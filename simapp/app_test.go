@@ -17,6 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authmiddleware "github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -48,7 +49,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 		)
 	}
 
-	genesisState := NewDefaultGenesisState(encCfg.Marshaler)
+	genesisState := NewDefaultGenesisState(encCfg.Codec)
 	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
 	require.NoError(t, err)
 
@@ -82,8 +83,9 @@ func TestRunMigrations(t *testing.T) {
 	bApp := baseapp.NewBaseApp(appName, logger, db, encCfg.TxConfig.TxDecoder())
 	bApp.SetCommitMultiStoreTracer(nil)
 	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	msr := authmiddleware.NewMsgServiceRouter(encCfg.InterfaceRegistry)
 	app.BaseApp = bApp
-	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
+	app.configurator = module.NewConfigurator(app.appCodec, msr, app.GRPCQueryRouter())
 
 	// We register all modules on the Configurator, except x/bank. x/bank will
 	// serve as the test subject on which we run the migration tests.
@@ -123,8 +125,13 @@ func TestRunMigrations(t *testing.T) {
 			false, "", true, "no migrations found for module bank: not found", 0,
 		},
 		{
-			"can register and run migration handler for x/bank",
+			"can register 1->2 migration handler for x/bank, cannot run migration",
 			"bank", 1,
+			false, "", true, "no migration found for module bank from version 2 to version 3: not found", 0,
+		},
+		{
+			"can register 2->3 migration handler for x/bank, can run migration",
+			"bank", 2,
 			false, "", false, "", 1,
 		},
 		{
@@ -243,7 +250,7 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 	encCfg := MakeTestEncodingConfig()
 	db := dbm.NewMemDB()
 	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
-	genesisState := NewDefaultGenesisState(encCfg.Marshaler)
+	genesisState := NewDefaultGenesisState(encCfg.Codec)
 	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
 	require.NoError(t, err)
 

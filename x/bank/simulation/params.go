@@ -23,7 +23,7 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 				if err != nil {
 					panic(err)
 				}
-				return fmt.Sprintf("%s", paramsBytes)
+				return string(paramsBytes)
 			},
 		),
 		simulation.NewSimParamChange(types.ModuleName, string(types.KeyDefaultSendEnabled),

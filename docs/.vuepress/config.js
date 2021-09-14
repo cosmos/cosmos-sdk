@@ -5,14 +5,14 @@ module.exports = {
     "/": {
       lang: "en-US"
     },
-    kr: {
-      lang: "kr"
-    },
-    cn: {
-      lang: "cn"
+    ko: {
+      lang: "ko"
     },
     ru: {
       lang: "ru"
+    },
+    zh: {
+      lang: "zh-CN"
     }
   },
   base: process.env.VUEPRESS_BASE || "/",
@@ -45,6 +45,10 @@ module.exports = {
       {
         "label": "v0.42",
         "key": "v0.42"
+      },
+      {
+        "label": "v0.44",
+        "key": "v0.44"
       },
       {
         "label": "master",

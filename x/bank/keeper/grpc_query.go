@@ -59,13 +59,12 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	balances := sdk.NewCoins()
 	accountStore := k.getAccountStore(sdkCtx, addr)
 
-	pageRes, err := query.Paginate(accountStore, req.Pagination, func(_, value []byte) error {
-		var result sdk.Coin
-		err := k.cdc.Unmarshal(value, &result)
-		if err != nil {
+	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
+		var amount sdk.Int
+		if err := amount.Unmarshal(value); err != nil {
 			return err
 		}
-		balances = append(balances, result)
+		balances = append(balances, sdk.NewCoin(string(key), amount))
 		return nil
 	})
 
@@ -163,4 +162,51 @@ func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetada
 	return &types.QueryDenomMetadataResponse{
 		Metadata: metadata,
 	}, nil
+}
+
+func (k BaseKeeper) DenomOwners(
+	goCtx context.Context,
+	req *types.QueryDenomOwnersRequest,
+) (*types.QueryDenomOwnersResponse, error) {
+
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if req.Denom == "" {
+		return nil, status.Error(codes.InvalidArgument, "empty denom")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	denomPrefixStore := k.getDenomAddressPrefixStore(ctx, req.Denom)
+
+	var denomOwners []*types.DenomOwner
+	pageRes, err := query.FilteredPaginate(
+		denomPrefixStore,
+		req.Pagination,
+		func(key []byte, value []byte, accumulate bool) (bool, error) {
+			if accumulate {
+				address, _, err := types.AddressAndDenomFromBalancesStore(key)
+				if err != nil {
+					return false, err
+				}
+
+				denomOwners = append(
+					denomOwners,
+					&types.DenomOwner{
+						Address: address.String(),
+						Balance: k.GetBalance(ctx, address, req.Denom),
+					},
+				)
+			}
+
+			return true, nil
+		},
+	)
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryDenomOwnersResponse{DenomOwners: denomOwners, Pagination: pageRes}, nil
 }

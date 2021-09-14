@@ -19,11 +19,11 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -49,14 +49,15 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	cfg := network.DefaultConfig()
 	cfg.NumValidators = 1
-
 	s.cfg = cfg
-	s.network = network.New(s.T(), cfg)
-	s.Require().NotNil(s.network)
+
+	var err error
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
 
-	_, err := s.network.WaitForHeight(1)
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
 	s.queryClient = tx.NewServiceClient(val.ClientCtx)
@@ -121,8 +122,15 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
 			} else {
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
-				s.Require().Equal(len(res.GetResult().GetEvents()), 6) // 1 coin recv 1 coin spent, 1 transfer, 3 messages.
-				s.Require().True(res.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
+				//
+				// The 13 events are:
+				// - Sending Fee to the pool: coin_spent, coin_received, transfer and message.sender=<val1>
+				// - tx.* events: tx.fee, tx.acc_seq, tx.signature
+				// - Sending Amount to recipient: coin_spent, coin_received, transfer and message.sender=<val1>
+				// - Msg events: message.module=bank and message.action=/cosmos.bank.v1beta1.MsgSend
+				s.Require().Equal(len(res.GetResult().GetEvents()), 13)
+				// Check the result and gas used are correct.
+				s.Require().True(res.GetGasInfo().GetGasUsed() > 0) // Gas used sometimes change, just check it's not empty.
 			}
 		})
 	}
@@ -162,8 +170,8 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 				err = val.ClientCtx.Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
-				s.Require().Equal(len(result.GetResult().GetEvents()), 6) // 1 coin recv, 1 coin spent,1 transfer, 3 messages.
-				s.Require().True(result.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
+				s.Require().Equal(len(result.GetResult().GetEvents()), 13) // See TestSimulateTx_GRPC for the 13 events.
+				s.Require().True(result.GetGasInfo().GetGasUsed() > 0)     // Gas used sometimes change, just check it's not empty.
 			}
 		})
 	}

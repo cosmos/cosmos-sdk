@@ -2,7 +2,7 @@
 
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
-VERSION := $(shell echo $(shell git describe --always) | sed 's/^v//')
+VERSION := $(shell echo $(shell git describe --always --match "v*") | sed 's/^v//')
 TMVERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
@@ -13,6 +13,7 @@ MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
+PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
 
 export GO111MODULE = on
 
@@ -237,11 +238,23 @@ check-test-unit-amino: ARGS=-tags='ledger test_ledger_mock test_amino norace'
 $(CHECK_TEST_TARGETS): EXTRA_ARGS=-run=none
 $(CHECK_TEST_TARGETS): run-tests
 
+SUB_MODULES = $(shell find . -type f -name 'go.mod' -print0 | xargs -0 -n1 dirname | sort)
+CURRENT_DIR = $(shell pwd)
 run-tests:
 ifneq (,$(shell which tparse 2>/dev/null))
-	go test -mod=readonly -json $(ARGS) $(EXTRA_ARGS) $(TEST_PACKAGES) | tparse
+	@echo "Starting unit tests"; \
+	for module in $(SUB_MODULES); do \
+		cd ${CURRENT_DIR}/$$module; \
+		echo "Running unit tests for module $$module"; \
+		go test -mod=readonly -json $(ARGS) $(TEST_PACKAGES) ./... | tparse; \
+    done
 else
-	go test -mod=readonly $(ARGS)  $(EXTRA_ARGS) $(TEST_PACKAGES)
+	@echo "Starting unit tests"; \
+	for module in $(SUB_MODULES); do \
+		cd ${CURRENT_DIR}/$$module; \
+		echo "Running unit tests for module $$module"; \
+		go test -mod=readonly $(ARGS) $(TEST_PACKAGES) ./... ; \
+	done
 endif
 
 .PHONY: run-tests test test-all $(TEST_TARGETS)
@@ -315,7 +328,7 @@ test-cover:
 .PHONY: test-cover
 
 test-rosetta:
-	docker build -t rosetta-ci:latest -f contrib/rosetta/node/Dockerfile .
+	docker build -t rosetta-ci:latest -f contrib/rosetta/rosetta-ci/Dockerfile .
 	docker-compose -f contrib/rosetta/docker-compose.yaml up --abort-on-container-exit --exit-code-from test_rosetta --build
 .PHONY: test-rosetta
 
@@ -327,17 +340,22 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-containerMarkdownLintImage=tmknom/markdownlint
-containerMarkdownLint=cosmos-sdk-markdownlint
-containerMarkdownLintFix=cosmos-sdk-markdownlint-fix
+markdownLintImage=tmknom/markdownlint
+containerMarkdownLint=$(PROJECT_NAME)-markdownlint
+containerMarkdownLintFix=$(PROJECT_NAME)-markdownlint-fix
 
-lint:
-	golangci-lint run --out-format=tab
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLint}$$"; then docker start -a $(containerMarkdownLint); else docker run --name $(containerMarkdownLint) -i -v "$(CURDIR):/work" $(containerMarkdownLintImage); fi
+golangci_lint_cmd=go run github.com/golangci/golangci-lint/cmd/golangci-lint
+
+lint: lint-go
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLint}$$"; then docker start -a $(containerMarkdownLint); else docker run --name $(containerMarkdownLint) -i -v "$(CURDIR):/work" $(markdownLintImage); fi
 
 lint-fix:
-	golangci-lint run --fix --out-format=tab --issues-exit-code=0
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLintFix}$$"; then docker start -a $(containerMarkdownLintFix); else docker run --name $(containerMarkdownLintFix) -i -v "$(CURDIR):/work" $(containerMarkdownLintImage) . --fix; fi
+	$(golangci_lint_cmd) run --fix --out-format=tab --issues-exit-code=0
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLintFix}$$"; then docker start -a $(containerMarkdownLintFix); else docker run --name $(containerMarkdownLintFix) -i -v "$(CURDIR):/work" $(markdownLintImage) . --fix; fi
+
+lint-go:
+	echo $(GIT_DIFF)
+	$(golangci_lint_cmd) run --out-format=tab $(GIT_DIFF)
 
 .PHONY: lint lint-fix
 
@@ -377,27 +395,29 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-containerProtoVer=v0.2
-containerProtoImage=tendermintdev/sdk-proto-gen:$(containerProtoVer)
-containerProtoGen=cosmos-sdk-proto-gen-$(containerProtoVer)
-containerProtoGenSwagger=cosmos-sdk-proto-gen-swagger-$(containerProtoVer)
-containerProtoFmt=cosmos-sdk-proto-fmt-$(containerProtoVer)
+protoVer=v0.2
+protoImageName=tendermintdev/sdk-proto-gen:$(protoVer)
+containerProtoGen=$(PROJECT_NAME)-proto-gen-$(protoVer)
+containerProtoGenAny=$(PROJECT_NAME)-proto-gen-any-$(protoVer)
+containerProtoGenSwagger=$(PROJECT_NAME)-proto-gen-swagger-$(protoVer)
+containerProtoFmt=$(PROJECT_NAME)-proto-fmt-$(protoVer)
 
 proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
 		sh ./scripts/protocgen.sh; fi
 
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
 proto-gen-any:
 	@echo "Generating Protobuf Any"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) sh ./scripts/protocgen-any.sh
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGenAny}$$"; then docker start -a $(containerProtoGenAny); else docker run --name $(containerProtoGenAny) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
+		sh ./scripts/protocgen-any.sh; fi
 
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGenSwagger}$$"; then docker start -a $(containerProtoGenSwagger); else docker run --name $(containerProtoGenSwagger) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGenSwagger}$$"; then docker start -a $(containerProtoGenSwagger); else docker run --name $(containerProtoGenSwagger) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
 		sh ./scripts/protoc-swagger-gen.sh; fi
 
 proto-format:
@@ -475,16 +495,16 @@ proto-update-deps:
 ###                                Localnet                                 ###
 ###############################################################################
 
-# Run a 4-node testnet locally
+# Run a 4-node testnet locally via docker compose
 localnet-start: build-linux localnet-stop
 	$(if $(shell $(DOCKER) inspect -f '{{ .Id }}' cosmossdk/simd-env 2>/dev/null),$(info found image cosmossdk/simd-env),$(MAKE) -C contrib/images simd-env)
-	if ! [ -f build/node0/simd/config/genesis.json ]; then $(DOCKER) run --rm \
+	if ! test -f build/node0/simd/config/genesis.json; then $(DOCKER) run --rm \
 		--user $(shell id -u):$(shell id -g) \
 		-v $(BUILDDIR):/simd:Z \
 		-v /etc/group:/etc/group:ro \
 		-v /etc/passwd:/etc/passwd:ro \
 		-v /etc/shadow:/etc/shadow:ro \
-		cosmossdk/simd-env testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
+		cosmossdk/simd-env testnet init-files --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
 	docker-compose up -d
 
 localnet-stop:
@@ -498,8 +518,8 @@ localnet-stop:
 # builds rosetta test data dir
 rosetta-data:
 	-docker container rm data_dir_build
-	docker build -t rosetta-ci:latest -f contrib/rosetta/node/Dockerfile .
+	docker build -t rosetta-ci:latest -f contrib/rosetta/rosetta-ci/Dockerfile .
 	docker run --name data_dir_build -t rosetta-ci:latest sh /rosetta/data.sh
-	docker cp data_dir_build:/tmp/data.tar.gz "$(CURDIR)/contrib/rosetta/node/data.tar.gz"
+	docker cp data_dir_build:/tmp/data.tar.gz "$(CURDIR)/contrib/rosetta/rosetta-ci/data.tar.gz"
 	docker container rm data_dir_build
 .PHONY: rosetta-data

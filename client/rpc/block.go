@@ -3,16 +3,13 @@ package rpc
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
 // BlockCommand returns the verified block data for a given heights
@@ -87,48 +84,4 @@ func GetChainHeight(clientCtx client.Context) (int64, error) {
 
 	height := status.SyncInfo.LatestBlockHeight
 	return height, nil
-}
-
-// REST handler to get a block
-func BlockRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-
-		height, err := strconv.ParseInt(vars["height"], 10, 64)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest,
-				"couldn't parse block height. Assumed format is '/block/{height}'.")
-			return
-		}
-
-		chainHeight, err := GetChainHeight(clientCtx)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, "failed to parse chain height")
-			return
-		}
-
-		if height > chainHeight {
-			rest.WriteErrorResponse(w, http.StatusNotFound, "requested block height is bigger then the chain length")
-			return
-		}
-
-		output, err := getBlock(clientCtx, &height)
-		if rest.CheckInternalServerError(w, err) {
-			return
-		}
-
-		rest.PostProcessResponseBare(w, clientCtx, output)
-	}
-}
-
-// REST handler to get the latest block
-func LatestBlockRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		output, err := getBlock(clientCtx, nil)
-		if rest.CheckInternalServerError(w, err) {
-			return
-		}
-
-		rest.PostProcessResponseBare(w, clientCtx, output)
-	}
 }

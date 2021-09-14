@@ -60,7 +60,8 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 	return types.ValidateGenesis(&data)
 }
 
-// RegisterRESTRoutes registers no REST routes for the crisis module.
+// RegisterRESTRoutes registers REST routes for the crisis module.
+// Deprecated: RegisterRESTRoutes is deprecated.
 func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the capability module.
@@ -118,9 +119,9 @@ func (AppModule) Name() string {
 // RegisterInvariants performs a no-op.
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Route returns the message routing key for the crisis module.
+// Deprecated: Route returns the message routing key for the crisis module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(RouterKey, NewHandler(*am.keeper))
+	return sdk.Route{}
 }
 
 // QuerierRoute returns no querier route.

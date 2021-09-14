@@ -127,7 +127,7 @@ func GetConfigFromEnv() (*Config, error) {
 	if cfg.AllowDownloadBinaries, err = booleanOption(envDownloadBin, false); err != nil {
 		return nil, err
 	}
-	if cfg.RestartAfterUpgrade, err = booleanOption(envRestartUpgrade, false); err != nil {
+	if cfg.RestartAfterUpgrade, err = booleanOption(envRestartUpgrade, true); err != nil {
 		return nil, err
 	}
 	if cfg.UnsafeSkipBackup, err = booleanOption(envSkipBackup, false); err != nil {

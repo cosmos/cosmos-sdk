@@ -26,6 +26,7 @@ type Keeper struct {
 	cdc      codec.BinaryCodec
 	// Used to calculate the estimated next epoch time.
 	// This is local to every node
+	// TODO: remove in favor of consensus param when its added
 	commitTimeout time.Duration
 }
 

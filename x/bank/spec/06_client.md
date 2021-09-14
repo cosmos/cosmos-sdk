@@ -27,7 +27,7 @@ simd query bank balances [address] [flags]
 Example:
 
 ```
-simd q bank balances cosmos1..
+simd query bank balances cosmos1..
 ```
 
 Example Output:
@@ -81,7 +81,7 @@ simd query bank total [flags]
 Example:
 
 ```
-simd q bank total --denom stake
+simd query bank total --denom stake
 ```
 
 Example Output:

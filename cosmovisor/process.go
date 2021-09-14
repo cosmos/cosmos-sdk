@@ -68,7 +68,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 			return false, err
 		}
 
-		if err = doPreUpgrade(l.cfg); err != nil {
+		if err = doPreUpgrade(l.cfg, 0); err != nil {
 			return false, err
 		}
 	}
@@ -154,7 +154,10 @@ func doBackup(cfg *Config) error {
 }
 
 // doPreUpgrade runs the pre-upgrade command defined by the application
-func doPreUpgrade(cfg *Config) error {
+// cfg contains the cosmovisor config from env var
+// preupgrade_attempt is the current attempt at preupgrade by cosmovisor.
+func doPreUpgrade(cfg *Config, preupgrade_attempt int) error {
+
 	bin, err := cfg.CurrentBin()
 	preUpgradeCmd := exec.Command(bin, "pre-upgrade")
 
@@ -169,8 +172,13 @@ func doPreUpgrade(cfg *Config) error {
 			return fmt.Errorf("pre-upgrade command failed : %w", err)
 		}
 		if err.(*exec.ExitError).ProcessState.ExitCode() == 31 {
-			fmt.Println("pre-upgrade command failed. retrying.")
-			return doPreUpgrade(cfg)
+			preupgrade_attempt += 1
+			if cfg.PreupgradeMaxRetries != -1 && preupgrade_attempt >= cfg.PreupgradeMaxRetries {
+				return fmt.Errorf("pre-upgrade command failed. reached max attempt of retries. Err: %w", err)
+			}
+
+			fmt.Println("pre-upgrade command failed. retrying. Attempt: #", preupgrade_attempt)
+			return doPreUpgrade(cfg, preupgrade_attempt)
 		}
 	}
 	fmt.Println("pre-upgrade successful. continuing the upgrade.")

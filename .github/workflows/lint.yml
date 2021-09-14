@@ -22,7 +22,7 @@ jobs:
             go.mod
             go.sum
       - name: print changed files
-        run: echo "files: ${{ env.GIT_DIFF }}"
+        run: echo "files" ${{ env.GIT_DIFF }}
       - name: print current directory
         run: pwd
       - name: list directory

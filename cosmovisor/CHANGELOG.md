@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 + [\#8590](https://github.com/cosmos/cosmos-sdk/pull/8590) File watcher for cosmovisor. Instead of parsing logs from stdin and stderr, we watch the `<DAEMON_HOME>/data/upgrade-info.json` file updates using polling mechanism.
++ [\#9973](https://github.com/cosmos/cosmos-sdk/pull/10056) Added support for pre-upgrade command in Cosmovisor to be called before the binary is upgraded. Added new environmental variable `PREUPGRADE_MAX_RETRIES ` which holds the number of times to reattempt failing preupgrade.
 
 ### Improvements
 

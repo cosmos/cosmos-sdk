@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -10,8 +9,13 @@ import (
 	db "github.com/tendermint/tm-db"
 )
 
+const (
+	DefaultEpochActionID = 1
+	DefaultEpochNumber   = 0
+)
+
 var (
-	NextEpochActionID      = []byte("next_epoch_action_id")
+	NextEpochActionID      = []byte{0x49}
 	EpochNumberID          = []byte{0x50}
 	EpochActionQueuePrefix = []byte{0x51} // prefix for the epoch
 )
@@ -20,6 +24,9 @@ var (
 type Keeper struct {
 	storeKey sdk.StoreKey
 	cdc      codec.BinaryCodec
+	// Used to calculate the estimated next epoch time.
+	// This is local to every node
+	commitTimeout time.Duration
 }
 
 // NewKeeper creates a epoch queue manager
@@ -49,14 +56,14 @@ func (k Keeper) GetNewActionID(ctx sdk.Context) uint64 {
 
 // ActionStoreKey returns action store key from ID
 func ActionStoreKey(epochNumber int64, actionID uint64) []byte {
-	return []byte(fmt.Sprintf("%s_%d_%d", EpochActionQueuePrefix, epochNumber, actionID))
+	return append(EpochActionQueuePrefix, byte(epochNumber), byte(actionID))
 }
 
 // QueueMsgForEpoch save the actions that need to be executed on next epoch
 func (k Keeper) QueueMsgForEpoch(ctx sdk.Context, epochNumber int64, msg sdk.Msg) {
 	store := ctx.KVStore(k.storeKey)
 
-	bz, err := k.cdc.MarshalInterface(action)
+	bz, err := k.cdc.MarshalInterface(msg)
 	if err != nil {
 		panic(err)
 	}
@@ -79,8 +86,8 @@ func (k Keeper) RestoreEpochAction(ctx sdk.Context, epochNumber int64, action *c
 	store.Set(ActionStoreKey(epochNumber, actionID), bz)
 }
 
-// GetEpochAction get action by ID
-func (k Keeper) GetEpochAction(ctx sdk.Context, epochNumber int64, actionID uint64) sdk.Msg {
+// GetEpochMsg gets a msg by ID
+func (k Keeper) GetEpochMsg(ctx sdk.Context, epochNumber int64, actionID uint64) sdk.Msg {
 	store := ctx.KVStore(k.storeKey)
 
 	bz := store.Get(ActionStoreKey(epochNumber, actionID))
@@ -179,8 +186,7 @@ func (k Keeper) GetNextEpochHeight(ctx sdk.Context, epochInterval int64) int64 {
 func (k Keeper) GetNextEpochTime(ctx sdk.Context, epochInterval int64) time.Time {
 	currentTime := ctx.BlockTime()
 	currentHeight := ctx.BlockHeight()
-	timeoutCommit := 5 * time.Second // TODO how to get timeout commit tendermint config?
 	// cp := baseapp.GetConsensusParams(ctx)
 
-	return currentTime.Add(timeoutCommit * time.Duration(k.GetNextEpochHeight(ctx, epochInterval)-currentHeight))
+	return currentTime.Add(k.commitTimeout * time.Duration(k.GetNextEpochHeight(ctx, epochInterval)-currentHeight))
 }

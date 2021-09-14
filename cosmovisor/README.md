@@ -44,21 +44,6 @@ All arguments passed to `cosmovisor` will be passed to the application binary (a
 * `DAEMON_POLL_INTERVAL` is the interval length in milliseconds for polling the upgrade plan file. Default: 300.
 * `UNSAFE_SKIP_BACKUP` (defaults to `false`), if set to `false`, will backup the data before trying the upgrade. Otherwise it will upgrade directly without doing any backup. This is useful (and recommended) in case of failures and when needed to rollback. It is advised to use backup option, i.e., `UNSAFE_SKIP_BACKUP=false`
 
-### Commands
-
-As Cosmovisor is meant to be used as a wrapper for a `Cosmos SDK` application, it does not support many commands. 
-
-However, to determine the version of Cosmovisor being run, the following command can be run.
-```
-cosmovisor version
-``` 
-This returns the version of the `Cosmos SDK` application as well as the version of Cosmovisor as shown below
-```
-v0.43.0-beta1-319-ge3aec1840
-Cosmovisor Version:  v0.1.0
-```
-
-
 ### Folder Layout
 
 `$DAEMON_HOME/cosmovisor` is expected to belong completely to `cosmovisor` and the subprocesses that are controlled by it. The folder content is organized as follows:
@@ -102,6 +87,20 @@ The system administrator is responsible for:
 In order to support downloadable binaries, a tarball for each upgrade binary will need to be packaged up and made available through a canonical URL. Additionally, a tarball that includes the genesis binary and all available upgrade binaries can be packaged up and made available so that all the necessary binaries required to sync a fullnode from start can be easily downloaded.
 
 The `DAEMON` specific code and operations (e.g. tendermint config, the application db, syncing blocks, etc.) all work as expected. The application binaries' directives such as command-line flags and environment variables also work as expected.
+
+### Commands
+
+As Cosmovisor is meant to be used as a wrapper for a `Cosmos SDK` application, it does not support many commands. 
+
+However, to determine the version of Cosmovisor being run, the following command can be run.
+```
+cosmovisor version
+``` 
+This returns the version of the `Cosmos SDK` application as well as the version of Cosmovisor as shown below
+```
+0.43.0-beta1-319-ge3aec1840
+Cosmovisor Version:  v0.1.0-85-g65baacac0
+```
 
 
 ### Detecting Upgrades

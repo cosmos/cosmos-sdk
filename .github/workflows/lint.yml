@@ -22,9 +22,11 @@ jobs:
             go.mod
             go.sum
       - name: print changed files
-        run: echo 'files: ${{ env.GIT_DIFF }}'
-      - name: print current directory and files
-        run: echo `pwd` "\n" `ls`
+        run: echo "files: ${{ env.GIT_DIFF }}"
+      - name: print current directory
+        run: pwd
+      - name: list directory
+        run: ls
       - name: run go linters
         run: make lint-go
         # if: env.GIT_DIFF

@@ -1,5 +1,5 @@
 name: Lint
-# Lint runs golangci-lint over the entire cosmos-sdk repository
+# Lint runs golangci-lint over changed *.{go, mod, sum} files in cosmos-sdk repository
 # This workflow is run on every pull request and push to master
 # The `golangci` will pass without running if no *.{go, mod, sum} files have been changed.
 on:
@@ -19,7 +19,7 @@ jobs:
         id: git_diff
         with:
           PATTERNS: |
-            **/**.go
+            **/*.go
             go.mod
             go.sum
       - name: run go linters

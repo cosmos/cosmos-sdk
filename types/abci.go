@@ -2,6 +2,8 @@ package types
 
 import abci "github.com/tendermint/tendermint/abci/types"
 
+// testing
+
 // InitChainer initializes application state at genesis
 type InitChainer func(ctx Context, req abci.RequestInitChain) abci.ResponseInitChain
 

@@ -21,7 +21,7 @@ builds:
       - CGO_ENABLED=0
 
 archives:
-  - name_template: '{{ .ProjectName }}-{{ replace .Version "cosmovisor/" "" }}-{{ .Os }}-{{ .Arch }}'
+  - name_template: '{{ replace .Version "cosmovisor/" "cosmovisor-" }}-{{ .Os }}-{{ .Arch }}'
     format_overrides:
       - goos: windows
         format: zip

@@ -43,7 +43,7 @@ All arguments passed to `cosmovisor` will be passed to the application binary (a
 * `DAEMON_RESTART_AFTER_UPGRADE` (*optional*), if set to `true`, will restart the subprocess with the same command-line arguments and flags (but with the new binary) after a successful upgrade. By default, `cosmovisor` stops running after an upgrade and requires the system administrator to manually restart it. Note that `cosmovisor` will not auto-restart the subprocess if there was an error.
 * `DAEMON_POLL_INTERVAL` is the interval length in milliseconds for polling the upgrade plan file. Default: 300.
 * `UNSAFE_SKIP_BACKUP` (defaults to `false`), if set to `false`, will backup the data before trying the upgrade. Otherwise it will upgrade directly without doing any backup. This is useful (and recommended) in case of failures and when needed to rollback. It is advised to use backup option, i.e., `UNSAFE_SKIP_BACKUP=false`
-* `PREUPGRADE_MAX_RETRIES` is the maximum number of times `pre-upgrade` is called in the application after exit status of `31`. More info on exit status codes [here](../docs/migrations/pre-upgrade.md). After the specified number of retires, if the pre-upgrade does not succeed, cosmovisor fails the upgrade. If the value is not set for this environment variable, the pre-upgrade runs until it receives a non `31` exit code.
+* `PREUPGRADE_MAX_RETRIES` (defaults to `0`) is the maximum number of times `pre-upgrade` is called in the application after exit status of `31`. More info on exit status codes [here](../docs/migrations/pre-upgrade.md). After the specified number of retires, if the pre-upgrade does not succeed, cosmovisor fails the upgrade. 
 
 ### Folder Layout
 

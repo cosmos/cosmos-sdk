@@ -148,9 +148,8 @@ func GetConfigFromEnv() (*Config, error) {
 	if err := cfg.validate(); err != nil {
 		return nil, err
 	}
-	if cfg.PreupgradeMaxRetries, err = strconv.Atoi(os.Getenv(envPreupgradeMaxRetries)); err != nil {
-		cfg.PreupgradeMaxRetries = -1 // Default if PREUPGRADE_MAX_RETRIES is not set
-	}
+
+	cfg.PreupgradeMaxRetries, _ = strconv.Atoi(os.Getenv(envPreupgradeMaxRetries))
 
 	return cfg, nil
 }

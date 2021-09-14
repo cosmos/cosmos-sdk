@@ -61,13 +61,14 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	if err != nil || !needsUpdate {
 		return false, err
 	}
-	if err := doBackup(l.cfg); err != nil {
-		return false, err
-	}
 
 	if !SkipUpgrade(args, l.fw.currentInfo) {
-		err = doPreUpgrade(l.cfg)
-		if err != nil {
+
+		if err := doBackup(l.cfg); err != nil {
+			return false, err
+		}
+
+		if err = doPreUpgrade(l.cfg); err != nil {
 			return false, err
 		}
 	}

@@ -152,7 +152,7 @@ var (
 	ErrAppConfig = Register(RootCodespace, 40, "error in app.toml")
 
 	// ErrInvalidDecString defines an error for an invalid decimal string
-	ErrInvalidDecString = Register(mathCodespace, 1, "invalid decimal string")
+	ErrInvalidDecString = Register(mathCodespace, 41, "invalid decimal string")
 )
 
 // Register returns an error instance that should be used as the base for

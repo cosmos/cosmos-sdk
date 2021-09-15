@@ -31,6 +31,21 @@ service Query {
   rpc ModuleAccounts(QueryModuleAccountsRequest) returns (QueryModuleAccountsResponse) {
     option (google.api.http).get = "/cosmos/auth/v1beta1/module_accounts";
   }
+
+  // Bech32 queries bech32Prefix
+  rpc Bech32Prefix(Bech32PrefixRequest) returns (Bech32PrefixResponse) {
+    option (google.api.http).get = "/cosmos/auth/v1beta1/bech32";
+  }
+
+  // AddressBytesToString converts Account Address bytes to string
+  rpc AddressBytesToString(AddressBytesToStringRequest) returns (AddressBytesToStringResponse) {
+    option (google.api.http).get = "/cosmos/auth/v1beta1/bech32/{address_bytes}";
+  }
+
+  // AddressStringToBytes converts Address string to bytes
+  rpc AddressStringToBytes(AddressStringToBytesRequest) returns (AddressStringToBytesResponse) {
+    option (google.api.http).get = "/cosmos/auth/v1beta1/bech32/{address_string}";
+  }
 }
 
 // QueryAccountsRequest is the request type for the Query/Accounts RPC method.
@@ -57,6 +72,15 @@ message QueryAccountRequest {
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
+// QueryModuleAccountsRequest is the request type for the Query/ModuleAccounts RPC method.
+message QueryModuleAccountsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
 // QueryAccountResponse is the response type for the Query/Account RPC method.
 message QueryAccountResponse {
   // account defines the account of the corresponding address.
@@ -66,16 +90,35 @@ message QueryAccountResponse {
 // QueryParamsRequest is the request type for the Query/Params RPC method.
 message QueryParamsRequest {}
 
-// QueryParamsResponse is the response type for the Query/Params RPC method.
-message QueryParamsResponse {
-  // params defines the parameters of the module.
-  Params params = 1 [(gogoproto.nullable) = false];
-}
-
-// QueryModuleAccountsRequest is the request type for the Query/ModuleAccounts RPC method.
-message QueryModuleAccountsRequest {}
-
 // QueryModuleAccountsResponse is the response type for the Query/ModuleAccounts RPC method.
 message QueryModuleAccountsResponse {
   repeated google.protobuf.Any accounts = 1 [(cosmos_proto.accepts_interface) = "ModuleAccountI"];
+}
+
+// Bech32PrefixRequest is the request type for Bech32Prefix rpc method
+message Bech32PrefixRequest  {}
+
+// Bech32PrefixResponse is the response type for Bech32Prefix rpc method
+message Bech32PrefixResponse  {
+  string bech32_prefix = 1;
+}
+
+// AddressBytesToStringRequest is the request type for AddressString rpc method
+message AddressBytesToStringRequest {
+  bytes address_bytes = 1;
+}
+
+// AddressBytesToStringResponse is the response type for AddressString rpc method
+message AddressBytesToStringResponse {
+  string address_string = 1;
+}
+
+// AddressStringToBytesRequest is the request type for AccountBytes rpc method
+message AddressStringToBytesRequest {
+  string address_string = 1;
+}
+
+// AddressStringToBytesResponse is the response type for AddressBytes rpc method
+message AddressStringToBytesResponse {
+  bytes address_bytes = 1;
 }

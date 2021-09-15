@@ -4,6 +4,7 @@ package cosmos.vesting.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/vesting/v1beta1/vesting.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/vesting/types";
 
@@ -12,6 +13,9 @@ service Msg {
   // CreateVestingAccount defines a method that enables creating a vesting
   // account.
   rpc CreateVestingAccount(MsgCreateVestingAccount) returns (MsgCreateVestingAccountResponse);
+  // CreatePeriodicVestingAccount defines a method that enables creating a
+  // periodic vesting account.
+  rpc CreatePeriodicVestingAccount(MsgCreatePeriodicVestingAccount) returns (MsgCreatePeriodicVestingAccountResponse);
 }
 
 // MsgCreateVestingAccount defines a message that enables creating a vesting
@@ -30,3 +34,19 @@ message MsgCreateVestingAccount {
 
 // MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount response type.
 message MsgCreateVestingAccountResponse {}
+
+
+// MsgCreateVestingAccount defines a message that enables creating a vesting
+// account.
+message MsgCreatePeriodicVestingAccount {
+  option (gogoproto.equal) = false;
+
+  string   from_address                    = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
+  string   to_address                      = 2 [(gogoproto.moretags) = "yaml:\"to_address\""];
+  int64    start_time                      = 3 [(gogoproto.moretags) = "yaml:\"start_time\""];
+  repeated Period vesting_periods = 4 [(gogoproto.nullable) = false];
+}
+
+// MsgCreateVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount
+// response type.
+message MsgCreatePeriodicVestingAccountResponse {}

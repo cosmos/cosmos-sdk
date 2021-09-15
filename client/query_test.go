@@ -11,7 +11,6 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestQueryABCIHeight() {
-
 	testCases := []struct {
 		name      string
 		reqHeight int64
@@ -50,7 +49,7 @@ func (s *IntegrationTestSuite) TestQueryABCIHeight() {
 			req := abci.RequestQuery{
 				Path:   fmt.Sprintf("store/%s/key", banktypes.StoreKey),
 				Height: tc.reqHeight,
-				Data:   banktypes.CreateAccountBalancesPrefix(val.Address),
+				Data:   append(banktypes.BalancesPrefix, val.Address.Bytes()...),
 				Prove:  true,
 			}
 

@@ -15,9 +15,9 @@ const (
 )
 
 var (
-	NextEpochActionID      = []byte{0x49}
-	EpochNumberID          = []byte{0x50}
-	EpochActionQueuePrefix = []byte{0x51} // prefix for the epoch
+	NextEpochActionID      = []byte{0x11}
+	EpochNumberID          = []byte{0x12}
+	EpochActionQueuePrefix = []byte{0x13} // prefix for the epoch
 )
 
 // Keeper of the store
@@ -31,10 +31,11 @@ type Keeper struct {
 }
 
 // NewKeeper creates a epoch queue manager
-func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, commitTimeout time.Duration) Keeper {
 	return Keeper{
-		storeKey: key,
-		cdc:      cdc,
+		storeKey:      key,
+		cdc:           cdc,
+		commitTimeout: commitTimeout,
 	}
 }
 

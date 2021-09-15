@@ -29,7 +29,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 
 	// construct genesis state
 	genAccs := []types.GenesisAccount{&acc}
-	benchmarkApp := simapp.SetupWithGenesisAccounts(genAccs)
+	benchmarkApp := simapp.SetupWithGenesisAccounts(&testing.T{}, genAccs)
 	ctx := benchmarkApp.BaseApp.NewContext(false, tmproto.Header{})
 
 	// some value conceivably higher than the benchmarks would ever go
@@ -73,7 +73,7 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 
 	// Construct genesis state
 	genAccs := []authtypes.GenesisAccount{&acc}
-	benchmarkApp := simapp.SetupWithGenesisAccounts(genAccs)
+	benchmarkApp := simapp.SetupWithGenesisAccounts(&testing.T{}, genAccs)
 	ctx := benchmarkApp.BaseApp.NewContext(false, tmproto.Header{})
 
 	// some value conceivably higher than the benchmarks would ever go

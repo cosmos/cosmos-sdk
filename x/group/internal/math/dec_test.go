@@ -11,7 +11,6 @@ import (
 )
 
 func TestDec(t *testing.T) {
-
 	// Property tests
 	t.Run("TestNewDecFromInt64", rapid.MakeCheck(testDecInt64))
 
@@ -77,13 +76,10 @@ func TestDec(t *testing.T) {
 	require.True(t, res.IsEqual(minusFivePointZero))
 
 	require.False(t, zero.IsNegative())
-
 	require.False(t, one.IsNegative())
-
 	require.True(t, minusOne.IsNegative())
 }
 
-// TODO: Think a bit more about the probability distribution of Dec
 var genDec *rapid.Generator = rapid.Custom(func(t *rapid.T) Dec {
 	f := rapid.Float64().Draw(t, "f").(float64)
 	dec, err := NewDecFromString(fmt.Sprintf("%g", f))

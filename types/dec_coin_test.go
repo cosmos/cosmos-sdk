@@ -671,7 +671,7 @@ func (s *decCoinTestSuite) TestDecCoins_IsAllPositive() {
 
 		{"One Coin - Zero value", sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(0)}}, false},
 
-		{"One Coin - Postive value", sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(5)}}, true},
+		{"One Coin - Positive value", sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(5)}}, true},
 
 		{"One Coin - Negative value", sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(-15)}}, false},
 
@@ -789,7 +789,7 @@ func (s *decCoinTestSuite) TestDecCoins_IsZero() {
 
 		{"One Coin - Zero value", sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(0)}}, true},
 
-		{"One Coin - Postive value", sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(5)}}, false},
+		{"One Coin - Positive value", sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(5)}}, false},
 
 		{"Multiple Coins - All zero value", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(0)},
@@ -1084,7 +1084,7 @@ func (s *decCoinTestSuite) TestDecCoin_Validate() {
 		input        sdk.DecCoin
 		expectedPass bool
 	}{
-		{"Uninitalized deccoin", empty, false},
+		{"Uninitialized deccoin", empty, false},
 
 		{"Invalid denom string", sdk.DecCoin{"(){9**&})", sdk.NewDec(33)}, false},
 
@@ -1121,11 +1121,9 @@ func (s *decCoinTestSuite) TestDecCoin_ParseDecCoin() {
 
 		{"Precision over limit", "9.11111111111111111111stake", empty, true},
 
-		// TODO - Clarify - According to error message for ValidateDenom call, supposed to
-		// throw error when upper case characters are used. Currently uppercase denoms are allowed.
-		{"Invalid denom", "9.3STAKE", sdk.DecCoin{"STAKE", sdk.NewDecWithPrec(93, 1)}, false},
+		{"Valid upper case denom", "9.3STAKE", sdk.DecCoin{"STAKE", sdk.NewDecWithPrec(93, 1)}, false},
 
-		{"Valid input - amount and denom seperated by space", "9.3 stake", sdk.DecCoin{"stake", sdk.NewDecWithPrec(93, 1)}, false},
+		{"Valid input - amount and denom separated by space", "9.3 stake", sdk.DecCoin{"stake", sdk.NewDecWithPrec(93, 1)}, false},
 
 		{"Valid input - amount and denom concatenated", "9.3stake", sdk.DecCoin{"stake", sdk.NewDecWithPrec(93, 1)}, false},
 	}

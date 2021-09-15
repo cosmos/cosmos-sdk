@@ -4,12 +4,16 @@ package mock
 import (
 	"bytes"
 	"fmt"
+	"math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 )
 
-// An sdk.Tx which is its own sdk.Msg.
+// kvstoreTx defines a tx for mock purposes. The `key` and `value` fields will
+// set those bytes in the kvstore, and the `bytes` field represents its
+// GetSignBytes value.
 type kvstoreTx struct {
 	key   []byte
 	value []byte
@@ -23,6 +27,7 @@ func (msg kvstoreTx) ProtoMessage()  {}
 
 var _ sdk.Tx = kvstoreTx{}
 var _ sdk.Msg = kvstoreTx{}
+var _ middleware.GasTx = kvstoreTx{}
 
 func NewTx(key, value string) kvstoreTx {
 	bytes := fmt.Sprintf("%s=%s", key, value)
@@ -60,6 +65,10 @@ func (tx kvstoreTx) ValidateBasic() error {
 
 func (tx kvstoreTx) GetSigners() []sdk.AccAddress {
 	return nil
+}
+
+func (tx kvstoreTx) GetGas() uint64 {
+	return math.MaxUint64
 }
 
 // takes raw transaction bytes and decodes them into an sdk.Tx. An sdk.Tx has

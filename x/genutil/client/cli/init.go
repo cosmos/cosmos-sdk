@@ -79,6 +79,13 @@ func InitCmd(mm genesisMM) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
+			cdc := clientCtx.Codec
+
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			config := serverCtx.Config
+
+			clientCtx = client.ReadHomeFlag(clientCtx, cmd)
+			config.SetRoot(clientCtx.HomeDir)
 
 			config := client.GetConfigFromCmd(cmd)
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
@@ -137,13 +144,7 @@ func InitCmd(mm genesisMM) *cobra.Command {
 				return fmt.Errorf("genesis.json file already exists: %v", genFile)
 			}
 
-			// Overwrites the SDK default denom for side-effects
-			if defaultDenom != "" {
-				sdk.DefaultBondDenom = defaultDenom
-			}
-			appGenState := mm.DefaultGenesis()
-
-			appState, err := json.MarshalIndent(appGenState, "", " ")
+			appState, err := json.MarshalIndent(mbm.DefaultGenesis(cdc), "", " ")
 			if err != nil {
 				return errorsmod.Wrap(err, "Failed to marshal default genesis state")
 			}
@@ -160,20 +161,12 @@ func InitCmd(mm genesisMM) *cobra.Command {
 				}
 			}
 
-			appGenesis.AppName = version.AppName
-			appGenesis.AppVersion = version.Version
-			appGenesis.ChainID = chainID
-			appGenesis.AppState = appState
-			appGenesis.InitialHeight = initHeight
-			appGenesis.Consensus = &types.ConsensusGenesis{
-				Validators: nil,
-				Params:     cmttypes.DefaultConsensusParams(),
-			}
+			genDoc.ChainID = chainID
+			genDoc.Validators = nil
+			genDoc.AppState = appState
 
-			appGenesis.Consensus.Params.Validator.PubKeyTypes = []string{consensusKey}
-
-			if err = genutil.ExportGenesisFile(appGenesis, genFile); err != nil {
-				return errorsmod.Wrap(err, "Failed to export genesis file")
+			if err = genutil.ExportGenesisFile(genDoc, genFile); err != nil {
+				return errors.Wrap(err, "Failed to export gensis file")
 			}
 
 			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)

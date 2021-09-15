@@ -315,11 +315,12 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 				clientCtx = clientCtx.WithOutputFormat(flags.OutputFormatJSON)
 			}
 
-			// If the user didn't explicitly set a --sign-mode flag, use DIRECT_AUX by default.
-			if clientCtx.SignModeStr == "" || !flagSet.Changed(flags.FlagSignMode) {
-				clientCtx = clientCtx.WithSignModeStr(flags.SignModeDirectAux)
-			}
-		}
+// ReadHomeFlag checks if home flag is changed. If this is a case, we update
+// HomeDir field of Client Context.
+func ReadHomeFlag(clientCtx Context, cmd *cobra.Command) Context {
+	if cmd.Flags().Changed(flags.FlagHome) {
+		rootDir, _ := cmd.Flags().GetString(flags.FlagHome)
+		clientCtx = clientCtx.WithHomeDir(rootDir)
 	}
 
 	return clientCtx, nil

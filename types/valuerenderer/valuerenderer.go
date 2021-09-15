@@ -1,6 +1,7 @@
 package valuerenderer
 
 import (
+	"context"
 	"errors"
 	"math"
 	"regexp"
@@ -17,47 +18,29 @@ import (
 
 // ValueRenderer defines an interface to produce formated output for Int,Dec,Coin types as well as parse a string to Coin or Uint.
 type ValueRenderer interface {
-	Format(interface{}) (string, error)
-	Parse(string) (interface{}, error)
+	Format(context.Context, interface{}) (string, error)
+	Parse(context.Context, string) (interface{}, error)
 }
+
+// denomQuerierFunc takes a context and a denom as arguments and returns metadata, error
+type denomQuerierFunc func(context.Context, string) (banktypes.Metadata, error)
 
 // DefaultValueRenderer defines a struct that implements ValueRenderer interface
 type DefaultValueRenderer struct {
-	// denomToMetadataMap represents a hashmap to lookup banktypes.Metadata by coin denom
-	denomToMetadataMap map[string]banktypes.Metadata
+	denomQuerier denomQuerierFunc
 }
 
 var _ ValueRenderer = &DefaultValueRenderer{}
 
-// TODO consider to move into valuerenderer_test.go
 // NewDefaultValueRenderer  initiates denomToMetadataMap field and returns DefaultValueRenderer struct
-func NewDefaultValueRenderer() DefaultValueRenderer {
-	return DefaultValueRenderer{denomToMetadataMap: make(map[string]banktypes.Metadata)}
-}
-
-// TODO decide what is the most effiecnt way to map key to metadata
-// 1. current implementation O(m*d)
-// 2. use metadata.Symbol is a key ,but this is an optional field
-// 3. use metadata.Base or ,metadata.Display as a key in this case the helper function
-// SetDenomToMetadataMap populates a hashmap that maps coin denomination to a metadata.
-func (dvr DefaultValueRenderer) SetDenomToMetadataMap(metadatas []banktypes.Metadata) error {
-	// TODO should I validate denom?
-	if metadatas == nil {
-		return errors.New("empty metadatas")
+func NewDefaultValueRenderer(denomQuerier denomQuerierFunc) DefaultValueRenderer {
+	return DefaultValueRenderer{
+		denomQuerier: denomQuerier,
 	}
-
-	// O(m*d), wheren m is number of metadatas and d is a number of denomUnits in each metadata
-	for _, m := range metadatas {
-		for _, denomUnit := range m.DenomUnits {
-			dvr.denomToMetadataMap[denomUnit.Denom] = m
-		}
-	}
-
-	return nil
 }
 
 // Format converts an empty interface into a string depending on interface type.
-func (dvr DefaultValueRenderer) Format(x interface{}) (string, error) {
+func (dvr DefaultValueRenderer) Format(c context.Context, x interface{}) (string, error) {
 	p := message.NewPrinter(language.English)
 	var sb strings.Builder
 
@@ -95,7 +78,7 @@ func (dvr DefaultValueRenderer) Format(x interface{}) (string, error) {
 		sb.WriteString(p.Sprintf("%d", v.Int64()))
 
 	case types.Coin:
-		metadata, err := dvr.LookupMetadataByDenom(v.Denom)
+		metadata, err := dvr.denomQuerier(c, convertToBaseDenom(v.Denom))
 		if err != nil {
 			return "", err
 		}
@@ -104,27 +87,29 @@ func (dvr DefaultValueRenderer) Format(x interface{}) (string, error) {
 		sb.WriteString(newAmount)
 		sb.WriteString(newDenom)
 
-		//	default:
-		//	panic("type is invalid")
+	default:
+		panic("type is invalid")
 	}
 
 	return sb.String(), nil
 }
 
-// LookupMetadataByDenom lookups metadata by coin denom
-func (dvr DefaultValueRenderer) LookupMetadataByDenom(denom string) (banktypes.Metadata, error) {
-	// lookup metadata by displayDenom
-	metadata, ok := dvr.denomToMetadataMap[denom]
-	if !ok {
-		return banktypes.Metadata{}, errors.New("unable to lookup displayDenom in denomToMetadataMap")
+func convertToBaseDenom(denom string) string {
+	switch {
+	// e.g. uregen => uregen
+	case strings.HasPrefix(denom, "u"):
+		return denom
+	// e.g. mregen => uregen
+	case strings.HasPrefix(denom, "m"):
+		return "u" + denom[1:]
+	// has no prefix regen => uregen
+	default:
+		return "u" + denom
 	}
-
-	return metadata, nil
 }
 
 // ComputeAmount calculates an amount to produce formated output
 func (dvr DefaultValueRenderer) ComputeAmount(coin types.Coin, metadata banktypes.Metadata) int64 {
-
 	var coinExp, displayExp int64
 	for _, denomUnit := range metadata.DenomUnits {
 		if denomUnit.Denom == coin.Denom {
@@ -142,9 +127,7 @@ func (dvr DefaultValueRenderer) ComputeAmount(coin types.Coin, metadata banktype
 	switch {
 	// negative , convert mregen to regen less zeroes
 	case math.Signbit(expSub):
-		// TODO or should i use math package?
 		amount = types.NewDecFromIntWithPrec(coin.Amount, int64(math.Abs(expSub))).TruncateInt64() // use Dec or just golang built in methods
-	// positive, convert mregen to uregen
 	case !math.Signbit(expSub):
 		amount = coin.Amount.Mul(types.NewInt(int64(math.Pow(10, expSub)))).Int64()
 	// == 0, convert regen to regen, amount does not change
@@ -156,7 +139,7 @@ func (dvr DefaultValueRenderer) ComputeAmount(coin types.Coin, metadata banktype
 }
 
 // Parse parses a string and takes a decision whether to convert it into Coin or Uint
-func (dvr DefaultValueRenderer) Parse(s string) (interface{}, error) {
+func (dvr DefaultValueRenderer) Parse(ctx context.Context, s string) (interface{}, error) {
 	if s == "" {
 		return nil, errors.New("unable to parse empty string")
 	}

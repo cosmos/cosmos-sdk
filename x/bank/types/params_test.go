@@ -49,7 +49,7 @@ func Test_sendParamEqual(t *testing.T) {
 }
 
 func Test_sendParamString(t *testing.T) {
-	paramString := "denom: foo\n"
+	paramString := "denom: foo\nenabled: false\n"
 	param := NewSendEnabled("foo", false)
 
 	require.Equal(t, paramString, param.String())
@@ -96,12 +96,7 @@ func Test_validateParams(t *testing.T) {
 
 	// Ensure proper format of yaml output when false
 	params.DefaultSendEnabled = false
-	paramYaml = `send_enabled:
-- denom: foodenom
-  enabled: false
-- denom: foodenom2
-  enabled: false
-`
+	paramYaml := `actual  : "default_send_enabled: true\nsend_enabled:\n- denom: foodenom\n- denom: foodenom2\n`
 	require.Equal(t, paramYaml, params.String())
 
 	params = NewParams(true, SendEnabledParams{

@@ -23,10 +23,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-<<<<<<< HEAD
-=======
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
->>>>>>> 148451b51 (fix: Allow --home to propagate to init command (#10104))
 )
 
 const (
@@ -114,40 +110,12 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			genFile := config.GenesisFile()
 			overwrite, _ := cmd.Flags().GetBool(FlagOverwrite)
-<<<<<<< HEAD
-=======
-			stakingBondDenom, _ := cmd.Flags().GetString(FlagStakingBondDenom)
->>>>>>> 148451b51 (fix: Allow --home to propagate to init command (#10104))
 
 			if !overwrite && tmos.FileExists(genFile) {
 				return fmt.Errorf("genesis.json file already exists: %v", genFile)
 			}
-<<<<<<< HEAD
+
 			appState, err := json.MarshalIndent(mbm.DefaultGenesis(cdc), "", " ")
-=======
-
-			appGenState := mbm.DefaultGenesis(cdc)
-
-			if stakingBondDenom != "" {
-				var stakingGenesis stakingtypes.GenesisState
-
-				stakingRaw := appGenState[stakingtypes.ModuleName]
-				err := clientCtx.Codec.UnmarshalJSON(stakingRaw, &stakingGenesis)
-				if err != nil {
-					return err
-				}
-
-				stakingGenesis.Params.BondDenom = stakingBondDenom
-				modifiedStakingStr, err := clientCtx.Codec.MarshalJSON(&stakingGenesis)
-				if err != nil {
-					return err
-				}
-
-				appGenState[stakingtypes.ModuleName] = modifiedStakingStr
-			}
-
-			appState, err := json.MarshalIndent(appGenState, "", " ")
->>>>>>> 148451b51 (fix: Allow --home to propagate to init command (#10104))
 			if err != nil {
 				return errors.Wrap(err, "Failed to marshall default genesis state")
 			}

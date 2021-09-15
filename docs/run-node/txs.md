@@ -83,6 +83,30 @@ You may optionally pass the `--broadcast-mode` flag to specify which response to
 - `sync`: the CLI waits for a CheckTx execution response only.
 - `async`: the CLI returns immediately (transaction might fail).
 
+### Encoding a Transaction
+
+In order to broadcast a transaction using the gRPC or REST endpoints, the transaction will need to be encoded first. This can be done using the CLI.
+
+Encoding a transaction is done using the following command:
+
+```bash
+simd tx encode tx_signed.json
+```
+
+This will read the transaction from the file, serialize it using Protobuf, and output the transaction bytes as base64 in the console.
+
+### Decoding a Transaction
+
+The CLI can also be used to decode transaction bytes.
+
+Decoding a transaction is done using the following command:
+
+```bash
+simd tx decode [protobuf-byte-string]
+```
+
+This will decode the transaction bytes and output the transaction as JSON in the console. You can also save the transaction to a file by appending `> tx.json` to the above command.
+
 ## Programmatically with Go
 
 It is possible to manipulate transactions programmatically via Go using the Cosmos SDK's `TxBuilder` interface.
@@ -326,7 +350,7 @@ func simulateTx() error {
 
 ## Using gRPC
 
-It is not possible to generate or sign a transaction using gRPC, only to broadcast one.
+It is not possible to generate or sign a transaction using gRPC, only to broadcast one. In order to broadcast a transaction using gRPC, you will need to generate, sign, and encode the transaction using either the CLI or programmatically with Go.
 
 ### Broadcasting a Transaction
 
@@ -341,7 +365,7 @@ grpcurl -plaintext \
 
 ## Using REST
 
-It is not possible to generate or sign a transaction using REST, only to broadcast one.
+It is not possible to generate or sign a transaction using REST, only to broadcast one. In order to broadcast a transaction using REST, you will need to generate, sign, and encode the transaction using either the CLI or programmatically with Go.
 
 ### Broadcasting a Transaction
 

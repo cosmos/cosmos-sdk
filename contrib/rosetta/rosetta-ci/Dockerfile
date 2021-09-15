@@ -4,7 +4,7 @@ RUN apk add --no-cache tar
 
 # prepare node data
 WORKDIR /node
-COPY ./contrib/rosetta/node/data.tar.gz data.tar.gz
+COPY ./contrib/rosetta/rosetta-ci/data.tar.gz data.tar.gz
 RUN tar -zxvf data.tar.gz -C .
 
 # build simd

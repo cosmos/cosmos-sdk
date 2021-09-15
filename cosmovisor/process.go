@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -62,6 +63,13 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	}
 	if err := doBackup(l.cfg); err != nil {
 		return false, err
+	}
+
+	if !SkipUpgrade(args, l.fw.currentInfo) {
+		err = doPreUpgrade(l.cfg)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	return true, DoUpgrade(l.cfg, l.fw.currentInfo)
@@ -142,4 +150,66 @@ func doBackup(cfg *Config) error {
 	}
 
 	return nil
+}
+
+// doPreUpgrade runs the pre-upgrade command defined by the application
+func doPreUpgrade(cfg *Config) error {
+	bin, err := cfg.CurrentBin()
+	preUpgradeCmd := exec.Command(bin, "pre-upgrade")
+
+	_, err = preUpgradeCmd.Output()
+
+	if err != nil {
+		if err.(*exec.ExitError).ProcessState.ExitCode() == 1 {
+			fmt.Println("pre-upgrade command does not exist. continuing the upgrade.")
+			return nil
+		}
+		if err.(*exec.ExitError).ProcessState.ExitCode() == 30 {
+			return fmt.Errorf("pre-upgrade command failed : %w", err)
+		}
+		if err.(*exec.ExitError).ProcessState.ExitCode() == 31 {
+			fmt.Println("pre-upgrade command failed. retrying.")
+			return doPreUpgrade(cfg)
+		}
+	}
+	fmt.Println("pre-upgrade successful. continuing the upgrade.")
+	return nil
+}
+
+// skipUpgrade checks if pre-upgrade script must be run. If the height in the upgrade plan matches any of the heights provided in --safe-skip-upgrade, the script is not run
+func SkipUpgrade(args []string, upgradeInfo UpgradeInfo) bool {
+	skipUpgradeHeights := UpgradeSkipHeights(args)
+	for _, h := range skipUpgradeHeights {
+		if h == int(upgradeInfo.Height) {
+			return true
+		}
+
+	}
+	return false
+}
+
+// UpgradeSkipHeights gets all the heights provided when
+// 		simd start --unsafe-skip-upgrades <height1> <optional_height_2> ... <optional_height_N>
+func UpgradeSkipHeights(args []string) []int {
+	var heights []int
+	for i, arg := range args {
+		if arg == "--unsafe-skip-upgrades" {
+			j := i + 1
+
+			for j < len(args) {
+				tArg := args[j]
+				if strings.HasPrefix(tArg, "-") {
+					break
+				}
+				h, err := strconv.Atoi(tArg)
+				if err == nil {
+					heights = append(heights, h)
+				}
+				j++
+			}
+
+			break
+		}
+	}
+	return heights
 }

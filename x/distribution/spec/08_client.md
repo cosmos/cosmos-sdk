@@ -4,9 +4,9 @@ order: 8
 
 # Client
 
-A user can query and interact with the `distribution` module using the CLI.
-
 ## CLI
+
+A user can query and interact with the `distribution` module using the CLI.
 
 ### Query
 

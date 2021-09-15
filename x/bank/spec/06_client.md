@@ -4,9 +4,9 @@ order: 6
 
 # Client
 
-A user can query and interact with the `bank` module using the CLI.
-
 ## CLI
+
+A user can query and interact with the `bank` module using the CLI.
 
 ### Query
 

@@ -328,7 +328,7 @@ test-cover:
 .PHONY: test-cover
 
 test-rosetta:
-	docker build -t rosetta-ci:latest -f contrib/rosetta/node/Dockerfile .
+	docker build -t rosetta-ci:latest -f contrib/rosetta/rosetta-ci/Dockerfile .
 	docker-compose -f contrib/rosetta/docker-compose.yaml up --abort-on-container-exit --exit-code-from test_rosetta --build
 .PHONY: test-rosetta
 
@@ -344,13 +344,18 @@ markdownLintImage=tmknom/markdownlint
 containerMarkdownLint=$(PROJECT_NAME)-markdownlint
 containerMarkdownLintFix=$(PROJECT_NAME)-markdownlint-fix
 
-lint:
-	golangci-lint run --out-format=tab
+golangci_lint_cmd=go run github.com/golangci/golangci-lint/cmd/golangci-lint
+
+lint: lint-go
 	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLint}$$"; then docker start -a $(containerMarkdownLint); else docker run --name $(containerMarkdownLint) -i -v "$(CURDIR):/work" $(markdownLintImage); fi
 
 lint-fix:
-	golangci-lint run --fix --out-format=tab --issues-exit-code=0
+	$(golangci_lint_cmd) run --fix --out-format=tab --issues-exit-code=0
 	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLintFix}$$"; then docker start -a $(containerMarkdownLintFix); else docker run --name $(containerMarkdownLintFix) -i -v "$(CURDIR):/work" $(markdownLintImage) . --fix; fi
+
+lint-go:
+	echo $(GIT_DIFF)
+	$(golangci_lint_cmd) run --out-format=tab $(GIT_DIFF)
 
 .PHONY: lint lint-fix
 
@@ -513,8 +518,8 @@ localnet-stop:
 # builds rosetta test data dir
 rosetta-data:
 	-docker container rm data_dir_build
-	docker build -t rosetta-ci:latest -f contrib/rosetta/node/Dockerfile .
+	docker build -t rosetta-ci:latest -f contrib/rosetta/rosetta-ci/Dockerfile .
 	docker run --name data_dir_build -t rosetta-ci:latest sh /rosetta/data.sh
-	docker cp data_dir_build:/tmp/data.tar.gz "$(CURDIR)/contrib/rosetta/node/data.tar.gz"
+	docker cp data_dir_build:/tmp/data.tar.gz "$(CURDIR)/contrib/rosetta/rosetta-ci/data.tar.gz"
 	docker container rm data_dir_build
 .PHONY: rosetta-data

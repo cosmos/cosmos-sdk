@@ -369,16 +369,19 @@ func DoTestReloadDB(t *testing.T, load Loader) {
 	dirname := t.TempDir()
 	db := load(t, dirname)
 
-	txn := db.Writer()
-	for i := 0; i < 100; i++ {
-		require.NoError(t, txn.Set(ikey(i), ival(i)))
-	}
-	require.NoError(t, txn.Commit())
-	first, err := db.SaveNextVersion()
-	require.NoError(t, err)
+	var firstVersions []uint64
 
-	txn = db.Writer()
-	for i := 0; i < 50; i++ { // overwrite some values
+	for i := 0; i < 10; i++ {
+		txn := db.Writer()
+		require.NoError(t, txn.Set(ikey(i), ival(i)))
+		require.NoError(t, txn.Commit())
+		ver, err := db.SaveNextVersion()
+		require.NoError(t, err)
+		firstVersions = append(firstVersions, ver)
+	}
+
+	txn := db.Writer()
+	for i := 0; i < 5; i++ { // overwrite some values
 		require.NoError(t, txn.Set(ikey(i), ival(i*10)))
 	}
 	require.NoError(t, txn.Commit())
@@ -386,45 +389,51 @@ func DoTestReloadDB(t *testing.T, load Loader) {
 	require.NoError(t, err)
 
 	txn = db.Writer()
-	for i := 100; i < 150; i++ {
-		require.NoError(t, txn.Set(ikey(i), ival(i)))
-	}
+	require.NoError(t, txn.Set(ikey(100), ival(100)))
 	require.NoError(t, txn.Commit())
-	db.Close()
 
 	// Reload and check each saved version
+	db.Close()
 	db = load(t, dirname)
 
-	view, err := db.ReaderAt(first)
+	// require.True(t, db.Versions().Equal(versions))
+	vset, err := db.Versions()
 	require.NoError(t, err)
-	for i := 0; i < 100; i++ {
-		v, err := view.Get(ikey(i))
-		require.NoError(t, err)
-		require.Equal(t, ival(i), v)
-	}
-	view.Discard()
+	require.Equal(t, last, vset.Last())
 
-	view, err = db.ReaderAt(last)
-	require.NoError(t, err)
-	for i := 0; i < 50; i++ {
-		v, err := view.Get(ikey(i))
-		require.NoError(t, err)
-		require.Equal(t, ival(i*10), v)
+	txn = db.Writer()
+	for i := 10; i < 15; i++ {
+		require.NoError(t, txn.Set(ikey(i), ival(i+10)))
 	}
-	for i := 50; i < 100; i++ {
+	require.NoError(t, txn.Commit())
+
+	for i := 0; i < 10; i++ {
+		view, err := db.ReaderAt(firstVersions[i])
+		require.NoError(t, err)
+		val, err := view.Get(ikey(i))
+		require.NoError(t, err)
+		require.Equal(t, ival(i), val)
+		view.Discard()
+	}
+
+	view, err := db.ReaderAt(last)
+	require.NoError(t, err)
+	for i := 0; i < 10; i++ {
 		v, err := view.Get(ikey(i))
 		require.NoError(t, err)
-		require.Equal(t, ival(i), v)
+		if i < 5 {
+			require.Equal(t, ival(i*10), v)
+		} else {
+			require.Equal(t, ival(i), v)
+		}
 	}
 	view.Discard()
 
 	// Load working version
 	view = db.Reader()
-	for i := 100; i < 150; i++ {
-		v, err := view.Get(ikey(i))
-		require.NoError(t, err)
-		require.Equal(t, ival(i), v)
-	}
+	val, err := view.Get(ikey(100))
+	require.NoError(t, err)
+	require.Equal(t, ival(100), val)
 	view.Discard()
 
 	require.NoError(t, db.Close())

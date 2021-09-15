@@ -59,7 +59,7 @@ func TestStakingMsgs(t *testing.T) {
 		},
 	}
 
-	app := simapp.SetupWithGenesisAccounts(accs, balances...)
+	app := simapp.SetupWithGenesisAccounts(t, accs, balances...)
 	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin})
 	simapp.CheckBalance(t, app, addr2, sdk.Coins{genCoin})
 

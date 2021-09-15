@@ -29,9 +29,13 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // MsgSend represents a message to send a nft from one account to another account.
 type MsgSend struct {
-	ClassId  string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
-	Id       string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
-	Sender   string `protobuf:"bytes,3,opt,name=sender,proto3" json:"sender,omitempty"`
+	// class_id defines the unique identifier of the nft classification, similar to the contract address of ERC721
+	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
+	// id defines the unique identification of nft
+	Id string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+	// sender is the address of the owner of nft
+	Sender string `protobuf:"bytes,3,opt,name=sender,proto3" json:"sender,omitempty"`
+	// receiver is the receiver address of nft
 	Receiver string `protobuf:"bytes,4,opt,name=receiver,proto3" json:"receiver,omitempty"`
 }
 

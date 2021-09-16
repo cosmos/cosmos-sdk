@@ -12,6 +12,4 @@ func isVersionCommand(args []string) bool {
 	return len(args) == 1 && strings.EqualFold(args[0], "version")
 }
 
-func printVersion() {
-	fmt.Println("Cosmovisor Version: ", Version)
-}
+func printVersion() { fmt.Println("Cosmovisor Version: ", Version) }

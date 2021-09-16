@@ -92,19 +92,27 @@ func TxTimeoutHeightMiddleware(txh txtypes.Handler) txtypes.Handler {
 	}
 }
 
-// CheckTx implements tx.Handler.CheckTx.
-func (txh txTimeoutHeightMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func checkTimeout(ctx context.Context, tx sdk.Tx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	timeoutTx, ok := tx.(TxWithTimeoutHeight)
 	if !ok {
-		return abci.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "expected tx to implement TxWithTimeoutHeight")
+		return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "expected tx to implement TxWithTimeoutHeight")
 	}
 
 	timeoutHeight := timeoutTx.GetTimeoutHeight()
 	if timeoutHeight > 0 && uint64(sdkCtx.BlockHeight()) > timeoutHeight {
-		return abci.ResponseCheckTx{}, sdkerrors.Wrapf(
+		return sdkerrors.Wrapf(
 			sdkerrors.ErrTxTimeoutHeight, "block height: %d, timeout height: %d", sdkCtx.BlockHeight(), timeoutHeight,
 		)
+	}
+
+	return nil
+}
+
+// CheckTx implements tx.Handler.CheckTx.
+func (txh txTimeoutHeightMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	if err := checkTimeout(ctx, tx); err != nil {
+		return abci.ResponseCheckTx{}, err
 	}
 
 	return txh.next.CheckTx(ctx, tx, req)
@@ -112,17 +120,8 @@ func (txh txTimeoutHeightMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req
 
 // DeliverTx implements tx.Handler.DeliverTx.
 func (txh txTimeoutHeightMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	timeoutTx, ok := tx.(TxWithTimeoutHeight)
-	if !ok {
-		return abci.ResponseDeliverTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "expected tx to implement TxWithTimeoutHeight")
-	}
-
-	timeoutHeight := timeoutTx.GetTimeoutHeight()
-	if timeoutHeight > 0 && uint64(sdkCtx.BlockHeight()) > timeoutHeight {
-		return abci.ResponseDeliverTx{}, sdkerrors.Wrapf(
-			sdkerrors.ErrTxTimeoutHeight, "block height: %d, timeout height: %d", sdkCtx.BlockHeight(), timeoutHeight,
-		)
+	if err := checkTimeout(ctx, tx); err != nil {
+		return abci.ResponseDeliverTx{}, err
 	}
 
 	return txh.next.DeliverTx(ctx, tx, req)
@@ -130,17 +129,8 @@ func (txh txTimeoutHeightMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, r
 
 // SimulateTx implements tx.Handler.SimulateTx.
 func (txh txTimeoutHeightMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req txtypes.RequestSimulateTx) (txtypes.ResponseSimulateTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	timeoutTx, ok := tx.(TxWithTimeoutHeight)
-	if !ok {
-		return txtypes.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "expected tx to implement TxWithTimeoutHeight")
-	}
-
-	timeoutHeight := timeoutTx.GetTimeoutHeight()
-	if timeoutHeight > 0 && uint64(sdkCtx.BlockHeight()) > timeoutHeight {
-		return txtypes.ResponseSimulateTx{}, sdkerrors.Wrapf(
-			sdkerrors.ErrTxTimeoutHeight, "block height: %d, timeout height: %d", sdkCtx.BlockHeight(), timeoutHeight,
-		)
+	if err := checkTimeout(ctx, tx); err != nil {
+		return txtypes.ResponseSimulateTx{}, err
 	}
 
 	return txh.next.SimulateTx(ctx, tx, req)
@@ -165,22 +155,30 @@ func ValidateMemoMiddleware(ak AccountKeeper) txtypes.Middleware {
 
 var _ txtypes.Handler = validateMemoMiddleware{}
 
-// CheckTx implements tx.Handler.CheckTx method.
-func (vmd validateMemoMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (vmd validateMemoMiddleware) checkForValidMemo(ctx context.Context, tx sdk.Tx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	memoTx, ok := tx.(sdk.TxWithMemo)
 	if !ok {
-		return abci.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+		return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
 	params := vmd.ak.GetParams(sdkCtx)
 
 	memoLength := len(memoTx.GetMemo())
 	if uint64(memoLength) > params.MaxMemoCharacters {
-		return abci.ResponseCheckTx{}, sdkerrors.Wrapf(sdkerrors.ErrMemoTooLarge,
+		return sdkerrors.Wrapf(sdkerrors.ErrMemoTooLarge,
 			"maximum number of characters is %d but received %d characters",
 			params.MaxMemoCharacters, memoLength,
 		)
+	}
+
+	return nil
+}
+
+// CheckTx implements tx.Handler.CheckTx method.
+func (vmd validateMemoMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	if err := vmd.checkForValidMemo(ctx, tx); err != nil {
+		return abci.ResponseCheckTx{}, err
 	}
 
 	return vmd.next.CheckTx(ctx, tx, req)
@@ -188,20 +186,8 @@ func (vmd validateMemoMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req ab
 
 // DeliverTx implements tx.Handler.DeliverTx method.
 func (vmd validateMemoMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	memoTx, ok := tx.(sdk.TxWithMemo)
-	if !ok {
-		return abci.ResponseDeliverTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
-	}
-
-	params := vmd.ak.GetParams(sdkCtx)
-
-	memoLength := len(memoTx.GetMemo())
-	if uint64(memoLength) > params.MaxMemoCharacters {
-		return abci.ResponseDeliverTx{}, sdkerrors.Wrapf(sdkerrors.ErrMemoTooLarge,
-			"maximum number of characters is %d but received %d characters",
-			params.MaxMemoCharacters, memoLength,
-		)
+	if err := vmd.checkForValidMemo(ctx, tx); err != nil {
+		return abci.ResponseDeliverTx{}, err
 	}
 
 	return vmd.next.DeliverTx(ctx, tx, req)
@@ -209,20 +195,8 @@ func (vmd validateMemoMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req 
 
 // SimulateTx implements tx.Handler.SimulateTx method.
 func (vmd validateMemoMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req txtypes.RequestSimulateTx) (txtypes.ResponseSimulateTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	memoTx, ok := tx.(sdk.TxWithMemo)
-	if !ok {
-		return txtypes.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
-	}
-
-	params := vmd.ak.GetParams(sdkCtx)
-
-	memoLength := len(memoTx.GetMemo())
-	if uint64(memoLength) > params.MaxMemoCharacters {
-		return txtypes.ResponseSimulateTx{}, sdkerrors.Wrapf(sdkerrors.ErrMemoTooLarge,
-			"maximum number of characters is %d but received %d characters",
-			params.MaxMemoCharacters, memoLength,
-		)
+	if err := vmd.checkForValidMemo(ctx, tx); err != nil {
+		return txtypes.ResponseSimulateTx{}, err
 	}
 
 	return vmd.next.SimulateTx(ctx, tx, req)

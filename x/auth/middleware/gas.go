@@ -51,10 +51,6 @@ func (txh gasTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.Reque
 	}
 
 	res, err := txh.next.DeliverTx(sdk.WrapSDKContext(sdkCtx), tx, req)
-	if err != nil {
-		return abci.ResponseDeliverTx{}, err
-	}
-
 	res.GasUsed = int64(sdkCtx.GasMeter().GasConsumed())
 	res.GasWanted = int64(sdkCtx.GasMeter().Limit())
 

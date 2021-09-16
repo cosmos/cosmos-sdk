@@ -101,13 +101,11 @@ func DeductFeeMiddleware(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKeepe
 	}
 }
 
-// CheckTx implements tx.Handler.CheckTx.
-func (dfd deductFeeMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (dfd deductFeeMiddleware) checkDeductFee(ctx context.Context, tx sdk.Tx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
-		return abci.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+		return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
 	if addr := dfd.accountKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {
@@ -124,12 +122,12 @@ func (dfd deductFeeMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.
 	// this works with only when feegrant enabled.
 	if feeGranter != nil {
 		if dfd.feegrantKeeper == nil {
-			return abci.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
 		} else if !feeGranter.Equals(feePayer) {
 			err := dfd.feegrantKeeper.UseGrantedFees(sdkCtx, feeGranter, feePayer, fee, tx.GetMsgs())
 
 			if err != nil {
-				return abci.ResponseCheckTx{}, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
+				return sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
 			}
 		}
 
@@ -138,14 +136,14 @@ func (dfd deductFeeMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.
 
 	deductFeesFromAcc := dfd.accountKeeper.GetAccount(sdkCtx, deductFeesFrom)
 	if deductFeesFromAcc == nil {
-		return abci.ResponseCheckTx{}, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
+		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
 	}
 
 	// deduct the fees
 	if !feeTx.GetFee().IsZero() {
 		err := DeductFees(dfd.bankKeeper, sdkCtx, deductFeesFromAcc, feeTx.GetFee())
 		if err != nil {
-			return abci.ResponseCheckTx{}, err
+			return err
 		}
 	}
 
@@ -153,119 +151,34 @@ func (dfd deductFeeMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.
 		sdk.NewAttribute(sdk.AttributeKeyFee, feeTx.GetFee().String()),
 	)}
 	sdkCtx.EventManager().EmitEvents(events)
+
+	return nil
+}
+
+// CheckTx implements tx.Handler.CheckTx.
+func (dfd deductFeeMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	if err := dfd.checkDeductFee(ctx, tx); err != nil {
+		return abci.ResponseCheckTx{}, err
+	}
 
 	return dfd.next.CheckTx(ctx, tx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
 func (dfd deductFeeMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	feeTx, ok := tx.(sdk.FeeTx)
-	if !ok {
-		return abci.ResponseDeliverTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+	if err := dfd.checkDeductFee(ctx, tx); err != nil {
+		return abci.ResponseDeliverTx{}, err
 	}
-
-	if addr := dfd.accountKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.FeeCollectorName))
-	}
-
-	fee := feeTx.GetFee()
-	feePayer := feeTx.FeePayer()
-	feeGranter := feeTx.FeeGranter()
-
-	deductFeesFrom := feePayer
-
-	// if feegranter set deduct fee from feegranter account.
-	// this works with only when feegrant enabled.
-	if feeGranter != nil {
-		if dfd.feegrantKeeper == nil {
-			return abci.ResponseDeliverTx{}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
-		} else if !feeGranter.Equals(feePayer) {
-			err := dfd.feegrantKeeper.UseGrantedFees(sdkCtx, feeGranter, feePayer, fee, tx.GetMsgs())
-
-			if err != nil {
-				return abci.ResponseDeliverTx{}, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
-			}
-		}
-
-		deductFeesFrom = feeGranter
-	}
-
-	deductFeesFromAcc := dfd.accountKeeper.GetAccount(sdkCtx, deductFeesFrom)
-	if deductFeesFromAcc == nil {
-		return abci.ResponseDeliverTx{}, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
-	}
-
-	// deduct the fees
-	if !feeTx.GetFee().IsZero() {
-		err := DeductFees(dfd.bankKeeper, sdkCtx, deductFeesFromAcc, feeTx.GetFee())
-		if err != nil {
-			return abci.ResponseDeliverTx{}, err
-		}
-	}
-
-	events := sdk.Events{sdk.NewEvent(sdk.EventTypeTx,
-		sdk.NewAttribute(sdk.AttributeKeyFee, feeTx.GetFee().String()),
-	)}
-	sdkCtx.EventManager().EmitEvents(events)
 
 	return dfd.next.DeliverTx(ctx, tx, req)
 }
 
-func (dfd deductFeeMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req txtypes.RequestSimulateTx) (txtypes.ResponseSimulateTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	feeTx, ok := tx.(sdk.FeeTx)
-	if !ok {
-		return txtypes.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+func (dfd deductFeeMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req txtypes.RequestSimulateTx) (txtypes.ResponseSimulateTx, error) {
+	if err := dfd.checkDeductFee(ctx, sdkTx); err != nil {
+		return txtypes.ResponseSimulateTx{}, err
 	}
 
-	if addr := dfd.accountKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.FeeCollectorName))
-	}
-
-	fee := feeTx.GetFee()
-	feePayer := feeTx.FeePayer()
-	feeGranter := feeTx.FeeGranter()
-
-	deductFeesFrom := feePayer
-
-	// if feegranter set deduct fee from feegranter account.
-	// this works with only when feegrant enabled.
-	if feeGranter != nil {
-		if dfd.feegrantKeeper == nil {
-			return txtypes.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
-		} else if !feeGranter.Equals(feePayer) {
-			err := dfd.feegrantKeeper.UseGrantedFees(sdkCtx, feeGranter, feePayer, fee, tx.GetMsgs())
-
-			if err != nil {
-				return txtypes.ResponseSimulateTx{}, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
-			}
-		}
-
-		deductFeesFrom = feeGranter
-	}
-
-	deductFeesFromAcc := dfd.accountKeeper.GetAccount(sdkCtx, deductFeesFrom)
-	if deductFeesFromAcc == nil {
-		return txtypes.ResponseSimulateTx{}, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
-	}
-
-	// deduct the fees
-	if !feeTx.GetFee().IsZero() {
-		err := DeductFees(dfd.bankKeeper, sdkCtx, deductFeesFromAcc, feeTx.GetFee())
-		if err != nil {
-			return txtypes.ResponseSimulateTx{}, err
-		}
-	}
-
-	events := sdk.Events{sdk.NewEvent(sdk.EventTypeTx,
-		sdk.NewAttribute(sdk.AttributeKeyFee, feeTx.GetFee().String()),
-	)}
-	sdkCtx.EventManager().EmitEvents(events)
-
-	return dfd.next.SimulateTx(ctx, tx, req)
+	return dfd.next.SimulateTx(ctx, sdkTx, req)
 }
 
 // DeductFees deducts fees from the given account.

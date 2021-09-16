@@ -280,28 +280,35 @@ func ValidateSigCountMiddleware(ak AccountKeeper) txtypes.Middleware {
 	}
 }
 
-// CheckTx implements tx.Handler.CheckTx.
-func (vscd validateSigCountMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (vscd validateSigCountMiddleware) checkSigCount(ctx context.Context, tx sdk.Tx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
-		return abci.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a sigTx")
+		return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a sigTx")
 	}
 
 	params := vscd.ak.GetParams(sdkCtx)
 	pubKeys, err := sigTx.GetPubKeys()
 	if err != nil {
-		return abci.ResponseCheckTx{}, err
+		return err
 	}
 
 	sigCount := 0
 	for _, pk := range pubKeys {
 		sigCount += CountSubKeys(pk)
 		if uint64(sigCount) > params.TxSigLimit {
-			return abci.ResponseCheckTx{}, sdkerrors.Wrapf(sdkerrors.ErrTooManySignatures,
+			return sdkerrors.Wrapf(sdkerrors.ErrTooManySignatures,
 				"signatures: %d, limit: %d", sigCount, params.TxSigLimit)
 		}
+	}
+	return nil
+}
+
+// CheckTx implements tx.Handler.CheckTx.
+func (vscd validateSigCountMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	if err := vscd.checkSigCount(ctx, tx); err != nil {
+		return abci.ResponseCheckTx{}, err
 	}
 
 	return vscd.next.CheckTx(ctx, tx, req)
@@ -309,26 +316,8 @@ func (vscd validateSigCountMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, r
 
 // DeliverTx implements tx.Handler.DeliverTx.
 func (vscd validateSigCountMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req txtypes.RequestSimulateTx) (txtypes.ResponseSimulateTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
-	if !ok {
-		return txtypes.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a sigTx")
-	}
-
-	params := vscd.ak.GetParams(sdkCtx)
-	pubKeys, err := sigTx.GetPubKeys()
-	if err != nil {
+	if err := vscd.checkSigCount(ctx, tx); err != nil {
 		return txtypes.ResponseSimulateTx{}, err
-	}
-
-	sigCount := 0
-	for _, pk := range pubKeys {
-		sigCount += CountSubKeys(pk)
-		if uint64(sigCount) > params.TxSigLimit {
-			return txtypes.ResponseSimulateTx{}, sdkerrors.Wrapf(sdkerrors.ErrTooManySignatures,
-				"signatures: %d, limit: %d", sigCount, params.TxSigLimit)
-		}
 	}
 
 	return vscd.next.SimulateTx(ctx, tx, req)
@@ -336,26 +325,8 @@ func (vscd validateSigCountMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx
 
 // SimulateTx implements tx.Handler.SimulateTx.
 func (vscd validateSigCountMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
-	if !ok {
-		return abci.ResponseDeliverTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a sigTx")
-	}
-
-	params := vscd.ak.GetParams(sdkCtx)
-	pubKeys, err := sigTx.GetPubKeys()
-	if err != nil {
+	if err := vscd.checkSigCount(ctx, tx); err != nil {
 		return abci.ResponseDeliverTx{}, err
-	}
-
-	sigCount := 0
-	for _, pk := range pubKeys {
-		sigCount += CountSubKeys(pk)
-		if uint64(sigCount) > params.TxSigLimit {
-			return abci.ResponseDeliverTx{}, sdkerrors.Wrapf(sdkerrors.ErrTooManySignatures,
-				"signatures: %d, limit: %d", sigCount, params.TxSigLimit)
-		}
 	}
 
 	return vscd.next.DeliverTx(ctx, tx, req)

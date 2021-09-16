@@ -82,7 +82,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, args, reply 
 		ctx = ctx.WithHeight(height)
 	}
 
-	req := abci.RequestQuery{
+	abciReq := abci.RequestQuery{
 		Path:   method,
 		Data:   reqBz,
 		Height: ctx.Height,

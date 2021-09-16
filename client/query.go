@@ -48,11 +48,11 @@ func (ctx Context) QueryStore(key []byte, storeName string) ([]byte, int64, erro
 	return ctx.queryStore(key, storeName, "key")
 }
 
-// QueryABCI performs a query to a CometBFT node with the provide RequestQuery.
+// QueryABCI performs a query to a Tendermint node with the provide RequestQuery.
 // It returns the ResultQuery obtained from the query. The height used to perform
 // the query is the RequestQuery Height if it is non-zero, otherwise the context
 // height is used.
-func (ctx Context) QueryABCI(req abci.QueryRequest) (abci.QueryResponse, error) {
+func (ctx Context) QueryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) {
 	return ctx.queryABCI(req)
 }
 
@@ -65,6 +65,14 @@ func (ctx Context) queryABCI(req abci.QueryRequest) (abci.QueryResponse, error) 
 	node, err := ctx.GetNode()
 	if err != nil {
 		return abci.QueryResponse{}, err
+	}
+
+	var queryHeight int64
+	if req.Height != 0 {
+		queryHeight = req.Height
+	} else {
+		// fallback on the context height
+		queryHeight = ctx.Height
 	}
 
 	var queryHeight int64

@@ -76,7 +76,8 @@ func NewClient(cfg *Config) (*Client, error) {
 
 	supportedOperations = append(
 		supportedOperations,
-		bank.EventTypeCoinSpent, bank.EventTypeCoinReceived,
+		bank.EventTypeCoinSpent,
+		bank.EventTypeCoinReceived,
 		bank.EventTypeCoinBurn,
 	)
 

@@ -9,7 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-func (s *MWTestSuite) TestRejectExtensionOptionsDecorator() {
+func (s *MWTestSuite) TestRejectExtensionOptionsMiddleware() {
 	ctx := s.SetupTest(true) // setup
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
@@ -22,7 +22,7 @@ func (s *MWTestSuite) TestRejectExtensionOptionsDecorator() {
 
 	extOptsTxBldr, ok := txBuilder.(tx.ExtensionOptionsTxBuilder)
 	if !ok {
-		// if we can't set extension options, this decorator doesn't apply and we're done
+		// if we can't set extension options, this middleware doesn't apply and we're done
 		return
 	}
 

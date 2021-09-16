@@ -151,7 +151,7 @@ func (suite *MWTestSuite) TestDeductFeesNoDelegation() {
 			tx, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
 			suite.Require().NoError(err)
 
-			// tests only feegrant ante
+			// tests only feegrant middleware
 			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, abci.RequestDeliverTx{})
 			if tc.valid {
 				suite.Require().NoError(err)

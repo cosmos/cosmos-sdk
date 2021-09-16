@@ -42,20 +42,20 @@ func (suite *MWTestSuite) TestValidateBasic() {
 	suite.Require().NoError(err)
 
 	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), validTx, types.RequestDeliverTx{})
-	suite.Require().Nil(err, "ValidateBasicDecorator returned error on valid tx. err: %v", err)
+	suite.Require().Nil(err, "ValidateBasicMiddleware returned error on valid tx. err: %v", err)
 
-	// test decorator skips on recheck
+	// test middleware skips on recheck
 	ctx = ctx.WithIsReCheckTx(true)
 
-	// decorator should skip processing invalidTx on recheck and thus return nil-error
+	// middleware should skip processing invalidTx on recheck and thus return nil-error
 	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), invalidTx, types.RequestDeliverTx{})
-	suite.Require().Nil(err, "ValidateBasicDecorator ran on ReCheck")
+	suite.Require().Nil(err, "ValidateBasicMiddleware ran on ReCheck")
 }
 
 func (suite *MWTestSuite) TestValidateMemo() {
 	ctx := suite.SetupTest(true) // setup
 	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
-	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.ValidateMemoDecorator(suite.app.AccountKeeper))
+	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.ValidateMemoMiddleware(suite.app.AccountKeeper))
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -82,9 +82,9 @@ func (suite *MWTestSuite) TestValidateMemo() {
 	validTx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 	suite.Require().NoError(err)
 
-	// require small memos pass ValidateMemo Decorator
+	// require small memos pass ValidateMemo middleware
 	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), validTx, types.RequestDeliverTx{})
-	suite.Require().Nil(err, "ValidateBasicDecorator returned error on valid tx. err: %v", err)
+	suite.Require().Nil(err, "ValidateBasicMiddleware returned error on valid tx. err: %v", err)
 }
 
 func (suite *MWTestSuite) TestConsumeGasForTxSize() {
@@ -139,13 +139,13 @@ func (suite *MWTestSuite) TestConsumeGasForTxSize() {
 			beforeGas = ctx.GasMeter().GasConsumed()
 			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, types.RequestDeliverTx{})
 
-			suite.Require().Nil(err, "ConsumeTxSizeGasDecorator returned error: %v", err)
+			suite.Require().Nil(err, "ConsumeTxSizeGasMiddleware returned error: %v", err)
 
-			// require that decorator consumes expected amount of gas
+			// require that middleware consumes expected amount of gas
 			consumedGas := ctx.GasMeter().GasConsumed() - beforeGas
-			suite.Require().Equal(expectedGas, consumedGas, "Decorator did not consume the correct amount of gas")
+			suite.Require().Equal(expectedGas, consumedGas, "Middleware did not consume the correct amount of gas")
 
-			// simulation must not underestimate gas of this decorator even with nil signatures
+			// simulation must not underestimate gas of this middleware even with nil signatures
 			txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
 			suite.Require().NoError(err)
 			suite.Require().NoError(txBuilder.SetSignatures(tc.sigV2))
@@ -165,9 +165,9 @@ func (suite *MWTestSuite) TestConsumeGasForTxSize() {
 			_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), tx, txtypes.RequestSimulateTx{})
 			consumedSimGas := ctx.GasMeter().GasConsumed() - beforeSimGas
 
-			// require that antehandler passes and does not underestimate decorator cost
-			suite.Require().Nil(err, "ConsumeTxSizeGasDecorator returned error: %v", err)
-			suite.Require().True(consumedSimGas >= expectedGas, "Simulate mode underestimates gas on AnteDecorator. Simulated cost: %d, expected cost: %d", consumedSimGas, expectedGas)
+			// require that antehandler passes and does not underestimate middleware cost
+			suite.Require().Nil(err, "ConsumeTxSizeGasMiddleware returned error: %v", err)
+			suite.Require().True(consumedSimGas >= expectedGas, "Simulate mode underestimates gas on Middleware. Simulated cost: %d, expected cost: %d", consumedSimGas, expectedGas)
 		})
 	}
 }

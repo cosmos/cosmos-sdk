@@ -264,7 +264,7 @@ func (spkd setPubKeyMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req t
 
 // validateSigCountMiddleware takes in Params and returns errors if there are too many signatures in the tx for the given params
 // otherwise it calls next AnteHandler
-// Use this decorator to set parameterized limit on number of signatures in tx
+// Use this middleware to set parameterized limit on number of signatures in tx
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type validateSigCountMiddleware struct {
 	ak   AccountKeeper
@@ -427,7 +427,7 @@ func ConsumeMultisignatureVerificationGas(
 
 // Consume parameter-defined amount of gas for each signature according to the passed-in SignatureVerificationGasConsumer function
 // before calling the next AnteHandler
-// CONTRACT: Pubkeys are set in context for all signers before this decorator runs
+// CONTRACT: Pubkeys are set in context for all signers before this middleware runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type sigGasConsumeMiddleware struct {
 	ak             AccountKeeper
@@ -574,7 +574,7 @@ func (sgcd sigGasConsumeMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, r
 // Verify all signatures for a tx and return an error if any are invalid. Note,
 // the sigVerificationMiddleware middleware will not get executed on ReCheck.
 //
-// CONTRACT: Pubkeys are set in context for all signers before this decorator runs
+// CONTRACT: Pubkeys are set in context for all signers before this middleware runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type sigVerificationMiddleware struct {
 	ak              AccountKeeper
@@ -596,7 +596,7 @@ func SigVerificationMiddleware(ak AccountKeeper, signModeHandler authsigning.Sig
 // signers are using SIGN_MODE_LEGACY_AMINO_JSON. If this is the case
 // then the corresponding SignatureV2 struct will not have account sequence
 // explicitly set, and we should skip the explicit verification of sig.Sequence
-// in the SigVerificationDecorator's AnteHandler function.
+// in the SigVerificationMiddleware's AnteHandler function.
 func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	switch v := sigData.(type) {
 	case *signing.SingleSignatureData:
@@ -818,7 +818,7 @@ func (svd sigVerificationMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, 
 }
 
 // incrementSequenceMiddleware handles incrementing sequences of all signers.
-// Use the incrementSequenceMiddleware decorator to prevent replay attacks. Note,
+// Use the incrementSequenceMiddleware middleware to prevent replay attacks. Note,
 // there is no need to execute incrementSequenceMiddleware on RecheckTX since
 // CheckTx would already bump the sequence number.
 //

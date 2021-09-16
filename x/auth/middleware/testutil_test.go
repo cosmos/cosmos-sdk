@@ -71,7 +71,7 @@ func (s *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 		middleware.MempoolFeeMiddleware,
 		middleware.ValidateBasicMiddleware,
 		middleware.TxTimeoutHeightMiddleware,
-		middleware.ValidateMemoDecorator(s.app.AccountKeeper),
+		middleware.ValidateMemoMiddleware(s.app.AccountKeeper),
 		middleware.ConsumeTxSizeGasMiddleware(s.app.AccountKeeper),
 		middleware.DeductFeeMiddleware(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper),
 		middleware.SetPubKeyMiddleware(s.app.AccountKeeper),
@@ -168,8 +168,8 @@ func (s *MWTestSuite) RunTestCase(ctx sdk.Context, txBuilder client.TxBuilder, p
 		txBuilder.SetFeeAmount(feeAmount)
 		txBuilder.SetGasLimit(gasLimit)
 
-		// Theoretically speaking, ante handler unit tests should only test
-		// ante handlers, but here we sometimes also test the tx creation
+		// Theoretically speaking, middleware unit tests should only test
+		// middlewares, but here we sometimes also test the tx creation
 		// process.
 		tx, _, txErr := s.createTestTx(txBuilder, privs, accNums, accSeqs, chainID)
 		newCtx, anteErr := s.txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, types.RequestDeliverTx{})
@@ -178,8 +178,6 @@ func (s *MWTestSuite) RunTestCase(ctx sdk.Context, txBuilder client.TxBuilder, p
 			s.Require().NoError(txErr)
 			s.Require().NoError(anteErr)
 			s.Require().NotNil(newCtx)
-
-			// s.ctx = newCtx
 		} else {
 			switch {
 			case txErr != nil:

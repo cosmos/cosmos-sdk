@@ -876,8 +876,8 @@ func (suite *MWTestSuite) TestAnteHandlerSetPubKey() {
 		{
 			"make sure previous public key has been set after wrong signature",
 			func() {
-				// Make sure public key has been set, as SetPubKeyDecorator
-				// is called before all signature verification decorators.
+				// Make sure public key has been set, as SetPubKeyMiddleware
+				// is called before all signature verification middlewares.
 				acc1 := suite.app.AccountKeeper.GetAccount(ctx, accounts[1].acc.GetAddress())
 				suite.Require().Equal(acc1.GetPubKey(), accounts[1].priv.PubKey())
 			},
@@ -1089,8 +1089,8 @@ func (suite *MWTestSuite) TestAnteHandlerReCheck() {
 	tx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 	suite.Require().NoError(err)
 
-	// make signature array empty which would normally cause ValidateBasicDecorator and SigVerificationDecorator fail
-	// since these decorators don't run on recheck, the tx should pass the antehandler
+	// make signature array empty which would normally cause ValidateBasicMiddleware and SigVerificationMiddleware fail
+	// since these middlewares don't run on recheck, the tx should pass the middleware
 	txBuilder, err = suite.clientCtx.TxConfig.WrapTxBuilder(tx)
 	suite.Require().NoError(err)
 	suite.Require().NoError(txBuilder.SetSignatures())

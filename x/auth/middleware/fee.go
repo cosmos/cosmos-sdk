@@ -16,12 +16,12 @@ import (
 
 var _ txtypes.Handler = mempoolFeeMiddleware{}
 
-// MempoolFeeDecorator will check if the transaction's fee is at least as large
+// MempoolFeeMiddleware will check if the transaction's fee is at least as large
 // as the local validator's minimum gasFee (defined in validator config).
-// If fee is too low, decorator returns error and tx is rejected from mempool.
+// If fee is too low, middleware returns error and tx is rejected from mempool.
 // Note this only applies when ctx.CheckTx = true
 // If fee is high enough or not CheckTx, then call next AnteHandler
-// CONTRACT: Tx must implement FeeTx to use MempoolFeeDecorator
+// CONTRACT: Tx must implement FeeTx to use MempoolFeeMiddleware
 type mempoolFeeMiddleware struct {
 	next txtypes.Handler
 }

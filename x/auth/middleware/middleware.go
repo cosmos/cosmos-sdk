@@ -51,15 +51,15 @@ type TxHandlerOptions struct {
 func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 	// TODO:
 	// if options.AccountKeeper == nil {
-	// 	return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "account keeper is required for ante builder")
+	// 	return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "account keeper is required for compose middlewares")
 	// }
 
 	// if options.BankKeeper == nil {
-	// 	return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "bank keeper is required for ante builder")
+	// 	return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "bank keeper is required for compose middlewares")
 	// }
 
 	// if options.SignModeHandler == nil {
-	// 	return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "sign mode handler is required for ante builder")
+	// 	return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "sign mode handler is required for compose middlewares")
 	// }
 
 	var sigGasConsumer = options.SigGasConsumer
@@ -87,7 +87,7 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		MempoolFeeMiddleware,
 		ValidateBasicMiddleware,
 		TxTimeoutHeightMiddleware,
-		ValidateMemoDecorator(options.AccountKeeper),
+		ValidateMemoMiddleware(options.AccountKeeper),
 		ConsumeTxSizeGasMiddleware(options.AccountKeeper),
 		DeductFeeMiddleware(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),
 		SetPubKeyMiddleware(options.AccountKeeper),

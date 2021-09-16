@@ -70,7 +70,7 @@ func (s *MWTestSuite) TestSetup() {
 			if tc.expErr {
 				s.Require().EqualError(err, tc.errorStr)
 			} else {
-				s.Require().Nil(err, "SetUpContextDecorator returned error")
+				s.Require().Nil(err, "SetUpContextMiddleware returned error")
 				s.Require().Equal(tc.expGasLimit, uint64(res.GasWanted))
 			}
 		})

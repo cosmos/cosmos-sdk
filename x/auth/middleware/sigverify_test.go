@@ -58,7 +58,7 @@ func (suite *MWTestSuite) TestSetPubKey() {
 	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, abci.RequestDeliverTx{})
 	require.NoError(err)
 
-	// Require that all accounts have pubkey set after Decorator runs
+	// Require that all accounts have pubkey set after middleware runs
 	for i, addr := range addrs {
 		pk, err := suite.app.AccountKeeper.GetPubKey(ctx, addr)
 		require.NoError(err, "Error on retrieving pubkey from account")
@@ -292,17 +292,17 @@ func (suite *MWTestSuite) TestSigIntegration() {
 
 	params := types.DefaultParams()
 	initialSigCost := params.SigVerifyCostSecp256k1
-	initialCost, err := suite.runSigDecorators(params, false, privs...)
+	initialCost, err := suite.runSigMiddlewares(params, false, privs...)
 	suite.Require().Nil(err)
 
 	params.SigVerifyCostSecp256k1 *= 2
-	doubleCost, err := suite.runSigDecorators(params, false, privs...)
+	doubleCost, err := suite.runSigMiddlewares(params, false, privs...)
 	suite.Require().Nil(err)
 
 	suite.Require().Equal(initialSigCost*uint64(len(privs)), doubleCost-initialCost)
 }
 
-func (suite *MWTestSuite) runSigDecorators(params types.Params, _ bool, privs ...cryptotypes.PrivKey) (sdk.Gas, error) {
+func (suite *MWTestSuite) runSigMiddlewares(params types.Params, _ bool, privs ...cryptotypes.PrivKey) (sdk.Gas, error) {
 	ctx := suite.SetupTest(true) // setup
 	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -351,7 +351,7 @@ func (suite *MWTestSuite) runSigDecorators(params types.Params, _ bool, privs ..
 	return after - before, err
 }
 
-func (suite *MWTestSuite) TestIncrementSequenceDecorator() {
+func (suite *MWTestSuite) TestIncrementSequenceMiddleware() {
 	ctx := suite.SetupTest(true) // setup
 	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
 

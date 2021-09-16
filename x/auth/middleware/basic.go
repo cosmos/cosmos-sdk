@@ -15,7 +15,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-// ValidateBasicDecorator will call tx.ValidateBasic, msg.ValidateBasic(for each msg inside tx)
+// ValidateBasicMiddleware will call tx.ValidateBasic, msg.ValidateBasic(for each msg inside tx)
 // and return any non-nil error.
 // If ValidateBasic passes, middleware calls next middleware in chain. Note,
 // validateBasicMiddleware will not get executed on ReCheckTx since it
@@ -69,14 +69,14 @@ func (basic validateBasicMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, 
 var _ txtypes.Handler = txTimeoutHeightMiddleware{}
 
 type (
-	// TxTimeoutHeightMiddleware defines an AnteHandler decorator that checks for a
+	// TxTimeoutHeightMiddleware defines a middleware that checks for a
 	// tx height timeout.
 	txTimeoutHeightMiddleware struct {
 		next txtypes.Handler
 	}
 
 	// TxWithTimeoutHeight defines the interface a tx must implement in order for
-	// TxHeightTimeoutDecorator to process the tx.
+	// TxHeightTimeoutMiddleware to process the tx.
 	TxWithTimeoutHeight interface {
 		sdk.Tx
 
@@ -84,7 +84,7 @@ type (
 	}
 )
 
-// TxTimeoutHeightMiddleware defines an AnteHandler decorator that checks for a
+// TxTimeoutHeightMiddleware defines a middleware that checks for a
 // tx height timeout.
 func TxTimeoutHeightMiddleware(txh txtypes.Handler) txtypes.Handler {
 	return txTimeoutHeightMiddleware{
@@ -154,7 +154,7 @@ type validateMemoMiddleware struct {
 	next txtypes.Handler
 }
 
-func ValidateMemoDecorator(ak AccountKeeper) txtypes.Middleware {
+func ValidateMemoMiddleware(ak AccountKeeper) txtypes.Middleware {
 	return func(txHandler txtypes.Handler) txtypes.Handler {
 		return validateMemoMiddleware{
 			ak:   ak,
@@ -237,7 +237,7 @@ var _ txtypes.Handler = consumeTxSizeGasMiddleware{}
 //
 // CONTRACT: If simulate=true, then signatures must either be completely filled
 // in or empty.
-// CONTRACT: To use this decorator, signatures of transaction must be represented
+// CONTRACT: To use this middleware, signatures of transaction must be represented
 // as legacytx.StdSignature otherwise simulate mode will incorrectly estimate gas cost.
 type consumeTxSizeGasMiddleware struct {
 	ak   AccountKeeper

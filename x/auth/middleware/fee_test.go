@@ -37,18 +37,18 @@ func (suite *MWTestSuite) TestEnsureMempoolFees() {
 
 	// antehandler errors with insufficient fees
 	_, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{})
-	suite.Require().NotNil(err, "Decorator should have errored on too low fee for local gasPrice")
+	suite.Require().NotNil(err, "Middleware should have errored on too low fee for local gasPrice")
 
 	// antehandler should not error since we do not check minGasPrice in DeliverTx
 	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, abci.RequestDeliverTx{})
-	suite.Require().Nil(err, "MempoolFeeDecorator returned error in DeliverTx")
+	suite.Require().Nil(err, "MempoolFeeMiddleware returned error in DeliverTx")
 
 	atomPrice = sdk.NewDecCoinFromDec("atom", sdk.NewDec(0).Quo(sdk.NewDec(100000)))
 	lowGasPrice := []sdk.DecCoin{atomPrice}
 	ctx = ctx.WithMinGasPrices(lowGasPrice)
 
 	_, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{})
-	suite.Require().Nil(err, "Decorator should not have errored on fee higher than local gasPrice")
+	suite.Require().Nil(err, "Middleware should not have errored on fee higher than local gasPrice")
 }
 
 func (suite *MWTestSuite) TestDeductFees() {

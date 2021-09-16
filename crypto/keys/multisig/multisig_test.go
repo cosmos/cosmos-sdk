@@ -453,3 +453,30 @@ func TestAminoUnmarshalJSON(t *testing.T) {
 		require.NoError(t, err)
 	}
 }
+
+func TestProtoMarshalJSON(t *testing.T) {
+	require := require.New(t)
+	pubkeys := generatePubKeys(3)
+	msig := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
+
+	registry := types.NewInterfaceRegistry()
+	cryptocodec.RegisterInterfaces(registry)
+	cdc := codec.NewProtoCodec(registry)
+
+	bz, err := cdc.MarshalInterfaceJSON(msig)
+	require.NoError(err)
+
+	var pk2 cryptotypes.PubKey
+	err = cdc.UnmarshalInterfaceJSON(bz, &pk2)
+	require.NoError(err)
+	require.True(pk2.Equals(msig))
+
+	// Test that we can correctly unmarshal key from keyring output
+
+	for _, key := range pk.(*kmultisig.LegacyAminoPubKey).PubKeys {
+		require.NotNil(t, key)
+		pk := secp256k1.PubKey{}
+		err := pk.Unmarshal(key.Value)
+		require.NoError(t, err)
+	}
+}

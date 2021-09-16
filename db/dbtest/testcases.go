@@ -246,6 +246,7 @@ func DoTestVersioning(t *testing.T, load Loader) {
 	require.NoError(t, err)
 	has, err := view.Has([]byte("2"))
 	require.False(t, has)
+	view.Discard()
 
 	view, err = db.ReaderAt(v2)
 	require.NoError(t, err)
@@ -258,13 +259,14 @@ func DoTestVersioning(t *testing.T, load Loader) {
 	require.NoError(t, err)
 	has, err = view.Has([]byte("1"))
 	require.False(t, has)
+	view.Discard()
 
-	// Try to read an invalid version
+	// Fail to read a nonexistent version
 	view, err = db.ReaderAt(versions.Last() + 1)
 	require.Equal(t, dbm.ErrVersionDoesNotExist, err)
 
+	// Fail to read a deleted version
 	require.NoError(t, db.DeleteVersion(v2))
-	// Try to read a deleted version
 	view, err = db.ReaderAt(v2)
 	require.Equal(t, dbm.ErrVersionDoesNotExist, err)
 
@@ -282,6 +284,14 @@ func DoTestVersioning(t *testing.T, load Loader) {
 		require.Equal(t, ver, versions.Last())
 		prev = ver
 	}
+
+	// Open multiple readers for the same past version
+	view, err = db.ReaderAt(v3)
+	require.NoError(t, err)
+	view2, err := db.ReaderAt(v3)
+	require.NoError(t, err)
+	view.Discard()
+	view2.Discard()
 
 	require.NoError(t, db.Close())
 }

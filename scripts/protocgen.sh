@@ -8,7 +8,7 @@ protoc_gen_gocosmos() {
     return 1
   fi
 
-  go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos@latest 2>/dev/null
+  go get github.com/cosmos/cosmos-proto/protoc-gen-gocosmos@latest 2>/dev/null
 }
 
 protoc_gen_gocosmos
@@ -35,7 +35,7 @@ buf protoc \
 go mod tidy
 
 # generate codec/testdata proto code
-buf protoc -I "proto" -I "third_party/proto" -I "testutil/testdata" --gocosmos_out=plugins=grpc,\
+buf protoc -I "proto" -I "third_party/proto" -I "testutil/testdata" --gocosmos_out=plugins=interfacetype+grpc,\
 Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. ./testutil/testdata/*.proto
 
 # move proto files to the right places

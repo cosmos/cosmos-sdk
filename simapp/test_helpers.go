@@ -11,6 +11,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -21,8 +22,12 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	"github.com/cosmos/cosmos-sdk/simapp/params"
+	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -50,6 +55,17 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 	},
 }
 
+// SetupOptions defines arguments that are passed into `Simapp` constructor.
+type SetupOptions struct {
+	Logger             log.Logger
+	DB                 *dbm.MemDB
+	InvCheckPeriod     uint
+	HomePath           string
+	SkipUpgradeHeights map[int64]bool
+	EncConfig          params.EncodingConfig
+	AppOpts            types.AppOptions
+}
+
 func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeTestEncodingConfig()
@@ -58,6 +74,47 @@ func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 		return app, NewDefaultGenesisState(encCdc.Codec)
 	}
 	return app, GenesisState{}
+}
+
+// NewSimappWithCustomOptions initializes a new SimApp with custom options.
+func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions) *SimApp {
+	t.Helper()
+
+	privVal := mock.NewPV()
+	pubKey, err := privVal.GetPubKey()
+	require.NoError(t, err)
+	// create validator set with single validator
+	validator := tmtypes.NewValidator(pubKey, 1)
+	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+
+	// generate genesis account
+	senderPrivKey := secp256k1.GenPrivKey()
+	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	balance := banktypes.Balance{
+		Address: acc.GetAddress().String(),
+		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
+	}
+
+	app := NewSimApp(options.Logger, options.DB, nil, true, options.SkipUpgradeHeights, options.HomePath, options.InvCheckPeriod, options.EncConfig, options.AppOpts)
+	genesisState := NewDefaultGenesisState(app.appCodec)
+	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
+
+	if !isCheckTx {
+		// init chain must be called to stop deliverState from being nil
+		stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
+		require.NoError(t, err)
+
+		// Initialize the chain
+		app.InitChain(
+			abci.RequestInitChain{
+				Validators:      []abci.ValidatorUpdate{},
+				ConsensusParams: DefaultConsensusParams,
+				AppStateBytes:   stateBytes,
+			},
+		)
+	}
+
+	return app
 }
 
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
@@ -83,12 +140,10 @@ func Setup(t *testing.T, isCheckTx bool) *SimApp {
 	return app
 }
 
-// SetupWithGenesisValSet initializes a new SimApp with a validator set and genesis accounts
-// that also act as delegators. For simplicity, each validator is bonded with a delegation
-// of one consensus engine unit (10^6) in the default token of the simapp from first genesis
-// account. A Nop logger is set in SimApp.
-func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
-	app, genesisState := setup(true, 5)
+func genesisStateWithValSet(t *testing.T,
+	app *SimApp, genesisState GenesisState,
+	valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount,
+	balances ...banktypes.Balance) GenesisState {
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
@@ -96,7 +151,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	validators := make([]stakingtypes.Validator, 0, len(valSet.Validators))
 	delegations := make([]stakingtypes.Delegation, 0, len(valSet.Validators))
 
-	bondAmt := sdk.NewInt(1000000)
+	bondAmt := sdk.DefaultPowerReduction
 
 	for _, val := range valSet.Validators {
 		pk, err := cryptocodec.FromTmPubKeyInterface(val.PubKey)
@@ -140,6 +195,19 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{})
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 
+	return genesisState
+}
+
+// SetupWithGenesisValSet initializes a new SimApp with a validator set and genesis accounts
+// that also act as delegators. For simplicity, each validator is bonded with a delegation
+// of one consensus engine unit in the default token of the simapp from first genesis
+// account. A Nop logger is set in SimApp.
+func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
+	t.Helper()
+
+	app, genesisState := setup(true, 5)
+	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, genAccs, balances...)
+
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	require.NoError(t, err)
 
@@ -166,7 +234,9 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 
 // SetupWithGenesisAccounts initializes a new SimApp with the provided genesis
 // accounts and possible balances.
-func SetupWithGenesisAccounts(genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
+func SetupWithGenesisAccounts(t *testing.T, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
+	t.Helper()
+
 	app, genesisState := setup(true, 0)
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
@@ -180,9 +250,7 @@ func SetupWithGenesisAccounts(genAccs []authtypes.GenesisAccount, balances ...ba
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 
 	app.InitChain(
 		abci.RequestInitChain{

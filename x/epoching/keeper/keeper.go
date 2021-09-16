@@ -98,7 +98,6 @@ func (k Keeper) GetEpochMsg(ctx sdk.Context, epochNumber int64, actionID uint64)
 	}
 
 	var action sdk.Msg
-	// reference from TestMarshalAny(t *testing.T)
 	k.cdc.UnmarshalInterface(bz, &action)
 
 	return action
@@ -112,7 +111,6 @@ func (k Keeper) GetEpochActions(ctx sdk.Context) []sdk.Msg {
 	for ; iterator.Valid(); iterator.Next() {
 		var action sdk.Msg
 		bz := iterator.Value()
-		// reference from TestMarshalAny(t *testing.T)
 		k.cdc.UnmarshalInterface(bz, &action)
 		actions = append(actions, action)
 	}
@@ -129,6 +127,7 @@ func (k Keeper) GetEpochActionsIterator(ctx sdk.Context) db.Iterator {
 func (k Keeper) DequeueEpochActions(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, []byte(EpochActionQueuePrefix))
+	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
 		key := iterator.Key()
@@ -147,7 +146,6 @@ func (k Keeper) GetEpochActionByIterator(iterator db.Iterator) sdk.Msg {
 	bz := iterator.Value()
 
 	var action sdk.Msg
-	// reference from TestMarshalAny(t *testing.T)
 	k.cdc.UnmarshalInterface(bz, &action)
 
 	return action
@@ -165,7 +163,6 @@ func (k Keeper) GetEpochNumber(ctx sdk.Context) int64 {
 
 	bz := store.Get(EpochNumberID)
 	if bz == nil {
-		// return default EpochNumber 0
 		return DefaultEpochNumber
 	}
 
@@ -188,7 +185,6 @@ func (k Keeper) GetNextEpochHeight(ctx sdk.Context, epochInterval int64) int64 {
 func (k Keeper) GetNextEpochTime(ctx sdk.Context, epochInterval int64) time.Time {
 	currentTime := ctx.BlockTime()
 	currentHeight := ctx.BlockHeight()
-	// cp := baseapp.GetConsensusParams(ctx)
 
 	return currentTime.Add(k.commitTimeout * time.Duration(k.GetNextEpochHeight(ctx, epochInterval)-currentHeight))
 }

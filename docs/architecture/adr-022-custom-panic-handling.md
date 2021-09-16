@@ -3,6 +3,11 @@
 ## Changelog
 
 - 2020 Apr 24: Initial Draft
+- 2021 Sep 14: Superseded by ADR-045
+
+## Status
+
+SUPERSEDED by ADR-045
 
 ## Context
 

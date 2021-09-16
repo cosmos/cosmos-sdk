@@ -125,25 +125,28 @@ Examples:
 					return err
 				}
 
-				if periodClock > 0 && periodLimit != nil {
-					periodReset := getPeriodReset(periodClock)
-					if exp != "" && periodReset.Sub(expiresAtTime) > 0 {
-						return fmt.Errorf("period(%d) cannot reset after expiration(%v)", periodClock, exp)
-					}
-
-					periodic := feegrant.PeriodicAllowance{
-						Basic:            basic,
-						Period:           getPeriod(periodClock),
-						PeriodReset:      getPeriodReset(periodClock),
-						PeriodSpendLimit: periodLimit,
-						PeriodCanSpend:   periodLimit,
-					}
-
-					grant = &periodic
-
-				} else {
-					return fmt.Errorf("invalid number of args %d", len(args))
+				if periodClock <= 0 {
+					return fmt.Errorf("period clock was not set")
 				}
+
+				if periodLimit == nil {
+					return fmt.Errorf("period limit was not set")
+				}
+
+				periodReset := getPeriodReset(periodClock)
+				if exp != "" && periodReset.Sub(expiresAtTime) > 0 {
+					return fmt.Errorf("period (%d) cannot reset after expiration (%v)", periodClock, exp)
+				}
+
+				periodic := feegrant.PeriodicAllowance{
+					Basic:            basic,
+					Period:           getPeriod(periodClock),
+					PeriodReset:      getPeriodReset(periodClock),
+					PeriodSpendLimit: periodLimit,
+					PeriodCanSpend:   periodLimit,
+				}
+
+				grant = &periodic
 			}
 
 			allowedMsgs, err := cmd.Flags().GetStringSlice(FlagAllowedMsgs)

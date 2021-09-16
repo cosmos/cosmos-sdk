@@ -40,7 +40,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 + [\#8590](https://github.com/cosmos/cosmos-sdk/pull/8590) File watcher for cosmovisor. Instead of parsing logs from stdin and stderr, we watch the `<DAEMON_HOME>/data/upgrade-info.json` file updates using polling mechanism.
++ [\#10128](https://github.com/cosmos/cosmos-sdk/pull/10128) Change default value of `DAEMON_RESTART_AFTER_UPGRADE` to `true`.
 + [\#9999](https://github.com/cosmos/cosmos-sdk/issues/9999) Added `version` command which returns the version of the cosmovisor along with the version of the application.
+
 
 ### Improvements
 

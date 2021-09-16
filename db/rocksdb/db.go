@@ -32,16 +32,28 @@ type dbManager struct {
 	dir     string
 	opts    dbOptions
 	vmgr    *dbm.VersionManager
-	mtx     *sync.RWMutex
+	mtx     sync.RWMutex
 	// Track open DBWriters
 	openWriters int32
+	cpCache     checkpointCache
 }
 
 type dbConnection = gorocksdb.OptimisticTransactionDB
 
+type checkpointCache struct {
+	cache map[uint64]*cpCacheEntry
+	mtx   sync.RWMutex
+}
+
+type cpCacheEntry struct {
+	cxn      *dbConnection
+	txnCount uint
+}
+
 type dbTxn struct {
-	txn *gorocksdb.Transaction
-	mgr *dbManager
+	txn     *gorocksdb.Transaction
+	mgr     *dbManager
+	version uint64
 }
 type dbWriter struct{ dbTxn }
 
@@ -79,9 +91,9 @@ func NewDB(dir string) (*dbManager, error) {
 		wo:  gorocksdb.NewDefaultWriteOptions(),
 	}
 	mgr := &dbManager{
-		dir:  dir,
-		opts: opts,
-		mtx:  &sync.RWMutex{},
+		dir:     dir,
+		opts:    opts,
+		cpCache: checkpointCache{cache: map[uint64]*cpCacheEntry{}},
 	}
 
 	err := os.MkdirAll(mgr.checkpointsDir(), 0755)
@@ -134,6 +146,13 @@ func (mgr *dbManager) checkpointPath(ver uint64) (string, error) {
 }
 
 func (mgr *dbManager) openCheckpoint(ver uint64) (*dbConnection, error) {
+	mgr.cpCache.mtx.Lock()
+	defer mgr.cpCache.mtx.Unlock()
+	cp, has := mgr.cpCache.cache[ver]
+	if has {
+		cp.txnCount += 1
+		return cp.cxn, nil
+	}
 	dbPath, err := mgr.checkpointPath(ver)
 	if err != nil {
 		return nil, err
@@ -142,6 +161,7 @@ func (mgr *dbManager) openCheckpoint(ver uint64) (*dbConnection, error) {
 	if err != nil {
 		return nil, err
 	}
+	mgr.cpCache.cache[ver] = &cpCacheEntry{cxn: db, txnCount: 1}
 	return db, nil
 }
 
@@ -165,8 +185,9 @@ func (mgr *dbManager) ReaderAt(ver uint64) (dbm.DBReader, error) {
 	}
 
 	return &dbTxn{
-		txn: db.TransactionBegin(mgr.opts.wo, mgr.opts.txo, nil),
-		mgr: mgr,
+		txn:     db.TransactionBegin(mgr.opts.wo, mgr.opts.txo, nil),
+		mgr:     mgr,
+		version: ver,
 	}, nil
 }
 
@@ -224,7 +245,7 @@ func (mgr *dbManager) save(target uint64) (uint64, error) {
 	}
 	dir := filepath.Join(mgr.checkpointsDir(), fmt.Sprintf(checkpointFileFormat, ver))
 	if err := cp.CreateCheckpoint(dir, 0); err != nil {
-		panic(err)
+		return 0, err
 	}
 	cp.Destroy()
 	mgr.vmgr = newVmgr
@@ -232,9 +253,11 @@ func (mgr *dbManager) save(target uint64) (uint64, error) {
 }
 
 func (mgr *dbManager) DeleteVersion(ver uint64) error {
+	if mgr.cpCache.has(ver) {
+		return dbm.ErrOpenTransactions
+	}
 	mgr.mtx.Lock()
 	defer mgr.mtx.Unlock()
-
 	dbPath, err := mgr.checkpointPath(ver)
 	if err != nil {
 		return err
@@ -319,7 +342,13 @@ func (tx *dbWriter) Commit() error {
 }
 
 func (tx *dbTxn) Discard() {
-	tx.txn.Destroy()
+	defer tx.txn.Destroy()
+	if tx.version == 0 {
+		return
+	}
+	if !tx.mgr.cpCache.decrement(tx.version) {
+		panic(fmt.Errorf("traensaction has no corresponding checkpoint cache entry: %v", tx.version))
+	}
 }
 
 func (tx *dbWriter) Discard() {
@@ -350,4 +379,26 @@ func (o dbOptions) destroy() {
 	o.wo.Destroy()
 	o.txo.Destroy()
 	o.dbo.Destroy()
+}
+
+func (cpc *checkpointCache) has(ver uint64) bool {
+	cpc.mtx.RLock()
+	defer cpc.mtx.RUnlock()
+	_, has := cpc.cache[ver]
+	return has
+}
+
+func (cpc *checkpointCache) decrement(ver uint64) bool {
+	cpc.mtx.Lock()
+	defer cpc.mtx.Unlock()
+	cp, has := cpc.cache[ver]
+	if !has {
+		return false
+	}
+	cp.txnCount -= 1
+	if cp.txnCount == 0 {
+		cp.cxn.Close()
+		delete(cpc.cache, ver)
+	}
+	return true
 }

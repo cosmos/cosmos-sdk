@@ -5,15 +5,25 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
+	tmjson "github.com/tendermint/tendermint/libs/json"
+	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
-	app, stateBytes := teststaking.SetupApp(t)
+	db := dbm.NewMemDB()
+	encCdc := simapp.MakeTestEncodingConfig()
+	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, simapp.DefaultNodeHome, 5, encCdc, simapp.EmptyAppOptions{})
+
+	genesisState := simapp.GenesisStateWithSingleValidator(t, app)
+	stateBytes, err := tmjson.Marshal(genesisState)
+	require.NoError(t, err)
+
 	app.InitChain(
 		abcitypes.RequestInitChain{
 			AppStateBytes: stateBytes,

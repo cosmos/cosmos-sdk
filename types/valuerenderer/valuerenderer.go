@@ -16,6 +16,10 @@ import (
 	"golang.org/x/text/message"
 )
 
+// TODO
+// 1.Look at some library wqith a lot of stars that formats nicely integers and floats.
+// 2.If there is no good solution for step1, implement own solution.
+
 // ValueRenderer defines an interface to produce formated output for Int,Dec,Coin types as well as parse a string to Coin or Uint.
 type ValueRenderer interface {
 	Format(context.Context, interface{}) (string, error)
@@ -145,7 +149,7 @@ func (dvr DefaultValueRenderer) Parse(ctx context.Context, s string) (interface{
 	}
 	// remove all commas
 	str := strings.ReplaceAll(s, ",", "")
-	re := regexp.MustCompile(`\d+[mu]?regen`)
+	re := regexp.MustCompile(`\d+[mu]?regen`) // TODO remove regen
 	// case 1: "1000000regen" => Coin
 	if re.MatchString(str) {
 		coin, err := coinFromString(str)
@@ -167,6 +171,7 @@ func (dvr DefaultValueRenderer) Parse(ctx context.Context, s string) (interface{
 
 // should I add tests for coinFromString?
 // coinFromString converts a string to coin
+// TODO use regex below intead of this algo
 func coinFromString(s string) (types.Coin, error) {
 	index := len(s) - 1
 	for i := len(s) - 1; i >= 0; i-- {

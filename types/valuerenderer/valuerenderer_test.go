@@ -50,7 +50,8 @@ func (suite *valueRendererTestSuite) SetupTest() {
 	suite.queryClient = queryClient
 	suite.printer = message.NewPrinter(language.English)
 }
-
+// TODO
+// 1. add some test cases for integer overflow, underflow
 func (suite *valueRendererTestSuite) TestFormatDenomQuerierFunc() {
 
 	metadataRegen := banktypes.Metadata{
@@ -156,9 +157,9 @@ func (suite *valueRendererTestSuite) TestFormatDenomQuerierFunc() {
 
 			c := types.WrapSDKContext(suite.ctx)
 
-			dvr := valuerenderer.NewDefaultValueRenderer(func(c context.Context, denom string) (banktypes.Metadata, error) {
+			dvr := valuerenderer.NewDefaultValueRenderer(func(c context.Context, baseDenom string) (banktypes.Metadata, error) {
 				req := &banktypes.QueryDenomMetadataRequest{
-					Denom: denom,
+					Denom: baseDenom,
 				}
 
 				resp, err := suite.queryClient.DenomMetadata(c, req)

@@ -30,3 +30,6 @@ This module allows accounts to grant fee allowances and to use fees from their a
     - [MsgGrantAllowance](04_events.md#msggrantallowance)
     - [MsgRevokeAllowance](04_events.md#msgrevokeallowance)
     - [Exec fee allowance](04_events.md#exec-fee-allowance)
+5. **[Client](05_client.md)**
+    - [CLI](05_client.md#cli)
+    - [gRPC](05_client.md#grpc)

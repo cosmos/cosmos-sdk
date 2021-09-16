@@ -4,11 +4,15 @@ order: 2
 
 # REST Endpoints Migration
 
-Migrate to gRPC-Gateway REST endpoints. Legacy REST endpoints were marked as deprecated in v0.40 and removed in v0.44. {synopsis}
+Migrate to gRPC-Gateway REST endpoints. Legacy REST endpoints were marked as deprecated in v0.40 and will be removed in v0.45. {synopsis}
+
+::: warning
+Two Legacy REST endpoints (`POST /txs` and `POST /txs/encode`) were removed ahead of schedule in v0.44 due to a security vulnerability.
+:::
 
 ## Legacy REST Endpoints
 
-Cosmos SDK versions v0.39 and earlier registered REST endpoints using a package called `gorilla/mux`. These REST endpoints were marked as deprecated in v0.40 and have since been referred to as legacy REST endpoints. Legacy REST endpoints were officially removed in v0.44.
+Cosmos SDK versions v0.39 and earlier registered REST endpoints using a package called `gorilla/mux`. These REST endpoints were marked as deprecated in v0.40 and have since been referred to as legacy REST endpoints. Legacy REST endpoints will be officially removed in v0.45.
 
 ## gRPC-Gateway REST Endpoints
 

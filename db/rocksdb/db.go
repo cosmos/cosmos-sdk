@@ -149,6 +149,8 @@ func (mgr *dbManager) Reader() dbm.DBReader {
 	mgr.mtx.RLock()
 	defer mgr.mtx.RUnlock()
 	return &dbTxn{
+		// Note: oldTransaction could be passed here as a small optimization to
+		// avoid allocating a new object.
 		txn: mgr.current.TransactionBegin(mgr.opts.wo, mgr.opts.txo, nil),
 		mgr: mgr,
 	}
@@ -157,14 +159,12 @@ func (mgr *dbManager) Reader() dbm.DBReader {
 func (mgr *dbManager) ReaderAt(ver uint64) (dbm.DBReader, error) {
 	mgr.mtx.RLock()
 	defer mgr.mtx.RUnlock()
-	// TODO: cache opened checkpoints
 	db, err := mgr.openCheckpoint(ver)
 	if err != nil {
 		return nil, err
 	}
 
 	return &dbTxn{
-		// todo: meaning of oldtransaction?
 		txn: db.TransactionBegin(mgr.opts.wo, mgr.opts.txo, nil),
 		mgr: mgr,
 	}, nil
@@ -251,7 +251,7 @@ func (mgr *dbManager) Close() error {
 	return nil
 }
 
-// Close implements DBConnection.
+// Stats implements DBConnection.
 func (mgr *dbManager) Stats() map[string]string {
 	keys := []string{"rocksdb.stats"}
 	stats := make(map[string]string, len(keys))

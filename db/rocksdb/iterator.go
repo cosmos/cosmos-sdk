@@ -12,7 +12,8 @@ type rocksDBIterator struct {
 	start, end []byte
 	isReverse  bool
 	isInvalid  bool
-	primed     bool
+	// Whether iterator has been advanced to the first element (is fully initialized)
+	primed bool
 }
 
 var _ dbm.Iterator = (*rocksDBIterator)(nil)
@@ -56,6 +57,9 @@ func (itr *rocksDBIterator) Domain() ([]byte, []byte) {
 
 // Valid implements Iterator.
 func (itr *rocksDBIterator) Valid() bool {
+	if !itr.primed {
+		return false
+	}
 
 	// Once invalid, forever invalid.
 	if itr.isInvalid {
@@ -68,10 +72,12 @@ func (itr *rocksDBIterator) Valid() bool {
 		return false
 	}
 
+	var (
+		start = itr.start
+		end   = itr.end
+		key   = moveSliceToBytes(itr.source.Key())
+	)
 	// If key is end or past it, invalid.
-	var start = itr.start
-	var end = itr.end
-	var key = moveSliceToBytes(itr.source.Key())
 	if itr.isReverse {
 		if start != nil && bytes.Compare(key, start) < 0 {
 			itr.isInvalid = true
@@ -83,8 +89,6 @@ func (itr *rocksDBIterator) Valid() bool {
 			return false
 		}
 	}
-
-	// It's valid.
 	return true
 }
 

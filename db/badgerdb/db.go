@@ -48,7 +48,8 @@ type badgerIterator struct {
 	start, end []byte
 	iter       *badger.Iterator
 	lastErr    error
-	primed     bool
+	// Whether iterator has been advanced to the first element (is fully initialized)
+	primed bool
 }
 
 // Map our versions to Badger timestamps.

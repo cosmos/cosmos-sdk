@@ -76,8 +76,8 @@ func (suite *MWTestSuite) TestSimulateGasCost() {
 	}
 }
 
-// Test various error cases in the AnteHandler control flow.
-func (suite *MWTestSuite) TestAnteHandlerSigErrors() {
+// Test various error cases in the TxHandler control flow.
+func (suite *MWTestSuite) TestTxHandlerSigErrors() {
 	ctx := suite.SetupTest(false) // reset
 	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -161,7 +161,7 @@ func (suite *MWTestSuite) TestAnteHandlerSigErrors() {
 }
 
 // Test logic around account number checking with one signer and many signers.
-func (suite *MWTestSuite) TestAnteHandlerAccountNumbers() {
+func (suite *MWTestSuite) TestTxHandlerAccountNumbers() {
 	ctx := suite.SetupTest(false) // reset
 	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -242,7 +242,7 @@ func (suite *MWTestSuite) TestAnteHandlerAccountNumbers() {
 }
 
 // Test logic around account number checking with many signers when BlockHeight is 0.
-func (suite *MWTestSuite) TestAnteHandlerAccountNumbersAtBlockHeightZero() {
+func (suite *MWTestSuite) TestTxHandlerAccountNumbersAtBlockHeightZero() {
 	ctx := suite.SetupTest(false) // setup
 	ctx = ctx.WithBlockHeight(0)
 	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
@@ -326,7 +326,7 @@ func (suite *MWTestSuite) TestAnteHandlerAccountNumbersAtBlockHeightZero() {
 }
 
 // Test logic around sequence checking with one signer and many signers.
-func (suite *MWTestSuite) TestAnteHandlerSequences() {
+func (suite *MWTestSuite) TestTxHandlerSequences() {
 	ctx := suite.SetupTest(false) // setup
 	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -438,7 +438,7 @@ func (suite *MWTestSuite) TestAnteHandlerSequences() {
 }
 
 // Test logic around fee deduction.
-func (suite *MWTestSuite) TestAnteHandlerFees() {
+func (suite *MWTestSuite) TestTxHandlerFees() {
 	ctx := suite.SetupTest(false) // setup
 	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -519,7 +519,7 @@ func (suite *MWTestSuite) TestAnteHandlerFees() {
 }
 
 // Test logic around memo gas consumption.
-func (suite *MWTestSuite) TestAnteHandlerMemoGas() {
+func (suite *MWTestSuite) TestTxHandlerMemoGas() {
 	ctx := suite.SetupTest(false) // setup
 	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -589,7 +589,7 @@ func (suite *MWTestSuite) TestAnteHandlerMemoGas() {
 	}
 }
 
-func (suite *MWTestSuite) TestAnteHandlerMultiSigner() {
+func (suite *MWTestSuite) TestTxHandlerMultiSigner() {
 	ctx := suite.SetupTest(false) // setup
 	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -662,7 +662,7 @@ func (suite *MWTestSuite) TestAnteHandlerMultiSigner() {
 	}
 }
 
-func (suite *MWTestSuite) TestAnteHandlerBadSignBytes() {
+func (suite *MWTestSuite) TestTxHandlerBadSignBytes() {
 	ctx := suite.SetupTest(true) // setup
 	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -788,7 +788,7 @@ func (suite *MWTestSuite) TestAnteHandlerBadSignBytes() {
 	}
 }
 
-func (suite *MWTestSuite) TestAnteHandlerSetPubKey() {
+func (suite *MWTestSuite) TestTxHandlerSetPubKey() {
 	ctx := suite.SetupTest(true) // setup
 	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -857,7 +857,7 @@ func (suite *MWTestSuite) TestAnteHandlerSetPubKey() {
 				suite.Require().NoError(err)
 				suite.Require().NoError(txBuilder.SetSignatures())
 
-				// Run anteHandler manually, expect ErrNoSignatures.
+				// Run txHandler manually, expect ErrNoSignatures.
 				_, err = suite.txHandler.CheckTx(sdk.WrapSDKContext(ctx), txBuilder.GetTx(), abci.RequestCheckTx{})
 				suite.Require().Error(err)
 				suite.Require().True(errors.Is(err, sdkerrors.ErrNoSignatures))
@@ -966,7 +966,7 @@ func TestCountSubkeys(t *testing.T) {
 	}
 }
 
-func (suite *MWTestSuite) TestAnteHandlerSigLimitExceeded() {
+func (suite *MWTestSuite) TestTxHandlerSigLimitExceeded() {
 	ctx := suite.SetupTest(false) // setup
 	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -1064,7 +1064,7 @@ func (suite *MWTestSuite) TestCustomSignatureVerificationGasConsumer() {
 	}
 }
 
-func (suite *MWTestSuite) TestAnteHandlerReCheck() {
+func (suite *MWTestSuite) TestTxHandlerReCheck() {
 	ctx := suite.SetupTest(false) // setup
 	// Set recheck=true
 	ctx = ctx.WithIsReCheckTx(true)
@@ -1096,7 +1096,7 @@ func (suite *MWTestSuite) TestAnteHandlerReCheck() {
 	suite.Require().NoError(txBuilder.SetSignatures())
 
 	_, err = suite.txHandler.CheckTx(sdk.WrapSDKContext(ctx), txBuilder.GetTx(), abci.RequestCheckTx{})
-	suite.Require().Nil(err, "AnteHandler errored on recheck unexpectedly: %v", err)
+	suite.Require().Nil(err, "TxHandler errored on recheck unexpectedly: %v", err)
 
 	tx, _, err = suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 	suite.Require().NoError(err)
@@ -1127,23 +1127,23 @@ func (suite *MWTestSuite) TestAnteHandlerReCheck() {
 	}
 
 	// require that local mempool fee check is still run on recheck since validator may change minFee between check and recheck
-	// create new minimum gas price so antehandler fails on recheck
+	// create new minimum gas price so txhandler fails on recheck
 	ctx = ctx.WithMinGasPrices([]sdk.DecCoin{{
 		Denom:  "dnecoin", // fee does not have this denom
 		Amount: sdk.NewDec(5),
 	}})
 	_, err = suite.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{})
 
-	suite.Require().NotNil(err, "antehandler on recheck did not fail when mingasPrice was changed")
+	suite.Require().NotNil(err, "txhandler on recheck did not fail when mingasPrice was changed")
 	// reset min gasprice
 	ctx = ctx.WithMinGasPrices(sdk.DecCoins{})
 
-	// remove funds for account so antehandler fails on recheck
+	// remove funds for account so txhandler fails on recheck
 	suite.app.AccountKeeper.SetAccount(ctx, accounts[0].acc)
 	balances := suite.app.BankKeeper.GetAllBalances(ctx, accounts[0].acc.GetAddress())
 	err = suite.app.BankKeeper.SendCoinsFromAccountToModule(ctx, accounts[0].acc.GetAddress(), minttypes.ModuleName, balances)
 	suite.Require().NoError(err)
 
 	_, err = suite.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{})
-	suite.Require().NotNil(err, "antehandler on recheck did not fail once feePayer no longer has sufficient funds")
+	suite.Require().NotNil(err, "txhandler on recheck did not fail once feePayer no longer has sufficient funds")
 }

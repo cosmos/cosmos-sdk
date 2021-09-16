@@ -343,7 +343,7 @@ func (suite *MWTestSuite) runSigMiddlewares(params types.Params, _ bool, privs .
 		),
 	)
 
-	// Determine gas consumption of antehandler with default params
+	// Determine gas consumption of txhandler with default params
 	before := ctx.GasMeter().GasConsumed()
 	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, abci.RequestDeliverTx{})
 	after := ctx.GasMeter().GasConsumed()

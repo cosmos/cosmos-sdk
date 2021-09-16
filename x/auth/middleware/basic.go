@@ -36,7 +36,7 @@ var _ txtypes.Handler = validateBasicMiddleware{}
 func (basic validateBasicMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	// no need to validate basic on recheck tx, call next antehandler
+	// no need to validate basic on recheck tx, call next middleware
 	if sdkCtx.IsReCheckTx() {
 		return basic.next.CheckTx(ctx, tx, req)
 	}
@@ -231,7 +231,7 @@ func (vmd validateMemoMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req
 var _ txtypes.Handler = consumeTxSizeGasMiddleware{}
 
 // consumeTxSizeGasMiddleware will take in parameters and consume gas proportional
-// to the size of tx before calling next AnteHandler. Note, the gas costs will be
+// to the size of tx before calling next middleware. Note, the gas costs will be
 // slightly over estimated due to the fact that any given signing account may need
 // to be retrieved from state.
 //

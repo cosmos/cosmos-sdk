@@ -161,11 +161,11 @@ func (suite *MWTestSuite) TestConsumeGasForTxSize() {
 
 			beforeSimGas := ctx.GasMeter().GasConsumed()
 
-			// run antehandler in simulate mode
+			// run txhandler in simulate mode
 			_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), tx, txtypes.RequestSimulateTx{})
 			consumedSimGas := ctx.GasMeter().GasConsumed() - beforeSimGas
 
-			// require that antehandler passes and does not underestimate middleware cost
+			// require that txhandler passes and does not underestimate middleware cost
 			suite.Require().Nil(err, "ConsumeTxSizeGasMiddleware returned error: %v", err)
 			suite.Require().True(consumedSimGas >= expectedGas, "Simulate mode underestimates gas on Middleware. Simulated cost: %d, expected cost: %d", consumedSimGas, expectedGas)
 		})

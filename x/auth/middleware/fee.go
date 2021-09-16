@@ -20,7 +20,7 @@ var _ txtypes.Handler = mempoolFeeMiddleware{}
 // as the local validator's minimum gasFee (defined in validator config).
 // If fee is too low, middleware returns error and tx is rejected from mempool.
 // Note this only applies when ctx.CheckTx = true
-// If fee is high enough or not CheckTx, then call next AnteHandler
+// If fee is high enough or not CheckTx, then call next middleware
 // CONTRACT: Tx must implement FeeTx to use MempoolFeeMiddleware
 type mempoolFeeMiddleware struct {
 	next txtypes.Handler
@@ -81,7 +81,7 @@ var _ txtypes.Handler = mempoolFeeMiddleware{}
 
 // deductFeeMiddleware deducts fees from the first signer of the tx
 // If the first signer does not have the funds to pay for the fees, return with InsufficientFunds error
-// Call next AnteHandler if fees successfully deducted
+// Call next middleware if fees successfully deducted
 // CONTRACT: Tx must implement FeeTx interface to use deductFeeMiddleware
 type deductFeeMiddleware struct {
 	accountKeeper  AccountKeeper

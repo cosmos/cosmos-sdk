@@ -83,7 +83,7 @@ func (txh runMsgsTxHandler) runMsgs(sdkCtx sdk.Context, msgs []sdk.Msg, txBytes 
 		Data: make([]*sdk.MsgData, 0, len(msgs)),
 	}
 
-	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
+	// NOTE: GasWanted is determined by the TxHandler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
 		var (
 			msgResult    *sdk.Result

@@ -263,7 +263,7 @@ func (spkd setPubKeyMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req t
 }
 
 // validateSigCountMiddleware takes in Params and returns errors if there are too many signatures in the tx for the given params
-// otherwise it calls next AnteHandler
+// otherwise it calls next middleware
 // Use this middleware to set parameterized limit on number of signatures in tx
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type validateSigCountMiddleware struct {
@@ -426,7 +426,7 @@ func ConsumeMultisignatureVerificationGas(
 }
 
 // Consume parameter-defined amount of gas for each signature according to the passed-in SignatureVerificationGasConsumer function
-// before calling the next AnteHandler
+// before calling the next middleware
 // CONTRACT: Pubkeys are set in context for all signers before this middleware runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type sigGasConsumeMiddleware struct {
@@ -596,7 +596,7 @@ func SigVerificationMiddleware(ak AccountKeeper, signModeHandler authsigning.Sig
 // signers are using SIGN_MODE_LEGACY_AMINO_JSON. If this is the case
 // then the corresponding SignatureV2 struct will not have account sequence
 // explicitly set, and we should skip the explicit verification of sig.Sequence
-// in the SigVerificationMiddleware's AnteHandler function.
+// in the SigVerificationMiddleware's middleware function.
 func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	switch v := sigData.(type) {
 	case *signing.SingleSignatureData:

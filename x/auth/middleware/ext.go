@@ -23,7 +23,7 @@ type rejectExtensionOptionsMiddleware struct {
 // NewRejectExtensionOptionsMiddleware creates a new rejectExtensionOptionsMiddleware.
 // rejectExtensionOptionsMiddleware is a middleware that rejects all extension
 // options which can optionally be included in protobuf transactions. Users that
-// need extension options should create a custom AnteHandler chain that handles
+// need extension options should create a custom middleware chain that handles
 // needed extension options properly and rejects unknown ones.
 func RejectExtensionOptionsMiddleware(txh tx.Handler) tx.Handler {
 	return rejectExtensionOptionsMiddleware{

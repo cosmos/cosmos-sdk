@@ -172,11 +172,11 @@ func (s *MWTestSuite) RunTestCase(ctx sdk.Context, txBuilder client.TxBuilder, p
 		// middlewares, but here we sometimes also test the tx creation
 		// process.
 		tx, _, txErr := s.createTestTx(txBuilder, privs, accNums, accSeqs, chainID)
-		newCtx, anteErr := s.txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, types.RequestDeliverTx{})
+		newCtx, txHandlerErr := s.txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, types.RequestDeliverTx{})
 
 		if tc.expPass {
 			s.Require().NoError(txErr)
-			s.Require().NoError(anteErr)
+			s.Require().NoError(txHandlerErr)
 			s.Require().NotNil(newCtx)
 		} else {
 			switch {
@@ -184,12 +184,12 @@ func (s *MWTestSuite) RunTestCase(ctx sdk.Context, txBuilder client.TxBuilder, p
 				s.Require().Error(txErr)
 				s.Require().True(errors.Is(txErr, tc.expErr))
 
-			case anteErr != nil:
-				s.Require().Error(anteErr)
-				s.Require().True(errors.Is(anteErr, tc.expErr))
+			case txHandlerErr != nil:
+				s.Require().Error(txHandlerErr)
+				s.Require().True(errors.Is(txHandlerErr, tc.expErr))
 
 			default:
-				s.Fail("expected one of txErr,anteErr to be an error")
+				s.Fail("expected one of txErr,txHandlerErr to be an error")
 			}
 		}
 	})

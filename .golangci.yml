@@ -17,15 +17,17 @@ linters:
     - gci
     - goconst
     - gocritic
-    - gofumpt
+    - gofmt
+    - goimports
     - gosec
     - gosimple
     - govet
     - ineffassign
     - misspell
     - nakedret
-    - nolintlint
+    - prealloc
     - revive
+    - exportloopref
     - staticcheck
     - stylecheck
     - thelper

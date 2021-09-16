@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"math"
 )
 
 // VersionManager encapsulates the current valid versions of a DB and computes
@@ -13,16 +14,19 @@ type VersionManager struct {
 
 var _ VersionSet = (*VersionManager)(nil)
 
-// NewVersionManager creates a VersionManager from a sorted slice of ascending version ids.
+// NewVersionManager creates a VersionManager from a slice of version ids.
 func NewVersionManager(versions []uint64) *VersionManager {
 	vmap := make(map[uint64]struct{})
 	var init, last uint64
+	init = math.MaxUint64
 	for _, ver := range versions {
 		vmap[ver] = struct{}{}
-	}
-	if len(versions) > 0 {
-		init = versions[0]
-		last = versions[len(versions)-1]
+		if ver < init {
+			init = ver
+		}
+		if ver > last {
+			last = ver
+		}
 	}
 	return &VersionManager{versions: vmap, initial: init, last: last}
 }

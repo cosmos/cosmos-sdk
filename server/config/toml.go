@@ -68,7 +68,7 @@ inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 #
 # Example:
 # ["message.sender", "message.recipient"]
-index-events = {{ .BaseConfig.IndexEvents }}
+index-events = [{{ range .BaseConfig.IndexEvents }}{{ printf "%q, " . }}{{end}}]
 
 ###############################################################################
 ###                         Telemetry Configuration                         ###

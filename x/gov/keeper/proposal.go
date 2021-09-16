@@ -42,7 +42,9 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (typ
 	keeper.SetProposalID(ctx, proposalID+1)
 
 	// called right after a proposal is submitted
-	keeper.AfterProposalSubmission(ctx, proposalID)
+	if err := keeper.AfterProposalSubmission(ctx, proposalID); err != nil {
+		return types.Proposal{}, err
+	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

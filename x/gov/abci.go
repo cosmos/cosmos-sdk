@@ -22,7 +22,14 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		keeper.DeleteAndBurnDeposits(ctx, proposal.ProposalId)
 
 		// called when proposal become inactive
-		keeper.AfterProposalFailedMinDeposit(ctx, proposal.ProposalId)
+		if err := keeper.AfterProposalFailedMinDeposit(ctx, proposal.ProposalId); err != nil {
+			// log the error to the node
+			logger.Error(
+				"hook AfterProposalFailedMinDeposit failed",
+				"proposal", proposal.ProposalId,
+				"error", err.Error(),
+			)
+		}
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
@@ -93,7 +100,14 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		keeper.RemoveFromActiveProposalQueue(ctx, proposal.ProposalId, proposal.VotingEndTime)
 
 		// when proposal become active
-		keeper.AfterProposalVotingPeriodEnded(ctx, proposal.ProposalId)
+		if err := keeper.AfterProposalVotingPeriodEnded(ctx, proposal.ProposalId); err != nil {
+			// log the error to the node
+			logger.Error(
+				"hook AfterProposalVotingPeriodEnded failed",
+				"proposal", proposal.ProposalId,
+				"error", err.Error(),
+			)
+		}
 
 		logger.Info(
 			"proposal tallied",

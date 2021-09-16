@@ -28,7 +28,9 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 	keeper.SetVote(ctx, vote)
 
 	// called after a vote on a proposal is cast
-	keeper.AfterProposalVote(ctx, proposalID, voterAddr)
+	if err := keeper.AfterProposalVote(ctx, proposalID, voterAddr); err != nil {
+		return err
+	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

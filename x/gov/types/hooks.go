@@ -6,37 +6,55 @@ import (
 
 var _ GovHooks = MultiGovHooks{}
 
-// combine multiple governance hooks, all hook functions are run in array sequence
+// MultiGovHooks combine multiple governance hooks, all hook functions are run in array sequence
 type MultiGovHooks []GovHooks
 
+// NewMultiGovHooks creates a new MultiGovHooks instance
 func NewMultiGovHooks(hooks ...GovHooks) MultiGovHooks {
 	return hooks
 }
 
-func (h MultiGovHooks) AfterProposalSubmission(ctx sdk.Context, proposalID uint64) {
+// AfterProposalSubmission implements GovHooks.AfterProposalSubmission. It iterates over all the
+// registered hooks and calls AfterProposalSubmission
+func (h MultiGovHooks) AfterProposalSubmission(ctx sdk.Context, proposalID uint64) error {
 	for i := range h {
-		h[i].AfterProposalSubmission(ctx, proposalID)
+		return h[i].AfterProposalSubmission(ctx, proposalID)
 	}
+	return nil
 }
 
-func (h MultiGovHooks) AfterProposalDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) {
+// AfterProposalDeposit implements GovHooks.AfterProposalDeposit. It iterates over all the
+// registered hooks and calls AfterProposalDeposit
+func (h MultiGovHooks) AfterProposalDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) error {
 	for i := range h {
-		h[i].AfterProposalDeposit(ctx, proposalID, depositorAddr)
+		return h[i].AfterProposalDeposit(ctx, proposalID, depositorAddr)
 	}
+	return nil
 }
 
-func (h MultiGovHooks) AfterProposalVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
+// AfterProposalVote implements GovHooks.AfterProposalVote. It iterates over all the
+// registered hooks and calls AfterProposalVote
+func (h MultiGovHooks) AfterProposalVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) error {
 	for i := range h {
-		h[i].AfterProposalVote(ctx, proposalID, voterAddr)
+		return h[i].AfterProposalVote(ctx, proposalID, voterAddr)
 	}
+	return nil
 }
-func (h MultiGovHooks) AfterProposalFailedMinDeposit(ctx sdk.Context, proposalID uint64) {
+
+// AfterProposalVotingPeriodEnded implements GovHooks.AfterProposalVotingPeriodEnded. It iterates over all the
+// registered hooks and calls AfterProposalFailedMinDeposit
+func (h MultiGovHooks) AfterProposalFailedMinDeposit(ctx sdk.Context, proposalID uint64) error {
 	for i := range h {
-		h[i].AfterProposalFailedMinDeposit(ctx, proposalID)
+		return h[i].AfterProposalFailedMinDeposit(ctx, proposalID)
 	}
+	return nil
 }
-func (h MultiGovHooks) AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalID uint64) {
+
+// AfterProposalVotingPeriodEnded implements GovHooks.AfterProposalVotingPeriodEnded. It iterates over all the
+// registered hooks and calls AfterProposalVotingPeriodEnded
+func (h MultiGovHooks) AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalID uint64) error {
 	for i := range h {
-		h[i].AfterProposalVotingPeriodEnded(ctx, proposalID)
+		return h[i].AfterProposalVotingPeriodEnded(ctx, proposalID)
 	}
+	return nil
 }

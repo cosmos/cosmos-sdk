@@ -25,22 +25,29 @@ type MockGovHooksReceiver struct {
 	AfterProposalVotingPeriodEndedValid bool
 }
 
-func (h *MockGovHooksReceiver) AfterProposalSubmission(ctx sdk.Context, proposalID uint64) {
+func (h *MockGovHooksReceiver) AfterProposalSubmission(ctx sdk.Context, proposalID uint64) error {
 	h.AfterProposalSubmissionValid = true
+	return nil
 }
 
-func (h *MockGovHooksReceiver) AfterProposalDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) {
+func (h *MockGovHooksReceiver) AfterProposalDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) error {
 	h.AfterProposalDepositValid = true
+	return nil
 }
 
-func (h *MockGovHooksReceiver) AfterProposalVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
+func (h *MockGovHooksReceiver) AfterProposalVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) error {
 	h.AfterProposalVoteValid = true
+	return nil
 }
-func (h *MockGovHooksReceiver) AfterProposalFailedMinDeposit(ctx sdk.Context, proposalID uint64) {
+
+func (h *MockGovHooksReceiver) AfterProposalFailedMinDeposit(ctx sdk.Context, proposalID uint64) error {
 	h.AfterProposalFailedMinDepositValid = true
+	return nil
 }
-func (h *MockGovHooksReceiver) AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalID uint64) {
+
+func (h *MockGovHooksReceiver) AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalID uint64) error {
 	h.AfterProposalVotingPeriodEndedValid = true
+	return nil
 }
 
 func TestHooks(t *testing.T) {

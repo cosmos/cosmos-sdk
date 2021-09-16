@@ -87,6 +87,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (x/bank) [\#10134](https://github.com/cosmos/cosmos-sdk/pull/10134) Add `HasDenomMetadata` function to bank `Keeper` to check if a client coin denom metadata exists in state.
 * (store) [\#10026](https://github.com/cosmos/cosmos-sdk/pull/10026) Improve CacheKVStore datastructures / algorithms, to no longer take O(N^2) time when interleaving iterators and insertions.
 * (types) [\#10076](https://github.com/cosmos/cosmos-sdk/pull/10076) Significantly speedup and lower allocations for `Coins.String()`.
 * (x/bank) [\#10022](https://github.com/cosmos/cosmos-sdk/pull/10022) `BankKeeper.SendCoins` now takes less execution time.
@@ -111,6 +112,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 + [\#9980](https://github.com/cosmos/cosmos-sdk/pull/9980) Returning the error when the invalid argument is passed to bank query total supply cli.
 + [\#10061](https://github.com/cosmos/cosmos-sdk/pull/10061) Ensure that `LegacyAminoPubKey` struct correctly unmarshals from JSON
 * (server) [#10016](https://github.com/cosmos/cosmos-sdk/issues/10016) Fix marshaling of index-events into server config file.
+* (x/feegrant) [\#10049](https://github.com/cosmos/cosmos-sdk/issues/10049) Fixed the error message when `period` or `period-limit` flag is not set on a feegrant grant transaction.
 
 
 ### State Machine Breaking
@@ -149,6 +151,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#8518](https://github.com/cosmos/cosmos-sdk/pull/8518) Help users of multisig wallets debug signature issues.
 * [\#9573](https://github.com/cosmos/cosmos-sdk/pull/9573) ADR 040 implementation: New DB interface
 * [\#9952](https://github.com/cosmos/cosmos-sdk/pull/9952) ADR 040: Implement in-memory DB backend
+* [\#9848](https://github.com/cosmos/cosmos-sdk/pull/9848) ADR-040: Implement BadgerDB backend
 
 
 ### Client Breaking Changes

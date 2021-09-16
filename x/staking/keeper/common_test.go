@@ -49,3 +49,12 @@ func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int) ([]sdk
 
 	return addrDels, addrVals
 }
+
+func delegateCoinsFromAccount(ctx sdk.Context, app *simapp.SimApp, addr sdk.AccAddress, amount sdk.Int, val types.Validator) error {
+	bondDenom := app.StakingKeeper.BondDenom(ctx)
+	coins := sdk.Coins{sdk.NewCoin(bondDenom, amount)}
+	app.BankKeeper.DelegateCoinsFromAccountToModule(ctx, addr, types.EpochDelegationPoolName, coins)
+	_, err := app.StakingKeeper.Delegate(ctx, addr, amount, types.Unbonded, val, true)
+
+	return err
+}

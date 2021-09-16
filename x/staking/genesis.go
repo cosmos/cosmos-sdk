@@ -6,6 +6,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -158,6 +159,13 @@ func InitGenesis(
 		}
 	}
 
+	epochNumber := data.EpochNumber
+	keeper.SetEpochNumber(ctx, epochNumber)
+
+	for _, msg := range data.BufferedMsgs {
+		keeper.RestoreEpochAction(ctx, epochNumber, msg)
+	}
+
 	return res
 }
 
@@ -186,6 +194,17 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 		return false
 	})
 
+	msgs := keeper.GetEpochActions(ctx)
+
+	var anys []*codectypes.Any
+	for _, msg := range msgs {
+		any, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			panic(err)
+		}
+		anys = append(anys, any)
+	}
+
 	return &types.GenesisState{
 		Params:               keeper.GetParams(ctx),
 		LastTotalPower:       keeper.GetLastTotalPower(ctx),
@@ -194,6 +213,7 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 		Delegations:          keeper.GetAllDelegations(ctx),
 		UnbondingDelegations: unbondingDelegations,
 		Redelegations:        redelegations,
+		BufferedMsgs:         anys,
 		Exported:             true,
 	}
 }

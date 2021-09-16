@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
@@ -65,6 +66,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		unbond,
 		fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
 	)
+
 	s.Require().NoError(err)
 	var txRes sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
@@ -77,6 +79,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
+
+	_, err = s.network.WaitForHeightWithTimeout(12, 30*time.Second)
+	s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -85,6 +90,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
+
 	require := s.Require()
 	val := s.network.Validators[0]
 
@@ -361,7 +367,11 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegation() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryDelegation()
 			clientCtx := val.ClientCtx
-
+			if !tc.expErr {
+				h, _ := s.network.LatestHeight()
+				_, err := s.network.WaitForHeightWithTimeout(h+11, 30*time.Second)
+				s.Require().NoError(err)
+			}
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expErr {
 				s.Require().Error(err)
@@ -800,6 +810,13 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorRedelegations() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
+			h, err := s.network.LatestHeight()
+			s.Require().NoError(err)
+
+			// Wait for height latestHeight + 11 for the epoch queued messages to be executed
+			_, err = s.network.WaitForHeightWithTimeout(h+12, 40*time.Second)
+			s.Require().NoError(err)
+
 			cmd := cli.GetCmdQueryValidatorRedelegations()
 			clientCtx := val.ClientCtx
 
@@ -879,6 +896,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 			"with text output",
 			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
 			`bond_denom: stake
+epoch_interval: "10"
 historical_entries: 10000
 max_entries: 7
 max_validators: 100
@@ -887,7 +905,7 @@ unbonding_time: 1814400s`,
 		{
 			"with json output",
 			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake"}`,
+			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake","epoch_interval":"10"}`,
 		},
 	}
 	for _, tc := range testCases {

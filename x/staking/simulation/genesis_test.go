@@ -60,9 +60,9 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, "BOND_STATUS_UNBONDED", stakingGenesis.Validators[2].Status.String())
 	require.Equal(t, "1000", stakingGenesis.Validators[2].Tokens.String())
 	require.Equal(t, "1000.000000000000000000", stakingGenesis.Validators[2].DelegatorShares.String())
-	require.Equal(t, "0.292059246265731326", stakingGenesis.Validators[2].Commission.CommissionRates.Rate.String())
-	require.Equal(t, "0.330000000000000000", stakingGenesis.Validators[2].Commission.CommissionRates.MaxRate.String())
-	require.Equal(t, "0.038337453731274481", stakingGenesis.Validators[2].Commission.CommissionRates.MaxChangeRate.String())
+	require.Equal(t, "0.760000000000000000", stakingGenesis.Validators[2].Commission.CommissionRates.Rate.String())
+	require.Equal(t, "0.760000000000000000", stakingGenesis.Validators[2].Commission.CommissionRates.MaxRate.String())
+	require.Equal(t, "0.312739151653465930", stakingGenesis.Validators[2].Commission.CommissionRates.MaxChangeRate.String())
 	require.Equal(t, "1", stakingGenesis.Validators[2].MinSelfDelegation.String())
 }
 

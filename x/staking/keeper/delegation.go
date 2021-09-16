@@ -550,7 +550,7 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time
 // tokenSrc indicates the bond status of the incoming funds.
 func (k Keeper) Delegate(
 	ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Int, tokenSrc types.BondStatus,
-	validator types.Validator, subtractAccount bool,
+	validator types.Validator, subtractEpochPool bool,
 ) (newShares sdk.Dec, err error) {
 	// In some situations, the exchange rate becomes invalid, e.g. if
 	// Validator loses all tokens due to slashing. In this case,
@@ -581,10 +581,10 @@ func (k Keeper) Delegate(
 		panic(err)
 	}
 
-	// if subtractAccount is true then we are
-	// performing a delegation and not a redelegation, thus the source tokens are
-	// all non bonded
-	if subtractAccount {
+	if subtractEpochPool {
+		// if subtractEpochPool is true then we are
+		// performing a delegation and not a redelegation, thus the source tokens are
+		// all non bonded
 		if tokenSrc == types.Bonded {
 			panic("delegation token source cannot be bonded")
 		}
@@ -601,7 +601,7 @@ func (k Keeper) Delegate(
 		}
 
 		coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), bondAmt))
-		if err := k.bankKeeper.DelegateCoinsFromAccountToModule(ctx, delegatorAddress, sendName, coins); err != nil {
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.EpochDelegationPoolName, sendName, coins); err != nil {
 			return sdk.Dec{}, err
 		}
 	} else {

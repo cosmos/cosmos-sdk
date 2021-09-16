@@ -19,7 +19,7 @@ func NewOnlineNetwork(network *types.NetworkIdentifier, client crgtypes.Client) 
 	ctx, cancel := context.WithTimeout(context.Background(), genesisBlockFetchTimeout)
 	defer cancel()
 
-	var genesisHeight int64 = 1
+	var genesisHeight int64 = -1 // to use initial_height in genesis.json
 	block, err := client.BlockByHeight(ctx, &genesisHeight)
 	if err != nil {
 		return OnlineNetwork{}, err
@@ -28,7 +28,7 @@ func NewOnlineNetwork(network *types.NetworkIdentifier, client crgtypes.Client) 
 	return OnlineNetwork{
 		client:                 client,
 		network:                network,
-		networkOptions:         networkOptionsFromClient(client),
+		networkOptions:         networkOptionsFromClient(client, block.Block),
 		genesisBlockIdentifier: block.Block,
 	}, nil
 }
@@ -50,7 +50,11 @@ func (o OnlineNetwork) AccountCoins(_ context.Context, _ *types.AccountCoinsRequ
 }
 
 // networkOptionsFromClient builds network options given the client
-func networkOptionsFromClient(client crgtypes.Client) *types.NetworkOptionsResponse {
+func networkOptionsFromClient(client crgtypes.Client, genesisBlock *types.BlockIdentifier) *types.NetworkOptionsResponse {
+	var tsi *int64 = nil
+	if genesisBlock != nil {
+		tsi = &(genesisBlock.Index)
+	}
 	return &types.NetworkOptionsResponse{
 		Version: &types.Version{
 			RosettaVersion: crgtypes.SpecVersion,
@@ -61,6 +65,7 @@ func networkOptionsFromClient(client crgtypes.Client) *types.NetworkOptionsRespo
 			OperationTypes:          client.SupportedOperations(),
 			Errors:                  crgerrs.SealAndListErrors(),
 			HistoricalBalanceLookup: true,
+			TimestampStartIndex:     tsi,
 		},
 	}
 }

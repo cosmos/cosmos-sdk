@@ -76,7 +76,9 @@ func NewClient(cfg *Config) (*Client, error) {
 
 	supportedOperations = append(
 		supportedOperations,
-		bank.EventTypeCoinSpent, bank.EventTypeCoinReceived,
+		bank.EventTypeCoinSpent,
+		bank.EventTypeCoinReceived,
+		bank.EventTypeCoinBurn,
 	)
 
 	return &Client{
@@ -185,6 +187,10 @@ func (c *Client) BlockByHash(ctx context.Context, hash string) (crgtypes.BlockRe
 }
 
 func (c *Client) BlockByHeight(ctx context.Context, height *int64) (crgtypes.BlockResponse, error) {
+	height, err := c.getHeight(ctx, height)
+	if err != nil {
+		return crgtypes.BlockResponse{}, crgerrs.WrapError(crgerrs.ErrBadGateway, err.Error())
+	}
 	block, err := c.tmRPC.Block(ctx, height)
 	if err != nil {
 		return crgtypes.BlockResponse{}, crgerrs.WrapError(crgerrs.ErrBadGateway, err.Error())
@@ -204,6 +210,10 @@ func (c *Client) BlockTransactionsByHash(ctx context.Context, hash string) (crgt
 }
 
 func (c *Client) BlockTransactionsByHeight(ctx context.Context, height *int64) (crgtypes.BlockTransactionsResponse, error) {
+	height, err := c.getHeight(ctx, height)
+	if err != nil {
+		return crgtypes.BlockTransactionsResponse{}, crgerrs.WrapError(crgerrs.ErrBadGateway, err.Error())
+	}
 	blockTxResp, err := c.blockTxs(ctx, height)
 	if err != nil {
 		return crgtypes.BlockTransactionsResponse{}, err
@@ -467,4 +477,17 @@ func (c *Client) blockTxs(ctx context.Context, height *int64) (crgtypes.BlockTra
 		BlockResponse: c.converter.ToRosetta().BlockResponse(blockInfo),
 		Transactions:  finalTxs,
 	}, nil
+}
+
+func (c *Client) getHeight(ctx context.Context, height *int64) (realHeight *int64, err error) {
+	if height != nil && *height == -1 {
+		genesis, err := c.tmRPC.Genesis(ctx)
+		if err != nil {
+			return nil, err
+		}
+		realHeight = &(genesis.Genesis.InitialHeight)
+	} else {
+		realHeight = height
+	}
+	return
 }

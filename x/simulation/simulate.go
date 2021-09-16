@@ -31,28 +31,20 @@ const AverageBlockTime = 6 * time.Second
 func initChain(
 	r *rand.Rand,
 	params Params,
-	accounts []simtypes.Account,
+	accounts []simulation.Account,
 	app *baseapp.BaseApp,
-	appStateFn simtypes.AppStateFn,
-	config simtypes.Config,
+	appStateFn simulation.AppStateFn,
+	config simulation.Config,
 	cdc codec.JSONCodec,
-) (mockValidators, time.Time, []simtypes.Account, string) {
-	blockMaxGas := int64(-1)
-	if config.BlockMaxGas > 0 {
-		blockMaxGas = config.BlockMaxGas
-	}
+) (mockValidators, time.Time, []simulation.Account, string) {
+
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
-	consensusParams := RandomConsensusParams(r, appState, cdc, blockMaxGas)
-	req := abci.InitChainRequest{
+	consensusParams := randomConsensusParams(r, appState, cdc)
+	req := abci.RequestInitChain{
 		AppStateBytes:   appState,
 		ChainId:         chainID,
 		ConsensusParams: consensusParams,
 		Time:            genesisTimestamp,
-		InitialHeight:   int64(config.InitialBlockHeight),
-	}
-	res, err := app.InitChain(&req)
-	if err != nil {
-		panic(err)
 	}
 	validators := newMockValidators(r, res.Validators, params)
 

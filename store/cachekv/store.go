@@ -246,12 +246,6 @@ func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair) {
 
 // Only entrypoint to mutate store.cache.
 func (store *Store) setCacheValue(key, value []byte, deleted bool, dirty bool) {
-<<<<<<< HEAD
-	store.cache[conv.UnsafeBytesToStr(key)] = &cValue{
-		value:   value,
-		deleted: deleted,
-		dirty:   dirty,
-=======
 	keyStr := conv.UnsafeBytesToStr(key)
 	store.cache[keyStr] = &cValue{
 		value: value,
@@ -261,7 +255,6 @@ func (store *Store) setCacheValue(key, value []byte, deleted bool, dirty bool) {
 		store.deleted[keyStr] = struct{}{}
 	} else {
 		delete(store.deleted, keyStr)
->>>>>>> 28bf2c124 (perf: Make CacheKV store interleaved iterator and insertion not O(n^2) (#10026))
 	}
 	if dirty {
 		store.unsortedCache[conv.UnsafeBytesToStr(key)] = struct{}{}

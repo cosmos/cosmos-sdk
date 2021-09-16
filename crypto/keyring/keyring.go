@@ -496,9 +496,9 @@ func (ks keystore) List() ([]*Record, error) {
 		return nil, err
 	}
 
-	res := make([]*Record, len(keys))
+	var res []*Record
 	sort.Strings(keys)
-	for i, key := range keys {
+	for _, key := range keys {
 		if strings.Contains(key, addressSuffix) {
 			continue
 		}
@@ -517,7 +517,7 @@ func (ks keystore) List() ([]*Record, error) {
 			return nil, err
 		}
 
-		res[i] = k
+		res = append(res, k)
 	}
 
 	return res, nil

@@ -38,12 +38,8 @@ func runListCmd(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	for _, r := range records {
-		if r == nil {
-			continue
-		}
-
-		cmd.Println(r.Name)
+	for _, k := range records {
+		cmd.Println(k.Name)
 	}
 
 	return nil

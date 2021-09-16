@@ -98,8 +98,8 @@ cosmovisor version
 ``` 
 This returns the version of the `Cosmos SDK` application as well as the version of Cosmovisor as shown below
 ```
-0.43.0-beta1-319-ge3aec1840
 Cosmovisor Version:  v0.1.0-85-g65baacac0
+0.43.0-beta1-319-ge3aec1840
 ```
 
 

@@ -17,7 +17,6 @@ func main() {
 
 // Run is the main loop, but returns an error
 func Run(args []string) error {
-
 	cfg, err := cosmovisor.GetConfigFromEnv()
 	if err != nil {
 		return err

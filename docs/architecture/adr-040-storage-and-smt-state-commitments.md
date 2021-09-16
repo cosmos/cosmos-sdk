@@ -153,15 +153,13 @@ Currently IBC (v1.0) module merkle proof for a `(key, value)` consists of two el
 1. Checks that a `proof` is a valid merkle proof `(key, value)` using ICS-23 spec.
 2. Then it checks that the `storeKey` and `root(proof)` hashes to the AppHash (App state commitment).
 
-Breaking this behavior would severely impact the Cosmos ecosystem which already widely adopts the IBC module. Unfortunately, the straightforward implementation is breaking. Hence, we
+Breaking this behavior would severely impact the Cosmos ecosystem which already widely adopts the IBC module. Unfortunately, the straightforward implementation is breaking because all keys in `SC` are hashed. So we can't simply make the last step. Even if we set the `storeKey` to an empty string it will rehash.
 
-, it then verifies proof store key hashes to app_hash with simple merkle tree verification method.
+For workaround we need to:
++ keep the double hashing and multistore concept for IBC.
++ the `RootStore` will have only two stores: the general one, and another for IBC. `RootStore` should not expose mounting stores in a "runtime" (it's only possible to do it through constructor).
++ The App Hash is a hash of both stores in the `RootStore`.
 
-
-RootStore merkle proofs, except for IBC module, will have only one pass. For module `M` and it's store key `S_m`, an object `O` with key `k` will be stored in `RootStore.WithPrefix(S_m)`.
-This will create a record in `SC` at key `hash(S_m + key)`.
-
-However this breaks the existing IBC
 
 
 ### Optimization: compress module keys

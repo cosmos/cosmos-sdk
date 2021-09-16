@@ -37,7 +37,6 @@ func Run(args []string) error {
 		fmt.Println("[cosmovisor] upgrade detected, DAEMON_RESTART_AFTER_UPGRADE is off. Verify new upgrade and start cosmovisor again.")
 	}
 
-	// Run cosmosvisor commands e.g `cosmovisor version`
 	cmd.RunCosmovisorCommands(args)
 	return err
 }

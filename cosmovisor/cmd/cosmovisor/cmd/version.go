@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// Cosmovisor version value. Set during build
+// Version represents Cosmovisor version value. Set during build
 var Version string
 
 func isVersionCommand(args []string) bool {
@@ -13,7 +13,5 @@ func isVersionCommand(args []string) bool {
 }
 
 func printVersion() {
-
 	fmt.Println("Cosmovisor Version: ", Version)
-
 }

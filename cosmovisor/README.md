@@ -92,7 +92,7 @@ The `DAEMON` specific code and operations (e.g. tendermint config, the applicati
 
 As Cosmovisor is meant to be used as a wrapper for a `Cosmos SDK` application, it does not support many commands. 
 
-However, to determine the version of Cosmovisor being run, the following command can be run.
+However, to determine the version of Cosmovisor, the following command can be run.
 ```
 cosmovisor version
 ``` 

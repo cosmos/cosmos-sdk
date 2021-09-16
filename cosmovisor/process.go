@@ -63,7 +63,6 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	}
 
 	if !IsSkipUpgradeHeight(args, l.fw.currentInfo) {
-
 		if err := doBackup(l.cfg); err != nil {
 			return false, err
 		}
@@ -157,7 +156,6 @@ func doBackup(cfg *Config) error {
 // cfg contains the cosmovisor config from env var
 // counter is the current attempt at preupgrade by cosmovisor.
 func doPreUpgrade(cfg *Config, counter int) error {
-
 	bin, err := cfg.CurrentBin()
 	preUpgradeCmd := exec.Command(bin, "pre-upgrade")
 

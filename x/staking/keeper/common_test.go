@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"math/big"
 	"testing"
+	"time"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -33,6 +34,7 @@ func createTestInput(t *testing.T) (*codec.LegacyAmino, *simapp.SimApp, sdk.Cont
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.GetSubspace(types.ModuleName),
+		6*time.Second,
 	)
 	return app.LegacyAmino(), app, ctx
 }

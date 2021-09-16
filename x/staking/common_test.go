@@ -3,6 +3,7 @@ package staking_test
 import (
 	"math/big"
 	"testing"
+	"time"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -48,6 +49,7 @@ func getBaseSimappWithCustomKeeper(t *testing.T) (*codec.LegacyAmino, *simapp.Si
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.GetSubspace(types.ModuleName),
+		6*time.Second,
 	)
 	app.StakingKeeper.SetParams(ctx, types.DefaultParams())
 

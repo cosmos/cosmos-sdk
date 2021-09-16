@@ -8,7 +8,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -61,22 +60,15 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	}
 
 	db := dbm.NewMemDB()
-	encCfg := MakeTestEncodingConfig()
-	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
-	genesisState := NewDefaultGenesisState(encCfg.Codec)
-	genAccs := []authtypes.GenesisAccount{acc}
-
-	genesisState = SetupGenesisStateWithValSet(t, app.AppCodec(), genesisState, valSet, genAccs, balances...)
-	stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
-	require.NoError(t, err)
-	// init chain will set the validator set and initialize the genesis accounts
-	app.InitChain(
-		abci.RequestInitChain{
-			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: DefaultConsensusParams,
-			AppStateBytes:   stateBytes,
-		},
-	)
+	app := NewSimappWithCustomOptions(t, false, SetupOptions{
+		Logger:             log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
+		DB:                 db,
+		InvCheckPeriod:     0,
+		EncConfig:          encCfg,
+		HomePath:           DefaultNodeHome,
+		SkipUpgradeHeights: map[int64]bool{},
+		AppOpts:            EmptyAppOptions{},
+	})
 
 	for acc := range maccPerms {
 		require.True(
@@ -90,7 +82,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 
 	// Making a new app object with the db, so that initchain hasn't been called
 	app2 := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
-	_, err = app2.ExportAppStateAndValidators(false, []string{})
+	_, err := app2.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }
 
@@ -273,7 +265,17 @@ func TestInitGenesisOnMigration(t *testing.T) {
 }
 
 func TestUpgradeStateOnGenesis(t *testing.T) {
-	app := Setup(t, false)
+	encCfg := MakeTestEncodingConfig()
+	db := dbm.NewMemDB()
+	app := NewSimappWithCustomOptions(t, false, SetupOptions{
+		Logger:             log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
+		DB:                 db,
+		InvCheckPeriod:     0,
+		EncConfig:          encCfg,
+		HomePath:           DefaultNodeHome,
+		SkipUpgradeHeights: map[int64]bool{},
+		AppOpts:            EmptyAppOptions{},
+	})
 
 	// make sure the upgrade keeper has version map in state
 	ctx := app.NewContext(false, tmproto.Header{})

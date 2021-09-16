@@ -1004,6 +1004,8 @@ func (suite *IntegrationTestSuite) TestSetDenomMetaData() {
 
 	actualMetadata, found := app.BankKeeper.GetDenomMetaData(ctx, metadata[1].Base)
 	suite.Require().True(found)
+	found = app.BankKeeper.HasDenomMetaData(ctx, metadata[1].Base)
+	suite.Require().True(found)
 	suite.Require().Equal(metadata[1].GetBase(), actualMetadata.GetBase())
 	suite.Require().Equal(metadata[1].GetDisplay(), actualMetadata.GetDisplay())
 	suite.Require().Equal(metadata[1].GetDescription(), actualMetadata.GetDescription())
@@ -1135,18 +1137,19 @@ func (suite *IntegrationTestSuite) TestBalanceTrackingEvents() {
 }
 
 func (suite *IntegrationTestSuite) getTestMetadata() []types.Metadata {
-	return []types.Metadata{{
-		Name:        "Cosmos Hub Atom",
-		Symbol:      "ATOM",
-		Description: "The native staking token of the Cosmos Hub.",
-		DenomUnits: []*types.DenomUnit{
-			{"uatom", uint32(0), []string{"microatom"}},
-			{"matom", uint32(3), []string{"milliatom"}},
-			{"atom", uint32(6), nil},
+	return []types.Metadata{
+		{
+			Name:        "Cosmos Hub Atom",
+			Symbol:      "ATOM",
+			Description: "The native staking token of the Cosmos Hub.",
+			DenomUnits: []*types.DenomUnit{
+				{"uatom", uint32(0), []string{"microatom"}},
+				{"matom", uint32(3), []string{"milliatom"}},
+				{"atom", uint32(6), nil},
+			},
+			Base:    "uatom",
+			Display: "atom",
 		},
-		Base:    "uatom",
-		Display: "atom",
-	},
 		{
 			Name:        "Token",
 			Symbol:      "TOKEN",

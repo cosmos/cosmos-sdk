@@ -1,7 +1,6 @@
 package upgrade_test
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -12,17 +11,12 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
@@ -40,37 +34,17 @@ type TestSuite struct {
 var s TestSuite
 
 func setupTest(t *testing.T, height int64, skip map[int64]bool) TestSuite {
-	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey()
-	if t != nil {
-		require.NoError(t, err)
-	}
-	// create validator set with single validator
-	validator := tmtypes.NewValidator(pubKey, 1)
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-
-	// generate genesis account
-	senderPrivKey := secp256k1.GenPrivKey()
-	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
-	balance := banktypes.Balance{
-		Address: acc.GetAddress().String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
-	}
 
 	db := dbm.NewMemDB()
-	encCdc := simapp.MakeTestEncodingConfig()
-	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, skip, simapp.DefaultNodeHome, 0, simapp.MakeTestEncodingConfig(), simapp.EmptyAppOptions{})
-	genesisState := simapp.NewDefaultGenesisState(encCdc.Codec)
-	genesisState = simapp.SetupGenesisStateWithValSet(t, app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
-	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-	require.NoError(t, err)
-
-	app.InitChain(
-		abci.RequestInitChain{
-			Validators:    []abci.ValidatorUpdate{},
-			AppStateBytes: stateBytes,
-		},
-	)
+	app := simapp.NewSimappWithCustomOptions(t, false, simapp.SetupOptions{
+		Logger:             log.NewNopLogger(),
+		SkipUpgradeHeights: skip,
+		DB:                 db,
+		InvCheckPeriod:     0,
+		HomePath:           simapp.DefaultNodeHome,
+		EncConfig:          simapp.MakeTestEncodingConfig(),
+		AppOpts:            simapp.EmptyAppOptions{},
+	})
 
 	s.keeper = app.UpgradeKeeper
 	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: height, Time: time.Now()})

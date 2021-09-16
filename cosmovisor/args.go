@@ -21,7 +21,7 @@ const (
 	envRestartUpgrade       = "DAEMON_RESTART_AFTER_UPGRADE"
 	envSkipBackup           = "UNSAFE_SKIP_BACKUP"
 	envInterval             = "DAEMON_POLL_INTERVAL"
-	envPreupgradeMaxRetries = "PREUPGRADE_MAX_RETRIES"
+	envPreupgradeMaxRetries = "DAEMON_PREUPGRADE_MAX_RETRIES"
 )
 
 const (

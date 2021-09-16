@@ -701,18 +701,7 @@ func (coins Coins) AmountOf(denom string) math.Int {
 
 // AmountOfNoDenomValidation returns the amount of a denom from coins
 // without validating the denomination.
-// CONTRACT: coins must be valid (sorted).
-func (coins Coins) AmountOfNoDenomValidation(denom string) math.Int {
-	if ok, c := coins.Find(denom); ok {
-		return c.Amount
-	}
-	return math.ZeroInt()
-}
-
-// Find returns true and coin if the denom exists in coins. Otherwise it returns false
-// and a zero coin. Uses binary search.
-// CONTRACT: coins must be valid (sorted).
-func (coins Coins) Find(denom string) (bool, Coin) {
+func (coins Coins) AmountOfNoDenomValidation(denom string) Int {
 	switch len(coins) {
 	case 0:
 		return false, Coin{}
@@ -725,15 +714,16 @@ func (coins Coins) Find(denom string) (bool, Coin) {
 		return false, Coin{}
 
 	default:
+		// Binary search the amount of coins remaining
 		midIdx := len(coins) / 2 // 2:1, 3:1, 4:2
 		coin := coins[midIdx]
 		switch {
 		case denom < coin.Denom:
-			return coins[:midIdx].Find(denom)
+			return coins[:midIdx].AmountOfNoDenomValidation(denom)
 		case denom == coin.Denom:
 			return true, coin
 		default:
-			return coins[midIdx+1:].Find(denom)
+			return coins[midIdx+1:].AmountOfNoDenomValidation(denom)
 		}
 	}
 }

@@ -18,6 +18,9 @@ const (
 	// StoreKey is the string store representation
 	StoreKey = ModuleName
 
+	// TStoreKey is the string transient store representation
+	TStoreKey = ModuleName
+
 	// QuerierRoute is the querier route for the staking module
 	QuerierRoute = ModuleName
 
@@ -46,7 +49,8 @@ var (
 	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
 	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue
 
-	HistoricalInfoKey = []byte{0x50} // prefix for the historical info
+	HistoricalInfoKey   = []byte{0x50} // prefix for the historical info
+	ValidatorUpdatesKey = []byte{0x51} // prefix for the end block validator updates transient key
 )
 
 // GetValidatorKey creates the key for the validator with address

@@ -35,7 +35,7 @@ IMPLEMENTATION STATUS is either `Implemented` or `Not Implemented`.
 #### Consensus Status
 
 ```
-DRAFT -> PROPOSED -> LAST CALL yyyy-mm-dd -> ACCEPTED | REJECTED -> SUPERSEEDED by ADR-xxx
+DRAFT -> PROPOSED -> LAST CALL yyyy-mm-dd -> ACCEPTED | REJECTED -> SUPERSEDED by ADR-xxx
                   \        |
                    \       |
                     v      v

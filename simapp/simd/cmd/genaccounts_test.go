@@ -83,7 +83,7 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 				path := hd.CreateHDPath(118, 0, 0).String()
 				kr, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, home, nil)
 				require.NoError(t, err)
-				_, _, err = kr.NewMnemonic(tc.addr, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+				_, _, err = kr.NewMnemonic(tc.addr, keyring.English, path, hd.Secp256k1)
 				require.NoError(t, err)
 				clientCtx = clientCtx.WithKeyring(kr)
 			}

@@ -13,9 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-var (
-	PKs = simapp.CreateTestPubKeys(500)
-)
+var PKs = simapp.CreateTestPubKeys(500)
 
 func init() {
 	sdk.DefaultPowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
@@ -30,6 +28,7 @@ func createTestInput() (*codec.LegacyAmino, *simapp.SimApp, sdk.Context) {
 	app.StakingKeeper = keeper.NewKeeper(
 		app.AppCodec(),
 		app.GetKey(types.StoreKey),
+		app.GetTKey(types.TStoreKey),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.GetSubspace(types.ModuleName),

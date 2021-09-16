@@ -33,7 +33,6 @@ simd query authz grants cosmos1.. cosmos1.. /cosmos.bank.v1beta1.MsgSend
 Example Output:
 
 ```
-k.v1beta1.MsgSend
 grants:
 - authorization:
     '@type': /cosmos.bank.v1beta1.SendAuthorization

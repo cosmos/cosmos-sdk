@@ -10,7 +10,7 @@ require (
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/coinbase/rosetta-sdk-go v0.6.10
 	github.com/confio/ics23/go v0.6.6
-	github.com/cosmos/cosmos-proto v0.0.0-20210720184750-6af320ed3523
+	github.com/cosmos/cosmos-proto v0.0.0-20210914142853-23ed61ac79ce
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.17.1
 	github.com/cosmos/ledger-cosmos-go v0.11.1
@@ -65,5 +65,3 @@ replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alp
 replace github.com/tendermint/tendermint => github.com/tendermint/tendermint v0.34.12
 
 replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
-
-replace github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v0.0.0-20210720184750-6af320ed3523

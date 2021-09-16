@@ -95,7 +95,7 @@ if err != nil {
 if upgradeInfo.Name == "my-plan" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 	storeUpgrades := storetypes.StoreUpgrades{
 		// add store upgrades for new modules
-		// Example: 
+		// Example:
 		//    Added: []string{"foo", "bar"},
 		// ...
 	}

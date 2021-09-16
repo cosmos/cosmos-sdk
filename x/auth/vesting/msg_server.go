@@ -98,3 +98,68 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 
 	return &types.MsgCreateVestingAccountResponse{}, nil
 }
+func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *types.MsgCreatePermanentLockedAccount) (*types.MsgCreatePermanentLockedAccountResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	ak := s.AccountKeeper
+	bk := s.BankKeeper
+
+	if err := bk.IsSendEnabledCoins(ctx, msg.Amount...); err != nil {
+		return nil, err
+	}
+
+	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return nil, err
+	}
+	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	if bk.BlockedAddr(to) {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
+	}
+
+	if acc := ak.GetAccount(ctx, to); acc != nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
+	}
+
+	baseAccountI := ak.NewAccountWithAddress(ctx, to)
+
+	baseAcc, ok := baseAccountI.(*authtypes.BaseAccount)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid account type; expected: BaseAccount, got: %T", baseAccountI)
+	}
+
+	var acc authtypes.AccountI = types.NewPermanentLockedAccount(baseAcc, msg.Amount)
+
+	ak.SetAccount(ctx, acc)
+
+	defer func() {
+		telemetry.IncrCounter(1, "new", "account")
+
+		for _, a := range msg.Amount {
+			if a.Amount.IsInt64() {
+				telemetry.SetGaugeWithLabels(
+					[]string{"tx", "msg", "create_permanent_locked_account"},
+					float32(a.Amount.Int64()),
+					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
+				)
+			}
+		}
+	}()
+
+	err = bk.SendCoins(ctx, from, to, msg.Amount)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	)
+
+	return &types.MsgCreatePermanentLockedAccountResponse{}, nil
+}

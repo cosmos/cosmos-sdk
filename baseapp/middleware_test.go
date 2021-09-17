@@ -274,9 +274,8 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 	routerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		legacyRouter.AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			// TODO:
-			// kv := msg.(*msgKeyValue)
-			// bapp.cms.GetCommitKVStore(capKey2).Set(kv.Key, kv.Value)
+			kv := msg.(*msgKeyValue)
+			bapp.CMS().GetCommitKVStore(capKey2).Set(kv.Key, kv.Value)
 			return &sdk.Result{}, nil
 		}))
 		txHandler := testTxHandler(middleware.TxHandlerOptions{
@@ -650,7 +649,7 @@ func TestCheckTx(t *testing.T) {
 		require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
 	}
 
-	checkStateStore := app.checkState.ctx.KVStore(capKey1)
+	checkStateStore := app.CheckState().Context().KVStore(capKey1)
 	storedCounter := getIntFromStore(checkStateStore, counterKey)
 
 	// Ensure AnteHandler ran
@@ -660,13 +659,13 @@ func TestCheckTx(t *testing.T) {
 	header := tmproto.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header, Hash: []byte("hash")})
 
-	require.NotNil(t, app.checkState.ctx.BlockGasMeter(), "block gas meter should have been set to checkState")
-	require.NotEmpty(t, app.checkState.ctx.HeaderHash())
+	require.NotNil(t, app.CheckState().Context().BlockGasMeter(), "block gas meter should have been set to checkState")
+	require.NotEmpty(t, app.CheckState().Context().HeaderHash())
 
 	app.EndBlock(abci.RequestEndBlock{})
 	app.Commit()
 
-	checkStateStore = app.checkState.ctx.KVStore(capKey1)
+	checkStateStore = app.CheckState().Context().KVStore(capKey1)
 	storedBytes := checkStateStore.Get(counterKey)
 	require.Nil(t, storedBytes)
 }
@@ -766,7 +765,7 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-	store := app.deliverState.ctx.KVStore(capKey1)
+	store := app.DeliverState().Context().KVStore(capKey1)
 
 	// tx counter only incremented once
 	txCounter := getIntFromStore(store, anteKey)
@@ -786,7 +785,7 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-	store = app.deliverState.ctx.KVStore(capKey1)
+	store = app.DeliverState().Context().KVStore(capKey1)
 
 	// tx counter only incremented once
 	txCounter = getIntFromStore(store, anteKey)
@@ -1126,7 +1125,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 		for j := 0; j < tc.numDelivers; j++ {
 			_, result, err := app.SimDeliver(aminoTxEncoder(), tx)
 
-			ctx := app.getState(runTxModeDeliver).ctx
+			ctx := app.DeliverState().Context()
 
 			// check for failed transactions
 			if tc.fail && (j+1) > tc.failAfterDeliver {
@@ -1189,7 +1188,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.Empty(t, res.Events)
 	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-	ctx := app.getState(runTxModeDeliver).ctx
+	ctx := app.DeliverState().Context()
 	store := ctx.KVStore(capKey1)
 	require.Equal(t, int64(0), getIntFromStore(store, anteKey))
 
@@ -1205,7 +1204,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.Empty(t, res.Events)
 	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-	ctx = app.getState(runTxModeDeliver).ctx
+	ctx = app.DeliverState().Context()
 	store = ctx.KVStore(capKey1)
 	require.Equal(t, int64(1), getIntFromStore(store, anteKey))
 	require.Equal(t, int64(0), getIntFromStore(store, deliverKey))
@@ -1221,7 +1220,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.NotEmpty(t, res.Events)
 	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-	ctx = app.getState(runTxModeDeliver).ctx
+	ctx = app.DeliverState().Context()
 	store = ctx.KVStore(capKey1)
 	require.Equal(t, int64(2), getIntFromStore(store, anteKey))
 	require.Equal(t, int64(1), getIntFromStore(store, deliverKey))

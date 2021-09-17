@@ -112,13 +112,13 @@ We need to be able to process transactions and roll-back state updates if a tran
 We identified use-cases, where modules will need to save an object commitment without storing an object itself. Sometimes clients are receiving complex objects, and they have no way to prove a correctness of that object without knowing the storage layout. For those use cases it would be easier to commit to the object without storing it directly.
 
 
-### Reduce MultiStore
+### Refactor MultiStore
 
-Stargate `/store` implementation (StoreV1) adds an additional layer in the SDK store construction - the `MultiStore` structure. The multistore exists to support the modularity of the Cosmos SDK - each module is using its own instance of IAVL, but in the current implementation, all instances share the same database.
+The Stargate `/store` implementation (StoreV1) adds an additional layer in the SDK store construction - the `MultiStore` structure. The multistore exists to support the modularity of the Cosmos SDK - each module is using its own instance of IAVL, but in the current implementation, all instances share the same database.
 
 The latter indicates, however, that the implementation doesn't provide true modularity. Instead it causes problems related to race condition and sync (see: [\#6370](https://github.com/cosmos/cosmos-sdk/issues/6370)).
 
-We propose to reduce the multistore concept from the SDK, and to use a single instance of `SC` and `SS` in a `rootStore` object. To avoid confusion, we should rename the `MultiStore` interface to `RootStore`.
+We propose to reduce the multistore concept from the SDK, and to use a single instance of `SC` and `SS` in a `RootStore` object. To avoid confusion, we should rename the `MultiStore` interface to `RootStore`.
 
 Moreover, to improve usability, we should extend the `KVStore` interface with _prefix store_. This will allow module developers to bind a store to a namespace for module sub-components:
 
@@ -138,29 +138,70 @@ for each OP in [Get Has, Set, ...]
     store.WithPrefix(prefix).OP(key) == store.OP(prefix + key)
 ```
 
+The `RootStore` will have the following interface; the methods for configuring tracing and listeners are omitted for brevity.
 
-The `RootStore` will have the following interface:
+```go
+// Used where read-only access to versions is needed.
+type BasicRootStore interface {
+	Store
+	GetKVStore(StoreKey) KVStore
+	CacheRootStore() CacheRootStore
+}
 
+// Used as the main app state, replacing CommitMultiStore.
+type CommitRootStore interface {
+    BasicRootStore
+	Committer
+	Snapshotter
+
+	GetVersion(uint64) (BasicRootStore, error)
+	SetInitialVersion(uint64) error
+
+    ... // Trace and Listen methods
+}
+
+// Replaces CacheMultiStore for branched state.
+type CacheRootStore interface {
+	BasicRootStore
+	Write()
+
+    ... // Trace and Listen methods
+}
+
+// Example of constructor parameters for the concrete type.
+type RootStoreConfig struct {
+	PersistentCache RootStorePersistentCache
+	Upgrades        *StoreUpgrades
+	InitialVersion  uint64
+
+    ReservePrefix(StoreKey, StoreType)
+}
+
+// Unchanged from MultiStorePersistentCache type.
+type RootStorePersistentCache interface {
+	GetStoreCache(StoreKey, CommitKVStore) CommitKVStore
+	Unwrap(StoreKey) CommitKVStore
+	Reset()
+}
 ```
-TODO
-```
 
-In contrast to `MultiStore`, `RootStore` doesn't allow to mount dynamically sub stores. However it can inherit a multistore functionality in it's concrete implementation (which will be needed for IBC support).
+In contrast to `MultiStore`, `RootStore` doesn't allow to dynamically mount sub-stores or provide an arbitrary backing DB.
+
+#### Compatibility support
+
+To ease the transition to this new interface for users, we can create a shim which wraps a `CommitMultiStore` but provides a `CommitRootStore` interface, and expose functions to safely create and access the underlying `CommitMultiStore`.
+
+The new `RootStore` and supporting types can be implemented in a `store/v2` package to avoid breaking existing code.
 
 #### Merkle Proofs and IBC
 
-Currently IBC (v1.0) module merkle proof for a `(key, value)` consists of two elements `[storeKey, proof]`. Verification using 2 passes:
-1. Checks that a `proof` is a valid merkle proof `(key, value)` using ICS-23 spec.
-2. Then it checks that the `storeKey` and `root(proof)` hashes to the AppHash (App state commitment).
+Currently, an IBC (v1.0) Merkle proof path consists of two elements (`["<store-key>", "<record-key>"]`), with each key corresponding to a separate proof. These are each verified according to individual [ICS-23 specs](https://github.com/cosmos/ibc-go/blob/f7051429e1cf833a6f65d51e6c3df1609290a549/modules/core/23-commitment/types/merkle.go#L17), and the result hash of each step is used as the committed value of the next step, until a root commitment hash is obtained.
 
-Breaking this behavior would severely impact the Cosmos ecosystem which already widely adopts the IBC module. Unfortunately, the straightforward implementation is breaking because all keys in `SC` are hashed. So we can't simply make the last step. Even if we set the `storeKey` to an empty string it will rehash.
+This is not compatible with the `RootStore`, which stores all records in a single Merkle tree structure, and won't produce separate proofs for the store- and record-key. Ideally, the store-key component of the proof could just be omitted, and updated to use a "no-op" spec, so only the record-key is used. However, because the IBC verification code hardcodes the `"ibc"` prefix and applies it to the SDK proof as a separate element of the proof path, this isn't possible without a breaking change. Breaking this behavior would severely impact the Cosmos ecosystem which already widely adopts the IBC module.
 
-For workaround we need to:
-+ keep the double hashing and multistore concept for IBC.
-+ the `RootStore` will have only two stores: the general one, and another for IBC. `RootStore` should not expose mounting stores in a "runtime" (it's only possible to do it through constructor).
-+ The App Hash is a hash of both stores in the `RootStore`.
+As a workaround, the `RootStore` will have to maintain a separate set of SMT-based stores and an index of store keys, in the same fashion as the `MultiStore`. The non-IBC state can be maintained as a separate store in the index, alongside the modules that are used in IBC (`clients/`, `connections/`, and `channels/`). The final App hash will be the root hash of the store index.
 
-
+This workaround can be used until the IBC connection code is fully upgraded and supports single-element commitment proofs.
 
 ### Optimization: compress module keys
 

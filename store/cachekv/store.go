@@ -69,7 +69,10 @@ func (store *Store) Get(key []byte) (value []byte) {
 }
 
 // Set implements types.KVStore.
-func (store *Store) Set(key, value []byte) {
+func (store *Store) Set(key []byte, value []byte) {
+	store.mtx.Lock()
+	defer store.mtx.Unlock()
+
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
 

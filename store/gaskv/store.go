@@ -43,8 +43,8 @@ func (gs *Store) Get(key []byte) (value []byte) {
 	return value
 }
 
-// Set implements KVStore.
-func (gs *Store) Set(key, value []byte) {
+// Implements KVStore.
+func (gs *Store) Set(key []byte, value []byte) {
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostFlat, types.GasWriteCostFlatDesc)

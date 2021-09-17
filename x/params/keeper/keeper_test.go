@@ -26,7 +26,7 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(true)
+	app := simapp.Setup(suite.T(), true)
 	ctx := app.BaseApp.NewContext(true, tmproto.Header{})
 
 	suite.app, suite.ctx = app, ctx

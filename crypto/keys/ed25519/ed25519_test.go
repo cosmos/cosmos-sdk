@@ -11,7 +11,9 @@ import (
 	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	ed25519 "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
@@ -84,6 +86,12 @@ func TestPubKeyEquals(t *testing.T) {
 	}
 }
 
+func TestAddressEd25519(t *testing.T) {
+	pk := ed25519.PubKey{[]byte{125, 80, 29, 208, 159, 53, 119, 198, 73, 53, 187, 33, 199, 144, 62, 255, 1, 235, 117, 96, 128, 211, 17, 45, 34, 64, 189, 165, 33, 182, 54, 206}}
+	addr := pk.Address()
+	require.Len(t, addr, 20, "Address must be 20 bytes long")
+}
+
 func TestPrivKeyEquals(t *testing.T) {
 	ed25519PrivKey := ed25519.GenPrivKey()
 
@@ -154,11 +162,11 @@ func TestMarshalAmino(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			// Do a round trip of encoding/decoding binary.
-			bz, err := aminoCdc.MarshalBinaryBare(tc.msg)
+			bz, err := aminoCdc.Marshal(tc.msg)
 			require.NoError(t, err)
 			require.Equal(t, tc.expBinary, bz)
 
-			err = aminoCdc.UnmarshalBinaryBare(bz, tc.typ)
+			err = aminoCdc.Unmarshal(bz, tc.typ)
 			require.NoError(t, err)
 
 			require.Equal(t, tc.msg, tc.typ)
@@ -195,7 +203,7 @@ func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
 			"ed25519 private key, binary",
 			tmPrivKey,
 			privKey,
-			aminoCdc.MarshalBinaryBare,
+			aminoCdc.Marshal,
 		},
 		{
 			"ed25519 private key, JSON",
@@ -207,7 +215,7 @@ func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
 			"ed25519 public key, binary",
 			tmPubKey,
 			pubKey,
-			aminoCdc.MarshalBinaryBare,
+			aminoCdc.Marshal,
 		},
 		{
 			"ed25519 public key, JSON",
@@ -227,4 +235,22 @@ func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
 			require.Equal(t, bz1, bz2)
 		})
 	}
+}
+
+func TestMarshalJSON(t *testing.T) {
+	require := require.New(t)
+	privKey := ed25519.GenPrivKey()
+	pk := privKey.PubKey()
+
+	registry := types.NewInterfaceRegistry()
+	cryptocodec.RegisterInterfaces(registry)
+	cdc := codec.NewProtoCodec(registry)
+
+	bz, err := cdc.MarshalInterfaceJSON(pk)
+	require.NoError(err)
+
+	var pk2 cryptotypes.PubKey
+	err = cdc.UnmarshalInterfaceJSON(bz, &pk2)
+	require.NoError(err)
+	require.True(pk2.Equals(pk))
 }

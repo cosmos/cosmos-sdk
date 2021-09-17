@@ -29,7 +29,7 @@ func (k msgServer) SetWithdrawAddress(goCtx context.Context, msg *types.MsgSetWi
 	if err != nil {
 		return nil, err
 	}
-	withdrawAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	withdrawAddress, err := sdk.AccAddressFromBech32(msg.WithdrawAddress)
 	if err != nil {
 		return nil, err
 	}

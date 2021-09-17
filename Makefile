@@ -2,7 +2,8 @@
 
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
-VERSION := $(shell echo $(shell git describe --always) | sed 's/^v//')
+VERSION := $(shell echo $(shell git describe --always --match "v*") | sed 's/^v//')
+TMVERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
@@ -12,6 +13,7 @@ MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
+PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
 
 export GO111MODULE = on
 
@@ -44,8 +46,6 @@ endif
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
   build_tags += gcc
 endif
-build_tags += $(BUILD_TAGS)
-build_tags := $(strip $(build_tags))
 
 whitespace :=
 whitespace += $(whitespace)
@@ -58,7 +58,8 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
 		  -X github.com/cosmos/cosmos-sdk/version.AppName=simd \
 		  -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 		  -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)"
+		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
+			-X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TMVERSION)
 
 # DB backend selection
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
@@ -66,6 +67,7 @@ ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
 endif
 ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=badgerdb
+  BUILD_TAGS += badgerdb
 endif
 # handle rocksdb
 ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
@@ -84,6 +86,9 @@ ifeq (,$(findstring nostrip,$(COSMOS_BUILD_OPTIONS)))
 endif
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
+
+build_tags += $(BUILD_TAGS)
+build_tags := $(strip $(build_tags))
 
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 # check for nostrip option
@@ -140,15 +145,16 @@ cosmovisor:
 
 .PHONY: build build-linux build-simd-all build-simd-linux cosmovisor
 
+mockgen_cmd=go run github.com/golang/mock/mockgen
+
 mocks: $(MOCKS_DIR)
-	mockgen -source=client/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
-	mockgen -package mocks -destination tests/mocks/tendermint_tm_db_DB.go github.com/tendermint/tm-db DB
-	mockgen -source=types/module/module.go -package mocks -destination tests/mocks/types_module_module.go
-	mockgen -source=types/invariant.go -package mocks -destination tests/mocks/types_invariant.go
-	mockgen -source=types/router.go -package mocks -destination tests/mocks/types_router.go
-	mockgen -source=types/handler.go -package mocks -destination tests/mocks/types_handler.go
-	mockgen -package mocks -destination tests/mocks/grpc_server.go github.com/gogo/protobuf/grpc Server
-	mockgen -package mocks -destination tests/mocks/tendermint_tendermint_libs_log_DB.go github.com/tendermint/tendermint/libs/log Logger
+	$(mockgen_cmd) -source=client/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
+	$(mockgen_cmd) -package mocks -destination tests/mocks/tendermint_tm_db_DB.go github.com/tendermint/tm-db DB
+	$(mockgen_cmd) -source=types/module/module.go -package mocks -destination tests/mocks/types_module_module.go
+	$(mockgen_cmd) -source=types/invariant.go -package mocks -destination tests/mocks/types_invariant.go
+	$(mockgen_cmd) -source=types/router.go -package mocks -destination tests/mocks/types_router.go
+	$(mockgen_cmd) -package mocks -destination tests/mocks/grpc_server.go github.com/gogo/protobuf/grpc Server
+	$(mockgen_cmd) -package mocks -destination tests/mocks/tendermint_tendermint_libs_log_DB.go github.com/tendermint/tendermint/libs/log Logger
 .PHONY: mocks
 
 $(MOCKS_DIR):
@@ -176,6 +182,16 @@ go.sum: go.mod
 ###                              Documentation                              ###
 ###############################################################################
 
+update-swagger-docs: statik
+	$(BINDIR)/statik -src=client/docs/swagger-ui -dest=client/docs -f -m
+	@if [ -n "$(git status --porcelain)" ]; then \
+        echo "\033[91mSwagger docs are out of sync!!!\033[0m";\
+        exit 1;\
+    else \
+        echo "\033[92mSwagger docs are in sync\033[0m";\
+    fi
+.PHONY: update-swagger-docs
+
 godocs:
 	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/cosmos/cosmos-sdk/types"
 	godoc -http=:6060
@@ -191,14 +207,7 @@ build-docs:
 		cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
 		cp ~/output/$${path_prefix}/index.html ~/output ; \
 	done < versions ;
-
-sync-docs:
-	cd ~/output && \
-	echo "role_arn = ${DEPLOYMENT_ROLE_ARN}" >> /root/.aws/config ; \
-	echo "CI job = ${CIRCLE_BUILD_URL}" >> version.html ; \
-	aws s3 sync . s3://${WEBSITE_BUCKET} --profile terraform --delete ; \
-	aws cloudfront create-invalidation --distribution-id ${CF_DISTRIBUTION_ID} --profile terraform --path "/*" ;
-.PHONY: sync-docs
+.PHONY: build-docs
 
 ###############################################################################
 ###                           Tests & Simulation                            ###
@@ -229,11 +238,23 @@ check-test-unit-amino: ARGS=-tags='ledger test_ledger_mock test_amino norace'
 $(CHECK_TEST_TARGETS): EXTRA_ARGS=-run=none
 $(CHECK_TEST_TARGETS): run-tests
 
+SUB_MODULES = $(shell find . -type f -name 'go.mod' -print0 | xargs -0 -n1 dirname | sort)
+CURRENT_DIR = $(shell pwd)
 run-tests:
 ifneq (,$(shell which tparse 2>/dev/null))
-	go test -mod=readonly -json $(ARGS) $(EXTRA_ARGS) $(TEST_PACKAGES) | tparse
+	@echo "Starting unit tests"; \
+	for module in $(SUB_MODULES); do \
+		cd ${CURRENT_DIR}/$$module; \
+		echo "Running unit tests for module $$module"; \
+		go test -mod=readonly -json $(ARGS) $(TEST_PACKAGES) ./... | tparse; \
+    done
 else
-	go test -mod=readonly $(ARGS)  $(EXTRA_ARGS) $(TEST_PACKAGES)
+	@echo "Starting unit tests"; \
+	for module in $(SUB_MODULES); do \
+		cd ${CURRENT_DIR}/$$module; \
+		echo "Running unit tests for module $$module"; \
+		go test -mod=readonly $(ARGS) $(TEST_PACKAGES) ./... ; \
+	done
 endif
 
 .PHONY: run-tests test test-all $(TEST_TARGETS)
@@ -306,6 +327,11 @@ test-cover:
 	@export VERSION=$(VERSION); bash -x contrib/test_cover.sh
 .PHONY: test-cover
 
+test-rosetta:
+	docker build -t rosetta-ci:latest -f contrib/rosetta/rosetta-ci/Dockerfile .
+	docker-compose -f contrib/rosetta/docker-compose.yaml up --abort-on-container-exit --exit-code-from test_rosetta --build
+.PHONY: test-rosetta
+
 benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
 .PHONY: benchmark
@@ -314,11 +340,23 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-lint:
-	golangci-lint run --out-format=tab
+markdownLintImage=tmknom/markdownlint
+containerMarkdownLint=$(PROJECT_NAME)-markdownlint
+containerMarkdownLintFix=$(PROJECT_NAME)-markdownlint-fix
+
+golangci_lint_cmd=go run github.com/golangci/golangci-lint/cmd/golangci-lint
+
+lint: lint-go
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLint}$$"; then docker start -a $(containerMarkdownLint); else docker run --name $(containerMarkdownLint) -i -v "$(CURDIR):/work" $(markdownLintImage); fi
 
 lint-fix:
-	golangci-lint run --fix --out-format=tab --issues-exit-code=0
+	$(golangci_lint_cmd) run --fix --out-format=tab --issues-exit-code=0
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLintFix}$$"; then docker start -a $(containerMarkdownLintFix); else docker run --name $(containerMarkdownLintFix) -i -v "$(CURDIR):/work" $(markdownLintImage) . --fix; fi
+
+lint-go:
+	echo $(GIT_DIFF)
+	$(golangci_lint_cmd) run --out-format=tab $(GIT_DIFF)
+
 .PHONY: lint lint-fix
 
 format:
@@ -357,30 +395,43 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
+protoVer=v0.2
+protoImageName=tendermintdev/sdk-proto-gen:$(protoVer)
+containerProtoGen=$(PROJECT_NAME)-proto-gen-$(protoVer)
+containerProtoGenAny=$(PROJECT_NAME)-proto-gen-any-$(protoVer)
+containerProtoGenSwagger=$(PROJECT_NAME)-proto-gen-swagger-$(protoVer)
+containerProtoFmt=$(PROJECT_NAME)-proto-fmt-$(protoVer)
+
 proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen sh ./scripts/protocgen.sh
-
-proto-format:
-	@echo "Formatting Protobuf files"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace \
-	--workdir /workspace tendermintdev/docker-build-proto \
-	find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \;
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
+		sh ./scripts/protocgen.sh; fi
 
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
 proto-gen-any:
-	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen sh ./scripts/protocgen-any.sh
+	@echo "Generating Protobuf Any"
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGenAny}$$"; then docker start -a $(containerProtoGenAny); else docker run --name $(containerProtoGenAny) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
+		sh ./scripts/protocgen-any.sh; fi
 
 proto-swagger-gen:
-	@./scripts/protoc-swagger-gen.sh
+	@echo "Generating Protobuf Swagger"
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGenSwagger}$$"; then docker start -a $(containerProtoGenSwagger); else docker run --name $(containerProtoGenSwagger) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
+		sh ./scripts/protoc-swagger-gen.sh; fi
+
+proto-format:
+	@echo "Formatting Protobuf files"
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then docker start -a $(containerProtoFmt); else docker run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
+		find ./ -not -path "./third_party/*" -name "*.proto" -exec clang-format -i {} \; ; fi
+
 
 proto-lint:
-	@$(DOCKER_BUF) check lint --error-format=json
+	@$(DOCKER_BUF) lint --error-format=json
 
 proto-check-breaking:
-	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=master
+	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=master
+
 
 TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.0-rc6/proto/tendermint
 GOGO_PROTO_URL      = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
@@ -444,19 +495,31 @@ proto-update-deps:
 ###                                Localnet                                 ###
 ###############################################################################
 
-# Run a 4-node testnet locally
+# Run a 4-node testnet locally via docker compose
 localnet-start: build-linux localnet-stop
 	$(if $(shell $(DOCKER) inspect -f '{{ .Id }}' cosmossdk/simd-env 2>/dev/null),$(info found image cosmossdk/simd-env),$(MAKE) -C contrib/images simd-env)
-	if ! [ -f build/node0/simd/config/genesis.json ]; then $(DOCKER) run --rm \
+	if ! test -f build/node0/simd/config/genesis.json; then $(DOCKER) run --rm \
 		--user $(shell id -u):$(shell id -g) \
 		-v $(BUILDDIR):/simd:Z \
 		-v /etc/group:/etc/group:ro \
 		-v /etc/passwd:/etc/passwd:ro \
 		-v /etc/shadow:/etc/shadow:ro \
-		cosmossdk/simd-env testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
+		cosmossdk/simd-env testnet init-files --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
 	docker-compose up -d
 
 localnet-stop:
 	docker-compose down
 
 .PHONY: localnet-start localnet-stop
+
+###############################################################################
+###                                rosetta                                  ###
+###############################################################################
+# builds rosetta test data dir
+rosetta-data:
+	-docker container rm data_dir_build
+	docker build -t rosetta-ci:latest -f contrib/rosetta/rosetta-ci/Dockerfile .
+	docker run --name data_dir_build -t rosetta-ci:latest sh /rosetta/data.sh
+	docker cp data_dir_build:/tmp/data.tar.gz "$(CURDIR)/contrib/rosetta/rosetta-ci/data.tar.gz"
+	docker container rm data_dir_build
+.PHONY: rosetta-data

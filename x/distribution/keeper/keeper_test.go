@@ -9,11 +9,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func TestSetWithdrawAddr(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000000000))
@@ -35,7 +36,7 @@ func TestSetWithdrawAddr(t *testing.T) {
 }
 
 func TestWithdrawValidatorCommission(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	valCommission := sdk.DecCoins{
@@ -48,16 +49,14 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 
 	// set module account coins
 	distrAcc := app.DistrKeeper.GetDistributionAccount(ctx)
-	err := app.BankKeeper.SetBalances(ctx, distrAcc.GetAddress(), sdk.NewCoins(
-		sdk.NewCoin("mytoken", sdk.NewInt(2)),
-		sdk.NewCoin("stake", sdk.NewInt(2)),
-	))
-	require.NoError(t, err)
+	coins := sdk.NewCoins(sdk.NewCoin("mytoken", sdk.NewInt(2)), sdk.NewCoin("stake", sdk.NewInt(2)))
+	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, distrAcc.GetName(), coins))
+
 	app.AccountKeeper.SetModuleAccount(ctx, distrAcc)
 
 	// check initial balance
 	balance := app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(valAddrs[0]))
-	expTokens := sdk.TokensFromConsensusPower(1000)
+	expTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 1000)
 	expCoins := sdk.NewCoins(sdk.NewCoin("stake", expTokens))
 	require.Equal(t, expCoins, balance)
 
@@ -68,7 +67,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, valAddrs[0], types.ValidatorAccumulatedCommission{Commission: valCommission})
 
 	// withdraw commission
-	_, err = app.DistrKeeper.WithdrawValidatorCommission(ctx, valAddrs[0])
+	_, err := app.DistrKeeper.WithdrawValidatorCommission(ctx, valAddrs[0])
 	require.NoError(t, err)
 
 	// check balance increase
@@ -89,7 +88,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 }
 
 func TestGetTotalRewards(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	valCommission := sdk.DecCoins{
@@ -110,13 +109,13 @@ func TestGetTotalRewards(t *testing.T) {
 }
 
 func TestFundCommunityPool(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000000000))
+	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.ZeroInt())
 
 	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr[0], amount))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr[0], amount))
 
 	initPool := app.DistrKeeper.GetFeePool(ctx)
 	assert.Empty(t, initPool.CommunityPool)

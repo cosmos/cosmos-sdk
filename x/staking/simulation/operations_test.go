@@ -13,6 +13,7 @@ import (
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
@@ -23,7 +24,7 @@ import (
 // TestWeightedOperations tests the weights of the operations.
 func TestWeightedOperations(t *testing.T) {
 
-	app, ctx := createTestApp(false)
+	app, ctx := createTestApp(t, false)
 
 	ctx.WithChainID("test-chain")
 
@@ -63,7 +64,7 @@ func TestWeightedOperations(t *testing.T) {
 // TestSimulateMsgCreateValidator tests the normal scenario of a valid message of type TypeMsgCreateValidator.
 // Abonormal scenarios, where the message are created by an errors are not tested here.
 func TestSimulateMsgCreateValidator(t *testing.T) {
-	app, ctx := createTestApp(false)
+	app, ctx := createTestApp(t, false)
 
 	// setup 3 accounts
 	s := rand.NewSource(1)
@@ -95,7 +96,7 @@ func TestSimulateMsgCreateValidator(t *testing.T) {
 // TestSimulateMsgEditValidator tests the normal scenario of a valid message of type TypeMsgEditValidator.
 // Abonormal scenarios, where the message is created by an errors are not tested here.
 func TestSimulateMsgEditValidator(t *testing.T) {
-	app, ctx := createTestApp(false)
+	app, ctx := createTestApp(t, false)
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
@@ -120,10 +121,10 @@ func TestSimulateMsgEditValidator(t *testing.T) {
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, "0.280623462081924936", msg.CommissionRate.String())
-	require.Equal(t, "rBqDOTtGTO", msg.Description.Moniker)
-	require.Equal(t, "BSpYuLyYgg", msg.Description.Identity)
-	require.Equal(t, "wNbeHVIkPZ", msg.Description.Website)
-	require.Equal(t, "MOXcnQfyze", msg.Description.SecurityContact)
+	require.Equal(t, "xKGLwQvuyN", msg.Description.Moniker)
+	require.Equal(t, "SlcxgdXhhu", msg.Description.Identity)
+	require.Equal(t, "WeLrQKjLxz", msg.Description.Website)
+	require.Equal(t, "rBqDOTtGTO", msg.Description.SecurityContact)
 	require.Equal(t, types.TypeMsgEditValidator, msg.Type())
 	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
 	require.Len(t, futureOperations, 0)
@@ -132,7 +133,7 @@ func TestSimulateMsgEditValidator(t *testing.T) {
 // TestSimulateMsgDelegate tests the normal scenario of a valid message of type TypeMsgDelegate.
 // Abonormal scenarios, where the message is created by an errors are not tested here.
 func TestSimulateMsgDelegate(t *testing.T) {
-	app, ctx := createTestApp(false)
+	app, ctx := createTestApp(t, false)
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
@@ -168,7 +169,7 @@ func TestSimulateMsgDelegate(t *testing.T) {
 // TestSimulateMsgUndelegate tests the normal scenario of a valid message of type TypeMsgUndelegate.
 // Abonormal scenarios, where the message is created by an errors are not tested here.
 func TestSimulateMsgUndelegate(t *testing.T) {
-	app, ctx := createTestApp(false)
+	app, ctx := createTestApp(t, false)
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
@@ -181,7 +182,7 @@ func TestSimulateMsgUndelegate(t *testing.T) {
 	validator0 := getTestingValidator0(t, app, ctx, accounts)
 
 	// setup delegation
-	delTokens := sdk.TokensFromConsensusPower(2)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := accounts[1]
 	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
@@ -214,7 +215,7 @@ func TestSimulateMsgUndelegate(t *testing.T) {
 // TestSimulateMsgBeginRedelegate tests the normal scenario of a valid message of type TypeMsgBeginRedelegate.
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
 func TestSimulateMsgBeginRedelegate(t *testing.T) {
-	app, ctx := createTestApp(false)
+	app, ctx := createTestApp(t, false)
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
@@ -227,7 +228,7 @@ func TestSimulateMsgBeginRedelegate(t *testing.T) {
 	validator0 := getTestingValidator0(t, app, ctx, accounts)
 	validator1 := getTestingValidator1(t, app, ctx, accounts)
 
-	delTokens := sdk.TokensFromConsensusPower(2)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 
 	// setup accounts[2] as delegator
@@ -262,9 +263,9 @@ func TestSimulateMsgBeginRedelegate(t *testing.T) {
 }
 
 // returns context and an app with updated mint keeper
-func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
+func createTestApp(t *testing.T, isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 	// sdk.PowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
-	app := simapp.Setup(isCheckTx)
+	app := simapp.Setup(t, isCheckTx)
 
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.MintKeeper.SetParams(ctx, minttypes.DefaultParams())
@@ -276,15 +277,14 @@ func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 func getTestingAccounts(t *testing.T, r *rand.Rand, app *simapp.SimApp, ctx sdk.Context, n int) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
 
-	initAmt := sdk.TokensFromConsensusPower(200)
+	initAmt := app.StakingKeeper.TokensFromConsensusPower(ctx, 200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	// add coins to the accounts
 	for _, account := range accounts {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, account.Address)
 		app.AccountKeeper.SetAccount(ctx, acc)
-		err := app.BankKeeper.SetBalances(ctx, account.Address, initCoins)
-		require.NoError(t, err)
+		require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, account.Address, initCoins))
 	}
 
 	return accounts
@@ -309,7 +309,7 @@ func getTestingValidator(t *testing.T, app *simapp.SimApp, ctx sdk.Context, acco
 	require.NoError(t, err)
 
 	validator.DelegatorShares = sdk.NewDec(100)
-	validator.Tokens = sdk.TokensFromConsensusPower(100)
+	validator.Tokens = app.StakingKeeper.TokensFromConsensusPower(ctx, 100)
 
 	app.StakingKeeper.SetValidator(ctx, validator)
 

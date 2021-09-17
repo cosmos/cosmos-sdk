@@ -8,7 +8,7 @@
 
 - Anil Kumar (@anilcse)
 - Jack Zampolin (@jackzampolin)
-- Adam Bozanich (@boz) 
+- Adam Bozanich (@boz)
 
 ## Status
 
@@ -16,13 +16,13 @@ Proposed
 
 ## Abstract
 
-Currently in the SDK, events are defined in the handlers for each message as well as `BeginBlock` and `EndBlock`. Each module doesn't have types defined for each event, they are implemented as `map[string]string`. Above all else this makes these events difficult to consume as it requires a great deal of raw string matching and parsing. This proposal focuses on updating the events to use **typed events** defined in each module such that emiting and subscribing to events will be much easier. This workflow comes from the experience of the Akash Network team. 
+Currently in the SDK, events are defined in the handlers for each message as well as `BeginBlock` and `EndBlock`. Each module doesn't have types defined for each event, they are implemented as `map[string]string`. Above all else this makes these events difficult to consume as it requires a great deal of raw string matching and parsing. This proposal focuses on updating the events to use **typed events** defined in each module such that emiting and subscribing to events will be much easier. This workflow comes from the experience of the Akash Network team.
 
 ## Context
 
-Currently in the SDK, events are defined in the handlers for each message, meaning each module doesn't have a cannonical set of types for each event. Above all else this makes these events difficult to consume as it requires a great deal of raw string matching and parsing. This proposal focuses on updating the events to use **typed events** defined in each module such that emiting and subscribing to events will be much easier. This workflow comes from the experience of the Akash Network team. 
+Currently in the SDK, events are defined in the handlers for each message, meaning each module doesn't have a cannonical set of types for each event. Above all else this makes these events difficult to consume as it requires a great deal of raw string matching and parsing. This proposal focuses on updating the events to use **typed events** defined in each module such that emiting and subscribing to events will be much easier. This workflow comes from the experience of the Akash Network team.
 
-[Our platform](http://github.com/ovrclk/akash) requires a number of programatic on chain interactions both on the provider (datacenter - to bid on new orders and listen for leases created) and user (application developer - to send the app manifest to the provider) side. In addition the Akash team is now maintaining the IBC [`relayer`](https://github.com/ovrclk/relayer), another very event driven process. In working on these core pieces of infrastructure, and integrating lessons learned from Kubernetes developement, our team has developed a standard method for defining and consuming typed events in SDK modules. We have found that it is extremely useful in building this type of event driven application. 
+[Our platform](http://github.com/ovrclk/akash) requires a number of programatic on chain interactions both on the provider (datacenter - to bid on new orders and listen for leases created) and user (application developer - to send the app manifest to the provider) side. In addition the Akash team is now maintaining the IBC [`relayer`](https://github.com/ovrclk/relayer), another very event driven process. In working on these core pieces of infrastructure, and integrating lessons learned from Kubernetes developement, our team has developed a standard method for defining and consuming typed events in SDK modules. We have found that it is extremely useful in building this type of event driven application.
 
 As the SDK gets used more extensively for apps like `peggy`, other peg zones, IBC, DeFi, etc... there will be an exploding demand for event driven applications to support new features desired by users. We propose upstreaming our findings into the SDK to enable all SDK applications to quickly and easily build event driven apps to aid their core application. Wallets, exchanges, explorers, and defi protocols all stand to benefit from this work.
 
@@ -39,7 +39,7 @@ __Step-1__:  Implement additional functionality in the `types` package: `EmitTyp
 ```go
 // types/events.go
 
-// EmitTypedEvent takes typed event and emits converting it into sdk.Event 
+// EmitTypedEvent takes typed event and emits converting it into sdk.Event
 func (em *EventManager) EmitTypedEvent(event proto.Message) error {
 	evtType := proto.MessageName(event)
 	evtJSON, err := codec.ProtoMarshalJSON(event)
@@ -82,7 +82,7 @@ func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 	} else {
 		value = reflect.Zero(concreteGoType)
     }
-    
+
 	protoMsg, ok := value.Interface().(proto.Message)
 	if !ok {
 		return nil, fmt.Errorf("%q does not implement proto.Message", event.Type)
@@ -109,7 +109,7 @@ func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 
 Here, the `EmitTypedEvent` is a method on `EventManager` which takes typed event as input and apply json serialization on it. Then it maps the JSON key/value pairs to `event.Attributes` and emits it in form of `sdk.Event`. `Event.Type` will be the type URL of the proto message.
 
-When we subscribe to emitted events on the tendermint websocket, they are emitted in the form of an `abci.Event`. `ParseTypedEvent` parses the event back to it's original proto message. 
+When we subscribe to emitted events on the tendermint websocket, they are emitted in the form of an `abci.Event`. `ParseTypedEvent` parses the event back to it's original proto message.
 
 __Step-2__: Add proto definitions for typed events for msgs in each module:
 
@@ -165,11 +165,10 @@ Please see the below code sample for more detail on this flow looks for clients.
 
 ### Negative
 
-
 ## Detailed code example of publishing events
 
 This ADR also proposes adding affordances to emit and consume these events. This way developers will only need to write
-`EventHandler`s which define the actions they desire to take. 
+`EventHandler`s which define the actions they desire to take.
 
 ```go
 // EventEmitter is a type that describes event emitter functions
@@ -193,7 +192,7 @@ func main() {
 }
 
 // SubmitProposalEventHandler is an example of an event handler that prints proposal details
-// when any EventSubmitProposal is emitted. 
+// when any EventSubmitProposal is emitted.
 func SubmitProposalEventHandler(ev proto.Message) (err error) {
     switch event := ev.(type) {
     // Handle governance proposal events creation events
@@ -206,9 +205,9 @@ func SubmitProposalEventHandler(ev proto.Message) (err error) {
     }
 }
 
-// TxEmitter is an example of an event emitter that emits just transaction events. This can and 
-// should be implemented somewhere in the SDK. The SDK can include an EventEmitters for tm.event='Tx' 
-// and/or tm.event='NewBlock' (the new block events may contain typed events) 
+// TxEmitter is an example of an event emitter that emits just transaction events. This can and
+// should be implemented somewhere in the SDK. The SDK can include an EventEmitters for tm.event='Tx'
+// and/or tm.event='NewBlock' (the new block events may contain typed events)
 func TxEmitter(ctx context.Context, cliCtx client.Context, ehs ...EventHandler) (err error) {
     // Instantiate and start tendermint RPC client
     client, err := cliCtx.GetNode()
@@ -290,7 +289,7 @@ func PublishChainTxEvents(ctx context.Context, client tmclient.EventsClient, bus
                     if !evt.Result.IsOK() {
                         continue
                     }
-                    // range over events, parse them using the basic manager and 
+                    // range over events, parse them using the basic manager and
                     // send them to the pubsub bus
                     for _, abciEv := range events {
                         typedEvent, err := sdk.ParseTypedEvent(abciEv)
@@ -315,5 +314,6 @@ func PublishChainTxEvents(ctx context.Context, client tmclient.EventsClient, bus
 ```
 
 ## References
+
 - [Publish Custom Events via a bus](https://github.com/ovrclk/akash/blob/90d258caeb933b611d575355b8df281208a214f8/events/publish.go#L19-L58)
 - [Consuming the events in `Client`](https://github.com/ovrclk/deploy/blob/bf6c633ab6c68f3026df59efd9982d6ca1bf0561/cmd/event-handlers.go#L57)

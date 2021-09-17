@@ -16,7 +16,7 @@ import (
 func GetValidateSignaturesCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate-signatures [file]",
-		Short: "Validate transactions signatures",
+		Short: "validate transactions signatures",
 		Long: `Print the addresses that must sign the transaction, those who have already
 signed it, and make sure that signatures are in the correct order.
 
@@ -96,12 +96,12 @@ func printAndValidateSigs(
 			success = false
 		}
 
-		// Validate the actual signature over the transaction bytes since we can
+		// validate the actual signature over the transaction bytes since we can
 		// reach out to a full node to query accounts.
 		if !offline && success {
 			accNum, accSeq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, sigAddr)
 			if err != nil {
-				cmd.Printf("failed to get account: %s\n", sigAddr)
+				cmd.PrintErrf("failed to get account: %s\n", sigAddr)
 				return false
 			}
 

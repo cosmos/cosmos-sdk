@@ -87,7 +87,7 @@ func testMarshalingTestCase(require *require.Assertions, tc testCase, m mustMars
 	}
 }
 
-func testMarshaling(t *testing.T, cdc codec.Marshaler) {
+func testMarshaling(t *testing.T, cdc codec.Codec) {
 	any, err := types.NewAnyWithValue(&testdata.Dog{Name: "rufus"})
 	require.NoError(t, err)
 
@@ -117,8 +117,8 @@ func testMarshaling(t *testing.T, cdc codec.Marshaler) {
 
 	for _, tc := range testCases {
 		tc := tc
-		m1 := mustMarshaler{cdc.MarshalBinaryBare, cdc.MustMarshalBinaryBare, cdc.UnmarshalBinaryBare, cdc.MustUnmarshalBinaryBare}
-		m2 := mustMarshaler{cdc.MarshalBinaryLengthPrefixed, cdc.MustMarshalBinaryLengthPrefixed, cdc.UnmarshalBinaryLengthPrefixed, cdc.MustUnmarshalBinaryLengthPrefixed}
+		m1 := mustMarshaler{cdc.Marshal, cdc.MustMarshal, cdc.Unmarshal, cdc.MustUnmarshal}
+		m2 := mustMarshaler{cdc.MarshalLengthPrefixed, cdc.MustMarshalLengthPrefixed, cdc.UnmarshalLengthPrefixed, cdc.MustUnmarshalLengthPrefixed}
 		m3 := mustMarshaler{
 			func(i codec.ProtoMarshaler) ([]byte, error) { return cdc.MarshalJSON(i) },
 			func(i codec.ProtoMarshaler) []byte { return cdc.MustMarshalJSON(i) },

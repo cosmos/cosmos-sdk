@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"testing"
@@ -6,29 +6,44 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
-func Test_validateAuxFuncs(t *testing.T) {
-	type args struct {
-		i interface{}
+func TestParams_ValidateBasic(t *testing.T) {
+	toDec := sdk.MustNewDecFromStr
+
+	type fields struct {
+		CommunityTax        sdk.Dec
+		BaseProposerReward  sdk.Dec
+		BonusProposerReward sdk.Dec
+		WithdrawAddrEnabled bool
 	}
 	tests := []struct {
 		name    string
-		args    args
+		fields  fields
 		wantErr bool
 	}{
-		{"wrong type", args{10.5}, true},
-		{"nil Int pointer", args{sdk.Dec{}}, true},
-		{"negative", args{sdk.NewDec(-1)}, true},
-		{"one dec", args{sdk.NewDec(1)}, false},
-		{"two dec", args{sdk.NewDec(2)}, true},
+		{"success", fields{toDec("0.1"), toDec("0.5"), toDec("0.4"), false}, false},
+		{"negative community tax", fields{toDec("-0.1"), toDec("0.5"), toDec("0.4"), false}, true},
+		{"negative base proposer reward", fields{toDec("0.1"), toDec("-0.5"), toDec("0.4"), false}, true},
+		{"negative bonus proposer reward", fields{toDec("0.1"), toDec("0.5"), toDec("-0.4"), false}, true},
+		{"total sum greater than 1", fields{toDec("0.2"), toDec("0.5"), toDec("0.4"), false}, true},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.wantErr, validateCommunityTax(tt.args.i) != nil)
-			require.Equal(t, tt.wantErr, validateBaseProposerReward(tt.args.i) != nil)
-			require.Equal(t, tt.wantErr, validateBonusProposerReward(tt.args.i) != nil)
+			p := types.Params{
+				CommunityTax:        tt.fields.CommunityTax,
+				BaseProposerReward:  tt.fields.BaseProposerReward,
+				BonusProposerReward: tt.fields.BonusProposerReward,
+				WithdrawAddrEnabled: tt.fields.WithdrawAddrEnabled,
+			}
+			if err := p.ValidateBasic(); (err != nil) != tt.wantErr {
+				t.Errorf("ValidateBasic() error = %v, wantErr %v", err, tt.wantErr)
+			}
 		})
 	}
+}
+
+func TestDefaultParams(t *testing.T) {
+	require.NoError(t, types.DefaultParams().ValidateBasic())
 }

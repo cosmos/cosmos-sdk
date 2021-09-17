@@ -2,6 +2,7 @@ package client
 
 import (
 	"github.com/spf13/pflag"
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -51,6 +52,7 @@ func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
 	limit, _ := flagSet.GetUint64(flags.FlagLimit)
 	countTotal, _ := flagSet.GetBool(flags.FlagCountTotal)
 	page, _ := flagSet.GetUint64(flags.FlagPage)
+	reverse, _ := flagSet.GetBool(flags.FlagReverse)
 
 	if page > 1 && offset > 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "page and offset cannot be used together")
@@ -65,5 +67,14 @@ func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
 		Offset:     offset,
 		Limit:      limit,
 		CountTotal: countTotal,
+		Reverse:    reverse,
 	}, nil
+}
+
+// NewClientFromNode sets up Client implementation that communicates with a Tendermint node over
+// JSON RPC and WebSockets
+// TODO: We might not need to manually append `/websocket`:
+// https://github.com/cosmos/cosmos-sdk/issues/8986
+func NewClientFromNode(nodeURI string) (*rpchttp.HTTP, error) {
+	return rpchttp.New(nodeURI, "/websocket")
 }

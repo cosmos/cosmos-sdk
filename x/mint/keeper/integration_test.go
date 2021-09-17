@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"testing"
+
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"

@@ -1,5 +1,5 @@
 <!--
-order: 6
+order: 7
 -->
 
 # Events
@@ -18,7 +18,7 @@ The staking module emits the following events:
 | complete_redelegation | destination_validator | {dstValidatorAddress}     |
 | complete_redelegation | delegator             | {delegatorAddress}        |
 
-## Handlers
+## Msg's
 
 ### MsgCreateValidator
 
@@ -61,7 +61,7 @@ The staking module emits the following events:
 | message | action              | begin_unbonding    |
 | message | sender              | {senderAddress}    |
 
-* [0] Time is formatted in the RFC3339 standard
+- [0] Time is formatted in the RFC3339 standard
 
 ### MsgBeginRedelegate
 
@@ -75,4 +75,4 @@ The staking module emits the following events:
 | message    | action                | begin_redelegate      |
 | message    | sender                | {senderAddress}       |
 
-* [0] Time is formatted in the RFC3339 standard
+- [0] Time is formatted in the RFC3339 standard

@@ -2,6 +2,8 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
+	"math"
 	"math/rand"
 	"testing"
 
@@ -33,6 +35,34 @@ func TestNewBitArrayNeverCrashesOnNegatives(t *testing.T) {
 	for _, bits := range bitList {
 		bA := NewCompactBitArray(bits)
 		require.Nil(t, bA)
+	}
+}
+
+func TestBitArrayEqual(t *testing.T) {
+	empty := new(CompactBitArray)
+	big1, _ := randCompactBitArray(1000)
+	big1Cpy := *big1
+	big2, _ := randCompactBitArray(1000)
+	big2.SetIndex(500, !big1.GetIndex(500)) // ensure they are different
+	cases := []struct {
+		name string
+		b1   *CompactBitArray
+		b2   *CompactBitArray
+		eq   bool
+	}{
+		{name: "both nil are equal", b1: nil, b2: nil, eq: true},
+		{name: "if one is nil then not equal", b1: nil, b2: empty, eq: false},
+		{name: "nil and empty not equal", b1: empty, b2: nil, eq: false},
+		{name: "empty and empty equal", b1: empty, b2: new(CompactBitArray), eq: true},
+		{name: "same bits should be equal", b1: big1, b2: &big1Cpy, eq: true},
+		{name: "different should not be equal", b1: big1, b2: big2, eq: false},
+	}
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			eq := tc.b1.Equal(tc.b2)
+			require.Equal(t, tc.eq, eq)
+		})
 	}
 }
 
@@ -154,6 +184,17 @@ func TestCompactMarshalUnmarshal(t *testing.T) {
 	}
 }
 
+// Ensure that CompactUnmarshal does not blindly try to slice using
+// a negative/out of bounds index of size returned from binary.Uvarint.
+// See issue https://github.com/cosmos/cosmos-sdk/issues/9165
+func TestCompactMarshalUnmarshalReturnsErrorOnInvalidSize(t *testing.T) {
+	malicious := []byte{0xd7, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01, 0x24, 0x28}
+	cba, err := CompactUnmarshal(malicious)
+	require.Error(t, err)
+	require.Nil(t, cba)
+	require.Contains(t, err.Error(), "n=-11 is out of range of len(bz)=13")
+}
+
 func TestCompactBitArrayNumOfTrueBitsBefore(t *testing.T) {
 	testCases := []struct {
 		marshalledBA   string
@@ -197,6 +238,58 @@ func TestCompactBitArrayGetSetIndex(t *testing.T) {
 			val := (r.Int63() % 2) == 0
 			bA.SetIndex(index, val)
 			require.Equal(t, val, bA.GetIndex(index), "bA.SetIndex(%d, %v) failed on bit array: %s", index, val, copy)
+
+			// Ensure that passing in negative indices to .SetIndex and .GetIndex do not
+			// panic. See issue https://github.com/cosmos/cosmos-sdk/issues/9164.
+			// To intentionally use negative indices, We want only values that aren't 0.
+			if index == 0 {
+				continue
+			}
+			require.False(t, bA.SetIndex(-index, val))
+			require.False(t, bA.GetIndex(-index))
 		}
+	}
+}
+
+func BenchmarkNumTrueBitsBefore(b *testing.B) {
+	ba, _ := randCompactBitArray(100)
+
+	b.Run("new", func(b *testing.B) {
+		b.ReportAllocs()
+		for i := 0; i < b.N; i++ {
+			ba.NumTrueBitsBefore(90)
+		}
+	})
+}
+
+func TestNewCompactBitArrayCrashWithLimits(t *testing.T) {
+	if testing.Short() {
+		t.Skip("This test can be expensive in memory")
+	}
+	tests := []struct {
+		in       int
+		mustPass bool
+	}{
+		{int(^uint(0) >> 30), false},
+		{int(^uint(0) >> 1), false},
+		{int(^uint(0) >> 2), false},
+		{int(math.MaxInt32), true},
+		{int(math.MaxInt32) + 1, true},
+		{int(math.MaxInt32) + 2, true},
+		{int(math.MaxInt32) - 7, true},
+		{int(math.MaxInt32) + 24, true},
+		{int(math.MaxInt32) * 9, false}, // results in >=maxint after (bits+7)/8
+		{1, true},
+		{0, false},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("%d", tt.in), func(t *testing.T) {
+			got := NewCompactBitArray(tt.in)
+			if g := got != nil; g != tt.mustPass {
+				t.Fatalf("got!=nil=%t, want=%t", g, tt.mustPass)
+			}
+		})
 	}
 }

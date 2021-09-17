@@ -43,7 +43,7 @@ func TestRandomizedGenState(t *testing.T) {
 
 	require.Equal(t, uint32(207), stakingGenesis.Params.MaxValidators)
 	require.Equal(t, uint32(7), stakingGenesis.Params.MaxEntries)
-	require.Equal(t, uint32(48), stakingGenesis.Params.HistoricalEntries)
+	require.Equal(t, uint32(8687), stakingGenesis.Params.HistoricalEntries)
 	require.Equal(t, "stake", stakingGenesis.Params.BondDenom)
 	require.Equal(t, float64(238280), stakingGenesis.Params.UnbondingTime.Seconds())
 	// check numbers of Delegations and Validators
@@ -66,7 +66,7 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, "1", stakingGenesis.Validators[2].MinSelfDelegation.String())
 }
 
-// TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.
+// TestRandomizedGenState1 tests abnormal scenarios of applying RandomizedGenState.
 func TestRandomizedGenState1(t *testing.T) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)

@@ -1,7 +1,9 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
+	"strings"
 
 	yaml "gopkg.in/yaml.v2"
 
@@ -10,8 +12,8 @@ import (
 
 // NewVote creates a new Vote instance
 //nolint:interfacer
-func NewVote(proposalID uint64, voter sdk.AccAddress, option VoteOption) Vote {
-	return Vote{proposalID, voter.String(), option}
+func NewVote(proposalID uint64, voter sdk.AccAddress, options WeightedVoteOptions) Vote {
+	return Vote{ProposalId: proposalID, Voter: voter.String(), Options: options}
 }
 
 func (v Vote) String() string {
@@ -43,7 +45,7 @@ func (v Votes) String() string {
 	}
 	out := fmt.Sprintf("Votes for Proposal %d:", v[0].ProposalId)
 	for _, vot := range v {
-		out += fmt.Sprintf("\n  %s: %s", vot.Voter, vot.Option)
+		out += fmt.Sprintf("\n  %s: %s", vot.Voter, vot.Options)
 	}
 	return out
 }
@@ -53,14 +55,65 @@ func (v Vote) Empty() bool {
 	return v.String() == Vote{}.String()
 }
 
+// NewNonSplitVoteOption creates a single option vote with weight 1
+func NewNonSplitVoteOption(option VoteOption) WeightedVoteOptions {
+	return WeightedVoteOptions{{option, sdk.NewDec(1)}}
+}
+
+func (v WeightedVoteOption) String() string {
+	out, _ := json.Marshal(v)
+	return string(out)
+}
+
+// WeightedVoteOptions describes array of WeightedVoteOptions
+type WeightedVoteOptions []WeightedVoteOption
+
+func (v WeightedVoteOptions) String() (out string) {
+	for _, opt := range v {
+		out += opt.String() + "\n"
+	}
+
+	return strings.TrimSpace(out)
+}
+
+// ValidWeightedVoteOption returns true if the sub vote is valid and false otherwise.
+func ValidWeightedVoteOption(option WeightedVoteOption) bool {
+	if !option.Weight.IsPositive() || option.Weight.GT(sdk.NewDec(1)) {
+		return false
+	}
+	return ValidVoteOption(option.Option)
+}
+
 // VoteOptionFromString returns a VoteOption from a string. It returns an error
 // if the string is invalid.
 func VoteOptionFromString(str string) (VoteOption, error) {
 	option, ok := VoteOption_value[str]
 	if !ok {
-		return OptionEmpty, fmt.Errorf("'%s' is not a valid vote option", str)
+		return OptionEmpty, fmt.Errorf("'%s' is not a valid vote option, available options: yes/no/no_with_veto/abstain", str)
 	}
 	return VoteOption(option), nil
+}
+
+// WeightedVoteOptionsFromString returns weighted vote options from string. It returns an error
+// if the string is invalid.
+func WeightedVoteOptionsFromString(str string) (WeightedVoteOptions, error) {
+	options := WeightedVoteOptions{}
+	for _, option := range strings.Split(str, ",") {
+		fields := strings.Split(option, "=")
+		option, err := VoteOptionFromString(fields[0])
+		if err != nil {
+			return options, err
+		}
+		if len(fields) < 2 {
+			return options, fmt.Errorf("weight field does not exist for %s option", fields[0])
+		}
+		weight, err := sdk.NewDecFromStr(fields[1])
+		if err != nil {
+			return options, err
+		}
+		options = append(options, WeightedVoteOption{option, weight})
+	}
+	return options, nil
 }
 
 // ValidVoteOption returns true if the vote option is valid and false otherwise.

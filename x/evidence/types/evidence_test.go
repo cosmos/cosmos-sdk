@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
@@ -56,4 +57,23 @@ func TestEquivocationValidateBasic(t *testing.T) {
 			require.Equal(t, tc.expectErr, tc.e.ValidateBasic() != nil)
 		})
 	}
+}
+
+func TestEvidenceAddressConversion(t *testing.T) {
+	sdk.GetConfig().SetBech32PrefixForConsensusNode("testcnclcons", "testcnclconspub")
+	tmEvidence := abci.Evidence{
+		Type: abci.EvidenceType_DUPLICATE_VOTE,
+		Validator: abci.Validator{
+			Address: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			Power:   100,
+		},
+		Height:           1,
+		Time:             time.Now(),
+		TotalVotingPower: 100,
+	}
+	evidence := types.FromABCIEvidence(tmEvidence).(*types.Equivocation)
+	consAddr := evidence.GetConsensusAddress()
+	// Check the address is the same after conversion
+	require.Equal(t, tmEvidence.Validator.Address, consAddr.Bytes())
+	sdk.GetConfig().SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)
 }

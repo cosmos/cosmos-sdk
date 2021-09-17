@@ -27,7 +27,7 @@ var (
 
 func init() {
 	var err error
-	pk1Any, err = codectypes.PackAny(pk1)
+	pk1Any, err = codectypes.NewAnyWithValue(pk1)
 	if err != nil {
 		panic(fmt.Sprintf("Can't pack pk1 %t as Any", pk1))
 	}

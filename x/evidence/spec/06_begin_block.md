@@ -7,19 +7,16 @@ order: 6
 ## Evidence Handling
 
 Tendermint blocks can include
-[Evidence](https://github.com/tendermint/tendermint/blob/master/docs/spec/blockchain/blockchain.md#evidence),
-which indicates that a validator committed malicious behavior. The relevant information is
-forwarded to the application as ABCI Evidence in `abci.RequestBeginBlock` so that
-the validator an be accordingly punished.
+[Evidence](https://github.com/tendermint/tendermint/blob/master/docs/spec/blockchain/blockchain.md#evidence) that indicates if a validator committed malicious behavior. The relevant information is forwarded to the application as ABCI Evidence in `abci.RequestBeginBlock` so that the validator can be punished accordingly.
 
 ### Equivocation
 
-Currently, the SDK handles two types of evidence inside ABCI's `BeginBlock`:
+Currently, the SDK handles two types of evidence inside the ABCI `BeginBlock`:
 
 - `DuplicateVoteEvidence`,
 - `LightClientAttackEvidence`.
 
-These two evidence types are handled the same way by the evidence module. First, the SDK converts the Tendermint concrete evidence type to a SDK `Evidence` interface using `Equivocation` as the concrete type.
+The evidence module handles these two evidence types the same way. First, the SDK converts the Tendermint concrete evidence type to a SDK `Evidence` interface using `Equivocation` as the concrete type.
 
 ```proto
 // Equivocation implements the Evidence interface.
@@ -35,16 +32,18 @@ For some `Equivocation` submitted in `block` to be valid, it must satisfy:
 
 `Evidence.Timestamp >= block.Timestamp - MaxEvidenceAge`
 
-Where `Evidence.Timestamp` is the timestamp in the block at height `Evidence.Height` and
-`block.Timestamp` is the current block timestamp.
+Where:
+
+- `Evidence.Timestamp` is the timestamp in the block at height `Evidence.Height`
+- `block.Timestamp` is the current block timestamp.
 
 If valid `Equivocation` evidence is included in a block, the validator's stake is
-reduced (slashed) by `SlashFractionDoubleSign`, which is defined by the `x/slashing` module,
-of what their stake was when the infraction occurred (rather than when the evidence was discovered).
-We want to "follow the stake", i.e. the stake which contributed to the infraction
+reduced (slashed) by `SlashFractionDoubleSign` as defined by the `x/slashing` module
+of what their stake was when the infraction occurred, rather than when the evidence was discovered.
+We want to "follow the stake", i.e., the stake that contributed to the infraction
 should be slashed, even if it has since been redelegated or started unbonding.
 
-In addition, the validator is permanently jailed and tombstoned making it impossible for that
+In addition, the validator is permanently jailed and tombstoned to make it impossible for that
 validator to ever re-enter the validator set.
 
 The `Equivocation` evidence is handled as follows:
@@ -151,5 +150,5 @@ func (k Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 ```
 
 Note, the slashing, jailing, and tombstoning calls are delegated through the `x/slashing` module
-which emit informative events and finally delegate calls to the `x/staking` module. Documentation
-on slashing and jailing can be found in the [x/staking spec](/.././cosmos-sdk/x/staking/spec/02_state_transitions.md)
+that emits informative events and finally delegates calls to the `x/staking` module. See documentation
+on slashing and jailing in [x/staking spec](/.././cosmos-sdk/x/staking/spec/02_state_transitions.md).

@@ -19,11 +19,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 // Test that simulate transaction accurately estimates gas cost
 func (suite *AnteTestSuite) TestSimulateGasCost() {
-	suite.SetupTest(true) // reset
+	suite.SetupTest(false) // reset
 
 	// Same data for every test cases
 	accounts := suite.CreateTestAccounts(3)
@@ -76,7 +78,7 @@ func (suite *AnteTestSuite) TestSimulateGasCost() {
 
 // Test various error cases in the AnteHandler control flow.
 func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
-	suite.SetupTest(true) // reset
+	suite.SetupTest(false) // reset
 
 	// Same data for every test cases
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
@@ -137,7 +139,9 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 			func() {
 				acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr0)
 				suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
-				err := suite.app.BankKeeper.SetBalances(suite.ctx, addr0, feeAmount)
+				err := suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, feeAmount)
+				suite.Require().NoError(err)
+				err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addr0, feeAmount)
 				suite.Require().NoError(err)
 			},
 			false,
@@ -435,7 +439,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 
 // Test logic around fee deduction.
 func (suite *AnteTestSuite) TestAnteHandlerFees() {
-	suite.SetupTest(true) // setup
+	suite.SetupTest(false) // setup
 
 	// Same data for every test cases
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
@@ -466,7 +470,8 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 		{
 			"signer does not have enough funds to pay the fee",
 			func() {
-				suite.app.BankKeeper.SetBalances(suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 149)))
+				err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 149)))
+				suite.Require().NoError(err)
 			},
 			false,
 			false,
@@ -475,12 +480,15 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 		{
 			"signer as enough funds, should pass",
 			func() {
+				accNums = []uint64{acc1.GetAccountNumber()}
+
 				modAcc := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 
 				suite.Require().True(suite.app.BankKeeper.GetAllBalances(suite.ctx, modAcc.GetAddress()).Empty())
 				require.True(sdk.IntEq(suite.T(), suite.app.BankKeeper.GetAllBalances(suite.ctx, addr0).AmountOf("atom"), sdk.NewInt(149)))
 
-				suite.app.BankKeeper.SetBalances(suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
+				err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 1)))
+				suite.Require().NoError(err)
 			},
 			false,
 			true,
@@ -502,6 +510,7 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
@@ -892,8 +901,7 @@ func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []cryptoty
 	pubkeys = make([]cryptotypes.PubKey, n)
 	signatures = make([][]byte, n)
 	for i := 0; i < n; i++ {
-		var privkey cryptotypes.PrivKey
-		privkey = secp256k1.GenPrivKey()
+		var privkey cryptotypes.PrivKey = secp256k1.GenPrivKey()
 
 		// TODO: also generate ed25519 keys as below when ed25519 keys are
 		//  actually supported, https://github.com/cosmos/cosmos-sdk/issues/4789
@@ -960,7 +968,7 @@ func TestCountSubkeys(t *testing.T) {
 }
 
 func (suite *AnteTestSuite) TestAnteHandlerSigLimitExceeded() {
-	suite.SetupTest(true) // setup
+	suite.SetupTest(false) // setup
 
 	// Same data for every test cases
 	accounts := suite.CreateTestAccounts(8)
@@ -997,18 +1005,29 @@ func (suite *AnteTestSuite) TestAnteHandlerSigLimitExceeded() {
 
 // Test custom SignatureVerificationGasConsumer
 func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
-	suite.SetupTest(true) // setup
+	suite.SetupTest(false) // setup
 
 	// setup an ante handler that only accepts PubKeyEd25519
-	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error {
-		switch pubkey := sig.PubKey.(type) {
-		case *ed25519.PubKey:
-			meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
-			return nil
-		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
-		}
-	}, suite.clientCtx.TxConfig.SignModeHandler())
+	anteHandler, err := ante.NewAnteHandler(
+		ante.HandlerOptions{
+			AccountKeeper:   suite.app.AccountKeeper,
+			BankKeeper:      suite.app.BankKeeper,
+			FeegrantKeeper:  suite.app.FeeGrantKeeper,
+			SignModeHandler: suite.clientCtx.TxConfig.SignModeHandler(),
+			SigGasConsumer: func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error {
+				switch pubkey := sig.PubKey.(type) {
+				case *ed25519.PubKey:
+					meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
+					return nil
+				default:
+					return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
+				}
+			},
+		},
+	)
+
+	suite.Require().NoError(err)
+	suite.anteHandler = anteHandler
 
 	// Same data for every test cases
 	accounts := suite.CreateTestAccounts(1)
@@ -1047,7 +1066,7 @@ func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
 }
 
 func (suite *AnteTestSuite) TestAnteHandlerReCheck() {
-	suite.SetupTest(true) // setup
+	suite.SetupTest(false) // setup
 	// Set recheck=true
 	suite.ctx = suite.ctx.WithIsReCheckTx(true)
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
@@ -1120,7 +1139,9 @@ func (suite *AnteTestSuite) TestAnteHandlerReCheck() {
 
 	// remove funds for account so antehandler fails on recheck
 	suite.app.AccountKeeper.SetAccount(suite.ctx, accounts[0].acc)
-	suite.app.BankKeeper.SetBalances(suite.ctx, accounts[0].acc.GetAddress(), sdk.NewCoins())
+	balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, accounts[0].acc.GetAddress())
+	err = suite.app.BankKeeper.SendCoinsFromAccountToModule(suite.ctx, accounts[0].acc.GetAddress(), minttypes.ModuleName, balances)
+	suite.Require().NoError(err)
 
 	_, err = suite.anteHandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "antehandler on recheck did not fail once feePayer no longer has sufficient funds")

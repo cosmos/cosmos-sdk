@@ -12,7 +12,7 @@ import (
 )
 
 func TestDeposits(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	TestAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(10000000))
@@ -22,8 +22,8 @@ func TestDeposits(t *testing.T) {
 	require.NoError(t, err)
 	proposalID := proposal.ProposalId
 
-	fourStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(4)))
-	fiveStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(5)))
+	fourStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 4)))
+	fiveStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 5)))
 
 	addr0Initial := app.BankKeeper.GetAllBalances(ctx, TestAddrs[0])
 	addr1Initial := app.BankKeeper.GetAllBalances(ctx, TestAddrs[1])
@@ -95,9 +95,20 @@ func TestDeposits(t *testing.T) {
 	deposit, found = app.GovKeeper.GetDeposit(ctx, proposalID, TestAddrs[1])
 	require.True(t, found)
 	require.Equal(t, fourStake, deposit.Amount)
-	app.GovKeeper.RefundDeposits(ctx, proposalID)
+	app.GovKeeper.RefundAndDeleteDeposits(ctx, proposalID)
 	deposit, found = app.GovKeeper.GetDeposit(ctx, proposalID, TestAddrs[1])
 	require.False(t, found)
 	require.Equal(t, addr0Initial, app.BankKeeper.GetAllBalances(ctx, TestAddrs[0]))
 	require.Equal(t, addr1Initial, app.BankKeeper.GetAllBalances(ctx, TestAddrs[1]))
+
+	// Test delete and burn deposits
+	proposal, err = app.GovKeeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
+	proposalID = proposal.ProposalId
+	_, err = app.GovKeeper.AddDeposit(ctx, proposalID, TestAddrs[0], fourStake)
+	require.NoError(t, err)
+	app.GovKeeper.DeleteAndBurnDeposits(ctx, proposalID)
+	deposits = app.GovKeeper.GetDeposits(ctx, proposalID)
+	require.Len(t, deposits, 0)
+	require.Equal(t, addr0Initial.Sub(fourStake), app.BankKeeper.GetAllBalances(ctx, TestAddrs[0]))
 }

@@ -69,6 +69,10 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 	tstaking.Ctx = ctx
 	tstaking.Denom = stakingParams.BondDenom
 	tstaking.Undelegate(sdk.AccAddress(operatorAddr), operatorAddr, totalBond, true)
+
+	// query evidence from store
+	evidences := suite.app.EvidenceKeeper.GetAllEvidence(ctx)
+	suite.Len(evidences, 1)
 }
 
 func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {

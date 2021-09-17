@@ -1965,10 +1965,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthDistribution
 			}
 			if (iNdEx + skippy) > l {
@@ -2071,10 +2068,7 @@ func (m *ValidatorHistoricalRewards) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthDistribution
 			}
 			if (iNdEx + skippy) > l {
@@ -2177,10 +2171,7 @@ func (m *ValidatorCurrentRewards) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthDistribution
 			}
 			if (iNdEx + skippy) > l {
@@ -2264,10 +2255,7 @@ func (m *ValidatorAccumulatedCommission) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthDistribution
 			}
 			if (iNdEx + skippy) > l {
@@ -2351,10 +2339,7 @@ func (m *ValidatorOutstandingRewards) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthDistribution
 			}
 			if (iNdEx + skippy) > l {
@@ -2457,10 +2442,7 @@ func (m *ValidatorSlashEvent) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthDistribution
 			}
 			if (iNdEx + skippy) > l {
@@ -2544,10 +2526,7 @@ func (m *ValidatorSlashEvents) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthDistribution
 			}
 			if (iNdEx + skippy) > l {
@@ -2631,10 +2610,7 @@ func (m *FeePool) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthDistribution
 			}
 			if (iNdEx + skippy) > l {
@@ -2814,10 +2790,7 @@ func (m *CommunityPoolSpendProposal) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthDistribution
 			}
 			if (iNdEx + skippy) > l {
@@ -2939,10 +2912,7 @@ func (m *DelegatorStartingInfo) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthDistribution
 			}
 			if (iNdEx + skippy) > l {
@@ -3058,10 +3028,7 @@ func (m *DelegationDelegatorReward) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthDistribution
 			}
 			if (iNdEx + skippy) > l {
@@ -3271,10 +3238,7 @@ func (m *CommunityPoolSpendProposalWithDeposit) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthDistribution
 			}
 			if (iNdEx + skippy) > l {

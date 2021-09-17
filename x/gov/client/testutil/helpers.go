@@ -41,5 +41,17 @@ func MsgVote(clientCtx client.Context, from, id, vote string, extraArgs ...strin
 
 	args = append(args, extraArgs...)
 
-	return clitestutil.ExecTestCLICmd(clientCtx, govcli.NewCmdVote(), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, govcli.NewCmdWeightedVote(), args)
+}
+
+func MsgDeposit(clientCtx client.Context, from, id, deposit string, extraArgs ...string) (testutil.BufferWriter, error) {
+	args := append([]string{
+		id,
+		deposit,
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, from),
+	}, commonArgs...)
+
+	args = append(args, extraArgs...)
+
+	return clitestutil.ExecTestCLICmd(clientCtx, govcli.NewCmdDeposit(), args)
 }

@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -23,7 +22,7 @@ func TestMsgSendValidation(t *testing.T) {
 	addr1 := sdk.AccAddress([]byte("from________________"))
 	addr2 := sdk.AccAddress([]byte("to__________________"))
 	addrEmpty := sdk.AccAddress([]byte(""))
-	addrTooLong := sdk.AccAddress([]byte("Accidentally used 33 bytes pubkey"))
+	addrLong := sdk.AccAddress([]byte("Purposefully long address"))
 
 	atom123 := sdk.NewCoins(sdk.NewInt64Coin("atom", 123))
 	atom0 := sdk.NewCoins(sdk.NewInt64Coin("atom", 0))
@@ -36,12 +35,12 @@ func TestMsgSendValidation(t *testing.T) {
 	}{
 		{"", NewMsgSend(addr1, addr2, atom123)},                                // valid send
 		{"", NewMsgSend(addr1, addr2, atom123eth123)},                          // valid send with multiple coins
+		{"", NewMsgSend(addrLong, addr2, atom123)},                             // valid send with long addr sender
+		{"", NewMsgSend(addr1, addrLong, atom123)},                             // valid send with long addr recipient
 		{": invalid coins", NewMsgSend(addr1, addr2, atom0)},                   // non positive coin
 		{"123atom,0eth: invalid coins", NewMsgSend(addr1, addr2, atom123eth0)}, // non positive coin in multicoins
-		{"Invalid sender address (empty address string is not allowed): invalid address", NewMsgSend(addrEmpty, addr2, atom123)},
-		{"Invalid sender address (incorrect address length (expected: 20, actual: 33)): invalid address", NewMsgSend(addrTooLong, addr2, atom123)},
-		{"Invalid recipient address (empty address string is not allowed): invalid address", NewMsgSend(addr1, addrEmpty, atom123)},
-		{"Invalid recipient address (incorrect address length (expected: 20, actual: 33)): invalid address", NewMsgSend(addr1, addrTooLong, atom123)},
+		{"invalid from address: empty address string is not allowed: invalid address", NewMsgSend(addrEmpty, addr2, atom123)},
+		{"invalid to address: empty address string is not allowed: invalid address", NewMsgSend(addr1, addrEmpty, atom123)},
 	}
 
 	for _, tc := range cases {
@@ -65,13 +64,6 @@ func TestMsgSendGetSignBytes(t *testing.T) {
 	require.Equal(t, expected, string(res))
 }
 
-func TestMsgSendGetSigners(t *testing.T) {
-	var msg = NewMsgSend(sdk.AccAddress([]byte("input111111111111111")), sdk.AccAddress{}, sdk.NewCoins())
-	res := msg.GetSigners()
-	// TODO: fix this !
-	require.Equal(t, fmt.Sprintf("%v", res), "[696E707574313131313131313131313131313131]")
-}
-
 func TestMsgMultiSendRoute(t *testing.T) {
 	// Construct a MsgSend
 	addr1 := sdk.AccAddress([]byte("input"))
@@ -91,7 +83,7 @@ func TestInputValidation(t *testing.T) {
 	addr1 := sdk.AccAddress([]byte("_______alice________"))
 	addr2 := sdk.AccAddress([]byte("________bob_________"))
 	addrEmpty := sdk.AccAddress([]byte(""))
-	addrTooLong := sdk.AccAddress([]byte("Accidentally used 33 bytes pubkey"))
+	addrLong := sdk.AccAddress([]byte("Purposefully long address"))
 
 	someCoins := sdk.NewCoins(sdk.NewInt64Coin("atom", 123))
 	multiCoins := sdk.NewCoins(sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 20))
@@ -109,9 +101,9 @@ func TestInputValidation(t *testing.T) {
 		{"", NewInput(addr1, someCoins)},
 		{"", NewInput(addr2, someCoins)},
 		{"", NewInput(addr2, multiCoins)},
+		{"", NewInput(addrLong, someCoins)},
 
-		{"empty address string is not allowed", NewInput(addrEmpty, someCoins)},
-		{"incorrect address length (expected: 20, actual: 33)", NewInput(addrTooLong, someCoins)},
+		{"invalid input address: empty address string is not allowed: invalid address", NewInput(addrEmpty, someCoins)},
 		{": invalid coins", NewInput(addr1, emptyCoins)},                // invalid coins
 		{": invalid coins", NewInput(addr1, emptyCoins2)},               // invalid coins
 		{"10eth,0atom: invalid coins", NewInput(addr1, someEmptyCoins)}, // invalid coins
@@ -132,7 +124,7 @@ func TestOutputValidation(t *testing.T) {
 	addr1 := sdk.AccAddress([]byte("_______alice________"))
 	addr2 := sdk.AccAddress([]byte("________bob_________"))
 	addrEmpty := sdk.AccAddress([]byte(""))
-	addrTooLong := sdk.AccAddress([]byte("Accidentally used 33 bytes pubkey"))
+	addrLong := sdk.AccAddress([]byte("Purposefully long address"))
 
 	someCoins := sdk.NewCoins(sdk.NewInt64Coin("atom", 123))
 	multiCoins := sdk.NewCoins(sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 20))
@@ -150,9 +142,9 @@ func TestOutputValidation(t *testing.T) {
 		{"", NewOutput(addr1, someCoins)},
 		{"", NewOutput(addr2, someCoins)},
 		{"", NewOutput(addr2, multiCoins)},
+		{"", NewOutput(addrLong, someCoins)},
 
-		{"Invalid output address (empty address string is not allowed): invalid address", NewOutput(addrEmpty, someCoins)},
-		{"Invalid output address (incorrect address length (expected: 20, actual: 33)): invalid address", NewOutput(addrTooLong, someCoins)},
+		{"invalid output address: empty address string is not allowed: invalid address", NewOutput(addrEmpty, someCoins)},
 		{": invalid coins", NewOutput(addr1, emptyCoins)},                // invalid coins
 		{": invalid coins", NewOutput(addr1, emptyCoins2)},               // invalid coins
 		{"10eth,0atom: invalid coins", NewOutput(addr1, someEmptyCoins)}, // invalid coins
@@ -238,35 +230,25 @@ func TestMsgMultiSendGetSignBytes(t *testing.T) {
 }
 
 func TestMsgMultiSendGetSigners(t *testing.T) {
-	var msg = MsgMultiSend{
-		Inputs: []Input{
-			NewInput(sdk.AccAddress([]byte("input111111111111111")), nil),
-			NewInput(sdk.AccAddress([]byte("input222222222222222")), nil),
-			NewInput(sdk.AccAddress([]byte("input333333333333333")), nil),
-		},
+	addrs := make([]string, 3)
+	inputs := make([]Input, 3)
+	for i, v := range []string{"input111111111111111", "input222222222222222", "input333333333333333"} {
+		addr := sdk.AccAddress([]byte(v))
+		inputs[i] = NewInput(addr, nil)
+		addrs[i] = addr.String()
 	}
+	var msg = NewMsgMultiSend(inputs, nil)
 
 	res := msg.GetSigners()
-	// TODO: fix this !
-	require.Equal(t, "[696E707574313131313131313131313131313131 696E707574323232323232323232323232323232 696E707574333333333333333333333333333333]", fmt.Sprintf("%v", res))
+	for i, signer := range res {
+		require.Equal(t, signer.String(), addrs[i])
+	}
 }
 
-/*
-// what to do w/ this test?
-func TestMsgSendSigners(t *testing.T) {
-	signers := []sdk.AccAddress{
-		{1, 2, 3},
-		{4, 5, 6},
-		{7, 8, 9},
-	}
-
-	someCoins := sdk.NewCoins(sdk.NewInt64Coin("atom", 123))
-	inputs := make([]Input, len(signers))
-	for i, signer := range signers {
-		inputs[i] = NewInput(signer, someCoins)
-	}
-	tx := NewMsgSend(inputs, nil)
-
-	require.Equal(t, signers, tx.Signers())
+func TestMsgSendGetSigners(t *testing.T) {
+	from := sdk.AccAddress([]byte("input111111111111111"))
+	msg := NewMsgSend(from, sdk.AccAddress{}, sdk.NewCoins())
+	res := msg.GetSigners()
+	require.Equal(t, 1, len(res))
+	require.True(t, from.Equals(res[0]))
 }
-*/

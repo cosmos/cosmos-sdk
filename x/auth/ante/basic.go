@@ -7,11 +7,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// ValidateBasicDecorator will call tx.ValidateBasic and return any non-nil error.
+// ValidateBasicDecorator will call tx.ValidateBasic, msg.ValidateBasic(for each msg inside tx)
+// and return any non-nil error.
 // If ValidateBasic passes, decorator calls next AnteHandler in chain. Note,
 // ValidateBasicDecorator decorator will not get executed on ReCheckTx since it
 // is not dependent on application state.
@@ -126,7 +127,7 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 				PubKey:    pubkey,
 			}
 
-			sigBz := legacy.Cdc.MustMarshalBinaryBare(simSig)
+			sigBz := legacy.Cdc.MustMarshal(simSig)
 			cost := sdk.Gas(len(sigBz) + 6)
 
 			// If the pubkey is a multi-signature pubkey, then we estimate for the maximum
@@ -178,6 +179,12 @@ type (
 		GetTimeoutHeight() uint64
 	}
 )
+
+// TxTimeoutHeightDecorator defines an AnteHandler decorator that checks for a
+// tx height timeout.
+func NewTxTimeoutHeightDecorator() TxTimeoutHeightDecorator {
+	return TxTimeoutHeightDecorator{}
+}
 
 // AnteHandle implements an AnteHandler decorator for the TxHeightTimeoutDecorator
 // type where the current block height is checked against the tx's height timeout.

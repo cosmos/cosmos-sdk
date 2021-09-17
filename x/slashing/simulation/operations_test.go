@@ -13,6 +13,7 @@ import (
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
@@ -22,7 +23,7 @@ import (
 
 // TestWeightedOperations tests the weights of the operations.
 func TestWeightedOperations(t *testing.T) {
-	app, ctx := createTestApp(false)
+	app, ctx := createTestApp(t, false)
 	ctx.WithChainID("test-chain")
 
 	cdc := app.AppCodec()
@@ -53,7 +54,7 @@ func TestWeightedOperations(t *testing.T) {
 // TestSimulateMsgUnjail tests the normal scenario of a valid message of type types.MsgUnjail.
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
 func TestSimulateMsgUnjail(t *testing.T) {
-	app, ctx := createTestApp(false)
+	app, ctx := createTestApp(t, false)
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
@@ -77,7 +78,7 @@ func TestSimulateMsgUnjail(t *testing.T) {
 	app.StakingKeeper.Jail(ctx, val0ConsAddress)
 
 	// setup self delegation
-	delTokens := sdk.TokensFromConsensusPower(2)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	val0AccAddress, err := sdk.ValAddressFromBech32(validator0.OperatorAddress)
 	require.NoError(t, err)
@@ -103,8 +104,8 @@ func TestSimulateMsgUnjail(t *testing.T) {
 }
 
 // returns context and an app with updated mint keeper
-func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
-	app := simapp.Setup(isCheckTx)
+func createTestApp(t *testing.T, isCheckTx bool) (*simapp.SimApp, sdk.Context) {
+	app := simapp.Setup(t, isCheckTx)
 
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.MintKeeper.SetParams(ctx, minttypes.DefaultParams())
@@ -116,15 +117,14 @@ func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 func getTestingAccounts(t *testing.T, r *rand.Rand, app *simapp.SimApp, ctx sdk.Context, n int) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
 
-	initAmt := sdk.TokensFromConsensusPower(200)
+	initAmt := app.StakingKeeper.TokensFromConsensusPower(ctx, 200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	// add coins to the accounts
 	for _, account := range accounts {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, account.Address)
 		app.AccountKeeper.SetAccount(ctx, acc)
-		err := app.BankKeeper.SetBalances(ctx, account.Address, initCoins)
-		require.NoError(t, err)
+		require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, account.Address, initCoins))
 	}
 
 	return accounts

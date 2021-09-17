@@ -26,7 +26,7 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(false)
+	app := simapp.Setup(suite.T(), false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	querier := keeper.Querier{Keeper: app.StakingKeeper}
@@ -45,13 +45,13 @@ func (suite *KeeperTestSuite) SetupTest() {
 	// have its order changed
 	sortedVals := make([]types.Validator, len(validators))
 	copy(sortedVals, validators)
-	hi := types.NewHistoricalInfo(header, sortedVals)
+	hi := types.NewHistoricalInfo(header, sortedVals, app.StakingKeeper.PowerReduction(ctx))
 	app.StakingKeeper.SetHistoricalInfo(ctx, 5, &hi)
 
 	suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals = app, ctx, queryClient, addrs, validators
 }
 func TestParams(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	expParams := types.DefaultParams()

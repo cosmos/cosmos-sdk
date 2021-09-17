@@ -2,6 +2,7 @@ package staking_test
 
 import (
 	"math/big"
+	"testing"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -15,7 +16,7 @@ import (
 )
 
 func init() {
-	sdk.PowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
+	sdk.DefaultPowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
 }
 
 // nolint:deadcode,unused,varcheck
@@ -35,8 +36,8 @@ var (
 
 // getBaseSimappWithCustomKeeper Returns a simapp with custom StakingKeeper
 // to avoid messing with the hooks.
-func getBaseSimappWithCustomKeeper() (*codec.LegacyAmino, *simapp.SimApp, sdk.Context) {
-	app := simapp.Setup(false)
+func getBaseSimappWithCustomKeeper(t *testing.T) (*codec.LegacyAmino, *simapp.SimApp, sdk.Context) {
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	appCodec := app.AppCodec()

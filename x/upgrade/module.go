@@ -15,7 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -42,10 +41,10 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
-// RegisterRESTRoutes registers all REST query handlers
-func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, r *mux.Router) {
-	rest.RegisterRoutes(clientCtx, r)
-}
+// RegisterRESTRoutes registers the REST routes for the upgrade module.
+// Deprecated: RegisterRESTRoutes is deprecated. `x/upgrade` legacy REST implementation
+// has been removed from the SDK.
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the upgrade module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
@@ -83,8 +82,10 @@ func NewAppModule(keeper keeper.Keeper) AppModule {
 // RegisterInvariants does nothing, there are no invariants to enforce
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Route is empty, as we do not handle Messages (just proposals)
-func (AppModule) Route() sdk.Route { return sdk.Route{} }
+// Deprecated: Route returns the message routing key for the upgrade module.
+func (AppModule) Route() sdk.Route {
+	return sdk.Route{}
+}
 
 // QuerierRoute returns the route we respond to for abci queries
 func (AppModule) QuerierRoute() string { return types.QuerierKey }
@@ -101,24 +102,27 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 // InitGenesis is ignored, no sense in serializing future upgrades
-func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONMarshaler, _ json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
 
 // DefaultGenesis is an empty object
-func (AppModuleBasic) DefaultGenesis(_ codec.JSONMarshaler) json.RawMessage {
+func (AppModuleBasic) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
 	return []byte("{}")
 }
 
 // ValidateGenesis is always successful, as we ignore the value
-func (AppModuleBasic) ValidateGenesis(_ codec.JSONMarshaler, config client.TxEncodingConfig, _ json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, config client.TxEncodingConfig, _ json.RawMessage) error {
 	return nil
 }
 
 // ExportGenesis is always empty, as InitGenesis does nothing either
-func (am AppModule) ExportGenesis(_ sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
+func (am AppModule) ExportGenesis(_ sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	return am.DefaultGenesis(cdc)
 }
+
+// ConsensusVersion implements AppModule/ConsensusVersion.
+func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock calls the upgrade module hooks
 //

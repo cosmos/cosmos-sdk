@@ -35,14 +35,14 @@ with particular kinds of accounts.
    ```
 
 4. Create the keeper. Note, the `x/bank` module depends on the `x/auth` module
-   and a list of blacklisted account addresses which funds are not allowed to be
+   and a list of blocklisted account addresses which funds are not allowed to be
    sent to. Your application will need to define this method based your needs.
 
    ```go
    func NewApp(...) *App {
      // ...
      app.BankKeeper = bank.NewBaseKeeper(
-       app.AccountKeeper, app.subspaces[bank.ModuleName], app.BlacklistedAccAddrs(),
+       app.AccountKeeper, app.subspaces[bank.ModuleName], app.BlocklistedAccAddrs(),
      )
    }
    ```
@@ -141,7 +141,7 @@ The `x/bank` supports the following transactional commands.
 1. Send tokens via a `MsgSend` message.
 
    ```shell
-   $ app tx send [from_key_or_address] [to_address] [amount] [...flags]
+   app tx send [from_key_or_address] [to_address] [amount] [...flags]
    ```
 
 Note, the `x/bank` module does not natively support constructing a `MsgMultiSend`

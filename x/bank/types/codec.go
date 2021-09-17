@@ -6,14 +6,12 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	"github.com/cosmos/cosmos-sdk/x/bank/exported"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/bank interfaces and concrete types
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterInterface((*exported.SupplyI)(nil), nil)
-	cdc.RegisterConcrete(&Supply{}, "cosmos-sdk/Supply", nil)
 	cdc.RegisterConcrete(&MsgSend{}, "cosmos-sdk/MsgSend", nil)
 	cdc.RegisterConcrete(&MsgMultiSend{}, "cosmos-sdk/MsgMultiSend", nil)
 }
@@ -23,11 +21,9 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgSend{},
 		&MsgMultiSend{},
 	)
-
-	registry.RegisterInterface(
-		"cosmos.bank.v1beta1.SupplyI",
-		(*exported.SupplyI)(nil),
-		&Supply{},
+	registry.RegisterImplementations(
+		(*authz.Authorization)(nil),
+		&SendAuthorization{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

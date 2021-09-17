@@ -1,13 +1,13 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -21,6 +21,7 @@ func GetQueryCmd() *cobra.Command {
 	cmd.AddCommand(
 		GetCurrentPlanCmd(),
 		GetAppliedPlanCmd(),
+		GetModuleVersionsCmd(),
 	)
 
 	return cmd
@@ -41,7 +42,7 @@ func GetCurrentPlanCmd() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			params := types.QueryCurrentPlanRequest{}
-			res, err := queryClient.CurrentPlan(context.Background(), &params)
+			res, err := queryClient.CurrentPlan(cmd.Context(), &params)
 			if err != nil {
 				return err
 			}
@@ -74,9 +75,9 @@ func GetAppliedPlanCmd() *cobra.Command {
 				return err
 			}
 			queryClient := types.NewQueryClient(clientCtx)
-
+			ctx := cmd.Context()
 			params := types.QueryAppliedPlanRequest{Name: args[0]}
-			res, err := queryClient.AppliedPlan(context.Background(), &params)
+			res, err := queryClient.AppliedPlan(ctx, &params)
 			if err != nil {
 				return err
 			}
@@ -90,7 +91,7 @@ func GetAppliedPlanCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			headers, err := node.BlockchainInfo(context.Background(), res.Height, res.Height)
+			headers, err := node.BlockchainInfo(ctx, res.Height, res.Height)
 			if err != nil {
 				return err
 			}
@@ -104,6 +105,48 @@ func GetAppliedPlanCmd() *cobra.Command {
 				return err
 			}
 			return clientCtx.PrintString(fmt.Sprintf("%s\n", string(bz)))
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetModuleVersionsCmd returns the module version list from state
+func GetModuleVersionsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "module_versions [optional module_name]",
+		Short: "get the list of module versions",
+		Long: "Gets a list of module names and their respective consensus versions.\n" +
+			"Following the command with a specific module name will return only\n" +
+			"that module's information.",
+		Args: cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			var params types.QueryModuleVersionsRequest
+
+			if len(args) == 1 {
+				params = types.QueryModuleVersionsRequest{ModuleName: args[0]}
+			} else {
+				params = types.QueryModuleVersionsRequest{}
+			}
+
+			res, err := queryClient.ModuleVersions(cmd.Context(), &params)
+			if err != nil {
+				return err
+			}
+
+			if res.ModuleVersions == nil {
+				return errors.ErrNotFound
+			}
+
+			return clientCtx.PrintProto(res)
 		},
 	}
 

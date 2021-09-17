@@ -12,6 +12,7 @@ import (
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -95,7 +96,7 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	validator0 := suite.getTestingValidator0(accounts)
 
 	// setup delegation
-	delTokens := sdk.TokensFromConsensusPower(2)
+	delTokens := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := accounts[1]
 	delegation := stakingtypes.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
@@ -143,11 +144,10 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 
 	// set module account coins
 	distrAcc := suite.app.DistrKeeper.GetDistributionAccount(suite.ctx)
-	err := suite.app.BankKeeper.SetBalances(suite.ctx, distrAcc.GetAddress(), sdk.NewCoins(
+	suite.Require().NoError(testutil.FundModuleAccount(suite.app.BankKeeper, suite.ctx, distrAcc.GetName(), sdk.NewCoins(
 		sdk.NewCoin(tokenName, sdk.NewInt(10)),
 		sdk.NewCoin("stake", sdk.NewInt(5)),
-	))
-	suite.Require().NoError(err)
+	)))
 	suite.app.AccountKeeper.SetModuleAccount(suite.ctx, distrAcc)
 
 	// set outstanding rewards
@@ -215,7 +215,7 @@ type SimTestSuite struct {
 
 func (suite *SimTestSuite) SetupTest() {
 	checkTx := false
-	app := simapp.Setup(checkTx)
+	app := simapp.Setup(suite.T(), checkTx)
 	suite.app = app
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{})
 }
@@ -223,15 +223,14 @@ func (suite *SimTestSuite) SetupTest() {
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
 
-	initAmt := sdk.TokensFromConsensusPower(200)
+	initAmt := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	// add coins to the accounts
 	for _, account := range accounts {
 		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-		err := suite.app.BankKeeper.SetBalances(suite.ctx, account.Address, initCoins)
-		suite.Require().NoError(err)
+		suite.Require().NoError(testutil.FundAccount(suite.app.BankKeeper, suite.ctx, account.Address, initCoins))
 	}
 
 	return accounts

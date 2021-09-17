@@ -7,7 +7,7 @@ order: 1
 ## Plan
 
 The `x/upgrade` module defines a `Plan` type in which a live upgrade is scheduled
-to occur. A `Plan` can be scheduled at a specific block height or time, but not both.
+to occur. A `Plan` can be scheduled at a specific block height.
 A `Plan` is created once a (frozen) release candidate along with an appropriate upgrade
 `Handler` (see below) is agreed upon, where the `Name` of a `Plan` corresponds to a
 specific `Handler`. Typically, a `Plan` is created through a governance proposal
@@ -30,7 +30,6 @@ for more info.
 ```go
 type Plan struct {
   Name   string
-  Time   Time
   Height int64
   Info   string
 }
@@ -48,20 +47,19 @@ and not defined on a per-module basis. Registering a `Handler` is done via
 `Keeper#SetUpgradeHandler` in the application.
 
 ```go
-type UpgradeHandler func(Context, Plan)
+type UpgradeHandler func(Context, Plan, VersionMap) (VersionMap, error)
 ```
 
 During each `EndBlock` execution, the `x/upgrade` module checks if there exists a
-`Plan` that should execute (is scheduled at that time or height). If so, the corresponding
+`Plan` that should execute (is scheduled at that height). If so, the corresponding
 `Handler` is executed. If the `Plan` is expected to execute but no `Handler` is registered
 or if the binary was upgraded too early, the node will gracefully panic and exit.
 
 ## StoreLoader
 
-
 The `x/upgrade` module also facilitates store migrations as part of the upgrade. The
-`StoreLoader` sets the migrations that need to occur before the new binary can 
-successfully run the chain. This `StoreLoader` is also application specific and 
+`StoreLoader` sets the migrations that need to occur before the new binary can
+successfully run the chain. This `StoreLoader` is also application specific and
 not defined on a per-module basis. Registering this `StoreLoader` is done via
 `app#SetStoreLoader` in the application.
 
@@ -69,14 +67,7 @@ not defined on a per-module basis. Registering this `StoreLoader` is done via
 func UpgradeStoreLoader (upgradeHeight int64, storeUpgrades *store.StoreUpgrades) baseapp.StoreLoader
 ```
 
-If there's a planned upgrade and the upgrade height is reached, the old binary writes `UpgradeInfo` to the disk before panic'ing.
-
-```go
-type UpgradeInfo struct {
-  Name    string
-  Height  int64
-}
-```
+If there's a planned upgrade and the upgrade height is reached, the old binary writes `Plan` to the disk before panic'ing.
 
 This information is critical to ensure the `StoreUpgrades` happens smoothly at correct height and
 expected upgrade. It eliminiates the chances for the new binary to execute `StoreUpgrades` multiple
@@ -88,7 +79,7 @@ will ensure these `StoreUpgrades` takes place only in planned upgrade handler.
 Typically, a `Plan` is proposed and submitted through governance via a `SoftwareUpgradeProposal`.
 This proposal prescribes to the standard governance process. If the proposal passes,
 the `Plan`, which targets a specific `Handler`, is persisted and scheduled. The
-upgrade can be delayed or hastened by updating the `Plan.Time` in a new proposal.
+upgrade can be delayed or hastened by updating the `Plan.Height` in a new proposal.
 
 ```go
 type SoftwareUpgradeProposal struct {

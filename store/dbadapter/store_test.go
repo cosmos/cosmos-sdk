@@ -5,6 +5,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
+
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
@@ -70,4 +72,19 @@ func TestAccessors(t *testing.T) {
 
 	mockDB.EXPECT().ReverseIterator(gomock.Eq(start), gomock.Eq(end)).Times(1).Return(nil, errFoo)
 	require.Panics(t, func() { store.ReverseIterator(start, end) })
+}
+
+func TestCacheWraps(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	mockDB := mocks.NewMockDB(mockCtrl)
+	store := dbadapter.Store{mockDB}
+
+	cacheWrapper := store.CacheWrap()
+	require.IsType(t, &cachekv.Store{}, cacheWrapper)
+
+	cacheWrappedWithTrace := store.CacheWrapWithTrace(nil, nil)
+	require.IsType(t, &cachekv.Store{}, cacheWrappedWithTrace)
+
+	cacheWrappedWithListeners := store.CacheWrapWithListeners(nil, nil)
+	require.IsType(t, &cachekv.Store{}, cacheWrappedWithListeners)
 }

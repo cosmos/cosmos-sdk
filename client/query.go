@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
@@ -13,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // GetNode returns an RPC client. If the context's client is not defined, an
@@ -47,7 +50,9 @@ func (ctx Context) QueryStore(key tmbytes.HexBytes, storeName string) ([]byte, i
 }
 
 // QueryABCI performs a query to a Tendermint node with the provide RequestQuery.
-// It returns the ResultQuery obtained from the query.
+// It returns the ResultQuery obtained from the query. The height used to perform
+// the query is the RequestQuery Height if it is non-zero, otherwise the context
+// height is used.
 func (ctx Context) QueryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) {
 	return ctx.queryABCI(req)
 }
@@ -55,6 +60,11 @@ func (ctx Context) QueryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) 
 // GetFromAddress returns the from address from the context's name.
 func (ctx Context) GetFromAddress() sdk.AccAddress {
 	return ctx.FromAddress
+}
+
+// GetFeeGranterAddress returns the fee granter address from the context
+func (ctx Context) GetFeeGranterAddress() sdk.AccAddress {
+	return ctx.FeeGranter
 }
 
 // GetFromName returns the key name for the current context.
@@ -68,8 +78,16 @@ func (ctx Context) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) 
 		return abci.ResponseQuery{}, err
 	}
 
+	var queryHeight int64
+	if req.Height != 0 {
+		queryHeight = req.Height
+	} else {
+		// fallback on the context height
+		queryHeight = ctx.Height
+	}
+
 	opts := rpcclient.ABCIQueryOptions{
-		Height: ctx.Height,
+		Height: queryHeight,
 		Prove:  req.Prove,
 	}
 
@@ -79,7 +97,7 @@ func (ctx Context) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) 
 	}
 
 	if !result.Response.IsOK() {
-		return abci.ResponseQuery{}, errors.New(result.Response.Log)
+		return abci.ResponseQuery{}, sdkErrorToGRPCError(result.Response)
 	}
 
 	// data from trusted node or subspace query doesn't need verification
@@ -88,6 +106,19 @@ func (ctx Context) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) 
 	}
 
 	return result.Response, nil
+}
+
+func sdkErrorToGRPCError(resp abci.ResponseQuery) error {
+	switch resp.Code {
+	case sdkerrors.ErrInvalidRequest.ABCICode():
+		return status.Error(codes.InvalidArgument, resp.Log)
+	case sdkerrors.ErrUnauthorized.ABCICode():
+		return status.Error(codes.Unauthenticated, resp.Log)
+	case sdkerrors.ErrKeyNotFound.ABCICode():
+		return status.Error(codes.NotFound, resp.Log)
+	default:
+		return status.Error(codes.Unknown, resp.Log)
+	}
 }
 
 // query performs a query to a Tendermint node with the provided store name

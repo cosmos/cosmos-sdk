@@ -9,7 +9,7 @@ import (
 	"math/big"
 )
 
-const maxBitLen = 255
+const maxBitLen = 256
 
 func newIntegerFromString(s string) (*big.Int, bool) {
 	return new(big.Int).SetString(s, 0)
@@ -36,6 +36,8 @@ func div(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Quo(i, i2) }
 func mod(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Mod(i, i2) }
 
 func neg(i *big.Int) *big.Int { return new(big.Int).Neg(i) }
+
+func abs(i *big.Int) *big.Int { return new(big.Int).Abs(i) }
 
 func min(i *big.Int, i2 *big.Int) *big.Int {
 	if i.Cmp(i2) == 1 {
@@ -67,9 +69,9 @@ func unmarshalText(i *big.Int, text string) error {
 
 var _ CustomProtobufType = (*Int)(nil)
 
-// Int wraps integer with 256 bit range bound
+// Int wraps big.Int with a 257 bit range bound
 // Checks overflow, underflow and division by zero
-// Exists in range from -(2^maxBitLen-1) to 2^maxBitLen-1
+// Exists in range from -(2^256 - 1) to 2^256 - 1
 type Int struct {
 	i *big.Int
 }
@@ -99,8 +101,13 @@ func NewIntFromUint64(n uint64) Int {
 	return Int{b}
 }
 
-// NewIntFromBigInt constructs Int from big.Int
+// NewIntFromBigInt constructs Int from big.Int. If the provided big.Int is nil,
+// it returns an empty instance. This function panics if the bit length is > 256.
 func NewIntFromBigInt(i *big.Int) Int {
+	if i == nil {
+		return Int{}
+	}
+
 	if i.BitLen() > maxBitLen {
 		panic("NewIntFromBigInt() out of bound")
 	}
@@ -304,6 +311,11 @@ func (i Int) Neg() (res Int) {
 	return Int{neg(i.i)}
 }
 
+// Abs returns the absolute value of Int.
+func (i Int) Abs() Int {
+	return Int{abs(i.i)}
+}
+
 // return the minimum of the ints
 func MinInt(i1, i2 Int) Int {
 	return Int{min(i1.BigInt(), i2.BigInt())}
@@ -375,7 +387,7 @@ func (i *Int) MarshalTo(data []byte) (n int, err error) {
 	if i.i == nil {
 		i.i = new(big.Int)
 	}
-	if len(i.i.Bytes()) == 0 {
+	if i.i.BitLen() == 0 { // The value 0
 		copy(data, []byte{0x30})
 		return 1, nil
 	}

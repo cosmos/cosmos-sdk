@@ -7,8 +7,8 @@
 
 ## Context
 
-Full implementation of the [IBC specification](https://github.com/cosmos/ics) requires the ability to create and authenticate object-capability keys at runtime (i.e., during transaction execution),
-as described in [ICS 5](https://github.com/cosmos/ics/tree/master/spec/ics-005-port-allocation#technical-specification). In the IBC specification, capability keys are created for each newly initialised
+Full implementation of the [IBC specification](https://github.com/cosmos/ibs) requires the ability to create and authenticate object-capability keys at runtime (i.e., during transaction execution),
+as described in [ICS 5](https://github.com/cosmos/ibc/tree/master/spec/core/ics-005-port-allocation#technical-specification). In the IBC specification, capability keys are created for each newly initialised
 port & channel, and are used to authenticate future usage of the port or channel. Since channels and potentially ports can be initialised during transaction execution, the state machine must be able to create
 object-capability keys at this time.
 
@@ -33,7 +33,7 @@ past transactions and assigned to particular modes), and keep them in a memory-o
 chain is running.
 
 The `CapabilityKeeper` will include a persistent `KVStore`, a `MemoryStore`, and an in-memory map.
-The persistent `KVStore` tracks which capability is owned by which modules. 
+The persistent `KVStore` tracks which capability is owned by which modules.
 The `MemoryStore` stores a forward mapping that map from module name, capability tuples to capability names and
 a reverse mapping that map from module name, capability name to the capability index.
 Since we cannot marshal the capability into a `KVStore` and unmarshal without changing the memory location of the capability,

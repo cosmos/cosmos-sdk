@@ -14,7 +14,7 @@ import (
 //----------------------------------------
 // Store
 
-// Store holds many cache-wrapped stores.
+// Store holds many branched stores.
 // Implements MultiStore.
 // NOTE: a Store (and MultiStores in general) should never expose the
 // keys for the substores.
@@ -25,16 +25,19 @@ type Store struct {
 
 	traceWriter  io.Writer
 	traceContext types.TraceContext
+
+	listeners map[types.StoreKey][]types.WriteListener
 }
 
 var _ types.CacheMultiStore = Store{}
 
 // NewFromKVStore creates a new Store object from a mapping of store keys to
 // CacheWrapper objects and a KVStore as the database. Each CacheWrapper store
-// is cache-wrapped.
+// is a branched store.
 func NewFromKVStore(
 	store types.KVStore, stores map[types.StoreKey]types.CacheWrapper,
 	keys map[string]types.StoreKey, traceWriter io.Writer, traceContext types.TraceContext,
+	listeners map[types.StoreKey][]types.WriteListener,
 ) Store {
 	cms := Store{
 		db:           cachekv.NewStore(store),
@@ -42,13 +45,20 @@ func NewFromKVStore(
 		keys:         keys,
 		traceWriter:  traceWriter,
 		traceContext: traceContext,
+		listeners:    listeners,
 	}
 
 	for key, store := range stores {
+		var cacheWrapped types.CacheWrap
 		if cms.TracingEnabled() {
-			cms.stores[key] = store.CacheWrapWithTrace(cms.traceWriter, cms.traceContext)
+			cacheWrapped = store.CacheWrapWithTrace(cms.traceWriter, cms.traceContext)
 		} else {
-			cms.stores[key] = store.CacheWrap()
+			cacheWrapped = store.CacheWrap()
+		}
+		if cms.ListeningEnabled(key) {
+			cms.stores[key] = cacheWrapped.CacheWrapWithListeners(key, cms.listeners[key])
+		} else {
+			cms.stores[key] = cacheWrapped
 		}
 	}
 
@@ -56,13 +66,13 @@ func NewFromKVStore(
 }
 
 // NewStore creates a new Store object from a mapping of store keys to
-// CacheWrapper objects. Each CacheWrapper store is cache-wrapped.
+// CacheWrapper objects. Each CacheWrapper store is a branched store.
 func NewStore(
 	db dbm.DB, stores map[types.StoreKey]types.CacheWrapper, keys map[string]types.StoreKey,
-	traceWriter io.Writer, traceContext types.TraceContext,
+	traceWriter io.Writer, traceContext types.TraceContext, listeners map[types.StoreKey][]types.WriteListener,
 ) Store {
 
-	return NewFromKVStore(dbadapter.Store{DB: db}, stores, keys, traceWriter, traceContext)
+	return NewFromKVStore(dbadapter.Store{DB: db}, stores, keys, traceWriter, traceContext, listeners)
 }
 
 func newCacheMultiStoreFromCMS(cms Store) Store {
@@ -71,7 +81,7 @@ func newCacheMultiStoreFromCMS(cms Store) Store {
 		stores[k] = v
 	}
 
-	return NewFromKVStore(cms.db, stores, nil, cms.traceWriter, cms.traceContext)
+	return NewFromKVStore(cms.db, stores, nil, cms.traceWriter, cms.traceContext, cms.listeners)
 }
 
 // SetTracer sets the tracer for the MultiStore that the underlying
@@ -102,6 +112,23 @@ func (cms Store) TracingEnabled() bool {
 	return cms.traceWriter != nil
 }
 
+// AddListeners adds listeners for a specific KVStore
+func (cms Store) AddListeners(key types.StoreKey, listeners []types.WriteListener) {
+	if ls, ok := cms.listeners[key]; ok {
+		cms.listeners[key] = append(ls, listeners...)
+	} else {
+		cms.listeners[key] = listeners
+	}
+}
+
+// ListeningEnabled returns if listening is enabled for a specific KVStore
+func (cms Store) ListeningEnabled(key types.StoreKey) bool {
+	if ls, ok := cms.listeners[key]; ok {
+		return len(ls) != 0
+	}
+	return false
+}
+
 // GetStoreType returns the type of the store.
 func (cms Store) GetStoreType() types.StoreType {
 	return types.StoreTypeMulti
@@ -125,6 +152,11 @@ func (cms Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 	return cms.CacheWrap()
 }
 
+// CacheWrapWithListeners implements the CacheWrapper interface.
+func (cms Store) CacheWrapWithListeners(_ types.StoreKey, _ []types.WriteListener) types.CacheWrap {
+	return cms.CacheWrap()
+}
+
 // Implements MultiStore.
 func (cms Store) CacheMultiStore() types.CacheMultiStore {
 	return newCacheMultiStoreFromCMS(cms)
@@ -136,18 +168,22 @@ func (cms Store) CacheMultiStore() types.CacheMultiStore {
 // TODO: The store implementation can possibly be modified to support this as it
 // seems safe to load previous versions (heights).
 func (cms Store) CacheMultiStoreWithVersion(_ int64) (types.CacheMultiStore, error) {
-	panic("cannot cache-wrap cached multi-store with a version")
+	panic("cannot branch cached multi-store with a version")
 }
 
 // GetStore returns an underlying Store by key.
 func (cms Store) GetStore(key types.StoreKey) types.Store {
-	return cms.stores[key].(types.Store)
+	s := cms.stores[key]
+	if key == nil || s == nil {
+		panic(fmt.Sprintf("kv store with key %v has not been registered in stores", key))
+	}
+	return s.(types.Store)
 }
 
 // GetKVStore returns an underlying KVStore by key.
 func (cms Store) GetKVStore(key types.StoreKey) types.KVStore {
 	store := cms.stores[key]
-	if key == nil {
+	if key == nil || store == nil {
 		panic(fmt.Sprintf("kv store with key %v has not been registered in stores", key))
 	}
 	return store.(types.KVStore)

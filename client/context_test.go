@@ -41,7 +41,7 @@ func TestContext_PrintObject(t *testing.T) {
 	// proto
 	//
 	registry := testdata.NewTestInterfaceRegistry()
-	ctx = ctx.WithJSONMarshaler(codec.NewProtoCodec(registry))
+	ctx = ctx.WithCodec(codec.NewProtoCodec(registry))
 
 	// json
 	buf := &bytes.Buffer{}
@@ -51,7 +51,7 @@ func TestContext_PrintObject(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t,
 		`{"animal":{"@type":"/testdata.Dog","size":"big","name":"Spot"},"x":"10"}
-`, string(buf.Bytes()))
+`, buf.String())
 
 	// yaml
 	buf = &bytes.Buffer{}
@@ -65,7 +65,7 @@ func TestContext_PrintObject(t *testing.T) {
   name: Spot
   size: big
 x: "10"
-`, string(buf.Bytes()))
+`, buf.String())
 
 	//
 	// amino
@@ -81,7 +81,7 @@ x: "10"
 	require.NoError(t, err)
 	require.Equal(t,
 		`{"type":"testdata/HasAnimal","value":{"animal":{"type":"testdata/Dog","value":{"size":"big","name":"Spot"}},"x":"10"}}
-`, string(buf.Bytes()))
+`, buf.String())
 
 	// yaml
 	buf = &bytes.Buffer{}
@@ -98,14 +98,15 @@ value:
       name: Spot
       size: big
   x: "10"
-`, string(buf.Bytes()))
+`, buf.String())
 }
 
 func TestCLIQueryConn(t *testing.T) {
 	cfg := network.DefaultConfig()
 	cfg.NumValidators = 1
 
-	n := network.New(t, cfg)
+	n, err := network.New(t, t.TempDir(), cfg)
+	require.NoError(t, err)
 	defer n.Cleanup()
 
 	testClient := testdata.NewQueryClient(n.Validators[0].ClientCtx)

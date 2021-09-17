@@ -49,9 +49,6 @@ ignored as it is implied from [from_key_or_address].`,
 			}
 
 			msg := types.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

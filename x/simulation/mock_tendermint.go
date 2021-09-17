@@ -59,8 +59,6 @@ func (vals mockValidators) getKeys() []string {
 	return keys
 }
 
-//_________________________________________________________________________________
-
 // randomProposer picks a random proposer from the current validator set
 func (vals mockValidators) randomProposer(r *rand.Rand) tmbytes.HexBytes {
 	keys := vals.getKeys()

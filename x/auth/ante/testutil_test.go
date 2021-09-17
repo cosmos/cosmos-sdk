@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -39,8 +41,8 @@ type AnteTestSuite struct {
 }
 
 // returns context and app with params set on account keeper
-func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
-	app := simapp.Setup(isCheckTx)
+func createTestApp(t *testing.T, isCheckTx bool) (*simapp.SimApp, sdk.Context) {
+	app := simapp.Setup(t, isCheckTx)
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
@@ -49,7 +51,7 @@ func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
 func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
-	suite.app, suite.ctx = createTestApp(isCheckTx)
+	suite.app, suite.ctx = createTestApp(suite.T(), isCheckTx)
 	suite.ctx = suite.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
@@ -61,7 +63,32 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	suite.clientCtx = client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig)
 
-	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, ante.DefaultSigVerificationGasConsumer, encodingConfig.TxConfig.SignModeHandler())
+	// We're not using ante.NewAnteHandler here because:
+	// - ante.NewAnteHandler doesn't have SetUpContextDecorator, as it has been
+	//   moved to the gas TxMiddleware
+	// - whereas these tests have not been migrated to middlewares yet, so
+	//   still need the SetUpContextDecorator.
+	//
+	// TODO: migrate all antehandler tests to middleware tests.
+	// https://github.com/cosmos/cosmos-sdk/issues/9585
+	anteDecorators := []sdk.AnteDecorator{
+		ante.NewSetUpContextDecorator(),
+		ante.NewRejectExtensionOptionsDecorator(),
+		ante.NewMempoolFeeDecorator(),
+		ante.NewValidateBasicDecorator(),
+		ante.NewTxTimeoutHeightDecorator(),
+		ante.NewValidateMemoDecorator(suite.app.AccountKeeper),
+		ante.NewConsumeGasForTxSizeDecorator(suite.app.AccountKeeper),
+		ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper),
+		// SetPubKeyDecorator must be called before all signature verification decorators
+		ante.NewSetPubKeyDecorator(suite.app.AccountKeeper),
+		ante.NewValidateSigCountDecorator(suite.app.AccountKeeper),
+		ante.NewSigGasConsumeDecorator(suite.app.AccountKeeper, ante.DefaultSigVerificationGasConsumer),
+		ante.NewSigVerificationDecorator(suite.app.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()),
+		ante.NewIncrementSequenceDecorator(suite.app.AccountKeeper),
+	}
+
+	suite.anteHandler = sdk.ChainAnteDecorators(anteDecorators...)
 }
 
 // CreateTestAccounts creates `numAccs` accounts, and return all relevant
@@ -75,9 +102,14 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 		err := acc.SetAccountNumber(uint64(i))
 		suite.Require().NoError(err)
 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-		suite.app.BankKeeper.SetBalances(suite.ctx, addr, sdk.Coins{
+		someCoins := sdk.Coins{
 			sdk.NewInt64Coin("atom", 10000000),
-		})
+		}
+		err = suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, someCoins)
+		suite.Require().NoError(err)
+
+		err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addr, someCoins)
+		suite.Require().NoError(err)
 
 		accounts = append(accounts, TestAccount{acc, priv})
 	}

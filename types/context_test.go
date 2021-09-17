@@ -8,13 +8,11 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/tests/mocks"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -26,15 +24,6 @@ func TestContextTestSuite(t *testing.T) {
 	suite.Run(t, new(contextTestSuite))
 }
 
-func (s *contextTestSuite) defaultContext(key types.StoreKey) types.Context {
-	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db)
-	cms.MountStoreWithDB(key, types.StoreTypeIAVL, db)
-	s.Require().NoError(cms.LoadLatestVersion())
-	ctx := types.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
-	return ctx
-}
-
 func (s *contextTestSuite) TestCacheContext() {
 	key := types.NewKVStoreKey(s.T().Name() + "_TestCacheContext")
 	k1 := []byte("hello")
@@ -42,7 +31,7 @@ func (s *contextTestSuite) TestCacheContext() {
 	k2 := []byte("key")
 	v2 := []byte("value")
 
-	ctx := s.defaultContext(key)
+	ctx := testutil.DefaultContext(key, types.NewTransientStoreKey("transient_"+s.T().Name()))
 	store := ctx.KVStore(key)
 	store.Set(k1, v1)
 	s.Require().Equal(v1, store.Get(k1))
@@ -64,7 +53,7 @@ func (s *contextTestSuite) TestCacheContext() {
 
 func (s *contextTestSuite) TestLogContext() {
 	key := types.NewKVStoreKey(s.T().Name())
-	ctx := s.defaultContext(key)
+	ctx := testutil.DefaultContext(key, types.NewTransientStoreKey("transient_"+s.T().Name()))
 	ctrl := gomock.NewController(s.T())
 	s.T().Cleanup(ctrl.Finish)
 
@@ -103,6 +92,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	meter := types.NewGasMeter(10000)
 	blockGasMeter := types.NewGasMeter(20000)
 	minGasPrices := types.DecCoins{types.NewInt64DecCoin("feetoken", 1)}
+	headerHash := []byte("headerHash")
 
 	ctx = types.NewContext(nil, header, ischeck, logger)
 	s.Require().Equal(header, ctx.BlockHeader())
@@ -114,7 +104,8 @@ func (s *contextTestSuite) TestContextWithCustom() {
 		WithVoteInfos(voteinfos).
 		WithGasMeter(meter).
 		WithMinGasPrices(minGasPrices).
-		WithBlockGasMeter(blockGasMeter)
+		WithBlockGasMeter(blockGasMeter).
+		WithHeaderHash(headerHash)
 	s.Require().Equal(height, ctx.BlockHeight())
 	s.Require().Equal(chainid, ctx.ChainID())
 	s.Require().Equal(ischeck, ctx.IsCheckTx())
@@ -124,6 +115,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	s.Require().Equal(meter, ctx.GasMeter())
 	s.Require().Equal(minGasPrices, ctx.MinGasPrices())
 	s.Require().Equal(blockGasMeter, ctx.BlockGasMeter())
+	s.Require().Equal(headerHash, ctx.HeaderHash().Bytes())
 	s.Require().False(ctx.WithIsCheckTx(false).IsCheckTx())
 
 	// test IsReCheckTx

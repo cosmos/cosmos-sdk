@@ -444,7 +444,6 @@ func queryParameters(ctx sdk.Context, k Keeper, legacyQuerierCdc *codec.LegacyAm
 	return res, nil
 }
 
-//______________________________________________________
 // util
 
 func DelegationToDelegationResponse(ctx sdk.Context, k Keeper, del types.Delegation) (types.DelegationResponse, error) {

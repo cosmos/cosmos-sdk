@@ -11,73 +11,88 @@ This document outlines the recommended structure of Cosmos SDK modules. These id
 A typical Cosmos SDK module can be structured as follows:
 
 ```shell
-x/{module}
+proto
+└── {project_name}
+    └── {module_name}
+        └── {proto_version}
+            ├── {module_name}.proto
+            ├── event.proto
+            ├── genesis.proto
+            ├── query.proto
+            └── tx.proto
+```
+
+- `{module_name}.proto`: The module's common message type definitions.
+- `event.proto`: The module's message type definitions related to events.
+- `genesis.proto`: The module's message type definitions related to genesis state.
+- `query.proto`: The module's Query service and related message type definitions.
+- `tx.proto`: The module's Msg service and related message type definitions.
+
+```shell
+x/{module_name}
 ├── client
 │   ├── cli
 │   │   ├── query.go
 │   │   └── tx.go
-│   └── rest
-│       ├── query.go
-│       └── tx.go
+│   └── testutil
+│       ├── cli_test.go
+│       └── suite.go
 ├── exported
 │   └── exported.go
 ├── keeper
-│   ├── invariants.go
 │   ├── genesis.go
+│   ├── grpc_query.go
+│   ├── hooks.go
+│   ├── invariants.go
 │   ├── keeper.go
+│   ├── keys.go
 │   ├── msg_server.go
-│   ├── ...
 │   └── querier.go
-│   └── grpc_query.go
-├── types
-│   ├── codec.go
-│   ├── errors.go
-│   ├── events.go
-│   ├── expected_keepers.go
-│   ├── genesis.go
-│   ├── keys.go
-│   ├── msgs.go
-│   ├── params.go
-│   ├── types.proto
-│   ├── ...
-│   └── querier.go
-│   └── {module_name}.pb.go
-│   └── query.pb.go
-│   └── genesis.pb.go
+├── module
+│   └── module.go
 ├── simulation
 │   ├── decoder.go
 │   ├── genesis.go
 │   ├── operations.go
-│   ├── params.go
-│   └── proposals.go
+│   └── params.go
+├── spec
+│   ├── 01_concepts.md
+│   ├── 02_state.md
+│   ├── 03_messages.md
+│   └── 04_events.md
+├── {module_name}.pb.go
 ├── abci.go
-├── handler.go
-├── ...
-└── module.go
+├── codec.go
+├── errors.go
+├── events.go
+├── events.pb.go
+├── expected_keepers.go
+├── genesis.go
+├── genesis.pb.go
+├── keys.go
+├── msgs.go
+├── params.go
+├── query.pb.go
+└── tx.pb.go
 ```
 
-- `abci.go`: The module's `BeginBlocker` and `EndBlocker` implementations (if any).
-- `client/`: The module's CLI and REST client functionality implementation and
-testing.
-- `exported/`: The module's exported types -- typically type interfaces. If a module
-relies on other module keepers, it is expected to receive them as interface
-contracts through the `expected_keepers.go` (which are detailed below) design to
-avoid having a direct dependency on the implementing module. However, these
-contracts can define methods that operate on and/or return types that are specific
-to the contract's implementing module and this is where `exported/` comes into play.
-Types defined here allow for `expected_keepers.go` in other modules to define
-contracts that use single canonical types. This pattern allows for code to remain
-DRY and also alleviates import cycle chaos.
-- `handler.go`: The module's message handlers.
-- `keeper/`: The module's keeper implementation along with any auxiliary
-implementations such as the querier and invariants.
-- `types/`: The module's type definitions such as messages, `KVStore` keys,
-parameter types, Protocol Buffer definitions, and `expected_keepers.go` contracts.
-- `module.go`: The module's implementation of the `AppModule` and `AppModuleBasic`
-interfaces.
-- `simulation/`: The module's simulation package defines all the required functions
-used on the blockchain simulator: randomized genesis state, parameters, weighted
-operations, proposal contents and types decoders.
+- `client/`: The module's CLI client functionality implementation and the module's integration testing suite.
+- `exported/`: The module's exported types - typically interface types. If a module relies on keepers from another module, it is expected to receive the keepers as interface contracts through the `expected_keepers.go` file (see below) in order to avoid a direct dependency on the module implementing the keepers. However, these interface contracts can define methods that operate on and/or return types that are specific to the module that is implementing the keepers and this is where `exported/` comes into play. The interface types that are defined in `exported/` use canonical types, allowing for the module to receive the keepers as interface contracts through the `expected_keepers.go` file. This pattern allows for code to remain DRY and also alleviates import cycle chaos.
+- `keeper/`: The module's `Keeper` and `MsgServer` implementation.
+- `module/`: The module's `AppModule` and `AppModuleBasic` implementation.
+- `simulation/`: The module's [simulation](./simulator.html) package defines functions used by the blockchain simulator application (`simapp`).
+- `spec/`: The module's specification documents outlining important concepts, state storage structure, and message and event type definitions.
+- The root directory includes type definitions for messages, events, and genesis state, including the type definitions generated by Protocol Buffers.
+    - `abci.go`: The module's `BeginBlocker` and `EndBlocker` implementations (this file is only required if `BeginBlocker` and/or `EndBlocker` need to be defined).
+    - `codec.go`: The module's registry methods for interface types.
+    - `errors.go`: The module's sentinel errors.
+    - `events.go`: The module's event types and constructors.
+    - `expected_keepers.go`: The module's [expected keeper](./keeper.html#type-definition) interfaces.
+    - `genesis.go`: The module's genesis state methods and helper functions.
+    - `keys.go`: The module's store keys and associated helper functions.
+    - `msgs.go`: The module's message type definitions and associated methods.
+    - `params.go`: The module's parameter type definitions and associated methods.
+    - `*.pb.go`: The module's type definitions generated by Protocol Buffers (as defined in the respective `*.proto` files above).
 
 ## Next {hide}
 

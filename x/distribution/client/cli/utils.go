@@ -8,7 +8,7 @@ import (
 )
 
 // ParseCommunityPoolSpendProposalWithDeposit reads and parses a CommunityPoolSpendProposalWithDeposit from a file.
-func ParseCommunityPoolSpendProposalWithDeposit(cdc codec.JSONMarshaler, proposalFile string) (types.CommunityPoolSpendProposalWithDeposit, error) {
+func ParseCommunityPoolSpendProposalWithDeposit(cdc codec.JSONCodec, proposalFile string) (types.CommunityPoolSpendProposalWithDeposit, error) {
 	proposal := types.CommunityPoolSpendProposalWithDeposit{}
 
 	contents, err := ioutil.ReadFile(proposalFile)

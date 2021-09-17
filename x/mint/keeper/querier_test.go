@@ -14,8 +14,12 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+var mintKeeperSuite MintKeeperTestSuite
+
 func TestNewQuerier(t *testing.T) {
-	app, ctx := createTestApp(true)
+	mintKeeperSuite.SetupTest()
+	app, ctx := mintKeeperSuite.app, mintKeeperSuite.ctx
+
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc.LegacyAmino)
 
@@ -38,7 +42,8 @@ func TestNewQuerier(t *testing.T) {
 }
 
 func TestQueryParams(t *testing.T) {
-	app, ctx := createTestApp(true)
+	mintKeeperSuite.SetupTest()
+	app, ctx := mintKeeperSuite.app, mintKeeperSuite.ctx
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc.LegacyAmino)
 
@@ -54,7 +59,8 @@ func TestQueryParams(t *testing.T) {
 }
 
 func TestQueryInflation(t *testing.T) {
-	app, ctx := createTestApp(true)
+	mintKeeperSuite.SetupTest()
+	app, ctx := mintKeeperSuite.app, mintKeeperSuite.ctx
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc.LegacyAmino)
 
@@ -70,7 +76,8 @@ func TestQueryInflation(t *testing.T) {
 }
 
 func TestQueryAnnualProvisions(t *testing.T) {
-	app, ctx := createTestApp(true)
+	mintKeeperSuite.SetupTest()
+	app, ctx := mintKeeperSuite.app, mintKeeperSuite.ctx
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc.LegacyAmino)
 

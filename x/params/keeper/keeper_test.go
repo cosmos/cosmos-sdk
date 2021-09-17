@@ -26,8 +26,10 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.app, suite.ctx = createTestApp(true)
+	app := simapp.Setup(true)
+	ctx := app.BaseApp.NewContext(true, tmproto.Header{})
 
+	suite.app, suite.ctx = app, ctx
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	proposal.RegisterQueryServer(queryHelper, suite.app.ParamsKeeper)
 	suite.queryClient = proposal.NewQueryClient(queryHelper)
@@ -35,14 +37,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
-}
-
-// returns context and app
-func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
-	app := simapp.Setup(isCheckTx)
-	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
-
-	return app, ctx
 }
 
 func validateNoOp(_ interface{}) error { return nil }

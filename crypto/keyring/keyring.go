@@ -49,7 +49,6 @@ const (
 var (
 	_                          Keyring = &keystore{}
 	maxPassphraseEntryAttempts         = 3
-	ErrNoKeysAvailable                 = errors.New("no keys available for migration")
 )
 
 // Keyring exposes operations over a backend supported by github.com/99designs/keyring.
@@ -854,7 +853,7 @@ func (ks keystore) MigrateAll() (bool, error) {
 	}
 
 	if len(keys) == 0 {
-		return false, ErrNoKeysAvailable
+		return false, nil
 	}
 
 	var migrated bool

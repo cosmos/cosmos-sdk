@@ -174,7 +174,7 @@ Example Output:
 ```bash
 pagination:
   next_key: null
-  total: "0"
+  total: "1"
 proposals:
 - content:
     '@type': /cosmos.gov.v1beta1.TextProposal
@@ -413,7 +413,7 @@ A user can query the `gov` module using gRPC endpoints.
 
 ### Proposal
 
-The `Proposal` endpoint allows users to query...
+The `Proposal` endpoint allows users to query a given proposal.
 
 ```bash
 cosmos.gov.v1beta1.Query/Proposal
@@ -458,7 +458,7 @@ Example Output:
 
 ### Proposals
 
-The `Proposals` endpoint allows users to query...
+The `Proposals` endpoint allows users to query all proposals with optional filters.
 
 ```bash
 cosmos.gov.v1beta1.Query/Proposals
@@ -522,7 +522,7 @@ Example Output:
 
 ### Vote
 
-The `Vote` endpoint allows users to query...
+The `Vote` endpoint allows users to query a vote for a given proposal.
 
 ```bash
 cosmos.gov.v1beta1.Query/Vote
@@ -557,7 +557,7 @@ Example Output:
 
 ### Votes
 
-The `Votes` endpoint allows users to query...
+The `Votes` endpoint allows users to query all votes for a given proposal.
 
 ```bash
 cosmos.gov.v1beta1.Query/Votes
@@ -597,9 +597,9 @@ Example Output:
 
 ### Params
 
-The `Params` endpoint allows users to query...
+The `Params` endpoint allows users to query all parameters for the `gov` module.
 
-<!-- TODO: fix required param_type but prints all params -->
+<!-- TODO: #10197 Querying governance params outputs nil values -->
 
 ```bash
 cosmos.gov.v1beta1.Query/Params
@@ -634,7 +634,7 @@ Example Output:
 
 ### Deposit
 
-The `Deposit` endpoint allows users to query...
+The `Deposit` endpoint allows users to query a deposit for a given proposal from a given depositor.
 
 ```bash
 cosmos.gov.v1beta1.Query/Deposit
@@ -668,7 +668,7 @@ Example Output:
 
 ### Deposits
 
-The `Deposits` endpoint allows users to query...
+The `Deposits` endpoint allows users to query all deposits for a given proposal.
 
 ```bash
 cosmos.gov.v1beta1.Query/Deposits
@@ -707,7 +707,7 @@ Example Output:
 
 ### TallyResult
 
-The `TallyResult` endpoint allows users to query...
+The `TallyResult` endpoint allows users to query the tally of a given proposal.
 
 ```bash
 cosmos.gov.v1beta1.Query/TallyResult
@@ -731,6 +731,330 @@ Example Output:
     "abstain": "0",
     "no": "0",
     "noWithVeto": "0"
+  }
+}
+```
+
+## REST
+
+A user can query the `gov` module using REST endpoints.
+
+### proposals
+
+The `proposals` endpoint allows users to query a given proposal.
+
+```bash
+/cosmos/gov/v1beta1/proposals/{proposal_id}
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/proposals/1
+```
+
+Example Output:
+
+```bash
+{
+  "proposal": {
+    "proposal_id": "1",
+    "content": {
+      "@type": "/cosmos.gov.v1beta1.TextProposal",
+      "title": "Test Proposal",
+      "description": "testing, testing, 1, 2, 3"
+    },
+    "status": "PROPOSAL_STATUS_VOTING_PERIOD",
+    "final_tally_result": {
+      "yes": "0",
+      "abstain": "0",
+      "no": "0",
+      "no_with_veto": "0"
+    },
+    "submit_time": "2021-09-16T19:40:08.712440474Z",
+    "deposit_end_time": "2021-09-18T19:40:08.712440474Z",
+    "total_deposit": [
+      {
+        "denom": "stake",
+        "amount": "10000000"
+      }
+    ],
+    "voting_start_time": "2021-09-16T19:40:08.712440474Z",
+    "voting_end_time": "2021-09-18T19:40:08.712440474Z"
+  }
+}
+```
+
+### proposals
+
+The `proposals` endpoint allows users to query all proposals with optional filters.
+
+```bash
+/cosmos/gov/v1beta1/proposals
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/proposals
+```
+
+Example Output:
+
+```bash
+{
+  "proposals": [
+    {
+      "proposal_id": "1",
+      "content": {
+        "@type": "/cosmos.gov.v1beta1.TextProposal",
+        "title": "Test Proposal",
+        "description": "testing, testing, 1, 2, 3"
+      },
+      "status": "PROPOSAL_STATUS_VOTING_PERIOD",
+      "final_tally_result": {
+        "yes": "0",
+        "abstain": "0",
+        "no": "0",
+        "no_with_veto": "0"
+      },
+      "submit_time": "2021-09-16T19:40:08.712440474Z",
+      "deposit_end_time": "2021-09-18T19:40:08.712440474Z",
+      "total_deposit": [
+        {
+          "denom": "stake",
+          "amount": "10000000"
+        }
+      ],
+      "voting_start_time": "2021-09-16T19:40:08.712440474Z",
+      "voting_end_time": "2021-09-18T19:40:08.712440474Z"
+    },
+    {
+      "proposal_id": "2",
+      "content": {
+        "@type": "/cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal",
+        "title": "Test Proposal",
+        "description": "testing, testing, 1, 2, 3"
+      },
+      "status": "PROPOSAL_STATUS_DEPOSIT_PERIOD",
+      "final_tally_result": {
+        "yes": "0",
+        "abstain": "0",
+        "no": "0",
+        "no_with_veto": "0"
+      },
+      "submit_time": "2021-09-17T18:26:57.866854713Z",
+      "deposit_end_time": "2021-09-19T18:26:57.866854713Z",
+      "total_deposit": [
+      ],
+      "voting_start_time": "0001-01-01T00:00:00Z",
+      "voting_end_time": "0001-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "2"
+  }
+}
+```
+
+### votes
+
+The `votes` endpoint allows users to query a vote for a given proposal.
+
+```bash
+/cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/proposals/1/votes/cosmos1..
+```
+
+Example Output:
+
+```bash
+{
+  "vote": {
+    "proposal_id": "1",
+    "voter": "cosmos1..",
+    "option": "VOTE_OPTION_YES",
+    "options": [
+      {
+        "option": "VOTE_OPTION_YES",
+        "weight": "1.000000000000000000"
+      }
+    ]
+  }
+}
+```
+
+### votes
+
+The `votes` endpoint allows users to query all votes for a given proposal.
+
+```bash
+/cosmos/gov/v1beta1/proposals/{proposal_id}/votes
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/proposals/1/votes
+```
+
+Example Output:
+
+```bash
+{
+  "votes": [
+    {
+      "proposal_id": "1",
+      "voter": "cosmos1..",
+      "option": "VOTE_OPTION_YES",
+      "options": [
+        {
+          "option": "VOTE_OPTION_YES",
+          "weight": "1.000000000000000000"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
+}
+```
+
+### params
+
+The `params` endpoint allows users to query all parameters for the `gov` module.
+
+<!-- TODO: #10197 Querying governance params outputs nil values -->
+
+```bash
+/cosmos/gov/v1beta1/params/{params_type}
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/params/voting
+```
+
+Example Output:
+
+```bash
+{
+  "voting_params": {
+    "voting_period": "172800s"
+  },
+  "deposit_params": {
+    "min_deposit": [
+    ],
+    "max_deposit_period": "0s"
+  },
+  "tally_params": {
+    "quorum": "0.000000000000000000",
+    "threshold": "0.000000000000000000",
+    "veto_threshold": "0.000000000000000000"
+  }
+}
+```
+
+### deposits
+
+The `deposits` endpoint allows users to query a deposit for a given proposal from a given depositor.
+
+```bash
+/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/proposals/1/deposits/cosmos1..
+```
+
+Example Output:
+
+```bash
+{
+  "deposit": {
+    "proposal_id": "1",
+    "depositor": "cosmos1..",
+    "amount": [
+      {
+        "denom": "stake",
+        "amount": "10000000"
+      }
+    ]
+  }
+}
+```
+
+### deposits
+
+The `deposits` endpoint allows users to query all deposits for a given proposal.
+
+```bash
+/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/proposals/1/deposits
+```
+
+Example Output:
+
+```bash
+{
+  "deposits": [
+    {
+      "proposal_id": "1",
+      "depositor": "cosmos1..",
+      "amount": [
+        {
+          "denom": "stake",
+          "amount": "10000000"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
+}
+```
+
+### tally
+
+The `tally` endpoint allows users to query the tally of a given proposal.
+
+```bash
+/cosmos/gov/v1beta1/proposals/{proposal_id}/tally
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/proposals/1/tally
+```
+
+Example Output:
+
+```bash
+{
+  "tally": {
+    "yes": "1000000",
+    "abstain": "0",
+    "no": "0",
+    "no_with_veto": "0"
   }
 }
 ```

@@ -428,14 +428,6 @@ func TestAminoUnmarshalJSON(t *testing.T) {
 	require.NoError(t, err)
 	lpk := pk.(*kmultisig.LegacyAminoPubKey)
 	require.Equal(t, uint32(3), lpk.Threshold)
-	require.Equal(t, 5, len(pk.(*kmultisig.LegacyAminoPubKey).PubKeys))
-
-	for _, key := range pk.(*kmultisig.LegacyAminoPubKey).PubKeys {
-		require.NotNil(t, key)
-		pk := secp256k1.PubKey{}
-		err := pk.Unmarshal(key.Value)
-		require.NoError(t, err)
-	}
 }
 
 func TestProtoMarshalJSON(t *testing.T) {

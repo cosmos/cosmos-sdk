@@ -143,45 +143,45 @@ The `RootStore` will have the following interface; the methods for configuring t
 ```go
 // Used where read-only access to versions is needed.
 type BasicRootStore interface {
-	Store
-	GetKVStore(StoreKey) KVStore
-	CacheRootStore() CacheRootStore
+    Store
+    GetKVStore(StoreKey) KVStore
+    CacheRootStore() CacheRootStore
 }
 
 // Used as the main app state, replacing CommitMultiStore.
 type CommitRootStore interface {
     BasicRootStore
-	Committer
-	Snapshotter
+    Committer
+    Snapshotter
 
-	GetVersion(uint64) (BasicRootStore, error)
-	SetInitialVersion(uint64) error
+    GetVersion(uint64) (BasicRootStore, error)
+    SetInitialVersion(uint64) error
 
     ... // Trace and Listen methods
 }
 
 // Replaces CacheMultiStore for branched state.
 type CacheRootStore interface {
-	BasicRootStore
-	Write()
+    BasicRootStore
+    Write()
 
     ... // Trace and Listen methods
 }
 
 // Example of constructor parameters for the concrete type.
 type RootStoreConfig struct {
-	PersistentCache RootStorePersistentCache
-	Upgrades        *StoreUpgrades
-	InitialVersion  uint64
+    PersistentCache RootStorePersistentCache
+    Upgrades        *StoreUpgrades
+    InitialVersion  uint64
 
     ReservePrefix(StoreKey, StoreType)
 }
 
 // Unchanged from MultiStorePersistentCache type.
 type RootStorePersistentCache interface {
-	GetStoreCache(StoreKey, CommitKVStore) CommitKVStore
-	Unwrap(StoreKey) CommitKVStore
-	Reset()
+    GetStoreCache(StoreKey, CommitKVStore) CommitKVStore
+    Unwrap(StoreKey) CommitKVStore
+    Reset()
 }
 ```
 

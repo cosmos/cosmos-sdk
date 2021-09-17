@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -33,18 +33,18 @@ var (
 // This is where apps can define their own PubKey
 type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
 
-var _ txtypes.Handler = mempoolFeeMiddleware{}
+var _ tx.Handler = mempoolFeeMiddleware{}
 
 // setPubKeyMiddleware sets PubKeys in context for any signer which does not already have pubkey set
 // PubKeys must be set in context for all signers before any other sigverify middlewares run
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type setPubKeyMiddleware struct {
 	ak   AccountKeeper
-	next txtypes.Handler
+	next tx.Handler
 }
 
-func SetPubKeyMiddleware(ak AccountKeeper) txtypes.Middleware {
-	return func(txh txtypes.Handler) txtypes.Handler {
+func SetPubKeyMiddleware(ak AccountKeeper) tx.Middleware {
+	return func(txh tx.Handler) tx.Handler {
 		return setPubKeyMiddleware{
 			ak:   ak,
 			next: txh,
@@ -197,17 +197,17 @@ func (spkd setPubKeyMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req ab
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (spkd setPubKeyMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req txtypes.RequestSimulateTx) (txtypes.ResponseSimulateTx, error) {
+func (spkd setPubKeyMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
+	sigTx, ok := sdkTx.(authsigning.SigVerifiableTx)
 	if !ok {
-		return txtypes.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
+		return tx.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}
 
 	pubkeys, err := sigTx.GetPubKeys()
 	if err != nil {
-		return txtypes.ResponseSimulateTx{}, err
+		return tx.ResponseSimulateTx{}, err
 	}
 	signers := sigTx.GetSigners()
 
@@ -219,7 +219,7 @@ func (spkd setPubKeyMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req t
 
 		acc, err := GetSignerAcc(sdkCtx, spkd.ak, signers[i])
 		if err != nil {
-			return txtypes.ResponseSimulateTx{}, err
+			return tx.ResponseSimulateTx{}, err
 		}
 		// account already has pubkey set,no need to reset
 		if acc.GetPubKey() != nil {
@@ -227,7 +227,7 @@ func (spkd setPubKeyMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req t
 		}
 		err = acc.SetPubKey(pk)
 		if err != nil {
-			return txtypes.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
+			return tx.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
 		}
 		spkd.ak.SetAccount(sdkCtx, acc)
 	}
@@ -238,7 +238,7 @@ func (spkd setPubKeyMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req t
 	// - concat(address,"/",sequence) (via `tx.acc_seq='cosmos1abc...def/42'`).
 	sigs, err := sigTx.GetSignaturesV2()
 	if err != nil {
-		return txtypes.ResponseSimulateTx{}, err
+		return tx.ResponseSimulateTx{}, err
 	}
 
 	var events sdk.Events
@@ -249,7 +249,7 @@ func (spkd setPubKeyMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req t
 
 		sigBzs, err := signatureDataToBz(sig.Data)
 		if err != nil {
-			return txtypes.ResponseSimulateTx{}, err
+			return tx.ResponseSimulateTx{}, err
 		}
 		for _, sigBz := range sigBzs {
 			events = append(events, sdk.NewEvent(sdk.EventTypeTx,
@@ -259,7 +259,7 @@ func (spkd setPubKeyMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req t
 	}
 
 	sdkCtx.EventManager().EmitEvents(events)
-	return spkd.next.SimulateTx(ctx, tx, req)
+	return spkd.next.SimulateTx(ctx, sdkTx, req)
 }
 
 // validateSigCountMiddleware takes in Params and returns errors if there are too many signatures in the tx for the given params
@@ -268,11 +268,11 @@ func (spkd setPubKeyMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req t
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type validateSigCountMiddleware struct {
 	ak   AccountKeeper
-	next txtypes.Handler
+	next tx.Handler
 }
 
-func ValidateSigCountMiddleware(ak AccountKeeper) txtypes.Middleware {
-	return func(txh txtypes.Handler) txtypes.Handler {
+func ValidateSigCountMiddleware(ak AccountKeeper) tx.Middleware {
+	return func(txh tx.Handler) tx.Handler {
 		return validateSigCountMiddleware{
 			ak:   ak,
 			next: txh,
@@ -315,12 +315,12 @@ func (vscd validateSigCountMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, r
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (vscd validateSigCountMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req txtypes.RequestSimulateTx) (txtypes.ResponseSimulateTx, error) {
-	if err := vscd.checkSigCount(ctx, tx); err != nil {
-		return txtypes.ResponseSimulateTx{}, err
+func (vscd validateSigCountMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+	if err := vscd.checkSigCount(ctx, sdkTx); err != nil {
+		return tx.ResponseSimulateTx{}, err
 	}
 
-	return vscd.next.SimulateTx(ctx, tx, req)
+	return vscd.next.SimulateTx(ctx, sdkTx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
@@ -403,11 +403,11 @@ func ConsumeMultisignatureVerificationGas(
 type sigGasConsumeMiddleware struct {
 	ak             AccountKeeper
 	sigGasConsumer SignatureVerificationGasConsumer
-	next           txtypes.Handler
+	next           tx.Handler
 }
 
-func SigGasConsumeMiddleware(ak AccountKeeper, sigGasConsumer SignatureVerificationGasConsumer) txtypes.Middleware {
-	return func(h txtypes.Handler) txtypes.Handler {
+func SigGasConsumeMiddleware(ak AccountKeeper, sigGasConsumer SignatureVerificationGasConsumer) tx.Middleware {
+	return func(h tx.Handler) tx.Handler {
 		return sigGasConsumeMiddleware{
 			ak:             ak,
 			sigGasConsumer: sigGasConsumer,
@@ -501,18 +501,18 @@ func (sgcd sigGasConsumeMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, re
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (sgcd sigGasConsumeMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req txtypes.RequestSimulateTx) (txtypes.ResponseSimulateTx, error) {
+func (sgcd sigGasConsumeMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
+	sigTx, ok := sdkTx.(authsigning.SigVerifiableTx)
 	if !ok {
-		return txtypes.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+		return tx.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
 	params := sgcd.ak.GetParams(sdkCtx)
 	sigs, err := sigTx.GetSignaturesV2()
 	if err != nil {
-		return txtypes.ResponseSimulateTx{}, err
+		return tx.ResponseSimulateTx{}, err
 	}
 
 	// stdSigs contains the sequence number, account number, and signatures.
@@ -521,7 +521,7 @@ func (sgcd sigGasConsumeMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, r
 	for i, sig := range sigs {
 		signerAcc, err := GetSignerAcc(sdkCtx, sgcd.ak, signerAddrs[i])
 		if err != nil {
-			return txtypes.ResponseSimulateTx{}, err
+			return tx.ResponseSimulateTx{}, err
 		}
 
 		pubKey := signerAcc.GetPubKey()
@@ -535,11 +535,11 @@ func (sgcd sigGasConsumeMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, r
 
 		err = sgcd.sigGasConsumer(sdkCtx.GasMeter(), sig, params)
 		if err != nil {
-			return txtypes.ResponseSimulateTx{}, err
+			return tx.ResponseSimulateTx{}, err
 		}
 	}
 
-	return sgcd.next.SimulateTx(ctx, tx, req)
+	return sgcd.next.SimulateTx(ctx, sdkTx, req)
 }
 
 // Verify all signatures for a tx and return an error if any are invalid. Note,
@@ -550,11 +550,11 @@ func (sgcd sigGasConsumeMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, r
 type sigVerificationMiddleware struct {
 	ak              AccountKeeper
 	signModeHandler authsigning.SignModeHandler
-	next            txtypes.Handler
+	next            tx.Handler
 }
 
-func SigVerificationMiddleware(ak AccountKeeper, signModeHandler authsigning.SignModeHandler) txtypes.Middleware {
-	return func(h txtypes.Handler) txtypes.Handler {
+func SigVerificationMiddleware(ak AccountKeeper, signModeHandler authsigning.SignModeHandler) tx.Middleware {
+	return func(h tx.Handler) tx.Handler {
 		return sigVerificationMiddleware{
 			ak:              ak,
 			signModeHandler: signModeHandler,
@@ -743,49 +743,49 @@ func (svd sigVerificationMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, r
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (svd sigVerificationMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req txtypes.RequestSimulateTx) (txtypes.ResponseSimulateTx, error) {
+func (svd sigVerificationMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	// no need to verify signatures on recheck tx
 	if sdkCtx.IsReCheckTx() {
-		return svd.next.SimulateTx(ctx, tx, req)
+		return svd.next.SimulateTx(ctx, sdkTx, req)
 	}
 
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
+	sigTx, ok := sdkTx.(authsigning.SigVerifiableTx)
 	if !ok {
-		return txtypes.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+		return tx.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
 	sigs, err := sigTx.GetSignaturesV2()
 	if err != nil {
-		return txtypes.ResponseSimulateTx{}, err
+		return tx.ResponseSimulateTx{}, err
 	}
 
 	signerAddrs := sigTx.GetSigners()
 
 	// check that signer length and signature length are the same
 	if len(sigs) != len(signerAddrs) {
-		return txtypes.ResponseSimulateTx{}, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signerAddrs), len(sigs))
+		return tx.ResponseSimulateTx{}, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signerAddrs), len(sigs))
 	}
 
 	for i, sig := range sigs {
 		acc, err := GetSignerAcc(sdkCtx, svd.ak, signerAddrs[i])
 		if err != nil {
-			return txtypes.ResponseSimulateTx{}, err
+			return tx.ResponseSimulateTx{}, err
 		}
 
 		// Check account sequence number.
 		if sig.Sequence != acc.GetSequence() {
-			return txtypes.ResponseSimulateTx{}, sdkerrors.Wrapf(
+			return tx.ResponseSimulateTx{}, sdkerrors.Wrapf(
 				sdkerrors.ErrWrongSequence,
 				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
 			)
 		}
 	}
 
-	return svd.next.SimulateTx(ctx, tx, req)
+	return svd.next.SimulateTx(ctx, sdkTx, req)
 }
 
 // incrementSequenceMiddleware handles incrementing sequences of all signers.
@@ -799,11 +799,11 @@ func (svd sigVerificationMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, 
 // client. It is recommended to instead use multiple messages in a tx.
 type incrementSequenceMiddleware struct {
 	ak   AccountKeeper
-	next txtypes.Handler
+	next tx.Handler
 }
 
-func IncrementSequenceMiddleware(ak AccountKeeper) txtypes.Middleware {
-	return func(h txtypes.Handler) txtypes.Handler {
+func IncrementSequenceMiddleware(ak AccountKeeper) tx.Middleware {
+	return func(h tx.Handler) tx.Handler {
 		return incrementSequenceMiddleware{
 			ak:   ak,
 			next: h,
@@ -854,11 +854,11 @@ func (isd incrementSequenceMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx,
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (isd incrementSequenceMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req txtypes.RequestSimulateTx) (txtypes.ResponseSimulateTx, error) {
+func (isd incrementSequenceMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
+	sigTx, ok := sdkTx.(authsigning.SigVerifiableTx)
 	if !ok {
-		return txtypes.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+		return tx.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
 	// increment sequence of all signers
@@ -871,7 +871,7 @@ func (isd incrementSequenceMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx
 		isd.ak.SetAccount(sdkCtx, acc)
 	}
 
-	return isd.next.SimulateTx(ctx, tx, req)
+	return isd.next.SimulateTx(ctx, sdkTx, req)
 }
 
 // GetSignerAcc returns an account for a given address that is expected to sign

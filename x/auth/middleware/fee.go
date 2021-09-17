@@ -7,14 +7,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	// "github.com/cosmos/cosmos-sdk/types/tx"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
-
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-var _ txtypes.Handler = mempoolFeeMiddleware{}
+var _ tx.Handler = mempoolFeeMiddleware{}
 
 // MempoolFeeMiddleware will check if the transaction's fee is at least as large
 // as the local validator's minimum gasFee (defined in validator config).
@@ -23,10 +21,10 @@ var _ txtypes.Handler = mempoolFeeMiddleware{}
 // If fee is high enough or not CheckTx, then call next middleware
 // CONTRACT: Tx must implement FeeTx to use MempoolFeeMiddleware
 type mempoolFeeMiddleware struct {
-	next txtypes.Handler
+	next tx.Handler
 }
 
-func MempoolFeeMiddleware(txh txtypes.Handler) txtypes.Handler {
+func MempoolFeeMiddleware(txh tx.Handler) tx.Handler {
 	return mempoolFeeMiddleware{
 		next: txh,
 	}
@@ -73,11 +71,11 @@ func (txh mempoolFeeMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req ab
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (txh mempoolFeeMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req txtypes.RequestSimulateTx) (txtypes.ResponseSimulateTx, error) {
+func (txh mempoolFeeMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	return txh.next.SimulateTx(ctx, tx, req)
 }
 
-var _ txtypes.Handler = mempoolFeeMiddleware{}
+var _ tx.Handler = mempoolFeeMiddleware{}
 
 // deductFeeMiddleware deducts fees from the first signer of the tx
 // If the first signer does not have the funds to pay for the fees, return with InsufficientFunds error
@@ -87,11 +85,11 @@ type deductFeeMiddleware struct {
 	accountKeeper  AccountKeeper
 	bankKeeper     types.BankKeeper
 	feegrantKeeper FeegrantKeeper
-	next           txtypes.Handler
+	next           tx.Handler
 }
 
-func DeductFeeMiddleware(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKeeper) txtypes.Middleware {
-	return func(txh txtypes.Handler) txtypes.Handler {
+func DeductFeeMiddleware(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKeeper) tx.Middleware {
+	return func(txh tx.Handler) tx.Handler {
 		return deductFeeMiddleware{
 			accountKeeper:  ak,
 			bankKeeper:     bk,
@@ -173,9 +171,9 @@ func (dfd deductFeeMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abc
 	return dfd.next.DeliverTx(ctx, tx, req)
 }
 
-func (dfd deductFeeMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req txtypes.RequestSimulateTx) (txtypes.ResponseSimulateTx, error) {
+func (dfd deductFeeMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	if err := dfd.checkDeductFee(ctx, sdkTx); err != nil {
-		return txtypes.ResponseSimulateTx{}, err
+		return tx.ResponseSimulateTx{}, err
 	}
 
 	return dfd.next.SimulateTx(ctx, sdkTx, req)

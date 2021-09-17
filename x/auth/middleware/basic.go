@@ -8,7 +8,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -21,16 +21,16 @@ import (
 // validateBasicMiddleware will not get executed on ReCheckTx since it
 // is not dependent on application state.
 type validateBasicMiddleware struct {
-	next txtypes.Handler
+	next tx.Handler
 }
 
-func ValidateBasicMiddleware(txh txtypes.Handler) txtypes.Handler {
+func ValidateBasicMiddleware(txh tx.Handler) tx.Handler {
 	return validateBasicMiddleware{
 		next: txh,
 	}
 }
 
-var _ txtypes.Handler = validateBasicMiddleware{}
+var _ tx.Handler = validateBasicMiddleware{}
 
 // CheckTx implements tx.Handler.CheckTx.
 func (basic validateBasicMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
@@ -58,21 +58,21 @@ func (basic validateBasicMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, r
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (basic validateBasicMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req txtypes.RequestSimulateTx) (txtypes.ResponseSimulateTx, error) {
-	if err := tx.ValidateBasic(); err != nil {
-		return txtypes.ResponseSimulateTx{}, err
+func (basic validateBasicMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+	if err := sdkTx.ValidateBasic(); err != nil {
+		return tx.ResponseSimulateTx{}, err
 	}
 
-	return basic.next.SimulateTx(ctx, tx, req)
+	return basic.next.SimulateTx(ctx, sdkTx, req)
 }
 
-var _ txtypes.Handler = txTimeoutHeightMiddleware{}
+var _ tx.Handler = txTimeoutHeightMiddleware{}
 
 type (
 	// TxTimeoutHeightMiddleware defines a middleware that checks for a
 	// tx height timeout.
 	txTimeoutHeightMiddleware struct {
-		next txtypes.Handler
+		next tx.Handler
 	}
 
 	// TxWithTimeoutHeight defines the interface a tx must implement in order for
@@ -86,7 +86,7 @@ type (
 
 // TxTimeoutHeightMiddleware defines a middleware that checks for a
 // tx height timeout.
-func TxTimeoutHeightMiddleware(txh txtypes.Handler) txtypes.Handler {
+func TxTimeoutHeightMiddleware(txh tx.Handler) tx.Handler {
 	return txTimeoutHeightMiddleware{
 		next: txh,
 	}
@@ -128,12 +128,12 @@ func (txh txTimeoutHeightMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, r
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (txh txTimeoutHeightMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req txtypes.RequestSimulateTx) (txtypes.ResponseSimulateTx, error) {
-	if err := checkTimeout(ctx, tx); err != nil {
-		return txtypes.ResponseSimulateTx{}, err
+func (txh txTimeoutHeightMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+	if err := checkTimeout(ctx, sdkTx); err != nil {
+		return tx.ResponseSimulateTx{}, err
 	}
 
-	return txh.next.SimulateTx(ctx, tx, req)
+	return txh.next.SimulateTx(ctx, sdkTx, req)
 }
 
 // validateMemoMiddleware will validate memo given the parameters passed in
@@ -141,11 +141,11 @@ func (txh txTimeoutHeightMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, 
 // CONTRACT: Tx must implement TxWithMemo interface
 type validateMemoMiddleware struct {
 	ak   AccountKeeper
-	next txtypes.Handler
+	next tx.Handler
 }
 
-func ValidateMemoMiddleware(ak AccountKeeper) txtypes.Middleware {
-	return func(txHandler txtypes.Handler) txtypes.Handler {
+func ValidateMemoMiddleware(ak AccountKeeper) tx.Middleware {
+	return func(txHandler tx.Handler) tx.Handler {
 		return validateMemoMiddleware{
 			ak:   ak,
 			next: txHandler,
@@ -153,7 +153,7 @@ func ValidateMemoMiddleware(ak AccountKeeper) txtypes.Middleware {
 	}
 }
 
-var _ txtypes.Handler = validateMemoMiddleware{}
+var _ tx.Handler = validateMemoMiddleware{}
 
 func (vmd validateMemoMiddleware) checkForValidMemo(ctx context.Context, tx sdk.Tx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -194,15 +194,15 @@ func (vmd validateMemoMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req 
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
-func (vmd validateMemoMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req txtypes.RequestSimulateTx) (txtypes.ResponseSimulateTx, error) {
-	if err := vmd.checkForValidMemo(ctx, tx); err != nil {
-		return txtypes.ResponseSimulateTx{}, err
+func (vmd validateMemoMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+	if err := vmd.checkForValidMemo(ctx, sdkTx); err != nil {
+		return tx.ResponseSimulateTx{}, err
 	}
 
-	return vmd.next.SimulateTx(ctx, tx, req)
+	return vmd.next.SimulateTx(ctx, sdkTx, req)
 }
 
-var _ txtypes.Handler = consumeTxSizeGasMiddleware{}
+var _ tx.Handler = consumeTxSizeGasMiddleware{}
 
 // consumeTxSizeGasMiddleware will take in parameters and consume gas proportional
 // to the size of tx before calling next middleware. Note, the gas costs will be
@@ -215,11 +215,11 @@ var _ txtypes.Handler = consumeTxSizeGasMiddleware{}
 // as legacytx.StdSignature otherwise simulate mode will incorrectly estimate gas cost.
 type consumeTxSizeGasMiddleware struct {
 	ak   AccountKeeper
-	next txtypes.Handler
+	next tx.Handler
 }
 
-func ConsumeTxSizeGasMiddleware(ak AccountKeeper) txtypes.Middleware {
-	return func(txHandler txtypes.Handler) txtypes.Handler {
+func ConsumeTxSizeGasMiddleware(ak AccountKeeper) tx.Middleware {
+	return func(txHandler tx.Handler) tx.Handler {
 		return consumeTxSizeGasMiddleware{
 			ak:   ak,
 			next: txHandler,
@@ -254,11 +254,11 @@ func (cgts consumeTxSizeGasMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx,
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (cgts consumeTxSizeGasMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req txtypes.RequestSimulateTx) (txtypes.ResponseSimulateTx, error) {
+func (cgts consumeTxSizeGasMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
+	sigTx, ok := sdkTx.(authsigning.SigVerifiableTx)
 	if !ok {
-		return txtypes.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
+		return tx.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}
 	params := cgts.ak.GetParams(sdkCtx)
 	sdkCtx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(sdkCtx.TxBytes())), "txSize")
@@ -267,7 +267,7 @@ func (cgts consumeTxSizeGasMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx
 	// in simulate mode, each element should be a nil signature
 	sigs, err := sigTx.GetSignaturesV2()
 	if err != nil {
-		return txtypes.ResponseSimulateTx{}, err
+		return tx.ResponseSimulateTx{}, err
 	}
 	n := len(sigs)
 
@@ -306,7 +306,7 @@ func (cgts consumeTxSizeGasMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx
 		sdkCtx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*cost, "txSize")
 	}
 
-	return cgts.next.SimulateTx(ctx, tx, req)
+	return cgts.next.SimulateTx(ctx, sdkTx, req)
 }
 
 // isIncompleteSignature tests whether SignatureData is fully filled in for simulation purposes

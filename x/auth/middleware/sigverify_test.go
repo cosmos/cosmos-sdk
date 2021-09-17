@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
@@ -52,10 +52,10 @@ func (suite *MWTestSuite) TestSetPubKey() {
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
-	tx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	testTx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 	require.NoError(err)
 
-	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, abci.RequestDeliverTx{})
+	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), testTx, abci.RequestDeliverTx{})
 	require.NoError(err)
 
 	// Require that all accounts have pubkey set after middleware runs
@@ -179,10 +179,10 @@ func (suite *MWTestSuite) TestSigVerification() {
 		txBuilder.SetFeeAmount(feeAmount)
 		txBuilder.SetGasLimit(gasLimit)
 
-		tx, _, err := suite.createTestTx(txBuilder, tc.privs, tc.accNums, tc.accSeqs, ctx.ChainID())
+		testTx, _, err := suite.createTestTx(txBuilder, tc.privs, tc.accNums, tc.accSeqs, ctx.ChainID())
 		suite.Require().NoError(err)
 
-		_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, abci.RequestDeliverTx{})
+		_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), testTx, abci.RequestDeliverTx{})
 		if tc.shouldErr {
 			suite.Require().NotNil(err, "TestCase %d: %s did not error as expected", i, tc.name)
 		} else {
@@ -270,10 +270,10 @@ func (suite *MWTestSuite) TestSigVerification_ExplicitAmino() {
 		txBuilder.SetFeeAmount(feeAmount)
 		txBuilder.SetGasLimit(gasLimit)
 
-		tx, _, err := suite.createTestTx(txBuilder, tc.privs, tc.accNums, tc.accSeqs, ctx.ChainID())
+		testTx, _, err := suite.createTestTx(txBuilder, tc.privs, tc.accNums, tc.accSeqs, ctx.ChainID())
 		suite.Require().NoError(err)
 
-		_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, abci.RequestDeliverTx{})
+		_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), testTx, abci.RequestDeliverTx{})
 		if tc.shouldErr {
 			suite.Require().NotNil(err, "TestCase %d: %s did not error as expected", i, tc.name)
 		} else {
@@ -330,7 +330,7 @@ func (suite *MWTestSuite) runSigMiddlewares(params types.Params, _ bool, privs .
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
 
-	tx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	testTx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 	suite.Require().NoError(err)
 
 	txHandler := middleware.ComposeMiddlewares(
@@ -345,7 +345,7 @@ func (suite *MWTestSuite) runSigMiddlewares(params types.Params, _ bool, privs .
 
 	// Determine gas consumption of txhandler with default params
 	before := ctx.GasMeter().GasConsumed()
-	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, abci.RequestDeliverTx{})
+	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), testTx, abci.RequestDeliverTx{})
 	after := ctx.GasMeter().GasConsumed()
 
 	return after - before, err
@@ -370,7 +370,7 @@ func (suite *MWTestSuite) TestIncrementSequenceMiddleware() {
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
 
-	tx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	testTx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 	suite.Require().NoError(err)
 
 	txHandler := middleware.ComposeMiddlewares(
@@ -393,9 +393,9 @@ func (suite *MWTestSuite) TestIncrementSequenceMiddleware() {
 	for i, tc := range testCases {
 		var err error
 		if tc.simulate {
-			_, err = txHandler.SimulateTx(sdk.WrapSDKContext(tc.ctx), tx, txtypes.RequestSimulateTx{})
+			_, err = txHandler.SimulateTx(sdk.WrapSDKContext(tc.ctx), testTx, tx.RequestSimulateTx{})
 		} else {
-			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(tc.ctx), tx, abci.RequestDeliverTx{})
+			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(tc.ctx), testTx, abci.RequestDeliverTx{})
 		}
 
 		suite.Require().NoError(err, "unexpected error; tc #%d, %v", i, tc)

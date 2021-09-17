@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/tendermint/tendermint/abci/types"
@@ -118,10 +118,10 @@ func (suite *MWTestSuite) TestConsumeGasForTxSize() {
 			txBuilder.SetMemo(strings.Repeat("01234567890", 10))
 
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-			tx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+			testTx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 			suite.Require().NoError(err)
 
-			txBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
+			txBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(testTx)
 			suite.Require().Nil(err, "Cannot marshal tx: %v", err)
 
 			params := suite.app.AccountKeeper.GetParams(ctx)
@@ -137,7 +137,7 @@ func (suite *MWTestSuite) TestConsumeGasForTxSize() {
 			expectedGas += afterGas - beforeGas
 
 			beforeGas = ctx.GasMeter().GasConsumed()
-			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, types.RequestDeliverTx{})
+			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), testTx, types.RequestDeliverTx{})
 
 			suite.Require().Nil(err, "ConsumeTxSizeGasMiddleware returned error: %v", err)
 
@@ -146,12 +146,12 @@ func (suite *MWTestSuite) TestConsumeGasForTxSize() {
 			suite.Require().Equal(expectedGas, consumedGas, "Middleware did not consume the correct amount of gas")
 
 			// simulation must not underestimate gas of this middleware even with nil signatures
-			txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
+			txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(testTx)
 			suite.Require().NoError(err)
 			suite.Require().NoError(txBuilder.SetSignatures(tc.sigV2))
-			tx = txBuilder.GetTx()
+			testTx = txBuilder.GetTx()
 
-			simTxBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
+			simTxBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(testTx)
 			suite.Require().Nil(err, "Cannot marshal tx: %v", err)
 			// require that simulated tx is smaller than tx with signatures
 			suite.Require().True(len(simTxBytes) < len(txBytes), "simulated tx still has signatures")
@@ -162,7 +162,7 @@ func (suite *MWTestSuite) TestConsumeGasForTxSize() {
 			beforeSimGas := ctx.GasMeter().GasConsumed()
 
 			// run txhandler in simulate mode
-			_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), tx, txtypes.RequestSimulateTx{})
+			_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), testTx, tx.RequestSimulateTx{})
 			consumedSimGas := ctx.GasMeter().GasConsumed() - beforeSimGas
 
 			// require that txhandler passes and does not underestimate middleware cost
@@ -211,11 +211,11 @@ func (suite *MWTestSuite) TestTxHeightTimeoutMiddleware() {
 			txBuilder.SetTimeoutHeight(tc.timeout)
 
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-			tx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+			testTx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 			suite.Require().NoError(err)
 
 			ctx := ctx.WithBlockHeight(tc.height)
-			_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), tx, txtypes.RequestSimulateTx{})
+			_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), testTx, tx.RequestSimulateTx{})
 			suite.Require().Equal(tc.expectErr, err != nil, err)
 		})
 	}

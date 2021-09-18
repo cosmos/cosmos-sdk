@@ -426,7 +426,9 @@ func (app *SimApp) setTxHandler(txConfig client.TxConfig, indexEventsStr []strin
 		LegacyAnteHandler: anteHandler,
 		AccountKeeper:     app.AccountKeeper,
 		BankKeeper:        app.BankKeeper,
+		FeegrantKeeper:    app.FeeGrantKeeper,
 		SignModeHandler:   txConfig.SignModeHandler(),
+		SigGasConsumer:    authmiddleware.DefaultSigVerificationGasConsumer,
 	})
 	if err != nil {
 		panic(err)

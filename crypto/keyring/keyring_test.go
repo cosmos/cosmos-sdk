@@ -976,7 +976,7 @@ func TestAltKeyring_Get(t *testing.T) {
 
 	key, err := kr.Key(uid)
 	require.NoError(t, err)
-	requireEqualRecord(t, mnemonic, key, true)
+	requireEqualRenamedKey(t, mnemonic, key, true)
 }
 
 func TestAltKeyring_KeyByAddress(t *testing.T) {
@@ -992,7 +992,7 @@ func TestAltKeyring_KeyByAddress(t *testing.T) {
 	require.NoError(t, err)
 	key, err := kr.KeyByAddress(addr)
 	require.NoError(t, err)
-	requireEqualRecord(t, key, mnemonic, true)
+	requireEqualRenamedKey(t, key, mnemonic, true)
 }
 
 func TestAltKeyring_Delete(t *testing.T) {
@@ -1316,7 +1316,7 @@ func TestRenameKey(t *testing.T) {
 				require.NoError(t, err)
 				newRecord, err := kr.Key(newKeyUID) // new key should be in keyring
 				require.NoError(t, err)
-				requireEqualRecord(t, newRecord, oldKeyRecord, false) // oldKeyRecord and newRecord should be the same except name
+				requireEqualRenamedKey(t, newRecord, oldKeyRecord, false) // oldKeyRecord and newRecord should be the same except name
 				oldKeyRecord, err = kr.Key(oldKeyUID)                 // old key should be gone from keyring
 				require.Error(t, err)
 			},
@@ -1360,7 +1360,7 @@ func TestRenameKey(t *testing.T) {
 	}
 }
 
-func requireEqualRecord(t *testing.T, key *Record, mnemonic *Record, nameMatch bool) {
+func requireEqualRenamedKey(t *testing.T, key *Record, mnemonic *Record, nameMatch bool) {
 	if nameMatch {
 		require.Equal(t, key.Name, mnemonic.Name)
 	}

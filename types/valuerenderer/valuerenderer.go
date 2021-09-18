@@ -9,11 +9,12 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/dustin/go-humanize"
+
 	"github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"golang.org/x/text/language"
-	"golang.org/x/text/message"
+	
 )
 
 // TODO
@@ -45,7 +46,6 @@ func NewDefaultValueRenderer(denomQuerier denomQuerierFunc) DefaultValueRenderer
 
 // Format converts an empty interface into a string depending on interface type.
 func (dvr DefaultValueRenderer) Format(c context.Context, x interface{}) (string, error) {
-	p := message.NewPrinter(language.English)
 	var sb strings.Builder
 
 	switch v := x.(type) {
@@ -87,9 +87,11 @@ func (dvr DefaultValueRenderer) Format(c context.Context, x interface{}) (string
 			return "", err
 		}
 
-		newAmount, newDenom := p.Sprintf("%d", dvr.ComputeAmount(v, metadata)), metadata.Display
-		sb.WriteString(newAmount)
-		sb.WriteString(newDenom)
+		expSub := computeExponentSubtraction(v.Denom, metadata)
+
+		newAmountStr:= dvr.ComputeAmount(v.Amount, expSub)
+		sb.WriteString(newAmountStr)
+		sb.WriteString(metadata.Display)
 
 	default:
 		panic("type is invalid")
@@ -112,11 +114,10 @@ func convertToBaseDenom(denom string) string {
 	}
 }
 
-// ComputeAmount calculates an amount to produce formated output
-func (dvr DefaultValueRenderer) ComputeAmount(coin types.Coin, metadata banktypes.Metadata) int64 {
+func computeExponentSubtraction(denom string, metadata banktypes.Metadata) float64 {
 	var coinExp, displayExp int64
 	for _, denomUnit := range metadata.DenomUnits {
-		if denomUnit.Denom == coin.Denom {
+		if denomUnit.Denom == denom {
 			coinExp = int64(denomUnit.Exponent)
 		}
 
@@ -125,13 +126,25 @@ func (dvr DefaultValueRenderer) ComputeAmount(coin types.Coin, metadata banktype
 		}
 	}
 
-	expSub := float64(coinExp - displayExp)
-	var amount int64
+	return float64(coinExp - displayExp)
+}
 
+// ComputeAmount calculates an amount to produce formated output
+func (dvr DefaultValueRenderer) ComputeAmount(amount types.Int, expSub float64) (string,error) {
+	
+	// check if amount is nil
+	// check if expSub is zero
+	var res interface{}
 	switch {
-	// negative , convert mregen to regen less zeroes
+	// negative , convert mregen to regen less zeroes 23 => 0,023, expSub -3
 	case math.Signbit(expSub):
-		amount = types.NewDecFromIntWithPrec(coin.Amount, int64(math.Abs(expSub))).TruncateInt64() // use Dec or just golang built in methods
+		// case 1 if number of zeroes >= Abs(expSub)  23000, -3 => 23 (int64)
+
+		// case 2 if number of zeroes < Abs(expSub)  23, -3 => 0.023 (float6464)
+
+		
+
+		//amount = types.NewDecFromIntWithPrec(coin.Amount, int64(math.Abs(expSub))).TruncateInt64() // use Dec or just golang built in methods
 	case !math.Signbit(expSub):
 		amount = coin.Amount.Mul(types.NewInt(int64(math.Pow(10, expSub)))).Int64()
 	// == 0, convert regen to regen, amount does not change

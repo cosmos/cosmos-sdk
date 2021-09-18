@@ -16,9 +16,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	"golang.org/x/text/language"
-	"golang.org/x/text/message"
 )
 
 type valueRendererTestSuite struct {
@@ -27,7 +24,7 @@ type valueRendererTestSuite struct {
 	app         *simapp.SimApp
 	ctx         types.Context
 	queryClient banktypes.QueryClient
-	printer     *message.Printer
+
 }
 
 func TestValueRendererTestSuite(t *testing.T) {
@@ -50,6 +47,9 @@ func (suite *valueRendererTestSuite) SetupTest() {
 	suite.queryClient = queryClient
 	suite.printer = message.NewPrinter(language.English)
 }
+
+
+
 // TODO
 // 1. add some test cases for integer overflow, underflow
 func (suite *valueRendererTestSuite) TestFormatDenomQuerierFunc() {
@@ -258,7 +258,7 @@ func TestFormatInt(t *testing.T) {
 }
 
 func TestParseString(t *testing.T) {
-	re := regexp.MustCompile(`\d+[mu]?regen`)
+	re := regexp.MustCompile(`\d+[mu]?regen`) // TODO test if denom starts with m or u
 	dvr := valuerenderer.NewDefaultValueRenderer(func(c context.Context, denom string) (banktypes.Metadata, error) {
 		return banktypes.Metadata{}, nil
 	})
@@ -301,4 +301,65 @@ func TestParseString(t *testing.T) {
 			}
 		})
 	}
+}
+
+
+
+func TestComputeAmount(t *testing.T) {
+    // consider move outside the function
+	matadataRegen := banktypes.Metadata{
+		Name:        "Regen",
+		Symbol:      "REGEN",
+		Description: "The native staking token of the Regen network.",
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    "uregen",
+				Exponent: 0,
+				Aliases:  []string{"microregen"},
+			},
+			{
+				Denom:    "mregen",
+				Exponent: 3,
+				Aliases:  []string{"milliregen"},
+			},
+			{
+				Denom:    "regen",
+				Exponent: 6,
+				Aliases:  []string{"regen"},
+			},
+		},
+		Base:    "uregen",
+		Display: "regen",
+	}
+
+
+
+	dvr := valuerenderer.NewDefaultValueRenderer(func(c context.Context, denom string) (banktypes.Metadata, error) {
+		return banktypes.Metadata{}, nil
+	})
+
+	tt := []struct {
+		name          string
+		coinAmount    int64
+		exponentSub   float64
+		expRes        string
+	}{
+		{"1m", 1000000, -3, "1,000"},
+		{"1m", 1000000, -3, "1,000"},
+		{"1,000,000", false, false},
+		{"323,000,000", false, false},
+		{"1mregen", true, false},
+		{"500uregen", true, false},
+		{"1,500,000,000regen", true, false},
+		{"394,382,328uregen", true, false},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.str, func(t *testing.T) {
+			dvr.ComputeAmount()
+			
+		})
+	}
+	
+	
 }

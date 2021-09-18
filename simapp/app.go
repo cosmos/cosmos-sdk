@@ -425,6 +425,8 @@ func (app *SimApp) setTxHandler(txConfig client.TxConfig, indexEventsStr []strin
 		MsgServiceRouter:  app.msgSvcRouter,
 		LegacyAnteHandler: anteHandler,
 		AccountKeeper:     app.AccountKeeper,
+		BankKeeper:        app.BankKeeper,
+		SignModeHandler:   txConfig.SignModeHandler(),
 	})
 	if err != nil {
 		panic(err)

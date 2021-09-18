@@ -76,6 +76,8 @@ func TestMsgService(t *testing.T) {
 	txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 		MsgServiceRouter: msr,
 		AccountKeeper:    app.AccountKeeper,
+		BankKeeper:       app.BankKeeper,
+		SignModeHandler:  encCfg.TxConfig.SignModeHandler(),
 	})
 	require.NoError(t, err)
 	baseApp.SetTxHandler(txHandler)

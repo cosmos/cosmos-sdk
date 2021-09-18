@@ -15,7 +15,7 @@ type legacyAnteTxHandler struct {
 	inner       tx.Handler
 }
 
-func newLegacyAnteMiddleware(anteHandler sdk.AnteHandler) tx.Middleware {
+func LegacyAnteMiddleware(anteHandler sdk.AnteHandler) tx.Middleware {
 	return func(txHandler tx.Handler) tx.Handler {
 		return legacyAnteTxHandler{
 			anteHandler: anteHandler,

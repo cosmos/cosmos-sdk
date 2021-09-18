@@ -260,10 +260,11 @@ func setupBaseApp(t *testing.T, options ...func(*baseapp.BaseApp)) *baseapp.Base
 
 func testTxHandler(options middleware.TxHandlerOptions) tx.Handler {
 	return middleware.ComposeMiddlewares(
-		middleware.NewRunMsgsTxHandler(options.MsgServiceRouter, middleware.NewLegacyRouter()),
+		middleware.NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
 		middleware.GasTxMiddleware,
 		middleware.RecoveryTxMiddleware,
 		middleware.NewIndexEventsTxMiddleware(options.IndexEvents),
+		middleware.LegacyAnteMiddleware(options.LegacyAnteHandler),
 	)
 }
 
@@ -625,8 +626,9 @@ func TestCheckTx(t *testing.T) {
 			return &sdk.Result{}, nil
 		}))
 		txHandler := testTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter:     legacyRouter,
-			MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			LegacyRouter:      legacyRouter,
+			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, counterKey),
+			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
 		})
 		bapp.SetTxHandler(txHandler)
 	}

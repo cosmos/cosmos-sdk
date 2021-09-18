@@ -98,6 +98,6 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 
 		// Temporary middleware to bundle antehandlers.
 		// TODO Remove in https://github.com/cosmos/cosmos-sdk/issues/9585.
-		newLegacyAnteMiddleware(options.LegacyAnteHandler),
+		LegacyAnteMiddleware(options.LegacyAnteHandler),
 	), nil
 }

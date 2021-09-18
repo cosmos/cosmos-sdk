@@ -52,36 +52,36 @@ func SetPubKeyMiddleware(ak AccountKeeper) tx.Middleware {
 	}
 }
 
-// CheckTx implements tx.Handler.CheckTx.
-func (spkd setPubKeyMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (spkm setPubKeyMiddleware) setPubKey(ctx context.Context, tx sdk.Tx, simulate bool) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
-		return abci.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
+		return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}
 
 	pubkeys, err := sigTx.GetPubKeys()
 	if err != nil {
-		return abci.ResponseCheckTx{}, err
+		return err
 	}
-
 	signers := sigTx.GetSigners()
 
 	for i, pk := range pubkeys {
 		// PublicKey was omitted from slice since it has already been set in context
 		if pk == nil {
-			continue
+			if !simulate {
+				continue
+			}
+			pk = simSecp256k1Pubkey
 		}
 		// Only make check if simulate=false
-		if !bytes.Equal(pk.Address(), signers[i]) {
-			return abci.ResponseCheckTx{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey,
+		if !simulate && !bytes.Equal(pk.Address(), signers[i]) {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey,
 				"pubKey does not match signer address %s with signer index: %d", signers[i], i)
 		}
 
-		acc, err := GetSignerAcc(sdkCtx, spkd.ak, signers[i])
+		acc, err := GetSignerAcc(sdkCtx, spkm.ak, signers[i])
 		if err != nil {
-			return abci.ResponseCheckTx{}, err
+			return err
 		}
 		// account already has pubkey set,no need to reset
 		if acc.GetPubKey() != nil {
@@ -89,9 +89,9 @@ func (spkd setPubKeyMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci
 		}
 		err = acc.SetPubKey(pk)
 		if err != nil {
-			return abci.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
 		}
-		spkd.ak.SetAccount(sdkCtx, acc)
+		spkm.ak.SetAccount(sdkCtx, acc)
 	}
 
 	// Also emit the following events, so that txs can be indexed by these
@@ -100,7 +100,7 @@ func (spkd setPubKeyMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci
 	// - concat(address,"/",sequence) (via `tx.acc_seq='cosmos1abc...def/42'`).
 	sigs, err := sigTx.GetSignaturesV2()
 	if err != nil {
-		return abci.ResponseCheckTx{}, err
+		return err
 	}
 
 	var events sdk.Events
@@ -111,7 +111,7 @@ func (spkd setPubKeyMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci
 
 		sigBzs, err := signatureDataToBz(sig.Data)
 		if err != nil {
-			return abci.ResponseCheckTx{}, err
+			return err
 		}
 		for _, sigBz := range sigBzs {
 			events = append(events, sdk.NewEvent(sdk.EventTypeTx,
@@ -121,145 +121,33 @@ func (spkd setPubKeyMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci
 	}
 
 	sdkCtx.EventManager().EmitEvents(events)
-	return spkd.next.CheckTx(ctx, tx, req)
+
+	return nil
+}
+
+// CheckTx implements tx.Handler.CheckTx.
+func (spkm setPubKeyMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	if err := spkm.setPubKey(ctx, tx, false); err != nil {
+		return abci.ResponseCheckTx{}, err
+	}
+
+	return spkm.next.CheckTx(ctx, tx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (spkd setPubKeyMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
-	if !ok {
-		return abci.ResponseDeliverTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
-	}
-
-	pubkeys, err := sigTx.GetPubKeys()
-	if err != nil {
+func (spkm setPubKeyMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+	if err := spkm.setPubKey(ctx, tx, false); err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
-
-	signers := sigTx.GetSigners()
-
-	for i, pk := range pubkeys {
-		// PublicKey was omitted from slice since it has already been set in context
-		if pk == nil {
-			continue
-		}
-		// Only make check if simulate=false
-		if !bytes.Equal(pk.Address(), signers[i]) {
-			return abci.ResponseDeliverTx{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey,
-				"pubKey does not match signer address %s with signer index: %d", signers[i], i)
-		}
-
-		acc, err := GetSignerAcc(sdkCtx, spkd.ak, signers[i])
-		if err != nil {
-			return abci.ResponseDeliverTx{}, err
-		}
-		// account already has pubkey set,no need to reset
-		if acc.GetPubKey() != nil {
-			continue
-		}
-		err = acc.SetPubKey(pk)
-		if err != nil {
-			return abci.ResponseDeliverTx{}, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
-		}
-		spkd.ak.SetAccount(sdkCtx, acc)
-	}
-
-	// Also emit the following events, so that txs can be indexed by these
-	// indices:
-	// - signature (via `tx.signature='<sig_as_base64>'`),
-	// - concat(address,"/",sequence) (via `tx.acc_seq='cosmos1abc...def/42'`).
-	sigs, err := sigTx.GetSignaturesV2()
-	if err != nil {
-		return abci.ResponseDeliverTx{}, err
-	}
-
-	var events sdk.Events
-	for i, sig := range sigs {
-		events = append(events, sdk.NewEvent(sdk.EventTypeTx,
-			sdk.NewAttribute(sdk.AttributeKeyAccountSequence, fmt.Sprintf("%s/%d", signers[i], sig.Sequence)),
-		))
-
-		sigBzs, err := signatureDataToBz(sig.Data)
-		if err != nil {
-			return abci.ResponseDeliverTx{}, err
-		}
-		for _, sigBz := range sigBzs {
-			events = append(events, sdk.NewEvent(sdk.EventTypeTx,
-				sdk.NewAttribute(sdk.AttributeKeySignature, base64.StdEncoding.EncodeToString(sigBz)),
-			))
-		}
-	}
-
-	sdkCtx.EventManager().EmitEvents(events)
-	return spkd.next.DeliverTx(ctx, tx, req)
+	return spkm.next.DeliverTx(ctx, tx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (spkd setPubKeyMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	sigTx, ok := sdkTx.(authsigning.SigVerifiableTx)
-	if !ok {
-		return tx.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
-	}
-
-	pubkeys, err := sigTx.GetPubKeys()
-	if err != nil {
+func (spkm setPubKeyMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+	if err := spkm.setPubKey(ctx, sdkTx, true); err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}
-	signers := sigTx.GetSigners()
-
-	for i, pk := range pubkeys {
-		// PublicKey was omitted from slice since it has already been set in context
-		if pk == nil {
-			pk = simSecp256k1Pubkey
-		}
-
-		acc, err := GetSignerAcc(sdkCtx, spkd.ak, signers[i])
-		if err != nil {
-			return tx.ResponseSimulateTx{}, err
-		}
-		// account already has pubkey set,no need to reset
-		if acc.GetPubKey() != nil {
-			continue
-		}
-		err = acc.SetPubKey(pk)
-		if err != nil {
-			return tx.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
-		}
-		spkd.ak.SetAccount(sdkCtx, acc)
-	}
-
-	// Also emit the following events, so that txs can be indexed by these
-	// indices:
-	// - signature (via `tx.signature='<sig_as_base64>'`),
-	// - concat(address,"/",sequence) (via `tx.acc_seq='cosmos1abc...def/42'`).
-	sigs, err := sigTx.GetSignaturesV2()
-	if err != nil {
-		return tx.ResponseSimulateTx{}, err
-	}
-
-	var events sdk.Events
-	for i, sig := range sigs {
-		events = append(events, sdk.NewEvent(sdk.EventTypeTx,
-			sdk.NewAttribute(sdk.AttributeKeyAccountSequence, fmt.Sprintf("%s/%d", signers[i], sig.Sequence)),
-		))
-
-		sigBzs, err := signatureDataToBz(sig.Data)
-		if err != nil {
-			return tx.ResponseSimulateTx{}, err
-		}
-		for _, sigBz := range sigBzs {
-			events = append(events, sdk.NewEvent(sdk.EventTypeTx,
-				sdk.NewAttribute(sdk.AttributeKeySignature, base64.StdEncoding.EncodeToString(sigBz)),
-			))
-		}
-	}
-
-	sdkCtx.EventManager().EmitEvents(events)
-	return spkd.next.SimulateTx(ctx, sdkTx, req)
+	return spkm.next.SimulateTx(ctx, sdkTx, req)
 }
 
 // validateSigCountMiddleware takes in Params and returns errors if there are too many signatures in the tx for the given params

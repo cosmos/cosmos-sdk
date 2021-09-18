@@ -1317,7 +1317,7 @@ func TestRenameKey(t *testing.T) {
 				newRecord, err := kr.Key(newKeyUID) // new key should be in keyring
 				require.NoError(t, err)
 				requireEqualRenamedKey(t, newRecord, oldKeyRecord, false) // oldKeyRecord and newRecord should be the same except name
-				oldKeyRecord, err = kr.Key(oldKeyUID)                 // old key should be gone from keyring
+				oldKeyRecord, err = kr.Key(oldKeyUID)                     // old key should be gone from keyring
 				require.Error(t, err)
 			},
 		},

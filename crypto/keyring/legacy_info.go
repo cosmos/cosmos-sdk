@@ -1,7 +1,6 @@
 package keyring
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
@@ -268,6 +267,6 @@ func privKeyFromLegacyInfo(info LegacyInfo) (cryptotypes.PrivKey, error) {
 		return priv, nil
 	// case legacyLedgerInfo, legacyOfflineInfo, LegacyMultiInfo:
 	default:
-		return nil, errors.New("only works on local private keys")
+		return nil, fmt.Errorf("only works on local private keys, provided %s", linfo)
 	}
 }

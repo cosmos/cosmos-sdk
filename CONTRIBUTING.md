@@ -380,7 +380,7 @@ should convene to rectify the situation by either:
 
 **Approval Committee & Decision Making**
 
-In absense of general consensus, decision making requires 1/2 vote from the two members
+In absence of general consensus, decision making requires 1/2 vote from the two members
 of the **Concept Approval Committee**.
 
 **Committee Members**

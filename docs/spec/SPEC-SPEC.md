@@ -34,6 +34,7 @@ following list is nonbinding and all files are optional.
 - `XX_end_block.md` - specify any end-block operations
 - `XX_hooks.md` - describe available hooks to be called by/from this module
 - `XX_events.md` - list and describe event tags used
+- `XX_client.md` - list and describe CLI commands and gRPC and REST endpoints
 - `XX_params.md` - list all module parameters, their types (in JSON) and examples
 - `XX_future_improvements.md` - describe future improvements of this module
 - `XX_appendix.md` - supplementary details referenced elsewhere within the spec

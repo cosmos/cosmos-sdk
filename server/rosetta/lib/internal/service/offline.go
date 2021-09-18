@@ -17,7 +17,7 @@ func NewOffline(network *types.NetworkIdentifier, client crgtypes.Client) (crgty
 		OnlineNetwork{
 			client:         client,
 			network:        network,
-			networkOptions: networkOptionsFromClient(client),
+			networkOptions: networkOptionsFromClient(client, nil),
 		},
 	}, nil
 }

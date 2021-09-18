@@ -41,13 +41,13 @@ func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*simapp.Si
 
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
 	require.Len(t, delegations, 1)
-	delegator := delegations[0]
+	delegation := delegations[0]
 
-	completionTime, err := app.StakingKeeper.Undelegate(ctx, delegator.GetDelegatorAddr(), delegator.GetValidatorAddr(), delegator.Shares)
+	completionTime, err := app.StakingKeeper.Undelegate(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr(), delegation.Shares)
 	require.NoError(t, err)
 	// mature unbonding delegation
 	ctx = ctx.WithBlockTime(completionTime)
-	_, err = app.StakingKeeper.CompleteUnbonding(ctx, delegator.GetDelegatorAddr(), delegator.GetValidatorAddr())
+	_, err = app.StakingKeeper.CompleteUnbonding(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr())
 	require.NoError(t, err)
 	// endblock
 	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
@@ -110,7 +110,6 @@ func TestSetValidator(t *testing.T) {
 
 	resVals = app.StakingKeeper.GetValidators(ctx, 5)
 	require.Equal(t, 2, len(resVals))
-	require.True(ValEq(t, validator, resVals[1]))
 
 	allVals := app.StakingKeeper.GetAllValidators(ctx)
 	require.Equal(t, 2, len(allVals))

@@ -14,5 +14,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )
-replace github.com/tecbot/gorocksdb => github.com/roysc/gorocksdb v0.0.0-20210804143633-c0bf0b3635e5 // FIXME
 
+// FIXME: gorocksdb bindings for OptimisticTransactionDB are not merged upstream, so we use a fork
+// See https://github.com/tecbot/gorocksdb/pull/216
+replace github.com/tecbot/gorocksdb => github.com/roysc/gorocksdb v1.1.0

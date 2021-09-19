@@ -263,8 +263,6 @@ func (d Dec) AddMut(d2 Dec) Dec {
 	return d
 }
 
-
-
 // subtraction
 func (d Dec) Sub(d2 Dec) Dec {
 	res := new(big.Int).Sub(d.i, d2.i)

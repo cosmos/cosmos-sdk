@@ -219,9 +219,6 @@ func ValidatePowerReduction(i interface{}) error {
 	return nil
 }
 
-
-
-
 func validateMinCommissionRate(i interface{}) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {

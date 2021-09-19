@@ -28,6 +28,16 @@ func NewEventManager() *EventManager {
 	return &EventManager{EmptyEvents()}
 }
 
+// Increase Capacity increases the capacity of the EventManager,
+// which is quite useful when many events are planned to be created.
+func (em *EventManager) IncreaseCapacity(capacity int) {
+	events := em.events.getUnderlyingSlice()
+	if cap(events) < capacity {
+		em.events = make(Events, 0, capacity)
+		em.events = append(em.events, events...)
+	}
+}
+
 func (em *EventManager) Events() Events { return em.events }
 
 // EmitEvent stores a single Event object.
@@ -208,6 +218,11 @@ func (e Events) ToABCIEvents() []abci.Event {
 	}
 
 	return res
+}
+
+// getUnderlyingSlice converts Events to its underlying []Event
+func (e Events) getUnderlyingSlice() []Event {
+	return e
 }
 
 func toBytes(i interface{}) []byte {

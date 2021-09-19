@@ -6,9 +6,9 @@ order: 3
 
 The crisis module emits the following events:
 
-## Handlers
+## MsgServer
 
-### MsgVerifyInvariance
+### MsgVerifyInvariant
 
 | Type      | Attribute Key | Attribute Value  |
 |-----------|---------------|------------------|

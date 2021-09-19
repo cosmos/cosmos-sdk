@@ -102,6 +102,23 @@ func (s *eventsTestSuite) TestEventManagerTypedEvents() {
 	s.Require().Equal(hasAnimal.Animal.String(), response.Animal.String())
 }
 
+func (s *eventsTestSuite) TestIncreaseCapcity() {
+	// Ensure that appends still work after increase capacity is called.
+	// This does not check that the underlying capacity was increased,
+	// however this has been ensured via benchmarks.
+	em := sdk.NewEventManager()
+	e1 := sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo"))
+	e2 := sdk.NewEvent("transfer", sdk.NewAttribute("sender", "bar"))
+	a := sdk.Events{e1}
+	b := sdk.Events{e2}
+	em.EmitEvents(a)
+	em.IncreaseCapacity(1024)
+	em.EmitEvents(b)
+	s.Require().Equal(em.Events(), sdk.Events{e1, e2})
+	s.Require().Equal(em.Events(), sdk.Events{e1}.AppendEvent(sdk.NewEvent("transfer", sdk.NewAttribute("sender", "bar"))))
+	s.Require().Equal(em.Events(), sdk.Events{e1}.AppendEvents(sdk.Events{e2}))
+}
+
 func (s *eventsTestSuite) TestStringifyEvents() {
 	e := sdk.Events{
 		sdk.NewEvent("message", sdk.NewAttribute("sender", "foo")),

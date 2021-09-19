@@ -289,6 +289,12 @@ func (cva ContinuousVestingAccount) Validate() error {
 	return cva.BaseVestingAccount.Validate()
 }
 
+// AddToOriginalVestedCoins adds more coins to an account that are subject to its initial vesting schedule
+func (cva *ContinuousVestingAccount) AddToOriginalVestedCoins(coins sdk.Coins) {
+	panic("AddToOriginalVestedCoins not implemented for ContinuousVestingAccount")
+	// cva.OriginalVesting = cva.OriginalVesting.Add(coins...)
+}
+
 func (cva ContinuousVestingAccount) String() string {
 	out, _ := cva.MarshalYAML()
 	return out.(string)
@@ -502,6 +508,11 @@ func (dva DelayedVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins 
 // defined as the vesting coins that are not delegated.
 func (dva DelayedVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
 	return dva.BaseVestingAccount.LockedCoinsFromVesting(dva.GetVestingCoins(blockTime))
+}
+
+// AddToOriginalVestedCoins adds more coins to an account that are subject to its initial vesting schedule
+func (dva *DelayedVestingAccount) AddToOriginalVestedCoins(coins sdk.Coins) {
+	dva.OriginalVesting = dva.OriginalVesting.Add(coins...)
 }
 
 // TrackDelegation tracks a desired delegation amount by setting the appropriate

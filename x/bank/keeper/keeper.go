@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -32,8 +33,12 @@ type Keeper interface {
 	IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool)
 
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromModuleToManyAccounts(
+		ctx sdk.Context, senderModule string, recipientAddrs []sdk.AccAddress, amts []sdk.Coins,
+	) error
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromModuleToAccountOriginalVesting(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	DelegateCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	UndelegateCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
@@ -141,7 +146,7 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 		}
 	}
 
-	if err := k.trackDelegation(ctx, delegatorAddr, balances, amt); err != nil {
+	if err := k.trackDelegation(ctx, delegatorAddr, ctx.BlockHeader().Time, balances, amt); err != nil {
 		return sdkerrors.Wrap(err, "failed to track delegation")
 	}
 	// emit coin spent event
@@ -290,6 +295,30 @@ func (k BaseKeeper) SendCoinsFromModuleToAccount(
 	return k.SendCoins(ctx, senderAddr, recipientAddr, amt)
 }
 
+// SendCoinsFromModuleToManyAccounts transfers coins from a ModuleAccount to multiple AccAddresses.
+// It will panic if the module account does not exist. An error is returned if
+// the recipient address is black-listed or if sending the tokens fails.
+func (k BaseKeeper) SendCoinsFromModuleToManyAccounts(
+	ctx sdk.Context, senderModule string, recipientAddrs []sdk.AccAddress, amts []sdk.Coins,
+) error {
+	if len(recipientAddrs) != len(amts) {
+		panic(fmt.Errorf("addresses and amounts numbers does not match"))
+	}
+
+	senderAddr := k.ak.GetModuleAddress(senderModule)
+	if senderAddr == nil {
+		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
+	}
+
+	for _, recipientAddr := range recipientAddrs {
+		if k.BlockedAddr(recipientAddr) {
+			return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", recipientAddr)
+		}
+	}
+
+	return k.SendManyCoins(ctx, senderAddr, recipientAddrs, amts)
+}
+
 // SendCoinsFromModuleToModule transfers coins from a ModuleAccount to another.
 // It will panic if either module account does not exist.
 func (k BaseKeeper) SendCoinsFromModuleToModule(
@@ -321,6 +350,27 @@ func (k BaseKeeper) SendCoinsFromAccountToModule(
 	}
 
 	return k.SendCoins(ctx, senderAddr, recipientAcc.GetAddress(), amt)
+}
+
+// SendCoinsFromModuleToAccountOriginalVesting does existing bank keeper logic for SendCoinsFromModuleToAccount,
+// except the recipient account should have its original vesting increment if its a vesting account.
+// If recipient is a regular account, just do a normal send
+func (k BaseKeeper) SendCoinsFromModuleToAccountOriginalVesting(
+	ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
+) error {
+
+	err := k.SendCoinsFromModuleToAccount(ctx, senderModule, recipientAddr, amt)
+	if err != nil {
+		return err
+	}
+
+	recipientAcc := k.ak.GetAccount(ctx, recipientAddr)
+	if dva, ok := recipientAcc.(vestexported.VestingAccount); ok {
+		dva.AddToOriginalVestedCoins(amt)
+		k.ak.SetAccount(ctx, dva)
+	}
+
+	return nil
 }
 
 // DelegateCoinsFromAccountToModule delegates coins and transfers them from a
@@ -447,8 +497,7 @@ func (k BaseKeeper) setSupply(ctx sdk.Context, coin sdk.Coin) {
 	}
 }
 
-// trackDelegation tracks the delegation of the given account if it is a vesting account
-func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, balance, amt sdk.Coins) error {
+func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, blockTime time.Time, balance, amt sdk.Coins) error {
 	acc := k.ak.GetAccount(ctx, addr)
 	if acc == nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
@@ -457,8 +506,7 @@ func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, balanc
 	vacc, ok := acc.(vestexported.VestingAccount)
 	if ok {
 		// TODO: return error on account.TrackDelegation
-		vacc.TrackDelegation(ctx.BlockHeader().Time, balance, amt)
-		k.ak.SetAccount(ctx, acc)
+		vacc.TrackDelegation(blockTime, balance, amt)
 	}
 
 	return nil

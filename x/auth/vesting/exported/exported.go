@@ -33,6 +33,9 @@ type VestingAccount interface {
 	GetVestedCoins(blockTime time.Time) sdk.Coins
 	GetVestingCoins(blockTime time.Time) sdk.Coins
 
+	// Mutates vesting account in place
+	AddToOriginalVestedCoins(coins sdk.Coins)
+
 	GetStartTime() int64
 	GetEndTime() int64
 

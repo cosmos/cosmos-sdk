@@ -208,7 +208,10 @@ func (d Dec) GTE(d2 Dec) bool   { return (d.i).Cmp(d2.i) >= 0 }       // greater
 func (d Dec) LT(d2 Dec) bool    { return (d.i).Cmp(d2.i) < 0 }        // less than
 func (d Dec) LTE(d2 Dec) bool   { return (d.i).Cmp(d2.i) <= 0 }       // less than or equal
 func (d Dec) Neg() Dec          { return Dec{new(big.Int).Neg(d.i)} } // reverse the decimal sign
+func (d Dec) NegMut() Dec       { d.i.Neg(d.i); return d }            // reverse the decimal sign, mutable
 func (d Dec) Abs() Dec          { return Dec{new(big.Int).Abs(d.i)} } // absolute value
+func (d Dec) Set(d2 Dec) Dec    { d.i.Set(d2.i); return d }           // set to existing dec value
+func (d Dec) Clone() Dec        { return Dec{new(big.Int).Set(d.i)} } // clone new dec
 
 // BigInt returns a copy of the underlying big.Int.
 func (d Dec) BigInt() *big.Int {
@@ -218,6 +221,26 @@ func (d Dec) BigInt() *big.Int {
 
 	cp := new(big.Int)
 	return cp.Set(d.i)
+}
+
+func (d Dec) ImmutOp(op func(Dec, Dec) Dec, d2 Dec) Dec {
+	return op(d.Clone(), d2)
+}
+
+func (d Dec) ImmutOpInt(op func(Dec, Int) Dec, d2 Int) Dec {
+	return op(d.Clone(), d2)
+}
+
+func (d Dec) ImmutOpInt64(op func(Dec, int64) Dec, d2 int64) Dec {
+	// TODO: use already allocated operand bigint to avoid
+	// newint each time, add mutex for race condition
+	return op(d.Clone(), d2)
+}
+
+func (d Dec) SetInt64(i int64) Dec {
+	d.i.SetInt64(i)
+	d.i.Mul(d.i, precisionReuse)
+	return d
 }
 
 // addition
@@ -230,6 +253,18 @@ func (d Dec) Add(d2 Dec) Dec {
 	return Dec{res}
 }
 
+// mutable addition
+func (d Dec) AddMut(d2 Dec) Dec {
+	d.i.Add(d.i, d2.i)
+
+	if d.i.BitLen() > 255+DecimalPrecisionBits {
+		panic("Int overflow")
+	}
+	return d
+}
+
+
+
 // subtraction
 func (d Dec) Sub(d2 Dec) Dec {
 	res := new(big.Int).Sub(d.i, d2.i)
@@ -238,6 +273,16 @@ func (d Dec) Sub(d2 Dec) Dec {
 		panic("Int overflow")
 	}
 	return Dec{res}
+}
+
+// mutable subtraction
+func (d Dec) SubMut(d2 Dec) Dec {
+	d.i.Sub(d.i, d2.i)
+
+	if d.i.BitLen() > 255+DecimalPrecisionBits {
+		panic("Int overflow")
+	}
+	return d
 }
 
 // multiplication
@@ -262,6 +307,18 @@ func (d Dec) MulTruncate(d2 Dec) Dec {
 	return Dec{chopped}
 }
 
+// mutable multiplication truncage
+func (d Dec) MulTruncateMut(d2 Dec) Dec {
+	d.i.Mul(d.i, d2.i)
+	chopped := chopPrecisionAndTruncate(d.i)
+
+	if chopped.BitLen() > 255+DecimalPrecisionBits {
+		panic("Int overflow")
+	}
+	*d.i = *chopped
+	return d
+}
+
 // multiplication
 func (d Dec) MulInt(i Int) Dec {
 	mul := new(big.Int).Mul(d.i, i.i)
@@ -284,6 +341,11 @@ func (d Dec) MulInt64(i int64) Dec {
 
 // quotient
 func (d Dec) Quo(d2 Dec) Dec {
+	return d.ImmutOp(Dec.QuoMut, d2)
+}
+
+// mutable quotient
+func (d Dec) QuoMut(d2 Dec) Dec {
 	// multiply precision twice
 	mul := new(big.Int).Mul(d.i, precisionReuse)
 	mul.Mul(mul, precisionReuse)
@@ -299,6 +361,11 @@ func (d Dec) Quo(d2 Dec) Dec {
 
 // quotient truncate
 func (d Dec) QuoTruncate(d2 Dec) Dec {
+	return d.ImmutOp(Dec.QuoTruncateMut, d2)
+}
+
+// mutable quotient truncate
+func (d Dec) QuoTruncateMut(d2 Dec) Dec {
 	// multiply precision twice
 	mul := new(big.Int).Mul(d.i, precisionReuse)
 	mul.Mul(mul, precisionReuse)
@@ -314,6 +381,11 @@ func (d Dec) QuoTruncate(d2 Dec) Dec {
 
 // quotient, round up
 func (d Dec) QuoRoundUp(d2 Dec) Dec {
+	return d.ImmutOp(Dec.QuoRoundupMut, d2)
+}
+
+// mutable quotient, round up
+func (d Dec) QuoRoundupMut(d2 Dec) Dec {
 	// multiply precision twice
 	mul := new(big.Int).Mul(d.i, precisionReuse)
 	mul.Mul(mul, precisionReuse)
@@ -389,6 +461,7 @@ func (d Dec) ApproxRoot(root uint64) (guess Dec, err error) {
 
 // Power returns a the result of raising to a positive integer power
 func (d Dec) Power(power uint64) Dec {
+	// TODO: use mutable functions here
 	if power == 0 {
 		return OneDec()
 	}

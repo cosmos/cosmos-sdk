@@ -282,6 +282,12 @@ message Params {
   uint32 historical_entries = 4 [(gogoproto.moretags) = "yaml:\"historical_entries\""];
   // bond_denom defines the bondable coin denomination.
   string bond_denom = 5 [(gogoproto.moretags) = "yaml:\"bond_denom\""];
+  // min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators
+  string min_commission_rate = 6 [
+    (gogoproto.moretags)   = "yaml:\"min_commission_rate\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 // DelegationResponse is equivalent to Delegation except that it contains a

@@ -293,3 +293,46 @@ func TestNewCompactBitArrayCrashWithLimits(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkNumTrueBitsBefore(b *testing.B) {
+	ba, _ := randCompactBitArray(100)
+
+	b.Run("new", func(b *testing.B) {
+		b.ReportAllocs()
+		for i := 0; i < b.N; i++ {
+			ba.NumTrueBitsBefore(90)
+		}
+	})
+}
+
+func TestNewCompactBitArrayCrashWithLimits(t *testing.T) {
+	if testing.Short() {
+		t.Skip("This test can be expensive in memory")
+	}
+	tests := []struct {
+		in       int
+		mustPass bool
+	}{
+		{int(^uint(0) >> 30), false},
+		{int(^uint(0) >> 1), false},
+		{int(^uint(0) >> 2), false},
+		{int(math.MaxInt32), true},
+		{int(math.MaxInt32) + 1, true},
+		{int(math.MaxInt32) + 2, true},
+		{int(math.MaxInt32) - 7, true},
+		{int(math.MaxInt32) + 24, true},
+		{int(math.MaxInt32) * 9, false}, // results in >=maxint after (bits+7)/8
+		{1, true},
+		{0, false},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("%d", tt.in), func(t *testing.T) {
+			got := NewCompactBitArray(tt.in)
+			if g := got != nil; g != tt.mustPass {
+				t.Fatalf("got!=nil=%t, want=%t", g, tt.mustPass)
+			}
+		})
+	}
+}

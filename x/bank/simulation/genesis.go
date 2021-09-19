@@ -35,6 +35,15 @@ func RandomGenesisSendParams(r *rand.Rand) types.SendEnabledParams {
 	return params.SendEnabled
 }
 
+func GenesisCoins(bondDenom string, initialStake int64) sdk.Coins {
+	coins := make(sdk.Coins, 4)
+	for i := range coins {
+		coins[i] = sdk.NewCoin(fmt.Sprintf("%s%02d", bondDenom, i), sdk.NewInt(initialStake))
+	}
+	coins = coins.Add(sdk.NewInt64Coin(bondDenom, initialStake))
+	return coins
+}
+
 // RandomGenesisBalances returns a slice of account balances. Each account has
 // a balance of simState.InitialStake for sdk.DefaultBondDenom.
 func RandomGenesisBalances(simState *module.SimulationState) []types.Balance {
@@ -43,7 +52,7 @@ func RandomGenesisBalances(simState *module.SimulationState) []types.Balance {
 	for _, acc := range simState.Accounts {
 		genesisBalances = append(genesisBalances, types.Balance{
 			Address: acc.Address.String(),
-			Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(simState.InitialStake))),
+			Coins:   GenesisCoins(sdk.DefaultBondDenom, simState.InitialStake),
 		})
 	}
 
@@ -65,8 +74,12 @@ func RandomizedGenState(simState *module.SimulationState) {
 	)
 
 	numAccs := int64(len(simState.Accounts))
-	totalSupply := sdk.NewInt(simState.InitialStake * (numAccs + simState.NumBonded))
-	supply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupply))
+
+	supply := GenesisCoins(sdk.DefaultBondDenom, simState.InitialStake)
+	for i, coin := range supply {
+		supply[i] = sdk.NewCoin(coin.Denom, coin.Amount.MulRaw(numAccs))
+	}
+	supply = supply.Add(sdk.NewInt64Coin(sdk.DefaultBondDenom, simState.InitialStake*simState.NumBonded))
 
 	bankGenesis := types.GenesisState{
 		Params: types.Params{

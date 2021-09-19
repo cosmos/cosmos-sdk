@@ -1,7 +1,10 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -16,6 +19,7 @@ type SendKeeper interface {
 
 	InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) error
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
+	SendManyCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddrs []sdk.AccAddress, amts []sdk.Coins) error
 
 	GetParams(ctx sdk.Context) types.Params
 	SetParams(ctx sdk.Context, params types.Params)
@@ -168,6 +172,54 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 }
 
 // subUnlockedCoins removes the unlocked amt coins of the given account. An error is
+// SendManyCoins transfer multiple amt coins from a sending account to multiple receiving accounts.
+// An error is returned upon failure.
+func (k BaseSendKeeper) SendManyCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddrs []sdk.AccAddress, amts []sdk.Coins) error {
+	if len(toAddrs) != len(amts) {
+		return fmt.Errorf("addresses and amounts numbers does not match")
+	}
+
+	totalAmt := sdk.Coins{}
+	for _, amt := range amts {
+		totalAmt = sdk.Coins.Add(totalAmt, amt...)
+	}
+
+	err := k.subUnlockedCoins(ctx, fromAddr, totalAmt)
+	if err != nil {
+		return err
+	}
+
+	fromAddrString := fromAddr.String()
+	for i, toAddr := range toAddrs {
+		amt := amts[i]
+
+		err := k.addCoins(ctx, toAddr, amt)
+		if err != nil {
+			return err
+		}
+
+		acc := k.ak.GetAccount(ctx, toAddr)
+		if acc == nil {
+			defer telemetry.IncrCounter(1, "new", "account")
+			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
+		}
+
+		ctx.EventManager().EmitEvent(sdk.NewEvent(
+			types.EventTypeTransfer,
+			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
+			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+		))
+	}
+
+	ctx.EventManager().EmitEvent(sdk.NewEvent(
+		sdk.EventTypeMessage,
+		sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
+	))
+	return nil
+}
+
+// SubtractCoins removes amt coins the account by the given address. An error is
 // returned if the resulting balance is negative or the initial amount is invalid.
 // A coin_spent event is emitted after.
 func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
@@ -231,6 +283,28 @@ func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.C
 // An error is returned upon failure.
 func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
 	accountStore := k.getAccountStore(ctx, addr)
+	for i := range balances {
+		balance := balances[i]
+		if !balance.IsValid() {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, balance.String())
+		}
+
+		// Bank invariants require to not store zero balances.
+		if !balance.IsZero() {
+			bz := k.cdc.MustMarshal(&balance)
+			accountStore.Set([]byte(balance.Denom), bz)
+		}
+	}
+
+	return nil
+}
+
+// initBalances sets the balance (multiple coins) for an account by address.
+// An error is returned upon failure.
+func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
+	store := ctx.KVStore(k.storeKey)
+	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
+	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
 	for i := range balances {
 		balance := balances[i]
 		if !balance.IsValid() {

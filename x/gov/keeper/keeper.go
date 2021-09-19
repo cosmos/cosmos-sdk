@@ -23,16 +23,13 @@ type Keeper struct {
 	// The reference to the DelegationSet and ValidatorSet to get information about validators and delegators
 	sk types.StakingKeeper
 
-	// GovHooks
-	hooks types.GovHooks
-
 	// The (unexposed) keys used to access the stores from the Context.
 	storeKey sdk.StoreKey
 
 	// GovHooks
 	hooks types.GovHooks
 
-	// The codec codec for binary encoding/decoding.
+	// The codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
 
 	// Proposal router
@@ -86,17 +83,6 @@ func (keeper *Keeper) SetHooks(gh types.GovHooks) *Keeper {
 // Logger returns a module-specific logger.
 func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
-}
-
-// SetHooks sets the hooks for governance
-func (keeper *Keeper) SetHooks(gh types.GovHooks) *Keeper {
-	if keeper.hooks != nil {
-		panic("cannot set governance hooks twice")
-	}
-
-	keeper.hooks = gh
-
-	return keeper
 }
 
 // Router returns the gov Keeper's Router

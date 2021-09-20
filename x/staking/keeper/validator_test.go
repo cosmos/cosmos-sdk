@@ -110,7 +110,10 @@ func TestSetValidator(t *testing.T) {
 	require.Equal(t, 1, len(resVals))
 	require.True(ValEq(t, validator, resVals[0]))
 
-	resVals = app.StakingKeeper.GetValidators(ctx, 5)
+	resVals = app.StakingKeeper.GetValidators(ctx, 1)
+	require.Equal(t, 1, len(resVals))
+
+	resVals = app.StakingKeeper.GetValidators(ctx, 10)
 	require.Equal(t, 2, len(resVals))
 
 	allVals := app.StakingKeeper.GetAllValidators(ctx)

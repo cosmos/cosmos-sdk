@@ -152,7 +152,6 @@ func (suite *IntegrationTestSuite) TestSendCoinsFromModuleToAccount_Blocklist() 
 		ctx, minttypes.ModuleName, addr1, initCoins,
 	))
 }
-
 func (suite *IntegrationTestSuite) TestSendCoinsFromModuleToAccount_Blacklist() {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
@@ -180,14 +179,13 @@ func (suite *IntegrationTestSuite) TestSendCoinsFromModuleToAccount_Blacklist() 
 	baseAcc := authKeeper.NewAccountWithAddress(ctx, authtypes.NewModuleAddress("baseAcc"))
 	suite.Require().NoError(keeper.SetBalances(ctx, holderAcc.GetAddress(), initCoins))
 
-	keeper(ctx, types.NewSupply(initCoins))
+	keeper.setSupply(ctx, types.NewSupply(initCoins))
 	authKeeper.SetModuleAccount(ctx, holderAcc)
 	authKeeper.SetAccount(ctx, baseAcc)
 
 	suite.Require().Error(keeper.SendCoinsFromModuleToAccount(ctx, holderAcc.GetName(), addr1, initCoins))
 	suite.Require().Error(keeper.SendCoinsFromModuleToManyAccounts(ctx, holderAcc.GetName(), []sdk.AccAddress{addr1}, []sdk.Coins{initCoins}))
 }
-
 func (suite *IntegrationTestSuite) TestSupply_SendCoins() {
 	ctx := suite.ctx
 

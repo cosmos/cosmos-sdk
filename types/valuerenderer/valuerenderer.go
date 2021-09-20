@@ -87,7 +87,7 @@ func (dvr DefaultValueRenderer) Format(c context.Context, x interface{}) (string
 
 	return sb.String(), nil
 }
-
+// TODO address the casse where denom starts with "u"
 func convertToBaseDenom(denom string) string {
 	switch {
 	// e.g. uregen => uregen
@@ -135,7 +135,7 @@ func (dvr DefaultValueRenderer) ComputeAmount(amount int64, expSub float64) stri
 
 	// check if amount is nil
 	// check if expSub is zero
-	var res string
+
 
 	switch {
 	// negative , convert mregen to regen less zeroes 23 => 0,023, expSub -3
@@ -146,23 +146,20 @@ func (dvr DefaultValueRenderer) ComputeAmount(amount int64, expSub float64) stri
 		if count >= int(math.Abs(expSub)) {
 			// case 1 if number of zeroes >= Abs(expSub)  23000, 3 => 23 (int64)
 			x := amount / int64(math.Pow(10, math.Abs(expSub)))
-			res = humanize.Comma(x)
+			return humanize.Comma(x)
 		} else {
 			// case 2 number of trailing zeroes < abs(expSub)  23, 3,=> 0.023(float64)
 			x := float64(float64(amount) / math.Pow(10, math.Abs(expSub)))
-			res = humanize.Ftoa(x)
+			return humanize.Ftoa(x)
 		}
 	// positive, e.g.convert mregen to uregen
 	case !math.Signbit(expSub):
 		x := amount * int64(math.Pow(10, expSub))
-		res = humanize.Comma(x)
+		return humanize.Comma(x)
 	// == 0, convert regen to regen, amount does not change
 	default:
-		res = humanize.Comma(amount)
+		return humanize.Comma(amount)
 	}
-
-	return res
-
 }
 
 // Parse parses a string and takes a decision whether to convert it into Coin or Uint

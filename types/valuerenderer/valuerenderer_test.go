@@ -24,7 +24,6 @@ type valueRendererTestSuite struct {
 	app         *simapp.SimApp
 	ctx         types.Context
 	queryClient banktypes.QueryClient
-
 }
 
 func TestValueRendererTestSuite(t *testing.T) {
@@ -45,10 +44,7 @@ func (suite *valueRendererTestSuite) SetupTest() {
 	suite.app = app
 	suite.ctx = ctx
 	suite.queryClient = queryClient
-	suite.printer = message.NewPrinter(language.English)
 }
-
-
 
 // TODO
 // 1. add some test cases for integer overflow, underflow
@@ -136,18 +132,15 @@ func (suite *valueRendererTestSuite) TestFormatDenomQuerierFunc() {
 			"20,000atom",
 			false,
 		},
-
-		/*
-			{ // TODO
-				"convert 23mregen to 0,023regen",
-				types.NewCoin("mregen", types.NewInt(int64(23))),
-				func() {
-					suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metadataRegen)
-				},
-				"0.023regen",
-				false,
+		{
+			"convert 23mregen to 0,023regen",
+			types.NewCoin("mregen", types.NewInt(int64(23))),
+			func() {
+				suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metadataRegen)
 			},
-		*/
+			"0.023regen",
+			false,
+		},
 	}
 
 	for _, tc := range tt {
@@ -197,13 +190,13 @@ func TestFormatDec(t *testing.T) {
 		{
 			"10 thousands decimal",
 			types.NewDecFromIntWithPrec(types.NewInt(1000000), 2),
-			"10,000.000000000000000000",
+			"10000",
 			false,
 		},
 		{
 			"10 mil decimal",
 			types.NewInt(10000000).ToDec(),
-			"10,000,000.000000000000000000",
+			"10000000",
 			false,
 		},
 	}
@@ -303,63 +296,33 @@ func TestParseString(t *testing.T) {
 	}
 }
 
-
-
 func TestComputeAmount(t *testing.T) {
-    // consider move outside the function
-	matadataRegen := banktypes.Metadata{
-		Name:        "Regen",
-		Symbol:      "REGEN",
-		Description: "The native staking token of the Regen network.",
-		DenomUnits: []*banktypes.DenomUnit{
-			{
-				Denom:    "uregen",
-				Exponent: 0,
-				Aliases:  []string{"microregen"},
-			},
-			{
-				Denom:    "mregen",
-				Exponent: 3,
-				Aliases:  []string{"milliregen"},
-			},
-			{
-				Denom:    "regen",
-				Exponent: 6,
-				Aliases:  []string{"regen"},
-			},
-		},
-		Base:    "uregen",
-		Display: "regen",
-	}
-
-
+	// consider move outside the function
 
 	dvr := valuerenderer.NewDefaultValueRenderer(func(c context.Context, denom string) (banktypes.Metadata, error) {
 		return banktypes.Metadata{}, nil
 	})
 
 	tt := []struct {
-		name          string
-		coinAmount    int64
-		exponentSub   float64
-		expRes        string
+		name        string
+		coinAmount  int64
+		exponentSub float64
+		expRes      string
 	}{
+		{"1b", 1000000000, -3, "1,000,000"},
 		{"1m", 1000000, -3, "1,000"},
-		{"1m", 1000000, -3, "1,000"},
-		{"1,000,000", false, false},
-		{"323,000,000", false, false},
-		{"1mregen", true, false},
-		{"500uregen", true, false},
-		{"1,500,000,000regen", true, false},
-		{"394,382,328uregen", true, false},
+		{"23", 23, -3, "0.023"},
+		{"1", 1, -6, "0.000001"},
+		{"10", 10, 6, "10,000,000"},
+		{"47", 47, 3, "47,000"},
+		{"49", 49, 0, "49"},
 	}
 
 	for _, tc := range tt {
-		t.Run(tc.str, func(t *testing.T) {
-			dvr.ComputeAmount()
-			
+		t.Run(tc.name, func(t *testing.T) {
+			amount := dvr.ComputeAmount(tc.coinAmount, tc.exponentSub)
+			require.Equal(t, amount, tc.expRes)
 		})
 	}
-	
-	
+
 }

@@ -13,8 +13,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	
 )
 
 // TODO
@@ -55,23 +53,12 @@ func (dvr DefaultValueRenderer) Format(c context.Context, x interface{}) (string
 			return "", errors.New("empty string")
 		}
 
-		strs := strings.Split(s, ".")
-
-		if len(strs) == 2 {
-			// there is a decimal place
-
-			// format the first part
-			i64, err := strconv.ParseInt(strs[0], 10, 64)
-			if err != nil {
-				return "", errors.New("unable to convert string to int64")
-			}
-			formated := p.Sprintf("%d", i64)
-
-			// concatanate first part, "." and second part
-			sb.WriteString(formated)
-			sb.WriteString(".")
-			sb.WriteString(strs[1])
+		f, err := strconv.ParseFloat(s, 64)
+		if err != nil {
+			return "", errors.New("empty string")
 		}
+
+		sb.WriteString(humanize.Ftoa(f))
 
 	case types.Int:
 		s := v.String()
@@ -79,7 +66,7 @@ func (dvr DefaultValueRenderer) Format(c context.Context, x interface{}) (string
 			return "", errors.New("empty string")
 		}
 
-		sb.WriteString(p.Sprintf("%d", v.Int64()))
+		sb.WriteString(humanize.Comma(v.Int64()))
 
 	case types.Coin:
 		metadata, err := dvr.denomQuerier(c, convertToBaseDenom(v.Denom))
@@ -89,8 +76,9 @@ func (dvr DefaultValueRenderer) Format(c context.Context, x interface{}) (string
 
 		expSub := computeExponentSubtraction(v.Denom, metadata)
 
-		newAmountStr:= dvr.ComputeAmount(v.Amount, expSub)
-		sb.WriteString(newAmountStr)
+		formatedAmount := dvr.ComputeAmount(v.Amount.Int64(), expSub)
+
+		sb.WriteString(formatedAmount)
 		sb.WriteString(metadata.Display)
 
 	default:
@@ -129,30 +117,52 @@ func computeExponentSubtraction(denom string, metadata banktypes.Metadata) float
 	return float64(coinExp - displayExp)
 }
 
+// countTrailingZeroes counts the amount of trailing zeroes in a string
+func countTrailingZeroes(str string) int {
+	counter := 0
+	for i := len(str) - 1; i > 0; i-- {
+		if rune(str[i]) == rune('0') {
+			counter++
+		} else {
+			break
+		}
+	}
+	return counter
+}
+
 // ComputeAmount calculates an amount to produce formated output
-func (dvr DefaultValueRenderer) ComputeAmount(amount types.Int, expSub float64) (string,error) {
-	
+func (dvr DefaultValueRenderer) ComputeAmount(amount int64, expSub float64) string {
+
 	// check if amount is nil
 	// check if expSub is zero
-	var res interface{}
+	var res string
+
 	switch {
 	// negative , convert mregen to regen less zeroes 23 => 0,023, expSub -3
 	case math.Signbit(expSub):
-		// case 1 if number of zeroes >= Abs(expSub)  23000, -3 => 23 (int64)
 
-		// case 2 if number of zeroes < Abs(expSub)  23, -3 => 0.023 (float6464)
-
-		
-
-		//amount = types.NewDecFromIntWithPrec(coin.Amount, int64(math.Abs(expSub))).TruncateInt64() // use Dec or just golang built in methods
+		stringValue := strconv.FormatInt(amount, 10)
+		count := countTrailingZeroes(stringValue)
+		if count >= int(math.Abs(expSub)) {
+			// case 1 if number of zeroes >= Abs(expSub)  23000, 3 => 23 (int64)
+			x := amount / int64(math.Pow(10, math.Abs(expSub)))
+			res = humanize.Comma(x)
+		} else {
+			// case 2 number of trailing zeroes < abs(expSub)  23, 3,=> 0.023(float64)
+			x := float64(float64(amount) / math.Pow(10, math.Abs(expSub)))
+			res = humanize.Ftoa(x)
+		}
+	// positive, e.g.convert mregen to uregen
 	case !math.Signbit(expSub):
-		amount = coin.Amount.Mul(types.NewInt(int64(math.Pow(10, expSub)))).Int64()
+		x := amount * int64(math.Pow(10, expSub))
+		res = humanize.Comma(x)
 	// == 0, convert regen to regen, amount does not change
 	default:
-		amount = coin.Amount.Int64()
+		res = humanize.Comma(amount)
 	}
 
-	return amount
+	return res
+
 }
 
 // Parse parses a string and takes a decision whether to convert it into Coin or Uint

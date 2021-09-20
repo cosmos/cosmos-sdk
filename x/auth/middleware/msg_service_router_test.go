@@ -1,23 +1,16 @@
 package middleware_test
 
 import (
-	"os"
 	"testing"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
+	"github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 func TestRegisterMsgService(t *testing.T) {
@@ -64,70 +57,23 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 	})
 }
 
-func TestMsgService(t *testing.T) {
-	app, _ := createTestApp(t, true)
+func (suite *MWTestSuite) TestMsgService(t *testing.T) {
+	ctx := suite.SetupTest(true) // setup
+
+	msr := middleware.NewMsgServiceRouter(suite.clientCtx.InterfaceRegistry)
+	testdata.RegisterMsgServer(msr, testdata.MsgServerImpl{})
+	txHandler := middleware.NewRunMsgsTxHandler(msr, nil)
+
 	priv, _, addr := testdata.KeyTestPubAddr()
-	encCfg := simapp.MakeTestEncodingConfig()
-	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
-	db := dbm.NewMemDB()
-	baseApp := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
-	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
-	msr := middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry)
-	txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
-		MsgServiceRouter: msr,
-		AccountKeeper:    app.AccountKeeper,
-		BankKeeper:       app.BankKeeper,
-		SignModeHandler:  encCfg.TxConfig.SignModeHandler(),
-	})
-	require.NoError(t, err)
-	baseApp.SetTxHandler(txHandler)
-	testdata.RegisterMsgServer(
-		msr,
-		testdata.MsgServerImpl{},
-	)
-	_ = baseApp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
+	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
+	txBuilder.SetMsgs(testdata.NewTestMsg(addr))
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv}, []uint64{0}, []uint64{0}
+	tx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	suite.Require().NoError(err)
+	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
+	suite.Require().NoError(err)
 
-	baseApp.MountStores(sdk.NewKVStoreKey("params"))
-	err = baseApp.LoadLatestVersion()
-	require.Nil(t, err)
-
-	msg := testdata.TestMsg{Signers: []string{addr.String()}}
-	txBuilder := encCfg.TxConfig.NewTxBuilder()
-	txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
-	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
-	err = txBuilder.SetMsgs(&msg)
-	require.NoError(t, err)
-
-	// First round: we gather all the signer infos. We use the "set empty
-	// signature" hack to do that.
-	sigV2 := signing.SignatureV2{
-		PubKey: priv.PubKey(),
-		Data: &signing.SingleSignatureData{
-			SignMode:  encCfg.TxConfig.SignModeHandler().DefaultMode(),
-			Signature: nil,
-		},
-		Sequence: 0,
-	}
-
-	err = txBuilder.SetSignatures(sigV2)
-	require.NoError(t, err)
-
-	// Second round: all signer infos are set, so each signer can sign.
-	signerData := authsigning.SignerData{
-		ChainID:       "test",
-		AccountNumber: 0,
-		Sequence:      0,
-	}
-	sigV2, err = tx.SignWithPrivKey(
-		encCfg.TxConfig.SignModeHandler().DefaultMode(), signerData,
-		txBuilder, priv, encCfg.TxConfig, 0)
-	require.NoError(t, err)
-	err = txBuilder.SetSignatures(sigV2)
-	require.NoError(t, err)
-
-	// Send the tx to the app
-	txBytes, err := encCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
-	require.NoError(t, err)
-	res := baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+	res, err := txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, types.RequestDeliverTx{Tx: txBytes})
+	suite.Require().NoError(err)
+	suite.Require().NotEmpty(res.Data) // Maybe we should also test that the data is an expected object, not only NotEmpty
 }

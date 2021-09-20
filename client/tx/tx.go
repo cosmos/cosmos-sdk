@@ -197,12 +197,16 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 		return err
 	}
 
-	key, err := txf.keybase.Key(name)
+	k, err := txf.keybase.Key(name)
 	if err != nil {
 		return err
 	}
 
-	pubKey := key.GetPubKey()
+	pubKey, err := k.GetPubKey()
+	if err != nil {
+		return err
+	}
+
 	pubkeys, err := txBuilder.GetTx().GetPubKeys()
 	if err != nil {
 		return err

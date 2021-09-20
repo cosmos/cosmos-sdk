@@ -112,10 +112,13 @@ func TestIntermediateWriter(t *testing.T) {
 	testBytes := []byte{1, 2, 3, 4, 5}
 	var length int
 	var err error
+	waitChan := make(chan struct{}, 0)
 	go func() {
 		length, err = iw.Write(testBytes)
+		waitChan <- struct{}{}
 	}()
 	receivedBytes := <-outChan
+	<-waitChan
 	require.Equal(t, len(testBytes), length)
 	require.Equal(t, testBytes, receivedBytes)
 	require.Nil(t, err)

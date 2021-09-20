@@ -43,6 +43,7 @@ type StreamingService struct {
 	writeDir           string                                 // directory to write files into
 	codec              codec.BinaryCodec                      // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
 	stateCache         [][]byte                               // cache the protobuf binary encoded StoreKVPairs in the order they are received
+	stateCacheLock     *sync.Mutex                            // mutex for the state cache
 	currentBlockNumber int64                                  // the current block number
 	currentTxIndex     int64                                  // the index of the current tx
 }
@@ -82,12 +83,13 @@ func NewStreamingService(writeDir, filePrefix string, storeKeys []sdk.StoreKey, 
 		return nil, err
 	}
 	return &StreamingService{
-		listeners:  listeners,
-		srcChan:    listenChan,
-		filePrefix: filePrefix,
-		writeDir:   writeDir,
-		codec:      c,
-		stateCache: make([][]byte, 0),
+		listeners:      listeners,
+		srcChan:        listenChan,
+		filePrefix:     filePrefix,
+		writeDir:       writeDir,
+		codec:          c,
+		stateCache:     make([][]byte, 0),
+		stateCacheLock: new(sync.Mutex),
 	}, nil
 }
 
@@ -114,13 +116,17 @@ func (fss *StreamingService) ListenBeginBlock(ctx sdk.Context, req abci.RequestB
 		return err
 	}
 	// write all state changes cached for this stage to file
+	fss.stateCacheLock.Lock()
 	for _, stateChange := range fss.stateCache {
 		if _, err = dstFile.Write(stateChange); err != nil {
+			fss.stateCache = nil
+			fss.stateCacheLock.Unlock()
 			return err
 		}
 	}
 	// reset cache
 	fss.stateCache = nil
+	fss.stateCacheLock.Unlock()
 	// write res to file
 	lengthPrefixedResBytes, err := fss.codec.MarshalLengthPrefixed(&res)
 	if err != nil {
@@ -161,13 +167,17 @@ func (fss *StreamingService) ListenDeliverTx(ctx sdk.Context, req abci.RequestDe
 		return err
 	}
 	// write all state changes cached for this stage to file
+	fss.stateCacheLock.Lock()
 	for _, stateChange := range fss.stateCache {
 		if _, err = dstFile.Write(stateChange); err != nil {
+			fss.stateCache = nil
+			fss.stateCacheLock.Unlock()
 			return err
 		}
 	}
 	// reset cache
 	fss.stateCache = nil
+	fss.stateCacheLock.Unlock()
 	// write res to file
 	lengthPrefixedResBytes, err := fss.codec.MarshalLengthPrefixed(&res)
 	if err != nil {
@@ -207,13 +217,17 @@ func (fss *StreamingService) ListenEndBlock(ctx sdk.Context, req abci.RequestEnd
 		return err
 	}
 	// write all state changes cached for this stage to file
+	fss.stateCacheLock.Lock()
 	for _, stateChange := range fss.stateCache {
 		if _, err = dstFile.Write(stateChange); err != nil {
+			fss.stateCache = nil
+			fss.stateCacheLock.Unlock()
 			return err
 		}
 	}
 	// reset cache
 	fss.stateCache = nil
+	fss.stateCacheLock.Unlock()
 	// write res to file
 	lengthPrefixedResBytes, err := fss.codec.MarshalLengthPrefixed(&res)
 	if err != nil {
@@ -246,7 +260,9 @@ func (fss *StreamingService) Stream(wg *sync.WaitGroup, quitChan <-chan struct{}
 			case <-quitChan:
 				return
 			case by := <-fss.srcChan:
+				fss.stateCacheLock.Lock()
 				fss.stateCache = append(fss.stateCache, by)
+				fss.stateCacheLock.Unlock()
 			}
 		}
 	}()

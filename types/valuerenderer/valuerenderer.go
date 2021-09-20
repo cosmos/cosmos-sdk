@@ -169,7 +169,7 @@ func (dvr DefaultValueRenderer) Parse(ctx context.Context, s string) (interface{
 	}
 	// remove all commas
 	str := strings.ReplaceAll(s, ",", "")
-	re := regexp.MustCompile(`\d+[mu]?regen`) // TODO remove regen
+	re := regexp.MustCompile(`\d+[mu]?\w+`)
 	// case 1: "1000000regen" => Coin
 	if re.MatchString(str) {
 		coin, err := coinFromString(str)

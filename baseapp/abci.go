@@ -712,7 +712,7 @@ func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 	}
 
 	if app.snapshotInterval > 0 && app.snapshotKeepRecent > 0 {
-		v := commitHeight - int64(app.snapshotInterval * uint64(app.snapshotKeepRecent))
+		v := commitHeight - int64(app.snapshotInterval*uint64(app.snapshotKeepRecent))
 		retentionHeight = minNonZero(retentionHeight, v)
 	}
 

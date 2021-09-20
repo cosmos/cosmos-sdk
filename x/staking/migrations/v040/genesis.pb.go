@@ -449,7 +449,7 @@ func sovGenesis(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozGenesis(x uint64) (n int) {
-	return sovGenesis(uint64((x << 1) ^ uint64(int64(x) >> 63)))
+	return sovGenesis(uint64((x << 1) ^ uint64(int64(x)>>63)))
 }
 func (m *GenesisState) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)

@@ -19,8 +19,8 @@ import (
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types2 "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
-	github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/proto"
+	github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 	github_com_gogo_protobuf_protoc_gen_gogo_descriptor "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
 	_ "github.com/golang/protobuf/ptypes/duration"
@@ -3482,7 +3482,7 @@ func sovStaking(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozStaking(x uint64) (n int) {
-	return sovStaking(uint64((x << 1) ^ uint64(int64(x) >> 63)))
+	return sovStaking(uint64((x << 1) ^ uint64(int64(x)>>63)))
 }
 func (this *ValAddresses) String() string {
 	if this == nil {

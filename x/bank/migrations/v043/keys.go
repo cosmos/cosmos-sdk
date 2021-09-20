@@ -43,4 +43,3 @@ func DenomMetadataKey(denom string) []byte {
 	d := []byte(denom)
 	return append(DenomMetadataPrefix, d...)
 }
-

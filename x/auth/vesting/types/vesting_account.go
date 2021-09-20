@@ -406,6 +406,12 @@ func (pva *PeriodicVestingAccount) TrackDelegation(blockTime time.Time, balance,
 	pva.BaseVestingAccount.TrackDelegation(balance, pva.GetVestingCoins(blockTime), amount)
 }
 
+// AddToOriginalVestedCoins adds more coins to an account that are subject to its initial vesting schedule
+func (pva *PeriodicVestingAccount) AddToOriginalVestedCoins(coins sdk.Coins) {
+	panic("AddToOriginalVestedCoins not implemented for PeriodicVestingAccount")
+	// pva.OriginalVesting = pva.OriginalVesting.Add(coins...)
+}
+
 // GetStartTime returns the time when vesting starts for a periodic vesting
 // account.
 func (pva PeriodicVestingAccount) GetStartTime() int64 {
@@ -577,6 +583,12 @@ func (plva PermanentLockedAccount) LockedCoins(_ time.Time) sdk.Coins {
 // overall amount of base coins.
 func (plva *PermanentLockedAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) {
 	plva.BaseVestingAccount.TrackDelegation(balance, plva.OriginalVesting, amount)
+}
+
+// AddToOriginalVestedCoins adds more coins to an account that are subject to its initial vesting schedule
+func (plva *PermanentLockedAccount) AddToOriginalVestedCoins(coins sdk.Coins) {
+	panic("AddToOriginalVestedCoins not implemented for PeriodicVestingAccount")
+	// pva.OriginalVesting = pva.OriginalVesting.Add(coins...)
 }
 
 // GetStartTime returns zero since a permanent locked vesting account has no start time.

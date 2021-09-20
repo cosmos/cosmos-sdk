@@ -199,20 +199,28 @@ func (k BaseKeeper) setSupply(ctx sdk.Context, coin sdk.Coin) {
 	}
 }
 
-// GetDenomMetaData retrieves the denomination metadata
-func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) types.Metadata {
+// GetDenomMetaData retrieves the denomination metadata. returns the metadata and true if the denom exists,
+// false otherwise.
+func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool) {
 	store := ctx.KVStore(k.storeKey)
-	store = prefix.NewStore(store, types.DenomMetadataKey(denom))
+	store = prefix.NewStore(store, types.DenomMetadataPrefix)
 
 	bz := store.Get([]byte(denom))
 	if bz == nil {
-		return types.Metadata{}
+		return types.Metadata{}, false
 	}
 
 	var metadata types.Metadata
 	k.cdc.MustUnmarshal(bz, &metadata)
 
-	return metadata
+	return metadata, true
+}
+
+// HasDenomMetaData checks if the denomination metadata exists in store.
+func (k BaseKeeper) HasDenomMetaData(ctx sdk.Context, denom string) bool {
+	store := ctx.KVStore(k.storeKey)
+	store = prefix.NewStore(store, types.DenomMetadataPrefix)
+	return store.Has([]byte(denom))
 }
 
 // GetAllDenomMetaData retrieves all denominations metadata
@@ -224,6 +232,34 @@ func (k BaseKeeper) GetAllDenomMetaData(ctx sdk.Context) []types.Metadata {
 	})
 
 	return denomMetaData
+}
+
+// IterateTotalSupply iterates over the total supply calling the given cb (callback) function
+// with the balance of each coin.
+// The iteration stops if the callback returns true.
+func (k BaseViewKeeper) IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bool) {
+	store := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
+
+	iterator := supplyStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var amount sdk.Int
+		err := amount.Unmarshal(iterator.Value())
+		if err != nil {
+			panic(fmt.Errorf("unable to unmarshal supply value %v", err))
+		}
+
+		balance := sdk.Coin{
+			Denom:  string(iterator.Key()),
+			Amount: amount,
+		}
+
+		if cb(balance) {
+			break
+		}
+	}
 }
 
 // IterateAllDenomMetaData iterates over all the denominations metadata and

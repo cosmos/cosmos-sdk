@@ -15,7 +15,6 @@ linters:
     - gocritic
     - gofmt
     - goimports
-    - golint
     - gosec
     - gosimple
     - govet
@@ -28,6 +27,7 @@ linters:
     - structcheck
     - stylecheck
     - typecheck
+    - revive
     - unconvert
     - unused
     - unparam

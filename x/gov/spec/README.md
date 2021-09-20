@@ -58,3 +58,4 @@ staking token of the chain.
 7. **[Client](07_client.md)**
     - [CLI](07_client.md#endblocker)
     - [gRPC](07_client.md#grpc)
+    - [REST](07_client.md#rest)

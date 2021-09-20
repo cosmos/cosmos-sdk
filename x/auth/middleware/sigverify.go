@@ -304,130 +304,81 @@ func SigGasConsumeMiddleware(ak AccountKeeper, sigGasConsumer SignatureVerificat
 	}
 }
 
-// CheckTx implements tx.Handler.CheckTx.
-func (sgcd sigGasConsumeMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (sgcm sigGasConsumeMiddleware) sigGasConsume(ctx context.Context, tx sdk.Tx, simulate bool) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
-		return abci.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+		return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
-	params := sgcd.ak.GetParams(sdkCtx)
+	params := sgcm.ak.GetParams(sdkCtx)
 	sigs, err := sigTx.GetSignaturesV2()
 	if err != nil {
+		return err
+	}
+
+	// stdSigs contains the sequence number, account number, and signatures.
+	// When simulating, this would just be a 0-length slice.
+	signerAddrs := sigTx.GetSigners()
+
+	for i, sig := range sigs {
+		signerAcc, err := GetSignerAcc(sdkCtx, sgcm.ak, signerAddrs[i])
+		if err != nil {
+			return err
+		}
+
+		pubKey := signerAcc.GetPubKey()
+
+		// In simulate mode the transaction comes with no signatures, thus if the
+		// account's pubkey is nil, both signature verification and gasKVStore.Set()
+		// shall consume the largest amount, i.e. it takes more gas to verify
+		// secp256k1 keys than ed25519 ones.
+		if simulate && pubKey == nil {
+			pubKey = simSecp256k1Pubkey
+		}
+
+		// make a SignatureV2 with PubKey filled in from above
+		sig = signing.SignatureV2{
+			PubKey:   pubKey,
+			Data:     sig.Data,
+			Sequence: sig.Sequence,
+		}
+
+		err = sgcm.sigGasConsumer(sdkCtx.GasMeter(), sig, params)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// CheckTx implements tx.Handler.CheckTx.
+func (sgcm sigGasConsumeMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	if err := sgcm.sigGasConsume(ctx, tx, false); err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
 
-	// stdSigs contains the sequence number, account number, and signatures.
-	// When simulating, this would just be a 0-length slice.
-	signerAddrs := sigTx.GetSigners()
-	for i, sig := range sigs {
-		signerAcc, err := GetSignerAcc(sdkCtx, sgcd.ak, signerAddrs[i])
-		if err != nil {
-			return abci.ResponseCheckTx{}, err
-		}
-
-		pubKey := signerAcc.GetPubKey()
-
-		// make a SignatureV2 with PubKey filled in from above
-		sig = signing.SignatureV2{
-			PubKey:   pubKey,
-			Data:     sig.Data,
-			Sequence: sig.Sequence,
-		}
-
-		err = sgcd.sigGasConsumer(sdkCtx.GasMeter(), sig, params)
-		if err != nil {
-			return abci.ResponseCheckTx{}, err
-		}
-	}
-
-	return sgcd.next.CheckTx(ctx, tx, req)
+	return sgcm.next.CheckTx(ctx, tx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (sgcd sigGasConsumeMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
-	if !ok {
-		return abci.ResponseDeliverTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
-	}
-
-	params := sgcd.ak.GetParams(sdkCtx)
-	sigs, err := sigTx.GetSignaturesV2()
-	if err != nil {
+func (sgcm sigGasConsumeMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+	if err := sgcm.sigGasConsume(ctx, tx, false); err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
 
-	// stdSigs contains the sequence number, account number, and signatures.
-	// When simulating, this would just be a 0-length slice.
-	signerAddrs := sigTx.GetSigners()
-	for i, sig := range sigs {
-		signerAcc, err := GetSignerAcc(sdkCtx, sgcd.ak, signerAddrs[i])
-		if err != nil {
-			return abci.ResponseDeliverTx{}, err
-		}
-
-		pubKey := signerAcc.GetPubKey()
-
-		// make a SignatureV2 with PubKey filled in from above
-		sig = signing.SignatureV2{
-			PubKey:   pubKey,
-			Data:     sig.Data,
-			Sequence: sig.Sequence,
-		}
-
-		err = sgcd.sigGasConsumer(sdkCtx.GasMeter(), sig, params)
-		if err != nil {
-			return abci.ResponseDeliverTx{}, err
-		}
-	}
-
-	return sgcd.next.DeliverTx(ctx, tx, req)
+	return sgcm.next.DeliverTx(ctx, tx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (sgcd sigGasConsumeMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	sigTx, ok := sdkTx.(authsigning.SigVerifiableTx)
-	if !ok {
-		return tx.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
-	}
-
-	params := sgcd.ak.GetParams(sdkCtx)
-	sigs, err := sigTx.GetSignaturesV2()
-	if err != nil {
+func (sgcm sigGasConsumeMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+	if err := sgcm.sigGasConsume(ctx, sdkTx, true); err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}
 
-	// stdSigs contains the sequence number, account number, and signatures.
-	// When simulating, this would just be a 0-length slice.
-	signerAddrs := sigTx.GetSigners()
-	for i, sig := range sigs {
-		signerAcc, err := GetSignerAcc(sdkCtx, sgcd.ak, signerAddrs[i])
-		if err != nil {
-			return tx.ResponseSimulateTx{}, err
-		}
-
-		pubKey := signerAcc.GetPubKey()
-
-		// make a SignatureV2 with PubKey filled in from above
-		sig = signing.SignatureV2{
-			PubKey:   pubKey,
-			Data:     sig.Data,
-			Sequence: sig.Sequence,
-		}
-
-		err = sgcd.sigGasConsumer(sdkCtx.GasMeter(), sig, params)
-		if err != nil {
-			return tx.ResponseSimulateTx{}, err
-		}
-	}
-
-	return sgcd.next.SimulateTx(ctx, sdkTx, req)
+	return sgcm.next.SimulateTx(ctx, sdkTx, req)
 }
 
 // Verify all signatures for a tx and return an error if any are invalid. Note,
@@ -472,49 +423,46 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	}
 }
 
-// CheckTx implements tx.Handler.CheckTx.
-func (svd sigVerificationMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (svm sigVerificationMiddleware) sigVerify(ctx context.Context, tx sdk.Tx, simulate bool) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
 	// no need to verify signatures on recheck tx
 	if sdkCtx.IsReCheckTx() {
-		return svd.next.CheckTx(ctx, tx, req)
+		return nil
 	}
-
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
-		return abci.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+		return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
 	sigs, err := sigTx.GetSignaturesV2()
 	if err != nil {
-		return abci.ResponseCheckTx{}, err
+		return err
 	}
 
 	signerAddrs := sigTx.GetSigners()
 
 	// check that signer length and signature length are the same
 	if len(sigs) != len(signerAddrs) {
-		return abci.ResponseCheckTx{}, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signerAddrs), len(sigs))
+		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signerAddrs), len(sigs))
 	}
 
 	for i, sig := range sigs {
-		acc, err := GetSignerAcc(sdkCtx, svd.ak, signerAddrs[i])
+		acc, err := GetSignerAcc(sdkCtx, svm.ak, signerAddrs[i])
 		if err != nil {
-			return abci.ResponseCheckTx{}, err
+			return err
 		}
 
 		// retrieve pubkey
 		pubKey := acc.GetPubKey()
-		if pubKey == nil {
-			return abci.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
+		if !simulate && pubKey == nil {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
 		// Check account sequence number.
 		if sig.Sequence != acc.GetSequence() {
-			return abci.ResponseCheckTx{}, sdkerrors.Wrapf(
+			return sdkerrors.Wrapf(
 				sdkerrors.ErrWrongSequence,
 				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
 			)
@@ -533,20 +481,30 @@ func (svd sigVerificationMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req
 			Sequence:      acc.GetSequence(),
 		}
 
-		err = authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx)
-		if err != nil {
-			var errMsg string
-			if OnlyLegacyAminoSigners(sig.Data) {
-				// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to check account sequence number,
-				// and therefore communicate sequence number as a potential cause of error.
-				errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)", accNum, acc.GetSequence(), chainID)
-			} else {
-				errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s)", accNum, chainID)
+		if !simulate {
+			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svm.signModeHandler, tx)
+			if err != nil {
+				var errMsg string
+				if OnlyLegacyAminoSigners(sig.Data) {
+					// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to check account sequence number,
+					// and therefore communicate sequence number as a potential cause of error.
+					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)", accNum, acc.GetSequence(), chainID)
+				} else {
+					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s)", accNum, chainID)
+				}
+				return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, errMsg)
+
 			}
-			return abci.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, errMsg)
-
 		}
+	}
 
+	return nil
+}
+
+// CheckTx implements tx.Handler.CheckTx.
+func (svd sigVerificationMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	if err := svd.sigVerify(ctx, tx, false); err != nil {
+		return abci.ResponseCheckTx{}, err
 	}
 
 	return svd.next.CheckTx(ctx, tx, req)
@@ -554,77 +512,8 @@ func (svd sigVerificationMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req
 
 // DeliverTx implements tx.Handler.DeliverTx.
 func (svd sigVerificationMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	// no need to verify signatures on recheck tx
-	if sdkCtx.IsReCheckTx() {
-		return svd.next.DeliverTx(ctx, tx, req)
-	}
-
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
-	if !ok {
-		return abci.ResponseDeliverTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
-	}
-
-	// stdSigs contains the sequence number, account number, and signatures.
-	// When simulating, this would just be a 0-length slice.
-	sigs, err := sigTx.GetSignaturesV2()
-	if err != nil {
+	if err := svd.sigVerify(ctx, tx, false); err != nil {
 		return abci.ResponseDeliverTx{}, err
-	}
-
-	signerAddrs := sigTx.GetSigners()
-
-	// check that signer length and signature length are the same
-	if len(sigs) != len(signerAddrs) {
-		return abci.ResponseDeliverTx{}, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signerAddrs), len(sigs))
-	}
-
-	for i, sig := range sigs {
-		acc, err := GetSignerAcc(sdkCtx, svd.ak, signerAddrs[i])
-		if err != nil {
-			return abci.ResponseDeliverTx{}, err
-		}
-
-		// retrieve pubkey
-		pubKey := acc.GetPubKey()
-		if pubKey == nil {
-			return abci.ResponseDeliverTx{}, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
-		}
-
-		// Check account sequence number.
-		if sig.Sequence != acc.GetSequence() {
-			return abci.ResponseDeliverTx{}, sdkerrors.Wrapf(
-				sdkerrors.ErrWrongSequence,
-				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
-			)
-		}
-
-		// retrieve signer data
-		genesis := sdkCtx.BlockHeight() == 0
-		chainID := sdkCtx.ChainID()
-		var accNum uint64
-		if !genesis {
-			accNum = acc.GetAccountNumber()
-		}
-		signerData := authsigning.SignerData{
-			ChainID:       chainID,
-			AccountNumber: accNum,
-			Sequence:      acc.GetSequence(),
-		}
-
-		err = authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx)
-		if err != nil {
-			var errMsg string
-			if OnlyLegacyAminoSigners(sig.Data) {
-				// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to check account sequence number,
-				// and therefore communicate sequence number as a potential cause of error.
-				errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)", accNum, acc.GetSequence(), chainID)
-			} else {
-				errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s)", accNum, chainID)
-			}
-			return abci.ResponseDeliverTx{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, errMsg)
-		}
 	}
 
 	return svd.next.DeliverTx(ctx, tx, req)
@@ -632,45 +521,8 @@ func (svd sigVerificationMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, r
 
 // SimulateTx implements tx.Handler.SimulateTx.
 func (svd sigVerificationMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	// no need to verify signatures on recheck tx
-	if sdkCtx.IsReCheckTx() {
-		return svd.next.SimulateTx(ctx, sdkTx, req)
-	}
-
-	sigTx, ok := sdkTx.(authsigning.SigVerifiableTx)
-	if !ok {
-		return tx.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
-	}
-
-	// stdSigs contains the sequence number, account number, and signatures.
-	// When simulating, this would just be a 0-length slice.
-	sigs, err := sigTx.GetSignaturesV2()
-	if err != nil {
+	if err := svd.sigVerify(ctx, sdkTx, true); err != nil {
 		return tx.ResponseSimulateTx{}, err
-	}
-
-	signerAddrs := sigTx.GetSigners()
-
-	// check that signer length and signature length are the same
-	if len(sigs) != len(signerAddrs) {
-		return tx.ResponseSimulateTx{}, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signerAddrs), len(sigs))
-	}
-
-	for i, sig := range sigs {
-		acc, err := GetSignerAcc(sdkCtx, svd.ak, signerAddrs[i])
-		if err != nil {
-			return tx.ResponseSimulateTx{}, err
-		}
-
-		// Check account sequence number.
-		if sig.Sequence != acc.GetSequence() {
-			return tx.ResponseSimulateTx{}, sdkerrors.Wrapf(
-				sdkerrors.ErrWrongSequence,
-				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
-			)
-		}
 	}
 
 	return svd.next.SimulateTx(ctx, sdkTx, req)
@@ -699,12 +551,11 @@ func IncrementSequenceMiddleware(ak AccountKeeper) tx.Middleware {
 	}
 }
 
-// CheckTx implements tx.Handler.CheckTx.
-func (isd incrementSequenceMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (isd incrementSequenceMiddleware) incrementSeq(ctx context.Context, tx sdk.Tx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
-		return abci.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+		return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
 	// increment sequence of all signers
@@ -715,6 +566,15 @@ func (isd incrementSequenceMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, r
 		}
 
 		isd.ak.SetAccount(sdkCtx, acc)
+	}
+
+	return nil
+}
+
+// CheckTx implements tx.Handler.CheckTx.
+func (isd incrementSequenceMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	if err := isd.incrementSeq(ctx, tx); err != nil {
+		return abci.ResponseCheckTx{}, err
 	}
 
 	return isd.next.CheckTx(ctx, tx, req)
@@ -722,20 +582,8 @@ func (isd incrementSequenceMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, r
 
 // DeliverTx implements tx.Handler.DeliverTx.
 func (isd incrementSequenceMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
-	if !ok {
-		return abci.ResponseDeliverTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
-	}
-
-	// increment sequence of all signers
-	for _, addr := range sigTx.GetSigners() {
-		acc := isd.ak.GetAccount(sdkCtx, addr)
-		if err := acc.SetSequence(acc.GetSequence() + 1); err != nil {
-			panic(err)
-		}
-
-		isd.ak.SetAccount(sdkCtx, acc)
+	if err := isd.incrementSeq(ctx, tx); err != nil {
+		return abci.ResponseDeliverTx{}, err
 	}
 
 	return isd.next.DeliverTx(ctx, tx, req)
@@ -743,20 +591,8 @@ func (isd incrementSequenceMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx,
 
 // SimulateTx implements tx.Handler.SimulateTx.
 func (isd incrementSequenceMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sigTx, ok := sdkTx.(authsigning.SigVerifiableTx)
-	if !ok {
-		return tx.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
-	}
-
-	// increment sequence of all signers
-	for _, addr := range sigTx.GetSigners() {
-		acc := isd.ak.GetAccount(sdkCtx, addr)
-		if err := acc.SetSequence(acc.GetSequence() + 1); err != nil {
-			panic(err)
-		}
-
-		isd.ak.SetAccount(sdkCtx, acc)
+	if err := isd.incrementSeq(ctx, sdkTx); err != nil {
+		return tx.ResponseSimulateTx{}, err
 	}
 
 	return isd.next.SimulateTx(ctx, sdkTx, req)

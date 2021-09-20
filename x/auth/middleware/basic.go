@@ -155,14 +155,14 @@ func ValidateMemoMiddleware(ak AccountKeeper) tx.Middleware {
 
 var _ tx.Handler = validateMemoMiddleware{}
 
-func (vmd validateMemoMiddleware) checkForValidMemo(ctx context.Context, tx sdk.Tx) error {
+func (vmm validateMemoMiddleware) checkForValidMemo(ctx context.Context, tx sdk.Tx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	memoTx, ok := tx.(sdk.TxWithMemo)
 	if !ok {
 		return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
-	params := vmd.ak.GetParams(sdkCtx)
+	params := vmm.ak.GetParams(sdkCtx)
 
 	memoLength := len(memoTx.GetMemo())
 	if uint64(memoLength) > params.MaxMemoCharacters {
@@ -176,30 +176,30 @@ func (vmd validateMemoMiddleware) checkForValidMemo(ctx context.Context, tx sdk.
 }
 
 // CheckTx implements tx.Handler.CheckTx method.
-func (vmd validateMemoMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	if err := vmd.checkForValidMemo(ctx, tx); err != nil {
+func (vmm validateMemoMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	if err := vmm.checkForValidMemo(ctx, tx); err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
 
-	return vmd.next.CheckTx(ctx, tx, req)
+	return vmm.next.CheckTx(ctx, tx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx method.
-func (vmd validateMemoMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	if err := vmd.checkForValidMemo(ctx, tx); err != nil {
+func (vmm validateMemoMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+	if err := vmm.checkForValidMemo(ctx, tx); err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
 
-	return vmd.next.DeliverTx(ctx, tx, req)
+	return vmm.next.DeliverTx(ctx, tx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
-func (vmd validateMemoMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	if err := vmd.checkForValidMemo(ctx, sdkTx); err != nil {
+func (vmm validateMemoMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+	if err := vmm.checkForValidMemo(ctx, sdkTx); err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}
 
-	return vmd.next.SimulateTx(ctx, sdkTx, req)
+	return vmm.next.SimulateTx(ctx, sdkTx, req)
 }
 
 var _ tx.Handler = consumeTxSizeGasMiddleware{}
@@ -227,83 +227,86 @@ func ConsumeTxSizeGasMiddleware(ak AccountKeeper) tx.Middleware {
 	}
 }
 
-// CheckTx implements tx.Handler.CheckTx.
-func (cgts consumeTxSizeGasMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (cgts consumeTxSizeGasMiddleware) consumeTxSizeGas(ctx context.Context, tx sdk.Tx, simulate bool) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	_, ok := tx.(authsigning.SigVerifiableTx)
+	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
-		return abci.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
+		return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}
 	params := cgts.ak.GetParams(sdkCtx)
+
 	sdkCtx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(sdkCtx.TxBytes())), "txSize")
+
+	// simulate gas cost for signatures in simulate mode
+	if simulate {
+		// in simulate mode, each element should be a nil signature
+		sigs, err := sigTx.GetSignaturesV2()
+		if err != nil {
+			return err
+		}
+		n := len(sigs)
+
+		for i, signer := range sigTx.GetSigners() {
+			// if signature is already filled in, no need to simulate gas cost
+			if i < n && !isIncompleteSignature(sigs[i].Data) {
+				continue
+			}
+
+			var pubkey cryptotypes.PubKey
+
+			acc := cgts.ak.GetAccount(sdkCtx, signer)
+
+			// use placeholder simSecp256k1Pubkey if sig is nil
+			if acc == nil || acc.GetPubKey() == nil {
+				pubkey = simSecp256k1Pubkey
+			} else {
+				pubkey = acc.GetPubKey()
+			}
+
+			// use stdsignature to mock the size of a full signature
+			simSig := legacytx.StdSignature{ //nolint:staticcheck // this will be removed when proto is ready
+				Signature: simSecp256k1Sig[:],
+				PubKey:    pubkey,
+			}
+
+			sigBz := legacy.Cdc.MustMarshal(simSig)
+			cost := sdk.Gas(len(sigBz) + 6)
+
+			// If the pubkey is a multi-signature pubkey, then we estimate for the maximum
+			// number of signers.
+			if _, ok := pubkey.(*multisig.LegacyAminoPubKey); ok {
+				cost *= params.TxSigLimit
+			}
+
+			sdkCtx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*cost, "txSize")
+		}
+	}
+
+	return nil
+}
+
+// CheckTx implements tx.Handler.CheckTx.
+func (cgts consumeTxSizeGasMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	if err := cgts.consumeTxSizeGas(ctx, tx, false); err != nil {
+		return abci.ResponseCheckTx{}, err
+	}
 
 	return cgts.next.CheckTx(ctx, tx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
 func (cgts consumeTxSizeGasMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	_, ok := tx.(authsigning.SigVerifiableTx)
-	if !ok {
-		return abci.ResponseDeliverTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
+	if err := cgts.consumeTxSizeGas(ctx, tx, false); err != nil {
+		return abci.ResponseDeliverTx{}, err
 	}
-	params := cgts.ak.GetParams(sdkCtx)
-	sdkCtx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(sdkCtx.TxBytes())), "txSize")
 
 	return cgts.next.DeliverTx(ctx, tx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
 func (cgts consumeTxSizeGasMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sigTx, ok := sdkTx.(authsigning.SigVerifiableTx)
-	if !ok {
-		return tx.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
-	}
-	params := cgts.ak.GetParams(sdkCtx)
-	sdkCtx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(sdkCtx.TxBytes())), "txSize")
-
-	// simulate gas cost for signatures in simulate mode
-	// in simulate mode, each element should be a nil signature
-	sigs, err := sigTx.GetSignaturesV2()
-	if err != nil {
+	if err := cgts.consumeTxSizeGas(ctx, sdkTx, true); err != nil {
 		return tx.ResponseSimulateTx{}, err
-	}
-	n := len(sigs)
-
-	for i, signer := range sigTx.GetSigners() {
-		// if signature is already filled in, no need to simulate gas cost
-		if i < n && !isIncompleteSignature(sigs[i].Data) {
-			continue
-		}
-
-		var pubkey cryptotypes.PubKey
-
-		acc := cgts.ak.GetAccount(sdkCtx, signer)
-
-		// use placeholder simSecp256k1Pubkey if sig is nil
-		if acc == nil || acc.GetPubKey() == nil {
-			pubkey = simSecp256k1Pubkey
-		} else {
-			pubkey = acc.GetPubKey()
-		}
-
-		// use stdsignature to mock the size of a full signature
-		simSig := legacytx.StdSignature{ //nolint:staticcheck // this will be removed when proto is ready
-			Signature: simSecp256k1Sig[:],
-			PubKey:    pubkey,
-		}
-
-		sigBz := legacy.Cdc.MustMarshal(simSig)
-		cost := sdk.Gas(len(sigBz) + 6)
-
-		// If the pubkey is a multi-signature pubkey, then we estimate for the maximum
-		// number of signers.
-		if _, ok := pubkey.(*multisig.LegacyAminoPubKey); ok {
-			cost *= params.TxSigLimit
-		}
-
-		sdkCtx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*cost, "txSize")
 	}
 
 	return cgts.next.SimulateTx(ctx, sdkTx, req)

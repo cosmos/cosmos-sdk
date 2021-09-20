@@ -40,17 +40,6 @@ func (txh recoveryTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.Re
 
 // DeliverTx implements tx.Handler.DeliverTx method.
 func (txh recoveryTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (res abci.ResponseDeliverTx, err error) {
-	// sdkCtx := sdk.UnwrapSDKContext(ctx)
-	// // Panic recovery.
-	// defer func() {
-	// 	if r := recover(); r != nil {
-	// 		err = handleRecovery(r, sdkCtx)
-	// 	}
-	// }()
-
-	// return txh.next.DeliverTx(ctx, tx, req)
-
-	// TODO : throwing nil pointer(since BlockGasMeter didn't set)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// only run the tx if there is block gas remaining
 	if sdkCtx.BlockGasMeter().IsOutOfGas() {

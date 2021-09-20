@@ -90,6 +90,7 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryAllBalances() {
 func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupply() {
 	app, ctx := suite.app, suite.ctx
 	legacyAmino := app.LegacyAmino()
+
 	genesisSupply, _, err := suite.app.BankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.MaxLimit})
 	suite.Require().NoError(err)
 
@@ -116,12 +117,9 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupply() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
-	// Adding genesis supply to the expectedTotalSupply
-	expectedTotalSupply = expectedTotalSupply.Add(genesisSupply...)
-
 	var resp types.QueryTotalSupplyResponse
 	suite.Require().NoError(legacyAmino.UnmarshalJSON(res, &resp))
-	suite.Require().Equal(expectedTotalSupply, resp.Supply)
+	suite.Require().Equal(expectedTotalSupply.Add(genesisSupply...), resp.Supply)
 }
 
 func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupplyOf() {

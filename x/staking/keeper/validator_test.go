@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -45,12 +46,13 @@ func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*simapp.Si
 
 	completionTime, err := app.StakingKeeper.Undelegate(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr(), delegation.Shares)
 	require.NoError(t, err)
+
 	// mature unbonding delegation
 	ctx = ctx.WithBlockTime(completionTime)
 	_, err = app.StakingKeeper.CompleteUnbonding(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr())
 	require.NoError(t, err)
-	// endblock
-	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	staking.EndBlocker(ctx, app.StakingKeeper)
 
 	return app, ctx, addrDels, addrVals
 }

@@ -78,12 +78,10 @@ func (suite *IntegrationTestSuite) TestTotalSupply() {
 		{Coins: sdk.NewCoins(sdk.NewCoin("barcoin", sdk.NewInt(1))), Address: "cosmos1t5u0jfg3ljsjrh2m9e47d4ny2hea7eehxrzdgd"},
 		{Coins: sdk.NewCoins(sdk.NewCoin("foocoin", sdk.NewInt(10)), sdk.NewCoin("barcoin", sdk.NewInt(20))), Address: "cosmos1m3h30wlvsf8llruxtpukdvsy0km2kum8g38c8q"},
 	}
+	totalSupply := sdk.NewCoins(sdk.NewCoin("foocoin", sdk.NewInt(11)), sdk.NewCoin("barcoin", sdk.NewInt(21)))
+
 	genesisSupply, _, err := suite.app.BankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.MaxLimit})
 	suite.Require().NoError(err)
-
-	// Adding genesis supply to the expTotalSupply
-	expTotalSupply := sdk.NewCoins(sdk.NewCoin("foocoin", sdk.NewInt(11)), sdk.NewCoin("barcoin", sdk.NewInt(21)))
-	expTotalSupply.Add(genesisSupply...)
 
 	testcases := []struct {
 		name        string
@@ -99,13 +97,13 @@ func (suite *IntegrationTestSuite) TestTotalSupply() {
 		},
 		{
 			"calculation matches genesis Supply field",
-			types.NewGenesisState(defaultGenesis.Params, balances, expTotalSupply, defaultGenesis.DenomMetadata),
-			expTotalSupply, false, "",
+			types.NewGenesisState(defaultGenesis.Params, balances, totalSupply, defaultGenesis.DenomMetadata),
+			totalSupply, false, "",
 		},
 		{
 			"calculation is correct, empty genesis Supply field",
 			types.NewGenesisState(defaultGenesis.Params, balances, nil, defaultGenesis.DenomMetadata),
-			expTotalSupply, false, "",
+			totalSupply, false, "",
 		},
 	}
 
@@ -118,7 +116,7 @@ func (suite *IntegrationTestSuite) TestTotalSupply() {
 				suite.app.BankKeeper.InitGenesis(suite.ctx, tc.genesis)
 				totalSupply, _, err := suite.app.BankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.MaxLimit})
 				suite.Require().NoError(err)
-				suite.Require().Equal(tc.expSupply, totalSupply.Sub(genesisSupply))
+				suite.Require().Equal(tc.expSupply.Add(genesisSupply...), totalSupply)
 			}
 		})
 	}

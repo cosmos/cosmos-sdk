@@ -118,6 +118,7 @@ func TestQueries(t *testing.T) {
 
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
 	// reset fee pool
 	app.DistrKeeper.SetFeePool(ctx, types.InitialFeePool())
 

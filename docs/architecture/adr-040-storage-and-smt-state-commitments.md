@@ -170,20 +170,13 @@ type CacheRootStore interface {
 
 // Example of constructor parameters for the concrete type.
 type RootStoreConfig struct {
-    PersistentCache RootStorePersistentCache
     Upgrades        *StoreUpgrades
     InitialVersion  uint64
 
     ReservePrefix(StoreKey, StoreType)
 }
-
-// Unchanged from MultiStorePersistentCache type.
-type RootStorePersistentCache interface {
-    GetStoreCache(StoreKey, CommitKVStore) CommitKVStore
-    Unwrap(StoreKey) CommitKVStore
-    Reset()
-}
 ```
+<!-- TODO: RootStorePersistentCache type -->
 
 In contrast to `MultiStore`, `RootStore` doesn't allow to dynamically mount sub-stores or provide an arbitrary backing DB.
 
@@ -200,7 +193,7 @@ The root hash of the proof for `"<record-key>"` is hashed with the `"<store-key>
 
 This is not compatible with the `RootStore`, which stores all records in a single Merkle tree structure, and won't produce separate proofs for the store- and record-key. Ideally, the store-key component of the proof could just be omitted, and updated to use a "no-op" spec, so only the record-key is used. However, because the IBC verification code hardcodes the `"ibc"` prefix and applies it to the SDK proof as a separate element of the proof path, this isn't possible without a breaking change. Breaking this behavior would severely impact the Cosmos ecosystem which already widely adopts the IBC module.
 
-As a workaround, the `RootStore` will have to maintain a separate set of SMT-based stores and an index of store keys, in the same fashion as the `MultiStore`. The non-IBC state can be maintained as a separate store in the index, alongside the modules that are used in IBC (`clients/`, `connections/`, and `channels/`). The final App hash will be the root hash of the store index.
+As a workaround, the `RootStore` will have to maintain two logically separate SMT-based stores: one for IBC state and one for everything else. A simple Merkle map containing these two store keys will act as a `MultiStore`-like index, and the final App hash will be the root hash of this index.
 
 This workaround can be used until the IBC connection code is fully upgraded and supports single-element commitment proofs.
 

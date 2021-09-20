@@ -3219,7 +3219,7 @@
         e.exports = function() {
             try {
                 if (!Object.assign) return !1;
-                var e = new String("abc");
+                var e = String("abc");
                 if (e[5] = "de", "5" === Object.getOwnPropertyNames(e)[0]) return !1;
                 for (var t = {}, n = 0; n < 10; n++) t["_" + String.fromCharCode(n)] = n;
                 if ("0123456789" !== Object.getOwnPropertyNames(t).map(function(e) {
@@ -16133,7 +16133,7 @@
                                             r.newThrownErr(i)
                                         }
                                     } catch (e) {
-                                        return
+
                                     }
                                 }());
                                 a.updateLoadingStatus("success"), a.updateSpec(t.text), i.url() !== e && a.updateUrl(e)
@@ -25551,13 +25551,13 @@
                         return r = u[a], t(r), r
                     }
                     if (delete u[o], a === o)
-                        for (; !i.call(u, ++a);) continue
+                        for (; !i.call(u, ++a);)
                 },
                 delete: t = function(e) {
                     var t = s[e];
                     if (t && (delete u[t], delete s[e], --n, a === t)) {
                         if (!n) return l = 0, void(a = 1);
-                        for (; !i.call(u, ++a);) continue
+                        for (; !i.call(u, ++a);)
                     }
                 },
                 clear: function() {

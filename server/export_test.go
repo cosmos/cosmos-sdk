@@ -136,7 +136,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 	serverCtx.Config.RootDir = tempDir
 
 	clientCtx := client.Context{}.WithCodec(app.AppCodec())
-	genDoc := newDefaultGenesisDoc(encCfg.Marshaler)
+	genDoc := newDefaultGenesisDoc(encCfg.Codec)
 
 	require.NoError(t, saveGenesisFile(genDoc, serverCtx.Config.GenesisFile()))
 	app.InitChain(

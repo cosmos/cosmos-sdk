@@ -27,7 +27,7 @@ artifacts
 # Data - ideally these don't exist
 baseapp/data/*
 client/lcd/keys/*
-mytestnet
+.testnets
 
 # Testing
 coverage.txt

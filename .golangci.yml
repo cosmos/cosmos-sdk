@@ -22,6 +22,7 @@ linters:
     - misspell
     - nakedret
     - prealloc
+    - revive
     - exportloopref
     - staticcheck
     - structcheck
@@ -54,7 +55,7 @@ issues:
     - text: "ST1016:"
       linters:
         - stylecheck
-    - path: "legacy"
+    - path: "migrations"
       text: "SA1019:"
       linters:
         - staticcheck

@@ -82,7 +82,8 @@ func (a AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.Tx
 }
 
 // RegisterRESTRoutes registers the REST routes for the feegrant module.
-func (AppModuleBasic) RegisterRESTRoutes(ctx sdkclient.Context, rtr *mux.Router) {}
+// Deprecated: RegisterRESTRoutes is deprecated.
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx sdkclient.Context, rtr *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the feegrant module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
@@ -131,9 +132,9 @@ func (AppModule) Name() string {
 // RegisterInvariants registers the feegrant module invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
-// Route returns the message routing key for the feegrant module.
+// Deprecated: Route returns the message routing key for the feegrant module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(feegrant.RouterKey, nil)
+	return sdk.Route{}
 }
 
 // NewHandler returns an sdk.Handler for the feegrant module.

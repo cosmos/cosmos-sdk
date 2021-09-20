@@ -105,7 +105,8 @@ func TestCLIQueryConn(t *testing.T) {
 	cfg := network.DefaultConfig()
 	cfg.NumValidators = 1
 
-	n := network.New(t, cfg)
+	n, err := network.New(t, t.TempDir(), cfg)
+	require.NoError(t, err)
 	defer n.Cleanup()
 
 	testClient := testdata.NewQueryClient(n.Validators[0].ClientCtx)

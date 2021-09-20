@@ -18,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bip39 "github.com/cosmos/go-bip39"
+	"github.com/cosmos/go-bip39"
 )
 
 func Test_runAddCmdBasic(t *testing.T) {
@@ -192,9 +192,9 @@ func Test_runAddCmdDryRun(t *testing.T) {
 			kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
 			require.NoError(t, err)
 
-			appCodec := simapp.MakeTestEncodingConfig().Marshaler
+			appCodec := simapp.MakeTestEncodingConfig().Codec
 			clientCtx := client.Context{}.
-				WithJSONCodec(appCodec).
+				WithCodec(appCodec).
 				WithKeyringDir(kbHome).
 				WithKeyring(kb)
 			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)

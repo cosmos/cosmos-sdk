@@ -9,6 +9,14 @@ pull_request_rules:
         method: squash
         strict: true
         commit_message: title+body
+  - name: backport patches to v0.44.x branch
+    conditions:
+      - base=master
+      - label=backport/0.44.x
+    actions:
+      backport:
+        branches:
+          - release/v0.44.x
   - name: backport patches to v0.42.x branch
     conditions:
       - base=master
@@ -17,11 +25,3 @@ pull_request_rules:
       backport:
         branches:
           - release/v0.42.x
-  - name: backport patches to v0.39.x branch
-    conditions:
-      - base=master
-      - label=backport/0.39.x (Launchpad)
-    actions:
-      backport:
-        branches:
-          - launchpad/backports

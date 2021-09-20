@@ -1,7 +1,7 @@
 package multisig
 
 import (
-	fmt "fmt"
+	"fmt"
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 

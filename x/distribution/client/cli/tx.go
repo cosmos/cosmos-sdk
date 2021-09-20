@@ -110,12 +110,6 @@ $ %s tx distribution withdraw-rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 
 				msgs = append(msgs, types.NewMsgWithdrawValidatorCommission(valAddr))
 			}
 
-			for _, msg := range msgs {
-				if err := msg.ValidateBasic(); err != nil {
-					return err
-				}
-			}
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msgs...)
 		},
 	}
@@ -170,9 +164,6 @@ $ %[1]s tx distribution withdraw-all-rewards --from mykey
 				}
 
 				msg := types.NewMsgWithdrawDelegatorReward(delAddr, val)
-				if err := msg.ValidateBasic(); err != nil {
-					return err
-				}
 				msgs = append(msgs, msg)
 			}
 

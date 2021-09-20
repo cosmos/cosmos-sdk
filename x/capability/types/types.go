@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

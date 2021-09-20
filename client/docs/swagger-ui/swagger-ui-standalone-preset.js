@@ -670,7 +670,7 @@
         t.exports = function() {
             try {
                 if (!Object.assign) return !1;
-                var t = new String("abc");
+                var t = String("abc");
                 if (t[5] = "de", "5" === Object.getOwnPropertyNames(t)[0]) return !1;
                 for (var e = {}, n = 0; n < 10; n++) e["_" + String.fromCharCode(n)] = n;
                 if ("0123456789" !== Object.getOwnPropertyNames(e).map(function(t) {
@@ -11884,13 +11884,13 @@
                         return r = a[u], e(r), r
                     }
                     if (delete a[i], u === i)
-                        for (; !o.call(a, ++u);) continue
+                        for (; !o.call(a, ++u);)
                 },
                 delete: e = function(t) {
                     var e = s[t];
                     if (e && (delete a[e], delete s[t], --n, u === e)) {
                         if (!n) return c = 0, void(u = 1);
-                        for (; !o.call(a, ++u);) continue
+                        for (; !o.call(a, ++u);)
                     }
                 },
                 clear: function() {

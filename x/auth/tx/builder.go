@@ -200,14 +200,9 @@ func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 }
 
 func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
-	anys := make([]*codectypes.Any, len(msgs))
-
-	for i, msg := range msgs {
-		var err error
-		anys[i], err = codectypes.NewAnyWithValue(msg)
-		if err != nil {
-			return err
-		}
+	anys, err := tx.SetMsgs(msgs)
+	if err != nil {
+		return err
 	}
 
 	w.tx.Body.Messages = anys

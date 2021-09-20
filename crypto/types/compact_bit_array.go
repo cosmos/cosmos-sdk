@@ -74,7 +74,7 @@ func (bA *CompactBitArray) SetIndex(i int, v bool) bool {
 	}
 
 	if v {
-		bA.Elems[i>>3] |= (1 << uint8(7-(i%8)))
+		bA.Elems[i>>3] |= 1 << uint8(7-(i%8))
 	} else {
 		bA.Elems[i>>3] &= ^(1 << uint8(7-(i%8)))
 	}

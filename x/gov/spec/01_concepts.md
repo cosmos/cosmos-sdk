@@ -56,18 +56,23 @@ arbitrary state changes.
 
 ## Deposit
 
-To prevent spam, proposals must be submitted with a deposit in the coins defined in the `MinDeposit` param. The voting period will not start until the proposal's deposit equals `MinDeposit`.
+To prevent spam, proposals must be submitted with a deposit in the coins defined in the `MinDeposit` param.
 
-When a proposal is submitted, it has to be accompanied by a deposit that must be strictly positive, but can be inferior to `MinDeposit`. The submitter doesn't need to pay for the entire deposit on their own. If a proposal's deposit is inferior to `MinDeposit`, other token holders can increase the proposal's deposit by sending a `Deposit` transaction. The deposit is kept in an escrow in the governance `ModuleAccount` until the proposal is finalized (passed or rejected).
+When a proposal is submitted, it has to be accompanied with a deposit that must be strictly positive, but can be inferior to `MinDeposit`. The submitter doesn't need to pay for the entire deposit on their own.
+The newly created proposal is stored in an _inactive proposal queue_ and stays there until its deposit passes the `MinDeposit`. Other token holders can increase the proposal's deposit by sending a `Deposit` transaction.
+If a proposal doesn't pass the `MinDeposit` before the deposit end time (the time when deposits are no longer accepted), the proposal will be destroyed: the proposal will be removed from state and the deposit will be burned (see x/gov `EndBlocker`).
+When a proposal deposit passes the `MinDeposit` threshold (even during the proposal submission) before the deposit end time, the proposal will be moved into the _active proposal queue_ and the voting period will begin.
 
-Once the proposal's deposit reaches `MinDeposit`, it enters voting period. If proposal's deposit does not reach `MinDeposit` before `MaxDepositPeriod`, proposal closes and nobody can deposit on it anymore.
+The deposit is kept in escrow and held by the governance `ModuleAccount` until the proposal is finalized (passed or rejected).
 
 ### Deposit refund and burn
 
-When a the a proposal finalized, the coins from the deposit are either refunded or burned, according to the final tally of the proposal:
+When a proposal is finalized, the coins from the deposit are either refunded or burned, according to the final tally of the proposal:
 
-- If the proposal is approved or if it's rejected but _not_ vetoed, deposits will automatically be refunded to their respective depositor (transferred from the governance `ModuleAccount`).
-- When the proposal is vetoed with a supermajority, deposits be burned from the governance `ModuleAccount`.
+- If the proposal is approved or rejected but _not_ vetoed, each deposit will be automatically refunded to its respective depositor (transferred from the governance `ModuleAccount`). 
+- When the proposal is vetoed with a supermajority, deposits will be burned from the governance `ModuleAccount` and the proposal information along with its deposit information will be removed from state.
+- All refunded or burned deposits are removed from the state. Events are issued when burning or refunding a deposit.
+- NOTE: The proposals which completed the voting period, cannot return the deposits when queried.
 
 ## Vote
 

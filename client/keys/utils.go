@@ -5,7 +5,7 @@ import (
 	"io"
 	"path/filepath"
 
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 
 	cryptokeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 )

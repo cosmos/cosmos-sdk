@@ -91,6 +91,9 @@ func (s *intTestSuite) TestIntPanic() {
 	s.Require().Panics(func() { intmax.Add(sdk.OneInt()) })
 	s.Require().Panics(func() { intmin.Sub(sdk.OneInt()) })
 
+	s.Require().NotPanics(func() { sdk.NewIntFromBigInt(nil) })
+	s.Require().True(sdk.NewIntFromBigInt(nil).IsNil())
+
 	// Division-by-zero check
 	s.Require().Panics(func() { i1.Quo(sdk.NewInt(0)) })
 

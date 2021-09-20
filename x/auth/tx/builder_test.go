@@ -40,7 +40,7 @@ func TestTxBuilder(t *testing.T) {
 		Sequence: accSeq,
 	})
 
-	var sig signing.SignatureV2 = signing.SignatureV2{
+	var sig = signing.SignatureV2{
 		PubKey: pubkey,
 		Data: &signing.SingleSignatureData{
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,

@@ -11,7 +11,6 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/pkg/errors"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -23,11 +22,9 @@ import (
 // Context implements a typical context created in SDK modules for transaction
 // handling and queries.
 type Context struct {
-	FromAddress sdk.AccAddress
-	Client      rpcclient.Client
-	ChainID     string
-	// Deprecated: Codec codec will be changed to Codec: codec.Codec
-	JSONCodec         codec.JSONCodec
+	FromAddress       sdk.AccAddress
+	Client            rpcclient.Client
+	ChainID           string
 	Codec             codec.Codec
 	InterfaceRegistry codectypes.InterfaceRegistry
 	Input             io.Reader
@@ -78,20 +75,8 @@ func (ctx Context) WithInput(r io.Reader) Context {
 	return ctx
 }
 
-// Deprecated: WithJSONCodec returns a copy of the Context with an updated JSONCodec.
-func (ctx Context) WithJSONCodec(m codec.JSONCodec) Context {
-	ctx.JSONCodec = m
-	// since we are using ctx.Codec everywhere in the SDK, for backward compatibility
-	// we need to try to set it here as well.
-	if c, ok := m.(codec.Codec); ok {
-		ctx.Codec = c
-	}
-	return ctx
-}
-
 // WithCodec returns a copy of the Context with an updated Codec.
 func (ctx Context) WithCodec(m codec.Codec) Context {
-	ctx.JSONCodec = m
 	ctx.Codec = m
 	return ctx
 }
@@ -336,15 +321,6 @@ func (ctx Context) printOutput(out []byte) error {
 func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddress, string, keyring.KeyType, error) {
 	if from == "" {
 		return nil, "", 0, nil
-	}
-
-	if genOnly {
-		addr, err := sdk.AccAddressFromBech32(from)
-		if err != nil {
-			return nil, "", 0, errors.Wrap(err, "must provide a valid Bech32 address in generate-only mode")
-		}
-
-		return addr, "", 0, nil
 	}
 
 	var info keyring.Info

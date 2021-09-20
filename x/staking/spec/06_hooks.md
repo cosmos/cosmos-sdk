@@ -1,5 +1,5 @@
 <!--
-order: 5
+order: 6
 -->
 
 # Hooks
@@ -9,19 +9,19 @@ occurred within staking.  These events can be registered to execute either
 right `Before` or `After` the staking event (as per the hook name). The
 following hooks can registered with staking:
 
-- `AfterValidatorCreated(Context, ValAddress)`
+- `AfterValidatorCreated(Context, ValAddress) error`
     - called when a validator is created
-- `BeforeValidatorModified(Context, ValAddress)`
+- `BeforeValidatorModified(Context, ValAddress) error`
     - called when a validator's state is changed
-- `AfterValidatorRemoved(Context, ConsAddress, ValAddress)`
+- `AfterValidatorRemoved(Context, ConsAddress, ValAddress) error`
     - called when a validator is deleted
-- `AfterValidatorBonded(Context, ConsAddress, ValAddress)`
+- `AfterValidatorBonded(Context, ConsAddress, ValAddress) error`
     - called when a validator is bonded
-- `AfterValidatorBeginUnbonding(Context, ConsAddress, ValAddress)`
+- `AfterValidatorBeginUnbonding(Context, ConsAddress, ValAddress) error`
     - called when a validator begins unbonding
-- `BeforeDelegationCreated(Context, AccAddress, ValAddress)`
+- `BeforeDelegationCreated(Context, AccAddress, ValAddress) error`
     - called when a delegation is created
-- `BeforeDelegationSharesModified(Context, AccAddress, ValAddress)`
+- `BeforeDelegationSharesModified(Context, AccAddress, ValAddress) error`
     - called when a delegation's shares are modified
-- `BeforeDelegationRemoved(Context, AccAddress, ValAddress)`
+- `BeforeDelegationRemoved(Context, AccAddress, ValAddress) error`
     - called when a delegation is removed

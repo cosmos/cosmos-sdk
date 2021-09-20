@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-func (k Keeper) AfterValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _ sdk.ValAddress) {
+func (k Keeper) AfterValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _ sdk.ValAddress) error {
 	// Update the signing info start height or create a new signing info
 	_, found := k.GetValidatorSigningInfo(ctx, address)
 	if !found {
@@ -23,6 +23,8 @@ func (k Keeper) AfterValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _
 		)
 		k.SetValidatorSigningInfo(ctx, address, signingInfo)
 	}
+
+	return nil
 }
 
 // AfterValidatorCreated adds the address-pubkey relation when a validator is created.
@@ -32,14 +34,14 @@ func (k Keeper) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) e
 	if err != nil {
 		return err
 	}
-	k.AddPubkey(ctx, consPk)
 
-	return nil
+	return k.AddPubkey(ctx, consPk)
 }
 
 // AfterValidatorRemoved deletes the address-pubkey relation when a validator is removed,
-func (k Keeper) AfterValidatorRemoved(ctx sdk.Context, address sdk.ConsAddress) {
+func (k Keeper) AfterValidatorRemoved(ctx sdk.Context, address sdk.ConsAddress) error {
 	k.deleteAddrPubkeyRelation(ctx, crypto.Address(address))
+	return nil
 }
 
 // Hooks wrapper struct for slashing keeper
@@ -55,24 +57,34 @@ func (k Keeper) Hooks() Hooks {
 }
 
 // Implements sdk.ValidatorHooks
-func (h Hooks) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
-	h.k.AfterValidatorBonded(ctx, consAddr, valAddr)
+func (h Hooks) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
+	return h.k.AfterValidatorBonded(ctx, consAddr, valAddr)
 }
 
 // Implements sdk.ValidatorHooks
-func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, _ sdk.ValAddress) {
-	h.k.AfterValidatorRemoved(ctx, consAddr)
+func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, _ sdk.ValAddress) error {
+	return h.k.AfterValidatorRemoved(ctx, consAddr)
 }
 
 // Implements sdk.ValidatorHooks
-func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
-	h.k.AfterValidatorCreated(ctx, valAddr)
+func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error {
+	return h.k.AfterValidatorCreated(ctx, valAddr)
 }
 
-func (h Hooks) AfterValidatorBeginUnbonding(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress)  {}
-func (h Hooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress)                          {}
-func (h Hooks) BeforeDelegationCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}
-func (h Hooks) BeforeDelegationSharesModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) {}
-func (h Hooks) BeforeDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}
-func (h Hooks) AfterDelegationModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}
-func (h Hooks) BeforeValidatorSlashed(_ sdk.Context, _ sdk.ValAddress, _ sdk.Dec)                {}
+func (h Hooks) AfterValidatorBeginUnbonding(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
+	return nil
+}
+func (h Hooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress) error { return nil }
+func (h Hooks) BeforeDelegationCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
+	return nil
+}
+func (h Hooks) BeforeDelegationSharesModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
+	return nil
+}
+func (h Hooks) BeforeDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
+	return nil
+}
+func (h Hooks) AfterDelegationModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
+	return nil
+}
+func (h Hooks) BeforeValidatorSlashed(_ sdk.Context, _ sdk.ValAddress, _ sdk.Dec) error { return nil }

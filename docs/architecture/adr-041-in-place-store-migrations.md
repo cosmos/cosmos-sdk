@@ -66,12 +66,12 @@ type Migrator struct {
 }
 ```
 
-Since migration functions manipulate legacy code, they should live inside the `legacy/` folder of each module, and be called by the Migrator's methods. We propose the format `Migrate{M}to{N}` for method names.
+Migration functions should live inside the `migrations/` folder of each module, and be called by the Migrator's methods. We propose the format `Migrate{M}to{N}` for method names.
 
 ```go
 // Migrate1to2 migrates from version 1 to 2.
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
-	return v043bank.MigrateStore(ctx, m.keeper.storeKey) // v043bank is package `x/bank/legacy/v043`.
+	return v043bank.MigrateStore(ctx, m.keeper.storeKey) // v043bank is package `x/bank/migrations/v043`.
 }
 ```
 

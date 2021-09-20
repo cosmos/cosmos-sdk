@@ -108,7 +108,7 @@ message GetSyncingResponse {
 // GetNodeInfoRequest is the request type for the Query/GetNodeInfo RPC method.
 message GetNodeInfoRequest {}
 
-// GetNodeInfoResponse is the request type for the Query/GetNodeInfo RPC method.
+// GetNodeInfoResponse is the response type for the Query/GetNodeInfo RPC method.
 message GetNodeInfoResponse {
   .tendermint.p2p.DefaultNodeInfo default_node_info   = 1;
   VersionInfo                     application_version = 2;

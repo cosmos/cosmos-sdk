@@ -1,7 +1,7 @@
 package types
 
 import (
-	fmt "fmt"
+	"fmt"
 
 	ics23 "github.com/confio/ics23/go"
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"

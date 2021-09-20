@@ -119,6 +119,8 @@ require (
 
 replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
+replace github.com/cosmos/cosmos-sdk => ./
+
 replace github.com/tendermint/tm-db => github.com/osmosis-labs/tm-db v0.6.5-0.20210911033928-ba9154613417
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1

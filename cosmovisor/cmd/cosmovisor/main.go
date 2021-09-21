@@ -49,6 +49,7 @@ func DoHelp() {
 	if err != nil {
 		return
 	}
+	fmt.Println(cfg.DetailString())
 	// If the config is valid, run the help command on the desired binary.
 	if err = cosmovisor.RunHelp(cfg, os.Stdout, os.Stderr); err != nil {
 		fmt.Fprintf(os.Stderr, "[cosmovisor] %w", err)

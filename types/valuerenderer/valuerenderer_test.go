@@ -251,7 +251,7 @@ func TestFormatInt(t *testing.T) {
 }
 
 func TestParseString(t *testing.T) {
-	re := regexp.MustCompile(`\d+[mu]?regen`) // TODO test if denom starts with m or u
+	re := regexp.MustCompile(`(\d+)(\w+)`) // TODO test if denom starts with m or u
 	dvr := valuerenderer.NewDefaultValueRenderer(func(c context.Context, denom string) (banktypes.Metadata, error) {
 		return banktypes.Metadata{}, nil
 	})
@@ -260,19 +260,27 @@ func TestParseString(t *testing.T) {
 		str           string
 		satisfyRegExp bool
 		expErr        bool
+		expPanic      bool
 	}{
-		{"", false, true},
-		{"10regen", true, false},
-		{"1,000,000", false, false},
-		{"323,000,000", false, false},
-		{"1mregen", true, false},
-		{"500uregen", true, false},
-		{"1,500,000,000regen", true, false},
-		{"394,382,328uregen", true, false},
+		{"", false, true, false},
+		{"10regen", true, false, false},
+		{"1,000,000", false, true, true},
+		{"323,000,000", false, false, true},
+		{"1mregen", true, false, false},
+		{"500uregen", true, false, false},
+		{"1,500,000,000regen", true, false, false},
+		{"394,382,328uregen", true, false, false},
 	}
 
 	for _, tc := range tt {
 		t.Run(tc.str, func(t *testing.T) {
+			if tc.expPanic {
+				require.Panics(t, func() {
+					dvr.Parse(context.Background(), tc.str)
+				})
+				return
+			}
+
 			x, err := dvr.Parse(context.Background(), tc.str)
 			if tc.expErr {
 				require.Error(t, err)

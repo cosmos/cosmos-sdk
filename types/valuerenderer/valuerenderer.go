@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"unicode"
 
 	"github.com/dustin/go-humanize"
 
@@ -87,6 +86,7 @@ func (dvr DefaultValueRenderer) Format(c context.Context, x interface{}) (string
 
 	return sb.String(), nil
 }
+
 // TODO address the casse where denom starts with "u"
 func convertToBaseDenom(denom string) string {
 	switch {
@@ -136,7 +136,6 @@ func (dvr DefaultValueRenderer) ComputeAmount(amount int64, expSub float64) stri
 	// check if amount is nil
 	// check if expSub is zero
 
-
 	switch {
 	// negative , convert mregen to regen less zeroes 23 => 0,023, expSub -3
 	case math.Signbit(expSub):
@@ -169,15 +168,20 @@ func (dvr DefaultValueRenderer) Parse(ctx context.Context, s string) (interface{
 	}
 	// remove all commas
 	str := strings.ReplaceAll(s, ",", "")
-	re := regexp.MustCompile(`\d+[mu]?\w+`)
+	re := regexp.MustCompile(`(\d+)(\w+)`)
 	// case 1: "1000000regen" => Coin
 	if re.MatchString(str) {
-		coin, err := coinFromString(str)
+		var amountStr, denomStr string
+		s1 := re.FindAllStringSubmatch(str, -1) // [[1000000regen 1000000 regen]]
+		amountStr, denomStr = s1[0][1], s1[0][2]
+
+		// perhaps check if amountStr and denomStr are not empty
+		amount, err := strconv.ParseInt(amountStr, 10, 64)
 		if err != nil {
 			return nil, err
 		}
 
-		return coin, nil
+		return types.NewInt64Coin(denomStr, amount), nil
 	}
 
 	// case2: convert it to Uint
@@ -187,32 +191,4 @@ func (dvr DefaultValueRenderer) Parse(ctx context.Context, s string) (interface{
 	}
 
 	return types.NewUint(i), nil
-}
-
-// should I add tests for coinFromString?
-// coinFromString converts a string to coin
-// TODO use regex below intead of this algo
-func coinFromString(s string) (types.Coin, error) {
-	index := len(s) - 1
-	for i := len(s) - 1; i >= 0; i-- {
-		if unicode.IsLetter(rune(s[i])) {
-			continue
-		}
-
-		index = i
-		break
-	}
-
-	if index == len(s)-1 {
-		return types.Coin{}, errors.New("unable to find a denonination")
-	}
-
-	amount, denom := s[:index+1], s[index+1:]
-	// convert to int64 to make up Coin later
-	amountInt, ok := types.NewIntFromString(amount)
-	if !ok {
-		return types.Coin{}, errors.New("unable to convert amountStr into int64")
-	}
-
-	return types.NewCoin(denom, amountInt), nil
 }

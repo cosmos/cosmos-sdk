@@ -16,6 +16,10 @@ func main() {
 
 // Run is the main loop, but returns an error
 func Run(args []string) error {
+	help := cosmovisor.HelpRequested(args)
+	if help {
+		fmt.Println(cosmovisor.GetHelpText())
+	}
 	cfg, err := cosmovisor.GetConfigFromEnv()
 	if err != nil {
 		return err
@@ -25,6 +29,7 @@ func Run(args []string) error {
 		return err
 	}
 
+	// TODO: 10126 - if help requested, call help on the binary.
 	doUpgrade, err := launcher.Run(args, os.Stdout, os.Stderr)
 	// if RestartAfterUpgrade, we launch after a successful upgrade (only condition LaunchProcess returns nil)
 	for cfg.RestartAfterUpgrade && err == nil && doUpgrade {

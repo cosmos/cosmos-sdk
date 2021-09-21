@@ -38,7 +38,7 @@ message MsgSubmitProposal {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"initial_deposit\""
   ];
-  string proposer = 3;
+  string proposer = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.
@@ -54,7 +54,7 @@ message MsgVote {
   option (gogoproto.goproto_getters)  = false;
 
   uint64     proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
-  string     voter       = 2;
+  string     voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   VoteOption option      = 3;
 }
 
@@ -69,7 +69,7 @@ message MsgVoteWeighted {
   option (gogoproto.goproto_getters)  = false;
 
   uint64                      proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
-  string                      voter       = 2;
+  string                      voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated WeightedVoteOption options     = 3 [(gogoproto.nullable) = false];
 }
 
@@ -84,7 +84,7 @@ message MsgDeposit {
   option (gogoproto.goproto_getters)  = false;
 
   uint64   proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
-  string   depositor   = 2;
+  string   depositor   = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated cosmos.base.v1beta1.Coin amount = 3
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }

@@ -78,8 +78,10 @@ func (m *GenesisState) GetEntries() []*Entry {
 
 // Entry Defines all nft owned by a person
 type Entry struct {
+	// owner is the owner address of the following nft
 	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
-	Nfts  []*NFT `protobuf:"bytes,2,rep,name=nfts,proto3" json:"nfts,omitempty"`
+	// nfts is a group of nfts of the same owner
+	Nfts []*NFT `protobuf:"bytes,2,rep,name=nfts,proto3" json:"nfts,omitempty"`
 }
 
 func (m *Entry) Reset()         { *m = Entry{} }

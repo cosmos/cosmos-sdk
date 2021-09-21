@@ -4,6 +4,7 @@ package cosmos.authz.v1beta1;
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/authz/v1beta1/authz.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/authz";
 
@@ -17,8 +18,8 @@ service Query {
 
 // QueryGrantsRequest is the request type for the Query/Grants RPC method.
 message QueryGrantsRequest {
-  string granter = 1;
-  string grantee = 2;
+  string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // Optional, msg_type_url, when set, will query only grants matching given msg type.
   string msg_type_url = 3;
   // pagination defines an pagination for the request.

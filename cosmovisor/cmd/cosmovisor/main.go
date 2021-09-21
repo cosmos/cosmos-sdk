@@ -16,9 +16,9 @@ func main() {
 
 // Run is the main loop, but returns an error
 func Run(args []string) error {
-	help := cosmovisor.HelpRequested(args)
-	if help {
-		fmt.Println(cosmovisor.GetHelpText())
+	if cosmovisor.ShouldGiveHelp(args) {
+		DoHelp()
+		return nil
 	}
 	cfg, err := cosmovisor.GetConfigFromEnv()
 	if err != nil {
@@ -29,7 +29,6 @@ func Run(args []string) error {
 		return err
 	}
 
-	// TODO: 10126 - if help requested, call help on the binary.
 	doUpgrade, err := launcher.Run(args, os.Stdout, os.Stderr)
 	// if RestartAfterUpgrade, we launch after a successful upgrade (only condition LaunchProcess returns nil)
 	for cfg.RestartAfterUpgrade && err == nil && doUpgrade {
@@ -40,4 +39,18 @@ func Run(args []string) error {
 		fmt.Println("[cosmovisor] upgrade detected, DAEMON_RESTART_AFTER_UPGRADE is off. Verify new upgrade and start cosmovisor again.")
 	}
 	return err
+}
+
+func DoHelp() {
+	// Output the help text
+	fmt.Println(cosmovisor.GetHelpText())
+	// If the config isn't valid, there's nothing else to do.
+	cfg, err := cosmovisor.GetConfigFromEnv()
+	if err != nil {
+		return
+	}
+	// If the config is valid, run the help command on the desired binary.
+	if err = cosmovisor.RunHelp(cfg, os.Stdout, os.Stderr); err != nil {
+		fmt.Fprintf(os.Stderr, "[cosmovisor] %w", err)
+	}
 }

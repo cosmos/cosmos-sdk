@@ -28,24 +28,35 @@ func NewLauncher(cfg *Config) (Launcher, error) {
 	return Launcher{cfg, fw}, err
 }
 
-// Run launches the app in a subprocess and returns when the subprocess (app)
-// exits (either when it dies, or *after* a successful upgrade.) and upgrade finished.
-// Returns true if the upgrade request was detected and the upgrade process started.
-func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
-	bin, err := l.cfg.CurrentBin()
+// launchCommand initializes and starts a command.
+// First return value is the path and name of the binary to execute.
+// Second return value is the command (after calling Start() on it).
+// Third return value is any error encountered.
+func launchCommand(cfg *Config, args []string, stdout, stderr io.Writer) (string, *exec.Cmd, error) {
+	bin, err := cfg.CurrentBin()
 	if err != nil {
-		return false, fmt.Errorf("error creating symlink to genesis: %w", err)
+		return "", nil, fmt.Errorf("error creating symlink to genesis: %w", err)
 	}
-
-	if err := EnsureBinary(bin); err != nil {
-		return false, fmt.Errorf("current binary is invalid: %w", err)
+	if err = EnsureBinary(bin); err != nil {
+		return "", nil, fmt.Errorf("current binary is invalid: %w", err)
 	}
 	fmt.Println("[cosmovisor] running ", bin, args)
 	cmd := exec.Command(bin, args...)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	if err := cmd.Start(); err != nil {
-		return false, fmt.Errorf("launching process %s %s failed: %w", bin, strings.Join(args, " "), err)
+		return "", nil, fmt.Errorf("launching process %s %s failed: %w", bin, strings.Join(args, " "), err)
+	}
+	return bin, cmd, nil
+}
+
+// Run launches the app in a subprocess and returns when the subprocess (app)
+// exits (either when it dies, or *after* a successful upgrade.) and upgrade finished.
+// Returns true if the upgrade request was detected and the upgrade process started.
+func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
+	bin, cmd, err := launchCommand(l.cfg, args, stdout, stderr)
+	if err != nil {
+		return false, err
 	}
 
 	sigs := make(chan os.Signal, 1)
@@ -73,6 +84,31 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	}
 
 	return true, DoUpgrade(l.cfg, l.fw.currentInfo)
+}
+
+// RunHelp runs the configured binary with the --help flag, timing out after 2 seconds.
+func RunHelp(cfg *Config, stdout, stderr io.Writer) error {
+	args := []string{"--help"}
+	bin, cmd, err := launchCommand(cfg, args, stdout, stderr)
+	if err != nil {
+		return err
+	}
+	var cmdDone = make(chan error)
+	go func() {
+		cmdDone <- cmd.Wait()
+	}()
+	timeoutLen := 2 * time.Second
+	timeout := time.After(timeoutLen)
+
+	select {
+	case <-timeout:
+		if err = cmd.Process.Kill(); err != nil {
+			return fmt.Errorf("could not kill command after %s: %w", timeoutLen, err)
+		}
+		return fmt.Errorf("command timed out after %s: %s %s", timeoutLen, bin, strings.Join(args, " "))
+	case err = <-cmdDone:
+		return err
+	}
 }
 
 // WaitForUpgradeOrExit checks upgrade plan file created by the app.

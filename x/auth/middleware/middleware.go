@@ -6,7 +6,7 @@ import (
 )
 
 // ComposeMiddlewares compose multiple middlewares on top of a tx.Handler. The
-// middleware order in the variadic arguments is from inside to outside.
+// middleware order in the variadic arguments is from outer to inner.
 //
 // Example: Given a base tx.Handler H, and two middlewares A and B, the
 // middleware stack:

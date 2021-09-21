@@ -1,10 +1,10 @@
-FROM golang:1.15-alpine as build
+FROM golang:1.17-alpine as build
 
 RUN apk add --no-cache tar
 
 # prepare node data
 WORKDIR /node
-COPY ./contrib/rosetta/node/data.tar.gz data.tar.gz
+COPY ./contrib/rosetta/rosetta-ci/data.tar.gz data.tar.gz
 RUN tar -zxvf data.tar.gz -C .
 
 # build simd
@@ -29,4 +29,3 @@ COPY --from=build /node/root /root/
 WORKDIR /root/.simapp
 
 RUN chmod -R 0777 ./
-

@@ -1,3 +1,7 @@
+# Cosmos SDK v0.42.10 "Stargate" Release Notes
+
+This release includes a new `AnteHandler` that rejects redundant IBC transactions to save relayers fees. This is a backport of [ibc-go \#235](https://github.com/cosmos/ibc-go/pull/235).
+
 # Cosmos SDK v0.42.9 "Stargate" Release Notes
 
 This release includes an important `x/capabiliy` module bug fix for 0.42.7 and 0.42.8 which prohibits IBC to create new channels (issuse [\#9800](https://github.com/cosmos/cosmos-sdk/issues/9800)).

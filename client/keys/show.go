@@ -63,12 +63,6 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		if err != nil {
 			return fmt.Errorf("%s is not a valid name or address: %v", args[0], err)
 		}
-		if info.GetType() == keyring.TypeMulti {
-			info, err = keyring.NewMultiInfo(info.GetName(), info.GetPubKey())
-			if err != nil {
-				return fmt.Errorf("%s is not a valid multisig name or address: %v", args[0], err)
-			}
-		}
 	} else {
 		pks := make([]cryptotypes.PubKey, len(args))
 		for i, keyref := range args {

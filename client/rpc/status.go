@@ -26,7 +26,7 @@ type validatorInfo struct {
 // ResultStatus is node's info, same as Tendermint, except that we use our own
 // PubKey.
 type resultStatus struct {
-	NodeInfo      tmtypes.DefaultNodeInfo
+	NodeInfo      tmtypes.NodeInfo
 	SyncInfo      ctypes.SyncInfo
 	ValidatorInfo validatorInfo
 }

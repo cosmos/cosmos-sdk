@@ -323,27 +323,32 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddres
 		return nil, "", 0, nil
 	}
 
-	var info keyring.Info
+	var k *keyring.Record
 	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
-		info, err = kr.KeyByAddress(addr)
+		k, err = kr.KeyByAddress(addr)
 		if err != nil {
 			return nil, "", 0, err
 		}
 	} else {
-		info, err = kr.Key(from)
+		k, err = kr.Key(from)
 		if err != nil {
 			return nil, "", 0, err
 		}
 	}
 
-	return info.GetAddress(), info.GetName(), info.GetType(), nil
+	addr, err := k.GetAddress()
+	if err != nil {
+		return nil, "", 0, err
+	}
+
+	return addr, k.Name, k.GetType(), nil
 }
 
 // NewKeyringFromBackend gets a Keyring object from a backend
 func NewKeyringFromBackend(ctx Context, backend string) (keyring.Keyring, error) {
 	if ctx.GenerateOnly || ctx.Simulate {
-		return keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, ctx.KeyringDir, ctx.Input, ctx.KeyringOptions...)
+		backend = keyring.BackendMemory
 	}
 
-	return keyring.New(sdk.KeyringServiceName(), backend, ctx.KeyringDir, ctx.Input, ctx.KeyringOptions...)
+	return keyring.New(sdk.KeyringServiceName(), backend, ctx.KeyringDir, ctx.Input, ctx.Codec, ctx.KeyringOptions...)
 }

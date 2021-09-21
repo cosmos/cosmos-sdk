@@ -60,7 +60,8 @@ func (s *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 	testdata.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 
 	s.clientCtx = client.Context{}.
-		WithTxConfig(encodingConfig.TxConfig)
+		WithTxConfig(encodingConfig.TxConfig).
+		WithInterfaceRegistry(encodingConfig.InterfaceRegistry)
 	// router := middleware.NewLegacyRouter()
 
 	s.txHandler = middleware.ComposeMiddlewares(

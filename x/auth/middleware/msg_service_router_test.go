@@ -61,8 +61,13 @@ func (suite *MWTestSuite) TestMsgService() {
 	ctx := suite.SetupTest(true) // setup
 
 	msr := middleware.NewMsgServiceRouter(suite.clientCtx.InterfaceRegistry)
+	router := middleware.NewLegacyRouter()
+	router.AddRoute(sdk.NewRoute("TestMsg", func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+		return &sdk.Result{}, nil
+	}))
+
 	testdata.RegisterMsgServer(msr, testdata.MsgServerImpl{})
-	txHandler := middleware.NewRunMsgsTxHandler(msr, nil)
+	txHandler := middleware.NewRunMsgsTxHandler(msr, router)
 
 	priv, _, addr := testdata.KeyTestPubAddr()
 	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()

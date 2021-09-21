@@ -1,23 +1,18 @@
 package keeper_test
 
 import (
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	"github.com/cosmos/cosmos-sdk/simapp"
-
-	"github.com/stretchr/testify/suite"
-
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	keep "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
-
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type MintKeeperTestSuite struct {
@@ -36,7 +31,6 @@ func (suite *MintKeeperTestSuite) SetupTest() {
 
 	suite.app = app
 	suite.ctx = ctx
-
 }
 
 func (suite *MintKeeperTestSuite) TestNewQuerier(t *testing.T) {

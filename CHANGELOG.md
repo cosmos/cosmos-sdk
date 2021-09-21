@@ -49,6 +49,23 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Migrate keys from `Info` -> `Record`
+  * Add new `codec.Codec` argument in:
+    * `keyring.NewInMemory`
+    * `keyring.New`
+  * Rename:
+    * `SavePubKey` to `SaveOfflineKey`.
+    * `NewMultiInfo`, `NewLedgerInfo`  to `NewLegacyMultiInfo`, `newLegacyLedgerInfo`  respectively.  Move them into `legacy_info.go`.
+    * `NewOfflineInfo` to `newLegacyOfflineInfo` and move it to `migration_test.go`.
+  * Return:
+    *`keyring.Record, error` in `SaveOfflineKey`, `SaveLedgerKey`, `SaveMultiSig`, `Key` and `KeyByAddress`.
+    *`keyring.Record` instead of `Info` in `NewMnemonic` and `List`.
+  * Remove `algo` argument from :
+    * `SaveOfflineKey`
+  * Take `keyring.Record` instead of `Info` as first argument in:
+    * `MkConsKeyOutput`
+    * `MkValKeyOutput` 
+    * `MkAccKeyOutput`
 * [\#10077](https://github.com/cosmos/cosmos-sdk/pull/10077) Remove telemetry on `GasKV` and `CacheKV` store Get/Set operations, significantly improving their performance.
 * [\#10022](https://github.com/cosmos/cosmos-sdk/pull/10022) `AuthKeeper` interface in `x/auth` now includes a function `HasAccount`.
 * [\#9759](https://github.com/cosmos/cosmos-sdk/pull/9759) `NewAccountKeeeper` in `x/auth` now takes an additional `bech32Prefix` argument that represents `sdk.Bech32MainPrefix`.
@@ -84,6 +101,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### CLI Breaking Changes
 
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `<app> keys migrate` CLI command now takes no arguments
 * [\#9246](https://github.com/cosmos/cosmos-sdk/pull/9246) Removed the CLI flag `--setup-config-only` from the `testnet` command and added the subcommand `init-files`.
 
 ### Improvements

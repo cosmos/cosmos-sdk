@@ -179,33 +179,39 @@ func (suite *valueRendererTestSuite) TestFormatDenomQuerierFunc() {
 func TestFormatDec(t *testing.T) {
 	var (
 		d valuerenderer.DefaultValueRenderer
+		dec types.Dec
 	)
 
 	tt := []struct {
 		name   string
-		input  types.Dec
+		pretest func()
 		expRes string
 		expErr bool
 	}{
 		{
-			"10 thousands decimal",
-			types.NewDecFromIntWithPrec(types.NewInt(1000000), 2),
-			"10000",
+			"10, decimal 05",
+			func() {
+				dec, _ = types.NewDecFromStr("10000000.05")
+			},
+			"10,000,000.05",
 			false,
 		},
 		{
-			"10 mil decimal",
-			types.NewInt(10000000).ToDec(),
-			"10000000",
+			"5 mil decimal",
+			func() {
+				dec, _ = types.NewDecFromStr("5000000.077")
+			},
+			"5,000,000.077",
 			false,
 		},
 	}
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			res, err := d.Format(context.Background(), tc.input)
+			tc.pretest()
+			res, err := d.Format(context.Background(), dec)
 			require.NoError(t, err)
-			require.Equal(t, tc.expRes, res)
+			require.Equal(t, res ,tc.expRes)
 		})
 	}
 }

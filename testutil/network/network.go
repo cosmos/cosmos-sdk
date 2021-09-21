@@ -15,8 +15,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/libs/log"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/node"
 	tmclient "github.com/tendermint/tendermint/rpc/client"
@@ -288,9 +288,10 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			appCfg.GRPCWeb.Enable = true
 		}
 
-		logger := log.NewNopLogger()
+		logger := server.ZeroLogWrapper{zerolog.Nop()}
 		if cfg.EnableTMLogging {
-			logger = log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+			logWriter := zerolog.ConsoleWriter{Out: os.Stderr}
+			logger = server.ZeroLogWrapper{zerolog.New(logWriter).Level(zerolog.InfoLevel).With().Timestamp().Logger()}
 		}
 
 		ctx.Logger = logger

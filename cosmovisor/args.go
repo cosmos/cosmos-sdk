@@ -65,10 +65,14 @@ func (cfg *Config) UpgradeBin(upgradeName string) string {
 // UpgradeDir is the directory named upgrade
 func (cfg *Config) UpgradeDir(upgradeName string) string {
 	safeName := url.PathEscape(upgradeName)
-	return filepath.Join(cfg.Home, rootName, upgradesDir, safeName)
+	return filepath.Join(cfg.BaseUpgradeDir(), safeName)
 }
 
-// UpgradeInfoFile is the expected upgrade-info filename created by `x/upgrade/keeper`.
+func (cfg *Config) BaseUpgradeDir() string {
+	return filepath.Join(cfg.Root(), upgradesDir)
+}
+
+// UpgradeInfoFilePath is the expected upgrade-info filename created by `x/upgrade/keeper`.
 func (cfg *Config) UpgradeInfoFilePath() string {
 	return filepath.Join(cfg.Home, "data", defaultFilename)
 }
@@ -256,6 +260,41 @@ func booleanOption(name string, defaultVal bool) (bool, error) {
 		return true, nil
 	}
 	return false, fmt.Errorf("env variable %q must have a boolean value (\"true\" or \"false\"), got %q", name, p)
+}
+
+func (cfg Config) DetailString() string {
+	configEntries := []struct { name, value string }{
+		{"Home", cfg.Home},
+		{"Name", cfg.Name},
+		{"AllowDownloadBinaries", fmt.Sprintf("%b", cfg.AllowDownloadBinaries)},
+		{"RestartAfterUpgrade", fmt.Sprintf("%b", cfg.RestartAfterUpgrade)},
+		{"PollInterval", fmt.Sprintf("%s", cfg.PollInterval)},
+		{"UnsafeSkipBackup", fmt.Sprintf("%b", cfg.UnsafeSkipBackup)},
+	}
+	derivedEntries := []struct { name, value string }{
+		{"Root Dir", cfg.Root()},
+		{"Upgrade Dir ", cfg.BaseUpgradeDir()},
+		{"Genesis Bin", cfg.GenesisBin()},
+		{"Monitored Upgrade Info File", cfg.UpgradeInfoFilePath()},
+	}
+
+	var sb strings.Builder
+	sb.WriteString("Configured Values:\n")
+	for _, kv := range configEntries {
+		sb.WriteString(fmt.Sprintf("  %s: %s\n", kv.name, kv.value))
+	}
+	sb.WriteString("Derived Values:\n")
+	dnl := 0
+	for _, kv := range derivedEntries {
+		if len(kv.name) > dnl {
+			dnl = len(kv.name)
+		}
+	}
+	dFmt := fmt.Sprintf("  %%%ds: %%s\n", dnl)
+	for _, kv := range derivedEntries {
+		sb.WriteString(fmt.Sprintf(dFmt, kv.name, kv.value))
+	}
+	return sb.String()
 }
 
 // ShouldGiveHelp checks the env and provided args to see if help is needed or being requested.

@@ -11,7 +11,7 @@ before:
 builds:
   - main: ./cmd/cosmovisor
     ldflags:
-      - -X github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor/cmd/Version={{ replace .Version "cosmovisor/" "" }}
+      - -X 'github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor/cmd.Version={{ replace .Version "cosmovisor/" "" }}'
     goos:
       - linux
       - windows

@@ -61,17 +61,12 @@ func (suite *MWTestSuite) TestMsgService() {
 	ctx := suite.SetupTest(true) // setup
 
 	msr := middleware.NewMsgServiceRouter(suite.clientCtx.InterfaceRegistry)
-	router := middleware.NewLegacyRouter()
-	router.AddRoute(sdk.NewRoute("TestMsg", func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		return &sdk.Result{}, nil
-	}))
-
 	testdata.RegisterMsgServer(msr, testdata.MsgServerImpl{})
-	txHandler := middleware.NewRunMsgsTxHandler(msr, router)
+	txHandler := middleware.NewRunMsgsTxHandler(msr, nil)
 
-	priv, _, addr := testdata.KeyTestPubAddr()
+	priv, _, _ := testdata.KeyTestPubAddr()
 	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
-	txBuilder.SetMsgs(testdata.NewTestMsg(addr))
+	txBuilder.SetMsgs(&testdata.MsgCreateDog{Dog: &testdata.Dog{Name: "Spot"}})
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv}, []uint64{0}, []uint64{0}
 	tx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 	suite.Require().NoError(err)

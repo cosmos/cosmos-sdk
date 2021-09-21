@@ -90,6 +90,21 @@ In order to support downloadable binaries, a tarball for each upgrade binary wil
 
 The `DAEMON` specific code and operations (e.g. tendermint config, the application db, syncing blocks, etc.) all work as expected. The application binaries' directives such as command-line flags and environment variables also work as expected.
 
+### Commands
+
+Because Cosmovisor is meant to be used as a wrapper for a Cosmos SDK application, it does not require many commands. 
+
+To determine the version of Cosmovisor, run the following command:
+```
+cosmovisor version
+``` 
+The output of the `cosmovisor version` command shows the version of the Cosmos SDK application and the version of Cosmovisor:
+
+```
+Cosmovisor Version:  v0.1.0-85-g65baacac0
+0.43.0-beta1-319-ge3aec1840
+```
+
 
 ### Detecting Upgrades
 

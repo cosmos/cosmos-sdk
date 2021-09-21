@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (store) [\#10026](https://github.com/cosmos/cosmos-sdk/pull/10026) Improve CacheKVStore datastructures / algorithms, to no longer take O(N^2) time when interleaving iterators and insertions.
 * (store) [\#10040](https://github.com/cosmos/cosmos-sdk/pull/10040) Bump IAVL to v0.17.1 which includes performance improvements on a batch load.
+* [\#10211](https://github.com/cosmos/cosmos-sdk/pull/10211) Backport of the mechanism to reject redundant IBC transactions from [ibc-go \#235](https://github.com/cosmos/ibc-go/pull/235).
 
 ### Bug Fixes
 

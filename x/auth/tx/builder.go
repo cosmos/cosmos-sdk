@@ -156,6 +156,10 @@ func (w *wrapper) FeeGranter() sdk.AccAddress {
 	return nil
 }
 
+func (w *wrapper) GetTip() tx.Tip {
+	return *w.tx.AuthInfo.Tip
+}
+
 func (w *wrapper) GetMemo() string {
 	return w.tx.Body.Memo
 }

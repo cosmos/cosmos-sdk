@@ -157,7 +157,7 @@ func doBackup(cfg *Config) error {
 func doPreUpgrade(cfg *Config) error {
 	counter := 0
 	for {
-		if counter >= cfg.PreupgradeMaxRetries {
+		if counter > cfg.PreupgradeMaxRetries {
 			return fmt.Errorf("pre-upgrade command failed. reached max attempt of retries - %d", cfg.PreupgradeMaxRetries)
 		}
 

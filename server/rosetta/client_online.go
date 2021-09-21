@@ -8,26 +8,21 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/version"
-
-	abcitypes "github.com/tendermint/tendermint/abci/types"
-
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
-	"google.golang.org/grpc/metadata"
-
+	abcitypes "github.com/tendermint/tendermint/abci/types"
+	tmrpc "github.com/tendermint/tendermint/rpc/client"
 	"github.com/tendermint/tendermint/rpc/client/http"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	crgerrs "github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
 	crgtypes "github.com/cosmos/cosmos-sdk/server/rosetta/lib/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	"github.com/cosmos/cosmos-sdk/version"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	tmrpc "github.com/tendermint/tendermint/rpc/client"
 )
 
 // interface assertion
@@ -101,7 +96,7 @@ func (c *Client) Bootstrap() error {
 		return err
 	}
 
-	tmRPC, err := http.New(c.config.TendermintRPC, tmWebsocketPath)
+	tmRPC, err := http.New(c.config.TendermintRPC)
 	if err != nil {
 		return err
 	}

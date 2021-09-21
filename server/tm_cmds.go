@@ -101,7 +101,7 @@ against which this app has been compiled.
 				BlockProtocol uint64
 				P2PProtocol   uint64
 			}{
-				Tendermint:    tversion.TMCoreSemVer,
+				Tendermint:    tversion.TMVersion,
 				ABCI:          tversion.ABCIVersion,
 				BlockProtocol: tversion.BlockProtocol,
 				P2PProtocol:   tversion.P2PProtocol,

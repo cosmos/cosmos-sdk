@@ -76,5 +76,5 @@ func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
 // TODO: We might not need to manually append `/websocket`:
 // https://github.com/cosmos/cosmos-sdk/issues/8986
 func NewClientFromNode(nodeURI string) (*rpchttp.HTTP, error) {
-	return rpchttp.New(nodeURI, "/websocket")
+	return rpchttp.New(nodeURI)
 }

@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	"github.com/tendermint/tendermint/libs/rand"
+	tmrand "github.com/tendermint/tendermint/libs/rand"
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
@@ -70,7 +71,7 @@ func GetKey(allkeys []string, loc Where) string {
 		return allkeys[len(allkeys)-1]
 	}
 	// select a random index between 1 and allkeys-2
-	idx := rand.Int()%(len(allkeys)-2) + 1
+	idx := tmrand.NewRand().Int()%(len(allkeys)-2) + 1
 	return allkeys[idx]
 }
 

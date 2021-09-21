@@ -6,30 +6,24 @@ import (
 	"fmt"
 	"reflect"
 
-	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	"github.com/tendermint/tendermint/crypto"
-
 	"github.com/btcsuite/btcd/btcec"
-	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"
-
-	crgtypes "github.com/cosmos/cosmos-sdk/server/rosetta/lib/types"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
+	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
-
-	crgerrs "github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	crgerrs "github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
+	crgtypes "github.com/cosmos/cosmos-sdk/server/rosetta/lib/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -571,9 +565,9 @@ func (c converter) Peers(peers []tmcoretypes.Peer) []*rosettatypes.Peer {
 
 	for i, peer := range peers {
 		converted[i] = &rosettatypes.Peer{
-			PeerID: peer.NodeInfo.Moniker,
+			PeerID: string(peer.ID),
 			Metadata: map[string]interface{}{
-				"addr": peer.NodeInfo.ListenAddr,
+				"addr": peer.URL,
 			},
 		}
 	}

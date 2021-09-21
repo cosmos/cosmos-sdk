@@ -3,13 +3,13 @@ package middleware_test
 import (
 	"testing"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/abci/types"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 )
 
@@ -57,7 +57,7 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 	})
 }
 
-func (suite *MWTestSuite) TestMsgService(t *testing.T) {
+func (suite *MWTestSuite) TestMsgService() {
 	ctx := suite.SetupTest(true) // setup
 
 	msr := middleware.NewMsgServiceRouter(suite.clientCtx.InterfaceRegistry)

@@ -18,7 +18,7 @@ for dir in $proto_dirs; do
   buf protoc \
     -I "proto" \
     -I "third_party/proto" \
-    --gocosmos_out=plugins=interfacetype+grpc,\
+    --gocosmos_out=plugins=grpc,\
 Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
     --grpc-gateway_out=logtostderr=true,allow_colon_final_segments=true:. \
   $(find "${dir}" -maxdepth 1 -name '*.proto')
@@ -35,7 +35,7 @@ buf protoc \
 go mod tidy
 
 # generate codec/testdata proto code
-buf protoc -I "proto" -I "third_party/proto" -I "testutil/testdata" --gocosmos_out=plugins=interfacetype+grpc,\
+buf protoc -I "proto" -I "third_party/proto" -I "testutil/testdata" --gocosmos_out=plugins=grpc,\
 Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. ./testutil/testdata/*.proto
 
 # move proto files to the right places

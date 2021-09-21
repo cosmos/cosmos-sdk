@@ -134,24 +134,27 @@ func TestBuildUnsignedTx(t *testing.T) {
 func TestSign(t *testing.T) {
 	requireT := require.New(t)
 	path := hd.CreateHDPath(118, 0, 0).String()
-	kr, err := keyring.New(t.Name(), "test", t.TempDir(), nil)
+	encCfg := simapp.MakeTestEncodingConfig()
+	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Codec)
 	requireT.NoError(err)
 
 	var from1 = "test_key1"
 	var from2 = "test_key2"
 
 	// create a new key using a mnemonic generator and test if we can reuse seed to recreate that account
-	_, seed, err := kr.NewMnemonic(from1, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	_, seed, err := kb.NewMnemonic(from1, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	requireT.NoError(err)
-	requireT.NoError(kr.Delete(from1))
-	info1, _, err := kr.NewMnemonic(from1, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	requireT.NoError(err)
-
-	info2, err := kr.NewAccount(from2, seed, "", path, hd.Secp256k1)
+	requireT.NoError(kb.Delete(from1))
+	k1, _, err := kb.NewMnemonic(from1, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	requireT.NoError(err)
 
-	pubKey1 := info1.GetPubKey()
-	pubKey2 := info2.GetPubKey()
+	k2, err := kb.NewAccount(from2, seed, "", path, hd.Secp256k1)
+	requireT.NoError(err)
+
+	pubKey1, err := k1.GetPubKey()
+	requireT.NoError(err)
+	pubKey2, err := k2.GetPubKey()
+	requireT.NoError(err)
 	requireT.NotEqual(pubKey1.Bytes(), pubKey2.Bytes())
 	t.Log("Pub keys:", pubKey1, pubKey2)
 
@@ -163,12 +166,16 @@ func TestSign(t *testing.T) {
 		WithMemo("memo").
 		WithChainID("test-chain")
 	txfDirect := txfNoKeybase.
-		WithKeybase(kr).
+		WithKeybase(kb).
 		WithSignMode(signingtypes.SignMode_SIGN_MODE_DIRECT)
 	txfAmino := txfDirect.
 		WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
-	msg1 := banktypes.NewMsgSend(info1.GetAddress(), sdk.AccAddress("to"), nil)
-	msg2 := banktypes.NewMsgSend(info2.GetAddress(), sdk.AccAddress("to"), nil)
+	addr1, err := k1.GetAddress()
+	requireT.NoError(err)
+	addr2, err := k2.GetAddress()
+	requireT.NoError(err)
+	msg1 := banktypes.NewMsgSend(addr1, sdk.AccAddress("to"), nil)
+	msg2 := banktypes.NewMsgSend(addr2, sdk.AccAddress("to"), nil)
 	txb, err := txfNoKeybase.BuildUnsignedTx(msg1, msg2)
 	requireT.NoError(err)
 	txb2, err := txfNoKeybase.BuildUnsignedTx(msg1, msg2)

@@ -46,10 +46,7 @@ func (suite *valueRendererTestSuite) SetupTest() {
 	suite.queryClient = queryClient
 }
 
-// TODO
-// 1. add some test cases for integer overflow, underflow
 func (suite *valueRendererTestSuite) TestFormatDenomQuerierFunc() {
-
 	metadataRegen := banktypes.Metadata{
 		Name:        "Regen",
 		Symbol:      "REGEN",
@@ -186,7 +183,6 @@ func TestFormatDec(t *testing.T) {
 		name   string
 		pretest func()
 		expRes string
-		expErr bool
 	}{
 		{
 			"10, decimal 05",
@@ -194,7 +190,6 @@ func TestFormatDec(t *testing.T) {
 				dec, _ = types.NewDecFromStr("10000000.05")
 			},
 			"10,000,000.05",
-			false,
 		},
 		{
 			"5 mil decimal",
@@ -202,7 +197,6 @@ func TestFormatDec(t *testing.T) {
 				dec, _ = types.NewDecFromStr("5000000.077")
 			},
 			"5,000,000.077",
-			false,
 		},
 	}
 
@@ -311,8 +305,6 @@ func TestParseString(t *testing.T) {
 }
 
 func TestComputeAmount(t *testing.T) {
-	// consider move outside the function
-
 	dvr := valuerenderer.NewDefaultValueRenderer(func(c context.Context, denom string) (banktypes.Metadata, error) {
 		return banktypes.Metadata{}, nil
 	})

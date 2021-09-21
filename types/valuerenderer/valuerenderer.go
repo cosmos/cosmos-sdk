@@ -14,10 +14,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-// TODO
-// 1.Look at some library wqith a lot of stars that formats nicely integers and floats.
-// 2.If there is no good solution for step1, implement own solution.
-
 // ValueRenderer defines an interface to produce formated output for Int,Dec,Coin types as well as parse a string to Coin or Uint.
 type ValueRenderer interface {
 	Format(context.Context, interface{}) (string, error)
@@ -51,9 +47,9 @@ func (dvr DefaultValueRenderer) Format(c context.Context, x interface{}) (string
 		if len(s) == 0 {
 			return "", errors.New("empty string")
 		}
-        // 10000.05
-		i := strings.Index(s, ".") // todo check i 
-		first, second := s[:i], s[i+1:] // 10000,05
+
+		i := strings.Index(s, ".")
+		first, second := s[:i], s[i+1:]
 		first64, err := strconv.ParseInt(first, 10, 64)
 		if err != nil {
 			return "", err
@@ -91,7 +87,7 @@ func (dvr DefaultValueRenderer) Format(c context.Context, x interface{}) (string
 	return sb.String(), nil
 }
 
-// TODO address the casse where denom starts with "u"
+// TODO address the cass where denom starts with "u"
 func convertToBaseDenom(denom string) string {
 	switch {
 	// e.g. uregen => uregen
@@ -121,9 +117,9 @@ func computeExponentSubtraction(denom string, metadata banktypes.Metadata) float
 	return float64(coinExp - displayExp)
 }
 
+// removeTrailingZeroes removes trailing zeroes from a string
 func removeTrailingZeroes(str string) string {
 	index := len(str)-1
-	// 050000
 	for i := len(str) - 1; i > 0; i-- {
 		if rune(str[i]) == rune('0') {
 			continue
@@ -151,9 +147,6 @@ func countTrailingZeroes(str string) int {
 
 // ComputeAmount calculates an amount to produce formated output
 func (dvr DefaultValueRenderer) ComputeAmount(amount int64, expSub float64) string {
-
-	// check if amount is nil
-	// check if expSub is zero
 
 	switch {
 	// negative , convert mregen to regen less zeroes 23 => 0,023, expSub -3
@@ -194,7 +187,6 @@ func (dvr DefaultValueRenderer) Parse(ctx context.Context, s string) (interface{
 		s1 := re.FindAllStringSubmatch(str, -1) // [[1000000regen 1000000 regen]]
 		amountStr, denomStr = s1[0][1], s1[0][2]
 
-		// perhaps check if amountStr and denomStr are not empty
 		amount, err := strconv.ParseInt(amountStr, 10, 64)
 		if err != nil {
 			return nil, err

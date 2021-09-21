@@ -18,8 +18,9 @@ import (
 type MintKeeperTestSuite struct {
 	suite.Suite
 
-	app *simapp.SimApp
-	ctx sdk.Context
+	app              *simapp.SimApp
+	ctx              sdk.Context
+	legacyQuerierCdc *codec.AminoCodec
 }
 
 func (suite *MintKeeperTestSuite) SetupTest() {
@@ -29,14 +30,15 @@ func (suite *MintKeeperTestSuite) SetupTest() {
 	app.MintKeeper.SetParams(ctx, types.DefaultParams())
 	app.MintKeeper.SetMinter(ctx, types.DefaultInitialMinter())
 
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
+
 	suite.app = app
 	suite.ctx = ctx
+	suite.legacyQuerierCdc = legacyQuerierCdc
 }
 
 func (suite *MintKeeperTestSuite) TestNewQuerier(t *testing.T) {
-	app, ctx := suite.app, suite.ctx
-
-	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
+	app, ctx, legacyQuerierCdc := suite.app, suite.ctx, suite.legacyQuerierCdc
 	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc.LegacyAmino)
 
 	query := abci.RequestQuery{
@@ -58,8 +60,7 @@ func (suite *MintKeeperTestSuite) TestNewQuerier(t *testing.T) {
 }
 
 func (suite *MintKeeperTestSuite) TestQueryParams(t *testing.T) {
-	app, ctx := suite.app, suite.ctx
-	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
+	app, ctx, legacyQuerierCdc := suite.app, suite.ctx, suite.legacyQuerierCdc
 	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc.LegacyAmino)
 
 	var params types.Params
@@ -74,8 +75,7 @@ func (suite *MintKeeperTestSuite) TestQueryParams(t *testing.T) {
 }
 
 func (suite *MintKeeperTestSuite) TestQueryInflation(t *testing.T) {
-	app, ctx := suite.app, suite.ctx
-	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
+	app, ctx, legacyQuerierCdc := suite.app, suite.ctx, suite.legacyQuerierCdc
 	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc.LegacyAmino)
 
 	var inflation sdk.Dec
@@ -90,8 +90,7 @@ func (suite *MintKeeperTestSuite) TestQueryInflation(t *testing.T) {
 }
 
 func (suite *MintKeeperTestSuite) TestQueryAnnualProvisions(t *testing.T) {
-	app, ctx := suite.app, suite.ctx
-	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
+	app, ctx, legacyQuerierCdc := suite.app, suite.ctx, suite.legacyQuerierCdc
 	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc.LegacyAmino)
 
 	var annualProvisions sdk.Dec

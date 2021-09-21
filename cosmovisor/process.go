@@ -175,11 +175,11 @@ func doPreUpgrade(cfg *Config) error {
 			if err.(*exec.ExitError).ProcessState.ExitCode() == 31 {
 				fmt.Println("pre-upgrade command failed. retrying. attempt:", counter)
 				fmt.Println(err)
+				continue
 			}
-		} else {
-			fmt.Println("pre-upgrade successful. continuing the upgrade.")
-			return nil
 		}
+		fmt.Println("pre-upgrade successful. continuing the upgrade.")
+		return nil
 	}
 }
 

@@ -257,3 +257,64 @@ func booleanOption(name string, defaultVal bool) (bool, error) {
 	}
 	return false, fmt.Errorf("env variable %q must have a boolean value (\"true\" or \"false\"), got %q", name, p)
 }
+
+// HelpRequested checks the provided args to see if help is being requested.
+// Help is requested if the first entry is "help", or if any of the entries are "-h" or "--help".
+func HelpRequested(args []string) bool {
+	if len(args) == 0 {
+		return false
+	}
+	if args[0] == "help" {
+		return true
+	}
+	for _, arg := range args {
+		if arg == "-h" || arg == "--help" {
+			return true
+		}
+	}
+	return false
+}
+
+// GetHelpText creates the help text multi-line string.
+func GetHelpText() string {
+	return fmt.Sprintf(`Cosmosvisor - A process manager for Cosmos SDK application binaries.
+
+Cosmovisor monitors the governance module for incoming chain upgrade proposals.
+If it sees a proposal that gets approved, cosmovisor can automatically download
+the new binary, stop the current binary, switch from the old binary to the new one,
+and finally restart the node with the new binary.
+
+Environment Variables:
+  %s
+    The location where the cosmovisor/ directory is kept that contains the genesis binary,
+    the upgrade binaries, and any additional auxiliary files associated with each binary
+    (e.g. $HOME/.gaiad, $HOME/.regend, $HOME/.simd, etc.).
+  %s
+    The name of the binary itself (e.g. gaiad, regend, simd, etc.).
+  %s
+    Optional, default is "false" (cosmovisor will not auto-download new binaries).
+    Enables auto-downloading of new binaries. For security reasons, this is intended
+    for full nodes rather than validators.
+    Valid values: true, false.
+  %s
+    Optional, default is "true" (cosmovisor will restart the subprocess after upgrade).
+    If true, will restart the subprocess with the same command-line arguments and flags
+    (but with the new binary) after a successful upgrade.
+    If false, cosmovisor stops running after an upgrade and requires the system administrator
+    to manually restart it.
+    Note that cosmovisor will not auto-restart the subprocess if there was an error.
+    Valid values: true, false.
+  %s
+    Optional, default is "300".
+    The interval length in milliseconds for polling the upgrade plan file.
+    Valid values: Integers greater than 0.
+  %s
+    Optional, default is "false" (cosmovisor will not auto-download new binaries).
+    If false, data will be backed up before trying the upgrade.
+    If true, data will NOT be backed up before trying the upgrade.
+    This is useful (and recommended) in case of failures and when needed to rollback.
+    It is advised to use backup option, i.e. UNSAFE_SKIP_BACKUP=false
+    Valid values: true, false.
+
+`, envHome, envName, envDownloadBin, envRestartUpgrade, envInterval, envSkipBackup)
+}

@@ -20,7 +20,7 @@ type ValueRenderer interface {
 	Parse(context.Context, string) (interface{}, error)
 }
 
-// denomQuerierFunc takes a context and a denom as arguments and returns metadata, error
+// denomQuerierFunc should take context and baseDenom to invoke DenomMetaData method on queryClient. This method will return banktypes.Metadata.
 type denomQuerierFunc func(context.Context, string) (banktypes.Metadata, error)
 
 // DefaultValueRenderer defines a struct that implements ValueRenderer interface

@@ -4,14 +4,15 @@ import (
 	"os"
 	"testing"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -66,15 +67,23 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 func TestMsgService(t *testing.T) {
 	priv, _, _ := testdata.KeyTestPubAddr()
 	encCfg := simapp.MakeTestEncodingConfig()
+
 	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
 	db := dbm.NewMemDB()
-	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
+
+	writer := zerolog.ConsoleWriter{Out: os.Stderr}
+	logger := server.ZeroLogWrapper{
+		Logger: zerolog.New(writer).Level(zerolog.InfoLevel).With().Timestamp().Logger(),
+	}
+	app := baseapp.NewBaseApp("test", logger, db, encCfg.TxConfig.TxDecoder())
 	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+
 	msr := middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry)
 	txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 		MsgServiceRouter: msr,
 	})
 	require.NoError(t, err)
+
 	app.SetTxHandler(txHandler)
 	testdata.RegisterMsgServer(
 		msr,

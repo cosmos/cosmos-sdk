@@ -7,6 +7,7 @@ import (
 
 	"github.com/armon/go-metrics"
 
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -15,10 +16,6 @@ import (
 type msgServer struct {
 	Keeper
 }
-
-// TODO: Revisit this once we have propoer gas fee framework.
-// Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054, https://github.com/cosmos/cosmos-sdk/discussions/9072
-const gasCostPerStorage = 10
 
 // NewMsgServerImpl returns an implementation of the gov MsgServer interface
 // for the provided Keeper.
@@ -40,7 +37,11 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *types.MsgSubmitPro
 		return nil, err
 	}
 
-	ctx.BlockGasMeter().ConsumeGas(uint64(3*gasCostPerStorage*len(bytes)), "Submit proposal")
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/9683
+	ctx.BlockGasMeter().ConsumeGas(
+		uint64(3*int(store.KVGasConfig().WriteCostPerByte)*len(bytes)),
+		"Submit proposal",
+	)
 
 	defer telemetry.IncrCounter(1, types.ModuleName, "proposal")
 

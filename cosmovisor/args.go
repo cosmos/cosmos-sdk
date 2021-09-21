@@ -149,7 +149,10 @@ func GetConfigFromEnv() (*Config, error) {
 		return nil, err
 	}
 
-	cfg.PreupgradeMaxRetries, _ = strconv.Atoi(os.Getenv(envPreupgradeMaxRetries))
+	envPreupgradeMaxRetriesVal := os.Getenv(envPreupgradeMaxRetries)
+	if cfg.PreupgradeMaxRetries, err = strconv.Atoi(envPreupgradeMaxRetriesVal); err != nil && envPreupgradeMaxRetriesVal != "" {
+		return nil, fmt.Errorf("%s could not be parsed to int: %w", envPreupgradeMaxRetries, err)
+	}
 
 	return cfg, nil
 }

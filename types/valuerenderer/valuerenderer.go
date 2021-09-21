@@ -102,6 +102,7 @@ func convertToBaseDenom(denom string) string {
 	}
 }
 
+// computeExponentSubtraction iterates over metadata.DenomUnits and computes the subtraction of exponents
 func computeExponentSubtraction(denom string, metadata banktypes.Metadata) float64 {
 	var coinExp, displayExp int64
 	for _, denomUnit := range metadata.DenomUnits {

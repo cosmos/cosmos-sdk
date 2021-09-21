@@ -143,11 +143,11 @@ func (dvr DefaultValueRenderer) ComputeAmount(amount int64, expSub float64) stri
 		stringValue := strconv.FormatInt(amount, 10)
 		count := countTrailingZeroes(stringValue)
 		if count >= int(math.Abs(expSub)) {
-			// case 1 if number of zeroes >= Abs(expSub)  23000, 3 => 23 (int64)
+			// case 1 if number of zeroes >= Abs(expSub)  23000, -3 => 23 (int64)
 			x := amount / int64(math.Pow(10, math.Abs(expSub)))
 			return humanize.Comma(x)
 		} else {
-			// case 2 number of trailing zeroes < abs(expSub)  23, 3,=> 0.023(float64)
+			// case 2 number of trailing zeroes < abs(expSub)  23, -3,=> 0.023(float64)
 			x := float64(float64(amount) / math.Pow(10, math.Abs(expSub)))
 			return humanize.Ftoa(x)
 		}

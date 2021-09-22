@@ -13,6 +13,7 @@ Proposed
 This ADR introduces a system for permissioned inter-module communication leveraging the protobuf `Query` and `Msg`
 service definitions defined in [ADR 021](./adr-021-protobuf-query-encoding.md) and
 [ADR 031](./adr-031-msg-service.md) which provides:
+
 - stable protobuf based module interfaces to potentially later replace the keeper paradigm
 - stronger inter-module object capabilities (OCAPs) guarantees
 - module accounts and sub-account authorization
@@ -24,6 +25,7 @@ In the current Cosmos SDK documentation on the [Object-Capability Model](../core
 > We assume that a thriving ecosystem of Cosmos-SDK modules that are easy to compose into a blockchain application will contain faulty or malicious modules.
 
 There is currently not a thriving ecosystem of Cosmos SDK modules. We hypothesize that this is in part due to:
+
 1. lack of a stable v1.0 Cosmos SDK to build modules off of. Module interfaces are changing, sometimes dramatically, from
 point release to point release, often for good reasons, but this does not create a stable foundation to build on.
 2. lack of a properly implemented object capability or even object-oriented encapsulation system which makes refactors
@@ -84,6 +86,7 @@ this ADR does not necessitate the creation of new protobuf definitions or servic
 based service interfaces already used by clients for inter-module communication.
 
 Using this `QueryClient`/`MsgClient` approach has the following key benefits over exposing keepers to external modules:
+
 1. Protobuf types are checked for breaking changes using [buf](https://buf.build/docs/breaking-overview) and because of
 the way protobuf is designed this will give us strong backwards compatibility guarantees while allowing for forward
 evolution.
@@ -95,6 +98,7 @@ enabling atomicy of operations ([currently a problem](https://github.com/cosmos/
 transaction
 
 This mechanism has the added benefits of:
+
 - reducing boilerplate through code generation, and
 - allowing for modules in other languages either via a VM like CosmWasm or sub-processes using gRPC
 
@@ -116,6 +120,7 @@ For example, module `A` could use its `A.ModuleKey` to create `MsgSend` object f
 will assure that the `from` account (`A.ModuleKey` in this case) is the signer.
 
 Here's an example of a hypothetical module `foo` interacting with `x/bank`:
+
 ```go
 package foo
 
@@ -247,7 +252,6 @@ In [ADR 031](./adr-031-msg-service.md), the `AppModule.RegisterService(Configura
 inter-module communication, we extend the `Configurator` interface to pass in the `ModuleKey` and to allow modules to
 specify their dependencies on other modules using `RequireServer()`:
 
-
 ```go
 type Configurator interface {
    MsgServer() grpc.Server
@@ -334,9 +338,10 @@ other modules. This will be addressed in separate ADRs or updates to this ADR.
 ### Future Work
 
 Other future improvements may include:
+
 * custom code generation that:
-  * simplifies interfaces (ex. generates code with `sdk.Context` instead of `context.Context`)
-  * optimizes inter-module calls - for instance caching resolved methods after first invocation
+    * simplifies interfaces (ex. generates code with `sdk.Context` instead of `context.Context`)
+    * optimizes inter-module calls - for instance caching resolved methods after first invocation
 * combining `StoreKey`s and `ModuleKey`s into a single interface so that modules have a single OCAPs handle
 * code generation which makes inter-module communication more performant
 * decoupling `ModuleKey` creation from `AppModuleBasic.Name()` so that app's can override root module account names
@@ -353,8 +358,8 @@ The advantages of the approach described in this ADR are mostly around how it in
 specifically:
 
 * protobuf so that:
-  * code generation of interfaces can be leveraged for a better dev UX
-  * module interfaces are versioned and checked for breakage using [buf](https://docs.buf.build/breaking-overview)
+    * code generation of interfaces can be leveraged for a better dev UX
+    * module interfaces are versioned and checked for breakage using [buf](https://docs.buf.build/breaking-overview)
 * sub-module accounts as per ADR 028
 * the general `Msg` passing paradigm and the way signers are specified by `GetSigners`
 

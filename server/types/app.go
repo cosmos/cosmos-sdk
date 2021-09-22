@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"io"
+	"time"
 
 	"github.com/gogo/protobuf/grpc"
 	"github.com/spf13/cobra"
@@ -15,6 +16,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 )
+
+// ServerStartTime defines the time duration that the server need to stay running after startup
+// for the startup be considered successful
+const ServerStartTime = 5 * time.Second
 
 type (
 	// AppOptions defines an interface that is passed into an application

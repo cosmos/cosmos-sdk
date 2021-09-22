@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"sort"
 
-	bip39 "github.com/cosmos/go-bip39"
+	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -82,13 +82,13 @@ Example:
 }
 
 func runAddCmdPrepare(cmd *cobra.Command, args []string) error {
-	buf := bufio.NewReader(cmd.InOrStdin())
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
 		return err
 	}
 
-	return RunAddCmd(clientCtx, cmd, args, buf)
+	buf := bufio.NewReader(clientCtx.Input)
+	return runAddCmd(clientCtx, cmd, args, buf)
 }
 
 /*
@@ -100,7 +100,7 @@ input
 output
 	- armor encrypted private key (saved to file)
 */
-func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *bufio.Reader) error {
+func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *bufio.Reader) error {
 	var err error
 
 	name := args[0]
@@ -117,7 +117,10 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		return err
 	}
 
-	if dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun); !dryRun {
+	if dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun); dryRun {
+		// use in memory keybase
+		kb = keyring.NewInMemory(ctx.Codec)
+	} else {
 		_, err = kb.Key(name)
 		if err == nil {
 			// account exists, ask for user confirmation
@@ -138,19 +141,23 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 		multisigKeys, _ := cmd.Flags().GetStringSlice(flagMultisig)
 		if len(multisigKeys) != 0 {
-			var pks []cryptotypes.PubKey
+			pks := make([]cryptotypes.PubKey, len(multisigKeys))
 			multisigThreshold, _ := cmd.Flags().GetInt(flagMultiSigThreshold)
 			if err := validateMultisigThreshold(multisigThreshold, len(multisigKeys)); err != nil {
 				return err
 			}
 
-			for _, keyname := range multisigKeys {
+			for i, keyname := range multisigKeys {
 				k, err := kb.Key(keyname)
 				if err != nil {
 					return err
 				}
 
-				pks = append(pks, k.GetPubKey())
+				key, err := k.GetPubKey()
+				if err != nil {
+					return err
+				}
+				pks[i] = key
 			}
 
 			if noSort, _ := cmd.Flags().GetBool(flagNoSort); !noSort {
@@ -160,24 +167,28 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 			}
 
 			pk := multisig.NewLegacyAminoPubKey(multisigThreshold, pks)
-			if _, err := kb.SaveMultisig(name, pk); err != nil {
+			k, err := kb.SaveMultisig(name, pk)
+			if err != nil {
 				return err
 			}
 
-			cmd.PrintErrf("Key %q saved to disk.\n", name)
-			return nil
+			return printCreate(cmd, k, false, "", outputFormat)
 		}
 	}
 
 	pubKey, _ := cmd.Flags().GetString(FlagPublicKey)
 	if pubKey != "" {
 		var pk cryptotypes.PubKey
-		err = ctx.JSONCodec.UnmarshalInterfaceJSON([]byte(pubKey), &pk)
+		if err = ctx.Codec.UnmarshalInterfaceJSON([]byte(pubKey), &pk); err != nil {
+			return err
+		}
+
+		k, err := kb.SaveOfflineKey(name, pk)
 		if err != nil {
 			return err
 		}
-		_, err := kb.SavePubKey(name, pk, algo.Name())
-		return err
+
+		return printCreate(cmd, k, false, "", outputFormat)
 	}
 
 	coinType, _ := cmd.Flags().GetUint32(flagCoinType)
@@ -195,13 +206,12 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	// If we're using ledger, only thing we need is the path and the bech32 prefix.
 	if useLedger {
 		bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
-		info, err := kb.SaveLedgerKey(name, hd.Secp256k1, bech32PrefixAccAddr, coinType, account, index)
-
+		k, err := kb.SaveLedgerKey(name, hd.Secp256k1, bech32PrefixAccAddr, coinType, account, index)
 		if err != nil {
 			return err
 		}
 
-		return printCreate(cmd, info, false, "", outputFormat)
+		return printCreate(cmd, k, false, "", outputFormat)
 	}
 
 	// Get bip39 mnemonic
@@ -263,7 +273,7 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		}
 	}
 
-	info, err := kb.NewAccount(name, mnemonic, bip39Passphrase, hdPath, algo)
+	k, err := kb.NewAccount(name, mnemonic, bip39Passphrase, hdPath, algo)
 	if err != nil {
 		return err
 	}
@@ -275,14 +285,14 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		mnemonic = ""
 	}
 
-	return printCreate(cmd, info, showMnemonic, mnemonic, outputFormat)
+	return printCreate(cmd, k, showMnemonic, mnemonic, outputFormat)
 }
 
-func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemonic string, outputFormat string) error {
+func printCreate(cmd *cobra.Command, k *keyring.Record, showMnemonic bool, mnemonic, outputFormat string) error {
 	switch outputFormat {
 	case OutputFormatText:
 		cmd.PrintErrln()
-		printKeyInfo(cmd.OutOrStdout(), info, keyring.MkAccKeyOutput, outputFormat)
+		printKeyringRecord(cmd.OutOrStdout(), k, keyring.MkAccKeyOutput, outputFormat)
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {
@@ -292,7 +302,7 @@ func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemo
 			fmt.Fprintln(cmd.ErrOrStderr(), mnemonic)
 		}
 	case OutputFormatJSON:
-		out, err := keyring.MkAccKeyOutput(info)
+		out, err := keyring.MkAccKeyOutput(k)
 		if err != nil {
 			return err
 		}

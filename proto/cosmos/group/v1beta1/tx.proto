@@ -1,0 +1,281 @@
+syntax = "proto3";
+
+package cosmos.group.v1beta1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/group";
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/any.proto";
+import "cosmos/group/v1beta1/types.proto";
+
+// Msg is the cosmos.group.v1beta1 Msg service.
+service Msg {
+
+  // CreateGroup creates a new group with an admin account address, a list of members and some optional metadata.
+  rpc CreateGroup(MsgCreateGroupRequest) returns (MsgCreateGroupResponse);
+
+  // UpdateGroupMembers updates the group members with given group id and admin address.
+  rpc UpdateGroupMembers(MsgUpdateGroupMembersRequest) returns (MsgUpdateGroupMembersResponse);
+
+  // UpdateGroupAdmin updates the group admin with given group id and previous admin address.
+  rpc UpdateGroupAdmin(MsgUpdateGroupAdminRequest) returns (MsgUpdateGroupAdminResponse);
+
+  // UpdateGroupMetadata updates the group metadata with given group id and admin address.
+  rpc UpdateGroupMetadata(MsgUpdateGroupMetadataRequest) returns (MsgUpdateGroupMetadataResponse);
+
+  // CreateGroupAccount creates a new group account using given DecisionPolicy.
+  rpc CreateGroupAccount(MsgCreateGroupAccountRequest) returns (MsgCreateGroupAccountResponse);
+
+  // UpdateGroupAccountAdmin updates a group account admin.
+  rpc UpdateGroupAccountAdmin(MsgUpdateGroupAccountAdminRequest) returns (MsgUpdateGroupAccountAdminResponse);
+
+  // UpdateGroupAccountDecisionPolicy allows a group account decision policy to be updated.
+  rpc UpdateGroupAccountDecisionPolicy(MsgUpdateGroupAccountDecisionPolicyRequest)
+      returns (MsgUpdateGroupAccountDecisionPolicyResponse);
+
+  // UpdateGroupAccountMetadata updates a group account metadata.
+  rpc UpdateGroupAccountMetadata(MsgUpdateGroupAccountMetadataRequest) returns (MsgUpdateGroupAccountMetadataResponse);
+
+  // CreateProposal submits a new proposal.
+  rpc CreateProposal(MsgCreateProposalRequest) returns (MsgCreateProposalResponse);
+
+  // Vote allows a voter to vote on a proposal.
+  rpc Vote(MsgVoteRequest) returns (MsgVoteResponse);
+
+  // Exec executes a proposal.
+  rpc Exec(MsgExecRequest) returns (MsgExecResponse);
+}
+
+//
+// Groups
+//
+
+// MsgCreateGroupRequest is the Msg/CreateGroup request type.
+message MsgCreateGroupRequest {
+
+  // admin is the account address of the group admin.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // members defines the group members.
+  repeated Member members = 2 [(gogoproto.nullable) = false];
+
+  // metadata is any arbitrary metadata to attached to the group.
+  bytes metadata = 3;
+}
+
+// MsgCreateGroupResponse is the Msg/CreateGroup response type.
+message MsgCreateGroupResponse {
+
+  // group_id is the unique ID of the newly created group.
+  uint64 group_id = 1;
+}
+
+// MsgUpdateGroupMembersRequest is the Msg/UpdateGroupMembers request type.
+message MsgUpdateGroupMembersRequest {
+
+  // admin is the account address of the group admin.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // group_id is the unique ID of the group.
+  uint64 group_id = 2;
+
+  // member_updates is the list of members to update,
+  // set weight to 0 to remove a member.
+  repeated Member member_updates = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgUpdateGroupMembersResponse is the Msg/UpdateGroupMembers response type.
+message MsgUpdateGroupMembersResponse {}
+
+// MsgUpdateGroupAdminRequest is the Msg/UpdateGroupAdmin request type.
+message MsgUpdateGroupAdminRequest {
+
+  // admin is the current account address of the group admin.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // group_id is the unique ID of the group.
+  uint64 group_id = 2;
+
+  // new_admin is the group new admin account address.
+  string new_admin = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgUpdateGroupAdminResponse is the Msg/UpdateGroupAdmin response type.
+message MsgUpdateGroupAdminResponse {}
+
+// MsgUpdateGroupMetadataRequest is the Msg/UpdateGroupMetadata request type.
+message MsgUpdateGroupMetadataRequest {
+
+  // admin is the account address of the group admin.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // group_id is the unique ID of the group.
+  uint64 group_id = 2;
+
+  // metadata is the updated group's metadata.
+  bytes metadata = 3;
+}
+
+// MsgUpdateGroupMetadataResponse is the Msg/UpdateGroupMetadata response type.
+message MsgUpdateGroupMetadataResponse {}
+
+//
+// Group Accounts
+//
+
+// MsgCreateGroupAccountRequest is the Msg/CreateGroupAccount request type.
+message MsgCreateGroupAccountRequest {
+  option (gogoproto.goproto_getters) = false;
+
+  // admin is the account address of the group admin.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // group_id is the unique ID of the group.
+  uint64 group_id = 2;
+
+  // metadata is any arbitrary metadata to attached to the group account.
+  bytes metadata = 3;
+
+  // decision_policy specifies the group account's decision policy.
+  google.protobuf.Any decision_policy = 4 [(cosmos_proto.accepts_interface) = "DecisionPolicy"];
+}
+
+// MsgCreateGroupAccountResponse is the Msg/CreateGroupAccount response type.
+message MsgCreateGroupAccountResponse {
+
+  // address is the account address of the newly created group account.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgUpdateGroupAccountAdminRequest is the Msg/UpdateGroupAccountAdmin request type.
+message MsgUpdateGroupAccountAdminRequest {
+
+  // admin is the account address of the group admin.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // address is the group account address.
+  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // new_admin is the new group account admin.
+  string new_admin = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgUpdateGroupAccountAdminResponse is the Msg/UpdateGroupAccountAdmin response type.
+message MsgUpdateGroupAccountAdminResponse {}
+
+// MsgUpdateGroupAccountDecisionPolicyRequest is the Msg/UpdateGroupAccountDecisionPolicy request type.
+message MsgUpdateGroupAccountDecisionPolicyRequest {
+  option (gogoproto.goproto_getters) = false;
+
+  // admin is the account address of the group admin.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // address is the group account address.
+  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // decision_policy is the updated group account decision policy.
+  google.protobuf.Any decision_policy = 3 [(cosmos_proto.accepts_interface) = "DecisionPolicy"];
+}
+
+// MsgUpdateGroupAccountDecisionPolicyResponse is the Msg/UpdateGroupAccountDecisionPolicy response type.
+message MsgUpdateGroupAccountDecisionPolicyResponse {}
+
+// MsgUpdateGroupAccountMetadataRequest is the Msg/UpdateGroupAccountMetadata request type.
+message MsgUpdateGroupAccountMetadataRequest {
+
+  // admin is the account address of the group admin.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // address is the group account address.
+  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // metadata is the updated group account metadata.
+  bytes metadata = 3;
+}
+
+// MsgUpdateGroupAccountMetadataResponse is the Msg/UpdateGroupAccountMetadata response type.
+message MsgUpdateGroupAccountMetadataResponse {}
+
+//
+// Proposals and Voting
+//
+
+// Exec defines modes of execution of a proposal on creation or on new vote.
+enum Exec {
+
+  // An empty value means that there should be a separate
+  // MsgExec request for the proposal to execute.
+  EXEC_UNSPECIFIED = 0;
+
+  // Try to execute the proposal immediately.
+  // If the proposal is not allowed per the DecisionPolicy,
+  // the proposal will still be open and could
+  // be executed at a later point.
+  EXEC_TRY = 1;
+}
+
+// MsgCreateProposalRequest is the Msg/CreateProposal request type.
+message MsgCreateProposalRequest {
+  option (gogoproto.goproto_getters) = false;
+
+  // address is the group account address.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // proposers are the account addresses of the proposers.
+  // Proposers signatures will be counted as yes votes.
+  repeated string proposers = 2;
+
+  // metadata is any arbitrary metadata to attached to the proposal.
+  bytes metadata = 3;
+
+  // msgs is a list of Msgs that will be executed if the proposal passes.
+  repeated google.protobuf.Any msgs = 4;
+
+  // exec defines the mode of execution of the proposal,
+  // whether it should be executed immediately on creation or not.
+  // If so, proposers signatures are considered as Yes votes.
+  Exec exec = 5;
+}
+
+// MsgCreateProposalResponse is the Msg/CreateProposal response type.
+message MsgCreateProposalResponse {
+
+  // proposal is the unique ID of the proposal.
+  uint64 proposal_id = 1;
+}
+
+// MsgVoteRequest is the Msg/Vote request type.
+message MsgVoteRequest {
+
+  // proposal is the unique ID of the proposal.
+  uint64 proposal_id = 1;
+  // voter is the voter account address.
+  string voter = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // choice is the voter's choice on the proposal.
+  Choice choice = 3;
+
+  // metadata is any arbitrary metadata to attached to the vote.
+  bytes metadata = 4;
+
+  // exec defines whether the proposal should be executed
+  // immediately after voting or not.
+  Exec exec = 5;
+}
+
+// MsgVoteResponse is the Msg/Vote response type.
+message MsgVoteResponse {}
+
+// MsgExecRequest is the Msg/Exec request type.
+message MsgExecRequest {
+
+  // proposal is the unique ID of the proposal.
+  uint64 proposal_id = 1;
+
+  // signer is the account address used to execute the proposal.
+  string signer = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgExecResponse is the Msg/Exec request type.
+message MsgExecResponse {}

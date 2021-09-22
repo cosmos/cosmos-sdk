@@ -17,7 +17,7 @@ import (
 )
 
 func TestNewQuerier(t *testing.T) {
-	cdc, app, ctx := createTestInput()
+	cdc, app, ctx := createTestInput(t)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 500, sdk.NewInt(10000))
 	_, addrAcc2 := addrs[0], addrs[1]
@@ -109,7 +109,7 @@ func TestNewQuerier(t *testing.T) {
 }
 
 func TestQueryParametersPool(t *testing.T) {
-	cdc, app, ctx := createTestInput()
+	cdc, app, ctx := createTestInput(t)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc.LegacyAmino)
 
@@ -135,7 +135,7 @@ func TestQueryParametersPool(t *testing.T) {
 }
 
 func TestQueryValidators(t *testing.T) {
-	cdc, app, ctx := createTestInput()
+	cdc, app, ctx := createTestInput(t)
 	params := app.StakingKeeper.GetParams(ctx)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc.LegacyAmino)
@@ -203,7 +203,7 @@ func TestQueryValidators(t *testing.T) {
 }
 
 func TestQueryDelegation(t *testing.T) {
-	cdc, app, ctx := createTestInput()
+	cdc, app, ctx := createTestInput(t)
 	params := app.StakingKeeper.GetParams(ctx)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc.LegacyAmino)
@@ -452,7 +452,7 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 		},
 	}
 
-	cdc, app, ctx := createTestInput()
+	cdc, app, ctx := createTestInput(t)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc.LegacyAmino)
 
@@ -537,7 +537,7 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 }
 
 func TestQueryRedelegations(t *testing.T) {
-	cdc, app, ctx := createTestInput()
+	cdc, app, ctx := createTestInput(t)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc.LegacyAmino)
 
@@ -609,7 +609,7 @@ func TestQueryRedelegations(t *testing.T) {
 }
 
 func TestQueryUnbondingDelegation(t *testing.T) {
-	cdc, app, ctx := createTestInput()
+	cdc, app, ctx := createTestInput(t)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc.LegacyAmino)
 
@@ -705,7 +705,7 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 }
 
 func TestQueryHistoricalInfo(t *testing.T) {
-	cdc, app, ctx := createTestInput()
+	cdc, app, ctx := createTestInput(t)
 	legacyQuerierCdc := codec.NewAminoCodec(cdc)
 	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc.LegacyAmino)
 

@@ -18,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 func TestNewMultiSig(t *testing.T) {
@@ -352,7 +352,7 @@ func TestDisplay(t *testing.T) {
 		func() { require.Empty(msig.String()) },
 	)
 	ccfg := simapp.MakeTestEncodingConfig()
-	bz, err := ccfg.Marshaler.MarshalInterfaceJSON(msig)
+	bz, err := ccfg.Codec.MarshalInterfaceJSON(msig)
 	require.NoError(err)
 	expectedPrefix := `{"@type":"/cosmos.crypto.multisig.LegacyAminoPubKey","threshold":2,"public_keys":[{"@type":"/cosmos.crypto.secp256k1.PubKey"`
 	require.True(strings.HasPrefix(string(bz), expectedPrefix))
@@ -428,6 +428,14 @@ func TestAminoUnmarshalJSON(t *testing.T) {
 	require.NoError(t, err)
 	lpk := pk.(*kmultisig.LegacyAminoPubKey)
 	require.Equal(t, uint32(3), lpk.Threshold)
+	require.Equal(t, 5, len(pk.(*kmultisig.LegacyAminoPubKey).PubKeys))
+
+	for _, key := range pk.(*kmultisig.LegacyAminoPubKey).PubKeys {
+		require.NotNil(t, key)
+		pk := secp256k1.PubKey{}
+		err := pk.Unmarshal(key.Value)
+		require.NoError(t, err)
+	}
 }
 
 func TestProtoMarshalJSON(t *testing.T) {
@@ -448,10 +456,9 @@ func TestProtoMarshalJSON(t *testing.T) {
 	require.True(pk2.Equals(msig))
 
 	// Test that we can correctly unmarshal key from keyring output
-
-	info, err := keyring.NewMultiInfo("my multisig", msig)
+	k, err := keyring.NewMultiRecord("my multisig", msig)
 	require.NoError(err)
-	ko, err := keyring.MkAccKeyOutput(info)
+	ko, err := keyring.MkAccKeyOutput(k)
 	require.NoError(err)
 	require.Equal(ko.Address, sdk.AccAddress(pk2.Address()).String())
 	require.Equal(ko.PubKey, string(bz))

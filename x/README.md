@@ -1,6 +1,5 @@
 <!--
-parent:
-  order: false
+order: 0
 -->
 
 # List of Modules
@@ -14,6 +13,7 @@ Here are some production-grade modules that can be used in Cosmos SDK applicatio
 - [Crisis](crisis/spec/README.md) - Halting the blockchain under certain circumstances (e.g. if an invariant is broken).
 - [Distribution](distribution/spec/README.md) - Fee distribution, and staking token provision distribution.
 - [Evidence](evidence/spec/README.md) - Evidence handling for double signing, misbehaviour, etc.
+- [Feegrant](feegrant/spec/README.md) - Grant fee allowances for executing transactions.
 - [Governance](gov/spec/README.md) - On-chain proposals and voting.
 - [Mint](mint/spec/README.md) - Creation of new units of staking token.
 - [Params](params/spec/README.md) - Globally available parameter store.
@@ -25,4 +25,4 @@ To learn more about the process of building modules, visit the [building modules
 
 ## IBC
 
-The IBC module for the SDK has moved to its [own repository](https://github.com/cosmos/ibc-go). 
+The IBC module for the SDK has moved to its [own repository](https://github.com/cosmos/ibc-go).

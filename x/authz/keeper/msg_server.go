@@ -70,9 +70,9 @@ func (k Keeper) Exec(goCtx context.Context, msg *authz.MsgExec) (*authz.MsgExecR
 	if err != nil {
 		return nil, err
 	}
-	result, err := k.DispatchActions(ctx, grantee, msgs)
+	results, err := k.DispatchActions(ctx, grantee, msgs)
 	if err != nil {
 		return nil, err
 	}
-	return &authz.MsgExecResponse{Result: result}, nil
+	return &authz.MsgExecResponse{Results: results}, nil
 }

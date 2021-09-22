@@ -86,7 +86,7 @@ module.
    func NewApp(...) *App {
      app.SetAnteHandler(ante.NewAnteHandler(
        app.AccountKeeper,
-       app.SupplyKeeper, 
+       app.SupplyKeeper,
        auth.DefaultSigVerificationGasConsumer,
      ))
    }
@@ -166,19 +166,19 @@ the module itself are defined below:
 1. Query an account.
 
    ```shell
-   $ app q auth account [address] [...flags]
+   app q auth account [address] [...flags]
    ```
 
 2. Sign an unsigned transaction using a single signature.
 
    ```shell
-   $ app tx auth sign [file]
+   app tx auth sign [file]
    ```
 
 3. Sign an unsigned transaction using a multisig.
 
    ```shell
-   $ app tx auth multisign [file] [name] [[signature]...]
+   app tx auth multisign [file] [name] [[signature]...]
    ```
 
 ### REST

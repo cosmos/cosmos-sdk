@@ -72,7 +72,7 @@ withdraw or update their delegation, and is thus not handled in `BeginBlock`.
 ### Example Distribution
 
 For this example distribution, the underlying consensus engine selects block proposers in
-proportion to their power relative to the entire bonded power. 
+proportion to their power relative to the entire bonded power.
 
 All validators are equally performant at including pre-commits in their proposed
 blocks. Then hold `(precommits included) / (total bonded validator power)`

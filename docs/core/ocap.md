@@ -31,9 +31,9 @@ foundation of an object capability system.
 > These structural properties stem from the two rules governing
 > access to existing objects:
 >
-> 1.  An object A can send a message to B only if object A holds a
+> 1. An object A can send a message to B only if object A holds a
 >     reference to B.
-> 2.  An object A can obtain a reference to C only
+> 2. An object A can obtain a reference to C only
 >     if object A receives a message containing a reference to C. As a
 >     consequence of these two rules, an object can obtain a reference
 >     to another object only through a preexisting chain of references.

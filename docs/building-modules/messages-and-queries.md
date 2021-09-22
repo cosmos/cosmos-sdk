@@ -25,14 +25,15 @@ See an example of a `Msg` service definition from `x/bank` module:
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L10-L17
 
 Each `Msg` service method must have exactly one argument, which must implement the `sdk.Msg` interface, and a Protobuf response. The naming convention is to call the RPC argument `Msg<service-rpc-name>` and the RPC response `Msg<service-rpc-name>Response`. For example:
+
 ```
   rpc Send(MsgSend) returns (MsgSendResponse);
 ```
 
 `sdk.Msg` interface is a simplified version of the Amino `LegacyMsg` interface described [below](#legacy-amino-msgs) with only `ValidateBasic()` and `GetSigners()` methods. For backwards compatibility with [Amino `LegacyMsg`s](#legacy-amino-msgs), existing `LegacyMsg` types should be used as the request parameter for `service` RPC definitions. Newer `sdk.Msg` types, which only support `service` definitions, should use canonical `Msg...` name.
 
-
 Cosmos SDK uses Protobuf definitions to generate client and server code:
+
 * `MsgServer` interface defines the server API for the `Msg` service and its implementation is described as part of the [`Msg` services](./msg-services.md) documentation.
 * Structures are generated for all RPC request and response types.
 
@@ -64,7 +65,7 @@ See an example implementation of a `message` from the `gov` module:
 
 ## Queries
 
-A `query` is a request for information made by end-users of applications through an interface and processed by a full-node. A `query` is received by a full-node through its consensus engine and relayed to the application via the ABCI. It is then routed to the appropriate module via `BaseApp`'s `queryrouter` so that it can be processed by the module's query service (./query-services.md). For a deeper look at the lifecycle of a `query`, click [here](../interfaces/query-lifecycle.md).
+A `query` is a request for information made by end-users of applications through an interface and processed by a full-node. A `query` is received by a full-node through its consensus engine and relayed to the application via the ABCI. It is then routed to the appropriate module via `BaseApp`'s `queryrouter` so that it can be processed by the module's query service (./query-services.md). For a deeper look at the lifecycle of a `query`, click [here](../basics/query-lifecycle.md).
 
 ### gRPC Queries
 

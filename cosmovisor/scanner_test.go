@@ -1,63 +1,62 @@
-package cosmovisor_test
+package cosmovisor
 
 import (
-	"bufio"
-	"io"
+	"path/filepath"
 	"testing"
-
-	"github.com/cosmos/cosmos-sdk/cosmovisor"
 
 	"github.com/stretchr/testify/require"
 )
 
-func TestWaitForInfo(t *testing.T) {
-	cases := map[string]struct {
-		write         []string
-		expectUpgrade *cosmovisor.UpgradeInfo
+func TestParseUpgradeInfoFile(t *testing.T) {
+	cases := []struct {
+		filename      string
+		expectUpgrade UpgradeInfo
 		expectErr     bool
-	}{
-		"no match": {
-			write: []string{"some", "random\ninfo\n"},
-		},
-		"match name with no info": {
-			write: []string{"first line\n", `UPGRADE "myname" NEEDED at height: 123: `, "\nnext line\n"},
-			expectUpgrade: &cosmovisor.UpgradeInfo{
-				Name: "myname",
-				Info: "",
-			},
-		},
-		"match name with info": {
-			write: []string{"first line\n", `UPGRADE "take2" NEEDED at height: 123:   DownloadData here!`, "\nnext line\n"},
-			expectUpgrade: &cosmovisor.UpgradeInfo{
-				Name: "take2",
-				Info: "DownloadData",
-			},
-		},
-	}
+	}{{
+		filename:      "f1-good.json",
+		expectUpgrade: UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 123},
+		expectErr:     false,
+	}, {
+		filename:      "f2-bad-type.json",
+		expectUpgrade: UpgradeInfo{},
+		expectErr:     true,
+	}, {
+		filename:      "f2-bad-type-2.json",
+		expectUpgrade: UpgradeInfo{},
+		expectErr:     true,
+	}, {
+		filename:      "f3-empty.json",
+		expectUpgrade: UpgradeInfo{},
+		expectErr:     true,
+	}, {
+		filename:      "f4-empty-obj.json",
+		expectUpgrade: UpgradeInfo{},
+		expectErr:     true,
+	}, {
+		filename:      "f5-partial-obj-1.json",
+		expectUpgrade: UpgradeInfo{},
+		expectErr:     true,
+	}, {
+		filename:      "f5-partial-obj-2.json",
+		expectUpgrade: UpgradeInfo{},
+		expectErr:     true,
+	}, {
+		filename:      "unknown.json",
+		expectUpgrade: UpgradeInfo{},
+		expectErr:     true,
+	}}
 
-	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
-			r, w := io.Pipe()
-			scan := bufio.NewScanner(r)
-
-			// write all info in separate routine
-			go func() {
-				for _, line := range tc.write {
-					n, err := w.Write([]byte(line))
-					require.NoError(t, err)
-					require.Equal(t, len(line), n)
-				}
-				w.Close()
-			}()
-
-			// now scan the info
-			info, err := cosmovisor.WaitForUpdate(scan)
+	for i := range cases {
+		tc := cases[i]
+		t.Run(tc.filename, func(t *testing.T) {
+			require := require.New(t)
+			ui, err := parseUpgradeInfoFile(filepath.Join(".", "testdata", "upgrade-files", tc.filename))
 			if tc.expectErr {
-				require.Error(t, err)
-				return
+				require.Error(err)
+			} else {
+				require.NoError(err)
+				require.Equal(tc.expectUpgrade, ui)
 			}
-			require.NoError(t, err)
-			require.Equal(t, tc.expectUpgrade, info)
 		})
 	}
 }

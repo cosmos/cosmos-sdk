@@ -39,11 +39,12 @@ func (k Keeper) BondDenom(ctx sdk.Context) (res string) {
 	return
 }
 
-// PowerReduction - is the amount of staking tokens required for 1 unit of consensus-engine power
-// governance can update it on a running chain
-func (k Keeper) PowerReduction(ctx sdk.Context) (res sdk.Int) {
-	k.paramstore.Get(ctx, types.KeyPowerReduction, &res)
-	return
+// PowerReduction - is the amount of staking tokens required for 1 unit of consensus-engine power.
+// Currently, this returns a global variable that the app developer can tweak.
+// TODO: we might turn this into an on-chain param:
+// https://github.com/cosmos/cosmos-sdk/issues/8365
+func (k Keeper) PowerReduction(ctx sdk.Context) sdk.Int {
+	return sdk.DefaultPowerReduction
 }
 
 // Get all parameteras as types.Params
@@ -54,7 +55,6 @@ func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 		k.MaxEntries(ctx),
 		k.HistoricalEntries(ctx),
 		k.BondDenom(ctx),
-		k.PowerReduction(ctx),
 	)
 }
 

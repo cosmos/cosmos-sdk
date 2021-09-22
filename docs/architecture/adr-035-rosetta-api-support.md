@@ -7,33 +7,33 @@
 - Alessio Treglia (@alessio)
 - Frojdy Dymylja (@fdymylja)
 
-
 ## Changelog
 
 - 2021-05-12: the external library  [cosmos-rosetta-gateway](https://github.com/tendermint/cosmos-rosetta-gateway) has been moved within the SDK.
+
 ## Context
 
-[Rosetta API](https://www.rosetta-api.org/) is an open-source specification and set of tools developed by Coinbase to 
+[Rosetta API](https://www.rosetta-api.org/) is an open-source specification and set of tools developed by Coinbase to
 standardise blockchain interactions.
 
 Through the use of a standard API for integrating blockchain applications it will
 
 * Be easier for a user to interact with a given blockchain
 * Allow exchanges to integrate new blockchains quickly and easily
-* Enable application developers to build cross-blockchain applications such as block explorers, wallets and dApps at 
+* Enable application developers to build cross-blockchain applications such as block explorers, wallets and dApps at
   considerably lower cost and effort.
 
 ## Decision
 
-It is clear that adding Rosetta API support to the Cosmos SDK will bring value to all the developers and 
+It is clear that adding Rosetta API support to the Cosmos SDK will bring value to all the developers and
 Cosmos SDK based chains in the ecosystem. How it is implemented is key.
 
 The driving principles of the proposed design are:
 
-1. **Extensibility:** it must be as riskless and painless as possible for application developers to set-up network 
+1. **Extensibility:** it must be as riskless and painless as possible for application developers to set-up network
    configurations to expose Rosetta API-compliant services.
 2. **Long term support:** This proposal aims to provide support for all the supported Cosmos SDK release series.
-3. **Cost-efficiency:** Backporting changes to Rosetta API specifications from `master` to the various stable 
+3. **Cost-efficiency:** Backporting changes to Rosetta API specifications from `master` to the various stable
    branches of Cosmos SDK is a cost that needs to be reduced.
 
 We will achieve these delivering on these principles by the following:
@@ -44,11 +44,10 @@ We will achieve these delivering on these principles by the following:
    b. The `Server` functionality as this is independent of the Cosmos SDK version.
    c. The `Online/OfflineNetwork`, which is not exported, and implements the rosetta API using the `Client` interface to query the node, build tx and so on.
    d. The `errors` package to extend rosetta errors.
-2. Due to differences between the Cosmos release series, each series will have its own specific implementation of `Client` interface. 
+2. Due to differences between the Cosmos release series, each series will have its own specific implementation of `Client` interface.
 3. There will be two options for starting an API service in applications:
    a. API shares the application process
    b. API-specific process.
-
 
 ## Architecture
 
@@ -65,6 +64,7 @@ The constructor follows:
 `func NewServer(settings Settings) (Server, error)`
 
 `Settings`, which are used to construct a new server, are the following:
+
 ```go
 // Settings define the rosetta server settings
 type Settings struct {
@@ -87,7 +87,6 @@ type Settings struct {
 #### Types
 
 Package types uses a mixture of rosetta types and custom defined type wrappers, that the client must parse and return while executing operations.
-
 
 ##### Interfaces
 
@@ -180,6 +179,7 @@ type Msg interface {
 ```
 
 Hence developers who want to extend the rosetta set of supported operations just need to extend their module's sdk.Msgs with the `ToOperations` and `FromOperations` methods.
+
 ### 3. API service invocation
 
 As stated at the start, application developers will have two methods for invocation of the Rosetta API service:
@@ -191,11 +191,9 @@ As stated at the start, application developers will have two methods for invocat
 
 Rosetta API service could run within the same execution process as the application. This would be enabled via app.toml settings, and if gRPC is not enabled the rosetta instance would be spinned in offline mode (tx building capabilities only).
 
-
 #### Separate API service
 
 Client application developers can write a new command to launch a Rosetta API server as a separate process too, using the rosetta command contained in the `/server/rosetta` package. Construction of the command depends on cosmos sdk version. Examples can be found inside `simd` for stargate, and `contrib/rosetta/simapp` for other release series.
-
 
 ## Status
 

@@ -15,6 +15,7 @@ This ADR defines the `x/group` module which allows the creation and management o
 ## Context
 
 The legacy amino multi-signature mechanism of the Cosmos SDK has certain limitations:
+
 - Key rotation is not possible, although this can be solved with [account rekeying](adr-034-account-rekeying.md).
 - Thresholds can't be changed.
 - UX is cumbersome for non-technical users ([#5661](https://github.com/cosmos/cosmos-sdk/issues/5661)).
@@ -47,7 +48,7 @@ message GroupInfo {
 
     // admin is the account address of the group's admin.
     string admin = 2;
-    
+
     // metadata is any arbitrary metadata to attached to the group.
     bytes metadata = 3;
 
@@ -78,10 +79,10 @@ message Member {
 
     // address is the member's account address.
     string address = 1;
-    
+
     // weight is the member's voting weight that should be greater than 0.
     string weight = 2;
-    
+
     // metadata is any arbitrary metadata to attached to the member.
     bytes metadata = 3;
 }
@@ -106,13 +107,13 @@ message GroupAccountInfo {
 
     // address is the group account address.
     string address = 1;
-    
+
     // group_id is the ID of the Group the GroupAccount belongs to.
     uint64 group_id = 2;
 
     // admin is the account address of the group admin.
     string admin = 3;
-    
+
     // metadata is any arbitrary metadata of this group account.
     bytes metadata = 4;
 
@@ -132,13 +133,13 @@ For instance, a group admin could be another group account which could "elects" 
 
 ### Decision Policy
 
-A decision policy is the mechanism by which members of a group can vote on 
+A decision policy is the mechanism by which members of a group can vote on
 proposals.
 
 All decision policies should have a minimum and maximum voting window.
 The minimum voting window is the minimum duration that must pass in order
 for a proposal to potentially pass, and it may be set to 0. The maximum voting
-window is the maximum time that a proposal may be voted on and executed if 
+window is the maximum time that a proposal may be voted on and executed if
 it reached enough support before it is closed.
 Both of these values must be less than a chain-wide max voting window parameter.
 
@@ -171,7 +172,7 @@ message ThresholdDecisionPolicy {
 
     // threshold is the minimum weighted sum of support votes for a proposal to succeed.
     string threshold = 1;
-    
+
     // voting_period is the duration from submission of a proposal to the end of voting period
     // Within this period, votes and exec messages can be submitted.
     google.protobuf.Duration voting_period = 2 [(gogoproto.nullable) = false];
@@ -185,6 +186,7 @@ A proposal consists of a set of `sdk.Msg`s that will be executed if the proposal
 passes as well as any metadata associated with the proposal. These `sdk.Msg`s get validated as part of the `Msg/CreateProposal` request validation. They should also have their signer set as the group account.
 
 Internally, a proposal also tracks:
+
 - its current `Status`: submitted, closed or aborted
 - its `Result`: unfinalized, accepted or rejected
 - its `VoteState` in the form of a `Tally`, which is calculated on new votes and when executing the proposal.
@@ -196,13 +198,13 @@ message Tally {
 
     // yes_count is the weighted sum of yes votes.
     string yes_count = 1;
-    
+
     // no_count is the weighted sum of no votes.
     string no_count = 2;
-    
+
     // abstain_count is the weighted sum of abstainers.
     string abstain_count = 3;
-    
+
     // veto_count is the weighted sum of vetoes.
     string veto_count = 4;
 }
@@ -265,13 +267,13 @@ Inter-module communication introduced by [ADR-033](adr-033-protobuf-inter-module
 
 - Convergence of `/group` and `x/gov` as both support proposals and voting: https://github.com/cosmos/cosmos-sdk/discussions/9066
 - `x/group` possible future improvements:
-  - Execute proposals on submission (https://github.com/regen-network/regen-ledger/issues/288)
-  - Withdraw a proposal (https://github.com/regen-network/cosmos-modules/issues/41)
-  - Make `Tally` more flexible and support non-binary choices
+    - Execute proposals on submission (https://github.com/regen-network/regen-ledger/issues/288)
+    - Withdraw a proposal (https://github.com/regen-network/cosmos-modules/issues/41)
+    - Make `Tally` more flexible and support non-binary choices
 
 ## References
 
 - Initial specification:
-  - https://gist.github.com/aaronc/b60628017352df5983791cad30babe56#group-module
-  - [#5236](https://github.com/cosmos/cosmos-sdk/pull/5236)
+    - https://gist.github.com/aaronc/b60628017352df5983791cad30babe56#group-module
+    - [#5236](https://github.com/cosmos/cosmos-sdk/pull/5236)
 - Proposal to add `x/group` into the SDK: [#7633](https://github.com/cosmos/cosmos-sdk/issues/7633)

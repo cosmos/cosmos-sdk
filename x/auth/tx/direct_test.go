@@ -131,6 +131,7 @@ func TestDirectModeHandler(t *testing.T) {
 
 func TestDirectModeHandler_nonDIRECT_MODE(t *testing.T) {
 	invalidModes := []signingtypes.SignMode{
+		signingtypes.SignMode_SIGN_MODE_DIRECT_JSON,
 		signingtypes.SignMode_SIGN_MODE_TEXTUAL,
 		signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		signingtypes.SignMode_SIGN_MODE_UNSPECIFIED,

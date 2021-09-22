@@ -34,11 +34,11 @@ For some `Equivocation` submitted in `block` to be valid, it must satisfy:
 
 Where:
 
-- `Evidence.Timestamp` is the timestamp in the block at height `Evidence.Height` 
+- `Evidence.Timestamp` is the timestamp in the block at height `Evidence.Height`
 - `block.Timestamp` is the current block timestamp.
 
 If valid `Equivocation` evidence is included in a block, the validator's stake is
-reduced (slashed) by `SlashFractionDoubleSign` as defined by the `x/slashing` module 
+reduced (slashed) by `SlashFractionDoubleSign` as defined by the `x/slashing` module
 of what their stake was when the infraction occurred, rather than when the evidence was discovered.
 We want to "follow the stake", i.e., the stake that contributed to the infraction
 should be slashed, even if it has since been redelegated or started unbonding.
@@ -150,5 +150,5 @@ func (k Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 ```
 
 Note, the slashing, jailing, and tombstoning calls are delegated through the `x/slashing` module
-that emits informative events and finally delegates calls to the `x/staking` module. See documentation 
+that emits informative events and finally delegates calls to the `x/staking` module. See documentation
 on slashing and jailing in [x/staking spec](/.././cosmos-sdk/x/staking/spec/02_state_transitions.md).

@@ -9,6 +9,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -140,6 +141,9 @@ type GRPCWebConfig struct {
 
 	// Address defines the gRPC-web server to listen on
 	Address string `mapstructure:"address"`
+
+	// EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk)
+	EnableUnsafeCORS bool `mapstructure:"enable-unsafe-cors"`
 }
 
 // StateSyncConfig defines the state sync snapshot configuration.
@@ -297,12 +301,22 @@ func GetConfig(v *viper.Viper) Config {
 			Address: v.GetString("grpc.address"),
 		},
 		GRPCWeb: GRPCWebConfig{
-			Enable:  v.GetBool("grpc-web.enable"),
-			Address: v.GetString("grpc-web.address"),
+			Enable:           v.GetBool("grpc-web.enable"),
+			Address:          v.GetString("grpc-web.address"),
+			EnableUnsafeCORS: v.GetBool("grpc-web.enable-unsafe-cors"),
 		},
 		StateSync: StateSyncConfig{
 			SnapshotInterval:   v.GetUint64("state-sync.snapshot-interval"),
 			SnapshotKeepRecent: v.GetUint32("state-sync.snapshot-keep-recent"),
 		},
 	}
+}
+
+// ValidateBasic returns an error if min-gas-prices field is empty in BaseConfig. Otherwise, it returns nil.
+func (c Config) ValidateBasic() error {
+	if c.BaseConfig.MinGasPrices == "" {
+		return sdkerrors.ErrAppConfig.Wrap("set min gas price in app.toml or flag or env variable")
+	}
+
+	return nil
 }

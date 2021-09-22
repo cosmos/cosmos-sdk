@@ -8,22 +8,22 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 type Keeper struct {
 	storeKey sdk.StoreKey
 	cdc      codec.BinaryCodec
-	router   *baseapp.MsgServiceRouter
+	router   *middleware.MsgServiceRouter
 }
 
 // NewKeeper constructs a message authorization Keeper
-func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryCodec, router *baseapp.MsgServiceRouter) Keeper {
+func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryCodec, router *middleware.MsgServiceRouter) Keeper {
 	return Keeper{
 		storeKey: storeKey,
 		cdc:      cdc,
@@ -72,15 +72,15 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 
 // DispatchActions attempts to execute the provided messages via authorization
 // grants from the message signer to the grantee.
-func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) (*sdk.Result, error) {
-	var msgResult *sdk.Result
-	var err error
-	for _, msg := range msgs {
+func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) ([][]byte, error) {
+	var results = make([][]byte, len(msgs))
+	for i, msg := range msgs {
 		signers := msg.GetSigners()
 		if len(signers) != 1 {
 			return nil, sdkerrors.ErrInvalidRequest.Wrap("authorization can be given to msg with only one signer")
 		}
 		granter := signers[0]
+
 		// if granter != grantee then check authorization.Accept, otherwise we implicitly accept.
 		if !granter.Equals(grantee) {
 			authorization, _ := k.GetCleanAuthorization(ctx, grantee, granter, sdk.MsgTypeURL(msg))
@@ -103,19 +103,28 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 				return nil, sdkerrors.ErrUnauthorized
 			}
 		}
-		handler := k.router.Handler(msg)
 
+		handler := k.router.Handler(msg)
 		if handler == nil {
 			return nil, sdkerrors.ErrUnknownRequest.Wrapf("unrecognized message route: %s", sdk.MsgTypeURL(msg))
 		}
 
-		msgResult, err = handler(ctx, msg)
+		msgResp, err := handler(ctx, msg)
 		if err != nil {
 			return nil, sdkerrors.Wrapf(err, "failed to execute message; message %v", msg)
 		}
+		results[i] = msgResp.Data
+
+		// emit the events from the dispatched actions
+		events := msgResp.Events
+		sdkEvents := make([]sdk.Event, 0, len(events))
+		for i := 0; i < len(events); i++ {
+			sdkEvents = append(sdkEvents, sdk.Event(events[i]))
+		}
+		ctx.EventManager().EmitEvents(sdkEvents)
 	}
 
-	return msgResult, nil
+	return results, nil
 }
 
 // SaveGrant method grants the provided authorization to the grantee on the granter's account

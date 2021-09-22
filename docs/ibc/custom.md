@@ -84,7 +84,7 @@ OnChanOpenTry(
             return err
         }
     }
-    
+
     // ... do custom initialization logic
 
     // Use above arguments to determine if we want to abort handshake
@@ -342,10 +342,10 @@ acknowledgement. An example of this technique is in the `ibc-transfer` module's
 ### Acknowledgements
 
 Modules may commit an acknowledgement upon receiving and processing a packet in the case of synchronous packet processing.
-In the case where a packet is processed at some later point after the packet has been received (asynchronous execution), the acknowledgement 
+In the case where a packet is processed at some later point after the packet has been received (asynchronous execution), the acknowledgement
 will be written once the packet has been processed by the application which may be well after the packet receipt.
 
-NOTE: Most blockchain modules will want to use the synchronous execution model in which the module processes and writes the acknowledgement 
+NOTE: Most blockchain modules will want to use the synchronous execution model in which the module processes and writes the acknowledgement
 for a packet as soon as it has been received from the IBC module.
 
 This acknowledgement can then be relayed back to the original sender chain, which can take action
@@ -408,7 +408,7 @@ OnAcknowledgementPacket(
 
 #### Timeout Packets
 
-If the timeout for a packet is reached before the packet is successfully received or the 
+If the timeout for a packet is reached before the packet is successfully received or the
 counterparty channel end is closed before the packet is successfully received, then the receiving
 chain can no longer process it. Thus, the sending chain must process the timeout using
 `OnTimeoutPacket` to handle this situation. Again the IBC module will verify that the timeout is

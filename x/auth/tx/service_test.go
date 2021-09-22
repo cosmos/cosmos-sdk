@@ -19,11 +19,11 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -49,14 +49,15 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	cfg := network.DefaultConfig()
 	cfg.NumValidators = 1
-
 	s.cfg = cfg
-	s.network = network.New(s.T(), cfg)
-	s.Require().NotNil(s.network)
+
+	var err error
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
 
-	_, err := s.network.WaitForHeight(1)
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
 	s.queryClient = tx.NewServiceClient(val.ClientCtx)
@@ -76,7 +77,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=foobar", flags.FlagNote),
 	)
 	s.Require().NoError(err)
-	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &s.txRes))
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &s.txRes))
 	s.Require().Equal(uint32(0), s.txRes.Code)
 
 	s.Require().NoError(s.network.WaitForNextBlock())
@@ -121,8 +122,15 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
 			} else {
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
-				s.Require().Equal(len(res.GetResult().GetEvents()), 6) // 1 coin recv 1 coin spent, 1 transfer, 3 messages.
-				s.Require().True(res.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
+				//
+				// The 13 events are:
+				// - Sending Fee to the pool: coin_spent, coin_received, transfer and message.sender=<val1>
+				// - tx.* events: tx.fee, tx.acc_seq, tx.signature
+				// - Sending Amount to recipient: coin_spent, coin_received, transfer and message.sender=<val1>
+				// - Msg events: message.module=bank and message.action=/cosmos.bank.v1beta1.MsgSend
+				s.Require().Equal(len(res.GetResult().GetEvents()), 13)
+				// Check the result and gas used are correct.
+				s.Require().True(res.GetGasInfo().GetGasUsed() > 0) // Gas used sometimes change, just check it's not empty.
 			}
 		})
 	}
@@ -151,7 +159,7 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			req, err := val.ClientCtx.JSONCodec.MarshalJSON(tc.req)
+			req, err := val.ClientCtx.Codec.MarshalJSON(tc.req)
 			s.Require().NoError(err)
 			res, err := rest.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/simulate", val.APIAddress), "application/json", req)
 			s.Require().NoError(err)
@@ -159,11 +167,11 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result tx.SimulateResponse
-				err = val.ClientCtx.JSONCodec.UnmarshalJSON(res, &result)
+				err = val.ClientCtx.Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
-				s.Require().Equal(len(result.GetResult().GetEvents()), 6) // 1 coin recv, 1 coin spent,1 transfer, 3 messages.
-				s.Require().True(result.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
+				s.Require().Equal(len(result.GetResult().GetEvents()), 13) // See TestSimulateTx_GRPC for the 13 events.
+				s.Require().True(result.GetGasInfo().GetGasUsed() > 0)     // Gas used sometimes change, just check it's not empty.
 			}
 		})
 	}
@@ -313,7 +321,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result tx.GetTxsEventResponse
-				err = val.ClientCtx.JSONCodec.UnmarshalJSON(res, &result)
+				err = val.ClientCtx.Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				s.Require().GreaterOrEqual(len(result.Txs), 1)
 				s.Require().Equal("foobar", result.Txs[0].Body.Memo)
@@ -382,7 +390,7 @@ func (s IntegrationTestSuite) TestGetTx_GRPCGateway() {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result tx.GetTxResponse
-				err = val.ClientCtx.JSONCodec.UnmarshalJSON(res, &result)
+				err = val.ClientCtx.Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				s.Require().Equal("foobar", result.Tx.Body.Memo)
 				s.Require().NotZero(result.TxResponse.Height)
@@ -459,7 +467,7 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			req, err := val.ClientCtx.JSONCodec.MarshalJSON(tc.req)
+			req, err := val.ClientCtx.Codec.MarshalJSON(tc.req)
 			s.Require().NoError(err)
 			res, err := rest.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress), "application/json", req)
 			s.Require().NoError(err)
@@ -467,7 +475,7 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result tx.BroadcastTxResponse
-				err = val.ClientCtx.JSONCodec.UnmarshalJSON(res, &result)
+				err = val.ClientCtx.Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				s.Require().Equal(uint32(0), result.TxResponse.Code, "rawlog", result.TxResponse.RawLog)
 			}
@@ -486,18 +494,27 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 	account2, _, err := kr.NewMnemonic("newAccount2", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
-	multi := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{account1.GetPubKey(), account2.GetPubKey()})
+	pub1, err := account1.GetPubKey()
+	s.Require().NoError(err)
+
+	pub2, err := account2.GetPubKey()
+	s.Require().NoError(err)
+
+	multi := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pub1, pub2})
 	_, err = kr.SaveMultisig("multi", multi)
 	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
-	multisigInfo, err := val1.ClientCtx.Keyring.Key("multi")
+	multisigRecord, err := val1.ClientCtx.Keyring.Key("multi")
 	s.Require().NoError(err)
 
 	height, err := s.network.LatestHeight()
 	_, err = s.network.WaitForHeight(height + 1)
+	s.Require().NoError(err)
+
+	addr, err := multisigRecord.GetAddress()
 	s.Require().NoError(err)
 
 	// Send coins from validator to multisig.
@@ -505,7 +522,7 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 	_, err = bankcli.MsgSendExec(
 		val1.ClientCtx,
 		val1.Address,
-		multisigInfo.GetAddress(),
+		addr,
 		sdk.NewCoins(coins),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -520,7 +537,7 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 	// Generate multisig transaction.
 	multiGeneratedTx, err := bankcli.MsgSendExec(
 		val1.ClientCtx,
-		multisigInfo.GetAddress(),
+		addr,
 		val1.Address,
 		sdk.NewCoins(
 			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
@@ -537,19 +554,23 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 	multiGeneratedTxFile := testutil.WriteToNewTempFile(s.T(), multiGeneratedTx.String())
 
 	// Sign with account1
+	addr1, err := account1.GetAddress()
+	s.Require().NoError(err)
 	val1.ClientCtx.HomeDir = strings.Replace(val1.ClientCtx.HomeDir, "simd", "simcli", 1)
-	account1Signature, err := authtest.TxSignExec(val1.ClientCtx, account1.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
+	account1Signature, err := authtest.TxSignExec(val1.ClientCtx, addr1, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 	sign1File := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
 
 	// Sign with account2
-	account2Signature, err := authtest.TxSignExec(val1.ClientCtx, account2.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
+	addr2, err := account2.GetAddress()
+	s.Require().NoError(err)
+	account2Signature, err := authtest.TxSignExec(val1.ClientCtx, addr2, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 	sign2File := testutil.WriteToNewTempFile(s.T(), account2Signature.String())
 
 	// multisign tx
 	val1.ClientCtx.Offline = false
-	multiSigWith2Signatures, err := authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
+	multiSigWith2Signatures, err := authtest.TxMultiSignExec(val1.ClientCtx, multisigRecord.Name, multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
 	s.Require().NoError(err)
 
 	// convert from protoJSON to protoBinary for sim

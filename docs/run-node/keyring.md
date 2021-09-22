@@ -25,8 +25,8 @@ is a list of the most popular operating systems and their respective passwords m
 - macOS (since Mac OS 8.6): [Keychain](https://support.apple.com/en-gb/guide/keychain-access/welcome/mac)
 - Windows: [Credentials Management API](https://docs.microsoft.com/en-us/windows/win32/secauthn/credentials-management)
 - GNU/Linux:
-  - [libsecret](https://gitlab.gnome.org/GNOME/libsecret)
-  - [kwallet](https://api.kde.org/frameworks/kwallet/html/index.html)
+    - [libsecret](https://gitlab.gnome.org/GNOME/libsecret)
+    - [kwallet](https://api.kde.org/frameworks/kwallet/html/index.html)
 
 GNU/Linux distributions that use GNOME as default desktop environment typically come with
 [Seahorse](https://wiki.gnome.org/Apps/Seahorse). Users of KDE based distributions are
@@ -78,7 +78,7 @@ passphrase expiration.
 The password store must be set up prior to first use:
 
 ```sh
-$ pass init <GPG_KEY_ID>
+pass init <GPG_KEY_ID>
 ```
 
 Replace `<GPG_KEY_ID>` with your GPG key ID. You can use your personal GPG key or an alternative

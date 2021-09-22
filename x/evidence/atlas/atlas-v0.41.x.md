@@ -43,7 +43,7 @@ with particular kinds of accounts.
    func NewApp(...) *App {
      // ...
       keys := sdk.NewKVStoreKeys(
-      evidencetypes.StoreKey, 
+      evidencetypes.StoreKey,
       )
      // ...
    }
@@ -81,7 +81,7 @@ with particular kinds of accounts.
      // ...
       app.mm.SetOrderBeginBlockers(
         // ...
-        evidencetypes.ModuleName, 
+        evidencetypes.ModuleName,
         // ...
       )
     }

@@ -1,31 +1,31 @@
 <!--
-order: 6
+order: 5
 -->
 
 # Vesting
 
 - [Vesting](#vesting)
-  - [Intro and Requirements](#intro-and-requirements)
-  - [Note](#note)
-  - [Vesting Account Types](#vesting-account-types)
-  - [Vesting Account Specification](#vesting-account-specification)
-    - [Determining Vesting & Vested Amounts](#determining-vesting--vested-amounts)
-      - [Continuously Vesting Accounts](#continuously-vesting-accounts)
-    - [Periodic Vesting Accounts](#periodic-vesting-accounts)
-      - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts)
-    - [Transferring/Sending](#transferringsending)
-      - [Keepers/Handlers](#keepershandlers)
-    - [Delegating](#delegating)
-      - [Keepers/Handlers](#keepershandlers-1)
-    - [Undelegating](#undelegating)
-      - [Keepers/Handlers](#keepershandlers-2)
-  - [Keepers & Handlers](#keepers--handlers)
-  - [Genesis Initialization](#genesis-initialization)
-  - [Examples](#examples)
-    - [Simple](#simple)
-    - [Slashing](#slashing)
-    - [Periodic Vesting](#periodic-vesting)
-  - [Glossary](#glossary)
+    - [Intro and Requirements](#intro-and-requirements)
+    - [Note](#note)
+    - [Vesting Account Types](#vesting-account-types)
+    - [Vesting Account Specification](#vesting-account-specification)
+        - [Determining Vesting & Vested Amounts](#determining-vesting--vested-amounts)
+            - [Continuously Vesting Accounts](#continuously-vesting-accounts)
+        - [Periodic Vesting Accounts](#periodic-vesting-accounts)
+            - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts)
+        - [Transferring/Sending](#transferringsending)
+            - [Keepers/Handlers](#keepershandlers)
+        - [Delegating](#delegating)
+            - [Keepers/Handlers](#keepershandlers-1)
+        - [Undelegating](#undelegating)
+            - [Keepers/Handlers](#keepershandlers-2)
+    - [Keepers & Handlers](#keepers--handlers)
+    - [Genesis Initialization](#genesis-initialization)
+    - [Examples](#examples)
+        - [Simple](#simple)
+        - [Slashing](#slashing)
+        - [Periodic Vesting](#periodic-vesting)
+    - [Glossary](#glossary)
 
 ## Intro and Requirements
 
@@ -39,7 +39,7 @@ are included, the vesting will occur over the specified number of periods.
 
 For all vesting accounts, the owner of the vesting account is able to delegate
 and undelegate from validators, however they cannot transfer coins to another
-account until those coins are vested. This specification allows for three
+account until those coins are vested. This specification allows for four
 different kinds of vesting:
 
 - Delayed vesting, where all coins are vested once `ET` is reached.
@@ -53,13 +53,15 @@ vesting account in that coins can be released in staggered tranches. For
 example, a periodic vesting account could be used for vesting arrangements
 where coins are relased quarterly, yearly, or over any other function of
 tokens over time.
+- Permanent locked vesting, where coins are locked forever. Coins in this account can
+still be used for delegating and for governance votes even while locked.
 
 ## Note
 
 Vesting accounts can be initialized with some vesting and non-vesting coins.
-The non-vesting coins would be immediately transferable. The current
-specification does not allow for vesting accounts to be created with normal
-messages after genesis. All vesting accounts must be created at genesis, or as
+The non-vesting coins would be immediately transferable. DelayedVesting and
+ContinuousVesting accounts can be created with normal messages after genesis.
+Other types of vesting accounts must be created at genesis, or as
 part of a manual network upgrade. The current specification only allows
 for _unconditional_ vesting (ie. there is no possibility of reaching `ET` and
 having coins fail to vest).
@@ -89,16 +91,21 @@ type VestingAccount interface {
   GetEndTime()   int64
 }
 ```
+
 ### BaseVestingAccount
+
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L10-L33
 
 ### ContinuousVestingAccount
+
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L35-L43
 
 ### DelayedVestingAccount
+
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L45-L53
 
 ### Period
+
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L56-L62
 
 ```go
@@ -108,6 +115,7 @@ type Periods []Period
 ```
 
 ### PeriodicVestingAccount
+
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L64-L73
 
 In order to facilitate less ad-hoc type checking and assertions and to support
@@ -125,6 +133,10 @@ type ViewKeeper interface {
   SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 }
 ```
+
+### PermanentLockedAccount
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L78-L83
 
 ## Vesting Account Specification
 
@@ -608,3 +620,5 @@ linearly over time.
 all coins at a given time.
 - PeriodicVestingAccount: A vesting account implementation that vests coins
 according to a custom vesting schedule.
+- PermanentLockedAccount: It does not ever release coins, locking them indefinitely.
+Coins in this account can still be used for delegating and for governance votes even while locked.

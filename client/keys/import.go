@@ -18,11 +18,11 @@ func ImportKeyCommand() *cobra.Command {
 		Long:  "Import a ASCII armored private key into the local keybase.",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			buf := bufio.NewReader(cmd.InOrStdin())
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
+			buf := bufio.NewReader(clientCtx.Input)
 
 			bz, err := ioutil.ReadFile(args[1])
 			if err != nil {

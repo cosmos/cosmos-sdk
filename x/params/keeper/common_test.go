@@ -9,7 +9,7 @@ import (
 )
 
 func testComponents() (*codec.LegacyAmino, sdk.Context, sdk.StoreKey, sdk.StoreKey, paramskeeper.Keeper) {
-	marshaler := simapp.MakeTestEncodingConfig().Marshaler
+	marshaler := simapp.MakeTestEncodingConfig().Codec
 	legacyAmino := createTestCodec()
 	mkey := sdk.NewKVStoreKey("test")
 	tkey := sdk.NewTransientStoreKey("transient_test")

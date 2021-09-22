@@ -18,7 +18,7 @@ of errors is handled via the `types/errors` package.
 
 Example:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.38.1/x/distribution/types/errors.go#L1-L21
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/x/distribution/types/errors.go#L1-L21
 
 Each custom module error must provide the codespace, which is typically the module name
 (e.g. "distribution") and is unique per module, and a uint32 code. Together, the codespace and code
@@ -48,7 +48,3 @@ an error is of a particular kind via `Is`.
 If a module error is registered, the SDK `errors` package allows ABCI information to be extracted
 through the `ABCIInfo` API. The package also provides `ResponseCheckTx` and `ResponseDeliverTx` as
 auxiliary APIs to automatically get `CheckTx` and `DeliverTx` responses from an error.
-
-## Next {hide}
-
-Learn about [interfaces](../interfaces/interfaces-intro.md) {hide}

@@ -141,7 +141,7 @@ The `x/bank` supports the following transactional commands.
 1. Send tokens via a `MsgSend` message.
 
    ```shell
-   $ app tx send [from_key_or_address] [to_address] [amount] [...flags]
+   app tx send [from_key_or_address] [to_address] [amount] [...flags]
    ```
 
 Note, the `x/bank` module does not natively support constructing a `MsgMultiSend`

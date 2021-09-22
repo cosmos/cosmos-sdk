@@ -92,7 +92,7 @@ to set up a script to periodically withdraw and rebond rewards.
     - [MsgSetWithdrawAddress](04_messages.md#msgsetwithdrawaddress)
     - [MsgWithdrawDelegatorReward](04_messages.md#msgwithdrawdelegatorreward)
         - [Withdraw Validator Rewards All](04_messages.md#withdraw-validator-rewards-all)
-    - [Common calculations ](04_messages.md#common-calculations-)
+    - [Common calculations](04_messages.md#common-calculations-)
 5. **[Hooks](05_hooks.md)**
     - [Create or modify delegation distribution](05_hooks.md#create-or-modify-delegation-distribution)
     - [Commission rate change](05_hooks.md#commission-rate-change)
@@ -101,3 +101,6 @@ to set up a script to periodically withdraw and rebond rewards.
     - [BeginBlocker](06_events.md#beginblocker)
     - [Handlers](06_events.md#handlers)
 7. **[Parameters](07_params.md)**
+8. **[Parameters](07_params.md)**
+    - [CLI](08_client.md#cli)
+    - [gRPC](08_client.md#grpc)

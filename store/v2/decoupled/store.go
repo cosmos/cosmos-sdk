@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"io"
 	"sync"
 	"time"
 
@@ -11,6 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/db/prefix"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	types "github.com/cosmos/cosmos-sdk/store/v2"
 	"github.com/cosmos/cosmos-sdk/store/v2/smt"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -437,4 +441,16 @@ func loadSMT(merkleTxn dbm.DBReadWriter, root []byte) *smt.Store {
 	merkleNodes := prefix.NewPrefixReadWriter(merkleTxn, merkleNodePrefix)
 	merkleValues := prefix.NewPrefixReadWriter(merkleTxn, merkleValuePrefix)
 	return smt.LoadStore(merkleNodes, merkleValues, root)
+}
+
+func (st *Store) CacheWrap() types.CacheWrap {
+	return cachekv.NewStore(st)
+}
+
+func (st *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
+	return cachekv.NewStore(tracekv.NewStore(st, w, tc))
+}
+
+func (st *Store) CacheWrapWithListeners(storeKey types.StoreKey, listeners []types.WriteListener) types.CacheWrap {
+	return cachekv.NewStore(listenkv.NewStore(st, storeKey, listeners))
 }

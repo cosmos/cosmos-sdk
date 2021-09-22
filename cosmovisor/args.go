@@ -120,6 +120,7 @@ func (cfg *Config) CurrentBin() (string, error) {
 // GetConfigFromEnv will read the environmental variables into a config
 // and then validate it is reasonable
 func GetConfigFromEnv() (*Config, error) {
+	var errs []error
 	cfg := &Config{
 		Home: os.Getenv(envHome),
 		Name: os.Getenv(envName),
@@ -127,28 +128,33 @@ func GetConfigFromEnv() (*Config, error) {
 
 	var err error
 	if cfg.AllowDownloadBinaries, err = booleanOption(envDownloadBin, false); err != nil {
-		return nil, err
+		errs = append(errs, err)
 	}
 	if cfg.RestartAfterUpgrade, err = booleanOption(envRestartUpgrade, true); err != nil {
-		return nil, err
+		errs = append(errs, err)
 	}
 	if cfg.UnsafeSkipBackup, err = booleanOption(envSkipBackup, false); err != nil {
-		return nil, err
+		errs = append(errs, err)
 	}
 
 	interval := os.Getenv(envInterval)
 	if interval != "" {
-		i, err := strconv.ParseUint(interval, 10, 32)
-		if err != nil {
-			return nil, err
+		switch i, e := strconv.ParseUint(interval, 10, 32); {
+		case e != nil:
+			errs = append(errs, fmt.Errorf("invalid %s: %w", envInterval, err))
+		case i == 0:
+			errs = append(errs, fmt.Errorf("invalid %s: cannot be 0", envInterval))
+		default:
+			cfg.PollInterval = time.Millisecond * time.Duration(i)
 		}
-		cfg.PollInterval = time.Millisecond * time.Duration(i)
 	} else {
 		cfg.PollInterval = 300 * time.Millisecond
 	}
 
-	if err := cfg.validate(); err != nil {
-		return nil, err
+	errs = append(errs, cfg.validate()...)
+
+	if len(errs) > 0 {
+		return nil, FlattenErrors(errs...)
 	}
 	return cfg, nil
 }
@@ -156,30 +162,27 @@ func GetConfigFromEnv() (*Config, error) {
 // validate returns an error if this config is invalid.
 // it enforces Home/cosmovisor is a valid directory and exists,
 // and that Name is set
-func (cfg *Config) validate() error {
+func (cfg *Config) validate() []error {
+	var errs []error
 	if cfg.Name == "" {
-		return errors.New(envName + " is not set")
+		errs = append(errs, errors.New(envName + " is not set"))
 	}
 
-	if cfg.Home == "" {
-		return errors.New(envHome + " is not set")
+	switch {
+	case cfg.Home == "":
+		errs = append(errs, errors.New(envHome + " is not set"))
+	case !filepath.IsAbs(cfg.Home):
+		errs = append(errs, errors.New(envHome + " must be an absolute path"))
+	default:
+		switch info, err := os.Stat(cfg.Root()); {
+		case err != nil:
+			errs = append(errs, fmt.Errorf("cannot stat home dir: %w", err))
+		case !info.IsDir():
+			errs = append(errs, fmt.Errorf("%s is not a directory", info.Name()))
+		}
 	}
 
-	if !filepath.IsAbs(cfg.Home) {
-		return errors.New(envHome + " must be an absolute path")
-	}
-
-	// ensure the root directory exists
-	info, err := os.Stat(cfg.Root())
-	if err != nil {
-		return fmt.Errorf("cannot stat home dir: %w", err)
-	}
-
-	if !info.IsDir() {
-		return fmt.Errorf("%s is not a directory", info.Name())
-	}
-
-	return nil
+	return errs
 }
 
 // SetCurrentUpgrade sets the named upgrade to be the current link, returns error if this binary doesn't exist
@@ -266,10 +269,10 @@ func (cfg Config) DetailString() string {
 	configEntries := []struct { name, value string }{
 		{"Home", cfg.Home},
 		{"Name", cfg.Name},
-		{"AllowDownloadBinaries", fmt.Sprintf("%b", cfg.AllowDownloadBinaries)},
-		{"RestartAfterUpgrade", fmt.Sprintf("%b", cfg.RestartAfterUpgrade)},
+		{"AllowDownloadBinaries", fmt.Sprintf("%t", cfg.AllowDownloadBinaries)},
+		{"RestartAfterUpgrade", fmt.Sprintf("%t", cfg.RestartAfterUpgrade)},
 		{"PollInterval", fmt.Sprintf("%s", cfg.PollInterval)},
-		{"UnsafeSkipBackup", fmt.Sprintf("%b", cfg.UnsafeSkipBackup)},
+		{"UnsafeSkipBackup", fmt.Sprintf("%t", cfg.UnsafeSkipBackup)},
 	}
 	derivedEntries := []struct { name, value string }{
 		{"Root Dir", cfg.Root()},
@@ -279,7 +282,7 @@ func (cfg Config) DetailString() string {
 	}
 
 	var sb strings.Builder
-	sb.WriteString("Configured Values:\n")
+	sb.WriteString("Configurable Values:\n")
 	for _, kv := range configEntries {
 		sb.WriteString(fmt.Sprintf("  %s: %s\n", kv.name, kv.value))
 	}

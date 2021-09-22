@@ -92,11 +92,11 @@ func (s *argsTestSuite) TestValidate() {
 	}
 
 	for _, tc := range cases {
-		err := tc.cfg.validate()
+		errs := tc.cfg.validate()
 		if tc.valid {
-			s.Require().NoError(err)
+			s.Require().Len(errs, 0)
 		} else {
-			s.Require().Error(err)
+			s.Require().Greater(len(errs), 0, "number of errors returned")
 		}
 	}
 }
@@ -107,7 +107,7 @@ func (s *argsTestSuite) TestEnsureBin() {
 	s.Require().NoError(err)
 
 	cfg := Config{Home: absPath, Name: "dummyd"}
-	s.Require().NoError(cfg.validate())
+	s.Require().Len(cfg.validate(), 0, "validation errors")
 
 	s.Require().NoError(EnsureBinary(cfg.GenesisBin()))
 

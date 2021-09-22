@@ -6,7 +6,7 @@ parent:
 
 # Introduction
 
-This folder contains introduction material on the Cosmos SDK.
+This introduction gives a quick start on the Cosmos SDK.
 
 1. [Overview](./overview.md)
 2. [Application-Specific Blockchains](./why-app-specific.md)

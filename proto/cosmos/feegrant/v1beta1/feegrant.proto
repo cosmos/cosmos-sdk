@@ -67,10 +67,10 @@ message AllowedMsgAllowance {
 // Grant is stored in the KVStore to record a grant with full context
 message Grant {
   // granter is the address of the user granting an allowance of their funds.
-  string granter = 1;
+  string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // grantee is the address of the user being granted an allowance of another user's funds.
-  string grantee = 2;
+  string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // allowance can be any of basic and filtered fee allowance.
   google.protobuf.Any allowance = 3 [(cosmos_proto.accepts_interface) = "FeeAllowanceI"];

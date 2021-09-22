@@ -1,0 +1,63 @@
+package cosmovisor
+
+import (
+	"fmt"
+	"strings"
+)
+
+// MultiError is an error combining multiple other errors
+type MultiError struct {
+	errs []error
+}
+
+// FlattenErrors possibly creates a MultiError.
+// If all provided errors are nil (or no errors are provided), nil is returned.
+// If only one non-nil error is provided, it is returned unchanged.
+// If two or more non-nil errors are provided, the returned error will be of type *MultiError.
+func FlattenErrors(errs ...error) error {
+	rv := MultiError{}
+	for _, err := range errs {
+		if err != nil {
+			rv.errs = append(rv.errs, err)
+		}
+	}
+	switch rv.Len() {
+	case 0:
+		return nil
+	case 1:
+		return rv.errs[0]
+	}
+	return &rv
+}
+
+// GetErrors gets all the errors involved in this MultiError.
+func (e MultiError) GetErrors() []error {
+	// Return a copy of the errs slice to prevent alteration of the original slice.
+	rv := make([]error, e.Len())
+	copy(rv, e.errs)
+	return rv
+}
+
+// Len gets the number of errors in this MultiError.
+func (e MultiError) Len() int {
+	return len(e.errs)
+}
+
+// Error implements the error interface for a MultiError.
+func (e *MultiError) Error() string {
+	// Assumes a MultiError cannot be created with 0 or 1 errors.
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("%d errors: ", len(e.errs)))
+	for i, err := range e.errs {
+		if i != 0 {
+			sb.WriteString(", ")
+		}
+		sb.WriteString(fmt.Sprintf("%d: %v", i+1, err))
+	}
+	return sb.String()
+}
+
+// String implements the string interface for a MultiError.
+func (e MultiError) String() string {
+	return e.Error()
+}

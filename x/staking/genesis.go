@@ -163,7 +163,7 @@ func InitGenesis(
 	keeper.SetEpochNumber(ctx, epochNumber)
 
 	for _, msg := range data.BufferedMsgs {
-		keeper.RestoreEpochAction(ctx, epochNumber, msg)
+		keeper.RestoreEpochMsg(ctx, epochNumber, msg)
 	}
 
 	return res
@@ -194,7 +194,7 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 		return false
 	})
 
-	msgs := keeper.GetEpochActions(ctx)
+	msgs := keeper.GetEpochMsgs(ctx)
 
 	var anys []*codectypes.Any
 	for _, msg := range msgs {

@@ -19,24 +19,24 @@ func (k Keeper) QueueMsgForEpoch(ctx sdk.Context, epochNumber int64, action sdk.
 	k.epochKeeper.QueueMsgForEpoch(ctx, epochNumber, action)
 }
 
-// RestoreEpochAction restore the actions that need to be executed on next epoch
-func (k Keeper) RestoreEpochAction(ctx sdk.Context, epochNumber int64, action *codectypes.Any) {
-	k.epochKeeper.RestoreEpochAction(ctx, epochNumber, action)
+// RestoreEpochMsg restore the actions that need to be executed on next epoch
+func (k Keeper) RestoreEpochMsg(ctx sdk.Context, epochNumber int64, action *codectypes.Any) {
+	k.epochKeeper.RestoreEpochMsg(ctx, epochNumber, action)
 }
 
-// GetEpochAction get action by ID
-func (k Keeper) GetEpochAction(ctx sdk.Context, epochNumber int64, msgID uint64) sdk.Msg {
+// GetEpochMsg get action by ID
+func (k Keeper) GetEpochMsg(ctx sdk.Context, epochNumber int64, msgID uint64) sdk.Msg {
 	return k.epochKeeper.GetEpochMsg(ctx, epochNumber, msgID)
 }
 
-// GetEpochActions get all actions
-func (k Keeper) GetEpochActions(ctx sdk.Context) []sdk.Msg {
-	return k.epochKeeper.GetEpochActions(ctx)
+// GetEpochMsgs get all actions
+func (k Keeper) GetEpochMsgs(ctx sdk.Context) []sdk.Msg {
+	return k.epochKeeper.GetEpochMsgs(ctx)
 }
 
-// GetEpochActionByIterator get action by iterator
-func (k Keeper) GetEpochActionByIterator(iterator db.Iterator) sdk.Msg {
-	return k.epochKeeper.GetEpochActionByIterator(iterator)
+// GetEpochMsgByIterator get action by iterator
+func (k Keeper) GetEpochMsgByIterator(iterator db.Iterator) sdk.Msg {
+	return k.epochKeeper.GetEpochMsgByIterator(iterator)
 }
 
 // SetEpochNumber set epoch number

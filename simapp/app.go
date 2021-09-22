@@ -578,7 +578,6 @@ func GetMaccPerms() map[string][]string {
 
 // ExecuteEpoch run epoch execution for testing
 func (app *SimApp) ExecuteEpoch(ctx sdk.Context) {
-	// NOTE: slashing module endblocker should run before staking module since MsgUnjail epoch action should run before making
 	// validator set update on staking module
 	app.StakingKeeper.ExecuteEpoch(ctx)
 }

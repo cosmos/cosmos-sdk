@@ -336,8 +336,8 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 	logger := k.Logger(ctx)
 
 	// execute all epoch actions
-	for iterator := k.epochKeeper.GetEpochActionsIterator(ctx); iterator.Valid(); iterator.Next() {
-		msg := k.GetEpochActionByIterator(iterator)
+	for iterator := k.epochKeeper.GetEpochMsgssIterator(ctx); iterator.Valid(); iterator.Next() {
+		msg := k.GetEpochMsgByIterator(iterator)
 
 		switch msg := msg.(type) {
 		case *types.MsgCreateValidator:

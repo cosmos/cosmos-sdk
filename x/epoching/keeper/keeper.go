@@ -15,9 +15,9 @@ const (
 )
 
 var (
-	NextEpochActionID      = []byte{0x11}
-	EpochNumberID          = []byte{0x12}
-	EpochActionQueuePrefix = []byte{0x13} // prefix for the epoch
+	NextEpochActionID   = []byte{0x11}
+	EpochNumberID       = []byte{0x12}
+	EpochMsgQueuePrefix = []byte{0x13} // prefix for the epoch
 )
 
 // Keeper of the store
@@ -58,7 +58,7 @@ func (k Keeper) GetNewActionID(ctx sdk.Context) uint64 {
 
 // ActionStoreKey returns action store key from ID
 func ActionStoreKey(epochNumber int64, actionID uint64) []byte {
-	return append(EpochActionQueuePrefix, byte(epochNumber), byte(actionID))
+	return append(EpochMsgQueuePrefix, byte(epochNumber), byte(actionID))
 }
 
 // QueueMsgForEpoch save the actions that need to be executed on next epoch
@@ -74,8 +74,8 @@ func (k Keeper) QueueMsgForEpoch(ctx sdk.Context, epochNumber int64, msg sdk.Msg
 	store.Set(ActionStoreKey(epochNumber, actionID), bz)
 }
 
-// RestoreEpochAction restore the actions that need to be executed on next epoch
-func (k Keeper) RestoreEpochAction(ctx sdk.Context, epochNumber int64, action *codectypes.Any) {
+// RestoreEpochMsg restore the actions that need to be executed on next epoch
+func (k Keeper) RestoreEpochMsg(ctx sdk.Context, epochNumber int64, action *codectypes.Any) {
 	store := ctx.KVStore(k.storeKey)
 
 	// reference from TestMarshalAny(t *testing.T)
@@ -103,10 +103,10 @@ func (k Keeper) GetEpochMsg(ctx sdk.Context, epochNumber int64, actionID uint64)
 	return action
 }
 
-// GetEpochActions get all actions
-func (k Keeper) GetEpochActions(ctx sdk.Context) []sdk.Msg {
+// GetEpochMsgs get all actions
+func (k Keeper) GetEpochMsgs(ctx sdk.Context) []sdk.Msg {
 	actions := []sdk.Msg{}
-	iterator := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte(EpochActionQueuePrefix))
+	iterator := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), EpochMsgQueuePrefix)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -119,15 +119,15 @@ func (k Keeper) GetEpochActions(ctx sdk.Context) []sdk.Msg {
 	return actions
 }
 
-// GetEpochActionsIterator returns iterator for EpochActions
-func (k Keeper) GetEpochActionsIterator(ctx sdk.Context) db.Iterator {
-	return sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte(EpochActionQueuePrefix))
+// GetEpochMsgssIterator returns iterator for EpochActions
+func (k Keeper) GetEpochMsgssIterator(ctx sdk.Context) db.Iterator {
+	return sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), EpochMsgQueuePrefix)
 }
 
 // DequeueEpochActions dequeue all the actions store on epoch
 func (k Keeper) DequeueEpochActions(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, []byte(EpochActionQueuePrefix))
+	iterator := sdk.KVStorePrefixIterator(store, EpochMsgQueuePrefix)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -142,8 +142,8 @@ func (k Keeper) DeleteByKey(ctx sdk.Context, key []byte) {
 	store.Delete(key)
 }
 
-// GetEpochActionByIterator get action by iterator
-func (k Keeper) GetEpochActionByIterator(iterator db.Iterator) sdk.Msg {
+// GetEpochMsgByIterator get action by iterator
+func (k Keeper) GetEpochMsgByIterator(iterator db.Iterator) sdk.Msg {
 	bz := iterator.Value()
 
 	var action sdk.Msg

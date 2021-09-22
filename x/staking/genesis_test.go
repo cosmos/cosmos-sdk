@@ -87,7 +87,7 @@ func TestInitGenesis(t *testing.T) {
 	require.Equal(t, genesisState.Params, actualGenesis.Params)
 	require.Equal(t, genesisState.Delegations, actualGenesis.Delegations)
 	require.EqualValues(t, app.StakingKeeper.GetAllValidators(ctx), actualGenesis.Validators)
-	msgs := app.StakingKeeper.GetEpochActions(ctx)
+	msgs := app.StakingKeeper.GetEpochMsgs(ctx)
 	var anys []*codectypes.Any
 	for _, msg := range msgs {
 		any, err := codectypes.NewAnyWithValue(msg)
@@ -97,7 +97,7 @@ func TestInitGenesis(t *testing.T) {
 		anys = append(anys, any)
 	}
 	require.Equal(t, anys, actualGenesis.BufferedMsgs)
-	fmt.Println(app.StakingKeeper.GetEpochActions(ctx), 11, actualGenesis.BufferedMsgs)
+	fmt.Println(app.StakingKeeper.GetEpochMsgs(ctx), 11, actualGenesis.BufferedMsgs)
 	// Ensure validators have addresses.
 	vals2, err := staking.WriteValidators(ctx, app.StakingKeeper)
 	require.NoError(t, err)

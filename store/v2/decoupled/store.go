@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/db/prefix"
@@ -12,6 +13,7 @@ import (
 
 	types "github.com/cosmos/cosmos-sdk/store/v2"
 	"github.com/cosmos/cosmos-sdk/store/v2/smt"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
@@ -31,9 +33,6 @@ var (
 )
 
 var ErrVersionDoesNotExist = errors.New("version does not exist")
-
-// TODO:
-// telemetry
 
 type StoreConfig struct {
 	// Version pruning options for backing DBs.
@@ -139,8 +138,10 @@ func (s *Store) GetSCStore() types.BasicKVStore {
 
 // Get implements KVStore.
 func (s *Store) Get(key []byte) []byte {
+	defer telemetry.MeasureSince(time.Now(), "store", "decoupled", "get")
 	s.mtx.RLock()
 	defer s.mtx.RUnlock()
+
 	val, err := s.dataTxn.Get(key)
 	if err != nil {
 		panic(err)
@@ -150,8 +151,10 @@ func (s *Store) Get(key []byte) []byte {
 
 // Has implements KVStore.
 func (s *Store) Has(key []byte) bool {
+	defer telemetry.MeasureSince(time.Now(), "store", "decoupled", "has")
 	s.mtx.RLock()
 	defer s.mtx.RUnlock()
+
 	has, err := s.dataTxn.Has(key)
 	if err != nil {
 		panic(err)
@@ -161,6 +164,7 @@ func (s *Store) Has(key []byte) bool {
 
 // Set implements KVStore.
 func (s *Store) Set(key []byte, value []byte) {
+	defer telemetry.MeasureSince(time.Now(), "store", "decoupled", "set")
 	khash := sha256.Sum256(key)
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
@@ -178,6 +182,7 @@ func (s *Store) Set(key []byte, value []byte) {
 
 // Delete implements KVStore.
 func (s *Store) Delete(key []byte) {
+	defer telemetry.MeasureSince(time.Now(), "store", "decoupled", "delete")
 	khash := sha256.Sum256(key)
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
@@ -323,7 +328,7 @@ func (s *Store) SetInitialVersion(version int64)    {}
 // if you care to have the latest data to see a tx results, you must
 // explicitly set the height you want to see
 func (s *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
-	// defer telemetry.MeasureSince(time.Now(), "store", "decoupled", "query")
+	defer telemetry.MeasureSince(time.Now(), "store", "decoupled", "query")
 
 	if len(req.Data) == 0 {
 		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrTxDecode, "query cannot be zero length"), false)

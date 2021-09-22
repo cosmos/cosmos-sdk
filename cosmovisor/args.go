@@ -276,7 +276,7 @@ func (cfg Config) DetailString() string {
 	}
 	derivedEntries := []struct { name, value string }{
 		{"Root Dir", cfg.Root()},
-		{"Upgrade Dir ", cfg.BaseUpgradeDir()},
+		{"Upgrade Dir", cfg.BaseUpgradeDir()},
 		{"Genesis Bin", cfg.GenesisBin()},
 		{"Monitored Upgrade Info File", cfg.UpgradeInfoFilePath()},
 	}

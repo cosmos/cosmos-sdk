@@ -312,7 +312,7 @@ func TestComputeAmount(t *testing.T) {
 	tt := []struct {
 		name        string
 		coinAmount  int64
-		exponentSub float64
+		exponentSub int64
 		expRes      string
 	}{
 		{"1b", 1000000000, -3, "1,000,000"},

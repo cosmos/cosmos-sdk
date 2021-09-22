@@ -103,7 +103,7 @@ func convertToBaseDenom(denom string) string {
 }
 
 // computeExponentSubtraction iterates over metadata.DenomUnits and computes the subtraction of exponents
-func computeExponentSubtraction(denom string, metadata banktypes.Metadata) float64 {
+func computeExponentSubtraction(denom string, metadata banktypes.Metadata) int64 {
 	var coinExp, displayExp int64
 	for _, denomUnit := range metadata.DenomUnits {
 		if denomUnit.Denom == denom {
@@ -115,7 +115,7 @@ func computeExponentSubtraction(denom string, metadata banktypes.Metadata) float
 		}
 	}
 
-	return float64(coinExp - displayExp)
+	return int64(coinExp - displayExp)
 }
 
 // removeTrailingZeroes removes trailing zeroes from a string
@@ -147,28 +147,28 @@ func countTrailingZeroes(str string) int {
 }
 
 // ComputeAmount calculates an amount to produce formated output
-func (dvr DefaultValueRenderer) ComputeAmount(amount int64, expSub float64) string {
+func (dvr DefaultValueRenderer) ComputeAmount(amount int64, expSub int64) string {
 
 	switch {
 	// negative , convert mregen to regen less zeroes 23 => 0,023, expSub -3
-	case math.Signbit(expSub):
+	case expSub < 0:
 
 		stringValue := strconv.FormatInt(amount, 10)
 		count := countTrailingZeroes(stringValue)
-		if count >= int(math.Abs(expSub)) {
+		if count >= int(math.Abs(float64(expSub))) {
 			// case 1 if number of zeroes >= Abs(expSub)  23000, -3 => 23 (int64)
-			x := amount / int64(math.Pow(10, math.Abs(expSub)))
+			x := amount / int64(math.Pow(10, math.Abs(float64(expSub))))
 			return humanize.Comma(x)
 		} else {
 			// case 2 number of trailing zeroes < abs(expSub)  23, -3,=> 0.023(float64)
-			x := float64(float64(amount) / math.Pow(10, math.Abs(expSub)))
+			x := float64(float64(amount) / math.Pow(10, math.Abs(float64(expSub))))
 			return humanize.Ftoa(x)
 		}
 	// positive, e.g.convert mregen to uregen
-	case !math.Signbit(expSub):
-		x := amount * int64(math.Pow(10, expSub))
+	case expSub > 0:
+		x := amount * int64(math.Pow(10, float64(expSub)))
 		return humanize.Comma(x)
-	// == 0, convert regen to regen, amount does not change
+	// expSub == 0, convert regen to regen, amount does not change
 	default:
 		return humanize.Comma(amount)
 	}

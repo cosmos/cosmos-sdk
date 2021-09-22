@@ -14,6 +14,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
+var RegExp = regexp.MustCompile(`(\d+)(\w+)`)
+
 // ValueRenderer defines an interface to produce formated output for Int,Dec,Coin types as well as parse a string to Coin or Uint.
 type ValueRenderer interface {
 	Format(context.Context, interface{}) (string, error)
@@ -170,11 +172,10 @@ func (dvr DefaultValueRenderer) Parse(ctx context.Context, s string) (interface{
 	}
 	// remove all commas
 	str := strings.ReplaceAll(s, ",", "")
-	re := regexp.MustCompile(`(\d+)(\w+)`)
 	// case 1: "1000000regen" => Coin
-	if re.MatchString(str) {
+	if RegExp.MatchString(str) {
 		var amountStr, denomStr string
-		s1 := re.FindAllStringSubmatch(str, -1) // [[1000000regen 1000000 regen]]
+		s1 := RegExp.FindAllStringSubmatch(str, -1) // [[1000000regen 1000000 regen]]
 		amountStr, denomStr = s1[0][1], s1[0][2]
 
 		amount, err := strconv.ParseInt(amountStr, 10, 64)

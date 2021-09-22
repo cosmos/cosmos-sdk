@@ -251,7 +251,7 @@ func TestFormatInt(t *testing.T) {
 }
 
 func TestParseString(t *testing.T) {
-	re := regexp.MustCompile(`(\d+)(\w+)`) // TODO test if denom starts with m or u
+	// TODO test if denom starts with m or u
 	dvr := valuerenderer.NewDefaultValueRenderer(func(c context.Context, denom string) (banktypes.Metadata, error) {
 		return banktypes.Metadata{}, nil
 	})
@@ -294,7 +294,7 @@ func TestParseString(t *testing.T) {
 				coin, ok := x.(types.Coin)
 				require.True(t, ok)
 				require.NotNil(t, coin)
-				require.True(t, re.MatchString(tc.str))
+				require.True(t, valuerenderer.RegExp.MatchString(tc.str))
 			} else {
 				u, ok := x.(types.Uint)
 				require.True(t, ok)

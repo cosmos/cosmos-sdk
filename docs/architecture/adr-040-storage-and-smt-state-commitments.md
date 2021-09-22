@@ -149,7 +149,8 @@ In contrast to `MultiStore`, `RootStore` doesn't allow to mount dynamically sub 
 
 #### Merkle Proofs and IBC
 
-Currently IBC (v1.0) module merkle proof for a `(key, value)` consists of two elements `[storeKey, proof]`. Verification using 2 passes:
+Currently the IBC (v1.0) module merkle proofs for a `(key, value)` consists of two elements `[storeKey, proof]`. Verification is done using 2 passes:
+
 1. Checks that a `proof` is a valid merkle proof `(key, value)` using ICS-23 spec.
 2. Then it checks that the `storeKey` and `root(proof)` hashes to the AppHash (App state commitment).
 

@@ -225,6 +225,16 @@
     - [PrivKey](#cosmos.crypto.ed25519.PrivKey)
     - [PubKey](#cosmos.crypto.ed25519.PubKey)
   
+- [cosmos/crypto/hd/v1/hd.proto](#cosmos/crypto/hd/v1/hd.proto)
+    - [BIP44Params](#cosmos.crypto.hd.v1.BIP44Params)
+  
+- [cosmos/crypto/keyring/v1/record.proto](#cosmos/crypto/keyring/v1/record.proto)
+    - [Record](#cosmos.crypto.keyring.v1.Record)
+    - [Record.Ledger](#cosmos.crypto.keyring.v1.Record.Ledger)
+    - [Record.Local](#cosmos.crypto.keyring.v1.Record.Local)
+    - [Record.Multi](#cosmos.crypto.keyring.v1.Record.Multi)
+    - [Record.Offline](#cosmos.crypto.keyring.v1.Record.Offline)
+  
 - [cosmos/crypto/multisig/keys.proto](#cosmos/crypto/multisig/keys.proto)
     - [LegacyAminoPubKey](#cosmos.crypto.multisig.LegacyAminoPubKey)
   
@@ -3592,6 +3602,129 @@ then you must create a new proto message and follow ADR-28 for Address construct
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [bytes](#bytes) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/crypto/hd/v1/hd.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/crypto/hd/v1/hd.proto
+
+
+
+<a name="cosmos.crypto.hd.v1.BIP44Params"></a>
+
+### BIP44Params
+BIP44Params is used as path field in ledger item in Record.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `purpose` | [uint32](#uint32) |  | purpose is a constant set to 44' (or 0x8000002C) following the BIP43 recommendation |
+| `coin_type` | [uint32](#uint32) |  | coin_type is a constant that improves privacy |
+| `account` | [uint32](#uint32) |  | account splits the key space into independent user identities |
+| `change` | [bool](#bool) |  | change is a constant used for public derivation. Constant 0 is used for external chain and constant 1 for internal chain. |
+| `address_index` | [uint32](#uint32) |  | address_index is used as child index in BIP32 derivation |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/crypto/keyring/v1/record.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/crypto/keyring/v1/record.proto
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record"></a>
+
+### Record
+Record is used for representing a key in the keyring.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  | name represents a name of Record |
+| `pub_key` | [google.protobuf.Any](#google.protobuf.Any) |  | pub_key represents a public key in any format |
+| `local` | [Record.Local](#cosmos.crypto.keyring.v1.Record.Local) |  | local stores the public information about a locally stored key |
+| `ledger` | [Record.Ledger](#cosmos.crypto.keyring.v1.Record.Ledger) |  | ledger stores the public information about a Ledger key |
+| `multi` | [Record.Multi](#cosmos.crypto.keyring.v1.Record.Multi) |  | Multi does not store any information. |
+| `offline` | [Record.Offline](#cosmos.crypto.keyring.v1.Record.Offline) |  | Offline does not store any information. |
+
+
+
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record.Ledger"></a>
+
+### Record.Ledger
+Ledger item
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `path` | [cosmos.crypto.hd.v1.BIP44Params](#cosmos.crypto.hd.v1.BIP44Params) |  |  |
+
+
+
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record.Local"></a>
+
+### Record.Local
+Item is a keyring item stored in a keyring backend.
+Local item
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `priv_key` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `priv_key_type` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record.Multi"></a>
+
+### Record.Multi
+Multi item
+
+
+
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record.Offline"></a>
+
+### Record.Offline
+Offline item
 
 
 

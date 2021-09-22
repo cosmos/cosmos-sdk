@@ -116,8 +116,6 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 
 	// --gas can accept integers and "auto"
 	cmd.Flags().String(FlagGas, "", fmt.Sprintf("gas limit to set per-transaction; set to %q to calculate sufficient gas automatically (default %d)", GasFlagAuto, DefaultGasLimit))
-
-	cmd.MarkFlagRequired(FlagChainID)
 }
 
 // AddPaginationFlagsToCmd adds common pagination flags to cmd

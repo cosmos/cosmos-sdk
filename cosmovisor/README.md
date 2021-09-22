@@ -40,9 +40,9 @@ All arguments passed to `cosmovisor` will be passed to the application binary (a
 * `DAEMON_HOME` is the location where the `cosmovisor/` directory is kept that contains the genesis binary, the upgrade binaries, and any additional auxiliary files associated with each binary (e.g. `$HOME/.gaiad`, `$HOME/.regend`, `$HOME/.simd`, etc.).
 * `DAEMON_NAME` is the name of the binary itself (e.g. `gaiad`, `regend`, `simd`, etc.).
 * `DAEMON_ALLOW_DOWNLOAD_BINARIES` (*optional*), if set to `true`, will enable auto-downloading of new binaries (for security reasons, this is intended for full nodes rather than validators). By default, `cosmovisor` will not auto-download new binaries.
-* `DAEMON_RESTART_AFTER_UPGRADE` (*optional*, default = `true`), if `true`, will restart the subprocess with the same command-line arguments and flags (but with the new binary) after a successful upgrade. Otherwise (`false`), `cosmovisor` stops running after an upgrade and requires the system administrator to manually restart it. Note that `cosmovisor` will not auto-restart the subprocess if there was an error.
+* `DAEMON_RESTART_AFTER_UPGRADE` (*optional*, default = `true`), if `true`, restarts the subprocess with the same command-line arguments and flags (but with the new binary) after a successful upgrade. Otherwise (`false`), `cosmovisor` stops running after an upgrade and requires the system administrator to manually restart it. Note restart is only after the upgrade and does not auto-restart the subprocess after an error occurs.
 * `DAEMON_POLL_INTERVAL` is the interval length in milliseconds for polling the upgrade plan file. Default: 300.
-* `UNSAFE_SKIP_BACKUP` (defaults to `false`), if set to `false`, will backup the data before trying the upgrade. Otherwise it will upgrade directly without doing any backup. This is useful (and recommended) in case of failures and when needed to rollback. It is advised to use backup option, i.e., `UNSAFE_SKIP_BACKUP=false`
+* `UNSAFE_SKIP_BACKUP` (defaults to `false`), if set to `false`, backs up the data before trying the upgrade. Otherwise (`true`), upgrades directly without performing a backup. The default value of false is useful and recommended in case of failures and when a backup needed to rollback. We recommend using the default backup option `UNSAFE_SKIP_BACKUP=false`.
 
 ### Folder Layout
 
@@ -87,6 +87,21 @@ The system administrator is responsible for:
 In order to support downloadable binaries, a tarball for each upgrade binary will need to be packaged up and made available through a canonical URL. Additionally, a tarball that includes the genesis binary and all available upgrade binaries can be packaged up and made available so that all the necessary binaries required to sync a fullnode from start can be easily downloaded.
 
 The `DAEMON` specific code and operations (e.g. tendermint config, the application db, syncing blocks, etc.) all work as expected. The application binaries' directives such as command-line flags and environment variables also work as expected.
+
+### Commands
+
+Because Cosmovisor is meant to be used as a wrapper for a Cosmos SDK application, it does not require many commands. 
+
+To determine the version of Cosmovisor, run the following command:
+```
+cosmovisor version
+``` 
+The output of the `cosmovisor version` command shows the version of the Cosmos SDK application and the version of Cosmovisor:
+
+```
+Cosmovisor Version:  v0.1.0-85-g65baacac0
+0.43.0-beta1-319-ge3aec1840
+```
 
 
 ### Detecting Upgrades

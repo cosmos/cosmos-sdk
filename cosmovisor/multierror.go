@@ -5,15 +5,18 @@ import (
 	"strings"
 )
 
-// MultiError is an error combining multiple other errors
+// MultiError is an error combining multiple other errors.
+// It will never have 0 or 1 errors. It will always have two or more.
 type MultiError struct {
 	errs []error
 }
 
 // FlattenErrors possibly creates a MultiError.
-// If all provided errors are nil (or no errors are provided), nil is returned.
+// Nil entries are ignored.
+// If all provided errors are nil (or nothing is provided), nil is returned.
 // If only one non-nil error is provided, it is returned unchanged.
-// If two or more non-nil errors are provided, the returned error will be of type *MultiError.
+// If two or more non-nil errors are provided, the returned error will be of type *MultiError
+// and it will contain each non-nil error.
 func FlattenErrors(errs ...error) error {
 	rv := MultiError{}
 	for _, err := range errs {
@@ -30,7 +33,7 @@ func FlattenErrors(errs ...error) error {
 	return &rv
 }
 
-// GetErrors gets all the errors involved in this MultiError.
+// GetErrors gets all the errors that make up this MultiError.
 func (e MultiError) GetErrors() []error {
 	// Return a copy of the errs slice to prevent alteration of the original slice.
 	rv := make([]error, e.Len())
@@ -45,7 +48,6 @@ func (e MultiError) Len() int {
 
 // Error implements the error interface for a MultiError.
 func (e *MultiError) Error() string {
-	// Assumes a MultiError cannot be created with 0 or 1 errors.
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("%d errors: ", len(e.errs)))
 	for i, err := range e.errs {

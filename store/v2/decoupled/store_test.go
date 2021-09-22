@@ -1,6 +1,7 @@
 package decoupled
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -128,6 +129,10 @@ func TestIterators(t *testing.T) {
 		[]string{"0 2", "0 1", "0 0", "0"})
 }
 
+type unsavableDB struct{ *memdb.MemDB }
+
+func (unsavableDB) SaveVersion(uint64) error { return errors.New("unsavable DB") }
+
 func TestCommit(t *testing.T) {
 	// Sanity test for Merkle hashing
 	store := newStoreWithData(t, memdb.NewDB(), nil)
@@ -149,6 +154,16 @@ func TestCommit(t *testing.T) {
 		require.Equal(t, id.Hash, lastid.Hash)
 		require.Equal(t, id.Version, lastid.Version)
 	}
+
+	// Storage commit is rolled back if Merkle commit fails
+	opts := StoreConfig{MerkleDB: unsavableDB{memdb.NewDB()}, Pruning: types.PruneNothing}
+	db := memdb.NewDB()
+	store, err := NewStore(db, opts)
+	require.NoError(t, err)
+	require.Panics(t, func() { _ = store.Commit() })
+	versions, err := db.Versions()
+	require.NoError(t, err)
+	require.Equal(t, 0, versions.Count())
 }
 
 func sliceToSet(slice []uint64) map[uint64]struct{} {

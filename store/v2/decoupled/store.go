@@ -277,14 +277,20 @@ func (s *Store) commit(target uint64) (*types.CommitID, error) {
 
 	// If DBs are not separate, Merkle state has been commmitted & snapshotted
 	if s.opts.MerkleDB != nil {
-		// TODO: roll back stateDB save on error?
+		rollback := func(e error) error {
+			if delerr := s.stateDB.DeleteVersion(target); delerr != nil {
+				return fmt.Errorf("%w: commit rollback failed: %v", e, delerr)
+			}
+			return e
+		}
+
 		err = s.merkleTxn.Commit()
 		if err != nil {
-			return nil, err
+			return nil, rollback(err)
 		}
 		err = s.opts.MerkleDB.SaveVersion(target)
 		if err != nil {
-			return nil, err
+			return nil, rollback(err)
 		}
 		merkleTxn = s.opts.MerkleDB.ReadWriter()
 	}

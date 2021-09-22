@@ -74,7 +74,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(20000))
+	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
 	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}

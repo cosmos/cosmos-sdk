@@ -165,7 +165,7 @@ func (dvr DefaultValueRenderer) ComputeAmount(amount int64, expSub int64) string
 	}
 }
 
-// Parse parses a string and takes a decision whether to convert it into Coin or Uint
+// Parse parses a string and returns types.Coin if the string matches a regular expression. If it does not match, it converts the string to types.Uint.
 func (dvr DefaultValueRenderer) Parse(ctx context.Context, s string) (interface{}, error) {
 	if s == "" {
 		return nil, errors.New("unable to parse empty string")

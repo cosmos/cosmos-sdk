@@ -2,7 +2,6 @@ package valuerenderer_test
 
 import (
 	"context"
-	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/require"

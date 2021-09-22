@@ -120,28 +120,17 @@ func computeExponentSubtraction(denom string, metadata banktypes.Metadata) int64
 
 // removeTrailingZeroes removes trailing zeroes from a string
 func removeTrailingZeroes(str string) string {
-	index := len(str)-1
-	for i := len(str) - 1; i > 0; i-- {
-		if rune(str[i]) == rune('0') {
-			continue
-		} 
-		
-		index = i
-		break
+	end := len(str) - 1 
+	for ; end > 0 && str[end] == '0'; end-- {
 	}
-
-	return str[:index+1]
+	return str[:end+1]
 }
 
 // countTrailingZeroes counts the amount of trailing zeroes in a string
 func countTrailingZeroes(str string) int {
 	counter := 0
-	for i := len(str) - 1; i > 0; i-- {
-		if rune(str[i]) == rune('0') {
-			counter++
-		} else {
-			break
-		}
+	for i := len(str) - 1; str[i] == '0' && i > 0; i--  {
+		counter++
 	}
 	return counter
 }
@@ -152,16 +141,16 @@ func (dvr DefaultValueRenderer) ComputeAmount(amount int64, expSub int64) string
 	switch {
 	// negative , convert mregen to regen less zeroes 23 => 0,023, expSub -3
 	case expSub < 0:
-
+		absExpSub := math.Abs(float64(expSub))
 		stringValue := strconv.FormatInt(amount, 10)
 		count := countTrailingZeroes(stringValue)
-		if count >= int(math.Abs(float64(expSub))) {
+		if count >= int(absExpSub) {
 			// case 1 if number of zeroes >= Abs(expSub)  23000, -3 => 23 (int64)
-			x := amount / int64(math.Pow(10, math.Abs(float64(expSub))))
+			x := amount / int64(math.Pow(10, absExpSub))
 			return humanize.Comma(x)
 		} else {
 			// case 2 number of trailing zeroes < abs(expSub)  23, -3,=> 0.023(float64)
-			x := float64(float64(amount) / math.Pow(10, math.Abs(float64(expSub))))
+			x := float64(float64(amount) / math.Pow(10, absExpSub))
 			return humanize.Ftoa(x)
 		}
 	// positive, e.g.convert mregen to uregen

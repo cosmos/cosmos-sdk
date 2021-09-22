@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"fmt"
 
 	"github.com/dustin/go-humanize"
 
@@ -70,7 +71,12 @@ func (dvr DefaultValueRenderer) Format(c context.Context, x interface{}) (string
 		sb.WriteString(humanize.Comma(v.Int64()))
 
 	case types.Coin:
-		metadata, err := dvr.denomQuerier(c, convertToBaseDenom(v.Denom))
+		baseDenom, err := baseFromDenom(v.Denom)
+		if err != nil {
+			return "", err
+		}
+
+		metadata, err := dvr.denomQuerier(c, baseDenom)
 		if err != nil {
 			return "", err
 		}
@@ -90,17 +96,22 @@ func (dvr DefaultValueRenderer) Format(c context.Context, x interface{}) (string
 }
 
 // TODO address the cass where denom starts with "u"
-func convertToBaseDenom(denom string) string {
-	switch {
+// baseFromDenom converts denom to banktypes.Metadata.Base that is used in banktypes.QueryDenomMetadataRequest. queryClient.DenomMetadata method takes Banktypes.QueryDenomMetadataRequest and context as arguments and returns resp.Metadata.
+func baseFromDenom(denom string) (string, error) {
+	if len(denom) == 0 {
+		return "", fmt.Errorf("empty denom: %s", denom)
+	}
+
+	switch denom[0] {
 	// e.g. uregen => uregen
-	case strings.HasPrefix(denom, "u"):
-		return denom
+	case 'u':
+		return denom,nil
 	// e.g. mregen => uregen
-	case strings.HasPrefix(denom, "m"):
-		return "u" + denom[1:]
-	// has no prefix regen => uregen
+	case 'm':
+		return "u" + denom[1:],nil
+	// "regen" matches metadata.Display => uregen
 	default:
-		return "u" + denom
+		return "u" + denom,nil
 	}
 }
 

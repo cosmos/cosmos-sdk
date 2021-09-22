@@ -16,22 +16,22 @@ type HasExtensionOptionsTx interface {
 	GetNonCriticalExtensionOptions() []*codectypes.Any
 }
 
-type rejectExtensionOptionsMiddleware struct {
+type rejectExtensionOptionsTxHandler struct {
 	next tx.Handler
 }
 
-// NewRejectExtensionOptionsMiddleware creates a new rejectExtensionOptionsMiddleware.
+// RejectExtensionOptionsMiddleware creates a new rejectExtensionOptionsMiddleware.
 // rejectExtensionOptionsMiddleware is a middleware that rejects all extension
 // options which can optionally be included in protobuf transactions. Users that
 // need extension options should create a custom middleware chain that handles
 // needed extension options properly and rejects unknown ones.
 func RejectExtensionOptionsMiddleware(txh tx.Handler) tx.Handler {
-	return rejectExtensionOptionsMiddleware{
+	return rejectExtensionOptionsTxHandler{
 		next: txh,
 	}
 }
 
-var _ tx.Handler = rejectExtensionOptionsMiddleware{}
+var _ tx.Handler = rejectExtensionOptionsTxHandler{}
 
 func checkExtOpts(tx sdk.Tx) error {
 	if hasExtOptsTx, ok := tx.(HasExtensionOptionsTx); ok {
@@ -44,7 +44,7 @@ func checkExtOpts(tx sdk.Tx) error {
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (txh rejectExtensionOptionsMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (txh rejectExtensionOptionsTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	if err := checkExtOpts(tx); err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
@@ -53,7 +53,7 @@ func (txh rejectExtensionOptionsMiddleware) CheckTx(ctx context.Context, tx sdk.
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (txh rejectExtensionOptionsMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+func (txh rejectExtensionOptionsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	if err := checkExtOpts(tx); err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
@@ -62,7 +62,7 @@ func (txh rejectExtensionOptionsMiddleware) DeliverTx(ctx context.Context, tx sd
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
-func (txh rejectExtensionOptionsMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (txh rejectExtensionOptionsTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	if err := checkExtOpts(sdkTx); err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}

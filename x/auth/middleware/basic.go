@@ -15,25 +15,25 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-type validateBasicMiddleware struct {
+type validateBasicTxHandler struct {
 	next tx.Handler
 }
 
 // ValidateBasicMiddleware will call tx.ValidateBasic, msg.ValidateBasic(for each msg inside tx)
 // and return any non-nil error.
 // If ValidateBasic passes, middleware calls next middleware in chain. Note,
-// validateBasicMiddleware will not get executed on ReCheckTx since it
+// validateBasicTxHandler will not get executed on ReCheckTx since it
 // is not dependent on application state.
 func ValidateBasicMiddleware(txh tx.Handler) tx.Handler {
-	return validateBasicMiddleware{
+	return validateBasicTxHandler{
 		next: txh,
 	}
 }
 
-var _ tx.Handler = validateBasicMiddleware{}
+var _ tx.Handler = validateBasicTxHandler{}
 
 // CheckTx implements tx.Handler.CheckTx.
-func (basic validateBasicMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (basic validateBasicTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	// no need to validate basic on recheck tx, call next middleware
 	if req.Type == abci.CheckTxType_Recheck {
 		return basic.next.CheckTx(ctx, tx, req)
@@ -47,7 +47,7 @@ func (basic validateBasicMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (basic validateBasicMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+func (basic validateBasicTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	if err := tx.ValidateBasic(); err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
@@ -56,7 +56,7 @@ func (basic validateBasicMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, r
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (basic validateBasicMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (basic validateBasicTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	if err := sdkTx.ValidateBasic(); err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}
@@ -64,16 +64,16 @@ func (basic validateBasicMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.T
 	return basic.next.SimulateTx(ctx, sdkTx, req)
 }
 
-var _ tx.Handler = txTimeoutHeightMiddleware{}
+var _ tx.Handler = txTimeoutHeightTxHandler{}
 
-type txTimeoutHeightMiddleware struct {
+type txTimeoutHeightTxHandler struct {
 	next tx.Handler
 }
 
 // TxTimeoutHeightMiddleware defines a middleware that checks for a
 // tx height timeout.
 func TxTimeoutHeightMiddleware(txh tx.Handler) tx.Handler {
-	return txTimeoutHeightMiddleware{
+	return txTimeoutHeightTxHandler{
 		next: txh,
 	}
 }
@@ -96,7 +96,7 @@ func checkTimeout(ctx context.Context, tx sdk.Tx) error {
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (txh txTimeoutHeightMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (txh txTimeoutHeightTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	if err := checkTimeout(ctx, tx); err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
@@ -105,7 +105,7 @@ func (txh txTimeoutHeightMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (txh txTimeoutHeightMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+func (txh txTimeoutHeightTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	if err := checkTimeout(ctx, tx); err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
@@ -114,7 +114,7 @@ func (txh txTimeoutHeightMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, r
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (txh txTimeoutHeightMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (txh txTimeoutHeightTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	if err := checkTimeout(ctx, sdkTx); err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}
@@ -122,26 +122,26 @@ func (txh txTimeoutHeightMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.T
 	return txh.next.SimulateTx(ctx, sdkTx, req)
 }
 
-// validateMemoMiddleware will validate memo given the parameters passed in
-// If memo is too large middleware returns with error, otherwise call next middleware
-// CONTRACT: Tx must implement TxWithMemo interface
-type validateMemoMiddleware struct {
+type validateMemoTxHandler struct {
 	ak   AccountKeeper
 	next tx.Handler
 }
 
+// ValidateMemoMiddleware will validate memo given the parameters passed in
+// If memo is too large middleware returns with error, otherwise call next middleware
+// CONTRACT: Tx must implement TxWithMemo interface
 func ValidateMemoMiddleware(ak AccountKeeper) tx.Middleware {
 	return func(txHandler tx.Handler) tx.Handler {
-		return validateMemoMiddleware{
+		return validateMemoTxHandler{
 			ak:   ak,
 			next: txHandler,
 		}
 	}
 }
 
-var _ tx.Handler = validateMemoMiddleware{}
+var _ tx.Handler = validateMemoTxHandler{}
 
-func (vmm validateMemoMiddleware) checkForValidMemo(ctx context.Context, tx sdk.Tx) error {
+func (vmm validateMemoTxHandler) checkForValidMemo(ctx context.Context, tx sdk.Tx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	memoTx, ok := tx.(sdk.TxWithMemo)
 	if !ok {
@@ -162,7 +162,7 @@ func (vmm validateMemoMiddleware) checkForValidMemo(ctx context.Context, tx sdk.
 }
 
 // CheckTx implements tx.Handler.CheckTx method.
-func (vmm validateMemoMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (vmm validateMemoTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	if err := vmm.checkForValidMemo(ctx, tx); err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
@@ -171,7 +171,7 @@ func (vmm validateMemoMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req ab
 }
 
 // DeliverTx implements tx.Handler.DeliverTx method.
-func (vmm validateMemoMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+func (vmm validateMemoTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	if err := vmm.checkForValidMemo(ctx, tx); err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
@@ -180,7 +180,7 @@ func (vmm validateMemoMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req 
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
-func (vmm validateMemoMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (vmm validateMemoTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	if err := vmm.checkForValidMemo(ctx, sdkTx); err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}
@@ -188,9 +188,14 @@ func (vmm validateMemoMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, 
 	return vmm.next.SimulateTx(ctx, sdkTx, req)
 }
 
-var _ tx.Handler = consumeTxSizeGasMiddleware{}
+var _ tx.Handler = consumeTxSizeGasTxHandler{}
 
-// consumeTxSizeGasMiddleware will take in parameters and consume gas proportional
+type consumeTxSizeGasTxHandler struct {
+	ak   AccountKeeper
+	next tx.Handler
+}
+
+// ConsumeTxSizeGasMiddleware will take in parameters and consume gas proportional
 // to the size of tx before calling next middleware. Note, the gas costs will be
 // slightly over estimated due to the fact that any given signing account may need
 // to be retrieved from state.
@@ -199,21 +204,16 @@ var _ tx.Handler = consumeTxSizeGasMiddleware{}
 // in or empty.
 // CONTRACT: To use this middleware, signatures of transaction must be represented
 // as legacytx.StdSignature otherwise simulate mode will incorrectly estimate gas cost.
-type consumeTxSizeGasMiddleware struct {
-	ak   AccountKeeper
-	next tx.Handler
-}
-
 func ConsumeTxSizeGasMiddleware(ak AccountKeeper) tx.Middleware {
 	return func(txHandler tx.Handler) tx.Handler {
-		return consumeTxSizeGasMiddleware{
+		return consumeTxSizeGasTxHandler{
 			ak:   ak,
 			next: txHandler,
 		}
 	}
 }
 
-func (cgts consumeTxSizeGasMiddleware) simulateSigGasCost(ctx context.Context, tx sdk.Tx) error {
+func (cgts consumeTxSizeGasTxHandler) simulateSigGasCost(ctx context.Context, tx sdk.Tx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	params := cgts.ak.GetParams(sdkCtx)
 
@@ -267,7 +267,7 @@ func (cgts consumeTxSizeGasMiddleware) simulateSigGasCost(ctx context.Context, t
 	return nil
 }
 
-func (cgts consumeTxSizeGasMiddleware) consumeTxSizeGas(ctx context.Context, tx sdk.Tx, txBytes []byte, simulate bool) error {
+func (cgts consumeTxSizeGasTxHandler) consumeTxSizeGas(ctx context.Context, tx sdk.Tx, txBytes []byte, simulate bool) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	params := cgts.ak.GetParams(sdkCtx)
 	sdkCtx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(txBytes)), "txSize")
@@ -276,7 +276,7 @@ func (cgts consumeTxSizeGasMiddleware) consumeTxSizeGas(ctx context.Context, tx 
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (cgts consumeTxSizeGasMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (cgts consumeTxSizeGasTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	if err := cgts.consumeTxSizeGas(ctx, tx, req.GetTx(), false); err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
@@ -285,7 +285,7 @@ func (cgts consumeTxSizeGasMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, r
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (cgts consumeTxSizeGasMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+func (cgts consumeTxSizeGasTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	if err := cgts.consumeTxSizeGas(ctx, tx, req.GetTx(), false); err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
@@ -294,7 +294,7 @@ func (cgts consumeTxSizeGasMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx,
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (cgts consumeTxSizeGasMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (cgts consumeTxSizeGasTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	if err := cgts.consumeTxSizeGas(ctx, sdkTx, req.TxBytes, true); err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}

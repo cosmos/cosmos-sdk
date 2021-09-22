@@ -12,7 +12,11 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-var _ tx.Handler = mempoolFeeMiddleware{}
+var _ tx.Handler = mempoolFeeTxHandler{}
+
+type mempoolFeeTxHandler struct {
+	next tx.Handler
+}
 
 // MempoolFeeMiddleware will check if the transaction's fee is at least as large
 // as the local validator's minimum gasFee (defined in validator config).
@@ -20,18 +24,14 @@ var _ tx.Handler = mempoolFeeMiddleware{}
 // Note this only applies when ctx.CheckTx = true
 // If fee is high enough or not CheckTx, then call next middleware
 // CONTRACT: Tx must implement FeeTx to use MempoolFeeMiddleware
-type mempoolFeeMiddleware struct {
-	next tx.Handler
-}
-
 func MempoolFeeMiddleware(txh tx.Handler) tx.Handler {
-	return mempoolFeeMiddleware{
+	return mempoolFeeTxHandler{
 		next: txh,
 	}
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (txh mempoolFeeMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (txh mempoolFeeTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	feeTx, ok := tx.(sdk.FeeTx)
@@ -66,31 +66,31 @@ func (txh mempoolFeeMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (txh mempoolFeeMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+func (txh mempoolFeeTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	return txh.next.DeliverTx(ctx, tx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (txh mempoolFeeMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (txh mempoolFeeTxHandler) SimulateTx(ctx context.Context, tx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	return txh.next.SimulateTx(ctx, tx, req)
 }
 
-var _ tx.Handler = mempoolFeeMiddleware{}
+var _ tx.Handler = deductFeeTxHandler{}
 
-// deductFeeMiddleware deducts fees from the first signer of the tx
-// If the first signer does not have the funds to pay for the fees, return with InsufficientFunds error
-// Call next middleware if fees successfully deducted
-// CONTRACT: Tx must implement FeeTx interface to use deductFeeMiddleware
-type deductFeeMiddleware struct {
+type deductFeeTxHandler struct {
 	accountKeeper  AccountKeeper
 	bankKeeper     types.BankKeeper
 	feegrantKeeper FeegrantKeeper
 	next           tx.Handler
 }
 
+// DeductFeeMiddleware deducts fees from the first signer of the tx
+// If the first signer does not have the funds to pay for the fees, return with InsufficientFunds error
+// Call next middleware if fees successfully deducted
+// CONTRACT: Tx must implement FeeTx interface to use deductFeeTxHandler
 func DeductFeeMiddleware(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKeeper) tx.Middleware {
 	return func(txh tx.Handler) tx.Handler {
-		return deductFeeMiddleware{
+		return deductFeeTxHandler{
 			accountKeeper:  ak,
 			bankKeeper:     bk,
 			feegrantKeeper: fk,
@@ -99,7 +99,7 @@ func DeductFeeMiddleware(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKeepe
 	}
 }
 
-func (dfd deductFeeMiddleware) checkDeductFee(ctx context.Context, tx sdk.Tx) error {
+func (dfd deductFeeTxHandler) checkDeductFee(ctx context.Context, tx sdk.Tx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
@@ -154,7 +154,7 @@ func (dfd deductFeeMiddleware) checkDeductFee(ctx context.Context, tx sdk.Tx) er
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (dfd deductFeeMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (dfd deductFeeTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	if err := dfd.checkDeductFee(ctx, tx); err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
@@ -163,7 +163,7 @@ func (dfd deductFeeMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (dfd deductFeeMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+func (dfd deductFeeTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	if err := dfd.checkDeductFee(ctx, tx); err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
@@ -171,7 +171,7 @@ func (dfd deductFeeMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abc
 	return dfd.next.DeliverTx(ctx, tx, req)
 }
 
-func (dfd deductFeeMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (dfd deductFeeTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	if err := dfd.checkDeductFee(ctx, sdkTx); err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}

@@ -33,26 +33,26 @@ var (
 // This is where apps can define their own PubKey
 type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
 
-var _ tx.Handler = setPubKeyMiddleware{}
+var _ tx.Handler = setPubKeyTxHandler{}
 
-// setPubKeyMiddleware sets PubKeys in context for any signer which does not already have pubkey set
-// PubKeys must be set in context for all signers before any other sigverify middlewares run
-// CONTRACT: Tx must implement SigVerifiableTx interface
-type setPubKeyMiddleware struct {
+type setPubKeyTxHandler struct {
 	ak   AccountKeeper
 	next tx.Handler
 }
 
+// SetPubKeyMiddleware sets PubKeys in context for any signer which does not already have pubkey set
+// PubKeys must be set in context for all signers before any other sigverify middlewares run
+// CONTRACT: Tx must implement SigVerifiableTx interface
 func SetPubKeyMiddleware(ak AccountKeeper) tx.Middleware {
 	return func(txh tx.Handler) tx.Handler {
-		return setPubKeyMiddleware{
+		return setPubKeyTxHandler{
 			ak:   ak,
 			next: txh,
 		}
 	}
 }
 
-func (spkm setPubKeyMiddleware) setPubKey(ctx context.Context, tx sdk.Tx, simulate bool) error {
+func (spkm setPubKeyTxHandler) setPubKey(ctx context.Context, tx sdk.Tx, simulate bool) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
@@ -126,7 +126,7 @@ func (spkm setPubKeyMiddleware) setPubKey(ctx context.Context, tx sdk.Tx, simula
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (spkm setPubKeyMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (spkm setPubKeyTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	if err := spkm.setPubKey(ctx, tx, false); err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
@@ -135,7 +135,7 @@ func (spkm setPubKeyMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (spkm setPubKeyMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+func (spkm setPubKeyTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	if err := spkm.setPubKey(ctx, tx, false); err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
@@ -143,34 +143,34 @@ func (spkm setPubKeyMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req ab
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (spkm setPubKeyMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (spkm setPubKeyTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	if err := spkm.setPubKey(ctx, sdkTx, true); err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}
 	return spkm.next.SimulateTx(ctx, sdkTx, req)
 }
 
-var _ tx.Handler = validateSigCountMiddleware{}
+var _ tx.Handler = validateSigCountTxHandler{}
 
-// validateSigCountMiddleware takes in Params and returns errors if there are too many signatures in the tx for the given params
-// otherwise it calls next middleware
-// Use this middleware to set parameterized limit on number of signatures in tx
-// CONTRACT: Tx must implement SigVerifiableTx interface
-type validateSigCountMiddleware struct {
+type validateSigCountTxHandler struct {
 	ak   AccountKeeper
 	next tx.Handler
 }
 
+// ValidateSigCountMiddleware takes in Params and returns errors if there are too many signatures in the tx for the given params
+// otherwise it calls next middleware
+// Use this middleware to set parameterized limit on number of signatures in tx
+// CONTRACT: Tx must implement SigVerifiableTx interface
 func ValidateSigCountMiddleware(ak AccountKeeper) tx.Middleware {
 	return func(txh tx.Handler) tx.Handler {
-		return validateSigCountMiddleware{
+		return validateSigCountTxHandler{
 			ak:   ak,
 			next: txh,
 		}
 	}
 }
 
-func (vscd validateSigCountMiddleware) checkSigCount(ctx context.Context, tx sdk.Tx) error {
+func (vscd validateSigCountTxHandler) checkSigCount(ctx context.Context, tx sdk.Tx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
@@ -196,7 +196,7 @@ func (vscd validateSigCountMiddleware) checkSigCount(ctx context.Context, tx sdk
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (vscd validateSigCountMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (vscd validateSigCountTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	if err := vscd.checkSigCount(ctx, tx); err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
@@ -205,7 +205,7 @@ func (vscd validateSigCountMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, r
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (vscd validateSigCountMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (vscd validateSigCountTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	if err := vscd.checkSigCount(ctx, sdkTx); err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}
@@ -214,7 +214,7 @@ func (vscd validateSigCountMiddleware) SimulateTx(ctx context.Context, sdkTx sdk
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (vscd validateSigCountMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+func (vscd validateSigCountTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	if err := vscd.checkSigCount(ctx, tx); err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
@@ -286,21 +286,21 @@ func ConsumeMultisignatureVerificationGas(
 	return nil
 }
 
-var _ tx.Handler = sigGasConsumeMiddleware{}
+var _ tx.Handler = sigGasConsumeTxHandler{}
 
-// Consume parameter-defined amount of gas for each signature according to the passed-in SignatureVerificationGasConsumer function
-// before calling the next middleware
-// CONTRACT: Pubkeys are set in context for all signers before this middleware runs
-// CONTRACT: Tx must implement SigVerifiableTx interface
-type sigGasConsumeMiddleware struct {
+type sigGasConsumeTxHandler struct {
 	ak             AccountKeeper
 	sigGasConsumer SignatureVerificationGasConsumer
 	next           tx.Handler
 }
 
+// SigGasConsumeMiddleware consumes parameter-defined amount of gas for each signature according to the passed-in SignatureVerificationGasConsumer function
+// before calling the next middleware
+// CONTRACT: Pubkeys are set in context for all signers before this middleware runs
+// CONTRACT: Tx must implement SigVerifiableTx interface
 func SigGasConsumeMiddleware(ak AccountKeeper, sigGasConsumer SignatureVerificationGasConsumer) tx.Middleware {
 	return func(h tx.Handler) tx.Handler {
-		return sigGasConsumeMiddleware{
+		return sigGasConsumeTxHandler{
 			ak:             ak,
 			sigGasConsumer: sigGasConsumer,
 			next:           h,
@@ -308,7 +308,7 @@ func SigGasConsumeMiddleware(ak AccountKeeper, sigGasConsumer SignatureVerificat
 	}
 }
 
-func (sgcm sigGasConsumeMiddleware) sigGasConsume(ctx context.Context, tx sdk.Tx, simulate bool) error {
+func (sgcm sigGasConsumeTxHandler) sigGasConsume(ctx context.Context, tx sdk.Tx, simulate bool) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
@@ -359,7 +359,7 @@ func (sgcm sigGasConsumeMiddleware) sigGasConsume(ctx context.Context, tx sdk.Tx
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (sgcm sigGasConsumeMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (sgcm sigGasConsumeTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	if err := sgcm.sigGasConsume(ctx, tx, false); err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
@@ -368,7 +368,7 @@ func (sgcm sigGasConsumeMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req 
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (sgcm sigGasConsumeMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+func (sgcm sigGasConsumeTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	if err := sgcm.sigGasConsume(ctx, tx, false); err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
@@ -377,7 +377,7 @@ func (sgcm sigGasConsumeMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, re
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (sgcm sigGasConsumeMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (sgcm sigGasConsumeTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	if err := sgcm.sigGasConsume(ctx, sdkTx, true); err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}
@@ -385,22 +385,22 @@ func (sgcm sigGasConsumeMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx
 	return sgcm.next.SimulateTx(ctx, sdkTx, req)
 }
 
-var _ tx.Handler = sigVerificationMiddleware{}
+var _ tx.Handler = sigVerificationTxHandler{}
 
-// Verify all signatures for a tx and return an error if any are invalid. Note,
-// the sigVerificationMiddleware middleware will not get executed on ReCheck.
-//
-// CONTRACT: Pubkeys are set in context for all signers before this middleware runs
-// CONTRACT: Tx must implement SigVerifiableTx interface
-type sigVerificationMiddleware struct {
+type sigVerificationTxHandler struct {
 	ak              AccountKeeper
 	signModeHandler authsigning.SignModeHandler
 	next            tx.Handler
 }
 
+// SigVerificationMiddleware verifies all signatures for a tx and return an error if any are invalid. Note,
+// the sigVerificationTxHandler middleware will not get executed on ReCheck.
+//
+// CONTRACT: Pubkeys are set in context for all signers before this middleware runs
+// CONTRACT: Tx must implement SigVerifiableTx interface
 func SigVerificationMiddleware(ak AccountKeeper, signModeHandler authsigning.SignModeHandler) tx.Middleware {
 	return func(h tx.Handler) tx.Handler {
-		return sigVerificationMiddleware{
+		return sigVerificationTxHandler{
 			ak:              ak,
 			signModeHandler: signModeHandler,
 			next:            h,
@@ -429,7 +429,7 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	}
 }
 
-func (svm sigVerificationMiddleware) sigVerify(ctx context.Context, tx sdk.Tx, isReCheckTx, simulate bool) error {
+func (svm sigVerificationTxHandler) sigVerify(ctx context.Context, tx sdk.Tx, isReCheckTx, simulate bool) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// no need to verify signatures on recheck tx
 	if isReCheckTx {
@@ -508,7 +508,7 @@ func (svm sigVerificationMiddleware) sigVerify(ctx context.Context, tx sdk.Tx, i
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (svd sigVerificationMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (svd sigVerificationTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	if err := svd.sigVerify(ctx, tx, req.Type == abci.CheckTxType_Recheck, false); err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
@@ -517,7 +517,7 @@ func (svd sigVerificationMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (svd sigVerificationMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+func (svd sigVerificationTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	if err := svd.sigVerify(ctx, tx, false, false); err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
@@ -526,7 +526,7 @@ func (svd sigVerificationMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, r
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (svd sigVerificationMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (svd sigVerificationTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	if err := svd.sigVerify(ctx, sdkTx, false, true); err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}
@@ -534,32 +534,32 @@ func (svd sigVerificationMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.T
 	return svd.next.SimulateTx(ctx, sdkTx, req)
 }
 
-var _ tx.Handler = incrementSequenceMiddleware{}
+var _ tx.Handler = incrementSequenceTxHandler{}
 
-// incrementSequenceMiddleware handles incrementing sequences of all signers.
-// Use the incrementSequenceMiddleware middleware to prevent replay attacks. Note,
-// there is no need to execute incrementSequenceMiddleware on RecheckTX since
+type incrementSequenceTxHandler struct {
+	ak   AccountKeeper
+	next tx.Handler
+}
+
+// IncrementSequenceMiddleware handles incrementing sequences of all signers.
+// Use the incrementSequenceTxHandler middleware to prevent replay attacks. Note,
+// there is no need to execute incrementSequenceTxHandler on RecheckTX since
 // CheckTx would already bump the sequence number.
 //
 // NOTE: Since CheckTx and DeliverTx state are managed separately, subsequent and
 // sequential txs orginating from the same account cannot be handled correctly in
 // a reliable way unless sequence numbers are managed and tracked manually by a
 // client. It is recommended to instead use multiple messages in a tx.
-type incrementSequenceMiddleware struct {
-	ak   AccountKeeper
-	next tx.Handler
-}
-
 func IncrementSequenceMiddleware(ak AccountKeeper) tx.Middleware {
 	return func(h tx.Handler) tx.Handler {
-		return incrementSequenceMiddleware{
+		return incrementSequenceTxHandler{
 			ak:   ak,
 			next: h,
 		}
 	}
 }
 
-func (isd incrementSequenceMiddleware) incrementSeq(ctx context.Context, tx sdk.Tx) error {
+func (isd incrementSequenceTxHandler) incrementSeq(ctx context.Context, tx sdk.Tx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
@@ -580,7 +580,7 @@ func (isd incrementSequenceMiddleware) incrementSeq(ctx context.Context, tx sdk.
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (isd incrementSequenceMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (isd incrementSequenceTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	if err := isd.incrementSeq(ctx, tx); err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
@@ -589,7 +589,7 @@ func (isd incrementSequenceMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, r
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (isd incrementSequenceMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+func (isd incrementSequenceTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	if err := isd.incrementSeq(ctx, tx); err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
@@ -598,7 +598,7 @@ func (isd incrementSequenceMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx,
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (isd incrementSequenceMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (isd incrementSequenceTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	if err := isd.incrementSeq(ctx, sdkTx); err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}

@@ -39,8 +39,8 @@ type StoreConfig struct {
 	Pruning types.PruningOptions
 	// The backing DB to use for the state commitment Merkle tree data.
 	// If nil, Merkle data is stored in the state storage DB under a separate prefix.
-	MerkleDB dbm.DBConnection
-	// initialVersion uint64
+	MerkleDB       dbm.DBConnection
+	InitialVersion uint64
 }
 
 // Store is a CommitKVStore which handles state storage and commitments as separate concerns,
@@ -97,13 +97,17 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (*Store, error) {
 
 // LoadStore loads a Store from a DB.
 func LoadStore(db dbm.DBConnection, opts StoreConfig) (*Store, error) {
+	versions, err := db.Versions()
+	if err != nil {
+		return nil, err
+	}
+	if opts.InitialVersion != 0 && versions.Last() < opts.InitialVersion {
+		return nil, fmt.Errorf("latest saved version is less than initial version: %v < %v",
+			versions.Last(), opts.InitialVersion)
+	}
 	stateTxn := db.ReadWriter()
 	merkleTxn := stateTxn
 	if opts.MerkleDB != nil {
-		versions, err := db.Versions()
-		if err != nil {
-			return nil, err
-		}
 		mversions, err := opts.MerkleDB.Versions()
 		if err != nil {
 			return nil, err
@@ -235,7 +239,12 @@ func (s *Store) Commit() types.CommitID {
 	if err != nil {
 		panic(err)
 	}
-	cid, err := s.commit(versions.Last() + 1)
+	target := versions.Last() + 1
+	// Fast forward to initialversion if needed
+	if s.opts.InitialVersion != 0 && target < s.opts.InitialVersion {
+		target = s.opts.InitialVersion
+	}
+	cid, err := s.commit(target)
 	if err != nil {
 		panic(err)
 	}
@@ -324,7 +333,7 @@ func (s *Store) LastCommitID() types.CommitID {
 
 func (s *Store) GetPruning() types.PruningOptions   { return s.opts.Pruning }
 func (s *Store) SetPruning(po types.PruningOptions) { s.opts.Pruning = po }
-func (s *Store) SetInitialVersion(version int64)    {}
+func (s *Store) SetInitialVersion(version int64)    { s.opts.InitialVersion = uint64(version) }
 
 // Query implements ABCI interface, allows queries.
 //

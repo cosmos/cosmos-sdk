@@ -75,6 +75,11 @@ func TestLoadStore(t *testing.T) {
 
 	value := store.Get([]byte("hello"))
 	require.Equal(t, []byte("goodbye"), value)
+
+	// Loading with an initial version beyond the lowest should error
+	opts := StoreConfig{InitialVersion: 5, Pruning: types.PruneNothing}
+	store, err = LoadStore(db, opts)
+	require.Error(t, err)
 }
 
 func TestIterators(t *testing.T) {
@@ -164,6 +169,12 @@ func TestCommit(t *testing.T) {
 	versions, err := db.Versions()
 	require.NoError(t, err)
 	require.Equal(t, 0, versions.Count())
+
+	opts = StoreConfig{InitialVersion: 5, Pruning: types.PruneNothing}
+	store, err = NewStore(memdb.NewDB(), opts)
+	require.NoError(t, err)
+	cid := store.Commit()
+	require.Equal(t, int64(5), cid.Version)
 }
 
 func sliceToSet(slice []uint64) map[uint64]struct{} {

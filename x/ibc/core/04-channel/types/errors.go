@@ -27,5 +27,5 @@ var (
 	ErrInvalidChannelIdentifier  = sdkerrors.Register(SubModuleName, 20, "invalid channel identifier")
 
 	// Antehandler error
-	ErrRedundantTx = sdkerrors.Register(SubModuleName, 21, "packet messages are redundant")
+	ErrRedundantTx = sdkerrors.Register(SubModuleName, 22, "packet messages are redundant")
 )

@@ -13,7 +13,7 @@ func NewAnteHandler(
 	ak ante.AccountKeeper, bankKeeper types.BankKeeper,
 	sigGasConsumer ante.SignatureVerificationGasConsumer,
 	signModeHandler signing.SignModeHandler,
-	IBCChannelkeeper channelkeeper.Keeper,
+	channelKeeper channelkeeper.Keeper,
 ) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
@@ -30,6 +30,6 @@ func NewAnteHandler(
 		ante.NewSigGasConsumeDecorator(ak, sigGasConsumer),
 		ante.NewSigVerificationDecorator(ak, signModeHandler),
 		ante.NewIncrementSequenceDecorator(ak),
-		ibcante.NewAnteDecorator(IBCChannelkeeper),
+		ibcante.NewAnteDecorator(channelKeeper),
 	)
 }

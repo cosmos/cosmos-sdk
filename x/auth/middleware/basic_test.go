@@ -137,7 +137,7 @@ func (suite *MWTestSuite) TestConsumeGasForTxSize() {
 			expectedGas += afterGas - beforeGas
 
 			beforeGas = ctx.GasMeter().GasConsumed()
-			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), testTx, types.RequestDeliverTx{})
+			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), testTx, types.RequestDeliverTx{Tx: txBytes})
 
 			suite.Require().Nil(err, "ConsumeTxSizeGasMiddleware returned error: %v", err)
 
@@ -162,7 +162,7 @@ func (suite *MWTestSuite) TestConsumeGasForTxSize() {
 			beforeSimGas := ctx.GasMeter().GasConsumed()
 
 			// run txhandler in simulate mode
-			_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), testTx, tx.RequestSimulateTx{})
+			_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), testTx, tx.RequestSimulateTx{TxBytes: simTxBytes})
 			consumedSimGas := ctx.GasMeter().GasConsumed() - beforeSimGas
 
 			// require that txhandler passes and does not underestimate middleware cost

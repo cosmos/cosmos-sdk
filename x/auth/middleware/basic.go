@@ -15,15 +15,15 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+type validateBasicMiddleware struct {
+	next tx.Handler
+}
+
 // ValidateBasicMiddleware will call tx.ValidateBasic, msg.ValidateBasic(for each msg inside tx)
 // and return any non-nil error.
 // If ValidateBasic passes, middleware calls next middleware in chain. Note,
 // validateBasicMiddleware will not get executed on ReCheckTx since it
 // is not dependent on application state.
-type validateBasicMiddleware struct {
-	next tx.Handler
-}
-
 func ValidateBasicMiddleware(txh tx.Handler) tx.Handler {
 	return validateBasicMiddleware{
 		next: txh,
@@ -34,10 +34,8 @@ var _ tx.Handler = validateBasicMiddleware{}
 
 // CheckTx implements tx.Handler.CheckTx.
 func (basic validateBasicMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
 	// no need to validate basic on recheck tx, call next middleware
-	if sdkCtx.IsReCheckTx() {
+	if req.Type == abci.CheckTxType_Recheck {
 		return basic.next.CheckTx(ctx, tx, req)
 	}
 
@@ -68,21 +66,9 @@ func (basic validateBasicMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.T
 
 var _ tx.Handler = txTimeoutHeightMiddleware{}
 
-type (
-	// TxTimeoutHeightMiddleware defines a middleware that checks for a
-	// tx height timeout.
-	txTimeoutHeightMiddleware struct {
-		next tx.Handler
-	}
-
-	// TxWithTimeoutHeight defines the interface a tx must implement in order for
-	// TxHeightTimeoutMiddleware to process the tx.
-	TxWithTimeoutHeight interface {
-		sdk.Tx
-
-		GetTimeoutHeight() uint64
-	}
-)
+type txTimeoutHeightMiddleware struct {
+	next tx.Handler
+}
 
 // TxTimeoutHeightMiddleware defines a middleware that checks for a
 // tx height timeout.
@@ -94,7 +80,7 @@ func TxTimeoutHeightMiddleware(txh tx.Handler) tx.Handler {
 
 func checkTimeout(ctx context.Context, tx sdk.Tx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	timeoutTx, ok := tx.(TxWithTimeoutHeight)
+	timeoutTx, ok := tx.(sdk.TxWithTimeoutHeight)
 	if !ok {
 		return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "expected tx to implement TxWithTimeoutHeight")
 	}
@@ -227,67 +213,71 @@ func ConsumeTxSizeGasMiddleware(ak AccountKeeper) tx.Middleware {
 	}
 }
 
-func (cgts consumeTxSizeGasMiddleware) consumeTxSizeGas(ctx context.Context, tx sdk.Tx, simulate bool) error {
+func (cgts consumeTxSizeGasMiddleware) simulateSigGasCost(ctx context.Context, tx sdk.Tx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	params := cgts.ak.GetParams(sdkCtx)
+
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}
-	params := cgts.ak.GetParams(sdkCtx)
 
-	sdkCtx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(sdkCtx.TxBytes())), "txSize")
-
-	// simulate gas cost for signatures in simulate mode
-	if simulate {
-		// in simulate mode, each element should be a nil signature
-		sigs, err := sigTx.GetSignaturesV2()
-		if err != nil {
-			return err
-		}
-		n := len(sigs)
-
-		for i, signer := range sigTx.GetSigners() {
-			// if signature is already filled in, no need to simulate gas cost
-			if i < n && !isIncompleteSignature(sigs[i].Data) {
-				continue
-			}
-
-			var pubkey cryptotypes.PubKey
-
-			acc := cgts.ak.GetAccount(sdkCtx, signer)
-
-			// use placeholder simSecp256k1Pubkey if sig is nil
-			if acc == nil || acc.GetPubKey() == nil {
-				pubkey = simSecp256k1Pubkey
-			} else {
-				pubkey = acc.GetPubKey()
-			}
-
-			// use stdsignature to mock the size of a full signature
-			simSig := legacytx.StdSignature{ //nolint:staticcheck // this will be removed when proto is ready
-				Signature: simSecp256k1Sig[:],
-				PubKey:    pubkey,
-			}
-
-			sigBz := legacy.Cdc.MustMarshal(simSig)
-			cost := sdk.Gas(len(sigBz) + 6)
-
-			// If the pubkey is a multi-signature pubkey, then we estimate for the maximum
-			// number of signers.
-			if _, ok := pubkey.(*multisig.LegacyAminoPubKey); ok {
-				cost *= params.TxSigLimit
-			}
-
-			sdkCtx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*cost, "txSize")
-		}
+	// in simulate mode, each element should be a nil signature
+	sigs, err := sigTx.GetSignaturesV2()
+	if err != nil {
+		return err
 	}
+	n := len(sigs)
+
+	for i, signer := range sigTx.GetSigners() {
+		// if signature is already filled in, no need to simulate gas cost
+		if i < n && !isIncompleteSignature(sigs[i].Data) {
+			continue
+		}
+
+		var pubkey cryptotypes.PubKey
+
+		acc := cgts.ak.GetAccount(sdkCtx, signer)
+
+		// use placeholder simSecp256k1Pubkey if sig is nil
+		if acc == nil || acc.GetPubKey() == nil {
+			pubkey = simSecp256k1Pubkey
+		} else {
+			pubkey = acc.GetPubKey()
+		}
+
+		// use stdsignature to mock the size of a full signature
+		simSig := legacytx.StdSignature{ //nolint:staticcheck // this will be removed when proto is ready
+			Signature: simSecp256k1Sig[:],
+			PubKey:    pubkey,
+		}
+
+		sigBz := legacy.Cdc.MustMarshal(simSig)
+		cost := sdk.Gas(len(sigBz) + 6)
+
+		// If the pubkey is a multi-signature pubkey, then we estimate for the maximum
+		// number of signers.
+		if _, ok := pubkey.(*multisig.LegacyAminoPubKey); ok {
+			cost *= params.TxSigLimit
+		}
+
+		sdkCtx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*cost, "txSize")
+	}
+
+	return nil
+}
+
+func (cgts consumeTxSizeGasMiddleware) consumeTxSizeGas(ctx context.Context, tx sdk.Tx, txBytes []byte, simulate bool) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	params := cgts.ak.GetParams(sdkCtx)
+	sdkCtx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(txBytes)), "txSize")
 
 	return nil
 }
 
 // CheckTx implements tx.Handler.CheckTx.
 func (cgts consumeTxSizeGasMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	if err := cgts.consumeTxSizeGas(ctx, tx, false); err != nil {
+	if err := cgts.consumeTxSizeGas(ctx, tx, req.GetTx(), false); err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
 
@@ -296,7 +286,7 @@ func (cgts consumeTxSizeGasMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, r
 
 // DeliverTx implements tx.Handler.DeliverTx.
 func (cgts consumeTxSizeGasMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	if err := cgts.consumeTxSizeGas(ctx, tx, false); err != nil {
+	if err := cgts.consumeTxSizeGas(ctx, tx, req.GetTx(), false); err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
 
@@ -305,7 +295,11 @@ func (cgts consumeTxSizeGasMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx,
 
 // SimulateTx implements tx.Handler.SimulateTx.
 func (cgts consumeTxSizeGasMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	if err := cgts.consumeTxSizeGas(ctx, sdkTx, true); err != nil {
+	if err := cgts.consumeTxSizeGas(ctx, sdkTx, req.TxBytes, true); err != nil {
+		return tx.ResponseSimulateTx{}, err
+	}
+
+	if err := cgts.simulateSigGasCost(ctx, sdkTx); err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}
 

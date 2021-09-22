@@ -75,5 +75,10 @@ func (suite *MWTestSuite) TestMsgService() {
 
 	res, err := txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, types.RequestDeliverTx{Tx: txBytes})
 	suite.Require().NoError(err)
-	suite.Require().NotEmpty(res.Data) // Maybe we should also test that the data is an expected object, not only NotEmpty
+	suite.Require().NotEmpty(res.Data)
+	var txMsgData sdk.TxMsgData
+	err = suite.clientCtx.Codec.Unmarshal(res.Data, &txMsgData)
+	suite.Require().NoError(err)
+	suite.Require().Len(txMsgData.Data, 1)
+	suite.Require().Equal(sdk.MsgTypeURL(&testdata.MsgCreateDog{}), txMsgData.Data[0].MsgType)
 }

@@ -33,7 +33,7 @@ var (
 // This is where apps can define their own PubKey
 type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
 
-var _ tx.Handler = mempoolFeeMiddleware{}
+var _ tx.Handler = setPubKeyMiddleware{}
 
 // setPubKeyMiddleware sets PubKeys in context for any signer which does not already have pubkey set
 // PubKeys must be set in context for all signers before any other sigverify middlewares run
@@ -149,6 +149,8 @@ func (spkm setPubKeyMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, re
 	}
 	return spkm.next.SimulateTx(ctx, sdkTx, req)
 }
+
+var _ tx.Handler = validateSigCountMiddleware{}
 
 // validateSigCountMiddleware takes in Params and returns errors if there are too many signatures in the tx for the given params
 // otherwise it calls next middleware
@@ -284,6 +286,8 @@ func ConsumeMultisignatureVerificationGas(
 	return nil
 }
 
+var _ tx.Handler = sigGasConsumeMiddleware{}
+
 // Consume parameter-defined amount of gas for each signature according to the passed-in SignatureVerificationGasConsumer function
 // before calling the next middleware
 // CONTRACT: Pubkeys are set in context for all signers before this middleware runs
@@ -381,6 +385,8 @@ func (sgcm sigGasConsumeMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx
 	return sgcm.next.SimulateTx(ctx, sdkTx, req)
 }
 
+var _ tx.Handler = sigVerificationMiddleware{}
+
 // Verify all signatures for a tx and return an error if any are invalid. Note,
 // the sigVerificationMiddleware middleware will not get executed on ReCheck.
 //
@@ -423,10 +429,10 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	}
 }
 
-func (svm sigVerificationMiddleware) sigVerify(ctx context.Context, tx sdk.Tx, simulate bool) error {
+func (svm sigVerificationMiddleware) sigVerify(ctx context.Context, tx sdk.Tx, isReCheckTx, simulate bool) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// no need to verify signatures on recheck tx
-	if sdkCtx.IsReCheckTx() {
+	if isReCheckTx {
 		return nil
 	}
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
@@ -503,7 +509,7 @@ func (svm sigVerificationMiddleware) sigVerify(ctx context.Context, tx sdk.Tx, s
 
 // CheckTx implements tx.Handler.CheckTx.
 func (svd sigVerificationMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	if err := svd.sigVerify(ctx, tx, false); err != nil {
+	if err := svd.sigVerify(ctx, tx, req.Type == abci.CheckTxType_Recheck, false); err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
 
@@ -512,7 +518,7 @@ func (svd sigVerificationMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req
 
 // DeliverTx implements tx.Handler.DeliverTx.
 func (svd sigVerificationMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	if err := svd.sigVerify(ctx, tx, false); err != nil {
+	if err := svd.sigVerify(ctx, tx, false, false); err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
 
@@ -521,12 +527,14 @@ func (svd sigVerificationMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, r
 
 // SimulateTx implements tx.Handler.SimulateTx.
 func (svd sigVerificationMiddleware) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	if err := svd.sigVerify(ctx, sdkTx, true); err != nil {
+	if err := svd.sigVerify(ctx, sdkTx, false, true); err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}
 
 	return svd.next.SimulateTx(ctx, sdkTx, req)
 }
+
+var _ tx.Handler = incrementSequenceMiddleware{}
 
 // incrementSequenceMiddleware handles incrementing sequences of all signers.
 // Use the incrementSequenceMiddleware middleware to prevent replay attacks. Note,

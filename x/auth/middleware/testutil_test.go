@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -61,7 +62,8 @@ func (s *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 
 	s.clientCtx = client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig).
-		WithInterfaceRegistry(encodingConfig.InterfaceRegistry)
+		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
+		WithCodec(codec.NewAminoCodec(encodingConfig.Amino))
 	// router := middleware.NewLegacyRouter()
 
 	s.txHandler = middleware.ComposeMiddlewares(

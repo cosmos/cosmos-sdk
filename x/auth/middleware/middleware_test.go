@@ -1095,7 +1095,7 @@ func (suite *MWTestSuite) TestTxHandlerReCheck() {
 	suite.Require().NoError(err)
 	suite.Require().NoError(txBuilder.SetSignatures())
 
-	_, err = suite.txHandler.CheckTx(sdk.WrapSDKContext(ctx), txBuilder.GetTx(), abci.RequestCheckTx{})
+	_, err = suite.txHandler.CheckTx(sdk.WrapSDKContext(ctx), txBuilder.GetTx(), abci.RequestCheckTx{Type: abci.CheckTxType_Recheck})
 	suite.Require().Nil(err, "TxHandler errored on recheck unexpectedly: %v", err)
 
 	tx, _, err = suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
@@ -1118,7 +1118,7 @@ func (suite *MWTestSuite) TestTxHandlerReCheck() {
 		// set testcase parameters
 		suite.app.AccountKeeper.SetParams(ctx, tc.params)
 
-		_, err = suite.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{})
+		_, err = suite.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{Tx: txBytes, Type: abci.CheckTxType_Recheck})
 
 		suite.Require().NotNil(err, "tx does not fail on recheck with updated params in test case: %s", tc.name)
 

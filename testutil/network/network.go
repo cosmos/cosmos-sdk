@@ -18,7 +18,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
-	"github.com/tendermint/tendermint/node"
+	"github.com/tendermint/tendermint/libs/service"
 	tmclient "github.com/tendermint/tendermint/rpc/client"
 	dbm "github.com/tendermint/tm-db"
 	"google.golang.org/grpc"
@@ -161,7 +161,7 @@ type (
 		ValAddress sdk.ValAddress
 		RPCClient  tmclient.Client
 
-		tmNode  *node.Node
+		tmNode  service.Service
 		api     *api.Server
 		grpc    *grpc.Server
 		grpcWeb *http.Server

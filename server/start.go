@@ -14,7 +14,6 @@ import (
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/node"
-	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/rpc/client/local"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -249,21 +248,11 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 	app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper)
 
-	nodeKey, err := tmtypes.LoadOrGenNodeKey(cfg.NodeKeyFile())
-	if err != nil {
-		return err
-	}
-
-	genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
-	tmNode, err := node.NewNode(
+	tmNode, err := node.New(
 		cfg,
-		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
-		nodeKey,
-		proxy.NewLocalClientCreator(app),
-		genDocProvider,
-		node.DefaultDBProvider,
-		node.DefaultMetricsProvider(cfg.Instrumentation),
 		ctx.Logger,
+		proxy.NewLocalClientCreator(app),
+		nil,
 	)
 	if err != nil {
 		return err
@@ -279,7 +268,15 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	// service if API or gRPC is enabled, and avoid doing so in the general
 	// case, because it spawns a new local tendermint RPC client.
 	if config.API.Enable || config.GRPC.Enable {
-		clientCtx = clientCtx.WithClient(local.New(tmNode))
+		node, ok := tmNode.(local.NodeService)
+		if !ok {
+			panic("something")
+		}
+		localNode, err := local.New(node)
+		if err != nil {
+			panic(err)
+		}
+		clientCtx = clientCtx.WithClient(localNode)
 
 		app.RegisterTxService(clientCtx)
 		app.RegisterTendermintService(clientCtx)
@@ -287,7 +284,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 	var apiSrv *api.Server
 	if config.API.Enable {
-		genDoc, err := genDocProvider()
+		genDoc, err := tmtypes.GenesisDocFromFile(cfg.GenesisFile())
 		if err != nil {
 			return err
 		}

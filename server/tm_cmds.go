@@ -3,12 +3,12 @@ package server
 // DONTCOVER
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	pvm "github.com/tendermint/tendermint/privval"
-	tmtypes "github.com/tendermint/tendermint/types"
 	tversion "github.com/tendermint/tendermint/version"
 	yaml "gopkg.in/yaml.v2"
 
@@ -26,11 +26,11 @@ func ShowNodeIDCmd() *cobra.Command {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
 
-			nodeKey, err := tmtypes.LoadNodeKey(cfg.NodeKeyFile())
+			nodeKey, err := cfg.LoadNodeKeyID()
 			if err != nil {
 				return err
 			}
-			fmt.Println(nodeKey.ID())
+			fmt.Println(nodeKey)
 			return nil
 		},
 	}
@@ -45,8 +45,11 @@ func ShowValidatorCmd() *cobra.Command {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
 
-			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
-			pk, err := privValidator.GetPubKey()
+			privValidator, err := pvm.LoadFilePV(cfg.PrivValidator.KeyFile(), cfg.PrivValidator.StateFile())
+			if err != nil {
+				return err
+			}
+			pk, err := privValidator.GetPubKey(context.TODO())
 			if err != nil {
 				return err
 			}
@@ -76,7 +79,10 @@ func ShowAddressCmd() *cobra.Command {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
 
-			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
+			privValidator, err := pvm.LoadFilePV(cfg.PrivValidator.Key, cfg.PrivValidator.State)
+			if err != nil {
+				return err
+			}
 			valConsAddr := (sdk.ConsAddress)(privValidator.GetAddress())
 			fmt.Println(valConsAddr.String())
 			return nil
@@ -125,7 +131,7 @@ func UnsafeResetAllCmd() *cobra.Command {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
 
-			tcmd.ResetAll(cfg.DBDir(), cfg.P2P.AddrBookFile(), cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile(), serverCtx.Logger)
+			tcmd.ResetAll(cfg.DBDir(), cfg.P2P.AddrBookFile(), cfg.PrivValidator.Key, cfg.PrivValidator.State, serverCtx.Logger)
 			return nil
 		},
 	}

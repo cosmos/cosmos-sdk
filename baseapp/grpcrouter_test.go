@@ -2,7 +2,6 @@ package baseapp_test
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -54,7 +53,8 @@ func TestRegisterQueryServiceTwice(t *testing.T) {
 	// Setup baseapp.
 	db := dbm.NewMemDB()
 	encCfg := simapp.MakeTestEncodingConfig()
-	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
+	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	app := baseapp.NewBaseApp("test", logger, db, encCfg.TxConfig.TxDecoder())
 	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
 

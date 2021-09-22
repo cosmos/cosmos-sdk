@@ -2,6 +2,7 @@ package simapp
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -81,7 +82,7 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 	t.Helper()
 
 	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey()
+	pubKey, err := privVal.GetPubKey(context.TODO())
 	require.NoError(t, err)
 	// create validator set with single validator
 	validator := tmtypes.NewValidator(pubKey, 1)

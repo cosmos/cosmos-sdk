@@ -1,6 +1,7 @@
 package genutil
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"path/filepath"
@@ -60,33 +61,36 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic strin
 		return "", nil, fmt.Errorf("invalid mnemonic")
 	}
 
-	nodeKey, err := tmtypes.LoadOrGenNodeKey(config.NodeKeyFile())
+	nodeKey, err := config.LoadNodeKeyID()
 	if err != nil {
 		return "", nil, err
 	}
 
-	nodeID = string(nodeKey.ID())
+	nodeID = string(nodeKey)
 
-	pvKeyFile := config.PrivValidatorKeyFile()
+	pvKeyFile := config.PrivValidator.KeyFile()
 	if err := tmos.EnsureDir(filepath.Dir(pvKeyFile), 0777); err != nil {
 		return "", nil, err
 	}
 
-	pvStateFile := config.PrivValidatorStateFile()
+	pvStateFile := config.PrivValidator.StateFile()
 	if err := tmos.EnsureDir(filepath.Dir(pvStateFile), 0777); err != nil {
 		return "", nil, err
 	}
 
 	var filePV *privval.FilePV
 	if len(mnemonic) == 0 {
-		filePV = privval.LoadOrGenFilePV(pvKeyFile, pvStateFile)
+		filePV, err = privval.LoadOrGenFilePV(pvKeyFile, pvStateFile)
+		if err != nil {
+			return "", nil, err
+		}
 	} else {
 		privKey := tmed25519.GenPrivKeyFromSecret([]byte(mnemonic))
 		filePV = privval.NewFilePV(privKey, pvKeyFile, pvStateFile)
 		filePV.Save()
 	}
 
-	tmValPubKey, err := filePV.GetPubKey()
+	tmValPubKey, err := filePV.GetPubKey(context.TODO())
 	if err != nil {
 		return "", nil, err
 	}

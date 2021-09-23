@@ -17,18 +17,18 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/cosmos/cosmos-sdk/container"
-	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 func ProvideAppConfig(config *Config) container.Option {
 	return container.Options(
 		container.OnePerScopeTypes(
-			reflect.TypeOf((*module.AppModule)(nil)).Elem(),
+			reflect.TypeOf(Handler{}),
 		),
 		composeModules(config),
-		container.Provide(func(modules map[string]module.AppModule, jsonCodec codec.JSONCodec) func(*baseapp.BaseApp) {
+		container.Provide(func(handlers map[string]Handler, jsonCodec codec.JSONCodec) func(*baseapp.BaseApp) {
 			return func(app *baseapp.BaseApp) {
 				app.SetInitChainer(func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+					goCtx := sdk.WrapSDKContext(ctx)
 					var genesisState map[string]json.RawMessage
 					if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 						panic(err)
@@ -40,7 +40,7 @@ func ProvideAppConfig(config *Config) container.Option {
 							continue
 						}
 
-						moduleValUpdates := modules[moduleName].InitGenesis(ctx, jsonCodec, genesisState[moduleName])
+						moduleValUpdates := handlers[moduleName].InitGenesis(goCtx, jsonCodec, genesisState[moduleName])
 
 						// use these validator updates if provided, the module manager assumes
 						// only one module will update the validator set
@@ -59,9 +59,10 @@ func ProvideAppConfig(config *Config) container.Option {
 
 				app.SetBeginBlocker(func(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 					ctx = ctx.WithEventManager(sdk.NewEventManager())
+					goCtx := sdk.WrapSDKContext(ctx)
 
 					for _, moduleName := range config.Abci.BeginBlock {
-						modules[moduleName].BeginBlock(ctx, req)
+						handlers[moduleName].BeginBlocker(goCtx, req)
 					}
 
 					return abci.ResponseBeginBlock{
@@ -71,10 +72,11 @@ func ProvideAppConfig(config *Config) container.Option {
 
 				app.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 					ctx = ctx.WithEventManager(sdk.NewEventManager())
+					goCtx := sdk.WrapSDKContext(ctx)
 					var validatorUpdates []abci.ValidatorUpdate
 
 					for _, moduleName := range config.Abci.EndBlock {
-						moduleValUpdates := modules[moduleName].EndBlock(ctx, req)
+						moduleValUpdates := handlers[moduleName].EndBlocker(goCtx, req)
 
 						// use these validator updates if provided, the module manager assumes
 						// only one module will update the validator set
@@ -149,12 +151,12 @@ func addModule(name string, mod interface{}) container.Option {
 	for i := 0; i < numMethods; i++ {
 		method := modTy.Method(i)
 		if strings.HasPrefix(method.Name, "Provide") || strings.HasPrefix(method.Name, "provide") {
-			ctrInfo, err := container.ExtractConstructorInfo(method.Func.Interface())
+			ctrInfo, err := container.ExtractProviderDescriptor(method.Func.Interface())
 			if err != nil {
 				return container.Error(err)
 			}
 
-			ctrInfo.In = ctrInfo.In[1:len(ctrInfo.In)]
+			ctrInfo.Inputs = ctrInfo.Inputs[1:len(ctrInfo.Inputs)]
 			ctrInfo.Fn = func(values []reflect.Value) ([]reflect.Value, error) {
 				return ctrInfo.Fn(append([]reflect.Value{reflect.ValueOf(mod)}, values...))
 			}

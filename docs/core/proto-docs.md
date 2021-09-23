@@ -9,6 +9,13 @@
     - [Config](#cosmos.app.v1.Config)
     - [ModuleConfig](#cosmos.app.v1.ModuleConfig)
   
+- [cosmos/auth/module/v1/module.proto](#cosmos/auth/module/v1/module.proto)
+    - [DefaultAccountConstructor](#cosmos.auth.module.v1.DefaultAccountConstructor)
+    - [DefaultRandomGenesisAccountsProvider](#cosmos.auth.module.v1.DefaultRandomGenesisAccountsProvider)
+    - [Module](#cosmos.auth.module.v1.Module)
+    - [Permission](#cosmos.auth.module.v1.Permission)
+    - [TxHandler](#cosmos.auth.module.v1.TxHandler)
+  
 - [cosmos/auth/v1beta1/auth.proto](#cosmos/auth/v1beta1/auth.proto)
     - [BaseAccount](#cosmos.auth.v1beta1.BaseAccount)
     - [ModuleAccount](#cosmos.auth.v1beta1.ModuleAccount)
@@ -780,6 +787,86 @@
 | ----- | ---- | ----- | ----------- |
 | `config` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 | `name` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/auth/module/v1/module.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/auth/module/v1/module.proto
+
+
+
+<a name="cosmos.auth.module.v1.DefaultAccountConstructor"></a>
+
+### DefaultAccountConstructor
+
+
+
+
+
+
+
+<a name="cosmos.auth.module.v1.DefaultRandomGenesisAccountsProvider"></a>
+
+### DefaultRandomGenesisAccountsProvider
+
+
+
+
+
+
+
+<a name="cosmos.auth.module.v1.Module"></a>
+
+### Module
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `bech32_account_prefix` | [string](#string) |  |  |
+| `permissions` | [Permission](#cosmos.auth.module.v1.Permission) | repeated |  |
+| `account_constructor` | [google.protobuf.Any](#google.protobuf.Any) |  | account_constructor is an optional AccountI constructor config object that can be provided to override the default BaseAccount constructor. The provided config object must have an `NewAccount() AccountI` method defined. If this is left empty, the default constructor will be used |
+| `random_genesis_accounts_provider` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+
+
+
+
+
+
+<a name="cosmos.auth.module.v1.Permission"></a>
+
+### Permission
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+| `permissions` | [string](#string) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.auth.module.v1.TxHandler"></a>
+
+### TxHandler
+
 
 
 

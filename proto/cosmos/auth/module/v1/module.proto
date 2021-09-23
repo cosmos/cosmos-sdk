@@ -1,6 +1,32 @@
 syntax = "proto3";
 package cosmos.auth.module.v1;
 
+option go_package = "github.com/cosmos/cosmos-sdk/x/auth/module";
+
+import "google/protobuf/any.proto";
+
+message TxHandler {
+
+}
+
 message Module {
   string bech32_account_prefix = 1;
+  repeated Permission permissions = 2;
+
+  // account_constructor is an optional AccountI constructor config object that can be provided
+  // to override the default BaseAccount constructor. The provided config object must have
+  // an `NewAccount() AccountI` method defined. If this is left empty, the default constructor
+  // will be used
+  google.protobuf.Any account_constructor = 3;
+
+  google.protobuf.Any random_genesis_accounts_provider = 4;
 }
+
+message Permission {
+  string address = 1;
+  repeated string permissions = 2;
+}
+
+message DefaultAccountConstructor {}
+
+message DefaultRandomGenesisAccountsProvider {}

@@ -12,7 +12,6 @@ import (
 	"github.com/rakyll/statik/fs"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -32,7 +31,7 @@ type Name string
 
 var BaseAppProvider = container.Options(
 	container.AutoGroupTypes(reflect.TypeOf(func(*baseapp.BaseApp) {})),
-	container.OnePerScopeTypes(reflect.TypeOf((*module.AppModuleBasic)(nil)).Elem()),
+	container.OnePerScopeTypes(reflect.TypeOf(Handler{})),
 	container.Provide(provideBaseApp),
 )
 
@@ -42,14 +41,14 @@ type baseAppInput struct {
 	Name         Name          `optional:"true"`
 	TxDecoder    sdk.TxDecoder `optional:"true"`
 	TypeRegistry codectypes.TypeRegistry
-	ModuleBasics map[string]module.AppModuleBasic
+	Handlers     map[string]Handler
 	Options      []func(*baseapp.BaseApp)
 }
 
 type app struct {
 	*baseapp.BaseApp
 
-	moduleBasics map[string]module.AppModuleBasic
+	handlers     map[string]Handler
 	typeRegistry codectypes.TypeRegistry
 }
 
@@ -77,7 +76,7 @@ func provideBaseApp(inputs baseAppInput) types.AppCreator {
 
 		return &app{
 			BaseApp:      baseApp,
-			moduleBasics: inputs.ModuleBasics,
+			handlers:     inputs.Handlers,
 			typeRegistry: inputs.TypeRegistry,
 		}
 	}
@@ -90,14 +89,14 @@ func (a app) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	// Register new tendermint queries routes from grpc-gateway.
 	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
-	// Register legacy and grpc-gateway routes for all modules.
-	for _, b := range a.moduleBasics {
-		b.RegisterRESTRoutes(clientCtx, apiSvr.Router)
-	}
-
-	for _, b := range a.moduleBasics {
-		b.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
-	}
+	//// ** TODO: Register legacy and grpc-gateway routes for all modules.
+	//for _, b := range a.moduleBasics {
+	//	b.RegisterRESTRoutes(clientCtx, apiSvr.Router)
+	//}
+	//
+	//for _, b := range a.moduleBasics {
+	//	b.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	//}
 
 	// register swagger API from root so that other applications can override easily
 	if apiConfig.Swagger {

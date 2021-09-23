@@ -144,7 +144,7 @@ func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 	}
 }
 
-// AppModuleGenesis is the standard form for an application module genesis functions
+// Deprecated: AppModuleGenesis is the standard form for an application module genesis functions
 type AppModuleGenesis interface {
 	AppModuleBasic
 
@@ -152,7 +152,7 @@ type AppModuleGenesis interface {
 	ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage
 }
 
-// AppModule is the standard form for an application module
+// Deprecated: AppModule is the standard form for an application module
 type AppModule interface {
 	AppModuleGenesis
 

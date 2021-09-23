@@ -1,0 +1,9 @@
+modules:
+  - name: auth
+    config:
+      "@type": cosmos.auth.module.v1.Module
+      bech32_account_prefix: sim
+abci:
+  init_genesis: [auth, bank]
+  begin_block: [auth, bank]
+  end_block: [auth, bank]

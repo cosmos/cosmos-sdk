@@ -1,0 +1,6 @@
+syntax = "proto3";
+package cosmos.auth.module.v1;
+
+message Module {
+  string bech32_account_prefix = 1;
+}

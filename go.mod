@@ -10,6 +10,7 @@ require (
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/coinbase/rosetta-sdk-go v0.6.10
 	github.com/confio/ics23/go v0.6.6
+	github.com/cosmos/cosmos-sdk/container v0.0.0-20210923142330-0ad9b4e4fefa
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.16.0
 	github.com/cosmos/ledger-cosmos-go v0.11.1
@@ -52,6 +53,7 @@ require (
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.4.0
 	nhooyr.io/websocket v1.8.6 // indirect
+	sigs.k8s.io/yaml v1.1.0
 )
 
 replace google.golang.org/grpc => google.golang.org/grpc v1.33.2

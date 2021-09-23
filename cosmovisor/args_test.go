@@ -23,7 +23,7 @@ func TestArgsTestSuite(t *testing.T) {
 }
 
 func (s *argsTestSuite) SetupSuite() {
-	s.envVars = []string{envHome, envName, envDownloadBin, envRestartUpgrade, envSkipBackup, envInterval}
+	s.envVars = []string{EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval}
 }
 
 // clearEnv clears environment variables and returns the values
@@ -290,7 +290,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 		expectedCfg      *Config
 		expectedErrCount int
 	}{
-		// envHome, envName, envDownloadBin, envRestartUpgrade, envSkipBackup, envInterval
+		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval
 		{
 			name:             "all bad",
 			envVals:          []string{"", "", "bad", "bad", "bad", "bad"},
@@ -334,7 +334,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 			expectedCfg:      newConfig(absPath, "testname", false, false, true, 303),
 			expectedErrCount: 0,
 		},
-		// envHome, envName, envDownloadBin, envRestartUpgrade, envSkipBackup, envInterval
+		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval
 		{
 			name:             "restart upgrade bad",
 			envVals:          []string{absPath, "testname", "true", "bad", "true", "303"},
@@ -359,7 +359,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 			expectedCfg:      newConfig(absPath, "testname", true, false, true, 303),
 			expectedErrCount: 0,
 		},
-		// envHome, envName, envDownloadBin, envRestartUpgrade, envSkipBackup, envInterval
+		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval
 		{
 			name:             "skip unsafe backups bad",
 			envVals:          []string{absPath, "testname", "true", "false", "bad", "303"},
@@ -384,7 +384,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 			expectedCfg:      newConfig(absPath, "testname", true, false, false, 303),
 			expectedErrCount: 0,
 		},
-		// envHome, envName, envDownloadBin, envRestartUpgrade, envSkipBackup, envInterval
+		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval
 		{
 			name:             "poll interval bad",
 			envVals:          []string{absPath, "testname", "false", "false", "false", "bad"},
@@ -440,7 +440,7 @@ func (s *argsTestSuite) TestShouldGiveHelp() {
 		assert.True(t, actual)
 	})
 
-	s.Require().NoError(os.Setenv(envName, "somename"), "setting name environment variable")
+	s.Require().NoError(os.Setenv(EnvName, "somename"), "setting name environment variable")
 
 	tests := []struct {
 		name     string
@@ -499,7 +499,7 @@ func (s *argsTestSuite) TestShouldGiveHelp() {
 
 func (s *argsTestSuite) TestGetHelpText() {
 	expectedPieces := []string{
-		envHome, envName, envDownloadBin, envRestartUpgrade, envSkipBackup, envInterval,
+		EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval,
 	}
 
 	actual := GetHelpText()

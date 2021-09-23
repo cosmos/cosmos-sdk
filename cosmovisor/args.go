@@ -15,12 +15,12 @@ import (
 
 // environment variable names
 const (
-	envHome           = "DAEMON_HOME"
-	envName           = "DAEMON_NAME"
-	envDownloadBin    = "DAEMON_ALLOW_DOWNLOAD_BINARIES"
-	envRestartUpgrade = "DAEMON_RESTART_AFTER_UPGRADE"
-	envSkipBackup     = "UNSAFE_SKIP_BACKUP"
-	envInterval       = "DAEMON_POLL_INTERVAL"
+	EnvHome           = "DAEMON_HOME"
+	EnvName           = "DAEMON_NAME"
+	EnvDownloadBin    = "DAEMON_ALLOW_DOWNLOAD_BINARIES"
+	EnvRestartUpgrade = "DAEMON_RESTART_AFTER_UPGRADE"
+	EnvSkipBackup     = "UNSAFE_SKIP_BACKUP"
+	EnvInterval       = "DAEMON_POLL_INTERVAL"
 )
 
 const (
@@ -122,28 +122,28 @@ func (cfg *Config) CurrentBin() (string, error) {
 func GetConfigFromEnv() (*Config, error) {
 	var errs []error
 	cfg := &Config{
-		Home: os.Getenv(envHome),
-		Name: os.Getenv(envName),
+		Home: os.Getenv(EnvHome),
+		Name: os.Getenv(EnvName),
 	}
 
 	var err error
-	if cfg.AllowDownloadBinaries, err = booleanOption(envDownloadBin, false); err != nil {
+	if cfg.AllowDownloadBinaries, err = booleanOption(EnvDownloadBin, false); err != nil {
 		errs = append(errs, err)
 	}
-	if cfg.RestartAfterUpgrade, err = booleanOption(envRestartUpgrade, true); err != nil {
+	if cfg.RestartAfterUpgrade, err = booleanOption(EnvRestartUpgrade, true); err != nil {
 		errs = append(errs, err)
 	}
-	if cfg.UnsafeSkipBackup, err = booleanOption(envSkipBackup, false); err != nil {
+	if cfg.UnsafeSkipBackup, err = booleanOption(EnvSkipBackup, false); err != nil {
 		errs = append(errs, err)
 	}
 
-	interval := os.Getenv(envInterval)
+	interval := os.Getenv(EnvInterval)
 	if interval != "" {
 		switch i, e := strconv.ParseUint(interval, 10, 32); {
 		case e != nil:
-			errs = append(errs, fmt.Errorf("invalid %s: %w", envInterval, err))
+			errs = append(errs, fmt.Errorf("invalid %s: %w", EnvInterval, err))
 		case i == 0:
-			errs = append(errs, fmt.Errorf("invalid %s: cannot be 0", envInterval))
+			errs = append(errs, fmt.Errorf("invalid %s: cannot be 0", EnvInterval))
 		default:
 			cfg.PollInterval = time.Millisecond * time.Duration(i)
 		}
@@ -165,14 +165,14 @@ func GetConfigFromEnv() (*Config, error) {
 func (cfg *Config) validate() []error {
 	var errs []error
 	if cfg.Name == "" {
-		errs = append(errs, errors.New(envName + " is not set"))
+		errs = append(errs, errors.New(EnvName+ " is not set"))
 	}
 
 	switch {
 	case cfg.Home == "":
-		errs = append(errs, errors.New(envHome + " is not set"))
+		errs = append(errs, errors.New(EnvHome+ " is not set"))
 	case !filepath.IsAbs(cfg.Home):
-		errs = append(errs, errors.New(envHome + " must be an absolute path"))
+		errs = append(errs, errors.New(EnvHome+ " must be an absolute path"))
 	default:
 		switch info, err := os.Stat(cfg.Root()); {
 		case err != nil:
@@ -301,10 +301,10 @@ func (cfg Config) DetailString() string {
 }
 
 // ShouldGiveHelp checks the env and provided args to see if help is needed or being requested.
-// Help is needed if the os.Getenv(envName) env var isn't set.
+// Help is needed if the os.Getenv(EnvName) env var isn't set.
 // Help is requested if the first arg is "help", "-h", or "--help".
 func ShouldGiveHelp(args []string) bool {
-	if len(os.Getenv(envName)) == 0 {
+	if len(os.Getenv(EnvName)) == 0 {
 		return true
 	}
 	if len(args) == 0 {
@@ -356,5 +356,5 @@ Configuration of Cosmoviser is done through the following environment variables:
         It is advised to use backup option, i.e. UNSAFE_SKIP_BACKUP=false
         Valid values: true, false.
 
-`, envHome, envName, envDownloadBin, envRestartUpgrade, envInterval, envSkipBackup)
+`, EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvInterval, EnvSkipBackup)
 }

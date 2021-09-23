@@ -9,7 +9,6 @@ import (
 )
 
 type rocksDBBatch struct {
-	db    *dbConnection
 	batch *gorocksdb.WriteBatch
 	mgr   *dbManager
 }
@@ -18,7 +17,6 @@ var _ dbm.DBWriter = (*rocksDBBatch)(nil)
 
 func (mgr *dbManager) newRocksDBBatch() *rocksDBBatch {
 	return &rocksDBBatch{
-		db:    mgr.current,
 		batch: gorocksdb.NewWriteBatch(),
 		mgr:   mgr,
 	}
@@ -53,7 +51,7 @@ func (b *rocksDBBatch) Commit() error {
 	if b.batch == nil {
 		return dbm.ErrBatchClosed
 	}
-	err := b.db.Write(b.mgr.opts.wo, b.batch)
+	err := b.mgr.current.Write(b.mgr.opts.wo, b.batch)
 	if err != nil {
 		return err
 	}

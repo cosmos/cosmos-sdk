@@ -15,12 +15,13 @@ import (
 
 // environment variable names
 const (
-	envHome           = "DAEMON_HOME"
-	envName           = "DAEMON_NAME"
-	envDownloadBin    = "DAEMON_ALLOW_DOWNLOAD_BINARIES"
-	envRestartUpgrade = "DAEMON_RESTART_AFTER_UPGRADE"
-	envSkipBackup     = "UNSAFE_SKIP_BACKUP"
-	envInterval       = "DAEMON_POLL_INTERVAL"
+	envHome                 = "DAEMON_HOME"
+	envName                 = "DAEMON_NAME"
+	envDownloadBin          = "DAEMON_ALLOW_DOWNLOAD_BINARIES"
+	envRestartUpgrade       = "DAEMON_RESTART_AFTER_UPGRADE"
+	envSkipBackup           = "UNSAFE_SKIP_BACKUP"
+	envInterval             = "DAEMON_POLL_INTERVAL"
+	envPreupgradeMaxRetries = "DAEMON_PREUPGRADE_MAX_RETRIES"
 )
 
 const (
@@ -42,6 +43,7 @@ type Config struct {
 	RestartAfterUpgrade   bool
 	PollInterval          time.Duration
 	UnsafeSkipBackup      bool
+	PreupgradeMaxRetries  int
 
 	// currently running upgrade
 	currentUpgrade UpgradeInfo
@@ -146,6 +148,12 @@ func GetConfigFromEnv() (*Config, error) {
 	if err := cfg.validate(); err != nil {
 		return nil, err
 	}
+
+	envPreupgradeMaxRetriesVal := os.Getenv(envPreupgradeMaxRetries)
+	if cfg.PreupgradeMaxRetries, err = strconv.Atoi(envPreupgradeMaxRetriesVal); err != nil && envPreupgradeMaxRetriesVal != "" {
+		return nil, fmt.Errorf("%s could not be parsed to int: %w", envPreupgradeMaxRetries, err)
+	}
+
 	return cfg, nil
 }
 

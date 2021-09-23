@@ -39,8 +39,8 @@ application during an attempt to change param(s).
 
 ## Decision
 
-> This section describes our response to these forces. It is stated in full sentences, with active voice. "We will ..."
-> {decision body}
+We will build off of the alignment of `x/gov` and `x/authz` per [#9810](https://github.com/cosmos/cosmos-sdk/pull/9810). Namely, module developers will create
+one or more unique parameter structures
 
 ## Consequences
 
@@ -52,25 +52,28 @@ application during an attempt to change param(s).
 
 ### Positive
 
-{positive consequences}
+- Module parameters are serialized more efficiently
+- Module parameters changes are able to be stateful
 
 ### Negative
 
-{negative consequences}
+- Module parameter UX becomes slightly more burdensome for developers:
+    - Modules are now responsible for persisting and retrieving parameter state
+    - Modules are now required to have unique message handlers to handle parameter
+      changes per unique parameter data structure.
 
 ### Neutral
 
-{neutral consequences}
+- Requires [#9810](https://github.com/cosmos/cosmos-sdk/pull/9810) to be reviewed
+  and merged.
 
-## Further Discussions
+<!-- ## Further Discussions
 
 While an ADR is in the DRAFT or PROPOSED stage, this section should contain a summary of issues to be solved in future iterations (usually referencing comments from a pull-request discussion).
-Later, this section can optionally list ideas or improvements the author or reviewers found during the analysis of this ADR.
-
-## Test Cases [optional]
-
-Test cases for an implementation are mandatory for ADRs that are affecting consensus changes. Other ADRs can choose to include links to test cases if applicable.
+Later, this section can optionally list ideas or improvements the author or reviewers found during the analysis of this ADR. -->
 
 ## References
 
-- {reference link}
+- https://github.com/cosmos/cosmos-sdk/pull/9810
+- https://github.com/cosmos/cosmos-sdk/issues/9438
+- https://github.com/cosmos/cosmos-sdk/discussions/9913

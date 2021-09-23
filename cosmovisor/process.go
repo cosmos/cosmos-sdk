@@ -39,7 +39,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	if err := EnsureBinary(bin); err != nil {
 		return false, fmt.Errorf("current binary is invalid: %w", err)
 	}
-	Logger.Info().Msgf("[cosmovisor] running ", bin, args)
+	Logger.Info().Msgf("[cosmovisor] running %s %v", bin, args)
 	cmd := exec.Command(bin, args...)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr

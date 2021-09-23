@@ -93,7 +93,7 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade UpgradeInfo) bool {
 	}
 	info, err := parseUpgradeInfoFile(fw.filename)
 	if err != nil {
-		Logger.Fatal().Msgf("Can't parse upgrade info file. Err: ", err)
+		Logger.Fatal().Msgf("Can't parse upgrade info file. Err: %v", err)
 		return false
 	}
 	if !fw.initialized { // daemon has restarted

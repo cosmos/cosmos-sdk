@@ -36,9 +36,6 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 
 	// Case 1. Broadcasting a Tx.
 	if reqProto, ok := req.(*tx.BroadcastTxRequest); ok {
-		if !ok {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxRequest)(nil), req)
-		}
 		res, ok := reply.(*tx.BroadcastTxResponse)
 		if !ok {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxResponse)(nil), req)

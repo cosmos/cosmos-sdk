@@ -287,6 +287,9 @@ func (mgr *dbManager) Stats() map[string]string {
 
 // Get implements DBReader.
 func (tx *dbTxn) Get(key []byte) ([]byte, error) {
+	if tx.txn == nil {
+		return nil, dbm.ErrTransactionClosed
+	}
 	if len(key) == 0 {
 		return nil, dbm.ErrKeyEmpty
 	}
@@ -299,6 +302,9 @@ func (tx *dbTxn) Get(key []byte) ([]byte, error) {
 
 // Get implements DBReader.
 func (tx *dbWriter) Get(key []byte) ([]byte, error) {
+	if tx.txn == nil {
+		return nil, dbm.ErrTransactionClosed
+	}
 	if len(key) == 0 {
 		return nil, dbm.ErrKeyEmpty
 	}
@@ -320,6 +326,9 @@ func (tx *dbTxn) Has(key []byte) (bool, error) {
 
 // Set implements DBWriter.
 func (tx *dbWriter) Set(key []byte, value []byte) error {
+	if tx.txn == nil {
+		return dbm.ErrTransactionClosed
+	}
 	if err := dbutil.ValidateKv(key, value); err != nil {
 		return err
 	}
@@ -328,6 +337,9 @@ func (tx *dbWriter) Set(key []byte, value []byte) error {
 
 // Delete implements DBWriter.
 func (tx *dbWriter) Delete(key []byte) error {
+	if tx.txn == nil {
+		return dbm.ErrTransactionClosed
+	}
 	if len(key) == 0 {
 		return dbm.ErrKeyEmpty
 	}
@@ -344,7 +356,10 @@ func (tx *dbWriter) Commit() (err error) {
 }
 
 func (tx *dbTxn) Discard() error {
-	defer tx.txn.Destroy()
+	if tx.txn == nil {
+		return dbm.ErrTransactionClosed
+	}
+	defer func() { tx.txn.Destroy(); tx.txn = nil }()
 	if tx.version == 0 {
 		return nil
 	}
@@ -361,6 +376,9 @@ func (tx *dbWriter) Discard() error {
 
 // Iterator implements DBReader.
 func (tx *dbTxn) Iterator(start, end []byte) (dbm.Iterator, error) {
+	if tx.txn == nil {
+		return nil, dbm.ErrTransactionClosed
+	}
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, dbm.ErrKeyEmpty
 	}
@@ -370,6 +388,9 @@ func (tx *dbTxn) Iterator(start, end []byte) (dbm.Iterator, error) {
 
 // ReverseIterator implements DBReader.
 func (tx *dbTxn) ReverseIterator(start, end []byte) (dbm.Iterator, error) {
+	if tx.txn == nil {
+		return nil, dbm.ErrTransactionClosed
+	}
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, dbm.ErrKeyEmpty
 	}

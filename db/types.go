@@ -3,8 +3,8 @@ package db
 import "errors"
 
 var (
-	// ErrBatchClosed is returned when a closed or written batch is used.
-	ErrBatchClosed = errors.New("batch has been written or closed")
+	// ErrTransactionClosed is returned when a closed or written transaction is used.
+	ErrTransactionClosed = errors.New("transaction has been written or closed")
 
 	// ErrKeyEmpty is returned when attempting to use an empty or nil key.
 	ErrKeyEmpty = errors.New("key cannot be empty")

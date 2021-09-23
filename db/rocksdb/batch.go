@@ -28,7 +28,7 @@ func (b *rocksDBBatch) Set(key, value []byte) error {
 		return err
 	}
 	if b.batch == nil {
-		return dbm.ErrBatchClosed
+		return dbm.ErrTransactionClosed
 	}
 	b.batch.Put(key, value)
 	return nil
@@ -40,7 +40,7 @@ func (b *rocksDBBatch) Delete(key []byte) error {
 		return dbm.ErrKeyEmpty
 	}
 	if b.batch == nil {
-		return dbm.ErrBatchClosed
+		return dbm.ErrTransactionClosed
 	}
 	b.batch.Delete(key)
 	return nil
@@ -49,7 +49,7 @@ func (b *rocksDBBatch) Delete(key []byte) error {
 // Write implements DBWriter.
 func (b *rocksDBBatch) Commit() (err error) {
 	if b.batch == nil {
-		return dbm.ErrBatchClosed
+		return dbm.ErrTransactionClosed
 	}
 	defer func() { err = dbutil.CombineErrors(err, b.Discard(), "Discard also failed") }()
 	err = b.mgr.current.Write(b.mgr.opts.wo, b.batch)

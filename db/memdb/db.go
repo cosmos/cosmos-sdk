@@ -161,6 +161,9 @@ func (db *MemDB) DeleteVersion(target uint64) error {
 
 // Get implements DBReader.
 func (tx *dbTxn) Get(key []byte) ([]byte, error) {
+	if tx.btree == nil {
+		return nil, dbm.ErrTransactionClosed
+	}
 	if len(key) == 0 {
 		return nil, dbm.ErrKeyEmpty
 	}
@@ -173,6 +176,9 @@ func (tx *dbTxn) Get(key []byte) ([]byte, error) {
 
 // Has implements DBReader.
 func (tx *dbTxn) Has(key []byte) (bool, error) {
+	if tx.btree == nil {
+		return false, dbm.ErrTransactionClosed
+	}
 	if len(key) == 0 {
 		return false, dbm.ErrKeyEmpty
 	}
@@ -181,6 +187,9 @@ func (tx *dbTxn) Has(key []byte) (bool, error) {
 
 // Set implements DBWriter.
 func (tx *dbWriter) Set(key []byte, value []byte) error {
+	if tx.btree == nil {
+		return dbm.ErrTransactionClosed
+	}
 	if err := dbutil.ValidateKv(key, value); err != nil {
 		return err
 	}
@@ -190,6 +199,9 @@ func (tx *dbWriter) Set(key []byte, value []byte) error {
 
 // Delete implements DBWriter.
 func (tx *dbWriter) Delete(key []byte) error {
+	if tx.btree == nil {
+		return dbm.ErrTransactionClosed
+	}
 	if len(key) == 0 {
 		return dbm.ErrKeyEmpty
 	}
@@ -200,6 +212,9 @@ func (tx *dbWriter) Delete(key []byte) error {
 // Iterator implements DBReader.
 // Takes out a read-lock on the database until the iterator is closed.
 func (tx *dbTxn) Iterator(start, end []byte) (dbm.Iterator, error) {
+	if tx.btree == nil {
+		return nil, dbm.ErrTransactionClosed
+	}
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, dbm.ErrKeyEmpty
 	}
@@ -209,6 +224,9 @@ func (tx *dbTxn) Iterator(start, end []byte) (dbm.Iterator, error) {
 // ReverseIterator implements DBReader.
 // Takes out a read-lock on the database until the iterator is closed.
 func (tx *dbTxn) ReverseIterator(start, end []byte) (dbm.Iterator, error) {
+	if tx.btree == nil {
+		return nil, dbm.ErrTransactionClosed
+	}
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, dbm.ErrKeyEmpty
 	}
@@ -217,17 +235,25 @@ func (tx *dbTxn) ReverseIterator(start, end []byte) (dbm.Iterator, error) {
 
 // Commit implements DBWriter.
 func (tx *dbWriter) Commit() error {
+	if tx.btree == nil {
+		return dbm.ErrTransactionClosed
+	}
 	tx.db.mtx.Lock()
 	defer tx.db.mtx.Unlock()
 	tx.db.btree = tx.btree
 	return tx.Discard()
 }
 
-// Discard implements DBReader and DBWriter.
-func (tx *dbTxn) Discard() error { return nil }
+// Discard implements DBReader.
+func (tx *dbTxn) Discard() error {
+	tx.btree = nil
+	return nil
+}
+
+// Discard implements DBWriter.
 func (tx *dbWriter) Discard() error {
 	atomic.AddInt32(&tx.db.openWriters, -1)
-	return nil
+	return tx.dbTxn.Discard()
 }
 
 // Print prints the database contents.

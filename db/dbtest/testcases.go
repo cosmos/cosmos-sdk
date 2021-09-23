@@ -326,6 +326,16 @@ func DoTestTransactions(t *testing.T, load Loader, multipleWriters bool) {
 			require.Equal(t, dbm.ErrOpenTransactions, err)
 			require.NoError(t, tx.Discard())
 		})
+
+		// Try to use a transaction after closing
+		t.Run("cannot reuse transaction", func(t *testing.T) {
+			t.Helper()
+			tx := getWriter()
+			require.NoError(t, tx.Commit())
+			require.Error(t, tx.Set([]byte("0"), []byte("a")))
+			tx = getWriter()
+			require.NoError(t, tx.Discard())
+			require.Error(t, tx.Set([]byte("0"), []byte("a")))
 		})
 
 		// Continue only if the backend supports multiple concurrent writers
@@ -368,6 +378,12 @@ func DoTestTransactions(t *testing.T, load Loader, multipleWriters bool) {
 			require.NoError(t, view.Discard())
 		})
 	}
+	// Try to reuse a reader txn
+	view := db.Reader()
+	require.NoError(t, view.Discard())
+	_, err := view.Get([]byte("0"))
+	require.Error(t, err)
+
 	require.NoError(t, db.Close())
 }
 

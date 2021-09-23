@@ -69,7 +69,7 @@ func DoTestGetSetHasDelete(t *testing.T, load Loader) {
 	err = txn.Set([]byte("b"), []byte{0x02})
 	require.NoError(t, err)
 
-	view.Discard()
+	require.NoError(t, view.Discard())
 	require.NoError(t, txn.Commit())
 
 	txn = db.ReadWriter()
@@ -189,7 +189,7 @@ func DoTestIterators(t *testing.T, load Loader) {
 		it.Close()
 	}
 
-	view.Discard()
+	require.NoError(t, view.Discard())
 	require.NoError(t, db.Close())
 }
 
@@ -246,7 +246,7 @@ func DoTestVersioning(t *testing.T, load Loader) {
 	require.NoError(t, err)
 	has, err := view.Has([]byte("2"))
 	require.False(t, has)
-	view.Discard()
+	require.NoError(t, view.Discard())
 
 	view, err = db.ReaderAt(v2)
 	require.NoError(t, err)
@@ -259,7 +259,7 @@ func DoTestVersioning(t *testing.T, load Loader) {
 	require.NoError(t, err)
 	has, err = view.Has([]byte("1"))
 	require.False(t, has)
-	view.Discard()
+	require.NoError(t, view.Discard())
 
 	view, err = db.ReaderAt(versions.Last() + 1)
 	require.Equal(t, dbm.ErrVersionDoesNotExist, err, "should fail to read a nonexistent version")
@@ -288,8 +288,8 @@ func DoTestVersioning(t *testing.T, load Loader) {
 	require.NoError(t, err)
 	view2, err := db.ReaderAt(v3)
 	require.NoError(t, err)
-	view.Discard()
-	view2.Discard()
+	require.NoError(t, view.Discard())
+	require.NoError(t, view2.Discard())
 
 	require.NoError(t, db.Close())
 }
@@ -308,23 +308,24 @@ func DoTestTransactions(t *testing.T, load Loader, multipleWriters bool) {
 		t.Run("no commit", func(t *testing.T) {
 			t.Helper()
 			view := db.Reader()
-			defer view.Discard()
 			tx := getWriter()
-			defer tx.Discard()
 			require.NoError(t, tx.Set([]byte("0"), []byte("a")))
 			v, err := view.Get([]byte("0"))
 			require.NoError(t, err)
 			require.Nil(t, v)
+			require.NoError(t, view.Discard())
+			require.NoError(t, tx.Discard())
 		})
 
 		// Try to commit version with open txns
-		t.Run("open transactions", func(t *testing.T) {
+		t.Run("cannot save with open transactions", func(t *testing.T) {
 			t.Helper()
 			tx := getWriter()
-			tx.Set([]byte("2"), []byte("a"))
+			require.NoError(t, tx.Set([]byte("0"), []byte("a")))
 			_, err := db.SaveNextVersion()
 			require.Equal(t, dbm.ErrOpenTransactions, err)
-			tx.Discard()
+			require.NoError(t, tx.Discard())
+		})
 		})
 
 		// Continue only if the backend supports multiple concurrent writers
@@ -361,12 +362,11 @@ func DoTestTransactions(t *testing.T, load Loader, multipleWriters bool) {
 			}
 			wg.Wait()
 			view := db.Reader()
-			defer view.Discard()
 			v, err := view.Get(ikey(0))
 			require.NoError(t, err)
 			require.Equal(t, ival(0), v)
+			require.NoError(t, view.Discard())
 		})
-
 	}
 	require.NoError(t, db.Close())
 }
@@ -421,7 +421,7 @@ func DoTestReloadDB(t *testing.T, load Loader) {
 		val, err := view.Get(ikey(i))
 		require.NoError(t, err)
 		require.Equal(t, ival(i), val)
-		view.Discard()
+		require.NoError(t, view.Discard())
 	}
 
 	view, err := db.ReaderAt(last)
@@ -435,14 +435,14 @@ func DoTestReloadDB(t *testing.T, load Loader) {
 			require.Equal(t, ival(i), v)
 		}
 	}
-	view.Discard()
+	require.NoError(t, view.Discard())
 
 	// Load working version
 	view = db.Reader()
 	val, err := view.Get(ikey(100))
 	require.NoError(t, err)
 	require.Equal(t, ival(100), val)
-	view.Discard()
+	require.NoError(t, view.Discard())
 
 	require.NoError(t, db.Close())
 }

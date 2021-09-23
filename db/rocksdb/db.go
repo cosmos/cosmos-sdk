@@ -334,24 +334,29 @@ func (tx *dbWriter) Delete(key []byte) error {
 	return tx.txn.Delete(key)
 }
 
-func (tx *dbWriter) Commit() error {
-	defer tx.Discard()
-	return tx.txn.Commit()
+func (tx *dbWriter) Commit() (err error) {
+	if tx.txn == nil {
+		return dbm.ErrTransactionClosed
+	}
+	defer func() { err = dbutil.CombineErrors(err, tx.Discard(), "Discard also failed") }()
+	err = tx.txn.Commit()
+	return
 }
 
-func (tx *dbTxn) Discard() {
+func (tx *dbTxn) Discard() error {
 	defer tx.txn.Destroy()
 	if tx.version == 0 {
-		return
+		return nil
 	}
 	if !tx.mgr.cpCache.decrement(tx.version) {
-		panic(fmt.Errorf("transaction has no corresponding checkpoint cache entry: %v", tx.version))
+		return fmt.Errorf("transaction has no corresponding checkpoint cache entry: %v", tx.version)
 	}
+	return nil
 }
 
-func (tx *dbWriter) Discard() {
+func (tx *dbWriter) Discard() error {
 	defer atomic.AddInt32(&tx.mgr.openWriters, -1)
-	tx.dbTxn.Discard()
+	return tx.dbTxn.Discard()
 }
 
 // Iterator implements DBReader.

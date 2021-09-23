@@ -276,20 +276,25 @@ func (tx *badgerWriter) Delete(key []byte) error {
 	return tx.txn.Delete(key)
 }
 
-func (tx *badgerWriter) Commit() error {
+func (tx *badgerWriter) Commit() (err error) {
+	if tx.discarded {
+		return errors.New("transaction has been discarded")
+	}
+	defer func() { err = dbutil.CombineErrors(err, tx.Discard(), "Discard also failed") }()
 	// Commit to the current commit TS, after ensuring it is > ReadTs
 	tx.db.vmgr.updateCommitTs(tx.txn.ReadTs())
-	defer tx.Discard()
-	return tx.txn.CommitAt(tx.db.vmgr.lastCommitTs(), nil)
+	err = tx.txn.CommitAt(tx.db.vmgr.lastCommitTs(), nil)
+	return
 }
 
-func (tx *badgerTxn) Discard() {
+func (tx *badgerTxn) Discard() error {
 	tx.txn.Discard()
+	return nil
 }
 
-func (tx *badgerWriter) Discard() {
+func (tx *badgerWriter) Discard() error {
 	defer atomic.AddInt32(&tx.db.openWriters, -1)
-	tx.badgerTxn.Discard()
+	return tx.badgerTxn.Discard()
 }
 
 func (tx *badgerTxn) iteratorOpts(start, end []byte, opts badger.IteratorOptions) (*badgerIterator, error) {

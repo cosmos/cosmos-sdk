@@ -97,7 +97,7 @@ type DBReader interface {
 	ReverseIterator(start, end []byte) (Iterator, error)
 
 	// Discards the transaction, invalidating any future operations on it.
-	Discard()
+	Discard() error
 }
 
 // DBWriter is a write-only transaction interface.
@@ -117,7 +117,7 @@ type DBWriter interface {
 	Commit() error
 
 	// Discards the transaction, invalidating any future operations on it.
-	Discard()
+	Discard() error
 }
 
 // DBReadWriter is a transaction interface that allows both reading and writing.

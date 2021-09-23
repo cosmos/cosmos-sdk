@@ -24,11 +24,11 @@ func (mgr *dbManager) newRocksDBBatch() *rocksDBBatch {
 
 // Set implements DBWriter.
 func (b *rocksDBBatch) Set(key, value []byte) error {
-	if b.batch == nil {
-		return dbm.ErrBatchClosed
-	}
 	if err := dbutil.ValidateKv(key, value); err != nil {
 		return err
+	}
+	if b.batch == nil {
+		return dbm.ErrBatchClosed
 	}
 	b.batch.Put(key, value)
 	return nil
@@ -47,24 +47,21 @@ func (b *rocksDBBatch) Delete(key []byte) error {
 }
 
 // Write implements DBWriter.
-func (b *rocksDBBatch) Commit() error {
+func (b *rocksDBBatch) Commit() (err error) {
 	if b.batch == nil {
 		return dbm.ErrBatchClosed
 	}
-	err := b.mgr.current.Write(b.mgr.opts.wo, b.batch)
-	if err != nil {
-		return err
-	}
-	// Make sure batch cannot be used afterwards.
-	b.Discard()
-	return nil
+	defer func() { err = dbutil.CombineErrors(err, b.Discard(), "Discard also failed") }()
+	err = b.mgr.current.Write(b.mgr.opts.wo, b.batch)
+	return
 }
 
 // Close implements DBWriter.
-func (b *rocksDBBatch) Discard() {
+func (b *rocksDBBatch) Discard() error {
 	defer atomic.AddInt32(&b.mgr.openWriters, -1)
 	if b.batch != nil {
 		b.batch.Destroy()
 		b.batch = nil
 	}
+	return nil
 }

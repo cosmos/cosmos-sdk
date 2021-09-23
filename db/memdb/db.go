@@ -219,15 +219,15 @@ func (tx *dbTxn) ReverseIterator(start, end []byte) (dbm.Iterator, error) {
 func (tx *dbWriter) Commit() error {
 	tx.db.mtx.Lock()
 	defer tx.db.mtx.Unlock()
-	defer tx.Discard()
 	tx.db.btree = tx.btree
-	return nil
+	return tx.Discard()
 }
 
 // Discard implements DBReader and DBWriter.
-func (tx *dbTxn) Discard() {}
-func (tx *dbWriter) Discard() {
+func (tx *dbTxn) Discard() error { return nil }
+func (tx *dbWriter) Discard() error {
 	atomic.AddInt32(&tx.db.openWriters, -1)
+	return nil
 }
 
 // Print prints the database contents.

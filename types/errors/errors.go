@@ -13,6 +13,9 @@ const RootCodespace = "sdk"
 // UndefinedCodespace when we explicitly declare no codespace
 const UndefinedCodespace = "undefined"
 
+// mathCodespace is the codespace for all errors defined in math package
+const mathCodespace = "math"
+
 var (
 	// errInternal should never be exposed, but we reserve this code for non-specified errors
 	errInternal = Register(UndefinedCodespace, 1, "internal")
@@ -147,6 +150,9 @@ var (
 
 	// ErrAppConfig defines an error occurred if min-gas-prices field in BaseConfig is empty.
 	ErrAppConfig = Register(RootCodespace, 40, "error in app.toml")
+
+	// ErrInvalidDecString defines an error for an invalid decimal string
+	ErrInvalidDecString = Register(mathCodespace, 41, "invalid decimal string")
 )
 
 // Register returns an error instance that should be used as the base for

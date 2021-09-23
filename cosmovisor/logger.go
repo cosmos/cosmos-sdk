@@ -1,0 +1,15 @@
+package cosmovisor
+
+import (
+	"os"
+	"time"
+
+	"github.com/rs/zerolog"
+)
+
+var Logger zerolog.Logger
+
+func SetupLogging() {
+	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
+	Logger = zerolog.New(output).With().Timestamp().Logger()
+}

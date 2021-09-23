@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
@@ -9,8 +8,9 @@ import (
 )
 
 func main() {
+	cosmovisor.SetupLogging()
 	if err := Run(os.Args[1:]); err != nil {
-		fmt.Fprintf(os.Stderr, "[cosmovisor] %+v\n", err)
+		cosmovisor.Logger.Error().Msgf("[cosmovisor] %+v\n", err)
 		os.Exit(1)
 	}
 }
@@ -31,11 +31,11 @@ func Run(args []string) error {
 	doUpgrade, err := launcher.Run(args, os.Stdout, os.Stderr)
 	// if RestartAfterUpgrade, we launch after a successful upgrade (only condition LaunchProcess returns nil)
 	for cfg.RestartAfterUpgrade && err == nil && doUpgrade {
-		fmt.Println("[cosmovisor] upgrade detected, relaunching the app ", cfg.Name)
+		cosmovisor.Logger.Info().Msgf("[cosmovisor] upgrade detected, relaunching the app ", cfg.Name)
 		doUpgrade, err = launcher.Run(args, os.Stdout, os.Stderr)
 	}
 	if doUpgrade && err == nil {
-		fmt.Println("[cosmovisor] upgrade detected, DAEMON_RESTART_AFTER_UPGRADE is off. Verify new upgrade and start cosmovisor again.")
+		cosmovisor.Logger.Info().Msgf("[cosmovisor] upgrade detected, DAEMON_RESTART_AFTER_UPGRADE is off. Verify new upgrade and start cosmovisor again.")
 	}
 
 	return err

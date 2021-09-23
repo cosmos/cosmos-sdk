@@ -40,7 +40,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	if err := EnsureBinary(bin); err != nil {
 		return false, fmt.Errorf("current binary is invalid: %w", err)
 	}
-	fmt.Println("[cosmovisor] running ", bin, args)
+	Logger.Info().Msgf("[cosmovisor] running ", bin, args)
 	cmd := exec.Command(bin, args...)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
@@ -92,7 +92,7 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 	select {
 	case <-l.fw.MonitorUpdate(currentUpgrade):
 		// upgrade - kill the process and restart
-		fmt.Println("[cosmovisor] Daemon shutting down in an attempt to restart")
+		Logger.Info().Msgf("[cosmovisor] Daemon shutting down in an attempt to restart")
 		_ = cmd.Process.Kill()
 	case err := <-cmdDone:
 		l.fw.Stop()
@@ -133,7 +133,7 @@ func doBackup(cfg *Config) error {
 		stStr := fmt.Sprintf("%d-%d-%d", st.Year(), st.Month(), st.Day())
 		dst := filepath.Join(cfg.Home, fmt.Sprintf("data"+"-backup-%s", stStr))
 
-		fmt.Printf("starting to take backup of data directory at time %s", st)
+		Logger.Info().Msgf("starting to take backup of data directory at time %s", st)
 
 		// copy the $DAEMON_HOME/data to a backup dir
 		err = copy.Copy(filepath.Join(cfg.Home, "data"), dst)
@@ -145,7 +145,7 @@ func doBackup(cfg *Config) error {
 		// backup is done, lets check endtime to calculate total time taken for backup process
 		et := time.Now()
 		timeTaken := et.Sub(st)
-		fmt.Printf("backup saved at location: %s, completed at time: %s\n"+
+		Logger.Info().Msgf("backup saved at location: %s, completed at time: %s\n"+
 			"time taken to complete the backup: %s", dst, et, timeTaken)
 	}
 
@@ -161,18 +161,18 @@ func doPreUpgrade(cfg *Config) error {
 
 	if err != nil {
 		if err.(*exec.ExitError).ProcessState.ExitCode() == 1 {
-			fmt.Println("pre-upgrade command does not exist. continuing the upgrade.")
+			Logger.Info().Msgf("pre-upgrade command does not exist. continuing the upgrade.")
 			return nil
 		}
 		if err.(*exec.ExitError).ProcessState.ExitCode() == 30 {
 			return fmt.Errorf("pre-upgrade command failed : %w", err)
 		}
 		if err.(*exec.ExitError).ProcessState.ExitCode() == 31 {
-			fmt.Println("pre-upgrade command failed. retrying.")
+			Logger.Info().Msgf("pre-upgrade command failed. retrying.")
 			return doPreUpgrade(cfg)
 		}
 	}
-	fmt.Println("pre-upgrade successful. continuing the upgrade.")
+	Logger.Info().Msgf("pre-upgrade successful. continuing the upgrade.")
 	return nil
 }
 

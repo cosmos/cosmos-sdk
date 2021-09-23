@@ -93,7 +93,7 @@ There are three PR templates. The [default template](./.github/PULL_REQUEST_TEMP
 
 ### Requesting Reviews
 
-In order to accommodate the review process, the author of the PR must complete the author checklist
+In order to accommodate the review process, the author of the PR must complete the author checklist (from the pull request template)
 to the best of their abilities before marking the PR as "Ready for Review". If you would like to
 receive early feedback on the PR, open the PR as a "Draft" and leave a comment in the PR indicating
 that you would like early feedback and tagging whoever you would like to receive feedback from.

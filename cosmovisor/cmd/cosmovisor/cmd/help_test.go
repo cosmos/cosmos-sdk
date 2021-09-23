@@ -22,8 +22,8 @@ func TestHelpTestSuite(t *testing.T) {
 
 func (s *HelpTestSuite) SetupSuite() {
 	s.envVars = []string{
-		cosmovisor.EnvHome, cosmovisor.EnvName, cosmovisor.EnvDownloadBin,
-		cosmovisor.EnvRestartUpgrade, cosmovisor.EnvSkipBackup, cosmovisor.EnvInterval,
+		cosmovisor.EnvHome, cosmovisor.EnvName, cosmovisor.EnvDownloadBin, cosmovisor.EnvRestartUpgrade,
+		cosmovisor.EnvSkipBackup, cosmovisor.EnvInterval, cosmovisor.EnvPreupgradeMaxRetries,
 	}
 }
 
@@ -141,8 +141,8 @@ func (s *HelpTestSuite) TestShouldGiveHelp() {
 
 func (s *HelpTestSuite) TestGetHelpText() {
 	expectedPieces := []string{
-		cosmovisor.EnvHome, cosmovisor.EnvName, cosmovisor.EnvDownloadBin,
-		cosmovisor.EnvRestartUpgrade, cosmovisor.EnvSkipBackup, cosmovisor.EnvInterval,
+		cosmovisor.EnvHome, cosmovisor.EnvName, cosmovisor.EnvDownloadBin, cosmovisor.EnvRestartUpgrade,
+		cosmovisor.EnvSkipBackup, cosmovisor.EnvInterval, cosmovisor.EnvPreupgradeMaxRetries,
 	}
 
 	actual := GetHelpText()

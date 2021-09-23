@@ -22,7 +22,7 @@ func ShouldGiveHelp(args []string) bool {
 func DoHelp() {
 	// Output the help text
 	fmt.Println(GetHelpText())
-	// If the config isn't valid, there's nothing else to do.
+	// If the config isn't valid, say what's wrong and we're done.
 	cfg, cerr := cosmovisor.GetConfigFromEnv()
 	switch err := cerr.(type) {
 	case nil:
@@ -32,11 +32,15 @@ func DoHelp() {
 		for i, e := range err.GetErrors() {
 			fmt.Fprintf(os.Stderr, "  %d: %v", i+1, e)
 		}
+		return
 	default:
 		fmt.Fprintf(os.Stderr, "[cosmovisor] %v", err)
+		return
 	}
+	// If the config's legit, output what we see it as.
 	fmt.Printf("[cosmovisor] config is valid:")
 	fmt.Println(cfg.DetailString())
+	// Attempt to run the configured binary with the --help flag.
 	if err := cosmovisor.RunHelp(cfg, os.Stdout, os.Stderr); err != nil {
 		fmt.Fprintf(os.Stderr, "[cosmovisor] %v", err)
 	}
@@ -84,7 +88,12 @@ Configuration of Cosmoviser is done through the following environment variables:
         This is useful (and recommended) in case of failures and when needed to rollback.
         It is advised to use backup option, i.e. UNSAFE_SKIP_BACKUP=false
         Valid values: true, false.
+    %s
+        Optional, default is 0 (only try the first time, do not retry).
+        The maximum number of times to call pre-upgrade in the application after exit status of 31.
+        After the maximum number of retries, cosmovisor fails the upgrade.
+        Valid values: Integers greater than or equal to 0.
 
-`, cosmovisor.EnvHome, cosmovisor.EnvName, cosmovisor.EnvDownloadBin,
-		cosmovisor.EnvRestartUpgrade, cosmovisor.EnvInterval, cosmovisor.EnvSkipBackup)
+`, cosmovisor.EnvHome, cosmovisor.EnvName, cosmovisor.EnvDownloadBin, cosmovisor.EnvRestartUpgrade,
+		cosmovisor.EnvInterval, cosmovisor.EnvSkipBackup, cosmovisor.EnvPreupgradeMaxRetries)
 }

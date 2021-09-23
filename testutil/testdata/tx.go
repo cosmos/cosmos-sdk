@@ -2,6 +2,7 @@ package testdata
 
 import (
 	"encoding/json"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/stretchr/testify/require"
 
@@ -62,12 +63,24 @@ func (msg *TestMsg) GetSignBytes() []byte {
 	}
 	return sdk.MustSortJSON(bz)
 }
-func (msg *TestMsg) GetSigners() []string {
-	return msg.Signers
+func (msg *TestMsg) GetSigners() []sdk.AccAddress {
+	signers := make([]sdk.AccAddress, 0, len(msg.Signers))
+	for _, addr := range msg.Signers {
+		a, _ := sdk.AccAddressFromBech32(addr)
+		signers = append(signers, a)
+	}
+	return signers
 }
-func (msg *TestMsg) ValidateBasic() error { return nil }
+func (msg *TestMsg) ValidateBasic() error {
+	for _, addr := range msg.Signers {
+		if _, err := sdk.AccAddressFromBech32(addr); err != nil {
+			return sdkerrors.ErrInvalidAddress.Wrapf("invalid signer address: %s", err)
+		}
+	}
+	return nil
+}
 
 var _ sdk.Msg = &MsgCreateDog{}
 
-func (msg *MsgCreateDog) GetSigners() []string { return []string{} }
-func (msg *MsgCreateDog) ValidateBasic() error { return nil }
+func (msg *MsgCreateDog) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{} }
+func (msg *MsgCreateDog) ValidateBasic() error         { return nil }

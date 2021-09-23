@@ -3,14 +3,16 @@ package cosmos_proto;
 
 import "google/protobuf/descriptor.proto";
 
-option go_package = "github.com/regen-network/cosmos-proto";
+option go_package = "github.com/cosmos/cosmos-proto";
 
 extend google.protobuf.MessageOptions {
-    string interface_type = 93001;
-
-    string implements_interface = 93002;
+    // implements_interface is used to annotate interface implementations
+    string implements_interface = 93001;
 }
 
 extend google.protobuf.FieldOptions {
+    // accepts_interface is used to annote fields that accept interfaces
     string accepts_interface = 93001;
+    // scalar is used to define scalar types
+    string scalar = 93002;
 }

@@ -69,8 +69,8 @@ func TestSetLoader(t *testing.T) {
 
 	// set a temporary home dir
 	homeDir := t.TempDir()
-	upgradeInfoFilePath := filepath.Join(homeDir, "upgrade-info.json")
-	upgradeInfo := &store.UpgradeInfo{
+	upgradeInfoFilePath := filepath.Join(homeDir, UpgradeInfoFilename)
+	upgradeInfo := &Plan{
 		Name: "test", Height: upgradeHeight,
 	}
 

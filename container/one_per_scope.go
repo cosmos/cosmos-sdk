@@ -33,7 +33,7 @@ func (o *mapOfOnePerScopeResolver) resolve(c *container, _ Scope, caller Locatio
 	c.logf("Providing %v to %s from:", o.mapType, caller.Name())
 	c.indentLogger()
 	for scope, node := range o.providers {
-		c.logf("%s: %s", scope.Name(), node.ctr.Location)
+		c.logf("%s: %s", scope.Name(), node.provider.Location)
 	}
 	c.dedentLogger()
 
@@ -67,13 +67,13 @@ func (o *onePerScopeResolver) addNode(n *simpleProvider, i int, c *container) er
 
 	if existing, ok := o.providers[n.scope]; ok {
 		return errors.Errorf("duplicate provision for one-per-scope type %v in scope %s: %s\n\talready provided by %s",
-			o.typ, n.scope.Name(), n.ctr.Location, existing.ctr.Location)
+			o.typ, n.scope.Name(), n.provider.Location, existing.provider.Location)
 	}
 
 	o.providers[n.scope] = n
 	o.idxMap[n.scope] = i
 
-	constructorGraphNode, err := c.locationGraphNode(n.ctr.Location, n.scope)
+	constructorGraphNode, err := c.locationGraphNode(n.provider.Location, n.scope)
 	if err != nil {
 		return err
 	}
@@ -88,5 +88,5 @@ func (o *onePerScopeResolver) addNode(n *simpleProvider, i int, c *container) er
 }
 
 func (o *mapOfOnePerScopeResolver) addNode(s *simpleProvider, _ int, _ *container) error {
-	return errors.Errorf("%v is a one-per-scope type and thus %v can't be used as an output parameter in %s", o.typ, o.mapType, s.ctr.Location)
+	return errors.Errorf("%v is a one-per-scope type and thus %v can't be used as an output parameter in %s", o.typ, o.mapType, s.provider.Location)
 }

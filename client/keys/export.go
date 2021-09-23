@@ -31,11 +31,11 @@ FULLY AWARE OF THE RISKS. If you are unsure, you may want to do some research
 and export your keys in ASCII-armored encrypted format.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			buf := bufio.NewReader(cmd.InOrStdin())
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
+			buf := bufio.NewReader(clientCtx.Input)
 			unarmored, _ := cmd.Flags().GetBool(flagUnarmoredHex)
 			unsafe, _ := cmd.Flags().GetBool(flagUnsafe)
 

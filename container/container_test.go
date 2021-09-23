@@ -60,14 +60,14 @@ func (ModuleA) Provide(key KVStoreKey) (KeeperA, Handler, Command) {
 type ModuleB struct{}
 
 type BDependencies struct {
-	container.StructArgs
+	container.In
 
 	Key KVStoreKey
 	A   MsgClientA
 }
 
 type BProvides struct {
-	container.StructArgs
+	container.Out
 
 	KeeperB  KeeperB
 	Commands []Command
@@ -83,7 +83,7 @@ func (ModuleB) Provide(dependencies BDependencies, _ container.Scope) (BProvides
 	}, Handler{}, nil
 }
 
-func TestRun(t *testing.T) {
+func TestScenario(t *testing.T) {
 	require.NoError(t,
 		container.Run(
 			func(handlers map[string]Handler, commands []Command, a KeeperA, b KeeperB) {
@@ -115,12 +115,12 @@ func TestRun(t *testing.T) {
 
 func wrapMethod0(module interface{}) interface{} {
 	methodFn := reflect.TypeOf(module).Method(0).Func.Interface()
-	ctrInfo, err := container.ExtractConstructorInfo(methodFn)
+	ctrInfo, err := container.ExtractProviderDescriptor(methodFn)
 	if err != nil {
 		panic(err)
 	}
 
-	ctrInfo.In = ctrInfo.In[1:]
+	ctrInfo.Inputs = ctrInfo.Inputs[1:]
 	fn := ctrInfo.Fn
 	ctrInfo.Fn = func(values []reflect.Value) ([]reflect.Value, error) {
 		return fn(append([]reflect.Value{reflect.ValueOf(module)}, values...))
@@ -155,7 +155,7 @@ func TestErrorOption(t *testing.T) {
 }
 
 func TestBadCtr(t *testing.T) {
-	_, err := container.ExtractConstructorInfo(KeeperA{})
+	_, err := container.ExtractProviderDescriptor(KeeperA{})
 	require.Error(t, err)
 }
 
@@ -167,12 +167,12 @@ func TestInvoker(t *testing.T) {
 }
 
 func TestErrorFunc(t *testing.T) {
-	_, err := container.ExtractConstructorInfo(
+	_, err := container.ExtractProviderDescriptor(
 		func() (error, int) { return nil, 0 },
 	)
 	require.Error(t, err)
 
-	_, err = container.ExtractConstructorInfo(
+	_, err = container.ExtractProviderDescriptor(
 		func() (int, error) { return 0, nil },
 	)
 	require.NoError(t, err)
@@ -467,14 +467,14 @@ func TestSupply(t *testing.T) {
 }
 
 type TestInput struct {
-	container.StructArgs
+	container.In
 
 	X int `optional:"true"`
 	Y float64
 }
 
 type TestOutput struct {
-	container.StructArgs
+	container.Out
 
 	X string
 }

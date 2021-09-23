@@ -5,7 +5,7 @@ import (
 )
 
 type scopeDepProvider struct {
-	ctr            *ConstructorInfo
+	provider            *ProviderDescriptor
 	calledForScope map[Scope]bool
 	valueMap       map[Scope][]reflect.Value
 }
@@ -46,5 +46,5 @@ func (s scopeDepResolver) resolve(ctr *container, scope Scope, caller Location) 
 }
 
 func (s scopeDepResolver) addNode(p *simpleProvider, _ int, _ *container) error {
-	return duplicateDefinitionError(s.typ, p.ctr.Location, s.node.ctr.Location.String())
+	return duplicateDefinitionError(s.typ, p.provider.Location, s.node.ctr.Location.String())
 }

@@ -120,8 +120,8 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 		//
 		// NOTE: This should ultimately be removed in favor a more flexible approach
 		// such as delegated fee messages.
-		acc := k.ak.GetAccount(ctx, outAddress)
-		if acc == nil {
+		accExists := k.ak.HasAccount(ctx, outAddress)
+		if !accExists {
 			defer telemetry.IncrCounter(1, "new", "account")
 			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, outAddress))
 		}
@@ -147,8 +147,8 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 	//
 	// NOTE: This should ultimately be removed in favor a more flexible approach
 	// such as delegated fee messages.
-	acc := k.ak.GetAccount(ctx, toAddr)
-	if acc == nil {
+	accExists := k.ak.HasAccount(ctx, toAddr)
+	if !accExists {
 		defer telemetry.IncrCounter(1, "new", "account")
 		k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
 	}
@@ -243,8 +243,11 @@ func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balan
 
 		// x/bank invariants prohibit persistence of zero balances
 		if !balance.IsZero() {
-			bz := k.cdc.MustMarshal(&balance)
-			accountStore.Set([]byte(balance.Denom), bz)
+			amount, err := balance.Amount.Marshal()
+			if err != nil {
+				return err
+			}
+			accountStore.Set([]byte(balance.Denom), amount)
 
 			denomPrefixStore, ok := denomPrefixStores[balance.Denom]
 			if !ok {
@@ -278,8 +281,11 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 		accountStore.Delete([]byte(balance.Denom))
 		denomPrefixStore.Delete(address.MustLengthPrefix(addr))
 	} else {
-		bz := k.cdc.MustMarshal(&balance)
-		accountStore.Set([]byte(balance.Denom), bz)
+		amount, err := balance.Amount.Marshal()
+		if err != nil {
+			return err
+		}
+		accountStore.Set([]byte(balance.Denom), amount)
 
 		// Store a reverse index from denomination to account address with a
 		// sentinel value.

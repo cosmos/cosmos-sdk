@@ -8,6 +8,7 @@ import "tendermint/p2p/types.proto";
 import "tendermint/types/block.proto";
 import "tendermint/types/types.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/tmservice";
 
@@ -71,7 +72,7 @@ message GetLatestValidatorSetResponse {
 
 // Validator is the type for the validator-set.
 message Validator {
-  string              address           = 1;
+  string              address           = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   google.protobuf.Any pub_key           = 2;
   int64               voting_power      = 3;
   int64               proposer_priority = 4;
@@ -108,7 +109,7 @@ message GetSyncingResponse {
 // GetNodeInfoRequest is the request type for the Query/GetNodeInfo RPC method.
 message GetNodeInfoRequest {}
 
-// GetNodeInfoResponse is the request type for the Query/GetNodeInfo RPC method.
+// GetNodeInfoResponse is the response type for the Query/GetNodeInfo RPC method.
 message GetNodeInfoResponse {
   .tendermint.p2p.DefaultNodeInfo default_node_info   = 1;
   VersionInfo                     application_version = 2;

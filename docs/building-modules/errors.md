@@ -18,7 +18,7 @@ of errors is handled via the `types/errors` package.
 
 Example:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.38.1/x/distribution/types/errors.go#L1-L21
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/x/distribution/types/errors.go#L1-L21
 
 Each custom module error must provide the codespace, which is typically the module name
 (e.g. "distribution") and is unique per module, and a uint32 code. Together, the codespace and code

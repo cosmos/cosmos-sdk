@@ -39,8 +39,14 @@ application during an attempt to change param(s).
 
 ## Decision
 
-We will build off of the alignment of `x/gov` and `x/authz` per [#9810](https://github.com/cosmos/cosmos-sdk/pull/9810). Namely, module developers will create
-one or more unique parameter structures
+We will build off of the alignment of `x/gov` and `x/authz` work per
+[#9810](https://github.com/cosmos/cosmos-sdk/pull/9810). Namely, module developers
+will create one or more unique parameter data structures that must be serialized
+to state. In addition, modules must implement `sdk.Msg` message(s) and their
+respective handler(s) such that when a governance proposal passes, via the work
+done in [#9810](https://github.com/cosmos/cosmos-sdk/pull/9810), the `x/gov`
+module can execute those messages which would then change the respective
+parameters and any other state mutations necessary.
 
 ## Consequences
 

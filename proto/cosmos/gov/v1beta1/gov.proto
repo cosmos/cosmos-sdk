@@ -56,7 +56,7 @@ message Deposit {
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.equal)           = false;
 
-  uint64   proposal_id                     = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
+  uint64   proposal_id                     = 1;
   string   depositor                       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated cosmos.base.v1beta1.Coin amount = 3
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
@@ -128,7 +128,7 @@ message Vote {
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.equal)            = false;
 
-  uint64 proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
+  uint64 proposal_id = 1;
   string voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // Deprecated: Prefer to use `options` instead. This field is set in queries
   // if and only if `len(options) == 1` and that option has weight 1. In all

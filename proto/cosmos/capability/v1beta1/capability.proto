@@ -10,7 +10,7 @@ import "gogoproto/gogo.proto";
 message Capability {
   option (gogoproto.goproto_stringer) = false;
   
-  uint64 index = 1 [(gogoproto.moretags) = "yaml:\"index\""];
+  uint64 index = 1;
 }
 
 // Owner defines a single capability owner. An owner is defined by the name of

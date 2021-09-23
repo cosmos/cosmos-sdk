@@ -48,6 +48,31 @@ done in [#9810](https://github.com/cosmos/cosmos-sdk/pull/9810), the `x/gov`
 module can execute those messages which would then change the respective
 parameters and any other state mutations necessary.
 
+Note, it is up to developers to decide how to structure their parameters and
+the respective `sdk.Msg` messages. Consider the parameters currently defined in
+`x/auth` using the `x/params` module for parameter management:
+
+```protobuf
+message Params {
+  uint64 max_memo_characters       = 1;
+  uint64 tx_sig_limit              = 2;
+  uint64 tx_size_cost_per_byte     = 3;
+  uint64 sig_verify_cost_ed25519   = 4;
+  uint64 sig_verify_cost_secp256k1 = 5;
+}
+```
+
+Developers can choose to either create a unique data structure for every field in
+`Params` or they can create a single `Params` structure as outlined above in the
+case of `x/auth`.
+
+In the former approach, a `sdk.Msg` would need to be created for every single
+field along with a handler. This can become burdensome if there are a lot of
+parameter fields. In the latter case, there is only a single data structure and
+thus only a single message handler, however, the message handler might have to be
+more sophisticated in that it might need to understand what parameters are being
+changed vs what parameters are untouched.
+
 ## Consequences
 
 > This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.

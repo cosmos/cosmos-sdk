@@ -172,8 +172,11 @@ func (gi *gasIterator) Error() error {
 // consumeSeekGas consumes on each iteration step a flat gas cost and a variable gas cost
 // based on the current value's length.
 func (gi *gasIterator) consumeSeekGas() {
-	value := gi.Value()
+	if gi.Valid() {
+		value := gi.Value()
 
-	gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*types.Gas(len(value)), types.GasValuePerByteDesc)
-	gi.gasMeter.ConsumeGas(gi.gasConfig.IterNextCostFlat, types.GasIterNextCostFlatDesc)
+		gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*types.Gas(len(value)), types.GasValuePerByteDesc)
+		gi.gasMeter.ConsumeGas(gi.gasConfig.IterNextCostFlat, types.GasIterNextCostFlatDesc)
+
+	}
 }

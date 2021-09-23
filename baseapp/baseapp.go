@@ -126,9 +126,9 @@ type BaseApp struct { // nolint: maligned
 	// which informs Tendermint what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
 
-	// hooked services
-	// these hooks will have the ABCI messages routed through them
-	hooks []Hook
+	// StreamingListener for hooking into the ABCI message processing of the BaseApp
+	// and exposing the requests and responses to external consumers
+	streamingListeners []StreamingListener
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

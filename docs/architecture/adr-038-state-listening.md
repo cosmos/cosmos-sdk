@@ -207,8 +207,8 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 We will introduce a new `StreamingService` interface for exposing `WriteListener` data streams to external consumers.
 
 ```go
-// Hook interface used to hook into the ABCI message processing of the BaseApp
-type Hook interface {
+// StreamingListener interface used to hook into the ABCI message processing of the BaseApp
+type StreamingListener interface {
 	ListenBeginBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error // update the streaming service with the latest BeginBlock messages
 	ListenEndBlock(ctx sdk.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error// update the steaming service with the latest EndBlock messages
 	ListenDeliverTx(ctx sdk.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error // update the steaming service with the latest DeliverTx messages
@@ -217,8 +217,8 @@ type Hook interface {
 // StreamingService interface for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks
 type StreamingService interface {
 	Stream(wg *sync.WaitGroup, quitChan <-chan struct{}) // streaming service loop, awaits kv pairs and writes them to some destination stream or file
-	Listeners() map[sdk.StoreKey][]storeTypes.WriteListener // returns the streaming service's listeners for the BaseApp to register
-	Hook
+	Listeners() map[sdk.StoreKey][]storeTypes.WriteListener // returns the streaming service's listeners for the BaseApp to register 
+	StreamingListener
 }
 ```
 

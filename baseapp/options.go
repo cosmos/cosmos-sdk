@@ -236,7 +236,7 @@ func (app *BaseApp) SetStreamingService(s StreamingService) {
 	for key, lis := range s.Listeners() {
 		app.cms.AddListeners(key, lis)
 	}
-	// register the streaming service hooks within the BaseApp
+	// register the streamingListeners within the BaseApp
 	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context using these hooks
-	app.hooks = append(app.hooks, s)
+	app.streamingListeners = append(app.streamingListeners, s)
 }

@@ -240,18 +240,32 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 		panic(fmt.Sprintf("unknown RequestCheckTx type: %s", req.Type))
 	}
 
-	gInfo, result, anteEvents, err := app.runTx(mode, req.Tx)
+	gInfo, result, anteEvents, tx, err := app.runTx(mode, req.Tx)
 	if err != nil {
 		return sdkerrors.ResponseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace)
 	}
 
 	return abci.ResponseCheckTx{
-		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
-		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
-		Log:       result.Log,
-		Data:      result.Data,
-		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
+		GasWanted:  int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
+		GasUsed:    int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
+		Log:        result.Log,
+		Data:       result.Data,
+		Events:     sdk.MarkEventsToIndex(result.Events, app.indexEvents),
+		IsOracleTx: isOracleTx(tx.GetMsgs()),
 	}
+}
+
+func isOracleTx(msgs []sdk.Msg) bool {
+	for _, msg := range msgs {
+		if sdk.MsgTypeURL(msg) == "/terra.oracle.v1beta1.MsgAggregateExchangeRatePrevote" ||
+			sdk.MsgTypeURL(msg) == "/terra.oracle.v1beta1.MsgAggregateExchangeRateVote" {
+			continue
+		} else {
+			return false
+		}
+	}
+
+	return true
 }
 
 // DeliverTx implements the ABCI interface and executes a tx in DeliverTx mode.
@@ -272,7 +286,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
 	}()
 
-	gInfo, result, anteEvents, err := app.runTx(runTxModeDeliver, req.Tx)
+	gInfo, result, anteEvents, _, err := app.runTx(runTxModeDeliver, req.Tx)
 	if err != nil {
 		resultStr = "failed"
 		return sdkerrors.ResponseDeliverTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace)

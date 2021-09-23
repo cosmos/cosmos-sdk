@@ -23,7 +23,7 @@ func TestArgsTestSuite(t *testing.T) {
 }
 
 func (s *argsTestSuite) SetupSuite() {
-	s.envVars = []string{EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval}
+	s.envVars = []string{EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval, EnvPreupgradeMaxRetries}
 }
 
 // clearEnv clears environment variables and returns the values
@@ -273,7 +273,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 	absPath, perr := filepath.Abs(relPath)
 	s.Require().NoError(perr)
 
-	newConfig := func(home, name string, downloadBin, restartUpgrade, skipBackup bool, interval int) *Config {
+	newConfig := func(home, name string, downloadBin, restartUpgrade, skipBackup bool, interval, preupgradeMaxRetries int) *Config {
 		return &Config{
 			Home:                  home,
 			Name:                  name,
@@ -281,6 +281,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 			RestartAfterUpgrade:   restartUpgrade,
 			PollInterval:          time.Millisecond * time.Duration(interval),
 			UnsafeSkipBackup:      skipBackup,
+			PreupgradeMaxRetries:  preupgradeMaxRetries,
 		}
 	}
 
@@ -290,123 +291,148 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 		expectedCfg      *Config
 		expectedErrCount int
 	}{
-		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval
+		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval, EnvPreupgradeMaxRetries
 		{
 			name:             "all bad",
-			envVals:          []string{"", "", "bad", "bad", "bad", "bad"},
+			envVals:          []string{"", "", "bad", "bad", "bad", "bad", "bad"},
 			expectedCfg:      nil,
-			expectedErrCount: 6,
+			expectedErrCount: 7,
 		},
 		{
 			name:             "all good",
-			envVals:          []string{absPath, "testname", "true", "false", "true", "303"},
-			expectedCfg:      newConfig(absPath, "testname", true, false, true, 303),
+			envVals:          []string{absPath, "testname", "true", "false", "true", "303", "1"},
+			expectedCfg:      newConfig(absPath, "testname", true, false, true, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "nothing set",
-			envVals:          []string{"", "", "", "", "", ""},
+			envVals:          []string{"", "", "", "", "", "", ""},
 			expectedCfg:      nil,
 			expectedErrCount: 2,
 		},
 		// Note: Home and Name tests are done in TestValidate
 		{
 			name:             "download bin bad",
-			envVals:          []string{absPath, "testname", "bad", "false", "true", "303"},
+			envVals:          []string{absPath, "testname", "bad", "false", "true", "303", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "download bin not set",
-			envVals:          []string{absPath, "testname", "", "false", "true", "303"},
-			expectedCfg:      newConfig(absPath, "testname", false, false, true, 303),
+			envVals:          []string{absPath, "testname", "", "false", "true", "303", "1"},
+			expectedCfg:      newConfig(absPath, "testname", false, false, true, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "download bin true",
-			envVals:          []string{absPath, "testname", "true", "false", "true", "303"},
-			expectedCfg:      newConfig(absPath, "testname", true, false, true, 303),
+			envVals:          []string{absPath, "testname", "true", "false", "true", "303", "1"},
+			expectedCfg:      newConfig(absPath, "testname", true, false, true, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "download bin false",
-			envVals:          []string{absPath, "testname", "false", "false", "true", "303"},
-			expectedCfg:      newConfig(absPath, "testname", false, false, true, 303),
+			envVals:          []string{absPath, "testname", "false", "false", "true", "303", "1"},
+			expectedCfg:      newConfig(absPath, "testname", false, false, true, 303, 1),
 			expectedErrCount: 0,
 		},
-		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval
+		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval, EnvPreupgradeMaxRetries
 		{
 			name:             "restart upgrade bad",
-			envVals:          []string{absPath, "testname", "true", "bad", "true", "303"},
+			envVals:          []string{absPath, "testname", "true", "bad", "true", "303", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "restart upgrade not set",
-			envVals:          []string{absPath, "testname", "true", "", "true", "303"},
-			expectedCfg:      newConfig(absPath, "testname", true, true, true, 303),
+			envVals:          []string{absPath, "testname", "true", "", "true", "303", "1"},
+			expectedCfg:      newConfig(absPath, "testname", true, true, true, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "restart upgrade true",
-			envVals:          []string{absPath, "testname", "true", "true", "true", "303"},
-			expectedCfg:      newConfig(absPath, "testname", true, true, true, 303),
+			envVals:          []string{absPath, "testname", "true", "true", "true", "303", "1"},
+			expectedCfg:      newConfig(absPath, "testname", true, true, true, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "restart upgrade true",
-			envVals:          []string{absPath, "testname", "true", "false", "true", "303"},
-			expectedCfg:      newConfig(absPath, "testname", true, false, true, 303),
+			envVals:          []string{absPath, "testname", "true", "false", "true", "303", "1"},
+			expectedCfg:      newConfig(absPath, "testname", true, false, true, 303, 1),
 			expectedErrCount: 0,
 		},
-		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval
+		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval, EnvPreupgradeMaxRetries
 		{
 			name:             "skip unsafe backups bad",
-			envVals:          []string{absPath, "testname", "true", "false", "bad", "303"},
+			envVals:          []string{absPath, "testname", "true", "false", "bad", "303", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "skip unsafe backups not set",
-			envVals:          []string{absPath, "testname", "true", "false", "", "303"},
-			expectedCfg:      newConfig(absPath, "testname", true, false, false, 303),
+			envVals:          []string{absPath, "testname", "true", "false", "", "303", "1"},
+			expectedCfg:      newConfig(absPath, "testname", true, false, false, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "skip unsafe backups true",
-			envVals:          []string{absPath, "testname", "true", "false", "true", "303"},
-			expectedCfg:      newConfig(absPath, "testname", true, false, true, 303),
+			envVals:          []string{absPath, "testname", "true", "false", "true", "303", "1"},
+			expectedCfg:      newConfig(absPath, "testname", true, false, true, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "skip unsafe backups false",
-			envVals:          []string{absPath, "testname", "true", "false", "false", "303"},
-			expectedCfg:      newConfig(absPath, "testname", true, false, false, 303),
+			envVals:          []string{absPath, "testname", "true", "false", "false", "303", "1"},
+			expectedCfg:      newConfig(absPath, "testname", true, false, false, 303, 1),
 			expectedErrCount: 0,
 		},
-		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval
+		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval, EnvPreupgradeMaxRetries
 		{
 			name:             "poll interval bad",
-			envVals:          []string{absPath, "testname", "false", "false", "false", "bad"},
+			envVals:          []string{absPath, "testname", "false", "false", "false", "bad", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "poll interval 0",
-			envVals:          []string{absPath, "testname", "false", "false", "false", "0"},
+			envVals:          []string{absPath, "testname", "false", "false", "false", "0", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "poll interval not set",
-			envVals:          []string{absPath, "testname", "false", "false", "false", ""},
-			expectedCfg:      newConfig(absPath, "testname", false, false, false, 300),
+			envVals:          []string{absPath, "testname", "false", "false", "false", "", "1"},
+			expectedCfg:      newConfig(absPath, "testname", false, false, false, 300, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "poll interval 987",
-			envVals:          []string{absPath, "testname", "false", "false", "false", "987"},
-			expectedCfg:      newConfig(absPath, "testname", false, false, false, 987),
+			envVals:          []string{absPath, "testname", "false", "false", "false", "987", "1"},
+			expectedCfg:      newConfig(absPath, "testname", false, false, false, 987, 1),
+			expectedErrCount: 0,
+		},
+		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval, EnvPreupgradeMaxRetries
+		{
+			name:             "prepupgrade max retries bad",
+			envVals:          []string{absPath, "testname", "false", "false", "false", "406", "bad"},
+			expectedCfg:      nil,
+			expectedErrCount: 1,
+		},
+		{
+			name:             "prepupgrade max retries 0",
+			envVals:          []string{absPath, "testname", "false", "false", "false", "406", "0"},
+			expectedCfg:      newConfig(absPath, "testname", false, false, false, 406, 0),
+			expectedErrCount: 0,
+		},
+		{
+			name:             "prepupgrade max retries not set",
+			envVals:          []string{absPath, "testname", "false", "false", "false", "406", ""},
+			expectedCfg:      newConfig(absPath, "testname", false, false, false, 406, 0),
+			expectedErrCount: 0,
+		},
+		{
+			name:             "prepupgrade max retries 5",
+			envVals:          []string{absPath, "testname", "false", "false", "false", "406", "5"},
+			expectedCfg:      newConfig(absPath, "testname", false, false, false, 406, 5),
 			expectedErrCount: 0,
 		},
 	}

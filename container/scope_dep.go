@@ -5,7 +5,7 @@ import (
 )
 
 type scopeDepProvider struct {
-	ctr            *ProviderDescriptor
+	provider            *ProviderDescriptor
 	calledForScope map[Scope]bool
 	valueMap       map[Scope][]reflect.Value
 }

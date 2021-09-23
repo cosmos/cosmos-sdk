@@ -5,16 +5,71 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
 type argsTestSuite struct {
 	suite.Suite
+
+	envVars []string
 }
 
 func TestArgsTestSuite(t *testing.T) {
 	suite.Run(t, new(argsTestSuite))
+}
+
+func (s *argsTestSuite) SetupSuite() {
+	s.envVars = []string{envHome, envName, envDownloadBin, envRestartUpgrade, envSkipBackup, envInterval}
+}
+
+// clearEnv clears environment variables and returns the values
+// in the same order as the entries in s.envVars.
+// Designed to be used like this:
+//    initialEnv := clearEnv()
+//    defer setEnv(nil, initialEnv)
+func (s *argsTestSuite) clearEnv() []string {
+	s.T().Logf("Clearing environment variables.")
+	rv := make([]string, len(s.envVars))
+	for i, envVar := range s.envVars {
+		rv[i] = os.Getenv(envVar)
+		s.Require().NoError(os.Unsetenv(envVar))
+	}
+	return rv
+}
+
+// setEnv sets environment variables to the values provided.
+// Ordering of envVals is the same as the entries in s.envVars.
+// If t is not nil, and there's a problem, the test will fail immediately.
+// If t is nil, problems will just be logged using s.T().
+func (s *argsTestSuite) setEnv(t *testing.T, envVals []string) {
+	if t == nil {
+		s.T().Logf("Restoring environment variables.")
+	}
+	for i := 0; i < len(envVals) && i < len(s.envVars); i++ {
+		envVar := s.envVars[i]
+		envVal := envVals[i]
+		var err error
+		var msg string
+		if len(envVal) != 0 {
+			err = os.Setenv(envVar, envVal)
+			msg = fmt.Sprintf("setting %s to %s", envVar, envVal)
+		} else {
+			err = os.Unsetenv(envVar)
+			msg = fmt.Sprintf("unsetting %s", envVar)
+		}
+		switch {
+		case t != nil:
+			require.NoError(t, err, msg)
+		case err != nil:
+			s.T().Logf("error %s: %v", msg, err)
+		default:
+			s.T().Logf("done %s", msg)
+		}
+	}
 }
 
 func (s *argsTestSuite) TestConfigPaths() {
@@ -132,17 +187,19 @@ func (s *argsTestSuite) TestEnsureBin() {
 }
 
 func (s *argsTestSuite) TestBooleanOption() {
-	require := s.Require()
+	initialEnv := s.clearEnv()
+	defer s.setEnv(nil, initialEnv)
+
 	name := "COSMOVISOR_TEST_VAL"
 
 	check := func(def, expected, isErr bool, msg string) {
 		v, err := booleanOption(name, def)
 		if isErr {
-			require.Error(err)
+			s.Require().Error(err)
 			return
 		}
-		require.NoError(err)
-		require.Equal(expected, v, msg)
+		s.Require().NoError(err)
+		s.Require().Equal(expected, v, msg)
 	}
 
 	os.Setenv(name, "")
@@ -168,5 +225,285 @@ func (s *argsTestSuite) TestBooleanOption() {
 	os.Setenv(name, "TRUE")
 	check(true, true, false, "should handle true value case not sensitive")
 	check(false, true, false, "should handle true value case not sensitive")
+}
 
+func (s *argsTestSuite) TestDetailString() {
+	home := "/home"
+	name := "test-name"
+	allowDownloadBinaries := true
+	restartAfterUpgrade := true
+	pollInterval := 406 * time.Millisecond
+	unsafeSkipBackup := false
+	cfg := &Config{
+		Home:                  home,
+		Name:                  name,
+		AllowDownloadBinaries: allowDownloadBinaries,
+		RestartAfterUpgrade:   restartAfterUpgrade,
+		PollInterval:          pollInterval,
+		UnsafeSkipBackup:      unsafeSkipBackup,
+	}
+
+	expectedPieces := []string{
+		"Configurable Values:",
+		fmt.Sprintf("Home: %s", home),
+		fmt.Sprintf("Name: %s", name),
+		fmt.Sprintf("AllowDownloadBinaries: %t", allowDownloadBinaries),
+		fmt.Sprintf("RestartAfterUpgrade: %t", restartAfterUpgrade),
+		fmt.Sprintf("PollInterval: %s", pollInterval),
+		fmt.Sprintf("UnsafeSkipBackup: %t", unsafeSkipBackup),
+		"Derived Values:",
+		fmt.Sprintf("Root Dir: %s", home),
+		fmt.Sprintf("Upgrade Dir: %s", home),
+		fmt.Sprintf("Genesis Bin: %s", home),
+		fmt.Sprintf("Monitored Upgrade Info File: %s", home),
+	}
+
+	actual := cfg.DetailString()
+
+	for _, piece := range expectedPieces {
+		s.Assert().Contains(actual, piece)
+	}
+}
+
+func (s *argsTestSuite) TestGetConfigFromEnv() {
+	initialEnv := s.clearEnv()
+	defer s.setEnv(nil, initialEnv)
+
+	relPath := filepath.Join("testdata", "validate")
+	absPath, perr := filepath.Abs(relPath)
+	s.Require().NoError(perr)
+
+	newConfig := func(home, name string, downloadBin, restartUpgrade, skipBackup bool, interval int) *Config {
+		return &Config{
+			Home:                  home,
+			Name:                  name,
+			AllowDownloadBinaries: downloadBin,
+			RestartAfterUpgrade:   restartUpgrade,
+			PollInterval:          time.Millisecond * time.Duration(interval),
+			UnsafeSkipBackup:      skipBackup,
+		}
+	}
+
+	tests := []struct {
+		name             string
+		envVals          []string
+		expectedCfg      *Config
+		expectedErrCount int
+	}{
+		// envHome, envName, envDownloadBin, envRestartUpgrade, envSkipBackup, envInterval
+		{
+			name:             "all bad",
+			envVals:          []string{"", "", "bad", "bad", "bad", "bad"},
+			expectedCfg:      nil,
+			expectedErrCount: 6,
+		},
+		{
+			name:             "all good",
+			envVals:          []string{absPath, "testname", "true", "false", "true", "303"},
+			expectedCfg:      newConfig(absPath, "testname", true, false, true, 303),
+			expectedErrCount: 0,
+		},
+		{
+			name:             "nothing set",
+			envVals:          []string{"", "", "", "", "", ""},
+			expectedCfg:      nil,
+			expectedErrCount: 2,
+		},
+		// Note: Home and Name tests are done in TestValidate
+		{
+			name:             "download bin bad",
+			envVals:          []string{absPath, "testname", "bad", "false", "true", "303"},
+			expectedCfg:      nil,
+			expectedErrCount: 1,
+		},
+		{
+			name:             "download bin not set",
+			envVals:          []string{absPath, "testname", "", "false", "true", "303"},
+			expectedCfg:      newConfig(absPath, "testname", false, false, true, 303),
+			expectedErrCount: 0,
+		},
+		{
+			name:             "download bin true",
+			envVals:          []string{absPath, "testname", "true", "false", "true", "303"},
+			expectedCfg:      newConfig(absPath, "testname", true, false, true, 303),
+			expectedErrCount: 0,
+		},
+		{
+			name:             "download bin false",
+			envVals:          []string{absPath, "testname", "false", "false", "true", "303"},
+			expectedCfg:      newConfig(absPath, "testname", false, false, true, 303),
+			expectedErrCount: 0,
+		},
+		// envHome, envName, envDownloadBin, envRestartUpgrade, envSkipBackup, envInterval
+		{
+			name:             "restart upgrade bad",
+			envVals:          []string{absPath, "testname", "true", "bad", "true", "303"},
+			expectedCfg:      nil,
+			expectedErrCount: 1,
+		},
+		{
+			name:             "restart upgrade not set",
+			envVals:          []string{absPath, "testname", "true", "", "true", "303"},
+			expectedCfg:      newConfig(absPath, "testname", true, true, true, 303),
+			expectedErrCount: 0,
+		},
+		{
+			name:             "restart upgrade true",
+			envVals:          []string{absPath, "testname", "true", "true", "true", "303"},
+			expectedCfg:      newConfig(absPath, "testname", true, true, true, 303),
+			expectedErrCount: 0,
+		},
+		{
+			name:             "restart upgrade true",
+			envVals:          []string{absPath, "testname", "true", "false", "true", "303"},
+			expectedCfg:      newConfig(absPath, "testname", true, false, true, 303),
+			expectedErrCount: 0,
+		},
+		// envHome, envName, envDownloadBin, envRestartUpgrade, envSkipBackup, envInterval
+		{
+			name:             "skip unsafe backups bad",
+			envVals:          []string{absPath, "testname", "true", "false", "bad", "303"},
+			expectedCfg:      nil,
+			expectedErrCount: 1,
+		},
+		{
+			name:             "skip unsafe backups not set",
+			envVals:          []string{absPath, "testname", "true", "false", "", "303"},
+			expectedCfg:      newConfig(absPath, "testname", true, false, false, 303),
+			expectedErrCount: 0,
+		},
+		{
+			name:             "skip unsafe backups true",
+			envVals:          []string{absPath, "testname", "true", "false", "true", "303"},
+			expectedCfg:      newConfig(absPath, "testname", true, false, true, 303),
+			expectedErrCount: 0,
+		},
+		{
+			name:             "skip unsafe backups false",
+			envVals:          []string{absPath, "testname", "true", "false", "false", "303"},
+			expectedCfg:      newConfig(absPath, "testname", true, false, false, 303),
+			expectedErrCount: 0,
+		},
+		// envHome, envName, envDownloadBin, envRestartUpgrade, envSkipBackup, envInterval
+		{
+			name:             "poll interval bad",
+			envVals:          []string{absPath, "testname", "false", "false", "false", "bad"},
+			expectedCfg:      nil,
+			expectedErrCount: 1,
+		},
+		{
+			name:             "poll interval 0",
+			envVals:          []string{absPath, "testname", "false", "false", "false", "0"},
+			expectedCfg:      nil,
+			expectedErrCount: 1,
+		},
+		{
+			name:             "poll interval not set",
+			envVals:          []string{absPath, "testname", "false", "false", "false", ""},
+			expectedCfg:      newConfig(absPath, "testname", false, false, false, 300),
+			expectedErrCount: 0,
+		},
+		{
+			name:             "poll interval 987",
+			envVals:          []string{absPath, "testname", "false", "false", "false", "987"},
+			expectedCfg:      newConfig(absPath, "testname", false, false, false, 987),
+			expectedErrCount: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			s.setEnv(t, tc.envVals)
+			cfg, err := GetConfigFromEnv()
+			if tc.expectedErrCount == 0 {
+				assert.NoError(t, err)
+			} else {
+				if assert.Error(t, err) {
+					errCount := 1
+					if multi, isMulti := err.(*MultiError); isMulti {
+						errCount = multi.Len()
+					}
+					assert.Equal(t, tc.expectedErrCount, errCount, "error count")
+				}
+			}
+			assert.Equal(t, tc.expectedCfg, cfg, "config")
+		})
+	}
+}
+
+func (s *argsTestSuite) TestShouldGiveHelp() {
+	initialEnv := s.clearEnv()
+	defer s.setEnv(nil, initialEnv)
+
+	s.T().Run("name not set", func(t *testing.T) {
+		actual := ShouldGiveHelp([]string{})
+		assert.True(t, actual)
+	})
+
+	s.Require().NoError(os.Setenv(envName, "somename"), "setting name environment variable")
+
+	tests := []struct {
+		name     string
+		args     []string
+		expected bool
+	}{
+		{
+			name:     "name set nil args",
+			args:     nil,
+			expected: false,
+		},
+		{
+			name:     "name set empty args",
+			args:     []string{},
+			expected: false,
+		},
+		{
+			name:     "name set help first",
+			args:     []string{"-h"},
+			expected: true,
+		},
+		{
+			name:     "name set -h first",
+			args:     []string{"-h"},
+			expected: true,
+		},
+		{
+			name:     "name set --help first",
+			args:     []string{"--help"},
+			expected: true,
+		},
+		{
+			name:     "name set help second",
+			args:     []string{"arg1", "-h"},
+			expected: false,
+		},
+		{
+			name:     "name set -h second",
+			args:     []string{"arg1", "-h"},
+			expected: false,
+		},
+		{
+			name:     "name set --help second",
+			args:     []string{"arg1", "--help"},
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			actual := ShouldGiveHelp(tc.args)
+			assert.Equal(t, tc.expected, actual)
+		})
+	}
+}
+
+func (s *argsTestSuite) TestGetHelpText() {
+	expectedPieces := []string{
+		envHome, envName, envDownloadBin, envRestartUpgrade, envSkipBackup, envInterval,
+	}
+
+	actual := GetHelpText()
+	for _, piece := range expectedPieces {
+		s.Assert().Contains(actual, piece)
+	}
 }

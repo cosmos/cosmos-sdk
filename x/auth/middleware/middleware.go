@@ -39,12 +39,11 @@ type TxHandlerOptions struct {
 	LegacyRouter     sdk.Router
 	MsgServiceRouter *MsgServiceRouter
 
-	LegacyAnteHandler sdk.AnteHandler
-	AccountKeeper     AccountKeeper
-	BankKeeper        types.BankKeeper
-	FeegrantKeeper    FeegrantKeeper
-	SignModeHandler   authsigning.SignModeHandler
-	SigGasConsumer    func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
+	AccountKeeper   AccountKeeper
+	BankKeeper      types.BankKeeper
+	FeegrantKeeper  FeegrantKeeper
+	SignModeHandler authsigning.SignModeHandler
+	SigGasConsumer  func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
 }
 
 // NewDefaultTxHandler defines a TxHandler middleware stacks that should work
@@ -95,9 +94,5 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		SigGasConsumeMiddleware(options.AccountKeeper, sigGasConsumer),
 		SigVerificationMiddleware(options.AccountKeeper, options.SignModeHandler),
 		IncrementSequenceMiddleware(options.AccountKeeper),
-
-		// Temporary middleware to bundle antehandlers.
-		// TODO Remove in https://github.com/cosmos/cosmos-sdk/issues/9585.
-		LegacyAnteMiddleware(options.LegacyAnteHandler),
 	), nil
 }

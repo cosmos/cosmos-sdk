@@ -258,13 +258,13 @@ func setupBaseApp(t *testing.T, options ...func(*baseapp.BaseApp)) *baseapp.Base
 	return app
 }
 
-func testTxHandler(options middleware.TxHandlerOptions) tx.Handler {
+func testTxHandler(options middleware.TxHandlerOptions, postTxHandlerMiddleware handlerFun) tx.Handler {
 	return middleware.ComposeMiddlewares(
 		middleware.NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
 		middleware.GasTxMiddleware,
 		middleware.RecoveryTxMiddleware,
 		middleware.NewIndexEventsTxMiddleware(options.IndexEvents),
-		middleware.LegacyAnteMiddleware(options.LegacyAnteHandler),
+		PostTxHandlerMiddleware(postTxHandlerMiddleware),
 	)
 }
 
@@ -279,11 +279,13 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 			bapp.CMS().GetCommitKVStore(capKey2).Set(kv.Key, kv.Value)
 			return &sdk.Result{}, nil
 		}))
-		txHandler := testTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter:      legacyRouter,
-			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
-			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) { return ctx, nil },
-		})
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) { return ctx, nil },
+		)
 		bapp.SetTxHandler(txHandler)
 	}
 
@@ -507,7 +509,7 @@ func TestApplySnapshotChunk(t *testing.T) {
 	assert.Equal(t, source.LastCommitID(), target.LastCommitID())
 }
 
-func anteHandlerTxTest(t *testing.T, capKey sdk.StoreKey, storeKey []byte) sdk.AnteHandler {
+func postHandlerTxTest(t *testing.T, capKey sdk.StoreKey, storeKey []byte) handlerFun {
 	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
 		store := ctx.KVStore(capKey)
 		txTest := tx.(txTest)
@@ -522,7 +524,7 @@ func anteHandlerTxTest(t *testing.T, capKey sdk.StoreKey, storeKey []byte) sdk.A
 		}
 
 		ctx.EventManager().EmitEvents(
-			counterEvent("ante_handler", txTest.Counter),
+			counterEvent("post_handlers", txTest.Counter),
 		)
 
 		return ctx, nil
@@ -625,11 +627,13 @@ func TestCheckTx(t *testing.T) {
 		legacyRouter.AddRoute(sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			return &sdk.Result{}, nil
 		}))
-		txHandler := testTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter:      legacyRouter,
-			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, counterKey),
-			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
-		})
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			postHandlerTxTest(t, capKey1, counterKey),
+		)
 		bapp.SetTxHandler(txHandler)
 	}
 
@@ -654,7 +658,7 @@ func TestCheckTx(t *testing.T) {
 	checkStateStore := app.CheckState().Context().KVStore(capKey1)
 	storedCounter := getIntFromStore(checkStateStore, counterKey)
 
-	// Ensure AnteHandler ran
+	// Ensure storedCounter
 	require.Equal(t, nTxs, storedCounter)
 
 	// If a block is committed, CheckTx state should be reset.
@@ -675,7 +679,7 @@ func TestCheckTx(t *testing.T) {
 // Test that successive DeliverTx can see each others' effects
 // on the store, both within and across blocks.
 func TestDeliverTx(t *testing.T) {
-	// test increments in the ante
+	// test increments in the post txHandler
 	anteKey := []byte("ante-key")
 	// test increments in the handler
 	deliverKey := []byte("deliver-key")
@@ -683,11 +687,13 @@ func TestDeliverTx(t *testing.T) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
 		legacyRouter.AddRoute(r)
-		txHandler := testTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter:      legacyRouter,
-			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
-			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, anteKey),
-		})
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			postHandlerTxTest(t, capKey1, anteKey),
+		)
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -715,7 +721,7 @@ func TestDeliverTx(t *testing.T) {
 			require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 			events := res.GetEvents()
 			require.Len(t, events, 3, "should contain ante handler, message type and counter events respectively")
-			require.Equal(t, sdk.MarkEventsToIndex(counterEvent("ante_handler", counter).ToABCIEvents(), map[string]struct{}{})[0], events[0], "ante handler event")
+			require.Equal(t, sdk.MarkEventsToIndex(counterEvent("post_handlers", counter).ToABCIEvents(), map[string]struct{}{})[0], events[0], "ante handler event")
 			require.Equal(t, sdk.MarkEventsToIndex(counterEvent(sdk.EventTypeMessage, counter).ToABCIEvents(), map[string]struct{}{})[0], events[2], "msg handler update counter event")
 		}
 
@@ -743,11 +749,13 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 		r2 := sdk.NewRoute(routeMsgCounter2, handlerMsgCounter(t, capKey1, deliverKey2))
 		legacyRouter.AddRoute(r1)
 		legacyRouter.AddRoute(r2)
-		txHandler := testTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter:      legacyRouter,
-			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
-			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, anteKey),
-		})
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			postHandlerTxTest(t, capKey1, anteKey),
+		)
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -821,11 +829,13 @@ func TestSimulateTx(t *testing.T) {
 			return &sdk.Result{}, nil
 		})
 		legacyRouter.AddRoute(r)
-		txHandler := testTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter:      legacyRouter,
-			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
-			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) { return ctx, nil },
-		})
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) { return ctx, nil },
+		)
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -887,13 +897,15 @@ func TestRunInvalidTransaction(t *testing.T) {
 			return &sdk.Result{}, nil
 		})
 		legacyRouter.AddRoute(r)
-		txHandler := testTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter:     legacyRouter,
-			MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
-			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 				return
 			},
-		})
+		)
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1002,11 +1014,13 @@ func TestTxGasLimits(t *testing.T) {
 			return &sdk.Result{}, nil
 		})
 		legacyRouter.AddRoute(r)
-		txHandler := testTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter:      legacyRouter,
-			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
-			LegacyAnteHandler: ante,
-		})
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			ante,
+		)
 
 		bapp.SetTxHandler(txHandler)
 	}
@@ -1079,11 +1093,13 @@ func TestMaxBlockGasLimits(t *testing.T) {
 			return &sdk.Result{}, nil
 		})
 		legacyRouter.AddRoute(r)
-		txHandler := testTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter:      legacyRouter,
-			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
-			LegacyAnteHandler: ante,
-		})
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			ante,
+		)
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1163,11 +1179,13 @@ func TestBaseAppAnteHandler(t *testing.T) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
 		legacyRouter.AddRoute(r)
-		txHandler := testTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter:      legacyRouter,
-			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
-			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, anteKey),
-		})
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			postHandlerTxTest(t, capKey1, anteKey),
+		)
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1181,7 +1199,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	// execute a tx that will fail ante handler execution
 	//
 	// NOTE: State should not be mutated here. This will be implicitly checked by
-	// the next txs ante handler execution (anteHandlerTxTest).
+	// the next txs ante handler execution (postHandlerTxTest).
 	tx := newTxCounter(0, 0)
 	tx.setFailOnAnte(true)
 	txBytes, err := cdc.Marshal(tx)
@@ -1255,11 +1273,13 @@ func TestGasConsumptionBadTx(t *testing.T) {
 			return &sdk.Result{}, nil
 		})
 		legacyRouter.AddRoute(r)
-		txHandler := testTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter:      legacyRouter,
-			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
-			LegacyAnteHandler: ante,
-		})
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			ante,
+		)
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1307,15 +1327,17 @@ func TestQuery(t *testing.T) {
 			return &sdk.Result{}, nil
 		})
 		legacyRouter.AddRoute(r)
-		txHandler := testTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter:     legacyRouter,
-			MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
-			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 				store := ctx.KVStore(capKey1)
 				store.Set(key, value)
 				return
 			},
-		})
+		)
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)

@@ -64,25 +64,25 @@ func (s *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 		WithTxConfig(encodingConfig.TxConfig).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithCodec(codec.NewAminoCodec(encodingConfig.Amino))
-	// router := middleware.NewLegacyRouter()
 
-	s.txHandler = middleware.ComposeMiddlewares(
-		noopTxHandler{},
-		middleware.GasTxMiddleware,
-		middleware.RecoveryTxMiddleware,
-		middleware.RejectExtensionOptionsMiddleware,
-		middleware.MempoolFeeMiddleware,
-		middleware.ValidateBasicMiddleware,
-		middleware.TxTimeoutHeightMiddleware,
-		middleware.ValidateMemoMiddleware(s.app.AccountKeeper),
-		middleware.ConsumeTxSizeGasMiddleware(s.app.AccountKeeper),
-		middleware.DeductFeeMiddleware(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper),
-		middleware.SetPubKeyMiddleware(s.app.AccountKeeper),
-		middleware.ValidateSigCountMiddleware(s.app.AccountKeeper),
-		middleware.SigGasConsumeMiddleware(s.app.AccountKeeper, middleware.DefaultSigVerificationGasConsumer),
-		middleware.SigVerificationMiddleware(s.app.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()),
-		middleware.IncrementSequenceMiddleware(s.app.AccountKeeper),
-	)
+	// We don't use simapp's own txHandler. For more flexibility (i.e. around
+	// using testdata), we create own own txHandler for this test suite.
+	msr := middleware.NewMsgServiceRouter(encodingConfig.InterfaceRegistry)
+	testdata.RegisterMsgServer(msr, testdata.MsgServerImpl{})
+	legacyRouter := middleware.NewLegacyRouter()
+	legacyRouter.AddRoute(sdk.NewRoute((&testdata.TestMsg{}).Route(), func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) { return &sdk.Result{}, nil }))
+	txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
+		Debug:            s.app.Trace(),
+		MsgServiceRouter: msr,
+		LegacyRouter:     legacyRouter,
+		AccountKeeper:    s.app.AccountKeeper,
+		BankKeeper:       s.app.BankKeeper,
+		FeegrantKeeper:   s.app.FeeGrantKeeper,
+		SignModeHandler:  encodingConfig.TxConfig.SignModeHandler(),
+		SigGasConsumer:   middleware.DefaultSigVerificationGasConsumer,
+	})
+	s.Require().NoError(err)
+	s.txHandler = txHandler
 
 	return ctx
 }

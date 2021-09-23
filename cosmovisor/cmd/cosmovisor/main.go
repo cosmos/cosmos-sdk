@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
+	"github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor/cmd"
 )
 
 func main() {
@@ -20,6 +21,8 @@ func Run(args []string) error {
 		DoHelp()
 		return nil
 	}
+	cmd.RunCosmovisorCommands(args)
+
 	cfg, err := cosmovisor.GetConfigFromEnv()
 	if err != nil {
 		return err
@@ -38,6 +41,7 @@ func Run(args []string) error {
 	if doUpgrade && err == nil {
 		fmt.Println("[cosmovisor] upgrade detected, DAEMON_RESTART_AFTER_UPGRADE is off. Verify new upgrade and start cosmovisor again.")
 	}
+
 	return err
 }
 

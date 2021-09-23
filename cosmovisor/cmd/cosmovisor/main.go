@@ -35,7 +35,7 @@ func Run(args []string) error {
 		doUpgrade, err = launcher.Run(args, os.Stdout, os.Stderr)
 	}
 	if doUpgrade && err == nil {
-		cosmovisor.Logger.Info().Msgf("[cosmovisor] upgrade detected, DAEMON_RESTART_AFTER_UPGRADE is off. Verify new upgrade and start cosmovisor again.")
+		cosmovisor.Logger.Info().Msg("[cosmovisor] upgrade detected, DAEMON_RESTART_AFTER_UPGRADE is off. Verify new upgrade and start cosmovisor again.")
 	}
 
 	return err

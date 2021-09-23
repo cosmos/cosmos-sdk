@@ -1,8 +1,14 @@
 package cmd
 
 // RunCosmovisorCommands executes cosmosvisor commands e.g `cosmovisor version`
-func RunCosmovisorCommands(args []string) {
-	if isVersionCommand(args) {
+// Returned boolean is whether or not execution should continue.
+func RunCosmovisorCommands(args []string) bool {
+	switch {
+	case ShouldGiveHelp(args):
+		DoHelp()
+		return false
+	case isVersionCommand(args):
 		printVersion()
 	}
+	return true
 }

@@ -17,11 +17,9 @@ func main() {
 
 // Run is the main loop, but returns an error
 func Run(args []string) error {
-	if cosmovisor.ShouldGiveHelp(args) {
-		DoHelp()
+	if keepGoing := cmd.RunCosmovisorCommands(args); !keepGoing {
 		return nil
 	}
-	cmd.RunCosmovisorCommands(args)
 
 	cfg, err := cosmovisor.GetConfigFromEnv()
 	if err != nil {
@@ -43,27 +41,4 @@ func Run(args []string) error {
 	}
 
 	return err
-}
-
-func DoHelp() {
-	// Output the help text
-	fmt.Println(cosmovisor.GetHelpText())
-	// If the config isn't valid, there's nothing else to do.
-	cfg, cerr := cosmovisor.GetConfigFromEnv()
-	switch err := cerr.(type) {
-	case nil:
-		// Nothing to do. Move on.
-	case *cosmovisor.MultiError:
-		fmt.Fprintf(os.Stderr, "[cosmovisor] multiple configuration errors found:\n")
-		for i, e := range err.GetErrors() {
-			fmt.Fprintf(os.Stderr, "  %d: %v", i+1, e)
-		}
-	default:
-		fmt.Fprintf(os.Stderr, "[cosmovisor] %v", err)
-	}
-	fmt.Printf("[cosmovisor] config is valid:")
-	fmt.Println(cfg.DetailString())
-	if err := cosmovisor.RunHelp(cfg, os.Stdout, os.Stderr); err != nil {
-		fmt.Fprintf(os.Stderr, "[cosmovisor] %v", err)
-	}
 }

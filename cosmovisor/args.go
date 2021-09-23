@@ -21,7 +21,7 @@ const (
 	EnvRestartUpgrade       = "DAEMON_RESTART_AFTER_UPGRADE"
 	EnvSkipBackup           = "UNSAFE_SKIP_BACKUP"
 	EnvInterval             = "DAEMON_POLL_INTERVAL"
-	envPreupgradeMaxRetries = "DAEMON_PREUPGRADE_MAX_RETRIES"
+	EnvPreupgradeMaxRetries = "DAEMON_PREUPGRADE_MAX_RETRIES"
 )
 
 const (
@@ -153,17 +153,16 @@ func GetConfigFromEnv() (*Config, error) {
 		cfg.PollInterval = 300 * time.Millisecond
 	}
 
+	envPreupgradeMaxRetriesVal := os.Getenv(EnvPreupgradeMaxRetries)
+	if cfg.PreupgradeMaxRetries, err = strconv.Atoi(envPreupgradeMaxRetriesVal); err != nil && envPreupgradeMaxRetriesVal != "" {
+		errs = append(errs, fmt.Errorf("%s could not be parsed to int: %w", EnvPreupgradeMaxRetries, err))
+	}
+
 	errs = append(errs, cfg.validate()...)
 
 	if len(errs) > 0 {
 		return nil, FlattenErrors(errs...)
 	}
-
-	envPreupgradeMaxRetriesVal := os.Getenv(envPreupgradeMaxRetries)
-	if cfg.PreupgradeMaxRetries, err = strconv.Atoi(envPreupgradeMaxRetriesVal); err != nil && envPreupgradeMaxRetriesVal != "" {
-		return nil, fmt.Errorf("%s could not be parsed to int: %w", envPreupgradeMaxRetries, err)
-	}
-
 	return cfg, nil
 }
 

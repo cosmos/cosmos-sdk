@@ -165,14 +165,14 @@ func GetConfigFromEnv() (*Config, error) {
 func (cfg *Config) validate() []error {
 	var errs []error
 	if cfg.Name == "" {
-		errs = append(errs, errors.New(EnvName+ " is not set"))
+		errs = append(errs, errors.New(EnvName+" is not set"))
 	}
 
 	switch {
 	case cfg.Home == "":
-		errs = append(errs, errors.New(EnvHome+ " is not set"))
+		errs = append(errs, errors.New(EnvHome+" is not set"))
 	case !filepath.IsAbs(cfg.Home):
-		errs = append(errs, errors.New(EnvHome+ " must be an absolute path"))
+		errs = append(errs, errors.New(EnvHome+" must be an absolute path"))
 	default:
 		switch info, err := os.Stat(cfg.Root()); {
 		case err != nil:
@@ -266,7 +266,7 @@ func booleanOption(name string, defaultVal bool) (bool, error) {
 }
 
 func (cfg Config) DetailString() string {
-	configEntries := []struct { name, value string }{
+	configEntries := []struct{ name, value string }{
 		{"Home", cfg.Home},
 		{"Name", cfg.Name},
 		{"AllowDownloadBinaries", fmt.Sprintf("%t", cfg.AllowDownloadBinaries)},
@@ -274,7 +274,7 @@ func (cfg Config) DetailString() string {
 		{"PollInterval", fmt.Sprintf("%s", cfg.PollInterval)},
 		{"UnsafeSkipBackup", fmt.Sprintf("%t", cfg.UnsafeSkipBackup)},
 	}
-	derivedEntries := []struct { name, value string }{
+	derivedEntries := []struct{ name, value string }{
 		{"Root Dir", cfg.Root()},
 		{"Upgrade Dir", cfg.BaseUpgradeDir()},
 		{"Genesis Bin", cfg.GenesisBin()},

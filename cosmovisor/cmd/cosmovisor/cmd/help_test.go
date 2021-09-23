@@ -150,6 +150,3 @@ func (s *HelpTestSuite) TestGetHelpText() {
 		s.Assert().Contains(actual, piece)
 	}
 }
-
-
-

@@ -86,5 +86,5 @@ Configuration of Cosmoviser is done through the following environment variables:
         Valid values: true, false.
 
 `, cosmovisor.EnvHome, cosmovisor.EnvName, cosmovisor.EnvDownloadBin,
-cosmovisor.EnvRestartUpgrade, cosmovisor.EnvInterval, cosmovisor.EnvSkipBackup)
+		cosmovisor.EnvRestartUpgrade, cosmovisor.EnvInterval, cosmovisor.EnvSkipBackup)
 }

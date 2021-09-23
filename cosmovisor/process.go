@@ -91,7 +91,7 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 	select {
 	case <-l.fw.MonitorUpdate(currentUpgrade):
 		// upgrade - kill the process and restart
-		Logger.Info().Msgf("[cosmovisor] Daemon shutting down in an attempt to restart")
+		Logger.Info().Msg("[cosmovisor] Daemon shutting down in an attempt to restart")
 		_ = cmd.Process.Kill()
 	case err := <-cmdDone:
 		l.fw.Stop()
@@ -160,18 +160,18 @@ func doPreUpgrade(cfg *Config) error {
 
 	if err != nil {
 		if err.(*exec.ExitError).ProcessState.ExitCode() == 1 {
-			Logger.Info().Msgf("pre-upgrade command does not exist. continuing the upgrade.")
+			Logger.Info().Msg("pre-upgrade command does not exist. continuing the upgrade.")
 			return nil
 		}
 		if err.(*exec.ExitError).ProcessState.ExitCode() == 30 {
 			return fmt.Errorf("pre-upgrade command failed : %w", err)
 		}
 		if err.(*exec.ExitError).ProcessState.ExitCode() == 31 {
-			Logger.Info().Msgf("pre-upgrade command failed. retrying.")
+			Logger.Info().Msg("pre-upgrade command failed. retrying.")
 			return doPreUpgrade(cfg)
 		}
 	}
-	Logger.Info().Msgf("pre-upgrade successful. continuing the upgrade.")
+	Logger.Info().Msg("pre-upgrade successful. continuing the upgrade.")
 	return nil
 }
 

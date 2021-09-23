@@ -31,7 +31,7 @@ func Run(args []string) error {
 	doUpgrade, err := launcher.Run(args, os.Stdout, os.Stderr)
 	// if RestartAfterUpgrade, we launch after a successful upgrade (only condition LaunchProcess returns nil)
 	for cfg.RestartAfterUpgrade && err == nil && doUpgrade {
-		cosmovisor.Logger.Info().Msgf("[cosmovisor] upgrade detected, relaunching the app ", cfg.Name)
+		cosmovisor.Logger.Info().Msgf("[cosmovisor] upgrade detected, relaunching the app %s", cfg.Name)
 		doUpgrade, err = launcher.Run(args, os.Stdout, os.Stderr)
 	}
 	if doUpgrade && err == nil {

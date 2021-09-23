@@ -1025,19 +1025,18 @@ func (suite *MWTestSuite) TestCustomSignatureVerificationGasConsumer() {
 		},
 	)
 	suite.Require().NoError(err)
-	suite.txHandler = txHandler
 
 	suite.Require().NoError(err)
 
 	// Same data for every test cases
 	accounts := suite.CreateTestAccounts(ctx, 1)
-	feeAmount := testdata.NewTestFeeAmount()
-	gasLimit := testdata.NewTestGasLimit()
+	txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
+	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
+	txBuilder.SetMsgs(testdata.NewTestMsg(accounts[0].acc.GetAddress()))
 
 	// Variable data per test case
 	var (
 		accNums []uint64
-		msgs    []sdk.Msg
 		privs   []cryptotypes.PrivKey
 		accSeqs []uint64
 	)
@@ -1046,7 +1045,6 @@ func (suite *MWTestSuite) TestCustomSignatureVerificationGasConsumer() {
 		{
 			"verify that an secp256k1 account gets rejected",
 			func() {
-				msgs = []sdk.Msg{testdata.NewTestMsg(accounts[0].acc.GetAddress())}
 				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
 			},
 			false,
@@ -1059,7 +1057,11 @@ func (suite *MWTestSuite) TestCustomSignatureVerificationGasConsumer() {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			tc.malleate()
 
-			suite.RunTestCase(ctx, txBuilder, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, ctx.ChainID(), tc)
+			tx, txBytes, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+			suite.Require().NoError(err)
+			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, abci.RequestDeliverTx{Tx: txBytes})
+			suite.Require().Error(err)
+			suite.Require().True(errors.Is(err, tc.expErr))
 		})
 	}
 }

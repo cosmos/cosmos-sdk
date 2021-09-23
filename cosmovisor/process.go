@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -53,7 +52,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	go func() {
 		sig := <-sigs
 		if err := cmd.Process.Signal(sig); err != nil {
-			log.Fatal(bin, "terminated. Error:", err)
+			Logger.Fatal().Msgf(bin, "terminated. Error:", err)
 		}
 	}()
 

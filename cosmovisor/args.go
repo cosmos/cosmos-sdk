@@ -239,7 +239,7 @@ func (cfg *Config) UpgradeInfo() UpgradeInfo {
 	return cfg.currentUpgrade
 
 returnError:
-	fmt.Println("[cosmovisor], error reading", filename, err)
+	Logger.Error().Msgf("[cosmovisor], error reading", filename, err)
 	cfg.currentUpgrade.Name = "_"
 	return cfg.currentUpgrade
 }

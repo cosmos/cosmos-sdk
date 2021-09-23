@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -94,7 +93,7 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade UpgradeInfo) bool {
 	}
 	info, err := parseUpgradeInfoFile(fw.filename)
 	if err != nil {
-		log.Fatal("Can't parse upgrade info file. Err: ", err)
+		Logger.Fatal().Msgf("Can't parse upgrade info file. Err: ", err)
 		return false
 	}
 	if !fw.initialized { // daemon has restarted

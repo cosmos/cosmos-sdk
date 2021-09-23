@@ -11,6 +11,7 @@ import (
 	"sync/atomic"
 
 	dbm "github.com/cosmos/cosmos-sdk/db"
+	dbutil "github.com/cosmos/cosmos-sdk/db/internal"
 
 	"github.com/dgraph-io/badger/v3"
 )
@@ -262,11 +263,8 @@ func (tx *badgerTxn) Has(key []byte) (bool, error) {
 }
 
 func (tx *badgerWriter) Set(key, value []byte) error {
-	if len(key) == 0 {
-		return dbm.ErrKeyEmpty
-	}
-	if value == nil {
-		return dbm.ErrValueNil
+	if err := dbutil.ValidateKv(key, value); err != nil {
+		return err
 	}
 	return tx.txn.Set(key, value)
 }

@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 
 	dbm "github.com/cosmos/cosmos-sdk/db"
+	dbutil "github.com/cosmos/cosmos-sdk/db/internal"
 	"github.com/google/btree"
 )
 
@@ -180,11 +181,8 @@ func (tx *dbTxn) Has(key []byte) (bool, error) {
 
 // Set implements DBWriter.
 func (tx *dbWriter) Set(key []byte, value []byte) error {
-	if len(key) == 0 {
-		return dbm.ErrKeyEmpty
-	}
-	if value == nil {
-		return dbm.ErrValueNil
+	if err := dbutil.ValidateKv(key, value); err != nil {
+		return err
 	}
 	tx.btree.ReplaceOrInsert(newPair(key, value))
 	return nil

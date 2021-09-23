@@ -4,6 +4,7 @@ import (
 	"sync/atomic"
 
 	dbm "github.com/cosmos/cosmos-sdk/db"
+	dbutil "github.com/cosmos/cosmos-sdk/db/internal"
 	"github.com/tecbot/gorocksdb"
 )
 
@@ -25,14 +26,11 @@ func (mgr *dbManager) newRocksDBBatch() *rocksDBBatch {
 
 // Set implements DBWriter.
 func (b *rocksDBBatch) Set(key, value []byte) error {
-	if len(key) == 0 {
-		return dbm.ErrKeyEmpty
-	}
-	if value == nil {
-		return dbm.ErrValueNil
-	}
 	if b.batch == nil {
 		return dbm.ErrBatchClosed
+	}
+	if err := dbutil.ValidateKv(key, value); err != nil {
+		return err
 	}
 	b.batch.Put(key, value)
 	return nil

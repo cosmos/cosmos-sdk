@@ -347,7 +347,7 @@ func (tx *dbTxn) Discard() {
 		return
 	}
 	if !tx.mgr.cpCache.decrement(tx.version) {
-		panic(fmt.Errorf("traensaction has no corresponding checkpoint cache entry: %v", tx.version))
+		panic(fmt.Errorf("transaction has no corresponding checkpoint cache entry: %v", tx.version))
 	}
 }
 

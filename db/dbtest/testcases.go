@@ -261,12 +261,10 @@ func DoTestVersioning(t *testing.T, load Loader) {
 	require.False(t, has)
 	view.Discard()
 
-	// Fail to read a nonexistent version
 	view, err = db.ReaderAt(versions.Last() + 1)
-	require.Equal(t, dbm.ErrVersionDoesNotExist, err)
+	require.Equal(t, dbm.ErrVersionDoesNotExist, err, "should fail to read a nonexistent version")
 
-	// Fail to read a deleted version
-	require.NoError(t, db.DeleteVersion(v2))
+	require.NoError(t, db.DeleteVersion(v2), "should delete version v2")
 	view, err = db.ReaderAt(v2)
 	require.Equal(t, dbm.ErrVersionDoesNotExist, err)
 

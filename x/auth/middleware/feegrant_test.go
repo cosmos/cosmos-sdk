@@ -24,18 +24,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
-func (suite *MWTestSuite) TestDeductFeesNoDelegation() {
-	ctx := suite.SetupTest(false) // setup
-	app := suite.app
+func (s *MWTestSuite) TestDeductFeesNoDelegation() {
+	ctx := s.SetupTest(false) // setup
+	app := s.app
 
 	protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(app.InterfaceRegistry()), tx.DefaultSignModes)
 
 	txHandler := middleware.ComposeMiddlewares(
 		noopTxHandler{},
 		middleware.DeductFeeMiddleware(
-			suite.app.AccountKeeper,
-			suite.app.BankKeeper,
-			suite.app.FeeGrantKeeper,
+			s.app.AccountKeeper,
+			s.app.BankKeeper,
+			s.app.FeeGrantKeeper,
 		),
 	)
 
@@ -47,24 +47,24 @@ func (suite *MWTestSuite) TestDeductFeesNoDelegation() {
 	priv5, _, addr5 := testdata.KeyTestPubAddr()
 
 	// Set addr1 with insufficient funds
-	err := testutil.FundAccount(suite.app.BankKeeper, ctx, addr1, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(10))})
-	suite.Require().NoError(err)
+	err := testutil.FundAccount(s.app.BankKeeper, ctx, addr1, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(10))})
+	s.Require().NoError(err)
 
 	// Set addr2 with more funds
-	err = testutil.FundAccount(suite.app.BankKeeper, ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99999))})
-	suite.Require().NoError(err)
+	err = testutil.FundAccount(s.app.BankKeeper, ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99999))})
+	s.Require().NoError(err)
 
 	// grant fee allowance from `addr2` to `addr3` (plenty to pay)
 	err = app.FeeGrantKeeper.GrantAllowance(ctx, addr2, addr3, &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
 	})
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
 	// grant low fee allowance (20atom), to check the tx requesting more than allowed.
 	err = app.FeeGrantKeeper.GrantAllowance(ctx, addr2, addr4, &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 20)),
 	})
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
 	cases := map[string]struct {
 		signerKey  cryptotypes.PrivKey
@@ -135,7 +135,7 @@ func (suite *MWTestSuite) TestDeductFeesNoDelegation() {
 
 	for name, stc := range cases {
 		tc := stc // to make scopelint happy
-		suite.T().Run(name, func(t *testing.T) {
+		s.T().Run(name, func(t *testing.T) {
 			fee := sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee))
 			msgs := []sdk.Msg{testdata.NewTestMsg(tc.signer)}
 
@@ -146,22 +146,22 @@ func (suite *MWTestSuite) TestDeductFeesNoDelegation() {
 			}
 
 			tx, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
 			// tests only feegrant middleware
 			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, abci.RequestDeliverTx{})
 			if tc.valid {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 
 			// tests while stack
-			_, err = suite.txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, abci.RequestDeliverTx{})
+			_, err = s.txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, abci.RequestDeliverTx{})
 			if tc.valid {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}

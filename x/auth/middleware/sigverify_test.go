@@ -22,13 +22,13 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-func (suite *MWTestSuite) TestSetPubKey() {
-	ctx := suite.SetupTest(true) // setup
-	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
-	require := suite.Require()
+func (s *MWTestSuite) TestSetPubKey() {
+	ctx := s.SetupTest(true) // setup
+	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
+	require := s.Require()
 	txHandler := middleware.ComposeMiddlewares(
 		noopTxHandler{},
-		middleware.SetPubKeyMiddleware(suite.app.AccountKeeper),
+		middleware.SetPubKeyMiddleware(s.app.AccountKeeper),
 	)
 
 	// keys and addresses
@@ -42,9 +42,9 @@ func (suite *MWTestSuite) TestSetPubKey() {
 	msgs := make([]sdk.Msg, len(addrs))
 	// set accounts and create msg for each address
 	for i, addr := range addrs {
-		acc := suite.app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		acc := s.app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 		require.NoError(acc.SetAccountNumber(uint64(i)))
-		suite.app.AccountKeeper.SetAccount(ctx, acc)
+		s.app.AccountKeeper.SetAccount(ctx, acc)
 		msgs[i] = testdata.NewTestMsg(addr)
 	}
 	require.NoError(txBuilder.SetMsgs(msgs...))
@@ -52,7 +52,7 @@ func (suite *MWTestSuite) TestSetPubKey() {
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
-	testTx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	testTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 	require.NoError(err)
 
 	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), testTx, abci.RequestDeliverTx{})
@@ -60,14 +60,14 @@ func (suite *MWTestSuite) TestSetPubKey() {
 
 	// Require that all accounts have pubkey set after middleware runs
 	for i, addr := range addrs {
-		pk, err := suite.app.AccountKeeper.GetPubKey(ctx, addr)
+		pk, err := s.app.AccountKeeper.GetPubKey(ctx, addr)
 		require.NoError(err, "Error on retrieving pubkey from account")
 		require.True(pubs[i].Equals(pk),
 			"Wrong Pubkey retrieved from AccountKeeper, idx=%d\nexpected=%s\n     got=%s", i, pubs[i], pk)
 	}
 }
 
-func (suite *MWTestSuite) TestConsumeSignatureVerificationGas() {
+func (s *MWTestSuite) TestConsumeSignatureVerificationGas() {
 	params := types.DefaultParams()
 	msg := []byte{1, 2, 3, 4}
 	cdc := simapp.MakeTestEncodingConfig().Amino
@@ -81,9 +81,9 @@ func (suite *MWTestSuite) TestConsumeSignatureVerificationGas() {
 	for i := 0; i < len(pkSet1); i++ {
 		stdSig := legacytx.StdSignature{PubKey: pkSet1[i], Signature: sigSet1[i]}
 		sigV2, err := legacytx.StdSignatureToSignatureV2(cdc, stdSig)
-		suite.Require().NoError(err)
+		s.Require().NoError(err)
 		err = multisig.AddSignatureV2(multisignature1, sigV2, pkSet1)
-		suite.Require().NoError(err)
+		s.Require().NoError(err)
 	}
 
 	type args struct {
@@ -113,25 +113,25 @@ func (suite *MWTestSuite) TestConsumeSignatureVerificationGas() {
 		err := middleware.DefaultSigVerificationGasConsumer(tt.args.meter, sigV2, tt.args.params)
 
 		if tt.shouldErr {
-			suite.Require().NotNil(err)
+			s.Require().NotNil(err)
 		} else {
-			suite.Require().Nil(err)
-			suite.Require().Equal(tt.gasConsumed, tt.args.meter.GasConsumed(), fmt.Sprintf("%d != %d", tt.gasConsumed, tt.args.meter.GasConsumed()))
+			s.Require().Nil(err)
+			s.Require().Equal(tt.gasConsumed, tt.args.meter.GasConsumed(), fmt.Sprintf("%d != %d", tt.gasConsumed, tt.args.meter.GasConsumed()))
 		}
 	}
 }
 
-func (suite *MWTestSuite) TestSigVerification() {
-	ctx := suite.SetupTest(true) // setup
+func (s *MWTestSuite) TestSigVerification() {
+	ctx := s.SetupTest(true) // setup
 
 	// make block height non-zero to ensure account numbers part of signBytes
 	ctx = ctx.WithBlockHeight(1)
 	txHandler := middleware.ComposeMiddlewares(
 		noopTxHandler{},
-		middleware.SetPubKeyMiddleware(suite.app.AccountKeeper),
+		middleware.SetPubKeyMiddleware(s.app.AccountKeeper),
 		middleware.SigVerificationMiddleware(
-			suite.app.AccountKeeper,
-			suite.clientCtx.TxConfig.SignModeHandler(),
+			s.app.AccountKeeper,
+			s.clientCtx.TxConfig.SignModeHandler(),
 		),
 	)
 
@@ -145,9 +145,9 @@ func (suite *MWTestSuite) TestSigVerification() {
 	msgs := make([]sdk.Msg, len(addrs))
 	// set accounts and create msg for each address
 	for i, addr := range addrs {
-		acc := suite.app.AccountKeeper.NewAccountWithAddress(ctx, addr)
-		suite.Require().NoError(acc.SetAccountNumber(uint64(i)))
-		suite.app.AccountKeeper.SetAccount(ctx, acc)
+		acc := s.app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		s.Require().NoError(acc.SetAccountNumber(uint64(i)))
+		s.app.AccountKeeper.SetAccount(ctx, acc)
 		msgs[i] = testdata.NewTestMsg(addr)
 	}
 
@@ -173,14 +173,14 @@ func (suite *MWTestSuite) TestSigVerification() {
 	}
 	for i, tc := range testCases {
 		ctx = ctx.WithIsReCheckTx(tc.recheck)
-		txBuilder := suite.clientCtx.TxConfig.NewTxBuilder() // Create new txBuilder for each test
+		txBuilder := s.clientCtx.TxConfig.NewTxBuilder() // Create new txBuilder for each test
 
-		suite.Require().NoError(txBuilder.SetMsgs(msgs...))
+		s.Require().NoError(txBuilder.SetMsgs(msgs...))
 		txBuilder.SetFeeAmount(feeAmount)
 		txBuilder.SetGasLimit(gasLimit)
 
-		testTx, _, err := suite.createTestTx(txBuilder, tc.privs, tc.accNums, tc.accSeqs, ctx.ChainID())
-		suite.Require().NoError(err)
+		testTx, _, err := s.createTestTx(txBuilder, tc.privs, tc.accNums, tc.accSeqs, ctx.ChainID())
+		s.Require().NoError(err)
 
 		if tc.recheck {
 			_, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), testTx, abci.RequestCheckTx{Type: abci.CheckTxType_Recheck})
@@ -188,9 +188,9 @@ func (suite *MWTestSuite) TestSigVerification() {
 			_, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), testTx, abci.RequestCheckTx{})
 		}
 		if tc.shouldErr {
-			suite.Require().NotNil(err, "TestCase %d: %s did not error as expected", i, tc.name)
+			s.Require().NotNil(err, "TestCase %d: %s did not error as expected", i, tc.name)
 		} else {
-			suite.Require().Nil(err, "TestCase %d: %s errored unexpectedly. Err: %v", i, tc.name, err)
+			s.Require().Nil(err, "TestCase %d: %s errored unexpectedly. Err: %v", i, tc.name, err)
 		}
 	}
 }
@@ -201,8 +201,8 @@ func (suite *MWTestSuite) TestSigVerification() {
 // this, since it'll be handled by the test matrix.
 // In the meantime, we want to make double-sure amino compatibility works.
 // ref: https://github.com/cosmos/cosmos-sdk/issues/7229
-func (suite *MWTestSuite) TestSigVerification_ExplicitAmino() {
-	ctx := suite.SetupTest(true)
+func (s *MWTestSuite) TestSigVerification_ExplicitAmino() {
+	ctx := s.SetupTest(true)
 	ctx = ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
@@ -213,7 +213,7 @@ func (suite *MWTestSuite) TestSigVerification_ExplicitAmino() {
 	// We're using TestMsg amino encoding in some tests, so register it here.
 	txConfig := legacytx.StdTxConfig{Cdc: aminoCdc}
 
-	suite.clientCtx = client.Context{}.
+	s.clientCtx = client.Context{}.
 		WithTxConfig(txConfig)
 
 	// make block height non-zero to ensure account numbers part of signBytes
@@ -229,9 +229,9 @@ func (suite *MWTestSuite) TestSigVerification_ExplicitAmino() {
 	msgs := make([]sdk.Msg, len(addrs))
 	// set accounts and create msg for each address
 	for i, addr := range addrs {
-		acc := suite.app.AccountKeeper.NewAccountWithAddress(ctx, addr)
-		suite.Require().NoError(acc.SetAccountNumber(uint64(i)))
-		suite.app.AccountKeeper.SetAccount(ctx, acc)
+		acc := s.app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		s.Require().NoError(acc.SetAccountNumber(uint64(i)))
+		s.app.AccountKeeper.SetAccount(ctx, acc)
 		msgs[i] = testdata.NewTestMsg(addr)
 	}
 
@@ -240,10 +240,10 @@ func (suite *MWTestSuite) TestSigVerification_ExplicitAmino() {
 
 	txHandler := middleware.ComposeMiddlewares(
 		noopTxHandler{},
-		middleware.SetPubKeyMiddleware(suite.app.AccountKeeper),
+		middleware.SetPubKeyMiddleware(s.app.AccountKeeper),
 		middleware.SigVerificationMiddleware(
-			suite.app.AccountKeeper,
-			suite.clientCtx.TxConfig.SignModeHandler(),
+			s.app.AccountKeeper,
+			s.clientCtx.TxConfig.SignModeHandler(),
 		),
 	)
 
@@ -268,14 +268,14 @@ func (suite *MWTestSuite) TestSigVerification_ExplicitAmino() {
 
 	for i, tc := range testCases {
 		ctx = ctx.WithIsReCheckTx(tc.recheck)
-		txBuilder := suite.clientCtx.TxConfig.NewTxBuilder() // Create new txBuilder for each test
+		txBuilder := s.clientCtx.TxConfig.NewTxBuilder() // Create new txBuilder for each test
 
-		suite.Require().NoError(txBuilder.SetMsgs(msgs...))
+		s.Require().NoError(txBuilder.SetMsgs(msgs...))
 		txBuilder.SetFeeAmount(feeAmount)
 		txBuilder.SetGasLimit(gasLimit)
 
-		testTx, _, err := suite.createTestTx(txBuilder, tc.privs, tc.accNums, tc.accSeqs, ctx.ChainID())
-		suite.Require().NoError(err)
+		testTx, _, err := s.createTestTx(txBuilder, tc.privs, tc.accNums, tc.accSeqs, ctx.ChainID())
+		s.Require().NoError(err)
 
 		if tc.recheck {
 			_, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), testTx, abci.RequestCheckTx{Type: abci.CheckTxType_Recheck})
@@ -283,14 +283,14 @@ func (suite *MWTestSuite) TestSigVerification_ExplicitAmino() {
 			_, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), testTx, abci.RequestCheckTx{})
 		}
 		if tc.shouldErr {
-			suite.Require().NotNil(err, "TestCase %d: %s did not error as expected", i, tc.name)
+			s.Require().NotNil(err, "TestCase %d: %s did not error as expected", i, tc.name)
 		} else {
-			suite.Require().Nil(err, "TestCase %d: %s errored unexpectedly. Err: %v", i, tc.name, err)
+			s.Require().Nil(err, "TestCase %d: %s errored unexpectedly. Err: %v", i, tc.name, err)
 		}
 	}
 }
 
-func (suite *MWTestSuite) TestSigIntegration() {
+func (s *MWTestSuite) TestSigIntegration() {
 	// generate private keys
 	privs := []cryptotypes.PrivKey{
 		secp256k1.GenPrivKey(),
@@ -300,23 +300,23 @@ func (suite *MWTestSuite) TestSigIntegration() {
 
 	params := types.DefaultParams()
 	initialSigCost := params.SigVerifyCostSecp256k1
-	initialCost, err := suite.runSigMiddlewares(params, false, privs...)
-	suite.Require().Nil(err)
+	initialCost, err := s.runSigMiddlewares(params, false, privs...)
+	s.Require().Nil(err)
 
 	params.SigVerifyCostSecp256k1 *= 2
-	doubleCost, err := suite.runSigMiddlewares(params, false, privs...)
-	suite.Require().Nil(err)
+	doubleCost, err := s.runSigMiddlewares(params, false, privs...)
+	s.Require().Nil(err)
 
-	suite.Require().Equal(initialSigCost*uint64(len(privs)), doubleCost-initialCost)
+	s.Require().Equal(initialSigCost*uint64(len(privs)), doubleCost-initialCost)
 }
 
-func (suite *MWTestSuite) runSigMiddlewares(params types.Params, _ bool, privs ...cryptotypes.PrivKey) (sdk.Gas, error) {
-	ctx := suite.SetupTest(true) // setup
-	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
+func (s *MWTestSuite) runSigMiddlewares(params types.Params, _ bool, privs ...cryptotypes.PrivKey) (sdk.Gas, error) {
+	ctx := s.SetupTest(true) // setup
+	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	// Make block-height non-zero to include accNum in SignBytes
 	ctx = ctx.WithBlockHeight(1)
-	suite.app.AccountKeeper.SetParams(ctx, params)
+	s.app.AccountKeeper.SetParams(ctx, params)
 
 	msgs := make([]sdk.Msg, len(privs))
 	accNums := make([]uint64, len(privs))
@@ -324,30 +324,30 @@ func (suite *MWTestSuite) runSigMiddlewares(params types.Params, _ bool, privs .
 	// set accounts and create msg for each address
 	for i, priv := range privs {
 		addr := sdk.AccAddress(priv.PubKey().Address())
-		acc := suite.app.AccountKeeper.NewAccountWithAddress(ctx, addr)
-		suite.Require().NoError(acc.SetAccountNumber(uint64(i)))
-		suite.app.AccountKeeper.SetAccount(ctx, acc)
+		acc := s.app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		s.Require().NoError(acc.SetAccountNumber(uint64(i)))
+		s.app.AccountKeeper.SetAccount(ctx, acc)
 		msgs[i] = testdata.NewTestMsg(addr)
 		accNums[i] = uint64(i)
 		accSeqs[i] = uint64(0)
 	}
-	suite.Require().NoError(txBuilder.SetMsgs(msgs...))
+	s.Require().NoError(txBuilder.SetMsgs(msgs...))
 
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
 
-	testTx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
-	suite.Require().NoError(err)
+	testTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	s.Require().NoError(err)
 
 	txHandler := middleware.ComposeMiddlewares(
 		noopTxHandler{},
-		middleware.SetPubKeyMiddleware(suite.app.AccountKeeper),
-		middleware.SigGasConsumeMiddleware(suite.app.AccountKeeper, middleware.DefaultSigVerificationGasConsumer),
+		middleware.SetPubKeyMiddleware(s.app.AccountKeeper),
+		middleware.SigGasConsumeMiddleware(s.app.AccountKeeper, middleware.DefaultSigVerificationGasConsumer),
 		middleware.SigVerificationMiddleware(
-			suite.app.AccountKeeper,
-			suite.clientCtx.TxConfig.SignModeHandler(),
+			s.app.AccountKeeper,
+			s.clientCtx.TxConfig.SignModeHandler(),
 		),
 	)
 
@@ -359,31 +359,31 @@ func (suite *MWTestSuite) runSigMiddlewares(params types.Params, _ bool, privs .
 	return after - before, err
 }
 
-func (suite *MWTestSuite) TestIncrementSequenceMiddleware() {
-	ctx := suite.SetupTest(true) // setup
-	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
+func (s *MWTestSuite) TestIncrementSequenceMiddleware() {
+	ctx := s.SetupTest(true) // setup
+	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	priv, _, addr := testdata.KeyTestPubAddr()
-	acc := suite.app.AccountKeeper.NewAccountWithAddress(ctx, addr)
-	suite.Require().NoError(acc.SetAccountNumber(uint64(50)))
-	suite.app.AccountKeeper.SetAccount(ctx, acc)
+	acc := s.app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+	s.Require().NoError(acc.SetAccountNumber(uint64(50)))
+	s.app.AccountKeeper.SetAccount(ctx, acc)
 
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
-	suite.Require().NoError(txBuilder.SetMsgs(msgs...))
+	s.Require().NoError(txBuilder.SetMsgs(msgs...))
 	privs := []cryptotypes.PrivKey{priv}
-	accNums := []uint64{suite.app.AccountKeeper.GetAccount(ctx, addr).GetAccountNumber()}
-	accSeqs := []uint64{suite.app.AccountKeeper.GetAccount(ctx, addr).GetSequence()}
+	accNums := []uint64{s.app.AccountKeeper.GetAccount(ctx, addr).GetAccountNumber()}
+	accSeqs := []uint64{s.app.AccountKeeper.GetAccount(ctx, addr).GetSequence()}
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
 
-	testTx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
-	suite.Require().NoError(err)
+	testTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	s.Require().NoError(err)
 
 	txHandler := middleware.ComposeMiddlewares(
 		noopTxHandler{},
-		middleware.IncrementSequenceMiddleware(suite.app.AccountKeeper),
+		middleware.IncrementSequenceMiddleware(s.app.AccountKeeper),
 	)
 
 	testCases := []struct {
@@ -406,7 +406,7 @@ func (suite *MWTestSuite) TestIncrementSequenceMiddleware() {
 			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(tc.ctx), testTx, abci.RequestDeliverTx{})
 		}
 
-		suite.Require().NoError(err, "unexpected error; tc #%d, %v", i, tc)
-		suite.Require().Equal(tc.expectedSeq, suite.app.AccountKeeper.GetAccount(ctx, addr).GetSequence())
+		s.Require().NoError(err, "unexpected error; tc #%d, %v", i, tc)
+		s.Require().Equal(tc.expectedSeq, s.app.AccountKeeper.GetAccount(ctx, addr).GetSequence())
 	}
 }

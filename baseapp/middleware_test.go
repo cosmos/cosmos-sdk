@@ -1170,7 +1170,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 	}
 }
 
-func TestBaseAppAnteHandler(t *testing.T) {
+func TestBaseAppMiddleware(t *testing.T) {
 	anteKey := []byte("ante-key")
 	deliverKey := []byte("deliver-key")
 	cdc := codec.NewLegacyAmino()

@@ -87,9 +87,9 @@ func (s *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 	return ctx
 }
 
-// CreateTestAccounts creates `numAccs` accounts, and return all relevant
+// createTestAccounts creates `numAccs` accounts, and return all relevant
 // information about them including their private keys.
-func (s *MWTestSuite) CreateTestAccounts(ctx sdk.Context, numAccs int) []testAccount {
+func (s *MWTestSuite) createTestAccounts(ctx sdk.Context, numAccs int) []testAccount {
 	var accounts []testAccount
 
 	for i := 0; i < numAccs; i++ {
@@ -165,7 +165,7 @@ func (s *MWTestSuite) createTestTx(txBuilder client.TxBuilder, privs []cryptotyp
 	return txBuilder.GetTx(), txBytes, nil
 }
 
-func (s *MWTestSuite) RunTestCase(ctx sdk.Context, txBuilder client.TxBuilder, privs []cryptotypes.PrivKey, msgs []sdk.Msg, feeAmount sdk.Coins, gasLimit uint64, accNums, accSeqs []uint64, chainID string, tc TestCase) {
+func (s *MWTestSuite) runTestCase(ctx sdk.Context, txBuilder client.TxBuilder, privs []cryptotypes.PrivKey, msgs []sdk.Msg, feeAmount sdk.Coins, gasLimit uint64, accNums, accSeqs []uint64, chainID string, tc TestCase) {
 	s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 		s.Require().NoError(txBuilder.SetMsgs(msgs...))
 		txBuilder.SetFeeAmount(feeAmount)

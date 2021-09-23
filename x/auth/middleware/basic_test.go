@@ -13,9 +13,9 @@ import (
 	"github.com/tendermint/tendermint/abci/types"
 )
 
-func (suite *MWTestSuite) TestValidateBasic() {
-	ctx := suite.SetupTest(true) // setup
-	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
+func (s *MWTestSuite) TestValidateBasic() {
+	ctx := s.SetupTest(true) // setup
+	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.ValidateBasicMiddleware)
 
@@ -26,36 +26,36 @@ func (suite *MWTestSuite) TestValidateBasic() {
 	msg := testdata.NewTestMsg(addr1)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	suite.Require().NoError(txBuilder.SetMsgs(msg))
+	s.Require().NoError(txBuilder.SetMsgs(msg))
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{}, []uint64{}, []uint64{}
-	invalidTx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
-	suite.Require().NoError(err)
+	invalidTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	s.Require().NoError(err)
 
 	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), invalidTx, types.RequestDeliverTx{})
-	suite.Require().NotNil(err, "Did not error on invalid tx")
+	s.Require().NotNil(err, "Did not error on invalid tx")
 
 	privs, accNums, accSeqs = []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	validTx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
-	suite.Require().NoError(err)
+	validTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	s.Require().NoError(err)
 
 	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), validTx, types.RequestDeliverTx{})
-	suite.Require().Nil(err, "ValidateBasicMiddleware returned error on valid tx. err: %v", err)
+	s.Require().Nil(err, "ValidateBasicMiddleware returned error on valid tx. err: %v", err)
 
 	// test middleware skips on recheck
 	ctx = ctx.WithIsReCheckTx(true)
 
 	// middleware should skip processing invalidTx on recheck and thus return nil-error
 	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), invalidTx, types.RequestDeliverTx{})
-	suite.Require().Nil(err, "ValidateBasicMiddleware ran on ReCheck")
+	s.Require().Nil(err, "ValidateBasicMiddleware ran on ReCheck")
 }
 
-func (suite *MWTestSuite) TestValidateMemo() {
-	ctx := suite.SetupTest(true) // setup
-	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
-	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.ValidateMemoMiddleware(suite.app.AccountKeeper))
+func (s *MWTestSuite) TestValidateMemo() {
+	ctx := s.SetupTest(true) // setup
+	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
+	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.ValidateMemoMiddleware(s.app.AccountKeeper))
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -64,34 +64,34 @@ func (suite *MWTestSuite) TestValidateMemo() {
 	msg := testdata.NewTestMsg(addr1)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	suite.Require().NoError(txBuilder.SetMsgs(msg))
+	s.Require().NoError(txBuilder.SetMsgs(msg))
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	txBuilder.SetMemo(strings.Repeat("01234567890", 500))
-	invalidTx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
-	suite.Require().NoError(err)
+	invalidTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	s.Require().NoError(err)
 
 	// require that long memos get rejected
 	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), invalidTx, types.RequestDeliverTx{})
 
-	suite.Require().NotNil(err, "Did not error on tx with high memo")
+	s.Require().NotNil(err, "Did not error on tx with high memo")
 
 	txBuilder.SetMemo(strings.Repeat("01234567890", 10))
-	validTx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
-	suite.Require().NoError(err)
+	validTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	s.Require().NoError(err)
 
 	// require small memos pass ValidateMemo middleware
 	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), validTx, types.RequestDeliverTx{})
-	suite.Require().Nil(err, "ValidateBasicMiddleware returned error on valid tx. err: %v", err)
+	s.Require().Nil(err, "ValidateBasicMiddleware returned error on valid tx. err: %v", err)
 }
 
-func (suite *MWTestSuite) TestConsumeGasForTxSize() {
-	ctx := suite.SetupTest(true) // setup
-	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
+func (s *MWTestSuite) TestConsumeGasForTxSize() {
+	ctx := s.SetupTest(true) // setup
+	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
-	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.ConsumeTxSizeGasMiddleware(suite.app.AccountKeeper))
+	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.ConsumeTxSizeGasMiddleware(s.app.AccountKeeper))
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -110,21 +110,21 @@ func (suite *MWTestSuite) TestConsumeGasForTxSize() {
 	}
 
 	for _, tc := range testCases {
-		suite.Run(tc.name, func() {
-			txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
-			suite.Require().NoError(txBuilder.SetMsgs(msg))
+		s.Run(tc.name, func() {
+			txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
+			s.Require().NoError(txBuilder.SetMsgs(msg))
 			txBuilder.SetFeeAmount(feeAmount)
 			txBuilder.SetGasLimit(gasLimit)
 			txBuilder.SetMemo(strings.Repeat("01234567890", 10))
 
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-			testTx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
-			suite.Require().NoError(err)
+			testTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+			s.Require().NoError(err)
 
-			txBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(testTx)
-			suite.Require().Nil(err, "Cannot marshal tx: %v", err)
+			txBytes, err := s.clientCtx.TxConfig.TxJSONEncoder()(testTx)
+			s.Require().Nil(err, "Cannot marshal tx: %v", err)
 
-			params := suite.app.AccountKeeper.GetParams(ctx)
+			params := s.app.AccountKeeper.GetParams(ctx)
 			expectedGas := sdk.Gas(len(txBytes)) * params.TxSizeCostPerByte
 
 			// Set ctx with TxBytes manually
@@ -132,31 +132,31 @@ func (suite *MWTestSuite) TestConsumeGasForTxSize() {
 
 			// track how much gas is necessary to retrieve parameters
 			beforeGas := ctx.GasMeter().GasConsumed()
-			suite.app.AccountKeeper.GetParams(ctx)
+			s.app.AccountKeeper.GetParams(ctx)
 			afterGas := ctx.GasMeter().GasConsumed()
 			expectedGas += afterGas - beforeGas
 
 			beforeGas = ctx.GasMeter().GasConsumed()
 			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), testTx, types.RequestDeliverTx{Tx: txBytes})
 
-			suite.Require().Nil(err, "ConsumeTxSizeGasMiddleware returned error: %v", err)
+			s.Require().Nil(err, "ConsumeTxSizeGasMiddleware returned error: %v", err)
 
 			// require that middleware consumes expected amount of gas
 			consumedGas := ctx.GasMeter().GasConsumed() - beforeGas
-			suite.Require().Equal(expectedGas, consumedGas, "Middleware did not consume the correct amount of gas")
+			s.Require().Equal(expectedGas, consumedGas, "Middleware did not consume the correct amount of gas")
 
 			// simulation must not underestimate gas of this middleware even with nil signatures
-			txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(testTx)
-			suite.Require().NoError(err)
-			suite.Require().NoError(txBuilder.SetSignatures(tc.sigV2))
+			txBuilder, err := s.clientCtx.TxConfig.WrapTxBuilder(testTx)
+			s.Require().NoError(err)
+			s.Require().NoError(txBuilder.SetSignatures(tc.sigV2))
 			testTx = txBuilder.GetTx()
 
-			simTxBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(testTx)
-			suite.Require().Nil(err, "Cannot marshal tx: %v", err)
+			simTxBytes, err := s.clientCtx.TxConfig.TxJSONEncoder()(testTx)
+			s.Require().Nil(err, "Cannot marshal tx: %v", err)
 			// require that simulated tx is smaller than tx with signatures
-			suite.Require().True(len(simTxBytes) < len(txBytes), "simulated tx still has signatures")
+			s.Require().True(len(simTxBytes) < len(txBytes), "simulated tx still has signatures")
 
-			// Set suite.ctx with smaller simulated TxBytes manually
+			// Set s.ctx with smaller simulated TxBytes manually
 			ctx = ctx.WithTxBytes(simTxBytes)
 
 			beforeSimGas := ctx.GasMeter().GasConsumed()
@@ -166,14 +166,14 @@ func (suite *MWTestSuite) TestConsumeGasForTxSize() {
 			consumedSimGas := ctx.GasMeter().GasConsumed() - beforeSimGas
 
 			// require that txhandler passes and does not underestimate middleware cost
-			suite.Require().Nil(err, "ConsumeTxSizeGasMiddleware returned error: %v", err)
-			suite.Require().True(consumedSimGas >= expectedGas, "Simulate mode underestimates gas on Middleware. Simulated cost: %d, expected cost: %d", consumedSimGas, expectedGas)
+			s.Require().Nil(err, "ConsumeTxSizeGasMiddleware returned error: %v", err)
+			s.Require().True(consumedSimGas >= expectedGas, "Simulate mode underestimates gas on Middleware. Simulated cost: %d, expected cost: %d", consumedSimGas, expectedGas)
 		})
 	}
 }
 
-func (suite *MWTestSuite) TestTxHeightTimeoutMiddleware() {
-	ctx := suite.SetupTest(true)
+func (s *MWTestSuite) TestTxHeightTimeoutMiddleware() {
+	ctx := s.SetupTest(true)
 
 	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.TxTimeoutHeightMiddleware)
 
@@ -200,10 +200,10 @@ func (suite *MWTestSuite) TestTxHeightTimeoutMiddleware() {
 	for _, tc := range testCases {
 		tc := tc
 
-		suite.Run(tc.name, func() {
-			txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
+		s.Run(tc.name, func() {
+			txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
-			suite.Require().NoError(txBuilder.SetMsgs(msg))
+			s.Require().NoError(txBuilder.SetMsgs(msg))
 
 			txBuilder.SetFeeAmount(feeAmount)
 			txBuilder.SetGasLimit(gasLimit)
@@ -211,12 +211,12 @@ func (suite *MWTestSuite) TestTxHeightTimeoutMiddleware() {
 			txBuilder.SetTimeoutHeight(tc.timeout)
 
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-			testTx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
-			suite.Require().NoError(err)
+			testTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+			s.Require().NoError(err)
 
 			ctx := ctx.WithBlockHeight(tc.height)
 			_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), testTx, tx.RequestSimulateTx{})
-			suite.Require().Equal(tc.expectErr, err != nil, err)
+			s.Require().Equal(tc.expectErr, err != nil, err)
 		})
 	}
 }

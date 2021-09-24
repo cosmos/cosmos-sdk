@@ -667,7 +667,7 @@ func (k Querier) QueuedMsgDelegates(c context.Context, req *types.QueryQueuedMsg
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	epochStore := prefix.NewStore(store, []byte(epochkeeper.EpochActionQueuePrefix))
+	epochStore := prefix.NewStore(store, []byte(epochkeeper.EpochMsgQueuePrefix))
 
 	pageRes, err := query.FilteredPaginate(epochStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var md sdk.Msg
@@ -705,7 +705,7 @@ func (k Querier) QueuedMsgDelegate(c context.Context, req *types.QueryQueuedMsgD
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	epochStore := prefix.NewStore(store, []byte(epochkeeper.EpochActionQueuePrefix))
+	epochStore := prefix.NewStore(store, []byte(epochkeeper.EpochMsgQueuePrefix))
 	pageRes, err := query.FilteredPaginate(epochStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var md sdk.Msg
 		if err := k.cdc.UnmarshalInterface(value, &md); err != nil {
@@ -742,7 +742,7 @@ func (k Querier) QueuedMsgBeginRedelegates(c context.Context, req *types.QueryQu
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	epochStore := prefix.NewStore(store, []byte(epochkeeper.EpochActionQueuePrefix))
+	epochStore := prefix.NewStore(store, []byte(epochkeeper.EpochMsgQueuePrefix))
 
 	pageRes, err := query.FilteredPaginate(epochStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var md sdk.Msg
@@ -782,7 +782,7 @@ func (k Querier) QueuedMsgBeginRedelegate(c context.Context, req *types.QueryQue
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	epochStore := prefix.NewStore(store, []byte(epochkeeper.EpochActionQueuePrefix))
+	epochStore := prefix.NewStore(store, []byte(epochkeeper.EpochMsgQueuePrefix))
 
 	pageRes, err := query.FilteredPaginate(epochStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var md sdk.Msg
@@ -820,7 +820,7 @@ func (k Querier) QueuedMsgUndelegates(c context.Context, req *types.QueryQueuedM
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	epochStore := prefix.NewStore(store, []byte(epochkeeper.EpochActionQueuePrefix))
+	epochStore := prefix.NewStore(store, []byte(epochkeeper.EpochMsgQueuePrefix))
 
 	pageRes, err := query.FilteredPaginate(epochStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var mbr sdk.Msg
@@ -860,7 +860,7 @@ func (k Querier) QueuedMsgUndelegate(c context.Context, req *types.QueryQueuedMs
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	epochStore := prefix.NewStore(store, []byte(epochkeeper.EpochActionQueuePrefix))
+	epochStore := prefix.NewStore(store, []byte(epochkeeper.EpochMsgQueuePrefix))
 
 	pageRes, err := query.FilteredPaginate(epochStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var md sdk.Msg

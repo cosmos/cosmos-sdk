@@ -58,7 +58,7 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvB.Value, &redB)
 
 			return fmt.Sprintf("%v\n%v", redA, redB)
-		case bytes.Equal(kvA.Key[:1], epochkeeper.EpochActionQueuePrefix), bytes.Equal(kvA.Key[:1], epochkeeper.EpochNumberID):
+		case bytes.Equal(kvA.Key[:1], epochkeeper.EpochMsgQueuePrefix), bytes.Equal(kvA.Key[:1], epochkeeper.EpochNumberID):
 			var redA, redB sdk.Msg
 
 			cdc.UnmarshalInterface(kvA.Value, &redA)

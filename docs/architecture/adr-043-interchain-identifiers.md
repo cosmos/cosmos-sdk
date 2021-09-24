@@ -69,7 +69,7 @@ An example of the extensibility of the DID syntax: a derivative demom of fungibl
     -  `DID:COSMOS:CHAIN:` for a Cosmos chain namespace
     -  `DID:COSMOS:CHAIN:NAMESPACE:` for an asset namespace in a Cosmos application chain
     -  `DID:COSMOS:CHAIN:NAMESPACE:{unique identifier string}` for the application's chosen method for deriving a unique identifier string
-2. IID implementations in the Cosmos SDK MUST conform to the Interchain Identifier (IID) specification RFC-09.
+2. IID implementations in the Cosmos SDK MUST conform to the Interchain Identifier (IID) specification [RFC-09](https://github.com/interNFT/nft-rfc/blob/main/nft-rfc-009.md).
 3. All Cosmos chains SHOULD provide a standard IID Interface for registering asset IIDs, creating and updating IID Document properties, and for resolving the IID to return an IID Document.
 4. Cosmos assets MAY be identified using IIDs and if implementers choose this format, they SHOULD conform to the IID Method.
 5. Application developers SHOULD define their own application-specific Unique Identifier String formats for the asset namespaces in their chain context.

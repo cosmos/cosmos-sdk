@@ -114,6 +114,31 @@ func (suite *HandlerTestSuite) TestMsgCreatePeriodicVestingAccount() {
 			msg:       types.NewMsgCreatePeriodicVestingAccount(addr1, addr3, 0, period),
 			expectErr: false,
 		},
+		{
+			name: "bad from addr",
+			msg: &types.MsgCreatePeriodicVestingAccount{
+				FromAddress:    "foo",
+				ToAddress:      addr3.String(),
+				StartTime:      0,
+				VestingPeriods: period,
+			},
+			expectErr: true,
+		},
+		{
+			name: "bad to addr",
+			msg: &types.MsgCreatePeriodicVestingAccount{
+				FromAddress:    addr1.String(),
+				ToAddress:      "foo",
+				StartTime:      0,
+				VestingPeriods: period,
+			},
+			expectErr: true,
+		},
+		{
+			name:      "account exists",
+			msg:       types.NewMsgCreatePeriodicVestingAccount(addr1, addr1, 0, period),
+			expectErr: true,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -135,6 +160,7 @@ func (suite *HandlerTestSuite) TestMsgCreatePeriodicVestingAccount() {
 
 				accI := suite.app.AccountKeeper.GetAccount(ctx, toAddr)
 				suite.Require().NotNil(accI)
+				suite.Require().IsType(&types.PeriodicVestingAccount{}, accI)
 				balanceSource := suite.app.BankKeeper.GetBalance(ctx, fromAddr, "test")
 				suite.Require().Equal(balanceSource, sdk.NewInt64Coin("test", 0))
 				balanceDest := suite.app.BankKeeper.GetBalance(ctx, toAddr, "test")

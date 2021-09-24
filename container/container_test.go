@@ -35,9 +35,13 @@ type Handler struct {
 	Handle func()
 }
 
+func (Handler) IsOnePerScopeType() {}
+
 type Command struct {
 	Run func()
 }
+
+func (Command) IsAutoGroupType() {}
 
 func ProvideKVStoreKey(scope container.Scope) KVStoreKey {
 	return KVStoreKey{name: scope.Name()}
@@ -101,8 +105,6 @@ func TestScenario(t *testing.T) {
 					},
 				}, b)
 			},
-			container.AutoGroupTypes(reflect.TypeOf(Command{})),
-			container.OnePerScopeTypes(reflect.TypeOf(Handler{})),
 			container.Provide(
 				ProvideKVStoreKey,
 				ProvideModuleKey,
@@ -295,45 +297,37 @@ func TestScoped(t *testing.T) {
 	)
 }
 
-var intType = reflect.TypeOf(0)
+type OnePerScopeInt int
+
+func (OnePerScopeInt) IsOnePerScopeType() {}
 
 func TestOnePerScope(t *testing.T) {
 	require.Error(t,
 		container.Run(
-			func() {},
-			container.OnePerScopeTypes(intType),
-			container.AutoGroupTypes(intType),
-		),
-	)
-
-	require.Error(t,
-		container.Run(
-			func(int) {},
-			container.OnePerScopeTypes(intType),
+			func(OnePerScopeInt) {},
 		),
 		"bad input type",
 	)
 
 	require.NoError(t,
 		container.Run(
-			func(x map[string]int, y string) {
-				require.Equal(t, map[string]int{
+			func(x map[string]OnePerScopeInt, y string) {
+				require.Equal(t, map[string]OnePerScopeInt{
 					"a": 3,
 					"b": 4,
 				}, x)
 				require.Equal(t, "7", y)
 			},
-			container.OnePerScopeTypes(intType),
 			container.ProvideWithScope("a",
-				func() int { return 3 },
+				func() OnePerScopeInt { return 3 },
 			),
 			container.ProvideWithScope("b",
-				func() int { return 4 },
+				func() OnePerScopeInt { return 4 },
 			),
-			container.Provide(func(x map[string]int) string {
+			container.Provide(func(x map[string]OnePerScopeInt) string {
 				sum := 0
 				for _, v := range x {
-					sum += v
+					sum += int(v)
 				}
 				return fmt.Sprintf("%d", sum)
 			}),
@@ -342,11 +336,10 @@ func TestOnePerScope(t *testing.T) {
 
 	require.Error(t,
 		container.Run(
-			func(map[string]int) {},
-			container.OnePerScopeTypes(intType),
+			func(map[string]OnePerScopeInt) {},
 			container.ProvideWithScope("a",
-				func() int { return 0 },
-				func() int { return 0 },
+				func() OnePerScopeInt { return 0 },
+				func() OnePerScopeInt { return 0 },
 			),
 		),
 		"duplicate",
@@ -354,10 +347,9 @@ func TestOnePerScope(t *testing.T) {
 
 	require.Error(t,
 		container.Run(
-			func(map[string]int) {},
-			container.OnePerScopeTypes(intType),
+			func(map[string]OnePerScopeInt) {},
 			container.Provide(
-				func() int { return 0 },
+				func() OnePerScopeInt { return 0 },
 			),
 		),
 		"out of scope",
@@ -365,55 +357,35 @@ func TestOnePerScope(t *testing.T) {
 
 	require.Error(t,
 		container.Run(
-			func(map[string]int) {},
-			container.OnePerScopeTypes(intType),
+			func(map[string]OnePerScopeInt) {},
 			container.Provide(
-				func() map[string]int { return nil },
+				func() map[string]OnePerScopeInt { return nil },
 			),
 		),
 		"bad return type",
 	)
 }
 
+type AutoGroupInt int
+
+func (AutoGroupInt) IsAutoGroupType() {}
+
 func TestAutoGroup(t *testing.T) {
 	require.NoError(t,
 		container.Run(
-			func() {},
-			container.AutoGroupTypes(intType),
-		),
-	)
-
-	require.Error(t,
-		container.Run(
-			func() {},
-			container.AutoGroupTypes(reflect.SliceOf(intType)),
-		),
-	)
-
-	require.Error(t,
-		container.Run(
-			func() {},
-			container.AutoGroupTypes(intType),
-			container.OnePerScopeTypes(intType),
-		),
-	)
-
-	require.NoError(t,
-		container.Run(
-			func(xs []int, sum string) {
+			func(xs []AutoGroupInt, sum string) {
 				require.Len(t, xs, 2)
-				require.Contains(t, xs, 4)
-				require.Contains(t, xs, 9)
+				require.Contains(t, xs, AutoGroupInt(4))
+				require.Contains(t, xs, AutoGroupInt(9))
 				require.Equal(t, "13", sum)
 			},
-			container.AutoGroupTypes(intType),
 			container.Provide(
-				func() int { return 4 },
-				func() int { return 9 },
-				func(xs []int) string {
+				func() AutoGroupInt { return 4 },
+				func() AutoGroupInt { return 9 },
+				func(xs []AutoGroupInt) string {
 					sum := 0
 					for _, x := range xs {
-						sum += x
+						sum += int(x)
 					}
 					return fmt.Sprintf("%d", sum)
 				},
@@ -423,10 +395,9 @@ func TestAutoGroup(t *testing.T) {
 
 	require.Error(t,
 		container.Run(
-			func(int) {},
-			container.AutoGroupTypes(intType),
+			func(AutoGroupInt) {},
 			container.Provide(
-				func() int { return 0 },
+				func() AutoGroupInt { return 0 },
 			),
 		),
 		"bad input type",

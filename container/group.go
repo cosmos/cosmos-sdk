@@ -7,6 +7,21 @@ import (
 	"github.com/pkg/errors"
 )
 
+// AutoGroupType marks a type which automatically gets grouped together. For an AutoGroupType T,
+// T and []T can be declared as output parameters for constructors as many times within the container
+// as desired. All of the provided values for T can be retrieved by declaring an
+// []T input parameter.
+type AutoGroupType interface {
+	// IsAutoGroupType is a marker function which just indicates that this is a auto-group type.
+	IsAutoGroupType()
+}
+
+var autoGroupTypeType = reflect.TypeOf((*AutoGroupType)(nil)).Elem()
+
+func isAutoGroupType(t reflect.Type) bool {
+	return t.Implements(autoGroupTypeType)
+}
+
 type groupResolver struct {
 	typ          reflect.Type
 	sliceType    reflect.Type
@@ -26,7 +41,7 @@ func (g *groupResolver) describeLocation() string {
 
 func (g *sliceGroupResolver) resolve(c *container, _ Scope, caller Location) (reflect.Value, error) {
 	// Log
-	c.logf("Providing %v to %s from:", g.sliceType, caller.Name())
+	c.logf("Providing auto-group type slice %v to %s from:", g.sliceType, caller.Name())
 	c.indentLogger()
 	for _, node := range g.providers {
 		c.logf(node.provider.Location.String())

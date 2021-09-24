@@ -13,9 +13,6 @@ import (
 )
 
 type config struct {
-	autoGroupTypes   map[reflect.Type]bool
-	onePerScopeTypes map[reflect.Type]bool
-
 	// logging
 	loggers   []func(string)
 	indentStr string
@@ -35,10 +32,8 @@ func newConfig() (*config, error) {
 	}
 
 	return &config{
-		autoGroupTypes:   map[reflect.Type]bool{},
-		onePerScopeTypes: map[reflect.Type]bool{},
-		graphviz:         g,
-		graph:            graph,
+		graphviz: g,
+		graph:    graph,
 	}, nil
 }
 

@@ -185,7 +185,7 @@ func (cfg *Config) validate() []error {
 		case err != nil:
 			errs = append(errs, fmt.Errorf("cannot stat home dir: %w", err))
 		case !info.IsDir():
-			errs = append(errs, fmt.Errorf("%s is not a directory", info.Name()))
+			errs = append(errs, fmt.Errorf("%s is not a directory", cfg.Root()))
 		}
 	}
 

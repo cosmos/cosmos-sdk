@@ -143,6 +143,7 @@ func (s *HelpTestSuite) TestGetHelpText() {
 	expectedPieces := []string{
 		cosmovisor.EnvHome, cosmovisor.EnvName, cosmovisor.EnvDownloadBin, cosmovisor.EnvRestartUpgrade,
 		cosmovisor.EnvSkipBackup, cosmovisor.EnvInterval, cosmovisor.EnvPreupgradeMaxRetries,
+		"https://github.com/cosmos/cosmos-sdk/tree/master/cosmovisor",
 	}
 
 	actual := GetHelpText()

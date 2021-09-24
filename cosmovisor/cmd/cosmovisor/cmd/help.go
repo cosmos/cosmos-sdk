@@ -93,6 +93,8 @@ Configuration of Cosmoviser is done through the following environment variables:
         The maximum number of times to call pre-upgrade in the application after exit status of 31.
         After the maximum number of retries, cosmovisor fails the upgrade.
         Valid values: Integers greater than or equal to 0.
+
+For more details, see: https://github.com/cosmos/cosmos-sdk/tree/master/cosmovisor
 `, cosmovisor.EnvHome, cosmovisor.EnvName, cosmovisor.EnvDownloadBin, cosmovisor.EnvRestartUpgrade,
 		cosmovisor.EnvInterval, cosmovisor.EnvSkipBackup, cosmovisor.EnvPreupgradeMaxRetries)
 }

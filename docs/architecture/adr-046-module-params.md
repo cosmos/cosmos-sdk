@@ -117,7 +117,16 @@ func ParamsFromMsg(msg *types.MsgUpdateParams) Params {
 
 ## Consequences
 
-> This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.
+As a result of implementing the module parameter methodology, we gain the ability
+for module parameter changes to be stateful and extensible to fit nearly every
+application's use case. In addition, there will be significant gains in performance
+when it comes to reading and writing parameters from and to state, especially if a
+specific set of parameters are read on a consistent basis.
+
+However, this methodology will require developers to implement more types and
+handlers which can become burdensome if many parameters exist. In addition,
+developers are required to implement persistance logics of module parameters.
+However, this should be trivial.
 
 ### Backwards Compatibility
 

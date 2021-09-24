@@ -2,7 +2,7 @@
 
 ## Context
 
-In the Internet of Blockchains We need a way to identify and locate assets within their chain namespace, using web-standard ([RFC39](https://datatracker.ietf.org/doc/html/rfc3986)) Universal Resource Indentifiers (URIs).
+In the Internet of Blockchains we need a way to identify and locate assets within their origin chain namespace, using web-standard ([RFC39](https://datatracker.ietf.org/doc/html/rfc3986)) Universal Resource Indentifiers (URIs).
 
 When we refer to on-chain assets, this includes tokens, wallets, name records, or any other uniquely identifiable entity within a chain namespace.
 

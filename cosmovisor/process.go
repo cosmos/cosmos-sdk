@@ -60,13 +60,13 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	if err != nil || !needsUpdate {
 		return false, err
 	}
-	if err := doBackup(l.cfg); err != nil {
-		return false, err
-	}
 
-	if !SkipUpgrade(args, l.fw.currentInfo) {
-		err = doPreUpgrade(l.cfg)
-		if err != nil {
+	if !IsSkipUpgradeHeight(args, l.fw.currentInfo) {
+		if err := doBackup(l.cfg); err != nil {
+			return false, err
+		}
+
+		if err = doPreUpgrade(l.cfg); err != nil {
 			return false, err
 		}
 	}
@@ -151,32 +151,53 @@ func doBackup(cfg *Config) error {
 	return nil
 }
 
-// doPreUpgrade runs the pre-upgrade command defined by the application
+// doPreUpgrade runs the pre-upgrade command defined by the application and handles respective error codes
+// cfg contains the cosmovisor config from env var
 func doPreUpgrade(cfg *Config) error {
-	bin, err := cfg.CurrentBin()
-	preUpgradeCmd := exec.Command(bin, "pre-upgrade")
+	counter := 0
+	for {
+		if counter > cfg.PreupgradeMaxRetries {
+			return fmt.Errorf("pre-upgrade command failed. reached max attempt of retries - %d", cfg.PreupgradeMaxRetries)
+		}
 
-	_, err = preUpgradeCmd.Output()
+		err := executePreUpgradeCmd(cfg)
+		counter += 1
 
-	if err != nil {
-		if err.(*exec.ExitError).ProcessState.ExitCode() == 1 {
-			Logger.Info().Msg("pre-upgrade command does not exist. continuing the upgrade.")
-			return nil
+
+		if err != nil {
+			if err.(*exec.ExitError).ProcessState.ExitCode() == 1 {
+				fmt.Println("pre-upgrade command does not exist. continuing the upgrade.")
+				return nil
+			}
+			if err.(*exec.ExitError).ProcessState.ExitCode() == 30 {
+				return fmt.Errorf("pre-upgrade command failed : %w", err)
+			}
+			if err.(*exec.ExitError).ProcessState.ExitCode() == 31 {
+				fmt.Println("pre-upgrade command failed. retrying. attempt:", counter)
+				fmt.Println(err)
+				continue
+			}
 		}
-		if err.(*exec.ExitError).ProcessState.ExitCode() == 30 {
-			return fmt.Errorf("pre-upgrade command failed : %w", err)
-		}
-		if err.(*exec.ExitError).ProcessState.ExitCode() == 31 {
-			Logger.Info().Msg("pre-upgrade command failed. retrying.")
-			return doPreUpgrade(cfg)
-		}
+		fmt.Println("pre-upgrade successful. continuing the upgrade.")
+		return nil
 	}
-	Logger.Info().Msg("pre-upgrade successful. continuing the upgrade.")
-	return nil
 }
 
-// skipUpgrade checks if pre-upgrade script must be run. If the height in the upgrade plan matches any of the heights provided in --safe-skip-upgrade, the script is not run
-func SkipUpgrade(args []string, upgradeInfo UpgradeInfo) bool {
+// executePreUpgradeCmd runs the pre-upgrade command defined by the application
+// cfg contains the cosmosvisor config from the env vars
+func executePreUpgradeCmd(cfg *Config) error {
+	bin, err := cfg.CurrentBin()
+	if err != nil {
+		return err
+	}
+
+	preUpgradeCmd := exec.Command(bin, "pre-upgrade")
+	_, err = preUpgradeCmd.Output()
+	return err
+}
+
+// IsSkipUpgradeHeight checks if pre-upgrade script must be run. If the height in the upgrade plan matches any of the heights provided in --safe-skip-upgrade, the script is not run
+func IsSkipUpgradeHeight(args []string, upgradeInfo UpgradeInfo) bool {
 	skipUpgradeHeights := UpgradeSkipHeights(args)
 	for _, h := range skipUpgradeHeights {
 		if h == int(upgradeInfo.Height) {

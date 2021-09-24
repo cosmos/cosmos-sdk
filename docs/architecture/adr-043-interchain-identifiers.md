@@ -1,4 +1,4 @@
-# ADR 043: Interchain Identifiers
+# ADR 043: Interchain Identifiers (IID)
 
 ## Context
 

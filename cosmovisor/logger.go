@@ -10,6 +10,6 @@ import (
 var Logger zerolog.Logger
 
 func SetupLogging() {
-	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
+	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Kitchen}
 	Logger = zerolog.New(output).With().Str("module", "cosmovisor").Timestamp().Logger()
 }

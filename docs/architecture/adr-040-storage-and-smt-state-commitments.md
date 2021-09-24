@@ -176,6 +176,7 @@ type RootStoreConfig struct {
     ReservePrefix(StoreKey, StoreType)
 }
 ```
+<!-- TODO: Review whether these types can be further reduced or simplified -->
 <!-- TODO: RootStorePersistentCache type -->
 
 In contrast to `MultiStore`, `RootStore` doesn't allow to dynamically mount sub-stores or provide an arbitrary backing DB.

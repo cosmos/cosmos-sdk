@@ -11,5 +11,5 @@ var Logger zerolog.Logger
 
 func SetupLogging() {
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
-	Logger = zerolog.New(output).With().Timestamp().Logger()
+	Logger = zerolog.New(output).With().Str("module", "cosmovisor").Timestamp().Logger()
 }

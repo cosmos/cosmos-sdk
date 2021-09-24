@@ -19,6 +19,7 @@ func ShouldGiveHelp(args []string) bool {
 	return args[0] == "help" || args[0] == "--help" || (len(args) == 1 && args[0] == "-h")
 }
 
+// DoHelp outputs help text, config info, and attempts to run the binary with the --help flag.
 func DoHelp() {
 	// Output the help text
 	fmt.Println(GetHelpText())

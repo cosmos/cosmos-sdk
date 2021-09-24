@@ -70,6 +70,7 @@ func (cfg *Config) UpgradeDir(upgradeName string) string {
 	return filepath.Join(cfg.BaseUpgradeDir(), safeName)
 }
 
+// BaseUpgradeDir is the directory containing the named upgrade directories.
 func (cfg *Config) BaseUpgradeDir() string {
 	return filepath.Join(cfg.Root(), upgradesDir)
 }
@@ -272,6 +273,7 @@ func booleanOption(name string, defaultVal bool) (bool, error) {
 	return false, fmt.Errorf("env variable %q must have a boolean value (\"true\" or \"false\"), got %q", name, p)
 }
 
+// DetailString returns a multi-line string with details about this config.
 func (cfg Config) DetailString() string {
 	configEntries := []struct{ name, value string }{
 		{"Home", cfg.Home},

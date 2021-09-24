@@ -3,6 +3,8 @@ package module
 import (
 	"fmt"
 
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 
 	"github.com/spf13/cast"
@@ -48,7 +50,7 @@ type outputs struct {
 	Keeper  authkeeper.AccountKeeperI
 }
 
-func (m Module) provide(codec codec.Codec, storeKey *sdk.KVStoreKey) (
+func (m Module) provide(codec codec.Codec, storeKey *sdk.KVStoreKey, subspace paramtypes.Subspace) (
 	app.Handler,
 	authkeeper.AccountKeeperI,
 	error,
@@ -57,7 +59,7 @@ func (m Module) provide(codec codec.Codec, storeKey *sdk.KVStoreKey) (
 		return app.Handler{}, nil, fmt.Errorf("missing bech32_account_prefix")
 	}
 
-	keeper := authkeeper.NewAccountKeeper(codec, storeKey, panic("TODO"), nil, nil, m.Bech32AccountPrefix)
+	keeper := authkeeper.NewAccountKeeper(codec, storeKey, subspace, nil, nil, m.Bech32AccountPrefix)
 	am := auth.NewAppModule(codec, keeper, nil)
 	return compat.AppModuleHandler(am), keeper, nil
 }

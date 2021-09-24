@@ -30,19 +30,19 @@ func DoHelp() {
 	case *cosmovisor.MultiError:
 		fmt.Fprintf(os.Stderr, "[cosmovisor] multiple configuration errors found:\n")
 		for i, e := range err.GetErrors() {
-			fmt.Fprintf(os.Stderr, "  %d: %v", i+1, e)
+			fmt.Fprintf(os.Stderr, "  %d: %v\n", i+1, e)
 		}
 		return
 	default:
-		fmt.Fprintf(os.Stderr, "[cosmovisor] %v", err)
+		fmt.Fprintf(os.Stderr, "[cosmovisor] %v\n", err)
 		return
 	}
 	// If the config's legit, output what we see it as.
-	fmt.Printf("[cosmovisor] config is valid:")
+	fmt.Println("[cosmovisor] config is valid:")
 	fmt.Println(cfg.DetailString())
 	// Attempt to run the configured binary with the --help flag.
 	if err := cosmovisor.RunHelp(cfg, os.Stdout, os.Stderr); err != nil {
-		fmt.Fprintf(os.Stderr, "[cosmovisor] %v", err)
+		fmt.Fprintf(os.Stderr, "[cosmovisor] %v\n", err)
 	}
 }
 
@@ -93,7 +93,6 @@ Configuration of Cosmoviser is done through the following environment variables:
         The maximum number of times to call pre-upgrade in the application after exit status of 31.
         After the maximum number of retries, cosmovisor fails the upgrade.
         Valid values: Integers greater than or equal to 0.
-
 `, cosmovisor.EnvHome, cosmovisor.EnvName, cosmovisor.EnvDownloadBin, cosmovisor.EnvRestartUpgrade,
 		cosmovisor.EnvInterval, cosmovisor.EnvSkipBackup, cosmovisor.EnvPreupgradeMaxRetries)
 }

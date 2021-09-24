@@ -121,7 +121,11 @@ func ParamsFromMsg(msg *types.MsgUpdateParams) Params {
 
 ### Backwards Compatibility
 
-> All ADRs that introduce backwards incompatibilities must include a section describing these incompatibilities and their severity. The ADR must explain how the author proposes to deal with these incompatibilities. ADR submissions without a sufficient backwards compatibility treatise may be rejected outright.
+The new method for working with module parameters is naturally not backwards
+compatible with the existing `x/params` module. However, the `x/params` will
+remain in the Cosmos SDK and will be marked as deprecated with no additional
+functionality being added apart from potential bug fixes. Note, the `x/params`
+module may be removed entirely in a future release.
 
 ### Positive
 

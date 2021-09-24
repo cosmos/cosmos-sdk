@@ -114,5 +114,7 @@ func DeliverGenTxs(
 		}
 	}
 
+	stakingKeeper.ExecuteEpoch(ctx)
+
 	return stakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 }

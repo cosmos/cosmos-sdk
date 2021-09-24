@@ -4,7 +4,7 @@ package math
 import (
 	"fmt"
 
-	"github.com/cockroachdb/apd/v2"
+	apd "github.com/cockroachdb/apd/v2"
 
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )

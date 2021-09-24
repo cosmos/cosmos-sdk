@@ -14,6 +14,7 @@ import (
 // StakingKeeper defines the expected staking keeper (noalias)
 type StakingKeeper interface {
 	ApplyAndReturnValidatorSetUpdates(sdk.Context) (updates []abci.ValidatorUpdate, err error)
+	ExecuteEpoch(sdk.Context)
 }
 
 // AccountKeeper defines the expected account keeper (noalias)

@@ -73,6 +73,48 @@ thus only a single message handler, however, the message handler might have to b
 more sophisticated in that it might need to understand what parameters are being
 changed vs what parameters are untouched.
 
+Once the `sdk.Msg` types and corresponding handlers are defined, proposals can
+be made using the `x/gov` module that are authorized by the root `x/gov`
+module's account.
+
+Continuing to use `x/auth`, we demonstrate a more complete example:
+
+```go
+type Params struct {
+	MaxMemoCharacters      uint64
+	TxSigLimit             uint64
+	TxSizeCostPerByte      uint64
+	SigVerifyCostED25519   uint64
+	SigVerifyCostSecp256k1 uint64
+}
+
+type MsgUpdateParams struct {
+	MaxMemoCharacters      uint64
+	TxSigLimit             uint64
+	TxSizeCostPerByte      uint64
+	SigVerifyCostED25519   uint64
+	SigVerifyCostSecp256k1 uint64
+}
+
+type MsgUpdateParamsResponse struct {}
+
+func (ms msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+  ctx := sdk.UnwrapSDKContext(goCtx)
+
+  // verification logic...
+
+  // persist params
+  params := ParamsFromMsg(msg)
+  ms.SaveParams(ctx, params)
+
+  return &types.MsgUpdateParamsResponse{}, nil
+}
+
+func ParamsFromMsg(msg *types.MsgUpdateParams) Params {
+  // ...
+}
+```
+
 ## Consequences
 
 > This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.

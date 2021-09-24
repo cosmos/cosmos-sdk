@@ -17,7 +17,6 @@ message Minter {
   // current annual expected provisions
   string annual_provisions = 2 [
     (cosmos_proto.scalar) = "cosmos.Dec",
-    (gogoproto.moretags)   = "yaml:\"annual_provisions\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
@@ -32,31 +31,27 @@ message Params {
   // maximum annual change in inflation rate
   string inflation_rate_change = 2 [
     (cosmos_proto.scalar) = "cosmos.Dec",
-    (gogoproto.moretags)   = "yaml:\"inflation_rate_change\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
   // maximum inflation rate
   string inflation_max = 3 [
     (cosmos_proto.scalar) = "cosmos.Dec",
-    (gogoproto.moretags)   = "yaml:\"inflation_max\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
   // minimum inflation rate
   string inflation_min = 4 [
     (cosmos_proto.scalar) = "cosmos.Dec",
-    (gogoproto.moretags)   = "yaml:\"inflation_min\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
   // goal of percent bonded atoms
   string goal_bonded = 5 [
     (cosmos_proto.scalar) = "cosmos.Dec",
-    (gogoproto.moretags)   = "yaml:\"goal_bonded\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
   // expected blocks per year
-  uint64 blocks_per_year = 6 [(gogoproto.moretags) = "yaml:\"blocks_per_year\""];
+  uint64 blocks_per_year = 6;
 }

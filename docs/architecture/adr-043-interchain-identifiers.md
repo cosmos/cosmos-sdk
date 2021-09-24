@@ -91,6 +91,7 @@ Draft
 - Can immediately be extended by a family of DID-related  specifications, such as Verifiable Credentials and Authorization Capabilities.
 - Immediately compatible with the extensive tooling (such as wallets) which has already been built for the DID ecosystem. 
 - Cosmos application chains have the option to either adopt the IID specification to create their own IID DID Method, or or use did:cosmos to add DIDs to their application chain, without needing to formally specify a new DID Method.
+-- This means that Cosmos will almost certainly become the easiest way for someone to create a ledger-based DID namespace they control. This will be particularly true for a did:cosmos method usable for more than just on-chain assets, available through the Cosmos SDK.
 
 ### Neutral
 

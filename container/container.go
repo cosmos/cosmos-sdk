@@ -169,7 +169,7 @@ func (c *container) addNode(constructor *ProviderDescriptor, scope Scope, noLog 
 			c.logf("Registering scope provider: %s", constructor.Location.String())
 		}
 		node := &scopeDepProvider{
-			ctr:            constructor,
+			provider:       constructor,
 			calledForScope: map[Scope]bool{},
 			valueMap:       map[Scope][]reflect.Value{},
 		}

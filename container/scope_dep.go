@@ -5,7 +5,7 @@ import (
 )
 
 type scopeDepProvider struct {
-	provider            *ProviderDescriptor
+	provider       *ProviderDescriptor
 	calledForScope map[Scope]bool
 	valueMap       map[Scope][]reflect.Value
 }
@@ -18,12 +18,12 @@ type scopeDepResolver struct {
 }
 
 func (s scopeDepResolver) describeLocation() string {
-	return s.node.ctr.Location.String()
+	return s.node.provider.Location.String()
 }
 
 func (s scopeDepResolver) resolve(ctr *container, scope Scope, caller Location) (reflect.Value, error) {
 	// Log
-	ctr.logf("Providing %v from %s to %s", s.typ, s.node.ctr.Location, caller.Name())
+	ctr.logf("Providing %v from %s to %s", s.typ, s.node.provider.Location, caller.Name())
 
 	// Resolve
 	if val, ok := s.valueMap[scope]; ok {
@@ -31,7 +31,7 @@ func (s scopeDepResolver) resolve(ctr *container, scope Scope, caller Location) 
 	}
 
 	if !s.node.calledForScope[scope] {
-		values, err := ctr.call(s.node.ctr, scope)
+		values, err := ctr.call(s.node.provider, scope)
 		if err != nil {
 			return reflect.Value{}, err
 		}
@@ -46,5 +46,5 @@ func (s scopeDepResolver) resolve(ctr *container, scope Scope, caller Location) 
 }
 
 func (s scopeDepResolver) addNode(p *simpleProvider, _ int, _ *container) error {
-	return duplicateDefinitionError(s.typ, p.provider.Location, s.node.ctr.Location.String())
+	return duplicateDefinitionError(s.typ, p.provider.Location, s.node.provider.Location.String())
 }

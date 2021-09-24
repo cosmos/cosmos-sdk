@@ -21,7 +21,11 @@ func FlattenErrors(errs ...error) error {
 	rv := MultiError{}
 	for _, err := range errs {
 		if err != nil {
-			rv.errs = append(rv.errs, err)
+			if merr, isMerr := err.(*MultiError); isMerr {
+				rv.errs = append(rv.errs, merr.errs...)
+			} else {
+				rv.errs = append(rv.errs, err)
+			}
 		}
 	}
 	switch rv.Len() {

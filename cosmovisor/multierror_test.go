@@ -15,6 +15,7 @@ type MultiErrorTestSuite struct {
 	err1 error
 	err2 error
 	err3 error
+	err4 error
 }
 
 func TestMultiErrorTestSuite(t *testing.T) {
@@ -25,6 +26,7 @@ func (s *MultiErrorTestSuite) SetupTest() {
 	s.err1 = errors.New("expected error one")
 	s.err2 = errors.New("expected error two")
 	s.err3 = errors.New("expected error three")
+	s.err3 = errors.New("expected error four")
 }
 
 func (s *MultiErrorTestSuite) TestFlattenErrors() {
@@ -72,6 +74,21 @@ func (s *MultiErrorTestSuite) TestFlattenErrors() {
 			name:     "lots in multi out",
 			input:    []error{s.err1, s.err2, s.err3, s.err2, s.err1},
 			expected: &MultiError{errs: []error{s.err1, s.err2, s.err3, s.err2, s.err1}},
+		},
+		{
+			name:     "multi and non in one multi out with all",
+			input:    []error{&MultiError{errs: []error{s.err1, s.err2}}, s.err3},
+			expected: &MultiError{errs: []error{s.err1, s.err2, s.err3}},
+		},
+		{
+			name:     "non and multi in one multi out with all",
+			input:    []error{s.err1, &MultiError{errs: []error{s.err2, s.err3}}},
+			expected: &MultiError{errs: []error{s.err1, s.err2, s.err3}},
+		},
+		{
+			name:     "two multi in one multi out with all",
+			input:    []error{&MultiError{errs: []error{s.err1, s.err2}}, &MultiError{errs: []error{s.err3, s.err4}}},
+			expected: &MultiError{errs: []error{s.err1, s.err2, s.err3, s.err4}},
 		},
 	}
 

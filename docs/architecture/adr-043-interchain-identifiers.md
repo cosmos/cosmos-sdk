@@ -31,7 +31,7 @@ The properties of a DID-Core standard DID Document include:
 - **Verification Relationship/s** (Describing and restricting the purposes for which the verification Methods can be used, such as Authentication).
 - **Services** related to the DID subject, with endpoints for reaching these services, such as data stores or blockchain services.
 
-For the IID Method, two additional DID Document properties have been specified, which are required for many types of on-chain assets:
+For the IID Document two additional properties have been specified, which are required for many types of on-chain assets:
 - **Linked Resources** for describing the resources which are associated with an on-chain asset, such as a media file together with its resource identifier, type, format, location and cryptographic proof (such as a hash). 
 - **Accorded Rights** for recording machine-executable capabilities, legal rights, or any other entitlements, which are accorded to the owner/controller of an asset.
 

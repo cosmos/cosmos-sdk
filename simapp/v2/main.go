@@ -21,6 +21,7 @@ func main() {
 			app.Name("simapp"),
 			cli.DefaultHome(".simapp"),
 		),
+		container.Provide(demoCustomAppConfigProvider),
 		app.ProvideAppConfigYAML(configYaml),
 	)
 }

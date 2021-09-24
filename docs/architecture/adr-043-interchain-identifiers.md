@@ -44,7 +44,7 @@ Asset IID   // self-referrant <--
 │   ├── Another Resource CID (Content ID)
 ```
 
-The **DID Syntax** for an IID conforms to the [DID-Core Syntax](), which would be expressed as follows for an asset minted from the NFT Module on a Cosmos chain:
+The **DID Syntax** for an IID conforms to the [DID-Core Syntax](https://www.w3.org/TR/did-core/#did-syntax), which would be expressed as follows for an asset minted from the NFT Module on a Cosmos chain:
 
 `DID:COSMOS:CHAIN:MODULE:abc123`
 

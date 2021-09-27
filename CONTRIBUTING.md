@@ -30,7 +30,7 @@ contributors, the general procedure for contributing has been established:
 1. Either [open](https://github.com/cosmos/cosmos-sdk/issues/new/choose) or
 
 1. Whether:
-   1. you want to propose something new, which requires specification, additional design or you would like to change a process, start with a [new discussion](https://github.com/cosmos/cosmos-sdk/discussions/new). With discussions we can better handle the design process using discussion threads. A discussion should usually lead to one or few issues,
+   1. You want to propose something new that requires specification or an additional design, or you would like to change a process, start with a [new discussion](https://github.com/cosmos/cosmos-sdk/discussions/new). With discussions, we can better handle the design process using discussion threads. A discussion usually leads to one or more issues.
    2. The issue is a specified proposal or a bug, then open a [new issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose).
    3. Review existing [issues](https://github.com/cosmos/cosmos-sdk/issues) to find an issue you'd like to help with.
 2. Participate in thoughtful discussion on that issue.
@@ -46,17 +46,16 @@ contributors, the general procedure for contributing has been established:
       - For core developers working within the `cosmos-sdk` repo, follow branch name conventions to ensure a clear
         ownership of branches 
         `{moniker}/{issue#}-branch-name`.
-   2. If you have something to show, stat with a `Draft` PR. It's good to have an early validation and we highly encourage to do it. Draft PR also indicates to the community that the work is in progress.
-      Moreover we want to avoid big PRs.
+   2. If you have something to show, start with a `Draft` PR. It's good to have early validation of your work and we highly recommend this practice. A Draft PR also indicates to the community that the work is in progress.
+      Draft PRs also helps to putting a PRs and a functionality to the right direction.
    3. Follow the [CONTRIBUTING GUIDELINES](CONTRIBUTING-GUIDELINES.md).
-   3. When the code is complete it can be marked `Ready for Review`.
-   4. Go through the checkboxes present in the PR template description (automatically filled when creating a new PR).
-   5. Be sure to include a relevant change log entry in the `Unreleased` section
-      of `CHANGELOG.md` (see file for log format).
-   6. Codeowners will be marked automatically as the reviewers.
+   3. When the code is complete, change your PR from `Draft` to `Ready for Review`.
+   4. Go through the actions for each checkbox present in the PR template description. The PR actions are automatically provided for each new PR.
+   5. Be sure to include a relevant changelog entry in the `Unreleased` section of `CHANGELOG.md` (see file for log format).
+   6. Codeowners are marked automatically as the reviewers.
 
 
-Note that for very small or blatantly obvious problems (such as typos) it is
+**Note** For very small or blatantly obvious problems such as typos, you are 
 not required to an open issue to submit a PR, but be aware that for more complex
 problems/features, if a PR is opened before an adequate design discussion has
 taken place in a GitHub issue, that PR runs a high likelihood of being rejected.
@@ -78,7 +77,7 @@ When proposing an architecture decision for the SDK, please start by opening an 
 
 ## Pull Requests
 
-PRs should be categorically broken up based on the type of changes being made (for example, `fix`, `feat`,
+PRs must have a category prefix that is based on the type of changes being made (for example, `fix`, `feat`,
 `refactor`, `docs`, and so on). The *type* must be included in the PR title as a prefix (for example,
 `fix: <description>`). This convention ensures that all changes that are committed to the base branch follow the
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
@@ -197,18 +196,18 @@ for tcIndex, tc := range cases {
 
 User-facing repos should adhere to the trunk based development branching model: https://trunkbaseddevelopment.com/. User branches should start with a user name, example: `{moniker}/{issue#}-branch-name`.
 
-The Cosmos SDK repository is a [multi Go module](https://github.com/golang/go/wiki/Modules#is-it-possible-to-add-a-module-to-a-multi-module-repository) repository. It means that we have few Go modules in a single repository.
+The Cosmos SDK repository is a [multi Go module](https://github.com/golang/go/wiki/Modules#is-it-possible-to-add-a-module-to-a-multi-module-repository) repository. It means that we have more than one Go module in a single repository.
 
-The SDK utilizes [semantic versioning](https://semver.org/).
+The Cosmos SDK utilizes [semantic versioning](https://semver.org/).
 
 ### PR Targeting
 
 Ensure that you base and target your PR on the `master` branch.
 
-All feature additions should be targeted against `master`. Bug fixes for an outstanding release candidate
-should be targeted against the release candidate branch.
+All feature additions must be targeted against `master`. Bug fixes for an outstanding release candidate
+must be targeted against the release candidate branch.
 
-If needed, we backport a commit from `master` to the release branch (not consensus breaking feature, optimization...)..
+If needed, we backport a commit from `master` to the release branch (excluding consensus breaking feature, optimization, and similar).
 
 ### Development Procedure
 
@@ -238,24 +237,24 @@ TL;DR before making a new _major_ release we do beta and release candidate relea
 v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → v1.0.0
 ```
 
-- Release a first beta version on `master` branch and freeze `master` for receiving any new features. Once beta is released, we focus on releasing the release candidate:
+- Release a first beta version on the `master` branch and freeze `master` from receiving any new features. After beta is released, we focus on releasing the release candidate:
   - finish audits and reviews
   - kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks)
   - perform functional tests
   - add more tests
   - release new beta version as the bugs are discovered and fixed.
-- Once the team feels that the `master` works fine we create a `release/vY` branch (going forward known a release branch), where `Y` is the version number, with the patch part substituted to `x` (eg: 0.42.x, 1.0.x). Ensure the release branch is protected against pushing from anyone except the release manager/coordinator.
-    - **no PRs targeting this branch should be merged unless exceptional circumstances arise**
+- After the team feels that the `master` works fine we create a `release/vY` branch (going forward known a release branch), where `Y` is the version number, with the patch part substituted to `x` (eg: 0.42.x, 1.0.x). Ensure the release branch is protected so that pushes against the release branch are permitted only by the release manager or release coordinator.
+    - **PRs targeting this branch can be merged _only_ when exceptional circumstances arise**
     - update the GitHub mergify integration by adding instructions for automatically backporting commits from `master` to the `release/vY` using the `backport/Y` label.
 - In the release branch, prepare a new version section in the `CHANGELOG.md`
     - All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
     - Copy the entries into a `RELEASE_CHANGELOG.md`, this is needed so the bot knows which entries to add to the release page on GitHub.
 - Create a new annotated git tag for a release candidate  (eg: `git tag -a v1.1.0-rc1`) in the release branch.
   - from this point we unfreeze master.
-  - the SDK teams should collaborate and do their best to run test nets in order to validate the release.
-  - once bugs are found, create a PR for `master` and backport to the release branch.
-  - create new release candidate tags once bugs are fixed.
-- Once the team feels the release branch is stable and everything works, create a full release:
+  - the SDK teams collaborate and do their best to run testnets in order to validate the release.
+  - when bugs are found, create a PR for `master`, and backport fixes to the release branch.
+  - create new release candidate tags after bugs are fixed.
+- After the team feels the release branch is stable and everything works, create a full release:
   - update `CHANGELOG.md`.
   - create a new annotated git tag (eg `git -a v1.1.0`) in the release branch.
   - Create a GitHub release.
@@ -264,19 +263,22 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
 
 A _minor release_ is an increment of the patch number (eg: `v1.2.0` → `v1.2.1`).
 
-Following _semver_ philosophy, we point release after `v1.0` must not break API but they may break consensus.
+Following _semver_ philosophy, point releases after `v1.0`:
+
+ - must not break API
+ - can break consensus
 Patch release must not break API nor consensus.
 Before `v1.0`, point release can break both point API and consensus.
 
 Updates to the release branch should come from `master` by backporting PRs (usually done by automatic cherry pick followed by a PRs to the release branch). The backports must be marked using `backport/Y` label in PR for master.
-It is the PR's author's responsibility to fix merge conflicts, update changelog entries, and
-ensure CI passes. If a PR originates from an external contributor, it may be a core team member's
+It is the PR author's responsibility to fix merge conflicts, update changelog entries, and
+ensure CI passes. If a PR originates from an external contributor, a core team member assumes 
 responsibility to perform this process instead of the original author.
 Lastly, it is core team's responsibility to ensure that the PR meets all the SRU criteria.
 
 Point Release must follow the [Stable Release Policy](./STABLE_RELEASES.md).
 
-Once the release branch has all commits required for the next minor release:
+After the release branch has all commits required for the next minor release:
 - update `CHANGELOG.md`.
 - create a new annotated git tag (eg `git -a v1.1.0`) in the release branch.
 - Create a GitHub release.
@@ -315,7 +317,7 @@ Other potential removal criteria:
 * Violation of Code of Conduct
 
 Earning this privilege should be considered to be no small feat and is by no
-means guaranteed by any quantifiable metric. It is a symbol of great trust of
+means guaranteed by any quantifiable metric. Serving as a code owner is a symbol of great trust from 
 the community of this project.
 
 ## Concept & Feature Approval Process

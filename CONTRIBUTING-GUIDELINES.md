@@ -5,7 +5,7 @@ This document is an extension to [CONTRIBUTING](./CONTRIBUTING.md) and provides 
 ## API & Design
 
 + Code must be well structured:
-  + packages should have a limited responsibility (different concerns should go to different packages),
+  + packages must have a limited responsibility (different concerns can go to different packages),
   + types must be easy to compose,
   + think about maintainbility and testability.
 + "Depend upon abstractions, [not] concretions".

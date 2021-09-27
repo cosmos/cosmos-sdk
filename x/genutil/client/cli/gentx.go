@@ -77,10 +77,9 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			}
 
 			// read --pubkey, if empty take it from priv_validator.json
-			if val, _ := cmd.Flags().GetString(cli.FlagPubKey); val != "" {
-				err = clientCtx.Codec.UnmarshalJSON([]byte(val), valPubKey)
-				if err != nil {
-					return errors.Wrap(err, "failed to unmarshal consensus node public key")
+			if pkStr, _ := cmd.Flags().GetString(cli.FlagPubKey); pkStr != "" {
+				if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(pkStr), &valPubKey); err != nil {
+					return errors.Wrap(err, "failed to unmarshal validator public key")
 				}
 			}
 
@@ -122,8 +121,11 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			if err != nil {
 				return errors.Wrap(err, "failed to parse coins")
 			}
-
-			err = genutil.ValidateAccountInGenesis(genesisState, genBalIterator, key.GetAddress(), coins, cdc)
+			addr, err := key.GetAddress()
+			if err != nil {
+				return err
+			}
+			err = genutil.ValidateAccountInGenesis(genesisState, genBalIterator, addr, coins, cdc)
 			if err != nil {
 				return errors.Wrap(err, "failed to validate account in genesis")
 			}
@@ -132,8 +134,11 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			if err != nil {
 				return errors.Wrap(err, "error creating tx builder")
 			}
-
-			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(key.GetAddress())
+			pub, err := key.GetAddress()
+			if err != nil {
+				return err
+			}
+			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(pub)
 
 			// The following line comes from a discrepancy between the `gentx`
 			// and `create-validator` commands:

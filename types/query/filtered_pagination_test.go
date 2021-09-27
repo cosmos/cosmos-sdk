@@ -2,6 +2,7 @@ package query_test
 
 import (
 	"fmt"
+	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -15,7 +16,7 @@ import (
 var addr1 = sdk.AccAddress([]byte("addr1"))
 
 func (s *paginationTestSuite) TestFilteredPaginations() {
-	app, ctx, appCodec := setupTest()
+	app, ctx, appCodec := setupTest(s.T())
 
 	var balances sdk.Coins
 	for i := 0; i < numBalances; i++ {
@@ -90,7 +91,7 @@ func (s *paginationTestSuite) TestFilteredPaginations() {
 }
 
 func (s *paginationTestSuite) TestReverseFilteredPaginations() {
-	app, ctx, appCodec := setupTest()
+	app, ctx, appCodec := setupTest(s.T())
 
 	var balances sdk.Coins
 	for i := 0; i < numBalances; i++ {
@@ -170,8 +171,8 @@ func (s *paginationTestSuite) TestReverseFilteredPaginations() {
 
 }
 
-func ExampleFilteredPaginate() {
-	app, ctx, appCodec := setupTest()
+func ExampleFilteredPaginate(t *testing.T) {
+	app, ctx, _ := setupTest(t)
 
 	var balances sdk.Coins
 	for i := 0; i < numBalances; i++ {
@@ -200,16 +201,16 @@ func ExampleFilteredPaginate() {
 
 	var balResult sdk.Coins
 	pageRes, err := query.FilteredPaginate(accountStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var bal sdk.Coin
-		err := appCodec.Unmarshal(value, &bal)
+		var amount sdk.Int
+		err := amount.Unmarshal(value)
 		if err != nil {
 			return false, err
 		}
 
-		// filter balances with amount greater than 100
-		if bal.Amount.Int64() > int64(100) {
+		// filter amount greater than 100
+		if amount.Int64() > int64(100) {
 			if accumulate {
-				balResult = append(balResult, bal)
+				balResult = append(balResult, sdk.NewCoin(string(key), amount))
 			}
 
 			return true, nil
@@ -232,16 +233,16 @@ func execFilterPaginate(store sdk.KVStore, pageReq *query.PageRequest, appCodec 
 
 	var balResult sdk.Coins
 	res, err = query.FilteredPaginate(accountStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var bal sdk.Coin
-		err := appCodec.Unmarshal(value, &bal)
+		var amount sdk.Int
+		err := amount.Unmarshal(value)
 		if err != nil {
 			return false, err
 		}
 
-		// filter balances with amount greater than 100
-		if bal.Amount.Int64() > int64(100) {
+		// filter amount greater than 100
+		if amount.Int64() > int64(100) {
 			if accumulate {
-				balResult = append(balResult, bal)
+				balResult = append(balResult, sdk.NewCoin(string(key), amount))
 			}
 
 			return true, nil

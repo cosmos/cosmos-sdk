@@ -35,7 +35,7 @@ func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msg
 	// Right now, we're factorizing that call inside this function.
 	// ref: https://github.com/cosmos/cosmos-sdk/pull/9236#discussion_r623803504
 	for _, msg := range msgs {
-		if err := tx.ValidateMsg(msg); err != nil {
+		if err := msg.ValidateBasic(); err != nil {
 			return err
 		}
 	}
@@ -197,15 +197,34 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 		return err
 	}
 
-	key, err := txf.keybase.Key(name)
+	k, err := txf.keybase.Key(name)
 	if err != nil {
 		return err
 	}
-	pubKey := key.GetPubKey()
+
+	pubKey, err := k.GetPubKey()
+	if err != nil {
+		return err
+	}
+
+	pubkeys, err := txBuilder.GetTx().GetPubKeys()
+	if err != nil {
+		return err
+	}
+
+	signerIndex := 0
+	for i, p := range pubkeys {
+		if p.Equals(pubKey) {
+			signerIndex = i
+			break
+		}
+	}
+
 	signerData := authsigning.SignerData{
 		ChainID:       txf.chainID,
 		AccountNumber: txf.accountNumber,
 		Sequence:      txf.sequence,
+		SignerIndex:   signerIndex,
 	}
 
 	// For SIGN_MODE_DIRECT, calling SetSignatures calls setSignerInfos on

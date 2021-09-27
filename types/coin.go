@@ -34,7 +34,7 @@ func NewInt64Coin(denom string, amount int64) Coin {
 
 // String provides a human-readable representation of a coin
 func (coin Coin) String() string {
-	return fmt.Sprintf("%v%v", coin.Amount, coin.Denom)
+	return fmt.Sprintf("%v%s", coin.Amount, coin.Denom)
 }
 
 // Validate returns an error if the Coin has a negative amount or if
@@ -185,13 +185,18 @@ func (coins Coins) MarshalJSON() ([]byte, error) {
 func (coins Coins) String() string {
 	if len(coins) == 0 {
 		return ""
+	} else if len(coins) == 1 {
+		return coins[0].String()
 	}
 
-	out := ""
-	for _, coin := range coins {
-		out += fmt.Sprintf("%v,", coin.String())
+	// Build the string with a string builder
+	var out strings.Builder
+	for _, coin := range coins[:len(coins)-1] {
+		out.WriteString(coin.String())
+		out.WriteByte(',')
 	}
-	return out[:len(out)-1]
+	out.WriteString(coins[len(coins)-1].String())
+	return out.String()
 }
 
 // Validate checks that the Coins are sorted, have positive amount, with a valid and unique
@@ -517,7 +522,12 @@ func (coins Coins) Empty() bool {
 // AmountOf returns the amount of a denom from coins
 func (coins Coins) AmountOf(denom string) Int {
 	mustValidateDenom(denom)
+	return coins.AmountOfNoDenomValidation(denom)
+}
 
+// AmountOfNoDenomValidation returns the amount of a denom from coins
+// without validating the denomination.
+func (coins Coins) AmountOfNoDenomValidation(denom string) Int {
 	switch len(coins) {
 	case 0:
 		return ZeroInt()
@@ -530,15 +540,16 @@ func (coins Coins) AmountOf(denom string) Int {
 		return ZeroInt()
 
 	default:
+		// Binary search the amount of coins remaining
 		midIdx := len(coins) / 2 // 2:1, 3:1, 4:2
 		coin := coins[midIdx]
 		switch {
 		case denom < coin.Denom:
-			return coins[:midIdx].AmountOf(denom)
+			return coins[:midIdx].AmountOfNoDenomValidation(denom)
 		case denom == coin.Denom:
 			return coin.Amount
 		default:
-			return coins[midIdx+1:].AmountOf(denom)
+			return coins[midIdx+1:].AmountOfNoDenomValidation(denom)
 		}
 	}
 }

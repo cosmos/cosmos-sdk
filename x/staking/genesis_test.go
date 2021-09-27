@@ -20,15 +20,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func bootstrapGenesisTest(numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
-	_, app, ctx := getBaseSimappWithCustomKeeper()
+func bootstrapGenesisTest(t *testing.T, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
+	_, app, ctx := getBaseSimappWithCustomKeeper(t)
 
 	addrDels, _ := generateAddresses(app, ctx, numAddrs, sdk.NewInt(10000))
 	return app, ctx, addrDels
 }
 
 func TestInitGenesis(t *testing.T) {
-	app, ctx, addrs := bootstrapGenesisTest(10)
+	app, ctx, addrs := bootstrapGenesisTest(t, 10)
 
 	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 1)
 
@@ -107,7 +107,7 @@ func TestInitGenesis(t *testing.T) {
 }
 
 func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.NewContext(false, tmproto.Header{})
 
 	consPub, err := codectypes.NewAnyWithValue(PKs[0])
@@ -155,7 +155,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	size := 200
 	require.True(t, size > 100)
 
-	app, ctx, addrs := bootstrapGenesisTest(200)
+	app, ctx, addrs := bootstrapGenesisTest(t, 200)
 
 	params := app.StakingKeeper.GetParams(ctx)
 	delegations := []types.Delegation{}

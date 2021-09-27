@@ -93,6 +93,7 @@ func AddQueryFlagsToCmd(cmd *cobra.Command) {
 
 // AddTxFlagsToCmd adds common flags to a module tx command.
 func AddTxFlagsToCmd(cmd *cobra.Command) {
+	cmd.Flags().StringP(tmcli.OutputFlag, "o", "json", "Output format (text|json)")
 	cmd.Flags().String(FlagKeyringDir, "", "The client Keyring directory; if omitted, the default 'home' directory will be used")
 	cmd.Flags().String(FlagFrom, "", "Name or address of private key with which to sign")
 	cmd.Flags().Uint64P(FlagAccountNumber, "a", 0, "The account number of the signing account (offline mode only)")
@@ -115,8 +116,6 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 
 	// --gas can accept integers and "auto"
 	cmd.Flags().String(FlagGas, "", fmt.Sprintf("gas limit to set per-transaction; set to %q to calculate sufficient gas automatically (default %d)", GasFlagAuto, DefaultGasLimit))
-
-	cmd.MarkFlagRequired(FlagChainID)
 }
 
 // AddPaginationFlagsToCmd adds common pagination flags to cmd

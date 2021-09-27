@@ -7,9 +7,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	yaml "gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -59,6 +60,7 @@ func TestBaseSequence(t *testing.T) {
 }
 
 func TestBaseAccountMarshal(t *testing.T) {
+	app := simapp.Setup(t, false)
 	_, pub, addr := testdata.KeyTestPubAddr()
 	acc := types.NewBaseAccountWithAddress(addr)
 	seq := uint64(7)
@@ -118,7 +120,7 @@ func TestModuleAccountMarshalYAML(t *testing.T) {
 	bs, err := yaml.Marshal(moduleAcc)
 	require.NoError(t, err)
 
-	want := "|\n  address: cosmos1n7rdpqvgf37ktx30a2sv2kkszk3m7ncmg5drhe\n  public_key: \"\"\n  account_number: 0\n  sequence: 0\n  name: test\n  permissions:\n  - minter\n  - burner\n  - staking\n"
+	want := "account_number: 0\naddress: cosmos1n7rdpqvgf37ktx30a2sv2kkszk3m7ncmg5drhe\nname: test\npermissions:\n- minter\n- burner\n- staking\npublic_key: \"\"\nsequence: 0\n"
 	require.Equal(t, want, string(bs))
 }
 

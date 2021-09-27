@@ -7,6 +7,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// UpgradeInfoFileName file to store upgrade information
+const UpgradeInfoFilename = "upgrade-info.json"
+
 func (p Plan) String() string {
 	due := p.DueAt()
 	return fmt.Sprintf(`Upgrade Plan

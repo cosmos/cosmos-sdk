@@ -38,16 +38,15 @@ func NewMsgGrantAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAd
 
 // ValidateBasic implements the sdk.Msg interface.
 func (msg MsgGrantAllowance) ValidateBasic() error {
-	if msg.Granter == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
+	if _, err := sdk.AccAddressFromBech32(msg.Granter); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid granter address: %s", err)
 	}
-	if msg.Grantee == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
+	if _, err := sdk.AccAddressFromBech32(msg.Grantee); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
 	}
 	if msg.Grantee == msg.Granter {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
 	}
-
 	allowance, err := msg.GetFeeAllowanceI()
 	if err != nil {
 		return err
@@ -57,8 +56,9 @@ func (msg MsgGrantAllowance) ValidateBasic() error {
 }
 
 // GetSigners gets the granter account associated with an allowance
-func (msg MsgGrantAllowance) GetSigners() []string {
-	return []string{msg.Granter}
+func (msg MsgGrantAllowance) GetSigners() []sdk.AccAddress {
+	granter, _ := sdk.AccAddressFromBech32(msg.Granter)
+	return []sdk.AccAddress{granter}
 }
 
 // Type implements the LegacyMsg.Type method.
@@ -101,11 +101,11 @@ func NewMsgRevokeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) MsgRe
 
 // ValidateBasic implements the sdk.Msg interface.
 func (msg MsgRevokeAllowance) ValidateBasic() error {
-	if msg.Granter == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
+	if _, err := sdk.AccAddressFromBech32(msg.Granter); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid granter address: %s", err)
 	}
-	if msg.Grantee == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
+	if _, err := sdk.AccAddressFromBech32(msg.Grantee); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
 	}
 	if msg.Grantee == msg.Granter {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "addresses must be different")
@@ -116,8 +116,9 @@ func (msg MsgRevokeAllowance) ValidateBasic() error {
 
 // GetSigners gets the granter address associated with an Allowance
 // to revoke.
-func (msg MsgRevokeAllowance) GetSigners() []string {
-	return []string{msg.Granter}
+func (msg MsgRevokeAllowance) GetSigners() []sdk.AccAddress {
+	granter, _ := sdk.AccAddressFromBech32(msg.Granter)
+	return []sdk.AccAddress{granter}
 }
 
 // Type implements the LegacyMsg.Type method.

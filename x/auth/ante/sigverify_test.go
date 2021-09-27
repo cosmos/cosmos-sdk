@@ -192,7 +192,7 @@ func (suite *AnteTestSuite) TestSigVerification() {
 // In the meantime, we want to make double-sure amino compatibility works.
 // ref: https://github.com/cosmos/cosmos-sdk/issues/7229
 func (suite *AnteTestSuite) TestSigVerification_ExplicitAmino() {
-	suite.app, suite.ctx = createTestApp(true)
+	suite.app, suite.ctx = createTestApp(suite.T(), true)
 	suite.ctx = suite.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.

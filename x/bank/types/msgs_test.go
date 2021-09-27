@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -40,8 +39,8 @@ func TestMsgSendValidation(t *testing.T) {
 		{"", NewMsgSend(addr1, addrLong, atom123)},                             // valid send with long addr recipient
 		{": invalid coins", NewMsgSend(addr1, addr2, atom0)},                   // non positive coin
 		{"123atom,0eth: invalid coins", NewMsgSend(addr1, addr2, atom123eth0)}, // non positive coin in multicoins
-		{"Invalid sender address (empty address string is not allowed): invalid address", NewMsgSend(addrEmpty, addr2, atom123)},
-		{"Invalid recipient address (empty address string is not allowed): invalid address", NewMsgSend(addr1, addrEmpty, atom123)},
+		{"invalid from address: empty address string is not allowed: invalid address", NewMsgSend(addrEmpty, addr2, atom123)},
+		{"invalid to address: empty address string is not allowed: invalid address", NewMsgSend(addr1, addrEmpty, atom123)},
 	}
 
 	for _, tc := range cases {
@@ -104,7 +103,7 @@ func TestInputValidation(t *testing.T) {
 		{"", NewInput(addr2, multiCoins)},
 		{"", NewInput(addrLong, someCoins)},
 
-		{"empty address string is not allowed", NewInput(addrEmpty, someCoins)},
+		{"invalid input address: empty address string is not allowed: invalid address", NewInput(addrEmpty, someCoins)},
 		{": invalid coins", NewInput(addr1, emptyCoins)},                // invalid coins
 		{": invalid coins", NewInput(addr1, emptyCoins2)},               // invalid coins
 		{"10eth,0atom: invalid coins", NewInput(addr1, someEmptyCoins)}, // invalid coins
@@ -145,7 +144,7 @@ func TestOutputValidation(t *testing.T) {
 		{"", NewOutput(addr2, multiCoins)},
 		{"", NewOutput(addrLong, someCoins)},
 
-		{"Invalid output address (empty address string is not allowed): invalid address", NewOutput(addrEmpty, someCoins)},
+		{"invalid output address: empty address string is not allowed: invalid address", NewOutput(addrEmpty, someCoins)},
 		{": invalid coins", NewOutput(addr1, emptyCoins)},                // invalid coins
 		{": invalid coins", NewOutput(addr1, emptyCoins2)},               // invalid coins
 		{"10eth,0atom: invalid coins", NewOutput(addr1, someEmptyCoins)}, // invalid coins
@@ -241,12 +240,15 @@ func TestMsgMultiSendGetSigners(t *testing.T) {
 	var msg = NewMsgMultiSend(inputs, nil)
 
 	res := msg.GetSigners()
-	require.Equal(t, fmt.Sprintf("%v", addrs), fmt.Sprintf("%v", res))
+	for i, signer := range res {
+		require.Equal(t, signer.String(), addrs[i])
+	}
 }
 
 func TestMsgSendGetSigners(t *testing.T) {
 	from := sdk.AccAddress([]byte("input111111111111111"))
 	msg := NewMsgSend(from, sdk.AccAddress{}, sdk.NewCoins())
 	res := msg.GetSigners()
-	require.Equal(t, fmt.Sprintf("%v", res), fmt.Sprintf("%v", []string{from.String()}))
+	require.Equal(t, 1, len(res))
+	require.True(t, from.Equals(res[0]))
 }

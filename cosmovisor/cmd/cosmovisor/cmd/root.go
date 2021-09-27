@@ -5,8 +5,7 @@ package cmd
 func RunCosmovisorCommands(args []string) bool {
 	switch {
 	case ShouldGiveHelp(args):
-		DoHelp(args)
-		return false
+		return DoHelp()
 	case isVersionCommand(args):
 		printVersion()
 	}

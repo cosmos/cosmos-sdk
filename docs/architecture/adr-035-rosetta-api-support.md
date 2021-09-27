@@ -9,7 +9,7 @@
 
 ## Changelog
 
-- 2021-05-12: the external library  [cosmos-rosetta-gateway](https://github.com/tendermint/cosmos-rosetta-gateway) has been moved within the SDK.
+- 2021-05-12: the external library  [cosmos-rosetta-gateway](https://github.com/tendermint/cosmos-rosetta-gateway) has been moved within the Cosmos SDK.
 
 ## Context
 
@@ -164,8 +164,8 @@ type OfflineClient interface {
 
 ### 2. Cosmos SDK Implementation
 
-The cosmos sdk implementation, based on version, takes care of satisfying the `Client` interface.
-In Stargate, Launchpad and 0.37, we have introduced the concept of rosetta.Msg, this message is not in the shared repository as the sdk.Msg type differs between cosmos-sdk versions.
+The Cosmos SDK implementation, based on version, takes care of satisfying the `Client` interface.
+In Stargate, Launchpad and 0.37, we have introduced the concept of rosetta.Msg, this message is not in the shared repository as the sdk.Msg type differs between Cosmos SDK versions.
 
 The rosetta.Msg interface follows:
 
@@ -193,7 +193,7 @@ Rosetta API service could run within the same execution process as the applicati
 
 #### Separate API service
 
-Client application developers can write a new command to launch a Rosetta API server as a separate process too, using the rosetta command contained in the `/server/rosetta` package. Construction of the command depends on cosmos sdk version. Examples can be found inside `simd` for stargate, and `contrib/rosetta/simapp` for other release series.
+Client application developers can write a new command to launch a Rosetta API server as a separate process too, using the rosetta command contained in the `/server/rosetta` package. Construction of the command depends on Cosmos SDK version. Examples can be found inside `simd` for stargate, and `contrib/rosetta/simapp` for other release series.
 
 ## Status
 

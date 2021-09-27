@@ -20,7 +20,7 @@
 
 concept--release-approval-process
 
-Thank you for considering making contributions to Cosmos-SDK and related
+Thank you for considering making contributions to Cosmos SDK and related
 repositories!
 
 Contributing to this repo can mean many things such as participating in
@@ -29,10 +29,10 @@ contributors, the general procedure for contributing has been established:
 
 1. Either [open](https://github.com/cosmos/cosmos-sdk/issues/new/choose) or
 
-1. Weather:
+1. Whether:
    1. you want to propose something new, which requires specification, additional design or you would like to change a process, start with a [new discussion](https://github.com/cosmos/cosmos-sdk/discussions/new). With discussions we can better handle the design process using discussion threads. A discussion should usually lead to one or few issues,
-   2. the issue is a specified proposal or a bug then open directly a [new issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose),
-   3. [find](https://github.com/cosmos/cosmos-sdk/issues) an issue you'd like to help with.
+   2. The issue is a specified proposal or a bug, then open a [new issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose).
+   3. Review existing [issues](https://github.com/cosmos/cosmos-sdk/issues) to find an issue you'd like to help with.
 2. Participate in thoughtful discussion on that issue.
 3. If you would like to contribute:
    1. Ensure that the proposal has been accepted.
@@ -42,9 +42,9 @@ contributors, the general procedure for contributing has been established:
       make a comment on the issue to inform the community of your intentions
       to begin work.
 4. To submit a work and contribute in development follow standard GitHub best practices:
-   1. fork the repo, branch from the HEAD of `master`, make some commits, and submit a PR to `master`
-      - For core developers working within the cosmos-sdk repo, to ensure a clear
-        ownership of branches, branches must be named with the convention
+   1. Fork the repo, branch from the HEAD of `master`, make some commits, and submit a PR to `master`.
+      - For core developers working within the `cosmos-sdk` repo, follow branch name conventions to ensure a clear
+        ownership of branches 
         `{moniker}/{issue#}-branch-name`.
    2. If you have something to show, stat with a `Draft` PR. It's good to have an early validation and we highly encourage to do it. Draft PR also indicates to the community that the work is in progress.
       Moreover we want to avoid big PRs.

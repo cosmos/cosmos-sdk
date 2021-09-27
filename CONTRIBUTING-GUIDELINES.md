@@ -1,22 +1,22 @@
 # Contributing Guidelines
 
-This document is an extension to the [CONTRIBUTING](./CONTRIBUTING.md). It describes more in details the coding guidelines and requirements.
+This document is an extension to [CONTRIBUTING](./CONTRIBUTING.md) and provides more details about the coding guidelines and requirements.
 
 ## API & Design
 
 + Code must be well structured:
   + packages should have a limited responsibility (different concerns should go to different packages),
-  + types should be easy to compose,
+  + types must be easy to compose,
   + think about maintainbility and testability.
 + "Depend upon abstractions, [not] concretions".
 + Try to limit the number of methods you are exposing. It's easier to expose something later than to hide it.
 + Take advantage of `internal` package concept.
-+ Follow agreed upon design patterns and naming conventions
++ Follow agreed-upon design patterns and naming conventions.
 + publicly-exposed functions are named logically, have forward-thinking arguments and return types.
 + Avoid global variables and global configurators.
 + Favor composable and extensible designs.
 + Minimize code duplicaiton.
-+ Limit 3rd party dependencies.
++ Limit third-party dependencies.
 
 Performance:
 + Avoid unnecessary operations or memory allocations.
@@ -26,40 +26,40 @@ Security:
 + Pay proper attention to exploits
   + gas usage
   + transaction verification and signatures
-  + malleability.
-  + code must be always deterministic.
-+ Thread safety. If some functionality is not thread safe, or uses something which is not thread safe, then indicate it clearly on each level.
+  + malleability
+  + code must be always deterministic
++ Thread safety. If some functionality is not thread-safe, or uses something that is not thread-safe, then clearly indicate the risk on each level.
 
 
 ## Testing and
 
 Make sure your code is well tested:
-+ Provide unit tests for every unit of your code if possible. Unit tests should take around 70%-80% of your tests.
++ Provide unit tests for every unit of your code if possible. Unit tests are expected to comprise 70%-80% of your tests.
 + Describe the test scenarios you are implementing for integration tests.
 + Create integration tests for queries and msgs.
-+ Use both test cases and property / fuzzy testing. We use [rapid](pgregory.net/rapid) framework for property / fuzzy testing.
-+ Code test coverage should not decrease. Explain in a PR if it decreases.
++ Use both test cases and property / fuzzy testing. We use the [rapid](pgregory.net/rapid) Go library for property-based and fuzzy testing.
++ Do not decrease code test coverage. Explain in a PR if test coverage is decreased.
 
 
 
 ## Quality Assurance
 
-We are forming a QA team which will support the core SDK team and collaborators by:
+We are forming a QA team that will support the core Cosmos SDK team and collaborators by:
 - Improving the Cosmos SDK and Regen Network QA Processes
 - Improving automation in QA and testing
-- Defining high quality metrics
-- Maintaining and improving testing frameworks (unit tests, integration tests and functional tests)
+- Defining high-quality metrics
+- Maintaining and improving testing frameworks (unit tests, integration tests, and functional tests)
 - Defining test scenarios.
 - Verifying user experience and defining a high quality.
-    - We want to have **acceptance tests**! Document and list acceptance lists which are implemented and which are still missing.
-- Supporting other teams with testing frameworks, automation and User Experience testing.
-- Testing chain upgrades for every new breaking change
-    - defining automated tests assuring data integrity after an update.
+    - We want to have **acceptance tests**! Document and list acceptance lists that are implemented and identify acceptance tests that are still missing.
+- Supporting other teams with testing frameworks, automation, and User Experience testing.
+- Testing chain upgrades for every new breaking change.
+    - Defining automated tests that assure data integrity after an update.
 
 Desired outcomes:
 
 - QA team works with Development Team
-- QA is happening in parallel to Core development
+- QA is happening in parallel with Core Cosmos SDK development
 - Releases are more predictable (0.40 and 0.43 were not predictable at all).
 - QA reports. Goal is to guide with new tasks and be one of the QA measures.
 

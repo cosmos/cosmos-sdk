@@ -18,8 +18,6 @@
     - [Code Owner Membership](#code-owner-membership)
     - [Concept & Feature Approval Process](#concept--feature-approval-process)
 
-concept--release-approval-process
-
 Thank you for considering making contributions to Cosmos SDK and related
 repositories!
 

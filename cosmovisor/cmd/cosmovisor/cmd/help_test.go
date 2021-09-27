@@ -142,6 +142,7 @@ func (s *HelpTestSuite) TestShouldGiveHelp() {
 func (s *HelpTestSuite) TestGetHelpText() {
 	expectedPieces := []string{
 		"Cosmosvisor",
+		cosmovisor.EnvName, cosmovisor.EnvHome,
 		"https://github.com/cosmos/cosmos-sdk/tree/master/cosmovisor/README.md",
 	}
 

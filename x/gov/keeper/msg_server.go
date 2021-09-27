@@ -38,9 +38,9 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *types.MsgSubmitPro
 	}
 
 	// ref: https://github.com/cosmos/cosmos-sdk/issues/9683
-	ctx.BlockGasMeter().ConsumeGas(
-		uint64(3*int(store.KVGasConfig().WriteCostPerByte)*len(bytes)),
-		"Submit proposal",
+	ctx.GasMeter().ConsumeGas(
+		3*store.KVGasConfig().WriteCostPerByte*uint64(len(bytes)),
+		"submit proposal",
 	)
 
 	defer telemetry.IncrCounter(1, types.ModuleName, "proposal")

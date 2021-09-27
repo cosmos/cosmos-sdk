@@ -141,9 +141,8 @@ func (s *HelpTestSuite) TestShouldGiveHelp() {
 
 func (s *HelpTestSuite) TestGetHelpText() {
 	expectedPieces := []string{
-		cosmovisor.EnvHome, cosmovisor.EnvName, cosmovisor.EnvDownloadBin, cosmovisor.EnvRestartUpgrade,
-		cosmovisor.EnvSkipBackup, cosmovisor.EnvInterval, cosmovisor.EnvPreupgradeMaxRetries,
-		"https://github.com/cosmos/cosmos-sdk/tree/master/cosmovisor",
+		"Cosmosvisor",
+		"https://github.com/cosmos/cosmos-sdk/tree/master/cosmovisor/README.md",
 	}
 
 	actual := GetHelpText()

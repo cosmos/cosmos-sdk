@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/cosmos/cosmos-sdk/cosmovisor/errors"
 )
 
 type argsTestSuite struct {
@@ -446,7 +448,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 			} else {
 				if assert.Error(t, err) {
 					errCount := 1
-					if multi, isMulti := err.(*MultiError); isMulti {
+					if multi, isMulti := err.(*errors.MultiError); isMulti {
 						errCount = multi.Len()
 					}
 					assert.Equal(t, tc.expectedErrCount, errCount, "error count")

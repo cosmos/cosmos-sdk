@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/cosmovisor"
 	"os"
+
+	"github.com/cosmos/cosmos-sdk/cosmovisor"
+	"github.com/cosmos/cosmos-sdk/cosmovisor/errors"
 )
 
 // ShouldGiveHelp checks the env and provided args to see if help is needed or being requested.
@@ -28,7 +30,7 @@ func DoHelp() {
 	switch err := cerr.(type) {
 	case nil:
 		// Nothing to do. Move on.
-	case *cosmovisor.MultiError:
+	case *errors.MultiError:
 		fmt.Fprintf(os.Stderr, "[cosmovisor] multiple configuration errors found:\n")
 		for i, e := range err.GetErrors() {
 			fmt.Fprintf(os.Stderr, "  %d: %v\n", i+1, e)

@@ -1,4 +1,4 @@
-package cosmovisor
+package errors
 
 import (
 	"fmt"

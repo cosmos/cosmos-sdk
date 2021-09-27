@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
 )
 
 // environment variable names
@@ -162,7 +164,7 @@ func GetConfigFromEnv() (*Config, error) {
 	errs = append(errs, cfg.validate()...)
 
 	if len(errs) > 0 {
-		return nil, FlattenErrors(errs...)
+		return nil, cverrors.FlattenErrors(errs...)
 	}
 	return cfg, nil
 }

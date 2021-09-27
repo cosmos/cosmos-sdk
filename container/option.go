@@ -43,7 +43,7 @@ func provide(ctr *container, scope Scope, constructors []interface{}) error {
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		_, err = ctr.addNode(&rc, scope, false)
+		_, err = ctr.addNode(&rc, scope)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -59,54 +59,6 @@ func Supply(values ...interface{}) Option {
 			if err != nil {
 				return errors.WithStack(err)
 			}
-		}
-		return nil
-	})
-}
-
-// AutoGroupTypes creates an option which registers the provided types as types which
-// will automatically get grouped together. For a given type T, T and []T can
-// be declared as output parameters for constructors as many times within the container
-// as desired. All of the provided values for T can be retrieved by declaring an
-// []T input parameter.
-func AutoGroupTypes(types ...reflect.Type) Option {
-	return configOption(func(c *config) error {
-		for _, ty := range types {
-			if ty.Kind() == reflect.Slice {
-				return errors.Errorf("slice type %T cannot be used as an auto-group type", ty)
-			}
-
-			if c.onePerScopeTypes[ty] {
-				return errors.Errorf("type %v is already registered as a one per scope type, trying to mark as an auto-group type", ty)
-			}
-			c.logf("Registering auto-group type %v", ty)
-			c.autoGroupTypes[ty] = true
-			node, err := c.typeGraphNode(reflect.SliceOf(ty))
-			if err != nil {
-				return errors.WithStack(err)
-			}
-			node.SetComment("auto-group")
-		}
-		return nil
-	})
-}
-
-// OnePerScopeTypes creates an option which registers the provided types as types which
-// can have up to one value per scope. All of the values for a one-per-scope type T
-// and their respective scopes, can be retrieved by declaring an input parameter map[string]T.
-func OnePerScopeTypes(types ...reflect.Type) Option {
-	return configOption(func(c *config) error {
-		for _, ty := range types {
-			if c.autoGroupTypes[ty] {
-				return errors.Errorf("type %v is already registered as an auto-group type, trying to mark as one per scope type", ty)
-			}
-			c.logf("Registering one-per-scope type %v", ty)
-			c.onePerScopeTypes[ty] = true
-			node, err := c.typeGraphNode(reflect.MapOf(stringType, ty))
-			if err != nil {
-				return errors.WithStack(err)
-			}
-			node.SetComment("one-per-scope")
 		}
 		return nil
 	})

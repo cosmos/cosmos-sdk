@@ -7,6 +7,20 @@ import (
 	"github.com/pkg/errors"
 )
 
+// OnePerScopeType marks a type which
+// can have up to one value per scope. All of the values for a one-per-scope type T
+// and their respective scopes, can be retrieved by declaring an input parameter map[string]T.
+type OnePerScopeType interface {
+	// IsOnePerScopeType is a marker function just indicates that this is a one-per-scope type.
+	IsOnePerScopeType()
+}
+
+var onePerScopeTypeType = reflect.TypeOf((*OnePerScopeType)(nil)).Elem()
+
+func isOnePerScopeType(t reflect.Type) bool {
+	return t.Implements(onePerScopeTypeType)
+}
+
 type onePerScopeResolver struct {
 	typ       reflect.Type
 	mapType   reflect.Type
@@ -30,7 +44,7 @@ func (o *onePerScopeResolver) describeLocation() string {
 
 func (o *mapOfOnePerScopeResolver) resolve(c *container, _ Scope, caller Location) (reflect.Value, error) {
 	// Log
-	c.logf("Providing %v to %s from:", o.mapType, caller.Name())
+	c.logf("Providing one-per-scope type map %v to %s from:", o.mapType, caller.Name())
 	c.indentLogger()
 	for scope, node := range o.providers {
 		c.logf("%s: %s", scope.Name(), node.provider.Location)

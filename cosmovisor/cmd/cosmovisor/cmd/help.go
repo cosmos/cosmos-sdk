@@ -9,16 +9,29 @@ import (
 )
 
 // ShouldGiveHelp checks the env and provided args to see if help is needed or being requested.
-// Help is needed if the os.Getenv(EnvName) env var isn't set.
-// Help is requested if the first arg is "help" or "--help"; or the only arg is "-h"
+// Help is needed if at least one of the following is true:
+// * the cosmovisor.EnvName env var isn't set.
+// * the cosmovisor.EnvHome env var isn't set.
+// Help is requested if one of the following is true:
+// * the first arg is "help"
+// * any args are "-h"
+// * any args are "--help"
 func ShouldGiveHelp(args []string) bool {
-	if len(os.Getenv(cosmovisor.EnvName)) == 0 {
+	if len(os.Getenv(cosmovisor.EnvName)) == 0 || len(os.Getenv(cosmovisor.EnvHome)) == 0 {
 		return true
 	}
 	if len(args) == 0 {
 		return false
 	}
-	return args[0] == "help" || args[0] == "--help" || (len(args) == 1 && args[0] == "-h")
+	if args[0] == "help" {
+		return true
+	}
+	for _, arg := range args {
+		if arg == "--help" || arg == "-h" {
+			return true
+		}
+	}
+	return false
 }
 
 // DoHelp outputs help text, config info, and attempts to run the binary with the --help flag.

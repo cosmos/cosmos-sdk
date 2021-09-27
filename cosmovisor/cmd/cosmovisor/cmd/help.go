@@ -35,7 +35,7 @@ func ShouldGiveHelp(args []string) bool {
 }
 
 // DoHelp outputs help text, config info, and attempts to run the binary with the --help flag.
-func DoHelp() {
+func DoHelp(args []string) {
 	// Output the help text
 	fmt.Println(GetHelpText())
 	// If the config isn't valid, say what's wrong and we're done.
@@ -53,11 +53,11 @@ func DoHelp() {
 		fmt.Fprintf(os.Stderr, "[cosmovisor] %v\n", err)
 		return
 	}
-	// If the config's legit, output what we see it as.
+	// If the config is okay, output what we see it as.
 	fmt.Println("[cosmovisor] config is valid:")
 	fmt.Println(cfg.DetailString())
-	// Attempt to run the configured binary with the --help flag.
-	if err := cosmovisor.RunHelp(cfg, os.Stdout, os.Stderr); err != nil {
+	// Attempt to run the configured binary with the given args in the hopes that it too outputs some help info.
+	if err := cosmovisor.RunHelp(cfg, args, os.Stdout, os.Stderr); err != nil {
 		fmt.Fprintf(os.Stderr, "[cosmovisor] %v\n", err)
 	}
 }

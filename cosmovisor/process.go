@@ -86,9 +86,9 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	return true, DoUpgrade(l.cfg, l.fw.currentInfo)
 }
 
-// RunHelp runs the configured binary with the --help flag, timing out after 2 seconds.
-func RunHelp(cfg *Config, stdout, stderr io.Writer) error {
-	args := []string{"--help"}
+// RunHelp runs the configured binary with the given args, timing out after 2 seconds.
+// Hopefully, the args are such that help text will be generated and printed by the configured binary.
+func RunHelp(cfg *Config, args []string, stdout, stderr io.Writer) error {
 	bin, cmd, err := launchCommand(cfg, args, stdout, stderr)
 	if err != nil {
 		return err

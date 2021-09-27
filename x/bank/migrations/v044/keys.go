@@ -5,6 +5,9 @@ var (
 )
 
 func CreateAddressDenomPrefix(denom string) []byte {
-	key := append(DenomAddressPrefix, []byte(denom)...)
-	return append(key, 0)
+	key := make([]byte, len(DenomAddressPrefix)+len(denom)+1)
+	copy(key, DenomAddressPrefix)
+	copy(key[len(DenomAddressPrefix):], denom)
+	// key[last] = 0 - not needed, because this is the default
+	return key
 }

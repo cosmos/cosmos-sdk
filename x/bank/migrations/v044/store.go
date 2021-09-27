@@ -79,11 +79,14 @@ func migrateDenomMetadata(store sdk.KVStore) error {
 
 	for ; oldDenomMetaDataIter.Valid(); oldDenomMetaDataIter.Next() {
 		oldKey := oldDenomMetaDataIter.Key()
-		// old key: prefix_bytes | denom_bytes | denom_bytes
-		newKey := append(types.DenomMetadataPrefix, oldKey[:len(oldKey)/2+1]...)
+		l := len(oldKey)/2 + 1
 
+		var newKey = make([]byte, len(types.DenomMetadataPrefix)+l)
+		copy(newKey, types.DenomMetadataPrefix)
+		// old key: prefix_bytes | denom_bytes | denom_bytes
+		newKey = append(newKey, oldKey[:l]...)
 		store.Set(newKey, oldDenomMetaDataIter.Value())
-		oldDenomMetaDataStore.Delete(oldDenomMetaDataIter.Key())
+		oldDenomMetaDataStore.Delete(oldKey)
 	}
 
 	return nil

@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/gaskv"
 	"github.com/cosmos/cosmos-sdk/store/types"
-
-	"github.com/stretchr/testify/require"
 )
 
 func bz(s string) []byte { return []byte(s) }
@@ -41,14 +40,18 @@ func TestGasKVStoreBasic(t *testing.T) {
 
 func TestGasKVStoreIterator(t *testing.T) {
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
-	meter := types.NewGasMeter(10000)
+	meter := types.NewGasMeter(100000)
 	st := gaskv.NewStore(mem, meter, types.KVGasConfig())
 	require.False(t, st.Has(keyFmt(1)))
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
 	require.Empty(t, st.Get(keyFmt(2)), "Expected `key2` to be empty")
+	require.Empty(t, st.Get(keyFmt(3)), "Expected `key3` to be empty")
+
 	st.Set(keyFmt(1), valFmt(1))
 	require.True(t, st.Has(keyFmt(1)))
 	st.Set(keyFmt(2), valFmt(2))
+	require.True(t, st.Has(keyFmt(2)))
+	st.Set(keyFmt(3), valFmt(0))
 
 	iterator := st.Iterator(nil, nil)
 	start, end := iterator.Domain()
@@ -71,8 +74,16 @@ func TestGasKVStoreIterator(t *testing.T) {
 	vb := iterator.Value()
 	require.Equal(t, vb, valFmt(2))
 	iterator.Next()
+	require.Equal(t, types.Gas(13377), meter.GasConsumed())
+	kc := iterator.Key()
+	require.Equal(t, kc, keyFmt(3))
+	vc := iterator.Value()
+	require.Equal(t, vc, valFmt(0))
+	iterator.Next()
+	require.Equal(t, types.Gas(13446), meter.GasConsumed())
 	require.False(t, iterator.Valid())
 	require.Panics(t, iterator.Next)
+	require.Equal(t, types.Gas(13476), meter.GasConsumed())
 	require.NoError(t, iterator.Error())
 
 	reverseIterator := st.ReverseIterator(nil, nil)
@@ -81,6 +92,8 @@ func TestGasKVStoreIterator(t *testing.T) {
 			t.Fatal(err)
 		}
 	})
+	require.Equal(t, reverseIterator.Key(), keyFmt(3))
+	reverseIterator.Next()
 	require.Equal(t, reverseIterator.Key(), keyFmt(2))
 	reverseIterator.Next()
 	require.Equal(t, reverseIterator.Key(), keyFmt(1))
@@ -88,7 +101,7 @@ func TestGasKVStoreIterator(t *testing.T) {
 	require.False(t, reverseIterator.Valid())
 	require.Panics(t, reverseIterator.Next)
 
-	require.Equal(t, types.Gas(9194), meter.GasConsumed())
+	require.Equal(t, types.Gas(13782), meter.GasConsumed())
 }
 
 func TestGasKVStoreOutOfGasSet(t *testing.T) {

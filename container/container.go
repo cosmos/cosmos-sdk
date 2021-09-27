@@ -77,21 +77,94 @@ func (c *container) call(constructor *ProviderDescriptor, scope Scope) ([]reflec
 	return out, nil
 }
 
+func (c *container) getResolver(typ reflect.Type) (resolver, error) {
+	if vr, ok := c.resolvers[typ]; ok {
+		return vr, nil
+	}
+
+	elemType := typ
+	if isAutoGroupSliceType(elemType) || isOnePerScopeMapType(elemType) {
+		elemType = elemType.Elem()
+	}
+
+	var typeGraphNode *cgraph.Node
+	var err error
+
+	if isAutoGroupType(elemType) {
+		c.logf("Registering resolver for auto-group type %v", elemType)
+		sliceType := reflect.SliceOf(elemType)
+
+		typeGraphNode, err = c.typeGraphNode(sliceType)
+		if err != nil {
+			return nil, err
+		}
+		typeGraphNode.SetComment("auto-group")
+
+		r := &groupResolver{
+			typ:       elemType,
+			sliceType: sliceType,
+			graphNode: typeGraphNode,
+		}
+
+		c.resolvers[elemType] = r
+		c.resolvers[sliceType] = &sliceGroupResolver{r}
+	} else if isOnePerScopeType(elemType) {
+		c.logf("Registering resolver for one-per-scope type %v", elemType)
+		mapType := reflect.MapOf(stringType, elemType)
+
+		typeGraphNode, err = c.typeGraphNode(mapType)
+		if err != nil {
+			return nil, err
+		}
+		typeGraphNode.SetComment("one-per-scope")
+
+		r := &onePerScopeResolver{
+			typ:       elemType,
+			mapType:   mapType,
+			providers: map[Scope]*simpleProvider{},
+			idxMap:    map[Scope]int{},
+			graphNode: typeGraphNode,
+		}
+
+		c.resolvers[elemType] = r
+		c.resolvers[mapType] = &mapOfOnePerScopeResolver{r}
+	}
+
+	return c.resolvers[typ], nil
+}
+
 func (c *container) addNode(constructor *ProviderDescriptor, scope Scope) (interface{}, error) {
 	constructorGraphNode, err := c.locationGraphNode(constructor.Location, scope)
 	if err != nil {
-		return reflect.Value{}, err
+		return nil, err
 	}
 
 	hasScopeParam := false
 	for _, in := range constructor.Inputs {
-		if in.Type == scopeType {
+		typ := in.Type
+		if typ == scopeType {
 			hasScopeParam = true
 		}
 
-		typeGraphNode, err := c.typeGraphNode(in.Type)
+		if isAutoGroupType(typ) {
+			return nil, fmt.Errorf("auto-group type %v can't be used as an input parameter", typ)
+		} else if isOnePerScopeType(typ) {
+			return nil, fmt.Errorf("one-per-scope type %v can't be used as an input parameter", typ)
+		}
+
+		vr, err := c.getResolver(typ)
 		if err != nil {
-			return reflect.Value{}, err
+			return nil, err
+		}
+
+		var typeGraphNode *cgraph.Node
+		if vr != nil {
+			typeGraphNode = vr.typeGraphNode()
+		} else {
+			typeGraphNode, err = c.typeGraphNode(typ)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		c.addGraphEdge(typeGraphNode, constructorGraphNode)
@@ -102,107 +175,56 @@ func (c *container) addNode(constructor *ProviderDescriptor, scope Scope) (inter
 		c.indentLogger()
 		defer c.dedentLogger()
 
-		node := &simpleProvider{
+		sp := &simpleProvider{
 			provider: constructor,
 			scope:    scope,
-		}
-
-		constructorGraphNode, err := c.locationGraphNode(constructor.Location, scope)
-		if err != nil {
-			return reflect.Value{}, err
 		}
 
 		for i, out := range constructor.Outputs {
 			typ := out.Type
 
 			// one-per-scope maps can't be used as a return type
-			if typ.Kind() == reflect.Map && isOnePerScopeType(typ.Elem()) && typ.Key().Kind() == reflect.String {
+			if isOnePerScopeMapType(typ) {
 				return nil, fmt.Errorf("%v cannot be used as a return type because %v is a one-per-scope type",
 					typ, typ.Elem())
 			}
 
 			// auto-group slices of auto-group types
-			if typ.Kind() == reflect.Slice && isAutoGroupType(typ.Elem()) {
+			if isAutoGroupSliceType(typ) {
 				typ = typ.Elem()
 			}
 
-			vr, ok := c.resolvers[typ]
-			if ok {
+			vr, err := c.getResolver(typ)
+			if err != nil {
+				return nil, err
+			}
+
+			if vr != nil {
 				c.logf("Found resolver for %v: %T", typ, vr)
-				err := vr.addNode(node, i, c)
+				err := vr.addNode(sp, i)
 				if err != nil {
 					return nil, err
 				}
 			} else {
-				var typeGraphNode *cgraph.Node
-				var err error
+				c.logf("Registering resolver for simple type %v", typ)
 
-				if isAutoGroupType(typ) {
-					c.logf("Registering resolver for auto-group type %v", typ)
-					sliceType := reflect.SliceOf(typ)
-
-					typeGraphNode, err = c.typeGraphNode(sliceType)
-					if err != nil {
-						return reflect.Value{}, err
-					}
-					typeGraphNode.SetComment("auto-group")
-
-					r := &groupResolver{
-						typ:       typ,
-						sliceType: sliceType,
-					}
-
-					err = r.addNode(node, i, c)
-					if err != nil {
-						return nil, err
-					}
-
-					c.resolvers[typ] = r
-					c.resolvers[sliceType] = &sliceGroupResolver{r}
-
-				} else if isOnePerScopeType(typ) {
-					c.logf("Registering resolver for one-per-scope type %v", typ)
-					mapType := reflect.MapOf(stringType, typ)
-
-					typeGraphNode, err = c.typeGraphNode(mapType)
-					if err != nil {
-						return reflect.Value{}, err
-					}
-					typeGraphNode.SetComment("one-per-scope")
-
-					r := &onePerScopeResolver{
-						typ:       typ,
-						mapType:   mapType,
-						providers: map[Scope]*simpleProvider{},
-						idxMap:    map[Scope]int{},
-					}
-
-					err = r.addNode(node, i, c)
-					if err != nil {
-						return nil, err
-					}
-
-					c.resolvers[typ] = r
-					c.resolvers[mapType] = &mapOfOnePerScopeResolver{r}
-				} else {
-					c.logf("Registering resolver for simple type %v", typ)
-
-					typeGraphNode, err = c.typeGraphNode(typ)
-					if err != nil {
-						return reflect.Value{}, err
-					}
-
-					c.resolvers[typ] = &simpleResolver{
-						node: node,
-						typ:  typ,
-					}
+				typeGraphNode, err := c.typeGraphNode(typ)
+				if err != nil {
+					return nil, err
 				}
 
-				c.addGraphEdge(constructorGraphNode, typeGraphNode)
+				vr = &simpleResolver{
+					node:      sp,
+					typ:       typ,
+					graphNode: typeGraphNode,
+				}
+				c.resolvers[typ] = vr
 			}
+
+			c.addGraphEdge(constructorGraphNode, vr.typeGraphNode())
 		}
 
-		return node, nil
+		return sp, nil
 	} else {
 		c.logf("Registering scope provider: %s", constructor.Location.String())
 		c.indentLogger()
@@ -224,16 +246,18 @@ func (c *container) addNode(constructor *ProviderDescriptor, scope Scope) (inter
 				return nil, errors.Errorf("duplicate provision of type %v by scoped provider %s\n\talready provided by %s",
 					typ, constructor.Location, existing.describeLocation())
 			}
+
+			typeGraphNode, err := c.typeGraphNode(typ)
+			if err != nil {
+				return reflect.Value{}, err
+			}
+
 			c.resolvers[typ] = &scopeDepResolver{
 				typ:         typ,
 				idxInValues: i,
 				node:        node,
 				valueMap:    map[Scope]reflect.Value{},
-			}
-
-			typeGraphNode, err := c.typeGraphNode(typ)
-			if err != nil {
-				return reflect.Value{}, err
+				graphNode:   typeGraphNode,
 			}
 
 			c.addGraphEdge(constructorGraphNode, typeGraphNode)
@@ -263,9 +287,10 @@ func (c *container) supply(value reflect.Value, location Location) error {
 	}
 
 	c.resolvers[typ] = &supplyResolver{
-		typ:   typ,
-		value: value,
-		loc:   location,
+		typ:       typ,
+		value:     value,
+		loc:       location,
+		graphNode: typeGraphNode,
 	}
 
 	return nil
@@ -288,8 +313,12 @@ func (c *container) resolve(in ProviderInput, scope Scope, caller Location) (ref
 		return reflect.ValueOf(scope), nil
 	}
 
-	vr, ok := c.resolvers[in.Type]
-	if !ok {
+	vr, err := c.getResolver(in.Type)
+	if err != nil {
+		return reflect.Value{}, err
+	}
+
+	if vr == nil {
 		if in.Optional {
 			c.logf("Providing zero value for optional dependency %v", in.Type)
 			return reflect.Zero(in.Type), nil

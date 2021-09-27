@@ -364,6 +364,13 @@ func TestOnePerScope(t *testing.T) {
 		),
 		"bad return type",
 	)
+
+	require.NoError(t,
+		container.Run(
+			func(map[string]OnePerScopeInt) {},
+		),
+		"no providers",
+	)
 }
 
 type AutoGroupInt int
@@ -401,6 +408,13 @@ func TestAutoGroup(t *testing.T) {
 			),
 		),
 		"bad input type",
+	)
+
+	require.NoError(t,
+		container.Run(
+			func([]AutoGroupInt) {},
+		),
+		"no providers",
 	)
 }
 

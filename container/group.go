@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/goccy/go-graphviz/cgraph"
+
 	"github.com/pkg/errors"
 )
 
@@ -22,6 +24,10 @@ func isAutoGroupType(t reflect.Type) bool {
 	return t.Implements(autoGroupTypeType)
 }
 
+func isAutoGroupSliceType(typ reflect.Type) bool {
+	return typ.Kind() == reflect.Slice && isAutoGroupType(typ.Elem())
+}
+
 type groupResolver struct {
 	typ          reflect.Type
 	sliceType    reflect.Type
@@ -29,6 +35,7 @@ type groupResolver struct {
 	providers    []*simpleProvider
 	resolved     bool
 	values       reflect.Value
+	graphNode    *cgraph.Node
 }
 
 type sliceGroupResolver struct {
@@ -77,20 +84,12 @@ func (g *groupResolver) resolve(_ *container, _ Scope, _ Location) (reflect.Valu
 	return reflect.Value{}, errors.Errorf("%v is an auto-group type and cannot be used as an input value, instead use %v", g.typ, g.sliceType)
 }
 
-func (g *groupResolver) addNode(n *simpleProvider, i int, c *container) error {
+func (g *groupResolver) addNode(n *simpleProvider, i int) error {
 	g.providers = append(g.providers, n)
 	g.idxsInValues = append(g.idxsInValues, i)
-
-	constructorGraphNode, err := c.locationGraphNode(n.provider.Location, n.scope)
-	if err != nil {
-		return err
-	}
-
-	typeGraphNode, err := c.typeGraphNode(g.sliceType)
-	if err != nil {
-		return err
-	}
-
-	c.addGraphEdge(constructorGraphNode, typeGraphNode)
 	return nil
+}
+
+func (g groupResolver) typeGraphNode() *cgraph.Node {
+	return g.graphNode
 }

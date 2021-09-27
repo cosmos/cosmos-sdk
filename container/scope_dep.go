@@ -2,6 +2,8 @@ package container
 
 import (
 	"reflect"
+
+	"github.com/goccy/go-graphviz/cgraph"
 )
 
 type scopeDepProvider struct {
@@ -15,6 +17,7 @@ type scopeDepResolver struct {
 	idxInValues int
 	node        *scopeDepProvider
 	valueMap    map[Scope]reflect.Value
+	graphNode   *cgraph.Node
 }
 
 func (s scopeDepResolver) describeLocation() string {
@@ -45,6 +48,10 @@ func (s scopeDepResolver) resolve(ctr *container, scope Scope, caller Location) 
 	return value, nil
 }
 
-func (s scopeDepResolver) addNode(p *simpleProvider, _ int, _ *container) error {
+func (s scopeDepResolver) addNode(p *simpleProvider, _ int) error {
 	return duplicateDefinitionError(s.typ, p.provider.Location, s.node.provider.Location.String())
+}
+
+func (s scopeDepResolver) typeGraphNode() *cgraph.Node {
+	return s.graphNode
 }

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/goccy/go-graphviz/cgraph"
+
 	"github.com/pkg/errors"
 )
 
@@ -21,6 +23,10 @@ func isOnePerScopeType(t reflect.Type) bool {
 	return t.Implements(onePerScopeTypeType)
 }
 
+func isOnePerScopeMapType(typ reflect.Type) bool {
+	return typ.Kind() == reflect.Map && isOnePerScopeType(typ.Elem()) && typ.Key().Kind() == reflect.String
+}
+
 type onePerScopeResolver struct {
 	typ       reflect.Type
 	mapType   reflect.Type
@@ -28,6 +34,7 @@ type onePerScopeResolver struct {
 	idxMap    map[Scope]int
 	resolved  bool
 	values    reflect.Value
+	graphNode *cgraph.Node
 }
 
 type mapOfOnePerScopeResolver struct {
@@ -74,7 +81,7 @@ func (o *mapOfOnePerScopeResolver) resolve(c *container, _ Scope, caller Locatio
 	return o.values, nil
 }
 
-func (o *onePerScopeResolver) addNode(n *simpleProvider, i int, c *container) error {
+func (o *onePerScopeResolver) addNode(n *simpleProvider, i int) error {
 	if n.scope == nil {
 		return errors.Errorf("cannot define a constructor with one-per-scope dependency %v which isn't provided in a scope", o.typ)
 	}
@@ -87,20 +94,13 @@ func (o *onePerScopeResolver) addNode(n *simpleProvider, i int, c *container) er
 	o.providers[n.scope] = n
 	o.idxMap[n.scope] = i
 
-	constructorGraphNode, err := c.locationGraphNode(n.provider.Location, n.scope)
-	if err != nil {
-		return err
-	}
-
-	typeGraphNode, err := c.typeGraphNode(o.mapType)
-	if err != nil {
-		return err
-	}
-
-	c.addGraphEdge(constructorGraphNode, typeGraphNode)
 	return nil
 }
 
-func (o *mapOfOnePerScopeResolver) addNode(s *simpleProvider, _ int, _ *container) error {
+func (o *mapOfOnePerScopeResolver) addNode(s *simpleProvider, _ int) error {
 	return errors.Errorf("%v is a one-per-scope type and thus %v can't be used as an output parameter in %s", o.typ, o.mapType, s.provider.Location)
+}
+
+func (o onePerScopeResolver) typeGraphNode() *cgraph.Node {
+	return o.graphNode
 }

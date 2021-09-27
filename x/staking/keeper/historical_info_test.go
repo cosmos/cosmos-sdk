@@ -86,7 +86,7 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, hi5, recv)
 
-	//genesis validator
+	// genesis validator
 	genesisVals := app.StakingKeeper.GetAllValidators(ctx)
 	require.Len(t, genesisVals, 1)
 

@@ -2,12 +2,14 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/cosmovisor"
+	"os"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"os"
-	"testing"
+
+	"github.com/cosmos/cosmos-sdk/cosmovisor"
 )
 
 type HelpTestSuite struct {

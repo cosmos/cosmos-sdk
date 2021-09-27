@@ -5,7 +5,6 @@ import (
 	io "io"
 	"os"
 	"path/filepath"
-	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 
@@ -29,14 +28,7 @@ import (
 )
 
 func Run(options ...container.Option) {
-	options = append(options,
-		container.AutoGroupTypes(
-			reflect.TypeOf(RootCommand{}),
-			reflect.TypeOf(QueryCommand{}),
-			reflect.TypeOf(TxCommand{}),
-			reflect.TypeOf((*ClientContextOption)(nil)).Elem(),
-		),
-	)
+	options = append(options, container.Debug())
 	err := container.Run(runner, options...)
 	if err != nil {
 		panic(err)

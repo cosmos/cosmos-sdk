@@ -35,3 +35,5 @@ type ServiceImpl struct {
 	Desc *grpc.ServiceDesc
 	Impl interface{}
 }
+
+func (Handler) IsOnePerScopeType() {}

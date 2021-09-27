@@ -5,7 +5,6 @@ import (
 	io "io"
 	"net/http"
 	"path/filepath"
-	"reflect"
 
 	"github.com/spf13/cast"
 
@@ -37,9 +36,9 @@ import (
 
 type Name string
 
+type BaseAppOption func(types.AppOptions, *baseapp.BaseApp)
+
 var BaseAppProvider = container.Options(
-	container.AutoGroupTypes(reflect.TypeOf(func(*baseapp.BaseApp) {})),
-	container.AutoGroupTypes(reflect.TypeOf(func(types.AppOptions) func(*baseapp.BaseApp) { return nil })),
 	container.Provide(provideBaseApp),
 )
 
@@ -49,10 +48,7 @@ type baseAppInput struct {
 	Name         Name          `optional:"true"`
 	TxDecoder    sdk.TxDecoder `optional:"true"`
 	TypeRegistry codectypes.TypeRegistry
-	Options      []func(*baseapp.BaseApp)
-
-	// AppOptOptions are functions which provide a BaseApp option based on some AppOptions provided at runtime
-	AppOptOptions []func(types.AppOptions) func(*baseapp.BaseApp)
+	Options      []BaseAppOption
 }
 
 type app struct {
@@ -113,16 +109,14 @@ func provideBaseApp(inputs baseAppInput) types.AppCreator {
 			baseapp.SetSnapshotKeepRecent(cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent))),
 		}
 
-		for _, appOptOpt := range inputs.AppOptOptions {
-			opts = append(opts, appOptOpt(appOpts))
-		}
-
-		opts = append(opts, inputs.Options...)
-
 		baseApp := baseapp.NewBaseApp(string(name), logger, db, txDecoder, opts...)
 
 		if tracer != nil {
 			baseApp.SetCommitMultiStoreTracer(tracer)
+		}
+
+		for _, opt := range inputs.Options {
+			opt(appOpts, baseApp)
 		}
 
 		return &app{

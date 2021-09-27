@@ -21,9 +21,6 @@ import (
 
 func ProvideAppConfig(config *Config) container.Option {
 	return container.Options(
-		container.OnePerScopeTypes(
-			reflect.TypeOf(Handler{}),
-		),
 		composeModules(config),
 		container.Provide(func(handlers map[string]Handler, jsonCodec codec.JSONCodec) func(*baseapp.BaseApp) {
 			return func(app *baseapp.BaseApp) {

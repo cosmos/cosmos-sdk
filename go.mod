@@ -57,10 +57,7 @@ require (
 	sigs.k8s.io/yaml v1.2.0
 )
 
-require (
-	github.com/cosmos/cosmos-sdk/container v0.0.0-20210923153110-f2652874e6a3
-	sigs.k8s.io/yaml v1.1.0
-)
+require github.com/cosmos/cosmos-sdk/container v0.0.0-20210923153110-f2652874e6a3
 
 require (
 	filippo.io/edwards25519 v1.0.0-beta.2 // indirect

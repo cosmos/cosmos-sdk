@@ -1,19 +1,14 @@
 package app
 
 import (
-	"reflect"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/container"
 )
 
-type CodecOption = func(codectypes.TypeRegistry)
+type CodecOption func(codectypes.TypeRegistry)
 
 var CodecProvider = container.Options(
-	container.AutoGroupTypes(
-		reflect.TypeOf(func(codectypes.TypeRegistry) {}),
-	),
 	container.Provide(func(options []CodecOption) (
 		codectypes.TypeRegistry,
 		codec.Codec,

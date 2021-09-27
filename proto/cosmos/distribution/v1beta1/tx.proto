@@ -6,6 +6,7 @@ option (gogoproto.equal_all) = true;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
 
 // Msg defines the distribution Msg service.
 service Msg {
@@ -32,8 +33,8 @@ message MsgSetWithdrawAddress {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
-  string withdraw_address  = 2 [(gogoproto.moretags) = "yaml:\"withdraw_address\""];
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string withdraw_address  = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgSetWithdrawAddressResponse defines the Msg/SetWithdrawAddress response type.
@@ -45,8 +46,8 @@ message MsgWithdrawDelegatorReward {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
-  string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward response type.
@@ -58,7 +59,7 @@ message MsgWithdrawValidatorCommission {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgWithdrawValidatorCommissionResponse defines the Msg/WithdrawValidatorCommission response type.
@@ -72,7 +73,7 @@ message MsgFundCommunityPool {
 
   repeated cosmos.base.v1beta1.Coin amount = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  string depositor = 2;
+  string depositor = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgFundCommunityPoolResponse defines the Msg/FundCommunityPool response type.

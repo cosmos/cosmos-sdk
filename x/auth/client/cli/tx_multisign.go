@@ -92,15 +92,24 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			return err
 		}
 
-		multisigInfo, err := getMultisigInfo(clientCtx, args[1])
+		k, err := getMultisigRecord(clientCtx, args[1])
+		if err != nil {
+			return err
+		}
+		pubKey, err := k.GetPubKey()
 		if err != nil {
 			return err
 		}
 
-		multisigPub := multisigInfo.GetPubKey().(*kmultisig.LegacyAminoPubKey)
+		addr, err := k.GetAddress()
+		if err != nil {
+			return err
+		}
+
+		multisigPub := pubKey.(*kmultisig.LegacyAminoPubKey)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 		if !clientCtx.Offline {
-			accnum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
+			accnum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, addr)
 			if err != nil {
 				return err
 			}
@@ -264,7 +273,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 		}
 		scanner := authclient.NewBatchScanner(txCfg, infile)
 
-		multisigInfo, err := getMultisigInfo(clientCtx, args[1])
+		k, err := getMultisigRecord(clientCtx, args[1])
 		if err != nil {
 			return err
 		}
@@ -279,8 +288,13 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			signatureBatch = append(signatureBatch, sigs)
 		}
 
+		addr, err := k.GetAddress()
+		if err != nil {
+			return err
+		}
+
 		if !clientCtx.Offline {
-			accnum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
+			accnum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, addr)
 			if err != nil {
 				return err
 			}
@@ -302,8 +316,11 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
-
-			multisigPub := multisigInfo.GetPubKey().(*kmultisig.LegacyAminoPubKey)
+			pubKey, err := k.GetPubKey()
+			if err != nil {
+				return err
+			}
+			multisigPub := pubKey.(*kmultisig.LegacyAminoPubKey)
 			multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 			signingData := signing.SignerData{
 				ChainID:       txFactory.ChainID(),
@@ -402,15 +419,12 @@ func readSignaturesFromFile(ctx client.Context, filename string) (sigs []signing
 	return sigs, nil
 }
 
-func getMultisigInfo(clientCtx client.Context, name string) (keyring.Info, error) {
+func getMultisigRecord(clientCtx client.Context, name string) (*keyring.Record, error) {
 	kb := clientCtx.Keyring
-	multisigInfo, err := kb.Key(name)
+	multisigRecord, err := kb.Key(name)
 	if err != nil {
 		return nil, errors.Wrap(err, "error getting keybase multisig account")
 	}
-	if multisigInfo.GetType() != keyring.TypeMulti {
-		return nil, fmt.Errorf("%q must be of type %s: %s", name, keyring.TypeMulti, multisigInfo.GetType())
-	}
 
-	return multisigInfo, nil
+	return multisigRecord, nil
 }

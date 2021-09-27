@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
@@ -106,9 +106,10 @@ func (ss StdSignature) MarshalYAML() (interface{}, error) {
 		pk = ss.PubKey.String()
 	}
 
+	
 	bz, err := yaml.Marshal(struct {
-		PubKey    string
-		Signature string
+		PubKey    string `json:"pub_key"`
+		Signature string `json:"signature"`
 	}{
 		pk,
 		fmt.Sprintf("%X", ss.Signature),

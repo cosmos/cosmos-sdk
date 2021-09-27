@@ -9,13 +9,8 @@ import (
 )
 
 // ShouldGiveHelp checks the env and provided args to see if help is needed or being requested.
-// Help is needed if at least one of the following is true:
-// * the cosmovisor.EnvName env var isn't set.
-// * the cosmovisor.EnvHome env var isn't set.
-// Help is requested if one of the following is true:
-// * the first arg is "help"
-// * any args are "-h"
-// * any args are "--help"
+// Help is needed if either cosmovisor.EnvName and/or cosmovisor.EnvHome env vars aren't set.
+// Help is requested if any args are "help", "--help", or "-h".
 func ShouldGiveHelp(args []string) bool {
 	if len(os.Getenv(cosmovisor.EnvName)) == 0 || len(os.Getenv(cosmovisor.EnvHome)) == 0 {
 		return true
@@ -23,11 +18,8 @@ func ShouldGiveHelp(args []string) bool {
 	if len(args) == 0 {
 		return false
 	}
-	if args[0] == "help" {
-		return true
-	}
 	for _, arg := range args {
-		if arg == "--help" || arg == "-h" {
+		if arg == "help" || arg == "--help" || arg == "-h" {
 			return true
 		}
 	}

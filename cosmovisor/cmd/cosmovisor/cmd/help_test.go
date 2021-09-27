@@ -205,7 +205,7 @@ func (s HelpTestSuite) TestShouldGiveHelpArgs() {
 		{
 			name:     "two args help second",
 			args:     []string{"arg1", "help"},
-			expected: false,
+			expected: true,
 		},
 		{
 			name:     "one arg -h",

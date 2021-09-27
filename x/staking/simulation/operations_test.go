@@ -102,8 +102,11 @@ func TestSimulateMsgEditValidator(t *testing.T) {
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
-	// setup accounts[1] as validator
-	_ = getTestingValidator0(t, app, ctx, accounts[1:])
+	// remove genesis validator account
+	accounts = accounts[1:]
+
+	// setup accounts[0] as validator
+	_ = getTestingValidator0(t, app, ctx, accounts)
 
 	// begin a new block
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
@@ -164,13 +167,16 @@ func TestSimulateMsgUndelegate(t *testing.T) {
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
-	// setup accounts[1] as validator
-	validator0 := getTestingValidator0(t, app, ctx, accounts[1:])
+	// remove genesis validator account
+	accounts = accounts[1:]
+
+	// setup accounts[0] as validator
+	validator0 := getTestingValidator0(t, app, ctx, accounts)
 
 	// setup delegation
 	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
-	delegator := accounts[2]
+	delegator := accounts[1]
 	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
 	app.StakingKeeper.SetDelegation(ctx, delegation)
 	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
@@ -183,7 +189,6 @@ func TestSimulateMsgUndelegate(t *testing.T) {
 	// execute operation
 	op := simulation.SimulateMsgUndelegate(app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
-
 	require.NoError(t, err)
 
 	var msg types.MsgUndelegate
@@ -208,15 +213,18 @@ func TestSimulateMsgBeginRedelegate(t *testing.T) {
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
-	// setup accounts[1] as validator1 and accounts[2] as validator2
-	validator0 := getTestingValidator0(t, app, ctx, accounts[1:])
-	validator1 := getTestingValidator1(t, app, ctx, accounts[1:])
+	// remove genesis validator account
+	accounts = accounts[1:]
+
+	// setup accounts[0] as validator0 and accounts[1] as validator1
+	validator0 := getTestingValidator0(t, app, ctx, accounts)
+	validator1 := getTestingValidator1(t, app, ctx, accounts)
 
 	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 
-	// setup accounts[3] as delegator
-	delegator := accounts[3]
+	// setup accounts[2] as delegator
+	delegator := accounts[2]
 	delegation := types.NewDelegation(delegator.Address, validator1.GetOperator(), issuedShares)
 	app.StakingKeeper.SetDelegation(ctx, delegation)
 	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator1.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
@@ -275,8 +283,11 @@ func createTestApp(t *testing.T, isCheckTx bool, r *rand.Rand, n int) (*simapp.S
 	initAmt := app.StakingKeeper.TokensFromConsensusPower(ctx, 200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
+	// remove genesis validator account
+	accs := accounts[1:]
+
 	// add coins to the accounts
-	for _, account := range accounts[1:] {
+	for _, account := range accs {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, account.Address)
 		app.AccountKeeper.SetAccount(ctx, acc)
 		require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, account.Address, initCoins))

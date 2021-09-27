@@ -159,6 +159,5 @@ func TestGetAllHistoricalInfo(t *testing.T) {
 	}
 
 	infos := app.StakingKeeper.GetAllHistoricalInfo(ctx)
-	require.Equal(t, len(expHistInfos), len(infos))
 	require.Equal(t, expHistInfos, infos)
 }

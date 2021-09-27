@@ -64,35 +64,38 @@ func TestSimulateMsgUnjail(t *testing.T) {
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
-	// setup accounts[1] as validator1
-	validator1 := getTestingValidator1(t, app, ctx, accounts[1:])
+	// remove genesis validator account
+	accounts = accounts[1:]
+
+	// setup accounts[0] as validator0
+	validator0 := getTestingValidator0(t, app, ctx, accounts)
 
 	// setup validator0 by consensus address
-	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator1)
-	val1ConsAddress, err := validator1.GetConsAddr()
+	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator0)
+	val0ConsAddress, err := validator0.GetConsAddr()
 	require.NoError(t, err)
-	info := types.NewValidatorSigningInfo(val1ConsAddress, int64(4), int64(3),
+	info := types.NewValidatorSigningInfo(val0ConsAddress, int64(4), int64(3),
 		time.Unix(2, 0), false, int64(10))
-	app.SlashingKeeper.SetValidatorSigningInfo(ctx, val1ConsAddress, info)
+	app.SlashingKeeper.SetValidatorSigningInfo(ctx, val0ConsAddress, info)
 
-	// put validator1 in jail
-	app.StakingKeeper.Jail(ctx, val1ConsAddress)
+	// put validator0 in jail
+	app.StakingKeeper.Jail(ctx, val0ConsAddress)
 
 	// setup self delegation
 	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
-	validator1, issuedShares := validator1.AddTokensFromDel(delTokens)
-	val1AccAddress, err := sdk.ValAddressFromBech32(validator1.OperatorAddress)
+	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
+	val0AccAddress, err := sdk.ValAddressFromBech32(validator0.OperatorAddress)
 	require.NoError(t, err)
-	selfDelegation := stakingtypes.NewDelegation(val1AccAddress.Bytes(), validator1.GetOperator(), issuedShares)
+	selfDelegation := stakingtypes.NewDelegation(val0AccAddress.Bytes(), validator0.GetOperator(), issuedShares)
 	app.StakingKeeper.SetDelegation(ctx, selfDelegation)
-	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator1.GetOperator(), val1AccAddress.Bytes(), distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
+	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), val0AccAddress.Bytes(), distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
 
 	// begin a new block
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
 
 	// execute operation
 	op := simulation.SimulateMsgUnjail(app.AccountKeeper, app.BankKeeper, app.SlashingKeeper, app.StakingKeeper)
-	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts[1:], "")
+	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 
 	var msg types.MsgUnjail
@@ -129,8 +132,11 @@ func createTestApp(t *testing.T, isCheckTx bool, r *rand.Rand, n int) (*simapp.S
 	initAmt := app.StakingKeeper.TokensFromConsensusPower(ctx, 200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
+	// remove genesis validator account
+	accs := accounts[1:]
+
 	// add coins to the accounts
-	for _, account := range accounts[1:] {
+	for _, account := range accs {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, account.Address)
 		app.AccountKeeper.SetAccount(ctx, acc)
 		require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, account.Address, initCoins))
@@ -142,7 +148,7 @@ func createTestApp(t *testing.T, isCheckTx bool, r *rand.Rand, n int) (*simapp.S
 	return app, ctx, accounts
 }
 
-func getTestingValidator1(t *testing.T, app *simapp.SimApp, ctx sdk.Context, accounts []simtypes.Account) stakingtypes.Validator {
+func getTestingValidator0(t *testing.T, app *simapp.SimApp, ctx sdk.Context, accounts []simtypes.Account) stakingtypes.Validator {
 	commission0 := stakingtypes.NewCommission(sdk.ZeroDec(), sdk.OneDec(), sdk.OneDec())
 	return getTestingValidator(t, app, ctx, accounts, commission0, 0)
 }

@@ -94,10 +94,10 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupply() {
 	genesisSupply, _, err := suite.app.BankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.MaxLimit})
 	suite.Require().NoError(err)
 
-	expectedTotalSupply := sdk.NewCoins(sdk.NewInt64Coin("test", 400000000))
+	testCoins := sdk.NewCoins(sdk.NewInt64Coin("test", 400000000))
 	suite.
 		Require().
-		NoError(app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply))
+		NoError(app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, testCoins))
 
 	req := abci.RequestQuery{
 		Path: fmt.Sprintf("custom/%s/%s", types.ModuleName, types.QueryTotalSupply),
@@ -119,7 +119,9 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupply() {
 
 	var resp types.QueryTotalSupplyResponse
 	suite.Require().NoError(legacyAmino.UnmarshalJSON(res, &resp))
-	suite.Require().Equal(expectedTotalSupply.Add(genesisSupply...), resp.Supply)
+
+	expectedTotalSupply := genesisSupply.Add(testCoins...)
+	suite.Require().Equal(expectedTotalSupply, resp.Supply)
 }
 
 func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupplyOf() {

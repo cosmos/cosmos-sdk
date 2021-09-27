@@ -236,6 +236,7 @@ func (s *argsTestSuite) TestDetailString() {
 	restartAfterUpgrade := true
 	pollInterval := 406 * time.Millisecond
 	unsafeSkipBackup := false
+	preupgradeMaxRetries := 8
 	cfg := &Config{
 		Home:                  home,
 		Name:                  name,
@@ -243,16 +244,18 @@ func (s *argsTestSuite) TestDetailString() {
 		RestartAfterUpgrade:   restartAfterUpgrade,
 		PollInterval:          pollInterval,
 		UnsafeSkipBackup:      unsafeSkipBackup,
+		PreupgradeMaxRetries:  preupgradeMaxRetries,
 	}
 
 	expectedPieces := []string{
 		"Configurable Values:",
-		fmt.Sprintf("Home: %s", home),
-		fmt.Sprintf("Name: %s", name),
-		fmt.Sprintf("AllowDownloadBinaries: %t", allowDownloadBinaries),
-		fmt.Sprintf("RestartAfterUpgrade: %t", restartAfterUpgrade),
-		fmt.Sprintf("PollInterval: %s", pollInterval),
-		fmt.Sprintf("UnsafeSkipBackup: %t", unsafeSkipBackup),
+		fmt.Sprintf("%s: %s", EnvHome, home),
+		fmt.Sprintf("%s: %s", EnvName, name),
+		fmt.Sprintf("%s: %t", EnvDownloadBin, allowDownloadBinaries),
+		fmt.Sprintf("%s: %t", EnvRestartUpgrade, restartAfterUpgrade),
+		fmt.Sprintf("%s: %s", EnvInterval, pollInterval),
+		fmt.Sprintf("%s: %t", EnvSkipBackup, unsafeSkipBackup),
+		fmt.Sprintf("%s: %d", EnvPreupgradeMaxRetries, preupgradeMaxRetries),
 		"Derived Values:",
 		fmt.Sprintf("Root Dir: %s", home),
 		fmt.Sprintf("Upgrade Dir: %s", home),

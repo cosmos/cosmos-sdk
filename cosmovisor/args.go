@@ -278,12 +278,13 @@ func booleanOption(name string, defaultVal bool) (bool, error) {
 // DetailString returns a multi-line string with details about this config.
 func (cfg Config) DetailString() string {
 	configEntries := []struct{ name, value string }{
-		{"Home", cfg.Home},
-		{"Name", cfg.Name},
-		{"AllowDownloadBinaries", fmt.Sprintf("%t", cfg.AllowDownloadBinaries)},
-		{"RestartAfterUpgrade", fmt.Sprintf("%t", cfg.RestartAfterUpgrade)},
-		{"PollInterval", fmt.Sprintf("%s", cfg.PollInterval)},
-		{"UnsafeSkipBackup", fmt.Sprintf("%t", cfg.UnsafeSkipBackup)},
+		{EnvHome, cfg.Home},
+		{EnvName, cfg.Name},
+		{EnvDownloadBin, fmt.Sprintf("%t", cfg.AllowDownloadBinaries)},
+		{EnvRestartUpgrade, fmt.Sprintf("%t", cfg.RestartAfterUpgrade)},
+		{EnvInterval, fmt.Sprintf("%s", cfg.PollInterval)},
+		{EnvSkipBackup, fmt.Sprintf("%t", cfg.UnsafeSkipBackup)},
+		{EnvPreupgradeMaxRetries, fmt.Sprintf("%d", cfg.PreupgradeMaxRetries)},
 	}
 	derivedEntries := []struct{ name, value string }{
 		{"Root Dir", cfg.Root()},

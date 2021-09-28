@@ -3,6 +3,7 @@ package badgerdb
 import (
 	"bytes"
 	"encoding/csv"
+	"errors"
 	"math"
 	"os"
 	"path/filepath"
@@ -42,6 +43,7 @@ type badgerTxn struct {
 
 type badgerWriter struct {
 	badgerTxn
+	discarded bool
 }
 
 type badgerIterator struct {
@@ -170,9 +172,9 @@ func (b *BadgerDB) ReaderAt(version uint64) (dbm.DBReader, error) {
 func (b *BadgerDB) ReadWriter() dbm.DBReadWriter {
 	atomic.AddInt32(&b.openWriters, 1)
 	b.mtx.RLock()
-	ts := b.vmgr.lastCommitTs()
+	ts := b.vmgr.lastTs
 	b.mtx.RUnlock()
-	return &badgerWriter{badgerTxn{txn: b.db.NewTransactionAt(ts, true), db: b}}
+	return &badgerWriter{badgerTxn{txn: b.db.NewTransactionAt(ts, true), db: b}, false}
 }
 
 func (b *BadgerDB) Writer() dbm.DBWriter {
@@ -282,8 +284,11 @@ func (tx *badgerWriter) Commit() (err error) {
 	}
 	defer func() { err = dbutil.CombineErrors(err, tx.Discard(), "Discard also failed") }()
 	// Commit to the current commit TS, after ensuring it is > ReadTs
+	tx.db.mtx.RLock()
 	tx.db.vmgr.updateCommitTs(tx.txn.ReadTs())
-	err = tx.txn.CommitAt(tx.db.vmgr.lastCommitTs(), nil)
+	ts := tx.db.vmgr.lastTs
+	tx.db.mtx.RUnlock()
+	err = tx.txn.CommitAt(ts, nil)
 	return
 }
 
@@ -293,7 +298,10 @@ func (tx *badgerTxn) Discard() error {
 }
 
 func (tx *badgerWriter) Discard() error {
-	defer atomic.AddInt32(&tx.db.openWriters, -1)
+	if !tx.discarded {
+		defer atomic.AddInt32(&tx.db.openWriters, -1)
+		tx.discarded = true
+	}
 	return tx.badgerTxn.Discard()
 }
 
@@ -397,9 +405,11 @@ func (vm *versionManager) Copy() *versionManager {
 	}
 }
 
-// updateCommitTs atomically increments the lastTs if equal to readts.
+// updateCommitTs increments the lastTs if equal to readts.
 func (vm *versionManager) updateCommitTs(readts uint64) {
-	atomic.CompareAndSwapUint64(&vm.lastTs, readts, readts+1)
+	if vm.lastTs == readts {
+		vm.lastTs += 1
+	}
 }
 func (vm *versionManager) Save(target uint64) (uint64, error) {
 	id, err := vm.VersionManager.Save(target)

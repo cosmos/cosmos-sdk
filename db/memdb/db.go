@@ -246,13 +246,17 @@ func (tx *dbWriter) Commit() error {
 
 // Discard implements DBReader.
 func (tx *dbTxn) Discard() error {
-	tx.btree = nil
+	if tx.btree != nil {
+		tx.btree = nil
+	}
 	return nil
 }
 
 // Discard implements DBWriter.
 func (tx *dbWriter) Discard() error {
-	atomic.AddInt32(&tx.db.openWriters, -1)
+	if tx.btree != nil {
+		defer atomic.AddInt32(&tx.db.openWriters, -1)
+	}
 	return tx.dbTxn.Discard()
 }
 

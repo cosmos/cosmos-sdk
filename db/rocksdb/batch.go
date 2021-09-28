@@ -58,8 +58,8 @@ func (b *rocksDBBatch) Commit() (err error) {
 
 // Close implements DBWriter.
 func (b *rocksDBBatch) Discard() error {
-	defer atomic.AddInt32(&b.mgr.openWriters, -1)
 	if b.batch != nil {
+		defer atomic.AddInt32(&b.mgr.openWriters, -1)
 		b.batch.Destroy()
 		b.batch = nil
 	}

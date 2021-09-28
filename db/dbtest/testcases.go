@@ -333,9 +333,12 @@ func DoTestTransactions(t *testing.T, load Loader, multipleWriters bool) {
 			tx := getWriter()
 			require.NoError(t, tx.Commit())
 			require.Error(t, tx.Set([]byte("0"), []byte("a")))
+			require.NoError(t, tx.Discard()) // redundant discard is fine
+
 			tx = getWriter()
 			require.NoError(t, tx.Discard())
 			require.Error(t, tx.Set([]byte("0"), []byte("a")))
+			require.NoError(t, tx.Discard())
 		})
 
 		// Continue only if the backend supports multiple concurrent writers
@@ -383,6 +386,7 @@ func DoTestTransactions(t *testing.T, load Loader, multipleWriters bool) {
 	require.NoError(t, view.Discard())
 	_, err := view.Get([]byte("0"))
 	require.Error(t, err)
+	require.NoError(t, view.Discard()) // redundant discard is fine
 
 	require.NoError(t, db.Close())
 }

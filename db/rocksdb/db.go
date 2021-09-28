@@ -357,7 +357,7 @@ func (tx *dbWriter) Commit() (err error) {
 
 func (tx *dbTxn) Discard() error {
 	if tx.txn == nil {
-		return dbm.ErrTransactionClosed
+		return nil // Discard() is idempotent
 	}
 	defer func() { tx.txn.Destroy(); tx.txn = nil }()
 	if tx.version == 0 {
@@ -370,7 +370,9 @@ func (tx *dbTxn) Discard() error {
 }
 
 func (tx *dbWriter) Discard() error {
-	defer atomic.AddInt32(&tx.mgr.openWriters, -1)
+	if tx.txn != nil {
+		defer atomic.AddInt32(&tx.mgr.openWriters, -1)
+	}
 	return tx.dbTxn.Discard()
 }
 

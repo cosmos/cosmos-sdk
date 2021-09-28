@@ -16,44 +16,80 @@ import (
 
 type argsTestSuite struct {
 	suite.Suite
-
-	envVars []string
 }
 
 func TestArgsTestSuite(t *testing.T) {
 	suite.Run(t, new(argsTestSuite))
 }
 
-func (s *argsTestSuite) SetupSuite() {
-	s.envVars = []string{EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval, EnvPreupgradeMaxRetries}
+// cosmovisorEnv are the string values of environment variables used to configure Cosmovisor.
+type cosmovisorEnv struct {
+	Home                 string
+	Name                 string
+	DownloadBin          string
+	RestartUpgrade       string
+	SkipBackup           string
+	Interval             string
+	PreupgradeMaxRetries string
 }
 
-// clearEnv clears environment variables and returns the values
-// in the same order as the entries in s.envVars.
+// ToMap creates a map of the cosmovisorEnv where the keys are the env var names.
+func (c cosmovisorEnv) ToMap() map[string]string {
+	return map[string]string{
+		EnvHome:                 c.Home,
+		EnvName:                 c.Name,
+		EnvDownloadBin:          c.DownloadBin,
+		EnvRestartUpgrade:       c.RestartUpgrade,
+		EnvSkipBackup:           c.SkipBackup,
+		EnvInterval:             c.Interval,
+		EnvPreupgradeMaxRetries: c.PreupgradeMaxRetries,
+	}
+}
+
+// Set sets the field in this cosmovisorEnv corresponding to the provided envVar to the given envVal.
+func (c *cosmovisorEnv) Set(envVar, envVal string) {
+	switch envVar {
+	case EnvHome:
+		c.Home = envVal
+	case EnvName:
+		c.Name = envVal
+	case EnvDownloadBin:
+		c.DownloadBin = envVal
+	case EnvRestartUpgrade:
+		c.RestartUpgrade = envVal
+	case EnvSkipBackup:
+		c.SkipBackup = envVal
+	case EnvInterval:
+		c.Interval = envVal
+	case EnvPreupgradeMaxRetries:
+		c.PreupgradeMaxRetries = envVal
+	default:
+		panic(fmt.Errorf("Unknown environment variable [%s]. Ccannot set field to [%s]. ", envVar, envVal))
+	}
+}
+
+// clearEnv clears environment variables and what they were.
 // Designed to be used like this:
 //    initialEnv := clearEnv()
 //    defer setEnv(nil, initialEnv)
-func (s *argsTestSuite) clearEnv() []string {
+func (s *argsTestSuite) clearEnv() *cosmovisorEnv {
 	s.T().Logf("Clearing environment variables.")
-	rv := make([]string, len(s.envVars))
-	for i, envVar := range s.envVars {
-		rv[i] = os.Getenv(envVar)
+	rv := cosmovisorEnv{}
+	for envVar := range rv.ToMap() {
+		rv.Set(envVar, os.Getenv(envVar))
 		s.Require().NoError(os.Unsetenv(envVar))
 	}
-	return rv
+	return &rv
 }
 
 // setEnv sets environment variables to the values provided.
-// Ordering of envVals is the same as the entries in s.envVars.
 // If t is not nil, and there's a problem, the test will fail immediately.
 // If t is nil, problems will just be logged using s.T().
-func (s *argsTestSuite) setEnv(t *testing.T, envVals []string) {
+func (s *argsTestSuite) setEnv(t *testing.T, env *cosmovisorEnv) {
 	if t == nil {
 		s.T().Logf("Restoring environment variables.")
 	}
-	for i := 0; i < len(envVals) && i < len(s.envVars); i++ {
-		envVar := s.envVars[i]
-		envVal := envVals[i]
+	for envVar, envVal := range env.ToMap() {
 		var err error
 		var msg string
 		if len(envVal) != 0 {
@@ -292,151 +328,151 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 
 	tests := []struct {
 		name             string
-		envVals          []string
+		envVals          cosmovisorEnv
 		expectedCfg      *Config
 		expectedErrCount int
 	}{
 		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval, EnvPreupgradeMaxRetries
 		{
 			name:             "all bad",
-			envVals:          []string{"", "", "bad", "bad", "bad", "bad", "bad"},
+			envVals:          cosmovisorEnv{"", "", "bad", "bad", "bad", "bad", "bad"},
 			expectedCfg:      nil,
 			expectedErrCount: 7,
 		},
 		{
 			name:             "all good",
-			envVals:          []string{absPath, "testname", "true", "false", "true", "303", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "true", "303", "1"},
 			expectedCfg:      newConfig(absPath, "testname", true, false, true, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "nothing set",
-			envVals:          []string{"", "", "", "", "", "", ""},
+			envVals:          cosmovisorEnv{"", "", "", "", "", "", ""},
 			expectedCfg:      nil,
 			expectedErrCount: 2,
 		},
 		// Note: Home and Name tests are done in TestValidate
 		{
 			name:             "download bin bad",
-			envVals:          []string{absPath, "testname", "bad", "false", "true", "303", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "bad", "false", "true", "303", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "download bin not set",
-			envVals:          []string{absPath, "testname", "", "false", "true", "303", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "", "false", "true", "303", "1"},
 			expectedCfg:      newConfig(absPath, "testname", false, false, true, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "download bin true",
-			envVals:          []string{absPath, "testname", "true", "false", "true", "303", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "true", "303", "1"},
 			expectedCfg:      newConfig(absPath, "testname", true, false, true, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "download bin false",
-			envVals:          []string{absPath, "testname", "false", "false", "true", "303", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "true", "303", "1"},
 			expectedCfg:      newConfig(absPath, "testname", false, false, true, 303, 1),
 			expectedErrCount: 0,
 		},
 		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval, EnvPreupgradeMaxRetries
 		{
 			name:             "restart upgrade bad",
-			envVals:          []string{absPath, "testname", "true", "bad", "true", "303", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "bad", "true", "303", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "restart upgrade not set",
-			envVals:          []string{absPath, "testname", "true", "", "true", "303", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "", "true", "303", "1"},
 			expectedCfg:      newConfig(absPath, "testname", true, true, true, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "restart upgrade true",
-			envVals:          []string{absPath, "testname", "true", "true", "true", "303", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "true", "303", "1"},
 			expectedCfg:      newConfig(absPath, "testname", true, true, true, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "restart upgrade true",
-			envVals:          []string{absPath, "testname", "true", "false", "true", "303", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "true", "303", "1"},
 			expectedCfg:      newConfig(absPath, "testname", true, false, true, 303, 1),
 			expectedErrCount: 0,
 		},
 		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval, EnvPreupgradeMaxRetries
 		{
 			name:             "skip unsafe backups bad",
-			envVals:          []string{absPath, "testname", "true", "false", "bad", "303", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "bad", "303", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "skip unsafe backups not set",
-			envVals:          []string{absPath, "testname", "true", "false", "", "303", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "", "303", "1"},
 			expectedCfg:      newConfig(absPath, "testname", true, false, false, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "skip unsafe backups true",
-			envVals:          []string{absPath, "testname", "true", "false", "true", "303", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "true", "303", "1"},
 			expectedCfg:      newConfig(absPath, "testname", true, false, true, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "skip unsafe backups false",
-			envVals:          []string{absPath, "testname", "true", "false", "false", "303", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "false", "303", "1"},
 			expectedCfg:      newConfig(absPath, "testname", true, false, false, 303, 1),
 			expectedErrCount: 0,
 		},
 		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval, EnvPreupgradeMaxRetries
 		{
 			name:             "poll interval bad",
-			envVals:          []string{absPath, "testname", "false", "false", "false", "bad", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "bad", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "poll interval 0",
-			envVals:          []string{absPath, "testname", "false", "false", "false", "0", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "0", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "poll interval not set",
-			envVals:          []string{absPath, "testname", "false", "false", "false", "", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "1"},
 			expectedCfg:      newConfig(absPath, "testname", false, false, false, 300, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "poll interval 987",
-			envVals:          []string{absPath, "testname", "false", "false", "false", "987", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "987", "1"},
 			expectedCfg:      newConfig(absPath, "testname", false, false, false, 987, 1),
 			expectedErrCount: 0,
 		},
 		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval, EnvPreupgradeMaxRetries
 		{
 			name:             "prepupgrade max retries bad",
-			envVals:          []string{absPath, "testname", "false", "false", "false", "406", "bad"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "406", "bad"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "prepupgrade max retries 0",
-			envVals:          []string{absPath, "testname", "false", "false", "false", "406", "0"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "406", "0"},
 			expectedCfg:      newConfig(absPath, "testname", false, false, false, 406, 0),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "prepupgrade max retries not set",
-			envVals:          []string{absPath, "testname", "false", "false", "false", "406", ""},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "406", ""},
 			expectedCfg:      newConfig(absPath, "testname", false, false, false, 406, 0),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "prepupgrade max retries 5",
-			envVals:          []string{absPath, "testname", "false", "false", "false", "406", "5"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "406", "5"},
 			expectedCfg:      newConfig(absPath, "testname", false, false, false, 406, 5),
 			expectedErrCount: 0,
 		},
@@ -444,7 +480,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			s.setEnv(t, tc.envVals)
+			s.setEnv(t, &tc.envVals)
 			cfg, err := GetConfigFromEnv()
 			if tc.expectedErrCount == 0 {
 				assert.NoError(t, err)

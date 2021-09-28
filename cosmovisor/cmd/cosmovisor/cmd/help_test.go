@@ -14,47 +14,60 @@ import (
 
 type HelpTestSuite struct {
 	suite.Suite
-
-	envVars []string
 }
 
 func TestHelpTestSuite(t *testing.T) {
 	suite.Run(t, new(HelpTestSuite))
 }
 
-func (s *HelpTestSuite) SetupSuite() {
-	s.envVars = []string{
-		cosmovisor.EnvHome, cosmovisor.EnvName, cosmovisor.EnvDownloadBin, cosmovisor.EnvRestartUpgrade,
-		cosmovisor.EnvSkipBackup, cosmovisor.EnvInterval, cosmovisor.EnvPreupgradeMaxRetries,
+// cosmovisorHelpEnv are some string values of environment variables used to configure Cosmovisor.
+type cosmovisorHelpEnv struct {
+	Home string
+	Name string
+}
+
+// ToMap creates a map of the cosmovisorHelpEnv where the keys are the env var names.
+func (c cosmovisorHelpEnv) ToMap() map[string]string {
+	return map[string]string{
+		cosmovisor.EnvHome: c.Home,
+		cosmovisor.EnvName: c.Name,
 	}
 }
 
-// clearEnv clears environment variables and returns the values
-// in the same order as the entries in s.envVars.
+// Set sets the field in this cosmovisorHelpEnv corresponding to the provided envVar to the given envVal.
+func (c *cosmovisorHelpEnv) Set(envVar, envVal string) {
+	switch envVar {
+	case cosmovisor.EnvHome:
+		c.Home = envVal
+	case cosmovisor.EnvName:
+		c.Name = envVal
+	default:
+		panic(fmt.Errorf("Unknown environment variable [%s]. Ccannot set field to [%s]. ", envVar, envVal))
+	}
+}
+
+// clearEnv clears environment variables and returns what they were.
 // Designed to be used like this:
 //    initialEnv := clearEnv()
 //    defer setEnv(nil, initialEnv)
-func (s *HelpTestSuite) clearEnv() []string {
+func (s *HelpTestSuite) clearEnv() *cosmovisorHelpEnv {
 	s.T().Logf("Clearing environment variables.")
-	rv := make([]string, len(s.envVars))
-	for i, envVar := range s.envVars {
-		rv[i] = os.Getenv(envVar)
+	rv := cosmovisorHelpEnv{}
+	for envVar := range rv.ToMap() {
+		rv.Set(envVar, os.Getenv(envVar))
 		s.Require().NoError(os.Unsetenv(envVar))
 	}
-	return rv
+	return &rv
 }
 
 // setEnv sets environment variables to the values provided.
-// Ordering of envVals is the same as the entries in s.envVars.
 // If t is not nil, and there's a problem, the test will fail immediately.
 // If t is nil, problems will just be logged using s.T().
-func (s *HelpTestSuite) setEnv(t *testing.T, envVals ...string) {
+func (s *HelpTestSuite) setEnv(t *testing.T, env *cosmovisorHelpEnv) {
 	if t == nil {
 		s.T().Logf("Restoring environment variables.")
 	}
-	for i := 0; i < len(envVals) && i < len(s.envVars); i++ {
-		envVar := s.envVars[i]
-		envVal := envVals[i]
+	for envVar, envVal := range env.ToMap() {
 		var err error
 		var msg string
 		if len(envVal) != 0 {
@@ -77,7 +90,7 @@ func (s *HelpTestSuite) setEnv(t *testing.T, envVals ...string) {
 
 func (s *HelpTestSuite) TestShouldGiveHelpEnvVars() {
 	initialEnv := s.clearEnv()
-	defer s.setEnv(nil, initialEnv...)
+	defer s.setEnv(nil, initialEnv)
 
 	emptyVal := ""
 	homeVal := "/somehome"
@@ -165,9 +178,9 @@ func (s *HelpTestSuite) TestShouldGiveHelpEnvVars() {
 
 func (s HelpTestSuite) TestShouldGiveHelpArgs() {
 	initialEnv := s.clearEnv()
-	defer s.setEnv(nil, initialEnv...)
+	defer s.setEnv(nil, initialEnv)
 
-	s.setEnv(s.T(), "/testhome", "testname")
+	s.setEnv(s.T(), &cosmovisorHelpEnv{"/testhome", "testname"})
 
 	tests := []struct {
 		name     string

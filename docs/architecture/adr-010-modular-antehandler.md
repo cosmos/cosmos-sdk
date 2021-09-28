@@ -190,7 +190,7 @@ This approach takes inspiration from Weave's decorator design while trying to mi
 
 In addition, this approach will not break any core Cosmos SDK API's. Since we preserve the notion of an AnteHandler and still set a single AnteHandler in baseapp, the decorator is simply an additional approach available for users that desire more customization. The API of modules (namely `x/auth`) may break with this approach, but the core API remains untouched.
 
-Allow Decorator interface that can be chained together to create an Cosmos SDK AnteHandler.
+Allow Decorator interface that can be chained together to create a Cosmos SDK AnteHandler.
 
 This allows users to choose between implementing an AnteHandler by themselves and setting it in the baseapp, or use the decorator pattern to chain their custom decorators with the Cosmos SDK provided decorators in the order they wish.
 

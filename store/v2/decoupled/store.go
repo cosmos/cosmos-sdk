@@ -143,11 +143,6 @@ func LoadStore(db dbm.DBConnection, opts StoreConfig) (*Store, error) {
 	}, nil
 }
 
-// Access the underlying SMT as a basic KV store
-func (s *Store) GetSCStore() types.BasicKVStore {
-	return s.merkleStore
-}
-
 // Get implements KVStore.
 func (s *Store) Get(key []byte) []byte {
 	defer telemetry.MeasureSince(time.Now(), "store", "decoupled", "get")

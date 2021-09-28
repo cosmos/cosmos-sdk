@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/db/prefix"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	util "github.com/cosmos/cosmos-sdk/internal"
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
@@ -40,6 +41,7 @@ var (
 var (
 	ErrVersionDoesNotExist = errors.New("version does not exist")
 	ErrMaximumHeight       = errors.New("maximum block height reached")
+	ErrNonEmptyDatabase    = errors.New("DB contains saved versions")
 )
 
 type StoreConfig struct {
@@ -70,23 +72,31 @@ type Store struct {
 var DefaultStoreConfig = StoreConfig{Pruning: types.PruneDefault, MerkleDB: nil}
 
 // NewStore creates a new, empty Store.
-func NewStore(db dbm.DBConnection, opts StoreConfig) (*Store, error) {
+// Returns ErrNonEmptyDatabase if a DB contains existing versions.
+func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 	versions, err := db.Versions()
 	if err != nil {
 		return nil, err
 	}
 	if saved := versions.Count(); saved != 0 {
-		return nil, fmt.Errorf("DB contains %v existing versions", saved)
+		return nil, fmt.Errorf("%w: %v existing versions", ErrNonEmptyDatabase, saved)
 	}
 	stateTxn := db.ReadWriter()
+	defer func() {
+		if err != nil {
+			err = util.CombineErrors(err, stateTxn.Discard(), "stateTxn.Discard also failed")
+		}
+	}()
 	merkleTxn := stateTxn
 	if opts.MerkleDB != nil {
-		mversions, err := opts.MerkleDB.Versions()
+		var mversions dbm.VersionSet
+		mversions, err = opts.MerkleDB.Versions()
 		if err != nil {
-			return nil, err
+			return
 		}
 		if saved := mversions.Count(); saved != 0 {
-			return nil, fmt.Errorf("Merkle DB contains %v existing versions", saved)
+			err = fmt.Errorf("%w (Merkle DB): %v existing versions", ErrNonEmptyDatabase, saved)
+			return
 		}
 		merkleTxn = opts.MerkleDB.ReadWriter()
 	}
@@ -104,7 +114,7 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (*Store, error) {
 }
 
 // LoadStore loads a Store from a DB.
-func LoadStore(db dbm.DBConnection, opts StoreConfig) (*Store, error) {
+func LoadStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 	versions, err := db.Versions()
 	if err != nil {
 		return nil, err
@@ -114,24 +124,37 @@ func LoadStore(db dbm.DBConnection, opts StoreConfig) (*Store, error) {
 			versions.Last(), opts.InitialVersion)
 	}
 	stateTxn := db.ReadWriter()
+	defer func() {
+		if err != nil {
+			err = util.CombineErrors(err, stateTxn.Discard(), "stateTxn.Discard also failed")
+		}
+	}()
 	merkleTxn := stateTxn
 	if opts.MerkleDB != nil {
-		mversions, err := opts.MerkleDB.Versions()
+		var mversions dbm.VersionSet
+		mversions, err = opts.MerkleDB.Versions()
 		if err != nil {
-			return nil, err
+			return
 		}
 		// Version sets of each DB must match
 		if !versions.Equal(mversions) {
-			return nil, fmt.Errorf("Storage and Merkle DB have different version history")
+			err = fmt.Errorf("Storage and Merkle DB have different version history")
+			return
 		}
 		merkleTxn = opts.MerkleDB.ReadWriter()
+		defer func() {
+			if err != nil {
+				err = util.CombineErrors(err, merkleTxn.Discard(), "merkleTxn.Discard also failed")
+			}
+		}()
 	}
 	root, err := stateTxn.Get(merkleRootKey)
 	if err != nil {
-		return nil, err
+		return
 	}
 	if root == nil {
-		return nil, fmt.Errorf("could not get root of SMT")
+		err = fmt.Errorf("could not get root of SMT")
+		return
 	}
 	return &Store{
 		stateDB:     db,
@@ -141,6 +164,14 @@ func LoadStore(db dbm.DBConnection, opts StoreConfig) (*Store, error) {
 		indexTxn:    prefix.NewPrefixReadWriter(stateTxn, indexPrefix),
 		merkleStore: loadSMT(merkleTxn, root),
 	}, nil
+}
+
+func (s *Store) Close() error {
+	err := s.stateTxn.Discard()
+	if s.opts.MerkleDB != nil {
+		err = util.CombineErrors(err, s.merkleTxn.Discard(), "merkleTxn.Discard also failed")
+	}
+	return err
 }
 
 // Get implements KVStore.
@@ -272,19 +303,19 @@ func (s *Store) Commit() types.CommitID {
 	return *cid
 }
 
-func (s *Store) commit(target uint64) (*types.CommitID, error) {
+func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
 	root := s.merkleStore.Root()
-	err := s.stateTxn.Set(merkleRootKey, root)
+	err = s.stateTxn.Set(merkleRootKey, root)
 	if err != nil {
-		return nil, err
+		return
 	}
 	err = s.stateTxn.Commit()
 	if err != nil {
-		return nil, err
+		return
 	}
 	err = s.stateDB.SaveVersion(target)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	stateTxn := s.stateDB.ReadWriter()
@@ -292,20 +323,21 @@ func (s *Store) commit(target uint64) (*types.CommitID, error) {
 
 	// If DBs are not separate, Merkle state has been commmitted & snapshotted
 	if s.opts.MerkleDB != nil {
-		rollback := func(e error) error {
-			if delerr := s.stateDB.DeleteVersion(target); delerr != nil {
-				return fmt.Errorf("%w: commit rollback failed: %v", e, delerr)
+		defer func() {
+			if err != nil {
+				if delerr := s.stateDB.DeleteVersion(target); delerr != nil {
+					err = fmt.Errorf("%w: commit rollback failed: %v", err, delerr)
+				}
 			}
-			return e
-		}
+		}()
 
 		err = s.merkleTxn.Commit()
 		if err != nil {
-			return nil, rollback(err)
+			return
 		}
 		err = s.opts.MerkleDB.SaveVersion(target)
 		if err != nil {
-			return nil, rollback(err)
+			return
 		}
 		merkleTxn = s.opts.MerkleDB.ReadWriter()
 	}

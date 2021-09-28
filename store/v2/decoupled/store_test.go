@@ -65,16 +65,26 @@ func TestStoreNoNilSet(t *testing.T) {
 	require.Panics(t, func() { store.Set([]byte("key"), nil) }, "setting a nil value should panic")
 }
 
-func TestLoadStore(t *testing.T) {
+func TestConstructors(t *testing.T) {
 	db := memdb.NewDB()
-	store := newAlohaStore(t, db)
-	store.Commit()
 
+	// Fail to load a store from an empty DB
 	store, err := LoadStore(db, DefaultStoreConfig)
-	require.NoError(t, err)
+	require.Error(t, err)
 
+	store = newAlohaStore(t, db)
+	store.Commit()
+	require.NoError(t, store.Close())
+
+	store, err = LoadStore(db, DefaultStoreConfig)
+	require.NoError(t, err)
 	value := store.Get([]byte("hello"))
 	require.Equal(t, []byte("goodbye"), value)
+	require.NoError(t, store.Close())
+
+	// Fail to create a new store from a non-empty DB
+	store, err = NewStore(db, DefaultStoreConfig)
+	require.True(t, errors.Is(err, ErrNonEmptyDatabase))
 
 	// Loading with an initial version beyond the lowest should error
 	opts := StoreConfig{InitialVersion: 5, Pruning: types.PruneNothing}

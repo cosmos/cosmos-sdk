@@ -51,7 +51,7 @@ The goal of this ADR is to provide thoughtful naming conventions that:
 names too short and cryptic) or under-optimizing (just accepting bloated names
 with lots of redundant information)
 
-These guidelines are meant to act as a style guide for both the SDK and
+These guidelines are meant to act as a style guide for both the Cosmos SDK and
 third-party modules.
 
 As a starting point, we should adopt all of the [DEFAULT](https://buf.build/docs/lint-checkers#default)
@@ -251,7 +251,7 @@ community-based governance.
 the path)
 * code generation will be easier for clients because .proto files will be
 in a single `proto/` directory which can be copied rather than scattered
-throughout the SDK
+throughout the Cosmos SDK
 
 ### Negative
 

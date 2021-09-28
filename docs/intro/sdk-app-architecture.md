@@ -32,7 +32,7 @@ In practice, the transactions are bundled in blocks to make the process more eff
 
 In a blockchain context, the state machine is deterministic. This means that if a node is started at a given state and replays the same sequence of transactions, it will always end up with the same final state.
 
-The Cosmos SDK gives developers maximum flexibility to define the state of their application, transaction types and state transition functions. The process of building state-machines with the SDK will be described more in depth in the following sections. But first, let us see how the state-machine is replicated using **Tendermint**.
+The Cosmos SDK gives developers maximum flexibility to define the state of their application, transaction types and state transition functions. The process of building state-machines with the Cosmos SDK will be described more in depth in the following sections. But first, let us see how the state-machine is replicated using **Tendermint**.
 
 ## Tendermint
 
@@ -94,4 +94,4 @@ Any application built on Tendermint needs to implement the ABCI interface in ord
 
 ## Next {hide}
 
-Read about the [high-level design principles of the SDK](./sdk-design.md) {hide}
+Read about the [high-level design principles of the Cosmos SDK](./sdk-design.md) {hide}

@@ -260,7 +260,7 @@ func (s *argsTestSuite) TestDetailString() {
 		fmt.Sprintf("Root Dir: %s", home),
 		fmt.Sprintf("Upgrade Dir: %s", home),
 		fmt.Sprintf("Genesis Bin: %s", home),
-		fmt.Sprintf("Monitored Upgrade Info File: %s", home),
+		fmt.Sprintf("Monitored File: %s", home),
 	}
 
 	actual := cfg.DetailString()

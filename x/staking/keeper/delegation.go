@@ -680,8 +680,11 @@ func (k Keeper) Unbond(
 		validator = k.mustGetValidator(ctx, validator.GetOperator())
 	}
 
-	// remove the delegation
-	if delegation.Shares.IsZero() {
+	// Remove the delegation if the resulting shares yield a truncated zero amount
+	// of tokens in the delegation. Note, in this this case, the shares themselves
+	// may not be zero, but rather a small fractional amount. Otherwise, we update
+	// the delegation object.
+	if validator.TokensFromShares(delegation.Shares).TruncateInt().IsZero() {
 		err = k.RemoveDelegation(ctx, delegation)
 	} else {
 		k.SetDelegation(ctx, delegation)

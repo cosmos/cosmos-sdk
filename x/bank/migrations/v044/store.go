@@ -59,7 +59,7 @@ func addDenomReverseIndex(store sdk.KVStore, cdc codec.BinaryCodec) error {
 
 		denomPrefixStore, ok := denomPrefixStores[balance.Denom]
 		if !ok {
-			denomPrefixStore = prefix.NewStore(store, CreateAddressDenomPrefix(balance.Denom))
+			denomPrefixStore = prefix.NewStore(store, CreateDenomAddressPrefix(balance.Denom))
 			denomPrefixStores[balance.Denom] = denomPrefixStore
 		}
 
@@ -82,9 +82,9 @@ func migrateDenomMetadata(store sdk.KVStore) error {
 		l := len(oldKey)/2 + 1
 
 		var newKey = make([]byte, len(types.DenomMetadataPrefix)+l)
-		copy(newKey, types.DenomMetadataPrefix)
 		// old key: prefix_bytes | denom_bytes | denom_bytes
-		newKey = append(newKey, oldKey[:l]...)
+		copy(newKey, types.DenomMetadataPrefix)
+		copy(newKey[len(types.DenomMetadataPrefix):], oldKey[:l])
 		store.Set(newKey, oldDenomMetaDataIter.Value())
 		oldDenomMetaDataStore.Delete(oldKey)
 	}

@@ -25,4 +25,7 @@ var (
 	ErrPacketReceived            = sdkerrors.Register(SubModuleName, 18, "packet already received")
 	ErrAcknowledgementExists     = sdkerrors.Register(SubModuleName, 19, "acknowledgement for packet already exists")
 	ErrInvalidChannelIdentifier  = sdkerrors.Register(SubModuleName, 20, "invalid channel identifier")
+
+	// Antehandler error
+	ErrRedundantTx = sdkerrors.Register(SubModuleName, 22, "packet messages are redundant")
 )

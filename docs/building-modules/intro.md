@@ -11,7 +11,7 @@ Modules define most of the logic of Cosmos SDK applications. Developers compose 
 - [Anatomy of an Cosmos SDK application](../basics/app-anatomy.md) {prereq}
 - [Lifecycle of an Cosmos SDK transaction](../basics/tx-lifecycle.md) {prereq}
 
-## Role of Modules in an Cosmos SDK Application
+## Role of Modules in a Cosmos SDK Application
 
 The Cosmos SDK can be thought of as the Ruby-on-Rails of blockchain development. It comes with a core that provides the basic functionalities every blockchain application needs, like a [boilerplate implementation of the ABCI](../core/baseapp.md) to communicate with the underlying consensus engine, a [`multistore`](../core/store.md#multistore) to persist state, a [server](../core/node.md) to form a full-node and [interfaces](./module-interfaces.md) to handle queries.
 

@@ -1,13 +1,6 @@
-package baseapp
+package baseapp_test
 
 import (
-	"bytes"
-	"encoding/binary"
-	"encoding/json"
-	"fmt"
-	"math"
-	"os"
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -17,113 +10,21 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
-
-var (
-	capKey1 = sdk.NewKVStoreKey("key1")
-	capKey2 = sdk.NewKVStoreKey("key2")
-
-	interfaceRegistry = testdata.NewTestInterfaceRegistry()
-)
-
-type paramStore struct {
-	db *dbm.MemDB
-}
-
-func (ps *paramStore) Set(_ sdk.Context, key []byte, value interface{}) {
-	bz, err := json.Marshal(value)
-	if err != nil {
-		panic(err)
-	}
-
-	ps.db.Set(key, bz)
-}
-
-func (ps *paramStore) Has(_ sdk.Context, key []byte) bool {
-	ok, err := ps.db.Has(key)
-	if err != nil {
-		panic(err)
-	}
-
-	return ok
-}
-
-func (ps *paramStore) Get(_ sdk.Context, key []byte, ptr interface{}) {
-	bz, err := ps.db.Get(key)
-	if err != nil {
-		panic(err)
-	}
-
-	if len(bz) == 0 {
-		return
-	}
-
-	if err := json.Unmarshal(bz, ptr); err != nil {
-		panic(err)
-	}
-}
-
-func defaultLogger() log.Logger {
-	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
-}
-
-func newBaseApp(name string, options ...func(*BaseApp)) *BaseApp {
-	logger := defaultLogger()
-	db := dbm.NewMemDB()
-	codec := codec.NewLegacyAmino()
-	registerTestCodec(codec)
-	return NewBaseApp(name, logger, db, testTxDecoder(codec), options...)
-}
-
-func registerTestCodec(cdc *codec.LegacyAmino) {
-	// register Tx, Msg
-	sdk.RegisterLegacyAminoCodec(cdc)
-
-	// register test types
-	cdc.RegisterConcrete(&txTest{}, "cosmos-sdk/baseapp/txTest", nil)
-	cdc.RegisterConcrete(&msgCounter{}, "cosmos-sdk/baseapp/msgCounter", nil)
-	cdc.RegisterConcrete(&msgCounter2{}, "cosmos-sdk/baseapp/msgCounter2", nil)
-	cdc.RegisterConcrete(&msgKeyValue{}, "cosmos-sdk/baseapp/msgKeyValue", nil)
-	cdc.RegisterConcrete(&msgNoRoute{}, "cosmos-sdk/baseapp/msgNoRoute", nil)
-}
-
-// aminoTxEncoder creates a amino TxEncoder for testing purposes.
-func aminoTxEncoder() sdk.TxEncoder {
-	cdc := codec.NewLegacyAmino()
-	registerTestCodec(cdc)
-
-	return legacytx.StdTxConfig{Cdc: cdc}.TxEncoder()
-}
-
-// simple one store baseapp
-func setupBaseApp(t *testing.T, options ...func(*BaseApp)) *BaseApp {
-	app := newBaseApp(t.Name(), options...)
-	require.Equal(t, t.Name(), app.Name())
-
-	app.MountStores(capKey1, capKey2)
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
-
-	// stores are mounted
-	err := app.LoadLatestVersion()
-	require.Nil(t, err)
-	return app
-}
 
 func TestMountStores(t *testing.T) {
 	app := setupBaseApp(t)
 
 	// check both stores
-	store1 := app.cms.GetCommitKVStore(capKey1)
+	store1 := app.CMS().GetCommitKVStore(capKey1)
 	require.NotNil(t, store1)
-	store2 := app.cms.GetCommitKVStore(capKey2)
+	store2 := app.CMS().GetCommitKVStore(capKey2)
 	require.NotNil(t, store2)
 }
 
@@ -131,10 +32,10 @@ func TestMountStores(t *testing.T) {
 // Test that LoadLatestVersion actually does.
 func TestLoadVersion(t *testing.T) {
 	logger := defaultLogger()
-	pruningOpt := SetPruning(store.PruneNothing)
+	pruningOpt := baseapp.SetPruning(store.PruneNothing)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil, pruningOpt)
+	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 
 	// make a cap key and mount the store
 	err := app.LoadLatestVersion() // needed to make stores non-nil
@@ -161,7 +62,7 @@ func TestLoadVersion(t *testing.T) {
 	commitID2 := sdk.CommitID{Version: 2, Hash: res.Data}
 
 	// reload with LoadLatestVersion
-	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app = baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 	app.MountStores()
 	err = app.LoadLatestVersion()
 	require.Nil(t, err)
@@ -169,7 +70,7 @@ func TestLoadVersion(t *testing.T) {
 
 	// reload with LoadVersion, see if you can commit the same block and get
 	// the same result
-	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app = baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 	err = app.LoadVersion(1)
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(1), commitID1)
@@ -178,8 +79,8 @@ func TestLoadVersion(t *testing.T) {
 	testLoadVersionHelper(t, app, int64(2), commitID2)
 }
 
-func useDefaultLoader(app *BaseApp) {
-	app.SetStoreLoader(DefaultStoreLoader)
+func useDefaultLoader(app *baseapp.BaseApp) {
+	app.SetStoreLoader(baseapp.DefaultStoreLoader)
 }
 
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
@@ -218,7 +119,7 @@ func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte
 // Test that LoadLatestVersion actually does.
 func TestSetLoader(t *testing.T) {
 	cases := map[string]struct {
-		setLoader    func(*BaseApp)
+		setLoader    func(*baseapp.BaseApp)
 		origStoreKey string
 		loadStoreKey string
 	}{
@@ -244,11 +145,11 @@ func TestSetLoader(t *testing.T) {
 			initStore(t, db, tc.origStoreKey, k, v)
 
 			// load the app with the existing db
-			opts := []func(*BaseApp){SetPruning(store.PruneNothing)}
+			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(store.PruneNothing)}
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)
 			}
-			app := NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
+			app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
 			app.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
 			err := app.LoadLatestVersion()
 			require.Nil(t, err)
@@ -267,10 +168,10 @@ func TestSetLoader(t *testing.T) {
 
 func TestVersionSetterGetter(t *testing.T) {
 	logger := defaultLogger()
-	pruningOpt := SetPruning(store.PruneDefault)
+	pruningOpt := baseapp.SetPruning(store.PruneDefault)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil, pruningOpt)
+	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 
 	require.Equal(t, "", app.Version())
 	res := app.Query(abci.RequestQuery{Path: "app/version"})
@@ -287,10 +188,10 @@ func TestVersionSetterGetter(t *testing.T) {
 
 func TestLoadVersionInvalid(t *testing.T) {
 	logger := log.NewNopLogger()
-	pruningOpt := SetPruning(store.PruneNothing)
+	pruningOpt := baseapp.SetPruning(store.PruneNothing)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil, pruningOpt)
+	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 
 	err := app.LoadLatestVersion()
 	require.Nil(t, err)
@@ -305,7 +206,7 @@ func TestLoadVersionInvalid(t *testing.T) {
 	commitID1 := sdk.CommitID{Version: 1, Hash: res.Data}
 
 	// create a new app with the stores mounted under the same cap key
-	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app = baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 
 	// require we can load the latest version
 	err = app.LoadVersion(1)
@@ -324,10 +225,10 @@ func TestLoadVersionPruning(t *testing.T) {
 		KeepEvery:  3,
 		Interval:   1,
 	}
-	pruningOpt := SetPruning(pruningOptions)
+	pruningOpt := baseapp.SetPruning(pruningOptions)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil, pruningOpt)
+	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("key1")
@@ -355,17 +256,17 @@ func TestLoadVersionPruning(t *testing.T) {
 	}
 
 	for _, v := range []int64{1, 2, 4} {
-		_, err = app.cms.CacheMultiStoreWithVersion(v)
+		_, err = app.CMS().CacheMultiStoreWithVersion(v)
 		require.NoError(t, err)
 	}
 
 	for _, v := range []int64{3, 5, 6, 7} {
-		_, err = app.cms.CacheMultiStoreWithVersion(v)
+		_, err = app.CMS().CacheMultiStoreWithVersion(v)
 		require.NoError(t, err)
 	}
 
 	// reload with LoadLatestVersion, check it loads last version
-	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app = baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 	app.MountStores(capKey)
 
 	err = app.LoadLatestVersion()
@@ -373,7 +274,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	testLoadVersionHelper(t, app, int64(7), lastCommitID)
 }
 
-func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, expectedID sdk.CommitID) {
+func testLoadVersionHelper(t *testing.T, app *baseapp.BaseApp, expectedHeight int64, expectedID sdk.CommitID) {
 	lastHeight := app.LastBlockHeight()
 	lastID := app.LastCommitID()
 	require.Equal(t, expectedHeight, lastHeight)
@@ -383,13 +284,13 @@ func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, exp
 func TestOptionFunction(t *testing.T) {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
-	bap := NewBaseApp("starting name", logger, db, nil, testChangeNameHelper("new name"))
-	require.Equal(t, bap.name, "new name", "BaseApp should have had name changed via option function")
+	bap := baseapp.NewBaseApp("starting name", logger, db, nil, testChangeNameHelper("new name"))
+	require.Equal(t, bap.GetName(), "new name", "BaseApp should have had name changed via option function")
 }
 
-func testChangeNameHelper(name string) func(*BaseApp) {
-	return func(bap *BaseApp) {
-		bap.name = name
+func testChangeNameHelper(name string) func(*baseapp.BaseApp) {
+	return func(bap *baseapp.BaseApp) {
+		bap.SetName(name)
 	}
 }
 
@@ -403,7 +304,7 @@ func TestTxDecoder(t *testing.T) {
 	tx := newTxCounter(1, 0)
 	txBytes := codec.MustMarshal(tx)
 
-	dTx, err := app.txDecoder(txBytes)
+	dTx, err := app.TxDecoder(txBytes)
 	require.NoError(t, err)
 
 	cTx := dTx.(txTest)
@@ -468,8 +369,8 @@ func TestBaseAppOptionSeal(t *testing.T) {
 
 func TestSetMinGasPrices(t *testing.T) {
 	minGasPrices := sdk.DecCoins{sdk.NewInt64DecCoin("stake", 5000)}
-	app := newBaseApp(t.Name(), SetMinGasPrices(minGasPrices.String()))
-	require.Equal(t, minGasPrices, app.minGasPrices)
+	app := newBaseApp(t.Name(), baseapp.SetMinGasPrices(minGasPrices.String()))
+	require.Equal(t, minGasPrices, app.MinGasPrices())
 }
 
 func TestInitChainer(t *testing.T) {
@@ -478,7 +379,7 @@ func TestInitChainer(t *testing.T) {
 	// we can reload the same  app later
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, logger, db, nil)
 	capKey := sdk.NewKVStoreKey("main")
 	capKey2 := sdk.NewKVStoreKey("key2")
 	app.MountStores(capKey, capKey2)
@@ -521,10 +422,10 @@ func TestInitChainer(t *testing.T) {
 	)
 
 	// assert that chainID is set correctly in InitChain
-	chainID := app.deliverState.ctx.ChainID()
+	chainID := app.DeliverState().Context().ChainID()
 	require.Equal(t, "test-chain-id", chainID, "ChainID in deliverState not set correctly in InitChain")
 
-	chainID = app.checkState.ctx.ChainID()
+	chainID = app.CheckState().Context().ChainID()
 	require.Equal(t, "test-chain-id", chainID, "ChainID in checkState not set correctly in InitChain")
 
 	app.Commit()
@@ -533,7 +434,7 @@ func TestInitChainer(t *testing.T) {
 	require.Equal(t, value, res.Value)
 
 	// reload app
-	app = NewBaseApp(name, logger, db, nil)
+	app = baseapp.NewBaseApp(name, logger, db, nil)
 	app.SetInitChainer(initChainer)
 	app.MountStores(capKey, capKey2)
 	err = app.LoadLatestVersion() // needed to make stores non-nil
@@ -557,7 +458,7 @@ func TestInitChain_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, logger, db, nil)
 
 	app.InitChain(
 		abci.RequestInitChain{
@@ -573,7 +474,7 @@ func TestBeginBlock_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, logger, db, nil)
 
 	app.InitChain(
 		abci.RequestInitChain{
@@ -599,250 +500,8 @@ func TestBeginBlock_WithInitialHeight(t *testing.T) {
 	require.Equal(t, int64(3), app.LastBlockHeight())
 }
 
-// Simple tx with a list of Msgs.
-type txTest struct {
-	Msgs       []sdk.Msg
-	Counter    int64
-	FailOnAnte bool
-	GasLimit   uint64
-}
-
-func (tx *txTest) setFailOnAnte(fail bool) {
-	tx.FailOnAnte = fail
-}
-
-func (tx *txTest) setFailOnHandler(fail bool) {
-	for i, msg := range tx.Msgs {
-		tx.Msgs[i] = msgCounter{msg.(msgCounter).Counter, fail}
-	}
-}
-
-// Implements Tx
-func (tx txTest) GetMsgs() []sdk.Msg   { return tx.Msgs }
-func (tx txTest) ValidateBasic() error { return nil }
-
-// Implements GasTx
-func (tx txTest) GetGas() uint64 { return tx.GasLimit }
-
-const (
-	routeMsgCounter  = "msgCounter"
-	routeMsgCounter2 = "msgCounter2"
-	routeMsgKeyValue = "msgKeyValue"
-)
-
-// ValidateBasic() fails on negative counters.
-// Otherwise it's up to the handlers
-type msgCounter struct {
-	Counter       int64
-	FailOnHandler bool
-}
-
-// dummy implementation of proto.Message
-func (msg msgCounter) Reset()         {}
-func (msg msgCounter) String() string { return "TODO" }
-func (msg msgCounter) ProtoMessage()  {}
-
-// Implements Msg
-func (msg msgCounter) Route() string                { return routeMsgCounter }
-func (msg msgCounter) Type() string                 { return "counter1" }
-func (msg msgCounter) GetSignBytes() []byte         { return nil }
-func (msg msgCounter) GetSigners() []sdk.AccAddress { return nil }
-func (msg msgCounter) ValidateBasic() error {
-	if msg.Counter >= 0 {
-		return nil
-	}
-	return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, "counter should be a non-negative integer")
-}
-
-func newTxCounter(counter int64, msgCounters ...int64) txTest {
-	msgs := make([]sdk.Msg, 0, len(msgCounters))
-	for _, c := range msgCounters {
-		msgs = append(msgs, msgCounter{c, false})
-	}
-
-	return txTest{msgs, counter, false, math.MaxUint64}
-}
-
-// a msg we dont know how to route
-type msgNoRoute struct {
-	msgCounter
-}
-
-func (tx msgNoRoute) Route() string { return "noroute" }
-
-// a msg we dont know how to decode
-type msgNoDecode struct {
-	msgCounter
-}
-
-func (tx msgNoDecode) Route() string { return routeMsgCounter }
-
-// Another counter msg. Duplicate of msgCounter
-type msgCounter2 struct {
-	Counter int64
-}
-
-// dummy implementation of proto.Message
-func (msg msgCounter2) Reset()         {}
-func (msg msgCounter2) String() string { return "TODO" }
-func (msg msgCounter2) ProtoMessage()  {}
-
-// Implements Msg
-func (msg msgCounter2) Route() string                { return routeMsgCounter2 }
-func (msg msgCounter2) Type() string                 { return "counter2" }
-func (msg msgCounter2) GetSignBytes() []byte         { return nil }
-func (msg msgCounter2) GetSigners() []sdk.AccAddress { return nil }
-func (msg msgCounter2) ValidateBasic() error {
-	if msg.Counter >= 0 {
-		return nil
-	}
-	return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, "counter should be a non-negative integer")
-}
-
-// A msg that sets a key/value pair.
-type msgKeyValue struct {
-	Key   []byte
-	Value []byte
-}
-
-func (msg msgKeyValue) Reset()                       {}
-func (msg msgKeyValue) String() string               { return "TODO" }
-func (msg msgKeyValue) ProtoMessage()                {}
-func (msg msgKeyValue) Route() string                { return routeMsgKeyValue }
-func (msg msgKeyValue) Type() string                 { return "keyValue" }
-func (msg msgKeyValue) GetSignBytes() []byte         { return nil }
-func (msg msgKeyValue) GetSigners() []sdk.AccAddress { return nil }
-func (msg msgKeyValue) ValidateBasic() error {
-	if msg.Key == nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "key cannot be nil")
-	}
-	if msg.Value == nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "value cannot be nil")
-	}
-	return nil
-}
-
-// amino decode
-func testTxDecoder(cdc *codec.LegacyAmino) sdk.TxDecoder {
-	return func(txBytes []byte) (sdk.Tx, error) {
-		var tx txTest
-		if len(txBytes) == 0 {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "tx bytes are empty")
-		}
-
-		err := cdc.Unmarshal(txBytes, &tx)
-		if err != nil {
-			return nil, sdkerrors.ErrTxDecode
-		}
-
-		return tx, nil
-	}
-}
-
-func anteHandlerTxTest(t *testing.T, capKey sdk.StoreKey, storeKey []byte) sdk.AnteHandler {
-	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
-		store := ctx.KVStore(capKey)
-		txTest := tx.(txTest)
-
-		if txTest.FailOnAnte {
-			return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
-		}
-
-		_, err := incrementingCounter(t, store, storeKey, txTest.Counter)
-		if err != nil {
-			return ctx, err
-		}
-
-		ctx.EventManager().EmitEvents(
-			counterEvent("ante_handler", txTest.Counter),
-		)
-
-		return ctx, nil
-	}
-}
-
-func counterEvent(evType string, msgCount int64) sdk.Events {
-	return sdk.Events{
-		sdk.NewEvent(
-			evType,
-			sdk.NewAttribute("update_counter", fmt.Sprintf("%d", msgCount)),
-		),
-	}
-}
-
-func handlerMsgCounter(t *testing.T, capKey sdk.StoreKey, deliverKey []byte) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		ctx = ctx.WithEventManager(sdk.NewEventManager())
-		store := ctx.KVStore(capKey)
-		var msgCount int64
-
-		switch m := msg.(type) {
-		case *msgCounter:
-			if m.FailOnHandler {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "message handler failure")
-			}
-
-			msgCount = m.Counter
-		case *msgCounter2:
-			msgCount = m.Counter
-		}
-
-		ctx.EventManager().EmitEvents(
-			counterEvent(sdk.EventTypeMessage, msgCount),
-		)
-
-		res, err := incrementingCounter(t, store, deliverKey, msgCount)
-		if err != nil {
-			return nil, err
-		}
-
-		res.Events = ctx.EventManager().Events().ToABCIEvents()
-		return res, nil
-	}
-}
-
-func getIntFromStore(store sdk.KVStore, key []byte) int64 {
-	bz := store.Get(key)
-	if len(bz) == 0 {
-		return 0
-	}
-	i, err := binary.ReadVarint(bytes.NewBuffer(bz))
-	if err != nil {
-		panic(err)
-	}
-	return i
-}
-
-func setIntOnStore(store sdk.KVStore, key []byte, i int64) {
-	bz := make([]byte, 8)
-	n := binary.PutVarint(bz, i)
-	store.Set(key, bz[:n])
-}
-
-// check counter matches what's in store.
-// increment and store
-func incrementingCounter(t *testing.T, store sdk.KVStore, counterKey []byte, counter int64) (*sdk.Result, error) {
-	storedCounter := getIntFromStore(store, counterKey)
-	require.Equal(t, storedCounter, counter)
-	setIntOnStore(store, counterKey, counter+1)
-	return &sdk.Result{}, nil
-}
-
-// Number of messages doesn't matter to CheckTx.
-func TestMultiMsgCheckTx(t *testing.T) {
-	// TODO: ensure we get the same results
-	// with one message or many
-}
-
-// Interleave calls to Check and Deliver and ensure
-// that there is no cross-talk. Check sees results of the previous Check calls
-// and Deliver sees that of the previous Deliver calls, but they don't see eachother.
-func TestConcurrentCheckDeliver(t *testing.T) {
-	// TODO
-}
-
 func TestGRPCQuery(t *testing.T) {
-	grpcQueryOpt := func(bapp *BaseApp) {
+	grpcQueryOpt := func(bapp *baseapp.BaseApp) {
 		testdata.RegisterQueryServer(
 			bapp.GRPCQueryRouter(),
 			testdata.QueryImpl{},
@@ -877,14 +536,14 @@ func TestGRPCQuery(t *testing.T) {
 
 // Test p2p filter queries
 func TestP2PQuery(t *testing.T) {
-	addrPeerFilterOpt := func(bapp *BaseApp) {
+	addrPeerFilterOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAddrPeerFilter(func(addrport string) abci.ResponseQuery {
 			require.Equal(t, "1.1.1.1:8000", addrport)
 			return abci.ResponseQuery{Code: uint32(3)}
 		})
 	}
 
-	idPeerFilterOpt := func(bapp *BaseApp) {
+	idPeerFilterOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetIDPeerFilter(func(id string) abci.ResponseQuery {
 			require.Equal(t, "testid", id)
 			return abci.ResponseQuery{Code: uint32(4)}
@@ -912,35 +571,16 @@ func TestGetMaximumBlockGas(t *testing.T) {
 	ctx := app.NewContext(true, tmproto.Header{})
 
 	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 0}})
-	require.Equal(t, uint64(0), app.getMaximumBlockGas(ctx))
+	require.Equal(t, uint64(0), app.GetMaximumBlockGas(ctx))
 
 	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -1}})
-	require.Equal(t, uint64(0), app.getMaximumBlockGas(ctx))
+	require.Equal(t, uint64(0), app.GetMaximumBlockGas(ctx))
 
 	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 5000000}})
-	require.Equal(t, uint64(5000000), app.getMaximumBlockGas(ctx))
+	require.Equal(t, uint64(5000000), app.GetMaximumBlockGas(ctx))
 
 	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -5000000}})
-	require.Panics(t, func() { app.getMaximumBlockGas(ctx) })
-}
-
-// NOTE: represents a new custom router for testing purposes of WithRouter()
-type testCustomRouter struct {
-	routes sync.Map
-}
-
-func (rtr *testCustomRouter) AddRoute(route sdk.Route) sdk.Router {
-	rtr.routes.Store(route.Path(), route.Handler())
-	return rtr
-}
-
-func (rtr *testCustomRouter) Route(ctx sdk.Context, path string) sdk.Handler {
-	if v, ok := rtr.routes.Load(path); ok {
-		if h, ok := v.(sdk.Handler); ok {
-			return h
-		}
-	}
-	return nil
+	require.Panics(t, func() { app.GetMaximumBlockGas(ctx) })
 }
 
 func TestBaseApp_EndBlock(t *testing.T) {
@@ -954,7 +594,7 @@ func TestBaseApp_EndBlock(t *testing.T) {
 		},
 	}
 
-	app := NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, logger, db, nil)
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: cp,

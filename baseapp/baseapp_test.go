@@ -80,6 +80,18 @@ func (ps *paramStore) Get(_ sdk.Context, key []byte, ptr interface{}) {
 	}
 }
 
+func defaultLogger() log.Logger {
+	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
+}
+
+func newBaseApp(name string, options ...func(*baseapp.BaseApp)) *baseapp.BaseApp {
+	logger := defaultLogger()
+	db := dbm.NewMemDB()
+	codec := codec.NewLegacyAmino()
+	registerTestCodec(codec)
+	return baseapp.NewBaseApp(name, logger, db, testTxDecoder(codec), options...)
+}
+
 func registerTestCodec(cdc *codec.LegacyAmino) {
 	// register Tx, Msg
 	sdk.RegisterLegacyAminoCodec(cdc)
@@ -98,18 +110,6 @@ func aminoTxEncoder() sdk.TxEncoder {
 	registerTestCodec(cdc)
 
 	return legacytx.StdTxConfig{Cdc: cdc}.TxEncoder()
-}
-
-func defaultLogger() log.Logger {
-	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
-}
-
-func newBaseApp(name string, options ...func(*baseapp.BaseApp)) *baseapp.BaseApp {
-	logger := defaultLogger()
-	db := dbm.NewMemDB()
-	codec := codec.NewLegacyAmino()
-	registerTestCodec(codec)
-	return baseapp.NewBaseApp(name, logger, db, testTxDecoder(codec), options...)
 }
 
 // simple one store baseapp
@@ -757,6 +757,15 @@ func (msg msgCounter) ValidateBasic() error {
 	return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, "counter should be a non-negative integer")
 }
 
+func newTxCounter(counter int64, msgCounters ...int64) txTest {
+	msgs := make([]sdk.Msg, 0, len(msgCounters))
+	for _, c := range msgCounters {
+		msgs = append(msgs, msgCounter{c, false})
+	}
+
+	return txTest{msgs, counter, false, math.MaxUint64}
+}
+
 // a msg we dont know how to route
 type msgNoRoute struct {
 	msgCounter
@@ -895,12 +904,6 @@ func handlerMsgCounter(t *testing.T, capKey sdk.StoreKey, deliverKey []byte) sdk
 	}
 }
 
-func setIntOnStore(store sdk.KVStore, key []byte, i int64) {
-	bz := make([]byte, 8)
-	n := binary.PutVarint(bz, i)
-	store.Set(key, bz[:n])
-}
-
 func getIntFromStore(store sdk.KVStore, key []byte) int64 {
 	bz := store.Get(key)
 	if len(bz) == 0 {
@@ -913,6 +916,12 @@ func getIntFromStore(store sdk.KVStore, key []byte) int64 {
 	return i
 }
 
+func setIntOnStore(store sdk.KVStore, key []byte, i int64) {
+	bz := make([]byte, 8)
+	n := binary.PutVarint(bz, i)
+	store.Set(key, bz[:n])
+}
+
 // check counter matches what's in store.
 // increment and store
 func incrementingCounter(t *testing.T, store sdk.KVStore, counterKey []byte, counter int64) (*sdk.Result, error) {
@@ -920,15 +929,6 @@ func incrementingCounter(t *testing.T, store sdk.KVStore, counterKey []byte, cou
 	require.Equal(t, storedCounter, counter)
 	setIntOnStore(store, counterKey, counter+1)
 	return &sdk.Result{}, nil
-}
-
-func newTxCounter(counter int64, msgCounters ...int64) txTest {
-	msgs := make([]sdk.Msg, 0, len(msgCounters))
-	for _, c := range msgCounters {
-		msgs = append(msgs, msgCounter{c, false})
-	}
-
-	return txTest{msgs, counter, false, math.MaxUint64}
 }
 
 //---------------------------------------------------------------------

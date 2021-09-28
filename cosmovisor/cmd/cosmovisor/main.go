@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
 	"github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor/cmd"
+	"github.com/cosmos/cosmos-sdk/cosmovisor/errors"
 )
 
 func main() {
@@ -17,14 +19,22 @@ func main() {
 
 // Run is the main loop, but returns an error
 func Run(args []string) error {
-	if keepGoing := cmd.RunCosmovisorCommands(args); !keepGoing {
-		return nil
-	}
+	cmd.RunCosmovisorCommands(args)
 
-	cfg, err := cosmovisor.GetConfigFromEnv()
-	if err != nil {
-		return err
+	cfg, cerr := cosmovisor.GetConfigFromEnv()
+	if cerr != nil {
+		switch err := cerr.(type) {
+		case *errors.MultiError:
+			cosmovisor.Logger.Error().Msg("multiple configuration errors found:")
+			for i, e := range err.GetErrors() {
+				cosmovisor.Logger.Error().Err(e).Msg(fmt.Sprintf("  %d:", i+1))
+			}
+		default:
+			cosmovisor.Logger.Error().Err(err).Msg("configuration error:")
+		}
+		return cerr
 	}
+	cosmovisor.Logger.Info().Msg("Configuration is valid:\n" + cfg.DetailString())
 	launcher, err := cosmovisor.NewLauncher(cfg)
 	if err != nil {
 		return err

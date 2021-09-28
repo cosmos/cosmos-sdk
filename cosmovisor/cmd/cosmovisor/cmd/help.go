@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
-	"github.com/cosmos/cosmos-sdk/cosmovisor/errors"
 )
 
 // ShouldGiveHelp checks the env and provided args to see if help is needed or being requested.
@@ -26,30 +25,10 @@ func ShouldGiveHelp(args []string) bool {
 	return false
 }
 
-// DoHelp outputs help text, config info, and attempts to run the binary with the --help flag.
-// Returns true if no errors were encountered and execution can/should continue.
-func DoHelp() bool {
-	// Output the help text
+// DoHelp outputs help text
+func DoHelp() {
+	// Not using the logger for this output because the header and footer look weird for help text.
 	fmt.Println(GetHelpText())
-	// If the config isn't valid, say what's wrong and we're done.
-	cfg, cerr := cosmovisor.GetConfigFromEnv()
-	switch err := cerr.(type) {
-	case nil:
-		// Nothing to do. Move on.
-	case *errors.MultiError:
-		fmt.Fprintf(os.Stderr, "[cosmovisor] multiple configuration errors found:\n")
-		for i, e := range err.GetErrors() {
-			fmt.Fprintf(os.Stderr, "  %d: %v\n", i+1, e)
-		}
-		return false
-	default:
-		fmt.Fprintf(os.Stderr, "[cosmovisor] %v\n", err)
-		return false
-	}
-	// If the config is okay, output what we see it as.
-	fmt.Println("[cosmovisor] config is valid:")
-	fmt.Println(cfg.DetailString())
-	return true
 }
 
 // GetHelpText creates the help text multi-line string.

@@ -4,7 +4,7 @@ order: 3
 
 # Query Lifecycle
 
-This document describes the lifecycle of a query in a SDK application, from the user interface to application stores and back. {synopsis}
+This document describes the lifecycle of a query in a Cosmos SDK application, from the user interface to application stores and back. {synopsis}
 
 ## Pre-requisite Readings
 
@@ -39,7 +39,7 @@ The CLI understands a specific set of commands, defined in a hierarchical struct
 ### gRPC
 
 ::: warning
-A patch introduced in `go-grpc v1.34.0` made gRPC incompatible with the `gogoproto` library, making some [gRPC queries](https://github.com/cosmos/cosmos-sdk/issues/8426) panic. As such, the SDK requires that `go-grpc <=v1.33.2` is installed in your `go.mod`.
+A patch introduced in `go-grpc v1.34.0` made gRPC incompatible with the `gogoproto` library, making some [gRPC queries](https://github.com/cosmos/cosmos-sdk/issues/8426) panic. As such, the Cosmos SDK requires that `go-grpc <=v1.33.2` is installed in your `go.mod`.
 
 To make sure that gRPC is working properly, it is **highly recommended** to add the following line in your application's `go.mod`:
 
@@ -109,7 +109,7 @@ Here is what the code looks like for the CLI command:
 
 #### gRPC Query Client Creation
 
-The SDK leverages code generated from Protobuf services to make queries. The `staking` module's `MyQuery` service generates a `queryClient`, which the CLI will use to make queries. Here is the relevant code:
+The Cosmos SDK leverages code generated from Protobuf services to make queries. The `staking` module's `MyQuery` service generates a `queryClient`, which the CLI will use to make queries. Here is the relevant code:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/x/staking/client/cli/query.go#L318-L342
 

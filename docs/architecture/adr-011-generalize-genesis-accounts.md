@@ -6,7 +6,7 @@
 
 ## Context
 
-Currently, the SDK allows for custom account types; the `auth` keeper stores any type fulfilling its `Account` interface. However `auth` does not handle exporting or loading accounts to/from a genesis file, this is done by `genaccounts`, which only handles one of 4 concrete account types (`BaseAccount`, `ContinuousVestingAccount`, `DelayedVestingAccount` and `ModuleAccount`).
+Currently, the Cosmos SDK allows for custom account types; the `auth` keeper stores any type fulfilling its `Account` interface. However `auth` does not handle exporting or loading accounts to/from a genesis file, this is done by `genaccounts`, which only handles one of 4 concrete account types (`BaseAccount`, `ContinuousVestingAccount`, `DelayedVestingAccount` and `ModuleAccount`).
 
 Projects desiring to use custom accounts (say custom vesting accounts) need to fork and modify `genaccounts`.
 

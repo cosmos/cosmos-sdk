@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"sync"
 	"time"
 
@@ -36,7 +37,10 @@ var (
 	merkleValuePrefix = []byte{4} // Prefix for Merkle value mappings
 )
 
-var ErrVersionDoesNotExist = errors.New("version does not exist")
+var (
+	ErrVersionDoesNotExist = errors.New("version does not exist")
+	ErrMaximumHeight       = errors.New("maximum block height reached")
+)
 
 type StoreConfig struct {
 	// Version pruning options for backing DBs.
@@ -244,6 +248,9 @@ func (s *Store) Commit() types.CommitID {
 		panic(err)
 	}
 	target := versions.Last() + 1
+	if target > math.MaxInt64 {
+		panic(ErrMaximumHeight)
+	}
 	// Fast forward to initialversion if needed
 	if s.opts.InitialVersion != 0 && target < s.opts.InitialVersion {
 		target = s.opts.InitialVersion
@@ -361,6 +368,9 @@ func (s *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			return sdkerrors.QueryResult(errors.New("failed to get version info"), false)
 		}
 		latest := versions.Last()
+		if latest > math.MaxInt64 {
+			return sdkerrors.QueryResult(ErrMaximumHeight, false)
+		}
 		if versions.Exists(latest - 1) {
 			height = int64(latest - 1)
 		} else {

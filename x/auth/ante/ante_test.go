@@ -13,6 +13,7 @@ import (
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -592,6 +593,7 @@ func (suite *AnteTestSuite) TestAnteHandlerMemoGas() {
 
 func (suite *AnteTestSuite) TestAnteHandlerMultiSigner() {
 	suite.SetupTest(false) // setup
+	suite.ctx = suite.ctx.WithGasMeter(storetypes.NewGasMeter(150000))
 
 	// Same data for every test cases
 	accounts := suite.CreateTestAccounts(3)

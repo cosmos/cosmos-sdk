@@ -290,7 +290,7 @@ func (cfg Config) DetailString() string {
 		{"Root Dir", cfg.Root()},
 		{"Upgrade Dir", cfg.BaseUpgradeDir()},
 		{"Genesis Bin", cfg.GenesisBin()},
-		{"Monitored Upgrade Info File", cfg.UpgradeInfoFilePath()},
+		{"Monitored File", cfg.UpgradeInfoFilePath()},
 	}
 
 	var sb strings.Builder

@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
 )
@@ -18,7 +19,7 @@ func ShouldGiveHelp(args []string) bool {
 		return false
 	}
 	for _, arg := range args {
-		if arg == "help" || arg == "--help" || arg == "-h" {
+		if strings.EqualFold(arg, "help") || strings.EqualFold(arg, "--help") || strings.EqualFold(arg, "-h") {
 			return true
 		}
 	}

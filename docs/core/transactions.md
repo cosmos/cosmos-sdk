@@ -8,7 +8,7 @@ order: 2
 
 ## Pre-requisite Readings
 
-- [Anatomy of an SDK Application](../basics/app-anatomy.md) {prereq}
+- [Anatomy of a Cosmos SDK Application](../basics/app-anatomy.md) {prereq}
 
 ## Transactions
 
@@ -18,7 +18,7 @@ When users want to interact with an application and make state changes (e.g. sen
 
 ## Type Definition
 
-Transaction objects are SDK types that implement the `Tx` interface
+Transaction objects are Cosmos SDK types that implement the `Tx` interface
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/tx_msg.go#L49-L57
 
@@ -31,7 +31,7 @@ As a developer, you should rarely manipulate `Tx` directly, as `Tx` is really an
 
 ### Signing Transactions
 
-Every message in a transaction must be signed by the addresses specified by its `GetSigners`. The SDK currently allows signing transactions in two different ways.
+Every message in a transaction must be signed by the addresses specified by its `GetSigners`. The Cosmos SDK currently allows signing transactions in two different ways.
 
 #### `SIGN_MODE_DIRECT` (preferred)
 
@@ -39,7 +39,7 @@ The most used implementation of the `Tx` interface is the Protobuf `Tx` message,
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/proto/cosmos/tx/v1beta1/tx.proto#L12-L25
 
-Because Protobuf serialization is not deterministic, the SDK uses an additional `TxRaw` type to denote the pinned bytes over which a transaction is signed. Any user can generate a valid `body` and `auth_info` for a transaction, and serialize these two messages using Protobuf. `TxRaw` then pins the user's exact binary representation of `body` and `auth_info`, called respectively `body_bytes` and `auth_info_bytes`. The document that is signed by all signers of the transaction is `SignDoc` (deterministically serialized using [ADR-027](../architecture/adr-027-deterministic-protobuf-serialization.md)):
+Because Protobuf serialization is not deterministic, the Cosmos SDK uses an additional `TxRaw` type to denote the pinned bytes over which a transaction is signed. Any user can generate a valid `body` and `auth_info` for a transaction, and serialize these two messages using Protobuf. `TxRaw` then pins the user's exact binary representation of `body` and `auth_info`, called respectively `body_bytes` and `auth_info_bytes`. The document that is signed by all signers of the transaction is `SignDoc` (deterministically serialized using [ADR-027](../architecture/adr-027-deterministic-protobuf-serialization.md)):
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/proto/cosmos/tx/v1beta1/tx.proto#L47-L64
 
@@ -66,7 +66,7 @@ Other sign modes, most notably `SIGN_MODE_TEXTUAL`, are being discussed. If you 
 The process of an end-user sending a transaction is:
 
 - decide on the messages to put into the transaction,
-- generate the transaction using the SDK's `TxBuilder`,
+- generate the transaction using the Cosmos SDK's `TxBuilder`,
 - broadcast the transaction using one of the available interfaces.
 
 The next paragraphs will describe each of these components, in this order.
@@ -136,7 +136,7 @@ simd tx send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000stake
 
 #### gRPC
 
-[gRPC](https://grpc.io) is introduced in Cosmos SDK 0.40 as the main component for the SDK's RPC layer. The principal usage of gRPC is in the context of modules' [`Query` services](../building-modules). However, the SDK also exposes a few other module-agnostic gRPC services, one of them being the `Tx` service:
+[gRPC](https://grpc.io) is introduced in Cosmos SDK 0.40 as the main component for the Cosmos SDK's RPC layer. The principal usage of gRPC is in the context of modules' [`Query` services](../building-modules). However, the Cosmos SDK also exposes a few other module-agnostic gRPC services, one of them being the `Tx` service:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/proto/cosmos/tx/v1beta1/service.proto
 

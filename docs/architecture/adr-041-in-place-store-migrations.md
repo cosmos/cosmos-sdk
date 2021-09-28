@@ -36,7 +36,7 @@ type AppModule interface {
 }
 ```
 
-This methods returns an `uint64` which serves as state-breaking version of the module. It MUST be incremented on each consensus-breaking change introduced by the module. To avoid potential errors with default values, the initial version of a module MUST be set to 1. In the SDK, version 1 corresponds to the modules in the v0.41 series.
+This methods returns an `uint64` which serves as state-breaking version of the module. It MUST be incremented on each consensus-breaking change introduced by the module. To avoid potential errors with default values, the initial version of a module MUST be set to 1. In the Cosmos SDK, version 1 corresponds to the modules in the v0.41 series.
 
 ### Module-Specific Migration Functions
 
@@ -57,7 +57,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 For example, if the new ConsensusVersion of a module is `N` , then `N-1` migration functions MUST be registered in the configurator.
 
-In the SDK, the migration functions are handled by each module's keeper, because the keeper holds the `sdk.StoreKey` used to perform in-place store migrations. To not overload the keeper, a `Migrator` wrapper is used by each module to handle the migration functions:
+In the Cosmos SDK, the migration functions are handled by each module's keeper, because the keeper holds the `sdk.StoreKey` used to perform in-place store migrations. To not overload the keeper, a `Migrator` wrapper is used by each module to handle the migration functions:
 
 ```go
 // Migrator is a struct for handling in-place store migrations.
@@ -155,8 +155,8 @@ While modules MUST register their migration functions when bumping ConsensusVers
 
 ### Neutral
 
-- The SDK will continue to support JSON migrations via the existing `simd export` and `simd migrate` commands.
-- The current ADR does not allow creating, renaming or deleting stores, only modifying existing store keys and values. The SDK already has the `StoreLoader` for those operations.
+- The Cosmos SDK will continue to support JSON migrations via the existing `simd export` and `simd migrate` commands.
+- The current ADR does not allow creating, renaming or deleting stores, only modifying existing store keys and values. The Cosmos SDK already has the `StoreLoader` for those operations.
 
 ## Further Discussions
 

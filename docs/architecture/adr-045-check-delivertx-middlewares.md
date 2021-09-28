@@ -16,7 +16,7 @@ This ADR replaces the current BaseApp `runTx` and antehandlers design with a mid
 
 BaseApp's implementation of ABCI `{Check,Deliver}Tx()` and its own `Simulate()` method call the `runTx` method under the hood, which first runs antehandlers, then executes `Msg`s. However, the [transaction Tips](https://github.com/cosmos/cosmos-sdk/issues/9406) and [refunding unused gas](https://github.com/cosmos/cosmos-sdk/issues/2150) use cases require custom logic to be run after the `Msg`s execution. There is currently no way to achieve this.
 
-An naive solution would be to add post-`Msg` hooks to BaseApp. However, the SDK team thinks in parallel about the bigger picture of making app wiring simpler ([#9181](https://github.com/cosmos/cosmos-sdk/discussions/9182)), which includes making BaseApp more lightweight and modular.
+An naive solution would be to add post-`Msg` hooks to BaseApp. However, the Cosmos SDK team thinks in parallel about the bigger picture of making app wiring simpler ([#9181](https://github.com/cosmos/cosmos-sdk/discussions/9182)), which includes making BaseApp more lightweight and modular.
 
 ## Decision
 
@@ -130,7 +130,7 @@ func (txh myTxHandler) SimulateTx(ctx context.Context, tx sdk.Tx, req tx.Request
 
 ### Composing Middlewares
 
-While BaseApp simply holds a reference to a `tx.Handler`, this `tx.Handler` itself is defined using a middleware stack. The SDK exposes a base (i.e. innermost) `tx.Handler` called `RunMsgsTxHandler`, which executes messages.
+While BaseApp simply holds a reference to a `tx.Handler`, this `tx.Handler` itself is defined using a middleware stack. The Cosmos SDK exposes a base (i.e. innermost) `tx.Handler` called `RunMsgsTxHandler`, which executes messages.
 
 Then, the app developer can compose multiple middlewares on top on the base `tx.Handler`. Each middleware can run pre-and-post-processing logic around its next middleware, as described in the section above. Conceptually, as an example, given the middlewares `A`, `B`, and `C` and the base `tx.Handler` `H` the stack looks like:
 
@@ -159,11 +159,11 @@ txHandler := middleware.ComposeMiddlewares(...)
 app.SetTxHandler(txHandler)
 ```
 
-The app developer can define their own middlewares, or use the SDK's pre-defined middlewares from `middleware.NewDefaultTxHandler()`.
+The app developer can define their own middlewares, or use the Cosmos SDK's pre-defined middlewares from `middleware.NewDefaultTxHandler()`.
 
-### Middlewares Maintained by the SDK
+### Middlewares Maintained by the Cosmos SDK
 
-While the app developer can define and compose the middlewares of their choice, the SDK provides a set of middlewares that caters for the ecosystem's most common use cases. These middlewares are:
+While the app developer can define and compose the middlewares of their choice, the Cosmos SDK provides a set of middlewares that caters for the ecosystem's most common use cases. These middlewares are:
 
 | Middleware              | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -220,7 +220,7 @@ if err != nil {
 + app.SetTxHandler(txHandler)
 ```
 
-Other more minor API breaking changes will also be provided in the CHANGELOG. As usual, the SDK will provide a release migration document for app developers.
+Other more minor API breaking changes will also be provided in the CHANGELOG. As usual, the Cosmos SDK will provide a release migration document for app developers.
 
 This ADR does not introduce any state-machine-, client- or CLI-breaking changes.
 

@@ -19,7 +19,7 @@
         - [Point Release Procedure](#point-release-procedure)
     - [Code Owner Membership](#code-owner-membership)
 
-Thank you for considering making contributions to Cosmos-SDK and related
+Thank you for considering making contributions to the Cosmos SDK and related
 repositories!
 
 Contributing to this repo can mean many things such as participating in
@@ -65,7 +65,7 @@ Other notes:
 
 ## Architecture Decision Records (ADR)
 
-When proposing an architecture decision for the SDK, please start by opening an [issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose) or a [discussion](https://github.com/cosmos/cosmos-sdk/discussions/new) with a summary of the proposal. Once the proposal has been discussed and there is rough alignment on a high-level approach to the design, the [ADR creation process](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/PROCESS.md) can begin. We are following this process to ensure all involved parties are in agreement before any party begins coding the proposed implementation. If you would like to see examples of how these are written, please refer to the current [ADRs](https://github.com/cosmos/cosmos-sdk/tree/master/docs/architecture).
+When proposing an architecture decision for the Cosmos SDK, please start by opening an [issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose) or a [discussion](https://github.com/cosmos/cosmos-sdk/discussions/new) with a summary of the proposal. Once the proposal has been discussed and there is rough alignment on a high-level approach to the design, the [ADR creation process](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/PROCESS.md) can begin. We are following this process to ensure all involved parties are in agreement before any party begins coding the proposed implementation. If you would like to see examples of how these are written, please refer to the current [ADRs](https://github.com/cosmos/cosmos-sdk/tree/master/docs/architecture).
 
 ## Pull Requests
 

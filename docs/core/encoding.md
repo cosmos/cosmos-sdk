@@ -8,7 +8,7 @@ While encoding in the Cosmos SDK used to be mainly handled by `go-amino` codec, 
 
 ## Pre-requisite Readings
 
-- [Anatomy of an Cosmos SDK application](../basics/app-anatomy.md) {prereq}
+- [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
 
 ## Encoding
 

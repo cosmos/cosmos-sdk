@@ -8,8 +8,8 @@ This document describes `BaseApp`, the abstraction that implements the core func
 
 ## Pre-requisite Readings
 
-- [Anatomy of an Cosmos SDK application](../basics/app-anatomy.md) {prereq}
-- [Lifecycle of an Cosmos SDK transaction](../basics/tx-lifecycle.md) {prereq}
+- [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
+- [Lifecycle of a Cosmos SDK transaction](../basics/tx-lifecycle.md) {prereq}
 
 ## Introduction
 
@@ -19,7 +19,7 @@ This document describes `BaseApp`, the abstraction that implements the core func
 - [Service Routers](#service-routers), to route messages and queries to the appropriate module.
 - Different [states](#states), as the state-machine can have different volatile states updated based on the ABCI message received.
 
-The goal of `BaseApp` is to provide the fundamental layer of an Cosmos SDK application
+The goal of `BaseApp` is to provide the fundamental layer of a Cosmos SDK application
 that developers can easily extend to build their own custom application. Usually,
 developers will create a custom type for their application, like so:
 

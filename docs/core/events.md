@@ -8,7 +8,7 @@ order: 9
 
 ## Pre-requisite Readings
 
-- [Anatomy of an Cosmos SDK application](../basics/app-anatomy.md) {prereq}
+- [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
 - [Tendermint Documentation on Events](https://docs.tendermint.com/master/spec/abci/abci.html#events) {prereq}
 
 ## Events

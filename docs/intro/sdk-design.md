@@ -92,4 +92,4 @@ In addition to the already existing modules in `x/`, that anyone can use in thei
 
 ## Next {hide}
 
-Learn more about the [anatomy of an Cosmos SDK application](../basics/app-anatomy.md) {hide}
+Learn more about the [anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {hide}

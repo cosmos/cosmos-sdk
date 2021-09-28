@@ -8,7 +8,7 @@ order: 2
 
 ## Pre-requisite Readings
 
-- [Anatomy of an Cosmos SDK Application](../basics/app-anatomy.md) {prereq}
+- [Anatomy of a Cosmos SDK Application](../basics/app-anatomy.md) {prereq}
 
 ## Transactions
 

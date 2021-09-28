@@ -8,7 +8,7 @@ Now that the application is ready and the keyring populated, it's time to see ho
 
 ## Pre-requisite Readings
 
-- [Anatomy of an Cosmos SDK Application](../basics/app-anatomy.md) {prereq}
+- [Anatomy of a Cosmos SDK Application](../basics/app-anatomy.md) {prereq}
 - [Setting up the keyring](./keyring.md) {prereq}
 
 ## Initialize the Chain

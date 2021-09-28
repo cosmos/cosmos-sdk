@@ -8,7 +8,7 @@ This document describes the default strategies to handle gas and fees within a C
 
 ### Pre-requisite Readings
 
-- [Anatomy of an Cosmos SDK Application](./app-anatomy.md) {prereq}
+- [Anatomy of a Cosmos SDK Application](./app-anatomy.md) {prereq}
 
 ## Introduction to `Gas` and `Fees`
 

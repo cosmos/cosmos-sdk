@@ -8,7 +8,7 @@ This document describes the in-built account and public key system of the Cosmos
 
 ### Pre-requisite Readings
 
-- [Anatomy of an Cosmos SDK Application](./app-anatomy.md) {prereq}
+- [Anatomy of a Cosmos SDK Application](./app-anatomy.md) {prereq}
 
 ## Account Definition
 

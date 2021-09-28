@@ -39,7 +39,7 @@ message Plan {
   // moved to the IBC module in the sub module 02-client.
   // If this field is not empty, an error will be thrown.
   google.protobuf.Any upgraded_client_state = 5
-      [deprecated = true, (gogoproto.moretags) = "yaml:\"upgraded_client_state\""];
+      [deprecated = true];
 }
 
 // SoftwareUpgradeProposal is a gov Content type for initiating a software

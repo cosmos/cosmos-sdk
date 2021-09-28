@@ -10,7 +10,8 @@ import (
 )
 
 func NewAnteHandler(
-	ak ante.AccountKeeper, bankKeeper types.BankKeeper,
+	ak ante.AccountKeeper,
+	bankKeeper types.BankKeeper, //nolint:interfacer
 	sigGasConsumer ante.SignatureVerificationGasConsumer,
 	signModeHandler signing.SignModeHandler,
 	channelKeeper channelkeeper.Keeper,

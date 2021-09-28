@@ -8,14 +8,14 @@ This document describes the default strategies to handle gas and fees within a C
 
 ### Pre-requisite Readings
 
-- [Anatomy of an SDK Application](./app-anatomy.md) {prereq}
+- [Anatomy of a Cosmos SDK Application](./app-anatomy.md) {prereq}
 
 ## Introduction to `Gas` and `Fees`
 
 In the Cosmos SDK, `gas` is a special unit that is used to track the consumption of resources during execution. `gas` is typically consumed whenever read and writes are made to the store, but it can also be consumed if expensive computation needs to be done. It serves two main purposes:
 
-- Make sure blocks are not consuming too many resources and will be finalized. This is implemented by default in the SDK via the [block gas meter](#block-gas-meter).
-- Prevent spam and abuse from end-user. To this end, `gas` consumed during [`message`](../building-modules/messages-and-queries.md#messages) execution is typically priced, resulting in a `fee` (`fees = gas * gas-prices`). `fees` generally have to be paid by the sender of the `message`. Note that the SDK does not enforce `gas` pricing by default, as there may be other ways to prevent spam (e.g. bandwidth schemes). Still, most applications will implement `fee` mechanisms to prevent spam. This is done via the [`AnteHandler`](#antehandler).
+- Make sure blocks are not consuming too many resources and will be finalized. This is implemented by default in the Cosmos SDK via the [block gas meter](#block-gas-meter).
+- Prevent spam and abuse from end-user. To this end, `gas` consumed during [`message`](../building-modules/messages-and-queries.md#messages) execution is typically priced, resulting in a `fee` (`fees = gas * gas-prices`). `fees` generally have to be paid by the sender of the `message`. Note that the Cosmos SDK does not enforce `gas` pricing by default, as there may be other ways to prevent spam (e.g. bandwidth schemes). Still, most applications will implement `fee` mechanisms to prevent spam. This is done via the [`AnteHandler`](#antehandler).
 
 ## Gas Meter
 
@@ -71,7 +71,7 @@ The `AnteHandler` is run for every transaction during `CheckTx` and `DeliverTx`,
 type AnteHandler func(ctx Context, tx Tx, simulate bool) (newCtx Context, result Result, abort bool)
 ```
 
-The `anteHandler` is not implemented in the core SDK but in a module. This gives the possibility to developers to choose which version of `AnteHandler` fits their application's needs. That said, most applications today use the default implementation defined in the [`auth` module](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth). Here is what the `anteHandler` is intended to do in a normal Cosmos SDK application:
+The `anteHandler` is not implemented in the core Cosmos SDK but in a module. This gives the possibility to developers to choose which version of `AnteHandler` fits their application's needs. That said, most applications today use the default implementation defined in the [`auth` module](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth). Here is what the `anteHandler` is intended to do in a normal Cosmos SDK application:
 
 - Verify that the transaction are of the correct type. Transaction types are defined in the module that implements the `anteHandler`, and they follow the transaction interface:
   +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/tx_msg.go#L49-L57

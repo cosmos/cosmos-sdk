@@ -64,7 +64,7 @@ Cosmos SDK modules can be seen as little state-machines within the state-machine
                                        v
 ```
 
-As a result of this architecture, building an Cosmos SDK application usually revolves around writing modules to implement the specialized  logic of the application, and composing them with existing modules to complete the application. Developers will generally work on modules that implement logic needed for their specific use case that do not exist yet, and will use existing modules for more generic functionalities like staking, accounts or token management.
+As a result of this architecture, building a Cosmos SDK application usually revolves around writing modules to implement the specialized logic of the application and composing them with existing modules to complete the application. Developers will generally work on modules that implement logic needed for their specific use case that do not exist yet, and will use existing modules for more generic functionalities like staking, accounts, or token management.
 
 ## How to Approach Building Modules as a Developer
 

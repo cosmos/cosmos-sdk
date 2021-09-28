@@ -88,17 +88,22 @@ func (suite *IntegrationTestSuite) TestQueryAllBalances() {
 
 func (suite *IntegrationTestSuite) TestQueryTotalSupply() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
-	expectedTotalSupply := sdk.NewCoins(sdk.NewInt64Coin("test", 400000000))
+	res, err := queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
+	suite.Require().NoError(err)
+	genesisSupply := res.Supply
+
+	testCoins := sdk.NewCoins(sdk.NewInt64Coin("test", 400000000))
 	suite.
 		Require().
-		NoError(app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply))
+		NoError(app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, testCoins))
 
-	res, err := queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
+	res, err = queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
+	expectedTotalSupply := genesisSupply.Add(testCoins...)
 	suite.Require().Equal(2, len(res.Supply))
-	suite.Require().Contains(res.Supply.String(), expectedTotalSupply.String())
+	suite.Require().Equal(res.Supply, expectedTotalSupply)
 }
 
 func (suite *IntegrationTestSuite) TestQueryTotalSupplyOf() {

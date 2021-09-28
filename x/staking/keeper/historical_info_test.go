@@ -134,6 +134,10 @@ func TestTrackHistoricalInfo(t *testing.T) {
 
 func TestGetAllHistoricalInfo(t *testing.T) {
 	_, app, ctx := createTestInput(t)
+	// clear historical info
+	infos := app.StakingKeeper.GetAllHistoricalInfo(ctx)
+	require.Len(t, infos, 1)
+	app.StakingKeeper.DeleteHistoricalInfo(ctx, infos[0].Header.Height)
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
@@ -147,7 +151,6 @@ func TestGetAllHistoricalInfo(t *testing.T) {
 	header2 := tmproto.Header{ChainID: "HelloChain", Height: 11}
 	header3 := tmproto.Header{ChainID: "HelloChain", Height: 12}
 
-	app.StakingKeeper.DeleteHistoricalInfo(ctx, 2)
 	hist1 := types.HistoricalInfo{Header: header1, Valset: valSet}
 	hist2 := types.HistoricalInfo{Header: header2, Valset: valSet}
 	hist3 := types.HistoricalInfo{Header: header3, Valset: valSet}
@@ -158,6 +161,6 @@ func TestGetAllHistoricalInfo(t *testing.T) {
 		app.StakingKeeper.SetHistoricalInfo(ctx, int64(10+i), &hi)
 	}
 
-	infos := app.StakingKeeper.GetAllHistoricalInfo(ctx)
+	infos = app.StakingKeeper.GetAllHistoricalInfo(ctx)
 	require.Equal(t, expHistInfos, infos)
 }

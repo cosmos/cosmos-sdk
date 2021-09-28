@@ -34,6 +34,7 @@ func TestInitGenesis(t *testing.T) {
 
 	params := app.StakingKeeper.GetParams(ctx)
 	validators := app.StakingKeeper.GetAllValidators(ctx)
+	require.Len(t, validators, 1)
 	var delegations []types.Delegation
 
 	pk0, err := codectypes.NewAnyWithValue(PKs[0])
@@ -41,8 +42,6 @@ func TestInitGenesis(t *testing.T) {
 
 	pk1, err := codectypes.NewAnyWithValue(PKs[1])
 	require.NoError(t, err)
-
-	genesisValidators := app.StakingKeeper.GetAllValidators(ctx)
 
 	// initialize the validators
 	bondedVal1 := types.Validator{
@@ -66,13 +65,14 @@ func TestInitGenesis(t *testing.T) {
 	validators = append(validators, bondedVal1, bondedVal2)
 	log.Printf("%#v", len(validators))
 	// mint coins in the bonded pool representing the validators coins
+	i2 := len(validators) - 1 // -1 to exclude genesis validator
 	require.NoError(t,
 		testutil.FundModuleAccount(
 			app.BankKeeper,
 			ctx,
 			types.BondedPoolName,
 			sdk.NewCoins(
-				sdk.NewCoin(params.BondDenom, valTokens.MulRaw((int64)(len(validators)-len(genesisValidators)))),
+				sdk.NewCoin(params.BondDenom, valTokens.MulRaw((int64)(i2))),
 			),
 		),
 	)
@@ -104,7 +104,9 @@ func TestInitGenesis(t *testing.T) {
 	require.Equal(t, types.Bonded, resVal.Status)
 
 	abcivals := make([]abci.ValidatorUpdate, len(vals))
-	for i, val := range validators[1:] {
+
+	validators = validators[1:] // remove genesis validator
+	for i, val := range validators {
 		abcivals[i] = val.ABCIValidatorUpdate(app.StakingKeeper.PowerReduction(ctx))
 	}
 
@@ -206,7 +208,9 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 		abcivals[i] = val.ABCIValidatorUpdate(app.StakingKeeper.PowerReduction(ctx))
 	}
 
-	require.Equal(t, abcivals, vals[:100])
+	// remove genesis validator
+	vals = vals[:100]
+	require.Equal(t, abcivals, vals)
 }
 
 func TestValidateGenesis(t *testing.T) {

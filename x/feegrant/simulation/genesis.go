@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -73,5 +74,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 		panic(err)
 	}
 
+	fmt.Printf("Selected randomly generated %s parameters:\n%s\n", feegrant.ModuleName, bz)
 	simState.GenState[feegrant.ModuleName] = bz
 }

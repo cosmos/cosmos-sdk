@@ -19,6 +19,7 @@ import (
 func TestDelegation(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
+	// remove genesis validator delegations
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
 	require.Len(t, delegations, 1)
 

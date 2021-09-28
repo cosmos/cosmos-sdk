@@ -40,18 +40,15 @@ func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*simapp.Si
 
 	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), totalSupply))
 
+	// unbond genesis validator delegations
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
 	require.Len(t, delegations, 1)
 	delegation := delegations[0]
 
-	completionTime, err := app.StakingKeeper.Undelegate(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr(), delegation.Shares)
+	_, err := app.StakingKeeper.Undelegate(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr(), delegation.Shares)
 	require.NoError(t, err)
 
-	// mature unbonding delegation
-	ctx = ctx.WithBlockTime(completionTime)
-	_, err = app.StakingKeeper.CompleteUnbonding(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr())
-	require.NoError(t, err)
-
+	// end block to unbond genesis validator
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
 	return app, ctx, addrDels, addrVals

@@ -116,7 +116,10 @@ func (suite *IntegrationTestSuite) TestTotalSupply() {
 				suite.app.BankKeeper.InitGenesis(suite.ctx, tc.genesis)
 				totalSupply, _, err := suite.app.BankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.MaxLimit})
 				suite.Require().NoError(err)
-				suite.Require().Equal(tc.expSupply.Add(genesisSupply...), totalSupply)
+
+				// adding genesis supply to expected supply
+				expected := tc.expSupply.Add(genesisSupply...)
+				suite.Require().Equal(expected, totalSupply)
 			}
 		})
 	}

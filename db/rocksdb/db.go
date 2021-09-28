@@ -83,7 +83,7 @@ func NewDB(dir string) (*dbManager, error) {
 	dbo.SetCreateIfMissing(true)
 	dbo.IncreaseParallelism(runtime.NumCPU())
 	// 1.5GB maximum memory use for writebuffer.
-	dbo.OptimizeLevelStyleCompaction(512 * 1024 * 1024)
+	dbo.OptimizeLevelStyleCompaction(1<<30 + 512<<20)
 
 	opts := dbOptions{
 		dbo: dbo,
@@ -215,12 +215,12 @@ func (mgr *dbManager) Versions() (dbm.VersionSet, error) {
 	return mgr.vmgr, nil
 }
 
-// SaveVersion implements DBConnection.
+// SaveNextVersion implements DBConnection.
 func (mgr *dbManager) SaveNextVersion() (uint64, error) {
 	return mgr.save(0)
 }
 
-// SaveNextVersion implements DBConnection.
+// SaveVersion implements DBConnection.
 func (mgr *dbManager) SaveVersion(target uint64) error {
 	if target == 0 {
 		return dbm.ErrInvalidVersion

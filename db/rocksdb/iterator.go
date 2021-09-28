@@ -61,12 +61,10 @@ func (itr *rocksDBIterator) Valid() bool {
 		return false
 	}
 
-	// Once invalid, forever invalid.
 	if itr.isInvalid {
 		return false
 	}
 
-	// If source is invalid, invalid.
 	if !itr.source.Valid() {
 		itr.isInvalid = true
 		return false
@@ -84,7 +82,7 @@ func (itr *rocksDBIterator) Valid() bool {
 			return false
 		}
 	} else {
-		if end != nil && bytes.Compare(end, key) <= 0 {
+		if end != nil && bytes.Compare(key, end) >= 0 {
 			itr.isInvalid = true
 			return false
 		}
@@ -143,7 +141,7 @@ func moveSliceToBytes(s *gorocksdb.Slice) []byte {
 	if !s.Exists() {
 		return nil
 	}
-	v := make([]byte, len(s.Data()))
+	v := make([]byte, s.Size())
 	copy(v, s.Data())
 	return v
 }

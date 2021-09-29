@@ -27,9 +27,9 @@ contributors, the general procedure for contributing has been established:
 
 1. Either [open](https://github.com/cosmos/cosmos-sdk/issues/new/choose) or
 
-1. Whether:
-   1. You want to propose something new that requires specification or an additional design, or you would like to change a process, start with a [new discussion](https://github.com/cosmos/cosmos-sdk/discussions/new). With discussions, we can better handle the design process using discussion threads. A discussion usually leads to one or more issues.
-   2. The issue is a specified proposal or a bug, then open a [new issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose).
+1. Determine whether a GitHub issue or discussion is more appropriate for your needs:
+  1. If want to propose something new that requires specification or an additional design, or you would like to change a process, start with a [new discussion](https://github.com/cosmos/cosmos-sdk/discussions/new). With discussions, we can better handle the design process using discussion threads. A discussion usually leads to one or more issues.
+   2. If the issue you want addressed is a specific proposal or a bug, then open a [new issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose).
    3. Review existing [issues](https://github.com/cosmos/cosmos-sdk/issues) to find an issue you'd like to help with.
 2. Participate in thoughtful discussion on that issue.
 3. If you would like to contribute:
@@ -39,13 +39,13 @@ contributors, the general procedure for contributing has been established:
    3. If nobody has been assigned for the issue and you would like to work on it,
       make a comment on the issue to inform the community of your intentions
       to begin work.
-4. To submit a work and contribute in development follow standard GitHub best practices:
+4. To submit your work as a contribution to the repository follow standard GitHub best practices:
    1. Fork the repo, branch from the HEAD of `master`, make some commits, and submit a PR to `master`.
       - For core developers working within the `cosmos-sdk` repo, follow branch name conventions to ensure a clear
         ownership of branches 
         `{moniker}/{issue#}-branch-name`.
    2. If you have something to show, start with a `Draft` PR. It's good to have early validation of your work and we highly recommend this practice. A Draft PR also indicates to the community that the work is in progress.
-      Draft PRs also helps to putting a PRs and a functionality to the right direction.
+      Draft PRs also helps the core team provide early feedback and ensure the work is in the right direction.
    3. Follow the [CONTRIBUTING GUIDELINES](CONTRIBUTING-GUIDELINES.md).
    3. When the code is complete, change your PR from `Draft` to `Ready for Review`.
    4. Go through the actions for each checkbox present in the PR template description. The PR actions are automatically provided for each new PR.
@@ -53,7 +53,7 @@ contributors, the general procedure for contributing has been established:
    6. Codeowners are marked automatically as the reviewers.
 
 
-**Note** For very small or blatantly obvious problems such as typos, you are 
+**Note: ** For very small or blatantly obvious problems such as typos, you are 
 not required to an open issue to submit a PR, but be aware that for more complex
 problems/features, if a PR is opened before an adequate design discussion has
 taken place in a GitHub issue, that PR runs a high likelihood of being rejected.

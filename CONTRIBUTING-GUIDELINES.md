@@ -23,7 +23,7 @@ Performance:
 
 
 Security:
-+ Pay proper attention to exploits
++ Pay proper attention to exploits involving:
   + gas usage
   + transaction verification and signatures
   + malleability

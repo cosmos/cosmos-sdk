@@ -51,7 +51,7 @@ func (o OnlineNetwork) AccountCoins(_ context.Context, _ *types.AccountCoinsRequ
 
 // networkOptionsFromClient builds network options given the client
 func networkOptionsFromClient(client crgtypes.Client, genesisBlock *types.BlockIdentifier) *types.NetworkOptionsResponse {
-	var tsi *int64 = nil
+	var tsi *int64
 	if genesisBlock != nil {
 		tsi = &(genesisBlock.Index)
 	}

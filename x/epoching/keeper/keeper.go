@@ -106,7 +106,7 @@ func (k Keeper) GetEpochMsg(ctx sdk.Context, epochNumber int64, actionID uint64)
 // GetEpochActions get all actions
 func (k Keeper) GetEpochActions(ctx sdk.Context) []sdk.Msg {
 	actions := []sdk.Msg{}
-	iterator := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte(EpochActionQueuePrefix))
+	iterator := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), EpochActionQueuePrefix)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -121,13 +121,13 @@ func (k Keeper) GetEpochActions(ctx sdk.Context) []sdk.Msg {
 
 // GetEpochActionsIterator returns iterator for EpochActions
 func (k Keeper) GetEpochActionsIterator(ctx sdk.Context) db.Iterator {
-	return sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte(EpochActionQueuePrefix))
+	return sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), EpochActionQueuePrefix)
 }
 
 // DequeueEpochActions dequeue all the actions store on epoch
 func (k Keeper) DequeueEpochActions(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, []byte(EpochActionQueuePrefix))
+	iterator := sdk.KVStorePrefixIterator(store, EpochActionQueuePrefix)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

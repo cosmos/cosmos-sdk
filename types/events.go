@@ -210,17 +210,6 @@ func (e Events) ToABCIEvents() []abci.Event {
 	return res
 }
 
-func toBytes(i interface{}) []byte {
-	switch x := i.(type) {
-	case []uint8:
-		return x
-	case string:
-		return []byte(x)
-	default:
-		panic(i)
-	}
-}
-
 // Common event types and attribute keys
 var (
 	EventTypeTx = "tx"
@@ -286,7 +275,7 @@ func StringifyEvent(e abci.Event) StringEvent {
 	for _, attr := range e.Attributes {
 		res.Attributes = append(
 			res.Attributes,
-			Attribute{string(attr.Key), string(attr.Value)},
+			Attribute{Key: attr.Key, Value: attr.Value},
 		)
 	}
 

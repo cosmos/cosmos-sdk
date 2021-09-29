@@ -288,10 +288,10 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			appCfg.GRPCWeb.Enable = true
 		}
 
-		logger := server.ZeroLogWrapper{zerolog.Nop()}
+		logger := server.ZeroLogWrapper{Logger: zerolog.Nop()}
 		if cfg.EnableTMLogging {
 			logWriter := zerolog.ConsoleWriter{Out: os.Stderr}
-			logger = server.ZeroLogWrapper{zerolog.New(logWriter).Level(zerolog.InfoLevel).With().Timestamp().Logger()}
+			logger = server.ZeroLogWrapper{Logger: zerolog.New(logWriter).Level(zerolog.InfoLevel).With().Timestamp().Logger()}
 		}
 
 		ctx.Logger = logger

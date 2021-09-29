@@ -28,7 +28,6 @@ import (
 // interface assertion
 var _ crgtypes.Client = (*Client)(nil)
 
-const tmWebsocketPath = "/websocket"
 const defaultNodeTimeout = 15 * time.Second
 
 // Client implements a single network client to interact with cosmos based chains

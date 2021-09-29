@@ -1244,8 +1244,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 	{
 		emptyTx := &txTest{}
 		_, result, err := app.SimDeliver(aminoTxEncoder(), emptyTx)
-		// require.Nil(t, result)
-		require.Equal(t, result, &sdk.Result{Data: []uint8{}, Events: []abci.Event{}, Log: "[]"})
+		require.Nil(t, result)
 
 		space, code, _ := sdkerrors.ABCIInfo(err, false)
 		require.EqualValues(t, sdkerrors.ErrInvalidRequest.Codespace(), space, err)

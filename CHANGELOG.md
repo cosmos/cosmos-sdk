@@ -37,6 +37,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.44.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.44.1) - 2021-09-29
+
 ### Improvements
 
 * (store) [\#10040](https://github.com/cosmos/cosmos-sdk/pull/10040) Bump IAVL to v0.17.1 which includes performance improvements on a batch load.

@@ -1,19 +1,21 @@
-# Cosmos SDK v0.44.0 Release Notes
+# Cosmos SDK v0.44.1 Release Notes
 
-v0.44 is a security release which contains a consensus breaking change.
-It doesn't bring any new feature and it's a logical continuation of v0.43.
+This release introduces bug fixes and improvements on the Cosmos SDK v0.44 series.
 
-Consequences:
-+ v0.43 is discontinued;
-+ all chains should upgrade to v0.44. Update from v0.43 doesn't require any migration. Chains can upgrade directly from v0.42, in that case v0.43 migrations must be executed when upgrading to v0.44;
-+ all previously planned features for v0.44 are going to land in v0.45, with the same release schedule.
+The main bug fix concerns all users performing in-place store migrations from v0.42 to v0.44. A source of non-determinism in the upgrade process has been [detected and fixed](https://github.com/cosmos/cosmos-sdk/pull/10189) in this release, causing consensus errors. As such, **v0.44.0 is not safe to use when performing v0.42->v0.44 in-place store upgrades**, please use this release v0.44.1 instead. This does not impact genesis JSON dump upgrades nor fresh chains starting with v0.44.
 
-Please see [Cosmos SDK v0.43.0 Release Notes](https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/RELEASE_NOTES.md).
+Another bug fix concerns calling the ABCI `Query` method using `client.Context`. We modified ABCI queries to use `abci.QueryRequest`'s `Height` field if it is non-zero, otherwise continue using `client.Context`'s height. This is a minor client-breaking change for users of the `client.Context`.
 
-## Updates
+Some CLI fixes are also included, such as:
 
-For a comprehensive list of all breaking changes and improvements since the v0.42 "Stargate" release series, please see the **[CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.44.x/CHANGELOG.md)**.
+- using pre-configured data for the CLI `add-genesis-account` command ([\#9969](https://github.com/cosmos/cosmos-sdk/pull/9969)),
+- ensuring the `init` command reads the `--home` flag value correctly ([#10104](https://github.com/cosmos/cosmos-sdk/pull/10104)),
+- fixing the error message when `period` or `period-limit` flag is not set on a feegrant grant transaction [\#10049](https://github.com/cosmos/cosmos-sdk/issues/10049).
 
-### Client Breaking Changes
+v0.44.1 also includes performance improvements, namely:
 
-* Remove broadcast & encode legacy REST endpoints. Both requests should use the new gRPC-Gateway REST endpoints. Please see the [REST Endpoints Migration guide](https://docs.cosmos.network/master/migrations/rest.html) to migrate to the new REST endpoints.
+- IAVL update to v0.17.1 which includes performance improvements on a batch load [\#10040](https://github.com/cosmos/cosmos-sdk/pull/10040),
+- Speedup coins.AmountOf(), by removing many intermittent regex calls [\#10021](https://github.com/cosmos/cosmos-sdk/pull/10021),
+- Improve CacheKVStore datastructures / algorithms, to no longer take O(N^2) time when interleaving iterators and insertions [\#10026](https://github.com/cosmos/cosmos-sdk/pull/10026).
+
+See the [Cosmos SDK v0.44.1 milestone](https://github.com/cosmos/cosmos-sdk/milestone/56?closed=1) on our issue tracker for the exhaustive list of all changes.

@@ -78,4 +78,4 @@ The fundamental issue here is that the governance of the application and the gov
 
 ## Next {hide}
 
-Learn more about the [high-level architecture](./sdk-app-architecture.md) of an SDK application {hide}
+Learn more about the [high-level architecture](./sdk-app-architecture.md) of a Cosmos SDK application {hide}

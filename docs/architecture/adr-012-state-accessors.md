@@ -6,7 +6,7 @@
 
 ## Context
 
-SDK modules currently use the `KVStore` interface and `Codec` to access their respective state. While
+Cosmos SDK modules currently use the `KVStore` interface and `Codec` to access their respective state. While
 this provides a large degree of freedom to module developers, it is hard to modularize and the UX is
 mediocre.
 

@@ -12,7 +12,7 @@ Some CLI fixes are also included, such as:
 
 v0.44.1 also includes performance improvements, namely:
 
-- Bump IAVL to v0.17.1 which includes performance improvements on a batch load [\#10040](https://github.com/cosmos/cosmos-sdk/pull/10040),
+- IAVL update to v0.17.1 which includes performance improvements on a batch load [\#10040](https://github.com/cosmos/cosmos-sdk/pull/10040),
 - Speedup coins.AmountOf(), by removing many intermittent regex calls [\#10021](https://github.com/cosmos/cosmos-sdk/pull/10021),
 - Improve CacheKVStore datastructures / algorithms, to no longer take O(N^2) time when interleaving iterators and insertions [\#10026](https://github.com/cosmos/cosmos-sdk/pull/10026).
 

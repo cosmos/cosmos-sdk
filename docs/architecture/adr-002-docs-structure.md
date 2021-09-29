@@ -2,7 +2,7 @@
 
 ## Context
 
-There is a need for a scalable structure of the SDK documentation. Current documentation includes a lot of non-related SDK material, is difficult to maintain and hard to follow as a user.
+There is a need for a scalable structure of the Cosmos SDK documentation. Current documentation includes a lot of non-related Cosmos SDK material, is difficult to maintain and hard to follow as a user.
 
 Ideally, we would have:
 
@@ -11,7 +11,7 @@ Ideally, we would have:
 
 ## Decision
 
-Re-structure the `/docs` folder of the SDK github repo as follows:
+Re-structure the `/docs` folder of the Cosmos SDK github repo as follows:
 
 ```
 docs/
@@ -40,9 +40,9 @@ docs/
 The files in each sub-folders do not matter and will likely change. What matters is the sectioning:
 
 - `README`: Landing page of the docs.
-- `intro`: Introductory material. Goal is to have a short explainer of the SDK and then channel people to the resource they need. The [sdk-tutorial](https://github.com/cosmos/sdk-application-tutorial/) will be highlighted, as well as the `godocs`.
-- `concepts`: Contains high-level explanations of the abstractions of the SDK. It does not contain specific code implementation and does not need to be updated often. **It is not an API specification of the interfaces**. API spec is the `godoc`.
-- `clients`: Contains specs and info about the various SDK clients.
+- `intro`: Introductory material. Goal is to have a short explainer of the Cosmos SDK and then channel people to the resource they need. The [Cosmos SDK tutorial](https://github.com/cosmos/sdk-application-tutorial/) will be highlighted, as well as the `godocs`.
+- `concepts`: Contains high-level explanations of the abstractions of the Cosmos SDK. It does not contain specific code implementation and does not need to be updated often. **It is not an API specification of the interfaces**. API spec is the `godoc`.
+- `clients`: Contains specs and info about the various Cosmos SDK clients.
 - `spec`: Contains specs of modules, and others.
 - `modules`: Contains links to `godocs` and the spec of the modules.
 - `architecture`: Contains architecture-related docs like the present one.
@@ -65,8 +65,8 @@ Accepted
 
 ### Positive
 
-- Much clearer organisation of the SDK docs.
-- The `/docs` folder now only contains SDK and gaia related material. Later, it will only contain SDK related material.
+- Much clearer organisation of the Cosmos SDK docs.
+- The `/docs` folder now only contains Cosmos SDK and gaia related material. Later, it will only contain Cosmos SDK related material.
 - Developers only have to update `/docs` folder when they open a PR (and not `/examples` for example).
 - Easier for developers to find what they need to update in the docs thanks to reworked architecture.
 - Cleaner vuepress build for website docs.

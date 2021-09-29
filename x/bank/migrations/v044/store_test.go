@@ -47,7 +47,7 @@ func TestMigrateStore(t *testing.T) {
 	}
 
 	for _, b := range balances {
-		denomPrefixStore := prefix.NewStore(store, v044.CreateAddressDenomPrefix(b.Denom))
+		denomPrefixStore := prefix.NewStore(store, v044.CreateDenomAddressPrefix(b.Denom))
 		bz := denomPrefixStore.Get(address.MustLengthPrefix(addr))
 		require.NotNil(t, bz)
 	}
@@ -88,6 +88,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 
 	for i := range []int{0, 1} {
 		key := append(v043.DenomMetadataPrefix, []byte(metaData[i].Base)...)
+		// keys before 0.44 had denom two times in the key
 		key = append(key, []byte(metaData[i].Base)...)
 		bz, err := encCfg.Codec.Marshal(&metaData[i])
 		require.NoError(t, err)
@@ -108,7 +109,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 		bz := denomMetadataStore.Get(oldKey)
 		require.Nil(t, bz)
 
-		require.Equal(t, string(newKey)[1:], metaData[i].Base)
+		require.Equal(t, string(newKey)[1:], metaData[i].Base, "idx: %d", i)
 		bz = denomMetadataStore.Get(denomMetadataIter.Key())
 		require.NotNil(t, bz)
 		err := encCfg.Codec.Unmarshal(bz, &result)

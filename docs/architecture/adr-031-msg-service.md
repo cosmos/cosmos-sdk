@@ -38,7 +38,7 @@ This was never adopted, however.
 Having a well-specified return value for `Msg`s would improve client UX. For instance,
 in `x/gov`,  `MsgSubmitProposal` returns the proposal ID as a big-endian `uint64`.
 This isn’t really documented anywhere and clients would need to know the internals
-of the SDK to parse that value and return it to users.
+of the Cosmos SDK to parse that value and return it to users.
 
 Also, there may be cases where we want to use these return values programatically.
 For instance, https://github.com/cosmos/cosmos-sdk/issues/7093 proposes a method for

@@ -209,12 +209,12 @@ func (s *Store) Set(key []byte, value []byte) {
 
 	err := s.dataTxn.Set(key, value)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
 	s.merkleStore.Set(key, value)
 	err = s.indexTxn.Set(khash[:], key)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
 }
 
@@ -351,7 +351,7 @@ func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
 	return &types.CommitID{Version: int64(target), Hash: root}, nil
 }
 
-// LastCommitID implements KVStore.
+// LastCommitID implements Committer.
 func (s *Store) LastCommitID() types.CommitID {
 	versions, err := s.stateDB.Versions()
 	if err != nil {
@@ -361,7 +361,7 @@ func (s *Store) LastCommitID() types.CommitID {
 	if last == 0 {
 		return types.CommitID{}
 	}
-	// Latest Merkle root should be the one currently stored
+	// Latest Merkle root is the one currently stored
 	hash, err := s.stateTxn.Get(merkleRootKey)
 	if err != nil {
 		panic(err)

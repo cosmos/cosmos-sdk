@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -79,138 +80,16 @@ func (ps *paramStore) Get(_ sdk.Context, key []byte, ptr interface{}) {
 	}
 }
 
-// Simple tx with a list of Msgs.
-type txTest struct {
-	Msgs       []sdk.Msg
-	Counter    int64
-	FailOnAnte bool
-	GasLimit   uint64
+func defaultLogger() log.Logger {
+	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
 }
 
-func (tx *txTest) setFailOnAnte(fail bool) {
-	tx.FailOnAnte = fail
-}
-
-func (tx *txTest) setFailOnHandler(fail bool) {
-	for i, msg := range tx.Msgs {
-		tx.Msgs[i] = msgCounter{msg.(msgCounter).Counter, fail}
-	}
-}
-
-// Implements Tx
-func (tx txTest) GetMsgs() []sdk.Msg   { return tx.Msgs }
-func (tx txTest) ValidateBasic() error { return nil }
-
-// Implements GasTx
-func (tx txTest) GetGas() uint64 { return tx.GasLimit }
-
-// Implements TxWithTimeoutHeight
-func (tx txTest) GetTimeoutHeight() uint64 { return 0 }
-
-const (
-	routeMsgCounter  = "msgCounter"
-	routeMsgCounter2 = "msgCounter2"
-	routeMsgKeyValue = "msgKeyValue"
-)
-
-// ValidateBasic() fails on negative counters.
-// Otherwise it's up to the handlers
-type msgCounter struct {
-	Counter       int64
-	FailOnHandler bool
-}
-
-// dummy implementation of proto.Message
-func (msg msgCounter) Reset()         {}
-func (msg msgCounter) String() string { return "TODO" }
-func (msg msgCounter) ProtoMessage()  {}
-
-// Implements Msg
-func (msg msgCounter) Route() string                { return routeMsgCounter }
-func (msg msgCounter) Type() string                 { return "counter1" }
-func (msg msgCounter) GetSignBytes() []byte         { return nil }
-func (msg msgCounter) GetSigners() []sdk.AccAddress { return nil }
-func (msg msgCounter) ValidateBasic() error {
-	if msg.Counter >= 0 {
-		return nil
-	}
-	return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, "counter should be a non-negative integer")
-}
-
-// a msg we dont know how to route
-type msgNoRoute struct {
-	msgCounter
-}
-
-func (tx msgNoRoute) Route() string { return "noroute" }
-
-// a msg we dont know how to decode
-type msgNoDecode struct {
-	msgCounter
-}
-
-func (tx msgNoDecode) Route() string { return routeMsgCounter }
-
-// Another counter msg. Duplicate of msgCounter
-type msgCounter2 struct {
-	Counter int64
-}
-
-// dummy implementation of proto.Message
-func (msg msgCounter2) Reset()         {}
-func (msg msgCounter2) String() string { return "TODO" }
-func (msg msgCounter2) ProtoMessage()  {}
-
-// Implements Msg
-func (msg msgCounter2) Route() string                { return routeMsgCounter2 }
-func (msg msgCounter2) Type() string                 { return "counter2" }
-func (msg msgCounter2) GetSignBytes() []byte         { return nil }
-func (msg msgCounter2) GetSigners() []sdk.AccAddress { return nil }
-func (msg msgCounter2) ValidateBasic() error {
-	if msg.Counter >= 0 {
-		return nil
-	}
-	return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, "counter should be a non-negative integer")
-}
-
-// A msg that sets a key/value pair.
-type msgKeyValue struct {
-	Key   []byte
-	Value []byte
-}
-
-func (msg msgKeyValue) Reset()                       {}
-func (msg msgKeyValue) String() string               { return "TODO" }
-func (msg msgKeyValue) ProtoMessage()                {}
-func (msg msgKeyValue) Route() string                { return routeMsgKeyValue }
-func (msg msgKeyValue) Type() string                 { return "keyValue" }
-func (msg msgKeyValue) GetSignBytes() []byte         { return nil }
-func (msg msgKeyValue) GetSigners() []sdk.AccAddress { return nil }
-func (msg msgKeyValue) ValidateBasic() error {
-	if msg.Key == nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "key cannot be nil")
-	}
-	if msg.Value == nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "value cannot be nil")
-	}
-	return nil
-}
-
-// amino decode
-func testTxDecoder(cdc *codec.LegacyAmino) sdk.TxDecoder {
-	return func(txBytes []byte) (sdk.Tx, error) {
-		var tx txTest
-		if len(txBytes) == 0 {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "tx bytes are empty")
-		}
-
-		err := cdc.Unmarshal(txBytes, &tx)
-		if err != nil {
-			return nil, sdkerrors.ErrTxDecode
-		}
-
-		return tx, nil
-	}
+func newBaseApp(name string, options ...func(*baseapp.BaseApp)) *baseapp.BaseApp {
+	logger := defaultLogger()
+	db := dbm.NewMemDB()
+	codec := codec.NewLegacyAmino()
+	registerTestCodec(codec)
+	return baseapp.NewBaseApp(name, logger, db, testTxDecoder(codec), options...)
 }
 
 func registerTestCodec(cdc *codec.LegacyAmino) {
@@ -231,18 +110,6 @@ func aminoTxEncoder() sdk.TxEncoder {
 	registerTestCodec(cdc)
 
 	return legacytx.StdTxConfig{Cdc: cdc}.TxEncoder()
-}
-
-func defaultLogger() log.Logger {
-	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
-}
-
-func newBaseApp(name string, options ...func(*baseapp.BaseApp)) *baseapp.BaseApp {
-	logger := defaultLogger()
-	db := dbm.NewMemDB()
-	codec := codec.NewLegacyAmino()
-	registerTestCodec(codec)
-	return baseapp.NewBaseApp(name, logger, db, testTxDecoder(codec), options...)
 }
 
 // simple one store baseapp
@@ -835,279 +702,147 @@ func TestBeginBlock_WithInitialHeight(t *testing.T) {
 	require.Equal(t, int64(3), app.LastBlockHeight())
 }
 
-func TestGRPCQuery(t *testing.T) {
-	grpcQueryOpt := func(bapp *baseapp.BaseApp) {
-		testdata.RegisterQueryServer(
-			bapp.GRPCQueryRouter(),
-			testdata.QueryImpl{},
-		)
-	}
-
-	app := setupBaseApp(t, grpcQueryOpt)
-
-	app.InitChain(abci.RequestInitChain{})
-	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	app.Commit()
-
-	req := testdata.SayHelloRequest{Name: "foo"}
-	reqBz, err := req.Marshal()
-	require.NoError(t, err)
-
-	reqQuery := abci.RequestQuery{
-		Data: reqBz,
-		Path: "/testdata.Query/SayHello",
-	}
-
-	resQuery := app.Query(reqQuery)
-
-	require.Equal(t, abci.CodeTypeOK, resQuery.Code, resQuery)
-
-	var res testdata.SayHelloResponse
-	err = res.Unmarshal(resQuery.Value)
-	require.NoError(t, err)
-	require.Equal(t, "Hello foo!", res.Greeting)
+// Simple tx with a list of Msgs.
+type txTest struct {
+	Msgs       []sdk.Msg
+	Counter    int64
+	FailOnAnte bool
+	GasLimit   uint64
 }
 
-// Test p2p filter queries
-func TestP2PQuery(t *testing.T) {
-	addrPeerFilterOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetAddrPeerFilter(func(addrport string) abci.ResponseQuery {
-			require.Equal(t, "1.1.1.1:8000", addrport)
-			return abci.ResponseQuery{Code: uint32(3)}
-		})
-	}
-
-	idPeerFilterOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetIDPeerFilter(func(id string) abci.ResponseQuery {
-			require.Equal(t, "testid", id)
-			return abci.ResponseQuery{Code: uint32(4)}
-		})
-	}
-
-	app := setupBaseApp(t, addrPeerFilterOpt, idPeerFilterOpt)
-
-	addrQuery := abci.RequestQuery{
-		Path: "/p2p/filter/addr/1.1.1.1:8000",
-	}
-	res := app.Query(addrQuery)
-	require.Equal(t, uint32(3), res.Code)
-
-	idQuery := abci.RequestQuery{
-		Path: "/p2p/filter/id/testid",
-	}
-	res = app.Query(idQuery)
-	require.Equal(t, uint32(4), res.Code)
+func (tx *txTest) setFailOnAnte(fail bool) {
+	tx.FailOnAnte = fail
 }
 
-func TestGetMaximumBlockGas(t *testing.T) {
-	app := setupBaseApp(t)
-	app.InitChain(abci.RequestInitChain{})
-	ctx := app.NewContext(true, tmproto.Header{})
-
-	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 0}})
-	require.Equal(t, uint64(0), app.GetMaximumBlockGas(ctx))
-
-	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -1}})
-	require.Equal(t, uint64(0), app.GetMaximumBlockGas(ctx))
-
-	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 5000000}})
-	require.Equal(t, uint64(5000000), app.GetMaximumBlockGas(ctx))
-
-	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -5000000}})
-	require.Panics(t, func() { app.GetMaximumBlockGas(ctx) })
+func (tx *txTest) setFailOnHandler(fail bool) {
+	for i, msg := range tx.Msgs {
+		tx.Msgs[i] = msgCounter{msg.(msgCounter).Counter, fail}
+	}
 }
 
-func TestBaseApp_EndBlock(t *testing.T) {
-	db := dbm.NewMemDB()
-	name := t.Name()
-	logger := defaultLogger()
+// Implements Tx
+func (tx txTest) GetMsgs() []sdk.Msg   { return tx.Msgs }
+func (tx txTest) ValidateBasic() error { return nil }
 
-	cp := &abci.ConsensusParams{
-		Block: &abci.BlockParams{
-			MaxGas: 5000000,
-		},
+// Implements GasTx
+func (tx txTest) GetGas() uint64 { return tx.GasLimit }
+
+// Implements TxWithTimeoutHeight
+func (tx txTest) GetTimeoutHeight() uint64 { return 0 }
+
+const (
+	routeMsgCounter  = "msgCounter"
+	routeMsgCounter2 = "msgCounter2"
+	routeMsgKeyValue = "msgKeyValue"
+)
+
+// ValidateBasic() fails on negative counters.
+// Otherwise it's up to the handlers
+type msgCounter struct {
+	Counter       int64
+	FailOnHandler bool
+}
+
+// dummy implementation of proto.Message
+func (msg msgCounter) Reset()         {}
+func (msg msgCounter) String() string { return "TODO" }
+func (msg msgCounter) ProtoMessage()  {}
+
+// Implements Msg
+func (msg msgCounter) Route() string                { return routeMsgCounter }
+func (msg msgCounter) Type() string                 { return "counter1" }
+func (msg msgCounter) GetSignBytes() []byte         { return nil }
+func (msg msgCounter) GetSigners() []sdk.AccAddress { return nil }
+func (msg msgCounter) ValidateBasic() error {
+	if msg.Counter >= 0 {
+		return nil
+	}
+	return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, "counter should be a non-negative integer")
+}
+
+func newTxCounter(counter int64, msgCounters ...int64) txTest {
+	msgs := make([]sdk.Msg, 0, len(msgCounters))
+	for _, c := range msgCounters {
+		msgs = append(msgs, msgCounter{c, false})
 	}
 
-	app := baseapp.NewBaseApp(name, logger, db, nil)
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
-	app.InitChain(abci.RequestInitChain{
-		ConsensusParams: cp,
-	})
+	return txTest{msgs, counter, false, math.MaxUint64}
+}
 
-	app.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-		return abci.ResponseEndBlock{
-			ValidatorUpdates: []abci.ValidatorUpdate{
-				{Power: 100},
-			},
+// a msg we dont know how to route
+type msgNoRoute struct {
+	msgCounter
+}
+
+func (tx msgNoRoute) Route() string { return "noroute" }
+
+// a msg we dont know how to decode
+type msgNoDecode struct {
+	msgCounter
+}
+
+func (tx msgNoDecode) Route() string { return routeMsgCounter }
+
+// Another counter msg. Duplicate of msgCounter
+type msgCounter2 struct {
+	Counter int64
+}
+
+// dummy implementation of proto.Message
+func (msg msgCounter2) Reset()         {}
+func (msg msgCounter2) String() string { return "TODO" }
+func (msg msgCounter2) ProtoMessage()  {}
+
+// Implements Msg
+func (msg msgCounter2) Route() string                { return routeMsgCounter2 }
+func (msg msgCounter2) Type() string                 { return "counter2" }
+func (msg msgCounter2) GetSignBytes() []byte         { return nil }
+func (msg msgCounter2) GetSigners() []sdk.AccAddress { return nil }
+func (msg msgCounter2) ValidateBasic() error {
+	if msg.Counter >= 0 {
+		return nil
+	}
+	return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, "counter should be a non-negative integer")
+}
+
+// A msg that sets a key/value pair.
+type msgKeyValue struct {
+	Key   []byte
+	Value []byte
+}
+
+func (msg msgKeyValue) Reset()                       {}
+func (msg msgKeyValue) String() string               { return "TODO" }
+func (msg msgKeyValue) ProtoMessage()                {}
+func (msg msgKeyValue) Route() string                { return routeMsgKeyValue }
+func (msg msgKeyValue) Type() string                 { return "keyValue" }
+func (msg msgKeyValue) GetSignBytes() []byte         { return nil }
+func (msg msgKeyValue) GetSigners() []sdk.AccAddress { return nil }
+func (msg msgKeyValue) ValidateBasic() error {
+	if msg.Key == nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "key cannot be nil")
+	}
+	if msg.Value == nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "value cannot be nil")
+	}
+	return nil
+}
+
+// amino decode
+func testTxDecoder(cdc *codec.LegacyAmino) sdk.TxDecoder {
+	return func(txBytes []byte) (sdk.Tx, error) {
+		var tx txTest
+		if len(txBytes) == 0 {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "tx bytes are empty")
 		}
-	})
-	app.Seal()
 
-	res := app.EndBlock(abci.RequestEndBlock{})
-	require.Len(t, res.GetValidatorUpdates(), 1)
-	require.Equal(t, int64(100), res.GetValidatorUpdates()[0].Power)
-	require.Equal(t, cp.Block.MaxGas, res.ConsensusParamUpdates.Block.MaxGas)
-}
+		err := cdc.Unmarshal(txBytes, &tx)
+		if err != nil {
+			return nil, sdkerrors.ErrTxDecode
+		}
 
-func TestListSnapshots(t *testing.T) {
-	app, teardown := setupBaseAppWithSnapshots(t, 5, 4)
-	defer teardown()
-
-	resp := app.ListSnapshots(abci.RequestListSnapshots{})
-	for _, s := range resp.Snapshots {
-		assert.NotEmpty(t, s.Hash)
-		assert.NotEmpty(t, s.Metadata)
-		s.Hash = nil
-		s.Metadata = nil
+		return tx, nil
 	}
-	assert.Equal(t, abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{
-		{Height: 4, Format: 1, Chunks: 2},
-		{Height: 2, Format: 1, Chunks: 1},
-	}}, resp)
-}
-
-func TestLoadSnapshotChunk(t *testing.T) {
-	app, teardown := setupBaseAppWithSnapshots(t, 2, 5)
-	defer teardown()
-
-	testcases := map[string]struct {
-		height      uint64
-		format      uint32
-		chunk       uint32
-		expectEmpty bool
-	}{
-		"Existing snapshot": {2, 1, 1, false},
-		"Missing height":    {100, 1, 1, true},
-		"Missing format":    {2, 2, 1, true},
-		"Missing chunk":     {2, 1, 9, true},
-		"Zero height":       {0, 1, 1, true},
-		"Zero format":       {2, 0, 1, true},
-		"Zero chunk":        {2, 1, 0, false},
-	}
-	for name, tc := range testcases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			resp := app.LoadSnapshotChunk(abci.RequestLoadSnapshotChunk{
-				Height: tc.height,
-				Format: tc.format,
-				Chunk:  tc.chunk,
-			})
-			if tc.expectEmpty {
-				assert.Equal(t, abci.ResponseLoadSnapshotChunk{}, resp)
-				return
-			}
-			assert.NotEmpty(t, resp.Chunk)
-		})
-	}
-}
-
-func TestOfferSnapshot_Errors(t *testing.T) {
-	// Set up app before test cases, since it's fairly expensive.
-	app, teardown := setupBaseAppWithSnapshots(t, 0, 0)
-	defer teardown()
-
-	m := snapshottypes.Metadata{ChunkHashes: [][]byte{{1}, {2}, {3}}}
-	metadata, err := m.Marshal()
-	require.NoError(t, err)
-	hash := []byte{1, 2, 3}
-
-	testcases := map[string]struct {
-		snapshot *abci.Snapshot
-		result   abci.ResponseOfferSnapshot_Result
-	}{
-		"nil snapshot": {nil, abci.ResponseOfferSnapshot_REJECT},
-		"invalid format": {&abci.Snapshot{
-			Height: 1, Format: 9, Chunks: 3, Hash: hash, Metadata: metadata,
-		}, abci.ResponseOfferSnapshot_REJECT_FORMAT},
-		"incorrect chunk count": {&abci.Snapshot{
-			Height: 1, Format: 1, Chunks: 2, Hash: hash, Metadata: metadata,
-		}, abci.ResponseOfferSnapshot_REJECT},
-		"no chunks": {&abci.Snapshot{
-			Height: 1, Format: 1, Chunks: 0, Hash: hash, Metadata: metadata,
-		}, abci.ResponseOfferSnapshot_REJECT},
-		"invalid metadata serialization": {&abci.Snapshot{
-			Height: 1, Format: 1, Chunks: 0, Hash: hash, Metadata: []byte{3, 1, 4},
-		}, abci.ResponseOfferSnapshot_REJECT},
-	}
-	for name, tc := range testcases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			resp := app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: tc.snapshot})
-			assert.Equal(t, tc.result, resp.Result)
-		})
-	}
-
-	// Offering a snapshot after one has been accepted should error
-	resp := app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
-		Height:   1,
-		Format:   snapshottypes.CurrentFormat,
-		Chunks:   3,
-		Hash:     []byte{1, 2, 3},
-		Metadata: metadata,
-	}})
-	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, resp)
-
-	resp = app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
-		Height:   2,
-		Format:   snapshottypes.CurrentFormat,
-		Chunks:   3,
-		Hash:     []byte{1, 2, 3},
-		Metadata: metadata,
-	}})
-	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}, resp)
-}
-
-func TestApplySnapshotChunk(t *testing.T) {
-	source, teardown := setupBaseAppWithSnapshots(t, 4, 10)
-	defer teardown()
-
-	target, teardown := setupBaseAppWithSnapshots(t, 0, 0)
-	defer teardown()
-
-	// Fetch latest snapshot to restore
-	respList := source.ListSnapshots(abci.RequestListSnapshots{})
-	require.NotEmpty(t, respList.Snapshots)
-	snapshot := respList.Snapshots[0]
-
-	// Make sure the snapshot has at least 3 chunks
-	require.GreaterOrEqual(t, snapshot.Chunks, uint32(3), "Not enough snapshot chunks")
-
-	// Begin a snapshot restoration in the target
-	respOffer := target.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: snapshot})
-	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, respOffer)
-
-	// We should be able to pass an invalid chunk and get a verify failure, before reapplying it.
-	respApply := target.ApplySnapshotChunk(abci.RequestApplySnapshotChunk{
-		Index:  0,
-		Chunk:  []byte{9},
-		Sender: "sender",
-	})
-	require.Equal(t, abci.ResponseApplySnapshotChunk{
-		Result:        abci.ResponseApplySnapshotChunk_RETRY,
-		RefetchChunks: []uint32{0},
-		RejectSenders: []string{"sender"},
-	}, respApply)
-
-	// Fetch each chunk from the source and apply it to the target
-	for index := uint32(0); index < snapshot.Chunks; index++ {
-		respChunk := source.LoadSnapshotChunk(abci.RequestLoadSnapshotChunk{
-			Height: snapshot.Height,
-			Format: snapshot.Format,
-			Chunk:  index,
-		})
-		require.NotNil(t, respChunk.Chunk)
-		respApply := target.ApplySnapshotChunk(abci.RequestApplySnapshotChunk{
-			Index: index,
-			Chunk: respChunk.Chunk,
-		})
-		require.Equal(t, abci.ResponseApplySnapshotChunk{
-			Result: abci.ResponseApplySnapshotChunk_ACCEPT,
-		}, respApply)
-	}
-
-	// The target should now have the same hash as the source
-	assert.Equal(t, source.LastCommitID(), target.LastCommitID())
 }
 
 func customHandlerTxTest(t *testing.T, capKey sdk.StoreKey, storeKey []byte) handlerFun {
@@ -1172,12 +907,6 @@ func handlerMsgCounter(t *testing.T, capKey sdk.StoreKey, deliverKey []byte) sdk
 	}
 }
 
-func setIntOnStore(store sdk.KVStore, key []byte, i int64) {
-	bz := make([]byte, 8)
-	n := binary.PutVarint(bz, i)
-	store.Set(key, bz[:n])
-}
-
 func getIntFromStore(store sdk.KVStore, key []byte) int64 {
 	bz := store.Get(key)
 	if len(bz) == 0 {
@@ -1190,6 +919,12 @@ func getIntFromStore(store sdk.KVStore, key []byte) int64 {
 	return i
 }
 
+func setIntOnStore(store sdk.KVStore, key []byte, i int64) {
+	bz := make([]byte, 8)
+	n := binary.PutVarint(bz, i)
+	store.Set(key, bz[:n])
+}
+
 // check counter matches what's in store.
 // increment and store
 func incrementingCounter(t *testing.T, store sdk.KVStore, counterKey []byte, counter int64) (*sdk.Result, error) {
@@ -1197,15 +932,6 @@ func incrementingCounter(t *testing.T, store sdk.KVStore, counterKey []byte, cou
 	require.Equal(t, storedCounter, counter)
 	setIntOnStore(store, counterKey, counter+1)
 	return &sdk.Result{}, nil
-}
-
-func newTxCounter(counter int64, msgCounters ...int64) txTest {
-	msgs := make([]sdk.Msg, 0, len(msgCounters))
-	for _, c := range msgCounters {
-		msgs = append(msgs, msgCounter{c, false})
-	}
-
-	return txTest{msgs, counter, false, math.MaxUint64}
 }
 
 //---------------------------------------------------------------------
@@ -1980,4 +1706,339 @@ func TestQuery(t *testing.T) {
 	app.Commit()
 	res = app.Query(query)
 	require.Equal(t, value, res.Value)
+}
+
+func TestGRPCQuery(t *testing.T) {
+	grpcQueryOpt := func(bapp *baseapp.BaseApp) {
+		testdata.RegisterQueryServer(
+			bapp.GRPCQueryRouter(),
+			testdata.QueryImpl{},
+		)
+	}
+
+	app := setupBaseApp(t, grpcQueryOpt)
+
+	app.InitChain(abci.RequestInitChain{})
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	app.Commit()
+
+	req := testdata.SayHelloRequest{Name: "foo"}
+	reqBz, err := req.Marshal()
+	require.NoError(t, err)
+
+	reqQuery := abci.RequestQuery{
+		Data: reqBz,
+		Path: "/testdata.Query/SayHello",
+	}
+
+	resQuery := app.Query(reqQuery)
+
+	require.Equal(t, abci.CodeTypeOK, resQuery.Code, resQuery)
+
+	var res testdata.SayHelloResponse
+	err = res.Unmarshal(resQuery.Value)
+	require.NoError(t, err)
+	require.Equal(t, "Hello foo!", res.Greeting)
+}
+
+// Test p2p filter queries
+func TestP2PQuery(t *testing.T) {
+	addrPeerFilterOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAddrPeerFilter(func(addrport string) abci.ResponseQuery {
+			require.Equal(t, "1.1.1.1:8000", addrport)
+			return abci.ResponseQuery{Code: uint32(3)}
+		})
+	}
+
+	idPeerFilterOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetIDPeerFilter(func(id string) abci.ResponseQuery {
+			require.Equal(t, "testid", id)
+			return abci.ResponseQuery{Code: uint32(4)}
+		})
+	}
+
+	app := setupBaseApp(t, addrPeerFilterOpt, idPeerFilterOpt)
+
+	addrQuery := abci.RequestQuery{
+		Path: "/p2p/filter/addr/1.1.1.1:8000",
+	}
+	res := app.Query(addrQuery)
+	require.Equal(t, uint32(3), res.Code)
+
+	idQuery := abci.RequestQuery{
+		Path: "/p2p/filter/id/testid",
+	}
+	res = app.Query(idQuery)
+	require.Equal(t, uint32(4), res.Code)
+}
+
+func TestGetMaximumBlockGas(t *testing.T) {
+	app := setupBaseApp(t)
+	app.InitChain(abci.RequestInitChain{})
+	ctx := app.NewContext(true, tmproto.Header{})
+
+	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 0}})
+	require.Equal(t, uint64(0), app.GetMaximumBlockGas(ctx))
+
+	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -1}})
+	require.Equal(t, uint64(0), app.GetMaximumBlockGas(ctx))
+
+	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 5000000}})
+	require.Equal(t, uint64(5000000), app.GetMaximumBlockGas(ctx))
+
+	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -5000000}})
+	require.Panics(t, func() { app.GetMaximumBlockGas(ctx) })
+}
+
+func TestListSnapshots(t *testing.T) {
+	app, teardown := setupBaseAppWithSnapshots(t, 5, 4)
+	defer teardown()
+
+	resp := app.ListSnapshots(abci.RequestListSnapshots{})
+	for _, s := range resp.Snapshots {
+		assert.NotEmpty(t, s.Hash)
+		assert.NotEmpty(t, s.Metadata)
+		s.Hash = nil
+		s.Metadata = nil
+	}
+	assert.Equal(t, abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{
+		{Height: 4, Format: 1, Chunks: 2},
+		{Height: 2, Format: 1, Chunks: 1},
+	}}, resp)
+}
+
+func TestLoadSnapshotChunk(t *testing.T) {
+	app, teardown := setupBaseAppWithSnapshots(t, 2, 5)
+	defer teardown()
+
+	testcases := map[string]struct {
+		height      uint64
+		format      uint32
+		chunk       uint32
+		expectEmpty bool
+	}{
+		"Existing snapshot": {2, 1, 1, false},
+		"Missing height":    {100, 1, 1, true},
+		"Missing format":    {2, 2, 1, true},
+		"Missing chunk":     {2, 1, 9, true},
+		"Zero height":       {0, 1, 1, true},
+		"Zero format":       {2, 0, 1, true},
+		"Zero chunk":        {2, 1, 0, false},
+	}
+	for name, tc := range testcases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			resp := app.LoadSnapshotChunk(abci.RequestLoadSnapshotChunk{
+				Height: tc.height,
+				Format: tc.format,
+				Chunk:  tc.chunk,
+			})
+			if tc.expectEmpty {
+				assert.Equal(t, abci.ResponseLoadSnapshotChunk{}, resp)
+				return
+			}
+			assert.NotEmpty(t, resp.Chunk)
+		})
+	}
+}
+
+func TestOfferSnapshot_Errors(t *testing.T) {
+	// Set up app before test cases, since it's fairly expensive.
+	app, teardown := setupBaseAppWithSnapshots(t, 0, 0)
+	defer teardown()
+
+	m := snapshottypes.Metadata{ChunkHashes: [][]byte{{1}, {2}, {3}}}
+	metadata, err := m.Marshal()
+	require.NoError(t, err)
+	hash := []byte{1, 2, 3}
+
+	testcases := map[string]struct {
+		snapshot *abci.Snapshot
+		result   abci.ResponseOfferSnapshot_Result
+	}{
+		"nil snapshot": {nil, abci.ResponseOfferSnapshot_REJECT},
+		"invalid format": {&abci.Snapshot{
+			Height: 1, Format: 9, Chunks: 3, Hash: hash, Metadata: metadata,
+		}, abci.ResponseOfferSnapshot_REJECT_FORMAT},
+		"incorrect chunk count": {&abci.Snapshot{
+			Height: 1, Format: 1, Chunks: 2, Hash: hash, Metadata: metadata,
+		}, abci.ResponseOfferSnapshot_REJECT},
+		"no chunks": {&abci.Snapshot{
+			Height: 1, Format: 1, Chunks: 0, Hash: hash, Metadata: metadata,
+		}, abci.ResponseOfferSnapshot_REJECT},
+		"invalid metadata serialization": {&abci.Snapshot{
+			Height: 1, Format: 1, Chunks: 0, Hash: hash, Metadata: []byte{3, 1, 4},
+		}, abci.ResponseOfferSnapshot_REJECT},
+	}
+	for name, tc := range testcases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			resp := app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: tc.snapshot})
+			assert.Equal(t, tc.result, resp.Result)
+		})
+	}
+
+	// Offering a snapshot after one has been accepted should error
+	resp := app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
+		Height:   1,
+		Format:   snapshottypes.CurrentFormat,
+		Chunks:   3,
+		Hash:     []byte{1, 2, 3},
+		Metadata: metadata,
+	}})
+	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, resp)
+
+	resp = app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
+		Height:   2,
+		Format:   snapshottypes.CurrentFormat,
+		Chunks:   3,
+		Hash:     []byte{1, 2, 3},
+		Metadata: metadata,
+	}})
+	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}, resp)
+}
+
+func TestApplySnapshotChunk(t *testing.T) {
+	source, teardown := setupBaseAppWithSnapshots(t, 4, 10)
+	defer teardown()
+
+	target, teardown := setupBaseAppWithSnapshots(t, 0, 0)
+	defer teardown()
+
+	// Fetch latest snapshot to restore
+	respList := source.ListSnapshots(abci.RequestListSnapshots{})
+	require.NotEmpty(t, respList.Snapshots)
+	snapshot := respList.Snapshots[0]
+
+	// Make sure the snapshot has at least 3 chunks
+	require.GreaterOrEqual(t, snapshot.Chunks, uint32(3), "Not enough snapshot chunks")
+
+	// Begin a snapshot restoration in the target
+	respOffer := target.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: snapshot})
+	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, respOffer)
+
+	// We should be able to pass an invalid chunk and get a verify failure, before reapplying it.
+	respApply := target.ApplySnapshotChunk(abci.RequestApplySnapshotChunk{
+		Index:  0,
+		Chunk:  []byte{9},
+		Sender: "sender",
+	})
+	require.Equal(t, abci.ResponseApplySnapshotChunk{
+		Result:        abci.ResponseApplySnapshotChunk_RETRY,
+		RefetchChunks: []uint32{0},
+		RejectSenders: []string{"sender"},
+	}, respApply)
+
+	// Fetch each chunk from the source and apply it to the target
+	for index := uint32(0); index < snapshot.Chunks; index++ {
+		respChunk := source.LoadSnapshotChunk(abci.RequestLoadSnapshotChunk{
+			Height: snapshot.Height,
+			Format: snapshot.Format,
+			Chunk:  index,
+		})
+		require.NotNil(t, respChunk.Chunk)
+		respApply := target.ApplySnapshotChunk(abci.RequestApplySnapshotChunk{
+			Index: index,
+			Chunk: respChunk.Chunk,
+		})
+		require.Equal(t, abci.ResponseApplySnapshotChunk{
+			Result: abci.ResponseApplySnapshotChunk_ACCEPT,
+		}, respApply)
+	}
+
+	// The target should now have the same hash as the source
+	assert.Equal(t, source.LastCommitID(), target.LastCommitID())
+}
+
+// NOTE: represents a new custom router for testing purposes of WithRouter()
+type testCustomRouter struct {
+	routes sync.Map
+}
+
+func (rtr *testCustomRouter) AddRoute(route sdk.Route) sdk.Router {
+	rtr.routes.Store(route.Path(), route.Handler())
+	return rtr
+}
+
+func (rtr *testCustomRouter) Route(ctx sdk.Context, path string) sdk.Handler {
+	if v, ok := rtr.routes.Load(path); ok {
+		if h, ok := v.(sdk.Handler); ok {
+			return h
+		}
+	}
+	return nil
+}
+
+func TestWithRouter(t *testing.T) {
+	// test increments in the handler
+	deliverKey := []byte("deliver-key")
+
+	txHandlerOpt := func(bapp *baseapp.BaseApp) {
+		customRouter := &testCustomRouter{routes: sync.Map{}}
+		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
+		customRouter.AddRoute(r)
+		txHandler := middleware.NewRunMsgsTxHandler(middleware.NewMsgServiceRouter(interfaceRegistry), customRouter)
+		bapp.SetTxHandler(txHandler)
+	}
+	app := setupBaseApp(t, txHandlerOpt)
+	app.InitChain(abci.RequestInitChain{})
+
+	// Create same codec used in txDecoder
+	codec := codec.NewLegacyAmino()
+	registerTestCodec(codec)
+
+	nBlocks := 3
+	txPerHeight := 5
+
+	for blockN := 0; blockN < nBlocks; blockN++ {
+		header := tmproto.Header{Height: int64(blockN) + 1}
+		app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+		for i := 0; i < txPerHeight; i++ {
+			counter := int64(blockN*txPerHeight + i)
+			tx := newTxCounter(counter, counter)
+
+			txBytes, err := codec.Marshal(tx)
+			require.NoError(t, err)
+
+			res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+			require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+		}
+
+		app.EndBlock(abci.RequestEndBlock{})
+		app.Commit()
+	}
+}
+
+func TestBaseApp_EndBlock(t *testing.T) {
+	db := dbm.NewMemDB()
+	name := t.Name()
+	logger := defaultLogger()
+
+	cp := &abci.ConsensusParams{
+		Block: &abci.BlockParams{
+			MaxGas: 5000000,
+		},
+	}
+
+	app := baseapp.NewBaseApp(name, logger, db, nil)
+	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.InitChain(abci.RequestInitChain{
+		ConsensusParams: cp,
+	})
+
+	app.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+		return abci.ResponseEndBlock{
+			ValidatorUpdates: []abci.ValidatorUpdate{
+				{Power: 100},
+			},
+		}
+	})
+	app.Seal()
+
+	res := app.EndBlock(abci.RequestEndBlock{})
+	require.Len(t, res.GetValidatorUpdates(), 1)
+	require.Equal(t, int64(100), res.GetValidatorUpdates()[0].Power)
+	require.Equal(t, cp.Block.MaxGas, res.ConsensusParamUpdates.Block.MaxGas)
 }

@@ -21,7 +21,7 @@ integrated with the application `SimulationManager`.
 
 ## Simulation package
 
-Every module that implements the SDK simulator needs to have a `x/<module>/simulation`
+Every module that implements the Cosmos SDK simulator needs to have a `x/<module>/simulation`
 package which contains the primary functions required by the fuzz tests: store
 decoders, randomized genesis state and parameters, weighted operations and proposal
 contents.
@@ -54,7 +54,7 @@ You can see how an example of what is needed to fully test parameter changes [he
 
 ### Random weighted operations
 
-Operations are one of the crucial parts of the SDK simulation. They are the transactions
+Operations are one of the crucial parts of the Cosmos SDK simulation. They are the transactions
 (`Msg`) that are simulated with random field values. The sender of the operation
 is also assigned randomly.
 
@@ -75,7 +75,7 @@ For the last test a tool called runsim  <!-- # TODO: add link to runsim readme w
 
 ### Random proposal contents
 
-Randomized governance proposals are also supported on the SDK simulator. Each
+Randomized governance proposals are also supported on the Cosmos SDK simulator. Each
 module must define the governance proposal `Content`s that they expose and register
 them to be used on the parameters.
 

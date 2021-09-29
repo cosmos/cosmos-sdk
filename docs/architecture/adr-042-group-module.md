@@ -276,4 +276,4 @@ Inter-module communication introduced by [ADR-033](adr-033-protobuf-inter-module
 - Initial specification:
     - https://gist.github.com/aaronc/b60628017352df5983791cad30babe56#group-module
     - [#5236](https://github.com/cosmos/cosmos-sdk/pull/5236)
-- Proposal to add `x/group` into the SDK: [#7633](https://github.com/cosmos/cosmos-sdk/issues/7633)
+- Proposal to add `x/group` into the Cosmos SDK: [#7633](https://github.com/cosmos/cosmos-sdk/issues/7633)

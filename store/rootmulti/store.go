@@ -239,6 +239,20 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		})
 	}
 
+	storesKeys := make([]types.StoreKey, 0, len(rs.storesParams))
+
+	for key := range rs.storesParams {
+		storesKeys = append(storesKeys, key)
+	}
+	if upgrades != nil {
+		// deterministic iteration order for upgrades
+		// (as the underlying store may change and
+		// upgrades make store changes where the execution order may matter)
+		sort.Slice(storesKeys, func(i, j int) bool {
+			return storesKeys[i].Name() < storesKeys[j].Name()
+		})
+	}
+
 	for _, key := range storesKeys {
 		storeParams := rs.storesParams[key]
 		commitID := rs.getCommitID(infos, key.Name())

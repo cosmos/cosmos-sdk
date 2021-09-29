@@ -22,10 +22,6 @@ package module
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
-	"maps"
-	"slices"
 	"sort"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
@@ -670,9 +666,18 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM app
 		modules = DefaultMigrationsOrder(m.ModuleNames())
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	updatedVM := appmodule.VersionMap{}
-	for _, moduleName := range modules {
+	updatedVM := make(VersionMap)
+	// for deterministic iteration order
+	// (as some migrations depend on other modules
+	// and the order of executing migrations matters)
+	// TODO: make the order user-configurable?
+	sortedModNames := make([]string, 0, len(m.Modules))
+	for key := range m.Modules {
+		sortedModNames = append(sortedModNames, key)
+	}
+	sort.Strings(sortedModNames)
+
+	for _, moduleName := range sortedModNames {
 		module := m.Modules[moduleName]
 		fromVersion, exists := fromVM[moduleName]
 		toVersion := uint64(0)

@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"time"
 
+	abciclient "github.com/tendermint/tendermint/abci/client"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmtime "github.com/tendermint/tendermint/libs/time"
 	"github.com/tendermint/tendermint/node"
-	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/rpc/client/local"
 	"github.com/tendermint/tendermint/types"
 
@@ -36,7 +36,7 @@ func startInProcess(cfg Config, val *Validator) error {
 	tmNode, err := node.New(
 		tmCfg,
 		logger.With("module", val.Moniker),
-		proxy.NewLocalClientCreator(app),
+		abciclient.NewLocalCreator(app),
 		nil,
 	)
 	if err != nil {

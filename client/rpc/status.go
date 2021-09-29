@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/tendermint/tendermint/libs/bytes"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/tendermint/tendermint/rpc/coretypes"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -27,7 +27,7 @@ type validatorInfo struct {
 // PubKey.
 type resultStatus struct {
 	NodeInfo      tmtypes.NodeInfo
-	SyncInfo      ctypes.SyncInfo
+	SyncInfo      coretypes.SyncInfo
 	ValidatorInfo validatorInfo
 }
 
@@ -77,10 +77,10 @@ func StatusCommand() *cobra.Command {
 	return cmd
 }
 
-func getNodeStatus(clientCtx client.Context) (*ctypes.ResultStatus, error) {
+func getNodeStatus(clientCtx client.Context) (*coretypes.ResultStatus, error) {
 	node, err := clientCtx.GetNode()
 	if err != nil {
-		return &ctypes.ResultStatus{}, err
+		return &coretypes.ResultStatus{}, err
 	}
 
 	return node.Status(context.Background())

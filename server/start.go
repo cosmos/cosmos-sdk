@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	abciclient "github.com/tendermint/tendermint/abci/client"
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/node"
-	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/rpc/client/local"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"google.golang.org/grpc"
@@ -251,7 +251,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	tmNode, err := node.New(
 		cfg,
 		ctx.Logger,
-		proxy.NewLocalClientCreator(app),
+		abciclient.NewLocalCreator(app),
 		nil,
 	)
 	if err != nil {

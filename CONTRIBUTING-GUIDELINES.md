@@ -31,7 +31,7 @@ Security:
 + Thread safety. If some functionality is not thread-safe, or uses something that is not thread-safe, then clearly indicate the risk on each level.
 
 
-## Testing and
+## Testing
 
 Make sure your code is well tested:
 + Provide unit tests for every unit of your code if possible. Unit tests are expected to comprise 70%-80% of your tests.
@@ -64,8 +64,4 @@ Desired outcomes:
 - QA reports. Goal is to guide with new tasks and be one of the QA measures.
 
 
-As a developer, you must help the QA team by leaving instructions for user experience and functional testing.
-
-Quality Assurance
-
-+
+As a developer, you must help the QA team by providing instructions for User Experience (UX) and functional testing.

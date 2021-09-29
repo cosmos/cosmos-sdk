@@ -2,19 +2,18 @@
 
 - [Contributing](#contributing)
     - [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
-    - [Pull Requests](#pull-requests)
+    - [Development Procedure](#development-procedure)
+        - [Testing](#testing)
+        - [Pull Requests](#pull-requests)
         - [Pull Request Templates](#pull-request-templates)
         - [Requesting Reviews](#requesting-reviews)
-        - [Reviewing Pull Requests](#reviewing-pull-requests)
         - [Updating Documentation](#updating-documentation)
     - [Dependencies](#dependencies)
     - [Protobuf](#protobuf)
-    - [Testing](#testing)
     - [Branching Model and Release](#branching-model-and-release)
         - [PR Targeting](#pr-targeting)
-        - [Development Procedure](#development-procedure)
         - [Major Release Procedure](#major-release-procedure)
-        - [Minor Release Procedure](#minor-release-procedure)
+        - [Patch Release Procedure](#patch-release-procedure)
     - [Code Owner Membership](#code-owner-membership)
     - [Concept & Feature Approval Process](#concept--feature-approval-process)
 
@@ -25,35 +24,23 @@ Contributing to this repo can mean many things such as participating in
 discussion or proposing code changes. To ensure a smooth workflow for all
 contributors, the general procedure for contributing has been established:
 
-1. Either [open](https://github.com/cosmos/cosmos-sdk/issues/new/choose) or
-
-1. Determine whether a GitHub issue or discussion is more appropriate for your needs:
+1. Start by browsing [new issue](https://github.com/cosmos/cosmos-sdk/issues) and [discussions](https://github.com/cosmos/cosmos-sdk/discussions). If you are looking for something interesting or if you have something in your mind, there is a chance it was has been discussed.
+2. Determine whether a GitHub issue or discussion is more appropriate for your needs:
   1. If want to propose something new that requires specification or an additional design, or you would like to change a process, start with a [new discussion](https://github.com/cosmos/cosmos-sdk/discussions/new). With discussions, we can better handle the design process using discussion threads. A discussion usually leads to one or more issues.
    2. If the issue you want addressed is a specific proposal or a bug, then open a [new issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose).
    3. Review existing [issues](https://github.com/cosmos/cosmos-sdk/issues) to find an issue you'd like to help with.
-2. Participate in thoughtful discussion on that issue.
-3. If you would like to contribute:
+3. Participate in thoughtful discussion on that issue.
+4. If you would like to contribute:
    1. Ensure that the proposal has been accepted.
    2. Ensure that nobody else has already begun working on this issue. If they have,
       make sure to contact them to collaborate.
    3. If nobody has been assigned for the issue and you would like to work on it,
       make a comment on the issue to inform the community of your intentions
       to begin work.
-4. To submit your work as a contribution to the repository follow standard GitHub best practices:
-   1. Fork the repo, branch from the HEAD of `master`, make some commits, and submit a PR to `master`.
-      - For core developers working within the `cosmos-sdk` repo, follow branch name conventions to ensure a clear
-        ownership of branches 
-        `{moniker}/{issue#}-branch-name`.
-   2. If you have something to show, start with a `Draft` PR. It's good to have early validation of your work and we highly recommend this practice. A Draft PR also indicates to the community that the work is in progress.
-      Draft PRs also helps the core team provide early feedback and ensure the work is in the right direction.
-   3. Follow the [CONTRIBUTING GUIDELINES](CONTRIBUTING-GUIDELINES.md).
-   3. When the code is complete, change your PR from `Draft` to `Ready for Review`.
-   4. Go through the actions for each checkbox present in the PR template description. The PR actions are automatically provided for each new PR.
-   5. Be sure to include a relevant changelog entry in the `Unreleased` section of `CHANGELOG.md` (see file for log format).
-   6. Codeowners are marked automatically as the reviewers.
+5. To submit your work as a contribution to the repository follow standard GitHub best practices. See [pull request guideline](#pull-requests) below.
 
 
-**Note: ** For very small or blatantly obvious problems such as typos, you are 
+**Note: ** For very small or blatantly obvious problems such as typos, you are
 not required to an open issue to submit a PR, but be aware that for more complex
 problems/features, if a PR is opened before an adequate design discussion has
 taken place in a GitHub issue, that PR runs a high likelihood of being rejected.
@@ -73,13 +60,71 @@ Other notes:
 
 When proposing an architecture decision for the SDK, please start by opening an [issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose) or a [discussion](https://github.com/cosmos/cosmos-sdk/discussions/new) with a summary of the proposal. Once the proposal has been discussed and there is rough alignment on a high-level approach to the design, the [ADR creation process](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/PROCESS.md) can begin. We are following this process to ensure all involved parties are in agreement before any party begins coding the proposed implementation. If you would like to see examples of how these are written, please refer to the current [ADRs](https://github.com/cosmos/cosmos-sdk/tree/master/docs/architecture).
 
-## Pull Requests
+## Development Procedure
+
+- The latest state of development is on `master`.
+- `master` must never fail `make lint test test-race`.
+- No `--force` onto `master` (except when reverting a broken commit, which should seldom happen).
+- Create a branch to start a wok:
+  - Fork the repo (core developers must create a branch directly in the Cosmos SDK repo),
+    branch from the HEAD of `master`, make some commits, and submit a PR to `master`.
+  - For core developers working within the `cosmos-sdk` repo, follow branch name conventions to ensure a clear
+    ownership of branches: `{moniker}/{issue#}-branch-name`.
+  - See [Branching Model](#branching-model-and-release) for more details.
+
+Code is merged into master through pull request procedure.
+
+### Testing
+
+Tests can be ran by running `make test` at the top level of the SDK repository.
+
+We expect tests to use `require` or `assert` rather than `t.Skip` or `t.Fail`,
+unless there is a reason to do otherwise.
+When testing a function under a variety of different inputs, we prefer to use
+[table driven tests](https://github.com/golang/go/wiki/TableDrivenTests).
+Table driven test error messages should follow the following format
+`<desc>, tc #<index>, i #<index>`.
+`<desc>` is an optional short description of whats failing, `tc` is the
+index within the table of the testcase that is failing, and `i` is when there
+is a loop, exactly which iteration of the loop failed.
+The idea is you should be able to see the
+error message and figure out exactly what failed.
+Here is an example check:
+
+```go
+<some table>
+for tcIndex, tc := range cases {
+  <some code>
+  resp, err := doSomething()
+  require.NoError(err)
+  require.Equal(t, tc.expected, resp, "should correctly perform X")
+```
+
+
+### Pull Requests
+
+Before submitting a pull request:
+- merge the latest master `git merge origin/master`,
+- run `make lint test` to ensure that all checks and tests pass.
+
+Then:
+
+1. If you have something to show, **start with a `Draft` PR**. It's good to have early validation of your work and we highly recommend this practice. A Draft PR also indicates to the community that the work is in progress.
+   Draft PRs also helps the core team provide early feedback and ensure the work is in the right direction.
+2. Follow the [CONTRIBUTING GUIDELINES](CONTRIBUTING-GUIDELINES.md).
+3. When the code is complete, change your PR from `Draft` to `Ready for Review`.
+4. Go through the actions for each checkbox present in the PR template description. The PR actions are automatically provided for each new PR.
+5. Be sure to include a relevant changelog entry in the `Unreleased` section of `CHANGELOG.md` (see file for log format).
 
 PRs must have a category prefix that is based on the type of changes being made (for example, `fix`, `feat`,
 `refactor`, `docs`, and so on). The *type* must be included in the PR title as a prefix (for example,
 `fix: <description>`). This convention ensures that all changes that are committed to the base branch follow the
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
 Additionally, each PR should only address a single issue.
+
+Pull requests are merged automatically using [`automerge` action](https://mergify.io/features/auto-merge).
+
+NOTE: when merging, GitHub will squash commits and rebase on top of the master.
 
 ### Pull Request Templates
 
@@ -90,12 +135,13 @@ There are three PR templates. The [default template](./.github/PULL_REQUEST_TEMP
 
 ### Requesting Reviews
 
-In order to accommodate the review process, the author of the PR must complete the author checklist (from the pull request template)
+In order to accommodate the review process, the author of the PR must complete the author checklist
+(from the pull request template)
 to the best of their abilities before marking the PR as "Ready for Review". If you would like to
 receive early feedback on the PR, open the PR as a "Draft" and leave a comment in the PR indicating
 that you would like early feedback and tagging whoever you would like to receive feedback from.
 
-### Reviewing Pull Requests
+Codeowners are marked automatically as the reviewers.
 
 All PRs require at least two review approvals before they can be merged (one review might be acceptable in
 the case of minor changes to [docs](./.github/PULL_REQUEST_TEMPLATE/docs.md) or [other](./.github/PULL_REQUEST_TEMPLATE/other.md) changes that do not affect production code). Each PR template has a reviewers checklist that must be completed before the PR can be merged. Each reviewer is responsible
@@ -164,32 +210,6 @@ For example, in vscode your `.vscode/settings.json` should look like:
 }
 ```
 
-## Testing
-
-Tests can be ran by running `make test` at the top level of the SDK repository.
-
-We expect tests to use `require` or `assert` rather than `t.Skip` or `t.Fail`,
-unless there is a reason to do otherwise.
-When testing a function under a variety of different inputs, we prefer to use
-[table driven tests](https://github.com/golang/go/wiki/TableDrivenTests).
-Table driven test error messages should follow the following format
-`<desc>, tc #<index>, i #<index>`.
-`<desc>` is an optional short description of whats failing, `tc` is the
-index within the table of the testcase that is failing, and `i` is when there
-is a loop, exactly which iteration of the loop failed.
-The idea is you should be able to see the
-error message and figure out exactly what failed.
-Here is an example check:
-
-```go
-<some table>
-for tcIndex, tc := range cases {
-  <some code>
-  resp, err := doSomething()
-  require.NoError(err)
-  require.Equal(t, tc.expected, resp, "should correctly perform X")
-```
-
 ## Branching Model and Release
 
 User-facing repos should adhere to the trunk based development branching model: https://trunkbaseddevelopment.com/. User branches should start with a user name, example: `{moniker}/{issue#}-branch-name`.
@@ -202,33 +222,13 @@ The Cosmos SDK utilizes [semantic versioning](https://semver.org/).
 
 Ensure that you base and target your PR on the `master` branch.
 
-All feature additions must be targeted against `master`. Bug fixes for an outstanding release candidate
-must be targeted against the release candidate branch.
+All feature additions and all bug fixes must be targeted against `master`. Exception is for bug fixes which are only related to a released version. In that case, the related bug fix PRs must target against the release branch.
 
-If needed, we backport a commit from `master` to the release branch (excluding consensus breaking feature, optimization, and similar).
-
-### Development Procedure
-
-- the latest state of development is on `master`
-- `master` must never fail `make lint test test-race`
-- no `--force` onto `master` (except when reverting a broken commit, which should seldom happen)
-- create a development branch either on github.com/cosmos/cosmos-sdk, or your fork (using `git remote add origin`)
-
-Submitting a pull request:
-- before submitting a pull request, merge the latest master `git merge origin/master`,
-- run `make lint test` to ensure that all checks and tests pass,
-- GitHub will squash commits and rebase on top of the master.
-
-Finalizing pull requests
-- ask contributors for review,
-- respond to all comments,
-- resolve merge conflicts
-
-Pull requests are merged automatically using `automerge` action.
+If needed, we backport a commit from `master` to a release branch (excluding consensus breaking feature, API breaking and similar).
 
 ### Major Release Procedure
 
-A _major release_ is an increment of the first number (eg: `v1.2` → `v2.0.0`) or the point number (eg: `v1.1 → v1.2.0`).
+A _major release_ is an increment of the first number (eg: `v1.2` → `v2.0.0`) or the __point number_ (eg: `v1.1 → v1.2.0`, also called _point release_).
 
 TL;DR before making a new _major_ release we do beta and release candidate releases. For example, for release 1.0.0:
 ```
@@ -257,26 +257,27 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
   - create a new annotated git tag (eg `git -a v1.1.0`) in the release branch.
   - Create a GitHub release.
 
-### Minor Release Procedure
-
-A _minor release_ is an increment of the patch number (eg: `v1.2.0` → `v1.2.1`).
-
 Following _semver_ philosophy, point releases after `v1.0`:
+- must not break API
+- can break consensus
 
- - must not break API
- - can break consensus
-Patch release must not break API nor consensus.
 Before `v1.0`, point release can break both point API and consensus.
+
+### Path Release Procedure
+
+A _patch release_ is an increment of the patch number (eg: `v1.2.0` → `v1.2.1`).
+
+**Patch release must not break API nor consensus.**
 
 Updates to the release branch should come from `master` by backporting PRs (usually done by automatic cherry pick followed by a PRs to the release branch). The backports must be marked using `backport/Y` label in PR for master.
 It is the PR author's responsibility to fix merge conflicts, update changelog entries, and
-ensure CI passes. If a PR originates from an external contributor, a core team member assumes 
+ensure CI passes. If a PR originates from an external contributor, a core team member assumes
 responsibility to perform this process instead of the original author.
 Lastly, it is core team's responsibility to ensure that the PR meets all the SRU criteria.
 
 Point Release must follow the [Stable Release Policy](./STABLE_RELEASES.md).
 
-After the release branch has all commits required for the next minor release:
+After the release branch has all commits required for the next patch release:
 - update `CHANGELOG.md`.
 - create a new annotated git tag (eg `git -a v1.1.0`) in the release branch.
 - Create a GitHub release.
@@ -315,7 +316,7 @@ Other potential removal criteria:
 * Violation of Code of Conduct
 
 Earning this privilege should be considered to be no small feat and is by no
-means guaranteed by any quantifiable metric. Serving as a code owner is a symbol of great trust from 
+means guaranteed by any quantifiable metric. Serving as a code owner is a symbol of great trust from
 the community of this project.
 
 ## Concept & Feature Approval Process

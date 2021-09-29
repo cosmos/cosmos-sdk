@@ -4,11 +4,11 @@ order: 6
 
 # Encoding
 
-While encoding in the SDK used to be mainly handled by `go-amino` codec, the SDK is moving towards using `gogoprotobuf` for both state and client-side encoding. {synopsis}
+While encoding in the Cosmos SDK used to be mainly handled by `go-amino` codec, the Cosmos SDK is moving towards using `gogoprotobuf` for both state and client-side encoding. {synopsis}
 
 ## Pre-requisite Readings
 
-- [Anatomy of an SDK application](../basics/app-anatomy.md) {prereq}
+- [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
 
 ## Encoding
 
@@ -69,7 +69,7 @@ typically used for when the data needs to be streamed or grouped together
 
 ### Gogoproto
 
-Modules are encouraged to utilize Protobuf encoding for their respective types. In the SDK, we use the [Gogoproto](https://github.com/gogo/protobuf) specific implementation of the Protobuf spec that offers speed and DX improvements compared to the official [Google protobuf implementation](https://github.com/protocolbuffers/protobuf).
+Modules are encouraged to utilize Protobuf encoding for their respective types. In the Cosmos SDK, we use the [Gogoproto](https://github.com/gogo/protobuf) specific implementation of the Protobuf spec that offers speed and DX improvements compared to the official [Google protobuf implementation](https://github.com/protocolbuffers/protobuf).
 
 ### Guidelines for protobuf message definitions
 
@@ -84,7 +84,7 @@ In addition to [following official Protocol Buffer guidelines](https://developer
 
 Another important use of Protobuf is the encoding and decoding of
 [transactions](./transactions.md). Transactions are defined by the application or
-the SDK but are then passed to the underlying consensus engine to be relayed to
+the Cosmos SDK but are then passed to the underlying consensus engine to be relayed to
 other peers. Since the underlying consensus engine is agnostic to the application,
 the consensus engine accepts only transactions in the form of raw bytes.
 
@@ -154,7 +154,7 @@ bz, err := cdc.Marshal(profile)
 jsonBz, err := cdc.MarshalJSON(profile)
 ```
 
-To summarize, to encode an interface, you must 1/ pack the interface into an `Any` and 2/ marshal the `Any`. For convenience, the SDK provides a `MarshalInterface` method to bundle these two steps. Have a look at [a real-life example in the x/auth module](https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/x/auth/keeper/keeper.go#L218-L221).
+To summarize, to encode an interface, you must 1/ pack the interface into an `Any` and 2/ marshal the `Any`. For convenience, the Cosmos SDK provides a `MarshalInterface` method to bundle these two steps. Have a look at [a real-life example in the x/auth module](https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/x/auth/keeper/keeper.go#L218-L221).
 
 The reverse operation of retrieving the concrete Go type from inside an `Any`, called "unpacking", is done with the `GetCachedValue()` on `Any`.
 
@@ -189,9 +189,9 @@ The `UnpackInterfaces` gets called recursively on all structs implementing this 
 
 For more information about interface encoding, and especially on `UnpackInterfaces` and how the `Any`'s `type_url` gets resolved using the `InterfaceRegistry`, please refer to [ADR-019](../architecture/adr-019-protobuf-state-encoding.md).
 
-#### `Any` Encoding in the SDK
+#### `Any` Encoding in the Cosmos SDK
 
-The above `Profile` example is a fictive example used for educational purposes. In the SDK, we use `Any` encoding in several places (non-exhaustive list):
+The above `Profile` example is a fictive example used for educational purposes. In the Cosmos SDK, we use `Any` encoding in several places (non-exhaustive list):
 
 - the `cryptotypes.PubKey` interface for encoding different types of public keys,
 - the `sdk.Msg` interface for encoding different `Msg`s in a transaction,
@@ -242,7 +242,7 @@ message MsgSubmitEvidence {
 }
 ```
 
-The SDK `codec.Codec` interface provides support methods `MarshalInterface` and `UnmarshalInterface` to easy encoding of state to `Any`.
+The Cosmos SDK `codec.Codec` interface provides support methods `MarshalInterface` and `UnmarshalInterface` to easy encoding of state to `Any`.
 
 Module should register interfaces using `InterfaceRegistry` which provides a mechanism for registering interfaces: `RegisterInterface(protoName string, iface interface{})` and implementations: `RegisterImplementations(iface interface{}, impls ...proto.Message)` that can be safely unpacked from Any, similarly to type registration with Amino:
 

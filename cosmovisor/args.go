@@ -11,17 +11,19 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
 )
 
 // environment variable names
 const (
-	envHome                 = "DAEMON_HOME"
-	envName                 = "DAEMON_NAME"
-	envDownloadBin          = "DAEMON_ALLOW_DOWNLOAD_BINARIES"
-	envRestartUpgrade       = "DAEMON_RESTART_AFTER_UPGRADE"
-	envSkipBackup           = "UNSAFE_SKIP_BACKUP"
-	envInterval             = "DAEMON_POLL_INTERVAL"
-	envPreupgradeMaxRetries = "DAEMON_PREUPGRADE_MAX_RETRIES"
+	EnvHome                 = "DAEMON_HOME"
+	EnvName                 = "DAEMON_NAME"
+	EnvDownloadBin          = "DAEMON_ALLOW_DOWNLOAD_BINARIES"
+	EnvRestartUpgrade       = "DAEMON_RESTART_AFTER_UPGRADE"
+	EnvSkipBackup           = "UNSAFE_SKIP_BACKUP"
+	EnvInterval             = "DAEMON_POLL_INTERVAL"
+	EnvPreupgradeMaxRetries = "DAEMON_PREUPGRADE_MAX_RETRIES"
 )
 
 const (
@@ -67,10 +69,15 @@ func (cfg *Config) UpgradeBin(upgradeName string) string {
 // UpgradeDir is the directory named upgrade
 func (cfg *Config) UpgradeDir(upgradeName string) string {
 	safeName := url.PathEscape(upgradeName)
-	return filepath.Join(cfg.Home, rootName, upgradesDir, safeName)
+	return filepath.Join(cfg.BaseUpgradeDir(), safeName)
 }
 
-// UpgradeInfoFile is the expected upgrade-info filename created by `x/upgrade/keeper`.
+// BaseUpgradeDir is the directory containing the named upgrade directories.
+func (cfg *Config) BaseUpgradeDir() string {
+	return filepath.Join(cfg.Root(), upgradesDir)
+}
+
+// UpgradeInfoFilePath is the expected upgrade-info filename created by `x/upgrade/keeper`.
 func (cfg *Config) UpgradeInfoFilePath() string {
 	return filepath.Join(cfg.Home, "data", defaultFilename)
 }
@@ -118,72 +125,74 @@ func (cfg *Config) CurrentBin() (string, error) {
 // GetConfigFromEnv will read the environmental variables into a config
 // and then validate it is reasonable
 func GetConfigFromEnv() (*Config, error) {
+	var errs []error
 	cfg := &Config{
-		Home: os.Getenv(envHome),
-		Name: os.Getenv(envName),
+		Home: os.Getenv(EnvHome),
+		Name: os.Getenv(EnvName),
 	}
 
 	var err error
-	if cfg.AllowDownloadBinaries, err = booleanOption(envDownloadBin, false); err != nil {
-		return nil, err
+	if cfg.AllowDownloadBinaries, err = booleanOption(EnvDownloadBin, false); err != nil {
+		errs = append(errs, err)
 	}
-	if cfg.RestartAfterUpgrade, err = booleanOption(envRestartUpgrade, true); err != nil {
-		return nil, err
+	if cfg.RestartAfterUpgrade, err = booleanOption(EnvRestartUpgrade, true); err != nil {
+		errs = append(errs, err)
 	}
-	if cfg.UnsafeSkipBackup, err = booleanOption(envSkipBackup, false); err != nil {
-		return nil, err
+	if cfg.UnsafeSkipBackup, err = booleanOption(EnvSkipBackup, false); err != nil {
+		errs = append(errs, err)
 	}
 
-	interval := os.Getenv(envInterval)
+	interval := os.Getenv(EnvInterval)
 	if interval != "" {
-		i, err := strconv.ParseUint(interval, 10, 32)
-		if err != nil {
-			return nil, err
+		switch i, e := strconv.ParseUint(interval, 10, 32); {
+		case e != nil:
+			errs = append(errs, fmt.Errorf("invalid %s: %w", EnvInterval, err))
+		case i == 0:
+			errs = append(errs, fmt.Errorf("invalid %s: cannot be 0", EnvInterval))
+		default:
+			cfg.PollInterval = time.Millisecond * time.Duration(i)
 		}
-		cfg.PollInterval = time.Millisecond * time.Duration(i)
 	} else {
 		cfg.PollInterval = 300 * time.Millisecond
 	}
 
-	if err := cfg.validate(); err != nil {
-		return nil, err
-	}
-
-	envPreupgradeMaxRetriesVal := os.Getenv(envPreupgradeMaxRetries)
+	envPreupgradeMaxRetriesVal := os.Getenv(EnvPreupgradeMaxRetries)
 	if cfg.PreupgradeMaxRetries, err = strconv.Atoi(envPreupgradeMaxRetriesVal); err != nil && envPreupgradeMaxRetriesVal != "" {
-		return nil, fmt.Errorf("%s could not be parsed to int: %w", envPreupgradeMaxRetries, err)
+		errs = append(errs, fmt.Errorf("%s could not be parsed to int: %w", EnvPreupgradeMaxRetries, err))
 	}
 
+	errs = append(errs, cfg.validate()...)
+
+	if len(errs) > 0 {
+		return nil, cverrors.FlattenErrors(errs...)
+	}
 	return cfg, nil
 }
 
 // validate returns an error if this config is invalid.
 // it enforces Home/cosmovisor is a valid directory and exists,
 // and that Name is set
-func (cfg *Config) validate() error {
+func (cfg *Config) validate() []error {
+	var errs []error
 	if cfg.Name == "" {
-		return errors.New(envName + " is not set")
+		errs = append(errs, errors.New(EnvName+" is not set"))
 	}
 
-	if cfg.Home == "" {
-		return errors.New(envHome + " is not set")
+	switch {
+	case cfg.Home == "":
+		errs = append(errs, errors.New(EnvHome+" is not set"))
+	case !filepath.IsAbs(cfg.Home):
+		errs = append(errs, errors.New(EnvHome+" must be an absolute path"))
+	default:
+		switch info, err := os.Stat(cfg.Root()); {
+		case err != nil:
+			errs = append(errs, fmt.Errorf("cannot stat home dir: %w", err))
+		case !info.IsDir():
+			errs = append(errs, fmt.Errorf("%s is not a directory", cfg.Root()))
+		}
 	}
 
-	if !filepath.IsAbs(cfg.Home) {
-		return errors.New(envHome + " must be an absolute path")
-	}
-
-	// ensure the root directory exists
-	info, err := os.Stat(cfg.Root())
-	if err != nil {
-		return fmt.Errorf("cannot stat home dir: %w", err)
-	}
-
-	if !info.IsDir() {
-		return fmt.Errorf("%s is not a directory", info.Name())
-	}
-
-	return nil
+	return errs
 }
 
 // SetCurrentUpgrade sets the named upgrade to be the current link, returns error if this binary doesn't exist
@@ -247,7 +256,7 @@ func (cfg *Config) UpgradeInfo() UpgradeInfo {
 	return cfg.currentUpgrade
 
 returnError:
-	fmt.Println("[cosmovisor], error reading", filename, err)
+	Logger.Error().Err(err).Str("filename", filename).Msg("failed to read")
 	cfg.currentUpgrade.Name = "_"
 	return cfg.currentUpgrade
 }
@@ -264,4 +273,41 @@ func booleanOption(name string, defaultVal bool) (bool, error) {
 		return true, nil
 	}
 	return false, fmt.Errorf("env variable %q must have a boolean value (\"true\" or \"false\"), got %q", name, p)
+}
+
+// DetailString returns a multi-line string with details about this config.
+func (cfg Config) DetailString() string {
+	configEntries := []struct{ name, value string }{
+		{EnvHome, cfg.Home},
+		{EnvName, cfg.Name},
+		{EnvDownloadBin, fmt.Sprintf("%t", cfg.AllowDownloadBinaries)},
+		{EnvRestartUpgrade, fmt.Sprintf("%t", cfg.RestartAfterUpgrade)},
+		{EnvInterval, fmt.Sprintf("%s", cfg.PollInterval)},
+		{EnvSkipBackup, fmt.Sprintf("%t", cfg.UnsafeSkipBackup)},
+		{EnvPreupgradeMaxRetries, fmt.Sprintf("%d", cfg.PreupgradeMaxRetries)},
+	}
+	derivedEntries := []struct{ name, value string }{
+		{"Root Dir", cfg.Root()},
+		{"Upgrade Dir", cfg.BaseUpgradeDir()},
+		{"Genesis Bin", cfg.GenesisBin()},
+		{"Monitored File", cfg.UpgradeInfoFilePath()},
+	}
+
+	var sb strings.Builder
+	sb.WriteString("Configurable Values:\n")
+	for _, kv := range configEntries {
+		sb.WriteString(fmt.Sprintf("  %s: %s\n", kv.name, kv.value))
+	}
+	sb.WriteString("Derived Values:\n")
+	dnl := 0
+	for _, kv := range derivedEntries {
+		if len(kv.name) > dnl {
+			dnl = len(kv.name)
+		}
+	}
+	dFmt := fmt.Sprintf("  %%%ds: %%s\n", dnl)
+	for _, kv := range derivedEntries {
+		sb.WriteString(fmt.Sprintf(dFmt, kv.name, kv.value))
+	}
+	return sb.String()
 }

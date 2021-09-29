@@ -8,7 +8,7 @@ order: 11
 
 When thinking about security, it is good to start with a specific threat model. Our threat model is the following:
 
-> We assume that a thriving ecosystem of Cosmos-SDK modules that are easy to compose into a blockchain application will contain faulty or malicious modules.
+> We assume that a thriving ecosystem of Cosmos SDK modules that are easy to compose into a blockchain application will contain faulty or malicious modules.
 
 The Cosmos SDK is designed to address this threat by being the
 foundation of an object capability system.

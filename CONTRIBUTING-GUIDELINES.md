@@ -21,7 +21,6 @@ This document is an extension to [CONTRIBUTING](./CONTRIBUTING.md) and provides 
 Performance:
 + Avoid unnecessary operations or memory allocations.
 
-
 Security:
 + Pay proper attention to exploits involving:
   + gas usage
@@ -40,27 +39,48 @@ Make sure your code is well tested:
 + Use both test cases and property / fuzzy testing. We use the [rapid](pgregory.net/rapid) Go library for property-based and fuzzy testing.
 + Do not decrease code test coverage. Explain in a PR if test coverage is decreased.
 
+We expect tests to use `require` or `assert` rather than `t.Skip` or `t.Fail`,
+unless there is a reason to do otherwise.
+When testing a function under a variety of different inputs, we prefer to use
+[table driven tests](https://github.com/golang/go/wiki/TableDrivenTests).
+Table driven test error messages should follow the following format
+`<desc>, tc #<index>, i #<index>`.
+`<desc>` is an optional short description of whats failing, `tc` is the
+index within the test case table that is failing, and `i` is when there
+is a loop, exactly which iteration of the loop failed.
+The idea is you should be able to see the
+error message and figure out exactly what failed.
+Here is an example check:
 
+```go
+<some table>
+for tcIndex, tc := range cases {
+  <some code>
+  resp, err := doSomething()
+  require.NoError(err)
+  require.Equal(t, tc.expected, resp, "should correctly perform X")
+```
 
 ## Quality Assurance
 
 We are forming a QA team that will support the core Cosmos SDK team and collaborators by:
-- Improving the Cosmos SDK and Regen Network QA Processes
+- Improving the Cosmos SDK QA Processes
 - Improving automation in QA and testing
 - Defining high-quality metrics
 - Maintaining and improving testing frameworks (unit tests, integration tests, and functional tests)
 - Defining test scenarios.
 - Verifying user experience and defining a high quality.
     - We want to have **acceptance tests**! Document and list acceptance lists that are implemented and identify acceptance tests that are still missing.
+    - Acceptance tests should be specified in `acceptance-tests` directory as Markdown files.
 - Supporting other teams with testing frameworks, automation, and User Experience testing.
 - Testing chain upgrades for every new breaking change.
     - Defining automated tests that assure data integrity after an update.
 
 Desired outcomes:
 
-- QA team works with Development Team
-- QA is happening in parallel with Core Cosmos SDK development
-- Releases are more predictable (0.40 and 0.43 were not predictable at all).
+- QA team works with Development Team.
+- QA is happening in parallel with Core Cosmos SDK development.
+- Releases are more predictable.
 - QA reports. Goal is to guide with new tasks and be one of the QA measures.
 
 

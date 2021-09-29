@@ -25,6 +25,7 @@ discussion or proposing code changes. To ensure a smooth workflow for all
 contributors, the general procedure for contributing has been established:
 
 1. Start by browsing [new issue](https://github.com/cosmos/cosmos-sdk/issues) and [discussions](https://github.com/cosmos/cosmos-sdk/discussions). If you are looking for something interesting or if you have something in your mind, there is a chance it was has been discussed.
+  - Looking for a good place to start contributing? How about checking out some [good first issues](https://github.com/cosmos/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)?
 2. Determine whether a GitHub issue or discussion is more appropriate for your needs:
   1. If want to propose something new that requires specification or an additional design, or you would like to change a process, start with a [new discussion](https://github.com/cosmos/cosmos-sdk/discussions/new). With discussions, we can better handle the design process using discussion threads. A discussion usually leads to one or more issues.
    2. If the issue you want addressed is a specific proposal or a bug, then open a [new issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose).
@@ -39,22 +40,10 @@ contributors, the general procedure for contributing has been established:
       to begin work.
 5. To submit your work as a contribution to the repository follow standard GitHub best practices. See [pull request guideline](#pull-requests) below.
 
-
 **Note: ** For very small or blatantly obvious problems such as typos, you are
 not required to an open issue to submit a PR, but be aware that for more complex
 problems/features, if a PR is opened before an adequate design discussion has
 taken place in a GitHub issue, that PR runs a high likelihood of being rejected.
-
-Other notes:
-
-- Looking for a good place to start contributing? How about checking out some
-  [good first issues](https://github.com/cosmos/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
-- Please make sure to run `make format` before every commit - the easiest way
-  to do this is have your editor run it for you upon saving a file (most of the editors
-  will do it anyway using a pre-configured setup of the programming language mode).
-  Additionally please ensure that your code is lint compliant by running `make lint-fix`.
-  A convenience git `pre-commit` hook that runs the formatters automatically
-  before each commit is available in the `contrib/githooks/` directory.
 
 ## Architecture Decision Records (ADR)
 
@@ -71,35 +60,19 @@ When proposing an architecture decision for the SDK, please start by opening an 
   - For core developers working within the `cosmos-sdk` repo, follow branch name conventions to ensure a clear
     ownership of branches: `{moniker}/{issue#}-branch-name`.
   - See [Branching Model](#branching-model-and-release) for more details.
+- Please make sure to run `make format` before every commit - the easiest way
+  to do this is have your editor run it for you upon saving a file (most of the editors
+  will do it anyway using a pre-configured setup of the programming language mode).
+  Additionally please ensure that your code is lint compliant by running `make lint-fix`.
+  A convenience git `pre-commit` hook that runs the formatters automatically
+  before each commit is available in the `contrib/githooks/` directory.
+- Follow the [CONTRIBUTING GUIDELINES](CONTRIBUTING-GUIDELINES.md).
 
 Code is merged into master through pull request procedure.
 
 ### Testing
 
 Tests can be ran by running `make test` at the top level of the SDK repository.
-
-We expect tests to use `require` or `assert` rather than `t.Skip` or `t.Fail`,
-unless there is a reason to do otherwise.
-When testing a function under a variety of different inputs, we prefer to use
-[table driven tests](https://github.com/golang/go/wiki/TableDrivenTests).
-Table driven test error messages should follow the following format
-`<desc>, tc #<index>, i #<index>`.
-`<desc>` is an optional short description of whats failing, `tc` is the
-index within the table of the testcase that is failing, and `i` is when there
-is a loop, exactly which iteration of the loop failed.
-The idea is you should be able to see the
-error message and figure out exactly what failed.
-Here is an example check:
-
-```go
-<some table>
-for tcIndex, tc := range cases {
-  <some code>
-  resp, err := doSomething()
-  require.NoError(err)
-  require.Equal(t, tc.expected, resp, "should correctly perform X")
-```
-
 
 ### Pull Requests
 
@@ -111,10 +84,9 @@ Then:
 
 1. If you have something to show, **start with a `Draft` PR**. It's good to have early validation of your work and we highly recommend this practice. A Draft PR also indicates to the community that the work is in progress.
    Draft PRs also helps the core team provide early feedback and ensure the work is in the right direction.
-2. Follow the [CONTRIBUTING GUIDELINES](CONTRIBUTING-GUIDELINES.md).
-3. When the code is complete, change your PR from `Draft` to `Ready for Review`.
-4. Go through the actions for each checkbox present in the PR template description. The PR actions are automatically provided for each new PR.
-5. Be sure to include a relevant changelog entry in the `Unreleased` section of `CHANGELOG.md` (see file for log format).
+2. When the code is complete, change your PR from `Draft` to `Ready for Review`.
+3. Go through the actions for each checkbox present in the PR template description. The PR actions are automatically provided for each new PR.
+4. Be sure to include a relevant changelog entry in the `Unreleased` section of `CHANGELOG.md` (see file for log format).
 
 PRs must have a category prefix that is based on the type of changes being made (for example, `fix`, `feat`,
 `refactor`, `docs`, and so on). The *type* must be included in the PR title as a prefix (for example,

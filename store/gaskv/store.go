@@ -39,6 +39,7 @@ func (gs *Store) Get(key []byte) (value []byte) {
 	value = gs.parent.Get(key)
 
 	// TODO overflow-safe math?
+	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostPerByte*types.Gas(len(key)), types.GasReadPerByteDesc)
 	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostPerByte*types.Gas(len(value)), types.GasReadPerByteDesc)
 
 	return value

@@ -43,7 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 + [\#10128](https://github.com/cosmos/cosmos-sdk/pull/10128) Change default value of `DAEMON_RESTART_AFTER_UPGRADE` to `true`.
 + [\#9999](https://github.com/cosmos/cosmos-sdk/pull/10103) Added `version` command that returns the cosmovisor version and the application version.
 + [\#9973](https://github.com/cosmos/cosmos-sdk/pull/10056) Added support for pre-upgrade command in Cosmovisor to be called before the binary is upgraded. Added new environmental variable `DAEMON_PREUPGRADE_MAX_RETRIES` that holds the maximum number of times to reattempt pre-upgrade before failing.
-
++ [\#10126](https://github.com/cosmos/cosmos-sdk/pull/10229) Added `help`.
 
 ### Improvements
 

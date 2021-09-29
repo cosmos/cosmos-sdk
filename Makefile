@@ -354,8 +354,7 @@ lint-fix:
 	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLintFix}$$"; then docker start -a $(containerMarkdownLintFix); else docker run --name $(containerMarkdownLintFix) -i -v "$(CURDIR):/work" $(markdownLintImage) . --fix; fi
 
 lint-go:
-	echo $(GIT_DIFF)
-	$(golangci_lint_cmd) run --out-format=tab $(GIT_DIFF)
+	$(golangci_lint_cmd) run --out-format=tab --timeout=5m
 
 .PHONY: lint lint-fix
 

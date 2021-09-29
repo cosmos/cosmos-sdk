@@ -21,6 +21,8 @@ jobs:
         with:
           PATTERNS: |
             **/**.go
+            go.mod
+            go.sum
       - name: run go linters
         run: make lint-go
         if: env.GIT_DIFF

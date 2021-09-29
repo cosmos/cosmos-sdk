@@ -198,21 +198,18 @@ func sliceToSet(slice []uint64) map[uint64]struct{} {
 func TestPruning(t *testing.T) {
 	// Save versions up to 10 and verify pruning at final commit
 	testCases := []struct {
-		keepRecent uint64
-		keepEvery  uint64
-		interval   uint64
-		kept       []uint64
+		types.PruningOptions
+		kept []uint64
 	}{
-		{2, 4, 10, []uint64{4, 8, 9, 10}},
-		{0, 4, 10, []uint64{4, 8, 10}},
-		{0, 0, 10, []uint64{10}},                           // everything
-		{0, 1, 0, []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}}, // nothing
+		{types.PruningOptions{2, 4, 10}, []uint64{4, 8, 9, 10}},
+		{types.PruningOptions{0, 4, 10}, []uint64{4, 8, 10}},
+		{types.PruneEverything, []uint64{10}},
+		{types.PruneNothing, []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
 	}
 
 	for tci, tc := range testCases {
-		opts := types.PruningOptions{tc.keepRecent, tc.keepEvery, tc.interval}
 		db := memdb.NewDB()
-		store, err := NewStore(db, StoreConfig{Pruning: opts})
+		store, err := NewStore(db, StoreConfig{Pruning: tc.PruningOptions})
 		require.NoError(t, err)
 
 		for i := byte(1); i <= 10; i++ {

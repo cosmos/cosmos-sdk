@@ -15,7 +15,7 @@ This document is an extension to [CONTRIBUTING](./CONTRIBUTING.md) and provides 
 + publicly-exposed functions are named logically, have forward-thinking arguments and return types.
 + Avoid global variables and global configurators.
 + Favor composable and extensible designs.
-+ Minimize code duplicaiton.
++ Minimize code duplication.
 + Limit third-party dependencies.
 
 Performance:

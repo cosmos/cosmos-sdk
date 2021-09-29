@@ -13,54 +13,55 @@ import (
 
 type handlerFun func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error)
 
-type postTxHandler struct {
+type customTxHandler struct {
 	handler handlerFun
-	inner   tx.Handler
+	next    tx.Handler
 }
 
-var _ tx.Handler = postTxHandler{}
+var _ tx.Handler = customTxHandler{}
 
-// PostTxHandlerMiddleware is being used in tests for testing post execution of txHandler middlewares.
-func PostTxHandlerMiddleware(handler handlerFun) tx.Middleware {
+// CustomTxMiddleware is being used in tests for testing
+// custom pre-`runMsgs` logic (also called antehandlers before).
+func CustomTxHandlerMiddleware(handler handlerFun) tx.Middleware {
 	return func(txHandler tx.Handler) tx.Handler {
-		return postTxHandler{
+		return customTxHandler{
 			handler: handler,
-			inner:   txHandler,
+			next:    txHandler,
 		}
 	}
 }
 
 // CheckTx implements tx.Handler.CheckTx method.
-func (txh postTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (txh customTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	sdkCtx, err := txh.runHandler(ctx, tx, req.Tx, false)
 	if err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
 
-	return txh.inner.CheckTx(sdk.WrapSDKContext(sdkCtx), tx, req)
+	return txh.next.CheckTx(sdk.WrapSDKContext(sdkCtx), tx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx method.
-func (txh postTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+func (txh customTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	sdkCtx, err := txh.runHandler(ctx, tx, req.Tx, false)
 	if err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
 
-	return txh.inner.DeliverTx(sdk.WrapSDKContext(sdkCtx), tx, req)
+	return txh.next.DeliverTx(sdk.WrapSDKContext(sdkCtx), tx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
-func (txh postTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (txh customTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	sdkCtx, err := txh.runHandler(ctx, sdkTx, req.TxBytes, true)
 	if err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}
 
-	return txh.inner.SimulateTx(sdk.WrapSDKContext(sdkCtx), sdkTx, req)
+	return txh.next.SimulateTx(sdk.WrapSDKContext(sdkCtx), sdkTx, req)
 }
 
-func (txh postTxHandler) runHandler(ctx context.Context, tx sdk.Tx, txBytes []byte, isSimulate bool) (sdk.Context, error) {
+func (txh customTxHandler) runHandler(ctx context.Context, tx sdk.Tx, txBytes []byte, isSimulate bool) (sdk.Context, error) {
 	err := validateBasicTxMsgs(tx.GetMsgs())
 	if err != nil {
 		return sdk.Context{}, err

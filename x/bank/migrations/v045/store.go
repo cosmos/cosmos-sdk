@@ -1,4 +1,4 @@
-package v044
+package v045
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-// MigrateStore performs in-place store migrations from v0.43 to v0.44. The
+// MigrateStore performs in-place store migrations from v0.43 to v0.45. The
 // migration includes:
 //
 // - Migrate coin storage to save only amount.

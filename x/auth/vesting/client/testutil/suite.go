@@ -130,3 +130,82 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 		})
 	}
 }
+
+func (s *IntegrationTestSuite) TestNewMsgCreatePeriodicVestingAccountCmd() {
+	val := s.network.Validators[0]
+	testCases := map[string]struct {
+		args         []string
+		expectErr    bool
+		expectedCode uint32
+		respType     proto.Message
+	}{
+		"create a periodic vesting account": {
+			args: []string{
+				sdk.AccAddress("addr5_______________").String(),
+				"testdata/periods1.json",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    false,
+			expectedCode: 0,
+			respType:     &sdk.TxResponse{},
+		},
+		"bad to address": {
+			args: []string{
+				"foo",
+				"testdata/periods1.json",
+			},
+			expectErr: true,
+		},
+		"bad from address": {
+			args: []string{
+				sdk.AccAddress("addr5_______________").String(),
+				"testdata/periods1.json",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, "foo"),
+			},
+			expectErr: true,
+		},
+		"bad file": {
+			args: []string{
+				sdk.AccAddress("addr6_______________").String(),
+				"testdata/noexist",
+			},
+			expectErr: true,
+		},
+		"bad json": {
+			args: []string{
+				sdk.AccAddress("addr7_______________").String(),
+				"testdata/badjson",
+			},
+			expectErr: true,
+		},
+		"bad periods": {
+			args: []string{
+				sdk.AccAddress("addr8_______________").String(),
+				"testdata/badperiod.json",
+			},
+			expectErr: true,
+		},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+
+		s.Run(name, func() {
+			clientCtx := val.ClientCtx
+
+			bw, err := clitestutil.ExecTestCLICmd(clientCtx, cli.NewMsgCreatePeriodicVestingAccountCmd(), tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(bw.Bytes(), tc.respType), bw.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code)
+			}
+		})
+	}
+}

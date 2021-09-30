@@ -89,7 +89,7 @@ func (s *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 
 // createTestAccounts creates `numAccs` accounts, and return all relevant
 // information about them including their private keys.
-func (s *MWTestSuite) createTestAccounts(ctx sdk.Context, numAccs int) []testAccount {
+func (s *MWTestSuite) createTestAccounts(ctx sdk.Context, numAccs int, coins sdk.Coins) []testAccount {
 	var accounts []testAccount
 
 	for i := 0; i < numAccs; i++ {
@@ -98,13 +98,11 @@ func (s *MWTestSuite) createTestAccounts(ctx sdk.Context, numAccs int) []testAcc
 		err := acc.SetAccountNumber(uint64(i))
 		s.Require().NoError(err)
 		s.app.AccountKeeper.SetAccount(ctx, acc)
-		someCoins := sdk.Coins{
-			sdk.NewInt64Coin("atom", 10000000),
-		}
-		err = s.app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, someCoins)
+
+		err = s.app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
 		s.Require().NoError(err)
 
-		err = s.app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, someCoins)
+		err = s.app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, coins)
 		s.Require().NoError(err)
 
 		accounts = append(accounts, testAccount{acc, priv})

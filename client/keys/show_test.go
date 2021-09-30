@@ -57,7 +57,7 @@ func Test_runShowCmd(t *testing.T) {
 	require.EqualError(t, cmd.ExecuteContext(ctx), "invalid is not a valid name or address: decoding bech32 failed: invalid bech32 string length 7")
 
 	cmd.SetArgs([]string{"invalid1", "invalid2"})
-	require.EqualError(t, cmd.ExecuteContext(ctx), "invalid1 is not a valid name or address: decoding bech32 failed: invalid index of 1")
+	require.EqualError(t, cmd.ExecuteContext(ctx), "invalid1 is not a valid name or address: decoding bech32 failed: invalid separator index 7")
 
 	fakeKeyName1 := "runShowCmd_Key1"
 	fakeKeyName2 := "runShowCmd_Key2"

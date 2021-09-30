@@ -33,19 +33,27 @@ func startInProcess(cfg Config, val *Validator) error {
 
 	app := cfg.AppConstructor(*val)
 
-	tmNode, err := node.New(
+	genDoc, err := types.GenesisDocFromFile(tmCfg.GenesisFile())
+	if err != nil {
+		return err
+	}
+
+	val.tmNode, err = node.New(
 		tmCfg,
 		logger.With("module", val.Moniker),
 		abciclient.NewLocalCreator(app),
-		nil,
+		genDoc,
 	)
 	if err != nil {
 		return err
 	}
-	val.tmNode = tmNode
+
+	if err := val.tmNode.Start(); err != nil {
+		return err
+	}
 
 	if val.RPCAddress != "" {
-		node, ok := tmNode.(local.NodeService)
+		node, ok := val.tmNode.(local.NodeService)
 		if !ok {
 			panic("can't cast service.Service to NodeService")
 		}
@@ -103,7 +111,6 @@ func startInProcess(cfg Config, val *Validator) error {
 			}
 		}
 	}
-
 	return nil
 }
 

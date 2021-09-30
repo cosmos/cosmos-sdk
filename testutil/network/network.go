@@ -432,8 +432,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		if err != nil {
 			return nil, err
 		}
-
-		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), appCfg)
+		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), appCfg)
 
 		clientCtx := client.Context{}.
 			WithKeyringDir(clientDir).
@@ -472,14 +471,20 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 	}
 
 	l.Log("starting test network...")
-	for _, v := range network.Validators {
+	for idx, v := range network.Validators {
 		err := startInProcess(cfg, v)
 		if err != nil {
 			return nil, err
 		}
+		l.Log("started validator", idx)
 	}
 
-	l.Log("started test network")
+	height, err := network.LatestHeight()
+	if err != nil {
+		return nil, err
+	}
+
+	l.Log("started test network at height:", height)
 
 	// Ensure we cleanup incase any test was abruptly halted (e.g. SIGINT) as any
 	// defer in a test would not be called.
@@ -514,7 +519,10 @@ func (n *Network) WaitForHeight(h int64) (int64, error) {
 // provide a custom timeout.
 func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, error) {
 	ticker := time.NewTicker(time.Second)
-	timeout := time.After(t)
+	defer ticker.Stop()
+
+	timeout := time.NewTimer(t)
+	defer timeout.Stop()
 
 	if len(n.Validators) == 0 {
 		return 0, errors.New("no validators available")
@@ -525,8 +533,7 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 
 	for {
 		select {
-		case <-timeout:
-			ticker.Stop()
+		case <-timeout.C:
 			return latestHeight, errors.New("timeout exceeded waiting for block")
 		case <-ticker.C:
 			status, err := val.RPCClient.Status(context.Background())

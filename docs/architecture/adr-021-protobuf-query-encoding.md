@@ -87,7 +87,7 @@ The custom queries for our module are implemented by implementing this interface
 The first parameter in this generated interface is a generic `context.Context`,
 whereas querier methods generally need an instance of `sdk.Context` to read
 from the store. Since arbitrary values can be attached to `context.Context`
-using the `WithValue` and `Value` methods, the SDK should provide a function
+using the `WithValue` and `Value` methods, the Cosmos SDK should provide a function
 `sdk.UnwrapSDKContext` to retrieve the `sdk.Context` from the provided
 `context.Context`.
 
@@ -186,7 +186,7 @@ approach, there will be no need to generate separate REST query handlers, just
 query servers as described above as grpc-gateway handles the translation of protobuf
 to REST as well as Swagger definitions.
 
-The SDK should provide CLI commands for apps to start GRPC gateway either in
+The Cosmos SDK should provide CLI commands for apps to start GRPC gateway either in
 a separate process or the same process as the ABCI app, as well as provide a
 command for generating grpc-gateway proxy `.proto` files and the `swagger.json`
 file.

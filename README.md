@@ -52,7 +52,7 @@ breaking changes.
 
 To learn how the SDK works from a high-level perspective, go to the [SDK Intro](./docs/intro/overview.md).
 
-If you want to get started quickly and learn how to build on top of the SDK, please follow the [SDK Application Tutorial](https://tutorials.cosmos.network/nameservice/tutorial/00-intro.html). You can also fork the tutorial's repository to get started building your own Cosmos SDK application.
+If you want to get started quickly and learn how to build on top of the SDK, please visit the [tutorials website](https://tutorials.cosmos.network). You can also fork the tutorial's repository to get started building your own Cosmos SDK application.
 
 For more, please go to the [Cosmos SDK Docs](./docs/).
 

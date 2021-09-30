@@ -53,6 +53,10 @@ func (s *StdTxBuilder) SetFeeAmount(amount sdk.Coins) {
 	s.StdTx.Fee.Amount = amount
 }
 
+func (s *StdTxBuilder) SetFeePayer(sdk.AccAddress) {
+	panic("StdTxBuilder does not support fee payer")
+}
+
 func (s *StdTxBuilder) SetGasLimit(limit uint64) {
 	s.StdTx.Fee.Gas = limit
 }

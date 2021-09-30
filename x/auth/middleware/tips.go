@@ -11,21 +11,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
-
-// bankKeeper defines the contract needed for transferring tips.
-type bankKeeper interface {
-	SendCoins(ctx sdk.Context, from, to sdk.AccAddress, amt sdk.Coins) error
-}
 
 type tipsTxHandler struct {
 	next       tx.Handler
-	bankKeeper bankKeeper
+	bankKeeper types.BankKeeper
 }
 
-// TipsTxMiddleware TODO
-func TipsTxMiddleware(txh tx.Handler) tx.Handler {
-	return tipsTxHandler{next: txh}
+// NewTipsTxMiddleware returns a new middleware for handling meta-transactions
+// with tips.
+func NewTipsTxMiddleware(bankKeeper types.BankKeeper) tx.Middleware {
+	return func(txh tx.Handler) tx.Handler {
+		return tipsTxHandler{txh, bankKeeper}
+	}
 }
 
 var _ tx.Handler = tipsTxHandler{}

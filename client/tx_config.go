@@ -41,6 +41,7 @@ type (
 		SetSignatures(signatures ...signingtypes.SignatureV2) error
 		SetMemo(memo string)
 		SetFeeAmount(amount sdk.Coins)
+		SetFeePayer(feePayer sdk.AccAddress)
 		SetGasLimit(limit uint64)
 		SetTip(tip *tx.Tip)
 		SetTimeoutHeight(height uint64)

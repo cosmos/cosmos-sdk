@@ -24,7 +24,6 @@ chain halt when the upgrade Plan contains a bad link or the resource with the
 binary will be temporarily unavailable. We are planning on adding a upgrade
 verification command which can potentially solve this issue.
 
-
 ## Other updates
 
 + Changed default value of `DAEMON_RESTART_AFTER_UPGRADE` to `true`.

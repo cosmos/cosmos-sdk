@@ -667,7 +667,6 @@
     - [SignDocDirectAux](#cosmos.tx.v1beta1.SignDocDirectAux)
     - [SignDocJSON](#cosmos.tx.v1beta1.SignDocJSON)
     - [SignerInfo](#cosmos.tx.v1beta1.SignerInfo)
-    - [StdSignDocAux](#cosmos.tx.v1beta1.StdSignDocAux)
     - [Tip](#cosmos.tx.v1beta1.Tip)
     - [Tx](#cosmos.tx.v1beta1.Tx)
     - [TxBody](#cosmos.tx.v1beta1.TxBody)
@@ -9547,27 +9546,6 @@ signer.
 | `public_key` | [google.protobuf.Any](#google.protobuf.Any) |  | public_key is the public key of the signer. It is optional for accounts that already exist in state. If unset, the verifier can use the required \ signer address for this position and lookup the public key. |
 | `mode_info` | [ModeInfo](#cosmos.tx.v1beta1.ModeInfo) |  | mode_info describes the signing mode of the signer and is a nested structure to support nested multisig pubkey's |
 | `sequence` | [uint64](#uint64) |  | sequence is the sequence of the account, which describes the number of committed transactions signed by a given address. It is used to prevent replay attacks. |
-
-
-
-
-
-
-<a name="cosmos.tx.v1beta1.StdSignDocAux"></a>
-
-### StdSignDocAux
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `account_number` | [uint64](#uint64) |  | account_number is the account number of the account in state. |
-| `sequence` | [uint64](#uint64) |  | sequence is the sequence number of the signing account. |
-| `timeout_height` | [uint64](#uint64) |  | timeout is the block height after which this transaction will not be processed by the chain |
-| `chain_id` | [string](#string) |  | chain_id is the unique identifier of the chain this transaction targets. It prevents signed transactions from being used on another chain by an attacker |
-| `memo` | [string](#string) |  | memo is any arbitrary note/comment to be added to the transaction. WARNING: in clients, any publicly exposed text should not be called memo, but should be called `note` instead (see https://github.com/cosmos/cosmos-sdk/issues/9122). |
-| `msgs` | [bytes](#bytes) | repeated | msgs |
-| `tip` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | Tip is the optional tip used for meta-transactions. |
 
 
 

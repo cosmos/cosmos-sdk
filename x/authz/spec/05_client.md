@@ -18,7 +18,7 @@ simd query authz --help
 
 #### grants
 
-The `grants` command allows users to query grants for a granter-grantee pair. If the message type URL is set, it will select grants only for that message type.
+The `grants` command allows users to query grants for a granter-grantee pair. If the message type URL is set, it selects grants only for that message type.
 
 ```bash
 simd query authz grants [granter-addr] [grantee-addr] [msg-type-url]? [flags]
@@ -99,7 +99,7 @@ A user can query the `authz` module using gRPC endpoints.
 
 ### Grants
 
-The `Grants` endpoint allows users to query grants for a granter-grantee pair. If the message type URL is set, it will select grants only for that message type.
+The `Grants` endpoint allows users to query grants for a granter-grantee pair. If the message type URL is set, it selects grants only for that message type.
 
 ```bash
 cosmos.authz.v1beta1.Query/Grants

@@ -38,7 +38,6 @@ var (
 	KeyMaxEntries        = []byte("MaxEntries")
 	KeyBondDenom         = []byte("BondDenom")
 	KeyHistoricalEntries = []byte("HistoricalEntries")
-	KeyPowerReduction    = []byte("PowerReduction")
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)

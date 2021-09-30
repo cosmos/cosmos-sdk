@@ -254,6 +254,13 @@ func (w *wrapper) SetFeeAmount(coins sdk.Coins) {
 	w.authInfoBz = nil
 }
 
+func (w *wrapper) SetTip(tip *tx.Tip) {
+	w.tx.AuthInfo.Tip = tip
+
+	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
+	w.authInfoBz = nil
+}
+
 func (w *wrapper) SetFeePayer(feePayer sdk.AccAddress) {
 	if w.tx.AuthInfo.Fee == nil {
 		w.tx.AuthInfo.Fee = &tx.Fee{}

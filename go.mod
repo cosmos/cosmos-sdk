@@ -34,7 +34,7 @@ require (
 	github.com/onsi/gomega v1.13.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0
-	github.com/prometheus/common v0.30.0
+	github.com/prometheus/common v0.31.1
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
 	github.com/rs/zerolog v1.25.0

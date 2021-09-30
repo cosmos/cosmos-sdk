@@ -76,7 +76,10 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
+<<<<<<< HEAD
 
+=======
+>>>>>>> cc1a1c8cd (fix: --home flag parsing (#10226))
 			config.SetRoot(clientCtx.HomeDir)
 
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)

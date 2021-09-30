@@ -9567,7 +9567,7 @@ signer.
 | `chain_id` | [string](#string) |  | chain_id is the unique identifier of the chain this transaction targets. It prevents signed transactions from being used on another chain by an attacker |
 | `memo` | [string](#string) |  | memo is any arbitrary note/comment to be added to the transaction. WARNING: in clients, any publicly exposed text should not be called memo, but should be called `note` instead (see https://github.com/cosmos/cosmos-sdk/issues/9122). |
 | `msgs` | [bytes](#bytes) | repeated | msgs |
-| `tip` | [bytes](#bytes) | repeated | Tip is the optional tip used for meta-transactions. |
+| `tip` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | Tip is the optional tip used for meta-transactions. |
 
 
 

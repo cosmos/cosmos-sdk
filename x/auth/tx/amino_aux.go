@@ -1,12 +1,14 @@
 package tx
 
 import (
+	"encoding/json"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
@@ -39,15 +41,25 @@ func (signModeAminoAuxHandler) GetSignBytes(
 		return nil, fmt.Errorf("can only handle a protobuf Tx, got %T", tx)
 	}
 
+	msgs := protoTx.GetMsgs()
+	msgsBytes := make([]json.RawMessage, 0, len(msgs))
+	for _, msg := range msgs {
+		legacyMsg, ok := msg.(legacytx.LegacyMsg)
+		if !ok {
+			panic(fmt.Errorf("expected %T when using amino JSON", (*legacytx.LegacyMsg)(nil)))
+		}
+
+		msgsBytes = append(msgsBytes, json.RawMessage(legacyMsg.GetSignBytes()))
+	}
+
 	signDocDirectAux := types.StdSignDocAux{
 		AccountNumber: data.AccountNumber,
 		Sequence:      data.Sequence,
 		TimeoutHeight: protoTx.GetTimeoutHeight(),
 		ChainId:       data.ChainID,
 		Memo:          protoTx.tx.Body.Memo,
-		// TODO
-		// Msgs:          protoTx.GetMsgs(),
-		// Tip:           protoTx.tx.AuthInfo.Tip,
+		Tip:           protoTx.tx.AuthInfo.Tip.Amount,
+		Msgs:          msgsBytes,
 	}
 
 	return signDocDirectAux.Marshal()

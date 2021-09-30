@@ -280,7 +280,5 @@ message StdSignDocAux {
   ];
 
   // Tip is the optional tip used for meta-transactions.
-  repeated bytes tip = 7 [ 
-    (gogoproto.casttype) = "encoding/json.RawMessage"
-  ];
+  repeated cosmos.base.v1beta1.Coin tip = 7;
 }

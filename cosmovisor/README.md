@@ -5,13 +5,14 @@
 #### Design
 
 Cosmovisor is designed to be used as a wrapper for an `Cosmos SDK` app:
-* it will pass all arguments to the app. Running `cosmovisor arg1 arg2 ....` will run `app arg1 arg2 ...`;
+* it will pass all arguments to the associated app (configured by `DAEMON_NAME` env variable).
+  Running `cosmovisor arg1 arg2 ....` will run `app arg1 arg2 ...`;
 * it will manage an app by restarting and upgrading if needed;
 * it is configured using environment variables, not positional arguments.
 
 *Note: If new versions of the application are not set up to run in-place store migrations, migrations will need to be run manually before restarting `cosmovisor` with the new binary. For this reason, we recommend applications adopt in-place store migrations.*
 
-*Note: If validators would like to enable the auto-download option, and they are currently running an application using Cosmos SDK `v0.42`, they will need to use Cosmovisor [`v0.1`](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv0.1.0). Later versions of Cosmovisor do not support Cosmos SDK `v0.42` or earlier if the auto-download option is enabled.*
+*Note: If validators would like to enable the auto-download option (which [we don't recommend](#auto-download)), and they are currently running an application using Cosmos SDK `v0.42`, they will need to use Cosmovisor [`v0.1`](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv0.1.0). Later versions of Cosmovisor do not support Cosmos SDK `v0.42` or earlier if the auto-download option is enabled.*
 
 ## Contributing
 
@@ -43,7 +44,7 @@ All arguments passed to `cosmovisor` will be passed to the application binary (a
 * `DAEMON_RESTART_AFTER_UPGRADE` (*optional*, default = `true`), if `true`, restarts the subprocess with the same command-line arguments and flags (but with the new binary) after a successful upgrade. Otherwise (`false`), `cosmovisor` stops running after an upgrade and requires the system administrator to manually restart it. Note restart is only after the upgrade and does not auto-restart the subprocess after an error occurs.
 * `DAEMON_POLL_INTERVAL` is the interval length in milliseconds for polling the upgrade plan file. Default: 300.
 * `UNSAFE_SKIP_BACKUP` (defaults to `false`), if set to `false`, backs up the data before trying the upgrade. Otherwise (`true`), upgrades directly without performing a backup. The default value of false is useful and recommended in case of failures and when a backup needed to rollback. We recommend using the default backup option `UNSAFE_SKIP_BACKUP=false`.
-* `DAEMON_PREUPGRADE_MAX_RETRIES` (defaults to `0`). The maximum number of times to call `pre-upgrade` in the application after exit status of `31`. After the maximum number of retries, cosmovisor fails the upgrade. 
+* `DAEMON_PREUPGRADE_MAX_RETRIES` (defaults to `0`). The maximum number of times to call `pre-upgrade` in the application after exit status of `31`. After the maximum number of retries, cosmovisor fails the upgrade.
 
 
 ### Folder Layout
@@ -92,12 +93,12 @@ The `DAEMON` specific code and operations (e.g. tendermint config, the applicati
 
 ### Commands
 
-Because Cosmovisor is meant to be used as a wrapper for a Cosmos SDK application, it does not require many commands. 
+Because Cosmovisor is meant to be used as a wrapper for a Cosmos SDK application, it does not require many commands.
 
 To determine the version of Cosmovisor, run the following command:
 ```
 cosmovisor version
-``` 
+```
 The output of the `cosmovisor version` command shows the version of the Cosmos SDK application and the version of Cosmovisor:
 
 ```
@@ -115,13 +116,17 @@ The following heuristic is applied to detect the upgrade:
 + If `cosmovisor/current/upgrade-info.json` doesn't exist but `data/upgrade-info.json` exists, then `cosmovisor` assumes that whatever is in `data/upgrade-info.json` is a valid upgrade request. In this case `cosmovisor` tries immediately to make an upgrade according to the `name` attribute in `data/upgrade-info.json`.
 + Otherwise, `cosmovisor` waits for changes in `upgrade-info.json`. As soon as a new upgrade name is recorded in the file, `cosmovisor` will trigger an upgrade mechanism.
 
-When the upgrade mechanism is triggered, `cosmovisor` will start by auto-downloading a new binary (if `DAEMON_ALLOW_DOWNLOAD_BINARIES` is enabled) into `cosmovisor/<name>/bin` (where `<name>` is the `upgrade-info.json:name` attribute). `cosmovisor` will then update the `current` symbolic link to point to the new directory and save `data/upgrade-info.json` to `cosmovisor/current/upgrade-info.json`.
+When the upgrade mechanism is triggered, `cosmovisor` will:
+1. if `DAEMON_ALLOW_DOWNLOAD_BINARIES` is enabled, start by auto-downloading a new binary into `cosmovisor/<name>/bin` (where `<name>` is the `upgrade-info.json:name` attribute);
+2. update the `current` symbolic link to point to the new directory and save `data/upgrade-info.json` to `cosmovisor/current/upgrade-info.json`.
 
 ### Auto-Download
 
-Generally, `cosmovisor` requires that the system administrator place all relevant binaries on disk before the upgrade happens. However, for people who don't need such control and want an easier setup (maybe they are syncing a non-validating fullnode and want to do little maintenance), there is another option.
+Generally, `cosmovisor` requires that the system administrator place all relevant binaries on disk before the upgrade happens. However, for people who don't need such control and want an automated setup (maybe they are syncing a non-validating fullnode and want to do little maintenance), there is another option.
 
-If `DAEMON_ALLOW_DOWNLOAD_BINARIES` is set to `true`, and no local binary can be found when an upgrade is triggered, `cosmovisor` will attempt to download and install the binary itself. The plan stored in the upgrade module has an info field for arbitrary JSON. This info is expected to be outputed on the halt log message. There are two valid formats to specify a download in such a message:
+**NOTE: we don't recommend using auto-download** because it doesn't verify in advance if a binary is available. If there will be any issue with downloading a binary, the cosmovisor will stop and won't restart an App (which could lead to a chain halt).
+
+If `DAEMON_ALLOW_DOWNLOAD_BINARIES` is set to `true`, and no local binary can be found when an upgrade is triggered, `cosmovisor` will attempt to download and install the binary itself based on the instructions in the `info` attribute in the `data/upgrade-info.json` file. The files is constructed by the x/upgrade module and contains data from the upgrade `Plan` object. The `Plan` has an info field that is expected to have one of the following two valid formats to specify a download:
 
 1. Store an os/architecture -> binary URI map in the upgrade plan info field as JSON under the `"binaries"` key. For example:
 

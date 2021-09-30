@@ -24,7 +24,7 @@ Contributing to this repo can mean many things such as participating in
 discussion or proposing code changes. To ensure a smooth workflow for all
 contributors, the general procedure for contributing has been established:
 
-1. Start by browsing [new issue](https://github.com/cosmos/cosmos-sdk/issues) and [discussions](https://github.com/cosmos/cosmos-sdk/discussions). If you are looking for something interesting or if you have something in your mind, there is a chance it was has been discussed.
+1. Start by browsing [new issues](https://github.com/cosmos/cosmos-sdk/issues) and [discussions](https://github.com/cosmos/cosmos-sdk/discussions). If you are looking for something interesting or if you have something in your mind, there is a chance it was has been discussed.
   - Looking for a good place to start contributing? How about checking out some [good first issues](https://github.com/cosmos/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)?
 2. Determine whether a GitHub issue or discussion is more appropriate for your needs:
   1. If want to propose something new that requires specification or an additional design, or you would like to change a process, start with a [new discussion](https://github.com/cosmos/cosmos-sdk/discussions/new). With discussions, we can better handle the design process using discussion threads. A discussion usually leads to one or more issues.
@@ -200,9 +200,9 @@ If needed, we backport a commit from `master` to a release branch (excluding con
 
 ### Major Release Procedure
 
-A _major release_ is an increment of the first number (eg: `v1.2` → `v2.0.0`) or the __point number_ (eg: `v1.1 → v1.2.0`, also called _point release_).
+A _major release_ is an increment of the first number (eg: `v1.2` → `v2.0.0`) or the _point number_ (eg: `v1.1 → v1.2.0`, also called _point release_).
 
-TL;DR before making a new _major_ release we do beta and release candidate releases. For example, for release 1.0.0:
+Before making a new _major_ release we do beta and release candidate releases. For example, for release 1.0.0:
 ```
 v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → v1.0.0
 ```
@@ -235,7 +235,7 @@ Following _semver_ philosophy, point releases after `v1.0`:
 
 Before `v1.0`, point release can break both point API and consensus.
 
-### Path Release Procedure
+### Patch Release Procedure
 
 A _patch release_ is an increment of the patch number (eg: `v1.2.0` → `v1.2.1`).
 
@@ -367,6 +367,6 @@ well as for PRs made as part of a release process:
 * Code reviewers should have more senior engineering capability
 * 1/2 approval is required from the **primary repo maintainers** in `CODEOWNERS`
 
-**Note**: For any major release series denoted as a "Stable Release" (e.g. v0.39 "Launchpad"), a separate release
+**Note**: For any major release series denoted as a "Stable Release" (e.g. v0.42 "Stargate"), a separate release
 committee is often established. Stable Releases, and their corresponding release committees are documented
 separately in [STABLE_RELEASES.md](./STABLE_RELEASES.md)*

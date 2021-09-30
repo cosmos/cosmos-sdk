@@ -1,4 +1,4 @@
-# Contributing Guidelines
+# Coding Guidelines
 
 This document is an extension to [CONTRIBUTING](./CONTRIBUTING.md) and provides more details about the coding guidelines and requirements.
 

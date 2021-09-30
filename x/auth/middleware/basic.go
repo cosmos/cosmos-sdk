@@ -39,6 +39,10 @@ func (basic validateBasicTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req 
 		return basic.next.CheckTx(ctx, tx, req)
 	}
 
+	if len(tx.GetMsgs()) == 0 {
+		return abci.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "must contain at least one message")
+	}
+
 	if err := tx.ValidateBasic(); err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
@@ -52,6 +56,10 @@ func (basic validateBasicTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, re
 		return abci.ResponseDeliverTx{}, err
 	}
 
+	if len(tx.GetMsgs()) == 0 {
+		return abci.ResponseDeliverTx{}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "must contain at least one message")
+	}
+
 	return basic.next.DeliverTx(ctx, tx, req)
 }
 
@@ -59,6 +67,10 @@ func (basic validateBasicTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, re
 func (basic validateBasicTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	if err := sdkTx.ValidateBasic(); err != nil {
 		return tx.ResponseSimulateTx{}, err
+	}
+
+	if len(sdkTx.GetMsgs()) == 0 {
+		return tx.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "must contain at least one message")
 	}
 
 	return basic.next.SimulateTx(ctx, sdkTx, req)

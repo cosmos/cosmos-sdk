@@ -252,3 +252,35 @@ message Tip {
   // tipper is the address of the account paying for the tip
   string tipper = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
+
+message StdSignDocAux {
+  // account_number is the account number of the account in state.
+  uint64 account_number = 1;
+
+  // sequence is the sequence number of the signing account.
+  uint64 sequence = 2;
+
+  // timeout is the block height after which this transaction will not
+  // be processed by the chain
+  uint64 timeout_height = 3;
+
+  // chain_id is the unique identifier of the chain this transaction targets.
+  // It prevents signed transactions from being used on another chain by an
+  // attacker
+  string chain_id = 4;
+
+  // memo is any arbitrary note/comment to be added to the transaction.
+  // WARNING: in clients, any publicly exposed text should not be called memo,
+  // but should be called `note` instead (see https://github.com/cosmos/cosmos-sdk/issues/9122).
+  string memo = 5;
+
+  // msgs 
+  repeated bytes msgs = 6 [ 
+    (gogoproto.casttype) = "encoding/json.RawMessage"
+  ];
+
+  // Tip is the optional tip used for meta-transactions.
+  repeated bytes tip = 7 [ 
+    (gogoproto.casttype) = "encoding/json.RawMessage"
+  ];
+}

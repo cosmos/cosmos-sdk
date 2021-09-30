@@ -667,6 +667,7 @@
     - [SignDocDirectAux](#cosmos.tx.v1beta1.SignDocDirectAux)
     - [SignDocJSON](#cosmos.tx.v1beta1.SignDocJSON)
     - [SignerInfo](#cosmos.tx.v1beta1.SignerInfo)
+    - [StdSignDocAux](#cosmos.tx.v1beta1.StdSignDocAux)
     - [Tip](#cosmos.tx.v1beta1.Tip)
     - [Tx](#cosmos.tx.v1beta1.Tx)
     - [TxBody](#cosmos.tx.v1beta1.TxBody)
@@ -2469,7 +2470,7 @@ ReflectionService defines a service for interface reflection.
 <a name="cosmos.base.reflection.v2alpha1.AppDescriptor"></a>
 
 ### AppDescriptor
-AppDescriptor describes a Cosmos SDK based application
+AppDescriptor describes a cosmos-sdk based application
 
 
 | Field | Type | Label | Description |
@@ -2750,7 +2751,7 @@ InterfaceImplementerDescriptor describes an interface implementer
 <a name="cosmos.base.reflection.v2alpha1.MsgDescriptor"></a>
 
 ### MsgDescriptor
-MsgDescriptor describes a Cosmos SDK message that can be delivered with a transaction
+MsgDescriptor describes a cosmos-sdk message that can be delivered with a transaction
 
 
 | Field | Type | Label | Description |
@@ -2783,7 +2784,7 @@ because it would be redundant with the grpc reflection service
 <a name="cosmos.base.reflection.v2alpha1.QueryServiceDescriptor"></a>
 
 ### QueryServiceDescriptor
-QueryServiceDescriptor describes a Cosmos SDK queryable service
+QueryServiceDescriptor describes a cosmos-sdk queryable service
 
 
 | Field | Type | Label | Description |
@@ -2800,12 +2801,12 @@ QueryServiceDescriptor describes a Cosmos SDK queryable service
 <a name="cosmos.base.reflection.v2alpha1.QueryServicesDescriptor"></a>
 
 ### QueryServicesDescriptor
-QueryServicesDescriptor contains the list of Cosmos SDK queriable services
+QueryServicesDescriptor contains the list of cosmos-sdk queriable services
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `query_services` | [QueryServiceDescriptor](#cosmos.base.reflection.v2alpha1.QueryServiceDescriptor) | repeated | query_services is a list of Cosmos SDK QueryServiceDescriptor |
+| `query_services` | [QueryServiceDescriptor](#cosmos.base.reflection.v2alpha1.QueryServiceDescriptor) | repeated | query_services is a list of cosmos-sdk QueryServiceDescriptor |
 
 
 
@@ -2861,7 +2862,7 @@ ReflectionService defines a service for application reflection.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `GetAuthnDescriptor` | [GetAuthnDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetAuthnDescriptorRequest) | [GetAuthnDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetAuthnDescriptorResponse) | GetAuthnDescriptor returns information on how to authenticate transactions in the application NOTE: this RPC is still experimental and might be subject to breaking changes or removal in future releases of the Cosmos SDK. | GET|/cosmos/base/reflection/v1beta1/app_descriptor/authn|
+| `GetAuthnDescriptor` | [GetAuthnDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetAuthnDescriptorRequest) | [GetAuthnDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetAuthnDescriptorResponse) | GetAuthnDescriptor returns information on how to authenticate transactions in the application NOTE: this RPC is still experimental and might be subject to breaking changes or removal in future releases of the cosmos-sdk. | GET|/cosmos/base/reflection/v1beta1/app_descriptor/authn|
 | `GetChainDescriptor` | [GetChainDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetChainDescriptorRequest) | [GetChainDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetChainDescriptorResponse) | GetChainDescriptor returns the description of the chain | GET|/cosmos/base/reflection/v1beta1/app_descriptor/chain|
 | `GetCodecDescriptor` | [GetCodecDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetCodecDescriptorRequest) | [GetCodecDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetCodecDescriptorResponse) | GetCodecDescriptor returns the descriptor of the codec of the application | GET|/cosmos/base/reflection/v1beta1/app_descriptor/codec|
 | `GetConfigurationDescriptor` | [GetConfigurationDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetConfigurationDescriptorRequest) | [GetConfigurationDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetConfigurationDescriptorResponse) | GetConfigurationDescriptor returns the descriptor for the sdk.Config of the application | GET|/cosmos/base/reflection/v1beta1/app_descriptor/configuration|
@@ -2882,7 +2883,7 @@ ReflectionService defines a service for application reflection.
 <a name="cosmos.base.snapshots.v1beta1.Metadata"></a>
 
 ### Metadata
-Metadata contains Cosmos SDK-specific snapshot metadata.
+Metadata contains SDK-specific snapshot metadata.
 
 
 | Field | Type | Label | Description |
@@ -3559,7 +3560,7 @@ Msg defines the bank Msg service.
 
 ### PrivKey
 Deprecated: PrivKey defines a ed25519 private key.
-NOTE: ed25519 keys must not be used in Cosmos SDK apps except in a tendermint validator context.
+NOTE: ed25519 keys must not be used in SDK apps except in a tendermint validator context.
 
 
 | Field | Type | Label | Description |
@@ -3574,8 +3575,8 @@ NOTE: ed25519 keys must not be used in Cosmos SDK apps except in a tendermint va
 <a name="cosmos.crypto.ed25519.PubKey"></a>
 
 ### PubKey
-PubKey is an ed25519 public key for handling Tendermint keys in the Cosmos SDK.
-It's needed for Any serialization and Cosmos SDK compatibility.
+PubKey is an ed25519 public key for handling Tendermint keys in SDK.
+It's needed for Any serialization and SDK compatibility.
 It must not be used in a non Tendermint key context because it doesn't implement
 ADR-28. Nevertheless, you will like to use ed25519 in app user level
 then you must create a new proto message and follow ADR-28 for Address construction.
@@ -9089,7 +9090,7 @@ Query defines the gRPC querier service.
 <a name="cosmos.staking.v1beta1.MsgBeginRedelegate"></a>
 
 ### MsgBeginRedelegate
-MsgBeginRedelegate defines a Cosmos SDK message for performing a redelegation
+MsgBeginRedelegate defines a SDK message for performing a redelegation
 of coins from a delegator and source validator to a destination validator.
 
 
@@ -9123,7 +9124,7 @@ MsgBeginRedelegateResponse defines the Msg/BeginRedelegate response type.
 <a name="cosmos.staking.v1beta1.MsgCreateValidator"></a>
 
 ### MsgCreateValidator
-MsgCreateValidator defines a Cosmos SDK message for creating a new validator.
+MsgCreateValidator defines a SDK message for creating a new validator.
 
 
 | Field | Type | Label | Description |
@@ -9154,7 +9155,7 @@ MsgCreateValidatorResponse defines the Msg/CreateValidator response type.
 <a name="cosmos.staking.v1beta1.MsgDelegate"></a>
 
 ### MsgDelegate
-MsgDelegate defines a Cosmos SDK message for performing a delegation of coins
+MsgDelegate defines a SDK message for performing a delegation of coins
 from a delegator to a validator.
 
 
@@ -9182,7 +9183,7 @@ MsgDelegateResponse defines the Msg/Delegate response type.
 <a name="cosmos.staking.v1beta1.MsgEditValidator"></a>
 
 ### MsgEditValidator
-MsgEditValidator defines a Cosmos SDK message for editing an existing validator.
+MsgEditValidator defines a SDK message for editing an existing validator.
 
 
 | Field | Type | Label | Description |
@@ -9210,7 +9211,7 @@ MsgEditValidatorResponse defines the Msg/EditValidator response type.
 <a name="cosmos.staking.v1beta1.MsgUndelegate"></a>
 
 ### MsgUndelegate
-MsgUndelegate defines a Cosmos SDK message for performing an undelegation from a
+MsgUndelegate defines a SDK message for performing an undelegation from a
 delegate and a validator.
 
 
@@ -9367,6 +9368,7 @@ SignMode represents a signing mode with its own security guarantees.
 | SIGN_MODE_TEXTUAL | 2 | SIGN_MODE_TEXTUAL is a future signing mode that will verify some human-readable textual representation on top of the binary representation from SIGN_MODE_DIRECT. It is currently not supported. |
 | SIGN_MODE_DIRECT_JSON | 3 | SIGN_MODE_DIRECT_JSON specifies a signing mode which uses SignDocJSON. It is verified using a canonical JSON representation of the bytes used in SIGN_MODE_DIRECT. It is currently not supported. |
 | SIGN_MODE_DIRECT_AUX | 4 | SIGN_MODE_DIRECT_AUX specifies a signing mode which uses SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode does not require signers signing over other signers' `signer_info`. It also allows for adding Tips in transactions. |
+| SIGN_MODE_AMINO_AUX | 5 | SIGN_MODE_AMINO_AUX specifies a signing mode which uses SignDocAminoAux. |
 | SIGN_MODE_LEGACY_AMINO_JSON | 127 | SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses Amino JSON and will be removed in the future. |
 
 
@@ -9545,6 +9547,27 @@ signer.
 | `public_key` | [google.protobuf.Any](#google.protobuf.Any) |  | public_key is the public key of the signer. It is optional for accounts that already exist in state. If unset, the verifier can use the required \ signer address for this position and lookup the public key. |
 | `mode_info` | [ModeInfo](#cosmos.tx.v1beta1.ModeInfo) |  | mode_info describes the signing mode of the signer and is a nested structure to support nested multisig pubkey's |
 | `sequence` | [uint64](#uint64) |  | sequence is the sequence of the account, which describes the number of committed transactions signed by a given address. It is used to prevent replay attacks. |
+
+
+
+
+
+
+<a name="cosmos.tx.v1beta1.StdSignDocAux"></a>
+
+### StdSignDocAux
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account_number` | [uint64](#uint64) |  | account_number is the account number of the account in state. |
+| `sequence` | [uint64](#uint64) |  | sequence is the sequence number of the signing account. |
+| `timeout_height` | [uint64](#uint64) |  | timeout is the block height after which this transaction will not be processed by the chain |
+| `chain_id` | [string](#string) |  | chain_id is the unique identifier of the chain this transaction targets. It prevents signed transactions from being used on another chain by an attacker |
+| `memo` | [string](#string) |  | memo is any arbitrary note/comment to be added to the transaction. WARNING: in clients, any publicly exposed text should not be called memo, but should be called `note` instead (see https://github.com/cosmos/cosmos-sdk/issues/9122). |
+| `msgs` | [bytes](#bytes) | repeated | msgs |
+| `tip` | [bytes](#bytes) | repeated | Tip is the optional tip used for meta-transactions. |
 
 
 
@@ -9873,7 +9896,7 @@ Plan specifies information about a planned upgrade and when it should occur.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  | Sets the name for the upgrade. This name will be used by the upgraded version of the software to apply any special "on-upgrade" commands during the first BeginBlock method after the upgrade is applied. It is also used to detect whether a software version can handle a given upgrade. If no upgrade handler with this name has been set in the software, it will be assumed that the software is out-of-date when the upgrade Time or Height is reached and the software will exit. |
-| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | **Deprecated.** Deprecated: Time based upgrades have been deprecated. Time based upgrade logic has been removed from the Cosmos SDK. If this field is not empty, an error will be thrown. |
+| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | **Deprecated.** Deprecated: Time based upgrades have been deprecated. Time based upgrade logic has been removed from the SDK. If this field is not empty, an error will be thrown. |
 | `height` | [int64](#int64) |  | The height at which the upgrade must be performed. Only used if Time is not set. |
 | `info` | [string](#string) |  | Any application specific upgrade info to be included on-chain such as a git commit that validators could automatically upgrade to |
 | `upgraded_client_state` | [google.protobuf.Any](#google.protobuf.Any) |  | **Deprecated.** Deprecated: UpgradedClientState field has been deprecated. IBC upgrade logic has been moved to the IBC module in the sub module 02-client. If this field is not empty, an error will be thrown. |

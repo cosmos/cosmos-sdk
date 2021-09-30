@@ -15,10 +15,10 @@ This policy presently applies *only* to the following release series:
 
 * **0.43 «Stargate»**
 
-### Point Releases
+### Patch Releases
 
 Once a Cosmos-SDK release has been completed and published, updates for it are released under certain circumstances
-and must follow the [Point Release Procedure](CONTRIBUTING.md).
+and must follow the [Patch Release Procedure](CONTRIBUTING.md#patch-release-procedure)[Point Release Procedure].
 
 ### Rationale
 

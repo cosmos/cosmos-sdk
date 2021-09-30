@@ -45,8 +45,9 @@ func (signModeAminoAuxHandler) GetSignBytes(
 		TimeoutHeight: protoTx.GetTimeoutHeight(),
 		ChainId:       data.ChainID,
 		Memo:          protoTx.tx.Body.Memo,
-		Msgs:          protoTx.GetMsgs(),
-		Tip:           protoTx.tx.AuthInfo.Tip,
+		// TODO
+		// Msgs:          protoTx.GetMsgs(),
+		// Tip:           protoTx.tx.AuthInfo.Tip,
 	}
 
 	return signDocDirectAux.Marshal()

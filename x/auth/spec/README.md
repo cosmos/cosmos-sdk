@@ -16,7 +16,7 @@ for an application, since the SDK itself is agnostic to these particulars. It co
 the ante handler, where all basic transaction validity checks (signatures, nonces, auxiliary fields)
 are performed, and exposes the account keeper, which allows other modules to read, write, and modify accounts.
 
-This module will be used in the Cosmos Hub.
+This module is used in the Cosmos Hub.
 
 ## Contents
 

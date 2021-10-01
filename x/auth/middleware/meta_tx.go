@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -31,18 +30,14 @@ var _ tx.Handler = tipsTxHandler{}
 
 // CheckTx implements tx.Handler.CheckTx.
 func (txh tipsTxHandler) CheckTx(ctx context.Context, sdkTx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	tipTx, err := assertTipTx(sdkTx)
-	if err != nil {
-		return txh.next.CheckTx(ctx, sdkTx, req)
-	}
-
-	if err := checkSigs(tipTx); err != nil {
-		return abci.ResponseCheckTx{}, err
-	}
-
 	res, err := txh.next.CheckTx(ctx, sdkTx, req)
 	if err != nil {
 		return abci.ResponseCheckTx{}, err
+	}
+
+	tipTx, ok := sdkTx.(tx.TipTx)
+	if !ok {
+		return res, err
 	}
 
 	if err := txh.transferTip(ctx, tipTx); err != nil {
@@ -54,18 +49,14 @@ func (txh tipsTxHandler) CheckTx(ctx context.Context, sdkTx sdk.Tx, req abci.Req
 
 // DeliverTx implements tx.Handler.DeliverTx.
 func (txh tipsTxHandler) DeliverTx(ctx context.Context, sdkTx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	tipTx, err := assertTipTx(sdkTx)
-	if err != nil {
-		return txh.next.DeliverTx(ctx, sdkTx, req)
-	}
-
-	if err := checkSigs(tipTx); err != nil {
-		return abci.ResponseDeliverTx{}, err
-	}
-
 	res, err := txh.next.DeliverTx(ctx, sdkTx, req)
 	if err != nil {
 		return abci.ResponseDeliverTx{}, err
+	}
+
+	tipTx, ok := sdkTx.(tx.TipTx)
+	if !ok {
+		return res, err
 	}
 
 	if err := txh.transferTip(ctx, tipTx); err != nil {
@@ -77,18 +68,14 @@ func (txh tipsTxHandler) DeliverTx(ctx context.Context, sdkTx sdk.Tx, req abci.R
 
 // SimulateTx implements tx.Handler.SimulateTx method.
 func (txh tipsTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	tipTx, err := assertTipTx(sdkTx)
-	if err != nil {
-		return txh.next.SimulateTx(ctx, sdkTx, req)
-	}
-
-	if err := checkSigs(tipTx); err != nil {
-		return tx.ResponseSimulateTx{}, err
-	}
-
 	res, err := txh.next.SimulateTx(ctx, sdkTx, req)
 	if err != nil {
 		return tx.ResponseSimulateTx{}, err
+	}
+
+	tipTx, ok := sdkTx.(tx.TipTx)
+	if !ok {
+		return res, err
 	}
 
 	if err := txh.transferTip(ctx, tipTx); err != nil {
@@ -98,31 +85,80 @@ func (txh tipsTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.Re
 	return res, err
 }
 
-func assertTipTx(sdkTx sdk.Tx) (tx.TipTx, error) {
-	tipTx, ok := sdkTx.(tx.TipTx)
-	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrTxDecode, "tx must be a TipTx, got %T", sdkTx)
+// transferTip transfers the tip from the tipper to the fee payer.
+func (txh tipsTxHandler) transferTip(ctx context.Context, tipTx tx.TipTx) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	tipper, err := sdk.AccAddressFromBech32(tipTx.GetTip().Tipper)
+	if err != nil {
+		return err
 	}
 
-	return tipTx, nil
+	return txh.bankKeeper.SendCoins(sdkCtx, tipper, tipTx.FeePayer(), tipTx.GetTip().Amount)
 }
 
-// checkSigs checks that all signatures in the tx have correct sign modes.
+type signModeTxHandler struct {
+	next tx.Handler
+}
+
+// NewTipsTxMiddleware returns a new middleware for handling meta-transactions
+// with tips.
+func SignModeTxMiddleware(txh tx.Handler) tx.Handler {
+	return signModeTxHandler{txh}
+}
+
+var _ tx.Handler = signModeTxHandler{}
+
+// CheckTx implements tx.Handler.CheckTx.
+func (txh signModeTxHandler) CheckTx(ctx context.Context, sdkTx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	if err := checkSignMode(sdkTx); err != nil {
+		return abci.ResponseCheckTx{}, err
+	}
+
+	return txh.next.CheckTx(ctx, sdkTx, req)
+}
+
+// DeliverTx implements tx.Handler.DeliverTx.
+func (txh signModeTxHandler) DeliverTx(ctx context.Context, sdkTx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+	if err := checkSignMode(sdkTx); err != nil {
+		return abci.ResponseDeliverTx{}, err
+	}
+
+	return txh.next.DeliverTx(ctx, sdkTx, req)
+}
+
+// SimulateTx implements tx.Handler.SimulateTx method.
+func (txh signModeTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+	if err := checkSignMode(sdkTx); err != nil {
+		return tx.ResponseSimulateTx{}, err
+	}
+
+	return txh.next.SimulateTx(ctx, sdkTx, req)
+}
+
+// checkSignMode checks that all signatures in the tx have correct sign modes.
 // Namely:
 // - fee payer should sign over fees,
 // - tipper should signer over tips.
-func checkSigs(tipTx tx.TipTx) error {
-	sigTx, ok := tipTx.(authsigning.SigVerifiableTx)
+func checkSignMode(sdkTx sdk.Tx) error {
+	tipTx, ok := sdkTx.(tx.TipTx)
 	if !ok {
-		return sdkerrors.Wrapf(sdkerrors.ErrTxDecode, "tx must be a SigVerifiableTx, got %T", tipTx)
+		return sdkerrors.Wrapf(sdkerrors.ErrTxDecode, "tx must be a TipTx, got %T", sdkTx)
+	}
+	feePayer := tipTx.FeePayer()
+	var tipper string
+	if tip := tipTx.GetTip(); tip != nil {
+		tipper = tipTx.GetTip().Tipper
 	}
 
-	feePayer := tipTx.FeePayer()
-	tipper := tipTx.GetTip().Tipper
+	sigTx, ok := sdkTx.(authsigning.SigVerifiableTx)
+	if !ok {
+		return sdkerrors.Wrapf(sdkerrors.ErrTxDecode, "tx must be a SigVerifiableTx, got %T", sdkTx)
+	}
 	sigsV2, err := sigTx.GetSignaturesV2()
 	if err != nil {
 		return err
 	}
+
 	for _, sig := range sigsV2 {
 		addr := sdk.AccAddress(sig.PubKey.Address())
 
@@ -146,11 +182,11 @@ func checkSigs(tipTx tx.TipTx) error {
 
 // checkFeeSigner checks whether a signature has signed over Fees.
 func checkFeeSigner(addr sdk.AccAddress, sigData signing.SignatureData) error {
-	if err := checkCorrectSignModes(addr, sigData, func(signMode signing.SignMode) bool {
-		return signMode == signing.SignMode_SIGN_MODE_DIRECT ||
-			signMode == signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
-	}); err != nil {
-		return sdkerrors.ErrUnauthorized.Wrapf("invalid sign mode for fee payer; %v", err)
+	if err := checkCorrectSignModes(addr, sigData, []signing.SignMode{
+		signing.SignMode_SIGN_MODE_DIRECT,
+		signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+	}, "fee payer"); err != nil {
+		return err
 	}
 
 	return nil
@@ -158,10 +194,10 @@ func checkFeeSigner(addr sdk.AccAddress, sigData signing.SignatureData) error {
 
 // checkTipSigner checks whether a signature has signed over Tips.
 func checkTipSigner(addr sdk.AccAddress, sigData signing.SignatureData) error {
-	if err := checkCorrectSignModes(addr, sigData, func(signMode signing.SignMode) bool {
-		return signMode == signing.SignMode_SIGN_MODE_DIRECT_AUX
-	}); err != nil {
-		return sdkerrors.ErrUnauthorized.Wrapf("invalid sign mode for tiper; %v", err)
+	if err := checkCorrectSignModes(addr, sigData, []signing.SignMode{
+		signing.SignMode_SIGN_MODE_DIRECT_AUX,
+	}, "tipper"); err != nil {
+		return err
 	}
 
 	return nil
@@ -169,22 +205,24 @@ func checkTipSigner(addr sdk.AccAddress, sigData signing.SignatureData) error {
 
 // checkCorrectSignModes checks that all signatures are one of the allowed
 // sign modes defined in `allowedSignModes`.
+// For multi-signatures, check recursively.
 func checkCorrectSignModes(
 	addr sdk.AccAddress,
 	sigData signing.SignatureData,
-	allowedSignModes func(signMode signing.SignMode) bool,
+	allowedSignModes []signing.SignMode,
+	errString string,
 ) error {
 	switch sigData := sigData.(type) {
 	case *signing.SingleSignatureData:
 		{
-			if !allowedSignModes(sigData.SignMode) {
-				return fmt.Errorf("invalid sign mode for signer %s, got %s", addr, sigData.SignMode)
+			if !arrayIncludes(allowedSignModes, sigData.SignMode) {
+				return sdkerrors.ErrUnauthorized.Wrapf("invalid sign mode for %s %s, got %s", errString, addr, sigData.SignMode)
 			}
 		}
 	case *signing.MultiSignatureData:
 		{
 			for _, s := range sigData.Signatures {
-				err := checkCorrectSignModes(addr, s, allowedSignModes)
+				err := checkCorrectSignModes(addr, s, allowedSignModes, errString)
 				if err != nil {
 					return err
 				}
@@ -197,13 +235,12 @@ func checkCorrectSignModes(
 	return nil
 }
 
-// transferTip transfers the tip from the tipper to the fee payer.
-func (txh tipsTxHandler) transferTip(ctx context.Context, tipTx tx.TipTx) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	tipper, err := sdk.AccAddressFromBech32(tipTx.GetTip().Tipper)
-	if err != nil {
-		return err
+func arrayIncludes(sms []signing.SignMode, sm signing.SignMode) bool {
+	for _, x := range sms {
+		if x == sm {
+			return true
+		}
 	}
 
-	return txh.bankKeeper.SendCoins(sdkCtx, tipper, tipTx.FeePayer(), tipTx.GetTip().Amount)
+	return false
 }

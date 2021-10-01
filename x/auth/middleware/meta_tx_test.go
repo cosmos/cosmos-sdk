@@ -2,10 +2,8 @@ package middleware_test
 
 import (
 	"fmt"
-	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -77,7 +75,7 @@ func (s *MWTestSuite) TestSignModes() {
 
 	for _, tc := range testcases {
 		tc := tc
-		s.Run(fmt.Sprintf("tipper=%s, feepayer=%s", signing.SignMode_name[int32(tc.tipperSignMode)], signing.SignMode_name[int32(tc.feePayerSignMode)]), func() {
+		s.Run(fmt.Sprintf("tipper=%s, feepayer=%s", tc.tipperSignMode, tc.feePayerSignMode), func() {
 			tipperTxBuilder := s.mkTipperTxBuilder(tipper.priv, msg, initialRegens, tc.tipperSignMode, tipper.accNum, 0, ctx.ChainID())
 			feePayerTxBuilder := s.mkFeePayerTxBuilder(feePayer.priv, tc.feePayerSignMode, tx.Fee{Amount: initialAtoms, GasLimit: 200000}, tipperTxBuilder.GetTx(), feePayer.accNum, 0, ctx.ChainID())
 
@@ -98,7 +96,7 @@ func (s *MWTestSuite) TestTips() {
 
 	testcases := []struct {
 		name      string
-		msgVoter  sdk.AccAddress
+		msgSigner sdk.AccAddress
 		tip       sdk.Coins
 		fee       sdk.Coins
 		gasLimit  uint64
@@ -106,7 +104,7 @@ func (s *MWTestSuite) TestTips() {
 		expErrStr string
 	}{
 		{
-			"tipper should be equal to msg signer of MsgVote",
+			"tipper should be equal to msg signer",
 			randomAddr, // arbitrary msg signer, not equal to tipper
 			sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(5000))), initialAtoms, 100000,
 			true, "pubKey does not match signer address",
@@ -145,9 +143,9 @@ func (s *MWTestSuite) TestTips() {
 			ctx, accts := s.setupMetaTxAccts(ctx)
 			tipper, feePayer := accts[0], accts[1]
 
-			voter := tc.msgVoter
+			voter := tc.msgSigner
 			if voter == nil {
-				voter = tipper.acc.GetAddress()
+				voter = tipper.acc.GetAddress() // Choose tipper as MsgSigner, unless overwritten by testcase.
 			}
 			msg = govtypes.NewMsgVote(voter, 1, govtypes.OptionYes)
 
@@ -261,8 +259,4 @@ func (s *MWTestSuite) mkFeePayerTxBuilder(
 	s.Require().NoError(err)
 
 	return txBuilder
-}
-
-func TestMWTestSuite2(t *testing.T) {
-	suite.Run(t, new(MWTestSuite))
 }

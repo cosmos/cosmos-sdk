@@ -44,6 +44,7 @@ type MWTestSuite struct {
 func createTestApp(t *testing.T, isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(t, isCheckTx)
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{}).WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
 	return app, ctx
 }

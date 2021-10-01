@@ -66,7 +66,7 @@ When proposing an architecture decision for the SDK, please start by opening an 
   Additionally please ensure that your code is lint compliant by running `make lint-fix`.
   A convenience git `pre-commit` hook that runs the formatters automatically
   before each commit is available in the `contrib/githooks/` directory.
-- Follow the [CODING GUIDELINES](CODING-GUIDELINES.md), which defines criteria for designing and coding a software.
+- Follow the [CODING GUIDELINES](CODING_GUIDELINES.md), which defines criteria for designing and coding a software.
 
 Code is merged into master through pull request procedure.
 

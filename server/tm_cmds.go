@@ -3,7 +3,6 @@ package server
 // DONTCOVER
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -49,7 +48,7 @@ func ShowValidatorCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			pk, err := privValidator.GetPubKey(context.TODO())
+			pk, err := privValidator.GetPubKey(cmd.Context())
 			if err != nil {
 				return err
 			}

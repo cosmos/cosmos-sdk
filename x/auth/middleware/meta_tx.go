@@ -36,7 +36,7 @@ func (txh tipsTxHandler) CheckTx(ctx context.Context, sdkTx sdk.Tx, req abci.Req
 	}
 
 	tipTx, ok := sdkTx.(tx.TipTx)
-	if !ok {
+	if !ok || tipTx.GetTip() == nil {
 		return res, err
 	}
 
@@ -55,7 +55,7 @@ func (txh tipsTxHandler) DeliverTx(ctx context.Context, sdkTx sdk.Tx, req abci.R
 	}
 
 	tipTx, ok := sdkTx.(tx.TipTx)
-	if !ok {
+	if !ok || tipTx.GetTip() == nil {
 		return res, err
 	}
 
@@ -74,7 +74,7 @@ func (txh tipsTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.Re
 	}
 
 	tipTx, ok := sdkTx.(tx.TipTx)
-	if !ok {
+	if !ok || tipTx.GetTip() == nil {
 		return res, err
 	}
 

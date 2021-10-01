@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -54,6 +55,7 @@ func (s *MWTestSuite) TestSignModes() {
 	ctx := s.SetupTest(false) // reset
 	ctx, accts := s.setupMetaTxAccts(ctx)
 	tipper, feePayer := accts[0], accts[1]
+	msg := govtypes.NewMsgVote(tipper.acc.GetAddress(), 1, govtypes.OptionYes)
 
 	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.SignModeTxMiddleware)
 
@@ -76,7 +78,7 @@ func (s *MWTestSuite) TestSignModes() {
 	for _, tc := range testcases {
 		tc := tc
 		s.Run(fmt.Sprintf("tipper=%s, feepayer=%s", signing.SignMode_name[int32(tc.tipperSignMode)], signing.SignMode_name[int32(tc.feePayerSignMode)]), func() {
-			tipperTxBuilder := s.mkTipperTxBuilder(tipper.priv, initialRegens, tc.tipperSignMode, tipper.accNum, 0, ctx.ChainID())
+			tipperTxBuilder := s.mkTipperTxBuilder(tipper.priv, msg, initialRegens, tc.tipperSignMode, tipper.accNum, 0, ctx.ChainID())
 			feePayerTxBuilder := s.mkFeePayerTxBuilder(feePayer.priv, tc.feePayerSignMode, tx.Fee{Amount: initialAtoms, GasLimit: 200000}, tipperTxBuilder.GetTx(), feePayer.accNum, 0, ctx.ChainID())
 
 			_, err := txHandler.DeliverTx(sdk.WrapSDKContext(ctx), feePayerTxBuilder.GetTx(), abci.RequestDeliverTx{})
@@ -91,12 +93,12 @@ func (s *MWTestSuite) TestSignModes() {
 }
 
 func (s *MWTestSuite) TestTips() {
-	ctx := s.SetupTest(false) // reset
-	ctx, accts := s.setupMetaTxAccts(ctx)
-	tipper, feePayer := accts[0], accts[1]
+	var msg sdk.Msg
+	_, _, randomAddr := testdata.KeyTestPubAddr()
 
 	testcases := []struct {
 		name      string
+		msgVoter  sdk.AccAddress
 		tip       sdk.Coins
 		fee       sdk.Coins
 		gasLimit  uint64
@@ -104,8 +106,34 @@ func (s *MWTestSuite) TestTips() {
 		expErrStr string
 	}{
 		{
-			"happy case",
-			sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(1000))), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(1000))), 100000,
+			"tipper should be equal to msg signer of MsgVote",
+			randomAddr, // arbitrary msg signer, not equal to tipper
+			sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(5000))), initialAtoms, 100000,
+			true, "pubKey does not match signer address",
+		},
+		{
+			"wrong tip denom", nil,
+			sdk.NewCoins(sdk.NewCoin("foobar", sdk.NewInt(1000))), initialAtoms, 100000,
+			true, "0foobar is smaller than 1000foobar: insufficient funds",
+		},
+		{
+			"insufficient tip from tipper", nil,
+			sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(5000))), initialAtoms, 100000,
+			true, "1000regen is smaller than 5000regen: insufficient funds",
+		},
+		{
+			"insufficient fees from feePayer", nil,
+			initialRegens, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(5000))), 100000,
+			true, "1000atom is smaller than 5000atom: insufficient funds: insufficient funds",
+		},
+		{
+			"insufficient gas", nil,
+			initialRegens, initialAtoms, 100,
+			true, "out of gas in location: ReadFlat; gasWanted: 100, gasUsed: 1000: out of gas",
+		},
+		{
+			"happy case", nil,
+			initialRegens, initialAtoms, 100000,
 			false, "",
 		},
 	}
@@ -113,15 +141,24 @@ func (s *MWTestSuite) TestTips() {
 	for _, tc := range testcases {
 		tc := tc
 		s.Run(tc.name, func() {
-			tipperTxBuilder := s.mkTipperTxBuilder(tipper.priv, tc.tip, signing.SignMode_SIGN_MODE_DIRECT_AUX, tipper.accNum, 0, ctx.ChainID())
+			ctx := s.SetupTest(false) // reset
+			ctx, accts := s.setupMetaTxAccts(ctx)
+			tipper, feePayer := accts[0], accts[1]
+
+			voter := tc.msgVoter
+			if voter == nil {
+				voter = tipper.acc.GetAddress()
+			}
+			msg = govtypes.NewMsgVote(voter, 1, govtypes.OptionYes)
+
+			tipperTxBuilder := s.mkTipperTxBuilder(tipper.priv, msg, tc.tip, signing.SignMode_SIGN_MODE_DIRECT_AUX, tipper.accNum, 0, ctx.ChainID())
 			feePayerTxBuilder := s.mkFeePayerTxBuilder(feePayer.priv, signing.SignMode_SIGN_MODE_DIRECT, tx.Fee{Amount: tc.fee, GasLimit: tc.gasLimit}, tipperTxBuilder.GetTx(), feePayer.accNum, 0, ctx.ChainID())
-			_, err := s.clientCtx.TxConfig.TxJSONEncoder()(feePayerTxBuilder.GetTx())
-			s.Require().NoError(err)
-			// fmt.Println(string(a))
+
 			_, res, err := s.app.SimDeliver(s.clientCtx.TxConfig.TxEncoder(), feePayerTxBuilder.GetTx())
 
 			if tc.expErr {
-				s.Require().EqualError(err, tc.expErrStr)
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrStr)
 			} else {
 				s.Require().NoError(err)
 				s.Require().NotNil(res)
@@ -149,15 +186,15 @@ func (s *MWTestSuite) TestTips() {
 }
 
 func (s *MWTestSuite) mkTipperTxBuilder(
-	tipperPriv cryptotypes.PrivKey, tip sdk.Coins, signMode signing.SignMode,
-	accNum, accSeq uint64, chainID string,
+	tipperPriv cryptotypes.PrivKey, msg sdk.Msg, tip sdk.Coins,
+	signMode signing.SignMode, accNum, accSeq uint64, chainID string,
 ) client.TxBuilder {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 	txBuilder.SetTip(&tx.Tip{
 		Amount: tip,
 		Tipper: sdk.AccAddress(tipperPriv.PubKey().Address()).String(),
 	})
-	err := txBuilder.SetMsgs(govtypes.NewMsgVote(tipperPriv.PubKey().Address().Bytes(), 1, govtypes.OptionYes))
+	err := txBuilder.SetMsgs(msg)
 	s.Require().NoError(err)
 
 	// Call SetSignatures with empty sig to populate AuthInfo.

@@ -33,6 +33,7 @@ type wrapper struct {
 var (
 	_ authsigning.Tx                   = &wrapper{}
 	_ client.TxBuilder                 = &wrapper{}
+	_ tx.TipTx                         = &wrapper{}
 	_ middleware.HasExtensionOptionsTx = &wrapper{}
 	_ ExtensionOptionsTxBuilder        = &wrapper{}
 )

@@ -200,11 +200,9 @@ func initTestnetFiles(
 	genBalIterator banktypes.GenesisBalancesIterator,
 	args initArgs,
 ) error {
-
 	if args.chainID == "" {
 		args.chainID = "chain-" + tmrand.Str(6)
 	}
-
 	nodeIDs := make([]string, args.numValidators)
 	valPubKeys := make([]cryptotypes.PubKey, args.numValidators)
 
@@ -333,7 +331,7 @@ func initTestnetFiles(
 			return err
 		}
 
-		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), simappConfig)
+		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), simappConfig)
 	}
 
 	if err := initGenFiles(clientCtx, mbm, args.chainID, genAccounts, genBalances, genFiles, args.numValidators); err != nil {

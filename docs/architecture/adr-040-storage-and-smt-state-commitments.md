@@ -134,7 +134,7 @@ The `WithPrefix` method will create a proxy object for the parent object and wil
 The following invariant must hold:
 
 ```
-for each OP in [Get Has, Set, ...]
+for each OP in [Get, Has, Set, ...]
     store.WithPrefix(prefix).OP(key) == store.OP(prefix + key)
 ```
 
@@ -200,19 +200,15 @@ This workaround can be used until the IBC connection code is fully upgraded and 
 
 ### Optimization: compress module keys
 
-We consider a compression of prefix keys using [Huffman Coding](https://en.wikipedia.org/wiki/Huffman_coding). It will require knowledge of used prefixes (module store keys) a priori. And for best results, it will need frequency information for each prefix (how often objects are stored in the store under the same prefix key). With Huffman Coding, the `WithPrefix` invariant has the following form:
+We consider a compression of prefix keys using [Huffman Coding](https://en.wikipedia.org/wiki/Huffman_coding). It will require knowledge of used prefixes (module store keys) a priori. And for the best results, it will need frequency information for each prefix (how often objects are stored in the store under the same prefix key). For Merkle Proofs we can't use prefix compression - so it should only apply for the `SS`. Moreover, the prefix compression should be only applied for the module namespace (the first prefix level). More precisely:
++ each module has it's own namespace;
++ when accessing a module namespace we create a KVStore with embedded prefix;
++ that prefix will be compressed only for accessing and managing `SS`.
+
+Huffman coding assures that in the set of prefix codes there are no two elements where one is a prefix of another:
 
 ```
-for each OP in [Get Has, Set, ...]
-    store.WithPrefix(prefix).OP(key) == store.OP(store.Code(prefix) + key)
-```
-
-Where `store.Code(prefix)` is a Huffman Code of `prefix` in the given `store`.
-
-To avoid conflicts in the address space, we need to assure that in the set of prefix codes there are no two elements where one is a prefix of another:
-
-```
-for each k1, k2 \in {store.Code(p): p \in StoreModuleKeys}
+for each k1, k2 \in {store.HuffmanCode(p): p \in StoreModuleKeys}
     assert( !k1.hasPrefix(k2) )
 ```
 

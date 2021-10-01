@@ -161,7 +161,7 @@ type Options struct {
 	SupportedAlgos SigningAlgoList
 	// supported signing algorithms for Ledger
 	SupportedAlgosLedger SigningAlgoList
-	SupportedAlgosHsm SigningAlgoList
+	SupportedAlgosHsm    SigningAlgoList
 }
 
 // NewInMemory creates a transient keyring useful for testing
@@ -385,16 +385,16 @@ func (ks keystore) SaveHsmKey(uid string, algo SignatureAlgo, label string, kr *
 			ErrUnsupportedSigningAlgo, algo.Name(),
 		)
 	}
-	
+
 	priv, err := kr.Key(label)
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("Failed to retrieve HSM key: %w", err)
 	}
-	
+
 	pub := priv.PubKey()
-	
-	return ks.writeHsmKey( uid, pub, label )
+
+	return ks.writeHsmKey(uid, pub, label)
 }
 
 // writeHsm creates a new Hsm Record object containing the key label
@@ -404,7 +404,7 @@ func (ks keystore) writeHsmKey(name string, pub types.PubKey, label string) (*Re
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return k, ks.writeRecord(k)
 }
 

@@ -706,7 +706,7 @@ func (d Dec) Marshal() ([]byte, error) {
 	if d.i == nil {
 		d.i = new(big.Int)
 	}
-	return d.i.MarshalText()
+	return []byte(d.String()), nil
 }
 
 // MarshalTo implements the gogo proto custom type interface.
@@ -736,17 +736,13 @@ func (d *Dec) Unmarshal(data []byte) error {
 		return nil
 	}
 
-	if d.i == nil {
-		d.i = new(big.Int)
-	}
-
-	if err := d.i.UnmarshalText(data); err != nil {
+	text := string(data)
+	newDec, err := NewDecFromStr(text)
+	if err != nil {
 		return err
 	}
 
-	if d.i.BitLen() > maxBitLen {
-		return fmt.Errorf("decimal out of range; got: %d, max: %d", d.i.BitLen(), maxBitLen)
-	}
+	*d = newDec
 
 	return nil
 }

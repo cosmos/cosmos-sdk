@@ -1,4 +1,4 @@
-package baseapp
+package baseapp_test
 
 import (
 	"bytes"
@@ -22,6 +22,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
@@ -30,6 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
@@ -83,12 +85,12 @@ func defaultLogger() log.Logger {
 	return logger.With("module", "sdk/app")
 }
 
-func newBaseApp(name string, options ...func(*BaseApp)) *BaseApp {
+func newBaseApp(name string, options ...func(*baseapp.BaseApp)) *baseapp.BaseApp {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
-	return NewBaseApp(name, logger, db, testTxDecoder(codec), options...)
+	return baseapp.NewBaseApp(name, logger, db, testTxDecoder(codec), options...)
 }
 
 func registerTestCodec(cdc *codec.LegacyAmino) {
@@ -112,7 +114,7 @@ func aminoTxEncoder() sdk.TxEncoder {
 }
 
 // simple one store baseapp
-func setupBaseApp(t *testing.T, options ...func(*BaseApp)) *BaseApp {
+func setupBaseApp(t *testing.T, options ...func(*baseapp.BaseApp)) *baseapp.BaseApp {
 	app := newBaseApp(t.Name(), options...)
 	require.Equal(t, t.Name(), app.Name())
 
@@ -125,23 +127,37 @@ func setupBaseApp(t *testing.T, options ...func(*BaseApp)) *BaseApp {
 	return app
 }
 
+// testTxHandler is a tx.Handler used for the mock app, it does not
+// contain any signature verification logic.
+func testTxHandler(options middleware.TxHandlerOptions, customTxHandlerMiddleware handlerFun) tx.Handler {
+	return middleware.ComposeMiddlewares(
+		middleware.NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
+		middleware.GasTxMiddleware,
+		middleware.RecoveryTxMiddleware,
+		middleware.NewIndexEventsTxMiddleware(options.IndexEvents),
+		middleware.ValidateBasicMiddleware,
+		CustomTxHandlerMiddleware(customTxHandlerMiddleware),
+	)
+}
+
 // simple one store baseapp with data and snapshots. Each tx is 1 MB in size (uncompressed).
-func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options ...func(*BaseApp)) (*BaseApp, func()) {
+func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options ...func(*baseapp.BaseApp)) (*baseapp.BaseApp, func()) {
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
-	routerOpt := func(bapp *BaseApp) {
+	routerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		legacyRouter.AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			kv := msg.(*msgKeyValue)
-			bapp.cms.GetCommitKVStore(capKey2).Set(kv.Key, kv.Value)
+			bapp.CMS().GetCommitKVStore(capKey2).Set(kv.Key, kv.Value)
 			return &sdk.Result{}, nil
 		}))
-		txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
-			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) { return ctx, nil },
-			LegacyRouter:      legacyRouter,
-			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
-		})
-		require.NoError(t, err)
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) { return ctx, nil },
+		)
 		bapp.SetTxHandler(txHandler)
 	}
 
@@ -156,9 +172,9 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 	}
 
 	app := setupBaseApp(t, append(options,
-		SetSnapshotStore(snapshotStore),
-		SetSnapshotInterval(snapshotInterval),
-		SetPruning(sdk.PruningOptions{KeepEvery: 1}),
+		baseapp.SetSnapshotStore(snapshotStore),
+		baseapp.SetSnapshotInterval(snapshotInterval),
+		baseapp.SetPruning(sdk.PruningOptions{KeepEvery: 1}),
 		routerOpt)...)
 
 	app.InitChain(abci.RequestInitChain{})
@@ -209,9 +225,9 @@ func TestMountStores(t *testing.T) {
 	app := setupBaseApp(t)
 
 	// check both stores
-	store1 := app.cms.GetCommitKVStore(capKey1)
+	store1 := app.CMS().GetCommitKVStore(capKey1)
 	require.NotNil(t, store1)
-	store2 := app.cms.GetCommitKVStore(capKey2)
+	store2 := app.CMS().GetCommitKVStore(capKey2)
 	require.NotNil(t, store2)
 }
 
@@ -219,10 +235,10 @@ func TestMountStores(t *testing.T) {
 // Test that LoadLatestVersion actually does.
 func TestLoadVersion(t *testing.T) {
 	logger := defaultLogger()
-	pruningOpt := SetPruning(store.PruneNothing)
+	pruningOpt := baseapp.SetPruning(store.PruneNothing)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil, pruningOpt)
+	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 
 	// make a cap key and mount the store
 	err := app.LoadLatestVersion() // needed to make stores non-nil
@@ -249,7 +265,7 @@ func TestLoadVersion(t *testing.T) {
 	commitID2 := sdk.CommitID{Version: 2, Hash: res.Data}
 
 	// reload with LoadLatestVersion
-	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app = baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 	app.MountStores()
 	err = app.LoadLatestVersion()
 	require.Nil(t, err)
@@ -257,7 +273,7 @@ func TestLoadVersion(t *testing.T) {
 
 	// reload with LoadVersion, see if you can commit the same block and get
 	// the same result
-	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app = baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 	err = app.LoadVersion(1)
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(1), commitID1)
@@ -266,8 +282,8 @@ func TestLoadVersion(t *testing.T) {
 	testLoadVersionHelper(t, app, int64(2), commitID2)
 }
 
-func useDefaultLoader(app *BaseApp) {
-	app.SetStoreLoader(DefaultStoreLoader)
+func useDefaultLoader(app *baseapp.BaseApp) {
+	app.SetStoreLoader(baseapp.DefaultStoreLoader)
 }
 
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
@@ -306,7 +322,7 @@ func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte
 // Test that LoadLatestVersion actually does.
 func TestSetLoader(t *testing.T) {
 	cases := map[string]struct {
-		setLoader    func(*BaseApp)
+		setLoader    func(*baseapp.BaseApp)
 		origStoreKey string
 		loadStoreKey string
 	}{
@@ -332,11 +348,11 @@ func TestSetLoader(t *testing.T) {
 			initStore(t, db, tc.origStoreKey, k, v)
 
 			// load the app with the existing db
-			opts := []func(*BaseApp){SetPruning(store.PruneNothing)}
+			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(store.PruneNothing)}
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)
 			}
-			app := NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
+			app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
 			app.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
 			err := app.LoadLatestVersion()
 			require.Nil(t, err)
@@ -355,10 +371,10 @@ func TestSetLoader(t *testing.T) {
 
 func TestVersionSetterGetter(t *testing.T) {
 	logger := defaultLogger()
-	pruningOpt := SetPruning(store.PruneDefault)
+	pruningOpt := baseapp.SetPruning(store.PruneDefault)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil, pruningOpt)
+	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 
 	require.Equal(t, "", app.Version())
 	res := app.Query(abci.RequestQuery{Path: "app/version"})
@@ -375,10 +391,10 @@ func TestVersionSetterGetter(t *testing.T) {
 
 func TestLoadVersionInvalid(t *testing.T) {
 	logger := log.NewNopLogger()
-	pruningOpt := SetPruning(store.PruneNothing)
+	pruningOpt := baseapp.SetPruning(store.PruneNothing)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil, pruningOpt)
+	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 
 	err := app.LoadLatestVersion()
 	require.Nil(t, err)
@@ -393,7 +409,7 @@ func TestLoadVersionInvalid(t *testing.T) {
 	commitID1 := sdk.CommitID{Version: 1, Hash: res.Data}
 
 	// create a new app with the stores mounted under the same cap key
-	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app = baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 
 	// require we can load the latest version
 	err = app.LoadVersion(1)
@@ -412,10 +428,10 @@ func TestLoadVersionPruning(t *testing.T) {
 		KeepEvery:  3,
 		Interval:   1,
 	}
-	pruningOpt := SetPruning(pruningOptions)
+	pruningOpt := baseapp.SetPruning(pruningOptions)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil, pruningOpt)
+	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("key1")
@@ -443,17 +459,17 @@ func TestLoadVersionPruning(t *testing.T) {
 	}
 
 	for _, v := range []int64{1, 2, 4} {
-		_, err = app.cms.CacheMultiStoreWithVersion(v)
+		_, err = app.CMS().CacheMultiStoreWithVersion(v)
 		require.NoError(t, err)
 	}
 
 	for _, v := range []int64{3, 5, 6, 7} {
-		_, err = app.cms.CacheMultiStoreWithVersion(v)
+		_, err = app.CMS().CacheMultiStoreWithVersion(v)
 		require.NoError(t, err)
 	}
 
 	// reload with LoadLatestVersion, check it loads last version
-	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app = baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 	app.MountStores(capKey)
 
 	err = app.LoadLatestVersion()
@@ -461,7 +477,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	testLoadVersionHelper(t, app, int64(7), lastCommitID)
 }
 
-func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, expectedID sdk.CommitID) {
+func testLoadVersionHelper(t *testing.T, app *baseapp.BaseApp, expectedHeight int64, expectedID sdk.CommitID) {
 	lastHeight := app.LastBlockHeight()
 	lastID := app.LastCommitID()
 	require.Equal(t, expectedHeight, lastHeight)
@@ -471,13 +487,13 @@ func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, exp
 func TestOptionFunction(t *testing.T) {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
-	bap := NewBaseApp("starting name", logger, db, nil, testChangeNameHelper("new name"))
-	require.Equal(t, bap.name, "new name", "BaseApp should have had name changed via option function")
+	bap := baseapp.NewBaseApp("starting name", logger, db, nil, testChangeNameHelper("new name"))
+	require.Equal(t, bap.GetName(), "new name", "BaseApp should have had name changed via option function")
 }
 
-func testChangeNameHelper(name string) func(*BaseApp) {
-	return func(bap *BaseApp) {
-		bap.name = name
+func testChangeNameHelper(name string) func(*baseapp.BaseApp) {
+	return func(bap *baseapp.BaseApp) {
+		bap.SetName(name)
 	}
 }
 
@@ -491,7 +507,7 @@ func TestTxDecoder(t *testing.T) {
 	tx := newTxCounter(1, 0)
 	txBytes := codec.MustMarshal(tx)
 
-	dTx, err := app.txDecoder(txBytes)
+	dTx, err := app.TxDecoder(txBytes)
 	require.NoError(t, err)
 
 	cTx := dTx.(txTest)
@@ -556,8 +572,8 @@ func TestBaseAppOptionSeal(t *testing.T) {
 
 func TestSetMinGasPrices(t *testing.T) {
 	minGasPrices := sdk.DecCoins{sdk.NewInt64DecCoin("stake", 5000)}
-	app := newBaseApp(t.Name(), SetMinGasPrices(minGasPrices.String()))
-	require.Equal(t, minGasPrices, app.minGasPrices)
+	app := newBaseApp(t.Name(), baseapp.SetMinGasPrices(minGasPrices.String()))
+	require.Equal(t, minGasPrices, app.MinGasPrices())
 }
 
 func TestInitChainer(t *testing.T) {
@@ -566,7 +582,7 @@ func TestInitChainer(t *testing.T) {
 	// we can reload the same  app later
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, logger, db, nil)
 	capKey := sdk.NewKVStoreKey("main")
 	capKey2 := sdk.NewKVStoreKey("key2")
 	app.MountStores(capKey, capKey2)
@@ -609,10 +625,10 @@ func TestInitChainer(t *testing.T) {
 	)
 
 	// assert that chainID is set correctly in InitChain
-	chainID := app.deliverState.ctx.ChainID()
+	chainID := app.DeliverState().Context().ChainID()
 	require.Equal(t, "test-chain-id", chainID, "ChainID in deliverState not set correctly in InitChain")
 
-	chainID = app.checkState.ctx.ChainID()
+	chainID = app.CheckState().Context().ChainID()
 	require.Equal(t, "test-chain-id", chainID, "ChainID in checkState not set correctly in InitChain")
 
 	app.Commit()
@@ -621,7 +637,7 @@ func TestInitChainer(t *testing.T) {
 	require.Equal(t, value, res.Value)
 
 	// reload app
-	app = NewBaseApp(name, logger, db, nil)
+	app = baseapp.NewBaseApp(name, logger, db, nil)
 	app.SetInitChainer(initChainer)
 	app.MountStores(capKey, capKey2)
 	err = app.LoadLatestVersion() // needed to make stores non-nil
@@ -645,7 +661,7 @@ func TestInitChain_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, logger, db, nil)
 
 	app.InitChain(
 		abci.RequestInitChain{
@@ -661,7 +677,7 @@ func TestBeginBlock_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, logger, db, nil)
 
 	app.InitChain(
 		abci.RequestInitChain{
@@ -711,6 +727,9 @@ func (tx txTest) ValidateBasic() error { return nil }
 
 // Implements GasTx
 func (tx txTest) GetGas() uint64 { return tx.GasLimit }
+
+// Implements TxWithTimeoutHeight
+func (tx txTest) GetTimeoutHeight() uint64 { return 0 }
 
 const (
 	routeMsgCounter  = "msgCounter"
@@ -827,7 +846,7 @@ func testTxDecoder(cdc *codec.LegacyAmino) sdk.TxDecoder {
 	}
 }
 
-func anteHandlerTxTest(t *testing.T, capKey sdk.StoreKey, storeKey []byte) sdk.AnteHandler {
+func customHandlerTxTest(t *testing.T, capKey sdk.StoreKey, storeKey []byte) handlerFun {
 	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
 		store := ctx.KVStore(capKey)
 		txTest := tx.(txTest)
@@ -842,7 +861,7 @@ func anteHandlerTxTest(t *testing.T, capKey sdk.StoreKey, storeKey []byte) sdk.A
 		}
 
 		ctx.EventManager().EmitEvents(
-			counterEvent("ante_handler", txTest.Counter),
+			counterEvent("post_handlers", txTest.Counter),
 		)
 
 		return ctx, nil
@@ -930,18 +949,19 @@ func TestCheckTx(t *testing.T) {
 	// This ensures changes to the kvstore persist across successive CheckTx.
 	counterKey := []byte("counter-key")
 
-	txHandlerOpt := func(bapp *BaseApp) {
+	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		// TODO: can remove this once CheckTx doesnt process msgs.
 		legacyRouter.AddRoute(sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			return &sdk.Result{}, nil
 		}))
-		txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter:      legacyRouter,
-			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, counterKey),
-			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
-		})
-		require.NoError(t, err)
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			customHandlerTxTest(t, capKey1, counterKey),
+		)
 		bapp.SetTxHandler(txHandler)
 	}
 
@@ -963,23 +983,23 @@ func TestCheckTx(t *testing.T) {
 		require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
 	}
 
-	checkStateStore := app.checkState.ctx.KVStore(capKey1)
+	checkStateStore := app.CheckState().Context().KVStore(capKey1)
 	storedCounter := getIntFromStore(checkStateStore, counterKey)
 
-	// Ensure AnteHandler ran
+	// Ensure storedCounter
 	require.Equal(t, nTxs, storedCounter)
 
 	// If a block is committed, CheckTx state should be reset.
 	header := tmproto.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header, Hash: []byte("hash")})
 
-	require.NotNil(t, app.checkState.ctx.BlockGasMeter(), "block gas meter should have been set to checkState")
-	require.NotEmpty(t, app.checkState.ctx.HeaderHash())
+	require.NotNil(t, app.CheckState().Context().BlockGasMeter(), "block gas meter should have been set to checkState")
+	require.NotEmpty(t, app.CheckState().Context().HeaderHash())
 
 	app.EndBlock(abci.RequestEndBlock{})
 	app.Commit()
 
-	checkStateStore = app.checkState.ctx.KVStore(capKey1)
+	checkStateStore = app.CheckState().Context().KVStore(capKey1)
 	storedBytes := checkStateStore.Get(counterKey)
 	require.Nil(t, storedBytes)
 }
@@ -987,20 +1007,21 @@ func TestCheckTx(t *testing.T) {
 // Test that successive DeliverTx can see each others' effects
 // on the store, both within and across blocks.
 func TestDeliverTx(t *testing.T) {
-	// test increments in the ante
+	// test increments in the post txHandler
 	anteKey := []byte("ante-key")
 	// test increments in the handler
 	deliverKey := []byte("deliver-key")
-	txHandlerOpt := func(bapp *BaseApp) {
+	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
 		legacyRouter.AddRoute(r)
-		txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter:      legacyRouter,
-			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, anteKey),
-			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
-		})
-		require.NoError(t, err)
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			customHandlerTxTest(t, capKey1, anteKey),
+		)
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1028,7 +1049,7 @@ func TestDeliverTx(t *testing.T) {
 			require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 			events := res.GetEvents()
 			require.Len(t, events, 3, "should contain ante handler, message type and counter events respectively")
-			require.Equal(t, sdk.MarkEventsToIndex(counterEvent("ante_handler", counter).ToABCIEvents(), map[string]struct{}{})[0], events[0], "ante handler event")
+			require.Equal(t, sdk.MarkEventsToIndex(counterEvent("post_handlers", counter).ToABCIEvents(), map[string]struct{}{})[0], events[0], "ante handler event")
 			require.Equal(t, sdk.MarkEventsToIndex(counterEvent(sdk.EventTypeMessage, counter).ToABCIEvents(), map[string]struct{}{})[0], events[2], "msg handler update counter event")
 		}
 
@@ -1050,18 +1071,19 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 	// increment the msg counter
 	deliverKey := []byte("deliver-key")
 	deliverKey2 := []byte("deliver-key2")
-	txHandlerOpt := func(bapp *BaseApp) {
+	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r1 := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
 		r2 := sdk.NewRoute(routeMsgCounter2, handlerMsgCounter(t, capKey1, deliverKey2))
 		legacyRouter.AddRoute(r1)
 		legacyRouter.AddRoute(r2)
-		txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter:      legacyRouter,
-			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, anteKey),
-			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
-		})
-		require.NoError(t, err)
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			customHandlerTxTest(t, capKey1, anteKey),
+		)
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1081,7 +1103,7 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-	store := app.deliverState.ctx.KVStore(capKey1)
+	store := app.DeliverState().Context().KVStore(capKey1)
 
 	// tx counter only incremented once
 	txCounter := getIntFromStore(store, anteKey)
@@ -1101,7 +1123,7 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-	store = app.deliverState.ctx.KVStore(capKey1)
+	store = app.DeliverState().Context().KVStore(capKey1)
 
 	// tx counter only incremented once
 	txCounter = getIntFromStore(store, anteKey)
@@ -1128,19 +1150,20 @@ func TestConcurrentCheckDeliver(t *testing.T) {
 func TestSimulateTx(t *testing.T) {
 	gasConsumed := uint64(5)
 
-	txHandlerOpt := func(bapp *BaseApp) {
+	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			ctx.GasMeter().ConsumeGas(gasConsumed, "test")
 			return &sdk.Result{}, nil
 		})
 		legacyRouter.AddRoute(r)
-		txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter:      legacyRouter,
-			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) { return ctx, nil },
-			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
-		})
-		require.NoError(t, err)
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) { return ctx, nil },
+		)
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1196,20 +1219,21 @@ func TestSimulateTx(t *testing.T) {
 }
 
 func TestRunInvalidTransaction(t *testing.T) {
-	txHandlerOpt := func(bapp *BaseApp) {
+	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			return &sdk.Result{}, nil
 		})
 		legacyRouter.AddRoute(r)
-		txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter: legacyRouter,
-			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 				return
 			},
-			MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
-		})
-		require.NoError(t, err)
+		)
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1310,7 +1334,7 @@ func TestTxGasLimits(t *testing.T) {
 		return ctx, nil
 	}
 
-	txHandlerOpt := func(bapp *BaseApp) {
+	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			count := msg.(msgCounter).Counter
@@ -1318,12 +1342,14 @@ func TestTxGasLimits(t *testing.T) {
 			return &sdk.Result{}, nil
 		})
 		legacyRouter.AddRoute(r)
-		txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter:      legacyRouter,
-			LegacyAnteHandler: ante,
-			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
-		})
-		require.NoError(t, err)
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			ante,
+		)
+
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1387,7 +1413,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 		return ctx, nil
 	}
 
-	txHandlerOpt := func(bapp *BaseApp) {
+	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			count := msg.(msgCounter).Counter
@@ -1395,12 +1421,13 @@ func TestMaxBlockGasLimits(t *testing.T) {
 			return &sdk.Result{}, nil
 		})
 		legacyRouter.AddRoute(r)
-		txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter:      legacyRouter,
-			LegacyAnteHandler: ante,
-			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
-		})
-		require.NoError(t, err)
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			ante,
+		)
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1444,7 +1471,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 		for j := 0; j < tc.numDelivers; j++ {
 			_, result, err := app.SimDeliver(aminoTxEncoder(), tx)
 
-			ctx := app.getState(runTxModeDeliver).ctx
+			ctx := app.DeliverState().Context()
 
 			// check for failed transactions
 			if tc.fail && (j+1) > tc.failAfterDeliver {
@@ -1471,21 +1498,22 @@ func TestMaxBlockGasLimits(t *testing.T) {
 	}
 }
 
-func TestBaseAppAnteHandler(t *testing.T) {
+func TestBaseAppMiddleware(t *testing.T) {
 	anteKey := []byte("ante-key")
 	deliverKey := []byte("deliver-key")
 	cdc := codec.NewLegacyAmino()
 
-	txHandlerOpt := func(bapp *BaseApp) {
+	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
 		legacyRouter.AddRoute(r)
-		txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter:      legacyRouter,
-			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, anteKey),
-			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
-		})
-		require.NoError(t, err)
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			customHandlerTxTest(t, capKey1, anteKey),
+		)
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1499,7 +1527,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	// execute a tx that will fail ante handler execution
 	//
 	// NOTE: State should not be mutated here. This will be implicitly checked by
-	// the next txs ante handler execution (anteHandlerTxTest).
+	// the next txs ante handler execution (customHandlerTxTest).
 	tx := newTxCounter(0, 0)
 	tx.setFailOnAnte(true)
 	txBytes, err := cdc.Marshal(tx)
@@ -1508,7 +1536,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.Empty(t, res.Events)
 	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-	ctx := app.getState(runTxModeDeliver).ctx
+	ctx := app.DeliverState().Context()
 	store := ctx.KVStore(capKey1)
 	require.Equal(t, int64(0), getIntFromStore(store, anteKey))
 
@@ -1524,7 +1552,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.Empty(t, res.Events)
 	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-	ctx = app.getState(runTxModeDeliver).ctx
+	ctx = app.DeliverState().Context()
 	store = ctx.KVStore(capKey1)
 	require.Equal(t, int64(1), getIntFromStore(store, anteKey))
 	require.Equal(t, int64(0), getIntFromStore(store, deliverKey))
@@ -1540,7 +1568,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.NotEmpty(t, res.Events)
 	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-	ctx = app.getState(runTxModeDeliver).ctx
+	ctx = app.DeliverState().Context()
 	store = ctx.KVStore(capKey1)
 	require.Equal(t, int64(2), getIntFromStore(store, anteKey))
 	require.Equal(t, int64(1), getIntFromStore(store, deliverKey))
@@ -1565,7 +1593,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 	cdc := codec.NewLegacyAmino()
 	registerTestCodec(cdc)
 
-	txHandlerOpt := func(bapp *BaseApp) {
+	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			count := msg.(msgCounter).Counter
@@ -1573,12 +1601,13 @@ func TestGasConsumptionBadTx(t *testing.T) {
 			return &sdk.Result{}, nil
 		})
 		legacyRouter.AddRoute(r)
-		txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter:      legacyRouter,
-			LegacyAnteHandler: ante,
-			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
-		})
-		require.NoError(t, err)
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			ante,
+		)
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1618,7 +1647,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 func TestQuery(t *testing.T) {
 	key, value := []byte("hello"), []byte("goodbye")
 
-	txHandlerOpt := func(bapp *BaseApp) {
+	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			store := ctx.KVStore(capKey1)
@@ -1626,16 +1655,17 @@ func TestQuery(t *testing.T) {
 			return &sdk.Result{}, nil
 		})
 		legacyRouter.AddRoute(r)
-		txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter: legacyRouter,
-			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+		txHandler := testTxHandler(
+			middleware.TxHandlerOptions{
+				LegacyRouter:     legacyRouter,
+				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			},
+			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 				store := ctx.KVStore(capKey1)
 				store.Set(key, value)
 				return
 			},
-			MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
-		})
-		require.NoError(t, err)
+		)
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1679,7 +1709,7 @@ func TestQuery(t *testing.T) {
 }
 
 func TestGRPCQuery(t *testing.T) {
-	grpcQueryOpt := func(bapp *BaseApp) {
+	grpcQueryOpt := func(bapp *baseapp.BaseApp) {
 		testdata.RegisterQueryServer(
 			bapp.GRPCQueryRouter(),
 			testdata.QueryImpl{},
@@ -1714,14 +1744,14 @@ func TestGRPCQuery(t *testing.T) {
 
 // Test p2p filter queries
 func TestP2PQuery(t *testing.T) {
-	addrPeerFilterOpt := func(bapp *BaseApp) {
+	addrPeerFilterOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAddrPeerFilter(func(addrport string) abci.ResponseQuery {
 			require.Equal(t, "1.1.1.1:8000", addrport)
 			return abci.ResponseQuery{Code: uint32(3)}
 		})
 	}
 
-	idPeerFilterOpt := func(bapp *BaseApp) {
+	idPeerFilterOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetIDPeerFilter(func(id string) abci.ResponseQuery {
 			require.Equal(t, "testid", id)
 			return abci.ResponseQuery{Code: uint32(4)}
@@ -1748,17 +1778,17 @@ func TestGetMaximumBlockGas(t *testing.T) {
 	app.InitChain(abci.RequestInitChain{})
 	ctx := app.NewContext(true, tmproto.Header{})
 
-	app.StoreConsensusParams(ctx, &tmproto.ConsensusParams{Block: &tmproto.BlockParams{MaxGas: 0}})
-	require.Equal(t, uint64(0), app.getMaximumBlockGas(ctx))
+	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 0}})
+	require.Equal(t, uint64(0), app.GetMaximumBlockGas(ctx))
 
-	app.StoreConsensusParams(ctx, &tmproto.ConsensusParams{Block: &tmproto.BlockParams{MaxGas: -1}})
-	require.Equal(t, uint64(0), app.getMaximumBlockGas(ctx))
+	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -1}})
+	require.Equal(t, uint64(0), app.GetMaximumBlockGas(ctx))
 
-	app.StoreConsensusParams(ctx, &tmproto.ConsensusParams{Block: &tmproto.BlockParams{MaxGas: 5000000}})
-	require.Equal(t, uint64(5000000), app.getMaximumBlockGas(ctx))
+	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 5000000}})
+	require.Equal(t, uint64(5000000), app.GetMaximumBlockGas(ctx))
 
-	app.StoreConsensusParams(ctx, &tmproto.ConsensusParams{Block: &tmproto.BlockParams{MaxGas: -5000000}})
-	require.Panics(t, func() { app.getMaximumBlockGas(ctx) })
+	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -5000000}})
+	require.Panics(t, func() { app.GetMaximumBlockGas(ctx) })
 }
 
 func TestListSnapshots(t *testing.T) {
@@ -1941,21 +1971,14 @@ func (rtr *testCustomRouter) Route(ctx sdk.Context, path string) sdk.Handler {
 }
 
 func TestWithRouter(t *testing.T) {
-	// test increments in the ante
-	anteKey := []byte("ante-key")
 	// test increments in the handler
 	deliverKey := []byte("deliver-key")
 
-	txHandlerOpt := func(bapp *BaseApp) {
+	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		customRouter := &testCustomRouter{routes: sync.Map{}}
 		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
 		customRouter.AddRoute(r)
-		txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter:      customRouter,
-			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, anteKey),
-			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
-		})
-		require.NoError(t, err)
+		txHandler := middleware.NewRunMsgsTxHandler(middleware.NewMsgServiceRouter(interfaceRegistry), customRouter)
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1999,7 +2022,7 @@ func TestBaseApp_EndBlock(t *testing.T) {
 		},
 	}
 
-	app := NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, logger, db, nil)
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: cp,

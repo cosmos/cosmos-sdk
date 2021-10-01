@@ -1,4 +1,4 @@
-package baseapp
+package baseapp_test
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 	tmprototypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -18,81 +19,81 @@ func TestGetBlockRentionHeight(t *testing.T) {
 	name := t.Name()
 
 	testCases := map[string]struct {
-		bapp         *BaseApp
+		bapp         *baseapp.BaseApp
 		maxAgeBlocks int64
 		commitHeight int64
 		expected     int64
 	}{
 		"defaults": {
-			bapp:         NewBaseApp(name, logger, db, nil),
+			bapp:         baseapp.NewBaseApp(name, logger, db, nil),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     0,
 		},
 		"pruning unbonding time only": {
-			bapp:         NewBaseApp(name, logger, db, nil, SetMinRetainBlocks(1)),
+			bapp:         baseapp.NewBaseApp(name, logger, db, nil, baseapp.SetMinRetainBlocks(1)),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
 			expected:     136120,
 		},
 		"pruning iavl snapshot only": {
-			bapp: NewBaseApp(
+			bapp: baseapp.NewBaseApp(
 				name, logger, db, nil,
-				SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
-				SetMinRetainBlocks(1),
+				baseapp.SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
+				baseapp.SetMinRetainBlocks(1),
 			),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     490000,
 		},
 		"pruning state sync snapshot only": {
-			bapp: NewBaseApp(
+			bapp: baseapp.NewBaseApp(
 				name, logger, db, nil,
-				SetSnapshotInterval(50000),
-				SetSnapshotKeepRecent(3),
-				SetMinRetainBlocks(1),
+				baseapp.SetSnapshotInterval(50000),
+				baseapp.SetSnapshotKeepRecent(3),
+				baseapp.SetMinRetainBlocks(1),
 			),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     349000,
 		},
 		"pruning min retention only": {
-			bapp: NewBaseApp(
+			bapp: baseapp.NewBaseApp(
 				name, logger, db, nil,
-				SetMinRetainBlocks(400000),
+				baseapp.SetMinRetainBlocks(400000),
 			),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     99000,
 		},
 		"pruning all conditions": {
-			bapp: NewBaseApp(
+			bapp: baseapp.NewBaseApp(
 				name, logger, db, nil,
-				SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
-				SetMinRetainBlocks(400000),
-				SetSnapshotInterval(50000), SetSnapshotKeepRecent(3),
+				baseapp.SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
+				baseapp.SetMinRetainBlocks(400000),
+				baseapp.SetSnapshotInterval(50000), baseapp.SetSnapshotKeepRecent(3),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
 			expected:     99000,
 		},
 		"no pruning due to no persisted state": {
-			bapp: NewBaseApp(
+			bapp: baseapp.NewBaseApp(
 				name, logger, db, nil,
-				SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
-				SetMinRetainBlocks(400000),
-				SetSnapshotInterval(50000), SetSnapshotKeepRecent(3),
+				baseapp.SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
+				baseapp.SetMinRetainBlocks(400000),
+				baseapp.SetSnapshotInterval(50000), baseapp.SetSnapshotKeepRecent(3),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 10000,
 			expected:     0,
 		},
 		"disable pruning": {
-			bapp: NewBaseApp(
+			bapp: baseapp.NewBaseApp(
 				name, logger, db, nil,
-				SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
-				SetMinRetainBlocks(0),
-				SetSnapshotInterval(50000), SetSnapshotKeepRecent(3),
+				baseapp.SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
+				baseapp.SetMinRetainBlocks(0),
+				baseapp.SetSnapshotInterval(50000), baseapp.SetSnapshotKeepRecent(3),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
@@ -126,14 +127,14 @@ func TestBaseAppCreateQueryContextRejectsNegativeHeights(t *testing.T) {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, logger, db, nil)
 
 	proves := []bool{
 		false, true,
 	}
 	for _, prove := range proves {
 		t.Run(fmt.Sprintf("prove=%t", prove), func(t *testing.T) {
-			sctx, err := app.createQueryContext(-10, true)
+			sctx, err := app.CreateQueryContext(-10, true)
 			require.Error(t, err)
 			require.Equal(t, sctx, sdk.Context{})
 		})

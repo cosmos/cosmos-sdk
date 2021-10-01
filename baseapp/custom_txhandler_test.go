@@ -61,13 +61,6 @@ func (txh customTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.
 }
 
 func (txh customTxHandler) runHandler(ctx context.Context, tx sdk.Tx, txBytes []byte, isSimulate bool) (sdk.Context, error) {
-	for _, msg := range tx.GetMsgs() {
-		err := msg.ValidateBasic()
-		if err != nil {
-			return sdk.Context{}, err
-		}
-	}
-
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	if txh.handler == nil {
 		return sdkCtx, nil

@@ -32,48 +32,64 @@ func ValidateBasicMiddleware(txh tx.Handler) tx.Handler {
 
 var _ tx.Handler = validateBasicTxHandler{}
 
-// CheckTx implements tx.Handler.CheckTx.
-func (basic validateBasicTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	// no need to validate basic on recheck tx, call next middleware
-	if req.Type == abci.CheckTxType_Recheck {
-		return basic.next.CheckTx(ctx, tx, req)
+// validateBasicTxMsgs executes basic validator calls for messages.
+func validateBasicTxMsgs(msgs []sdk.Msg) error {
+	if len(msgs) == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "must contain at least one message")
 	}
 
-	if len(tx.GetMsgs()) == 0 {
-		return abci.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "must contain at least one message")
+	for _, msg := range msgs {
+		err := msg.ValidateBasic()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// CheckTx implements tx.Handler.CheckTx.
+func (txh validateBasicTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	// no need to validate basic on recheck tx, call next middleware
+	if req.Type == abci.CheckTxType_Recheck {
+		return txh.next.CheckTx(ctx, tx, req)
+	}
+
+	if err := validateBasicTxMsgs(tx.GetMsgs()); err != nil {
+		return abci.ResponseCheckTx{}, err
 	}
 
 	if err := tx.ValidateBasic(); err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
 
-	return basic.next.CheckTx(ctx, tx, req)
+	return txh.next.CheckTx(ctx, tx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (basic validateBasicTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+func (txh validateBasicTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	if err := tx.ValidateBasic(); err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
 
-	if len(tx.GetMsgs()) == 0 {
-		return abci.ResponseDeliverTx{}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "must contain at least one message")
+	if err := validateBasicTxMsgs(tx.GetMsgs()); err != nil {
+		return abci.ResponseDeliverTx{}, err
 	}
 
-	return basic.next.DeliverTx(ctx, tx, req)
+	return txh.next.DeliverTx(ctx, tx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (basic validateBasicTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (txh validateBasicTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	if err := sdkTx.ValidateBasic(); err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}
 
-	if len(sdkTx.GetMsgs()) == 0 {
-		return tx.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "must contain at least one message")
+	if err := validateBasicTxMsgs(sdkTx.GetMsgs()); err != nil {
+		return tx.ResponseSimulateTx{}, err
 	}
 
-	return basic.next.SimulateTx(ctx, sdkTx, req)
+	return txh.next.SimulateTx(ctx, sdkTx, req)
 }
 
 var _ tx.Handler = txTimeoutHeightTxHandler{}

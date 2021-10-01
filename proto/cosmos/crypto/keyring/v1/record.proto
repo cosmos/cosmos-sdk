@@ -25,7 +25,9 @@ message Record {
     Multi multi  = 5;
      // Offline does not store any information.
     Offline offline  = 6;
-  }
+    // Hsm stores the public info about an hsm-resident key
+    Hsm hsm = 7;
+}
 
   // Item is a keyring item stored in a keyring backend.
   // Local item
@@ -39,6 +41,10 @@ message Record {
     hd.v1.BIP44Params path = 1;
   }
 
+  message Hsm {
+    string label = 1;
+  }
+  
   // Multi item
   message Multi {}
 

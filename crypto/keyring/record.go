@@ -34,6 +34,17 @@ func NewLocalRecord(name string, priv cryptotypes.PrivKey, pk cryptotypes.PubKey
 	return newRecord(name, pk, recordLocalItem)
 }
 
+// NewHsmRecord creates a new Record with an HSM key label
+func NewHsmRecord(name string, pk cryptotypes.PubKey, label string) (*Record, error) {
+       hsmkey := &Record_Hsm{label}
+       recordHsmKey := &Record_Hsm_{hsmkey}
+       return newRecord(name, pk, recordHsmKey)
+}
+
+func (rh *Record_Hsm) GetPath() string {
+       return rh.Label
+}
+
 // NewLedgerRecord creates a new Record with ledger item
 func NewLedgerRecord(name string, pk cryptotypes.PubKey, path *hd.BIP44Params) (*Record, error) {
 	recordLedger := &Record_Ledger{path}

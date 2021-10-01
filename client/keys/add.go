@@ -110,7 +110,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	kb := ctx.Keyring
 	outputFormat := ctx.OutputFormat
 
-	keyringAlgos, _ := kb.SupportedAlgorithms()
+	keyringAlgos, _, _ := kb.SupportedAlgorithms()
 	algoStr, _ := cmd.Flags().GetString(flags.FlagKeyAlgorithm)
 	algo, err := keyring.NewSigningAlgoFromString(algoStr, keyringAlgos)
 	if err != nil {

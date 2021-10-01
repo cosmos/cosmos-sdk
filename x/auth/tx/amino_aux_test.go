@@ -31,9 +31,19 @@ func TestAminoAuxHandler(t *testing.T) {
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	accSeq := uint64(2) // Arbitrary account sequence
 	timeout := uint64(10)
+	fee := txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
+	tip := sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(1000)))
 
-	// any, err := codectypes.NewAnyWithValue(pubkey)
-	// require.NoError(t, err)
+	err := txBuilder.SetMsgs(msgs...)
+	require.NoError(t, err)
+	txBuilder.SetMemo(memo)
+	txBuilder.SetFeeAmount(fee.Amount)
+	txBuilder.SetGasLimit(fee.GasLimit)
+	txBuilder.SetTimeoutHeight(timeout)
+	txBuilder.SetTip(&txtypes.Tip{
+		Amount: tip,
+		Tipper: addr.String(), // Not needed when signing using AMINO_AUX, but putting here for clarity.
+	})
 
 	sigData := &signingtypes.SingleSignatureData{
 		SignMode: signingtypes.SignMode_SIGN_MODE_AMINO_AUX,
@@ -44,20 +54,6 @@ func TestAminoAuxHandler(t *testing.T) {
 		Data:     sigData,
 		Sequence: accSeq,
 	}
-
-	fee := txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
-
-	tip := sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(1000)))
-	err := txBuilder.SetMsgs(msgs...)
-	require.NoError(t, err)
-	txBuilder.SetMemo(memo)
-	txBuilder.SetFeeAmount(fee.Amount)
-	txBuilder.SetGasLimit(fee.GasLimit)
-	txBuilder.SetTimeoutHeight(timeout)
-	txBuilder.SetTip(&txtypes.Tip{
-		Amount: tip,
-	})
-
 	err = txBuilder.SetSignatures(sig)
 	require.NoError(t, err)
 
@@ -65,22 +61,13 @@ func TestAminoAuxHandler(t *testing.T) {
 		ChainID:       chainId,
 		AccountNumber: accountNumber,
 		Sequence:      accSeq,
+		SignerIndex:   0,
 	}
 
 	handler := signModeAminoAuxHandler{}
 	signBytes, err := handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_AMINO_AUX, signingData, txBuilder.GetTx())
-
 	require.NoError(t, err)
 	require.NotNil(t, signBytes)
-
-	anys := make([]*codectypes.Any, len(msgs))
-	for i, msg := range msgs {
-		var err error
-		anys[i], err = codectypes.NewAnyWithValue(msg)
-		if err != nil {
-			panic(err)
-		}
-	}
 
 	expectedSignBytes := legacytx.StdSignAuxBytes(chainId, accountNumber, accSeq, timeout, tip, msgs, memo)
 	require.NoError(t, err)

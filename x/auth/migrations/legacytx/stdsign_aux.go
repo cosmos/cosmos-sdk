@@ -24,7 +24,7 @@ func StdSignAuxBytes(chainID string, accnum, sequence, timeout uint64, tip sdk.C
 	for _, msg := range msgs {
 		legacyMsg, ok := msg.(LegacyMsg)
 		if !ok {
-			panic(fmt.Errorf("expected %T when using amino JSON", (*LegacyMsg)(nil)))
+			panic(fmt.Errorf("expected %T when using AMINO_AUX", (*LegacyMsg)(nil)))
 		}
 
 		msgsBytes = append(msgsBytes, json.RawMessage(legacyMsg.GetSignBytes()))

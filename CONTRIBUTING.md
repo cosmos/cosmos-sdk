@@ -46,7 +46,7 @@ taken place in a GitHub issue, that PR runs a high likelihood of being rejected.
 
 ## Architecture Decision Records (ADR)
 
-When proposing an architecture decision for the SDK, please start by opening an [issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose) or a [discussion](https://github.com/cosmos/cosmos-sdk/discussions/new) with a summary of the proposal. Once the proposal has been discussed and there is rough alignment on a high-level approach to the design, the [ADR creation process](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/PROCESS.md) can begin. We are following this process to ensure all involved parties are in agreement before any party begins coding the proposed implementation. If you would like to see examples of how these are written, please refer to the current [ADRs](https://github.com/cosmos/cosmos-sdk/tree/master/docs/architecture).
+When proposing an architecture decision for the Cosmos SDK, please start by opening an [issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose) or a [discussion](https://github.com/cosmos/cosmos-sdk/discussions/new) with a summary of the proposal. Once the proposal has been discussed and there is rough alignment on a high-level approach to the design, the [ADR creation process](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/PROCESS.md) can begin. We are following this process to ensure all involved parties are in agreement before any party begins coding the proposed implementation. If you would like to see examples of how these are written, please refer to the current [ADRs](https://github.com/cosmos/cosmos-sdk/tree/master/docs/architecture).
 
 ## Development Procedure
 
@@ -59,10 +59,10 @@ When proposing an architecture decision for the SDK, please start by opening an 
   - For core developers working within the `cosmos-sdk` repo, follow branch name conventions to ensure a clear
     ownership of branches: `{moniker}/{issue#}-branch-name`.
   - See [Branching Model](#branching-model-and-release) for more details.
-- Please make sure to run `make format` before every commit - the easiest way
+- Be sure to run `make format` before every commit. The easiest way
   to do this is have your editor run it for you upon saving a file (most of the editors
   will do it anyway using a pre-configured setup of the programming language mode).
-  Additionally please ensure that your code is lint compliant by running `make lint-fix`.
+  Additionally, be sure that your code is lint compliant by running `make lint-fix`.
   A convenience git `pre-commit` hook that runs the formatters automatically
   before each commit is available in the `contrib/githooks/` directory.
 - Follow the [CODING GUIDELINES](CODING_GUIDELINES.md), which defines criteria for designing and coding a software.
@@ -153,7 +153,7 @@ build, in which case we can fall back on `go mod tidy -v`.
 
 ## Protobuf
 
-We use [Protocol Buffers](https://developers.google.com/protocol-buffers) along with [gogoproto](https://github.com/gogo/protobuf) to generate code for use in Cosmos-SDK.
+We use [Protocol Buffers](https://developers.google.com/protocol-buffers) along with [gogoproto](https://github.com/gogo/protobuf) to generate code for use in Cosmos SDK.
 
 For determinstic behavior around Protobuf tooling, everything is containerized using Docker. Make sure to have Docker installed on your machine, or head to [Docker's website](https://docs.docker.com/get-docker/) to install it.
 
@@ -241,7 +241,7 @@ is broken up into three distinct stages: **Strategy Discovery**, **Concept Appro
 
 ### Strategy Discovery
 
-* Develop long term priorities, strategy and roadmap for the SDK
+* Develop long term priorities, strategy and roadmap for the Cosmos SDK
 * Release committee not yet defined as there is already a roadmap that can be used for the time being
 
 ### Concept Approval
@@ -285,7 +285,7 @@ Members must:
 
 * Participate in all or almost all ADR discussions, both on GitHub as well as in bi-weekly Architecture Review
   meetings
-* Be active contributors to the SDK, and furthermore should be continuously making substantial contributions
+* Be active contributors to the Cosmos SDK, and furthermore should be continuously making substantial contributions
   to the project's codebase, review process, documentation and ADRs
 * Have stake in the Cosmos SDK project, represented by:
     * Being a client / user of the Comsos SDK

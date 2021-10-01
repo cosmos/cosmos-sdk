@@ -100,8 +100,11 @@ type signModeTxHandler struct {
 	next tx.Handler
 }
 
-// NewTipsTxMiddleware returns a new middleware for handling meta-transactions
-// with tips.
+// NewTipsTxMiddleware returns a new middleware that checks that
+// all signatures in the tx have correct sign modes.
+// Namely:
+// - fee payer should sign over fees,
+// - tipper should signer over tips.
 func SignModeTxMiddleware(txh tx.Handler) tx.Handler {
 	return signModeTxHandler{txh}
 }

@@ -17,8 +17,7 @@
     - [Code Owner Membership](#code-owner-membership)
     - [Concept & Feature Approval Process](#concept--feature-approval-process)
 
-Thank you for considering making contributions to Cosmos SDK and related
-repositories!
+Thank you for considering making contributions to the Cosmos SDK and related repositories!
 
 Contributing to this repo can mean many things such as participating in
 discussion or proposing code changes. To ensure a smooth workflow for all
@@ -72,7 +71,7 @@ Code is merged into master through pull request procedure.
 
 ### Testing
 
-Tests can be ran by running `make test` at the top level of the SDK repository.
+Tests can be executed by running `make test` at the top level of the Cosmos SDK repository.
 
 ### Pull Requests
 
@@ -81,7 +80,6 @@ Before submitting a pull request:
 - run `make lint test` to ensure that all checks and tests pass.
 
 Then:
-
 1. If you have something to show, **start with a `Draft` PR**. It's good to have early validation of your work and we highly recommend this practice. A Draft PR also indicates to the community that the work is in progress.
    Draft PRs also helps the core team provide early feedback and ensure the work is in the right direction.
 2. When the code is complete, change your PR from `Draft` to `Ready for Review`.

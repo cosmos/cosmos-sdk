@@ -11,7 +11,7 @@ Proposed
 
 ## Abstract
 
-This ADR defines an address format for all addressable SDK accounts. That includes: new public key algorithms, multisig public keys, and module accounts.
+This ADR defines an address format for all addressable Cosmos SDK accounts. That includes: new public key algorithms, multisig public keys, and module accounts.
 
 ## Context
 
@@ -79,7 +79,7 @@ We define the following account types, for which we define the address function:
 
 ### Legacy Public Key Addresses Don't Change
 
-Currently (Jan 2021), the only officially supported SDK user accounts are `secp256k1` basic accounts and legacy amino multisig.
+Currently (Jan 2021), the only officially supported Cosmos SDK user accounts are `secp256k1` basic accounts and legacy amino multisig.
 They are used in existing Cosmos SDK zones. They use the following address formats:
 
 - secp256k1: `ripemd160(sha256(pk_bytes))[:20]`
@@ -186,7 +186,7 @@ address.Hash("module", moduleName)
 ```
 
 We use `"module"` as a schema type for all module derived addresses. Module accounts can have sub accounts. The derivation process has a defined order: module name, submodule key, subsubmodule key.
-Module account addresses are heavily used in the SDK so it makes sense to optimize the derivation process: instead of using of using `LengthPrefix` for the module name, we use a null byte (`'\x00'`) as a separator. This works, because null byte is not a part of a valid module name.
+Module account addresses are heavily used in the Cosmos SDK so it makes sense to optimize the derivation process: instead of using of using `LengthPrefix` for the module name, we use a null byte (`'\x00'`) as a separator. This works, because null byte is not a part of a valid module name.
 
 ```go
 func Module(moduleName string, key []byte) []byte{
@@ -227,7 +227,7 @@ smartContractAddr := Derived(Module("cosmwasm", smartContractsNamespace), []{sma
 ### Schema Types
 
 A `typ` parameter used in `Hash` function SHOULD be unique for each account type.
-Since all SDK account types are serialized in the state, we propose to use the protobuf message name string.
+Since all Cosmos SDK account types are serialized in the state, we propose to use the protobuf message name string.
 
 Example: all public key types have a unique protobuf message type similar to:
 
@@ -248,7 +248,7 @@ in other places such as the type URL in `Any`s. We can easily obtain the name us
 
 ### Backwards Compatibility
 
-This ADR is compatible with what was committed and directly supported in the SDK repository.
+This ADR is compatible with what was committed and directly supported in the Cosmos SDK repository.
 
 ### Positive
 

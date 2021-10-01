@@ -8,13 +8,13 @@ order: 3
 
 ## Pre-requisite Readings
 
-- [Introduction to SDK Modules](./intro.md) {prereq}
+- [Introduction to Cosmos SDK Modules](./intro.md) {prereq}
 
 ## Messages
 
 `Msg`s are objects whose end-goal is to trigger state-transitions. They are wrapped in [transactions](../core/transactions.md), which may contain one or more of them.
 
-When a transaction is relayed from the underlying consensus engine to the SDK application, it is first decoded by [`BaseApp`](../core/baseapp.md). Then, each message contained in the transaction is extracted and routed to the appropriate module via `BaseApp`'s `MsgServiceRouter` so that it can be processed by the module's [`Msg` service](./msg-services.md). For a more detailed explanation of the lifecycle of a transaction, click [here](../basics/tx-lifecycle.md).
+When a transaction is relayed from the underlying consensus engine to the Cosmos SDK application, it is first decoded by [`BaseApp`](../core/baseapp.md). Then, each message contained in the transaction is extracted and routed to the appropriate module via `BaseApp`'s `MsgServiceRouter` so that it can be processed by the module's [`Msg` service](./msg-services.md). For a more detailed explanation of the lifecycle of a transaction, click [here](../basics/tx-lifecycle.md).
 
 ### `Msg` Services
 
@@ -32,14 +32,14 @@ Each `Msg` service method must have exactly one argument, which must implement t
 
 `sdk.Msg` interface is a simplified version of the Amino `LegacyMsg` interface described [below](#legacy-amino-msgs) with only `ValidateBasic()` and `GetSigners()` methods. For backwards compatibility with [Amino `LegacyMsg`s](#legacy-amino-msgs), existing `LegacyMsg` types should be used as the request parameter for `service` RPC definitions. Newer `sdk.Msg` types, which only support `service` definitions, should use canonical `Msg...` name.
 
-Cosmos SDK uses Protobuf definitions to generate client and server code:
+The Cosmos SDK uses Protobuf definitions to generate client and server code:
 
 * `MsgServer` interface defines the server API for the `Msg` service and its implementation is described as part of the [`Msg` services](./msg-services.md) documentation.
 * Structures are generated for all RPC request and response types.
 
 A `RegisterMsgServer` method is also generated and should be used to register the module's `MsgServer` implementation in `RegisterServices` method from the [`AppModule` interface](./module-manager.md#appmodule).
 
-In order for clients (CLI and grpc-gateway) to have these URLs registered, the SDK provides the function `RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.ServiceDesc)` that should be called inside module's [`RegisterInterfaces`](module-manager.md#appmodulebasic) method, using the proto-generated `&_Msg_serviceDesc` as `*grpc.ServiceDesc` argument.
+In order for clients (CLI and grpc-gateway) to have these URLs registered, the Cosmos SDK provides the function `RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.ServiceDesc)` that should be called inside module's [`RegisterInterfaces`](module-manager.md#appmodulebasic) method, using the proto-generated `&_Msg_serviceDesc` as `*grpc.ServiceDesc` argument.
 
 ### Legacy Amino `LegacyMsg`s
 
@@ -57,7 +57,7 @@ It extends `proto.Message` and contains the following methods:
 - `Type() string`: Type of the message, used primarly in [events](../core/events.md). This should return a message-specific `string`, typically the denomination of the message itself.
 - `ValidateBasic() error`: This method is called by `BaseApp` very early in the processing of the `message` (in both [`CheckTx`](../core/baseapp.md#checktx) and [`DeliverTx`](../core/baseapp.md#delivertx)), in order to discard obviously invalid messages. `ValidateBasic` should only include *stateless* checks, i.e. checks that do not require access to the state. This usually consists in checking that the message's parameters are correctly formatted and valid (i.e. that the `amount` is strictly positive for a transfer).
 - `GetSignBytes() []byte`: Return the canonical byte representation of the message. Used to generate a signature.
-- `GetSigners() []AccAddress`: Return the list of signers. The SDK will make sure that each `message` contained in a transaction is signed by all the signers listed in the list returned by this method.
+- `GetSigners() []AccAddress`: Return the list of signers. The Cosmos SDK will make sure that each `message` contained in a transaction is signed by all the signers listed in the list returned by this method.
 
 See an example implementation of a `message` from the `gov` module:
 
@@ -81,7 +81,7 @@ A `RegisterQueryServer` method is also generated and should be used to register 
 
 ### Legacy Queries
 
-Before the introduction of Protobuf and gRPC in the SDK, there was usually no specific `query` object defined by module developers, contrary to `message`s. Instead, the SDK took the simpler approach of using a simple `path` to define each `query`. The `path` contains the `query` type and all the arguments needed in order to process it. For most module queries, the `path` should look like the following:
+Before the introduction of Protobuf and gRPC in the Cosmos SDK, there was usually no specific `query` object defined by module developers, contrary to `message`s. Instead, the Cosmos SDK took the simpler approach of using a simple `path` to define each `query`. The `path` contains the `query` type and all the arguments needed in order to process it. For most module queries, the `path` should look like the following:
 
 ```
 queryCategory/queryRoute/queryType/arg1/arg2/...

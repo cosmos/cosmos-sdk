@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
@@ -62,11 +61,6 @@ func (txh customTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.
 }
 
 func (txh customTxHandler) runHandler(ctx context.Context, tx sdk.Tx, txBytes []byte, isSimulate bool) (sdk.Context, error) {
-	err := validateBasicTxMsgs(tx.GetMsgs())
-	if err != nil {
-		return sdk.Context{}, err
-	}
-
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	if txh.handler == nil {
 		return sdkCtx, nil
@@ -120,20 +114,4 @@ func cacheTxContext(sdkCtx sdk.Context, txBytes []byte) (sdk.Context, sdk.CacheM
 	}
 
 	return sdkCtx.WithMultiStore(msCache), msCache
-}
-
-// validateBasicTxMsgs executes basic validator calls for messages.
-func validateBasicTxMsgs(msgs []sdk.Msg) error {
-	if len(msgs) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "must contain at least one message")
-	}
-
-	for _, msg := range msgs {
-		err := msg.ValidateBasic()
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

@@ -204,7 +204,7 @@ func (s IntegrationTestSuite) TestValidatorSetByHeight_GRPC() {
 		expErrMsg string
 	}{
 		{"nil request", nil, true, "request cannot be nil"},
-		{"empty request", &tmservice.GetValidatorSetByHeightRequest{}, true, "height must be greater than 0"},
+		{"empty request", &tmservice.GetValidatorSetByHeightRequest{}, true, "height must be greater than zero"},
 		{"no pagination", &tmservice.GetValidatorSetByHeightRequest{Height: 1}, false, ""},
 		{"with pagination", &tmservice.GetValidatorSetByHeightRequest{Height: 1, Pagination: &qtypes.PageRequest{Offset: 0, Limit: 1}}, false, ""},
 	}

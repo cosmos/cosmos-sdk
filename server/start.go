@@ -248,11 +248,16 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 	app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper)
 
+	genDoc, err := tmtypes.GenesisDocFromFile(cfg.GenesisFile())
+	if err != nil {
+		return err
+	}
+
 	tmNode, err := node.New(
 		cfg,
 		ctx.Logger,
 		abciclient.NewLocalCreator(app),
-		nil,
+		genDoc,
 	)
 	if err != nil {
 		return err

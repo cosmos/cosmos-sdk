@@ -7,14 +7,13 @@ require (
 	github.com/armon/go-metrics v0.3.9
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.22.0-beta
-	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/coinbase/rosetta-sdk-go v0.6.10
 	github.com/confio/ics23/go v0.6.6
+	github.com/cosmos/btcutil v1.0.4
 	github.com/cosmos/cosmos-proto v0.0.0-20210914142853-23ed61ac79ce
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.17.1
 	github.com/cosmos/ledger-cosmos-go v0.11.1
-	github.com/enigmampc/btcutil v1.0.3-0.20200723161021-e2fb6adb2a25
 	github.com/gogo/gateway v1.1.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/mock v1.6.0
@@ -26,7 +25,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/hdevalence/ed25519consensus v0.0.0-20210204194344-59a8610d2b87
 	github.com/improbable-eng/grpc-web v0.14.1
-	github.com/jhump/protoreflect v1.9.0
+	github.com/jhump/protoreflect v1.10.0
 	github.com/kr/text v0.2.0 // indirect
 	github.com/magiconair/properties v1.8.5
 	github.com/mattn/go-isatty v0.0.14
@@ -35,7 +34,7 @@ require (
 	github.com/onsi/gomega v1.13.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0
-	github.com/prometheus/common v0.30.0
+	github.com/prometheus/common v0.31.1
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
 	github.com/rs/zerolog v1.25.0
@@ -51,10 +50,10 @@ require (
 	github.com/tendermint/tm-db v0.6.4
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 	google.golang.org/genproto v0.0.0-20210828152312-66f60bf46e71
-	google.golang.org/grpc v1.40.0
+	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
-	gopkg.in/yaml.v2 v2.4.0
+	sigs.k8s.io/yaml v1.3.0
 )
 
 require (
@@ -118,6 +117,7 @@ require (
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
 	golang.org/x/text v0.3.6 // indirect
 	gopkg.in/ini.v1 v1.63.2 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
 )

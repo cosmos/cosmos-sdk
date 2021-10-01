@@ -39,8 +39,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	wrapCtx := sdk.WrapSDKContext(ctx)
-	res, err := govMsgSvr.SubmitProposal(wrapCtx, newProposalMsg)
+	res, err := govMsgSvr.SubmitProposal(sdk.WrapSDKContext(ctx), newProposalMsg)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 

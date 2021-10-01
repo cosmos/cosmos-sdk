@@ -65,13 +65,13 @@ will provide two concrete implementations of the `Marshaler` interface: `AminoCo
 - `AminoCodec`: Uses Amino for both binary and JSON encoding.
 - `ProtoCodec`: Uses Protobuf for both binary and JSON encoding.
 
-Modules will use whichever codec that is instantiated in the app. By default, the SDK's `simapp`
+Modules will use whichever codec that is instantiated in the app. By default, the Cosmos SDK's `simapp`
 instantiates a `ProtoCodec` as the concrete implementation of `Marshaler`, inside the `MakeTestEncodingConfig`
 function. This can be easily overwritten by app developers if they so desire.
 
 The ultimate goal will be to replace Amino JSON encoding with Protobuf encoding and thus have
 modules accept and/or extend `ProtoCodec`. Until then, Amino JSON is still provided for legacy use-cases.
-A handful of places in the SDK still have Amino JSON hardcoded, such as the Legacy API REST endpoints
+A handful of places in the Cosmos SDK still have Amino JSON hardcoded, such as the Legacy API REST endpoints
 and the `x/params` store. They are planned to be converted to Protobuf in a gradual manner.
 
 ### Module Codecs
@@ -139,7 +139,7 @@ compression at the persistence layer in the future and the performance impact
 is likely to be small. Thus, not using `Any` is seem as a pre-mature optimization,
 with user experience as the higher order concern.
 
-Note, that given the SDK's decision to adopt the `Codec` interfaces described
+Note, that given the Cosmos SDK's decision to adopt the `Codec` interfaces described
 above, apps can still choose to use `oneof` to encode state and transactions
 but it is not the recommended approach. If apps do choose to use `oneof`s
 instead of `Any` they will likely lose compatibility with client apps that
@@ -226,7 +226,7 @@ every module that implements it in order to populate the `InterfaceRegistry`.
 
 ### Using `Any` to encode state
 
-The SDK will provide support methods `MarshalInterface` and `UnmarshalInterface` to hide a complexity of wrapping interface types into `Any` and allow easy serialization.
+The Cosmos SDK will provide support methods `MarshalInterface` and `UnmarshalInterface` to hide a complexity of wrapping interface types into `Any` and allow easy serialization.
 
 ```go
 import "github.com/cosmos/cosmos-sdk/codec"

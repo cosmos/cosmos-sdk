@@ -66,44 +66,72 @@ func NewServiceConstructor(name string) (ServiceConstructor, error) {
 // FileStreamingConstructor is the streaming.ServiceConstructor function for creating a FileStreamingService
 func FileStreamingConstructor(opts serverTypes.AppOptions, keys []sdk.StoreKey, marshaller codec.BinaryCodec) (baseapp.StreamingService, error) {
 	filePrefix := cast.ToString(opts.Get("streamers.file.prefix"))
-	fileDir := cast.ToString(opts.Get("streamers.file.writeDir"))
+	fileDir := cast.ToString(opts.Get("streamers.file.write_dir"))
 	return file.NewStreamingService(fileDir, filePrefix, keys, marshaller)
 }
 
 // LoadStreamingServices is a function for loading StreamingServices onto the BaseApp using the provided AppOptions, codec, and keys
 // It returns the WaitGroup and quit channel used to synchronize with the streaming services and any error that occurs during the setup
-func LoadStreamingServices(bApp *baseapp.BaseApp, appOpts serverTypes.AppOptions, appCodec codec.BinaryCodec, keys map[string]*sdk.KVStoreKey) (*sync.WaitGroup, chan struct{}, error) {
+func LoadStreamingServices(bApp *baseapp.BaseApp, appOpts serverTypes.AppOptions, appCodec codec.BinaryCodec, keys map[string]*sdk.KVStoreKey) ([]baseapp.StreamingService, *sync.WaitGroup, error) {
 	// waitgroup and quit channel for optional shutdown coordination of the streaming service(s)
 	wg := new(sync.WaitGroup)
-	quitChan := make(chan struct{})
 	// configure state listening capabilities using AppOptions
 	streamers := cast.ToStringSlice(appOpts.Get("store.streamers"))
+	activeStreamers := make([]baseapp.StreamingService, 0, len(streamers))
 	for _, streamerName := range streamers {
 		// get the store keys allowed to be exposed for this streaming service
 		exposeKeyStrs := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("streamers.%s.keys", streamerName)))
-		exposeStoreKeys := make([]sdk.StoreKey, 0, len(exposeKeyStrs))
-		for _, keyStr := range exposeKeyStrs {
-			if storeKey, ok := keys[keyStr]; ok {
+		var exposeStoreKeys []sdk.StoreKey
+		if exposeAll(exposeKeyStrs) { // if list contains `*`, expose all StoreKeys
+			exposeStoreKeys = make([]sdk.StoreKey, 0, len(keys))
+			for _, storeKey := range keys {
 				exposeStoreKeys = append(exposeStoreKeys, storeKey)
 			}
+		} else {
+			exposeStoreKeys = make([]sdk.StoreKey, 0, len(exposeKeyStrs))
+			for _, keyStr := range exposeKeyStrs {
+				if storeKey, ok := keys[keyStr]; ok {
+					exposeStoreKeys = append(exposeStoreKeys, storeKey)
+				}
+			}
+		}
+		if len(exposeStoreKeys) == 0 { // short circuit if we are not exposing anything
+			continue
 		}
 		// get the constructor for this streamer name
 		constructor, err := NewServiceConstructor(streamerName)
 		if err != nil {
-			// close the quitChan to shutdown any services we may have already spun up before hitting the error on this one
-			close(quitChan)
+			// close any services we may have already spun up before hitting the error on this one
+			for _, activeStreamer := range activeStreamers {
+				activeStreamer.Close()
+			}
 			return nil, nil, err
 		}
 		// generate the streaming service using the constructor, appOptions, and the StoreKeys we want to expose
 		streamingService, err := constructor(appOpts, exposeStoreKeys, appCodec)
 		if err != nil {
-			close(quitChan)
+			// close any services we may have already spun up before hitting the error on this one
+			for _, activeStreamer := range activeStreamers {
+				activeStreamer.Close()
+			}
 			return nil, nil, err
 		}
 		// register the streaming service with the BaseApp
 		bApp.SetStreamingService(streamingService)
 		// kick off the background streaming service loop
-		streamingService.Stream(wg, quitChan)
+		streamingService.Stream(wg)
+		// add to the list of active streamers
+		activeStreamers = append(activeStreamers, streamingService)
 	}
-	return wg, quitChan, nil
+	// if there are no active streamers, activeStreamers is empty (len == 0) and the waitGroup is not waiting on anything
+	return activeStreamers, wg, nil
+}
+
+func exposeAll(list []string) bool {
+	for _, ele := range list {
+		if ele == "*" {
+			return true
+		}
+	}
+	return false
 }

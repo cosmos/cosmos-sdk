@@ -19,18 +19,20 @@ import (
 /*
 The naming schema and data format for the files this service writes out to is as such:
 
-After every `BeginBlock` request a new file is created with the name `block-{N}-begin`, where N is the block number. All
-subsequent state changes are written out to this file until the first `DeliverTx` request is received. At the head of these files,
-the length-prefixed protobuf encoded `BeginBlock` request is written, and the response is written at the tail.
+After every `BeginBlock` request a new file is created with the name `block-{N}-begin`, where N is the block number.
+All subsequent state changes are written out to this file until the first `DeliverTx` request is received.
+At the head of these files, the length-prefixed protobuf encoded `BeginBlock` request is written,
+and the response is written at the tail.
 
-After every `DeliverTx` request a new file is created with the name `block-{N}-tx-{M}` where N is the block number and M
-is the tx number in the block (i.e. 0, 1, 2...). All subsequent state changes are written out to this file until the next
-`DeliverTx` request is received or an `EndBlock` request is received. At the head of these files, the length-prefixed protobuf
-encoded `DeliverTx` request is written, and the response is written at the tail.
+After every `DeliverTx` request a new file is created with the name `block-{N}-tx-{M}` where N is the block number and
+M is the tx number in the block (i.e. 0, 1, 2...). All subsequent state changes are written out to this file until the
+next `DeliverTx` request is received or an `EndBlock` request is received. At the head of these files,
+the length-prefixed protobuf encoded `DeliverTx` request is written, and the response is written at the tail.
 
-After every `EndBlock` request a new file is created with the name `block-{N}-end`, where N is the block number. All
-subsequent state changes are written out to this file until the next `BeginBlock` request is received. At the head of these files,
-the length-prefixed protobuf encoded `EndBlock` request is written, and the response is written at the tail.
+After every `EndBlock` request a new file is created with the name `block-{N}-end`, where N is the block number.
+All subsequent state changes are written out to this file until the next `BeginBlock` request is received.
+At the head of these files, the length-prefixed protobuf encoded `EndBlock` request is written,
+and the response is written at the tail.
 */
 
 var _ baseapp.StreamingService = &StreamingService{}
@@ -38,7 +40,7 @@ var _ baseapp.StreamingService = &StreamingService{}
 // StreamingService is a concrete implementation of StreamingService that writes state changes out to files
 type StreamingService struct {
 	listeners          map[sdk.StoreKey][]types.WriteListener // the listeners that will be initialized with BaseApp
-	srcChan            <-chan []byte                          // the channel that all of the WriteListeners write their data out to
+	srcChan            <-chan []byte                          // the channel that all the WriteListeners write their data out to
 	filePrefix         string                                 // optional prefix for each of the generated files
 	writeDir           string                                 // directory to write files into
 	codec              codec.BinaryCodec                      // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
@@ -46,10 +48,11 @@ type StreamingService struct {
 	stateCacheLock     *sync.Mutex                            // mutex for the state cache
 	currentBlockNumber int64                                  // the current block number
 	currentTxIndex     int64                                  // the index of the current tx
+	quitChan           chan struct{}                          // channel to synchronize closure
 }
 
-// IntermediateWriter is used so that we do not need to update the underlying io.Writer inside the StoreKVPairWriteListener
-// everytime we begin writing to a new file
+// IntermediateWriter is used so that we do not need to update the underlying io.Writer
+// inside the StoreKVPairWriteListener everytime we begin writing to a new file
 type IntermediateWriter struct {
 	outChan chan<- []byte
 }
@@ -93,14 +96,16 @@ func NewStreamingService(writeDir, filePrefix string, storeKeys []sdk.StoreKey, 
 	}, nil
 }
 
-// Listeners returns the StreamingService's underlying WriteListeners, use for registering them with the BaseApp
+// Listeners satisfies the baseapp.StreamingService interface
+// It returns the StreamingService's underlying WriteListeners
+// Use for registering the underlying WriteListeners with the BaseApp
 func (fss *StreamingService) Listeners() map[sdk.StoreKey][]types.WriteListener {
 	return fss.listeners
 }
 
-// ListenBeginBlock satisfies the Hook interface
-// It writes out the received BeginBlock request and response and the resulting state changes out to a file as described
-// in the above the naming schema
+// ListenBeginBlock satisfies the baseapp.StreamingListener interface
+// It writes the received BeginBlock request and response and the resulting state changes
+// out to a file as described in the above the naming schema
 func (fss *StreamingService) ListenBeginBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
 	// generate the new file
 	dstFile, err := fss.openBeginBlockFile(req)
@@ -149,9 +154,9 @@ func (fss *StreamingService) openBeginBlockFile(req abci.RequestBeginBlock) (*os
 	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0600)
 }
 
-// ListenDeliverTx satisfies the Hook interface
-// It writes out the received DeliverTx request and response and the resulting state changes out to a file as described
-// in the above the naming schema
+// ListenDeliverTx satisfies the baseapp.StreamingListener interface
+// It writes the received DeliverTx request and response and the resulting state changes
+// out to a file as described in the above the naming schema
 func (fss *StreamingService) ListenDeliverTx(ctx sdk.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
 	// generate the new file
 	dstFile, err := fss.openDeliverTxFile()
@@ -199,9 +204,9 @@ func (fss *StreamingService) openDeliverTxFile() (*os.File, error) {
 	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0600)
 }
 
-// ListenEndBlock satisfies the Hook interface
-// It writes out the received EndBlock request and response and the resulting state changes out to a file as described
-// in the above the naming schema
+// ListenEndBlock satisfies the baseapp.StreamingListener interface
+// It writes the received EndBlock request and response and the resulting state changes
+// out to a file as described in the above the naming schema
 func (fss *StreamingService) ListenEndBlock(ctx sdk.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
 	// generate the new file
 	dstFile, err := fss.openEndBlockFile()
@@ -248,16 +253,17 @@ func (fss *StreamingService) openEndBlockFile() (*os.File, error) {
 	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0600)
 }
 
-// Stream spins up a goroutine select loop which awaits length-prefixed binary encoded KV pairs and caches them in the order they were received
-// Do we need this and an intermediate writer? We could just write directly to the buffer on calls to Write
-// But then we don't support a Stream interface, which could be needed for other types of streamers
-func (fss *StreamingService) Stream(wg *sync.WaitGroup, quitChan <-chan struct{}) {
+// Stream satisfies the baseapp.StreamingService interface
+// It spins up a goroutine select loop which awaits length-prefixed binary encoded KV pairs
+// and caches them in the order they were received
+func (fss *StreamingService) Stream(wg *sync.WaitGroup) {
+	fss.quitChan = make(chan struct{})
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		for {
 			select {
-			case <-quitChan:
+			case <-fss.quitChan:
 				return
 			case by := <-fss.srcChan:
 				fss.stateCacheLock.Lock()
@@ -266,6 +272,12 @@ func (fss *StreamingService) Stream(wg *sync.WaitGroup, quitChan <-chan struct{}
 			}
 		}
 	}()
+}
+
+// Close satisfies the io.Closer interface, which satisfies the baseapp.StreamingService interface
+func (fss *StreamingService) Close() error {
+	close(fss.quitChan)
+	return nil
 }
 
 // isDirWriteable checks if dir is writable by writing and removing a file

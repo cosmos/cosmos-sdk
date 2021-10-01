@@ -209,16 +209,24 @@ We will introduce a new `StreamingService` interface for exposing `WriteListener
 ```go
 // StreamingListener interface used to hook into the ABCI message processing of the BaseApp
 type StreamingListener interface {
-	ListenBeginBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error // update the streaming service with the latest BeginBlock messages
-	ListenEndBlock(ctx sdk.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error// update the steaming service with the latest EndBlock messages
-	ListenDeliverTx(ctx sdk.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error // update the steaming service with the latest DeliverTx messages
+	// ListenBeginBlock updates the streaming service with the latest BeginBlock messages 
+	ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error 
+	// ListenEndBlock updates the steaming service with the latest EndBlock messages 
+	ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error 
+	// ListenDeliverTx updates the steaming service with the latest DeliverTx messages 
+	ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
 }
 
 // StreamingService interface for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks
 type StreamingService interface {
-	Stream(wg *sync.WaitGroup, quitChan <-chan struct{}) // streaming service loop, awaits kv pairs and writes them to some destination stream or file
-	Listeners() map[sdk.StoreKey][]storeTypes.WriteListener // returns the streaming service's listeners for the BaseApp to register 
-	StreamingListener
+	// Stream is the streaming service loop, awaits kv pairs and writes them to some destination stream or file 
+	Stream(wg *sync.WaitGroup) 
+	// Listeners returns the streaming service's listeners for the BaseApp to register 
+	Listeners() map[types.StoreKey][]store.WriteListener 
+	// StreamingListener interface for hooking into the ABCI messages from inside the BaseApp 
+	StreamingListener 
+	// Closer interface 
+	io.Closer
 }
 ```
 
@@ -474,7 +482,7 @@ Note: the actual namespace is TBD.
 [streamers]
     [streamers.file]
         keys = ["list", "of", "store", "keys", "we", "want", "to", "expose", "for", "this", "streaming", "service"]
-        writeDir = "path to the write directory"
+        write_dir = "path to the write directory"
         prefix = "optional prefix to prepend to the generated file names"
 ```
 
@@ -534,7 +542,7 @@ func NewServiceConstructor(name string) (ServiceConstructor, error) {
 // FileStreamingConstructor is the streaming.ServiceConstructor function for creating a FileStreamingService
 func FileStreamingConstructor(opts serverTypes.AppOptions, keys []sdk.StoreKey, marshaller codec.BinaryMarshaler) (sdk.StreamingService, error) {
   filePrefix := cast.ToString(opts.Get("streamers.file.prefix"))
-  fileDir := cast.ToString(opts.Get("streamers.file.writeDir"))
+  fileDir := cast.ToString(opts.Get("streamers.file.write_dir"))
   return file.NewStreamingService(fileDir, filePrefix, keys, marshaller)
 }
 ```
@@ -563,13 +571,24 @@ func NewSimApp(
 	// configure state listening capabilities using AppOptions
 	listeners := cast.ToStringSlice(appOpts.Get("store.streamers"))
 	for _, listenerName := range listeners {
-		// get the store keys allowed to be exposed for this streaming service/state listeners
-		exposeKeyStrs := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("streamers.%s.keys", listenerName)))
-		exposeStoreKeys := make([]storeTypes.StoreKey, 0, len(exposeKeyStrs))
-		for _, keyStr := range exposeKeyStrs {
-			if storeKey, ok := keys[keyStr]; ok {
+		// get the store keys allowed to be exposed for this streaming service 
+		exposeKeyStrs := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("streamers.%s.keys", streamerName)))
+		var exposeStoreKeys []sdk.StoreKey
+		if exposeAll(exposeKeyStrs) { // if list contains `*`, expose all StoreKeys 
+			exposeStoreKeys = make([]sdk.StoreKey, 0, len(keys))
+			for _, storeKey := range keys {
 				exposeStoreKeys = append(exposeStoreKeys, storeKey)
 			}
+		} else {
+			exposeStoreKeys = make([]sdk.StoreKey, 0, len(exposeKeyStrs))
+			for _, keyStr := range exposeKeyStrs {
+				if storeKey, ok := keys[keyStr]; ok {
+					exposeStoreKeys = append(exposeStoreKeys, storeKey)
+				}
+			}
+		}
+		if len(exposeStoreKeys) == 0 { // short circuit if we are not exposing anything 
+			continue
 		}
 		// get the constructor for this listener name
 		constructor, err := baseapp.NewStreamingServiceConstructor(listenerName)

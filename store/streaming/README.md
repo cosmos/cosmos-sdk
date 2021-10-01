@@ -17,7 +17,7 @@ The `StreamingService` is configured from within an App using the `AppOptions` l
 [streamers]
     [streamers.file]
         keys = ["list", "of", "store", "keys", "we", "want", "to", "expose", "for", "this", "streaming", "service"]
-        writeDir = "path to the write directory"
+        write_dir = "path to the write directory"
         prefix = "optional prefix to prepend to the generated file names"
 ```
 
@@ -37,13 +37,16 @@ for _, listenerName := range listeners {
 
 `streamers` contains a mapping of the specific `StreamingService` implementation name to the configuration parameters for that specific service.
 `streamers.x.keys` contains the list of `StoreKey` names for the KVStores to expose using this service and is required by every type of `StreamingService`,
-other options will be specific to the implementation. In the case of the file streaming service, `streamers.file.writeDir` contains the path to the
+other options will be specific to the implementation. In order to expose *all* KVStores, we can include `*` in this list. An empty list is equivalent to turning the
+service off.
+
+In the case of the file streaming service, `streamers.file.write_dir` contains the path to the
 directory to write the files to, and `streamers.file.prefix` contains an optional prefix to prepend to the output files to prevent potential collisions
 with other App `StreamingService` output files.
 
 The `ServiceConstructor` accepts `AppOptions`, the store keys collected using `streamers.x.keys`, a `BinaryMarshaller` and
 returns a `StreamingService` implementation. The `AppOptions` are passed in to provide access to any implementation specific configuration options,
-e.g. in the case of the file streaming service the `streamers.file.writeDir` and `streamers.file.prefix`.
+e.g. in the case of the file streaming service the `streamers.file.write_dir` and `streamers.file.prefix`.
 
 ```go
 streamingService, err := constructor(appOpts, exposeStoreKeys, appCodec)

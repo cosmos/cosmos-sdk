@@ -160,6 +160,36 @@ If `DAEMON_ALLOW_DOWNLOAD_BINARIES` is set to `true`, and no local binary can be
 }
 ```
 
+You can include multiple binaries at once to ensure more than one environment will receive the correct binaries:
+
+```json
+{
+  "binaries": {
+    "linux/amd64":"https://example.com/gaia.zip?checksum=sha256:aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f"
+    "linux/arm64":"https://example.com/gaia.zip?checksum=sha256:aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f",
+    "darwin/amd64":"https://example.com/gaia.zip?checksum=sha256:aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f"}
+    }
+}
+```
+
+When submitting this as a proposal ensure there are no spaces. An example command using `gaiad` could look like:
+
+```
+> gaiad tx gov submit-proposal software-upgrade Vega \
+--title Vega \
+--deposit 100uatom \
+--upgrade-height 7368420 \
+--upgrade-info '{"binaries":{"linux/amd64":"https://github.com/cosmos/gaia/releases/download/v6.0.0-rc1/gaiad-v6.0.0-rc1-linux-amd64","linux/arm64":"https://github.com/cosmos/gaia/releases/download/v6.0.0-rc1/gaiad-v6.0.0-rc1-linux-arm64","darwin/amd64":"https://github.com/cosmos/gaia/releases/download/v6.0.0-rc1/gaiad-v6.0.0-rc1-darwin-amd64"}}' \
+--description "upgrade to Vega" \
+--gas 400000 \
+--from user \
+--keyring-backend test \
+--chain-id test \
+--home test/val2 \
+--node tcp://localhost:36657 \
+--yes
+```
+
 2. Store a link to a file that contains all information in the above format (e.g. if you want to specify lots of binaries, changelog info, etc. without filling up the blockchain). For example:
 
 ```

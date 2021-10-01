@@ -3,6 +3,11 @@ package middleware_test
 import (
 	"fmt"
 	"testing"
+	"time"
+
+	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -14,30 +19,40 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-var regens = sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(1000)))
-var atoms = sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(1000)))
+var initialRegens = sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(1000)))
+var initialAtoms = sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(1000)))
 
 // setupMetaTxAccts sets up 2 accounts:
 // - tipper has 1000 regens
 // - feePayer has 1000 atoms and 1000 regens
-func (s *MWTestSuite) setupMetaTxAccts(ctx sdk.Context) []testAccount {
-	accts := s.createTestAccounts(ctx, 2, regens)
+func (s *MWTestSuite) setupMetaTxAccts(ctx sdk.Context) (sdk.Context, []testAccount) {
+	accts := s.createTestAccounts(ctx, 2, initialRegens)
 	feePayer := accts[1]
-	err := s.app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, atoms)
+	err := s.app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, initialAtoms)
 	s.Require().NoError(err)
-	err = s.app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, feePayer.acc.GetAddress(), atoms)
+	err = s.app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, feePayer.acc.GetAddress(), initialAtoms)
 	s.Require().NoError(err)
 
-	return accts
+	// Create dummy proposal for tipper to vote on.
+	prop, err := govtypes.NewProposal(govtypes.NewTextProposal("foo", "bar"), 1, time.Now(), time.Now().Add(time.Hour))
+	s.Require().NoError(err)
+	s.app.GovKeeper.SetProposal(ctx, prop)
+	s.app.GovKeeper.ActivateVotingPeriod(ctx, prop)
+
+	// Move to next block to commit previous data to state.
+	s.app.EndBlock(abci.RequestEndBlock{Height: 1})
+	s.app.Commit()
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
+	ctx = ctx.WithBlockHeight(2)
+
+	return ctx, accts
 }
 
 func (s *MWTestSuite) TestSignModes() {
 	ctx := s.SetupTest(false) // reset
-	accts := s.setupMetaTxAccts(ctx)
+	ctx, accts := s.setupMetaTxAccts(ctx)
 	tipper, feePayer := accts[0], accts[1]
 
 	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.SignModeTxMiddleware)
@@ -61,8 +76,8 @@ func (s *MWTestSuite) TestSignModes() {
 	for _, tc := range testcases {
 		tc := tc
 		s.Run(fmt.Sprintf("tipper=%s, feepayer=%s", signing.SignMode_name[int32(tc.tipperSignMode)], signing.SignMode_name[int32(tc.feePayerSignMode)]), func() {
-			tipperTxBuilder := s.mkTipperTxBuilder(tipper.priv, regens, tc.tipperSignMode, tipper.accNum, 0, ctx.ChainID())
-			feePayerTxBuilder := s.mkFeePayerTxBuilder(feePayer.priv, tc.feePayerSignMode, tx.Fee{Amount: atoms, GasLimit: 200000}, tipperTxBuilder.GetTx(), feePayer.accNum, 0, ctx.ChainID())
+			tipperTxBuilder := s.mkTipperTxBuilder(tipper.priv, initialRegens, tc.tipperSignMode, tipper.accNum, 0, ctx.ChainID())
+			feePayerTxBuilder := s.mkFeePayerTxBuilder(feePayer.priv, tc.feePayerSignMode, tx.Fee{Amount: initialAtoms, GasLimit: 200000}, tipperTxBuilder.GetTx(), feePayer.accNum, 0, ctx.ChainID())
 
 			_, err := txHandler.DeliverTx(sdk.WrapSDKContext(ctx), feePayerTxBuilder.GetTx(), abci.RequestDeliverTx{})
 			if tc.expErr {
@@ -75,9 +90,9 @@ func (s *MWTestSuite) TestSignModes() {
 	}
 }
 
-func (s *MWTestSuite) TestMetaTransactions() {
+func (s *MWTestSuite) TestTips() {
 	ctx := s.SetupTest(false) // reset
-	accts := s.setupMetaTxAccts(ctx)
+	ctx, accts := s.setupMetaTxAccts(ctx)
 	tipper, feePayer := accts[0], accts[1]
 
 	testcases := []struct {
@@ -89,9 +104,9 @@ func (s *MWTestSuite) TestMetaTransactions() {
 		expErrStr string
 	}{
 		{
-			name: "happy case",
-			tip:  sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(1000))),
-			fee:  sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(1000))),
+			"happy case",
+			sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(1000))), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(1000))), 100000,
+			false, "",
 		},
 	}
 
@@ -100,14 +115,34 @@ func (s *MWTestSuite) TestMetaTransactions() {
 		s.Run(tc.name, func() {
 			tipperTxBuilder := s.mkTipperTxBuilder(tipper.priv, tc.tip, signing.SignMode_SIGN_MODE_DIRECT_AUX, tipper.accNum, 0, ctx.ChainID())
 			feePayerTxBuilder := s.mkFeePayerTxBuilder(feePayer.priv, signing.SignMode_SIGN_MODE_DIRECT, tx.Fee{Amount: tc.fee, GasLimit: tc.gasLimit}, tipperTxBuilder.GetTx(), feePayer.accNum, 0, ctx.ChainID())
-			tx, _, err := s.createTestTx(feePayerTxBuilder, []cryptotypes.PrivKey{feePayer.priv}, []uint64{1}, []uint64{0}, ctx.ChainID())
+			_, err := s.clientCtx.TxConfig.TxJSONEncoder()(feePayerTxBuilder.GetTx())
 			s.Require().NoError(err)
-			_, res, err := s.app.SimDeliver(s.clientCtx.TxConfig.TxEncoder(), tx)
+			// fmt.Println(string(a))
+			_, res, err := s.app.SimDeliver(s.clientCtx.TxConfig.TxEncoder(), feePayerTxBuilder.GetTx())
+
 			if tc.expErr {
 				s.Require().EqualError(err, tc.expErrStr)
 			} else {
 				s.Require().NoError(err)
 				s.Require().NotNil(res)
+
+				// Move to next block to commit previous data to state.
+				s.app.EndBlock(abci.RequestEndBlock{Height: 2})
+				s.app.Commit()
+				s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 3}})
+				ctx = ctx.WithBlockHeight(3)
+
+				// Make sure tip is correctly transferred to feepayer, and fee is paid.
+				expTipperRegens := initialRegens.Sub(tc.tip)
+				expFeePayerRegens := initialRegens.Add(tc.tip...)
+				expFeePayerAtoms := initialAtoms.Sub(tc.fee)
+				s.Require().True(expTipperRegens.AmountOf("regen").Equal(s.app.BankKeeper.GetBalance(ctx, tipper.acc.GetAddress(), "regen").Amount))
+				s.Require().True(expFeePayerRegens.AmountOf("regen").Equal(s.app.BankKeeper.GetBalance(ctx, feePayer.acc.GetAddress(), "regen").Amount))
+				s.Require().True(expFeePayerAtoms.AmountOf("atom").Equal(s.app.BankKeeper.GetBalance(ctx, feePayer.acc.GetAddress(), "atom").Amount))
+				// Make sure MsgVote has been submitted by tipper.
+				votes := s.app.GovKeeper.GetAllVotes(ctx)
+				s.Require().Len(votes, 1)
+				s.Require().Equal(tipper.acc.GetAddress().String(), votes[0].Voter)
 			}
 		})
 	}

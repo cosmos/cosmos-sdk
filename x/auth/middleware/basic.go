@@ -295,6 +295,7 @@ func (cgts consumeTxSizeGasTxHandler) simulateSigGasCost(ctx context.Context, tx
 	return nil
 }
 
+// nolint:unparam
 func (cgts consumeTxSizeGasTxHandler) consumeTxSizeGas(ctx context.Context, tx sdk.Tx, txBytes []byte, simulate bool) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	params := cgts.ak.GetParams(sdkCtx)

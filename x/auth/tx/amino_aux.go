@@ -50,13 +50,8 @@ func (signModeAminoAuxHandler) GetSignBytes(
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "SIGN_MODE_AMINO_AUX does not support protobuf extension options.")
 	}
 
-	var tip sdk.Coins
-	for _, v := range protoTx.tx.AuthInfo.Tip.Amount {
-		tip.Add(*v)
-	}
-
 	return legacytx.StdSignAuxBytes(
 		data.ChainID, data.AccountNumber, data.Sequence, protoTx.GetTimeoutHeight(),
-		tip, tx.GetMsgs(), protoTx.GetMemo(),
+		protoTx.tx.AuthInfo.Tip.Amount, tx.GetMsgs(), protoTx.GetMemo(),
 	), nil
 }

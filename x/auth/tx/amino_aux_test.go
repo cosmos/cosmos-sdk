@@ -1,9 +1,10 @@
 package tx
 
 import (
-	"encoding/json"
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -11,8 +12,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAminoAuxHandler(t *testing.T) {
@@ -24,9 +25,12 @@ func TestAminoAuxHandler(t *testing.T) {
 	txConfig := NewTxConfig(marshaler, []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_AMINO_AUX})
 	txBuilder := txConfig.NewTxBuilder()
 
+	accountNumber := uint64(1)
+	chainId := "test-chain"
 	memo := "sometestmemo"
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	accSeq := uint64(2) // Arbitrary account sequence
+	timeout := uint64(10)
 
 	// any, err := codectypes.NewAnyWithValue(pubkey)
 	// require.NoError(t, err)
@@ -43,22 +47,28 @@ func TestAminoAuxHandler(t *testing.T) {
 
 	fee := txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
 
+	tip := sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(1000)))
 	err := txBuilder.SetMsgs(msgs...)
 	require.NoError(t, err)
 	txBuilder.SetMemo(memo)
 	txBuilder.SetFeeAmount(fee.Amount)
 	txBuilder.SetGasLimit(fee.GasLimit)
+	txBuilder.SetTimeoutHeight(timeout)
+	txBuilder.SetTip(&txtypes.Tip{
+		Amount: tip,
+	})
 
 	err = txBuilder.SetSignatures(sig)
 	require.NoError(t, err)
 
 	signingData := signing.SignerData{
-		ChainID:       "test-chain",
-		AccountNumber: 1,
+		ChainID:       chainId,
+		AccountNumber: accountNumber,
+		Sequence:      accSeq,
 	}
 
-	modeHandler := signModeAminoAuxHandler{}
-	signBytes, err := modeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_AMINO_AUX, signingData, txBuilder.GetTx())
+	handler := signModeAminoAuxHandler{}
+	signBytes, err := handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_AMINO_AUX, signingData, txBuilder.GetTx())
 
 	require.NoError(t, err)
 	require.NotNil(t, signBytes)
@@ -72,26 +82,7 @@ func TestAminoAuxHandler(t *testing.T) {
 		}
 	}
 
-	// txBody := &txtypes.TxBody{
-	// 	Memo:     memo,
-	// 	Messages: anys,
-	// }
-	// bodyBytes := marshaler.MustMarshal(txBody)
-	txBytes, err := txConfig.TxJSONEncoder()(txBuilder.GetTx())
-	raw := make([]json.RawMessage, 1)
-	raw = append(raw, txBytes)
-	require.NoError(t, err)
-
-	t.Log("verify GetSignBytes with generating sign bytes by marshaling signDocDirectAux")
-	signDocDirectAux := txtypes.StdSignDocAux{
-		AccountNumber: 1,
-		ChainId:       "test-chain",
-		TimeoutHeight: uint64(10),
-		Memo:          memo,
-		Msgs:          raw,
-	}
-
-	expectedSignBytes, err := signDocDirectAux.Marshal()
+	expectedSignBytes := legacytx.StdSignAuxBytes(chainId, accountNumber, accSeq, timeout, tip, msgs, memo)
 	require.NoError(t, err)
 	require.Equal(t, expectedSignBytes, signBytes)
 
@@ -100,15 +91,31 @@ func TestAminoAuxHandler(t *testing.T) {
 	require.NoError(t, err)
 	err = txBuilder.SetSignatures(sig)
 	require.NoError(t, err)
-	signBytes, err = modeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT_AUX, signingData, txBuilder.GetTx())
+	signBytes, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_AMINO_AUX, signingData, txBuilder.GetTx())
 	require.NoError(t, err)
 	require.Equal(t, expectedSignBytes, signBytes)
 
-	// t.Log("verify GetSignBytes with false txBody data")
-	// signDocDirectAux.BodyBytes = []byte("dfafdasfds")
-	// expectedSignBytes, err = signDocDirectAux.Marshal()
-	// require.NoError(t, err)
-	// require.NotEqual(t, expectedSignBytes, signBytes)
+	// expect error with wrong sign mode
+	_, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, txBuilder.GetTx())
+	require.Error(t, err)
+
+	// expect error with extension options
+	bldr := newBuilder()
+	buildTx(t, bldr)
+	any, err := codectypes.NewAnyWithValue(testdata.NewTestMsg())
+	require.NoError(t, err)
+	bldr.tx.Body.ExtensionOptions = []*codectypes.Any{any}
+	tx := bldr.GetTx()
+	_, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_AMINO_AUX, signingData, tx)
+	require.Error(t, err)
+
+	// expect error with non-critical extension options
+	bldr = newBuilder()
+	buildTx(t, bldr)
+	bldr.tx.Body.NonCriticalExtensionOptions = []*codectypes.Any{any}
+	tx = bldr.GetTx()
+	_, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_AMINO_AUX, signingData, tx)
+	require.Error(t, err)
 }
 
 func TestAminoAuxHandler_DefaultMode(t *testing.T) {

@@ -258,7 +258,7 @@ func initTestnetFiles(
 			return err
 		}
 
-		keyringAlgos, _ := kb.SupportedAlgorithms()
+		keyringAlgos, _, _ := kb.SupportedAlgorithms()
 		algo, err := keyring.NewSigningAlgoFromString(args.algo, keyringAlgos)
 		if err != nil {
 			return err

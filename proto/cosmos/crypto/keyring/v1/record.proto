@@ -41,6 +41,7 @@ message Record {
     hd.v1.BIP44Params path = 1;
   }
 
+  // Hsm item
   message Hsm {
     string label = 1;
   }

@@ -48,6 +48,7 @@ const (
 	TypeLedger  KeyType = 1
 	TypeOffline KeyType = 2
 	TypeMulti   KeyType = 3
+	TypeHsm     KeyType = 4
 )
 
 var keyTypes = map[KeyType]string{
@@ -55,6 +56,7 @@ var keyTypes = map[KeyType]string{
 	TypeLedger:  "ledger",
 	TypeOffline: "offline",
 	TypeMulti:   "multi",
+	TypeHsm:     "hsm",
 }
 
 // String implements the stringer interface for KeyType.

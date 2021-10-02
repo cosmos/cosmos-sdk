@@ -41,7 +41,7 @@ func NewHsmRecord(name string, pk cryptotypes.PubKey, label string) (*Record, er
 	return newRecord(name, pk, recordHsmKey)
 }
 
-func (rh *Record_Hsm) GetPath() string {
+func (rh *Record_Hsm) GetLabel() string {
 	return rh.Label
 }
 
@@ -100,6 +100,8 @@ func (k Record) GetType() KeyType {
 		return TypeMulti
 	case k.GetOffline() != nil:
 		return TypeOffline
+	case k.GetHsm() != nil:
+		return TypeHsm
 	default:
 		panic("unrecognized record type")
 	}

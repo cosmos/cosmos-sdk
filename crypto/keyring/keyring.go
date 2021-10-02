@@ -660,6 +660,29 @@ func SignWithLedger(k *Record, msg []byte) (sig []byte, pub types.PubKey, err er
 	return sig, priv.PubKey(), nil
 }
 
+func SignWithHsm(k *Record, msg []byte, kr *hsmkeys.Pkcs11Keyring) (sig []byte, pub types.PubKey, err error) {
+	hsmrecord := k.GetHsm()
+	if hsmrecord== nil {
+		return nil, nil, errors.New("not an HSM object")
+	}
+
+	label := hsmrecord.GetLabel()
+
+	priv, err := kr.Key(label)
+
+	if err != nil {
+		return nil, nil, err
+	}
+	
+	signed, err := priv.Sign(msg, nil)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return signed, priv.PubKey(), nil
+}
+
 func newOSBackendKeyringConfig(appName, dir string, buf io.Reader) keyring.Config {
 	return keyring.Config{
 		ServiceName:              appName,

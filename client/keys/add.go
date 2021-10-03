@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	hsmkeys "github.com/regen-network/keystone/keys"
 )
 
 const (
@@ -33,6 +34,10 @@ const (
 
 	// DefaultKeyPass contains the default key password for genesis transactions
 	DefaultKeyPass = "12345678"
+
+	// The name for the pkcs11 config file (should be in the
+	// homedir)
+	PKCS11_CONFIG = "pkcs11-config"
 )
 
 // AddKeyCommand defines a keys command to add a generated or recovered private key to keybase.
@@ -196,11 +201,12 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	index, _ := cmd.Flags().GetUint32(flagIndex)
 	hdPath, _ := cmd.Flags().GetString(flagHDPath)
 	useLedger, _ := cmd.Flags().GetBool(flags.FlagUseLedger)
+	useHsm, _ := cmd.Flags().GetBool(flags.FlagUseHsm)
 
 	if len(hdPath) == 0 {
 		hdPath = hd.CreateHDPath(coinType, account, index).String()
-	} else if useLedger {
-		return errors.New("cannot set custom bip32 path with ledger")
+	} else if useLedger || useHsm {
+		return errors.New("cannot set custom bip32 path with ledger or other device")
 	}
 
 	// If we're using ledger, only thing we need is the path and the bech32 prefix.
@@ -214,6 +220,44 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		return printCreate(cmd, k, false, "", outputFormat)
 	}
 
+	if useHsm {
+
+		label, err := hsmkeys.CryptoRandomBytes(16)
+
+		if err != nil {
+			return err
+		}
+		
+		configPath, err := cmd.Flags().GetString(flags.FlagHome + "/" + PKCS11_CONFIG)
+
+		if err != nil {
+			return err
+		}
+		
+		fmt.Printf("PKCS11 config: %s", configPath )
+		
+		kr, err := hsmkeys.NewPkcs11FromConfig(configPath)
+		
+		if err != nil {
+			return err
+		}
+
+		key, err := kr.NewKey(hsmkeys.KEYGEN_SECP256K1, string(label))
+		if err != nil || key == nil {
+			return err
+		}
+
+		key = nil
+		
+		k, err := kb.SaveHsmKey(name, hd.Secp256k1, string(label), kr)
+
+		if err != nil {
+			return err
+		}
+
+		return printCreate(cmd, k, false, "", outputFormat)
+	}
+	
 	// Get bip39 mnemonic
 	var mnemonic, bip39Passphrase string
 

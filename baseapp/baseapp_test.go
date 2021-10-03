@@ -27,7 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -235,7 +234,7 @@ func TestMountStores(t *testing.T) {
 // Test that LoadLatestVersion actually does.
 func TestLoadVersion(t *testing.T) {
 	logger := defaultLogger()
-	pruningOpt := baseapp.SetPruning(store.PruneNothing)
+	pruningOpt := baseapp.SetPruning(storetypes.PruneNothing)
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
@@ -288,15 +287,15 @@ func useDefaultLoader(app *baseapp.BaseApp) {
 
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 	rs := rootmulti.NewStore(db)
-	rs.SetPruning(store.PruneNothing)
+	rs.SetPruning(storetypes.PruneNothing)
 	key := sdk.NewKVStoreKey(storeKey)
-	rs.MountStoreWithDB(key, store.StoreTypeIAVL, nil)
+	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
 	err := rs.LoadLatestVersion()
 	require.Nil(t, err)
 	require.Equal(t, int64(0), rs.LastCommitID().Version)
 
 	// write some data in substore
-	kv, _ := rs.GetStore(key).(store.KVStore)
+	kv, _ := rs.GetStore(key).(storetypes.KVStore)
 	require.NotNil(t, kv)
 	kv.Set(k, v)
 	commitID := rs.Commit()
@@ -305,15 +304,15 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 
 func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
 	rs := rootmulti.NewStore(db)
-	rs.SetPruning(store.PruneDefault)
+	rs.SetPruning(storetypes.PruneDefault)
 	key := sdk.NewKVStoreKey(storeKey)
-	rs.MountStoreWithDB(key, store.StoreTypeIAVL, nil)
+	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
 	err := rs.LoadLatestVersion()
 	require.Nil(t, err)
 	require.Equal(t, ver, rs.LastCommitID().Version)
 
 	// query data in substore
-	kv, _ := rs.GetStore(key).(store.KVStore)
+	kv, _ := rs.GetStore(key).(storetypes.KVStore)
 	require.NotNil(t, kv)
 	require.Equal(t, v, kv.Get(k))
 }
@@ -348,7 +347,7 @@ func TestSetLoader(t *testing.T) {
 			initStore(t, db, tc.origStoreKey, k, v)
 
 			// load the app with the existing db
-			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(store.PruneNothing)}
+			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(storetypes.PruneNothing)}
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)
 			}
@@ -371,7 +370,7 @@ func TestSetLoader(t *testing.T) {
 
 func TestVersionSetterGetter(t *testing.T) {
 	logger := defaultLogger()
-	pruningOpt := baseapp.SetPruning(store.PruneDefault)
+	pruningOpt := baseapp.SetPruning(storetypes.PruneDefault)
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
@@ -391,7 +390,7 @@ func TestVersionSetterGetter(t *testing.T) {
 
 func TestLoadVersionInvalid(t *testing.T) {
 	logger := log.NewNopLogger()
-	pruningOpt := baseapp.SetPruning(store.PruneNothing)
+	pruningOpt := baseapp.SetPruning(storetypes.PruneNothing)
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
@@ -423,7 +422,7 @@ func TestLoadVersionInvalid(t *testing.T) {
 
 func TestLoadVersionPruning(t *testing.T) {
 	logger := log.NewNopLogger()
-	pruningOptions := store.PruningOptions{
+	pruningOptions := storetypes.PruningOptions{
 		KeepRecent: 2,
 		KeepEvery:  3,
 		Interval:   1,

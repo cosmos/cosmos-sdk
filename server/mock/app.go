@@ -8,15 +8,15 @@ import (
 
 	"github.com/tendermint/tendermint/types"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 func testTxHandler(options middleware.TxHandlerOptions) tx.Handler {
@@ -72,7 +72,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 
 // KVStoreHandler is a simple handler that takes kvstoreTx and writes
 // them to the db
-func KVStoreHandler(storeKey sdk.StoreKey) sdk.Handler {
+func KVStoreHandler(storeKey storetypes.StoreKey) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		dTx, ok := msg.(kvstoreTx)
 		if !ok {
@@ -105,7 +105,7 @@ type GenesisJSON struct {
 
 // InitChainer returns a function that can initialize the chain
 // with key/value pairs
-func InitChainer(key sdk.StoreKey) func(sdk.Context, abci.RequestInitChain) abci.ResponseInitChain {
+func InitChainer(key storetypes.StoreKey) func(sdk.Context, abci.RequestInitChain) abci.ResponseInitChain {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		stateJSON := req.AppStateBytes
 

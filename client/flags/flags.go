@@ -42,6 +42,7 @@ const (
 	FlagHome             = tmcli.HomeFlag
 	FlagKeyringDir       = "keyring-dir"
 	FlagUseLedger        = "ledger"
+	FlagUseHsm           = "hsm"
 	FlagChainID          = "chain-id"
 	FlagNode             = "node"
 	FlagHeight           = "height"
@@ -103,6 +104,7 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().String(FlagGasPrices, "", "Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)")
 	cmd.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
 	cmd.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
+	cmd.Flags().Bool(FlagUseHsm, false, "Use a PKCS11 device such as an HSM")
 	cmd.Flags().Float64(FlagGasAdjustment, DefaultGasAdjustment, "adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored ")
 	cmd.Flags().StringP(FlagBroadcastMode, "b", BroadcastSync, "Transaction broadcasting mode (sync|async|block)")
 	cmd.Flags().Bool(FlagDryRun, false, "ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it")

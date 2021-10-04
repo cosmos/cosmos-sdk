@@ -36,6 +36,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Bug Fixes
+
+* (client) [#10226](https://github.com/cosmos/cosmos-sdk/pull/10226) Fix --home flag parsing. 
+
 ## [v0.42.10](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.42.10) - 2021-09-28
 
 ### Improvements
@@ -45,70 +49,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10211](https://github.com/cosmos/cosmos-sdk/pull/10211) Backport of the mechanism to reject redundant IBC transactions from [ibc-go \#235](https://github.com/cosmos/ibc-go/pull/235).
 
 ### Bug Fixes
-<<<<<<< HEAD
-=======
-
-* (client) [#10226](https://github.com/cosmos/cosmos-sdk/pull/10226) Fix --home flag parsing. 
-* [#10180](https://github.com/cosmos/cosmos-sdk/issues/10180) Documentation: make references to Cosmos SDK consistent
-* (store) [#10218](https://github.com/cosmos/cosmos-sdk/pull/10218) Charge gas even when there are no entries while seeking.
-* (x/genutil) [#10104](https://github.com/cosmos/cosmos-sdk/pull/10104) Ensure the `init` command reads the `--home` flag value correctly.
-* [\#9651](https://github.com/cosmos/cosmos-sdk/pull/9651) Change inconsistent limit of `0` to `MaxUint64` on InfiniteGasMeter and add GasRemaining func to GasMeter.
-* [\#9639](https://github.com/cosmos/cosmos-sdk/pull/9639) Check store keys length before accessing them by making sure that `key` is of length `m+1` (for `key[n:m]`)
-* (types) [\#9627](https://github.com/cosmos/cosmos-sdk/pull/9627) Fix nil pointer panic on `NewBigIntFromInt`
-* (x/genutil) [\#9574](https://github.com/cosmos/cosmos-sdk/pull/9575) Actually use the `gentx` client tx flags (like `--keyring-dir`)
-* (x/distribution) [\#9599](https://github.com/cosmos/cosmos-sdk/pull/9599) Withdraw rewards event now includes a value attribute even if there are 0 rewards (due to situations like 100% commission).
-* (x/genutil) [\#9638](https://github.com/cosmos/cosmos-sdk/pull/9638) Added missing validator key save when recovering from mnemonic
-* [\#9762](https://github.com/cosmos/cosmos-sdk/pull/9762) The init command uses the chain-id from the client config if --chain-id is not provided
-* [\#9854](https://github.com/cosmos/cosmos-sdk/pull/9854) Fixed the `make proto-gen` to get dynamic container name based on project name for the cosmos based sdks.
-* [\#9829](https://github.com/cosmos/cosmos-sdk/pull/9829) Fixed Coin denom sorting not being checked during `Balance.Validate` check. Refactored the Validation logic to use `Coins.Validate` for `Balance.Coins`.
-+ [\#9965](https://github.com/cosmos/cosmos-sdk/pull/9965) Fixed `simd version` command output to report the right release tag.
-+ [\#9980](https://github.com/cosmos/cosmos-sdk/pull/9980) Returning the error when the invalid argument is passed to bank query total supply cli.
-+ [\#10061](https://github.com/cosmos/cosmos-sdk/pull/10061) Ensure that `LegacyAminoPubKey` struct correctly unmarshals from JSON
-* (server) [#10016](https://github.com/cosmos/cosmos-sdk/issues/10016) Fix marshaling of index-events into server config file.
-* (x/feegrant) [\#10049](https://github.com/cosmos/cosmos-sdk/issues/10049) Fixed the error message when `period` or `period-limit` flag is not set on a feegrant grant transaction.
-* [\#10184](https://github.com/cosmos/cosmos-sdk/pull/10184) Fixed CLI tx commands to no longer explicitly require the chain-id flag as this value can come from a user config.
-* [\#10239](https://github.com/cosmos/cosmos-sdk/pull/10239) Fixed x/bank/044 migrateDenomMetadata.
-* (x/upgrade) [\#10189](https://github.com/cosmos/cosmos-sdk/issues/10189) Removed potential sources of non-determinism in upgrades
-
-### State Machine Breaking
-
-* (x/auth)[\#9596](https://github.com/cosmos/cosmos-sdk/pull/9596) Enable creating periodic vesting accounts with a transactions instead of requiring them to be created in genesis.
-* (x/bank) [\#9611](https://github.com/cosmos/cosmos-sdk/pull/9611) Introduce a new index to act as a reverse index between a denomination and address allowing to query for
-  token holders of a specific denomination. `DenomOwners` is updated to use the new reverse index.
-* (x/bank) [\#9832] (https://github.com/cosmos/cosmos-sdk/pull/9832) Account balance is stored as `sdk.Int` rather than `sdk.Coin`.
-* (x/bank) [\#9890] (https://github.com/cosmos/cosmos-sdk/pull/9890) Remove duplicate denom from denom metadata key.
-* (x/upgrade) [\#10189](https://github.com/cosmos/cosmos-sdk/issues/10189) Removed potential sources of non-determinism in upgrades
-
- ### Deprecated
-
-* (x/upgrade) [\#9906](https://github.com/cosmos/cosmos-sdk/pull/9906) Deprecate `UpgradeConsensusState` gRPC query since this functionality is only used for IBC, which now has its own [IBC replacement](https://github.com/cosmos/ibc-go/blob/2c880a22e9f9cc75f62b527ca94aa75ce1106001/proto/ibc/core/client/v1/query.proto#L54)
-
-## [v0.43.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0) - 2021-08-10
-
-### Features
-
-* [\#6711](https://github.com/cosmos/cosmos-sdk/pull/6711) Make integration test suites reusable by apps, tests are exported in each module's `client/testutil` package.
-* [\#8077](https://github.com/cosmos/cosmos-sdk/pull/8077) Added support for grpc-web, enabling browsers to communicate with a chain's gRPC server
-* [\#8965](https://github.com/cosmos/cosmos-sdk/pull/8965) cosmos reflection now provides more information on the application such as: deliverable msgs, sdk.Config info etc (still in alpha stage).
-* [\#8520](https://github.com/cosmos/cosmos-sdk/pull/8520) Add support for permanently locked vesting accounts.
-* [\#8559](https://github.com/cosmos/cosmos-sdk/pull/8559) Added Protobuf compatible secp256r1 ECDSA signatures.
-* [\#8786](https://github.com/cosmos/cosmos-sdk/pull/8786) Enabled secp256r1 in x/auth.
-* (rosetta) [\#8729](https://github.com/cosmos/cosmos-sdk/pull/8729) Data API fully supports balance tracking. Construction API can now construct any message supported by the application.
-* [\#8754](https://github.com/cosmos/cosmos-sdk/pull/8875) Added support for reverse iteration to pagination.
-* (types) [\#9079](https://github.com/cosmos/cosmos-sdk/issues/9079) Add `AddAmount`/`SubAmount` methods to `sdk.Coin`.
-* [#9088](https://github.com/cosmos/cosmos-sdk/pull/9088) Added implementation to ADR-28 Derived Addresses.
-* [\#9133](https://github.com/cosmos/cosmos-sdk/pull/9133) Added hooks for governance actions.
-* (x/staking) [\#9214](https://github.com/cosmos/cosmos-sdk/pull/9214) Added `new_shares` attribute inside `EventTypeDelegate` event.
-* [\#9382](https://github.com/cosmos/cosmos-sdk/pull/9382) feat: add Dec.Float64() function.
-* [\#9457](https://github.com/cosmos/cosmos-sdk/pull/9457) Add amino support for x/authz and x/feegrant Msgs.
-* [\#9498](https://github.com/cosmos/cosmos-sdk/pull/9498) Added `Codec: codec.Codec` attribute to `client/Context` structure.
-* [\#9540](https://github.com/cosmos/cosmos-sdk/pull/9540) Add output flag for query txs command.
-* (errors) [\#8845](https://github.com/cosmos/cosmos-sdk/pull/8845) Add `Error.Wrap` handy method
-* [\#8518](https://github.com/cosmos/cosmos-sdk/pull/8518) Help users of multisig wallets debug signature issues.
-* [\#9573](https://github.com/cosmos/cosmos-sdk/pull/9573) ADR 040 implementation: New DB interface
-* [\#9952](https://github.com/cosmos/cosmos-sdk/pull/9952) ADR 040: Implement in-memory DB backend
-* [\#9848](https://github.com/cosmos/cosmos-sdk/pull/9848) ADR-040: Implement BadgerDB backend
->>>>>>> cc1a1c8cd (fix: --home flag parsing (#10226))
 
 * [\#9969](https://github.com/cosmos/cosmos-sdk/pull/9969) fix: use keyring in config for add-genesis-account cmd.
 

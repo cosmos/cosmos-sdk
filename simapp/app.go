@@ -30,7 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -401,29 +400,20 @@ func NewSimApp(
 }
 
 func (app *SimApp) setTxHandler(txConfig client.TxConfig, indexEventsStr []string) {
-	anteHandler, err := ante.NewAnteHandler(
-		ante.HandlerOptions{
-			AccountKeeper:   app.AccountKeeper,
-			BankKeeper:      app.BankKeeper,
-			SignModeHandler: txConfig.SignModeHandler(),
-			FeegrantKeeper:  app.FeeGrantKeeper,
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-		},
-	)
-	if err != nil {
-		panic(err)
-	}
-
 	indexEvents := map[string]struct{}{}
 	for _, e := range indexEventsStr {
 		indexEvents[e] = struct{}{}
 	}
 	txHandler, err := authmiddleware.NewDefaultTxHandler(authmiddleware.TxHandlerOptions{
-		Debug:             app.Trace(),
-		IndexEvents:       indexEvents,
-		LegacyRouter:      app.legacyRouter,
-		MsgServiceRouter:  app.msgSvcRouter,
-		LegacyAnteHandler: anteHandler,
+		Debug:            app.Trace(),
+		IndexEvents:      indexEvents,
+		LegacyRouter:     app.legacyRouter,
+		MsgServiceRouter: app.msgSvcRouter,
+		AccountKeeper:    app.AccountKeeper,
+		BankKeeper:       app.BankKeeper,
+		FeegrantKeeper:   app.FeeGrantKeeper,
+		SignModeHandler:  txConfig.SignModeHandler(),
+		SigGasConsumer:   authmiddleware.DefaultSigVerificationGasConsumer,
 	})
 	if err != nil {
 		panic(err)

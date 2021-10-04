@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
 )
@@ -22,7 +23,7 @@ var (
 
 // Keeper of the store
 type Keeper struct {
-	storeKey sdk.StoreKey
+	storeKey storetypes.StoreKey
 	cdc      codec.BinaryCodec
 	// Used to calculate the estimated next epoch time.
 	// This is local to every node
@@ -31,7 +32,7 @@ type Keeper struct {
 }
 
 // NewKeeper creates a epoch queue manager
-func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, commitTimeout time.Duration) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, key storetypes.StoreKey, commitTimeout time.Duration) Keeper {
 	return Keeper{
 		storeKey:      key,
 		cdc:           cdc,

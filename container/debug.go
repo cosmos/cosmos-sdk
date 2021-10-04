@@ -13,10 +13,12 @@ import (
 	"github.com/goccy/go-graphviz/cgraph"
 )
 
+// DebugOption is a functional debug option for a container.
 type DebugOption interface {
 	applyConfig(*debugConfig) error
 }
 
+// StdoutLogger is a debug option which routes logging output to stdout.
 func StdoutLogger() DebugOption {
 	return Logger(func(s string) {
 		_, _ = fmt.Fprintln(os.Stdout, s)
@@ -34,6 +36,8 @@ func Visualizer(visualizer func(dotGraph string)) DebugOption {
 	})
 }
 
+// LogVisualizer is a debug option which dumps a graphviz DOT rendering of
+// the container to the log.
 func LogVisualizer() DebugOption {
 	return debugOption(func(c *debugConfig) error {
 		c.enableLogVisualizer()
@@ -41,6 +45,9 @@ func LogVisualizer() DebugOption {
 	})
 }
 
+// FileVisualizer is a debug option which dumps a graphviz rendering of
+// the container to the specified file with the specified format. Currently
+// supported formats are: dot, svg, png and jpg.
 func FileVisualizer(filename, format string) DebugOption {
 	return debugOption(func(c *debugConfig) error {
 		c.addFileVisualizer(filename, format)
@@ -58,6 +65,18 @@ func Logger(logger func(string)) DebugOption {
 	})
 }
 
+// Debug is a default debug option which sends log output to stdout, dumps
+// the container in the graphviz DOT format to stdout, and to the file
+// container_dump.svg.
+func Debug() DebugOption {
+	return DebugOptions(
+		StdoutLogger(),
+		LogVisualizer(),
+		FileVisualizer("container_dump.svg", "svg"),
+	)
+}
+
+// DebugOptions creates a debug option which bundles together other debug options.
 func DebugOptions(options ...DebugOption) DebugOption {
 	return debugOption(func(c *debugConfig) error {
 		for _, opt := range options {
@@ -68,14 +87,6 @@ func DebugOptions(options ...DebugOption) DebugOption {
 		}
 		return nil
 	})
-}
-
-func Debug() DebugOption {
-	return DebugOptions(
-		StdoutLogger(),
-		LogVisualizer(),
-		FileVisualizer("container_dump.svg", "svg"),
-	)
 }
 
 type debugConfig struct {

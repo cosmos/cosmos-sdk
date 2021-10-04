@@ -11,6 +11,8 @@ func Run(invoker interface{}, opts ...Option) error {
 	return RunDebug(invoker, nil, opts...)
 }
 
+// RunDebug is a version of Run which takes an optional DebugOption for
+// logging and visualization.
 func RunDebug(invoker interface{}, debugOpt DebugOption, opts ...Option) error {
 	opt := Options(opts...)
 

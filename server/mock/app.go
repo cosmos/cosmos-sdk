@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/types"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
@@ -15,8 +17,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
 func testTxHandler(options middleware.TxHandlerOptions) tx.Handler {

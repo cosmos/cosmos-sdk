@@ -48,7 +48,8 @@ type Context struct {
 	NodeURI           string
 	FeeGranter        sdk.AccAddress
 	Viper             *viper.Viper
-
+	UseHsm            bool
+	
 	// TODO: Deprecated (remove).
 	LegacyAmino *codec.LegacyAmino
 }
@@ -127,6 +128,13 @@ func (ctx Context) WithClient(client rpcclient.Client) Context {
 // WithUseLedger returns a copy of the context with an updated UseLedger flag.
 func (ctx Context) WithUseLedger(useLedger bool) Context {
 	ctx.UseLedger = useLedger
+	return ctx
+}
+
+// WithUseHsm updates the UseHsm client context flag to indicate use
+// (or not) of a PKCS11-compliant HSM
+func (ctx Context) WithUseHsm(useHsm bool) Context {
+	ctx.UseHsm = useHsm
 	return ctx
 }
 

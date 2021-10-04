@@ -77,9 +77,10 @@ func (s *MWTestSuite) TestSignModes() {
 		tc := tc
 		s.Run(fmt.Sprintf("tipper=%s, feepayer=%s", tc.tipperSignMode, tc.feePayerSignMode), func() {
 			tipperTxBuilder := s.mkTipperTxBuilder(tipper.priv, msg, initialRegens, tc.tipperSignMode, tipper.accNum, 0, ctx.ChainID())
-			feePayerTxBuilder := s.mkFeePayerTxBuilder(feePayer.priv, tc.feePayerSignMode, tx.Fee{Amount: initialAtoms, GasLimit: 200000}, tipperTxBuilder.GetTx(), feePayer.accNum, 0, ctx.ChainID())
+			feePayerTxBuilder, err := mkFeePayerTxBuilder(s.clientCtx, feePayer.priv, tc.feePayerSignMode, tx.Fee{Amount: initialAtoms, GasLimit: 200000}, tipperTxBuilder.GetTx(), feePayer.accNum, 0, ctx.ChainID())
+			s.Require().NoError(err)
 
-			_, err := txHandler.DeliverTx(sdk.WrapSDKContext(ctx), feePayerTxBuilder.GetTx(), abci.RequestDeliverTx{})
+			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), feePayerTxBuilder.GetTx(), abci.RequestDeliverTx{})
 			if tc.expErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), "invalid sign mode for")
@@ -150,7 +151,8 @@ func (s *MWTestSuite) TestTips() {
 			msg = govtypes.NewMsgVote(voter, 1, govtypes.OptionYes)
 
 			tipperTxBuilder := s.mkTipperTxBuilder(tipper.priv, msg, tc.tip, signing.SignMode_SIGN_MODE_DIRECT_AUX, tipper.accNum, 0, ctx.ChainID())
-			feePayerTxBuilder := s.mkFeePayerTxBuilder(feePayer.priv, signing.SignMode_SIGN_MODE_DIRECT, tx.Fee{Amount: tc.fee, GasLimit: tc.gasLimit}, tipperTxBuilder.GetTx(), feePayer.accNum, 0, ctx.ChainID())
+			feePayerTxBuilder, err := mkFeePayerTxBuilder(s.clientCtx, feePayer.priv, signing.SignMode_SIGN_MODE_DIRECT, tx.Fee{Amount: tc.fee, GasLimit: tc.gasLimit}, tipperTxBuilder.GetTx(), feePayer.accNum, 0, ctx.ChainID())
+			s.Require().NoError(err)
 
 			_, res, err := s.app.SimDeliver(s.clientCtx.TxConfig.TxEncoder(), feePayerTxBuilder.GetTx())
 
@@ -220,13 +222,16 @@ func (s *MWTestSuite) mkTipperTxBuilder(
 	return txBuilder
 }
 
-func (s *MWTestSuite) mkFeePayerTxBuilder(
+func mkFeePayerTxBuilder(
+	clientCtx client.Context,
 	feePayerPriv cryptotypes.PrivKey, signMode signing.SignMode,
 	fee tx.Fee, tipTx tx.TipTx, accNum, accSeq uint64, chainID string,
-) client.TxBuilder {
-	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
+) (client.TxBuilder, error) {
+	txBuilder := clientCtx.TxConfig.NewTxBuilder()
 	err := txBuilder.SetMsgs(tipTx.GetMsgs()...)
-	s.Require().NoError(err)
+	if err != nil {
+		return nil, err
+	}
 	txBuilder.SetFeePayer(sdk.AccAddress(feePayerPriv.PubKey().Address()))
 	txBuilder.SetFeeAmount(fee.Amount)
 	txBuilder.SetGasLimit(fee.GasLimit)
@@ -234,7 +239,9 @@ func (s *MWTestSuite) mkFeePayerTxBuilder(
 
 	// Calling SetSignatures with empty sig to populate AuthInfo.
 	tipperSigsV2, err := tipTx.(authsigning.SigVerifiableTx).GetSignaturesV2()
-	s.Require().NoError(err)
+	if err != nil {
+		return nil, err
+	}
 	feePayerSigV2 := signing.SignatureV2{
 		PubKey: feePayerPriv.PubKey(),
 		Data: &signing.SingleSignatureData{
@@ -252,11 +259,15 @@ func (s *MWTestSuite) mkFeePayerTxBuilder(
 	}
 	feePayerSigV2, err = clienttx.SignWithPrivKey(
 		signMode, signerData,
-		txBuilder, feePayerPriv, s.clientCtx.TxConfig, accSeq)
-	s.Require().NoError(err)
+		txBuilder, feePayerPriv, clientCtx.TxConfig, accSeq)
+	if err != nil {
+		return nil, err
+	}
 	sigsV2 = append(tipperSigsV2, feePayerSigV2)
 	err = txBuilder.SetSignatures(sigsV2...)
-	s.Require().NoError(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return txBuilder
+	return txBuilder, nil
 }

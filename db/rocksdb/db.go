@@ -15,6 +15,7 @@ import (
 )
 
 var (
+	currentDBFileName    string = "current.db"
 	checkpointFileFormat string = "%020d.db"
 )
 
@@ -47,8 +48,8 @@ type checkpointCache struct {
 }
 
 type cpCacheEntry struct {
-	cxn      *dbConnection
-	txnCount uint
+	cxn       *dbConnection
+	openCount uint
 }
 
 type dbTxn struct {
@@ -104,7 +105,16 @@ func NewDB(dir string) (*dbManager, error) {
 	if mgr.vmgr, err = readVersions(mgr.checkpointsDir()); err != nil {
 		return nil, err
 	}
-	dbPath := filepath.Join(dir, "current.db")
+	dbPath := filepath.Join(dir, currentDBFileName)
+	// if the current db file is missing but there are checkpoints, restore it
+	if mgr.vmgr.Count() > 0 {
+		if _, err = os.Stat(dbPath); os.IsNotExist(err) {
+			err = mgr.restoreFromCheckpoint(mgr.vmgr.Last(), dbPath)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 	mgr.current, err = gorocksdb.OpenOptimisticTransactionDb(dbo, dbPath)
 	if err != nil {
 		return nil, err
@@ -133,8 +143,8 @@ func readVersions(dir string) (*dbm.VersionManager, error) {
 	return dbm.NewVersionManager(versions), nil
 }
 
-func (mgr *dbManager) checkpointPath(ver uint64) (string, error) {
-	dbPath := filepath.Join(mgr.checkpointsDir(), fmt.Sprintf(checkpointFileFormat, ver))
+func (mgr *dbManager) checkpointPath(version uint64) (string, error) {
+	dbPath := filepath.Join(mgr.checkpointsDir(), fmt.Sprintf(checkpointFileFormat, version))
 	if stat, err := os.Stat(dbPath); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			err = dbm.ErrVersionDoesNotExist
@@ -146,15 +156,15 @@ func (mgr *dbManager) checkpointPath(ver uint64) (string, error) {
 	return dbPath, nil
 }
 
-func (mgr *dbManager) openCheckpoint(ver uint64) (*dbConnection, error) {
+func (mgr *dbManager) openCheckpoint(version uint64) (*dbConnection, error) {
 	mgr.cpCache.mtx.Lock()
 	defer mgr.cpCache.mtx.Unlock()
-	cp, has := mgr.cpCache.cache[ver]
+	cp, has := mgr.cpCache.cache[version]
 	if has {
-		cp.txnCount += 1
+		cp.openCount += 1
 		return cp.cxn, nil
 	}
-	dbPath, err := mgr.checkpointPath(ver)
+	dbPath, err := mgr.checkpointPath(version)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +172,7 @@ func (mgr *dbManager) openCheckpoint(ver uint64) (*dbConnection, error) {
 	if err != nil {
 		return nil, err
 	}
-	mgr.cpCache.cache[ver] = &cpCacheEntry{cxn: db, txnCount: 1}
+	mgr.cpCache.cache[version] = &cpCacheEntry{cxn: db, openCount: 1}
 	return db, nil
 }
 
@@ -177,10 +187,10 @@ func (mgr *dbManager) Reader() dbm.DBReader {
 	}
 }
 
-func (mgr *dbManager) ReaderAt(ver uint64) (dbm.DBReader, error) {
+func (mgr *dbManager) ReaderAt(version uint64) (dbm.DBReader, error) {
 	mgr.mtx.RLock()
 	defer mgr.mtx.RUnlock()
-	db, err := mgr.openCheckpoint(ver)
+	db, err := mgr.openCheckpoint(version)
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +198,7 @@ func (mgr *dbManager) ReaderAt(ver uint64) (dbm.DBReader, error) {
 	return &dbTxn{
 		txn:     db.TransactionBegin(mgr.opts.wo, mgr.opts.txo, nil),
 		mgr:     mgr,
-		version: ver,
+		version: version,
 	}, nil
 }
 
@@ -236,7 +246,7 @@ func (mgr *dbManager) save(target uint64) (uint64, error) {
 		return 0, dbm.ErrOpenTransactions
 	}
 	newVmgr := mgr.vmgr.Copy()
-	ver, err := newVmgr.Save(target)
+	target, err := newVmgr.Save(target)
 	if err != nil {
 		return 0, err
 	}
@@ -244,13 +254,13 @@ func (mgr *dbManager) save(target uint64) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	dir := filepath.Join(mgr.checkpointsDir(), fmt.Sprintf(checkpointFileFormat, ver))
+	dir := filepath.Join(mgr.checkpointsDir(), fmt.Sprintf(checkpointFileFormat, target))
 	if err := cp.CreateCheckpoint(dir, 0); err != nil {
 		return 0, err
 	}
 	cp.Destroy()
 	mgr.vmgr = newVmgr
-	return ver, nil
+	return target, nil
 }
 
 func (mgr *dbManager) DeleteVersion(ver uint64) error {
@@ -266,6 +276,49 @@ func (mgr *dbManager) DeleteVersion(ver uint64) error {
 	mgr.vmgr = mgr.vmgr.Copy()
 	mgr.vmgr.Delete(ver)
 	return os.RemoveAll(dbPath)
+}
+
+func (mgr *dbManager) Revert() (err error) {
+	mgr.mtx.RLock()
+	defer mgr.mtx.RUnlock()
+	if mgr.openWriters > 0 {
+		return dbm.ErrOpenTransactions
+	}
+	last := mgr.vmgr.Last()
+	if last == 0 {
+		return dbm.ErrInvalidVersion
+	}
+	// Close current connection and replace it with a checkpoint (created from the last checkpoint)
+	mgr.current.Close()
+	dbPath := filepath.Join(mgr.dir, currentDBFileName)
+	err = os.RemoveAll(dbPath)
+	if err != nil {
+		return
+	}
+	err = mgr.restoreFromCheckpoint(last, dbPath)
+	if err != nil {
+		return
+	}
+	mgr.current, err = gorocksdb.OpenOptimisticTransactionDb(mgr.opts.dbo, dbPath)
+	return
+}
+
+func (mgr *dbManager) restoreFromCheckpoint(version uint64, path string) error {
+	cxn, err := mgr.openCheckpoint(version)
+	if err != nil {
+		return err
+	}
+	defer mgr.cpCache.decrement(version)
+	cp, err := cxn.NewCheckpoint()
+	if err != nil {
+		return err
+	}
+	err = cp.CreateCheckpoint(path, 0)
+	if err != nil {
+		return err
+	}
+	cp.Destroy()
+	return nil
 }
 
 // Close implements DBConnection.
@@ -421,8 +474,8 @@ func (cpc *checkpointCache) decrement(ver uint64) bool {
 	if !has {
 		return false
 	}
-	cp.txnCount -= 1
-	if cp.txnCount == 0 {
+	cp.openCount -= 1
+	if cp.openCount == 0 {
 		cp.cxn.Close()
 		delete(cpc.cache, ver)
 	}

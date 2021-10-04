@@ -63,7 +63,24 @@ func InitGenesis(
 		}
 	}
 
+	valCache := make(map[string]types.Validator, len(data.Validators))
+
 	for _, delegation := range data.Delegations {
+		validator, ok := valCache[delegation.GetValidatorAddr().String()]
+		if !ok {
+			validator, ok = keeper.GetValidator(ctx, delegation.GetValidatorAddr())
+			if !ok {
+				panic(fmt.Sprintf("expected %s validator to be found", delegation.GetValidatorAddr()))
+			}
+
+			valCache[delegation.GetValidatorAddr().String()] = validator
+		}
+
+		// skip importing delegations with non-zero shares but zero token amounts
+		if !delegation.Shares.IsZero() && validator.TokensFromShares(delegation.Shares).TruncateInt().IsZero() {
+			continue
+		}
+
 		delegatorAddress, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
 		if err != nil {
 			panic(err)

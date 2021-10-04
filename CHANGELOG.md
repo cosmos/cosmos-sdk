@@ -37,9 +37,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Bug Fixes
+
+* (client) [#10226](https://github.com/cosmos/cosmos-sdk/pull/10226) Fix --home flag parsing. 
+
 ### Improvements
 
 * [\#10045](https://github.com/cosmos/cosmos-sdk/pull/10045) Revert [#8549](https://github.com/cosmos/cosmos-sdk/pull/8549). Do not route grpc queries through Tendermint.
+
+## [v0.44.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.44.1) - 2021-09-29
+
 ### Client Breaking Changes
 
 * [\#9879](https://github.com/cosmos/cosmos-sdk/pull/9879) Modify ABCI Queries to use `abci.QueryRequest` Height field if it is non-zero, otherwise continue using context height.

@@ -1,4 +1,4 @@
-package v044_test
+package v045_test
 
 import (
 	"testing"
@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	v043 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v043"
-	v044 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v044"
+	v045 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v045"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -36,7 +36,7 @@ func TestMigrateStore(t *testing.T) {
 		prefixAccStore.Set([]byte(b.Denom), bz)
 	}
 
-	require.NoError(t, v044.MigrateStore(ctx, bankKey, encCfg.Codec))
+	require.NoError(t, v045.MigrateStore(ctx, bankKey, encCfg.Codec))
 
 	for _, b := range balances {
 		addrPrefixStore := prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
@@ -47,7 +47,7 @@ func TestMigrateStore(t *testing.T) {
 	}
 
 	for _, b := range balances {
-		denomPrefixStore := prefix.NewStore(store, v044.CreateAddressDenomPrefix(b.Denom))
+		denomPrefixStore := prefix.NewStore(store, v045.CreateDenomAddressPrefix(b.Denom))
 		bz := denomPrefixStore.Get(address.MustLengthPrefix(addr))
 		require.NotNil(t, bz)
 	}
@@ -88,13 +88,14 @@ func TestMigrateDenomMetaData(t *testing.T) {
 
 	for i := range []int{0, 1} {
 		key := append(v043.DenomMetadataPrefix, []byte(metaData[i].Base)...)
+		// keys before 0.44 had denom two times in the key
 		key = append(key, []byte(metaData[i].Base)...)
 		bz, err := encCfg.Codec.Marshal(&metaData[i])
 		require.NoError(t, err)
 		denomMetadataStore.Set(key, bz)
 	}
 
-	require.NoError(t, v044.MigrateStore(ctx, bankKey, encCfg.Codec))
+	require.NoError(t, v045.MigrateStore(ctx, bankKey, encCfg.Codec))
 
 	denomMetadataStore = prefix.NewStore(store, v043.DenomMetadataPrefix)
 	denomMetadataIter := denomMetadataStore.Iterator(nil, nil)
@@ -108,7 +109,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 		bz := denomMetadataStore.Get(oldKey)
 		require.Nil(t, bz)
 
-		require.Equal(t, string(newKey)[1:], metaData[i].Base)
+		require.Equal(t, string(newKey)[1:], metaData[i].Base, "idx: %d", i)
 		bz = denomMetadataStore.Get(denomMetadataIter.Key())
 		require.NotNil(t, bz)
 		err := encCfg.Codec.Unmarshal(bz, &result)

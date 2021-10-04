@@ -8,24 +8,30 @@ package container
 // Ex:
 //  Run(func (x int) error { println(x) }, Provide(func() int { return 1 }))
 func Run(invoker interface{}, opts ...Option) error {
+	return RunDebug(invoker, nil, opts...)
+}
+
+func RunDebug(invoker interface{}, debugOpt DebugOption, opts ...Option) error {
 	opt := Options(opts...)
 
-	cfg, err := newConfig()
+	cfg, err := newDebugConfig()
 	if err != nil {
 		return err
 	}
 
 	defer cfg.generateGraph() // always generate graph on exit
 
-	err = opt.applyConfig(cfg)
-	if err != nil {
-		return err
+	if debugOpt != nil {
+		err = debugOpt.applyConfig(cfg)
+		if err != nil {
+			return err
+		}
 	}
 
 	cfg.logf("Registering providers")
 	cfg.indentLogger()
 	ctr := newContainer(cfg)
-	err = opt.applyContainer(ctr)
+	err = opt.apply(ctr)
 	if err != nil {
 		cfg.logf("Failed registering providers because of: %+v", err)
 		return err

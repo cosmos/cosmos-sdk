@@ -3,6 +3,7 @@ package container
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"path/filepath"
 	"reflect"
 
@@ -12,7 +13,72 @@ import (
 	"github.com/goccy/go-graphviz/cgraph"
 )
 
-type config struct {
+type DebugOption interface {
+	applyConfig(*debugConfig) error
+}
+
+func StdoutLogger() DebugOption {
+	return Logger(func(s string) {
+		_, _ = fmt.Fprintln(os.Stdout, s)
+	})
+}
+
+// Visualizer creates an option which provides a visualizer function which
+// will receive a rendering of the container in the Graphiz DOT format
+// whenever the container finishes building or fails due to an error. The
+// graph is color-coded to aid debugging.
+func Visualizer(visualizer func(dotGraph string)) DebugOption {
+	return debugOption(func(c *debugConfig) error {
+		c.addFuncVisualizer(visualizer)
+		return nil
+	})
+}
+
+func LogVisualizer() DebugOption {
+	return debugOption(func(c *debugConfig) error {
+		c.enableLogVisualizer()
+		return nil
+	})
+}
+
+func FileVisualizer(filename, format string) DebugOption {
+	return debugOption(func(c *debugConfig) error {
+		c.addFileVisualizer(filename, format)
+		return nil
+	})
+}
+
+// Logger creates an option which provides a logger function which will
+// receive all log messages from the container.
+func Logger(logger func(string)) DebugOption {
+	return debugOption(func(c *debugConfig) error {
+		logger("Initializing logger")
+		c.loggers = append(c.loggers, logger)
+		return nil
+	})
+}
+
+func DebugOptions(options ...DebugOption) DebugOption {
+	return debugOption(func(c *debugConfig) error {
+		for _, opt := range options {
+			err := opt.applyConfig(c)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func Debug() DebugOption {
+	return DebugOptions(
+		StdoutLogger(),
+		LogVisualizer(),
+		FileVisualizer("container_dump.svg", "svg"),
+	)
+}
+
+type debugConfig struct {
 	// logging
 	loggers   []func(string)
 	indentStr string
@@ -24,37 +90,45 @@ type config struct {
 	logVisualizer bool
 }
 
-func newConfig() (*config, error) {
+type debugOption func(*debugConfig) error
+
+func (c debugOption) applyConfig(ctr *debugConfig) error {
+	return c(ctr)
+}
+
+var _ DebugOption = (*debugOption)(nil)
+
+func newDebugConfig() (*debugConfig, error) {
 	g := graphviz.New()
 	graph, err := g.Graph()
 	if err != nil {
 		return nil, errors.Wrap(err, "error initializing graph")
 	}
 
-	return &config{
+	return &debugConfig{
 		graphviz: g,
 		graph:    graph,
 	}, nil
 }
 
-func (c *config) indentLogger() {
+func (c *debugConfig) indentLogger() {
 	c.indentStr = c.indentStr + " "
 }
 
-func (c *config) dedentLogger() {
+func (c *debugConfig) dedentLogger() {
 	if len(c.indentStr) > 0 {
 		c.indentStr = c.indentStr[1:]
 	}
 }
 
-func (c config) logf(format string, args ...interface{}) {
+func (c debugConfig) logf(format string, args ...interface{}) {
 	s := fmt.Sprintf(c.indentStr+format, args...)
 	for _, logger := range c.loggers {
 		logger(s)
 	}
 }
 
-func (c *config) generateGraph() {
+func (c *debugConfig) generateGraph() {
 	buf := &bytes.Buffer{}
 	err := c.graphviz.Render(c.graph, graphviz.XDOT, buf)
 	if err != nil {
@@ -83,17 +157,17 @@ func (c *config) generateGraph() {
 	}
 }
 
-func (c *config) addFuncVisualizer(f func(string)) {
+func (c *debugConfig) addFuncVisualizer(f func(string)) {
 	c.visualizers = append(c.visualizers, func(dot string) {
 		f(dot)
 	})
 }
 
-func (c *config) enableLogVisualizer() {
+func (c *debugConfig) enableLogVisualizer() {
 	c.logVisualizer = true
 }
 
-func (c *config) addFileVisualizer(filename string, format string) {
+func (c *debugConfig) addFileVisualizer(filename string, format string) {
 	c.visualizers = append(c.visualizers, func(_ string) {
 		err := c.graphviz.RenderFilename(c.graph, graphviz.Format(format), filename)
 		if err != nil {
@@ -107,7 +181,7 @@ func (c *config) addFileVisualizer(filename string, format string) {
 	})
 }
 
-func (c *config) locationGraphNode(location Location, scope Scope) (*cgraph.Node, error) {
+func (c *debugConfig) locationGraphNode(location Location, scope Scope) (*cgraph.Node, error) {
 	graph := c.scopeSubGraph(scope)
 	node, found, err := c.findOrCreateGraphNode(graph, location.Name())
 	if err != nil {
@@ -123,7 +197,7 @@ func (c *config) locationGraphNode(location Location, scope Scope) (*cgraph.Node
 	return node, nil
 }
 
-func (c *config) typeGraphNode(typ reflect.Type) (*cgraph.Node, error) {
+func (c *debugConfig) typeGraphNode(typ reflect.Type) (*cgraph.Node, error) {
 	node, found, err := c.findOrCreateGraphNode(c.graph, typ.String())
 	if err != nil {
 		return nil, err
@@ -137,7 +211,7 @@ func (c *config) typeGraphNode(typ reflect.Type) (*cgraph.Node, error) {
 	return node, err
 }
 
-func (c *config) findOrCreateGraphNode(subGraph *cgraph.Graph, name string) (node *cgraph.Node, found bool, err error) {
+func (c *debugConfig) findOrCreateGraphNode(subGraph *cgraph.Graph, name string) (node *cgraph.Node, found bool, err error) {
 	node, err = c.graph.Node(name)
 	if err != nil {
 		return nil, false, errors.Wrapf(err, "error finding graph node %s", name)
@@ -155,7 +229,7 @@ func (c *config) findOrCreateGraphNode(subGraph *cgraph.Graph, name string) (nod
 	return node, false, nil
 }
 
-func (c *config) scopeSubGraph(scope Scope) *cgraph.Graph {
+func (c *debugConfig) scopeSubGraph(scope Scope) *cgraph.Graph {
 	graph := c.graph
 	if scope != nil {
 		gname := fmt.Sprintf("cluster_%s", scope.Name())
@@ -165,7 +239,7 @@ func (c *config) scopeSubGraph(scope Scope) *cgraph.Graph {
 	return graph
 }
 
-func (c *config) addGraphEdge(from *cgraph.Node, to *cgraph.Node) {
+func (c *debugConfig) addGraphEdge(from *cgraph.Node, to *cgraph.Node) {
 	_, err := c.graph.CreateEdge("", from, to)
 	if err != nil {
 		c.logf("error creating graph edge")

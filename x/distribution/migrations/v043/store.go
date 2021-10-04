@@ -1,6 +1,7 @@
 package v043
 
 import (
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v040distribution "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v040"
 )
@@ -9,7 +10,7 @@ import (
 // migration includes:
 //
 // - Change addresses to be length-prefixed.
-func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey) error {
+func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey) error {
 	store := ctx.KVStore(storeKey)
 	MigratePrefixAddress(store, v040distribution.ValidatorOutstandingRewardsPrefix)
 	MigratePrefixAddress(store, v040distribution.DelegatorWithdrawAddrPrefix)

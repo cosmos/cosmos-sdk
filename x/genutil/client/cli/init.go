@@ -83,8 +83,6 @@ func InitCmd(mm genesisMM) *cobra.Command {
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
-
-			clientCtx = client.ReadHomeFlag(clientCtx, cmd)
 			config.SetRoot(clientCtx.HomeDir)
 
 			config := client.GetConfigFromCmd(cmd)

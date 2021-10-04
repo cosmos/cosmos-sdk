@@ -11,6 +11,7 @@ require (
 	github.com/confio/ics23/go v0.6.6
 	github.com/cosmos/btcutil v1.0.4
 	github.com/cosmos/cosmos-proto v0.0.0-20210914142853-23ed61ac79ce
+	github.com/cosmos/cosmos-sdk/container v0.0.0-20211004203641-fb78bbfbbb7c
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.17.1
 	github.com/cosmos/ledger-cosmos-go v0.11.1
@@ -74,10 +75,13 @@ require (
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/dvsekhvalnov/jose2go v0.0.0-20200901110807-248326c1351b // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
+	github.com/fogleman/gg v1.3.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/go-kit/kit v0.10.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.0 // indirect
+	github.com/goccy/go-graphviz v0.0.9 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
+	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
 	github.com/google/btree v1.0.0 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
@@ -112,6 +116,7 @@ require (
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
 	github.com/zondax/hid v0.9.0 // indirect
 	go.etcd.io/bbolt v1.3.5 // indirect
+	golang.org/x/image v0.0.0-20200119044424-58c23975cae1 // indirect
 	golang.org/x/net v0.0.0-20210525063256-abc453219eb5 // indirect
 	golang.org/x/sys v0.0.0-20210823070655-63515b42dcdf // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect

@@ -21,11 +21,14 @@ import (
 // defined.
 func (ctx Context) BroadcastTx(txBytes []byte) (res *sdk.TxResponse, err error) {
 	switch ctx.BroadcastMode {
-	case flags.BroadcastSync, flags.BroadcastBlock:
+	case flags.BroadcastSync:
 		res, err = ctx.BroadcastTxSync(txBytes)
 
 	case flags.BroadcastAsync:
 		res, err = ctx.BroadcastTxAsync(txBytes)
+
+	case flags.BroadcastBlock:
+		res, err = ctx.BroadcastTxCommit(txBytes)
 
 	default:
 		return nil, fmt.Errorf("unsupported return type %s; supported types: sync, async, block", ctx.BroadcastMode)

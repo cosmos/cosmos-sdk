@@ -47,10 +47,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (bank) [\#9618](https://github.com/cosmos/cosmos-sdk/pull/9618) Update bank.Metadata: add URI and URIHash attributes.
 * [\#9837](https://github.com/cosmos/cosmos-sdk/issues/9837) `--generate-only` flag will accept the keyname now.
 * [\#10045](https://github.com/cosmos/cosmos-sdk/pull/10045) Revert [#8549](https://github.com/cosmos/cosmos-sdk/pull/8549). Do not route grpc queries through Tendermint.
-* [\#10295](https://github.com/cosmos/cosmos-sdk/pull/10295) Remove store type aliases in /types
 
 ### API Breaking Changes
 
+* [\#10295](https://github.com/cosmos/cosmos-sdk/pull/10295) Remove store type aliases from /types
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Migrate keys from `Info` -> `Record`
   * Add new `codec.Codec` argument in:
     * `keyring.NewInMemory`

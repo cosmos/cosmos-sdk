@@ -30,7 +30,7 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 
 		// Get height header from the request context, if present.
 		var height int64
-		if heightHeaders := md.Get(grpctypes.GRPCBlockHeightHeader); len(heightHeaders) > 0 {
+		if heightHeaders := md.Get(grpctypes.GRPCBlockHeightHeader); len(heightHeaders) == 1 {
 			height, err = strconv.ParseInt(heightHeaders[0], 10, 64)
 			if err != nil {
 				return nil, sdkerrors.Wrapf(
@@ -49,13 +49,14 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 			return nil, err
 		}
 
-		// Attach the sdk.Context into the gRPC's context.Context.
-		grpcCtx = context.WithValue(grpcCtx, sdk.SdkContextKey, sdkCtx)
-
 		// Add relevant gRPC headers
 		if height == 0 {
 			height = sdkCtx.BlockHeight() // If height was not set in the request, set it to the latest
 		}
+
+		// Attach the sdk.Context into the gRPC's context.Context.
+		grpcCtx = context.WithValue(grpcCtx, sdk.SdkContextKey, sdkCtx)
+
 		md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
 		grpc.SetHeader(grpcCtx, md)
 

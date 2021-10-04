@@ -36,16 +36,12 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, args, reply 
 	// 2-2. or we are querying for state, in which case we call ABCI's Query if grpc client not set.
 
 	// In both cases, we don't allow empty request args (it will panic unexpectedly).
-	if reflect.ValueOf(args).IsNil() {
+	if reflect.ValueOf(req).IsNil() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "request cannot be nil")
 	}
 
 	// Case 1. Broadcasting a Tx.
-	if isBroadcast(method) {
-		req, ok := args.(*tx.BroadcastTxRequest)
-		if !ok {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxRequest)(nil), args)
-		}
+	if reqProto, ok := req.(*tx.BroadcastTxRequest); ok {
 		res, ok := reply.(*tx.BroadcastTxResponse)
 		if !ok {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxResponse)(nil), args)
@@ -61,7 +57,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, args, reply 
 	}
 
 	// Case 2. Querying state.
-	reqBz, err := protoCodec.Marshal(args)
+	reqBz, err := protoCodec.Marshal(req)
 	if err != nil {
 		return err
 	}
@@ -88,7 +84,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, args, reply 
 		Height: ctx.Height,
 	}
 
-	res, err := ctx.QueryABCI(req)
+	res, err := ctx.QueryABCI(abciReq)
 	if err != nil {
 		return err
 	}
@@ -123,8 +119,4 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, args, reply 
 // NewStream implements the grpc ClientConn.NewStream method
 func (Context) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
 	return nil, fmt.Errorf("streaming rpc not supported")
-}
-
-func isBroadcast(method string) bool {
-	return method == "/cosmos.tx.v1beta1.Service/BroadcastTx"
 }

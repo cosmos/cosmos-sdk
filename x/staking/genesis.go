@@ -34,8 +34,11 @@ func InitGenesis(
 	keeper.SetParams(ctx, data.Params)
 	keeper.SetLastTotalPower(ctx, data.LastTotalPower)
 
+	valCache := make(map[string]types.Validator, len(data.Validators))
+
 	for _, validator := range data.Validators {
 		keeper.SetValidator(ctx, validator)
+		valCache[validator.OperatorAddress] = validator
 
 		// Manually set indices for the first time
 		keeper.SetValidatorByConsAddr(ctx, validator)
@@ -63,17 +66,10 @@ func InitGenesis(
 		}
 	}
 
-	valCache := make(map[string]types.Validator, len(data.Validators))
-
 	for _, delegation := range data.Delegations {
 		validator, ok := valCache[delegation.GetValidatorAddr().String()]
 		if !ok {
-			validator, ok = keeper.GetValidator(ctx, delegation.GetValidatorAddr())
-			if !ok {
-				panic(fmt.Sprintf("expected %s validator to be found", delegation.GetValidatorAddr()))
-			}
-
-			valCache[delegation.GetValidatorAddr().String()] = validator
+			panic(fmt.Sprintf("expected %s validator to be found", delegation.GetValidatorAddr()))
 		}
 
 		// skip importing delegations with non-zero shares but zero token amounts

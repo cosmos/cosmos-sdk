@@ -148,11 +148,24 @@ type unsavableDB struct{ *memdb.MemDB }
 
 func (unsavableDB) SaveVersion(uint64) error { return errors.New("unsavable DB") }
 
+type uncommittableTxn struct{ dbm.DBReadWriter }
+
+func (tx uncommittableTxn) Commit() error {
+	tx.Discard()
+	return errors.New("uncommittable Txn")
+}
+
+type uncommittableDB struct{ *memdb.MemDB }
+
+func (db uncommittableDB) ReadWriter() dbm.DBReadWriter {
+	return uncommittableTxn{db.MemDB.ReadWriter()}
+}
+
 func TestCommit(t *testing.T) {
 	// Sanity test for Merkle hashing
 	store := newStoreWithData(t, memdb.NewDB(), nil)
 	idNew := store.Commit()
-	store.Set([]byte{0x00}, []byte("a"))
+	store.Set([]byte{0}, []byte{0})
 	idOne := store.Commit()
 	require.Equal(t, idNew.Version+1, idOne.Version)
 	require.NotEqual(t, idNew.Hash, idOne.Hash)
@@ -162,26 +175,67 @@ func TestCommit(t *testing.T) {
 	idEmptied := store.Commit()
 	require.Equal(t, idNew.Hash, idEmptied.Hash)
 
-	for i := byte(0); i < 10; i++ {
+	previd := idEmptied
+	for i := byte(1); i < 5; i++ {
 		store.Set([]byte{i}, []byte{i})
 		id := store.Commit()
 		lastid := store.LastCommitID()
 		require.Equal(t, id.Hash, lastid.Hash)
 		require.Equal(t, id.Version, lastid.Version)
+		require.NotEqual(t, previd.Hash, id.Hash)
+		require.NotEqual(t, previd.Version, id.Version)
 	}
 
-	// Storage commit is rolled back if Merkle commit fails
-	opts := StoreConfig{MerkleDB: unsavableDB{memdb.NewDB()}, Pruning: types.PruneNothing}
-	db := memdb.NewDB()
-	store, err := NewStore(db, opts)
-	require.NoError(t, err)
-	require.Panics(t, func() { _ = store.Commit() })
-	versions, err := db.Versions()
-	require.NoError(t, err)
-	require.Equal(t, 0, versions.Count())
+	testFailedCommit := func(db dbm.DBConnection, opts StoreConfig) {
+		store, err := NewStore(db, opts)
+		require.NoError(t, err)
+		store.Set([]byte{0}, []byte{0})
 
-	opts = StoreConfig{InitialVersion: 5, Pruning: types.PruneNothing}
-	store, err = NewStore(memdb.NewDB(), opts)
+		require.Panics(t, func() { _ = store.Commit() })
+
+		versions, err := db.Versions()
+		require.NoError(t, err)
+		require.Equal(t, 0, versions.Count())
+		if opts.MerkleDB != nil {
+			versions, err = opts.MerkleDB.Versions()
+			require.NoError(t, err)
+			require.Equal(t, 0, versions.Count())
+		}
+
+		store, err = NewStore(db, opts)
+		require.NoError(t, err)
+		require.Nil(t, store.Get([]byte{0}))
+	}
+
+	// Ensure storage commit is rolled back in each failure case
+	t.Run("recover after failed Commit", func(t *testing.T) {
+		testFailedCommit(
+			uncommittableDB{memdb.NewDB()},
+			StoreConfig{Pruning: types.PruneNothing},
+		)
+	})
+	t.Run("recover after failed SaveVersion", func(t *testing.T) {
+		testFailedCommit(
+			unsavableDB{memdb.NewDB()},
+			StoreConfig{Pruning: types.PruneNothing},
+		)
+	})
+	t.Run("recover after failed MerkleDB Commit", func(t *testing.T) {
+		testFailedCommit(
+			memdb.NewDB(),
+			StoreConfig{MerkleDB: uncommittableDB{memdb.NewDB()}, Pruning: types.PruneNothing},
+		)
+	})
+	t.Run("recover after failed MerkleDB SaveVersion", func(t *testing.T) {
+		testFailedCommit(
+			memdb.NewDB(),
+			StoreConfig{MerkleDB: unsavableDB{memdb.NewDB()}, Pruning: types.PruneNothing},
+		)
+	})
+
+	// setting initial version
+	opts := StoreConfig{InitialVersion: 5, Pruning: types.PruneNothing}
+	store, err := NewStore(memdb.NewDB(), opts)
 	require.NoError(t, err)
 	cid := store.Commit()
 	require.Equal(t, int64(5), cid.Version)

@@ -76,10 +76,15 @@ var DefaultStoreConfig = StoreConfig{Pruning: types.PruneDefault, MerkleDB: nil}
 func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 	versions, err := db.Versions()
 	if err != nil {
-		return nil, err
+		return
 	}
 	if saved := versions.Count(); saved != 0 {
-		return nil, fmt.Errorf("%w: %v existing versions", ErrNonEmptyDatabase, saved)
+		err = fmt.Errorf("%w: %v existing versions", ErrNonEmptyDatabase, saved)
+		return
+	}
+	err = db.Revert()
+	if err != nil {
+		return
 	}
 	stateTxn := db.ReadWriter()
 	defer func() {
@@ -96,6 +101,10 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 		}
 		if saved := mversions.Count(); saved != 0 {
 			err = fmt.Errorf("%w (Merkle DB): %v existing versions", ErrNonEmptyDatabase, saved)
+			return
+		}
+		err = opts.MerkleDB.Revert()
+		if err != nil {
 			return
 		}
 		merkleTxn = opts.MerkleDB.ReadWriter()
@@ -123,6 +132,10 @@ func LoadStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 		return nil, fmt.Errorf("latest saved version is less than initial version: %v < %v",
 			versions.Last(), opts.InitialVersion)
 	}
+	err = db.Revert()
+	if err != nil {
+		return
+	}
 	stateTxn := db.ReadWriter()
 	defer func() {
 		if err != nil {
@@ -139,6 +152,10 @@ func LoadStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 		// Version sets of each DB must match
 		if !versions.Equal(mversions) {
 			err = fmt.Errorf("Storage and Merkle DB have different version history")
+			return
+		}
+		err = opts.MerkleDB.Revert()
+		if err != nil {
 			return
 		}
 		merkleTxn = opts.MerkleDB.ReadWriter()
@@ -313,12 +330,22 @@ func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
 	if err != nil {
 		return
 	}
+	defer func() {
+		if err != nil {
+			err = util.CombineErrors(err, s.stateDB.Revert(), "stateDB.Revert also failed")
+		}
+	}()
 	err = s.stateDB.SaveVersion(target)
 	if err != nil {
 		return
 	}
 
 	stateTxn := s.stateDB.ReadWriter()
+	defer func() {
+		if err != nil {
+			err = util.CombineErrors(err, stateTxn.Discard(), "stateTxn.Discard also failed")
+		}
+	}()
 	merkleTxn := stateTxn
 
 	// If DBs are not separate, Merkle state has been commmitted & snapshotted
@@ -335,6 +362,12 @@ func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
 		if err != nil {
 			return
 		}
+		defer func() {
+			if err != nil {
+				err = util.CombineErrors(err, s.opts.MerkleDB.Revert(), "merkleDB.Revert also failed")
+			}
+		}()
+
 		err = s.opts.MerkleDB.SaveVersion(target)
 		if err != nil {
 			return

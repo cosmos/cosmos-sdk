@@ -62,15 +62,23 @@ func (s *MWTestSuite) TestSignModes() {
 		feePayerSignMode signing.SignMode
 		expErr           bool
 	}{
-		{signing.SignMode_SIGN_MODE_DIRECT, signing.SignMode_SIGN_MODE_DIRECT, true},
+		{signing.SignMode_SIGN_MODE_DIRECT, signing.SignMode_SIGN_MODE_DIRECT, false},
 		{signing.SignMode_SIGN_MODE_DIRECT, signing.SignMode_SIGN_MODE_DIRECT_AUX, true},
-		{signing.SignMode_SIGN_MODE_DIRECT, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, true},
+		{signing.SignMode_SIGN_MODE_DIRECT, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, false},
+		{signing.SignMode_SIGN_MODE_DIRECT, signing.SignMode_SIGN_MODE_AMINO_AUX, true},
 		{signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_DIRECT, false},
 		{signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_DIRECT_AUX, true},
 		{signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, false},
+		{signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_AMINO_AUX, true},
 		{signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signing.SignMode_SIGN_MODE_DIRECT, true},
 		{signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signing.SignMode_SIGN_MODE_DIRECT_AUX, true},
 		{signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, true},
+		{signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signing.SignMode_SIGN_MODE_AMINO_AUX, true},
+		{signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signing.SignMode_SIGN_MODE_AMINO_AUX, true},
+		{signing.SignMode_SIGN_MODE_AMINO_AUX, signing.SignMode_SIGN_MODE_DIRECT, false},
+		{signing.SignMode_SIGN_MODE_AMINO_AUX, signing.SignMode_SIGN_MODE_DIRECT_AUX, true},
+		{signing.SignMode_SIGN_MODE_AMINO_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, false},
+		{signing.SignMode_SIGN_MODE_AMINO_AUX, signing.SignMode_SIGN_MODE_AMINO_AUX, true},
 	}
 
 	for _, tc := range testcases {

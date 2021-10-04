@@ -12,10 +12,12 @@ var DefaultSignModes = []signingtypes.SignMode{
 	signingtypes.SignMode_SIGN_MODE_DIRECT,
 	signingtypes.SignMode_SIGN_MODE_DIRECT_AUX,
 	signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+	signingtypes.SignMode_SIGN_MODE_AMINO_AUX,
 }
 
 // makeSignModeHandler returns the default protobuf SignModeHandler supporting
-// SIGN_MODE_DIRECT and SIGN_MODE_LEGACY_AMINO_JSON.
+// SIGN_MODE_DIRECT, SIGN_MODE_LEGACY_AMINO_JSON, SIGN_MODE_DIRECT_AUXX and
+// SIGN_MODE_AMINO_AUX.
 func makeSignModeHandler(modes []signingtypes.SignMode) signing.SignModeHandler {
 	if len(modes) < 1 {
 		panic(fmt.Errorf("no sign modes enabled"))

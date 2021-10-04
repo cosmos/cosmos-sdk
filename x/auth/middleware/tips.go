@@ -198,7 +198,9 @@ func checkFeeSigner(addr sdk.AccAddress, sigData signing.SignatureData) error {
 // checkTipSigner checks whether a signature has signed over Tips.
 func checkTipSigner(addr sdk.AccAddress, sigData signing.SignatureData) error {
 	if err := checkCorrectSignModes(addr, sigData, []signing.SignMode{
+		signing.SignMode_SIGN_MODE_DIRECT,
 		signing.SignMode_SIGN_MODE_DIRECT_AUX,
+		signing.SignMode_SIGN_MODE_AMINO_AUX,
 	}, "tipper"); err != nil {
 		return err
 	}

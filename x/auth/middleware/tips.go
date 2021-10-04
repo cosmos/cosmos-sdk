@@ -100,7 +100,7 @@ type signModeTxHandler struct {
 	next tx.Handler
 }
 
-// NewTipsTxMiddleware returns a new middleware that checks that
+// SignModeTxMiddleware returns a new middleware that checks that
 // all signatures in the tx have correct sign modes.
 // Namely:
 // - fee payer should sign over fees,

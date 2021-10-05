@@ -23,12 +23,30 @@ func deleteDelegations(store sdk.KVStore, cdc codec.BinaryCodec) error {
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
 
+	valCache := make(map[string]v040staking.Validator)
+
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
 		var delegation v040staking.Delegation
 		if err := cdc.Unmarshal(oldStoreIter.Value(), &delegation); err != nil {
 			return err
 		}
 
+		validator, ok := valCache[delegation.ValidatorAddress]
+		if !ok {
+			valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+			if err != nil {
+				return err
+			}
+
+			if err := cdc.Unmarshal(store.Get(GetValidatorKey(valAddr)), &validator); err != nil {
+				return err
+			}
+
+			valCache[delegation.ValidatorAddress] = validator
+		}
+
+		// TODO: On-chain, we call BeforeDelegationRemoved prior to removing the
+		// object from state. Do we need to do the same here?
 		if validator.TokensFromShares(delegation.Shares).TruncateInt().IsZero() || delegation.Shares.IsZero() {
 			oldStore.Delete(oldStoreIter.Key())
 		}

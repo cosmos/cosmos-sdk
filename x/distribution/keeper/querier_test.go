@@ -119,6 +119,9 @@ func TestQueries(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
+	// reset fee pool
+	app.DistrKeeper.SetFeePool(ctx, types.InitialFeePool())
+
 	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
 	valOpAddr1 := valAddrs[0]

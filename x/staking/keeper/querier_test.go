@@ -143,9 +143,9 @@ func TestQueryValidators(t *testing.T) {
 	addrs := simapp.AddTestAddrs(app, ctx, 500, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
 
 	// Create Validators
-	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
-	status := []types.BondStatus{types.Bonded, types.Unbonded, types.Unbonding}
-	var validators [3]types.Validator
+	amts := []sdk.Int{sdk.NewInt(8), sdk.NewInt(7)}
+	status := []types.BondStatus{types.Unbonded, types.Unbonding}
+	var validators [2]types.Validator
 	for i, amt := range amts {
 		validators[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i])
 		validators[i], _ = validators[i].AddTokensFromDel(amt)
@@ -154,7 +154,6 @@ func TestQueryValidators(t *testing.T) {
 
 	app.StakingKeeper.SetValidator(ctx, validators[0])
 	app.StakingKeeper.SetValidator(ctx, validators[1])
-	app.StakingKeeper.SetValidator(ctx, validators[2])
 
 	// Query Validators
 	queriedValidators := app.StakingKeeper.GetValidators(ctx, params.MaxValidators)
@@ -305,6 +304,9 @@ func TestQueryDelegation(t *testing.T) {
 	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegationRes.Balance)
 
 	// Query Delegator Delegations
+	bz, errRes = cdc.MarshalJSON(queryParams)
+	require.NoError(t, errRes)
+
 	query = abci.RequestQuery{
 		Path: "/custom/staking/delegatorDelegations",
 		Data: bz,

@@ -13,7 +13,8 @@ import (
 	"github.com/goccy/go-graphviz/cgraph"
 )
 
-// DebugOption is a functional debug option for a container.
+// DebugOption is a functional option for running a container that controls
+// debug logging and visualization output.
 type DebugOption interface {
 	applyConfig(*debugConfig) error
 }

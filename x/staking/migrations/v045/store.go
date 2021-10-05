@@ -18,16 +18,16 @@ func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec)
 }
 
 func purgeDelegations(store sdk.KVStore, cdc codec.BinaryCodec) error {
-	oldStore := prefix.NewStore(store, v040staking.DelegationKey)
+	prefixDelStore := prefix.NewStore(store, v040staking.DelegationKey)
 
-	oldStoreIter := oldStore.Iterator(nil, nil)
-	defer oldStoreIter.Close()
+	delStoreIter := prefixDelStore.Iterator(nil, nil)
+	defer delStoreIter.Close()
 
 	valCache := make(map[string]v040staking.Validator)
 
-	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
+	for ; delStoreIter.Valid(); delStoreIter.Next() {
 		var delegation v040staking.Delegation
-		if err := cdc.Unmarshal(oldStoreIter.Value(), &delegation); err != nil {
+		if err := cdc.Unmarshal(delStoreIter.Value(), &delegation); err != nil {
 			return err
 		}
 
@@ -48,7 +48,7 @@ func purgeDelegations(store sdk.KVStore, cdc codec.BinaryCodec) error {
 		// TODO: On-chain, we call BeforeDelegationRemoved prior to removing the
 		// object from state. Do we need to do the same here?
 		if validator.TokensFromShares(delegation.Shares).TruncateInt().IsZero() || delegation.Shares.IsZero() {
-			oldStore.Delete(oldStoreIter.Key())
+			prefixDelStore.Delete(delStoreIter.Key())
 		}
 	}
 

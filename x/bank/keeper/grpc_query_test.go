@@ -81,22 +81,29 @@ func (suite *IntegrationTestSuite) TestQueryAllBalances() {
 	}
 	req = types.NewQueryAllBalancesRequest(addr, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
+	suite.Require().NoError(err)
 	suite.Equal(res.Balances.Len(), 1)
 	suite.Nil(res.Pagination.NextKey)
 }
 
 func (suite *IntegrationTestSuite) TestQueryTotalSupply() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
-	expectedTotalSupply := sdk.NewCoins(sdk.NewInt64Coin("test", 400000000))
+	res, err := queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
+	suite.Require().NoError(err)
+	genesisSupply := res.Supply
+
+	testCoins := sdk.NewCoins(sdk.NewInt64Coin("test", 400000000))
 	suite.
 		Require().
-		NoError(app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply))
+		NoError(app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, testCoins))
 
-	res, err := queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
+	res, err = queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
-	suite.Require().Equal(expectedTotalSupply, res.Supply)
+	expectedTotalSupply := genesisSupply.Add(testCoins...)
+	suite.Require().Equal(2, len(res.Supply))
+	suite.Require().Equal(res.Supply, expectedTotalSupply)
 }
 
 func (suite *IntegrationTestSuite) TestQueryTotalSupplyOf() {
@@ -353,7 +360,7 @@ func (suite *IntegrationTestSuite) TestGRPCDenomOwners() {
 			expPass:  true,
 			numAddrs: 6,
 			hasNext:  true,
-			total:    10,
+			total:    13,
 		},
 		"valid request - page 2": {
 			req: &types.QueryDenomOwnersRequest{
@@ -365,9 +372,9 @@ func (suite *IntegrationTestSuite) TestGRPCDenomOwners() {
 				},
 			},
 			expPass:  true,
-			numAddrs: 4,
+			numAddrs: 7,
 			hasNext:  false,
-			total:    10,
+			total:    13,
 		},
 	}
 

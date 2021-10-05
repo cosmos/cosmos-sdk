@@ -39,16 +39,16 @@ var _ baseapp.StreamingService = &StreamingService{}
 
 // StreamingService is a concrete implementation of StreamingService that writes state changes out to files
 type StreamingService struct {
-	listeners          map[sdk.StoreKey][]types.WriteListener // the listeners that will be initialized with BaseApp
-	srcChan            <-chan []byte                          // the channel that all the WriteListeners write their data out to
-	filePrefix         string                                 // optional prefix for each of the generated files
-	writeDir           string                                 // directory to write files into
-	codec              codec.BinaryCodec                      // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
-	stateCache         [][]byte                               // cache the protobuf binary encoded StoreKVPairs in the order they are received
-	stateCacheLock     *sync.Mutex                            // mutex for the state cache
-	currentBlockNumber int64                                  // the current block number
-	currentTxIndex     int64                                  // the index of the current tx
-	quitChan           chan struct{}                          // channel to synchronize closure
+	listeners          map[types.StoreKey][]types.WriteListener // the listeners that will be initialized with BaseApp
+	srcChan            <-chan []byte                            // the channel that all the WriteListeners write their data out to
+	filePrefix         string                                   // optional prefix for each of the generated files
+	writeDir           string                                   // directory to write files into
+	codec              codec.BinaryCodec                        // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
+	stateCache         [][]byte                                 // cache the protobuf binary encoded StoreKVPairs in the order they are received
+	stateCacheLock     *sync.Mutex                              // mutex for the state cache
+	currentBlockNumber int64                                    // the current block number
+	currentTxIndex     int64                                    // the index of the current tx
+	quitChan           chan struct{}                            // channel to synchronize closure
 }
 
 // IntermediateWriter is used so that we do not need to update the underlying io.Writer
@@ -71,11 +71,11 @@ func (iw *IntermediateWriter) Write(b []byte) (int, error) {
 }
 
 // NewStreamingService creates a new StreamingService for the provided writeDir, (optional) filePrefix, and storeKeys
-func NewStreamingService(writeDir, filePrefix string, storeKeys []sdk.StoreKey, c codec.BinaryCodec) (*StreamingService, error) {
+func NewStreamingService(writeDir, filePrefix string, storeKeys []types.StoreKey, c codec.BinaryCodec) (*StreamingService, error) {
 	listenChan := make(chan []byte)
 	iw := NewIntermediateWriter(listenChan)
 	listener := types.NewStoreKVPairWriteListener(iw, c)
-	listeners := make(map[sdk.StoreKey][]types.WriteListener, len(storeKeys))
+	listeners := make(map[types.StoreKey][]types.WriteListener, len(storeKeys))
 	// in this case, we are using the same listener for each Store
 	for _, key := range storeKeys {
 		listeners[key] = append(listeners[key], listener)
@@ -99,7 +99,7 @@ func NewStreamingService(writeDir, filePrefix string, storeKeys []sdk.StoreKey, 
 // Listeners satisfies the baseapp.StreamingService interface
 // It returns the StreamingService's underlying WriteListeners
 // Use for registering the underlying WriteListeners with the BaseApp
-func (fss *StreamingService) Listeners() map[sdk.StoreKey][]types.WriteListener {
+func (fss *StreamingService) Listeners() map[types.StoreKey][]types.WriteListener {
 	return fss.listeners
 }
 

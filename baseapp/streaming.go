@@ -25,7 +25,7 @@ type StreamingService interface {
 	// Stream is the streaming service loop, awaits kv pairs and writes them to some destination stream or file
 	Stream(wg *sync.WaitGroup)
 	// Listeners returns the streaming service's listeners for the BaseApp to register
-	Listeners() map[types.StoreKey][]store.WriteListener
+	Listeners() map[store.StoreKey][]store.WriteListener
 	// StreamingListener interface for hooking into the ABCI messages from inside the BaseApp
 	StreamingListener
 	// Closer interface

@@ -14,10 +14,10 @@ import (
 func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
 
-	return deleteDelegations(store, cdc)
+	return purgeDelegations(store, cdc)
 }
 
-func deleteDelegations(store sdk.KVStore, cdc codec.BinaryCodec) error {
+func purgeDelegations(store sdk.KVStore, cdc codec.BinaryCodec) error {
 	oldStore := prefix.NewStore(store, v040staking.DelegationKey)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)

@@ -33,7 +33,7 @@ func TestIsVersionCommand(t *testing.T) {
 		tc := cases[i]
 		t.Run(tc.name, func(t *testing.T) {
 			require := require.New(t)
-			res := isVersionCommand(tc.args)
+			res := IsVersionCommand(tc.args)
 			require.Equal(tc.expectRes, res)
 		})
 	}

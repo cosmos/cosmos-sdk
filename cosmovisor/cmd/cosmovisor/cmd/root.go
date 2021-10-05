@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
 )
 
@@ -10,8 +12,8 @@ func RunCosmovisorCommand(args []string) error {
 	case ShouldGiveHelp(args):
 		DoHelp()
 		return nil
-	case isVersionCommand(args):
-		printVersion()
+	case IsVersionCommand(args):
+		PrintVersion()
 		return nil
 	case IsRunCommand(args):
 		return Run(args[1:])
@@ -22,4 +24,14 @@ func RunCosmovisorCommand(args []string) error {
 	warnRun()
 	defer warnRun()
 	return Run(args)
+}
+
+// isOneOf returns true if the given arg equals one of the provided options (ignoring case).
+func isOneOf(arg string, options []string) bool {
+	for _, opt := range options {
+		if strings.EqualFold(arg, opt) {
+			return true
+		}
+	}
+	return false
 }

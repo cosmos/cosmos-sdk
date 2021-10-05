@@ -3,15 +3,17 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
 	"github.com/cosmos/cosmos-sdk/cosmovisor/errors"
 )
 
+// HelpArgs are the strings that indicate a cosmovisor run command.
+var RunArgs = []string{"run"}
+
 // IsRunCommand checks if the given args indicate that a run is desired.
 func IsRunCommand(args []string) bool {
-	return len(args) > 0 && strings.EqualFold(args[0], "run")
+	return len(args) > 0 && isOneOf(args[0], RunArgs)
 }
 
 // Run runs the configured program and monitors it for upgrades.

@@ -541,13 +541,13 @@ The `validators` command allow user to query details about all validators on a n
 Usage:
 
 ```bash
-junod query staking validators [flags]
+simd query staking validators [flags]
 ```
 
 Example:
 
 ```bash
-junod query staking validators
+simd query staking validators
 ```
 
 Example Output:

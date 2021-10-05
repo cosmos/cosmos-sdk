@@ -610,3 +610,102 @@ description:
   unbonding_height: "0"
   unbonding_time: "1970-01-01T00:00:00Z"
 ```
+
+### Transactions
+
+The `tx` commands allow users to interact with the `staking` module.
+
+```bash
+simd tx staking --help
+```
+
+#### create-validator
+
+The command `create-validator` allow user to create new validator initialized with a self-delegation to it.
+
+Usage:
+
+```bash
+simd tx staking create-validator [flags]
+```
+
+Example:
+
+```bash
+simd tx staking create-validator \
+  --amount=1000000stake \
+  --pubkey=$(simd tendermint show-validator) \
+  --moniker="my-moniker" \
+  --website="https://myweb.site" \
+  --details="description of your validator" \
+  --chain-id="name_of_chain_id" \
+  --commission-rate="0.10" \
+  --commission-max-rate="0.20" \
+  --commission-max-change-rate="0.01" \
+  --min-self-delegation="1" \
+  --gas="auto" \
+  --gas-adjustment="1.2" \
+  --gas-prices="0.025stake" \
+  --from=mykey
+```
+
+#### delegate
+
+The command `delegate` allow user to delegate liquid tokens to a validator.
+
+Usage:
+
+```bash
+simd tx staking delegate [validator-addr] [amount] [flags]
+```
+
+Example:
+
+```bash
+simd tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --from mykey
+```
+
+#### edit-validator
+The command `edit-validator` allow user to edit an existing validator account.
+
+Usage:
+
+```bash
+simd tx staking edit-validator [flags]
+```
+
+Example:
+
+```bash
+simd tx staking edit-validator --moniker "new_moniker_name" --website "new_webiste_url" --from mykey
+```
+
+#### redelegate
+The command `redelegate` allow user to redelegate illiquid tokens from one validator to another.
+
+Usage:
+
+```bash
+simd tx staking redelegate [src-validator-addr] [dst-validator-addr] [amount] [flags]
+```
+
+Example:
+
+```bash
+simd tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 100stake --from mykey
+```
+
+#### unbond
+The command `unbond` allow user to unbond shares from a validator.
+
+Usage:
+
+```bash
+simd tx staking unbond [validator-addr] [amount] [flags]
+```
+
+Example:
+
+```bash
+simd tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from mykey
+```

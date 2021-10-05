@@ -3,8 +3,8 @@ package db
 import "errors"
 
 var (
-	// ErrBatchClosed is returned when a closed or written batch is used.
-	ErrBatchClosed = errors.New("batch has been written or closed")
+	// ErrTransactionClosed is returned when a closed or written transaction is used.
+	ErrTransactionClosed = errors.New("transaction has been written or closed")
 
 	// ErrKeyEmpty is returned when attempting to use an empty or nil key.
 	ErrKeyEmpty = errors.New("key cannot be empty")
@@ -61,6 +61,11 @@ type DBConnection interface {
 	// Deletes a saved version. Returns ErrVersionDoesNotExist for invalid versions.
 	DeleteVersion(uint64) error
 
+	// Reverts the DB state to the last saved version.
+	// Returns an error if no saved versions exist.
+	// Returns an error if any open DBWriter transactions exist.
+	Revert() error
+
 	// Close closes the database connection.
 	Close() error
 }
@@ -97,7 +102,7 @@ type DBReader interface {
 	ReverseIterator(start, end []byte) (Iterator, error)
 
 	// Discards the transaction, invalidating any future operations on it.
-	Discard()
+	Discard() error
 }
 
 // DBWriter is a write-only transaction interface.
@@ -117,7 +122,7 @@ type DBWriter interface {
 	Commit() error
 
 	// Discards the transaction, invalidating any future operations on it.
-	Discard()
+	Discard() error
 }
 
 // DBReadWriter is a transaction interface that allows both reading and writing.

@@ -1,9 +1,10 @@
 syntax = "proto3";
-package cosmos.gov.v1beta1;
+package cosmos.gov.v1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "cosmos/gov/v1/gov.proto";
 import "cosmos/gov/v1beta1/gov.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
@@ -12,42 +13,42 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
 service Query {
   // Proposal queries proposal details based on ProposalID.
   rpc Proposal(QueryProposalRequest) returns (QueryProposalResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1beta1/proposals/{proposal_id}";
+    option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}";
   }
 
   // Proposals queries all proposals based on given status.
   rpc Proposals(QueryProposalsRequest) returns (QueryProposalsResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1beta1/proposals";
+    option (google.api.http).get = "/cosmos/gov/v1/proposals";
   }
 
   // Vote queries voted information based on proposalID, voterAddr.
   rpc Vote(QueryVoteRequest) returns (QueryVoteResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}";
+    option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}/votes/{voter}";
   }
 
   // Votes queries votes of a given proposal.
   rpc Votes(QueryVotesRequest) returns (QueryVotesResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1beta1/proposals/{proposal_id}/votes";
+    option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}/votes";
   }
 
   // Params queries all parameters of the gov module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1beta1/params/{params_type}";
+    option (google.api.http).get = "/cosmos/gov/v1/params/{params_type}";
   }
 
   // Deposit queries single deposit information based proposalID, depositAddr.
   rpc Deposit(QueryDepositRequest) returns (QueryDepositResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}";
+    option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}/deposits/{depositor}";
   }
 
   // Deposits queries all deposits of a single proposal.
   rpc Deposits(QueryDepositsRequest) returns (QueryDepositsResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits";
+    option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}/deposits";
   }
 
   // TallyResult queries the tally of a proposal vote.
   rpc TallyResult(QueryTallyResultRequest) returns (QueryTallyResultResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1beta1/proposals/{proposal_id}/tally";
+    option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}/tally";
   }
 }
 
@@ -68,7 +69,7 @@ message QueryProposalsRequest {
   option (gogoproto.goproto_getters) = false;
 
   // proposal_status defines the status of the proposals.
-  ProposalStatus proposal_status = 1;
+  cosmos.gov.v1beta1.ProposalStatus proposal_status = 1;
 
   // voter defines the voter address for the proposals.
   string voter = 2;
@@ -104,7 +105,7 @@ message QueryVoteRequest {
 // QueryVoteResponse is the response type for the Query/Vote RPC method.
 message QueryVoteResponse {
   // vote defined the queried vote.
-  Vote vote = 1 [(gogoproto.nullable) = false];
+  cosmos.gov.v1beta1.Vote vote = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryVotesRequest is the request type for the Query/Votes RPC method.
@@ -119,7 +120,7 @@ message QueryVotesRequest {
 // QueryVotesResponse is the response type for the Query/Votes RPC method.
 message QueryVotesResponse {
   // votes defined the queried votes.
-  repeated Vote votes = 1 [(gogoproto.nullable) = false];
+  repeated cosmos.gov.v1beta1.Vote votes = 1 [(gogoproto.nullable) = false];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -135,11 +136,11 @@ message QueryParamsRequest {
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
   // voting_params defines the parameters related to voting.
-  VotingParams voting_params = 1 [(gogoproto.nullable) = false];
+  cosmos.gov.v1beta1.VotingParams voting_params = 1 [(gogoproto.nullable) = false];
   // deposit_params defines the parameters related to deposit.
-  DepositParams deposit_params = 2 [(gogoproto.nullable) = false];
+  cosmos.gov.v1beta1.DepositParams deposit_params = 2 [(gogoproto.nullable) = false];
   // tally_params defines the parameters related to tally.
-  TallyParams tally_params = 3 [(gogoproto.nullable) = false];
+  cosmos.gov.v1beta1.TallyParams tally_params = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryDepositRequest is the request type for the Query/Deposit RPC method.
@@ -157,7 +158,7 @@ message QueryDepositRequest {
 // QueryDepositResponse is the response type for the Query/Deposit RPC method.
 message QueryDepositResponse {
   // deposit defines the requested deposit.
-  Deposit deposit = 1 [(gogoproto.nullable) = false];
+  cosmos.gov.v1beta1.Deposit deposit = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryDepositsRequest is the request type for the Query/Deposits RPC method.
@@ -171,7 +172,7 @@ message QueryDepositsRequest {
 
 // QueryDepositsResponse is the response type for the Query/Deposits RPC method.
 message QueryDepositsResponse {
-  repeated Deposit deposits = 1 [(gogoproto.nullable) = false];
+  repeated cosmos.gov.v1beta1.Deposit deposits = 1 [(gogoproto.nullable) = false];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -186,5 +187,5 @@ message QueryTallyResultRequest {
 // QueryTallyResultResponse is the response type for the Query/Tally RPC method.
 message QueryTallyResultResponse {
   // tally defines the requested tally.
-  TallyResult tally = 1 [(gogoproto.nullable) = false];
+  cosmos.gov.v1beta1.TallyResult tally = 1 [(gogoproto.nullable) = false];
 }

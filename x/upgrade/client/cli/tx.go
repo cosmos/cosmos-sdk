@@ -40,11 +40,7 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			name := args[0]
-			content, err := parseArgsToContent(cmd, name)
-			if err != nil {
-				return err
-			}
+			// TODO: replace Content with an upgrade message that gets attached to the proposal
 
 			from := clientCtx.GetFromAddress()
 
@@ -57,7 +53,7 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 				return err
 			}
 
-			msg, err := gov.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := gov.NewMsgSubmitProposal([]sdk.Msg{}, deposit, from)
 			if err != nil {
 				return err
 			}
@@ -66,8 +62,6 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
 	cmd.Flags().Int64(FlagUpgradeHeight, 0, "The height at which the upgrade must happen")
 	cmd.Flags().String(FlagUpgradeInfo, "", "Optional info for the planned upgrade such as commit hash, etc.")
@@ -99,19 +93,8 @@ func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 				return err
 			}
 
-			title, err := cmd.Flags().GetString(cli.FlagTitle)
-			if err != nil {
-				return err
-			}
-
-			description, err := cmd.Flags().GetString(cli.FlagDescription)
-			if err != nil {
-				return err
-			}
-
-			content := types.NewCancelSoftwareUpgradeProposal(title, description)
-
-			msg, err := gov.NewMsgSubmitProposal(content, deposit, from)
+			// TODO: replace cancel upgrade content with a message
+			msg, err := gov.NewMsgSubmitProposal([]sdk.Msg{}, deposit, from)
 			if err != nil {
 				return err
 			}
@@ -120,37 +103,8 @@ func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
-	cmd.MarkFlagRequired(cli.FlagTitle)
-	cmd.MarkFlagRequired(cli.FlagDescription)
 
 	return cmd
 }
 
-func parseArgsToContent(cmd *cobra.Command, name string) (gov.Content, error) {
-	title, err := cmd.Flags().GetString(cli.FlagTitle)
-	if err != nil {
-		return nil, err
-	}
-
-	description, err := cmd.Flags().GetString(cli.FlagDescription)
-	if err != nil {
-		return nil, err
-	}
-
-	height, err := cmd.Flags().GetInt64(FlagUpgradeHeight)
-	if err != nil {
-		return nil, err
-	}
-
-	info, err := cmd.Flags().GetString(FlagUpgradeInfo)
-	if err != nil {
-		return nil, err
-	}
-
-	plan := types.Plan{Name: name, Height: height, Info: info}
-	content := types.NewSoftwareUpgradeProposal(title, description, plan)
-	return content, nil
-}

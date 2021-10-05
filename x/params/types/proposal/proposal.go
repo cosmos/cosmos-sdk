@@ -18,7 +18,6 @@ const (
 var _ govtypes.Content = &ParameterChangeProposal{}
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeChange)
 	govtypes.RegisterProposalTypeCodec(&ParameterChangeProposal{}, "cosmos-sdk/ParameterChangeProposal")
 }
 
@@ -40,11 +39,6 @@ func (pcp *ParameterChangeProposal) ProposalType() string { return ProposalTypeC
 
 // ValidateBasic validates the parameter change proposal
 func (pcp *ParameterChangeProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(pcp)
-	if err != nil {
-		return err
-	}
-
 	return ValidateChanges(pcp.Changes)
 }
 

@@ -26,7 +26,13 @@ var _ types.MsgServer = msgServer{}
 
 func (k msgServer) SubmitProposal(goCtx context.Context, msg *types.MsgSubmitProposal) (*types.MsgSubmitProposalResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	proposal, err := k.Keeper.SubmitProposal(ctx, msg.GetContent())
+
+	proposalMsgs, err := msg.GetMessages()
+	if err != nil {
+		return nil, err
+	}
+
+	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +52,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *types.MsgSubmitPro
 		),
 	)
 
-	submitEvent := sdk.NewEvent(types.EventTypeSubmitProposal, sdk.NewAttribute(types.AttributeKeyProposalType, msg.GetContent().ProposalType()))
+	submitEvent := sdk.NewEvent(types.EventTypeSubmitProposal)
 	if votingStarted {
 		submitEvent = submitEvent.AppendAttributes(
 			sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.ProposalId)),
@@ -156,4 +162,16 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDeposit) (*types
 	}
 
 	return &types.MsgDepositResponse{}, nil
+}
+
+func (k msgServer) Signal(goCtx context.Context, msg *types.MsgSignal) (*types.MsgSignalResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeSignalProposal,
+			sdk.NewAttribute(types.AttributeSignalTitle, msg.Title),
+			sdk.NewAttribute(types.AttributeSignalDescription, msg.Description),
+		),
+	)
+	return &types.MsgSignalResponse{}, nil
 }

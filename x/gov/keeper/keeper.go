@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -33,7 +34,7 @@ type Keeper struct {
 	cdc codec.BinaryCodec
 
 	// Proposal router
-	router types.Router
+	router *middleware.MsgServiceRouter
 }
 
 // NewKeeper returns a governance keeper. It handles:
@@ -45,18 +46,14 @@ type Keeper struct {
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
 	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace types.ParamSubspace,
-	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper, rtr types.Router,
+	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper,
+	router *middleware.MsgServiceRouter,
 ) Keeper {
 
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
-
-	// It is vital to seal the governance proposal router here as to not allow
-	// further handlers to be registered after the keeper is created since this
-	// could create invalid or non-deterministic behavior.
-	rtr.Seal()
 
 	return Keeper{
 		storeKey:   key,
@@ -65,7 +62,7 @@ func NewKeeper(
 		bankKeeper: bankKeeper,
 		sk:         sk,
 		cdc:        cdc,
-		router:     rtr,
+		router:     router,
 	}
 }
 
@@ -86,7 +83,7 @@ func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // Router returns the gov Keeper's Router
-func (keeper Keeper) Router() types.Router {
+func (keeper Keeper) Router() *middleware.MsgServiceRouter {
 	return keeper.router
 }
 

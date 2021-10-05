@@ -96,10 +96,10 @@ message QueryModuleAccountsResponse {
 }
 
 // Bech32PrefixRequest is the request type for Bech32Prefix rpc method
-message Bech32PrefixRequest  {}
+message Bech32PrefixRequest {}
 
 // Bech32PrefixResponse is the response type for Bech32Prefix rpc method
-message Bech32PrefixResponse  {
+message Bech32PrefixResponse {
   string bech32_prefix = 1;
 }
 

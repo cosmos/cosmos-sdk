@@ -42,9 +42,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	val := s.network.Validators[0]
 
+	messages := []sdk.Msg{types.NewMsgVote(val.Address, 1, types.OptionYes)}
+
 	// create a proposal with deposit
-	_, err = MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 1", "Where is the title!?", types.ProposalTypeText,
+	_, err = MsgSubmitProposal(val.ClientCtx, val.Address.String(), messages,
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
@@ -55,15 +56,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	// create a proposal without deposit
-	_, err = MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 2", "Where is the title!?", types.ProposalTypeText)
+	_, err = MsgSubmitProposal(val.ClientCtx, val.Address.String(), messages)
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
 	// create a proposal3 with deposit
-	_, err = MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 3", "Where is the title!?", types.ProposalTypeText,
+	_, err = MsgSubmitProposal(val.ClientCtx, val.Address.String(), messages,
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
@@ -277,19 +276,9 @@ func (s *IntegrationTestSuite) TestCmdTally() {
 
 func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 	val := s.network.Validators[0]
-	invalidProp := `{
-  "title": "",
-	"description": "Where is the title!?",
-	"type": "Text",
-  "deposit": "-324foocoin"
-}`
-	invalidPropFile := testutil.WriteToNewTempFile(s.T(), invalidProp)
-	validProp := fmt.Sprintf(`{
-  "title": "Text Proposal",
-	"description": "Hello, World!",
-	"type": "Text",
-  "deposit": "%s"
-}`, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)))
+	emptyProp := `[]`
+	emptyPropFile := testutil.WriteToNewTempFile(s.T(), emptyProp)
+	validProp := fmt.Sprintf("[{\"type\":\"cosmos-sdk/MsgVote\",\"value\":{\"option\":1,\"proposal_id\":\"1\",\"voter\":\"cosmos1w3jhxap3gempvr\"}}]")
 	validPropFile := testutil.WriteToNewTempFile(s.T(), validProp)
 	testCases := []struct {
 		name         string
@@ -299,9 +288,9 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 		respType     proto.Message
 	}{
 		{
-			"invalid proposal (file)",
+			"empty proposal",
 			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagProposal, invalidPropFile.Name()),
+				emptyPropFile.Name(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -309,21 +298,9 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 			true, 0, nil,
 		},
 		{
-			"invalid proposal",
+			"valid proposal",
 			[]string{
-				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),
-				fmt.Sprintf("--%s=%s", cli.FlagProposalType, types.ProposalTypeText),
-				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)).String()),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			true, 0, nil,
-		},
-		{
-			"valid transaction (file)",
-			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagProposal, validPropFile.Name()),
+				validPropFile.Name(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -332,11 +309,9 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 			false, 0, &sdk.TxResponse{},
 		},
 		{
-			"valid transaction",
+			"valid proposal 2",
 			[]string{
-				fmt.Sprintf("--%s='Text Proposal'", cli.FlagTitle),
-				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),
-				fmt.Sprintf("--%s=%s", cli.FlagProposalType, types.ProposalTypeText),
+				validPropFile.Name(),
 				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)).String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -369,8 +344,6 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 
 func (s *IntegrationTestSuite) TestCmdGetProposal() {
 	val := s.network.Validators[0]
-
-	title := "Text Proposal 1"
 
 	testCases := []struct {
 		name      string
@@ -409,7 +382,6 @@ func (s *IntegrationTestSuite) TestCmdGetProposal() {
 				s.Require().NoError(err)
 				var proposal types.Proposal
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &proposal), out.String())
-				s.Require().Equal(title, proposal.GetTitle())
 			}
 		})
 	}

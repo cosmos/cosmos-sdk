@@ -17,7 +17,6 @@ const (
 var _ govtypes.Content = &CommunityPoolSpendProposal{}
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeCommunityPoolSpend)
 	govtypes.RegisterProposalTypeCodec(&CommunityPoolSpendProposal{}, "cosmos-sdk/CommunityPoolSpendProposal")
 }
 
@@ -41,10 +40,6 @@ func (csp *CommunityPoolSpendProposal) ProposalType() string { return ProposalTy
 
 // ValidateBasic runs basic stateless validity checks
 func (csp *CommunityPoolSpendProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(csp)
-	if err != nil {
-		return err
-	}
 	if !csp.Amount.IsValid() {
 		return ErrInvalidProposalAmount
 	}

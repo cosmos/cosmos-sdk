@@ -67,7 +67,8 @@ Where proposal.json contains:
 			}
 
 			from := clientCtx.GetFromAddress()
-			content := paramproposal.NewParameterChangeProposal(
+			// TODO: remove content and create a parameter change proposal instead
+			_ = paramproposal.NewParameterChangeProposal(
 				proposal.Title, proposal.Description, proposal.Changes.ToParamChanges(),
 			)
 
@@ -76,7 +77,7 @@ Where proposal.json contains:
 				return err
 			}
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := govtypes.NewMsgSubmitProposal([]sdk.Msg{}, deposit, from)
 			if err != nil {
 				return err
 			}

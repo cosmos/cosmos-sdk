@@ -310,9 +310,10 @@ Where proposal.json contains:
 			if err != nil {
 				return err
 			}
-			content := types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, recpAddr, amount)
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			// TODO: replace content proposals with a community spend message
+			_ = types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, recpAddr, amount)
+			msg, err := govtypes.NewMsgSubmitProposal([]sdk.Msg{}, deposit, from)
 			if err != nil {
 				return err
 			}

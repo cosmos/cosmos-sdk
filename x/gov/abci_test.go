@@ -32,8 +32,9 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
+	proposal := []sdk.Msg{types.NewMsgVote(addrs[0], 1, types.OptionYes)}
 	newProposalMsg, err := types.NewMsgSubmitProposal(
-		types.ContentFromProposalType("test", "test", types.ProposalTypeText),
+		proposal,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
 	)
@@ -85,8 +86,9 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
+	proposal := []sdk.Msg{types.NewMsgVote(addrs[0], 1, types.OptionYes)}
 	newProposalMsg, err := types.NewMsgSubmitProposal(
-		types.ContentFromProposalType("test", "test", types.ProposalTypeText),
+		proposal,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
 	)
@@ -108,8 +110,9 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
+	proposal2 := []sdk.Msg{types.NewMsgVote(addrs[1], 1, types.OptionNo)}
 	newProposalMsg2, err := types.NewMsgSubmitProposal(
-		types.ContentFromProposalType("test2", "test2", types.ProposalTypeText),
+		proposal2,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
 	)
@@ -165,8 +168,9 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	require.False(t, activeQueue.Valid())
 	activeQueue.Close()
 
+	proposal := []sdk.Msg{types.NewMsgVote(addrs[0], 1, types.OptionYes)}
 	newProposalMsg, err := types.NewMsgSubmitProposal(
-		types.ContentFromProposalType("test2", "test2", types.ProposalTypeText),
+		proposal,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
 	)
@@ -221,7 +225,8 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	activeQueue.Close()
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 5))}
-	newProposalMsg, err := types.NewMsgSubmitProposal(TestProposal, proposalCoins, addrs[0])
+	msgs := []sdk.Msg{types.NewMsgVote(addrs[0], 1, types.OptionYes)}
+	newProposalMsg, err := types.NewMsgSubmitProposal(msgs, proposalCoins, addrs[0])
 	require.NoError(t, err)
 
 	wrapCtx := sdk.WrapSDKContext(ctx)
@@ -289,7 +294,8 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	require.NotNil(t, macc)
 	initialModuleAccCoins := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
 
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, TestProposal)
+	messages := []sdk.Msg{types.NewMsgVote(addrs[0], 1, types.OptionYes)}
+	proposal, err := app.GovKeeper.SubmitProposal(ctx,  messages)
 	require.NoError(t, err)
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 10))}
@@ -339,7 +345,8 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	// Create a proposal where the handler will pass for the test proposal
 	// because the value of contextKeyBadProposal is true.
 	ctx = ctx.WithValue(contextKeyBadProposal, true)
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, TestProposal)
+	messages := []sdk.Msg{types.NewMsgVote(addrs[0], 1, types.OptionYes)}
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, messages)
 	require.NoError(t, err)
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 10)))

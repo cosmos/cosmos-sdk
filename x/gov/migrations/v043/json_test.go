@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	v040gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v040"
 	v043gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v043"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -23,7 +24,7 @@ func TestMigrateJSON(t *testing.T) {
 
 	voter, err := sdk.AccAddressFromBech32("cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh")
 	require.NoError(t, err)
-	govGenState := &types.GenesisState{
+	govGenState := &v040gov.GenesisState{
 		Votes: types.Votes{
 			types.Vote{ProposalId: 1, Voter: voter.String(), Option: types.OptionAbstain},
 			types.Vote{ProposalId: 2, Voter: voter.String(), Option: types.OptionEmpty},

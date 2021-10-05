@@ -17,9 +17,6 @@ type AppModuleSimulation interface {
 	// randomized genesis states
 	GenerateGenesisState(input *SimulationState)
 
-	// content functions used to simulate governance proposals
-	ProposalContents(simState SimulationState) []simulation.WeightedProposalContent
-
 	// randomized module parameters for param change proposals
 	RandomizedParams(r *rand.Rand) []simulation.ParamChange
 
@@ -45,17 +42,6 @@ func NewSimulationManager(modules ...AppModuleSimulation) *SimulationManager {
 		Modules:       modules,
 		StoreDecoders: make(sdk.StoreDecoderRegistry),
 	}
-}
-
-// GetProposalContents returns each module's proposal content generator function
-// with their default operation weight and key.
-func (sm *SimulationManager) GetProposalContents(simState SimulationState) []simulation.WeightedProposalContent {
-	wContents := make([]simulation.WeightedProposalContent, 0, len(sm.Modules))
-	for _, module := range sm.Modules {
-		wContents = append(wContents, module.ProposalContents(simState)...)
-	}
-
-	return wContents
 }
 
 // RegisterStoreDecoders registers each of the modules' store decoders into a map
@@ -108,5 +94,4 @@ type SimulationState struct {
 	GenTimestamp time.Time                            // genesis timestamp
 	UnbondTime   time.Duration                        // staking unbond time stored to use it as the slashing maximum evidence duration
 	ParamChanges []simulation.ParamChange             // simulated parameter changes from modules
-	Contents     []simulation.WeightedProposalContent // proposal content generator functions with their default weight and app sim key
 }

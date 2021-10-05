@@ -10,27 +10,32 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // DefaultStartingProposalID is 1
 const DefaultStartingProposalID uint64 = 1
 
 // NewProposal creates a new Proposal instance
-func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Time) (Proposal, error) {
-	msg, ok := content.(proto.Message)
-	if !ok {
-		return Proposal{}, fmt.Errorf("%T does not implement proto.Message", content)
-	}
+func NewProposal(messages []sdk.Msg, id uint64, submitTime, depositEndTime time.Time) (Proposal, error) {
 
-	any, err := types.NewAnyWithValue(msg)
-	if err != nil {
-		return Proposal{}, err
+	msgs := make([]*types.Any, len(messages))
+	for i, msg := range messages {
+		m, ok := msg.(proto.Message)
+		if !ok {
+			return Proposal{}, fmt.Errorf("can't proto marshal %T", msg)
+		}
+		any, err := types.NewAnyWithValue(m)
+		if err != nil {
+			return Proposal{}, err
+		}
+
+		msgs[i] = any
 	}
 
 	p := Proposal{
-		Content:          any,
 		ProposalId:       id,
+		Messages:         msgs,
 		Status:           StatusDepositPeriod,
 		FinalTallyResult: EmptyTallyResult(),
 		TotalDeposit:     sdk.NewCoins(),
@@ -47,43 +52,14 @@ func (p Proposal) String() string {
 	return string(out)
 }
 
-// GetContent returns the proposal Content
-func (p Proposal) GetContent() Content {
-	content, ok := p.Content.GetCachedValue().(Content)
-	if !ok {
-		return nil
-	}
-	return content
-}
-
-func (p Proposal) ProposalType() string {
-	content := p.GetContent()
-	if content == nil {
-		return ""
-	}
-	return content.ProposalType()
-}
-
-func (p Proposal) ProposalRoute() string {
-	content := p.GetContent()
-	if content == nil {
-		return ""
-	}
-	return content.ProposalRoute()
-}
-
-func (p Proposal) GetTitle() string {
-	content := p.GetContent()
-	if content == nil {
-		return ""
-	}
-	return content.GetTitle()
+// GetMessages returns the proposal messages
+func (p Proposal) GetMessages() ([]sdk.Msg, error) {
+	return sdktx.GetMsgs(p.Messages, "sdk.MsgProposal")
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (p Proposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	var content Content
-	return unpacker.UnpackAny(p.Content, &content)
+	return sdktx.UnpackInterfaces(unpacker, p.Messages)
 }
 
 // Proposals is an array of proposal
@@ -110,9 +86,8 @@ func (p Proposals) Equal(other Proposals) bool {
 func (p Proposals) String() string {
 	out := "ID - (Status) [Type] Title\n"
 	for _, prop := range p {
-		out += fmt.Sprintf("%d - (%s) [%s] %s\n",
-			prop.ProposalId, prop.Status,
-			prop.ProposalType(), prop.GetTitle())
+		out += fmt.Sprintf("%d - %s\n",
+			prop.ProposalId, prop.Status)
 	}
 	return strings.TrimSpace(out)
 }
@@ -175,88 +150,5 @@ func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	default:
 		// TODO: Do this conversion more directly
 		s.Write([]byte(fmt.Sprintf("%v", byte(status))))
-	}
-}
-
-// Proposal types
-const (
-	ProposalTypeText string = "Text"
-)
-
-// Implements Content Interface
-var _ Content = &TextProposal{}
-
-// NewTextProposal creates a text proposal Content
-func NewTextProposal(title, description string) Content {
-	return &TextProposal{title, description}
-}
-
-// GetTitle returns the proposal title
-func (tp *TextProposal) GetTitle() string { return tp.Title }
-
-// GetDescription returns the proposal description
-func (tp *TextProposal) GetDescription() string { return tp.Description }
-
-// ProposalRoute returns the proposal router key
-func (tp *TextProposal) ProposalRoute() string { return RouterKey }
-
-// ProposalType is "Text"
-func (tp *TextProposal) ProposalType() string { return ProposalTypeText }
-
-// ValidateBasic validates the content's title and description of the proposal
-func (tp *TextProposal) ValidateBasic() error { return ValidateAbstract(tp) }
-
-// String implements Stringer interface
-func (tp TextProposal) String() string {
-	out, _ := yaml.Marshal(tp)
-	return string(out)
-}
-
-var validProposalTypes = map[string]struct{}{
-	ProposalTypeText: {},
-}
-
-// RegisterProposalType registers a proposal type. It will panic if the type is
-// already registered.
-func RegisterProposalType(ty string) {
-	if _, ok := validProposalTypes[ty]; ok {
-		panic(fmt.Sprintf("already registered proposal type: %s", ty))
-	}
-
-	validProposalTypes[ty] = struct{}{}
-}
-
-// ContentFromProposalType returns a Content object based on the proposal type.
-func ContentFromProposalType(title, desc, ty string) Content {
-	switch ty {
-	case ProposalTypeText:
-		return NewTextProposal(title, desc)
-
-	default:
-		return nil
-	}
-}
-
-// IsValidProposalType returns a boolean determining if the proposal type is
-// valid.
-//
-// NOTE: Modules with their own proposal types must register them.
-func IsValidProposalType(ty string) bool {
-	_, ok := validProposalTypes[ty]
-	return ok
-}
-
-// ProposalHandler implements the Handler interface for governance module-based
-// proposals (ie. TextProposal ). Since these are
-// merely signaling mechanisms at the moment and do not affect state, it
-// performs a no-op.
-func ProposalHandler(_ sdk.Context, c Content) error {
-	switch c.ProposalType() {
-	case ProposalTypeText:
-		// both proposal types do not change state so this performs a no-op
-		return nil
-
-	default:
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized gov proposal type: %s", c.ProposalType())
 	}
 }

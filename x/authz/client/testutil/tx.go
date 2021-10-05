@@ -17,8 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
@@ -50,12 +48,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// Send some funds to the new account.
 	s.msgSendExec(s.grantee[0])
 	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-
-	// create a proposal with deposit
-	_, err = govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 1", "Where is the title!?", govtypes.ProposalTypeText,
-		fmt.Sprintf("--%s=%s", govcli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, govtypes.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 
 	// Create new account in the keyring.

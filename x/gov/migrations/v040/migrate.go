@@ -71,7 +71,7 @@ func migrateContent(oldContent v036gov.Content) *codectypes.Any {
 	switch oldContent := oldContent.(type) {
 	case v036gov.TextProposal:
 		{
-			protoProposal = &v040gov.TextProposal{
+			protoProposal = &TextProposal{
 				Title:       oldContent.Title,
 				Description: oldContent.Description,
 			}

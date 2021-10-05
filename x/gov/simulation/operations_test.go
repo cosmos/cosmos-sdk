@@ -1,7 +1,6 @@
 package simulation_test
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -20,39 +19,6 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-type MockWeightedProposalContent struct {
-	n int
-}
-
-func (m MockWeightedProposalContent) AppParamsKey() string {
-	return fmt.Sprintf("AppParamsKey-%d", m.n)
-}
-
-func (m MockWeightedProposalContent) DefaultWeight() int {
-	return m.n
-}
-
-func (m MockWeightedProposalContent) ContentSimulatorFn() simtypes.ContentSimulatorFn {
-	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) simtypes.Content {
-		return types.NewTextProposal(
-			fmt.Sprintf("title-%d: %s", m.n, simtypes.RandStringOfLength(r, 100)),
-			fmt.Sprintf("description-%d: %s", m.n, simtypes.RandStringOfLength(r, 4000)),
-		)
-	}
-}
-
-// make sure the MockWeightedProposalContent satisfied the WeightedProposalContent interface
-var _ simtypes.WeightedProposalContent = MockWeightedProposalContent{}
-
-func mockWeightedProposalContent(n int) []simtypes.WeightedProposalContent {
-	wpc := make([]simtypes.WeightedProposalContent, n)
-	for i := 0; i < n; i++ {
-		wpc[i] = MockWeightedProposalContent{i}
-
-	}
-	return wpc
-
-}
 
 // TestWeightedOperations tests the weights of the operations.
 func TestWeightedOperations(t *testing.T) {
@@ -63,7 +29,7 @@ func TestWeightedOperations(t *testing.T) {
 	appParams := make(simtypes.AppParams)
 
 	weightesOps := simulation.WeightedOperations(appParams, cdc, app.AccountKeeper,
-		app.BankKeeper, app.GovKeeper, mockWeightedProposalContent(3),
+		app.BankKeeper, app.GovKeeper,
 	)
 
 	// setup 3 accounts
@@ -109,7 +75,7 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgSubmitProposal(app.AccountKeeper, app.BankKeeper, app.GovKeeper, MockWeightedProposalContent{3}.ContentSimulatorFn())
+	op := simulation.SimulateMsgSubmitProposal(app.AccountKeeper, app.BankKeeper, app.GovKeeper)
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 
@@ -119,9 +85,10 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 	require.True(t, operationMsg.OK)
 	require.Equal(t, "cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.Proposer)
 	require.Equal(t, "2686011stake", msg.InitialDeposit.String())
-	require.Equal(t, "title-3: ZBSpYuLyYggwexjxusrBqDOTtGTOWeLrQKjLxzIivHSlcxgdXhhuTSkuxKGLwQvuyNhYFmBZHeAerqyNEUzXPFGkqEGqiQWIXnku", msg.GetContent().GetTitle())
-	require.Equal(t, "description-3: NJWzHdBNpAXKJPHWQdrGYcAHSctgVlqwqHoLfHsXUdStwfefwzqLuKEhmMyYLdbZrcPgYqjNHxPexsruwEGStAneKbWkQDDIlCWBLSiAASNhZqNFlPtfqPJoxKsgMdzjWqLWdqKQuJqWPMvwPQWZUtVMOTMYKJbfdlZsjdsomuScvDmbDkgRualsxDvRJuCAmPOXitIbcyWsKGSdrEunFAOdmXnsuyFVgJqEjbklvmwrUlsxjRSfKZxGcpayDdgoFcnVSutxjRgOSFzPwidAjubMncNweqpbxhXGchpZUxuFDOtpnhNUycJICRYqsPhPSCjPTWZFLkstHWJxvdPEAyEIxXgLwbNOjrgzmaujiBABBIXvcXpLrbcEWNNQsbjvgJFgJkflpRohHUutvnaUqoopuKjTDaemDeSdqbnOzcfJpcTuAQtZoiLZOoAIlboFDAeGmSNwkvObPRvRWQgWkGkxwtPauYgdkmypLjbqhlHJIQTntgWjXwZdOyYEdQRRLfMSdnxqppqUofqLbLQDUjwKVKfZJUJQPsWIPwIVaSTrmKskoAhvmZyJgeRpkaTfGgrJzAigcxtfshmiDCFkuiluqtMOkidknnTBtumyJYlIsWLnCQclqdVmikUoMOPdPWwYbJxXyqUVicNxFxyqJTenNblyyKSdlCbiXxUiYUiMwXZASYfvMDPFgxniSjWaZTjHkqlJvtBsXqwPpyVxnJVGFWhfSxgOcduoxkiopJvFjMmFabrGYeVtTXLhxVUEiGwYUvndjFGzDVntUvibiyZhfMQdMhgsiuysLMiePBNXifRLMsSmXPkwlPloUbJveCvUlaalhZHuvdkCnkSHbMbmOnrfEGPwQiACiPlnihiaOdbjPqPiTXaHDoJXjSlZmltGqNHHNrcKdlFSCdmVOuvDcBLdSklyGJmcLTbSFtALdGlPkqqecJrpLCXNPWefoTJNgEJlyMEPneVaxxduAAEqQpHWZodWyRkDAxzyMnFMcjSVqeRXLqsNyNtQBbuRvunZflWSbbvXXdkyLikYqutQhLPONXbvhcQZJPSWnOulqQaXmbfFxAkqfYeseSHOQidHwbcsOaMnSrrmGjjRmEMQNuknupMxJiIeVjmgZvbmjPIQTEhQFULQLBMPrxcFPvBinaOPYWGvYGRKxLZdwamfRQQFngcdSlvwjfaPbURasIsGJVHtcEAxnIIrhSriiXLOlbEBLXFElXJFGxHJczRBIxAuPKtBisjKBwfzZFagdNmjdwIRvwzLkFKWRTDPxJCmpzHUcrPiiXXHnOIlqNVoGSXZewdnCRhuxeYGPVTfrNTQNOxZmxInOazUYNTNDgzsxlgiVEHPKMfbesvPHUqpNkUqbzeuzfdrsuLDpKHMUbBMKczKKWOdYoIXoPYtEjfOnlQLoGnbQUCuERdEFaptwnsHzTJDsuZkKtzMpFaZobynZdzNydEeJJHDYaQcwUxcqvwfWwNUsCiLvkZQiSfzAHftYgAmVsXgtmcYgTqJIawstRYJrZdSxlfRiqTufgEQVambeZZmaAyRQbcmdjVUZZCgqDrSeltJGXPMgZnGDZqISrGDOClxXCxMjmKqEPwKHoOfOeyGmqWqihqjINXLqnyTesZePQRqaWDQNqpLgNrAUKulklmckTijUltQKuWQDwpLmDyxLppPVMwsmBIpOwQttYFMjgJQZLYFPmxWFLIeZihkRNnkzoypBICIxgEuYsVWGIGRbbxqVasYnstWomJnHwmtOhAFSpttRYYzBmyEtZXiCthvKvWszTXDbiJbGXMcrYpKAgvUVFtdKUfvdMfhAryctklUCEdjetjuGNfJjajZtvzdYaqInKtFPPLYmRaXPdQzxdSQfmZDEVHlHGEGNSPRFJuIfKLLfUmnHxHnRjmzQPNlqrXgifUdzAGKVabYqvcDeYoTYgPsBUqehrBhmQUgTvDnsdpuhUoxskDdppTsYMcnDIPSwKIqhXDCIxOuXrywahvVavvHkPuaenjLmEbMgrkrQLHEAwrhHkPRNvonNQKqprqOFVZKAtpRSpvQUxMoXCMZLSSbnLEFsjVfANdQNQVwTmGxqVjVqRuxREAhuaDrFgEZpYKhwWPEKBevBfsOIcaZKyykQafzmGPLRAKDtTcJxJVgiiuUkmyMYuDUNEUhBEdoBLJnamtLmMJQgmLiUELIhLpiEvpOXOvXCPUeldLFqkKOwfacqIaRcnnZvERKRMCKUkMABbDHytQqQblrvoxOZkwzosQfDKGtIdfcXRJNqlBNwOCWoQBcEWyqrMlYZIAXYJmLfnjoJepgSFvrgajaBAIksoyeHqgqbGvpAstMIGmIhRYGGNPRIfOQKsGoKgxtsidhTaAePRCBFqZgPDWCIkqOJezGVkjfYUCZTlInbxBXwUAVRsxHTQtJFnnpmMvXDYCVlEmnZBKhmmxQOIQzxFWpJQkQoSAYzTEiDWEOsVLNrbfzeHFRyeYATakQQWmFDLPbVMCJcWjFGJjfqCoVzlbNNEsqxdSmNPjTjHYOkuEMFLkXYGaoJlraLqayMeCsTjWNRDPBywBJLAPVkGQqTwApVVwYAetlwSbzsdHWsTwSIcctkyKDuRWYDQikRqsKTMJchrliONJeaZIzwPQrNbTwxsGdwuduvibtYndRwpdsvyCktRHFalvUuEKMqXbItfGcNGWsGzubdPMYayOUOINjpcFBeESdwpdlTYmrPsLsVDhpTzoMegKrytNVZkfJRPuDCUXxSlSthOohmsuxmIZUedzxKmowKOdXTMcEtdpHaPWgIsIjrViKrQOCONlSuazmLuCUjLltOGXeNgJKedTVrrVCpWYWHyVrdXpKgNaMJVjbXxnVMSChdWKuZdqpisvrkBJPoURDYxWOtpjzZoOpWzyUuYNhCzRoHsMjmmWDcXzQiHIyjwdhPNwiPqFxeUfMVFQGImhykFgMIlQEoZCaRoqSBXTSWAeDumdbsOGtATwEdZlLfoBKiTvodQBGOEcuATWXfiinSjPmJKcWgQrTVYVrwlyMWhxqNbCMpIQNoSMGTiWfPTCezUjYcdWppnsYJihLQCqbNLRGgqrwHuIvsazapTpoPZIyZyeeSueJuTIhpHMEJfJpScshJubJGfkusuVBgfTWQoywSSliQQSfbvaHKiLnyjdSbpMkdBgXepoSsHnCQaYuHQqZsoEOmJCiuQUpJkmfyfbIShzlZpHFmLCsbknEAkKXKfRTRnuwdBeuOGgFbJLbDksHVapaRayWzwoYBEpmrlAxrUxYMUekKbpjPNfjUCjhbdMAnJmYQVZBQZkFVweHDAlaqJjRqoQPoOMLhyvYCzqEuQsAFoxWrzRnTVjStPadhsESlERnKhpEPsfDxNvxqcOyIulaCkmPdambLHvGhTZzysvqFauEgkFRItPfvisehFmoBhQqmkfbHVsgfHXDPJVyhwPllQpuYLRYvGodxKjkarnSNgsXoKEMlaSKxKdcVgvOkuLcfLFfdtXGTclqfPOfeoVLbqcjcXCUEBgAGplrkgsmIEhWRZLlGPGCwKWRaCKMkBHTAcypUrYjWwCLtOPVygMwMANGoQwFnCqFrUGMCRZUGJKTZIGPyldsifauoMnJPLTcDHmilcmahlqOELaAUYDBuzsVywnDQfwRLGIWozYaOAilMBcObErwgTDNGWnwQMUgFFSKtPDMEoEQCTKVREqrXZSGLqwTMcxHfWotDllNkIJPMbXzjDVjPOOjCFuIvTyhXKLyhUScOXvYthRXpPfKwMhptXaxIxgqBoUqzrWbaoLTVpQoottZyPFfNOoMioXHRuFwMRYUiKvcWPkrayyTLOCFJlAyslDameIuqVAuxErqFPEWIScKpBORIuZqoXlZuTvAjEdlEWDODFRregDTqGNoFBIHxvimmIZwLfFyKUfEWAnNBdtdzDmTPXtpHRGdIbuucfTjOygZsTxPjfweXhSUkMhPjMaxKlMIJMOXcnQfyzeOcbWwNbeH", msg.GetContent().GetDescription())
 	require.Equal(t, "gov", msg.Route())
+	proposalMsgs, err := msg.GetMessages()
+	require.NoError(t, err)
+	require.Equal(t, "abc", proposalMsgs)
 	require.Equal(t, types.TypeMsgSubmitProposal, msg.Type())
 }
 
@@ -137,13 +104,11 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	r := rand.New(s)
 	accounts := getTestingAccounts(t, r, app, ctx, 3)
 
-	// setup a proposal
-	content := types.NewTextProposal("Test", "description")
-
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal, err := types.NewProposal(content, 1, submitTime, submitTime.Add(depositPeriod))
+	proposalMsgs := []sdk.Msg{types.NewMsgVote(accounts[0].Address, 1, types.OptionYes)}
+	proposal, err := types.NewProposal(proposalMsgs, 1, submitTime, submitTime.Add(depositPeriod))
 	require.NoError(t, err)
 
 	app.GovKeeper.SetProposal(ctx, proposal)
@@ -179,13 +144,11 @@ func TestSimulateMsgVote(t *testing.T) {
 	r := rand.New(s)
 	accounts := getTestingAccounts(t, r, app, ctx, 3)
 
-	// setup a proposal
-	content := types.NewTextProposal("Test", "description")
-
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal, err := types.NewProposal(content, 1, submitTime, submitTime.Add(depositPeriod))
+	proposalMsgs := []sdk.Msg{types.NewMsgVote(accounts[0].Address, 1, types.OptionYes)}
+	proposal, err := types.NewProposal(proposalMsgs, 1, submitTime, submitTime.Add(depositPeriod))
 	require.NoError(t, err)
 
 	app.GovKeeper.ActivateVotingPeriod(ctx, proposal)
@@ -221,13 +184,11 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	r := rand.New(s)
 	accounts := getTestingAccounts(t, r, app, ctx, 3)
 
-	// setup a proposal
-	content := types.NewTextProposal("Test", "description")
-
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal, err := types.NewProposal(content, 1, submitTime, submitTime.Add(depositPeriod))
+	proposalMsgs := []sdk.Msg{types.NewMsgVote(accounts[0].Address, 1, types.OptionYes)}
+	proposal, err := types.NewProposal(proposalMsgs, 1, submitTime, submitTime.Add(depositPeriod))
 	require.NoError(t, err)
 
 	app.GovKeeper.ActivateVotingPeriod(ctx, proposal)

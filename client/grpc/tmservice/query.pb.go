@@ -633,7 +633,7 @@ func (m *GetNodeInfoRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GetNodeInfoRequest proto.InternalMessageInfo
 
-// GetNodeInfoResponse is the request type for the Query/GetNodeInfo RPC method.
+// GetNodeInfoResponse is the response type for the Query/GetNodeInfo RPC method.
 type GetNodeInfoResponse struct {
 	DefaultNodeInfo    *p2p.DefaultNodeInfo `protobuf:"bytes,1,opt,name=default_node_info,json=defaultNodeInfo,proto3" json:"default_node_info,omitempty"`
 	ApplicationVersion *VersionInfo         `protobuf:"bytes,2,opt,name=application_version,json=applicationVersion,proto3" json:"application_version,omitempty"`

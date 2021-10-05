@@ -122,32 +122,6 @@ func (spc ParamChange) ComposedKey() string {
 	return spc.Subspace() + "/" + spc.Key()
 }
 
-// Proposal Contents
-
-// WeightedProposalContent defines a common struct for proposal contents defined by
-// external modules (i.e outside gov)
-type WeightedProposalContent struct {
-	appParamsKey       string                        // key used to retrieve the value of the weight from the simulation application params
-	defaultWeight      int                           // default weight
-	contentSimulatorFn simulation.ContentSimulatorFn // content simulator function
-}
-
-func NewWeightedProposalContent(appParamsKey string, defaultWeight int, contentSimulatorFn simulation.ContentSimulatorFn) simulation.WeightedProposalContent {
-	return &WeightedProposalContent{appParamsKey: appParamsKey, defaultWeight: defaultWeight, contentSimulatorFn: contentSimulatorFn}
-}
-
-func (w WeightedProposalContent) AppParamsKey() string {
-	return w.appParamsKey
-}
-
-func (w WeightedProposalContent) DefaultWeight() int {
-	return w.defaultWeight
-}
-
-func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulatorFn {
-	return w.contentSimulatorFn
-}
-
 // Param change proposals
 
 // randomConsensusParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.

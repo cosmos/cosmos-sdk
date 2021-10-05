@@ -19,9 +19,7 @@ func NewSoftwareUpgradeProposal(title, description string, plan Plan) gov.Conten
 var _ gov.Content = &SoftwareUpgradeProposal{}
 
 func init() {
-	gov.RegisterProposalType(ProposalTypeSoftwareUpgrade)
 	gov.RegisterProposalTypeCodec(&SoftwareUpgradeProposal{}, "cosmos-sdk/SoftwareUpgradeProposal")
-	gov.RegisterProposalType(ProposalTypeCancelSoftwareUpgrade)
 	gov.RegisterProposalTypeCodec(&CancelSoftwareUpgradeProposal{}, "cosmos-sdk/CancelSoftwareUpgradeProposal")
 }
 
@@ -33,7 +31,7 @@ func (sup *SoftwareUpgradeProposal) ValidateBasic() error {
 	if err := sup.Plan.ValidateBasic(); err != nil {
 		return err
 	}
-	return gov.ValidateAbstract(sup)
+	return nil
 }
 
 func (sup SoftwareUpgradeProposal) String() string {
@@ -57,7 +55,7 @@ func (csup *CancelSoftwareUpgradeProposal) ProposalType() string {
 	return ProposalTypeCancelSoftwareUpgrade
 }
 func (csup *CancelSoftwareUpgradeProposal) ValidateBasic() error {
-	return gov.ValidateAbstract(csup)
+	return nil
 }
 
 func (csup CancelSoftwareUpgradeProposal) String() string {

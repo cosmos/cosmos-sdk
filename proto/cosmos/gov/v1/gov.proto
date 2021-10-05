@@ -1,0 +1,37 @@
+syntax = "proto3";
+package cosmos.gov.v1;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+import "cosmos/gov/v1beta1/gov.proto";
+
+option go_package                       = "github.com/cosmos/cosmos-sdk/x/gov/types";
+option (gogoproto.goproto_stringer_all) = false;
+option (gogoproto.stringer_all)         = false;
+option (gogoproto.goproto_getters_all)  = false;
+
+// Proposal defines the core field members of a governance proposal.
+message Proposal {
+  option (gogoproto.equal) = true;
+
+  uint64   proposal_id                       = 1 [(gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
+  repeated google.protobuf.Any      messages = 2;
+  cosmos.gov.v1beta1.ProposalStatus status   = 3 [(gogoproto.moretags) = "yaml:\"proposal_status\""];
+  cosmos.gov.v1beta1.TallyResult    final_tally_result = 4
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"final_tally_result\""];
+  google.protobuf.Timestamp submit_time = 5
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"submit_time\""];
+  google.protobuf.Timestamp deposit_end_time = 6
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"deposit_end_time\""];
+  repeated cosmos.base.v1beta1.Coin total_deposit = 7 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags)     = "yaml:\"total_deposit\""
+  ];
+  google.protobuf.Timestamp voting_start_time = 8
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"voting_start_time\""];
+  google.protobuf.Timestamp voting_end_time = 9
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"voting_end_time\""];
+}

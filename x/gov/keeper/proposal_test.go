@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,27 +43,21 @@ func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 	activeIterator.Close()
 }
 
-type invalidProposalRoute struct{ types.TextProposal }
-
-func (invalidProposalRoute) ProposalRoute() string { return "nonexistingroute" }
-
 func (suite *KeeperTestSuite) TestSubmitProposal() {
+	// Proposal is for the gov module to vote on another proposal :)
+	govAccount := suite.app.GovKeeper.GetGovernanceAccount(suite.ctx)
+	voteProposal := []sdk.Msg{types.NewMsgVote(govAccount.GetAddress(), 0, types.OptionYes)}
+
 	testCases := []struct {
-		content     types.Content
+		messages    []sdk.Msg
 		expectedErr error
 	}{
-		{&types.TextProposal{Title: "title", Description: "description"}, nil},
-		// Keeper does not check the validity of title and description, no error
-		{&types.TextProposal{Title: "", Description: "description"}, nil},
-		{&types.TextProposal{Title: strings.Repeat("1234567890", 100), Description: "description"}, nil},
-		{&types.TextProposal{Title: "title", Description: ""}, nil},
-		{&types.TextProposal{Title: "title", Description: strings.Repeat("1234567890", 1000)}, nil},
-		// error only when invalid route
-		{&invalidProposalRoute{}, types.ErrNoProposalHandlerExists},
+		{voteProposal, nil},
+		{[]sdk.Msg{}, types.ErrNoProposalMsgs},
 	}
 
 	for i, tc := range testCases {
-		_, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tc.content)
+		_, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tc.messages)
 		suite.Require().True(errors.Is(tc.expectedErr, err), "tc #%d; got: %v, expected: %v", i, err, tc.expectedErr)
 	}
 }

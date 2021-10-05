@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	TestProposal = types.NewTextProposal("Test", "description")
+	TestProposal = []sdk.Msg{types.NewMsgVote(sdk.AccAddress([]byte("addrs")), 1, types.OptionYes)}
 )
 
 func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {

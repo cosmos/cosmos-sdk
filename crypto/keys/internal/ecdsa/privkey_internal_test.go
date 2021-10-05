@@ -80,7 +80,7 @@ func (suite *SKSuite) TestSign() {
 	// leave r untouched!
 	high_s := new(big.Int).Mod(new(big.Int).Neg(low_s), elliptic.P256().Params().N)
 
-	require.False(suite.pk.VerifySignature(msg, signatureRaw(r,high_s)))
+	require.False(suite.pk.VerifySignature(msg, signatureRaw(r, high_s)))
 
 	// Valid signature using low_s, but too long
 	sigCpy = make([]byte, len(sig)+2)

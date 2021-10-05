@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strings"
 
 	yaml "gopkg.in/yaml.v2"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // Governance message types and routes
@@ -18,6 +20,11 @@ const (
 	TypeMsgVote           = "vote"
 	TypeMsgVoteWeighted   = "weighted_vote"
 	TypeMsgSubmitProposal = "submit_proposal"
+	TypeMsgSignal         = "signal"
+
+	// Constants pertaining to a Signal message
+	MaxDescriptionLength int = 5000
+	MaxTitleLength       int = 140
 )
 
 var (
@@ -27,15 +34,16 @@ var (
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
 //nolint:interfacer
-func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) (*MsgSubmitProposal, error) {
+func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer sdk.AccAddress) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		InitialDeposit: initialDeposit,
 		Proposer:       proposer.String(),
 	}
-	err := m.SetContent(content)
-	if err != nil {
-		return nil, err
+
+	if err := m.SetMessages(messages); err != nil {
+		return &MsgSubmitProposal{}, err
 	}
+
 	return m, nil
 }
 
@@ -46,12 +54,17 @@ func (m *MsgSubmitProposal) GetProposer() sdk.AccAddress {
 	return proposer
 }
 
-func (m *MsgSubmitProposal) GetContent() Content {
-	content, ok := m.Content.GetCachedValue().(Content)
-	if !ok {
-		return nil
+func (m *MsgSubmitProposal) GetMessages() ([]sdk.Msg, error) {
+	msgs := make([]sdk.Msg, len(m.Messages))
+	for i, msgAny := range m.Messages {
+		msg, ok := msgAny.GetCachedValue().(sdk.Msg)
+		if !ok {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "messages contains %T which is not a sdk.Msg", msgAny)
+		}
+		msgs[i] = msg
 	}
-	return content
+
+	return msgs, nil
 }
 
 func (m *MsgSubmitProposal) SetInitialDeposit(coins sdk.Coins) {
@@ -62,16 +75,21 @@ func (m *MsgSubmitProposal) SetProposer(address fmt.Stringer) {
 	m.Proposer = address.String()
 }
 
-func (m *MsgSubmitProposal) SetContent(content Content) error {
-	msg, ok := content.(proto.Message)
-	if !ok {
-		return fmt.Errorf("can't proto marshal %T", msg)
+func (m *MsgSubmitProposal) SetMessages(messages []sdk.Msg) error {
+	msgs := make([]*types.Any, len(messages))
+	for i, msg := range messages {
+		m, ok := msg.(proto.Message)
+		if !ok {
+			return fmt.Errorf("can't proto marshal %T", msg)
+		}
+		any, err := types.NewAnyWithValue(m)
+		if err != nil {
+			return err
+		}
+
+		msgs[i] = any
 	}
-	any, err := types.NewAnyWithValue(msg)
-	if err != nil {
-		return err
-	}
-	m.Content = any
+	m.Messages = msgs
 	return nil
 }
 
@@ -93,14 +111,12 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.InitialDeposit.String())
 	}
 
-	content := m.GetContent()
-	if content == nil {
-		return sdkerrors.Wrap(ErrInvalidProposalContent, "missing content")
+	// Empty messages are not allowed
+	if m.Messages == nil || len(m.Messages) == 0 {
+		return ErrNoProposalMsgs
 	}
-	if !IsValidProposalType(content.ProposalType()) {
-		return sdkerrors.Wrap(ErrInvalidProposalType, content.ProposalType())
-	}
-	if err := content.ValidateBasic(); err != nil {
+
+	if _, err := m.GetMessages(); err != nil {
 		return err
 	}
 
@@ -127,8 +143,7 @@ func (m MsgSubmitProposal) String() string {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m MsgSubmitProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	var content Content
-	return unpacker.UnpackAny(m.Content, &content)
+	return sdktx.UnpackInterfaces(unpacker, m.Messages)
 }
 
 // NewMsgDeposit creates a new MsgDeposit instance
@@ -279,4 +294,52 @@ func (msg MsgVoteWeighted) GetSignBytes() []byte {
 func (msg MsgVoteWeighted) GetSigners() []sdk.AccAddress {
 	voter, _ := sdk.AccAddressFromBech32(msg.Voter)
 	return []sdk.AccAddress{voter}
+}
+
+// NewMsgVote creates a message to cast a vote on an active proposal
+//nolint:interfacer
+func NewMsgSignal(title, description string) *MsgSignal {
+	return &MsgSignal{title, description}
+}
+
+// Route implements Msg
+func (msg MsgSignal) Route() string { return RouterKey }
+
+// Type implements Msg
+func (msg MsgSignal) Type() string { return TypeMsgSignal }
+
+// ValidateBasic implements Msg
+func (msg MsgSignal) ValidateBasic() error {
+	if len(strings.TrimSpace(msg.Title)) == 0 {
+		return sdkerrors.Wrap(ErrInvalidSignalMsg, "signal title cannot be blank")
+	}
+	if len(msg.Title) > MaxTitleLength {
+		return sdkerrors.Wrap(ErrInvalidSignalMsg, fmt.Sprintf("signal title is longer than max length of %d", MaxTitleLength))
+	}
+
+	if len(msg.Description) == 0 {
+		return sdkerrors.Wrap(ErrInvalidSignalMsg, "signal description cannot be blank")
+	}
+	if len(msg.Description) > MaxDescriptionLength {
+		return sdkerrors.Wrap(ErrInvalidSignalMsg, fmt.Sprintf("signal description is longer than max length of %d", MaxDescriptionLength))
+	}
+
+	return nil
+}
+
+// String implements the Stringer interface
+func (msg MsgSignal) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// GetSignBytes implements Msg
+func (msg MsgSignal) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners implements Msg. A signal message has no signers
+func (msg MsgSignal) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{}
 }

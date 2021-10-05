@@ -1,7 +1,8 @@
 syntax = "proto3";
-package cosmos.gov.v1beta1;
+package cosmos.gov.v1;
 
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/gov/v1/gov.proto";
 import "cosmos/gov/v1beta1/gov.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
@@ -9,7 +10,7 @@ import "google/protobuf/any.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
 
-// Msg defines the bank Msg service.
+// Msg defines the gov Msg service.
 service Msg {
   // SubmitProposal defines a method to create new proposal given a content.
   rpc SubmitProposal(MsgSubmitProposal) returns (MsgSubmitProposalResponse);
@@ -22,6 +23,10 @@ service Msg {
 
   // Deposit defines a method to add deposit on a specific proposal.
   rpc Deposit(MsgDeposit) returns (MsgDepositResponse);
+
+  // Signal is a basic governance proposal message which has no functionality
+  // but is used to gather signal on a certain intention.
+  rpc Signal(MsgSignal) returns (MsgSignalResponse);
 }
 
 // MsgSubmitProposal defines an sdk.Msg type that supports submitting arbitrary
@@ -32,7 +37,7 @@ message MsgSubmitProposal {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  google.protobuf.Any content                       = 1 [(cosmos_proto.accepts_interface) = "Content"];
+  repeated google.protobuf.Any messages             = 1;
   repeated cosmos.base.v1beta1.Coin initial_deposit = 2 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
@@ -55,7 +60,7 @@ message MsgVote {
 
   uint64     proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
   string     voter       = 2;
-  VoteOption option      = 3;
+  cosmos.gov.v1beta1.VoteOption option      = 3;
 }
 
 // MsgVoteResponse defines the Msg/Vote response type.
@@ -70,7 +75,7 @@ message MsgVoteWeighted {
 
   uint64                      proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
   string                      voter       = 2;
-  repeated WeightedVoteOption options     = 3 [(gogoproto.nullable) = false];
+  repeated cosmos.gov.v1beta1.WeightedVoteOption options     = 3 [(gogoproto.nullable) = false];
 }
 
 // MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.
@@ -91,3 +96,18 @@ message MsgDeposit {
 
 // MsgDepositResponse defines the Msg/Deposit response type.
 message MsgDepositResponse {}
+
+// MsgSignal is functionally a no-op message that can be submitted in a proposal to signal
+// an intention for members to vote on.
+message MsgSignal {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  string title       = 1;
+  string description = 2;
+}
+
+// MsgSignalResponse defined the Msg/Signal response type
+message MsgSignalResponse {}

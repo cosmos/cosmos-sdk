@@ -72,12 +72,11 @@ func (s *DepositTestSuite) createProposal(val *network.Validator, initialDeposit
 		exactArgs = append(exactArgs, fmt.Sprintf("--%s=%s", cli.FlagDeposit, initialDeposit.String()))
 	}
 
+	proposal := []sdk.Msg{types.NewMsgVote(val.Address, 1, types.OptionYes)}
 	_, err := MsgSubmitProposal(
 		val.ClientCtx,
 		val.Address.String(),
-		fmt.Sprintf("Text Proposal %d", id),
-		"Where is the title!?",
-		types.ProposalTypeText,
+		proposal,
 		exactArgs...,
 	)
 

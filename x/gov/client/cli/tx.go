@@ -12,20 +12,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	govutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // Proposal flags
 const (
-	FlagTitle        = "title"
-	FlagDescription  = "description"
-	FlagProposalType = "type"
 	FlagDeposit      = "deposit"
 	flagVoter        = "voter"
 	flagDepositor    = "depositor"
 	flagStatus       = "status"
-	FlagProposal     = "proposal"
 )
 
 type proposal struct {
@@ -39,9 +36,6 @@ type proposal struct {
 // verify that these values are not provided in conjunction with a JSON proposal
 // file.
 var ProposalFlags = []string{
-	FlagTitle,
-	FlagDescription,
-	FlagProposalType,
 	FlagDeposit,
 }
 
@@ -78,29 +72,16 @@ func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
 // NewCmdSubmitProposal implements submitting a proposal transaction command.
 func NewCmdSubmitProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "submit-proposal",
+		Use:   "submit-proposal [path/to/messages.json]",
 		Short: "Submit a proposal along with an initial deposit",
+		Args:  cobra.ExactArgs(1),
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Submit a proposal along with an initial deposit.
-Proposal title, description, type and deposit can be given directly or through a proposal JSON file.
+			fmt.Sprintf(`Submit a proposal with an array of messages along with an initial deposit.
 
 Example:
-$ %s tx gov submit-proposal --proposal="path/to/proposal.json" --from mykey
-
-Where proposal.json contains:
-
-{
-  "title": "Test Proposal",
-  "description": "My awesome proposal",
-  "type": "Text",
-  "deposit": "10test"
-}
-
-Which is equivalent to:
-
-$ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
+$ %s tx gov submit-proposal path/to/messages.json --from mykey --deposit="10test"
 `,
-				version.AppName, version.AppName,
+				version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -109,19 +90,22 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 				return err
 			}
 
-			proposal, err := parseSubmitProposalFlags(cmd.Flags())
-			if err != nil {
-				return fmt.Errorf("failed to parse proposal: %w", err)
-			}
-
-			amount, err := sdk.ParseCoinsNormalized(proposal.Deposit)
+			proposalMsgs, err := authclient.ReadTxFromFile(clientCtx, args[0])
 			if err != nil {
 				return err
 			}
 
-			content := types.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
+			depositString, err := cmd.Flags().GetString(FlagDeposit)
+			if err != nil {
+				return err
+			}
 
-			msg, err := types.NewMsgSubmitProposal(content, amount, clientCtx.GetFromAddress())
+			deposit, err := sdk.ParseCoinsNormalized(depositString)
+			if err != nil {
+				return err
+			}
+
+			msg, err := types.NewMsgSubmitProposal(proposalMsgs.GetMsgs(), deposit, clientCtx.GetFromAddress())
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}
@@ -130,11 +114,7 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 		},
 	}
 
-	cmd.Flags().String(FlagTitle, "", "The proposal title")
-	cmd.Flags().String(FlagDescription, "", "The proposal description")
-	cmd.Flags().String(FlagProposalType, "", "The proposal Type")
 	cmd.Flags().String(FlagDeposit, "", "The proposal deposit")
-	cmd.Flags().String(FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

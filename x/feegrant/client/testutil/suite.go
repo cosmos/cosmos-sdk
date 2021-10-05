@@ -693,9 +693,9 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 
 	// granted fee allowance for an account which is not in state and creating
 	// any tx with it by using --fee-account shouldn't fail
+	proposal := []sdk.Msg{govtypes.NewMsgVote(grantee, 1, govtypes.OptionYes)}
 	out, err := govtestutil.MsgSubmitProposal(val.ClientCtx, grantee.String(),
-		"Text Proposal", "No desc", govtypes.ProposalTypeText,
-		fmt.Sprintf("--%s=%s", flags.FlagFeeAccount, granter.String()),
+		proposal, fmt.Sprintf("--%s=%s", flags.FlagFeeAccount, granter.String()),
 	)
 
 	s.Require().NoError(err)
@@ -832,7 +832,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 			"valid proposal tx",
 			func() (testutil.BufferWriter, error) {
 				return govtestutil.MsgSubmitProposal(val.ClientCtx, grantee.String(),
-					"Text Proposal", "No desc", govtypes.ProposalTypeText,
+					[]sdk.Msg{govtypes.NewMsgVote(grantee, 1, govtypes.OptionYes)},
 					fmt.Sprintf("--%s=%s", flags.FlagFeeAccount, granter.String()),
 				)
 			},

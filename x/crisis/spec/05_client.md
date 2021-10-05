@@ -1,3 +1,6 @@
+<!--
+order: 5
+-->
 # Client
 
 ## CLI
@@ -9,8 +12,8 @@ The `tx` commands allow users to interact with the `crisis` module.
 simd tx crisis --help
 ```
 
-### invariant-broken
-The `invariant-broken` Submit proof that an invariant broken to halt the chain
+#### invariant-broken
+The `invariant-broken` command submits proof when an invariant was broken to halt the chain
 ```bash
 simd tx crisis invariant-broken [module-name] [invariant-route] [flags]
 ```

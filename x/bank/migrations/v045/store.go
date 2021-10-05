@@ -1,21 +1,22 @@
-package v044
+package v045
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	v043 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v043"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-// MigrateStore performs in-place store migrations from v0.43 to v0.44. The
+// MigrateStore performs in-place store migrations from v0.43 to v0.45. The
 // migration includes:
 //
 // - Migrate coin storage to save only amount.
 // - Add an additional reverse index from denomination to address.
 // - Remove duplicate denom from denom metadata store key.
-func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
+func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
 	err := addDenomReverseIndex(store, cdc)
 	if err != nil {

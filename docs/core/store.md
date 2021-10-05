@@ -222,6 +222,16 @@ When `Store.{Get, Set}()` is called, the store forwards the call to its parent, 
 
 When `Store.Iterator()` is called, it does not simply prefix the `Store.prefix`, since it does not work as intended. In that case, some of the elements are traversed even they are not starting with the prefix.
 
+### `ListenKv` Store
+
+`listenkv.Store` is a wrapper `KVStore` which provides state listening capabilities over the underlying `KVStore`.
+It is applied automatically by the Cosmos SDK on any `KVStore` whose `StoreKey` is specified during state streaming configuration.
+Additional information about state streaming configuration can be found in the [store/streaming/README.md](../../store/streaming/README.md).
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.44.1/store/listenkv/store.go#L11-L18
+
+When `KVStore.Set` or `KVStore.Delete` methods are called, `listenkv.Store` automatically writes the operations to the set of `Store.listeners`.
+
 ## Next {hide}
 
 Learn about [encoding](./encoding.md) {hide}

@@ -203,6 +203,9 @@ func testListenBeginBlock(t *testing.T) {
 }
 
 func testListenDeliverTx1(t *testing.T) {
+	if os.Getenv("CI_TEST") != "" {
+		t.Skip("Skipping testListenDeliverTx1 in CI environment")
+	}
 	expectedDeliverTxReq1Bytes, err := testMarshaller.Marshal(&testDeliverTxReq1)
 	require.Nil(t, err)
 	expectedDeliverTxRes1Bytes, err := testMarshaller.Marshal(&testDeliverTxRes1)

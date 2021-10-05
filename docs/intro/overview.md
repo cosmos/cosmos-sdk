@@ -4,7 +4,7 @@ order: 1
 
 # High-level Overview
 
-## What is the SDK?
+## What is the Cosmos SDK?
 
 The [Cosmos-SDK](https://github.com/cosmos/cosmos-sdk) is an open-source framework for building multi-asset public Proof-of-Stake (PoS) <df value="blockchain">blockchains</df>, like the Cosmos Hub, as well as permissioned Proof-Of-Authority (PoA) blockchains. Blockchains built with the Cosmos SDK are generally referred to as **application-specific blockchains**.
 
@@ -22,15 +22,15 @@ Learn more about [application-specific blockchains](./why-app-specific.md).
 
 The Cosmos SDK is the most advanced framework for building custom application-specific blockchains today. Here are a few reasons why you might want to consider building your decentralised application with the Cosmos SDK:
 
-- The default consensus engine available within the SDK is [Tendermint Core](https://github.com/tendermint/tendermint). Tendermint is the most (and only) mature BFT consensus engine in existence. It is widely used across the industry and is considered the gold standard consensus engine for building Proof-of-Stake systems.
-- The SDK is open source and designed to make it easy to build blockchains out of composable [modules](../../x/). As the ecosystem of open source SDK modules grows, it will become increasingly easier to build complex decentralised platforms with it.
-- The SDK is inspired by capabilities-based security, and informed by years of wrestling with blockchain state-machines. This makes the Cosmos SDK a very secure environment to build blockchains.
+- The default consensus engine available within the Cosmos SDK is [Tendermint Core](https://github.com/tendermint/tendermint). Tendermint is the most (and only) mature BFT consensus engine in existence. It is widely used across the industry and is considered the gold standard consensus engine for building Proof-of-Stake systems.
+- The Cosmos SDK is open source and designed to make it easy to build blockchains out of composable [modules](../../x/). As the ecosystem of open source Cosmos SDK modules grows, it will become increasingly easier to build complex decentralised platforms with it.
+- The Cosmos SDK is inspired by capabilities-based security, and informed by years of wrestling with blockchain state-machines. This makes the Cosmos SDK a very secure environment to build blockchains.
 - Most importantly, the Cosmos SDK has already been used to build many application-specific blockchains that are already in production. Among others, we can cite [Cosmos Hub](https://hub.cosmos.network), [IRIS Hub](https://irisnet.org), [Binance Chain](https://docs.binance.org/), [Terra](https://terra.money/) or [Kava](https://www.kava.io/). [Many more](https://cosmos.network/ecosystem) are building on the Cosmos SDK.
 
 ## Getting started with the Cosmos SDK
 
-- Learn more about the [architecture of an SDK application](./sdk-app-architecture.md)
-- Learn how to build an application-specific blockchain from scratch with the [SDK Tutorial](https://cosmos.network/docs/tutorial)
+- Learn more about the [architecture of a Cosmos SDK application](./sdk-app-architecture.md)
+- Learn how to build an application-specific blockchain from scratch with the [Cosmos SDK Tutorial](https://cosmos.network/docs/tutorial)
 
 ## Next {hide}
 

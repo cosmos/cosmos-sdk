@@ -6,7 +6,7 @@ order: 12
 
 `BaseApp.runTx()` function handles Golang panics that might occur during transactions execution, for example, keeper has faced an invalid state and paniced.
 Depending on the panic type different handler is used, for instance the default one prints an error log message.
-Recovery middleware is used to add custom panic recovery for SDK application developers.
+Recovery middleware is used to add custom panic recovery for Cosmos SDK application developers.
 
 More context could be found in the corresponding [ADR-022](../architecture/adr-022-custom-panic-handling.md).
 
@@ -50,7 +50,7 @@ func (k FooKeeper) Do(obj interface{}) {
 By default that panic would be recovered and an error message will be printed to log. To override that behaviour we should register a custom RecoveryHandler:
 
 ```go
-// SDK application constructor
+// Cosmos SDK application constructor
 customHandler := func(recoveryObj interface{}) error {
     err, ok := recoveryObj.(error)
     if !ok {

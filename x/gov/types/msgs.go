@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	yaml "gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	"github.com/gogo/protobuf/proto"
 

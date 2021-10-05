@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -39,7 +39,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	if err := EnsureBinary(bin); err != nil {
 		return false, fmt.Errorf("current binary is invalid: %w", err)
 	}
-	fmt.Println("[cosmovisor] running ", bin, args)
+	Logger.Info().Str("path", bin).Strs("args", args).Msg("running app")
 	cmd := exec.Command(bin, args...)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
@@ -52,7 +52,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	go func() {
 		sig := <-sigs
 		if err := cmd.Process.Signal(sig); err != nil {
-			log.Fatal(bin, "terminated. Error:", err)
+			Logger.Fatal().Err(err).Str("bin", bin).Msg("terminated")
 		}
 	}()
 
@@ -60,8 +60,15 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	if err != nil || !needsUpdate {
 		return false, err
 	}
-	if err := doBackup(l.cfg); err != nil {
-		return false, err
+
+	if !IsSkipUpgradeHeight(args, l.fw.currentInfo) {
+		if err := doBackup(l.cfg); err != nil {
+			return false, err
+		}
+
+		if err = doPreUpgrade(l.cfg); err != nil {
+			return false, err
+		}
 	}
 
 	return true, DoUpgrade(l.cfg, l.fw.currentInfo)
@@ -84,7 +91,7 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 	select {
 	case <-l.fw.MonitorUpdate(currentUpgrade):
 		// upgrade - kill the process and restart
-		fmt.Println("[cosmovisor] Daemon shutting down in an attempt to restart")
+		Logger.Info().Msg("Daemon shutting down in an attempt to restart")
 		_ = cmd.Process.Kill()
 	case err := <-cmdDone:
 		l.fw.Stop()
@@ -125,7 +132,7 @@ func doBackup(cfg *Config) error {
 		stStr := fmt.Sprintf("%d-%d-%d", st.Year(), st.Month(), st.Day())
 		dst := filepath.Join(cfg.Home, fmt.Sprintf("data"+"-backup-%s", stStr))
 
-		fmt.Printf("starting to take backup of data directory at time %s", st)
+		Logger.Info().Time("backup start time", st).Msg("starting to take backup of data directory")
 
 		// copy the $DAEMON_HOME/data to a backup dir
 		err = copy.Copy(filepath.Join(cfg.Home, "data"), dst)
@@ -136,10 +143,89 @@ func doBackup(cfg *Config) error {
 
 		// backup is done, lets check endtime to calculate total time taken for backup process
 		et := time.Now()
-		timeTaken := et.Sub(st)
-		fmt.Printf("backup saved at location: %s, completed at time: %s\n"+
-			"time taken to complete the backup: %s", dst, et, timeTaken)
+		Logger.Info().Str("backup saved at", dst).Time("backup completion time", et).TimeDiff("time taken to complete backup", et, st).Msg("backup completed")
 	}
 
 	return nil
+}
+
+// doPreUpgrade runs the pre-upgrade command defined by the application and handles respective error codes
+// cfg contains the cosmovisor config from env var
+func doPreUpgrade(cfg *Config) error {
+	counter := 0
+	for {
+		if counter > cfg.PreupgradeMaxRetries {
+			return fmt.Errorf("pre-upgrade command failed. reached max attempt of retries - %d", cfg.PreupgradeMaxRetries)
+		}
+
+		err := executePreUpgradeCmd(cfg)
+		counter += 1
+
+		if err != nil {
+			if err.(*exec.ExitError).ProcessState.ExitCode() == 1 {
+				Logger.Info().Msg("pre-upgrade command does not exist. continuing the upgrade.")
+				return nil
+			}
+			if err.(*exec.ExitError).ProcessState.ExitCode() == 30 {
+				return fmt.Errorf("pre-upgrade command failed : %w", err)
+			}
+			if err.(*exec.ExitError).ProcessState.ExitCode() == 31 {
+				Logger.Error().Err(err).Int("attempt", counter).Msg("pre-upgrade command failed. retrying")
+				continue
+			}
+		}
+		fmt.Println("pre-upgrade successful. continuing the upgrade.")
+		return nil
+	}
+}
+
+// executePreUpgradeCmd runs the pre-upgrade command defined by the application
+// cfg contains the cosmosvisor config from the env vars
+func executePreUpgradeCmd(cfg *Config) error {
+	bin, err := cfg.CurrentBin()
+	if err != nil {
+		return err
+	}
+
+	preUpgradeCmd := exec.Command(bin, "pre-upgrade")
+	_, err = preUpgradeCmd.Output()
+	return err
+}
+
+// IsSkipUpgradeHeight checks if pre-upgrade script must be run. If the height in the upgrade plan matches any of the heights provided in --safe-skip-upgrade, the script is not run
+func IsSkipUpgradeHeight(args []string, upgradeInfo UpgradeInfo) bool {
+	skipUpgradeHeights := UpgradeSkipHeights(args)
+	for _, h := range skipUpgradeHeights {
+		if h == int(upgradeInfo.Height) {
+			return true
+		}
+
+	}
+	return false
+}
+
+// UpgradeSkipHeights gets all the heights provided when
+// 		simd start --unsafe-skip-upgrades <height1> <optional_height_2> ... <optional_height_N>
+func UpgradeSkipHeights(args []string) []int {
+	var heights []int
+	for i, arg := range args {
+		if arg == "--unsafe-skip-upgrades" {
+			j := i + 1
+
+			for j < len(args) {
+				tArg := args[j]
+				if strings.HasPrefix(tArg, "-") {
+					break
+				}
+				h, err := strconv.Atoi(tArg)
+				if err == nil {
+					heights = append(heights, h)
+				}
+				j++
+			}
+
+			break
+		}
+	}
+	return heights
 }

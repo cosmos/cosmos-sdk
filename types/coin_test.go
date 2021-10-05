@@ -96,6 +96,7 @@ func (s *coinTestSuite) TestCoinIsValid() {
 		{sdk.Coin{loremIpsum, sdk.OneInt()}, false},
 		{sdk.Coin{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.OneInt()}, true},
 		{sdk.Coin{"atOm", sdk.OneInt()}, true},
+		{sdk.Coin{"x:y-z.1_2", sdk.OneInt()}, true},
 		{sdk.Coin{"     ", sdk.OneInt()}, false},
 	}
 
@@ -706,7 +707,7 @@ func (s *coinTestSuite) TestParseCoins() {
 		{"2 3foo, 97 bar", false, nil},                      // 3foo is invalid coin name
 		{"11me coin, 12you coin", false, nil},               // no spaces in coin names
 		{"1.2btc", true, sdk.Coins{{"btc", sdk.NewInt(1)}}}, // amount can be decimal, will get truncated
-		{"5foo:bar", false, nil},                            // invalid separator
+		{"5foo:bar", true, sdk.Coins{{"foo:bar", sdk.NewInt(5)}}},
 		{"10atom10", true, sdk.Coins{{"atom10", sdk.NewInt(10)}}},
 		{"200transfer/channelToA/uatom", true, sdk.Coins{{"transfer/channelToA/uatom", sdk.NewInt(200)}}},
 		{"50ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", true, sdk.Coins{{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.NewInt(50)}}},

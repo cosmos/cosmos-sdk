@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	cfg "github.com/tendermint/tendermint/config"
@@ -23,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/go-bip39"
 )
 
 const (
@@ -80,7 +80,6 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
-
 			config.SetRoot(clientCtx.HomeDir)
 
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
@@ -117,7 +116,6 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			genFile := config.GenesisFile()
 			overwrite, _ := cmd.Flags().GetBool(FlagOverwrite)
-
 			stakingBondDenom, _ := cmd.Flags().GetString(FlagStakingBondDenom)
 
 			if !overwrite && tmos.FileExists(genFile) {
@@ -127,17 +125,20 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			appGenState := mbm.DefaultGenesis(cdc)
 
 			if stakingBondDenom != "" {
-				stakingRaw := appGenState[stakingtypes.ModuleName]
 				var stakingGenesis stakingtypes.GenesisState
+
+				stakingRaw := appGenState[stakingtypes.ModuleName]
 				err := clientCtx.Codec.UnmarshalJSON(stakingRaw, &stakingGenesis)
 				if err != nil {
 					return err
 				}
+
 				stakingGenesis.Params.BondDenom = stakingBondDenom
 				modifiedStakingStr, err := clientCtx.Codec.MarshalJSON(&stakingGenesis)
 				if err != nil {
 					return err
 				}
+
 				appGenState[stakingtypes.ModuleName] = modifiedStakingStr
 			}
 
@@ -161,6 +162,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			genDoc.ChainID = chainID
 			genDoc.Validators = nil
 			genDoc.AppState = appState
+
 			if err = genutil.ExportGenesisFile(genDoc, genFile); err != nil {
 				return errors.Wrap(err, "Failed to export gensis file")
 			}

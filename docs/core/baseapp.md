@@ -4,22 +4,22 @@ order: 1
 
 # BaseApp
 
-This document describes `BaseApp`, the abstraction that implements the core functionalities of an SDK application. {synopsis}
+This document describes `BaseApp`, the abstraction that implements the core functionalities of a Cosmos SDK application. {synopsis}
 
 ## Pre-requisite Readings
 
-- [Anatomy of an SDK application](../basics/app-anatomy.md) {prereq}
-- [Lifecycle of an SDK transaction](../basics/tx-lifecycle.md) {prereq}
+- [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
+- [Lifecycle of a Cosmos SDK transaction](../basics/tx-lifecycle.md) {prereq}
 
 ## Introduction
 
-`BaseApp` is a base type that implements the core of an SDK application, namely:
+`BaseApp` is a base type that implements the core of a Cosmos SDK application, namely:
 
 - The [Application Blockchain Interface](#abci), for the state-machine to communicate with the underlying consensus engine (e.g. Tendermint).
 - [Service Routers](#service-routers), to route messages and queries to the appropriate module.
 - Different [states](#states), as the state-machine can have different volatile states updated based on the ABCI message received.
 
-The goal of `BaseApp` is to provide the fundamental layer of an SDK application
+The goal of `BaseApp` is to provide the fundamental layer of a Cosmos SDK application
 that developers can easily extend to build their own custom application. Usually,
 developers will create a custom type for their application, like so:
 

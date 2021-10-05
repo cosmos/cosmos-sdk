@@ -27,9 +27,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
+var testMbm = module.NewBasicManager(
+	staking.AppModuleBasic{},
+	genutil.AppModuleBasic{},
+)
 
 func TestInitCmd(t *testing.T) {
 	tests := []struct {
@@ -137,7 +141,11 @@ func TestInitStakingBondDenom(t *testing.T) {
 
 	cmd := genutilcli.InitCmd(testMbm, home)
 
-	cmd.SetArgs([]string{"appnode-test", fmt.Sprintf("--%s=%s --%s=testtoken", cli.HomeFlag, home, genutilcli.FlagStakingBondDenom)})
+	cmd.SetArgs([]string{
+		"appnode-test",
+		fmt.Sprintf("--%s=%s", cli.HomeFlag, home),
+		fmt.Sprintf("--%s=testtoken", genutilcli.FlagStakingBondDenom),
+	})
 	require.NoError(t, cmd.ExecuteContext(ctx))
 }
 

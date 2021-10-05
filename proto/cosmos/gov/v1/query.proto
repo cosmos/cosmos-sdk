@@ -6,6 +6,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/gov/v1/gov.proto";
 import "cosmos/gov/v1beta1/gov.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
 
@@ -72,10 +73,10 @@ message QueryProposalsRequest {
   cosmos.gov.v1beta1.ProposalStatus proposal_status = 1;
 
   // voter defines the voter address for the proposals.
-  string voter = 2;
+  string voter = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // depositor defines the deposit addresses from the proposals.
-  string depositor = 3;
+  string depositor = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 4;
@@ -99,7 +100,7 @@ message QueryVoteRequest {
   uint64 proposal_id = 1;
 
   // voter defines the oter address for the proposals.
-  string voter = 2;
+  string voter = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // QueryVoteResponse is the response type for the Query/Vote RPC method.
@@ -152,7 +153,7 @@ message QueryDepositRequest {
   uint64 proposal_id = 1;
 
   // depositor defines the deposit addresses from the proposals.
-  string depositor = 2;
+  string depositor = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // QueryDepositResponse is the response type for the Query/Deposit RPC method.

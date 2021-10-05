@@ -3,6 +3,7 @@ package v043
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v040"
 	v040bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v040"
@@ -76,7 +77,7 @@ func migrateBalanceKeys(store sdk.KVStore) {
 // - Change balances prefix to 1 byte
 // - Change supply to be indexed by denom
 // - Prune balances & supply with zero coins (ref: https://github.com/cosmos/cosmos-sdk/pull/9229)
-func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
+func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
 	migrateBalanceKeys(store)
 

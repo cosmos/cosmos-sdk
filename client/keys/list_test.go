@@ -57,7 +57,6 @@ func Test_runListCmd(t *testing.T) {
 			cmd.SetArgs([]string{
 				fmt.Sprintf("--%s=%s", flags.FlagHome, tt.kbDir),
 				fmt.Sprintf("--%s=false", flagListNames),
-				fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 			})
 
 			if err := cmd.ExecuteContext(ctx); (err != nil) != tt.wantErr {
@@ -67,7 +66,6 @@ func Test_runListCmd(t *testing.T) {
 			cmd.SetArgs([]string{
 				fmt.Sprintf("--%s=%s", flags.FlagHome, tt.kbDir),
 				fmt.Sprintf("--%s=true", flagListNames),
-				fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 			})
 
 			if err := cmd.ExecuteContext(ctx); (err != nil) != tt.wantErr {

@@ -29,7 +29,7 @@ enum SignMode {
 
   // SIGN_MODE_AMINO_AUX specifies a signing mode which uses
   // SignDocAminoAux.
-  SIGN_MODE_AMINO_AUX = 5;
+  SIGN_MODE_AMINO_AUX = 4;
 
   // SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses
   // Amino JSON and will be removed in the future.

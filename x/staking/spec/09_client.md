@@ -276,3 +276,337 @@ redelegation_responses:
     validator_dst_address: cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm
     validator_src_address: cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm
 ```
+
+#### redelegations
+
+The `redelegations` command allow user to query all redelegation records for an individual delegator.
+
+Usage:
+
+```bash
+simd query staking redelegations [delegator-addr] [flags]
+```
+
+Example:
+
+```bash
+simd query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
+```
+
+Example Output:
+
+```bash
+pagination:
+  next_key: null
+  total: "0"
+redelegation_responses:
+- entries:
+  - balance: "50000000"
+    redelegation_entry:
+      completion_time: "2021-10-24T20:33:21.960084845Z"
+      creation_height: 2.382847e+06
+      initial_balance: "50000000"
+      shares_dst: "50000000.000000000000000000"
+  - balance: "5000000000"
+    redelegation_entry:
+      completion_time: "2021-10-25T21:33:54.446846862Z"
+      creation_height: 2.397271e+06
+      initial_balance: "5000000000"
+      shares_dst: "5000000000.000000000000000000"
+  redelegation:
+    delegator_address: cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
+    entries: null
+    validator_dst_address: cosmosvaloper1uccl5ugxrm7vqlzwqr04pjd320d2fz0z3hc6vm
+    validator_src_address: cosmosvaloper1zppjyal5emta5cquje8ndkpz0rs046m7zqxrpp
+- entries:
+  - balance: "562770000000"
+    redelegation_entry:
+      completion_time: "2021-10-25T21:42:07.336911677Z"
+      creation_height: 2.39735e+06
+      initial_balance: "562770000000"
+      shares_dst: "562770000000.000000000000000000"
+  redelegation:
+    delegator_address: cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
+    entries: null
+    validator_dst_address: cosmosvaloper1uccl5ugxrm7vqlzwqr04pjd320d2fz0z3hc6vm
+    validator_src_address: cosmosvaloper1zppjyal5emta5cquje8ndkpz0rs046m7zqxrpp
+```
+
+#### redelegations-from
+
+The `redelegations-from` command allow user to query delegations that are redelegating _from_ a validator.
+
+Usage:
+
+```bash
+simd query staking redelegations-from [validator-addr] [flags]
+```
+
+Example:
+
+```bash
+simd query staking redelegations-from cosmosvaloper1y4rzzrgl66eyhzt6gse2k7ej3zgwmngeleucjy
+```
+
+Example Output:
+
+```bash
+pagination:
+  next_key: null
+  total: "0"
+redelegation_responses:
+- entries:
+  - balance: "50000000"
+    redelegation_entry:
+      completion_time: "2021-10-24T20:33:21.960084845Z"
+      creation_height: 2.382847e+06
+      initial_balance: "50000000"
+      shares_dst: "50000000.000000000000000000"
+  - balance: "5000000000"
+    redelegation_entry:
+      completion_time: "2021-10-25T21:33:54.446846862Z"
+      creation_height: 2.397271e+06
+      initial_balance: "5000000000"
+      shares_dst: "5000000000.000000000000000000"
+  redelegation:
+    delegator_address: cosmos1pm6e78p4pgn0da365plzl4t56pxy8hwtqp2mph
+    entries: null
+    validator_dst_address: cosmosvaloper1uccl5ugxrm7vqlzwqr04pjd320d2fz0z3hc6vm
+    validator_src_address: cosmosvaloper1y4rzzrgl66eyhzt6gse2k7ej3zgwmngeleucjy
+- entries:
+  - balance: "221000000"
+    redelegation_entry:
+      completion_time: "2021-10-05T21:05:45.669420544Z"
+      creation_height: 2.120693e+06
+      initial_balance: "221000000"
+      shares_dst: "221000000.000000000000000000"
+  redelegation:
+    delegator_address: cosmos1zqv8qxy2zgn4c58fz8jt8jmhs3d0attcussrf6
+    entries: null
+    validator_dst_address: cosmosvaloper10mseqwnwtjaqfrwwp2nyrruwmjp6u5jhah4c3y
+    validator_src_address: cosmosvaloper1y4rzzrgl66eyhzt6gse2k7ej3zgwmngeleucjy
+```
+
+#### unbonding-delegation
+
+The `unbonding-delegation` command allow user to query unbonding delegations for an individual delegator on an individual validator.
+
+Usage:
+
+```bash
+simd query staking unbonding-delegation [delegator-addr] [validator-addr] [flags]
+```
+
+Example:
+
+```bash
+simd query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+```
+
+Example Output:
+
+```bash
+delegator_address: cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
+entries:
+- balance: "52000000"
+  completion_time: "2021-11-02T11:35:55.391594709Z"
+  creation_height: "55078"
+  initial_balance: "52000000"
+validator_address: cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+```
+
+#### unbonding-delegations
+
+The `unbonding-delegations` command allow user to query all unbonding-delegations records for one delegator.
+
+Usage:
+
+```bash
+simd query staking unbonding-delegations [delegator-addr] [flags]
+```
+
+Example:
+
+```bash
+simd query staking unbonding-delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
+```
+
+Example Output:
+
+```bash
+pagination:
+  next_key: null
+  total: "0"
+unbonding_responses:
+- delegator_address: cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
+  entries:
+  - balance: "52000000"
+    completion_time: "2021-11-02T11:35:55.391594709Z"
+    creation_height: "55078"
+    initial_balance: "52000000"
+  validator_address: cosmosvaloper1t8ehvswxjfn3ejzkjtntcyrqwvmvuknzmvtaaa
+
+```
+
+#### unbonding-delegations-from
+
+The `unbonding-delegations-from` command allow user to query delegations that are unbonding _from_ a validator.
+
+Usage:
+
+```bash
+simd query staking unbonding-delegations-from [validator-addr] [flags]
+```
+
+Example:
+
+```bash
+simd query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+```
+
+Example Output:
+
+```bash
+pagination:
+  next_key: null
+  total: "0"
+unbonding_responses:
+- delegator_address: cosmos1qqq9txnw4c77sdvzx0tkedsafl5s3vk7hn53fn
+  entries:
+  - balance: "150000000"
+    completion_time: "2021-11-01T21:41:13.098141574Z"
+    creation_height: "46823"
+    initial_balance: "150000000"
+  validator_address: cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+- delegator_address: cosmos1peteje73eklqau66mr7h7rmewmt2vt99y24f5z
+  entries:
+  - balance: "24000000"
+    completion_time: "2021-10-31T02:57:18.192280361Z"
+    creation_height: "21516"
+    initial_balance: "24000000"
+  validator_address: cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+```
+
+#### validator
+
+The `validator` command allow user to query details about an individual validator.
+
+Usage:
+
+```bash
+simd query staking validator [validator-addr] [flags]
+```
+
+Example:
+
+```bash
+simd query staking validator cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+```
+
+Example Output:
+
+```bash
+commission:
+  commission_rates:
+    max_change_rate: "0.020000000000000000"
+    max_rate: "0.200000000000000000"
+    rate: "0.050000000000000000"
+  update_time: "2021-10-01T19:24:52.663191049Z"
+consensus_pubkey:
+  '@type': /cosmos.crypto.ed25519.PubKey
+  key: sIiexdJdYWn27+7iUHQJDnkp63gq/rzUq1Y+fxoGjXc=
+delegator_shares: "32948270000.000000000000000000"
+description:
+  details: Witval is the validator arm from Vitwit. Vitwit is into software consulting
+    and services business since 2015. We are working closely with Cosmos ecosystem
+    since 2018. We are also building tools for the ecosystem, Aneka is our explorer
+    for the cosmos ecosystem.
+  identity: 51468B615127273A
+  moniker: Witval
+  security_contact: ""
+  website: ""
+jailed: false
+min_self_delegation: "1"
+operator_address: cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+status: BOND_STATUS_BONDED
+tokens: "32948270000"
+unbonding_height: "0"
+unbonding_time: "1970-01-01T00:00:00Z"
+```
+
+#### validators
+
+The `validators` command allow user to query details about all validators on a network.
+
+Usage:
+
+```bash
+junod query staking validators [flags]
+```
+
+Example:
+
+```bash
+junod query staking validators
+```
+
+Example Output:
+
+```bash
+pagination:
+  next_key: FPTi7TKAjN63QqZh+BaXn6gBmD5/
+  total: "0"
+validators:
+commission:
+  commission_rates:
+    max_change_rate: "0.020000000000000000"
+    max_rate: "0.200000000000000000"
+    rate: "0.050000000000000000"
+  update_time: "2021-10-01T19:24:52.663191049Z"
+consensus_pubkey:
+  '@type': /cosmos.crypto.ed25519.PubKey
+  key: sIiexdJdYWn27+7iUHQJDnkp63gq/rzUq1Y+fxoGjXc=
+delegator_shares: "32948270000.000000000000000000"
+description:
+    details: Witval is the validator arm from Vitwit. Vitwit is into software consulting
+      and services business since 2015. We are working closely with Cosmos ecosystem
+      since 2018. We are also building tools for the ecosystem, Aneka is our explorer
+      for the cosmos ecosystem.
+    identity: 51468B615127273A
+    moniker: Witval
+    security_contact: ""
+    website: ""
+  jailed: false
+  min_self_delegation: "1"
+  operator_address: cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+  status: BOND_STATUS_BONDED
+  tokens: "32948270000"
+  unbonding_height: "0"
+  unbonding_time: "1970-01-01T00:00:00Z"
+- commission:
+    commission_rates:
+      max_change_rate: "0.100000000000000000"
+      max_rate: "0.200000000000000000"
+      rate: "0.050000000000000000"
+    update_time: "2021-10-04T18:02:21.446645619Z"
+  consensus_pubkey:
+    '@type': /cosmos.crypto.ed25519.PubKey
+    key: GDNpuKDmCg9GnhnsiU4fCWktuGUemjNfvpCZiqoRIYA=
+  delegator_shares: "559343421.000000000000000000"
+  description:
+    details: Noderunners is a professional validator in POS networks. We have a huge
+      node running experience, reliable soft and hardware. Our commissions are always
+      low, our support to delegators is always full. Stake with us and start receiving
+      your Juno rewards now!
+    identity: 812E82D12FEA3493
+    moniker: Noderunners
+    security_contact: info@noderunners.biz
+    website: http://noderunners.biz
+  jailed: false
+  min_self_delegation: "1"
+  operator_address: cosmosvaloper1q5ku90atkhktze83j9xjaks2p7uruag5zp6wt7
+  status: BOND_STATUS_BONDED
+  tokens: "559343421"
+  unbonding_height: "0"
+  unbonding_time: "1970-01-01T00:00:00Z"
+```

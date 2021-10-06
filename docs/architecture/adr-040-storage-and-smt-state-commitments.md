@@ -122,13 +122,9 @@ We identified use-cases, where modules will need to save an object commitment wi
 
 ### Refactor MultiStore
 
-The Stargate `/store` implementation (StoreV1) adds an additional layer in the SDK store construction - the `MultiStore` structure. The multistore exists to support the modularity of the Cosmos SDK - each module is using its own instance of IAVL, but in the current implementation, all instances share the same database.
+The Stargate `/store` implementation (store/v1) adds an additional layer in the SDK store construction - the `MultiStore` structure. The multistore exists to support the modularity of the Cosmos SDK - each module is using its own instance of IAVL, but in the current implementation, all instances share the same database. The latter indicates, however, that the implementation doesn't provide true modularity. Instead it causes problems related to race condition and atomic DB commits (see: [\#6370](https://github.com/cosmos/cosmos-sdk/issues/6370) and [discussion](https://github.com/cosmos/cosmos-sdk/discussions/8297#discussioncomment-757043)).
 
-The latter indicates, however, that the implementation doesn't provide true modularity. Instead it causes problems related to race condition and sync (see: [\#6370](https://github.com/cosmos/cosmos-sdk/issues/6370)).
-
-We propose to reduce the multistore concept from the SDK, and to use a single instance of `SC` and `SS` in a `RootStore` object. To avoid confusion, we should rename the `MultiStore` interface to `RootStore`.
-
-The `RootStore` will have the following interface; the methods for configuring tracing and listeners are omitted for brevity.
+We propose to reduce the multistore concept from the SDK, and to use a single instance of `SC` and `SS` in a `RootStore` object. To avoid confusion, we should rename the `MultiStore` interface to `RootStore`. The `RootStore` will have the following interface; the methods for configuring tracing and listeners are omitted for brevity.
 
 ```go
 // Used where read-only access to versions is needed.
@@ -190,7 +186,7 @@ As a workaround, the `RootStore` will have to use two separate SMTs (they could 
 
 The solution presented here can be used until the IBC module is fully upgraded to supports single-element commitment proofs.
 
-### Optimization: compress module keys
+### Optimization: compress module key prefixes
 
 We consider a compression of prefix keys using [Huffman Coding](https://en.wikipedia.org/wiki/Huffman_coding). It will require knowledge of used prefixes (module store keys) a priori. And for the best results, it will need frequency information for each prefix (how often objects are stored in the store under the same prefix key). For Merkle Proofs we can't use prefix compression - so it should only apply for the `SS`. Moreover, the prefix compression should be only applied for the module namespace (the first prefix level). More precisely:
 + each module has it's own namespace;
@@ -214,7 +210,7 @@ NOTE: We need to assure that the codes won't change. Huffman Coding depends on t
 
 TODO: need to make decision about the key compression.
 
-### Optimization: SS key compression
+## Optimization: SS key compression
 
 Some objects may be saved with key, which contains a Protobuf message type. Such keys are long. We could save a lot of space if we can map Protobuf message types in varints.
 

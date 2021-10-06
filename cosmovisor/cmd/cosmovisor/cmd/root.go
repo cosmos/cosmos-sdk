@@ -10,7 +10,7 @@ import (
 func RunCosmovisorCommand(args []string) error {
 	arg0 := ""
 	if len(args) > 0 {
-		arg0 = args[0]
+		arg0 = strings.TrimSpace(args[0])
 	}
 	switch {
 	case ShouldGiveHelp(arg0):

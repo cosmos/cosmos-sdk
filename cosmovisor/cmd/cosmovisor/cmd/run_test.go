@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestIsVersionCommand(t *testing.T) {
+func TestIsRunCommand(t *testing.T) {
 	cases := []struct {
 		name     string
 		arg      string
@@ -24,34 +24,18 @@ func TestIsVersionCommand(t *testing.T) {
 			expected: false,
 		},
 		{
-			name:     "version",
-			arg:      "version",
+			name:     "run",
+			arg:      "run",
 			expected: true,
 		},
 		{
-			name:     "--version",
-			arg:      "--version",
+			name:     "run weird casing",
+			arg:      "RUn",
 			expected: true,
 		},
 		{
-			name:     "version weird casing",
-			arg:      "veRSiOn",
-			expected: true,
-		},
-		{
-			// -v should be reserved for verbose, and should not be used for --version.
-			name:     "-v",
-			arg:      "-v",
-			expected: false,
-		},
-		{
-			name:     "typo",
-			arg:      "vrsion",
-			expected: false,
-		},
-		{
-			name:     "non version command",
-			arg:      "start",
+			name:     "--run",
+			arg:      "--run",
 			expected: false,
 		},
 		{
@@ -70,16 +54,23 @@ func TestIsVersionCommand(t *testing.T) {
 			expected: false,
 		},
 		{
-			name:     "run",
-			arg:      "run",
+			name:     "version",
+			arg:      "version",
+			expected: false,
+		},
+		{
+			name:     "--version",
+			arg:      "--version",
 			expected: false,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(fmt.Sprintf("%s - %t", tc.name, tc.expected), func(t *testing.T) {
-			actual := IsVersionCommand(tc.arg)
+			actual := IsRunCommand(tc.arg)
 			require.Equal(t, tc.expected, actual)
 		})
 	}
 }
+
+// TODO: Write tests for func Run(args []string) error

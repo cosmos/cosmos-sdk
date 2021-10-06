@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog"
+
 	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
 )
 
@@ -167,6 +169,23 @@ func GetConfigFromEnv() (*Config, error) {
 		return nil, cverrors.FlattenErrors(errs...)
 	}
 	return cfg, nil
+}
+
+// LogConfigOrError logs either the config details or the error.
+func LogConfigOrError(logger zerolog.Logger, cfg *Config, cerr error) {
+	if cerr != nil {
+		switch err := cerr.(type) {
+		case *cverrors.MultiError:
+			logger.Error().Msg("multiple configuration errors found:")
+			for i, e := range err.GetErrors() {
+				logger.Error().Err(e).Msg(fmt.Sprintf("  %d:", i+1))
+			}
+		default:
+			logger.Error().Err(cerr).Msg("configuration error:")
+		}
+	} else {
+		logger.Info().Msg("Configuration is valid:\n" + cfg.DetailString())
+	}
 }
 
 // validate returns an error if this config is invalid.

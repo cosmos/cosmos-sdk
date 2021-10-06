@@ -182,7 +182,7 @@ The root hash of the proof for `"<record-key>"` is hashed with the `"<store-key>
 
 This is not compatible with the `RootStore`, which stores all records in a single Merkle tree structure, and won't produce separate proofs for the store- and record-key. Ideally, the store-key component of the proof could just be omitted, and updated to use a "no-op" spec, so only the record-key is used. However, because the IBC verification code hardcodes the `"ibc"` prefix and applies it to the SDK proof as a separate element of the proof path, this isn't possible without a breaking change. Breaking this behavior would severely impact the Cosmos ecosystem which already widely adopts the IBC module. Requesting an update of the IBC module across the chains is a time consuming effort and not easily feasible.
 
-As a workaround, the `RootStore` will have to use two separate SMTs (they could use the same underlying DB): one for IBC state and one for everything else. A simple Merkle map that reference these SMTs will act as a Merkle Tree to create a final App hash. The Merkle map is not stored in a DBs - it's constructed in the runtime.
+As a workaround, the `RootStore` will have to use two separate SMTs (they could use the same underlying DB): one for IBC state and one for everything else. A simple Merkle map that reference these SMTs will act as a Merkle Tree to create a final App hash. The Merkle map is not stored in a DBs - it's constructed in the runtime. The IBC substore key must be `"ibc"`.
 
 The workaround can still guarantee atomic syncs: the [proposed DB backends](#evaluated-kv-databases) support atomic transactions and efficient rollbacks, which will be used in the commit phase.
 
@@ -273,3 +273,5 @@ We were discussing use case where modules can use a support database, which is n
 + Facebook Diem (Libra) SMT [design](https://developers.diem.com/papers/jellyfish-merkle-tree/2021-01-14.pdf)
 + [Trillian Revocation Transparency](https://github.com/google/trillian/blob/master/docs/papers/RevocationTransparency.pdf), [Trillian Verifiable Data Structures](https://github.com/google/trillian/blob/master/docs/papers/VerifiableDataStructures.pdf).
 + Design and implementation [discussion](https://github.com/cosmos/cosmos-sdk/discussions/8297).
++ [How to Upgrade IBC Chains and their Clients](https://github.com/cosmos/ibc-go/blob/main/docs/ibc/upgrades/quick-guide.md)
++ [ADR-40 Effect on IBC](https://github.com/cosmos/ibc-go/discussions/256)

@@ -20,5 +20,5 @@ simd tx crisis invariant-broken [module-name] [invariant-route] [flags]
 
 Example:
 ```bash
-simd tx crisis invariant-broken bank total-supply --from=[keyname or cosmos1..]
+simd tx crisis invariant-broken bank total-supply --from=[keyname or address]
 ```

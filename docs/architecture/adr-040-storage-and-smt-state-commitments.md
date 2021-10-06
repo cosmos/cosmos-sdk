@@ -48,7 +48,7 @@ For data access we propose 2 additional KV buckets (namespaces for the key-value
 2. B2: `hash(key, value) → key`: a reverse index to get a key from an SMT path. Recall that SMT will store `(k, v)` as `(hash(k), hash(key, value))`. So, we can get an object value by composing `SMT_path → B2 → B1`.
 3. we could use more buckets to optimize the app usage if needed.
 
-We propose to use a KV database for both `SS` and `SC` - each run by its own database instance. This design allows for the separation of `SS` and `SC` into different hardware units, providing support for more complex setup scenarios and improving DB performance (essentially this will create two store shards: one for `SS` and another for `SC`). Moreover, we will be able to configure databases for `SS` and `SC` separately.
+We propose to use a KV database for both `SS` and `SC`. The store interface will allow to use the same physical DB backend for both `SS` and `SC` as well two separate DBs. The latter option allows for the separation of `SS` and `SC` into different hardware units, providing support for more complex setup scenarios and improving overall performance: one can use different backends (eg RocksDB and Badger) as well as independently tuning the underlying DB configuration.
 
 ### Requirements
 
@@ -120,24 +120,6 @@ The latter indicates, however, that the implementation doesn't provide true modu
 
 We propose to reduce the multistore concept from the SDK, and to use a single instance of `SC` and `SS` in a `RootStore` object. To avoid confusion, we should rename the `MultiStore` interface to `RootStore`.
 
-Moreover, to improve usability, we should extend the `KVStore` interface with _prefix store_. This will allow module developers to bind a store to a namespace for module sub-components:
-
-```go
-type KVStore interface {
-    ... current KVStore
-
-    WithPrefix(prefix string) KVStore
-}
-```
-
-The `WithPrefix` method will create a proxy object for the parent object and will prepend `prefix` to a key parameter of all key-value operations (similar to the `store/prefix.Store` implementation).
-The following invariant must hold:
-
-```
-for each OP in [Get, Has, Set, ...]
-    store.WithPrefix(prefix).OP(key) == store.OP(prefix + key)
-```
-
 The `RootStore` will have the following interface; the methods for configuring tracing and listeners are omitted for brevity.
 
 ```go
@@ -181,6 +163,8 @@ type RootStoreConfig struct {
 
 In contrast to `MultiStore`, `RootStore` doesn't allow to dynamically mount sub-stores or provide an arbitrary backing DB.
 
+NOTE: modules will be still use a special commitments and their own DBs. For example: a module which will use ZK proofs for state, can store and commit this proofs in the `RootStore` (usually as a single record) and manage the specialized store privately or using the `SS` low level interface.
+
 #### Compatibility support
 
 To ease the transition to this new interface for users, we can create a shim which wraps a `CommitMultiStore` but provides a `CommitRootStore` interface, and expose functions to safely create and access the underlying `CommitMultiStore`.
@@ -192,11 +176,11 @@ The new `RootStore` and supporting types can be implemented in a `store/v2` pack
 Currently, an IBC (v1.0) Merkle proof path consists of two elements (`["<store-key>", "<record-key>"]`), with each key corresponding to a separate proof. These are each verified according to individual [ICS-23 specs](https://github.com/cosmos/ibc-go/blob/f7051429e1cf833a6f65d51e6c3df1609290a549/modules/core/23-commitment/types/merkle.go#L17), and the result hash of each step is used as the committed value of the next step, until a root commitment hash is obtained.
 The root hash of the proof for `"<record-key>"` is hashed with the `"<store-key>"` to validate against the App Hash.
 
-This is not compatible with the `RootStore`, which stores all records in a single Merkle tree structure, and won't produce separate proofs for the store- and record-key. Ideally, the store-key component of the proof could just be omitted, and updated to use a "no-op" spec, so only the record-key is used. However, because the IBC verification code hardcodes the `"ibc"` prefix and applies it to the SDK proof as a separate element of the proof path, this isn't possible without a breaking change. Breaking this behavior would severely impact the Cosmos ecosystem which already widely adopts the IBC module, and updating it across the chains is a time consuming effort.
+This is not compatible with the `RootStore`, which stores all records in a single Merkle tree structure, and won't produce separate proofs for the store- and record-key. Ideally, the store-key component of the proof could just be omitted, and updated to use a "no-op" spec, so only the record-key is used. However, because the IBC verification code hardcodes the `"ibc"` prefix and applies it to the SDK proof as a separate element of the proof path, this isn't possible without a breaking change. Breaking this behavior would severely impact the Cosmos ecosystem which already widely adopts the IBC module. Requesting an update of the IBC module across the chains is a time consuming effort and not easily feasible.
 
-As a workaround, the `RootStore` will have to maintain two logically separate SMT-based stores: one for IBC state and one for everything else. A simple Merkle map containing these two store keys will act as a `MultiStore`-like index, and the final App hash will be the root hash of this index.
+As a workaround, the `RootStore` will have to use two separate SMTs (they could use the same underlying DB): one for IBC state and one for everything else. A simple Merkle map that reference these SMTs will act as a Merkle Tree to create a final App hash. The Merkle map is not stored in a DBs - it's constructed in the runtime.
 
-This workaround can be used until the IBC connection code is fully upgraded and supports single-element commitment proofs.
+The solution presented here can be used until the IBC module is fully upgraded to supports single-element commitment proofs.
 
 ### Optimization: compress module keys
 
@@ -213,6 +197,14 @@ for each k1, k2 \in {store.HuffmanCode(p): p \in StoreModuleKeys}
 ```
 
 NOTE: We need to assure that the codes won't change. Huffman Coding depends on the keys and its frequency - so we would need to generate the codes and then fix the mapping in a static variable.
+
+#### Alternatives
+
++ Single byte prefix
++ Double byte prefix
++ Varint prefix (varint is a simplified version of Huffman Coding without taking the frequency information into account).
+
+TODO: need to make decision about the key compression.
 
 ## Consequences
 

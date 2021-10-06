@@ -18,7 +18,7 @@ func RunCosmovisorCommand(args []string) error {
 		return nil
 	case IsVersionCommand(arg0):
 		PrintVersion()
-		return nil
+		return Run([]string{"version"})
 	case IsRunCommand(arg0):
 		return Run(args[1:])
 	}

@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -29,6 +30,7 @@ type Factory struct {
 	chainID            string
 	memo               string
 	fees               sdk.Coins
+	tip                *tx.Tip
 	gasPrices          sdk.DecCoins
 	signMode           signing.SignMode
 	simulateAndExecute bool
@@ -44,6 +46,10 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 		signMode = signing.SignMode_SIGN_MODE_DIRECT
 	case flags.SignModeLegacyAminoJSON:
 		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+	case flags.SignModeDirectAux:
+		signMode = signing.SignMode_SIGN_MODE_DIRECT_AUX
+	case flags.SignModeAminoAux:
+		signMode = signing.SignMode_SIGN_MODE_AMINO_AUX
 	}
 
 	accNum, _ := flagSet.GetUint64(flags.FlagAccountNumber)
@@ -72,6 +78,9 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 
 	feesStr, _ := flagSet.GetString(flags.FlagFees)
 	f = f.WithFees(feesStr)
+
+	tipsStr, _ := flagSet.GetString(flags.FlagTip)
+	f = f.WithTips(tipsStr)
 
 	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
 	f = f.WithGasPrices(gasPricesStr)
@@ -127,6 +136,19 @@ func (f Factory) WithFees(fees string) Factory {
 	}
 
 	f.fees = parsedFees
+	return f
+}
+
+// WithTips returns a copy of the Factory with an updated tip.
+func (f Factory) WithTips(tip string) Factory {
+	parsedTips, err := sdk.ParseCoinsNormalized(tip)
+	if err != nil {
+		panic(err)
+	}
+
+	f.tip = &tx.Tip{
+		Amount: parsedTips,
+	}
 	return f
 }
 
@@ -254,12 +276,27 @@ func (f Factory) PrintUnsignedTx(clientCtx client.Context, msgs ...sdk.Msg) erro
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n", GasEstimateResponse{GasEstimate: f.Gas()})
 	}
 
-	tx, err := f.BuildUnsignedTx(msgs...)
+	unsignedTx, err := f.BuildUnsignedTx(msgs...)
 	if err != nil {
 		return err
 	}
 
-	json, err := clientCtx.TxConfig.TxJSONEncoder()(tx.GetTx())
+	tipAmt := f.fees
+	if f.tip != nil {
+		tipAmt = f.tip.Amount
+	}
+	if f.SignMode() == signing.SignMode_SIGN_MODE_AMINO_AUX {
+		unsignedTx.SetTip(&tx.Tip{
+			Amount: tipAmt,
+		})
+	} else if f.SignMode() == signing.SignMode_SIGN_MODE_DIRECT_AUX {
+		unsignedTx.SetTip(&tx.Tip{
+			Tipper: clientCtx.FromAddress.String(),
+			Amount: tipAmt,
+		})
+	}
+
+	json, err := clientCtx.TxConfig.TxJSONEncoder()(unsignedTx.GetTx())
 	if err != nil {
 		return err
 	}

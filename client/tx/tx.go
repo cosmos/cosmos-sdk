@@ -66,6 +66,13 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n", GasEstimateResponse{GasEstimate: txf.Gas()})
 	}
 
+	if txf.SignMode() == signing.SignMode_SIGN_MODE_DIRECT_AUX ||
+		txf.SignMode() == signing.SignMode_SIGN_MODE_AMINO_AUX {
+		if !clientCtx.GenerateOnly {
+			return sdkerrors.Wrap(sdkerrors.ErrNotSupported, "Signing in {DIRECT|AMINO}_AUX mode is required --generate-only flag")
+		}
+	}
+
 	if clientCtx.Simulate {
 		return nil
 	}
@@ -292,4 +299,54 @@ type GasEstimateResponse struct {
 
 func (gr GasEstimateResponse) String() string {
 	return fmt.Sprintf("gas estimate: %d", gr.GasEstimate)
+}
+
+func FeePayerTipTxBuilder(
+	clientCtx client.Context,
+	feePayerPriv cryptotypes.PrivKey, signMode signing.SignMode,
+	fee tx.Fee, tipTx tx.TipTx, accNum, accSeq uint64, chainID string,
+) (client.TxBuilder, error) {
+	txBuilder := clientCtx.TxConfig.NewTxBuilder()
+	err := txBuilder.SetMsgs(tipTx.GetMsgs()...)
+	if err != nil {
+		return nil, err
+	}
+	txBuilder.SetFeePayer(sdk.AccAddress(feePayerPriv.PubKey().Address()))
+	txBuilder.SetFeeAmount(fee.Amount)
+	txBuilder.SetGasLimit(fee.GasLimit)
+	txBuilder.SetTip(tipTx.GetTip())
+
+	// Calling SetSignatures with empty sig to populate AuthInfo.
+	tipperSigsV2, err := tipTx.(authsigning.SigVerifiableTx).GetSignaturesV2()
+	if err != nil {
+		return nil, err
+	}
+	feePayerSigV2 := signing.SignatureV2{
+		PubKey: feePayerPriv.PubKey(),
+		Data: &signing.SingleSignatureData{
+			SignMode:  signMode,
+			Signature: nil,
+		}}
+	sigsV2 := append(tipperSigsV2, feePayerSigV2)
+	txBuilder.SetSignatures(sigsV2...)
+
+	// Actually sign the data.
+	signerData := authsigning.SignerData{
+		ChainID:       chainID,
+		AccountNumber: accNum,
+		Sequence:      accSeq,
+	}
+	feePayerSigV2, err = SignWithPrivKey(
+		signMode, signerData,
+		txBuilder, feePayerPriv, clientCtx.TxConfig, accSeq)
+	if err != nil {
+		return nil, err
+	}
+	sigsV2 = append(tipperSigsV2, feePayerSigV2)
+	err = txBuilder.SetSignatures(sigsV2...)
+	if err != nil {
+		return nil, err
+	}
+
+	return txBuilder, nil
 }

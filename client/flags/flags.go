@@ -35,6 +35,10 @@ const (
 	SignModeDirect = "direct"
 	// SignModeLegacyAminoJSON is the value of the --sign-mode flag for SIGN_MODE_LEGACY_AMINO_JSON
 	SignModeLegacyAminoJSON = "amino-json"
+	// SignModeDirectAux is the value of the --sign-mode flag for SIGN_MODE_DIRECT_AUX
+	SignModeDirectAux = "direct-aux"
+	// SignModeAminoAux is the value of the --sign-mode flag for SIGN_MODE_AMINO_AUX
+	SignModeAminoAux = "amino-aux"
 )
 
 // List of CLI flags
@@ -72,6 +76,7 @@ const (
 	FlagKeyAlgorithm     = "algo"
 	FlagFeeAccount       = "fee-account"
 	FlagReverse          = "reverse"
+	FlagTip              = "tip"
 
 	// Tendermint logging flags
 	FlagLogLevel  = "log_level"
@@ -110,9 +115,10 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().Bool(FlagOffline, false, "Offline mode (does not allow any online functionality)")
 	cmd.Flags().BoolP(FlagSkipConfirmation, "y", false, "Skip tx broadcasting prompt confirmation")
 	cmd.Flags().String(FlagKeyringBackend, DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test|memory)")
-	cmd.Flags().String(FlagSignMode, "", "Choose sign mode (direct|amino-json), this is an advanced feature")
+	cmd.Flags().String(FlagSignMode, "", "Choose sign mode (direct|amino-json|direct-aux|amino-aux), this is an advanced feature")
 	cmd.Flags().Uint64(FlagTimeoutHeight, 0, "Set a block timeout height to prevent the tx from being committed past a certain height")
 	cmd.Flags().String(FlagFeeAccount, "", "Fee account pays fees for the transaction instead of deducting from the signer")
+	cmd.Flags().String(FlagTip, "", "Tip amount for executing the tx; eg: 1000uatom")
 
 	// --gas can accept integers and "auto"
 	cmd.Flags().String(FlagGas, "", fmt.Sprintf("gas limit to set per-transaction; set to %q to calculate sufficient gas automatically (default %d)", GasFlagAuto, DefaultGasLimit))

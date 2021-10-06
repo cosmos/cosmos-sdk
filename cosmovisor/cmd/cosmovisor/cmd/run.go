@@ -1,14 +1,12 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
-	"github.com/cosmos/cosmos-sdk/cosmovisor/errors"
 )
 
-// HelpArgs are the strings that indicate a cosmovisor run command.
+// RunArgs are the strings that indicate a cosmovisor run command.
 var RunArgs = []string{"run"}
 
 // IsRunCommand checks if the given args indicate that a run is desired.
@@ -19,19 +17,10 @@ func IsRunCommand(args []string) bool {
 // Run runs the configured program and monitors it for upgrades.
 func Run(args []string) error {
 	cfg, cerr := cosmovisor.GetConfigFromEnv()
+	cosmovisor.LogConfigOrError(cosmovisor.Logger, cfg, cerr)
 	if cerr != nil {
-		switch err := cerr.(type) {
-		case *errors.MultiError:
-			cosmovisor.Logger.Error().Msg("multiple configuration errors found:")
-			for i, e := range err.GetErrors() {
-				cosmovisor.Logger.Error().Err(e).Msg(fmt.Sprintf("  %d:", i+1))
-			}
-		default:
-			cosmovisor.Logger.Error().Err(err).Msg("configuration error:")
-		}
 		return cerr
 	}
-	cosmovisor.Logger.Info().Msg("Configuration is valid:\n" + cfg.DetailString())
 	launcher, err := cosmovisor.NewLauncher(cfg)
 	if err != nil {
 		return err

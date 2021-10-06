@@ -214,6 +214,12 @@ NOTE: We need to assure that the codes won't change. Huffman Coding depends on t
 
 TODO: need to make decision about the key compression.
 
+### Optimization: SS key compression
+
+Some objects may be saved with key, which contains a Protobuf message type. Such keys are long. We could save a lot of space if we can map Protobuf message types in varints.
+
+TODO: finalize this or move to another ADR.
+
 ## Consequences
 
 ### Backwards Compatibility

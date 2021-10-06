@@ -356,18 +356,22 @@
 - [cosmos/genutil/v1beta1/genesis.proto](#cosmos/genutil/v1beta1/genesis.proto)
     - [GenesisState](#cosmos.genutil.v1beta1.GenesisState)
   
-- [cosmos/gov/v1/gov.proto](#cosmos/gov/v1/gov.proto)
-    - [Deposit](#cosmos.gov.v1.Deposit)
-    - [DepositParams](#cosmos.gov.v1.DepositParams)
-    - [Proposal](#cosmos.gov.v1.Proposal)
-    - [TallyParams](#cosmos.gov.v1.TallyParams)
-    - [TallyResult](#cosmos.gov.v1.TallyResult)
-    - [Vote](#cosmos.gov.v1.Vote)
-    - [VotingParams](#cosmos.gov.v1.VotingParams)
-    - [WeightedVoteOption](#cosmos.gov.v1.WeightedVoteOption)
+- [cosmos/gov/v1beta1/gov.proto](#cosmos/gov/v1beta1/gov.proto)
+    - [Deposit](#cosmos.gov.v1beta1.Deposit)
+    - [DepositParams](#cosmos.gov.v1beta1.DepositParams)
+    - [Proposal](#cosmos.gov.v1beta1.Proposal)
+    - [TallyParams](#cosmos.gov.v1beta1.TallyParams)
+    - [TallyResult](#cosmos.gov.v1beta1.TallyResult)
+    - [TextProposal](#cosmos.gov.v1beta1.TextProposal)
+    - [Vote](#cosmos.gov.v1beta1.Vote)
+    - [VotingParams](#cosmos.gov.v1beta1.VotingParams)
+    - [WeightedVoteOption](#cosmos.gov.v1beta1.WeightedVoteOption)
   
-    - [ProposalStatus](#cosmos.gov.v1.ProposalStatus)
-    - [VoteOption](#cosmos.gov.v1.VoteOption)
+    - [ProposalStatus](#cosmos.gov.v1beta1.ProposalStatus)
+    - [VoteOption](#cosmos.gov.v1beta1.VoteOption)
+  
+- [cosmos/gov/v1/gov.proto](#cosmos/gov/v1/gov.proto)
+    - [Proposal](#cosmos.gov.v1.Proposal)
   
 - [cosmos/gov/v1/genesis.proto](#cosmos/gov/v1/genesis.proto)
     - [GenesisState](#cosmos.gov.v1.GenesisState)
@@ -405,6 +409,9 @@
     - [MsgVoteWeightedResponse](#cosmos.gov.v1.MsgVoteWeightedResponse)
   
     - [Msg](#cosmos.gov.v1.Msg)
+  
+- [cosmos/gov/v1beta1/genesis.proto](#cosmos/gov/v1beta1/genesis.proto)
+    - [GenesisState](#cosmos.gov.v1beta1.GenesisState)
   
 - [cosmos/group/v1beta1/types.proto](#cosmos/group/v1beta1/types.proto)
     - [GroupAccountInfo](#cosmos.group.v1beta1.GroupAccountInfo)
@@ -5288,14 +5295,14 @@ GenesisState defines the raw genesis transaction in JSON.
 
 
 
-<a name="cosmos/gov/v1/gov.proto"></a>
+<a name="cosmos/gov/v1beta1/gov.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## cosmos/gov/v1/gov.proto
+## cosmos/gov/v1beta1/gov.proto
 
 
 
-<a name="cosmos.gov.v1.Deposit"></a>
+<a name="cosmos.gov.v1beta1.Deposit"></a>
 
 ### Deposit
 Deposit defines an amount deposited by an account address to an active
@@ -5313,7 +5320,7 @@ proposal.
 
 
 
-<a name="cosmos.gov.v1.DepositParams"></a>
+<a name="cosmos.gov.v1beta1.DepositParams"></a>
 
 ### DepositParams
 DepositParams defines the params for deposits on governance proposals.
@@ -5329,7 +5336,7 @@ DepositParams defines the params for deposits on governance proposals.
 
 
 
-<a name="cosmos.gov.v1.Proposal"></a>
+<a name="cosmos.gov.v1beta1.Proposal"></a>
 
 ### Proposal
 Proposal defines the core field members of a governance proposal.
@@ -5338,9 +5345,9 @@ Proposal defines the core field members of a governance proposal.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `proposal_id` | [uint64](#uint64) |  |  |
-| `messages` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
-| `status` | [ProposalStatus](#cosmos.gov.v1.ProposalStatus) |  |  |
-| `final_tally_result` | [TallyResult](#cosmos.gov.v1.TallyResult) |  |  |
+| `content` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `status` | [ProposalStatus](#cosmos.gov.v1beta1.ProposalStatus) |  |  |
+| `final_tally_result` | [TallyResult](#cosmos.gov.v1beta1.TallyResult) |  |  |
 | `submit_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `deposit_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `total_deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
@@ -5352,7 +5359,7 @@ Proposal defines the core field members of a governance proposal.
 
 
 
-<a name="cosmos.gov.v1.TallyParams"></a>
+<a name="cosmos.gov.v1beta1.TallyParams"></a>
 
 ### TallyParams
 TallyParams defines the params for tallying votes on governance proposals.
@@ -5369,7 +5376,7 @@ TallyParams defines the params for tallying votes on governance proposals.
 
 
 
-<a name="cosmos.gov.v1.TallyResult"></a>
+<a name="cosmos.gov.v1beta1.TallyResult"></a>
 
 ### TallyResult
 TallyResult defines a standard tally for a governance proposal.
@@ -5387,7 +5394,24 @@ TallyResult defines a standard tally for a governance proposal.
 
 
 
-<a name="cosmos.gov.v1.Vote"></a>
+<a name="cosmos.gov.v1beta1.TextProposal"></a>
+
+### TextProposal
+TextProposal defines a standard text proposal whose changes need to be
+manually updated in case of approval.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.gov.v1beta1.Vote"></a>
 
 ### Vote
 Vote defines a vote on a governance proposal.
@@ -5398,15 +5422,15 @@ A Vote consists of a proposal ID, the voter, and the vote option.
 | ----- | ---- | ----- | ----------- |
 | `proposal_id` | [uint64](#uint64) |  |  |
 | `voter` | [string](#string) |  |  |
-| `option` | [VoteOption](#cosmos.gov.v1.VoteOption) |  | **Deprecated.** Deprecated: Prefer to use `options` instead. This field is set in queries if and only if `len(options) == 1` and that option has weight 1. In all other cases, this field will default to VOTE_OPTION_UNSPECIFIED. |
-| `options` | [WeightedVoteOption](#cosmos.gov.v1.WeightedVoteOption) | repeated |  |
+| `option` | [VoteOption](#cosmos.gov.v1beta1.VoteOption) |  | **Deprecated.** Deprecated: Prefer to use `options` instead. This field is set in queries if and only if `len(options) == 1` and that option has weight 1. In all other cases, this field will default to VOTE_OPTION_UNSPECIFIED. |
+| `options` | [WeightedVoteOption](#cosmos.gov.v1beta1.WeightedVoteOption) | repeated |  |
 
 
 
 
 
 
-<a name="cosmos.gov.v1.VotingParams"></a>
+<a name="cosmos.gov.v1beta1.VotingParams"></a>
 
 ### VotingParams
 VotingParams defines the params for voting on governance proposals.
@@ -5421,7 +5445,7 @@ VotingParams defines the params for voting on governance proposals.
 
 
 
-<a name="cosmos.gov.v1.WeightedVoteOption"></a>
+<a name="cosmos.gov.v1beta1.WeightedVoteOption"></a>
 
 ### WeightedVoteOption
 WeightedVoteOption defines a unit of vote for vote split.
@@ -5429,7 +5453,7 @@ WeightedVoteOption defines a unit of vote for vote split.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `option` | [VoteOption](#cosmos.gov.v1.VoteOption) |  |  |
+| `option` | [VoteOption](#cosmos.gov.v1beta1.VoteOption) |  |  |
 | `weight` | [string](#string) |  |  |
 
 
@@ -5439,7 +5463,7 @@ WeightedVoteOption defines a unit of vote for vote split.
  <!-- end messages -->
 
 
-<a name="cosmos.gov.v1.ProposalStatus"></a>
+<a name="cosmos.gov.v1beta1.ProposalStatus"></a>
 
 ### ProposalStatus
 ProposalStatus enumerates the valid statuses of a proposal.
@@ -5455,7 +5479,7 @@ ProposalStatus enumerates the valid statuses of a proposal.
 
 
 
-<a name="cosmos.gov.v1.VoteOption"></a>
+<a name="cosmos.gov.v1beta1.VoteOption"></a>
 
 ### VoteOption
 VoteOption enumerates the valid vote options for a given governance proposal.
@@ -5468,6 +5492,45 @@ VoteOption enumerates the valid vote options for a given governance proposal.
 | VOTE_OPTION_NO | 3 | VOTE_OPTION_NO defines a no vote option. |
 | VOTE_OPTION_NO_WITH_VETO | 4 | VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option. |
 
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/gov/v1/gov.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/gov/v1/gov.proto
+
+
+
+<a name="cosmos.gov.v1.Proposal"></a>
+
+### Proposal
+Proposal defines the core field members of a governance proposal.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal_id` | [uint64](#uint64) |  |  |
+| `messages` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
+| `status` | [cosmos.gov.v1beta1.ProposalStatus](#cosmos.gov.v1beta1.ProposalStatus) |  |  |
+| `final_tally_result` | [cosmos.gov.v1beta1.TallyResult](#cosmos.gov.v1beta1.TallyResult) |  |  |
+| `submit_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `deposit_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `total_deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `voting_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `voting_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+
+
+
+
+
+ <!-- end messages -->
 
  <!-- end enums -->
 
@@ -5493,12 +5556,12 @@ GenesisState defines the gov module's genesis state.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `starting_proposal_id` | [uint64](#uint64) |  | starting_proposal_id is the ID of the starting proposal. |
-| `deposits` | [Deposit](#cosmos.gov.v1.Deposit) | repeated | deposits defines all the deposits present at genesis. |
-| `votes` | [Vote](#cosmos.gov.v1.Vote) | repeated | votes defines all the votes present at genesis. |
+| `deposits` | [cosmos.gov.v1beta1.Deposit](#cosmos.gov.v1beta1.Deposit) | repeated | deposits defines all the deposits present at genesis. |
+| `votes` | [cosmos.gov.v1beta1.Vote](#cosmos.gov.v1beta1.Vote) | repeated | votes defines all the votes present at genesis. |
 | `proposals` | [Proposal](#cosmos.gov.v1.Proposal) | repeated | proposals defines all the proposals present at genesis. |
-| `deposit_params` | [DepositParams](#cosmos.gov.v1.DepositParams) |  | params defines all the paramaters of related to deposit. |
-| `voting_params` | [VotingParams](#cosmos.gov.v1.VotingParams) |  | params defines all the paramaters of related to voting. |
-| `tally_params` | [TallyParams](#cosmos.gov.v1.TallyParams) |  | params defines all the paramaters of related to tally. |
+| `deposit_params` | [cosmos.gov.v1beta1.DepositParams](#cosmos.gov.v1beta1.DepositParams) |  | params defines all the paramaters of related to deposit. |
+| `voting_params` | [cosmos.gov.v1beta1.VotingParams](#cosmos.gov.v1beta1.VotingParams) |  | params defines all the paramaters of related to voting. |
+| `tally_params` | [cosmos.gov.v1beta1.TallyParams](#cosmos.gov.v1beta1.TallyParams) |  | params defines all the paramaters of related to tally. |
 
 
 
@@ -5545,7 +5608,7 @@ QueryDepositResponse is the response type for the Query/Deposit RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `deposit` | [Deposit](#cosmos.gov.v1.Deposit) |  | deposit defines the requested deposit. |
+| `deposit` | [cosmos.gov.v1beta1.Deposit](#cosmos.gov.v1beta1.Deposit) |  | deposit defines the requested deposit. |
 
 
 
@@ -5576,7 +5639,7 @@ QueryDepositsResponse is the response type for the Query/Deposits RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `deposits` | [Deposit](#cosmos.gov.v1.Deposit) | repeated |  |
+| `deposits` | [cosmos.gov.v1beta1.Deposit](#cosmos.gov.v1beta1.Deposit) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
 
 
@@ -5607,9 +5670,9 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `voting_params` | [VotingParams](#cosmos.gov.v1.VotingParams) |  | voting_params defines the parameters related to voting. |
-| `deposit_params` | [DepositParams](#cosmos.gov.v1.DepositParams) |  | deposit_params defines the parameters related to deposit. |
-| `tally_params` | [TallyParams](#cosmos.gov.v1.TallyParams) |  | tally_params defines the parameters related to tally. |
+| `voting_params` | [cosmos.gov.v1beta1.VotingParams](#cosmos.gov.v1beta1.VotingParams) |  | voting_params defines the parameters related to voting. |
+| `deposit_params` | [cosmos.gov.v1beta1.DepositParams](#cosmos.gov.v1beta1.DepositParams) |  | deposit_params defines the parameters related to deposit. |
+| `tally_params` | [cosmos.gov.v1beta1.TallyParams](#cosmos.gov.v1beta1.TallyParams) |  | tally_params defines the parameters related to tally. |
 
 
 
@@ -5654,7 +5717,7 @@ QueryProposalsRequest is the request type for the Query/Proposals RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `proposal_status` | [ProposalStatus](#cosmos.gov.v1.ProposalStatus) |  | proposal_status defines the status of the proposals. |
+| `proposal_status` | [cosmos.gov.v1beta1.ProposalStatus](#cosmos.gov.v1beta1.ProposalStatus) |  | proposal_status defines the status of the proposals. |
 | `voter` | [string](#string) |  | voter defines the voter address for the proposals. |
 | `depositor` | [string](#string) |  | depositor defines the deposit addresses from the proposals. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
@@ -5704,7 +5767,7 @@ QueryTallyResultResponse is the response type for the Query/Tally RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `tally` | [TallyResult](#cosmos.gov.v1.TallyResult) |  | tally defines the requested tally. |
+| `tally` | [cosmos.gov.v1beta1.TallyResult](#cosmos.gov.v1beta1.TallyResult) |  | tally defines the requested tally. |
 
 
 
@@ -5735,7 +5798,7 @@ QueryVoteResponse is the response type for the Query/Vote RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `vote` | [Vote](#cosmos.gov.v1.Vote) |  | vote defined the queried vote. |
+| `vote` | [cosmos.gov.v1beta1.Vote](#cosmos.gov.v1beta1.Vote) |  | vote defined the queried vote. |
 
 
 
@@ -5766,7 +5829,7 @@ QueryVotesResponse is the response type for the Query/Votes RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `votes` | [Vote](#cosmos.gov.v1.Vote) | repeated | votes defined the queried votes. |
+| `votes` | [cosmos.gov.v1beta1.Vote](#cosmos.gov.v1beta1.Vote) | repeated | votes defined the queried votes. |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
 
 
@@ -5904,7 +5967,7 @@ MsgVote defines a message to cast a vote.
 | ----- | ---- | ----- | ----------- |
 | `proposal_id` | [uint64](#uint64) |  |  |
 | `voter` | [string](#string) |  |  |
-| `option` | [VoteOption](#cosmos.gov.v1.VoteOption) |  |  |
+| `option` | [cosmos.gov.v1beta1.VoteOption](#cosmos.gov.v1beta1.VoteOption) |  |  |
 
 
 
@@ -5931,7 +5994,7 @@ MsgVoteWeighted defines a message to cast a vote.
 | ----- | ---- | ----- | ----------- |
 | `proposal_id` | [uint64](#uint64) |  |  |
 | `voter` | [string](#string) |  |  |
-| `options` | [WeightedVoteOption](#cosmos.gov.v1.WeightedVoteOption) | repeated |  |
+| `options` | [cosmos.gov.v1beta1.WeightedVoteOption](#cosmos.gov.v1beta1.WeightedVoteOption) | repeated |  |
 
 
 
@@ -5966,6 +6029,43 @@ Msg defines the gov Msg service.
 | `VoteWeighted` | [MsgVoteWeighted](#cosmos.gov.v1.MsgVoteWeighted) | [MsgVoteWeightedResponse](#cosmos.gov.v1.MsgVoteWeightedResponse) | VoteWeighted defines a method to add a weighted vote on a specific proposal. | |
 | `Deposit` | [MsgDeposit](#cosmos.gov.v1.MsgDeposit) | [MsgDepositResponse](#cosmos.gov.v1.MsgDepositResponse) | Deposit defines a method to add deposit on a specific proposal. | |
 | `Signal` | [MsgSignal](#cosmos.gov.v1.MsgSignal) | [MsgSignalResponse](#cosmos.gov.v1.MsgSignalResponse) | Signal is a basic governance proposal message which has no functionality but is used to gather signal on a certain intention. | |
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/gov/v1beta1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/gov/v1beta1/genesis.proto
+
+
+
+<a name="cosmos.gov.v1beta1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the gov module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `starting_proposal_id` | [uint64](#uint64) |  | starting_proposal_id is the ID of the starting proposal. |
+| `deposits` | [Deposit](#cosmos.gov.v1beta1.Deposit) | repeated | deposits defines all the deposits present at genesis. |
+| `votes` | [Vote](#cosmos.gov.v1beta1.Vote) | repeated | votes defines all the votes present at genesis. |
+| `proposals` | [Proposal](#cosmos.gov.v1beta1.Proposal) | repeated | proposals defines all the proposals present at genesis. |
+| `deposit_params` | [DepositParams](#cosmos.gov.v1beta1.DepositParams) |  | params defines all the paramaters of related to deposit. |
+| `voting_params` | [VotingParams](#cosmos.gov.v1beta1.VotingParams) |  | params defines all the paramaters of related to voting. |
+| `tally_params` | [TallyParams](#cosmos.gov.v1beta1.TallyParams) |  | params defines all the paramaters of related to tally. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
 
  <!-- end services -->
 

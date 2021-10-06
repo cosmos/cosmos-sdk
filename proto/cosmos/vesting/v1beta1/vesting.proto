@@ -14,18 +14,12 @@ message BaseVestingAccount {
   option (gogoproto.goproto_stringer) = false;
 
   cosmos.auth.v1beta1.BaseAccount base_account       = 1 [(gogoproto.embed) = true];
-  repeated cosmos.base.v1beta1.Coin original_vesting = 2 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
-  repeated cosmos.base.v1beta1.Coin delegated_free = 3 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
-  repeated cosmos.base.v1beta1.Coin delegated_vesting = 4 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  repeated cosmos.base.v1beta1.Coin original_vesting = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin delegated_free = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin delegated_vesting = 4
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   int64 end_time = 5;
 }
 
@@ -66,7 +60,7 @@ message PeriodicVestingAccount {
 
   BaseVestingAccount base_vesting_account = 1 [(gogoproto.embed) = true];
   int64              start_time           = 2;
-  repeated Period vesting_periods = 3 [(gogoproto.nullable) = false];
+  repeated Period    vesting_periods      = 3 [(gogoproto.nullable) = false];
 }
 
 // PermanentLockedAccount implements the VestingAccount interface. It does

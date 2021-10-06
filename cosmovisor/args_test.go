@@ -454,6 +454,18 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 			expectedCfg:      newConfig(absPath, "testname", false, false, false, 987, 1),
 			expectedErrCount: 0,
 		},
+		{
+			name:             "poll interval 1s",
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "1s", "1"},
+			expectedCfg:      newConfig(absPath, "testname", false, false, false, 1000, 1),
+			expectedErrCount: 0,
+		},
+		{
+			name:             "poll interval -3m",
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "-3m", "1"},
+			expectedCfg:      nil,
+			expectedErrCount: 1,
+		},
 		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval, EnvPreupgradeMaxRetries
 		{
 			name:             "prepupgrade max retries bad",
@@ -512,7 +524,7 @@ func (s *argsTestSuite) TestLogConfigOrError() {
 		PreupgradeMaxRetries:  20,
 	}
 	errNormal := fmt.Errorf("this is a single error")
-	errs := []error {
+	errs := []error{
 		fmt.Errorf("multi-error error 1"),
 		fmt.Errorf("multi-error error 2"),
 		fmt.Errorf("multi-error error 3"),

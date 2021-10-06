@@ -146,13 +146,18 @@ func GetConfigFromEnv() (*Config, error) {
 
 	interval := os.Getenv(EnvInterval)
 	if interval != "" {
-		switch i, e := strconv.ParseUint(interval, 10, 32); {
-		case e != nil:
-			errs = append(errs, fmt.Errorf("invalid %s: %w", EnvInterval, err))
-		case i == 0:
-			errs = append(errs, fmt.Errorf("invalid %s: cannot be 0", EnvInterval))
-		default:
-			cfg.PollInterval = time.Millisecond * time.Duration(i)
+		var intervalUInt uint64
+		intervalUInt, err = strconv.ParseUint(interval, 10, 32)
+		if err == nil {
+			cfg.PollInterval = time.Millisecond * time.Duration(intervalUInt)
+		} else {
+			cfg.PollInterval, err = time.ParseDuration(interval)
+		}
+		switch {
+		case err != nil:
+			errs = append(errs, fmt.Errorf("invalid %s: could not parse \"%s\" into either a duration or uint (milliseconds)", EnvInterval, interval))
+		case cfg.PollInterval <= 0:
+			errs = append(errs, fmt.Errorf("invalid %s: must be greater than 0", EnvInterval))
 		}
 	} else {
 		cfg.PollInterval = 300 * time.Millisecond

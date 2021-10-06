@@ -1,6 +1,7 @@
 # Contributing
 
 - [Contributing](#contributing)
+    - [Dev Calls](#dev-calls)
     - [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
     - [Development Procedure](#development-procedure)
         - [Testing](#testing)
@@ -12,8 +13,6 @@
     - [Protobuf](#protobuf)
     - [Branching Model and Release](#branching-model-and-release)
         - [PR Targeting](#pr-targeting)
-        - [Major Release Procedure](#major-release-procedure)
-        - [Patch Release Procedure](#patch-release-procedure)
     - [Code Owner Membership](#code-owner-membership)
     - [Concept & Feature Approval Process](#concept--feature-approval-process)
 
@@ -43,6 +42,23 @@ contributors, the general procedure for contributing has been established:
 not required to an open issue to submit a PR, but be aware that for more complex
 problems/features, if a PR is opened before an adequate design discussion has
 taken place in a GitHub issue, that PR runs a high likelihood of being rejected.
+
+## Teams Dev Calls
+
+The Cosmos SDK team is fully decentralized and self organized.
+
+The developers are organized in working group which are listed on [Github Issue](https://github.com/cosmos/cosmos-sdk/issues/9058) (pinned at the top of the [issues list](https://github.com/cosmos/cosmos-sdk/issues)).
+
+The important development announcements are shared on [Discord](https://discord.com/invite/cosmosnetwork) in the \#dev-announcements channel.
+
+To synchronize we have few major meetings:
++ Architecture calls: bi-weekly on Fridays at 14:00 UTC (alternating with the grooming meeting below).
++ Grooming / Planning: bi-weekly on Fridays at 14:00 UTC (alternating with the architecture meeting above).
++ Cosmos Community SDK Development Call every last Wednesday at 17:00 UTC.
++ Cosmos Roadmap Prioritization every 4 weeks on Tuesday at 15:00 (limited participation).
+
+If you would like to join one of those calls, then please contact us on [Discord](https://discord.com/invite/cosmosnetwork) or reach out directly to Cory Levinson from Regen Network.
+
 
 ## Architecture Decision Records (ADR)
 

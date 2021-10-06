@@ -55,17 +55,29 @@ If you want to get started quickly and learn how to build on top of Cosmos SDK, 
 
 For more information, see the [Cosmos SDK Documentation](./docs/).
 
-## Cosmos Hub Mainnet
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for details how to contribute and participate in our [dev calls](./CONTRIBUTE.md#dev-calls).
+If you want to follow the updates or learn more about the latest design then join our [Discord](https://discord.com/invite/cosmosnetwork).
+
+## Tools ans Frameworks
+
+Cosmos ecosystem is wast. We will only make few notable mentions here.
+
++ [Tools](https://v1.cosmos.network/tools): notable frameworks and modules.
++ [CosmJS](https://github.com/cosmos/cosmjs): the Swiss Army knife to power JavaScript based client solutions.
+
+### Cosmos Hub Mainnet
 
 The Cosmos Hub application, `gaia`, has moved to its own [cosmos/gaia repository](https://github.com/cosmos/gaia). Go there to join the Cosmos Hub mainnet and more.
 
-## Inter-Blockchain Communication (IBC)
+### Inter-Blockchain Communication (IBC)
 
 The IBC module for the Cosmos SDK has moved to its own [cosmos/ibc-go repository](https://github.com/cosmos/ibc-go). Go there to build and integrate with the IBC module.
 
-## Starport
+### Starport
 
-Starport is the all-in-one platform to build, launch, and maintain any crypto application on a sovereign and secured blockchain. If you are building a new app or a new module, use [Starport](https://github.com/tendermint/starport) to get started and speed up development. 
+Starport is the all-in-one platform to build, launch, and maintain any crypto application on a sovereign and secured blockchain. If you are building a new app or a new module, use [Starport](https://github.com/tendermint/starport) to get started and speed up development.
 
 ## Disambiguation
 

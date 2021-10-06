@@ -10,8 +10,8 @@ import (
 var RunArgs = []string{"run"}
 
 // IsRunCommand checks if the given args indicate that a run is desired.
-func IsRunCommand(args []string) bool {
-	return len(args) > 0 && isOneOf(args[0], RunArgs)
+func IsRunCommand(arg string) bool {
+	return isOneOf(arg, RunArgs)
 }
 
 // Run runs the configured program and monitors it for upgrades.

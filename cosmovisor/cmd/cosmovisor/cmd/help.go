@@ -16,9 +16,8 @@ var HelpArgs = []string{"help", "--help", "-h"}
 // ShouldGiveHelp checks the env and provided args to see if help is needed or being requested.
 // Help is needed if either cosmovisor.EnvName and/or cosmovisor.EnvHome env vars aren't set.
 // Help is requested if the first arg is "help", "--help", or "-h".
-func ShouldGiveHelp(args []string) bool {
-	return (len(args) > 0 && isOneOf(args[0], HelpArgs)) ||
-		len(os.Getenv(cosmovisor.EnvName)) == 0 || len(os.Getenv(cosmovisor.EnvHome)) == 0
+func ShouldGiveHelp(arg string) bool {
+	return isOneOf(arg, HelpArgs) || len(os.Getenv(cosmovisor.EnvName)) == 0 || len(os.Getenv(cosmovisor.EnvHome)) == 0
 }
 
 // DoHelp outputs help text

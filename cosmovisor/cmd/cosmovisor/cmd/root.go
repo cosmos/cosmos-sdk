@@ -8,14 +8,18 @@ import (
 
 // RunCosmovisorCommand executes the desired cosmovisor command.
 func RunCosmovisorCommand(args []string) error {
+	arg0 := ""
+	if len(args) > 0 {
+		arg0 = args[0]
+	}
 	switch {
-	case ShouldGiveHelp(args):
+	case ShouldGiveHelp(arg0):
 		DoHelp()
 		return nil
-	case IsVersionCommand(args):
+	case IsVersionCommand(arg0):
 		PrintVersion()
 		return nil
-	case IsRunCommand(args):
+	case IsRunCommand(arg0):
 		return Run(args[1:])
 	}
 	warnRun := func() {

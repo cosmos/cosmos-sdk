@@ -294,6 +294,18 @@ func (d Dec) Mul(d2 Dec) Dec {
 	return Dec{chopped}
 }
 
+// mutable multiplication
+func (d Dec) MulMut(d2 Dec) Dec {
+	d.i.Mul(d.i, d2.i)
+	chopped := chopPrecisionAndRound(d.i)
+
+	if chopped.BitLen() > 255+DecimalPrecisionBits {
+		panic("Int overflow")
+	}
+	*d.i = *chopped
+	return d
+}
+
 // multiplication truncate
 func (d Dec) MulTruncate(d2 Dec) Dec {
 	mul := new(big.Int).Mul(d.i, d2.i)

@@ -5,7 +5,7 @@
 - 2019-11-06: Initial Draft
 - 2020-10-12: Updated Draft
 - 2020-11-13: Accepted
-- 2020-05-06: proto API updates, use `sdk.Msg` instead of `sdk.ServiceMsg` (the latter concept was removed from SDK)
+- 2020-05-06: proto API updates, use `sdk.Msg` instead of `sdk.ServiceMsg` (the latter concept was removed from Cosmos SDK)
 
 ## Status
 

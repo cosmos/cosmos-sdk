@@ -8,7 +8,7 @@ order: 7
 
 ## Pre-requisite Readings
 
-- [Introduction to SDK Modules](./intro.md) {prereq}
+- [Introduction to Cosmos SDK Modules](./intro.md) {prereq}
 
 ## Motivation
 

@@ -93,6 +93,11 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		clientCtx = clientCtx.WithOutputFormat(output)
 	}
 
+	if clientCtx.HomeDir == "" || flagSet.Changed(flags.FlagHome) {
+		homeDir, _ := flagSet.GetString(flags.FlagHome)
+		clientCtx = clientCtx.WithHomeDir(homeDir)
+	}
+
 	if !clientCtx.Simulate || flagSet.Changed(flags.FlagDryRun) {
 		dryRun, _ := flagSet.GetBool(flags.FlagDryRun)
 		clientCtx = clientCtx.WithSimulation(dryRun)
@@ -247,17 +252,6 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 	}
 
 	return clientCtx, nil
-}
-
-// ReadHomeFlag checks if home flag is changed. If this is a case, we update
-// HomeDir field of Client Context.
-func ReadHomeFlag(clientCtx Context, cmd *cobra.Command) Context {
-	if cmd.Flags().Changed(flags.FlagHome) {
-		rootDir, _ := cmd.Flags().GetString(flags.FlagHome)
-		clientCtx = clientCtx.WithHomeDir(rootDir)
-	}
-
-	return clientCtx
 }
 
 // GetClientQueryContext returns a Context from a command with fields set based on flags

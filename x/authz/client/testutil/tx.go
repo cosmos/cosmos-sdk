@@ -45,9 +45,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	val := s.network.Validators[0]
 	s.grantee = make([]sdk.AccAddress, 2)
 
+	// Send some funds to the new account.
 	// Create new account in the keyring.
 	s.grantee[0] = s.createAccount("grantee1")
-	// Send some funds to the new account.
 	s.msgSendExec(s.grantee[0])
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -84,9 +84,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 func (s *IntegrationTestSuite) createAccount(uid string) sdk.AccAddress {
 	val := s.network.Validators[0]
 	// Create new account in the keyring.
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic(uid, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	k, _, err := val.ClientCtx.Keyring.NewMnemonic(uid, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
-	return sdk.AccAddress(info.GetPubKey().Address())
+
+	addr, err := k.GetAddress()
+	s.Require().NoError(err)
+
+	return addr
 }
 
 func (s *IntegrationTestSuite) msgSendExec(grantee sdk.AccAddress) {
@@ -967,6 +971,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 			"valid txn: (undelegate half tokens)",
 			[]string{
 				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "250000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -980,6 +985,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 			"valid txn: (undelegate remaining half tokens)",
 			[]string{
 				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "250000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -993,6 +999,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 			"failed with error no authorization found",
 			[]string{
 				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "250000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -1057,6 +1064,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 			"valid txn",
 			[]string{
 				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "250000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -1070,6 +1078,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 			"valid txn",
 			[]string{
 				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "250000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),

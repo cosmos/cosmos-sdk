@@ -2,12 +2,12 @@
 order: 1
 -->
 
-# Chain Upgrade Guide to v0.43
+# Chain Upgrade Guide to v0.44
 
-This document provides guidelines for a chain upgrade from v0.42 to v0.43 and an example of the upgrade process using `simapp`. {synopsis}
+This document provides guidelines for a chain upgrade from v0.42 to v0.44 and an example of the upgrade process using `simapp`. {synopsis}
 
 ::: tip
-You must upgrade to Stargate v0.42 before upgrading to v0.43. If you have not done so, please see [Chain Upgrade Guide to v0.42](/v0.42/migrations/chain-upgrade-guide-040.html).
+You must upgrade to Stargate v0.42 before upgrading to v0.44. If you have not done so, please see [Chain Upgrade Guide to v0.42](/v0.42/migrations/chain-upgrade-guide-040.html). Please note, v0.43 was discontinued shortly after being released and all chains should upgrade directly to v0.44 from v0.42.
 :::
 
 ## Prerequisite Readings
@@ -16,17 +16,17 @@ You must upgrade to Stargate v0.42 before upgrading to v0.43. If you have not do
 - [In-Place Store Migrations](../core/upgrade.html) {prereq}
 - [Cosmovisor](../run-node/cosmovisor.html) {prereq}
 
-Cosmos SDK v0.43 introduces a new way of handling chain upgrades that no longer requires exporting state to JSON, making the necesssary changes, and then creating a new chain with the modified JSON as the new genesis file.
+Cosmos SDK v0.44 introduces a new way of handling chain upgrades that no longer requires exporting state to JSON, making the necessary changes, and then creating a new chain with the modified JSON as the new genesis file.
 
 Instead of starting a new chain, the upgrade binary will read the existing database and perform in-place store migrations. This new way of handling chain upgrades can be used alongside [Cosmovisor](../run-node/cosmovisor.html) to make the upgrade process seamless.
 
 ## In-Place Store Migrations
 
-We recommend using [In-Place Store Migrations](../core/upgrade.html) to upgrade your chain from v0.42 to v0.43. The first step is to make sure all your modules follow the [Module Upgrade Guide](../building-modules/upgrade.html). The second step is to add an [upgrade handler](../core/upgrade.html#running-migrations) to `app.go`.
+We recommend using [In-Place Store Migrations](../core/upgrade.html) to upgrade your chain from v0.42 to v0.44. The first step is to make sure all your modules follow the [Module Upgrade Guide](../building-modules/upgrade.html). The second step is to add an [upgrade handler](../core/upgrade.html#running-migrations) to `app.go`.
 
 In this document, we'll provide an example of what the upgrade handler looks like for a chain upgrading module versions for the first time. It's critical to note that the initial version of each module must be set to `1` rather than `0` or else the upgrade handler will re-initialize each module.
 
-In addition to migrating existing modules, the upgrade handler also performs store upgrades for new modules. In the example below, we'll be adding store migrations for two new modules made available in v0.43: `x/authz` and `x/feegrant`.
+In addition to migrating existing modules, the upgrade handler also performs store upgrades for new modules. In the example below, we'll be adding store migrations for two new modules made available in v0.44: `x/authz` and `x/feegrant`.
 
 ## Using Cosmovisor
 
@@ -36,11 +36,11 @@ Validators can use the auto-restart option to prevent unecessary downtime during
 
 ## Migrating app.toml
 
-With the update to `v0.43`, new server configuration options have been added to `app.toml`. The updates include new configuration sections for Rosetta and gRPC Web as well as a new configuration option for State Sync. Check out the default [`app.toml`](https://github.com/cosmos/cosmos-sdk/blob/release/v0.43.x/server/config/toml.go) file in the latest version of `v0.43` for more information.
+With the update to `v0.44`, new server configuration options have been added to `app.toml`. The updates include new configuration sections for Rosetta and gRPC Web as well as a new configuration option for State Sync. Check out the default [`app.toml`](https://github.com/cosmos/cosmos-sdk/blob/release/v0.44.x/server/config/toml.go) file in the latest version of `v0.44` for more information.
 
 ## Example: Simapp Upgrade
 
-The following example will walk through the upgrade process using `simapp` as our blockchain application. We will be upgrading `simapp` from v0.42 to v0.43. We will be building the upgrade binary ourselves and enabling the auto-restart option.
+The following example will walk through the upgrade process using `simapp` as our blockchain application. We will be upgrading `simapp` from v0.42 to v0.44. We will be building the upgrade binary ourselves and enabling the auto-restart option.
 
 *Note: In this example, we will be starting a new chain from `v0.42`. The binary for this version will be the genesis binary. For validators using Cosmovisor for the first time, the binary for the current version of the chain should be used as the genesis binary (i.e. the starting binary). For more information, see [Cosmovisor](../run-node/cosmovisor.html).*
 
@@ -138,12 +138,12 @@ Now that `cosmovisor` is installed and the genesis binary has been added, let's 
 
 ### Chain Upgrade
 
-<!-- TODO: update example to use v0.43.x -->
+<!-- TODO: update example to use v0.44.x -->
 
-Check out `release/v0.43.x`:
+Check out `release/v0.44.x`:
 
 ```
-git checkout release/v0.43.x
+git checkout release/v0.44.x
 ```
 
 Add the following to `simapp/app.go` inside `NewSimApp` and after `app.UpgradeKeeper`:
@@ -156,7 +156,7 @@ Add the following to `simapp/app.go` after `NewSimApp` (to learn more about the 
 
 ```go
 func (app *SimApp) registerUpgradeHandlers() {
-	app.UpgradeKeeper.SetUpgradeHandler("v0.43", func(ctx sdk.Context, plan upgradetypes.Plan, _ module.VersionMap) (module.VersionMap, error) {
+	app.UpgradeKeeper.SetUpgradeHandler("v0.44", func(ctx sdk.Context, plan upgradetypes.Plan, _ module.VersionMap) (module.VersionMap, error) {
 		// 1st-time running in-store migrations, using 1 as fromVersion to
 		// avoid running InitGenesis.
 		fromVM := map[string]uint64{
@@ -186,7 +186,7 @@ func (app *SimApp) registerUpgradeHandlers() {
 		panic(err)
 	}
 
-	if upgradeInfo.Name == "v0.43" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+	if upgradeInfo.Name == "v0.44" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
 			Added: []string{"authz", "feegrant"},
 		}
@@ -203,17 +203,17 @@ Add `storetypes` to imports:
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 ```
 
-Build the `simd` binary for `v0.43.x` (the upgrade binary):
+Build the `simd` binary for `v0.44.x` (the upgrade binary):
 
 ```
 make build
 ```
 
-Create the folder for the upgrade binary and copy the `v0.43.x` binary:
+Create the folder for the upgrade binary and copy the `v0.44.x` binary:
 
 ```
-mkdir -p $DAEMON_HOME/cosmovisor/upgrades/v0.43/bin
-cp ./build/simd $DAEMON_HOME/cosmovisor/upgrades/v0.43/bin
+mkdir -p $DAEMON_HOME/cosmovisor/upgrades/v0.44/bin
+cp ./build/simd $DAEMON_HOME/cosmovisor/upgrades/v0.44/bin
 ```
 
 Now that we have added the upgrade handler and prepared the upgrade binary, we are ready to start `cosmovisor` and simulate the upgrade proposal process.
@@ -229,7 +229,7 @@ cosmovisor start
 Open a new terminal window and submit an upgrade proposal along with a deposit and a vote (these commands must be run within 20 seconds of each other):
 
 ```
-./build/simd tx gov submit-proposal software-upgrade v0.43 --title upgrade --description upgrade --upgrade-height 20 --from validator --yes
+./build/simd tx gov submit-proposal software-upgrade v0.44 --title upgrade --description upgrade --upgrade-height 20 --from validator --yes
 ./build/simd tx gov deposit 1 10000000stake --from validator --yes
 ./build/simd tx gov vote 1 yes --from validator --yes
 ```

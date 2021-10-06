@@ -168,7 +168,8 @@ func (db *MemDB) Revert() error {
 
 	last := db.vmgr.Last()
 	if last == 0 {
-		return dbm.ErrInvalidVersion // revert needs at least one version
+		db.btree = btree.New(bTreeDegree)
+		return nil
 	}
 	var has bool
 	db.btree, has = db.saved[last]

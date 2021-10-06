@@ -255,14 +255,17 @@ func (b *BadgerDB) Revert() error {
 		return dbm.ErrOpenTransactions
 	}
 
+	// Revert from latest commit TS to last "saved" TS
+	// if no versions exist, use 0 as it precedes any possible commit TS
+	var target uint64
 	last := b.vmgr.Last()
 	if last == 0 {
-		return dbm.ErrInvalidVersion
-	}
-	// Revert from latest commit TS to last "saved" TS
-	target, has := b.vmgr.versionTs(last)
-	if !has {
-		return errors.New("bad version history")
+		target = 0
+	} else {
+		var has bool
+		if target, has = b.vmgr.versionTs(last); !has {
+			return errors.New("bad version history")
+		}
 	}
 	lastTs := b.vmgr.lastTs
 	if target == lastTs {

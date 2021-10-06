@@ -61,8 +61,7 @@ type DBConnection interface {
 	// Deletes a saved version. Returns ErrVersionDoesNotExist for invalid versions.
 	DeleteVersion(uint64) error
 
-	// Reverts the DB state to the last saved version.
-	// Returns an error if no saved versions exist.
+	// Reverts the DB state to the last saved version; if none exist, this clears the DB.
 	// Returns an error if any open DBWriter transactions exist.
 	Revert() error
 

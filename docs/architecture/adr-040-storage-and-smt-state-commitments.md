@@ -184,7 +184,9 @@ This is not compatible with the `RootStore`, which stores all records in a singl
 
 As a workaround, the `RootStore` will have to use two separate SMTs (they could use the same underlying DB): one for IBC state and one for everything else. A simple Merkle map that reference these SMTs will act as a Merkle Tree to create a final App hash. The Merkle map is not stored in a DBs - it's constructed in the runtime.
 
-The solution presented here can be used until the IBC module is fully upgraded to supports single-element commitment proofs.
+The workaround can still guarantee atomic syncs: the [proposed DB backends](#evaluated-kv-databases) support atomic transactions and efficient rollbacks, which will be used in the commit phase.
+
+The presented workaround can be used until the IBC module is fully upgraded to supports single-element commitment proofs.
 
 ### Optimization: compress module key prefixes
 

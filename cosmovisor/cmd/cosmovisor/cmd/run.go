@@ -14,7 +14,7 @@ func IsRunCommand(arg string) bool {
 	return isOneOf(arg, RunArgs)
 }
 
-// Run runs the configured program and monitors it for upgrades.
+// Run runs the configured program with the given args and monitors it for upgrades.
 func Run(args []string) error {
 	cfg, cerr := cosmovisor.GetConfigFromEnv()
 	cosmovisor.LogConfigOrError(cosmovisor.Logger, cfg, cerr)

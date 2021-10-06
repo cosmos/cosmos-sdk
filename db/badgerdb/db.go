@@ -113,8 +113,10 @@ func readVersionsFile(path string) (*versionManager, error) {
 	if err != nil {
 		return nil, err
 	}
-	var versions []uint64
-	var lastTs uint64
+	var (
+		versions []uint64
+		lastTs   uint64
+	)
 	vmap := map[uint64]uint64{}
 	for _, row := range rows {
 		version, err := strconv.ParseUint(row[0], 10, 64)

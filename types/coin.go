@@ -522,7 +522,6 @@ func (coins Coins) Empty() bool {
 // AmountOf returns the amount of a denom from coins
 func (coins Coins) AmountOf(denom string) Int {
 	mustValidateDenom(denom)
-
 	return coins.AmountOfNoDenomValidation(denom)
 }
 

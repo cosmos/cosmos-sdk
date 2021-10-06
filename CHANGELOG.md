@@ -37,6 +37,25 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.44.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.44.1) - 2021-09-29
+
+### Improvements
+
+* (store) [\#10040](https://github.com/cosmos/cosmos-sdk/pull/10040) Bump IAVL to v0.17.1 which includes performance improvements on a batch load.
+* (types) [\#10021](https://github.com/cosmos/cosmos-sdk/pull/10021) Speedup coins.AmountOf(), by removing many intermittent regex calls.
+* [\#10077](https://github.com/cosmos/cosmos-sdk/pull/10077) Remove telemetry on `GasKV` and `CacheKV` store Get/Set operations, significantly improving their performance.
+* (store) [\#10026](https://github.com/cosmos/cosmos-sdk/pull/10026) Improve CacheKVStore datastructures / algorithms, to no longer take O(N^2) time when interleaving iterators and insertions.
+
+### Bug Fixes
+
+* [\#9969](https://github.com/cosmos/cosmos-sdk/pull/9969) fix: use keyring in config for add-genesis-account cmd.
+* (x/genutil) [#10104](https://github.com/cosmos/cosmos-sdk/pull/10104) Ensure the `init` command reads the `--home` flag value correctly.
+* (x/feegrant) [\#10049](https://github.com/cosmos/cosmos-sdk/issues/10049) Fixed the error message when `period` or `period-limit` flag is not set on a feegrant grant transaction.
+
+### Client Breaking Changes
+
+* [\#9879](https://github.com/cosmos/cosmos-sdk/pull/9879) Modify ABCI Queries to use `abci.QueryRequest` Height field if it is non-zero, otherwise continue using context height.
+
 ## [v0.44.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.44.0) - 2021-09-01
 
 ### Features
@@ -53,13 +72,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-+ [\#9965](https://github.com/cosmos/cosmos-sdk/pull/9965) Fixed `simd version` command output to report the right release tag.
-+
-### API Breaking Changes
-* (client/tx) [\#9421](https://github.com/cosmos/cosmos-sdk/pull/9421/) `BuildUnsignedTx`, `BuildSimTx`, `PrintUnsignedStdTx` functions are moved to
-  the Tx Factory as methods.
+* [\#9965](https://github.com/cosmos/cosmos-sdk/pull/9965) Fixed `simd version` command output to report the right release tag.
+* (x/upgrade) [\#10189](https://github.com/cosmos/cosmos-sdk/issues/10189) Removed potential sources of non-determinism in upgrades.
 
 ### Client Breaking Changes
+
 * [\#10041](https://github.com/cosmos/cosmos-sdk/pull/10041) Remove broadcast & encode legacy REST endpoints. Please see the [REST Endpoints Migration guide](https://docs.cosmos.network/master/migrations/rest.html) to migrate to the new REST endpoints.
 
 ## [v0.43.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0) - 2021-08-10
@@ -148,6 +165,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank) [\#9550](https://github.com/cosmos/cosmos-sdk/pull/9550) `server.InterceptConfigsPreRunHandler` now takes 2 additional arguments: customAppConfigTemplate and customAppConfig. If you don't need to customize these, simply put `""` and `nil`.
 * [\#8245](https://github.com/cosmos/cosmos-sdk/pull/8245) Removed `simapp.MakeCodecs` and use `simapp.MakeTestEncodingConfig` instead.
 * (x/capability) [\#9836](https://github.com/cosmos/cosmos-sdk/pull/9836) Removed `InitializeAndSeal(ctx sdk.Context)` and replaced with `Seal()`. App must add x/capability module to the begin blockers which will assure that the x/capability keeper is properly initialized. The x/capability begin blocker must be run before any other module which uses x/capability.
+
 
 
 ### State Machine Breaking

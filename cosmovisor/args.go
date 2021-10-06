@@ -173,7 +173,8 @@ func GetConfigFromEnv() (*Config, error) {
 
 // LogConfigOrError logs either the config details or the error.
 func LogConfigOrError(logger zerolog.Logger, cfg *Config, cerr error) {
-	if cerr != nil {
+	switch {
+	case cerr != nil:
 		switch err := cerr.(type) {
 		case *cverrors.MultiError:
 			logger.Error().Msg("multiple configuration errors found:")
@@ -183,7 +184,7 @@ func LogConfigOrError(logger zerolog.Logger, cfg *Config, cerr error) {
 		default:
 			logger.Error().Err(cerr).Msg("configuration error:")
 		}
-	} else {
+	case cfg != nil:
 		logger.Info().Msg("Configuration is valid:\n" + cfg.DetailString())
 	}
 }

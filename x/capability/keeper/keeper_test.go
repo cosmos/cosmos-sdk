@@ -19,7 +19,7 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	cdc    codec.Marshaler
+	cdc    codec.Codec
 	ctx    sdk.Context
 	app    *simapp.SimApp
 	keeper *keeper.Keeper

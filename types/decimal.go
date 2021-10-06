@@ -471,6 +471,11 @@ func (d Dec) ApproxRoot(root uint64) (guess Dec, err error) {
 
 // Power returns a the result of raising to a positive integer power
 func (d Dec) Power(power uint64) Dec {
+	res := Dec{new(big.Int).Set(d.i)}
+	return res.PowerMut(power)
+}
+
+func (d Dec) PowerMut(power uint64) Dec {
 	// TODO: use mutable functions here
 	if power == 0 {
 		return OneDec()
@@ -479,13 +484,13 @@ func (d Dec) Power(power uint64) Dec {
 
 	for i := power; i > 1; {
 		if i%2 != 0 {
-			tmp = tmp.Mul(d)
+			tmp.MulMut(d)
 		}
 		i /= 2
-		d = d.Mul(d)
+		d.MulMut(d)
 	}
 
-	return d.Mul(tmp)
+	return d.MulMut(tmp)
 }
 
 // ApproxSqrt is a wrapper around ApproxRoot for the common special case

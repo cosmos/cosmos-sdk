@@ -34,7 +34,9 @@ func TestCreateHsmKeyAndSign(t *testing.T) {
 	// hardcoded path for now - might change this API to actually
 	// take a JSON string and let caller decide how to get that
 	// JSON
-	kr, err := hsmkeys.NewPkcs11FromConfig("./testdata/keys/pkcs11-config")
+	configPath := "./testdata/keys/pkcs11-config"
+	
+	kr, err := hsmkeys.NewPkcs11FromConfig(configPath)
 
 	label, err := randomBytes(16)
 	require.NoError(t, err)
@@ -45,7 +47,7 @@ func TestCreateHsmKeyAndSign(t *testing.T) {
 
 	require.NoError(t, err)
 
-	hsmrecord, err := kb.SaveHsmKey("testkey123", hd.Secp256k1, string(label), kr)
+	hsmrecord, err := kb.SaveHsmKey("testkey123", hd.Secp256k1, string(label), configPath)
 	require.NoError(t, err)
 
 	hsmkey := hsmrecord.GetHsm()
@@ -55,7 +57,7 @@ func TestCreateHsmKeyAndSign(t *testing.T) {
 	require.NoError(t, err)
 	fmt.Printf("PubKey: %v", pubkey )
 	msg := []byte("Signing this plaintext tells me what exactly?")
-	sig, pub, err := SignWithHsm(hsmrecord, msg, kr)
+	sig, pub, err := SignWithHsm(hsmrecord, msg)
 	require.NoError(t, err)
 	fmt.Printf("Signature: %v", sig)
 	fmt.Printf("PubKey: %v", pub)

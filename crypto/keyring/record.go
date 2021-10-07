@@ -35,14 +35,22 @@ func NewLocalRecord(name string, priv cryptotypes.PrivKey, pk cryptotypes.PubKey
 }
 
 // NewHsmRecord creates a new Record with an HSM key label
-func NewHsmRecord(name string, pk cryptotypes.PubKey, label string) (*Record, error) {
-	hsmkey := &Record_Hsm{label}
+func NewHsmRecord(name string, pk cryptotypes.PubKey, label string, configPath string) (*Record, error) {
+	hsmkey := &Record_Hsm{label, configPath}
 	recordHsmKey := &Record_Hsm_{hsmkey}
 	return newRecord(name, pk, recordHsmKey)
 }
 
+// GetLabel returns the key label in this HSM record
 func (rh *Record_Hsm) GetLabel() string {
 	return rh.Label
+}
+
+// GetConfigPath returns the configuration path
+// for the HSM config, so this assumes same
+// machine is being used
+func (rh *Record_Hsm) GetConfigPath() string {
+	return rh.ConfigPath
 }
 
 // NewLedgerRecord creates a new Record with ledger item

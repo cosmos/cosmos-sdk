@@ -87,7 +87,7 @@ type Keyring interface {
 	SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (*Record, error)
 
 	// SaveHsmKey retrieves a public key reference from a PKCS11 device, such as an HSM, ran persists it
-	SaveHsmKey(uid string, algo SignatureAlgo, label string, kr *hsmkeys.Pkcs11Keyring) (*Record, error)
+	SaveHsmKey(uid string, algo SignatureAlgo, label string, configPath string) (*Record, error)
 
 	// SaveOfflineKey stores a public key and returns the persisted Info structure.
 	SaveOfflineKey(uid string, pubkey types.PubKey) (*Record, error)
@@ -355,6 +355,9 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 	case k.GetLedger() != nil:
 		return SignWithLedger(k, msg)
 
+	case k.GetHsm() != nil:
+		return SignWithHsm(k, msg)
+
 		// multi or offline record
 	default:
 		pub, err := k.GetPubKey()
@@ -378,7 +381,9 @@ func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, types
 // SaveHsmKey will check whether a key with the given uid exists on
 // the HSM, and retrieve its pub key if so, persisting it in the local
 // keyring backend.
-func (ks keystore) SaveHsmKey(uid string, algo SignatureAlgo, label string, kr *hsmkeys.Pkcs11Keyring) (*Record, error) {
+// the config path is passed in, so anyone using this key must also have access
+// to the HSM that contains the key with that label
+func (ks keystore) SaveHsmKey(uid string, algo SignatureAlgo, label string, configPath string) (*Record, error) {
 	if !ks.options.SupportedAlgosHsm.Contains(algo) {
 		return nil, fmt.Errorf(
 			"%w: signature algo %s is not defined in the keyring options",
@@ -386,6 +391,12 @@ func (ks keystore) SaveHsmKey(uid string, algo SignatureAlgo, label string, kr *
 		)
 	}
 
+	kr, err := hsmkeys.NewPkcs11FromConfig(configPath)
+
+	if err != nil {
+		return nil, err
+	}
+	
 	priv, err := kr.Key(label)
 
 	if err != nil {
@@ -394,13 +405,13 @@ func (ks keystore) SaveHsmKey(uid string, algo SignatureAlgo, label string, kr *
 
 	pub := priv.PubKey()
 
-	return ks.writeHsmKey(uid, pub, label)
+	return ks.writeHsmKey(uid, pub, label, configPath)
 }
 
 // writeHsm creates a new Hsm Record object containing the key label
 // for the private key, and the actual Cosmos keyring PubKey
-func (ks keystore) writeHsmKey(name string, pub types.PubKey, label string) (*Record, error) {
-	k, err := NewHsmRecord(name, pub, label)
+func (ks keystore) writeHsmKey(name string, pub types.PubKey, label string, configPath string) (*Record, error) {
+	k, err := NewHsmRecord(name, pub, label, configPath)
 	if err != nil {
 		return nil, err
 	}
@@ -660,14 +671,21 @@ func SignWithLedger(k *Record, msg []byte) (sig []byte, pub types.PubKey, err er
 	return sig, priv.PubKey(), nil
 }
 
-func SignWithHsm(k *Record, msg []byte, kr *hsmkeys.Pkcs11Keyring) (sig []byte, pub types.PubKey, err error) {
+func SignWithHsm(k *Record, msg []byte) (sig []byte, pub types.PubKey, err error) {
 	hsmrecord := k.GetHsm()
 	if hsmrecord== nil {
 		return nil, nil, errors.New("not an HSM object")
 	}
 
 	label := hsmrecord.GetLabel()
+	configPath := hsmrecord.GetConfigPath()
 
+	kr, err := hsmkeys.NewPkcs11FromConfig(configPath)
+
+	if err != nil {
+		return nil, nil, err
+	}
+	
 	priv, err := kr.Key(label)
 
 	if err != nil {

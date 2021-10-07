@@ -250,7 +250,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 		key = nil
 		
-		k, err := kb.SaveHsmKey(name, hd.Secp256k1, string(label), kr)
+		k, err := kb.SaveHsmKey(name, hd.Secp256k1, string(label), configPath)
 
 		if err != nil {
 			return err

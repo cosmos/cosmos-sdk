@@ -80,7 +80,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 	f = f.WithFees(feesStr)
 
 	tipsStr, _ := flagSet.GetString(flags.FlagTip)
-	f = f.WithTips(tipsStr)
+	f = f.WithTips(tipsStr, "")
 
 	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
 	f = f.WithGasPrices(gasPricesStr)
@@ -140,13 +140,14 @@ func (f Factory) WithFees(fees string) Factory {
 }
 
 // WithTips returns a copy of the Factory with an updated tip.
-func (f Factory) WithTips(tip string) Factory {
+func (f Factory) WithTips(tip string, tipper string) Factory {
 	parsedTips, err := sdk.ParseCoinsNormalized(tip)
 	if err != nil {
 		panic(err)
 	}
 
 	f.tip = &tx.Tip{
+		Tipper: tipper,
 		Amount: parsedTips,
 	}
 	return f
@@ -287,6 +288,7 @@ func (f Factory) PrintUnsignedTx(clientCtx client.Context, msgs ...sdk.Msg) erro
 	}
 	if f.SignMode() == signing.SignMode_SIGN_MODE_AMINO_AUX {
 		unsignedTx.SetTip(&tx.Tip{
+			Tipper: clientCtx.FromAddress.String(),
 			Amount: tipAmt,
 		})
 	} else if f.SignMode() == signing.SignMode_SIGN_MODE_DIRECT_AUX {

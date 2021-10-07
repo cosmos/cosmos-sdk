@@ -207,30 +207,11 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 		return err
 	}
 
-	pubkeys, err := txBuilder.GetTx().GetPubKeys()
-	if err != nil {
-		return err
-	}
-
-	signerIndex := 0
-	for i, p := range pubkeys {
-		if p.Equals(pubKey) {
-			signerIndex = i
-			break
-		}
-	}
-
-	var isTipper bool
-	if tip := txBuilder.GetTx().GetTip(); tip != nil {
-		isTipper = tip.Tipper == sdk.AccAddress(pubKey.Address()).String()
-	}
-
 	signerData := authsigning.SignerData{
 		ChainID:       txf.chainID,
 		AccountNumber: txf.accountNumber,
 		Sequence:      txf.sequence,
-		SignerIndex:   signerIndex,
-		IsTipper:      isTipper,
+		Address:       sdk.AccAddress(pubKey.Address()),
 	}
 
 	// For SIGN_MODE_DIRECT, calling SetSignatures calls setSignerInfos on

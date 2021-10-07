@@ -482,12 +482,8 @@ func (svm sigVerificationTxHandler) sigVerify(ctx context.Context, sdkTx sdk.Tx,
 			accNum = acc.GetAccountNumber()
 		}
 
-		var isTipper bool
-		if tipTx, ok := sdkTx.(tx.TipTx); ok && tipTx.GetTip() != nil {
-			isTipper = tipTx.GetTip().Tipper == signerAddrs[i].String()
-		}
-
 		signerData := authsigning.SignerData{
+			Address:       signerAddrs[i],
 			ChainID:       chainID,
 			AccountNumber: accNum,
 			Sequence:      acc.GetSequence(),

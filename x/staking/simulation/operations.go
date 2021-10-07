@@ -101,7 +101,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 		// ensure the validator doesn't exist already
 		_, found := k.GetValidator(ctx, address)
 		if found {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreateValidator, "unable to find validator"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreateValidator, "validator already exists"), nil, nil
 		}
 
 		denom := k.GetParams(ctx).BondDenom

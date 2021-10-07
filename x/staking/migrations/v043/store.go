@@ -2,6 +2,7 @@ package v043
 
 import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v040"
@@ -58,7 +59,7 @@ func migrateValidatorsByPowerIndexKey(store sdk.KVStore) {
 // migration includes:
 //
 // - Setting the Power Reduction param in the paramstore
-func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey) error {
+func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey) error {
 	store := ctx.KVStore(storeKey)
 
 	v043distribution.MigratePrefixAddress(store, v040staking.LastValidatorPowerKey)

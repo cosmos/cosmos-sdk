@@ -10,7 +10,7 @@ A user can query and interact with the `staking` module using the CLI.
 
 ### Query
 
-The `query` commands allow users to query `staking` state.
+The `query` commands allows users to query `staking` state.
 
 ```bash
 simd query staking --help
@@ -18,7 +18,7 @@ simd query staking --help
 
 #### delegation
 
-The `delegation` command allows user to query delegations for an individual delegator on an individual validator.
+The `delegation` command allows users to query delegations for an individual delegator on an individual validator.
 
 Usage:
 
@@ -46,7 +46,7 @@ delegation:
 
 #### delegations
 
-The `delegations` command allow user to query delegations for an individual delegator on all validators.
+The `delegations` command allows users to query delegations for an individual delegator on all validators.
 
 Usage:
 
@@ -85,7 +85,7 @@ pagination:
 
 #### delegations-to
 
-The `delegations-to` command allow user to query delegations on an individual validator.
+The `delegations-to` command allows users to query delegations on an individual validator.
 
 Usage:
 
@@ -123,7 +123,7 @@ pagination:
 
 #### historical-info
 
-The `historical-info` command allow user to query historical info at given height.
+The `historical-info` command allows users to query historical info at given height.
 
 Usage:
 
@@ -189,7 +189,7 @@ valset:
 
 #### params
 
-The `params` command allow user to query values set as staking parameters.
+The `params` command allows users to query values set as staking parameters.
 
 Usage:
 
@@ -215,7 +215,7 @@ unbonding_time: 1814400s
 
 #### pool
 
-The `pool` command allows user to query values for amounts stored in the staking pool.
+The `pool` command allows users to query values for amounts stored in the staking pool.
 
 Usage:
 
@@ -238,7 +238,7 @@ not_bonded_tokens: "0"
 
 #### redelegation
 
-The `redelegation` command allow user to query a redelegation record based on delegator and a source and destination validator address.
+The `redelegation` command allows users to query a redelegation record based on delegator and a source and destination validator address.
 
 Usage:
 
@@ -279,7 +279,7 @@ redelegation_responses:
 
 #### redelegations
 
-The `redelegations` command allow user to query all redelegation records for an individual delegator.
+The `redelegations` command allows users to query all redelegation records for an individual delegator.
 
 Usage:
 
@@ -334,7 +334,7 @@ redelegation_responses:
 
 #### redelegations-from
 
-The `redelegations-from` command allow user to query delegations that are redelegating _from_ a validator.
+The `redelegations-from` command allows users to query delegations that are redelegating _from_ a validator.
 
 Usage:
 
@@ -389,7 +389,7 @@ redelegation_responses:
 
 #### unbonding-delegation
 
-The `unbonding-delegation` command allow user to query unbonding delegations for an individual delegator on an individual validator.
+The `unbonding-delegation` command allows users to query unbonding delegations for an individual delegator on an individual validator.
 
 Usage:
 
@@ -417,7 +417,7 @@ validator_address: cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 
 #### unbonding-delegations
 
-The `unbonding-delegations` command allow user to query all unbonding-delegations records for one delegator.
+The `unbonding-delegations` command allows users to query all unbonding-delegations records for one delegator.
 
 Usage:
 
@@ -450,7 +450,7 @@ unbonding_responses:
 
 #### unbonding-delegations-from
 
-The `unbonding-delegations-from` command allow user to query delegations that are unbonding _from_ a validator.
+The `unbonding-delegations-from` command allows users to query delegations that are unbonding _from_ a validator.
 
 Usage:
 
@@ -489,7 +489,7 @@ unbonding_responses:
 
 #### validator
 
-The `validator` command allow user to query details about an individual validator.
+The `validator` command allows users to query details about an individual validator.
 
 Usage:
 
@@ -536,7 +536,7 @@ unbonding_time: "1970-01-01T00:00:00Z"
 
 #### validators
 
-The `validators` command allow user to query details about all validators on a network.
+The `validators` command allows users to query details about all validators on a network.
 
 Usage:
 
@@ -613,7 +613,7 @@ description:
 
 ### Transactions
 
-The `tx` commands allow users to interact with the `staking` module.
+The `tx` commands allows users to interact with the `staking` module.
 
 ```bash
 simd tx staking --help
@@ -621,7 +621,7 @@ simd tx staking --help
 
 #### create-validator
 
-The command `create-validator` allow user to create new validator initialized with a self-delegation to it.
+The command `create-validator` allows users to create new validator initialized with a self-delegation to it.
 
 Usage:
 
@@ -651,7 +651,7 @@ simd tx staking create-validator \
 
 #### delegate
 
-The command `delegate` allow user to delegate liquid tokens to a validator.
+The command `delegate` allows users to delegate liquid tokens to a validator.
 
 Usage:
 
@@ -666,7 +666,8 @@ simd tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 10
 ```
 
 #### edit-validator
-The command `edit-validator` allow user to edit an existing validator account.
+
+The command `edit-validator` allows users to edit an existing validator account.
 
 Usage:
 
@@ -681,7 +682,8 @@ simd tx staking edit-validator --moniker "new_moniker_name" --website "new_webis
 ```
 
 #### redelegate
-The command `redelegate` allow user to redelegate illiquid tokens from one validator to another.
+
+The command `redelegate` allows users to redelegate illiquid tokens from one validator to another.
 
 Usage:
 
@@ -696,7 +698,8 @@ simd tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 
 ```
 
 #### unbond
-The command `unbond` allow user to unbond shares from a validator.
+
+The command `unbond` allows users to unbond shares from a validator.
 
 Usage:
 
@@ -709,3 +712,8 @@ Example:
 ```bash
 simd tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from mykey
 ```
+
+## gRPC
+
+A user can query the `staking` module using gRPC endpoints.
+

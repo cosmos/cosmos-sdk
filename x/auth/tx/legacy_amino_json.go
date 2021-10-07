@@ -43,10 +43,14 @@ func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode,
 	body := protoTx.tx.Body
 
 	if len(body.ExtensionOptions) != 0 || len(body.NonCriticalExtensionOptions) != 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "SIGN_MODE_LEGACY_AMINO_JSON does not support protobuf extension options")
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%s does not support protobuf extension options", signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
 	addr := data.Address
+	if addr == nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "got empty address in %s handler", signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	}
+
 	seq, err := getSequence(protoTx, addr)
 	if err != nil {
 		return nil, err

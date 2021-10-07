@@ -42,7 +42,7 @@ func (signModeDirectAuxHandler) GetSignBytes(
 	}
 
 	if data.Address == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "got empty address in SIGN_MODE_LEGACY_AMINO_JSON handler")
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "got empty address in %s handler", signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
 	}
 
 	var pubKey *codectypes.Any
@@ -56,7 +56,7 @@ func (signModeDirectAuxHandler) GetSignBytes(
 		}
 	}
 	if pubKey == nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap("got empty pubKey in SIGN_MODE_DIRECT_AUX handler")
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("got empty pubKey in %s handler", signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
 	}
 
 	seq, err := getSequence(protoTx, data.Address)

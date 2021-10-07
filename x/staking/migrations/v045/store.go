@@ -39,7 +39,7 @@ func purgeDelegations(store sdk.KVStore, cdc codec.BinaryCodec) error {
 				return err
 			}
 
-			if err := cdc.Unmarshal(store.Get(GetValidatorKey(valAddr)), &validator); err != nil {
+			if err := cdc.Unmarshal(store.Get(getValidatorKey(valAddr)), &validator); err != nil {
 				return err
 			}
 

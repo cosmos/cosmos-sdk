@@ -6,6 +6,6 @@ import (
 	v040staking "github.com/cosmos/cosmos-sdk/x/staking/migrations/v040"
 )
 
-func GetValidatorKey(operatorAddr sdk.ValAddress) []byte {
+func getValidatorKey(operatorAddr sdk.ValAddress) []byte {
 	return append(v040staking.ValidatorsKey, address.MustLengthPrefix(operatorAddr)...)
 }

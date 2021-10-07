@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
@@ -54,6 +55,10 @@ func (s *StdTxBuilder) SetFeeAmount(amount sdk.Coins) {
 
 func (s *StdTxBuilder) SetGasLimit(limit uint64) {
 	s.StdTx.Fee.Gas = limit
+}
+
+func (s *StdTxBuilder) SetTip(tip *tx.Tip) {
+	panic("StdTxBuilder does not support tips")
 }
 
 // SetMemo implements TxBuilder.SetMemo

@@ -19,6 +19,15 @@ import (
 func TestDelegation(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
+	// remove genesis validator delegations
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	require.Len(t, delegations, 1)
+
+	app.StakingKeeper.RemoveDelegation(ctx, types.Delegation{
+		ValidatorAddress: delegations[0].ValidatorAddress,
+		DelegatorAddress: delegations[0].DelegatorAddress,
+	})
+
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(10000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
 

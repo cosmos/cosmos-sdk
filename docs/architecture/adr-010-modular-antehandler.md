@@ -3,6 +3,11 @@
 ## Changelog
 
 - 2019 Aug 31: Initial draft
+- 2021 Sep 14: Superseded by ADR-045
+
+## Status
+
+SUPERSEDED by ADR-045
 
 ## Context
 
@@ -39,7 +44,7 @@ type Decorator interface {
 }
 ```
 
-Each decorator works like a modularized SDK antehandler function, but it can take in a `next` argument that may be another decorator or a Handler (which does not take in a next argument). These decorators can be chained together, one decorator being passed in as the `next` argument of the previous decorator in the chain. The chain ends in a Router which can take a tx and route to the appropriate msg handler.
+Each decorator works like a modularized Cosmos SDK antehandler function, but it can take in a `next` argument that may be another decorator or a Handler (which does not take in a next argument). These decorators can be chained together, one decorator being passed in as the `next` argument of the previous decorator in the chain. The chain ends in a Router which can take a tx and route to the appropriate msg handler.
 
 A key benefit of this approach is that one Decorator can wrap its internal logic around the next Checker/Deliverer. A weave Decorator may do the following:
 
@@ -79,7 +84,7 @@ If however, users wish to change the order or add, modify, or delete ante micro-
 
 This is an example of a user's AnteHandler if they choose not to make any custom micro-functions.
 
-##### SDK code
+##### Cosmos SDK code
 
 ```go
 // Chains together a list of AnteHandler micro-functions that get run one after the other.
@@ -181,13 +186,13 @@ Cons:
 
 ### Simple Decorators
 
-This approach takes inspiration from Weave's decorator design while trying to minimize the number of breaking changes to the SDK and maximizing simplicity. Like Weave decorators, this approach allows one `AnteDecorator` to wrap the next AnteHandler to do pre- and post-processing on the result. This is useful since decorators can do defer/cleanups after an AnteHandler returns as well as perform some setup beforehand. Unlike Weave decorators, these `AnteDecorator` functions can only wrap over the AnteHandler rather than the entire handler execution path. This is deliberate as we want decorators from different modules to perform authentication/validation on a `tx`. However, we do not want decorators being capable of wrapping and modifying the results of a `MsgHandler`.
+This approach takes inspiration from Weave's decorator design while trying to minimize the number of breaking changes to the Cosmos SDK and maximizing simplicity. Like Weave decorators, this approach allows one `AnteDecorator` to wrap the next AnteHandler to do pre- and post-processing on the result. This is useful since decorators can do defer/cleanups after an AnteHandler returns as well as perform some setup beforehand. Unlike Weave decorators, these `AnteDecorator` functions can only wrap over the AnteHandler rather than the entire handler execution path. This is deliberate as we want decorators from different modules to perform authentication/validation on a `tx`. However, we do not want decorators being capable of wrapping and modifying the results of a `MsgHandler`.
 
-In addition, this approach will not break any core SDK API's. Since we preserve the notion of an AnteHandler and still set a single AnteHandler in baseapp, the decorator is simply an additional approach available for users that desire more customization. The API of modules (namely `x/auth`) may break with this approach, but the core API remains untouched.
+In addition, this approach will not break any core Cosmos SDK API's. Since we preserve the notion of an AnteHandler and still set a single AnteHandler in baseapp, the decorator is simply an additional approach available for users that desire more customization. The API of modules (namely `x/auth`) may break with this approach, but the core API remains untouched.
 
-Allow Decorator interface that can be chained together to create an SDK AnteHandler.
+Allow Decorator interface that can be chained together to create a Cosmos SDK AnteHandler.
 
-This allows users to choose between implementing an AnteHandler by themselves and setting it in the baseapp, or use the decorator pattern to chain their custom decorators with SDK provided decorators in the order they wish.
+This allows users to choose between implementing an AnteHandler by themselves and setting it in the baseapp, or use the decorator pattern to chain their custom decorators with the Cosmos SDK provided decorators in the order they wish.
 
 ```go
 // An AnteDecorator wraps an AnteHandler, and can do pre- and post-processing on the next AnteHandler

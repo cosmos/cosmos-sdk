@@ -7,7 +7,7 @@ order: 13
 The Cosmos SDK offers a full fledged simulation framework to fuzz test every
 message defined by a module.
 
-On the SDK, this functionality is provided by the[`SimApp`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/app.go), which is a
+On the Cosmos SDK, this functionality is provided by the[`SimApp`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/app.go), which is a
 `Baseapp` application that is used for running the [`simulation`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/x/simulation) module.
 This module defines all the simulation logic as well as the operations for
 randomized parameters like accounts, balances etc.
@@ -63,7 +63,7 @@ generated genesis state (`1`) with manually generated simulation params (`3`).
 ## Usage
 
 This is a general example of how simulations are run. For more specific examples
-check the SDK [Makefile](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/Makefile#L251-L287).
+check the Cosmos SDK [Makefile](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/Makefile#L251-L287).
 
 ```bash
  $ go test -mod=readonly github.com/cosmos/cosmos-sdk/simapp \
@@ -92,9 +92,9 @@ Here are some suggestions when encountering a simulation failure:
 - Try adding logs to operations that are not logged. You will have to define a
   [Logger](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/x/staking/keeper/keeper.go#L66-L69) on your `Keeper`.
 
-## Use simulation in your SDK-based application
+## Use simulation in your Cosmos SDK-based application
 
-Learn how you can integrate the simulation into your SDK-based application:
+Learn how you can integrate the simulation into your Cosmos SDK-based application:
 
 - Application Simulation Manager
 - [Building modules: Simulator](../building-modules/simulator.md)

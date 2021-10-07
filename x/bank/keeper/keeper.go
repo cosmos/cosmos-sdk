@@ -28,6 +28,7 @@ type Keeper interface {
 	GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
 	IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bool)
 	GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool)
+	HasDenomMetaData(ctx sdk.Context, denom string) bool
 	SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)
 	IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool)
 
@@ -73,7 +74,6 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.P
 		supply = supply.Add(sdk.NewCoin(string(key), amount))
 		return nil
 	})
-
 	if err != nil {
 		return nil, nil, err
 	}
@@ -229,6 +229,13 @@ func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) (types.Metad
 	k.cdc.MustUnmarshal(bz, &metadata)
 
 	return metadata, true
+}
+
+// HasDenomMetaData checks if the denomination metadata exists in store.
+func (k BaseKeeper) HasDenomMetaData(ctx sdk.Context, denom string) bool {
+	store := ctx.KVStore(k.storeKey)
+	store = prefix.NewStore(store, types.DenomMetadataPrefix)
+	return store.Has([]byte(denom))
 }
 
 // GetAllDenomMetaData retrieves all denominations metadata

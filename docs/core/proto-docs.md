@@ -225,6 +225,16 @@
     - [PrivKey](#cosmos.crypto.ed25519.PrivKey)
     - [PubKey](#cosmos.crypto.ed25519.PubKey)
   
+- [cosmos/crypto/hd/v1/hd.proto](#cosmos/crypto/hd/v1/hd.proto)
+    - [BIP44Params](#cosmos.crypto.hd.v1.BIP44Params)
+  
+- [cosmos/crypto/keyring/v1/record.proto](#cosmos/crypto/keyring/v1/record.proto)
+    - [Record](#cosmos.crypto.keyring.v1.Record)
+    - [Record.Ledger](#cosmos.crypto.keyring.v1.Record.Ledger)
+    - [Record.Local](#cosmos.crypto.keyring.v1.Record.Local)
+    - [Record.Multi](#cosmos.crypto.keyring.v1.Record.Multi)
+    - [Record.Offline](#cosmos.crypto.keyring.v1.Record.Offline)
+  
 - [cosmos/crypto/multisig/keys.proto](#cosmos/crypto/multisig/keys.proto)
     - [LegacyAminoPubKey](#cosmos.crypto.multisig.LegacyAminoPubKey)
   
@@ -2459,7 +2469,7 @@ ReflectionService defines a service for interface reflection.
 <a name="cosmos.base.reflection.v2alpha1.AppDescriptor"></a>
 
 ### AppDescriptor
-AppDescriptor describes a cosmos-sdk based application
+AppDescriptor describes a Cosmos SDK based application
 
 
 | Field | Type | Label | Description |
@@ -2740,7 +2750,7 @@ InterfaceImplementerDescriptor describes an interface implementer
 <a name="cosmos.base.reflection.v2alpha1.MsgDescriptor"></a>
 
 ### MsgDescriptor
-MsgDescriptor describes a cosmos-sdk message that can be delivered with a transaction
+MsgDescriptor describes a Cosmos SDK message that can be delivered with a transaction
 
 
 | Field | Type | Label | Description |
@@ -2773,7 +2783,7 @@ because it would be redundant with the grpc reflection service
 <a name="cosmos.base.reflection.v2alpha1.QueryServiceDescriptor"></a>
 
 ### QueryServiceDescriptor
-QueryServiceDescriptor describes a cosmos-sdk queryable service
+QueryServiceDescriptor describes a Cosmos SDK queryable service
 
 
 | Field | Type | Label | Description |
@@ -2790,12 +2800,12 @@ QueryServiceDescriptor describes a cosmos-sdk queryable service
 <a name="cosmos.base.reflection.v2alpha1.QueryServicesDescriptor"></a>
 
 ### QueryServicesDescriptor
-QueryServicesDescriptor contains the list of cosmos-sdk queriable services
+QueryServicesDescriptor contains the list of Cosmos SDK queriable services
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `query_services` | [QueryServiceDescriptor](#cosmos.base.reflection.v2alpha1.QueryServiceDescriptor) | repeated | query_services is a list of cosmos-sdk QueryServiceDescriptor |
+| `query_services` | [QueryServiceDescriptor](#cosmos.base.reflection.v2alpha1.QueryServiceDescriptor) | repeated | query_services is a list of Cosmos SDK QueryServiceDescriptor |
 
 
 
@@ -2851,7 +2861,7 @@ ReflectionService defines a service for application reflection.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `GetAuthnDescriptor` | [GetAuthnDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetAuthnDescriptorRequest) | [GetAuthnDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetAuthnDescriptorResponse) | GetAuthnDescriptor returns information on how to authenticate transactions in the application NOTE: this RPC is still experimental and might be subject to breaking changes or removal in future releases of the cosmos-sdk. | GET|/cosmos/base/reflection/v1beta1/app_descriptor/authn|
+| `GetAuthnDescriptor` | [GetAuthnDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetAuthnDescriptorRequest) | [GetAuthnDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetAuthnDescriptorResponse) | GetAuthnDescriptor returns information on how to authenticate transactions in the application NOTE: this RPC is still experimental and might be subject to breaking changes or removal in future releases of the Cosmos SDK. | GET|/cosmos/base/reflection/v1beta1/app_descriptor/authn|
 | `GetChainDescriptor` | [GetChainDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetChainDescriptorRequest) | [GetChainDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetChainDescriptorResponse) | GetChainDescriptor returns the description of the chain | GET|/cosmos/base/reflection/v1beta1/app_descriptor/chain|
 | `GetCodecDescriptor` | [GetCodecDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetCodecDescriptorRequest) | [GetCodecDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetCodecDescriptorResponse) | GetCodecDescriptor returns the descriptor of the codec of the application | GET|/cosmos/base/reflection/v1beta1/app_descriptor/codec|
 | `GetConfigurationDescriptor` | [GetConfigurationDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetConfigurationDescriptorRequest) | [GetConfigurationDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetConfigurationDescriptorResponse) | GetConfigurationDescriptor returns the descriptor for the sdk.Config of the application | GET|/cosmos/base/reflection/v1beta1/app_descriptor/configuration|
@@ -2872,7 +2882,7 @@ ReflectionService defines a service for application reflection.
 <a name="cosmos.base.snapshots.v1beta1.Metadata"></a>
 
 ### Metadata
-Metadata contains SDK-specific snapshot metadata.
+Metadata contains Cosmos SDK-specific snapshot metadata.
 
 
 | Field | Type | Label | Description |
@@ -3189,7 +3199,7 @@ GetNodeInfoRequest is the request type for the Query/GetNodeInfo RPC method.
 <a name="cosmos.base.tendermint.v1beta1.GetNodeInfoResponse"></a>
 
 ### GetNodeInfoResponse
-GetNodeInfoResponse is the request type for the Query/GetNodeInfo RPC method.
+GetNodeInfoResponse is the response type for the Query/GetNodeInfo RPC method.
 
 
 | Field | Type | Label | Description |
@@ -3549,7 +3559,7 @@ Msg defines the bank Msg service.
 
 ### PrivKey
 Deprecated: PrivKey defines a ed25519 private key.
-NOTE: ed25519 keys must not be used in SDK apps except in a tendermint validator context.
+NOTE: ed25519 keys must not be used in Cosmos SDK apps except in a tendermint validator context.
 
 
 | Field | Type | Label | Description |
@@ -3564,8 +3574,8 @@ NOTE: ed25519 keys must not be used in SDK apps except in a tendermint validator
 <a name="cosmos.crypto.ed25519.PubKey"></a>
 
 ### PubKey
-PubKey is an ed25519 public key for handling Tendermint keys in SDK.
-It's needed for Any serialization and SDK compatibility.
+PubKey is an ed25519 public key for handling Tendermint keys in the Cosmos SDK.
+It's needed for Any serialization and Cosmos SDK compatibility.
 It must not be used in a non Tendermint key context because it doesn't implement
 ADR-28. Nevertheless, you will like to use ed25519 in app user level
 then you must create a new proto message and follow ADR-28 for Address construction.
@@ -3574,6 +3584,129 @@ then you must create a new proto message and follow ADR-28 for Address construct
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [bytes](#bytes) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/crypto/hd/v1/hd.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/crypto/hd/v1/hd.proto
+
+
+
+<a name="cosmos.crypto.hd.v1.BIP44Params"></a>
+
+### BIP44Params
+BIP44Params is used as path field in ledger item in Record.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `purpose` | [uint32](#uint32) |  | purpose is a constant set to 44' (or 0x8000002C) following the BIP43 recommendation |
+| `coin_type` | [uint32](#uint32) |  | coin_type is a constant that improves privacy |
+| `account` | [uint32](#uint32) |  | account splits the key space into independent user identities |
+| `change` | [bool](#bool) |  | change is a constant used for public derivation. Constant 0 is used for external chain and constant 1 for internal chain. |
+| `address_index` | [uint32](#uint32) |  | address_index is used as child index in BIP32 derivation |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/crypto/keyring/v1/record.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/crypto/keyring/v1/record.proto
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record"></a>
+
+### Record
+Record is used for representing a key in the keyring.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  | name represents a name of Record |
+| `pub_key` | [google.protobuf.Any](#google.protobuf.Any) |  | pub_key represents a public key in any format |
+| `local` | [Record.Local](#cosmos.crypto.keyring.v1.Record.Local) |  | local stores the public information about a locally stored key |
+| `ledger` | [Record.Ledger](#cosmos.crypto.keyring.v1.Record.Ledger) |  | ledger stores the public information about a Ledger key |
+| `multi` | [Record.Multi](#cosmos.crypto.keyring.v1.Record.Multi) |  | Multi does not store any information. |
+| `offline` | [Record.Offline](#cosmos.crypto.keyring.v1.Record.Offline) |  | Offline does not store any information. |
+
+
+
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record.Ledger"></a>
+
+### Record.Ledger
+Ledger item
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `path` | [cosmos.crypto.hd.v1.BIP44Params](#cosmos.crypto.hd.v1.BIP44Params) |  |  |
+
+
+
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record.Local"></a>
+
+### Record.Local
+Item is a keyring item stored in a keyring backend.
+Local item
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `priv_key` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `priv_key_type` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record.Multi"></a>
+
+### Record.Multi
+Multi item
+
+
+
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record.Offline"></a>
+
+### Record.Offline
+Offline item
 
 
 
@@ -7090,11 +7223,12 @@ Class defines the class of the nft type.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `id` | [string](#string) |  |  |
-| `name` | [string](#string) |  |  |
-| `symbol` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
-| `uri` | [string](#string) |  |  |
+| `id` | [string](#string) |  | id defines the unique identifier of the NFT classification, similar to the contract address of ERC721 |
+| `name` | [string](#string) |  | name defines the human-readable name of the NFT classification |
+| `symbol` | [string](#string) |  | symbol is an abbreviated name for nft classification |
+| `description` | [string](#string) |  | description is a brief description of nft classification |
+| `uri` | [string](#string) |  | uri is a URI may point to a JSON file that conforms to the nft classification Metadata JSON Schema. |
+| `uri_hash` | [string](#string) |  | uri_hash is a hash of the document pointed to uri |
 
 
 
@@ -7104,15 +7238,16 @@ Class defines the class of the nft type.
 <a name="cosmos.nft.v1beta1.NFT"></a>
 
 ### NFT
-NFT defines the nft.
+NFT defines the NFT.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `class_id` | [string](#string) |  |  |
-| `id` | [string](#string) |  |  |
-| `uri` | [string](#string) |  |  |
-| `data` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `class_id` | [string](#string) |  | class_id defines the unique identifier of the NFT classification, similar to the contract address of ERC721 |
+| `id` | [string](#string) |  | id defines the unique identification of NFT |
+| `uri` | [string](#string) |  | uri defines NFT's metadata storage address outside the chain |
+| `uri_hash` | [string](#string) |  | uri_hash is a hash of the document pointed to uri |
+| `data` | [google.protobuf.Any](#google.protobuf.Any) |  | data is the metadata of the NFT |
 
 
 
@@ -7143,8 +7278,8 @@ Entry Defines all nft owned by a person
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `owner` | [string](#string) |  |  |
-| `nfts` | [NFT](#cosmos.nft.v1beta1.NFT) | repeated |  |
+| `owner` | [string](#string) |  | owner is the owner address of the following nft |
+| `nfts` | [NFT](#cosmos.nft.v1beta1.NFT) | repeated | nfts is a group of nfts of the same owner |
 
 
 
@@ -7415,7 +7550,7 @@ Query defines the gRPC querier service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Balance` | [QueryBalanceRequest](#cosmos.nft.v1beta1.QueryBalanceRequest) | [QueryBalanceResponse](#cosmos.nft.v1beta1.QueryBalanceResponse) | Balance queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721 | GET|/cosmos/nft/v1beta1/balance/{class_id}/{owner}|
 | `Owner` | [QueryOwnerRequest](#cosmos.nft.v1beta1.QueryOwnerRequest) | [QueryOwnerResponse](#cosmos.nft.v1beta1.QueryOwnerResponse) | Owner queries the owner of the NFT based on its class and id, same as ownerOf in ERC721 | GET|/cosmos/nft/v1beta1/owner/{class_id}/{id}|
-| `Supply` | [QuerySupplyRequest](#cosmos.nft.v1beta1.QuerySupplyRequest) | [QuerySupplyResponse](#cosmos.nft.v1beta1.QuerySupplyResponse) | Supply queries the number of nft based on the class, same as totalSupply of ERC721 | GET|/cosmos/nft/v1beta1/supply/{class_id}|
+| `Supply` | [QuerySupplyRequest](#cosmos.nft.v1beta1.QuerySupplyRequest) | [QuerySupplyResponse](#cosmos.nft.v1beta1.QuerySupplyResponse) | Supply queries the number of NFTs from the given class, same as totalSupply of ERC721. | GET|/cosmos/nft/v1beta1/supply/{class_id}|
 | `NFTsOfClass` | [QueryNFTsOfClassRequest](#cosmos.nft.v1beta1.QueryNFTsOfClassRequest) | [QueryNFTsOfClassResponse](#cosmos.nft.v1beta1.QueryNFTsOfClassResponse) | NFTsOfClass queries all NFTs of a given class or optional owner, similar to tokenByIndex in ERC721Enumerable | GET|/cosmos/nft/v1beta1/nfts/{class_id}|
 | `NFT` | [QueryNFTRequest](#cosmos.nft.v1beta1.QueryNFTRequest) | [QueryNFTResponse](#cosmos.nft.v1beta1.QueryNFTResponse) | NFT queries an NFT based on its class and id. | GET|/cosmos/nft/v1beta1/nfts/{class_id}/{id}|
 | `Class` | [QueryClassRequest](#cosmos.nft.v1beta1.QueryClassRequest) | [QueryClassResponse](#cosmos.nft.v1beta1.QueryClassResponse) | Class queries an NFT class based on its id | GET|/cosmos/nft/v1beta1/classes/{class_id}|
@@ -7440,10 +7575,10 @@ MsgSend represents a message to send a nft from one account to another account.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `class_id` | [string](#string) |  |  |
-| `id` | [string](#string) |  |  |
-| `sender` | [string](#string) |  |  |
-| `receiver` | [string](#string) |  |  |
+| `class_id` | [string](#string) |  | class_id defines the unique identifier of the nft classification, similar to the contract address of ERC721 |
+| `id` | [string](#string) |  | id defines the unique identification of nft |
+| `sender` | [string](#string) |  | sender is the address of the owner of nft |
+| `receiver` | [string](#string) |  | receiver is the receiver address of nft |
 
 
 
@@ -8954,7 +9089,7 @@ Query defines the gRPC querier service.
 <a name="cosmos.staking.v1beta1.MsgBeginRedelegate"></a>
 
 ### MsgBeginRedelegate
-MsgBeginRedelegate defines a SDK message for performing a redelegation
+MsgBeginRedelegate defines a Cosmos SDK message for performing a redelegation
 of coins from a delegator and source validator to a destination validator.
 
 
@@ -8988,7 +9123,7 @@ MsgBeginRedelegateResponse defines the Msg/BeginRedelegate response type.
 <a name="cosmos.staking.v1beta1.MsgCreateValidator"></a>
 
 ### MsgCreateValidator
-MsgCreateValidator defines a SDK message for creating a new validator.
+MsgCreateValidator defines a Cosmos SDK message for creating a new validator.
 
 
 | Field | Type | Label | Description |
@@ -9019,7 +9154,7 @@ MsgCreateValidatorResponse defines the Msg/CreateValidator response type.
 <a name="cosmos.staking.v1beta1.MsgDelegate"></a>
 
 ### MsgDelegate
-MsgDelegate defines a SDK message for performing a delegation of coins
+MsgDelegate defines a Cosmos SDK message for performing a delegation of coins
 from a delegator to a validator.
 
 
@@ -9047,7 +9182,7 @@ MsgDelegateResponse defines the Msg/Delegate response type.
 <a name="cosmos.staking.v1beta1.MsgEditValidator"></a>
 
 ### MsgEditValidator
-MsgEditValidator defines a SDK message for editing an existing validator.
+MsgEditValidator defines a Cosmos SDK message for editing an existing validator.
 
 
 | Field | Type | Label | Description |
@@ -9075,7 +9210,7 @@ MsgEditValidatorResponse defines the Msg/EditValidator response type.
 <a name="cosmos.staking.v1beta1.MsgUndelegate"></a>
 
 ### MsgUndelegate
-MsgUndelegate defines a SDK message for performing an undelegation from a
+MsgUndelegate defines a Cosmos SDK message for performing an undelegation from a
 delegate and a validator.
 
 
@@ -9738,7 +9873,7 @@ Plan specifies information about a planned upgrade and when it should occur.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  | Sets the name for the upgrade. This name will be used by the upgraded version of the software to apply any special "on-upgrade" commands during the first BeginBlock method after the upgrade is applied. It is also used to detect whether a software version can handle a given upgrade. If no upgrade handler with this name has been set in the software, it will be assumed that the software is out-of-date when the upgrade Time or Height is reached and the software will exit. |
-| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | **Deprecated.** Deprecated: Time based upgrades have been deprecated. Time based upgrade logic has been removed from the SDK. If this field is not empty, an error will be thrown. |
+| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | **Deprecated.** Deprecated: Time based upgrades have been deprecated. Time based upgrade logic has been removed from the Cosmos SDK. If this field is not empty, an error will be thrown. |
 | `height` | [int64](#int64) |  | The height at which the upgrade must be performed. Only used if Time is not set. |
 | `info` | [string](#string) |  | Any application specific upgrade info to be included on-chain such as a git commit that validators could automatically upgrade to |
 | `upgraded_client_state` | [google.protobuf.Any](#google.protobuf.Any) |  | **Deprecated.** Deprecated: UpgradedClientState field has been deprecated. IBC upgrade logic has been moved to the IBC module in the sub module 02-client. If this field is not empty, an error will be thrown. |

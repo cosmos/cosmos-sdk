@@ -55,3 +55,7 @@ staking token of the chain.
     - [Handlers](04_events.md#handlers)
 5. **[Future Improvements](05_future_improvements.md)**
 6. **[Parameters](06_params.md)**
+7. **[Client](07_client.md)**
+    - [CLI](07_client.md#cli)
+    - [gRPC](07_client.md#grpc)
+    - [REST](07_client.md#rest)

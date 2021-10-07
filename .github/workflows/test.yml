@@ -76,6 +76,8 @@ jobs:
         run: go list ./... > pkgs.txt
       - name: Append ./db packages
         run: cd db; go list ./... >> ../pkgs.txt; cd ..
+      - name: Append ./container packages
+        run: cd container; go list ./... >> ../pkgs.txt; cd ..
       - name: Split pkgs into 4 files
         run: split -d -n l/4 pkgs.txt pkgs.txt.part.
       # cache multiple

@@ -46,5 +46,8 @@ and restart the App.
 
 Configuration of Cosmovisor is done through environment variables, which are
 documented in: https://github.com/cosmos/cosmos-sdk/tree/master/cosmovisor/README.md
+
+To get help for the configured binary:
+  cosmovisor run help
 `, cosmovisor.EnvName, cosmovisor.EnvHome)
 }

@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	cfg "github.com/tendermint/tendermint/config"
@@ -23,6 +22,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	"github.com/cosmos/go-bip39"
 )
 
 const (
@@ -76,10 +76,6 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
-<<<<<<< HEAD
-
-=======
->>>>>>> cc1a1c8cd (fix: --home flag parsing (#10226))
 			config.SetRoot(clientCtx.HomeDir)
 
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)

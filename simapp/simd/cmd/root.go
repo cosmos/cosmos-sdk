@@ -53,9 +53,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		Use:   "simd",
 		Short: "simulation app",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-<<<<<<< HEAD
-			initClientCtx = client.ReadHomeFlag(initClientCtx, cmd)
-=======
 			// set the default command outputs
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
@@ -64,7 +61,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			if err != nil {
 				return err
 			}
->>>>>>> cc1a1c8cd (fix: --home flag parsing (#10226))
 
 			initClientCtx, err = config.ReadFromClientConfig(initClientCtx)
 			if err != nil {

@@ -3,6 +3,7 @@ package v045
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v040staking "github.com/cosmos/cosmos-sdk/x/staking/migrations/v040"
 )
@@ -11,7 +12,7 @@ import (
 // The migration includes:
 //
 // - Removing delegations that have a zero share or token amount.
-func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
+func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
 
 	return purgeDelegations(store, cdc)

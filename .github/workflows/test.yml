@@ -76,8 +76,6 @@ jobs:
         run: go list ./... > pkgs.txt
       - name: Append ./db packages
         run: cd db; go list ./... >> ../pkgs.txt; cd ..
-      - name: echo pkgs.txt
-        run: cat pkgs.txt
       - name: Split pkgs into 4 files
         run: split -d -n l/4 pkgs.txt pkgs.txt.part.
       # cache multiple

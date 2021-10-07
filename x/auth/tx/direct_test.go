@@ -69,6 +69,7 @@ func TestDirectModeHandler(t *testing.T) {
 	require.Len(t, modeHandler.Modes(), 1)
 
 	signingData := signing.SignerData{
+		Address:       addr,
 		ChainID:       "test-chain",
 		AccountNumber: 1,
 	}

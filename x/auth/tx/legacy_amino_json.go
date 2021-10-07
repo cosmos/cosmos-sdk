@@ -46,9 +46,31 @@ func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode,
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "SIGN_MODE_LEGACY_AMINO_JSON does not support protobuf extension options")
 	}
 
+	addr := data.Address
+	seq, err := getSequence(protoTx, addr)
+	if err != nil {
+		return nil, err
+	}
+
 	return legacytx.StdSignBytes(
-		data.ChainID, data.AccountNumber, data.Sequence, protoTx.GetTimeoutHeight(),
+		data.ChainID, data.AccountNumber, seq, protoTx.GetTimeoutHeight(),
 		legacytx.StdFee{Amount: protoTx.GetFee(), Gas: protoTx.GetGas()},
 		tx.GetMsgs(), protoTx.GetMemo(),
 	), nil
+}
+
+// getSequence retrieves the sequence of the given address from the protoTx's
+// signer infos.
+func getSequence(protoTx *wrapper, addr sdk.AccAddress) (uint64, error) {
+	sigsV2, err := protoTx.GetSignaturesV2()
+	if err != nil {
+		return 0, err
+	}
+	for _, si := range sigsV2 {
+		if addr.Equals(sdk.AccAddress(si.PubKey.Address())) {
+			return si.Sequence, nil
+		}
+	}
+
+	return 0, sdkerrors.ErrInvalidRequest.Wrapf("address %s not found in signer infos", addr)
 }

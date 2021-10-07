@@ -53,6 +53,7 @@ func TestDirectAuxHandler(t *testing.T) {
 	require.NoError(t, err)
 
 	signingData := signing.SignerData{
+		Address:       addr,
 		ChainID:       "test-chain",
 		AccountNumber: 1,
 	}

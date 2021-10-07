@@ -6,6 +6,10 @@ import (
 )
 
 var (
+	// IsAlphaNumericOrUnderscore is a regular expression that matches all typical
+	// JSON property names.
+	IsAlphaNumericOrUnderscore = regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString
+
 	// IsAlphaNumeric defines a regular expression for matching against alpha-numeric
 	// values.
 	IsAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString

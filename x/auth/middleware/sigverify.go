@@ -429,13 +429,13 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	}
 }
 
-func (svm sigVerificationTxHandler) sigVerify(ctx context.Context, tx sdk.Tx, isReCheckTx, simulate bool) error {
+func (svm sigVerificationTxHandler) sigVerify(ctx context.Context, sdkTx sdk.Tx, isReCheckTx, simulate bool) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// no need to verify signatures on recheck tx
 	if isReCheckTx {
 		return nil
 	}
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
+	sigTx, ok := sdkTx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
@@ -481,6 +481,12 @@ func (svm sigVerificationTxHandler) sigVerify(ctx context.Context, tx sdk.Tx, is
 		if !genesis {
 			accNum = acc.GetAccountNumber()
 		}
+
+		var isTipper bool
+		if tipTx, ok := sdkTx.(tx.TipTx); ok && tipTx.GetTip() != nil {
+			isTipper = tipTx.GetTip().Tipper == signerAddrs[i].String()
+		}
+
 		signerData := authsigning.SignerData{
 			ChainID:       chainID,
 			AccountNumber: accNum,
@@ -488,7 +494,7 @@ func (svm sigVerificationTxHandler) sigVerify(ctx context.Context, tx sdk.Tx, is
 		}
 
 		if !simulate {
-			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svm.signModeHandler, tx)
+			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svm.signModeHandler, sdkTx)
 			if err != nil {
 				var errMsg string
 				if OnlyLegacyAminoSigners(sig.Data) {

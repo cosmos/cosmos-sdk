@@ -220,11 +220,17 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 		}
 	}
 
+	var isTipper bool
+	if tip := txBuilder.GetTx().GetTip(); tip != nil {
+		isTipper = tip.Tipper == sdk.AccAddress(pubKey.Address()).String()
+	}
+
 	signerData := authsigning.SignerData{
 		ChainID:       txf.chainID,
 		AccountNumber: txf.accountNumber,
 		Sequence:      txf.sequence,
 		SignerIndex:   signerIndex,
+		IsTipper:      isTipper,
 	}
 
 	// For SIGN_MODE_DIRECT, calling SetSignatures calls setSignerInfos on

@@ -149,11 +149,9 @@ func writeVersionsFile(vm *versionManager, path string) error {
 	}
 	defer file.Close()
 	w := csv.NewWriter(file)
-	var rows [][]string
-	rows = append(rows, []string{
-		strconv.FormatUint(0, 10),
-		strconv.FormatUint(vm.lastTs, 10),
-	})
+	rows := [][]string{
+		[]string{"0", strconv.FormatUint(vm.lastTs, 10)},
+	}
 	for it := vm.Iterator(); it.Next(); {
 		version := it.Value()
 		ts, ok := vm.vmap[version]

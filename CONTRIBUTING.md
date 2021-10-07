@@ -47,7 +47,7 @@ taken place in a GitHub issue, that PR runs a high likelihood of being rejected.
 
 The Cosmos SDK team is fully decentralized and self organized.
 
-The developers are organized in working group which are listed on [Github Issue](https://github.com/cosmos/cosmos-sdk/issues/9058) (pinned at the top of the [issues list](https://github.com/cosmos/cosmos-sdk/issues)).
+The developers are organized in working group which are listed on a ["Working Groups & Arch Process" Github Issue](https://github.com/cosmos/cosmos-sdk/issues/9058) (pinned at the top of the [issues list](https://github.com/cosmos/cosmos-sdk/issues)).
 
 The important development announcements are shared on [Discord](https://discord.com/invite/cosmosnetwork) in the \#dev-announcements channel.
 
@@ -57,7 +57,7 @@ To synchronize we have few major meetings:
 + Cosmos Community SDK Development Call every last Wednesday at 17:00 UTC.
 + Cosmos Roadmap Prioritization every 4 weeks on Tuesday at 15:00 (limited participation).
 
-If you would like to join one of those calls, then please contact us on [Discord](https://discord.com/invite/cosmosnetwork) or reach out directly to Cory Levinson from Regen Network.
+If you would like to join one of those calls, then please contact us on [Discord](https://discord.com/invite/cosmosnetwork) or reach out directly to Cory Levinson from Regen Network (cory@regen.network).
 
 
 ## Architecture Decision Records (ADR)

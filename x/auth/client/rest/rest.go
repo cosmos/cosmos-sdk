@@ -30,6 +30,7 @@ func RegisterTxRoutes(clientCtx client.Context, rtr *mux.Router) {
 	r := rest.WithHTTPDeprecationHeaders(rtr)
 	r.HandleFunc("/txs/{hash}", QueryTxRequestHandlerFn(clientCtx)).Methods("GET")
 	r.HandleFunc("/txs", QueryTxsRequestHandlerFn(clientCtx)).Methods("GET")
+	r.HandleFunc("/txs", BroadcastTxRequest(clientCtx)).Methods("POST")
 	r.HandleFunc("/txs/encode", EncodeTxRequest(clientCtx)).Methods("POST")
 	r.HandleFunc("/txs/decode", DecodeTxRequestHandlerFn(clientCtx)).Methods("POST")
 }

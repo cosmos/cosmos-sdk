@@ -38,7 +38,7 @@ func TestNewTableBuilder(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			builder, err := newTableBuilder(0x1, tc.model, cdc)
+			builder, err := newTableBuilder([2]byte{0x1}, tc.model, cdc)
 			if tc.expectErr {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tc.expectedErr)
@@ -96,7 +96,7 @@ func TestCreate(t *testing.T) {
 			ctx := NewMockContext()
 			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
-			const anyPrefix = 0x10
+			var anyPrefix = [2]byte{0x10}
 			tableBuilder, err := newTableBuilder(anyPrefix, &testdata.TableModel{}, cdc)
 			require.NoError(t, err)
 			myTable := tableBuilder.Build()
@@ -154,7 +154,7 @@ func TestUpdate(t *testing.T) {
 			ctx := NewMockContext()
 			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
-			const anyPrefix = 0x10
+			var anyPrefix = [2]byte{0x10}
 			tableBuilder, err := newTableBuilder(anyPrefix, &testdata.TableModel{}, cdc)
 			require.NoError(t, err)
 			myTable := tableBuilder.Build()
@@ -204,7 +204,7 @@ func TestDelete(t *testing.T) {
 			ctx := NewMockContext()
 			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
-			const anyPrefix = 0x10
+			var anyPrefix = [2]byte{0x10}
 			tableBuilder, err := newTableBuilder(anyPrefix, &testdata.TableModel{}, cdc)
 			require.NoError(t, err)
 			myTable := tableBuilder.Build()

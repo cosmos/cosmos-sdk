@@ -17,8 +17,8 @@ import (
 func TestTypeSafeRowGetter(t *testing.T) {
 	storeKey := sdk.NewKVStoreKey("test")
 	ctx := NewMockContext()
-	const prefixKey = 0x2
-	store := prefix.NewStore(ctx.KVStore(storeKey), []byte{prefixKey})
+	var prefixKey = [2]byte{0x2}
+	store := prefix.NewStore(ctx.KVStore(storeKey), prefixKey[:])
 	md := testdata.TableModel{
 		Id:   1,
 		Name: "some name",

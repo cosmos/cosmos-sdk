@@ -13,14 +13,14 @@ var _ Indexable = &tableBuilder{}
 
 type tableBuilder struct {
 	model       reflect.Type
-	prefixData  byte
+	prefix      [2]byte
 	afterSet    []AfterSetInterceptor
 	afterDelete []AfterDeleteInterceptor
 	cdc         codec.Codec
 }
 
 // newTableBuilder creates a builder to setup a table object.
-func newTableBuilder(prefixData byte, model codec.ProtoMarshaler, cdc codec.Codec) (*tableBuilder, error) {
+func newTableBuilder(prefix [2]byte, model codec.ProtoMarshaler, cdc codec.Codec) (*tableBuilder, error) {
 	if model == nil {
 		return nil, ErrArgument.Wrap("Model must not be nil")
 	}
@@ -29,22 +29,22 @@ func newTableBuilder(prefixData byte, model codec.ProtoMarshaler, cdc codec.Code
 		tp = tp.Elem()
 	}
 	return &tableBuilder{
-		prefixData: prefixData,
-		model:      tp,
-		cdc:        cdc,
+		prefix: prefix,
+		model:  tp,
+		cdc:    cdc,
 	}, nil
 }
 
 // RowGetter returns a type safe RowGetter.
 func (a tableBuilder) RowGetter() RowGetter {
-	return NewTypeSafeRowGetter(a.prefixData, a.model, a.cdc)
+	return NewTypeSafeRowGetter(a.prefix, a.model, a.cdc)
 }
 
 // Build creates a new table object.
 func (a tableBuilder) Build() table {
 	return table{
 		model:       a.model,
-		prefix:      a.prefixData,
+		prefix:      a.prefix,
 		afterSet:    a.afterSet,
 		afterDelete: a.afterDelete,
 		cdc:         a.cdc,
@@ -73,7 +73,7 @@ func (a *tableBuilder) AddAfterDeleteInterceptor(interceptor AfterDeleteIntercep
 // these requirements.
 type table struct {
 	model       reflect.Type
-	prefix      byte
+	prefix      [2]byte
 	afterSet    []AfterSetInterceptor
 	afterDelete []AfterDeleteInterceptor
 	cdc         codec.Codec
@@ -123,7 +123,7 @@ func (a table) Set(store sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler
 		return err
 	}
 
-	pStore := prefix.NewStore(store, []byte{a.prefix})
+	pStore := prefix.NewStore(store, a.prefix[:])
 
 	var oldValue codec.ProtoMarshaler
 	if a.Has(store, rowID) {
@@ -161,7 +161,7 @@ func assertValid(obj codec.ProtoMarshaler) error {
 // Delete iterates through the registered callbacks that remove secondary index
 // keys.
 func (a table) Delete(store sdk.KVStore, rowID RowID) error {
-	pStore := prefix.NewStore(store, []byte{a.prefix})
+	pStore := prefix.NewStore(store, a.prefix[:])
 
 	var oldValue = reflect.New(a.model).Interface().(codec.ProtoMarshaler)
 	if err := a.GetOne(store, rowID, oldValue); err != nil {
@@ -183,7 +183,7 @@ func (a table) Has(store sdk.KVStore, key RowID) bool {
 	if len(key) == 0 {
 		return false
 	}
-	pStore := prefix.NewStore(store, []byte{a.prefix})
+	pStore := prefix.NewStore(store, a.prefix[:])
 	it := pStore.Iterator(PrefixRange(key))
 	defer it.Close()
 	return it.Valid()

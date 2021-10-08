@@ -69,7 +69,7 @@ type AfterDeleteInterceptor func(store sdk.KVStore, rowID RowID, value codec.Pro
 type RowGetter func(store sdk.KVStore, rowID RowID, dest codec.ProtoMarshaler) error
 
 // NewTypeSafeRowGetter returns a `RowGetter` with type check on the dest parameter.
-func NewTypeSafeRowGetter(prefixKey byte, model reflect.Type, cdc codec.Codec) RowGetter {
+func NewTypeSafeRowGetter(prefixKey [2]byte, model reflect.Type, cdc codec.Codec) RowGetter {
 	return func(store sdk.KVStore, rowID RowID, dest codec.ProtoMarshaler) error {
 		if len(rowID) == 0 {
 			return errors.Wrap(ErrArgument, "key must not be nil")
@@ -78,7 +78,7 @@ func NewTypeSafeRowGetter(prefixKey byte, model reflect.Type, cdc codec.Codec) R
 			return err
 		}
 
-		pStore := prefix.NewStore(store, []byte{prefixKey})
+		pStore := prefix.NewStore(store, prefixKey[:])
 		it := pStore.Iterator(PrefixRange(rowID))
 		defer it.Close()
 		if !it.Valid() {

@@ -200,7 +200,7 @@ func (s *IntegrationTestSuite) TestQueryGranterGrantsGRPC() {
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/%s", val.APIAddress, val.Address.String()),
 			false,
 			"",
-			2,
+			6,
 		},
 	}
 	for _, tc := range testCases {

@@ -22,3 +22,5 @@ application initialization process.
 3. **[Events](03_events.md)**
     - [Handlers](03_events.md#handlers)
 4. **[Parameters](04_params.md)**
+5. **[Client](05_client.md)**
+    - [CLI](05_client.md#cli)

@@ -4,11 +4,15 @@ order: 2
 
 # REST Endpoints Migration
 
-Migrate to gRPC-Gateway REST endpoints. Legacy REST endpoints were marked as deprecated in v0.40 and removed in v0.44. {synopsis}
+Migrate to gRPC-Gateway REST endpoints. Legacy REST endpoints were marked as deprecated in v0.40 and will be removed in v0.45. {synopsis}
+
+::: warning
+Two Legacy REST endpoints (`POST /txs` and `POST /txs/encode`) were removed ahead of schedule in v0.44 due to a security vulnerability.
+:::
 
 ## Legacy REST Endpoints
 
-Cosmos SDK versions v0.39 and earlier registered REST endpoints using a package called `gorilla/mux`. These REST endpoints were marked as deprecated in v0.40 and have since been referred to as legacy REST endpoints. Legacy REST endpoints were officially removed in v0.44.
+Cosmos SDK versions v0.39 and earlier registered REST endpoints using a package called `gorilla/mux`. These REST endpoints were marked as deprecated in v0.40 and have since been referred to as legacy REST endpoints. Legacy REST endpoints will be officially removed in v0.45.
 
 ## gRPC-Gateway REST Endpoints
 
@@ -43,7 +47,7 @@ Following the Protocol Buffers migration in v0.40, Cosmos SDK has been set to ta
 | `GET /gov/parameters/{type}`                                                    | Get government parameters                                           | `GET /cosmos/gov/v1beta1/params/{type}`                                                               |
 | `GET /gov/proposals`                                                            | Get all proposals                                                   | `GET /cosmos/gov/v1beta1/proposals`                                                                   |
 | `GET /gov/proposals/{proposal-id}`                                              | Get proposal by id                                                  | `GET /cosmos/gov/v1beta1/proposals/{proposal-id}`                                                     |
-| `GET /gov/proposals/{proposal-id}/proposer`                                     | Get proposer of a proposal                                          | `GET /cosmos/gov/v1beta1/proposals/{proposal-id}` (Get proposer from `Proposal` struct)               |
+| `GET /gov/proposals/{proposal-id}/proposer`                                     | Get proposer of a proposal                                          | N/A, use Query tx by events endpoint               |
 | `GET /gov/proposals/{proposal-id}/deposits`                                     | Get deposits of a proposal                                          | `GET /cosmos/gov/v1beta1/proposals/{proposal-id}/deposits`                                            |
 | `GET /gov/proposals/{proposal-id}/deposits/{depositor}`                         | Get depositor a of deposit                                          | `GET /cosmos/gov/v1beta1/proposals/{proposal-id}/deposits/{depositor}`                                |
 | `GET /gov/proposals/{proposal-id}/tally`                                        | Get tally of a proposal                                             | `GET /cosmos/gov/v1beta1/proposals/{proposal-id}/tally`                                               |
@@ -78,4 +82,4 @@ Following the Protocol Buffers migration in v0.40, Cosmos SDK has been set to ta
 
 ## Migrating to gRPC
 
-Instead of hitting REST endpoints as described above, the SDK also exposes a gRPC server. Any client can use gRPC instead of REST to interact with the node. An overview of different ways to communicate with a node can be found [here](../core/grpc_rest.md), and a concrete tutorial for setting up a gRPC client can be found [here](../run-node/txs.md#programmatically-with-go).
+Instead of hitting REST endpoints as described above, the Cosmos SDK also exposes a gRPC server. Any client can use gRPC instead of REST to interact with the node. An overview of different ways to communicate with a node can be found [here](../core/grpc_rest.md), and a concrete tutorial for setting up a gRPC client can be found [here](../run-node/txs.md#programmatically-with-go).

@@ -8,7 +8,7 @@ order: 9
 
 ## Pre-requisite Readings
 
-- [Anatomy of an SDK application](../basics/app-anatomy.md) {prereq}
+- [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
 - [Tendermint Documentation on Events](https://docs.tendermint.com/master/spec/abci/abci.html#events) {prereq}
 
 ## Events
@@ -20,7 +20,7 @@ take the form of: `{eventType}.{attributeKey}={attributeValue}`.
 
 An Event contains:
 
-- A `type` to categorize the Event at a high-level; for example, the SDK uses the `"message"` type to filter Events by `Msg`s.
+- A `type` to categorize the Event at a high-level; for example, the Cosmos SDK uses the `"message"` type to filter Events by `Msg`s.
 - A list of `attributes` are key-value pairs that give more information about the categorized Event. For example, for the `"message"` type, we can filter Events by key-value pairs using `message.action={some_action}`, `message.module={some_module}` or `message.sender={some_sender}`.
 
 ::: tip
@@ -41,7 +41,7 @@ Events are returned to the underlying consensus engine in the response of the fo
 
 ### Examples
 
-The following examples show how to query Events using the SDK.
+The following examples show how to query Events using the Cosmos SDK.
 
 | Event                                            | Description                                                                                                                                              |
 | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -128,10 +128,10 @@ where `senderAddress` is an address following the [`AccAddress`](../basics/accou
 
 ## Typed Events (coming soon)
 
-As previously described, Events are defined on a per-module basis. It is the responsibility of the module developer to define Event types and Event attributes. Except in the `spec/XX_events.md` file, these Event types and attributes are unfortunately not easily discoverable, so the SDK proposes to use Protobuf-defined [Typed Events](../architecture/adr-032-typed-events.md) for emitting and querying Events.
+As previously described, Events are defined on a per-module basis. It is the responsibility of the module developer to define Event types and Event attributes. Except in the `spec/XX_events.md` file, these Event types and attributes are unfortunately not easily discoverable, so the Cosmos SDK proposes to use Protobuf-defined [Typed Events](../architecture/adr-032-typed-events.md) for emitting and querying Events.
 
 The Typed Events proposal has not yet been fully implemented. Documentation is not yet available.
 
 ## Next {hide}
 
-Learn about SDK [telemetry](./telemetry.md) {hide}
+Learn about Cosmos SDK [telemetry](./telemetry.md) {hide}

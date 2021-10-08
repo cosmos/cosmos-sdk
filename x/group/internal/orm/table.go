@@ -51,8 +51,8 @@ func (a tableBuilder) Build() table {
 	}
 }
 
-// AddafterSetInterceptor can be used to register a callback function that is executed after an object is created and/or updated.
-func (a *tableBuilder) AddafterSetInterceptor(interceptor AfterSetInterceptor) {
+// AddAfterSetInterceptor can be used to register a callback function that is executed after an object is created and/or updated.
+func (a *tableBuilder) AddAfterSetInterceptor(interceptor AfterSetInterceptor) {
 	a.afterSet = append(a.afterSet, interceptor)
 }
 

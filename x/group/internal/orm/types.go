@@ -54,7 +54,7 @@ type Iterator interface {
 // This interface provides a set of functions that can be called by indexes to register and interact with the tables.
 type Indexable interface {
 	RowGetter() RowGetter
-	AddafterSetInterceptor(interceptor AfterSetInterceptor)
+	AddAfterSetInterceptor(interceptor AfterSetInterceptor)
 	AddAfterDeleteInterceptor(interceptor AfterDeleteInterceptor)
 }
 

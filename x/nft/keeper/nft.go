@@ -176,17 +176,17 @@ func (k Keeper) getClassStoreByOwner(ctx sdk.Context, owner sdk.AccAddress, clas
 }
 
 func (k Keeper) incrTotalSupply(ctx sdk.Context, classID string) {
-	store := ctx.KVStore(k.storeKey)
-	supplyKey := classTotalSupply(classID)
-	bz := store.Get(supplyKey)
-	supply := sdk.BigEndianToUint64(bz) + 1
-	store.Set(supplyKey, sdk.Uint64ToBigEndian(supply))
+	supply := k.GetTotalSupply(ctx, classID) + 1
+	k.updateTotalSupply(ctx, classID, supply)
 }
 
 func (k Keeper) decrTotalSupply(ctx sdk.Context, classID string) {
+	supply := k.GetTotalSupply(ctx, classID) - 1
+	k.updateTotalSupply(ctx, classID, supply)
+}
+
+func (k Keeper) updateTotalSupply(ctx sdk.Context, classID string, supply uint64) {
 	store := ctx.KVStore(k.storeKey)
 	supplyKey := classTotalSupply(classID)
-	bz := store.Get(supplyKey)
-	supply := sdk.BigEndianToUint64(bz) - 1
 	store.Set(supplyKey, sdk.Uint64ToBigEndian(supply))
 }

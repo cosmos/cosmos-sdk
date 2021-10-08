@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"sort"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/nft"
 )
@@ -43,11 +45,17 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *nft.GenesisState {
 		}
 	}
 
+	owners := make([]string, 0, len(nftMap))
+	for owner := range nftMap {
+		owners = append(owners, owner)
+	}
+	sort.Strings(owners)
+
 	entries := make([]*nft.Entry, 0, len(nftMap))
-	for k, v := range nftMap {
+	for _, owner := range owners {
 		entries = append(entries, &nft.Entry{
-			Owner: k,
-			Nfts:  v,
+			Owner: owner,
+			Nfts:  nftMap[owner],
 		})
 	}
 	return &nft.GenesisState{

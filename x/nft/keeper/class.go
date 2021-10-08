@@ -11,7 +11,10 @@ func (k Keeper) NewClass(ctx sdk.Context, class nft.Class) error {
 	if k.HasClass(ctx, class.Id) {
 		return sdkerrors.Wrap(nft.ErrClassExists, class.Id)
 	}
-	bz := k.cdc.MustMarshal(&class)
+	bz, err := k.cdc.Marshal(&class)
+	if err != nil {
+		return sdkerrors.Wrap(err, "Marshal nft.Class failed")
+	}
 	store := ctx.KVStore(k.storeKey)
 	store.Set(classStoreKey(class.Id), bz)
 	return nil
@@ -22,7 +25,10 @@ func (k Keeper) UpdateClass(ctx sdk.Context, class nft.Class) error {
 	if !k.HasClass(ctx, class.Id) {
 		return sdkerrors.Wrap(nft.ErrClassNotExists, class.Id)
 	}
-	bz := k.cdc.MustMarshal(&class)
+	bz, err := k.cdc.Marshal(&class)
+	if err != nil {
+		return sdkerrors.Wrap(err, "Marshal nft.Class failed")
+	}
 	store := ctx.KVStore(k.storeKey)
 	store.Set(classStoreKey(class.Id), bz)
 	return nil

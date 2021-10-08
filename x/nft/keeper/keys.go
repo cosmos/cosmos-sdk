@@ -23,44 +23,54 @@ const StoreKey = nft.ModuleName
 
 // classStoreKey returns the byte representation of the nft class key
 func classStoreKey(classID string) []byte {
-	return append(ClassKey, []byte(classID)...)
+	key := make([]byte, len(ClassKey)+len(classID))
+	copy(key, ClassKey)
+	copy(key[len(ClassKey):], classID)
+	return key
 }
 
 // nftStoreKey returns the byte representation of the nft
 func nftStoreKey(classID string) []byte {
-	return append(append(NFTKey, []byte(classID)...), Delimiter...)
+	key := make([]byte, len(NFTKey)+len(classID)+len(Delimiter))
+	copy(key, NFTKey)
+	copy(key[len(NFTKey):], classID)
+	copy(key[len(NFTKey)+len(classID):], Delimiter)
+	return key
 }
 
 // classTotalSupply returns the byte representation of the ClassTotalSupply
 func classTotalSupply(classID string) []byte {
-	return append(ClassTotalSupply, []byte(classID)...)
+	key := make([]byte, len(ClassTotalSupply)+len(classID))
+	copy(key, ClassTotalSupply)
+	copy(key[len(ClassTotalSupply):], classID)
+	return key
 }
 
 // nftOfClassByOwnerStoreKey returns the byte representation of the nft owner
+// Items are stored with the following key: values
+// 0x03<owner><classID><Delimiter(1 Byte)>
 func nftOfClassByOwnerStoreKey(owner sdk.AccAddress, classID string) []byte {
-	// 0x03<owner><classID><Delimiter(1 Byte)>
-
 	owner = address.MustLengthPrefix(owner)
 	classIDBz := conv.UnsafeStrToBytes(classID)
 
-	var key = make([]byte, 1+len(owner)+1)
+	var key = make([]byte, len(NFTOfClassByOwnerKey)+len(owner)+len(Delimiter))
 	copy(key, NFTOfClassByOwnerKey)
-	copy(key[1:], owner)
-	copy(key[1+len(owner):], classIDBz)
+	copy(key[len(NFTOfClassByOwnerKey):], owner)
+	copy(key[len(NFTOfClassByOwnerKey)+len(owner):], classIDBz)
 	return append(key, Delimiter...)
 }
 
 // ownerStoreKey returns the byte representation of the nft owner
+// Items are stored with the following key: values
+// 0x04<classID><Delimiter(1 Byte)><nftID>
 func ownerStoreKey(classID, nftID string) []byte {
 	// key is of format:
-	// 0x04<classID><Delimiter(1 Byte)><nftID>
-
 	classIDBz := conv.UnsafeStrToBytes(classID)
 	nftIDBz := conv.UnsafeStrToBytes(nftID)
 
-	var key = make([]byte, 1+len(classIDBz)+1+len(nftIDBz))
+	var key = make([]byte, len(OwnerKey)+len(classIDBz)+len(Delimiter)+len(nftIDBz))
 	copy(key, OwnerKey)
-	copy(key[1:], classIDBz)
-	copy(key[1+len(classIDBz):], Delimiter)
+	copy(key[len(OwnerKey):], classIDBz)
+	copy(key[len(OwnerKey)+len(classIDBz):], Delimiter)
 	return append(key, nftIDBz...)
 }

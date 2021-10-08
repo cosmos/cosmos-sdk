@@ -19,7 +19,7 @@ import (
 )
 
 func TestTickExpiredDepositPeriod(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
@@ -39,8 +39,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	wrapCtx := sdk.WrapSDKContext(ctx)
-	res, err := govMsgSvr.SubmitProposal(wrapCtx, newProposalMsg)
+	res, err := govMsgSvr.SubmitProposal(sdk.WrapSDKContext(ctx), newProposalMsg)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
@@ -72,7 +71,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 }
 
 func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
@@ -149,7 +148,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 }
 
 func TestTickPassedDepositPeriod(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
@@ -202,7 +201,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 }
 
 func TestTickPassedVotingPeriod(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
@@ -268,7 +267,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 }
 
 func TestProposalPassedEndblocker(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
@@ -321,7 +320,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 }
 
 func TestEndBlockerProposalHandlerFailed(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrs(app, ctx, 1, valTokens)
 

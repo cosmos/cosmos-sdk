@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -28,8 +29,8 @@ type (
 	// a single specific module.
 	Keeper struct {
 		cdc           codec.BinaryCodec
-		storeKey      sdk.StoreKey
-		memKey        sdk.StoreKey
+		storeKey      storetypes.StoreKey
+		memKey        storetypes.StoreKey
 		capMap        map[uint64]*types.Capability
 		scopedModules map[string]struct{}
 		sealed        bool
@@ -43,8 +44,8 @@ type (
 	// passed by other modules.
 	ScopedKeeper struct {
 		cdc      codec.BinaryCodec
-		storeKey sdk.StoreKey
-		memKey   sdk.StoreKey
+		storeKey storetypes.StoreKey
+		memKey   storetypes.StoreKey
 		capMap   map[uint64]*types.Capability
 		module   string
 	}
@@ -52,7 +53,7 @@ type (
 
 // NewKeeper constructs a new CapabilityKeeper instance and initializes maps
 // for capability map and scopedModules map.
-func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey storetypes.StoreKey) *Keeper {
 	return &Keeper{
 		cdc:           cdc,
 		storeKey:      storeKey,
@@ -89,38 +90,59 @@ func (k *Keeper) ScopeToModule(moduleName string) ScopedKeeper {
 	}
 }
 
-// InitializeAndSeal loads all capabilities from the persistent KVStore into the
-// in-memory store and seals the keeper to prevent further modules from creating
-// a scoped keeper. InitializeAndSeal must be called once after the application
-// state is loaded.
-func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
+// Seal seals the keeper to prevent further modules from creating a scoped keeper.
+// Seal may be called during app initialization for applications that do not wish to create scoped keepers dynamically.
+func (k *Keeper) Seal() {
 	if k.sealed {
 		panic("cannot initialize and seal an already sealed capability keeper")
 	}
 
+	k.sealed = true
+}
+
+// InitMemStore will assure that the module store is a memory store (it will panic if it's not)
+// and willl initialize it. The function is safe to be called multiple times.
+// InitMemStore must be called every time the app starts before the keeper is used (so
+// `BeginBlock` or `InitChain` - whichever is first). We need access to the store so we
+// can't initialize it in a constructor.
+func (k *Keeper) InitMemStore(ctx sdk.Context) {
 	memStore := ctx.KVStore(k.memKey)
 	memStoreType := memStore.GetStoreType()
 
-	if memStoreType != sdk.StoreTypeMemory {
-		panic(fmt.Sprintf("invalid memory store type; got %s, expected: %s", memStoreType, sdk.StoreTypeMemory))
+	if memStoreType != storetypes.StoreTypeMemory {
+		panic(fmt.Sprintf("invalid memory store type; got %s, expected: %s", memStoreType, storetypes.StoreTypeMemory))
 	}
 
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixIndexCapability)
-	iterator := sdk.KVStorePrefixIterator(prefixStore, nil)
+	// create context with no block gas meter to ensure we do not consume gas during local initialization logic.
+	noGasCtx := ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
 
-	// initialize the in-memory store for all persisted capabilities
-	defer iterator.Close()
+	// check if memory store has not been initialized yet by checking if initialized flag is nil.
+	if !k.IsInitialized(noGasCtx) {
+		prefixStore := prefix.NewStore(noGasCtx.KVStore(k.storeKey), types.KeyPrefixIndexCapability)
+		iterator := sdk.KVStorePrefixIterator(prefixStore, nil)
 
-	for ; iterator.Valid(); iterator.Next() {
-		index := types.IndexFromKey(iterator.Key())
+		// initialize the in-memory store for all persisted capabilities
+		defer iterator.Close()
 
-		var capOwners types.CapabilityOwners
+		for ; iterator.Valid(); iterator.Next() {
+			index := types.IndexFromKey(iterator.Key())
 
-		k.cdc.MustUnmarshal(iterator.Value(), &capOwners)
-		k.InitializeCapability(ctx, index, capOwners)
+			var capOwners types.CapabilityOwners
+
+			k.cdc.MustUnmarshal(iterator.Value(), &capOwners)
+			k.InitializeCapability(noGasCtx, index, capOwners)
+		}
+
+		// set the initialized flag so we don't rerun initialization logic
+		memStore := noGasCtx.KVStore(k.memKey)
+		memStore.Set(types.KeyMemInitialized, []byte{1})
 	}
+}
 
-	k.sealed = true
+// IsInitialized returns true if the keeper is properly initialized, and false otherwise.
+func (k *Keeper) IsInitialized(ctx sdk.Context) bool {
+	memStore := ctx.KVStore(k.memKey)
+	return memStore.Get(types.KeyMemInitialized) != nil
 }
 
 // InitializeIndex sets the index to one (or greater) in InitChain according
@@ -358,6 +380,7 @@ func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (*types.Capab
 		// so we delete here to remove unnecessary values in map
 		// TODO: Delete index correctly from capMap by storing some reverse lookup
 		// in-memory map. Issue: https://github.com/cosmos/cosmos-sdk/issues/7805
+
 		return nil, false
 	}
 

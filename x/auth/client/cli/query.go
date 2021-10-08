@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -42,6 +43,7 @@ func GetQueryCmd() *cobra.Command {
 		GetAccountCmd(),
 		GetAccountsCmd(),
 		QueryParamsCmd(),
+		QueryModuleAccountsCmd(),
 	)
 
 	return cmd
@@ -142,6 +144,33 @@ func GetAccountsCmd() *cobra.Command {
 	return cmd
 }
 
+// QueryAllModuleAccountsCmd returns a list of all the existing module accounts with their account information and permissions
+func QueryModuleAccountsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "module-accounts",
+		Short: "Query all module accounts",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.ModuleAccounts(context.Background(), &types.QueryModuleAccountsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
 // QueryTxsByEventsCmd returns a command to search through transactions by events.
 func QueryTxsByEventsCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -217,12 +246,12 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 func QueryTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tx --type=[hash|acc_seq|signature] [hash|acc_seq|signature]",
-		Short: "Query for a transaction by hash, addr++seq combination or signature in a committed block",
+		Short: "Query for a transaction by hash, \"<addr>/<seq>\" combination or comma-separated signatures in a committed block",
 		Long: strings.TrimSpace(fmt.Sprintf(`
 Example:
 $ %s query tx <hash>
-$ %s query tx --%s=%s <addr>:<sequence>
-$ %s query tx --%s=%s <sig1_base64,sig2_base64...>
+$ %s query tx --%s=%s <addr>/<sequence>
+$ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 `,
 			version.AppName,
 			version.AppName, flagType, typeAccSeq,

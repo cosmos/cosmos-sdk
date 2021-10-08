@@ -30,7 +30,7 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(false)
+	app := simapp.Setup(suite.T(), false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
@@ -601,6 +601,8 @@ func (suite *KeeperTestSuite) TestGRPCDelegatorWithdrawAddress() {
 
 func (suite *KeeperTestSuite) TestGRPCCommunityPool() {
 	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
+	// reset fee pool
+	app.DistrKeeper.SetFeePool(ctx, types.InitialFeePool())
 
 	var (
 		req     *types.QueryCommunityPoolRequest

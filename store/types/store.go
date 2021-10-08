@@ -50,13 +50,6 @@ type StoreUpgrades struct {
 	Deleted []string      `json:"deleted"`
 }
 
-// UpgradeInfo defines height and name of the upgrade
-// to ensure multistore upgrades happen only at matching height.
-type UpgradeInfo struct {
-	Name   string `json:"name"`
-	Height int64  `json:"height"`
-}
-
 // StoreRename defines a name change of a sub-store.
 // All data previously under a PrefixStore with OldKey will be copied
 // to a PrefixStore with NewKey, then deleted from OldKey store.

@@ -45,7 +45,7 @@ type GenTxTestSuite struct {
 
 func (suite *GenTxTestSuite) SetupTest() {
 	checkTx := false
-	app := simapp.Setup(checkTx)
+	app := simapp.Setup(suite.T(), checkTx)
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{})
 	suite.app = app
 	suite.encodingConfig = simapp.MakeTestEncodingConfig()
@@ -240,7 +240,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 					sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)},
 					helpers.DefaultGenTxGas,
 					suite.ctx.ChainID(),
-					[]uint64{0},
+					[]uint64{7},
 					[]uint64{0},
 					priv1,
 				)

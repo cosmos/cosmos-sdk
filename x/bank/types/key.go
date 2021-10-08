@@ -31,32 +31,25 @@ var (
 	BalancesPrefix = []byte{0x02}
 )
 
-// DenomMetadataKey returns the denomination metadata key.
-func DenomMetadataKey(denom string) []byte {
-	d := []byte(denom)
-	return append(DenomMetadataPrefix, d...)
-}
-
-// AddressFromBalancesStore returns an account address from a balances prefix
+// AddressAndDenomFromBalancesStore returns an account address and denom from a balances prefix
 // store. The key must not contain the prefix BalancesPrefix as the prefix store
 // iterator discards the actual prefix.
 //
-// If invalid key is passed, AddressFromBalancesStore returns ErrInvalidKey.
-func AddressFromBalancesStore(key []byte) (sdk.AccAddress, error) {
+// If invalid key is passed, AddressAndDenomFromBalancesStore returns ErrInvalidKey.
+func AddressAndDenomFromBalancesStore(key []byte) (sdk.AccAddress, string, error) {
 	if len(key) == 0 {
-		return nil, ErrInvalidKey
+		return nil, "", ErrInvalidKey
 	}
 
 	kv.AssertKeyAtLeastLength(key, 1)
 
-	addrLen := key[0]
-	bound := int(addrLen)
+	addrBound := int(key[0])
 
-	if len(key)-1 < bound {
-		return nil, ErrInvalidKey
+	if len(key)-1 < addrBound {
+		return nil, "", ErrInvalidKey
 	}
 
-	return key[1 : bound+1], nil
+	return key[1 : addrBound+1], string(key[addrBound+1:]), nil
 }
 
 // CreateAccountBalancesPrefix creates the prefix for an account's balances.
@@ -67,6 +60,10 @@ func CreateAccountBalancesPrefix(addr []byte) []byte {
 // CreateDenomAddressPrefix creates a prefix for a reverse index of denomination
 // to account balance for that denomination.
 func CreateDenomAddressPrefix(denom string) []byte {
-	key := append(DenomAddressPrefix, []byte(denom)...)
-	return append(key, 0)
+	// we add a "zero" byte at the end - null byte terminator, to allow prefix denom prefix
+	// scan. Setting it is not needed (key[last] = 0) - because this is the default.
+	key := make([]byte, len(DenomAddressPrefix)+len(denom)+1)
+	copy(key, DenomAddressPrefix)
+	copy(key[len(DenomAddressPrefix):], denom)
+	return key
 }

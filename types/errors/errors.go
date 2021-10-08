@@ -13,6 +13,12 @@ const RootCodespace = "sdk"
 // UndefinedCodespace when we explicitly declare no codespace
 const UndefinedCodespace = "undefined"
 
+// mathCodespace is the codespace for all errors defined in math package
+const mathCodespace = "math"
+
+// mathCodespace is the codespace for all errors defined in orm package
+const ormCodespace = "orm"
+
 var (
 	// errInternal should never be exposed, but we reserve this code for non-specified errors
 	errInternal = Register(UndefinedCodespace, 1, "internal")
@@ -147,6 +153,27 @@ var (
 
 	// ErrAppConfig defines an error occurred if min-gas-prices field in BaseConfig is empty.
 	ErrAppConfig = Register(RootCodespace, 40, "error in app.toml")
+
+	// ErrInvalidDecString defines an error for an invalid decimal string
+	ErrInvalidDecString = Register(mathCodespace, 41, "invalid decimal string")
+
+	// ErrIteratorDone defines an error when an iterator is done
+	ErrIteratorDone = Register(ormCodespace, 42, "iterator done")
+
+	// ErrInvalidIterator defines an error for an invalid iterator
+	ErrInvalidIterator = Register(ormCodespace, 43, "invalid iterator")
+
+	// ErrUniqueConstraint defines an error when a value already exists at a given key
+	ErrUniqueConstraint = Register(ormCodespace, 44, "unique constraint violation")
+
+	// ErrEmptyModel defines an error when an empty model is provided for building a table
+	ErrEmptyModel = Register(ormCodespace, 45, "invalid argument")
+
+	// ErrIndexKeyMaxLength defines an error when a key exceeds max length
+	ErrKeyMaxLength = Register(ormCodespace, 46, "index key exceeds max length")
+
+	// ErrEmptyModel defines an error for an empty key
+	ErrEmptyKey = Register(ormCodespace, 47, "cannot use empty key")
 )
 
 // Register returns an error instance that should be used as the base for

@@ -1,5 +1,5 @@
 <!--
-order: 6
+order: 5
 -->
 
 # Vesting
@@ -34,12 +34,12 @@ the Cosmos Hub. The requirements for this vesting account is that it should be
 initialized during genesis with a starting balance `X` and a vesting end
 time `ET`. A vesting account may be initialized with a vesting start time `ST`
 and a number of vesting periods `P`. If a vesting start time is included, the
-vesting period will not begin until start time is reached. If vesting periods
-are included, the vesting will occur over the specified number of periods.
+vesting period does not begin until start time is reached. If vesting periods
+are included, the vesting occurs over the specified number of periods.
 
 For all vesting accounts, the owner of the vesting account is able to delegate
 and undelegate from validators, however they cannot transfer coins to another
-account until those coins are vested. This specification allows for three
+account until those coins are vested. This specification allows for four
 different kinds of vesting:
 
 - Delayed vesting, where all coins are vested once `ET` is reached.
@@ -53,13 +53,15 @@ vesting account in that coins can be released in staggered tranches. For
 example, a periodic vesting account could be used for vesting arrangements
 where coins are relased quarterly, yearly, or over any other function of
 tokens over time.
+- Permanent locked vesting, where coins are locked forever. Coins in this account can
+still be used for delegating and for governance votes even while locked.
 
 ## Note
 
 Vesting accounts can be initialized with some vesting and non-vesting coins.
-The non-vesting coins would be immediately transferable. The current
-specification does not allow for vesting accounts to be created with normal
-messages after genesis. All vesting accounts must be created at genesis, or as
+The non-vesting coins would be immediately transferable. DelayedVesting and
+ContinuousVesting accounts can be created with normal messages after genesis.
+Other types of vesting accounts must be created at genesis, or as
 part of a manual network upgrade. The current specification only allows
 for _unconditional_ vesting (ie. there is no possibility of reaching `ET` and
 having coins fail to vest).
@@ -131,6 +133,10 @@ type ViewKeeper interface {
   SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 }
 ```
+
+### PermanentLockedAccount
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L78-L83
 
 ## Vesting Account Specification
 
@@ -372,7 +378,7 @@ func (cva ContinuousVestingAccount) TrackUndelegation(amount Coins) {
 **Note** `TrackUnDelegation` only modifies the `DelegatedVesting` and `DelegatedFree`
 fields, so upstream callers MUST modify the `Coins` field by adding `amount`.
 
-**Note**: If a delegation is slashed, the continuous vesting account will end up
+**Note**: If a delegation is slashed, the continuous vesting account ends up
 with an excess `DV` amount, even after all its coins have vested. This is because
 undelegating free coins are prioritized.
 
@@ -413,11 +419,11 @@ See the above specification for full implementation details.
 
 ## Genesis Initialization
 
-To initialize both vesting and non-vesting accounts, the `GenesisAccount` struct will
-include new fields: `Vesting`, `StartTime`, and `EndTime`. Accounts meant to be
-of type `BaseAccount` or any non-vesting type will have `Vesting = false`. The
-genesis initialization logic (e.g. `initFromGenesisState`) will have to parse
-and return the correct accounts accordingly based off of these new fields.
+To initialize both vesting and non-vesting accounts, the `GenesisAccount` struct
+includes new fields: `Vesting`, `StartTime`, and `EndTime`. Accounts meant to be
+of type `BaseAccount` or any non-vesting type have `Vesting = false`. The
+genesis initialization logic (e.g. `initFromGenesisState`) must parse
+and return the correct accounts accordingly based off of these fields.
 
 ```go
 type GenesisAccount struct {
@@ -614,3 +620,5 @@ linearly over time.
 all coins at a given time.
 - PeriodicVestingAccount: A vesting account implementation that vests coins
 according to a custom vesting schedule.
+- PermanentLockedAccount: It does not ever release coins, locking them indefinitely.
+Coins in this account can still be used for delegating and for governance votes even while locked.

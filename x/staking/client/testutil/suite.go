@@ -93,10 +93,13 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 	require.NoError(err)
 	require.NotNil(consPubKeyBz)
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	k, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(err)
 
-	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+	pub, err := k.GetPubKey()
+	require.NoError(err)
+
+	newAddr := sdk.AccAddress(pub.Address())
 	_, err = banktestutil.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
@@ -212,6 +215,15 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 				txResp := tc.respType.(*sdk.TxResponse)
 				require.Equal(tc.expectedCode, txResp.Code,
 					"test: %s, output\n:", tc.name, out.String())
+
+				events := txResp.Logs[0].GetEvents()
+				for i := 0; i < len(events); i++ {
+					if events[i].GetType() == "create_validator" {
+						attributes := events[i].GetAttributes()
+						require.Equal(attributes[1].Value, "100stake")
+						break
+					}
+				}
 			}
 		})
 	}
@@ -1049,10 +1061,13 @@ func (s *IntegrationTestSuite) TestNewEditValidatorCmd() {
 func (s *IntegrationTestSuite) TestNewDelegateCmd() {
 	val := s.network.Validators[0]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	k, _, err := val.ClientCtx.Keyring.NewMnemonic("NewAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
-	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+	pub, err := k.GetPubKey()
+	s.Require().NoError(err)
+
+	newAddr := sdk.AccAddress(pub.Address())
 
 	_, err = banktestutil.MsgSendExec(
 		val.ClientCtx,
@@ -1289,9 +1304,11 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 	val := s.network.Validators[0]
 
 	// Create new account in the keyring.
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewDelegator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	k, _, err := val.ClientCtx.Keyring.NewMnemonic("NewDelegator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(err)
-	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+	pub, err := k.GetPubKey()
+	require.NoError(err)
+	newAddr := sdk.AccAddress(pub.Address())
 
 	// Send some funds to the new account.
 	_, err = banktestutil.MsgSendExec(

@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
@@ -129,4 +130,12 @@ func TestAminoCodecFullDecodeAndEncode(t *testing.T) {
 	marshaledTx, err := legacyCdc.MarshalJSON(tx)
 	require.NoError(t, err)
 	require.Equal(t, string(marshaledTx), txSigned)
+
+	// Marshalling/unmarshalling the tx wrapped in a struct should work.
+	txRequest := &cli.BroadcastReq{
+		Mode: "block",
+		Tx:   tx,
+	}
+	_, err = legacyCdc.MarshalJSON(txRequest)
+	require.NoError(t, err)
 }

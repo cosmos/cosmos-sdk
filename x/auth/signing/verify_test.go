@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -29,7 +29,7 @@ func TestVerifySignature(t *testing.T) {
 		chainId = "test-chain"
 	)
 
-	app, ctx := createTestApp(false)
+	app, ctx := createTestApp(t, false)
 	ctx = ctx.WithBlockHeight(1)
 
 	cdc := codec.NewLegacyAmino()
@@ -42,7 +42,8 @@ func TestVerifySignature(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, acc1)
 	balances := sdk.NewCoins(sdk.NewInt64Coin("atom", 200))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr, balances))
-	acc, err := ante.GetSignerAcc(ctx, app.AccountKeeper, addr)
+	acc, err := middleware.GetSignerAcc(ctx, app.AccountKeeper, addr)
+	require.NoError(t, err)
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr, balances))
 
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
@@ -97,8 +98,8 @@ func TestVerifySignature(t *testing.T) {
 }
 
 // returns context and app with params set on account keeper
-func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
-	app := simapp.Setup(isCheckTx)
+func createTestApp(t *testing.T, isCheckTx bool) (*simapp.SimApp, sdk.Context) {
+	app := simapp.Setup(t, isCheckTx)
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, types.DefaultParams())
 

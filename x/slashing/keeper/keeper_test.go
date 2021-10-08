@@ -16,7 +16,7 @@ import (
 )
 
 func TestUnJailNotBonded(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	p := app.StakingKeeper.GetParams(ctx)
@@ -82,7 +82,7 @@ func TestUnJailNotBonded(t *testing.T) {
 // Ensure that SigningInfo.StartHeight is set correctly
 // and that they are not immediately jailed
 func TestHandleNewValidator(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, app.StakingKeeper.TokensFromConsensusPower(ctx, 200))
@@ -119,6 +119,8 @@ func TestHandleNewValidator(t *testing.T) {
 	require.Equal(t, stakingtypes.Bonded, validator.GetStatus())
 	bondPool := app.StakingKeeper.GetBondedPool(ctx)
 	expTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 100)
+	// adding genesis validator tokens
+	expTokens = expTokens.Add(app.StakingKeeper.TokensFromConsensusPower(ctx, 1))
 	require.True(t, expTokens.Equal(app.BankKeeper.GetBalance(ctx, bondPool.GetAddress(), app.StakingKeeper.BondDenom(ctx)).Amount))
 }
 
@@ -126,7 +128,7 @@ func TestHandleNewValidator(t *testing.T) {
 // Ensure that they're only slashed once
 func TestHandleAlreadyJailed(t *testing.T) {
 	// initial setup
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, app.StakingKeeper.TokensFromConsensusPower(ctx, 200))
@@ -180,7 +182,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// initial setup
 	// TestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.SlashingKeeper.SetParams(ctx, testslashing.TestParams())
 

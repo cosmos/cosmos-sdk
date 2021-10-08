@@ -1,0 +1,4 @@
+#!/bin/sh
+
+echo Chain 3 from zipped directory
+echo Args: $@

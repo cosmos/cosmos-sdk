@@ -83,7 +83,7 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 	maccPerms[randomPerm] = []string{"random"}
 	authKeeper := authkeeper.NewAccountKeeper(
 		appCodec, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
-		authtypes.ProtoBaseAccount, maccPerms,
+		authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
 	)
 	keeper := keeper.NewBaseKeeper(
 		appCodec, app.GetKey(types.StoreKey), authKeeper,
@@ -94,7 +94,7 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 }
 
 func (suite *IntegrationTestSuite) SetupTest() {
-	app := simapp.Setup(false)
+	app := simapp.Setup(suite.T(), false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
@@ -117,26 +117,31 @@ func (suite *IntegrationTestSuite) TestSupply() {
 	// add module accounts to supply keeper
 	authKeeper, keeper := suite.initKeepersWithmAccPerms(make(map[string]bool))
 
+	genesisSupply, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
+	require.NoError(err)
+
 	initialPower := int64(100)
 	initTokens := suite.app.StakingKeeper.TokensFromConsensusPower(ctx, initialPower)
-	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
+	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 
 	// set burnerAcc balance
 	authKeeper.SetModuleAccount(ctx, burnerAcc)
-	require.NoError(keeper.MintCoins(ctx, authtypes.Minter, totalSupply))
-	require.NoError(keeper.SendCoinsFromModuleToAccount(ctx, authtypes.Minter, burnerAcc.GetAddress(), totalSupply))
+	require.NoError(keeper.MintCoins(ctx, authtypes.Minter, initCoins))
+	require.NoError(keeper.SendCoinsFromModuleToAccount(ctx, authtypes.Minter, burnerAcc.GetAddress(), initCoins))
 
 	total, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
 	require.NoError(err)
-	require.Equal(totalSupply, total)
+
+	expTotalSupply := initCoins.Add(genesisSupply...)
+	require.Equal(expTotalSupply, total)
 
 	// burning all supplied tokens
-	err = keeper.BurnCoins(ctx, authtypes.Burner, totalSupply)
+	err = keeper.BurnCoins(ctx, authtypes.Burner, initCoins)
 	require.NoError(err)
 
 	total, _, err = keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
 	require.NoError(err)
-	require.Equal(total.String(), "")
+	require.Equal(total, genesisSupply)
 }
 
 func (suite *IntegrationTestSuite) TestSendCoinsFromModuleToAccount_Blocklist() {
@@ -1001,6 +1006,8 @@ func (suite *IntegrationTestSuite) TestSetDenomMetaData() {
 
 	actualMetadata, found := app.BankKeeper.GetDenomMetaData(ctx, metadata[1].Base)
 	suite.Require().True(found)
+	found = app.BankKeeper.HasDenomMetaData(ctx, metadata[1].Base)
+	suite.Require().True(found)
 	suite.Require().Equal(metadata[1].GetBase(), actualMetadata.GetBase())
 	suite.Require().Equal(metadata[1].GetDisplay(), actualMetadata.GetDisplay())
 	suite.Require().Equal(metadata[1].GetDescription(), actualMetadata.GetDescription())
@@ -1043,7 +1050,7 @@ func (suite *IntegrationTestSuite) TestBalanceTrackingEvents() {
 
 	suite.app.AccountKeeper = authkeeper.NewAccountKeeper(
 		suite.app.AppCodec(), suite.app.GetKey(authtypes.StoreKey), suite.app.GetSubspace(authtypes.ModuleName),
-		authtypes.ProtoBaseAccount, maccPerms,
+		authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
 	)
 
 	suite.app.BankKeeper = keeper.NewBaseKeeper(suite.app.AppCodec(), suite.app.GetKey(types.StoreKey),
@@ -1132,18 +1139,19 @@ func (suite *IntegrationTestSuite) TestBalanceTrackingEvents() {
 }
 
 func (suite *IntegrationTestSuite) getTestMetadata() []types.Metadata {
-	return []types.Metadata{{
-		Name:        "Cosmos Hub Atom",
-		Symbol:      "ATOM",
-		Description: "The native staking token of the Cosmos Hub.",
-		DenomUnits: []*types.DenomUnit{
-			{"uatom", uint32(0), []string{"microatom"}},
-			{"matom", uint32(3), []string{"milliatom"}},
-			{"atom", uint32(6), nil},
+	return []types.Metadata{
+		{
+			Name:        "Cosmos Hub Atom",
+			Symbol:      "ATOM",
+			Description: "The native staking token of the Cosmos Hub.",
+			DenomUnits: []*types.DenomUnit{
+				{"uatom", uint32(0), []string{"microatom"}},
+				{"matom", uint32(3), []string{"milliatom"}},
+				{"atom", uint32(6), nil},
+			},
+			Base:    "uatom",
+			Display: "atom",
 		},
-		Base:    "uatom",
-		Display: "atom",
-	},
 		{
 			Name:        "Token",
 			Symbol:      "TOKEN",

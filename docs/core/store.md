@@ -8,11 +8,11 @@ A store is a data structure that holds the state of the application. {synopsis}
 
 ### Pre-requisite Readings
 
-- [Anatomy of an SDK application](../basics/app-anatomy.md) {prereq}
+- [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
 
-## Introduction to SDK Stores
+## Introduction to Cosmos SDK Stores
 
-The Cosmos SDK comes with a large set of stores to persist the state of applications. By default, the main store of SDK applications is a `multistore`, i.e. a store of stores. Developers can add any number of key-value stores to the multistore, depending on their application needs. The multistore exists to support the modularity of the Cosmos SDK, as it lets each module declare and manage their own subset of the state. Key-value stores in the multistore can only be accessed with a specific capability `key`, which is typically held in the [`keeper`](../building-modules/keeper.md) of the module that declared the store.
+The Cosmos SDK comes with a large set of stores to persist the state of applications. By default, the main store of Cosmos SDK applications is a `multistore`, i.e. a store of stores. Developers can add any number of key-value stores to the multistore, depending on their application needs. The multistore exists to support the modularity of the Cosmos SDK, as it lets each module declare and manage their own subset of the state. Key-value stores in the multistore can only be accessed with a specific capability `key`, which is typically held in the [`keeper`](../building-modules/keeper.md) of the module that declared the store.
 
 ```
 +-----------------------------------------------------+
@@ -221,24 +221,6 @@ When each `KVStore` methods are called, `tracekv.Store` automatically logs `trac
 When `Store.{Get, Set}()` is called, the store forwards the call to its parent, with the key prefixed with the `Store.prefix`.
 
 When `Store.Iterator()` is called, it does not simply prefix the `Store.prefix`, since it does not work as intended. In that case, some of the elements are traversed even they are not starting with the prefix.
-
-## Table Store
-
-The table-store package provides a framework for creating relational database tables with primary and secondary keys.
-
-```go
-type Table struct {
-	model       reflect.Type
-	prefix      byte
-	afterSave   []AfterSaveInterceptor
-	afterDelete []AfterDeleteInterceptor
-	cdc         codec.Codec
-}
-```
-
-Such table can be built given a `codec.ProtoMarshaler` model type, a prefix to access the underlying prefix store used to store table data as well as a `Codec` for marshalling/unmarshalling.
-In the prefix store, entities are stored by an unique identifier called `RowID` which can be based either on an `uint64` auto-increment counter or dynamic size bytes.
-Regular CRUD operations can be performed on a table, these methods take a `sdk.KVStore` as parameter to get the table prefix store.
 
 ## Next {hide}
 

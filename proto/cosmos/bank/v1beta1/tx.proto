@@ -4,6 +4,7 @@ package cosmos.bank.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/bank/v1beta1/bank.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
@@ -21,8 +22,8 @@ message MsgSend {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string   from_address                    = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
-  string   to_address                      = 2 [(gogoproto.moretags) = "yaml:\"to_address\""];
+  string   from_address                    = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string   to_address                      = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated cosmos.base.v1beta1.Coin amount = 3
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }

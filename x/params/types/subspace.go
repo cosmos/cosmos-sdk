@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -23,14 +24,14 @@ const (
 type Subspace struct {
 	cdc         codec.BinaryCodec
 	legacyAmino *codec.LegacyAmino
-	key         sdk.StoreKey // []byte -> []byte, stores parameter
-	tkey        sdk.StoreKey // []byte -> bool, stores parameter change
+	key         storetypes.StoreKey // []byte -> []byte, stores parameter
+	tkey        storetypes.StoreKey // []byte -> bool, stores parameter change
 	name        []byte
 	table       KeyTable
 }
 
 // NewSubspace constructs a store with namestore
-func NewSubspace(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key sdk.StoreKey, tkey sdk.StoreKey, name string) Subspace {
+func NewSubspace(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key storetypes.StoreKey, tkey storetypes.StoreKey, name string) Subspace {
 	return Subspace{
 		cdc:         cdc,
 		legacyAmino: legacyAmino,
@@ -124,6 +125,22 @@ func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
 
 	if err := s.legacyAmino.UnmarshalJSON(bz, ptr); err != nil {
 		panic(err)
+	}
+}
+
+// IterateKeys iterates over all the keys in the subspace and executes the
+// provided callback. If the callback returns true for a given key, iteration
+// will halt.
+func (s Subspace) IterateKeys(ctx sdk.Context, cb func(key []byte) bool) {
+	store := s.kvStore(ctx)
+
+	iter := sdk.KVStorePrefixIterator(store, nil)
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		if cb(iter.Key()) {
+			break
+		}
 	}
 }
 

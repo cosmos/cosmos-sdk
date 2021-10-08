@@ -75,7 +75,7 @@ func FlagSetAmount() *flag.FlagSet {
 // FlagSetPublicKey Returns the flagset for Public Key related operations.
 func FlagSetPublicKey() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
-	fs.String(FlagPubKey, "", "The Bech32 encoded PubKey of the validator")
+	fs.String(FlagPubKey, "", "The validator's Protobuf JSON encoded public key")
 	return fs
 }
 

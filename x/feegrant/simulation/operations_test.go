@@ -27,7 +27,7 @@ type SimTestSuite struct {
 
 func (suite *SimTestSuite) SetupTest() {
 	checkTx := false
-	app := simapp.Setup(checkTx)
+	app := simapp.Setup(suite.T(), checkTx)
 	suite.app = app
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{
 		Time: time.Now(),
@@ -75,12 +75,12 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}{
 		{
 			simappparams.DefaultWeightGrantAllowance,
-			feegrant.ModuleName,
+			feegrant.MsgGrantAllowance{}.Route(),
 			simulation.TypeMsgGrantAllowance,
 		},
 		{
 			simappparams.DefaultWeightRevokeAllowance,
-			feegrant.ModuleName,
+			feegrant.MsgRevokeAllowance{}.Route(),
 			simulation.TypeMsgRevokeAllowance,
 		},
 	}

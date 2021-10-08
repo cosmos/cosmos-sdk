@@ -8,11 +8,11 @@ Cosmos SDK modules need to implement the [`AppModule` interfaces](#application-m
 
 ## Pre-requisite Readings
 
-- [Introduction to SDK Modules](./intro.md) {prereq}
+- [Introduction to Cosmos SDK Modules](./intro.md) {prereq}
 
 ## Application Module Interfaces
 
-Application module interfaces exist to facilitate the composition of modules together to form a functional SDK application. There are 3 main application module interfaces:
+Application module interfaces exist to facilitate the composition of modules together to form a functional Cosmos SDK application. There are 3 main application module interfaces:
 
 - [`AppModuleBasic`](#appmodulebasic) for independent module functionalities.
 - [`AppModule`](#appmodule) for inter-dependent module functionalities (except genesis-related functionalities).

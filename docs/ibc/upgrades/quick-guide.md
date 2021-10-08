@@ -6,7 +6,7 @@ order: 1
 
 Learn how to upgrade your chain and counterparty clients. {synopsis}
 
-The information in this doc for upgrading chains is relevant to SDK chains. However, the guide for counterparty clients is relevant to any Tendermint client that enables upgrades.
+The information in this doc for upgrading chains is relevant to Cosmos SDK chains. However, the guide for counterparty clients is relevant to any Tendermint client that enables upgrades.
 
 ### IBC Client Breaking Upgrades
 
@@ -26,7 +26,7 @@ Note: Since upgrades are only implemented for Tendermint clients, this doc only 
 8. Upgrading to a non-backwards compatible version of IBC: **Unsupported**, as IBC version is negotiated on connection handshake.
 9. Changing the Tendermint LightClient algorithm: **Partially Supported**. Changes to the light client algorithm that do not change the ClientState or ConsensusState struct may be supported, provided that the counterparty is also upgraded to support the new light client algorithm. Changes that require updating the ClientState and ConsensusState structs themselves are theoretically possible by providing a path to translate an older ClientState struct into the new ClientState struct; however this is not currently implemented.
 
-### Step-by-Step Upgrade Process for SDK chains
+### Step-by-Step Upgrade Process for Cosmos SDK chains
 
 If the IBC-connected chain is conducting an upgrade that will break counterparty clients, it must ensure that the upgrade is first supported by IBC using the list above and then execute the upgrade process described below in order to prevent counterparty clients from breaking.
 

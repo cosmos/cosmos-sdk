@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"runtime/debug"
+	"strings"
 	"testing"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -152,6 +154,17 @@ func TestAppImportExport(t *testing.T) {
 	var genesisState GenesisState
 	err = json.Unmarshal(exported.AppState, &genesisState)
 	require.NoError(t, err)
+
+	defer func() {
+		if r := recover(); r != nil {
+			err := fmt.Sprintf("%v", r)
+			if !strings.Contains(err, "validator set is empty after InitGenesis") {
+				panic(r)
+			}
+			logger.Info("Skipping simulation as all validators have been unbonded")
+			logger.Info("err", err, "stacktrace", string(debug.Stack()))
+		}
+	}()
 
 	ctxA := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 	ctxB := newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})

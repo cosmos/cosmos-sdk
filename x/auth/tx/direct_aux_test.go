@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -11,7 +13,6 @@ import (
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/stretchr/testify/require"
 )
 
 func TestDirectAuxHandler(t *testing.T) {
@@ -112,7 +113,6 @@ func TestDirectAuxHandler_DefaultMode(t *testing.T) {
 func TestDirectAuxModeHandler_nonDIRECT_MODE(t *testing.T) {
 	invalidModes := []signingtypes.SignMode{
 		signingtypes.SignMode_SIGN_MODE_DIRECT,
-		signingtypes.SignMode_SIGN_MODE_DIRECT_JSON,
 		signingtypes.SignMode_SIGN_MODE_TEXTUAL,
 		signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		signingtypes.SignMode_SIGN_MODE_UNSPECIFIED,

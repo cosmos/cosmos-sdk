@@ -1,7 +1,9 @@
 package testutil
 
 import (
+	"encoding/json"
 	"fmt"
+	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -18,8 +20,14 @@ var commonArgs = []string{
 }
 
 // MsgSubmitProposal creates a tx for submit proposal
-func MsgSubmitProposal(clientCtx client.Context, from string, messages []sdk.Msg, extraArgs ...string) (testutil.BufferWriter, error) {
-	args := append(commonArgs, fmt.Sprintf("--%s=%s", flags.FlagFrom, from))
+func MsgSubmitProposal(t *testing.T, clientCtx client.Context, from string, messages []sdk.Msg, extraArgs ...string) (testutil.BufferWriter, error) {
+	bz, err := json.Marshal(messages)
+	if err != nil {
+		return nil, err 
+	}
+	msgFile := testutil.WriteToNewTempFile(t, string(bz))
+	args := append(commonArgs, msgFile.Name())
+	args = append(args, fmt.Sprintf("--%s=%s", flags.FlagFrom, from))
 	args = append(args, extraArgs...)
 
 	return clitestutil.ExecTestCLICmd(clientCtx, govcli.NewCmdSubmitProposal(), args)

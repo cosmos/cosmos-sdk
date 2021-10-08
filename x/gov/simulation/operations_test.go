@@ -9,6 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,6 +19,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
+
+var (
+	amino = codec.NewLegacyAmino()
+	ModuleCdc = codec.NewAminoCodec(amino)
+)
+
+func init() {
+	types.RegisterLegacyAminoCodec(amino)
+	amino.RegisterInterface((*sdk.Msg)(nil), nil)
+}
 
 // TestWeightedOperations tests the weights of the operations.
 func TestWeightedOperations(t *testing.T) {
@@ -77,7 +88,11 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg types.MsgSubmitProposal
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	err = ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	require.NoError(t, err)
+
+	govAcc := app.GovKeeper.GetGovernanceAccount(ctx).GetAddress()
+	expectedProposalMsgs := []sdk.Msg{types.NewMsgVote(govAcc, 1, types.OptionYes)}
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Proposer)
@@ -85,7 +100,7 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 	require.Equal(t, "gov", msg.Route())
 	proposalMsgs, err := msg.GetMessages()
 	require.NoError(t, err)
-	require.Equal(t, "abc", proposalMsgs)
+	require.Equal(t, expectedProposalMsgs, proposalMsgs)
 	require.Equal(t, types.TypeMsgSubmitProposal, msg.Type())
 }
 

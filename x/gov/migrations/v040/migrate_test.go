@@ -14,10 +14,13 @@ import (
 	v040gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v040"
 	v036params "github.com/cosmos/cosmos-sdk/x/params/migrations/v036"
 	v038upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/migrations/v038"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 func TestMigrate(t *testing.T) {
 	encodingConfig := simapp.MakeTestEncodingConfig()
+	v1beta1.RegisterLegacyAminoCodec(encodingConfig.Amino)
+	v1beta1.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 	clientCtx := client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).

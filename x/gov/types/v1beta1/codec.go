@@ -5,8 +5,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func  RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*Content)(nil), nil)
+	cdc.RegisterConcrete(&TextProposal{}, "cosmos-sdk/TextProposal", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {

@@ -45,7 +45,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	messages := []sdk.Msg{types.NewMsgVote(val.Address, 1, types.OptionYes)}
 
 	// create a proposal with deposit
-	_, err = MsgSubmitProposal(val.ClientCtx, val.Address.String(), messages,
+	_, err = MsgSubmitProposal(s.T(), val.ClientCtx, val.Address.String(), messages,
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
@@ -56,13 +56,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	// create a proposal without deposit
-	_, err = MsgSubmitProposal(val.ClientCtx, val.Address.String(), messages)
+	_, err = MsgSubmitProposal(s.T(), val.ClientCtx, val.Address.String(), messages)
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
 	// create a proposal3 with deposit
-	_, err = MsgSubmitProposal(val.ClientCtx, val.Address.String(), messages,
+	_, err = MsgSubmitProposal(s.T(), val.ClientCtx, val.Address.String(), messages,
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)

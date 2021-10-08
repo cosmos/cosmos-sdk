@@ -75,6 +75,7 @@ func (s *DepositTestSuite) createProposal(val *network.Validator, initialDeposit
 
 	proposal := []sdk.Msg{types.NewMsgVote(val.Address, 1, types.OptionYes)}
 	_, err := MsgSubmitProposal(
+		s.T(), 
 		val.ClientCtx,
 		val.Address.String(),
 		proposal,

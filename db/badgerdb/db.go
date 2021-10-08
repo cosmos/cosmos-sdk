@@ -59,10 +59,10 @@ type badgerIterator struct {
 
 // Map our versions to Badger timestamps.
 //
-// A badger Txn's commit TS must be strictly greater than a record's "last-read"
-// TS in order to detect conflicts, and a Txn must be read at a TS after last
+// A badger Txn's commit timestamp must be strictly greater than a record's "last-read"
+// timestamp in order to detect conflicts, and a Txn must be read at a timestamp after last
 // commit to see current state. So we must use commit increments that are more
-// granular than our version interval, and map versions to the corresponding TS.
+// granular than our version interval, and map versions to the corresponding timestamp.
 type versionManager struct {
 	*dbm.VersionManager
 	vmap   map[uint64]uint64
@@ -127,7 +127,7 @@ func readVersionsFile(path string) (*versionManager, error) {
 		if err != nil {
 			return nil, err
 		}
-		if version == 0 { // 0 maps to the latest TS
+		if version == 0 { // 0 maps to the latest timestamp
 			lastTs = ts
 		}
 		versions = append(versions, version)
@@ -253,8 +253,8 @@ func (b *BadgerDB) Revert() error {
 		return dbm.ErrOpenTransactions
 	}
 
-	// Revert from latest commit TS to last "saved" TS
-	// if no versions exist, use 0 as it precedes any possible commit TS
+	// Revert from latest commit timestamp to last "saved" timestamp
+	// if no versions exist, use 0 as it precedes any possible commit timestamp
 	var target uint64
 	last := b.vmgr.Last()
 	if last == 0 {
@@ -374,7 +374,7 @@ func (tx *badgerWriter) Commit() (err error) {
 		return errors.New("transaction has been discarded")
 	}
 	defer func() { err = dbutil.CombineErrors(err, tx.Discard(), "Discard also failed") }()
-	// Commit to the current commit TS, after ensuring it is > ReadTs
+	// Commit to the current commit timestamp, after ensuring it is > ReadTs
 	tx.db.mtx.RLock()
 	tx.db.vmgr.updateCommitTs(tx.txn.ReadTs())
 	ts := tx.db.vmgr.lastTs

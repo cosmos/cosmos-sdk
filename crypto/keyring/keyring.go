@@ -878,22 +878,12 @@ func (ks keystore) MigrateAll() (bool, error) {
 
 // migrate converts keyring.Item from amino to proto serialization format.
 func (ks keystore) migrate(key string) (*Record, bool, error) {
-	keys, err := ks.db.Keys()
-	if err != nil {
-		return nil, false, err
-	}
-	for i := 0; i < len(keys); i++ {
-		if strings.Contains(keys[i], key) {
-			if !(strings.HasSuffix(key, ".info")) {
-				key = key + ".info"
-				break
-			}
-		}
-	}
-
 	item, err := ks.db.Get(key)
 	if err != nil {
-		return nil, false, wrapKeyNotFound(err, key)
+		item, err = ks.db.Get(key + ".info")
+		if err != nil {
+			return nil, false, wrapKeyNotFound(err, key)
+		}
 	}
 
 	if len(item.Data) == 0 {

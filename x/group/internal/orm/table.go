@@ -14,7 +14,7 @@ var _ Indexable = &tableBuilder{}
 type tableBuilder struct {
 	model       reflect.Type
 	prefixData  byte
-	afterSave   []AfterSaveInterceptor
+	afterSet    []AfterSetInterceptor
 	afterDelete []AfterDeleteInterceptor
 	cdc         codec.Codec
 }
@@ -32,7 +32,7 @@ func newTableBuilder(prefixData byte, model codec.ProtoMarshaler, cdc codec.Code
 		prefixData: prefixData,
 		model:      tp,
 		cdc:        cdc,
-	}
+	}, nil
 }
 
 // RowGetter returns a type safe RowGetter.
@@ -45,15 +45,15 @@ func (a tableBuilder) Build() table {
 	return table{
 		model:       a.model,
 		prefix:      a.prefixData,
-		afterSave:   a.afterSave,
+		afterSet:    a.afterSet,
 		afterDelete: a.afterDelete,
 		cdc:         a.cdc,
 	}
 }
 
-// AddAfterSaveInterceptor can be used to register a callback function that is executed after an object is created and/or updated.
-func (a *tableBuilder) AddAfterSaveInterceptor(interceptor AfterSaveInterceptor) {
-	a.afterSave = append(a.afterSave, interceptor)
+// AddafterSetInterceptor can be used to register a callback function that is executed after an object is created and/or updated.
+func (a *tableBuilder) AddafterSetInterceptor(interceptor AfterSetInterceptor) {
+	a.afterSet = append(a.afterSet, interceptor)
 }
 
 // AddAfterDeleteInterceptor can be used to register a callback function that is executed after an object is deleted.
@@ -74,7 +74,7 @@ func (a *tableBuilder) AddAfterDeleteInterceptor(interceptor AfterDeleteIntercep
 type table struct {
 	model       reflect.Type
 	prefix      byte
-	afterSave   []AfterSaveInterceptor
+	afterSet    []AfterSetInterceptor
 	afterDelete []AfterDeleteInterceptor
 	cdc         codec.Codec
 }
@@ -126,9 +126,9 @@ func (a table) Set(store sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler
 	pStore := prefix.NewStore(store, []byte{a.prefix})
 
 	var oldValue codec.ProtoMarshaler
-	if a.Has(ctx, rowID) {
+	if a.Has(store, rowID) {
 		oldValue = reflect.New(a.model).Interface().(codec.ProtoMarshaler)
-		a.GetOne(ctx, rowID, oldValue)
+		a.GetOne(store, rowID, oldValue)
 	}
 
 	newValueEncoded, err := a.cdc.Marshal(newValue)

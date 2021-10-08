@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-const tableCodespace = "table"
+const ormCodespace = "orm"
 
 var (
 	ErrNotFound          = errors.Register(ormCodespace, 100, "not found")
@@ -54,13 +54,12 @@ type Iterator interface {
 // This interface provides a set of functions that can be called by indexes to register and interact with the tables.
 type Indexable interface {
 	RowGetter() RowGetter
-	IndexKeyCodec() IndexKeyCodec
-	AddAfterSaveInterceptor(interceptor AfterSaveInterceptor)
+	AddafterSetInterceptor(interceptor AfterSetInterceptor)
 	AddAfterDeleteInterceptor(interceptor AfterDeleteInterceptor)
 }
 
-// AfterSaveInterceptor defines a callback function to be called on Create + Update.
-type AfterSaveInterceptor func(store sdk.KVStore, rowID RowID, newValue, oldValue codec.ProtoMarshaler) error
+// AfterSetInterceptor defines a callback function to be called on Create + Update.
+type AfterSetInterceptor func(store sdk.KVStore, rowID RowID, newValue, oldValue codec.ProtoMarshaler) error
 
 // AfterDeleteInterceptor defines a callback function to be called on Delete operations.
 type AfterDeleteInterceptor func(store sdk.KVStore, rowID RowID, value codec.ProtoMarshaler) error

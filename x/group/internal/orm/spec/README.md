@@ -6,7 +6,7 @@ The orm package provides a framework for creating relational database tables wit
 type table struct {
 	model       reflect.Type
 	prefix      byte
-	afterSave   []AfterSaveInterceptor
+	afterSet   []AfterSetInterceptor
 	afterDelete []AfterDeleteInterceptor
 	cdc         codec.Codec
 }

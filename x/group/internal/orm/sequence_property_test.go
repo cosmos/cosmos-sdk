@@ -16,7 +16,7 @@ func TestSequence(t *testing.T) {
 // as the model of the sequence.
 type sequenceMachine struct {
 	store sdk.KVStore
-	seq   *orm.Sequence
+	seq   *Sequence
 	state uint64
 }
 
@@ -25,10 +25,10 @@ type sequenceMachine struct {
 func (m *sequenceMachine) Init(t *rapid.T) {
 	// Create context and KV store
 	ctx := NewMockContext()
-	m.store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+	m.store = ctx.KVStore(sdk.NewKVStoreKey("test"))
 
 	// Create primary key table
-	seq := orm.NewSequence(0x1)
+	seq := NewSequence(0x1)
 	m.seq = &seq
 
 	// Choose initial sequence value

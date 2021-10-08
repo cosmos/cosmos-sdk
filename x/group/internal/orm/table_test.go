@@ -31,7 +31,7 @@ func TestNewTableBuilder(t *testing.T) {
 		},
 		{
 			name:      "all not nil",
-			model:     &testdata.GroupInfo{},
+			model:     &testdata.TableModel{},
 			expectErr: false,
 		},
 	}
@@ -52,7 +52,7 @@ func TestNewTableBuilder(t *testing.T) {
 
 func TestCreate(t *testing.T) {
 	specs := map[string]struct {
-		rowID  orm.RowID
+		rowID  RowID
 		src    codec.ProtoMarshaler
 		expErr *errors.Error
 	}{
@@ -62,7 +62,7 @@ func TestCreate(t *testing.T) {
 				Id:   1,
 				Name: "some name",
 			},
-			expErr: orm.ErrEmptyKey,
+			expErr: ErrEmptyKey,
 		},
 		"happy path": {
 			rowID: EncodeSequence(1),
@@ -97,10 +97,11 @@ func TestCreate(t *testing.T) {
 			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
 			const anyPrefix = 0x10
-			tableBuilder := newTableBuilder(anyPrefix, &testdata.TableModel{}, cdc)
+			tableBuilder, err := newTableBuilder(anyPrefix, &testdata.TableModel{}, cdc)
+			require.NoError(t, err)
 			myTable := tableBuilder.Build()
 
-			err := myTable.Create(store, spec.rowID, spec.src)
+			err = myTable.Create(store, spec.rowID, spec.src)
 
 			require.True(t, spec.expErr.Is(err), err)
 			shouldExists := spec.expErr == nil
@@ -154,7 +155,8 @@ func TestUpdate(t *testing.T) {
 			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
 			const anyPrefix = 0x10
-			tableBuilder := newTableBuilder(anyPrefix, &testdata.TableModel{}, cdc)
+			tableBuilder, err := newTableBuilder(anyPrefix, &testdata.TableModel{}, cdc)
+			require.NoError(t, err)
 			myTable := tableBuilder.Build()
 
 			initValue := testdata.TableModel{
@@ -162,7 +164,7 @@ func TestUpdate(t *testing.T) {
 				Name: "old name",
 			}
 
-			err := myTable.Create(store, EncodeSequence(1), &initValue)
+			err = myTable.Create(store, EncodeSequence(1), &initValue)
 			require.NoError(t, err)
 
 			// when
@@ -203,7 +205,8 @@ func TestDelete(t *testing.T) {
 			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
 			const anyPrefix = 0x10
-			tableBuilder := newTableBuilder(anyPrefix, &testdata.TableModel{}, FixLengthIndexKeys(EncodedSeqLength), cdc)
+			tableBuilder, err := newTableBuilder(anyPrefix, &testdata.TableModel{}, cdc)
+			require.NoError(t, err)
 			myTable := tableBuilder.Build()
 
 			initValue := testdata.TableModel{
@@ -211,7 +214,7 @@ func TestDelete(t *testing.T) {
 				Name: "some name",
 			}
 
-			err := myTable.Create(store, EncodeSequence(1), &initValue)
+			err = myTable.Create(store, EncodeSequence(1), &initValue)
 			require.NoError(t, err)
 
 			// when

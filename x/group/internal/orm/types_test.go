@@ -38,24 +38,24 @@ func TestTypeSafeRowGetter(t *testing.T) {
 			srcModelType: reflect.TypeOf(testdata.TableModel{}),
 			expObj:       md,
 		},
-		"unknown rowID should return ErrNotFound": {
+		"unknown rowID should return errors.ErrNotFound": {
 			srcRowID:     EncodeSequence(2),
 			srcModelType: reflect.TypeOf(testdata.TableModel{}),
-			expErr:       ErrNotFound,
+			expErr:       errors.ErrNotFound,
 		},
-		"wrong type should cause ErrType": {
+		"wrong type should cause errors.ErrInvalidType": {
 			srcRowID:     EncodeSequence(1),
 			srcModelType: reflect.TypeOf(testdata.Cat{}),
-			expErr:       ErrType,
+			expErr:       errors.ErrInvalidType,
 		},
 		"empty rowID not allowed": {
 			srcRowID:     []byte{},
 			srcModelType: reflect.TypeOf(testdata.TableModel{}),
-			expErr:       ErrArgument,
+			expErr:       errors.ErrEmptyKey,
 		},
 		"nil rowID not allowed": {
 			srcModelType: reflect.TypeOf(testdata.TableModel{}),
-			expErr:       ErrArgument,
+			expErr:       errors.ErrEmptyKey,
 		},
 	}
 	for msg, spec := range specs {

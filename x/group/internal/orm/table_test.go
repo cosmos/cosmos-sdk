@@ -62,7 +62,7 @@ func TestCreate(t *testing.T) {
 				Id:   1,
 				Name: "some name",
 			},
-			expErr: ErrEmptyKey,
+			expErr: errors.ErrEmptyKey,
 		},
 		"happy path": {
 			rowID: EncodeSequence(1),
@@ -77,7 +77,7 @@ func TestCreate(t *testing.T) {
 				Moniker: "cat moniker",
 				Lives:   10,
 			},
-			expErr: ErrType,
+			expErr: errors.ErrInvalidType,
 		},
 		"model validation fails": {
 			rowID: EncodeSequence(1),
@@ -111,7 +111,7 @@ func TestCreate(t *testing.T) {
 			var loaded testdata.TableModel
 			err = myTable.GetOne(store, spec.rowID, &loaded)
 			if spec.expErr != nil {
-				require.True(t, ErrNotFound.Is(err))
+				require.True(t, errors.ErrNotFound.Is(err))
 				return
 			}
 			require.NoError(t, err)
@@ -136,7 +136,7 @@ func TestUpdate(t *testing.T) {
 				Moniker: "cat moniker",
 				Lives:   10,
 			},
-			expErr: ErrType,
+			expErr: errors.ErrInvalidType,
 		},
 		"model validation fails": {
 			src: &testdata.TableModel{
@@ -193,7 +193,7 @@ func TestDelete(t *testing.T) {
 		},
 		"not found": {
 			rowId:  []byte("not-found"),
-			expErr: ErrNotFound,
+			expErr: errors.ErrNotFound,
 		},
 	}
 	for msg, spec := range specs {
@@ -223,13 +223,13 @@ func TestDelete(t *testing.T) {
 
 			// then
 			var loaded testdata.TableModel
-			if spec.expErr == ErrNotFound {
+			if spec.expErr == errors.ErrNotFound {
 				require.NoError(t, myTable.GetOne(store, EncodeSequence(1), &loaded))
 				assert.Equal(t, initValue, loaded)
 			} else {
 				err := myTable.GetOne(store, EncodeSequence(1), &loaded)
 				require.Error(t, err)
-				require.Equal(t, err, ErrNotFound)
+				require.Equal(t, err, errors.ErrNotFound)
 			}
 		})
 	}

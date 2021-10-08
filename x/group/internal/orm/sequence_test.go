@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -16,7 +17,7 @@ func TestSequenceUniqueConstraint(t *testing.T) {
 	err := seq.InitVal(store, 2)
 	require.NoError(t, err)
 	err = seq.InitVal(store, 3)
-	require.True(t, ErrUniqueConstraint.Is(err))
+	require.True(t, errors.ErrUniqueConstraint.Is(err))
 }
 
 func TestSequenceIncrements(t *testing.T) {

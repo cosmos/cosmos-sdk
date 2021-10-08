@@ -22,7 +22,7 @@ type tableBuilder struct {
 // newTableBuilder creates a builder to setup a table object.
 func newTableBuilder(prefix [2]byte, model codec.ProtoMarshaler, cdc codec.Codec) (*tableBuilder, error) {
 	if model == nil {
-		return nil, ErrArgument.Wrap("Model must not be nil")
+		return nil, errors.ErrEmptyModel.Wrap("Model must not be nil")
 	}
 	tp := reflect.TypeOf(model)
 	if tp.Kind() == reflect.Ptr {
@@ -80,20 +80,20 @@ type table struct {
 }
 
 // Create persists the given object under the rowID key, returning an
-// ErrUniqueConstraint if a value already exists at that key.
+// errors.ErrUniqueConstraint if a value already exists at that key.
 //
 // Create iterates through the registered callbacks that may add secondary index
 // keys.
 func (a table) Create(store sdk.KVStore, rowID RowID, obj codec.ProtoMarshaler) error {
 	if a.Has(store, rowID) {
-		return ErrUniqueConstraint
+		return errors.ErrUniqueConstraint
 	}
 
 	return a.Set(store, rowID, obj)
 }
 
 // Update updates the given object under the rowID key. It expects the key to
-// exists already and fails with an `ErrNotFound` otherwise. Any caller must
+// exists already and fails with an `errors.ErrNotFound` otherwise. Any caller must
 // therefore make sure that this contract is fulfilled. Parameters must not be
 // nil.
 //
@@ -101,7 +101,7 @@ func (a table) Create(store sdk.KVStore, rowID RowID, obj codec.ProtoMarshaler) 
 // secondary index keys.
 func (a table) Update(store sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler) error {
 	if !a.Has(store, rowID) {
-		return ErrNotFound
+		return errors.ErrNotFound
 	}
 
 	return a.Set(store, rowID, newValue)
@@ -114,7 +114,7 @@ func (a table) Update(store sdk.KVStore, rowID RowID, newValue codec.ProtoMarsha
 // keys.
 func (a table) Set(store sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler) error {
 	if len(rowID) == 0 {
-		return ErrEmptyKey
+		return errors.ErrEmptyKey
 	}
 	if err := assertCorrectType(a.model, newValue); err != nil {
 		return err
@@ -155,7 +155,7 @@ func assertValid(obj codec.ProtoMarshaler) error {
 }
 
 // Delete removes the object under the rowID key. It expects the key to exists
-// already and fails with a `ErrNotFound` otherwise. Any caller must therefore
+// already and fails with a `errors.ErrNotFound` otherwise. Any caller must therefore
 // make sure that this contract is fulfilled.
 //
 // Delete iterates through the registered callbacks that remove secondary index
@@ -190,11 +190,11 @@ func (a table) Has(store sdk.KVStore, key RowID) bool {
 }
 
 // GetOne load the object persisted for the given RowID into the dest parameter.
-// If none exists or `rowID==nil` then `ErrNotFound` is returned instead.
+// If none exists or `rowID==nil` then `errors.ErrNotFound` is returned instead.
 // Parameters must not be nil - we don't allow creation of values with empty keys.
 func (a table) GetOne(store sdk.KVStore, rowID RowID, dest codec.ProtoMarshaler) error {
 	if len(rowID) == 0 {
-		return ErrNotFound
+		return errors.ErrNotFound
 	}
 	x := NewTypeSafeRowGetter(a.prefix, a.model, a.cdc)
 	return x(store, rowID, dest)

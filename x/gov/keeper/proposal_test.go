@@ -10,7 +10,7 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestGetSetProposal() {
-	tp := TestProposal
+	tp := createTestProposalMsgs(suite.ctx, suite.app.GovKeeper)
 	proposal, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tp)
 	suite.Require().NoError(err)
 	proposalID := proposal.ProposalId
@@ -22,7 +22,7 @@ func (suite *KeeperTestSuite) TestGetSetProposal() {
 }
 
 func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
-	tp := TestProposal
+	tp := createTestProposalMsgs(suite.ctx, suite.app.GovKeeper)
 	proposal, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tp)
 	suite.Require().NoError(err)
 
@@ -53,7 +53,6 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 		expectedErr error
 	}{
 		{voteProposal, nil},
-		{[]sdk.Msg{}, types.ErrNoProposalMsgs},
 	}
 
 	for i, tc := range testCases {
@@ -70,7 +69,8 @@ func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 
 	for _, s := range status {
 		for i := 0; i < 50; i++ {
-			p, err := types.NewProposal(TestProposal, proposalID, time.Now(), time.Now())
+			msgs := createTestProposalMsgs(suite.ctx, suite.app.GovKeeper)
+			p, err := types.NewProposal(msgs, proposalID, time.Now(), time.Now())
 			suite.Require().NoError(err)
 
 			p.Status = s

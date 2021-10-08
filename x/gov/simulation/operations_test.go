@@ -41,9 +41,7 @@ func TestWeightedOperations(t *testing.T) {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{0, types.ModuleName, "submit_proposal"},
-		{1, types.ModuleName, "submit_proposal"},
-		{2, types.ModuleName, "submit_proposal"},
+		{simappparams.DefaultWeightMsgSignalProposal, types.ModuleName, types.TypeMsgSubmitProposal},
 		{simappparams.DefaultWeightMsgDeposit, types.ModuleName, types.TypeMsgDeposit},
 		{simappparams.DefaultWeightMsgVote, types.ModuleName, types.TypeMsgVote},
 		{simappparams.DefaultWeightMsgVoteWeighted, types.ModuleName, types.TypeMsgVoteWeighted},
@@ -82,8 +80,8 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)
-	require.Equal(t, "cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.Proposer)
-	require.Equal(t, "2686011stake", msg.InitialDeposit.String())
+	require.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Proposer)
+	require.Equal(t, "560969stake", msg.InitialDeposit.String())
 	require.Equal(t, "gov", msg.Route())
 	proposalMsgs, err := msg.GetMessages()
 	require.NoError(t, err)

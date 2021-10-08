@@ -172,7 +172,6 @@ func TestMsgSubmitProposal_GetSignBytes(t *testing.T) {
 	require.NotPanics(t, func() {
 		bz = msg.GetSignBytes()
 	})
-	require.Equal(t,
-		`"{\"type\":\"cosmos-sdk/MsgSubmitProposal\",\"value\":{\"initial_deposit\":[],\"messages\":[{\"type\":\"cosmos-sdk/MsgVote\",\"value\":{\"option\":1,\"proposal_id\":\"1\",\"voter\":\"cosmos1w3jhxap3gempvr\"}}]}}"`,
+	require.Equal(t, "{\"type\":\"cosmos-sdk/MsgSubmitProposal\",\"value\":{\"initial_deposit\":[],\"messages\":[{\"type\":\"cosmos-sdk/MsgVote\",\"value\":{\"option\":1,\"proposal_id\":\"1\",\"voter\":\"cosmos1w3jhxap3gempvr\"}}]}}",
 		string(bz))
 }

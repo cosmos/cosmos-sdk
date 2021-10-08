@@ -20,9 +20,10 @@ var initialProposalID = uint64(100000000000000)
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgDeposit      = "op_weight_msg_deposit"
-	OpWeightMsgVote         = "op_weight_msg_vote"
-	OpWeightMsgVoteWeighted = "op_weight_msg_weighted_vote"
+	OpWeightMsgSubmitProposal = "op_weight_msg_submit_proposal"
+	OpWeightMsgDeposit        = "op_weight_msg_deposit"
+	OpWeightMsgVote           = "op_weight_msg_vote"
+	OpWeightMsgVoteWeighted   = "op_weight_msg_weighted_vote"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -32,9 +33,16 @@ func WeightedOperations(
 ) simulation.WeightedOperations {
 
 	var (
-		weightMsgDeposit      int
-		weightMsgVote         int
-		weightMsgVoteWeighted int
+		weightMsgSubmitProposal int
+		weightMsgDeposit        int
+		weightMsgVote           int
+		weightMsgVoteWeighted   int
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgSubmitProposal, &weightMsgSubmitProposal, nil,
+		func(_ *rand.Rand) {
+			weightMsgSubmitProposal = simappparams.DefaultWeightMsgSignalProposal
+		},
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgDeposit, &weightMsgDeposit, nil,
@@ -56,6 +64,10 @@ func WeightedOperations(
 	)
 
 	return simulation.WeightedOperations{
+		simulation.NewWeightedOperation(
+			weightMsgSubmitProposal,
+			SimulateMsgSubmitProposal(ak, bk, k),
+		),
 		simulation.NewWeightedOperation(
 			weightMsgDeposit,
 			SimulateMsgDeposit(ak, bk, k),
@@ -112,7 +124,8 @@ func SimulateMsgSubmitProposal(
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSubmitProposal, "unable to generate deposit"), nil, err
 		}
 
-		proposal := []sdk.Msg{types.NewMsgVote(simAccount.Address, 1, types.OptionYes)}
+		govAcc := k.GetGovernanceAccount(ctx).GetAddress()
+		proposal := []sdk.Msg{types.NewMsgVote(govAcc, 1, types.OptionYes)}
 		msg, err := types.NewMsgSubmitProposal(proposal, deposit, simAccount.Address)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate a submit proposal msg"), nil, err

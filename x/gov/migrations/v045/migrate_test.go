@@ -98,25 +98,27 @@ func TestMigrate(t *testing.T) {
 	"deposits": [],
 	"proposals": [
 		{
-			"content": {
-				"@type": "/cosmos.gov.v1beta1.TextProposal",
-				"description": "bar_text",
-				"title": "foo_text"
-			},
-			"deposit_end_time": "0001-01-01T00:00:00Z",
+			"deposit_end_time": "2020-01-01T01:00:00Z",
 			"final_tally_result": {
 				"abstain": "0",
 				"no": "0",
 				"no_with_veto": "0",
 				"yes": "0"
 			},
-			"proposal_id": "0",
-			"status": "PROPOSAL_STATUS_UNSPECIFIED",
-			"submit_time": "0001-01-01T00:00:00Z",
+			"messages": [
+				{
+					"@type": "/cosmos.gov.v1.MsgSignal",
+					"description": "bar_description",
+					"title": "foo_title"
+				}
+			],
+			"proposal_id": "5",
+			"status": "PROPOSAL_STATUS_DEPOSIT_PERIOD",
+			"submit_time": "2019-01-01T01:00:00Z",
 			"total_deposit": [],
 			"voting_end_time": "0001-01-01T00:00:00Z",
 			"voting_start_time": "0001-01-01T00:00:00Z"
-		},
+		}
 	],
 	"starting_proposal_id": "0",
 	"tally_params": {

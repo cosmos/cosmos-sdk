@@ -40,7 +40,7 @@ func TestIncrementProposalNumber(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	tp := TestProposal
+	tp := createTestProposalMsgs(ctx, app.GovKeeper)
 	_, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	_, err = app.GovKeeper.SubmitProposal(ctx, tp)
@@ -62,7 +62,7 @@ func TestProposalQueues(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	// create test proposals
-	tp := TestProposal
+	tp := createTestProposalMsgs(ctx, app.GovKeeper)
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 

@@ -7,15 +7,17 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-var (
-	TestProposal = []sdk.Msg{types.NewMsgVote(sdk.AccAddress([]byte("addrs")), 1, types.OptionYes)}
-)
+func createTestProposalMsgs(ctx sdk.Context, gov keeper.Keeper) []sdk.Msg {
+	govAcc := gov.GetGovernanceAccount(ctx).GetAddress()
+	return []sdk.Msg{types.NewMsgVote(govAcc, 1, types.OptionYes)}
+}
 
 func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 5, sdk.NewInt(30000000))

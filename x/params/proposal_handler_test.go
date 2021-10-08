@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	oldgovtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -20,7 +21,7 @@ type HandlerTestSuite struct {
 
 	app        *simapp.SimApp
 	ctx        sdk.Context
-	govHandler govtypes.Handler
+	govHandler oldgovtypes.Handler
 }
 
 func (suite *HandlerTestSuite) SetupTest() {

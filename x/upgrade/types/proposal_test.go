@@ -9,16 +9,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
+	oldgov "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type ProposalWrapper struct {
-	Prop gov.Content
+	Prop oldgov.Content
 }
 
 func TestContentAccessors(t *testing.T) {
 	cases := map[string]struct {
-		p     gov.Content
+		p     oldgov.Content
 		title string
 		desc  string
 		typ   string
@@ -45,6 +46,7 @@ func TestContentAccessors(t *testing.T) {
 	}
 
 	cdc := codec.NewLegacyAmino()
+	oldgov.RegisterLegacyAminoCodec(cdc)
 	gov.RegisterLegacyAminoCodec(cdc)
 	types.RegisterLegacyAminoCodec(cdc)
 

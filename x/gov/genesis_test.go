@@ -35,7 +35,8 @@ func TestImportExportQueues(t *testing.T) {
 	ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 
 	// Create two proposals, put the second into the voting period
-	proposal := []sdk.Msg{types.NewMsgVote(addrs[0], 1, types.OptionYes)}
+	govAcc := app.GovKeeper.GetGovernanceAccount(ctx).GetAddress()
+	proposal := []sdk.Msg{types.NewMsgVote(govAcc, 1, types.OptionYes)}
 	proposal1, err := app.GovKeeper.SubmitProposal(ctx, proposal)
 	require.NoError(t, err)
 	proposalID1 := proposal1.ProposalId
@@ -151,7 +152,8 @@ func TestEqualProposals(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	// Submit two proposals
-	proposal := []sdk.Msg{types.NewMsgVote(addrs[0], 1, types.OptionYes)}
+	govAcc := app.GovKeeper.GetGovernanceAccount(ctx).GetAddress()
+	proposal := []sdk.Msg{types.NewMsgVote(govAcc, 1, types.OptionYes)}
 	proposal1, err := app.GovKeeper.SubmitProposal(ctx, proposal)
 	require.NoError(t, err)
 

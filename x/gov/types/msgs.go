@@ -55,16 +55,7 @@ func (m *MsgSubmitProposal) GetProposer() sdk.AccAddress {
 }
 
 func (m *MsgSubmitProposal) GetMessages() ([]sdk.Msg, error) {
-	msgs := make([]sdk.Msg, len(m.Messages))
-	for i, msgAny := range m.Messages {
-		msg, ok := msgAny.GetCachedValue().(sdk.Msg)
-		if !ok {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "messages contains %T which is not a sdk.Msg", msgAny)
-		}
-		msgs[i] = msg
-	}
-
-	return msgs, nil
+	return sdktx.GetMsgs(m.Messages, "sdk.MsgProposal")
 }
 
 func (m *MsgSubmitProposal) SetInitialDeposit(coins sdk.Coins) {
@@ -116,8 +107,16 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 		return ErrNoProposalMsgs
 	}
 
-	if _, err := m.GetMessages(); err != nil {
+	msgs, err := m.GetMessages()
+	if err != nil {
 		return err
+	}
+
+	for idx, msg := range msgs {
+		if err := msg.ValidateBasic(); err != nil {
+			return sdkerrors.Wrap(ErrInvalidProposalMsg,
+				fmt.Sprintf("msg: %d, err: %s", idx, err.Error()))
+		}
 	}
 
 	return nil

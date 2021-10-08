@@ -17,7 +17,7 @@ func TestVotes(t *testing.T) {
 
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 5, sdk.NewInt(30000000))
 
-	tp := TestProposal
+	tp := createTestProposalMsgs(ctx, app.GovKeeper)
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalId

@@ -62,7 +62,7 @@ func TestHooks(t *testing.T) {
 	require.False(t, govHooksReceiver.AfterProposalFailedMinDepositValid)
 	require.False(t, govHooksReceiver.AfterProposalVotingPeriodEndedValid)
 
-	tp := TestProposal
+	tp := createTestProposalMsgs(ctx, app.GovKeeper)
 	_, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	require.True(t, govHooksReceiver.AfterProposalSubmissionValid)

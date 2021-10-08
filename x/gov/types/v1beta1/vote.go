@@ -1,7 +1,6 @@
-package types
+package v1beta1
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -16,7 +15,7 @@ func NewVote(proposalID uint64, voter sdk.AccAddress, options WeightedVoteOption
 	return Vote{ProposalId: proposalID, Voter: voter.String(), Options: options}
 }
 
-// String returns a string representation of Vote
+// String returns the string representation of the vote
 func (v Vote) String() string {
 	out, _ := yaml.Marshal(v)
 	return string(out)
@@ -27,34 +26,8 @@ func (v Vote) Empty() bool {
 	return v.String() == Vote{}.String()
 }
 
-// Votes is a collection of Vote objects
+// Votes is an array of vote
 type Votes []Vote
-
-// Equal returns true if two slices (order-dependant) of votes are equal.
-func (v Votes) Equal(other Votes) bool {
-	if len(v) != len(other) {
-		return false
-	}
-
-	for i, vote := range v {
-		if vote.String() != other[i].String() {
-			return false
-		}
-	}
-
-	return true
-}
-
-func (v Votes) String() string {
-	if len(v) == 0 {
-		return "[]"
-	}
-	out := fmt.Sprintf("Votes for Proposal %d:", v[0].ProposalId)
-	for _, vot := range v {
-		out += fmt.Sprintf("\n  %s: %s", vot.Voter, vot.Options)
-	}
-	return out
-}
 
 // NewNonSplitVoteOption creates a single option vote with weight 1
 func NewNonSplitVoteOption(option VoteOption) WeightedVoteOptions {
@@ -62,7 +35,7 @@ func NewNonSplitVoteOption(option VoteOption) WeightedVoteOptions {
 }
 
 func (v WeightedVoteOption) String() string {
-	out, _ := json.Marshal(v)
+	out, _ := yaml.Marshal(v)
 	return string(out)
 }
 

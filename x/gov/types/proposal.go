@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
 	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -19,18 +18,9 @@ const DefaultStartingProposalID uint64 = 1
 // NewProposal creates a new Proposal instance
 func NewProposal(messages []sdk.Msg, id uint64, submitTime, depositEndTime time.Time) (Proposal, error) {
 
-	msgs := make([]*types.Any, len(messages))
-	for i, msg := range messages {
-		m, ok := msg.(proto.Message)
-		if !ok {
-			return Proposal{}, fmt.Errorf("can't proto marshal %T", msg)
-		}
-		any, err := types.NewAnyWithValue(m)
-		if err != nil {
-			return Proposal{}, err
-		}
-
-		msgs[i] = any
+	msgs, err := sdktx.SetMsgs(messages)
+	if err != nil {
+		return Proposal{}, err
 	}
 
 	p := Proposal{
@@ -117,19 +107,6 @@ func ProposalStatusFromString(str string) (ProposalStatus, error) {
 	return ProposalStatus(num), nil
 }
 
-// ValidProposalStatus returns true if the proposal status is valid and false
-// otherwise.
-func ValidProposalStatus(status ProposalStatus) bool {
-	if status == StatusDepositPeriod ||
-		status == StatusVotingPeriod ||
-		status == StatusPassed ||
-		status == StatusRejected ||
-		status == StatusFailed {
-		return true
-	}
-	return false
-}
-
 // Marshal needed for protobuf compatibility
 func (status ProposalStatus) Marshal() ([]byte, error) {
 	return []byte{byte(status)}, nil
@@ -151,4 +128,17 @@ func (status ProposalStatus) Format(s fmt.State, verb rune) {
 		// TODO: Do this conversion more directly
 		s.Write([]byte(fmt.Sprintf("%v", byte(status))))
 	}
+}
+
+// ValidProposalStatus returns true if the proposal status is valid and false
+// otherwise.
+func ValidProposalStatus(status ProposalStatus) bool {
+	if status == StatusDepositPeriod ||
+		status == StatusVotingPeriod ||
+		status == StatusPassed ||
+		status == StatusRejected ||
+		status == StatusFailed {
+		return true
+	}
+	return false
 }

@@ -294,7 +294,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	initialModuleAccCoins := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
 
 	messages := []sdk.Msg{types.NewMsgVote(addrs[0], 1, types.OptionYes)}
-	proposal, err := app.GovKeeper.SubmitProposal(ctx,  messages)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, messages)
 	require.NoError(t, err)
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 10))}

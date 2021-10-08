@@ -1,15 +1,18 @@
-package types
+package v1beta1
 
-import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+import sdk "github.com/cosmos/cosmos-sdk/types"
+
+// Copied over from /x/gov/types/keys.go to avoid circular imports
+const (
+	ModuleName = "gov"
+
+	RouterKey = ModuleName
 )
 
 // Content defines an interface that a proposal must implement. It contains
 // information such as the title and description along with the type and routing
 // information for the appropriate handler to process the proposal. Content can
 // have additional fields, which will handled by a proposal's Handler.
-// TODO Try to unify this interface with types/module/simulation
-// https://github.com/cosmos/cosmos-sdk/issues/5853
 type Content interface {
 	GetTitle() string
 	GetDescription() string

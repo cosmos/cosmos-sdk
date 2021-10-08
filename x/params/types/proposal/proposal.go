@@ -6,7 +6,7 @@ import (
 
 	"sigs.k8s.io/yaml"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -16,10 +16,6 @@ const (
 
 // Assert ParameterChangeProposal implements govtypes.Content at compile-time
 var _ govtypes.Content = &ParameterChangeProposal{}
-
-func init() {
-	govtypes.RegisterProposalTypeCodec(&ParameterChangeProposal{}, "cosmos-sdk/ParameterChangeProposal")
-}
 
 func NewParameterChangeProposal(title, description string, changes []ParamChange) *ParameterChangeProposal {
 	return &ParameterChangeProposal{title, description, changes}

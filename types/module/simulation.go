@@ -85,13 +85,13 @@ func (sm *SimulationManager) WeightedOperations(simState SimulationState) []simu
 // GenesisState generator function
 type SimulationState struct {
 	AppParams    simulation.AppParams
-	Cdc          codec.JSONCodec                      // application codec
-	Rand         *rand.Rand                           // random number
-	GenState     map[string]json.RawMessage           // genesis state
-	Accounts     []simulation.Account                 // simulation accounts
-	InitialStake int64                                // initial coins per account
-	NumBonded    int64                                // number of initially bonded accounts
-	GenTimestamp time.Time                            // genesis timestamp
-	UnbondTime   time.Duration                        // staking unbond time stored to use it as the slashing maximum evidence duration
-	ParamChanges []simulation.ParamChange             // simulated parameter changes from modules
+	Cdc          codec.JSONCodec            // application codec
+	Rand         *rand.Rand                 // random number
+	GenState     map[string]json.RawMessage // genesis state
+	Accounts     []simulation.Account       // simulation accounts
+	InitialStake int64                      // initial coins per account
+	NumBonded    int64                      // number of initially bonded accounts
+	GenTimestamp time.Time                  // genesis timestamp
+	UnbondTime   time.Duration              // staking unbond time stored to use it as the slashing maximum evidence duration
+	ParamChanges []simulation.ParamChange   // simulated parameter changes from modules
 }

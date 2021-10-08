@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -17,11 +17,6 @@ func NewSoftwareUpgradeProposal(title, description string, plan Plan) gov.Conten
 
 // Implements Proposal Interface
 var _ gov.Content = &SoftwareUpgradeProposal{}
-
-func init() {
-	gov.RegisterProposalTypeCodec(&SoftwareUpgradeProposal{}, "cosmos-sdk/SoftwareUpgradeProposal")
-	gov.RegisterProposalTypeCodec(&CancelSoftwareUpgradeProposal{}, "cosmos-sdk/CancelSoftwareUpgradeProposal")
-}
 
 func (sup *SoftwareUpgradeProposal) GetTitle() string       { return sup.Title }
 func (sup *SoftwareUpgradeProposal) GetDescription() string { return sup.Description }

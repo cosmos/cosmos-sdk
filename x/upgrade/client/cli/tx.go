@@ -107,4 +107,3 @@ func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 
 	return cmd
 }
-

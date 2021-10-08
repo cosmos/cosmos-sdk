@@ -18,7 +18,7 @@ import (
 	v039genutil "github.com/cosmos/cosmos-sdk/x/genutil/migrations/v039"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	v036gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v036"
-	v045gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v045"
+	v040gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v040"
 	v039mint "github.com/cosmos/cosmos-sdk/x/mint/migrations/v039"
 	v040mint "github.com/cosmos/cosmos-sdk/x/mint/migrations/v040"
 	v036params "github.com/cosmos/cosmos-sdk/x/params/migrations/v036"
@@ -137,7 +137,7 @@ func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 
 		// Migrate relative source genesis application state and marshal it into
 		// the respective key.
-		appState[v036gov.ModuleName] = v040Codec.MustMarshalJSON(v045gov.Migrate(govGenState))
+		appState[v036gov.ModuleName] = v040Codec.MustMarshalJSON(v040gov.Migrate(govGenState))
 	}
 
 	// Migrate x/mint.

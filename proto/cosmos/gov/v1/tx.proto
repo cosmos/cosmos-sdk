@@ -3,7 +3,6 @@ package cosmos.gov.v1;
 
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/gov/v1/gov.proto";
-import "cosmos/gov/v1beta1/gov.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
@@ -55,9 +54,9 @@ message MsgVote {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  uint64 proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
-  string voter       = 2;
-  cosmos.gov.v1beta1.VoteOption option = 3;
+  uint64     proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
+  string     voter       = 2;
+  VoteOption option      = 3;
 }
 
 // MsgVoteResponse defines the Msg/Vote response type.
@@ -70,9 +69,9 @@ message MsgVoteWeighted {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  uint64   proposal_id                                   = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
-  string   voter                                         = 2;
-  repeated cosmos.gov.v1beta1.WeightedVoteOption options = 3 [(gogoproto.nullable) = false];
+  uint64                      proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
+  string                      voter       = 2;
+  repeated WeightedVoteOption options     = 3 [(gogoproto.nullable) = false];
 }
 
 // MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.

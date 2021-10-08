@@ -399,27 +399,37 @@ func DoTestRevert(t *testing.T, load Loader, reload bool) {
 	db := load(t, dirname)
 	var txn dbm.DBWriter
 
-	txn = db.Writer()
-	require.NoError(t, txn.Set([]byte{2}, []byte{2}))
-	require.NoError(t, txn.Commit())
+	initContents := func() {
+		txn = db.Writer()
+		require.NoError(t, txn.Set([]byte{2}, []byte{2}))
+		require.NoError(t, txn.Commit())
 
-	txn = db.Writer()
-	for i := byte(6); i < 10; i++ {
-		require.NoError(t, txn.Set([]byte{i}, []byte{i}))
+		txn = db.Writer()
+		for i := byte(6); i < 10; i++ {
+			require.NoError(t, txn.Set([]byte{i}, []byte{i}))
+		}
+		require.NoError(t, txn.Delete([]byte{2}))
+		require.NoError(t, txn.Delete([]byte{3}))
+		require.NoError(t, txn.Commit())
 	}
-	require.NoError(t, txn.Delete([]byte{2}))
-	require.NoError(t, txn.Delete([]byte{3}))
-	require.NoError(t, txn.Commit())
 
-	require.Error(t, db.Revert()) // can't revert with no versions
+	initContents()
+	require.NoError(t, db.Revert())
+	view := db.Reader()
+	it, err := view.Iterator(nil, nil)
+	require.NoError(t, err)
+	require.False(t, it.Next()) // db is empty
+	require.NoError(t, it.Close())
+	require.NoError(t, view.Discard())
 
-	_, err := db.SaveNextVersion()
+	initContents()
+	_, err = db.SaveNextVersion()
 	require.NoError(t, err)
 
 	// get snapshot of db state
 	state := map[string][]byte{}
-	view := db.Reader()
-	it, err := view.Iterator(nil, nil)
+	view = db.Reader()
+	it, err = view.Iterator(nil, nil)
 	require.NoError(t, err)
 	for it.Next() {
 		state[string(it.Key())] = it.Value()

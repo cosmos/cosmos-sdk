@@ -79,7 +79,7 @@ func (s *TestSuite) TestUpdateClass() {
 	err := s.app.NFTKeeper.NewClass(s.ctx, class)
 	s.Require().NoError(err)
 
-	except := nft.Class{
+	noExistClass := nft.Class{
 		Id:          "kitty1",
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
@@ -88,10 +88,10 @@ func (s *TestSuite) TestUpdateClass() {
 		UriHash:     testClassURIHash,
 	}
 
-	err = s.app.NFTKeeper.UpdateClass(s.ctx, except)
+	err = s.app.NFTKeeper.UpdateClass(s.ctx, noExistClass)
 	s.Require().Error(err)
 
-	except = nft.Class{
+	except := nft.Class{
 		Id:          testClassID,
 		Name:        "My crypto Kitty",
 		Symbol:      testClassSymbol,
@@ -109,7 +109,7 @@ func (s *TestSuite) TestUpdateClass() {
 }
 
 func (s *TestSuite) TestMint() {
-	except := nft.Class{
+	class := nft.Class{
 		Id:          testClassID,
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
@@ -117,7 +117,7 @@ func (s *TestSuite) TestMint() {
 		Uri:         testClassURI,
 		UriHash:     testClassURIHash,
 	}
-	err := s.app.NFTKeeper.NewClass(s.ctx, except)
+	err := s.app.NFTKeeper.NewClass(s.ctx, class)
 	s.Require().NoError(err)
 
 	expNFT := nft.NFT{

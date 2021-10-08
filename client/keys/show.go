@@ -3,7 +3,6 @@ package keys
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/libs/cli"
@@ -164,9 +163,6 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 }
 
 func fetchKey(kb keyring.Keyring, keyref string) (*keyring.Record, error) {
-	if !strings.HasSuffix(keyref, ".info") {
-		keyref = keyref + ".info"
-	}
 	// firstly check if the keyref is a key name of a key registered in a keyring.
 	k, err := kb.Key(keyref)
 	// if the key is not there or if we have a problem with a keyring itself then we move to a

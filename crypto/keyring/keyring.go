@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/99designs/keyring"
-	"github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
 	"github.com/tendermint/crypto/bcrypt"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
@@ -25,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/go-bip39"
 )
 
 // Backend options for Keyring
@@ -878,6 +878,19 @@ func (ks keystore) MigrateAll() (bool, error) {
 
 // migrate converts keyring.Item from amino to proto serialization format.
 func (ks keystore) migrate(key string) (*Record, bool, error) {
+	keys, err := ks.db.Keys()
+	if err != nil {
+		return nil, false, err
+	}
+	for i := 0; i < len(keys); i++ {
+		if strings.Contains(keys[i], key) {
+			if !(strings.HasSuffix(key, ".info")) {
+				key = key + ".info"
+				break
+			}
+		}
+	}
+
 	item, err := ks.db.Get(key)
 	if err != nil {
 		return nil, false, wrapKeyNotFound(err, key)

@@ -30,18 +30,19 @@ To install the latest version of `cosmovisor`, run the following command:
 go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@latest
 ```
 
-To install a previous version, you can specify the version. IMPORTANT: Chains that use Cosmos-SDK v0.42.x MUST use Cosmovisor v0.1.0
+To install a previous version, you can specify the version. IMPORTANT: Chains that use Cosmos-SDK v0.42.x and want to use auto-download feature MUST use Cosmovisor v0.1.0
 
 ```
 go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v0.1.0
 ```
 
-It is currently not possible to confirm the version of cosmovisor but will be included in Cosmovisor v1.1.0.
+It is possible to confirm the version of cosmovisor when using Cosmovisor v1.0.0, but it is not possible to do so with `v0.1.0`.
 
 You can also install from source by pulling the cosmos-sdk repository and switching to the correct version and building as follows:
 
 ```
 git clone git@github.com:cosmos/cosmos-sdk
+cd cosmos-sdk
 git checkout cosmovisor/vx.x.x
 cd cosmovisor
 make
@@ -183,7 +184,6 @@ When submitting this as a proposal ensure there are no spaces. An example comman
 --description "upgrade to Vega" \
 --gas 400000 \
 --from user \
---keyring-backend test \
 --chain-id test \
 --home test/val2 \
 --node tcp://localhost:36657 \

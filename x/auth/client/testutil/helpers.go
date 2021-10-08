@@ -106,4 +106,12 @@ func TxMultiSignBatchExec(clientCtx client.Context, filename string, from string
 	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetMultiSignBatchCmd(), args)
 }
 
+func TxTipsToFeeExec(clientCtx client.Context, filename string, extraArgs ...string) (testutil.BufferWriter, error) {
+	args := []string{
+		filename,
+	}
+
+	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetTipsToFeeCommand(), append(args, extraArgs...))
+}
+
 // DONTCOVER

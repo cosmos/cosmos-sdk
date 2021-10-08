@@ -33,6 +33,8 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 type IntegrationTestSuite struct {
@@ -1459,6 +1461,153 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 	require.Equal(sdk.NewCoins(val0Coin, val1Coin), queryRes.Balances)
 }
 
+func (s *IntegrationTestSuite) TestTipsWithAux() {
+	require := s.Require()
+	val := s.network.Validators[0]
+	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10))
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"error with SIGN_MDOE_DIRECT_AUX and generate-only unset",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+			},
+			true,
+		},
+		{
+			"error with SIGN_MODE_AMINO_AUX and generate-only unset",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeAminoAux),
+			},
+			true,
+		},
+		{
+			"no error with SIGN_MDOE_DIRECT_AUX mode and generate-only set",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+			},
+			false,
+		},
+		{
+			"no error with SIGN_MDOE_AMINO_AUX mode and generate-only set",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeAminoAux),
+				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+			},
+			false,
+		},
+		{
+			"no error with SIGN_MDOE_DIRECT_AUX mode and generate-only, tip flag set",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, val0Coin.String()),
+			},
+			false,
+		},
+		{
+			"no error with SIGN_MDOE_DIRECT_AUX mode and generate-only, tip flag set",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, val0Coin.String()),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			res, err := govtestutil.MsgSubmitProposal(
+				val.ClientCtx,
+				val.Address.String(),
+				"test",
+				"test desc",
+				govtypes.ProposalTypeText,
+				tc.args...,
+			)
+			if tc.expectErr {
+				require.Error(err)
+			} else {
+				require.NoError(err)
+				s.Require().False(strings.Contains(string(res.Bytes()), "\"tip\":null"))
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestTipsToFee() {
+	require := s.Require()
+	val := s.network.Validators[0]
+
+	kb := s.network.Validators[0].ClientCtx.Keyring
+	acc, _, err := kb.NewMnemonic("tipperAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	require.NoError(err)
+
+	tipper, err := acc.GetAddress()
+	require.NoError(err)
+
+	feePayer := val.Address
+	fee := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(1000))
+	tip := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1000))
+
+	res, err := s.createBankMsg(val, tipper, sdk.NewCoins(tip))
+	require.NoError(err)
+
+	var txRes sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
+	s.Require().NotEqual(0, txRes.Code)
+	s.Require().NotNil(0, txRes.Height)
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// generate tx with --generate-only mode
+	res, err = govtestutil.MsgSubmitProposal(
+		val.ClientCtx,
+		tipper.String(),
+		"test",
+		"test desc",
+		govtypes.ProposalTypeText,
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+		fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+		fmt.Sprintf("--%s=%s", flags.FlagTip, tip.String()),
+	)
+	require.NoError(err)
+	genTxFile := testutil.WriteToNewTempFile(s.T(), string(res.Bytes()))
+
+	// sign the generated tx with the user1
+	res, err = TxSignExec(
+		val.ClientCtx,
+		tipper,
+		genTxFile.Name(),
+		fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+	)
+	s.Require().NoError(err)
+	auxSignedTxFile := testutil.WriteToNewTempFile(s.T(), string(res.Bytes()))
+
+	// broadcast the tx
+	res, err = TxTipsToFeeExec(
+		val.ClientCtx,
+		auxSignedTxFile.Name(),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+	)
+	require.NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
+	s.Require().Equal(0, txRes.Code)
+	s.Require().NotNil(0, txRes.Height)
+}
+
 func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.AccAddress, amount sdk.Coins, extraFlags ...string) (testutil.BufferWriter, error) {
 	flags := []string{fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -1468,4 +1617,15 @@ func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.
 
 	flags = append(flags, extraFlags...)
 	return bankcli.MsgSendExec(val.ClientCtx, val.Address, toAddr, amount, flags...)
+}
+
+func (s *IntegrationTestSuite) getBalances(clientCtx client.Context, addr sdk.AccAddress, denom string) sdk.Int {
+	resp, err := bankcli.QueryBalancesExec(clientCtx, addr)
+	s.Require().NoError(err)
+
+	var balRes banktypes.QueryAllBalancesResponse
+	err = clientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
+	s.Require().NoError(err)
+	startTokens := balRes.Balances.AmountOf(denom)
+	return startTokens
 }

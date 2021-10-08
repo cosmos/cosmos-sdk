@@ -82,6 +82,8 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		return err
 	}
 
+	tx = appendTips(clientCtx, tx, txf)
+
 	if !clientCtx.SkipConfirm {
 		out, err := clientCtx.TxConfig.TxJSONEncoder()(tx.GetTx())
 		if err != nil {

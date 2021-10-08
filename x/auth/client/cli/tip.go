@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -41,5 +42,6 @@ func GetTipsToFeeCommand() *cobra.Command {
 		},
 	}
 
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

@@ -31,38 +31,37 @@ var (
 // and read and write access.
 // Past versions are only accessible read-only.
 type DBConnection interface {
-	// Opens a read-only transaction at the current working version.
+	// Reader opens a read-only transaction at the current working version.
 	Reader() DBReader
 
-	// Opens a read-only transaction at a specified version.
+	// ReaderAt opens a read-only transaction at a specified version.
 	// Returns ErrVersionDoesNotExist for invalid versions.
 	ReaderAt(uint64) (DBReader, error)
 
-	// Opens a read-write transaction at the current version.
+	// ReadWriter opens a read-write transaction at the current version.
 	ReadWriter() DBReadWriter
 
-	// Opens a write-only transaction at the current version.
+	// Writer opens a write-only transaction at the current version.
 	Writer() DBWriter
 
-	// Returns all saved versions as an immutable set which is safe for concurrent access.
+	// Versions returns all saved versions as an immutable set which is safe for concurrent access.
 	Versions() (VersionSet, error)
 
-	// Saves the current contents of the database and returns the next version ID, which will be
-	// `Versions().Last()+1`.
+	// SaveNextVersion saves the current contents of the database and returns the next version ID,
+	// which will be `Versions().Last()+1`.
 	// Returns an error if any open DBWriter transactions exist.
 	// TODO: rename to something more descriptive?
 	SaveNextVersion() (uint64, error)
 
-	// Attempts to save database at a specific version ID, which must be greater than or equal to
-	// what would be returned by `SaveNextVersion`.
+	// SaveVersion attempts to save database at a specific version ID, which must be greater than or
+	// equal to what would be returned by `SaveNextVersion`.
 	// Returns an error if any open DBWriter transactions exist.
 	SaveVersion(uint64) error
 
-	// Deletes a saved version. Returns ErrVersionDoesNotExist for invalid versions.
+	// DeleteVersion deletes a saved version. Returns ErrVersionDoesNotExist for invalid versions.
 	DeleteVersion(uint64) error
 
-	// Reverts the DB state to the last saved version.
-	// Returns an error if no saved versions exist.
+	// Revert reverts the DB state to the last saved version; if none exist, this clears the DB.
 	// Returns an error if any open DBWriter transactions exist.
 	Revert() error
 
@@ -101,7 +100,7 @@ type DBReader interface {
 	// TODO: replace with an extra argument to Iterator()?
 	ReverseIterator(start, end []byte) (Iterator, error)
 
-	// Discards the transaction, invalidating any future operations on it.
+	// Discard discards the transaction, invalidating any future operations on it.
 	Discard() error
 }
 
@@ -118,10 +117,10 @@ type DBWriter interface {
 	// CONTRACT: key readonly []byte
 	Delete([]byte) error
 
-	// Flushes pending writes and discards the transaction.
+	// Commit flushes pending writes and discards the transaction.
 	Commit() error
 
-	// Discards the transaction, invalidating any future operations on it.
+	// Discard discards the transaction, invalidating any future operations on it.
 	Discard() error
 }
 

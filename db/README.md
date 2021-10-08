@@ -62,3 +62,6 @@ tx2.Set(key, []byte("b"))
 tx1.Commit() // ok
 tx2.Commit() // ok
 ```
+### RocksDB
+
+A [RocksDB](https://github.com/facebook/rocksdb)-based backend. Internally this uses [`OptimisticTransactionDB`](https://github.com/facebook/rocksdb/wiki/Transactions#optimistictransactiondb) to allow concurrent transactions with write conflict detection. Historical versioning is internally implemented with [Checkpoints](https://github.com/facebook/rocksdb/wiki/Checkpoints).

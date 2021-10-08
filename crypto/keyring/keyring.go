@@ -880,7 +880,7 @@ func (ks keystore) MigrateAll() (bool, error) {
 func (ks keystore) migrate(key string) (*Record, bool, error) {
 	item, err := ks.db.Get(key)
 	if err != nil {
-		item, err = ks.db.Get(key + ".info")
+		item, err = ks.db.Get(fmt.Sprint(key, ".info"))
 		if err != nil {
 			return nil, false, wrapKeyNotFound(err, key)
 		}

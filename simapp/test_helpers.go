@@ -123,7 +123,7 @@ func Setup(t *testing.T, isCheckTx bool) *SimApp {
 	t.Helper()
 
 	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey()
+	pubKey, err := privVal.GetPubKey(context.TODO())
 	require.NoError(t, err)
 
 	// create validator set with single validator
@@ -246,7 +246,7 @@ func SetupWithGenesisAccounts(t *testing.T, genAccs []authtypes.GenesisAccount, 
 	t.Helper()
 
 	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey()
+	pubKey, err := privVal.GetPubKey(context.TODO())
 	require.NoError(t, err)
 
 	// create validator set with single validator
@@ -262,7 +262,7 @@ func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) GenesisState {
 	t.Helper()
 
 	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey()
+	pubKey, err := privVal.GetPubKey(context.TODO())
 	require.NoError(t, err)
 
 	// create validator set with single validator

@@ -1,4 +1,4 @@
-package table
+package orm
 
 import (
 	"testing"
@@ -6,6 +6,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestSequenceUniqueConstraint(t *testing.T) {
+	ctx := NewMockContext()
+	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+
+	seq := NewSequence(0x1)
+	err := seq.InitVal(store, 2)
+	require.NoError(t, err)
+	err = seq.InitVal(store, 3)
+	require.True(t, ErrUniqueConstraint.Is(err))
+}
 
 func TestSequenceIncrements(t *testing.T) {
 	ctx := NewMockContext()

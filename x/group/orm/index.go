@@ -1,4 +1,4 @@
-package table
+package orm
 
 // PrefixRange turns a prefix into a (start, end) range. The start is the given prefix value and
 // the end is calculated by adding 1 bit to the start value. Nil is not allowed as prefix.

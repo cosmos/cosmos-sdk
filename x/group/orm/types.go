@@ -1,7 +1,7 @@
 /*
-Package store/table is a convenient object to data store mapper.
+Package orm is a convenient object to data store mapper.
 */
-package table
+package orm
 
 import (
 	"io"
@@ -16,13 +16,14 @@ import (
 const tableCodespace = "table"
 
 var (
-	ErrNotFound          = errors.Register(tableCodespace, 100, "not found")
-	ErrIteratorDone      = errors.Register(tableCodespace, 101, "iterator done")
-	ErrIteratorInvalid   = errors.Register(tableCodespace, 102, "iterator invalid")
-	ErrType              = errors.Register(tableCodespace, 110, "invalid type")
-	ErrUniqueConstraint  = errors.Register(tableCodespace, 111, "unique constraint violation")
-	ErrArgument          = errors.Register(tableCodespace, 112, "invalid argument")
-	ErrIndexKeyMaxLength = errors.Register(tableCodespace, 113, "index key exceeds max length")
+	ErrNotFound          = errors.Register(ormCodespace, 100, "not found")
+	ErrIteratorDone      = errors.Register(ormCodespace, 101, "iterator done")
+	ErrIteratorInvalid   = errors.Register(ormCodespace, 102, "iterator invalid")
+	ErrType              = errors.Register(ormCodespace, 110, "invalid type")
+	ErrUniqueConstraint  = errors.Register(ormCodespace, 111, "unique constraint violation")
+	ErrArgument          = errors.Register(ormCodespace, 112, "invalid argument")
+	ErrIndexKeyMaxLength = errors.Register(ormCodespace, 113, "index key exceeds max length")
+	ErrEmptyKey          = errors.Register(ormCodespace, 114, "cannot use empty key")
 )
 
 // Unique identifier of a persistent table.
@@ -47,15 +48,6 @@ type Iterator interface {
 	LoadNext(dest codec.ProtoMarshaler) (RowID, error)
 	// Close releases the iterator and should be called at the end of iteration
 	io.Closer
-}
-
-// IndexKeyCodec defines the encoding/decoding methods for building/splitting index keys.
-type IndexKeyCodec interface {
-	// BuildIndexKey encodes a searchable key and the target RowID.
-	BuildIndexKey(searchableKey []byte, rowID RowID) []byte
-	// StripRowID returns the RowID from the combined persistentIndexKey. It is the reverse operation to BuildIndexKey
-	// but with the searchableKey dropped.
-	StripRowID(persistentIndexKey []byte) RowID
 }
 
 // Indexable types are used to setup new tables.

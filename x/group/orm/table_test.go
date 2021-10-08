@@ -1,4 +1,4 @@
-package table
+package orm
 
 import (
 	"fmt"
@@ -16,36 +16,35 @@ import (
 func TestNewTableBuilder(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
-	const anyPrefix = 0x10
 
-	specs := map[string]struct {
+	testCases := []struct {
+		name        string
 		model       codec.ProtoMarshaler
-		idxKeyCodec IndexKeyCodec
-		expPanic    bool
+		expectErr   bool
+		expectedErr string
 	}{
-		"happy path": {
-			model:       &testdata.TableModel{},
-			idxKeyCodec: FixLengthIndexKeys(EncodedSeqLength),
+		{
+			name:        "nil model",
+			model:       nil,
+			expectErr:   true,
+			expectedErr: "Model must not be nil",
 		},
-		"nil model": {
-			idxKeyCodec: FixLengthIndexKeys(EncodedSeqLength),
-			expPanic:    true,
-		},
-		"nil idxKeyCodec": {
-			model:    &testdata.TableModel{},
-			expPanic: true,
+		{
+			name:      "all not nil",
+			model:     &testdata.GroupInfo{},
+			expectErr: false,
 		},
 	}
 
-	for msg, spec := range specs {
-		t.Run(msg, func(t *testing.T) {
-			f := func() {
-				NewTableBuilder(anyPrefix, spec.model, spec.idxKeyCodec, cdc)
-			}
-			if spec.expPanic {
-				require.Panics(t, f)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			builder, err := newTableBuilder(0x1, tc.model, cdc)
+			if tc.expectErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.expectedErr)
 			} else {
-				require.NotPanics(t, f)
+				require.NoError(t, err)
+				require.NotNil(t, builder)
 			}
 		})
 	}
@@ -53,16 +52,27 @@ func TestNewTableBuilder(t *testing.T) {
 
 func TestCreate(t *testing.T) {
 	specs := map[string]struct {
+		rowID  orm.RowID
 		src    codec.ProtoMarshaler
 		expErr *errors.Error
 	}{
+		"empty rowID": {
+			rowID: []byte{},
+			src: &testdata.TableModel{
+				Id:   1,
+				Name: "some name",
+			},
+			expErr: orm.ErrEmptyKey,
+		},
 		"happy path": {
+			rowID: EncodeSequence(1),
 			src: &testdata.TableModel{
 				Id:   1,
 				Name: "some name",
 			},
 		},
 		"wrong type": {
+			rowID: EncodeSequence(1),
 			src: &testdata.Cat{
 				Moniker: "cat moniker",
 				Lives:   10,
@@ -70,6 +80,7 @@ func TestCreate(t *testing.T) {
 			expErr: ErrType,
 		},
 		"model validation fails": {
+			rowID: EncodeSequence(1),
 			src: &testdata.TableModel{
 				Id:   1,
 				Name: "",
@@ -86,18 +97,18 @@ func TestCreate(t *testing.T) {
 			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
 			const anyPrefix = 0x10
-			tableBuilder := NewTableBuilder(anyPrefix, &testdata.TableModel{}, FixLengthIndexKeys(EncodedSeqLength), cdc)
+			tableBuilder := newTableBuilder(anyPrefix, &testdata.TableModel{}, cdc)
 			myTable := tableBuilder.Build()
 
-			err := myTable.Create(store, EncodeSequence(1), spec.src)
+			err := myTable.Create(store, spec.rowID, spec.src)
 
 			require.True(t, spec.expErr.Is(err), err)
 			shouldExists := spec.expErr == nil
-			assert.Equal(t, shouldExists, myTable.Has(store, EncodeSequence(1)), fmt.Sprintf("expected %v", shouldExists))
+			assert.Equal(t, shouldExists, myTable.Has(store, spec.rowID), fmt.Sprintf("expected %v", shouldExists))
 
 			// then
 			var loaded testdata.TableModel
-			err = myTable.GetOne(store, EncodeSequence(1), &loaded)
+			err = myTable.GetOne(store, spec.rowID, &loaded)
 			if spec.expErr != nil {
 				require.True(t, ErrNotFound.Is(err))
 				return
@@ -143,7 +154,7 @@ func TestUpdate(t *testing.T) {
 			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
 			const anyPrefix = 0x10
-			tableBuilder := NewTableBuilder(anyPrefix, &testdata.TableModel{}, FixLengthIndexKeys(EncodedSeqLength), cdc)
+			tableBuilder := newTableBuilder(anyPrefix, &testdata.TableModel{}, cdc)
 			myTable := tableBuilder.Build()
 
 			initValue := testdata.TableModel{
@@ -192,7 +203,7 @@ func TestDelete(t *testing.T) {
 			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
 			const anyPrefix = 0x10
-			tableBuilder := NewTableBuilder(anyPrefix, &testdata.TableModel{}, FixLengthIndexKeys(EncodedSeqLength), cdc)
+			tableBuilder := newTableBuilder(anyPrefix, &testdata.TableModel{}, FixLengthIndexKeys(EncodedSeqLength), cdc)
 			myTable := tableBuilder.Build()
 
 			initValue := testdata.TableModel{

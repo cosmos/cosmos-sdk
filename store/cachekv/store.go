@@ -5,7 +5,6 @@ import (
 	"io"
 	"sort"
 	"sync"
-	"time"
 
 	dbm "github.com/tendermint/tm-db"
 

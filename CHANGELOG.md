@@ -125,6 +125,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9699](https://github.com/cosmos/cosmos-sdk/pull/9699) Add `:`, `.`, `-`, and `_` as allowed characters in the default denom regular expression.
 * (genesis) [\#9697](https://github.com/cosmos/cosmos-sdk/pull/9697) Ensure `InitGenesis` returns with non-empty validator set.
 * [\#10262](https://github.com/cosmos/cosmos-sdk/pull/10262) Remove unnecessary logging in `x/feegrant` simulation.
+* [\#10339](https://github.com/cosmos/cosmos-sdk/pull/10339) Only allocate memory when a zero coin is found
 
 ### Bug Fixes
 

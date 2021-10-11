@@ -12,7 +12,7 @@
 - 2020 August 19: Move sequence field from `SignDoc` to `SignerInfo`, as discussed in [#6966](https://github.com/cosmos/cosmos-sdk/issues/6966).
 - 2020 September 25: Remove `PublicKey` type in favor of `secp256k1.PubKey`, `ed25519.PubKey` and `multisig.LegacyAminoPubKey`.
 - 2020 October 15: Add `GetAccount` and `GetAccountWithHeight` methods to the `AccountRetriever` interface.
-- 2021 Feb 24: The SDK does not use Tendermint's `PubKey` interface anymore, but its own `cryptotypes.PubKey`. Updates to reflect this.
+- 2021 Feb 24: The Cosmos SDK does not use Tendermint's `PubKey` interface anymore, but its own `cryptotypes.PubKey`. Updates to reflect this.
 - 2021 May 3: Rename `clientCtx.JSONMarshaler` to `clientCtx.JSONCodec`.
 - 2021 June 10: Add `clientCtx.Codec: codec.Codec`.
 

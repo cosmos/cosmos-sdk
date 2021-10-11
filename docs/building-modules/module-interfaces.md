@@ -4,7 +4,7 @@ order: 11
 
 # Module Interfaces
 
-This document details how to build CLI and REST interfaces for a module. Examples from various SDK modules are included. {synopsis}
+This document details how to build CLI and REST interfaces for a module. Examples from various Cosmos SDK modules are included. {synopsis}
 
 ## Prerequisite Readings
 
@@ -100,7 +100,7 @@ cmd.MarkFlagRequired(FlagFrom)
 
 For more detailed information on creating flags, visit the [Cobra Documentation](https://github.com/spf13/cobra).
 
-As mentioned in [transaction commands](#transaction-commands), there is a set of flags that all transaction commands must add. This is done with the `AddTxFlagsToCmd` method defined in the SDK's `./client/flags` package.
+As mentioned in [transaction commands](#transaction-commands), there is a set of flags that all transaction commands must add. This is done with the `AddTxFlagsToCmd` method defined in the Cosmos SDK's `./client/flags` package.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/client/flags/flags.go#L94-L120
 
@@ -132,7 +132,7 @@ Modules that want to expose REST queries should add `google.api.http` annotation
 
 gRPC gateway is started in-process along with the application and Tendermint. It can be enabled or disabled by setting gRPC Configuration `enable` in [`app.toml`](../run-node/run-node.md#configuring-the-node-using-apptoml).
 
-The SDK provides a command for generating [Swagger](https://swagger.io/) documentation (`protoc-gen-swagger`). Setting `swagger` in [`app.toml`](../run-node/run-node.md#configuring-the-node-using-apptoml) defines if swagger documentation should be automatically registered.
+The Cosmos SDK provides a command for generating [Swagger](https://swagger.io/) documentation (`protoc-gen-swagger`). Setting `swagger` in [`app.toml`](../run-node/run-node.md#configuring-the-node-using-apptoml) defines if swagger documentation should be automatically registered.
 
 ## Next {hide}
 

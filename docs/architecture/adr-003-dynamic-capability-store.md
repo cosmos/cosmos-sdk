@@ -21,7 +21,7 @@ This ADR proposes such an interface & mechanism.
 
 ## Decision
 
-The SDK will include a new `CapabilityKeeper` abstraction, which is responsible for provisioning,
+The Cosmos SDK will include a new `CapabilityKeeper` abstraction, which is responsible for provisioning,
 tracking, and authenticating capabilities at runtime. During application initialisation in `app.go`,
 the `CapabilityKeeper` will be hooked up to modules through unique function references
 (by calling `ScopeToModule`, defined below) so that it can identify the calling module when later

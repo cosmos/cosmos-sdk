@@ -11,7 +11,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/store/gaskv"
-	stypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 /*
@@ -87,7 +87,7 @@ func NewContext(ms MultiStore, header tmproto.Header, isCheckTx bool, logger log
 		chainID:      header.ChainID,
 		checkTx:      isCheckTx,
 		logger:       logger,
-		gasMeter:     stypes.NewInfiniteGasMeter(),
+		gasMeter:     storetypes.NewInfiniteGasMeter(),
 		minGasPrice:  DecCoins{},
 		eventManager: NewEventManager(),
 	}
@@ -243,13 +243,13 @@ func (c Context) Value(key interface{}) interface{} {
 // ----------------------------------------------------------------------------
 
 // KVStore fetches a KVStore from the MultiStore.
-func (c Context) KVStore(key StoreKey) KVStore {
-	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), stypes.KVGasConfig())
+func (c Context) KVStore(key storetypes.StoreKey) KVStore {
+	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), storetypes.KVGasConfig())
 }
 
 // TransientStore fetches a TransientStore from the MultiStore.
-func (c Context) TransientStore(key StoreKey) KVStore {
-	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), stypes.TransientGasConfig())
+func (c Context) TransientStore(key storetypes.StoreKey) KVStore {
+	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), storetypes.TransientGasConfig())
 }
 
 // CacheContext returns a new Context with the multi-store cached and a new

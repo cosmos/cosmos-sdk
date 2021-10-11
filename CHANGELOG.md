@@ -69,7 +69,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * `MkConsKeyOutput`
     * `MkValKeyOutput`
     * `MkAccKeyOutput`
-* [\#10077](https://github.com/cosmos/cosmos-sdk/pull/10077) Remove telemetry on `GasKV` and `CacheKV` store Get/Set operations, significantly improving their performance.
+* [\#10077](https://github.com/cosmos/cosmos-sdk/pull/10077),[\#10334](https://github.com/cosmos/cosmos-sdk/pull/10334) Remove telemetry on `GasKV` and `CacheKV` store operations, significantly improving their performance.
 * [\#10022](https://github.com/cosmos/cosmos-sdk/pull/10022) `AuthKeeper` interface in `x/auth` now includes a function `HasAccount`.
 * [\#9759](https://github.com/cosmos/cosmos-sdk/pull/9759) `NewAccountKeeeper` in `x/auth` now takes an additional `bech32Prefix` argument that represents `sdk.Bech32MainPrefix`.
 * [\#9628](https://github.com/cosmos/cosmos-sdk/pull/9628) Rename `x/{mod}/legacy` to `x/{mod}/migrations`.
@@ -151,6 +151,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Machine Breaking
 
+* (x/staking) [#10254](https://github.com/cosmos/cosmos-sdk/pull/10254) Instead of using the shares to determine if a delegation should be removed, use the truncated (token) amount.
 * (store) [#10247](https://github.com/cosmos/cosmos-sdk/pull/10247) Charge gas for the key length in gas meter.
 * (store) [#10218](https://github.com/cosmos/cosmos-sdk/pull/10218) Charge gas even when there are no entries while seeking.
 * (x/auth)[\#9596](https://github.com/cosmos/cosmos-sdk/pull/9596) Enable creating periodic vesting accounts with a transactions instead of requiring them to be created in genesis.

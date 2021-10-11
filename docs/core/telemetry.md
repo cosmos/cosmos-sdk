@@ -131,14 +131,6 @@ The following examples expose too much cardinality and may not even prove to be 
 | `store_iavl_delete`             | Duration of an IAVL `Store#Delete` call                                                   | ms              | summary |
 | `store_iavl_commit`             | Duration of an IAVL `Store#Commit` call                                                   | ms              | summary |
 | `store_iavl_query`              | Duration of an IAVL `Store#Query` call                                                    | ms              | summary |
-| `store_gaskv_get`               | Duration of a GasKV `Store#Get` call                                                      | ms              | summary |
-| `store_gaskv_set`               | Duration of a GasKV `Store#Set` call                                                      | ms              | summary |
-| `store_gaskv_has`               | Duration of a GasKV `Store#Has` call                                                      | ms              | summary |
-| `store_gaskv_delete`            | Duration of a GasKV `Store#Delete` call                                                   | ms              | summary |
-| `store_cachekv_get`             | Duration of a CacheKV `Store#Get` call                                                    | ms              | summary |
-| `store_cachekv_set`             | Duration of a CacheKV `Store#Set` call                                                    | ms              | summary |
-| `store_cachekv_write`           | Duration of a CacheKV `Store#Write` call                                                  | ms              | summary |
-| `store_cachekv_delete`          | Duration of a CacheKV `Store#Delete` call                                                 | ms              | summary |
 
 ## Next {hide}
 

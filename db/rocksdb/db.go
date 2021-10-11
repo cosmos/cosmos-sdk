@@ -284,10 +284,6 @@ func (mgr *dbManager) Revert() (err error) {
 	if mgr.openWriters > 0 {
 		return dbm.ErrOpenTransactions
 	}
-	last := mgr.vmgr.Last()
-	if last == 0 {
-		return dbm.ErrInvalidVersion
-	}
 	// Close current connection and replace it with a checkpoint (created from the last checkpoint)
 	mgr.current.Close()
 	dbPath := filepath.Join(mgr.dir, currentDBFileName)
@@ -295,9 +291,11 @@ func (mgr *dbManager) Revert() (err error) {
 	if err != nil {
 		return
 	}
-	err = mgr.restoreFromCheckpoint(last, dbPath)
-	if err != nil {
-		return
+	if last := mgr.vmgr.Last(); last != 0 {
+		err = mgr.restoreFromCheckpoint(last, dbPath)
+		if err != nil {
+			return
+		}
 	}
 	mgr.current, err = gorocksdb.OpenOptimisticTransactionDb(mgr.opts.dbo, dbPath)
 	return

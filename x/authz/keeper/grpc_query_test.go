@@ -164,7 +164,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorizations() {
 	}
 }
 
-func (suite *TestSuite) TestQueryGranterGrants() {
+func (suite *TestSuite) TestGRPCQueryGranterGrants() {
 	require := suite.Require()
 	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 

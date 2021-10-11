@@ -12,7 +12,7 @@ A user can query and interact with the `upgrade` module using the CLI.
 
 The `query` commands allow users to query `upgrade` state.
 
-```
+```bash
 simd query upgrade --help
 ```
 
@@ -20,7 +20,7 @@ simd query upgrade --help
 
 The `applied` command allows users to query the block header for height at which a completed upgrade was applied.
 
-```
+```bash
 simd query upgrade applied [upgrade-name] [flags]
 ```
 
@@ -29,13 +29,13 @@ This helps a client determine which binary was valid over a given range of block
 
 Example:
 
-```
+```bash
 simd query upgrade applied "test-upgrade"
 ```
 
 Example Output:
 
-```
+```bash
 "block_id": {
     "hash": "A769136351786B9034A5F196DC53F7E50FCEB53B48FA0786E1BFC45A0BB646B5",
     "parts": {
@@ -79,17 +79,17 @@ The `module_versions` command gets a list of module names and their respective c
 Following the command with a specific module name will return only
 that module's information.
 
-```
+```bash
 simd query upgrade module_versions [optional module_name] [flags]
 ```
 Example:
 
-```
+```bash
 simd query upgrade module_versions
 ```
 
 Example Output:
-```
+```bash
 module_versions:
 - name: auth
   version: "2"
@@ -131,13 +131,13 @@ module_versions:
 
 Example:
 
-```
+```bash
 regen query upgrade module_versions ibc
 ```
 
 Example Output:
 
-```
+```bash
 module_versions:
 - name: ibc
   version: "2"
@@ -147,22 +147,167 @@ module_versions:
 
 The `plan` command gets the currently scheduled upgrade plan, if one exists.
 
-```
+```bash
 regen query upgrade plan [flags]
 ```
 
 Example:
 
-```
+```bash
 simd query upgrade plan
 ```
 
 Example Output:
 
-```
+```bash
 height: "130"
 info: ""
 name: test-upgrade
 time: "0001-01-01T00:00:00Z"
 upgraded_client_state: null
 ```
+
+
+## REST
+
+A user can query the `upgrade` module using REST endpoints.
+
+### Applied Plan
+
+`AppliedPlan` queries a previously applied upgrade plan by its name.
+
+```bash
+/cosmos/upgrade/v1beta1/applied_plan/{name}
+```
+
+Example:
+
+```bash
+curl -X GET "http://localhost:1317/cosmos/upgrade/v1beta1/applied_plan/v2.0-upgrade" -H "accept: application/json"
+```
+
+Example Output:
+
+```bash
+{
+  "height": "30"
+}
+```
+### Current Plan
+
+`CurrentPlan` queries the current upgrade plan.
+
+```bash
+/cosmos/upgrade/v1beta1/current_plan
+```
+
+Example:
+
+```bash
+curl -X GET "http://localhost:1317/cosmos/upgrade/v1beta1/current_plan" -H "accept: application/json"
+```
+
+Example Output:
+
+```bash
+{
+  "plan": "v2.1-upgrade"
+}
+```
+
+
+### Module versions
+
+`ModuleVersions` queries the list of module versions from state.
+
+```bash
+/cosmos/upgrade/v1beta1/module_versions
+```
+
+Example:
+
+```bash
+curl -X GET "http://localhost:1317/cosmos/upgrade/v1beta1/module_versions" -H "accept: application/json"
+```
+
+Example Output:
+
+```bash
+{
+  "module_versions": [
+    {
+      "name": "auth",
+      "version": "2"
+    },
+    {
+      "name": "authz",
+      "version": "1"
+    },
+    {
+      "name": "bank",
+      "version": "2"
+    },
+    {
+      "name": "capability",
+      "version": "1"
+    },
+    {
+      "name": "crisis",
+      "version": "1"
+    },
+    {
+      "name": "distribution",
+      "version": "2"
+    },
+    {
+      "name": "evidence",
+      "version": "1"
+    },
+    {
+      "name": "feegrant",
+      "version": "1"
+    },
+    {
+      "name": "genutil",
+      "version": "1"
+    },
+    {
+      "name": "gov",
+      "version": "2"
+    },
+    {
+      "name": "ibc",
+      "version": "2"
+    },
+    {
+      "name": "mint",
+      "version": "1"
+    },
+    {
+      "name": "params",
+      "version": "1"
+    },
+    {
+      "name": "slashing",
+      "version": "2"
+    },
+    {
+      "name": "staking",
+      "version": "2"
+    },
+    {
+      "name": "transfer",
+      "version": "1"
+    },
+    {
+      "name": "upgrade",
+      "version": "1"
+    },
+    {
+      "name": "vesting",
+      "version": "1"
+    }
+  ]
+}
+```
+

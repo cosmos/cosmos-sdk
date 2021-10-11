@@ -20,3 +20,7 @@ parent:
 4. **[Parameters](04_params.md)**
 5. **[Events](05_events.md)**
     - [BeginBlocker](05_events.md#beginblocker)
+6. **[Client](06_client.md)**
+    - [CLI](06_client.md#cli)
+    - [gRPC](06_client.md#grpc)
+    - [REST](06_client.md#rest)

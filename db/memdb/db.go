@@ -159,6 +159,31 @@ func (db *MemDB) DeleteVersion(target uint64) error {
 	return nil
 }
 
+func (db *MemDB) Revert() error {
+	db.mtx.RLock()
+	defer db.mtx.RUnlock()
+	if db.openWriters > 0 {
+		return dbm.ErrOpenTransactions
+	}
+
+	last := db.vmgr.Last()
+	if last == 0 {
+		db.btree = btree.New(bTreeDegree)
+		return nil
+	}
+	var has bool
+	db.btree, has = db.saved[last]
+	if !has {
+		return fmt.Errorf("bad version history: version %v not saved", last)
+	}
+	for ver, _ := range db.saved {
+		if ver > last {
+			delete(db.saved, ver)
+		}
+	}
+	return nil
+}
+
 // Get implements DBReader.
 func (tx *dbTxn) Get(key []byte) ([]byte, error) {
 	if tx.btree == nil {

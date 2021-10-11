@@ -137,13 +137,11 @@ func PositiveDelegationInvariant(k Keeper) sdk.Invariant {
 		for _, delegation := range delegations {
 			if delegation.Shares.IsNegative() {
 				count++
-
 				msg += fmt.Sprintf("\tdelegation with negative shares: %+v\n", delegation)
 			}
 
 			if delegation.Shares.IsZero() {
 				count++
-
 				msg += fmt.Sprintf("\tdelegation with zero shares: %+v\n", delegation)
 			}
 		}

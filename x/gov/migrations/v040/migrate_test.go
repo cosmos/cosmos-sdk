@@ -12,9 +12,9 @@ import (
 	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v036"
 	v036gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v036"
 	v040gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v040"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	v036params "github.com/cosmos/cosmos-sdk/x/params/migrations/v036"
 	v038upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/migrations/v038"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 func TestMigrate(t *testing.T) {

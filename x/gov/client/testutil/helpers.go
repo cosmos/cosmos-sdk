@@ -1,7 +1,6 @@
 package testutil
 
 import (
-	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -21,10 +20,15 @@ var commonArgs = []string{
 
 // MsgSubmitProposal creates a tx for submit proposal
 func MsgSubmitProposal(t *testing.T, clientCtx client.Context, from string, messages []sdk.Msg, extraArgs ...string) (testutil.BufferWriter, error) {
-	bz, err := json.Marshal(messages)
-	if err != nil {
-		return nil, err 
+	txBuilder := clientCtx.TxConfig.NewTxBuilder()
+	if err := txBuilder.SetMsgs(messages...); err != nil {
+		return nil, err
 	}
+	bz, err := clientCtx.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
+	if err != nil {
+		return nil, err
+	}
+
 	msgFile := testutil.WriteToNewTempFile(t, string(bz))
 	args := append(commonArgs, msgFile.Name())
 	args = append(args, fmt.Sprintf("--%s=%s", flags.FlagFrom, from))

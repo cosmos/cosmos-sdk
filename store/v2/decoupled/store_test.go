@@ -68,27 +68,19 @@ func TestStoreNoNilSet(t *testing.T) {
 func TestConstructors(t *testing.T) {
 	db := memdb.NewDB()
 
-	// Fail to load a store from an empty DB
-	store, err := LoadStore(db, DefaultStoreConfig)
-	require.Error(t, err)
-
-	store = newAlohaStore(t, db)
+	store := newAlohaStore(t, db)
 	store.Commit()
 	require.NoError(t, store.Close())
 
-	store, err = LoadStore(db, DefaultStoreConfig)
+	store, err := NewStore(db, DefaultStoreConfig)
 	require.NoError(t, err)
 	value := store.Get([]byte("hello"))
 	require.Equal(t, []byte("goodbye"), value)
 	require.NoError(t, store.Close())
 
-	// Fail to create a new store from a non-empty DB
-	store, err = NewStore(db, DefaultStoreConfig)
-	require.True(t, errors.Is(err, ErrNonEmptyDatabase))
-
 	// Loading with an initial version beyond the lowest should error
 	opts := StoreConfig{InitialVersion: 5, Pruning: types.PruneNothing}
-	store, err = LoadStore(db, opts)
+	store, err = NewStore(db, opts)
 	require.Error(t, err)
 }
 

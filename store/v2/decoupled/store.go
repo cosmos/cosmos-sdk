@@ -41,7 +41,6 @@ var (
 var (
 	ErrVersionDoesNotExist = errors.New("version does not exist")
 	ErrMaximumHeight       = errors.New("maximum block height reached")
-	ErrNonEmptyDatabase    = errors.New("DB contains saved versions")
 )
 
 type StoreConfig struct {
@@ -71,66 +70,20 @@ type Store struct {
 
 var DefaultStoreConfig = StoreConfig{Pruning: types.PruneDefault, MerkleDB: nil}
 
-// NewStore creates a new, empty Store.
-// Returns ErrNonEmptyDatabase if a DB contains existing versions.
+// NewStore creates a new Store, or loads one if db contains existing data.
 func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 	versions, err := db.Versions()
 	if err != nil {
 		return
 	}
+	loadExisting := false
+	// If the DB is not empty, attempt to load existing data
 	if saved := versions.Count(); saved != 0 {
-		err = fmt.Errorf("%w: %v existing versions", ErrNonEmptyDatabase, saved)
-		return
-	}
-	err = db.Revert()
-	if err != nil {
-		return
-	}
-	stateTxn := db.ReadWriter()
-	defer func() {
-		if err != nil {
-			err = util.CombineErrors(err, stateTxn.Discard(), "stateTxn.Discard also failed")
+		if opts.InitialVersion != 0 && versions.Last() < opts.InitialVersion {
+			return nil, fmt.Errorf("latest saved version is less than initial version: %v < %v",
+				versions.Last(), opts.InitialVersion)
 		}
-	}()
-	merkleTxn := stateTxn
-	if opts.MerkleDB != nil {
-		var mversions dbm.VersionSet
-		mversions, err = opts.MerkleDB.Versions()
-		if err != nil {
-			return
-		}
-		if saved := mversions.Count(); saved != 0 {
-			err = fmt.Errorf("%w (Merkle DB): %v existing versions", ErrNonEmptyDatabase, saved)
-			return
-		}
-		err = opts.MerkleDB.Revert()
-		if err != nil {
-			return
-		}
-		merkleTxn = opts.MerkleDB.ReadWriter()
-	}
-	merkleNodes := prefix.NewPrefixReadWriter(merkleTxn, merkleNodePrefix)
-	merkleValues := prefix.NewPrefixReadWriter(merkleTxn, merkleValuePrefix)
-	return &Store{
-		stateDB:     db,
-		stateTxn:    stateTxn,
-		dataTxn:     prefix.NewPrefixReadWriter(stateTxn, dataPrefix),
-		indexTxn:    prefix.NewPrefixReadWriter(stateTxn, indexPrefix),
-		merkleTxn:   merkleTxn,
-		merkleStore: smt.NewStore(merkleNodes, merkleValues),
-		opts:        opts,
-	}, nil
-}
-
-// LoadStore loads a Store from a DB.
-func LoadStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
-	versions, err := db.Versions()
-	if err != nil {
-		return nil, err
-	}
-	if opts.InitialVersion != 0 && versions.Last() < opts.InitialVersion {
-		return nil, fmt.Errorf("latest saved version is less than initial version: %v < %v",
-			versions.Last(), opts.InitialVersion)
+		loadExisting = true
 	}
 	err = db.Revert()
 	if err != nil {
@@ -159,27 +112,33 @@ func LoadStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 			return
 		}
 		merkleTxn = opts.MerkleDB.ReadWriter()
-		defer func() {
-			if err != nil {
-				err = util.CombineErrors(err, merkleTxn.Discard(), "merkleTxn.Discard also failed")
-			}
-		}()
 	}
-	root, err := stateTxn.Get(merkleRootKey)
-	if err != nil {
-		return
-	}
-	if root == nil {
-		err = fmt.Errorf("could not get root of SMT")
-		return
+
+	var merkleStore *smt.Store
+	if loadExisting {
+		var root []byte
+		root, err = stateTxn.Get(merkleRootKey)
+		if err != nil {
+			return
+		}
+		if root == nil {
+			err = fmt.Errorf("could not get root of SMT")
+			return
+		}
+		merkleStore = loadSMT(merkleTxn, root)
+	} else {
+		merkleNodes := prefix.NewPrefixReadWriter(merkleTxn, merkleNodePrefix)
+		merkleValues := prefix.NewPrefixReadWriter(merkleTxn, merkleValuePrefix)
+		merkleStore = smt.NewStore(merkleNodes, merkleValues)
 	}
 	return &Store{
 		stateDB:     db,
 		stateTxn:    stateTxn,
 		dataTxn:     prefix.NewPrefixReadWriter(stateTxn, dataPrefix),
-		merkleTxn:   merkleTxn,
 		indexTxn:    prefix.NewPrefixReadWriter(stateTxn, indexPrefix),
-		merkleStore: loadSMT(merkleTxn, root),
+		merkleTxn:   merkleTxn,
+		merkleStore: merkleStore,
+		opts:        opts,
 	}, nil
 }
 

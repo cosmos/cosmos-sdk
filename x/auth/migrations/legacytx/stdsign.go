@@ -47,7 +47,7 @@ type StdSignDoc struct {
 	Memo          string            `json:"memo" yaml:"memo"`
 	Fee           json.RawMessage   `json:"fee" yaml:"fee"`
 	Msgs          []json.RawMessage `json:"msgs" yaml:"msgs"`
-	Tip           StdTip            `json:"tip,omitempty" yaml:"tip"`
+	Tip           *StdTip           `json:"tip,omitempty" yaml:"tip"`
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.

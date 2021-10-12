@@ -787,7 +787,7 @@ func (ks keystore) writeRecord(k *Record) error {
 	}
 
 	item := keyring.Item{
-		Key:  key,
+		Key:  fmt.Sprint(key, ".info"),
 		Data: serializedRecord,
 	}
 
@@ -878,12 +878,12 @@ func (ks keystore) MigrateAll() (bool, error) {
 
 // migrate converts keyring.Item from amino to proto serialization format.
 func (ks keystore) migrate(key string) (*Record, bool, error) {
+	if !(strings.HasPrefix(key, "cosmos")) && !(strings.HasSuffix(key, ".info")) {
+		key = fmt.Sprint(key, ".info")
+	}
 	item, err := ks.db.Get(key)
 	if err != nil {
-		item, err = ks.db.Get(fmt.Sprint(key, ".info"))
-		if err != nil {
-			return nil, false, wrapKeyNotFound(err, key)
-		}
+		return nil, false, wrapKeyNotFound(err, key)
 	}
 
 	if len(item.Data) == 0 {
@@ -913,7 +913,7 @@ func (ks keystore) migrate(key string) (*Record, bool, error) {
 	}
 
 	item = keyring.Item{
-		Key:         key,
+		Key:         fmt.Sprint(key, ".info"),
 		Data:        serializedRecord,
 		Description: "SDK kerying version",
 	}

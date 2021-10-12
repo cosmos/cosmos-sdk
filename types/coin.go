@@ -144,6 +144,11 @@ func (coin Coin) IsNegative() bool {
 	return coin.Amount.Sign() == -1
 }
 
+// IsNil returns true if the coin amount is nil and false otherwise.
+func (coin Coin) IsNil() bool {
+	return coin.Amount.i == nil
+}
+
 //-----------------------------------------------------------------------------
 // Coins
 
@@ -578,6 +583,19 @@ func (coins Coins) IsAllPositive() bool {
 func (coins Coins) IsAnyNegative() bool {
 	for _, coin := range coins {
 		if coin.IsNegative() {
+			return true
+		}
+	}
+
+	return false
+}
+
+// IsAnyNil returns true if there is at least one coin whose amount
+// is nil; returns false otherwise. It returns false if the coin set
+// is empty too.
+func (coins Coins) IsAnyNil() bool {
+	for _, coin := range coins {
+		if coin.IsNil() {
 			return true
 		}
 	}

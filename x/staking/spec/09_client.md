@@ -123,7 +123,7 @@ pagination:
 
 #### historical-info
 
-The `historical-info` command allows users to query historical info at given height.
+The `historical-info` command allows users to query historical information at given height.
 
 Usage:
 
@@ -1335,3 +1335,756 @@ Example Output:
   }
 }
 ```
+
+## REST
+
+A user can query the `staking` module using REST endpoints.
+
+### DelegatorDelegations
+
+The `DelegtaorDelegations` REST endpoint queries all delegations of a given delegator address.
+
+```bash
+/cosmos/staking/v1beta1/delegations/{delegatorAddr}
+```
+
+
+Example:
+
+```bash
+curl -X GET "http://localhost:1317/cosmos/staking/v1beta1/delegations/cosmos1vcs68xf2tnqes5tg0khr0vyevm40ff6zdxatp5" -H  "accept: application/json"
+```
+
+Example Output:
+
+```bash
+{
+  "delegation_responses": [
+    {
+      "delegation": {
+        "delegator_address": "cosmos1vcs68xf2tnqes5tg0khr0vyevm40ff6zdxatp5",
+        "validator_address": "cosmosvaloper1quqxfrxkycr0uzt4yk0d57tcq3zk7srm7sm6r8",
+        "shares": "256250000.000000000000000000"
+      },
+      "balance": {
+        "denom": "stake",
+        "amount": "256250000"
+      }
+    },
+    {
+      "delegation": {
+        "delegator_address": "cosmos1vcs68xf2tnqes5tg0khr0vyevm40ff6zdxatp5",
+        "validator_address": "cosmosvaloper194v8uwee2fvs2s8fa5k7j03ktwc87h5ym39jfv",
+        "shares": "255150000.000000000000000000"
+      },
+      "balance": {
+        "denom": "stake",
+        "amount": "255150000"
+      }
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "2"
+  }
+}
+```
+
+### Redelegations
+
+The `Redelegations` REST endpoint queries redelegations of given address.
+
+```bash
+/cosmos/staking/v1beta1/delegators/{delegatorAddr}/redelegations
+```
+
+Example:
+
+```bash
+curl -X GET \
+"http://localhost:1317/cosmos/staking/v1beta1/delegators/cosmos1thfntksw0d35n2tkr0k8v54fr8wxtxwxl2c56e/redelegations?srcValidatorAddr=cosmosvaloper1lzhlnpahvznwfv4jmay2tgaha5kmz5qx4cuznf&dstValidatorAddr=cosmosvaloper1vq8tw77kp8lvxq9u3c8eeln9zymn68rng8pgt4" \
+-H  "accept: application/json"
+```
+
+Example Output:
+
+```bash
+{
+  "redelegation_responses": [
+    {
+      "redelegation": {
+        "delegator_address": "cosmos1thfntksw0d35n2tkr0k8v54fr8wxtxwxl2c56e",
+        "validator_src_address": "cosmosvaloper1lzhlnpahvznwfv4jmay2tgaha5kmz5qx4cuznf",
+        "validator_dst_address": "cosmosvaloper1vq8tw77kp8lvxq9u3c8eeln9zymn68rng8pgt4",
+        "entries": null
+      },
+      "entries": [
+        {
+          "redelegation_entry": {
+            "creation_height": 151523,
+            "completion_time": "2021-11-09T06:03:25.640682116Z",
+            "initial_balance": "200000000",
+            "shares_dst": "200000000.000000000000000000"
+          },
+          "balance": "200000000"
+        }
+      ]
+    }
+  ],
+  "pagination": null
+}
+```
+
+### DelegatorUnbondingDelegations
+
+The `DelegatorUnbondingDelegations` REST endpoint queries all unbonding delegations of a given delegator address.
+
+```bash
+/cosmos/staking/v1beta1/delegators/{delegatorAddr}/unbonding_delegations
+```
+
+Example:
+
+```bash
+curl -X GET \
+"http://localhost:1317/cosmos/staking/v1beta1/delegators/cosmos1nxv42u3lv642q0fuzu2qmrku27zgut3n3z7lll/unbonding_delegations" \
+-H  "accept: application/json"
+```
+
+Example Output:
+
+```bash
+{
+  "unbonding_responses": [
+    {
+      "delegator_address": "cosmos1nxv42u3lv642q0fuzu2qmrku27zgut3n3z7lll",
+      "validator_address": "cosmosvaloper1e7mvqlz50ch6gw4yjfemsc069wfre4qwmw53kq",
+      "entries": [
+        {
+          "creation_height": "2442278",
+          "completion_time": "2021-10-12T10:59:03.797335857Z",
+          "initial_balance": "50000000000",
+          "balance": "50000000000"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
+}
+```
+
+### DelegatorValidators
+
+The `DelegatorValidators` REST endpoint queries all validators information for given delegator address.
+
+```bash
+/cosmos/staking/v1beta1/delegators/{delegatorAddr}/validators
+```
+
+Example:
+
+```bash
+curl -X GET \
+"http://localhost:1317/cosmos/staking/v1beta1/delegators/cosmos1xwazl8ftks4gn00y5x3c47auquc62ssune9ppv/validators" \
+-H  "accept: application/json"
+```
+
+Example Output:
+
+```bash
+{
+  "validators": [
+    {
+      "operator_address": "cosmosvaloper1xwazl8ftks4gn00y5x3c47auquc62ssuvynw64",
+      "consensus_pubkey": {
+        "@type": "/cosmos.crypto.ed25519.PubKey",
+        "key": "5v4n3px3PkfNnKflSgepDnsMQR1hiNXnqOC11Y72/PQ="
+      },
+      "jailed": false,
+      "status": "BOND_STATUS_BONDED",
+      "tokens": "21592843799",
+      "delegator_shares": "21592843799.000000000000000000",
+      "description": {
+        "moniker": "jabbey",
+        "identity": "",
+        "website": "https://twitter.com/JoeAbbey",
+        "security_contact": "",
+        "details": "just another dad in the cosmos"
+      },
+      "unbonding_height": "0",
+      "unbonding_time": "1970-01-01T00:00:00Z",
+      "commission": {
+        "commission_rates": {
+          "rate": "0.100000000000000000",
+          "max_rate": "0.200000000000000000",
+          "max_change_rate": "0.100000000000000000"
+        },
+        "update_time": "2021-10-09T19:03:54.984821705Z"
+      },
+      "min_self_delegation": "1"
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
+}
+```
+
+### DelegatorValidator
+
+The `DelegatorValidator` REST endpoint queries validator information for given delegator validator pair.
+
+```bash
+/cosmos/staking/v1beta1/delegators/{delegatorAddr}/validators/{validatorAddr}
+```
+
+Example:
+
+```bash
+curl -X GET \
+"http://localhost:1317/cosmos/staking/v1beta1/delegators/cosmos1xwazl8ftks4gn00y5x3c47auquc62ssune9ppv/validators/cosmosvaloper1xwazl8ftks4gn00y5x3c47auquc62ssuvynw64" \
+-H  "accept: application/json"
+```
+
+Example Output:
+
+```bash
+{
+  "validator": {
+    "operator_address": "cosmosvaloper1xwazl8ftks4gn00y5x3c47auquc62ssuvynw64",
+    "consensus_pubkey": {
+      "@type": "/cosmos.crypto.ed25519.PubKey",
+      "key": "5v4n3px3PkfNnKflSgepDnsMQR1hiNXnqOC11Y72/PQ="
+    },
+    "jailed": false,
+    "status": "BOND_STATUS_BONDED",
+    "tokens": "21592843799",
+    "delegator_shares": "21592843799.000000000000000000",
+    "description": {
+      "moniker": "jabbey",
+      "identity": "",
+      "website": "https://twitter.com/JoeAbbey",
+      "security_contact": "",
+      "details": "just another dad in the cosmos"
+    },
+    "unbonding_height": "0",
+    "unbonding_time": "1970-01-01T00:00:00Z",
+    "commission": {
+      "commission_rates": {
+        "rate": "0.100000000000000000",
+        "max_rate": "0.200000000000000000",
+        "max_change_rate": "0.100000000000000000"
+      },
+      "update_time": "2021-10-09T19:03:54.984821705Z"
+    },
+    "min_self_delegation": "1"
+  }
+}
+```
+
+### HistoricalInfo
+
+The `HistoricalInfo` REST endpoint queries the historical information for given height.
+
+```bash
+/cosmos/staking/v1beta1/historical_info/{height}
+```
+
+Example:
+
+```bash
+curl -X GET "http://localhost:1317/cosmos/staking/v1beta1/historical_info/153332" -H  "accept: application/json"
+```
+
+Example Output:
+
+```bash
+{
+  "hist": {
+    "header": {
+      "version": {
+        "block": "11",
+        "app": "0"
+      },
+      "chain_id": "cosmos-1",
+      "height": "153332",
+      "time": "2021-10-12T09:05:35.062230221Z",
+      "last_block_id": {
+        "hash": "NX8HevR5khb7H6NGKva+jVz7cyf0skF1CrcY9A0s+d8=",
+        "part_set_header": {
+          "total": 1,
+          "hash": "zLQ2FiKM5tooL3BInt+VVfgzjlBXfq0Hc8Iux/xrhdg="
+        }
+      },
+      "last_commit_hash": "P6IJrK8vSqU3dGEyRHnAFocoDGja0bn9euLuy09s350=",
+      "data_hash": "eUd+6acHWrNXYju8Js449RJ99lOYOs16KpqQl4SMrEM=",
+      "validators_hash": "mB4pravvMsJKgi+g8aYdSeNlt0kPjnRFyvtAQtaxcfw=",
+      "next_validators_hash": "mB4pravvMsJKgi+g8aYdSeNlt0kPjnRFyvtAQtaxcfw=",
+      "consensus_hash": "BICRvH3cKD93v7+R1zxE2ljD34qcvIZ0Bdi389qtoi8=",
+      "app_hash": "fuELArKRK+CptnZ8tu54h6xEleSWenHNmqC84W866fU=",
+      "last_results_hash": "p/BPexV4LxAzlVcPRvW+lomgXb6Yze8YLIQUo/4Kdgc=",
+      "evidence_hash": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+      "proposer_address": "G0MeY8xQx7ooOsni8KE/3R/Ib3Q="
+    },
+    "valset": [
+      {
+        "operator_address": "cosmosvaloper196ax4vc0lwpxndu9dyhvca7jhxp70rmcqcnylw",
+        "consensus_pubkey": {
+          "@type": "/cosmos.crypto.ed25519.PubKey",
+          "key": "/O7BtNW0pafwfvomgR4ZnfldwPXiFfJs9mHg3gwfv5Q="
+        },
+        "jailed": false,
+        "status": "BOND_STATUS_BONDED",
+        "tokens": "1416521659632",
+        "delegator_shares": "1416521659632.000000000000000000",
+        "description": {
+          "moniker": "SG-1",
+          "identity": "48608633F99D1B60",
+          "website": "https://sg-1.online",
+          "security_contact": "",
+          "details": "SG-1 - your favorite validator on cosmos. We offer 100% Soft Slash protection."
+        },
+        "unbonding_height": "0",
+        "unbonding_time": "1970-01-01T00:00:00Z",
+        "commission": {
+          "commission_rates": {
+            "rate": "0.037500000000000000",
+            "max_rate": "0.200000000000000000",
+            "max_change_rate": "0.030000000000000000"
+          },
+          "update_time": "2021-10-01T15:00:00Z"
+        },
+        "min_self_delegation": "1"
+      },
+      {
+        "operator_address": "cosmosvaloper1t8ehvswxjfn3ejzkjtntcyrqwvmvuknzmvtaaa",
+        "consensus_pubkey": {
+          "@type": "/cosmos.crypto.ed25519.PubKey",
+          "key": "uExZyjNLtr2+FFIhNDAMcQ8+yTrqE7ygYTsI7khkA5Y="
+        },
+        "jailed": false,
+        "status": "BOND_STATUS_BONDED",
+        "tokens": "1348298958808",
+        "delegator_shares": "1348298958808.000000000000000000",
+        "description": {
+          "moniker": "Cosmostation",
+          "identity": "AE4C403A6E7AA1AC",
+          "website": "https://www.cosmostation.io",
+          "security_contact": "admin@stamper.network",
+          "details": "Cosmostation validator node. Delegate your tokens and Start Earning Staking Rewards"
+        },
+        "unbonding_height": "0",
+        "unbonding_time": "1970-01-01T00:00:00Z",
+        "commission": {
+          "commission_rates": {
+            "rate": "0.050000000000000000",
+            "max_rate": "1.000000000000000000",
+            "max_change_rate": "0.200000000000000000"
+          },
+          "update_time": "2021-10-01T15:06:38.821314287Z"
+        },
+        "min_self_delegation": "1"
+      }
+    ]
+  }
+}
+```
+
+### Parameters
+
+The `Parameters` REST endpoint queries the staking parameters.
+
+```bash
+/cosmos/staking/v1beta1/params
+```
+
+Example:
+
+```bash
+curl -X GET "http://localhost:1317/cosmos/staking/v1beta1/params" -H  "accept: application/json"
+```
+
+Example Output:
+
+```bash
+{
+  "params": {
+    "unbonding_time": "2419200s",
+    "max_validators": 100,
+    "max_entries": 7,
+    "historical_entries": 10000,
+    "bond_denom": "stake"
+  }
+}
+```
+
+### Pool
+
+The `Pool` REST endpoint queries the pool information.
+
+```bash
+/cosmos/staking/v1beta1/pool
+```
+
+Example:
+
+```bash
+curl -X GET "http://localhost:1317/cosmos/staking/v1beta1/pool" -H  "accept: application/json"
+```
+
+Example Output:
+
+```bash
+{
+  "pool": {
+    "not_bonded_tokens": "432805737458",
+    "bonded_tokens": "15783637712645"
+  }
+}
+```
+
+### Validators
+
+The `Validators` REST endpoint queries all validators that match the given status.
+
+```bash
+/cosmos/staking/v1beta1/validators
+```
+
+Example:
+
+```bash
+curl -X GET "http://localhost:1317/cosmos/staking/v1beta1/validators" -H  "accept: application/json"
+```
+
+Example Output:
+
+```bash
+{
+  "validators": [
+    {
+      "operator_address": "cosmosvaloper1q3jsx9dpfhtyqqgetwpe5tmk8f0ms5qywje8tw",
+      "consensus_pubkey": {
+        "@type": "/cosmos.crypto.ed25519.PubKey",
+        "key": "N7BPyek2aKuNZ0N/8YsrqSDhGZmgVaYUBuddY8pwKaE="
+      },
+      "jailed": false,
+      "status": "BOND_STATUS_BONDED",
+      "tokens": "383301887799",
+      "delegator_shares": "383301887799.000000000000000000",
+      "description": {
+        "moniker": "SmartNodes",
+        "identity": "D372724899D1EDC8",
+        "website": "https://smartnodes.co",
+        "security_contact": "",
+        "details": "Earn Rewards with Crypto Staking & Node Deployment"
+      },
+      "unbonding_height": "0",
+      "unbonding_time": "1970-01-01T00:00:00Z",
+      "commission": {
+        "commission_rates": {
+          "rate": "0.050000000000000000",
+          "max_rate": "0.200000000000000000",
+          "max_change_rate": "0.100000000000000000"
+        },
+        "update_time": "2021-10-01T15:51:31.596618510Z"
+      },
+      "min_self_delegation": "1"
+    },
+    {
+      "operator_address": "cosmosvaloper1q5ku90atkhktze83j9xjaks2p7uruag5zp6wt7",
+      "consensus_pubkey": {
+        "@type": "/cosmos.crypto.ed25519.PubKey",
+        "key": "GDNpuKDmCg9GnhnsiU4fCWktuGUemjNfvpCZiqoRIYA="
+      },
+      "jailed": false,
+      "status": "BOND_STATUS_UNBONDING",
+      "tokens": "1017819654",
+      "delegator_shares": "1017819654.000000000000000000",
+      "description": {
+        "moniker": "Noderunners",
+        "identity": "812E82D12FEA3493",
+        "website": "http://noderunners.biz",
+        "security_contact": "info@noderunners.biz",
+        "details": "Noderunners is a professional validator in POS networks. We have a huge node running experience, reliable soft and hardware. Our commissions are always low, our support to delegators is always full. Stake with us and start receiving your cosmos rewards now!"
+      },
+      "unbonding_height": "147302",
+      "unbonding_time": "2021-11-08T22:58:53.718662452Z",
+      "commission": {
+        "commission_rates": {
+          "rate": "0.050000000000000000",
+          "max_rate": "0.200000000000000000",
+          "max_change_rate": "0.100000000000000000"
+        },
+        "update_time": "2021-10-04T18:02:21.446645619Z"
+      },
+      "min_self_delegation": "1"
+    }
+  ],
+  "pagination": {
+    "next_key": "FONDBFkE4tEEf7yxWWKOD49jC2NK",
+    "total": "2"
+  }
+}
+```
+
+### Validator
+
+The `Validator` REST endpoint queries validator information for given validator address.
+
+```bash
+/cosmos/staking/v1beta1/validators/{validatorAddr}
+```
+
+Example:
+
+```bash
+curl -X GET \
+"http://localhost:1317/cosmos/staking/v1beta1/validators/cosmosvaloper16msryt3fqlxtvsy8u5ay7wv2p8mglfg9g70e3q" \
+-H  "accept: application/json"
+```
+
+Example Output:
+
+```bash
+{
+  "validator": {
+    "operator_address": "cosmosvaloper16msryt3fqlxtvsy8u5ay7wv2p8mglfg9g70e3q",
+    "consensus_pubkey": {
+      "@type": "/cosmos.crypto.ed25519.PubKey",
+      "key": "sIiexdJdYWn27+7iUHQJDnkp63gq/rzUq1Y+fxoGjXc="
+    },
+    "jailed": false,
+    "status": "BOND_STATUS_BONDED",
+    "tokens": "33027900000",
+    "delegator_shares": "33027900000.000000000000000000",
+    "description": {
+      "moniker": "Witval",
+      "identity": "51468B615127273A",
+      "website": "",
+      "security_contact": "",
+      "details": "Witval is the validator arm from Vitwit. Vitwit is into software consulting and services business since 2015. We are working closely with Cosmos ecosystem since 2018. We are also building tools for the ecosystem, Aneka is our explorer for the cosmos ecosystem."
+    },
+    "unbonding_height": "0",
+    "unbonding_time": "1970-01-01T00:00:00Z",
+    "commission": {
+      "commission_rates": {
+        "rate": "0.050000000000000000",
+        "max_rate": "0.200000000000000000",
+        "max_change_rate": "0.020000000000000000"
+      },
+      "update_time": "2021-10-01T19:24:52.663191049Z"
+    },
+    "min_self_delegation": "1"
+  }
+}
+```
+
+### ValidatorDelegations
+
+The `ValidatorDelegations` REST endpoint queries delegate information for given validator. 
+
+```bash
+/cosmos/staking/v1beta1/validators/{validatorAddr}/delegations
+```
+
+Example:
+
+```bash
+curl -X GET "http://localhost:1317/cosmos/staking/v1beta1/validators/cosmosvaloper16msryt3fqlxtvsy8u5ay7wv2p8mglfg9g70e3q/delegations" -H  "accept: application/json"
+```
+
+Example Output:
+
+```bash
+{
+  "delegation_responses": [
+    {
+      "delegation": {
+        "delegator_address": "cosmos190g5j8aszqhvtg7cprmev8xcxs6csra7xnk3n3",
+        "validator_address": "cosmosvaloper16msryt3fqlxtvsy8u5ay7wv2p8mglfg9g70e3q",
+        "shares": "31000000000.000000000000000000"
+      },
+      "balance": {
+        "denom": "stake",
+        "amount": "31000000000"
+      }
+    },
+    {
+      "delegation": {
+        "delegator_address": "cosmos1ddle9tczl87gsvmeva3c48nenyng4n56qwq4ee",
+        "validator_address": "cosmosvaloper16msryt3fqlxtvsy8u5ay7wv2p8mglfg9g70e3q",
+        "shares": "628470000.000000000000000000"
+      },
+      "balance": {
+        "denom": "stake",
+        "amount": "628470000"
+      }
+    },
+    {
+      "delegation": {
+        "delegator_address": "cosmos10fdvkczl76m040smd33lh9xn9j0cf26kk4s2nw",
+        "validator_address": "cosmosvaloper16msryt3fqlxtvsy8u5ay7wv2p8mglfg9g70e3q",
+        "shares": "838120000.000000000000000000"
+      },
+      "balance": {
+        "denom": "stake",
+        "amount": "838120000"
+      }
+    },
+    {
+      "delegation": {
+        "delegator_address": "cosmos1n8f5fknsv2yt7a8u6nrx30zqy7lu9jfm0t5lq8",
+        "validator_address": "cosmosvaloper16msryt3fqlxtvsy8u5ay7wv2p8mglfg9g70e3q",
+        "shares": "500000000.000000000000000000"
+      },
+      "balance": {
+        "denom": "stake",
+        "amount": "500000000"
+      }
+    },
+    {
+      "delegation": {
+        "delegator_address": "cosmos16msryt3fqlxtvsy8u5ay7wv2p8mglfg9hrek2e",
+        "validator_address": "cosmosvaloper16msryt3fqlxtvsy8u5ay7wv2p8mglfg9g70e3q",
+        "shares": "61310000.000000000000000000"
+      },
+      "balance": {
+        "denom": "stake",
+        "amount": "61310000"
+      }
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "5"
+  }
+}
+```
+
+### Delegation
+
+The `Delegation` REST endpoint queries delegate information for given validator delegator pair.
+
+```bash
+/cosmos/staking/v1beta1/validators/{validatorAddr}/delegations/{delegatorAddr}
+```
+
+Example:
+
+```bash
+curl -X GET \
+"http://localhost:1317/cosmos/staking/v1beta1/validators/cosmosvaloper16msryt3fqlxtvsy8u5ay7wv2p8mglfg9g70e3q/delegations/cosmos1n8f5fknsv2yt7a8u6nrx30zqy7lu9jfm0t5lq8" \
+-H  "accept: application/json"
+```
+
+Example Output:
+
+```bash
+{
+  "delegation_response": {
+    "delegation": {
+      "delegator_address": "cosmos1n8f5fknsv2yt7a8u6nrx30zqy7lu9jfm0t5lq8",
+      "validator_address": "cosmosvaloper16msryt3fqlxtvsy8u5ay7wv2p8mglfg9g70e3q",
+      "shares": "500000000.000000000000000000"
+    },
+    "balance": {
+      "denom": "stake",
+      "amount": "500000000"
+    }
+  }
+}
+```
+
+### UnbondingDelegation
+
+The `UnbondingDelegation` REST endpoint queries unbonding information for given validator delegator pair.
+
+```bash
+/cosmos/staking/v1beta1/validators/{validatorAddr}/delegations/{delegatorAddr}/unbonding_delegation
+```
+
+Example:
+
+```bash
+curl -X GET \
+"http://localhost:1317/cosmos/staking/v1beta1/validators/cosmosvaloper13v4spsah85ps4vtrw07vzea37gq5la5gktlkeu/delegations/cosmos1ze2ye5u5k3qdlexvt2e0nn0508p04094ya0qpm/unbonding_delegation" \
+-H  "accept: application/json"
+```
+
+Example Output:
+
+```bash
+{
+  "unbond": {
+    "delegator_address": "cosmos1ze2ye5u5k3qdlexvt2e0nn0508p04094ya0qpm",
+    "validator_address": "cosmosvaloper13v4spsah85ps4vtrw07vzea37gq5la5gktlkeu",
+    "entries": [
+      {
+        "creation_height": "153687",
+        "completion_time": "2021-11-09T09:41:18.352401903Z",
+        "initial_balance": "525111",
+        "balance": "525111"
+      }
+    ]
+  }
+}
+```
+
+### ValidatorUnbondingDelegations
+
+The `ValidatorUnbondingDelegations` REST endpoint queries unbonding delegations of a validator. 
+
+```bash
+/cosmos/staking/v1beta1/validators/{validatorAddr}/unbonding_delegations
+```
+
+Example:
+
+```bash
+curl -X GET \
+"http://localhost:1317/cosmos/staking/v1beta1/validators/cosmosvaloper13v4spsah85ps4vtrw07vzea37gq5la5gktlkeu/unbonding_delegations" \
+-H  "accept: application/json"
+```
+
+Example Output:
+
+```bash
+{
+  "unbonding_responses": [
+    {
+      "delegator_address": "cosmos1q9snn84jfrd9ge8t46kdcggpe58dua82vnj7uy",
+      "validator_address": "cosmosvaloper13v4spsah85ps4vtrw07vzea37gq5la5gktlkeu",
+      "entries": [
+        {
+          "creation_height": "90998",
+          "completion_time": "2021-11-05T00:14:37.005841058Z",
+          "initial_balance": "24000000",
+          "balance": "24000000"
+        }
+      ]
+    },
+    {
+      "delegator_address": "cosmos1qf36e6wmq9h4twhdvs6pyq9qcaeu7ye0s3dqq2",
+      "validator_address": "cosmosvaloper13v4spsah85ps4vtrw07vzea37gq5la5gktlkeu",
+      "entries": [
+        {
+          "creation_height": "47478",
+          "completion_time": "2021-11-01T22:47:26.714116854Z",
+          "initial_balance": "8000000",
+          "balance": "8000000"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "2"
+  }
+}
+```
+

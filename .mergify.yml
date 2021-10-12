@@ -7,7 +7,7 @@ queue_rules:
 pull_request_rules:
   - name: automerge to Agoric* with label automerge and branch protection passing
     conditions:
-      - "#approved-reviews-by>1"
+      - "#approved-reviews-by>0"
       - base~=^Agoric
       - label=automerge
     actions:
@@ -18,15 +18,15 @@ pull_request_rules:
   - name: backport patches to Agoric branch
     conditions:
       - base=Agoric-ag0
-      - label=backport/ag0
+      - label=backport/Agoric
     actions:
       backport:
         branches:
           - Agoric
-  - name: backport patches to Agoric-gaiad branch
+  - name: backport patches to Agoric-ag0 branch
     conditions:
       - base=Agoric
-      - label=backport/Agoric-gaiad
+      - label=backport/Agoric-ag0
     actions:
       backport:
         branches:

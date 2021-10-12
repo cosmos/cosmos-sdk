@@ -1598,14 +1598,15 @@ func (s *IntegrationTestSuite) TestTipsToFee() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+		// fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 	)
 	require.NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
-	s.Require().Equal(0, txRes.Code)
-	s.Require().NotNil(0, txRes.Height)
+	s.Require().Equal(uint32(0), txRes.Code)
+	s.Require().NotNil(int64(0), txRes.Height)
 }
 
 func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.AccAddress, amount sdk.Coins, extraFlags ...string) (testutil.BufferWriter, error) {

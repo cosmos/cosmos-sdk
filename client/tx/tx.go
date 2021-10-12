@@ -202,9 +202,9 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 		// use the SignModeHandler's default mode if unspecified
 		signMode = txf.txConfig.SignModeHandler().DefaultMode()
 	}
-	if err := checkMultipleSigners(signMode, txBuilder.GetTx()); err != nil {
-		return err
-	}
+	// if err := checkMultipleSigners(signMode, txBuilder.GetTx()); err != nil {
+	// 	return err
+	// }
 
 	k, err := txf.keybase.Key(name)
 	if err != nil {

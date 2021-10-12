@@ -1,16 +1,14 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 func GetTipsToFeeCommand() *cobra.Command {
@@ -29,16 +27,42 @@ func GetTipsToFeeCommand() *cobra.Command {
 				return err
 			}
 
-			tipTx, ok := auxTx.(tx.TipTx)
+			f := clienttx.NewFactoryCLI(clientCtx, cmd.Flags())
+			txBuilder, ok := auxTx.(client.TxBuilder)
 			if !ok {
-				return fmt.Errorf("transcation not supported")
+				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid transaction")
 			}
 
-			tip := tipTx.GetTip()
-			f := clienttx.NewFactoryCLI(clientCtx, cmd.Flags())
-			f.WithTips(sdk.NewCoins(tip.Amount...).String(), tip.Tipper)
+			tipperSigsV2, err := auxTx.(authsigning.SigVerifiableTx).GetSignaturesV2()
+			if err != nil {
+				return err
+			}
 
-			return clienttx.GenerateOrBroadcastTxWithFactory(clientCtx, f, tipTx.GetMsgs()...)
+			txBuilder.SetFeePayer(clientCtx.FromAddress)
+			txBuilder.SetFeeAmount(f.Fees())
+			txBuilder.SetGasLimit(f.Gas())
+			err = txBuilder.SetSignatures(tipperSigsV2...)
+			if err != nil {
+				return err
+			}
+
+			err = authclient.SignTx(f, clientCtx, clientCtx.FromName, txBuilder, clientCtx.Offline, false)
+			if err != nil {
+				return err
+			}
+
+			txBytes, err := clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+			if err != nil {
+				return err
+			}
+
+			// broadcast to a Tendermint node
+			res, err := clientCtx.BroadcastTx(txBytes)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
 		},
 	}
 

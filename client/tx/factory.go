@@ -264,12 +264,9 @@ func appendTips(clientCtx client.Context, tb client.TxBuilder, f Factory) client
 		tipAmt = f.tip.Amount
 	}
 
-	if f.SignMode() == signing.SignMode_SIGN_MODE_AMINO_AUX {
-		tb.SetTip(&tx.Tip{
-			Tipper: clientCtx.FromAddress.String(),
-			Amount: tipAmt,
-		})
-	} else if f.SignMode() == signing.SignMode_SIGN_MODE_DIRECT_AUX {
+	if f.SignMode() == signing.SignMode_SIGN_MODE_AMINO_AUX ||
+		f.SignMode() == signing.SignMode_SIGN_MODE_DIRECT_AUX {
+
 		tb.SetTip(&tx.Tip{
 			Tipper: clientCtx.FromAddress.String(),
 			Amount: tipAmt,

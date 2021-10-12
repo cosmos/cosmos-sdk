@@ -11,12 +11,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// NewGrant returns new Grant. Expiration is optional and noop if null.
-// It returns an error if the expiration is before the current block time,
-// which is passed into the `blockTime` arg.
-func NewGrant(blockTime time.Time, a Authorization, expiration *time.Time) (Grant, error) {
-	if expiration != nil && !expiration.After(blockTime) {
-		return Grant{}, errorsmod.Wrapf(ErrInvalidExpirationTime, "expiration must be after the current block time (%v), got %v", blockTime.Format(time.RFC3339), expiration.Format(time.RFC3339))
+// NewGrant returns new Grant
+func NewGrant( /*blockTime time.Time, */ a Authorization, expiration time.Time) (Grant, error) {
+	// TODO: add this for 0.45
+	// if !expiration.After(blockTime) {
+	// 	return Grant{}, sdkerrors.ErrInvalidRequest.Wrapf("expiration must be after the current block time (%v), got %v", blockTime.Format(time.RFC3339), expiration.Format(time.RFC3339))
+	// }
+	g := Grant{
+		Expiration: expiration,
 	}
 	msg, ok := a.(proto.Message)
 	if !ok {
@@ -54,10 +56,6 @@ func (g Grant) GetAuthorization() (Authorization, error) {
 }
 
 func (g Grant) ValidateBasic() error {
-	if g.Authorization == nil {
-		return sdkerrors.ErrInvalidType.Wrap("authorization is nil")
-	}
-
 	av := g.Authorization.GetCachedValue()
 	a, ok := av.(Authorization)
 	if !ok {

@@ -14,13 +14,10 @@ import (
 
 var _ authz.MsgServer = Keeper{}
 
-// Grant implements the MsgServer.Grant method to create a new grant.
-func (k Keeper) Grant(ctx context.Context, msg *authz.MsgGrant) (*authz.MsgGrantResponse, error) {
-	if strings.EqualFold(msg.Grantee, msg.Granter) {
-		return nil, authz.ErrGranteeIsGranter
-	}
-
-	grantee, err := k.authKeeper.AddressCodec().StringToBytes(msg.Grantee)
+// GrantAuthorization implements the MsgServer.Grant method to create a new grant.
+func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGrantResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
 	}

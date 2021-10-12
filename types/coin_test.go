@@ -237,6 +237,20 @@ func (s *coinTestSuite) TestCoinIsZero() {
 	s.Require().False(res)
 }
 
+func (s *coinTestSuite) TestCoinIsNil() {
+	coin := sdk.Coin{}
+	res := coin.IsNil()
+	s.Require().True(res)
+
+	coin = sdk.Coin{Denom: "uatom"}
+	res = coin.IsNil()
+	s.Require().True(res)
+
+	coin = sdk.NewInt64Coin(testDenom1, 1)
+	res = coin.IsNil()
+	s.Require().False(res)
+}
+
 func (s *coinTestSuite) TestFilteredZeroCoins() {
 	cases := []struct {
 		name     string
@@ -900,6 +914,19 @@ func (s *coinTestSuite) TestCoinsIsAnyGT() {
 	for _, tc := range tests {
 		s.Require().True(tc.expPass == tc.coinsA.IsAnyGT(tc.coinsB), tc.name)
 	}
+}
+
+func (s *coinTestSuite) TestCoinsIsAnyNil() {
+	twoAtom := sdk.NewInt64Coin("atom", 2)
+	fiveAtom := sdk.NewInt64Coin("atom", 5)
+	threeEth := sdk.NewInt64Coin("eth", 3)
+	nilAtom := sdk.Coin{Denom: "atom"}
+
+	s.Require().True(sdk.Coins{twoAtom, fiveAtom, threeEth, nilAtom}.IsAnyNil())
+	s.Require().True(sdk.Coins{twoAtom, nilAtom, fiveAtom, threeEth}.IsAnyNil())
+	s.Require().True(sdk.Coins{nilAtom, twoAtom, fiveAtom, threeEth}.IsAnyNil())
+	s.Require().False(sdk.Coins{twoAtom, fiveAtom, threeEth}.IsAnyNil())
+
 }
 
 func (s *coinTestSuite) TestMarshalJSONCoins() {

@@ -52,11 +52,6 @@ func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode,
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "got empty address in %s handler", signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
-	seq, err := getSequence(protoTx, addr)
-	if err != nil {
-		return nil, err
-	}
-
 	// We set a convention that if the tipper signs with LEGACY_AMINO_JSON, then
 	// they sign over empty fees and 0 gas.
 	var isTipper bool
@@ -77,24 +72,8 @@ func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode,
 	}
 
 	return legacytx.StdSignBytes(
-		data.ChainID, data.AccountNumber, seq, protoTx.GetTimeoutHeight(),
+		data.ChainID, data.AccountNumber, data.Sequence, protoTx.GetTimeoutHeight(),
 		legacytx.StdFee{Amount: protoTx.GetFee(), Gas: protoTx.GetGas(), Payer: protoTx.FeePayer().String(), Granter: protoTx.FeeGranter().String()},
 		tx.GetMsgs(), protoTx.GetMemo(),
 	), nil
-}
-
-// getSequence retrieves the sequence of the given address from the protoTx's
-// signer infos.
-func getSequence(protoTx *wrapper, addr sdk.AccAddress) (uint64, error) {
-	sigsV2, err := protoTx.GetSignaturesV2()
-	if err != nil {
-		return 0, err
-	}
-	for _, si := range sigsV2 {
-		if addr.Equals(sdk.AccAddress(si.PubKey.Address())) {
-			return si.Sequence, nil
-		}
-	}
-
-	return 0, sdkerrors.ErrInvalidRequest.Wrapf("address %s not found in signer infos", addr)
 }

@@ -59,16 +59,11 @@ func (signModeDirectAuxHandler) GetSignBytes(
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("got empty pubKey in %s handler", signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
 	}
 
-	seq, err := getSequence(protoTx, data.Address)
-	if err != nil {
-		return nil, err
-	}
-
 	signDocDirectAux := types.SignDocDirectAux{
 		BodyBytes:     protoTx.getBodyBytes(),
 		ChainId:       data.ChainID,
 		AccountNumber: data.AccountNumber,
-		Sequence:      seq,
+		Sequence:      data.Sequence,
 		Tip:           protoTx.tx.AuthInfo.Tip,
 		PublicKey:     pubKey,
 	}

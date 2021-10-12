@@ -113,6 +113,11 @@ func printAndValidateSigs(
 			}
 			err = authsigning.VerifySignature(pubKey, signingData, sig.Data, signModeHandler, sigTx)
 			if err != nil {
+				return false
+			}
+		}
+
+		cmd.Printf(" %d: %s\t\t\t[%s]%s%s\n", i, sigAddr.String(), sigSanity, multiSigHeader, multiSigMsg)
 	}
 
 	cmd.Println("")

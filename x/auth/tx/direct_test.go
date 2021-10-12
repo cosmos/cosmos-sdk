@@ -21,7 +21,7 @@ func TestDirectModeHandler(t *testing.T) {
 	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 
-	txConfig := NewTxConfig(marshaler, []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_DIRECT})
+	txConfig := NewTxConfig(marshaler, []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_DIRECT}, nil)
 	txBuilder := txConfig.NewTxBuilder()
 
 	memo := "sometestmemo"

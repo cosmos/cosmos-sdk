@@ -66,7 +66,7 @@ func (t *Tx) ValidateBasic() error {
 	}
 
 	if fee.Amount.IsAnyNil() {
-		return errorsmod.Wrapf(
+		return sdkerrors.Wrapf(
 			sdkerrors.ErrInsufficientFee,
 			"invalid fee provided: null",
 		)

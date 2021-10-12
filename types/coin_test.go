@@ -1319,6 +1319,7 @@ func (s *coinTestSuite) TestCoinsIsAnyNil() {
 	s.Require().True(sdk.Coins{twoAtom, nilAtom, fiveAtom, threeEth}.IsAnyNil())
 	s.Require().True(sdk.Coins{nilAtom, twoAtom, fiveAtom, threeEth}.IsAnyNil())
 	s.Require().False(sdk.Coins{twoAtom, fiveAtom, threeEth}.IsAnyNil())
+
 }
 
 func (s *coinTestSuite) TestMarshalJSONCoins() {

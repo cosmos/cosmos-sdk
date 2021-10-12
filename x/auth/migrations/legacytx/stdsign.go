@@ -47,6 +47,7 @@ type StdSignDoc struct {
 	Memo          string            `json:"memo" yaml:"memo"`
 	Fee           json.RawMessage   `json:"fee" yaml:"fee"`
 	Msgs          []json.RawMessage `json:"msgs" yaml:"msgs"`
+	Tip           StdTip            `json:"tip,omitempty" yaml:"tip"`
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.
@@ -106,7 +107,6 @@ func (ss StdSignature) MarshalYAML() (interface{}, error) {
 		pk = ss.PubKey.String()
 	}
 
-	
 	bz, err := yaml.Marshal(struct {
 		PubKey    string `json:"pub_key"`
 		Signature string `json:"signature"`

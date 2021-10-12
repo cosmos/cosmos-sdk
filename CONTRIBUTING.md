@@ -45,7 +45,7 @@ taken place in a GitHub issue, that PR runs a high likelihood of being rejected.
 
 ## Teams Dev Calls
 
-The Cosmos SDK team is fully decentralized and self organized.
+The Cosmos SDK has many stakeholders contributing and shaping the project. Regen Network Development leads the Cosmos SDK R&D, and welcomes long-term contributors & additional maintainers from other projects. We use self-organizing principles to coordinate and collaborate across organizations in structured "Working Groups" that focus on specific problem domains or architectural components of the Cosmos SDK.
 
 The developers are organized in working group which are listed on a ["Working Groups & Arch Process" Github Issue](https://github.com/cosmos/cosmos-sdk/issues/9058) (pinned at the top of the [issues list](https://github.com/cosmos/cosmos-sdk/issues)).
 

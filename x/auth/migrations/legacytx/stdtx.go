@@ -75,7 +75,7 @@ func (fee StdFee) GasPrices() sdk.DecCoins {
 // StdTip is the tips used in a tipped transaction.
 type StdTip struct {
 	Amount sdk.Coins `json:"amount" yaml:"amount"`
-	Tipper string    `json:"gas" yaml:"gas"`
+	Tipper string    `json:"tipper" yaml:"tipper"`
 }
 
 // StdTx is the legacy transaction format for wrapping a Msg with Fee and Signatures.

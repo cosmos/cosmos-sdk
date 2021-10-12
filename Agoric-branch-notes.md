@@ -1,23 +1,19 @@
 We have:
 
-- @zmanian is in charge of branches used by proto-mainnet `gaiad`
-- `Agoric-proto` - should be identical to `cosmos/cosmos-sdk` + changes needed
-  by proto-mainnet
 - `Agoric` - the head of this branch should be eventually used by the
-  `agoric-sdk`.  Needs to be kept up-to-date with all agoric-specific patches.
+  [agoric-sdk](https://github.com/Agoric/agoric-sdk).
+- [ag0](https://github.com/Agoric/ag0) [Agoric mainnet](https://agoric.com)
+  phase 0's [gaiad-equivalent](https://github.com/cosmos/gaia)
+- `Agoric-ag0` - should be identical to
+  [cosmos/cosmos-sdk](https://github.com/cosmos/cosmos-sdk) + changes needed by
+  `ag0`
 
 For new features:
 
-- Create a new development branch off of `Agoric-proto` or `Agoric` in `agoric-labs/cosmos-sdk`
-- Test, review, merge PR
-- Consider creating a rebased PR against upstream (`cosmos/cosmos-sdk`) to merge the feature
-
-Merging `Agoric-proto` back into `Agoric`:
-
-- `git checkout Agoric`
-- `git merge Agoric-proto`
-- `git push origin Agoric`
-- test as if a new cosmos-sdk release
+- Create a new development branch off of `Agoric` or `Agoric-ag0`
+- Test, review, merge PR with `automerge` label for mergify.io
+- Add `backport/ag0` label or `backport/Agoric` to have mergify port the PR to
+  the other branch
 
 Upon new cosmos-sdk releases:
 

@@ -193,6 +193,7 @@ Example Output:
   "height": "30"
 }
 ```
+
 ### Current Plan
 
 `CurrentPlan` queries the current upgrade plan.
@@ -310,4 +311,152 @@ Example Output:
   ]
 }
 ```
+
+## gRPC
+
+A user can query the `upgrade` module using gRPC endpoints.
+
+### Applied Plan
+
+`AppliedPlan` queries a previously applied upgrade plan by its name.
+
+```bash
+cosmos.upgrade.v1beta1.Query/AppliedPlan
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    -d '{"name":"v2.0-upgrade"}' \
+    localhost:9090 \
+    cosmos.upgrade.v1beta1.Query/AppliedPlan
+```
+
+Example Output:
+
+```bash
+{
+  "height": "30"
+}
+```
+
+### Current Plan
+
+`CurrentPlan` queries the current upgrade plan.
+
+```bash
+cosmos.upgrade.v1beta1.Query/CurrentPlan
+```
+
+Example:
+
+```bash
+grpcurl -plaintext localhost:9090 cosmos.slashing.v1beta1.Query/CurrentPlan
+```
+
+Example Output:
+
+```bash
+{
+  "plan": "v2.1-upgrade"
+}
+```
+
+
+### Module versions
+
+`ModuleVersions` queries the list of module versions from state.
+
+```bash
+cosmos.upgrade.v1beta1.Query/ModuleVersions
+```
+
+Example:
+
+```bash
+grpcurl -plaintext localhost:9090 cosmos.slashing.v1beta1.Query/ModuleVersions
+```
+
+Example Output:
+
+```bash
+{
+  "module_versions": [
+    {
+      "name": "auth",
+      "version": "2"
+    },
+    {
+      "name": "authz",
+      "version": "1"
+    },
+    {
+      "name": "bank",
+      "version": "2"
+    },
+    {
+      "name": "capability",
+      "version": "1"
+    },
+    {
+      "name": "crisis",
+      "version": "1"
+    },
+    {
+      "name": "distribution",
+      "version": "2"
+    },
+    {
+      "name": "evidence",
+      "version": "1"
+    },
+    {
+      "name": "feegrant",
+      "version": "1"
+    },
+    {
+      "name": "genutil",
+      "version": "1"
+    },
+    {
+      "name": "gov",
+      "version": "2"
+    },
+    {
+      "name": "ibc",
+      "version": "2"
+    },
+    {
+      "name": "mint",
+      "version": "1"
+    },
+    {
+      "name": "params",
+      "version": "1"
+    },
+    {
+      "name": "slashing",
+      "version": "2"
+    },
+    {
+      "name": "staking",
+      "version": "2"
+    },
+    {
+      "name": "transfer",
+      "version": "1"
+    },
+    {
+      "name": "upgrade",
+      "version": "1"
+    },
+    {
+      "name": "vesting",
+      "version": "1"
+    }
+  ]
+}
+```
+
 

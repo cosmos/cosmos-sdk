@@ -28,3 +28,4 @@ recover from.
 4. **[Client](04_client.md)**
     - [CLI](04_client.md#cli)
     - [REST](04_client.md#rest)
+    - [gRPC](04_client.md#grpc)

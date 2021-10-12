@@ -134,7 +134,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration time.Time) error {
 	store := ctx.KVStore(k.storeKey)
 
-	grant, err := authz.NewGrant(authorization, expiration)
+	grant, err := authz.NewGrant(ctx.BlockTime(), authorization, expiration)
 	if err != nil {
 		return err
 	}

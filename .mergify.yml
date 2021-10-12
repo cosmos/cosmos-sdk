@@ -1,58 +1,33 @@
 queue_rules:
-  - name: default
+  - name: main
     conditions:
-      - "#approved-reviews-by>1"
+      - base~=^Agoric
+
 
 pull_request_rules:
-  - name: automerge to main with label automerge and branch protection passing
+  - name: automerge to Agoric* with label automerge and branch protection passing
     conditions:
       - "#approved-reviews-by>1"
-      - base=main
-      - label=A:automerge
+      - base~=^Agoric
+      - label=automerge
     actions:
       queue:
-        name: default
-        method: squash
-        commit_message_template: |
-          {{ title }} (#{{ number }})
-          {{ body }}
-  - name: backport patches to v0.52.x branch
+        name: main
+        method: merge
+      # commit_message: title+body
+  - name: backport patches to Agoric branch
     conditions:
-      - base=main
-      - label=backport/v0.52.x
+      - base=Agoric-ag0
+      - label=backport/ag0
     actions:
       backport:
         branches:
-          - release/v0.52.x
-  - name: backport patches to v0.50.x branch
+          - Agoric
+  - name: backport patches to Agoric-gaiad branch
     conditions:
-      - base=main
-      - label=backport/v0.50.x
+      - base=Agoric
+      - label=backport/Agoric-gaiad
     actions:
       backport:
         branches:
-          - release/v0.50.x
-  - name: backport patches to v0.47.x branch
-    conditions:
-      - base=main
-      - label=backport/v0.47.x
-    actions:
-      backport:
-        branches:
-          - release/v0.47.x
-  - name: backport patches to v0.46.x branch
-    conditions:
-      - base=main
-      - label=backport/0.46.x
-    actions:
-      backport:
-        branches:
-          - release/v0.46.x
-  - name: backport patches to v0.45.x branch
-    conditions:
-      - base=main
-      - label=backport/0.45.x
-    actions:
-      backport:
-        branches:
-          - release/v0.45.x
+          - Agoric-ag0

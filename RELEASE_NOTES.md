@@ -4,4 +4,4 @@ Recently, the Cosmos-SDK team became aware of a high-severity security vulnerabi
 
 Nodes can update their software independently of each other (no coordinated chain restart necessary), but should do so as soon as they are able.
 
-The full disclosure will be announced a week after the release.
+A full disclosure will be published a week after the release.

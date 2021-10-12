@@ -25,3 +25,7 @@ recover from.
 1. **[Concepts](01_concepts.md)**
 2. **[State](02_state.md)**
 3. **[Events](03_events.md)**
+4. **[Client](04_client.md)**
+    - [CLI](04_client.md#cli)
+    - [REST](04_client.md#rest)
+    - [gRPC](04_client.md#grpc)

@@ -54,7 +54,7 @@ The important development announcements are shared on [Discord](https://discord.
 To synchronize we have few major meetings:
 + Architecture calls: bi-weekly on Fridays at 14:00 UTC (alternating with the grooming meeting below).
 + Grooming / Planning: bi-weekly on Fridays at 14:00 UTC (alternating with the architecture meeting above).
-+ Cosmos Community SDK Development Call every last Wednesday at 17:00 UTC.
++ Cosmos Community SDK Development Call on the last Wednesday of every month at 17:00 UTC.
 + Cosmos Roadmap Prioritization every 4 weeks on Tuesday at 15:00 UTC (limited participation).
 
 If you would like to join one of those calls, then please contact us on [Discord](https://discord.com/invite/cosmosnetwork) or reach out directly to Cory Levinson from Regen Network (cory@regen.network).

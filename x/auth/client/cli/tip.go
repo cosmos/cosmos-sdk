@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
@@ -27,20 +28,24 @@ func GetTipsToFeeCommand() *cobra.Command {
 				return err
 			}
 
-			f := clienttx.NewFactoryCLI(clientCtx, cmd.Flags())
-			txBuilder, ok := auxTx.(client.TxBuilder)
+			tipTx, ok := auxTx.(tx.TipTx)
 			if !ok {
 				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid transaction")
 			}
 
-			tipperSigsV2, err := auxTx.(authsigning.SigVerifiableTx).GetSignaturesV2()
+			f := clienttx.NewFactoryCLI(clientCtx, cmd.Flags())
+
+			tipperSigsV2, err := tipTx.(authsigning.SigVerifiableTx).GetSignaturesV2()
 			if err != nil {
 				return err
 			}
+			txBuilder := clientCtx.TxConfig.NewTxBuilder()
 
+			txBuilder.SetMsgs(tipTx.GetMsgs()...)
 			txBuilder.SetFeePayer(clientCtx.FromAddress)
 			txBuilder.SetFeeAmount(f.Fees())
 			txBuilder.SetGasLimit(f.Gas())
+			txBuilder.SetTip(tipTx.GetTip())
 			err = txBuilder.SetSignatures(tipperSigsV2...)
 			if err != nil {
 				return err

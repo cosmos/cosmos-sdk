@@ -1552,14 +1552,17 @@ func (s *IntegrationTestSuite) TestTipsToFee() {
 
 	tipper, err := acc.GetAddress()
 	require.NoError(err)
+	tipperInitialBal := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10000))
 
 	feePayer := val.Address
-	fee := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(1000))
-	tip := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1000))
+	fee := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1000))
+	tip := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(1000))
 
-	res, err := s.createBankMsg(val, tipper, sdk.NewCoins(tip))
+	res, err := s.createBankMsg(val, tipper, sdk.NewCoins(tipperInitialBal))
 	require.NoError(err)
 
+	bal := s.getBalances(val.ClientCtx, tipper, tip.Denom)
+	s.Require().Equal(bal, tipperInitialBal.Amount)
 	var txRes sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
 	s.Require().NotEqual(0, txRes.Code)
@@ -1580,7 +1583,7 @@ func (s *IntegrationTestSuite) TestTipsToFee() {
 	require.NoError(err)
 	genTxFile := testutil.WriteToNewTempFile(s.T(), string(res.Bytes()))
 
-	// sign the generated tx with the user1
+	// sign the generated tx with user1
 	res, err = TxSignExec(
 		val.ClientCtx,
 		tipper,
@@ -1598,15 +1601,18 @@ func (s *IntegrationTestSuite) TestTipsToFee() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
-		// fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+		fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 	)
 	require.NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
-	s.Require().NoError(s.network.WaitForNextBlock())
+	fmt.Println("res", string(res.Bytes()))
 
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
 	s.Require().Equal(uint32(0), txRes.Code)
 	s.Require().NotNil(int64(0), txRes.Height)
+
+	bal = s.getBalances(val.ClientCtx, tipper, tip.Denom)
+	s.Require().Equal(bal, tipperInitialBal.Sub(tip).Amount)
 }
 
 func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.AccAddress, amount sdk.Coins, extraFlags ...string) (testutil.BufferWriter, error) {

@@ -106,7 +106,7 @@ func printAndValidateSigs(
 			}
 
 			signingData := authsigning.SignerData{
-				Address:       sigAddr,
+				Address:       sigAddr.String(),
 				ChainID:       chainID,
 				AccountNumber: accNum,
 				Sequence:      accSeq,

@@ -24,7 +24,7 @@ type SignModeHandler interface {
 // isn't included in the transaction body itself
 type SignerData struct {
 	// The address of the signer.
-	Address sdk.AccAddress
+	Address string
 
 	// ChainID is the chain that this transaction is targeted
 	ChainID string

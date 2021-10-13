@@ -44,6 +44,10 @@ func TestVersioning(t *testing.T) {
 	dbtest.DoTestVersioning(t, load)
 }
 
+func TestRevert(t *testing.T) {
+	dbtest.DoTestRevert(t, load, false)
+}
+
 func TestTransactions(t *testing.T) {
 	dbtest.DoTestTransactions(t, load, false)
 }

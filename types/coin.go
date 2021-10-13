@@ -626,16 +626,15 @@ func (coins Coins) negative() Coins {
 
 // removeZeroCoins removes all zero coins from the given coin set in-place.
 func removeZeroCoins(coins Coins) Coins {
-	var result []Coin
-
 	for i := 0; i < len(coins); i++ {
 		if coins[i].IsZero() {
-			result = make([]Coin, 0, len(coins))
 			break
 		} else if i == len(coins)-1 {
 			return coins
 		}
 	}
+
+	result := make([]Coin, 0, len(coins)-1)
 
 	for _, coin := range coins {
 		if !coin.IsZero() {

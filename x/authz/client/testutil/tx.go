@@ -121,8 +121,8 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[0]
 
-	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
-	pastHour := time.Now().Add(time.Minute * time.Duration(-60)).Unix()
+	twoHours := time.Now().Add(time.Minute * 120).Unix()
+	pastHour := time.Now().Add(time.Minute * -60).Unix()
 
 	testCases := []struct {
 		name         string
@@ -314,9 +314,13 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	}
 
 	for _, tc := range testCases {
+		if "Invalid expiration time" != tc.name {
+			continue
+		}
 		tc := tc
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
+			fmt.Println(">> test", tc.name, pastHour, "\n-----")
 			out, err := ExecGrant(
 				val,
 				tc.args,

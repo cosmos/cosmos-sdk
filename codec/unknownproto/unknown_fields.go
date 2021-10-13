@@ -5,7 +5,7 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"reflect"
 	"strings"
 	"sync"
@@ -358,7 +358,7 @@ func extractFileDescMessageDesc(desc descriptorIface) (*descriptor.FileDescripto
 	if err != nil {
 		return nil, nil, err
 	}
-	protoBlob, err := ioutil.ReadAll(gzr)
+	protoBlob, err := io.ReadAll(gzr)
 	if err != nil {
 		return nil, nil, err
 	}

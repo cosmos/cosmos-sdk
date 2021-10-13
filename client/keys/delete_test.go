@@ -53,7 +53,7 @@ func Test_runDeleteCmd(t *testing.T) {
 
 	err = cmd.ExecuteContext(ctx)
 	require.Error(t, err)
-	require.EqualError(t, err, "blah: key not found")
+	require.EqualError(t, err, "blah.info: key not found")
 
 	// User confirmation missing
 	cmd.SetArgs([]string{
@@ -65,7 +65,7 @@ func Test_runDeleteCmd(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, "EOF", err.Error())
 
-	_, err = kb.Key(fakeKeyName1)
+	_, err = kb.Key(string(keyring.InfoKey(fakeKeyName1)))
 	require.NoError(t, err)
 
 	// Now there is a confirmation
@@ -77,10 +77,10 @@ func Test_runDeleteCmd(t *testing.T) {
 	})
 	require.NoError(t, cmd.Execute())
 
-	_, err = kb.Key(fakeKeyName1)
+	_, err = kb.Key(string(keyring.InfoKey(fakeKeyName1)))
 	require.Error(t, err) // Key1 is gone
 
-	_, err = kb.Key(fakeKeyName2)
+	_, err = kb.Key(string(keyring.InfoKey(fakeKeyName2)))
 	require.NoError(t, err)
 
 	cmd.SetArgs([]string{
@@ -91,6 +91,6 @@ func Test_runDeleteCmd(t *testing.T) {
 	})
 	require.NoError(t, cmd.Execute())
 
-	_, err = kb.Key(fakeKeyName2)
+	_, err = kb.Key(string(keyring.InfoKey(fakeKeyName2)))
 	require.Error(t, err) // Key2 is gone
 }

@@ -3,11 +3,13 @@ package keys
 import (
 	"bufio"
 	"io/ioutil"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
 // ImportKeyCommand imports private keys from a keyfile.
@@ -32,6 +34,10 @@ func ImportKeyCommand() *cobra.Command {
 			passphrase, err := input.GetPassword("Enter passphrase to decrypt your key:", buf)
 			if err != nil {
 				return err
+			}
+
+			if !strings.HasSuffix(args[0], keyring.InfoSuffix) {
+				args[0] = string(keyring.InfoKey(args[0]))
 			}
 
 			return clientCtx.Keyring.ImportPrivKey(args[0], string(bz), passphrase)

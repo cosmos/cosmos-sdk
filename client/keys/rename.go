@@ -3,11 +3,13 @@ package keys
 import (
 	"bufio"
 	"fmt"
+	"strings"
+
+	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/spf13/cobra"
 )
 
 // RenameKeyCommand renames a key from the key store.
@@ -30,6 +32,9 @@ private keys stored in a ledger device cannot be renamed with the CLI.
 			}
 
 			oldName, newName := args[0], args[1]
+			if !strings.HasSuffix(oldName, keyring.InfoSuffix) {
+				oldName = string(keyring.InfoKey(oldName))
+			}
 
 			k, err := clientCtx.Keyring.Key(oldName)
 			if err != nil {

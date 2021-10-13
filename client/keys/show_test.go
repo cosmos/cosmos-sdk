@@ -62,7 +62,7 @@ func Test_runShowCmd(t *testing.T) {
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	cmd.SetArgs([]string{"invalid"})
-	require.EqualError(t, cmd.ExecuteContext(ctx), "invalid is not a valid name or address: decoding bech32 failed: invalid bech32 string length 7")
+	require.EqualError(t, cmd.ExecuteContext(ctx), "invalid is not a valid name or address: decoding bech32 failed: invalid separator index -1")
 
 	cmd.SetArgs([]string{"invalid1", "invalid2"})
 	require.EqualError(t, cmd.ExecuteContext(ctx), "invalid1 is not a valid name or address: decoding bech32 failed: invalid separator index 7")
@@ -103,7 +103,7 @@ func Test_runShowCmd(t *testing.T) {
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	// try fetch by addr
-	k, err := kb.Key(fakeKeyName1)
+	k, err := kb.Key(string(keyring.InfoKey(fakeKeyName1)))
 	require.NoError(t, err)
 	addr, err := k.GetAddress()
 	require.NoError(t, err)

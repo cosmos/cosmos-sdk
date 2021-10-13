@@ -49,7 +49,7 @@ func Test_runRenameCmd(t *testing.T) {
 	cmd.SetArgs([]string{"blah", "blaah", fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome)})
 	err = cmd.ExecuteContext(ctx)
 	require.Error(t, err)
-	require.EqualError(t, err, "blah: key not found")
+	require.EqualError(t, err, "blah.info: key not found")
 
 	// User confirmation missing
 	cmd.SetArgs([]string{
@@ -62,7 +62,7 @@ func Test_runRenameCmd(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, "EOF", err.Error())
 
-	oldKey, err := kb.Key(fakeKeyName1)
+	oldKey, err := kb.Key(string(keyring.InfoKey(fakeKeyName1)))
 	require.NoError(t, err)
 
 	// add a confirmation
@@ -76,11 +76,11 @@ func Test_runRenameCmd(t *testing.T) {
 	require.NoError(t, cmd.Execute())
 
 	// key1 is gone
-	_, err = kb.Key(fakeKeyName1)
+	_, err = kb.Key(string(keyring.InfoKey(fakeKeyName1)))
 	require.Error(t, err)
 
 	// key2 exists now
-	renamedKey, err := kb.Key(fakeKeyName2)
+	renamedKey, err := kb.Key(string(keyring.InfoKey(fakeKeyName2)))
 	require.NoError(t, err)
 	oldPk, err := oldKey.GetPubKey()
 	require.NoError(t, err)

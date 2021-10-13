@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil/expect"
 )
 
 // Issue #7739: Catch parse errors resulting from unexpected EOF in
@@ -20,6 +21,6 @@ func TestBadBytesPassedIntoDecoder(t *testing.T) {
 
 	// TODO: When issue https://github.com/cosmos/cosmos-sdk/issues/7846
 	// is addressed, we'll remove this .Contains check.
-	require.Contains(t, err.Error(), io.ErrUnexpectedEOF.Error())
+	expect.ErrorContains(require.New(t), io.ErrUnexpectedEOF.Error(), err)
 	require.Nil(t, tx)
 }

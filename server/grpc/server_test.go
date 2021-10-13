@@ -22,6 +22,7 @@ import (
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	reflectionv2 "github.com/cosmos/cosmos-sdk/server/grpc/reflection/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil/expect"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -212,9 +213,8 @@ func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 			testClient := testdata.NewQueryClient(s.conn)
 			ctx := metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, tt.value)
 			testRes, err := testClient.Echo(ctx, &testdata.EchoRequest{Message: "hello"})
-			require.Error(t, err)
+			expect.ErrorContains(require.New(t), tt.wantErr, err)
 			require.Nil(t, testRes)
-			require.Contains(t, err.Error(), tt.wantErr)
 		})
 	}
 }

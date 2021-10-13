@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/testutil/expect"
 	"github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/go-bip39"
@@ -175,13 +176,7 @@ func TestDeriveHDPathRange(t *testing.T) {
 		t.Run(tt.path, func(t *testing.T) {
 			master, ch := hd.ComputeMastersFromSeed(seed)
 			_, err := hd.DerivePrivateKeyForPath(master, ch, tt.path)
-
-			if tt.wantErr == "" {
-				require.NoError(t, err, "unexpected error")
-			} else {
-				require.Error(t, err, "expected a report of an int overflow")
-				require.Contains(t, err.Error(), tt.wantErr)
-			}
+			expect.ErrorContains(require.New(t), tt.wantErr, err)
 		})
 	}
 }

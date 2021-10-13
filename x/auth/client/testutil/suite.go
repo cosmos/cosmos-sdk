@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/expect"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -1287,8 +1288,7 @@ func TestGetBroadcastCommandWithoutOfflineFlag(t *testing.T) {
 
 	cmd.SetArgs([]string{txFile.Name()})
 	err = cmd.ExecuteContext(ctx)
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "connect: connection refused")
+	expect.ErrorContains(require.New(t), "connect: connection refused", err)
 	require.Contains(t, out.String(), "connect: connection refused")
 }
 

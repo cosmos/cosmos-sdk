@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil/expect"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -43,8 +44,7 @@ func TestArmorUnarmorPrivKey(t *testing.T) {
 	// wrong key type
 	armored = crypto.ArmorPubKeyBytes(priv.PubKey().Bytes(), "")
 	_, _, err = crypto.UnarmorDecryptPrivKey(armored, "passphrase")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "unrecognized armor type")
+	expect.ErrorContains(require.New(t), "unrecognized armor type", err)
 
 	// armor key manually
 	encryptPrivKeyFn := func(privKey cryptotypes.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {

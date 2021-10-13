@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/expect"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
@@ -100,8 +101,7 @@ func TestConfigCmdEnvFlag(t *testing.T) {
 			*/
 			cmd := cli.GetQueryCmd()
 			_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			require.Error(t, err)
-			require.Contains(t, err.Error(), tc.expNode, "Output does not contain expected Node")
+			expect.ErrorContains(require.New(t), "Output does not contain expected Node", err)
 		})
 	}
 }

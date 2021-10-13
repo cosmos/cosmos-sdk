@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/testutil/expect"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -190,9 +191,8 @@ func TestCompactMarshalUnmarshal(t *testing.T) {
 func TestCompactMarshalUnmarshalReturnsErrorOnInvalidSize(t *testing.T) {
 	malicious := []byte{0xd7, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01, 0x24, 0x28}
 	cba, err := CompactUnmarshal(malicious)
-	require.Error(t, err)
+	expect.ErrorContains(require.New(t), "n=-11 is out of range of len(bz)=13", err)
 	require.Nil(t, cba)
-	require.Contains(t, err.Error(), "n=-11 is out of range of len(bz)=13")
 }
 
 func TestCompactBitArrayNumOfTrueBitsBefore(t *testing.T) {

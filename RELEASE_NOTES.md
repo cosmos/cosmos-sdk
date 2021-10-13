@@ -1,21 +1,7 @@
-# Cosmos SDK v0.44.1 Release Notes
+# Cosmos SDK v0.44.2 Release Notes
 
-This release introduces bug fixes and improvements on the Cosmos SDK v0.44 series.
+Recently, the Cosmos-SDK team became aware of a high-severity security vulnerability that impacts Cosmos-SDK v0.43.x and v0.44.x and can result in a consensus halt. User funds are NOT at risk; however, the vulnerability can result in a chain halt. This vulnerability does not impact the current Cosmos Hub, though other Cosmos-SDK based blockchains using v0.43.x or v0.44.x may be affected and are advised to update to v0.44.2 immediately.
 
-The main bug fix concerns all users performing in-place store migrations from v0.42 to v0.44. A source of non-determinism in the upgrade process has been [detected and fixed](https://github.com/cosmos/cosmos-sdk/pull/10189) in this release, causing consensus errors. As such, **v0.44.0 is not safe to use when performing v0.42->v0.44 in-place store upgrades**, please use this release v0.44.1 instead. This does not impact genesis JSON dump upgrades nor fresh chains starting with v0.44.
+Nodes can update their software independently of each other (no coordinated chain restart necessary), but should do so as soon as they are able.
 
-Another bug fix concerns calling the ABCI `Query` method using `client.Context`. We modified ABCI queries to use `abci.QueryRequest`'s `Height` field if it is non-zero, otherwise continue using `client.Context`'s height. This is a minor client-breaking change for users of the `client.Context`.
-
-Some CLI fixes are also included, such as:
-
-- using pre-configured data for the CLI `add-genesis-account` command ([\#9969](https://github.com/cosmos/cosmos-sdk/pull/9969)),
-- ensuring the `init` command reads the `--home` flag value correctly ([#10104](https://github.com/cosmos/cosmos-sdk/pull/10104)),
-- fixing the error message when `period` or `period-limit` flag is not set on a feegrant grant transaction [\#10049](https://github.com/cosmos/cosmos-sdk/issues/10049).
-
-v0.44.1 also includes performance improvements, namely:
-
-- IAVL update to v0.17.1 which includes performance improvements on a batch load [\#10040](https://github.com/cosmos/cosmos-sdk/pull/10040),
-- Speedup coins.AmountOf(), by removing many intermittent regex calls [\#10021](https://github.com/cosmos/cosmos-sdk/pull/10021),
-- Improve CacheKVStore datastructures / algorithms, to no longer take O(N^2) time when interleaving iterators and insertions [\#10026](https://github.com/cosmos/cosmos-sdk/pull/10026).
-
-See the [Cosmos SDK v0.44.1 milestone](https://github.com/cosmos/cosmos-sdk/milestone/56?closed=1) on our issue tracker for the exhaustive list of all changes.
+A full disclosure will be published a week after the release.

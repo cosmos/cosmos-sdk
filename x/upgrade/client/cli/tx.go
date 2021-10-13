@@ -14,6 +14,7 @@ import (
 const (
 	FlagUpgradeHeight = "upgrade-height"
 	FlagUpgradeInfo   = "upgrade-info"
+	FlagNoValidate    = "no-validate"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -45,6 +46,25 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			noValidate, err := cmd.Flags().GetBool(FlagNoValidate)
+			if err != nil {
+				return err
+			}
+			if !noValidate {
+				var urls types.BinaryDownloadURLMap
+				prop := content.(*types.SoftwareUpgradeProposal)
+				if len(prop.Plan.Info) > 0 {
+					if urls, err = types.ParsePlanInfo(prop.Plan.Info); err != nil {
+						return err
+					}
+					if err = urls.ValidateBasic(); err != nil {
+						return err
+					}
+					if err = urls.ValidateURLsExist(); err != nil {
+						return err
+					}
+				}
+			}
 
 			from := clientCtx.GetFromAddress()
 
@@ -71,6 +91,7 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
 	cmd.Flags().Int64(FlagUpgradeHeight, 0, "The height at which the upgrade must happen")
 	cmd.Flags().String(FlagUpgradeInfo, "", "Optional info for the planned upgrade such as commit hash, etc.")
+	cmd.Flags().Bool(FlagNoValidate, false, "Do not validate the info field (default behavior is to validate it).")
 
 	return cmd
 }

@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	// banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,7 +17,6 @@ func expecError(r *require.Assertions, expected string, received error) {
 }
 
 func TestNewGrant(t *testing.T) {
-	// ba := banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("foo", 123)))
 	a := NewGenericAuthorization("some-type")
 	var tcs = []struct {
 		title     string

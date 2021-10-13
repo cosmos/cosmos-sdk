@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"io"
-	"io/ioutil"
 	"sync"
 
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
@@ -144,7 +143,7 @@ func (m *Manager) LoadChunk(height uint64, format uint32, chunk uint32) ([]byte,
 	}
 	defer reader.Close()
 
-	return ioutil.ReadAll(reader)
+	return io.ReadAll(reader)
 }
 
 // Prune prunes snapshots, if no other operations are in progress.
@@ -239,7 +238,7 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 	}
 
 	// Pass the chunk to the restore, and wait for completion if it was the final one.
-	m.chRestore <- ioutil.NopCloser(bytes.NewReader(chunk))
+	m.chRestore <- io.NopCloser(bytes.NewReader(chunk))
 	m.restoreChunkIndex++
 
 	if int(m.restoreChunkIndex) >= len(m.restoreChunkHashes) {

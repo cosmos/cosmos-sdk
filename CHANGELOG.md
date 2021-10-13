@@ -47,6 +47,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (bank) [\#9618](https://github.com/cosmos/cosmos-sdk/pull/9618) Update bank.Metadata: add URI and URIHash attributes.
 * [\#9837](https://github.com/cosmos/cosmos-sdk/issues/9837) `--generate-only` flag will accept the keyname now.
 * [\#10045](https://github.com/cosmos/cosmos-sdk/pull/10045) Revert [#8549](https://github.com/cosmos/cosmos-sdk/pull/8549). Do not route grpc queries through Tendermint.
+* [\#10326](https://github.com/cosmos/cosmos-sdk/pull/10326) `x/authz` add query all grants by granter query.
 
 ### API Breaking Changes
 
@@ -68,7 +69,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * `MkConsKeyOutput`
     * `MkValKeyOutput`
     * `MkAccKeyOutput`
-* [\#10077](https://github.com/cosmos/cosmos-sdk/pull/10077) Remove telemetry on `GasKV` and `CacheKV` store Get/Set operations, significantly improving their performance.
+* [\#10077](https://github.com/cosmos/cosmos-sdk/pull/10077),[\#10334](https://github.com/cosmos/cosmos-sdk/pull/10334) Remove telemetry on `GasKV` and `CacheKV` store operations, significantly improving their performance.
 * [\#10022](https://github.com/cosmos/cosmos-sdk/pull/10022) `AuthKeeper` interface in `x/auth` now includes a function `HasAccount`.
 * [\#9759](https://github.com/cosmos/cosmos-sdk/pull/9759) `NewAccountKeeeper` in `x/auth` now takes an additional `bech32Prefix` argument that represents `sdk.Bech32MainPrefix`.
 * [\#9628](https://github.com/cosmos/cosmos-sdk/pull/9628) Rename `x/{mod}/legacy` to `x/{mod}/migrations`.
@@ -111,6 +112,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [\#10327](https://github.com/cosmos/cosmos-sdk/pull/10327) Add null guard for possible nil `Amount` in tx fee `Coins`
 * [\#9780](https://github.com/cosmos/cosmos-sdk/pull/9780) Remove gogoproto `moretags` YAML annotations and add `sigs.k8s.io/yaml` for YAML marshalling.
 * (x/bank) [\#10134](https://github.com/cosmos/cosmos-sdk/pull/10134) Add `HasDenomMetadata` function to bank `Keeper` to check if a client coin denom metadata exists in state.
 * (store) [\#10026](https://github.com/cosmos/cosmos-sdk/pull/10026) Improve CacheKVStore datastructures / algorithms, to no longer take O(N^2) time when interleaving iterators and insertions.
@@ -124,6 +126,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9699](https://github.com/cosmos/cosmos-sdk/pull/9699) Add `:`, `.`, `-`, and `_` as allowed characters in the default denom regular expression.
 * (genesis) [\#9697](https://github.com/cosmos/cosmos-sdk/pull/9697) Ensure `InitGenesis` returns with non-empty validator set.
 * [\#10262](https://github.com/cosmos/cosmos-sdk/pull/10262) Remove unnecessary logging in `x/feegrant` simulation.
+* [\#10341](https://github.com/cosmos/cosmos-sdk/pull/10341) Move from `io/ioutil` to `io` and `os` packages.
 
 ### Bug Fixes
 
@@ -150,6 +153,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Machine Breaking
 
+* (x/staking) [#10254](https://github.com/cosmos/cosmos-sdk/pull/10254) Instead of using the shares to determine if a delegation should be removed, use the truncated (token) amount.
 * (store) [#10247](https://github.com/cosmos/cosmos-sdk/pull/10247) Charge gas for the key length in gas meter.
 * (store) [#10218](https://github.com/cosmos/cosmos-sdk/pull/10218) Charge gas even when there are no entries while seeking.
 * (x/auth)[\#9596](https://github.com/cosmos/cosmos-sdk/pull/9596) Enable creating periodic vesting accounts with a transactions instead of requiring them to be created in genesis.
@@ -189,6 +193,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9952](https://github.com/cosmos/cosmos-sdk/pull/9952) ADR 040: Implement in-memory DB backend
 * [\#9848](https://github.com/cosmos/cosmos-sdk/pull/9848) ADR-040: Implement BadgerDB backend
 * [\#9851](https://github.com/cosmos/cosmos-sdk/pull/9851) ADR-040: Implement RocksDB backend
+* [\#10308](https://github.com/cosmos/cosmos-sdk/pull/10308) ADR-040: Implement DBConnection.Revert
 
 
 ### Client Breaking Changes

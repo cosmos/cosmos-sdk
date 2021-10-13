@@ -60,7 +60,7 @@ func TestDirectAuxHandler(t *testing.T) {
 		AccountNumber: 1,
 	}
 
-	modeHandler := signModeDirectAuxHandler{}
+	modeHandler := signModeDirectAuxHandler{addressCdc}
 	signBytes, err := modeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT_AUX, signingData, txBuilder.GetTx())
 	require.NoError(t, err)
 	require.NotNil(t, signBytes)

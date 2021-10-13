@@ -2,7 +2,6 @@ package address
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -12,10 +11,10 @@ type Bech32Codec struct {
 	Bech32Prefix string
 }
 
-var _ address.Codec = &Bech32Codec{}
+var _ Codec = &Bech32Codec{}
 
 // NewBech32Codec creates a new address.Codec based on bech32 encoding.
-func NewBech32Codec(prefix string) address.Codec {
+func NewBech32Codec(prefix string) Codec {
 	return Bech32Codec{prefix}
 }
 

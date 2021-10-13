@@ -3,8 +3,8 @@ package tx
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/types/address"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/address"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 

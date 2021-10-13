@@ -66,7 +66,7 @@ Developers can choose to either create a unique data structure for every field i
 `Params` or they can create a single `Params` structure as outlined above in the
 case of `x/auth`.
 
-In the former approach, a `sdk.Msg` would need to be created for every single
+In the former, `x/params`, approach, a `sdk.Msg` would need to be created for every single
 field along with a handler. This can become burdensome if there are a lot of
 parameter fields. In the latter case, there is only a single data structure and
 thus only a single message handler, however, the message handler might have to be

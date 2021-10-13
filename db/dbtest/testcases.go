@@ -69,7 +69,7 @@ func DoTestGetSetHasDelete(t *testing.T, load Loader) {
 	err = txn.Set([]byte("b"), []byte{0x02})
 	require.NoError(t, err)
 
-	view.Discard()
+	require.NoError(t, view.Discard())
 	require.NoError(t, txn.Commit())
 
 	txn = db.ReadWriter()
@@ -145,7 +145,7 @@ func DoTestIterators(t *testing.T, load Loader) {
 		for ; iter.Next(); i++ {
 			expectedValue := expected[i]
 			value := iter.Value()
-			require.EqualValues(t, expectedValue, string(value), "i=%v", i)
+			require.Equal(t, expectedValue, string(value), "i=%v", i)
 		}
 		require.Equal(t, len(expected), i)
 	}
@@ -189,7 +189,7 @@ func DoTestIterators(t *testing.T, load Loader) {
 		it.Close()
 	}
 
-	view.Discard()
+	require.NoError(t, view.Discard())
 	require.NoError(t, db.Close())
 }
 
@@ -246,6 +246,7 @@ func DoTestVersioning(t *testing.T, load Loader) {
 	require.NoError(t, err)
 	has, err := view.Has([]byte("2"))
 	require.False(t, has)
+	require.NoError(t, view.Discard())
 
 	view, err = db.ReaderAt(v2)
 	require.NoError(t, err)
@@ -258,13 +259,12 @@ func DoTestVersioning(t *testing.T, load Loader) {
 	require.NoError(t, err)
 	has, err = view.Has([]byte("1"))
 	require.False(t, has)
+	require.NoError(t, view.Discard())
 
-	// Try to read an invalid version
 	view, err = db.ReaderAt(versions.Last() + 1)
-	require.Equal(t, dbm.ErrVersionDoesNotExist, err)
+	require.Equal(t, dbm.ErrVersionDoesNotExist, err, "should fail to read a nonexistent version")
 
-	require.NoError(t, db.DeleteVersion(v2))
-	// Try to read a deleted version
+	require.NoError(t, db.DeleteVersion(v2), "should delete version v2")
 	view, err = db.ReaderAt(v2)
 	require.Equal(t, dbm.ErrVersionDoesNotExist, err)
 
@@ -283,6 +283,14 @@ func DoTestVersioning(t *testing.T, load Loader) {
 		prev = ver
 	}
 
+	// Open multiple readers for the same past version
+	view, err = db.ReaderAt(v3)
+	require.NoError(t, err)
+	view2, err := db.ReaderAt(v3)
+	require.NoError(t, err)
+	require.NoError(t, view.Discard())
+	require.NoError(t, view2.Discard())
+
 	require.NoError(t, db.Close())
 }
 
@@ -300,23 +308,37 @@ func DoTestTransactions(t *testing.T, load Loader, multipleWriters bool) {
 		t.Run("no commit", func(t *testing.T) {
 			t.Helper()
 			view := db.Reader()
-			defer view.Discard()
 			tx := getWriter()
-			defer tx.Discard()
 			require.NoError(t, tx.Set([]byte("0"), []byte("a")))
 			v, err := view.Get([]byte("0"))
 			require.NoError(t, err)
 			require.Nil(t, v)
+			require.NoError(t, view.Discard())
+			require.NoError(t, tx.Discard())
 		})
 
 		// Try to commit version with open txns
-		t.Run("open transactions", func(t *testing.T) {
+		t.Run("cannot save with open transactions", func(t *testing.T) {
 			t.Helper()
 			tx := getWriter()
-			tx.Set([]byte("2"), []byte("a"))
+			require.NoError(t, tx.Set([]byte("0"), []byte("a")))
 			_, err := db.SaveNextVersion()
 			require.Equal(t, dbm.ErrOpenTransactions, err)
-			tx.Discard()
+			require.NoError(t, tx.Discard())
+		})
+
+		// Try to use a transaction after closing
+		t.Run("cannot reuse transaction", func(t *testing.T) {
+			t.Helper()
+			tx := getWriter()
+			require.NoError(t, tx.Commit())
+			require.Error(t, tx.Set([]byte("0"), []byte("a")))
+			require.NoError(t, tx.Discard()) // redundant discard is fine
+
+			tx = getWriter()
+			require.NoError(t, tx.Discard())
+			require.Error(t, tx.Set([]byte("0"), []byte("a")))
+			require.NoError(t, tx.Discard())
 		})
 
 		// Continue only if the backend supports multiple concurrent writers
@@ -353,13 +375,139 @@ func DoTestTransactions(t *testing.T, load Loader, multipleWriters bool) {
 			}
 			wg.Wait()
 			view := db.Reader()
-			defer view.Discard()
 			v, err := view.Get(ikey(0))
 			require.NoError(t, err)
 			require.Equal(t, ival(0), v)
+			require.NoError(t, view.Discard())
 		})
-
 	}
+	// Try to reuse a reader txn
+	view := db.Reader()
+	require.NoError(t, view.Discard())
+	_, err := view.Get([]byte("0"))
+	require.Error(t, err)
+	require.NoError(t, view.Discard()) // redundant discard is fine
+
+	require.NoError(t, db.Close())
+}
+
+// Test that Revert works as intended, optionally closing and
+// reloading the DB both before and after reverting
+func DoTestRevert(t *testing.T, load Loader, reload bool) {
+	t.Helper()
+	dirname := t.TempDir()
+	db := load(t, dirname)
+	var txn dbm.DBWriter
+
+	initContents := func() {
+		txn = db.Writer()
+		require.NoError(t, txn.Set([]byte{2}, []byte{2}))
+		require.NoError(t, txn.Commit())
+
+		txn = db.Writer()
+		for i := byte(6); i < 10; i++ {
+			require.NoError(t, txn.Set([]byte{i}, []byte{i}))
+		}
+		require.NoError(t, txn.Delete([]byte{2}))
+		require.NoError(t, txn.Delete([]byte{3}))
+		require.NoError(t, txn.Commit())
+	}
+
+	initContents()
+	require.NoError(t, db.Revert())
+	view := db.Reader()
+	it, err := view.Iterator(nil, nil)
+	require.NoError(t, err)
+	require.False(t, it.Next()) // db is empty
+	require.NoError(t, it.Close())
+	require.NoError(t, view.Discard())
+
+	initContents()
+	_, err = db.SaveNextVersion()
+	require.NoError(t, err)
+
+	// get snapshot of db state
+	state := map[string][]byte{}
+	view = db.Reader()
+	it, err = view.Iterator(nil, nil)
+	require.NoError(t, err)
+	for it.Next() {
+		state[string(it.Key())] = it.Value()
+	}
+	require.NoError(t, it.Close())
+	view.Discard()
+
+	checkContents := func() {
+		view = db.Reader()
+		count := 0
+		it, err = view.Iterator(nil, nil)
+		require.NoError(t, err)
+		for it.Next() {
+			val, has := state[string(it.Key())]
+			require.True(t, has, "key should not be present: %v => %v", it.Key(), it.Value())
+			require.Equal(t, val, it.Value())
+			count++
+		}
+		require.NoError(t, it.Close())
+		require.Equal(t, len(state), count)
+		view.Discard()
+	}
+
+	changeContents := func() {
+		txn = db.Writer()
+		require.NoError(t, txn.Set([]byte{3}, []byte{15}))
+		require.NoError(t, txn.Set([]byte{7}, []byte{70}))
+		require.NoError(t, txn.Delete([]byte{8}))
+		require.NoError(t, txn.Delete([]byte{9}))
+		require.NoError(t, txn.Set([]byte{10}, []byte{0}))
+		require.NoError(t, txn.Commit())
+
+		txn = db.Writer()
+		require.NoError(t, txn.Set([]byte{3}, []byte{30}))
+		require.NoError(t, txn.Set([]byte{8}, []byte{8}))
+		require.NoError(t, txn.Delete([]byte{9}))
+		require.NoError(t, txn.Commit())
+	}
+
+	changeContents()
+
+	if reload {
+		db.Close()
+		db = load(t, dirname)
+	}
+
+	txn = db.Writer()
+	require.Error(t, db.Revert()) // can't revert with open writers
+	txn.Discard()
+	require.NoError(t, db.Revert())
+
+	if reload {
+		db.Close()
+		db = load(t, dirname)
+	}
+
+	checkContents()
+
+	// With intermediate versions added & deleted, revert again to v1
+	changeContents()
+	v2, _ := db.SaveNextVersion()
+
+	txn = db.Writer()
+	require.NoError(t, txn.Delete([]byte{6}))
+	require.NoError(t, txn.Set([]byte{8}, []byte{9}))
+	require.NoError(t, txn.Set([]byte{11}, []byte{11}))
+	txn.Commit()
+	v3, _ := db.SaveNextVersion()
+
+	txn = db.Writer()
+	require.NoError(t, txn.Set([]byte{12}, []byte{12}))
+	txn.Commit()
+
+	db.DeleteVersion(v2)
+	db.DeleteVersion(v3)
+	db.Revert()
+	checkContents()
+
 	require.NoError(t, db.Close())
 }
 
@@ -389,8 +537,11 @@ func DoTestReloadDB(t *testing.T, load Loader) {
 	require.NoError(t, err)
 
 	txn = db.Writer()
-	require.NoError(t, txn.Set(ikey(100), ival(100)))
+	require.NoError(t, txn.Set([]byte("working-version"), ival(100)))
 	require.NoError(t, txn.Commit())
+
+	txn = db.Writer()
+	require.NoError(t, txn.Set([]byte("uncommitted"), ival(200)))
 
 	// Reload and check each saved version
 	db.Close()
@@ -401,19 +552,13 @@ func DoTestReloadDB(t *testing.T, load Loader) {
 	require.NoError(t, err)
 	require.Equal(t, last, vset.Last())
 
-	txn = db.Writer()
-	for i := 10; i < 15; i++ {
-		require.NoError(t, txn.Set(ikey(i), ival(i+10)))
-	}
-	require.NoError(t, txn.Commit())
-
 	for i := 0; i < 10; i++ {
 		view, err := db.ReaderAt(firstVersions[i])
 		require.NoError(t, err)
 		val, err := view.Get(ikey(i))
 		require.NoError(t, err)
 		require.Equal(t, ival(i), val)
-		view.Discard()
+		require.NoError(t, view.Discard())
 	}
 
 	view, err := db.ReaderAt(last)
@@ -427,14 +572,18 @@ func DoTestReloadDB(t *testing.T, load Loader) {
 			require.Equal(t, ival(i), v)
 		}
 	}
-	view.Discard()
+	require.NoError(t, view.Discard())
 
 	// Load working version
 	view = db.Reader()
-	val, err := view.Get(ikey(100))
+	val, err := view.Get([]byte("working-version"))
 	require.NoError(t, err)
 	require.Equal(t, ival(100), val)
-	view.Discard()
 
+	val, err = view.Get([]byte("uncommitted"))
+	require.NoError(t, err)
+	require.Nil(t, val)
+
+	require.NoError(t, view.Discard())
 	require.NoError(t, db.Close())
 }

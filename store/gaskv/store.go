@@ -2,10 +2,8 @@ package gaskv
 
 import (
 	"io"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 var _ types.KVStore = &Store{}
@@ -39,6 +37,7 @@ func (gs *Store) Get(key []byte) (value []byte) {
 	value = gs.parent.Get(key)
 
 	// TODO overflow-safe math?
+	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostPerByte*types.Gas(len(key)), types.GasReadPerByteDesc)
 	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostPerByte*types.Gas(len(value)), types.GasReadPerByteDesc)
 
 	return value
@@ -50,20 +49,19 @@ func (gs *Store) Set(key []byte, value []byte) {
 	types.AssertValidValue(value)
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostFlat, types.GasWriteCostFlatDesc)
 	// TODO overflow-safe math?
+	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostPerByte*types.Gas(len(key)), types.GasWritePerByteDesc)
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostPerByte*types.Gas(len(value)), types.GasWritePerByteDesc)
 	gs.parent.Set(key, value)
 }
 
 // Implements KVStore.
 func (gs *Store) Has(key []byte) bool {
-	defer telemetry.MeasureSince(time.Now(), "store", "gaskv", "has")
 	gs.gasMeter.ConsumeGas(gs.gasConfig.HasCost, types.GasHasDesc)
 	return gs.parent.Has(key)
 }
 
 // Implements KVStore.
 func (gs *Store) Delete(key []byte) {
-	defer telemetry.MeasureSince(time.Now(), "store", "gaskv", "delete")
 	// charge gas to prevent certain attack vectors even though space is being freed
 	gs.gasMeter.ConsumeGas(gs.gasConfig.DeleteCost, types.GasDeleteDesc)
 	gs.parent.Delete(key)
@@ -173,8 +171,10 @@ func (gi *gasIterator) Error() error {
 // based on the current value's length.
 func (gi *gasIterator) consumeSeekGas() {
 	if gi.Valid() {
+		key := gi.Key()
 		value := gi.Value()
 
+		gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*types.Gas(len(key)), types.GasValuePerByteDesc)
 		gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*types.Gas(len(value)), types.GasValuePerByteDesc)
 	}
 	gi.gasMeter.ConsumeGas(gi.gasConfig.IterNextCostFlat, types.GasIterNextCostFlatDesc)

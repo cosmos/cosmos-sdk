@@ -90,6 +90,7 @@ func (s *TestSuite) TestUpdateClass() {
 
 	err = s.app.NFTKeeper.UpdateClass(s.ctx, noExistClass)
 	s.Require().Error(err)
+	s.Require().Contains(err.Error(), "nft class does not exist")
 
 	except := nft.Class{
 		Id:          testClassID,

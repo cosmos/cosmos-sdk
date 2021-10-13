@@ -65,6 +65,10 @@ func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, 
 
 	var stdTip *StdTip
 	if tip != nil {
+		if tip.Tipper == "" {
+			panic(fmt.Errorf("tipper cannot be empty"))
+		}
+
 		stdTip = &StdTip{Amount: tip.Amount, Tipper: tip.Tipper}
 	}
 

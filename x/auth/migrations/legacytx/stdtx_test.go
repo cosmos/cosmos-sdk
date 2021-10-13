@@ -141,9 +141,9 @@ func TestStdSignBytes(t *testing.T) {
 			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000","payer":"%s"},"memo":"memo","msgs":[["%s"]],"sequence":"6","tip":{"amount":[{"amount":"150","denom":"tiptoken"}],"tipper":"%s"}}`, addr, addr, addr),
 		},
 		{
-			"with empty tip (but not nil)",
-			args{"1234", 3, 6, 0, defaultFee, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo", &tx.Tip{}},
-			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000"},"memo":"memo","msgs":[["%s"]],"sequence":"6","tip":{"amount":[],"tipper":""}}`, addr),
+			"with empty tip (but not nil), tipper cannot be empty",
+			args{"1234", 3, 6, 0, defaultFee, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo", &tx.Tip{Tipper: addr.String()}},
+			fmt.Sprintf(`{"account_number":"3","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"100000"},"memo":"memo","msgs":[["%s"]],"sequence":"6","tip":{"amount":[],"tipper":"%s"}}`, addr, addr),
 		},
 	}
 	for i, tc := range tests {

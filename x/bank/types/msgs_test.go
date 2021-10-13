@@ -41,7 +41,7 @@ func TestMsgSendValidation(t *testing.T) {
 		{": invalid coins", NewMsgSend(addr1, addr2, atom0)},                   // non positive coin
 		{"123atom,0eth: invalid coins", NewMsgSend(addr1, addr2, atom123eth0)}, // non positive coin in multicoins
 		{"Invalid sender address (empty address string is not allowed): invalid address", NewMsgSend(addrEmpty, addr2, atom123)},
-		{"Invalid recipient address (empty address string is not allowed): invalid address", NewMsgSend(addr1, addrEmpty, atom123)},
+		{"Invalid recipient address :(decoding bech32 failed: invalid bech32 string length 0): invalid address", NewMsgSend(addr1, addrEmpty, atom123)},
 	}
 
 	for _, tc := range cases {

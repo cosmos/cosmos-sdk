@@ -128,14 +128,14 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 				return fmt.Errorf("set the chain id with either the --chain-id flag or config file")
 			}
 
-			signingData := signing.SignerData{
-				Address:       sdk.AccAddress(sigs[i].PubKey.Address()).String(),
-				ChainID:       txFactory.ChainID(),
-				AccountNumber: txFactory.AccountNumber(),
-				Sequence:      txFactory.Sequence(),
-			}
-
 			for _, sig := range sigs {
+				signingData := signing.SignerData{
+					Address:       sdk.AccAddress(sig.PubKey.Address()).String(),
+					ChainID:       txFactory.ChainID(),
+					AccountNumber: txFactory.AccountNumber(),
+					Sequence:      txFactory.Sequence(),
+				}
+
 				err = signing.VerifySignature(sig.PubKey, signingData, sig.Data, txCfg.SignModeHandler(), txBuilder.GetTx())
 				if err != nil {
 					addr, _ := sdk.AccAddressFromHex(sig.PubKey.Address().String())

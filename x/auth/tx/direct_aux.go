@@ -17,7 +17,7 @@ var _ signing.SignModeHandler = signModeDirectAuxHandler{}
 
 // signModeDirectAuxHandler defines the SIGN_MODE_DIRECT_AUX SignModeHandler
 type signModeDirectAuxHandler struct {
-	addrCdc address.Codec
+	addressCdc address.Codec
 }
 
 // DefaultMode implements SignModeHandler.DefaultMode
@@ -48,7 +48,7 @@ func (h signModeDirectAuxHandler) GetSignBytes(
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "got empty address in %s handler", signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
 	}
 
-	addrBz, err := h.addrCdc.StringToBytes(data.Address)
+	addrBz, err := h.addressCdc.StringToBytes(data.Address)
 	if err != nil {
 		return nil, err
 	}

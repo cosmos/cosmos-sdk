@@ -1,4 +1,4 @@
-package keeper
+package address
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -7,24 +7,26 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-type bech32Codec struct {
-	bech32Prefix string
+// Bech32Codec is a address.Codec based on bech32 encoding.
+type Bech32Codec struct {
+	Bech32Prefix string
 }
 
-var _ address.Codec = &bech32Codec{}
+var _ address.Codec = &Bech32Codec{}
 
+// NewBech32Codec creates a new address.Codec based on bech32 encoding.
 func NewBech32Codec(prefix string) address.Codec {
-	return bech32Codec{prefix}
+	return Bech32Codec{prefix}
 }
 
-// StringToBytes encodes text to bytes
-func (bc bech32Codec) StringToBytes(text string) ([]byte, error) {
+// StringToBytes encodes text to bytes.
+func (bc Bech32Codec) StringToBytes(text string) ([]byte, error) {
 	hrp, bz, err := bech32.DecodeAndConvert(text)
 	if err != nil {
 		return nil, err
 	}
 
-	if hrp != bc.bech32Prefix {
+	if hrp != bc.Bech32Prefix {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "hrp does not match bech32Prefix")
 	}
 
@@ -35,9 +37,9 @@ func (bc bech32Codec) StringToBytes(text string) ([]byte, error) {
 	return bz, nil
 }
 
-// BytesToString decodes bytes to text
-func (bc bech32Codec) BytesToString(bz []byte) (string, error) {
-	text, err := bech32.ConvertAndEncode(bc.bech32Prefix, bz)
+// BytesToString decodes bytes to text.
+func (bc Bech32Codec) BytesToString(bz []byte) (string, error) {
+	text, err := bech32.ConvertAndEncode(bc.Bech32Prefix, bz)
 	if err != nil {
 		return "", err
 	}

@@ -20,9 +20,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/address"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -38,7 +38,7 @@ type Client struct {
 
 	config *Config
 
-	auth  auth.QueryClient
+	auth  authtypes.QueryClient
 	bank  bank.QueryClient
 	tmRPC tmrpc.Client
 
@@ -56,8 +56,7 @@ func NewClient(cfg *Config) (*Client, error) {
 		v = "unknown"
 	}
 
-	addrCdc := keeper.NewBech32Codec(sdk.Bech32MainPrefix)
-	txConfig := authtx.NewTxConfig(cfg.Codec, authtx.DefaultSignModes, addrCdc)
+	txConfig := authtx.NewTxConfig(cfg.Codec, authtx.DefaultSignModes, address.NewBech32Codec(sdk.Bech32MainPrefix))
 
 	var supportedOperations []string
 	for _, ii := range cfg.InterfaceRegistry.ListImplementations(sdk.MsgInterfaceProtoName) {
@@ -103,7 +102,7 @@ func (c *Client) Bootstrap() error {
 		return err
 	}
 
-	authClient := auth.NewQueryClient(grpcConn)
+	authClient := authtypes.NewQueryClient(grpcConn)
 	bankClient := bank.NewQueryClient(grpcConn)
 
 	c.auth = authClient
@@ -134,7 +133,7 @@ func (c *Client) accountInfo(ctx context.Context, addr string, height *int64) (*
 		ctx = metadata.AppendToOutgoingContext(ctx, grpctypes.GRPCBlockHeightHeader, strHeight)
 	}
 
-	accountInfo, err := c.auth.Account(ctx, &auth.QueryAccountRequest{
+	accountInfo, err := c.auth.Account(ctx, &authtypes.QueryAccountRequest{
 		Address: addr,
 	})
 	if err != nil {

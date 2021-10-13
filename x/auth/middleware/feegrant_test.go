@@ -16,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/address"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -28,7 +29,7 @@ func (s *MWTestSuite) TestDeductFeesNoDelegation() {
 	ctx := s.SetupTest(false) // setup
 	app := s.app
 
-	protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(app.InterfaceRegistry()), tx.DefaultSignModes)
+	protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(app.InterfaceRegistry()), tx.DefaultSignModes, address.NewBech32Codec(sdk.Bech32MainPrefix))
 
 	txHandler := middleware.ComposeMiddlewares(
 		noopTxHandler{},

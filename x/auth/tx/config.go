@@ -22,9 +22,9 @@ type config struct {
 
 // NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and sign modes. The
 // first enabled sign mode will become the default sign mode.
-func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode, addrCdc address.Codec) client.TxConfig {
+func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode, addressCdc address.Codec) client.TxConfig {
 	return &config{
-		handler:     makeSignModeHandler(enabledSignModes, addrCdc),
+		handler:     makeSignModeHandler(enabledSignModes, addressCdc),
 		decoder:     DefaultTxDecoder(protoCodec),
 		encoder:     DefaultTxEncoder(),
 		jsonDecoder: DefaultJSONTxDecoder(protoCodec),

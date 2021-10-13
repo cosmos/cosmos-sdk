@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/address"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
@@ -21,9 +21,9 @@ func TestDirectAuxHandler(t *testing.T) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
-	addrCdc := keeper.NewBech32Codec(sdk.Bech32MainPrefix)
+	addressCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
-	txConfig := NewTxConfig(marshaler, []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_DIRECT_AUX}, addrCdc)
+	txConfig := NewTxConfig(marshaler, []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_DIRECT_AUX}, addressCdc)
 	txBuilder := txConfig.NewTxBuilder()
 
 	memo := "sometestmemo"

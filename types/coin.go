@@ -634,7 +634,10 @@ func removeZeroCoins(coins Coins) Coins {
 		}
 	}
 
-	result := make([]Coin, 0, len(coins)-1)
+	var result []Coin
+	if len(coins) > 0 {
+		result = make([]Coin, 0, len(coins)-1)
+	}
 
 	for _, coin := range coins {
 		if !coin.IsZero() {

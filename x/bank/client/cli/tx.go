@@ -38,17 +38,20 @@ ignored as it is implied from [from_key_or_address].`,
 			if err != nil {
 				return err
 			}
-			toAddr, err := sdk.AccAddressFromBech32(args[1])
-			if err != nil {
-				return err
-			}
 
 			coins, err := sdk.ParseCoinsNormalized(args[2])
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
+			msg := &types.MsgSend{
+				FromAddress: clientCtx.GetFromAddress().String(),
+				ToAddress:   args[1],
+				Amount:      coins,
+			}
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"bytes"
 	"fmt"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -8,14 +9,16 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	types "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-
+	"github.com/cosmos/cosmos-sdk/x/auth/address"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 var _ signing.SignModeHandler = signModeDirectAuxHandler{}
 
 // signModeDirectAuxHandler defines the SIGN_MODE_DIRECT_AUX SignModeHandler
-type signModeDirectAuxHandler struct{}
+type signModeDirectAuxHandler struct {
+	addressCdc address.Codec
+}
 
 // DefaultMode implements SignModeHandler.DefaultMode
 func (signModeDirectAuxHandler) DefaultMode() signingtypes.SignMode {
@@ -28,7 +31,7 @@ func (signModeDirectAuxHandler) Modes() []signingtypes.SignMode {
 }
 
 // GetSignBytes implements SignModeHandler.GetSignBytes
-func (signModeDirectAuxHandler) GetSignBytes(
+func (h signModeDirectAuxHandler) GetSignBytes(
 	mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx,
 ) ([]byte, error) {
 
@@ -41,8 +44,13 @@ func (signModeDirectAuxHandler) GetSignBytes(
 		return nil, fmt.Errorf("can only handle a protobuf Tx, got %T", tx)
 	}
 
-	if data.Address == nil {
+	if data.Address == "" {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "got empty address in %s handler", signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
+	}
+
+	addrBz, err := h.addressCdc.StringToBytes(data.Address)
+	if err != nil {
+		return nil, err
 	}
 
 	var pubKey *codectypes.Any
@@ -51,7 +59,7 @@ func (signModeDirectAuxHandler) GetSignBytes(
 		return nil, err
 	}
 	for i, pk := range pubKeys {
-		if data.Address.Equals(sdk.AccAddress(pk.Address())) {
+		if bytes.Equal(addrBz, pk.Address()) {
 			pubKey = protoTx.tx.AuthInfo.SignerInfos[i].PublicKey
 		}
 	}

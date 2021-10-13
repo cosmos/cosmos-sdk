@@ -6,6 +6,8 @@ package params
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/address"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
@@ -17,11 +19,13 @@ func MakeTestEncodingConfig() EncodingConfig {
 	cdc := codec.NewLegacyAmino()
 	interfaceRegistry := types.NewInterfaceRegistry()
 	codec := codec.NewProtoCodec(interfaceRegistry)
+	addressCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	return EncodingConfig{
+		AddressCdc:        addressCdc,
 		InterfaceRegistry: interfaceRegistry,
 		Codec:             codec,
-		TxConfig:          tx.NewTxConfig(codec, tx.DefaultSignModes),
+		TxConfig:          tx.NewTxConfig(codec, tx.DefaultSignModes, addressCdc),
 		Amino:             cdc,
 	}
 }

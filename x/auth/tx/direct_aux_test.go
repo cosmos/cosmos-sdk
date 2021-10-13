@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/address"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
@@ -20,8 +21,9 @@ func TestDirectAuxHandler(t *testing.T) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	addressCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
-	txConfig := NewTxConfig(marshaler, []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_DIRECT_AUX})
+	txConfig := NewTxConfig(marshaler, []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_DIRECT_AUX}, addressCdc)
 	txBuilder := txConfig.NewTxBuilder()
 
 	memo := "sometestmemo"
@@ -53,12 +55,12 @@ func TestDirectAuxHandler(t *testing.T) {
 	require.NoError(t, err)
 
 	signingData := signing.SignerData{
-		Address:       addr,
+		Address:       addr.String(),
 		ChainID:       "test-chain",
 		AccountNumber: 1,
 	}
 
-	modeHandler := signModeDirectAuxHandler{}
+	modeHandler := signModeDirectAuxHandler{addressCdc}
 	signBytes, err := modeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT_AUX, signingData, txBuilder.GetTx())
 	require.NoError(t, err)
 	require.NotNil(t, signBytes)

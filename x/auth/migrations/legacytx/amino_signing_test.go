@@ -46,7 +46,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 
 	handler := stdTxSignModeHandler{}
 	signingData := signing.SignerData{
-		Address:       addr1,
+		Address:       addr1.String(),
 		ChainID:       chainId,
 		AccountNumber: accNum,
 		Sequence:      seqNum,

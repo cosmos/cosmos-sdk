@@ -483,7 +483,7 @@ func (svm sigVerificationTxHandler) sigVerify(ctx context.Context, sdkTx sdk.Tx,
 		}
 
 		signerData := authsigning.SignerData{
-			Address:       signerAddrs[i],
+			Address:       signerAddrs[i].String(),
 			ChainID:       chainID,
 			AccountNumber: accNum,
 			Sequence:      acc.GetSequence(),

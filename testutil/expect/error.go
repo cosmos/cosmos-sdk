@@ -2,9 +2,9 @@ package expect
 
 import "github.com/stretchr/testify/require"
 
-// Error checks if the received error is not nil and it's string contains
+// ErrorContains checks if the received error is not nil and it's string contains
 // the `expected` message. If `expected` is empty then received should be nil.
-func Error(r *require.Assertions, expected string, received error) {
+func ErrorContains(r *require.Assertions, expected string, received error) {
 	if expected == "" {
 		r.NoError(received)
 	} else {

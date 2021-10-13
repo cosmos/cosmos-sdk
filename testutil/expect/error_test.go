@@ -26,7 +26,7 @@ func TestExpect(t *testing.T) {
 		t.Run(tc.title, func(t *testing.T) {
 			r := require.New(t)
 			mockedT := new(MockT)
-			Error(require.New(mockedT), tc.expectMsg, tc.err)
+			ErrorContains(require.New(mockedT), tc.expectMsg, tc.err)
 			r.NotEqual(tc.passes, mockedT.Failed)
 		})
 	}

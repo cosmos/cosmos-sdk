@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	typestx "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -48,32 +47,32 @@ func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode,
 	}
 
 	addr := data.Address
-	if addr == nil {
+	if addr == "" {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "got empty address in %s handler", signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
+	tip := protoTx.GetTip()
+	isTipper := tip != nil && tip.Tipper == addr
+
 	// We set a convention that if the tipper signs with LEGACY_AMINO_JSON, then
 	// they sign over empty fees and 0 gas.
-	var isTipper bool
-	if addr == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "got empty address in SIGN_MODE_LEGACY_AMINO_JSON handler")
-	}
-	if tipTx, ok := tx.(typestx.TipTx); ok && tipTx.GetTip() != nil {
-		isTipper = tipTx.GetTip().Tipper == addr.String()
-	}
-
 	if isTipper {
 		return legacytx.StdSignBytes(
 			data.ChainID, data.AccountNumber, data.Sequence, protoTx.GetTimeoutHeight(),
 			// The tipper signs over 0 fee and 0 gas, no feepayer, no feegranter by convention.
 			legacytx.StdFee{},
-			tx.GetMsgs(), protoTx.GetMemo(),
+			tx.GetMsgs(), protoTx.GetMemo(), tip,
 		), nil
 	}
 
 	return legacytx.StdSignBytes(
 		data.ChainID, data.AccountNumber, data.Sequence, protoTx.GetTimeoutHeight(),
-		legacytx.StdFee{Amount: protoTx.GetFee(), Gas: protoTx.GetGas(), Payer: protoTx.FeePayer().String(), Granter: protoTx.FeeGranter().String()},
-		tx.GetMsgs(), protoTx.GetMemo(),
+		legacytx.StdFee{
+			Amount:  protoTx.GetFee(),
+			Gas:     protoTx.GetGas(),
+			Payer:   protoTx.tx.AuthInfo.Fee.Payer,
+			Granter: protoTx.tx.AuthInfo.Fee.Granter,
+		},
+		tx.GetMsgs(), protoTx.GetMemo(), tip,
 	), nil
 }

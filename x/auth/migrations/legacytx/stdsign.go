@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -51,7 +52,7 @@ type StdSignDoc struct {
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.
-func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
+func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, msgs []sdk.Msg, memo string, tip *tx.Tip) []byte {
 	msgsBytes := make([]json.RawMessage, 0, len(msgs))
 	for _, msg := range msgs {
 		legacyMsg, ok := msg.(LegacyMsg)
@@ -62,6 +63,11 @@ func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, 
 		msgsBytes = append(msgsBytes, json.RawMessage(legacyMsg.GetSignBytes()))
 	}
 
+	var stdTip *StdTip
+	if tip != nil {
+		stdTip = &StdTip{Amount: tip.Amount, Tipper: tip.Tipper}
+	}
+
 	bz, err := legacy.Cdc.MarshalJSON(StdSignDoc{
 		AccountNumber: accnum,
 		ChainID:       chainID,
@@ -70,6 +76,7 @@ func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, 
 		Msgs:          msgsBytes,
 		Sequence:      sequence,
 		TimeoutHeight: timeout,
+		Tip:           stdTip,
 	})
 	if err != nil {
 		panic(err)

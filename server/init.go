@@ -3,9 +3,8 @@ package server
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -28,7 +27,7 @@ func GenerateCoinKey(algo keyring.SignatureAlgo, cdc codec.Codec) (sdk.AccAddres
 // phrase to recover the private key.
 func GenerateSaveCoinKey(keybase keyring.Keyring, keyName string, overwrite bool, algo keyring.SignatureAlgo) (sdk.AccAddress, string, error) {
 	exists := false
-	_, err := keybase.Key(keyName)
+	_, err := keybase.Key(string(keyring.InfoKey(keyName)))
 	if err == nil {
 		exists = true
 	}
@@ -41,7 +40,7 @@ func GenerateSaveCoinKey(keybase keyring.Keyring, keyName string, overwrite bool
 
 	// generate a private key, with recovery phrase
 	if exists {
-		err = keybase.Delete(keyName)
+		err = keybase.Delete(string(keyring.InfoKey(keyName)))
 		if err != nil {
 			return sdk.AccAddress([]byte{}), "", fmt.Errorf(
 				"failed to overwrite key")

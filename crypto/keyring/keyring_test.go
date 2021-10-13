@@ -526,7 +526,7 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	// deleting a key removes it
 	err = cstore.Delete(string(InfoKey("bad name")))
 	require.NotNil(t, err)
-	err = cstore.Delete(n1)
+	err = cstore.Delete(string(InfoKey(n1)))
 	require.NoError(t, err)
 	keyS, err = cstore.List()
 	require.NoError(t, err)
@@ -552,14 +552,14 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	require.Equal(t, 2, len(keyS))
 
 	// delete the offline key
-	err = cstore.Delete(o1)
+	err = cstore.Delete(string(InfoKey(o1)))
 	require.NoError(t, err)
 	keyS, err = cstore.List()
 	require.NoError(t, err)
 	require.Equal(t, 1, len(keyS))
 
 	// addr cache gets nuked - and test skip flag
-	err = cstore.Delete(n2)
+	err = cstore.Delete(string(InfoKey(n2)))
 	require.NoError(t, err)
 }
 

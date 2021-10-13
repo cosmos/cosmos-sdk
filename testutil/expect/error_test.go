@@ -23,6 +23,7 @@ func TestExpect(t *testing.T) {
 	}
 
 	for _, tc := range tc {
+		tc := tc
 		t.Run(tc.title, func(t *testing.T) {
 			r := require.New(t)
 			mockedT := new(MockT)

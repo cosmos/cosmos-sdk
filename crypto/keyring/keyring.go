@@ -410,7 +410,7 @@ func (ks keystore) DeleteByAddress(address sdk.Address) error {
 		return err
 	}
 
-	err = ks.Delete(k.Name)
+	err = ks.Delete(string(InfoKey(k.Name)))
 	if err != nil {
 		return err
 	}

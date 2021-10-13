@@ -73,7 +73,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Create a file with all core Cosmos SDK pkgs
-        run:  pkgsfile=`pwd`/pkgs.txt; find -name go.mod -execdir go list ./... >> $pkgsfile \;
+        run:  pkgsfile=`pwd`/pkgs.txt; find -name go.mod -not -path "./cosmovisor/*" -execdir go list ./... >> $pkgsfile \;
       - name: echo pkgs
         run: cat ./pkgs.txt
       - name: Split pkgs into 4 files

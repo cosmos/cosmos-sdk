@@ -73,11 +73,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Create a file with all core Cosmos SDK pkgs
-        run: go list ./... > pkgs.txt
-      - name: Append ./db packages
-        run: cd db; go list ./... >> ../pkgs.txt; cd ..
-      - name: Append ./container packages
-        run: cd container; go list ./... >> ../pkgs.txt; cd ..
+        run:  pkgsfile=`pwd`/pkgs.txt; find -name go.mod -execdir go list ./... >> $pkgsfile \;
+      - name: echo pkgs
+        run: cat ./pkgs.txt
       - name: Split pkgs into 4 files
         run: split -d -n l/4 pkgs.txt pkgs.txt.part.
       # cache multiple

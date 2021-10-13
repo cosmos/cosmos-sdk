@@ -73,9 +73,8 @@ thus only a single message handler, however, the message handler might have to b
 more sophisticated in that it might need to understand what parameters are being
 changed vs what parameters are untouched.
 
-Once the `sdk.Msg` types and corresponding handlers are defined, proposals can
-be made using the `x/gov` module that are authorized by the root `x/gov`
-module's account.
+Params change proposals are made using the `x/gov` module. Execution is done through
+`x/authz` authorization to the root `x/gov` module's account.
 
 Continuing to use `x/auth`, we demonstrate a more complete example:
 

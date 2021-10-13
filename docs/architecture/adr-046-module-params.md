@@ -138,7 +138,8 @@ module may be removed entirely in a future release.
 ### Positive
 
 - Module parameters are serialized more efficiently
-- Module parameters changes are able to be stateful
+- Modules are able to react on parameters changes and perform additional actions.
+- Special events can be emitted, allowing hooks to be triggered.
 
 ### Negative
 

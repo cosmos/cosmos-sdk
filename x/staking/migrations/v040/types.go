@@ -183,6 +183,10 @@ func (v Validator) String() string {
 	return string(out)
 }
 
+func (v Validator) TokensFromShares(shares sdk.Dec) sdk.Dec {
+	return (shares.MulInt(v.Tokens)).Quo(v.DelegatorShares)
+}
+
 // Validators is a collection of Validator
 type Validators []Validator
 

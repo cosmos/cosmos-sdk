@@ -24,6 +24,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+const (
+	consensusVersion uint64 = 3
+)
+
 var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
@@ -140,6 +144,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 	m := keeper.NewMigrator(am.keeper)
 	cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
+	cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3)
 }
 
 // InitGenesis performs genesis initialization for the staking module. It returns
@@ -160,7 +165,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 2 }
+func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
 
 // BeginBlock returns the begin blocker for the staking module.
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {

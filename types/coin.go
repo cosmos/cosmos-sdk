@@ -626,7 +626,7 @@ func (coins Coins) negative() Coins {
 
 // removeZeroCoins removes all zero coins from the given coin set in-place.
 func removeZeroCoins(coins Coins) Coins {
-	result := ([]Coin)(nil)
+	var result []Coin
 
 	for i := 0; i < len(coins); i++ {
 		if coins[i].IsZero() {

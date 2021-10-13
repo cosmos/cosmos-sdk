@@ -117,7 +117,7 @@ func printAndValidateSigs(
 			}
 		}
 
-		cmd.Printf(" %d: %s\t\t\t[%s]%s%s\n", i, sigAddr.String(), sigSanity, multiSigHeader, multiSigMsg)
+		cmd.Printf("  %d: %s\t\t\t[%s]%s%s\n", i, sigAddr.String(), sigSanity, multiSigHeader, multiSigMsg)
 	}
 
 	cmd.Println("")

@@ -97,6 +97,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * Move Msg routers from BaseApp to middlewares.
   * Move Baseapp panic recovery into a middleware.
   * Rename simulation helper methods `baseapp.{Check,Deliver}` to `baseapp.Sim{Check,Deliver}`.
+* [\#10322](https://github.com/cosmos/cosmos-sdk/pull/10322) The `tx.NewTxConfig` function takes a new parameter of type `address.Codec` used to encode and decode addresses. As such, a new field `AddressCdc` has been added to `simapp.EncodingConfig`.
 
 ### Client Breaking Changes
 

@@ -22,7 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth/address"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -38,7 +38,7 @@ type Client struct {
 
 	config *Config
 
-	auth  authtypes.QueryClient
+	auth  auth.QueryClient
 	bank  bank.QueryClient
 	tmRPC tmrpc.Client
 
@@ -102,7 +102,7 @@ func (c *Client) Bootstrap() error {
 		return err
 	}
 
-	authClient := authtypes.NewQueryClient(grpcConn)
+	authClient := auth.NewQueryClient(grpcConn)
 	bankClient := bank.NewQueryClient(grpcConn)
 
 	c.auth = authClient
@@ -133,7 +133,7 @@ func (c *Client) accountInfo(ctx context.Context, addr string, height *int64) (*
 		ctx = metadata.AppendToOutgoingContext(ctx, grpctypes.GRPCBlockHeightHeader, strHeight)
 	}
 
-	accountInfo, err := c.auth.Account(ctx, &authtypes.QueryAccountRequest{
+	accountInfo, err := c.auth.Account(ctx, &auth.QueryAccountRequest{
 		Address: addr,
 	})
 	if err != nil {

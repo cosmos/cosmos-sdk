@@ -10,7 +10,7 @@ import (
 // EncodingConfig specifies the concrete encoding types to use for a given app.
 // This is provided for compatibility between protobuf and amino implementations.
 type EncodingConfig struct {
-	addressCdc        address.Codec
+	AddressCdc        address.Codec
 	InterfaceRegistry types.InterfaceRegistry
 	Codec             codec.Codec
 	TxConfig          client.TxConfig

@@ -22,7 +22,7 @@ func MakeTestEncodingConfig() EncodingConfig {
 	addressCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	return EncodingConfig{
-		addressCdc:        addressCdc,
+		AddressCdc:        addressCdc,
 		InterfaceRegistry: interfaceRegistry,
 		Codec:             codec,
 		TxConfig:          tx.NewTxConfig(codec, tx.DefaultSignModes, addressCdc),

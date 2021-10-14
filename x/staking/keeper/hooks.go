@@ -77,3 +77,13 @@ func (k Keeper) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, 
 		k.hooks.BeforeValidatorSlashed(ctx, valAddr, fraction)
 	}
 }
+
+// This is called after undelegation is completed
+// TODO JEHAN: I'm using this for a proof of concept for CCV. It's possible that this functionality can
+// instead be provided with RemoveDelegation and AfterDelegationModified but it will be more complicated
+func (k Keeper) UnbondingDelegationEntryCreated(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
+	if k.hooks != nil {
+		return k.hooks.UnbondingDelegationEntryCreated(ctx, valAddr, fraction)
+	}
+	return nil
+}

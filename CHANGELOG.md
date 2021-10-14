@@ -35,6 +35,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+
+## v0.44.2-regen-1
+
++ Merged Cosmos-SDK v0.44.1
+
 ## v0.44.0-regen-1
 
 ### Features

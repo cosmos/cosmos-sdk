@@ -61,12 +61,12 @@ For example, starting with the `unsigned_tx.json`, and assuming the transaction 
 
 ```bash
 # Let signer1 sign the unsigned tx.
-simd tx multisignsign unsigned_tx.json signer_key_1 --chain-id my-test-chain --keyring-backend test > partial_tx_1.json
+simd tx multisign unsigned_tx.json signer_key_1 --chain-id my-test-chain --keyring-backend test > partial_tx_1.json
 # Now signer1 will send the partial_tx_1.json to the signer2.
 # Signer2 appends their signature:
-simd tx multisignsign partial_tx_1.json signer_key_2 --chain-id my-test-chain --keyring-backend test > partial_tx_2.json
+simd tx multisign partial_tx_1.json signer_key_2 --chain-id my-test-chain --keyring-backend test > partial_tx_2.json
 # Signer2 sends the partial_tx_2.json file to signer3, and signer3 can append his signature:
-simd tx multisignsign partial_tx_2.json signer_key_3 --chain-id my-test-chain --keyring-backend test > partial_tx_3.json
+simd tx multisign partial_tx_2.json signer_key_3 --chain-id my-test-chain --keyring-backend test > partial_tx_3.json
 ```
 
 ### Broadcasting a Transaction
@@ -113,7 +113,7 @@ It is possible to manipulate transactions programmatically via Go using the Cosm
 
 ### Generating a Transaction
 
-Before generating a transaction, a new instance of a `TxBuilder` needs to be created. Since the SDK supports both Amino and Protobuf transactions, the first step would be to decide which encoding scheme to use. All the subsequent steps remain unchanged, whether you're using Amino or Protobuf, as `TxBuilder` abstracts the encoding mechanisms. In the following snippet, we will use Protobuf.
+Before generating a transaction, a new instance of a `TxBuilder` needs to be created. Since the Cosmos SDK supports both Amino and Protobuf transactions, the first step would be to decide which encoding scheme to use. All the subsequent steps remain unchanged, whether you're using Amino or Protobuf, as `TxBuilder` abstracts the encoding mechanisms. In the following snippet, we will use Protobuf.
 
 ```go
 import (
@@ -283,7 +283,7 @@ func sendTx(ctx context.Context) error {
     // Create a connection to the gRPC server.
     grpcConn := grpc.Dial(
         "127.0.0.1:9090", // Or your gRPC server address.
-        grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
+        grpc.WithInsecure(), // The Cosmos SDK doesn't support any transport security mechanism.
     )
     defer grpcConn.Close()
 

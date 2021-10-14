@@ -5,7 +5,7 @@ package rest
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -18,7 +18,7 @@ func GetRequest(url string) ([]byte, error) {
 	}
 	defer res.Body.Close()
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func PostRequest(url string, contentType string, data []byte) ([]byte, error) {
 	}
 	defer res.Body.Close()
 
-	bz, err := ioutil.ReadAll(res.Body)
+	bz, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error reading response body: %w", err)
 	}

@@ -36,4 +36,6 @@ This module is used in the Cosmos Hub.
    - [Genesis Initialization](05_vesting.md#genesis-initialization)
    - [Examples](05_vesting.md#examples)
    - [Glossary](05_vesting.md#glossary)
-6. **[Parameters](07_params.md)**
+6. **[Parameters](06_params.md)**
+7. **[Client](07_client.md)**
+   - [CLI](07_client.md#cli)

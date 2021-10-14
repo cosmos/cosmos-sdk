@@ -58,7 +58,7 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 				prop := content.(*types.SoftwareUpgradeProposal)
 				if len(prop.Plan.Info) > 0 {
 					var daemonName string
-					if daemonName, err = getDaemonName(cmd); err != nil {
+					if daemonName, err = cmd.Flags().GetString(FlagDaemonName); err != nil {
 						return err
 					}
 					var planInfo *types.PlanInfo
@@ -100,8 +100,7 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 	cmd.Flags().Int64(FlagUpgradeHeight, 0, "The height at which the upgrade must happen")
 	cmd.Flags().String(FlagUpgradeInfo, "", "Optional info for the planned upgrade such as commit hash, etc.")
 	cmd.Flags().Bool(FlagNoValidate, false, "Do not validate the info field (default behavior is to validate it).")
-	_, defaultDaemonName := filepath.Split(os.Args[0])
-	cmd.Flags().String(FlagDaemonName, defaultDaemonName, "The name of the executable binary that is being upgraded.")
+	cmd.Flags().String(FlagDaemonName, getDefaultDaemonName(), "The name of the executable binary that is being upgraded.")
 
 	return cmd
 }
@@ -186,18 +185,13 @@ func parseArgsToContent(cmd *cobra.Command, name string) (gov.Content, error) {
 	return content, nil
 }
 
-// getDaemonName gets the desired daemon name from the flag, env var, or default.
-func getDaemonName(cmd *cobra.Command) (string, error) {
-	// If something was provided for it, return that.
-	if cmd.Flags().Changed(FlagDaemonName) {
-		return cmd.Flags().GetString(FlagDaemonName)
-	}
-	// Check for a DAEMON_NAME env var and return that if found.
-	// This is the same env var used by Cosmovisor.
+// getDefaultDaemonName gets the default name to use for the daemon.
+// If a DAEMON_NAME env var is set, that is used.
+// Otherwise, the last part of the currently running executable is used.
+func getDefaultDaemonName() string {
 	name := os.Getenv("DAEMON_NAME")
-	if len(name) > 0 {
-		return name, nil
+	if len(name) == 0 {
+		_, name = filepath.Split(os.Args[0])
 	}
-	// Return what the flag is (which should be the default).
-	return cmd.Flags().GetString(FlagDaemonName)
+	return name
 }

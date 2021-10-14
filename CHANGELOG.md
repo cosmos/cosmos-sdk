@@ -99,6 +99,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * Move Baseapp panic recovery into a middleware.
   * Rename simulation helper methods `baseapp.{Check,Deliver}` to `baseapp.Sim{Check,Deliver}`.
 * [\#10322](https://github.com/cosmos/cosmos-sdk/pull/10322) The `tx.NewTxConfig` function takes a new parameter of type `address.Codec` used to encode and decode addresses. As such, a new field `AddressCdc` has been added to `simapp.EncodingConfig`.
+* [\#10208](https://github.com/cosmos/cosmos-sdk/pull/10208) The `x/auth/signing.Tx` interface now also includes a new `GetTip() *tx.Tip` method for verifying tipped transactions. The `x/auth/types` expected BankKeeper interface now expects the `SendCoins` method too.
 
 ### Client Breaking Changes
 

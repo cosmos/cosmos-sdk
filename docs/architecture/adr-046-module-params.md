@@ -118,9 +118,12 @@ func ParamsFromMsg(msg *types.MsgUpdateParams) Params {
 
 As a result of implementing the module parameter methodology, we gain the ability
 for module parameter changes to be stateful and extensible to fit nearly every
-application's use case. In addition, there will be significant gains in performance
-when it comes to reading and writing parameters from and to state, especially if
-a specific set of parameters are read on a consistent basis.
+application's use case. We will be able to emit events (and trigger hooks registered 
+to that events using the work proposed in [even hooks](https://github.com/cosmos/cosmos-sdk/discussions/9656)),
+call other Msg service methods or perform migration.
+In addition, there will be significant gains in performance when it comes to reading 
+and writing parameters from and to state, especially if a specific set of parameters 
+are read on a consistent basis.
 
 However, this methodology will require developers to implement more types and
 Msg service metohds which can become burdensome if many parameters exist. In addition,

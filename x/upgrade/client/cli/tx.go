@@ -1,6 +1,9 @@
 package cli
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -15,6 +18,7 @@ const (
 	FlagUpgradeHeight = "upgrade-height"
 	FlagUpgradeInfo   = "upgrade-info"
 	FlagNoValidate    = "no-validate"
+	FlagDaemonName    = "daemon-name"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -51,16 +55,20 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 				return err
 			}
 			if !noValidate {
-				var urls types.BinaryDownloadURLMap
 				prop := content.(*types.SoftwareUpgradeProposal)
 				if len(prop.Plan.Info) > 0 {
-					if urls, err = types.ParsePlanInfo(prop.Plan.Info); err != nil {
+					var daemonName string
+					if daemonName, err = getDaemonName(cmd); err != nil {
 						return err
 					}
-					if err = urls.ValidateBasic(); err != nil {
+					var planInfo *types.PlanInfo
+					if planInfo, err = types.ParsePlanInfo(prop.Plan.Info); err != nil {
 						return err
 					}
-					if err = urls.ValidateURLsExist(); err != nil {
+					if err = planInfo.ValidateBasic(); err != nil {
+						return err
+					}
+					if err = planInfo.Binaries.CheckURLs(daemonName); err != nil {
 						return err
 					}
 				}
@@ -92,6 +100,8 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 	cmd.Flags().Int64(FlagUpgradeHeight, 0, "The height at which the upgrade must happen")
 	cmd.Flags().String(FlagUpgradeInfo, "", "Optional info for the planned upgrade such as commit hash, etc.")
 	cmd.Flags().Bool(FlagNoValidate, false, "Do not validate the info field (default behavior is to validate it).")
+	_, defaultDaemonName := filepath.Split(os.Args[0])
+	cmd.Flags().String(FlagDaemonName, defaultDaemonName, "The name of the executable binary that is being upgraded.")
 
 	return cmd
 }
@@ -174,4 +184,20 @@ func parseArgsToContent(cmd *cobra.Command, name string) (gov.Content, error) {
 	plan := types.Plan{Name: name, Height: height, Info: info}
 	content := types.NewSoftwareUpgradeProposal(title, description, plan)
 	return content, nil
+}
+
+// getDaemonName gets the desired daemon name from the flag, env var, or default.
+func getDaemonName(cmd *cobra.Command) (string, error) {
+	// If something was provided for it, return that.
+	if cmd.Flags().Changed(FlagDaemonName) {
+		return cmd.Flags().GetString(FlagDaemonName)
+	}
+	// Check for a DAEMON_NAME env var and return that if found.
+	// This is the same env var used by Cosmovisor.
+	name := os.Getenv("DAEMON_NAME")
+	if len(name) > 0 {
+		return name, nil
+	}
+	// Return what the flag is (which should be the default).
+	return cmd.Flags().GetString(FlagDaemonName)
 }

@@ -3,8 +3,9 @@ package memdb
 import (
 	"bytes"
 	"context"
+	"sync"
 
-	tmdb "github.com/cosmos/cosmos-sdk/db"
+	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/google/btree"
 )
 
@@ -24,13 +25,14 @@ type memDBIterator struct {
 	end    []byte
 }
 
-var _ tmdb.Iterator = (*memDBIterator)(nil)
+var _ dbm.Iterator = (*memDBIterator)(nil)
 
 // newMemDBIterator creates a new memDBIterator.
 // A visitor is passed to the btree which streams items to the iterator over a channel. Advancing
 // the iterator pulls items from the channel, returning execution to the visitor.
 // The reverse case needs some special handling, since we use [start, end) while btree uses (start, end]
-func newMemDBIterator(tx *dbTxn, start []byte, end []byte, reverse bool) *memDBIterator {
+// locker is an object that is locked for the duration of the iterator's usage.
+func newMemDBIterator(tx *dbTxn, start []byte, end []byte, reverse bool, locker sync.Locker) *memDBIterator {
 	ctx, cancel := context.WithCancel(context.Background())
 	ch := make(chan *item, chBufferSize)
 	iter := &memDBIterator{
@@ -40,7 +42,13 @@ func newMemDBIterator(tx *dbTxn, start []byte, end []byte, reverse bool) *memDBI
 		end:    end,
 	}
 
+	if locker != nil {
+		locker.Lock()
+	}
 	go func() {
+		if locker != nil {
+			defer locker.Unlock()
+		}
 		defer close(ch)
 		// Because we use [start, end) for reverse ranges, while btree uses (start, end], we need
 		// the following variables to handle some reverse iteration conditions ourselves.

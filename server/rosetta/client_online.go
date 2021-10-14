@@ -20,7 +20,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/auth/address"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -56,7 +55,7 @@ func NewClient(cfg *Config) (*Client, error) {
 		v = "unknown"
 	}
 
-	txConfig := authtx.NewTxConfig(cfg.Codec, authtx.DefaultSignModes, address.NewBech32Codec(sdk.Bech32MainPrefix))
+	txConfig := authtx.NewTxConfig(cfg.Codec, authtx.DefaultSignModes)
 
 	var supportedOperations []string
 	for _, ii := range cfg.InterfaceRegistry.ListImplementations(sdk.MsgInterfaceProtoName) {

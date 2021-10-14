@@ -1,24 +1,19 @@
 package tx
 
 import (
-	"bytes"
 	"fmt"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	types "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/address"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 var _ signing.SignModeHandler = signModeDirectAuxHandler{}
 
 // signModeDirectAuxHandler defines the SIGN_MODE_DIRECT_AUX SignModeHandler
-type signModeDirectAuxHandler struct {
-	addressCdc address.Codec
-}
+type signModeDirectAuxHandler struct{}
 
 // DefaultMode implements SignModeHandler.DefaultMode
 func (signModeDirectAuxHandler) DefaultMode() signingtypes.SignMode {
@@ -48,23 +43,9 @@ func (h signModeDirectAuxHandler) GetSignBytes(
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "got empty address in %s handler", signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
 	}
 
-	addrBz, err := h.addressCdc.StringToBytes(data.Address)
-	if err != nil {
-		return nil, err
-	}
-
-	var pubKey *codectypes.Any
-	pubKeys, err := protoTx.GetPubKeys()
-	if err != nil {
-		return nil, err
-	}
-	for i, pk := range pubKeys {
-		if bytes.Equal(addrBz, pk.Address()) {
-			pubKey = protoTx.tx.AuthInfo.SignerInfos[i].PublicKey
-		}
-	}
-	if pubKey == nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf("got empty pubKey in %s handler", signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
+	signerInfo := protoTx.tx.AuthInfo.SignerInfos[data.SignerIndex]
+	if signerInfo == nil || signerInfo.PublicKey == nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("got empty pubkey for address %s in %s handler", data.Address, signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
 	}
 
 	signDocDirectAux := types.SignDocDirectAux{
@@ -73,7 +54,7 @@ func (h signModeDirectAuxHandler) GetSignBytes(
 		AccountNumber: data.AccountNumber,
 		Sequence:      data.Sequence,
 		Tip:           protoTx.tx.AuthInfo.Tip,
-		PublicKey:     pubKey,
+		PublicKey:     protoTx.tx.AuthInfo.SignerInfos[data.SignerIndex].PublicKey,
 	}
 
 	return signDocDirectAux.Marshal()

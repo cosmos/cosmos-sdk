@@ -88,7 +88,7 @@ func (s Subspace) transientStore(ctx sdk.Context) sdk.KVStore {
 func (s Subspace) Validate(ctx sdk.Context, key []byte, value interface{}) error {
 	attr, ok := s.table.m[string(key)]
 	if !ok {
-		return fmt.Errorf("parameter %s not registered", string(key))
+		return fmt.Errorf("parameter %s not registered", key)
 	}
 
 	if err := attr.vfn(value); err != nil {
@@ -167,7 +167,7 @@ func (s Subspace) Modified(ctx sdk.Context, key []byte) bool {
 func (s Subspace) checkType(key []byte, value interface{}) {
 	attr, ok := s.table.m[string(key)]
 	if !ok {
-		panic(fmt.Sprintf("parameter %s not registered", string(key)))
+		panic(fmt.Sprintf("parameter %s not registered", key))
 	}
 
 	ty := attr.ty
@@ -209,7 +209,7 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, value interface{}) {
 func (s Subspace) Update(ctx sdk.Context, key, value []byte) error {
 	attr, ok := s.table.m[string(key)]
 	if !ok {
-		panic(fmt.Sprintf("parameter %s not registered", string(key)))
+		panic(fmt.Sprintf("parameter %s not registered", key))
 	}
 
 	ty := attr.ty

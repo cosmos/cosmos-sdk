@@ -114,6 +114,22 @@ func ParamsFromMsg(msg *types.MsgUpdateParams) Params {
 }
 ```
 
+A gRPC `Service` query should also be provided, for example:
+
+```protobuf
+service Query {
+  // ...
+  
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/cosmos/<module>/v1beta1/params";
+  }
+}
+
+message QueryParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+```
+
 ## Consequences
 
 As a result of implementing the module parameter methodology, we gain the ability

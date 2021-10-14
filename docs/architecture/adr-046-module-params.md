@@ -46,7 +46,7 @@ to state. The Param data structures must implement `sdk.Msg` interface with resp
 Protobuf Msg service method which will validate and update the parameters with all 
 necessary changes. The `x/gov` module via the work done in 
 [#9810](https://github.com/cosmos/cosmos-sdk/pull/9810), will dispatch Param 
-messages, which will be handled by Protobuf Msg services.```
+messages, which will be handled by Protobuf Msg services.
 
 Note, it is up to developers to decide how to structure their parameters and
 the respective `sdk.Msg` messages. Consider the parameters currently defined in

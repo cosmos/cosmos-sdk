@@ -33,9 +33,9 @@ that developers only need to define the `Params` struct, the `Subspace`, and the
 various auxiliary functions, e.g. `ParamSetPairs`, on the `Params` type. However,
 there are some notable drawbacks. These drawbacks include the fact that parameters
 are serialized in state via JSON which is extremely slow. In addition, parameter
-changes via `ParamChangeProposal` governance proposals are _stateless_. In other
-words, it is currently not possible to have any state transitions in the
-application during an attempt to change param(s).
+changes via `ParamChangeProposal` governance proposals have no way of reading from
+or writing to state. In other words, it is currently not possible to have any
+state transitions in the application during an attempt to change param(s).
 
 ## Decision
 

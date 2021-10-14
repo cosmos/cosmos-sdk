@@ -249,12 +249,8 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 	return clientCtx, nil
 }
 
-// ReadHomeFlag checks if home flag is changed.
-// If this is a case, we update HomeDir field of Client Context
-/* Discovered a bug with Cory
-./build/simd init andrei --home ./test
-cd test/config there is no client.toml configuration file
-*/
+// ReadHomeFlag checks if home flag is changed. If this is a case, we update
+// HomeDir field of Client Context.
 func ReadHomeFlag(clientCtx Context, cmd *cobra.Command) Context {
 	if cmd.Flags().Changed(flags.FlagHome) {
 		rootDir, _ := cmd.Flags().GetString(flags.FlagHome)

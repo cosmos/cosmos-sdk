@@ -30,6 +30,7 @@ package module
 
 import (
 	"encoding/json"
+	"sort"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -389,7 +390,18 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 	}
 
 	updatedVM := make(VersionMap)
-	for moduleName, module := range m.Modules {
+	// for deterministic iteration order
+	// (as some migrations depend on other modules
+	// and the order of executing migrations matters)
+	// TODO: make the order user-configurable?
+	sortedModNames := make([]string, 0, len(m.Modules))
+	for key := range m.Modules {
+		sortedModNames = append(sortedModNames, key)
+	}
+	sort.Strings(sortedModNames)
+
+	for _, moduleName := range sortedModNames {
+		module := m.Modules[moduleName]
 		fromVersion, exists := fromVM[moduleName]
 		toVersion := module.ConsensusVersion()
 

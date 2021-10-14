@@ -1,6 +1,7 @@
 package file
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -15,25 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-/*
-The naming schema and data format for the files this service writes out to is as such:
-
-After every `BeginBlock` request a new file is created with the name `block-{N}-begin`, where N is the block number.
-All subsequent state changes are written out to this file until the first `DeliverTx` request is received.
-At the head of these files, the length-prefixed protobuf encoded `BeginBlock` request is written,
-and the response is written at the tail.
-
-After every `DeliverTx` request a new file is created with the name `block-{N}-tx-{M}` where N is the block number and
-M is the tx number in the block (i.e. 0, 1, 2...). All subsequent state changes are written out to this file until the
-next `DeliverTx` request is received or an `EndBlock` request is received. At the head of these files,
-the length-prefixed protobuf encoded `DeliverTx` request is written, and the response is written at the tail.
-
-After every `EndBlock` request a new file is created with the name `block-{N}-end`, where N is the block number.
-All subsequent state changes are written out to this file until the next `BeginBlock` request is received.
-At the head of these files, the length-prefixed protobuf encoded `EndBlock` request is written,
-and the response is written at the tail.
-*/
 
 var _ baseapp.StreamingService = &StreamingService{}
 
@@ -103,7 +85,7 @@ func (fss *StreamingService) Listeners() map[types.StoreKey][]types.WriteListene
 	return fss.listeners
 }
 
-// ListenBeginBlock satisfies the baseapp.StreamingListener interface
+// ListenBeginBlock satisfies the baseapp.ABCIListener interface
 // It writes the received BeginBlock request and response and the resulting state changes
 // out to a file as described in the above the naming schema
 func (fss *StreamingService) ListenBeginBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
@@ -154,7 +136,7 @@ func (fss *StreamingService) openBeginBlockFile(req abci.RequestBeginBlock) (*os
 	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0600)
 }
 
-// ListenDeliverTx satisfies the baseapp.StreamingListener interface
+// ListenDeliverTx satisfies the baseapp.ABCIListener interface
 // It writes the received DeliverTx request and response and the resulting state changes
 // out to a file as described in the above the naming schema
 func (fss *StreamingService) ListenDeliverTx(ctx sdk.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
@@ -204,7 +186,7 @@ func (fss *StreamingService) openDeliverTxFile() (*os.File, error) {
 	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0600)
 }
 
-// ListenEndBlock satisfies the baseapp.StreamingListener interface
+// ListenEndBlock satisfies the baseapp.ABCIListener interface
 // It writes the received EndBlock request and response and the resulting state changes
 // out to a file as described in the above the naming schema
 func (fss *StreamingService) ListenEndBlock(ctx sdk.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
@@ -256,7 +238,11 @@ func (fss *StreamingService) openEndBlockFile() (*os.File, error) {
 // Stream satisfies the baseapp.StreamingService interface
 // It spins up a goroutine select loop which awaits length-prefixed binary encoded KV pairs
 // and caches them in the order they were received
-func (fss *StreamingService) Stream(wg *sync.WaitGroup) {
+// returns an error if it is called twice
+func (fss *StreamingService) Stream(wg *sync.WaitGroup) error {
+	if fss.quitChan != nil {
+		return errors.New("`Stream` has already been called. The stream needs to be closed before it can be started again")
+	}
 	fss.quitChan = make(chan struct{})
 	wg.Add(1)
 	go func() {
@@ -264,6 +250,7 @@ func (fss *StreamingService) Stream(wg *sync.WaitGroup) {
 		for {
 			select {
 			case <-fss.quitChan:
+				fss.quitChan = nil
 				return
 			case by := <-fss.srcChan:
 				fss.stateCacheLock.Lock()
@@ -272,6 +259,7 @@ func (fss *StreamingService) Stream(wg *sync.WaitGroup) {
 			}
 		}
 	}()
+	return nil
 }
 
 // Close satisfies the io.Closer interface, which satisfies the baseapp.StreamingService interface

@@ -8,6 +8,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -49,16 +51,13 @@ func NewFromKVStore(
 	}
 
 	for key, store := range stores {
-		var cacheWrapped types.CacheWrap
-		switch {
-		case cms.ListeningEnabled(key):
-			cacheWrapped = store.CacheWrapWithListeners(key, cms.listeners[key])
-		case cms.TracingEnabled():
-			cacheWrapped = store.CacheWrapWithTrace(cms.traceWriter, cms.traceContext)
-		default:
-			cacheWrapped = store.CacheWrap()
+		if cms.TracingEnabled() {
+			store = tracekv.NewStore(store.(types.KVStore), cms.traceWriter, cms.traceContext)
 		}
-		cms.stores[key] = cacheWrapped
+		if cms.ListeningEnabled(key) {
+			store = listenkv.NewStore(store.(types.KVStore), key, listeners[key])
+		}
+		cms.stores[key] = cachekv.NewStore(store.(types.KVStore))
 	}
 
 	return cms

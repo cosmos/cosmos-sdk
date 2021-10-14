@@ -42,17 +42,17 @@ func (sst ServiceType) String() string {
 	case File:
 		return "file"
 	default:
-		return ""
+		return "unknown"
 	}
 }
 
 // ServiceConstructorLookupTable is a mapping of streaming.ServiceTypes to streaming.ServiceConstructors
 var ServiceConstructorLookupTable = map[ServiceType]ServiceConstructor{
-	File: FileStreamingConstructor,
+	File: NewFileStreamingService,
 }
 
-// NewServiceConstructor returns the streaming.ServiceConstructor corresponding to the provided name
-func NewServiceConstructor(name string) (ServiceConstructor, error) {
+// ServiceTypeFromString returns the streaming.ServiceConstructor corresponding to the provided name
+func ServiceTypeFromString(name string) (ServiceConstructor, error) {
 	ssType := NewStreamingServiceType(name)
 	if ssType == Unknown {
 		return nil, fmt.Errorf("unrecognized streaming service name %s", name)
@@ -63,8 +63,8 @@ func NewServiceConstructor(name string) (ServiceConstructor, error) {
 	return nil, fmt.Errorf("streaming service constructor of type %s not found", ssType.String())
 }
 
-// FileStreamingConstructor is the streaming.ServiceConstructor function for creating a FileStreamingService
-func FileStreamingConstructor(opts serverTypes.AppOptions, keys []types.StoreKey, marshaller codec.BinaryCodec) (baseapp.StreamingService, error) {
+// NewFileStreamingService is the streaming.ServiceConstructor function for creating a FileStreamingService
+func NewFileStreamingService(opts serverTypes.AppOptions, keys []types.StoreKey, marshaller codec.BinaryCodec) (baseapp.StreamingService, error) {
 	filePrefix := cast.ToString(opts.Get("streamers.file.prefix"))
 	fileDir := cast.ToString(opts.Get("streamers.file.write_dir"))
 	return file.NewStreamingService(fileDir, filePrefix, keys, marshaller)
@@ -99,7 +99,7 @@ func LoadStreamingServices(bApp *baseapp.BaseApp, appOpts serverTypes.AppOptions
 			continue
 		}
 		// get the constructor for this streamer name
-		constructor, err := NewServiceConstructor(streamerName)
+		constructor, err := ServiceTypeFromString(streamerName)
 		if err != nil {
 			// close any services we may have already spun up before hitting the error on this one
 			for _, activeStreamer := range activeStreamers {

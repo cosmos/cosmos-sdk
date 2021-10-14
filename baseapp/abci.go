@@ -197,7 +197,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	app.voteInfos = req.LastCommitInfo.GetVotes()
 
 	// call the hooks with the BeginBlock messages
-	for _, streamingListener := range app.streamingListeners {
+	for _, streamingListener := range app.abciListeners {
 		if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
 			app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", err)
 		}
@@ -224,7 +224,7 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	}
 
 	// call the streaming service hooks with the EndBlock messages
-	for _, streamingListener := range app.streamingListeners {
+	for _, streamingListener := range app.abciListeners {
 		if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
 			app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", err)
 		}
@@ -279,7 +279,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 
 	var res abci.ResponseDeliverTx
 	defer func() {
-		for _, streamingListener := range app.streamingListeners {
+		for _, streamingListener := range app.abciListeners {
 			if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
 				app.logger.Error("DeliverTx listening hook failed", "err", err)
 			}

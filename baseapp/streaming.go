@@ -10,8 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
-// StreamingListener interface used to hook into the ABCI message processing of the BaseApp
-type StreamingListener interface {
+// ABCIListener interface used to hook into the ABCI message processing of the BaseApp
+type ABCIListener interface {
 	// ListenBeginBlock updates the streaming service with the latest BeginBlock messages
 	ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error
 	// ListenEndBlock updates the steaming service with the latest EndBlock messages
@@ -23,11 +23,11 @@ type StreamingListener interface {
 // StreamingService interface for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks
 type StreamingService interface {
 	// Stream is the streaming service loop, awaits kv pairs and writes them to some destination stream or file
-	Stream(wg *sync.WaitGroup)
+	Stream(wg *sync.WaitGroup) error
 	// Listeners returns the streaming service's listeners for the BaseApp to register
 	Listeners() map[store.StoreKey][]store.WriteListener
-	// StreamingListener interface for hooking into the ABCI messages from inside the BaseApp
-	StreamingListener
+	// ABCIListener interface for hooking into the ABCI messages from inside the BaseApp
+	ABCIListener
 	// Closer interface
 	io.Closer
 }

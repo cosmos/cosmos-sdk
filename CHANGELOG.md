@@ -48,6 +48,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9837](https://github.com/cosmos/cosmos-sdk/issues/9837) `--generate-only` flag will accept the keyname now.
 * [\#10045](https://github.com/cosmos/cosmos-sdk/pull/10045) Revert [#8549](https://github.com/cosmos/cosmos-sdk/pull/8549). Do not route grpc queries through Tendermint.
 * [\#10326](https://github.com/cosmos/cosmos-sdk/pull/10326) `x/authz` add query all grants by granter query.
+* [\#10208](https://github.com/cosmos/cosmos-sdk/pull/10208) Add `SignModeTxMiddleware` for checking sign modes and `TipsTxMiddleware` for transferring tips.
 
 ### API Breaking Changes
 

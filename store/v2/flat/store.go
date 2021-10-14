@@ -54,11 +54,11 @@ type StoreConfig struct {
 // optionally using separate backing key-value DBs for each.
 // Allows synchronized R/W access by locking.
 type Store struct {
-	stateDB   dbm.DBConnection
-	stateTxn  dbm.DBReadWriter
-	dataTxn   dbm.DBReadWriter
-	merkleTxn dbm.DBReadWriter
-	indexTxn  dbm.DBReadWriter
+	stateDB     dbm.DBConnection
+	stateTxn    dbm.DBReadWriter
+	dataBucket  dbm.DBReadWriter
+	indexBucket dbm.DBReadWriter
+	merkleTxn   dbm.DBReadWriter
 	// State commitment (SC) KV store for current version
 	merkleStore *smt.Store
 
@@ -132,8 +132,8 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 	return &Store{
 		stateDB:     db,
 		stateTxn:    stateTxn,
-		dataTxn:     prefix.NewPrefixReadWriter(stateTxn, dataPrefix),
-		indexTxn:    prefix.NewPrefixReadWriter(stateTxn, indexPrefix),
+		dataBucket:  prefix.NewPrefixReadWriter(stateTxn, dataPrefix),
+		indexBucket: prefix.NewPrefixReadWriter(stateTxn, indexPrefix),
 		merkleTxn:   merkleTxn,
 		merkleStore: merkleStore,
 		opts:        opts,
@@ -153,7 +153,7 @@ func (s *Store) Get(key []byte) []byte {
 	s.mtx.RLock()
 	defer s.mtx.RUnlock()
 
-	val, err := s.dataTxn.Get(key)
+	val, err := s.dataBucket.Get(key)
 	if err != nil {
 		panic(err)
 	}
@@ -165,7 +165,7 @@ func (s *Store) Has(key []byte) bool {
 	s.mtx.RLock()
 	defer s.mtx.RUnlock()
 
-	has, err := s.dataTxn.Has(key)
+	has, err := s.dataBucket.Has(key)
 	if err != nil {
 		panic(err)
 	}
@@ -177,13 +177,13 @@ func (s *Store) Set(key, value []byte) {
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
 
-	err := s.dataTxn.Set(key, value)
+	err := s.dataBucket.Set(key, value)
 	if err != nil {
 		panic(err)
 	}
 	s.merkleStore.Set(key, value)
 	khash := sha256.Sum256(key)
-	err = s.indexTxn.Set(khash[:], key)
+	err = s.indexBucket.Set(khash[:], key)
 	if err != nil {
 		panic(err)
 	}
@@ -196,8 +196,8 @@ func (s *Store) Delete(key []byte) {
 	defer s.mtx.Unlock()
 
 	s.merkleStore.Delete(key)
-	_ = s.indexTxn.Delete(khash[:])
-	_ = s.dataTxn.Delete(key)
+	_ = s.indexBucket.Delete(khash[:])
+	_ = s.dataBucket.Delete(key)
 }
 
 type contentsIterator struct {
@@ -216,7 +216,7 @@ func (it *contentsIterator) Valid() bool { return it.valid }
 
 // Iterator implements KVStore.
 func (s *Store) Iterator(start, end []byte) types.Iterator {
-	iter, err := s.dataTxn.Iterator(start, end)
+	iter, err := s.dataBucket.Iterator(start, end)
 	if err != nil {
 		panic(err)
 	}
@@ -225,7 +225,7 @@ func (s *Store) Iterator(start, end []byte) types.Iterator {
 
 // ReverseIterator implements KVStore.
 func (s *Store) ReverseIterator(start, end []byte) types.Iterator {
-	iter, err := s.dataTxn.ReverseIterator(start, end)
+	iter, err := s.dataBucket.ReverseIterator(start, end)
 	if err != nil {
 		panic(err)
 	}
@@ -329,8 +329,8 @@ func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
 	}
 
 	s.stateTxn = stateTxn
-	s.dataTxn = prefix.NewPrefixReadWriter(stateTxn, dataPrefix)
-	s.indexTxn = prefix.NewPrefixReadWriter(stateTxn, indexPrefix)
+	s.dataBucket = prefix.NewPrefixReadWriter(stateTxn, dataPrefix)
+	s.indexBucket = prefix.NewPrefixReadWriter(stateTxn, indexPrefix)
 	s.merkleTxn = merkleTxn
 	s.merkleStore = loadSMT(merkleTxn, root)
 

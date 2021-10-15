@@ -35,8 +35,8 @@ go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@latest
 ### Command Line Arguments And Environment Variables
 
 The first argument passed to `cosmovisor` is the action for `cosmovisor` to take. Options are:
-* `run` - Run the configured binary using the rest of the provided arguments.
 * `help`, `--help`, or `-h` - Output `cosmovisor` help information and check your `cosmovisor` configuration.
+* `run` - Run the configured binary using the rest of the provided arguments.
 * `version`, or `--version` - Output the `cosmovisor` version and also run the binary with the `version` argument.
 
 All arguments passed to `cosmovisor run` will be passed to the application binary (as a subprocess). `cosmovisor` will return `/dev/stdout` and `/dev/stderr` of the subprocess as its own. For this reason, `cosmovisor run` cannot accept any command-line arguments other than those available to the application binary.

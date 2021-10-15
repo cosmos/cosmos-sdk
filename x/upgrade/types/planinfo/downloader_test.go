@@ -4,13 +4,13 @@ import (
 	"archive/zip"
 	"crypto/sha256"
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -127,6 +127,17 @@ func requireFileEquals(t *testing.T, path string, tf *TestFile) {
 	require.Equal(t, string(tf.Contents), string(file), "file contents")
 }
 
+// makeFileUrl converts the given path to a URL with the correct checksum query parameter.
+func makeFileURL(t *testing.T, path string) string {
+	f, err := os.Open(path)
+	require.NoError(t, err, "opening file")
+	defer f.Close()
+	hasher := sha256.New()
+	_, err = io.Copy(hasher, f)
+	require.NoError(t, err, "copying file to hasher")
+	return fmt.Sprintf("file://%s?checksum=sha256:%x", path, hasher.Sum(nil))
+}
+
 func (s *DownloaderTestSuite) TestDownloadUpgrade() {
 	justAFile := NewTestFile("just-a-file", "#!/usr/bin\necho 'I am just a file'\n")
 	someFileName := "some-file"
@@ -139,15 +150,6 @@ func (s *DownloaderTestSuite) TestDownloadUpgrade() {
 	getDstDir := func(testName string) string {
 		_, tName := filepath.Split(testName)
 		return s.Home + "/dst/" + tName
-	}
-	makeFileURL := func(t *testing.T, path string) string {
-		f, err := os.Open(path)
-		require.NoError(t, err, "opening file")
-		defer f.Close()
-		hasher := sha256.New()
-		_, err = io.Copy(hasher, f)
-		require.NoError(t, err, "copying file to hasher")
-		return fmt.Sprintf("file://%s?checksum=sha256:%x", path, hasher.Sum(nil))
 	}
 
 	s.T().Run("url does not exist", func(t *testing.T) {

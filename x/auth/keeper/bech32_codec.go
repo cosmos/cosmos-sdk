@@ -7,19 +7,17 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// bech32Codec is a address.Codec based on bech32 encoding.
 type bech32Codec struct {
 	bech32Prefix string
 }
 
 var _ address.Codec = &bech32Codec{}
 
-// newBech32Codec creates a new address.Codec based on bech32 encoding.
-func newBech32Codec(prefix string) address.Codec {
+func newBech32Codec(prefix string) bech32Codec {
 	return bech32Codec{prefix}
 }
 
-// StringToBytes encodes text to bytes.
+// StringToBytes encodes text to bytes
 func (bc bech32Codec) StringToBytes(text string) ([]byte, error) {
 	hrp, bz, err := bech32.DecodeAndConvert(text)
 	if err != nil {
@@ -37,7 +35,7 @@ func (bc bech32Codec) StringToBytes(text string) ([]byte, error) {
 	return bz, nil
 }
 
-// BytesToString decodes bytes to text.
+// BytesToString decodes bytes to text
 func (bc bech32Codec) BytesToString(bz []byte) (string, error) {
 	text, err := bech32.ConvertAndEncode(bc.bech32Prefix, bz)
 	if err != nil {

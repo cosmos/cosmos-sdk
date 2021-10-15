@@ -3672,7 +3672,7 @@ Hsm item
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `label` | [string](#string) |  |  |
-| `configPath` | [string](#string) |  |  |
+| `config_path` | [string](#string) |  |  |
 
 
 

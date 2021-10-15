@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -81,9 +83,21 @@ func (k Keeper) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, 
 // This is called after undelegation is completed
 // TODO JEHAN: I'm using this for a proof of concept for CCV. It's possible that this functionality can
 // instead be provided with RemoveDelegation and AfterDelegationModified but it will be more complicated
-func (k Keeper) UnbondingDelegationEntryCreated(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
+func (k Keeper) UnbondingDelegationEntryCreated(ctx sdk.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
+	creationHeight int64, completionTime time.Time, balance sdk.Int, id sdk.Int) error {
 	if k.hooks != nil {
-		return k.hooks.UnbondingDelegationEntryCreated(ctx, valAddr, fraction)
+		return k.hooks.UnbondingDelegationEntryCreated(ctx, delegatorAddr, validatorAddr, creationHeight, completionTime, balance, id)
+	}
+	return nil
+}
+
+// This is called before completing unbonding of a UnbondingDelegationEntry. returning an error
+// will stop the unbonding.
+// TODO JEHAN: Using an error this way feels wrong because it's not really an error. I would use
+// a return value but i'm not sure if that's ok to do with hooks
+func (k Keeper) BeforeUnbondingDelegationEntryComplete(ctx sdk.Context, id sdk.Int) error {
+	if k.hooks != nil {
+		return k.hooks.BeforeUnbondingDelegationEntryComplete(ctx, id)
 	}
 	return nil
 }

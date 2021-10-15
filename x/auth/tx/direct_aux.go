@@ -26,7 +26,7 @@ func (signModeDirectAuxHandler) Modes() []signingtypes.SignMode {
 }
 
 // GetSignBytes implements SignModeHandler.GetSignBytes
-func (h signModeDirectAuxHandler) GetSignBytes(
+func (signModeDirectAuxHandler) GetSignBytes(
 	mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx,
 ) ([]byte, error) {
 
@@ -39,13 +39,9 @@ func (h signModeDirectAuxHandler) GetSignBytes(
 		return nil, fmt.Errorf("can only handle a protobuf Tx, got %T", tx)
 	}
 
-	if data.Address == "" {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "got empty address in %s handler", signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
-	}
-
 	signerInfo := protoTx.tx.AuthInfo.SignerInfos[data.SignerIndex]
 	if signerInfo == nil || signerInfo.PublicKey == nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf("got empty pubkey for address %s in %s handler", data.Address, signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("got empty pubkey for signer #%d in %s handler", data.SignerIndex, signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
 	}
 
 	signDocDirectAux := types.SignDocDirectAux{

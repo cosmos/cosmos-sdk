@@ -14,7 +14,7 @@ type bech32Codec struct {
 
 var _ address.Codec = &bech32Codec{}
 
-// NewBech32Codec creates a new address.Codec based on bech32 encoding.
+// newBech32Codec creates a new address.Codec based on bech32 encoding.
 func newBech32Codec(prefix string) address.Codec {
 	return bech32Codec{prefix}
 }

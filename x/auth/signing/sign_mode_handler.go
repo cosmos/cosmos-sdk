@@ -38,5 +38,6 @@ type SignerData struct {
 	// info.
 	Sequence uint64
 
+	// SignerIndex index of signer in the signer_infos array.
 	SignerIndex int
 }

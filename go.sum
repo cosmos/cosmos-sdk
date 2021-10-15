@@ -512,8 +512,8 @@ github.com/jackpal/go-nat-pmp v1.0.2-0.20160603034137-1fa385a6f458/go.mod h1:QPH
 github.com/jedisct1/go-minisign v0.0.0-20190909160543-45766022959e/go.mod h1:G1CVv03EnqU1wYL2dFwXxW2An0az9JTl/ZsqXQeBlkU=
 github.com/jessevdk/go-flags v0.0.0-20141203071132-1679536dcc89/go.mod h1:4FA24M0QyGHXBuZZK/XkWh8h0e1EYbRYJSGM75WSRxI=
 github.com/jessevdk/go-flags v1.4.0/go.mod h1:4FA24M0QyGHXBuZZK/XkWh8h0e1EYbRYJSGM75WSRxI=
-github.com/jhump/protoreflect v1.10.0 h1:mbS/mqFrJSliRdPuNP+LY0JqitVP0SW58GQ7A2l2dTI=
-github.com/jhump/protoreflect v1.10.0/go.mod h1:7GcYQDdMU/O/BBrl/cX6PNHpXh6cenjd8pneu5yW7Tg=
+github.com/jhump/protoreflect v1.10.1 h1:iH+UZfsbRE6vpyZH7asAjTPWJf7RJbpZ9j/N3lDlKs0=
+github.com/jhump/protoreflect v1.10.1/go.mod h1:7GcYQDdMU/O/BBrl/cX6PNHpXh6cenjd8pneu5yW7Tg=
 github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af h1:pmfjZENx5imkbgOkpRUYLnmbU7UEFbjtDA2hxJ1ichM=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
@@ -856,8 +856,9 @@ github.com/tendermint/go-amino v0.16.0/go.mod h1:TQU0M1i/ImAo+tYpZi73AU3V/dKeCoM
 github.com/tendermint/tendermint v0.34.0-rc4/go.mod h1:yotsojf2C1QBOw4dZrTcxbyxmPUrT4hNuOQWX9XUwB4=
 github.com/tendermint/tendermint v0.34.0-rc6/go.mod h1:ugzyZO5foutZImv0Iyx/gOFCX6mjJTgbLHTwi17VDVg=
 github.com/tendermint/tendermint v0.34.0/go.mod h1:Aj3PIipBFSNO21r+Lq3TtzQ+uKESxkbA3yo/INM4QwQ=
-github.com/tendermint/tendermint v0.34.13 h1:fu+tsHudbOr5PvepjH0q47Jae59hQAvn3IqAHv2EbC8=
 github.com/tendermint/tendermint v0.34.13/go.mod h1:6RVVRBqwtKhA+H59APKumO+B7Nye4QXSFc6+TYxAxCI=
+github.com/tendermint/tendermint v0.34.14 h1:GCXmlS8Bqd2Ix3TQCpwYLUNHe+Y+QyJsm5YE+S/FkPo=
+github.com/tendermint/tendermint v0.34.14/go.mod h1:FrwVm3TvsVicI9Z7FlucHV6Znfd5KBc/Lpp69cCwtk0=
 github.com/tendermint/tm-db v0.6.2/go.mod h1:GYtQ67SUvATOcoY8/+x6ylk8Qo02BQyLrAs+yAcLvGI=
 github.com/tendermint/tm-db v0.6.3/go.mod h1:lfA1dL9/Y/Y8wwyPp2NMLyn5P5Ptr/gvDFNWtrCWSf8=
 github.com/tendermint/tm-db v0.6.4 h1:3N2jlnYQkXNQclQwd/eKV/NzlqPlfK21cpRRIx80XXQ=

@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -682,7 +681,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 
 		switch {
 		case err == nil:
-			keyhash, err = ioutil.ReadFile(keyhashFilePath)
+			keyhash, err = os.ReadFile(keyhashFilePath)
 			if err != nil {
 				return "", fmt.Errorf("failed to read %s: %v", keyhashFilePath, err)
 			}
@@ -746,7 +745,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 				continue
 			}
 
-			if err := ioutil.WriteFile(dir+"/keyhash", passwordHash, 0555); err != nil {
+			if err := os.WriteFile(dir+"/keyhash", passwordHash, 0555); err != nil {
 				return "", err
 			}
 

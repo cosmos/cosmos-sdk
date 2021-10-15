@@ -215,15 +215,8 @@ func TestCommit(t *testing.T) {
 			require.NotEqual(t, previd.Version, id.Version)
 		}
 	}
-	for _, opts := range []StoreConfig{
-		StoreConfig{Pruning: types.PruneNothing},
-		StoreConfig{Pruning: types.PruneEverything},
-		StoreConfig{Pruning: types.PruneNothing, MerkleDB: memdb.NewDB()},
-		StoreConfig{Pruning: types.PruneEverything, MerkleDB: memdb.NewDB()},
-	} {
-		// t.Run(fmt.Sprintf("basic with config %v", i))
-		testBasic(opts)
-	}
+	testBasic(StoreConfig{Pruning: types.PruneNothing})
+	testBasic(StoreConfig{Pruning: types.PruneNothing, MerkleDB: memdb.NewDB()})
 
 	testFailedCommit := func(t *testing.T, store *Store, db dbm.DBConnection) {
 		opts := store.opts
@@ -232,7 +225,6 @@ func TestCommit(t *testing.T) {
 		}
 
 		store.Set([]byte{0}, []byte{0})
-		// require.Panics(t, store.Commit)
 		require.Panics(t, func() { store.Commit() })
 		require.NoError(t, store.Close())
 
@@ -534,8 +526,8 @@ func TestQuery(t *testing.T) {
 	require.NotEqual(t, sdkerrors.SuccessABCICode, qres.Code)
 	short.Close()
 
-	testProve := func(name string) {
-		t.Logf(name)
+	// test that proofs are generated with single and separate DBs
+	testProve := func() {
 		queryProve0 := abci.RequestQuery{Path: "/key", Data: k1, Prove: true}
 		store.Query(queryProve0)
 		qres = store.Query(queryProve0)
@@ -543,14 +535,14 @@ func TestQuery(t *testing.T) {
 		require.Equal(t, v1, qres.Value)
 		require.NotNil(t, qres.ProofOps)
 	}
-	testProve("single DB")
+	testProve()
 	store.Close()
+
 	store, err = NewStore(memdb.NewDB(), StoreConfig{MerkleDB: memdb.NewDB()})
 	require.NoError(t, err)
 	store.Set(k1, v1)
 	store.Commit()
-	testProve("separate DBs")
-
+	testProve()
 	store.Close()
 }
 

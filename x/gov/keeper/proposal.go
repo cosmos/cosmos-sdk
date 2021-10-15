@@ -54,7 +54,8 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (typ
 	return proposal, nil
 }
 
-// GetProposal get proposal from store by ProposalID
+// GetProposal get proposal from store by ProposalID.
+// Panics if can't unmarshal the proposal.
 func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (types.Proposal, bool) {
 	store := ctx.KVStore(keeper.storeKey)
 
@@ -71,7 +72,8 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (types.Prop
 	return proposal, true
 }
 
-// SetProposal set a proposal to store
+// SetProposal set a proposal to store.
+// Panics if can't marshal the proposal.
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal types.Proposal) {
 	bz, err := keeper.MarshalProposal(proposal)
 	if err != nil {
@@ -82,7 +84,8 @@ func (keeper Keeper) SetProposal(ctx sdk.Context, proposal types.Proposal) {
 	store.Set(types.ProposalKey(proposal.ProposalId), bz)
 }
 
-// DeleteProposal deletes a proposal from store
+// DeleteProposal deletes a proposal from store.
+// Panics if the proposal doesn't exist.
 func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
@@ -94,7 +97,8 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 	store.Delete(types.ProposalKey(proposalID))
 }
 
-// IterateProposals iterates over the all the proposals and performs a callback function
+// IterateProposals iterates over the all the proposals and performs a callback function.
+// Panics when the iterator encounters a proposal which can't be unmarshaled.
 func (keeper Keeper) IterateProposals(ctx sdk.Context, cb func(proposal types.Proposal) (stop bool)) {
 	store := ctx.KVStore(keeper.storeKey)
 

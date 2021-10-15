@@ -15,6 +15,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -42,7 +43,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	val := s.network.Validators[0]
 
-	messages := []sdk.Msg{types.NewMsgVote(val.Address, 1, types.OptionYes)}
+	govAcc, err := s.cfg.AccountRetriever.GetAccount(val.ClientCtx, authtypes.NewModuleAddress(types.ModuleName))
+	s.Require().NoError(err)
+
+	messages := []sdk.Msg{types.NewMsgVote(govAcc.GetAddress(), 1, types.OptionYes)}
 
 	// create a proposal with deposit
 	_, err = MsgSubmitProposal(s.T(), val.ClientCtx, val.Address.String(), messages,
@@ -278,8 +282,11 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 	val := s.network.Validators[0]
 	emptyProp := `[]`
 	emptyPropFile := testutil.WriteToNewTempFile(s.T(), emptyProp)
-	validProp := fmt.Sprintf("[{\"type\":\"cosmos-sdk/MsgVote\",\"value\":{\"option\":1,\"proposal_id\":\"1\",\"voter\":\"cosmos1w3jhxap3gempvr\"}}]")
-	validPropFile := testutil.WriteToNewTempFile(s.T(), validProp)
+	govAcc, err := s.cfg.AccountRetriever.GetAccount(val.ClientCtx, authtypes.NewModuleAddress(types.ModuleName))
+	s.Require().NoError(err)
+	validProp, err := MsgVote(val.ClientCtx, govAcc.GetAddress().String(), "1", "yes", "--generate-only")
+	s.Require().NoError(err)
+	validPropFile := testutil.WriteToNewTempFile(s.T(), validProp.String())
 	testCases := []struct {
 		name         string
 		args         []string

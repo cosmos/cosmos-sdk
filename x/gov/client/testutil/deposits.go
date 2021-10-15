@@ -10,6 +10,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -73,8 +74,11 @@ func (s *DepositTestSuite) createProposal(val *network.Validator, initialDeposit
 		exactArgs = append(exactArgs, fmt.Sprintf("--%s=%s", cli.FlagDeposit, initialDeposit.String()))
 	}
 
-	proposal := []sdk.Msg{types.NewMsgVote(val.Address, 1, types.OptionYes)}
-	_, err := MsgSubmitProposal(
+	govAcc, err := s.cfg.AccountRetriever.GetAccount(val.ClientCtx, authtypes.NewModuleAddress(types.ModuleName))
+	s.Require().NoError(err)
+
+	proposal := []sdk.Msg{types.NewMsgVote(govAcc.GetAddress(), 1, types.OptionYes)}
+	_, err = MsgSubmitProposal(
 		s.T(),
 		val.ClientCtx,
 		val.Address.String(),

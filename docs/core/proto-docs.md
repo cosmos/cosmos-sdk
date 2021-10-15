@@ -1280,7 +1280,7 @@ GrantAuthorization defines the GenesisState/GrantAuthorization type.
 <a name="cosmos.authz.v1beta1.QueryGranterGrantsRequest"></a>
 
 ### QueryGranterGrantsRequest
-QueryGranterGrantsRequest is the request type for the Query/Grants RPC method.
+QueryGranterGrantsRequest is the request type for the Query/GranterGrants RPC method.
 
 
 | Field | Type | Label | Description |

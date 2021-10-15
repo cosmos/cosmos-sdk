@@ -1,7 +1,9 @@
 package planinfo
 
 import (
+	"errors"
 	"fmt"
+	neturl "net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,9 +14,16 @@ import (
 // DownloadUpgrade downloads the given url into the provided directory and ensures it's valid.
 // If this returns nil, the download was successful, and {dstRoot}/bin/{daemonName} is a regular executable file.
 func DownloadUpgrade(dstRoot, url, daemonName string) error {
+	if err := checkURL(url); err != nil {
+		return err
+	}
 	target := filepath.Join(dstRoot, "bin", daemonName)
 	// First try to download it as a single file. If there's no error, it's okay and we're done.
 	if err := getter.GetFile(target, url); err != nil {
+		// If it was a checksum error, no need to try as directory.
+		if _, ok := err.(*getter.ChecksumError); ok {
+			return err
+		}
 		// File download didn't work, try it as a directory.
 		if err = downloadUpgradeAsDir(dstRoot, url, daemonName); err != nil {
 			// Out of options, send back the error.
@@ -75,6 +84,9 @@ func EnsureBinary(path string) error {
 
 // DownloadPlanInfoFromURL gets the contents of the file at the given URL.
 func DownloadPlanInfoFromURL(url string) (string, error) {
+	if err := checkURL(url); err != nil {
+		return "", err
+	}
 	tempDir, err := os.MkdirTemp("", "plan-info-reference")
 	if err != nil {
 		return "", fmt.Errorf("could not create temp directory: %w", err)
@@ -93,4 +105,17 @@ func DownloadPlanInfoFromURL(url string) (string, error) {
 		return "", fmt.Errorf("no content returned by \"%s\"", url)
 	}
 	return planInfoStr, nil
+}
+
+// checkURL checks that the given url is a url and contains a checksum query parameter.
+func checkURL(urlStr string) error {
+	url, err := neturl.Parse(urlStr)
+	if err != nil {
+		return err
+	}
+	checksum := url.Query().Get("checksum")
+	if len(checksum) == 0 {
+		return errors.New("missing checksum query parameter")
+	}
+	return nil
 }

@@ -68,6 +68,7 @@ func (m PlanInfo) ValidateFull(daemonName string) error {
 //  * This has at least one entry.
 //  * All entry keys have the format "os/arch" or are "any".
 //  * All entry values are valid URLs.
+//  * All URLs contain a checksum query parameter.
 func (m BinaryDownloadURLMap) ValidateBasic() error {
 	// Make sure there's at least one.
 	if len(m) == 0 {
@@ -78,7 +79,7 @@ func (m BinaryDownloadURLMap) ValidateBasic() error {
 		if key != "any" && !osArchRx.MatchString(key) {
 			return fmt.Errorf("invalid os/arch format in key \"%s\"", key)
 		}
-		if _, err := neturl.Parse(val); err != nil {
+		if err := checkURL(val); err != nil {
 			return fmt.Errorf("invalid url \"%s\" in binaries[%s]: %v", val, key, err)
 		}
 	}

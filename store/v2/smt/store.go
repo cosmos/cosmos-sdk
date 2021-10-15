@@ -2,6 +2,7 @@ package smt
 
 import (
 	"crypto/sha256"
+	"errors"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
@@ -13,6 +14,11 @@ import (
 
 var (
 	_ types.BasicKVStore = (*Store)(nil)
+)
+
+var (
+	errKeyEmpty error = errors.New("key is empty or nil")
+	errValueNil error = errors.New("value is nil")
 )
 
 // Store Implements types.KVStore and CommitKVStore.
@@ -48,6 +54,9 @@ func (s *Store) Root() []byte { return s.tree.Root() }
 // Get returns nil iff key doesn't exist. Panics on nil key.
 func (s *Store) Get(key []byte) []byte {
 	defer telemetry.MeasureSince(time.Now(), "store", "smt", "get")
+	if len(key) == 0 {
+		panic(errKeyEmpty)
+	}
 	val, err := s.tree.Get(key)
 	if err != nil {
 		panic(err)
@@ -58,6 +67,9 @@ func (s *Store) Get(key []byte) []byte {
 // Has checks if a key exists. Panics on nil key.
 func (s *Store) Has(key []byte) bool {
 	defer telemetry.MeasureSince(time.Now(), "store", "smt", "has")
+	if len(key) == 0 {
+		panic(errKeyEmpty)
+	}
 	has, err := s.tree.Has(key)
 	if err != nil {
 		panic(err)
@@ -68,6 +80,12 @@ func (s *Store) Has(key []byte) bool {
 // Set sets the key. Panics on nil key or value.
 func (s *Store) Set(key []byte, value []byte) {
 	defer telemetry.MeasureSince(time.Now(), "store", "smt", "set")
+	if len(key) == 0 {
+		panic(errKeyEmpty)
+	}
+	if value == nil {
+		panic(errValueNil)
+	}
 	_, err := s.tree.Update(key, value)
 	if err != nil {
 		panic(err)
@@ -77,7 +95,9 @@ func (s *Store) Set(key []byte, value []byte) {
 // Delete deletes the key. Panics on nil key.
 func (s *Store) Delete(key []byte) {
 	defer telemetry.MeasureSince(time.Now(), "store", "smt", "delete")
-
+	if len(key) == 0 {
+		panic(errKeyEmpty)
+	}
 	_, err := s.tree.Delete(key)
 	if err != nil {
 		panic(err)

@@ -17,4 +17,26 @@ func TestGetSetHasDelete(t *testing.T) {
 	assert.Equal(t, true, s.Has([]byte("foo")))
 	s.Delete([]byte("foo"))
 	assert.Equal(t, false, s.Has([]byte("foo")))
+
+	assert.Panics(t, func() { s.Get(nil) }, "Get(nil key) should panic")
+	assert.Panics(t, func() { s.Get([]byte{}) }, "Get(empty key) should panic")
+	assert.Panics(t, func() { s.Has(nil) }, "Has(nil key) should panic")
+	assert.Panics(t, func() { s.Has([]byte{}) }, "Has(empty key) should panic")
+	assert.Panics(t, func() { s.Set(nil, []byte("value")) }, "Set(nil key) should panic")
+	assert.Panics(t, func() { s.Set([]byte{}, []byte("value")) }, "Set(empty key) should panic")
+	assert.Panics(t, func() { s.Set([]byte("key"), nil) }, "Set(nil value) should panic")
+}
+
+func TestLoadStore(t *testing.T) {
+	nodes, values := smt.NewSimpleMap(), smt.NewSimpleMap()
+	s := store.NewStore(nodes, values)
+
+	s.Set([]byte{0}, []byte{0})
+	s.Set([]byte{1}, []byte{1})
+	s.Delete([]byte{1})
+	root := s.Root()
+
+	s = store.LoadStore(nodes, values, root)
+	assert.Equal(t, []byte{0}, s.Get([]byte{0}))
+	assert.False(t, s.Has([]byte{1}))
 }

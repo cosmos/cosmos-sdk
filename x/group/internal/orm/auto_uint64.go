@@ -3,24 +3,19 @@ package orm
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var _ Indexable = &AutoUInt64TableBuilder{}
 
 // NewAutoUInt64TableBuilder creates a builder to setup a AutoUInt64Table object.
-func NewAutoUInt64TableBuilder(prefixData byte, prefixSeq byte, model codec.ProtoMarshaler, cdc codec.Codec) (*AutoUInt64TableBuilder, error) {
-	if prefixData == prefixSeq {
-		return nil, errors.ErrUniqueConstraint.Wrap("prefixData and prefixSeq must be unique")
-	}
-
+func NewAutoUInt64TableBuilder(prefixData [2]byte, prefixSeq byte, model codec.ProtoMarshaler, cdc codec.Codec) (*AutoUInt64TableBuilder, error) {
 	tableBuilder, err := newTableBuilder(prefixData, model, cdc)
 	if err != nil {
 		return nil, err
 	}
 	return &AutoUInt64TableBuilder{
-		Builder: tableBuilder,
-		seq:     NewSequence(prefixSeq),
+		tableBuilder: tableBuilder,
+		seq:          NewSequence(prefixSeq),
 	}, nil
 }
 

@@ -23,11 +23,11 @@ func TestContains(t *testing.T) {
 	require.NoError(t, err)
 	tb := builder.Build()
 
-	myPersistentObj := testdata.TableModel{
+	obj := testdata.TableModel{
 		Id:   1,
 		Name: "Some name",
 	}
-	err = tb.Create(store, &myPersistentObj)
+	err = tb.Create(store, &obj)
 	require.NoError(t, err)
 
 	specs := map[string]struct {
@@ -35,25 +35,23 @@ func TestContains(t *testing.T) {
 		exp bool
 	}{
 
-		"same object": {src: &myPersistentObj, exp: true},
+		"same object": {src: &obj, exp: true},
 		"clone": {
-			src: &testdata.GroupMember{
-				Group:  []byte("group-a"),
-				Member: []byte("member-one"),
-				Weight: 1,
+			src: &testdata.TableModel{
+				Id:   1,
+				Name: "Some name",
 			},
 			exp: true,
 		},
 		"different primary key": {
-			src: &testdata.GroupMember{
-				Group:  []byte("another group"),
-				Member: []byte("member-one"),
-				Weight: 1,
+			src: &testdata.TableModel{
+				Id:   2,
+				Name: "Some name",
 			},
 			exp: false,
 		},
 		"different type, same key": {
-			src: mockPrimaryKeyed{&myPersistentObj},
+			src: mockPrimaryKeyed{&obj},
 			exp: false,
 		},
 	}
@@ -66,5 +64,5 @@ func TestContains(t *testing.T) {
 }
 
 type mockPrimaryKeyed struct {
-	*testdata.GroupMember
+	*testdata.TableModel
 }

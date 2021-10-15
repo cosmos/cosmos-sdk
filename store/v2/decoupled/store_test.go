@@ -2,6 +2,7 @@ package decoupled
 
 import (
 	"errors"
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,6 +12,7 @@ import (
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/db/memdb"
 	"github.com/cosmos/cosmos-sdk/store/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
@@ -54,15 +56,17 @@ func TestGetSetHasDelete(t *testing.T) {
 
 	exists = store.Has([]byte(key))
 	require.False(t, exists)
-}
 
-func TestStoreNoNilSet(t *testing.T) {
-	store := newAlohaStore(t, memdb.NewDB())
-
-	require.Panics(t, func() { store.Set(nil, []byte("value")) }, "setting a nil key should panic")
-	require.Panics(t, func() { store.Set([]byte(""), []byte("value")) }, "setting an empty key should panic")
-
-	require.Panics(t, func() { store.Set([]byte("key"), nil) }, "setting a nil value should panic")
+	require.Panics(t, func() { store.Get(nil) }, "Get(nil key) should panic")
+	require.Panics(t, func() { store.Get([]byte{}) }, "Get(empty key) should panic")
+	require.Panics(t, func() { store.Has(nil) }, "Has(nil key) should panic")
+	require.Panics(t, func() { store.Has([]byte{}) }, "Has(empty key) should panic")
+	require.Panics(t, func() { store.Set(nil, []byte("value")) }, "Set(nil key) should panic")
+	require.Panics(t, func() { store.Set([]byte{}, []byte("value")) }, "Set(empty key) should panic")
+	require.Panics(t, func() { store.Set([]byte("key"), nil) }, "Set(nil value) should panic")
+	store.indexTxn = rwCrudFails{store.indexTxn}
+	require.Panics(t, func() { store.Set([]byte("key"), []byte("value")) },
+		"Set() when index fails should panic")
 }
 
 func TestConstructors(t *testing.T) {
@@ -81,6 +85,44 @@ func TestConstructors(t *testing.T) {
 	// Loading with an initial version beyond the lowest should error
 	opts := StoreConfig{InitialVersion: 5, Pruning: types.PruneNothing}
 	store, err = NewStore(db, opts)
+	require.Error(t, err)
+	db.Close()
+
+	store, err = NewStore(dbVersionsFails{memdb.NewDB()}, DefaultStoreConfig)
+	require.Error(t, err)
+	store, err = NewStore(db, StoreConfig{MerkleDB: dbVersionsFails{memdb.NewDB()}})
+	require.Error(t, err)
+
+	// can't use a DB with open writers
+	db = memdb.NewDB()
+	merkledb := memdb.NewDB()
+	w := db.Writer()
+	store, err = NewStore(db, DefaultStoreConfig)
+	require.Error(t, err)
+	w.Discard()
+	w = merkledb.Writer()
+	store, err = NewStore(db, StoreConfig{MerkleDB: merkledb})
+	require.Error(t, err)
+	w.Discard()
+
+	// can't use DBs with different version history
+	merkledb.SaveNextVersion()
+	store, err = NewStore(db, StoreConfig{MerkleDB: merkledb})
+	require.Error(t, err)
+	merkledb.Close()
+
+	// can't load existing store when we can't access the last commit hash
+	store, err = NewStore(db, DefaultStoreConfig)
+	require.NoError(t, err)
+	store.Commit()
+
+	w = db.Writer()
+	w.Delete(merkleRootKey)
+	w.Commit()
+	store, err = NewStore(db, DefaultStoreConfig)
+	require.Error(t, err)
+
+	store, err = NewStore(dbRWCrudFails{db}, DefaultStoreConfig)
 	require.Error(t, err)
 }
 
@@ -106,131 +148,185 @@ func TestIterators(t *testing.T) {
 
 	testCase(t, store.Iterator(nil, nil),
 		[]string{"0", "0 0", "0 1", "0 2", "1"})
-	testCase(t, store.Iterator([]byte{0x00}, nil),
+	testCase(t, store.Iterator([]byte{0}, nil),
 		[]string{"0", "0 0", "0 1", "0 2", "1"})
-	testCase(t, store.Iterator([]byte{0x00}, []byte{0x00, 0x01}),
+	testCase(t, store.Iterator([]byte{0}, []byte{0, 1}),
 		[]string{"0", "0 0"})
-	testCase(t, store.Iterator([]byte{0x00}, []byte{0x01}),
+	testCase(t, store.Iterator([]byte{0}, []byte{1}),
 		[]string{"0", "0 0", "0 1", "0 2"})
-	testCase(t, store.Iterator([]byte{0x00, 0x01}, []byte{0x01}),
+	testCase(t, store.Iterator([]byte{0, 1}, []byte{1}),
 		[]string{"0 1", "0 2"})
-	testCase(t, store.Iterator(nil, []byte{0x01}),
+	testCase(t, store.Iterator(nil, []byte{1}),
 		[]string{"0", "0 0", "0 1", "0 2"})
+	testCase(t, store.Iterator([]byte{0}, []byte{0}), []string{}) // start = end
+	testCase(t, store.Iterator([]byte{1}, []byte{0}), []string{}) // start > end
 
 	testCase(t, store.ReverseIterator(nil, nil),
 		[]string{"1", "0 2", "0 1", "0 0", "0"})
-	testCase(t, store.ReverseIterator([]byte{0x00}, nil),
+	testCase(t, store.ReverseIterator([]byte{0}, nil),
 		[]string{"1", "0 2", "0 1", "0 0", "0"})
-	testCase(t, store.ReverseIterator([]byte{0x00}, []byte{0x00, 0x01}),
+	testCase(t, store.ReverseIterator([]byte{0}, []byte{0, 1}),
 		[]string{"0 0", "0"})
-	testCase(t, store.ReverseIterator([]byte{0x00}, []byte{0x01}),
+	testCase(t, store.ReverseIterator([]byte{0}, []byte{1}),
 		[]string{"0 2", "0 1", "0 0", "0"})
-	testCase(t, store.ReverseIterator([]byte{0x00, 0x01}, []byte{0x01}),
+	testCase(t, store.ReverseIterator([]byte{0, 1}, []byte{1}),
 		[]string{"0 2", "0 1"})
-	testCase(t, store.ReverseIterator(nil, []byte{0x01}),
+	testCase(t, store.ReverseIterator(nil, []byte{1}),
 		[]string{"0 2", "0 1", "0 0", "0"})
+	testCase(t, store.ReverseIterator([]byte{0}, []byte{0}), []string{}) // start = end
+	testCase(t, store.ReverseIterator([]byte{1}, []byte{0}), []string{}) // start > end
 
 	testCase(t, types.KVStorePrefixIterator(store, []byte{0}),
 		[]string{"0", "0 0", "0 1", "0 2"})
 	testCase(t, types.KVStoreReversePrefixIterator(store, []byte{0}),
 		[]string{"0 2", "0 1", "0 0", "0"})
-}
 
-type unsavableDB struct{ *memdb.MemDB }
-
-func (unsavableDB) SaveVersion(uint64) error { return errors.New("unsavable DB") }
-
-type uncommittableTxn struct{ dbm.DBReadWriter }
-
-func (tx uncommittableTxn) Commit() error {
-	tx.Discard()
-	return errors.New("uncommittable Txn")
-}
-
-type uncommittableDB struct{ *memdb.MemDB }
-
-func (db uncommittableDB) ReadWriter() dbm.DBReadWriter {
-	return uncommittableTxn{db.MemDB.ReadWriter()}
+	require.Panics(t, func() { store.Iterator([]byte{}, nil) }, "Iterator(empty key) should panic")
+	require.Panics(t, func() { store.Iterator(nil, []byte{}) }, "Iterator(empty key) should panic")
+	require.Panics(t, func() { store.ReverseIterator([]byte{}, nil) }, "Iterator(empty key) should panic")
+	require.Panics(t, func() { store.ReverseIterator(nil, []byte{}) }, "Iterator(empty key) should panic")
 }
 
 func TestCommit(t *testing.T) {
-	// Sanity test for Merkle hashing
-	store := newStoreWithData(t, memdb.NewDB(), nil)
-	idNew := store.Commit()
-	store.Set([]byte{0}, []byte{0})
-	idOne := store.Commit()
-	require.Equal(t, idNew.Version+1, idOne.Version)
-	require.NotEqual(t, idNew.Hash, idOne.Hash)
+	testBasic := func(opts StoreConfig) {
+		// Sanity test for Merkle hashing
+		store, err := NewStore(memdb.NewDB(), opts)
+		require.NoError(t, err)
+		require.Zero(t, store.LastCommitID())
+		idNew := store.Commit()
+		store.Set([]byte{0}, []byte{0})
+		idOne := store.Commit()
+		require.Equal(t, idNew.Version+1, idOne.Version)
+		require.NotEqual(t, idNew.Hash, idOne.Hash)
 
-	// Hash of emptied store is same as new store
-	store.Delete([]byte{0x00})
-	idEmptied := store.Commit()
-	require.Equal(t, idNew.Hash, idEmptied.Hash)
+		// Hash of emptied store is same as new store
+		store.Delete([]byte{0})
+		idEmptied := store.Commit()
+		require.Equal(t, idNew.Hash, idEmptied.Hash)
 
-	previd := idEmptied
-	for i := byte(1); i < 5; i++ {
-		store.Set([]byte{i}, []byte{i})
-		id := store.Commit()
-		lastid := store.LastCommitID()
-		require.Equal(t, id.Hash, lastid.Hash)
-		require.Equal(t, id.Version, lastid.Version)
-		require.NotEqual(t, previd.Hash, id.Hash)
-		require.NotEqual(t, previd.Version, id.Version)
+		previd := idEmptied
+		for i := byte(1); i < 5; i++ {
+			store.Set([]byte{i}, []byte{i})
+			id := store.Commit()
+			lastid := store.LastCommitID()
+			require.Equal(t, id.Hash, lastid.Hash)
+			require.Equal(t, id.Version, lastid.Version)
+			require.NotEqual(t, previd.Hash, id.Hash)
+			require.NotEqual(t, previd.Version, id.Version)
+		}
+	}
+	for _, opts := range []StoreConfig{
+		StoreConfig{Pruning: types.PruneNothing},
+		StoreConfig{Pruning: types.PruneEverything},
+		StoreConfig{Pruning: types.PruneNothing, MerkleDB: memdb.NewDB()},
+		StoreConfig{Pruning: types.PruneEverything, MerkleDB: memdb.NewDB()},
+	} {
+		// t.Run(fmt.Sprintf("basic with config %v", i))
+		testBasic(opts)
 	}
 
-	testFailedCommit := func(db dbm.DBConnection, opts StoreConfig) {
-		store, err := NewStore(db, opts)
-		require.NoError(t, err)
+	testFailedCommit := func(t *testing.T, store *Store, db dbm.DBConnection) {
+		opts := store.opts
+		if db == nil {
+			db = store.stateDB
+		}
+
 		store.Set([]byte{0}, []byte{0})
+		// require.Panics(t, store.Commit)
+		require.Panics(t, func() { store.Commit() })
+		require.NoError(t, store.Close())
 
-		require.Panics(t, func() { _ = store.Commit() })
-
-		versions, err := db.Versions()
-		require.NoError(t, err)
+		versions, _ := db.Versions()
 		require.Equal(t, 0, versions.Count())
 		if opts.MerkleDB != nil {
-			versions, err = opts.MerkleDB.Versions()
-			require.NoError(t, err)
+			versions, _ = opts.MerkleDB.Versions()
 			require.Equal(t, 0, versions.Count())
 		}
 
-		store, err = NewStore(db, opts)
+		store, err := NewStore(db, opts)
 		require.NoError(t, err)
 		require.Nil(t, store.Get([]byte{0}))
+		require.NoError(t, store.Close())
 	}
 
 	// Ensure storage commit is rolled back in each failure case
 	t.Run("recover after failed Commit", func(t *testing.T) {
-		testFailedCommit(
-			uncommittableDB{memdb.NewDB()},
-			StoreConfig{Pruning: types.PruneNothing},
-		)
+		store, err := NewStore(
+			dbRWCommitFails{memdb.NewDB()},
+			StoreConfig{Pruning: types.PruneNothing})
+		require.NoError(t, err)
+		testFailedCommit(t, store, nil)
 	})
 	t.Run("recover after failed SaveVersion", func(t *testing.T) {
-		testFailedCommit(
-			unsavableDB{memdb.NewDB()},
-			StoreConfig{Pruning: types.PruneNothing},
-		)
+		store, err := NewStore(
+			dbSaveVersionFails{memdb.NewDB()},
+			StoreConfig{Pruning: types.PruneNothing})
+		require.NoError(t, err)
+		testFailedCommit(t, store, nil)
 	})
 	t.Run("recover after failed MerkleDB Commit", func(t *testing.T) {
-		testFailedCommit(
-			memdb.NewDB(),
-			StoreConfig{MerkleDB: uncommittableDB{memdb.NewDB()}, Pruning: types.PruneNothing},
-		)
+		store, err := NewStore(memdb.NewDB(),
+			StoreConfig{MerkleDB: dbRWCommitFails{memdb.NewDB()}, Pruning: types.PruneNothing})
+		require.NoError(t, err)
+		testFailedCommit(t, store, nil)
 	})
 	t.Run("recover after failed MerkleDB SaveVersion", func(t *testing.T) {
-		testFailedCommit(
-			memdb.NewDB(),
-			StoreConfig{MerkleDB: unsavableDB{memdb.NewDB()}, Pruning: types.PruneNothing},
-		)
+		store, err := NewStore(memdb.NewDB(),
+			StoreConfig{MerkleDB: dbSaveVersionFails{memdb.NewDB()}, Pruning: types.PruneNothing})
+		require.NoError(t, err)
+		testFailedCommit(t, store, nil)
+	})
+
+	t.Run("stateDB.DeleteVersion error triggers failure", func(t *testing.T) {
+		store, err := NewStore(memdb.NewDB(), StoreConfig{MerkleDB: memdb.NewDB()})
+		require.NoError(t, err)
+		store.merkleTxn = rwCommitFails{store.merkleTxn}
+		store.stateDB = dbDeleteVersionFails{store.stateDB}
+		require.Panics(t, func() { store.Commit() })
+	})
+	t.Run("stateDB.Versions error triggers failure", func(t *testing.T) {
+		db := memdb.NewDB()
+		store, err := NewStore(db, DefaultStoreConfig)
+		require.NoError(t, err)
+		store.stateDB = dbVersionsFails{store.stateDB}
+		testFailedCommit(t, store, db)
+	})
+	t.Run("stateTxn.Set error triggers failure", func(t *testing.T) {
+		store, err := NewStore(memdb.NewDB(), DefaultStoreConfig)
+		require.NoError(t, err)
+		store.stateTxn = rwCrudFails{store.stateTxn}
+		testFailedCommit(t, store, nil)
+	})
+
+	t.Run("height overflow triggers failure", func(t *testing.T) {
+		store, err := NewStore(memdb.NewDB(),
+			StoreConfig{InitialVersion: math.MaxInt64, Pruning: types.PruneNothing})
+		require.NoError(t, err)
+		require.Equal(t, int64(math.MaxInt64), store.Commit().Version)
+		require.NoError(t, err)
+		require.Panics(t, func() { store.Commit() })
+		require.Equal(t, int64(math.MaxInt64), store.LastCommitID().Version) // version history not modified
 	})
 
 	// setting initial version
-	opts := StoreConfig{InitialVersion: 5, Pruning: types.PruneNothing}
-	store, err := NewStore(memdb.NewDB(), opts)
+	store, err := NewStore(memdb.NewDB(),
+		StoreConfig{InitialVersion: 5, Pruning: types.PruneNothing, MerkleDB: memdb.NewDB()})
 	require.NoError(t, err)
-	cid := store.Commit()
-	require.Equal(t, int64(5), cid.Version)
+	require.Equal(t, int64(5), store.Commit().Version)
+	store.SetInitialVersion(10)
+	require.Equal(t, int64(10), store.Commit().Version)
+
+	store, err = NewStore(memdb.NewDB(), StoreConfig{MerkleDB: memdb.NewDB()})
+	require.NoError(t, err)
+	store.Commit()
+	store.stateDB = dbVersionsFails{store.stateDB}
+	require.Panics(t, func() { store.LastCommitID() })
+
+	store, err = NewStore(memdb.NewDB(), StoreConfig{MerkleDB: memdb.NewDB()})
+	require.NoError(t, err)
+	store.Commit()
+	store.stateTxn = rwCrudFails{store.stateTxn}
+	require.Panics(t, func() { store.LastCommitID() })
 }
 
 func sliceToSet(slice []uint64) map[uint64]struct{} {
@@ -345,7 +441,7 @@ func TestQuery(t *testing.T) {
 
 	// query subspace before anything set
 	qres := store.Query(querySub)
-	require.Equal(t, uint32(0), qres.Code)
+	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
 	require.Equal(t, valExpSubEmpty, qres.Value)
 
 	// set data
@@ -354,24 +450,23 @@ func TestQuery(t *testing.T) {
 
 	// set data without commit, doesn't show up
 	qres = store.Query(query)
-	require.Equal(t, uint32(0), qres.Code)
+	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
 	require.Nil(t, qres.Value)
 
 	// commit it, but still don't see on old version
 	cid = store.Commit()
 	qres = store.Query(query)
-	require.Equal(t, uint32(0), qres.Code)
+	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
 	require.Nil(t, qres.Value)
 
 	// but yes on the new version
 	query.Height = cid.Version
 	qres = store.Query(query)
-	require.Equal(t, uint32(0), qres.Code)
+	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
 	require.Equal(t, v1, qres.Value)
-
 	// and for the subspace
 	qres = store.Query(querySub)
-	require.Equal(t, uint32(0), qres.Code)
+	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
 	require.Equal(t, valExpSub1, qres.Value)
 
 	// modify
@@ -380,27 +475,108 @@ func TestQuery(t *testing.T) {
 
 	// query will return old values, as height is fixed
 	qres = store.Query(query)
-	require.Equal(t, uint32(0), qres.Code)
+	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
 	require.Equal(t, v1, qres.Value)
 
 	// update to latest in the query and we are happy
 	query.Height = cid.Version
 	qres = store.Query(query)
-	require.Equal(t, uint32(0), qres.Code)
+	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
 	require.Equal(t, v3, qres.Value)
-	query2 := abci.RequestQuery{Path: "/key", Data: k2, Height: cid.Version}
 
+	query2 := abci.RequestQuery{Path: "/key", Data: k2, Height: cid.Version}
 	qres = store.Query(query2)
-	require.Equal(t, uint32(0), qres.Code)
+	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
 	require.Equal(t, v2, qres.Value)
 	// and for the subspace
 	qres = store.Query(querySub)
-	require.Equal(t, uint32(0), qres.Code)
+	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
 	require.Equal(t, valExpSub2, qres.Value)
 
 	// default (height 0) will show latest -1
 	query0 := abci.RequestQuery{Path: "/key", Data: k1}
 	qres = store.Query(query0)
-	require.Equal(t, uint32(0), qres.Code)
+	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
 	require.Equal(t, v1, qres.Value)
+
+	// querying an empty store will fail
+	short, err := NewStore(memdb.NewDB(), DefaultStoreConfig)
+	require.NoError(t, err)
+	qres = short.Query(query0)
+	require.NotEqual(t, sdkerrors.SuccessABCICode, qres.Code)
+
+	// default shows latest, if latest-1 does not exist
+	short.Set(k1, v1)
+	short.Commit()
+	qres = short.Query(query0)
+	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
+	require.Equal(t, v1, qres.Value)
+
+	// query with a nil or empty key fails
+	badquery := abci.RequestQuery{Path: "/key", Data: []byte{}}
+	qres = store.Query(badquery)
+	require.NotEqual(t, sdkerrors.SuccessABCICode, qres.Code)
+	badquery.Data = nil
+	qres = store.Query(badquery)
+	require.NotEqual(t, sdkerrors.SuccessABCICode, qres.Code)
+	// querying an invalid height will fail
+	badquery = abci.RequestQuery{Path: "/key", Data: k1, Height: store.LastCommitID().Version + 1}
+	qres = store.Query(badquery)
+	require.NotEqual(t, sdkerrors.SuccessABCICode, qres.Code)
+	// or an invalid path
+	badquery = abci.RequestQuery{Path: "/badpath", Data: k1}
+	qres = store.Query(badquery)
+	require.NotEqual(t, sdkerrors.SuccessABCICode, qres.Code)
+
+	// artificial error case
+	short.stateDB = dbVersionsFails{store.stateDB}
+	qres = short.Query(badquery)
+	require.NotEqual(t, sdkerrors.SuccessABCICode, qres.Code)
+	short.Close()
+
+	testProve := func(name string) {
+		t.Logf(name)
+		queryProve0 := abci.RequestQuery{Path: "/key", Data: k1, Prove: true}
+		store.Query(queryProve0)
+		qres = store.Query(queryProve0)
+		require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
+		require.Equal(t, v1, qres.Value)
+		require.NotNil(t, qres.ProofOps)
+	}
+	testProve("single DB")
+	store.Close()
+	store, err = NewStore(memdb.NewDB(), StoreConfig{MerkleDB: memdb.NewDB()})
+	require.NoError(t, err)
+	store.Set(k1, v1)
+	store.Commit()
+	testProve("separate DBs")
+
+	store.Close()
+}
+
+type dbDeleteVersionFails struct{ dbm.DBConnection }
+type dbRWCommitFails struct{ *memdb.MemDB }
+type dbRWCrudFails struct{ dbm.DBConnection }
+type dbSaveVersionFails struct{ *memdb.MemDB }
+type dbVersionsFails struct{ dbm.DBConnection }
+type rwCommitFails struct{ dbm.DBReadWriter }
+type rwCrudFails struct{ dbm.DBReadWriter }
+
+func (dbVersionsFails) Versions() (dbm.VersionSet, error) { return nil, errors.New("dbVersionsFails") }
+func (db dbRWCrudFails) ReadWriter() dbm.DBReadWriter {
+	return rwCrudFails{db.DBConnection.ReadWriter()}
+}
+func (rwCrudFails) Get([]byte) ([]byte, error) { return nil, errors.New("rwCrudFails.Get") }
+func (rwCrudFails) Has([]byte) (bool, error)   { return false, errors.New("rwCrudFails.Has") }
+func (rwCrudFails) Set([]byte, []byte) error   { return errors.New("rwCrudFails.Set") }
+func (rwCrudFails) Delete([]byte) error        { return errors.New("rwCrudFails.Delete") }
+
+func (dbSaveVersionFails) SaveVersion(uint64) error     { return errors.New("dbSaveVersionFails") }
+func (dbDeleteVersionFails) DeleteVersion(uint64) error { return errors.New("dbDeleteVersionFails") }
+func (tx rwCommitFails) Commit() error {
+	tx.Discard()
+	return errors.New("rwCommitFails")
+}
+func (db dbRWCommitFails) ReadWriter() dbm.DBReadWriter {
+	return rwCommitFails{db.MemDB.ReadWriter()}
 }

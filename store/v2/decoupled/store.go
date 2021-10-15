@@ -387,13 +387,13 @@ func (s *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			return sdkerrors.QueryResult(errors.New("failed to get version info"), false)
 		}
 		latest := versions.Last()
-		if latest > math.MaxInt64 {
-			return sdkerrors.QueryResult(ErrMaximumHeight, false)
-		}
 		if versions.Exists(latest - 1) {
 			height = int64(latest - 1)
 		} else {
 			height = int64(latest)
+		}
+		if height < 0 {
+			return sdkerrors.QueryResult(fmt.Errorf("height overflow: %v", latest), false)
 		}
 	}
 	res.Height = height
@@ -404,10 +404,10 @@ func (s *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		res.Key = req.Data // data holds the key bytes
 
 		dbr, err := s.stateDB.ReaderAt(uint64(height))
-		if err == dbm.ErrVersionDoesNotExist {
-			return sdkerrors.QueryResult(sdkerrors.ErrInvalidHeight, false)
-		}
 		if err != nil {
+			if err == dbm.ErrVersionDoesNotExist {
+				err = sdkerrors.ErrInvalidHeight
+			}
 			return sdkerrors.QueryResult(err, false)
 		}
 		defer dbr.Discard()
@@ -423,8 +423,8 @@ func (s *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		if s.opts.MerkleDB != nil {
 			merkleView, err = s.opts.MerkleDB.ReaderAt(uint64(height))
 			if err != nil {
-				return sdkerrors.QueryResult(fmt.Errorf(
-					"%w: version does not exist in Merkle DB: %v", sdkerrors.ErrInvalidHeight, height), false)
+				return sdkerrors.QueryResult(
+					fmt.Errorf("version exists in state DB but not Merkle DB: %v", height), false)
 			}
 			defer merkleView.Discard()
 		}

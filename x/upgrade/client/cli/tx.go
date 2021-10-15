@@ -97,7 +97,7 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
 	cmd.Flags().Int64(FlagUpgradeHeight, 0, "The height at which the upgrade must happen")
 	cmd.Flags().String(FlagUpgradeInfo, "", "Optional info for the planned upgrade such as commit hash, etc.")
-	cmd.Flags().Bool(FlagNoValidate, false, "Skip validation the upgrade info.")
+	cmd.Flags().Bool(FlagNoValidate, false, "Skip validation of the upgrade info.")
 	cmd.Flags().String(FlagDaemonName, getDefaultDaemonName(), "The name of the executable binary that is being upgraded (used for upgrade info validation).")
 
 	return cmd

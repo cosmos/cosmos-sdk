@@ -141,12 +141,12 @@ func makeFileURL(t *testing.T, path string) string {
 func (s *DownloaderTestSuite) TestDownloadUpgrade() {
 	justAFile := NewTestFile("just-a-file", "#!/usr/bin\necho 'I am just a file'\n")
 	someFileName := "some-file"
-	someFileInBin := NewTestFile("bin" + someFileName, "#!/usr/bin\necho 'I am some file in bin'\n")
-	anotherFile := NewTestFile("another-file",  "#!/usr/bin\necho 'I am just another file'\n")
+	someFileInBin := NewTestFile("bin"+someFileName, "#!/usr/bin\necho 'I am some file in bin'\n")
+	anotherFile := NewTestFile("another-file", "#!/usr/bin\necho 'I am just another file'\n")
 	justAFilePath := s.saveSrcTestFile(justAFile)
-	justAFileZip := s.saveSrcTestZip(justAFile.Name + ".zip", NewTestZip(justAFile))
-	someFileInBinZip := s.saveSrcTestZip(someFileInBin.Name + ".zip", NewTestZip(someFileInBin))
-	allFilesZip := s.saveSrcTestZip(anotherFile.Name + ".zip", NewTestZip(justAFile, someFileInBin, anotherFile))
+	justAFileZip := s.saveSrcTestZip(justAFile.Name+".zip", NewTestZip(justAFile))
+	someFileInBinZip := s.saveSrcTestZip(someFileInBin.Name+".zip", NewTestZip(someFileInBin))
+	allFilesZip := s.saveSrcTestZip(anotherFile.Name+".zip", NewTestZip(justAFile, someFileInBin, anotherFile))
 	getDstDir := func(testName string) string {
 		_, tName := filepath.Split(testName)
 		return s.Home + "/dst/" + tName
@@ -175,7 +175,7 @@ func (s *DownloaderTestSuite) TestDownloadUpgrade() {
 		err := DownloadUpgrade(dstRoot, url, justAFile.Name)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "Checksums did not match")
-		assert.Contains(t, err.Error(), "Expected: " + badChecksum)
+		assert.Contains(t, err.Error(), "Expected: "+badChecksum)
 	})
 
 	s.T().Run("url returns single file", func(t *testing.T) {
@@ -286,8 +286,8 @@ func (s *DownloaderTestSuite) TestDownloadPlanInfoFromURL() {
 		_, err := DownloadPlanInfoFromURL(url)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "Checksums did not match")
-		assert.Contains(t, err.Error(), "Expected: " + badChecksum)
-		assert.Contains(t, err.Error(), "Got: " +planChecksum)
+		assert.Contains(t, err.Error(), "Expected: "+badChecksum)
+		assert.Contains(t, err.Error(), "Got: "+planChecksum)
 	})
 
 	s.T().Run("plan is empty", func(t *testing.T) {

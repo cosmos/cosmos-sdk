@@ -57,10 +57,10 @@ func (s PlanInfoTestSuite) TestParsePlanInfo() {
 	}
 
 	tests := []struct {
-		name string
-		infoStrMaker func(t *testing.T) string
+		name             string
+		infoStrMaker     func(t *testing.T) string
 		expectedPlanInfo *PlanInfo
-		expectedInError []string
+		expectedInError  []string
 	}{
 		{
 			name:             "json good",
@@ -132,17 +132,17 @@ func (s PlanInfoTestSuite) TestPlanInfoValidateFull() {
 	linux386URL := makeFileURL(s.T(), linux386Path)
 
 	tests := []struct {
-		name string
+		name     string
 		planInfo *PlanInfo
-		errs []string
+		errs     []string
 	}{
 		// Positive test case
 		{
-			name:     "two good entries",
+			name: "two good entries",
 			planInfo: &PlanInfo{
 				Binaries: BinaryDownloadURLMap{
 					"darwin/amd64": darwinAMD64URL,
-					"linux/386": linux386URL,
+					"linux/386":    linux386URL,
 				},
 			},
 			errs: nil,
@@ -150,12 +150,12 @@ func (s PlanInfoTestSuite) TestPlanInfoValidateFull() {
 		// a failure from BinaryDownloadURLMap.ValidateBasic
 		{
 			name:     "empty binaries",
-			planInfo: &PlanInfo{Binaries:BinaryDownloadURLMap{}},
+			planInfo: &PlanInfo{Binaries: BinaryDownloadURLMap{}},
 			errs:     []string{"no \"binaries\" entries found"},
 		},
 		// a failure from BinaryDownloadURLMap.CheckURLS
 		{
-			name:     "url does not exist",
+			name: "url does not exist",
 			planInfo: &PlanInfo{
 				Binaries: BinaryDownloadURLMap{
 					"darwin/arm64": "file:///no/such/file/exists/hopefully.zip?checksum=sha256:b5a2c96250612366ea272ffac6d9744aaf4b45aacd96aa7cfcb931ee3b558259",
@@ -195,67 +195,67 @@ func (s PlanInfoTestSuite) TestBinaryDownloadURLMapValidateBasic() {
 			errs:   []string{"no \"binaries\" entries found"},
 		},
 		{
-			name:   "key with empty string",
+			name: "key with empty string",
 			urlMap: BinaryDownloadURLMap{
 				"": addDummyChecksum("https://v1.cosmos.network/sdk"),
 			},
 			errs: []string{"invalid os/arch", `""`},
 		},
 		{
-			name:   "invalid key format",
+			name: "invalid key format",
 			urlMap: BinaryDownloadURLMap{
 				"badkey": addDummyChecksum("https://v1.cosmos.network/sdk"),
 			},
 			errs: []string{"invalid os/arch", "badkey"},
 		},
 		{
-			name:   "any key is valid",
+			name: "any key is valid",
 			urlMap: BinaryDownloadURLMap{
 				"any": addDummyChecksum("https://v1.cosmos.network/sdk"),
 			},
 			errs: nil,
 		},
 		{
-			name:   "os arch key is valid",
+			name: "os arch key is valid",
 			urlMap: BinaryDownloadURLMap{
 				"darwin/amd64": addDummyChecksum("https://v1.cosmos.network/sdk"),
 			},
 			errs: nil,
 		},
 		{
-			name:   "not a url",
+			name: "not a url",
 			urlMap: BinaryDownloadURLMap{
-				"isa/url": addDummyChecksum("https://v1.cosmos.network/sdk"),
+				"isa/url":  addDummyChecksum("https://v1.cosmos.network/sdk"),
 				"nota/url": addDummyChecksum("https://v1.cosmos.network:not-a-port/sdk"),
 			},
 			errs: []string{"invalid url", "nota/url", "invalid port"},
 		},
 		{
-			name:   "url without checksum",
+			name: "url without checksum",
 			urlMap: BinaryDownloadURLMap{
 				"darwin/amd64": "https://v1.cosmos.network/sdk",
 			},
 			errs: []string{"invalid url", "darwin/amd64", "missing checksum query parameter"},
 		},
 		{
-			name:   "multiple valid entries but one bad url",
+			name: "multiple valid entries but one bad url",
 			urlMap: BinaryDownloadURLMap{
-				"any" : addDummyChecksum("https://v1.cosmos.network/sdk"),
+				"any":          addDummyChecksum("https://v1.cosmos.network/sdk"),
 				"darwin/amd64": addDummyChecksum("https://v1.cosmos.network/sdk"),
 				"darwin/arm64": addDummyChecksum("https://v1.cosmos.network/sdk"),
-				"windows/bad": addDummyChecksum("https://v1.cosmos.network:not-a-port/sdk"),
-				"linux/386": addDummyChecksum("https://v1.cosmos.network/sdk"),
+				"windows/bad":  addDummyChecksum("https://v1.cosmos.network:not-a-port/sdk"),
+				"linux/386":    addDummyChecksum("https://v1.cosmos.network/sdk"),
 			},
 			errs: []string{"invalid url", "windows/bad", "invalid port"},
 		},
 		{
-			name:   "multiple valid entries but one bad key",
+			name: "multiple valid entries but one bad key",
 			urlMap: BinaryDownloadURLMap{
-				"any" : addDummyChecksum("https://v1.cosmos.network/sdk"),
+				"any":          addDummyChecksum("https://v1.cosmos.network/sdk"),
 				"darwin/amd64": addDummyChecksum("https://v1.cosmos.network/sdk"),
-				"badkey": addDummyChecksum("https://v1.cosmos.network/sdk"),
+				"badkey":       addDummyChecksum("https://v1.cosmos.network/sdk"),
 				"darwin/arm64": addDummyChecksum("https://v1.cosmos.network/sdk"),
-				"linux/386": addDummyChecksum("https://v1.cosmos.network/sdk"),
+				"linux/386":    addDummyChecksum("https://v1.cosmos.network/sdk"),
 			},
 			errs: []string{"invalid os/arch", "badkey"},
 		},
@@ -285,31 +285,31 @@ func (s PlanInfoTestSuite) TestBinaryDownloadURLMapCheckURLs() {
 	linux386URL := makeFileURL(s.T(), linux386Path)
 
 	tests := []struct {
-		name string
+		name   string
 		urlMap BinaryDownloadURLMap
-		errs []string
+		errs   []string
 	}{
 		{
-			name:   "two good entries",
+			name: "two good entries",
 			urlMap: BinaryDownloadURLMap{
 				"darwin/amd64": darwinAMD64URL,
-				"linux/386": linux386URL,
+				"linux/386":    linux386URL,
 			},
-			errs:   nil,
+			errs: nil,
 		},
 		{
-			name:   "url does not exist",
+			name: "url does not exist",
 			urlMap: BinaryDownloadURLMap{
 				"darwin/arm64": "file:///no/such/file/exists/hopefully.zip?checksum=sha256:b5a2c96250612366ea272ffac6d9744aaf4b45aacd96aa7cfcb931ee3b558259",
 			},
-			errs:   []string{"error downloading binary", "darwin/arm64", "no such file or directory"},
+			errs: []string{"error downloading binary", "darwin/arm64", "no such file or directory"},
 		},
 		{
-			name:   "bad checksum",
+			name: "bad checksum",
 			urlMap: BinaryDownloadURLMap{
 				"darwin/amd64": "file://" + darwinAMD64Path + "?checksum=sha256:b5a2c96250612366ea272ffac6d9744aaf4b45aacd96aa7cfcb931ee3b558259",
 			},
-			errs:   []string{"error downloading binary", "darwin/amd64", "Checksums did not match", "b5a2c96250612366ea272ffac6d9744aaf4b45aacd96aa7cfcb931ee3b558259"},
+			errs: []string{"error downloading binary", "darwin/amd64", "Checksums did not match", "b5a2c96250612366ea272ffac6d9744aaf4b45aacd96aa7cfcb931ee3b558259"},
 		},
 	}
 

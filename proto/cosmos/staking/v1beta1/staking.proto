@@ -228,7 +228,8 @@ message UnbondingDelegationEntry {
   string balance = 4 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 
   // incrementing id that uniquely identifies this entry
-  int64 id = 5;
+  // TODO JEHAN: could probably use an int64 for this
+  string id = 5 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
 // RedelegationEntry defines a redelegation object with relevant metadata.

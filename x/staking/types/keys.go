@@ -45,6 +45,9 @@ var (
 	RedelegationByValSrcIndexKey     = []byte{0x35} // prefix for each key for an redelegation, by source validator operator
 	RedelegationByValDstIndexKey     = []byte{0x36} // prefix for each key for an redelegation, by destination validator operator
 
+	UnbondingDelegationEntryIdKey      = []byte{0x37} // key for the counter for the incrementing id for UnbondingDelegationEntries
+	StoppedUnbondingDelegationEntryKey = []byte{0x38} // prefix for UnbondingDelegationEntries that have been put on hold by an external module
+
 	UnbondingQueueKey    = []byte{0x41} // prefix for the timestamps in unbonding queue
 	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
 	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue

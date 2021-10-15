@@ -10,6 +10,32 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+func (k Keeper) IncrementUnbondingDelegationEntryId(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	bytes := store.Get(types.UnbondingDelegationEntryIdKey)
+
+	// Unmarshal and increment
+	var unbondingDelegationEntryId sdk.Int
+	unbondingDelegationEntryId.Unmarshal(bytes)
+	unbondingDelegationEntryId = unbondingDelegationEntryId.AddRaw(1)
+
+	// Convert back into bytes for storage (Marshal cannot error) TODO JEHAN: is this unsafe??
+	bytes, _ = unbondingDelegationEntryId.Marshal()
+
+	store.Set(types.UnbondingDelegationEntryIdKey, bytes)
+}
+
+func (k Keeper) GetUnbondingDelegationEntryId(ctx sdk.Context) sdk.Int {
+	store := ctx.KVStore(k.storeKey)
+	bytes := store.Get(types.UnbondingDelegationEntryIdKey)
+
+	// Unmarshal
+	var unbondingDelegationEntryId sdk.Int
+	unbondingDelegationEntryId.Unmarshal(bytes)
+
+	return unbondingDelegationEntryId
+}
+
 // return a specific delegation
 func (k Keeper) GetDelegation(ctx sdk.Context,
 	delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation types.Delegation, found bool) {
@@ -235,13 +261,18 @@ func (k Keeper) SetUnbondingDelegationEntry(
 	creationHeight int64, minTime time.Time, balance sdk.Int,
 ) types.UnbondingDelegation {
 	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
+	id := k.GetUnbondingDelegationEntryId(ctx)
+	k.IncrementUnbondingDelegationEntryId(ctx)
 	if found {
-		ubd.AddEntry(creationHeight, minTime, balance)
+		ubd.AddEntry(creationHeight, minTime, balance, id)
 	} else {
-		ubd = types.NewUnbondingDelegation(delegatorAddr, validatorAddr, creationHeight, minTime, balance)
+		ubd = types.NewUnbondingDelegation(delegatorAddr, validatorAddr, creationHeight, minTime, balance, id)
 	}
 
 	k.SetUnbondingDelegation(ctx, ubd)
+
+	// Call hook
+	k.UnbondingDelegationEntryCreated(ctx, delegatorAddr, validatorAddr, creationHeight, minTime, balance, id)
 
 	return ubd
 }
@@ -773,19 +804,22 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 	for i := 0; i < len(ubd.Entries); i++ {
 		entry := ubd.Entries[i]
 		if entry.IsMature(ctxTime) {
-			ubd.RemoveEntry(int64(i))
-			i--
+			// call hook, if error is returned, stop unbonding
+			err := k.BeforeUnbondingDelegationEntryComplete(ctx, entry.Id)
+			if err == nil {
+				ubd.RemoveEntry(int64(i))
+				i--
+				// track undelegation only when remaining or truncated shares are non-zero
+				if !entry.Balance.IsZero() {
+					amt := sdk.NewCoin(bondDenom, entry.Balance)
+					if err := k.bankKeeper.UndelegateCoinsFromModuleToAccount(
+						ctx, types.NotBondedPoolName, delegatorAddress, sdk.NewCoins(amt),
+					); err != nil {
+						return nil, err
+					}
 
-			// track undelegation only when remaining or truncated shares are non-zero
-			if !entry.Balance.IsZero() {
-				amt := sdk.NewCoin(bondDenom, entry.Balance)
-				if err := k.bankKeeper.UndelegateCoinsFromModuleToAccount(
-					ctx, types.NotBondedPoolName, delegatorAddress, sdk.NewCoins(amt),
-				); err != nil {
-					return nil, err
+					balances = balances.Add(amt)
 				}
-
-				balances = balances.Add(amt)
 			}
 		}
 	}

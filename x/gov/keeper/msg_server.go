@@ -7,7 +7,7 @@ import (
 
 	"github.com/armon/go-metrics"
 
-	store "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -39,7 +39,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *types.MsgSubmitPro
 
 	// ref: https://github.com/cosmos/cosmos-sdk/issues/9683
 	ctx.GasMeter().ConsumeGas(
-		3*store.KVGasConfig().WriteCostPerByte*uint64(len(bytes)),
+		3*storetypes.KVGasConfig().WriteCostPerByte*uint64(len(bytes)),
 		"submit proposal",
 	)
 

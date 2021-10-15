@@ -230,6 +230,7 @@
   
 - [cosmos/crypto/keyring/v1/record.proto](#cosmos/crypto/keyring/v1/record.proto)
     - [Record](#cosmos.crypto.keyring.v1.Record)
+    - [Record.Hsm](#cosmos.crypto.keyring.v1.Record.Hsm)
     - [Record.Ledger](#cosmos.crypto.keyring.v1.Record.Ledger)
     - [Record.Local](#cosmos.crypto.keyring.v1.Record.Local)
     - [Record.Multi](#cosmos.crypto.keyring.v1.Record.Multi)
@@ -2469,7 +2470,7 @@ ReflectionService defines a service for interface reflection.
 <a name="cosmos.base.reflection.v2alpha1.AppDescriptor"></a>
 
 ### AppDescriptor
-AppDescriptor describes a Cosmos SDK based application
+AppDescriptor describes a cosmos-sdk based application
 
 
 | Field | Type | Label | Description |
@@ -2750,7 +2751,7 @@ InterfaceImplementerDescriptor describes an interface implementer
 <a name="cosmos.base.reflection.v2alpha1.MsgDescriptor"></a>
 
 ### MsgDescriptor
-MsgDescriptor describes a Cosmos SDK message that can be delivered with a transaction
+MsgDescriptor describes a cosmos-sdk message that can be delivered with a transaction
 
 
 | Field | Type | Label | Description |
@@ -2783,7 +2784,7 @@ because it would be redundant with the grpc reflection service
 <a name="cosmos.base.reflection.v2alpha1.QueryServiceDescriptor"></a>
 
 ### QueryServiceDescriptor
-QueryServiceDescriptor describes a Cosmos SDK queryable service
+QueryServiceDescriptor describes a cosmos-sdk queryable service
 
 
 | Field | Type | Label | Description |
@@ -2800,12 +2801,12 @@ QueryServiceDescriptor describes a Cosmos SDK queryable service
 <a name="cosmos.base.reflection.v2alpha1.QueryServicesDescriptor"></a>
 
 ### QueryServicesDescriptor
-QueryServicesDescriptor contains the list of Cosmos SDK queriable services
+QueryServicesDescriptor contains the list of cosmos-sdk queriable services
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `query_services` | [QueryServiceDescriptor](#cosmos.base.reflection.v2alpha1.QueryServiceDescriptor) | repeated | query_services is a list of Cosmos SDK QueryServiceDescriptor |
+| `query_services` | [QueryServiceDescriptor](#cosmos.base.reflection.v2alpha1.QueryServiceDescriptor) | repeated | query_services is a list of cosmos-sdk QueryServiceDescriptor |
 
 
 
@@ -2861,7 +2862,7 @@ ReflectionService defines a service for application reflection.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `GetAuthnDescriptor` | [GetAuthnDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetAuthnDescriptorRequest) | [GetAuthnDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetAuthnDescriptorResponse) | GetAuthnDescriptor returns information on how to authenticate transactions in the application NOTE: this RPC is still experimental and might be subject to breaking changes or removal in future releases of the Cosmos SDK. | GET|/cosmos/base/reflection/v1beta1/app_descriptor/authn|
+| `GetAuthnDescriptor` | [GetAuthnDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetAuthnDescriptorRequest) | [GetAuthnDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetAuthnDescriptorResponse) | GetAuthnDescriptor returns information on how to authenticate transactions in the application NOTE: this RPC is still experimental and might be subject to breaking changes or removal in future releases of the cosmos-sdk. | GET|/cosmos/base/reflection/v1beta1/app_descriptor/authn|
 | `GetChainDescriptor` | [GetChainDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetChainDescriptorRequest) | [GetChainDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetChainDescriptorResponse) | GetChainDescriptor returns the description of the chain | GET|/cosmos/base/reflection/v1beta1/app_descriptor/chain|
 | `GetCodecDescriptor` | [GetCodecDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetCodecDescriptorRequest) | [GetCodecDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetCodecDescriptorResponse) | GetCodecDescriptor returns the descriptor of the codec of the application | GET|/cosmos/base/reflection/v1beta1/app_descriptor/codec|
 | `GetConfigurationDescriptor` | [GetConfigurationDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetConfigurationDescriptorRequest) | [GetConfigurationDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetConfigurationDescriptorResponse) | GetConfigurationDescriptor returns the descriptor for the sdk.Config of the application | GET|/cosmos/base/reflection/v1beta1/app_descriptor/configuration|
@@ -2882,7 +2883,7 @@ ReflectionService defines a service for application reflection.
 <a name="cosmos.base.snapshots.v1beta1.Metadata"></a>
 
 ### Metadata
-Metadata contains Cosmos SDK-specific snapshot metadata.
+Metadata contains SDK-specific snapshot metadata.
 
 
 | Field | Type | Label | Description |
@@ -3559,7 +3560,7 @@ Msg defines the bank Msg service.
 
 ### PrivKey
 Deprecated: PrivKey defines a ed25519 private key.
-NOTE: ed25519 keys must not be used in Cosmos SDK apps except in a tendermint validator context.
+NOTE: ed25519 keys must not be used in SDK apps except in a tendermint validator context.
 
 
 | Field | Type | Label | Description |
@@ -3574,8 +3575,8 @@ NOTE: ed25519 keys must not be used in Cosmos SDK apps except in a tendermint va
 <a name="cosmos.crypto.ed25519.PubKey"></a>
 
 ### PubKey
-PubKey is an ed25519 public key for handling Tendermint keys in the Cosmos SDK.
-It's needed for Any serialization and Cosmos SDK compatibility.
+PubKey is an ed25519 public key for handling Tendermint keys in SDK.
+It's needed for Any serialization and SDK compatibility.
 It must not be used in a non Tendermint key context because it doesn't implement
 ADR-28. Nevertheless, you will like to use ed25519 in app user level
 then you must create a new proto message and follow ADR-28 for Address construction.
@@ -3655,6 +3656,23 @@ Record is used for representing a key in the keyring.
 | `ledger` | [Record.Ledger](#cosmos.crypto.keyring.v1.Record.Ledger) |  | ledger stores the public information about a Ledger key |
 | `multi` | [Record.Multi](#cosmos.crypto.keyring.v1.Record.Multi) |  | Multi does not store any information. |
 | `offline` | [Record.Offline](#cosmos.crypto.keyring.v1.Record.Offline) |  | Offline does not store any information. |
+| `hsm` | [Record.Hsm](#cosmos.crypto.keyring.v1.Record.Hsm) |  | Hsm stores the public info about an hsm-resident key |
+
+
+
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record.Hsm"></a>
+
+### Record.Hsm
+Hsm item
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `label` | [string](#string) |  |  |
+| `configPath` | [string](#string) |  |  |
 
 
 
@@ -9089,7 +9107,7 @@ Query defines the gRPC querier service.
 <a name="cosmos.staking.v1beta1.MsgBeginRedelegate"></a>
 
 ### MsgBeginRedelegate
-MsgBeginRedelegate defines a Cosmos SDK message for performing a redelegation
+MsgBeginRedelegate defines a SDK message for performing a redelegation
 of coins from a delegator and source validator to a destination validator.
 
 
@@ -9123,7 +9141,7 @@ MsgBeginRedelegateResponse defines the Msg/BeginRedelegate response type.
 <a name="cosmos.staking.v1beta1.MsgCreateValidator"></a>
 
 ### MsgCreateValidator
-MsgCreateValidator defines a Cosmos SDK message for creating a new validator.
+MsgCreateValidator defines a SDK message for creating a new validator.
 
 
 | Field | Type | Label | Description |
@@ -9154,7 +9172,7 @@ MsgCreateValidatorResponse defines the Msg/CreateValidator response type.
 <a name="cosmos.staking.v1beta1.MsgDelegate"></a>
 
 ### MsgDelegate
-MsgDelegate defines a Cosmos SDK message for performing a delegation of coins
+MsgDelegate defines a SDK message for performing a delegation of coins
 from a delegator to a validator.
 
 
@@ -9182,7 +9200,7 @@ MsgDelegateResponse defines the Msg/Delegate response type.
 <a name="cosmos.staking.v1beta1.MsgEditValidator"></a>
 
 ### MsgEditValidator
-MsgEditValidator defines a Cosmos SDK message for editing an existing validator.
+MsgEditValidator defines a SDK message for editing an existing validator.
 
 
 | Field | Type | Label | Description |
@@ -9210,7 +9228,7 @@ MsgEditValidatorResponse defines the Msg/EditValidator response type.
 <a name="cosmos.staking.v1beta1.MsgUndelegate"></a>
 
 ### MsgUndelegate
-MsgUndelegate defines a Cosmos SDK message for performing an undelegation from a
+MsgUndelegate defines a SDK message for performing an undelegation from a
 delegate and a validator.
 
 
@@ -9873,7 +9891,7 @@ Plan specifies information about a planned upgrade and when it should occur.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  | Sets the name for the upgrade. This name will be used by the upgraded version of the software to apply any special "on-upgrade" commands during the first BeginBlock method after the upgrade is applied. It is also used to detect whether a software version can handle a given upgrade. If no upgrade handler with this name has been set in the software, it will be assumed that the software is out-of-date when the upgrade Time or Height is reached and the software will exit. |
-| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | **Deprecated.** Deprecated: Time based upgrades have been deprecated. Time based upgrade logic has been removed from the Cosmos SDK. If this field is not empty, an error will be thrown. |
+| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | **Deprecated.** Deprecated: Time based upgrades have been deprecated. Time based upgrade logic has been removed from the SDK. If this field is not empty, an error will be thrown. |
 | `height` | [int64](#int64) |  | The height at which the upgrade must be performed. Only used if Time is not set. |
 | `info` | [string](#string) |  | Any application specific upgrade info to be included on-chain such as a git commit that validators could automatically upgrade to |
 | `upgraded_client_state` | [google.protobuf.Any](#google.protobuf.Any) |  | **Deprecated.** Deprecated: UpgradedClientState field has been deprecated. IBC upgrade logic has been moved to the IBC module in the sub module 02-client. If this field is not empty, an error will be thrown. |

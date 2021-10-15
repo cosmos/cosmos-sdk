@@ -64,17 +64,21 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (types.Prop
 	}
 
 	var proposal types.Proposal
-	keeper.MustUnmarshalProposal(bz, &proposal)
+	if err := keeper.UnmarshalProposal(bz, &proposal); err != nil {
+		panic(err)
+	}
 
 	return proposal, true
 }
 
 // SetProposal set a proposal to store
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal types.Proposal) {
+	bz, err := keeper.MarshalProposal(proposal)
+	if err != nil {
+		panic(err)
+	}
+
 	store := ctx.KVStore(keeper.storeKey)
-
-	bz := keeper.MustMarshalProposal(proposal)
-
 	store.Set(types.ProposalKey(proposal.ProposalId), bz)
 }
 
@@ -208,19 +212,4 @@ func (keeper Keeper) UnmarshalProposal(bz []byte, proposal *types.Proposal) erro
 		return err
 	}
 	return nil
-}
-
-func (keeper Keeper) MustMarshalProposal(proposal types.Proposal) []byte {
-	bz, err := keeper.MarshalProposal(proposal)
-	if err != nil {
-		panic(err)
-	}
-	return bz
-}
-
-func (keeper Keeper) MustUnmarshalProposal(bz []byte, proposal *types.Proposal) {
-	err := keeper.UnmarshalProposal(bz, proposal)
-	if err != nil {
-		panic(err)
-	}
 }

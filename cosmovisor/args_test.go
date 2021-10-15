@@ -592,9 +592,6 @@ func (s *argsTestSuite) TestLogConfigOrError() {
 			for _, unexpected := range tc.notcontains {
 				assert.NotContains(t, output, unexpected)
 			}
-			if t.Failed() {
-				fmt.Println(output)
-			}
 		})
 	}
 }

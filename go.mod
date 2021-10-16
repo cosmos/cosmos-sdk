@@ -33,7 +33,7 @@ require (
 	github.com/prometheus/common v0.31.1
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
-	github.com/regen-network/keystone/keys v0.0.0-20211003133409-7eec4d1325fc
+	github.com/regen-network/keystone/keys v0.0.0-20211010102541-0e5580f45a03
 	github.com/rs/zerolog v1.25.0
 	github.com/spf13/cast v1.4.1
 	github.com/spf13/cobra v1.2.1

@@ -732,6 +732,8 @@ github.com/regen-network/cosmos-proto v0.3.1 h1:rV7iM4SSFAagvy8RiyhiACbWEGotmqzy
 github.com/regen-network/cosmos-proto v0.3.1/go.mod h1:jO0sVX6a1B36nmE8C9xBFXpNwWejXC7QqCOnH3O0+YM=
 github.com/regen-network/keystone/keys v0.0.0-20211003133409-7eec4d1325fc h1:Wj0xxiRKPtlM1EF3euS4/OW6weAXHoSeWOU4hbz9B+4=
 github.com/regen-network/keystone/keys v0.0.0-20211003133409-7eec4d1325fc/go.mod h1:kElF/8eluneHAO2s1UnFl0Jy5An3f7OiXbzUI+1vnJU=
+github.com/regen-network/keystone/keys v0.0.0-20211010102541-0e5580f45a03 h1:wNluc1aKlSlfQi5mKqWZq+eFjyO996VJP/iMaFpnuBk=
+github.com/regen-network/keystone/keys v0.0.0-20211010102541-0e5580f45a03/go.mod h1:kElF/8eluneHAO2s1UnFl0Jy5An3f7OiXbzUI+1vnJU=
 github.com/regen-network/protobuf v1.3.3-alpha.regen.1 h1:OHEc+q5iIAXpqiqFKeLpu5NwTIkVXUs48vFMwzqpqY4=
 github.com/regen-network/protobuf v1.3.3-alpha.regen.1/go.mod h1:2DjTFR1HhMQhiWC5sZ4OhQ3+NtdbZ6oBDKQwq5Ou+FI=
 github.com/rjeczalik/notify v0.9.1/go.mod h1:rKwnCoCGeuQnwBtTSPL9Dad03Vh2n40ePRrjvIXnJho=

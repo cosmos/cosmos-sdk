@@ -56,6 +56,12 @@ var (
 	ValidatorUpdatesKey = []byte{0x51} // prefix for the end block validator updates transient key
 )
 
+func GetStoppedUnbondingDelegationEntryKey(id uint64) []byte {
+	bz := make([]byte, 8)
+	binary.BigEndian.PutUint64(bz, id)
+	return append(StoppedUnbondingDelegationEntryKey, bz...)
+}
+
 // GetValidatorKey creates the key for the validator with address
 // VALUE: staking/Validator
 func GetValidatorKey(operatorAddr sdk.ValAddress) []byte {

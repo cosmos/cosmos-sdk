@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"time"
 
@@ -10,28 +11,47 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (k Keeper) IncrementUnbondingDelegationEntryId(ctx sdk.Context) {
+func (k Keeper) SetStoppedUnbondingDelegationEntry(ctx sdk.Context, entry types.UnbondingDelegationEntry) {
 	store := ctx.KVStore(k.storeKey)
-	bytes := store.Get(types.UnbondingDelegationEntryIdKey)
 
-	// Unmarshal and increment
-	var unbondingDelegationEntryId sdk.Int
-	unbondingDelegationEntryId.Unmarshal(bytes)
-	unbondingDelegationEntryId = unbondingDelegationEntryId.AddRaw(1)
-
-	// Convert back into bytes for storage (Marshal cannot error) TODO JEHAN: is this unsafe??
-	bytes, _ = unbondingDelegationEntryId.Marshal()
-
-	store.Set(types.UnbondingDelegationEntryIdKey, bytes)
+	bz := types.MustMarshalUBDE(k.cdc, entry)
+	store.Set(types.GetStoppedUnbondingDelegationEntryKey(entry.Id), bz)
 }
 
-func (k Keeper) GetUnbondingDelegationEntryId(ctx sdk.Context) sdk.Int {
+func (k Keeper) GetStoppedUnbondingDelegationEntry(ctx sdk.Context, id uint64) (entry types.UnbondingDelegationEntry, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bytes := store.Get(types.UnbondingDelegationEntryIdKey)
+	bz := store.Get(types.GetStoppedUnbondingDelegationEntryKey(entry.Id))
+
+	if bz == nil {
+		return entry, false
+	}
+
+	entry = types.MustUnmarshalUBDE(k.cdc, bz)
+
+	return entry, true
+}
+
+func (k Keeper) IncrementUnbondingDelegationEntryId(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.UnbondingDelegationEntryIdKey)
+
+	// Unmarshal and increment
+	unbondingDelegationEntryId := binary.BigEndian.Uint64(bz)
+	unbondingDelegationEntryId = unbondingDelegationEntryId + 1
+
+	// Convert back into bytes for storage
+	bz = make([]byte, 8)
+	binary.BigEndian.PutUint64(bz, unbondingDelegationEntryId)
+
+	store.Set(types.UnbondingDelegationEntryIdKey, bz)
+}
+
+func (k Keeper) GetUnbondingDelegationEntryId(ctx sdk.Context) uint64 {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.UnbondingDelegationEntryIdKey)
 
 	// Unmarshal
-	var unbondingDelegationEntryId sdk.Int
-	unbondingDelegationEntryId.Unmarshal(bytes)
+	unbondingDelegationEntryId := binary.BigEndian.Uint64(bz)
 
 	return unbondingDelegationEntryId
 }
@@ -820,6 +840,12 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 
 					balances = balances.Add(amt)
 				}
+			} else {
+				// Move entry to stopped UBDE bucket to be completed later
+				ubd.RemoveEntry(int64(i))
+				i--
+
+				k.SetStoppedUnbondingDelegationEntry(ctx, entry)
 			}
 		}
 	}
@@ -832,6 +858,32 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 	}
 
 	return balances, nil
+}
+
+func (k Keeper) CompleteStoppedUnbonding(ctx sdk.Context, id uint64) error {
+	entry, found := k.GetStoppedUnbondingDelegationEntry(ctx, id)
+	if !found {
+		// ERROR
+	}
+
+	delegatorAddress, err := sdk.AccAddressFromBech32(entry.DelegatorAddress)
+	if err != nil {
+		return err
+	}
+
+	bondDenom := k.GetParams(ctx).BondDenom
+
+	// track undelegation only when remaining or truncated shares are non-zero
+	if !entry.Balance.IsZero() {
+		amt := sdk.NewCoin(bondDenom, entry.Balance)
+		if err := k.bankKeeper.UndelegateCoinsFromModuleToAccount(
+			ctx, types.NotBondedPoolName, delegatorAddress, sdk.NewCoins(amt),
+		); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // begin unbonding / redelegation; create a redelegation record

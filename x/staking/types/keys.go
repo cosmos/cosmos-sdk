@@ -53,6 +53,12 @@ var (
 	HistoricalInfoKey = []byte{0x50} // prefix for the historical info
 )
 
+func GetStoppedUnbondingDelegationEntryKey(id uint64) []byte {
+	bz := make([]byte, 8)
+	binary.BigEndian.PutUint64(bz, id)
+	return append(StoppedUnbondingDelegationEntryKey, bz...)
+}
+
 // GetValidatorKey creates the key for the validator with address
 // VALUE: staking/Validator
 func GetValidatorKey(operatorAddr sdk.ValAddress) []byte {

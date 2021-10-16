@@ -104,6 +104,6 @@ type StakingHooks interface {
 	AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error
 	BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error
 	UnbondingDelegationEntryCreated(ctx sdk.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
-		creationHeight int64, completionTime time.Time, balance sdk.Int, id sdk.Int) error
-	BeforeUnbondingDelegationEntryComplete(ctx sdk.Context, id sdk.Int) error
+		creationHeight int64, completionTime time.Time, balance sdk.Int, id uint64) error
+	BeforeUnbondingDelegationEntryComplete(ctx sdk.Context, id uint64) error
 }

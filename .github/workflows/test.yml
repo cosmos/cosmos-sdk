@@ -69,10 +69,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: List out the concerned packages
+        run: find . -name "go.mod" | grep -v cosmovisor | while read F;do cd $(dirname $F);go list ./...;cd $OLDPWD;done
       - name: Create a file with all the pkgs
-        run: go list ./... > pkgs.txt
+        run: find . -name "go.mod" | grep -v cosmovisor | while read F;do cd $(dirname $F);go list ./...;cd $OLDPWD;done >> pkgs.txt
       - name: Split pkgs into 4 files
         run: split -d -n l/4 pkgs.txt pkgs.txt.part.
+      - name: Echo out the contents of pkgs.txt
+        run: cat pkgs.txt
       # cache multiple
       - uses: actions/upload-artifact@v2
         with:
@@ -115,7 +119,7 @@ jobs:
         if: env.GIT_DIFF
       - name: test & coverage report creation
         run: |
-          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='norace ledger test_ledger_mock'
+          cat pkgs.txt.part.${{ matrix.part }} && cat pkgs.txt.part.${{ matrix.part }} | while read pkg;do go test -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='norace ledger test_ledger_mock' $pkg;done
         if: env.GIT_DIFF
       - uses: actions/upload-artifact@v2
         with:

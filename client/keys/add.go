@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"path/filepath"
 
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
@@ -228,12 +229,14 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		if err != nil {
 			return err
 		}
-		
-		configPath, err := cmd.Flags().GetString(flags.FlagHome + "/" + PKCS11_CONFIG)
+
+		nodeHome, err := cmd.Flags().GetString(flags.FlagHome)
 
 		if err != nil {
 			return err
 		}
+
+		configPath :=  filepath.Join(nodeHome, "config", PKCS11_CONFIG)
 		
 		fmt.Printf("PKCS11 config: %s", configPath )
 		

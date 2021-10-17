@@ -127,11 +127,11 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 				"send",
 				fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, pastHour),
 			},
-			0,
-			true,
+			0xd,
+			false, // TODO: enable in v0.45
 		},
 		{
 			"fail with error invalid msg-type",

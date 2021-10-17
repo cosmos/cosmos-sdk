@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -246,7 +245,7 @@ func (cfg *Config) UpgradeInfo() UpgradeInfo {
 	if err != nil { // no current directory
 		goto returnError
 	}
-	if bz, err = ioutil.ReadFile(filename); err != nil {
+	if bz, err = os.ReadFile(filename); err != nil {
 		goto returnError
 	}
 	if err = json.Unmarshal(bz, &u); err != nil {

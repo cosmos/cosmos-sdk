@@ -127,6 +127,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 
 	// sign transaction
 	signerData := signing.SignerData{
+		Address:       addr.String(),
 		ChainID:       "test",
 		AccountNumber: 1,
 		Sequence:      seq1,
@@ -137,6 +138,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	s.Require().NoError(err)
 
 	signerData = signing.SignerData{
+		Address:       msigAddr.String(),
 		ChainID:       "test",
 		AccountNumber: 3,
 		Sequence:      mseq,

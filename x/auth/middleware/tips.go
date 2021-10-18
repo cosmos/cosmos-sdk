@@ -200,7 +200,7 @@ func checkTipSigner(addr sdk.AccAddress, sigData signing.SignatureData) error {
 	if err := checkCorrectSignModes(addr, sigData, []signing.SignMode{
 		signing.SignMode_SIGN_MODE_DIRECT,
 		signing.SignMode_SIGN_MODE_DIRECT_AUX,
-		signing.SignMode_SIGN_MODE_AMINO_AUX,
+		signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 	}, "tipper"); err != nil {
 		return err
 	}

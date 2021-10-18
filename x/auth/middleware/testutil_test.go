@@ -100,7 +100,6 @@ func (s *MWTestSuite) createTestAccounts(ctx sdk.Context, numAccs int, coins sdk
 		err := acc.SetAccountNumber(accNum)
 		s.Require().NoError(err)
 		s.app.AccountKeeper.SetAccount(ctx, acc)
-
 		err = s.app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
 		s.Require().NoError(err)
 
@@ -139,6 +138,7 @@ func (s *MWTestSuite) createTestTx(txBuilder client.TxBuilder, privs []cryptotyp
 	sigsV2 = []signing.SignatureV2{}
 	for i, priv := range privs {
 		signerData := xauthsigning.SignerData{
+			Address:       sdk.AccAddress(priv.PubKey().Address()).String(),
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],

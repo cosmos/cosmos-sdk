@@ -45,7 +45,7 @@ func (s PlanInfoTestSuite) TestParsePlanInfo() {
 			"os2/arch2": "url2",
 		},
 	}
-	makeInfoStrFuncJSON := func(val string) func(t *testing.T) string {
+	makeInfoStrFuncString := func(val string) func(t *testing.T) string {
 		return func(t *testing.T) string {
 			return val
 		}
@@ -64,25 +64,31 @@ func (s PlanInfoTestSuite) TestParsePlanInfo() {
 	}{
 		{
 			name:             "json good",
-			infoStrMaker:     makeInfoStrFuncJSON(goodJSON),
+			infoStrMaker:     makeInfoStrFuncString(goodJSON),
 			expectedPlanInfo: goodJSONPlanInfo,
 			expectedInError:  nil,
 		},
 		{
+			name:             "blank string",
+			infoStrMaker:     makeInfoStrFuncString("   "),
+			expectedPlanInfo: nil,
+			expectedInError:  []string{"plan info cannot be blank"},
+		},
+		{
 			name:             "json binaries is wrong data type",
-			infoStrMaker:     makeInfoStrFuncJSON(binariesWrongJSON),
+			infoStrMaker:     makeInfoStrFuncString(binariesWrongJSON),
 			expectedPlanInfo: nil,
 			expectedInError:  []string{"could not parse plan info", "cannot unmarshal array into Go struct field PlanInfo.binaries"},
 		},
 		{
 			name:             "json wrong data type in binaries value",
-			infoStrMaker:     makeInfoStrFuncJSON(binariesWrongValueJSON),
+			infoStrMaker:     makeInfoStrFuncString(binariesWrongValueJSON),
 			expectedPlanInfo: nil,
 			expectedInError:  []string{"could not parse plan info", "cannot unmarshal number into Go struct field PlanInfo.binaries"},
 		},
 		{
 			name:             "url does not exist",
-			infoStrMaker:     makeInfoStrFuncJSON("file:///this/file/does/not/exist?checksum=sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+			infoStrMaker:     makeInfoStrFuncString("file:///this/file/does/not/exist?checksum=sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
 			expectedPlanInfo: nil,
 			expectedInError:  []string{"could not download reference", "file:///this/file/does/not/exist"},
 		},

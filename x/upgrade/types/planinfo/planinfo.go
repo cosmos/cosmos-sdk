@@ -11,12 +11,6 @@ import (
 	"strings"
 )
 
-var osArchRx *regexp.Regexp
-
-func init() {
-	osArchRx = regexp.MustCompile(`[a-zA-Z0-9]+/[a-zA-Z0-9]+`)
-}
-
 // PlanInfo is the special structure that the Plan.Info string can be (as json).
 type PlanInfo struct {
 	Binaries BinaryDownloadURLMap `json:"binaries"`
@@ -75,6 +69,7 @@ func (m BinaryDownloadURLMap) ValidateBasic() error {
 		return errors.New("no \"binaries\" entries found")
 	}
 
+	osArchRx := regexp.MustCompile(`[a-zA-Z0-9]+/[a-zA-Z0-9]+`)
 	for key, val := range m {
 		if key != "any" && !osArchRx.MatchString(key) {
 			return fmt.Errorf("invalid os/arch format in key \"%s\"", key)

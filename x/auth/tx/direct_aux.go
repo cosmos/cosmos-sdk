@@ -26,7 +26,7 @@ func (signModeDirectAuxHandler) Modes() []signingtypes.SignMode {
 }
 
 // GetSignBytes implements SignModeHandler.GetSignBytes
-func (h signModeDirectAuxHandler) GetSignBytes(
+func (signModeDirectAuxHandler) GetSignBytes(
 	mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx,
 ) ([]byte, error) {
 

@@ -111,17 +111,19 @@ func TestConstructors(t *testing.T) {
 	require.Error(t, err)
 	merkledb.Close()
 
-	// can't load existing store when we can't access the last commit hash
+	// can't load existing store when we can't access the latest Merkle root hash
 	store, err = NewStore(db, DefaultStoreConfig)
 	require.NoError(t, err)
 	store.Commit()
-
+	require.NoError(t, store.Close())
+	// because root is misssing
 	w = db.Writer()
 	w.Delete(merkleRootKey)
 	w.Commit()
+	db.SaveNextVersion()
 	store, err = NewStore(db, DefaultStoreConfig)
 	require.Error(t, err)
-
+	// or, because of an error
 	store, err = NewStore(dbRWCrudFails{db}, DefaultStoreConfig)
 	require.Error(t, err)
 }
@@ -269,6 +271,20 @@ func TestCommit(t *testing.T) {
 		testFailedCommit(t, store, nil)
 	})
 
+	t.Run("recover after stateDB.Versions error triggers failure", func(t *testing.T) {
+		db := memdb.NewDB()
+		store, err := NewStore(db, DefaultStoreConfig)
+		require.NoError(t, err)
+		store.stateDB = dbVersionsFails{store.stateDB}
+		testFailedCommit(t, store, db)
+	})
+	t.Run("recover after stateTxn.Set error triggers failure", func(t *testing.T) {
+		store, err := NewStore(memdb.NewDB(), DefaultStoreConfig)
+		require.NoError(t, err)
+		store.stateTxn = rwCrudFails{store.stateTxn}
+		testFailedCommit(t, store, nil)
+	})
+
 	t.Run("stateDB.DeleteVersion error triggers failure", func(t *testing.T) {
 		store, err := NewStore(memdb.NewDB(), StoreConfig{MerkleDB: memdb.NewDB()})
 		require.NoError(t, err)
@@ -276,26 +292,11 @@ func TestCommit(t *testing.T) {
 		store.stateDB = dbDeleteVersionFails{store.stateDB}
 		require.Panics(t, func() { store.Commit() })
 	})
-	t.Run("stateDB.Versions error triggers failure", func(t *testing.T) {
-		db := memdb.NewDB()
-		store, err := NewStore(db, DefaultStoreConfig)
-		require.NoError(t, err)
-		store.stateDB = dbVersionsFails{store.stateDB}
-		testFailedCommit(t, store, db)
-	})
-	t.Run("stateTxn.Set error triggers failure", func(t *testing.T) {
-		store, err := NewStore(memdb.NewDB(), DefaultStoreConfig)
-		require.NoError(t, err)
-		store.stateTxn = rwCrudFails{store.stateTxn}
-		testFailedCommit(t, store, nil)
-	})
-
 	t.Run("height overflow triggers failure", func(t *testing.T) {
 		store, err := NewStore(memdb.NewDB(),
 			StoreConfig{InitialVersion: math.MaxInt64, Pruning: types.PruneNothing})
 		require.NoError(t, err)
 		require.Equal(t, int64(math.MaxInt64), store.Commit().Version)
-		require.NoError(t, err)
 		require.Panics(t, func() { store.Commit() })
 		require.Equal(t, int64(math.MaxInt64), store.LastCommitID().Version) // version history not modified
 	})
@@ -342,8 +343,8 @@ func TestPruning(t *testing.T) {
 	}
 
 	for tci, tc := range testCases {
-		db := memdb.NewDB()
-		store, err := NewStore(db, StoreConfig{Pruning: tc.PruningOptions})
+		dbs := []dbm.DBConnection{memdb.NewDB(), memdb.NewDB()}
+		store, err := NewStore(dbs[0], StoreConfig{Pruning: tc.PruningOptions, MerkleDB: dbs[1]})
 		require.NoError(t, err)
 
 		for i := byte(1); i <= 10; i++ {
@@ -353,12 +354,14 @@ func TestPruning(t *testing.T) {
 			require.Equal(t, latest, uint64(cid.Version))
 		}
 
-		versions, err := db.Versions()
-		require.NoError(t, err)
-		kept := sliceToSet(tc.kept)
-		for v := uint64(1); v <= 10; v++ {
-			_, has := kept[v]
-			require.Equal(t, has, versions.Exists(v), "Version = %v; tc #%d", v, tci)
+		for _, db := range dbs {
+			versions, err := db.Versions()
+			require.NoError(t, err)
+			kept := sliceToSet(tc.kept)
+			for v := uint64(1); v <= 10; v++ {
+				_, has := kept[v]
+				require.Equal(t, has, versions.Exists(v), "Version = %v; tc #%d", v, tci)
+			}
 		}
 	}
 
@@ -492,17 +495,30 @@ func TestQuery(t *testing.T) {
 	require.Equal(t, v1, qres.Value)
 
 	// querying an empty store will fail
-	short, err := NewStore(memdb.NewDB(), DefaultStoreConfig)
+	store2, err := NewStore(memdb.NewDB(), DefaultStoreConfig)
 	require.NoError(t, err)
-	qres = short.Query(query0)
+	qres = store2.Query(query0)
 	require.NotEqual(t, sdkerrors.SuccessABCICode, qres.Code)
 
 	// default shows latest, if latest-1 does not exist
-	short.Set(k1, v1)
-	short.Commit()
-	qres = short.Query(query0)
+	store2.Set(k1, v1)
+	store2.Commit()
+	qres = store2.Query(query0)
 	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
 	require.Equal(t, v1, qres.Value)
+	store2.Close()
+
+	// artificial error cases for coverage (should never happen with defined usage)
+	// ensure that height overflow triggers an error
+	require.NoError(t, err)
+	store2.stateDB = dbVersionsIs{store2.stateDB, dbm.NewVersionManager([]uint64{uint64(math.MaxInt64) + 1})}
+	qres = store2.Query(query0)
+	require.NotEqual(t, sdkerrors.SuccessABCICode, qres.Code)
+	// failure to access versions triggers an error
+	store2.stateDB = dbVersionsFails{store.stateDB}
+	qres = store2.Query(query0)
+	require.NotEqual(t, sdkerrors.SuccessABCICode, qres.Code)
+	store2.Close()
 
 	// query with a nil or empty key fails
 	badquery := abci.RequestQuery{Path: "/key", Data: []byte{}}
@@ -519,12 +535,6 @@ func TestQuery(t *testing.T) {
 	badquery = abci.RequestQuery{Path: "/badpath", Data: k1}
 	qres = store.Query(badquery)
 	require.NotEqual(t, sdkerrors.SuccessABCICode, qres.Code)
-
-	// artificial error case
-	short.stateDB = dbVersionsFails{store.stateDB}
-	qres = short.Query(badquery)
-	require.NotEqual(t, sdkerrors.SuccessABCICode, qres.Code)
-	short.Close()
 
 	// test that proofs are generated with single and separate DBs
 	testProve := func() {
@@ -550,19 +560,19 @@ type dbDeleteVersionFails struct{ dbm.DBConnection }
 type dbRWCommitFails struct{ *memdb.MemDB }
 type dbRWCrudFails struct{ dbm.DBConnection }
 type dbSaveVersionFails struct{ *memdb.MemDB }
+type dbVersionsIs struct {
+	dbm.DBConnection
+	vset dbm.VersionSet
+}
 type dbVersionsFails struct{ dbm.DBConnection }
 type rwCommitFails struct{ dbm.DBReadWriter }
 type rwCrudFails struct{ dbm.DBReadWriter }
 
 func (dbVersionsFails) Versions() (dbm.VersionSet, error) { return nil, errors.New("dbVersionsFails") }
+func (db dbVersionsIs) Versions() (dbm.VersionSet, error) { return db.vset, nil }
 func (db dbRWCrudFails) ReadWriter() dbm.DBReadWriter {
 	return rwCrudFails{db.DBConnection.ReadWriter()}
 }
-func (rwCrudFails) Get([]byte) ([]byte, error) { return nil, errors.New("rwCrudFails.Get") }
-func (rwCrudFails) Has([]byte) (bool, error)   { return false, errors.New("rwCrudFails.Has") }
-func (rwCrudFails) Set([]byte, []byte) error   { return errors.New("rwCrudFails.Set") }
-func (rwCrudFails) Delete([]byte) error        { return errors.New("rwCrudFails.Delete") }
-
 func (dbSaveVersionFails) SaveVersion(uint64) error     { return errors.New("dbSaveVersionFails") }
 func (dbDeleteVersionFails) DeleteVersion(uint64) error { return errors.New("dbDeleteVersionFails") }
 func (tx rwCommitFails) Commit() error {
@@ -572,3 +582,8 @@ func (tx rwCommitFails) Commit() error {
 func (db dbRWCommitFails) ReadWriter() dbm.DBReadWriter {
 	return rwCommitFails{db.MemDB.ReadWriter()}
 }
+
+func (rwCrudFails) Get([]byte) ([]byte, error) { return nil, errors.New("rwCrudFails.Get") }
+func (rwCrudFails) Has([]byte) (bool, error)   { return false, errors.New("rwCrudFails.Has") }
+func (rwCrudFails) Set([]byte, []byte) error   { return errors.New("rwCrudFails.Set") }
+func (rwCrudFails) Delete([]byte) error        { return errors.New("rwCrudFails.Delete") }

@@ -393,7 +393,7 @@ func (s *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			height = int64(latest)
 		}
 		if height < 0 {
-			return sdkerrors.QueryResult(fmt.Errorf("height overflow: %v", latest), false)
+			return sdkerrors.QueryResult(fmt.Errorf("height overflow: %v", height), false)
 		}
 	}
 	res.Height = height
@@ -414,7 +414,7 @@ func (s *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		contents := prefix.NewPrefixReader(dbr, dataPrefix)
 		res.Value, err = contents.Get(res.Key)
 		if err != nil {
-			return sdkerrors.QueryResult(sdkerrors.ErrKeyNotFound, false)
+			return sdkerrors.QueryResult(err, false)
 		}
 		if !req.Prove {
 			break
@@ -430,6 +430,9 @@ func (s *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		}
 		root, err := dbr.Get(merkleRootKey)
 		if err != nil {
+			return sdkerrors.QueryResult(err, false)
+		}
+		if root == nil {
 			return sdkerrors.QueryResult(errors.New("Merkle root hash not found"), false)
 		}
 		merkleStore := loadSMT(dbm.ReaderAsReadWriter(merkleView), root)

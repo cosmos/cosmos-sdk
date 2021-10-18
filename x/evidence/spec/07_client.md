@@ -2,18 +2,18 @@
 
 ## CLI
 
-A user can query and interact with the `evidence` module using CLI.
+A user can query and interact with the `evidence` module using the CLI.
 
 ### Query
 
-The `query` commands allows users to interact with the `evidence` state.
+The `query` commands allows users to query `evidence` state.
 
 ```bash
 simd query evidence --help
 ```
 ### evidence
 
-The `evidence` command allows users to list all evidences.
+The `evidence` command allows users to list all evidence or evidence by hash.
 
 Usage:
 
@@ -34,6 +34,13 @@ pagination:
   next_key: null
   total: "0"
 ```
+To query evidence by hash
+
+Example:
+
+```bash
+simd query evidence "DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660"
+```
 
 ## REST
 
@@ -53,9 +60,9 @@ Example:
 curl -X GET "http://localhost:1317/cosmos/evidence/v1beta1/evidence/DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660"
 ```
 
-### All evidences
+### All evidence
 
-Get all evidences
+Get all evidence
 
 ```bash
 /cosmos/evidence/v1beta1/evidence
@@ -85,9 +92,9 @@ Example:
 grpcurl -plaintext -d '{"evidence_hash":"DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660"}' localhost:9090 cosmos.evidence.v1beta1.Query/Evidence
 ```
 
-### All evidences
+### All evidence
 
-Get all evidences
+Get all evidence
 
 ```bash
 cosmos.evidence.v1beta1.Query/AllEvidence

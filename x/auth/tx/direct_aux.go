@@ -7,16 +7,13 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	types "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/address"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 var _ signing.SignModeHandler = signModeDirectAuxHandler{}
 
 // signModeDirectAuxHandler defines the SIGN_MODE_DIRECT_AUX SignModeHandler
-type signModeDirectAuxHandler struct {
-	addressCdc address.Codec
-}
+type signModeDirectAuxHandler struct{}
 
 // DefaultMode implements SignModeHandler.DefaultMode
 func (signModeDirectAuxHandler) DefaultMode() signingtypes.SignMode {

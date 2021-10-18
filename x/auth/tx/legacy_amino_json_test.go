@@ -73,7 +73,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 				w.SetFeePayer(addr2)
 				w.SetFeeGranter(addr2)
 			},
-			legacytx.StdSignBytes(chainId, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Payer: addr2.String(), Granter: addr2.String()}, []sdk.Msg{msg}, memo, tip),
+			legacytx.StdSignBytes(chainId, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Payer: addr2.String(), Granter: addr2.String()}, []sdk.Msg{msg}, memo, nil),
 		},
 		{
 			"signer which is also tipper", addr1.String(),
@@ -117,6 +117,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 		ChainID:       chainId,
 		AccountNumber: accNum,
 		Sequence:      seqNum,
+		SignerIndex:   0,
 	}
 
 	// expect error with wrong sign mode
@@ -140,7 +141,6 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	tx = bldr.GetTx()
 	_, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.Error(t, err)
-
 }
 
 func TestLegacyAminoJSONHandler_DefaultMode(t *testing.T) {

@@ -7,7 +7,6 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/address"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -45,7 +44,7 @@ func (s *ConverterTestSuite) SetupTest() {
 	s.unsignedTxBytes = unsignedTxBytes
 	// instantiate converter
 	cdc, ir := rosetta.MakeCodec()
-	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes, address.NewBech32Codec(sdk.Bech32MainPrefix))
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 	s.c = rosetta.NewConverter(cdc, ir, txConfig)
 	// add utils
 	s.ir = ir

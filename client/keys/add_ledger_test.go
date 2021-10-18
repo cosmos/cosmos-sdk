@@ -6,7 +6,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -54,7 +54,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 		fmt.Sprintf("--%s=0", flagIndex),
 		fmt.Sprintf("--%s=330", flagCoinType),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, hd.Secp256k1Type),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 
@@ -104,7 +104,7 @@ func Test_runAddCmdLedger(t *testing.T) {
 		"keyname1",
 		fmt.Sprintf("--%s=true", flags.FlagUseLedger),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, hd.Secp256k1Type),
 		fmt.Sprintf("--%s=%d", flagCoinType, sdk.CoinType),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
@@ -188,7 +188,7 @@ func Test_runAddCmdLedgerDryRun(t *testing.T) {
 				_, err = kb.Key("testkey")
 				require.NoError(t, err)
 
-				out, err := ioutil.ReadAll(b)
+				out, err := io.ReadAll(b)
 				require.NoError(t, err)
 				require.Contains(t, string(out), "name: testkey")
 			} else {

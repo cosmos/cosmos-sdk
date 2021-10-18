@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -113,7 +112,7 @@ func doBackup(cfg *Config) error {
 	if !cfg.UnsafeSkipBackup {
 		// check if upgrade-info.json is not empty.
 		var uInfo UpgradeInfo
-		upgradeInfoFile, err := ioutil.ReadFile(filepath.Join(cfg.Home, "data", "upgrade-info.json"))
+		upgradeInfoFile, err := os.ReadFile(filepath.Join(cfg.Home, "data", "upgrade-info.json"))
 		if err != nil {
 			return fmt.Errorf("error while reading upgrade-info.json: %w", err)
 		}

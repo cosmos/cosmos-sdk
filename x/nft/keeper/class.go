@@ -6,8 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
-// NewClass defines a method for creating a new nft class
-func (k Keeper) NewClass(ctx sdk.Context, class nft.Class) error {
+// SaveClass defines a method for creating a new nft class
+func (k Keeper) SaveClass(ctx sdk.Context, class nft.Class) error {
 	if k.HasClass(ctx, class.Id) {
 		return sdkerrors.Wrap(nft.ErrClassExists, class.Id)
 	}

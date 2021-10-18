@@ -87,7 +87,8 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
 	AppModuleBasic
-	keeper        keeper.Keeper
+	keeper keeper.Keeper
+	// TODO accountKeeper,bankKeeper will be replaced by query service
 	accountKeeper nft.AccountKeeper
 	bankKeeper    nft.BankKeeper
 	registry      cdctypes.InterfaceRegistry

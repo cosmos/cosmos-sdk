@@ -363,7 +363,6 @@ func (s *Store) LastCommitID() types.CommitID {
 
 func (s *Store) GetPruning() types.PruningOptions   { return s.opts.Pruning }
 func (s *Store) SetPruning(po types.PruningOptions) { s.opts.Pruning = po }
-func (s *Store) SetInitialVersion(version int64)    { s.opts.InitialVersion = uint64(version) }
 
 // Query implements ABCI interface, allows queries.
 //

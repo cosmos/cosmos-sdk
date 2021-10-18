@@ -306,8 +306,6 @@ func TestCommit(t *testing.T) {
 		StoreConfig{InitialVersion: 5, Pruning: types.PruneNothing, MerkleDB: memdb.NewDB()})
 	require.NoError(t, err)
 	require.Equal(t, int64(5), store.Commit().Version)
-	store.SetInitialVersion(10)
-	require.Equal(t, int64(10), store.Commit().Version)
 
 	store, err = NewStore(memdb.NewDB(), StoreConfig{MerkleDB: memdb.NewDB()})
 	require.NoError(t, err)

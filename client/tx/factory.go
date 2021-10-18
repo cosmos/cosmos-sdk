@@ -48,8 +48,6 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 	case flags.SignModeDirectAux:
 		signMode = signing.SignMode_SIGN_MODE_DIRECT_AUX
-	case flags.SignModeAminoAux:
-		signMode = signing.SignMode_SIGN_MODE_AMINO_AUX
 	}
 
 	accNum, _ := flagSet.GetUint64(flags.FlagAccountNumber)
@@ -264,9 +262,7 @@ func appendTips(clientCtx client.Context, tb client.TxBuilder, f Factory) client
 		tipAmt = f.tip.Amount
 	}
 
-	if f.SignMode() == signing.SignMode_SIGN_MODE_AMINO_AUX ||
-		f.SignMode() == signing.SignMode_SIGN_MODE_DIRECT_AUX {
-
+	if f.SignMode() == signing.SignMode_SIGN_MODE_DIRECT_AUX {
 		tb.SetTip(&tx.Tip{
 			Tipper: clientCtx.FromAddress.String(),
 			Amount: tipAmt,

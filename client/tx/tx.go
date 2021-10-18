@@ -66,8 +66,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n", GasEstimateResponse{GasEstimate: txf.Gas()})
 	}
 
-	if txf.SignMode() == signing.SignMode_SIGN_MODE_DIRECT_AUX ||
-		txf.SignMode() == signing.SignMode_SIGN_MODE_AMINO_AUX {
+	if txf.SignMode() == signing.SignMode_SIGN_MODE_DIRECT_AUX {
 		if !clientCtx.GenerateOnly {
 			return sdkerrors.Wrap(sdkerrors.ErrNotSupported, "Signing in {DIRECT|AMINO}_AUX mode is required --generate-only flag")
 		}

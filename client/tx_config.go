@@ -45,7 +45,6 @@ type (
 		SetGasLimit(limit uint64)
 		SetTip(tip *tx.Tip)
 		SetTimeoutHeight(height uint64)
-		SetFeePayer(feePayer sdk.AccAddress)
 		SetFeeGranter(feeGranter sdk.AccAddress)
 	}
 )

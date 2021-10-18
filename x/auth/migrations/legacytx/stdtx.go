@@ -239,9 +239,6 @@ func (tx StdTx) FeeGranter() sdk.AccAddress {
 	return nil
 }
 
-// GetTip always returns nil for StdTx
-func (tx StdTx) GetTip() *tx.Tip { return nil }
-
 func (tx StdTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, m := range tx.Msgs {
 		err := codectypes.UnpackInterfaces(m, unpacker)

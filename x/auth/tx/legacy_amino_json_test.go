@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -73,7 +74,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 				w.SetFeePayer(addr2)
 				w.SetFeeGranter(addr2)
 			},
-			legacytx.StdSignBytes(chainId, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Payer: addr2.String(), Granter: addr2.String()}, []sdk.Msg{msg}, memo, tip),
+			legacytx.StdSignBytes(chainId, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Payer: addr2.String(), Granter: addr2.String()}, []sdk.Msg{msg}, memo, nil),
 		},
 		{
 			"signer which is also tipper", addr1.String(),
@@ -103,6 +104,8 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 				Sequence:      seqNum,
 			}
 			signBz, err := handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
+			fmt.Println("signBz", string(signBz))
+			fmt.Println("esignB", string(tc.expectedSignBz))
 			require.NoError(t, err)
 
 			require.Equal(t, tc.expectedSignBz, signBz)

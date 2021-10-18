@@ -53,7 +53,6 @@ func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode,
 
 	tip := protoTx.GetTip()
 	isTipper := tip != nil && tip.Tipper == addr
-	fmt.Println("tip", tip, isTipper)
 
 	// We set a convention that if the tipper signs with LEGACY_AMINO_JSON, then
 	// they sign over empty fees and 0 gas.

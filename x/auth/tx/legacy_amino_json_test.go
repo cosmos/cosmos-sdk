@@ -1,7 +1,6 @@
 package tx
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -104,8 +103,6 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 				Sequence:      seqNum,
 			}
 			signBz, err := handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
-			fmt.Println("signBz", string(signBz))
-			fmt.Println("esignB", string(tc.expectedSignBz))
 			require.NoError(t, err)
 
 			require.Equal(t, tc.expectedSignBz, signBz)

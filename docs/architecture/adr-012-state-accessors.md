@@ -96,7 +96,7 @@ func (Mapping) Has(ctx Context, key []byte) bool {}
 func (Mapping) Delete(ctx Context, key []byte) {}
 ```
 
-Each method of the `Mapping` type that is passed the arugments `ctx`, `key`, and `args...` will proxy
+Each method of the `Mapping` type that is passed the arguments `ctx`, `key`, and `args...` will proxy
 the call to `Mapping.Value(key)` with arguments `ctx` and `args...`.
 
 In addition, we will define and provide a common set of types derived from the `Value` type:

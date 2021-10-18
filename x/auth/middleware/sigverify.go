@@ -487,6 +487,7 @@ func (svm sigVerificationTxHandler) sigVerify(ctx context.Context, sdkTx sdk.Tx,
 			ChainID:       chainID,
 			AccountNumber: accNum,
 			Sequence:      acc.GetSequence(),
+			SignerIndex:   i,
 		}
 
 		if !simulate {

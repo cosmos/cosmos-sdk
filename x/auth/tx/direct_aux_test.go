@@ -58,6 +58,7 @@ func TestDirectAuxHandler(t *testing.T) {
 		Address:       addr.String(),
 		ChainID:       "test-chain",
 		AccountNumber: 1,
+		SignerIndex:   0,
 	}
 
 	modeHandler := signModeDirectAuxHandler{addressCdc}

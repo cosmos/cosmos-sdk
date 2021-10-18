@@ -38,4 +38,9 @@ This module is used in the Cosmos Hub.
    - [Glossary](05_vesting.md#glossary)
 6. **[Parameters](06_params.md)**
 7. **[Client](07_client.md)**
-   - [CLI](07_client.md#cli)
+   - **[Auth](07_client.md#auth)**
+      - [CLI](07_client.md#cli)
+      - [gRPC](07_client.md#grpc)
+      - [REST](07_client.md#rest)
+   - **[Vesting](07_client.md#vesting)**
+      - [CLI](07_client.md#vesting#cli)

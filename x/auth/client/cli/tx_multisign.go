@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -128,12 +127,13 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 				return fmt.Errorf("set the chain id with either the --chain-id flag or config file")
 			}
 
-			for _, sig := range sigs {
+			for j, sig := range sigs {
 				signingData := signing.SignerData{
 					Address:       sdk.AccAddress(sig.PubKey.Address()).String(),
 					ChainID:       txFactory.ChainID(),
 					AccountNumber: txFactory.AccountNumber(),
 					Sequence:      txFactory.Sequence(),
+					SignerIndex:   j,
 				}
 
 				err = signing.VerifySignature(sig.PubKey, signingData, sig.Data, txCfg.SignModeHandler(), txBuilder.GetTx())
@@ -328,6 +328,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 				ChainID:       txFactory.ChainID(),
 				AccountNumber: txFactory.AccountNumber(),
 				Sequence:      txFactory.Sequence(),
+				SignerIndex:   i,
 			}
 
 			for _, sig := range signatureBatch {
@@ -395,14 +396,14 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 
 func unmarshalSignatureJSON(clientCtx client.Context, filename string) (sigs []signingtypes.SignatureV2, err error) {
 	var bytes []byte
-	if bytes, err = ioutil.ReadFile(filename); err != nil {
+	if bytes, err = os.ReadFile(filename); err != nil {
 		return
 	}
 	return clientCtx.TxConfig.UnmarshalSignatureJSON(bytes)
 }
 
 func readSignaturesFromFile(ctx client.Context, filename string) (sigs []signingtypes.SignatureV2, err error) {
-	bz, err := ioutil.ReadFile(filename)
+	bz, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}

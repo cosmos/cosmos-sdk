@@ -117,6 +117,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 		ChainID:       chainId,
 		AccountNumber: accNum,
 		Sequence:      seqNum,
+		SignerIndex:   0,
 	}
 
 	// expect error with wrong sign mode

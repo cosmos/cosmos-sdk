@@ -2,7 +2,6 @@ package container_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"reflect"
 	"testing"
@@ -506,38 +505,40 @@ func TestLogging(t *testing.T) {
 	var logOut string
 	var dotGraph string
 
-	outfile, err := ioutil.TempFile("", "out")
+	outfile, err := os.CreateTemp("", "out")
 	require.NoError(t, err)
 	stdout := os.Stdout
 	os.Stdout = outfile
 	defer func() { os.Stdout = stdout }()
 	defer os.Remove(outfile.Name())
 
-	graphfile, err := ioutil.TempFile("", "graph")
+	graphfile, err := os.CreateTemp("", "graph")
 	require.NoError(t, err)
 	defer os.Remove(graphfile.Name())
 
-	require.NoError(t, container.Run(
+	require.NoError(t, container.RunDebug(
 		func() {},
-		container.Logger(func(s string) {
-			logOut += s
-		}),
-		container.Visualizer(func(g string) {
-			dotGraph = g
-		}),
-		container.LogVisualizer(),
-		container.FileVisualizer(graphfile.Name(), "svg"),
-		container.StdoutLogger(),
+		container.DebugOptions(
+			container.Logger(func(s string) {
+				logOut += s
+			}),
+			container.Visualizer(func(g string) {
+				dotGraph = g
+			}),
+			container.LogVisualizer(),
+			container.FileVisualizer(graphfile.Name(), "svg"),
+			container.StdoutLogger(),
+		),
 	))
 
 	require.Contains(t, logOut, "digraph")
 	require.Contains(t, dotGraph, "digraph")
 
-	outfileContents, err := ioutil.ReadFile(outfile.Name())
+	outfileContents, err := os.ReadFile(outfile.Name())
 	require.NoError(t, err)
 	require.Contains(t, string(outfileContents), "digraph")
 
-	graphfileContents, err := ioutil.ReadFile(graphfile.Name())
+	graphfileContents, err := os.ReadFile(graphfile.Name())
 	require.NoError(t, err)
 	require.Contains(t, string(graphfileContents), "<svg")
 }

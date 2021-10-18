@@ -13,7 +13,6 @@ var DefaultSignModes = []signingtypes.SignMode{
 	signingtypes.SignMode_SIGN_MODE_DIRECT,
 	signingtypes.SignMode_SIGN_MODE_DIRECT_AUX,
 	signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-	signingtypes.SignMode_SIGN_MODE_DIRECT_AUX,
 }
 
 // makeSignModeHandler returns the default protobuf SignModeHandler supporting

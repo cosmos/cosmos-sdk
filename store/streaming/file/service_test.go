@@ -125,6 +125,9 @@ func TestIntermediateWriter(t *testing.T) {
 }
 
 func TestFileStreamingService(t *testing.T) {
+	if os.Getenv("CI_TEST") != "" {
+		t.Skip("Skipping TestFileStreamingService in CI environment")
+	}
 	err := os.Mkdir(testDir, 0700)
 	require.Nil(t, err)
 	defer os.RemoveAll(testDir)
@@ -203,9 +206,6 @@ func testListenBeginBlock(t *testing.T) {
 }
 
 func testListenDeliverTx1(t *testing.T) {
-	if os.Getenv("CI_TEST") != "" {
-		t.Skip("Skipping testListenDeliverTx1 in CI environment")
-	}
 	expectedDeliverTxReq1Bytes, err := testMarshaller.Marshal(&testDeliverTxReq1)
 	require.Nil(t, err)
 	expectedDeliverTxRes1Bytes, err := testMarshaller.Marshal(&testDeliverTxRes1)

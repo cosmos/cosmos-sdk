@@ -24,10 +24,10 @@ var (
 )
 
 func TestStreamingServiceConstructor(t *testing.T) {
-	_, err := ServiceTypeFromString("unexpectedName")
+	_, err := NewServiceConstructor("unexpectedName")
 	require.NotNil(t, err)
 
-	constructor, err := ServiceTypeFromString("file")
+	constructor, err := NewServiceConstructor("file")
 	require.Nil(t, err)
 	var expectedType ServiceConstructor
 	require.IsType(t, expectedType, constructor)

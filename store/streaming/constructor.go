@@ -26,8 +26,8 @@ const (
 	// add more in the future
 )
 
-// NewStreamingServiceType returns the streaming.ServiceType corresponding to the provided name
-func NewStreamingServiceType(name string) ServiceType {
+// ServiceTypeFromString returns the streaming.ServiceType corresponding to the provided name
+func ServiceTypeFromString(name string) ServiceType {
 	switch strings.ToLower(name) {
 	case "file", "f":
 		return File
@@ -51,9 +51,9 @@ var ServiceConstructorLookupTable = map[ServiceType]ServiceConstructor{
 	File: NewFileStreamingService,
 }
 
-// ServiceTypeFromString returns the streaming.ServiceConstructor corresponding to the provided name
-func ServiceTypeFromString(name string) (ServiceConstructor, error) {
-	ssType := NewStreamingServiceType(name)
+// NewServiceConstructor returns the streaming.ServiceConstructor corresponding to the provided name
+func NewServiceConstructor(name string) (ServiceConstructor, error) {
+	ssType := ServiceTypeFromString(name)
 	if ssType == Unknown {
 		return nil, fmt.Errorf("unrecognized streaming service name %s", name)
 	}
@@ -99,7 +99,7 @@ func LoadStreamingServices(bApp *baseapp.BaseApp, appOpts serverTypes.AppOptions
 			continue
 		}
 		// get the constructor for this streamer name
-		constructor, err := ServiceTypeFromString(streamerName)
+		constructor, err := NewServiceConstructor(streamerName)
 		if err != nil {
 			// close any services we may have already spun up before hitting the error on this one
 			for _, activeStreamer := range activeStreamers {

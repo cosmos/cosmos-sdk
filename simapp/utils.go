@@ -3,7 +3,7 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -34,7 +34,7 @@ func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DB, string,
 		logger = log.NewNopLogger()
 	}
 
-	dir, err := ioutil.TempDir("", dirPrefix)
+	dir, err := os.MkdirTemp("", dirPrefix)
 	if err != nil {
 		return simtypes.Config{}, nil, "", nil, false, err
 	}
@@ -56,7 +56,7 @@ func SimulationOperations(app App, cdc codec.JSONCodec, config simtypes.Config) 
 	}
 
 	if config.ParamsFile != "" {
-		bz, err := ioutil.ReadFile(config.ParamsFile)
+		bz, err := os.ReadFile(config.ParamsFile)
 		if err != nil {
 			panic(err)
 		}
@@ -84,7 +84,7 @@ func CheckExportSimulation(
 			return err
 		}
 
-		if err := ioutil.WriteFile(config.ExportStatePath, []byte(exported.AppState), 0600); err != nil {
+		if err := os.WriteFile(config.ExportStatePath, []byte(exported.AppState), 0600); err != nil {
 			return err
 		}
 	}
@@ -96,7 +96,7 @@ func CheckExportSimulation(
 			return err
 		}
 
-		if err := ioutil.WriteFile(config.ExportParamsPath, paramsBz, 0600); err != nil {
+		if err := os.WriteFile(config.ExportParamsPath, paramsBz, 0600); err != nil {
 			return err
 		}
 	}

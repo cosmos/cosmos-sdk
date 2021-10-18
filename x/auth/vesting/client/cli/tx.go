@@ -3,7 +3,7 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -129,7 +129,7 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 				return err
 			}
 
-			contents, err := ioutil.ReadFile(args[1])
+			contents, err := os.ReadFile(args[1])
 			if err != nil {
 				return err
 			}

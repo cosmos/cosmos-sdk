@@ -215,6 +215,13 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
 	}
 }
 
+// HasSupply checks if the supply coin exists in store.
+func (k BaseKeeper) HasSupply(ctx sdk.Context, denom string) bool {
+	store := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
+	return supplyStore.Has([]byte(denom))
+}
+
 // GetDenomMetaData retrieves the denomination metadata. returns the metadata and true if the denom exists,
 // false otherwise.
 func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool) {

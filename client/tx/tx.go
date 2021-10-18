@@ -225,6 +225,7 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 		AccountNumber: txf.accountNumber,
 		Sequence:      txf.sequence,
 		SignerIndex:   signerIndex,
+		Address:       sdk.AccAddress(pubKey.Address()).String(),
 	}
 
 	// For SIGN_MODE_DIRECT, calling SetSignatures calls setSignerInfos on

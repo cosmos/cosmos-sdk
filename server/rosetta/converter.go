@@ -722,9 +722,11 @@ func (c converter) SigningComponents(tx authsigning.Tx, metadata *ConstructionMe
 
 		// set the signer data
 		signerData := authsigning.SignerData{
+			Address:       signer.String(),
 			ChainID:       metadata.ChainID,
 			AccountNumber: metadata.SignersData[i].AccountNumber,
 			Sequence:      metadata.SignersData[i].Sequence,
+			SignerIndex:   i,
 		}
 
 		// get signature bytes

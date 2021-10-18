@@ -57,18 +57,16 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 			}
 			if !noValidate {
 				prop := content.(*types.SoftwareUpgradeProposal)
-				if len(prop.Plan.Info) > 0 {
-					var daemonName string
-					if daemonName, err = cmd.Flags().GetString(FlagDaemonName); err != nil {
-						return err
-					}
-					var planInfo *planinfo.PlanInfo
-					if planInfo, err = planinfo.ParsePlanInfo(prop.Plan.Info); err != nil {
-						return err
-					}
-					if err = planInfo.ValidateFull(daemonName); err != nil {
-						return err
-					}
+				var daemonName string
+				if daemonName, err = cmd.Flags().GetString(FlagDaemonName); err != nil {
+					return err
+				}
+				var planInfo *planinfo.PlanInfo
+				if planInfo, err = planinfo.ParsePlanInfo(prop.Plan.Info); err != nil {
+					return err
+				}
+				if err = planInfo.ValidateFull(daemonName); err != nil {
+					return err
 				}
 			}
 

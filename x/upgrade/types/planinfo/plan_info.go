@@ -24,6 +24,10 @@ type BinaryDownloadURLMap map[string]string
 func ParsePlanInfo(infoStr string) (*PlanInfo, error) {
 	infoStr = strings.TrimSpace(infoStr)
 
+	if len(infoStr) == 0 {
+		return nil, errors.New("plan info cannot be blank")
+	}
+
 	// If it's a url, download it and treat the result as the real info.
 	if _, err := neturl.Parse(infoStr); err == nil {
 		infoStr, err = DownloadPlanInfoFromURL(infoStr)

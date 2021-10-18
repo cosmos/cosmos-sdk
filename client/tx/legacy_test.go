@@ -61,7 +61,7 @@ type TestSuite struct {
 func (s *TestSuite) SetupSuite() {
 	encCfg := simapp.MakeTestEncodingConfig()
 	s.encCfg = encCfg
-	s.protoCfg = tx.NewTxConfig(codec.NewProtoCodec(encCfg.InterfaceRegistry), tx.DefaultSignModes, s.encCfg.AddressCdc)
+	s.protoCfg = tx.NewTxConfig(codec.NewProtoCodec(encCfg.InterfaceRegistry), tx.DefaultSignModes)
 	s.aminoCfg = legacytx.StdTxConfig{Cdc: encCfg.Amino}
 }
 

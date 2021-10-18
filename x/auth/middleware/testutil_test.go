@@ -142,6 +142,7 @@ func (s *MWTestSuite) createTestTx(txBuilder client.TxBuilder, privs []cryptotyp
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
+			SignerIndex:   i,
 		}
 		sigV2, err := tx.SignWithPrivKey(
 			s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,

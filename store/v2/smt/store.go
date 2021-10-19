@@ -3,10 +3,8 @@ package smt
 import (
 	"crypto/sha256"
 	"errors"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	"github.com/lazyledger/smt"
@@ -53,7 +51,6 @@ func (s *Store) Root() []byte { return s.tree.Root() }
 
 // Get returns nil iff key doesn't exist. Panics on nil key.
 func (s *Store) Get(key []byte) []byte {
-	defer telemetry.MeasureSince(time.Now(), "store", "smt", "get")
 	if len(key) == 0 {
 		panic(errKeyEmpty)
 	}
@@ -66,7 +63,6 @@ func (s *Store) Get(key []byte) []byte {
 
 // Has checks if a key exists. Panics on nil key.
 func (s *Store) Has(key []byte) bool {
-	defer telemetry.MeasureSince(time.Now(), "store", "smt", "has")
 	if len(key) == 0 {
 		panic(errKeyEmpty)
 	}
@@ -79,7 +75,6 @@ func (s *Store) Has(key []byte) bool {
 
 // Set sets the key. Panics on nil key or value.
 func (s *Store) Set(key []byte, value []byte) {
-	defer telemetry.MeasureSince(time.Now(), "store", "smt", "set")
 	if len(key) == 0 {
 		panic(errKeyEmpty)
 	}
@@ -94,7 +89,6 @@ func (s *Store) Set(key []byte, value []byte) {
 
 // Delete deletes the key. Panics on nil key.
 func (s *Store) Delete(key []byte) {
-	defer telemetry.MeasureSince(time.Now(), "store", "smt", "delete")
 	if len(key) == 0 {
 		panic(errKeyEmpty)
 	}

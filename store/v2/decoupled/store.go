@@ -173,8 +173,7 @@ func (s *Store) Has(key []byte) bool {
 }
 
 // Set implements KVStore.
-func (s *Store) Set(key []byte, value []byte) {
-	khash := sha256.Sum256(key)
+func (s *Store) Set(key, value []byte) {
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
 
@@ -183,6 +182,7 @@ func (s *Store) Set(key []byte, value []byte) {
 		panic(err)
 	}
 	s.merkleStore.Set(key, value)
+	khash := sha256.Sum256(key)
 	err = s.indexTxn.Set(khash[:], key)
 	if err != nil {
 		panic(err)
@@ -383,9 +383,9 @@ func (s *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		} else {
 			height = int64(latest)
 		}
-		if height < 0 {
-			return sdkerrors.QueryResult(fmt.Errorf("height overflow: %v", height), false)
-		}
+	}
+	if height < 0 {
+		return sdkerrors.QueryResult(fmt.Errorf("height overflow: %v", height), false)
 	}
 	res.Height = height
 
@@ -396,7 +396,7 @@ func (s *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 		dbr, err := s.stateDB.ReaderAt(uint64(height))
 		if err != nil {
-			if err == dbm.ErrVersionDoesNotExist {
+			if errors.Is(err, dbm.ErrVersionDoesNotExist) {
 				err = sdkerrors.ErrInvalidHeight
 			}
 			return sdkerrors.QueryResult(err, false)

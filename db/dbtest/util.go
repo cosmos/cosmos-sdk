@@ -21,12 +21,10 @@ func AssertDomain(t *testing.T, itr dbm.Iterator, start, end []byte) {
 	assert.Equal(t, end, de, "checkDomain domain end incorrect")
 }
 
-func AssertItem(t *testing.T, itr dbm.Iterator, key []byte, value []byte) {
+func AssertItem(t *testing.T, itr dbm.Iterator, key, value []byte) {
 	t.Helper()
-	v := itr.Value()
-	k := itr.Key()
-	assert.Exactly(t, key, k)
-	assert.Exactly(t, value, v)
+	assert.Exactly(t, itr.Key(), k)
+	assert.Exactly(t, itr.Value(), v)
 }
 
 func AssertInvalid(t *testing.T, itr dbm.Iterator) {
@@ -41,7 +39,7 @@ func AssertKeyPanics(t *testing.T, itr dbm.Iterator) {
 	assert.Panics(t, func() { itr.Key() }, "checkKeyPanics expected panic but didn't")
 }
 
-func AssertValue(t *testing.T, db dbm.DBReader, key []byte, valueWanted []byte) {
+func AssertValue(t *testing.T, db dbm.DBReader, key, valueWanted []byte) {
 	t.Helper()
 	valueGot, err := db.Get(key)
 	assert.NoError(t, err)

@@ -1,6 +1,6 @@
-module github.com/cosmos/cosmos-sdk/db
-
 go 1.17
+
+module github.com/cosmos/cosmos-sdk/db
 
 require (
 	github.com/dgraph-io/badger/v3 v3.2103.1

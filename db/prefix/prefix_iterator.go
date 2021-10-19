@@ -11,10 +11,7 @@ import (
 // restricted by prefix.
 func IteratePrefix(db dbm.DBReader, prefix []byte) (dbm.Iterator, error) {
 	var start, end []byte
-	if len(prefix) == 0 {
-		start = nil
-		end = nil
-	} else {
+	if len(prefix) != 0 {
 		start = prefix
 		end = cpIncr(prefix)
 	}
@@ -46,7 +43,7 @@ func newPrefixIterator(prefix, start, end []byte, source dbm.Iterator) *prefixDB
 }
 
 // Domain implements Iterator.
-func (itr *prefixDBIterator) Domain() (start []byte, end []byte) {
+func (itr *prefixDBIterator) Domain() (start, end []byte) {
 	return itr.start, itr.end
 }
 
@@ -70,12 +67,13 @@ func (itr *prefixDBIterator) Next() bool {
 	if !itr.source.Next() {
 		return false
 	}
-	if !bytes.HasPrefix(itr.source.Key(), itr.prefix) {
+	key := itr.source.Key()
+	if !bytes.HasPrefix(key, itr.prefix) {
 		return false
 	}
 	// Empty keys are not allowed, so if a key exists in the database that exactly matches the
 	// prefix we need to skip it.
-	if bytes.Equal(itr.source.Key(), itr.prefix) {
+	if bytes.Equal(key, itr.prefix) {
 		return itr.Next()
 	}
 	return true

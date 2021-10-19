@@ -32,7 +32,7 @@ func NewPrefixReadWriter(db dbm.DBReadWriter, prefix []byte) prefixRW {
 	}
 }
 
-func prefixed(prefix []byte, key []byte) []byte {
+func prefixed(prefix, key []byte) []byte {
 	return append(prefix, key...)
 }
 

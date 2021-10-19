@@ -30,7 +30,7 @@ type ProofOp struct {
 	Proof  smt.SparseMerkleProof
 }
 
-var _ merkle.ProofOperator = &ProofOp{}
+var _ merkle.ProofOperator = (*ProofOp)(nil)
 
 // NewProofOp returns a ProofOp for a SparseMerkleProof.
 func NewProofOp(root, key []byte, hasher HasherType, proof smt.SparseMerkleProof) *ProofOp {

@@ -10,7 +10,7 @@ import (
 )
 
 type container struct {
-	*config
+	*debugConfig
 
 	resolvers map[reflect.Type]resolver
 
@@ -26,9 +26,9 @@ type resolveFrame struct {
 	typ reflect.Type
 }
 
-func newContainer(cfg *config) *container {
+func newContainer(cfg *debugConfig) *container {
 	return &container{
-		config:      cfg,
+		debugConfig: cfg,
 		resolvers:   map[reflect.Type]resolver{},
 		scopes:      map[string]Scope{},
 		callerStack: nil,

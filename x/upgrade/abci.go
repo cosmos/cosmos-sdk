@@ -22,6 +22,15 @@ import (
 // skipUpgradeHeightArray is a set of block heights for which the upgrade must be skipped
 func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+
+	k.IterateDoneUpgrades(ctx, func(name string, height int64) bool {
+		if !k.HasHandler(name) {
+			panic(fmt.Sprintf("upgrade handler is missing for %s upgrade plan", name))
+		}
+
+		return false
+	})
+
 	plan, found := k.GetUpgradePlan(ctx)
 	if !found {
 		return

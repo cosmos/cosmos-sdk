@@ -227,6 +227,19 @@ func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) ([]
 	return bz, true
 }
 
+// IterateDoneUpgrades iterate over all the applied upgrades.
+// Callback to get all data, returns true to stop, false to keep reading
+func (k Keeper) IterateDoneUpgrades(ctx sdk.Context, cb func(name string, height int64) bool) {
+	iter := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
+	defer iter.Close()
+
+	stop := false
+	for ; iter.Valid() && !stop; iter.Next() {
+		bz := iter.Value()
+		stop = cb(string(iter.Key()), int64(binary.BigEndian.Uint64(bz)))
+	}
+}
+
 // GetDoneHeight returns the height at which the given upgrade was executed
 func (k Keeper) GetDoneHeight(ctx sdk.Context, name string) int64 {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.DoneByte})

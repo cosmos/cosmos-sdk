@@ -80,7 +80,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 		},
 		"invalid address": {
 			args: []string{
-				sdk.AccAddress("addr4").String(),
+				"addr4",
 				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
 				"4070908800",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),

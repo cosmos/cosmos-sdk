@@ -1,4 +1,4 @@
-package decoupled
+package flat
 
 import (
 	"errors"

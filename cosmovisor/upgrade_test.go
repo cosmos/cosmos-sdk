@@ -3,7 +3,9 @@
 package cosmovisor_test
 
 import (
+	"errors"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -137,7 +139,13 @@ func (s *upgradeTestSuite) TestGetDownloadURL() {
 	cases := map[string]struct {
 		info string
 		url  string
-		err  string
+		err  interface{}
+
+		// If err == nil, the test must not report an error.
+		// If err is a string, the test must report an error whose string has err
+		// as a substring.
+		// If err is a func(suite.Suite, error), it is called to check the error
+		// value.
 	}{
 		"missing": {
 			err: "downloading reference link : invalid source string:",
@@ -152,7 +160,12 @@ func (s *upgradeTestSuite) TestGetDownloadURL() {
 		},
 		"missing link": {
 			info: "https://no.such.domain/exists.txt",
-			err:  "dial tcp: lookup no.such.domain: no such host",
+			err: func(s suite.Suite, err error) {
+				var dns *net.DNSError
+				s.Require().True(errors.As(err, &dns), "result is not a DNSError")
+				s.Require().Equal("no.such.domain", dns.Name)
+				s.Require().Equal(true, dns.IsNotFound)
+			},
 		},
 		"proper binary": {
 			info: `{"binaries": {"linux/amd64": "https://foo.bar/", "windows/amd64": "https://something.else"}}`,
@@ -175,12 +188,17 @@ func (s *upgradeTestSuite) TestGetDownloadURL() {
 	for name, tc := range cases {
 		s.Run(name, func() {
 			url, err := cosmovisor.GetDownloadURL(cosmovisor.UpgradeInfo{Info: tc.info})
-			if tc.err != "" {
-				s.Require().Error(err)
-				s.Require().Contains(err.Error(), tc.err)
-			} else {
+			switch e := tc.err.(type) {
+			case nil:
 				s.Require().NoError(err)
 				s.Require().Equal(tc.url, url)
+
+			case string:
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.err)
+
+			case func(suite.Suite, error):
+				e(s.Suite, err)
 			}
 		})
 	}

@@ -21,8 +21,9 @@ jobs:
         with:
           PATTERNS: |
             **/**.go
-            go.mod
-            go.sum
-      - name: run go linters
-        run: make lint-go
+      - uses: golangci/golangci-lint-action@v2.5.2
+        with:
+          version: v1.42.1
+          args: --timeout 10m
+          github-token: ${{ secrets.github_token }}
         if: env.GIT_DIFF

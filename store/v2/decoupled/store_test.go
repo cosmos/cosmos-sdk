@@ -12,7 +12,6 @@ import (
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/db/memdb"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
@@ -434,7 +433,7 @@ func TestQuery(t *testing.T) {
 
 	// query subspace before anything set
 	qres := store.Query(querySub)
-	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
+	require.True(t, qres.IsOK())
 	require.Equal(t, valExpSubEmpty, qres.Value)
 
 	// set data
@@ -443,23 +442,23 @@ func TestQuery(t *testing.T) {
 
 	// set data without commit, doesn't show up
 	qres = store.Query(query)
-	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
+	require.True(t, qres.IsOK())
 	require.Nil(t, qres.Value)
 
 	// commit it, but still don't see on old version
 	cid = store.Commit()
 	qres = store.Query(query)
-	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
+	require.True(t, qres.IsOK())
 	require.Nil(t, qres.Value)
 
 	// but yes on the new version
 	query.Height = cid.Version
 	qres = store.Query(query)
-	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
+	require.True(t, qres.IsOK())
 	require.Equal(t, v1, qres.Value)
 	// and for the subspace
 	qres = store.Query(querySub)
-	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
+	require.True(t, qres.IsOK())
 	require.Equal(t, valExpSub1, qres.Value)
 
 	// modify
@@ -468,41 +467,41 @@ func TestQuery(t *testing.T) {
 
 	// query will return old values, as height is fixed
 	qres = store.Query(query)
-	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
+	require.True(t, qres.IsOK())
 	require.Equal(t, v1, qres.Value)
 
 	// update to latest in the query and we are happy
 	query.Height = cid.Version
 	qres = store.Query(query)
-	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
+	require.True(t, qres.IsOK())
 	require.Equal(t, v3, qres.Value)
 
 	query2 := abci.RequestQuery{Path: "/key", Data: k2, Height: cid.Version}
 	qres = store.Query(query2)
-	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
+	require.True(t, qres.IsOK())
 	require.Equal(t, v2, qres.Value)
 	// and for the subspace
 	qres = store.Query(querySub)
-	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
+	require.True(t, qres.IsOK())
 	require.Equal(t, valExpSub2, qres.Value)
 
 	// default (height 0) will show latest -1
 	query0 := abci.RequestQuery{Path: "/key", Data: k1}
 	qres = store.Query(query0)
-	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
+	require.True(t, qres.IsOK())
 	require.Equal(t, v1, qres.Value)
 
 	// querying an empty store will fail
 	store2, err := NewStore(memdb.NewDB(), DefaultStoreConfig)
 	require.NoError(t, err)
 	qres = store2.Query(query0)
-	require.NotEqual(t, sdkerrors.SuccessABCICode, qres.Code)
+	require.True(t, qres.IsErr())
 
 	// default shows latest, if latest-1 does not exist
 	store2.Set(k1, v1)
 	store2.Commit()
 	qres = store2.Query(query0)
-	require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
+	require.True(t, qres.IsOK())
 	require.Equal(t, v1, qres.Value)
 	store2.Close()
 
@@ -511,35 +510,35 @@ func TestQuery(t *testing.T) {
 	require.NoError(t, err)
 	store2.stateDB = dbVersionsIs{store2.stateDB, dbm.NewVersionManager([]uint64{uint64(math.MaxInt64) + 1})}
 	qres = store2.Query(query0)
-	require.NotEqual(t, sdkerrors.SuccessABCICode, qres.Code)
+	require.True(t, qres.IsErr())
 	// failure to access versions triggers an error
 	store2.stateDB = dbVersionsFails{store.stateDB}
 	qres = store2.Query(query0)
-	require.NotEqual(t, sdkerrors.SuccessABCICode, qres.Code)
+	require.True(t, qres.IsErr())
 	store2.Close()
 
 	// query with a nil or empty key fails
 	badquery := abci.RequestQuery{Path: "/key", Data: []byte{}}
 	qres = store.Query(badquery)
-	require.NotEqual(t, sdkerrors.SuccessABCICode, qres.Code)
+	require.True(t, qres.IsErr())
 	badquery.Data = nil
 	qres = store.Query(badquery)
-	require.NotEqual(t, sdkerrors.SuccessABCICode, qres.Code)
+	require.True(t, qres.IsErr())
 	// querying an invalid height will fail
 	badquery = abci.RequestQuery{Path: "/key", Data: k1, Height: store.LastCommitID().Version + 1}
 	qres = store.Query(badquery)
-	require.NotEqual(t, sdkerrors.SuccessABCICode, qres.Code)
+	require.True(t, qres.IsErr())
 	// or an invalid path
 	badquery = abci.RequestQuery{Path: "/badpath", Data: k1}
 	qres = store.Query(badquery)
-	require.NotEqual(t, sdkerrors.SuccessABCICode, qres.Code)
+	require.True(t, qres.IsErr())
 
 	// test that proofs are generated with single and separate DBs
 	testProve := func() {
 		queryProve0 := abci.RequestQuery{Path: "/key", Data: k1, Prove: true}
 		store.Query(queryProve0)
 		qres = store.Query(queryProve0)
-		require.Equal(t, sdkerrors.SuccessABCICode, qres.Code)
+		require.True(t, qres.IsOK())
 		require.Equal(t, v1, qres.Value)
 		require.NotNil(t, qres.ProofOps)
 	}

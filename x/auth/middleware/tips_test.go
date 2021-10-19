@@ -41,10 +41,11 @@ func (s *MWTestSuite) setupMetaTxAccts(ctx sdk.Context) (sdk.Context, []testAcco
 	s.app.GovKeeper.ActivateVotingPeriod(ctx, prop)
 
 	// Move to next block to commit previous data to state.
-	s.app.EndBlock(abci.RequestEndBlock{Height: 1})
+	s.app.EndBlock(abci.RequestEndBlock{Height: ctx.BlockHeight()})
 	s.app.Commit()
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
-	ctx = ctx.WithBlockHeight(2)
+
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: ctx.BlockHeight()}})
 
 	return ctx, accts
 }
@@ -208,9 +209,11 @@ func (s *MWTestSuite) mkTipperTxBuilder(
 
 	// Actually sign the data.
 	signerData := authsigning.SignerData{
+		Address:       sdk.AccAddress(tipperPriv.PubKey().Address()).String(),
 		ChainID:       chainID,
 		AccountNumber: accNum,
 		Sequence:      accSeq,
+		SignerIndex:   0,
 	}
 	sigV2, err := clienttx.SignWithPrivKey(
 		signMode, signerData,
@@ -253,9 +256,11 @@ func mkFeePayerTxBuilder(
 
 	// Actually sign the data.
 	signerData := authsigning.SignerData{
+		Address:       sdk.AccAddress(feePayerPriv.PubKey().Address()).String(),
 		ChainID:       chainID,
 		AccountNumber: accNum,
 		Sequence:      accSeq,
+		SignerIndex:   1,
 	}
 	feePayerSigV2, err = clienttx.SignWithPrivKey(
 		signMode, signerData,

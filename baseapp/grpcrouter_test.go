@@ -2,7 +2,6 @@ package baseapp_test
 
 import (
 	"context"
-	"os"
 	"sync"
 	"testing"
 

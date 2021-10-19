@@ -2,6 +2,7 @@ package mock
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	"github.com/rs/zerolog"

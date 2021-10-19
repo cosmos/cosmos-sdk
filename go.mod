@@ -12,7 +12,7 @@ require (
 	github.com/cosmos/btcutil v1.0.4
 	github.com/cosmos/cosmos-proto v0.0.0-20210914142853-23ed61ac79ce
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/iavl v0.17.1
+	github.com/cosmos/iavl v0.17.2-0.20211019083829-a33fa2e01412
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/gogo/gateway v1.1.0
 	github.com/gogo/protobuf v1.3.3

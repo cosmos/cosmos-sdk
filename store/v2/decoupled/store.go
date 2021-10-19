@@ -7,7 +7,6 @@ import (
 	"io"
 	"math"
 	"sync"
-	"time"
 
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/db/prefix"
@@ -19,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/store/v2/smt"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
@@ -152,7 +150,6 @@ func (s *Store) Close() error {
 
 // Get implements KVStore.
 func (s *Store) Get(key []byte) []byte {
-	defer telemetry.MeasureSince(time.Now(), "store", "decoupled", "get")
 	s.mtx.RLock()
 	defer s.mtx.RUnlock()
 
@@ -165,7 +162,6 @@ func (s *Store) Get(key []byte) []byte {
 
 // Has implements KVStore.
 func (s *Store) Has(key []byte) bool {
-	defer telemetry.MeasureSince(time.Now(), "store", "decoupled", "has")
 	s.mtx.RLock()
 	defer s.mtx.RUnlock()
 
@@ -178,7 +174,6 @@ func (s *Store) Has(key []byte) bool {
 
 // Set implements KVStore.
 func (s *Store) Set(key []byte, value []byte) {
-	defer telemetry.MeasureSince(time.Now(), "store", "decoupled", "set")
 	khash := sha256.Sum256(key)
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
@@ -196,7 +191,6 @@ func (s *Store) Set(key []byte, value []byte) {
 
 // Delete implements KVStore.
 func (s *Store) Delete(key []byte) {
-	defer telemetry.MeasureSince(time.Now(), "store", "decoupled", "delete")
 	khash := sha256.Sum256(key)
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
@@ -372,8 +366,6 @@ func (s *Store) SetPruning(po types.PruningOptions) { s.opts.Pruning = po }
 // if you care to have the latest data to see a tx results, you must
 // explicitly set the height you want to see
 func (s *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
-	defer telemetry.MeasureSince(time.Now(), "store", "decoupled", "query")
-
 	if len(req.Data) == 0 {
 		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrTxDecode, "query cannot be zero length"), false)
 	}

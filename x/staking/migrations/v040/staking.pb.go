@@ -801,6 +801,7 @@ type Params struct {
 	MaxEntries        uint32        `protobuf:"varint,3,opt,name=max_entries,json=maxEntries,proto3" json:"max_entries,omitempty" yaml:"max_entries"`
 	HistoricalEntries uint32        `protobuf:"varint,4,opt,name=historical_entries,json=historicalEntries,proto3" json:"historical_entries,omitempty" yaml:"historical_entries"`
 	BondDenom         string        `protobuf:"bytes,5,opt,name=bond_denom,json=bondDenom,proto3" json:"bond_denom,omitempty" yaml:"bond_denom"`
+	MinCommissionRate types2.Dec
 }
 
 func (m *Params) Reset()      { *m = Params{} }

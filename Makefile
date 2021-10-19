@@ -125,7 +125,7 @@ build-simd-all: go.sum
         --env VERSION=$(VERSION) \
         --env COMMIT=$(COMMIT) \
         --env LEDGER_ENABLED=$(LEDGER_ENABLED) \
-        --name latest-build cosmossdk/rbuilder:latest
+        --name latest-build tendermintdev/rbuilder:latest
 	$(DOCKER) cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
 
 build-simd-linux: go.sum $(BUILDDIR)/
@@ -136,7 +136,7 @@ build-simd-linux: go.sum $(BUILDDIR)/
         --env VERSION=$(VERSION) \
         --env COMMIT=$(COMMIT) \
         --env LEDGER_ENABLED=false \
-        --name latest-build cosmossdk/rbuilder:latest
+        --name latest-build tendermintdev/rbuilder:latest
 	$(DOCKER) cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
 	cp artifacts/simd-*-linux-amd64 $(BUILDDIR)/simd
 

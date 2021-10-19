@@ -23,8 +23,8 @@ func AssertDomain(t *testing.T, itr dbm.Iterator, start, end []byte) {
 
 func AssertItem(t *testing.T, itr dbm.Iterator, key, value []byte) {
 	t.Helper()
-	assert.Exactly(t, itr.Key(), k)
-	assert.Exactly(t, itr.Value(), v)
+	assert.Exactly(t, key, itr.Key())
+	assert.Exactly(t, value, itr.Value())
 }
 
 func AssertInvalid(t *testing.T, itr dbm.Iterator) {

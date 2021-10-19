@@ -481,10 +481,13 @@ func (svm sigVerificationTxHandler) sigVerify(ctx context.Context, tx sdk.Tx, is
 		if !genesis {
 			accNum = acc.GetAccountNumber()
 		}
+
 		signerData := authsigning.SignerData{
+			Address:       signerAddrs[i].String(),
 			ChainID:       chainID,
 			AccountNumber: accNum,
 			Sequence:      acc.GetSequence(),
+			SignerIndex:   i,
 		}
 
 		if !simulate {

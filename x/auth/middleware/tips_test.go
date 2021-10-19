@@ -108,22 +108,22 @@ func (s *MWTestSuite) TestTips() {
 		{
 			"tipper should be equal to msg signer",
 			randomAddr, // arbitrary msg signer, not equal to tipper
-			sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(5000))), initialAtoms, 100000,
+			sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(5000))), initialAtoms, 200000,
 			true, "pubKey does not match signer address",
 		},
 		{
 			"wrong tip denom", nil,
-			sdk.NewCoins(sdk.NewCoin("foobar", sdk.NewInt(1000))), initialAtoms, 100000,
+			sdk.NewCoins(sdk.NewCoin("foobar", sdk.NewInt(1000))), initialAtoms, 200000,
 			true, "0foobar is smaller than 1000foobar: insufficient funds",
 		},
 		{
 			"insufficient tip from tipper", nil,
-			sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(5000))), initialAtoms, 100000,
+			sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(5000))), initialAtoms, 200000,
 			true, "1000regen is smaller than 5000regen: insufficient funds",
 		},
 		{
 			"insufficient fees from feePayer", nil,
-			initialRegens, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(5000))), 100000,
+			initialRegens, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(5000))), 200000,
 			true, "1000atom is smaller than 5000atom: insufficient funds: insufficient funds",
 		},
 		{
@@ -133,7 +133,7 @@ func (s *MWTestSuite) TestTips() {
 		},
 		{
 			"happy case", nil,
-			initialRegens, initialAtoms, 100000,
+			initialRegens, initialAtoms, 200000,
 			false, "",
 		},
 	}
@@ -165,10 +165,11 @@ func (s *MWTestSuite) TestTips() {
 				s.Require().NotNil(res)
 
 				// Move to next block to commit previous data to state.
-				s.app.EndBlock(abci.RequestEndBlock{Height: 2})
+				s.app.EndBlock(abci.RequestEndBlock{Height: ctx.BlockHeight()})
 				s.app.Commit()
-				s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 3}})
-				ctx = ctx.WithBlockHeight(3)
+
+				ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+				s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: ctx.BlockHeight()}})
 
 				// Make sure tip is correctly transferred to feepayer, and fee is paid.
 				expTipperRegens := initialRegens.Sub(tc.tip)

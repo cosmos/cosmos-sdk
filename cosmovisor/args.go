@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog"
+
 	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
 )
 
@@ -143,13 +145,18 @@ func GetConfigFromEnv() (*Config, error) {
 
 	interval := os.Getenv(EnvInterval)
 	if interval != "" {
-		switch i, e := strconv.ParseUint(interval, 10, 32); {
-		case e != nil:
-			errs = append(errs, fmt.Errorf("invalid %s: %w", EnvInterval, err))
-		case i == 0:
-			errs = append(errs, fmt.Errorf("invalid %s: cannot be 0", EnvInterval))
-		default:
-			cfg.PollInterval = time.Millisecond * time.Duration(i)
+		var intervalUInt uint64
+		intervalUInt, err = strconv.ParseUint(interval, 10, 32)
+		if err == nil {
+			cfg.PollInterval = time.Millisecond * time.Duration(intervalUInt)
+		} else {
+			cfg.PollInterval, err = time.ParseDuration(interval)
+		}
+		switch {
+		case err != nil:
+			errs = append(errs, fmt.Errorf("invalid %s: could not parse \"%s\" into either a duration or uint (milliseconds)", EnvInterval, interval))
+		case cfg.PollInterval <= 0:
+			errs = append(errs, fmt.Errorf("invalid %s: must be greater than 0", EnvInterval))
 		}
 	} else {
 		cfg.PollInterval = 300 * time.Millisecond
@@ -166,6 +173,24 @@ func GetConfigFromEnv() (*Config, error) {
 		return nil, cverrors.FlattenErrors(errs...)
 	}
 	return cfg, nil
+}
+
+// LogConfigOrError logs either the config details or the error.
+func LogConfigOrError(logger zerolog.Logger, cfg *Config, cerr error) {
+	switch {
+	case cerr != nil:
+		switch err := cerr.(type) {
+		case *cverrors.MultiError:
+			logger.Error().Msg("multiple configuration errors found:")
+			for i, e := range err.GetErrors() {
+				logger.Error().Err(e).Msg(fmt.Sprintf("  %d:", i+1))
+			}
+		default:
+			logger.Error().Err(cerr).Msg("configuration error:")
+		}
+	case cfg != nil:
+		logger.Info().Msg("Configuration is valid:\n" + cfg.DetailString())
+	}
 }
 
 // validate returns an error if this config is invalid.

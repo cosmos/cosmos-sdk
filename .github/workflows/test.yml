@@ -93,8 +93,6 @@ jobs:
 
   tests:
     runs-on: ubuntu-latest
-    env:
-      CI_TEST: true
     needs: split-test-files
     strategy:
       fail-fast: false

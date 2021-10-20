@@ -125,7 +125,7 @@ func TestIntermediateWriter(t *testing.T) {
 }
 
 func TestFileStreamingService(t *testing.T) {
-	if os.Getenv("CI_TEST") != "" {
+	if os.Getenv("CI") != "" {
 		t.Skip("Skipping TestFileStreamingService in CI environment")
 	}
 	err := os.Mkdir(testDir, 0700)

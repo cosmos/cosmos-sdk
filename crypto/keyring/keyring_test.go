@@ -119,7 +119,7 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	// deleting a key removes it
 	err = kb.Delete("bad name")
 	require.NotNil(t, err)
-	err = kb.Delete(string(InfoKey(n1)))
+	err = kb.Delete(n1)
 	require.NoError(t, err)
 	keyS, err = kb.List()
 	require.NoError(t, err)
@@ -145,14 +145,14 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	require.Equal(t, 2, len(keyS))
 
 	// delete the offline key
-	err = kb.Delete(string(InfoKey(o1)))
+	err = kb.Delete(o1)
 	require.NoError(t, err)
 	keyS, err = kb.List()
 	require.NoError(t, err)
 	require.Equal(t, 1, len(keyS))
 
 	// addr cache gets nuked - and test skip flag
-	require.NoError(t, kb.Delete(string(InfoKey(n2))))
+	require.NoError(t, kb.Delete(n2))
 }
 
 func TestSignVerifyKeyRing(t *testing.T) {
@@ -230,7 +230,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	// Import a public key
 	armor, err := kb.ExportPubKeyArmor(n2)
 	require.NoError(t, err)
-	require.NoError(t, kb.Delete(string(InfoKey(n2))))
+	require.NoError(t, kb.Delete(n2))
 
 	require.NoError(t, kb.ImportPubKey(n3, armor))
 	i3, err := kb.Key(n3)
@@ -261,7 +261,7 @@ func TestExportImportKeyRing(t *testing.T) {
 
 	armor, err := kb.ExportPrivKeyArmor("john", "apassphrase")
 	require.NoError(t, err)
-	err = kb.Delete(string(InfoKey("john")))
+	err = kb.Delete("john")
 	require.NoError(t, err)
 
 	err = kb.ImportPrivKey("john2", armor, "apassphrase")
@@ -312,7 +312,7 @@ func TestExportImportPubKeyKeyRing(t *testing.T) {
 	// Export the public key only
 	armor, err := kb.ExportPubKeyArmor("john")
 	require.NoError(t, err)
-	err = kb.Delete(string(InfoKey("john")))
+	err = kb.Delete("john")
 	require.NoError(t, err)
 
 	// Import it under a different name
@@ -357,7 +357,7 @@ func TestAdvancedKeyManagementKeyRing(t *testing.T) {
 	require.NotNil(t, err)
 	exported, err := kb.ExportPubKeyArmor(n1)
 	require.Nil(t, err, "%+v", err)
-	err = kb.Delete(string(InfoKey(n1)))
+	err = kb.Delete(n1)
 	require.NoError(t, err)
 
 	// import succeeds
@@ -388,7 +388,7 @@ func TestSeedPhraseKeyRing(t *testing.T) {
 	require.NoError(t, err)
 
 	// now, let us delete this key
-	err = kb.Delete(string(InfoKey(n1)))
+	err = kb.Delete(n1)
 	require.Nil(t, err, "%+v", err)
 	_, err = kb.Key(n1)
 	require.NotNil(t, err)
@@ -416,7 +416,7 @@ func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
 	keystr, err := kb.ExportPrivKeyArmor("john", "somepassword")
 	require.NoError(t, err)
 	require.NotEmpty(t, keystr)
-	err = kb.Delete(string(InfoKey("john")))
+	err = kb.Delete("john")
 	require.NoError(t, err)
 
 	// try import the key - wrong password
@@ -524,9 +524,9 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	require.True(t, key1.Equals(key2))
 
 	// deleting a key removes it
-	err = cstore.Delete(string(InfoKey("bad name")))
+	err = cstore.Delete("bad name")
 	require.NotNil(t, err)
-	err = cstore.Delete(string(InfoKey(n1)))
+	err = cstore.Delete(n1)
 	require.NoError(t, err)
 	keyS, err = cstore.List()
 	require.NoError(t, err)
@@ -552,14 +552,14 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	require.Equal(t, 2, len(keyS))
 
 	// delete the offline key
-	err = cstore.Delete(string(InfoKey(o1)))
+	err = cstore.Delete(o1)
 	require.NoError(t, err)
 	keyS, err = cstore.List()
 	require.NoError(t, err)
 	require.Equal(t, 1, len(keyS))
 
 	// addr cache gets nuked - and test skip flag
-	err = cstore.Delete(string(InfoKey(n2)))
+	err = cstore.Delete(n2)
 	require.NoError(t, err)
 }
 
@@ -702,7 +702,7 @@ func TestInMemoryExportImportPrivKey(t *testing.T) {
 	require.NoError(t, err)
 
 	// delete exported key
-	require.NoError(t, kb.Delete(string(InfoKey("john"))))
+	require.NoError(t, kb.Delete("john"))
 	_, err = kb.Key("john")
 	require.Error(t, err)
 
@@ -813,7 +813,7 @@ func TestInMemorySeedPhrase(t *testing.T) {
 	require.NotEmpty(t, mnemonic)
 
 	// now, let us delete this key
-	err = cstore.Delete(string(InfoKey(n1)))
+	err = cstore.Delete(n1)
 	require.Nil(t, err, "%+v", err)
 	_, err = cstore.Key(n1)
 	require.NotNil(t, err)
@@ -840,7 +840,7 @@ func TestKeyChain_ShouldFailWhenAddingSameGeneratedAccount(t *testing.T) {
 	_, seed, err := kr.NewMnemonic("test", English, "", DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
 
-	require.NoError(t, kr.Delete(string(InfoKey("test"))))
+	require.NoError(t, kr.Delete("test"))
 
 	path := hd.CreateHDPath(118, 0, 0).String()
 	_, err = kr.NewAccount("test1", seed, "", path, hd.Secp256k1)
@@ -1008,7 +1008,7 @@ func TestAltKeyring_Delete(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, list, 1)
 
-	err = kr.Delete(string(InfoKey(uid)))
+	err = kr.Delete(uid)
 	require.NoError(t, err)
 
 	list, err = kr.List()
@@ -1147,7 +1147,7 @@ func TestAltKeyring_ImportExportPrivKey(t *testing.T) {
 	passphrase := "somePass"
 	armor, err := kr.ExportPrivKeyArmor(uid, passphrase)
 	require.NoError(t, err)
-	err = kr.Delete(string(InfoKey(uid)))
+	err = kr.Delete(uid)
 	require.NoError(t, err)
 	newUID := otherID
 	// Should fail importing with wrong password
@@ -1176,7 +1176,7 @@ func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
 	require.NoError(t, err)
 	armor, err := kr.ExportPrivKeyArmorByAddress(addr, passphrase)
 	require.NoError(t, err)
-	err = kr.Delete(string(InfoKey(uid)))
+	err = kr.Delete(uid)
 	require.NoError(t, err)
 
 	newUID := otherID
@@ -1203,7 +1203,7 @@ func TestAltKeyring_ImportExportPubKey(t *testing.T) {
 
 	armor, err := kr.ExportPubKeyArmor(uid)
 	require.NoError(t, err)
-	err = kr.Delete(string(InfoKey(uid)))
+	err = kr.Delete(uid)
 	require.NoError(t, err)
 
 	newUID := otherID
@@ -1228,7 +1228,7 @@ func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
 	require.NoError(t, err)
 	armor, err := kr.ExportPubKeyArmorByAddress(addr)
 	require.NoError(t, err)
-	err = kr.Delete(string(InfoKey(uid)))
+	err = kr.Delete(uid)
 	require.NoError(t, err)
 
 	newUID := otherID
@@ -1312,7 +1312,7 @@ func TestRenameKey(t *testing.T) {
 			run: func(kr Keyring) {
 				oldKeyUID, newKeyUID := "old", "new"
 				oldKeyRecord := newKeyRecord(t, kr, oldKeyUID)
-				err := kr.Rename(string(InfoKey(oldKeyUID)), newKeyUID) // rename from "old" to "new"
+				err := kr.Rename(oldKeyUID, newKeyUID) // rename from "old" to "new"
 				require.NoError(t, err)
 				newRecord, err := kr.Key(newKeyUID) // new key should be in keyring
 				require.NoError(t, err)

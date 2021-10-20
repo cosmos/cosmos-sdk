@@ -3,7 +3,6 @@ package keys
 import (
 	"bufio"
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -39,10 +38,6 @@ and export your keys in ASCII-armored encrypted format.`,
 			buf := bufio.NewReader(clientCtx.Input)
 			unarmored, _ := cmd.Flags().GetBool(flagUnarmoredHex)
 			unsafe, _ := cmd.Flags().GetBool(flagUnsafe)
-
-			if !strings.HasSuffix(args[0], keyring.InfoSuffix) {
-				args[0] = string(keyring.InfoKey(args[0]))
-			}
 
 			if unarmored && unsafe {
 				return exportUnsafeUnarmored(cmd, args[0], buf, clientCtx.Keyring)

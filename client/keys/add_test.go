@@ -64,8 +64,8 @@ func Test_runAddCmdBasic(t *testing.T) {
 	require.NoError(t, cmd.ExecuteContext(ctx))
 	require.Error(t, cmd.ExecuteContext(ctx))
 
-	mockIn.Reset("N\n")
-	require.Error(t, cmd.ExecuteContext(ctx))
+	mockIn.Reset("y\n")
+	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	cmd.SetArgs([]string{
 		"keyname4",
@@ -151,7 +151,7 @@ func Test_runAddCmdDryRun(t *testing.T) {
 			args: []string{
 				"testkey",
 				fmt.Sprintf("--%s=%s", flags.FlagDryRun, "false"),
-				fmt.Sprintf("--%s=%s", flagMultisig, string(keyring.InfoKey("subkey"))),
+				fmt.Sprintf("--%s=%s", flagMultisig, "subkey"),
 			},
 			added: true,
 		},
@@ -216,14 +216,14 @@ func Test_runAddCmdDryRun(t *testing.T) {
 			require.NoError(t, cmd.ExecuteContext(ctx))
 
 			if tt.added {
-				_, err := kb.Key(string(keyring.InfoKey("testkey")))
+				_, err := kb.Key("testkey")
 				require.NoError(t, err)
 
 				out, err := io.ReadAll(b)
 				require.NoError(t, err)
 				require.Contains(t, string(out), "name: testkey")
 			} else {
-				_, err = kb.Key(string(keyring.InfoKey("testkey")))
+				_, err = kb.Key("testkey")
 				require.Error(t, err)
 				require.Equal(t, "testkey.info: key not found", err.Error())
 			}
@@ -271,7 +271,7 @@ func TestAddRecoverFileBackend(t *testing.T) {
 	})
 
 	mockIn.Reset(fmt.Sprintf("%s\n%s\n", keyringPassword, keyringPassword))
-	k, err := kb.Key(string(keyring.InfoKey("keyname1")))
+	k, err := kb.Key("keyname1")
 	require.NoError(t, err)
 	require.Equal(t, "keyname1", k.Name)
 }

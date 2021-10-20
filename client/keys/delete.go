@@ -2,7 +2,6 @@ package keys
 
 import (
 	"bufio"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -36,9 +35,6 @@ private keys stored in a ledger device cannot be deleted with the CLI.
 			}
 
 			for _, name := range args {
-				if !strings.HasSuffix(name, keyring.InfoSuffix) {
-					name = string(keyring.InfoKey(name))
-				}
 				k, err := clientCtx.Keyring.Key(name)
 				if err != nil {
 					return err

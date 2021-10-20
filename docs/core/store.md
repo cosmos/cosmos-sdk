@@ -232,6 +232,26 @@ Additional information about state streaming configuration can be found in the [
 
 When `KVStore.Set` or `KVStore.Delete` methods are called, `listenkv.Store` automatically writes the operations to the set of `Store.listeners`.
 
+## New Store package (`store/v2`)
+
+The SDK is in the process of transitioning to use the types listed here as the default interface for state storage. At the time of writing, these cannot be used within an application and are not directly compatible with the `CommitMultiStore` and related types.
+
+### `BasicKVStore` interface
+
+An interface providing only the basic CRUD functionality (`Get`, `Set`, `Has`, and `Delete` methods), without iteration or caching. This is used to partially expose components of a larger store, such as a `flat.Store`.
+
+### Flat Store
+
+`flat.Store` is the new default persistent store, which internally decouples the concerns of state storage and commitment scheme. Values are stored directly in the backing key-value database (the "storage" bucket), while the value's hash is mapped in a separate store which is able to generate a cryptographic commitment (the "state commitment" bucket, implmented with `smt.Store`).
+
+This can optionally be constructed to use different backend databases for each bucket.
+
+<!-- TODO: add link +++ https://github.com/cosmos/cosmos-sdk/blob/v0.44.0/store/v2/flat/store.go -->
+
+### SMT Store
+
+A `BasicKVStore` which is used to partially expose functions of an underlying store (for instance, to allow access to the commitment store in `flat.Store`).
+
 ## Next {hide}
 
 Learn about [encoding](./encoding.md) {hide}

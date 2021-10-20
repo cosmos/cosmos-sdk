@@ -43,7 +43,7 @@ type MWTestSuite struct {
 // returns context and app with params set on account keeper
 func createTestApp(t *testing.T, isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(t, isCheckTx)
-	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{}).WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{Height: app.LastBlockHeight() + 1}).WithBlockGasMeter(sdk.NewInfiniteGasMeter())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
 	return app, ctx
@@ -53,7 +53,6 @@ func createTestApp(t *testing.T, isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 func (s *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 	var ctx sdk.Context
 	s.app, ctx = createTestApp(s.T(), isCheckTx)
-	ctx = ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
 	encodingConfig := simapp.MakeTestEncodingConfig()

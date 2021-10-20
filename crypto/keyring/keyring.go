@@ -457,7 +457,7 @@ func (ks keystore) Delete(uid string) error {
 	}
 
 	if !(strings.HasSuffix(uid, infoSuffix)) {
-		uid = string(infoKey(uid))
+		uid = infoKey(uid)
 	}
 	err = ks.db.Remove(uid)
 	if err != nil {
@@ -775,7 +775,7 @@ func (ks keystore) writeRecord(k *Record) error {
 
 	key := infoKey(k.Name)
 
-	exists, err := ks.existsInDb(addr, k.Name)
+	exists, err := ks.existsInDb(addr, key)
 	if err != nil {
 		return err
 	}
@@ -881,7 +881,7 @@ func (ks keystore) MigrateAll() (bool, error) {
 // migrate converts keyring.Item from amino to proto serialization format.
 func (ks keystore) migrate(key string) (*Record, bool, error) {
 	if !(strings.HasSuffix(key, infoSuffix)) && !(strings.HasPrefix(key, sdk.Bech32PrefixAccAddr)) {
-		key = string(infoKey(key))
+		key = infoKey(key)
 	}
 	item, err := ks.db.Get(key)
 	if err != nil {

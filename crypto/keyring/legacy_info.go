@@ -43,7 +43,7 @@ type legacyLocalInfo struct {
 	Algo         hd.PubKeyType      `json:"algo"`
 }
 
-func infoKey(name string) []byte { return []byte(fmt.Sprintf("%s.%s", name, infoSuffix)) }
+func infoKey(name string) string { return fmt.Sprintf("%s.%s", name, infoSuffix) }
 
 // GetType implements Info interface
 func (i legacyLocalInfo) GetType() KeyType {

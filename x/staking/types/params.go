@@ -133,10 +133,6 @@ func (p Params) Validate() error {
 		return err
 	}
 
-	if err := ValidatePowerReduction(p.PowerReduction); err != nil {
-		return err
-	}
-
 	if err := validateMinCommissionRate(p.MinCommissionRate); err != nil {
 		return err
 	}

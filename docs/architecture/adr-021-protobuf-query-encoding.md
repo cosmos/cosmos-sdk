@@ -52,7 +52,6 @@ high to justify its usage. However for queries this is not a concern, and
 providing generic module-level queries that use `Any` does not preclude apps
 from also providing app-level queries that return use the app-level `oneof`s.
 
-
 A hypothetical example for the `gov` module would look something like:
 
 ```proto
@@ -88,7 +87,7 @@ The custom queries for our module are implemented by implementing this interface
 The first parameter in this generated interface is a generic `context.Context`,
 whereas querier methods generally need an instance of `sdk.Context` to read
 from the store. Since arbitrary values can be attached to `context.Context`
-using the `WithValue` and `Value` methods, the SDK should provide a function
+using the `WithValue` and `Value` methods, the Cosmos SDK should provide a function
 `sdk.UnwrapSDKContext` to retrieve the `sdk.Context` from the provided
 `context.Context`.
 
@@ -126,7 +125,6 @@ The signature for this method matches the existing
 `RegisterServer` method on the GRPC `Server` type where `handler` is the custom
 query server implementation described above.
 
-
 GRPC-like requests are routed by the service name (ex. `cosmos_sdk.x.bank.v1.Query`)
 and method name (ex. `QueryBalance`) combined with `/`s to form a full
 method name (ex. `/cosmos_sdk.x.bank.v1.Query/QueryBalance`). This gets translated
@@ -140,7 +138,7 @@ there is a quite natural mapping of GRPC-like rpc methods to the existing
 
 This basic specification allows us to reuse protocol buffer `service` definitions
 for ABCI custom queries substantially reducing the need for manual decoding and
-encoding in query methods. 
+encoding in query methods.
 
 ### GRPC Protocol Support
 
@@ -178,7 +176,7 @@ service Query {
 }
 ```
 
-grpc-gateway will work direcly against the GRPC proxy described above which will 
+grpc-gateway will work direcly against the GRPC proxy described above which will
 translate requests to ABCI queries under the hood. grpc-gateway can also
 generate Swagger definitions automatically.
 
@@ -188,7 +186,7 @@ approach, there will be no need to generate separate REST query handlers, just
 query servers as described above as grpc-gateway handles the translation of protobuf
 to REST as well as Swagger definitions.
 
-The SDK should provide CLI commands for apps to start GRPC gateway either in
+The Cosmos SDK should provide CLI commands for apps to start GRPC gateway either in
 a separate process or the same process as the ABCI app, as well as provide a
 command for generating grpc-gateway proxy `.proto` files and the `swagger.json`
 file.
@@ -211,7 +209,7 @@ we have tweaked the grpc codegen to use an interface rather than concrete type
 for the generated client struct. This allows us to also reuse the GRPC infrastructure
 for ABCI client queries.
 
-1Context` will receive a new method `QueryConn` that returns a `ClientConn`
+1Context`will receive a new method`QueryConn`that returns a`ClientConn`
 that routes calls to ABCI queries
 
 Clients (such as CLI methods) will then be able to call query methods like this:

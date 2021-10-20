@@ -38,7 +38,7 @@ This was never adopted, however.
 Having a well-specified return value for `Msg`s would improve client UX. For instance,
 in `x/gov`,  `MsgSubmitProposal` returns the proposal ID as a big-endian `uint64`.
 This isn’t really documented anywhere and clients would need to know the internals
-of the SDK to parse that value and return it to users.
+of the Cosmos SDK to parse that value and return it to users.
 
 Also, there may be cases where we want to use these return values programatically.
 For instance, https://github.com/cosmos/cosmos-sdk/issues/7093 proposes a method for
@@ -182,6 +182,7 @@ This also allows us to change how we perform functional tests. Instead of mockin
 Finally, closing a module to client API opens desirable OCAP patterns discussed in ADR-033. Since server implementation and interface is hidden, nobody can hold "keepers"/servers and will be forced to relay on the client interface, which will drive developers for correct encapsulation and software engineering patterns.
 
 ### Pros
+
 - communicates return type clearly
 - manual handler registration and return type marshaling is no longer needed, just implement the interface and register it
 - communication interface is automatically generated, the developer can now focus only on the state transition methods - this would improve the UX of [\#7093](https://github.com/cosmos/cosmos-sdk/issues/7093) approach (1) if we chose to adopt that
@@ -189,8 +190,8 @@ Finally, closing a module to client API opens desirable OCAP patterns discussed 
 - dramatically reduces and simplifies the code
 
 ### Cons
-- using `service` definitions outside the context of gRPC could be confusing (but doesn’t violate the proto3 spec)
 
+- using `service` definitions outside the context of gRPC could be confusing (but doesn’t violate the proto3 spec)
 
 ## References
 

@@ -23,9 +23,13 @@ func (s *testMsgSuite) TestMsg() {
 
 	msg := testdata.NewTestMsg(accAddr)
 	s.Require().NotNil(msg)
-	s.Require().Equal([]sdk.AccAddress{accAddr}, msg.GetSigners())
+	s.Require().True(accAddr.Equals(msg.GetSigners()[0]))
 	s.Require().Equal("TestMsg", msg.Route())
 	s.Require().Equal("Test message", msg.Type())
 	s.Require().Nil(msg.ValidateBasic())
 	s.Require().NotPanics(func() { msg.GetSignBytes() })
+}
+
+func (s *testMsgSuite) TestMsgTypeURL() {
+	s.Require().Equal("/testdata.TestMsg", sdk.MsgTypeURL(new(testdata.TestMsg)))
 }

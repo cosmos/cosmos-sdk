@@ -33,6 +33,9 @@ func (m *PrivKey) Sign(msg []byte) ([]byte, error) {
 
 // Bytes serialize the private key.
 func (m *PrivKey) Bytes() []byte {
+	if m == nil {
+		return nil
+	}
 	return m.Secret.Bytes()
 }
 

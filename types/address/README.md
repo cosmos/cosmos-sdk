@@ -1,6 +1,6 @@
 # Account
 
-This package defines Cosmos SDK address related functions.
+This package defines Cosmos SDK address-related functions.
 
 ## References
 

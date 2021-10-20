@@ -275,11 +275,6 @@ $ %s tx gov weighted-vote 1 yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05 --from
 
 			// Build vote message and run basic validation
 			msg := types.NewMsgVoteWeighted(from, proposalID, options)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

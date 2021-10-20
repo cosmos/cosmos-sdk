@@ -68,11 +68,11 @@ func TestMarshalProtoPubKey(t *testing.T) {
 
 	pkAny, err := codectypes.NewAnyWithValue(pk)
 	require.NoError(err)
-	bz, err := ccfg.Marshaler.MarshalJSON(pkAny)
+	bz, err := ccfg.Codec.MarshalJSON(pkAny)
 	require.NoError(err)
 
 	var pkAny2 codectypes.Any
-	err = ccfg.Marshaler.UnmarshalJSON(bz, &pkAny2)
+	err = ccfg.Codec.UnmarshalJSON(bz, &pkAny2)
 	require.NoError(err)
 	// Before getting a cached value we need to unpack it.
 	// Normally this happens in types which implement UnpackInterfaces
@@ -84,11 +84,11 @@ func TestMarshalProtoPubKey(t *testing.T) {
 
 	// **** test binary serialization ****
 
-	bz, err = ccfg.Marshaler.Marshal(pkAny)
+	bz, err = ccfg.Codec.Marshal(pkAny)
 	require.NoError(err)
 
 	var pkAny3 codectypes.Any
-	err = ccfg.Marshaler.Unmarshal(bz, &pkAny3)
+	err = ccfg.Codec.Unmarshal(bz, &pkAny3)
 	require.NoError(err)
 	err = ccfg.InterfaceRegistry.UnpackAny(&pkAny3, &pkI)
 	require.NoError(err)
@@ -106,11 +106,11 @@ func TestMarshalProtoInterfacePubKey(t *testing.T) {
 
 	// **** test JSON serialization ****
 
-	bz, err := ccfg.Marshaler.MarshalInterfaceJSON(pk)
+	bz, err := ccfg.Codec.MarshalInterfaceJSON(pk)
 	require.NoError(err)
 
 	var pk3 cryptotypes.PubKey
-	err = ccfg.Marshaler.UnmarshalInterfaceJSON(bz, &pk3)
+	err = ccfg.Codec.UnmarshalInterfaceJSON(bz, &pk3)
 	require.NoError(err)
 	require.True(pk3.Equals(pk))
 
@@ -119,18 +119,18 @@ func TestMarshalProtoInterfacePubKey(t *testing.T) {
 	// Any can't implement UnpackInterfacesMessage interface. So Any is not
 	// automatically unpacked and we won't get a value.
 	var pkAny codectypes.Any
-	err = ccfg.Marshaler.UnmarshalJSON(bz, &pkAny)
+	err = ccfg.Codec.UnmarshalJSON(bz, &pkAny)
 	require.NoError(err)
 	ifc := pkAny.GetCachedValue()
 	require.Nil(ifc)
 
 	// **** test binary serialization ****
 
-	bz, err = ccfg.Marshaler.MarshalInterface(pk)
+	bz, err = ccfg.Codec.MarshalInterface(pk)
 	require.NoError(err)
 
 	var pk2 cryptotypes.PubKey
-	err = ccfg.Marshaler.UnmarshalInterface(bz, &pk2)
+	err = ccfg.Codec.UnmarshalInterface(bz, &pk2)
 	require.NoError(err)
 	require.True(pk2.Equals(pk))
 }

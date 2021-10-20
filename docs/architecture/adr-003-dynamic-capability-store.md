@@ -21,7 +21,7 @@ This ADR proposes such an interface & mechanism.
 
 ## Decision
 
-The SDK will include a new `CapabilityKeeper` abstraction, which is responsible for provisioning,
+The Cosmos SDK will include a new `CapabilityKeeper` abstraction, which is responsible for provisioning,
 tracking, and authenticating capabilities at runtime. During application initialisation in `app.go`,
 the `CapabilityKeeper` will be hooked up to modules through unique function references
 (by calling `ScopeToModule`, defined below) so that it can identify the calling module when later
@@ -33,7 +33,7 @@ past transactions and assigned to particular modes), and keep them in a memory-o
 chain is running.
 
 The `CapabilityKeeper` will include a persistent `KVStore`, a `MemoryStore`, and an in-memory map.
-The persistent `KVStore` tracks which capability is owned by which modules. 
+The persistent `KVStore` tracks which capability is owned by which modules.
 The `MemoryStore` stores a forward mapping that map from module name, capability tuples to capability names and
 a reverse mapping that map from module name, capability name to the capability index.
 Since we cannot marshal the capability into a `KVStore` and unmarshal without changing the memory location of the capability,

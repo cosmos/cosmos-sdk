@@ -14,11 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	v036 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v036"
-	v038 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v038"
-	v039 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v039"
-	v040 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v040"
-	v043 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v043"
+	v040 "github.com/cosmos/cosmos-sdk/x/genutil/migrations/v040"
+	v043 "github.com/cosmos/cosmos-sdk/x/genutil/migrations/v043"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -28,9 +25,6 @@ const flagGenesisTime = "genesis-time"
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/5041
 var migrationMap = types.MigrationMap{
-	"v0.36": v036.Migrate,
-	"v0.38": v038.Migrate, // NOTE: v0.37 and v0.38 are genesis compatible.
-	"v0.39": v039.Migrate,
 	"v0.42": v040.Migrate, // NOTE: v0.40, v0.41 and v0.42 are genesis compatible.
 	"v0.43": v043.Migrate,
 }

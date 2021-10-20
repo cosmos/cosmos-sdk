@@ -5,14 +5,14 @@ module.exports = {
     "/": {
       lang: "en-US"
     },
-    kr: {
-      lang: "kr"
-    },
-    cn: {
-      lang: "cn"
+    ko: {
+      lang: "ko"
     },
     ru: {
       lang: "ru"
+    },
+    zh: {
+      lang: "zh-CN"
     }
   },
   base: process.env.VUEPRESS_BASE || "/",
@@ -47,6 +47,10 @@ module.exports = {
         "key": "v0.42"
       },
       {
+        "label": "v0.44",
+        "key": "v0.44"
+      },
+      {
         "label": "master",
         "key": "master"
       }
@@ -54,7 +58,7 @@ module.exports = {
     topbar: {
       banner: true
     },
-    sidebar: { 
+    sidebar: {
       auto: true,
       nav: [
         {
@@ -109,7 +113,7 @@ module.exports = {
     },
     footer: {
       question: {
-        text: "Chat with Cosmos developers in <a href='https://discord.gg/W8trcGV' target='_blank'>Discord</a> or reach out on the <a href='https://forum.cosmos.network/c/tendermint' target='_blank'>SDK Developer Forum</a> to learn more."
+        text: "Chat with Cosmos developers in <a href='https://discord.gg/cosmosnetwork' target='_blank'>Discord</a> or reach out on the <a href='https://forum.cosmos.network/c/tendermint' target='_blank'>SDK Developer Forum</a> to learn more."
       },
       logo: "/logo-bw.svg",
       textLink: {
@@ -175,7 +179,7 @@ module.exports = {
             },
             {
               title: "Chat",
-              url: "https://discord.gg/W8trcGV"
+              url: "https://discord.gg/cosmosnetwork"
             }
           ]
         },

@@ -31,7 +31,7 @@ func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGra
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "%s doesn't exist.", t)
 	}
 
-	err = k.SaveGrant(ctx, grantee, granter, authorization, msg.Expiration)
+	err = k.SaveGrant(ctx, grantee, granter, authorization, msg.Grant.Expiration)
 	if err != nil {
 		return nil, err
 	}
@@ -70,9 +70,9 @@ func (k Keeper) Exec(goCtx context.Context, msg *authz.MsgExec) (*authz.MsgExecR
 	if err != nil {
 		return nil, err
 	}
-	result, err := k.DispatchActions(ctx, grantee, msgs)
+	results, err := k.DispatchActions(ctx, grantee, msgs)
 	if err != nil {
 		return nil, err
 	}
-	return &authz.MsgExecResponse{Result: result}, nil
+	return &authz.MsgExecResponse{Results: results}, nil
 }

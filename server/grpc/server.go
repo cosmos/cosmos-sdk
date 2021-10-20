@@ -17,7 +17,7 @@ import (
 // StartGRPCServer starts a gRPC server on the given address.
 func StartGRPCServer(clientCtx client.Context, app types.Application, address string) (*grpc.Server, error) {
 	grpcSrv := grpc.NewServer()
-	app.RegisterGRPCServer(clientCtx, grpcSrv)
+	app.RegisterGRPCServer(grpcSrv)
 	// reflection allows consumers to build dynamic clients that can write
 	// to any cosmos-sdk application without relying on application packages at compile time
 	err := reflection.Register(grpcSrv, reflection.Config{
@@ -54,7 +54,7 @@ func StartGRPCServer(clientCtx client.Context, app types.Application, address st
 	select {
 	case err := <-errCh:
 		return nil, err
-	case <-time.After(5 * time.Second): // assume server started successfully
+	case <-time.After(types.ServerStartTime): // assume server started successfully
 		return grpcSrv, nil
 	}
 }

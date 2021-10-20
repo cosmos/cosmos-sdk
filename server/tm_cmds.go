@@ -10,7 +10,7 @@ import (
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
 	tversion "github.com/tendermint/tendermint/version"
-	yaml "gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -55,7 +55,7 @@ func ShowValidatorCmd() *cobra.Command {
 				return err
 			}
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			bz, err := clientCtx.JSONCodec.MarshalInterfaceJSON(sdkPK)
+			bz, err := clientCtx.Codec.MarshalInterfaceJSON(sdkPK)
 			if err != nil {
 				return err
 			}

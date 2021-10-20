@@ -3,16 +3,22 @@
 ## Changelog
 
 - 2020 Apr 24: Initial Draft
+- 2021 Sep 14: Superseded by ADR-045
+
+## Status
+
+SUPERSEDED by ADR-045
 
 ## Context
 
 The current implementation of BaseApp does not allow developers to write custom error handlers during panic recovery
 [runTx()](https://github.com/cosmos/cosmos-sdk/blob/bad4ca75f58b182f600396ca350ad844c18fc80b/baseapp/baseapp.go#L539)
-method. We think that this method can be more flexible and can give SDK users more options for customizations without
+method. We think that this method can be more flexible and can give Cosmos SDK users more options for customizations without
 the need to rewrite whole BaseApp. Also there's one special case for `sdk.ErrorOutOfGas` error handling, that case
 might be handled in a "standard" way (middleware) alongside the others.
 
 We propose middleware-solution, which could help developers implement the following cases:
+
 * add external logging (let's say sending reports to external services like [Sentry](https://sentry.io));
 * call panic for specific error cases;
 
@@ -56,7 +62,7 @@ An example:
 func exampleErrHandler(recoveryObj interface{}) error {
     err, ok := recoveryObj.(error)
     if !ok { return nil }
-    
+
     if someSpecificError.Is(err) {
         panic(customPanicMsg)
     } else {
@@ -87,13 +93,14 @@ func newRecoveryMiddleware(handler RecoveryHandler, next recoveryMiddleware) rec
 ```
 
 Function receives a `recoveryObj` object and returns:
+
 * (next `recoveryMiddleware`, `nil`) if object wasn't handled (not a target type) by `RecoveryHandler`;
 * (`nil`, not nil `error`) if input object was handled and other middlewares in the chain should not be executed;
 * (`nil`, `nil`) in case of invalid behavior. Panic recovery might not have been properly handled;
-this can be avoided by always using a `default` as a rightmost middleware in the chain (always returns an `error`'); 
-
+this can be avoided by always using a `default` as a rightmost middleware in the chain (always returns an `error`');
 
 `OutOfGas` middleware example:
+
 ```go
 func newOutOfGasRecoveryMiddleware(gasWanted uint64, ctx sdk.Context, next recoveryMiddleware) recoveryMiddleware {
     handler := func(recoveryObj interface{}) error {
@@ -106,12 +113,13 @@ func newOutOfGasRecoveryMiddleware(gasWanted uint64, ctx sdk.Context, next recov
             ),
         )
     }
-    
+
     return newRecoveryMiddleware(handler, next)
 }
 ```
 
 `Default` middleware example:
+
 ```go
 func newDefaultRecoveryMiddleware() recoveryMiddleware {
     handler := func(recoveryObj interface{}) error {
@@ -119,7 +127,7 @@ func newDefaultRecoveryMiddleware() recoveryMiddleware {
             sdkerrors.ErrPanic, fmt.Sprintf("recovered: %v\nstack:\n%v", recoveryObj, string(debug.Stack())),
         )
     }
-    
+
     return newRecoveryMiddleware(handler, nil)
 }
 ```

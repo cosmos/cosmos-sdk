@@ -1,0 +1,245 @@
+syntax = "proto3";
+
+package cosmos.group.v1beta1;
+
+import "cosmos/group/v1beta1/types.proto";
+import "gogoproto/gogo.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/group";
+
+// Query is the cosmos.group.v1beta1 Query service.
+service Query {
+
+  // GroupInfo queries group info based on group id.
+  rpc GroupInfo(QueryGroupInfoRequest) returns (QueryGroupInfoResponse);
+
+  // GroupAccountInfo queries group account info based on group account address.
+  rpc GroupAccountInfo(QueryGroupAccountInfoRequest) returns (QueryGroupAccountInfoResponse);
+
+  // GroupMembers queries members of a group
+  rpc GroupMembers(QueryGroupMembersRequest) returns (QueryGroupMembersResponse);
+
+  // GroupsByAdmin queries groups by admin address.
+  rpc GroupsByAdmin(QueryGroupsByAdminRequest) returns (QueryGroupsByAdminResponse);
+
+  // GroupAccountsByGroup queries group accounts by group id.
+  rpc GroupAccountsByGroup(QueryGroupAccountsByGroupRequest) returns (QueryGroupAccountsByGroupResponse);
+
+  // GroupsByAdmin queries group accounts by admin address.
+  rpc GroupAccountsByAdmin(QueryGroupAccountsByAdminRequest) returns (QueryGroupAccountsByAdminResponse);
+
+  // Proposal queries a proposal based on proposal id.
+  rpc Proposal(QueryProposalRequest) returns (QueryProposalResponse);
+
+  // ProposalsByGroupAccount queries proposals based on group account address.
+  rpc ProposalsByGroupAccount(QueryProposalsByGroupAccountRequest) returns (QueryProposalsByGroupAccountResponse);
+
+  // VoteByProposalVoter queries a vote by proposal id and voter.
+  rpc VoteByProposalVoter(QueryVoteByProposalVoterRequest) returns (QueryVoteByProposalVoterResponse);
+
+  // VotesByProposal queries a vote by proposal.
+  rpc VotesByProposal(QueryVotesByProposalRequest) returns (QueryVotesByProposalResponse);
+
+  // VotesByVoter queries a vote by voter.
+  rpc VotesByVoter(QueryVotesByVoterRequest) returns (QueryVotesByVoterResponse);
+}
+
+// QueryGroupInfoRequest is the Query/GroupInfo request type.
+message QueryGroupInfoRequest {
+
+  // group_id is the unique ID of the group.
+  uint64 group_id = 1;
+}
+
+// QueryGroupInfoResponse is the Query/GroupInfo response type.
+message QueryGroupInfoResponse {
+
+  // info is the GroupInfo for the group.
+  GroupInfo info = 1;
+}
+
+// QueryGroupAccountInfoRequest is the Query/GroupAccountInfo request type.
+message QueryGroupAccountInfoRequest {
+
+  // address is the account address of the group account.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryGroupAccountInfoResponse is the Query/GroupAccountInfo response type.
+message QueryGroupAccountInfoResponse {
+
+  // info is the GroupAccountInfo for the group account.
+  GroupAccountInfo info = 1;
+}
+
+// QueryGroupMembersRequest is the Query/GroupMembersRequest request type.
+message QueryGroupMembersRequest {
+
+  // group_id is the unique ID of the group.
+  uint64 group_id = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryGroupMembersResponse is the Query/GroupMembersResponse response type.
+message QueryGroupMembersResponse {
+
+  // members are the members of the group with given group_id.
+  repeated GroupMember members = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryGroupsByAdminRequest is the Query/GroupsByAdminRequest request type.
+message QueryGroupsByAdminRequest {
+
+  // admin is the account address of a group's admin.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryGroupsByAdminResponse is the Query/GroupsByAdminResponse response type.
+message QueryGroupsByAdminResponse {
+
+  // groups are the groups info with the provided admin.
+  repeated GroupInfo groups = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryGroupAccountsByGroupRequest is the Query/GroupAccountsByGroup request type.
+message QueryGroupAccountsByGroupRequest {
+
+  // group_id is the unique ID of the group account's group.
+  uint64 group_id = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryGroupAccountsByGroupResponse is the Query/GroupAccountsByGroup response type.
+message QueryGroupAccountsByGroupResponse {
+
+  // group_accounts are the group accounts info associated with the provided group.
+  repeated GroupAccountInfo group_accounts = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryGroupAccountsByAdminRequest is the Query/GroupAccountsByAdmin request type.
+message QueryGroupAccountsByAdminRequest {
+
+  // admin is the admin address of the group account.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryGroupAccountsByAdminResponse is the Query/GroupAccountsByAdmin response type.
+message QueryGroupAccountsByAdminResponse {
+
+  // group_accounts are the group accounts info with provided admin.
+  repeated GroupAccountInfo group_accounts = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryProposalRequest is the Query/Proposal request type.
+message QueryProposalRequest {
+
+  // proposal_id is the unique ID of a proposal.
+  uint64 proposal_id = 1;
+}
+
+// QueryProposalResponse is the Query/Proposal response type.
+message QueryProposalResponse {
+
+  // proposal is the proposal info.
+  Proposal proposal = 1;
+}
+
+// QueryProposalsByGroupAccountRequest is the Query/ProposalByGroupAccount request type.
+message QueryProposalsByGroupAccountRequest {
+
+  // address is the group account address related to proposals.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryProposalsByGroupAccountResponse is the Query/ProposalByGroupAccount response type.
+message QueryProposalsByGroupAccountResponse {
+
+  // proposals are the proposals with given group account.
+  repeated Proposal proposals = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryVoteByProposalVoterResponse is the Query/VoteByProposalVoter request type.
+message QueryVoteByProposalVoterRequest {
+
+  // proposal_id is the unique ID of a proposal.
+  uint64 proposal_id = 1;
+
+  // voter is a proposal voter account address.
+  string voter = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryVoteByProposalVoterResponse is the Query/VoteByProposalVoter response type.
+message QueryVoteByProposalVoterResponse {
+
+  // vote is the vote with given proposal_id and voter.
+  Vote vote = 1;
+}
+
+// QueryVotesByProposalResponse is the Query/VotesByProposal request type.
+message QueryVotesByProposalRequest {
+
+  // proposal_id is the unique ID of a proposal.
+  uint64 proposal_id = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryVotesByProposalResponse is the Query/VotesByProposal response type.
+message QueryVotesByProposalResponse {
+
+  // votes are the list of votes for given proposal_id.
+  repeated Vote votes = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryVotesByVoterResponse is the Query/VotesByVoter request type.
+message QueryVotesByVoterRequest {
+  // voter is a proposal voter account address.
+  string voter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryVotesByVoterResponse is the Query/VotesByVoter response type.
+message QueryVotesByVoterResponse {
+
+  // votes are the list of votes by given voter.
+  repeated Vote votes = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

@@ -12,7 +12,7 @@ send fungible token transfers to other chains.
 
 ## Integrating the IBC module
 
-Integrating the IBC module to your SDK-based application is straighforward. The general changes can be summarized in the following steps:
+Integrating the IBC module to your Cosmos SDK-based application is straighforward. The general changes can be summarized in the following steps:
 
 - Add required modules to the `module.BasicManager`
 - Define additional `Keeper` fields for the new modules on the `App` type
@@ -206,7 +206,7 @@ connection handhake.
 The IBC module also has
 [`BeginBlock`](https://github.com/cosmos/ibc-go/blob/main/modules/core/02-client/abci.go) logic as
 well. This is optional as it is only required if your application uses the [localhost
-client](https://github.com/cosmos/ics/blob/master/spec/ics-009-loopback-client) to connect two
+client](https://github.com/cosmos/ibc/tree/master/spec/client/ics-009-loopback-client) to connect two
 different modules from the same chain.
 
 ::: tip
@@ -244,7 +244,7 @@ func NewApp(...args) *App {
 :::
 
 That's it! You have now wired up the IBC module and are now able to send fungible tokens across
-different chains. If you want to have a broader view of the changes take a look into the SDK's
+different chains. If you want to have a broader view of the changes take a look into the Cosmos SDK's
 [`SimApp`](https://github.com/cosmos/ibc-go/blob/main/testing/simapp/app.go).
 
 ## Next {hide}

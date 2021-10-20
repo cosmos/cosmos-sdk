@@ -16,7 +16,7 @@ for an application, since the SDK itself is agnostic to these particulars. It co
 the ante handler, where all basic transaction validity checks (signatures, nonces, auxiliary fields)
 are performed, and exposes the account keeper, which allows other modules to read, write, and modify accounts.
 
-This module will be used in the Cosmos Hub.
+This module is used in the Cosmos Hub.
 
 ## Contents
 
@@ -36,4 +36,11 @@ This module will be used in the Cosmos Hub.
    - [Genesis Initialization](05_vesting.md#genesis-initialization)
    - [Examples](05_vesting.md#examples)
    - [Glossary](05_vesting.md#glossary)
-6. **[Parameters](07_params.md)**
+6. **[Parameters](06_params.md)**
+7. **[Client](07_client.md)**
+   - **[Auth](07_client.md#auth)**
+      - [CLI](07_client.md#cli)
+      - [gRPC](07_client.md#grpc)
+      - [REST](07_client.md#rest)
+   - **[Vesting](07_client.md#vesting)**
+      - [CLI](07_client.md#vesting#cli)

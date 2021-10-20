@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"testing"
 
@@ -300,8 +299,8 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	ci, err = getCommitInfo(db, 2)
 	require.NoError(t, err)
 	require.Equal(t, int64(2), ci.Version)
-	require.Equal(t, 4, len(ci.StoreInfos), ci.StoreInfos)
-	checkContains(t, ci.StoreInfos, []string{"store1", "restore2", "store3", "store4"})
+	require.Equal(t, 3, len(ci.StoreInfos), ci.StoreInfos)
+	checkContains(t, ci.StoreInfos, []string{"store1", "restore2", "store4"})
 }
 
 func TestParsePath(t *testing.T) {
@@ -842,7 +841,7 @@ func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
 		chunks, err := source.Snapshot(uint64(version), snapshottypes.CurrentFormat)
 		require.NoError(b, err)
 		for reader := range chunks {
-			_, err := io.Copy(ioutil.Discard, reader)
+			_, err := io.Copy(io.Discard, reader)
 			require.NoError(b, err)
 			err = reader.Close()
 			require.NoError(b, err)

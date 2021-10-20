@@ -21,7 +21,7 @@ set in the governance module.
 - Initialise `Proposals` attributes
 - Decrease balance of sender by `InitialDeposit`
 - If `MinDeposit` is reached:
-  - Push `proposalID` in `ProposalProcessingQueue`
+    - Push `proposalID` in `ProposalProcessingQueue`
 - Transfer `InitialDeposit` from the `Proposer` to the governance `ModuleAccount`
 
 A `MsgSubmitProposal` transaction can be handled according to the following
@@ -83,7 +83,7 @@ Once a proposal is submitted, if
 - Add `deposit` of sender in `proposal.Deposits`
 - Increase `proposal.TotalDeposit` by sender's `deposit`
 - If `MinDeposit` is reached:
-  - Push `proposalID` in `ProposalProcessingQueueEnd`
+    - Push `proposalID` in `ProposalProcessingQueueEnd`
 - Transfer `Deposit` from the `proposer` to the governance `ModuleAccount`
 
 A `MsgDeposit` transaction has to go through a number of checks to be valid.

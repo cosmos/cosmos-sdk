@@ -10,7 +10,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
@@ -31,10 +31,10 @@ type wrapper struct {
 }
 
 var (
-	_ authsigning.Tx             = &wrapper{}
-	_ client.TxBuilder           = &wrapper{}
-	_ ante.HasExtensionOptionsTx = &wrapper{}
-	_ ExtensionOptionsTxBuilder  = &wrapper{}
+	_ authsigning.Tx                   = &wrapper{}
+	_ client.TxBuilder                 = &wrapper{}
+	_ middleware.HasExtensionOptionsTx = &wrapper{}
+	_ ExtensionOptionsTxBuilder        = &wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
@@ -200,14 +200,9 @@ func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 }
 
 func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
-	anys := make([]*codectypes.Any, len(msgs))
-
-	for i, msg := range msgs {
-		var err error
-		anys[i], err = codectypes.NewAnyWithValue(msg)
-		if err != nil {
-			return err
-		}
+	anys, err := tx.SetMsgs(msgs)
+	if err != nil {
+		return err
 	}
 
 	w.tx.Body.Messages = anys
@@ -250,6 +245,13 @@ func (w *wrapper) SetFeeAmount(coins sdk.Coins) {
 	}
 
 	w.tx.AuthInfo.Fee.Amount = coins
+
+	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
+	w.authInfoBz = nil
+}
+
+func (w *wrapper) SetTip(tip *tx.Tip) {
+	w.tx.AuthInfo.Tip = tip
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil

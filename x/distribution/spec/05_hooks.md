@@ -3,10 +3,12 @@ order: 5
 -->
 
 # Hooks
+
 Available hooks that can be called by and from this module.
+
 ## Create or modify delegation distribution
 
- - triggered-by: `staking.MsgDelegate`, `staking.MsgBeginRedelegate`, `staking.MsgUndelegate`
+- triggered-by: `staking.MsgDelegate`, `staking.MsgBeginRedelegate`, `staking.MsgUndelegate`
 
 ### Before
 

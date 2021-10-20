@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -96,4 +97,21 @@ func TestMsgGrantAuthorization(t *testing.T) {
 			require.Error(t, msg.ValidateBasic(), "test: %v", i)
 		}
 	}
+}
+
+func TestMsgGrantGetAuthorization(t *testing.T) {
+	require := require.New(t)
+
+	m := authz.MsgGrant{}
+	require.Nil(m.GetAuthorization())
+
+	g := authz.GenericAuthorization{Msg: "some_type"}
+	var err error
+	m.Grant.Authorization, err = cdctypes.NewAnyWithValue(&g)
+	require.NoError(err)
+	require.Equal(m.GetAuthorization(), &g)
+
+	g = authz.GenericAuthorization{Msg: "some_type2"}
+	m.SetAuthorization(&g)
+	require.Equal(m.GetAuthorization(), &g)
 }

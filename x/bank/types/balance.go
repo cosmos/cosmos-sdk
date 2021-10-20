@@ -30,32 +30,13 @@ func (b Balance) GetCoins() sdk.Coins {
 
 // Validate checks for address and coins correctness.
 func (b Balance) Validate() error {
-	_, err := sdk.AccAddressFromBech32(b.Address)
-	if err != nil {
+	if _, err := sdk.AccAddressFromBech32(b.Address); err != nil {
 		return err
 	}
-	seenDenoms := make(map[string]bool)
 
-	// NOTE: we perform a custom validation since the coins.Validate function
-	// errors on zero balance coins
-	for _, coin := range b.Coins {
-		if seenDenoms[coin.Denom] {
-			return fmt.Errorf("duplicate denomination %s", coin.Denom)
-		}
-
-		if err := sdk.ValidateDenom(coin.Denom); err != nil {
-			return err
-		}
-
-		if coin.IsNegative() {
-			return fmt.Errorf("coin %s amount is cannot be negative", coin.Denom)
-		}
-
-		seenDenoms[coin.Denom] = true
+	if err := b.Coins.Validate(); err != nil {
+		return err
 	}
-
-	// sort the coins post validation
-	b.Coins = b.Coins.Sort()
 
 	return nil
 }

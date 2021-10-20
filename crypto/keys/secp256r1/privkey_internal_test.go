@@ -3,7 +3,7 @@ package secp256r1
 import (
 	"testing"
 
-	proto "github.com/gogo/protobuf/proto"
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto"
 
@@ -41,7 +41,7 @@ func (suite *SKSuite) TestPubKey() {
 	suite.True(suite.sk.(*PrivKey).Secret.PublicKey.Equal(&pk.(*PubKey).Key.PublicKey))
 }
 
-func (suite *SKSuite) Bytes() {
+func (suite *SKSuite) TestBytes() {
 	bz := suite.sk.Bytes()
 	suite.Len(bz, fieldSize)
 	var sk *PrivKey

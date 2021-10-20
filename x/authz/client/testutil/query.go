@@ -17,7 +17,7 @@ import (
 func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 	val := s.network.Validators[0]
 
-	grantee := s.grantee
+	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	_, err := ExecGrant(
@@ -85,7 +85,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 			} else {
 				s.Require().NoError(err)
 				var grants authz.QueryGrantsResponse
-				err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp.Bytes(), &grants)
+				err = val.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &grants)
 				s.Require().NoError(err)
 			}
 		})
@@ -95,7 +95,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 func (s *IntegrationTestSuite) TestQueryAuthorization() {
 	val := s.network.Validators[0]
 
-	grantee := s.grantee
+	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	_, err := ExecGrant(
@@ -176,6 +176,78 @@ func (s *IntegrationTestSuite) TestQueryAuthorization() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().Contains(strings.TrimSpace(out.String()), tc.expectedOutput)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestQueryGranterGrants() {
+	val := s.network.Validators[0]
+	grantee := s.grantee[0]
+	require := s.Require()
+
+	testCases := []struct {
+		name        string
+		args        []string
+		expectErr   bool
+		expectedErr string
+		expItems    int
+	}{
+		{
+			"invalid address",
+			[]string{
+				"invalid-address",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			"decoding bech32 failed",
+			0,
+		},
+		{
+			"no authorization found",
+			[]string{
+				grantee.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			"",
+			0,
+		},
+		{
+			"valid case",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			"",
+			6,
+		},
+		{
+			"valid case with pagination",
+			[]string{
+				val.Address.String(),
+				"--limit=2",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			"",
+			2,
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := cli.GetQueryGranterGrants()
+			clientCtx := val.ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				require.Error(err)
+				require.Contains(out.String(), tc.expectedErr)
+			} else {
+				require.NoError(err)
+				var grants authz.QueryGranterGrantsResponse
+				require.NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &grants))
+				require.Len(grants.Grants, tc.expItems)
 			}
 		})
 	}

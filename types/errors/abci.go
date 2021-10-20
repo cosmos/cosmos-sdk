@@ -10,7 +10,7 @@ import (
 const (
 	// SuccessABCICode declares an ABCI response use 0 to signal that the
 	// processing was successful and no error is returned.
-	SuccessABCICode = 0
+	SuccessABCICode uint32 = 0
 
 	// All unclassified errors that do not provide an ABCI code are clubbed
 	// under an internal error code and a generic message instead of
@@ -67,8 +67,8 @@ func ResponseDeliverTx(err error, gw, gu uint64, debug bool) abci.ResponseDelive
 
 // QueryResult returns a ResponseQuery from an error. It will try to parse ABCI
 // info from the error.
-func QueryResult(err error) abci.ResponseQuery {
-	space, code, log := ABCIInfo(err, false)
+func QueryResult(err error, debug bool) abci.ResponseQuery {
+	space, code, log := ABCIInfo(err, debug)
 	return abci.ResponseQuery{
 		Codespace: space,
 		Code:      code,

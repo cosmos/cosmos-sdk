@@ -31,7 +31,7 @@ message PageRequest {
   // is set.
   bool count_total = 4;
 
-  // reverse is set to true indicates that, results to be returned in the descending order.
+  // reverse is set to true if results are to be returned in the descending order.
   bool reverse = 5;
 }
 

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	metrics "github.com/armon/go-metrics"
+	"github.com/armon/go-metrics"
 	metricsprom "github.com/armon/go-metrics/prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/expfmt"
@@ -64,11 +64,13 @@ type Metrics struct {
 	prometheusEnabled bool
 }
 
+// GatherResponse is the response type of registered metrics
 type GatherResponse struct {
 	Metrics     []byte
 	ContentType string
 }
 
+// New creates a new instance of Metrics
 func New(cfg Config) (*Metrics, error) {
 	if !cfg.Enabled {
 		return nil, nil

@@ -22,6 +22,9 @@ value called `rpc.laddr` would be read from an environmental variable called
 Running the `InterceptConfigsPreRunHandler` also reads `app.toml`
 and `config.toml` from the home directory under the `config` directory.
 If `config.toml` or `app.toml` do not exist then those files are created
-and populated with default values.
+and populated with default values. `InterceptConfigsPreRunHandler` takes
+two parameters to set/update a custom template to create custom `app.toml`.
+If these parameters are empty, the server then creates a default template
+provided by the SDK.
 */
 package server

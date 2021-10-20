@@ -3,7 +3,8 @@ order: 1
 -->
 
 # Concepts
-In Proof of Stake (PoS) blockchains, rewards gained from transaction fees are paid to validators. The fee distribution module fairly distributes the rewards to the validators' constituent delegators. 
+
+In Proof of Stake (PoS) blockchains, rewards gained from transaction fees are paid to validators. The fee distribution module fairly distributes the rewards to the validators' constituent delegators.
 
 Rewards are calculated per period. The period is updated each time a validator's delegation changes, for example, when the validator receives a new delegation.
 The rewards for a single validator can then be calculated by taking the total rewards for the period before the delegation started, minus the current total rewards.
@@ -12,7 +13,7 @@ To learn more, see the [F1 Fee Distribution paper](/docs/spec/fee_distribution/f
 The commission to the validator is paid when the validator is removed or when the validator requests a withdrawal.
 The commission is calculated and incremented at every `BeginBlock` operation to update accumulated fee amounts.
 
-The rewards to a delegator are distributed when the delegation is changed or removed, or a withdrawal is requested. 
+The rewards to a delegator are distributed when the delegation is changed or removed, or a withdrawal is requested.
 Before rewards are distributed, all slashes to the validator that occurred during the current delegation are applied.
 
 ## Reference Counting in F1 Fee Distribution

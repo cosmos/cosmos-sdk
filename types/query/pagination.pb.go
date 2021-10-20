@@ -46,7 +46,7 @@ type PageRequest struct {
 	// count_total is only respected when offset is used. It is ignored when key
 	// is set.
 	CountTotal bool `protobuf:"varint,4,opt,name=count_total,json=countTotal,proto3" json:"count_total,omitempty"`
-	// reverse is set to true indicates that, results to be returned in the descending order.
+	// reverse is set to true if results are to be returned in the descending order.
 	Reverse bool `protobuf:"varint,5,opt,name=reverse,proto3" json:"reverse,omitempty"`
 }
 

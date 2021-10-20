@@ -46,7 +46,7 @@ func GetTxCmd() *cobra.Command {
 // NewCmdFeeGrant returns a CLI command handler for creating a MsgGrantAllowance transaction.
 func NewCmdFeeGrant() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant [granter] [grantee]",
+		Use:   "grant [granter_key_or_address] [grantee]",
 		Short: "Grant Fee allowance to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(
@@ -63,10 +63,6 @@ Examples:
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			_, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
 
 			cmd.Flags().Set(flags.FlagFrom, args[0])
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -129,25 +125,28 @@ Examples:
 					return err
 				}
 
-				if periodClock > 0 && periodLimit != nil {
-					periodReset := getPeriodReset(periodClock)
-					if exp != "" && periodReset.Sub(expiresAtTime) > 0 {
-						return fmt.Errorf("period(%d) cannot reset after expiration(%v)", periodClock, exp)
-					}
-
-					periodic := feegrant.PeriodicAllowance{
-						Basic:            basic,
-						Period:           getPeriod(periodClock),
-						PeriodReset:      getPeriodReset(periodClock),
-						PeriodSpendLimit: periodLimit,
-						PeriodCanSpend:   periodLimit,
-					}
-
-					grant = &periodic
-
-				} else {
-					return fmt.Errorf("invalid number of args %d", len(args))
+				if periodClock <= 0 {
+					return fmt.Errorf("period clock was not set")
 				}
+
+				if periodLimit == nil {
+					return fmt.Errorf("period limit was not set")
+				}
+
+				periodReset := getPeriodReset(periodClock)
+				if exp != "" && periodReset.Sub(expiresAtTime) > 0 {
+					return fmt.Errorf("period (%d) cannot reset after expiration (%v)", periodClock, exp)
+				}
+
+				periodic := feegrant.PeriodicAllowance{
+					Basic:            basic,
+					Period:           getPeriod(periodClock),
+					PeriodReset:      getPeriodReset(periodClock),
+					PeriodSpendLimit: periodLimit,
+					PeriodCanSpend:   periodLimit,
+				}
+
+				grant = &periodic
 			}
 
 			allowedMsgs, err := cmd.Flags().GetStringSlice(FlagAllowedMsgs)

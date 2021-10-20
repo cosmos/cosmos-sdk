@@ -23,13 +23,9 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 	}
 
 	anys := t.Body.Messages
-	res := make([]sdk.Msg, len(anys))
-	for i, any := range anys {
-		cached := any.GetCachedValue()
-		if cached == nil {
-			panic("Any cached value is nil. Transaction messages must be correctly packed Any values.")
-		}
-		res[i] = cached.(sdk.Msg)
+	res, err := GetMsgs(anys, "transaction")
+	if err != nil {
+		panic(err)
 	}
 	return res
 }
@@ -59,6 +55,13 @@ func (t *Tx) ValidateBasic() error {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest,
 			"invalid gas supplied; %d > %d", fee.GasLimit, MaxGasWanted,
+		)
+	}
+
+	if fee.Amount.IsAnyNil() {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInsufficientFee,
+			"invalid fee provided: null",
 		)
 	}
 
@@ -170,15 +173,7 @@ func (t *Tx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	for _, any := range m.Messages {
-		var msg sdk.Msg
-		err := unpacker.UnpackAny(any, &msg)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return UnpackInterfaces(unpacker, m.Messages)
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method

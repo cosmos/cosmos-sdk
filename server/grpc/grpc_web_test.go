@@ -7,7 +7,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/textproto"
 	"strconv"
@@ -45,10 +44,12 @@ func (s *GRPCWebTestSuite) SetupSuite() {
 	cfg := network.DefaultConfig()
 	cfg.NumValidators = 1
 	s.cfg = cfg
-	s.network = network.New(s.T(), s.cfg)
-	s.Require().NotNil(s.network)
 
-	_, err := s.network.WaitForHeight(2)
+	var err error
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
+
+	_, err = s.network.WaitForHeight(2)
 	s.Require().NoError(err)
 
 	s.protoCdc = codec.NewProtoCodec(s.cfg.InterfaceRegistry)
@@ -195,7 +196,7 @@ func (s *GRPCWebTestSuite) makeGrpcRequest(
 		return nil, Trailer{}, nil, err
 	}
 	defer resp.Body.Close()
-	contents, err := ioutil.ReadAll(resp.Body)
+	contents, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, Trailer{}, nil, err
 	}

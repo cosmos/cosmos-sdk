@@ -1,6 +1,10 @@
 package types
 
 import (
+	fmt "fmt"
+	"sort"
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
@@ -54,44 +58,32 @@ func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []k
 	return types.DiffKVStores(a, b, prefixesToSkip)
 }
 
-type (
-	CacheKVStore  = types.CacheKVStore
-	CommitKVStore = types.CommitKVStore
-	CacheWrap     = types.CacheWrap
-	CacheWrapper  = types.CacheWrapper
-	CommitID      = types.CommitID
-)
-
-type StoreType = types.StoreType
-
-const (
-	StoreTypeMulti     = types.StoreTypeMulti
-	StoreTypeDB        = types.StoreTypeDB
-	StoreTypeIAVL      = types.StoreTypeIAVL
-	StoreTypeTransient = types.StoreTypeTransient
-	StoreTypeMemory    = types.StoreTypeMemory
-)
-
-type (
-	StoreKey          = types.StoreKey
-	CapabilityKey     = types.CapabilityKey
-	KVStoreKey        = types.KVStoreKey
-	TransientStoreKey = types.TransientStoreKey
-	MemoryStoreKey    = types.MemoryStoreKey
-)
+// assertNoCommonPrefix will panic if there are two keys: k1 and k2 in keys, such that
+// k1 is a prefix of k2
+func assertNoPrefix(keys []string) {
+	sorted := make([]string, len(keys))
+	copy(sorted, keys)
+	sort.Strings(sorted)
+	for i := 1; i < len(sorted); i++ {
+		if strings.HasPrefix(sorted[i], sorted[i-1]) {
+			panic(fmt.Sprint("Potential key collision between KVStores:", sorted[i], " - ", sorted[i-1]))
+		}
+	}
+}
 
 // NewKVStoreKey returns a new pointer to a KVStoreKey.
-// Use a pointer so keys don't collide.
-func NewKVStoreKey(name string) *KVStoreKey {
+func NewKVStoreKey(name string) *types.KVStoreKey {
 	return types.NewKVStoreKey(name)
 }
 
 // NewKVStoreKeys returns a map of new  pointers to KVStoreKey's.
-// Uses pointers so keys don't collide.
-func NewKVStoreKeys(names ...string) map[string]*KVStoreKey {
-	keys := make(map[string]*KVStoreKey)
-	for _, name := range names {
-		keys[name] = NewKVStoreKey(name)
+// The function will panic if there is a potential conflict in names (see `assertNoPrefix`
+// function for more details).
+func NewKVStoreKeys(names ...string) map[string]*types.KVStoreKey {
+	assertNoPrefix(names)
+	keys := make(map[string]*types.KVStoreKey, len(names))
+	for _, n := range names {
+		keys[n] = NewKVStoreKey(n)
 	}
 
 	return keys
@@ -99,16 +91,19 @@ func NewKVStoreKeys(names ...string) map[string]*KVStoreKey {
 
 // Constructs new TransientStoreKey
 // Must return a pointer according to the ocap principle
-func NewTransientStoreKey(name string) *TransientStoreKey {
+func NewTransientStoreKey(name string) *types.TransientStoreKey {
 	return types.NewTransientStoreKey(name)
 }
 
 // NewTransientStoreKeys constructs a new map of TransientStoreKey's
 // Must return pointers according to the ocap principle
-func NewTransientStoreKeys(names ...string) map[string]*TransientStoreKey {
-	keys := make(map[string]*TransientStoreKey)
-	for _, name := range names {
-		keys[name] = NewTransientStoreKey(name)
+// The function will panic if there is a potential conflict in names (see `assertNoPrefix`
+// function for more details).
+func NewTransientStoreKeys(names ...string) map[string]*types.TransientStoreKey {
+	assertNoPrefix(names)
+	keys := make(map[string]*types.TransientStoreKey)
+	for _, n := range names {
+		keys[n] = NewTransientStoreKey(n)
 	}
 
 	return keys
@@ -116,10 +111,13 @@ func NewTransientStoreKeys(names ...string) map[string]*TransientStoreKey {
 
 // NewMemoryStoreKeys constructs a new map matching store key names to their
 // respective MemoryStoreKey references.
-func NewMemoryStoreKeys(names ...string) map[string]*MemoryStoreKey {
-	keys := make(map[string]*MemoryStoreKey)
-	for _, name := range names {
-		keys[name] = types.NewMemoryStoreKey(name)
+// The function will panic if there is a potential conflict in names (see `assertNoPrefix`
+// function for more details).
+func NewMemoryStoreKeys(names ...string) map[string]*types.MemoryStoreKey {
+	assertNoPrefix(names)
+	keys := make(map[string]*types.MemoryStoreKey)
+	for _, n := range names {
+		keys[n] = types.NewMemoryStoreKey(n)
 	}
 
 	return keys

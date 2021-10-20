@@ -15,6 +15,9 @@ func (m *PubKey) String() string {
 
 // Bytes implements SDK PubKey interface.
 func (m *PubKey) Bytes() []byte {
+	if m == nil {
+		return nil
+	}
 	return m.Key.Bytes()
 }
 

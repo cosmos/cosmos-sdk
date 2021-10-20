@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
@@ -47,7 +46,6 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, uint32(8687), stakingGenesis.Params.HistoricalEntries)
 	require.Equal(t, "stake", stakingGenesis.Params.BondDenom)
 	require.Equal(t, float64(238280), stakingGenesis.Params.UnbondingTime.Seconds())
-	require.Equal(t, sdk.DefaultPowerReduction, stakingGenesis.Params.PowerReduction)
 	// check numbers of Delegations and Validators
 	require.Len(t, stakingGenesis.Delegations, 3)
 	require.Len(t, stakingGenesis.Validators, 3)
@@ -68,7 +66,7 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, "1", stakingGenesis.Validators[2].MinSelfDelegation.String())
 }
 
-// TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.
+// TestRandomizedGenState1 tests abnormal scenarios of applying RandomizedGenState.
 func TestRandomizedGenState1(t *testing.T) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)

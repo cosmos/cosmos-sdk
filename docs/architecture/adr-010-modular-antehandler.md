@@ -3,6 +3,11 @@
 ## Changelog
 
 - 2019 Aug 31: Initial draft
+- 2021 Sep 14: Superseded by ADR-045
+
+## Status
+
+SUPERSEDED by ADR-045
 
 ## Context
 
@@ -17,10 +22,12 @@ For example, let's say a user wants to implement some custom signature verificat
 One approach is to use the [ModuleManager](https://godoc.org/github.com/cosmos/cosmos-sdk/types/module) and have each module implement its own antehandler if it requires custom antehandler logic. The ModuleManager can then be passed in an AnteHandler order in the same way it has an order for BeginBlockers and EndBlockers. The ModuleManager returns a single AnteHandler function that will take in a tx and run each module's `AnteHandle` in the specified order. The module manager's AnteHandler is set as the baseapp's AnteHandler.
 
 Pros:
+
 1. Simple to implement
 2. Utilizes the existing ModuleManager architecture
 
 Cons:
+
 1. Improves granularity but still cannot get more granular than a per-module basis. e.g. If auth's `AnteHandle` function is in charge of validating memo and signatures, users cannot swap the signature-checking functionality while keeping the rest of auth's `AnteHandle` functionality.
 2. Module AnteHandler are run one after the other. There is no way for one AnteHandler to wrap or "decorate" another.
 
@@ -37,7 +44,7 @@ type Decorator interface {
 }
 ```
 
-Each decorator works like a modularized SDK antehandler function, but it can take in a `next` argument that may be another decorator or a Handler (which does not take in a next argument). These decorators can be chained together, one decorator being passed in as the `next` argument of the previous decorator in the chain. The chain ends in a Router which can take a tx and route to the appropriate msg handler.
+Each decorator works like a modularized Cosmos SDK antehandler function, but it can take in a `next` argument that may be another decorator or a Handler (which does not take in a next argument). These decorators can be chained together, one decorator being passed in as the `next` argument of the previous decorator in the chain. The chain ends in a Router which can take a tx and route to the appropriate msg handler.
 
 A key benefit of this approach is that one Decorator can wrap its internal logic around the next Checker/Deliverer. A weave Decorator may do the following:
 
@@ -53,10 +60,12 @@ func (example Decorator) Deliver(ctx Context, store KVStore, tx Tx, next Deliver
 ```
 
 Pros:
+
 1. Weave Decorators can wrap over the next decorator/handler in the chain. The ability to both pre-process and post-process may be useful in certain settings.
 2. Provides a nested modular structure that isn't possible in the solution above, while also allowing for a linear one-after-the-other structure like the solution above.
 
 Cons:
+
 1. It is hard to understand at first glance the state updates that would occur after a Decorator runs given the `ctx`, `store`, and `tx`. A Decorator can have an arbitrary number of nested Decorators being called within its function body, each possibly doing some pre- and post-processing before calling the next decorator on the chain. Thus to understand what a Decorator is doing, one must also understand what every other decorator further along the chain is also doing. This can get quite complicated to understand. A linear, one-after-the-other approach while less powerful, may be much easier to reason about.
 
 ### Chained Micro-Functions
@@ -65,17 +74,17 @@ The benefit of Weave's approach is that the Decorators can be very concise, whic
 
 Another approach is to split the AnteHandler functionality into tightly scoped "micro-functions", while preserving the one-after-the-other ordering that would come from the ModuleManager approach.
 
-We can then have a way to chain these micro-functions so that they run one after the other. Modules may define multiple ante micro-functions and then also provide a default per-module AnteHandler that implements a default, suggested order for these micro-functions. 
+We can then have a way to chain these micro-functions so that they run one after the other. Modules may define multiple ante micro-functions and then also provide a default per-module AnteHandler that implements a default, suggested order for these micro-functions.
 
 Users can order the AnteHandlers easily by simply using the ModuleManager. The ModuleManager will take in a list of AnteHandlers and return a single AnteHandler that runs each AnteHandler in the order of the list provided. If the user is comfortable with the default ordering of each module, this is as simple as providing a list with each module's antehandler (exactly the same as BeginBlocker and EndBlocker).
 
 If however, users wish to change the order or add, modify, or delete ante micro-functions in anyway; they can always define their own ante micro-functions and add them explicitly to the list that gets passed into module manager.
 
-#### Default Workflow:
+#### Default Workflow
 
 This is an example of a user's AnteHandler if they choose not to make any custom micro-functions.
 
-##### SDK code:
+##### Cosmos SDK code
 
 ```go
 // Chains together a list of AnteHandler micro-functions that get run one after the other.
@@ -137,7 +146,7 @@ func (mm ModuleManager) GetAnteHandler() AnteHandler {
 }
 ```
 
-##### User Code:
+##### User Code
 
 ```go
 // Note: Since user is not making any custom modifications, we can just SetAnteHandlerOrder with the default AnteHandlers provided by each module in our preferred order
@@ -166,22 +175,24 @@ moduleManager.SetAnteHandlerOrder([]AnteHandler(ValidateMemo, CustomSigVerify, D
 ```
 
 Pros:
+
 1. Allows for ante functionality to be as modular as possible.
 2. For users that do not need custom ante-functionality, there is little difference between how antehandlers work and how BeginBlock and EndBlock work in ModuleManager.
 3. Still easy to understand
 
 Cons:
+
 1. Cannot wrap antehandlers with decorators like you can with Weave.
 
 ### Simple Decorators
 
-This approach takes inspiration from Weave's decorator design while trying to minimize the number of breaking changes to the SDK and maximizing simplicity. Like Weave decorators, this approach allows one `AnteDecorator` to wrap the next AnteHandler to do pre- and post-processing on the result. This is useful since decorators can do defer/cleanups after an AnteHandler returns as well as perform some setup beforehand. Unlike Weave decorators, these `AnteDecorator` functions can only wrap over the AnteHandler rather than the entire handler execution path. This is deliberate as we want decorators from different modules to perform authentication/validation on a `tx`. However, we do not want decorators being capable of wrapping and modifying the results of a `MsgHandler`.
+This approach takes inspiration from Weave's decorator design while trying to minimize the number of breaking changes to the Cosmos SDK and maximizing simplicity. Like Weave decorators, this approach allows one `AnteDecorator` to wrap the next AnteHandler to do pre- and post-processing on the result. This is useful since decorators can do defer/cleanups after an AnteHandler returns as well as perform some setup beforehand. Unlike Weave decorators, these `AnteDecorator` functions can only wrap over the AnteHandler rather than the entire handler execution path. This is deliberate as we want decorators from different modules to perform authentication/validation on a `tx`. However, we do not want decorators being capable of wrapping and modifying the results of a `MsgHandler`.
 
-In addition, this approach will not break any core SDK API's. Since we preserve the notion of an AnteHandler and still set a single AnteHandler in baseapp, the decorator is simply an additional approach available for users that desire more customization. The API of modules (namely `x/auth`) may break with this approach, but the core API remains untouched.
+In addition, this approach will not break any core Cosmos SDK API's. Since we preserve the notion of an AnteHandler and still set a single AnteHandler in baseapp, the decorator is simply an additional approach available for users that desire more customization. The API of modules (namely `x/auth`) may break with this approach, but the core API remains untouched.
 
-Allow Decorator interface that can be chained together to create an SDK AnteHandler.
+Allow Decorator interface that can be chained together to create a Cosmos SDK AnteHandler.
 
-This allows users to choose between implementing an AnteHandler by themselves and setting it in the baseapp, or use the decorator pattern to chain their custom decorators with SDK provided decorators in the order they wish.
+This allows users to choose between implementing an AnteHandler by themselves and setting it in the baseapp, or use the decorator pattern to chain their custom decorators with the Cosmos SDK provided decorators in the order they wish.
 
 ```go
 // An AnteDecorator wraps an AnteHandler, and can do pre- and post-processing on the next AnteHandler

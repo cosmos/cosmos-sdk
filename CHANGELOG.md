@@ -156,6 +156,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10184](https://github.com/cosmos/cosmos-sdk/pull/10184) Fixed CLI tx commands to no longer explicitly require the chain-id flag as this value can come from a user config.
 * [\#10239](https://github.com/cosmos/cosmos-sdk/pull/10239) Fixed x/bank/044 migrateDenomMetadata.
 * (x/upgrade) [\#10189](https://github.com/cosmos/cosmos-sdk/issues/10189) Removed potential sources of non-determinism in upgrades
+* [\#10258](https://github.com/cosmos/cosmos-sdk/issues/10258) Fixes issue related to segmentaiton fault on mac m1 arm64
 
 ### State Machine Breaking
 
@@ -200,6 +201,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9848](https://github.com/cosmos/cosmos-sdk/pull/9848) ADR-040: Implement BadgerDB backend
 * [\#9851](https://github.com/cosmos/cosmos-sdk/pull/9851) ADR-040: Implement RocksDB backend
 * [\#10308](https://github.com/cosmos/cosmos-sdk/pull/10308) ADR-040: Implement DBConnection.Revert
+* [\#9892](https://github.com/cosmos/cosmos-sdk/pull/9892) ADR-040: KV Store with decoupled storage and state commitment
 
 
 ### Client Breaking Changes

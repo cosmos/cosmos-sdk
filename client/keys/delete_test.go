@@ -80,7 +80,7 @@ func Test_runDeleteCmd(t *testing.T) {
 	_, err = kb.Key(fakeKeyName1)
 	require.Error(t, err) // Key1 is gone
 
-	_, err = kb.Key(string(fakeKeyName2))
+	_, err = kb.Key(fakeKeyName2)
 	require.NoError(t, err)
 
 	cmd.SetArgs([]string{

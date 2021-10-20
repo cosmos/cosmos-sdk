@@ -6,7 +6,7 @@
 
 ## Status
 
-DRAFT
+Proposed
 
 ## Abstract
 

@@ -156,7 +156,7 @@ func (m *QueryGrantsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryGranterGrantsRequest is the request type for the Query/Grants RPC method.
+// QueryGranterGrantsRequest is the request type for the Query/GranterGrants RPC method.
 type QueryGranterGrantsRequest struct {
 	Granter string `protobuf:"bytes,1,opt,name=granter,proto3" json:"granter,omitempty"`
 	// pagination defines an pagination for the request.

@@ -1479,24 +1479,9 @@ func (s *IntegrationTestSuite) TestTipsWithAux() {
 			true,
 		},
 		{
-			"error with SIGN_MODE_AMINO_AUX and generate-only unset",
-			[]string{
-				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeAminoAux),
-			},
-			true,
-		},
-		{
 			"no error with SIGN_MDOE_DIRECT_AUX mode and generate-only set",
 			[]string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
-				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-			},
-			false,
-		},
-		{
-			"no error with SIGN_MDOE_AMINO_AUX mode and generate-only set",
-			[]string{
-				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeAminoAux),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 			},
 			false,
@@ -1605,7 +1590,6 @@ func (s *IntegrationTestSuite) TestTipsToFee() {
 	)
 	require.NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
-	fmt.Println("res", string(res.Bytes()))
 
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
 	s.Require().Equal(uint32(0), txRes.Code)

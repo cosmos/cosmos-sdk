@@ -62,7 +62,7 @@ func TestCreate(t *testing.T) {
 				Id:   1,
 				Name: "some name",
 			},
-			expErr: errors.ErrEmptyKey,
+			expErr: errors.ErrORMEmptyKey,
 		},
 		"happy path": {
 			rowID: EncodeSequence(1),

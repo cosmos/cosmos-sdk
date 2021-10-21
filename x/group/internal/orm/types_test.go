@@ -51,11 +51,11 @@ func TestTypeSafeRowGetter(t *testing.T) {
 		"empty rowID not allowed": {
 			srcRowID:     []byte{},
 			srcModelType: reflect.TypeOf(testdata.TableModel{}),
-			expErr:       errors.ErrEmptyKey,
+			expErr:       errors.ErrORMEmptyKey,
 		},
 		"nil rowID not allowed": {
 			srcModelType: reflect.TypeOf(testdata.TableModel{}),
-			expErr:       errors.ErrEmptyKey,
+			expErr:       errors.ErrORMEmptyKey,
 		},
 	}
 	for msg, spec := range specs {

@@ -30,7 +30,7 @@ type Validateable interface {
 // Iterator allows iteration through a sequence of key value pairs
 type Iterator interface {
 	// LoadNext loads the next value in the sequence into the pointer passed as dest and returns the key. If there
-	// are no more items the ErrIteratorDone error is returned
+	// are no more items the ErrORMIteratorDone error is returned
 	// The key is the rowID.
 	LoadNext(store sdk.KVStore, dest codec.ProtoMarshaler) (RowID, error)
 	// Close releases the iterator and should be called at the end of iteration
@@ -59,7 +59,7 @@ type RowGetter func(store sdk.KVStore, rowID RowID, dest codec.ProtoMarshaler) e
 func NewTypeSafeRowGetter(prefixKey [2]byte, model reflect.Type, cdc codec.Codec) RowGetter {
 	return func(store sdk.KVStore, rowID RowID, dest codec.ProtoMarshaler) error {
 		if len(rowID) == 0 {
-			return errors.Wrap(errors.ErrEmptyKey, "key must not be nil")
+			return errors.Wrap(errors.ErrORMEmptyKey, "key must not be nil")
 		}
 		if err := assertCorrectType(model, dest); err != nil {
 			return err

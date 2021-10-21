@@ -32,7 +32,7 @@ type table struct {
 // newTable creates a new table
 func newTable(prefix [2]byte, model codec.ProtoMarshaler, cdc codec.Codec) (*table, error) {
 	if model == nil {
-		return nil, errors.ErrEmptyModel.Wrap("Model must not be nil")
+		return nil, errors.ErrORMEmptyModel.Wrap("Model must not be nil")
 	}
 	tp := reflect.TypeOf(model)
 	if tp.Kind() == reflect.Ptr {
@@ -61,13 +61,13 @@ func (a *table) AddAfterDeleteInterceptor(interceptor AfterDeleteInterceptor) {
 }
 
 // Create persists the given object under the rowID key, returning an
-// errors.ErrUniqueConstraint if a value already exists at that key.
+// errors.ErrORMUniqueConstraint if a value already exists at that key.
 //
 // Create iterates through the registered callbacks that may add secondary index
 // keys.
 func (a table) Create(store sdk.KVStore, rowID RowID, obj codec.ProtoMarshaler) error {
 	if a.Has(store, rowID) {
-		return errors.ErrUniqueConstraint
+		return errors.ErrORMUniqueConstraint
 	}
 
 	return a.Set(store, rowID, obj)
@@ -78,8 +78,7 @@ func (a table) Create(store sdk.KVStore, rowID RowID, obj codec.ProtoMarshaler) 
 // therefore make sure that this contract is fulfilled. Parameters must not be
 // nil.
 //
-// Update iterates through the registered callbacks that may add or remove
-// secondary index keys.
+// Update triggers all "after set" hooks that may add or remove secondary index keys.
 func (a table) Update(store sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler) error {
 	if !a.Has(store, rowID) {
 		return errors.ErrNotFound
@@ -95,7 +94,7 @@ func (a table) Update(store sdk.KVStore, rowID RowID, newValue codec.ProtoMarsha
 // keys.
 func (a table) Set(store sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler) error {
 	if len(rowID) == 0 {
-		return errors.ErrEmptyKey
+		return errors.ErrORMEmptyKey
 	}
 	if err := assertCorrectType(a.model, newValue); err != nil {
 		return err

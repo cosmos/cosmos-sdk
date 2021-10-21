@@ -88,7 +88,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 
 	for i := range []int{0, 1} {
 		key := append(v043.DenomMetadataPrefix, []byte(metaData[i].Base)...)
-		// keys before 0.44 had denom two times in the key
+		// keys before 0.45 had denom two times in the key
 		key = append(key, []byte(metaData[i].Base)...)
 		bz, err := encCfg.Codec.Marshal(&metaData[i])
 		require.NoError(t, err)

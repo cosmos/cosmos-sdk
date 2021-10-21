@@ -68,14 +68,35 @@ jobs:
         run: cd cosmovisor; make
         if: env.GIT_DIFF
 
+  test-submodules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2.1.4
+        with:
+          go-version: 1.17
+      - uses: technote-space/get-diff-action@v5
+        id: git_diff
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
+      - name: Run submodule tests and create test coverage profile.
+        run: GIT_DIFF="${{ env.GIT_DIFF }}" bash scripts/module-tests.sh
+        if: env.GIT_DIFF
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "${{ github.sha }}-go-submodules-coverage"
+          path: ./coverage-go-submod-profile.out
+
+
   split-test-files:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Create a file with all core Cosmos SDK pkgs
-        run:  pkgsfile=`pwd`/pkgs.txt; find -name go.mod -not -path "./cosmovisor/*" -execdir go list ./... >> $pkgsfile \;
-      - name: echo pkgs
-        run: cat ./pkgs.txt
+        run:  go list ./... > pkgs.txt
       - name: Split pkgs into 4 files
         run: split -d -n l/4 pkgs.txt pkgs.txt.part.
       # cache multiple
@@ -152,7 +173,15 @@ jobs:
         if: env.GIT_DIFF
       - uses: actions/download-artifact@v2
         with:
+          name: "${{ github.sha }}-02-coverage"
+        if: env.GIT_DIFF
+      - uses: actions/download-artifact@v2
+        with:
           name: "${{ github.sha }}-03-coverage"
+        if: env.GIT_DIFF
+      - uses: actions/download-artifact@v2
+        with:
+          name: "${{ github.sha }}-go-submodules-coverage"
         if: env.GIT_DIFF
       - run: |
           cat ./*profile.out | grep -v "mode: atomic" >> coverage.txt

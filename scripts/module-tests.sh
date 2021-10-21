@@ -9,6 +9,7 @@
 execute_mod_tests() {
     go_mod=$1;
     mod_dir=$(dirname "$go_mod");
+    mod_dir=${mod_dir:2}; # remove "./" prefix
     root_dir=$(pwd);
 
     # TODO: in the future we will need to disable it once we go into multi module setup, because
@@ -21,17 +22,25 @@ execute_mod_tests() {
     echo "executing $go_mod tests"
     cd $mod_dir;
     go test -mod=readonly -timeout 30m -coverprofile=${root_dir}/${coverage_file}.tmp -covermode=atomic -tags='norace ledger test_ledger_mock'  ./...
+    local ret=$?
+    echo "test return: " $ret;
     cd -;
     # strip mode statement
     tail -n +1 ${coverage_file}.tmp >> ${coverage_file}
     rm ${coverage_file}.tmp;
+    return $ret;
 }
 
-#GIT_DIFF=`git status --porcelain`
-echo "GIT DIFF:" ${GIT_DIFF}
+GIT_DIFF=`git status --porcelain`
 
 coverage_file=coverage-go-submod-profile.out
+return_val=0;
 
-for f in $(find -name go.mod -not -path "./go.mod"); do
+for f in $(find -name go.mod -not -path "./go.mod") "./container/go.mod"; do
     execute_mod_tests $f;
+    if [[ $? -ne 0  ]] ; then
+        return_val=2;
+    fi;
 done
+
+exit $return_val;

@@ -1,5 +1,7 @@
 package db
 
+//
+
 type readerRWAdapter struct{ DBReader }
 
 // ReaderAsReadWriter returns a ReadWriter that forwards to a reader and errors if writes are

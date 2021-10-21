@@ -11,8 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/container"
 )
 
-//
-
 type KVStoreKey struct {
 	name string
 }

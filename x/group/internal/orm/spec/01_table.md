@@ -1,8 +1,9 @@
 # Table
 
+A table can be built given a `codec.ProtoMarshaler` model type, a prefix to access the underlying prefix store used to store table data as well as a `Codec` for marshalling/unmarshalling.
+
 +++ https://github.com/cosmos/cosmos-sdk/blob/9f78f16ae75cc42fc5fe636bde18a453ba74831f/x/group/internal/orm/table.go#L24-L30
 
-A table can be built given a `codec.ProtoMarshaler` model type, a prefix to access the underlying prefix store used to store table data as well as a `Codec` for marshalling/unmarshalling.
 In the prefix store, entities should be stored by an unique identifier called `RowID` which can be based either on an `uint64` auto-increment counter, string or dynamic size bytes.
 Regular CRUD operations can be performed on a table, these methods take a `sdk.KVStore` as parameter to get the table prefix store.
 

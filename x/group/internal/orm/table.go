@@ -42,13 +42,7 @@ func (a tableBuilder) RowGetter() RowGetter {
 
 // Build creates a new table object.
 func (a tableBuilder) Build() table {
-	return table{
-		model:       a.model,
-		prefix:      a.prefix,
-		afterSet:    a.afterSet,
-		afterDelete: a.afterDelete,
-		cdc:         a.cdc,
-	}
+	return table(a)
 }
 
 // AddAfterSetInterceptor can be used to register a callback function that is executed after an object is created and/or updated.

@@ -421,7 +421,7 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 		// The module won't exist in the fromVM in two cases:
 		// 1. A new module is added. In this case we run InitGenesis with an
 		// empty genesis state.
-		// 2. An existing chain is upgrading to version < 0.43 to v0.43+ for the first time.
+		// 2. An existing chain is upgrading from version < 0.43 to v0.43+ for the first time.
 		// In this case, all modules have yet to be added to x/upgrade's VersionMap store.
 		if exists {
 			err := c.runModuleMigrations(ctx, moduleName, fromVersion, toVersion)

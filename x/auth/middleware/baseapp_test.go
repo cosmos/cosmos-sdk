@@ -37,6 +37,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
+// This file tests baseapp's integration with middlewares. It's mostly about
+// testing the CheckTx, DeliverTx and SimulateTx paths.
+
 var (
 	capKey1 = sdk.NewKVStoreKey("key1")
 	capKey2 = sdk.NewKVStoreKey("key2")

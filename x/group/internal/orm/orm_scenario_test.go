@@ -98,7 +98,7 @@ func TestKeeperEndToEndWithPrimaryKeyTable(t *testing.T) {
 	// and when we create another entry with the same primary key
 	err = k.primaryKeyTable.Create(store, &tm)
 	// then it should fail as the primary key must be unique
-	require.True(t, errors.ErrUniqueConstraint.Is(err), err)
+	require.True(t, errors.ErrORMUniqueConstraint.Is(err), err)
 
 	// and when entity updated with new primary key
 	updatedMember := &testdata.TableModel{

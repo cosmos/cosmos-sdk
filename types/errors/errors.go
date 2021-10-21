@@ -16,6 +16,9 @@ const UndefinedCodespace = "undefined"
 // mathCodespace is the codespace for all errors defined in math package
 const mathCodespace = "math"
 
+// mathCodespace is the codespace for all errors defined in orm package
+const ormCodespace = "orm"
+
 var (
 	// errInternal should never be exposed, but we reserve this code for non-specified errors
 	errInternal = Register(UndefinedCodespace, 1, "internal")
@@ -153,6 +156,24 @@ var (
 
 	// ErrInvalidDecString defines an error for an invalid decimal string
 	ErrInvalidDecString = Register(mathCodespace, 41, "invalid decimal string")
+
+	// ErrORMIteratorDone defines an error when an iterator is done
+	ErrORMIteratorDone = Register(ormCodespace, 42, "iterator done")
+
+	// ErrORMInvalidIterator defines an error for an invalid iterator
+	ErrORMInvalidIterator = Register(ormCodespace, 43, "invalid iterator")
+
+	// ErrORMUniqueConstraint defines an error when a value already exists at a given key
+	ErrORMUniqueConstraint = Register(ormCodespace, 44, "unique constraint violation")
+
+	// ErrORMEmptyModel defines an error when an empty model is provided for building a table
+	ErrORMEmptyModel = Register(ormCodespace, 45, "invalid argument")
+
+	// ErrORMKeyMaxLength defines an error when a key exceeds max length
+	ErrORMKeyMaxLength = Register(ormCodespace, 46, "index key exceeds max length")
+
+	// ErrORMEmptyKey defines an error for an empty key
+	ErrORMEmptyKey = Register(ormCodespace, 47, "cannot use empty key")
 )
 
 // Register returns an error instance that should be used as the base for

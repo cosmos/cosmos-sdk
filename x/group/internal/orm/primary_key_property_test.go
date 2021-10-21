@@ -62,15 +62,14 @@ func (m *primaryKeyMachine) Init(t *rapid.T) {
 	// Create primary key table
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
-	builder, err := NewPrimaryKeyTableBuilder(
+	table, err := NewPrimaryKeyTable(
 		[2]byte{0x1},
 		&testdata.TableModel{},
 		cdc,
 	)
 	require.NoError(t, err)
-	table := builder.Build()
 
-	m.table = &table
+	m.table = table
 
 	// Create model state
 	m.state = make(map[string]*testdata.TableModel)

@@ -6,8 +6,8 @@ import (
 )
 
 type TestKeeper struct {
-	autoUInt64Table AutoUInt64Table
-	primaryKeyTable PrimaryKeyTable
+	autoUInt64Table *AutoUInt64Table
+	primaryKeyTable *PrimaryKeyTable
 }
 
 var (
@@ -19,17 +19,17 @@ var (
 func NewTestKeeper(cdc codec.Codec) TestKeeper {
 	k := TestKeeper{}
 
-	autoUInt64TableBuilder, err := NewAutoUInt64TableBuilder(AutoUInt64TableTablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc)
+	autoUInt64Table, err := NewAutoUInt64Table(AutoUInt64TableTablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.autoUInt64Table = autoUInt64TableBuilder.Build()
+	k.autoUInt64Table = autoUInt64Table
 
-	primaryKeyTableBuilder, err := NewPrimaryKeyTableBuilder(PrimaryKeyTablePrefix, &testdata.TableModel{}, cdc)
+	primaryKeyTable, err := NewPrimaryKeyTable(PrimaryKeyTablePrefix, &testdata.TableModel{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.primaryKeyTable = primaryKeyTableBuilder.Build()
+	k.primaryKeyTable = primaryKeyTable
 
 	return k
 }

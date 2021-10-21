@@ -19,9 +19,8 @@ func TestContains(t *testing.T) {
 	ctx := NewMockContext()
 	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
-	builder, err := NewPrimaryKeyTableBuilder([2]byte{0x1}, &testdata.TableModel{}, cdc)
+	tb, err := NewPrimaryKeyTable([2]byte{0x1}, &testdata.TableModel{}, cdc)
 	require.NoError(t, err)
-	tb := builder.Build()
 
 	obj := testdata.TableModel{
 		Id:   1,

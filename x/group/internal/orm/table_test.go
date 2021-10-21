@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewTableBuilder(t *testing.T) {
+func TestNewTable(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
@@ -38,13 +38,13 @@ func TestNewTableBuilder(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			builder, err := newTableBuilder([2]byte{0x1}, tc.model, cdc)
+			table, err := newTable([2]byte{0x1}, tc.model, cdc)
 			if tc.expectErr {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tc.expectedErr)
 			} else {
 				require.NoError(t, err)
-				require.NotNil(t, builder)
+				require.NotNil(t, table)
 			}
 		})
 	}
@@ -97,9 +97,8 @@ func TestCreate(t *testing.T) {
 			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
 			var anyPrefix = [2]byte{0x10}
-			tableBuilder, err := newTableBuilder(anyPrefix, &testdata.TableModel{}, cdc)
+			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc)
 			require.NoError(t, err)
-			myTable := tableBuilder.Build()
 
 			err = myTable.Create(store, spec.rowID, spec.src)
 
@@ -155,9 +154,8 @@ func TestUpdate(t *testing.T) {
 			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
 			var anyPrefix = [2]byte{0x10}
-			tableBuilder, err := newTableBuilder(anyPrefix, &testdata.TableModel{}, cdc)
+			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc)
 			require.NoError(t, err)
-			myTable := tableBuilder.Build()
 
 			initValue := testdata.TableModel{
 				Id:   1,
@@ -205,9 +203,8 @@ func TestDelete(t *testing.T) {
 			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
 			var anyPrefix = [2]byte{0x10}
-			tableBuilder, err := newTableBuilder(anyPrefix, &testdata.TableModel{}, cdc)
+			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc)
 			require.NoError(t, err)
-			myTable := tableBuilder.Build()
 
 			initValue := testdata.TableModel{
 				Id:   1,

@@ -5,37 +5,24 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ Indexable = &AutoUInt64TableBuilder{}
+var _ Indexable = &AutoUInt64Table{}
 
-// NewAutoUInt64TableBuilder creates a builder to setup a AutoUInt64Table object.
-func NewAutoUInt64TableBuilder(prefixData [2]byte, prefixSeq byte, model codec.ProtoMarshaler, cdc codec.Codec) (*AutoUInt64TableBuilder, error) {
-	tableBuilder, err := newTableBuilder(prefixData, model, cdc)
-	if err != nil {
-		return nil, err
-	}
-	return &AutoUInt64TableBuilder{
-		tableBuilder: tableBuilder,
-		seq:          NewSequence(prefixSeq),
-	}, nil
-}
-
-type AutoUInt64TableBuilder struct {
-	*tableBuilder
+// AutoUInt64Table is the table type with an auto incrementing ID.
+type AutoUInt64Table struct {
+	*table
 	seq Sequence
 }
 
-// Build create the AutoUInt64Table object.
-func (a AutoUInt64TableBuilder) Build() AutoUInt64Table {
-	return AutoUInt64Table{
-		table: a.tableBuilder.Build(),
-		seq:   a.seq,
+// NewAutoUInt64Table creates a new AutoUInt64Table.
+func NewAutoUInt64Table(prefixData [2]byte, prefixSeq byte, model codec.ProtoMarshaler, cdc codec.Codec) (*AutoUInt64Table, error) {
+	table, err := newTable(prefixData, model, cdc)
+	if err != nil {
+		return nil, err
 	}
-}
-
-// AutoUInt64Table is the table type which an auto incrementing ID.
-type AutoUInt64Table struct {
-	table table
-	seq   Sequence
+	return &AutoUInt64Table{
+		table: table,
+		seq:   NewSequence(prefixSeq),
+	}, nil
 }
 
 // Create a new persistent object with an auto generated uint64 primary key. The

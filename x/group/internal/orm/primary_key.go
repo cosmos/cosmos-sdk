@@ -5,25 +5,23 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ Indexable = &PrimaryKeyTableBuilder{}
+var _ Indexable = &PrimaryKeyTable{}
 
-// NewPrimaryKeyTableBuilder creates a builder to setup a PrimaryKeyTable object.
-func NewPrimaryKeyTableBuilder(prefixData [2]byte, model PrimaryKeyed, cdc codec.Codec) (*PrimaryKeyTableBuilder, error) {
-	tableBuilder, err := newTableBuilder(prefixData, model, cdc)
+// PrimaryKeyTable provides simpler object style orm methods without passing database RowIDs.
+// Entries are persisted and loaded with a reference to their unique primary key.
+type PrimaryKeyTable struct {
+	*table
+}
+
+// NewPrimaryKeyTable creates a new PrimaryKeyTable.
+func NewPrimaryKeyTable(prefixData [2]byte, model PrimaryKeyed, cdc codec.Codec) (*PrimaryKeyTable, error) {
+	table, err := newTable(prefixData, model, cdc)
 	if err != nil {
 		return nil, err
 	}
-	return &PrimaryKeyTableBuilder{
-		tableBuilder: tableBuilder,
+	return &PrimaryKeyTable{
+		table: table,
 	}, nil
-}
-
-type PrimaryKeyTableBuilder struct {
-	*tableBuilder
-}
-
-func (a PrimaryKeyTableBuilder) Build() PrimaryKeyTable {
-	return PrimaryKeyTable{table: a.tableBuilder.Build()}
 }
 
 // PrimaryKeyed defines an object type that is aware of its immutable primary key.
@@ -53,12 +51,6 @@ func PrimaryKey(obj PrimaryKeyed) []byte {
 		panic(err)
 	}
 	return key
-}
-
-// PrimaryKeyTable provides simpler object style orm methods without passing database RowIDs.
-// Entries are persisted and loaded with a reference to their unique primary key.
-type PrimaryKeyTable struct {
-	table table
 }
 
 // Create persists the given object under their primary key. It checks if the

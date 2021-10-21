@@ -9,51 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ Indexable = &tableBuilder{}
-
-type tableBuilder struct {
-	model       reflect.Type
-	prefix      [2]byte
-	afterSet    []AfterSetInterceptor
-	afterDelete []AfterDeleteInterceptor
-	cdc         codec.Codec
-}
-
-// newTableBuilder creates a builder to setup a table object.
-func newTableBuilder(prefix [2]byte, model codec.ProtoMarshaler, cdc codec.Codec) (*tableBuilder, error) {
-	if model == nil {
-		return nil, errors.ErrEmptyModel.Wrap("Model must not be nil")
-	}
-	tp := reflect.TypeOf(model)
-	if tp.Kind() == reflect.Ptr {
-		tp = tp.Elem()
-	}
-	return &tableBuilder{
-		prefix: prefix,
-		model:  tp,
-		cdc:    cdc,
-	}, nil
-}
-
-// RowGetter returns a type safe RowGetter.
-func (a tableBuilder) RowGetter() RowGetter {
-	return NewTypeSafeRowGetter(a.prefix, a.model, a.cdc)
-}
-
-// Build creates a new table object.
-func (a tableBuilder) Build() table {
-	return table(a)
-}
-
-// AddAfterSetInterceptor can be used to register a callback function that is executed after an object is created and/or updated.
-func (a *tableBuilder) AddAfterSetInterceptor(interceptor AfterSetInterceptor) {
-	a.afterSet = append(a.afterSet, interceptor)
-}
-
-// AddAfterDeleteInterceptor can be used to register a callback function that is executed after an object is deleted.
-func (a *tableBuilder) AddAfterDeleteInterceptor(interceptor AfterDeleteInterceptor) {
-	a.afterDelete = append(a.afterDelete, interceptor)
-}
+var _ Indexable = &table{}
 
 // table is the high level object to storage mapper functionality. Persistent
 // entities are stored by an unique identifier called `RowID`. The table struct
@@ -71,6 +27,37 @@ type table struct {
 	afterSet    []AfterSetInterceptor
 	afterDelete []AfterDeleteInterceptor
 	cdc         codec.Codec
+}
+
+// newTable creates a new table
+func newTable(prefix [2]byte, model codec.ProtoMarshaler, cdc codec.Codec) (*table, error) {
+	if model == nil {
+		return nil, errors.ErrEmptyModel.Wrap("Model must not be nil")
+	}
+	tp := reflect.TypeOf(model)
+	if tp.Kind() == reflect.Ptr {
+		tp = tp.Elem()
+	}
+	return &table{
+		prefix: prefix,
+		model:  tp,
+		cdc:    cdc,
+	}, nil
+}
+
+// RowGetter returns a type safe RowGetter.
+func (a table) RowGetter() RowGetter {
+	return NewTypeSafeRowGetter(a.prefix, a.model, a.cdc)
+}
+
+// AddAfterSetInterceptor can be used to register a callback function that is executed after an object is created and/or updated.
+func (a *table) AddAfterSetInterceptor(interceptor AfterSetInterceptor) {
+	a.afterSet = append(a.afterSet, interceptor)
+}
+
+// AddAfterDeleteInterceptor can be used to register a callback function that is executed after an object is deleted.
+func (a *table) AddAfterDeleteInterceptor(interceptor AfterDeleteInterceptor) {
+	a.afterDelete = append(a.afterDelete, interceptor)
 }
 
 // Create persists the given object under the rowID key, returning an

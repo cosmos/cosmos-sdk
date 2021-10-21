@@ -162,6 +162,7 @@ type RootStoreConfig struct {
     ReservePrefix(StoreKey, StoreType)
 }
 ```
+
 <!-- TODO: Review whether these types can be further reduced or simplified -->
 <!-- TODO: RootStorePersistentCache type -->
 
@@ -190,25 +191,12 @@ The presented workaround can be used until the IBC module is fully upgraded to s
 
 ### Optimization: compress module key prefixes
 
-We consider a compression of prefix keys using [Huffman Coding](https://en.wikipedia.org/wiki/Huffman_coding). It will require knowledge of used prefixes (module store keys) a priori. And for the best results, it will need frequency information for each prefix (how often objects are stored in the store under the same prefix key). For Merkle Proofs we can't use prefix compression - so it should only apply for the `SS`. Moreover, the prefix compression should be only applied for the module namespace (the first prefix level). More precisely:
+We consider a compression of prefix keys by creating a mapping from module key to an integer, and serializing the integer using varint coding. Varint coding assures that different values don't have common byte prefix. For Merkle Proofs we can't use prefix compression - so it should only apply for the `SS` keys. Moreover, the prefix compression should be only applied for the module namespace. More precisely:
 + each module has it's own namespace;
 + when accessing a module namespace we create a KVStore with embedded prefix;
-+ that prefix will be compressed only for accessing and managing `SS`.
++ that prefix will be compressed only when accessing and managing `SS`.
 
-Huffman coding assures that in the set of prefix codes there are no two elements where one is a prefix of another:
-
-```
-for each k1, k2 \in {store.HuffmanCode(p): p \in StoreModuleKeys}
-    assert( !k1.hasPrefix(k2) )
-```
-
-NOTE: We need to assure that the codes won't change. Huffman Coding depends on the keys and its frequency - so we would need to generate the codes and then fix the mapping in a static variable.
-
-#### Alternatives
-
-+ Single byte prefix
-+ Double byte prefix
-+ Varint prefix (varint is a simplified version of Huffman Coding without taking the frequency information into account).
+We need to assure that the codes won't change. We can fix the mapping in a static variable (provided by an app) or SS state under a special key.
 
 TODO: need to make decision about the key compression.
 

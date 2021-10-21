@@ -165,9 +165,9 @@ type RootStoreConfig struct {
 <!-- TODO: Review whether these types can be further reduced or simplified -->
 <!-- TODO: RootStorePersistentCache type -->
 
-In contrast to `MultiStore`, `RootStore` doesn't allow to dynamically mount sub-stores or provide an arbitrary backing DB.
+In contrast to `MultiStore`, `RootStore` doesn't allow to dynamically mount sub-stores or provide an arbitrary backing DB for individual sub-stores.
 
-NOTE: modules will be still use a special commitments and their own DBs. For example: a module which will use ZK proofs for state, can store and commit this proofs in the `RootStore` (usually as a single record) and manage the specialized store privately or using the `SS` low level interface.
+NOTE: modules will be able to use a special commitment and their own DBs. For example: a module which will use ZK proofs for state can store and commit this proof in the `RootStore` (usually as a single record) and manage the specialized store privately or using the `SC` low level interface.
 
 #### Compatibility support
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
 set -euo pipefail
+set -x
 
 BINARY=/simd/${BINARY:-simd}
 ID=${ID:-0}
@@ -10,7 +11,7 @@ if ! [ -f "${BINARY}" ]; then
 	exit 1
 fi
 
-export SIMDHOME="/simd/node${ID}/simd"
+export SIMDHOME="/data/node${ID}/simd"
 
 if [ -d "$(dirname "${SIMDHOME}"/"${LOG}")" ]; then
   "${BINARY}" --home "${SIMDHOME}" "$@" | tee "${SIMDHOME}/${LOG}"

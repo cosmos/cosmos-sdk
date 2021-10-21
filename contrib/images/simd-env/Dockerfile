@@ -5,7 +5,7 @@ WORKDIR /work
 RUN make clean build-linux
 
 FROM alpine:3.14 AS run
-RUN apk add curl file jq
+RUN apk add curl jq
 COPY contrib/images/simd-env/wrapper.sh /usr/bin/wrapper.sh
 
 VOLUME /simd

@@ -78,8 +78,7 @@ func (a table) Create(store sdk.KVStore, rowID RowID, obj codec.ProtoMarshaler) 
 // therefore make sure that this contract is fulfilled. Parameters must not be
 // nil.
 //
-// Update iterates through the registered callbacks that may add or remove
-// secondary index keys.
+// Update triggers all "after set" hooks that may add or remove secondary index keys.
 func (a table) Update(store sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler) error {
 	if !a.Has(store, rowID) {
 		return errors.ErrNotFound

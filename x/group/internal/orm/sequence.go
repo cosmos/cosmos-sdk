@@ -55,7 +55,7 @@ func (s Sequence) PeekNextVal(store sdk.KVStore) uint64 {
 func (s Sequence) InitVal(store sdk.KVStore, seq uint64) error {
 	pStore := prefix.NewStore(store, []byte{s.prefix})
 	if pStore.Has(sequenceStorageKey) {
-		return errors.Wrap(errors.ErrUniqueConstraint, "already initialized")
+		return errors.Wrap(errors.ErrORMUniqueConstraint, "already initialized")
 	}
 	pStore.Set(sequenceStorageKey, EncodeSequence(seq))
 	return nil

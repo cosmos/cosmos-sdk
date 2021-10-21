@@ -17,7 +17,7 @@ func TestSequenceUniqueConstraint(t *testing.T) {
 	err := seq.InitVal(store, 2)
 	require.NoError(t, err)
 	err = seq.InitVal(store, 3)
-	require.True(t, errors.ErrUniqueConstraint.Is(err))
+	require.True(t, errors.ErrORMUniqueConstraint.Is(err))
 }
 
 func TestSequenceIncrements(t *testing.T) {

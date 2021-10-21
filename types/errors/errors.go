@@ -157,23 +157,23 @@ var (
 	// ErrInvalidDecString defines an error for an invalid decimal string
 	ErrInvalidDecString = Register(mathCodespace, 41, "invalid decimal string")
 
-	// ErrIteratorDone defines an error when an iterator is done
-	ErrIteratorDone = Register(ormCodespace, 42, "iterator done")
+	// ErrORMIteratorDone defines an error when an iterator is done
+	ErrORMIteratorDone = Register(ormCodespace, 42, "iterator done")
 
-	// ErrInvalidIterator defines an error for an invalid iterator
-	ErrInvalidIterator = Register(ormCodespace, 43, "invalid iterator")
+	// ErrORMInvalidIterator defines an error for an invalid iterator
+	ErrORMInvalidIterator = Register(ormCodespace, 43, "invalid iterator")
 
-	// ErrUniqueConstraint defines an error when a value already exists at a given key
-	ErrUniqueConstraint = Register(ormCodespace, 44, "unique constraint violation")
+	// ErrORMUniqueConstraint defines an error when a value already exists at a given key
+	ErrORMUniqueConstraint = Register(ormCodespace, 44, "unique constraint violation")
 
-	// ErrEmptyModel defines an error when an empty model is provided for building a table
-	ErrEmptyModel = Register(ormCodespace, 45, "invalid argument")
+	// ErrORMEmptyModel defines an error when an empty model is provided for building a table
+	ErrORMEmptyModel = Register(ormCodespace, 45, "invalid argument")
 
-	// ErrIndexKeyMaxLength defines an error when a key exceeds max length
-	ErrKeyMaxLength = Register(ormCodespace, 46, "index key exceeds max length")
+	// ErrORMKeyMaxLength defines an error when a key exceeds max length
+	ErrORMKeyMaxLength = Register(ormCodespace, 46, "index key exceeds max length")
 
-	// ErrEmptyModel defines an error for an empty key
-	ErrEmptyKey = Register(ormCodespace, 47, "cannot use empty key")
+	// ErrORMEmptyKey defines an error for an empty key
+	ErrORMEmptyKey = Register(ormCodespace, 47, "cannot use empty key")
 )
 
 // Register returns an error instance that should be used as the base for

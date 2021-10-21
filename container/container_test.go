@@ -516,17 +516,19 @@ func TestLogging(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Remove(graphfile.Name())
 
-	require.NoError(t, container.Run(
+	require.NoError(t, container.RunDebug(
 		func() {},
-		container.Logger(func(s string) {
-			logOut += s
-		}),
-		container.Visualizer(func(g string) {
-			dotGraph = g
-		}),
-		container.LogVisualizer(),
-		container.FileVisualizer(graphfile.Name(), "svg"),
-		container.StdoutLogger(),
+		container.DebugOptions(
+			container.Logger(func(s string) {
+				logOut += s
+			}),
+			container.Visualizer(func(g string) {
+				dotGraph = g
+			}),
+			container.LogVisualizer(),
+			container.FileVisualizer(graphfile.Name(), "svg"),
+			container.StdoutLogger(),
+		),
 	))
 
 	require.Contains(t, logOut, "digraph")

@@ -83,7 +83,8 @@ jobs:
             go.mod
             go.sum
       - name: Run submodule tests and create test coverage profile.
-        run: GIT_DIFF="${{ env.GIT_DIFF }}" bash scripts/module-tests.sh
+        # GIT_DIFF is passed to the scripts
+        run: bash scripts/module-tests.sh
         if: env.GIT_DIFF
       - uses: actions/upload-artifact@v2
         with:
@@ -166,10 +167,6 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: "${{ github.sha }}-01-coverage"
-        if: env.GIT_DIFF
-      - uses: actions/download-artifact@v2
-        with:
-          name: "${{ github.sha }}-02-coverage"
         if: env.GIT_DIFF
       - uses: actions/download-artifact@v2
         with:

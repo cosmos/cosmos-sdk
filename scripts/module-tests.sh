@@ -11,8 +11,6 @@ execute_mod_tests() {
     mod_dir=$(dirname "$go_mod");
     root_dir=$(pwd);
 
-    # mod_in_dir=$(grep $mod_dir <<< $GIT_DIFF);
-    # if [ -n "$GIT_DIFF" -a -z "$mod_in_dir" ]; then
     # TODO: in the future we will need to disable it once we go into multi module setup, because
     # we will have cross module dependencies.
     if [ -n "$GIT_DIFF" ] && ! grep $mod_dir <<< $GIT_DIFF; then

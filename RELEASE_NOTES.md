@@ -10,4 +10,4 @@ This release notably also:
 - bumps the `gin-gonic/gin` version to 1.7.0 to fix the upstream [security vulnerability](https://github.com/advisories/GHSA-h395-qcrw-5vmq).
 - adds a null guard with a user-friendly error message for possible nil `Amount` in tx fee `Coins`.
 
-See the [Cosmos SDK v0.44.3 milestone]() on our issue tracker for the exhaustive list of all changes.
+See the [Cosmos SDK v0.44.3 milestone](https://github.com/cosmos/cosmos-sdk/blob/v0.44.3/CHANGELOG.md) on our issue tracker for the exhaustive list of all changes.

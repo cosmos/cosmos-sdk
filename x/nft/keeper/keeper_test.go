@@ -47,7 +47,7 @@ func TestTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }
 
-func (s *TestSuite) TestNewClass() {
+func (s *TestSuite) TestSaveClass() {
 	except := nft.Class{
 		Id:          testClassID,
 		Name:        testClassName,
@@ -56,7 +56,7 @@ func (s *TestSuite) TestNewClass() {
 		Uri:         testClassURI,
 		UriHash:     testClassURIHash,
 	}
-	err := s.app.NFTKeeper.NewClass(s.ctx, except)
+	err := s.app.NFTKeeper.SaveClass(s.ctx, except)
 	s.Require().NoError(err)
 
 	actual, has := s.app.NFTKeeper.GetClass(s.ctx, testClassID)
@@ -76,7 +76,7 @@ func (s *TestSuite) TestUpdateClass() {
 		Uri:         testClassURI,
 		UriHash:     testClassURIHash,
 	}
-	err := s.app.NFTKeeper.NewClass(s.ctx, class)
+	err := s.app.NFTKeeper.SaveClass(s.ctx, class)
 	s.Require().NoError(err)
 
 	noExistClass := nft.Class{
@@ -118,7 +118,7 @@ func (s *TestSuite) TestMint() {
 		Uri:         testClassURI,
 		UriHash:     testClassURIHash,
 	}
-	err := s.app.NFTKeeper.NewClass(s.ctx, class)
+	err := s.app.NFTKeeper.SaveClass(s.ctx, class)
 	s.Require().NoError(err)
 
 	expNFT := nft.NFT{
@@ -164,7 +164,7 @@ func (s *TestSuite) TestBurn() {
 		Uri:         testClassURI,
 		UriHash:     testClassURIHash,
 	}
-	err := s.app.NFTKeeper.NewClass(s.ctx, except)
+	err := s.app.NFTKeeper.SaveClass(s.ctx, except)
 	s.Require().NoError(err)
 
 	expNFT := nft.NFT{
@@ -212,7 +212,7 @@ func (s *TestSuite) TestUpdate() {
 		Uri:         testClassURI,
 		UriHash:     testClassURIHash,
 	}
-	err := s.app.NFTKeeper.NewClass(s.ctx, class)
+	err := s.app.NFTKeeper.SaveClass(s.ctx, class)
 	s.Require().NoError(err)
 
 	myNFT := nft.NFT{
@@ -247,7 +247,7 @@ func (s *TestSuite) TestTransfer() {
 		Uri:         testClassURI,
 		UriHash:     testClassURIHash,
 	}
-	err := s.app.NFTKeeper.NewClass(s.ctx, class)
+	err := s.app.NFTKeeper.SaveClass(s.ctx, class)
 	s.Require().NoError(err)
 
 	expNFT := nft.NFT{
@@ -286,7 +286,7 @@ func (s *TestSuite) TestExportGenesis() {
 		Uri:         testClassURI,
 		UriHash:     testClassURIHash,
 	}
-	err := s.app.NFTKeeper.NewClass(s.ctx, class)
+	err := s.app.NFTKeeper.SaveClass(s.ctx, class)
 	s.Require().NoError(err)
 
 	expNFT := nft.NFT{

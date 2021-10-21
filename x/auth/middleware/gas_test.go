@@ -15,14 +15,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// txTest is a dummy tx that doesn't implement GasTx. It should set the GasMeter
+// noGasTx is a dummy tx that doesn't implement GasTx. It should set the GasMeter
 // to 0 in this case.
-type txTest struct{}
+type noGasTx struct{}
 
-var _ sdk.Tx = txTest{}
+var _ sdk.Tx = noGasTx{}
 
-func (t txTest) GetMsgs() []sdk.Msg   { return []sdk.Msg{} }
-func (t txTest) ValidateBasic() error { return nil }
+func (t noGasTx) GetMsgs() []sdk.Msg   { return []sdk.Msg{} }
+func (t noGasTx) ValidateBasic() error { return nil }
 
 func (s *MWTestSuite) setupGasTx() (signing.Tx, []byte, sdk.Context, uint64) {
 	ctx := s.SetupTest(true)
@@ -50,7 +50,7 @@ func (s *MWTestSuite) setupGasTx() (signing.Tx, []byte, sdk.Context, uint64) {
 	return tx, txBytes, ctx, gasLimit
 }
 
-func (s *MWTestSuite) TestSetup() {
+func (s *MWTestSuite) TestSetupGas() {
 	tx, _, ctx, gasLimit := s.setupGasTx()
 	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.GasTxMiddleware)
 
@@ -61,7 +61,7 @@ func (s *MWTestSuite) TestSetup() {
 		expErr      bool
 		errorStr    string
 	}{
-		{"not a gas tx", txTest{}, 0, true, "Tx must be GasTx: tx parse error"},
+		{"not a gas tx", noGasTx{}, 0, true, "Tx must be GasTx: tx parse error"},
 		{"tx with its own gas limit", tx, gasLimit, false, ""},
 	}
 	for _, tc := range testcases {

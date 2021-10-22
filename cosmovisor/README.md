@@ -4,9 +4,9 @@
 
 #### Design
 
-Cosmovisor is designed to be used as a wrapper for an `Cosmos SDK` app:
-* it will pass all arguments to the associated app (configured by `DAEMON_NAME` env variable).
-  Running `cosmovisor arg1 arg2 ....` will run `app arg1 arg2 ...`;
+Cosmovisor is designed to be used as a wrapper for a `Cosmos SDK` app:
+* it will pass arguments to the associated app (configured by `DAEMON_NAME` env variable).
+  Running `cosmovisor run arg1 arg2 ....` will run `app arg1 arg2 ...`;
 * it will manage an app by restarting and upgrading if needed;
 * it is configured using environment variables, not positional arguments.
 
@@ -34,7 +34,14 @@ go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@latest
 
 ### Command Line Arguments And Environment Variables
 
-All arguments passed to `cosmovisor` will be passed to the application binary (as a subprocess). `cosmovisor` will return `/dev/stdout` and `/dev/stderr` of the subprocess as its own. For this reason, `cosmovisor` cannot accept any command-line arguments other than those available to the application binary, nor will it print anything to output other than what is printed by the application binary.
+The first argument passed to `cosmovisor` is the action for `cosmovisor` to take. Options are:
+* `help`, `--help`, or `-h` - Output `cosmovisor` help information and check your `cosmovisor` configuration.
+* `run` - Run the configured binary using the rest of the provided arguments.
+* `version`, or `--version` - Output the `cosmovisor` version and also run the binary with the `version` argument.
+
+All arguments passed to `cosmovisor run` will be passed to the application binary (as a subprocess). `cosmovisor` will return `/dev/stdout` and `/dev/stderr` of the subprocess as its own. For this reason, `cosmovisor run` cannot accept any command-line arguments other than those available to the application binary.
+
+*Note: Use of `cosmovisor` without one of the action arguments is deprecated. For backwards compatability, if the first argument is not an action argument, `run` is assumed. However, this fallback might be removed in future versions, so it is recommended that you always provide `run`.
 
 `cosmovisor` reads its configuration from environment variables:
 
@@ -42,10 +49,9 @@ All arguments passed to `cosmovisor` will be passed to the application binary (a
 * `DAEMON_NAME` is the name of the binary itself (e.g. `gaiad`, `regend`, `simd`, etc.).
 * `DAEMON_ALLOW_DOWNLOAD_BINARIES` (*optional*), if set to `true`, will enable auto-downloading of new binaries (for security reasons, this is intended for full nodes rather than validators). By default, `cosmovisor` will not auto-download new binaries.
 * `DAEMON_RESTART_AFTER_UPGRADE` (*optional*, default = `true`), if `true`, restarts the subprocess with the same command-line arguments and flags (but with the new binary) after a successful upgrade. Otherwise (`false`), `cosmovisor` stops running after an upgrade and requires the system administrator to manually restart it. Note restart is only after the upgrade and does not auto-restart the subprocess after an error occurs.
-* `DAEMON_POLL_INTERVAL` is the interval length in milliseconds for polling the upgrade plan file. Default: 300.
-* `UNSAFE_SKIP_BACKUP` (defaults to `false`), if set to `false`, backs up the data before trying the upgrade. Otherwise (`true`), upgrades directly without performing a backup. The default value of false is useful and recommended in case of failures and when a backup needed to rollback. We recommend using the default backup option `UNSAFE_SKIP_BACKUP=false`.
+* `DAEMON_POLL_INTERVAL` is the interval length for polling the upgrade plan file. The value can either be a number (in milliseconds) or a duration (e.g. `1s`). Default: 300 milliseconds.
+* `UNSAFE_SKIP_BACKUP` (defaults to `false`), if set to `true`, upgrades directly without performing a backup. Otherwise (`false`, default) backs up the data before trying the upgrade. The default value of false is useful and recommended in case of failures and when a backup needed to rollback. We recommend using the default backup option `UNSAFE_SKIP_BACKUP=false`.
 * `DAEMON_PREUPGRADE_MAX_RETRIES` (defaults to `0`). The maximum number of times to call `pre-upgrade` in the application after exit status of `31`. After the maximum number of retries, cosmovisor fails the upgrade.
-
 
 ### Folder Layout
 
@@ -90,22 +96,6 @@ The system administrator is responsible for:
 In order to support downloadable binaries, a tarball for each upgrade binary will need to be packaged up and made available through a canonical URL. Additionally, a tarball that includes the genesis binary and all available upgrade binaries can be packaged up and made available so that all the necessary binaries required to sync a fullnode from start can be easily downloaded.
 
 The `DAEMON` specific code and operations (e.g. tendermint config, the application db, syncing blocks, etc.) all work as expected. The application binaries' directives such as command-line flags and environment variables also work as expected.
-
-### Commands
-
-Because Cosmovisor is meant to be used as a wrapper for a Cosmos SDK application, it does not require many commands.
-
-To determine the version of Cosmovisor, run the following command:
-```
-cosmovisor version
-```
-The output of the `cosmovisor version` command shows the version of the Cosmos SDK application and the version of Cosmovisor:
-
-```
-Cosmovisor Version:  v0.1.0-85-g65baacac0
-0.43.0-beta1-319-ge3aec1840
-```
-
 
 ### Detecting Upgrades
 
@@ -278,7 +268,7 @@ cp ./build/simd $DAEMON_HOME/cosmovisor/upgrades/test1/bin
 Start `cosmosvisor`:
 
 ```
-cosmovisor start
+cosmovisor run start
 ```
 
 Open a new terminal window and submit an upgrade proposal along with a deposit and a vote (these commands must be run within 20 seconds of each other):

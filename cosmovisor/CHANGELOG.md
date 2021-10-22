@@ -36,6 +36,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
++ [\#10285](https://github.com/cosmos/cosmos-sdk/pull/10316) Added `run` action.
+
+### Deprecated
+
++ [\#10285](https://github.com/cosmos/cosmos-sdk/pull/10316) Running `cosmovisor` without the `run` argument.
+
 ## v1.0.0 2021-09-30
 
 ### Features

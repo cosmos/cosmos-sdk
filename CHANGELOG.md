@@ -157,6 +157,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10239](https://github.com/cosmos/cosmos-sdk/pull/10239) Fixed x/bank/044 migrateDenomMetadata.
 * (x/upgrade) [\#10189](https://github.com/cosmos/cosmos-sdk/issues/10189) Removed potential sources of non-determinism in upgrades
 * [\#10258](https://github.com/cosmos/cosmos-sdk/issues/10258) Fixes issue related to segmentaiton fault on mac m1 arm64
+* [\#10394](https://github.com/cosmos/cosmos-sdk/issues/10394) Fixes issue related to grpc-gateway of account balance by
+  ibc-denom.
 
 ### State Machine Breaking
 

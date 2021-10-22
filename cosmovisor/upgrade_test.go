@@ -215,7 +215,7 @@ func (s *upgradeTestSuite) TestDownloadBinary() {
 		},
 		"get zipped directory with valid checksum": {
 			// sha256sum ./testdata/repo/chain3-zip_dir/autod.zip
-			url:         "./testdata/repo/chain3-zip_dir/autod.zip?checksum=sha256:3784e4574cad69b67e34d4ea4425eff140063a3870270a301d6bb24a098a27ae",
+			url:         "./testdata/repo/chain3-zip_dir/autod.zip?checksum=sha256:8951f52a0aea8617de0ae459a20daf704c29d259c425e60d520e363df0f166b4",
 			canDownload: true,
 			validBinary: true,
 		},

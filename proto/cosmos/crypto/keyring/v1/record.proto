@@ -45,8 +45,8 @@ message Record {
   message Hsm {
     string label = 1;
     string config_path = 2;
-}
-  
+  }
+
   // Multi item
   message Multi {}
 

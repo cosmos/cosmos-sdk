@@ -35,7 +35,7 @@ func TestAddCmdHsmKey(t *testing.T) {
 	require.NoError(t, err)
 
 	DefaultNodeHome := filepath.Join(userHomeDir, ".simapp")
-	
+
 	cmd.SetArgs([]string{
 		"keyname1",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, DefaultNodeHome),

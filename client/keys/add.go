@@ -5,8 +5,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"sort"
 	"path/filepath"
+	"sort"
 
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
@@ -236,12 +236,12 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 			return err
 		}
 
-		configPath :=  filepath.Join(nodeHome, "config", PKCS11_CONFIG)
-		
-		fmt.Printf("PKCS11 config: %s", configPath )
-		
+		configPath := filepath.Join(nodeHome, "config", PKCS11_CONFIG)
+
+		fmt.Printf("PKCS11 config: %s", configPath)
+
 		kr, err := hsmkeys.NewPkcs11FromConfig(configPath)
-		
+
 		if err != nil {
 			return err
 		}
@@ -252,7 +252,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		}
 
 		key = nil
-		
+
 		k, err := kb.SaveHsmKey(name, hd.Secp256k1, string(label), configPath)
 
 		if err != nil {
@@ -261,7 +261,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 		return printCreate(cmd, k, false, "", outputFormat)
 	}
-	
+
 	// Get bip39 mnemonic
 	var mnemonic, bip39Passphrase string
 

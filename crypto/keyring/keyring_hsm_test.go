@@ -1,15 +1,14 @@
 package keyring
 
 import (
-	"testing"
+	"crypto/rand"
 	"fmt"
 	"log"
-	"crypto/rand"
+	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	hsmkeys "github.com/regen-network/keystone/keys"
-
+	"github.com/stretchr/testify/require"
 )
 
 // randomBytes returns n bytes obtained from a local source of
@@ -30,12 +29,12 @@ func randomBytes(n int) ([]byte, error) {
 func TestCreateHsmKeyAndSign(t *testing.T) {
 	cdc := getCodec()
 	kb := NewInMemory(cdc)
-	
+
 	// hardcoded path for now - might change this API to actually
 	// take a JSON string and let caller decide how to get that
 	// JSON
 	configPath := "./testdata/keys/pkcs11-config"
-	
+
 	kr, err := hsmkeys.NewPkcs11FromConfig(configPath)
 
 	label, err := randomBytes(16)
@@ -55,7 +54,7 @@ func TestCreateHsmKeyAndSign(t *testing.T) {
 	fmt.Printf("Key label: %s", labelcopy)
 	pubkey, err := hsmrecord.GetPubKey()
 	require.NoError(t, err)
-	fmt.Printf("PubKey: %v", pubkey )
+	fmt.Printf("PubKey: %v", pubkey)
 	msg := []byte("Signing this plaintext tells me what exactly?")
 	sig, pub, err := SignWithHsm(hsmrecord, msg)
 	require.NoError(t, err)

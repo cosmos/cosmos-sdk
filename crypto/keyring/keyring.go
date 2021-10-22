@@ -395,7 +395,7 @@ func (ks keystore) SaveHsmKey(uid string, algo SignatureAlgo, label string, conf
 	if err != nil {
 		return nil, err
 	}
-	
+
 	priv, err := kr.Key(label)
 
 	if err != nil {
@@ -672,7 +672,7 @@ func SignWithLedger(k *Record, msg []byte) (sig []byte, pub types.PubKey, err er
 
 func SignWithHsm(k *Record, msg []byte) (sig []byte, pub types.PubKey, err error) {
 	hsmrecord := k.GetHsm()
-	if hsmrecord== nil {
+	if hsmrecord == nil {
 		return nil, nil, errors.New("not an HSM object")
 	}
 
@@ -684,13 +684,13 @@ func SignWithHsm(k *Record, msg []byte) (sig []byte, pub types.PubKey, err error
 	if err != nil {
 		return nil, nil, err
 	}
-	
+
 	priv, err := kr.Key(label)
 
 	if err != nil {
 		return nil, nil, err
 	}
-	
+
 	signed, err := priv.Sign(msg, nil)
 
 	if err != nil {

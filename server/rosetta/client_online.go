@@ -3,8 +3,11 @@ package rosetta
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -481,13 +484,39 @@ func (c *Client) blockTxs(ctx context.Context, height *int64) (crgtypes.BlockTra
 
 func (c *Client) getHeight(ctx context.Context, height *int64) (realHeight *int64, err error) {
 	if height != nil && *height == -1 {
-		genesis, err := c.tmRPC.Genesis(ctx)
+		genesisChunk, err := c.tmRPC.GenesisChunked(ctx, 0)
 		if err != nil {
 			return nil, err
 		}
-		realHeight = &(genesis.Genesis.InitialHeight)
+
+		heightNum, err := extractInitialHeightFromGenesisChunk(genesisChunk.Data)
+		if err != nil {
+			return nil, err
+		}
+
+		realHeight = &heightNum
 	} else {
 		realHeight = height
 	}
 	return
+}
+
+func extractInitialHeightFromGenesisChunk(genesisChunk string) (int64, error) {
+	firstChunk, err := base64.StdEncoding.DecodeString(genesisChunk)
+	if err != nil {
+		return 0, err
+	}
+
+	re, err := regexp.Compile("\"initial_height\":\"(\\d+)\"")
+	if err != nil {
+		return 0, err
+	}
+
+	matches := re.FindStringSubmatch(string(firstChunk))
+	if len(matches) != 2 {
+		return 0, errors.New("failed to fetch initial_height")
+	}
+
+	heightStr := matches[1]
+	return strconv.ParseInt(heightStr, 10, 64)
 }

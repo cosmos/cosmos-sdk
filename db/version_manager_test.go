@@ -17,10 +17,10 @@ func TestVersionManager(t *testing.T) {
 	require.True(t, vm.Equal(vm))
 	require.False(t, vm.Exists(0))
 
-	id, err := vm.Save(0)
+	id1, err := vm.Save(0)
 	require.NoError(t, err)
-	require.Equal(t, uint64(1), id)
-	require.True(t, vm.Exists(id))
+	require.Equal(t, uint64(1), id1)
+	require.True(t, vm.Exists(id1))
 	id2, err := vm.Save(0)
 	require.NoError(t, err)
 	require.True(t, vm.Exists(id2))
@@ -28,17 +28,17 @@ func TestVersionManager(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, vm.Exists(id3))
 
-	id, err = vm.Save(id) // can't save existing id
+	_, err = vm.Save(id1) // can't save existing id
 	require.Error(t, err)
 
-	id, err = vm.Save(0)
+	id4, err := vm.Save(0)
 	require.NoError(t, err)
-	require.True(t, vm.Exists(id))
-	vm.Delete(id)
-	require.False(t, vm.Exists(id))
+	require.True(t, vm.Exists(id4))
+	vm.Delete(id4)
+	require.False(t, vm.Exists(id4))
 
-	vm.Delete(1)
-	require.False(t, vm.Exists(1))
+	vm.Delete(id1)
+	require.False(t, vm.Exists(id1))
 	require.Equal(t, id2, vm.Initial())
 	require.Equal(t, id3, vm.Last())
 
@@ -50,9 +50,9 @@ func TestVersionManager(t *testing.T) {
 	require.Equal(t, []uint64{id2, id3}, all)
 
 	vmc := vm.Copy()
-	id, err = vmc.Save(0)
+	id5, err := vmc.Save(0)
 	require.NoError(t, err)
-	require.False(t, vm.Exists(id)) // true copy is made
+	require.False(t, vm.Exists(id5)) // true copy is made
 
 	vm2 := dbm.NewVersionManager([]uint64{id2, id3})
 	require.True(t, vm.Equal(vm2))

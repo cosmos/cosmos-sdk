@@ -139,9 +139,11 @@ func (s *MWTestSuite) createTestTx(txBuilder client.TxBuilder, privs []cryptotyp
 	sigsV2 = []signing.SignatureV2{}
 	for i, priv := range privs {
 		signerData := xauthsigning.SignerData{
+			Address:       sdk.AccAddress(priv.PubKey().Address()).String(),
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
+			SignerIndex:   i,
 		}
 		sigV2, err := tx.SignWithPrivKey(
 			s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,

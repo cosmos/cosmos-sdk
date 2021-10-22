@@ -55,7 +55,7 @@ func TestVerifySignature(t *testing.T) {
 		Sequence:      acc.GetSequence(),
 		SignerIndex:   0,
 	}
-	signBytes := legacytx.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.Sequence, 10, fee, msgs, memo)
+	signBytes := legacytx.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.Sequence, 10, fee, msgs, memo, nil)
 	signature, err := priv.Sign(signBytes)
 	require.NoError(t, err)
 
@@ -73,7 +73,7 @@ func TestVerifySignature(t *testing.T) {
 	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pkSet)
 	multisignature := multisig.NewMultisig(2)
 	msgs = []sdk.Msg{testdata.NewTestMsg(addr, addr1)}
-	multiSignBytes := legacytx.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.Sequence, 10, fee, msgs, memo)
+	multiSignBytes := legacytx.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.Sequence, 10, fee, msgs, memo, nil)
 
 	sig1, err := priv.Sign(multiSignBytes)
 	require.NoError(t, err)

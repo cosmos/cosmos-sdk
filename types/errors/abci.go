@@ -10,7 +10,7 @@ import (
 const (
 	// SuccessABCICode declares an ABCI response use 0 to signal that the
 	// processing was successful and no error is returned.
-	SuccessABCICode = 0
+	SuccessABCICode uint32 = 0
 
 	// All unclassified errors that do not provide an ABCI code are clubbed
 	// under an internal error code and a generic message instead of

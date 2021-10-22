@@ -246,43 +246,45 @@ func (s *upgradeTestSuite) TestDownloadBinary() {
 		},
 	}
 
-	for _, tc := range cases {
-		var err error
-		// make temp dir
-		home := copyTestData(s.T(), "download")
+	for label, tc := range cases {
+		s.Run(label, func() {
+			var err error
+			// make temp dir
+			home := copyTestData(s.T(), "download")
 
-		cfg := &cosmovisor.Config{
-			Home:                  home,
-			Name:                  "autod",
-			AllowDownloadBinaries: true,
-		}
+			cfg := &cosmovisor.Config{
+				Home:                  home,
+				Name:                  "autod",
+				AllowDownloadBinaries: true,
+			}
 
-		// if we have a relative path, make it absolute, but don't change eg. https://... urls
-		url := tc.url
-		if strings.HasPrefix(url, "./") {
-			url, err = filepath.Abs(url)
+			// if we have a relative path, make it absolute, but don't change eg. https://... urls
+			url := tc.url
+			if strings.HasPrefix(url, "./") {
+				url, err = filepath.Abs(url)
+				s.Require().NoError(err)
+			}
+
+			upgrade := "amazonas"
+			info := cosmovisor.UpgradeInfo{
+				Name: upgrade,
+				Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, cosmovisor.OSArch(), url),
+			}
+
+			err = cosmovisor.DownloadBinary(cfg, info)
+			if !tc.canDownload {
+				s.Require().Error(err)
+				return
+			}
 			s.Require().NoError(err)
-		}
 
-		upgrade := "amazonas"
-		info := cosmovisor.UpgradeInfo{
-			Name: upgrade,
-			Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, cosmovisor.OSArch(), url),
-		}
-
-		err = cosmovisor.DownloadBinary(cfg, info)
-		if !tc.canDownload {
-			s.Require().Error(err)
-			return
-		}
-		s.Require().NoError(err)
-
-		err = cosmovisor.EnsureBinary(cfg.UpgradeBin(upgrade))
-		if tc.validBinary {
-			s.Require().NoError(err)
-		} else {
-			s.Require().Error(err)
-		}
+			err = cosmovisor.EnsureBinary(cfg.UpgradeBin(upgrade))
+			if tc.validBinary {
+				s.Require().NoError(err)
+			} else {
+				s.Require().Error(err)
+			}
+		})
 	}
 }
 

@@ -38,8 +38,8 @@ jobs:
         with:
           PATTERNS: |
             **/**.go
-            go.mod
-            go.sum
+            **/go.mod
+            **/go.sum
       - name: Build
         run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make build
 

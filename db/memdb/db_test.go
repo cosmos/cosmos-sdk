@@ -7,8 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/db/dbtest"
 )
 
-// this test should fail to build
-
 func BenchmarkMemDBRangeScans1M(b *testing.B) {
 	db := NewDB()
 	defer db.Close()

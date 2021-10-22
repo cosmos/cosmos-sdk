@@ -68,7 +68,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 			legacytx.StdSignBytes(chainId, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Granter: addr2.String()}, []sdk.Msg{msg}, memo, nil),
 		},
 		{
-			"explicit fee payer and feegranter", addr1.String(),
+			"explicit fee payer and fee granter", addr1.String(),
 			func(w *wrapper) {
 				w.SetFeePayer(addr2)
 				w.SetFeeGranter(addr2)
@@ -79,11 +79,6 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 			"signer which is also tipper", addr1.String(),
 			func(w *wrapper) { w.SetTip(tip) },
 			legacytx.StdSignBytes(chainId, accNum, seqNum, timeout, legacytx.StdFee{}, []sdk.Msg{msg}, memo, tip),
-		},
-		{
-			"signer which is not tipper", addr2.String(),
-			func(w *wrapper) { w.SetTip(tip) },
-			legacytx.StdSignBytes(chainId, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas}, []sdk.Msg{msg}, memo, tip),
 		},
 	}
 

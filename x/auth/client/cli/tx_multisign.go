@@ -127,13 +127,15 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 				return fmt.Errorf("set the chain id with either the --chain-id flag or config file")
 			}
 
-			signingData := signing.SignerData{
-				ChainID:       txFactory.ChainID(),
-				AccountNumber: txFactory.AccountNumber(),
-				Sequence:      txFactory.Sequence(),
-			}
+			for j, sig := range sigs {
+				signingData := signing.SignerData{
+					Address:       sdk.AccAddress(sig.PubKey.Address()).String(),
+					ChainID:       txFactory.ChainID(),
+					AccountNumber: txFactory.AccountNumber(),
+					Sequence:      txFactory.Sequence(),
+					SignerIndex:   j,
+				}
 
-			for _, sig := range sigs {
 				err = signing.VerifySignature(sig.PubKey, signingData, sig.Data, txCfg.SignModeHandler(), txBuilder.GetTx())
 				if err != nil {
 					addr, _ := sdk.AccAddressFromHex(sig.PubKey.Address().String())
@@ -322,9 +324,11 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			multisigPub := pubKey.(*kmultisig.LegacyAminoPubKey)
 			multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 			signingData := signing.SignerData{
+				Address:       sdk.AccAddress(pubKey.Address()).String(),
 				ChainID:       txFactory.ChainID(),
 				AccountNumber: txFactory.AccountNumber(),
 				Sequence:      txFactory.Sequence(),
+				SignerIndex:   i,
 			}
 
 			for _, sig := range signatureBatch {

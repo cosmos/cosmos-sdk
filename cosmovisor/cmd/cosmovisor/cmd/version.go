@@ -2,14 +2,20 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
 )
 
 // Version represents Cosmovisor version value. Set during build
 var Version string
 
-func isVersionCommand(args []string) bool {
-	return len(args) == 1 && strings.EqualFold(args[0], "version")
+// VersionArgs is the strings that indicate a cosmovisor version command.
+var VersionArgs = []string{"version", "--version"}
+
+// IsVersionCommand checks if the given args indicate that the version is being requested.
+func IsVersionCommand(arg string) bool {
+	return isOneOf(arg, VersionArgs)
 }
 
-func printVersion() { fmt.Println("Cosmovisor Version: ", Version) }
+// PrintVersion prints the cosmovisor version.
+func PrintVersion() {
+	fmt.Println("Cosmovisor Version: ", Version)
+}

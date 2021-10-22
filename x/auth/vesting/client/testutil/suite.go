@@ -113,6 +113,13 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 		},
 	}
 
+	// Synchronize height between test runs, to ensure sequence numbers are
+	// properly updated.
+	height, err := s.network.LatestHeight()
+	if err != nil {
+		s.T().Fatalf("Getting initial latest height: %v", err)
+	}
+	s.T().Logf("Initial latest height: %d", height)
 	for name, tc := range testCases {
 		tc := tc
 
@@ -130,5 +137,12 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}
 		})
+
+		next, err := s.network.WaitForHeight(height + 1)
+		if err != nil {
+			s.T().Fatalf("Waiting for height %d: %v", height+1, err)
+		}
+		height = next
+		s.T().Logf("Height now: %d", height)
 	}
 }

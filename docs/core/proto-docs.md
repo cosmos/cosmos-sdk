@@ -855,7 +855,9 @@ pagination. Ex:
 | `offset` | [uint64](#uint64) |  | offset is a numeric offset that can be used when key is unavailable. It is less efficient than using key. Only one of offset or key should be set. |
 | `limit` | [uint64](#uint64) |  | limit is the total number of results to be returned in the result page. If left empty it will default to a value to be set by each app. |
 | `count_total` | [bool](#bool) |  | count_total is set to true to indicate that the result set should include a count of the total number of items available for pagination in UIs. count_total is only respected when offset is used. It is ignored when key is set. |
-| `reverse` | [bool](#bool) |  | reverse is set to true if results are to be returned in the descending order. |
+| `reverse` | [bool](#bool) |  | reverse is set to true if results are to be returned in the descending order.
+
+@since Cosmos SDK v0.43 |
 
 
 
@@ -1020,6 +1022,8 @@ QueryAccountResponse is the response type for the Query/Account RPC method.
 ### QueryAccountsRequest
 QueryAccountsRequest is the request type for the Query/Accounts RPC method.
 
+@since Cosmos SDK v0.43
+
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -1034,6 +1038,8 @@ QueryAccountsRequest is the request type for the Query/Accounts RPC method.
 
 ### QueryAccountsResponse
 QueryAccountsResponse is the response type for the Query/Accounts RPC method.
+
+@since Cosmos SDK v0.43
 
 
 | Field | Type | Label | Description |
@@ -1109,7 +1115,9 @@ Query defines the gRPC querier service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Accounts` | [QueryAccountsRequest](#cosmos.auth.v1beta1.QueryAccountsRequest) | [QueryAccountsResponse](#cosmos.auth.v1beta1.QueryAccountsResponse) | Accounts returns all the existing accounts | GET|/cosmos/auth/v1beta1/accounts|
+| `Accounts` | [QueryAccountsRequest](#cosmos.auth.v1beta1.QueryAccountsRequest) | [QueryAccountsResponse](#cosmos.auth.v1beta1.QueryAccountsResponse) | Accounts returns all the existing accounts
+
+@since Cosmos SDK v0.43 | GET|/cosmos/auth/v1beta1/accounts|
 | `Account` | [QueryAccountRequest](#cosmos.auth.v1beta1.QueryAccountRequest) | [QueryAccountResponse](#cosmos.auth.v1beta1.QueryAccountResponse) | Account returns account details based on address. | GET|/cosmos/auth/v1beta1/accounts/{address}|
 | `Params` | [QueryParamsRequest](#cosmos.auth.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.auth.v1beta1.QueryParamsResponse) | Params queries all parameters. | GET|/cosmos/auth/v1beta1/params|
 | `ModuleAccounts` | [QueryModuleAccountsRequest](#cosmos.auth.v1beta1.QueryModuleAccountsRequest) | [QueryModuleAccountsResponse](#cosmos.auth.v1beta1.QueryModuleAccountsResponse) | ModuleAccounts returns all the existing module accounts. | GET|/cosmos/auth/v1beta1/module_accounts|
@@ -3354,7 +3362,7 @@ VersionInfo is the type for the GetNodeInfoResponse message.
 | `build_tags` | [string](#string) |  |  |
 | `go_version` | [string](#string) |  |  |
 | `build_deps` | [Module](#cosmos.base.tendermint.v1beta1.Module) | repeated |  |
-| `cosmos_sdk_version` | [string](#string) |  |  |
+| `cosmos_sdk_version` | [string](#string) |  | @since Cosmos SDK v0.43 |
 
 
 
@@ -5950,6 +5958,8 @@ MsgVoteResponse defines the Msg/Vote response type.
 ### MsgVoteWeighted
 MsgVoteWeighted defines a message to cast a vote.
 
+@since Cosmos SDK v0.43
+
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -5966,6 +5976,8 @@ MsgVoteWeighted defines a message to cast a vote.
 
 ### MsgVoteWeightedResponse
 MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.
+
+@since Cosmos SDK v0.43
 
 
 
@@ -5987,7 +5999,9 @@ Msg defines the bank Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `SubmitProposal` | [MsgSubmitProposal](#cosmos.gov.v1beta1.MsgSubmitProposal) | [MsgSubmitProposalResponse](#cosmos.gov.v1beta1.MsgSubmitProposalResponse) | SubmitProposal defines a method to create new proposal given a content. | |
 | `Vote` | [MsgVote](#cosmos.gov.v1beta1.MsgVote) | [MsgVoteResponse](#cosmos.gov.v1beta1.MsgVoteResponse) | Vote defines a method to add a vote on a specific proposal. | |
-| `VoteWeighted` | [MsgVoteWeighted](#cosmos.gov.v1beta1.MsgVoteWeighted) | [MsgVoteWeightedResponse](#cosmos.gov.v1beta1.MsgVoteWeightedResponse) | VoteWeighted defines a method to add a weighted vote on a specific proposal. | |
+| `VoteWeighted` | [MsgVoteWeighted](#cosmos.gov.v1beta1.MsgVoteWeighted) | [MsgVoteWeightedResponse](#cosmos.gov.v1beta1.MsgVoteWeightedResponse) | VoteWeighted defines a method to add a weighted vote on a specific proposal.
+
+@since Cosmos SDK v0.43 | |
 | `Deposit` | [MsgDeposit](#cosmos.gov.v1beta1.MsgDeposit) | [MsgDepositResponse](#cosmos.gov.v1beta1.MsgDepositResponse) | Deposit defines a method to add deposit on a specific proposal. | |
 
  <!-- end services -->

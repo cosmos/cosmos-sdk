@@ -133,27 +133,27 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 func TestSkipUpgrade(t *testing.T) {
 	cases := []struct {
 		args        []string
-		upgradeInfo cosmovisor.UpgradeInfo
+		upgradeInfo upgradetypes.Plan
 		expectRes   bool
 	}{{
 		args:        []string{"appb", "start", "--unsafe-skip-upgrades"},
-		upgradeInfo: cosmovisor.UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 123},
+		upgradeInfo: upgradetypes.Plan{Name: "upgrade1", Info: "some info", Height: 123},
 		expectRes:   false,
 	}, {
 		args:        []string{"appb", "start", "--unsafe-skip-upgrades", "--abcd"},
-		upgradeInfo: cosmovisor.UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 123},
+		upgradeInfo: upgradetypes.Plan{Name: "upgrade1", Info: "some info", Height: 123},
 		expectRes:   false,
 	}, {
 		args:        []string{"appb", "start", "--unsafe-skip-upgrades", "10", "--abcd"},
-		upgradeInfo: cosmovisor.UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 11},
+		upgradeInfo: upgradetypes.Plan{Name: "upgrade1", Info: "some info", Height: 11},
 		expectRes:   false,
 	}, {
 		args:        []string{"appb", "start", "--unsafe-skip-upgrades", "10", "20", "--abcd"},
-		upgradeInfo: cosmovisor.UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 20},
+		upgradeInfo: upgradetypes.Plan{Name: "upgrade1", Info: "some info", Height: 20},
 		expectRes:   true,
 	}, {
 		args:        []string{"appb", "start", "--unsafe-skip-upgrades", "10", "20", "--abcd", "34"},
-		upgradeInfo: cosmovisor.UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 34},
+		upgradeInfo: upgradetypes.Plan{Name: "upgrade1", Info: "some info", Height: 34},
 		expectRes:   false,
 	}}
 

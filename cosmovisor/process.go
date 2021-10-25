@@ -3,6 +3,7 @@ package cosmovisor
 import (
 	"encoding/json"
 	"fmt"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"io"
 	"os"
 	"os/exec"
@@ -111,7 +112,7 @@ func doBackup(cfg *Config) error {
 	// take backup if `UNSAFE_SKIP_BACKUP` is not set.
 	if !cfg.UnsafeSkipBackup {
 		// check if upgrade-info.json is not empty.
-		var uInfo UpgradeInfo
+		var uInfo upgradetypes.Plan
 		upgradeInfoFile, err := os.ReadFile(filepath.Join(cfg.Home, "data", "upgrade-info.json"))
 		if err != nil {
 			return fmt.Errorf("error while reading upgrade-info.json: %w", err)
@@ -192,7 +193,7 @@ func executePreUpgradeCmd(cfg *Config) error {
 }
 
 // IsSkipUpgradeHeight checks if pre-upgrade script must be run. If the height in the upgrade plan matches any of the heights provided in --safe-skip-upgrade, the script is not run
-func IsSkipUpgradeHeight(args []string, upgradeInfo UpgradeInfo) bool {
+func IsSkipUpgradeHeight(args []string, upgradeInfo upgradetypes.Plan) bool {
 	skipUpgradeHeights := UpgradeSkipHeights(args)
 	for _, h := range skipUpgradeHeights {
 		if h == int(upgradeInfo.Height) {

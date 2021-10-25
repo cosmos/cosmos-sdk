@@ -14,7 +14,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 service Query {
   // Accounts returns all the existing accounts
   //
-  // @since Cosmos SDK v0.43
+  // @since Cosmos SDK 0.43
   rpc Accounts(QueryAccountsRequest) returns (QueryAccountsResponse) {
     option (google.api.http).get = "/cosmos/auth/v1beta1/accounts";
   }
@@ -52,7 +52,7 @@ service Query {
 
 // QueryAccountsRequest is the request type for the Query/Accounts RPC method.
 //
-// @since Cosmos SDK v0.43
+// @since Cosmos SDK 0.43
 message QueryAccountsRequest {
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
@@ -60,7 +60,7 @@ message QueryAccountsRequest {
 
 // QueryAccountsResponse is the response type for the Query/Accounts RPC method.
 //
-// @since Cosmos SDK v0.43
+// @since Cosmos SDK 0.43
 message QueryAccountsResponse {
   // accounts are the existing accounts
   repeated google.protobuf.Any accounts = 1 [(cosmos_proto.accepts_interface) = "AccountI"];

@@ -33,7 +33,7 @@ message PageRequest {
 
   // reverse is set to true if results are to be returned in the descending order.
   //
-  // @since Cosmos SDK v0.43
+  // @since Cosmos SDK 0.43
   bool reverse = 5;
 }
 

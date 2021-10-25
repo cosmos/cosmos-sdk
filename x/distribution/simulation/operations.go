@@ -224,7 +224,8 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 
 		coins, hasNeg := spendable.SafeSub(fundAmount)
 		if !hasNeg {
-			fees, err = simtypes.RandomFees(r, ctx, coins)
+			feeCoins := coins.FilterDenoms([]string{sdk.DefaultBondDenom})
+			fees, err = simtypes.RandomFees(r, ctx, feeCoins)
 			if err != nil {
 				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgFundCommunityPool, "unable to generate fees"), nil, err
 			}

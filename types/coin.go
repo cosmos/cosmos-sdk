@@ -564,6 +564,17 @@ func (coins Coins) GetDenomByIndex(i int) string {
 	return coins[i].Denom
 }
 
+// FilterDenoms returns the coins with only the passed in denoms
+func (coins Coins) FilterDenoms(denoms []string) Coins {
+	filteredCoins := NewCoins()
+
+	for _, denom := range denoms {
+		filteredCoins = filteredCoins.Add(NewCoin(denom, coins.AmountOf(denom)))
+	}
+
+	return filteredCoins
+}
+
 // IsAllPositive returns true if there is at least one coin and all currencies
 // have a positive value.
 func (coins Coins) IsAllPositive() bool {

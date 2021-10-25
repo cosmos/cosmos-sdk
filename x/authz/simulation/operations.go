@@ -101,7 +101,8 @@ func SimulateMsgGrant(ak authz.AccountKeeper, bk authz.BankKeeper, _ keeper.Keep
 
 		granterAcc := ak.GetAccount(ctx, granter.Address)
 		spendableCoins := bk.SpendableCoins(ctx, granter.Address)
-		fees, err := simtypes.RandomFees(r, ctx, spendableCoins)
+		feeCoins := spendableCoins.FilterDenoms([]string{sdk.DefaultBondDenom})
+		fees, err := simtypes.RandomFees(r, ctx, feeCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, err.Error()), nil, err
 		}
@@ -174,7 +175,8 @@ func SimulateMsgRevoke(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Kee
 		}
 
 		spendableCoins := bk.SpendableCoins(ctx, granterAddr)
-		fees, err := simtypes.RandomFees(r, ctx, spendableCoins)
+		feeCoins := spendableCoins.FilterDenoms([]string{sdk.DefaultBondDenom})
+		fees, err := simtypes.RandomFees(r, ctx, feeCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "fee error"), nil, err
 		}
@@ -260,7 +262,8 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 		}
 
 		granteeSpendableCoins := bk.SpendableCoins(ctx, granteeAddr)
-		fees, err := simtypes.RandomFees(r, ctx, granteeSpendableCoins)
+		feeCoins := granteeSpendableCoins.FilterDenoms([]string{sdk.DefaultBondDenom})
+		fees, err := simtypes.RandomFees(r, ctx, feeCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "fee error"), nil, err
 		}

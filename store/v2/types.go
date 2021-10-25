@@ -10,6 +10,7 @@ import (
 type StoreKey = v1.StoreKey
 type CommitID = v1.CommitID
 type StoreUpgrades = v1.StoreUpgrades
+type StoreRename = v1.StoreRename
 type Iterator = v1.Iterator
 type PruningOptions = v1.PruningOptions
 
@@ -24,6 +25,10 @@ type CacheKVStore = v1.CacheKVStore
 type Queryable = v1.Queryable
 type CacheWrap = v1.CacheWrap
 
+type KVStoreKey = v1.KVStoreKey
+type MemoryStoreKey = v1.MemoryStoreKey
+type TransientStoreKey = v1.TransientStoreKey
+
 var (
 	PruneDefault    = v1.PruneDefault
 	PruneEverything = v1.PruneEverything
@@ -31,7 +36,10 @@ var (
 )
 
 type BasicRootStore interface {
+	// Returns a KVStore which has access only to the namespace of the StoreKey.
+	// Panics if the key is not found in the schema.
 	GetKVStore(StoreKey) KVStore
+	// Returns a branched whose modifications are later merged back in.
 	CacheRootStore() CacheRootStore
 }
 
@@ -43,17 +51,19 @@ type rootStoreTraceListen interface {
 	AddListeners(key StoreKey, listeners []WriteListener)
 }
 
-type RootStore interface {
+type CommitRootStore interface {
 	BasicRootStore
 	rootStoreTraceListen
 
-	GetVersion(uint64) (BasicRootStore, error)
-}
+	// Gets a read-only view of the store at a specific version.
+	// Returns an error if the version is not found.
+	GetVersion(int64) (BasicRootStore, error)
+	// Closes the store and all backing transactions.
+	Close() error
 
-type CommitRootStore interface {
-	RootStore
+	// RootStore
 	Committer
-	snapshottypes.Snapshotter // or PortableStore
+	snapshottypes.Snapshotter // todo: PortableStore?
 	SetInitialVersion(uint64) error
 }
 
@@ -76,5 +86,9 @@ type StoreType = v1.StoreType
 const StoreTypeMemory = v1.StoreTypeMemory
 const StoreTypeTransient = v1.StoreTypeTransient
 const StoreTypeDecoupled = v1.StoreTypeDecoupled
+const StoreTypeDB = v1.StoreTypeDB
 const StoreTypeSMT = v1.StoreTypeSMT
 const StoreTypePersistent = StoreTypeDecoupled
+
+var NewKVStoreKey = v1.NewKVStoreKey
+var PrefixEndBytes = v1.PrefixEndBytes

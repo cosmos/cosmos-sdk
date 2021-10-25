@@ -15,8 +15,14 @@ type prefixRW struct {
 	prefix []byte
 }
 
+type prefixW struct {
+	db     dbm.DBWriter
+	prefix []byte
+}
+
 var _ dbm.DBReader = (*prefixR)(nil)
 var _ dbm.DBReadWriter = (*prefixRW)(nil)
+var _ dbm.DBWriter = (*prefixW)(nil)
 
 func NewPrefixReader(db dbm.DBReader, prefix []byte) prefixR {
 	return prefixR{
@@ -27,6 +33,13 @@ func NewPrefixReader(db dbm.DBReader, prefix []byte) prefixR {
 
 func NewPrefixReadWriter(db dbm.DBReadWriter, prefix []byte) prefixRW {
 	return prefixRW{
+		prefix: prefix,
+		db:     db,
+	}
+}
+
+func NewPrefixWriter(db dbm.DBWriter, prefix []byte) prefixW {
+	return prefixW{
 		prefix: prefix,
 		db:     db,
 	}
@@ -134,6 +147,28 @@ func (pdb prefixRW) Commit() error { return pdb.db.Commit() }
 
 // Discard implements DBReadWriter.
 func (pdb prefixRW) Discard() error { return pdb.db.Discard() }
+
+// Set implements DBReadWriter.
+func (pdb prefixW) Set(key []byte, value []byte) error {
+	if len(key) == 0 {
+		return dbm.ErrKeyEmpty
+	}
+	return pdb.db.Set(prefixed(pdb.prefix, key), value)
+}
+
+// Delete implements DBReadWriter.
+func (pdb prefixW) Delete(key []byte) error {
+	if len(key) == 0 {
+		return dbm.ErrKeyEmpty
+	}
+	return pdb.db.Delete(prefixed(pdb.prefix, key))
+}
+
+// Close implements DBReadWriter.
+func (pdb prefixW) Commit() error { return pdb.db.Commit() }
+
+// Discard implements DBReadWriter.
+func (pdb prefixW) Discard() error { return pdb.db.Discard() }
 
 // Returns a slice of the same length (big endian), but incremented by one.
 // Returns nil on overflow (e.g. if bz bytes are all 0xFF)

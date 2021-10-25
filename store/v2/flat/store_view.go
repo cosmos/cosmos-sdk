@@ -18,7 +18,7 @@ import (
 var ErrReadOnly = errors.New("cannot modify read-only store")
 
 // Represents a read-only view of a store's contents at a given version.
-type viewStore struct {
+type storeView struct {
 	stateView   dbm.DBReader
 	dataBucket  dbm.DBReader
 	indexBucket dbm.DBReader
@@ -26,8 +26,8 @@ type viewStore struct {
 	merkleStore *smt.Store
 }
 
-func (s *Store) GetVersion(ver int64) (ret *viewStore, err error) {
-	stateView, err := s.stateDB.ReaderAt(uint64(ver))
+func (s *Store) GetVersion(version int64) (ret *storeView, err error) {
+	stateView, err := s.stateDB.ReaderAt(uint64(version))
 	if err != nil {
 		return
 	}
@@ -39,7 +39,7 @@ func (s *Store) GetVersion(ver int64) (ret *viewStore, err error) {
 
 	merkleView := stateView
 	if s.opts.MerkleDB != nil {
-		merkleView, err = s.opts.MerkleDB.ReaderAt(uint64(ver))
+		merkleView, err = s.opts.MerkleDB.ReaderAt(uint64(version))
 		if err != nil {
 			return
 		}
@@ -53,17 +53,21 @@ func (s *Store) GetVersion(ver int64) (ret *viewStore, err error) {
 	if err != nil {
 		return
 	}
-	return &viewStore{
+	return &storeView{
 		stateView:   stateView,
 		dataBucket:  prefix.NewPrefixReader(stateView, dataPrefix),
-		merkleView:  merkleView,
 		indexBucket: prefix.NewPrefixReader(stateView, indexPrefix),
+		merkleView:  merkleView,
 		merkleStore: loadSMT(dbm.ReaderAsReadWriter(merkleView), root),
 	}, nil
 }
 
+func (s *storeView) GetMerkleStore() *smt.Store {
+	return s.merkleStore
+}
+
 // Get implements KVStore.
-func (s *viewStore) Get(key []byte) []byte {
+func (s *storeView) Get(key []byte) []byte {
 	val, err := s.dataBucket.Get(key)
 	if err != nil {
 		panic(err)
@@ -72,7 +76,7 @@ func (s *viewStore) Get(key []byte) []byte {
 }
 
 // Has implements KVStore.
-func (s *viewStore) Has(key []byte) bool {
+func (s *storeView) Has(key []byte) bool {
 	has, err := s.dataBucket.Has(key)
 	if err != nil {
 		panic(err)
@@ -81,17 +85,17 @@ func (s *viewStore) Has(key []byte) bool {
 }
 
 // Set implements KVStore.
-func (s *viewStore) Set(key []byte, value []byte) {
+func (s *storeView) Set(key []byte, value []byte) {
 	panic(ErrReadOnly)
 }
 
 // Delete implements KVStore.
-func (s *viewStore) Delete(key []byte) {
+func (s *storeView) Delete(key []byte) {
 	panic(ErrReadOnly)
 }
 
 // Iterator implements KVStore.
-func (s *viewStore) Iterator(start, end []byte) types.Iterator {
+func (s *storeView) Iterator(start, end []byte) types.Iterator {
 	iter, err := s.dataBucket.Iterator(start, end)
 	if err != nil {
 		panic(err)
@@ -100,7 +104,7 @@ func (s *viewStore) Iterator(start, end []byte) types.Iterator {
 }
 
 // ReverseIterator implements KVStore.
-func (s *viewStore) ReverseIterator(start, end []byte) types.Iterator {
+func (s *storeView) ReverseIterator(start, end []byte) types.Iterator {
 	iter, err := s.dataBucket.ReverseIterator(start, end)
 	if err != nil {
 		panic(err)
@@ -109,18 +113,18 @@ func (s *viewStore) ReverseIterator(start, end []byte) types.Iterator {
 }
 
 // GetStoreType implements Store.
-func (s *viewStore) GetStoreType() types.StoreType {
+func (s *storeView) GetStoreType() types.StoreType {
 	return types.StoreTypeDecoupled
 }
 
-func (st *viewStore) CacheWrap() types.CacheWrap {
+func (st *storeView) CacheWrap() types.CacheWrap {
 	return cachekv.NewStore(st)
 }
 
-func (st *viewStore) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
+func (st *storeView) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
 	return cachekv.NewStore(tracekv.NewStore(st, w, tc))
 }
 
-func (st *viewStore) CacheWrapWithListeners(storeKey types.StoreKey, listeners []types.WriteListener) types.CacheWrap {
+func (st *storeView) CacheWrapWithListeners(storeKey types.StoreKey, listeners []types.WriteListener) types.CacheWrap {
 	return cachekv.NewStore(listenkv.NewStore(st, storeKey, listeners))
 }

@@ -3,17 +3,22 @@ package dbadapter
 import (
 	"io"
 
-	dbm "github.com/tendermint/tm-db"
+	// dbm "github.com/tendermint/tm-db"
 
+	dbm "github.com/cosmos/cosmos-sdk/db"
+	dbutil "github.com/cosmos/cosmos-sdk/internal/db"
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
+// dbm.DB implements KVStore so we can CacheKVStore it.
+var _ types.KVStore = Store{}
+
 // Wrapper type for dbm.Db with implementation of KVStore
 type Store struct {
-	dbm.DB
+	DB dbm.DBReadWriter
 }
 
 // Get wraps the underlying DB's Get method panicing on error.
@@ -58,7 +63,7 @@ func (dsa Store) Iterator(start, end []byte) types.Iterator {
 		panic(err)
 	}
 
-	return iter
+	return dbutil.DBToStoreIterator(iter)
 }
 
 // ReverseIterator wraps the underlying DB's ReverseIterator method panicing on error.
@@ -68,11 +73,11 @@ func (dsa Store) ReverseIterator(start, end []byte) types.Iterator {
 		panic(err)
 	}
 
-	return iter
+	return dbutil.DBToStoreIterator(iter)
 }
 
 // GetStoreType returns the type of the store.
-func (Store) GetStoreType() types.StoreType {
+func (dsa Store) GetStoreType() types.StoreType {
 	return types.StoreTypeDB
 }
 
@@ -90,6 +95,3 @@ func (dsa Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Ca
 func (dsa Store) CacheWrapWithListeners(storeKey types.StoreKey, listeners []types.WriteListener) types.CacheWrap {
 	return cachekv.NewStore(listenkv.NewStore(dsa, storeKey, listeners))
 }
-
-// dbm.DB implements KVStore so we can CacheKVStore it.
-var _ types.KVStore = Store{}

@@ -8,10 +8,10 @@ import (
 	"math"
 	"sync"
 
-	dbm "github.com/cosmos/cosmos-sdk/db"
-	"github.com/cosmos/cosmos-sdk/db/prefix"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	dbm "github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db/prefix"
 	util "github.com/cosmos/cosmos-sdk/internal"
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
@@ -43,11 +43,11 @@ var (
 
 type StoreConfig struct {
 	// Version pruning options for backing DBs.
-	Pruning types.PruningOptions
+	Pruning        types.PruningOptions
+	InitialVersion uint64
 	// The backing DB to use for the state commitment Merkle tree data.
 	// If nil, Merkle data is stored in the state storage DB under a separate prefix.
-	MerkleDB       dbm.DBConnection
-	InitialVersion uint64
+	MerkleDB dbm.DBConnection
 }
 
 // Store is a CommitKVStore which handles state storage and commitments as separate concerns,
@@ -68,7 +68,7 @@ type Store struct {
 
 var DefaultStoreConfig = StoreConfig{Pruning: types.PruneDefault, MerkleDB: nil}
 
-// NewStore creates a new Store, or loads one if db contains existing data.
+// NewStore creates a new Store, or loads one if the DB contains existing data.
 func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 	versions, err := db.Versions()
 	if err != nil {
@@ -394,40 +394,18 @@ func (s *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		var err error
 		res.Key = req.Data // data holds the key bytes
 
-		dbr, err := s.stateDB.ReaderAt(uint64(height))
+		view, err := s.GetVersion(height)
 		if err != nil {
 			if errors.Is(err, dbm.ErrVersionDoesNotExist) {
 				err = sdkerrors.ErrInvalidHeight
 			}
 			return sdkerrors.QueryResult(err, false)
 		}
-		defer dbr.Discard()
-		contents := prefix.NewPrefixReader(dbr, dataPrefix)
-		res.Value, err = contents.Get(res.Key)
-		if err != nil {
-			return sdkerrors.QueryResult(err, false)
-		}
+		res.Value = view.Get(res.Key)
 		if !req.Prove {
 			break
 		}
-		merkleView := dbr
-		if s.opts.MerkleDB != nil {
-			merkleView, err = s.opts.MerkleDB.ReaderAt(uint64(height))
-			if err != nil {
-				return sdkerrors.QueryResult(
-					fmt.Errorf("version exists in state DB but not Merkle DB: %v", height), false)
-			}
-			defer merkleView.Discard()
-		}
-		root, err := dbr.Get(merkleRootKey)
-		if err != nil {
-			return sdkerrors.QueryResult(err, false)
-		}
-		if root == nil {
-			return sdkerrors.QueryResult(errors.New("Merkle root hash not found"), false) //nolint:stylecheck
-		}
-		merkleStore := loadSMT(dbm.ReaderAsReadWriter(merkleView), root)
-		res.ProofOps, err = merkleStore.GetProof(res.Key)
+		res.ProofOps, err = view.GetMerkleStore().GetProof(res.Key)
 		if err != nil {
 			return sdkerrors.QueryResult(fmt.Errorf("Merkle proof creation failed for key: %v", res.Key), false) //nolint:stylecheck
 		}

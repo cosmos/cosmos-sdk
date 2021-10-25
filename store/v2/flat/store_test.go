@@ -63,7 +63,7 @@ func TestGetSetHasDelete(t *testing.T) {
 	require.Panics(t, func() { store.Set(nil, []byte("value")) }, "Set(nil key) should panic")
 	require.Panics(t, func() { store.Set([]byte{}, []byte("value")) }, "Set(empty key) should panic")
 	require.Panics(t, func() { store.Set([]byte("key"), nil) }, "Set(nil value) should panic")
-	store.indexTxn = rwCrudFails{store.indexTxn}
+	store.indexBucket = rwCrudFails{store.indexBucket}
 	require.Panics(t, func() { store.Set([]byte("key"), []byte("value")) },
 		"Set() when index fails should panic")
 }

@@ -30,6 +30,7 @@ var (
 	schemaPrefix = []byte{5} // Prefix for store keys (prefixes)
 )
 
+// RootStoreConfig is used to define a schema and pass options to the RootStore constructor.
 type RootStoreConfig struct {
 	StoreConfig
 	PersistentCache types.RootStorePersistentCache
@@ -39,6 +40,7 @@ type RootStoreConfig struct {
 	*traceMixin
 }
 
+// Represents the valid store types for a RootStore schema, a subset of the StoreType values
 type subStoreType byte
 
 const (
@@ -47,8 +49,10 @@ const (
 	subStoreTransient
 )
 
+// A loaded mapping of store names to types
 type storeSchema map[string]subStoreType
 
+// Registry used to build a valid schema with no prefix conflicts
 type prefixRegistry struct {
 	storeSchema
 	reserved []string
@@ -87,10 +91,11 @@ type rootCache struct {
 // Read-only store for querying
 type rootView struct {
 	*storeView
-	// schema storeSchema
-	storeMixin //?
+	schema storeSchema
+	// storeMixin //?
 }
 
+// Auxiliary type used only to avoid repetitive method implementations
 type rootGeneric struct {
 	schema             storeSchema
 	persist, mem, tran types.KVStore
@@ -335,12 +340,7 @@ func (rs *rootStore) makeRootView(view *storeView) (ret *rootView, err error) {
 	// The migrated contents and schema are not committed until the next store.Commit
 	return &rootView{
 		storeView: view,
-		// schema:    pr.storeSchema,
-		storeMixin: storeMixin{
-			schema:        pr.storeSchema,
-			listenerMixin: rs.listenerMixin,
-			traceMixin:    rs.traceMixin,
-		},
+		schema:    pr.storeSchema,
 	}, nil
 }
 
@@ -356,7 +356,7 @@ func (rv *rootView) CacheRootStore() types.CacheRootStore {
 		CacheKVStore: cachekv.NewStore(rv),
 		mem:          cachekv.NewStore(mem.NewStore(memdb.NewDB())),
 		tran:         cachekv.NewStore(transkv.NewStore(memdb.NewDB())),
-		storeMixin:   rv.storeMixin,
+		storeMixin:   storeMixin{schema: rv.schema},
 	}
 }
 
@@ -365,7 +365,7 @@ func (rs *rootStore) CacheRootStore() types.CacheRootStore {
 		CacheKVStore: cachekv.NewStore(rs),
 		mem:          cachekv.NewStore(rs.mem),
 		tran:         cachekv.NewStore(rs.tran),
-		storeMixin:   rs.storeMixin, // todo: copy?
+		storeMixin:   storeMixin{schema: rs.schema},
 	}
 }
 
@@ -526,7 +526,7 @@ func (rs *rootCache) CacheRootStore() types.CacheRootStore {
 		CacheKVStore: cachekv.NewStore(rs),
 		mem:          cachekv.NewStore(rs.mem),
 		tran:         cachekv.NewStore(rs.tran),
-		storeMixin:   rs.storeMixin,
+		storeMixin:   storeMixin{schema: rs.schema},
 	}
 }
 

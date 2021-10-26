@@ -49,7 +49,7 @@ func Test_runRenameCmd(t *testing.T) {
 	cmd.SetArgs([]string{"blah", "blaah", fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome)})
 	err = cmd.ExecuteContext(ctx)
 	require.Error(t, err)
-	require.EqualError(t, err, "blah: key not found")
+	require.EqualError(t, err, "blah.info: key not found")
 
 	// User confirmation missing
 	cmd.SetArgs([]string{

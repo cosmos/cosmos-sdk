@@ -1,7 +1,6 @@
 package middleware_test
 
 import (
-	"fmt"
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -14,7 +13,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -48,48 +46,6 @@ func (s *MWTestSuite) setupMetaTxAccts(ctx sdk.Context) (sdk.Context, []testAcco
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: ctx.BlockHeight()}})
 
 	return ctx, accts
-}
-
-func (s *MWTestSuite) TestSignModes() {
-	ctx := s.SetupTest(false) // reset
-	ctx, accts := s.setupMetaTxAccts(ctx)
-	tipper, feePayer := accts[0], accts[1]
-	msg := govtypes.NewMsgVote(tipper.acc.GetAddress(), 1, govtypes.OptionYes)
-
-	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.SignModeTxMiddleware)
-
-	testcases := []struct {
-		tipperSignMode   signing.SignMode
-		feePayerSignMode signing.SignMode
-		expErr           bool
-	}{
-		{signing.SignMode_SIGN_MODE_DIRECT, signing.SignMode_SIGN_MODE_DIRECT, false},
-		{signing.SignMode_SIGN_MODE_DIRECT, signing.SignMode_SIGN_MODE_DIRECT_AUX, true},
-		{signing.SignMode_SIGN_MODE_DIRECT, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, false},
-		{signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_DIRECT, false},
-		{signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_DIRECT_AUX, true},
-		{signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, false},
-		{signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signing.SignMode_SIGN_MODE_DIRECT, false},
-		{signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signing.SignMode_SIGN_MODE_DIRECT_AUX, true},
-		{signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, false},
-	}
-
-	for _, tc := range testcases {
-		tc := tc
-		s.Run(fmt.Sprintf("tipper=%s, feepayer=%s", tc.tipperSignMode, tc.feePayerSignMode), func() {
-			tipperTxBuilder := s.mkTipperTxBuilder(tipper.priv, msg, initialRegens, tc.tipperSignMode, tipper.accNum, 0, ctx.ChainID())
-			feePayerTxBuilder, err := mkFeePayerTxBuilder(s.clientCtx, feePayer.priv, tc.feePayerSignMode, tx.Fee{Amount: initialAtoms, GasLimit: 200000}, tipperTxBuilder.GetTx(), feePayer.accNum, 0, ctx.ChainID())
-			s.Require().NoError(err)
-
-			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), feePayerTxBuilder.GetTx(), abci.RequestDeliverTx{})
-			if tc.expErr {
-				s.Require().Error(err)
-				s.Require().Contains(err.Error(), "invalid sign mode for")
-			} else {
-				s.Require().NoError(err)
-			}
-		})
-	}
 }
 
 func (s *MWTestSuite) TestTips() {

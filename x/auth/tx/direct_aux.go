@@ -44,11 +44,25 @@ func (signModeDirectAuxHandler) GetSignBytes(
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("got empty pubkey for signer #%d in %s handler", data.SignerIndex, signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
 	}
 
+	// Fee payer cannot use SIGN_MODE_DIRECT_AUX, because SIGN_MODE_DIRECT_AUX
+	// does not sign over fees, which would create malleability issues.
+	feeTx, ok := tx.(sdk.FeeTx)
+	if !ok {
+		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", sdk.FeeTx(nil), tx)
+	}
+	addr := data.Address
+	if addr == "" {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "got empty address in %s handler", signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
+	}
+	if feeTx.FeePayer().String() == data.Address {
+		return nil, sdkerrors.ErrUnauthorized.Wrapf("fee payer %s cannot sign with %s", feeTx.FeePayer(), signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
+	}
+
 	signDocDirectAux := types.SignDocDirectAux{
 		BodyBytes:     protoTx.getBodyBytes(),
 		ChainId:       data.ChainID,
 		AccountNumber: data.AccountNumber,
-		Sequence:      data.Sequence,
+		Sequence:      signerInfo.Sequence,
 		Tip:           protoTx.tx.AuthInfo.Tip,
 		PublicKey:     signerInfo.PublicKey,
 	}

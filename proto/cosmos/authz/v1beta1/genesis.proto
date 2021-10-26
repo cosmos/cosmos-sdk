@@ -9,11 +9,15 @@ import "cosmos_proto/cosmos.proto";
 option go_package = "github.com/cosmos/cosmos-sdk/x/authz";
 
 // GenesisState defines the authz module's genesis state.
+//
+// Since: cosmos-sdk 0.43
 message GenesisState {
   repeated GrantAuthorization authorization = 1 [(gogoproto.nullable) = false];
 }
 
 // GrantAuthorization defines the GenesisState/GrantAuthorization type.
+//
+// Since: cosmos-sdk 0.43
 message GrantAuthorization {
   string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];

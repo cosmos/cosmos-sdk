@@ -440,6 +440,8 @@ func (ks keystore) Rename(oldName, newName string) error {
 	return nil
 }
 
+// Delete deletes a key in the keyring. `uid` represents the key name, without
+// the `.info` suffix.
 func (ks keystore) Delete(uid string) error {
 	k, err := ks.Key(uid)
 	if err != nil {
@@ -456,10 +458,7 @@ func (ks keystore) Delete(uid string) error {
 		return err
 	}
 
-	if !(strings.HasSuffix(uid, infoSuffix)) {
-		uid = infoKey(uid)
-	}
-	err = ks.db.Remove(uid)
+	err = ks.db.Remove(infoKey(uid))
 	if err != nil {
 		return err
 	}
@@ -789,7 +788,7 @@ func (ks keystore) writeRecord(k *Record) error {
 	}
 
 	item := keyring.Item{
-		Key:  string(key),
+		Key:  key,
 		Data: serializedRecord,
 	}
 

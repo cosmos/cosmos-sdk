@@ -52,7 +52,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10326](https://github.com/cosmos/cosmos-sdk/pull/10326) `x/authz` add query all grants by granter query.
 * [\#10024](https://github.com/cosmos/cosmos-sdk/pull/10024) `store/cachekv` performance improvement by reduced growth factor for iterator ranging by using binary searches to find dirty items when unsorted key count >= 1024
 * [\#10348](https://github.com/cosmos/cosmos-sdk/pull/10348) Add `fee.{payer,granter}` and `tip` fields to StdSignDoc for signing tipped transactions.
-* [\#10208](https://github.com/cosmos/cosmos-sdk/pull/10208) Add `SignModeTxMiddleware` for checking sign modes and `TipsTxMiddleware` for transferring tips.
+* [\#10208](https://github.com/cosmos/cosmos-sdk/pull/10208) Add `TipsTxMiddleware` for transferring tips.
 
 ### API Breaking Changes
 

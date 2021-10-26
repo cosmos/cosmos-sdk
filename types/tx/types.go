@@ -112,14 +112,14 @@ func (t *Tx) GetSigners() []sdk.AccAddress {
 	}
 
 	// ensure any specified fee payer is included in the required signers (at the end)
-	feePayer := t.AuthInfo.Fee.Payer
-	if feePayer != "" && !seen[feePayer] {
-		payerAddr, err := sdk.AccAddressFromBech32(feePayer)
+	fee := t.AuthInfo.Fee
+	if fee != nil && fee.Payer != "" && !seen[fee.Payer] {
+		payerAddr, err := sdk.AccAddressFromBech32(fee.Payer)
 		if err != nil {
 			panic(err)
 		}
 		signers = append(signers, payerAddr)
-		seen[feePayer] = true
+		seen[fee.Payer] = true
 	}
 
 	return signers

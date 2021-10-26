@@ -49,10 +49,8 @@ type ExtensionOptionsTxBuilder interface {
 func newBuilder() *wrapper {
 	return &wrapper{
 		tx: &tx.Tx{
-			Body: &tx.TxBody{},
-			AuthInfo: &tx.AuthInfo{
-				Fee: &tx.Fee{},
-			},
+			Body:     &tx.TxBody{},
+			AuthInfo: &tx.AuthInfo{},
 		},
 	}
 }
@@ -133,9 +131,9 @@ func (w *wrapper) GetFee() sdk.Coins {
 }
 
 func (w *wrapper) FeePayer() sdk.AccAddress {
-	feePayer := w.tx.AuthInfo.Fee.Payer
-	if feePayer != "" {
-		payerAddr, err := sdk.AccAddressFromBech32(feePayer)
+	fee := w.tx.AuthInfo.Fee
+	if fee != nil && fee.Payer != "" {
+		payerAddr, err := sdk.AccAddressFromBech32(fee.Payer)
 		if err != nil {
 			panic(err)
 		}

@@ -284,9 +284,11 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 	emptyPropFile := testutil.WriteToNewTempFile(s.T(), emptyProp)
 	govAcc, err := s.cfg.AccountRetriever.GetAccount(val.ClientCtx, authtypes.NewModuleAddress(types.ModuleName))
 	s.Require().NoError(err)
-	validProp, err := MsgVote(val.ClientCtx, govAcc.GetAddress().String(), "1", "yes", "--generate-only")
-	s.Require().NoError(err)
-	validPropFile := testutil.WriteToNewTempFile(s.T(), validProp.String())
+	validProp := fmt.Sprintf(
+		`{"body":{"messages":[{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%s","to_address":"%s","amount":[{"denom":"%s","amount":"10"}]}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`,
+		govAcc.GetAddress().String(), val.Address.String(), s.cfg.BondDenom,
+	)
+	validPropFile := testutil.WriteToNewTempFile(s.T(), validProp)
 	testCases := []struct {
 		name         string
 		args         []string

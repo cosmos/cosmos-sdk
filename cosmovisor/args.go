@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -32,7 +33,6 @@ const (
 	genesisDir      = "genesis"
 	upgradesDir     = "upgrades"
 	currentLink     = "current"
-	upgradeFilename = "upgrade-info.json"
 )
 
 // must be the same as x/upgrade/types.UpgradeInfoFilename
@@ -244,7 +244,7 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) error {
 	}
 
 	cfg.currentUpgrade = u
-	f, err := os.Create(filepath.Join(upgrade, upgradeFilename))
+	f, err := os.Create(filepath.Join(upgrade, upgradekeeper.UpgradeInfoFileName))
 	if err != nil {
 		return err
 	}
@@ -263,7 +263,7 @@ func (cfg *Config) UpgradeInfo() upgradetypes.Plan {
 		return cfg.currentUpgrade
 	}
 
-	filename := filepath.Join(cfg.Root(), currentLink, upgradeFilename)
+	filename := filepath.Join(cfg.Root(), currentLink, upgradekeeper.UpgradeInfoFileName)
 	_, err := os.Lstat(filename)
 	var u upgradetypes.Plan
 	var bz []byte

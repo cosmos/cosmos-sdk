@@ -263,6 +263,7 @@ func (m *QueryUpgradedConsensusStateRequest) GetLastHeight() int64 {
 //
 // Deprecated: Do not use.
 type QueryUpgradedConsensusStateResponse struct {
+	// Since: cosmos-sdk 0.43
 	UpgradedConsensusState []byte `protobuf:"bytes,2,opt,name=upgraded_consensus_state,json=upgradedConsensusState,proto3" json:"upgraded_consensus_state,omitempty"`
 }
 
@@ -308,6 +309,8 @@ func (m *QueryUpgradedConsensusStateResponse) GetUpgradedConsensusState() []byte
 
 // QueryModuleVersionsRequest is the request type for the Query/ModuleVersions
 // RPC method.
+//
+// Since: cosmos-sdk 0.43
 type QueryModuleVersionsRequest struct {
 	// module_name is a field to query a specific module
 	// consensus version from state. Leaving this empty will
@@ -357,6 +360,8 @@ func (m *QueryModuleVersionsRequest) GetModuleName() string {
 
 // QueryModuleVersionsResponse is the response type for the Query/ModuleVersions
 // RPC method.
+//
+// Since: cosmos-sdk 0.43
 type QueryModuleVersionsResponse struct {
 	// module_versions is a list of module names with their consensus versions.
 	ModuleVersions []*ModuleVersion `protobuf:"bytes,1,rep,name=module_versions,json=moduleVersions,proto3" json:"module_versions,omitempty"`
@@ -482,6 +487,8 @@ type QueryClient interface {
 	// (https://github.com/cosmos/ibc-go/blob/2c880a22e9f9cc75f62b527ca94aa75ce1106001/proto/ibc/core/client/v1/query.proto#L54)
 	UpgradedConsensusState(ctx context.Context, in *QueryUpgradedConsensusStateRequest, opts ...grpc.CallOption) (*QueryUpgradedConsensusStateResponse, error)
 	// ModuleVersions queries the list of module versions from state.
+	//
+	// Since: cosmos-sdk 0.43
 	ModuleVersions(ctx context.Context, in *QueryModuleVersionsRequest, opts ...grpc.CallOption) (*QueryModuleVersionsResponse, error)
 }
 
@@ -544,6 +551,8 @@ type QueryServer interface {
 	// (https://github.com/cosmos/ibc-go/blob/2c880a22e9f9cc75f62b527ca94aa75ce1106001/proto/ibc/core/client/v1/query.proto#L54)
 	UpgradedConsensusState(context.Context, *QueryUpgradedConsensusStateRequest) (*QueryUpgradedConsensusStateResponse, error)
 	// ModuleVersions queries the list of module versions from state.
+	//
+	// Since: cosmos-sdk 0.43
 	ModuleVersions(context.Context, *QueryModuleVersionsRequest) (*QueryModuleVersionsResponse, error)
 }
 

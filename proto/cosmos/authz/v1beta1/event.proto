@@ -1,3 +1,4 @@
+// Since: cosmos-sdk 0.43
 syntax = "proto3";
 package cosmos.authz.v1beta1;
 
@@ -6,8 +7,6 @@ import "cosmos_proto/cosmos.proto";
 option go_package = "github.com/cosmos/cosmos-sdk/x/authz";
 
 // EventGrant is emitted on Msg/Grant
-//
-// Since: cosmos-sdk 0.43
 message EventGrant {
   // Msg type URL for which an autorization is granted
   string msg_type_url = 2;
@@ -18,8 +17,6 @@ message EventGrant {
 }
 
 // EventRevoke is emitted on Msg/Revoke
-//
-// Since: cosmos-sdk 0.43
 message EventRevoke {
   // Msg type URL for which an autorization is revoked
   string msg_type_url = 2;

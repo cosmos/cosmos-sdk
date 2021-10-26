@@ -696,7 +696,7 @@ type VersionInfo struct {
 	BuildTags string    `protobuf:"bytes,5,opt,name=build_tags,json=buildTags,proto3" json:"build_tags,omitempty"`
 	GoVersion string    `protobuf:"bytes,6,opt,name=go_version,json=goVersion,proto3" json:"go_version,omitempty"`
 	BuildDeps []*Module `protobuf:"bytes,7,rep,name=build_deps,json=buildDeps,proto3" json:"build_deps,omitempty"`
-	// @since Cosmos SDK 0.43
+	// Since: cosmos-sdk 0.43
 	CosmosSdkVersion string `protobuf:"bytes,8,opt,name=cosmos_sdk_version,json=cosmosSdkVersion,proto3" json:"cosmos_sdk_version,omitempty"`
 }
 

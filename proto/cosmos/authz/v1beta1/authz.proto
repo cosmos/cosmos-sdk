@@ -1,3 +1,4 @@
+// Since: cosmos-sdk 0.43
 syntax = "proto3";
 package cosmos.authz.v1beta1;
 
@@ -11,8 +12,6 @@ option (gogoproto.goproto_getters_all) = false;
 
 // GenericAuthorization gives the grantee unrestricted permissions to execute
 // the provided method on behalf of the granter's account.
-//
-// Since: cosmos-sdk 0.43
 message GenericAuthorization {
   option (cosmos_proto.implements_interface) = "Authorization";
 
@@ -22,8 +21,6 @@ message GenericAuthorization {
 
 // Grant gives permissions to execute
 // the provide method with expiration time.
-//
-// Since: cosmos-sdk 0.43
 message Grant {
   google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
   google.protobuf.Timestamp expiration    = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];

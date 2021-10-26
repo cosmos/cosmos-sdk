@@ -1,3 +1,4 @@
+// Since: cosmos-sdk 0.43
 syntax = "proto3";
 package cosmos.authz.v1beta1;
 
@@ -9,8 +10,6 @@ import "cosmos_proto/cosmos.proto";
 option go_package = "github.com/cosmos/cosmos-sdk/x/authz";
 
 // Query defines the gRPC querier service.
-//
-// Since: cosmos-sdk 0.43
 service Query {
   // Returns list of `Authorization`, granted to the grantee by the granter.
   rpc Grants(QueryGrantsRequest) returns (QueryGrantsResponse) {
@@ -24,8 +23,6 @@ service Query {
 }
 
 // QueryGrantsRequest is the request type for the Query/Grants RPC method.
-//
-// Since: cosmos-sdk 0.43
 message QueryGrantsRequest {
   string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -36,8 +33,6 @@ message QueryGrantsRequest {
 }
 
 // QueryGrantsResponse is the response type for the Query/Authorizations RPC method.
-//
-// Since: cosmos-sdk 0.43
 message QueryGrantsResponse {
   // authorizations is a list of grants granted for grantee by granter.
   repeated cosmos.authz.v1beta1.Grant grants = 1;
@@ -46,8 +41,6 @@ message QueryGrantsResponse {
 }
 
 // QueryGranterGrantsRequest is the request type for the Query/GranterGrants RPC method.
-//
-// Since: cosmos-sdk 0.43
 message QueryGranterGrantsRequest {
   string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
@@ -56,8 +49,6 @@ message QueryGranterGrantsRequest {
 }
 
 // QueryGranterGrantsResponse is the response type for the Query/GranterGrants RPC method.
-//
-// Since: cosmos-sdk 0.43
 message QueryGranterGrantsResponse {
   // authorizations is a list of grants granted for grantee by granter.
   repeated cosmos.authz.v1beta1.Grant grants = 1;

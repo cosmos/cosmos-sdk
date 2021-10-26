@@ -209,18 +209,18 @@ func (s *upgradeTestSuite) TestDownloadBinary() {
 			canDownload: false,
 		},
 		"get zipped directory": {
-			url:         "./testdata/repo/zip_directory/autod.zip",
+			url:         "./testdata/repo/chain3-zip_dir/autod.zip",
 			canDownload: true,
 			validBinary: true,
 		},
 		"get zipped directory with valid checksum": {
-			// sha256sum ./testdata/repo/zip_directory/autod.zip
-			url:         "./testdata/repo/zip_directory/autod.zip?checksum=sha256:3784e4574cad69b67e34d4ea4425eff140063a3870270a301d6bb24a098a27ae",
+			// sha256sum ./testdata/repo/chain3-zip_dir/autod.zip
+			url:         "./testdata/repo/chain3-zip_dir/autod.zip?checksum=sha256:8951f52a0aea8617de0ae459a20daf704c29d259c425e60d520e363df0f166b4",
 			canDownload: true,
 			validBinary: true,
 		},
 		"get zipped directory with invalid checksum": {
-			url:         "./testdata/repo/zip_directory/autod.zip?checksum=sha256:73e2bd6cbb99261733caf137015d5cc58e3f96248d8b01da68be8564989dd906",
+			url:         "./testdata/repo/chain3-zip_dir/autod.zip?checksum=sha256:73e2bd6cbb99261733caf137015d5cc58e3f96248d8b01da68be8564989dd906",
 			canDownload: false,
 		},
 		"invalid url": {
@@ -256,15 +256,15 @@ func (s *upgradeTestSuite) TestDownloadBinary() {
 		err = cosmovisor.DownloadBinary(cfg, info)
 		if !tc.canDownload {
 			s.Require().Error(err)
-			return
-		}
-		s.Require().NoError(err)
-
-		err = cosmovisor.EnsureBinary(cfg.UpgradeBin(upgrade))
-		if tc.validBinary {
-			s.Require().NoError(err)
 		} else {
-			s.Require().Error(err)
+			s.Require().NoError(err)
+
+			err = cosmovisor.EnsureBinary(cfg.UpgradeBin(upgrade))
+			if tc.validBinary {
+				s.Require().NoError(err)
+			} else {
+				s.Require().Error(err)
+			}
 		}
 	}
 }

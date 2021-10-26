@@ -90,6 +90,53 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 	}, nil
 }
 
+// GranterGrants implements the Query/GranterGrants gRPC method.
+func (k Keeper) GranterGrants(c context.Context, req *authz.QueryGranterGrantsRequest) (*authz.QueryGranterGrantsResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	granter, err := sdk.AccAddressFromBech32(req.Granter)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	store := ctx.KVStore(k.storeKey)
+	authzStore := prefix.NewStore(store, grantStoreKey(nil, granter, ""))
+
+	var authorizations []*authz.Grant
+	pageRes, err := query.FilteredPaginate(authzStore, req.Pagination, func(key []byte, value []byte,
+		accumulate bool) (bool, error) {
+		auth, err := unmarshalAuthorization(k.cdc, value)
+		if err != nil {
+			return false, err
+		}
+
+		auth1 := auth.GetAuthorization()
+		if accumulate {
+			any, err := codectypes.NewAnyWithValue(auth1)
+			if err != nil {
+				return false, status.Errorf(codes.Internal, err.Error())
+			}
+
+			authorizations = append(authorizations, &authz.Grant{
+				Authorization: any,
+				Expiration:    auth.Expiration,
+			})
+		}
+		return true, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &authz.QueryGranterGrantsResponse{
+		Grants:     authorizations,
+		Pagination: pageRes,
+	}, nil
+}
+
 // unmarshal an authorization from a store value
 func unmarshalAuthorization(cdc codec.BinaryCodec, value []byte) (v authz.Grant, err error) {
 	err = cdc.Unmarshal(value, &v)

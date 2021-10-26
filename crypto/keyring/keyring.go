@@ -5,14 +5,12 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/99designs/keyring"
-	"github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
 	"github.com/tendermint/crypto/bcrypt"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
@@ -25,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/go-bip39"
 )
 
 // Backend options for Keyring
@@ -441,6 +440,8 @@ func (ks keystore) Rename(oldName, newName string) error {
 	return nil
 }
 
+// Delete deletes a key in the keyring. `uid` represents the key name, without
+// the `.info` suffix.
 func (ks keystore) Delete(uid string) error {
 	k, err := ks.Key(uid)
 	if err != nil {
@@ -457,7 +458,7 @@ func (ks keystore) Delete(uid string) error {
 		return err
 	}
 
-	err = ks.db.Remove(uid)
+	err = ks.db.Remove(infoKey(uid))
 	if err != nil {
 		return err
 	}
@@ -682,7 +683,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 
 		switch {
 		case err == nil:
-			keyhash, err = ioutil.ReadFile(keyhashFilePath)
+			keyhash, err = os.ReadFile(keyhashFilePath)
 			if err != nil {
 				return "", fmt.Errorf("failed to read %s: %v", keyhashFilePath, err)
 			}
@@ -746,7 +747,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 				continue
 			}
 
-			if err := ioutil.WriteFile(dir+"/keyhash", passwordHash, 0555); err != nil {
+			if err := os.WriteFile(dir+"/keyhash", passwordHash, 0555); err != nil {
 				return "", err
 			}
 
@@ -771,7 +772,7 @@ func (ks keystore) writeRecord(k *Record) error {
 		return err
 	}
 
-	key := k.Name
+	key := infoKey(k.Name)
 
 	exists, err := ks.existsInDb(addr, key)
 	if err != nil {
@@ -878,6 +879,9 @@ func (ks keystore) MigrateAll() (bool, error) {
 
 // migrate converts keyring.Item from amino to proto serialization format.
 func (ks keystore) migrate(key string) (*Record, bool, error) {
+	if !(strings.HasSuffix(key, infoSuffix)) && !(strings.HasPrefix(key, sdk.Bech32PrefixAccAddr)) {
+		key = infoKey(key)
+	}
 	item, err := ks.db.Get(key)
 	if err != nil {
 		return nil, false, wrapKeyNotFound(err, key)

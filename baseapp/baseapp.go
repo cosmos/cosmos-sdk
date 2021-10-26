@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -126,6 +125,10 @@ type BaseApp struct { // nolint: maligned
 	// indexEvents defines the set of events in the form {eventType}.{attributeKey},
 	// which informs Tendermint what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
+
+	// abciListeners for hooking into the ABCI message processing of the BaseApp
+	// and exposing the requests and responses to external consumers
+	abciListeners []ABCIListener
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -202,7 +205,7 @@ func (app *BaseApp) MountStores(keys ...storetypes.StoreKey) {
 			app.MountStore(key, storetypes.StoreTypeTransient)
 
 		default:
-			panic("Unrecognized store key type " + reflect.TypeOf(key).Name())
+			panic(fmt.Sprintf("Unrecognized store key type :%T", key))
 		}
 	}
 }

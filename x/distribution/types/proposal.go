@@ -16,7 +16,7 @@ const (
 // Assert CommunityPoolSpendProposal implements govtypes.Content at compile-time
 var _ govtypes.Content = &CommunityPoolSpendProposal{}
 
-// NewCommunityPoolSpendProposal creates a new community pool spned proposal.
+// NewCommunityPoolSpendProposal creates a new community pool spend proposal.
 //nolint:interfacer
 func NewCommunityPoolSpendProposal(title, description string, recipient sdk.AccAddress, amount sdk.Coins) *CommunityPoolSpendProposal {
 	return &CommunityPoolSpendProposal{title, description, recipient.String(), amount}

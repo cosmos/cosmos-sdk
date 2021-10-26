@@ -47,6 +47,8 @@
     - [GrantAuthorization](#cosmos.authz.v1beta1.GrantAuthorization)
   
 - [cosmos/authz/v1beta1/query.proto](#cosmos/authz/v1beta1/query.proto)
+    - [QueryGranterGrantsRequest](#cosmos.authz.v1beta1.QueryGranterGrantsRequest)
+    - [QueryGranterGrantsResponse](#cosmos.authz.v1beta1.QueryGranterGrantsResponse)
     - [QueryGrantsRequest](#cosmos.authz.v1beta1.QueryGrantsRequest)
     - [QueryGrantsResponse](#cosmos.authz.v1beta1.QueryGrantsResponse)
   
@@ -1292,6 +1294,38 @@ GrantAuthorization defines the GenesisState/GrantAuthorization type.
 
 
 
+<a name="cosmos.authz.v1beta1.QueryGranterGrantsRequest"></a>
+
+### QueryGranterGrantsRequest
+QueryGranterGrantsRequest is the request type for the Query/GranterGrants RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.authz.v1beta1.QueryGranterGrantsResponse"></a>
+
+### QueryGranterGrantsResponse
+QueryGranterGrantsResponse is the response type for the Query/GranterGrants RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `grants` | [Grant](#cosmos.authz.v1beta1.Grant) | repeated | authorizations is a list of grants granted for grantee by granter. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
+
+
+
+
+
+
 <a name="cosmos.authz.v1beta1.QueryGrantsRequest"></a>
 
 ### QueryGrantsRequest
@@ -1340,6 +1374,7 @@ Query defines the gRPC querier service.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Grants` | [QueryGrantsRequest](#cosmos.authz.v1beta1.QueryGrantsRequest) | [QueryGrantsResponse](#cosmos.authz.v1beta1.QueryGrantsResponse) | Returns list of `Authorization`, granted to the grantee by the granter. | GET|/cosmos/authz/v1beta1/grants|
+| `GranterGrants` | [QueryGranterGrantsRequest](#cosmos.authz.v1beta1.QueryGranterGrantsRequest) | [QueryGranterGrantsResponse](#cosmos.authz.v1beta1.QueryGranterGrantsResponse) | GranterGrants returns list of `Authorization`, granted by granter. | GET|/cosmos/authz/v1beta1/grants/{granter}|
 
  <!-- end services -->
 
@@ -9637,7 +9672,6 @@ SignMode represents a signing mode with its own security guarantees.
 | SIGN_MODE_DIRECT | 1 | SIGN_MODE_DIRECT specifies a signing mode which uses SignDoc and is verified with raw bytes from Tx. |
 | SIGN_MODE_TEXTUAL | 2 | SIGN_MODE_TEXTUAL is a future signing mode that will verify some human-readable textual representation on top of the binary representation from SIGN_MODE_DIRECT. It is currently not supported. |
 | SIGN_MODE_DIRECT_AUX | 3 | SIGN_MODE_DIRECT_AUX specifies a signing mode which uses SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode does not require signers signing over other signers' `signer_info`. It also allows for adding Tips in transactions. |
-| SIGN_MODE_AMINO_AUX | 4 | SIGN_MODE_AMINO_AUX specifies a signing mode which uses SignDocAminoAux. |
 | SIGN_MODE_LEGACY_AMINO_JSON | 127 | SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses Amino JSON and will be removed in the future. |
 
 

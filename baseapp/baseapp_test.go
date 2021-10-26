@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math"
 	"math/rand"
 	"os"
@@ -162,7 +161,7 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 
 	snapshotInterval := uint64(2)
 	snapshotTimeout := 1 * time.Minute
-	snapshotDir, err := ioutil.TempDir("", "baseapp")
+	snapshotDir, err := os.MkdirTemp("", "baseapp")
 	require.NoError(t, err)
 	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), snapshotDir)
 	require.NoError(t, err)
@@ -934,7 +933,7 @@ func incrementingCounter(t *testing.T, store sdk.KVStore, counterKey []byte, cou
 	return &sdk.Result{}, nil
 }
 
-//---------------------------------------------------------------------
+// ---------------------------------------------------------------------
 // Tx processing - CheckTx, DeliverTx, SimulateTx.
 // These tests use the serialized tx as input, while most others will use the
 // Check(), Deliver(), Simulate() methods directly.

@@ -5,7 +5,6 @@ package cosmovisor_test
 
 import (
 	"errors"
-	"fmt"
 	"net"
 	"os"
 	"path/filepath"
@@ -266,16 +265,11 @@ func (s *upgradeTestSuite) TestDownloadBinary() {
 				s.Require().NoError(err)
 			}
 
-			upgrade := "amazonas"
-			info := cosmovisor.UpgradeInfo{
-				Name: upgrade,
-				Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, cosmovisor.OSArch(), url),
-			}
-
+			const upgrade = "amazonas"
 			err = cosmovisor.EnsureBinary(cfg.UpgradeBin(upgrade))
 			if tc.validBinary {
-        s.Require().NoError(err)
-      } else {
+				s.Require().NoError(err)
+			} else {
 				s.Require().Error(err)
 			}
 		})

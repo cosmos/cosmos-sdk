@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -12,9 +11,11 @@ import (
 	"strings"
 	"time"
 
-	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/rs/zerolog"
+
+	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
+	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // environment variable names

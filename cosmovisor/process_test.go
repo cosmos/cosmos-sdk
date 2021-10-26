@@ -4,11 +4,13 @@ package cosmovisor_test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/cosmovisor"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"testing"
+
+	"github.com/cosmos/cosmos-sdk/cosmovisor"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type processTestSuite struct {

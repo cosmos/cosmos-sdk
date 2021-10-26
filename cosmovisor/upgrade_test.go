@@ -10,12 +10,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/otiai10/copy"
+	
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/otiai10/copy"
-	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type upgradeTestSuite struct {

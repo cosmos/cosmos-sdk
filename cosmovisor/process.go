@@ -3,7 +3,6 @@ package cosmovisor
 import (
 	"encoding/json"
 	"fmt"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"io"
 	"os"
 	"os/exec"
@@ -15,6 +14,8 @@ import (
 	"time"
 
 	"github.com/otiai10/copy"
+
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type Launcher struct {

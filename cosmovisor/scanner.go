@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"os"
 	"path/filepath"
 	"time"
+
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type fileWatcher struct {

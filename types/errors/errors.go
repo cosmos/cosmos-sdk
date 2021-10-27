@@ -170,7 +170,7 @@ var (
 	ErrORMEmptyModel = Register(ormCodespace, 45, "invalid argument")
 
 	// ErrORMKeyMaxLength defines an error when a key exceeds max length
-	ErrORMKeyMaxLength = Register(ormCodespace, 46, "index key exceeds max length")
+	ErrORMKeyMaxLength = Register(ormCodespace, 46, "key exceeds max length")
 
 	// ErrORMEmptyKey defines an error for an empty key
 	ErrORMEmptyKey = Register(ormCodespace, 47, "cannot use empty key")

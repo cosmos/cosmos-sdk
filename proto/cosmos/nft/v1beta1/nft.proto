@@ -10,19 +10,19 @@ message Class {
   // id defines the unique identifier of the NFT classification, similar to the contract address of ERC721
   string id = 1;
 
-  // name defines the human-readable name of the NFT classification
+  // name defines the human-readable name of the NFT classification,optional
   string name = 2;
 
-  // symbol is an abbreviated name for nft classification
+  // symbol is an abbreviated name for nft classification,optional
   string symbol = 3;
 
-  // description is a brief description of nft classification
+  // description is a brief description of nft classification,optional
   string description = 4;
 
-  // uri is a URI may point to a JSON file that conforms to the nft classification Metadata JSON Schema.
+  // uri is a URI may point to a JSON file that conforms to the nft classification Metadata JSON Schema.optional
   string uri = 5;
 
-  // uri_hash is a hash of the document pointed to uri
+  // uri_hash is a hash of the document pointed to uri,optional
   string uri_hash = 6;
 }
 
@@ -40,6 +40,6 @@ message NFT {
   // uri_hash is a hash of the document pointed to uri
   string uri_hash = 4;
 
-  // data is the metadata of the NFT
+  // data is the metadata of the NFT,optional
   google.protobuf.Any data = 10;
 }

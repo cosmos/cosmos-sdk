@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -226,7 +225,7 @@ func Test_runAddCmdDryRun(t *testing.T) {
 			} else {
 				_, err = kb.Key("testkey")
 				require.Error(t, err)
-				require.Equal(t, "testkey: key not found", err.Error())
+				require.Equal(t, "testkey.info: key not found", err.Error())
 			}
 		})
 	}

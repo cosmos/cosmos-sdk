@@ -12,11 +12,7 @@ import (
 // phrase to recover the private key.
 func GenerateCoinKey(algo keyring.SignatureAlgo) (sdk.AccAddress, string, error) {
 	// generate a private key, with recovery phrase
-<<<<<<< HEAD
-	info, secret, err := keyring.NewInMemory().NewMnemonic("name", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
-=======
-	k, secret, err := keyring.NewInMemory(cdc).NewMnemonic("name", keyring.English, sdk.GetConfig().GetFullBIP44Path(), keyring.DefaultBIP39Passphrase, algo)
->>>>>>> 33737f4d8 (fix: use sdk.config hdpath (#10414))
+	info, secret, err := keyring.NewInMemory().NewMnemonic("name", keyring.English, sdk.GetConfig().GetFullBIP44Path(), keyring.DefaultBIP39Passphrase, algo)
 	if err != nil {
 		return sdk.AccAddress([]byte{}), "", err
 	}
@@ -47,11 +43,7 @@ func GenerateSaveCoinKey(keybase keyring.Keyring, keyName string, overwrite bool
 		}
 	}
 
-<<<<<<< HEAD
-	info, secret, err := keybase.NewMnemonic(keyName, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
-=======
-	k, secret, err := keybase.NewMnemonic(keyName, keyring.English, sdk.GetConfig().GetFullBIP44Path(), keyring.DefaultBIP39Passphrase, algo)
->>>>>>> 33737f4d8 (fix: use sdk.config hdpath (#10414))
+	info, secret, err := keybase.NewMnemonic(keyName, keyring.English, sdk.GetConfig().GetFullBIP44Path(), keyring.DefaultBIP39Passphrase, algo)
 	if err != nil {
 		return sdk.AccAddress([]byte{}), "", err
 	}

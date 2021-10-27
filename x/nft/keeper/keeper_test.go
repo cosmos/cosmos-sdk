@@ -2,10 +2,10 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,6 +24,10 @@ const (
 	testURIHash          = "229bfd3c1b431c14a526497873897108"
 )
 
+func timeNow() time.Time {
+	return time.Now().Round(0).UTC()
+}
+
 type TestSuite struct {
 	suite.Suite
 
@@ -36,7 +40,7 @@ type TestSuite struct {
 func (s *TestSuite) SetupTest() {
 	app := simapp.Setup(s.T(), false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	ctx = ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: timeNow()})
 
 	s.app = app
 	s.ctx = ctx

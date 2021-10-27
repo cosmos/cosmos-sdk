@@ -1,4 +1,5 @@
-//+build ledger test_ledger_mock
+//go:build ledger || test_ledger_mock
+// +build ledger test_ledger_mock
 
 package keys
 
@@ -194,7 +195,7 @@ func Test_runAddCmdLedgerDryRun(t *testing.T) {
 			} else {
 				_, err = kb.Key("testkey")
 				require.Error(t, err)
-				require.Equal(t, "testkey: key not found", err.Error())
+				require.Equal(t, "testkey.info: key not found", err.Error())
 			}
 		})
 	}

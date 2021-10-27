@@ -52,12 +52,13 @@ const (
 // A loaded mapping of store names to types
 type storeSchema map[string]subStoreType
 
-// Registry used to build a valid schema with no prefix conflicts
+// Builder type used to create a valid schema with no prefix conflicts
 type prefixRegistry struct {
 	storeSchema
 	reserved []string
 }
 
+// Mixin types that will be composed into each distinct root store variant type
 type listenerMixin struct {
 	listeners map[types.StoreKey][]types.WriteListener
 }
@@ -101,6 +102,8 @@ type rootGeneric struct {
 	persist, mem, tran types.KVStore
 }
 
+// DefaultRootStoreConfig returns a RootStore config with an empty schema, a single backing DB,
+// pruning with PruneDefault, no listeners and no tracer.
 func DefaultRootStoreConfig() RootStoreConfig {
 	return RootStoreConfig{
 		StoreConfig: StoreConfig{Pruning: types.PruneDefault},
@@ -121,7 +124,7 @@ func validSubStoreType(sst subStoreType) bool {
 	return byte(sst) <= byte(subStoreTransient)
 }
 
-// TODO: should this include mem/tran?
+// Returns true iff both schema maps match exactly (including mem/tran stores)
 func (this storeSchema) equal(that storeSchema) bool {
 	if len(this) != len(that) {
 		return false
@@ -138,6 +141,7 @@ func (this storeSchema) equal(that storeSchema) bool {
 	return true
 }
 
+// Parses a schema from the DB
 func readSchema(bucket dbm.DBReader) (*prefixRegistry, error) {
 	ret := prefixRegistry{storeSchema: storeSchema{}}
 	it, err := bucket.Iterator(nil, nil)
@@ -156,7 +160,7 @@ func readSchema(bucket dbm.DBReader) (*prefixRegistry, error) {
 	return &ret, nil
 }
 
-// Construct a rootStore from a base decoupled.Store
+// NewRootStore constructs a RootStore directly from a DB connection and options.
 func NewRootStore(db dbm.DBConnection, opts RootStoreConfig) (*rootStore, error) {
 	base, err := NewStore(db, opts.StoreConfig)
 	if err != nil {
@@ -239,6 +243,7 @@ func makeRootStore(base *Store, opts RootStoreConfig) (ret *rootStore, err error
 	return
 }
 
+// Applies store upgrades to the DB contents.
 func (pr *prefixRegistry) migrate(store *Store, upgrades types.StoreUpgrades) error {
 	// branch state to allow mutation while iterating
 	branch := cachekv.NewStore(store)
@@ -351,12 +356,21 @@ func (rv *rootView) GetKVStore(key types.StoreKey) types.KVStore {
 	return rv.generic().getStore(key.Name())
 }
 
+// Copies only the schema
+func newStoreMixin(schema storeSchema) storeMixin {
+	return storeMixin{
+		schema:        schema,
+		listenerMixin: &listenerMixin{},
+		traceMixin:    &traceMixin{},
+	}
+}
+
 func (rv *rootView) CacheRootStore() types.CacheRootStore {
 	return &rootCache{
 		CacheKVStore: cachekv.NewStore(rv),
 		mem:          cachekv.NewStore(mem.NewStore(memdb.NewDB())),
 		tran:         cachekv.NewStore(transkv.NewStore(memdb.NewDB())),
-		storeMixin:   storeMixin{schema: rv.schema},
+		storeMixin:   newStoreMixin(rv.schema),
 	}
 }
 
@@ -365,7 +379,7 @@ func (rs *rootStore) CacheRootStore() types.CacheRootStore {
 		CacheKVStore: cachekv.NewStore(rs),
 		mem:          cachekv.NewStore(rs.mem),
 		tran:         cachekv.NewStore(rs.tran),
-		storeMixin:   storeMixin{schema: rs.schema},
+		storeMixin:   newStoreMixin(rs.schema),
 	}
 }
 
@@ -483,13 +497,6 @@ func (rs *rootStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	return res
 }
 
-func (rs *rootStore) Restore(height uint64, format uint32, chunks <-chan io.ReadCloser, ready chan<- struct{}) error {
-	return nil
-}
-func (rs *rootStore) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error) {
-	return nil, nil
-}
-
 func (rs *rootStore) generic() rootGeneric { return rootGeneric{rs.schema, rs, rs.mem, rs.tran} }
 
 func (store rootGeneric) getStore(key string) types.KVStore {
@@ -505,7 +512,7 @@ func (store rootGeneric) getStore(key string) types.KVStore {
 		}
 	}
 	if sub == nil {
-		return nil
+		panic(fmt.Sprintf("store does not exist for key: %s", key))
 	}
 	return prefix.NewStore(sub, []byte(key))
 }
@@ -526,7 +533,7 @@ func (rs *rootCache) CacheRootStore() types.CacheRootStore {
 		CacheKVStore: cachekv.NewStore(rs),
 		mem:          cachekv.NewStore(rs.mem),
 		tran:         cachekv.NewStore(rs.tran),
-		storeMixin:   storeMixin{schema: rs.schema},
+		storeMixin:   newStoreMixin(rs.schema),
 	}
 }
 
@@ -620,4 +627,11 @@ func (treg *traceMixin) SetTracer(w io.Writer) {
 }
 func (treg *traceMixin) SetTraceContext(tc types.TraceContext) {
 	treg.TraceContext = tc
+}
+
+func (rs *rootStore) Restore(height uint64, format uint32, chunks <-chan io.ReadCloser, ready chan<- struct{}) error {
+	return nil
+}
+func (rs *rootStore) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error) {
+	return nil, nil
 }

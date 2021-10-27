@@ -90,8 +90,8 @@ func TestRootStoreMigration(t *testing.T) {
 	require.NotNil(t, s3)
 	s3.Set(k3, v3)
 
-	s4 := store.GetKVStore(skey_4)
-	require.Nil(t, s4)
+	require.Panics(t, func() { store.GetKVStore(skey_4) })
+	// require.Nil(t, s4)
 
 	_ = store.Commit()
 	require.NoError(t, store.Close())
@@ -127,11 +127,10 @@ func TestRootStoreMigration(t *testing.T) {
 
 	// store3 is gone
 	// TODO: breaking change? verify
-	s3 = restore.GetKVStore(skey_3)
-	require.Nil(t, s3)
+	require.Panics(t, func() { s3 = restore.GetKVStore(skey_3) })
 
 	// store4 is mounted, with empty data
-	s4 = restore.GetKVStore(skey_4)
+	s4 := restore.GetKVStore(skey_4)
 	require.NotNil(t, s4)
 
 	values := 0
@@ -147,8 +146,7 @@ func TestRootStoreMigration(t *testing.T) {
 	s4.Set(k4, v4)
 
 	// store2 is no longer mounted
-	st2 := restore.GetKVStore(skey_2)
-	require.Nil(t, st2)
+	require.Panics(t, func() { restore.GetKVStore(skey_2) })
 
 	// restore2 has the old data
 	rs2 := restore.GetKVStore(skey_2b)
@@ -164,7 +162,7 @@ func TestRootStoreMigration(t *testing.T) {
 	reload, err := NewRootStore(db, storeConfig123(t))
 	require.Error(t, err)
 
-	// pass a schema update with the migrations
+	// pass in a schema reflecting the migrations
 	migratedOpts := DefaultRootStoreConfig()
 	err = migratedOpts.ReservePrefix(skey_1, types.StoreTypePersistent)
 	require.NoError(t, err)

@@ -36,8 +36,10 @@ var (
 )
 
 type BasicRootStore interface {
-	// returns nil if not found
+	// Returns a KVStore which has access only to the namespace of the StoreKey.
+	// Panics if the key is not found in the schema.
 	GetKVStore(StoreKey) KVStore
+	// Returns a branched whose modifications are later merged back in.
 	CacheRootStore() CacheRootStore
 }
 
@@ -53,7 +55,10 @@ type CommitRootStore interface {
 	BasicRootStore
 	rootStoreTraceListen
 
+	// Gets a read-only view of the store at a specific version.
+	// Returns an error if the version is not found.
 	GetVersion(int64) (BasicRootStore, error)
+	// Closes the store and all backing transactions.
 	Close() error
 
 	// RootStore

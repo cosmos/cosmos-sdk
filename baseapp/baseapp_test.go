@@ -1828,6 +1828,8 @@ func TestGetMaximumBlockGas(t *testing.T) {
 }
 
 func TestListSnapshots(t *testing.T) {
+	t.Skip("disabled pending RootStore snapshot implementation")
+
 	app, teardown := setupBaseAppWithSnapshots(t, 5, 4)
 	defer teardown()
 
@@ -1845,6 +1847,8 @@ func TestListSnapshots(t *testing.T) {
 }
 
 func TestLoadSnapshotChunk(t *testing.T) {
+	t.Skip("disabled pending RootStore snapshot implementation")
+
 	app, teardown := setupBaseAppWithSnapshots(t, 2, 5)
 	defer teardown()
 
@@ -1880,6 +1884,8 @@ func TestLoadSnapshotChunk(t *testing.T) {
 }
 
 func TestOfferSnapshot_Errors(t *testing.T) {
+	t.Skip("disabled pending RootStore snapshot implementation")
+
 	// Set up app before test cases, since it's fairly expensive.
 	app, teardown := setupBaseAppWithSnapshots(t, 0, 0)
 	defer teardown()
@@ -1936,6 +1942,8 @@ func TestOfferSnapshot_Errors(t *testing.T) {
 }
 
 func TestApplySnapshotChunk(t *testing.T) {
+	t.Skip("disabled pending RootStore snapshot implementation")
+
 	source, teardown := setupBaseAppWithSnapshots(t, 4, 10)
 	defer teardown()
 

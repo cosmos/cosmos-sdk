@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/99designs/keyring"
-	bip39 "github.com/cosmos/go-bip39"
+	"github.com/cosmos/go-bip39"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -432,7 +432,7 @@ func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
 
 	// try export non existing key
 	_, err = kb.ExportPrivKeyArmor("john3", "wrongpassword")
-	require.EqualError(t, err, "john3: key not found")
+	require.EqualError(t, err, "john3.info: key not found")
 }
 
 func TestInMemoryLanguage(t *testing.T) {

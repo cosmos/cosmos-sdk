@@ -93,7 +93,7 @@ func (a PrimaryKeyTable) Delete(store sdk.KVStore, obj PrimaryKeyed) error {
 	return a.table.Delete(store, PrimaryKey(obj))
 }
 
-// Has checks if a key exists. Panics on nil key.
+// Has checks if a key exists. Always returns false on nil or empty key.
 func (a PrimaryKeyTable) Has(store sdk.KVStore, primaryKey RowID) bool {
 	return a.table.Has(store, primaryKey)
 }

@@ -101,8 +101,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * Move Msg routers from BaseApp to middlewares.
   * Move Baseapp panic recovery into a middleware.
   * Rename simulation helper methods `baseapp.{Check,Deliver}` to `baseapp.Sim{Check,Deliver}`.
-* (x/authz) [\#10350](https://github.com/cosmos/cosmos-sdk/issues/10350) authz `NewGrant` takes a new argument: block time, to correctly validate expire time.
 * [\#10348](https://github.com/cosmos/cosmos-sdk/pull/10348) StdSignBytes takes a new argument of type `*tx.Tip` for signing over tips using LEGACY_AMINO_JSON.
+* (x/authz) [\#10447](https://github.com/cosmos/cosmos-sdk/pull/10447) authz `NewGrant` takes a new argument: block time, to correctly validate expire time.
 
 ### Client Breaking Changes
 
@@ -160,7 +160,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10239](https://github.com/cosmos/cosmos-sdk/pull/10239) Fixed x/bank/044 migrateDenomMetadata.
 * (x/upgrade) [\#10189](https://github.com/cosmos/cosmos-sdk/issues/10189) Removed potential sources of non-determinism in upgrades
 * [\#10258](https://github.com/cosmos/cosmos-sdk/issues/10258) Fixes issue related to segmentaiton fault on mac m1 arm64
-* (x/authz) [\#10350](https://github.com/cosmos/cosmos-sdk/issues/10350) Fix authz `NewGrant` expiration check.
+* (x/authz) [\#10447](https://github.com/cosmos/cosmos-sdk/pull/10447) Fix authz `NewGrant` expiration check.
 
 ### State Machine Breaking
 

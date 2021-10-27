@@ -25,6 +25,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // StoreKVPair is a KVStore KVPair used for listening to state changes (Sets and Deletes)
 // It optionally includes the StoreKey for the originating KVStore and a Boolean flag to distinguish between Sets and
 // Deletes
+//
+// Since: cosmos-sdk 0.43
 type StoreKVPair struct {
 	StoreKey string `protobuf:"bytes,1,opt,name=store_key,json=storeKey,proto3" json:"store_key,omitempty"`
 	Delete   bool   `protobuf:"varint,2,opt,name=delete,proto3" json:"delete,omitempty"`

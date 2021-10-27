@@ -332,10 +332,26 @@ type Metadata struct {
 	// displayed in clients.
 	Display string `protobuf:"bytes,4,opt,name=display,proto3" json:"display,omitempty"`
 	// name defines the name of the token (eg: Cosmos Atom)
+	//
+	// Since: cosmos-sdk 0.43
 	Name string `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty"`
 	// symbol is the token symbol usually shown on exchanges (eg: ATOM). This can
 	// be the same as the display.
+	//
+	// Since: cosmos-sdk 0.43
 	Symbol string `protobuf:"bytes,6,opt,name=symbol,proto3" json:"symbol,omitempty"`
+<<<<<<< HEAD
+=======
+	// URI to a document (on or off-chain) that contains additional information. Optional.
+	//
+	// Since: cosmos-sdk 0.45
+	URI string `protobuf:"bytes,7,opt,name=uri,proto3" json:"uri,omitempty"`
+	// URIHash is a sha256 hash of a document pointed by URI. It's used to verify that
+	// the document didn't change. Optional.
+	//
+	// Since: cosmos-sdk 0.45
+	URIHash string `protobuf:"bytes,8,opt,name=uri_hash,json=uriHash,proto3" json:"uri_hash,omitempty"`
+>>>>>>> 0a3660d2a (chore: Add "Since:" on proto doc comments (#10434))
 }
 
 func (m *Metadata) Reset()         { *m = Metadata{} }

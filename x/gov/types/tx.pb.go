@@ -194,6 +194,8 @@ func (m *MsgVoteResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgVoteResponse proto.InternalMessageInfo
 
 // MsgVoteWeighted defines a message to cast a vote.
+//
+// Since: cosmos-sdk 0.43
 type MsgVoteWeighted struct {
 	ProposalId uint64               `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty" yaml:"proposal_id"`
 	Voter      string               `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
@@ -233,6 +235,8 @@ func (m *MsgVoteWeighted) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgVoteWeighted proto.InternalMessageInfo
 
 // MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.
+//
+// Since: cosmos-sdk 0.43
 type MsgVoteWeightedResponse struct {
 }
 
@@ -421,6 +425,8 @@ type MsgClient interface {
 	// Vote defines a method to add a vote on a specific proposal.
 	Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error)
 	// VoteWeighted defines a method to add a weighted vote on a specific proposal.
+	//
+	// Since: cosmos-sdk 0.43
 	VoteWeighted(ctx context.Context, in *MsgVoteWeighted, opts ...grpc.CallOption) (*MsgVoteWeightedResponse, error)
 	// Deposit defines a method to add deposit on a specific proposal.
 	Deposit(ctx context.Context, in *MsgDeposit, opts ...grpc.CallOption) (*MsgDepositResponse, error)
@@ -477,6 +483,8 @@ type MsgServer interface {
 	// Vote defines a method to add a vote on a specific proposal.
 	Vote(context.Context, *MsgVote) (*MsgVoteResponse, error)
 	// VoteWeighted defines a method to add a weighted vote on a specific proposal.
+	//
+	// Since: cosmos-sdk 0.43
 	VoteWeighted(context.Context, *MsgVoteWeighted) (*MsgVoteWeightedResponse, error)
 	// Deposit defines a method to add deposit on a specific proposal.
 	Deposit(context.Context, *MsgDeposit) (*MsgDepositResponse, error)

@@ -688,14 +688,15 @@ func (m *GetNodeInfoResponse) GetApplicationVersion() *VersionInfo {
 
 // VersionInfo is the type for the GetNodeInfoResponse message.
 type VersionInfo struct {
-	Name             string    `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	AppName          string    `protobuf:"bytes,2,opt,name=app_name,json=appName,proto3" json:"app_name,omitempty"`
-	Version          string    `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
-	GitCommit        string    `protobuf:"bytes,4,opt,name=git_commit,json=gitCommit,proto3" json:"git_commit,omitempty"`
-	BuildTags        string    `protobuf:"bytes,5,opt,name=build_tags,json=buildTags,proto3" json:"build_tags,omitempty"`
-	GoVersion        string    `protobuf:"bytes,6,opt,name=go_version,json=goVersion,proto3" json:"go_version,omitempty"`
-	BuildDeps        []*Module `protobuf:"bytes,7,rep,name=build_deps,json=buildDeps,proto3" json:"build_deps,omitempty"`
-	CosmosSdkVersion string    `protobuf:"bytes,8,opt,name=cosmos_sdk_version,json=cosmosSdkVersion,proto3" json:"cosmos_sdk_version,omitempty"`
+	Name      string    `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	AppName   string    `protobuf:"bytes,2,opt,name=app_name,json=appName,proto3" json:"app_name,omitempty"`
+	Version   string    `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
+	GitCommit string    `protobuf:"bytes,4,opt,name=git_commit,json=gitCommit,proto3" json:"git_commit,omitempty"`
+	BuildTags string    `protobuf:"bytes,5,opt,name=build_tags,json=buildTags,proto3" json:"build_tags,omitempty"`
+	GoVersion string    `protobuf:"bytes,6,opt,name=go_version,json=goVersion,proto3" json:"go_version,omitempty"`
+	BuildDeps []*Module `protobuf:"bytes,7,rep,name=build_deps,json=buildDeps,proto3" json:"build_deps,omitempty"`
+	// Since: cosmos-sdk 0.43
+	CosmosSdkVersion string `protobuf:"bytes,8,opt,name=cosmos_sdk_version,json=cosmosSdkVersion,proto3" json:"cosmos_sdk_version,omitempty"`
 }
 
 func (m *VersionInfo) Reset()         { *m = VersionInfo{} }

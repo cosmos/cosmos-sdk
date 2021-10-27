@@ -352,6 +352,13 @@ type AuthInfo struct {
 	// based on the cost of evaluating the body and doing signature verification
 	// of the signers. This can be estimated via simulation.
 	Fee *Fee `protobuf:"bytes,2,opt,name=fee,proto3" json:"fee,omitempty"`
+<<<<<<< HEAD
+=======
+	// Tip is the optional tip used for meta-transactions.
+	//
+	// Since: cosmos-sdk 0.45
+	Tip *Tip `protobuf:"bytes,3,opt,name=tip,proto3" json:"tip,omitempty"`
+>>>>>>> 0a3660d2a (chore: Add "Since:" on proto doc comments (#10434))
 }
 
 func (m *AuthInfo) Reset()         { *m = AuthInfo{} }

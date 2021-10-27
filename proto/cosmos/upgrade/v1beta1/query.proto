@@ -31,6 +31,8 @@ service Query {
   }
 
   // ModuleVersions queries the list of module versions from state.
+  //
+  // Since: cosmos-sdk 0.43
   rpc ModuleVersions(QueryModuleVersionsRequest) returns (QueryModuleVersionsResponse) {
     option (google.api.http).get = "/cosmos/upgrade/v1beta1/module_versions";
   }
@@ -77,11 +79,14 @@ message QueryUpgradedConsensusStateResponse {
   option deprecated = true;
   reserved 1;
 
+  // Since: cosmos-sdk 0.43
   bytes upgraded_consensus_state = 2;
 }
 
 // QueryModuleVersionsRequest is the request type for the Query/ModuleVersions
 // RPC method.
+//
+// Since: cosmos-sdk 0.43
 message QueryModuleVersionsRequest {
   // module_name is a field to query a specific module
   // consensus version from state. Leaving this empty will
@@ -91,6 +96,8 @@ message QueryModuleVersionsRequest {
 
 // QueryModuleVersionsResponse is the response type for the Query/ModuleVersions
 // RPC method.
+//
+// Since: cosmos-sdk 0.43
 message QueryModuleVersionsResponse {
   // module_versions is a list of module names with their consensus versions.
   repeated ModuleVersion module_versions = 1;

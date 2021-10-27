@@ -35,6 +35,7 @@ var (
 	_ client.TxBuilder                 = &wrapper{}
 	_ middleware.HasExtensionOptionsTx = &wrapper{}
 	_ ExtensionOptionsTxBuilder        = &wrapper{}
+	_ tx.TipTx                         = &wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
@@ -156,6 +157,10 @@ func (w *wrapper) FeeGranter() sdk.AccAddress {
 	return nil
 }
 
+func (w *wrapper) GetTip() *tx.Tip {
+	return w.tx.AuthInfo.Tip
+}
+
 func (w *wrapper) GetMemo() string {
 	return w.tx.Body.Memo
 }
@@ -245,6 +250,13 @@ func (w *wrapper) SetFeeAmount(coins sdk.Coins) {
 	}
 
 	w.tx.AuthInfo.Fee.Amount = coins
+
+	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
+	w.authInfoBz = nil
+}
+
+func (w *wrapper) SetTip(tip *tx.Tip) {
+	w.tx.AuthInfo.Tip = tip
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil

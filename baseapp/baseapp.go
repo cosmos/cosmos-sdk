@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -15,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
@@ -125,6 +125,10 @@ type BaseApp struct { // nolint: maligned
 	// indexEvents defines the set of events in the form {eventType}.{attributeKey},
 	// which informs Tendermint what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
+
+	// abciListeners for hooking into the ABCI message processing of the BaseApp
+	// and exposing the requests and responses to external consumers
+	abciListeners []ABCIListener
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -185,60 +189,60 @@ func (app *BaseApp) Trace() bool {
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
 // multistore.
-func (app *BaseApp) MountStores(keys ...sdk.StoreKey) {
+func (app *BaseApp) MountStores(keys ...storetypes.StoreKey) {
 	for _, key := range keys {
 		switch key.(type) {
-		case *sdk.KVStoreKey:
+		case *storetypes.KVStoreKey:
 			if !app.fauxMerkleMode {
-				app.MountStore(key, sdk.StoreTypeIAVL)
+				app.MountStore(key, storetypes.StoreTypeIAVL)
 			} else {
 				// StoreTypeDB doesn't do anything upon commit, and it doesn't
 				// retain history, but it's useful for faster simulation.
-				app.MountStore(key, sdk.StoreTypeDB)
+				app.MountStore(key, storetypes.StoreTypeDB)
 			}
 
-		case *sdk.TransientStoreKey:
-			app.MountStore(key, sdk.StoreTypeTransient)
+		case *storetypes.TransientStoreKey:
+			app.MountStore(key, storetypes.StoreTypeTransient)
 
 		default:
-			panic("Unrecognized store key type " + reflect.TypeOf(key).Name())
+			panic(fmt.Sprintf("Unrecognized store key type :%T", key))
 		}
 	}
 }
 
 // MountKVStores mounts all IAVL or DB stores to the provided keys in the
 // BaseApp multistore.
-func (app *BaseApp) MountKVStores(keys map[string]*sdk.KVStoreKey) {
+func (app *BaseApp) MountKVStores(keys map[string]*storetypes.KVStoreKey) {
 	for _, key := range keys {
 		if !app.fauxMerkleMode {
-			app.MountStore(key, sdk.StoreTypeIAVL)
+			app.MountStore(key, storetypes.StoreTypeIAVL)
 		} else {
 			// StoreTypeDB doesn't do anything upon commit, and it doesn't
 			// retain history, but it's useful for faster simulation.
-			app.MountStore(key, sdk.StoreTypeDB)
+			app.MountStore(key, storetypes.StoreTypeDB)
 		}
 	}
 }
 
 // MountTransientStores mounts all transient stores to the provided keys in
 // the BaseApp multistore.
-func (app *BaseApp) MountTransientStores(keys map[string]*sdk.TransientStoreKey) {
+func (app *BaseApp) MountTransientStores(keys map[string]*storetypes.TransientStoreKey) {
 	for _, key := range keys {
-		app.MountStore(key, sdk.StoreTypeTransient)
+		app.MountStore(key, storetypes.StoreTypeTransient)
 	}
 }
 
 // MountMemoryStores mounts all in-memory KVStores with the BaseApp's internal
 // commit multi-store.
-func (app *BaseApp) MountMemoryStores(keys map[string]*sdk.MemoryStoreKey) {
+func (app *BaseApp) MountMemoryStores(keys map[string]*storetypes.MemoryStoreKey) {
 	for _, memKey := range keys {
-		app.MountStore(memKey, sdk.StoreTypeMemory)
+		app.MountStore(memKey, storetypes.StoreTypeMemory)
 	}
 }
 
 // MountStore mounts a store to the provided key in the BaseApp multistore,
 // using the default DB.
-func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
+func (app *BaseApp) MountStore(key storetypes.StoreKey, typ storetypes.StoreType) {
 	app.cms.MountStoreWithDB(key, typ, nil)
 }
 
@@ -270,7 +274,7 @@ func (app *BaseApp) LoadVersion(version int64) error {
 }
 
 // LastCommitID returns the last CommitID of the multistore.
-func (app *BaseApp) LastCommitID() sdk.CommitID {
+func (app *BaseApp) LastCommitID() storetypes.CommitID {
 	return app.cms.LastCommitID()
 }
 

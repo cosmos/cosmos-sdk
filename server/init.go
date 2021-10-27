@@ -3,9 +3,8 @@ package server
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -13,7 +12,7 @@ import (
 // phrase to recover the private key.
 func GenerateCoinKey(algo keyring.SignatureAlgo, cdc codec.Codec) (sdk.AccAddress, string, error) {
 	// generate a private key, with recovery phrase
-	k, secret, err := keyring.NewInMemory(cdc).NewMnemonic("name", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
+	k, secret, err := keyring.NewInMemory(cdc).NewMnemonic("name", keyring.English, sdk.GetConfig().GetFullBIP44Path(), keyring.DefaultBIP39Passphrase, algo)
 	if err != nil {
 		return sdk.AccAddress([]byte{}), "", err
 	}
@@ -48,7 +47,7 @@ func GenerateSaveCoinKey(keybase keyring.Keyring, keyName string, overwrite bool
 		}
 	}
 
-	k, secret, err := keybase.NewMnemonic(keyName, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
+	k, secret, err := keybase.NewMnemonic(keyName, keyring.English, sdk.GetConfig().GetFullBIP44Path(), keyring.DefaultBIP39Passphrase, algo)
 	if err != nil {
 		return sdk.AccAddress([]byte{}), "", err
 	}

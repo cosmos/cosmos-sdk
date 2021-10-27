@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -95,9 +94,9 @@ func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) 
 	var bytes []byte
 
 	if filename == "-" {
-		bytes, err = ioutil.ReadAll(os.Stdin)
+		bytes, err = io.ReadAll(os.Stdin)
 	} else {
-		bytes, err = ioutil.ReadFile(filename)
+		bytes, err = os.ReadFile(filename)
 	}
 
 	if err != nil {

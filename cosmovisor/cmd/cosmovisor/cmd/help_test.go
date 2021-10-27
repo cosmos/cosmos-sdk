@@ -170,13 +170,13 @@ func (s *HelpTestSuite) TestShouldGiveHelpEnvVars() {
 		s.T().Run(tc.name, func(t *testing.T) {
 			prepEnv(t, cosmovisor.EnvHome, tc.envHome)
 			prepEnv(t, cosmovisor.EnvName, tc.envName)
-			actual := ShouldGiveHelp(nil)
+			actual := ShouldGiveHelp("not-a-help-arg")
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }
 
-func (s HelpTestSuite) TestShouldGiveHelpArgs() {
+func (s HelpTestSuite) TestShouldGiveHelpArg() {
 	initialEnv := s.clearEnv()
 	defer s.setEnv(nil, initialEnv)
 
@@ -184,79 +184,59 @@ func (s HelpTestSuite) TestShouldGiveHelpArgs() {
 
 	tests := []struct {
 		name     string
-		args     []string
+		arg      string
 		expected bool
 	}{
 		{
-			name:     "nil args",
-			args:     nil,
+			name:     "empty string",
+			arg:      "",
 			expected: false,
 		},
 		{
-			name:     "empty args",
-			args:     []string{},
+			name:     "random",
+			arg:      "random",
 			expected: false,
 		},
 		{
-			name:     "one arg random",
-			args:     []string{"random"},
+			name:     "help",
+			arg:      "help",
+			expected: true,
+		},
+		{
+			name:     "-h",
+			arg:      "-h",
+			expected: true,
+		},
+		{
+			name:     "--help",
+			arg:      "--help",
+			expected: true,
+		},
+		{
+			name:     "help weird casing",
+			arg:      "hELP",
+			expected: true,
+		},
+		{
+			name:     "version",
+			arg:      "version",
 			expected: false,
 		},
 		{
-			name:     "five args random",
-			args:     []string{"random1", "--random2", "-r", "random4", "-random5"},
+			name:     "--version",
+			arg:      "--version",
 			expected: false,
 		},
 		{
-			name:     "one arg help",
-			args:     []string{"help"},
-			expected: true,
-		},
-		{
-			name:     " two args help first",
-			args:     []string{"help", "arg2"},
-			expected: true,
-		},
-		{
-			name:     "two args help second",
-			args:     []string{"arg1", "help"},
-			expected: true,
-		},
-		{
-			name:     "one arg -h",
-			args:     []string{"-h"},
-			expected: true,
-		},
-		{
-			name:     "two args -h first",
-			args:     []string{"-h", "arg2"},
-			expected: true,
-		},
-		{
-			name:     "two args -h second",
-			args:     []string{"arg1", "-h"},
-			expected: true,
-		},
-		{
-			name:     "one arg --help",
-			args:     []string{"--help"},
-			expected: true,
-		},
-		{
-			name:     "two args --help first",
-			args:     []string{"--help", "arg2"},
-			expected: true,
-		},
-		{
-			name:     "two args --help second",
-			args:     []string{"arg1", "--help"},
-			expected: true,
+			name:     "run",
+			arg:      "run",
+			expected: false,
 		},
 	}
 
 	for _, tc := range tests {
-		s.T().Run(tc.name, func(t *testing.T) {
-			actual := ShouldGiveHelp(tc.args)
+		s.T().Run(fmt.Sprintf("%s - %t", tc.name, tc.expected), func(t *testing.T) {
+			actual := ShouldGiveHelp(tc.arg)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}

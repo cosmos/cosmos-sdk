@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -23,14 +24,14 @@ const (
 type Subspace struct {
 	cdc         codec.BinaryCodec
 	legacyAmino *codec.LegacyAmino
-	key         sdk.StoreKey // []byte -> []byte, stores parameter
-	tkey        sdk.StoreKey // []byte -> bool, stores parameter change
+	key         storetypes.StoreKey // []byte -> []byte, stores parameter
+	tkey        storetypes.StoreKey // []byte -> bool, stores parameter change
 	name        []byte
 	table       KeyTable
 }
 
 // NewSubspace constructs a store with namestore
-func NewSubspace(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key sdk.StoreKey, tkey sdk.StoreKey, name string) Subspace {
+func NewSubspace(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key storetypes.StoreKey, tkey storetypes.StoreKey, name string) Subspace {
 	return Subspace{
 		cdc:         cdc,
 		legacyAmino: legacyAmino,
@@ -87,7 +88,7 @@ func (s Subspace) transientStore(ctx sdk.Context) sdk.KVStore {
 func (s Subspace) Validate(ctx sdk.Context, key []byte, value interface{}) error {
 	attr, ok := s.table.m[string(key)]
 	if !ok {
-		return fmt.Errorf("parameter %s not registered", string(key))
+		return fmt.Errorf("parameter %s not registered", key)
 	}
 
 	if err := attr.vfn(value); err != nil {
@@ -166,7 +167,7 @@ func (s Subspace) Modified(ctx sdk.Context, key []byte) bool {
 func (s Subspace) checkType(key []byte, value interface{}) {
 	attr, ok := s.table.m[string(key)]
 	if !ok {
-		panic(fmt.Sprintf("parameter %s not registered", string(key)))
+		panic(fmt.Sprintf("parameter %s not registered", key))
 	}
 
 	ty := attr.ty
@@ -208,7 +209,7 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, value interface{}) {
 func (s Subspace) Update(ctx sdk.Context, key, value []byte) error {
 	attr, ok := s.table.m[string(key)]
 	if !ok {
-		panic(fmt.Sprintf("parameter %s not registered", string(key)))
+		panic(fmt.Sprintf("parameter %s not registered", key))
 	}
 
 	ty := attr.ty

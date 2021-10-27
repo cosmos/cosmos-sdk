@@ -4,10 +4,11 @@ import (
 	"bufio"
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/spf13/cobra"
 )
 
 // RenameKeyCommand renames a key from the key store.

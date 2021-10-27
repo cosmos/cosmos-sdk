@@ -195,6 +195,14 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 	// set the signed validators for addition to context in deliverTx
 	app.voteInfos = req.LastCommitInfo.GetVotes()
+
+	// call the hooks with the BeginBlock messages
+	for _, streamingListener := range app.abciListeners {
+		if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
+			app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", err)
+		}
+	}
+
 	return res
 }
 
@@ -213,6 +221,13 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 
 	if cp := app.GetConsensusParams(app.deliverState.ctx); cp != nil {
 		res.ConsensusParamUpdates = cp
+	}
+
+	// call the streaming service hooks with the EndBlock messages
+	for _, streamingListener := range app.abciListeners {
+		if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
+			app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", err)
+		}
 	}
 
 	return res
@@ -262,15 +277,25 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
 	defer telemetry.MeasureSince(time.Now(), "abci", "deliver_tx")
 
+	var res abci.ResponseDeliverTx
+	defer func() {
+		for _, streamingListener := range app.abciListeners {
+			if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
+				app.logger.Error("DeliverTx listening hook failed", "err", err)
+			}
+		}
+	}()
 	tx, err := app.txDecoder(req.Tx)
 	if err != nil {
-		return sdkerrors.ResponseDeliverTx(err, 0, 0, app.trace)
+		res = sdkerrors.ResponseDeliverTx(err, 0, 0, app.trace)
+		return res
 	}
 
 	ctx := app.getContextForTx(runTxModeDeliver, req.Tx)
-	res, err := app.txHandler.DeliverTx(ctx, tx, req)
+	res, err = app.txHandler.DeliverTx(ctx, tx, req)
 	if err != nil {
-		return sdkerrors.ResponseDeliverTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
+		res = sdkerrors.ResponseDeliverTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
+		return res
 	}
 
 	return res

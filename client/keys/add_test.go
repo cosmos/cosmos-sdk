@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -18,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bip39 "github.com/cosmos/go-bip39"
+	"github.com/cosmos/go-bip39"
 )
 
 func Test_runAddCmdBasic(t *testing.T) {
@@ -45,7 +44,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 		"keyname1",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, hd.Secp256k1Type),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	mockIn.Reset("y\n")
@@ -58,7 +57,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 		"keyname2",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, hd.Secp256k1Type),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 
@@ -72,7 +71,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 		"keyname4",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, hd.Secp256k1Type),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 
@@ -84,7 +83,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=true", flags.FlagDryRun),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, hd.Secp256k1Type),
 	})
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
@@ -220,13 +219,13 @@ func Test_runAddCmdDryRun(t *testing.T) {
 				_, err := kb.Key("testkey")
 				require.NoError(t, err)
 
-				out, err := ioutil.ReadAll(b)
+				out, err := io.ReadAll(b)
 				require.NoError(t, err)
 				require.Contains(t, string(out), "name: testkey")
 			} else {
 				_, err = kb.Key("testkey")
 				require.Error(t, err)
-				require.Equal(t, "testkey: key not found", err.Error())
+				require.Equal(t, "testkey.info: key not found", err.Error())
 			}
 		})
 	}
@@ -247,7 +246,7 @@ func TestAddRecoverFileBackend(t *testing.T) {
 		"keyname1",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, hd.Secp256k1Type),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendFile),
 		fmt.Sprintf("--%s", flagRecover),
 	})

@@ -108,14 +108,6 @@ message AuthInfo {
   // based on the cost of evaluating the body and doing signature verification
   // of the signers. This can be estimated via simulation.
   Fee fee = 2;
-<<<<<<< HEAD
-=======
-
-  // Tip is the optional tip used for meta-transactions.
-  //
-  // Since: cosmos-sdk 0.45
-  Tip tip = 3;
->>>>>>> 0a3660d2a (chore: Add "Since:" on proto doc comments (#10434))
 }
 
 // SignerInfo describes the public key and signing mode of a single top-level

@@ -1572,23 +1572,12 @@ a basic token.
 | `denom_units` | [DenomUnit](#cosmos.bank.v1beta1.DenomUnit) | repeated | denom_units represents the list of DenomUnit's for a given coin |
 | `base` | [string](#string) |  | base represents the base denom (should be the DenomUnit with exponent = 0). |
 | `display` | [string](#string) |  | display indicates the suggested denom that should be displayed in clients. |
-<<<<<<< HEAD
-| `name` | [string](#string) |  | name defines the name of the token (eg: Cosmos Atom) |
-| `symbol` | [string](#string) |  | symbol is the token symbol usually shown on exchanges (eg: ATOM). This can be the same as the display. |
-=======
 | `name` | [string](#string) |  | name defines the name of the token (eg: Cosmos Atom)
 
 Since: cosmos-sdk 0.43 |
 | `symbol` | [string](#string) |  | symbol is the token symbol usually shown on exchanges (eg: ATOM). This can be the same as the display.
 
 Since: cosmos-sdk 0.43 |
-| `uri` | [string](#string) |  | URI to a document (on or off-chain) that contains additional information. Optional.
-
-Since: cosmos-sdk 0.45 |
-| `uri_hash` | [string](#string) |  | URIHash is a sha256 hash of a document pointed by URI. It's used to verify that the document didn't change. Optional.
-
-Since: cosmos-sdk 0.45 |
->>>>>>> 0a3660d2a (chore: Add "Since:" on proto doc comments (#10434))
 
 
 
@@ -7500,12 +7489,6 @@ transaction.
 | ----- | ---- | ----- | ----------- |
 | `signer_infos` | [SignerInfo](#cosmos.tx.v1beta1.SignerInfo) | repeated | signer_infos defines the signing modes for the required signers. The number and order of elements must match the required signers from TxBody's messages. The first element is the primary signer and the one which pays the fee. |
 | `fee` | [Fee](#cosmos.tx.v1beta1.Fee) |  | Fee is the fee and gas limit for the transaction. The first signer is the primary signer and the one which pays the fee. The fee can be calculated based on the cost of evaluating the body and doing signature verification of the signers. This can be estimated via simulation. |
-<<<<<<< HEAD
-=======
-| `tip` | [Tip](#cosmos.tx.v1beta1.Tip) |  | Tip is the optional tip used for meta-transactions.
-
-Since: cosmos-sdk 0.45 |
->>>>>>> 0a3660d2a (chore: Add "Since:" on proto doc comments (#10434))
 
 
 

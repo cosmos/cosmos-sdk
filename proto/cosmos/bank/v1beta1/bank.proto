@@ -93,16 +93,4 @@ message Metadata {
   //
   // Since: cosmos-sdk 0.43
   string symbol = 6;
-<<<<<<< HEAD
-=======
-  // URI to a document (on or off-chain) that contains additional information. Optional.
-  //
-  // Since: cosmos-sdk 0.45
-  string uri = 7 [(gogoproto.customname) = "URI"];
-  // URIHash is a sha256 hash of a document pointed by URI. It's used to verify that
-  // the document didn't change. Optional.
-  //
-  // Since: cosmos-sdk 0.45
-  string uri_hash = 8 [(gogoproto.customname) = "URIHash"];
->>>>>>> 0a3660d2a (chore: Add "Since:" on proto doc comments (#10434))
 }

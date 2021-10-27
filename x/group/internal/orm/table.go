@@ -32,7 +32,7 @@ type table struct {
 // newTable creates a new table
 func newTable(prefix [2]byte, model codec.ProtoMarshaler, cdc codec.Codec) (*table, error) {
 	if model == nil {
-		return nil, errors.ErrORMEmptyModel.Wrap("Model must not be nil")
+		return nil, errors.ErrORMInvalidArgument.Wrap("Model must not be nil")
 	}
 	tp := reflect.TypeOf(model)
 	if tp.Kind() == reflect.Ptr {

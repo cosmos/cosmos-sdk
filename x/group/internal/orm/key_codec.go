@@ -73,3 +73,27 @@ func NullTerminatedBytes(s string) []byte {
 	copy(bytes, s)
 	return bytes
 }
+
+// stripRowID returns the RowID from the indexKey based on secondaryIndexKey type.
+// It is the reverse operation to buildKeyFromParts for index keys
+// where the first part is the encoded secondaryIndexKey and the second part is the RowID.
+func stripRowID(indexKey []byte, secondaryIndexKey interface{}) (RowID, error) {
+	switch v := secondaryIndexKey.(type) {
+	case []byte:
+		searchableKeyLen := indexKey[0]
+		return indexKey[1+searchableKeyLen:], nil
+	case string:
+		searchableKeyLen := 0
+		for i, b := range indexKey {
+			if b == 0 {
+				searchableKeyLen = i
+				break
+			}
+		}
+		return indexKey[1+searchableKeyLen:], nil
+	case uint64:
+		return indexKey[EncodedSeqLength:], nil
+	default:
+		return nil, fmt.Errorf("type %T not allowed as index key", v)
+	}
+}

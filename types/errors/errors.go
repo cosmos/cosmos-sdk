@@ -166,8 +166,8 @@ var (
 	// ErrORMUniqueConstraint defines an error when a value already exists at a given key
 	ErrORMUniqueConstraint = Register(ormCodespace, 44, "unique constraint violation")
 
-	// ErrORMEmptyModel defines an error when an empty model is provided for building a table
-	ErrORMEmptyModel = Register(ormCodespace, 45, "invalid argument")
+	// ErrORMInvalidArgument defines an error when an invalid argument is provided for building a table or an index
+	ErrORMInvalidArgument = Register(ormCodespace, 45, "invalid argument")
 
 	// ErrORMKeyMaxLength defines an error when a key exceeds max length
 	ErrORMKeyMaxLength = Register(ormCodespace, 46, "key exceeds max length")

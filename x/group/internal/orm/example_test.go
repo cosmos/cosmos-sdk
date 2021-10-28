@@ -11,9 +11,15 @@ type TestKeeper struct {
 }
 
 var (
-	AutoUInt64TableTablePrefix [2]byte = [2]byte{0x0}
-	PrimaryKeyTablePrefix      [2]byte = [2]byte{0x1}
-	AutoUInt64TableSeqPrefix   byte    = 0x2
+	AutoUInt64TableTablePrefix           [2]byte = [2]byte{0x0}
+	PrimaryKeyTablePrefix                [2]byte = [2]byte{0x1}
+	AutoUInt64TableSeqPrefix             byte    = 0x2
+	AutoUInt64TableModelByNamePrefix     byte    = 0x3
+	AutoUInt64TableModelByNumberPrefix   byte    = 0x4
+	AutoUInt64TableModelByMetadataPrefix byte    = 0x5
+	PrimaryKeyTableModelByNamePrefix     byte    = 0x6
+	PrimaryKeyTableModelByNumberPrefix   byte    = 0x7
+	PrimaryKeyTableModelByMetadataPrefix byte    = 0x8
 )
 
 func NewTestKeeper(cdc codec.Codec) TestKeeper {

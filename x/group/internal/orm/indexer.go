@@ -131,7 +131,7 @@ func uniqueKeysAddFunc(store sdk.KVStore, secondaryIndexKey interface{}, rowID R
 	it := store.Iterator(PrefixRange(secondaryIndexKeyBytes))
 	defer it.Close()
 	if it.Valid() {
-		return ErrUniqueConstraint
+		return errors.ErrORMUniqueConstraint
 	}
 
 	indexKey, err := buildKeyFromParts([]interface{}{secondaryIndexKey, []byte(rowID)})

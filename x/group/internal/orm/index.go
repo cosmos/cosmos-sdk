@@ -89,7 +89,7 @@ func (i MultiKeyIndex) Get(store sdk.KVStore, searchKey interface{}) (Iterator, 
 		return nil, err
 	}
 	it := pStore.Iterator(PrefixRange(encodedKey))
-	return indexIterator{it: it, rowGetter: i.rowGetter, indexKey: i.indexKey}, nil
+	return indexIterator{store: store, it: it, rowGetter: i.rowGetter, indexKey: i.indexKey}, nil
 }
 
 // GetPaginated creates an iterator for the searchKey
@@ -111,7 +111,7 @@ func (i MultiKeyIndex) GetPaginated(store sdk.KVStore, searchKey interface{}, pa
 		}
 	}
 	it := pStore.Iterator(start, end)
-	return indexIterator{it: it, rowGetter: i.rowGetter, indexKey: i.indexKey}, nil
+	return indexIterator{store: store, it: it, rowGetter: i.rowGetter, indexKey: i.indexKey}, nil
 }
 
 // PrefixScan returns an Iterator over a domain of keys in ascending order. End is exclusive.
@@ -145,7 +145,7 @@ func (i MultiKeyIndex) PrefixScan(store sdk.KVStore, startI interface{}, endI in
 	}
 	pStore := prefix.NewStore(store, []byte{i.prefix})
 	it := pStore.Iterator(start, end)
-	return indexIterator{it: it, rowGetter: i.rowGetter, indexKey: i.indexKey}, nil
+	return indexIterator{store: store, it: it, rowGetter: i.rowGetter, indexKey: i.indexKey}, nil
 }
 
 // ReversePrefixScan returns an Iterator over a domain of keys in descending order. End is exclusive.
@@ -172,7 +172,7 @@ func (i MultiKeyIndex) ReversePrefixScan(store sdk.KVStore, startI interface{}, 
 	}
 	pStore := prefix.NewStore(store, []byte{i.prefix})
 	it := pStore.ReverseIterator(start, end)
-	return indexIterator{it: it, rowGetter: i.rowGetter, indexKey: i.indexKey}, nil
+	return indexIterator{store: store, it: it, rowGetter: i.rowGetter, indexKey: i.indexKey}, nil
 }
 
 func getPrefixScanKeyBytes(keyI interface{}) ([]byte, error) {
@@ -225,17 +225,18 @@ func NewUniqueIndex(tb Indexable, prefix byte, uniqueIndexerFunc UniqueIndexerFu
 
 // indexIterator uses rowGetter to lazy load new model values on request.
 type indexIterator struct {
+	store     sdk.KVStore
 	rowGetter RowGetter
 	it        types.Iterator
 	indexKey  interface{}
 }
 
 // LoadNext loads the next value in the sequence into the pointer passed as dest and returns the key. If there
-// are no more items the errors.ErrORMInvalidIterator error is returned
+// are no more items the errors.ErrORMIteratorDone error is returned
 // The key is the rowID and not any MultiKeyIndex key.
-func (i indexIterator) LoadNext(store sdk.KVStore, dest codec.ProtoMarshaler) (RowID, error) {
+func (i indexIterator) LoadNext(dest codec.ProtoMarshaler) (RowID, error) {
 	if !i.it.Valid() {
-		return nil, errors.ErrORMInvalidIterator
+		return nil, errors.ErrORMIteratorDone
 	}
 	indexPrefixKey := i.it.Key()
 	rowID, err := stripRowID(indexPrefixKey, i.indexKey)
@@ -243,7 +244,7 @@ func (i indexIterator) LoadNext(store sdk.KVStore, dest codec.ProtoMarshaler) (R
 		return nil, err
 	}
 	i.it.Next()
-	return rowID, i.rowGetter(store, rowID, dest)
+	return rowID, i.rowGetter(i.store, rowID, dest)
 }
 
 // Close releases the iterator and should be called at the end of iteration

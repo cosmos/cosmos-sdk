@@ -1,10 +1,12 @@
 package orm
 
 import (
+	"bytes"
 	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -178,4 +180,74 @@ func (a table) GetOne(store sdk.KVStore, rowID RowID, dest codec.ProtoMarshaler)
 	}
 	x := NewTypeSafeRowGetter(a.prefix, a.model, a.cdc)
 	return x(store, rowID, dest)
+}
+
+// PrefixScan returns an Iterator over a domain of keys in ascending order. End is exclusive.
+// Start is an MultiKeyIndex key or prefix. It must be less than end, or the Iterator is invalid.
+// Iterator must be closed by caller.
+// To iterate over entire domain, use PrefixScan(nil, nil)
+//
+// WARNING: The use of a PrefixScan can be very expensive in terms of Gas. Please make sure you do not expose
+// this as an endpoint to the public without further limits.
+// Example:
+//			it, err := idx.PrefixScan(ctx, start, end)
+//			if err !=nil {
+//				return err
+//			}
+//			const defaultLimit = 20
+//			it = LimitIterator(it, defaultLimit)
+//
+// CONTRACT: No writes may happen within a domain while an iterator exists over it.
+func (a table) PrefixScan(store sdk.KVStore, start, end RowID) (Iterator, error) {
+	if start != nil && end != nil && bytes.Compare(start, end) >= 0 {
+		return NewInvalidIterator(), errors.Wrap(errors.ErrORMInvalidArgument, "start must be before end")
+	}
+	pStore := prefix.NewStore(store, a.prefix[:])
+	return &typeSafeIterator{
+		store:     store,
+		rowGetter: NewTypeSafeRowGetter(a.prefix, a.model, a.cdc),
+		it:        pStore.Iterator(start, end),
+	}, nil
+}
+
+// ReversePrefixScan returns an Iterator over a domain of keys in descending order. End is exclusive.
+// Start is an MultiKeyIndex key or prefix. It must be less than end, or the Iterator is invalid  and error is returned.
+// Iterator must be closed by caller.
+// To iterate over entire domain, use PrefixScan(nil, nil)
+//
+// WARNING: The use of a ReversePrefixScan can be very expensive in terms of Gas. Please make sure you do not expose
+// this as an endpoint to the public without further limits. See `LimitIterator`
+//
+// CONTRACT: No writes may happen within a domain while an iterator exists over it.
+func (a table) ReversePrefixScan(store sdk.KVStore, start, end RowID) (Iterator, error) {
+	if start != nil && end != nil && bytes.Compare(start, end) >= 0 {
+		return NewInvalidIterator(), errors.Wrap(errors.ErrORMInvalidArgument, "start must be before end")
+	}
+	pStore := prefix.NewStore(store, a.prefix[:])
+	return &typeSafeIterator{
+		store:     store,
+		rowGetter: NewTypeSafeRowGetter(a.prefix, a.model, a.cdc),
+		it:        pStore.ReverseIterator(start, end),
+	}, nil
+}
+
+// typeSafeIterator is initialized with a type safe RowGetter only.
+type typeSafeIterator struct {
+	store     sdk.KVStore
+	rowGetter RowGetter
+	it        types.Iterator
+}
+
+func (i typeSafeIterator) LoadNext(dest codec.ProtoMarshaler) (RowID, error) {
+	if !i.it.Valid() {
+		return nil, errors.ErrORMIteratorDone
+	}
+	rowID := i.it.Key()
+	i.it.Next()
+	return rowID, i.rowGetter(i.store, rowID, dest)
+}
+
+func (i typeSafeIterator) Close() error {
+	i.it.Close()
+	return nil
 }

@@ -114,6 +114,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [\#10439](https://github.com/cosmos/cosmos-sdk/pull/10439) Check error for `RegisterQueryHandlerClient` in all modules `RegisterGRPCGatewayRoutes`.
 * [\#9780](https://github.com/cosmos/cosmos-sdk/pull/9780) Remove gogoproto `moretags` YAML annotations and add `sigs.k8s.io/yaml` for YAML marshalling.
 * (x/bank) [\#10134](https://github.com/cosmos/cosmos-sdk/pull/10134) Add `HasDenomMetadata` function to bank `Keeper` to check if a client coin denom metadata exists in state.
 * (types) [\#10076](https://github.com/cosmos/cosmos-sdk/pull/10076) Significantly speedup and lower allocations for `Coins.String()`.

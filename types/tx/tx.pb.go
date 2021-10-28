@@ -450,6 +450,8 @@ type AuthInfo struct {
 	// of the signers. This can be estimated via simulation.
 	Fee *Fee `protobuf:"bytes,2,opt,name=fee,proto3" json:"fee,omitempty"`
 	// Tip is the optional tip used for meta-transactions.
+	//
+	// Since: cosmos-sdk 0.45
 	Tip *Tip `protobuf:"bytes,3,opt,name=tip,proto3" json:"tip,omitempty"`
 }
 

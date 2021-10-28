@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/internal/testproto"
 	"github.com/cosmos/cosmos-sdk/orm/pkg/orm"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"testing"
 )
@@ -25,22 +26,8 @@ func TestIndexer(t *testing.T) {
 	}
 
 	err := indexer.RegisterObject(ctx, &v1alpha1.StateObjectDescriptor{
-		TypePrefix: []byte{0x0, 0x1},
-		TableDescriptor: &v1alpha1.TableDescriptor{
-			PrimaryKeyDescriptor: &v1alpha1.PrimaryKeyDescriptor{ProtobufFieldNames: []string{
-				"id",
-			}},
-			SecondaryKeyDescriptors: []*v1alpha1.SecondaryKeyDescriptor{
-				{
-					ProtobufFieldName: "city",
-				},
-				{
-					ProtobufFieldName: "postal_code",
-				},
-				// { ProtobufFieldName: "country_code",}, TODO(fdymylja): support kind enum
-			},
-			Singleton: false,
-		},
+		TypePrefix:        []byte{0x0, 0x1},
+		TableDescriptor:   proto.GetExtension(obj.ProtoReflect().Descriptor().Options(), v1alpha1.E_TableDescriptor).(*v1alpha1.TableDescriptor),
 		FileDescriptor:    nil,
 		ProtoDependencies: nil,
 	}, obj.ProtoReflect().Type())

@@ -55,9 +55,9 @@ func (f *FieldKeyEncoder) EncodePrimaryKey(primaryKey []byte, o proto.Message) (
 
 func NewFieldIndexer(typePrefix []byte, sd *v1alpha1.SecondaryKeyDescriptor, messageType protoreflect.MessageType) (*FieldKeyEncoder, error) {
 	md := messageType.Descriptor()
-	fd := md.Fields().ByName(protoreflect.Name(sd.ProtobufFieldName))
+	fd := md.Fields().ByName(protoreflect.Name(sd.FieldName))
 	if fd == nil {
-		return nil, fmt.Errorf("field %s does not belogn to message %s", sd.ProtobufFieldName, md.FullName())
+		return nil, fmt.Errorf("field %s does not belogn to message %s", sd.FieldName, md.FullName())
 	}
 	kindEncoder, err := kindencoder.NewKindEncoder(fd.Kind())
 	if err != nil {

@@ -6,33 +6,51 @@ option go_package = "github.com/cosmos/cosmos-sdk/orm/apis/orm/v1alpha1";
 
 import "google/protobuf/descriptor.proto";
 
+extend google.protobuf.MessageOptions {
+  cosmos.orm.v1alpha1.TableDescriptor table_descriptor = 100000000;
+}
+
+// StateObjectDescriptor describes a state object saved inside the ORM store.
 message StateObjectDescriptor {
+  // type_prefix identifies the bytes short hand used to identify the type
   bytes type_prefix = 1;
+  // table_descriptor how the object is indexed and saved into state
   TableDescriptor table_descriptor = 2;
+  // file_descriptor is the file descriptor which represents the message.
   google.protobuf.FileDescriptorProto file_descriptor = 3;
+  // proto_dependencies is the list of ordered dependencies required
+  // to compile the file_descriptor.
+  // NOTE: this exists so that in the future we can support historical queries
+  // with dynamic protobuf types.
   repeated google.protobuf.FileDescriptorProto proto_dependencies = 4;
 }
 
-extend google.protobuf.MessageOptions {
-  TableDescriptor table_descriptor = 1000000;
-}
-
+// TableDescriptor describes how a state object should be saved into
+// state and which are its indexes.
 message TableDescriptor {
   // primary_key_descriptor describes how the state object primary key
   // is formed.
-  PrimaryKeyDescriptor primary_key_descriptor = 1;
+  PrimaryKeyDescriptor primary_key = 1;
   // secondary_key_descriptors describes how the state object is indexed.
-  repeated SecondaryKeyDescriptor secondary_key_descriptors = 2;
+  repeated SecondaryKeyDescriptor secondary_keys = 2;
   // singleton signals that can exist only one instance of this object
   // if singleton is true, primary_key_descriptor and secondary_key_descriptors
   // must not be set.
   bool singleton = 3;
 }
 
+// PrimaryKeyDescriptor describes the state object's primary key.
 message PrimaryKeyDescriptor {
-  repeated string protobuf_field_names = 1;
+  // field_names is the list of protobuf field names
+  // that are encoded to bytes and used to compose
+  // the primary key.
+  repeated string field_names = 1;
 }
 
+// SecondaryKeyDescriptor describes the state object's secondary keys
 message SecondaryKeyDescriptor {
-  string protobuf_field_name = 2;
+  // field_name is the protobuf field name which is
+  // encoded to bytes and used to compose the secondary key.
+  string field_name = 1;
+  // unique defines if this index should only point to one primary key.
 }

@@ -12,3 +12,8 @@ RUN apk add "protoc"
 RUN protoc --version
 # install
 RUN GO111MODULE=on go get google.golang.org/protobuf/cmd/protoc-gen-go google.golang.org/grpc/cmd/protoc-gen-go-grpc
+
+WORKDIR /build
+COPY . ./
+RUN go build -o protoc-gen-go-cosmos-orm ./cmd/protoc-gen-go-cosmos-orm
+RUN mv /build/protoc-gen-go-cosmos-orm /usr/bin/protoc-gen-go-cosmos-orm

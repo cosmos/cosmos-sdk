@@ -49,9 +49,9 @@ func NewCodec(td *v1alpha1.TableDescriptor, messageType protoreflect.MessageType
 		}, nil
 	}
 
-	pkd := td.PrimaryKeyDescriptor
+	pkd := td.PrimaryKey
 
-	if len(pkd.ProtobufFieldNames) == 0 {
+	if len(pkd.FieldNames) == 0 {
 		return nil, fmt.Errorf("no protobuf field names are defined")
 	}
 
@@ -59,7 +59,7 @@ func NewCodec(td *v1alpha1.TableDescriptor, messageType protoreflect.MessageType
 
 	var fieldEncodeFuncs []fieldEncodeFunc
 
-	for _, field := range pkd.ProtobufFieldNames {
+	for _, field := range pkd.FieldNames {
 		fd := md.Fields().ByName(protoreflect.Name(field))
 		if fd == nil {
 			return nil, fmt.Errorf("field %s does not belong to %s", field, md.FullName())

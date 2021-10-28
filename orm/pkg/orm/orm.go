@@ -15,6 +15,14 @@ var (
 	ErrNotFound      = errors.New("orm: object not found")
 )
 
+type Server interface {
+	Create(ctx context.Context, object proto.Message) error
+	Get(ctx context.Context, primaryKey []byte, target proto.Message) error
+	Update(ctx context.Context, target proto.Message) error
+	Delete(ctx context.Context, object proto.Message) error
+	List(ctx context.Context, object proto.Message, options ListOptions) (objectIterator, error)
+}
+
 type ListOptions struct {
 	FieldsToMatch []FieldMatch
 }
@@ -24,12 +32,17 @@ type FieldMatch struct {
 	Value     protoreflect.Value
 }
 
-type ObjectIterator struct {
+type ObjectIterator interface {
+	kv.Iterator
+	UnmarshalTo(o proto.Message) error
+}
+
+type objectIterator struct {
 	kv.Iterator
 	store *ORM
 }
 
-func (i ObjectIterator) Get(o proto.Message) error {
+func (i objectIterator) UnmarshalTo(o proto.Message) error {
 	return i.store.Get(i.Context(), i.Key(), o)
 }
 
@@ -106,9 +119,9 @@ func (s *ORM) Delete(ctx context.Context, target proto.Message) error {
 func (s *ORM) List(ctx context.Context, object proto.Message, options ListOptions) (ObjectIterator, error) {
 	keyIter, err := s.indexer.List(ctx, object, options)
 	if err != nil {
-		return ObjectIterator{}, err
+		return objectIterator{}, err
 	}
-	return ObjectIterator{Iterator: keyIter, store: s}, nil
+	return objectIterator{Iterator: keyIter, store: s}, nil
 }
 
 func (s *ORM) RegisterObject(ctx context.Context, descriptor *v1alpha1.StateObjectDescriptor, messageType protoreflect.MessageType) error {

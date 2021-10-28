@@ -144,14 +144,14 @@ func (i *Indexer) RegisterObject(ctx context.Context, descriptor *v1alpha1.State
 		return nil
 	}
 
-	for _, sk := range descriptor.TableDescriptor.SecondaryKeyDescriptors {
+	for _, sk := range descriptor.TableDescriptor.SecondaryKeys {
 		fieldEncoder, err := NewFieldIndexer(descriptor.TypePrefix, sk, messageType)
 		if err != nil {
 			return err
 		}
 
 		if _, exists := i.fieldIndexers[fieldEncoder.fd.FullName()]; exists {
-			return fmt.Errorf("duplicate index: %s", sk.ProtobufFieldName)
+			return fmt.Errorf("duplicate index: %s", sk.FieldName)
 		}
 
 		i.objectsIndexers[md.FullName()] = append(i.objectsIndexers[md.FullName()], fieldEncoder)

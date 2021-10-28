@@ -4,6 +4,8 @@ package orm.internal.testproto;
 
 option go_package = "github.com/cosmos/cosmos-sdk/orm/internal/testproto";
 
+import "apis/orm/v1alpha1/orm.proto";
+
 enum CountryCode {
   UNKNOWN = 0;
   US = 1;
@@ -12,19 +14,76 @@ enum CountryCode {
 }
 
 message PersonStateObject {
+  option (cosmos.orm.v1alpha1.table_descriptor) =  {
+    primary_key: {
+      field_names: "id",
+    },
+    secondary_keys: {
+      field_name: "city",
+    },
+    secondary_keys: {
+      field_name: "postal_code",
+    },
+  };
+
+
   string id = 1;
   string city = 2;
   int64 postal_code = 3;
   CountryCode country_code = 5;
 }
 
-message BalanceStateObject {
+message Balance {
+
+  option (cosmos.orm.v1alpha1.table_descriptor) = {
+    primary_key: {
+      field_names: "address",
+      field_names: "denom",
+    },
+    secondary_keys: {
+      field_name: "address",
+    }
+    secondary_keys: {
+      field_name: "denom",
+    }
+  };
+
   string address = 1;
   string denom = 2;
 
   uint64 amount = 3;
 }
 
-message BankParam {
+message Param {
+  option (cosmos.orm.v1alpha1.table_descriptor) = {
+    singleton: true,
+  };
+
   uint64 max_denoms = 1;
+}
+
+message Redelegation {
+
+  option (cosmos.orm.v1alpha1.table_descriptor) = {
+    primary_key: {
+      field_names: "delegator_src_address",
+      field_names: "validator_src_address",
+      field_names: "validator_dst_address",
+    },
+    secondary_keys: {
+      field_name: "delegator_src_address",
+    }
+    secondary_keys: {
+      field_name: "validator_src_address",
+    },
+    secondary_keys: {
+      field_name: "validator_dst_address",
+    }
+  };
+
+
+  string delegator_src_address = 1;
+  string validator_src_address = 2;
+  string validator_dst_address = 3;
+
 }

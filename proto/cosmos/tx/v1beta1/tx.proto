@@ -222,10 +222,11 @@ message Tip {
   string tipper = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// AuxTx is the intermediary tx that an auxiliary signer (e.g. a tipper) builds,
-// to be sent to the final tx's fee payer. AuxTx is not a valid tx in itself,
-// and will be rejected by the node if sent directly as-is.
-message AuxTx {
+// AuxSignerData is the intermediary format that an auxiliary signer (e.g. a
+// tipper) builds and sends to the fee payer (who will build and broadcast the
+// actual tx). AuxSignerData is not a valid tx in itself, and will be rejected
+// by the node if sent directly as-is.
+message AuxSignerData {
 	// sign_doc is the SIGN_MOD_DIRECT_AUX sign doc that the auxiliary signer
   // signs.
 	SignDocDirectAux sign_doc = 1;

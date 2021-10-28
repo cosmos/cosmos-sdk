@@ -661,7 +661,7 @@
   
 - [cosmos/tx/v1beta1/tx.proto](#cosmos/tx/v1beta1/tx.proto)
     - [AuthInfo](#cosmos.tx.v1beta1.AuthInfo)
-    - [AuxTx](#cosmos.tx.v1beta1.AuxTx)
+    - [AuxSignerData](#cosmos.tx.v1beta1.AuxSignerData)
     - [Fee](#cosmos.tx.v1beta1.Fee)
     - [ModeInfo](#cosmos.tx.v1beta1.ModeInfo)
     - [ModeInfo.Multi](#cosmos.tx.v1beta1.ModeInfo.Multi)
@@ -9475,12 +9475,13 @@ Since: cosmos-sdk 0.45 |
 
 
 
-<a name="cosmos.tx.v1beta1.AuxTx"></a>
+<a name="cosmos.tx.v1beta1.AuxSignerData"></a>
 
-### AuxTx
-AuxTx is the intermediary tx that an auxiliary signer (e.g. a tipper) builds,
-to be sent to the final tx's fee payer. AuxTx is not a valid tx in itself,
-and will be rejected by the node if sent directly as-is.
+### AuxSignerData
+AuxSignerData is the intermediary format that an auxiliary signer (e.g. a
+tipper) builds and sends to the fee payer (who will build and broadcast the
+actual tx). AuxSignerData is not a valid tx in itself, and will be rejected
+by the node if sent directly as-is.
 
 
 | Field | Type | Label | Description |

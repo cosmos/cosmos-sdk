@@ -12,8 +12,8 @@ import (
 
 // AuxTxBuilder is a client-side builder for creating an AuxTx.
 type AuxTxBuilder struct {
-	body  *tx.TxBody
-	auxTx *tx.AuxTx
+	body          *tx.TxBody
+	auxSignerData *tx.AuxSignerData
 }
 
 func (b *AuxTxBuilder) SetMemo(memo string) {
@@ -48,19 +48,19 @@ func (b *AuxTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
 func (b *AuxTxBuilder) SetAccountNumber(accNum uint64) {
 	b.checkEmptyFields()
 
-	b.auxTx.SignDoc.AccountNumber = accNum
+	b.auxSignerData.SignDoc.AccountNumber = accNum
 }
 
 func (b *AuxTxBuilder) SetChainID(chainID string) {
 	b.checkEmptyFields()
 
-	b.auxTx.SignDoc.ChainId = chainID
+	b.auxSignerData.SignDoc.ChainId = chainID
 }
 
 func (b *AuxTxBuilder) SetSequence(accSeq uint64) {
 	b.checkEmptyFields()
 
-	b.auxTx.SignDoc.Sequence = accSeq
+	b.auxSignerData.SignDoc.Sequence = accSeq
 }
 
 func (b *AuxTxBuilder) SetPubKey(pk cryptotypes.PubKey) error {
@@ -71,7 +71,7 @@ func (b *AuxTxBuilder) SetPubKey(pk cryptotypes.PubKey) error {
 
 	b.checkEmptyFields()
 
-	b.auxTx.SignDoc.PublicKey = any
+	b.auxSignerData.SignDoc.PublicKey = any
 
 	return nil
 }
@@ -79,15 +79,15 @@ func (b *AuxTxBuilder) SetPubKey(pk cryptotypes.PubKey) error {
 func (b *AuxTxBuilder) SetTip(tip *tx.Tip) {
 	b.checkEmptyFields()
 
-	b.auxTx.SignDoc.Tip = tip
+	b.auxSignerData.SignDoc.Tip = tip
 }
 
 func (b *AuxTxBuilder) SetSignature(sig []byte) {
-	if b.auxTx == nil {
-		b.auxTx = &tx.AuxTx{}
+	if b.auxSignerData == nil {
+		b.auxSignerData = &tx.AuxSignerData{}
 	}
 
-	b.auxTx.Sig = sig
+	b.auxSignerData.Sig = sig
 }
 
 // GetSignBytes returns the builder's sign bytes.
@@ -102,7 +102,7 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 		return nil, err
 	}
 
-	auxTx := b.auxTx
+	auxTx := b.auxSignerData
 	if auxTx == nil {
 		return nil, sdkerrors.ErrLogic.Wrap("aux tx is nil, call setters on AuxTxBuilder first")
 	}
@@ -114,11 +114,11 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 
 	sd.BodyBytes = bodyBz
 
-	if err := b.auxTx.SignDoc.ValidateBasic(); err != nil {
+	if err := b.auxSignerData.SignDoc.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
-	signBz, err := proto.Marshal(b.auxTx.SignDoc)
+	signBz, err := proto.Marshal(b.auxSignerData.SignDoc)
 	if err != nil {
 		return nil, err
 	}
@@ -127,12 +127,12 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 }
 
 // GetAuxTx returns the builder's AuxTx.
-func (b *AuxTxBuilder) GetAuxTx() (*tx.AuxTx, error) {
-	if err := b.auxTx.ValidateBasic(); err != nil {
+func (b *AuxTxBuilder) GetAuxTx() (*tx.AuxSignerData, error) {
+	if err := b.auxSignerData.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
-	return b.auxTx, nil
+	return b.auxSignerData, nil
 }
 
 func (b *AuxTxBuilder) checkEmptyFields() {
@@ -140,10 +140,10 @@ func (b *AuxTxBuilder) checkEmptyFields() {
 		b.body = &tx.TxBody{}
 	}
 
-	if b.auxTx == nil {
-		b.auxTx = &tx.AuxTx{}
-		if b.auxTx.SignDoc == nil {
-			b.auxTx.SignDoc = &tx.SignDocDirectAux{}
+	if b.auxSignerData == nil {
+		b.auxSignerData = &tx.AuxSignerData{}
+		if b.auxSignerData.SignDoc == nil {
+			b.auxSignerData.SignDoc = &tx.SignDocDirectAux{}
 		}
 	}
 }

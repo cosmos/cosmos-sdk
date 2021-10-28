@@ -12,7 +12,13 @@ DRAFT
 
 ## Abstract
 
-This ADR defines the `x/nft` module which is a generic implementation of NFTs, roughly "compatible" with ERC721.
+This ADR defines the `x/nft` module which is a generic implementation of NFTs, roughly "compatible" with ERC721. **Applications using the `x/nft` module must implement the following functions**:
+
+- `MsgNewClass` - Receive the user's request to create a class, and call the `NewClass` of the `x/nft` module.
+- `MsgUpdateClass` - Receive the user's request to update a class, and call the `UpdateClass` of the `x/nft` module.
+- `MsgMintNFT` - Receive the user's request to mint a nft, and call the `MintNFT` of the `x/nft` module.
+- `BurnNFT` - Receive the user's request to burn a nft, and call the `BurnNFT` of the `x/nft` module.
+- `UpdateNFT` - Receive the user's request to update a nft, and call the `UpdateNFT` of the `x/nft` module.
 
 ## Context
 
@@ -55,6 +61,7 @@ message Class {
   string symbol      = 3;
   string description = 4;
   string uri         = 5;
+  string uri_hash    = 6;
 }
 ```
 
@@ -63,6 +70,7 @@ message Class {
 - `symbol` is the symbol usually shown on exchanges for the NFT class; _optional_
 - `description` is a detailed description of the NFT class; _optional_
 - `uri` is a URL pointing to an off-chain JSON file that contains metadata about this NFT class ([OpenSea example](https://docs.opensea.io/docs/contract-level-metadata)); _optional_
+- `uri_hash` is a hash of the `uri`; _optional_
 
 #### NFT
 
@@ -73,6 +81,7 @@ message NFT {
   string class_id           = 1;
   string id                 = 2;
   string uri                = 3;
+  string uri_hash           = 4;
   google.protobuf.Any data  = 10;
 }
 ```
@@ -83,6 +92,7 @@ message NFT {
   {class_id}/{id} --> NFT (bytes)
   ```
 - `uri` is a URL pointing to an off-chain JSON file that contains metadata about this NFT (Ref: [ERC721 standard and OpenSea extension](https://docs.opensea.io/docs/metadata-standards)); _required_
+- `uri_hash` is a hash of the `uri`;
 - `data` is a field that CAN be used by composing modules to specify additional properties for the NFT; _optional_
 
 This ADR doesn't specify values that `data` can take; however, best practices recommend upper-level NFT modules clearly specify their contents.  Although the value of this field doesn't provide the additional context required to manage NFT records, which means that the field can technically be removed from the specification, the field's existence allows basic informational/UI functionality.

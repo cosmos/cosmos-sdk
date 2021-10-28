@@ -93,7 +93,7 @@ func TestIndexPrefixScan(t *testing.T) {
 		return i, nil
 	}, testdata.TableModel{}.Metadata)
 	require.NoError(t, err)
-	strIdx, err := NewIndex(tb, AutoUInt64TableModelByNamePrefix, func(val interface{}) ([]interface{}, error) {
+	strIdx, err := NewIndex(tb, 0x1, func(val interface{}) ([]interface{}, error) {
 		i := []interface{}{val.(*testdata.TableModel).Name}
 		return i, nil
 	}, testdata.TableModel{}.Name)

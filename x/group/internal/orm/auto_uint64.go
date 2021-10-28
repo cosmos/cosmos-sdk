@@ -73,3 +73,36 @@ func (a AutoUInt64Table) GetOne(store sdk.KVStore, rowID uint64, dest codec.Prot
 	}
 	return rawRowID, nil
 }
+
+// PrefixScan returns an Iterator over a domain of keys in ascending order. End is exclusive.
+// Start is an MultiKeyIndex key or prefix. It must be less than end, or the Iterator is invalid and error is returned.
+// Iterator must be closed by caller.
+// To iterate over entire domain, use PrefixScan(nil, nil)
+//
+// WARNING: The use of a PrefixScan can be very expensive in terms of Gas. Please make sure you do not expose
+// this as an endpoint to the public without further limits.
+// Example:
+//			it, err := idx.PrefixScan(ctx, start, end)
+//			if err !=nil {
+//				return err
+//			}
+//			const defaultLimit = 20
+//			it = LimitIterator(it, defaultLimit)
+//
+// CONTRACT: No writes may happen within a domain while an iterator exists over it.
+func (a AutoUInt64Table) PrefixScan(store sdk.KVStore, start, end uint64) (Iterator, error) {
+	return a.table.PrefixScan(store, EncodeSequence(start), EncodeSequence(end))
+}
+
+// ReversePrefixScan returns an Iterator over a domain of keys in descending order. End is exclusive.
+// Start is an MultiKeyIndex key or prefix. It must be less than end, or the Iterator is invalid  and error is returned.
+// Iterator must be closed by caller.
+// To iterate over entire domain, use PrefixScan(nil, nil)
+//
+// WARNING: The use of a ReversePrefixScan can be very expensive in terms of Gas. Please make sure you do not expose
+// this as an endpoint to the public without further limits. See `LimitIterator`
+//
+// CONTRACT: No writes may happen within a domain while an iterator exists over it.
+func (a AutoUInt64Table) ReversePrefixScan(store sdk.KVStore, start uint64, end uint64) (Iterator, error) {
+	return a.table.ReversePrefixScan(store, EncodeSequence(start), EncodeSequence(end))
+}

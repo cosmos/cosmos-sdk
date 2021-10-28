@@ -208,33 +208,33 @@ func TestPaginate(t *testing.T) {
 	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
 	metadata := []byte("metadata")
-	g1 := testdata.TableModel{
+	t1 := testdata.TableModel{
 		Id:       1,
 		Name:     "my test 1",
 		Metadata: metadata,
 	}
-	g2 := testdata.TableModel{
+	t2 := testdata.TableModel{
 		Id:       2,
 		Name:     "my test 2",
 		Metadata: metadata,
 	}
-	g3 := testdata.TableModel{
+	t3 := testdata.TableModel{
 		Id:       3,
 		Name:     "my test 3",
 		Metadata: []byte("other-metadata"),
 	}
-	g4 := testdata.TableModel{
+	t4 := testdata.TableModel{
 		Id:       4,
 		Name:     "my test 4",
 		Metadata: metadata,
 	}
-	g5 := testdata.TableModel{
+	t5 := testdata.TableModel{
 		Id:       5,
 		Name:     "my test 5",
 		Metadata: []byte("other-metadata"),
 	}
 
-	for _, g := range []testdata.TableModel{g1, g2, g3, g4, g5} {
+	for _, g := range []testdata.TableModel{t1, t2, t3, t4, t5} {
 		_, err := tb.Create(store, &g)
 		require.NoError(t, err)
 	}
@@ -248,7 +248,7 @@ func TestPaginate(t *testing.T) {
 	}{
 		"one item": {
 			pageReq:    &query.PageRequest{Key: nil, Limit: 1},
-			exp:        []testdata.TableModel{g1},
+			exp:        []testdata.TableModel{t1},
 			expPageRes: &query.PageResponse{Total: 0, NextKey: EncodeSequence(2)},
 			key:        metadata,
 		},
@@ -259,7 +259,7 @@ func TestPaginate(t *testing.T) {
 		},
 		"up to max": {
 			pageReq:    &query.PageRequest{Key: nil, Limit: 3, CountTotal: true},
-			exp:        []testdata.TableModel{g1, g2, g4},
+			exp:        []testdata.TableModel{t1, t2, t4},
 			expPageRes: &query.PageResponse{Total: 3, NextKey: nil},
 			key:        metadata,
 		},
@@ -271,25 +271,25 @@ func TestPaginate(t *testing.T) {
 		},
 		"with offset and count total": {
 			pageReq:    &query.PageRequest{Key: nil, Offset: 1, Limit: 2, CountTotal: true},
-			exp:        []testdata.TableModel{g2, g4},
+			exp:        []testdata.TableModel{t2, t4},
 			expPageRes: &query.PageResponse{Total: 3, NextKey: nil},
 			key:        metadata,
 		},
 		"nil/default page req (limit = 100 > number of items)": {
 			pageReq:    nil,
-			exp:        []testdata.TableModel{g1, g2, g4},
+			exp:        []testdata.TableModel{t1, t2, t4},
 			expPageRes: &query.PageResponse{Total: 3, NextKey: nil},
 			key:        metadata,
 		},
 		"with key and limit < number of elem (count total is ignored in this case)": {
 			pageReq:    &query.PageRequest{Key: EncodeSequence(2), Limit: 1, CountTotal: true},
-			exp:        []testdata.TableModel{g2},
+			exp:        []testdata.TableModel{t2},
 			expPageRes: &query.PageResponse{Total: 0, NextKey: EncodeSequence(4)},
 			key:        metadata,
 		},
 		"with key and limit >= number of elem": {
 			pageReq:    &query.PageRequest{Key: EncodeSequence(2), Limit: 2},
-			exp:        []testdata.TableModel{g2, g4},
+			exp:        []testdata.TableModel{t2, t4},
 			expPageRes: &query.PageResponse{Total: 0, NextKey: nil},
 			key:        metadata,
 		},

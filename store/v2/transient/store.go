@@ -17,7 +17,7 @@ type Store struct {
 	conn dbm.DBConnection
 }
 
-// Constructs new MemDB adapter
+// NewStore constructs a new transient store.
 func NewStore(db dbm.DBConnection) *Store {
 	return &Store{
 		Store: dbadapter.Store{DB: db.ReadWriter()},

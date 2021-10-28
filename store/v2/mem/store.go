@@ -18,6 +18,7 @@ type Store struct {
 	conn dbm.DBConnection
 }
 
+// NewStore constructs a new in-memory store.
 func NewStore(db dbm.DBConnection) *Store {
 	return &Store{
 		Store: dbadapter.Store{DB: db.ReadWriter()},
@@ -32,10 +33,6 @@ func (s Store) GetStoreType() types.StoreType {
 
 // Commit commits to the underlying DB.
 func (s *Store) Commit() (id types.CommitID) {
-	if err := s.DB.Commit(); err != nil {
-		panic(err)
-	}
-	s.Store = dbadapter.Store{DB: s.conn.ReadWriter()}
 	return
 }
 

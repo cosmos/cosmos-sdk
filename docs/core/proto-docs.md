@@ -661,6 +661,7 @@
   
 - [cosmos/tx/v1beta1/tx.proto](#cosmos/tx/v1beta1/tx.proto)
     - [AuthInfo](#cosmos.tx.v1beta1.AuthInfo)
+    - [AuxTx](#cosmos.tx.v1beta1.AuxTx)
     - [Fee](#cosmos.tx.v1beta1.Fee)
     - [ModeInfo](#cosmos.tx.v1beta1.ModeInfo)
     - [ModeInfo.Multi](#cosmos.tx.v1beta1.ModeInfo.Multi)
@@ -9468,6 +9469,24 @@ transaction.
 | `tip` | [Tip](#cosmos.tx.v1beta1.Tip) |  | Tip is the optional tip used for meta-transactions.
 
 Since: cosmos-sdk 0.45 |
+
+
+
+
+
+
+<a name="cosmos.tx.v1beta1.AuxTx"></a>
+
+### AuxTx
+AuxTx is the intermediary tx that an auxiliary signer (e.g. a tipper) builds,
+to be sent to the final tx's fee payer. AuxTx is not a valid tx in itself,
+and will be rejected by the node if sent directly as-is.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sign_doc` | [SignDocDirectAux](#cosmos.tx.v1beta1.SignDocDirectAux) |  | sign_doc is the SIGN_MOD_DIRECT_AUX sign doc that the auxiliary signer signs. |
+| `sig` | [bytes](#bytes) |  | sig is the signature of the sign doc. |
 
 
 

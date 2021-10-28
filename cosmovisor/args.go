@@ -176,20 +176,16 @@ func GetConfigFromEnv() (*Config, error) {
 }
 
 // LogConfigOrError logs either the config details or the error.
-func LogConfigOrError(logger zerolog.Logger, cfg *Config, cerr error) {
+func LogConfigOrError(logger zerolog.Logger, cfg *Config, err error) {
+	if cfg == nil && err == nil {
+		return
+	}
+	logger.Info().Msg("Configuration:")
 	switch {
-	case cerr != nil:
-		switch err := cerr.(type) {
-		case *cverrors.MultiError:
-			logger.Error().Msg("multiple configuration errors found:")
-			for i, e := range err.GetErrors() {
-				logger.Error().Err(e).Msg(fmt.Sprintf("  %d:", i+1))
-			}
-		default:
-			logger.Error().Err(cerr).Msg("configuration error:")
-		}
+	case err != nil:
+		cverrors.LogErrors(logger, "configuration errors found", err)
 	case cfg != nil:
-		logger.Info().Msg("Configuration is valid:\n" + cfg.DetailString())
+		logger.Info().Msg(cfg.DetailString())
 	}
 }
 

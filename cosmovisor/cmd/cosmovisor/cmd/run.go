@@ -16,10 +16,9 @@ func IsRunCommand(arg string) bool {
 
 // Run runs the configured program with the given args and monitors it for upgrades.
 func Run(args []string) error {
-	cfg, cerr := cosmovisor.GetConfigFromEnv()
-	cosmovisor.LogConfigOrError(cosmovisor.Logger, cfg, cerr)
-	if cerr != nil {
-		return cerr
+	cfg, err := cosmovisor.GetConfigFromEnv()
+	if err != nil {
+		return err
 	}
 	launcher, err := cosmovisor.NewLauncher(cfg)
 	if err != nil {

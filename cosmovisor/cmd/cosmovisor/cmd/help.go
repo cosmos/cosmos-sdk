@@ -3,9 +3,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"time"
-
-	"github.com/rs/zerolog"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
 )
@@ -24,13 +21,6 @@ func ShouldGiveHelp(arg string) bool {
 func DoHelp() {
 	// Not using the logger for this output because the header and footer look weird for help text.
 	fmt.Println(GetHelpText())
-	// Check the config and output details or any errors.
-	// Not using the cosmovisor.Logger in order to ignore any level it might have set,
-	// and also to not have any of the extra parameters in the output.
-	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Kitchen}
-	logger := zerolog.New(output).With().Timestamp().Logger()
-	cfg, err := cosmovisor.GetConfigFromEnv()
-	cosmovisor.LogConfigOrError(logger, cfg, err)
 }
 
 // GetHelpText creates the help text multi-line string.

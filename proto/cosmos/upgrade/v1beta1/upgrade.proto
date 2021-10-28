@@ -64,6 +64,8 @@ message CancelSoftwareUpgradeProposal {
 }
 
 // ModuleVersion specifies a module and its consensus version.
+//
+// Since: cosmos-sdk 0.43
 message ModuleVersion {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = true;

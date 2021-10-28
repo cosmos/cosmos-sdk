@@ -27,15 +27,15 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type Class struct {
 	// id defines the unique identifier of the NFT classification, similar to the contract address of ERC721
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// name defines the human-readable name of the NFT classification
+	// name defines the human-readable name of the NFT classification,optional
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	// symbol is an abbreviated name for nft classification
+	// symbol is an abbreviated name for nft classification,optional
 	Symbol string `protobuf:"bytes,3,opt,name=symbol,proto3" json:"symbol,omitempty"`
-	// description is a brief description of nft classification
+	// description is a brief description of nft classification,optional
 	Description string `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
-	// uri is a URI may point to a JSON file that conforms to the nft classification Metadata JSON Schema.
+	// uri is a URI may point to a JSON file that conforms to the nft classification Metadata JSON Schema.optional
 	Uri string `protobuf:"bytes,5,opt,name=uri,proto3" json:"uri,omitempty"`
-	// uri_hash is a hash of the document pointed to uri
+	// uri_hash is a hash of the document pointed to uri,optional
 	UriHash string `protobuf:"bytes,6,opt,name=uri_hash,json=uriHash,proto3" json:"uri_hash,omitempty"`
 }
 
@@ -124,7 +124,7 @@ type NFT struct {
 	Uri string `protobuf:"bytes,3,opt,name=uri,proto3" json:"uri,omitempty"`
 	// uri_hash is a hash of the document pointed to uri
 	UriHash string `protobuf:"bytes,4,opt,name=uri_hash,json=uriHash,proto3" json:"uri_hash,omitempty"`
-	// data is the metadata of the NFT
+	// data is the metadata of the NFT,optional
 	Data *types.Any `protobuf:"bytes,10,opt,name=data,proto3" json:"data,omitempty"`
 }
 

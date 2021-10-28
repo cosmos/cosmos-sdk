@@ -9,6 +9,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
 // SendAuthorization allows the grantee to spend up to spend_limit coins from
 // the granter's account.
+//
+// Since: cosmos-sdk 0.43
 message SendAuthorization {
   option (cosmos_proto.implements_interface) = "Authorization";
 

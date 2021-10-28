@@ -1,0 +1,30 @@
+syntax="proto3";
+
+package orm.internal.testproto;
+
+option go_package = "github.com/cosmos/cosmos-sdk/orm/internal/testproto";
+
+enum CountryCode {
+  UNKNOWN = 0;
+  US = 1;
+  IT = 2;
+  ES = 3;
+}
+
+message PersonStateObject {
+  string id = 1;
+  string city = 2;
+  int64 postal_code = 3;
+  CountryCode country_code = 5;
+}
+
+message BalanceStateObject {
+  string address = 1;
+  string denom = 2;
+
+  uint64 amount = 3;
+}
+
+message BankParam {
+  uint64 max_denoms = 1;
+}

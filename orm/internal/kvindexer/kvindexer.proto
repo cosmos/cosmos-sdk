@@ -1,0 +1,9 @@
+syntax="proto3";
+
+package cosmos.orm.interna.kvindexer;
+
+option go_package = "github.com/cosmos/cosmos-sdk/orm/internal/kvindexer";
+
+message MappingKeysList {
+  repeated bytes keys = 1;
+}

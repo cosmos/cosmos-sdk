@@ -1,0 +1,38 @@
+syntax="proto3";
+
+package cosmos.orm.v1alpha1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/orm/apis/orm/v1alpha1";
+
+import "google/protobuf/descriptor.proto";
+
+message StateObjectDescriptor {
+  bytes type_prefix = 1;
+  TableDescriptor table_descriptor = 2;
+  google.protobuf.FileDescriptorProto file_descriptor = 3;
+  repeated google.protobuf.FileDescriptorProto proto_dependencies = 4;
+}
+
+extend google.protobuf.MessageOptions {
+  TableDescriptor table_descriptor = 1000000;
+}
+
+message TableDescriptor {
+  // primary_key_descriptor describes how the state object primary key
+  // is formed.
+  PrimaryKeyDescriptor primary_key_descriptor = 1;
+  // secondary_key_descriptors describes how the state object is indexed.
+  repeated SecondaryKeyDescriptor secondary_key_descriptors = 2;
+  // singleton signals that can exist only one instance of this object
+  // if singleton is true, primary_key_descriptor and secondary_key_descriptors
+  // must not be set.
+  bool singleton = 3;
+}
+
+message PrimaryKeyDescriptor {
+  repeated string protobuf_field_names = 1;
+}
+
+message SecondaryKeyDescriptor {
+  string protobuf_field_name = 2;
+}

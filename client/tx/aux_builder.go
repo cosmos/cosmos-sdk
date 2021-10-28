@@ -64,16 +64,22 @@ func (b *AuxTxBuilder) SetSequence(accSeq uint64) {
 }
 
 func (b *AuxTxBuilder) SetPubKey(pk cryptotypes.PubKey) error {
-	b.checkEmptyFields()
-
 	any, err := codectypes.NewAnyWithValue(pk)
 	if err != nil {
 		return err
 	}
 
+	b.checkEmptyFields()
+
 	b.auxTx.SignDoc.PublicKey = any
 
 	return nil
+}
+
+func (b *AuxTxBuilder) SetTip(tip *tx.Tip) {
+	b.checkEmptyFields()
+
+	b.auxTx.SignDoc.Tip = tip
 }
 
 func (b *AuxTxBuilder) SetSignature(sig []byte) {

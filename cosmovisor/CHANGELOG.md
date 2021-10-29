@@ -44,6 +44,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 + [\#10285](https://github.com/cosmos/cosmos-sdk/pull/10316) Running `cosmovisor` without the `run` argument.
 
+### Bug Fixes
+
++ [\#10460](https://github.com/cosmos/cosmos-sdk/pull/10316) Fix version when using 'go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v1.0.0' to install cosmovisor.
+
 ## v1.0.0 2021-09-30
 
 ### Features

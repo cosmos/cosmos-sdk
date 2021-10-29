@@ -32,7 +32,10 @@ The model provided for creating a `PrimaryKeyTable` should implement the `Primar
 
 `PrimaryKeyFields()` method returns the list of key parts for a given object.
 The primary key parts can be []byte, string, and `uint64` types. 
- Key parts, except the last part, follow these rules:
+
+### Key codec
+
+Key parts, except the last part, follow these rules:
   - []byte is encoded with a single byte length prefix
   - strings are null-terminated
   - `uint64` are encoded using 8 byte big endian.

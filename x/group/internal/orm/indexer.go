@@ -11,7 +11,7 @@ type IndexerFunc func(value interface{}) ([]interface{}, error)
 // IndexerFunc creates exactly one index key for the source object.
 type UniqueIndexerFunc func(value interface{}) (interface{}, error)
 
-// Indexer manages the persistence for an Index based on searchable keys and operations.
+// Indexer manages the persistence of an Index based on searchable keys and operations.
 type Indexer struct {
 	indexerFunc IndexerFunc
 	addFunc     func(store sdk.KVStore, secondaryIndexKey interface{}, rowID RowID) error

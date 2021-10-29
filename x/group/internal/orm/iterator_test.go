@@ -197,7 +197,7 @@ func TestPaginate(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	tb, err := NewAutoUInt64Table(AutoUInt64TableTablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc)
+	tb, err := NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc)
 	require.NoError(t, err)
 	idx, err := NewIndex(tb, AutoUInt64TableModelByMetadataPrefix, func(val interface{}) ([]interface{}, error) {
 		return []interface{}{[]byte(val.(*testdata.TableModel).Metadata)}, nil

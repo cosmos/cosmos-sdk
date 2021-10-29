@@ -15,7 +15,7 @@ type TestKeeper struct {
 }
 
 var (
-	AutoUInt64TableTablePrefix           [2]byte = [2]byte{0x0}
+	AutoUInt64TablePrefix                [2]byte = [2]byte{0x0}
 	PrimaryKeyTablePrefix                [2]byte = [2]byte{0x1}
 	AutoUInt64TableSeqPrefix             byte    = 0x2
 	AutoUInt64TableModelByMetadataPrefix byte    = 0x4
@@ -28,7 +28,7 @@ func NewTestKeeper(cdc codec.Codec) TestKeeper {
 	k := TestKeeper{}
 	var err error
 
-	k.autoUInt64Table, err = NewAutoUInt64Table(AutoUInt64TableTablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc)
+	k.autoUInt64Table, err = NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}

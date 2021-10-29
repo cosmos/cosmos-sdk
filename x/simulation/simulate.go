@@ -186,7 +186,7 @@ func SimulateFromSeed(
 			futureOps = append(futureOps, timeFutureOps...)
 		}
 
-		if futureOps != nil || timeFutureOps != nil {
+		if futureOps != nil {
 			queueOperations(operationQueue, timeOperationQueue, futureOps)
 		}
 

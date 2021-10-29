@@ -24,6 +24,7 @@ if baseGP.IsZero() {
   }
 } else {
   // check `tx.GetFee() > max(baseGP, minGP) * tx.GetGas()`
+  // ignore the token types in `minimal-gas-prices` which are not specified in `BaseGasPrices`
   for i, gp := range baseGP {
     fee := gp.Amount.Mul(gas).Ceil().RoundInt()
     amt := minGasPrices.AmountOf(gp.Denom)

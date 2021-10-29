@@ -24,6 +24,10 @@ Base gas prices are adjusted in the `EndBlock` event according to the total gas
 
 ```golang
 parentGP := GetState(BaseGasPrices)
+if parentGP.IsZero() {
+  // base gas prices are not enabled
+  return
+}
 parentGasUsed := GetState(BlockGasUsed)
 
 var expectedGP sdk.Coins

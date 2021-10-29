@@ -14,41 +14,44 @@ func TestImportExportTableData(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	storeKey := sdk.NewKVStoreKey("test")
-	const prefix = iota
-	table, err := NewAutoUInt64Table(AutoUInt64TableTablePrefix, 0x1, storeKey, &testdata.GroupInfo{}, cdc)
+	table, err := NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc)
 	require.NoError(t, err)
 
 	ctx := NewMockContext()
+	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
-	groups := []*testdata.GroupInfo{
+	tms := []*testdata.TableModel{
 		{
-			GroupId: 1,
-			Admin:   sdk.AccAddress([]byte("admin1-address")),
+			Id:       1,
+			Name:     "my test 1",
+			Number:   123,
+			Metadata: []byte("metadata 1"),
 		},
 		{
-			GroupId: 2,
-			Admin:   sdk.AccAddress([]byte("admin2-address")),
+			Id:       2,
+			Name:     "my test 2",
+			Number:   456,
+			Metadata: []byte("metadata 2"),
 		},
 	}
 
-	err = table.Import(ctx, groups, 2)
+	err = table.Import(store, tms, 2)
 	require.NoError(t, err)
 
-	for _, g := range groups {
-		var loaded testdata.GroupInfo
-		_, err := table.GetOne(ctx, g.GroupId, &loaded)
+	for _, g := range tms {
+		var loaded testdata.TableModel
+		_, err := table.GetOne(store, g.Id, &loaded)
 		require.NoError(t, err)
 
 		require.Equal(t, g, &loaded)
 	}
 
-	var exported []*testdata.GroupInfo
-	seq, err := table.Export(ctx, &exported)
+	var exported []*testdata.TableModel
+	seq, err := table.Export(store, &exported)
 	require.NoError(t, err)
 	require.Equal(t, seq, uint64(2))
 
 	for i, g := range exported {
-		require.Equal(t, g, groups[i])
+		require.Equal(t, g, tms[i])
 	}
 }

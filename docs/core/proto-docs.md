@@ -8455,6 +8455,9 @@ RedelegationEntry defines a redelegation object with relevant metadata.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `delegator_address` | [string](#string) |  | delegator_address is the bech32-encoded address of the delegator. |
+| `validator_src_address` | [string](#string) |  | validator_src_address is the validator redelegation source operator address. |
+| `validator_dst_address` | [string](#string) |  | validator_dst_address is the validator redelegation destination operator address. |
 | `creation_height` | [int64](#int64) |  | creation_height defines the height which the redelegation took place. |
 | `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | completion_time defines the unix time for redelegation completion. |
 | `initial_balance` | [string](#string) |  | initial_balance defines the initial balance when redelegation started. |
@@ -8529,6 +8532,8 @@ UnbondingDelegationEntry defines an unbonding object with relevant metadata.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `delegator_address` | [string](#string) |  | delegator_address is the bech32-encoded address of the delegator. |
+| `validator_address` | [string](#string) |  | validator_address is the bech32-encoded address of the validator. |
 | `creation_height` | [int64](#int64) |  | creation_height is the height which the unbonding took place. |
 | `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | completion_time is the unix time for unbonding completion. |
 | `initial_balance` | [string](#string) |  | initial_balance defines the tokens initially scheduled to receive at completion. |

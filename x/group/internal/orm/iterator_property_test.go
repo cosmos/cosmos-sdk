@@ -87,7 +87,7 @@ func TestPaginationProperty(t *testing.T) {
 	}))
 }
 
-func testTableModelIterator(gms []*testdata.TableModel, key RowID) Iterator {
+func testTableModelIterator(tms []*testdata.TableModel, key RowID) Iterator {
 	var closed bool
 	var index int
 	if key != nil {
@@ -98,7 +98,7 @@ func testTableModelIterator(gms []*testdata.TableModel, key RowID) Iterator {
 			return nil, errors.Wrap(errors.ErrORMInvalidArgument, "destination object must not be nil")
 		}
 
-		if index == len(gms) {
+		if index == len(tms) {
 			closed = true
 		}
 
@@ -108,7 +108,7 @@ func testTableModelIterator(gms []*testdata.TableModel, key RowID) Iterator {
 
 		rowID := EncodeSequence(uint64(index))
 
-		bytes, err := gms[index].Marshal()
+		bytes, err := tms[index].Marshal()
 		if err != nil {
 			return nil, err
 		}

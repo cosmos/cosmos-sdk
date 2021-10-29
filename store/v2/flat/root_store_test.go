@@ -65,6 +65,43 @@ func TestRootStoreBasic(t *testing.T) {
 	require.Equal(t, []byte(nil), val)
 }
 
+func TestGetVersion(t *testing.T) {
+	db := memdb.NewDB()
+	opts := storeConfig123(t)
+	store, err := NewRootStore(db, opts)
+	require.NoError(t, err)
+
+	cid := store.Commit()
+	// opts := DefaultRootStoreConfig()
+
+	view, err := store.GetVersion(cid.Version)
+	require.NoError(t, err)
+	subview := view.GetKVStore(skey_1)
+	require.NotNil(t, subview)
+
+	// version view should be read-only
+	require.Panics(t, func() { subview.Set([]byte{1}, []byte{1}) })
+	require.Panics(t, func() { subview.Delete([]byte{0}) })
+	// nonexistent version shouldn't be accessible
+	view, err = store.GetVersion(cid.Version + 1)
+	require.Equal(t, ErrVersionDoesNotExist, err)
+
+	substore := store.GetKVStore(skey_1)
+	require.NotNil(t, substore)
+	substore.Set([]byte{0}, []byte{0})
+	// setting a new value shouldn't affect old version
+	require.False(t, subview.Has([]byte{0}))
+
+	cid = store.Commit()
+	view, err = store.GetVersion(cid.Version)
+	require.NoError(t, err)
+	subview = view.GetKVStore(skey_1)
+	require.NotNil(t, subview)
+
+	store.Delete([]byte{0})
+	require.Equal(t, []byte{0}, subview.Get([]byte{0}))
+}
+
 func TestRootStoreMigration(t *testing.T) {
 	skey_2b := types.NewKVStoreKey("store2b")
 	skey_4 := types.NewKVStoreKey("store4")
@@ -91,9 +128,8 @@ func TestRootStoreMigration(t *testing.T) {
 	s3.Set(k3, v3)
 
 	require.Panics(t, func() { store.GetKVStore(skey_4) })
-	// require.Nil(t, s4)
 
-	_ = store.Commit()
+	cid := store.Commit()
 	require.NoError(t, store.Close())
 
 	// Load without changes and make sure it is sensible
@@ -126,7 +162,6 @@ func TestRootStoreMigration(t *testing.T) {
 	require.Equal(t, v1, s1.Get(k1))
 
 	// store3 is gone
-	// TODO: breaking change? verify
 	require.Panics(t, func() { s3 = restore.GetKVStore(skey_3) })
 
 	// store4 is mounted, with empty data
@@ -186,25 +221,22 @@ func TestRootStoreMigration(t *testing.T) {
 	rl4 := reload.GetKVStore(skey_4)
 	require.NotNil(t, rl4)
 	require.Equal(t, v4, rl4.Get(k4))
-}
 
-func TestGetVersion(t *testing.T) {
-	db := memdb.NewDB()
-	opts := storeConfig123(t)
-	store, err := NewRootStore(db, opts)
-	require.NoError(t, err)
-
-	cid := store.Commit()
-	// opts := DefaultRootStoreConfig()
-
+	// load and check a view of the store at first commit
 	view, err := store.GetVersion(cid.Version)
 	require.NoError(t, err)
 
-	subview := view.GetKVStore(skey_1)
-	require.NotNil(t, subview)
+	s1 = view.GetKVStore(skey_1)
+	require.NotNil(t, s1)
+	require.Equal(t, v1, s1.Get(k1))
 
-	view, err = store.GetVersion(cid.Version + 1)
-	require.Equal(t, ErrVersionDoesNotExist, err)
+	s2 = view.GetKVStore(skey_2)
+	require.NotNil(t, s2)
+	require.Equal(t, v2, s2.Get(k2))
 
-	// ...todo
+	s3 = view.GetKVStore(skey_3)
+	require.NotNil(t, s3)
+	require.Equal(t, v3, s3.Get(k3))
+
+	require.Panics(t, func() { view.GetKVStore(skey_4) })
 }

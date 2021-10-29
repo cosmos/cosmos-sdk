@@ -19,7 +19,7 @@ requiredFees := make(sdk.Coins, 0)
 if baseGP.IsZero() {
   // base gas prices are not enabled, check the minimal-gas-prices only
   for i, gp := range minGasPrices {
-  	fee := gp.Amount.Mul(gas).Ceil().RoundInt()
+    fee := gp.Amount.Mul(gas).Ceil().RoundInt()
     requiredFees = append(requiredFees, sdk.NewCoin(gp.Denom, fee))
   }
 } else {
@@ -29,14 +29,13 @@ if baseGP.IsZero() {
     amt := minGasPrices.AmountOf(gp.Denom)
     if amt > fee {
       fee = amt
-		}
+    }
     requiredFees = append(requiredFees, sdk.NewCoin(gp.Denom, fee))
   }
 }
 
 feeCoins := tx.GetFee()
 if !feeCoins.IsAnyGTE(requiredFees) {
-	return fmt.Errorf("insufficient fees; got: %s required: %s", feeCoins, requiredFees)
+  return fmt.Errorf("insufficient fees; got: %s required: %s", feeCoins, requiredFees)
 }
 ```
-

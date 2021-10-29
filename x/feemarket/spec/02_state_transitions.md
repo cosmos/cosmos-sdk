@@ -30,16 +30,15 @@ var expectedGP sdk.Coins
 if parentGasUsed == -1:
   expectedGP = parentGP
 else if parentGasUsed == params.BlockGasTarget:
-	expectedGP = parentGP
+  expectedGP = parentGP
 else if parentGasUsed > params.BlockGasTarget:
-	delta = parentGasUsed - params.BlockGasTarget
-	delta = max(parentGP * delta / params.BlockGasTarget / params.BaseGasPriceChangeDenominator, 1)
-	expectedGP = parentGP + delta
+  delta = parentGasUsed - params.BlockGasTarget
+  delta = max(parentGP * delta / params.BlockGasTarget / params.BaseGasPriceChangeDenominator, 1)
+  expectedGP = parentGP + delta
 else:
-	delta =  params.BlockGasTarget - parentGasUsed
-	delta = parentGP * delta / params.BlockGasTarget / params.BaseGasPriceChangeDenominator
-	expectedGP = parentGP - delta
+  delta =  params.BlockGasTarget - parentGasUsed
+  delta = parentGP * delta / params.BlockGasTarget / params.BaseGasPriceChangeDenominator
+  expectedGP = parentGP - delta
 
 SetState(BaseGasPrices, expectedGP)
 ```
-

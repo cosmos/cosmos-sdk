@@ -30,6 +30,8 @@ enum VoteOption {
 }
 
 // WeightedVoteOption defines a unit of vote for vote split.
+//
+// Since: cosmos-sdk 0.43
 message WeightedVoteOption {
   VoteOption option = 1;
   string     weight = 2 [
@@ -135,6 +137,7 @@ message Vote {
   // if and only if `len(options) == 1` and that option has weight 1. In all
   // other cases, this field will default to VOTE_OPTION_UNSPECIFIED.
   VoteOption                  option  = 3 [deprecated = true];
+  // Since: cosmos-sdk 0.43
   repeated WeightedVoteOption options = 4 [(gogoproto.nullable) = false];
 }
 

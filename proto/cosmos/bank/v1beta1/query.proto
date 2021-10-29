@@ -95,6 +95,8 @@ message QueryTotalSupplyRequest {
   option (gogoproto.goproto_getters) = false;
 
   // pagination defines an optional pagination for the request.
+  //
+  // Since: cosmos-sdk 0.43
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
@@ -106,6 +108,8 @@ message QueryTotalSupplyResponse {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   // pagination defines the pagination in the response.
+  //
+  // Since: cosmos-sdk 0.43
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 

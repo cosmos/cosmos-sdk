@@ -268,19 +268,7 @@ func (suite *TestSuite) TestGRPCQueryNFTsOfClass() {
 			func(require *require.Assertions, res *nft.QueryNFTsOfClassResponse) {},
 		},
 		{
-			"success but class id not exist",
-			func(require *require.Assertions) {
-				req = &nft.QueryNFTsOfClassRequest{
-					ClassId: "kitty1",
-				}
-			},
-			"",
-			func(require *require.Assertions, res *nft.QueryNFTsOfClassResponse) {
-				require.Equal(res.Amount, supply)
-			},
-		},
-		{
-			"success but supply equal zero",
+			"success, no nft",
 			func(require *require.Assertions) {
 				req = &nft.QueryNFTsOfClassRequest{
 					ClassId: testClassID,
@@ -289,12 +277,15 @@ func (suite *TestSuite) TestGRPCQueryNFTsOfClass() {
 			},
 			"",
 			func(require *require.Assertions, res *nft.QueryNFTsOfClassResponse) {
-				require.Equal(res.Amount, supply)
+				require.Len(res.Nfts, 0)
 			},
 		},
 		{
-			"Success",
+			"success, class id not exist",
 			func(require *require.Assertions) {
+				req = &nft.QueryNFTsOfClassRequest{
+					ClassId: "kitty1",
+				}
 				n := nft.NFT{
 					ClassId: testClassID,
 					Id:      testID,
@@ -302,15 +293,62 @@ func (suite *TestSuite) TestGRPCQueryNFTsOfClass() {
 				}
 				err := suite.app.NFTKeeper.Mint(suite.ctx, n, suite.addrs[0])
 				suite.Require().NoError(err)
-
-				req = &nft.QueryNFTsOfClassRequest{
-					ClassId: testClassID,
-				}
-				supply = 1
 			},
 			"",
 			func(require *require.Assertions, res *nft.QueryNFTsOfClassResponse) {
-				require.Equal(res.Amount, supply)
+				require.Len(res.Nfts, 0)
+			},
+		},
+		{
+			"success, owner not exist",
+			func(require *require.Assertions) {
+				req = &nft.QueryNFTsOfClassRequest{
+					ClassId: testClassID,
+					Owner:   suite.addrs[1].String(),
+				}
+			},
+			"",
+			func(require *require.Assertions, res *nft.QueryNFTsOfClassResponse) {
+				require.Len(res.Nfts, 0)
+			},
+		},
+		{
+			"Success, query by classId",
+			func(require *require.Assertions) {
+				req = &nft.QueryNFTsOfClassRequest{
+					ClassId: testClassID,
+				}
+				nfts = []*nft.NFT{
+					{
+						ClassId: testClassID,
+						Id:      testID,
+						Uri:     testURI,
+					},
+				}
+			},
+			"",
+			func(require *require.Assertions, res *nft.QueryNFTsOfClassResponse) {
+				require.Equal(res.Nfts, nfts)
+			},
+		},
+		{
+			"Success,query by classId and owner",
+			func(require *require.Assertions) {
+				req = &nft.QueryNFTsOfClassRequest{
+					ClassId: testClassID,
+					Owner:   suite.addrs[0].String(),
+				}
+				nfts = []*nft.NFT{
+					{
+						ClassId: testClassID,
+						Id:      testID,
+						Uri:     testURI,
+					},
+				}
+			},
+			"",
+			func(require *require.Assertions, res *nft.QueryNFTsOfClassResponse) {
+				require.Equal(res.Nfts, nfts)
 			},
 		},
 	}
@@ -319,6 +357,220 @@ func (suite *TestSuite) TestGRPCQueryNFTsOfClass() {
 			require := suite.Require()
 			tc.malleate(require)
 			result, err := suite.queryClient.NFTsOfClass(gocontext.Background(), req)
+			if tc.expError == "" {
+				require.NoError(err)
+			} else {
+				require.Error(err)
+				require.Contains(err.Error(), tc.expError)
+			}
+			tc.postTest(require, result)
+		})
+	}
+}
+
+func (suite *TestSuite) TestGRPCQueryNFT() {
+	var (
+		req    *nft.QueryNFTRequest
+		expNFT nft.NFT
+	)
+	testCases := []struct {
+		msg      string
+		malleate func(require *require.Assertions)
+		expError string
+		postTest func(require *require.Assertions, res *nft.QueryNFTResponse)
+	}{
+		{
+			"fail empty ClassId",
+			func(require *require.Assertions) {
+				req = &nft.QueryNFTRequest{}
+			},
+			"class id can not be empty",
+			func(require *require.Assertions, res *nft.QueryNFTResponse) {},
+		},
+		{
+			"fail empty nft id",
+			func(require *require.Assertions) {
+				req = &nft.QueryNFTRequest{
+					ClassId: testClassID,
+				}
+			},
+			"nft id can not be empty",
+			func(require *require.Assertions, res *nft.QueryNFTResponse) {},
+		},
+		{
+			"fail ClassId not exist",
+			func(require *require.Assertions) {
+				req = &nft.QueryNFTRequest{
+					ClassId: "kitty1",
+					Id:      testID,
+				}
+				suite.TestMint()
+			},
+			"not found nft",
+			func(require *require.Assertions, res *nft.QueryNFTResponse) {},
+		},
+		{
+			"fail nft id not exist",
+			func(require *require.Assertions) {
+				req = &nft.QueryNFTRequest{
+					ClassId: testClassID,
+					Id:      "kitty2",
+				}
+			},
+			"not found nft",
+			func(require *require.Assertions, res *nft.QueryNFTResponse) {},
+		},
+		{
+			"success",
+			func(require *require.Assertions) {
+				req = &nft.QueryNFTRequest{
+					ClassId: testClassID,
+					Id:      testID,
+				}
+				expNFT = nft.NFT{
+					ClassId: testClassID,
+					Id:      testID,
+					Uri:     testURI,
+				}
+			},
+			"",
+			func(require *require.Assertions, res *nft.QueryNFTResponse) {
+				require.Equal(*res.Nft, expNFT)
+			},
+		},
+	}
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			require := suite.Require()
+			tc.malleate(require)
+			result, err := suite.queryClient.NFT(gocontext.Background(), req)
+			if tc.expError == "" {
+				require.NoError(err)
+			} else {
+				require.Error(err)
+				require.Contains(err.Error(), tc.expError)
+			}
+			tc.postTest(require, result)
+		})
+	}
+}
+
+func (suite *TestSuite) TestGRPCQueryClass() {
+	var (
+		req   *nft.QueryClassRequest
+		class nft.Class
+	)
+	testCases := []struct {
+		msg      string
+		malleate func(require *require.Assertions)
+		expError string
+		postTest func(require *require.Assertions, res *nft.QueryClassResponse)
+	}{
+		{
+			"fail empty ClassId",
+			func(require *require.Assertions) {
+				req = &nft.QueryClassRequest{}
+			},
+			"class id can not be empty",
+			func(require *require.Assertions, res *nft.QueryClassResponse) {},
+		},
+		{
+			"fail ClassId not exist",
+			func(require *require.Assertions) {
+				req = &nft.QueryClassRequest{
+					ClassId: "kitty1",
+				}
+				suite.TestSaveClass()
+			},
+			"not found class",
+			func(require *require.Assertions, res *nft.QueryClassResponse) {},
+		},
+		{
+			"success",
+			func(require *require.Assertions) {
+				class = nft.Class{
+					Id:          testClassID,
+					Name:        testClassName,
+					Symbol:      testClassSymbol,
+					Description: testClassDescription,
+					Uri:         testClassURI,
+					UriHash:     testClassURIHash,
+				}
+				req = &nft.QueryClassRequest{
+					ClassId: testClassID,
+				}
+			},
+			"",
+			func(require *require.Assertions, res *nft.QueryClassResponse) {
+				require.Equal(*res.Class, class)
+			},
+		},
+	}
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			require := suite.Require()
+			tc.malleate(require)
+			result, err := suite.queryClient.Class(gocontext.Background(), req)
+			if tc.expError == "" {
+				require.NoError(err)
+			} else {
+				require.Error(err)
+				require.Contains(err.Error(), tc.expError)
+			}
+			tc.postTest(require, result)
+		})
+	}
+}
+
+func (suite *TestSuite) TestGRPCQueryClasses() {
+	var (
+		req     *nft.QueryClassesRequest
+		classes []nft.Class
+	)
+	testCases := []struct {
+		msg      string
+		malleate func(require *require.Assertions)
+		expError string
+		postTest func(require *require.Assertions, res *nft.QueryClassesResponse)
+	}{
+		{
+			"success Class not exist",
+			func(require *require.Assertions) {
+				req = &nft.QueryClassesRequest{}
+			},
+			"",
+			func(require *require.Assertions, res *nft.QueryClassesResponse) {
+				require.Len(res.Classes, 0)
+			},
+		},
+		{
+			"success",
+			func(require *require.Assertions) {
+				req = &nft.QueryClassesRequest{}
+				classes = []nft.Class{
+					{
+						Id:          testClassID,
+						Name:        testClassName,
+						Symbol:      testClassSymbol,
+						Description: testClassDescription,
+						Uri:         testClassURI,
+						UriHash:     testClassURIHash,
+					},
+				}
+				suite.TestSaveClass()
+			},
+			"",
+			func(require *require.Assertions, res *nft.QueryClassesResponse) {
+				require.Len(res.Classes, 1)
+				require.Equal(*res.Classes[0], classes[0])
+			},
+		},
+	}
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			require := suite.Require()
+			tc.malleate(require)
+			result, err := suite.queryClient.Classes(gocontext.Background(), req)
 			if tc.expError == "" {
 				require.NoError(err)
 			} else {

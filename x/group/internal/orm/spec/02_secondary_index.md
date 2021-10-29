@@ -10,7 +10,7 @@ A `MultiKeyIndex` is an index where multiple entries can point to the same under
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/430163ed4eefcc0d67b706411ffc0b7c5414cd90/x/group/internal/orm/index.go#L25-L31
 
-Internally, it uses an `indexer` that manages the persistence of the index based on searchable keys and create/update/delete operations.
+Internally, it uses an `Indexer` that manages the persistence of the index based on searchable keys and create/update/delete operations.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/430163ed4eefcc0d67b706411ffc0b7c5414cd90/x/group/internal/orm/index.go#L15-L19
 

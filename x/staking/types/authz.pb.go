@@ -69,6 +69,8 @@ func (AuthorizationType) EnumDescriptor() ([]byte, []int) {
 }
 
 // StakeAuthorization defines authorization for delegate/undelegate/redelegate.
+//
+// Since: cosmos-sdk 0.43
 type StakeAuthorization struct {
 	// max_tokens specifies the maximum amount of tokens can be delegate to a validator. If it is
 	// empty, there is no spend limit and any amount of coins can be delegated.

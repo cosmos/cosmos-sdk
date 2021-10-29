@@ -33,6 +33,8 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // QueryAccountsRequest is the request type for the Query/Accounts RPC method.
+//
+// Since: cosmos-sdk 0.43
 type QueryAccountsRequest struct {
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -79,6 +81,8 @@ func (m *QueryAccountsRequest) GetPagination() *query.PageRequest {
 }
 
 // QueryAccountsResponse is the response type for the Query/Accounts RPC method.
+//
+// Since: cosmos-sdk 0.43
 type QueryAccountsResponse struct {
 	// accounts are the existing accounts
 	Accounts []*any.Any `protobuf:"bytes,1,rep,name=accounts,proto3" json:"accounts,omitempty"`
@@ -338,9 +342,18 @@ func (m *QueryModuleAccountsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryModuleAccountsRequest proto.InternalMessageInfo
 
-// QueryModuleAccountsResponse is the response type for the Query/ModuleAccounts RPC method.
-type QueryModuleAccountsResponse struct {
-	Accounts []*any.Any `protobuf:"bytes,1,rep,name=accounts,proto3" json:"accounts,omitempty"`
+// QueryClient is the client API for Query service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type QueryClient interface {
+	// Accounts returns all the existing accounts
+	//
+	// Since: cosmos-sdk 0.43
+	Accounts(ctx context.Context, in *QueryAccountsRequest, opts ...grpc.CallOption) (*QueryAccountsResponse, error)
+	// Account returns account details based on address.
+	Account(ctx context.Context, in *QueryAccountRequest, opts ...grpc.CallOption) (*QueryAccountResponse, error)
+	// Params queries all parameters.
+	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 }
 
 func (m *QueryModuleAccountsResponse) Reset()         { *m = QueryModuleAccountsResponse{} }
@@ -383,9 +396,16 @@ func (m *QueryModuleAccountsResponse) GetAccounts() []*any.Any {
 	return nil
 }
 
-// QueryModuleAccountByNameRequest is the request type for the Query/ModuleAccountByName RPC method.
-type QueryModuleAccountByNameRequest struct {
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+// QueryServer is the server API for Query service.
+type QueryServer interface {
+	// Accounts returns all the existing accounts
+	//
+	// Since: cosmos-sdk 0.43
+	Accounts(context.Context, *QueryAccountsRequest) (*QueryAccountsResponse, error)
+	// Account returns account details based on address.
+	Account(context.Context, *QueryAccountRequest) (*QueryAccountResponse, error)
+	// Params queries all parameters.
+	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 }
 
 func (m *QueryModuleAccountByNameRequest) Reset()         { *m = QueryModuleAccountByNameRequest{} }

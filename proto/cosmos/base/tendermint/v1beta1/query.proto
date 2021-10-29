@@ -147,7 +147,8 @@ message VersionInfo {
   string          build_tags         = 5;
   string          go_version         = 6;
   repeated Module build_deps         = 7;
-  string          cosmos_sdk_version = 8 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.43"];
+  // Since: cosmos-sdk 0.43
+  string          cosmos_sdk_version = 8;
 }
 
 // Module is the type for VersionInfo

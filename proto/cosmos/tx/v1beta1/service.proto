@@ -164,7 +164,9 @@ message SimulateRequest {
   // Deprecated. Send raw tx bytes instead.
   cosmos.tx.v1beta1.Tx tx = 1 [deprecated = true];
   // tx_bytes is the raw transaction.
-  bytes tx_bytes = 2 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.43"];
+  //
+  // Since: cosmos-sdk 0.43
+  bytes tx_bytes = 2;
 }
 
 // SimulateResponse is the response type for the

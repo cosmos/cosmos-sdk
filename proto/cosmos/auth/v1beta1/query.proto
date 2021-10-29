@@ -13,9 +13,9 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 
 // Query defines the gRPC querier service.
 service Query {
-  // Accounts returns all the existing accounts.
-  // When called from another module, this query might consume a high amount of
-  // gas if the pagination field is incorrectly set.
+  // Accounts returns all the existing accounts
+  //
+  // Since: cosmos-sdk 0.43
   rpc Accounts(QueryAccountsRequest) returns (QueryAccountsResponse) {
     option (cosmos_proto.method_added_in)      = "cosmos-sdk 0.43";
     option (cosmos.query.v1.module_query_safe) = true;
@@ -81,6 +81,8 @@ service Query {
 }
 
 // QueryAccountsRequest is the request type for the Query/Accounts RPC method.
+//
+// Since: cosmos-sdk 0.43
 message QueryAccountsRequest {
   option (cosmos_proto.message_added_in) = "cosmos-sdk 0.43";
   // pagination defines an optional pagination for the request.
@@ -88,6 +90,8 @@ message QueryAccountsRequest {
 }
 
 // QueryAccountsResponse is the response type for the Query/Accounts RPC method.
+//
+// Since: cosmos-sdk 0.43
 message QueryAccountsResponse {
   option (cosmos_proto.message_added_in) = "cosmos-sdk 0.47";
   // accounts are the existing accounts

@@ -1,0 +1,25 @@
+// Since: cosmos-sdk 0.43
+syntax = "proto3";
+package cosmos.authz.v1beta1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/authz";
+
+// EventGrant is emitted on Msg/Grant
+message EventGrant {
+  // Msg type URL for which an autorization is granted
+  string msg_type_url = 2;
+  // Granter account address
+  string granter = 3;
+  // Grantee account address
+  string grantee = 4;
+}
+
+// EventRevoke is emitted on Msg/Revoke
+message EventRevoke {
+  // Msg type URL for which an autorization is revoked
+  string msg_type_url = 2;
+  // Granter account address
+  string granter = 3;
+  // Grantee account address
+  string grantee = 4;
+}

@@ -1,0 +1,24 @@
+// Since: cosmos-sdk 0.43
+syntax = "proto3";
+package cosmos.authz.v1beta1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/authz";
+
+// GenesisState defines the authz module's genesis state.
+message GenesisState {
+  repeated GrantAuthorization authorization = 1 [(gogoproto.nullable) = false];
+}
+
+// GrantAuthorization defines the GenesisState/GrantAuthorization type.
+message GrantAuthorization {
+  string granter = 1;
+  string grantee = 2;
+
+  google.protobuf.Any       authorization = 3 [(cosmos_proto.accepts_interface) = "Authorization"];
+  google.protobuf.Timestamp expiration    = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}

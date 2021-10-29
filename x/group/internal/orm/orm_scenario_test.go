@@ -1,6 +1,7 @@
 package orm
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"testing"
@@ -14,6 +15,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
+
+// Testing ORM with arbitrary metadata length
+const metadataLen = 10
 
 func TestKeeperEndToEndWithAutoUInt64Table(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
@@ -272,6 +276,144 @@ func TestGasCostsPrimaryKeyTable(t *testing.T) {
 		err = k.primaryKeyTable.Delete(gCtx.KVStore(store), &m)
 		require.NoError(t, err)
 		t.Logf("%d: gas consumed on delete: %d", i, gCtx.GasConsumed())
+	}
+}
+
+func TestExportImportStateAutoUInt64Table(t *testing.T) {
+	interfaceRegistry := types.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+
+	ctx := NewMockContext()
+	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+
+	k := NewTestKeeper(cdc)
+
+	testRecordsNum := 10
+	for i := 1; i <= testRecordsNum; i++ {
+		tm := testdata.TableModel{
+			Id:       uint64(i),
+			Name:     fmt.Sprintf("my test %d", i),
+			Metadata: bytes.Repeat([]byte{byte(i)}, metadataLen),
+		}
+
+		rowID, err := k.autoUInt64Table.Create(store, &tm)
+		require.NoError(t, err)
+		require.Equal(t, uint64(i), rowID)
+	}
+	var tms []*testdata.TableModel
+	seqVal, err := k.autoUInt64Table.Export(store, &tms)
+	require.NoError(t, err)
+
+	// when a new db seeded
+	ctx = NewMockContext()
+	store = ctx.KVStore(sdk.NewKVStoreKey("test"))
+
+	err = k.autoUInt64Table.Import(store, tms, seqVal)
+	require.NoError(t, err)
+
+	// then all data is set again
+	for i := 1; i <= testRecordsNum; i++ {
+		require.True(t, k.autoUInt64Table.Has(store, uint64(i)))
+		var loaded testdata.TableModel
+		rowID, err := k.autoUInt64Table.GetOne(store, uint64(i), &loaded)
+		require.NoError(t, err)
+
+		require.Equal(t, RowID(EncodeSequence(uint64(i))), rowID)
+		assert.Equal(t, fmt.Sprintf("my test %d", i), loaded.Name)
+		exp := bytes.Repeat([]byte{byte(i)}, metadataLen)
+		assert.Equal(t, exp, loaded.Metadata)
+
+		// and also the indexes
+		exists, err := k.autoUInt64TableModelByMetadataIndex.Has(store, exp)
+		require.NoError(t, err)
+		require.True(t, exists)
+
+		it, err := k.autoUInt64TableModelByMetadataIndex.Get(store, exp)
+		require.NoError(t, err)
+		var all []testdata.TableModel
+		ReadAll(it, &all)
+		require.Len(t, all, 1)
+		assert.Equal(t, loaded, all[0])
+	}
+	require.Equal(t, uint64(testRecordsNum), k.autoUInt64Table.Sequence().CurVal(store))
+}
+
+func TestExportImportStatePrimaryKeyTable(t *testing.T) {
+	interfaceRegistry := types.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+
+	ctx := NewMockContext()
+	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+
+	k := NewTestKeeper(cdc)
+
+	testRecordsNum := 10
+	testRecords := make([]testdata.TableModel, testRecordsNum)
+	for i := 1; i <= testRecordsNum; i++ {
+		tm := testdata.TableModel{
+			Id:       uint64(i),
+			Name:     fmt.Sprintf("my test %d", i),
+			Number:   uint64(i - 1),
+			Metadata: bytes.Repeat([]byte{byte(i)}, metadataLen),
+		}
+
+		err := k.primaryKeyTable.Create(store, &tm)
+		require.NoError(t, err)
+		testRecords[i-1] = tm
+	}
+	var tms []*testdata.TableModel
+	_, err := k.primaryKeyTable.Export(store, &tms)
+	require.NoError(t, err)
+
+	// when a new db seeded
+	ctx = NewMockContext()
+	store = ctx.KVStore(sdk.NewKVStoreKey("test"))
+
+	err = k.primaryKeyTable.Import(store, tms, 0)
+	require.NoError(t, err)
+
+	// then all data is set again
+	it, err := k.primaryKeyTable.PrefixScan(store, nil, nil)
+	require.NoError(t, err)
+	var loaded []testdata.TableModel
+	keys, err := ReadAll(it, &loaded)
+	require.NoError(t, err)
+	for i := range keys {
+		assert.Equal(t, PrimaryKey(&testRecords[i]), keys[i].Bytes())
+	}
+	assert.Equal(t, testRecords, loaded)
+
+	// and first index setup
+	for _, v := range testRecords {
+		it, err = k.primaryKeyTableModelByNameIndex.Get(store, v.Name)
+		require.NoError(t, err)
+		loaded = nil
+		keys, err = ReadAll(it, &loaded)
+		require.NoError(t, err)
+		assert.Equal(t, []RowID{PrimaryKey(&v)}, keys)
+		assert.Equal(t, []testdata.TableModel{v}, loaded)
+	}
+
+	// and second index setup
+	for _, v := range testRecords {
+		it, err = k.primaryKeyTableModelByNumberIndex.Get(store, v.Number)
+		require.NoError(t, err)
+		loaded = nil
+		keys, err = ReadAll(it, &loaded)
+		require.NoError(t, err)
+		assert.Equal(t, []RowID{PrimaryKey(&v)}, keys)
+		assert.Equal(t, []testdata.TableModel{v}, loaded)
+	}
+
+	// and uint64 index setup
+	for _, v := range testRecords {
+		it, err = k.primaryKeyTableModelByMetadataIndex.Get(store, v.Metadata)
+		require.NoError(t, err)
+		loaded = nil
+		keys, err = ReadAll(it, &loaded)
+		require.NoError(t, err)
+		assert.Equal(t, []RowID{PrimaryKey(&v)}, keys)
+		assert.Equal(t, []testdata.TableModel{v}, loaded)
 	}
 }
 

@@ -179,16 +179,8 @@ func SimulateFromSeed(
 			config.Lean, config.ChainID,
 		)
 
-		if timeFutureOps != nil {
-			if futureOps == nil {
-				futureOps = make([]simulation.FutureOperation, 0, len(timeFutureOps))
-			}
-			futureOps = append(futureOps, timeFutureOps...)
-		}
-
-		if futureOps != nil {
-			queueOperations(operationQueue, timeOperationQueue, futureOps)
-		}
+		futureOps = append(futureOps, timeFutureOps...)
+		queueOperations(operationQueue, timeOperationQueue, futureOps)
 
 		// run standard operations
 		operations := blockSimulator(r, app, ctx, accs, header)

@@ -824,11 +824,20 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 	for i := 0; i < len(ubd.Entries); i++ {
 		entry := ubd.Entries[i]
 		if entry.IsMature(ctxTime) {
-			// call hook, if error is returned, stop unbonding
-			err := k.BeforeUnbondingDelegationEntryComplete(ctx, entry.Id)
-			if err == nil {
+			// This hook allows external modules to stop an unbonding delegation entry from fully unbonding
+			// when the completionTime has passed. This allows them to prolong the unbonding period.
+			stop := k.BeforeUnbondingDelegationEntryComplete(ctx, entry.Id)
+			if stop {
+				// Move entry to stopped UBDE bucket to be completed later
 				ubd.RemoveEntry(int64(i))
 				i--
+
+				k.SetStoppedUnbondingDelegationEntry(ctx, entry)
+			} else {
+				// Proceed with unbonding
+				ubd.RemoveEntry(int64(i))
+				i--
+
 				// track undelegation only when remaining or truncated shares are non-zero
 				if !entry.Balance.IsZero() {
 					amt := sdk.NewCoin(bondDenom, entry.Balance)
@@ -840,12 +849,6 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 
 					balances = balances.Add(amt)
 				}
-			} else {
-				// Move entry to stopped UBDE bucket to be completed later
-				ubd.RemoveEntry(int64(i))
-				i--
-
-				k.SetStoppedUnbondingDelegationEntry(ctx, entry)
 			}
 		}
 	}
@@ -860,30 +863,29 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 	return balances, nil
 }
 
-func (k Keeper) CompleteStoppedUnbonding(ctx sdk.Context, id uint64) error {
-	entry, found := k.GetStoppedUnbondingDelegationEntry(ctx, id)
+func (k Keeper) CompleteStoppedUnbonding(ctx sdk.Context, id uint64) (err error, found bool) {
+	ubde, found := k.GetStoppedUnbondingDelegationEntry(ctx, id)
 	if !found {
-		// ERROR
+		return nil, false
 	}
 
-	delegatorAddress, err := sdk.AccAddressFromBech32(entry.DelegatorAddress)
+	delegatorAddress, err := sdk.AccAddressFromBech32(ubde.DelegatorAddress)
 	if err != nil {
-		return err
+		return err, true
 	}
 
 	bondDenom := k.GetParams(ctx).BondDenom
 
 	// track undelegation only when remaining or truncated shares are non-zero
-	if !entry.Balance.IsZero() {
-		amt := sdk.NewCoin(bondDenom, entry.Balance)
+	if !ubde.Balance.IsZero() {
+		amt := sdk.NewCoin(bondDenom, ubde.Balance)
 		if err := k.bankKeeper.UndelegateCoinsFromModuleToAccount(
 			ctx, types.NotBondedPoolName, delegatorAddress, sdk.NewCoins(amt),
 		); err != nil {
-			return err
+			return err, true
 		}
 	}
-
-	return nil
+	return nil, true
 }
 
 // begin unbonding / redelegation; create a redelegation record

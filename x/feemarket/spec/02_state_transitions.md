@@ -33,8 +33,8 @@ else if parentGasUsed == params.BlockGasTarget:
 	expectedGP = parentGP
 else if parentGasUsed > params.BlockGasTarget:
 	delta = parentGasUsed - params.BlockGasTarget
-	delta = max(parentBaseFee * delta / params.BlockGasTarget / params.BaseGasPriceChangeDenominator, 1)
-	expectedGP = parentBaseFee + delta
+	delta = max(parentGP * delta / params.BlockGasTarget / params.BaseGasPriceChangeDenominator, 1)
+	expectedGP = parentGP + delta
 else:
 	delta =  params.BlockGasTarget - parentGasUsed
 	delta = parentGP * delta / params.BlockGasTarget / params.BaseGasPriceChangeDenominator

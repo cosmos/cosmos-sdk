@@ -11,4 +11,4 @@ The `x/feemarket` module contains the following parameters:
 | InitialBaseGasPrices          | Coins  | "1000uatom" |
 | BaseGasPriceChangeDenominator | uint32 | 8           |
 
-- `BlockGasTarget`, should be smaller than `ConsensusParams.Block.MaxGas` if the latter one is specified.
+- `BlockGasTarget`, should be smaller than or equal to `ConsensusParams.Block.MaxGas` if the latter one is specified.

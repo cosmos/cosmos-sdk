@@ -354,7 +354,7 @@ lint-fix:
 	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLintFix}$$"; then docker start -a $(containerMarkdownLintFix); else docker run --name $(containerMarkdownLintFix) -i -v "$(CURDIR):/work" $(markdownLintImage) . --fix; fi
 
 lint-go:
-	test -n "`golangci-lint version | awk '$4 >= 1.42'`"
+	@@test -n "$$golangci-lint version | awk '$4 >= 1.42')"
 	$(golangci_lint_cmd) run --out-format=tab $(GIT_DIFF)
 
 .PHONY: lint lint-fix

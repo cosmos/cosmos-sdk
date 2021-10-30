@@ -110,6 +110,96 @@ We need to be able to process transactions and roll-back state updates if a tran
 
 We identified use-cases, where modules will need to save an object commitment without storing an object itself. Sometimes clients are receiving complex objects, and they have no way to prove a correctness of that object without knowing the storage layout. For those use cases it would be easier to commit to the object without storing it directly.
 
+<<<<<<< HEAD
+=======
+### Refactor MultiStore
+
+The Stargate `/store` implementation (store/v1) adds an additional layer in the SDK store construction - the `MultiStore` structure. The multistore exists to support the modularity of the Cosmos SDK - each module is using its own instance of IAVL, but in the current implementation, all instances share the same database. The latter indicates, however, that the implementation doesn't provide true modularity. Instead it causes problems related to race condition and atomic DB commits (see: [\#6370](https://github.com/cosmos/cosmos-sdk/issues/6370) and [discussion](https://github.com/cosmos/cosmos-sdk/discussions/8297#discussioncomment-757043)).
+
+We propose to reduce the multistore concept from the SDK, and to use a single instance of `SC` and `SS` in a `RootStore` object. To avoid confusion, we should rename the `MultiStore` interface to `RootStore`. The `RootStore` will have the following interface; the methods for configuring tracing and listeners are omitted for brevity.
+
+```go
+// Used where read-only access to versions is needed.
+type BasicRootStore interface {
+    Store
+    GetKVStore(StoreKey) KVStore
+    CacheRootStore() CacheRootStore
+}
+
+// Used as the main app state, replacing CommitMultiStore.
+type CommitRootStore interface {
+    BasicRootStore
+    Committer
+    Snapshotter
+
+    GetVersion(uint64) (BasicRootStore, error)
+    SetInitialVersion(uint64) error
+
+    ... // Trace and Listen methods
+}
+
+// Replaces CacheMultiStore for branched state.
+type CacheRootStore interface {
+    BasicRootStore
+    Write()
+
+    ... // Trace and Listen methods
+}
+
+// Example of constructor parameters for the concrete type.
+type RootStoreConfig struct {
+    Upgrades        *StoreUpgrades
+    InitialVersion  uint64
+
+    ReservePrefix(StoreKey, StoreType)
+}
+```
+
+<!-- TODO: Review whether these types can be further reduced or simplified -->
+<!-- TODO: RootStorePersistentCache type -->
+
+In contrast to `MultiStore`, `RootStore` doesn't allow to dynamically mount sub-stores or provide an arbitrary backing DB for individual sub-stores.
+
+NOTE: modules will be able to use a special commitment and their own DBs. For example: a module which will use ZK proofs for state can store and commit this proof in the `RootStore` (usually as a single record) and manage the specialized store privately or using the `SC` low level interface.
+
+#### Compatibility support
+
+To ease the transition to this new interface for users, we can create a shim which wraps a `CommitMultiStore` but provides a `CommitRootStore` interface, and expose functions to safely create and access the underlying `CommitMultiStore`.
+
+The new `RootStore` and supporting types can be implemented in a `store/v2` package to avoid breaking existing code.
+
+#### Merkle Proofs and IBC
+
+Currently, an IBC (v1.0) Merkle proof path consists of two elements (`["<store-key>", "<record-key>"]`), with each key corresponding to a separate proof. These are each verified according to individual [ICS-23 specs](https://github.com/cosmos/ibc-go/blob/f7051429e1cf833a6f65d51e6c3df1609290a549/modules/core/23-commitment/types/merkle.go#L17), and the result hash of each step is used as the committed value of the next step, until a root commitment hash is obtained.
+The root hash of the proof for `"<record-key>"` is hashed with the `"<store-key>"` to validate against the App Hash.
+
+This is not compatible with the `RootStore`, which stores all records in a single Merkle tree structure, and won't produce separate proofs for the store- and record-key. Ideally, the store-key component of the proof could just be omitted, and updated to use a "no-op" spec, so only the record-key is used. However, because the IBC verification code hardcodes the `"ibc"` prefix and applies it to the SDK proof as a separate element of the proof path, this isn't possible without a breaking change. Breaking this behavior would severely impact the Cosmos ecosystem which already widely adopts the IBC module. Requesting an update of the IBC module across the chains is a time consuming effort and not easily feasible.
+
+As a workaround, the `RootStore` will have to use two separate SMTs (they could use the same underlying DB): one for IBC state and one for everything else. A simple Merkle map that reference these SMTs will act as a Merkle Tree to create a final App hash. The Merkle map is not stored in a DBs - it's constructed in the runtime. The IBC substore key must be `"ibc"`.
+
+The workaround can still guarantee atomic syncs: the [proposed DB backends](#evaluated-kv-databases) support atomic transactions and efficient rollbacks, which will be used in the commit phase.
+
+The presented workaround can be used until the IBC module is fully upgraded to supports single-element commitment proofs.
+
+### Optimization: compress module key prefixes
+
+We consider a compression of prefix keys by creating a mapping from module key to an integer, and serializing the integer using varint coding. Varint coding assures that different values don't have common byte prefix. For Merkle Proofs we can't use prefix compression - so it should only apply for the `SS` keys. Moreover, the prefix compression should be only applied for the module namespace. More precisely:
+
++ each module has it's own namespace;
++ when accessing a module namespace we create a KVStore with embedded prefix;
++ that prefix will be compressed only when accessing and managing `SS`.
+
+We need to assure that the codes won't change. We can fix the mapping in a static variable (provided by an app) or SS state under a special key.
+
+TODO: need to make decision about the key compression.
+
+## Optimization: SS key compression
+
+Some objects may be saved with key, which contains a Protobuf message type. Such keys are long. We could save a lot of space if we can map Protobuf message types in varints.
+
+TODO: finalize this or move to another ADR.
+
+>>>>>>> 479485f95 (style: lint go and markdown (#10060))
 ## Consequences
 
 ### Backwards Compatibility

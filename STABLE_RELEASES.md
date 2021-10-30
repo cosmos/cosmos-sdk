@@ -2,13 +2,85 @@
 
 *Stable Release Series* continue to receive bug fixes until they reach **End Of Life**.
 
+<<<<<<< HEAD:STABLE_RELEASES.md
 Only the following release series are currently supported and receive bug fixes:
+=======
+## Major Release Procedure
+
+A _major release_ is an increment of the first number (eg: `v1.2` → `v2.0.0`) or the _point number_ (eg: `v1.1 → v1.2.0`, also called _point release_). Each major release opens a _stable release series_ and receives updates outlined in the [Major Release Maintenance](#major-release-maintenance)_section.
+
+Before making a new _major_ release we do beta and release candidate releases. For example, for release 1.0.0:
+
+```
+v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → v1.0.0
+```
+
+- Release a first beta version on the `master` branch and freeze `master` from receiving any new features. After beta is released, we focus on releasing the release candidate:
+    - finish audits and reviews
+    - kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks)
+    - perform functional tests
+    - add more tests
+    - release new beta version as the bugs are discovered and fixed.
+- After the team feels that the `master` works fine we create a `release/vY` branch (going forward known a release branch), where `Y` is the version number, with the patch part substituted to `x` (eg: 0.42.x, 1.0.x). Ensure the release branch is protected so that pushes against the release branch are permitted only by the release manager or release coordinator.
+    - **PRs targeting this branch can be merged _only_ when exceptional circumstances arise**
+    - update the GitHub mergify integration by adding instructions for automatically backporting commits from `master` to the `release/vY` using the `backport/Y` label.
+- In the release branch, prepare a new version section in the `CHANGELOG.md`
+    - All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
+    - Copy the entries into a `RELEASE_CHANGELOG.md`, this is needed so the bot knows which entries to add to the release page on GitHub.
+- Create a new annotated git tag for a release candidate  (eg: `git tag -a v1.1.0-rc1`) in the release branch.
+    - from this point we unfreeze master.
+    - the SDK teams collaborate and do their best to run testnets in order to validate the release.
+    - when bugs are found, create a PR for `master`, and backport fixes to the release branch.
+    - create new release candidate tags after bugs are fixed.
+- After the team feels the release branch is stable and everything works, create a full release:
+    - update `CHANGELOG.md`.
+    - create a new annotated git tag (eg `git -a v1.1.0`) in the release branch.
+    - Create a GitHub release.
+
+Following _semver_ philosophy, point releases after `v1.0`:
+
+- must not break API
+- can break consensus
+
+Before `v1.0`, point release can break both point API and consensus.
+
+## Patch Release Procedure
+
+A _patch release_ is an increment of the patch number (eg: `v1.2.0` → `v1.2.1`).
+
+**Patch release must not break API nor consensus.**
+
+Updates to the release branch should come from `master` by backporting PRs (usually done by automatic cherry pick followed by a PRs to the release branch). The backports must be marked using `backport/Y` label in PR for master.
+It is the PR author's responsibility to fix merge conflicts, update changelog entries, and
+ensure CI passes. If a PR originates from an external contributor, a core team member assumes
+responsibility to perform this process instead of the original author.
+Lastly, it is core team's responsibility to ensure that the PR meets all the SRU criteria.
+
+Point Release must follow the [Stable Release Policy](#stable-release-policy).
+
+After the release branch has all commits required for the next patch release:
+
+- update `CHANGELOG.md`.
+- create a new annotated git tag (eg `git -a v1.1.0`) in the release branch.
+- Create a GitHub release.
+
+## Major Release Maintenance
+
+Major Release series continue to receive bug fixes (released as a Patch Release) until they reach **End Of Life**.
+Major Release series is maintained in compliance with the **Stable Release Policy** as described in this document.
+Note: not every Major Release is denoted as stable releases.
+
+Only the following major release series have a stable release status:
+>>>>>>> 479485f95 (style: lint go and markdown (#10060)):RELEASE_PROCESS.md
 
 * **0.42 «Stargate»** will be supported until 6 months after **0.43.0** is published. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
 * **0.43 «Stargate»** is the latest stable release.
 
+<<<<<<< HEAD:STABLE_RELEASES.md
 The **0.43 «Stargate»** release series is maintained in compliance with the **Stable Release Policy** as described in this document.
 
+=======
+>>>>>>> 479485f95 (style: lint go and markdown (#10060)):RELEASE_PROCESS.md
 ## Stable Release Policy
 
 This policy presently applies *only* to the following release series:

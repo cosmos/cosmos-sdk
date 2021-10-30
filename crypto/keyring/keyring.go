@@ -475,6 +475,10 @@ func (ks keystore) List() ([]Info, error) {
 		return nil, err
 	}
 
+<<<<<<< HEAD
+=======
+	var res []*Record //nolint:prealloc
+>>>>>>> 479485f95 (style: lint go and markdown (#10060))
 	sort.Strings(keys)
 
 	for _, key := range keys {

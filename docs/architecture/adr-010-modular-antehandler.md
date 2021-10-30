@@ -273,10 +273,6 @@ Cons:
 1. Decorator pattern may have a deeply nested structure that is hard to understand, this is mitigated by having the decorator order explicitly listed in the `ChainAnteDecorators` function.
 2. Does not make use of the ModuleManager design. Since this is already being used for BeginBlocker/EndBlocker, this proposal seems unaligned with that design pattern.
 
-## Status
-
-> Accepted Simple Decorators approach
-
 ## Consequences
 
 Since pros and cons are written for each approach, it is omitted from this section

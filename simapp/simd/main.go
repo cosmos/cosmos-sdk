@@ -1,9 +1,9 @@
 package main
 
 import (
-	"os"
+	"os" //nolint:typecheck
 
-	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/server" //nolint:typecheck
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/simd/cmd"

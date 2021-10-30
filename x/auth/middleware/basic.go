@@ -295,7 +295,7 @@ func (cgts consumeTxSizeGasTxHandler) simulateSigGasCost(ctx context.Context, tx
 	return nil
 }
 
-func (cgts consumeTxSizeGasTxHandler) consumeTxSizeGas(ctx context.Context, _ sdk.Tx, txBytes []byte, simulate bool) error {
+func (cgts consumeTxSizeGasTxHandler) consumeTxSizeGas(ctx context.Context, _ sdk.Tx, txBytes []byte) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	params := cgts.ak.GetParams(sdkCtx)
 	sdkCtx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(txBytes)), "txSize")
@@ -305,7 +305,7 @@ func (cgts consumeTxSizeGasTxHandler) consumeTxSizeGas(ctx context.Context, _ sd
 
 // CheckTx implements tx.Handler.CheckTx.
 func (cgts consumeTxSizeGasTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	if err := cgts.consumeTxSizeGas(ctx, tx, req.GetTx(), false); err != nil {
+	if err := cgts.consumeTxSizeGas(ctx, tx, req.GetTx()); err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
 
@@ -314,7 +314,7 @@ func (cgts consumeTxSizeGasTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, re
 
 // DeliverTx implements tx.Handler.DeliverTx.
 func (cgts consumeTxSizeGasTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	if err := cgts.consumeTxSizeGas(ctx, tx, req.GetTx(), false); err != nil {
+	if err := cgts.consumeTxSizeGas(ctx, tx, req.GetTx()); err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
 
@@ -323,7 +323,7 @@ func (cgts consumeTxSizeGasTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, 
 
 // SimulateTx implements tx.Handler.SimulateTx.
 func (cgts consumeTxSizeGasTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	if err := cgts.consumeTxSizeGas(ctx, sdkTx, req.TxBytes, true); err != nil {
+	if err := cgts.consumeTxSizeGas(ctx, sdkTx, req.TxBytes); err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}
 

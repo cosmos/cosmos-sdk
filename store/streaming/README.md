@@ -1,4 +1,5 @@
 # State Streaming Service
+
 This package contains the constructors for the `StreamingService`s used to write state changes out from individual KVStores to a
 file or stream, as described in [ADR-038](../../docs/architecture/adr-038-state-listening.md) and defined in [types/streaming.go](../../baseapp/streaming.go).
 The child directories contain the implementations for specific output destinations.
@@ -24,7 +25,6 @@ The `StreamingService` is configured from within an App using the `AppOptions` l
 `store.streamers` contains a list of the names of the `StreamingService` implementations to employ which are used by `ServiceTypeFromString`
 to return the `ServiceConstructor` for that particular implementation:
 
- 
 ```go
 listeners := cast.ToStringSlice(appOpts.Get("store.streamers"))
 for _, listenerName := range listeners {

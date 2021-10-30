@@ -38,7 +38,8 @@ This represents a self-contained and immutable view of a database's version hist
 ### In-memory DB
 
 The in-memory DB in the `db/memdb` package cannot be persisted to disk. It is implemented using the Google [btree](https://pkg.go.dev/github.com/google/btree) library.
-  * This currently does not perform write conflict detection, so it only supports a single open write-transaction at a time. Multiple and concurrent read-transactions are supported.
+
+* This currently does not perform write conflict detection, so it only supports a single open write-transaction at a time. Multiple and concurrent read-transactions are supported.
 
 ### BadgerDB
 
@@ -56,6 +57,7 @@ err := tx2.Commit() // err is non-nil
 ```
 
 But this will not:
+
 ```go
 tx1, tx2 := db.Writer(), db.ReadWriter()
 key := []byte("key")
@@ -64,6 +66,7 @@ tx2.Set(key, []byte("b"))
 tx1.Commit() // ok
 tx2.Commit() // ok
 ```
+
 ### RocksDB
 
 A [RocksDB](https://github.com/facebook/rocksdb)-based backend. Internally this uses [`OptimisticTransactionDB`](https://github.com/facebook/rocksdb/wiki/Transactions#optimistictransactiondb) to allow concurrent transactions with write conflict detection. Historical versioning is internally implemented with [Checkpoints](https://github.com/facebook/rocksdb/wiki/Checkpoints).

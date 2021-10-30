@@ -1,10 +1,14 @@
 package container
 
-import "reflect"
+import (
+	"reflect"
+
+	"github.com/pkg/errors"
+)
 
 // Option is a functional option for a container.
 type Option interface {
-	isOption()
+	apply(*container) error
 }
 
 // Provide creates a container option which registers the provided dependency
@@ -12,39 +16,76 @@ type Option interface {
 // exception of scoped constructors which are called at most once per scope
 // (see Scope).
 func Provide(constructors ...interface{}) Option {
-	panic("TODO")
+	return containerOption(func(ctr *container) error {
+		return provide(ctr, nil, constructors)
+	})
 }
 
 // ProvideWithScope creates a container option which registers the provided dependency
 // injection constructors that are to be run in the provided scope. Each constructor
 // will be called at most once.
-func ProvideWithScope(scope Scope, constructors ...interface{}) Option {
-	panic("TODO")
+func ProvideWithScope(scopeName string, constructors ...interface{}) Option {
+	return containerOption(func(ctr *container) error {
+		if scopeName == "" {
+			return errors.Errorf("expected non-empty scope name")
+		}
+
+		return provide(ctr, ctr.createOrGetScope(scopeName), constructors)
+	})
 }
 
-// AutoGroupTypes creates an option which registers the provided types as types which
-// will automatically get grouped together. For a given type T, T and []T can
-// be declared as output parameters for constructors as many times within the container
-// as desired. All of the provided values for T can be retrieved by declaring an
-// []T input parameter.
-func AutoGroupTypes(types ...reflect.Type) Option {
-	panic("TODO")
+func provide(ctr *container, scope Scope, constructors []interface{}) error {
+	for _, c := range constructors {
+		rc, err := ExtractProviderDescriptor(c)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		_, err = ctr.addNode(&rc, scope)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	}
+	return nil
 }
 
-// OnePerScopeTypes creates an option which registers the provided types as types which
-// can have up to one value per scope. All of the values for a one-per-scope type T
-// and their respective scopes, can be retrieved by declaring an input parameter map[Scope]T.
-func OnePerScopeTypes(types ...reflect.Type) Option {
-	panic("TODO")
+func Supply(values ...interface{}) Option {
+	loc := LocationFromCaller(1)
+	return containerOption(func(ctr *container) error {
+		for _, v := range values {
+			err := ctr.supply(reflect.ValueOf(v), loc)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+		}
+		return nil
+	})
 }
 
 // Error creates an option which causes the dependency injection container to
 // fail immediately.
 func Error(err error) Option {
-	panic("TODO")
+	return containerOption(func(*container) error {
+		return errors.WithStack(err)
+	})
 }
 
 // Options creates an option which bundles together other options.
 func Options(opts ...Option) Option {
-	panic("TODO")
+	return containerOption(func(ctr *container) error {
+		for _, opt := range opts {
+			err := opt.apply(ctr)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+		}
+		return nil
+	})
 }
+
+type containerOption func(*container) error
+
+func (c containerOption) apply(ctr *container) error {
+	return c(ctr)
+}
+
+var _ Option = (*containerOption)(nil)

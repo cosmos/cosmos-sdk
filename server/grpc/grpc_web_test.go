@@ -7,7 +7,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/textproto"
 	"strconv"
@@ -197,7 +196,7 @@ func (s *GRPCWebTestSuite) makeGrpcRequest(
 		return nil, Trailer{}, nil, err
 	}
 	defer resp.Body.Close()
-	contents, err := ioutil.ReadAll(resp.Body)
+	contents, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, Trailer{}, nil, err
 	}

@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"testing"
 
@@ -842,7 +841,7 @@ func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
 		chunks, err := source.Snapshot(uint64(version), snapshottypes.CurrentFormat)
 		require.NoError(b, err)
 		for reader := range chunks {
-			_, err := io.Copy(ioutil.Discard, reader)
+			_, err := io.Copy(io.Discard, reader)
 			require.NoError(b, err)
 			err = reader.Close()
 			require.NoError(b, err)

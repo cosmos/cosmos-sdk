@@ -3,8 +3,11 @@ package rosetta
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -76,7 +79,9 @@ func NewClient(cfg *Config) (*Client, error) {
 
 	supportedOperations = append(
 		supportedOperations,
-		bank.EventTypeCoinSpent, bank.EventTypeCoinReceived,
+		bank.EventTypeCoinSpent,
+		bank.EventTypeCoinReceived,
+		bank.EventTypeCoinBurn,
 	)
 
 	return &Client{
@@ -185,6 +190,10 @@ func (c *Client) BlockByHash(ctx context.Context, hash string) (crgtypes.BlockRe
 }
 
 func (c *Client) BlockByHeight(ctx context.Context, height *int64) (crgtypes.BlockResponse, error) {
+	height, err := c.getHeight(ctx, height)
+	if err != nil {
+		return crgtypes.BlockResponse{}, crgerrs.WrapError(crgerrs.ErrBadGateway, err.Error())
+	}
 	block, err := c.tmRPC.Block(ctx, height)
 	if err != nil {
 		return crgtypes.BlockResponse{}, crgerrs.WrapError(crgerrs.ErrBadGateway, err.Error())
@@ -204,6 +213,10 @@ func (c *Client) BlockTransactionsByHash(ctx context.Context, hash string) (crgt
 }
 
 func (c *Client) BlockTransactionsByHeight(ctx context.Context, height *int64) (crgtypes.BlockTransactionsResponse, error) {
+	height, err := c.getHeight(ctx, height)
+	if err != nil {
+		return crgtypes.BlockTransactionsResponse{}, crgerrs.WrapError(crgerrs.ErrBadGateway, err.Error())
+	}
 	blockTxResp, err := c.blockTxs(ctx, height)
 	if err != nil {
 		return crgtypes.BlockTransactionsResponse{}, err
@@ -467,4 +480,43 @@ func (c *Client) blockTxs(ctx context.Context, height *int64) (crgtypes.BlockTra
 		BlockResponse: c.converter.ToRosetta().BlockResponse(blockInfo),
 		Transactions:  finalTxs,
 	}, nil
+}
+
+func (c *Client) getHeight(ctx context.Context, height *int64) (realHeight *int64, err error) {
+	if height != nil && *height == -1 {
+		genesisChunk, err := c.tmRPC.GenesisChunked(ctx, 0)
+		if err != nil {
+			return nil, err
+		}
+
+		heightNum, err := extractInitialHeightFromGenesisChunk(genesisChunk.Data)
+		if err != nil {
+			return nil, err
+		}
+
+		realHeight = &heightNum
+	} else {
+		realHeight = height
+	}
+	return
+}
+
+func extractInitialHeightFromGenesisChunk(genesisChunk string) (int64, error) {
+	firstChunk, err := base64.StdEncoding.DecodeString(genesisChunk)
+	if err != nil {
+		return 0, err
+	}
+
+	re, err := regexp.Compile("\"initial_height\":\"(\\d+)\"")
+	if err != nil {
+		return 0, err
+	}
+
+	matches := re.FindStringSubmatch(string(firstChunk))
+	if len(matches) != 2 {
+		return 0, errors.New("failed to fetch initial_height")
+	}
+
+	heightStr := matches[1]
+	return strconv.ParseInt(heightStr, 10, 64)
 }

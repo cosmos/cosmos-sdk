@@ -4,10 +4,11 @@ import (
 	"bufio"
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/spf13/cobra"
 )
 
 // RenameKeyCommand renames a key from the key store.
@@ -31,7 +32,7 @@ private keys stored in a ledger device cannot be renamed with the CLI.
 
 			oldName, newName := args[0], args[1]
 
-			info, err := clientCtx.Keyring.Key(oldName)
+			k, err := clientCtx.Keyring.Key(oldName)
 			if err != nil {
 				return err
 			}
@@ -50,7 +51,7 @@ private keys stored in a ledger device cannot be renamed with the CLI.
 				return err
 			}
 
-			if info.GetType() == keyring.TypeLedger || info.GetType() == keyring.TypeOffline {
+			if k.GetType() == keyring.TypeLedger || k.GetType() == keyring.TypeOffline {
 				cmd.PrintErrln("Public key reference renamed")
 				return nil
 			}

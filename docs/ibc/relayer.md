@@ -16,7 +16,7 @@ of some logic clients may want to be aware of. This is extremely useful when rel
 Any message that uses IBC will emit events for the corresponding TAO logic executed as defined in
 the [IBC events spec](https://github.com/cosmos/ibc-go/blob/main/modules/core/spec/06_events.md).
 
-In the SDK, it can be assumed that for every message there is an event emitted with the type `message`,
+In the Cosmos SDK, it can be assumed that for every message there is an event emitted with the type `message`,
 attribute key `action`, and an attribute value representing the type of message sent
 (`channel_open_init` would be the attribute value for `MsgChannelOpenInit`). If a relayer queries
 for transaction events, it can split message events using this event Type/Attribute Key pair.

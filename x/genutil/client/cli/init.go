@@ -61,7 +61,7 @@ func displayInfo(info printInfo) error {
 		return err
 	}
 
-	_, err = fmt.Fprintf(os.Stderr, "%s\n", string(sdk.MustSortJSON(out)))
+	_, err = fmt.Fprintf(os.Stderr, "%s\n", sdk.MustSortJSON(out))
 
 	return err
 }
@@ -80,8 +80,6 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
-
-			clientCtx = client.ReadHomeFlag(clientCtx, cmd)
 			config.SetRoot(clientCtx.HomeDir)
 
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)

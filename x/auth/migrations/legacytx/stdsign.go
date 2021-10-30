@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -47,10 +48,11 @@ type StdSignDoc struct {
 	Memo          string            `json:"memo" yaml:"memo"`
 	Fee           json.RawMessage   `json:"fee" yaml:"fee"`
 	Msgs          []json.RawMessage `json:"msgs" yaml:"msgs"`
+	Tip           *StdTip           `json:"tip,omitempty" yaml:"tip"`
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.
-func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
+func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, msgs []sdk.Msg, memo string, tip *tx.Tip) []byte {
 	msgsBytes := make([]json.RawMessage, 0, len(msgs))
 	for _, msg := range msgs {
 		legacyMsg, ok := msg.(LegacyMsg)
@@ -61,6 +63,15 @@ func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, 
 		msgsBytes = append(msgsBytes, json.RawMessage(legacyMsg.GetSignBytes()))
 	}
 
+	var stdTip *StdTip
+	if tip != nil {
+		if tip.Tipper == "" {
+			panic(fmt.Errorf("tipper cannot be empty"))
+		}
+
+		stdTip = &StdTip{Amount: tip.Amount, Tipper: tip.Tipper}
+	}
+
 	bz, err := legacy.Cdc.MarshalJSON(StdSignDoc{
 		AccountNumber: accnum,
 		ChainID:       chainID,
@@ -69,6 +80,7 @@ func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, 
 		Msgs:          msgsBytes,
 		Sequence:      sequence,
 		TimeoutHeight: timeout,
+		Tip:           stdTip,
 	})
 	if err != nil {
 		panic(err)
@@ -107,8 +119,8 @@ func (ss StdSignature) MarshalYAML() (interface{}, error) {
 	}
 
 	bz, err := yaml.Marshal(struct {
-		PubKey    string
-		Signature string
+		PubKey    string `json:"pub_key"`
+		Signature string `json:"signature"`
 	}{
 		pk,
 		fmt.Sprintf("%X", ss.Signature),

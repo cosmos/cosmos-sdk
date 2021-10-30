@@ -34,8 +34,8 @@ the Cosmos Hub. The requirements for this vesting account is that it should be
 initialized during genesis with a starting balance `X` and a vesting end
 time `ET`. A vesting account may be initialized with a vesting start time `ST`
 and a number of vesting periods `P`. If a vesting start time is included, the
-vesting period will not begin until start time is reached. If vesting periods
-are included, the vesting will occur over the specified number of periods.
+vesting period does not begin until start time is reached. If vesting periods
+are included, the vesting occurs over the specified number of periods.
 
 For all vesting accounts, the owner of the vesting account is able to delegate
 and undelegate from validators, however they cannot transfer coins to another
@@ -378,7 +378,7 @@ func (cva ContinuousVestingAccount) TrackUndelegation(amount Coins) {
 **Note** `TrackUnDelegation` only modifies the `DelegatedVesting` and `DelegatedFree`
 fields, so upstream callers MUST modify the `Coins` field by adding `amount`.
 
-**Note**: If a delegation is slashed, the continuous vesting account will end up
+**Note**: If a delegation is slashed, the continuous vesting account ends up
 with an excess `DV` amount, even after all its coins have vested. This is because
 undelegating free coins are prioritized.
 
@@ -419,11 +419,11 @@ See the above specification for full implementation details.
 
 ## Genesis Initialization
 
-To initialize both vesting and non-vesting accounts, the `GenesisAccount` struct will
-include new fields: `Vesting`, `StartTime`, and `EndTime`. Accounts meant to be
-of type `BaseAccount` or any non-vesting type will have `Vesting = false`. The
-genesis initialization logic (e.g. `initFromGenesisState`) will have to parse
-and return the correct accounts accordingly based off of these new fields.
+To initialize both vesting and non-vesting accounts, the `GenesisAccount` struct
+includes new fields: `Vesting`, `StartTime`, and `EndTime`. Accounts meant to be
+of type `BaseAccount` or any non-vesting type have `Vesting = false`. The
+genesis initialization logic (e.g. `initFromGenesisState`) must parse
+and return the correct accounts accordingly based off of these fields.
 
 ```go
 type GenesisAccount struct {

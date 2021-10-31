@@ -2,7 +2,7 @@
 order: 9
 -->
 
-## CLI
+# CLI
 
 A user can query and interact with the `slashing` module using the CLI.
 
@@ -37,7 +37,6 @@ signed_blocks_window: "100"
 slash_fraction_double_sign: "0.050000000000000000"
 slash_fraction_downtime: "0.010000000000000000"
 ```
-
 
 #### signing-info
 
@@ -208,7 +207,6 @@ Example Output:
 ## REST
 
 A user can query the `slashing` module using REST endpoints.
-
 
 ### Params
 

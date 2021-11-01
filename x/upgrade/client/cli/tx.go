@@ -96,7 +96,7 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 	cmd.Flags().Int64(FlagUpgradeHeight, 0, "The height at which the upgrade must happen")
 	cmd.Flags().String(FlagUpgradeInfo, "", "Info for the upgrade plan such as new version download urls, etc.")
 	cmd.Flags().Bool(FlagNoValidate, false, "Skip validation of the upgrade info.")
-	cmd.Flags().String(FlagDaemonName, getDefaultDaemonName(), "The name of the executable that is being upgraded (used for upgrade info validation).")
+	cmd.Flags().String(FlagDaemonName, getDefaultDaemonName(), "The name of the executable being upgraded (for upgrade-info validation). Default is the DAEMON_NAME env var, or this executable.")
 
 	return cmd
 }
@@ -185,6 +185,7 @@ func parseArgsToContent(cmd *cobra.Command, name string) (gov.Content, error) {
 // If a DAEMON_NAME env var is set, that is used.
 // Otherwise, the last part of the currently running executable is used.
 func getDefaultDaemonName() string {
+	// DAEMON_NAME is specifically used here to correspond with the Comsovisor setup env vars.
 	name := os.Getenv("DAEMON_NAME")
 	if len(name) == 0 {
 		_, name = filepath.Split(os.Args[0])

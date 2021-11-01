@@ -22,7 +22,7 @@ import (
 // Note: Because a checksum is required, this function cannot be used to download non-archive directories.
 // If dstRoot already exists, some or all of its contents might be updated.
 func DownloadUpgrade(dstRoot, url, daemonName string) error {
-	if err := checkURL(url); err != nil {
+	if err := validateIsURLWithChecksum(url); err != nil {
 		return err
 	}
 	target := filepath.Join(dstRoot, "bin", daemonName)
@@ -95,7 +95,7 @@ func EnsureBinary(path string) error {
 
 // DownloadPlanInfoFromURL gets the contents of the file at the given URL.
 func DownloadPlanInfoFromURL(url string) (string, error) {
-	if err := checkURL(url); err != nil {
+	if err := validateIsURLWithChecksum(url); err != nil {
 		return "", err
 	}
 	tempDir, err := os.MkdirTemp("", "plan-info-reference")
@@ -118,14 +118,13 @@ func DownloadPlanInfoFromURL(url string) (string, error) {
 	return planInfoStr, nil
 }
 
-// checkURL checks that the given url is a url and contains a checksum query parameter.
-func checkURL(urlStr string) error {
+// validateIsURLWithChecksum checks that the given string is a url and contains a checksum query parameter.
+func validateIsURLWithChecksum(urlStr string) error {
 	url, err := neturl.Parse(urlStr)
 	if err != nil {
 		return err
 	}
-	checksum := url.Query().Get("checksum")
-	if len(checksum) == 0 {
+	if len(url.Query().Get("checksum")) == 0 {
 		return errors.New("missing checksum query parameter")
 	}
 	return nil

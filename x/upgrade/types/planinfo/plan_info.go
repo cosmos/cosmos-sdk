@@ -25,7 +25,7 @@ func ParsePlanInfo(infoStr string) (*PlanInfo, error) {
 	infoStr = strings.TrimSpace(infoStr)
 
 	if len(infoStr) == 0 {
-		return nil, errors.New("plan info cannot be blank")
+		return nil, errors.New("plan info must not be blank")
 	}
 
 	// If it's a url, download it and treat the result as the real info.

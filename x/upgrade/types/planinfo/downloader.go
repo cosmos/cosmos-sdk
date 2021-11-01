@@ -70,8 +70,11 @@ func downloadUpgradeAsDir(dstDir, url, daemonName string) error {
 	return fmt.Errorf("url \"%s\" result does not contain a bin/%s or %s file", url, daemonName, daemonName)
 }
 
-// EnsureBinary checks that the given file exists as a regular file.
-// If it exists, this also sets all the executable bits.
+// EnsureBinary checks that the given file exists as a regular file and is executable.
+// An error is returned if:
+//  - The file does not exist.
+//  - The path exists, but is one of: Dir, Symlink, NamedPipe, Socket, Device, CharDevice, or Irregular.
+//  - The file exists, is not executable by all three of User, Group, and Other, and cannot be made executable.
 func EnsureBinary(path string) error {
 	info, err := os.Stat(path)
 	if err != nil {

@@ -159,6 +159,27 @@ func UnmarshalUBD(cdc codec.BinaryCodec, value []byte) (ubd UnbondingDelegation,
 	return ubd, err
 }
 
+// return the unbonding delegation entry
+func MustMarshalUBDE(cdc codec.BinaryCodec, ubd UnbondingDelegationEntry) []byte {
+	return cdc.MustMarshal(&ubd)
+}
+
+// unmarshal a unbonding delegation entry from a store value
+func MustUnmarshalUBDE(cdc codec.BinaryCodec, value []byte) UnbondingDelegationEntry {
+	ubd, err := UnmarshalUBDE(cdc, value)
+	if err != nil {
+		panic(err)
+	}
+
+	return ubd
+}
+
+// unmarshal a unbonding delegation entry from a store value
+func UnmarshalUBDE(cdc codec.BinaryCodec, value []byte) (ubd UnbondingDelegationEntry, err error) {
+	err = cdc.Unmarshal(value, &ubd)
+	return ubd, err
+}
+
 // String returns a human readable string representation of an UnbondingDelegation.
 func (ubd UnbondingDelegation) String() string {
 	out := fmt.Sprintf(`Unbonding Delegations between:

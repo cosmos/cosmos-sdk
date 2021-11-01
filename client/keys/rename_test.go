@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -30,7 +31,8 @@ func Test_runRenameCmd(t *testing.T) {
 
 	path := sdk.GetConfig().GetFullBIP44Path()
 
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
+	cdc := simapp.MakeTestEncodingConfig().Codec
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 	require.NoError(t, err)
 
 	// put fakeKeyName1 in keyring
@@ -39,7 +41,7 @@ func Test_runRenameCmd(t *testing.T) {
 
 	clientCtx := client.Context{}.
 		WithKeyringDir(kbHome).
-		WithKeyring(kb)
+		WithCodec(cdc)
 
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
@@ -80,11 +82,18 @@ func Test_runRenameCmd(t *testing.T) {
 	// key2 exists now
 	renamedKey, err := kb.Key(fakeKeyName2)
 	require.NoError(t, err)
-
-	require.Equal(t, oldKey.GetPubKey(), renamedKey.GetPubKey())
+	oldPk, err := oldKey.GetPubKey()
+	require.NoError(t, err)
+	renamedPk, err := renamedKey.GetPubKey()
+	require.NoError(t, err)
+	require.Equal(t, oldPk, renamedPk)
 	require.Equal(t, oldKey.GetType(), renamedKey.GetType())
-	require.Equal(t, oldKey.GetAddress(), renamedKey.GetAddress())
-	require.Equal(t, oldKey.GetAlgo(), renamedKey.GetAlgo())
+
+	oldAddr, err := oldKey.GetAddress()
+	require.NoError(t, err)
+	renamedAddr, err := renamedKey.GetAddress()
+	require.NoError(t, err)
+	require.Equal(t, oldAddr, renamedAddr)
 
 	// try to rename key1 but it doesnt exist anymore so error
 	cmd.SetArgs([]string{

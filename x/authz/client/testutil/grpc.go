@@ -26,13 +26,13 @@ func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 			"fail invalid granter address",
 			fmt.Sprintf(grantsURL, "invalid_granter", grantee.String(), typeMsgSend),
 			true,
-			"decoding bech32 failed: invalid index of 1: invalid request",
+			"decoding bech32 failed: invalid separator index -1: invalid request",
 		},
 		{
 			"fail invalid grantee address",
 			fmt.Sprintf(grantsURL, val.Address.String(), "invalid_grantee", typeMsgSend),
 			true,
-			"decoding bech32 failed: invalid index of 1: invalid request",
+			"decoding bech32 failed: invalid separator index -1: invalid request",
 		},
 		{
 			"fail with empty granter",
@@ -156,6 +156,63 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &authorizations)
 				s.Require().NoError(err)
 				tc.postRun(&authorizations)
+			}
+
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestQueryGranterGrantsGRPC() {
+	val := s.network.Validators[0]
+	grantee := s.grantee[1]
+	require := s.Require()
+
+	testCases := []struct {
+		name      string
+		url       string
+		expectErr bool
+		errMsg    string
+		numItems  int
+	}{
+		{
+			"invalid account address",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/%s", val.APIAddress, "invalid address"),
+			true,
+			"decoding bech32 failed",
+			0,
+		},
+		{
+			"no authorizations found",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/%s", val.APIAddress, grantee.String()),
+			false,
+			"",
+			0,
+		},
+		{
+			"valid query",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/%s", val.APIAddress, val.Address.String()),
+			false,
+			"",
+			6,
+		},
+		{
+			"valid query: expect two grants",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/%s", val.APIAddress, val.Address.String()),
+			false,
+			"",
+			6,
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			resp, _ := rest.GetRequest(tc.url)
+			if tc.expectErr {
+				require.Contains(string(resp), tc.errMsg)
+			} else {
+				var authorizations authz.QueryGrantsResponse
+				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &authorizations)
+				require.NoError(err)
+				require.Len(authorizations.Grants, tc.numItems)
 			}
 
 		})

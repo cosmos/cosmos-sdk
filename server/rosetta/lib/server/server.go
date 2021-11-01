@@ -49,6 +49,7 @@ func NewServer(settings Settings) (Server, error) {
 		[]*types.NetworkIdentifier{settings.Network},
 		nil,
 		false,
+		"",
 	)
 	if err != nil {
 		return Server{}, fmt.Errorf("cannot build asserter: %w", err)

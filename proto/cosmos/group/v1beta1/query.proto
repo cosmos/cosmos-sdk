@@ -5,6 +5,7 @@ package cosmos.group.v1beta1;
 import "cosmos/group/v1beta1/types.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/group";
 
@@ -63,7 +64,7 @@ message QueryGroupInfoResponse {
 message QueryGroupAccountInfoRequest {
 
   // address is the account address of the group account.
-  string address = 1;
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // QueryGroupAccountInfoResponse is the Query/GroupAccountInfo response type.
@@ -97,7 +98,7 @@ message QueryGroupMembersResponse {
 message QueryGroupsByAdminRequest {
 
   // admin is the account address of a group's admin.
-  string admin = 1;
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
@@ -137,7 +138,7 @@ message QueryGroupAccountsByGroupResponse {
 message QueryGroupAccountsByAdminRequest {
 
   // admin is the admin address of the group account.
-  string admin = 1;
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
@@ -171,7 +172,7 @@ message QueryProposalResponse {
 message QueryProposalsByGroupAccountRequest {
 
   // address is the group account address related to proposals.
-  string address = 1;
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
@@ -194,7 +195,7 @@ message QueryVoteByProposalVoterRequest {
   uint64 proposal_id = 1;
 
   // voter is a proposal voter account address.
-  string voter = 2;
+  string voter = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // QueryVoteByProposalVoterResponse is the Query/VoteByProposalVoter response type.
@@ -227,7 +228,7 @@ message QueryVotesByProposalResponse {
 // QueryVotesByVoterResponse is the Query/VotesByVoter request type.
 message QueryVotesByVoterRequest {
   // voter is a proposal voter account address.
-  string voter = 1;
+  string voter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;

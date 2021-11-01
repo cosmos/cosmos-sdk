@@ -112,6 +112,9 @@ func TestFundCommunityPool(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
+	// reset fee pool
+	app.DistrKeeper.SetFeePool(ctx, types.InitialFeePool())
+
 	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.ZeroInt())
 
 	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))

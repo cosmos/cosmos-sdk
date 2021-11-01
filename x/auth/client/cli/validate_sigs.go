@@ -106,9 +106,11 @@ func printAndValidateSigs(
 			}
 
 			signingData := authsigning.SignerData{
+				Address:       sigAddr.String(),
 				ChainID:       chainID,
 				AccountNumber: accNum,
 				Sequence:      accSeq,
+				SignerIndex:   i,
 			}
 			err = authsigning.VerifySignature(pubKey, signingData, sig.Data, signModeHandler, sigTx)
 			if err != nil {

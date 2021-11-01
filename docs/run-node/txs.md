@@ -61,12 +61,12 @@ For example, starting with the `unsigned_tx.json`, and assuming the transaction 
 
 ```bash
 # Let signer1 sign the unsigned tx.
-simd tx multisignsign unsigned_tx.json signer_key_1 --chain-id my-test-chain --keyring-backend test > partial_tx_1.json
+simd tx multisign unsigned_tx.json signer_key_1 --chain-id my-test-chain --keyring-backend test > partial_tx_1.json
 # Now signer1 will send the partial_tx_1.json to the signer2.
 # Signer2 appends their signature:
-simd tx multisignsign partial_tx_1.json signer_key_2 --chain-id my-test-chain --keyring-backend test > partial_tx_2.json
+simd tx multisign partial_tx_1.json signer_key_2 --chain-id my-test-chain --keyring-backend test > partial_tx_2.json
 # Signer2 sends the partial_tx_2.json file to signer3, and signer3 can append his signature:
-simd tx multisignsign partial_tx_2.json signer_key_3 --chain-id my-test-chain --keyring-backend test > partial_tx_3.json
+simd tx multisign partial_tx_2.json signer_key_3 --chain-id my-test-chain --keyring-backend test > partial_tx_3.json
 ```
 
 ### Broadcasting a Transaction
@@ -83,13 +83,37 @@ You may optionally pass the `--broadcast-mode` flag to specify which response to
 - `sync`: the CLI waits for a CheckTx execution response only.
 - `async`: the CLI returns immediately (transaction might fail).
 
+### Encoding a Transaction
+
+In order to broadcast a transaction using the gRPC or REST endpoints, the transaction will need to be encoded first. This can be done using the CLI.
+
+Encoding a transaction is done using the following command:
+
+```bash
+simd tx encode tx_signed.json
+```
+
+This will read the transaction from the file, serialize it using Protobuf, and output the transaction bytes as base64 in the console.
+
+### Decoding a Transaction
+
+The CLI can also be used to decode transaction bytes.
+
+Decoding a transaction is done using the following command:
+
+```bash
+simd tx decode [protobuf-byte-string]
+```
+
+This will decode the transaction bytes and output the transaction as JSON in the console. You can also save the transaction to a file by appending `> tx.json` to the above command.
+
 ## Programmatically with Go
 
 It is possible to manipulate transactions programmatically via Go using the Cosmos SDK's `TxBuilder` interface.
 
 ### Generating a Transaction
 
-Before generating a transaction, a new instance of a `TxBuilder` needs to be created. Since the SDK supports both Amino and Protobuf transactions, the first step would be to decide which encoding scheme to use. All the subsequent steps remain unchanged, whether you're using Amino or Protobuf, as `TxBuilder` abstracts the encoding mechanisms. In the following snippet, we will use Protobuf.
+Before generating a transaction, a new instance of a `TxBuilder` needs to be created. Since the Cosmos SDK supports both Amino and Protobuf transactions, the first step would be to decide which encoding scheme to use. All the subsequent steps remain unchanged, whether you're using Amino or Protobuf, as `TxBuilder` abstracts the encoding mechanisms. In the following snippet, we will use Protobuf.
 
 ```go
 import (
@@ -259,7 +283,7 @@ func sendTx(ctx context.Context) error {
     // Create a connection to the gRPC server.
     grpcConn := grpc.Dial(
         "127.0.0.1:9090", // Or your gRPC server address.
-        grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
+        grpc.WithInsecure(), // The Cosmos SDK doesn't support any transport security mechanism.
     )
     defer grpcConn.Close()
 
@@ -326,7 +350,7 @@ func simulateTx() error {
 
 ## Using gRPC
 
-It is not possible to generate or sign a transaction using gRPC, only to broadcast one.
+It is not possible to generate or sign a transaction using gRPC, only to broadcast one. In order to broadcast a transaction using gRPC, you will need to generate, sign, and encode the transaction using either the CLI or programmatically with Go.
 
 ### Broadcasting a Transaction
 
@@ -341,7 +365,7 @@ grpcurl -plaintext \
 
 ## Using REST
 
-It is not possible to generate or sign a transaction using REST, only to broadcast one.
+It is not possible to generate or sign a transaction using REST, only to broadcast one. In order to broadcast a transaction using REST, you will need to generate, sign, and encode the transaction using either the CLI or programmatically with Go.
 
 ### Broadcasting a Transaction
 

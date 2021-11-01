@@ -43,3 +43,7 @@ This module will be used by the Cosmos Hub, the first hub in the Cosmos ecosyste
 7. **[Staking Tombstone](07_tombstone.md)**
    - [Abstract](07_tombstone.md#abstract)
 8. **[Parameters](08_params.md)**
+9. **[Client](09_client.md)**
+    - [CLI](09_client.md#cli)
+    - [gRPC](09_client.md#grpc)
+    - [REST](09_client.md#rest)

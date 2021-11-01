@@ -47,6 +47,8 @@
     - [GrantAuthorization](#cosmos.authz.v1beta1.GrantAuthorization)
   
 - [cosmos/authz/v1beta1/query.proto](#cosmos/authz/v1beta1/query.proto)
+    - [QueryGranterGrantsRequest](#cosmos.authz.v1beta1.QueryGranterGrantsRequest)
+    - [QueryGranterGrantsResponse](#cosmos.authz.v1beta1.QueryGranterGrantsResponse)
     - [QueryGrantsRequest](#cosmos.authz.v1beta1.QueryGrantsRequest)
     - [QueryGrantsResponse](#cosmos.authz.v1beta1.QueryGrantsResponse)
   
@@ -224,6 +226,16 @@
 - [cosmos/crypto/ed25519/keys.proto](#cosmos/crypto/ed25519/keys.proto)
     - [PrivKey](#cosmos.crypto.ed25519.PrivKey)
     - [PubKey](#cosmos.crypto.ed25519.PubKey)
+  
+- [cosmos/crypto/hd/v1/hd.proto](#cosmos/crypto/hd/v1/hd.proto)
+    - [BIP44Params](#cosmos.crypto.hd.v1.BIP44Params)
+  
+- [cosmos/crypto/keyring/v1/record.proto](#cosmos/crypto/keyring/v1/record.proto)
+    - [Record](#cosmos.crypto.keyring.v1.Record)
+    - [Record.Ledger](#cosmos.crypto.keyring.v1.Record.Ledger)
+    - [Record.Local](#cosmos.crypto.keyring.v1.Record.Local)
+    - [Record.Multi](#cosmos.crypto.keyring.v1.Record.Multi)
+    - [Record.Offline](#cosmos.crypto.keyring.v1.Record.Offline)
   
 - [cosmos/crypto/multisig/keys.proto](#cosmos/crypto/multisig/keys.proto)
     - [LegacyAminoPubKey](#cosmos.crypto.multisig.LegacyAminoPubKey)
@@ -655,7 +667,6 @@
     - [ModeInfo.Single](#cosmos.tx.v1beta1.ModeInfo.Single)
     - [SignDoc](#cosmos.tx.v1beta1.SignDoc)
     - [SignDocDirectAux](#cosmos.tx.v1beta1.SignDocDirectAux)
-    - [SignDocJSON](#cosmos.tx.v1beta1.SignDocJSON)
     - [SignerInfo](#cosmos.tx.v1beta1.SignerInfo)
     - [Tip](#cosmos.tx.v1beta1.Tip)
     - [Tx](#cosmos.tx.v1beta1.Tx)
@@ -844,7 +855,9 @@ pagination. Ex:
 | `offset` | [uint64](#uint64) |  | offset is a numeric offset that can be used when key is unavailable. It is less efficient than using key. Only one of offset or key should be set. |
 | `limit` | [uint64](#uint64) |  | limit is the total number of results to be returned in the result page. If left empty it will default to a value to be set by each app. |
 | `count_total` | [bool](#bool) |  | count_total is set to true to indicate that the result set should include a count of the total number of items available for pagination in UIs. count_total is only respected when offset is used. It is ignored when key is set. |
-| `reverse` | [bool](#bool) |  | reverse is set to true if results are to be returned in the descending order. |
+| `reverse` | [bool](#bool) |  | reverse is set to true if results are to be returned in the descending order.
+
+Since: cosmos-sdk 0.43 |
 
 
 
@@ -1009,6 +1022,8 @@ QueryAccountResponse is the response type for the Query/Account RPC method.
 ### QueryAccountsRequest
 QueryAccountsRequest is the request type for the Query/Accounts RPC method.
 
+Since: cosmos-sdk 0.43
+
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -1023,6 +1038,8 @@ QueryAccountsRequest is the request type for the Query/Accounts RPC method.
 
 ### QueryAccountsResponse
 QueryAccountsResponse is the response type for the Query/Accounts RPC method.
+
+Since: cosmos-sdk 0.43
 
 
 | Field | Type | Label | Description |
@@ -1098,7 +1115,9 @@ Query defines the gRPC querier service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Accounts` | [QueryAccountsRequest](#cosmos.auth.v1beta1.QueryAccountsRequest) | [QueryAccountsResponse](#cosmos.auth.v1beta1.QueryAccountsResponse) | Accounts returns all the existing accounts | GET|/cosmos/auth/v1beta1/accounts|
+| `Accounts` | [QueryAccountsRequest](#cosmos.auth.v1beta1.QueryAccountsRequest) | [QueryAccountsResponse](#cosmos.auth.v1beta1.QueryAccountsResponse) | Accounts returns all the existing accounts
+
+Since: cosmos-sdk 0.43 | GET|/cosmos/auth/v1beta1/accounts|
 | `Account` | [QueryAccountRequest](#cosmos.auth.v1beta1.QueryAccountRequest) | [QueryAccountResponse](#cosmos.auth.v1beta1.QueryAccountResponse) | Account returns account details based on address. | GET|/cosmos/auth/v1beta1/accounts/{address}|
 | `Params` | [QueryParamsRequest](#cosmos.auth.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.auth.v1beta1.QueryParamsResponse) | Params queries all parameters. | GET|/cosmos/auth/v1beta1/params|
 | `ModuleAccounts` | [QueryModuleAccountsRequest](#cosmos.auth.v1beta1.QueryModuleAccountsRequest) | [QueryModuleAccountsResponse](#cosmos.auth.v1beta1.QueryModuleAccountsResponse) | ModuleAccounts returns all the existing module accounts. | GET|/cosmos/auth/v1beta1/module_accounts|
@@ -1114,7 +1133,7 @@ Query defines the gRPC querier service.
 <p align="right"><a href="#top">Top</a></p>
 
 ## cosmos/authz/v1beta1/authz.proto
-
+Since: cosmos-sdk 0.43
 
 
 <a name="cosmos.authz.v1beta1.GenericAuthorization"></a>
@@ -1163,7 +1182,7 @@ the provide method with expiration time.
 <p align="right"><a href="#top">Top</a></p>
 
 ## cosmos/authz/v1beta1/event.proto
-
+Since: cosmos-sdk 0.43
 
 
 <a name="cosmos.authz.v1beta1.EventGrant"></a>
@@ -1213,7 +1232,7 @@ EventRevoke is emitted on Msg/Revoke
 <p align="right"><a href="#top">Top</a></p>
 
 ## cosmos/authz/v1beta1/genesis.proto
-
+Since: cosmos-sdk 0.43
 
 
 <a name="cosmos.authz.v1beta1.GenesisState"></a>
@@ -1262,6 +1281,38 @@ GrantAuthorization defines the GenesisState/GrantAuthorization type.
 <p align="right"><a href="#top">Top</a></p>
 
 ## cosmos/authz/v1beta1/query.proto
+Since: cosmos-sdk 0.43
+
+
+<a name="cosmos.authz.v1beta1.QueryGranterGrantsRequest"></a>
+
+### QueryGranterGrantsRequest
+QueryGranterGrantsRequest is the request type for the Query/GranterGrants RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.authz.v1beta1.QueryGranterGrantsResponse"></a>
+
+### QueryGranterGrantsResponse
+QueryGranterGrantsResponse is the response type for the Query/GranterGrants RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `grants` | [Grant](#cosmos.authz.v1beta1.Grant) | repeated | authorizations is a list of grants granted for grantee by granter. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
+
+
+
 
 
 
@@ -1313,6 +1364,7 @@ Query defines the gRPC querier service.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Grants` | [QueryGrantsRequest](#cosmos.authz.v1beta1.QueryGrantsRequest) | [QueryGrantsResponse](#cosmos.authz.v1beta1.QueryGrantsResponse) | Returns list of `Authorization`, granted to the grantee by the granter. | GET|/cosmos/authz/v1beta1/grants|
+| `GranterGrants` | [QueryGranterGrantsRequest](#cosmos.authz.v1beta1.QueryGranterGrantsRequest) | [QueryGranterGrantsResponse](#cosmos.authz.v1beta1.QueryGranterGrantsResponse) | GranterGrants returns list of `Authorization`, granted by granter. | GET|/cosmos/authz/v1beta1/grants/{granter}|
 
  <!-- end services -->
 
@@ -1519,7 +1571,7 @@ tags are stringified and the log is JSON decoded.
 <p align="right"><a href="#top">Top</a></p>
 
 ## cosmos/authz/v1beta1/tx.proto
-
+Since: cosmos-sdk 0.43
 
 
 <a name="cosmos.authz.v1beta1.MsgExec"></a>
@@ -1729,6 +1781,8 @@ IntProto defines a Protobuf wrapper around an Int object.
 SendAuthorization allows the grantee to spend up to spend_limit coins from
 the granter's account.
 
+Since: cosmos-sdk 0.43
+
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -1802,10 +1856,18 @@ a basic token.
 | `denom_units` | [DenomUnit](#cosmos.bank.v1beta1.DenomUnit) | repeated | denom_units represents the list of DenomUnit's for a given coin |
 | `base` | [string](#string) |  | base represents the base denom (should be the DenomUnit with exponent = 0). |
 | `display` | [string](#string) |  | display indicates the suggested denom that should be displayed in clients. |
-| `name` | [string](#string) |  | name defines the name of the token (eg: Cosmos Atom) |
-| `symbol` | [string](#string) |  | symbol is the token symbol usually shown on exchanges (eg: ATOM). This can be the same as the display. |
-| `uri` | [string](#string) |  | URI to a document (on or off-chain) that contains additional information. Optional. |
-| `uri_hash` | [string](#string) |  | URIHash is a sha256 hash of a document pointed by URI. It's used to verify that the document didn't change. Optional. |
+| `name` | [string](#string) |  | name defines the name of the token (eg: Cosmos Atom)
+
+Since: cosmos-sdk 0.43 |
+| `symbol` | [string](#string) |  | symbol is the token symbol usually shown on exchanges (eg: ATOM). This can be the same as the display.
+
+Since: cosmos-sdk 0.43 |
+| `uri` | [string](#string) |  | URI to a document (on or off-chain) that contains additional information. Optional.
+
+Since: cosmos-sdk 0.45 |
+| `uri_hash` | [string](#string) |  | URIHash is a sha256 hash of a document pointed by URI. It's used to verify that the document didn't change. Optional.
+
+Since: cosmos-sdk 0.45 |
 
 
 
@@ -2188,7 +2250,9 @@ method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request.
+
+Since: cosmos-sdk 0.43 |
 
 
 
@@ -2205,7 +2269,9 @@ method
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply is the supply of the coins |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response.
+
+Since: cosmos-sdk 0.43 |
 
 
 
@@ -2453,7 +2519,7 @@ ReflectionService defines a service for interface reflection.
 <p align="right"><a href="#top">Top</a></p>
 
 ## cosmos/base/reflection/v2alpha1/reflection.proto
-
+Since: cosmos-sdk 0.43
 
 
 <a name="cosmos.base.reflection.v2alpha1.AppDescriptor"></a>
@@ -2993,6 +3059,8 @@ StoreKVPair is a KVStore KVPair used for listening to state changes (Sets and De
 It optionally includes the StoreKey for the originating KVStore and a Boolean flag to distinguish between Sets and
 Deletes
 
+Since: cosmos-sdk 0.43
+
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -3189,7 +3257,7 @@ GetNodeInfoRequest is the request type for the Query/GetNodeInfo RPC method.
 <a name="cosmos.base.tendermint.v1beta1.GetNodeInfoResponse"></a>
 
 ### GetNodeInfoResponse
-GetNodeInfoResponse is the request type for the Query/GetNodeInfo RPC method.
+GetNodeInfoResponse is the response type for the Query/GetNodeInfo RPC method.
 
 
 | Field | Type | Label | Description |
@@ -3310,7 +3378,7 @@ VersionInfo is the type for the GetNodeInfoResponse message.
 | `build_tags` | [string](#string) |  |  |
 | `go_version` | [string](#string) |  |  |
 | `build_deps` | [Module](#cosmos.base.tendermint.v1beta1.Module) | repeated |  |
-| `cosmos_sdk_version` | [string](#string) |  |  |
+| `cosmos_sdk_version` | [string](#string) |  | Since: cosmos-sdk 0.43 |
 
 
 
@@ -3589,6 +3657,129 @@ then you must create a new proto message and follow ADR-28 for Address construct
 
 
 
+<a name="cosmos/crypto/hd/v1/hd.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/crypto/hd/v1/hd.proto
+
+
+
+<a name="cosmos.crypto.hd.v1.BIP44Params"></a>
+
+### BIP44Params
+BIP44Params is used as path field in ledger item in Record.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `purpose` | [uint32](#uint32) |  | purpose is a constant set to 44' (or 0x8000002C) following the BIP43 recommendation |
+| `coin_type` | [uint32](#uint32) |  | coin_type is a constant that improves privacy |
+| `account` | [uint32](#uint32) |  | account splits the key space into independent user identities |
+| `change` | [bool](#bool) |  | change is a constant used for public derivation. Constant 0 is used for external chain and constant 1 for internal chain. |
+| `address_index` | [uint32](#uint32) |  | address_index is used as child index in BIP32 derivation |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/crypto/keyring/v1/record.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/crypto/keyring/v1/record.proto
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record"></a>
+
+### Record
+Record is used for representing a key in the keyring.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  | name represents a name of Record |
+| `pub_key` | [google.protobuf.Any](#google.protobuf.Any) |  | pub_key represents a public key in any format |
+| `local` | [Record.Local](#cosmos.crypto.keyring.v1.Record.Local) |  | local stores the public information about a locally stored key |
+| `ledger` | [Record.Ledger](#cosmos.crypto.keyring.v1.Record.Ledger) |  | ledger stores the public information about a Ledger key |
+| `multi` | [Record.Multi](#cosmos.crypto.keyring.v1.Record.Multi) |  | Multi does not store any information. |
+| `offline` | [Record.Offline](#cosmos.crypto.keyring.v1.Record.Offline) |  | Offline does not store any information. |
+
+
+
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record.Ledger"></a>
+
+### Record.Ledger
+Ledger item
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `path` | [cosmos.crypto.hd.v1.BIP44Params](#cosmos.crypto.hd.v1.BIP44Params) |  |  |
+
+
+
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record.Local"></a>
+
+### Record.Local
+Item is a keyring item stored in a keyring backend.
+Local item
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `priv_key` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `priv_key_type` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record.Multi"></a>
+
+### Record.Multi
+Multi item
+
+
+
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record.Offline"></a>
+
+### Record.Offline
+Offline item
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="cosmos/crypto/multisig/keys.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -3729,7 +3920,7 @@ This prefix is followed with the x-coordinate.
 <p align="right"><a href="#top">Top</a></p>
 
 ## cosmos/crypto/secp256r1/keys.proto
-
+Since: cosmos-sdk 0.43
 
 
 <a name="cosmos.crypto.secp256r1.PrivKey"></a>
@@ -4840,7 +5031,7 @@ Msg defines the evidence Msg service.
 <p align="right"><a href="#top">Top</a></p>
 
 ## cosmos/feegrant/v1beta1/feegrant.proto
-
+Since: cosmos-sdk 0.43
 
 
 <a name="cosmos.feegrant.v1beta1.AllowedMsgAllowance"></a>
@@ -4926,7 +5117,7 @@ as well as a limit per time period.
 <p align="right"><a href="#top">Top</a></p>
 
 ## cosmos/feegrant/v1beta1/genesis.proto
-
+Since: cosmos-sdk 0.43
 
 
 <a name="cosmos.feegrant.v1beta1.GenesisState"></a>
@@ -4957,7 +5148,7 @@ GenesisState contains a set of fee allowances, persisted from the store
 <p align="right"><a href="#top">Top</a></p>
 
 ## cosmos/feegrant/v1beta1/query.proto
-
+Since: cosmos-sdk 0.43
 
 
 <a name="cosmos.feegrant.v1beta1.QueryAllowanceRequest"></a>
@@ -5047,7 +5238,7 @@ Query defines the gRPC querier service.
 <p align="right"><a href="#top">Top</a></p>
 
 ## cosmos/feegrant/v1beta1/tx.proto
-
+Since: cosmos-sdk 0.43
 
 
 <a name="cosmos.feegrant.v1beta1.MsgGrantAllowance"></a>
@@ -5283,7 +5474,7 @@ A Vote consists of a proposal ID, the voter, and the vote option.
 | `proposal_id` | [uint64](#uint64) |  |  |
 | `voter` | [string](#string) |  |  |
 | `option` | [VoteOption](#cosmos.gov.v1beta1.VoteOption) |  | **Deprecated.** Deprecated: Prefer to use `options` instead. This field is set in queries if and only if `len(options) == 1` and that option has weight 1. In all other cases, this field will default to VOTE_OPTION_UNSPECIFIED. |
-| `options` | [WeightedVoteOption](#cosmos.gov.v1beta1.WeightedVoteOption) | repeated |  |
+| `options` | [WeightedVoteOption](#cosmos.gov.v1beta1.WeightedVoteOption) | repeated | Since: cosmos-sdk 0.43 |
 
 
 
@@ -5309,6 +5500,8 @@ VotingParams defines the params for voting on governance proposals.
 
 ### WeightedVoteOption
 WeightedVoteOption defines a unit of vote for vote split.
+
+Since: cosmos-sdk 0.43
 
 
 | Field | Type | Label | Description |
@@ -5783,6 +5976,8 @@ MsgVoteResponse defines the Msg/Vote response type.
 ### MsgVoteWeighted
 MsgVoteWeighted defines a message to cast a vote.
 
+Since: cosmos-sdk 0.43
+
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -5799,6 +5994,8 @@ MsgVoteWeighted defines a message to cast a vote.
 
 ### MsgVoteWeightedResponse
 MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.
+
+Since: cosmos-sdk 0.43
 
 
 
@@ -5820,7 +6017,9 @@ Msg defines the bank Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `SubmitProposal` | [MsgSubmitProposal](#cosmos.gov.v1beta1.MsgSubmitProposal) | [MsgSubmitProposalResponse](#cosmos.gov.v1beta1.MsgSubmitProposalResponse) | SubmitProposal defines a method to create new proposal given a content. | |
 | `Vote` | [MsgVote](#cosmos.gov.v1beta1.MsgVote) | [MsgVoteResponse](#cosmos.gov.v1beta1.MsgVoteResponse) | Vote defines a method to add a vote on a specific proposal. | |
-| `VoteWeighted` | [MsgVoteWeighted](#cosmos.gov.v1beta1.MsgVoteWeighted) | [MsgVoteWeightedResponse](#cosmos.gov.v1beta1.MsgVoteWeightedResponse) | VoteWeighted defines a method to add a weighted vote on a specific proposal. | |
+| `VoteWeighted` | [MsgVoteWeighted](#cosmos.gov.v1beta1.MsgVoteWeighted) | [MsgVoteWeightedResponse](#cosmos.gov.v1beta1.MsgVoteWeightedResponse) | VoteWeighted defines a method to add a weighted vote on a specific proposal.
+
+Since: cosmos-sdk 0.43 | |
 | `Deposit` | [MsgDeposit](#cosmos.gov.v1beta1.MsgDeposit) | [MsgDepositResponse](#cosmos.gov.v1beta1.MsgDepositResponse) | Deposit defines a method to add deposit on a specific proposal. | |
 
  <!-- end services -->
@@ -7090,11 +7289,12 @@ Class defines the class of the nft type.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `id` | [string](#string) |  |  |
-| `name` | [string](#string) |  |  |
-| `symbol` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
-| `uri` | [string](#string) |  |  |
+| `id` | [string](#string) |  | id defines the unique identifier of the NFT classification, similar to the contract address of ERC721 |
+| `name` | [string](#string) |  | name defines the human-readable name of the NFT classification,optional |
+| `symbol` | [string](#string) |  | symbol is an abbreviated name for nft classification,optional |
+| `description` | [string](#string) |  | description is a brief description of nft classification,optional |
+| `uri` | [string](#string) |  | uri is a URI may point to a JSON file that conforms to the nft classification Metadata JSON Schema.optional |
+| `uri_hash` | [string](#string) |  | uri_hash is a hash of the document pointed to uri,optional |
 
 
 
@@ -7104,15 +7304,16 @@ Class defines the class of the nft type.
 <a name="cosmos.nft.v1beta1.NFT"></a>
 
 ### NFT
-NFT defines the nft.
+NFT defines the NFT.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `class_id` | [string](#string) |  |  |
-| `id` | [string](#string) |  |  |
-| `uri` | [string](#string) |  |  |
-| `data` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `class_id` | [string](#string) |  | class_id defines the unique identifier of the NFT classification, similar to the contract address of ERC721 |
+| `id` | [string](#string) |  | id defines the unique identification of NFT |
+| `uri` | [string](#string) |  | uri defines NFT's metadata storage address outside the chain |
+| `uri_hash` | [string](#string) |  | uri_hash is a hash of the document pointed to uri |
+| `data` | [google.protobuf.Any](#google.protobuf.Any) |  | data is the metadata of the NFT,optional |
 
 
 
@@ -7143,8 +7344,8 @@ Entry Defines all nft owned by a person
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `owner` | [string](#string) |  |  |
-| `nfts` | [NFT](#cosmos.nft.v1beta1.NFT) | repeated |  |
+| `owner` | [string](#string) |  | owner is the owner address of the following nft |
+| `nfts` | [NFT](#cosmos.nft.v1beta1.NFT) | repeated | nfts is a group of nfts of the same owner |
 
 
 
@@ -7415,7 +7616,7 @@ Query defines the gRPC querier service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Balance` | [QueryBalanceRequest](#cosmos.nft.v1beta1.QueryBalanceRequest) | [QueryBalanceResponse](#cosmos.nft.v1beta1.QueryBalanceResponse) | Balance queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721 | GET|/cosmos/nft/v1beta1/balance/{class_id}/{owner}|
 | `Owner` | [QueryOwnerRequest](#cosmos.nft.v1beta1.QueryOwnerRequest) | [QueryOwnerResponse](#cosmos.nft.v1beta1.QueryOwnerResponse) | Owner queries the owner of the NFT based on its class and id, same as ownerOf in ERC721 | GET|/cosmos/nft/v1beta1/owner/{class_id}/{id}|
-| `Supply` | [QuerySupplyRequest](#cosmos.nft.v1beta1.QuerySupplyRequest) | [QuerySupplyResponse](#cosmos.nft.v1beta1.QuerySupplyResponse) | Supply queries the number of nft based on the class, same as totalSupply of ERC721 | GET|/cosmos/nft/v1beta1/supply/{class_id}|
+| `Supply` | [QuerySupplyRequest](#cosmos.nft.v1beta1.QuerySupplyRequest) | [QuerySupplyResponse](#cosmos.nft.v1beta1.QuerySupplyResponse) | Supply queries the number of NFTs from the given class, same as totalSupply of ERC721. | GET|/cosmos/nft/v1beta1/supply/{class_id}|
 | `NFTsOfClass` | [QueryNFTsOfClassRequest](#cosmos.nft.v1beta1.QueryNFTsOfClassRequest) | [QueryNFTsOfClassResponse](#cosmos.nft.v1beta1.QueryNFTsOfClassResponse) | NFTsOfClass queries all NFTs of a given class or optional owner, similar to tokenByIndex in ERC721Enumerable | GET|/cosmos/nft/v1beta1/nfts/{class_id}|
 | `NFT` | [QueryNFTRequest](#cosmos.nft.v1beta1.QueryNFTRequest) | [QueryNFTResponse](#cosmos.nft.v1beta1.QueryNFTResponse) | NFT queries an NFT based on its class and id. | GET|/cosmos/nft/v1beta1/nfts/{class_id}/{id}|
 | `Class` | [QueryClassRequest](#cosmos.nft.v1beta1.QueryClassRequest) | [QueryClassResponse](#cosmos.nft.v1beta1.QueryClassResponse) | Class queries an NFT class based on its id | GET|/cosmos/nft/v1beta1/classes/{class_id}|
@@ -7440,10 +7641,10 @@ MsgSend represents a message to send a nft from one account to another account.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `class_id` | [string](#string) |  |  |
-| `id` | [string](#string) |  |  |
-| `sender` | [string](#string) |  |  |
-| `receiver` | [string](#string) |  |  |
+| `class_id` | [string](#string) |  | class_id defines the unique identifier of the nft classification, similar to the contract address of ERC721 |
+| `id` | [string](#string) |  | id defines the unique identification of nft |
+| `sender` | [string](#string) |  | sender is the address of the owner of nft |
+| `receiver` | [string](#string) |  | receiver is the receiver address of nft |
 
 
 
@@ -7951,6 +8152,8 @@ Msg defines the slashing Msg service.
 ### StakeAuthorization
 StakeAuthorization defines authorization for delegate/undelegate/redelegate.
 
+Since: cosmos-sdk 0.43
+
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -7985,6 +8188,8 @@ Validators defines list of validator addresses.
 
 ### AuthorizationType
 AuthorizationType defines the type of staking module authorization type
+
+Since: cosmos-sdk 0.43
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
@@ -9230,8 +9435,7 @@ SignMode represents a signing mode with its own security guarantees.
 | SIGN_MODE_UNSPECIFIED | 0 | SIGN_MODE_UNSPECIFIED specifies an unknown signing mode and will be rejected. |
 | SIGN_MODE_DIRECT | 1 | SIGN_MODE_DIRECT specifies a signing mode which uses SignDoc and is verified with raw bytes from Tx. |
 | SIGN_MODE_TEXTUAL | 2 | SIGN_MODE_TEXTUAL is a future signing mode that will verify some human-readable textual representation on top of the binary representation from SIGN_MODE_DIRECT. It is currently not supported. |
-| SIGN_MODE_DIRECT_JSON | 3 | SIGN_MODE_DIRECT_JSON specifies a signing mode which uses SignDocJSON. It is verified using a canonical JSON representation of the bytes used in SIGN_MODE_DIRECT. It is currently not supported. |
-| SIGN_MODE_DIRECT_AUX | 4 | SIGN_MODE_DIRECT_AUX specifies a signing mode which uses SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode does not require signers signing over other signers' `signer_info`. It also allows for adding Tips in transactions. |
+| SIGN_MODE_DIRECT_AUX | 3 | SIGN_MODE_DIRECT_AUX specifies a signing mode which uses SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode does not require signers signing over other signers' `signer_info`. It also allows for adding Tips in transactions. |
 | SIGN_MODE_LEGACY_AMINO_JSON | 127 | SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses Amino JSON and will be removed in the future. |
 
 
@@ -9261,7 +9465,9 @@ transaction.
 | ----- | ---- | ----- | ----------- |
 | `signer_infos` | [SignerInfo](#cosmos.tx.v1beta1.SignerInfo) | repeated | signer_infos defines the signing modes for the required signers. The number and order of elements must match the required signers from TxBody's messages. The first element is the primary signer and the one which pays the fee. |
 | `fee` | [Fee](#cosmos.tx.v1beta1.Fee) |  | Fee is the fee and gas limit for the transaction. The first signer is the primary signer and the one which pays the fee. The fee can be calculated based on the cost of evaluating the body and doing signature verification of the signers. This can be estimated via simulation. |
-| `tip` | [Tip](#cosmos.tx.v1beta1.Tip) |  | Tip is the optional tip used for meta-transactions. |
+| `tip` | [Tip](#cosmos.tx.v1beta1.Tip) |  | Tip is the optional tip used for meta-transactions.
+
+Since: cosmos-sdk 0.45 |
 
 
 
@@ -9370,28 +9576,6 @@ SIGN_MODE_DIRECT_AUX.
 | `account_number` | [uint64](#uint64) |  | account_number is the account number of the account in state. |
 | `sequence` | [uint64](#uint64) |  | sequence is the sequence number of the signing account. |
 | `tip` | [Tip](#cosmos.tx.v1beta1.Tip) |  | Tip is the optional tip used for meta-transactions. It should be left empty if the signer is not the tipper for this transaction. |
-
-
-
-
-
-
-<a name="cosmos.tx.v1beta1.SignDocJSON"></a>
-
-### SignDocJSON
-SignDocJSON is the type used for generating sign bytes for
-SIGN_MODE_DIRECT_JSON. It is designed to be serialized as proto3 JSON
-following the rules defined here:
-https://github.com/regen-network/canonical-proto3/blob/master/README.md#json.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `body` | [TxBody](#cosmos.tx.v1beta1.TxBody) |  | body is the processable content of the transaction |
-| `auth_info` | [AuthInfo](#cosmos.tx.v1beta1.AuthInfo) |  | auth_info is the authorization related content of the transaction, specifically signers, signer modes and fee |
-| `chain_id` | [string](#string) |  | chain_id is the identifier of the chain this transaction targets. It prevents signed transactions from being used on another chain by an attacker |
-| `account_number` | [uint64](#uint64) |  | account_number is the account number of the signing account in state |
-| `sign_doc_sha256_hash` | [bytes](#bytes) |  | sign_doc_sha256_hash is the SHA-256 hash of SignDoc. It is included here to reduce the malleability attack surface of SIGN_MODE_DIRECT_JSON vs SIGN_MODE_DIRECT to zero. Basically this means that any discrepancy between protobuf bytes over the wire and protobuf bytes that are signed cannot be exploited. This information is obviously redundant with information already in SignDocJSON, but is included as a security check for scenarios where this information may have inadvertently been excluded. We include the hash of SignDoc rather than the full SignDoc bytes to reduce the size of SignDocJSON for scenarios where large payloads could cause problems for hardware wallets. |
 
 
 
@@ -9616,7 +9800,9 @@ RPC method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `tx` | [Tx](#cosmos.tx.v1beta1.Tx) |  | **Deprecated.** tx is the transaction to simulate. Deprecated. Send raw tx bytes instead. |
-| `tx_bytes` | [bytes](#bytes) |  | tx_bytes is the raw transaction. |
+| `tx_bytes` | [bytes](#bytes) |  | tx_bytes is the raw transaction.
+
+Since: cosmos-sdk 0.43 |
 
 
 
@@ -9717,6 +9903,8 @@ upgrade.
 
 ### ModuleVersion
 ModuleVersion specifies a module and its consensus version.
+
+Since: cosmos-sdk 0.43
 
 
 | Field | Type | Label | Description |
@@ -9847,6 +10035,8 @@ method.
 QueryModuleVersionsRequest is the request type for the Query/ModuleVersions
 RPC method.
 
+Since: cosmos-sdk 0.43
+
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -9862,6 +10052,8 @@ RPC method.
 ### QueryModuleVersionsResponse
 QueryModuleVersionsResponse is the response type for the Query/ModuleVersions
 RPC method.
+
+Since: cosmos-sdk 0.43
 
 
 | Field | Type | Label | Description |
@@ -9898,7 +10090,7 @@ RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `upgraded_consensus_state` | [bytes](#bytes) |  |  |
+| `upgraded_consensus_state` | [bytes](#bytes) |  | Since: cosmos-sdk 0.43 |
 
 
 
@@ -9921,7 +10113,9 @@ Query defines the gRPC upgrade querier service.
 | `CurrentPlan` | [QueryCurrentPlanRequest](#cosmos.upgrade.v1beta1.QueryCurrentPlanRequest) | [QueryCurrentPlanResponse](#cosmos.upgrade.v1beta1.QueryCurrentPlanResponse) | CurrentPlan queries the current upgrade plan. | GET|/cosmos/upgrade/v1beta1/current_plan|
 | `AppliedPlan` | [QueryAppliedPlanRequest](#cosmos.upgrade.v1beta1.QueryAppliedPlanRequest) | [QueryAppliedPlanResponse](#cosmos.upgrade.v1beta1.QueryAppliedPlanResponse) | AppliedPlan queries a previously applied upgrade plan by its name. | GET|/cosmos/upgrade/v1beta1/applied_plan/{name}|
 | `UpgradedConsensusState` | [QueryUpgradedConsensusStateRequest](#cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateRequest) | [QueryUpgradedConsensusStateResponse](#cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateResponse) | UpgradedConsensusState queries the consensus state that will serve as a trusted kernel for the next version of this chain. It will only be stored at the last height of this chain. UpgradedConsensusState RPC not supported with legacy querier This rpc is deprecated now that IBC has its own replacement (https://github.com/cosmos/ibc-go/blob/2c880a22e9f9cc75f62b527ca94aa75ce1106001/proto/ibc/core/client/v1/query.proto#L54) | GET|/cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}|
-| `ModuleVersions` | [QueryModuleVersionsRequest](#cosmos.upgrade.v1beta1.QueryModuleVersionsRequest) | [QueryModuleVersionsResponse](#cosmos.upgrade.v1beta1.QueryModuleVersionsResponse) | ModuleVersions queries the list of module versions from state. | GET|/cosmos/upgrade/v1beta1/module_versions|
+| `ModuleVersions` | [QueryModuleVersionsRequest](#cosmos.upgrade.v1beta1.QueryModuleVersionsRequest) | [QueryModuleVersionsResponse](#cosmos.upgrade.v1beta1.QueryModuleVersionsResponse) | ModuleVersions queries the list of module versions from state.
+
+Since: cosmos-sdk 0.43 | GET|/cosmos/upgrade/v1beta1/module_versions|
 
  <!-- end services -->
 
@@ -10028,6 +10222,8 @@ periodically vests by unlocking coins during each specified period.
 PermanentLockedAccount implements the VestingAccount interface. It does
 not ever release coins, locking them indefinitely. Coins in this account can
 still be used for delegating and for governance votes even while locked.
+
+Since: cosmos-sdk 0.43
 
 
 | Field | Type | Label | Description |

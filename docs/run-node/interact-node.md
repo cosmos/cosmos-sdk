@@ -129,7 +129,7 @@ func queryState() error {
     // Create a connection to the gRPC server.
     grpcConn := grpc.Dial(
         "127.0.0.1:9090", // your gRPC server address.
-        grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
+        grpc.WithInsecure(), // The Cosmos SDK doesn't support any transport security mechanism.
     )
     defer grpcConn.Close()
 

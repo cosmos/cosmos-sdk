@@ -13,16 +13,18 @@ type VersionManager struct {
 
 var _ VersionSet = (*VersionManager)(nil)
 
-// NewVersionManager creates a VersionManager from a sorted slice of ascending version ids.
+// NewVersionManager creates a VersionManager from a slice of version ids.
 func NewVersionManager(versions []uint64) *VersionManager {
 	vmap := make(map[uint64]struct{})
 	var init, last uint64
 	for _, ver := range versions {
 		vmap[ver] = struct{}{}
-	}
-	if len(versions) > 0 {
-		init = versions[0]
-		last = versions[len(versions)-1]
+		if init == 0 || ver < init {
+			init = ver
+		}
+		if ver > last {
+			last = ver
+		}
 	}
 	return &VersionManager{versions: vmap, initial: init, last: last}
 }
@@ -42,16 +44,11 @@ func (vm *VersionManager) Initial() uint64 {
 	return vm.initial
 }
 
-func (vm *VersionManager) Next() uint64 {
-	return vm.Last() + 1
-}
-
 func (vm *VersionManager) Save(target uint64) (uint64, error) {
-	next := vm.Next()
+	next := vm.Last() + 1
 	if target == 0 {
 		target = next
-	}
-	if target < next {
+	} else if target < next {
 		return 0, fmt.Errorf(
 			"target version cannot be less than next sequential version (%v < %v)", target, next)
 	}

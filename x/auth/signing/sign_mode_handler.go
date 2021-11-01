@@ -23,6 +23,9 @@ type SignModeHandler interface {
 // SignerData is the specific information needed to sign a transaction that generally
 // isn't included in the transaction body itself
 type SignerData struct {
+	// The address of the signer.
+	Address string
+
 	// ChainID is the chain that this transaction is targeted
 	ChainID string
 
@@ -34,4 +37,7 @@ type SignerData struct {
 	// since in SIGN_MODE_DIRECT the account sequence is already in the signer
 	// info.
 	Sequence uint64
+
+	// SignerIndex index of signer in the signer_infos array.
+	SignerIndex int
 }

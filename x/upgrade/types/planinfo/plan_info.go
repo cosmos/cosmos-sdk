@@ -30,7 +30,7 @@ func ParsePlanInfo(infoStr string) (*PlanInfo, error) {
 
 	// If it's a url, download it and treat the result as the real info.
 	if _, err := neturl.Parse(infoStr); err == nil {
-		infoStr, err = DownloadPlanInfoFromURL(infoStr)
+		infoStr, err = DownloadURLWithChecksum(infoStr)
 		if err != nil {
 			return nil, err
 		}

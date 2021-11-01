@@ -95,29 +95,37 @@ func EnsureBinary(path string) error {
 	return nil
 }
 
-// DownloadPlanInfoFromURL gets the contents of the file at the given URL.
-func DownloadPlanInfoFromURL(url string) (string, error) {
+// DownloadURLWithChecksum gets the contents of the given url, ensuring the checksum is correct.
+// The provided url must contain a checksum parameter that matches the file being downloaded.
+// If there isn't an error, the content returned by the url will be returned as a string.
+// Returns an error if:
+//  - The url is not a URL or does not contain a checksum parameter.
+//  - Downloading the URL fails.
+//  - The checksum does not match what is returned by the URL.
+//  - The URL does not return a regular file.
+//  - The downloaded file is empty or only whitespace.
+func DownloadURLWithChecksum(url string) (string, error) {
 	if err := validateIsURLWithChecksum(url); err != nil {
 		return "", err
 	}
-	tempDir, err := os.MkdirTemp("", "plan-info-reference")
+	tempDir, err := os.MkdirTemp("", "reference")
 	if err != nil {
 		return "", fmt.Errorf("could not create temp directory: %w", err)
 	}
 	defer os.RemoveAll(tempDir)
-	planInfoPath := filepath.Join(tempDir, "plan-info.json")
-	if err = getter.GetFile(planInfoPath, url); err != nil {
-		return "", fmt.Errorf("could not download reference link \"%s\": %w", url, err)
+	tempFile := filepath.Join(tempDir, "content")
+	if err = getter.GetFile(tempFile, url); err != nil {
+		return "", fmt.Errorf("could not download url \"%s\": %w", url, err)
 	}
-	planInfoBz, rerr := os.ReadFile(planInfoPath)
+	tempFileBz, rerr := os.ReadFile(tempFile)
 	if rerr != nil {
-		return "", fmt.Errorf("could not read downloaded plan info file: %w", rerr)
+		return "", fmt.Errorf("could not read downloaded temporary file: %w", rerr)
 	}
-	planInfoStr := strings.TrimSpace(string(planInfoBz))
-	if len(planInfoStr) == 0 {
+	tempFileStr := strings.TrimSpace(string(tempFileBz))
+	if len(tempFileStr) == 0 {
 		return "", fmt.Errorf("no content returned by \"%s\"", url)
 	}
-	return planInfoStr, nil
+	return tempFileStr, nil
 }
 
 // validateIsURLWithChecksum checks that the given string is a url and contains a checksum query parameter.

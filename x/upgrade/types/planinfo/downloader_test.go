@@ -250,7 +250,7 @@ func (s *DownloaderTestSuite) TestEnsureBinary() {
 	})
 }
 
-func (s *DownloaderTestSuite) TestDownloadPlanInfoFromURL() {
+func (s *DownloaderTestSuite) TestDownloadURLWithChecksum() {
 	planContents := `{"binaries":{"xxx/yyy":"url"}}`
 	planFile := NewTestFile("plan-info.json", planContents)
 	planPath := s.saveSrcTestFile(planFile)
@@ -261,21 +261,21 @@ func (s *DownloaderTestSuite) TestDownloadPlanInfoFromURL() {
 
 	s.T().Run("url does not exist", func(t *testing.T) {
 		url := "file:///never-gonna-be-a-thing?checksum=sha256:2c22e34510bd1d4ad2343cdc54f7165bccf30caef73f39af7dd1db2795a3da48"
-		_, err := DownloadPlanInfoFromURL(url)
+		_, err := DownloadURLWithChecksum(url)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "could not download reference link")
+		assert.Contains(t, err.Error(), "could not download url")
 	})
 
 	s.T().Run("without checksum", func(t *testing.T) {
 		url := "file://" + planPath
-		_, err := DownloadPlanInfoFromURL(url)
+		_, err := DownloadURLWithChecksum(url)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "missing checksum query parameter")
 	})
 
 	s.T().Run("with correct checksum", func(t *testing.T) {
 		url := "file://" + planPath + "?checksum=sha256:" + planChecksum
-		actual, err := DownloadPlanInfoFromURL(url)
+		actual, err := DownloadURLWithChecksum(url)
 		require.NoError(t, err)
 		require.Equal(t, planContents, actual)
 	})
@@ -283,7 +283,7 @@ func (s *DownloaderTestSuite) TestDownloadPlanInfoFromURL() {
 	s.T().Run("with incorrect checksum", func(t *testing.T) {
 		badChecksum := "2c22e34510bd1d4ad2343cdc54f7165bccf30caef73f39af7dd1db2795a3da48"
 		url := "file://" + planPath + "?checksum=sha256:" + badChecksum
-		_, err := DownloadPlanInfoFromURL(url)
+		_, err := DownloadURLWithChecksum(url)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "Checksums did not match")
 		assert.Contains(t, err.Error(), "Expected: "+badChecksum)
@@ -292,7 +292,7 @@ func (s *DownloaderTestSuite) TestDownloadPlanInfoFromURL() {
 
 	s.T().Run("plan is empty", func(t *testing.T) {
 		url := "file://" + emptyPlanPath + "?checksum=sha256:" + emptyChecksum
-		_, err := DownloadPlanInfoFromURL(url)
+		_, err := DownloadURLWithChecksum(url)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "no content returned")
 	})

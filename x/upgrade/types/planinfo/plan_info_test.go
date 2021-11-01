@@ -90,7 +90,7 @@ func (s PlanInfoTestSuite) TestParsePlanInfo() {
 			name:             "url does not exist",
 			infoStrMaker:     makeInfoStrFuncString("file:///this/file/does/not/exist?checksum=sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
 			expectedPlanInfo: nil,
-			expectedInError:  []string{"could not download reference", "file:///this/file/does/not/exist"},
+			expectedInError:  []string{"could not download url", "file:///this/file/does/not/exist"},
 		},
 		{
 			name:             "url good",

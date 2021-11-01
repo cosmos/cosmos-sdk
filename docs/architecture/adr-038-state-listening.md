@@ -211,23 +211,23 @@ and relays ABCI requests and responses so that the service can group the state c
 ```go
 // ABCIListener interface used to hook into the ABCI message processing of the BaseApp
 type ABCIListener interface {
-	// ListenBeginBlock updates the streaming service with the latest BeginBlock messages 
-	ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error 
-	// ListenEndBlock updates the steaming service with the latest EndBlock messages 
-	ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error 
-	// ListenDeliverTx updates the steaming service with the latest DeliverTx messages 
+	// ListenBeginBlock updates the streaming service with the latest BeginBlock messages
+	ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error
+	// ListenEndBlock updates the steaming service with the latest EndBlock messages
+	ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
+	// ListenDeliverTx updates the steaming service with the latest DeliverTx messages
 	ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
 }
 
 // StreamingService interface for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks
 type StreamingService interface {
-	// Stream is the streaming service loop, awaits kv pairs and writes them to some destination stream or file 
+	// Stream is the streaming service loop, awaits kv pairs and writes them to some destination stream or file
 	Stream(wg *sync.WaitGroup) error
-	// Listeners returns the streaming service's listeners for the BaseApp to register 
-	Listeners() map[types.StoreKey][]store.WriteListener 
-	// ABCIListener interface for hooking into the ABCI messages from inside the BaseApp 
-	ABCIListener 
-	// Closer interface 
+	// Listeners returns the streaming service's listeners for the BaseApp to register
+	Listeners() map[types.StoreKey][]store.WriteListener
+	// ABCIListener interface for hooking into the ABCI messages from inside the BaseApp
+	ABCIListener
+	// Closer interface
 	io.Closer
 }
 ```
@@ -598,10 +598,10 @@ func NewSimApp(
 	// configure state listening capabilities using AppOptions
 	listeners := cast.ToStringSlice(appOpts.Get("store.streamers"))
 	for _, listenerName := range listeners {
-		// get the store keys allowed to be exposed for this streaming service 
+		// get the store keys allowed to be exposed for this streaming service
 		exposeKeyStrs := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("streamers.%s.keys", streamerName)))
 		var exposeStoreKeys []sdk.StoreKey
-		if exposeAll(exposeKeyStrs) { // if list contains `*`, expose all StoreKeys 
+		if exposeAll(exposeKeyStrs) { // if list contains `*`, expose all StoreKeys
 			exposeStoreKeys = make([]sdk.StoreKey, 0, len(keys))
 			for _, storeKey := range keys {
 				exposeStoreKeys = append(exposeStoreKeys, storeKey)
@@ -614,7 +614,7 @@ func NewSimApp(
 				}
 			}
 		}
-		if len(exposeStoreKeys) == 0 { // short circuit if we are not exposing anything 
+		if len(exposeStoreKeys) == 0 { // short circuit if we are not exposing anything
 			continue
 		}
 		// get the constructor for this listener name

@@ -95,7 +95,8 @@ type AppModule struct {
 	inflationCalculator types.InflationCalculationFn
 }
 
-// NewAppModule creates a new AppModule object
+// NewAppModule creates a new AppModule object. If the InflationCalculationFn
+// argument is nil, then the SDK's default inflation function will be used.
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper, ic types.InflationCalculationFn) AppModule {
 	if ic == nil {
 		ic = types.DefaultInflationCalculationFn

@@ -32,8 +32,8 @@ func DownloadUpgrade(dstRoot, url, daemonName string) error {
 		if _, ok := err.(*getter.ChecksumError); ok {
 			return err
 		}
-		// File download didn't work, try it as a directory.
-		if err = downloadUpgradeAsDir(dstRoot, url, daemonName); err != nil {
+		// File download didn't work, try it as an archive.
+		if err = downloadUpgradeAsArchive(dstRoot, url, daemonName); err != nil {
 			// Out of options, send back the error.
 			return err
 		}
@@ -41,9 +41,11 @@ func DownloadUpgrade(dstRoot, url, daemonName string) error {
 	return EnsureBinary(target)
 }
 
-// downloadUpgradeAsDir tries to download the given url as a directory, saving it as the given dstDir.
+// downloadUpgradeAsArchive tries to download the given url as an archive.
+// The archive is unpacked and saved in dstDir.
+// If the archive contains /{daemonName} and not /bin/{daemonName}, then /{daemonName} will be moved to /bin/{daemonName}.
 // If this returns nil, the download was successful, and {dstDir}/bin/{daemonName} is a regular executable file.
-func downloadUpgradeAsDir(dstDir, url, daemonName string) error {
+func downloadUpgradeAsArchive(dstDir, url, daemonName string) error {
 	err := getter.Get(dstDir, url)
 	if err != nil {
 		return err

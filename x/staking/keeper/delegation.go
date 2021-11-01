@@ -8,6 +8,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -138,19 +139,35 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) e
 // return a given amount of all the delegator unbonding-delegations
 func (k Keeper) GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	maxRetrieve uint16) (unbondingDelegations []types.UnbondingDelegation) {
-	unbondingDelegations = make([]types.UnbondingDelegation, maxRetrieve)
-
 	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := types.GetUBDsKey(delegator)
 
-	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey)
+	iterKey := append(types.UnbondingDelegationEntryByDelValKey, address.MustLengthPrefix(delegator)...)
+	iterator := sdk.KVStorePrefixIterator(store, iterKey)
 	defer iterator.Close()
 
 	i := 0
 	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
-		unbondingDelegation := types.MustUnmarshalUBD(k.cdc, iterator.Value())
-		unbondingDelegations[i] = unbondingDelegation
-		i++
+		var index []uint64
+		err := json.Unmarshal(iterator.Value(), &index)
+		if err != nil {
+			panic("Failed to JSON unmarshal")
+		}
+
+		var ubd types.UnbondingDelegation
+
+		for _, id := range index {
+			ubde, found := k.GetUnbondingDelegationEntry(ctx, id)
+			if !found {
+				panic("UnbondingDelegationEntry by validator, delegator index corrupted")
+			}
+			ubd.Entries = append(ubd.Entries, ubde)
+		}
+
+		// all entries have the same delegator and validator
+		ubd.DelegatorAddress = ubd.Entries[0].DelegatorAddress
+		ubd.ValidatorAddress = ubd.Entries[0].ValidatorAddress
+
+		unbondingDelegations = append(unbondingDelegations, ubd)
 	}
 
 	return unbondingDelegations[:i] // trim if the array length < maxRetrieve
@@ -160,7 +177,7 @@ func (k Keeper) GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddres
 func (k Keeper) GetUnbondingDelegation(
 	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress,
 ) (ubd types.UnbondingDelegation, found bool) {
-	index := k.GetUBDEByValDelIndex(ctx, valAddr, delAddr)
+	index := k.GetUBDEByDelValIndex(ctx, delAddr, valAddr)
 
 	if len(index) == 0 {
 		return ubd, false
@@ -182,19 +199,36 @@ func (k Keeper) GetUnbondingDelegation(
 
 // return all unbonding delegations from a particular validator
 func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sdk.ValAddress) (ubds []types.UnbondingDelegation) {
-	store := ctx.KVStore(k.storeKey)
+	// store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.GetUBDsByValIndexKey(valAddr))
-	defer iterator.Close()
+	// iterator := sdk.KVStorePrefixIterator(store, types.GetUBDsByValIndexKey(valAddr))
+	// defer iterator.Close()
 
-	for ; iterator.Valid(); iterator.Next() {
-		key := types.GetUBDKeyFromValIndexKey(iterator.Key())
-		value := store.Get(key)
-		ubd := types.MustUnmarshalUBD(k.cdc, value)
-		ubds = append(ubds, ubd)
-	}
+	// for ; iterator.Valid(); iterator.Next() {
+	// 	key := types.GetUBDKeyFromValIndexKey(iterator.Key())
+	// 	value := store.Get(key)
+	// 	ubd := types.MustUnmarshalUBD(k.cdc, value)
+	// 	ubds = append(ubds, ubd)
+	// }
 
-	return ubds
+	// return ubds
+
+	// store.Iterator(types.UnbondingQueueKey,
+	// 	sdk.InclusiveEndBytes(types.GetUnbondingDelegationTimeKey(endTime)))
+
+	// Generate prefix with only validator address, allowing us to iterate through indexes of UBDEs
+	// for all delegators of this validator
+	// iterKey := append(types.UnbondingDelegationEntryByDelValKey, address.MustLengthPrefix(lAddr)...)
+
+	// iterator := sdk.KVStorePrefixIterator(store, iterKey)
+	// defer iterator.Close()
+
+	// for ; iterator.Valid(); iterator.Next() {
+	// 	key := types.GetUBDKeyFromValIndexKey(iterator.Key())
+	// 	value := store.Get(key)
+	// 	ubd := types.MustUnmarshalUBD(k.cdc, value)
+	// 	ubds = append(ubds, ubd)
+	// }
 }
 
 // iterate through all of the unbonding delegations
@@ -279,7 +313,7 @@ func (k Keeper) SetUnbondingDelegationEntry(
 	k.InsertUBDQueue(ctx, ubde, completionTime)
 	k.InsertUBDEByDelIndex(ctx, ubde, delegatorAddr)
 	k.InsertUBDEByValIndex(ctx, ubde, validatorAddr)
-	k.InsertUBDEByValDelIndex(ctx, ubde, validatorAddr, delegatorAddr)
+	k.InsertUBDEByDelValIndex(ctx, ubde, delegatorAddr, validatorAddr)
 
 	// Set record
 	bz := types.MustMarshalUBDE(k.cdc, ubde)
@@ -305,7 +339,7 @@ func (k Keeper) RemoveUnbondingDelegationEntry(ctx sdk.Context, ubde types.Unbon
 	// TODO Should queue index be removed here too?
 	k.RemoveUBDEByDelIndex(ctx, ubde)
 	k.RemoveUBDEByValIndex(ctx, ubde)
-	k.RemoveUBDEByValDelIndex(ctx, ubde)
+	k.RemoveUBDEByDelValIndex(ctx, ubde)
 
 	// Delete record
 	store.Delete(types.GetUnbondingDelegationEntryKey(ubde.Id))
@@ -419,10 +453,10 @@ func (k Keeper) RemoveUBDEByDelIndex(ctx sdk.Context, ubde types.UnbondingDelega
 	k.SetUBDEByDelIndex(ctx, delAddr, newIndex)
 }
 
-func (k Keeper) GetUBDEByValDelIndex(ctx sdk.Context, valAddr sdk.ValAddress, delAddr sdk.AccAddress) (ids []uint64) {
+func (k Keeper) GetUBDEByDelValIndex(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (ids []uint64) {
 	store := ctx.KVStore(k.storeKey)
 
-	bz := store.Get(types.GetUnbondingDelegationEntryByValDelKey(valAddr, delAddr))
+	bz := store.Get(types.GetUnbondingDelegationEntryByDelValKey(delAddr, valAddr))
 	if bz == nil {
 		return []uint64{}
 	}
@@ -435,7 +469,7 @@ func (k Keeper) GetUBDEByValDelIndex(ctx sdk.Context, valAddr sdk.ValAddress, de
 	return ids
 }
 
-func (k Keeper) SetUBDEByValDelIndex(ctx sdk.Context, valAddr sdk.ValAddress, delAddr sdk.AccAddress, ids []uint64) {
+func (k Keeper) SetUBDEByDelValIndex(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, ids []uint64) {
 	store := ctx.KVStore(k.storeKey)
 
 	bz, err := json.Marshal(ids)
@@ -443,26 +477,26 @@ func (k Keeper) SetUBDEByValDelIndex(ctx sdk.Context, valAddr sdk.ValAddress, de
 		panic("Failed to JSON marshal")
 	}
 
-	store.Set(types.GetUnbondingDelegationEntryByValDelKey(valAddr, delAddr), bz)
+	store.Set(types.GetUnbondingDelegationEntryByDelValKey(delAddr, valAddr), bz)
 }
 
-func (k Keeper) InsertUBDEByValDelIndex(ctx sdk.Context, ubde types.UnbondingDelegationEntry,
-	valAddr sdk.ValAddress, delAddr sdk.AccAddress) {
+func (k Keeper) InsertUBDEByDelValIndex(ctx sdk.Context, ubde types.UnbondingDelegationEntry,
+	delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 
 	ids := k.GetUBDEByDelIndex(ctx, delAddr)
 	if len(ids) == 0 {
-		k.SetUBDEByValDelIndex(ctx, valAddr, delAddr, []uint64{ubde.Id})
+		k.SetUBDEByDelValIndex(ctx, delAddr, valAddr, []uint64{ubde.Id})
 	} else {
 		ids = append(ids, ubde.Id)
-		k.SetUBDEByValDelIndex(ctx, valAddr, delAddr, ids)
+		k.SetUBDEByDelValIndex(ctx, delAddr, valAddr, ids)
 	}
 }
 
-func (k Keeper) RemoveUBDEByValDelIndex(ctx sdk.Context, ubde types.UnbondingDelegationEntry) {
+func (k Keeper) RemoveUBDEByDelValIndex(ctx sdk.Context, ubde types.UnbondingDelegationEntry) {
 	valAddr, _ := sdk.ValAddressFromBech32(ubde.ValidatorAddress)
 	delAddr, _ := sdk.AccAddressFromBech32(ubde.DelegatorAddress)
 
-	index := k.GetUBDEByValDelIndex(ctx, valAddr, delAddr)
+	index := k.GetUBDEByDelValIndex(ctx, delAddr, valAddr)
 
 	var newIndex []uint64
 	for _, id := range index {
@@ -471,7 +505,7 @@ func (k Keeper) RemoveUBDEByValDelIndex(ctx sdk.Context, ubde types.UnbondingDel
 		}
 	}
 
-	k.SetUBDEByValDelIndex(ctx, valAddr, delAddr, newIndex)
+	k.SetUBDEByDelValIndex(ctx, delAddr, valAddr, newIndex)
 }
 
 // gets a specific unbonding queue timeslice. A timeslice is a slice of IDs

@@ -46,7 +46,7 @@ var (
 	UnbondingDelegationEntryKey          = []byte{0x38}
 	UnbondingDelegationEntryByDelKey     = []byte{0x39}
 	UnbondingDelegationEntryByValKey     = []byte{0x3A}
-	UnbondingDelegationEntryByValDelKey  = []byte{0x3B}
+	UnbondingDelegationEntryByDelValKey  = []byte{0x3B}
 
 	UnbondingQueueKey    = []byte{0x41} // prefix for the timestamps in unbonding queue
 	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
@@ -69,9 +69,9 @@ func GetUnbondingDelegationEntryByDelKey(delAddr sdk.AccAddress) []byte {
 	return append(UnbondingDelegationEntryByDelKey, address.MustLengthPrefix(delAddr)...)
 }
 
-func GetUnbondingDelegationEntryByValDelKey(valAddr sdk.ValAddress, delAddr sdk.AccAddress) []byte {
-	valDel := append(address.MustLengthPrefix(valAddr), address.MustLengthPrefix(delAddr)...)
-	return append(UnbondingDelegationEntryByValDelKey, valDel...)
+func GetUnbondingDelegationEntryByDelValKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+	delVal := append(address.MustLengthPrefix(delAddr), address.MustLengthPrefix(valAddr)...)
+	return append(UnbondingDelegationEntryByDelValKey, delVal...)
 }
 
 // GetValidatorKey creates the key for the validator with address

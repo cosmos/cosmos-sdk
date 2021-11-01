@@ -15,8 +15,8 @@ var (
 )
 
 var (
-	errKeyEmpty error = errors.New("key is empty or nil")
-	errValueNil error = errors.New("value is nil")
+	errKeyEmpty = errors.New("key is empty or nil")
+	errValueNil = errors.New("value is nil")
 )
 
 // Store Implements types.KVStore and CommitKVStore.

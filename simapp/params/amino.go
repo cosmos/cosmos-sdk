@@ -1,4 +1,3 @@
-//go:build test_amino
 // +build test_amino
 
 package params

@@ -12,7 +12,15 @@ import (
 )
 
 // DownloadUpgrade downloads the given url into the provided directory and ensures it's valid.
+// The provided url must contain a checksum parameter that matches the file being downloaded.
 // If this returns nil, the download was successful, and {dstRoot}/bin/{daemonName} is a regular executable file.
+// This is an opinionated directory structure that corresponds with Cosmovisor requirements.
+// If the url is not an archive, it is downloaded and saved to {dstRoot}/bin/{daemonName}.
+// If the url is an archive, it is downloaded and unpacked to {dstRoot}.
+//    If the archive does not contain a /bin/{daemonName} file, then this will attempt to move /{daemonName} to /bin/{daemonName}.
+//    If the archive does not contain either /bin/{daemonName} or /{daemonName}, an error is returned.
+// Note: Because a checksum is required, this function cannot be used to download non-archive directories.
+// If dstRoot already exists, some or all of its contents might be updated.
 func DownloadUpgrade(dstRoot, url, daemonName string) error {
 	if err := checkURL(url); err != nil {
 		return err

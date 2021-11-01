@@ -302,7 +302,10 @@ func (k Keeper) GetUnbondingDelegationEntry(ctx sdk.Context, id uint64) (types.U
 func (k Keeper) RemoveUnbondingDelegationEntry(ctx sdk.Context, ubde types.UnbondingDelegationEntry) {
 	store := ctx.KVStore(k.storeKey)
 
-	// TODO Clean up indexes
+	// TODO Should queue index be removed here too?
+	k.RemoveUBDEByDelIndex(ctx, ubde)
+	k.RemoveUBDEByValIndex(ctx, ubde)
+	k.RemoveUBDEByValDelIndex(ctx, ubde)
 
 	// Delete record
 	store.Delete(types.GetUnbondingDelegationEntryKey(ubde.Id))
@@ -347,6 +350,21 @@ func (k Keeper) InsertUBDEByValIndex(ctx sdk.Context, ubde types.UnbondingDelega
 	}
 }
 
+func (k Keeper) RemoveUBDEByValIndex(ctx sdk.Context, ubde types.UnbondingDelegationEntry) {
+	valAddr, _ := sdk.ValAddressFromBech32(ubde.ValidatorAddress)
+
+	index := k.GetUBDEByValIndex(ctx, valAddr)
+
+	var newIndex []uint64
+	for _, id := range index {
+		if id != ubde.Id {
+			newIndex = append(newIndex, id)
+		}
+	}
+
+	k.SetUBDEByValIndex(ctx, valAddr, newIndex)
+}
+
 func (k Keeper) GetUBDEByDelIndex(ctx sdk.Context, delAddr sdk.AccAddress) (ids []uint64) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -386,6 +404,21 @@ func (k Keeper) InsertUBDEByDelIndex(ctx sdk.Context, ubde types.UnbondingDelega
 	}
 }
 
+func (k Keeper) RemoveUBDEByDelIndex(ctx sdk.Context, ubde types.UnbondingDelegationEntry) {
+	delAddr, _ := sdk.AccAddressFromBech32(ubde.DelegatorAddress)
+
+	index := k.GetUBDEByDelIndex(ctx, delAddr)
+
+	var newIndex []uint64
+	for _, id := range index {
+		if id != ubde.Id {
+			newIndex = append(newIndex, id)
+		}
+	}
+
+	k.SetUBDEByDelIndex(ctx, delAddr, newIndex)
+}
+
 func (k Keeper) GetUBDEByValDelIndex(ctx sdk.Context, valAddr sdk.ValAddress, delAddr sdk.AccAddress) (ids []uint64) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -423,6 +456,22 @@ func (k Keeper) InsertUBDEByValDelIndex(ctx sdk.Context, ubde types.UnbondingDel
 		ids = append(ids, ubde.Id)
 		k.SetUBDEByValDelIndex(ctx, valAddr, delAddr, ids)
 	}
+}
+
+func (k Keeper) RemoveUBDEByValDelIndex(ctx sdk.Context, ubde types.UnbondingDelegationEntry) {
+	valAddr, _ := sdk.ValAddressFromBech32(ubde.ValidatorAddress)
+	delAddr, _ := sdk.AccAddressFromBech32(ubde.DelegatorAddress)
+
+	index := k.GetUBDEByValDelIndex(ctx, valAddr, delAddr)
+
+	var newIndex []uint64
+	for _, id := range index {
+		if id != ubde.Id {
+			newIndex = append(newIndex, id)
+		}
+	}
+
+	k.SetUBDEByValDelIndex(ctx, valAddr, delAddr, newIndex)
 }
 
 // gets a specific unbonding queue timeslice. A timeslice is a slice of IDs

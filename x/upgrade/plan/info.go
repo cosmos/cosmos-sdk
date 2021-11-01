@@ -1,4 +1,4 @@
-package planinfo
+package plan
 
 import (
 	"encoding/json"
@@ -11,17 +11,17 @@ import (
 	"strings"
 )
 
-// PlanInfo is the special structure that the Plan.Info string can be (as json).
-type PlanInfo struct {
+// Info is the special structure that the Plan.Info string can be (as json).
+type Info struct {
 	Binaries BinaryDownloadURLMap `json:"binaries"`
 }
 
 // BinaryDownloadURLMap is a map of os/architecture stings to a URL where the binary can be downloaded.
 type BinaryDownloadURLMap map[string]string
 
-// ParsePlanInfo parses an info string into a map of os/arch strings to URL string.
+// ParseInfo parses an info string into a map of os/arch strings to URL string.
 // If the infoStr is a url, an GET request will be made to it, and its response will be parsed instead.
-func ParsePlanInfo(infoStr string) (*PlanInfo, error) {
+func ParseInfo(infoStr string) (*Info, error) {
 	infoStr = strings.TrimSpace(infoStr)
 
 	if len(infoStr) == 0 {
@@ -37,7 +37,7 @@ func ParsePlanInfo(infoStr string) (*PlanInfo, error) {
 	}
 
 	// Now, try to parse it into the expected structure.
-	var planInfo PlanInfo
+	var planInfo Info
 	if err := json.Unmarshal([]byte(infoStr), &planInfo); err != nil {
 		return nil, fmt.Errorf("could not parse plan info: %v", err)
 	}
@@ -45,13 +45,13 @@ func ParsePlanInfo(infoStr string) (*PlanInfo, error) {
 	return &planInfo, nil
 }
 
-// ValidateFull does all possible validation of this PlanInfo.
+// ValidateFull does all possible validation of this Info.
 // The provided daemonName is the name of the executable file expected in all downloaded directories.
 // It checks that:
 //  * Binaries.ValidateBasic() doesn't return an error
 //  * Binaries.CheckURLs(daemonName) doesn't return an error.
 // Warning: This is an expensive process. See BinaryDownloadURLMap.CheckURLs for more info.
-func (m PlanInfo) ValidateFull(daemonName string) error {
+func (m Info) ValidateFull(daemonName string) error {
 	if err := m.Binaries.ValidateBasic(); err != nil {
 		return err
 	}

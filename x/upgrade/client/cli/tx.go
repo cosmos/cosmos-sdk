@@ -11,8 +11,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types/planinfo"
 )
 
 const (
@@ -61,8 +61,8 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 				if daemonName, err = cmd.Flags().GetString(FlagDaemonName); err != nil {
 					return err
 				}
-				var planInfo *planinfo.PlanInfo
-				if planInfo, err = planinfo.ParsePlanInfo(prop.Plan.Info); err != nil {
+				var planInfo *plan.Info
+				if planInfo, err = plan.ParseInfo(prop.Plan.Info); err != nil {
 					return err
 				}
 				if err = planInfo.ValidateFull(daemonName); err != nil {

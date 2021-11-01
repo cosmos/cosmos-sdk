@@ -1,4 +1,4 @@
-package planinfo
+package plan
 
 import (
 	"testing"
@@ -8,38 +8,38 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type PlanInfoTestSuite struct {
+type InfoTestSuite struct {
 	suite.Suite
 
 	// Home is a temporary directory for use in these tests.
 	Home string
 }
 
-func (s *PlanInfoTestSuite) SetupTest() {
+func (s *InfoTestSuite) SetupTest() {
 	s.Home = s.T().TempDir()
 	s.T().Logf("Home: [%s]", s.Home)
 }
 
-func TestPlanInfoTestSuite(t *testing.T) {
-	suite.Run(t, new(PlanInfoTestSuite))
+func TestInfoTestSuite(t *testing.T) {
+	suite.Run(t, new(InfoTestSuite))
 }
 
 // saveSrcTestFile saves a TestFile in this test's Home/src directory.
 // The full path to the saved file is returned.
-func (s PlanInfoTestSuite) saveTestFile(f *TestFile) string {
+func (s InfoTestSuite) saveTestFile(f *TestFile) string {
 	fullName, err := f.SaveIn(s.Home)
 	s.Require().NoError(err, "saving test file %s", f.Name)
 	return fullName
 }
 
-func (s PlanInfoTestSuite) TestParsePlanInfo() {
+func (s InfoTestSuite) TestParseInfo() {
 	goodJSON := `{"binaries":{"os1/arch1":"url1","os2/arch2":"url2"}}`
 	binariesWrongJSON := `{"binaries":["foo","bar"]}`
 	binariesWrongValueJSON := `{"binaries":{"os1/arch1":1,"os2/arch2":2}}`
 	goodJSONPath := s.saveTestFile(NewTestFile("good.json", goodJSON))
 	binariesWrongJSONPath := s.saveTestFile(NewTestFile("binaries-wrong.json", binariesWrongJSON))
 	binariesWrongValueJSONPath := s.saveTestFile(NewTestFile("binaries-wrong-value.json", binariesWrongValueJSON))
-	goodJSONPlanInfo := &PlanInfo{
+	goodJSONAsInfo := &Info{
 		Binaries: BinaryDownloadURLMap{
 			"os1/arch1": "url1",
 			"os2/arch2": "url2",
@@ -57,65 +57,65 @@ func (s PlanInfoTestSuite) TestParsePlanInfo() {
 	}
 
 	tests := []struct {
-		name             string
-		infoStrMaker     func(t *testing.T) string
-		expectedPlanInfo *PlanInfo
-		expectedInError  []string
+		name            string
+		infoStrMaker    func(t *testing.T) string
+		expectedInfo    *Info
+		expectedInError []string
 	}{
 		{
-			name:             "json good",
-			infoStrMaker:     makeInfoStrFuncString(goodJSON),
-			expectedPlanInfo: goodJSONPlanInfo,
-			expectedInError:  nil,
+			name:            "json good",
+			infoStrMaker:    makeInfoStrFuncString(goodJSON),
+			expectedInfo:    goodJSONAsInfo,
+			expectedInError: nil,
 		},
 		{
-			name:             "blank string",
-			infoStrMaker:     makeInfoStrFuncString("   "),
-			expectedPlanInfo: nil,
-			expectedInError:  []string{"plan info cannot be blank"},
+			name:            "blank string",
+			infoStrMaker:    makeInfoStrFuncString("   "),
+			expectedInfo:    nil,
+			expectedInError: []string{"plan info cannot be blank"},
 		},
 		{
-			name:             "json binaries is wrong data type",
-			infoStrMaker:     makeInfoStrFuncString(binariesWrongJSON),
-			expectedPlanInfo: nil,
-			expectedInError:  []string{"could not parse plan info", "cannot unmarshal array into Go struct field PlanInfo.binaries"},
+			name:            "json binaries is wrong data type",
+			infoStrMaker:    makeInfoStrFuncString(binariesWrongJSON),
+			expectedInfo:    nil,
+			expectedInError: []string{"could not parse plan info", "cannot unmarshal array into Go struct field Info.binaries"},
 		},
 		{
-			name:             "json wrong data type in binaries value",
-			infoStrMaker:     makeInfoStrFuncString(binariesWrongValueJSON),
-			expectedPlanInfo: nil,
-			expectedInError:  []string{"could not parse plan info", "cannot unmarshal number into Go struct field PlanInfo.binaries"},
+			name:            "json wrong data type in binaries value",
+			infoStrMaker:    makeInfoStrFuncString(binariesWrongValueJSON),
+			expectedInfo:    nil,
+			expectedInError: []string{"could not parse plan info", "cannot unmarshal number into Go struct field Info.binaries"},
 		},
 		{
-			name:             "url does not exist",
-			infoStrMaker:     makeInfoStrFuncString("file:///this/file/does/not/exist?checksum=sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
-			expectedPlanInfo: nil,
-			expectedInError:  []string{"could not download url", "file:///this/file/does/not/exist"},
+			name:            "url does not exist",
+			infoStrMaker:    makeInfoStrFuncString("file:///this/file/does/not/exist?checksum=sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+			expectedInfo:    nil,
+			expectedInError: []string{"could not download url", "file:///this/file/does/not/exist"},
 		},
 		{
-			name:             "url good",
-			infoStrMaker:     makeInfoStrFuncURL(goodJSONPath),
-			expectedPlanInfo: goodJSONPlanInfo,
-			expectedInError:  nil,
+			name:            "url good",
+			infoStrMaker:    makeInfoStrFuncURL(goodJSONPath),
+			expectedInfo:    goodJSONAsInfo,
+			expectedInError: nil,
 		},
 		{
-			name:             "url binaries is wrong data type",
-			infoStrMaker:     makeInfoStrFuncURL(binariesWrongJSONPath),
-			expectedPlanInfo: nil,
-			expectedInError:  []string{"could not parse plan info", "cannot unmarshal array into Go struct field PlanInfo.binaries"},
+			name:            "url binaries is wrong data type",
+			infoStrMaker:    makeInfoStrFuncURL(binariesWrongJSONPath),
+			expectedInfo:    nil,
+			expectedInError: []string{"could not parse plan info", "cannot unmarshal array into Go struct field Info.binaries"},
 		},
 		{
-			name:             "url wrong data type in binaries value",
-			infoStrMaker:     makeInfoStrFuncURL(binariesWrongValueJSONPath),
-			expectedPlanInfo: nil,
-			expectedInError:  []string{"could not parse plan info", "cannot unmarshal number into Go struct field PlanInfo.binaries"},
+			name:            "url wrong data type in binaries value",
+			infoStrMaker:    makeInfoStrFuncURL(binariesWrongValueJSONPath),
+			expectedInfo:    nil,
+			expectedInError: []string{"could not parse plan info", "cannot unmarshal number into Go struct field Info.binaries"},
 		},
 	}
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
 			infoStr := tc.infoStrMaker(t)
-			actualPlanInfo, actualErr := ParsePlanInfo(infoStr)
+			actualInfo, actualErr := ParseInfo(infoStr)
 			if len(tc.expectedInError) > 0 {
 				require.Error(t, actualErr)
 				for _, expectedErr := range tc.expectedInError {
@@ -124,12 +124,12 @@ func (s PlanInfoTestSuite) TestParsePlanInfo() {
 			} else {
 				require.NoError(t, actualErr)
 			}
-			assert.Equal(t, tc.expectedPlanInfo, actualPlanInfo)
+			assert.Equal(t, tc.expectedInfo, actualInfo)
 		})
 	}
 }
 
-func (s PlanInfoTestSuite) TestPlanInfoValidateFull() {
+func (s InfoTestSuite) TestInfoValidateFull() {
 	darwinAMD64File := NewTestFile("darwin_amd64", "#!/usr/bin\necho 'darwin/amd64'\n")
 	linux386File := NewTestFile("linux_386", "#!/usr/bin\necho 'darwin/amd64'\n")
 	darwinAMD64Path := s.saveTestFile(darwinAMD64File)
@@ -139,13 +139,13 @@ func (s PlanInfoTestSuite) TestPlanInfoValidateFull() {
 
 	tests := []struct {
 		name     string
-		planInfo *PlanInfo
+		planInfo *Info
 		errs     []string
 	}{
 		// Positive test case
 		{
 			name: "two good entries",
-			planInfo: &PlanInfo{
+			planInfo: &Info{
 				Binaries: BinaryDownloadURLMap{
 					"darwin/amd64": darwinAMD64URL,
 					"linux/386":    linux386URL,
@@ -156,13 +156,13 @@ func (s PlanInfoTestSuite) TestPlanInfoValidateFull() {
 		// a failure from BinaryDownloadURLMap.ValidateBasic
 		{
 			name:     "empty binaries",
-			planInfo: &PlanInfo{Binaries: BinaryDownloadURLMap{}},
+			planInfo: &Info{Binaries: BinaryDownloadURLMap{}},
 			errs:     []string{"no \"binaries\" entries found"},
 		},
 		// a failure from BinaryDownloadURLMap.CheckURLS
 		{
 			name: "url does not exist",
-			planInfo: &PlanInfo{
+			planInfo: &Info{
 				Binaries: BinaryDownloadURLMap{
 					"darwin/arm64": "file:///no/such/file/exists/hopefully.zip?checksum=sha256:b5a2c96250612366ea272ffac6d9744aaf4b45aacd96aa7cfcb931ee3b558259",
 				},
@@ -186,7 +186,7 @@ func (s PlanInfoTestSuite) TestPlanInfoValidateFull() {
 	}
 }
 
-func (s PlanInfoTestSuite) TestBinaryDownloadURLMapValidateBasic() {
+func (s InfoTestSuite) TestBinaryDownloadURLMapValidateBasic() {
 	addDummyChecksum := func(url string) string {
 		return url + "?checksum=sha256:b5a2c96250612366ea272ffac6d9744aaf4b45aacd96aa7cfcb931ee3b558259"
 	}
@@ -282,7 +282,7 @@ func (s PlanInfoTestSuite) TestBinaryDownloadURLMapValidateBasic() {
 	}
 }
 
-func (s PlanInfoTestSuite) TestBinaryDownloadURLMapCheckURLs() {
+func (s InfoTestSuite) TestBinaryDownloadURLMapCheckURLs() {
 	darwinAMD64File := NewTestFile("darwin_amd64", "#!/usr/bin\necho 'darwin/amd64'\n")
 	linux386File := NewTestFile("linux_386", "#!/usr/bin\necho 'darwin/amd64'\n")
 	darwinAMD64Path := s.saveTestFile(darwinAMD64File)

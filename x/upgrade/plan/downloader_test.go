@@ -1,4 +1,4 @@
-package planinfo
+package plan
 
 import (
 	"archive/zip"

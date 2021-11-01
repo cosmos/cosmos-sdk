@@ -666,7 +666,7 @@ Example Output:
 }
 ```
 
-### Deposits
+### deposits
 
 The `Deposits` endpoint allows users to query all deposits for a given proposal.
 
@@ -739,7 +739,7 @@ Example Output:
 
 A user can query the `gov` module using REST endpoints.
 
-### proposals
+### proposal
 
 The `proposals` endpoint allows users to query a given proposal.
 
@@ -787,7 +787,7 @@ Example Output:
 
 ### proposals
 
-The `proposals` endpoint allows users to query all proposals with optional filters.
+The `proposals` endpoint also allows users to query all proposals with optional filters.
 
 ```bash
 /cosmos/gov/v1beta1/proposals
@@ -858,7 +858,7 @@ Example Output:
 }
 ```
 
-### votes
+### voter vote
 
 The `votes` endpoint allows users to query a vote for a given proposal.
 
@@ -995,7 +995,7 @@ Example Output:
 }
 ```
 
-### deposits
+### proposal deposits
 
 The `deposits` endpoint allows users to query all deposits for a given proposal.
 

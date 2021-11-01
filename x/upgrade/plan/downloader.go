@@ -22,7 +22,7 @@ import (
 // Note: Because a checksum is required, this function cannot be used to download non-archive directories.
 // If dstRoot already exists, some or all of its contents might be updated.
 func DownloadUpgrade(dstRoot, url, daemonName string) error {
-	if err := validateIsURLWithChecksum(url); err != nil {
+	if err := ValidateIsURLWithChecksum(url); err != nil {
 		return err
 	}
 	target := filepath.Join(dstRoot, "bin", daemonName)
@@ -105,7 +105,7 @@ func EnsureBinary(path string) error {
 //  - The URL does not return a regular file.
 //  - The downloaded file is empty or only whitespace.
 func DownloadURLWithChecksum(url string) (string, error) {
-	if err := validateIsURLWithChecksum(url); err != nil {
+	if err := ValidateIsURLWithChecksum(url); err != nil {
 		return "", err
 	}
 	tempDir, err := os.MkdirTemp("", "reference")
@@ -128,8 +128,8 @@ func DownloadURLWithChecksum(url string) (string, error) {
 	return tempFileStr, nil
 }
 
-// validateIsURLWithChecksum checks that the given string is a url and contains a checksum query parameter.
-func validateIsURLWithChecksum(urlStr string) error {
+// ValidateIsURLWithChecksum checks that the given string is a url and contains a checksum query parameter.
+func ValidateIsURLWithChecksum(urlStr string) error {
 	url, err := neturl.Parse(urlStr)
 	if err != nil {
 		return err

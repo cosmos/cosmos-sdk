@@ -78,7 +78,7 @@ func (m BinaryDownloadURLMap) ValidateBasic() error {
 		if key != "any" && !osArchRx.MatchString(key) {
 			return fmt.Errorf("invalid os/arch format in key \"%s\"", key)
 		}
-		if err := validateIsURLWithChecksum(val); err != nil {
+		if err := ValidateIsURLWithChecksum(val); err != nil {
 			return fmt.Errorf("invalid url \"%s\" in binaries[%s]: %v", val, key, err)
 		}
 	}

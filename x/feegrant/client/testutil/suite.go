@@ -18,6 +18,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/client/cli"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
@@ -825,6 +826,9 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 		spendLimit.String(),
 	)
 
+	govAcc, err := s.cfg.AccountRetriever.GetAccount(val.ClientCtx, authtypes.NewModuleAddress(feegrant.ModuleName))
+	s.Require().NoError(err)
+
 	// exec filtered fee allowance
 	cases := []struct {
 		name         string
@@ -836,7 +840,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 			"valid proposal tx",
 			func() (testutil.BufferWriter, error) {
 				return govtestutil.MsgSubmitProposal(s.T(), val.ClientCtx, grantee.String(),
-					[]sdk.Msg{govtypes.NewMsgVote(grantee, 1, govtypes.OptionYes)},
+					[]sdk.Msg{govtypes.NewMsgVote(govAcc.GetAddress(), 1, govtypes.OptionYes)},
 					fmt.Sprintf("--%s=%s", flags.FlagFeeAccount, granter.String()),
 				)
 			},

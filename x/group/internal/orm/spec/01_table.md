@@ -8,10 +8,11 @@ In the prefix store, entities should be stored by an unique identifier called `R
 Regular CRUD operations can be performed on a table, these methods take a `sdk.KVStore` as parameter to get the table prefix store.
 
 The `table` struct does not:
- - enforce uniqueness of the `RowID`
- - enforce prefix uniqueness of keys, i.e. not allowing one key to be a prefix
+
+- enforce uniqueness of the `RowID`
+- enforce prefix uniqueness of keys, i.e. not allowing one key to be a prefix
  of another
- - optimize Gas usage conditions
+- optimize Gas usage conditions
 The `table` struct is private, so that we only have custom tables built on top of it, that do satisfy these requirements.
 
 ## AutoUInt64Table

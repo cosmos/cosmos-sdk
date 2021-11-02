@@ -5,9 +5,9 @@ This document is an extension to [CONTRIBUTING](./CONTRIBUTING.md) and provides 
 ## API & Design
 
 + Code must be well structured:
-  + packages must have a limited responsibility (different concerns can go to different packages),
-  + types must be easy to compose,
-  + think about maintainbility and testability.
+    + packages must have a limited responsibility (different concerns can go to different packages),
+    + types must be easy to compose,
+    + think about maintainbility and testability.
 + "Depend upon abstractions, [not] concretions".
 + Try to limit the number of methods you are exposing. It's easier to expose something later than to hide it.
 + Take advantage of `internal` package concept.
@@ -19,20 +19,22 @@ This document is an extension to [CONTRIBUTING](./CONTRIBUTING.md) and provides 
 + Limit third-party dependencies.
 
 Performance:
+
 + Avoid unnecessary operations or memory allocations.
 
 Security:
-+ Pay proper attention to exploits involving:
-  + gas usage
-  + transaction verification and signatures
-  + malleability
-  + code must be always deterministic
-+ Thread safety. If some functionality is not thread-safe, or uses something that is not thread-safe, then clearly indicate the risk on each level.
 
++ Pay proper attention to exploits involving:
+    + gas usage
+    + transaction verification and signatures
+    + malleability
+    + code must be always deterministic
++ Thread safety. If some functionality is not thread-safe, or uses something that is not thread-safe, then clearly indicate the risk on each level.
 
 ## Testing
 
 Make sure your code is well tested:
+
 + Provide unit tests for every unit of your code if possible. Unit tests are expected to comprise 70%-80% of your tests.
 + Describe the test scenarios you are implementing for integration tests.
 + Create integration tests for queries and msgs.
@@ -64,6 +66,7 @@ for tcIndex, tc := range cases {
 ## Quality Assurance
 
 We are forming a QA team that will support the core Cosmos SDK team and collaborators by:
+
 - Improving the Cosmos SDK QA Processes
 - Improving automation in QA and testing
 - Defining high-quality metrics
@@ -82,6 +85,5 @@ Desired outcomes:
 - QA is happening in parallel with Core Cosmos SDK development.
 - Releases are more predictable.
 - QA reports. Goal is to guide with new tasks and be one of the QA measures.
-
 
 As a developer, you must help the QA team by providing instructions for User Experience (UX) and functional testing.

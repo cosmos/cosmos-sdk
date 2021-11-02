@@ -14,9 +14,9 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// wrapper is a wrapper around the tx.Tx proto.Message which retain the raw
+// Wrapper is a wrapper around the tx.Tx proto.Message which retain the raw
 // body and auth_info bytes.
-type wrapper struct {
+type Wrapper struct {
 	tx *tx.Tx
 
 	// bodyBz represents the protobuf encoding of TxBody. This should be encoding
@@ -31,11 +31,11 @@ type wrapper struct {
 }
 
 var (
-	_ authsigning.Tx                   = &wrapper{}
-	_ client.TxBuilder                 = &wrapper{}
-	_ middleware.HasExtensionOptionsTx = &wrapper{}
-	_ ExtensionOptionsTxBuilder        = &wrapper{}
-	_ tx.TipTx                         = &wrapper{}
+	_ authsigning.Tx                   = &Wrapper{}
+	_ client.TxBuilder                 = &Wrapper{}
+	_ middleware.HasExtensionOptionsTx = &Wrapper{}
+	_ ExtensionOptionsTxBuilder        = &Wrapper{}
+	_ tx.TipTx                         = &Wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
@@ -46,8 +46,8 @@ type ExtensionOptionsTxBuilder interface {
 	SetNonCriticalExtensionOptions(...*codectypes.Any)
 }
 
-func newBuilder() *wrapper {
-	return &wrapper{
+func newBuilder() *Wrapper {
+	return &Wrapper{
 		tx: &tx.Tx{
 			Body: &tx.TxBody{},
 			AuthInfo: &tx.AuthInfo{
@@ -57,15 +57,15 @@ func newBuilder() *wrapper {
 	}
 }
 
-func (w *wrapper) GetMsgs() []sdk.Msg {
+func (w *Wrapper) GetMsgs() []sdk.Msg {
 	return w.tx.GetMsgs()
 }
 
-func (w *wrapper) ValidateBasic() error {
+func (w *Wrapper) ValidateBasic() error {
 	return w.tx.ValidateBasic()
 }
 
-func (w *wrapper) getBodyBytes() []byte {
+func (w *Wrapper) getBodyBytes() []byte {
 	if len(w.bodyBz) == 0 {
 		// if bodyBz is empty, then marshal the body. bodyBz will generally
 		// be set to nil whenever SetBody is called so the result of calling
@@ -81,7 +81,7 @@ func (w *wrapper) getBodyBytes() []byte {
 	return w.bodyBz
 }
 
-func (w *wrapper) getAuthInfoBytes() []byte {
+func (w *Wrapper) getAuthInfoBytes() []byte {
 	if len(w.authInfoBz) == 0 {
 		// if authInfoBz is empty, then marshal the body. authInfoBz will generally
 		// be set to nil whenever SetAuthInfo is called so the result of calling
@@ -97,11 +97,11 @@ func (w *wrapper) getAuthInfoBytes() []byte {
 	return w.authInfoBz
 }
 
-func (w *wrapper) GetSigners() []sdk.AccAddress {
+func (w *Wrapper) GetSigners() []sdk.AccAddress {
 	return w.tx.GetSigners()
 }
 
-func (w *wrapper) GetPubKeys() ([]cryptotypes.PubKey, error) {
+func (w *Wrapper) GetPubKeys() ([]cryptotypes.PubKey, error) {
 	signerInfos := w.tx.AuthInfo.SignerInfos
 	pks := make([]cryptotypes.PubKey, len(signerInfos))
 
@@ -124,15 +124,15 @@ func (w *wrapper) GetPubKeys() ([]cryptotypes.PubKey, error) {
 	return pks, nil
 }
 
-func (w *wrapper) GetGas() uint64 {
+func (w *Wrapper) GetGas() uint64 {
 	return w.tx.AuthInfo.Fee.GasLimit
 }
 
-func (w *wrapper) GetFee() sdk.Coins {
+func (w *Wrapper) GetFee() sdk.Coins {
 	return w.tx.AuthInfo.Fee.Amount
 }
 
-func (w *wrapper) FeePayer() sdk.AccAddress {
+func (w *Wrapper) FeePayer() sdk.AccAddress {
 	feePayer := w.tx.AuthInfo.Fee.Payer
 	if feePayer != "" {
 		payerAddr, err := sdk.AccAddressFromBech32(feePayer)
@@ -145,7 +145,7 @@ func (w *wrapper) FeePayer() sdk.AccAddress {
 	return w.GetSigners()[0]
 }
 
-func (w *wrapper) FeeGranter() sdk.AccAddress {
+func (w *Wrapper) FeeGranter() sdk.AccAddress {
 	feePayer := w.tx.AuthInfo.Fee.Granter
 	if feePayer != "" {
 		granterAddr, err := sdk.AccAddressFromBech32(feePayer)
@@ -157,20 +157,20 @@ func (w *wrapper) FeeGranter() sdk.AccAddress {
 	return nil
 }
 
-func (w *wrapper) GetTip() *tx.Tip {
+func (w *Wrapper) GetTip() *tx.Tip {
 	return w.tx.AuthInfo.Tip
 }
 
-func (w *wrapper) GetMemo() string {
+func (w *Wrapper) GetMemo() string {
 	return w.tx.Body.Memo
 }
 
 // GetTimeoutHeight returns the transaction's timeout height (if set).
-func (w *wrapper) GetTimeoutHeight() uint64 {
+func (w *Wrapper) GetTimeoutHeight() uint64 {
 	return w.tx.Body.TimeoutHeight
 }
 
-func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
+func (w *Wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 	signerInfos := w.tx.AuthInfo.SignerInfos
 	sigs := w.tx.Signatures
 	pubKeys, err := w.GetPubKeys()
@@ -204,7 +204,7 @@ func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 	return res, nil
 }
 
-func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
+func (w *Wrapper) SetMsgs(msgs ...sdk.Msg) error {
 	anys, err := tx.SetMsgs(msgs)
 	if err != nil {
 		return err
@@ -219,21 +219,21 @@ func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
 }
 
 // SetTimeoutHeight sets the transaction's height timeout.
-func (w *wrapper) SetTimeoutHeight(height uint64) {
+func (w *Wrapper) SetTimeoutHeight(height uint64) {
 	w.tx.Body.TimeoutHeight = height
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
 	w.bodyBz = nil
 }
 
-func (w *wrapper) SetMemo(memo string) {
+func (w *Wrapper) SetMemo(memo string) {
 	w.tx.Body.Memo = memo
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
 	w.bodyBz = nil
 }
 
-func (w *wrapper) SetGasLimit(limit uint64) {
+func (w *Wrapper) SetGasLimit(limit uint64) {
 	if w.tx.AuthInfo.Fee == nil {
 		w.tx.AuthInfo.Fee = &tx.Fee{}
 	}
@@ -244,7 +244,7 @@ func (w *wrapper) SetGasLimit(limit uint64) {
 	w.authInfoBz = nil
 }
 
-func (w *wrapper) SetFeeAmount(coins sdk.Coins) {
+func (w *Wrapper) SetFeeAmount(coins sdk.Coins) {
 	if w.tx.AuthInfo.Fee == nil {
 		w.tx.AuthInfo.Fee = &tx.Fee{}
 	}
@@ -255,14 +255,14 @@ func (w *wrapper) SetFeeAmount(coins sdk.Coins) {
 	w.authInfoBz = nil
 }
 
-func (w *wrapper) SetTip(tip *tx.Tip) {
+func (w *Wrapper) SetTip(tip *tx.Tip) {
 	w.tx.AuthInfo.Tip = tip
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
 }
 
-func (w *wrapper) SetFeePayer(feePayer sdk.AccAddress) {
+func (w *Wrapper) SetFeePayer(feePayer sdk.AccAddress) {
 	if w.tx.AuthInfo.Fee == nil {
 		w.tx.AuthInfo.Fee = &tx.Fee{}
 	}
@@ -273,7 +273,7 @@ func (w *wrapper) SetFeePayer(feePayer sdk.AccAddress) {
 	w.authInfoBz = nil
 }
 
-func (w *wrapper) SetFeeGranter(feeGranter sdk.AccAddress) {
+func (w *Wrapper) SetFeeGranter(feeGranter sdk.AccAddress) {
 	if w.tx.AuthInfo.Fee == nil {
 		w.tx.AuthInfo.Fee = &tx.Fee{}
 	}
@@ -284,7 +284,7 @@ func (w *wrapper) SetFeeGranter(feeGranter sdk.AccAddress) {
 	w.authInfoBz = nil
 }
 
-func (w *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
+func (w *Wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
 	n := len(signatures)
 	signerInfos := make([]*tx.SignerInfo, n)
 	rawSigs := make([][]byte, n)
@@ -309,51 +309,51 @@ func (w *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
 	return nil
 }
 
-func (w *wrapper) setSignerInfos(infos []*tx.SignerInfo) {
+func (w *Wrapper) setSignerInfos(infos []*tx.SignerInfo) {
 	w.tx.AuthInfo.SignerInfos = infos
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
 }
 
-func (w *wrapper) setSignatures(sigs [][]byte) {
+func (w *Wrapper) setSignatures(sigs [][]byte) {
 	w.tx.Signatures = sigs
 }
 
-func (w *wrapper) GetTx() authsigning.Tx {
+func (w *Wrapper) GetTx() authsigning.Tx {
 	return w
 }
 
-func (w *wrapper) GetProtoTx() *tx.Tx {
+func (w *Wrapper) GetProtoTx() *tx.Tx {
 	return w.tx
 }
 
 // Deprecated: AsAny extracts proto Tx and wraps it into Any.
 // NOTE: You should probably use `GetProtoTx` if you want to serialize the transaction.
-func (w *wrapper) AsAny() *codectypes.Any {
+func (w *Wrapper) AsAny() *codectypes.Any {
 	return codectypes.UnsafePackAny(w.tx)
 }
 
 // WrapTx creates a TxBuilder wrapper around a tx.Tx proto message.
 func WrapTx(protoTx *tx.Tx) client.TxBuilder {
-	return &wrapper{
+	return &Wrapper{
 		tx: protoTx,
 	}
 }
 
-func (w *wrapper) GetExtensionOptions() []*codectypes.Any {
+func (w *Wrapper) GetExtensionOptions() []*codectypes.Any {
 	return w.tx.Body.ExtensionOptions
 }
 
-func (w *wrapper) GetNonCriticalExtensionOptions() []*codectypes.Any {
+func (w *Wrapper) GetNonCriticalExtensionOptions() []*codectypes.Any {
 	return w.tx.Body.NonCriticalExtensionOptions
 }
 
-func (w *wrapper) SetExtensionOptions(extOpts ...*codectypes.Any) {
+func (w *Wrapper) SetExtensionOptions(extOpts ...*codectypes.Any) {
 	w.tx.Body.ExtensionOptions = extOpts
 	w.bodyBz = nil
 }
 
-func (w *wrapper) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
+func (w *Wrapper) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 	w.tx.Body.NonCriticalExtensionOptions = extOpts
 	w.bodyBz = nil
 }

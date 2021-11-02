@@ -34,7 +34,7 @@ func (signModeDirectAuxHandler) GetSignBytes(
 		return nil, fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_DIRECT_AUX, mode)
 	}
 
-	protoTx, ok := tx.(*wrapper)
+	protoTx, ok := tx.(*Wrapper)
 	if !ok {
 		return nil, fmt.Errorf("can only handle a protobuf Tx, got %T", tx)
 	}

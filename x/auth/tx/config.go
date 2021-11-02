@@ -40,9 +40,9 @@ func (g config) NewTxBuilder() client.TxBuilder {
 
 // WrapTxBuilder returns a builder from provided transaction
 func (g config) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
-	newBuilder, ok := newTx.(*wrapper)
+	newBuilder, ok := newTx.(*Wrapper)
 	if !ok {
-		return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, newTx)
+		return nil, fmt.Errorf("expected %T, got %T", &Wrapper{}, newTx)
 	}
 
 	return newBuilder, nil

@@ -31,7 +31,7 @@ func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode,
 		return nil, fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, mode)
 	}
 
-	protoTx, ok := tx.(*wrapper)
+	protoTx, ok := tx.(*Wrapper)
 	if !ok {
 		return nil, fmt.Errorf("can only handle a protobuf Tx, got %T", tx)
 	}

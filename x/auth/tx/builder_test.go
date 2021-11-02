@@ -117,7 +117,7 @@ func TestTxBuilder(t *testing.T) {
 	txBuilder.SetNonCriticalExtensionOptions(any)
 	require.Equal(t, []*codectypes.Any{any}, txBuilder.GetNonCriticalExtensionOptions())
 
-	txBuilder = &wrapper{}
+	txBuilder = &Wrapper{}
 	require.NotPanics(t, func() {
 		_ = txBuilder.GetMsgs()
 	})

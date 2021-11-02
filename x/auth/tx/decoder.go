@@ -66,7 +66,7 @@ func DefaultTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 			Signatures: raw.Signatures,
 		}
 
-		return &wrapper{
+		return &Wrapper{
 			tx:                           theTx,
 			bodyBz:                       raw.BodyBytes,
 			authInfoBz:                   raw.AuthInfoBytes,
@@ -84,7 +84,7 @@ func DefaultJSONTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 
-		return &wrapper{
+		return &Wrapper{
 			tx: &theTx,
 		}, nil
 	}

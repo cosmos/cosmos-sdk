@@ -25,7 +25,7 @@ var (
 	timeout = uint64(10)
 )
 
-func buildTx(t *testing.T, bldr *wrapper) {
+func buildTx(t *testing.T, bldr *Wrapper) {
 	bldr.SetFeeAmount(coins)
 	bldr.SetGasLimit(gas)
 	bldr.SetMemo(memo)
@@ -44,32 +44,32 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	testcases := []struct {
 		name           string
 		signer         string
-		malleate       func(*wrapper)
+		malleate       func(*Wrapper)
 		expectedSignBz []byte
 	}{
 		{
 			"signer which is also fee payer (no tips)", addr1.String(),
-			func(w *wrapper) {},
+			func(w *Wrapper) {},
 			legacytx.StdSignBytes(chainId, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas}, []sdk.Msg{msg}, memo, nil),
 		},
 		{
 			"signer which is also fee payer (with tips)", addr2.String(),
-			func(w *wrapper) { w.SetTip(tip) },
+			func(w *Wrapper) { w.SetTip(tip) },
 			legacytx.StdSignBytes(chainId, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas}, []sdk.Msg{msg}, memo, tip),
 		},
 		{
 			"explicit fee payer", addr1.String(),
-			func(w *wrapper) { w.SetFeePayer(addr2) },
+			func(w *Wrapper) { w.SetFeePayer(addr2) },
 			legacytx.StdSignBytes(chainId, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Payer: addr2.String()}, []sdk.Msg{msg}, memo, nil),
 		},
 		{
 			"explicit fee granter", addr1.String(),
-			func(w *wrapper) { w.SetFeeGranter(addr2) },
+			func(w *Wrapper) { w.SetFeeGranter(addr2) },
 			legacytx.StdSignBytes(chainId, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Granter: addr2.String()}, []sdk.Msg{msg}, memo, nil),
 		},
 		{
 			"explicit fee payer and fee granter", addr1.String(),
-			func(w *wrapper) {
+			func(w *Wrapper) {
 				w.SetFeePayer(addr2)
 				w.SetFeeGranter(addr2)
 			},
@@ -77,7 +77,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 		},
 		{
 			"signer which is also tipper", addr1.String(),
-			func(w *wrapper) { w.SetTip(tip) },
+			func(w *Wrapper) { w.SetTip(tip) },
 			legacytx.StdSignBytes(chainId, accNum, seqNum, timeout, legacytx.StdFee{}, []sdk.Msg{msg}, memo, tip),
 		},
 	}

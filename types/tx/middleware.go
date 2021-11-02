@@ -6,6 +6,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 // RequestSimulateTx is the request type for the tx.Handler.RequestSimulateTx
@@ -24,9 +25,9 @@ type ResponseSimulateTx struct {
 // TxHandler defines the baseapp's CheckTx, DeliverTx and Simulate respective
 // handlers. It is designed as a middleware stack.
 type Handler interface {
-	CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error)
-	DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error)
-	SimulateTx(ctx context.Context, tx sdk.Tx, req RequestSimulateTx) (ResponseSimulateTx, error)
+	CheckTx(ctx context.Context, tx tx.Wrapper, req abci.RequestCheckTx) (abci.ResponseCheckTx, error)
+	DeliverTx(ctx context.Context, tx tx.Wrapper, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error)
+	SimulateTx(ctx context.Context, tx tx.Wrapper, req RequestSimulateTx) (ResponseSimulateTx, error)
 }
 
 // TxMiddleware defines one layer of the TxHandler middleware stack.

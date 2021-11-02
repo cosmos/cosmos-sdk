@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -480,10 +478,6 @@ func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
 func (app *BaseApp) getState(mode runTxMode) *state {
 	if mode == runTxModeDeliver {
 		return app.deliverState
-	}
-
-	if app.checkState.ctx.BlockTime().UnixNano() < 1 {
-		app.checkState.ctx = app.checkState.ctx.WithBlockTime(time.Now())
 	}
 
 	return app.checkState

@@ -228,8 +228,11 @@ message Tip {
 // by the node if sent directly as-is.
 message AuxSignerData {
 	// sign_doc is the SIGN_MOD_DIRECT_AUX sign doc that the auxiliary signer
-  // signs.
+  // signs. Note: we use the same sign doc even if we're signing with
+  // LEGACY_AMINO_JSON.
 	SignDocDirectAux sign_doc = 1;
+  // mode is the signing mode of the single signer
+  cosmos.tx.signing.v1beta1.SignMode mode = 2;
 	// sig is the signature of the sign doc.
-	bytes sig = 2;
+	bytes sig = 3;
 }

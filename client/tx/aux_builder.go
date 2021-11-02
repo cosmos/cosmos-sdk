@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // AuxTxBuilder is a client-side builder for creating an AuxTx.
@@ -72,6 +73,18 @@ func (b *AuxTxBuilder) SetPubKey(pk cryptotypes.PubKey) error {
 	b.checkEmptyFields()
 
 	b.auxSignerData.SignDoc.PublicKey = any
+
+	return nil
+}
+
+func (b *AuxTxBuilder) SetSignMode(mode signing.SignMode) error {
+	switch mode {
+	case signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
+	default:
+		return sdkerrors.ErrInvalidRequest.Wrapf("AuxTxBuilder can only sign with %s or %s", signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	}
+
+	b.auxSignerData.Mode = mode
 
 	return nil
 }

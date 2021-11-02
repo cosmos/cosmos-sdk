@@ -4,6 +4,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // ValidateBasic performs stateless validation of the sign doc.
@@ -35,7 +36,11 @@ func (s *SignDocDirectAux) UnpackInterfaces(unpacker codectypes.AnyUnpacker) err
 }
 
 // ValidateBasic performs stateless validation of the auxiliary tx.
-func (a *AuxTx) ValidateBasic() error {
+func (a *AuxSignerData) ValidateBasic() error {
+	if a.Mode != signing.SignMode_SIGN_MODE_DIRECT_AUX && a.Mode != signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
+		return sdkerrors.ErrInvalidRequest.Wrapf("AuxTxBuilder can only sign with %s or %s", signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	}
+
 	if len(a.Sig) == 0 {
 		return sdkerrors.ErrNoSignatures.Wrap("signature cannot be empty")
 	}
@@ -44,6 +49,6 @@ func (a *AuxTx) ValidateBasic() error {
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
-func (a *AuxTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (a *AuxSignerData) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return a.GetSignDoc().UnpackInterfaces(unpacker)
 }

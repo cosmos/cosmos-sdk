@@ -47,6 +47,7 @@ var (
 	UnbondingDelegationEntryByDelKey     = []byte{0x39}
 	UnbondingDelegationEntryByValKey     = []byte{0x3A}
 	UnbondingDelegationEntryByDelValKey  = []byte{0x3B}
+	UnbondingDelegationEntryByValDelKey  = []byte{0x3C}
 
 	UnbondingQueueKey    = []byte{0x41} // prefix for the timestamps in unbonding queue
 	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
@@ -71,6 +72,26 @@ func GetUnbondingDelegationEntryByDelKey(delAddr sdk.AccAddress) []byte {
 
 func GetUnbondingDelegationEntryByDelValKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	delVal := append(address.MustLengthPrefix(delAddr), address.MustLengthPrefix(valAddr)...)
+	return append(UnbondingDelegationEntryByDelValKey, delVal...)
+}
+
+func GetUnbondingDelegationEntryByValDelKey(valAddr sdk.ValAddress, delAddr sdk.AccAddress) []byte {
+	valDel := append(address.MustLengthPrefix(valAddr), address.MustLengthPrefix(delAddr)...)
+	return append(UnbondingDelegationEntryByDelValKey, valDel...)
+}
+
+// GetUBDEDelValToValDel rearranges the ValDelIndexKey to get a DelValIndexKey
+func UBDEValDelToDelValIndexKey(indexKey []byte) []byte {
+	kv.AssertKeyAtLeastLength(indexKey, 2)
+	addrs := indexKey[1:] // remove prefix bytes
+
+	valAddrLen := addrs[0]
+	kv.AssertKeyAtLeastLength(addrs, 2+int(valAddrLen))
+	valAddr := addrs[1 : 1+valAddrLen]
+	kv.AssertKeyAtLeastLength(addrs, 3+int(valAddrLen))
+	delAddr := addrs[valAddrLen+2:]
+
+	delVal := append(delAddr, valAddr...)
 	return append(UnbondingDelegationEntryByDelValKey, delVal...)
 }
 

@@ -290,7 +290,7 @@ func (app *BaseApp) init() error {
 	}
 
 	// needed for the export command which inits from store but never calls initchain
-	app.setCheckState(tmproto.Header{Time: time.Now()})
+	app.setCheckState(tmproto.Header{})
 	app.Seal()
 
 	// make sure the snapshot interval is a multiple of the pruning KeepEvery interval
@@ -480,6 +480,10 @@ func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
 func (app *BaseApp) getState(mode runTxMode) *state {
 	if mode == runTxModeDeliver {
 		return app.deliverState
+	}
+
+	if app.checkState.ctx.BlockTime().UnixNano() < 1 {
+		app.checkState.ctx = app.checkState.ctx.WithBlockTime(time.Now())
 	}
 
 	return app.checkState

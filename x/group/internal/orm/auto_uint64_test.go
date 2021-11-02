@@ -86,7 +86,7 @@ func TestAutoUInt64PrefixScan(t *testing.T) {
 			expResult: []testdata.TableModel{t2, t3},
 			expRowIDs: []RowID{EncodeSequence(2), EncodeSequence(3)},
 		},
-		"start before end should fail": {
+		"start after end should fail": {
 			start:    2,
 			end:      1,
 			method:   tb.PrefixScan,
@@ -133,7 +133,7 @@ func TestAutoUInt64PrefixScan(t *testing.T) {
 			expResult: []testdata.TableModel{t3, t2},
 			expRowIDs: []RowID{EncodeSequence(3), EncodeSequence(2)},
 		},
-		"reverse start before end should fail": {
+		"reverse start after end should fail": {
 			start:    2,
 			end:      1,
 			method:   tb.ReversePrefixScan,

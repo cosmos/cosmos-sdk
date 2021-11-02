@@ -18,6 +18,7 @@ import (
 // Transaction command flags
 const (
 	FlagDelayed = "delayed"
+	FlagMerge   = "merge"
 )
 
 // GetTxCmd returns vesting module's transaction commands.
@@ -157,7 +158,9 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 				periods = append(periods, period)
 			}
 
-			msg := types.NewMsgCreatePeriodicVestingAccount(clientCtx.GetFromAddress(), toAddr, vestingData.StartTime, periods)
+			merge, _ := cmd.Flags().GetBool(FlagMerge)
+
+			msg := types.NewMsgCreatePeriodicVestingAccount(clientCtx.GetFromAddress(), toAddr, vestingData.StartTime, periods, merge)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -166,6 +169,7 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 		},
 	}
 
+	cmd.Flags().Bool(FlagMerge, false, "Merge new amount and schedule with existing periodic vesting account, if any")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

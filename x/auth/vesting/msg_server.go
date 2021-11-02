@@ -99,6 +99,86 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 	return &types.MsgCreateVestingAccountResponse{}, nil
 }
 
+func min64(i, j int64) int64 {
+	if i < j {
+		return i
+	}
+	return j
+}
+
+// mergePeriods returns the merge of two vesting period schedules.
+// The merge is defined as the union of the vesting events, with simultaneous
+// events combined into a single event.
+// Returns new start time, new end time, and merged vesting events, relative to
+// the new start time.
+func mergePeriods(startP, startQ int64, p, q []types.Period) (int64, int64, []types.Period) {
+	timeP := startP // time of last merged p event, next p event is relative to this time
+	timeQ := startQ // time of last merged q event, next q event is relative to this time
+	iP := 0         // p indexes before this have been merged
+	iQ := 0         // q indexes before this have been merged
+	lenP := len(p)
+	lenQ := len(q)
+	startTime := min64(startP, startQ) // we pick the earlier time
+	time := startTime                  // time of last merged event, or the start time
+	merged := []types.Period{}
+
+	// emit adds a merged period and updates the last event time
+	emit := func(nextTime int64, amount sdk.Coins) {
+		period := types.Period{
+			Length: nextTime - time,
+			Amount: amount,
+		}
+		merged = append(merged, period)
+		time = nextTime
+	}
+
+	// consumeP emits the next period from p, updating indexes
+	consumeP := func(nextP int64) {
+		emit(nextP, p[iP].Amount)
+		timeP = nextP
+		iP++
+	}
+
+	// consumeQ emits the next period from q, updating indexes
+	consumeQ := func(nextQ int64) {
+		emit(nextQ, q[iQ].Amount)
+		timeQ = nextQ
+		iQ++
+	}
+
+	// consumeBoth emits a merge of the next periods from p and q, updating indexes
+	consumeBoth := func(nextTime int64) {
+		emit(nextTime, p[iP].Amount.Add(q[iQ].Amount...))
+		timeP = nextTime
+		timeQ = nextTime
+		iP++
+		iQ++
+	}
+
+	for iP < lenP && iQ < lenQ {
+		nextP := timeP + p[iP].Length // next p event in absolute time
+		nextQ := timeQ + q[iQ].Length // next q event in absolute time
+		if nextP < nextQ {
+			consumeP(nextP)
+		} else if nextP > nextQ {
+			consumeQ(nextQ)
+		} else {
+			consumeBoth(nextP)
+		}
+	}
+	for iP < lenP {
+		// Ragged end - consume remaining p
+		nextP := timeP + p[iP].Length
+		consumeP(nextP)
+	}
+	for iQ < lenQ {
+		// Ragged end - consume remaining q
+		nextQ := timeQ + q[iQ].Length
+		consumeQ(nextQ)
+	}
+	return startTime, time, merged
+}
+
 func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *types.MsgCreatePeriodicVestingAccount) (*types.MsgCreatePeriodicVestingAccountResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -118,19 +198,35 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
 	}
 
-	if acc := ak.GetAccount(ctx, to); acc != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
-	}
-
 	var totalCoins sdk.Coins
-
 	for _, period := range msg.VestingPeriods {
 		totalCoins = totalCoins.Add(period.Amount...)
 	}
+	totalCoins = totalCoins.Sort()
 
-	baseAccount := ak.NewAccountWithAddress(ctx, to)
+	acc := ak.GetAccount(ctx, to)
 
-	acc := types.NewPeriodicVestingAccount(baseAccount.(*authtypes.BaseAccount), totalCoins.Sort(), msg.StartTime, msg.VestingPeriods)
+	if acc != nil {
+		pva, ok := acc.(*types.PeriodicVestingAccount)
+		if !msg.Merge {
+			if ok {
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists; consider using --merge", msg.ToAddress)
+			}
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
+		}
+		if !ok {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrNotSupported, "account %s must be a periodic vestic account", msg.ToAddress)
+		}
+		newStart, newEnd, newPeriods := mergePeriods(pva.StartTime, msg.GetStartTime(),
+			pva.GetVestingPeriods(), msg.GetVestingPeriods())
+		pva.StartTime = newStart
+		pva.EndTime = newEnd
+		pva.VestingPeriods = newPeriods
+		pva.OriginalVesting = pva.OriginalVesting.Add(totalCoins...)
+	} else {
+		baseAccount := ak.NewAccountWithAddress(ctx, to)
+		acc = types.NewPeriodicVestingAccount(baseAccount.(*authtypes.BaseAccount), totalCoins, msg.StartTime, msg.VestingPeriods)
+	}
 
 	ak.SetAccount(ctx, acc)
 

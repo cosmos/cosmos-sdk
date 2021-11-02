@@ -2,6 +2,7 @@ package vesting_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -111,7 +112,7 @@ func (suite *HandlerTestSuite) TestMsgCreatePeriodicVestingAccount() {
 	}{
 		{
 			name:      "create periodic vesting account",
-			msg:       types.NewMsgCreatePeriodicVestingAccount(addr1, addr3, 0, period),
+			msg:       types.NewMsgCreatePeriodicVestingAccount(addr1, addr3, 0, period, false),
 			expectErr: false,
 		},
 		{
@@ -136,7 +137,7 @@ func (suite *HandlerTestSuite) TestMsgCreatePeriodicVestingAccount() {
 		},
 		{
 			name:      "account exists",
-			msg:       types.NewMsgCreatePeriodicVestingAccount(addr1, addr1, 0, period),
+			msg:       types.NewMsgCreatePeriodicVestingAccount(addr1, addr1, 0, period, false),
 			expectErr: true,
 		},
 	}
@@ -169,6 +170,80 @@ func (suite *HandlerTestSuite) TestMsgCreatePeriodicVestingAccount() {
 			}
 		})
 	}
+}
+
+func (suite *HandlerTestSuite) TestMsgCreatePeriodicVestingAccount_Merge() {
+	tst := func(amt int64) sdk.Coin {
+		return sdk.NewInt64Coin("test", amt)
+	}
+	ctx := suite.app.BaseApp.NewContext(false, tmproto.Header{Height: suite.app.LastBlockHeight() + 1})
+
+	addr1 := sdk.AccAddress([]byte("addr1_______________"))
+	addr2 := sdk.AccAddress([]byte("addr2_______________"))
+	addr3 := sdk.AccAddress([]byte("addr3_______________"))
+	addr4 := sdk.AccAddress([]byte("addr4_______________"))
+
+	// Create the funding account
+	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
+	suite.app.AccountKeeper.SetAccount(ctx, acc1)
+	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, ctx, addr1, sdk.NewCoins(tst(1000))))
+
+	// Create a normal account - cannot merge into it
+	acc2 := suite.app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
+	suite.app.AccountKeeper.SetAccount(ctx, acc2)
+	periods := []types.Period{
+		{Length: 1000, Amount: sdk.NewCoins(tst(60))},
+		{Length: 1000, Amount: sdk.NewCoins(tst(40))},
+	}
+	res, err := suite.handler(ctx, types.NewMsgCreatePeriodicVestingAccount(addr1, addr2, 0, periods, true))
+	suite.Require().Nil(res, "want nil result when merging with non-periodic vesting account")
+	suite.Require().Error(err, "want failure when merging with non-periodic vesting account")
+	funderBalance := suite.app.BankKeeper.GetBalance(ctx, addr1, "test")
+	suite.Require().Equal(funderBalance, tst(1000))
+
+	// Create a PVA normally
+	res, err = suite.handler(ctx, types.NewMsgCreatePeriodicVestingAccount(addr1, addr3, 0, periods, false))
+	suite.Require().NotNil(res)
+	suite.Require().NoError(err)
+	acc3 := suite.app.AccountKeeper.GetAccount(ctx, addr3)
+	suite.Require().NotNil(acc3)
+	suite.Require().IsType(&types.PeriodicVestingAccount{}, acc3)
+	funderBalance = suite.app.BankKeeper.GetBalance(ctx, addr1, "test")
+	suite.Require().Equal(funderBalance, tst(900))
+	balance := suite.app.BankKeeper.GetBalance(ctx, addr3, "test")
+	suite.Require().Equal(balance, tst(100))
+
+	// Add new funding to it
+	res, err = suite.handler(ctx, types.NewMsgCreatePeriodicVestingAccount(addr1, addr3, 2000, periods, true))
+	suite.Require().NotNil(res)
+	suite.Require().NoError(err)
+	acc3 = suite.app.AccountKeeper.GetAccount(ctx, addr3)
+	suite.Require().NotNil(acc3)
+	suite.Require().IsType(&types.PeriodicVestingAccount{}, acc3)
+	funderBalance = suite.app.BankKeeper.GetBalance(ctx, addr1, "test")
+	suite.Require().Equal(funderBalance, tst(800))
+	balance = suite.app.BankKeeper.GetBalance(ctx, addr3, "test")
+	suite.Require().Equal(balance, tst(200))
+	pva := acc3.(*types.PeriodicVestingAccount)
+	suite.Require().True(pva.GetVestingCoins(time.Unix(0, 0)).IsEqual(sdk.NewCoins(tst(200))))
+	suite.Require().True(pva.GetVestingCoins(time.Unix(1005, 0)).IsEqual(sdk.NewCoins(tst(140))))
+	suite.Require().True(pva.GetVestingCoins(time.Unix(2005, 0)).IsEqual(sdk.NewCoins(tst(100))))
+	suite.Require().True(pva.GetVestingCoins(time.Unix(3005, 0)).IsEqual(sdk.NewCoins(tst(40))))
+	suite.Require().True(pva.GetVestingCoins(time.Unix(4005, 0)).IsEqual(sdk.NewCoins(tst(0))))
+
+	// Can create a new periodic vesting account using merge flag too
+	acc4 := suite.app.AccountKeeper.GetAccount(ctx, addr4)
+	suite.Require().Nil(acc4)
+	res, err = suite.handler(ctx, types.NewMsgCreatePeriodicVestingAccount(addr1, addr4, 0, periods, true))
+	suite.Require().NotNil(res)
+	suite.Require().NoError(err)
+	acc4 = suite.app.AccountKeeper.GetAccount(ctx, addr4)
+	suite.Require().NotNil(acc4)
+	suite.Require().IsType(&types.PeriodicVestingAccount{}, acc4)
+	funderBalance = suite.app.BankKeeper.GetBalance(ctx, addr1, "test")
+	suite.Require().Equal(funderBalance, tst(700))
+	balance = suite.app.BankKeeper.GetBalance(ctx, addr4, "test")
+	suite.Require().Equal(balance, tst(100))
 }
 
 func TestHandlerTestSuite(t *testing.T) {

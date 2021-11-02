@@ -188,6 +188,20 @@ func (s *IntegrationTestSuite) TestNewMsgCreatePeriodicVestingAccountCmd() {
 			},
 			expectErr: true,
 		},
+		"merge": {
+			args: []string{
+				sdk.AccAddress("addr9_______________").String(),
+				"testdata/periods1.json",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				"--merge",
+			},
+			expectErr:    false,
+			expectedCode: 0,
+			respType:     &sdk.TxResponse{},
+		},
 	}
 
 	for name, tc := range testCases {

@@ -43,6 +43,7 @@ message MsgCreatePeriodicVestingAccount {
   string   to_address                      = 2 [(gogoproto.moretags) = "yaml:\"to_address\""];
   int64    start_time                      = 3 [(gogoproto.moretags) = "yaml:\"start_time\""];
   repeated Period vesting_periods = 4 [(gogoproto.nullable) = false];
+  bool merge = 5;
 }
 
 // MsgCreatePeriodicVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount

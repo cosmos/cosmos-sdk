@@ -21,8 +21,19 @@ import (
 func Test_splitAndCall_NoMessages(t *testing.T) {
 	clientCtx := client.Context{}
 
-	err := newSplitAndApply(nil, clientCtx, nil, nil, 10)
-	assert.NoError(t, err, "")
+	// empty tx will always trigger genOrBroadcastFn
+	maxMsgsCases := []int{0, 1, 10}
+	calledCounter := 0
+	for _, maxMsgs := range maxMsgsCases {
+		err := newSplitAndApply(
+			func(clientCtx client.Context, fs *pflag.FlagSet, msgs ...sdk.Msg) error {
+				// dummy genOrBroadcastFn called once for each case
+				calledCounter++
+				return nil
+			}, clientCtx, nil, nil, maxMsgs)
+		assert.NoError(t, err, "")
+	}
+	assert.Equal(t, calledCounter, len(maxMsgsCases))
 }
 
 func Test_splitAndCall_Splitting(t *testing.T) {

@@ -52,13 +52,12 @@ func newSplitAndApply(
 	genOrBroadcastFn newGenerateOrBroadcastFunc, clientCtx client.Context,
 	fs *pflag.FlagSet, msgs []sdk.Msg, chunkSize int,
 ) error {
-
-	if chunkSize == 0 {
+	totalMessages := len(msgs)
+	if chunkSize == 0 || totalMessages == 0 {
 		return genOrBroadcastFn(clientCtx, fs, msgs...)
 	}
 
 	// split messages into slices of length chunkSize
-	totalMessages := len(msgs)
 	for i := 0; i < len(msgs); i += chunkSize {
 
 		sliceEnd := i + chunkSize

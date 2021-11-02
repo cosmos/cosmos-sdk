@@ -9,6 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
+// defaultPageLimit is the default limit value for pagination requests.
+const defaultPageLimit = 100
+
 // IteratorFunc is a function type that satisfies the Iterator interface
 // The passed function is called on LoadNext operations.
 type IteratorFunc func(dest codec.ProtoMarshaler) (RowID, error)
@@ -134,7 +137,7 @@ func Paginate(
 	}
 
 	if limit == 0 {
-		limit = 100
+		limit = defaultPageLimit
 
 		// count total results when the limit is zero/not supplied
 		countTotal = true

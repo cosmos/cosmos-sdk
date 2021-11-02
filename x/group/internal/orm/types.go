@@ -10,8 +10,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 // Unique identifier of a persistent table.
@@ -98,14 +99,14 @@ type AfterSetInterceptor func(store sdk.KVStore, rowID RowID, newValue, oldValue
 type AfterDeleteInterceptor func(store sdk.KVStore, rowID RowID, value codec.ProtoMarshaler) error
 
 // RowGetter loads a persistent object by row ID into the destination object. The dest parameter must therefore be a pointer.
-// Any implementation must return `errors.ErrNotFound` when no object for the rowID exists
+// Any implementation must return `sdkerrors.ErrNotFound` when no object for the rowID exists
 type RowGetter func(store sdk.KVStore, rowID RowID, dest codec.ProtoMarshaler) error
 
 // NewTypeSafeRowGetter returns a `RowGetter` with type check on the dest parameter.
 func NewTypeSafeRowGetter(prefixKey [2]byte, model reflect.Type, cdc codec.Codec) RowGetter {
 	return func(store sdk.KVStore, rowID RowID, dest codec.ProtoMarshaler) error {
 		if len(rowID) == 0 {
-			return errors.Wrap(errors.ErrORMEmptyKey, "key must not be nil")
+			return sdkerrors.Wrap(errors.ErrORMEmptyKey, "key must not be nil")
 		}
 		if err := assertCorrectType(model, dest); err != nil {
 			return err
@@ -115,7 +116,7 @@ func NewTypeSafeRowGetter(prefixKey [2]byte, model reflect.Type, cdc codec.Codec
 		it := pStore.Iterator(PrefixRange(rowID))
 		defer it.Close()
 		if !it.Valid() {
-			return errors.ErrNotFound
+			return sdkerrors.ErrNotFound
 		}
 		return cdc.Unmarshal(it.Value(), dest)
 	}
@@ -124,10 +125,10 @@ func NewTypeSafeRowGetter(prefixKey [2]byte, model reflect.Type, cdc codec.Codec
 func assertCorrectType(model reflect.Type, obj codec.ProtoMarshaler) error {
 	tp := reflect.TypeOf(obj)
 	if tp.Kind() != reflect.Ptr {
-		return errors.Wrap(errors.ErrInvalidType, "model destination must be a pointer")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidType, "model destination must be a pointer")
 	}
 	if model != tp.Elem() {
-		return errors.Wrapf(errors.ErrInvalidType, "can not use %T with this bucket", obj)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "can not use %T with this bucket", obj)
 	}
 	return nil
 }

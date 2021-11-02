@@ -2,7 +2,8 @@ package orm
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 // IndexerFunc creates one or multiple index keys for the source object.
@@ -125,7 +126,7 @@ func uniqueKeysAddFunc(store sdk.KVStore, secondaryIndexKey interface{}, rowID R
 		return err
 	}
 	if len(secondaryIndexKeyBytes) == 0 {
-		return errors.Wrap(errors.ErrORMInvalidArgument, "empty index key")
+		return sdkerrors.Wrap(errors.ErrORMInvalidArgument, "empty index key")
 	}
 
 	it := store.Iterator(PrefixRange(secondaryIndexKeyBytes))
@@ -150,7 +151,7 @@ func multiKeyAddFunc(store sdk.KVStore, secondaryIndexKey interface{}, rowID Row
 		return err
 	}
 	if len(secondaryIndexKeyBytes) == 0 {
-		return errors.Wrap(errors.ErrORMInvalidArgument, "empty index key")
+		return sdkerrors.Wrap(errors.ErrORMInvalidArgument, "empty index key")
 	}
 
 	encodedKey, err := buildKeyFromParts([]interface{}{secondaryIndexKey, []byte(rowID)})
@@ -158,7 +159,7 @@ func multiKeyAddFunc(store sdk.KVStore, secondaryIndexKey interface{}, rowID Row
 		return err
 	}
 	if len(encodedKey) == 0 {
-		return errors.Wrap(errors.ErrORMInvalidArgument, "empty index key")
+		return sdkerrors.Wrap(errors.ErrORMInvalidArgument, "empty index key")
 	}
 
 	store.Set(encodedKey, []byte{})

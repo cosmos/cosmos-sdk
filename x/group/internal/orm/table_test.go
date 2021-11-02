@@ -8,7 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -54,7 +55,7 @@ func TestCreate(t *testing.T) {
 	specs := map[string]struct {
 		rowID  RowID
 		src    codec.ProtoMarshaler
-		expErr *errors.Error
+		expErr *sdkerrors.Error
 	}{
 		"empty rowID": {
 			rowID: []byte{},
@@ -77,7 +78,7 @@ func TestCreate(t *testing.T) {
 				Moniker: "cat moniker",
 				Lives:   10,
 			},
-			expErr: errors.ErrInvalidType,
+			expErr: sdkerrors.ErrInvalidType,
 		},
 		"model validation fails": {
 			rowID: EncodeSequence(1),
@@ -110,7 +111,7 @@ func TestCreate(t *testing.T) {
 			var loaded testdata.TableModel
 			err = myTable.GetOne(store, spec.rowID, &loaded)
 			if spec.expErr != nil {
-				require.True(t, errors.ErrNotFound.Is(err))
+				require.True(t, sdkerrors.ErrNotFound.Is(err))
 				return
 			}
 			require.NoError(t, err)
@@ -122,7 +123,7 @@ func TestCreate(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	specs := map[string]struct {
 		src    codec.ProtoMarshaler
-		expErr *errors.Error
+		expErr *sdkerrors.Error
 	}{
 		"happy path": {
 			src: &testdata.TableModel{
@@ -135,7 +136,7 @@ func TestUpdate(t *testing.T) {
 				Moniker: "cat moniker",
 				Lives:   10,
 			},
-			expErr: errors.ErrInvalidType,
+			expErr: sdkerrors.ErrInvalidType,
 		},
 		"model validation fails": {
 			src: &testdata.TableModel{
@@ -184,14 +185,14 @@ func TestUpdate(t *testing.T) {
 func TestDelete(t *testing.T) {
 	specs := map[string]struct {
 		rowId  []byte
-		expErr *errors.Error
+		expErr *sdkerrors.Error
 	}{
 		"happy path": {
 			rowId: EncodeSequence(1),
 		},
 		"not found": {
 			rowId:  []byte("not-found"),
-			expErr: errors.ErrNotFound,
+			expErr: sdkerrors.ErrNotFound,
 		},
 	}
 	for msg, spec := range specs {
@@ -220,13 +221,13 @@ func TestDelete(t *testing.T) {
 
 			// then
 			var loaded testdata.TableModel
-			if spec.expErr == errors.ErrNotFound {
+			if spec.expErr == sdkerrors.ErrNotFound {
 				require.NoError(t, myTable.GetOne(store, EncodeSequence(1), &loaded))
 				assert.Equal(t, initValue, loaded)
 			} else {
 				err := myTable.GetOne(store, EncodeSequence(1), &loaded)
 				require.Error(t, err)
-				require.Equal(t, err, errors.ErrNotFound)
+				require.Equal(t, err, sdkerrors.ErrNotFound)
 			}
 		})
 	}

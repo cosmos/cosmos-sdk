@@ -8,7 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -48,7 +49,7 @@ func TestAutoUInt64PrefixScan(t *testing.T) {
 		start, end uint64
 		expResult  []testdata.TableModel
 		expRowIDs  []RowID
-		expError   *errors.Error
+		expError   *sdkerrors.Error
 		method     func(store sdk.KVStore, start uint64, end uint64) (Iterator, error)
 	}{
 		"first element": {

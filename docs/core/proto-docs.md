@@ -8187,6 +8187,7 @@ account.
 | `to_address` | [string](#string) |  |  |
 | `start_time` | [int64](#int64) |  |  |
 | `vesting_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated |  |
+| `merge` | [bool](#bool) |  |  |
 
 
 

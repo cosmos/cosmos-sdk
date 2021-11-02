@@ -5,8 +5,9 @@ import (
 	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 // defaultPageLimit is the default limit value for pagination requests.
@@ -32,7 +33,7 @@ func NewSingleValueIterator(rowID RowID, val []byte) Iterator {
 	var closed bool
 	return IteratorFunc(func(dest codec.ProtoMarshaler) (RowID, error) {
 		if dest == nil {
-			return nil, errors.Wrap(errors.ErrORMInvalidArgument, "destination object must not be nil")
+			return nil, sdkerrors.Wrap(errors.ErrORMInvalidArgument, "destination object must not be nil")
 		}
 		if closed || val == nil {
 			return nil, errors.ErrORMIteratorDone
@@ -88,7 +89,7 @@ func (i LimitedIterator) Close() error {
 // When the iterator is closed or has no elements the according error is passed as return value.
 func First(it Iterator, dest codec.ProtoMarshaler) (RowID, error) {
 	if it == nil {
-		return nil, errors.Wrap(errors.ErrORMInvalidArgument, "iterator must not be nil")
+		return nil, sdkerrors.Wrap(errors.ErrORMInvalidArgument, "iterator must not be nil")
 	}
 	defer it.Close()
 	binKey, err := it.LoadNext(dest)
@@ -144,7 +145,7 @@ func Paginate(
 	}
 
 	if it == nil {
-		return nil, errors.Wrap(errors.ErrORMInvalidArgument, "iterator must not be nil")
+		return nil, sdkerrors.Wrap(errors.ErrORMInvalidArgument, "iterator must not be nil")
 	}
 	defer it.Close()
 
@@ -174,7 +175,7 @@ func Paginate(
 
 		modelProto, ok := model.Interface().(codec.ProtoMarshaler)
 		if !ok {
-			return nil, errors.Wrapf(errors.ErrORMInvalidArgument, "%s should implement codec.ProtoMarshaler", elemType)
+			return nil, sdkerrors.Wrapf(errors.ErrORMInvalidArgument, "%s should implement codec.ProtoMarshaler", elemType)
 		}
 		binKey, err := it.LoadNext(modelProto)
 		if err != nil {
@@ -234,7 +235,7 @@ type ModelSlicePtr interface{}
 //
 func ReadAll(it Iterator, dest ModelSlicePtr) ([]RowID, error) {
 	if it == nil {
-		return nil, errors.Wrap(errors.ErrORMInvalidArgument, "iterator must not be nil")
+		return nil, sdkerrors.Wrap(errors.ErrORMInvalidArgument, "iterator must not be nil")
 	}
 	defer it.Close()
 
@@ -273,14 +274,14 @@ func ReadAll(it Iterator, dest ModelSlicePtr) ([]RowID, error) {
 // It overwrites destRef and tmpSlice using reflection.
 func assertDest(dest ModelSlicePtr, destRef *reflect.Value, tmpSlice *reflect.Value) (reflect.Type, error) {
 	if dest == nil {
-		return nil, errors.Wrap(errors.ErrORMInvalidArgument, "destination must not be nil")
+		return nil, sdkerrors.Wrap(errors.ErrORMInvalidArgument, "destination must not be nil")
 	}
 	tp := reflect.ValueOf(dest)
 	if tp.Kind() != reflect.Ptr {
-		return nil, errors.Wrap(errors.ErrORMInvalidArgument, "destination must be a pointer to a slice")
+		return nil, sdkerrors.Wrap(errors.ErrORMInvalidArgument, "destination must be a pointer to a slice")
 	}
 	if tp.Elem().Kind() != reflect.Slice {
-		return nil, errors.Wrap(errors.ErrORMInvalidArgument, "destination must point to a slice")
+		return nil, sdkerrors.Wrap(errors.ErrORMInvalidArgument, "destination must point to a slice")
 	}
 
 	// Since dest is just an interface{}, we overwrite destRef using reflection
@@ -288,7 +289,7 @@ func assertDest(dest ModelSlicePtr, destRef *reflect.Value, tmpSlice *reflect.Va
 	*destRef = tp.Elem()
 	// We need to verify that we can call Set() on destRef.
 	if !destRef.CanSet() {
-		return nil, errors.Wrap(errors.ErrORMInvalidArgument, "destination not assignable")
+		return nil, sdkerrors.Wrap(errors.ErrORMInvalidArgument, "destination not assignable")
 	}
 
 	elemType := reflect.TypeOf(dest).Elem().Elem()
@@ -296,7 +297,7 @@ func assertDest(dest ModelSlicePtr, destRef *reflect.Value, tmpSlice *reflect.Va
 	protoMarshaler := reflect.TypeOf((*codec.ProtoMarshaler)(nil)).Elem()
 	if !elemType.Implements(protoMarshaler) &&
 		!reflect.PtrTo(elemType).Implements(protoMarshaler) {
-		return nil, errors.Wrapf(errors.ErrORMInvalidArgument, "unsupported type :%s", elemType)
+		return nil, sdkerrors.Wrapf(errors.ErrORMInvalidArgument, "unsupported type :%s", elemType)
 	}
 
 	// tmpSlice is a slice value for the specified type

@@ -7,7 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
@@ -141,7 +142,7 @@ func (i MultiKeyIndex) PrefixScan(store sdk.KVStore, startI interface{}, endI in
 	}
 
 	if start != nil && end != nil && bytes.Compare(start, end) >= 0 {
-		return NewInvalidIterator(), errors.Wrap(errors.ErrORMInvalidArgument, "start must be less than end")
+		return NewInvalidIterator(), sdkerrors.Wrap(errors.ErrORMInvalidArgument, "start must be less than end")
 	}
 	pStore := prefix.NewStore(store, []byte{i.prefix})
 	it := pStore.Iterator(start, end)
@@ -168,7 +169,7 @@ func (i MultiKeyIndex) ReversePrefixScan(store sdk.KVStore, startI interface{}, 
 	}
 
 	if start != nil && end != nil && bytes.Compare(start, end) >= 0 {
-		return NewInvalidIterator(), errors.Wrap(errors.ErrORMInvalidArgument, "start must be less than end")
+		return NewInvalidIterator(), sdkerrors.Wrap(errors.ErrORMInvalidArgument, "start must be less than end")
 	}
 	pStore := prefix.NewStore(store, []byte{i.prefix})
 	it := pStore.ReverseIterator(start, end)

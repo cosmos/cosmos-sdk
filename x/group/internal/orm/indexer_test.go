@@ -7,7 +7,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -373,7 +374,7 @@ func TestUniqueKeyAddFunc(t *testing.T) {
 
 	specs := map[string]struct {
 		srcKey           []byte
-		expErr           *errors.Error
+		expErr           *sdkerrors.Error
 		expExistingEntry []byte
 	}{
 
@@ -417,7 +418,7 @@ func TestMultiKeyAddFunc(t *testing.T) {
 
 	specs := map[string]struct {
 		srcKey           []byte
-		expErr           *errors.Error
+		expErr           *sdkerrors.Error
 		expExistingEntry []byte
 	}{
 

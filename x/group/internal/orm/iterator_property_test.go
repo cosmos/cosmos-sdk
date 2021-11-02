@@ -5,8 +5,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	"github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
 )
@@ -95,7 +96,7 @@ func testTableModelIterator(tms []*testdata.TableModel, key RowID) Iterator {
 	}
 	return IteratorFunc(func(dest codec.ProtoMarshaler) (RowID, error) {
 		if dest == nil {
-			return nil, errors.Wrap(errors.ErrORMInvalidArgument, "destination object must not be nil")
+			return nil, sdkerrors.Wrap(errors.ErrORMInvalidArgument, "destination object must not be nil")
 		}
 
 		if index == len(tms) {

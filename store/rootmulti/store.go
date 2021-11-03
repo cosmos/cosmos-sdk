@@ -620,7 +620,7 @@ func (rs *Store) SetInitialVersion(version int64) error {
 			// If the store is wrapped with an inter-block cache, we must first unwrap
 			// it to get the underlying IAVL store.
 			store = rs.GetCommitKVStore(key)
-			store.(*iavl.Store).SetInitialVersion(version)
+			store.(types.StoreWithInitialVersion).SetInitialVersion(version)
 		}
 	}
 

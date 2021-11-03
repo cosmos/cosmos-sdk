@@ -410,3 +410,51 @@ func TestDumpUpgradeInfoToFile(t *testing.T) {
 	err = os.Remove(upgradeInfoFilePath)
 	require.Nil(err)
 }
+
+func TestBinaryVersion(t *testing.T) {
+	s := setupTest(t, 10, map[int64]bool{})
+
+	t.Log("verify not panic: upgrade handler is present for applied upgrade")
+	s.keeper.SetUpgradeHandler("test0", func(ctx sdk.Context, plan types.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		return nil, nil
+	})
+
+	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "Upgrade test", Plan: types.Plan{Name: "test0", Height: s.ctx.BlockHeight() + 2}})
+	require.Nil(t, err)
+
+	newCtx := s.ctx.WithBlockHeight(12)
+	s.keeper.ApplyUpgrade(newCtx, types.Plan{
+		Name:   "test0",
+		Height: 12,
+	})
+
+	newCtx = s.ctx.WithBlockHeight(13)
+	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
+	require.NotPanics(t, func() {
+		s.module.BeginBlock(newCtx, req)
+	})
+
+	t.Log("verify not panic: upgrade handler is present for scheduled upgrade")
+	s.keeper.SetUpgradeHandler("test1", func(ctx sdk.Context, plan types.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		return nil, nil
+	})
+
+	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "Upgrade test", Plan: types.Plan{Name: "test1", Height: s.ctx.BlockHeight() + 2}})
+	require.Nil(t, err)
+
+	newCtx = s.ctx.WithBlockHeight(13)
+	req = abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
+	require.NotPanics(t, func() {
+		s.module.BeginBlock(newCtx, req)
+	})
+
+	t.Log("verify test panic: upgrade handler is not present for scheduled upgrade")
+	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "Upgrade test", Plan: types.Plan{Name: "test2", Height: s.ctx.BlockHeight() + 2}})
+	require.Nil(t, err)
+
+	newCtx = s.ctx.WithBlockHeight(13)
+	req = abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
+	require.Panics(t, func() {
+		s.module.BeginBlock(newCtx, req)
+	})
+}

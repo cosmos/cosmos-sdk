@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	xp "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -236,8 +237,14 @@ func (k Keeper) IterateDoneUpgrades(ctx sdk.Context, cb func(name string, height
 	stop := false
 	for ; iter.Valid() && !stop; iter.Next() {
 		bz := iter.Value()
-		stop = cb(string(iter.Key()), int64(binary.BigEndian.Uint64(bz)))
+		stop = cb(parseDoneKey(iter.Key()), int64(binary.BigEndian.Uint64(bz)))
 	}
+}
+
+// parseDoneKey - split upgrade name from the done key
+func parseDoneKey(key []byte) string {
+	kv.AssertKeyAtLeastLength(key, 2)
+	return string(key[1:])
 }
 
 // GetDoneHeight returns the height at which the given upgrade was executed

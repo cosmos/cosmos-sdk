@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -295,7 +296,7 @@ Where proposal.json contains:
 				return err
 			}
 
-			amount, err := sdk.ParseCoinsNormalized(proposal.Amount)
+			_, err = sdk.ParseCoinsNormalized(proposal.Amount)
 			if err != nil {
 				return err
 			}
@@ -306,14 +307,19 @@ Where proposal.json contains:
 			}
 
 			from := clientCtx.GetFromAddress()
-			recpAddr, err := sdk.AccAddressFromBech32(proposal.Recipient)
+			_, err = sdk.AccAddressFromBech32(proposal.Recipient)
 			if err != nil {
 				return err
 			}
 
-			// TODO: replace content proposals with a community spend message
-			_ = types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, recpAddr, amount)
-			msg, err := govtypes.NewMsgSubmitProposal([]sdk.Msg{}, deposit, from)
+			govAcc, err := clientCtx.AccountRetriever.GetAccount(clientCtx, authtypes.NewModuleAddress(govtypes.ModuleName))
+			if err != nil {
+				return err
+			}
+
+			// TODO: replace signal proposal with a community spend message
+			signalMsg := govtypes.NewMsgSignal(proposal.Title, proposal.Description, govAcc.GetAddress())
+			msg, err := govtypes.NewMsgSubmitProposal([]sdk.Msg{signalMsg}, deposit, from)
 			if err != nil {
 				return err
 			}

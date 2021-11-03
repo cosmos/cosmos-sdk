@@ -28,8 +28,8 @@ const (
 )
 
 var (
-	_, _, _, _ sdk.Msg                       = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}
-	_          types.UnpackInterfacesMessage = &MsgSubmitProposal{}
+	_, _, _, _, _ sdk.Msg                       = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}, &MsgSignal{}
+	_             types.UnpackInterfacesMessage = &MsgSubmitProposal{}
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
@@ -297,8 +297,12 @@ func (msg MsgVoteWeighted) GetSigners() []sdk.AccAddress {
 
 // NewMsgVote creates a message to cast a vote on an active proposal
 //nolint:interfacer
-func NewMsgSignal(title, description string) *MsgSignal {
-	return &MsgSignal{title, description}
+func NewMsgSignal(title, description string, authority sdk.AccAddress) *MsgSignal {
+	return &MsgSignal{
+		Title:       title,
+		Description: description,
+		Authority:   authority.String(),
+	}
 }
 
 // Route implements Msg
@@ -315,12 +319,11 @@ func (msg MsgSignal) ValidateBasic() error {
 	if len(msg.Title) > MaxTitleLength {
 		return sdkerrors.Wrap(ErrInvalidSignalMsg, fmt.Sprintf("signal title is longer than max length of %d", MaxTitleLength))
 	}
-
-	if len(msg.Description) == 0 {
-		return sdkerrors.Wrap(ErrInvalidSignalMsg, "signal description cannot be blank")
-	}
 	if len(msg.Description) > MaxDescriptionLength {
 		return sdkerrors.Wrap(ErrInvalidSignalMsg, fmt.Sprintf("signal description is longer than max length of %d", MaxDescriptionLength))
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
 	}
 
 	return nil
@@ -338,7 +341,8 @@ func (msg MsgSignal) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-// GetSigners implements Msg. A signal message has no signers
+// GetSigners implements Msg. A signal message must have the governance account as the signer
 func (msg MsgSignal) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{}
+	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{authority}
 }

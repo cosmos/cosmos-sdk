@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	v045gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v045"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
@@ -76,7 +77,9 @@ func TestMigrate(t *testing.T) {
 		Proposals: proposals,
 	}
 
-	migrated := v045gov.Migrate(govGenState)
+	govAcc := sdk.AccAddress("test_gov_account")
+
+	migrated := v045gov.Migrate(govGenState, govAcc)
 
 	bz, err := clientCtx.Codec.MarshalJSON(migrated)
 	require.NoError(t, err)
@@ -108,6 +111,7 @@ func TestMigrate(t *testing.T) {
 			"messages": [
 				{
 					"@type": "/cosmos.gov.v1.MsgSignal",
+					"authority": "cosmos1w3jhxazlvahhvhmpvd3k7atwwsq04etk",
 					"description": "bar_description",
 					"title": "foo_title"
 				}

@@ -5921,6 +5921,7 @@ an intention for members to vote on.
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
+| `authority` | [string](#string) |  |  |
 
 
 

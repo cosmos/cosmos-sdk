@@ -33,7 +33,6 @@ func TestMsgSubmitProposal(t *testing.T) {
 	}{
 		{"Test Proposal", "the purpose of this proposal is to test", addrs[0], coinsPos, true},
 		{"", "the purpose of this proposal is to test", addrs[0], coinsPos, false},
-		{"Test Proposal", "", addrs[0], coinsPos, false},
 		{"Test Proposal", "the purpose of this proposal is to test", sdk.AccAddress{}, coinsPos, false},
 		{"Test Proposal", "the purpose of this proposal is to test", addrs[0], coinsZero, true},
 		{"Test Proposal", "the purpose of this proposal is to test", addrs[0], coinsMulti, true},
@@ -42,7 +41,7 @@ func TestMsgSubmitProposal(t *testing.T) {
 	}
 
 	for i, tc := range tests {
-		proposal := []sdk.Msg{NewMsgSignal(tc.title, tc.description)}
+		proposal := []sdk.Msg{NewMsgSignal(tc.title, tc.description, tc.proposerAddr)}
 
 		msg, err := NewMsgSubmitProposal(
 			proposal,

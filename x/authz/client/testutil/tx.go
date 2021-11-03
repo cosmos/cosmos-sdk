@@ -503,7 +503,7 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 	)
 
 	// msg undelegate
-	undelegateTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgUndelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
+	undelegateTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgUndelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"250000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
 		tokens.GetDenomByIndex(0), tokens[0].Amount)
 	execMsg := testutil.WriteToNewTempFile(s.T(), undelegateTx)
 
@@ -549,7 +549,7 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 	)
 
 	// msg undelegate
-	undelegateTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgUndelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
+	undelegateTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgUndelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"250000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
 		tokens.GetDenomByIndex(0), tokens[0].Amount)
 
 	execMsg := testutil.WriteToNewTempFile(s.T(), undelegateTx)

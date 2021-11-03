@@ -9,18 +9,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-func Migrate(oldGovState v1beta1.GenesisState) *types.GenesisState {
+func Migrate(oldGovState v1beta1.GenesisState, govAcc sdk.AccAddress) *types.GenesisState {
 	return &types.GenesisState{
 		Deposits:      migrateDeposits(oldGovState.Deposits),
 		Votes:         migrateVotes(oldGovState.Votes),
-		Proposals:     migrateProposals(oldGovState.Proposals),
+		Proposals:     migrateProposals(oldGovState.Proposals, govAcc),
 		DepositParams: types.DepositParams(oldGovState.DepositParams),
 		VotingParams:  types.VotingParams(oldGovState.VotingParams),
 		TallyParams:   types.TallyParams(oldGovState.TallyParams),
 	}
 }
 
-func migrateProposals(oldProposals v1beta1.Proposals) types.Proposals {
+func migrateProposals(oldProposals v1beta1.Proposals, govAcc sdk.AccAddress) types.Proposals {
 	newProposals := make(types.Proposals, len(oldProposals))
 	for idx, proposal := range oldProposals {
 		content := proposal.GetContent()
@@ -28,7 +28,7 @@ func migrateProposals(oldProposals v1beta1.Proposals) types.Proposals {
 			continue
 		}
 
-		msgs, err := sdktx.SetMsgs(migrateContent(content))
+		msgs, err := sdktx.SetMsgs(migrateContent(content, govAcc))
 		if err != nil {
 			panic(fmt.Sprintf("failed to marshal proposal msgs: %v", err))
 		}
@@ -47,14 +47,14 @@ func migrateProposals(oldProposals v1beta1.Proposals) types.Proposals {
 	return newProposals
 }
 
-func migrateContent(content v1beta1.Content) []sdk.Msg {
+func migrateContent(content v1beta1.Content, govAcc sdk.AccAddress) []sdk.Msg {
 	switch content.ProposalType() {
 	case v1beta1.ProposalTypeText:
-		return []sdk.Msg{types.NewMsgSignal(content.GetTitle(), content.GetDescription())}
+		return []sdk.Msg{types.NewMsgSignal(content.GetTitle(), content.GetDescription(), govAcc)}
 	// TODO: enter the other proposal content types
 	default:
 		// NOTE: If a network is using a unique content type that isn't recognisable then it will not be possible to migrate it to the new proposal type. The best thing to do in this situation, rather than silently ignore it, is to convert it to a signal proposal
-		return []sdk.Msg{types.NewMsgSignal(content.GetTitle(), content.GetDescription())}
+		return []sdk.Msg{types.NewMsgSignal(content.GetTitle(), content.GetDescription(), govAcc)}
 	}
 }
 

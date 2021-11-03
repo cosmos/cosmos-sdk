@@ -826,7 +826,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 		spendLimit.String(),
 	)
 
-	govAcc, err := s.cfg.AccountRetriever.GetAccount(val.ClientCtx, authtypes.NewModuleAddress(feegrant.ModuleName))
+	govAcc, err := s.cfg.AccountRetriever.GetAccount(val.ClientCtx, authtypes.NewModuleAddress(govtypes.ModuleName))
 	s.Require().NoError(err)
 
 	// exec filtered fee allowance

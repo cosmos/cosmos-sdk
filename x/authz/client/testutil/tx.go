@@ -498,8 +498,14 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 	)
 	s.Require().NoError(err)
 	// msg vote
-	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
-	execMsg := testutil.WriteToNewTempFile(s.T(), voteTx)
+	tokens := sdk.NewCoins(
+		sdk.NewCoin("stake", sdk.NewInt(50)),
+	)
+
+	// msg undelegate
+	undelegateTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgUndelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
+		tokens.GetDenomByIndex(0), tokens[0].Amount)
+	execMsg := testutil.WriteToNewTempFile(s.T(), undelegateTx)
 
 	// waiting for authorization to expires
 	time.Sleep(12 * time.Second)
@@ -538,9 +544,15 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 	)
 	s.Require().NoError(err)
 
-	// msg vote
-	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
-	execMsg := testutil.WriteToNewTempFile(s.T(), voteTx)
+	tokens := sdk.NewCoins(
+		sdk.NewCoin("stake", sdk.NewInt(50)),
+	)
+
+	// msg undelegate
+	undelegateTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgUndelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
+		tokens.GetDenomByIndex(0), tokens[0].Amount)
+
+	execMsg := testutil.WriteToNewTempFile(s.T(), undelegateTx)
 
 	testCases := []struct {
 		name         string

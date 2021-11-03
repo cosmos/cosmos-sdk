@@ -342,6 +342,8 @@ type SimulateRequest struct {
 	// Deprecated. Send raw tx bytes instead.
 	Tx *Tx `protobuf:"bytes,1,opt,name=tx,proto3" json:"tx,omitempty"` // Deprecated: Do not use.
 	// tx_bytes is the raw transaction.
+	//
+	// Since: cosmos-sdk 0.43
 	TxBytes []byte `protobuf:"bytes,2,opt,name=tx_bytes,json=txBytes,proto3" json:"tx_bytes,omitempty"`
 }
 

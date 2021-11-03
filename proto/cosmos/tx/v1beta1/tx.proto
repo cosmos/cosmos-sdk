@@ -137,6 +137,8 @@ message AuthInfo {
   Fee fee = 2;
 
   // Tip is the optional tip used for meta-transactions.
+  //
+  // Since: cosmos-sdk 0.45
   Tip tip = 3;
 }
 

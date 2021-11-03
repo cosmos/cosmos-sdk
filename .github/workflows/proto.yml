@@ -27,5 +27,8 @@ jobs:
       - uses: bufbuild/buf-setup-action@v1.38.0
       - uses: bufbuild/buf-breaking-action@v1
         with:
-          input: "proto"
-          against: "https://github.com/${{ github.repository }}.git#branch=${{ github.event.pull_request.base.ref }},ref=HEAD~1,subdir=proto"
+          PATTERNS: |
+            **/**.proto
+      - name: check-breakage
+        run: make proto-check-breaking PR_TARGET_REPO=https://github.com/${{ github.repository }}.git PR_TARGET_BRANCH=${{ github.base_ref }}
+        if: env.GIT_DIFF

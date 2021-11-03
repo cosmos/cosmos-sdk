@@ -228,17 +228,15 @@ func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) ([]
 	return bz, true
 }
 
-// IterateDoneUpgrades iterate over all the applied upgrades.
-// Callback to get all data, returns true to stop, false to keep reading
-func (k Keeper) IterateDoneUpgrades(ctx sdk.Context, cb func(name string, height int64) bool) {
-	iter := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
+// GetLastCompletedUpgrade returns the last applied upgrade name and height.
+func (k Keeper) GetLastCompletedUpgrade(ctx sdk.Context) (string, int64) {
+	iter := sdk.KVStoreReversePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
 	defer iter.Close()
-
-	stop := false
-	for ; iter.Valid() && !stop; iter.Next() {
-		bz := iter.Value()
-		stop = cb(parseDoneKey(iter.Key()), int64(binary.BigEndian.Uint64(bz)))
+	for iter.Valid() {
+		return parseDoneKey(iter.Key()), int64(binary.BigEndian.Uint64(iter.Value()))
 	}
+
+	return "", 0
 }
 
 // parseDoneKey - split upgrade name from the done key

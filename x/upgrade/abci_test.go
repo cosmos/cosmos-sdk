@@ -415,8 +415,8 @@ func TestBinaryVersion(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
 
 	t.Log("verify not panic: upgrade handler is present for applied upgrade")
-	s.keeper.SetUpgradeHandler("test0", func(ctx sdk.Context, plan types.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		return nil, nil
+	s.keeper.SetUpgradeHandler("test0", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		return vm, nil
 	})
 
 	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "Upgrade test", Plan: types.Plan{Name: "test0", Height: s.ctx.BlockHeight() + 2}})
@@ -435,8 +435,8 @@ func TestBinaryVersion(t *testing.T) {
 	})
 
 	t.Log("verify not panic: upgrade handler is present for scheduled upgrade")
-	s.keeper.SetUpgradeHandler("test1", func(ctx sdk.Context, plan types.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		return nil, nil
+	s.keeper.SetUpgradeHandler("test1", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		return vm, nil
 	})
 
 	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "Upgrade test", Plan: types.Plan{Name: "test1", Height: s.ctx.BlockHeight() + 2}})

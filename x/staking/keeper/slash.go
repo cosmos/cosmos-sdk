@@ -171,7 +171,7 @@ func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 	burnedAmount := sdk.ZeroInt()
 
 	// perform slashing on all entries within the unbonding delegation
-	for i, entry := range unbondingDelegation.Entries {
+	for _, entry := range unbondingDelegation.Entries {
 		// If unbonding started before this height, stake didn't contribute to infraction
 		if entry.CreationHeight < infractionHeight {
 			continue
@@ -200,8 +200,10 @@ func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 
 		burnedAmount = burnedAmount.Add(unbondingSlashAmount)
 		entry.Balance = entry.Balance.Sub(unbondingSlashAmount)
-		unbondingDelegation.Entries[i] = entry
-		k.SetUnbondingDelegation(ctx, unbondingDelegation)
+
+		// Set unbonding delegation entry record - This does not update any of the indexes!
+		// But that's ok because the only thing that may have changed is entry.Balance, which is not indexed
+		k.SetUnbondingDelegationEntry(ctx, entry)
 	}
 
 	if err := k.burnNotBondedTokens(ctx, burnedAmount); err != nil {

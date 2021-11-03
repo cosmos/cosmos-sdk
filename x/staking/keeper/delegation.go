@@ -17,12 +17,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (k Keeper) IncrementUnbondingDelegationEntryId(ctx sdk.Context) uint64 {
+func (k Keeper) IncrementUnbondingDelegationEntryId(ctx sdk.Context) (unbondingDelegationEntryId uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.UnbondingDelegationEntryIdCounterKey)
 
-	// Unmarshal and increment
-	unbondingDelegationEntryId := binary.BigEndian.Uint64(bz)
+	if bz == nil {
+		unbondingDelegationEntryId = 0
+	} else {
+		unbondingDelegationEntryId = binary.BigEndian.Uint64(bz)
+	}
+
 	unbondingDelegationEntryId = unbondingDelegationEntryId + 1
 
 	// Convert back into bytes for storage
@@ -152,12 +156,35 @@ func (k Keeper) GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddres
 	i := 0
 	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
 		index := UnmarshalIndex(store.Get(types.UBDEValDelToDelValIndexKey(iterator.Key())))
-		ubd := k.GetUBDFromUBDEIndex(ctx, index)
+		ubd := k.getUBDFromUBDEIndex(ctx, index)
 
 		unbondingDelegations = append(unbondingDelegations, ubd)
 	}
 
 	return unbondingDelegations[:i] // trim if the array length < maxRetrieve
+}
+
+// This gets all UnbondingDelegationEntries from a delegator
+func (k Keeper) GetUnbondingDelegationEntriesFromDelegator(ctx sdk.Context, delAddr sdk.AccAddress) (ubdes []types.UnbondingDelegationEntry) {
+	store := ctx.KVStore(k.storeKey)
+
+	iterKey := append(types.UnbondingDelegationEntryByDelValKey, address.MustLengthPrefix(delAddr)...)
+	iterator := sdk.KVStorePrefixIterator(store, iterKey)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		index := UnmarshalIndex(store.Get(iterator.Key()))
+		for _, id := range index {
+			ubde, found := k.GetUnbondingDelegationEntry(ctx, id)
+			if !found {
+				panic("UnbondingDelegationEntry by validator, delegator index corrupted")
+			}
+			ubdes = append(ubdes, ubde)
+		}
+
+	}
+
+	return ubdes
 }
 
 // return a unbonding delegation
@@ -203,7 +230,7 @@ func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sd
 
 	for ; iterator.Valid(); iterator.Next() {
 		index := UnmarshalIndex(store.Get(types.UBDEValDelToDelValIndexKey(iterator.Key())))
-		ubd := k.GetUBDFromUBDEIndex(ctx, index)
+		ubd := k.getUBDFromUBDEIndex(ctx, index)
 
 		ubds = append(ubds, ubd)
 	}
@@ -211,7 +238,30 @@ func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sd
 	return ubds
 }
 
-func (k Keeper) GetUBDFromUBDEIndex(ctx sdk.Context, index []uint64) (ubds types.UnbondingDelegation) {
+// This gets all UnbondingDelegationEntries for a validator, without wrapping them in an UnbondingDelegation struct
+func (k Keeper) GetUnbondingDelegationEntriesFromValidator(ctx sdk.Context, valAddr sdk.ValAddress) (ubdes []types.UnbondingDelegationEntry) {
+	store := ctx.KVStore(k.storeKey)
+
+	iterKey := append(types.UnbondingDelegationEntryByValDelKey, address.MustLengthPrefix(valAddr)...)
+	iterator := sdk.KVStorePrefixIterator(store, iterKey)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		index := UnmarshalIndex(store.Get(types.UBDEValDelToDelValIndexKey(iterator.Key())))
+		for _, id := range index {
+			ubde, found := k.GetUnbondingDelegationEntry(ctx, id)
+			if !found {
+				panic("UnbondingDelegationEntry by validator, delegator index corrupted")
+			}
+			ubdes = append(ubdes, ubde)
+		}
+
+	}
+
+	return ubdes
+}
+
+func (k Keeper) getUBDFromUBDEIndex(ctx sdk.Context, index []uint64) (ubds types.UnbondingDelegation) {
 	var ubd types.UnbondingDelegation
 
 	for _, id := range index {
@@ -233,12 +283,33 @@ func (k Keeper) GetUBDFromUBDEIndex(ctx sdk.Context, index []uint64) (ubds types
 func (k Keeper) IterateUnbondingDelegations(ctx sdk.Context, fn func(index int64, ubd types.UnbondingDelegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.UnbondingDelegationKey)
+	iterKey := types.UnbondingDelegationEntryByDelValKey
+	iterator := sdk.KVStorePrefixIterator(store, iterKey)
 	defer iterator.Close()
 
 	for i := int64(0); iterator.Valid(); iterator.Next() {
-		ubd := types.MustUnmarshalUBD(k.cdc, iterator.Value())
+		index := UnmarshalIndex(store.Get(types.UBDEValDelToDelValIndexKey(iterator.Key())))
+		ubd := k.getUBDFromUBDEIndex(ctx, index)
+
 		if stop := fn(i, ubd); stop {
+			break
+		}
+		i++
+	}
+}
+
+// iterate through all of the unbonding delegation entries in order of their IDs
+func (k Keeper) IterateUnbondingDelegationEntries(ctx sdk.Context, fn func(index int64, ubd types.UnbondingDelegationEntry) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+
+	iterKey := types.UnbondingDelegationEntryKey
+	iterator := sdk.KVStorePrefixIterator(store, iterKey)
+	defer iterator.Close()
+
+	for i := int64(0); iterator.Valid(); iterator.Next() {
+		bz := store.Get(iterator.Key())
+
+		if stop := fn(i, types.MustUnmarshalUBDE(k.cdc, bz)); stop {
 			break
 		}
 		i++
@@ -256,46 +327,47 @@ func (k Keeper) HasMaxUnbondingDelegationEntries(ctx sdk.Context,
 	return len(ubd.Entries) >= int(k.MaxEntries(ctx))
 }
 
-// set the unbonding delegation and associated index
-func (k Keeper) SetUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
-	delegatorAddress, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
-	if err != nil {
-		panic(err)
-	}
-	store := ctx.KVStore(k.storeKey)
-	bz := types.MustMarshalUBD(k.cdc, ubd)
-	addr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
-	if err != nil {
-		panic(err)
-	}
-	key := types.GetUBDKey(delegatorAddress, addr)
-	store.Set(key, bz)
-	store.Set(types.GetUBDByValIndexKey(delegatorAddress, addr), []byte{}) // index, store empty bytes
-}
+// // set the unbonding delegation and associated index
+// func (k Keeper) CreateUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
+// 	delAddr, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
+// 	if err != nil {
+// 		panic(err)
+// 	}
 
-// remove the unbonding delegation object and associated index
-func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
-	delegatorAddress, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
-	if err != nil {
-		panic(err)
-	}
+// 	valAddr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
+// 	if err != nil {
+// 		panic(err)
+// 	}
 
-	store := ctx.KVStore(k.storeKey)
-	addr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
-	if err != nil {
-		panic(err)
-	}
-	key := types.GetUBDKey(delegatorAddress, addr)
-	store.Delete(key)
-	store.Delete(types.GetUBDByValIndexKey(delegatorAddress, addr))
-}
+// 	// Delete old UBDEs for this delegator/validator pair
+// 	oldUBD, found := k.GetUnbondingDelegation(ctx, delAddr, valAddr)
+// 	if found {
+// 		for _, ubde := range oldUBD.Entries {
+// 			k.RemoveUnbondingDelegationEntry(ctx, ubde)
+// 		}
+// 	}
 
-func (k Keeper) SetUnbondingDelegationEntry(
+// 	// Set new entries
+// 	for _, ubde := range ubd.Entries {
+// 		k.CreateUnbondingDelegationEntry(ctx, delAddr, valAddr, ubde.CreationHeight, ubde.CompletionTime, ubde.Balance, ubde.Id)
+// 	}
+// }
+
+// // remove the unbonding delegation object and associated index
+// func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
+// 	// Remove old entries
+// 	for _, ubde := range ubd.Entries {
+// 		k.RemoveUnbondingDelegationEntry(ctx, ubde)
+// 	}
+// }
+
+// This creates, saves, and returns a new UnbondingDelegationEntry, generating an ID for it as well as setting indexes
+// for DelegatorAddress, ValidatorAddress, and CompletionTime
+func (k Keeper) CreateUnbondingDelegationEntry(
 	ctx sdk.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
-	creationHeight int64, completionTime time.Time, balance sdk.Int,
+	creationHeight int64, completionTime time.Time, balance sdk.Int, id uint64,
 ) types.UnbondingDelegationEntry {
 	store := ctx.KVStore(k.storeKey)
-	id := k.IncrementUnbondingDelegationEntryId(ctx)
 
 	ubde := types.UnbondingDelegationEntry{
 		DelegatorAddress: delegatorAddr.String(),
@@ -318,6 +390,15 @@ func (k Keeper) SetUnbondingDelegationEntry(
 	store.Set(types.GetUnbondingDelegationEntryKey(id), bz)
 
 	return ubde
+}
+
+// This sets an UnbondingDelegationEntry WITHOUT creating or updating indexes. To save a new UnbondingDelegationEntry
+// use CreateUnbondingDelegationEntry instead. If you are using this to update a UnbondingDelegationEntry, make sure you have
+// not modified any indexed fields, such as DelegatorAddress, ValidatorAddress, or CompletionTime.
+func (k Keeper) SetUnbondingDelegationEntry(ctx sdk.Context, ubde types.UnbondingDelegationEntry) {
+	store := ctx.KVStore(k.storeKey)
+	bz := types.MustMarshalUBDE(k.cdc, ubde)
+	store.Set(types.GetUnbondingDelegationEntryKey(ubde.Id), bz)
 }
 
 func (k Keeper) GetUnbondingDelegationEntry(ctx sdk.Context, id uint64) (types.UnbondingDelegationEntry, bool) {
@@ -1037,7 +1118,8 @@ func (k Keeper) Undelegate(
 	}
 
 	completionTime := ctx.BlockHeader().Time.Add(k.UnbondingTime(ctx))
-	k.SetUnbondingDelegationEntry(ctx, delAddr, valAddr, ctx.BlockHeight(), completionTime, returnAmount)
+	id := k.IncrementUnbondingDelegationEntryId(ctx)
+	k.CreateUnbondingDelegationEntry(ctx, delAddr, valAddr, ctx.BlockHeight(), completionTime, returnAmount, id)
 
 	return completionTime, nil
 }

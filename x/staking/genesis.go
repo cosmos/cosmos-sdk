@@ -87,10 +87,26 @@ func InitGenesis(
 	}
 
 	for _, ubd := range data.UnbondingDelegations {
-		keeper.SetUnbondingDelegation(ctx, ubd)
 
 		for _, entry := range ubd.Entries {
-			keeper.InsertUBDQueue(ctx, ubd, entry.CompletionTime)
+			delegatorAddress, err := sdk.AccAddressFromBech32(entry.DelegatorAddress)
+			if err != nil {
+				panic(err)
+			}
+
+			validatorAddress, err := sdk.ValAddressFromBech32(entry.ValidatorAddress)
+			if err != nil {
+				panic(err)
+			}
+
+			keeper.CreateUnbondingDelegationEntry(ctx,
+				delegatorAddress,
+				validatorAddress,
+				entry.CreationHeight,
+				entry.CompletionTime,
+				entry.Balance,
+				entry.Id,
+			)
 			notBondedTokens = notBondedTokens.Add(entry.Balance)
 		}
 	}

@@ -80,18 +80,28 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 
 	// set an unbonding delegation with expiration timestamp (beyond which the
 	// unbonding delegation shouldn't be slashed)
-	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 0,
-		time.Unix(5, 0), sdk.NewInt(10))
+	// ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 0,
+	// 	time.Unix(5, 0), sdk.NewInt(10))
 
-	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
+	// app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 
 	// unbonding started prior to the infraction height, stakw didn't contribute
+	id := app.StakingKeeper.IncrementUnbondingDelegationEntryId(ctx)
+	app.StakingKeeper.CreateUnbondingDelegationEntry(ctx, addrDels[0], addrVals[0], 0,
+		time.Unix(5, 0), sdk.NewInt(10), id)
+	ubd, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
+	require.True(t, found)
 	slashAmount := app.StakingKeeper.SlashUnbondingDelegation(ctx, ubd, 1, fraction)
 	require.True(t, slashAmount.Equal(sdk.NewInt(0)))
 
 	// after the expiration time, no longer eligible for slashing
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(10, 0)})
-	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
+	id = app.StakingKeeper.IncrementUnbondingDelegationEntryId(ctx)
+	app.StakingKeeper.CreateUnbondingDelegationEntry(ctx, addrDels[0], addrVals[0], 0,
+		time.Unix(5, 0), sdk.NewInt(10), id)
+	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
+	require.True(t, found)
+
 	slashAmount = app.StakingKeeper.SlashUnbondingDelegation(ctx, ubd, 0, fraction)
 	require.True(t, slashAmount.Equal(sdk.NewInt(0)))
 
@@ -99,10 +109,14 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 	oldUnbondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(0, 0)})
-	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
+	id = app.StakingKeeper.IncrementUnbondingDelegationEntryId(ctx)
+	app.StakingKeeper.CreateUnbondingDelegationEntry(ctx, addrDels[0], addrVals[0], 0,
+		time.Unix(5, 0), sdk.NewInt(10), id)
+	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
+	require.True(t, found)
 	slashAmount = app.StakingKeeper.SlashUnbondingDelegation(ctx, ubd, 0, fraction)
 	require.True(t, slashAmount.Equal(sdk.NewInt(5)))
-	ubd, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
+	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
 
@@ -265,8 +279,10 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// set an unbonding delegation with expiration timestamp beyond which the
 	// unbonding delegation shouldn't be slashed
 	ubdTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 4)
-	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 11, time.Unix(0, 0), ubdTokens)
-	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
+	id := app.StakingKeeper.IncrementUnbondingDelegationEntryId(ctx)
+	app.StakingKeeper.CreateUnbondingDelegationEntry(ctx, addrDels[0], addrVals[0], 11, time.Unix(0, 0), ubdTokens, id)
+	ubd, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
+	require.True(t, found)
 
 	// slash validator for the first time
 	ctx = ctx.WithBlockHeight(12)
@@ -555,9 +571,9 @@ func TestSlashBoth(t *testing.T) {
 	// set an unbonding delegation with expiration timestamp (beyond which the
 	// unbonding delegation shouldn't be slashed)
 	ubdATokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 4)
-	ubdA := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 11,
-		time.Unix(0, 0), ubdATokens)
-	app.StakingKeeper.SetUnbondingDelegation(ctx, ubdA)
+	id := app.StakingKeeper.IncrementUnbondingDelegationEntryId(ctx)
+	app.StakingKeeper.CreateUnbondingDelegationEntry(ctx, addrDels[0], addrVals[0], 11,
+		time.Unix(0, 0), ubdATokens, id)
 
 	bondedCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, rdATokens.MulRaw(2)))
 	notBondedCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, ubdATokens))

@@ -51,7 +51,7 @@ func TestPeriodicVestingAccountMsg(t *testing.T) {
 	periods := []Period{
 		{Length: 86400, Amount: amount},
 	}
-	msg := NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr, startTime, periods)
+	msg := NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr, startTime, periods, false)
 	route := msg.Route()
 	require.Equal(t, RouterKey, route)
 	tp := msg.Type()
@@ -79,7 +79,7 @@ func TestPeriodicVestingAccountMsg(t *testing.T) {
 
 	badPeriods := NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr, startTime, []Period{
 		{Length: 0, Amount: amount},
-	})
+	}, false)
 	err = badPeriods.ValidateBasic()
 	require.Error(t, err)
 }

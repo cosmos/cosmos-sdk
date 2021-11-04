@@ -357,3 +357,22 @@ func (w *wrapper) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 	w.tx.Body.NonCriticalExtensionOptions = extOpts
 	w.bodyBz = nil
 }
+
+func (w *wrapper) AddAuxSignerData(data tx.AuxSignerData) error {
+	err := data.ValidateBasic()
+	if err != nil {
+		return err
+	}
+
+	w.bodyBz = data.SignDoc.BodyBytes
+	w.SetTip(data.GetSignDoc().GetTip())
+
+	w.tx.AuthInfo.SignerInfos = []*tx.SignerInfo{
+		{
+			PublicKey: data.SignDoc.PublicKey,
+			ModeInfo:  &tx.ModeInfo{Sum: &tx.ModeInfo_Single_{Single: &tx.ModeInfo_Single{Mode: data.Mode}}},
+		},
+	}
+
+	return nil
+}

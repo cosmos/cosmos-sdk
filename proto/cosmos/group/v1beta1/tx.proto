@@ -250,7 +250,12 @@ message MsgVoteRequest {
 
   // proposal is the unique ID of the proposal.
   uint64 proposal_id = 1;
-  // voter is the voter account address.
+
+  // voter is the voter account address. If voter is the address of a group
+  // account, this operation will fail because nested voting is not handled with
+  // "vote proposals" but rather through vote_paths. In order for a group to
+  // vote on a proposal in a group they are a member of, each of its members
+  // must vote on the proposal using a vote_paths.
   string voter = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // choice is the voter's choice on the proposal.
@@ -262,6 +267,25 @@ message MsgVoteRequest {
   // exec defines whether the proposal should be executed
   // immediately after voting or not.
   Exec exec = 5;
+
+  // vote_paths allows individuals to vote on proposals in groups which they
+  // are part of through some nested group memberships. Multiple vote paths can
+  // be provided in a single vote operation to handle cases where a single voter
+  // is a member of the parent group through multiple nested groups.
+  repeated VotePath vote_paths  = 6;
+
+  // VotePath is the path of a voter from the group they are directly a member
+  // of to the group account which the proposal is in.
+  message VotePath {
+    // nested_group_path is the list of groups that the voter is in which are
+    // transitively part of the group account which the proposal is in. These
+    // group accounts should be ordered starting with the group that the voter
+    // is directly in up to the group which is directly a member of the group
+    // which has the proposal. For example if voter A is in group B, the B is in
+    // group C, C is in group D and A wants to vote on a proposal in D, then
+    // nested_group_path should be the list ["B", "C"].
+    repeated string nested_group_path = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  }
 }
 
 // MsgVoteResponse is the Msg/Vote response type.

@@ -26,5 +26,5 @@ jobs:
           PATTERNS: |
             **/**.proto
       - name: check-breakage
-        run: make proto-check-breaking
+        run: make proto-check-breaking PR_TARGET_REPO=https://github.com/${{ github.repository }}.git PR_TARGET_BRANCH=${{ github.base_ref }}
         if: env.GIT_DIFF

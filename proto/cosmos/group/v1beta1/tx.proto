@@ -271,7 +271,9 @@ message MsgVoteRequest {
   // vote_paths allows individuals to vote on proposals in groups which they
   // are part of through some nested group memberships. Multiple vote paths can
   // be provided in a single vote operation to handle cases where a single voter
-  // is a member of the parent group through multiple nested groups.
+  // is a member of the parent group through multiple nested groups. Currently
+  // nested voting is tabulated using a winner take all method rather than
+  // proportionally. However, proportional voting may be supported in the future.
   repeated VotePath vote_paths  = 6;
 
   // VotePath is the path of a voter from the group they are directly a member

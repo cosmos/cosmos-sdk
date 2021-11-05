@@ -325,40 +325,6 @@ func (k Keeper) HasMaxUnbondingDelegationEntries(ctx sdk.Context,
 	return len(ubd.Entries) >= int(k.MaxEntries(ctx))
 }
 
-// // set the unbonding delegation and associated index
-// func (k Keeper) CreateUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
-// 	delAddr, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	valAddr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	// Delete old UBDEs for this delegator/validator pair
-// 	oldUBD, found := k.GetUnbondingDelegation(ctx, delAddr, valAddr)
-// 	if found {
-// 		for _, ubde := range oldUBD.Entries {
-// 			k.RemoveUnbondingDelegationEntry(ctx, ubde)
-// 		}
-// 	}
-
-// 	// Set new entries
-// 	for _, ubde := range ubd.Entries {
-// 		k.CreateUnbondingDelegationEntry(ctx, delAddr, valAddr, ubde.CreationHeight, ubde.CompletionTime, ubde.Balance, ubde.Id)
-// 	}
-// }
-
-// // remove the unbonding delegation object and associated index
-// func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
-// 	// Remove old entries
-// 	for _, ubde := range ubd.Entries {
-// 		k.RemoveUnbondingDelegationEntry(ctx, ubde)
-// 	}
-// }
-
 // This creates, saves, and returns a new UnbondingDelegationEntry, generating an ID for it as well as setting indexes
 // for DelegatorAddress, ValidatorAddress, and CompletionTime
 func (k Keeper) CreateUnbondingDelegationEntry(

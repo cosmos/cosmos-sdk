@@ -1,6 +1,8 @@
 package types
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -60,4 +62,18 @@ func (h MultiStakingHooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.V
 	for i := range h {
 		h[i].BeforeValidatorSlashed(ctx, valAddr, fraction)
 	}
+}
+func (h MultiStakingHooks) UnbondingDelegationEntryCreated(ctx sdk.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
+	creationHeight int64, completionTime time.Time, balance sdk.Int, id uint64) {
+	for i := range h {
+		h[i].UnbondingDelegationEntryCreated(ctx, delegatorAddr, validatorAddr, creationHeight, completionTime, balance, id)
+	}
+}
+func (h MultiStakingHooks) BeforeUnbondingDelegationEntryComplete(ctx sdk.Context, id uint64) bool {
+	for i := range h {
+		if h[i].BeforeUnbondingDelegationEntryComplete(ctx, id) {
+			return true
+		}
+	}
+	return false
 }

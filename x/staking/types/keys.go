@@ -47,6 +47,7 @@ var (
 
 	UnbondingDelegationEntryIdKey      = []byte{0x37} // key for the counter for the incrementing id for UnbondingDelegationEntries
 	StoppedUnbondingDelegationEntryKey = []byte{0x38} // prefix for UnbondingDelegationEntries that have been put on hold by an external module
+	UnbondingDelegationEntryIndexKey   = []byte{0x39} // prefix for an index for looking up UnbondingDelegations by UnbondingDelegationEntry ID
 
 	UnbondingQueueKey    = []byte{0x41} // prefix for the timestamps in unbonding queue
 	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
@@ -57,6 +58,12 @@ var (
 )
 
 func GetStoppedUnbondingDelegationEntryKey(id uint64) []byte {
+	bz := make([]byte, 8)
+	binary.BigEndian.PutUint64(bz, id)
+	return append(StoppedUnbondingDelegationEntryKey, bz...)
+}
+
+func GetUnbondingDelegationEntryIndexKey(id uint64) []byte {
 	bz := make([]byte, 8)
 	binary.BigEndian.PutUint64(bz, id)
 	return append(StoppedUnbondingDelegationEntryKey, bz...)

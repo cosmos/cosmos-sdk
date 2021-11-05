@@ -887,6 +887,8 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 	return balances, nil
 }
 
+// This can be called to complete the unbonding of an unbonding delegation entry that was previously
+// stopped by the BeforeUnbondingDelegationEntryComplete hook in CompleteUnbonding
 func (k Keeper) CompleteStoppedUnbonding(ctx sdk.Context, id uint64) (found bool, err error) {
 	ubd, found := k.GetUnbondingDelegationByEntry(ctx, id)
 	if !found {

@@ -153,6 +153,7 @@ func TestUnbondingDelegation(t *testing.T) {
 		0,
 		time.Unix(0, 0).UTC(),
 		sdk.NewInt(5),
+		app.StakingKeeper.IncrementUnbondingDelegationEntryId(ctx),
 	)
 
 	// set and retrieve a record

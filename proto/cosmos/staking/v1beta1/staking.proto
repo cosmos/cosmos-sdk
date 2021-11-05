@@ -227,14 +227,11 @@ message UnbondingDelegationEntry {
   // balance defines the tokens to receive at completion.
   string balance = 4 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 
-  // incrementing id that uniquely identifies this entry
+  // Incrementing id that uniquely identifies this entry
   uint64 id = 5;
 
-  // TODO JEHAN: this is duplicative of the delegator_address on the UnbondingDelegation
-  // struct that this is often stored on. However, we need it for CompleteStoppedUnbonding.
-  // IMO this module should be rearchitected to get rid of UnbondingDelegations which 
-  // serve no real purpose and just store UnbondingDelegationEntry's by themselves
-  string delegator_address = 6 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // True if this entry's unbonding has been stopped by an external module
+  bool on_hold = 6; 
 }
 
 // RedelegationEntry defines a redelegation object with relevant metadata.

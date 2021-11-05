@@ -1,7 +1,3 @@
-// TODO:
-
-// Set up DelVal reverse index and use it to impelement get by validator
-
 package keeper
 
 import (
@@ -149,7 +145,7 @@ func (k Keeper) GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddres
 	maxRetrieve uint16) (unbondingDelegations []types.UnbondingDelegation) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterKey := append(types.UnbondingDelegationEntryByDelValKey, address.MustLengthPrefix(delegator)...)
+	iterKey := types.GetUnbondingDelegationEntryByDelValPartialKey(delegator)
 	iterator := sdk.KVStorePrefixIterator(store, iterKey)
 	defer iterator.Close()
 
@@ -168,7 +164,7 @@ func (k Keeper) GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddres
 func (k Keeper) GetUnbondingDelegationEntriesFromDelegator(ctx sdk.Context, delAddr sdk.AccAddress) (ubdes []types.UnbondingDelegationEntry) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterKey := append(types.UnbondingDelegationEntryByDelValKey, address.MustLengthPrefix(delAddr)...)
+	iterKey := types.GetUnbondingDelegationEntryByDelValPartialKey(delAddr)
 	iterator := sdk.KVStorePrefixIterator(store, iterKey)
 	defer iterator.Close()
 
@@ -214,9 +210,8 @@ func (k Keeper) GetUnbondingDelegation(
 func UnmarshalIndex(bz []byte) (index []uint64) {
 	err := json.Unmarshal(bz, &index)
 	if err != nil {
-		panic("Failed to JSON unmarshal")
+		panic(err)
 	}
-
 	return index
 }
 
@@ -288,13 +283,16 @@ func (k Keeper) IterateUnbondingDelegations(ctx sdk.Context, fn func(index int64
 	defer iterator.Close()
 
 	for i := int64(0); iterator.Valid(); iterator.Next() {
-		index := UnmarshalIndex(store.Get(types.UBDEValDelToDelValIndexKey(iterator.Key())))
-		ubd := k.getUBDFromUBDEIndex(ctx, index)
+		// TODO JEHAN: We should NOT merge this without figuring out why this conditional is neccesary and eliminating it
+		if len(iterator.Value()) != 0 {
+			index := UnmarshalIndex(iterator.Value())
+			ubd := k.getUBDFromUBDEIndex(ctx, index)
 
-		if stop := fn(i, ubd); stop {
-			break
+			if stop := fn(i, ubd); stop {
+				break
+			}
+			i++
 		}
-		i++
 	}
 }
 
@@ -381,8 +379,6 @@ func (k Keeper) CreateUnbondingDelegationEntry(
 
 	// Set indexes
 	k.InsertUBDQueue(ctx, ubde, completionTime)
-	k.InsertUBDEByDelIndex(ctx, ubde, delegatorAddr)
-	k.InsertUBDEByValIndex(ctx, ubde, validatorAddr)
 	k.InsertUBDEByDelValIndex(ctx, ubde, delegatorAddr, validatorAddr)
 
 	// Set record
@@ -416,120 +412,10 @@ func (k Keeper) RemoveUnbondingDelegationEntry(ctx sdk.Context, ubde types.Unbon
 	store := ctx.KVStore(k.storeKey)
 
 	// TODO Should queue index be removed here too?
-	k.RemoveUBDEByDelIndex(ctx, ubde)
-	k.RemoveUBDEByValIndex(ctx, ubde)
 	k.RemoveUBDEByDelValIndex(ctx, ubde)
 
 	// Delete record
 	store.Delete(types.GetUnbondingDelegationEntryKey(ubde.Id))
-}
-
-func (k Keeper) GetUBDEByValIndex(ctx sdk.Context, valAddr sdk.ValAddress) (ids []uint64) {
-	store := ctx.KVStore(k.storeKey)
-
-	bz := store.Get(types.GetUnbondingDelegationEntryByValKey(valAddr))
-	if bz == nil {
-		return []uint64{}
-	}
-
-	err := json.Unmarshal(bz, &ids)
-	if err != nil {
-		panic("Failed to JSON unmarshal")
-	}
-
-	return ids
-}
-
-func (k Keeper) SetUBDEByValIndex(ctx sdk.Context, valAddr sdk.ValAddress, ids []uint64) {
-	store := ctx.KVStore(k.storeKey)
-
-	bz, err := json.Marshal(ids)
-	if err != nil {
-		panic("Failed to JSON marshal")
-	}
-
-	store.Set(types.GetUnbondingDelegationEntryByValKey(valAddr), bz)
-}
-
-func (k Keeper) InsertUBDEByValIndex(ctx sdk.Context, ubde types.UnbondingDelegationEntry,
-	valAddr sdk.ValAddress) {
-
-	ids := k.GetUBDEByValIndex(ctx, valAddr)
-	if len(ids) == 0 {
-		k.SetUBDEByValIndex(ctx, valAddr, []uint64{ubde.Id})
-	} else {
-		ids = append(ids, ubde.Id)
-		k.SetUBDEByValIndex(ctx, valAddr, ids)
-	}
-}
-
-func (k Keeper) RemoveUBDEByValIndex(ctx sdk.Context, ubde types.UnbondingDelegationEntry) {
-	valAddr, _ := sdk.ValAddressFromBech32(ubde.ValidatorAddress)
-
-	index := k.GetUBDEByValIndex(ctx, valAddr)
-
-	var newIndex []uint64
-	for _, id := range index {
-		if id != ubde.Id {
-			newIndex = append(newIndex, id)
-		}
-	}
-
-	k.SetUBDEByValIndex(ctx, valAddr, newIndex)
-}
-
-func (k Keeper) GetUBDEByDelIndex(ctx sdk.Context, delAddr sdk.AccAddress) (ids []uint64) {
-	store := ctx.KVStore(k.storeKey)
-
-	bz := store.Get(types.GetUnbondingDelegationEntryByDelKey(delAddr))
-	if bz == nil {
-		return []uint64{}
-	}
-
-	err := json.Unmarshal(bz, &ids)
-	if err != nil {
-		panic("Failed to JSON unmarshal")
-	}
-
-	return ids
-}
-
-func (k Keeper) SetUBDEByDelIndex(ctx sdk.Context, delAddr sdk.AccAddress, ids []uint64) {
-	store := ctx.KVStore(k.storeKey)
-
-	bz, err := json.Marshal(ids)
-	if err != nil {
-		panic("Failed to JSON marshal")
-	}
-
-	store.Set(types.GetUnbondingDelegationEntryByDelKey(delAddr), bz)
-}
-
-func (k Keeper) InsertUBDEByDelIndex(ctx sdk.Context, ubde types.UnbondingDelegationEntry,
-	delAddr sdk.AccAddress) {
-
-	ids := k.GetUBDEByDelIndex(ctx, delAddr)
-	if len(ids) == 0 {
-		k.SetUBDEByDelIndex(ctx, delAddr, []uint64{ubde.Id})
-	} else {
-		ids = append(ids, ubde.Id)
-		k.SetUBDEByDelIndex(ctx, delAddr, ids)
-	}
-}
-
-func (k Keeper) RemoveUBDEByDelIndex(ctx sdk.Context, ubde types.UnbondingDelegationEntry) {
-	delAddr, _ := sdk.AccAddressFromBech32(ubde.DelegatorAddress)
-
-	index := k.GetUBDEByDelIndex(ctx, delAddr)
-
-	var newIndex []uint64
-	for _, id := range index {
-		if id != ubde.Id {
-			newIndex = append(newIndex, id)
-		}
-	}
-
-	k.SetUBDEByDelIndex(ctx, delAddr, newIndex)
 }
 
 func (k Keeper) GetUBDEByDelValIndex(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (ids []uint64) {
@@ -575,8 +461,14 @@ func (k Keeper) InsertUBDEByDelValIndex(ctx sdk.Context, ubde types.UnbondingDel
 
 func (k Keeper) RemoveUBDEByDelValIndex(ctx sdk.Context, ubde types.UnbondingDelegationEntry) {
 	store := ctx.KVStore(k.storeKey)
-	valAddr, _ := sdk.ValAddressFromBech32(ubde.ValidatorAddress)
-	delAddr, _ := sdk.AccAddressFromBech32(ubde.DelegatorAddress)
+	valAddr, err := sdk.ValAddressFromBech32(ubde.ValidatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	delAddr, err := sdk.AccAddressFromBech32(ubde.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
 
 	index := k.GetUBDEByDelValIndex(ctx, delAddr, valAddr)
 

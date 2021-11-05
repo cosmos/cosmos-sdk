@@ -69,16 +69,16 @@ func TestStoreMigration(t *testing.T) {
 			v040staking.GetDelegationKey(addr4, valAddr1),
 			types.GetDelegationKey(addr4, valAddr1),
 		},
-		{
-			"UnbondingDelegationKey",
-			v040staking.GetUBDKey(addr4, valAddr1),
-			types.GetUBDKey(addr4, valAddr1),
-		},
-		{
-			"UnbondingDelegationByValIndexKey",
-			v040staking.GetUBDByValIndexKey(addr4, valAddr1),
-			types.GetUBDByValIndexKey(addr4, valAddr1),
-		},
+		// {
+		// 	"UnbondingDelegationKey",
+		// 	v040staking.GetUBDKey(addr4, valAddr1),
+		// 	types.GetUBDKey(addr4, valAddr1),
+		// },
+		// {
+		// 	"UnbondingDelegationByValIndexKey",
+		// 	v040staking.GetUBDByValIndexKey(addr4, valAddr1),
+		// 	types.GetUBDByValIndexKey(addr4, valAddr1),
+		// },
 		{
 			"RedelegationKey",
 			v040staking.GetREDKey(addr4, valAddr1, valAddr2),

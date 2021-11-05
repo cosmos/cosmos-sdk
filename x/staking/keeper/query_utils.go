@@ -72,19 +72,18 @@ func (k Keeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAdd
 }
 
 // return all unbonding-delegations for a delegator
-func (k Keeper) GetAllUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress) []types.UnbondingDelegation {
-	unbondingDelegations := make([]types.UnbondingDelegation, 0)
-
+func (k Keeper) GetAllUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress) (unbondingDelegations []types.UnbondingDelegation) {
 	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := types.GetUBDsKey(delegator)
 
-	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
+	iterKey := types.GetUnbondingDelegationEntryByDelValPartialKey(delegator)
+	iterator := sdk.KVStorePrefixIterator(store, iterKey)
 	defer iterator.Close()
 
-	for i := 0; iterator.Valid(); iterator.Next() {
-		unbondingDelegation := types.MustUnmarshalUBD(k.cdc, iterator.Value())
-		unbondingDelegations = append(unbondingDelegations, unbondingDelegation)
-		i++
+	for ; iterator.Valid(); iterator.Next() {
+		index := UnmarshalIndex(store.Get(types.UBDEValDelToDelValIndexKey(iterator.Key())))
+		ubd := k.getUBDFromUBDEIndex(ctx, index)
+
+		unbondingDelegations = append(unbondingDelegations, ubd)
 	}
 
 	return unbondingDelegations

@@ -151,17 +151,17 @@ func (k Querier) ValidatorUnbondingDelegations(c context.Context, req *types.Que
 		return nil, err
 	}
 
-	srcValPrefix := types.GetUBDsByValIndexKey(valAddr)
+	srcValPrefix := types.GetUnbondingDelegationEntryByValDelPartialKey(valAddr)
 	ubdStore := prefix.NewStore(store, srcValPrefix)
 	pageRes, err := query.Paginate(ubdStore, req.Pagination, func(key []byte, value []byte) error {
-		storeKey := types.GetUBDKeyFromValIndexKey(append(srcValPrefix, key...))
+		storeKey := types.UBDEValDelToDelValIndexKey(append(srcValPrefix, key...))
 		storeValue := store.Get(storeKey)
 
-		ubd, err := types.UnmarshalUBD(k.cdc, storeValue)
-		if err != nil {
-			return err
-		}
+		index := UnmarshalIndex(storeValue)
+		ubd := k.getUBDFromUBDEIndex(ctx, index)
+
 		ubds = append(ubds, ubd)
+
 		return nil
 	})
 	if err != nil {
@@ -340,13 +340,18 @@ func (k Querier) DelegatorUnbondingDelegations(c context.Context, req *types.Que
 		return nil, err
 	}
 
-	unbStore := prefix.NewStore(store, types.GetUBDsKey(delAddr))
-	pageRes, err := query.Paginate(unbStore, req.Pagination, func(key []byte, value []byte) error {
-		unbond, err := types.UnmarshalUBD(k.cdc, value)
-		if err != nil {
-			return err
+	keyPrefix := types.GetUnbondingDelegationEntryByDelValPartialKey(delAddr)
+
+	indexStore := prefix.NewStore(store, keyPrefix)
+	pageRes, err := query.Paginate(indexStore, req.Pagination, func(key []byte, value []byte) error {
+		bz := store.Get(types.UBDEValDelToDelValIndexKey(append(keyPrefix, key...)))
+		// JEHAN TODO: We cannot merge this until we figure out why this conditional is needed and eliminate it
+		if bz != nil {
+			index := UnmarshalIndex(bz)
+			ubd := k.getUBDFromUBDEIndex(ctx, index)
+
+			unbondingDelegations = append(unbondingDelegations, ubd)
 		}
-		unbondingDelegations = append(unbondingDelegations, unbond)
 		return nil
 	})
 	if err != nil {

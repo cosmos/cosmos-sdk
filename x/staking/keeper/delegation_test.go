@@ -160,6 +160,7 @@ func TestUnbondingDelegation(t *testing.T) {
 		0,
 		time.Unix(0, 0).UTC(),
 		sdk.NewInt(5),
+		1,
 	)
 	require.Equal(t, ubd, resUnbond)
 

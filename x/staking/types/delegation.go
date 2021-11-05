@@ -92,15 +92,6 @@ func (d Delegations) String() (out string) {
 	return strings.TrimSpace(out)
 }
 
-func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time, balance sdk.Int) UnbondingDelegationEntry {
-	return UnbondingDelegationEntry{
-		CreationHeight: creationHeight,
-		CompletionTime: completionTime,
-		InitialBalance: balance,
-		Balance:        balance,
-	}
-}
-
 // String implements the stringer interface for a UnbondingDelegationEntry.
 func (e UnbondingDelegationEntry) String() string {
 	out, _ := yaml.Marshal(e)
@@ -116,47 +107,21 @@ func (e UnbondingDelegationEntry) IsMature(currentTime time.Time) bool {
 //nolint:interfacer
 func NewUnbondingDelegation(
 	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
-	creationHeight int64, minTime time.Time, balance sdk.Int,
+	creationHeight int64, minTime time.Time, balance sdk.Int, ubdeID uint64,
 ) UnbondingDelegation {
 	return UnbondingDelegation{
 		DelegatorAddress: delegatorAddr.String(),
 		ValidatorAddress: validatorAddr.String(),
 		Entries: []UnbondingDelegationEntry{
-			NewUnbondingDelegationEntry(creationHeight, minTime, balance),
+			{
+				CreationHeight: creationHeight,
+				CompletionTime: minTime,
+				InitialBalance: balance,
+				Balance:        balance,
+				Id:             ubdeID,
+			},
 		},
 	}
-}
-
-// AddEntry - append entry to the unbonding delegation
-func (ubd *UnbondingDelegation) AddEntry(creationHeight int64, minTime time.Time, balance sdk.Int) {
-	entry := NewUnbondingDelegationEntry(creationHeight, minTime, balance)
-	ubd.Entries = append(ubd.Entries, entry)
-}
-
-// RemoveEntry - remove entry at index i to the unbonding delegation
-func (ubd *UnbondingDelegation) RemoveEntry(i int64) {
-	ubd.Entries = append(ubd.Entries[:i], ubd.Entries[i+1:]...)
-}
-
-// return the unbonding delegation
-func MustMarshalUBD(cdc codec.BinaryCodec, ubd UnbondingDelegation) []byte {
-	return cdc.MustMarshal(&ubd)
-}
-
-// unmarshal a unbonding delegation from a store value
-func MustUnmarshalUBD(cdc codec.BinaryCodec, value []byte) UnbondingDelegation {
-	ubd, err := UnmarshalUBD(cdc, value)
-	if err != nil {
-		panic(err)
-	}
-
-	return ubd
-}
-
-// unmarshal a unbonding delegation from a store value
-func UnmarshalUBD(cdc codec.BinaryCodec, value []byte) (ubd UnbondingDelegation, err error) {
-	err = cdc.Unmarshal(value, &ubd)
-	return ubd, err
 }
 
 // return the unbonding delegation entry

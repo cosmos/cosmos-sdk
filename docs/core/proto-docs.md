@@ -7295,6 +7295,7 @@ Class defines the class of the nft type.
 | `description` | [string](#string) |  | description is a brief description of nft classification,optional |
 | `uri` | [string](#string) |  | uri is a URI may point to a JSON file that conforms to the nft classification Metadata JSON Schema.optional |
 | `uri_hash` | [string](#string) |  | uri_hash is a hash of the document pointed to uri,optional |
+| `data` | [google.protobuf.Any](#google.protobuf.Any) |  | data is the metadata of NFT classification,optional |
 
 
 

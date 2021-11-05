@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// Increments and returns a unique ID for an UnbondingDelegationEntry
 func (k Keeper) IncrementUnbondingDelegationEntryId(ctx sdk.Context) (unbondingDelegationEntryId uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.UnbondingDelegationEntryIdKey)
@@ -195,6 +196,7 @@ func (k Keeper) GetUnbondingDelegationByEntry(
 	return ubd, true
 }
 
+// Set an index entry to look up an UnbondingDelegation by the ID of an UnbondingDelegationEntry that it contains
 func (k Keeper) SetUBDByEntryIndex(ctx sdk.Context, ubd types.UnbondingDelegation, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -214,6 +216,7 @@ func (k Keeper) SetUBDByEntryIndex(ctx sdk.Context, ubd types.UnbondingDelegatio
 	store.Set(indexKey, ubdKey)
 }
 
+// Remove an index entry to look up an UnbondingDelegation by the ID of an UnbondingDelegationEntry that it contains
 func (k Keeper) DeleteUBDByEntryIndex(ctx sdk.Context, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -315,6 +318,9 @@ func (k Keeper) SetUnbondingDelegationEntry(
 	}
 
 	k.SetUnbondingDelegation(ctx, ubd)
+
+	// Add to the UBDByEntry index to look up the UBD by the UBDE ID
+	k.SetUBDByEntryIndex(ctx, ubd, id)
 
 	// Call hook
 	k.UnbondingDelegationEntryCreated(ctx, delegatorAddr, validatorAddr, creationHeight, minTime, balance, id)
@@ -855,8 +861,6 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 			if onHold {
 				// Mark that the entry is stopped
 				entry.OnHold = true
-				// Add to the UBDByEntry index so that CompleteStoppedUnbonding can find it
-				k.SetUBDByEntryIndex(ctx, ubd, entry.Id)
 			} else {
 				// Proceed with unbonding
 				ubd.RemoveEntry(int64(i))

@@ -80,9 +80,7 @@ func (k Keeper) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, 
 	}
 }
 
-// This is called after undelegation is completed
-// TODO JEHAN: I'm using this for a proof of concept for CCV. It's possible that this functionality can
-// instead be provided with RemoveDelegation and AfterDelegationModified but it will be more complicated
+// This is called when an UnbondingDelegationEntry is first created
 func (k Keeper) UnbondingDelegationEntryCreated(ctx sdk.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 	creationHeight int64, completionTime time.Time, balance sdk.Int, id uint64) {
 	if k.hooks != nil {

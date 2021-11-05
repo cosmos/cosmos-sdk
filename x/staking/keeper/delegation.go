@@ -196,7 +196,7 @@ func (k Keeper) GetUnbondingDelegationByEntry(
 	return ubd, true
 }
 
-// Set an index entry to look up an UnbondingDelegation by the ID of an UnbondingDelegationEntry that it contains
+// Set an index to look up an UnbondingDelegation by the ID of an UnbondingDelegationEntry that it contains
 func (k Keeper) SetUBDByEntryIndex(ctx sdk.Context, ubd types.UnbondingDelegation, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -216,7 +216,7 @@ func (k Keeper) SetUBDByEntryIndex(ctx sdk.Context, ubd types.UnbondingDelegatio
 	store.Set(indexKey, ubdKey)
 }
 
-// Remove an index entry to look up an UnbondingDelegation by the ID of an UnbondingDelegationEntry that it contains
+// Remove a UBDByEntryIndex
 func (k Keeper) DeleteUBDByEntryIndex(ctx sdk.Context, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 

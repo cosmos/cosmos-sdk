@@ -887,10 +887,10 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 	return balances, nil
 }
 
-func (k Keeper) CompleteStoppedUnbonding(ctx sdk.Context, id uint64) (err error, found bool) {
+func (k Keeper) CompleteStoppedUnbonding(ctx sdk.Context, id uint64) (found bool, err error) {
 	ubd, found := k.GetUnbondingDelegationByEntry(ctx, id)
 	if !found {
-		return nil, false
+		return false, nil
 	}
 
 	for i, entry := range ubd.Entries {
@@ -900,7 +900,7 @@ func (k Keeper) CompleteStoppedUnbonding(ctx sdk.Context, id uint64) (err error,
 			// Complete unbonding
 			delegatorAddress, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
 			if err != nil {
-				return err, true
+				return true, err
 			}
 
 			bondDenom := k.GetParams(ctx).BondDenom
@@ -916,7 +916,7 @@ func (k Keeper) CompleteStoppedUnbonding(ctx sdk.Context, id uint64) (err error,
 				if err := k.bankKeeper.UndelegateCoinsFromModuleToAccount(
 					ctx, types.NotBondedPoolName, delegatorAddress, sdk.NewCoins(amt),
 				); err != nil {
-					return err, true
+					return false, err
 				}
 			}
 
@@ -927,12 +927,13 @@ func (k Keeper) CompleteStoppedUnbonding(ctx sdk.Context, id uint64) (err error,
 				k.SetUnbondingDelegation(ctx, ubd)
 			}
 
-			return nil, true
+			// Successfully completed unbonding
+			return true, nil
 		}
 	}
 
 	// If an entry was not found
-	return nil, false
+	return false, nil
 }
 
 // begin unbonding / redelegation; create a redelegation record

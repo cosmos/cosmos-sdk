@@ -27,7 +27,7 @@ This defines the cryptographic control structure for a DID, and may also specify
 
 The properties of a DID-Core standard DID Document include:
 - **Identifier** (the DID) of the subject with the Identifier of the Controller who is authorized to update the DID Document.
-- **Verificaton Method/s** (The cryptographic key material).
+- **Verification Method/s** (The public cryptographic material).
 - **Verification Relationship/s** (Describing and restricting the purposes for which the verification Methods can be used, such as Authentication).
 - **Services** related to the DID subject, with endpoints for reaching these services, such as data stores or blockchain services.
 

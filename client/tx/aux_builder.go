@@ -9,12 +9,22 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 // AuxTxBuilder is a client-side builder for creating an AuxTx.
 type AuxTxBuilder struct {
+	// msgs is used to store the sdk.Msgs that are added to the
+	// TxBuilder. It's also added inside body.Messages, because:
+	// - b.msgs is used for constructing the AMINO sign bz,
+	// - b.body is used for constructing the DIRECT_AUX sign bz.
+	msgs          []sdk.Msg
 	body          *tx.TxBody
 	auxSignerData *tx.AuxSignerData
+}
+
+func NewAuxTxBuilder() AuxTxBuilder {
+	return AuxTxBuilder{}
 }
 
 func (b *AuxTxBuilder) SetMemo(memo string) {
@@ -41,6 +51,7 @@ func (b *AuxTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
 
 	b.checkEmptyFields()
 
+	b.msgs = msgs
 	b.body.Messages = anys
 
 	return nil
@@ -105,24 +116,24 @@ func (b *AuxTxBuilder) SetSignature(sig []byte) {
 
 // GetSignBytes returns the builder's sign bytes.
 func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
-	body := b.body
-	if body == nil {
-		return nil, sdkerrors.ErrLogic.Wrap("tx body is nil, call setters on AuxTxBuilder first")
-	}
-
-	bodyBz, err := proto.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-
 	auxTx := b.auxSignerData
 	if auxTx == nil {
 		return nil, sdkerrors.ErrLogic.Wrap("aux tx is nil, call setters on AuxTxBuilder first")
 	}
 
+	body := b.body
+	if body == nil {
+		return nil, sdkerrors.ErrLogic.Wrap("tx body is nil, call setters on AuxTxBuilder first")
+	}
+
 	sd := auxTx.SignDoc
 	if sd == nil {
 		return nil, sdkerrors.ErrLogic.Wrap("sign doc is nil, call setters on AuxTxBuilder first")
+	}
+
+	bodyBz, err := proto.Marshal(body)
+	if err != nil {
+		return nil, err
 	}
 
 	sd.BodyBytes = bodyBz
@@ -131,9 +142,31 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 		return nil, err
 	}
 
-	signBz, err := proto.Marshal(b.auxSignerData.SignDoc)
-	if err != nil {
-		return nil, err
+	var signBz []byte
+	switch b.auxSignerData.Mode {
+	case signing.SignMode_SIGN_MODE_DIRECT_AUX:
+		{
+
+			signBz, err = proto.Marshal(b.auxSignerData.SignDoc)
+			if err != nil {
+				return nil, err
+			}
+		}
+	case signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
+		{
+			signBz = legacytx.StdSignBytes(
+				b.auxSignerData.SignDoc.ChainId, b.auxSignerData.SignDoc.AccountNumber,
+				b.auxSignerData.SignDoc.Sequence, b.body.TimeoutHeight,
+				// Aux signer never signs over fee.
+				// For LEGACY_AMINO_JSON, we use the convention to sign
+				// over empty fees.
+				// ref: https://github.com/cosmos/cosmos-sdk/pull/10348
+				legacytx.StdFee{},
+				b.msgs, b.body.Memo, b.auxSignerData.SignDoc.Tip,
+			)
+		}
+	default:
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("got unknown sign mode %s", b.auxSignerData.Mode)
 	}
 
 	return signBz, nil

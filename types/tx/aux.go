@@ -31,13 +31,6 @@ func (s *SignDocDirectAux) ValidateBasic() error {
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
-func (s *SignDocDirectAux) GetPubKey() (cryptotypes.PubKey, error) {
-	var pk cryptotypes.PubKey
-	err := 
-	return pk,nil
-}
-
-// UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (s *SignDocDirectAux) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return unpacker.UnpackAny(s.PublicKey, new(cryptotypes.PubKey))
 }

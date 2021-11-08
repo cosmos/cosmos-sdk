@@ -911,6 +911,8 @@ func (m *Tip) GetTipper() string {
 // tipper) builds and sends to the fee payer (who will build and broadcast the
 // actual tx). AuxSignerData is not a valid tx in itself, and will be rejected
 // by the node if sent directly as-is.
+//
+// Since: cosmos-sdk 0.45
 type AuxSignerData struct {
 	// sign_doc is the SIGN_MOD_DIRECT_AUX sign doc that the auxiliary signer
 	// signs. Note: we use the same sign doc even if we're signing with

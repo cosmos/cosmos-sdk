@@ -9483,6 +9483,8 @@ tipper) builds and sends to the fee payer (who will build and broadcast the
 actual tx). AuxSignerData is not a valid tx in itself, and will be rejected
 by the node if sent directly as-is.
 
+Since: cosmos-sdk 0.45
+
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |

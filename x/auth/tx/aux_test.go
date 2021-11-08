@@ -47,35 +47,30 @@ func TestBuilderWithAux(t *testing.T) {
 	auxSignerData, err := auxBuilder.GetAuxSignerData()
 	require.NoError(t, err)
 
-	// Create a TxBuilder
+	// Fee payer creates a TxBuilder.
 	w := encCfg.TxConfig.NewTxBuilder()
-	w.AddAuxSignerData(auxSignerData)
+	err = w.AddAuxSignerData(auxSignerData)
+	require.NoError(t, err)
 	w.SetFeePayer(feepayerAddr)
 	w.SetFeeAmount(fee)
 	w.SetGasLimit(gas)
 	sigs, err := w.(authsigning.SigVerifiableTx).GetSignaturesV2()
 	require.NoError(t, err)
 	tipperSigV2 := sigs[0]
-	// Set the fee payer signer info
+	// Set all signer infos.
 	w.SetSignatures(tipperSigV2, signing.SignatureV2{
 		PubKey:   feepayerPk,
 		Sequence: 15,
 	})
 	signBz, err = encCfg.TxConfig.SignModeHandler().GetSignBytes(
 		signing.SignMode_SIGN_MODE_DIRECT,
-		authsigning.SignerData{
-			Address:       feepayerAddr.String(),
-			ChainID:       chainID,
-			AccountNumber: 11,
-			Sequence:      15,
-			SignerIndex:   1,
-		},
+		authsigning.SignerData{Address: feepayerAddr.String(), ChainID: chainID, AccountNumber: 11, Sequence: 15, SignerIndex: 1},
 		w.GetTx(),
 	)
 	require.NoError(t, err)
 	feepayerSig, err := feepayerPriv.Sign(signBz)
 	require.NoError(t, err)
-	// Set the fee payer signature
+	// Set all signatures.
 	w.SetSignatures(tipperSigV2, signing.SignatureV2{
 		PubKey: feepayerPk,
 		Data: &signing.SingleSignatureData{
@@ -85,7 +80,7 @@ func TestBuilderWithAux(t *testing.T) {
 		Sequence: 15,
 	})
 
-	// Make sure tx is correct
+	// Make sure tx is correct.
 	txBz, err := encCfg.TxConfig.TxEncoder()(w.GetTx())
 	require.NoError(t, err)
 	tx, err := encCfg.TxConfig.TxDecoder()(txBz)
@@ -96,6 +91,7 @@ func TestBuilderWithAux(t *testing.T) {
 	require.Equal(t, tip, tx.(txtypes.TipTx).GetTip())
 	require.Equal(t, msg, tx.GetMsgs()[0])
 	require.Equal(t, memo, tx.(sdk.TxWithMemo).GetMemo())
+	require.Equal(t, uint64(3), tx.(sdk.TxWithTimeoutHeight).GetTimeoutHeight())
 	sigs, err = tx.(authsigning.Tx).GetSignaturesV2()
 	require.NoError(t, err)
 	require.Equal(t, signing.SignatureV2{

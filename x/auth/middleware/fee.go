@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var _ tx.Handler = mempoolFeeTxHandler{}
@@ -62,7 +62,10 @@ func (txh mempoolFeeTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.
 		}
 	}
 
-	return txh.next.CheckTx(ctx, tx, req)
+	res, err := txh.next.CheckTx(ctx, tx, req)
+	res.Priority = GetTxPriority(feeCoins)
+
+	return res, err
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
@@ -191,4 +194,15 @@ func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc types.AccountI
 	}
 
 	return nil
+}
+
+// GetTxPriority returns a naive tx priority based on the total sum of all fees
+// provided in a transaction.
+func GetTxPriority(fee sdk.Coins) int64 {
+	var priority int64
+	for _, c := range fee {
+		priority += c.Amount.Int64()
+	}
+
+	return priority
 }

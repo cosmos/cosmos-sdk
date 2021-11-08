@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/nft"
@@ -40,10 +41,14 @@ type TestSuite struct {
 func (s *TestSuite) SetupTest() {
 	app := simapp.Setup(s.T(), false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	ctx = ctx.WithBlockHeader(tmproto.Header{Time: timeNow()})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
+	nft.RegisterQueryServer(queryHelper, app.NFTKeeper)
+	queryClient := nft.NewQueryClient(queryHelper)
 
 	s.app = app
 	s.ctx = ctx
+	s.queryClient = queryClient
 	s.addrs = simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(30000000))
 }
 

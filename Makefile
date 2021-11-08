@@ -321,8 +321,7 @@ markdownLintImage=tmknom/markdownlint
 containerMarkdownLint=$(PROJECT_NAME)-markdownlint
 containerMarkdownLintFix=$(PROJECT_NAME)-markdownlint-fix
 
-install-golangci-lint:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.1
+golangci_lint_cmd=golangci-lint
 
 lint: lint-go
 	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLint}$$"; then docker start -a $(containerMarkdownLint); else docker run --name $(containerMarkdownLint) -i -v "$(CURDIR):/work" $(markdownLintImage); fi
@@ -331,8 +330,9 @@ lint-fix: install-golangci-lint
 	golangci-lint run --fix --out-format=tab --issues-exit-code=0
 	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLintFix}$$"; then docker start -a $(containerMarkdownLintFix); else docker run --name $(containerMarkdownLintFix) -i -v "$(CURDIR):/work" $(markdownLintImage) . --fix; fi
 
-lint-go: install-golangci-lint
-	golangci-lint run --out-format=tab
+lint-go:
+	@@test -n "$$golangci-lint version | awk '$4 >= 1.42')"
+	$(golangci_lint_cmd) run --out-format=tab $(GIT_DIFF)
 
 .PHONY: lint lint-fix
 

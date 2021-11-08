@@ -38,6 +38,7 @@ type (
 		GetTx() signing.Tx
 
 		SetMsgs(msgs ...sdk.Msg) error
+		AddSignature(signature signingtypes.SignatureV2) error
 		SetSignatures(signatures ...signingtypes.SignatureV2) error
 		SetMemo(memo string)
 		SetFeeAmount(amount sdk.Coins)
@@ -45,5 +46,6 @@ type (
 		SetTip(tip *tx.Tip)
 		SetTimeoutHeight(height uint64)
 		SetFeeGranter(feeGranter sdk.AccAddress)
+		AddAuxSignerData(tx.AuxSignerData) error
 	}
 )

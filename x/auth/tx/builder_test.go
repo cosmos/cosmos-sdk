@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -312,4 +313,45 @@ func TestBuilderFeeGranter(t *testing.T) {
 	// set fee granter
 	txBuilder.SetFeeGranter(addr1)
 	require.Equal(t, addr1, txBuilder.GetTx().FeeGranter())
+}
+
+func TestBuilderWithAux(t *testing.T) {
+	tipperPriv, tipperPk, tipperAddr := testdata.KeyTestPubAddr()
+	_, feepayerPk, feepayerAddr := testdata.KeyTestPubAddr()
+	msg := testdata.NewTestMsg(tipperAddr)
+	tip := &txtypes.Tip{Tipper: tipperAddr.String(), Amount: testdata.NewTestFeeAmount()}
+	chainID := "test-chain"
+
+	// Create an AuxTxBuilder
+	auxBuilder := clienttx.NewAuxTxBuilder()
+	auxBuilder.SetAccountNumber(1)
+	auxBuilder.SetSequence(2)
+	auxBuilder.SetTimeoutHeight(3)
+	auxBuilder.SetMemo(memo)
+	auxBuilder.SetChainID(chainID)
+	auxBuilder.SetMsgs(msg)
+	auxBuilder.SetPubKey(tipperPk)
+	auxBuilder.SetTip(tip)
+	err := auxBuilder.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX)
+	require.NoError(t, err)
+	signBz, err := auxBuilder.GetSignBytes()
+	require.NoError(t, err)
+	sig, err := tipperPriv.Sign(signBz)
+	require.NoError(t, err)
+	auxBuilder.SetSignature(sig)
+	auxSignerData, err := auxBuilder.GetAuxSignerData()
+	require.NoError(t, err)
+
+	// Create a TxBuilder
+	w := newBuilder()
+	w.AddAuxSignerData(auxSignerData)
+	w.SetFeePayer(feepayerAddr)
+	w.SetFeeAmount(testdata.NewTestFeeAmount())
+	// Set SignerInfo for the feepayer
+	w.AddSignature(signing.SignatureV2{
+		PubKey:   feepayerPk,
+		Data:     &signing.SingleSignatureData{SignMode: signing.SignMode_SIGN_MODE_DIRECT},
+		Sequence: 5,
+	})
+
 }

@@ -34,18 +34,26 @@ func (s *StdTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
 	return nil
 }
 
+// SetSignatures implements TxBuilder.AddSignature.
+func (s *StdTxBuilder) AddSignature(sig signing.SignatureV2) error {
+	stdSig, err := SignatureV2ToStdSignature(s.cdc, sig)
+	if err != nil {
+		return err
+	}
+
+	s.Signatures = append(s.Signatures, stdSig)
+	return nil
+}
+
 // SetSignatures implements TxBuilder.SetSignatures.
 func (s *StdTxBuilder) SetSignatures(signatures ...signing.SignatureV2) error {
-	sigs := make([]StdSignature, len(signatures))
-	var err error
-	for i, sig := range signatures {
-		sigs[i], err = SignatureV2ToStdSignature(s.cdc, sig)
+	for _, sig := range signatures {
+		err := s.AddSignature(sig)
 		if err != nil {
 			return err
 		}
 	}
 
-	s.Signatures = sigs
 	return nil
 }
 
@@ -73,6 +81,11 @@ func (s *StdTxBuilder) SetTimeoutHeight(height uint64) {
 
 // SetFeeGranter does nothing for stdtx
 func (s *StdTxBuilder) SetFeeGranter(_ sdk.AccAddress) {}
+
+// AddAuxSignerData returns an error for StdTxBuilder.
+func (s *StdTxBuilder) AddAuxSignerData(_ tx.AuxSignerData) error {
+	return sdkerrors.ErrLogic.Wrap("cannot use AuxSignerData with StdTxBuilder")
+}
 
 // StdTxConfig is a context.TxConfig for StdTx
 type StdTxConfig struct {

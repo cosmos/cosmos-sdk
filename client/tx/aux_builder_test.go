@@ -114,7 +114,7 @@ func TestAuxTxBuilder(t *testing.T) {
 			false, "",
 		},
 		{
-			"GetAuxTx signature should not be empty",
+			"GetAuxSignerData signature should not be empty",
 			func() error {
 				b.SetMsgs(msg)
 				b.SetPubKey(pk)
@@ -125,13 +125,13 @@ func TestAuxTxBuilder(t *testing.T) {
 				_, err = b.GetSignBytes()
 				require.NoError(t, err)
 
-				_, err = b.GetAuxTx()
+				_, err = b.GetAuxSignerData()
 				return err
 			},
 			true, "signature cannot be empty: no signatures supplied",
 		},
 		{
-			"GetAuxTx works for DIRECT_AUX",
+			"GetAuxSignerData works for DIRECT_AUX",
 			func() error {
 				memo := "test-memo"
 				chainID := "test-chain"
@@ -151,24 +151,24 @@ func TestAuxTxBuilder(t *testing.T) {
 				require.NoError(t, err)
 				b.SetSignature(sig)
 
-				auxTx, err := b.GetAuxTx()
+				auxSignerData, err := b.GetAuxSignerData()
 				require.NoError(t, err)
 
-				// Make sure auxTx is correctly populated
+				// Make sure auxSignerData is correctly populated
 				var body typestx.TxBody
-				err = encCfg.Codec.Unmarshal(auxTx.SignDoc.BodyBytes, &body)
+				err = encCfg.Codec.Unmarshal(auxSignerData.SignDoc.BodyBytes, &body)
 				require.NoError(t, err)
 
-				require.Equal(t, uint64(1), auxTx.SignDoc.AccountNumber)
-				require.Equal(t, uint64(2), auxTx.SignDoc.Sequence)
+				require.Equal(t, uint64(1), auxSignerData.SignDoc.AccountNumber)
+				require.Equal(t, uint64(2), auxSignerData.SignDoc.Sequence)
 				require.Equal(t, uint64(3), body.TimeoutHeight)
 				require.Equal(t, memo, body.Memo)
-				require.Equal(t, chainID, auxTx.SignDoc.ChainId)
+				require.Equal(t, chainID, auxSignerData.SignDoc.ChainId)
 				require.Equal(t, msgAny, body.GetMessages()[0])
-				require.Equal(t, pkAny, auxTx.SignDoc.PublicKey)
-				require.Equal(t, tip, auxTx.SignDoc.Tip)
-				require.Equal(t, signing.SignMode_SIGN_MODE_DIRECT_AUX, auxTx.Mode)
-				require.Equal(t, sig, auxTx.Sig)
+				require.Equal(t, pkAny, auxSignerData.SignDoc.PublicKey)
+				require.Equal(t, tip, auxSignerData.SignDoc.Tip)
+				require.Equal(t, signing.SignMode_SIGN_MODE_DIRECT_AUX, auxSignerData.Mode)
+				require.Equal(t, sig, auxSignerData.Sig)
 
 				return err
 			},
@@ -189,7 +189,7 @@ func TestAuxTxBuilder(t *testing.T) {
 			false, "",
 		},
 		{
-			"GetAuxTx works for LEGACY_AMINO_JSON",
+			"GetAuxSignerData works for LEGACY_AMINO_JSON",
 			func() error {
 				b.SetMsgs(msg)
 				b.SetPubKey(pk)
@@ -201,7 +201,7 @@ func TestAuxTxBuilder(t *testing.T) {
 				require.NoError(t, err)
 				b.SetSignature(sig)
 
-				_, err = b.GetAuxTx()
+				_, err = b.GetAuxSignerData()
 				return err
 			},
 			false, "",

@@ -284,27 +284,32 @@ func (w *wrapper) SetFeeGranter(feeGranter sdk.AccAddress) {
 	w.authInfoBz = nil
 }
 
-func (w *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
-	n := len(signatures)
-	signerInfos := make([]*tx.SignerInfo, n)
-	rawSigs := make([][]byte, n)
+func (w *wrapper) AddSignature(sig signing.SignatureV2) error {
+	modeInfo, rawSig := SignatureDataToModeInfoAndSig(sig.Data)
+	any, err := codectypes.NewAnyWithValue(sig.PubKey)
+	if err != nil {
+		return err
+	}
 
-	for i, sig := range signatures {
-		var modeInfo *tx.ModeInfo
-		modeInfo, rawSigs[i] = SignatureDataToModeInfoAndSig(sig.Data)
-		any, err := codectypes.NewAnyWithValue(sig.PubKey)
+	signerInfo := &tx.SignerInfo{
+		PublicKey: any,
+		ModeInfo:  modeInfo,
+		Sequence:  sig.Sequence,
+	}
+
+	w.setSignerInfos(append(w.tx.AuthInfo.SignerInfos, signerInfo))
+	w.setSignatures(append(w.tx.Signatures, rawSig))
+
+	return nil
+}
+
+func (w *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
+	for _, sig := range signatures {
+		err := w.AddSignature(sig)
 		if err != nil {
 			return err
 		}
-		signerInfos[i] = &tx.SignerInfo{
-			PublicKey: any,
-			ModeInfo:  modeInfo,
-			Sequence:  sig.Sequence,
-		}
 	}
-
-	w.setSignerInfos(signerInfos)
-	w.setSignatures(rawSigs)
 
 	return nil
 }
@@ -367,12 +372,12 @@ func (w *wrapper) AddAuxSignerData(data tx.AuxSignerData) error {
 	w.bodyBz = data.SignDoc.BodyBytes
 	w.SetTip(data.GetSignDoc().GetTip())
 
-	w.tx.AuthInfo.SignerInfos = []*tx.SignerInfo{
-		{
-			PublicKey: data.SignDoc.PublicKey,
-			ModeInfo:  &tx.ModeInfo{Sum: &tx.ModeInfo_Single_{Single: &tx.ModeInfo_Single{Mode: data.Mode}}},
-		},
-	}
+	w.setSignerInfos(append(w.tx.AuthInfo.SignerInfos, &tx.SignerInfo{
+		PublicKey: data.SignDoc.PublicKey,
+		ModeInfo:  &tx.ModeInfo{Sum: &tx.ModeInfo_Single_{Single: &tx.ModeInfo_Single{Mode: data.Mode}}},
+		Sequence:  data.SignDoc.Sequence,
+	}))
+	w.setSignatures(append(w.tx.Signatures, data.Sig))
 
 	return nil
 }

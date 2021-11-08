@@ -172,13 +172,13 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 	return signBz, nil
 }
 
-// GetAuxTx returns the builder's AuxTx.
-func (b *AuxTxBuilder) GetAuxTx() (*tx.AuxSignerData, error) {
+// GetAuxSignerData returns the builder's AuxTx.
+func (b *AuxTxBuilder) GetAuxSignerData() (tx.AuxSignerData, error) {
 	if err := b.auxSignerData.ValidateBasic(); err != nil {
-		return nil, err
+		return tx.AuxSignerData{}, err
 	}
 
-	return b.auxSignerData, nil
+	return *b.auxSignerData, nil
 }
 
 func (b *AuxTxBuilder) checkEmptyFields() {

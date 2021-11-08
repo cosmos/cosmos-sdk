@@ -230,6 +230,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2.1.4
+        with:
+          go-version: 1.17
       - uses: technote-space/get-diff-action@v5
         id: git_diff
         with:
@@ -239,7 +242,7 @@ jobs:
             go.sum
       - name: start localnet
         run: |
-          make localnet-start
+          make clean build-simd-linux localnet-start
         if: env.GIT_DIFF
       - name: test liveness
         run: |

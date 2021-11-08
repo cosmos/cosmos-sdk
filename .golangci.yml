@@ -21,7 +21,6 @@ linters:
     - govet
     - ineffassign
     - misspell
-    - misspell
     - nakedret
     - nolintlint
     - prealloc

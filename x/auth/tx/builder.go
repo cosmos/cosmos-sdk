@@ -284,32 +284,27 @@ func (w *wrapper) SetFeeGranter(feeGranter sdk.AccAddress) {
 	w.authInfoBz = nil
 }
 
-func (w *wrapper) AddSignature(sig signing.SignatureV2) error {
-	modeInfo, rawSig := SignatureDataToModeInfoAndSig(sig.Data)
-	any, err := codectypes.NewAnyWithValue(sig.PubKey)
-	if err != nil {
-		return err
-	}
-
-	signerInfo := &tx.SignerInfo{
-		PublicKey: any,
-		ModeInfo:  modeInfo,
-		Sequence:  sig.Sequence,
-	}
-
-	w.setSignerInfos(append(w.tx.AuthInfo.SignerInfos, signerInfo))
-	w.setSignatures(append(w.tx.Signatures, rawSig))
-
-	return nil
-}
-
 func (w *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
-	for _, sig := range signatures {
-		err := w.AddSignature(sig)
+	n := len(signatures)
+	signerInfos := make([]*tx.SignerInfo, n)
+	rawSigs := make([][]byte, n)
+
+	for i, sig := range signatures {
+		var modeInfo *tx.ModeInfo
+		modeInfo, rawSigs[i] = SignatureDataToModeInfoAndSig(sig.Data)
+		any, err := codectypes.NewAnyWithValue(sig.PubKey)
 		if err != nil {
 			return err
 		}
+		signerInfos[i] = &tx.SignerInfo{
+			PublicKey: any,
+			ModeInfo:  modeInfo,
+			Sequence:  sig.Sequence,
+		}
 	}
+
+	w.setSignerInfos(signerInfos)
+	w.setSignatures(rawSigs)
 
 	return nil
 }

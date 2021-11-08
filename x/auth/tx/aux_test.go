@@ -19,7 +19,7 @@ func TestBuilderWithAux(t *testing.T) {
 	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
 
 	tipperPriv, tipperPk, tipperAddr := testdata.KeyTestPubAddr()
-	_, feepayerPk, feepayerAddr := testdata.KeyTestPubAddr()
+	feepayerPriv, feepayerPk, feepayerAddr := testdata.KeyTestPubAddr()
 	msg := testdata.NewTestMsg(tipperAddr)
 	memo := "test-memo"
 	tip := &txtypes.Tip{Tipper: tipperAddr.String(), Amount: sdk.NewCoins(sdk.NewCoin("tip-denom", sdk.NewIntFromUint64(123)))}
@@ -41,9 +41,9 @@ func TestBuilderWithAux(t *testing.T) {
 	require.NoError(t, err)
 	signBz, err := auxBuilder.GetSignBytes()
 	require.NoError(t, err)
-	sig, err := tipperPriv.Sign(signBz)
+	tipperSig, err := tipperPriv.Sign(signBz)
 	require.NoError(t, err)
-	auxBuilder.SetSignature(sig)
+	auxBuilder.SetSignature(tipperSig)
 	auxSignerData, err := auxBuilder.GetAuxSignerData()
 	require.NoError(t, err)
 
@@ -53,12 +53,36 @@ func TestBuilderWithAux(t *testing.T) {
 	w.SetFeePayer(feepayerAddr)
 	w.SetFeeAmount(fee)
 	w.SetGasLimit(gas)
-	w.AddSignature(signing.SignatureV2{
+	sigs, err := w.(authsigning.SigVerifiableTx).GetSignaturesV2()
+	require.NoError(t, err)
+	tipperSigV2 := sigs[0]
+	// Set the fee payer signer info
+	w.SetSignatures(tipperSigV2, signing.SignatureV2{
+		PubKey:   feepayerPk,
+		Sequence: 15,
+	})
+	signBz, err = encCfg.TxConfig.SignModeHandler().GetSignBytes(
+		signing.SignMode_SIGN_MODE_DIRECT,
+		authsigning.SignerData{
+			Address:       feepayerAddr.String(),
+			ChainID:       chainID,
+			AccountNumber: 11,
+			Sequence:      15,
+			SignerIndex:   1,
+		},
+		w.GetTx(),
+	)
+	require.NoError(t, err)
+	feepayerSig, err := feepayerPriv.Sign(signBz)
+	require.NoError(t, err)
+	// Set the fee payer signature
+	w.SetSignatures(tipperSigV2, signing.SignatureV2{
 		PubKey: feepayerPk,
 		Data: &signing.SingleSignatureData{
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
-			Signature: []byte{42}}, // dummy sig
-		Sequence: 5,
+			Signature: feepayerSig,
+		},
+		Sequence: 15,
 	})
 
 	// Make sure tx is correct
@@ -72,16 +96,16 @@ func TestBuilderWithAux(t *testing.T) {
 	require.Equal(t, tip, tx.(txtypes.TipTx).GetTip())
 	require.Equal(t, msg, tx.GetMsgs()[0])
 	require.Equal(t, memo, tx.(sdk.TxWithMemo).GetMemo())
-	sigs, err := tx.(authsigning.Tx).GetSignaturesV2()
+	sigs, err = tx.(authsigning.Tx).GetSignaturesV2()
 	require.NoError(t, err)
 	require.Equal(t, signing.SignatureV2{
 		PubKey:   tipperPk,
-		Data:     &signing.SingleSignatureData{SignMode: signing.SignMode_SIGN_MODE_DIRECT_AUX, Signature: sig},
+		Data:     &signing.SingleSignatureData{SignMode: signing.SignMode_SIGN_MODE_DIRECT_AUX, Signature: tipperSig},
 		Sequence: 2,
 	}, sigs[0])
 	require.Equal(t, signing.SignatureV2{
 		PubKey:   feepayerPk,
-		Data:     &signing.SingleSignatureData{SignMode: signing.SignMode_SIGN_MODE_DIRECT, Signature: []byte{42}},
-		Sequence: 5,
+		Data:     &signing.SingleSignatureData{SignMode: signing.SignMode_SIGN_MODE_DIRECT, Signature: feepayerSig},
+		Sequence: 15,
 	}, sigs[1])
 }

@@ -407,6 +407,15 @@
   
     - [Msg](#cosmos.gov.v1beta1.Msg)
   
+- [cosmos/group/v1beta1/events.proto](#cosmos/group/v1beta1/events.proto)
+    - [EventCreateGroup](#cosmos.group.v1beta1.EventCreateGroup)
+    - [EventCreateGroupAccount](#cosmos.group.v1beta1.EventCreateGroupAccount)
+    - [EventCreateProposal](#cosmos.group.v1beta1.EventCreateProposal)
+    - [EventExec](#cosmos.group.v1beta1.EventExec)
+    - [EventUpdateGroup](#cosmos.group.v1beta1.EventUpdateGroup)
+    - [EventUpdateGroupAccount](#cosmos.group.v1beta1.EventUpdateGroupAccount)
+    - [EventVote](#cosmos.group.v1beta1.EventVote)
+  
 - [cosmos/group/v1beta1/types.proto](#cosmos/group/v1beta1/types.proto)
     - [GroupAccountInfo](#cosmos.group.v1beta1.GroupAccountInfo)
     - [GroupInfo](#cosmos.group.v1beta1.GroupInfo)
@@ -6021,6 +6030,127 @@ Msg defines the bank Msg service.
 
 Since: cosmos-sdk 0.43 | |
 | `Deposit` | [MsgDeposit](#cosmos.gov.v1beta1.MsgDeposit) | [MsgDepositResponse](#cosmos.gov.v1beta1.MsgDepositResponse) | Deposit defines a method to add deposit on a specific proposal. | |
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/group/v1beta1/events.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/group/v1beta1/events.proto
+
+
+
+<a name="cosmos.group.v1beta1.EventCreateGroup"></a>
+
+### EventCreateGroup
+EventCreateGroup is an event emitted when a group is created.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `group_id` | [uint64](#uint64) |  | group_id is the unique ID of the group. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.EventCreateGroupAccount"></a>
+
+### EventCreateGroupAccount
+EventCreateGroupAccount is an event emitted when a group account is created.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the address of the group account. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.EventCreateProposal"></a>
+
+### EventCreateProposal
+EventCreateProposal is an event emitted when a proposal is created.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal_id` | [uint64](#uint64) |  | proposal_id is the unique ID of the proposal. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.EventExec"></a>
+
+### EventExec
+EventExec is an event emitted when a proposal is executed.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal_id` | [uint64](#uint64) |  | proposal_id is the unique ID of the proposal. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.EventUpdateGroup"></a>
+
+### EventUpdateGroup
+EventUpdateGroup is an event emitted when a group is updated.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `group_id` | [uint64](#uint64) |  | group_id is the unique ID of the group. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.EventUpdateGroupAccount"></a>
+
+### EventUpdateGroupAccount
+EventUpdateGroupAccount is an event emitted when a group account is updated.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the address of the group account. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.EventVote"></a>
+
+### EventVote
+EventVote is an event emitted when a voter votes on a proposal.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal_id` | [uint64](#uint64) |  | proposal_id is the unique ID of the proposal. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
 
  <!-- end services -->
 

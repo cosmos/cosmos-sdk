@@ -10,7 +10,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	// sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
+
+// MaxMetadataLength defines the max length of the metadata bytes field
+// for various entities within the group module
+// TODO: This could be used as params once x/params is upgraded to use protobuf
+const MaxMetadataLength = 255
 
 type DecisionPolicyResult struct {
 	Allow bool
@@ -72,6 +78,42 @@ func (g GroupAccountInfo) GetDecisionPolicy() DecisionPolicy {
 func (g GroupAccountInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var decisionPolicy DecisionPolicy
 	return unpacker.UnpackAny(g.DecisionPolicy, &decisionPolicy)
+}
+
+func (g GroupAccountInfo) PrimaryKeyFields() []interface{} {
+	addr, err := sdk.AccAddressFromBech32(g.Address)
+	if err != nil {
+		panic(err)
+	}
+	return []interface{}{addr.Bytes()}
+}
+
+func (g GroupMember) PrimaryKeyFields() []interface{} {
+	addr, err := sdk.AccAddressFromBech32(g.Member.Address)
+	if err != nil {
+		panic(err)
+	}
+	return []interface{}{g.GroupId, addr.Bytes()}
+}
+
+// func (g GroupMember) ValidateBasic() error {
+// 	if g.GroupId == 0 {
+// 		return sdkerrors.Wrap(ErrEmpty, "group")
+// 	}
+
+// 	err := g.Member.ValidateBasic()
+// 	if err != nil {
+// 		return sdkerrors.Wrap(err, "member")
+// 	}
+// 	return nil
+// }
+
+func (v Vote) PrimaryKeyFields() []interface{} {
+	addr, err := sdk.AccAddressFromBech32(v.Voter)
+	if err != nil {
+		panic(err)
+	}
+	return []interface{}{v.ProposalId, addr.Bytes()}
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces

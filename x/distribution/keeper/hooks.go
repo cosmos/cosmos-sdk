@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -118,4 +120,9 @@ func (h Hooks) AfterValidatorBeginUnbonding(_ sdk.Context, _ sdk.ConsAddress, _ 
 }
 func (h Hooks) BeforeDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
 	return nil
+}
+func (h Hooks) UnbondingDelegationEntryCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress, _ int64, _ time.Time, _ sdk.Int, _ uint64) {
+}
+func (h Hooks) BeforeUnbondingDelegationEntryComplete(_ sdk.Context, _ uint64) bool {
+	return false
 }

@@ -226,6 +226,12 @@ message UnbondingDelegationEntry {
   ];
   // balance defines the tokens to receive at completion.
   string balance = 4 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  // Incrementing id that uniquely identifies this entry
+  uint64 id = 5;
+
+  // True if this entry's unbonding has been stopped by an external module
+  bool on_hold = 6; 
 }
 
 // RedelegationEntry defines a redelegation object with relevant metadata.

@@ -12,4 +12,5 @@ var (
 	ErrNFTExists      = sdkerrors.Register(ModuleName, 5, "nft already exist")
 	ErrNFTNotExists   = sdkerrors.Register(ModuleName, 6, "nft does not exist")
 	ErrInvalidID      = sdkerrors.Register(ModuleName, 7, "invalid id")
+	ErrInvalidClassID = sdkerrors.Register(ModuleName, 8, "invalid class id")
 )

@@ -21,15 +21,16 @@ import (
 )
 
 const (
-	flagInteractive = "interactive"
-	flagRecover     = "recover"
-	flagNoBackup    = "no-backup"
-	flagCoinType    = "coin-type"
-	flagAccount     = "account"
-	flagIndex       = "index"
-	flagMultisig    = "multisig"
-	flagNoSort      = "nosort"
-	flagHDPath      = "hd-path"
+	flagInteractive  = "interactive"
+	flagRecover      = "recover"
+	flagNoBackup     = "no-backup"
+	flagCoinType     = "coin-type"
+	flagAccount      = "account"
+	flagIndex        = "index"
+	flagMultisig     = "multisig"
+	flagNoSort       = "nosort"
+	flagHDPath       = "hd-path"
+	flagLegacyHdPath = "legacy-hd-path"
 
 	// DefaultKeyPass contains the default key password for genesis transactions
 	DefaultKeyPass = "12345678"
@@ -69,6 +70,7 @@ Example:
 	f.String(FlagPublicKey, "", "Parse a public key in JSON format and saves key info to <name> file.")
 	f.BoolP(flagInteractive, "i", false, "Interactively prompt user for BIP39 passphrase and mnemonic")
 	f.Bool(flags.FlagUseLedger, false, "Store a local reference to a private key on a Ledger device")
+	f.Bool(flagLegacyHdPath, false, "Flag to specify the command uses old HD path - use this for ledger compatibility")
 	f.Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
 	f.Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 	f.Bool(flags.FlagDryRun, false, "Perform action, but don't add key to local keystore")
@@ -202,8 +204,10 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 	// If we're using ledger, only thing we need is the path and the bech32 prefix.
 	if useLedger {
-
-		if coinType != sdk.CoinType {
+		legacyHdPath, _ := cmd.Flags().GetBool(flagLegacyHdPath)
+		if legacyHdPath {
+			coinType = sdk.CoinType
+		} else {
 			return errors.New("ledger does not currently support new coin type. Use the legacy hd path flag")
 		}
 

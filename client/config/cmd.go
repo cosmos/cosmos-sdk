@@ -19,8 +19,17 @@ func Cmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config <key> [value]",
 		Short: "Create or query an application CLI configuration file",
-		RunE:  runConfigCmd,
-		Args:  cobra.RangeArgs(0, 2),
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			// This is here to prevent config validation before changing it.
+			// It overrides the rootCmd `PersistentPreRunE` to allow to correct a faulty configuration.
+			if err := client.SetCmdClientContextHandler(client.Context{}.WithViper(""), cmd); err != nil {
+				return err
+			}
+
+			return nil
+		},
+		RunE: runConfigCmd,
+		Args: cobra.RangeArgs(0, 2),
 	}
 	return cmd
 }

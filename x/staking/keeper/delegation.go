@@ -853,7 +853,7 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 
 	// loop through all the entries and try to complete unbonding mature entries
 	for i := 0; i < len(ubd.Entries); i++ {
-		entry := ubd.Entries[i]
+		entry := &ubd.Entries[i]
 		if entry.IsMature(ctxTime) {
 			// This hook allows external modules to stop an unbonding delegation entry from fully unbonding
 			// when the completionTime has passed. This allows them to prolong the unbonding period.

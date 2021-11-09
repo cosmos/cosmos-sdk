@@ -9,7 +9,7 @@ import (
 var denomUnits = map[string]Dec{}
 
 // baseDenom is the denom of smallest unit registered
-var baseDenom string = ""
+var baseDenom string
 
 // RegisterDenom registers a denomination with a corresponding unit. If the
 // denomination is already registered, an error will be returned.

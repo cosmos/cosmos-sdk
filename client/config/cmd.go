@@ -19,10 +19,23 @@ func Cmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config <key> [value]",
 		Short: "Create or query an application CLI configuration file",
+
+		// This is here to prevent config validation before changing it.
+		// It overrides the rootCmd `PersistentPreRunE` to allow to correct a faulty configuration.
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			// This is here to prevent config validation before changing it.
-			// It overrides the rootCmd `PersistentPreRunE` to allow to correct a faulty configuration.
-			if err := client.SetCmdClientContextHandler(client.Context{}.WithViper(""), cmd); err != nil {
+			// Create context with flags to get the right home dir
+			clientCtx, err := client.ReadPersistentCommandFlags(client.GetClientContextFromCmd(cmd).WithViper(""), cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			// Create config.toml if it doesn't exist yet
+			_, err = GetConfigOrDefault(clientCtx)
+			if err != nil {
+				return err
+			}
+
+			if err := client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
 				return err
 			}
 

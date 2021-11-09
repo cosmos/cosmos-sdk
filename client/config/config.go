@@ -52,22 +52,7 @@ func (c *ClientConfig) SetBroadcastMode(broadcastMode string) {
 
 // ReadFromClientConfig reads values from client.toml file and updates them in client Context
 func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
-	configPath := filepath.Join(ctx.HomeDir, "config")
-	configFilePath := filepath.Join(configPath, "client.toml")
-	conf := defaultClientConfig()
-
-	// if config.toml file does not exist we create it and write default ClientConfig values into it.
-	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
-		if err := ensureConfigPath(configPath); err != nil {
-			return ctx, fmt.Errorf("couldn't make client config: %v", err)
-		}
-
-		if err := writeConfigToFile(configFilePath, conf); err != nil {
-			return ctx, fmt.Errorf("could not write client config to the file: %v", err)
-		}
-	}
-
-	conf, err := getClientConfig(configPath, ctx.Viper)
+	conf, err := GetConfigOrDefault(ctx)
 	if err != nil {
 		return ctx, fmt.Errorf("couldn't get client config: %v", err)
 	}
@@ -94,4 +79,23 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 		WithBroadcastMode(conf.BroadcastMode)
 
 	return ctx, nil
+}
+
+func GetConfigOrDefault(ctx client.Context) (*ClientConfig, error) {
+	configPath := filepath.Join(ctx.HomeDir, "config")
+	configFilePath := filepath.Join(configPath, "client.toml")
+	conf := defaultClientConfig()
+
+	// if config.toml file does not exist we create it and write default ClientConfig values into it.
+	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
+		if err := ensureConfigPath(configPath); err != nil {
+			return nil, fmt.Errorf("couldn't make client config: %v", err)
+		}
+
+		if err := writeConfigToFile(configFilePath, conf); err != nil {
+			return nil, fmt.Errorf("could not write client config to the file: %v", err)
+		}
+	}
+
+	return getClientConfig(configPath, ctx.Viper)
 }

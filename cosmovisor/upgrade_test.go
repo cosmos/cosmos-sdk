@@ -262,7 +262,7 @@ func (s *upgradeTestSuite) TestDownloadBinary() {
 			const upgrade = "amazonas"
 			info := upgradetypes.Plan{
 				Name: upgrade,
-				Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, cosmovisor.OSArch(), url),
+				Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, cosmovisor.OSArch(), tc.url),
 			}
 
 			err = cosmovisor.DownloadBinary(cfg, info)

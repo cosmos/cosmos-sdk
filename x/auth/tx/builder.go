@@ -4,6 +4,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,6 +18,8 @@ import (
 // wrapper is a wrapper around the tx.Tx proto.Message which retain the raw
 // body and auth_info bytes.
 type wrapper struct {
+	cdc codec.Codec
+
 	tx *tx.Tx
 
 	// bodyBz represents the protobuf encoding of TxBody. This should be encoding
@@ -46,8 +49,9 @@ type ExtensionOptionsTxBuilder interface {
 	SetNonCriticalExtensionOptions(...*codectypes.Any)
 }
 
-func newBuilder() *wrapper {
+func newBuilder(cdc codec.Codec) *wrapper {
 	return &wrapper{
+		cdc: cdc,
 		tx: &tx.Tx{
 			Body: &tx.TxBody{},
 			AuthInfo: &tx.AuthInfo{
@@ -315,8 +319,26 @@ func (w *wrapper) setSignerInfos(infos []*tx.SignerInfo) {
 	w.authInfoBz = nil
 }
 
+func (w *wrapper) setSignerInfoAtIndex(index int, info *tx.SignerInfo) {
+	if w.tx.AuthInfo.SignerInfos == nil {
+		w.tx.AuthInfo.SignerInfos = make([]*tx.SignerInfo, len(w.GetSigners()))
+	}
+
+	w.tx.AuthInfo.SignerInfos[index] = info
+	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
+	w.authInfoBz = nil
+}
+
 func (w *wrapper) setSignatures(sigs [][]byte) {
 	w.tx.Signatures = sigs
+}
+
+func (w *wrapper) setSignatureAtIndex(index int, sig []byte) {
+	if w.tx.Signatures == nil {
+		w.tx.Signatures = make([][]byte, len(w.GetSigners()))
+	}
+
+	w.tx.Signatures[index] = sig
 }
 
 func (w *wrapper) GetTx() authsigning.Tx {
@@ -365,14 +387,45 @@ func (w *wrapper) AddAuxSignerData(data tx.AuxSignerData) error {
 	}
 
 	w.bodyBz = data.SignDoc.BodyBytes
+
+	var body tx.TxBody
+	err = w.cdc.Unmarshal(w.bodyBz, &body)
+	if err != nil {
+		return err
+	}
+
+	w.SetMemo(body.Memo)
+	w.SetTimeoutHeight(body.TimeoutHeight)
+	w.SetExtensionOptions(body.ExtensionOptions...)
+	w.SetNonCriticalExtensionOptions(body.NonCriticalExtensionOptions...)
+	msgs := make([]sdk.Msg, len(body.Messages))
+	for i, msgAny := range body.Messages {
+		msgs[i] = msgAny.GetCachedValue().(sdk.Msg)
+	}
+	w.SetMsgs(msgs...)
 	w.SetTip(data.GetSignDoc().GetTip())
 
-	w.setSignerInfos(append(w.tx.AuthInfo.SignerInfos, &tx.SignerInfo{
+	// Get the aux signer's index in GetSigners.
+	signerIndex := -1
+	pk, ok := data.SignDoc.PublicKey.GetCachedValue().(cryptotypes.PubKey)
+	if !ok {
+		return sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (cryptotypes.PubKey)(nil), pk)
+	}
+	for i, signer := range w.GetSigners() {
+		if signer.Equals(sdk.AccAddress(pk.Address())) {
+			signerIndex = i
+		}
+	}
+	if signerIndex < 0 {
+		return sdkerrors.ErrLogic.Wrapf("address %s is not a signer", sdk.AccAddress(pk.Address()))
+	}
+
+	w.setSignerInfoAtIndex(signerIndex, &tx.SignerInfo{
 		PublicKey: data.SignDoc.PublicKey,
 		ModeInfo:  &tx.ModeInfo{Sum: &tx.ModeInfo_Single_{Single: &tx.ModeInfo_Single{Mode: data.Mode}}},
 		Sequence:  data.SignDoc.Sequence,
-	}))
-	w.setSignatures(append(w.tx.Signatures, data.Sig))
+	})
+	w.setSignatureAtIndex(signerIndex, data.Sig)
 
 	return nil
 }

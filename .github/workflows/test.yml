@@ -48,28 +48,12 @@ jobs:
 
   test-submodules:
     runs-on: ubuntu-latest
-    env:
-      CGO_INSTALL_PREFIX: /tmp/cgo
+    container: tendermintdev/docker-tm-db-testing
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2.1.4
         with:
           go-version: 1.17
-      - name: install rocksdb
-        env:
-          ROCKSDB_VERSION: 6.24.2
-        run: |
-          curl -LO https://github.com/facebook/rocksdb/archive/refs/tags/v${{ env.ROCKSDB_VERSION }}.tar.gz
-          tar -xf v${{ env.ROCKSDB_VERSION }}.tar.gz
-          cd rocksdb-${{ env.ROCKSDB_VERSION }}
-          cmake -S . -B build \
-            -D WITH_GFLAGS=OFF \
-            -D WITH_BENCHMARK_TOOLS=OFF \
-            -D WITH_CORE_TOOLS=OFF \
-            -D WITH_TOOLS=OFF \
-            -D ROCKSDB_BUILD_SHARED=OFF
-          cmake --build build -t rocksdb -j2
-          cmake --install build --prefix ${{ env.CGO_INSTALL_PREFIX }}
       - uses: technote-space/get-diff-action@v5
         id: git_diff
         with:
@@ -78,9 +62,6 @@ jobs:
             go.mod
             go.sum
       - name: Run submodule tests and create test coverage profile.
-        env:
-          CGO_CFLAGS: "-I${{ env.CGO_INSTALL_PREFIX }}/include"
-          CGO_LDFLAGS: "-L${{ env.CGO_INSTALL_PREFIX }}/lib/x86_64-linux-gnu"
         # GIT_DIFF is passed to the scripts
         run: bash scripts/module-tests.sh
         if: env.GIT_DIFF

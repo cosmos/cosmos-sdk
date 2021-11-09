@@ -17,6 +17,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
+func generatePubKeys(n int) []cryptotypes.PubKey {
+	pks := make([]cryptotypes.PubKey, n)
+	for i := 0; i < n; i++ {
+		pks[i] = secp256k1.GenPrivKey().PubKey()
+	}
+
+	return pks
+}
+
 func TestAddress(t *testing.T) {
 	msg := []byte{1, 2, 3, 4}
 	pubKeys, _ := generatePubKeysAndSignatures(5, msg)
@@ -379,5 +388,32 @@ func TestAminoUnmarshalJSON(t *testing.T) {
 	var pk cryptotypes.PubKey
 	err := cdc.UnmarshalJSON([]byte(pkJSON), &pk)
 	require.NoError(t, err)
-	require.Equal(t, uint32(3), pk.(*kmultisig.LegacyAminoPubKey).Threshold)
+	lpk := pk.(*kmultisig.LegacyAminoPubKey)
+	require.Equal(t, uint32(3), lpk.Threshold)
+	require.Equal(t, 5, len(pk.(*kmultisig.LegacyAminoPubKey).PubKeys))
+
+	for _, key := range pk.(*kmultisig.LegacyAminoPubKey).PubKeys {
+		require.NotNil(t, key)
+		pk := secp256k1.PubKey{}
+		err := pk.Unmarshal(key.Value)
+		require.NoError(t, err)
+	}
+}
+
+func TestProtoMarshalJSON(t *testing.T) {
+	require := require.New(t)
+	pubkeys := generatePubKeys(3)
+	msig := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
+
+	registry := types.NewInterfaceRegistry()
+	cryptocodec.RegisterInterfaces(registry)
+	cdc := codec.NewProtoCodec(registry)
+
+	bz, err := cdc.MarshalInterfaceJSON(msig)
+	require.NoError(err)
+
+	var pk2 cryptotypes.PubKey
+	err = cdc.UnmarshalInterfaceJSON(bz, &pk2)
+	require.NoError(err)
+	require.True(pk2.Equals(msig))
 }

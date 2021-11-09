@@ -57,6 +57,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * [\#9969](https://github.com/cosmos/cosmos-sdk/pull/9969) fix: use keyring in config for add-genesis-account cmd.
+* [\#10061](https://github.com/cosmos/cosmos-sdk/pull/10061) Ensure that `LegacyAminoPubKey` struct correctly unmarshals from JSON
 
 ### Client Breaking Changes
 
@@ -64,7 +65,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
-* [\#10077](https://github.com/cosmos/cosmos-sdk/pull/10077) Remove telemetry on `GasKV` and `CacheKV` store Get/Set operations, significantly improving their performance.
++ [\#10077](https://github.com/cosmos/cosmos-sdk/pull/10077) Remove telemetry on `GasKV` and `CacheKV` store Get/Set operations, significantly improving their performance.
 
 ## [v0.42.9](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.42.9) - 2021-08-04
 

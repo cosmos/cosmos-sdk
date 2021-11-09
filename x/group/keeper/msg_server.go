@@ -439,10 +439,7 @@ func (k msgServer) CreateProposal(goCtx context.Context, req *group.MsgCreatePro
 	// Define proposal timout.
 	// The voting window begins as soon as the proposal is submitted.
 	timeout := policy.GetTimeout()
-	window, err := gogotypes.DurationFromProto(&timeout)
-	if err != nil {
-		return nil, sdkerrors.Wrap(err, "maxVotingWindow time conversion")
-	}
+	window := timeout
 	// endTime, err := gogotypes.TimestampProto(ctx.BlockTime().Add(window))
 	// if err != nil {
 	// 	return nil, sdkerrors.Wrap(err, "end time conversion")

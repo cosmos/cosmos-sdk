@@ -29,7 +29,7 @@ type DecisionPolicy interface {
 	codec.ProtoMarshaler
 
 	ValidateBasic() error
-	GetTimeout() types.Duration
+	GetTimeout() time.Duration
 	Allow(tally Tally, totalPower string, votingDuration time.Duration) (DecisionPolicyResult, error)
 	Validate(g GroupInfo) error
 }
@@ -38,7 +38,7 @@ type DecisionPolicy interface {
 var _ DecisionPolicy = &ThresholdDecisionPolicy{}
 
 // NewThresholdDecisionPolicy creates a threshold DecisionPolicy
-func NewThresholdDecisionPolicy(threshold string, timeout types.Duration) DecisionPolicy {
+func NewThresholdDecisionPolicy(threshold string, timeout time.Duration) DecisionPolicy {
 	return &ThresholdDecisionPolicy{threshold, timeout}
 }
 
@@ -47,10 +47,7 @@ func (p ThresholdDecisionPolicy) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "threshold")
 	}
 
-	timeout, err := types.DurationFromProto(&p.Timeout)
-	if err != nil {
-		return sdkerrors.Wrap(err, "timeout")
-	}
+	timeout := p.Timeout
 
 	if timeout <= time.Nanosecond {
 		return sdkerrors.Wrap(ErrInvalid, "timeout")

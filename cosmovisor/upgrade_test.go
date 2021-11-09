@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/otiai10/copy"
@@ -259,10 +260,16 @@ func (s *upgradeTestSuite) TestDownloadBinary() {
 				AllowDownloadBinaries: true,
 			}
 
+			url := tc.url
+			if strings.HasPrefix(url, "./") {
+				url, err = filepath.Abs(url)
+				s.Require().NoError(err)
+			}
+
 			const upgrade = "amazonas"
 			info := upgradetypes.Plan{
 				Name: upgrade,
-				Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, cosmovisor.OSArch(), tc.url),
+				Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, cosmovisor.OSArch(), url),
 			}
 
 			err = cosmovisor.DownloadBinary(cfg, info)

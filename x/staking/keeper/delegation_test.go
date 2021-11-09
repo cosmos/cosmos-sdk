@@ -339,6 +339,11 @@ func (h MockHooks) BeforeUnbondingDelegationEntryComplete(_ sdk.Context, _ uint6
 type MyHooks struct {
 	MockHooks
 	beforeUnbondingDelegationEntryComplete func() bool
+	unbondingDelegationEntryCreated        func(uint64)
+}
+
+func (h MyHooks) UnbondingDelegationEntryCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress, _ int64, _ time.Time, _ sdk.Int, id uint64) {
+	h.unbondingDelegationEntryCreated(id)
 }
 
 func (h MyHooks) BeforeUnbondingDelegationEntryComplete(_ sdk.Context, _ uint64) bool {
@@ -356,19 +361,18 @@ func TestUnbondingDelegationsOnHold(t *testing.T) {
 		app.GetSubspace(types.ModuleName),
 	)
 
-	testCounter := 0
+	onHold := true
+	udecHookCalled := false
+	var ubdeID uint64
 
-	t.Log("bonjour")
 	myHooks := MyHooks{
 		MockHooks: MockHooks{},
 		beforeUnbondingDelegationEntryComplete: func() bool {
-			testCounter = testCounter + 1
-			if testCounter > 2 {
-				t.Log("uh oh")
-				return true
-			}
-			t.Log("hello")
-			return false
+			return onHold
+		},
+		unbondingDelegationEntryCreated: func(id uint64) {
+			udecHookCalled = true
+			ubdeID = id
 		},
 	}
 
@@ -402,64 +406,49 @@ func TestUnbondingDelegationsOnHold(t *testing.T) {
 	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares)
 	app.StakingKeeper.SetDelegation(ctx, delegation)
 
-	// Undelegate with the max number of entries
-	// -----------------------------------------
-	maxEntries := app.StakingKeeper.MaxEntries(ctx)
+	// Undelegate
+	// Save original bonded and unbonded amounts
+	bondedAmt1 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
+	notBondedAmt1 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
-	oldBonded := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-	oldNotBonded := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+	completionTime, err := app.StakingKeeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
+	require.NoError(t, err)
 
-	// should all pass
-	var completionTime time.Time
-	for i := uint32(0); i < maxEntries; i++ {
-		var err error
-		completionTime, err = app.StakingKeeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
-		require.NoError(t, err)
-	}
+	// check that the unbonding actually happened
+	bondedAmt2 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
+	notBondedAmt2 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+	// Bonded amount is less
+	require.True(sdk.IntEq(t, bondedAmt1.SubRaw(1), bondedAmt2))
+	// Unbonded amount is more
+	require.True(sdk.IntEq(t, notBondedAmt1.AddRaw(1), notBondedAmt2))
 
-	// check that the bonding actually happened
-	newBonded := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-	newNotBonded := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
-	require.True(sdk.IntEq(t, newBonded, oldBonded.SubRaw(int64(maxEntries))))
-	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded.AddRaw(int64(maxEntries))))
+	// check that our hook was called
+	require.True(t, udecHookCalled)
 
-	// An additional unbond should fail due to max entries
-	// ---------------------------------------------------
-	oldBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-	oldNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
-
-	// Try the additional unbond
-	_, err := app.StakingKeeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
-	require.Error(t, err)
-
-	// Check that nothing changed, because it failed
-	newBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-	newNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
-
-	require.True(sdk.IntEq(t, newBonded, oldBonded))
-	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded))
-
-	// Now mature unbonding delegations
-	// --------------------------------
+	// Now try to mature the UnbondingDelegation
 	ctx = ctx.WithBlockTime(completionTime)
 	_, err = app.StakingKeeper.CompleteUnbonding(ctx, addrDels[0], addrVals[0])
 	require.NoError(t, err)
 
-	newBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-	newNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
-	require.True(sdk.IntEq(t, newBonded, oldBonded))
-	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded.SubRaw(int64(maxEntries))))
+	bondedAmt3 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
+	notBondedAmt3 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
-	oldNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+	// Bonded and unbonded amounts are the same as before because the unbonding was stopped
+	require.True(sdk.IntEq(t, bondedAmt2, bondedAmt3))
+	require.True(sdk.IntEq(t, notBondedAmt2, notBondedAmt3))
 
-	// unbonding should work again
-	_, err = app.StakingKeeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
+	// Complete the stopped unbonding
+	found, err := app.StakingKeeper.CompleteStoppedUnbonding(ctx, ubdeID)
 	require.NoError(t, err)
+	require.True(t, found)
 
-	newBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-	newNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
-	require.True(sdk.IntEq(t, newBonded, oldBonded.SubRaw(1)))
-	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded.AddRaw(1)))
+	// Check that the unbonding was finally completed
+	bondedAmt4 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
+	notBondedAmt4 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+
+	require.True(sdk.IntEq(t, bondedAmt2, bondedAmt4))
+	// Not bonded amount back to what it was originaly
+	require.True(sdk.IntEq(t, notBondedAmt2.SubRaw(1), notBondedAmt4))
 }
 
 //// test undelegating self delegation from a validator pushing it below MinSelfDelegation

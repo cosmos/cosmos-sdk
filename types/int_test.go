@@ -393,6 +393,12 @@ func (s *intTestSuite) TestIntEq() {
 	s.Require().False(resp)
 }
 
+func (s *intTestSuite) TestPositivity() {
+	bi := sdk.NewIntFromBigInt(big.NewInt(0))
+	s.Require().True(bi.IsPositive(), "0 should be positive")
+	s.Require().False(bi.IsNegative(), "0 should not be negative")
+}
+
 func TestRoundTripMarshalToInt(t *testing.T) {
 	var values = []int64{
 		0,

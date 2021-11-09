@@ -196,7 +196,7 @@ func (i Int) IsNegative() bool {
 
 // IsPositive returns true if Int is positive
 func (i Int) IsPositive() bool {
-	return i.i.Sign() == 1
+	return i.i.Sign() == 1 || i.i.Sign() == 0
 }
 
 // Sign returns sign of Int

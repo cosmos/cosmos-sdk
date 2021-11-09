@@ -34,6 +34,91 @@ type DecisionPolicy interface {
 	Validate(g GroupInfo) error
 }
 
+// Implements DecisionPolicy Interface
+var _ DecisionPolicy = &ThresholdDecisionPolicy{}
+
+// NewThresholdDecisionPolicy creates a threshold DecisionPolicy
+func NewThresholdDecisionPolicy(threshold string, timeout types.Duration) DecisionPolicy {
+	return &ThresholdDecisionPolicy{threshold, timeout}
+}
+
+func (p ThresholdDecisionPolicy) ValidateBasic() error {
+	if _, err := math.NewPositiveDecFromString(p.Threshold); err != nil {
+		return sdkerrors.Wrap(err, "threshold")
+	}
+
+	timeout, err := types.DurationFromProto(&p.Timeout)
+	if err != nil {
+		return sdkerrors.Wrap(err, "timeout")
+	}
+
+	if timeout <= time.Nanosecond {
+		return sdkerrors.Wrap(ErrInvalid, "timeout")
+	}
+	return nil
+}
+
+// Allow allows a proposal to pass when the tally of yes votes equals or exceeds the threshold before the timeout.
+func (p ThresholdDecisionPolicy) Allow(tally Tally, totalPower string, votingDuration time.Duration) (DecisionPolicyResult, error) {
+	pTimeout := types.DurationProto(p.Timeout)
+	timeout, err := types.DurationFromProto(pTimeout)
+	if err != nil {
+		return DecisionPolicyResult{}, err
+	}
+	if timeout <= votingDuration {
+		return DecisionPolicyResult{Allow: false, Final: true}, nil
+	}
+
+	threshold, err := math.NewPositiveDecFromString(p.Threshold)
+	if err != nil {
+		return DecisionPolicyResult{}, err
+	}
+	yesCount, err := math.NewNonNegativeDecFromString(tally.YesCount)
+	if err != nil {
+		return DecisionPolicyResult{}, err
+	}
+	if yesCount.Cmp(threshold) >= 0 {
+		return DecisionPolicyResult{Allow: true, Final: true}, nil
+	}
+
+	totalPowerDec, err := math.NewNonNegativeDecFromString(totalPower)
+	if err != nil {
+		return DecisionPolicyResult{}, err
+	}
+	totalCounts, err := tally.TotalCounts()
+	if err != nil {
+		return DecisionPolicyResult{}, err
+	}
+	undecided, err := math.SubNonNegative(totalPowerDec, totalCounts)
+	if err != nil {
+		return DecisionPolicyResult{}, err
+	}
+	sum, err := yesCount.Add(undecided)
+	if err != nil {
+		return DecisionPolicyResult{}, err
+	}
+	if sum.Cmp(threshold) < 0 {
+		return DecisionPolicyResult{Allow: false, Final: true}, nil
+	}
+	return DecisionPolicyResult{Allow: false, Final: false}, nil
+}
+
+// Validate returns an error if policy threshold is greater than the total group weight
+func (p *ThresholdDecisionPolicy) Validate(g GroupInfo) error {
+	threshold, err := math.NewPositiveDecFromString(p.Threshold)
+	if err != nil {
+		return sdkerrors.Wrap(err, "threshold")
+	}
+	totalWeight, err := math.NewNonNegativeDecFromString(g.TotalWeight)
+	if err != nil {
+		return sdkerrors.Wrap(err, "group total weight")
+	}
+	if threshold.Cmp(totalWeight) > 0 {
+		return sdkerrors.Wrap(ErrInvalid, "policy threshold should not be greater than the total group weight")
+	}
+	return nil
+}
+
 // NewGroupAccountInfo creates a new GroupAccountInfo instance
 func NewGroupAccountInfo(address sdk.AccAddress, group uint64, admin sdk.AccAddress, metadata []byte,
 	version uint64, decisionPolicy DecisionPolicy, derivationKey []byte) (GroupAccountInfo, error) {
@@ -231,4 +316,43 @@ func (t *Tally) Add(vote Vote, weight string) error {
 		return err
 	}
 	return nil
+}
+
+// TotalCounts is the sum of all weights.
+func (t Tally) TotalCounts() (math.Dec, error) {
+	yesCount, err := t.GetYesCount()
+	if err != nil {
+		return math.Dec{}, sdkerrors.Wrap(err, "yes count")
+	}
+	noCount, err := t.GetNoCount()
+	if err != nil {
+		return math.Dec{}, sdkerrors.Wrap(err, "no count")
+	}
+	abstainCount, err := t.GetAbstainCount()
+	if err != nil {
+		return math.Dec{}, sdkerrors.Wrap(err, "abstain count")
+	}
+	vetoCount, err := t.GetVetoCount()
+	if err != nil {
+		return math.Dec{}, sdkerrors.Wrap(err, "veto count")
+	}
+
+	totalCounts := math.NewDecFromInt64(0)
+	totalCounts, err = totalCounts.Add(yesCount)
+	if err != nil {
+		return math.Dec{}, err
+	}
+	totalCounts, err = totalCounts.Add(noCount)
+	if err != nil {
+		return math.Dec{}, err
+	}
+	totalCounts, err = totalCounts.Add(abstainCount)
+	if err != nil {
+		return math.Dec{}, err
+	}
+	totalCounts, err = totalCounts.Add(vetoCount)
+	if err != nil {
+		return math.Dec{}, err
+	}
+	return totalCounts, nil
 }

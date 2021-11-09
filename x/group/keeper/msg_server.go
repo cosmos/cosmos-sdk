@@ -698,7 +698,7 @@ func (k msgServer) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgEx
 		// Cashing context so that we don't update the store in case of failure.
 		ctx, flush := ctx.CacheContext()
 
-		err := k.server.execMsgs(sdk.WrapSDKContext(ctx), accountInfo.DerivationKey, proposal)
+		err := k.execMsgs(sdk.WrapSDKContext(ctx), accountInfo.DerivationKey, proposal)
 		if err != nil {
 			proposal.ExecutorResult = group.ProposalExecutorResultFailure
 			proposalType := reflect.TypeOf(proposal).String()

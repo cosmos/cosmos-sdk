@@ -37,6 +37,7 @@ func TestBuilderWithAux(t *testing.T) {
 
 	// Create an AuxTxBuilder for tipper (1st signer)
 	tipperBuilder := clienttx.NewAuxTxBuilder()
+	tipperBuilder.SetAddress(tipperAddr.String())
 	tipperBuilder.SetAccountNumber(1)
 	tipperBuilder.SetSequence(2)
 	tipperBuilder.SetTimeoutHeight(3)
@@ -57,6 +58,7 @@ func TestBuilderWithAux(t *testing.T) {
 
 	// Create an AuxTxBuilder for aux2 (2nd signer)
 	aux2Builder := clienttx.NewAuxTxBuilder()
+	aux2Builder.SetAddress(aux2Addr.String())
 	aux2Builder.SetAccountNumber(11)
 	aux2Builder.SetSequence(12)
 	aux2Builder.SetTimeoutHeight(3)

@@ -114,11 +114,29 @@ func TestAuxTxBuilder(t *testing.T) {
 			false, "",
 		},
 		{
+			"GetAuxSignerData address should not be empty",
+			func() error {
+				b.SetMsgs(msg)
+				b.SetPubKey(pk)
+				b.SetTip(tip)
+				err := b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX)
+				require.NoError(t, err)
+
+				_, err = b.GetSignBytes()
+				require.NoError(t, err)
+
+				_, err = b.GetAuxSignerData()
+				return err
+			},
+			true, "address cannot be empty: invalid request",
+		},
+		{
 			"GetAuxSignerData signature should not be empty",
 			func() error {
 				b.SetMsgs(msg)
 				b.SetPubKey(pk)
 				b.SetTip(tip)
+				b.SetAddress(addr.String())
 				err := b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX)
 				require.NoError(t, err)
 
@@ -144,6 +162,7 @@ func TestAuxTxBuilder(t *testing.T) {
 				b.SetMsgs(msg)
 				b.SetPubKey(pk)
 				b.SetTip(tip)
+				b.SetAddress(addr.String())
 				err := b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX)
 				require.NoError(t, err)
 
@@ -180,6 +199,7 @@ func TestAuxTxBuilder(t *testing.T) {
 				b.SetMsgs(msg)
 				b.SetPubKey(pk)
 				b.SetTip(tip)
+				b.SetAddress(addr.String())
 				err := b.SetSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 				require.NoError(t, err)
 
@@ -194,6 +214,7 @@ func TestAuxTxBuilder(t *testing.T) {
 				b.SetMsgs(msg)
 				b.SetPubKey(pk)
 				b.SetTip(tip)
+				b.SetAddress(addr.String())
 				err := b.SetSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 				require.NoError(t, err)
 

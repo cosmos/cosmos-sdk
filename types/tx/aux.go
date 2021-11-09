@@ -37,6 +37,10 @@ func (s *SignDocDirectAux) UnpackInterfaces(unpacker codectypes.AnyUnpacker) err
 
 // ValidateBasic performs stateless validation of the auxiliary tx.
 func (a *AuxSignerData) ValidateBasic() error {
+	if a.Address == "" {
+		return sdkerrors.ErrInvalidRequest.Wrapf("address cannot be empty")
+	}
+
 	if a.Mode != signing.SignMode_SIGN_MODE_DIRECT_AUX && a.Mode != signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
 		return sdkerrors.ErrInvalidRequest.Wrapf("AuxTxBuilder can only sign with %s or %s", signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}

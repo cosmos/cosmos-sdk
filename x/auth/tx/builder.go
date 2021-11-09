@@ -407,17 +407,13 @@ func (w *wrapper) AddAuxSignerData(data tx.AuxSignerData) error {
 
 	// Get the aux signer's index in GetSigners.
 	signerIndex := -1
-	pk, ok := data.SignDoc.PublicKey.GetCachedValue().(cryptotypes.PubKey)
-	if !ok {
-		return sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (cryptotypes.PubKey)(nil), pk)
-	}
 	for i, signer := range w.GetSigners() {
-		if signer.Equals(sdk.AccAddress(pk.Address())) {
+		if signer.String() == data.Address {
 			signerIndex = i
 		}
 	}
 	if signerIndex < 0 {
-		return sdkerrors.ErrLogic.Wrapf("address %s is not a signer", sdk.AccAddress(pk.Address()))
+		return sdkerrors.ErrLogic.Wrapf("address %s is not a signer", data.Address)
 	}
 
 	w.setSignerInfoAtIndex(signerIndex, &tx.SignerInfo{

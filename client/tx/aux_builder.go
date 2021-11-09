@@ -27,6 +27,12 @@ func NewAuxTxBuilder() AuxTxBuilder {
 	return AuxTxBuilder{}
 }
 
+func (b *AuxTxBuilder) SetAddress(addr string) {
+	b.checkEmptyFields()
+
+	b.auxSignerData.Address = addr
+}
+
 func (b *AuxTxBuilder) SetMemo(memo string) {
 	b.checkEmptyFields()
 

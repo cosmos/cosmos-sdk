@@ -50,7 +50,7 @@ func TestSignDocDirectAux(t *testing.T) {
 
 func TestAuxSignerData(t *testing.T) {
 	bodyBz := []byte{42}
-	_, pk, _ := testdata.KeyTestPubAddr()
+	_, pk, addr := testdata.KeyTestPubAddr()
 	pkAny, err := codectypes.NewAnyWithValue(pk)
 	require.NoError(t, err)
 	sig := []byte{42}
@@ -61,11 +61,12 @@ func TestAuxSignerData(t *testing.T) {
 		sd     tx.AuxSignerData
 		expErr bool
 	}{
-		{"empty sign mode", tx.AuxSignerData{}, true},
-		{"SIGN_MODE_DIRECT", tx.AuxSignerData{Mode: signing.SignMode(signing.SignMode_SIGN_MODE_DIRECT)}, true},
-		{"no sig", tx.AuxSignerData{Mode: signing.SignMode(signing.SignMode_SIGN_MODE_DIRECT)}, true},
-		{"happy case WITH DIRECT_AUX", tx.AuxSignerData{Mode: signing.SignMode_SIGN_MODE_DIRECT_AUX, SignDoc: sd, Sig: sig}, false},
-		{"happy case WITH DIRECT_AUX", tx.AuxSignerData{Mode: signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, SignDoc: sd, Sig: sig}, false},
+		{"empty address", tx.AuxSignerData{}, true},
+		{"empty sign mode", tx.AuxSignerData{Address: addr.String()}, true},
+		{"SIGN_MODE_DIRECT", tx.AuxSignerData{Address: addr.String(), Mode: signing.SignMode(signing.SignMode_SIGN_MODE_DIRECT)}, true},
+		{"no sig", tx.AuxSignerData{Address: addr.String(), Mode: signing.SignMode(signing.SignMode_SIGN_MODE_DIRECT)}, true},
+		{"happy case WITH DIRECT_AUX", tx.AuxSignerData{Address: addr.String(), Mode: signing.SignMode_SIGN_MODE_DIRECT_AUX, SignDoc: sd, Sig: sig}, false},
+		{"happy case WITH DIRECT_AUX", tx.AuxSignerData{Address: addr.String(), Mode: signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, SignDoc: sd, Sig: sig}, false},
 	}
 
 	for _, tc := range testcases {

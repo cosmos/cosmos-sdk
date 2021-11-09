@@ -59,7 +59,7 @@ func (s *IntegrationTestSuite) TestQueryBalanceGRPC() {
 	}
 	balanceURL := val.APIAddress + "/cosmos/nft/v1beta1/balance/%s/%s"
 	for _, tc := range testCases {
-		uri := fmt.Sprintf(balanceURL, tc.args.ClassId, tc.args.Owner)
+		uri := fmt.Sprintf(balanceURL, tc.args.Owner, tc.args.ClassId)
 		s.Run(tc.name, func() {
 			resp, _ := rest.GetRequest(uri)
 			if tc.expectErr {

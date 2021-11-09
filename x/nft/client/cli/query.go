@@ -12,6 +12,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
+// Flag names and values
+const (
+	FlagOwner = "owner"
+)
+
 // GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd() *cobra.Command {
 	nftQueryCmd := &cobra.Command{
@@ -118,20 +123,18 @@ func GetCmdQueryNFT() *cobra.Command {
 	return cmd
 }
 
-// GetCmdQueryNFT implements the query nft command.
+// GetCmdQueryNFTs implements the query nft command.
 func GetCmdQueryNFTs() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "nfts [class-id] [owner]",
-		Args:  cobra.RangeArgs(1, 2),
+		Use:   "nfts [class-id]",
+		Args:  cobra.ExactArgs(1),
 		Short: "query all NFTs of a given class or owner address.",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query all NFTs of a given class or owner address. If owner
 is set, all nfts that belong to the owner are filtered out.
 Examples:
-$ %s query %s nfts <class-id>
-$ %s query %s nfts <class-id> <owner>
+$ %s query %s nfts <class-id> --owner=<owner>
 `,
-				version.AppName, nft.ModuleName,
 				version.AppName, nft.ModuleName),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -149,8 +152,14 @@ $ %s query %s nfts <class-id> <owner>
 				ClassId:    args[0],
 				Pagination: pageReq,
 			}
-			if len(args) == 2 {
-				request.Owner = args[1]
+
+			owner, err := cmd.Flags().GetString(FlagOwner)
+			if err != nil {
+				return err
+			}
+
+			if len(owner) > 0 {
+				request.Owner = owner
 			}
 			res, err := queryClient.NFTsOfClass(cmd.Context(), request)
 			if err != nil {
@@ -161,6 +170,7 @@ $ %s query %s nfts <class-id> <owner>
 	}
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "nfts")
+	cmd.Flags().String(FlagOwner, "", "The owner of the nft")
 	return cmd
 }
 
@@ -194,10 +204,10 @@ func GetCmdQueryOwner() *cobra.Command {
 // GetCmdQueryBalance implements the query balance command.
 func GetCmdQueryBalance() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "balance [class-id] [owner]",
+		Use:     "balance [owner] [class-id]",
 		Args:    cobra.ExactArgs(2),
 		Short:   "query the number of NFTs of a given class owned by the owner.",
-		Example: fmt.Sprintf(`$ %s query %s balance <class-id> <owner>`, version.AppName, nft.ModuleName),
+		Example: fmt.Sprintf(`$ %s query %s balance <owner> <class-id>`, version.AppName, nft.ModuleName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -205,8 +215,8 @@ func GetCmdQueryBalance() *cobra.Command {
 			}
 			queryClient := nft.NewQueryClient(clientCtx)
 			res, err := queryClient.Balance(cmd.Context(), &nft.QueryBalanceRequest{
-				ClassId: args[0],
-				Owner:   args[1],
+				ClassId: args[1],
+				Owner:   args[0],
 			})
 			if err != nil {
 				return err

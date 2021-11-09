@@ -52,7 +52,7 @@ func ExecQueryNFTsByOwner(val *network.Validator, classID, owner string) (testut
 	cmd := cli.GetCmdQueryNFTs()
 	var args []string
 	args = append(args, classID)
-	args = append(args, owner)
+	args = append(args, fmt.Sprintf("--%s=%s", cli.FlagOwner, owner))
 	args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
 	return clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 }
@@ -69,8 +69,8 @@ func ExecQueryOwner(val *network.Validator, classID, nftID string) (testutil.Buf
 func ExecQueryBalance(val *network.Validator, classID, owner string) (testutil.BufferWriter, error) {
 	cmd := cli.GetCmdQueryBalance()
 	var args []string
-	args = append(args, classID)
 	args = append(args, owner)
+	args = append(args, classID)
 	args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
 	return clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 }

@@ -23,18 +23,15 @@ import (
 func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
+	lastAppliedPlan, _ := k.GetLastCompletedUpgrade(ctx)
+	// Throw an error if there is no upgrade handler is registered for last applied upgrade(meaning this is a wrong binary)
+	if lastAppliedPlan != "" && !k.HasHandler(lastAppliedPlan) {
+		panic(fmt.Sprintf("upgrade handler is missing for %s upgrade plan", lastAppliedPlan))
+	}
+
 	plan, found := k.GetUpgradePlan(ctx)
 	if !found {
-		recentPlan, _ := k.GetLastCompletedUpgrade(ctx)
-		if recentPlan != "" && !k.HasHandler(recentPlan) {
-			panic(fmt.Sprintf("upgrade handler is missing for %s upgrade plan", recentPlan))
-		}
-
 		return
-	} else {
-		if !k.HasHandler(plan.Name) {
-			panic(fmt.Sprintf("upgrade handler is missing for %s upgrade plan", plan.Name))
-		}
 	}
 
 	logger := ctx.Logger()

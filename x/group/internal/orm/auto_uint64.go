@@ -73,3 +73,8 @@ func (a AutoUInt64Table) GetOne(store sdk.KVStore, rowID uint64, dest codec.Prot
 	}
 	return rawRowID, nil
 }
+
+// Sequence returns the sequence used by this table
+func (a AutoUInt64Table) Sequence() Sequence {
+	return a.seq
+}

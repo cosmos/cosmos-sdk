@@ -1,10 +1,9 @@
-package server
+package keeper
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	servermodule "github.com/cosmos/cosmos-sdk/types/module/server"
 	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/exported"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
@@ -40,11 +39,10 @@ const (
 type serverImpl struct {
 	key servermodule.RootModuleKey
 
-	accKeeper  exported.AccountKeeper
-	bankKeeper exported.BankKeeper
+	accKeeper  group.AccountKeeper
+	bankKeeper group.BankKeeper
 
 	// Group Table
-	groupSeq   orm.Sequence
 	groupTable orm.AutoUInt64Table
 	// groupByAdminIndex orm.Index
 
@@ -70,7 +68,7 @@ type serverImpl struct {
 	// voteByVoterIndex    orm.Index
 }
 
-func newServer(storeKey servermodule.RootModuleKey, accKeeper exported.AccountKeeper, bankKeeper exported.BankKeeper, cdc codec.Codec) serverImpl {
+func newServer(storeKey servermodule.RootModuleKey, accKeeper group.AccountKeeper, bankKeeper group.BankKeeper, cdc codec.Codec) serverImpl {
 	s := serverImpl{key: storeKey, accKeeper: accKeeper, bankKeeper: bankKeeper}
 
 	// Group Table
@@ -78,7 +76,6 @@ func newServer(storeKey servermodule.RootModuleKey, accKeeper exported.AccountKe
 	if err != nil {
 		panic(err.Error())
 	}
-	s.groupSeq = orm.NewSequence(GroupTableSeqPrefix)
 	s.groupTable = *groupTable
 
 	// Group Member Table
@@ -113,9 +110,9 @@ func newServer(storeKey servermodule.RootModuleKey, accKeeper exported.AccountKe
 	return s
 }
 
-func RegisterServices(configurator servermodule.Configurator, accountKeeper exported.AccountKeeper, bankKeeper exported.BankKeeper) {
+func RegisterServices(configurator servermodule.Configurator, accountKeeper group.AccountKeeper, bankKeeper group.BankKeeper) {
 	impl := newServer(configurator.ModuleKey(), accountKeeper, bankKeeper, configurator.Marshaler())
-	group.RegisterMsgServer(configurator.MsgServer(), impl)
+	// group.RegisterMsgServer(configurator.MsgServer(), impl)
 	// group.RegisterQueryServer(configurator.QueryServer(), impl)
 	// configurator.RegisterWeightedOperationsHandler(impl.WeightedOperations)
 

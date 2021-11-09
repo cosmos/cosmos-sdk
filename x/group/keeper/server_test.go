@@ -1,4 +1,4 @@
-package server_test
+package keeper_test
 
 import (
 	"testing"

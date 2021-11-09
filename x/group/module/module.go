@@ -13,14 +13,13 @@ import (
 	servermodule "github.com/cosmos/cosmos-sdk/types/module/server"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/exported"
-	"github.com/cosmos/cosmos-sdk/x/group/server"
+	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 )
 
 type Module struct {
 	Registry      types.InterfaceRegistry
-	BankKeeper    exported.BankKeeper
-	AccountKeeper exported.AccountKeeper
+	BankKeeper    group.BankKeeper
+	AccountKeeper group.AccountKeeper
 }
 
 var _ module.AppModuleBasic = Module{}
@@ -41,7 +40,7 @@ func (a Module) RegisterInterfaces(registry types.InterfaceRegistry) {
 }
 
 func (a Module) RegisterServices(configurator servermodule.Configurator) {
-	server.RegisterServices(configurator, a.AccountKeeper, a.BankKeeper)
+	keeper.RegisterServices(configurator, a.AccountKeeper, a.BankKeeper)
 }
 
 // func (a Module) DefaultGenesis(marshaler codec.JSONCodec) json.RawMessage {
@@ -72,10 +71,6 @@ func (a Module) RegisterServices(configurator servermodule.Configurator) {
 func (a Module) RegisterRESTRoutes(sdkclient.Context, *mux.Router) {}
 func (a Module) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	group.RegisterLegacyAminoCodec(cdc)
-}
-
-func (a Module) Route(configurator servermodule.Configurator) sdk.Route {
-	return sdk.NewRoute(group.RouterKey, server.NewHandler(configurator, a.AccountKeeper, a.BankKeeper))
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.

@@ -24,6 +24,7 @@ import (
 var (
 	_ types.CommitRootStore = (*rootStore)(nil)
 	_ types.CacheRootStore  = (*rootCache)(nil)
+	_ types.BasicRootStore  = (*rootView)(nil)
 )
 
 var (

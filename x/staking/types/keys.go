@@ -19,7 +19,7 @@ const (
 	StoreKey = ModuleName
 
 	// TStoreKey is the string transient store representation
-	TStoreKey = ModuleName
+	TStoreKey = "transient_staking"
 
 	// QuerierRoute is the querier route for the staking module
 	QuerierRoute = ModuleName

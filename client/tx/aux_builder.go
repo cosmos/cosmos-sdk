@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
-// AuxTxBuilder is a client-side builder for creating an AuxTx.
+// AuxTxBuilder is a client-side builder for creating an AuxSignerData.
 type AuxTxBuilder struct {
 	// msgs is used to store the sdk.Msgs that are added to the
 	// TxBuilder. It's also added inside body.Messages, because:
@@ -23,28 +23,34 @@ type AuxTxBuilder struct {
 	auxSignerData *tx.AuxSignerData
 }
 
+// NewAuxTxBuilder creates a new client-side builder for constructing an
+// AuxSignerData.
 func NewAuxTxBuilder() AuxTxBuilder {
 	return AuxTxBuilder{}
 }
 
+// SetAddress sets the aux signer's bech32 address.
 func (b *AuxTxBuilder) SetAddress(addr string) {
 	b.checkEmptyFields()
 
 	b.auxSignerData.Address = addr
 }
 
+// SetMemo sets a memo in the tx.
 func (b *AuxTxBuilder) SetMemo(memo string) {
 	b.checkEmptyFields()
 
 	b.body.Memo = memo
 }
 
+// SetTimeoutHeight sets a timeout height in the tx.
 func (b *AuxTxBuilder) SetTimeoutHeight(height uint64) {
 	b.checkEmptyFields()
 
 	b.body.TimeoutHeight = height
 }
 
+// SetMsgs sets an array of Msgs in the tx.
 func (b *AuxTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
 	anys := make([]*codectypes.Any, len(msgs))
 	for i, msg := range msgs {
@@ -63,24 +69,28 @@ func (b *AuxTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
 	return nil
 }
 
+// SetAccountNumber sets the aux signer's account number in the AuxSignerData.
 func (b *AuxTxBuilder) SetAccountNumber(accNum uint64) {
 	b.checkEmptyFields()
 
 	b.auxSignerData.SignDoc.AccountNumber = accNum
 }
 
+// SetChainID sets the chain id in the AuxSignerData.
 func (b *AuxTxBuilder) SetChainID(chainID string) {
 	b.checkEmptyFields()
 
 	b.auxSignerData.SignDoc.ChainId = chainID
 }
 
+// SetSequence sets the aux signer's sequence in the AuxSignerData.
 func (b *AuxTxBuilder) SetSequence(accSeq uint64) {
 	b.checkEmptyFields()
 
 	b.auxSignerData.SignDoc.Sequence = accSeq
 }
 
+// SetPubKey sets the aux signer's pubkey in the AuxSignerData.
 func (b *AuxTxBuilder) SetPubKey(pk cryptotypes.PubKey) error {
 	any, err := codectypes.NewAnyWithValue(pk)
 	if err != nil {
@@ -94,6 +104,8 @@ func (b *AuxTxBuilder) SetPubKey(pk cryptotypes.PubKey) error {
 	return nil
 }
 
+// SetSignMode sets the aux signer's sign mode. Allowed sign modes are
+// DIRECT_AUX and LEGACY_AMINO_JSON.
 func (b *AuxTxBuilder) SetSignMode(mode signing.SignMode) error {
 	switch mode {
 	case signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
@@ -106,16 +118,16 @@ func (b *AuxTxBuilder) SetSignMode(mode signing.SignMode) error {
 	return nil
 }
 
+// SetTip sets an optional tip.
 func (b *AuxTxBuilder) SetTip(tip *tx.Tip) {
 	b.checkEmptyFields()
 
 	b.auxSignerData.SignDoc.Tip = tip
 }
 
+// SetSignature sets the aux signer's signature.
 func (b *AuxTxBuilder) SetSignature(sig []byte) {
-	if b.auxSignerData == nil {
-		b.auxSignerData = &tx.AuxSignerData{}
-	}
+	b.checkEmptyFields()
 
 	b.auxSignerData.Sig = sig
 }
@@ -152,7 +164,6 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 	switch b.auxSignerData.Mode {
 	case signing.SignMode_SIGN_MODE_DIRECT_AUX:
 		{
-
 			signBz, err = proto.Marshal(b.auxSignerData.SignDoc)
 			if err != nil {
 				return nil, err
@@ -178,7 +189,7 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 	return signBz, nil
 }
 
-// GetAuxSignerData returns the builder's AuxTx.
+// GetAuxSignerData returns the builder's AuxSignerData.
 func (b *AuxTxBuilder) GetAuxSignerData() (tx.AuxSignerData, error) {
 	if err := b.auxSignerData.ValidateBasic(); err != nil {
 		return tx.AuxSignerData{}, err

@@ -232,7 +232,7 @@ func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) ([]
 func (k Keeper) GetNextOrLastUpgrade(ctx sdk.Context) (string, int64) {
 	iter := sdk.KVStoreReversePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
 	defer iter.Close()
-	for iter.Valid() {
+	if iter.Valid() {
 		return parseDoneKey(iter.Key()), int64(binary.BigEndian.Uint64(iter.Value()))
 	}
 

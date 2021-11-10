@@ -297,6 +297,19 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded.AddRaw(1)))
 }
 
+type MockStakingHooks struct {
+	StakingHooksTemplate
+	beforeUnbondingDelegationEntryComplete func() bool
+	unbondingDelegationEntryCreated        func(uint64)
+}
+
+func (h MockStakingHooks) UnbondingDelegationEntryCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress, _ int64, _ time.Time, _ sdk.Int, id uint64) {
+	h.unbondingDelegationEntryCreated(id)
+}
+func (h MockStakingHooks) BeforeUnbondingDelegationEntryComplete(_ sdk.Context, _ uint64) bool {
+	return h.beforeUnbondingDelegationEntryComplete()
+}
+
 func TestUnbondingDelegationOnHold(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 

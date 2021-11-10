@@ -7,46 +7,42 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-type MockStakingHooks struct {
-	beforeUnbondingDelegationEntryComplete func() bool
-	unbondingDelegationEntryCreated        func(uint64)
-}
+type StakingHooksTemplate struct{}
 
-var _ types.StakingHooks = MockStakingHooks{}
+var _ types.StakingHooks = StakingHooksTemplate{}
 
-func (h MockStakingHooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error {
+func (h StakingHooksTemplate) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error {
 	return nil
 }
-func (h MockStakingHooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) error {
+func (h StakingHooksTemplate) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) error {
 	return nil
 }
-func (h MockStakingHooks) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+func (h StakingHooksTemplate) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
 	return nil
 }
-func (h MockStakingHooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+func (h StakingHooksTemplate) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
 	return nil
 }
-func (h MockStakingHooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+func (h StakingHooksTemplate) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
 	return nil
 }
-func (h MockStakingHooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
+func (h StakingHooksTemplate) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
 	return nil
 }
-func (h MockStakingHooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress) error { return nil }
-func (h MockStakingHooks) AfterValidatorBonded(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
+func (h StakingHooksTemplate) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress) error {
 	return nil
 }
-func (h MockStakingHooks) AfterValidatorBeginUnbonding(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
+func (h StakingHooksTemplate) AfterValidatorBonded(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
 	return nil
 }
-func (h MockStakingHooks) BeforeDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
+func (h StakingHooksTemplate) AfterValidatorBeginUnbonding(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
 	return nil
 }
-
-func (h MockStakingHooks) UnbondingDelegationEntryCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress, _ int64, _ time.Time, _ sdk.Int, id uint64) {
-	h.unbondingDelegationEntryCreated(id)
+func (h StakingHooksTemplate) BeforeDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
+	return nil
 }
-
-func (h MockStakingHooks) BeforeUnbondingDelegationEntryComplete(_ sdk.Context, _ uint64) bool {
-	return h.beforeUnbondingDelegationEntryComplete()
+func (h StakingHooksTemplate) UnbondingDelegationEntryCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress, _ int64, _ time.Time, _ sdk.Int, id uint64) {
+}
+func (h StakingHooksTemplate) BeforeUnbondingDelegationEntryComplete(_ sdk.Context, _ uint64) bool {
+	return false
 }

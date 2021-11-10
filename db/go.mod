@@ -37,4 +37,4 @@ require (
 
 // FIXME: gorocksdb bindings for OptimisticTransactionDB are not merged upstream, so we use a fork
 // See https://github.com/tecbot/gorocksdb/pull/216
-replace github.com/tecbot/gorocksdb => github.com/roysc/gorocksdb v1.1.0
+replace github.com/tecbot/gorocksdb => github.com/roysc/gorocksdb v1.1.1

@@ -14,9 +14,12 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
@@ -48,6 +51,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.grantee[0] = s.createAccount("grantee1")
 	s.msgSendExec(s.grantee[0])
 	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
+	// create a proposal with deposit
+	govAcc, err := s.cfg.AccountRetriever.GetAccount(val.ClientCtx, auth.NewModuleAddress(govtypes.ModuleName))
+	s.Require().NoError(err)
+	proposal := []sdk.Msg{govtypes.NewMsgSignal("test_title", "test_description", govAcc.GetAddress())}
+	_, err = govtestutil.MsgSubmitProposal(s.T(), val.ClientCtx, val.Address.String(), proposal,
+		fmt.Sprintf("--%s=%s", govcli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, govtypes.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 
 	// Create new account in the keyring.
@@ -497,15 +508,10 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 		},
 	)
 	s.Require().NoError(err)
-	// msg vote
-	tokens := sdk.NewCoins(
-		sdk.NewCoin("stake", sdk.NewInt(50)),
-	)
 
-	// msg undelegate
-	undelegateTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgUndelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"250000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
-		tokens.GetDenomByIndex(0), tokens[0].Amount)
-	execMsg := testutil.WriteToNewTempFile(s.T(), undelegateTx)
+	// msg vote
+	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
+	execMsg := testutil.WriteToNewTempFile(s.T(), voteTx)
 
 	// waiting for authorization to expires
 	time.Sleep(12 * time.Second)
@@ -544,15 +550,9 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 	)
 	s.Require().NoError(err)
 
-	tokens := sdk.NewCoins(
-		sdk.NewCoin("stake", sdk.NewInt(50)),
-	)
-
-	// msg undelegate
-	undelegateTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgUndelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"250000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
-		tokens.GetDenomByIndex(0), tokens[0].Amount)
-
-	execMsg := testutil.WriteToNewTempFile(s.T(), undelegateTx)
+	// msg vote
+	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
+	execMsg := testutil.WriteToNewTempFile(s.T(), voteTx)
 
 	testCases := []struct {
 		name         string

@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -24,7 +25,8 @@ func Test_runListCmd(t *testing.T) {
 	kbHome2 := t.TempDir()
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome2, mockIn)
+	encCfg := simapp.MakeTestEncodingConfig()
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome2, mockIn, encCfg.Codec)
 	require.NoError(t, err)
 
 	clientCtx := client.Context{}.WithKeyring(kb)
@@ -57,7 +59,6 @@ func Test_runListCmd(t *testing.T) {
 			cmd.SetArgs([]string{
 				fmt.Sprintf("--%s=%s", flags.FlagHome, tt.kbDir),
 				fmt.Sprintf("--%s=false", flagListNames),
-				fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 			})
 
 			if err := cmd.ExecuteContext(ctx); (err != nil) != tt.wantErr {
@@ -67,7 +68,6 @@ func Test_runListCmd(t *testing.T) {
 			cmd.SetArgs([]string{
 				fmt.Sprintf("--%s=%s", flags.FlagHome, tt.kbDir),
 				fmt.Sprintf("--%s=true", flagListNames),
-				fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 			})
 
 			if err := cmd.ExecuteContext(ctx); (err != nil) != tt.wantErr {

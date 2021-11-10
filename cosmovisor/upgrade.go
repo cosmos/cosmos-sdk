@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -36,11 +35,11 @@ func DoUpgrade(cfg *Config, info UpgradeInfo) error {
 	}
 
 	// If not there, then we try to download it... maybe
-	fmt.Println("[cosmovisor] No upgrade binary found, beginning to download it")
+	Logger.Info().Msg("No upgrade binary found, beginning to download it")
 	if err := DownloadBinary(cfg, info); err != nil {
 		return fmt.Errorf("cannot download binary. %w", err)
 	}
-	fmt.Println("[cosmovisor] Downloading binary complete")
+	Logger.Info().Msg("Downloading binary complete")
 
 	// and then set the binary again
 	if err := EnsureBinary(cfg.UpgradeBin(info.Name)); err != nil {
@@ -108,7 +107,7 @@ func GetDownloadURL(info UpgradeInfo) (string, error) {
 	doc := strings.TrimSpace(info.Info)
 	// if this is a url, then we download that and try to get a new doc with the real info
 	if _, err := url.Parse(doc); err == nil {
-		tmpDir, err := ioutil.TempDir("", "upgrade-manager-reference")
+		tmpDir, err := os.MkdirTemp("", "upgrade-manager-reference")
 		if err != nil {
 			return "", fmt.Errorf("create tempdir for reference file: %w", err)
 		}
@@ -119,7 +118,7 @@ func GetDownloadURL(info UpgradeInfo) (string, error) {
 			return "", fmt.Errorf("downloading reference link %s: %w", doc, err)
 		}
 
-		refBytes, err := ioutil.ReadFile(refPath)
+		refBytes, err := os.ReadFile(refPath)
 		if err != nil {
 			return "", fmt.Errorf("reading downloaded reference: %w", err)
 		}

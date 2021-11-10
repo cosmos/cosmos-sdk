@@ -3,12 +3,17 @@
 ## Changelog
 
 - 2020 Apr 24: Initial Draft
+- 2021 Sep 14: Superseded by ADR-045
+
+## Status
+
+SUPERSEDED by ADR-045
 
 ## Context
 
 The current implementation of BaseApp does not allow developers to write custom error handlers during panic recovery
 [runTx()](https://github.com/cosmos/cosmos-sdk/blob/bad4ca75f58b182f600396ca350ad844c18fc80b/baseapp/baseapp.go#L539)
-method. We think that this method can be more flexible and can give SDK users more options for customizations without
+method. We think that this method can be more flexible and can give Cosmos SDK users more options for customizations without
 the need to rewrite whole BaseApp. Also there's one special case for `sdk.ErrorOutOfGas` error handling, that case
 might be handled in a "standard" way (middleware) alongside the others.
 

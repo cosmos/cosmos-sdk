@@ -8,12 +8,12 @@ The `context` is a data structure intended to be passed from function to functio
 
 ## Pre-requisites Readings
 
-- [Anatomy of an SDK Application](../basics/app-anatomy.md) {prereq}
+- [Anatomy of a Cosmos SDK Application](../basics/app-anatomy.md) {prereq}
 - [Lifecycle of a Transaction](../basics/tx-lifecycle.md) {prereq}
 
 ## Context Definition
 
-The SDK `Context` is a custom data structure that contains Go's stdlib [`context`](https://golang.org/pkg/context) as its base, and has many additional types within its definition that are specific to the Cosmos SDK. The `Context` is integral to transaction processing in that it allows modules to easily access their respective [store](./store.md#base-layer-kvstores) in the [`multistore`](./store.md#multistore) and retrieve transactional context such as the block header and gas meter.
+The Cosmos SDK `Context` is a custom data structure that contains Go's stdlib [`context`](https://golang.org/pkg/context) as its base, and has many additional types within its definition that are specific to the Cosmos SDK. The `Context` is integral to transaction processing in that it allows modules to easily access their respective [store](./store.md#base-layer-kvstores) in the [`multistore`](./store.md#multistore) and retrieve transactional context such as the block header and gas meter.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/context.go#L16-L39
 
@@ -21,7 +21,7 @@ The SDK `Context` is a custom data structure that contains Go's stdlib [`context
 - **Multistore:** Every application's `BaseApp` contains a [`CommitMultiStore`](./store.md#multistore) which is provided when a `Context` is created. Calling the `KVStore()` and `TransientStore()` methods allows modules to fetch their respective [`KVStore`](./store.md#base-layer-kvstores) using their unique `StoreKey`.
 - **ABCI Header:** The [header](https://tendermint.com/docs/spec/abci/abci.html#header) is an ABCI type. It carries important information about the state of the blockchain, such as block height and proposer of the current block.
 - **Chain ID:** The unique identification number of the blockchain a block pertains to.
-- **Transaction Bytes:** The `[]byte` representation of a transaction being processed using the context. Every transaction is processed by various parts of the SDK and consensus engine (e.g. Tendermint) throughout its [lifecycle](../basics/tx-lifecycle.md), some of which to not have any understanding of transaction types. Thus, transactions are marshaled into the generic `[]byte` type using some kind of [encoding format](./encoding.md) such as [Amino](./encoding.md).
+- **Transaction Bytes:** The `[]byte` representation of a transaction being processed using the context. Every transaction is processed by various parts of the Cosmos SDK and consensus engine (e.g. Tendermint) throughout its [lifecycle](../basics/tx-lifecycle.md), some of which to not have any understanding of transaction types. Thus, transactions are marshaled into the generic `[]byte` type using some kind of [encoding format](./encoding.md) such as [Amino](./encoding.md).
 - **Logger:** A `logger` from the Tendermint libraries. Learn more about logs [here](https://tendermint.com/docs/tendermint-core/how-to-read-logs.html#how-to-read-logs). Modules call this method to create their own unique module-specific logger.
 - **VoteInfo:** A list of the ABCI type [`VoteInfo`](https://tendermint.com/docs/spec/abci/abci.html#voteinfo), which includes the name of a validator and a boolean indicating whether they have signed the block.
 - **Gas Meters:** Specifically, a [`gasMeter`](../basics/gas-fees.md#main-gas-meter) for the transaction currently being processed using the context and a [`blockGasMeter`](../basics/gas-fees.md#block-gas-meter) for the entire block it belongs to. Users specify how much in fees they wish to pay for the execution of their transaction; these gas meters keep track of how much [gas](../basics/gas-fees.md) has been used in the transaction or block so far. If the gas meter runs out, execution halts.

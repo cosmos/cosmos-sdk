@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	yaml "gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -181,6 +181,10 @@ func (d DelegationResponse) String() string {
 func (v Validator) String() string {
 	out, _ := yaml.Marshal(v)
 	return string(out)
+}
+
+func (v Validator) TokensFromShares(shares sdk.Dec) sdk.Dec {
+	return (shares.MulInt(v.Tokens)).Quo(v.DelegatorShares)
 }
 
 // Validators is a collection of Validator

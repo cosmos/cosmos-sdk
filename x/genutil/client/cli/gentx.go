@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -121,8 +120,11 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			if err != nil {
 				return errors.Wrap(err, "failed to parse coins")
 			}
-
-			err = genutil.ValidateAccountInGenesis(genesisState, genBalIterator, key.GetAddress(), coins, cdc)
+			addr, err := key.GetAddress()
+			if err != nil {
+				return err
+			}
+			err = genutil.ValidateAccountInGenesis(genesisState, genBalIterator, addr, coins, cdc)
 			if err != nil {
 				return errors.Wrap(err, "failed to validate account in genesis")
 			}
@@ -131,8 +133,11 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			if err != nil {
 				return errors.Wrap(err, "error creating tx builder")
 			}
-
-			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(key.GetAddress())
+			pub, err := key.GetAddress()
+			if err != nil {
+				return err
+			}
+			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(pub)
 
 			// The following line comes from a discrepancy between the `gentx`
 			// and `create-validator` commands:
@@ -219,7 +224,7 @@ func makeOutputFilepath(rootDir, nodeID string) (string, error) {
 }
 
 func readUnsignedGenTxFile(clientCtx client.Context, r io.Reader) (sdk.Tx, error) {
-	bz, err := ioutil.ReadAll(r)
+	bz, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}

@@ -18,10 +18,6 @@ func (s *SignDocDirectAux) ValidateBasic() error {
 	}
 
 	if s.Tip != nil {
-		if len(s.Tip.Amount) == 0 {
-			return sdkerrors.ErrInvalidRequest.Wrap("tip amount cannot be empty")
-		}
-
 		if s.Tip.Tipper == "" {
 			return sdkerrors.ErrInvalidRequest.Wrap("tipper cannot be empty")
 		}

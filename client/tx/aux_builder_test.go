@@ -83,14 +83,14 @@ func TestAuxTxBuilder(t *testing.T) {
 			func() error {
 				b.SetMsgs(msg1)
 				b.SetPubKey(pub1)
-				b.SetTip(&typestx.Tip{Tipper: addr1.String()})
+				b.SetTip(&typestx.Tip{})
 				err := b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX)
 				require.NoError(t, err)
 
 				_, err = b.GetSignBytes()
 				return err
 			},
-			true, "tip amount cannot be empty",
+			true, "tipper cannot be empty",
 		},
 		{
 			"GetSignBytes works for DIRECT_AUX",

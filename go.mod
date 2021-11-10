@@ -25,7 +25,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
 	github.com/hdevalence/ed25519consensus v0.0.0-20210204194344-59a8610d2b87
-	github.com/improbable-eng/grpc-web v0.14.1
+	github.com/improbable-eng/grpc-web v0.15.0
 	github.com/jhump/protoreflect v1.10.1
 	github.com/lazyledger/smt v0.2.1-0.20210709230900-03ea40719554
 	github.com/magiconair/properties v1.8.5
@@ -60,6 +60,7 @@ require (
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
 	github.com/Workiva/go-datastructures v1.0.52 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/cenkalti/backoff/v4 v4.1.1 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/cosmos/ledger-go v0.9.2 // indirect

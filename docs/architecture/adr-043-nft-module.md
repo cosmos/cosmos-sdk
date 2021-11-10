@@ -12,7 +12,13 @@ DRAFT
 
 ## Abstract
 
-This ADR defines the `x/nft` module which is a generic implementation of NFTs, roughly "compatible" with ERC721.
+This ADR defines the `x/nft` module which is a generic implementation of NFTs, roughly "compatible" with ERC721. **Applications using the `x/nft` module must implement the following functions**:
+
+- `MsgNewClass` - Receive the user's request to create a class, and call the `NewClass` of the `x/nft` module.
+- `MsgUpdateClass` - Receive the user's request to update a class, and call the `UpdateClass` of the `x/nft` module.
+- `MsgMintNFT` - Receive the user's request to mint a nft, and call the `MintNFT` of the `x/nft` module.
+- `BurnNFT` - Receive the user's request to burn a nft, and call the `BurnNFT` of the `x/nft` module.
+- `UpdateNFT` - Receive the user's request to update a nft, and call the `UpdateNFT` of the `x/nft` module.
 
 ## Context
 
@@ -55,6 +61,7 @@ message Class {
   string symbol      = 3;
   string description = 4;
   string uri         = 5;
+  string uri_hash    = 6;
 }
 ```
 
@@ -63,6 +70,7 @@ message Class {
 - `symbol` is the symbol usually shown on exchanges for the NFT class; _optional_
 - `description` is a detailed description of the NFT class; _optional_
 - `uri` is a URL pointing to an off-chain JSON file that contains metadata about this NFT class ([OpenSea example](https://docs.opensea.io/docs/contract-level-metadata)); _optional_
+- `uri_hash` is a hash of the `uri`; _optional_
 
 #### NFT
 
@@ -73,16 +81,20 @@ message NFT {
   string class_id           = 1;
   string id                 = 2;
   string uri                = 3;
+  string uri_hash           = 4;
   google.protobuf.Any data  = 10;
 }
 ```
 
 - `class_id` is the identifier of the NFT class where the NFT belongs; _required_
 - `id` is an alphanumeric identifier of the NFT, unique within the scope of its class. It is specified by the creator of the NFT and may be expanded to use DID in the future. `class_id` combined with `id` uniquely identifies an NFT and is used as the primary index for storing the NFT; _required_
+
   ```
   {class_id}/{id} --> NFT (bytes)
   ```
+
 - `uri` is a URL pointing to an off-chain JSON file that contains metadata about this NFT (Ref: [ERC721 standard and OpenSea extension](https://docs.opensea.io/docs/metadata-standards)); _required_
+- `uri_hash` is a hash of the `uri`;
 - `data` is a field that CAN be used by composing modules to specify additional properties for the NFT; _optional_
 
 This ADR doesn't specify values that `data` can take; however, best practices recommend upper-level NFT modules clearly specify their contents.  Although the value of this field doesn't provide the additional context required to manage NFT records, which means that the field can technically be removed from the specification, the field's existence allows basic informational/UI functionality.
@@ -281,14 +293,12 @@ message QueryClassesResponse {
 }
 ```
 
-
 ### Interoperability
 
 Interoperability is all about reusing assets between modules and chains. The former one is achieved by ADR-33: Protobuf client - server communication. At the time of writing ADR-33 is not finalized. The latter is achieved by IBC. Here we will focus on the IBC side.
 IBC is implemented per module. Here, we aligned that NFTs will be recorded and managed in the x/nft. This requires creation of a new IBC standard and implementation of it.
 
 For IBC interoperability, NFT custom modules MUST use the NFT object type understood by the IBC client. So, for x/nft interoperability, custom NFT implementations (example: x/cryptokitty) should use the canonical x/nft module and proxy all NFT balance keeping functionality to x/nft or else re-implement all functionality using the NFT object type understood by the IBC client. In other words: x/nft becomes the standard NFT registry for all Cosmos NFTs (example: x/cryptokitty will register a kitty NFT in x/nft and use x/nft for book keeping). This was [discussed](https://github.com/cosmos/cosmos-sdk/discussions/9065#discussioncomment-873206) in the context of using x/bank as a general asset balance book. Not using x/nft will require implementing another module for IBC.
-
 
 ## Consequences
 

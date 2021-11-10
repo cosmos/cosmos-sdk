@@ -109,7 +109,7 @@ BUILD_TARGETS := build install
 
 build: BUILD_ARGS=-o $(BUILDDIR)/
 build-linux:
-	GOOS=linux GOARCH=amd64 LEDGER_ENABLED=false $(MAKE) build
+	GOOS=linux GOARCH=$(if $(findstring aarch64,$(shell uname -m)) || $(findstring arm64,$(shell uname -m)),arm64,amd64) LEDGER_ENABLED=false $(MAKE) build
 
 $(BUILD_TARGETS): go.sum $(BUILDDIR)/
 	go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
@@ -125,7 +125,7 @@ build-simd-all: go.sum
         --env VERSION=$(VERSION) \
         --env COMMIT=$(COMMIT) \
         --env LEDGER_ENABLED=$(LEDGER_ENABLED) \
-        --name latest-build cosmossdk/rbuilder:latest
+        --name latest-build tendermintdev/rbuilder:latest
 	$(DOCKER) cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
 
 build-simd-linux: go.sum $(BUILDDIR)/
@@ -136,7 +136,7 @@ build-simd-linux: go.sum $(BUILDDIR)/
         --env VERSION=$(VERSION) \
         --env COMMIT=$(COMMIT) \
         --env LEDGER_ENABLED=false \
-        --name latest-build cosmossdk/rbuilder:latest
+        --name latest-build tendermintdev/rbuilder:latest
 	$(DOCKER) cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
 	cp artifacts/simd-*-linux-amd64 $(BUILDDIR)/simd
 
@@ -344,7 +344,7 @@ markdownLintImage=tmknom/markdownlint
 containerMarkdownLint=$(PROJECT_NAME)-markdownlint
 containerMarkdownLintFix=$(PROJECT_NAME)-markdownlint-fix
 
-golangci_lint_cmd=go run github.com/golangci/golangci-lint/cmd/golangci-lint
+golangci_lint_cmd=golangci-lint
 
 lint: lint-go
 	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLint}$$"; then docker start -a $(containerMarkdownLint); else docker run --name $(containerMarkdownLint) -i -v "$(CURDIR):/work" $(markdownLintImage); fi
@@ -354,7 +354,7 @@ lint-fix:
 	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLintFix}$$"; then docker start -a $(containerMarkdownLintFix); else docker run --name $(containerMarkdownLintFix) -i -v "$(CURDIR):/work" $(markdownLintImage) . --fix; fi
 
 lint-go:
-	echo $(GIT_DIFF)
+	@@test -n "$$golangci-lint version | awk '$4 >= 1.42')"
 	$(golangci_lint_cmd) run --out-format=tab $(GIT_DIFF)
 
 .PHONY: lint lint-fix

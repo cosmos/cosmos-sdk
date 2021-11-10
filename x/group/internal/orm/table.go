@@ -239,7 +239,7 @@ func (a table) ReversePrefixScan(store sdk.KVStore, start, end RowID) (Iterator,
 func (a table) Export(store sdk.KVStore, dest ModelSlicePtr) (uint64, error) {
 	it, err := a.PrefixScan(store, nil, nil)
 	if err != nil {
-		return 0, errors.Wrap(err, "table Export failure when exporting table data")
+		return 0, sdkerrors.Wrap(err, "table Export failure when exporting table data")
 	}
 	_, err = ReadAll(it, dest)
 	if err != nil {
@@ -264,14 +264,14 @@ func (a table) Import(store sdk.KVStore, data interface{}, _ uint64) error {
 	// Provided data must be a slice
 	modelSlice := reflect.ValueOf(data)
 	if modelSlice.Kind() != reflect.Slice {
-		return errors.Wrap(errors.ErrORMInvalidArgument, "data must be a slice")
+		return sdkerrors.Wrap(errors.ErrORMInvalidArgument, "data must be a slice")
 	}
 
 	// Import values from slice
 	for i := 0; i < modelSlice.Len(); i++ {
 		obj, ok := modelSlice.Index(i).Interface().(PrimaryKeyed)
 		if !ok {
-			return errors.Wrapf(errors.ErrORMInvalidArgument, "unsupported type :%s", reflect.TypeOf(data).Elem().Elem())
+			return sdkerrors.Wrapf(errors.ErrORMInvalidArgument, "unsupported type :%s", reflect.TypeOf(data).Elem().Elem())
 		}
 		err := a.Create(store, PrimaryKey(obj), obj)
 		if err != nil {

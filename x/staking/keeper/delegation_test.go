@@ -297,59 +297,6 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded.AddRaw(1)))
 }
 
-type MockHooks struct {
-}
-
-var _ types.StakingHooks = MockHooks{}
-
-func (h MockHooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error {
-	return nil
-}
-func (h MockHooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) error {
-	return nil
-}
-func (h MockHooks) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
-	return nil
-}
-func (h MockHooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
-	return nil
-}
-func (h MockHooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
-	return nil
-}
-func (h MockHooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
-	return nil
-}
-func (h MockHooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress) error { return nil }
-func (h MockHooks) AfterValidatorBonded(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
-	return nil
-}
-func (h MockHooks) AfterValidatorBeginUnbonding(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
-	return nil
-}
-func (h MockHooks) BeforeDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
-	return nil
-}
-func (h MockHooks) UnbondingDelegationEntryCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress, _ int64, _ time.Time, _ sdk.Int, _ uint64) {
-}
-func (h MockHooks) BeforeUnbondingDelegationEntryComplete(_ sdk.Context, _ uint64) bool {
-	return false
-}
-
-type MyHooks struct {
-	MockHooks
-	beforeUnbondingDelegationEntryComplete func() bool
-	unbondingDelegationEntryCreated        func(uint64)
-}
-
-func (h MyHooks) UnbondingDelegationEntryCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress, _ int64, _ time.Time, _ sdk.Int, id uint64) {
-	h.unbondingDelegationEntryCreated(id)
-}
-
-func (h MyHooks) BeforeUnbondingDelegationEntryComplete(_ sdk.Context, _ uint64) bool {
-	return h.beforeUnbondingDelegationEntryComplete()
-}
-
 func TestUnbondingDelegationsOnHold(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
@@ -365,8 +312,7 @@ func TestUnbondingDelegationsOnHold(t *testing.T) {
 	udecHookCalled := false
 	var ubdeID uint64
 
-	myHooks := MyHooks{
-		MockHooks: MockHooks{},
+	myHooks := MockStakingHooks{
 		beforeUnbondingDelegationEntryComplete: func() bool {
 			return onHold
 		},

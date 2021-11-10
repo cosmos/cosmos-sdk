@@ -24,6 +24,9 @@ message Class {
 
   // uri_hash is a hash of the document pointed to uri,optional
   string uri_hash = 6;
+
+  // data is the metadata of NFT classification,optional
+  google.protobuf.Any data = 7;
 }
 
 // NFT defines the NFT.

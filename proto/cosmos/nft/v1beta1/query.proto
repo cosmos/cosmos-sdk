@@ -11,7 +11,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/nft";
 service Query {
   // Balance queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
   rpc Balance(QueryBalanceRequest) returns (QueryBalanceResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/balance/{class_id}/{owner}";
+    option (google.api.http).get = "/cosmos/nft/v1beta1/balance/{owner}/{class_id}";
   }
 
   // Owner queries the owner of the NFT based on its class and id, same as ownerOf in ERC721

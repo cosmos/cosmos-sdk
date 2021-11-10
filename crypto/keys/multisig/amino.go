@@ -78,9 +78,34 @@ func (m *LegacyAminoPubKey) UnmarshalAminoJSON(tmPk tmMultisig) error {
 	// Instead of just doing `*m = *protoPk`, we prefer to modify in-place the
 	// existing Anys inside `m` (instead of allocating new Anys), as so not to
 	// break the `.compat` fields in the existing Anys.
+<<<<<<< HEAD
 	for i := range m.PubKeys {
 		m.PubKeys[i].TypeUrl = protoPk.PubKeys[i].TypeUrl
 		m.PubKeys[i].Value = protoPk.PubKeys[i].Value
+=======
+	if m.PubKeys == nil {
+		m.PubKeys = make([]*types.Any, len(tmPk.PubKeys))
+	}
+	for i := range m.PubKeys {
+		if m.PubKeys[i] == nil {
+			// create the compat jsonBz value
+			bz, err := AminoCdc.MarshalJSON(tmPk.PubKeys[i])
+			if err != nil {
+				return err
+			}
+
+			m.PubKeys[i] = protoPk.PubKeys[i]
+			// UnmarshalJSON():
+			// just sets the compat.jsonBz value.
+			// always succeeds: err == nil
+			if err := m.PubKeys[i].UnmarshalJSON(bz); err != nil {
+				return err
+			}
+		} else {
+			m.PubKeys[i].TypeUrl = protoPk.PubKeys[i].TypeUrl
+			m.PubKeys[i].Value = protoPk.PubKeys[i].Value
+		}
+>>>>>>> 3f3ca314f (fix: recreate compat field, of null pubkeys in multisig (#10515))
 	}
 	m.Threshold = protoPk.Threshold
 

@@ -1,4 +1,4 @@
-package keeper_test
+package keeper
 
 import (
 	"time"

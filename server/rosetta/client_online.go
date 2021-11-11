@@ -401,6 +401,25 @@ func (c *Client) ConstructionMetadataFromOptions(ctx context.Context, options ma
 		return nil, err
 	}
 
+	if constructionOptions.GasLimit <= 0 {
+		// set to default
+		constructionOptions.GasLimit = uint64(c.config.SuggestGas)
+	}
+	if constructionOptions.GasPrice == "" {
+		// set to default
+		denom := c.config.DefaultSuggestDenom
+		constructionOptions.GasPrice = c.config.SuggestPrices.AmountOf(denom).String() + denom
+	} else {
+		gasPrice, err := sdk.ParseDecCoin(constructionOptions.GasPrice)
+		if err != nil {
+			return nil, err
+		}
+		// check gasPrice is in the list
+		if !c.config.SuggestPrices.AmountOf(gasPrice.Denom).IsPositive() {
+			return nil, crgerrs.ErrBadArgument
+		}
+	}
+
 	signersData := make([]*SignerData, len(constructionOptions.ExpectedSigners))
 
 	for i, signer := range constructionOptions.ExpectedSigners {

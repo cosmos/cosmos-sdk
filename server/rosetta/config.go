@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // configuration defaults constants
@@ -30,6 +31,8 @@ const (
 	DefaultNetwork = "network"
 	// DefaultOffline defines the default offline value
 	DefaultOffline = false
+	// DefaultSuggestGas defines the default gas limit for fee suggestion
+	DefaultSuggestGas = 20_000
 )
 
 // configuration flags
@@ -65,6 +68,12 @@ type Config struct {
 	Retries int
 	// Offline defines if the server must be run in offline mode
 	Offline bool
+	// SuggestGas defines the gas limit for fee suggestion
+	SuggestGas int
+	// DefaultSuggestDenom defines the default denom for fee suggestion
+	DefaultSuggestDenom string
+	// SuggestPrices defines the gas prices for fee suggestion
+	SuggestPrices sdk.DecCoins
 	// Codec overrides the default data and construction api client codecs
 	Codec *codec.ProtoCodec
 	// InterfaceRegistry overrides the default data and construction api interface registry
@@ -101,6 +110,19 @@ func (c *Config) validate() error {
 	}
 	if c.Offline {
 		return fmt.Errorf("offline mode is not supported for stargate implementation due to how sigv2 works")
+	}
+	if c.SuggestGas <= 0 {
+		c.SuggestGas = DefaultSuggestGas
+	}
+	found := false
+	for i := 0; i < c.SuggestPrices.Len(); i++ {
+		if c.SuggestPrices.GetDenomByIndex(i) == c.DefaultSuggestDenom {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return fmt.Errorf("default suggest denom is not found in minimum-gas-prices")
 	}
 
 	// these are optional but it must be online

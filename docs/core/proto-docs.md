@@ -661,6 +661,7 @@
   
 - [cosmos/tx/v1beta1/tx.proto](#cosmos/tx/v1beta1/tx.proto)
     - [AuthInfo](#cosmos.tx.v1beta1.AuthInfo)
+    - [AuxSignerData](#cosmos.tx.v1beta1.AuxSignerData)
     - [Fee](#cosmos.tx.v1beta1.Fee)
     - [ModeInfo](#cosmos.tx.v1beta1.ModeInfo)
     - [ModeInfo.Multi](#cosmos.tx.v1beta1.ModeInfo.Multi)
@@ -9469,6 +9470,29 @@ transaction.
 | `tip` | [Tip](#cosmos.tx.v1beta1.Tip) |  | Tip is the optional tip used for meta-transactions.
 
 Since: cosmos-sdk 0.45 |
+
+
+
+
+
+
+<a name="cosmos.tx.v1beta1.AuxSignerData"></a>
+
+### AuxSignerData
+AuxSignerData is the intermediary format that an auxiliary signer (e.g. a
+tipper) builds and sends to the fee payer (who will build and broadcast the
+actual tx). AuxSignerData is not a valid tx in itself, and will be rejected
+by the node if sent directly as-is.
+
+Since: cosmos-sdk 0.45
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the bech32-encoded address of the auxiliary signer. If using AuxSignerData across different chains, the bech32 prefix of the target chain (where the final transaction is broadcasted) should be used. |
+| `sign_doc` | [SignDocDirectAux](#cosmos.tx.v1beta1.SignDocDirectAux) |  | sign_doc is the SIGN_MOD_DIRECT_AUX sign doc that the auxiliary signer signs. Note: we use the same sign doc even if we're signing with LEGACY_AMINO_JSON. |
+| `mode` | [cosmos.tx.signing.v1beta1.SignMode](#cosmos.tx.signing.v1beta1.SignMode) |  | mode is the signing mode of the single signer |
+| `sig` | [bytes](#bytes) |  | sig is the signature of the sign doc. |
 
 
 

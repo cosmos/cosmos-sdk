@@ -14,7 +14,7 @@ pull_request_rules:
         name: default
       merge:
         method: squash
-        strict: smart+fasttrack
+        strict: true
         commit_message: title+body
   - name: backport patches to v0.44.x branch
     conditions:

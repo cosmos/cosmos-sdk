@@ -42,7 +42,7 @@ following rewards between validators and associated delegators:
 
 Fees are pooled within a global pool, as well as validator specific
 proposer-reward pools. The mechanisms used allow for validators and delegators
-to independently and lazily withdraw their rewards.  
+to independently and lazily withdraw their rewards.
 
 ## Shortcomings
 

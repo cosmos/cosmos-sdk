@@ -102,4 +102,4 @@ Previously, some modules exposed legacy `POST` endpoints to generate unsigned tr
 
 ## Migrating to gRPC
 
-Instead of hitting REST endpoints as described in the previous paragraph, the SDK also exposes a gRPC server. Any client can use gRPC instead of REST to interact with the node. An overview of different ways to communicate with a node can be found [here](../core/grpc_rest.md), and a concrete tutorial for setting up a gRPC client [here](../run-node/txs.md#programmatically-with-go).
+Instead of hitting REST endpoints as described above, the Cosmos SDK also exposes a gRPC server. Any client can use gRPC instead of REST to interact with the node. An overview of different ways to communicate with a node can be found [here](../core/grpc_rest.md), and a concrete tutorial for setting up a gRPC client can be found [here](../run-node/txs.md#programmatically-with-go).

@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO: remove and use: robert/expect-error
 func expecError(r *require.Assertions, expected string, received error) {
 	if expected == "" {
 		r.NoError(received)

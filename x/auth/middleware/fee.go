@@ -72,10 +72,7 @@ func (txh mempoolFeeTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.
 		}
 	}
 
-	res, err := txh.next.CheckTx(ctx, tx, req)
-	res.Priority = GetTxPriority(feeCoins)
-
-	return res, err
+	return txh.next.CheckTx(ctx, tx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
@@ -204,15 +201,4 @@ func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc types.AccountI
 	}
 
 	return nil
-}
-
-// GetTxPriority returns a naive tx priority based on the total sum of all fees
-// provided in a transaction.
-func GetTxPriority(fee sdk.Coins) int64 {
-	var priority int64
-	for _, c := range fee {
-		priority += c.Amount.Int64()
-	}
-
-	return priority
 }

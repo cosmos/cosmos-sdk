@@ -125,6 +125,12 @@ type RosettaConfig struct {
 
 	// Offline defines if the server must be run in offline mode
 	Offline bool `mapstructure:"offline"`
+
+	// SuggestGas defines gas limit when calculate fee
+	SuggestGas int `mapstructure:"suggest-gas"`
+
+	// DefaultSuggestDenom defines the defult denom for fee suggestion
+	DefaultSuggestDenom string `mapstructure:"default-suggest-denom"`
 }
 
 // GRPCConfig defines configuration for the gRPC server.
@@ -292,12 +298,14 @@ func GetConfig(v *viper.Viper) Config {
 			EnableUnsafeCORS:   v.GetBool("api.enabled-unsafe-cors"),
 		},
 		Rosetta: RosettaConfig{
-			Enable:     v.GetBool("rosetta.enable"),
-			Address:    v.GetString("rosetta.address"),
-			Blockchain: v.GetString("rosetta.blockchain"),
-			Network:    v.GetString("rosetta.network"),
-			Retries:    v.GetInt("rosetta.retries"),
-			Offline:    v.GetBool("rosetta.offline"),
+			Enable:              v.GetBool("rosetta.enable"),
+			Address:             v.GetString("rosetta.address"),
+			Blockchain:          v.GetString("rosetta.blockchain"),
+			Network:             v.GetString("rosetta.network"),
+			Retries:             v.GetInt("rosetta.retries"),
+			Offline:             v.GetBool("rosetta.offline"),
+			SuggestGas:          v.GetInt("rosetta.suggest-gas"),
+			DefaultSuggestDenom: v.GetString("rosetta.default-suggest-denom"),
 		},
 		GRPC: GRPCConfig{
 			Enable:  v.GetBool("grpc.enable"),

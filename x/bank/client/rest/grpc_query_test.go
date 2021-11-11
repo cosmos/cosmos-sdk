@@ -227,7 +227,7 @@ func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 		},
 		{
 			"gPRC account balance of a denom",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/%s", baseURL, val.Address.String(), s.cfg.BondDenom),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/by_denom?denom=%s", baseURL, val.Address.String(), s.cfg.BondDenom),
 			&types.QueryBalanceResponse{},
 			&types.QueryBalanceResponse{
 				Balance: &sdk.Coin{
@@ -238,7 +238,7 @@ func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 		},
 		{
 			"gPRC account balance of a bogus denom",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/foobar", baseURL, val.Address.String()),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/by_denom?denom=foobar", baseURL, val.Address.String()),
 			&types.QueryBalanceResponse{},
 			&types.QueryBalanceResponse{
 				Balance: &sdk.Coin{

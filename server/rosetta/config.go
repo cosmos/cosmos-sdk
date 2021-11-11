@@ -32,7 +32,7 @@ const (
 	// DefaultOffline defines the default offline value
 	DefaultOffline = false
 	// DefaultSuggestGas defines the default gas limit for fee suggestion
-	DefaultSuggestGas = 20_000
+	DefaultSuggestGas = 200_000
 )
 
 // configuration flags

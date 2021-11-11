@@ -1,15 +1,14 @@
-package keeper
+package types
 
 import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type StakingHooksTemplate struct{}
 
-var _ types.StakingHooks = StakingHooksTemplate{}
+var _ StakingHooks = StakingHooksTemplate{}
 
 func (h StakingHooksTemplate) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error {
 	return nil

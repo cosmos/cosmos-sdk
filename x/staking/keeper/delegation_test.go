@@ -298,7 +298,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 }
 
 type MockStakingHooks struct {
-	keeper.StakingHooksTemplate
+	types.StakingHooksTemplate
 	beforeUnbondingDelegationEntryComplete func() bool
 	unbondingDelegationEntryCreated        func(uint64)
 }

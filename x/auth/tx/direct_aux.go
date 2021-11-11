@@ -50,7 +50,7 @@ func (signModeDirectAuxHandler) GetSignBytes(
 		AccountNumber: data.AccountNumber,
 		Sequence:      data.Sequence,
 		Tip:           protoTx.tx.AuthInfo.Tip,
-		PublicKey:     protoTx.tx.AuthInfo.SignerInfos[data.SignerIndex].PublicKey,
+		PublicKey:     signerInfo.PublicKey,
 	}
 
 	return signDocDirectAux.Marshal()

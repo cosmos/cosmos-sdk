@@ -10,7 +10,7 @@ import (
 )
 
 // BeginBlocker mints new tokens for the previous block.
-func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
+func BeginBlocker(ctx sdk.Context, k keeper.Keeper, ic types.InflationCalculationFn) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	// fetch stored minter & params
@@ -20,7 +20,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	// recalculate inflation rate
 	totalStakingSupply := k.StakingTokenSupply(ctx)
 	bondedRatio := k.BondedRatio(ctx)
-	minter.Inflation = minter.NextInflationRate(params, bondedRatio)
+	minter.Inflation = ic(ctx, minter, params, bondedRatio)
 	minter.AnnualProvisions = minter.NextAnnualProvisions(params, totalStakingSupply)
 	k.SetMinter(ctx, minter)
 

@@ -7,7 +7,7 @@ pull_request_rules:
     actions:
       merge:
         method: squash
-        strict: true
+        strict: smart+fasttrack
         commit_message: title+body
   - name: backport patches to v0.44.x branch
     conditions:

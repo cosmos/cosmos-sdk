@@ -36,11 +36,6 @@ func MempoolFeeMiddleware(txh tx.Handler) tx.Handler {
 // and the transaction does not meet the minimum, the transaction is rejected.
 //
 // Recall, a transaction's fee is determined by ceil(minGasPrice * gasLimit).
-// In addition, we set the Priority of the transaction to be ordered in the
-// Tendermint mempool based naively on the total sum of all fees included.
-// Applications that need more sophisticated mempool ordering should look to
-// implement their own fee handling middleware instead of using
-// mempoolFeeTxHandler.
 func (txh mempoolFeeTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 

@@ -23,6 +23,11 @@ func TxPriorityHandler(txh tx.Handler) tx.Handler {
 	return txPriorityHandler{next: txh}
 }
 
+// CheckTx implements tx.Handler.CheckTx. We set the Priority of the transaction
+// to be ordered in the Tendermint mempool based naively on the total sum of all
+// fees included. Applications that need more sophisticated mempool ordering
+// should look to implement their own fee handling middleware instead of using
+// TxPriorityHandler.
 func (h txPriorityHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {

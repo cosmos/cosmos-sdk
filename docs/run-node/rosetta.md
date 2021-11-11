@@ -1,8 +1,5 @@
 # Rosetta
 
-<<<<<<< HEAD
-Package rosetta implements the rosetta API for the current cosmos sdk release series.
-=======
 The `rosetta` package implements Coinbase's [Rosetta API](https://www.rosetta-api.org). This document provides instructions on how to use the Rosetta API integration. For information about the motivation and design choices, refer to [ADR 035](../architecture/adr-035-rosetta-api-support.md).
 
 ## Add Rosetta Command
@@ -55,7 +52,6 @@ appd rosetta
      --grpc "gRPC endpoint (ex: localhost:9090)"
      --addr "rosetta binding address (ex: :8080)"
 ```
->>>>>>> 479485f95 (style: lint go and markdown (#10060))
 
 ## Extension
 

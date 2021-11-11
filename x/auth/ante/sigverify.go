@@ -228,12 +228,7 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	}
 }
 
-<<<<<<< HEAD:x/auth/ante/sigverify.go
 func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-=======
-func (svd sigVerificationTxHandler) sigVerify(ctx context.Context, tx sdk.Tx, isReCheckTx, simulate bool) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
->>>>>>> 479485f95 (style: lint go and markdown (#10060)):x/auth/middleware/sigverify.go
 	// no need to verify signatures on recheck tx
 	if ctx.IsReCheckTx() {
 		return next(ctx, tx, simulate)
@@ -258,11 +253,7 @@ func (svd sigVerificationTxHandler) sigVerify(ctx context.Context, tx sdk.Tx, is
 	}
 
 	for i, sig := range sigs {
-<<<<<<< HEAD:x/auth/ante/sigverify.go
 		acc, err := GetSignerAcc(ctx, svd.ak, signerAddrs[i])
-=======
-		acc, err := GetSignerAcc(sdkCtx, svd.ak, signerAddrs[i])
->>>>>>> 479485f95 (style: lint go and markdown (#10060)):x/auth/middleware/sigverify.go
 		if err != nil {
 			return ctx, err
 		}

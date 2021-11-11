@@ -3,7 +3,8 @@ package orm
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 // MaxBytesLen is the maximum allowed length for a key part of type []byte
@@ -58,7 +59,7 @@ func keyPartBytes(part interface{}, last bool) ([]byte, error) {
 func AddLengthPrefix(bytes []byte) []byte {
 	byteLen := len(bytes)
 	if byteLen > MaxBytesLen {
-		panic(errors.Wrap(errors.ErrORMKeyMaxLength, "Cannot create key part with an []byte of length greater than 255 bytes. Try again with a smaller []byte."))
+		panic(sdkerrors.Wrap(errors.ErrORMKeyMaxLength, "Cannot create key part with an []byte of length greater than 255 bytes. Try again with a smaller []byte."))
 	}
 
 	prefixedBytes := make([]byte, 1+len(bytes))
@@ -72,4 +73,28 @@ func NullTerminatedBytes(s string) []byte {
 	bytes := make([]byte, len(s)+1)
 	copy(bytes, s)
 	return bytes
+}
+
+// stripRowID returns the RowID from the indexKey based on secondaryIndexKey type.
+// It is the reverse operation to buildKeyFromParts for index keys
+// where the first part is the encoded secondaryIndexKey and the second part is the RowID.
+func stripRowID(indexKey []byte, secondaryIndexKey interface{}) (RowID, error) {
+	switch v := secondaryIndexKey.(type) {
+	case []byte:
+		searchableKeyLen := indexKey[0]
+		return indexKey[1+searchableKeyLen:], nil
+	case string:
+		searchableKeyLen := 0
+		for i, b := range indexKey {
+			if b == 0 {
+				searchableKeyLen = i
+				break
+			}
+		}
+		return indexKey[1+searchableKeyLen:], nil
+	case uint64:
+		return indexKey[EncodedSeqLength:], nil
+	default:
+		return nil, fmt.Errorf("type %T not allowed as index key", v)
+	}
 }

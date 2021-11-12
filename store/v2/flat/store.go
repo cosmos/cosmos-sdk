@@ -47,26 +47,26 @@ type StoreConfig struct {
 	InitialVersion uint64
 	// The backing DB to use for the state commitment Merkle tree data.
 	// If nil, Merkle data is stored in the state storage DB under a separate prefix.
-	MerkleDB dbm.DBConnection
+	StateCommitmentDB dbm.DBConnection
 }
 
 // Store is a CommitKVStore which handles state storage and commitments as separate concerns,
 // optionally using separate backing key-value DBs for each.
 // Allows synchronized R/W access by locking.
 type Store struct {
-	stateDB     dbm.DBConnection
-	stateTxn    dbm.DBReadWriter
-	dataBucket  dbm.DBReadWriter
-	indexBucket dbm.DBReadWriter
-	merkleTxn   dbm.DBReadWriter
+	stateDB            dbm.DBConnection
+	stateTxn           dbm.DBReadWriter
+	dataBucket         dbm.DBReadWriter
+	indexBucket        dbm.DBReadWriter
+	stateCommitmentTxn dbm.DBReadWriter
 	// State commitment (SC) KV store for current version
-	merkleStore *smt.Store
+	stateCommitmentStore *smt.Store
 
 	opts StoreConfig
 	mtx  sync.RWMutex
 }
 
-var DefaultStoreConfig = StoreConfig{Pruning: types.PruneDefault, MerkleDB: nil}
+var DefaultStoreConfig = StoreConfig{Pruning: types.PruneDefault, StateCommitmentDB: nil}
 
 // NewStore creates a new Store, or loads one if the DB contains existing data.
 func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
@@ -93,26 +93,26 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 			err = util.CombineErrors(err, stateTxn.Discard(), "stateTxn.Discard also failed")
 		}
 	}()
-	merkleTxn := stateTxn
-	if opts.MerkleDB != nil {
+	stateCommitmentTxn := stateTxn
+	if opts.StateCommitmentDB != nil {
 		var mversions dbm.VersionSet
-		mversions, err = opts.MerkleDB.Versions()
+		mversions, err = opts.StateCommitmentDB.Versions()
 		if err != nil {
 			return
 		}
 		// Version sets of each DB must match
 		if !versions.Equal(mversions) {
-			err = fmt.Errorf("storage and Merkle DB have different version history")
+			err = fmt.Errorf("Storage and StateCommitment DB have different version history") //nolint:stylecheck
 			return
 		}
-		err = opts.MerkleDB.Revert()
+		err = opts.StateCommitmentDB.Revert()
 		if err != nil {
 			return
 		}
-		merkleTxn = opts.MerkleDB.ReadWriter()
+		stateCommitmentTxn = opts.StateCommitmentDB.ReadWriter()
 	}
 
-	var merkleStore *smt.Store
+	var stateCommitmentStore *smt.Store
 	if loadExisting {
 		var root []byte
 		root, err = stateTxn.Get(merkleRootKey)
@@ -123,27 +123,27 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 			err = fmt.Errorf("could not get root of SMT")
 			return
 		}
-		merkleStore = loadSMT(merkleTxn, root)
+		stateCommitmentStore = loadSMT(stateCommitmentTxn, root)
 	} else {
-		merkleNodes := prefix.NewPrefixReadWriter(merkleTxn, merkleNodePrefix)
-		merkleValues := prefix.NewPrefixReadWriter(merkleTxn, merkleValuePrefix)
-		merkleStore = smt.NewStore(merkleNodes, merkleValues)
+		merkleNodes := prefix.NewPrefixReadWriter(stateCommitmentTxn, merkleNodePrefix)
+		merkleValues := prefix.NewPrefixReadWriter(stateCommitmentTxn, merkleValuePrefix)
+		stateCommitmentStore = smt.NewStore(merkleNodes, merkleValues)
 	}
 	return &Store{
-		stateDB:     db,
-		stateTxn:    stateTxn,
-		dataBucket:  prefix.NewPrefixReadWriter(stateTxn, dataPrefix),
-		indexBucket: prefix.NewPrefixReadWriter(stateTxn, indexPrefix),
-		merkleTxn:   merkleTxn,
-		merkleStore: merkleStore,
-		opts:        opts,
+		stateDB:              db,
+		stateTxn:             stateTxn,
+		dataBucket:           prefix.NewPrefixReadWriter(stateTxn, dataPrefix),
+		indexBucket:          prefix.NewPrefixReadWriter(stateTxn, indexPrefix),
+		stateCommitmentTxn:   stateCommitmentTxn,
+		stateCommitmentStore: stateCommitmentStore,
+		opts:                 opts,
 	}, nil
 }
 
 func (s *Store) Close() error {
 	err := s.stateTxn.Discard()
-	if s.opts.MerkleDB != nil {
-		err = util.CombineErrors(err, s.merkleTxn.Discard(), "merkleTxn.Discard also failed")
+	if s.opts.StateCommitmentDB != nil {
+		err = util.CombineErrors(err, s.stateCommitmentTxn.Discard(), "stateCommitmentTxn.Discard also failed")
 	}
 	return err
 }
@@ -181,7 +181,7 @@ func (s *Store) Set(key, value []byte) {
 	if err != nil {
 		panic(err)
 	}
-	s.merkleStore.Set(key, value)
+	s.stateCommitmentStore.Set(key, value)
 	khash := sha256.Sum256(key)
 	err = s.indexBucket.Set(khash[:], key)
 	if err != nil {
@@ -195,7 +195,7 @@ func (s *Store) Delete(key []byte) {
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
 
-	s.merkleStore.Delete(key)
+	s.stateCommitmentStore.Delete(key)
 	_ = s.indexBucket.Delete(khash[:])
 	_ = s.dataBucket.Delete(key)
 }
@@ -264,8 +264,8 @@ func (s *Store) Commit() types.CommitID {
 		for version := firstPrunable; version <= lastPrunable; version++ {
 			if s.opts.Pruning.KeepEvery == 0 || version%int64(s.opts.Pruning.KeepEvery) != 0 {
 				s.stateDB.DeleteVersion(uint64(version))
-				if s.opts.MerkleDB != nil {
-					s.opts.MerkleDB.DeleteVersion(uint64(version))
+				if s.opts.StateCommitmentDB != nil {
+					s.opts.StateCommitmentDB.DeleteVersion(uint64(version))
 				}
 			}
 		}
@@ -274,7 +274,7 @@ func (s *Store) Commit() types.CommitID {
 }
 
 func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
-	root := s.merkleStore.Root()
+	root := s.stateCommitmentStore.Root()
 	err = s.stateTxn.Set(merkleRootKey, root)
 	if err != nil {
 		return
@@ -299,10 +299,10 @@ func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
 			err = util.CombineErrors(err, stateTxn.Discard(), "stateTxn.Discard also failed")
 		}
 	}()
-	merkleTxn := stateTxn
+	stateCommitmentTxn := stateTxn
 
-	// If DBs are not separate, Merkle state has been commmitted & snapshotted
-	if s.opts.MerkleDB != nil {
+	// If DBs are not separate, StateCommitment state has been commmitted & snapshotted
+	if s.opts.StateCommitmentDB != nil {
 		defer func() {
 			if err != nil {
 				if delerr := s.stateDB.DeleteVersion(target); delerr != nil {
@@ -311,28 +311,28 @@ func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
 			}
 		}()
 
-		err = s.merkleTxn.Commit()
+		err = s.stateCommitmentTxn.Commit()
 		if err != nil {
 			return
 		}
 		defer func() {
 			if err != nil {
-				err = util.CombineErrors(err, s.opts.MerkleDB.Revert(), "merkleDB.Revert also failed")
+				err = util.CombineErrors(err, s.opts.StateCommitmentDB.Revert(), "stateCommitmentDB.Revert also failed")
 			}
 		}()
 
-		err = s.opts.MerkleDB.SaveVersion(target)
+		err = s.opts.StateCommitmentDB.SaveVersion(target)
 		if err != nil {
 			return
 		}
-		merkleTxn = s.opts.MerkleDB.ReadWriter()
+		stateCommitmentTxn = s.opts.StateCommitmentDB.ReadWriter()
 	}
 
 	s.stateTxn = stateTxn
 	s.dataBucket = prefix.NewPrefixReadWriter(stateTxn, dataPrefix)
 	s.indexBucket = prefix.NewPrefixReadWriter(stateTxn, indexPrefix)
-	s.merkleTxn = merkleTxn
-	s.merkleStore = loadSMT(merkleTxn, root)
+	s.stateCommitmentTxn = stateCommitmentTxn
+	s.stateCommitmentStore = loadSMT(stateCommitmentTxn, root)
 
 	return &types.CommitID{Version: int64(target), Hash: root}, nil
 }
@@ -405,7 +405,7 @@ func (s *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		if !req.Prove {
 			break
 		}
-		res.ProofOps, err = view.GetMerkleStore().GetProof(res.Key)
+		res.ProofOps, err = view.GetStateCommitmentStore().GetProof(res.Key)
 		if err != nil {
 			return sdkerrors.QueryResult(fmt.Errorf("Merkle proof creation failed for key: %v", res.Key), false) //nolint: stylecheck // proper name
 		}
@@ -438,9 +438,9 @@ func (s *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	return res
 }
 
-func loadSMT(merkleTxn dbm.DBReadWriter, root []byte) *smt.Store {
-	merkleNodes := prefix.NewPrefixReadWriter(merkleTxn, merkleNodePrefix)
-	merkleValues := prefix.NewPrefixReadWriter(merkleTxn, merkleValuePrefix)
+func loadSMT(stateCommitmentTxn dbm.DBReadWriter, root []byte) *smt.Store {
+	merkleNodes := prefix.NewPrefixReadWriter(stateCommitmentTxn, merkleNodePrefix)
+	merkleValues := prefix.NewPrefixReadWriter(stateCommitmentTxn, merkleValuePrefix)
 	return smt.LoadStore(merkleNodes, merkleValues, root)
 }
 

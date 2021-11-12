@@ -464,7 +464,7 @@ func (rs *rootStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		}
 		// res.ProofOps, err = view.prove(storeName, res.Key)
 		fullkey := storeName + string(res.Key)
-		res.ProofOps, err = view.merkleStore.GetProof([]byte(fullkey))
+		res.ProofOps, err = view.stateCommitmentStore.GetProof([]byte(fullkey))
 		if err != nil {
 			return sdkerrors.QueryResult(fmt.Errorf("Merkle proof creation failed for key: %v", res.Key), false)
 		}

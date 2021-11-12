@@ -89,7 +89,7 @@ func TestConstructors(t *testing.T) {
 
 	store, err = NewStore(dbVersionsFails{memdb.NewDB()}, DefaultStoreConfig)
 	require.Error(t, err)
-	store, err = NewStore(db, StoreConfig{MerkleDB: dbVersionsFails{memdb.NewDB()}})
+	store, err = NewStore(db, StoreConfig{StateCommitmentDB: dbVersionsFails{memdb.NewDB()}})
 	require.Error(t, err)
 
 	// can't use a DB with open writers
@@ -100,13 +100,13 @@ func TestConstructors(t *testing.T) {
 	require.Error(t, err)
 	w.Discard()
 	w = merkledb.Writer()
-	store, err = NewStore(db, StoreConfig{MerkleDB: merkledb})
+	store, err = NewStore(db, StoreConfig{StateCommitmentDB: merkledb})
 	require.Error(t, err)
 	w.Discard()
 
 	// can't use DBs with different version history
 	merkledb.SaveNextVersion()
-	store, err = NewStore(db, StoreConfig{MerkleDB: merkledb})
+	store, err = NewStore(db, StoreConfig{StateCommitmentDB: merkledb})
 	require.Error(t, err)
 	merkledb.Close()
 
@@ -217,7 +217,7 @@ func TestCommit(t *testing.T) {
 		}
 	}
 	testBasic(StoreConfig{Pruning: types.PruneNothing})
-	testBasic(StoreConfig{Pruning: types.PruneNothing, MerkleDB: memdb.NewDB()})
+	testBasic(StoreConfig{Pruning: types.PruneNothing, StateCommitmentDB: memdb.NewDB()})
 
 	testFailedCommit := func(t *testing.T, store *Store, db dbm.DBConnection) {
 		opts := store.opts
@@ -231,8 +231,8 @@ func TestCommit(t *testing.T) {
 
 		versions, _ := db.Versions()
 		require.Equal(t, 0, versions.Count())
-		if opts.MerkleDB != nil {
-			versions, _ = opts.MerkleDB.Versions()
+		if opts.StateCommitmentDB != nil {
+			versions, _ = opts.StateCommitmentDB.Versions()
 			require.Equal(t, 0, versions.Count())
 		}
 
@@ -257,15 +257,15 @@ func TestCommit(t *testing.T) {
 		require.NoError(t, err)
 		testFailedCommit(t, store, nil)
 	})
-	t.Run("recover after failed MerkleDB Commit", func(t *testing.T) {
+	t.Run("recover after failed StateCommitmentDB Commit", func(t *testing.T) {
 		store, err := NewStore(memdb.NewDB(),
-			StoreConfig{MerkleDB: dbRWCommitFails{memdb.NewDB()}, Pruning: types.PruneNothing})
+			StoreConfig{StateCommitmentDB: dbRWCommitFails{memdb.NewDB()}, Pruning: types.PruneNothing})
 		require.NoError(t, err)
 		testFailedCommit(t, store, nil)
 	})
-	t.Run("recover after failed MerkleDB SaveVersion", func(t *testing.T) {
+	t.Run("recover after failed StateCommitmentDB SaveVersion", func(t *testing.T) {
 		store, err := NewStore(memdb.NewDB(),
-			StoreConfig{MerkleDB: dbSaveVersionFails{memdb.NewDB()}, Pruning: types.PruneNothing})
+			StoreConfig{StateCommitmentDB: dbSaveVersionFails{memdb.NewDB()}, Pruning: types.PruneNothing})
 		require.NoError(t, err)
 		testFailedCommit(t, store, nil)
 	})
@@ -285,9 +285,9 @@ func TestCommit(t *testing.T) {
 	})
 
 	t.Run("stateDB.DeleteVersion error triggers failure", func(t *testing.T) {
-		store, err := NewStore(memdb.NewDB(), StoreConfig{MerkleDB: memdb.NewDB()})
+		store, err := NewStore(memdb.NewDB(), StoreConfig{StateCommitmentDB: memdb.NewDB()})
 		require.NoError(t, err)
-		store.merkleTxn = rwCommitFails{store.merkleTxn}
+		store.stateCommitmentTxn = rwCommitFails{store.stateCommitmentTxn}
 		store.stateDB = dbDeleteVersionFails{store.stateDB}
 		require.Panics(t, func() { store.Commit() })
 	})
@@ -302,17 +302,17 @@ func TestCommit(t *testing.T) {
 
 	// setting initial version
 	store, err := NewStore(memdb.NewDB(),
-		StoreConfig{InitialVersion: 5, Pruning: types.PruneNothing, MerkleDB: memdb.NewDB()})
+		StoreConfig{InitialVersion: 5, Pruning: types.PruneNothing, StateCommitmentDB: memdb.NewDB()})
 	require.NoError(t, err)
 	require.Equal(t, int64(5), store.Commit().Version)
 
-	store, err = NewStore(memdb.NewDB(), StoreConfig{MerkleDB: memdb.NewDB()})
+	store, err = NewStore(memdb.NewDB(), StoreConfig{StateCommitmentDB: memdb.NewDB()})
 	require.NoError(t, err)
 	store.Commit()
 	store.stateDB = dbVersionsFails{store.stateDB}
 	require.Panics(t, func() { store.LastCommitID() })
 
-	store, err = NewStore(memdb.NewDB(), StoreConfig{MerkleDB: memdb.NewDB()})
+	store, err = NewStore(memdb.NewDB(), StoreConfig{StateCommitmentDB: memdb.NewDB()})
 	require.NoError(t, err)
 	store.Commit()
 	store.stateTxn = rwCrudFails{store.stateTxn}
@@ -341,7 +341,7 @@ func TestPruning(t *testing.T) {
 
 	for tci, tc := range testCases {
 		dbs := []dbm.DBConnection{memdb.NewDB(), memdb.NewDB()}
-		store, err := NewStore(dbs[0], StoreConfig{Pruning: tc.PruningOptions, MerkleDB: dbs[1]})
+		store, err := NewStore(dbs[0], StoreConfig{Pruning: tc.PruningOptions, StateCommitmentDB: dbs[1]})
 		require.NoError(t, err)
 
 		for i := byte(1); i <= 10; i++ {
@@ -545,7 +545,7 @@ func TestQuery(t *testing.T) {
 	testProve()
 	store.Close()
 
-	store, err = NewStore(memdb.NewDB(), StoreConfig{MerkleDB: memdb.NewDB()})
+	store, err = NewStore(memdb.NewDB(), StoreConfig{StateCommitmentDB: memdb.NewDB()})
 	require.NoError(t, err)
 	store.Set(k1, v1)
 	store.Commit()

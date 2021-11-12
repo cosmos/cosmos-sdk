@@ -19,11 +19,11 @@ var ErrReadOnly = errors.New("cannot modify read-only store")
 
 // Represents a read-only view of a store's contents at a given version.
 type storeView struct {
-	stateView   dbm.DBReader
-	dataBucket  dbm.DBReader
-	indexBucket dbm.DBReader
-	merkleView  dbm.DBReader
-	merkleStore *smt.Store
+	stateView            dbm.DBReader
+	dataBucket           dbm.DBReader
+	indexBucket          dbm.DBReader
+	stateCommitmentView  dbm.DBReader
+	stateCommitmentStore *smt.Store
 }
 
 func (s *Store) GetVersion(version int64) (ret *storeView, err error) {
@@ -37,15 +37,15 @@ func (s *Store) GetVersion(version int64) (ret *storeView, err error) {
 		}
 	}()
 
-	merkleView := stateView
-	if s.opts.MerkleDB != nil {
-		merkleView, err = s.opts.MerkleDB.ReaderAt(uint64(version))
+	stateCommitmentView := stateView
+	if s.opts.StateCommitmentDB != nil {
+		stateCommitmentView, err = s.opts.StateCommitmentDB.ReaderAt(uint64(version))
 		if err != nil {
 			return
 		}
 		defer func() {
 			if err != nil {
-				err = util.CombineErrors(err, merkleView.Discard(), "merkleView.Discard also failed")
+				err = util.CombineErrors(err, stateCommitmentView.Discard(), "stateCommitmentView.Discard also failed")
 			}
 		}()
 	}
@@ -54,16 +54,16 @@ func (s *Store) GetVersion(version int64) (ret *storeView, err error) {
 		return
 	}
 	return &storeView{
-		stateView:   stateView,
-		dataBucket:  prefix.NewPrefixReader(stateView, dataPrefix),
-		indexBucket: prefix.NewPrefixReader(stateView, indexPrefix),
-		merkleView:  merkleView,
-		merkleStore: loadSMT(dbm.ReaderAsReadWriter(merkleView), root),
+		stateView:            stateView,
+		dataBucket:           prefix.NewPrefixReader(stateView, dataPrefix),
+		indexBucket:          prefix.NewPrefixReader(stateView, indexPrefix),
+		stateCommitmentView:  stateCommitmentView,
+		stateCommitmentStore: loadSMT(dbm.ReaderAsReadWriter(stateCommitmentView), root),
 	}, nil
 }
 
-func (s *storeView) GetMerkleStore() *smt.Store {
-	return s.merkleStore
+func (s *storeView) GetStateCommitmentStore() *smt.Store {
+	return s.stateCommitmentStore
 }
 
 // Get implements KVStore.

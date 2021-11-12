@@ -12,6 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
+var DowngradeVerified = false
+
 // BeginBlock will check if there is a scheduled plan and if it is ready to be executed.
 // If the current height is in the provided set of heights to skip, it will skip and clear the upgrade plan.
 // If it is ready, it will execute it if the handler is installed, and panic/abort otherwise.
@@ -24,8 +26,19 @@ func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	plan, found := k.GetUpgradePlan(ctx)
+
+	if !DowngradeVerified {
+		DowngradeVerified = true
+		lastAppliedPlan, _ := k.GetLastCompletedUpgrade(ctx)
+		// verify if we are running valid app version
+		if !found || !plan.ShouldExecute(ctx) || (plan.ShouldExecute(ctx) && k.IsSkipHeight(ctx.BlockHeight())) {
+			if lastAppliedPlan != "" && !k.HasHandler(lastAppliedPlan) {
+				panic(fmt.Sprintf("Wrong app version, upgrade handler is missing for %s upgrade plan", lastAppliedPlan))
+			}
+		}
+	}
+
 	if !found {
-		verifyAppliedHandlerPresent(ctx, k)
 		return
 	}
 
@@ -35,7 +48,6 @@ func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 	if plan.ShouldExecute(ctx) {
 		// If skip upgrade has been set for current height, we clear the upgrade plan
 		if k.IsSkipHeight(ctx.BlockHeight()) {
-			verifyAppliedHandlerPresent(ctx, k)
 
 			skipUpgradeMsg := fmt.Sprintf("UPGRADE \"%s\" SKIPPED at %d: %s", plan.Name, plan.Height, plan.Info)
 			logger.Info(skipUpgradeMsg)
@@ -66,22 +78,12 @@ func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 		return
 	}
 
-	verifyAppliedHandlerPresent(ctx, k)
-
 	// if we have a pending upgrade, but it is not yet time, make sure we did not
 	// set the handler already
 	if k.HasHandler(plan.Name) {
 		downgradeMsg := fmt.Sprintf("BINARY UPDATED BEFORE TRIGGER! UPGRADE \"%s\" - in binary but not executed on chain. Downgrade your binary", plan.Name)
 		ctx.Logger().Error(downgradeMsg)
 		panic(downgradeMsg)
-	}
-}
-
-// checkBinaryVersion throws an error if there is no upgrade handler is registered for last applied upgrade
-func verifyAppliedHandlerPresent(ctx sdk.Context, k keeper.Keeper) {
-	lastAppliedPlan, _ := k.GetNextOrLastUpgrade(ctx)
-	if lastAppliedPlan != "" && !k.HasHandler(lastAppliedPlan) {
-		panic(fmt.Sprintf("upgrade handler is missing for %s upgrade plan", lastAppliedPlan))
 	}
 }
 

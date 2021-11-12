@@ -444,6 +444,7 @@ func TestBinaryVersion(t *testing.T) {
 	// remove last applied upgrade
 	s.keeper.DeleteUpgradeHandler("test0")
 	t.Log("verify panic: no upgrade handler is present for last upgrade")
+	upgrade.DowngradeVerified = false
 	require.Panics(t, func() {
 		s.module.BeginBlock(newCtx, req)
 	})
@@ -458,6 +459,7 @@ func TestBinaryVersion(t *testing.T) {
 
 	newCtx = s.ctx.WithBlockHeight(15)
 	req = abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
+	upgrade.DowngradeVerified = false
 	require.Panics(t, func() {
 		s.module.BeginBlock(newCtx, req)
 	})
@@ -468,6 +470,7 @@ func TestBinaryVersion(t *testing.T) {
 
 	newCtx = s.ctx.WithBlockHeight(skipHeight + 2)
 	req = abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
+	upgrade.DowngradeVerified = false
 	require.Panics(t, func() {
 		s.module.BeginBlock(newCtx, req)
 	})

@@ -237,7 +237,7 @@ func (s *KeeperTestSuite) TestLastCompletedUpgrade() {
 	require := s.Require()
 
 	s.T().Log("verify empty name if applied upgrades are empty")
-	name, height := keeper.GetNextOrLastUpgrade(s.ctx)
+	name, height := keeper.GetLastCompletedUpgrade(s.ctx)
 	require.Equal("", name)
 	require.Equal(int64(0), height)
 
@@ -251,7 +251,7 @@ func (s *KeeperTestSuite) TestLastCompletedUpgrade() {
 	})
 
 	s.T().Log("verify valid upgrade name and height")
-	name, height = keeper.GetNextOrLastUpgrade(s.ctx)
+	name, height = keeper.GetLastCompletedUpgrade(s.ctx)
 	require.Equal("test0", name)
 	require.Equal(int64(10), height)
 
@@ -266,7 +266,7 @@ func (s *KeeperTestSuite) TestLastCompletedUpgrade() {
 	})
 
 	s.T().Log("verify valid upgrade name and height with multiple upgrades")
-	name, height = keeper.GetNextOrLastUpgrade(newCtx)
+	name, height = keeper.GetLastCompletedUpgrade(newCtx)
 	require.Equal("test1", name)
 	require.Equal(int64(15), height)
 }

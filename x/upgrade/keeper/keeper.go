@@ -233,8 +233,8 @@ func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) ([]
 	return bz, true
 }
 
-// GetNextOrLastUpgrade returns the last applied upgrade name and height.
-func (k Keeper) GetNextOrLastUpgrade(ctx sdk.Context) (string, int64) {
+// GetLastCompletedUpgrade returns the last applied upgrade name and height.
+func (k Keeper) GetLastCompletedUpgrade(ctx sdk.Context) (string, int64) {
 	iter := sdk.KVStoreReversePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
 	defer iter.Close()
 	if iter.Valid() {

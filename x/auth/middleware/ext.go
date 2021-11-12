@@ -44,28 +44,28 @@ func checkExtOpts(tx sdk.Tx) error {
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (txh rejectExtensionOptionsTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	if err := checkExtOpts(tx); err != nil {
-		return abci.ResponseCheckTx{}, err
+func (txh rejectExtensionOptionsTxHandler) CheckTx(ctx context.Context, sdkTx sdk.Tx, req abci.RequestCheckTx) (tx.Response, error) {
+	if err := checkExtOpts(sdkTx); err != nil {
+		return tx.Response{}, err
 	}
 
-	return txh.next.CheckTx(ctx, tx, req)
+	return txh.next.CheckTx(ctx, sdkTx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (txh rejectExtensionOptionsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	if err := checkExtOpts(tx); err != nil {
-		return abci.ResponseDeliverTx{}, err
+func (txh rejectExtensionOptionsTxHandler) DeliverTx(ctx context.Context, sdkTx sdk.Tx) (tx.Response, error) {
+	if err := checkExtOpts(sdkTx); err != nil {
+		return tx.Response{}, err
 	}
 
-	return txh.next.DeliverTx(ctx, tx, req)
+	return txh.next.DeliverTx(ctx, sdkTx)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
-func (txh rejectExtensionOptionsTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (txh rejectExtensionOptionsTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx) (tx.Response, error) {
 	if err := checkExtOpts(sdkTx); err != nil {
-		return tx.ResponseSimulateTx{}, err
+		return tx.Response{}, err
 	}
 
-	return txh.next.SimulateTx(ctx, sdkTx, req)
+	return txh.next.SimulateTx(ctx, sdkTx)
 }

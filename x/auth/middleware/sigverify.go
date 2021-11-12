@@ -126,28 +126,28 @@ func (spkm setPubKeyTxHandler) setPubKey(ctx context.Context, tx sdk.Tx, simulat
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (spkm setPubKeyTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	if err := spkm.setPubKey(ctx, tx, false); err != nil {
-		return abci.ResponseCheckTx{}, err
+func (spkm setPubKeyTxHandler) CheckTx(ctx context.Context, sdkTx sdk.Tx, req abci.RequestCheckTx) (tx.Response, error) {
+	if err := spkm.setPubKey(ctx, sdkTx, false); err != nil {
+		return tx.Response{}, err
 	}
 
-	return spkm.next.CheckTx(ctx, tx, req)
+	return spkm.next.CheckTx(ctx, sdkTx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (spkm setPubKeyTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	if err := spkm.setPubKey(ctx, tx, false); err != nil {
-		return abci.ResponseDeliverTx{}, err
+func (spkm setPubKeyTxHandler) DeliverTx(ctx context.Context, sdkTx sdk.Tx) (tx.Response, error) {
+	if err := spkm.setPubKey(ctx, sdkTx, false); err != nil {
+		return tx.Response{}, err
 	}
-	return spkm.next.DeliverTx(ctx, tx, req)
+	return spkm.next.DeliverTx(ctx, sdkTx)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (spkm setPubKeyTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (spkm setPubKeyTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx) (tx.Response, error) {
 	if err := spkm.setPubKey(ctx, sdkTx, true); err != nil {
-		return tx.ResponseSimulateTx{}, err
+		return tx.Response{}, err
 	}
-	return spkm.next.SimulateTx(ctx, sdkTx, req)
+	return spkm.next.SimulateTx(ctx, sdkTx)
 }
 
 var _ tx.Handler = validateSigCountTxHandler{}
@@ -170,10 +170,10 @@ func ValidateSigCountMiddleware(ak AccountKeeper) tx.Middleware {
 	}
 }
 
-func (vscd validateSigCountTxHandler) checkSigCount(ctx context.Context, tx sdk.Tx) error {
+func (vscd validateSigCountTxHandler) checkSigCount(ctx context.Context, sdkTx sdk.Tx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
+	sigTx, ok := sdkTx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a sigTx")
 	}
@@ -196,30 +196,30 @@ func (vscd validateSigCountTxHandler) checkSigCount(ctx context.Context, tx sdk.
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (vscd validateSigCountTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	if err := vscd.checkSigCount(ctx, tx); err != nil {
-		return abci.ResponseCheckTx{}, err
+func (vscd validateSigCountTxHandler) CheckTx(ctx context.Context, sdkTx sdk.Tx, req abci.RequestCheckTx) (tx.Response, error) {
+	if err := vscd.checkSigCount(ctx, sdkTx); err != nil {
+		return tx.Response{}, err
 	}
 
-	return vscd.next.CheckTx(ctx, tx, req)
+	return vscd.next.CheckTx(ctx, sdkTx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (vscd validateSigCountTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (vscd validateSigCountTxHandler) DeliverTx(ctx context.Context, sdkTx sdk.Tx) (tx.Response, error) {
 	if err := vscd.checkSigCount(ctx, sdkTx); err != nil {
-		return tx.ResponseSimulateTx{}, err
+		return tx.Response{}, err
 	}
 
-	return vscd.next.SimulateTx(ctx, sdkTx, req)
+	return vscd.next.DeliverTx(ctx, sdkTx)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (vscd validateSigCountTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	if err := vscd.checkSigCount(ctx, tx); err != nil {
-		return abci.ResponseDeliverTx{}, err
+func (vscd validateSigCountTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx) (tx.Response, error) {
+	if err := vscd.checkSigCount(ctx, sdkTx); err != nil {
+		return tx.Response{}, err
 	}
 
-	return vscd.next.DeliverTx(ctx, tx, req)
+	return vscd.next.SimulateTx(ctx, sdkTx)
 }
 
 // DefaultSigVerificationGasConsumer is the default implementation of SignatureVerificationGasConsumer. It consumes gas
@@ -359,30 +359,30 @@ func (sgcm sigGasConsumeTxHandler) sigGasConsume(ctx context.Context, tx sdk.Tx,
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (sgcm sigGasConsumeTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	if err := sgcm.sigGasConsume(ctx, tx, false); err != nil {
-		return abci.ResponseCheckTx{}, err
+func (sgcm sigGasConsumeTxHandler) CheckTx(ctx context.Context, sdkTx sdk.Tx, req abci.RequestCheckTx) (tx.Response, error) {
+	if err := sgcm.sigGasConsume(ctx, sdkTx, false); err != nil {
+		return tx.Response{}, err
 	}
 
-	return sgcm.next.CheckTx(ctx, tx, req)
+	return sgcm.next.CheckTx(ctx, sdkTx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (sgcm sigGasConsumeTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	if err := sgcm.sigGasConsume(ctx, tx, false); err != nil {
-		return abci.ResponseDeliverTx{}, err
+func (sgcm sigGasConsumeTxHandler) DeliverTx(ctx context.Context, sdkTx sdk.Tx) (tx.Response, error) {
+	if err := sgcm.sigGasConsume(ctx, sdkTx, false); err != nil {
+		return tx.Response{}, err
 	}
 
-	return sgcm.next.DeliverTx(ctx, tx, req)
+	return sgcm.next.DeliverTx(ctx, sdkTx)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (sgcm sigGasConsumeTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (sgcm sigGasConsumeTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx) (tx.Response, error) {
 	if err := sgcm.sigGasConsume(ctx, sdkTx, true); err != nil {
-		return tx.ResponseSimulateTx{}, err
+		return tx.Response{}, err
 	}
 
-	return sgcm.next.SimulateTx(ctx, sdkTx, req)
+	return sgcm.next.SimulateTx(ctx, sdkTx)
 }
 
 var _ tx.Handler = sigVerificationTxHandler{}
@@ -511,30 +511,30 @@ func (svd sigVerificationTxHandler) sigVerify(ctx context.Context, tx sdk.Tx, is
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (svd sigVerificationTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	if err := svd.sigVerify(ctx, tx, req.Type == abci.CheckTxType_Recheck, false); err != nil {
-		return abci.ResponseCheckTx{}, err
+func (svd sigVerificationTxHandler) CheckTx(ctx context.Context, sdkTx sdk.Tx, req abci.RequestCheckTx) (tx.Response, error) {
+	if err := svd.sigVerify(ctx, sdkTx, req.Type == abci.CheckTxType_Recheck, false); err != nil {
+		return tx.Response{}, err
 	}
 
-	return svd.next.CheckTx(ctx, tx, req)
+	return svd.next.CheckTx(ctx, sdkTx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (svd sigVerificationTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	if err := svd.sigVerify(ctx, tx, false, false); err != nil {
-		return abci.ResponseDeliverTx{}, err
+func (svd sigVerificationTxHandler) DeliverTx(ctx context.Context, sdkTx sdk.Tx) (tx.Response, error) {
+	if err := svd.sigVerify(ctx, sdkTx, false, false); err != nil {
+		return tx.Response{}, err
 	}
 
-	return svd.next.DeliverTx(ctx, tx, req)
+	return svd.next.DeliverTx(ctx, sdkTx)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (svd sigVerificationTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (svd sigVerificationTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx) (tx.Response, error) {
 	if err := svd.sigVerify(ctx, sdkTx, false, true); err != nil {
-		return tx.ResponseSimulateTx{}, err
+		return tx.Response{}, err
 	}
 
-	return svd.next.SimulateTx(ctx, sdkTx, req)
+	return svd.next.SimulateTx(ctx, sdkTx)
 }
 
 var _ tx.Handler = incrementSequenceTxHandler{}
@@ -583,30 +583,30 @@ func (isd incrementSequenceTxHandler) incrementSeq(ctx context.Context, tx sdk.T
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (isd incrementSequenceTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	if err := isd.incrementSeq(ctx, tx); err != nil {
-		return abci.ResponseCheckTx{}, err
+func (isd incrementSequenceTxHandler) CheckTx(ctx context.Context, sdkTx sdk.Tx, req abci.RequestCheckTx) (tx.Response, error) {
+	if err := isd.incrementSeq(ctx, sdkTx); err != nil {
+		return tx.Response{}, err
 	}
 
-	return isd.next.CheckTx(ctx, tx, req)
+	return isd.next.CheckTx(ctx, sdkTx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (isd incrementSequenceTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	if err := isd.incrementSeq(ctx, tx); err != nil {
-		return abci.ResponseDeliverTx{}, err
+func (isd incrementSequenceTxHandler) DeliverTx(ctx context.Context, sdkTx sdk.Tx) (tx.Response, error) {
+	if err := isd.incrementSeq(ctx, sdkTx); err != nil {
+		return tx.Response{}, err
 	}
 
-	return isd.next.DeliverTx(ctx, tx, req)
+	return isd.next.DeliverTx(ctx, sdkTx)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (isd incrementSequenceTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (isd incrementSequenceTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx) (tx.Response, error) {
 	if err := isd.incrementSeq(ctx, sdkTx); err != nil {
-		return tx.ResponseSimulateTx{}, err
+		return tx.Response{}, err
 	}
 
-	return isd.next.SimulateTx(ctx, sdkTx, req)
+	return isd.next.SimulateTx(ctx, sdkTx)
 }
 
 // GetSignerAcc returns an account for a given address that is expected to sign

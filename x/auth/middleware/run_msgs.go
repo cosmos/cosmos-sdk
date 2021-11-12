@@ -30,19 +30,19 @@ func NewRunMsgsTxHandler(msr *MsgServiceRouter, legacyRouter sdk.Router) tx.Hand
 var _ tx.Handler = runMsgsTxHandler{}
 
 // CheckTx implements tx.Handler.CheckTx method.
-func (txh runMsgsTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (txh runMsgsTxHandler) CheckTx(ctx context.Context, sdkTx sdk.Tx, req abci.RequestCheckTx) (tx.Response, error) {
 	// Don't run Msgs during CheckTx.
-	return abci.ResponseCheckTx{}, nil
+	return tx.Response{}, nil
 }
 
 // DeliverTx implements tx.Handler.DeliverTx method.
-func (txh runMsgsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	res, err := txh.runMsgs(sdk.UnwrapSDKContext(ctx), tx.GetMsgs(), req.Tx)
+func (txh runMsgsTxHandler) DeliverTx(ctx context.Context, sdkTx sdk.Tx, req abci.RequestDeliverTx) (tx.Response, error) {
+	res, err := txh.runMsgs(sdk.UnwrapSDKContext(ctx), sdkTx.GetMsgs(), req.Tx)
 	if err != nil {
-		return abci.ResponseDeliverTx{}, err
+		return tx.Response{}, err
 	}
 
-	return abci.ResponseDeliverTx{
+	return tx.Response{
 		// GasInfo will be populated by the Gas middleware.
 		Log:    res.Log,
 		Data:   res.Data,
@@ -51,13 +51,13 @@ func (txh runMsgsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.R
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
-func (txh runMsgsTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (txh runMsgsTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.Response, error) {
 	res, err := txh.runMsgs(sdk.UnwrapSDKContext(ctx), sdkTx.GetMsgs(), req.TxBytes)
 	if err != nil {
-		return tx.ResponseSimulateTx{}, err
+		return tx.Response{}, err
 	}
 
-	return tx.ResponseSimulateTx{
+	return tx.Response{
 		// GasInfo will be populated by the Gas middleware.
 		Result: res,
 	}, nil

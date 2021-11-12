@@ -26,7 +26,7 @@ func RecoveryTxMiddleware(txh tx.Handler) tx.Handler {
 var _ tx.Handler = recoveryTxHandler{}
 
 // CheckTx implements tx.Handler.CheckTx method.
-func (txh recoveryTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (res abci.ResponseCheckTx, err error) {
+func (txh recoveryTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (res tx.Response, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Panic recovery.
 	defer func() {
@@ -39,7 +39,7 @@ func (txh recoveryTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.Re
 }
 
 // DeliverTx implements tx.Handler.DeliverTx method.
-func (txh recoveryTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (res abci.ResponseDeliverTx, err error) {
+func (txh recoveryTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx) (res tx.Response, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// only run the tx if there is block gas remaining
 	if sdkCtx.BlockGasMeter().IsOutOfGas() {
@@ -71,11 +71,11 @@ func (txh recoveryTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.
 		}
 	}()
 
-	return txh.next.DeliverTx(ctx, tx, req)
+	return txh.next.DeliverTx(ctx, tx)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
-func (txh recoveryTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (res tx.ResponseSimulateTx, err error) {
+func (txh recoveryTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx) (res tx.Response, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Panic recovery.
 	defer func() {
@@ -84,7 +84,7 @@ func (txh recoveryTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req t
 		}
 	}()
 
-	return txh.next.SimulateTx(ctx, sdkTx, req)
+	return txh.next.SimulateTx(ctx, sdkTx)
 }
 
 func handleRecovery(r interface{}, sdkCtx sdk.Context) error {

@@ -127,12 +127,12 @@ type noopTxHandler struct{}
 
 var _ tx.Handler = noopTxHandler{}
 
-func (txh noopTxHandler) CheckTx(_ context.Context, _ sdk.Tx, _ abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	return abci.ResponseCheckTx{}, nil
+func (txh noopTxHandler) CheckTx(_ context.Context, _ sdk.Tx, _ abci.RequestCheckTx) (tx.Response, error) {
+	return tx.Response{}, nil
 }
-func (txh noopTxHandler) SimulateTx(_ context.Context, _ sdk.Tx, _ tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	return tx.ResponseSimulateTx{}, nil
+func (txh noopTxHandler) SimulateTx(_ context.Context, _ sdk.Tx) (tx.Response, error) {
+	return tx.Response{}, nil
 }
-func (txh noopTxHandler) DeliverTx(ctx context.Context, _ sdk.Tx, _ abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	return abci.ResponseDeliverTx{}, nil
+func (txh noopTxHandler) DeliverTx(ctx context.Context, _ sdk.Tx) (tx.Response, error) {
+	return tx.Response{}, nil
 }

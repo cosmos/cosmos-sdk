@@ -30,7 +30,7 @@ func NewIndexEventsTxMiddleware(indexEvents map[string]struct{}) tx.Middleware {
 var _ tx.Handler = indexEventsTxHandler{}
 
 // CheckTx implements tx.Handler.CheckTx method.
-func (txh indexEventsTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (txh indexEventsTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (tx.Response, error) {
 	res, err := txh.inner.CheckTx(ctx, tx, req)
 	if err != nil {
 		return res, err
@@ -41,8 +41,8 @@ func (txh indexEventsTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci
 }
 
 // DeliverTx implements tx.Handler.DeliverTx method.
-func (txh indexEventsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	res, err := txh.inner.DeliverTx(ctx, tx, req)
+func (txh indexEventsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx) (tx.Response, error) {
+	res, err := txh.inner.DeliverTx(ctx, tx)
 	if err != nil {
 		return res, err
 	}
@@ -52,12 +52,12 @@ func (txh indexEventsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req ab
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
-func (txh indexEventsTxHandler) SimulateTx(ctx context.Context, tx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	res, err := txh.inner.SimulateTx(ctx, tx, req)
+func (txh indexEventsTxHandler) SimulateTx(ctx context.Context, tx sdk.Tx) (tx.Response, error) {
+	res, err := txh.inner.SimulateTx(ctx, tx)
 	if err != nil {
 		return res, err
 	}
 
-	res.Result.Events = sdk.MarkEventsToIndex(res.Result.Events, txh.indexEvents)
+	res.Events = sdk.MarkEventsToIndex(res.Events, txh.indexEvents)
 	return res, nil
 }

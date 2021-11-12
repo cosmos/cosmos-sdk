@@ -3,6 +3,7 @@ package tx
 import (
 	context "context"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,12 +22,20 @@ type ResponseSimulateTx struct {
 	Result  *sdk.Result
 }
 
+type Response struct {
+	GasWanted    uint64
+	GasUsed      uint64
+	MsgResponses []codectypes.Any // Represents each Msg service handler's response type. Will get proto-serialized into the `Data` field in ABCI, see note #2
+	Log          string
+	Events       []abci.Event
+}
+
 // TxHandler defines the baseapp's CheckTx, DeliverTx and Simulate respective
 // handlers. It is designed as a middleware stack.
 type Handler interface {
-	CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error)
-	DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error)
-	SimulateTx(ctx context.Context, tx sdk.Tx, req RequestSimulateTx) (ResponseSimulateTx, error)
+	CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (Response, error)
+	DeliverTx(ctx context.Context, tx sdk.Tx) (Response, error)
+	SimulateTx(ctx context.Context, tx sdk.Tx) (Response, error)
 }
 
 // TxMiddleware defines one layer of the TxHandler middleware stack.

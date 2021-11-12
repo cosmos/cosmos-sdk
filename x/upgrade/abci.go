@@ -41,14 +41,12 @@ func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 	if !found {
 		return
 	}
-
 	logger := ctx.Logger()
 
 	// To make sure clear upgrade is executed at the same block
 	if plan.ShouldExecute(ctx) {
 		// If skip upgrade has been set for current height, we clear the upgrade plan
 		if k.IsSkipHeight(ctx.BlockHeight()) {
-
 			skipUpgradeMsg := fmt.Sprintf("UPGRADE \"%s\" SKIPPED at %d: %s", plan.Name, plan.Height, plan.Info)
 			logger.Info(skipUpgradeMsg)
 

@@ -686,13 +686,7 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-<<<<<<< HEAD
 	pattern_Query_Balance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "bank", "v1beta1", "balances", "address", "denom"}, "", runtime.AssumeColonVerbOpt(true)))
-=======
-	pattern_Query_Balance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"cosmos", "bank", "v1beta1", "balances", "address", "by_denom"}, "", runtime.AssumeColonVerbOpt(false)))
-
-	pattern_Query_AllBalances_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "bank", "v1beta1", "balances", "address"}, "", runtime.AssumeColonVerbOpt(false)))
->>>>>>> 99c5230fa (fix: query account balance by ibc denom (#10394))
 
 	pattern_Query_AllBalances_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "bank", "v1beta1", "balances", "address"}, "", runtime.AssumeColonVerbOpt(true)))
 

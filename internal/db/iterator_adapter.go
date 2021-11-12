@@ -13,7 +13,7 @@ type dbAsStoreIter struct {
 }
 
 // DBToStoreIterator returns an iterator wrapping the given iterator so that it satisfies the
-// store/types.Iterator interface.
+// (store/types).Iterator interface.
 func DBToStoreIterator(source dbm.Iterator) *dbAsStoreIter {
 	ret := &dbAsStoreIter{Iterator: source}
 	ret.Next()

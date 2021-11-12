@@ -91,3 +91,5 @@ const StoreTypePersistent = v1.StoreTypePersistent
 
 var NewKVStoreKey = v1.NewKVStoreKey
 var PrefixEndBytes = v1.PrefixEndBytes
+var KVStorePrefixIterator = v1.KVStorePrefixIterator
+var KVStoreReversePrefixIterator = v1.KVStoreReversePrefixIterator

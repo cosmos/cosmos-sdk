@@ -1,7 +1,6 @@
 package root
 
 import (
-	"errors"
 	"math"
 	"testing"
 
@@ -11,7 +10,7 @@ import (
 
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/db/memdb"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	types "github.com/cosmos/cosmos-sdk/store/v2"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
@@ -21,24 +20,43 @@ var (
 		"hello": "goodbye",
 		"aloha": "shalom",
 	}
+	skey_1  = types.NewKVStoreKey("store1")
+	skey_2  = types.NewKVStoreKey("store2")
+	skey_3  = types.NewKVStoreKey("store3")
+	skey_4  = types.NewKVStoreKey("store4")
+	skey_1b = types.NewKVStoreKey("store1b")
+	skey_2b = types.NewKVStoreKey("store2b")
+	skey_3b = types.NewKVStoreKey("store3b")
 )
 
-func newStoreWithData(t *testing.T, db dbm.DBConnection, storeData map[string]string) *Store {
-	store, err := NewStore(db, DefaultStoreConfig)
+func simpleStoreConfig(t *testing.T) StoreConfig {
+	opts := DefaultStoreConfig()
+	require.NoError(t, opts.ReservePrefix(skey_1.Name(), types.StoreTypePersistent))
+	return opts
+}
+
+func storeConfig123(t *testing.T) StoreConfig {
+	opts := DefaultStoreConfig()
+	opts.Pruning = types.PruneNothing
+	require.NoError(t, opts.ReservePrefix(skey_1.Name(), types.StoreTypePersistent))
+	require.NoError(t, opts.ReservePrefix(skey_2.Name(), types.StoreTypePersistent))
+	require.NoError(t, opts.ReservePrefix(skey_3.Name(), types.StoreTypePersistent))
+	return opts
+}
+
+func newSubStoreWithData(t *testing.T, db dbm.DBConnection, storeData map[string]string) (*Store, types.KVStore) {
+	root, err := NewStore(db, simpleStoreConfig(t))
 	require.NoError(t, err)
 
+	store := root.GetKVStore(skey_1)
 	for k, v := range storeData {
 		store.Set([]byte(k), []byte(v))
 	}
-	return store
-}
-
-func newAlohaStore(t *testing.T, db dbm.DBConnection) *Store {
-	return newStoreWithData(t, db, alohaData)
+	return root, store
 }
 
 func TestGetSetHasDelete(t *testing.T) {
-	store := newAlohaStore(t, memdb.NewDB())
+	root, store := newSubStoreWithData(t, memdb.NewDB(), alohaData)
 	key := "hello"
 
 	exists := store.Has([]byte(key))
@@ -63,7 +81,7 @@ func TestGetSetHasDelete(t *testing.T) {
 	require.Panics(t, func() { store.Set(nil, []byte("value")) }, "Set(nil key) should panic")
 	require.Panics(t, func() { store.Set([]byte{}, []byte("value")) }, "Set(empty key) should panic")
 	require.Panics(t, func() { store.Set([]byte("key"), nil) }, "Set(nil value) should panic")
-	store.indexBucket = rwCrudFails{store.indexBucket}
+	root.indexBucket = rwCrudFails{root.indexBucket}
 	require.Panics(t, func() { store.Set([]byte("key"), []byte("value")) },
 		"Set() when index fails should panic")
 }
@@ -71,14 +89,10 @@ func TestGetSetHasDelete(t *testing.T) {
 func TestConstructors(t *testing.T) {
 	db := memdb.NewDB()
 
-	store := newAlohaStore(t, db)
-	store.Commit()
-	require.NoError(t, store.Close())
-
-	store, err := NewStore(db, DefaultStoreConfig)
+	store, err := NewStore(db, simpleStoreConfig(t))
 	require.NoError(t, err)
-	value := store.Get([]byte("hello"))
-	require.Equal(t, []byte("goodbye"), value)
+	_ = store.GetKVStore(skey_1)
+	store.Commit()
 	require.NoError(t, store.Close())
 
 	// Loading with an initial version beyond the lowest should error
@@ -87,7 +101,7 @@ func TestConstructors(t *testing.T) {
 	require.Error(t, err)
 	db.Close()
 
-	store, err = NewStore(dbVersionsFails{memdb.NewDB()}, DefaultStoreConfig)
+	store, err = NewStore(dbVersionsFails{memdb.NewDB()}, DefaultStoreConfig())
 	require.Error(t, err)
 	store, err = NewStore(db, StoreConfig{StateCommitmentDB: dbVersionsFails{memdb.NewDB()}})
 	require.Error(t, err)
@@ -96,7 +110,7 @@ func TestConstructors(t *testing.T) {
 	db = memdb.NewDB()
 	merkledb := memdb.NewDB()
 	w := db.Writer()
-	store, err = NewStore(db, DefaultStoreConfig)
+	store, err = NewStore(db, DefaultStoreConfig())
 	require.Error(t, err)
 	w.Discard()
 	w = merkledb.Writer()
@@ -111,24 +125,24 @@ func TestConstructors(t *testing.T) {
 	merkledb.Close()
 
 	// can't load existing store when we can't access the latest Merkle root hash
-	store, err = NewStore(db, DefaultStoreConfig)
+	store, err = NewStore(db, DefaultStoreConfig())
 	require.NoError(t, err)
 	store.Commit()
 	require.NoError(t, store.Close())
-	// because root is misssing
+	// ...whether because root is misssing
 	w = db.Writer()
 	w.Delete(merkleRootKey)
 	w.Commit()
 	db.SaveNextVersion()
-	store, err = NewStore(db, DefaultStoreConfig)
+	store, err = NewStore(db, DefaultStoreConfig())
 	require.Error(t, err)
-	// or, because of an error
-	store, err = NewStore(dbRWCrudFails{db}, DefaultStoreConfig)
+	// ...or, because of an error
+	store, err = NewStore(dbRWCrudFails{db}, DefaultStoreConfig())
 	require.Error(t, err)
 }
 
 func TestIterators(t *testing.T) {
-	store := newStoreWithData(t, memdb.NewDB(), map[string]string{
+	_, store := newSubStoreWithData(t, memdb.NewDB(), map[string]string{
 		string([]byte{0x00}):       "0",
 		string([]byte{0x00, 0x00}): "0 0",
 		string([]byte{0x00, 0x01}): "0 1",
@@ -216,11 +230,16 @@ func TestCommit(t *testing.T) {
 			require.NotEqual(t, previd.Version, id.Version)
 		}
 	}
-	testBasic(StoreConfig{Pruning: types.PruneNothing})
-	testBasic(StoreConfig{Pruning: types.PruneNothing, StateCommitmentDB: memdb.NewDB()})
+	basicOpts := simpleStoreConfig(t)
+	basicOpts.Pruning = types.PruneNothing
+	testBasic(basicOpts)
+	basicOpts.StateCommitmentDB = memdb.NewDB()
+	testBasic(basicOpts)
 
-	testFailedCommit := func(t *testing.T, store *Store, db dbm.DBConnection) {
-		opts := store.opts
+	testFailedCommit := func(t *testing.T,
+		store *Store,
+		db dbm.DBConnection,
+		opts StoreConfig) {
 		if db == nil {
 			db = store.stateDB
 		}
@@ -231,8 +250,8 @@ func TestCommit(t *testing.T) {
 
 		versions, _ := db.Versions()
 		require.Equal(t, 0, versions.Count())
-		if opts.StateCommitmentDB != nil {
-			versions, _ = opts.StateCommitmentDB.Versions()
+		if store.StateCommitmentDB != nil {
+			versions, _ = store.StateCommitmentDB.Versions()
 			require.Equal(t, 0, versions.Count())
 		}
 
@@ -242,58 +261,62 @@ func TestCommit(t *testing.T) {
 		require.NoError(t, store.Close())
 	}
 
+	opts := simpleStoreConfig(t)
+	opts.Pruning = types.PruneNothing
+
 	// Ensure storage commit is rolled back in each failure case
 	t.Run("recover after failed Commit", func(t *testing.T) {
-		store, err := NewStore(
-			dbRWCommitFails{memdb.NewDB()},
-			StoreConfig{Pruning: types.PruneNothing})
+		store, err := NewStore(dbRWCommitFails{memdb.NewDB()}, opts)
 		require.NoError(t, err)
-		testFailedCommit(t, store, nil)
+		testFailedCommit(t, store, nil, opts)
 	})
 	t.Run("recover after failed SaveVersion", func(t *testing.T) {
-		store, err := NewStore(
-			dbSaveVersionFails{memdb.NewDB()},
-			StoreConfig{Pruning: types.PruneNothing})
+		store, err := NewStore(dbSaveVersionFails{memdb.NewDB()}, opts)
 		require.NoError(t, err)
-		testFailedCommit(t, store, nil)
-	})
-	t.Run("recover after failed StateCommitmentDB Commit", func(t *testing.T) {
-		store, err := NewStore(memdb.NewDB(),
-			StoreConfig{StateCommitmentDB: dbRWCommitFails{memdb.NewDB()}, Pruning: types.PruneNothing})
-		require.NoError(t, err)
-		testFailedCommit(t, store, nil)
-	})
-	t.Run("recover after failed StateCommitmentDB SaveVersion", func(t *testing.T) {
-		store, err := NewStore(memdb.NewDB(),
-			StoreConfig{StateCommitmentDB: dbSaveVersionFails{memdb.NewDB()}, Pruning: types.PruneNothing})
-		require.NoError(t, err)
-		testFailedCommit(t, store, nil)
+		testFailedCommit(t, store, nil, opts)
 	})
 
+	t.Run("recover after failed StateCommitmentDB Commit", func(t *testing.T) {
+		opts.StateCommitmentDB = dbRWCommitFails{memdb.NewDB()}
+		store, err := NewStore(memdb.NewDB(), opts)
+		require.NoError(t, err)
+		testFailedCommit(t, store, nil, opts)
+	})
+	t.Run("recover after failed StateCommitmentDB SaveVersion", func(t *testing.T) {
+		opts.StateCommitmentDB = dbSaveVersionFails{memdb.NewDB()}
+		store, err := NewStore(memdb.NewDB(), opts)
+		require.NoError(t, err)
+		testFailedCommit(t, store, nil, opts)
+	})
+
+	opts = simpleStoreConfig(t)
 	t.Run("recover after stateDB.Versions error triggers failure", func(t *testing.T) {
 		db := memdb.NewDB()
-		store, err := NewStore(db, DefaultStoreConfig)
+		store, err := NewStore(db, opts)
 		require.NoError(t, err)
 		store.stateDB = dbVersionsFails{store.stateDB}
-		testFailedCommit(t, store, db)
+		testFailedCommit(t, store, db, opts)
 	})
 	t.Run("recover after stateTxn.Set error triggers failure", func(t *testing.T) {
-		store, err := NewStore(memdb.NewDB(), DefaultStoreConfig)
+		store, err := NewStore(memdb.NewDB(), opts)
 		require.NoError(t, err)
 		store.stateTxn = rwCrudFails{store.stateTxn}
-		testFailedCommit(t, store, nil)
+		testFailedCommit(t, store, nil, opts)
 	})
 
 	t.Run("stateDB.DeleteVersion error triggers failure", func(t *testing.T) {
-		store, err := NewStore(memdb.NewDB(), StoreConfig{StateCommitmentDB: memdb.NewDB()})
+		opts.StateCommitmentDB = memdb.NewDB()
+		store, err := NewStore(memdb.NewDB(), opts)
 		require.NoError(t, err)
 		store.stateCommitmentTxn = rwCommitFails{store.stateCommitmentTxn}
 		store.stateDB = dbDeleteVersionFails{store.stateDB}
 		require.Panics(t, func() { store.Commit() })
 	})
 	t.Run("height overflow triggers failure", func(t *testing.T) {
-		store, err := NewStore(memdb.NewDB(),
-			StoreConfig{InitialVersion: math.MaxInt64, Pruning: types.PruneNothing})
+		opts.StateCommitmentDB = nil
+		opts.InitialVersion = math.MaxInt64
+		opts.Pruning = types.PruneNothing
+		store, err := NewStore(memdb.NewDB(), opts)
 		require.NoError(t, err)
 		require.Equal(t, int64(math.MaxInt64), store.Commit().Version)
 		require.Panics(t, func() { store.Commit() })
@@ -301,18 +324,24 @@ func TestCommit(t *testing.T) {
 	})
 
 	// setting initial version
-	store, err := NewStore(memdb.NewDB(),
-		StoreConfig{InitialVersion: 5, Pruning: types.PruneNothing, StateCommitmentDB: memdb.NewDB()})
+	opts = simpleStoreConfig(t)
+	opts.InitialVersion = 5
+	opts.Pruning = types.PruneNothing
+	opts.StateCommitmentDB = memdb.NewDB()
+	store, err := NewStore(memdb.NewDB(), opts)
 	require.NoError(t, err)
 	require.Equal(t, int64(5), store.Commit().Version)
 
-	store, err = NewStore(memdb.NewDB(), StoreConfig{StateCommitmentDB: memdb.NewDB()})
+	opts = simpleStoreConfig(t)
+	store, err = NewStore(memdb.NewDB(), opts)
 	require.NoError(t, err)
 	store.Commit()
 	store.stateDB = dbVersionsFails{store.stateDB}
 	require.Panics(t, func() { store.LastCommitID() })
 
-	store, err = NewStore(memdb.NewDB(), StoreConfig{StateCommitmentDB: memdb.NewDB()})
+	opts = simpleStoreConfig(t)
+	opts.StateCommitmentDB = memdb.NewDB()
+	store, err = NewStore(memdb.NewDB(), opts)
 	require.NoError(t, err)
 	store.Commit()
 	store.stateTxn = rwCrudFails{store.stateTxn}
@@ -364,7 +393,7 @@ func TestPruning(t *testing.T) {
 
 	// Test pruning interval
 	// Save up to 20th version while checking history at specific version checkpoints
-	opts := types.PruningOptions{0, 5, 10}
+	pruning := types.PruningOptions{0, 5, 10}
 	testCheckPoints := map[uint64][]uint64{
 		5:  []uint64{1, 2, 3, 4, 5},
 		10: []uint64{5, 10},
@@ -372,7 +401,7 @@ func TestPruning(t *testing.T) {
 		20: []uint64{5, 10, 15, 20},
 	}
 	db := memdb.NewDB()
-	store, err := NewStore(db, StoreConfig{Pruning: opts})
+	store, err := NewStore(db, StoreConfig{Pruning: pruning})
 	require.NoError(t, err)
 
 	for i := byte(1); i <= 20; i++ {
@@ -396,13 +425,13 @@ func TestPruning(t *testing.T) {
 }
 
 func TestQuery(t *testing.T) {
-	store := newStoreWithData(t, memdb.NewDB(), nil)
+	path := func(skey types.StoreKey, endp string) string { return "/" + skey.Name() + endp }
 
-	k1, v1 := []byte("key1"), []byte("val1")
-	k2, v2 := []byte("key2"), []byte("val2")
-	v3 := []byte("val3")
+	k1, v1 := []byte("k1"), []byte("v1")
+	k2, v2 := []byte("k2"), []byte("v2")
+	v3 := []byte("v3")
 
-	ksub := []byte("key")
+	ksub := []byte("k")
 	KVs0 := kv.Pairs{}
 	KVs1 := kv.Pairs{
 		Pairs: []kv.Pair{
@@ -426,82 +455,88 @@ func TestQuery(t *testing.T) {
 	valExpSub2, err := KVs2.Marshal()
 	require.NoError(t, err)
 
+	store, err := NewStore(memdb.NewDB(), simpleStoreConfig(t))
+	require.NoError(t, err)
 	cid := store.Commit()
 	ver := cid.Version
-	query := abci.RequestQuery{Path: "/key", Data: k1, Height: ver}
-	querySub := abci.RequestQuery{Path: "/subspace", Data: ksub, Height: ver}
+	query := abci.RequestQuery{Path: path(skey_1, "/key"), Data: k1, Height: ver}
+	querySub := abci.RequestQuery{Path: path(skey_1, "/subspace"), Data: ksub, Height: ver}
 
 	// query subspace before anything set
 	qres := store.Query(querySub)
-	require.True(t, qres.IsOK())
+	require.True(t, qres.IsOK(), qres.Log)
 	require.Equal(t, valExpSubEmpty, qres.Value)
 
+	sub := store.GetKVStore(skey_1)
+	require.NotNil(t, sub)
 	// set data
-	store.Set(k1, v1)
-	store.Set(k2, v2)
+	sub.Set(k1, v1)
+	sub.Set(k2, v2)
 
 	// set data without commit, doesn't show up
 	qres = store.Query(query)
-	require.True(t, qres.IsOK())
+	require.True(t, qres.IsOK(), qres.Log)
 	require.Nil(t, qres.Value)
 
 	// commit it, but still don't see on old version
 	cid = store.Commit()
 	qres = store.Query(query)
-	require.True(t, qres.IsOK())
+	require.True(t, qres.IsOK(), qres.Log)
 	require.Nil(t, qres.Value)
 
 	// but yes on the new version
 	query.Height = cid.Version
 	qres = store.Query(query)
-	require.True(t, qres.IsOK())
+	require.True(t, qres.IsOK(), qres.Log)
 	require.Equal(t, v1, qres.Value)
 	// and for the subspace
+	querySub.Height = cid.Version
 	qres = store.Query(querySub)
-	require.True(t, qres.IsOK())
+	require.True(t, qres.IsOK(), qres.Log)
 	require.Equal(t, valExpSub1, qres.Value)
 
 	// modify
-	store.Set(k1, v3)
+	sub.Set(k1, v3)
 	cid = store.Commit()
 
 	// query will return old values, as height is fixed
 	qres = store.Query(query)
-	require.True(t, qres.IsOK())
+	require.True(t, qres.IsOK(), qres.Log)
 	require.Equal(t, v1, qres.Value)
 
 	// update to latest in the query and we are happy
 	query.Height = cid.Version
 	qres = store.Query(query)
-	require.True(t, qres.IsOK())
+	require.True(t, qres.IsOK(), qres.Log)
 	require.Equal(t, v3, qres.Value)
 
-	query2 := abci.RequestQuery{Path: "/key", Data: k2, Height: cid.Version}
+	query2 := abci.RequestQuery{Path: path(skey_1, "/key"), Data: k2, Height: cid.Version}
 	qres = store.Query(query2)
-	require.True(t, qres.IsOK())
+	require.True(t, qres.IsOK(), qres.Log)
 	require.Equal(t, v2, qres.Value)
 	// and for the subspace
+	querySub.Height = cid.Version
 	qres = store.Query(querySub)
-	require.True(t, qres.IsOK())
+	require.True(t, qres.IsOK(), qres.Log)
 	require.Equal(t, valExpSub2, qres.Value)
 
-	// default (height 0) will show latest -1
-	query0 := abci.RequestQuery{Path: "/key", Data: k1}
+	// default (height 0) will show latest-1
+	query0 := abci.RequestQuery{Path: path(skey_1, "/key"), Data: k1}
 	qres = store.Query(query0)
-	require.True(t, qres.IsOK())
+	require.True(t, qres.IsOK(), qres.Log)
 	require.Equal(t, v1, qres.Value)
 
 	// querying an empty store will fail
-	store2, err := NewStore(memdb.NewDB(), DefaultStoreConfig)
+	store2, err := NewStore(memdb.NewDB(), simpleStoreConfig(t))
 	require.NoError(t, err)
 	qres = store2.Query(query0)
 	require.True(t, qres.IsErr())
 
 	// default shows latest, if latest-1 does not exist
-	store2.Set(k1, v1)
+	store2.GetKVStore(skey_1).Set(k1, v1)
 	store2.Commit()
 	qres = store2.Query(query0)
-	require.True(t, qres.IsOK())
+	require.True(t, qres.IsOK(), qres.Log)
 	require.Equal(t, v1, qres.Value)
 	store2.Close()
 
@@ -518,69 +553,243 @@ func TestQuery(t *testing.T) {
 	store2.Close()
 
 	// query with a nil or empty key fails
-	badquery := abci.RequestQuery{Path: "/key", Data: []byte{}}
+	badquery := abci.RequestQuery{Path: path(skey_1, "/key"), Data: []byte{}}
 	qres = store.Query(badquery)
 	require.True(t, qres.IsErr())
 	badquery.Data = nil
 	qres = store.Query(badquery)
 	require.True(t, qres.IsErr())
 	// querying an invalid height will fail
-	badquery = abci.RequestQuery{Path: "/key", Data: k1, Height: store.LastCommitID().Version + 1}
+	badquery = abci.RequestQuery{Path: path(skey_1, "/key"), Data: k1, Height: store.LastCommitID().Version + 1}
 	qres = store.Query(badquery)
 	require.True(t, qres.IsErr())
 	// or an invalid path
-	badquery = abci.RequestQuery{Path: "/badpath", Data: k1}
+	badquery = abci.RequestQuery{Path: path(skey_1, "/badpath"), Data: k1}
 	qres = store.Query(badquery)
 	require.True(t, qres.IsErr())
 
 	// test that proofs are generated with single and separate DBs
 	testProve := func() {
-		queryProve0 := abci.RequestQuery{Path: "/key", Data: k1, Prove: true}
-		store.Query(queryProve0)
+		queryProve0 := abci.RequestQuery{Path: path(skey_1, "/key"), Data: k1, Prove: true}
 		qres = store.Query(queryProve0)
-		require.True(t, qres.IsOK())
+		require.True(t, qres.IsOK(), qres.Log)
 		require.Equal(t, v1, qres.Value)
 		require.NotNil(t, qres.ProofOps)
 	}
 	testProve()
 	store.Close()
 
-	store, err = NewStore(memdb.NewDB(), StoreConfig{StateCommitmentDB: memdb.NewDB()})
+	opts := simpleStoreConfig(t)
+	opts.StateCommitmentDB = memdb.NewDB()
+	store, err = NewStore(memdb.NewDB(), opts)
 	require.NoError(t, err)
-	store.Set(k1, v1)
+	store.GetKVStore(skey_1).Set(k1, v1)
 	store.Commit()
 	testProve()
 	store.Close()
 }
 
-type dbDeleteVersionFails struct{ dbm.DBConnection }
-type dbRWCommitFails struct{ *memdb.MemDB }
-type dbRWCrudFails struct{ dbm.DBConnection }
-type dbSaveVersionFails struct{ *memdb.MemDB }
-type dbVersionsIs struct {
-	dbm.DBConnection
-	vset dbm.VersionSet
-}
-type dbVersionsFails struct{ dbm.DBConnection }
-type rwCommitFails struct{ dbm.DBReadWriter }
-type rwCrudFails struct{ dbm.DBReadWriter }
-
-func (dbVersionsFails) Versions() (dbm.VersionSet, error) { return nil, errors.New("dbVersionsFails") }
-func (db dbVersionsIs) Versions() (dbm.VersionSet, error) { return db.vset, nil }
-func (db dbRWCrudFails) ReadWriter() dbm.DBReadWriter {
-	return rwCrudFails{db.DBConnection.ReadWriter()}
-}
-func (dbSaveVersionFails) SaveVersion(uint64) error     { return errors.New("dbSaveVersionFails") }
-func (dbDeleteVersionFails) DeleteVersion(uint64) error { return errors.New("dbDeleteVersionFails") }
-func (tx rwCommitFails) Commit() error {
-	tx.Discard()
-	return errors.New("rwCommitFails")
-}
-func (db dbRWCommitFails) ReadWriter() dbm.DBReadWriter {
-	return rwCommitFails{db.MemDB.ReadWriter()}
+func TestStoreConfig(t *testing.T) {
+	opts := DefaultStoreConfig()
+	// Fail with invalid types
+	require.Error(t, opts.ReservePrefix(skey_1.Name(), types.StoreTypeDB))
+	require.Error(t, opts.ReservePrefix(skey_1.Name(), types.StoreTypeSMT))
+	// Ensure that no prefix conflicts are allowed
+	require.NoError(t, opts.ReservePrefix(skey_1.Name(), types.StoreTypePersistent))
+	require.NoError(t, opts.ReservePrefix(skey_2.Name(), types.StoreTypeMemory))
+	require.NoError(t, opts.ReservePrefix(skey_3b.Name(), types.StoreTypeTransient))
+	require.Error(t, opts.ReservePrefix(skey_1b.Name(), types.StoreTypePersistent))
+	require.Error(t, opts.ReservePrefix(skey_2b.Name(), types.StoreTypePersistent))
+	require.Error(t, opts.ReservePrefix(skey_3.Name(), types.StoreTypePersistent))
 }
 
-func (rwCrudFails) Get([]byte) ([]byte, error) { return nil, errors.New("rwCrudFails.Get") }
-func (rwCrudFails) Has([]byte) (bool, error)   { return false, errors.New("rwCrudFails.Has") }
-func (rwCrudFails) Set([]byte, []byte) error   { return errors.New("rwCrudFails.Set") }
-func (rwCrudFails) Delete([]byte) error        { return errors.New("rwCrudFails.Delete") }
+func TestRootStoreBasic(t *testing.T) {
+	opts := DefaultStoreConfig()
+	err := opts.ReservePrefix(skey_1.Name(), types.StoreTypePersistent)
+	require.NoError(t, err)
+	db := memdb.NewDB()
+	store, err := NewStore(db, opts)
+	require.NoError(t, err)
+
+	store_1 := store.GetKVStore(skey_1)
+	require.NotNil(t, store_1)
+	store_1.Set([]byte{0}, []byte{0})
+	val := store_1.Get([]byte{0})
+	require.Equal(t, []byte{0}, val)
+	store_1.Delete([]byte{0})
+	val = store_1.Get([]byte{0})
+	require.Equal(t, []byte(nil), val)
+}
+
+func TestGetVersion(t *testing.T) {
+	db := memdb.NewDB()
+	opts := storeConfig123(t)
+	store, err := NewStore(db, opts)
+	require.NoError(t, err)
+
+	cid := store.Commit()
+	// opts := DefaultStoreConfig()
+
+	view, err := store.GetVersion(cid.Version)
+	require.NoError(t, err)
+	subview := view.GetKVStore(skey_1)
+	require.NotNil(t, subview)
+
+	// version view should be read-only
+	require.Panics(t, func() { subview.Set([]byte{1}, []byte{1}) })
+	require.Panics(t, func() { subview.Delete([]byte{0}) })
+	// nonexistent version shouldn't be accessible
+	view, err = store.GetVersion(cid.Version + 1)
+	require.Equal(t, ErrVersionDoesNotExist, err)
+
+	substore := store.GetKVStore(skey_1)
+	require.NotNil(t, substore)
+	substore.Set([]byte{0}, []byte{0})
+	// setting a new value shouldn't affect old version
+	require.False(t, subview.Has([]byte{0}))
+
+	cid = store.Commit()
+	view, err = store.GetVersion(cid.Version)
+	require.NoError(t, err)
+	subview = view.GetKVStore(skey_1)
+	require.NotNil(t, subview)
+
+	store.Delete([]byte{0})
+	require.Equal(t, []byte{0}, subview.Get([]byte{0}))
+}
+
+func TestRootStoreMigration(t *testing.T) {
+	db := memdb.NewDB()
+	opts := storeConfig123(t)
+	store, err := NewStore(db, opts)
+	require.NoError(t, err)
+
+	// write some data in all stores
+	k1, v1 := []byte("first"), []byte("store")
+	s1 := store.GetKVStore(skey_1)
+	require.NotNil(t, s1)
+	s1.Set(k1, v1)
+
+	k2, v2 := []byte("second"), []byte("restore")
+	s2 := store.GetKVStore(skey_2)
+	require.NotNil(t, s2)
+	s2.Set(k2, v2)
+
+	k3, v3 := []byte("third"), []byte("dropped")
+	s3 := store.GetKVStore(skey_3)
+	require.NotNil(t, s3)
+	s3.Set(k3, v3)
+
+	require.Panics(t, func() { store.GetKVStore(skey_4) })
+
+	cid := store.Commit()
+	require.NoError(t, store.Close())
+
+	// Load without changes and make sure it is sensible
+	store, err = NewStore(db, opts)
+	require.NoError(t, err)
+
+	// let's query data to see it was saved properly
+	s2 = store.GetKVStore(skey_2)
+	require.NotNil(t, s2)
+	require.Equal(t, v2, s2.Get(k2))
+	require.NoError(t, store.Close())
+
+	// now, let's load with upgrades...
+	opts.Upgrades = []types.StoreUpgrades{
+		types.StoreUpgrades{
+			Added: []string{skey_4.Name()},
+			Renamed: []types.StoreRename{{
+				OldKey: skey_2.Name(),
+				NewKey: skey_2b.Name(),
+			}},
+			Deleted: []string{skey_3.Name()},
+		},
+	}
+	restore, err := NewStore(db, opts)
+	require.Nil(t, err)
+
+	// s1 was not changed
+	s1 = restore.GetKVStore(skey_1)
+	require.NotNil(t, s1)
+	require.Equal(t, v1, s1.Get(k1))
+
+	// store3 is gone
+	require.Panics(t, func() { s3 = restore.GetKVStore(skey_3) })
+
+	// store4 is mounted, with empty data
+	s4 := restore.GetKVStore(skey_4)
+	require.NotNil(t, s4)
+
+	values := 0
+	it := s4.Iterator(nil, nil)
+	for ; it.Valid(); it.Next() {
+		values += 1
+	}
+	require.Zero(t, values)
+	require.NoError(t, it.Close())
+
+	// write something inside store4
+	k4, v4 := []byte("fourth"), []byte("created")
+	s4.Set(k4, v4)
+
+	// store2 is no longer mounted
+	require.Panics(t, func() { restore.GetKVStore(skey_2) })
+
+	// restore2 has the old data
+	rs2 := restore.GetKVStore(skey_2b)
+	require.NotNil(t, rs2)
+	require.Equal(t, v2, rs2.Get(k2))
+
+	// store this migrated data, and load it again without migrations
+	migratedID := restore.Commit()
+	require.Equal(t, migratedID.Version, int64(2))
+	require.NoError(t, restore.Close())
+
+	// fail to load the migrated store with the old schema
+	reload, err := NewStore(db, storeConfig123(t))
+	require.Error(t, err)
+
+	// pass in a schema reflecting the migrations
+	migratedOpts := DefaultStoreConfig()
+	err = migratedOpts.ReservePrefix(skey_1.Name(), types.StoreTypePersistent)
+	require.NoError(t, err)
+	err = migratedOpts.ReservePrefix(skey_2b.Name(), types.StoreTypePersistent)
+	require.NoError(t, err)
+	err = migratedOpts.ReservePrefix(skey_4.Name(), types.StoreTypePersistent)
+	require.NoError(t, err)
+	reload, err = NewStore(db, migratedOpts)
+	require.Nil(t, err)
+	require.Equal(t, migratedID, reload.LastCommitID())
+
+	// query this new store
+	rl1 := reload.GetKVStore(skey_1)
+	require.NotNil(t, rl1)
+	require.Equal(t, v1, rl1.Get(k1))
+
+	rl2 := reload.GetKVStore(skey_2b)
+	require.NotNil(t, rl2)
+	require.Equal(t, v2, rl2.Get(k2))
+
+	rl4 := reload.GetKVStore(skey_4)
+	require.NotNil(t, rl4)
+	require.Equal(t, v4, rl4.Get(k4))
+
+	// load and check a view of the store at first commit
+	view, err := store.GetVersion(cid.Version)
+	require.NoError(t, err)
+
+	s1 = view.GetKVStore(skey_1)
+	require.NotNil(t, s1)
+	require.Equal(t, v1, s1.Get(k1))
+
+	s2 = view.GetKVStore(skey_2)
+	require.NotNil(t, s2)
+	require.Equal(t, v2, s2.Get(k2))
+
+	s3 = view.GetKVStore(skey_3)
+	require.NotNil(t, s3)
+	require.Equal(t, v3, s3.Get(k3))
+
+	require.Panics(t, func() { view.GetKVStore(skey_4) })
+}

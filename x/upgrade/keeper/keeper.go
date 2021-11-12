@@ -327,7 +327,7 @@ func (k Keeper) IsSkipHeight(height int64) bool {
 
 // DumpUpgradeInfoToDisk writes upgrade information to UpgradeInfoFileName.
 // `info` should be provided and contain Plan.Info data in order to support
-// auto upgrade functionality by cosmovisor and other tools using upgarde-info.json
+// auto download functionality by cosmovisor and other tools using upgarde-info.json
 // (GetUpgradeInfoPath()) file.
 func (k Keeper) DumpUpgradeInfoToDisk(height int64, name string, info ...string) error {
 	upgradeInfoFilePath, err := k.GetUpgradeInfoPath()

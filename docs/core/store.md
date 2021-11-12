@@ -240,13 +240,13 @@ The SDK is in the process of transitioning to use the types listed here as the d
 
 An interface providing only the basic CRUD functionality (`Get`, `Set`, `Has`, and `Delete` methods), without iteration or caching. This is used to partially expose components of a larger store, such as a `flat.Store`.
 
-### Flat Store
+### Root Store
 
-`flat.Store` is the new default persistent store, which internally decouples the concerns of state storage and commitment scheme. Values are stored directly in the backing key-value database (the "storage" bucket), while the value's hash is mapped in a separate store which is able to generate a cryptographic commitment (the "state commitment" bucket, implmented with `smt.Store`).
+`root.RootStore` is the new default persistent store, which internally decouples the concerns of state storage and state commitment. Values are stored directly in the backing key-value database (the "storage" bucket), while the value's hash is mapped in a separate store which is able to generate a cryptographic commitment (the "state commitment" bucket, implmented with `smt.Store`).
 
-This can optionally be constructed to use different backend databases for each bucket.
+This can optionally be configured to use different backend databases for each bucket.
 
-<!-- TODO: add link +++ https://github.com/cosmos/cosmos-sdk/blob/v0.44.0/store/v2/flat/store.go -->
+<!-- TODO: add link +++ https://github.com/cosmos/cosmos-sdk/blob/v0.44.0/store/v2/root/root_store.go -->
 
 ### SMT Store
 

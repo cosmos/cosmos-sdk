@@ -65,8 +65,9 @@ A good pattern for defining AT is listing scenarios with [GIVEN-WHEN-THEN](https
 
 In other words: we define a use case input, current state and the expected outcome. Example:
 
-> Feature: User trades stocks
->   Scenario: User requests a sell before close of trading
+> Feature: User trades stocks\n
+> Scenario: User requests a sell before close of trading
+>
 >     Given I have 100 shares of MSFT stock
 >        And I have 150 shares of APPL stock
 >        And the time is before close of trading

@@ -31,7 +31,6 @@ Security:
     + code must be always deterministic
 + Thread safety. If some functionality is not thread-safe, or uses something that is not thread-safe, then clearly indicate the risk on each level.
 
-
 ## Acceptance tests
 
 Start the design by defining Acceptance Tests. The purpose of Acceptance Testing is to
@@ -65,7 +64,7 @@ A good pattern for defining AT is listing scenarios with [GIVEN-WHEN-THEN](https
 
 In other words: we define a use case input, current state and the expected outcome. Example:
 
-> Feature: User trades stocks\n
+> Feature: User trades stocks.
 > Scenario: User requests a sell before close of trading
 >
 >     Given I have 100 shares of MSFT stock

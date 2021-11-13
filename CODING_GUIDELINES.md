@@ -79,6 +79,11 @@ In other words: we define a use case input, current state and the expected outco
 
 *Reference: [https://openclassrooms.com/en/courses/4544611-write-agile-documentation-user-stories-acceptance-tests/4810081-writing-acceptance-tests](https://openclassrooms.com/en/courses/4544611-write-agile-documentation-user-stories-acceptance-tests/4810081-writing-acceptance-tests)*
 
+### How and where to add acceptance tests?
+
+Acceptance tests are written in the Markdown format, using the scenario template described above, and be part of the specification (module _spec_ directory). They should be defined during the design phase or at an early stage of development. Automated tests should cover all acceptance tests scenarios.
+Acceptance tests should be defined before writing a module architecture - it will clarify the purpose and usage of the software.
+
 ## Automated Tests
 
 Make sure your code is well tested:

@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/99designs/keyring"
-	"github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
 	"github.com/tendermint/crypto/bcrypt"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
@@ -25,6 +24,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	hsmkeys "github.com/regen-network/keystone/keys"
+	"github.com/cosmos/go-bip39"
 )
 
 // Backend options for Keyring
@@ -490,6 +490,8 @@ func (ks keystore) Rename(oldName, newName string) error {
 	return nil
 }
 
+// Delete deletes a key in the keyring. `uid` represents the key name, without
+// the `.info` suffix.
 func (ks keystore) Delete(uid string) error {
 	k, err := ks.Key(uid)
 	if err != nil {
@@ -506,7 +508,7 @@ func (ks keystore) Delete(uid string) error {
 		return err
 	}
 
-	err = ks.db.Remove(uid)
+	err = ks.db.Remove(infoKey(uid))
 	if err != nil {
 		return err
 	}
@@ -544,7 +546,7 @@ func (ks keystore) List() ([]*Record, error) {
 		return nil, err
 	}
 
-	var res []*Record
+	var res []*Record //nolint:prealloc
 	sort.Strings(keys)
 	for _, key := range keys {
 		if strings.Contains(key, addressSuffix) {
@@ -850,7 +852,7 @@ func (ks keystore) writeRecord(k *Record) error {
 		return err
 	}
 
-	key := k.Name
+	key := infoKey(k.Name)
 
 	exists, err := ks.existsInDb(addr, key)
 	if err != nil {
@@ -957,6 +959,9 @@ func (ks keystore) MigrateAll() (bool, error) {
 
 // migrate converts keyring.Item from amino to proto serialization format.
 func (ks keystore) migrate(key string) (*Record, bool, error) {
+	if !(strings.HasSuffix(key, infoSuffix)) && !(strings.HasPrefix(key, sdk.Bech32PrefixAccAddr)) {
+		key = infoKey(key)
+	}
 	item, err := ks.db.Get(key)
 	if err != nil {
 		return nil, false, wrapKeyNotFound(err, key)

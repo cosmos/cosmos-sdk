@@ -102,7 +102,7 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 		}
 		// Version sets of each DB must match
 		if !versions.Equal(mversions) {
-			err = fmt.Errorf("Storage and Merkle DB have different version history")
+			err = fmt.Errorf("Storage and Merkle DB have different version history") //nolint:stylecheck
 			return
 		}
 		err = opts.MerkleDB.Revert()
@@ -424,12 +424,12 @@ func (s *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			return sdkerrors.QueryResult(err, false)
 		}
 		if root == nil {
-			return sdkerrors.QueryResult(errors.New("Merkle root hash not found"), false)
+			return sdkerrors.QueryResult(errors.New("Merkle root hash not found"), false) //nolint:stylecheck
 		}
 		merkleStore := loadSMT(dbm.ReaderAsReadWriter(merkleView), root)
 		res.ProofOps, err = merkleStore.GetProof(res.Key)
 		if err != nil {
-			return sdkerrors.QueryResult(fmt.Errorf("Merkle proof creation failed for key: %v", res.Key), false)
+			return sdkerrors.QueryResult(fmt.Errorf("Merkle proof creation failed for key: %v", res.Key), false) //nolint:stylecheck
 		}
 
 	case "/subspace":
@@ -466,14 +466,14 @@ func loadSMT(merkleTxn dbm.DBReadWriter, root []byte) *smt.Store {
 	return smt.LoadStore(merkleNodes, merkleValues, root)
 }
 
-func (st *Store) CacheWrap() types.CacheWrap {
-	return cachekv.NewStore(st)
+func (s *Store) CacheWrap() types.CacheWrap {
+	return cachekv.NewStore(s)
 }
 
-func (st *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	return cachekv.NewStore(tracekv.NewStore(st, w, tc))
+func (s *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
+	return cachekv.NewStore(tracekv.NewStore(s, w, tc))
 }
 
-func (st *Store) CacheWrapWithListeners(storeKey types.StoreKey, listeners []types.WriteListener) types.CacheWrap {
-	return cachekv.NewStore(listenkv.NewStore(st, storeKey, listeners))
+func (s *Store) CacheWrapWithListeners(storeKey types.StoreKey, listeners []types.WriteListener) types.CacheWrap {
+	return cachekv.NewStore(listenkv.NewStore(s, storeKey, listeners))
 }

@@ -106,10 +106,6 @@ func TestBuilderWithAux(t *testing.T) {
 			tipperSignerData, err = tipperBuilder.GetAuxSignerData()
 			require.NoError(t, err)
 
-			var body txtypes.TxBody
-			err = encCfg.Codec.Unmarshal(tipperSignerData.SignDoc.BodyBytes, &body)
-			require.NoError(t, err)
-
 			err = w.AddAuxSignerData(tipperSignerData)
 			if tc.expErr {
 				require.Error(t, err)

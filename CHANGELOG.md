@@ -38,6 +38,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+* (x/upgrade) [\#10532](https://github.com/cosmos/cosmos-sdk/pull/10532)  Add `keeper.DumpUpgradeInfoWithInfoToDisk` to include `Plan.Info` in the upgrade-info file.
+
 ### Bug Fixes
 
 * [\#10414](https://github.com/cosmos/cosmos-sdk/pull/10414) Use `sdk.GetConfig().GetFullBIP44Path()` instead `sdk.FullFundraiserPath` to generate key

@@ -13,7 +13,7 @@ require (
 	github.com/cosmos/cosmos-proto v0.0.0-20210914142853-23ed61ac79ce
 	github.com/cosmos/cosmos-sdk/db v0.0.0
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/iavl v0.17.2-0.20211019083829-a33fa2e01412
+	github.com/cosmos/iavl v0.17.2
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/gogo/gateway v1.1.0
 	github.com/gogo/protobuf v1.3.3
@@ -51,7 +51,7 @@ require (
 	github.com/tendermint/tm-db v0.6.4
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 	google.golang.org/genproto v0.0.0-20210828152312-66f60bf46e71
-	google.golang.org/grpc v1.41.0
+	google.golang.org/grpc v1.42.0
 	google.golang.org/protobuf v1.27.1
 	sigs.k8s.io/yaml v1.3.0
 )

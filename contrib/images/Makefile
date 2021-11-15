@@ -1,7 +1,7 @@
 all: simd-env
 
-simd-env: simd-rmi
-	docker build --tag cosmossdk/simd -f simd-env/Dockerfile \
+simd-env:
+	docker build --tag cosmossdk/simd-env -f simd-env/Dockerfile \
 		$(shell git rev-parse --show-toplevel)
 
 simd-dlv: simd-rmi

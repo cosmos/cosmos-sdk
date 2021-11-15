@@ -14,6 +14,12 @@ const aminoNonCriticalFieldsError = "protobuf transaction contains unknown non-c
 
 var _ signing.SignModeHandler = signModeLegacyAminoJSONHandler{}
 
+// NewSignModeLegacyAminoJSONHandler creates a new legacy Amino SignModeHandler
+// instance.
+func NewSignModeLegacyAminoJSONHandler() signing.SignModeHandler {
+	return signModeLegacyAminoJSONHandler{}
+}
+
 // signModeLegacyAminoJSONHandler defines the SIGN_MODE_LEGACY_AMINO_JSON
 // SignModeHandler.
 type signModeLegacyAminoJSONHandler struct{}

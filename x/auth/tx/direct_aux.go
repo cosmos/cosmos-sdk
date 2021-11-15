@@ -12,6 +12,12 @@ import (
 
 var _ signing.SignModeHandler = signModeDirectAuxHandler{}
 
+// NewSignModeDirectAuxHandler creates a new Direct Aux SignModeHandler
+// instance.
+func NewSignModeDirectAuxHandler() signing.SignModeHandler {
+	return signModeDirectAuxHandler{}
+}
+
 // signModeDirectAuxHandler defines the SIGN_MODE_DIRECT_AUX SignModeHandler
 type signModeDirectAuxHandler struct{}
 

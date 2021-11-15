@@ -34,6 +34,26 @@ func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signin
 	}
 }
 
+// CustomTxConfig returns a new protobuf TxConfig using the provided ProtoCodec, sign modes, and (de/en)coders. The
+// first enabled sign mode will become the default sign mode.
+func CustomTxConfig(
+	handler signing.SignModeHandler,
+	decoder sdk.TxDecoder,
+	encoder sdk.TxEncoder,
+	jsonDecoder sdk.TxDecoder,
+	jsonEncoder sdk.TxEncoder,
+	protoCodec codec.ProtoCodecMarshaler,
+) client.TxConfig {
+	return &config{
+		handler:     handler,
+		decoder:     decoder,
+		encoder:     encoder,
+		jsonDecoder: jsonDecoder,
+		jsonEncoder: jsonEncoder,
+		protoCodec:  protoCodec,
+	}
+}
+
 func (g config) NewTxBuilder() client.TxBuilder {
 	return newBuilder(g.protoCodec)
 }

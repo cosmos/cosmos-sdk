@@ -26,11 +26,11 @@ func makeSignModeHandler(modes []signingtypes.SignMode) signing.SignModeHandler 
 	for i, mode := range modes {
 		switch mode {
 		case signingtypes.SignMode_SIGN_MODE_DIRECT:
-			handlers[i] = signModeDirectHandler{}
+			handlers[i] = NewSignModeDirectHandler()
 		case signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
-			handlers[i] = signModeLegacyAminoJSONHandler{}
+			handlers[i] = NewSignModeLegacyAminoJSONHandler()
 		case signingtypes.SignMode_SIGN_MODE_DIRECT_AUX:
-			handlers[i] = signModeDirectAuxHandler{}
+			handlers[i] = NewSignModeDirectAuxHandler()
 		default:
 			panic(fmt.Errorf("unsupported sign mode %+v", mode))
 		}

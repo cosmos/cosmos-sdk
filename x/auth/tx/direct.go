@@ -10,10 +10,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
+var _ signing.SignModeHandler = signModeDirectHandler{}
+
+// NewSignModeDirectHandler creates a new Direct SignModeHandler
+// instance.
+func NewSignModeDirectHandler() signing.SignModeHandler {
+	return signModeDirectHandler{}
+}
+
 // signModeDirectHandler defines the SIGN_MODE_DIRECT SignModeHandler
 type signModeDirectHandler struct{}
-
-var _ signing.SignModeHandler = signModeDirectHandler{}
 
 // DefaultMode implements SignModeHandler.DefaultMode
 func (signModeDirectHandler) DefaultMode() signingtypes.SignMode {

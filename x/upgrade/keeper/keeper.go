@@ -325,11 +325,19 @@ func (k Keeper) IsSkipHeight(height int64) bool {
 	return k.skipUpgradeHeights[height]
 }
 
-// DumpUpgradeInfoToDisk writes upgrade information to UpgradeInfoFileName.
+// DumpUpgradeInfoToDisk writes upgrade information to UpgradeInfoFileName. The function
+// doesn't save the `Plan.Info` data, hence it won't support auto download functionality
+// by cosmvisor.
+// NOTE: this function will be update in the next release.
+func (k Keeper) DumpUpgradeInfoToDisk(height int64, name string) error {
+	return k.DumpUpgradeInfoWithInfoToDisk(height, name, "")
+}
+
+// Deprecated: DumpUpgradeInfoWithInfoToDisk writes upgrade information to UpgradeInfoFileName.
 // `info` should be provided and contain Plan.Info data in order to support
 // auto download functionality by cosmovisor and other tools using upgarde-info.json
 // (GetUpgradeInfoPath()) file.
-func (k Keeper) DumpUpgradeInfoToDisk(height int64, name string, info ...string) error {
+func (k Keeper) DumpUpgradeInfoWithInfoToDisk(height int64, name string, info string) error {
 	upgradeInfoFilePath, err := k.GetUpgradeInfoPath()
 	if err != nil {
 		return err
@@ -338,9 +346,7 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, name string, info ...string)
 	upgradeInfo := upgradeInfo{
 		Name:   name,
 		Height: height,
-	}
-	if len(info) != 0 {
-		upgradeInfo.Info = info[0]
+		Info:   info,
 	}
 	bz, err := json.Marshal(upgradeInfo)
 	if err != nil {

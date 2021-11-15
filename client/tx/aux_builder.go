@@ -41,6 +41,7 @@ func (b *AuxTxBuilder) SetMemo(memo string) {
 	b.checkEmptyFields()
 
 	b.body.Memo = memo
+	b.auxSignerData.SignDoc.BodyBytes = nil
 }
 
 // SetTimeoutHeight sets a timeout height in the tx.
@@ -48,6 +49,7 @@ func (b *AuxTxBuilder) SetTimeoutHeight(height uint64) {
 	b.checkEmptyFields()
 
 	b.body.TimeoutHeight = height
+	b.auxSignerData.SignDoc.BodyBytes = nil
 }
 
 // SetMsgs sets an array of Msgs in the tx.
@@ -65,6 +67,7 @@ func (b *AuxTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
 
 	b.msgs = msgs
 	b.body.Messages = anys
+	b.auxSignerData.SignDoc.BodyBytes = nil
 
 	return nil
 }
@@ -130,6 +133,26 @@ func (b *AuxTxBuilder) SetSignature(sig []byte) {
 	b.checkEmptyFields()
 
 	b.auxSignerData.Sig = sig
+}
+
+// SetExtensionOptions sets the aux signer's extension options.
+func (b *AuxTxBuilder) SetExtensionOptions(extOpts ...*codectypes.Any) {
+	b.checkEmptyFields()
+
+	b.body.ExtensionOptions = extOpts
+	b.auxSignerData.SignDoc.BodyBytes = nil
+}
+
+func (b *AuxTxBuilder) GetBody() *tx.TxBody {
+	return b.body
+}
+
+// SetSignature sets the aux signer's signature.
+func (b *AuxTxBuilder) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
+	b.checkEmptyFields()
+
+	b.body.NonCriticalExtensionOptions = extOpts
+	b.auxSignerData.SignDoc.BodyBytes = nil
 }
 
 // GetSignBytes returns the builder's sign bytes.

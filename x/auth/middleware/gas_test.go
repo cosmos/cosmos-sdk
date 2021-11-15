@@ -51,7 +51,7 @@ func (s *MWTestSuite) setupGasTx() (signing.Tx, []byte, sdk.Context, uint64) {
 }
 
 func (s *MWTestSuite) TestSetup() {
-	tx, _, ctx, gasLimit := s.setupGasTx()
+	testTx, _, ctx, gasLimit := s.setupGasTx()
 	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.GasTxMiddleware)
 
 	testcases := []struct {
@@ -62,11 +62,11 @@ func (s *MWTestSuite) TestSetup() {
 		errorStr    string
 	}{
 		{"not a gas tx", txTest{}, 0, true, "Tx must be GasTx: tx parse error"},
-		{"tx with its own gas limit", tx, gasLimit, false, ""},
+		{"tx with its own gas limit", testTx, gasLimit, false, ""},
 	}
 	for _, tc := range testcases {
 		s.Run(tc.name, func() {
-			res, err := txHandler.CheckTx(sdk.WrapSDKContext(ctx), tc.tx, abci.RequestCheckTx{})
+			res, err := txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, abci.RequestCheckTx{})
 			if tc.expErr {
 				s.Require().EqualError(err, tc.errorStr)
 			} else {
@@ -78,15 +78,17 @@ func (s *MWTestSuite) TestSetup() {
 }
 
 func (s *MWTestSuite) TestRecoverPanic() {
-	tx, txBytes, ctx, gasLimit := s.setupGasTx()
+	testTx, txBytes, ctx, gasLimit := s.setupGasTx()
 	txHandler := middleware.ComposeMiddlewares(outOfGasTxHandler{}, middleware.GasTxMiddleware, middleware.RecoveryTxMiddleware)
-	res, err := txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{Tx: txBytes})
+	res, err := txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, abci.RequestCheckTx{Tx: txBytes})
 	s.Require().Error(err, "Did not return error on OutOfGas panic")
 	s.Require().True(errors.Is(sdkerrors.ErrOutOfGas, err), "Returned error is not an out of gas error")
 	s.Require().Equal(gasLimit, uint64(res.GasWanted))
 
 	txHandler = middleware.ComposeMiddlewares(outOfGasTxHandler{}, middleware.GasTxMiddleware)
-	s.Require().Panics(func() { txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{Tx: txBytes}) }, "Recovered from non-Out-of-Gas panic")
+	s.Require().Panics(func() {
+		txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, abci.RequestCheckTx{Tx: txBytes})
+	}, "Recovered from non-Out-of-Gas panic")
 }
 
 // outOfGasTxHandler is a test middleware that will throw OutOfGas panic.
@@ -94,7 +96,7 @@ type outOfGasTxHandler struct{}
 
 var _ tx.Handler = outOfGasTxHandler{}
 
-func (txh outOfGasTxHandler) DeliverTx(ctx context.Context, _ sdk.Tx, _ abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+func (txh outOfGasTxHandler) DeliverTx(ctx context.Context, _ tx.Request) (tx.Response, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	overLimit := sdkCtx.GasMeter().Limit() + 1
 
@@ -103,7 +105,7 @@ func (txh outOfGasTxHandler) DeliverTx(ctx context.Context, _ sdk.Tx, _ abci.Req
 
 	panic("not reached")
 }
-func (txh outOfGasTxHandler) CheckTx(ctx context.Context, _ sdk.Tx, _ abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (txh outOfGasTxHandler) CheckTx(ctx context.Context, _ tx.Request, _ abci.RequestCheckTx) (tx.Response, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	overLimit := sdkCtx.GasMeter().Limit() + 1
 
@@ -112,7 +114,7 @@ func (txh outOfGasTxHandler) CheckTx(ctx context.Context, _ sdk.Tx, _ abci.Reque
 
 	panic("not reached")
 }
-func (txh outOfGasTxHandler) SimulateTx(ctx context.Context, _ sdk.Tx, _ tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+func (txh outOfGasTxHandler) SimulateTx(ctx context.Context, _ tx.Request) (tx.Response, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	overLimit := sdkCtx.GasMeter().Limit() + 1
 
@@ -127,12 +129,12 @@ type noopTxHandler struct{}
 
 var _ tx.Handler = noopTxHandler{}
 
-func (txh noopTxHandler) CheckTx(_ context.Context, _ sdk.Tx, _ abci.RequestCheckTx) (tx.Response, error) {
+func (txh noopTxHandler) CheckTx(_ context.Context, _ tx.Request, _ abci.RequestCheckTx) (tx.Response, error) {
 	return tx.Response{}, nil
 }
-func (txh noopTxHandler) SimulateTx(_ context.Context, _ sdk.Tx) (tx.Response, error) {
+func (txh noopTxHandler) SimulateTx(_ context.Context, _ tx.Request) (tx.Response, error) {
 	return tx.Response{}, nil
 }
-func (txh noopTxHandler) DeliverTx(ctx context.Context, _ sdk.Tx) (tx.Response, error) {
+func (txh noopTxHandler) DeliverTx(ctx context.Context, _ tx.Request) (tx.Response, error) {
 	return tx.Response{}, nil
 }

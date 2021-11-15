@@ -31,10 +31,10 @@ func MempoolFeeMiddleware(txh tx.Handler) tx.Handler {
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (txh mempoolFeeTxHandler) CheckTx(ctx context.Context, sdkTx sdk.Tx, req abci.RequestCheckTx) (tx.Response, error) {
+func (txh mempoolFeeTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq abci.RequestCheckTx) (tx.Response, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	feeTx, ok := sdkTx.(sdk.FeeTx)
+	feeTx, ok := req.Tx.(sdk.FeeTx)
 	if !ok {
 		return tx.Response{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
@@ -62,17 +62,17 @@ func (txh mempoolFeeTxHandler) CheckTx(ctx context.Context, sdkTx sdk.Tx, req ab
 		}
 	}
 
-	return txh.next.CheckTx(ctx, sdkTx, req)
+	return txh.next.CheckTx(ctx, req, checkReq)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (txh mempoolFeeTxHandler) DeliverTx(ctx context.Context, sdkTx sdk.Tx) (tx.Response, error) {
-	return txh.next.DeliverTx(ctx, sdkTx)
+func (txh mempoolFeeTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	return txh.next.DeliverTx(ctx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (txh mempoolFeeTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx) (tx.Response, error) {
-	return txh.next.SimulateTx(ctx, sdkTx)
+func (txh mempoolFeeTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	return txh.next.SimulateTx(ctx, req)
 }
 
 var _ tx.Handler = deductFeeTxHandler{}
@@ -154,29 +154,29 @@ func (dfd deductFeeTxHandler) checkDeductFee(ctx context.Context, sdkTx sdk.Tx) 
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (dfd deductFeeTxHandler) CheckTx(ctx context.Context, sdkTx sdk.Tx, req abci.RequestCheckTx) (tx.Response, error) {
-	if err := dfd.checkDeductFee(ctx, sdkTx); err != nil {
+func (dfd deductFeeTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq abci.RequestCheckTx) (tx.Response, error) {
+	if err := dfd.checkDeductFee(ctx, req.Tx); err != nil {
 		return tx.Response{}, err
 	}
 
-	return dfd.next.CheckTx(ctx, sdkTx, req)
+	return dfd.next.CheckTx(ctx, req, checkReq)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (dfd deductFeeTxHandler) DeliverTx(ctx context.Context, sdkTx sdk.Tx) (tx.Response, error) {
-	if err := dfd.checkDeductFee(ctx, sdkTx); err != nil {
+func (dfd deductFeeTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	if err := dfd.checkDeductFee(ctx, req.Tx); err != nil {
 		return tx.Response{}, err
 	}
 
-	return dfd.next.DeliverTx(ctx, sdkTx)
+	return dfd.next.DeliverTx(ctx, req)
 }
 
-func (dfd deductFeeTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx) (tx.Response, error) {
-	if err := dfd.checkDeductFee(ctx, sdkTx); err != nil {
+func (dfd deductFeeTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	if err := dfd.checkDeductFee(ctx, req.Tx); err != nil {
 		return tx.Response{}, err
 	}
 
-	return dfd.next.SimulateTx(ctx, sdkTx)
+	return dfd.next.SimulateTx(ctx, req)
 }
 
 // DeductFees deducts fees from the given account.

@@ -30,13 +30,13 @@ func GasTxMiddleware(txh tx.Handler) tx.Handler {
 var _ tx.Handler = gasTxHandler{}
 
 // CheckTx implements tx.Handler.CheckTx.
-func (txh gasTxHandler) CheckTx(ctx context.Context, sdkTx sdk.Tx, req abci.RequestCheckTx) (tx.Response, error) {
-	sdkCtx, err := gasContext(sdk.UnwrapSDKContext(ctx), sdkTx, false)
+func (txh gasTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq abci.RequestCheckTx) (tx.Response, error) {
+	sdkCtx, err := gasContext(sdk.UnwrapSDKContext(ctx), req.Tx, false)
 	if err != nil {
 		return tx.Response{}, err
 	}
 
-	res, err := txh.next.CheckTx(sdk.WrapSDKContext(sdkCtx), sdkTx, req)
+	res, err := txh.next.CheckTx(sdk.WrapSDKContext(sdkCtx), req, checkReq)
 	res.GasUsed = uint64(sdkCtx.GasMeter().GasConsumed())
 	res.GasWanted = uint64(sdkCtx.GasMeter().Limit())
 
@@ -44,13 +44,13 @@ func (txh gasTxHandler) CheckTx(ctx context.Context, sdkTx sdk.Tx, req abci.Requ
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (txh gasTxHandler) DeliverTx(ctx context.Context, sdkTx sdk.Tx) (tx.Response, error) {
-	sdkCtx, err := gasContext(sdk.UnwrapSDKContext(ctx), sdkTx, false)
+func (txh gasTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	sdkCtx, err := gasContext(sdk.UnwrapSDKContext(ctx), req.Tx, false)
 	if err != nil {
 		return tx.Response{}, err
 	}
 
-	res, err := txh.next.DeliverTx(sdk.WrapSDKContext(sdkCtx), sdkTx)
+	res, err := txh.next.DeliverTx(sdk.WrapSDKContext(sdkCtx), req)
 	res.GasUsed = uint64(sdkCtx.GasMeter().GasConsumed())
 	res.GasWanted = uint64(sdkCtx.GasMeter().Limit())
 
@@ -58,13 +58,13 @@ func (txh gasTxHandler) DeliverTx(ctx context.Context, sdkTx sdk.Tx) (tx.Respons
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
-func (txh gasTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx) (tx.Response, error) {
-	sdkCtx, err := gasContext(sdk.UnwrapSDKContext(ctx), sdkTx, true)
+func (txh gasTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	sdkCtx, err := gasContext(sdk.UnwrapSDKContext(ctx), req.Tx, true)
 	if err != nil {
 		return tx.Response{}, err
 	}
 
-	res, err := txh.next.SimulateTx(sdk.WrapSDKContext(sdkCtx), sdkTx)
+	res, err := txh.next.SimulateTx(sdk.WrapSDKContext(sdkCtx), req)
 	res.GasWanted = sdkCtx.GasMeter().Limit()
 	res.GasUsed = sdkCtx.GasMeter().GasConsumed()
 

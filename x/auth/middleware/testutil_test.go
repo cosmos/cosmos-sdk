@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -176,8 +175,8 @@ func (s *MWTestSuite) runTestCase(ctx sdk.Context, txBuilder client.TxBuilder, p
 		// Theoretically speaking, middleware unit tests should only test
 		// middlewares, but here we sometimes also test the tx creation
 		// process.
-		tx, _, txErr := s.createTestTx(txBuilder, privs, accNums, accSeqs, chainID)
-		newCtx, txHandlerErr := s.txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, types.RequestDeliverTx{})
+		testTx, _, txErr := s.createTestTx(txBuilder, privs, accNums, accSeqs, chainID)
+		newCtx, txHandlerErr := s.txHandler.DeliverTx(sdk.WrapSDKContext(ctx), txtypes.Request{Tx: testTx})
 
 		if tc.expPass {
 			s.Require().NoError(txErr)

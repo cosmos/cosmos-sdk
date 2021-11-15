@@ -30,12 +30,17 @@ type Response struct {
 	Events       []abci.Event
 }
 
+type Request struct {
+	Tx      sdk.Tx
+	TxBytes []byte
+}
+
 // TxHandler defines the baseapp's CheckTx, DeliverTx and Simulate respective
 // handlers. It is designed as a middleware stack.
 type Handler interface {
-	CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (Response, error)
-	DeliverTx(ctx context.Context, tx sdk.Tx) (Response, error)
-	SimulateTx(ctx context.Context, tx sdk.Tx) (Response, error)
+	CheckTx(ctx context.Context, req Request, checkReq abci.RequestCheckTx) (Response, error)
+	DeliverTx(ctx context.Context, req Request) (Response, error)
+	SimulateTx(ctx context.Context, req Request) (Response, error)
 }
 
 // TxMiddleware defines one layer of the TxHandler middleware stack.

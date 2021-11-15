@@ -9,6 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -80,9 +81,7 @@ func (txh runMsgsTxHandler) runMsgs(sdkCtx sdk.Context, msgs []sdk.Msg, txBytes 
 	// Result if any single message fails or does not have a registered Handler.
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 	events := sdkCtx.EventManager().Events()
-	txMsgData := &sdk.TxMsgData{
-		Data: make([]*sdk.MsgData, 0, len(msgs)),
-	}
+	msgResponses := make([]*codectypes.Any, len(msgs))
 
 	// NOTE: GasWanted is determined by the Gas TxHandler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
@@ -129,20 +128,29 @@ func (txh runMsgsTxHandler) runMsgs(sdkCtx sdk.Context, msgs []sdk.Msg, txBytes 
 		// separate each result.
 		events = events.AppendEvents(msgEvents)
 
-		txMsgData.Data = append(txMsgData.Data, &sdk.MsgData{MsgType: sdk.MsgTypeURL(msg), Data: msgResult.Data})
+		// Each individual sdk.Result has exactly one Msg response. We aggregate here.
+		msgResponse := msgResult.MsgResponses[0]
+		if msgResponse == nil {
+			return nil, sdkerrors.ErrLogic.Wrapf("got nil Msg response at index %d", i)
+		}
+		msgResponses[i] = msgResponse
 		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint32(i), msgResult.Log, msgEvents))
 	}
 
 	msCache.Write()
-	data, err := proto.Marshal(txMsgData)
+	// The data we send back to tendermint is the proto-marshalled bytes of TxMsgData.
+	data, err := proto.Marshal(&sdk.TxMsgData{
+		MsgResponses: msgResponses,
+	})
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to marshal tx data")
 	}
 
 	return &sdk.Result{
-		Data:   data,
-		Log:    strings.TrimSpace(msgLogs.String()),
-		Events: events.ToABCIEvents(),
+		Data:         data,
+		Log:          strings.TrimSpace(msgLogs.String()),
+		Events:       events.ToABCIEvents(),
+		MsgResponses: msgResponses,
 	}, nil
 }
 

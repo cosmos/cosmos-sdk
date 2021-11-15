@@ -47,7 +47,13 @@ func (k Keeper) PowerReduction(ctx sdk.Context) sdk.Int {
 	return sdk.DefaultPowerReduction
 }
 
-// Get all parameteras as types.Params
+// MinCommissionRate - Minimum validator commission rate
+func (k Keeper) MinCommissionRate(ctx sdk.Context) (res sdk.Dec) {
+	k.paramstore.Get(ctx, types.KeyMinCommissionRate, &res)
+	return
+}
+
+// Get all parameters as types.Params
 func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 	return types.NewParams(
 		k.UnbondingTime(ctx),
@@ -55,6 +61,7 @@ func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 		k.MaxEntries(ctx),
 		k.HistoricalEntries(ctx),
 		k.BondDenom(ctx),
+		k.MinCommissionRate(ctx),
 	)
 }
 

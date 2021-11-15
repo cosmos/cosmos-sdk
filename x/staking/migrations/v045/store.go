@@ -5,17 +5,27 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	v040staking "github.com/cosmos/cosmos-sdk/x/staking/migrations/v040"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // MigrateStore performs in-place store migrations from v0.43/v0.44 to v0.45.
 // The migration includes:
 //
 // - Removing delegations that have a zero share or token amount.
-func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
+// - Setting the MinCommissionRate param in the paramstore
+func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, paramstore paramtypes.Subspace) error {
 	store := ctx.KVStore(storeKey)
 
+	migrateParamsStore(ctx, paramstore)
+
 	return purgeDelegations(store, cdc)
+}
+
+func migrateParamsStore(ctx sdk.Context, paramstore paramtypes.Subspace) {
+	paramstore.WithKeyTable(types.ParamKeyTable())
+	paramstore.Set(ctx, types.KeyMinCommissionRate, types.DefaultMinCommissionRate)
 }
 
 func purgeDelegations(store sdk.KVStore, cdc codec.BinaryCodec) error {

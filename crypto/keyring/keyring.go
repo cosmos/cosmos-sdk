@@ -473,7 +473,7 @@ func (ks keystore) KeyByAddress(address sdk.Address) (*Record, error) {
 	}
 
 	if len(ik.Data) == 0 {
-		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address", address, "not found"))
+		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address ", address.String(), "not found"))
 	}
 
 	return ks.Key(string(ik.Data))

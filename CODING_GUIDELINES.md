@@ -77,12 +77,14 @@ In other words: we define a use case input, current state and the expected outco
 >       And I should have 150 shares of APPL stock
 >       And a sell order for 20 shares of MSFT stock should have been executed
 
-*Reference: [https://openclassrooms.com/en/courses/4544611-write-agile-documentation-user-stories-acceptance-tests/4810081-writing-acceptance-tests](https://openclassrooms.com/en/courses/4544611-write-agile-documentation-user-stories-acceptance-tests/4810081-writing-acceptance-tests)*
+*Reference: [writing acceptance tests](https://openclassrooms.com/en/courses/4544611-write-agile-documentation-user-stories-acceptance-tests/4810081-writing-acceptance-tests)*.
 
 ### How and where to add acceptance tests?
 
-Acceptance tests are written in the Markdown format, using the scenario template described above, and be part of the specification (module _spec_ directory). They should be defined during the design phase or at an early stage of development. Automated tests should cover all acceptance tests scenarios.
-Acceptance tests should be defined before writing a module architecture - it will clarify the purpose and usage of the software.
+Acceptance tests are written in the Markdown format, using the scenario template described above, and be part of the specification (`xx_test.md` file in _spec_ directory). Example: (`eco-credits/spec/06.test.md`)[https://github.com/regen-network/regen-ledger/blob/7297783577e6cd102c5093365b573163680f36a1/x/ecocredit/spec/06_tests.md]
+
+Acceptance tests should be defined during the design phase or at an early stage of development. Moreover, they should be defined before writing a module architecture - it will clarify the purpose and usage of the software.
+Automated tests should cover all acceptance tests scenarios.
 
 ## Automated Tests
 

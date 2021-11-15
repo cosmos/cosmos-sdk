@@ -143,10 +143,6 @@ func (b *AuxTxBuilder) SetExtensionOptions(extOpts ...*codectypes.Any) {
 	b.auxSignerData.SignDoc.BodyBytes = nil
 }
 
-func (b *AuxTxBuilder) GetBody() *tx.TxBody {
-	return b.body
-}
-
 // SetSignature sets the aux signer's signature.
 func (b *AuxTxBuilder) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 	b.checkEmptyFields()

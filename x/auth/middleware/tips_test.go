@@ -20,10 +20,10 @@ import (
 var initialRegens = sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(1000)))
 var initialAtoms = sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(1000)))
 
-// setupMetaTxAccts sets up 2 accounts:
+// setupAcctsForTips sets up 2 accounts:
 // - tipper has 1000 regens
 // - feePayer has 1000 atoms and 1000 regens
-func (s *MWTestSuite) setupMetaTxAccts(ctx sdk.Context) (sdk.Context, []testAccount) {
+func (s *MWTestSuite) setupAcctsForTips(ctx sdk.Context) (sdk.Context, []testAccount) {
 	accts := s.createTestAccounts(ctx, 2, initialRegens)
 	feePayer := accts[1]
 	err := s.app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, initialAtoms)
@@ -89,14 +89,13 @@ func (s *MWTestSuite) TestTips() {
 		tc := tc
 		s.Run(tc.name, func() {
 			ctx := s.SetupTest(false) // reset
-			ctx, accts := s.setupMetaTxAccts(ctx)
+			ctx, accts := s.setupAcctsForTips(ctx)
 			tipper, feePayer := accts[0], accts[1]
 
 			msg = govtypes.NewMsgVote(tipper.acc.GetAddress(), 1, govtypes.OptionYes)
 
 			auxSignerData := s.mkTipperAuxSignerData(tipper.priv, msg, tc.tip, signing.SignMode_SIGN_MODE_DIRECT_AUX, tipper.accNum, 0, ctx.ChainID())
-			feePayerTxBuilder, err := mkFeePayerTxBuilder(s.clientCtx, auxSignerData, feePayer.priv, signing.SignMode_SIGN_MODE_DIRECT, tx.Fee{Amount: tc.fee, GasLimit: tc.gasLimit}, feePayer.accNum, 0, ctx.ChainID())
-			s.Require().NoError(err)
+			feePayerTxBuilder := s.mkFeePayerTxBuilder(s.clientCtx, auxSignerData, feePayer.priv, signing.SignMode_SIGN_MODE_DIRECT, tx.Fee{Amount: tc.fee, GasLimit: tc.gasLimit}, feePayer.accNum, 0, ctx.ChainID())
 
 			_, res, err := s.app.SimDeliver(s.clientCtx.TxConfig.TxEncoder(), feePayerTxBuilder.GetTx())
 
@@ -161,26 +160,22 @@ func (s *MWTestSuite) mkTipperAuxSignerData(
 	return auxSignerData
 }
 
-func mkFeePayerTxBuilder(
+func (s *MWTestSuite) mkFeePayerTxBuilder(
 	clientCtx client.Context,
 	auxSignerData tx.AuxSignerData,
 	feePayerPriv cryptotypes.PrivKey, signMode signing.SignMode,
 	fee tx.Fee, accNum, accSeq uint64, chainID string,
-) (client.TxBuilder, error) {
+) client.TxBuilder {
 	txBuilder := clientCtx.TxConfig.NewTxBuilder()
 	err := txBuilder.AddAuxSignerData(auxSignerData)
-	if err != nil {
-		return nil, err
-	}
+	s.Require().NoError(err)
 	txBuilder.SetFeePayer(sdk.AccAddress(feePayerPriv.PubKey().Address()))
 	txBuilder.SetFeeAmount(fee.Amount)
 	txBuilder.SetGasLimit(fee.GasLimit)
 
 	// Calling SetSignatures with empty sig to populate AuthInfo.
 	tipperSigsV2, err := auxSignerData.GetSignatureV2()
-	if err != nil {
-		return nil, err
-	}
+	s.Require().NoError(err)
 	feePayerSigV2 := signing.SignatureV2{
 		PubKey: feePayerPriv.PubKey(),
 		Data: &signing.SingleSignatureData{
@@ -201,14 +196,10 @@ func mkFeePayerTxBuilder(
 	feePayerSigV2, err = clienttx.SignWithPrivKey(
 		signMode, signerData,
 		txBuilder, feePayerPriv, clientCtx.TxConfig, accSeq)
-	if err != nil {
-		return nil, err
-	}
+	s.Require().NoError(err)
 	sigsV2 = append([]signing.SignatureV2{tipperSigsV2}, feePayerSigV2)
 	err = txBuilder.SetSignatures(sigsV2...)
-	if err != nil {
-		return nil, err
-	}
+	s.Require().NoError(err)
 
-	return txBuilder, nil
+	return txBuilder
 }

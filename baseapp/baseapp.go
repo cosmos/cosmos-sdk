@@ -344,10 +344,6 @@ func (app *BaseApp) setIndexEvents(ie []string) {
 	}
 }
 
-func (app *BaseApp) setIAVLCacheSize(size int) {
-	app.iavlCacheSize = size
-}
-
 // QueryRouter returns the QueryRouter of a BaseApp.
 func (app *BaseApp) QueryRouter() sdk.QueryRouter { return app.queryRouter }
 

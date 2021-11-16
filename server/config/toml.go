@@ -8,7 +8,6 @@ import (
 	"text/template"
 
 	"github.com/spf13/viper"
-	tmos "github.com/tendermint/tendermint/libs/os"
 )
 
 const DefaultConfigTemplate = `# This is a TOML config file.
@@ -253,6 +252,7 @@ func WriteConfigFile(configFilePath string, config interface{}) {
 
 func mustWriteFile(filePath string, contents []byte, mode os.FileMode) {
 	if err := ioutil.WriteFile(filePath, contents, mode); err != nil {
-		tmos.Exit(fmt.Sprintf("failed to write file: %v", err))
+		fmt.Printf(fmt.Sprintf("failed to write file: %v", err) + "\n")
+		os.Exit(1)
 	}
 }

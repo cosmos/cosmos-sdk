@@ -2,11 +2,10 @@ package keeper_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/libs/time"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -25,10 +24,6 @@ const (
 	testURI              = "kitty uri"
 	testURIHash          = "229bfd3c1b431c14a526497873897108"
 )
-
-func timeNow() time.Time {
-	return time.Now().Round(0).UTC()
-}
 
 type TestSuite struct {
 	suite.Suite

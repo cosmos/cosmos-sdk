@@ -8,10 +8,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/tendermint/tendermint/rpc/coretypes"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/rpc/coretypes"
 )
 
 // QueryTxsByEvents performs a search for transactions for a given set of events

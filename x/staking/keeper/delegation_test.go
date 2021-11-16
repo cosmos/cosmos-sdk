@@ -311,10 +311,11 @@ func (h MockStakingHooks) BeforeUnbondingDelegationEntryComplete(_ sdk.Context, 
 }
 
 func TestUnbondingDelegationOnHold(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	_, app, ctx := createTestInput()
 
 	stakingKeeper := keeper.NewKeeper(
 		app.AppCodec(),
+		app.GetKey(types.StoreKey),
 		app.GetKey(types.StoreKey),
 		app.AccountKeeper,
 		app.BankKeeper,
@@ -349,7 +350,7 @@ func TestUnbondingDelegationOnHold(t *testing.T) {
 	bondDenom := app.StakingKeeper.BondDenom(ctx)
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 
-	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
+	require.NoError(t, simapp.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// create a validator and a delegator to that validator

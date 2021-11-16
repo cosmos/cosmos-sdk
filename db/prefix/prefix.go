@@ -46,7 +46,7 @@ func NewPrefixWriter(db dbm.DBWriter, prefix []byte) prefixW {
 }
 
 func prefixed(prefix, key []byte) []byte {
-	return append(prefix, key...)
+	return append(cp(prefix), key...)
 }
 
 // Get implements DBReader.
@@ -170,6 +170,12 @@ func (pdb prefixW) Commit() error { return pdb.db.Commit() }
 // Discard implements DBReadWriter.
 func (pdb prefixW) Discard() error { return pdb.db.Discard() }
 
+func cp(bz []byte) (ret []byte) {
+	ret = make([]byte, len(bz))
+	copy(ret, bz)
+	return ret
+}
+
 // Returns a slice of the same length (big endian), but incremented by one.
 // Returns nil on overflow (e.g. if bz bytes are all 0xFF)
 // CONTRACT: len(bz) > 0
@@ -177,8 +183,7 @@ func cpIncr(bz []byte) (ret []byte) {
 	if len(bz) == 0 {
 		panic("cpIncr expects non-zero bz length")
 	}
-	ret = make([]byte, len(bz))
-	copy(ret, bz)
+	ret = cp(bz)
 	for i := len(bz) - 1; i >= 0; i-- {
 		if ret[i] < byte(0xFF) {
 			ret[i]++

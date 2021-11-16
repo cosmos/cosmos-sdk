@@ -1,6 +1,7 @@
 package root
 
 import (
+	"bytes"
 	"errors"
 
 	dbm "github.com/cosmos/cosmos-sdk/db"
@@ -17,12 +18,15 @@ type dbVersionsIs struct {
 }
 type dbVersionsFails struct{ dbm.DBConnection }
 type rwCommitFails struct{ dbm.DBReadWriter }
-type rwCrudFails struct{ dbm.DBReadWriter }
+type rwCrudFails struct {
+	dbm.DBReadWriter
+	onKey []byte
+}
 
 func (dbVersionsFails) Versions() (dbm.VersionSet, error) { return nil, errors.New("dbVersionsFails") }
 func (db dbVersionsIs) Versions() (dbm.VersionSet, error) { return db.vset, nil }
 func (db dbRWCrudFails) ReadWriter() dbm.DBReadWriter {
-	return rwCrudFails{db.DBConnection.ReadWriter()}
+	return rwCrudFails{db.DBConnection.ReadWriter(), nil}
 }
 func (dbSaveVersionFails) SaveVersion(uint64) error     { return errors.New("dbSaveVersionFails") }
 func (dbDeleteVersionFails) DeleteVersion(uint64) error { return errors.New("dbDeleteVersionFails") }
@@ -34,7 +38,27 @@ func (db dbRWCommitFails) ReadWriter() dbm.DBReadWriter {
 	return rwCommitFails{db.MemDB.ReadWriter()}
 }
 
-func (rwCrudFails) Get([]byte) ([]byte, error) { return nil, errors.New("rwCrudFails.Get") }
-func (rwCrudFails) Has([]byte) (bool, error)   { return false, errors.New("rwCrudFails.Has") }
-func (rwCrudFails) Set([]byte, []byte) error   { return errors.New("rwCrudFails.Set") }
-func (rwCrudFails) Delete([]byte) error        { return errors.New("rwCrudFails.Delete") }
+func (rw rwCrudFails) Get(k []byte) ([]byte, error) {
+	if rw.onKey == nil || bytes.Equal(rw.onKey, k) {
+		return nil, errors.New("rwCrudFails.Get")
+	}
+	return rw.DBReadWriter.Get(k)
+}
+func (rw rwCrudFails) Has(k []byte) (bool, error) {
+	if rw.onKey == nil || bytes.Equal(rw.onKey, k) {
+		return false, errors.New("rwCrudFails.Has")
+	}
+	return rw.DBReadWriter.Has(k)
+}
+func (rw rwCrudFails) Set(k []byte, v []byte) error {
+	if rw.onKey == nil || bytes.Equal(rw.onKey, k) {
+		return errors.New("rwCrudFails.Set")
+	}
+	return rw.DBReadWriter.Set(k, v)
+}
+func (rw rwCrudFails) Delete(k []byte) error {
+	if rw.onKey == nil || bytes.Equal(rw.onKey, k) {
+		return errors.New("rwCrudFails.Delete")
+	}
+	return rw.DBReadWriter.Delete(k)
+}

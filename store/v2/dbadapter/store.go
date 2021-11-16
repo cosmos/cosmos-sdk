@@ -62,7 +62,6 @@ func (dsa Store) Iterator(start, end []byte) types.Iterator {
 	if err != nil {
 		panic(err)
 	}
-
 	return dbutil.DBToStoreIterator(iter)
 }
 
@@ -72,7 +71,6 @@ func (dsa Store) ReverseIterator(start, end []byte) types.Iterator {
 	if err != nil {
 		panic(err)
 	}
-
 	return dbutil.DBToStoreIterator(iter)
 }
 

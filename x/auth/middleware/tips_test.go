@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -50,11 +49,9 @@ func (s *MWTestSuite) setupMetaTxAccts(ctx sdk.Context) (sdk.Context, []testAcco
 
 func (s *MWTestSuite) TestTips() {
 	var msg sdk.Msg
-	_, _, randomAddr := testdata.KeyTestPubAddr()
 
 	testcases := []struct {
 		name      string
-		msgSigner sdk.AccAddress
 		tip       sdk.Coins
 		fee       sdk.Coins
 		gasLimit  uint64
@@ -62,33 +59,27 @@ func (s *MWTestSuite) TestTips() {
 		expErrStr string
 	}{
 		{
-			"tipper should be equal to msg signer",
-			randomAddr, // arbitrary msg signer, not equal to tipper
-			sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(5000))), initialAtoms, 200000,
-			true, "pubKey does not match signer address",
-		},
-		{
-			"wrong tip denom", nil,
+			"wrong tip denom",
 			sdk.NewCoins(sdk.NewCoin("foobar", sdk.NewInt(1000))), initialAtoms, 200000,
 			true, "0foobar is smaller than 1000foobar: insufficient funds",
 		},
 		{
-			"insufficient tip from tipper", nil,
+			"insufficient tip from tipper",
 			sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(5000))), initialAtoms, 200000,
 			true, "1000regen is smaller than 5000regen: insufficient funds",
 		},
 		{
-			"insufficient fees from feePayer", nil,
+			"insufficient fees from feePayer",
 			initialRegens, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(5000))), 200000,
 			true, "1000atom is smaller than 5000atom: insufficient funds: insufficient funds",
 		},
 		{
-			"insufficient gas", nil,
+			"insufficient gas",
 			initialRegens, initialAtoms, 100,
 			true, "out of gas in location: ReadFlat; gasWanted: 100, gasUsed: 1000: out of gas",
 		},
 		{
-			"happy case", nil,
+			"happy case",
 			initialRegens, initialAtoms, 200000,
 			false, "",
 		},
@@ -101,14 +92,10 @@ func (s *MWTestSuite) TestTips() {
 			ctx, accts := s.setupMetaTxAccts(ctx)
 			tipper, feePayer := accts[0], accts[1]
 
-			voter := tc.msgSigner
-			if voter == nil {
-				voter = tipper.acc.GetAddress() // Choose tipper as MsgSigner, unless overwritten by testcase.
-			}
-			msg = govtypes.NewMsgVote(voter, 1, govtypes.OptionYes)
+			msg = govtypes.NewMsgVote(tipper.acc.GetAddress(), 1, govtypes.OptionYes)
 
-			tipperTxBuilder := s.mkTipperTxBuilder(tipper.priv, msg, tc.tip, signing.SignMode_SIGN_MODE_DIRECT_AUX, tipper.accNum, 0, ctx.ChainID())
-			feePayerTxBuilder, err := mkFeePayerTxBuilder(s.clientCtx, feePayer.priv, signing.SignMode_SIGN_MODE_DIRECT, tx.Fee{Amount: tc.fee, GasLimit: tc.gasLimit}, tipperTxBuilder.GetTx(), feePayer.accNum, 0, ctx.ChainID())
+			auxSignerData := s.mkTipperAuxSignerData(tipper.priv, msg, tc.tip, signing.SignMode_SIGN_MODE_DIRECT_AUX, tipper.accNum, 0, ctx.ChainID())
+			feePayerTxBuilder, err := mkFeePayerTxBuilder(s.clientCtx, auxSignerData, feePayer.priv, signing.SignMode_SIGN_MODE_DIRECT, tx.Fee{Amount: tc.fee, GasLimit: tc.gasLimit}, feePayer.accNum, 0, ctx.ChainID())
 			s.Require().NoError(err)
 
 			_, res, err := s.app.SimDeliver(s.clientCtx.TxConfig.TxEncoder(), feePayerTxBuilder.GetTx())
@@ -143,62 +130,54 @@ func (s *MWTestSuite) TestTips() {
 	}
 }
 
-func (s *MWTestSuite) mkTipperTxBuilder(
+func (s *MWTestSuite) mkTipperAuxSignerData(
 	tipperPriv cryptotypes.PrivKey, msg sdk.Msg, tip sdk.Coins,
 	signMode signing.SignMode, accNum, accSeq uint64, chainID string,
-) client.TxBuilder {
-	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
-	txBuilder.SetTip(&tx.Tip{
-		Amount: tip,
-		Tipper: sdk.AccAddress(tipperPriv.PubKey().Address()).String(),
-	})
-	err := txBuilder.SetMsgs(msg)
+) tx.AuxSignerData {
+	tipperAddr := sdk.AccAddress(tipperPriv.PubKey().Address()).String()
+	b := clienttx.NewAuxTxBuilder()
+	b.SetAddress(tipperAddr)
+	b.SetAccountNumber(accNum)
+	b.SetSequence(accSeq)
+	err := b.SetMsgs(msg)
+	s.Require().NoError(err)
+	b.SetTip(&tx.Tip{Amount: tip, Tipper: tipperAddr})
+	err = b.SetSignMode(signMode)
+	s.Require().NoError(err)
+	b.SetSequence(accSeq)
+	err = b.SetPubKey(tipperPriv.PubKey())
+	s.Require().NoError(err)
+	b.SetChainID(chainID)
+
+	signBz, err := b.GetSignBytes()
+	s.Require().NoError(err)
+	sig, err := tipperPriv.Sign(signBz)
+	s.Require().NoError(err)
+	b.SetSignature(sig)
+
+	auxSignerData, err := b.GetAuxSignerData()
 	s.Require().NoError(err)
 
-	// Call SetSignatures with empty sig to populate AuthInfo.
-	err = txBuilder.SetSignatures(signing.SignatureV2{
-		PubKey: tipperPriv.PubKey(),
-		Data: &signing.SingleSignatureData{
-			SignMode:  signMode,
-			Signature: nil,
-		}})
-	s.Require().NoError(err)
-
-	// Actually sign the data.
-	signerData := authsigning.SignerData{
-		Address:       sdk.AccAddress(tipperPriv.PubKey().Address()).String(),
-		ChainID:       chainID,
-		AccountNumber: accNum,
-		Sequence:      accSeq,
-		SignerIndex:   0,
-	}
-	sigV2, err := clienttx.SignWithPrivKey(
-		signMode, signerData,
-		txBuilder, tipperPriv, s.clientCtx.TxConfig, accSeq)
-	s.Require().NoError(err)
-
-	txBuilder.SetSignatures(sigV2)
-
-	return txBuilder
+	return auxSignerData
 }
 
 func mkFeePayerTxBuilder(
 	clientCtx client.Context,
+	auxSignerData tx.AuxSignerData,
 	feePayerPriv cryptotypes.PrivKey, signMode signing.SignMode,
-	fee tx.Fee, tipTx tx.TipTx, accNum, accSeq uint64, chainID string,
+	fee tx.Fee, accNum, accSeq uint64, chainID string,
 ) (client.TxBuilder, error) {
 	txBuilder := clientCtx.TxConfig.NewTxBuilder()
-	err := txBuilder.SetMsgs(tipTx.GetMsgs()...)
+	err := txBuilder.AddAuxSignerData(auxSignerData)
 	if err != nil {
 		return nil, err
 	}
 	txBuilder.SetFeePayer(sdk.AccAddress(feePayerPriv.PubKey().Address()))
 	txBuilder.SetFeeAmount(fee.Amount)
 	txBuilder.SetGasLimit(fee.GasLimit)
-	txBuilder.SetTip(tipTx.GetTip())
 
 	// Calling SetSignatures with empty sig to populate AuthInfo.
-	tipperSigsV2, err := tipTx.(authsigning.SigVerifiableTx).GetSignaturesV2()
+	tipperSigsV2, err := auxSignerData.GetSignatureV2()
 	if err != nil {
 		return nil, err
 	}
@@ -208,7 +187,7 @@ func mkFeePayerTxBuilder(
 			SignMode:  signMode,
 			Signature: nil,
 		}}
-	sigsV2 := append(tipperSigsV2, feePayerSigV2)
+	sigsV2 := append([]signing.SignatureV2{tipperSigsV2}, feePayerSigV2)
 	txBuilder.SetSignatures(sigsV2...)
 
 	// Actually sign the data.
@@ -225,7 +204,7 @@ func mkFeePayerTxBuilder(
 	if err != nil {
 		return nil, err
 	}
-	sigsV2 = append(tipperSigsV2, feePayerSigV2)
+	sigsV2 = append([]signing.SignatureV2{tipperSigsV2}, feePayerSigV2)
 	err = txBuilder.SetSignatures(sigsV2...)
 	if err != nil {
 		return nil, err

@@ -46,5 +46,6 @@ type (
 		SetTimeoutHeight(height uint64)
 		SetFeePayer(feePayer sdk.AccAddress)
 		SetFeeGranter(feeGranter sdk.AccAddress)
+		AddAuxSignerData(tx.AuxSignerData) error
 	}
 )

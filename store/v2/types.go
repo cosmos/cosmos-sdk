@@ -85,10 +85,9 @@ type StoreType = v1.StoreType
 // Valid types
 const StoreTypeMemory = v1.StoreTypeMemory
 const StoreTypeTransient = v1.StoreTypeTransient
-const StoreTypeDecoupled = v1.StoreTypeDecoupled
 const StoreTypeDB = v1.StoreTypeDB
 const StoreTypeSMT = v1.StoreTypeSMT
-const StoreTypePersistent = StoreTypeDecoupled
+const StoreTypePersistent = v1.StoreTypePersistent
 
 var NewKVStoreKey = v1.NewKVStoreKey
 var PrefixEndBytes = v1.PrefixEndBytes

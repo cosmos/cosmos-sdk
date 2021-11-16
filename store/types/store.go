@@ -297,8 +297,7 @@ const (
 	StoreTypeTransient
 	StoreTypeMemory
 	StoreTypeSMT
-	StoreTypeDecoupled
-	StoreTypePersistent = StoreTypeDecoupled
+	StoreTypePersistent
 )
 
 func (st StoreType) String() string {
@@ -320,9 +319,6 @@ func (st StoreType) String() string {
 
 	case StoreTypeSMT:
 		return "StoreTypeSMT"
-
-	case StoreTypeDecoupled:
-		return "StoreTypeDecoupled"
 	}
 
 	return "unknown store type"

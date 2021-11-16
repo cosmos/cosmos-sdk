@@ -126,6 +126,9 @@ type BaseApp struct { // nolint: maligned
 	// which informs Tendermint what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
 
+	// IAVL cache size. Setting this value will set the desired cache size on the iavl tree
+	iavlCacheSize int
+
 	// abciListeners for hooking into the ABCI message processing of the BaseApp
 	// and exposing the requests and responses to external consumers
 	abciListeners []ABCIListener
@@ -339,6 +342,10 @@ func (app *BaseApp) setIndexEvents(ie []string) {
 	for _, e := range ie {
 		app.indexEvents[e] = struct{}{}
 	}
+}
+
+func (app *BaseApp) setIAVLCacheSize(size int) {
+	app.iavlCacheSize = size
 }
 
 // QueryRouter returns the QueryRouter of a BaseApp.

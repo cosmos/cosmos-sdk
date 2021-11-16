@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -77,6 +78,12 @@ func TestAuxSignerData(t *testing.T) {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
+				sigV2, err := tc.sd.GetSignatureV2()
+				require.NoError(t, err)
+				require.Equal(t, tc.sd.Mode, sigV2.Data.(*signing.SingleSignatureData).SignMode)
+				require.Equal(t, tc.sd.Sig, sigV2.Data.(*signing.SingleSignatureData).Signature)
+				require.Equal(t, tc.sd.SignDoc.Sequence, sigV2.Sequence)
+				require.True(t, tc.sd.SignDoc.PublicKey.GetCachedValue().(cryptotypes.PubKey).Equals(sigV2.PubKey))
 			}
 		})
 	}

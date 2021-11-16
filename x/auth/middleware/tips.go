@@ -15,9 +15,9 @@ type tipsTxHandler struct {
 	bankKeeper types.BankKeeper
 }
 
-// NewTipsTxMiddleware returns a new middleware for handling transactions with
+// NewTipMiddleware returns a new middleware for handling transactions with
 // tips.
-func NewTipsTxMiddleware(bankKeeper types.BankKeeper) tx.Middleware {
+func NewTipMiddleware(bankKeeper types.BankKeeper) tx.Middleware {
 	return func(txh tx.Handler) tx.Handler {
 		return tipsTxHandler{txh, bankKeeper}
 	}

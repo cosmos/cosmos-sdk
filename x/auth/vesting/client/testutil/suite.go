@@ -56,7 +56,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 				"4070908800",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			expectErr:    false,
@@ -71,7 +71,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 				fmt.Sprintf("--%s=true", cli.FlagDelayed),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			expectErr:    false,
@@ -80,7 +80,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 		},
 		"invalid address": {
 			args: []string{
-				sdk.AccAddress("addr4").String(),
+				"addr4",
 				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
 				"4070908800",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
@@ -113,6 +113,13 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 		},
 	}
 
+	// Synchronize height between test runs, to ensure sequence numbers are
+	// properly updated.
+	height, err := s.network.LatestHeight()
+	if err != nil {
+		s.T().Fatalf("Getting initial latest height: %v", err)
+	}
+	s.T().Logf("Initial latest height: %d", height)
 	for name, tc := range testCases {
 		tc := tc
 
@@ -130,5 +137,12 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}
 		})
+
+		next, err := s.network.WaitForHeight(height + 1)
+		if err != nil {
+			s.T().Fatalf("Waiting for height %d: %v", height+1, err)
+		}
+		height = next
+		s.T().Logf("Height now: %d", height)
 	}
 }

@@ -12,7 +12,7 @@ services:
       - ID=0
       - LOG=${LOG:-simd.log}
     volumes:
-      - ./build:/simd:Z
+      - ./localnet:/data:Z
     networks:
       localnet:
         ipv4_address: 192.168.10.2
@@ -28,7 +28,7 @@ services:
       - ID=1
       - LOG=${LOG:-simd.log}
     volumes:
-      - ./build:/simd:Z
+      - ./localnet:/data:Z
     networks:
       localnet:
         ipv4_address: 192.168.10.3
@@ -44,7 +44,7 @@ services:
       - "1319:1317"
       - "9092:9090"
     volumes:
-      - ./build:/simd:Z
+      - ./localnet:/data:Z
     networks:
       localnet:
         ipv4_address: 192.168.10.4
@@ -60,7 +60,7 @@ services:
       - "1320:1317"
       - "9093:9090"
     volumes:
-      - ./build:/simd:Z
+      - ./localnet:/data:Z
     networks:
       localnet:
         ipv4_address: 192.168.10.5

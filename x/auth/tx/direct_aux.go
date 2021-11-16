@@ -54,28 +54,7 @@ func (signModeDirectAuxHandler) GetSignBytes(
 	// Fee payer cannot use SIGN_MODE_DIRECT_AUX, because SIGN_MODE_DIRECT_AUX
 	// does not sign over fees, which would create malleability issues.
 	if feePayer == data.Address {
-		tip := protoTx.tx.GetAuthInfo().GetTip()
-		var tipper string
-		if tip != nil {
-			tipper = tip.Tipper
-		}
-
-		// In general, the transactions with tips require that the fee payer and
-		// tipper are two different persons.
-		//
-		// However, recall that `protoTx.FeePayer()` is defined as
-		// `tx.AuthInfo.Fee.Payer` if not nil, or defaults to `tx.GetSigners[0]`.
-		// When fee payer is `tx.GetSigners[0]` (i.e. the tx.AuthInfo.Fee.Payer
-		// field is not set), then the tipper and the fee payer
-		// are the same person. Concretely, this happens when the tipper signs
-		// their tx before relaying it to the fee payer.
-		if tipper == feePayer {
-			if protoTx.tx.GetAuthInfo().GetFee() != nil {
-				return nil, sdkerrors.ErrUnauthorized.Wrapf("tipper %s cannot be fee payer", tipper)
-			}
-		} else {
-			return nil, sdkerrors.ErrUnauthorized.Wrapf("fee payer %s cannot sign with %s", feePayer, signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
-		}
+		return nil, sdkerrors.ErrUnauthorized.Wrapf("fee payer %s cannot sign with %s", feePayer, signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
 	}
 
 	signDocDirectAux := types.SignDocDirectAux{

@@ -53,8 +53,10 @@ func newBuilder(cdc codec.Codec) *wrapper {
 	return &wrapper{
 		cdc: cdc,
 		tx: &tx.Tx{
-			Body:     &tx.TxBody{},
-			AuthInfo: &tx.AuthInfo{},
+			Body: &tx.TxBody{},
+			AuthInfo: &tx.AuthInfo{
+				Fee: &tx.Fee{},
+			},
 		},
 	}
 }
@@ -135,9 +137,9 @@ func (w *wrapper) GetFee() sdk.Coins {
 }
 
 func (w *wrapper) FeePayer() sdk.AccAddress {
-	fee := w.tx.AuthInfo.Fee
-	if fee != nil && fee.Payer != "" {
-		payerAddr, err := sdk.AccAddressFromBech32(fee.Payer)
+	feePayer := w.tx.AuthInfo.Fee.Payer
+	if feePayer != "" {
+		payerAddr, err := sdk.AccAddressFromBech32(feePayer)
 		if err != nil {
 			panic(err)
 		}

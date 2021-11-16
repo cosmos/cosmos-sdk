@@ -4,19 +4,21 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"time"
 
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	"github.com/cosmos/iavl"
-	ics23 "github.com/cosmos/ics23/go"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
+	dbm "github.com/tendermint/tm-db"
 
-	corestore "cosmossdk.io/core/store"
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/internal/kv"
-	"cosmossdk.io/store/metrics"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/tracekv"
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 const (
@@ -421,5 +423,24 @@ func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *cmtproto
 	}
 
 	op := types.NewIavlCommitmentOp(key, commitmentProof)
-	return &cmtprotocrypto.ProofOps{Ops: []cmtprotocrypto.ProofOp{op.ProofOp()}}
+	return &tmcrypto.ProofOps{Ops: []tmcrypto.ProofOp{op.ProofOp()}}
+}
+
+//----------------------------------------
+
+// Implements types.Iterator.
+type iavlIterator struct {
+	*iavl.Iterator
+}
+
+var _ types.Iterator = (*iavlIterator)(nil)
+
+// newIAVLIterator will create a new iavlIterator.
+// CONTRACT: Caller must release the iavlIterator, as each one creates a new
+// goroutine.
+func newIAVLIterator(tree *iavl.ImmutableTree, start, end []byte, ascending bool) *iavlIterator {
+	iter := &iavlIterator{
+		Iterator: tree.Iterator(start, end, ascending),
+	}
+	return iter
 }

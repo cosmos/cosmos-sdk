@@ -48,6 +48,23 @@ func (a *AuxSignerData) ValidateBasic() error {
 	return a.GetSignDoc().ValidateBasic()
 }
 
+// GetSignaturesV2 gets the SignatureV2 of the aux signer.
+func (a *AuxSignerData) GetSignatureV2() (signing.SignatureV2, error) {
+	pk, ok := a.SignDoc.PublicKey.GetCachedValue().(cryptotypes.PubKey)
+	if !ok {
+		return signing.SignatureV2{}, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (cryptotypes.PubKey)(nil), pk)
+	}
+
+	return signing.SignatureV2{
+		PubKey: pk,
+		Data: &signing.SingleSignatureData{
+			SignMode:  a.Mode,
+			Signature: a.Sig,
+		},
+		Sequence: a.SignDoc.Sequence,
+	}, nil
+}
+
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (a *AuxSignerData) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return a.GetSignDoc().UnpackInterfaces(unpacker)

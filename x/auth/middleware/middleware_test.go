@@ -23,13 +23,15 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+var testCoins = sdk.Coins{sdk.NewInt64Coin("atom", 10000000)}
+
 // Test that simulate transaction accurately estimates gas cost
 func (s *MWTestSuite) TestSimulateGasCost() {
 	ctx := s.SetupTest(false) // reset
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 3)
+	accounts := s.createTestAccounts(ctx, 3, testCoins)
 	msgs := []sdk.Msg{
 		testdata.NewTestMsg(accounts[0].acc.GetAddress(), accounts[1].acc.GetAddress()),
 		testdata.NewTestMsg(accounts[2].acc.GetAddress(), accounts[0].acc.GetAddress()),
@@ -166,7 +168,7 @@ func (s *MWTestSuite) TestTxHandlerAccountNumbers() {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 2)
+	accounts := s.createTestAccounts(ctx, 2, testCoins)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 
@@ -248,7 +250,7 @@ func (s *MWTestSuite) TestTxHandlerAccountNumbersAtBlockHeightZero() {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 2)
+	accounts := s.createTestAccounts(ctx, 2, testCoins)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 
@@ -331,7 +333,7 @@ func (s *MWTestSuite) TestTxHandlerSequences() {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 3)
+	accounts := s.createTestAccounts(ctx, 3, testCoins)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 
@@ -524,7 +526,7 @@ func (s *MWTestSuite) TestTxHandlerMemoGas() {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 1)
+	accounts := s.createTestAccounts(ctx, 1, testCoins)
 	msgs := []sdk.Msg{testdata.NewTestMsg(accounts[0].acc.GetAddress())}
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
 
@@ -594,7 +596,7 @@ func (s *MWTestSuite) TestTxHandlerMultiSigner() {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 3)
+	accounts := s.createTestAccounts(ctx, 3, testCoins)
 	msg1 := testdata.NewTestMsg(accounts[0].acc.GetAddress(), accounts[1].acc.GetAddress())
 	msg2 := testdata.NewTestMsg(accounts[2].acc.GetAddress(), accounts[0].acc.GetAddress())
 	msg3 := testdata.NewTestMsg(accounts[1].acc.GetAddress(), accounts[2].acc.GetAddress())
@@ -667,7 +669,7 @@ func (s *MWTestSuite) TestTxHandlerBadSignBytes() {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 2)
+	accounts := s.createTestAccounts(ctx, 2, testCoins)
 	msg0 := testdata.NewTestMsg(accounts[0].acc.GetAddress())
 
 	// Variable data per test case
@@ -793,7 +795,7 @@ func (s *MWTestSuite) TestTxHandlerSetPubKey() {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 2)
+	accounts := s.createTestAccounts(ctx, 2, testCoins)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 
@@ -971,7 +973,7 @@ func (s *MWTestSuite) TestTxHandlerSigLimitExceeded() {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 8)
+	accounts := s.createTestAccounts(ctx, 8, testCoins)
 	var addrs []sdk.AccAddress
 	var privs []cryptotypes.PrivKey
 	for i := 0; i < 8; i++ {
@@ -1029,7 +1031,7 @@ func (s *MWTestSuite) TestCustomSignatureVerificationGasConsumer() {
 	s.Require().NoError(err)
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 1)
+	accounts := s.createTestAccounts(ctx, 1, testCoins)
 	txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
 	txBuilder.SetMsgs(testdata.NewTestMsg(accounts[0].acc.GetAddress()))
@@ -1073,7 +1075,7 @@ func (s *MWTestSuite) TestTxHandlerReCheck() {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 1)
+	accounts := s.createTestAccounts(ctx, 1, testCoins)
 
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()

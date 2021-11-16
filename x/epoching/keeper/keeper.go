@@ -107,7 +107,7 @@ func (k Keeper) GetEpochMsg(ctx sdk.Context, epochNumber int64, actionID uint64)
 // GetEpochActions get all actions
 func (k Keeper) GetEpochActions(ctx sdk.Context) []sdk.Msg {
 	actions := []sdk.Msg{}
-	iterator := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), EpochActionQueuePrefix)
+	iterator := k.GetEpochActionsIterator(ctx)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

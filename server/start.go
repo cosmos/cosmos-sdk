@@ -275,7 +275,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	if config.API.Enable || config.GRPC.Enable {
 		node, ok := tmNode.(local.NodeService)
 		if !ok {
-			panic("something")
+			panic("unable to set node type. Please try reinstalling the binary.")
 		}
 		localNode, err := local.New(node)
 		if err != nil {

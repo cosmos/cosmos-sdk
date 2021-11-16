@@ -9,11 +9,11 @@ type TableExportable interface {
 	// Export stores all the values in the table in the passed
 	// ModelSlicePtr. If the table has an associated sequence, then its
 	// current value is returned, otherwise 0 is returned by default.
-	Export(sdk.KVStore, ModelSlicePtr) (uint64, error)
+	Export(store sdk.KVStore, dest ModelSlicePtr) (uint64, error)
 
 	// Import clears the table and initializes it from the given data
 	// interface{}. data should be a slice of structs that implement
 	// PrimaryKeyed. The seqValue is optional and only
 	// used with tables that have an associated sequence.
-	Import(sdk.KVStore, interface{}, uint64) error
+	Import(store sdk.KVStore, data interface{}, seqValue uint64) error
 }

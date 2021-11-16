@@ -303,6 +303,7 @@ func TestExportImportStateAutoUInt64Table(t *testing.T) {
 	var tms []*testdata.TableModel
 	seqVal, err := k.autoUInt64Table.Export(store, &tms)
 	require.NoError(t, err)
+	require.Equal(t, seqVal, uint64(testRecordsNum))
 
 	// when a new db seeded
 	ctx = NewMockContext()
@@ -383,38 +384,23 @@ func TestExportImportStatePrimaryKeyTable(t *testing.T) {
 	}
 	assert.Equal(t, testRecords, loaded)
 
-	// and first index setup
+	// all indexes setup
 	for _, v := range testRecords {
-		it, err = k.primaryKeyTableModelByNameIndex.Get(store, v.Name)
-		require.NoError(t, err)
-		loaded = nil
-		keys, err = ReadAll(it, &loaded)
-		require.NoError(t, err)
-		assert.Equal(t, []RowID{PrimaryKey(&v)}, keys)
-		assert.Equal(t, []testdata.TableModel{v}, loaded)
+		assertIndex(t, store, k.primaryKeyTableModelByNameIndex, v, v.Name)
+		assertIndex(t, store, k.primaryKeyTableModelByNumberIndex, v, v.Number)
+		assertIndex(t, store, k.primaryKeyTableModelByMetadataIndex, v, v.Metadata)
 	}
+}
 
-	// and second index setup
-	for _, v := range testRecords {
-		it, err = k.primaryKeyTableModelByNumberIndex.Get(store, v.Number)
-		require.NoError(t, err)
-		loaded = nil
-		keys, err = ReadAll(it, &loaded)
-		require.NoError(t, err)
-		assert.Equal(t, []RowID{PrimaryKey(&v)}, keys)
-		assert.Equal(t, []testdata.TableModel{v}, loaded)
-	}
+func assertIndex(t *testing.T, store sdk.KVStore, index Index, v testdata.TableModel, searchKey interface{}) {
+	it, err := index.Get(store, searchKey)
+	require.NoError(t, err)
 
-	// and uint64 index setup
-	for _, v := range testRecords {
-		it, err = k.primaryKeyTableModelByMetadataIndex.Get(store, v.Metadata)
-		require.NoError(t, err)
-		loaded = nil
-		keys, err = ReadAll(it, &loaded)
-		require.NoError(t, err)
-		assert.Equal(t, []RowID{PrimaryKey(&v)}, keys)
-		assert.Equal(t, []testdata.TableModel{v}, loaded)
-	}
+	var loaded []testdata.TableModel
+	keys, err := ReadAll(it, &loaded)
+	require.NoError(t, err)
+	assert.Equal(t, []RowID{PrimaryKey(&v)}, keys)
+	assert.Equal(t, []testdata.TableModel{v}, loaded)
 }
 
 func first(t *testing.T, it Iterator) ([]byte, testdata.TableModel) {

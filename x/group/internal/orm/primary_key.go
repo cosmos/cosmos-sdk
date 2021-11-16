@@ -5,7 +5,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ Indexable = &PrimaryKeyTable{}
+var (
+	_ Indexable       = &PrimaryKeyTable{}
+	_ TableExportable = &PrimaryKeyTable{}
+)
 
 // PrimaryKeyTable provides simpler object style orm methods without passing database RowIDs.
 // Entries are persisted and loaded with a reference to their unique primary key.
@@ -143,4 +146,15 @@ func (a PrimaryKeyTable) PrefixScan(store sdk.KVStore, start, end []byte) (Itera
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
 func (a PrimaryKeyTable) ReversePrefixScan(store sdk.KVStore, start, end []byte) (Iterator, error) {
 	return a.table.ReversePrefixScan(store, start, end)
+}
+
+// Export stores all the values in the table in the passed ModelSlicePtr.
+func (a PrimaryKeyTable) Export(store sdk.KVStore, dest ModelSlicePtr) (uint64, error) {
+	return a.table.Export(store, dest)
+}
+
+// Import clears the table and initializes it from the given data interface{}.
+// data should be a slice of structs that implement PrimaryKeyed.
+func (a PrimaryKeyTable) Import(store sdk.KVStore, data interface{}, seqValue uint64) error {
+	return a.table.Import(store, data, seqValue)
 }

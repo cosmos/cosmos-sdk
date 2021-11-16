@@ -12,7 +12,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
-var _ Indexable = &table{}
+var (
+	_ Indexable       = &table{}
+	_ TableExportable = &table{}
+)
 
 // table is the high level object to storage mapper functionality. Persistent
 // entities are stored by an unique identifier called `RowID`. The table struct
@@ -230,6 +233,53 @@ func (a table) ReversePrefixScan(store sdk.KVStore, start, end RowID) (Iterator,
 		rowGetter: NewTypeSafeRowGetter(a.prefix, a.model, a.cdc),
 		it:        pStore.ReverseIterator(start, end),
 	}, nil
+}
+
+// Export stores all the values in the table in the passed ModelSlicePtr.
+func (a table) Export(store sdk.KVStore, dest ModelSlicePtr) (uint64, error) {
+	it, err := a.PrefixScan(store, nil, nil)
+	if err != nil {
+		return 0, sdkerrors.Wrap(err, "table Export failure when exporting table data")
+	}
+	_, err = ReadAll(it, dest)
+	if err != nil {
+		return 0, err
+	}
+	return 0, nil
+}
+
+// Import clears the table and initializes it from the given data interface{}.
+// data should be a slice of structs that implement PrimaryKeyed.
+func (a table) Import(store sdk.KVStore, data interface{}, _ uint64) error {
+	// Clear all data
+	pStore := prefix.NewStore(store, a.prefix[:])
+	it := pStore.Iterator(nil, nil)
+	defer it.Close()
+	for ; it.Valid(); it.Next() {
+		if err := a.Delete(store, it.Key()); err != nil {
+			return err
+		}
+	}
+
+	// Provided data must be a slice
+	modelSlice := reflect.ValueOf(data)
+	if modelSlice.Kind() != reflect.Slice {
+		return sdkerrors.Wrap(errors.ErrORMInvalidArgument, "data must be a slice")
+	}
+
+	// Import values from slice
+	for i := 0; i < modelSlice.Len(); i++ {
+		obj, ok := modelSlice.Index(i).Interface().(PrimaryKeyed)
+		if !ok {
+			return sdkerrors.Wrapf(errors.ErrORMInvalidArgument, "unsupported type :%s", reflect.TypeOf(data).Elem().Elem())
+		}
+		err := a.Create(store, PrimaryKey(obj), obj)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // typeSafeIterator is initialized with a type safe RowGetter only.

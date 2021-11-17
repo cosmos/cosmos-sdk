@@ -162,7 +162,6 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		rpc.StatusCommand(),
 		queryCommand(),
 		txCommand(),
-		authcmd.GetSignDocCommand(),
 		keys.Commands(simapp.DefaultNodeHome),
 	)
 
@@ -208,6 +207,7 @@ func txCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
+		authcmd.GetSignDocCommand(),
 		authcmd.GetSignCommand(),
 		authcmd.GetSignBatchCommand(),
 		authcmd.GetMultiSignCommand(),

@@ -219,7 +219,7 @@ func (suite *IntegrationTestSuite) TestSupply_SendCoins() {
 	suite.Require().NoError(
 		keeper.SendCoinsFromModuleToManyAccounts(ctx, authtypes.Burner, []sdk.AccAddress{baseAcc.GetAddress()}, []sdk.Coins{initCoins}),
 	)
-	suite.Require().Equal(sdk.Coins(nil), getCoinsByName(ctx, keeper, authKeeper, authtypes.Burner))
+	suite.Require().Equal(sdk.NewCoins(), getCoinsByName(ctx, keeper, authKeeper, authtypes.Burner))
 	suite.Require().Equal(initCoins, keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
 }
 
@@ -481,7 +481,7 @@ func (suite *IntegrationTestSuite) TestSendManyCoins() {
 	addr2 := sdk.AccAddress([]byte("addr2_______________"))
 	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
 	app.AccountKeeper.SetAccount(ctx, acc2)
-	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr2, balances))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr2, balances))
 
 	addr3 := sdk.AccAddress([]byte("addr3_______________"))
 	acc3 := app.AccountKeeper.NewAccountWithAddress(ctx, addr3)
@@ -496,7 +496,7 @@ func (suite *IntegrationTestSuite) TestSendManyCoins() {
 
 	suite.Require().Error(app.BankKeeper.SendManyCoins(ctx, addr1, toAddrs, sendAmts))
 
-	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, balances))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, balances))
 	suite.Require().Error(app.BankKeeper.SendManyCoins(ctx, addr1, toAddrs, sendAmts))
 
 	toAddrs = append(toAddrs, addr3)

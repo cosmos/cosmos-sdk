@@ -242,15 +242,13 @@ An interface providing only the basic CRUD functionality (`Get`, `Set`, `Has`, a
 
 ### Root Store
 
-`root.RootStore` is the new default persistent store, which internally decouples the concerns of state storage and state commitment. Values are stored directly in the backing key-value database (the "storage" bucket), while the value's hash is mapped in a separate store which is able to generate a cryptographic commitment (the "state commitment" bucket, implmented with `smt.Store`).
+`RootStore` is the new interface for the main client store, replacing the function of `MultiStore`. It internally decouples the concerns of state storage and state commitment: values are stored and read directly from the backing key-value database, but are also mapped in a logically separate *state-commitment* store which generates cryptographic proofs.
 
-This can optionally be configured to use different backend databases for each bucket.
-
-<!-- TODO: add link +++ https://github.com/cosmos/cosmos-sdk/blob/v0.44.0/store/v2/root/root_store.go -->
+Implemented in `store/v2/root`. This can optionally be configured to use different backend databases for each bucket, e.g., `badgerdb` for the state storage DB and `memdb` for the state commitment DB. State commitment is implemented with an `smt.Store`.
 
 ### SMT Store
 
-A `BasicKVStore` which is used to partially expose functions of an underlying store (for instance, to allow access to the commitment store in `flat.Store`).
+Maps values into a Sparse Merkle Tree, and supports a `BasicKVStore` interface as well as methods for cryptographic proof generation.
 
 ## Next {hide}
 

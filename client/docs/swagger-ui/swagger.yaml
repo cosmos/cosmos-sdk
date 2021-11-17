@@ -25056,7 +25056,7 @@ definitions:
     description: >-
       QueryEvidenceResponse is the response type for the Query/Evidence RPC
       method.
-  cosmos.gov.v1.Deposit:
+  cosmos.gov.v1beta2.Deposit:
     type: object
     properties:
       proposal_id:
@@ -25081,7 +25081,7 @@ definitions:
     description: |-
       Deposit defines an amount deposited by an account address to an active
       proposal.
-  cosmos.gov.v1.DepositParams:
+  cosmos.gov.v1beta2.DepositParams:
     type: object
     properties:
       min_deposit:
@@ -25106,7 +25106,7 @@ definitions:
           value: 2
            months.
     description: DepositParams defines the params for deposits on governance proposals.
-  cosmos.gov.v1.Proposal:
+  cosmos.gov.v1beta2.Proposal:
     type: object
     properties:
       proposal_id:
@@ -25334,7 +25334,7 @@ definitions:
         type: string
         format: date-time
     description: Proposal defines the core field members of a governance proposal.
-  cosmos.gov.v1.ProposalStatus:
+  cosmos.gov.v1beta2.ProposalStatus:
     type: string
     enum:
       - PROPOSAL_STATUS_UNSPECIFIED
@@ -25358,7 +25358,7 @@ definitions:
       been rejected.
        - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
       failed.
-  cosmos.gov.v1.QueryDepositResponse:
+  cosmos.gov.v1beta2.QueryDepositResponse:
     type: object
     properties:
       deposit:
@@ -25392,7 +25392,7 @@ definitions:
     description: >-
       QueryDepositResponse is the response type for the Query/Deposit RPC
       method.
-  cosmos.gov.v1.QueryDepositsResponse:
+  cosmos.gov.v1beta2.QueryDepositsResponse:
     type: object
     properties:
       deposits:
@@ -25448,7 +25448,7 @@ definitions:
     description: >-
       QueryDepositsResponse is the response type for the Query/Deposits RPC
       method.
-  cosmos.gov.v1.QueryParamsResponse:
+  cosmos.gov.v1beta2.QueryParamsResponse:
     type: object
     properties:
       voting_params:
@@ -25511,7 +25511,7 @@ definitions:
               be
                vetoed. Default value: 1/3.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
-  cosmos.gov.v1.QueryProposalResponse:
+  cosmos.gov.v1beta2.QueryProposalResponse:
     type: object
     properties:
       proposal:
@@ -25754,7 +25754,7 @@ definitions:
     description: >-
       QueryProposalResponse is the response type for the Query/Proposal RPC
       method.
-  cosmos.gov.v1.QueryProposalsResponse:
+  cosmos.gov.v1beta2.QueryProposalsResponse:
     type: object
     properties:
       proposals:
@@ -26021,7 +26021,7 @@ definitions:
     description: |-
       QueryProposalsResponse is the response type for the Query/Proposals RPC
       method.
-  cosmos.gov.v1.QueryTallyResultResponse:
+  cosmos.gov.v1beta2.QueryTallyResultResponse:
     type: object
     properties:
       tally:
@@ -26039,7 +26039,7 @@ definitions:
     description: >-
       QueryTallyResultResponse is the response type for the Query/Tally RPC
       method.
-  cosmos.gov.v1.QueryVoteResponse:
+  cosmos.gov.v1beta2.QueryVoteResponse:
     type: object
     properties:
       vote:
@@ -26097,7 +26097,7 @@ definitions:
           Vote defines a vote on a governance proposal.
           A Vote consists of a proposal ID, the voter, and the vote option.
     description: QueryVoteResponse is the response type for the Query/Vote RPC method.
-  cosmos.gov.v1.QueryVotesResponse:
+  cosmos.gov.v1beta2.QueryVotesResponse:
     type: object
     properties:
       votes:
@@ -26176,7 +26176,7 @@ definitions:
 
               was set, its value is undefined otherwise
     description: QueryVotesResponse is the response type for the Query/Votes RPC method.
-  cosmos.gov.v1.TallyParams:
+  cosmos.gov.v1beta2.TallyParams:
     type: object
     properties:
       quorum:
@@ -26198,7 +26198,7 @@ definitions:
           Minimum value of Veto votes to Total votes ratio for proposal to be
            vetoed. Default value: 1/3.
     description: TallyParams defines the params for tallying votes on governance proposals.
-  cosmos.gov.v1.TallyResult:
+  cosmos.gov.v1beta2.TallyResult:
     type: object
     properties:
       'yes':
@@ -26210,7 +26210,7 @@ definitions:
       no_with_veto:
         type: string
     description: TallyResult defines a standard tally for a governance proposal.
-  cosmos.gov.v1.Vote:
+  cosmos.gov.v1beta2.Vote:
     type: object
     properties:
       proposal_id:
@@ -26264,7 +26264,7 @@ definitions:
     description: |-
       Vote defines a vote on a governance proposal.
       A Vote consists of a proposal ID, the voter, and the vote option.
-  cosmos.gov.v1.VoteOption:
+  cosmos.gov.v1beta2.VoteOption:
     type: string
     enum:
       - VOTE_OPTION_UNSPECIFIED
@@ -26282,14 +26282,14 @@ definitions:
        - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
        - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
        - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
-  cosmos.gov.v1.VotingParams:
+  cosmos.gov.v1beta2.VotingParams:
     type: object
     properties:
       voting_period:
         type: string
         description: Length of the voting period.
     description: VotingParams defines the params for voting on governance proposals.
-  cosmos.gov.v1.WeightedVoteOption:
+  cosmos.gov.v1beta2.WeightedVoteOption:
     type: object
     properties:
       option:

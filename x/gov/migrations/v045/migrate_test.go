@@ -110,7 +110,7 @@ func TestMigrate(t *testing.T) {
 			},
 			"messages": [
 				{
-					"@type": "/cosmos.gov.v1.MsgSignal",
+					"@type": "/cosmos.gov.v1beta2.MsgSignal",
 					"authority": "cosmos1w3jhxazlvahhvhmpvd3k7atwwsq04etk",
 					"description": "bar_description",
 					"title": "foo_title"

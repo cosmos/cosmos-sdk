@@ -1,7 +1,6 @@
 package types
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -21,42 +20,6 @@ var (
 
 func init() {
 	coinsMulti.Sort()
-}
-
-// test ValidateBasic for MsgCreateValidator
-func TestMsgSubmitProposal(t *testing.T) {
-	tests := []struct {
-		title, description string
-		proposerAddr       sdk.AccAddress
-		initialDeposit     sdk.Coins
-		expectPass         bool
-	}{
-		{"Test Proposal", "the purpose of this proposal is to test", addrs[0], coinsPos, true},
-		{"", "the purpose of this proposal is to test", addrs[0], coinsPos, false},
-		{"Test Proposal", "the purpose of this proposal is to test", sdk.AccAddress{}, coinsPos, false},
-		{"Test Proposal", "the purpose of this proposal is to test", addrs[0], coinsZero, true},
-		{"Test Proposal", "the purpose of this proposal is to test", addrs[0], coinsMulti, true},
-		{strings.Repeat("#", MaxTitleLength*2), "the purpose of this proposal is to test", addrs[0], coinsMulti, false},
-		{"Test Proposal", strings.Repeat("#", MaxDescriptionLength*2), addrs[0], coinsMulti, false},
-	}
-
-	for i, tc := range tests {
-		proposal := []sdk.Msg{NewMsgSignal(tc.title, tc.description, tc.proposerAddr)}
-
-		msg, err := NewMsgSubmitProposal(
-			proposal,
-			tc.initialDeposit,
-			tc.proposerAddr,
-		)
-
-		require.NoError(t, err)
-
-		if tc.expectPass {
-			require.NoError(t, msg.ValidateBasic(), "test: %v", i)
-		} else {
-			require.Error(t, msg.ValidateBasic(), "test: %v", i)
-		}
-	}
 }
 
 func TestMsgDepositGetSignBytes(t *testing.T) {

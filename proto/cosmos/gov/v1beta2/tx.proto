@@ -24,10 +24,6 @@ service Msg {
 
   // Deposit defines a method to add deposit on a specific proposal.
   rpc Deposit(MsgDeposit) returns (MsgDepositResponse);
-
-  // Signal is a basic governance proposal message which has no functionality
-  // but is used to gather signal on a certain intention.
-  rpc Signal(MsgSignal) returns (MsgSignalResponse);
 }
 
 // MsgSubmitProposal defines an sdk.Msg type that supports submitting arbitrary
@@ -99,18 +95,3 @@ message MsgDeposit {
 // MsgDepositResponse defines the Msg/Deposit response type.
 message MsgDepositResponse {}
 
-// MsgSignal is functionally a no-op message that can be submitted in a proposal to signal
-// an intention for members to vote on.
-message MsgSignal {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
-  option (gogoproto.goproto_getters)  = false;
-
-  string title       = 1;
-  string description = 2;
-  string authority   = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-}
-
-// MsgSignalResponse defined the Msg/Signal response type
-message MsgSignalResponse {}

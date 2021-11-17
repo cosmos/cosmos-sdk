@@ -21,8 +21,8 @@ const (
 	FlagUpgradeInfo   = "upgrade-info"
 	FlagNoValidate    = "no-validate"
 	FlagDaemonName    = "daemon-name"
-	FlagTitle = "title"
-	FlagDescription = "description"
+	FlagTitle         = "title"
+	FlagDescription   = "description"
 )
 
 // GetTxCmd returns the transaction commands for this module

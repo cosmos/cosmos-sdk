@@ -175,15 +175,3 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDeposit) (*types
 
 	return &types.MsgDepositResponse{}, nil
 }
-
-func (k msgServer) Signal(goCtx context.Context, msg *types.MsgSignal) (*types.MsgSignalResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeSignalProposal,
-			sdk.NewAttribute(types.AttributeSignalTitle, msg.Title),
-			sdk.NewAttribute(types.AttributeSignalDescription, msg.Description),
-		),
-	)
-	return &types.MsgSignalResponse{}, nil
-}

@@ -414,8 +414,6 @@
 - [cosmos/gov/v1beta2/tx.proto](#cosmos/gov/v1beta2/tx.proto)
     - [MsgDeposit](#cosmos.gov.v1beta2.MsgDeposit)
     - [MsgDepositResponse](#cosmos.gov.v1beta2.MsgDepositResponse)
-    - [MsgSignal](#cosmos.gov.v1beta2.MsgSignal)
-    - [MsgSignalResponse](#cosmos.gov.v1beta2.MsgSignalResponse)
     - [MsgSubmitProposal](#cosmos.gov.v1beta2.MsgSubmitProposal)
     - [MsgSubmitProposalResponse](#cosmos.gov.v1beta2.MsgSubmitProposalResponse)
     - [MsgVote](#cosmos.gov.v1beta2.MsgVote)
@@ -6156,34 +6154,6 @@ MsgDepositResponse defines the Msg/Deposit response type.
 
 
 
-<a name="cosmos.gov.v1beta2.MsgSignal"></a>
-
-### MsgSignal
-MsgSignal is functionally a no-op message that can be submitted in a proposal to signal
-an intention for members to vote on.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
-| `authority` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.MsgSignalResponse"></a>
-
-### MsgSignalResponse
-MsgSignalResponse defined the Msg/Signal response type
-
-
-
-
-
-
 <a name="cosmos.gov.v1beta2.MsgSubmitProposal"></a>
 
 ### MsgSubmitProposal
@@ -6294,7 +6264,6 @@ Msg defines the gov Msg service.
 
 Since: cosmos-sdk 0.43 | |
 | `Deposit` | [MsgDeposit](#cosmos.gov.v1beta2.MsgDeposit) | [MsgDepositResponse](#cosmos.gov.v1beta2.MsgDepositResponse) | Deposit defines a method to add deposit on a specific proposal. | |
-| `Signal` | [MsgSignal](#cosmos.gov.v1beta2.MsgSignal) | [MsgSignalResponse](#cosmos.gov.v1beta2.MsgSignalResponse) | Signal is a basic governance proposal message which has no functionality but is used to gather signal on a certain intention. | |
 
  <!-- end services -->
 

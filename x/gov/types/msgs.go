@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"strings"
 
 	"sigs.k8s.io/yaml"
 
@@ -28,8 +27,8 @@ const (
 )
 
 var (
-	_, _, _, _, _ sdk.Msg                       = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}, &MsgSignal{}
-	_             types.UnpackInterfacesMessage = &MsgSubmitProposal{}
+	_, _, _, _ sdk.Msg                       = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}
+	_          types.UnpackInterfacesMessage = &MsgSubmitProposal{}
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
@@ -103,9 +102,10 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 	}
 
 	// Empty messages are not allowed
-	if m.Messages == nil || len(m.Messages) == 0 {
-		return ErrNoProposalMsgs
-	}
+	// TODO: ValidateBasic should check that either metadata or length is non nil
+	// if m.Messages == nil || len(m.Messages) == 0 {
+	// 	return ErrNoProposalMsgs
+	// }
 
 	msgs, err := m.GetMessages()
 	if err != nil {
@@ -293,56 +293,4 @@ func (msg MsgVoteWeighted) GetSignBytes() []byte {
 func (msg MsgVoteWeighted) GetSigners() []sdk.AccAddress {
 	voter, _ := sdk.AccAddressFromBech32(msg.Voter)
 	return []sdk.AccAddress{voter}
-}
-
-// NewMsgVote creates a message to cast a vote on an active proposal
-//nolint:interfacer
-func NewMsgSignal(title, description string, authority sdk.AccAddress) *MsgSignal {
-	return &MsgSignal{
-		Title:       title,
-		Description: description,
-		Authority:   authority.String(),
-	}
-}
-
-// Route implements Msg
-func (msg MsgSignal) Route() string { return RouterKey }
-
-// Type implements Msg
-func (msg MsgSignal) Type() string { return TypeMsgSignal }
-
-// ValidateBasic implements Msg
-func (msg MsgSignal) ValidateBasic() error {
-	if len(strings.TrimSpace(msg.Title)) == 0 {
-		return sdkerrors.Wrap(ErrInvalidSignalMsg, "signal title cannot be blank")
-	}
-	if len(msg.Title) > MaxTitleLength {
-		return sdkerrors.Wrap(ErrInvalidSignalMsg, fmt.Sprintf("signal title is longer than max length of %d", MaxTitleLength))
-	}
-	if len(msg.Description) > MaxDescriptionLength {
-		return sdkerrors.Wrap(ErrInvalidSignalMsg, fmt.Sprintf("signal description is longer than max length of %d", MaxDescriptionLength))
-	}
-	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
-	}
-
-	return nil
-}
-
-// String implements the Stringer interface
-func (msg MsgSignal) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
-// GetSignBytes implements Msg
-func (msg MsgSignal) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
-}
-
-// GetSigners implements Msg. A signal message must have the governance account as the signer
-func (msg MsgSignal) GetSigners() []sdk.AccAddress {
-	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{authority}
 }

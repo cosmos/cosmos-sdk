@@ -54,10 +54,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	// create a proposal with deposit
-	govAcc, err := s.cfg.AccountRetriever.GetAccount(val.ClientCtx, auth.NewModuleAddress(govtypes.ModuleName))
+	_, err = s.cfg.AccountRetriever.GetAccount(val.ClientCtx, auth.NewModuleAddress(govtypes.ModuleName))
 	s.Require().NoError(err)
-	proposal := []sdk.Msg{govtypes.NewMsgSignal("test_title", "test_description", govAcc.GetAddress())}
-	_, err = govtestutil.MsgSubmitProposal(s.T(), val.ClientCtx, val.Address.String(), proposal,
+	_, err = govtestutil.MsgSubmitProposal(s.T(), val.ClientCtx, val.Address.String(), []sdk.Msg{},
 		fmt.Sprintf("--%s=%s", govcli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, govtypes.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 

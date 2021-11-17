@@ -696,11 +696,10 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 
 	// granted fee allowance for an account which is not in state and creating
 	// any tx with it by using --fee-account shouldn't fail
-	govAcc, err := s.cfg.AccountRetriever.GetAccount(val.ClientCtx, authtypes.NewModuleAddress(govtypes.ModuleName))
+	_, err = s.cfg.AccountRetriever.GetAccount(val.ClientCtx, authtypes.NewModuleAddress(govtypes.ModuleName))
 	s.Require().NoError(err)
-	proposal := []sdk.Msg{govtypes.NewMsgSignal("test_title", "test_description", govAcc.GetAddress())}
 	out, err := govtestutil.MsgSubmitProposal(s.T(), val.ClientCtx, grantee.String(),
-		proposal, fmt.Sprintf("--%s=%s", flags.FlagFeeAccount, granter.String()),
+		[]sdk.Msg{}, fmt.Sprintf("--%s=%s", flags.FlagFeeAccount, granter.String()),
 	)
 
 	s.Require().NoError(err)

@@ -50,11 +50,11 @@ func migrateProposals(oldProposals v1beta1.Proposals, govAcc sdk.AccAddress) typ
 func migrateContent(content v1beta1.Content, govAcc sdk.AccAddress) []sdk.Msg {
 	switch content.ProposalType() {
 	case v1beta1.ProposalTypeText:
-		return []sdk.Msg{types.NewMsgSignal(content.GetTitle(), content.GetDescription(), govAcc)}
+		return []sdk.Msg{}
 	// TODO: enter the other proposal content types
 	default:
 		// NOTE: If a network is using a unique content type that isn't recognisable then it will not be possible to migrate it to the new proposal type. The best thing to do in this situation, rather than silently ignore it, is to convert it to a signal proposal
-		return []sdk.Msg{types.NewMsgSignal(content.GetTitle(), content.GetDescription(), govAcc)}
+		return []sdk.Msg{}
 	}
 }
 

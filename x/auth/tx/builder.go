@@ -394,6 +394,51 @@ func (w *wrapper) AddAuxSignerData(data tx.AuxSignerData) error {
 		return err
 	}
 
+	if w.tx.Body.Memo != "" && w.tx.Body.Memo != body.Memo {
+		return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has memo %s, got %s in AuxSignerData", w.tx.Body.Memo, body.Memo)
+	}
+	if w.tx.Body.TimeoutHeight != 0 && w.tx.Body.TimeoutHeight != body.TimeoutHeight {
+		return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has timeout height %d, got %d in AuxSignerData", w.tx.Body.TimeoutHeight, body.TimeoutHeight)
+	}
+	if len(w.tx.Body.ExtensionOptions) != 0 {
+		if len(w.tx.Body.ExtensionOptions) != len(body.ExtensionOptions) {
+			return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has %d extension options, got %d in AuxSignerData", len(w.tx.Body.ExtensionOptions), len(body.ExtensionOptions))
+		}
+		for i, o := range w.tx.Body.ExtensionOptions {
+			if !o.Equal(body.ExtensionOptions[i]) {
+				return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has extension option %+v at index %d, got %+v in AuxSignerData", o, i, body.ExtensionOptions[i])
+			}
+		}
+	}
+	if len(w.tx.Body.NonCriticalExtensionOptions) != 0 {
+		if len(w.tx.Body.NonCriticalExtensionOptions) != len(body.NonCriticalExtensionOptions) {
+			return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has %d non-critical extension options, got %d in AuxSignerData", len(w.tx.Body.NonCriticalExtensionOptions), len(body.NonCriticalExtensionOptions))
+		}
+		for i, o := range w.tx.Body.NonCriticalExtensionOptions {
+			if !o.Equal(body.NonCriticalExtensionOptions[i]) {
+				return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has non-critical extension option %+v at index %d, got %+v in AuxSignerData", o, i, body.NonCriticalExtensionOptions[i])
+			}
+		}
+	}
+	if len(w.tx.Body.Messages) != 0 {
+		if len(w.tx.Body.Messages) != len(body.Messages) {
+			return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has %d Msgs, got %d in AuxSignerData", len(w.tx.Body.Messages), len(body.Messages))
+		}
+		for i, o := range w.tx.Body.Messages {
+			if !o.Equal(body.Messages[i]) {
+				return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has Msg %+v at index %d, got %+v in AuxSignerData", o, i, body.Messages[i])
+			}
+		}
+	}
+	if w.tx.AuthInfo.Tip != nil && data.SignDoc.Tip != nil {
+		if !w.tx.AuthInfo.Tip.Amount.IsEqual(data.SignDoc.Tip.Amount) {
+			return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has tip %+v, got %+v in AuxSignerData", w.tx.AuthInfo.Tip.Amount, data.SignDoc.Tip.Amount)
+		}
+		if w.tx.AuthInfo.Tip.Tipper != data.SignDoc.Tip.Tipper {
+			return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has tipper %s, got %s in AuxSignerData", w.tx.AuthInfo.Tip.Tipper, data.SignDoc.Tip.Tipper)
+		}
+	}
+
 	w.SetMemo(body.Memo)
 	w.SetTimeoutHeight(body.TimeoutHeight)
 	w.SetExtensionOptions(body.ExtensionOptions...)

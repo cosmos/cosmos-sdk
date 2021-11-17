@@ -13,6 +13,5 @@ message LegacyAminoPubKey {
   option (gogoproto.goproto_getters) = false;
 
   uint32   threshold                       = 1;
-  repeated google.protobuf.Any public_keys = 2
-      [(gogoproto.customname) = "PubKeys"];
+  repeated google.protobuf.Any public_keys = 2 [(gogoproto.customname) = "PubKeys"];
 }

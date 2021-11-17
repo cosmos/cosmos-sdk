@@ -500,6 +500,4 @@ func TestBinaryVersion(t *testing.T) {
 			})
 		}
 	}
-
-	require.True(t, false)
 }

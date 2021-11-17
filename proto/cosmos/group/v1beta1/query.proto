@@ -3,7 +3,6 @@ syntax = "proto3";
 package cosmos.group.v1beta1;
 
 import "cosmos/group/v1beta1/types.proto";
-import "gogoproto/gogo.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos_proto/cosmos.proto";
 

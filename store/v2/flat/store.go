@@ -102,7 +102,7 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 		}
 		// Version sets of each DB must match
 		if !versions.Equal(mversions) {
-			err = fmt.Errorf("Storage and Merkle DB have different version history") //nolint:stylecheck
+			err = fmt.Errorf("storage and Merkle DB have different version history")
 			return
 		}
 		err = opts.MerkleDB.Revert()
@@ -424,12 +424,12 @@ func (s *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			return sdkerrors.QueryResult(err, false)
 		}
 		if root == nil {
-			return sdkerrors.QueryResult(errors.New("Merkle root hash not found"), false) //nolint:stylecheck
+			return sdkerrors.QueryResult(errors.New("Merkle root hash not found"), false) //nolint: stylecheck // proper name
 		}
 		merkleStore := loadSMT(dbm.ReaderAsReadWriter(merkleView), root)
 		res.ProofOps, err = merkleStore.GetProof(res.Key)
 		if err != nil {
-			return sdkerrors.QueryResult(fmt.Errorf("Merkle proof creation failed for key: %v", res.Key), false) //nolint:stylecheck
+			return sdkerrors.QueryResult(fmt.Errorf("Merkle proof creation failed for key: %v", res.Key), false) //nolint: stylecheck // proper name
 		}
 
 	case "/subspace":

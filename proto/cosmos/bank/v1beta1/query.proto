@@ -57,7 +57,7 @@ service Query {
 
 // QueryBalanceRequest is the request type for the Query/Balance RPC method.
 message QueryBalanceRequest {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // address is the address to query balances for.
@@ -75,7 +75,7 @@ message QueryBalanceResponse {
 
 // QueryBalanceRequest is the request type for the Query/AllBalances RPC method.
 message QueryAllBalancesRequest {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // address is the address to query balances for.
@@ -90,7 +90,7 @@ message QueryAllBalancesRequest {
 message QueryAllBalancesResponse {
   // balances is the balances of all the coins.
   repeated cosmos.base.v1beta1.Coin balances = 1
-  [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -99,7 +99,7 @@ message QueryAllBalancesResponse {
 // QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC
 // method.
 message QueryTotalSupplyRequest {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // pagination defines an optional pagination for the request.
@@ -113,7 +113,7 @@ message QueryTotalSupplyRequest {
 message QueryTotalSupplyResponse {
   // supply is the supply of the coins
   repeated cosmos.base.v1beta1.Coin supply = 1
-  [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   // pagination defines the pagination in the response.
   //
@@ -186,7 +186,8 @@ message QueryDenomOwnersRequest {
 // balance of the denominated token.
 message DenomOwner {
   // address defines the address that owns a particular denomination.
-  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];;
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  ;
 
   // balance is the balance of the denominated coin for an account.
   cosmos.base.v1beta1.Coin balance = 2 [(gogoproto.nullable) = false];

@@ -25,7 +25,7 @@ type ResponseSimulateTx struct {
 type Response struct {
 	GasWanted    uint64
 	GasUsed      uint64
-	MsgResponses []codectypes.Any // Represents each Msg service handler's response type. Will get proto-serialized into the `Data` field in ABCI, see note #2
+	MsgResponses []*codectypes.Any // Represents each Msg service handler's response type. Will get proto-serialized into the `Data` field in ABCI, see note #2
 	Log          string
 	Events       []abci.Event
 }

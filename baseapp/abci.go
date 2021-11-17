@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // InitChain implements the ABCI interface. It runs the initialization logic
@@ -255,17 +256,18 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 		panic(fmt.Sprintf("unknown RequestCheckTx type: %s", req.Type))
 	}
 
-	tx, err := app.txDecoder(req.Tx)
+	reqTx, err := app.txDecoder(req.Tx)
 	if err != nil {
 		return sdkerrors.ResponseCheckTx(err, 0, 0, app.trace)
 	}
 
 	ctx := app.getContextForTx(mode, req.Tx)
-	res, err := app.txHandler.CheckTx(ctx, tx, req)
+	checkTxRes, err := app.txHandler.CheckTx(ctx, tx.Request{Tx: reqTx}, req)
 	if err != nil {
-		return sdkerrors.ResponseCheckTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
+		return sdkerrors.ResponseCheckTx(err, uint64(checkTxRes.GasUsed), uint64(checkTxRes.GasWanted), app.trace)
 	}
 
+	res := convertTxResponseToCheckTx(checkTxRes)
 	return res
 }
 
@@ -285,20 +287,20 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 			}
 		}
 	}()
-	tx, err := app.txDecoder(req.Tx)
+	reqTx, err := app.txDecoder(req.Tx)
 	if err != nil {
 		res = sdkerrors.ResponseDeliverTx(err, 0, 0, app.trace)
 		return res
 	}
 
 	ctx := app.getContextForTx(runTxModeDeliver, req.Tx)
-	res, err = app.txHandler.DeliverTx(ctx, tx, req)
+	delTxRes, err := app.txHandler.DeliverTx(ctx, tx.Request{Tx: reqTx, TxBytes: req.Tx})
 	if err != nil {
-		res = sdkerrors.ResponseDeliverTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
+		res = sdkerrors.ResponseDeliverTx(err, uint64(delTxRes.GasUsed), uint64(delTxRes.GasWanted), app.trace)
 		return res
 	}
 
-	return res
+	return convertTxResponseToDeliverTx(delTxRes)
 }
 
 // Commit implements the ABCI interface. It will commit all state that exists in
@@ -899,4 +901,32 @@ func splitPath(requestPath string) (path []string) {
 	}
 
 	return path
+}
+
+func convertTxResponseToCheckTx(txRes tx.Response) abci.ResponseCheckTx {
+	txMsgData := &sdk.TxMsgData{MsgResponses: txRes.MsgResponses}
+	data, err := proto.Marshal(txMsgData)
+	if err != nil {
+		panic(fmt.Sprintf("error while converting tx response to check tx: %s", err.Error()))
+	}
+	res := abci.ResponseCheckTx{
+		Data:   data,
+		Log:    txRes.Log,
+		Events: txRes.Events,
+	}
+	return res
+}
+
+func convertTxResponseToDeliverTx(txRes tx.Response) abci.ResponseDeliverTx {
+	txMsgData := &sdk.TxMsgData{MsgResponses: txRes.MsgResponses}
+	data, err := proto.Marshal(txMsgData)
+	if err != nil {
+		panic(fmt.Sprintf("error while converting tx response to deliver tx: %s", err.Error()))
+	}
+	res := abci.ResponseDeliverTx{
+		Data:   data,
+		Log:    txRes.Log,
+		Events: txRes.Events,
+	}
+	return res
 }

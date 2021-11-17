@@ -46,9 +46,8 @@ func (txh runMsgsTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.R
 	return tx.Response{
 		// GasInfo will be populated by the Gas middleware.
 		Log:          res.Log,
-		MsgResponses: res.Data,
-		// Data:   res.Data,
-		Events: res.Events,
+		MsgResponses: res.MsgResponses,
+		Events:       res.Events,
 	}, nil
 }
 
@@ -61,7 +60,7 @@ func (txh runMsgsTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.
 
 	return tx.Response{
 		// GasInfo will be populated by the Gas middleware.
-		MsgResponses: res,
+		MsgResponses: res.MsgResponses,
 	}, nil
 }
 

@@ -27,6 +27,7 @@ func GetSignDocCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
+	cmd.Flags().String(flags.FlagFrom, "", "Name or address of private key with which to sign")
 	cmd.MarkFlagRequired(flags.FlagFrom)
 
 	return cmd

@@ -412,66 +412,94 @@ func TestDumpUpgradeInfoToFile(t *testing.T) {
 }
 
 func TestBinaryVersion(t *testing.T) {
-	var (
-		skipHeight int64 = 15
-	)
+	var skipHeight int64 = 15
 	s := setupTest(t, 10, map[int64]bool{skipHeight: true})
 
-	t.Log("verify not panic: no scheduled upgrade or applied upgrade is present")
-	req := abci.RequestBeginBlock{Header: s.ctx.BlockHeader()}
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(s.ctx, req)
-	})
+	testCases := []struct {
+		name        string
+		preRun      func() (sdk.Context, abci.RequestBeginBlock)
+		expectPanic bool
+	}{
+		{
+			"test not panic: no scheduled upgrade or applied upgrade is present",
+			func() (sdk.Context, abci.RequestBeginBlock) {
+				req := abci.RequestBeginBlock{Header: s.ctx.BlockHeader()}
+				return s.ctx, req
+			},
+			false,
+		},
+		{
+			"test not panic: upgrade handler is present for last applied upgrade",
+			func() (sdk.Context, abci.RequestBeginBlock) {
+				s.keeper.SetUpgradeHandler("test0", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+					return vm, nil
+				})
 
-	s.keeper.SetUpgradeHandler("test0", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		return vm, nil
-	})
+				err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "Upgrade test", Plan: types.Plan{Name: "test0", Height: s.ctx.BlockHeight() + 2}})
+				require.Nil(t, err)
 
-	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "Upgrade test", Plan: types.Plan{Name: "test0", Height: s.ctx.BlockHeight() + 2}})
-	require.Nil(t, err)
+				newCtx := s.ctx.WithBlockHeight(12)
+				s.keeper.ApplyUpgrade(newCtx, types.Plan{
+					Name:   "test0",
+					Height: 12,
+				})
 
-	newCtx := s.ctx.WithBlockHeight(12)
-	s.keeper.ApplyUpgrade(newCtx, types.Plan{
-		Name:   "test0",
-		Height: 12,
-	})
+				req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
+				return newCtx, req
+			},
+			false,
+		},
+		{
+			"test panic: no upgrade handler is present for last upgrade",
+			func() (sdk.Context, abci.RequestBeginBlock) {
 
-	req = abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx, req)
-	})
+				newCtx := s.ctx.WithBlockHeight(13)
+				req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
+				upgrade.DowngradeVerified = false
 
-	// remove last applied upgrade
-	s.keeper.DeleteUpgradeHandler("test0")
-	t.Log("verify panic: no upgrade handler is present for last upgrade")
-	upgrade.DowngradeVerified = false
-	require.Panics(t, func() {
-		s.module.BeginBlock(newCtx, req)
-	})
+				// delete last applied upgrade
+				s.keeper.DeleteUpgradeHandler("test0")
+				return newCtx, req
+			},
+			true,
+		},
+		{
+			"test panic: no upgrade handler is present for last upgrade with skip upgrade",
+			func() (sdk.Context, abci.RequestBeginBlock) {
+				upgrade.DowngradeVerified = false
 
-	t.Log("verify panic: no upgrade handler is present for last upgrade with skip upgrade")
-	s.keeper.SetUpgradeHandler("test1", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		return vm, nil
-	})
+				newCtx := s.ctx.WithBlockHeight(15)
+				req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
+				return newCtx, req
+			},
+			true,
+		},
+		{
+			"test panic: upgrade needed",
+			func() (sdk.Context, abci.RequestBeginBlock) {
+				err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "Upgrade test", Plan: types.Plan{Name: "test2", Height: 13}})
+				require.Nil(t, err)
 
-	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "Upgrade test", Plan: types.Plan{Name: "test1", Height: 15}})
-	require.Nil(t, err)
+				newCtx := s.ctx.WithBlockHeight(13)
+				req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
+				return newCtx, req
+			},
+			true,
+		},
+	}
 
-	newCtx = s.ctx.WithBlockHeight(15)
-	req = abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-	upgrade.DowngradeVerified = false
-	require.Panics(t, func() {
-		s.module.BeginBlock(newCtx, req)
-	})
+	for _, tc := range testCases {
+		ctx, req := tc.preRun()
+		if tc.expectPanic {
+			require.Panics(t, func() {
+				s.module.BeginBlock(ctx, req)
+			})
+		} else {
+			require.NotPanics(t, func() {
+				s.module.BeginBlock(ctx, req)
+			})
+		}
+	}
 
-	t.Log("verify test panic: upgrade handler is not present for scheduled upgrade")
-	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "Upgrade test", Plan: types.Plan{Name: "test2", Height: skipHeight + 2}})
-	require.Nil(t, err)
-
-	newCtx = s.ctx.WithBlockHeight(skipHeight + 2)
-	req = abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-	upgrade.DowngradeVerified = false
-	require.Panics(t, func() {
-		s.module.BeginBlock(newCtx, req)
-	})
+	require.True(t, false)
 }

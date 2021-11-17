@@ -211,7 +211,7 @@ func DefaultConfig() *Config {
 			PruningInterval:   "0",
 			MinRetainBlocks:   0,
 			IndexEvents:       make([]string, 0),
-			IAVLCacheSize:     50000000, // 50 MB
+			IAVLCacheSize:     781250, // 50 MB
 		},
 		Telemetry: telemetry.Config{
 			Enabled:      false,

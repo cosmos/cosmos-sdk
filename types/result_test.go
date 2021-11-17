@@ -13,7 +13,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/bytes"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/tendermint/tendermint/rpc/coretypes"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -75,7 +75,7 @@ func (s *resultTestSuite) TestResponseResultTx() {
 		GasWanted: 100,
 		GasUsed:   90,
 	}
-	resultTx := &ctypes.ResultTx{
+	resultTx := &coretypes.ResultTx{
 		Hash:     bytes.HexBytes([]byte("test")),
 		Height:   10,
 		TxResult: deliverTxResult,
@@ -116,7 +116,7 @@ func (s *resultTestSuite) TestResponseResultTx() {
 	s.Require().True(sdk.TxResponse{}.Empty())
 	s.Require().False(want.Empty())
 
-	resultBroadcastTx := &ctypes.ResultBroadcastTx{
+	resultBroadcastTx := &coretypes.ResultBroadcastTx{
 		Code:      1,
 		Codespace: "codespace",
 		Data:      []byte("data"),
@@ -143,7 +143,7 @@ func (s *resultTestSuite) TestResponseFormatBroadcastTxCommit() {
 	s.Require().NoError(err)
 
 	// test checkTx
-	checkTxResult := &ctypes.ResultBroadcastTxCommit{
+	checkTxResult := &coretypes.ResultBroadcastTxCommit{
 		Height: 10,
 		Hash:   bytes.HexBytes([]byte("test")),
 		CheckTx: abci.ResponseCheckTx{
@@ -156,7 +156,7 @@ func (s *resultTestSuite) TestResponseFormatBroadcastTxCommit() {
 			Codespace: "codespace",
 		},
 	}
-	deliverTxResult := &ctypes.ResultBroadcastTxCommit{
+	deliverTxResult := &coretypes.ResultBroadcastTxCommit{
 		Height: 10,
 		Hash:   bytes.HexBytes([]byte("test")),
 		DeliverTx: abci.ResponseDeliverTx{

@@ -207,6 +207,7 @@ func txCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
+		authcmd.GetSignDocCommand(),
 		authcmd.GetSignCommand(),
 		authcmd.GetSignBatchCommand(),
 		authcmd.GetMultiSignCommand(),

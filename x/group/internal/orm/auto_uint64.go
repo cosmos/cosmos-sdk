@@ -3,9 +3,13 @@ package orm
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ Indexable = &AutoUInt64Table{}
+var (
+	_ Indexable       = &AutoUInt64Table{}
+	_ TableExportable = &AutoUInt64Table{}
+)
 
 // AutoUInt64Table is the table type with an auto incrementing ID.
 type AutoUInt64Table struct {
@@ -105,4 +109,28 @@ func (a AutoUInt64Table) PrefixScan(store sdk.KVStore, start, end uint64) (Itera
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
 func (a AutoUInt64Table) ReversePrefixScan(store sdk.KVStore, start uint64, end uint64) (Iterator, error) {
 	return a.table.ReversePrefixScan(store, EncodeSequence(start), EncodeSequence(end))
+}
+
+// Sequence returns the sequence used by this table
+func (a AutoUInt64Table) Sequence() Sequence {
+	return a.seq
+}
+
+// Export stores all the values in the table in the passed ModelSlicePtr and
+// returns the current value of the associated sequence.
+func (a AutoUInt64Table) Export(store sdk.KVStore, dest ModelSlicePtr) (uint64, error) {
+	_, err := a.table.Export(store, dest)
+	if err != nil {
+		return 0, err
+	}
+	return a.seq.CurVal(store), nil
+}
+
+// Import clears the table and initializes it from the given data interface{}.
+// data should be a slice of structs that implement PrimaryKeyed.
+func (a AutoUInt64Table) Import(store sdk.KVStore, data interface{}, seqValue uint64) error {
+	if err := a.seq.InitVal(store, seqValue); err != nil {
+		return errors.Wrap(err, "sequence")
+	}
+	return a.table.Import(store, data, seqValue)
 }

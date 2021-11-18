@@ -9,7 +9,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/tendermint/tendermint/rpc/coretypes"
 	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -61,7 +61,7 @@ func (logs ABCIMessageLogs) String() (str string) {
 }
 
 // NewResponseResultTx returns a TxResponse given a ResultTx from tendermint
-func NewResponseResultTx(res *ctypes.ResultTx, anyTx *codectypes.Any, timestamp string) *TxResponse {
+func NewResponseResultTx(res *coretypes.ResultTx, anyTx *codectypes.Any, timestamp string) *TxResponse {
 	if res == nil {
 		return nil
 	}
@@ -86,7 +86,7 @@ func NewResponseResultTx(res *ctypes.ResultTx, anyTx *codectypes.Any, timestamp 
 
 // NewResponseFormatBroadcastTxCommit returns a TxResponse given a
 // ResultBroadcastTxCommit from tendermint.
-func NewResponseFormatBroadcastTxCommit(res *ctypes.ResultBroadcastTxCommit) *TxResponse {
+func NewResponseFormatBroadcastTxCommit(res *coretypes.ResultBroadcastTxCommit) *TxResponse {
 	if res == nil {
 		return nil
 	}
@@ -98,7 +98,7 @@ func NewResponseFormatBroadcastTxCommit(res *ctypes.ResultBroadcastTxCommit) *Tx
 	return newTxResponseDeliverTx(res)
 }
 
-func newTxResponseCheckTx(res *ctypes.ResultBroadcastTxCommit) *TxResponse {
+func newTxResponseCheckTx(res *coretypes.ResultBroadcastTxCommit) *TxResponse {
 	if res == nil {
 		return nil
 	}
@@ -124,7 +124,7 @@ func newTxResponseCheckTx(res *ctypes.ResultBroadcastTxCommit) *TxResponse {
 	}
 }
 
-func newTxResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) *TxResponse {
+func newTxResponseDeliverTx(res *coretypes.ResultBroadcastTxCommit) *TxResponse {
 	if res == nil {
 		return nil
 	}
@@ -151,7 +151,7 @@ func newTxResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) *TxResponse {
 }
 
 // NewResponseFormatBroadcastTx returns a TxResponse given a ResultBroadcastTx from tendermint
-func NewResponseFormatBroadcastTx(res *ctypes.ResultBroadcastTx) *TxResponse {
+func NewResponseFormatBroadcastTx(res *coretypes.ResultBroadcastTx) *TxResponse {
 	if res == nil {
 		return nil
 	}

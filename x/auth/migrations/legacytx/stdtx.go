@@ -1,8 +1,6 @@
 package legacytx
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -164,9 +162,6 @@ func (tx StdTx) GetSigners() []sdk.AccAddress {
 
 	return signers
 }
-
-// GetMemo returns the tip
-func (tx StdTx) GetTip() *tx.Tip { panic(fmt.Errorf("StdTx does not support tips")) }
 
 // GetMemo returns the memo
 func (tx StdTx) GetMemo() string { return tx.Memo }

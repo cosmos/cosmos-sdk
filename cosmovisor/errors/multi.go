@@ -73,7 +73,9 @@ func (e MultiError) String() string {
 func LogErrors(logger zerolog.Logger, msg string, err error) {
 	switch err := err.(type) {
 	case *MultiError:
-		logger.Error().Msg(msg)
+		if msg != "" {
+			logger.Error().Msg(msg)
+		}
 		for i, e := range err.GetErrors() {
 			logger.Error().Err(e).Msg(fmt.Sprintf("  %d:", i+1))
 		}

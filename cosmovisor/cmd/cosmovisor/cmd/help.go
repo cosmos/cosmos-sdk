@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
 )
@@ -14,7 +13,7 @@ var HelpArgs = []string{"help", "--help", "-h"}
 // Help is needed if either cosmovisor.EnvName and/or cosmovisor.EnvHome env vars aren't set.
 // Help is requested if the first arg is "help", "--help", or "-h".
 func ShouldGiveHelp(arg string) bool {
-	return isOneOf(arg, HelpArgs) || len(os.Getenv(cosmovisor.EnvName)) == 0 || len(os.Getenv(cosmovisor.EnvHome)) == 0
+	return isOneOf(arg, HelpArgs)
 }
 
 // DoHelp outputs help text
@@ -39,5 +38,10 @@ documented in: https://github.com/cosmos/cosmos-sdk/tree/master/cosmovisor/READM
 
 To get help for the configured binary:
   cosmovisor run help
+
+Available Commands:
+  help     This help message
+  run      Runs app passing all subsequent parameters
+  version  Prints version of cosmovisor and the associated app.
 `, cosmovisor.EnvName, cosmovisor.EnvHome)
 }

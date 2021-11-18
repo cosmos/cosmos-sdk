@@ -26,57 +26,57 @@ func NewTipMiddleware(bankKeeper types.BankKeeper) tx.Middleware {
 var _ tx.Handler = tipsTxHandler{}
 
 // CheckTx implements tx.Handler.CheckTx.
-func (txh tipsTxHandler) CheckTx(ctx context.Context, sdkTx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	res, err := txh.next.CheckTx(ctx, sdkTx, req)
+func (txh tipsTxHandler) CheckTx(ctx context.Context, req tx.Request, checkTx abci.RequestCheckTx) (tx.Response, error) {
+	res, err := txh.next.CheckTx(ctx, req, checkTx)
 	if err != nil {
-		return abci.ResponseCheckTx{}, err
+		return tx.Response{}, err
 	}
 
-	tipTx, ok := sdkTx.(tx.TipTx)
+	tipTx, ok := req.Tx.(tx.TipTx)
 	if !ok || tipTx.GetTip() == nil {
 		return res, err
 	}
 
 	if err := txh.transferTip(ctx, tipTx); err != nil {
-		return abci.ResponseCheckTx{}, err
+		return tx.Response{}, err
 	}
 
 	return res, err
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (txh tipsTxHandler) DeliverTx(ctx context.Context, sdkTx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	res, err := txh.next.DeliverTx(ctx, sdkTx, req)
+func (txh tipsTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	res, err := txh.next.DeliverTx(ctx, req)
 	if err != nil {
-		return abci.ResponseDeliverTx{}, err
+		return tx.Response{}, err
 	}
 
-	tipTx, ok := sdkTx.(tx.TipTx)
+	tipTx, ok := req.Tx.(tx.TipTx)
 	if !ok || tipTx.GetTip() == nil {
 		return res, err
 	}
 
 	if err := txh.transferTip(ctx, tipTx); err != nil {
-		return abci.ResponseDeliverTx{}, err
+		return tx.Response{}, err
 	}
 
 	return res, err
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
-func (txh tipsTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	res, err := txh.next.SimulateTx(ctx, sdkTx, req)
+func (txh tipsTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	res, err := txh.next.SimulateTx(ctx, req)
 	if err != nil {
-		return tx.ResponseSimulateTx{}, err
+		return tx.Response{}, err
 	}
 
-	tipTx, ok := sdkTx.(tx.TipTx)
+	tipTx, ok := req.Tx.(tx.TipTx)
 	if !ok || tipTx.GetTip() == nil {
 		return res, err
 	}
 
 	if err := txh.transferTip(ctx, tipTx); err != nil {
-		return tx.ResponseSimulateTx{}, err
+		return tx.Response{}, err
 	}
 
 	return res, err

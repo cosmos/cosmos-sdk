@@ -1,9 +1,5 @@
 package codec
 
-import (
-	"github.com/gogo/protobuf/proto"
-)
-
 // AminoCodec defines a codec that utilizes Codec for both binary and JSON
 // encoding.
 type AminoCodec struct {
@@ -18,73 +14,73 @@ func NewAminoCodec(codec *LegacyAmino) *AminoCodec {
 }
 
 // Marshal implements BinaryMarshaler.Marshal method.
-func (ac *AminoCodec) Marshal(o ProtoMarshaler) ([]byte, error) {
+func (ac *AminoCodec) Marshal(o interface{}) ([]byte, error) {
 	return ac.LegacyAmino.Marshal(o)
 }
 
 // MustMarshal implements BinaryMarshaler.MustMarshal method.
-func (ac *AminoCodec) MustMarshal(o ProtoMarshaler) []byte {
+func (ac *AminoCodec) MustMarshal(o interface{}) []byte {
 	return ac.LegacyAmino.MustMarshal(o)
 }
 
 // MarshalLengthPrefixed implements BinaryMarshaler.MarshalLengthPrefixed method.
-func (ac *AminoCodec) MarshalLengthPrefixed(o ProtoMarshaler) ([]byte, error) {
+func (ac *AminoCodec) MarshalLengthPrefixed(o interface{}) ([]byte, error) {
 	return ac.LegacyAmino.MarshalLengthPrefixed(o)
 }
 
 // MustMarshalLengthPrefixed implements BinaryMarshaler.MustMarshalLengthPrefixed method.
-func (ac *AminoCodec) MustMarshalLengthPrefixed(o ProtoMarshaler) []byte {
+func (ac *AminoCodec) MustMarshalLengthPrefixed(o interface{}) []byte {
 	return ac.LegacyAmino.MustMarshalLengthPrefixed(o)
 }
 
 // Unmarshal implements BinaryMarshaler.Unmarshal method.
-func (ac *AminoCodec) Unmarshal(bz []byte, ptr ProtoMarshaler) error {
+func (ac *AminoCodec) Unmarshal(bz []byte, ptr interface{}) error {
 	return ac.LegacyAmino.Unmarshal(bz, ptr)
 }
 
 // MustUnmarshal implements BinaryMarshaler.MustUnmarshal method.
-func (ac *AminoCodec) MustUnmarshal(bz []byte, ptr ProtoMarshaler) {
+func (ac *AminoCodec) MustUnmarshal(bz []byte, ptr interface{}) {
 	ac.LegacyAmino.MustUnmarshal(bz, ptr)
 }
 
 // UnmarshalLengthPrefixed implements BinaryMarshaler.UnmarshalLengthPrefixed method.
-func (ac *AminoCodec) UnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler) error {
+func (ac *AminoCodec) UnmarshalLengthPrefixed(bz []byte, ptr interface{}) error {
 	return ac.LegacyAmino.UnmarshalLengthPrefixed(bz, ptr)
 }
 
 // MustUnmarshalLengthPrefixed implements BinaryMarshaler.MustUnmarshalLengthPrefixed method.
-func (ac *AminoCodec) MustUnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler) {
+func (ac *AminoCodec) MustUnmarshalLengthPrefixed(bz []byte, ptr interface{}) {
 	ac.LegacyAmino.MustUnmarshalLengthPrefixed(bz, ptr)
 }
 
 // MarshalJSON implements JSONCodec.MarshalJSON method,
 // it marshals to JSON using legacy amino codec.
-func (ac *AminoCodec) MarshalJSON(o proto.Message) ([]byte, error) {
+func (ac *AminoCodec) MarshalJSON(o interface{}) ([]byte, error) {
 	return ac.LegacyAmino.MarshalJSON(o)
 }
 
 // MustMarshalJSON implements JSONCodec.MustMarshalJSON method,
 // it executes MarshalJSON except it panics upon failure.
-func (ac *AminoCodec) MustMarshalJSON(o proto.Message) []byte {
+func (ac *AminoCodec) MustMarshalJSON(o interface{}) []byte {
 	return ac.LegacyAmino.MustMarshalJSON(o)
 }
 
 // UnmarshalJSON implements JSONCodec.UnmarshalJSON method,
 // it unmarshals from JSON using legacy amino codec.
-func (ac *AminoCodec) UnmarshalJSON(bz []byte, ptr proto.Message) error {
+func (ac *AminoCodec) UnmarshalJSON(bz []byte, ptr interface{}) error {
 	return ac.LegacyAmino.UnmarshalJSON(bz, ptr)
 }
 
 // MustUnmarshalJSON implements JSONCodec.MustUnmarshalJSON method,
 // it executes UnmarshalJSON except it panics upon failure.
-func (ac *AminoCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
+func (ac *AminoCodec) MustUnmarshalJSON(bz []byte, ptr interface{}) {
 	ac.LegacyAmino.MustUnmarshalJSON(bz, ptr)
 }
 
 // MarshalInterface is a convenience function for amino marshaling interfaces.
 // The `i` must be an interface.
 // NOTE: to marshal a concrete type, you should use Marshal instead
-func (ac *AminoCodec) MarshalInterface(i proto.Message) ([]byte, error) {
+func (ac *AminoCodec) MarshalInterface(i interface{}) ([]byte, error) {
 	if err := assertNotNil(i); err != nil {
 		return nil, err
 	}
@@ -105,7 +101,7 @@ func (ac *AminoCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
 // MarshalInterfaceJSON is a convenience function for amino marshaling interfaces.
 // The `i` must be an interface.
 // NOTE: to marshal a concrete type, you should use MarshalJSON instead
-func (ac *AminoCodec) MarshalInterfaceJSON(i proto.Message) ([]byte, error) {
+func (ac *AminoCodec) MarshalInterfaceJSON(i interface{}) ([]byte, error) {
 	if err := assertNotNil(i); err != nil {
 		return nil, err
 	}

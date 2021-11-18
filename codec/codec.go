@@ -21,32 +21,32 @@ type (
 
 	BinaryCodec interface {
 		// Marshal returns binary encoding of v.
-		Marshal(o ProtoMarshaler) ([]byte, error)
+		Marshal(o interface{}) ([]byte, error)
 		// MustMarshal calls Marshal and panics if error is returned.
-		MustMarshal(o ProtoMarshaler) []byte
+		MustMarshal(o interface{}) []byte
 
 		// MarshalLengthPrefixed returns binary encoding of v with bytes length prefix.
-		MarshalLengthPrefixed(o ProtoMarshaler) ([]byte, error)
+		MarshalLengthPrefixed(o interface{}) ([]byte, error)
 		// MustMarshalLengthPrefixed calls MarshalLengthPrefixed and panics if
 		// error is returned.
-		MustMarshalLengthPrefixed(o ProtoMarshaler) []byte
+		MustMarshalLengthPrefixed(o interface{}) []byte
 
 		// Unmarshal parses the data encoded with Marshal method and stores the result
 		// in the value pointed to by v.
-		Unmarshal(bz []byte, ptr ProtoMarshaler) error
+		Unmarshal(bz []byte, ptr interface{}) error
 		// MustUnmarshal calls Unmarshal and panics if error is returned.
-		MustUnmarshal(bz []byte, ptr ProtoMarshaler)
+		MustUnmarshal(bz []byte, ptr interface{})
 
 		// Unmarshal parses the data encoded with UnmarshalLengthPrefixed method and stores
 		// the result in the value pointed to by v.
-		UnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler) error
+		UnmarshalLengthPrefixed(bz []byte, ptr interface{}) error
 		// MustUnmarshalLengthPrefixed calls UnmarshalLengthPrefixed and panics if error
 		// is returned.
-		MustUnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler)
+		MustUnmarshalLengthPrefixed(bz []byte, ptr interface{})
 
 		// MarshalInterface is a helper method which will wrap `i` into `Any` for correct
 		// binary interface (de)serialization.
-		MarshalInterface(i proto.Message) ([]byte, error)
+		MarshalInterface(i interface{}) ([]byte, error)
 		// UnmarshalInterface is a helper method which will parse binary enoded data
 		// into `Any` and unpack any into the `ptr`. It fails if the target interface type
 		// is not registered in codec, or is not compatible with the serialized data
@@ -57,12 +57,12 @@ type (
 
 	JSONCodec interface {
 		// MarshalJSON returns JSON encoding of v.
-		MarshalJSON(o proto.Message) ([]byte, error)
+		MarshalJSON(o interface{}) ([]byte, error)
 		// MustMarshalJSON calls MarshalJSON and panics if error is returned.
-		MustMarshalJSON(o proto.Message) []byte
+		MustMarshalJSON(o interface{}) []byte
 		// MarshalInterfaceJSON is a helper method which will wrap `i` into `Any` for correct
 		// JSON interface (de)serialization.
-		MarshalInterfaceJSON(i proto.Message) ([]byte, error)
+		MarshalInterfaceJSON(i interface{}) ([]byte, error)
 		// UnmarshalInterfaceJSON is a helper method which will parse JSON enoded data
 		// into `Any` and unpack any into the `ptr`. It fails if the target interface type
 		// is not registered in codec, or is not compatible with the serialized data
@@ -70,9 +70,9 @@ type (
 
 		// UnmarshalJSON parses the data encoded with MarshalJSON method and stores the result
 		// in the value pointed to by v.
-		UnmarshalJSON(bz []byte, ptr proto.Message) error
+		UnmarshalJSON(bz []byte, ptr interface{}) error
 		// MustUnmarshalJSON calls Unmarshal and panics if error is returned.
-		MustUnmarshalJSON(bz []byte, ptr proto.Message)
+		MustUnmarshalJSON(bz []byte, ptr interface{})
 	}
 
 	// ProtoMarshaler defines an interface a type must implement to serialize itself

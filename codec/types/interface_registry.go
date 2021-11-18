@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"reflect"
 
+	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"google.golang.org/protobuf/reflect/protoregistry"
+
 	"github.com/gogo/protobuf/jsonpb"
 	gogoproto "github.com/gogo/protobuf/proto"
 	protov2 "google.golang.org/protobuf/proto"
@@ -26,8 +30,12 @@ type AnyUnpacker interface {
 // InterfaceRegistry provides a mechanism for registering interfaces and
 // implementations that can be safely unpacked from Any
 type InterfaceRegistry interface {
+	isInterfaceRegistry()
+
 	AnyUnpacker
 	jsonpb.AnyResolver
+	protoregistry.ExtensionTypeResolver
+	protoregistry.MessageTypeResolver
 
 	// RegisterInterface associates protoName as the public name for the
 	// interface passed in as iface. This is to be used primarily to create
@@ -95,6 +103,8 @@ func NewInterfaceRegistry() InterfaceRegistry {
 		typeURLMap:     map[string]reflect.Type{},
 	}
 }
+
+func (interfaceRegistry) isInterfaceRegistry() {}
 
 func (registry *interfaceRegistry) RegisterInterface(protoName string, iface interface{}, impls ...interface{}) {
 	typ := reflect.TypeOf(iface)
@@ -296,4 +306,26 @@ func UnpackInterfaces(x interface{}, unpacker AnyUnpacker) error {
 		return msg.UnpackInterfaces(unpacker)
 	}
 	return nil
+}
+
+func (registry interfaceRegistry) FindExtensionByName(field protoreflect.FullName) (protoreflect.ExtensionType, error) {
+	return protoregistry.GlobalTypes.FindExtensionByName(field)
+}
+
+func (registry interfaceRegistry) FindExtensionByNumber(message protoreflect.FullName, field protoreflect.FieldNumber) (protoreflect.ExtensionType, error) {
+	return protoregistry.GlobalTypes.FindExtensionByNumber(message, field)
+}
+
+func (registry interfaceRegistry) FindMessageByName(message protoreflect.FullName) (protoreflect.MessageType, error) {
+	return registry.FindMessageByURL("/" + string(message))
+}
+
+func (registry interfaceRegistry) FindMessageByURL(url string) (protoreflect.MessageType, error) {
+	typ, ok := registry.typeURLMap[url]
+	if !ok {
+		return nil, fmt.Errorf("can't resolve type URL %s", url)
+	}
+
+	msg := reflect.New(typ.Elem()).Interface()
+	return protoimpl.X.ProtoMessageV2Of(msg).ProtoReflect().Type(), nil
 }

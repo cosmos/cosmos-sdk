@@ -1,16 +1,13 @@
 package types
 
 import (
-	"github.com/gogo/protobuf/proto"
-
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 type (
 	// Msg defines the interface a transaction message must fulfill.
 	Msg interface {
-		proto.Message
-
 		// ValidateBasic does a simple validation check that
 		// doesn't require access to any other information.
 		ValidateBasic() error
@@ -77,5 +74,9 @@ type TxEncoder func(tx Tx) ([]byte, error)
 
 // MsgTypeURL returns the TypeURL of a `sdk.Msg`.
 func MsgTypeURL(msg Msg) string {
-	return "/" + proto.MessageName(msg)
+	msgName, err := codectypes.MessageName(msg)
+	if err != nil {
+		panic(err)
+	}
+	return "/" + msgName
 }

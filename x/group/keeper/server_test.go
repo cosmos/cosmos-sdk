@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,8 +37,6 @@ func TestServer(t *testing.T) {
 
 	authSubspace := paramstypes.NewSubspace(cdc, amino, paramsKey, tkey, authtypes.ModuleName)
 	bankSubspace := paramstypes.NewSubspace(cdc, amino, paramsKey, tkey, banktypes.ModuleName)
-	// stakingSubspace := paramstypes.NewSubspace(cdc, amino, paramsKey, tkey, stakingtypes.ModuleName)
-	// mintSubspace := paramstypes.NewSubspace(cdc, amino, paramsKey, tkey, minttypes.ModuleName)
 
 	maccPerms := map[string][]string{
 		authtypes.FeeCollectorName:     nil,
@@ -58,14 +58,6 @@ func TestServer(t *testing.T) {
 		cdc, bankKey, accountKeeper, bankSubspace, modAccAddrs,
 	)
 
-	// stakingKeeper := stakingkeeper.NewKeeper(
-	// 	cdc, stakingKey, accountKeeper, bankKeeper, stakingSubspace,
-	// )
-
-	// mintKeeper := mintkeeper.NewKeeper(
-	// 	cdc, mintKey, mintSubspace, stakingKeeper, accountKeeper, bankKeeper, authtypes.FeeCollectorName,
-	// )
-
 	baseApp := ff.BaseApp()
 	baseApp.MsgServiceRouter().SetInterfaceRegistry(cdc.InterfaceRegistry())
 	banktypes.RegisterMsgServer(baseApp.MsgServiceRouter(), bankkeeper.NewMsgServerImpl(bankKeeper))
@@ -80,7 +72,8 @@ func TestServer(t *testing.T) {
 		group.Module{AccountKeeper: accountKeeper},
 	})
 
-	// s := testsuite.NewIntegrationTestSuite(ff, accountKeeper, bankKeeper, mintKeeper, ecocreditSubspace)
+}
 
-	// suite.Run(t, s)
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
 }

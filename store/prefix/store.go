@@ -36,8 +36,8 @@ func cloneAppend(bz []byte, tail []byte) (res []byte) {
 }
 
 func (s Store) key(key []byte) (res []byte) {
-	if len(key) == 0 {
-		panic("nil or empty key on Store")
+	if key == nil {
+		panic("nil key on Store")
 	}
 	res = cloneAppend(s.prefix, key)
 	return
@@ -89,12 +89,6 @@ func (s Store) Delete(key []byte) {
 // Implements KVStore
 // Check https://github.com/tendermint/tendermint/blob/master/libs/db/prefix_db.go#L106
 func (s Store) Iterator(start, end []byte) types.Iterator {
-	if start != nil && len(start) == 0 {
-		panic("empty start key")
-	}
-	if end != nil && len(end) == 0 {
-		panic("empty end key")
-	}
 	newstart := cloneAppend(s.prefix, start)
 
 	var newend []byte
@@ -112,12 +106,6 @@ func (s Store) Iterator(start, end []byte) types.Iterator {
 // ReverseIterator implements KVStore
 // Check https://github.com/tendermint/tendermint/blob/master/libs/db/prefix_db.go#L129
 func (s Store) ReverseIterator(start, end []byte) types.Iterator {
-	if start != nil && len(start) == 0 {
-		panic("empty start key")
-	}
-	if end != nil && len(end) == 0 {
-		panic("empty end key")
-	}
 	newstart := cloneAppend(s.prefix, start)
 
 	var newend []byte

@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
-func (s serverImpl) execMsgs(ctx context.Context, derivationKey []byte, proposal group.Proposal) error {
-	derivedKey := s.key.Derive(derivationKey)
+func (s msgServer) execMsgs(ctx context.Context, derivationKey []byte, proposal group.Proposal) error {
+	derivedKey := s.server.key.Derive(derivationKey)
 	msgs := proposal.GetMsgs()
 
 	for _, msg := range msgs {

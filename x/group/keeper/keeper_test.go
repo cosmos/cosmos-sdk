@@ -80,10 +80,6 @@ func (s *KeeperTestSuite) SetupSuite() {
 	s.sdkCtx = types.UnwrapSDKContext(sdkCtx)
 	s.ctx = s.sdkCtx.Context()
 
-	// ecocreditParams := ecocredit.DefaultParams()
-	// ecocreditParams.CreditClassFee = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0))) // overwriting the fee to 0stake
-	// s.paramSpace.SetParamSet(s.sdkCtx, &ecocreditParams)
-
 	// s.genesisCtx = types.Context{Context: sdkCtx}
 	s.genesisCtx = types.UnwrapSDKContext(sdkCtx)
 	s.Require().NoError(s.bankKeeper.MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("test", 400000000))))
@@ -115,7 +111,7 @@ func (s *KeeperTestSuite) SetupSuite() {
 
 	policy := group.NewThresholdDecisionPolicy(
 		"2",
-		gogotypes.Duration{Seconds: 1},
+		1,
 	)
 	accountReq := &group.MsgCreateGroupAccount{
 		Admin:    s.addr1.String(),
@@ -745,7 +741,7 @@ func (s *KeeperTestSuite) TestCreateGroupAccount() {
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
-				gogotypes.Duration{Seconds: 1},
+				1,
 			),
 		},
 		"decision policy threshold > total group weight": {
@@ -756,7 +752,7 @@ func (s *KeeperTestSuite) TestCreateGroupAccount() {
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"10",
-				gogotypes.Duration{Seconds: 1},
+				1,
 			),
 		},
 		"group id does not exists": {
@@ -767,7 +763,7 @@ func (s *KeeperTestSuite) TestCreateGroupAccount() {
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
-				gogotypes.Duration{Seconds: 1},
+				1,
 			),
 			expErr: true,
 		},
@@ -779,7 +775,7 @@ func (s *KeeperTestSuite) TestCreateGroupAccount() {
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
-				gogotypes.Duration{Seconds: 1},
+				1,
 			),
 			expErr: true,
 		},
@@ -791,7 +787,7 @@ func (s *KeeperTestSuite) TestCreateGroupAccount() {
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
-				gogotypes.Duration{Seconds: 1},
+				1,
 			),
 			expErr: true,
 		},
@@ -1020,7 +1016,7 @@ func (s *KeeperTestSuite) TestUpdateGroupAccountDecisionPolicy() {
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"2",
-				gogotypes.Duration{Seconds: 2},
+				1,
 			),
 			expGroupAccount: &group.GroupAccountInfo{
 				Admin:          admin.String(),
@@ -1072,11 +1068,11 @@ func (s *KeeperTestSuite) TestGroupAccountsByAdminOrGroup() {
 	policies := []group.DecisionPolicy{
 		group.NewThresholdDecisionPolicy(
 			"1",
-			gogotypes.Duration{Seconds: 1},
+			1,
 		),
 		group.NewThresholdDecisionPolicy(
 			"10",
-			gogotypes.Duration{Seconds: 1},
+			1,
 		),
 	}
 
@@ -1160,7 +1156,7 @@ func (s *KeeperTestSuite) TestCreateProposal() {
 	}
 	policy := group.NewThresholdDecisionPolicy(
 		"100",
-		gogotypes.Duration{Seconds: 1},
+		1,
 	)
 	err := accountReq.SetDecisionPolicy(policy)
 	s.Require().NoError(err)
@@ -1397,7 +1393,7 @@ func (s *KeeperTestSuite) TestVote() {
 
 	policy := group.NewThresholdDecisionPolicy(
 		"2",
-		gogotypes.Duration{Seconds: 1},
+		1,
 	)
 	accountReq := &group.MsgCreateGroupAccount{
 		Admin:    s.addr1.String(),
@@ -1757,7 +1753,7 @@ func (s *KeeperTestSuite) TestVote() {
 					groupAccount,
 					&group.ThresholdDecisionPolicy{
 						Threshold: "1",
-						Timeout:   gogotypes.Duration{Seconds: 1},
+						Timeout:   1,
 					},
 				)
 				s.Require().NoError(err)
@@ -2132,7 +2128,7 @@ func createGroupAndGroupAccount(
 
 	policy := group.NewThresholdDecisionPolicy(
 		"1",
-		gogotypes.Duration{Seconds: 1},
+		1,
 	)
 	err = groupAccount.SetDecisionPolicy(policy)
 	s.Require().NoError(err)

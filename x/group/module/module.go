@@ -12,17 +12,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	servermodule "github.com/cosmos/cosmos-sdk/types/module/server"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 )
 
 type Module struct {
+	keeper        keeper.Keeper
 	Registry      types.InterfaceRegistry
 	BankKeeper    group.BankKeeper
 	AccountKeeper group.AccountKeeper
 }
 
-var _ module.AppModuleBasic = Module{}
+// var _ module.AppModuleBasic = Module{}
 var _ module.AppModuleSimulation = Module{}
 var _ servermodule.Module = Module{}
 
@@ -40,7 +42,9 @@ func (a Module) RegisterInterfaces(registry types.InterfaceRegistry) {
 }
 
 func (a Module) RegisterServices(configurator servermodule.Configurator) {
-	keeper.RegisterServices(configurator, a.AccountKeeper, a.BankKeeper)
+	group.RegisterMsgServer(configurator.MsgServer(), keeper.NewMsgServerImpl(a.keeper))
+	group.RegisterQueryServer(configurator.QueryServer(), a.keeper)
+	a.keeper.RegisterServices(configurator, a.AccountKeeper, a.BankKeeper)
 }
 
 // func (a Module) DefaultGenesis(marshaler codec.JSONCodec) json.RawMessage {
@@ -78,10 +82,10 @@ func (Module) ConsensusVersion() uint64 { return 1 }
 
 // AppModuleSimulation functions
 
-// // GenerateGenesisState creates a randomized GenesisState of the group module.
-// func (Module) GenerateGenesisState(simState *module.SimulationState) {
-// 	simulation.RandomizedGenState(simState)
-// }
+// GenerateGenesisState creates a randomized GenesisState of the group module.
+func (Module) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+}
 
 // ProposalContents returns all the group content functions used to
 // simulate proposals.

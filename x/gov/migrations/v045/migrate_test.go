@@ -108,14 +108,7 @@ func TestMigrate(t *testing.T) {
 				"no_with_veto": "0",
 				"yes": "0"
 			},
-			"messages": [
-				{
-					"@type": "/cosmos.gov.v1beta2.MsgSignal",
-					"authority": "cosmos1w3jhxazlvahhvhmpvd3k7atwwsq04etk",
-					"description": "bar_description",
-					"title": "foo_title"
-				}
-			],
+			"messages": [],
 			"proposal_id": "5",
 			"status": "PROPOSAL_STATUS_DEPOSIT_PERIOD",
 			"submit_time": "2019-01-01T01:00:00Z",

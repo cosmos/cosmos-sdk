@@ -109,7 +109,7 @@ func (any *Any) pack(v interface{}) error {
 			return err
 		}
 	case protov2.Message:
-		bz, err = protov2.Marshal(v)
+		bz, err = protov2.MarshalOptions{Deterministic: true}.Marshal(v)
 		if err != nil {
 			return err
 		}

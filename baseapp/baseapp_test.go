@@ -80,7 +80,8 @@ func (ps *paramStore) Get(_ sdk.Context, key []byte, ptr interface{}) {
 }
 
 func defaultLogger() log.Logger {
-	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
+	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	return logger.With("module", "sdk/app")
 }
 
 func newBaseApp(name string, options ...func(*baseapp.BaseApp)) *baseapp.BaseApp {
@@ -1431,8 +1432,8 @@ func TestMaxBlockGasLimits(t *testing.T) {
 	app := setupBaseApp(t, txHandlerOpt)
 
 	app.InitChain(abci.RequestInitChain{
-		ConsensusParams: &abci.ConsensusParams{
-			Block: &abci.BlockParams{
+		ConsensusParams: &tmproto.ConsensusParams{
+			Block: &tmproto.BlockParams{
 				MaxGas: 100,
 			},
 		},
@@ -1611,8 +1612,8 @@ func TestGasConsumptionBadTx(t *testing.T) {
 	app := setupBaseApp(t, txHandlerOpt)
 
 	app.InitChain(abci.RequestInitChain{
-		ConsensusParams: &abci.ConsensusParams{
-			Block: &abci.BlockParams{
+		ConsensusParams: &tmproto.ConsensusParams{
+			Block: &tmproto.BlockParams{
 				MaxGas: 9,
 			},
 		},
@@ -1776,16 +1777,16 @@ func TestGetMaximumBlockGas(t *testing.T) {
 	app.InitChain(abci.RequestInitChain{})
 	ctx := app.NewContext(true, tmproto.Header{})
 
-	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 0}})
+	app.StoreConsensusParams(ctx, &tmproto.ConsensusParams{Block: &tmproto.BlockParams{MaxGas: 0}})
 	require.Equal(t, uint64(0), app.GetMaximumBlockGas(ctx))
 
-	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -1}})
+	app.StoreConsensusParams(ctx, &tmproto.ConsensusParams{Block: &tmproto.BlockParams{MaxGas: -1}})
 	require.Equal(t, uint64(0), app.GetMaximumBlockGas(ctx))
 
-	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 5000000}})
+	app.StoreConsensusParams(ctx, &tmproto.ConsensusParams{Block: &tmproto.BlockParams{MaxGas: 5000000}})
 	require.Equal(t, uint64(5000000), app.GetMaximumBlockGas(ctx))
 
-	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -5000000}})
+	app.StoreConsensusParams(ctx, &tmproto.ConsensusParams{Block: &tmproto.BlockParams{MaxGas: -5000000}})
 	require.Panics(t, func() { app.GetMaximumBlockGas(ctx) })
 }
 
@@ -2014,8 +2015,8 @@ func TestBaseApp_EndBlock(t *testing.T) {
 	name := t.Name()
 	logger := defaultLogger()
 
-	cp := &abci.ConsensusParams{
-		Block: &abci.BlockParams{
+	cp := &tmproto.ConsensusParams{
+		Block: &tmproto.BlockParams{
 			MaxGas: 5000000,
 		},
 	}

@@ -93,6 +93,7 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		ValidateSigCountMiddleware(options.AccountKeeper),
 		SigGasConsumeMiddleware(options.AccountKeeper, sigGasConsumer),
 		SigVerificationMiddleware(options.AccountKeeper, options.SignModeHandler),
+		NewTipMiddleware(options.BankKeeper),
 		IncrementSequenceMiddleware(options.AccountKeeper),
 	), nil
 }

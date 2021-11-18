@@ -15,6 +15,8 @@ The `table` struct does not:
 - optimize Gas usage conditions
 The `table` struct is private, so that we only have custom tables built on top of it, that do satisfy these requirements.
 
+`table` provides methods for exporting (using a [`PrefixScan` `Iterator`](03_iterator_pagination.md#iterator)) and importing genesis data. For the import to be successful, objects have to be aware of their primary key by implementing the [`PrimaryKeyed`](#primarykeyed) interface.
+
 ## AutoUInt64Table
 
 `AutoUInt64Table` is a table type with an auto incrementing `uint64` ID.
@@ -27,14 +29,18 @@ It's based on the `Sequence` struct which is a persistent unique key generator b
 
 `PrimaryKeyTable` provides simpler object style orm methods where are persisted and loaded with a reference to their unique primary key.
 
+### PrimaryKeyed
+
 The model provided for creating a `PrimaryKeyTable` should implement the `PrimaryKeyed` interface:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/9f78f16ae75cc42fc5fe636bde18a453ba74831f/x/group/internal/orm/primary_key.go#L28-L41
 
 `PrimaryKeyFields()` method returns the list of key parts for a given object.
-The primary key parts can be []byte, string, and `uint64` types.
- Key parts, except the last part, follow these rules:
+The primary key parts can be []byte, string, and `uint64` types. 
 
-- []byte is encoded with a single byte length prefix
-- strings are null-terminated
-- `uint64` are encoded using 8 byte big endian.
+### Key codec
+
+Key parts, except the last part, follow these rules:
+  - []byte is encoded with a single byte length prefix
+  - strings are null-terminated
+  - `uint64` are encoded using 8 byte big endian.

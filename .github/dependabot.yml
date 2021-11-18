@@ -23,3 +23,8 @@ updates:
   open-pull-requests-limit: 10
   reviewers:
   - fadeev
+- package-ecosystem: gomod
+  directory: "/db"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10

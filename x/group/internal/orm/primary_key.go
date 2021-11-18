@@ -5,7 +5,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ Indexable = &PrimaryKeyTable{}
+var (
+	_ Indexable       = &PrimaryKeyTable{}
+	_ TableExportable = &PrimaryKeyTable{}
+)
 
 // PrimaryKeyTable provides simpler object style orm methods without passing database RowIDs.
 // Entries are persisted and loaded with a reference to their unique primary key.
@@ -110,4 +113,48 @@ func (a PrimaryKeyTable) Contains(store sdk.KVStore, obj PrimaryKeyed) bool {
 // If none exists `ErrNotFound` is returned instead. Parameters must not be nil.
 func (a PrimaryKeyTable) GetOne(store sdk.KVStore, primKey RowID, dest codec.ProtoMarshaler) error {
 	return a.table.GetOne(store, primKey, dest)
+}
+
+// PrefixScan returns an Iterator over a domain of keys in ascending order. End is exclusive.
+// Start is an MultiKeyIndex key or prefix. It must be less than end, or the Iterator is invalid and error is returned.
+// Iterator must be closed by caller.
+// To iterate over entire domain, use PrefixScan(nil, nil)
+//
+// WARNING: The use of a PrefixScan can be very expensive in terms of Gas. Please make sure you do not expose
+// this as an endpoint to the public without further limits.
+// Example:
+//			it, err := idx.PrefixScan(ctx, start, end)
+//			if err !=nil {
+//				return err
+//			}
+//			const defaultLimit = 20
+//			it = LimitIterator(it, defaultLimit)
+//
+// CONTRACT: No writes may happen within a domain while an iterator exists over it.
+func (a PrimaryKeyTable) PrefixScan(store sdk.KVStore, start, end []byte) (Iterator, error) {
+	return a.table.PrefixScan(store, start, end)
+}
+
+// ReversePrefixScan returns an Iterator over a domain of keys in descending order. End is exclusive.
+// Start is an MultiKeyIndex key or prefix. It must be less than end, or the Iterator is invalid  and error is returned.
+// Iterator must be closed by caller.
+// To iterate over entire domain, use PrefixScan(nil, nil)
+//
+// WARNING: The use of a ReversePrefixScan can be very expensive in terms of Gas. Please make sure you do not expose
+// this as an endpoint to the public without further limits. See `LimitIterator`
+//
+// CONTRACT: No writes may happen within a domain while an iterator exists over it.
+func (a PrimaryKeyTable) ReversePrefixScan(store sdk.KVStore, start, end []byte) (Iterator, error) {
+	return a.table.ReversePrefixScan(store, start, end)
+}
+
+// Export stores all the values in the table in the passed ModelSlicePtr.
+func (a PrimaryKeyTable) Export(store sdk.KVStore, dest ModelSlicePtr) (uint64, error) {
+	return a.table.Export(store, dest)
+}
+
+// Import clears the table and initializes it from the given data interface{}.
+// data should be a slice of structs that implement PrimaryKeyed.
+func (a PrimaryKeyTable) Import(store sdk.KVStore, data interface{}, seqValue uint64) error {
+	return a.table.Import(store, data, seqValue)
 }

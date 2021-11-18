@@ -11,6 +11,7 @@ linters:
     - depguard
     - dogsled
     # - errcheck
+    - exportloopref
     - goconst
     - gocritic
     - gofmt
@@ -21,19 +22,17 @@ linters:
     - ineffassign
     - misspell
     - nakedret
+    - nolintlint
     - prealloc
     - revive
-    - exportloopref
     - staticcheck
     - structcheck
     - stylecheck
     - typecheck
     - unconvert
-    - unused
     - unparam
-    - misspell
+    - unused
     # - wsl
-    - nolintlint
 
 issues:
   exclude-rules:

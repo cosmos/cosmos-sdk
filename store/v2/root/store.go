@@ -80,30 +80,27 @@ type StoreSchema map[string]types.StoreType
 type Store struct {
 	stateDB            dbm.DBConnection
 	stateTxn           dbm.DBReadWriter
+	StateCommitmentDB  dbm.DBConnection
 	stateCommitmentTxn dbm.DBReadWriter
-
-	Pruning           types.PruningOptions
-	InitialVersion    uint64
-	StateCommitmentDB dbm.DBConnection
 
 	schema StoreSchema
 	mem    *mem.Store
 	tran   *transkv.Store
+	mtx    sync.RWMutex
+
+	Pruning        types.PruningOptions
+	InitialVersion uint64
 	*listenerMixin
 	*traceMixin
+	PersistentCache types.RootStorePersistentCache
 
 	substoreCache   map[string]*substore
 	npSubstoreCache map[string]types.KVStore
-
-	mtx          sync.RWMutex
-	loadExisting bool
-
-	PersistentCache types.RootStorePersistentCache
 }
 
 type substore struct {
 	root                 *Store
-	key                  string
+	name                 string
 	dataBucket           dbm.DBReadWriter
 	indexBucket          dbm.DBReadWriter
 	stateCommitmentStore *smt.Store
@@ -224,14 +221,12 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 	if err != nil {
 		return
 	}
-	loadExisting := false
 	// If the DB is not empty, attempt to load existing data
 	if saved := versions.Count(); saved != 0 {
 		if opts.InitialVersion != 0 && versions.Last() < opts.InitialVersion {
 			return nil, fmt.Errorf("latest saved version is less than initial version: %v < %v",
 				versions.Last(), opts.InitialVersion)
 		}
-		loadExisting = true
 	}
 	err = db.Revert()
 	if err != nil {
@@ -277,7 +272,6 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 
 		Pruning:        opts.Pruning,
 		InitialVersion: opts.InitialVersion,
-		loadExisting:   loadExisting,
 	}
 
 	// Now load the substore schema
@@ -502,7 +496,7 @@ func (rs *Store) getSubstore(key string) (*substore, error) {
 
 	return &substore{
 		root:                 rs,
-		key:                  key,
+		name:                 key,
 		dataBucket:           prefixdb.NewPrefixReadWriter(stateRW, dataPrefix),
 		indexBucket:          prefixdb.NewPrefixReadWriter(stateRW, indexPrefix),
 		stateCommitmentStore: stateCommitmentStore,
@@ -511,7 +505,7 @@ func (rs *Store) getSubstore(key string) (*substore, error) {
 
 // resets a substore's state after commit (stateTxn discarded)
 func (s *substore) refresh(rootHash []byte) {
-	pfx := substorePrefix(s.key)
+	pfx := substorePrefix(s.name)
 	stateRW := prefixdb.NewPrefixReadWriter(s.root.stateTxn, pfx)
 	stateCommitmentRW := prefixdb.NewPrefixReadWriter(s.root.stateCommitmentTxn, pfx)
 	s.dataBucket = prefixdb.NewPrefixReadWriter(stateRW, dataPrefix)
@@ -560,7 +554,7 @@ func (s *Store) Commit() types.CommitID {
 	return *cid
 }
 
-func (s *Store) updateMerkleRoots() (ret map[string][]byte, err error) {
+func (s *Store) getMerkleRoots() (ret map[string][]byte, err error) {
 	ret = map[string][]byte{}
 	for key, _ := range s.schema {
 		sub, has := s.substoreCache[key]
@@ -570,23 +564,25 @@ func (s *Store) updateMerkleRoots() (ret map[string][]byte, err error) {
 				return
 			}
 		}
-		rootHash := sub.stateCommitmentStore.Root()
-		ret[key] = rootHash
-		pfx := substorePrefix(key)
-		stateW := prefixdb.NewPrefixReadWriter(s.stateTxn, pfx)
-		if err = stateW.Set(substoreMerkleRootKey, rootHash); err != nil {
-			return
-		}
+		ret[key] = sub.stateCommitmentStore.Root()
 	}
 	return
 }
 
 func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
-	rootHashes, err := s.updateMerkleRoots()
+	storeHashes, err := s.getMerkleRoots()
 	if err != nil {
 		return
 	}
-	rootHash := sdkmaps.HashFromMap(rootHashes)
+	// Update substore Merkle roots
+	for key, storeHash := range storeHashes {
+		pfx := substorePrefix(key)
+		stateW := prefixdb.NewPrefixReadWriter(s.stateTxn, pfx)
+		if err = stateW.Set(substoreMerkleRootKey, storeHash); err != nil {
+			return
+		}
+	}
+	rootHash := sdkmaps.HashFromMap(storeHashes)
 	if err = s.stateTxn.Set(merkleRootKey, rootHash); err != nil {
 		return
 	}
@@ -611,7 +607,7 @@ func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
 	}()
 	stateCommitmentTxn := stateTxn
 
-	// If DBs are not separate, StateCommitment state has been commmitted & snapshotted
+	// If DBs are not separate, StateCommitment state has been committed & snapshotted
 	if s.StateCommitmentDB != nil {
 		// if any error is encountered henceforth, we must revert the state and SC dbs
 		defer func() {
@@ -643,7 +639,7 @@ func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
 	s.stateCommitmentTxn = stateCommitmentTxn
 	// the state on all living substores must be refreshed
 	for key, sub := range s.substoreCache {
-		sub.refresh(rootHashes[key])
+		sub.refresh(storeHashes[key])
 	}
 
 	return &types.CommitID{Version: int64(target), Hash: rootHash}, nil
@@ -762,7 +758,7 @@ func (rs *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		if !req.Prove {
 			break
 		}
-		// res.ProofOps, err = view.prove(storeName, res.Key)
+		// TODO: actual IBC compatible proof. This is a placeholder so unit tests can pass
 		res.ProofOps, err = substore.stateCommitmentStore.GetProof([]byte(storeName + string(res.Key)))
 		if err != nil {
 			return sdkerrors.QueryResult(fmt.Errorf("Merkle proof creation failed for key: %v", res.Key), false) //nolint: stylecheck // proper name

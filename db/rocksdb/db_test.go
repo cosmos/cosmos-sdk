@@ -2,6 +2,7 @@ package rocksdb
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -53,11 +54,11 @@ func TestRevertRecovery(t *testing.T) {
 	require.NoError(t, txn.Set([]byte{2}, []byte{2}))
 	require.NoError(t, txn.Commit())
 
-	// make checkpoints dir temporarily unreadable to trigger an error
-	require.NoError(t, os.Chmod(db.checkpointsDir(), 0000))
+	// move checkpoints dir temporarily to trigger an error
+	hideDir := filepath.Join(dir, "hide_checkpoints")
+	require.NoError(t, os.Rename(db.checkpointsDir(), hideDir))
 	require.Error(t, db.Revert())
-
-	require.NoError(t, os.Chmod(db.checkpointsDir(), 0755))
+	require.NoError(t, os.Rename(hideDir, db.checkpointsDir()))
 	db, err = NewDB(dir)
 	require.NoError(t, err)
 }

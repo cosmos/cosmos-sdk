@@ -3,7 +3,8 @@ package types
 import (
 	fmt "fmt"
 
-	"github.com/gogo/protobuf/proto"
+	gogoproto "github.com/gogo/protobuf/proto"
+	protov2 "google.golang.org/protobuf/proto"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -60,21 +61,14 @@ type Any struct {
 // returns an error if that value couldn't be packed. This also caches
 // the packed value so that it can be retrieved from GetCachedValue without
 // unmarshaling
-func NewAnyWithValue(v proto.Message) (*Any, error) {
-	if v == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrPackAny, "Expecting non nil value to create a new Any")
-	}
-
-	bz, err := proto.Marshal(v)
+func NewAnyWithValue(v interface{}) (*Any, error) {
+	any := &Any{}
+	err := any.pack(v)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Any{
-		TypeUrl:     "/" + proto.MessageName(v),
-		Value:       bz,
-		cachedValue: v,
-	}, nil
+	return any, nil
 }
 
 // UnsafePackAny packs the value x in the Any and instead of returning the error
@@ -83,8 +77,10 @@ func NewAnyWithValue(v proto.Message) (*Any, error) {
 // values can safely be packed using this method when they will only be
 // marshaled with amino and not protobuf.
 func UnsafePackAny(x interface{}) *Any {
-	if msg, ok := x.(proto.Message); ok {
-		any, err := NewAnyWithValue(msg)
+	_, v1 := x.(gogoproto.Message)
+	_, v2 := x.(protov2.Message)
+	if v1 || v2 {
+		any, err := NewAnyWithValue(x)
 		if err == nil {
 			return any
 		}
@@ -95,15 +91,33 @@ func UnsafePackAny(x interface{}) *Any {
 // pack packs the value x in the Any or returns an error. This also caches
 // the packed value so that it can be retrieved from GetCachedValue without
 // unmarshaling
-func (any *Any) pack(x proto.Message) error {
-	any.TypeUrl = "/" + proto.MessageName(x)
-	bz, err := proto.Marshal(x)
+func (any *Any) pack(v interface{}) error {
+	if v == nil {
+		return sdkerrors.Wrap(sdkerrors.ErrPackAny, "Expecting non nil value to create a new Any")
+	}
+
+	msgName, err := MessageName(v)
 	if err != nil {
 		return err
 	}
 
+	var bz []byte
+	switch v := v.(type) {
+	case gogoproto.Message:
+		bz, err = gogoproto.Marshal(v)
+		if err != nil {
+			return err
+		}
+	case protov2.Message:
+		bz, err = protov2.Marshal(v)
+		if err != nil {
+			return err
+		}
+	}
+
+	any.TypeUrl = "/" + msgName
 	any.Value = bz
-	any.cachedValue = x
+	any.cachedValue = v
 
 	return nil
 }

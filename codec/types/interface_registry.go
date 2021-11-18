@@ -5,8 +5,9 @@ import (
 	"reflect"
 
 	"github.com/gogo/protobuf/jsonpb"
-
-	"github.com/gogo/protobuf/proto"
+	gogoproto "github.com/gogo/protobuf/proto"
+	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/runtime/protoimpl"
 )
 
 // AnyUnpacker is an interface which allows safely unpacking types packed
@@ -37,14 +38,14 @@ type InterfaceRegistry interface {
 	//
 	// Ex:
 	//   registry.RegisterInterface("cosmos.base.v1beta1.Msg", (*sdk.Msg)(nil))
-	RegisterInterface(protoName string, iface interface{}, impls ...proto.Message)
+	RegisterInterface(protoName string, iface interface{}, impls ...interface{})
 
 	// RegisterImplementations registers impls as concrete implementations of
 	// the interface iface.
 	//
 	// Ex:
 	//  registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSend{}, &MsgMultiSend{})
-	RegisterImplementations(iface interface{}, impls ...proto.Message)
+	RegisterImplementations(iface interface{}, impls ...interface{})
 
 	// ListAllInterfaces list the type URLs of all registered interfaces.
 	ListAllInterfaces() []string
@@ -54,8 +55,8 @@ type InterfaceRegistry interface {
 	ListImplementations(ifaceTypeURL string) []string
 }
 
-// UnpackInterfacesMessage is meant to extend protobuf types (which implement
-// proto.Message) to support a post-deserialization phase which unpacks
+// UnpackInterfacesMessage is meant to extend protobuf types
+// to support a post-deserialization phase which unpacks
 // types packed within Any's using the whitelist provided by AnyUnpacker
 type UnpackInterfacesMessage interface {
 	// UnpackInterfaces is implemented in order to unpack values packed within
@@ -95,7 +96,7 @@ func NewInterfaceRegistry() InterfaceRegistry {
 	}
 }
 
-func (registry *interfaceRegistry) RegisterInterface(protoName string, iface interface{}, impls ...proto.Message) {
+func (registry *interfaceRegistry) RegisterInterface(protoName string, iface interface{}, impls ...interface{}) {
 	typ := reflect.TypeOf(iface)
 	if typ.Elem().Kind() != reflect.Interface {
 		panic(fmt.Errorf("%T is not an interface type", iface))
@@ -104,15 +105,32 @@ func (registry *interfaceRegistry) RegisterInterface(protoName string, iface int
 	registry.RegisterImplementations(iface, impls...)
 }
 
-// RegisterImplementations registers a concrete proto Message which implements
+// RegisterImplementations registers a concrete proto (v1 or v2) message which implements
 // the given interface.
 //
 // This function PANICs if different concrete types are registered under the
 // same typeURL.
-func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, impls ...proto.Message) {
+func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, impls ...interface{}) {
 	for _, impl := range impls {
-		typeURL := "/" + proto.MessageName(impl)
+		msgName, err := MessageName(impl)
+		if err != nil {
+			panic(err)
+		}
+
+		typeURL := "/" + msgName
 		registry.registerImpl(iface, typeURL, impl)
+	}
+}
+
+// MessageName returns the message name of a proto v1 or v2 message or an error.
+func MessageName(m interface{}) (string, error) {
+	switch impl := m.(type) {
+	case gogoproto.Message:
+		return gogoproto.MessageName(impl), nil
+	case protov2.Message:
+		return string(impl.ProtoReflect().Descriptor().FullName()), nil
+	default:
+		return "", fmt.Errorf("%T is neither a v1 nor v2 proto message", impl)
 	}
 }
 
@@ -121,7 +139,7 @@ func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, im
 //
 // This function PANICs if different concrete types are registered under the
 // same typeURL.
-func (registry *interfaceRegistry) RegisterCustomTypeURL(iface interface{}, typeURL string, impl proto.Message) {
+func (registry *interfaceRegistry) RegisterCustomTypeURL(iface interface{}, typeURL string, impl interface{}) {
 	registry.registerImpl(iface, typeURL, impl)
 }
 
@@ -130,7 +148,7 @@ func (registry *interfaceRegistry) RegisterCustomTypeURL(iface interface{}, type
 //
 // This function PANICs if different concrete types are registered under the
 // same typeURL.
-func (registry *interfaceRegistry) registerImpl(iface interface{}, typeURL string, impl proto.Message) {
+func (registry *interfaceRegistry) registerImpl(iface interface{}, typeURL string, impl interface{}) {
 	ityp := reflect.TypeOf(iface).Elem()
 	imap, found := registry.interfaceImpls[ityp]
 	if !found {
@@ -229,17 +247,24 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 		return fmt.Errorf("no concrete type registered for type URL %s against interface %T", any.TypeUrl, iface)
 	}
 
-	msg, ok := reflect.New(typ.Elem()).Interface().(proto.Message)
-	if !ok {
-		return fmt.Errorf("can't proto unmarshal %T", msg)
+	msg := reflect.New(typ.Elem()).Interface()
+
+	switch msg := msg.(type) {
+	case gogoproto.Message:
+		err := gogoproto.Unmarshal(any.Value, msg)
+		if err != nil {
+			return err
+		}
+	case protov2.Message:
+		err := protov2.Unmarshal(any.Value, msg)
+		if err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("%T is neither a v1 nor v2 proto message", msg)
 	}
 
-	err := proto.Unmarshal(any.Value, msg)
-	if err != nil {
-		return err
-	}
-
-	err = UnpackInterfaces(msg, registry)
+	err := UnpackInterfaces(msg, registry)
 	if err != nil {
 		return err
 	}
@@ -254,18 +279,14 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 // Resolve returns the proto message given its typeURL. It works with types
 // registered with RegisterInterface/RegisterImplementations, as well as those
 // registered with RegisterWithCustomTypeURL.
-func (registry *interfaceRegistry) Resolve(typeURL string) (proto.Message, error) {
+func (registry *interfaceRegistry) Resolve(typeURL string) (gogoproto.Message, error) {
 	typ, found := registry.typeURLMap[typeURL]
 	if !found {
 		return nil, fmt.Errorf("unable to resolve type URL %s", typeURL)
 	}
 
-	msg, ok := reflect.New(typ.Elem()).Interface().(proto.Message)
-	if !ok {
-		return nil, fmt.Errorf("can't resolve type URL %s", typeURL)
-	}
-
-	return msg, nil
+	msg := reflect.New(typ.Elem()).Interface()
+	return protoimpl.X.ProtoMessageV1Of(msg), nil
 }
 
 // UnpackInterfaces is a convenience function that calls UnpackInterfaces

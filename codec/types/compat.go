@@ -6,9 +6,9 @@ import (
 	"runtime/debug"
 
 	"github.com/gogo/protobuf/jsonpb"
-	"github.com/gogo/protobuf/proto"
-
-	amino "github.com/tendermint/go-amino"
+	gogoproto "github.com/gogo/protobuf/proto"
+	"github.com/tendermint/go-amino"
+	protov2 "google.golang.org/protobuf/proto"
 )
 
 type anyCompat struct {
@@ -88,8 +88,10 @@ func (a AminoUnpacker) UnpackAny(any *Any, iface interface{}) error {
 	if err != nil {
 		return err
 	}
-	if m, ok := val.(proto.Message); ok {
-		if err = any.pack(m); err != nil {
+	_, v1 := val.(gogoproto.Message)
+	_, v2 := val.(protov2.Message)
+	if v1 || v2 {
+		if err = any.pack(val); err != nil {
 			return err
 		}
 	} else {
@@ -146,8 +148,10 @@ func (a AminoJSONUnpacker) UnpackAny(any *Any, iface interface{}) error {
 	if err != nil {
 		return err
 	}
-	if m, ok := val.(proto.Message); ok {
-		if err = any.pack(m); err != nil {
+	_, v1 := val.(gogoproto.Message)
+	_, v2 := val.(protov2.Message)
+	if v1 || v2 {
+		if err = any.pack(val); err != nil {
 			return err
 		}
 	} else {

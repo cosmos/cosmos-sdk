@@ -50,8 +50,11 @@ var (
 
 	ErrVersionDoesNotExist = errors.New("version does not exist")
 	ErrMaximumHeight       = errors.New("maximum block height reached")
-	ErrStoreNotFound       = func(skey string) error { return fmt.Errorf("store does not exist for key: %s", skey) }
 )
+
+func ErrStoreNotFound(skey string) error {
+	return fmt.Errorf("store does not exist for key: %s", skey)
+}
 
 // StoreConfig is used to define a schema and pass options to the RootStore constructor.
 type StoreConfig struct {

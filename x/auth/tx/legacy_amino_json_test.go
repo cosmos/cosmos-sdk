@@ -68,7 +68,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 			legacytx.StdSignBytes(chainId, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Granter: addr2.String()}, []sdk.Msg{msg}, memo, nil),
 		},
 		{
-			"explicit fee payer and feegranter", addr1.String(),
+			"explicit fee payer and fee granter", addr1.String(),
 			func(w *wrapper) {
 				w.SetFeePayer(addr2)
 				w.SetFeeGranter(addr2)
@@ -80,18 +80,13 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 			func(w *wrapper) { w.SetTip(tip) },
 			legacytx.StdSignBytes(chainId, accNum, seqNum, timeout, legacytx.StdFee{}, []sdk.Msg{msg}, memo, tip),
 		},
-		{
-			"signer which is not tipper", addr2.String(),
-			func(w *wrapper) { w.SetTip(tip) },
-			legacytx.StdSignBytes(chainId, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas}, []sdk.Msg{msg}, memo, tip),
-		},
 	}
 
 	handler := signModeLegacyAminoJSONHandler{}
 	for _, tc := range testcases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			bldr := newBuilder()
+			bldr := newBuilder(nil)
 			buildTx(t, bldr)
 			tx := bldr.GetTx()
 			tc.malleate(bldr)
@@ -109,7 +104,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 		})
 	}
 
-	bldr := newBuilder()
+	bldr := newBuilder(nil)
 	buildTx(t, bldr)
 	tx := bldr.GetTx()
 	signingData := signing.SignerData{
@@ -125,7 +120,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	require.Error(t, err)
 
 	// expect error with extension options
-	bldr = newBuilder()
+	bldr = newBuilder(nil)
 	buildTx(t, bldr)
 	any, err := cdctypes.NewAnyWithValue(testdata.NewTestMsg())
 	require.NoError(t, err)
@@ -135,7 +130,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	require.Error(t, err)
 
 	// expect error with non-critical extension options
-	bldr = newBuilder()
+	bldr = newBuilder(nil)
 	buildTx(t, bldr)
 	bldr.tx.Body.NonCriticalExtensionOptions = []*cdctypes.Any{any}
 	tx = bldr.GetTx()

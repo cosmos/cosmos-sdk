@@ -429,7 +429,7 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	}
 }
 
-func (svm sigVerificationTxHandler) sigVerify(ctx context.Context, tx sdk.Tx, isReCheckTx, simulate bool) error {
+func (svd sigVerificationTxHandler) sigVerify(ctx context.Context, tx sdk.Tx, isReCheckTx, simulate bool) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// no need to verify signatures on recheck tx
 	if isReCheckTx {
@@ -455,7 +455,7 @@ func (svm sigVerificationTxHandler) sigVerify(ctx context.Context, tx sdk.Tx, is
 	}
 
 	for i, sig := range sigs {
-		acc, err := GetSignerAcc(sdkCtx, svm.ak, signerAddrs[i])
+		acc, err := GetSignerAcc(sdkCtx, svd.ak, signerAddrs[i])
 		if err != nil {
 			return err
 		}
@@ -491,7 +491,7 @@ func (svm sigVerificationTxHandler) sigVerify(ctx context.Context, tx sdk.Tx, is
 		}
 
 		if !simulate {
-			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svm.signModeHandler, tx)
+			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx)
 			if err != nil {
 				var errMsg string
 				if OnlyLegacyAminoSigners(sig.Data) {

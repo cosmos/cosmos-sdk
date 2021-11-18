@@ -136,7 +136,7 @@ func (s *IntegrationTestSuite) TestCLISignGenOnly() {
 		sendTokens.String(),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly), // shouldn't break if we use keyname with --generate-only flag
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 	}
 	generatedStd, err := clitestutil.ExecTestCLICmd(val.ClientCtx, bank.NewSendTxCmd(), args)
 	s.Require().NoError(err)
@@ -762,7 +762,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Broadcast correct transaction.
-	val1.ClientCtx.BroadcastMode = flags.BroadcastBlock
+	val1.ClientCtx.BroadcastMode = flags.BroadcastSync
 	_, err = TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
@@ -817,7 +817,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
@@ -927,7 +927,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
@@ -962,7 +962,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	_, err = TxValidateSignaturesExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
-	val1.ClientCtx.BroadcastMode = flags.BroadcastBlock
+	val1.ClientCtx.BroadcastMode = flags.BroadcastSync
 	_, err = TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
@@ -1011,7 +1011,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
@@ -1051,7 +1051,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	_, err = TxValidateSignaturesExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
-	val1.ClientCtx.BroadcastMode = flags.BroadcastBlock
+	val1.ClientCtx.BroadcastMode = flags.BroadcastSync
 	_, err = TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
@@ -1089,7 +1089,7 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1)),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
@@ -1152,7 +1152,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1)),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
@@ -1192,7 +1192,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	// Broadcast transactions.
 	for _, signedTx := range signedTxs {
 		signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx)
-		val.ClientCtx.BroadcastMode = flags.BroadcastBlock
+		val.ClientCtx.BroadcastMode = flags.BroadcastSync
 		_, err = TxBroadcastExec(val.ClientCtx, signedTxFile.Name())
 		s.Require().NoError(err)
 		s.Require().NoError(s.network.WaitForNextBlock())
@@ -1601,7 +1601,7 @@ func (s *IntegrationTestSuite) TestTipsToFee() {
 
 func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.AccAddress, amount sdk.Coins, extraFlags ...string) (testutil.BufferWriter, error) {
 	flags := []string{fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees,
 			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}

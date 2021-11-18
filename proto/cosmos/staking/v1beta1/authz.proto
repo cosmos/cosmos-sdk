@@ -8,6 +8,8 @@ import "cosmos/base/v1beta1/coin.proto";
 option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
 // StakeAuthorization defines authorization for delegate/undelegate/redelegate.
+//
+// Since: cosmos-sdk 0.43
 message StakeAuthorization {
   option (cosmos_proto.implements_interface) = "Authorization";
 
@@ -31,6 +33,8 @@ message StakeAuthorization {
 }
 
 // AuthorizationType defines the type of staking module authorization type
+//
+// Since: cosmos-sdk 0.43
 enum AuthorizationType {
   // AUTHORIZATION_TYPE_UNSPECIFIED specifies an unknown authorization type
   AUTHORIZATION_TYPE_UNSPECIFIED = 0;

@@ -12,9 +12,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-// DowngradeVerified is a variable that tells if we've already sanity checked that this binary version isn't being used against an old state.
+// downgradeVerified is a variable that tells if we've already sanity checked that this binary version isn't being used against an old state.
 // If so, we dont run that check every beginblock.
-var DowngradeVerified = false
+var downgradeVerified = false
+
+// ResetDowngradeVerified resets downgradeVerified.
+// Note: It should be use only for testing purposes.
+func ResetDowngradeVerified() {
+	downgradeVerified = false
+}
 
 // BeginBlock will check if there is a scheduled plan and if it is ready to be executed.
 // If the current height is in the provided set of heights to skip, it will skip and clear the upgrade plan.
@@ -29,8 +35,8 @@ func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 
 	plan, found := k.GetUpgradePlan(ctx)
 
-	if !DowngradeVerified {
-		DowngradeVerified = true
+	if !downgradeVerified {
+		downgradeVerified = true
 		lastAppliedPlan, _ := k.GetLastCompletedUpgrade(ctx)
 		// This check will make sure that we are using a valid binary.
 		// It'll panic in these cases if there is no upgrade handler registered for the last applied upgrade.
@@ -39,7 +45,7 @@ func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 		// 3. If the plan is ready and skip upgrade height is set for current height.
 		if !found || !plan.ShouldExecute(ctx) || (plan.ShouldExecute(ctx) && k.IsSkipHeight(ctx.BlockHeight())) {
 			if lastAppliedPlan != "" && !k.HasHandler(lastAppliedPlan) {
-				panic(fmt.Sprintf("Wrong app version, upgrade handler is missing for %s upgrade plan", lastAppliedPlan))
+				panic(fmt.Sprintf("Wrong app version %d, upgrade handler is missing for %s upgrade plan", ctx.ConsensusParams().Version.AppVersion, lastAppliedPlan))
 			}
 		}
 	}

@@ -455,7 +455,7 @@ func TestBinaryVersion(t *testing.T) {
 
 				newCtx := s.ctx.WithBlockHeight(13)
 				req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-				upgrade.DowngradeVerified = false
+				upgrade.ResetDowngradeVerified()
 
 				// delete last applied upgrade
 				s.keeper.DeleteUpgradeHandler("test0")
@@ -466,7 +466,7 @@ func TestBinaryVersion(t *testing.T) {
 		{
 			"test panic: no upgrade handler is present for last upgrade with skip upgrade",
 			func() (sdk.Context, abci.RequestBeginBlock) {
-				upgrade.DowngradeVerified = false
+				upgrade.ResetDowngradeVerified()
 
 				newCtx := s.ctx.WithBlockHeight(15)
 				req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}

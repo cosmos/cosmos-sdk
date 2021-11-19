@@ -89,6 +89,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	msigAddr := sdk.AccAddress(multisigPk.Address())
 	msg2 := testdata.NewTestMsg(msigAddr)
 	err := txBuilder.SetMsgs(msg, msg2)
+	txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
 	s.Require().NoError(err)
 
 	// check that validation fails

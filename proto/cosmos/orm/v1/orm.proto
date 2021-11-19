@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package regen.orm.v1alpha1;
+package cosmos.orm.v1alpha1;
 
 import "google/protobuf/descriptor.proto";
 

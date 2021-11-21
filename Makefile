@@ -96,6 +96,11 @@ ifeq (,$(findstring nostrip,$(COSMOS_BUILD_OPTIONS)))
   BUILD_FLAGS += -trimpath
 endif
 
+# Check for debug option
+ifeq (debug,$(findstring debug,$(COSMOS_BUILD_OPTIONS)))
+  BUILD_FLAGS += -gcflags "all=-N -l"
+endif
+
 all: tools build lint test
 
 # The below include contains the tools and runsim targets.
@@ -472,17 +477,24 @@ proto-update-deps:
 ###                                Localnet                                 ###
 ###############################################################################
 
-# Run a 4-node testnet locally via docker compose
-localnet-start: localnet-stop
-	$(if $(shell $(DOCKER) inspect -f '{{ .Id }}' cosmossdk/simd-env 2>/dev/null),$(info found image cosmossdk/simd-env),$(MAKE) -C contrib/images simd-env)
-	$(DOCKER) run --rm -v $(CURDIR)/localnet:/data cosmossdk/simd-env \
-		testnet init-files --v 4 -o /data --starting-ip-address 192.168.10.2 --keyring-backend=test
+localnet-build-env:
+	$(MAKE) -C contrib/images simd-env
+localnet-build-dlv:
+	$(MAKE) -C contrib/images simd-dlv
+
+localnet-build-nodes:
+	$(DOCKER) run --rm -v $(CURDIR)/.testnets:/data cosmossdk/simd \
+    		  testnet init-files --v 4 --starting-ip-address 192.168.10.2 --keyring-backend=test
 	docker-compose up -d
 
 localnet-stop:
 	docker-compose down
 
-.PHONY: localnet-start localnet-stop
+# Run a 4-node testnet locally
+localnet-start: localnet-stop localnet-build-env localnet-build-nodes
+localnet-debug: localnet-stop localnet-build-dlv localnet-build-nodes
+
+.PHONY: localnet-start localnet-stop localnet-debug localnet-build-env localnet-build-dlv localnet-build-nodes
 
 ###############################################################################
 ###                                rosetta                                  ###

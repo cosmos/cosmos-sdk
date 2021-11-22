@@ -1495,15 +1495,6 @@ func (s *IntegrationTestSuite) TestTipsWithAux() {
 			},
 			false,
 		},
-		{
-			"no error with SIGN_MDOE_DIRECT_AUX mode and generate-only, tip flag set",
-			[]string{
-				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
-				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-				fmt.Sprintf("--%s=%s", flags.FlagTip, val0Coin.String()),
-			},
-			false,
-		},
 	}
 
 	for _, tc := range testCases {
@@ -1543,19 +1534,15 @@ func (s *IntegrationTestSuite) TestTipsToFee() {
 	fee := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1000))
 	tip := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(1000))
 
-	res, err := s.createBankMsg(val, tipper, sdk.NewCoins(tipperInitialBal))
+	_, err = s.createBankMsg(val, tipper, sdk.NewCoins(tipperInitialBal))
 	require.NoError(err)
-
-	bal := s.getBalances(val.ClientCtx, tipper, tip.Denom)
-	s.Require().Equal(bal, tipperInitialBal.Amount)
-	var txRes sdk.TxResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
-	s.Require().NotEqual(0, txRes.Code)
-	s.Require().NotNil(0, txRes.Height)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
+	bal := s.getBalances(val.ClientCtx, tipper, tip.Denom)
+	s.Require().True(bal.Equal(tipperInitialBal.Amount))
+
 	// generate tx with --generate-only mode
-	res, err = govtestutil.MsgSubmitProposal(
+	res, err := govtestutil.MsgSubmitProposal(
 		val.ClientCtx,
 		tipper.String(),
 		"test",
@@ -1573,7 +1560,6 @@ func (s *IntegrationTestSuite) TestTipsToFee() {
 		val.ClientCtx,
 		tipper,
 		genTxFile.Name(),
-		fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 	)
 	s.Require().NoError(err)
 	auxSignedTxFile := testutil.WriteToNewTempFile(s.T(), string(res.Bytes()))
@@ -1586,17 +1572,19 @@ func (s *IntegrationTestSuite) TestTipsToFee() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
-		fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+		fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
 	)
+
 	require.NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
+	var txRes sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
 	s.Require().Equal(uint32(0), txRes.Code)
 	s.Require().NotNil(int64(0), txRes.Height)
 
 	bal = s.getBalances(val.ClientCtx, tipper, tip.Denom)
-	s.Require().Equal(bal, tipperInitialBal.Sub(tip).Amount)
+	s.Require().True(bal.Equal(tipperInitialBal.Sub(tip).Amount))
 }
 
 func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.AccAddress, amount sdk.Coins, extraFlags ...string) (testutil.BufferWriter, error) {

@@ -33,6 +33,13 @@ func GetTipsToFeeCommand() *cobra.Command {
 				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid transaction")
 			}
 
+			// b, err := clientCtx.TxConfig.WrapTxBuilder(tipTx)
+			// if err != nil {
+			// 	return err
+			// }
+
+			// b.AddAuxSignerData()
+
 			f := clienttx.NewFactoryCLI(clientCtx, cmd.Flags())
 
 			tipperSigsV2, err := tipTx.(authsigning.SigVerifiableTx).GetSignaturesV2()
@@ -40,6 +47,7 @@ func GetTipsToFeeCommand() *cobra.Command {
 				return err
 			}
 			txBuilder := clientCtx.TxConfig.NewTxBuilder()
+			// err := txBuilder.AddAuxSignerData(auxSignerData)
 
 			txBuilder.SetMsgs(tipTx.GetMsgs()...)
 			txBuilder.SetFeePayer(clientCtx.FromAddress)

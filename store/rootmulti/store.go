@@ -75,15 +75,6 @@ var (
 // LoadVersion must be called.
 func NewStore(db dbm.DB) *Store {
 	return &Store{
-<<<<<<< HEAD
-		db:           db,
-		pruningOpts:  types.PruneNothing,
-		storesParams: make(map[types.StoreKey]storeParams),
-		stores:       make(map[types.StoreKey]types.CommitKVStore),
-		keysByName:   make(map[string]types.StoreKey),
-		pruneHeights: make([]int64, 0),
-		listeners:    make(map[types.StoreKey][]types.WriteListener),
-=======
 		db:            db,
 		pruningOpts:   types.PruneNothing,
 		iavlCacheSize: iavl.DefaultIAVLCacheSize,
@@ -92,8 +83,6 @@ func NewStore(db dbm.DB) *Store {
 		keysByName:    make(map[string]types.StoreKey),
 		pruneHeights:  make([]int64, 0),
 		listeners:     make(map[types.StoreKey][]types.WriteListener),
-		removalMap:    make(map[types.StoreKey]bool),
->>>>>>> 76dde9853 (feat: add configurable iavl cache size (#10561))
 	}
 }
 

@@ -274,6 +274,8 @@ func (k Keeper) CreateGroupAccount(goCtx context.Context, req *MsgCreateGroupAcc
 		// accountID := k.key.Derive(accountDerivationKey)
 		// accountAddr = accountID.Address()
 
+		// accountID := address.Derive(accountAddr, accountDerivationKey)
+
 		if k.accKeeper.GetAccount(ctx, accountAddr) != nil {
 			// handle a rare collision
 			continue

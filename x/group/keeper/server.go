@@ -38,7 +38,7 @@ const (
 )
 
 type serverImpl struct {
-	key servermodule.RootModuleKey
+	key sdk.StoreKey
 
 	accKeeper  group.AccountKeeper
 	bankKeeper group.BankKeeper

@@ -5,6 +5,7 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	app "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,6 +18,7 @@ type Keeper struct {
 	authKeeper group.AccountKeeper
 	bankKeeper group.BankKeeper
 	server     serverImpl
+	router     *app.MsgServiceRouter
 }
 
 // NewKeeper creates a new group keeper
@@ -33,3 +35,4 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryCodec, ak group.Acc
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", group.ModuleName))
 }
+s

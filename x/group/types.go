@@ -179,17 +179,17 @@ func (g GroupMember) PrimaryKeyFields() []interface{} {
 	return []interface{}{g.GroupId, addr.Bytes()}
 }
 
-// func (g GroupMember) ValidateBasic() error {
-// 	if g.GroupId == 0 {
-// 		return sdkerrors.Wrap(ErrEmpty, "group")
-// 	}
+func (g GroupMember) ValidateBasic() error {
+	if g.GroupId == 0 {
+		return sdkerrors.Wrap(ErrEmpty, "group")
+	}
 
-// 	err := g.Member.ValidateBasic()
-// 	if err != nil {
-// 		return sdkerrors.Wrap(err, "member")
-// 	}
-// 	return nil
-// }
+	err := g.Member.ValidateBasic()
+	if err != nil {
+		return sdkerrors.Wrap(err, "member")
+	}
+	return nil
+}
 
 func (v Vote) PrimaryKeyFields() []interface{} {
 	addr, err := sdk.AccAddressFromBech32(v.Voter)

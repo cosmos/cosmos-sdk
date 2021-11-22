@@ -24,9 +24,6 @@ var (
 	// ErrORMKeyMaxLength defines an error when a key exceeds max length
 	ErrORMKeyMaxLength = errors.Register(ormCodespace, 15, "key exceeds max length")
 
-	// ErrORMNotFound defines an error when requested entity doesn't exist in the state.
-	ErrORMNotFound = errors.Register(ormCodespace, 16, "")
-
 	// ErrORMEmptyKey defines an error for an empty key
 	ErrORMEmptyKey = errors.Register(ormCodespace, 47, "cannot use empty key")
 )

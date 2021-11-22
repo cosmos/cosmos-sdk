@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/module/server"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 )
 
@@ -562,7 +562,7 @@ func (m MsgCreateProposal) ValidateBasic() error {
 
 // SetMsgs packs msgs into Any's
 func (m *MsgCreateProposal) SetMsgs(msgs []sdk.Msg) error {
-	anys, err := server.SetMsgs(msgs)
+	anys, err := tx.SetMsgs(msgs)
 	if err != nil {
 		return err
 	}
@@ -572,7 +572,7 @@ func (m *MsgCreateProposal) SetMsgs(msgs []sdk.Msg) error {
 
 // GetMsgs unpacks m.Msgs Any's into sdk.Msg's
 func (m MsgCreateProposal) GetMsgs() []sdk.Msg {
-	msgs, err := server.GetMsgs(m.Msgs)
+	msgs, err := tx.GetMsgs(m.Msgs, "proposal")
 	if err != nil {
 		panic(err)
 	}
@@ -581,7 +581,7 @@ func (m MsgCreateProposal) GetMsgs() []sdk.Msg {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m MsgCreateProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	return server.UnpackInterfaces(unpacker, m.Msgs)
+	return tx.UnpackInterfaces(unpacker, m.Msgs)
 }
 
 var _ sdk.Msg = &MsgVote{}

@@ -554,14 +554,14 @@ func (s *argsTestSuite) TestLogConfigOrError() {
 			name:        "multi error",
 			cfg:         nil,
 			err:         errMulti,
-			contains:    []string{"multiple configuration errors found", errs[0].Error(), errs[1].Error(), errs[2].Error()},
+			contains:    []string{"configuration errors found", errs[0].Error(), errs[1].Error(), errs[2].Error()},
 			notcontains: nil,
 		},
 		{
 			name:        "config",
 			cfg:         cfg,
 			err:         nil,
-			contains:    []string{"Configuration is valid", cfg.DetailString()},
+			contains:    []string{"Configurable Values", cfg.DetailString()},
 			notcontains: nil,
 		},
 		{

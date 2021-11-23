@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 )
 
 var (
@@ -25,7 +26,7 @@ var (
 )
 
 type AppModule struct {
-	keeper        group.Keeper
+	keeper        groupkeeper.Keeper
 	BankKeeper    group.BankKeeper
 	AccountKeeper group.AccountKeeper
 	registry      cdctypes.InterfaceRegistry

@@ -11,6 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
+var _ group.QueryServer = Keeper{}
+
 func (q Keeper) GroupInfo(goCtx context.Context, request *group.QueryGroupInfo) (*group.QueryGroupInfoResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	groupID := request.GroupId

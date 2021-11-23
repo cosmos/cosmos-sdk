@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
+	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
 // MaxMetadataLength defines the max length of the metadata bytes field
@@ -116,6 +117,8 @@ func (p *ThresholdDecisionPolicy) Validate(g GroupInfo) error {
 	return nil
 }
 
+var _ orm.Validateable = GroupAccountInfo{}
+
 // NewGroupAccountInfo creates a new GroupAccountInfo instance
 func NewGroupAccountInfo(address sdk.AccAddress, group uint64, admin sdk.AccAddress, metadata []byte,
 	version uint64, decisionPolicy DecisionPolicy, derivationKey []byte) (GroupAccountInfo, error) {
@@ -169,6 +172,38 @@ func (g GroupAccountInfo) PrimaryKeyFields() []interface{} {
 		panic(err)
 	}
 	return []interface{}{addr.Bytes()}
+}
+
+func (g GroupAccountInfo) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(g.Admin)
+	if err != nil {
+		return sdkerrors.Wrap(err, "admin")
+	}
+
+	_, err = sdk.AccAddressFromBech32(g.Address)
+	if err != nil {
+		return sdkerrors.Wrap(err, "group account")
+	}
+
+	if g.GroupId == 0 {
+		return sdkerrors.Wrap(ErrEmpty, "group")
+	}
+	if g.Version == 0 {
+		return sdkerrors.Wrap(ErrEmpty, "version")
+	}
+	policy := g.GetDecisionPolicy()
+
+	if policy == nil {
+		return sdkerrors.Wrap(ErrEmpty, "policy")
+	}
+	if err := policy.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "policy")
+	}
+
+	if g.DerivationKey == nil {
+		return sdkerrors.Wrap(ErrEmpty, "derivationKey")
+	}
+	return nil
 }
 
 func (g GroupMember) PrimaryKeyFields() []interface{} {

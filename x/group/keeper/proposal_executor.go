@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"context"
+
 	app "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
@@ -8,22 +10,22 @@ import (
 	grouperrors "github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
-// func (s Keeper) execMsgs(ctx context.Context, derivationKey []byte, proposal group.Proposal) error {
-// 	derivedKey := s.key.Derive(derivationKey)
-// 	msgs := proposal.GetMsgs()
+func (s Keeper) execMsgs(ctx context.Context, derivationKey []byte, proposal group.Proposal) error {
+	derivedKey := s.key.Derive(derivationKey)
+	msgs := proposal.GetMsgs()
 
-// 	for _, msg := range msgs {
-// 		var reply interface{}
+	for _, msg := range msgs {
+		var reply interface{}
 
-// 		// Execute the message using the derived key,
-// 		// this will verify that the message signer is the group account.
-// 		err := derivedKey.Invoke(ctx, server.TypeURL(msg), msg, reply)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }
+		// Execute the message using the derived key,
+		// this will verify that the message signer is the group account.
+		err := derivedKey.Invoke(ctx, sdk.MsgTypeURL(msg), msg, reply)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 // doExecuteMsgs routes the messages to the registered handlers. Messages are limited to those that require no authZ or
 // by the group account only. Otherwise this gives access to other peoples accounts as the sdk ant handler is bypassed

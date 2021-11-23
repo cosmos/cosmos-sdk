@@ -8,7 +8,6 @@ import (
 const ormCodespace = "orm"
 
 var (
-
 	// ErrORMIteratorDone defines an error when an iterator is done
 	ErrORMIteratorDone = errors.Register(ormCodespace, 11, "iterator done")
 

@@ -49,7 +49,6 @@ type BaseApp struct { // nolint: maligned
 	db                dbm.DB               // common DB backend
 	cms               sdk.CommitMultiStore // Main (uncached) state
 	storeLoader       StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
-	router            sdk.Router           // handle any kind of message
 	queryRouter       sdk.QueryRouter      // router for redirecting query calls
 	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
 	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
@@ -142,16 +141,16 @@ func NewBaseApp(
 	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
 	app := &BaseApp{
-		logger:          logger,
-		name:            name,
-		db:              db,
-		cms:             store.NewCommitMultiStore(db),
-		storeLoader:     DefaultStoreLoader,
-		router:          NewRouter(),
-		queryRouter:     NewQueryRouter(),
-		grpcQueryRouter: NewGRPCQueryRouter(),
-		txDecoder:       txDecoder,
-		fauxMerkleMode:  false,
+		logger:           logger,
+		name:             name,
+		db:               db,
+		cms:              store.NewCommitMultiStore(db),
+		storeLoader:      DefaultStoreLoader,
+		queryRouter:      NewQueryRouter(),
+		grpcQueryRouter:  NewGRPCQueryRouter(),
+		txDecoder:        txDecoder,
+		fauxMerkleMode:   false,
+		msgServiceRouter: NewMsgServiceRouter(),
 	}
 
 	for _, option := range options {
@@ -345,17 +344,6 @@ func (app *BaseApp) setIndexEvents(ie []string) {
 	for _, e := range ie {
 		app.indexEvents[e] = struct{}{}
 	}
-}
-
-// Router returns the router of the BaseApp.
-func (app *BaseApp) Router() sdk.Router {
-	if app.sealed {
-		// We cannot return a Router when the app is sealed because we can't have
-		// any routes modified which would cause unexpected routing behavior.
-		panic("Router() on sealed BaseApp")
-	}
-
-	return app.router
 }
 
 // QueryRouter returns the QueryRouter of a BaseApp.

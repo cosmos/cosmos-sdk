@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"orm/types/ormerrors"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
 
 type BytesCodec struct{}

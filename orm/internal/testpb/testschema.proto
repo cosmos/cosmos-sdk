@@ -1,71 +1,53 @@
 syntax = "proto3";
 
-package internal.testpb;
+package testpb;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "cosmos/orm/v1alpha1/orm.proto";
 
-enum Enumeration {
-  One = 0;
-  Two = 1;
-}
+option go_package = "github.com/cosmos/cosmos-sdk/orm/internal/testpb";
 
 message A {
   option (cosmos.orm.v1alpha1.table) = {
     id: 1;
     primary_key: {
-      fields: "UINT32,UINT64,STRING"
+      fields: "u32,u64,str"
     }
     index:{
       id: 1;
-      fields:"UINT64,STRING"
+      fields:"u64,str"
     }
     index:{
       id: 2;
-      fields:"STRING,UINT32"
+      fields:"str,u32"
     }
     index:{
       id: 3;
-      fields:"BYTES,STRING"
+      fields:"bz,str"
     }
   };
 
-  Enumeration ENUM = 1;
-  bool BOOL = 2;
-  int32 INT32 = 3;
-  sint32 SINT32 = 4;
-  uint32 UINT32 = 5;
-  int64 INT64 = 6;
-  sint64 SINT64 = 7;
-  uint64 UINT64 = 8;
-  sfixed32 SFIXED32 = 9;
-  fixed32 FIXED32 = 10;
-  float FLOAT = 11;
-  sfixed64 SFIXED64 = 12;
-  fixed64 FIXED64 = 13;
-  double DOUBLE = 14;
-  string STRING = 15;
-  bytes BYTES = 16;
-  B MESSAGE = 17;
-  map<string, B> MAP = 18;
-  repeated B LIST = 19;
-  oneof ONEOF {
-    B ONEOF_B = 20;
-    string ONEOF_STRING = 21;
-  };
-  repeated Enumeration LIST_ENUM = 22;
-  google.protobuf.Timestamp TIMESTAMP = 23;
-  google.protobuf.Duration DURATION = 24;
+  uint32 u32 = 1;
+  uint64 u64 = 2;
+  string str = 3;
+  bytes bz = 4;
+  google.protobuf.Timestamp ts = 5;
+  google.protobuf.Duration dur = 6;
+}
+
+enum Enum {
+  ENUM_UNSPECIFIED = 0;
+  ENUM_ONE = 1;
 }
 
 message B {
-  option (regen.orm.v1alpha1.singleton) = {id: 2};
+  option (cosmos.orm.v1alpha1.singleton) = {id: 2};
   string x = 1;
 }
 
 message C {
-  option (regen.orm.v1alpha1.table) = {
+  option (cosmos.orm.v1alpha1.table) = {
     id: 3
     primary_key:{
       fields:"id"

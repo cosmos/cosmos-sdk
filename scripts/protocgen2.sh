@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
 
+# this script is for generating protobuf files for the new google.golang.org/protobuf API
+
 set -eo pipefail
 
-# this script does code generation using protoc-gen-go (eventually pulsar)
-# instead of gogo for files that use the new google.golang.org/protobuf API
+(cd api; buf generate .)
 
-# NOTE: buf and protoc-gen-go mus be
-
-cd api
-buf generate .
-
+(cd orm/internal; buf generate .)

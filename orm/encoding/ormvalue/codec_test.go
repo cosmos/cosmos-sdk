@@ -3,9 +3,10 @@ package ormvalue_test
 import (
 	"bytes"
 	"fmt"
-	"orm/encoding/ormvalue"
-	"orm/internal/testutil"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormvalue"
+	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
 
 	"gotest.tools/assert"
 
@@ -27,14 +28,14 @@ func testKeyPartCodec(t *testing.T, spec testutil.TestKeyPartSpec) {
 	})
 }
 
-func testKeyPartCodecNT(t *testing.T, fname string, generator *rapid.Generator, nonTerminal bool) {
+func testKeyPartCodecNT(t *testing.T, fname protoreflect.Name, generator *rapid.Generator, nonTerminal bool) {
 	cdc, err := testutil.MakeTestPartCodec(fname, nonTerminal)
 	assert.NilError(t, err)
 	rapid.Check(t, func(t *rapid.T) {
-		x := protoreflect.ValueOf(generator.Draw(t, fname))
+		x := protoreflect.ValueOf(generator.Draw(t, string(fname)))
 		bz1 := assertEncDecPart(t, x, cdc)
 		if cdc.IsOrdered() {
-			y := protoreflect.ValueOf(generator.Draw(t, fname+"2"))
+			y := protoreflect.ValueOf(generator.Draw(t, string(fname+"2")))
 			bz2 := assertEncDecPart(t, y, cdc)
 			assert.Equal(t, cdc.Compare(x, y), bytes.Compare(bz1, bz2))
 		}

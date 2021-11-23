@@ -1,12 +1,10 @@
 syntax = "proto3";
 
-package testschema;
+package internal.testpb;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "cosmos/orm/v1alpha1/orm.proto";
-
-option go_package = "github.com/cosmos/cosmos-sdk/orm/internal/testpb";
 
 enum Enumeration {
   One = 0;

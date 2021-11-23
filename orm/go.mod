@@ -7,7 +7,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.44.3
 	github.com/cosmos/cosmos-sdk/api v0.1.0-alpha1
 	google.golang.org/protobuf v1.27.1
-	gotest.tools v2.2.0+incompatible
+	gotest.tools/v3 v3.0.3
 	pgregory.net/rapid v0.4.7
 )
 

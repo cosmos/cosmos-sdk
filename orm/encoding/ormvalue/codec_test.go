@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"testing"
 
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"gotest.tools/v3/assert"
+	"pgregory.net/rapid"
+
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormvalue"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
-
-	"gotest.tools/assert"
-
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"pgregory.net/rapid"
 )
 
 func TestPartCodec(t *testing.T) {

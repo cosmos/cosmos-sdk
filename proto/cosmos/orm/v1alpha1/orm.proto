@@ -10,11 +10,11 @@ extend google.protobuf.MessageOptions {
 
   // table specifies that this message will be used as an ORM table. It cannot
   // be used together with the singleton option.
-  TableDescriptor table = 100003790;
+  TableDescriptor table = 104503790;
 
   // singleton specifies that this message will be used as an ORM singleton. It cannot
   // be used together with the table option.
-  SingletonDescriptor singleton = 100003791;
+  SingletonDescriptor singleton = 104503791;
 }
 
 // TableDescriptor describes an ORM table.
@@ -81,9 +81,11 @@ message SecondaryIndexDescriptor {
   // field types are the same as those for PrimaryKeyDescriptor.fields.
   // Index keys are prefixed by the varint encoded table id and the varint
   // encoded index id plus any additional prefix specified by the schema.
-  // In addition the the field segments, index keys are suffixed with any
-  // additional primary key fields not present in the index fields so that the
-  // primary key can be reconstructed.
+  //
+  // In addition the the field segments, non-unique index keys are suffixed with
+  // any additional primary key fields not present in the index fields so that the
+  // primary key can be reconstructed. Unique indexes instead of being suffixed
+  // store the remaining primary key fields in the value..
   string fields = 1;
 
   // id is a non-zero integer ID that must be unique within the indexes for this

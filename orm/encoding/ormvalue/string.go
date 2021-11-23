@@ -9,6 +9,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+// StringCodec encodes strings as raw bytes.
 type StringCodec struct{}
 
 func (s StringCodec) FixedSize() int {
@@ -37,6 +38,8 @@ func (s StringCodec) Encode(value protoreflect.Value, w io.Writer) error {
 	return err
 }
 
+// NonTerminalStringCodec encodes strings as null-terminated raw bytes. Null
+// values within strings will produce an error.
 type NonTerminalStringCodec struct{}
 
 func (s NonTerminalStringCodec) FixedSize() int {

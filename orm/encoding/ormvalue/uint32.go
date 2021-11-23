@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+// Uint32Codec encodes uint32 values as 4-byte big-endian integers.
 type Uint32Codec struct{}
 
 func (u Uint32Codec) FixedSize() int {

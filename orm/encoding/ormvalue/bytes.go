@@ -10,6 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
 
+// BytesCodec encodes bytes as raw bytes. It errors if the byte array is longer
+// than 255 bytes.
 type BytesCodec struct{}
 
 func (b BytesCodec) FixedSize() int {
@@ -47,6 +49,8 @@ func (b BytesCodec) Compare(v1, v2 protoreflect.Value) int {
 	return bytes.Compare(v1.Bytes(), v2.Bytes())
 }
 
+// NonTerminalBytesCodec encodes bytes as raw bytes length prefixed by a single
+// byte. It errors if the byte array is longer than 255 bytes.
 type NonTerminalBytesCodec struct{}
 
 func (b NonTerminalBytesCodec) FixedSize() int {

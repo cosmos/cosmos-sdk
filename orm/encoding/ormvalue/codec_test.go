@@ -34,7 +34,7 @@ func testKeyPartCodecNT(t *testing.T, fname protoreflect.Name, generator *rapid.
 		x := protoreflect.ValueOf(generator.Draw(t, string(fname)))
 		bz1 := assertEncDecPart(t, x, cdc)
 		if cdc.IsOrdered() {
-			y := protoreflect.ValueOf(generator.Draw(t, string(fname+"2")))
+			y := protoreflect.ValueOf(generator.Draw(t, fmt.Sprintf("%s 2", fname)))
 			bz2 := assertEncDecPart(t, y, cdc)
 			assert.Equal(t, cdc.Compare(x, y), bytes.Compare(bz1, bz2))
 		}
@@ -48,7 +48,7 @@ func assertEncDecPart(t *rapid.T, x protoreflect.Value, cdc ormvalue.Codec) []by
 	bz := buf.Bytes()
 	size, err := cdc.Size(x)
 	assert.NilError(t, err)
-	assert.Equal(t, size, len(bz))
+	assert.Assert(t, size >= len(bz))
 	fixedSize := cdc.FixedSize()
 	if fixedSize > 0 {
 		assert.Equal(t, fixedSize, size)

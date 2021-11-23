@@ -34,11 +34,24 @@ message A {
   bytes bz = 4;
   google.protobuf.Timestamp ts = 5;
   google.protobuf.Duration dur = 6;
+  int32 i32 = 7;
+  sint32 s32 = 8;
+  sfixed32 sf32 = 9;
+  int64 i64 = 10;
+  sint64 s64 = 11;
+  sfixed64 sf64 = 12;
+  fixed32 f32 = 13;
+  fixed64 f64 = 14;
+  bool b = 15;
+  Enum e = 16;
 }
 
 enum Enum {
   ENUM_UNSPECIFIED = 0;
   ENUM_ONE = 1;
+  ENUM_TWO = 2;
+  ENUM_FIVE = 5;
+  ENUM_NEG_THREE = -3;
 }
 
 message B {

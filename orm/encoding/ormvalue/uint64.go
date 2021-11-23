@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+// Uint64Codec encodes uint64 values as 8-byte big-endian integers.
 type Uint64Codec struct{}
 
 func (u Uint64Codec) FixedSize() int {

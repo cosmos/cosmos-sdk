@@ -159,6 +159,11 @@ retries = {{ .Rosetta.Retries }}
 # Offline defines if Rosetta server should run in offline mode.
 offline = {{ .Rosetta.Offline }}
 
+# Suggest gas defines 
+suggest-gas = {{ .Rosetta.SuggestGas }}
+
+default-suggest-denom = {{ .Rosetta.DefaultSuggestDenom }}
+
 ###############################################################################
 ###                           gRPC Configuration                            ###
 ###############################################################################

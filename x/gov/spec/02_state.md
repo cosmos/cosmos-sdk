@@ -9,32 +9,42 @@ order: 2
 `Proposal` objects are used to tally votes and generally track the proposal's state.
 They contain an array of arbitrary `sdk.Msg`'s which the governance module will attempt
 to resolve and then execute if the proposal passes. `Proposal`'s are identified by a
-unique id.
+unique id and contains a series of timestamps: `submit_time`, `deposit_end_time`,
+`voting_start_time`, `voting_end_time` which track the lifecycle of a proposal
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta2/gov.proto#L55-L77
 
-The `Content` on a proposal is an interface which contains the information about
-the `Proposal` such as the tile, description, and any notable changes. Also, this
-`Content` type can by implemented by any module. The `Content`'s `ProposalRoute`
-returns a string which must be used to route the `Content`'s `Handler` in the
-governance keeper. This allows the governance keeper to execute proposal logic
-implemented by any module. If a proposal passes, the handler is executed. Only
-if the handler is successful does the state get persisted and the proposal finally
-passes. Otherwise, the proposal is rejected.
+A proposal will generally require more than just a set of messages to explain its
+purpose but need some greater justification and allow a means for interested participants
+to discuss and debate the proposal. In most cases, it is encouraged to have an off-chain
+system that supports the on-chain governance process. To accommodate for this, a
+proposal contains a special `metadata` field, an array of bytes, which can be used to
+add context to the proposal. The `metadata` field allows custom use for networks, however,
+it is expected that the field contain a URL or some form of CID using a system such as
+[IPFS](https://docs.ipfs.io/concepts/content-addressing/). To support the case of
+interoperability across networks, the SDK recommends that the `metadata` resolves into
+the following `JSON` template:
 
-```go
-type Handler func(ctx sdk.Context, content Content) sdk.Error
+```json
+{
+  "title": "...",
+  "description": "...",
+  "forum": "...", // a link to the discussion platform (i.e. Discord)
+  "other": "..." // any extra data that doesn't correspond to the other fields
+}
 ```
 
-The `Handler` is responsible for actually executing the proposal and processing
-any state changes specified by the proposal. It is executed only if a proposal
-passes during `EndBlock`.
+This makes it far easier for clients to support multiple networks.
 
-We also mention a method to update the tally for a given proposal:
+### Writing a module that uses governance
 
-```go
-  func (proposal Proposal) updateTally(vote byte, amount sdk.Dec)
-```
+There are many aspects of a chain, or of the individual modules that you may want to
+use governance to perform such as changing various parameters. This is very simple
+to do. First, write out your message types and `MsgServer` implementation. Add an
+`authority` field to the keeper which will be populated in the constructor with the
+governance module account: `govKeeper.GetGovernanceAccount().GetAddress()`. Then for
+the methods in the `msg_server.go` perform a check on the message that the signer
+matches `authority`. This will prevent any user from executing that message.
 
 ## Parameters and base types
 

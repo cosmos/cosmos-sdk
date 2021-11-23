@@ -29,7 +29,9 @@ A proposal includes an array of `sdk.Msg`s which are executed automatically if t
 proposal passes. The messages are executed by the governance module itself. Modules
 such as `x/upgrade`, that want to allow certain messages to be executed by governance
 only should add a whitelist within the respective msg server, granting the governance
-module the right to execute the message once a quorum has been reached.
+module the right to execute the message once a quorum has been reached. The governance
+module uses the message router to check that these messages are correctly constructed
+and have a respective path to execute on but do not perform a full validity check.
 
 ## Deposit
 

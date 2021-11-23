@@ -4,6 +4,38 @@ order: 2
 
 # State
 
+## Proposals
+
+`Proposal` objects are used to tally votes and generally track the proposal's state.
+They contain an array of arbitrary `sdk.Msg`'s which the governance module will attempt
+to resolve and then execute if the proposal passes. `Proposal`'s are identified by a
+unique id.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta2/gov.proto#L55-L77
+
+The `Content` on a proposal is an interface which contains the information about
+the `Proposal` such as the tile, description, and any notable changes. Also, this
+`Content` type can by implemented by any module. The `Content`'s `ProposalRoute`
+returns a string which must be used to route the `Content`'s `Handler` in the
+governance keeper. This allows the governance keeper to execute proposal logic
+implemented by any module. If a proposal passes, the handler is executed. Only
+if the handler is successful does the state get persisted and the proposal finally
+passes. Otherwise, the proposal is rejected.
+
+```go
+type Handler func(ctx sdk.Context, content Content) sdk.Error
+```
+
+The `Handler` is responsible for actually executing the proposal and processing
+any state changes specified by the proposal. It is executed only if a proposal
+passes during `EndBlock`.
+
+We also mention a method to update the tally for a given proposal:
+
+```go
+  func (proposal Proposal) updateTally(vote byte, amount sdk.Dec)
+```
+
 ## Parameters and base types
 
 `Parameters` define the rules according to which votes are run. There can only
@@ -70,48 +102,6 @@ This type is used in a temp map when tallying
     Minus     sdk.Dec
     Vote      Vote
   }
-```
-
-## Proposals
-
-`Proposal` objects are used to account votes and generally track the proposal's state. They contain `Content` which denotes
-what this proposal is about, and other fields, which are the mutable state of
-the governance process.
-
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/gov.proto#L55-L77
-
-```go
-type Content interface {
-	GetTitle() string
-	GetDescription() string
-	ProposalRoute() string
-	ProposalType() string
-	ValidateBasic() sdk.Error
-	String() string
-}
-```
-
-The `Content` on a proposal is an interface which contains the information about
-the `Proposal` such as the tile, description, and any notable changes. Also, this
-`Content` type can by implemented by any module. The `Content`'s `ProposalRoute`
-returns a string which must be used to route the `Content`'s `Handler` in the
-governance keeper. This allows the governance keeper to execute proposal logic
-implemented by any module. If a proposal passes, the handler is executed. Only
-if the handler is successful does the state get persisted and the proposal finally
-passes. Otherwise, the proposal is rejected.
-
-```go
-type Handler func(ctx sdk.Context, content Content) sdk.Error
-```
-
-The `Handler` is responsible for actually executing the proposal and processing
-any state changes specified by the proposal. It is executed only if a proposal
-passes during `EndBlock`.
-
-We also mention a method to update the tally for a given proposal:
-
-```go
-  func (proposal Proposal) updateTally(vote byte, amount sdk.Dec)
 ```
 
 ## Stores

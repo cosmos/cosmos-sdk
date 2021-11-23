@@ -3,8 +3,6 @@ package middleware
 import (
 	"context"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -26,22 +24,22 @@ func NewTipMiddleware(bankKeeper types.BankKeeper) tx.Middleware {
 var _ tx.Handler = tipsTxHandler{}
 
 // CheckTx implements tx.Handler.CheckTx.
-func (txh tipsTxHandler) CheckTx(ctx context.Context, req tx.Request, checkTx abci.RequestCheckTx) (tx.Response, error) {
-	res, err := txh.next.CheckTx(ctx, req, checkTx)
+func (txh tipsTxHandler) CheckTx(ctx context.Context, req tx.Request, checkTx tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
+	res, resCheckTx, err := txh.next.CheckTx(ctx, req, checkTx)
 	if err != nil {
-		return tx.Response{}, err
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
 	tipTx, ok := req.Tx.(tx.TipTx)
 	if !ok || tipTx.GetTip() == nil {
-		return res, err
+		return res, tx.ResponseCheckTx{}, err
 	}
 
 	if err := txh.transferTip(ctx, tipTx); err != nil {
-		return tx.Response{}, err
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
-	return res, err
+	return res, resCheckTx, err
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.

@@ -3,8 +3,6 @@ package middleware
 import (
 	"context"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -30,17 +28,17 @@ func GasTxMiddleware(txh tx.Handler) tx.Handler {
 var _ tx.Handler = gasTxHandler{}
 
 // CheckTx implements tx.Handler.CheckTx.
-func (txh gasTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq abci.RequestCheckTx) (tx.Response, error) {
+func (txh gasTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	sdkCtx, err := gasContext(sdk.UnwrapSDKContext(ctx), req.Tx, false)
 	if err != nil {
-		return tx.Response{}, err
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
-	res, err := txh.next.CheckTx(sdk.WrapSDKContext(sdkCtx), req, checkReq)
+	res, resCheckTx, err := txh.next.CheckTx(sdk.WrapSDKContext(sdkCtx), req, checkReq)
 	res.GasUsed = uint64(sdkCtx.GasMeter().GasConsumed())
 	res.GasWanted = uint64(sdkCtx.GasMeter().Limit())
 
-	return res, err
+	return res, resCheckTx, err
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.

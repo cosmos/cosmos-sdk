@@ -49,18 +49,18 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (txh validateBasicTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq abci.RequestCheckTx) (tx.Response, error) {
+func (txh validateBasicTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	// no need to validate basic on recheck tx, call next middleware
 	if checkReq.Type == abci.CheckTxType_Recheck {
 		return txh.next.CheckTx(ctx, req, checkReq)
 	}
 
 	if err := validateBasicTxMsgs(req.Tx.GetMsgs()); err != nil {
-		return tx.Response{}, err
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
 	if err := req.Tx.ValidateBasic(); err != nil {
-		return tx.Response{}, err
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
 	return txh.next.CheckTx(ctx, req, checkReq)
@@ -124,9 +124,9 @@ func checkTimeout(ctx context.Context, tx sdk.Tx) error {
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (txh txTimeoutHeightTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq abci.RequestCheckTx) (tx.Response, error) {
+func (txh txTimeoutHeightTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	if err := checkTimeout(ctx, req.Tx); err != nil {
-		return tx.Response{}, err
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
 	return txh.next.CheckTx(ctx, req, checkReq)
@@ -190,9 +190,9 @@ func (vmm validateMemoTxHandler) checkForValidMemo(ctx context.Context, tx sdk.T
 }
 
 // CheckTx implements tx.Handler.CheckTx method.
-func (vmm validateMemoTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq abci.RequestCheckTx) (tx.Response, error) {
+func (vmm validateMemoTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	if err := vmm.checkForValidMemo(ctx, req.Tx); err != nil {
-		return tx.Response{}, err
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
 	return vmm.next.CheckTx(ctx, req, checkReq)
@@ -305,9 +305,9 @@ func (cgts consumeTxSizeGasTxHandler) consumeTxSizeGas(ctx context.Context, _ sd
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (cgts consumeTxSizeGasTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq abci.RequestCheckTx) (tx.Response, error) {
+func (cgts consumeTxSizeGasTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	if err := cgts.consumeTxSizeGas(ctx, req.Tx, req.TxBytes); err != nil {
-		return tx.Response{}, err
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
 	return cgts.next.CheckTx(ctx, req, checkReq)

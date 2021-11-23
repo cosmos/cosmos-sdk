@@ -21,7 +21,7 @@ func (app *BaseApp) SimCheck(txEncoder sdk.TxEncoder, sdkTx sdk.Tx) (sdk.GasInfo
 	}
 
 	ctx := app.getContextForTx(runTxModeDeliver, bz)
-	res, err := app.txHandler.CheckTx(ctx, tx.Request{Tx: sdkTx}, abci.RequestCheckTx{Tx: bz, Type: abci.CheckTxType_New})
+	res, _, err := app.txHandler.CheckTx(ctx, tx.Request{Tx: sdkTx, TxBytes: bz}, tx.RequestCheckTx{Type: abci.CheckTxType_New})
 	gInfo := sdk.GasInfo{GasWanted: uint64(res.GasWanted), GasUsed: uint64(res.GasUsed)}
 	if err != nil {
 		return gInfo, nil, err

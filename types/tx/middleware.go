@@ -35,10 +35,18 @@ type Request struct {
 	TxBytes []byte
 }
 
+type ResponseCheckTx struct {
+	priority uint64
+}
+
+type RequestCheckTx struct {
+	Type abci.CheckTxType
+}
+
 // TxHandler defines the baseapp's CheckTx, DeliverTx and Simulate respective
 // handlers. It is designed as a middleware stack.
 type Handler interface {
-	CheckTx(ctx context.Context, req Request, checkReq abci.RequestCheckTx) (Response, error)
+	CheckTx(ctx context.Context, req Request, checkReq RequestCheckTx) (Response, ResponseCheckTx, error)
 	DeliverTx(ctx context.Context, req Request) (Response, error)
 	SimulateTx(ctx context.Context, req Request) (Response, error)
 }

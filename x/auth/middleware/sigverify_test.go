@@ -183,9 +183,9 @@ func (s *MWTestSuite) TestSigVerification() {
 		s.Require().NoError(err)
 
 		if tc.recheck {
-			_, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, abci.RequestCheckTx{Type: abci.CheckTxType_Recheck})
+			_, _, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, tx.RequestCheckTx{Type: abci.CheckTxType_Recheck})
 		} else {
-			_, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, abci.RequestCheckTx{})
+			_, _, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, tx.RequestCheckTx{})
 		}
 		if tc.shouldErr {
 			s.Require().NotNil(err, "TestCase %d: %s did not error as expected", i, tc.name)
@@ -278,9 +278,9 @@ func (s *MWTestSuite) TestSigVerification_ExplicitAmino() {
 		s.Require().NoError(err)
 
 		if tc.recheck {
-			_, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, abci.RequestCheckTx{Type: abci.CheckTxType_Recheck})
+			_, _, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, tx.RequestCheckTx{Type: abci.CheckTxType_Recheck})
 		} else {
-			_, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, abci.RequestCheckTx{})
+			_, _, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, tx.RequestCheckTx{})
 		}
 		if tc.shouldErr {
 			s.Require().NotNil(err, "TestCase %d: %s did not error as expected", i, tc.name)

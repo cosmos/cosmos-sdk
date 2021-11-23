@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var _ tx.Handler = mempoolFeeTxHandler{}
@@ -31,12 +30,12 @@ func MempoolFeeMiddleware(txh tx.Handler) tx.Handler {
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (txh mempoolFeeTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq abci.RequestCheckTx) (tx.Response, error) {
+func (txh mempoolFeeTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	feeTx, ok := req.Tx.(sdk.FeeTx)
 	if !ok {
-		return tx.Response{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+		return tx.Response{}, tx.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
 	feeCoins := feeTx.GetFee()
@@ -58,7 +57,7 @@ func (txh mempoolFeeTxHandler) CheckTx(ctx context.Context, req tx.Request, chec
 		}
 
 		if !feeCoins.IsAnyGTE(requiredFees) {
-			return tx.Response{}, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s required: %s", feeCoins, requiredFees)
+			return tx.Response{}, tx.ResponseCheckTx{}, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s required: %s", feeCoins, requiredFees)
 		}
 	}
 
@@ -154,9 +153,9 @@ func (dfd deductFeeTxHandler) checkDeductFee(ctx context.Context, sdkTx sdk.Tx) 
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (dfd deductFeeTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq abci.RequestCheckTx) (tx.Response, error) {
+func (dfd deductFeeTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	if err := dfd.checkDeductFee(ctx, req.Tx); err != nil {
-		return tx.Response{}, err
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
 	return dfd.next.CheckTx(ctx, req, checkReq)

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -31,9 +30,9 @@ func NewRunMsgsTxHandler(msr *MsgServiceRouter, legacyRouter sdk.Router) tx.Hand
 var _ tx.Handler = runMsgsTxHandler{}
 
 // CheckTx implements tx.Handler.CheckTx method.
-func (txh runMsgsTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq abci.RequestCheckTx) (tx.Response, error) {
+func (txh runMsgsTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	// Don't run Msgs during CheckTx.
-	return tx.Response{}, nil
+	return tx.Response{}, tx.ResponseCheckTx{}, nil
 }
 
 // DeliverTx implements tx.Handler.DeliverTx method.

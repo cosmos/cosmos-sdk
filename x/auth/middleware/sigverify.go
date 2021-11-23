@@ -126,9 +126,9 @@ func (spkm setPubKeyTxHandler) setPubKey(ctx context.Context, req tx.Request, si
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (spkm setPubKeyTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq abci.RequestCheckTx) (tx.Response, error) {
+func (spkm setPubKeyTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	if err := spkm.setPubKey(ctx, req, false); err != nil {
-		return tx.Response{}, err
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
 	return spkm.next.CheckTx(ctx, req, checkReq)
@@ -196,9 +196,9 @@ func (vscd validateSigCountTxHandler) checkSigCount(ctx context.Context, req tx.
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (vscd validateSigCountTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq abci.RequestCheckTx) (tx.Response, error) {
+func (vscd validateSigCountTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	if err := vscd.checkSigCount(ctx, req); err != nil {
-		return tx.Response{}, err
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
 	return vscd.next.CheckTx(ctx, req, checkReq)
@@ -359,9 +359,9 @@ func (sgcm sigGasConsumeTxHandler) sigGasConsume(ctx context.Context, req tx.Req
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (sgcm sigGasConsumeTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq abci.RequestCheckTx) (tx.Response, error) {
+func (sgcm sigGasConsumeTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	if err := sgcm.sigGasConsume(ctx, req, false); err != nil {
-		return tx.Response{}, err
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
 	return sgcm.next.CheckTx(ctx, req, checkReq)
@@ -511,9 +511,9 @@ func (svd sigVerificationTxHandler) sigVerify(ctx context.Context, req tx.Reques
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (svd sigVerificationTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq abci.RequestCheckTx) (tx.Response, error) {
+func (svd sigVerificationTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	if err := svd.sigVerify(ctx, req, checkReq.Type == abci.CheckTxType_Recheck, false); err != nil {
-		return tx.Response{}, err
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
 	return svd.next.CheckTx(ctx, req, checkReq)
@@ -583,9 +583,9 @@ func (isd incrementSequenceTxHandler) incrementSeq(ctx context.Context, req tx.R
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (isd incrementSequenceTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq abci.RequestCheckTx) (tx.Response, error) {
+func (isd incrementSequenceTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	if err := isd.incrementSeq(ctx, req); err != nil {
-		return tx.Response{}, err
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
 	return isd.next.CheckTx(ctx, req, checkReq)

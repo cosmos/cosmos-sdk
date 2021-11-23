@@ -861,7 +861,7 @@ func (s *MWTestSuite) TestTxHandlerSetPubKey() {
 				s.Require().NoError(txBuilder.SetSignatures())
 
 				// Run txHandler manually, expect ErrNoSignatures.
-				_, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: txBuilder.GetTx()}, abci.RequestCheckTx{})
+				_, _, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: txBuilder.GetTx()}, tx.RequestCheckTx{})
 				s.Require().Error(err)
 				s.Require().True(errors.Is(err, sdkerrors.ErrNoSignatures))
 
@@ -1100,7 +1100,7 @@ func (s *MWTestSuite) TestTxHandlerReCheck() {
 	s.Require().NoError(err)
 	s.Require().NoError(txBuilder.SetSignatures())
 
-	_, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: txBuilder.GetTx()}, abci.RequestCheckTx{Type: abci.CheckTxType_Recheck})
+	_, _, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: txBuilder.GetTx()}, tx.RequestCheckTx{Type: abci.CheckTxType_Recheck})
 	s.Require().Nil(err, "TxHandler errored on recheck unexpectedly: %v", err)
 
 	testTx, _, err = s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
@@ -1123,7 +1123,7 @@ func (s *MWTestSuite) TestTxHandlerReCheck() {
 		// set testcase parameters
 		s.app.AccountKeeper.SetParams(ctx, tc.params)
 
-		_, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, abci.RequestCheckTx{Tx: txBytes, Type: abci.CheckTxType_Recheck})
+		_, _, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: txBytes}, tx.RequestCheckTx{Type: abci.CheckTxType_Recheck})
 
 		s.Require().NotNil(err, "tx does not fail on recheck with updated params in test case: %s", tc.name)
 
@@ -1137,7 +1137,7 @@ func (s *MWTestSuite) TestTxHandlerReCheck() {
 		Denom:  "dnecoin", // fee does not have this denom
 		Amount: sdk.NewDec(5),
 	}})
-	_, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, abci.RequestCheckTx{})
+	_, _, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, tx.RequestCheckTx{})
 
 	s.Require().NotNil(err, "txhandler on recheck did not fail when mingasPrice was changed")
 	// reset min gasprice
@@ -1149,6 +1149,6 @@ func (s *MWTestSuite) TestTxHandlerReCheck() {
 	err = s.app.BankKeeper.SendCoinsFromAccountToModule(ctx, accounts[0].acc.GetAddress(), minttypes.ModuleName, balances)
 	s.Require().NoError(err)
 
-	_, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, abci.RequestCheckTx{})
+	_, _, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, tx.RequestCheckTx{})
 	s.Require().NotNil(err, "txhandler on recheck did not fail once feePayer no longer has sufficient funds")
 }

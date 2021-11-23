@@ -3,8 +3,6 @@ package middleware
 import (
 	"context"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
@@ -30,14 +28,14 @@ func NewIndexEventsTxMiddleware(indexEvents map[string]struct{}) tx.Middleware {
 var _ tx.Handler = indexEventsTxHandler{}
 
 // CheckTx implements tx.Handler.CheckTx method.
-func (txh indexEventsTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq abci.RequestCheckTx) (tx.Response, error) {
-	res, err := txh.inner.CheckTx(ctx, req, checkReq)
+func (txh indexEventsTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
+	res, resCheckTx, err := txh.inner.CheckTx(ctx, req, checkReq)
 	if err != nil {
-		return res, err
+		return res, tx.ResponseCheckTx{}, err
 	}
 
 	res.Events = sdk.MarkEventsToIndex(res.Events, txh.indexEvents)
-	return res, nil
+	return res, resCheckTx, nil
 }
 
 // DeliverTx implements tx.Handler.DeliverTx method.

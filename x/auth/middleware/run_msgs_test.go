@@ -26,7 +26,7 @@ func (s *MWTestSuite) TestRunMsgs() {
 
 	res, err := txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: txBytes})
 	s.Require().NoError(err)
-	s.Require().NotEmpty(res.Data)
+	s.Require().NotEmpty(res.MsgResponses)
 	var txMsgData sdk.TxMsgData
 	err = s.clientCtx.Codec.Unmarshal(res.Data, &txMsgData)
 	s.Require().NoError(err)

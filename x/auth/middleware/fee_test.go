@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func (s *MWTestSuite) TestEnsureMempoolFees() {
@@ -37,7 +36,7 @@ func (s *MWTestSuite) TestEnsureMempoolFees() {
 	ctx = ctx.WithMinGasPrices(highGasPrice)
 
 	// txHandler errors with insufficient fees
-	_, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, abci.RequestCheckTx{})
+	_, _, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, tx.RequestCheckTx{})
 	s.Require().NotNil(err, "Middleware should have errored on too low fee for local gasPrice")
 
 	// txHandler should not error since we do not check minGasPrice in DeliverTx
@@ -48,7 +47,7 @@ func (s *MWTestSuite) TestEnsureMempoolFees() {
 	lowGasPrice := []sdk.DecCoin{atomPrice}
 	ctx = ctx.WithMinGasPrices(lowGasPrice)
 
-	_, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, abci.RequestCheckTx{})
+	_, _, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, tx.RequestCheckTx{})
 	s.Require().Nil(err, "Middleware should not have errored on fee higher than local gasPrice")
 }
 

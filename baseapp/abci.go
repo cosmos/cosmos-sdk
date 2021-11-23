@@ -256,13 +256,11 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 	}
 
 	ctx := app.getContextForTx(mode, req.Tx)
-	checkTxRes, err := app.txHandler.CheckTx(ctx, tx.Request{Tx: reqTx}, req)
+	res, _, err := app.txHandler.CheckTx(ctx, tx.Request{Tx: reqTx}, tx.RequestCheckTx{Type: req.Type})
 	if err != nil {
-		return sdkerrors.ResponseCheckTx(err, uint64(checkTxRes.GasUsed), uint64(checkTxRes.GasWanted), app.trace)
+		return sdkerrors.ResponseCheckTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
 	}
-
-	res := convertTxResponseToCheckTx(checkTxRes)
-	return res
+	return convertTxResponseToCheckTx(res)
 }
 
 // DeliverTx implements the ABCI interface and executes a tx in DeliverTx mode.

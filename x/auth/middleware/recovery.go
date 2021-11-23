@@ -4,8 +4,6 @@ import (
 	"context"
 	"runtime/debug"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -26,7 +24,7 @@ func RecoveryTxMiddleware(txh tx.Handler) tx.Handler {
 var _ tx.Handler = recoveryTxHandler{}
 
 // CheckTx implements tx.Handler.CheckTx method.
-func (txh recoveryTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq abci.RequestCheckTx) (res tx.Response, err error) {
+func (txh recoveryTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (res tx.Response, resCheckTx tx.ResponseCheckTx, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Panic recovery.
 	defer func() {

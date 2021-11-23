@@ -3,6 +3,7 @@ package group
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 func (ms Members) ValidateBasic() error {
@@ -14,7 +15,7 @@ func (ms Members) ValidateBasic() error {
 		}
 		addr := member.Address
 		if _, exists := index[addr]; exists {
-			return sdkerrors.Wrapf(ErrDuplicate, "address: %s", addr)
+			return sdkerrors.Wrapf(errors.ErrDuplicate, "address: %s", addr)
 		}
 		index[addr] = struct{}{}
 	}
@@ -31,7 +32,7 @@ func (a AccAddresses) ValidateBasic() error {
 		accAddr := a[i]
 		addr := string(accAddr)
 		if _, exists := index[addr]; exists {
-			return sdkerrors.Wrapf(ErrDuplicate, "address: %s", accAddr.String())
+			return sdkerrors.Wrapf(errors.ErrDuplicate, "address: %s", accAddr.String())
 		}
 		index[addr] = struct{}{}
 	}

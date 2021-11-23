@@ -14,6 +14,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
@@ -405,7 +406,7 @@ func (k Keeper) CreateProposal(goCtx context.Context, req *group.MsgCreatePropos
 	// Only members of the group can submit a new proposal.
 	for i := range proposers {
 		if !k.groupMemberTable.Has(ctx.KVStore(k.key), orm.PrimaryKey(&group.GroupMember{GroupId: g.GroupId, Member: &group.Member{Address: proposers[i]}})) {
-			return nil, sdkerrors.Wrapf(group.ErrUnauthorized, "not in group: %s", proposers[i])
+			return nil, sdkerrors.Wrapf(errors.ErrUnauthorized, "not in group: %s", proposers[i])
 		}
 	}
 
@@ -421,7 +422,7 @@ func (k Keeper) CreateProposal(goCtx context.Context, req *group.MsgCreatePropos
 
 	policy := account.GetDecisionPolicy()
 	if policy == nil {
-		return nil, sdkerrors.Wrap(group.ErrEmpty, "nil policy")
+		return nil, sdkerrors.Wrap(errors.ErrEmpty, "nil policy")
 	}
 
 	// Prevent proposal that can not succeed.
@@ -517,7 +518,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	}
 	// Ensure that we can still accept votes for this proposal.
 	if proposal.Status != group.ProposalStatusSubmitted {
-		return nil, sdkerrors.Wrap(group.ErrInvalid, "proposal not open for voting")
+		return nil, sdkerrors.Wrap(errors.ErrInvalid, "proposal not open for voting")
 	}
 	proposalTimeout, err := gogotypes.TimestampProto(proposal.Timeout)
 	if err != nil {
@@ -528,7 +529,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 		return nil, err
 	}
 	if votingPeriodEnd.Before(ctx.BlockTime()) || votingPeriodEnd.Equal(ctx.BlockTime()) {
-		return nil, sdkerrors.Wrap(group.ErrExpired, "voting period has ended already")
+		return nil, sdkerrors.Wrap(errors.ErrExpired, "voting period has ended already")
 	}
 
 	var accountInfo group.GroupAccountInfo
@@ -542,7 +543,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 		return nil, sdkerrors.Wrap(err, "load group account")
 	}
 	if proposal.GroupAccountVersion != accountInfo.Version {
-		return nil, sdkerrors.Wrap(group.ErrModified, "group account was modified")
+		return nil, sdkerrors.Wrap(errors.ErrModified, "group account was modified")
 	}
 
 	// Ensure that group hasn't been modified since the proposal submission.
@@ -551,7 +552,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 		return nil, err
 	}
 	if electorate.Version != proposal.GroupVersion {
-		return nil, sdkerrors.Wrap(group.ErrModified, "group was modified")
+		return nil, sdkerrors.Wrap(errors.ErrModified, "group was modified")
 	}
 
 	// Count and store votes.
@@ -640,7 +641,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	}
 
 	if proposal.Status != group.ProposalStatusSubmitted && proposal.Status != group.ProposalStatusClosed {
-		return nil, sdkerrors.Wrapf(group.ErrInvalid, "not possible with proposal status %s", proposal.Status.String())
+		return nil, sdkerrors.Wrapf(errors.ErrInvalid, "not possible with proposal status %s", proposal.Status.String())
 	}
 
 	var accountInfo group.GroupAccountInfo
@@ -803,7 +804,7 @@ func (k Keeper) doAuthenticated(ctx types.Context, req authNGroupReq, action act
 // is greater than a fixed maxMetadataLength.
 func assertMetadataLength(metadata []byte, description string) error {
 	if len(metadata) > group.MaxMetadataLength {
-		return sdkerrors.Wrap(group.ErrMaxLimit, description)
+		return sdkerrors.Wrap(errors.ErrMaxLimit, description)
 	}
 	return nil
 }

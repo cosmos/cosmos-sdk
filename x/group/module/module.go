@@ -26,10 +26,22 @@ var (
 )
 
 type AppModule struct {
+	AppModuleBasic
 	keeper        groupkeeper.Keeper
 	BankKeeper    group.BankKeeper
 	AccountKeeper group.AccountKeeper
 	registry      cdctypes.InterfaceRegistry
+}
+
+// NewAppModule creates a new AppModule object
+func NewAppModule(cdc codec.Codec, keeper groupkeeper.Keeper, ak group.AccountKeeper, bk group.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
+	return AppModule{
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		keeper:         keeper,
+		BankKeeper:     bk,
+		AccountKeeper:  ak,
+		registry:       registry,
+	}
 }
 
 type AppModuleBasic struct {

@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	grouperrors "github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 // func (s Keeper) execMsgs(ctx context.Context, derivationKey []byte, proposal group.Proposal) error {
@@ -36,7 +37,7 @@ func doExecuteMsgs(ctx sdk.Context, router app.MsgServiceRouter, proposal group.
 	for i, msg := range msgs {
 		handler := router.Route(ctx, msg.Route())
 		if handler == nil {
-			return nil, errors.Wrapf(group.ErrInvalid, "no message handler found for %q", msg.Route())
+			return nil, errors.Wrapf(grouperrors.ErrInvalid, "no message handler found for %q", msg.Route())
 		}
 		r, err := handler(ctx, msg)
 		if err != nil {

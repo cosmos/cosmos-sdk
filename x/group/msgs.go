@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	errors "github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 )
 
@@ -30,7 +31,7 @@ const (
 var _ sdk.Msg = &MsgCreateGroup{}
 
 // Route Implements Msg.
-func (m MsgCreateGroup) Route() string { return sdk.MsgTypeURL(&m) }
+func (m MsgCreateGroup) Route() string { return RouterKey }
 
 // Type Implements Msg.
 func (m MsgCreateGroup) Type() string { return TypeMsgCreateGroup }
@@ -86,7 +87,9 @@ func (m Member) ValidateBasic() error {
 var _ sdk.Msg = &MsgUpdateGroupAdmin{}
 
 // Route Implements Msg.
-func (m MsgUpdateGroupAdmin) Route() string { return RouterKey }
+func (m MsgUpdateGroupAdmin) Route() string {
+	return RouterKey
+}
 
 // Type Implements Msg.
 func (m MsgUpdateGroupAdmin) Type() string { return TypeMsgUpdateGroupAdmin }
@@ -108,7 +111,7 @@ func (m MsgUpdateGroupAdmin) GetSigners() []sdk.AccAddress {
 // ValidateBasic does a sanity check on the provided data
 func (m MsgUpdateGroupAdmin) ValidateBasic() error {
 	if m.GroupId == 0 {
-		return sdkerrors.Wrap(ErrEmpty, "group")
+		return sdkerrors.Wrap(errors.ErrEmpty, "group")
 	}
 
 	admin, err := sdk.AccAddressFromBech32(m.Admin)
@@ -122,7 +125,7 @@ func (m MsgUpdateGroupAdmin) ValidateBasic() error {
 	}
 
 	if admin.Equals(newAdmin) {
-		return sdkerrors.Wrap(ErrInvalid, "new and old admin are the same")
+		return sdkerrors.Wrap(errors.ErrInvalid, "new and old admin are the same")
 	}
 	return nil
 }
@@ -134,7 +137,9 @@ func (m *MsgUpdateGroupAdmin) GetGroupID() uint64 {
 var _ sdk.Msg = &MsgUpdateGroupMetadata{}
 
 // Route Implements Msg.
-func (m MsgUpdateGroupMetadata) Route() string { return RouterKey }
+func (m MsgUpdateGroupMetadata) Route() string {
+	return RouterKey
+}
 
 // Type Implements Msg.
 func (m MsgUpdateGroupMetadata) Type() string { return TypeMsgUpdateGroupComment }
@@ -156,7 +161,7 @@ func (m MsgUpdateGroupMetadata) GetSigners() []sdk.AccAddress {
 // ValidateBasic does a sanity check on the provided data
 func (m MsgUpdateGroupMetadata) ValidateBasic() error {
 	if m.GroupId == 0 {
-		return sdkerrors.Wrap(ErrEmpty, "group")
+		return sdkerrors.Wrap(errors.ErrEmpty, "group")
 
 	}
 	_, err := sdk.AccAddressFromBech32(m.Admin)
@@ -173,7 +178,9 @@ func (m *MsgUpdateGroupMetadata) GetGroupID() uint64 {
 var _ sdk.Msg = &MsgUpdateGroupMembers{}
 
 // Route Implements Msg.
-func (m MsgUpdateGroupMembers) Route() string { return RouterKey }
+func (m MsgUpdateGroupMembers) Route() string {
+	return RouterKey
+}
 
 // Type Implements Msg.
 func (m MsgUpdateGroupMembers) Type() string { return TypeMsgUpdateGroupMembers }
@@ -197,7 +204,7 @@ func (m MsgUpdateGroupMembers) GetSigners() []sdk.AccAddress {
 // ValidateBasic does a sanity check on the provided data
 func (m MsgUpdateGroupMembers) ValidateBasic() error {
 	if m.GroupId == 0 {
-		return sdkerrors.Wrap(ErrEmpty, "group")
+		return sdkerrors.Wrap(errors.ErrEmpty, "group")
 
 	}
 	_, err := sdk.AccAddressFromBech32(m.Admin)
@@ -206,7 +213,7 @@ func (m MsgUpdateGroupMembers) ValidateBasic() error {
 	}
 
 	if len(m.MemberUpdates) == 0 {
-		return sdkerrors.Wrap(ErrEmpty, "member updates")
+		return sdkerrors.Wrap(errors.ErrEmpty, "member updates")
 	}
 	members := Members{Members: m.MemberUpdates}
 	if err := members.ValidateBasic(); err != nil {
@@ -222,7 +229,9 @@ func (m *MsgUpdateGroupMembers) GetGroupID() uint64 {
 var _ sdk.Msg = &MsgCreateGroupAccount{}
 
 // Route Implements Msg.
-func (m MsgCreateGroupAccount) Route() string { return RouterKey }
+func (m MsgCreateGroupAccount) Route() string {
+	return RouterKey
+}
 
 // Type Implements Msg.
 func (m MsgCreateGroupAccount) Type() string { return TypeMsgCreateGroupAccount }
@@ -248,12 +257,12 @@ func (m MsgCreateGroupAccount) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "admin")
 	}
 	if m.GroupId == 0 {
-		return sdkerrors.Wrap(ErrEmpty, "group")
+		return sdkerrors.Wrap(errors.ErrEmpty, "group")
 	}
 
 	policy := m.GetDecisionPolicy()
 	if policy == nil {
-		return sdkerrors.Wrap(ErrEmpty, "decision policy")
+		return sdkerrors.Wrap(errors.ErrEmpty, "decision policy")
 	}
 
 	if err := policy.ValidateBasic(); err != nil {
@@ -265,7 +274,9 @@ func (m MsgCreateGroupAccount) ValidateBasic() error {
 var _ sdk.Msg = &MsgUpdateGroupAccountAdmin{}
 
 // Route Implements Msg.
-func (m MsgUpdateGroupAccountAdmin) Route() string { return RouterKey }
+func (m MsgUpdateGroupAccountAdmin) Route() string {
+	return RouterKey
+}
 
 // Type Implements Msg.
 func (m MsgUpdateGroupAccountAdmin) Type() string { return TypeMsgUpdateGroupAccountAdmin }
@@ -302,7 +313,7 @@ func (m MsgUpdateGroupAccountAdmin) ValidateBasic() error {
 	}
 
 	if admin.Equals(newAdmin) {
-		return sdkerrors.Wrap(ErrInvalid, "new and old admin are the same")
+		return sdkerrors.Wrap(errors.ErrInvalid, "new and old admin are the same")
 	}
 	return nil
 }
@@ -336,7 +347,9 @@ func (m *MsgUpdateGroupAccountDecisionPolicy) SetDecisionPolicy(decisionPolicy D
 }
 
 // Route Implements Msg.
-func (m MsgUpdateGroupAccountDecisionPolicy) Route() string { return RouterKey }
+func (m MsgUpdateGroupAccountDecisionPolicy) Route() string {
+	return RouterKey
+}
 
 // Type Implements Msg.
 func (m MsgUpdateGroupAccountDecisionPolicy) Type() string {
@@ -371,7 +384,7 @@ func (m MsgUpdateGroupAccountDecisionPolicy) ValidateBasic() error {
 
 	policy := m.GetDecisionPolicy()
 	if policy == nil {
-		return sdkerrors.Wrap(ErrEmpty, "decision policy")
+		return sdkerrors.Wrap(errors.ErrEmpty, "decision policy")
 	}
 
 	if err := policy.ValidateBasic(); err != nil {
@@ -398,7 +411,9 @@ func (m MsgUpdateGroupAccountDecisionPolicy) UnpackInterfaces(unpacker types.Any
 var _ sdk.Msg = &MsgUpdateGroupAccountMetadata{}
 
 // Route Implements Msg.
-func (m MsgUpdateGroupAccountMetadata) Route() string { return RouterKey }
+func (m MsgUpdateGroupAccountMetadata) Route() string {
+	return RouterKey
+}
 
 // Type Implements Msg.
 func (m MsgUpdateGroupAccountMetadata) Type() string { return TypeMsgUpdateGroupAccountComment }
@@ -506,7 +521,9 @@ func NewMsgCreateProposalRequest(address string, proposers []string, msgs []sdk.
 }
 
 // Route Implements Msg.
-func (m MsgCreateProposal) Route() string { return RouterKey }
+func (m MsgCreateProposal) Route() string {
+	return RouterKey
+}
 
 // Type Implements Msg.
 func (m MsgCreateProposal) Type() string { return TypeMsgCreateProposal }
@@ -537,7 +554,7 @@ func (m MsgCreateProposal) ValidateBasic() error {
 	}
 
 	if len(m.Proposers) == 0 {
-		return sdkerrors.Wrap(ErrEmpty, "proposers")
+		return sdkerrors.Wrap(errors.ErrEmpty, "proposers")
 	}
 	addrs := make([]sdk.AccAddress, len(m.Proposers))
 	for i, proposer := range m.Proposers {
@@ -587,7 +604,9 @@ func (m MsgCreateProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 var _ sdk.Msg = &MsgVote{}
 
 // Route Implements Msg.
-func (m MsgVote) Route() string { return RouterKey }
+func (m MsgVote) Route() string {
+	return RouterKey
+}
 
 // Type Implements Msg.
 func (m MsgVote) Type() string { return TypeMsgVote }
@@ -613,13 +632,13 @@ func (m MsgVote) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "voter")
 	}
 	if m.ProposalId == 0 {
-		return sdkerrors.Wrap(ErrEmpty, "proposal")
+		return sdkerrors.Wrap(errors.ErrEmpty, "proposal")
 	}
 	if m.Choice == Choice_CHOICE_UNSPECIFIED {
-		return sdkerrors.Wrap(ErrEmpty, "choice")
+		return sdkerrors.Wrap(errors.ErrEmpty, "choice")
 	}
 	if _, ok := Choice_name[int32(m.Choice)]; !ok {
-		return sdkerrors.Wrap(ErrInvalid, "choice")
+		return sdkerrors.Wrap(errors.ErrInvalid, "choice")
 	}
 	return nil
 }
@@ -627,7 +646,9 @@ func (m MsgVote) ValidateBasic() error {
 var _ sdk.Msg = &MsgExec{}
 
 // Route Implements Msg.
-func (m MsgExec) Route() string { return RouterKey }
+func (m MsgExec) Route() string {
+	return RouterKey
+}
 
 // Type Implements Msg.
 func (m MsgExec) Type() string { return TypeMsgExec }
@@ -653,7 +674,7 @@ func (m MsgExec) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "signer")
 	}
 	if m.ProposalId == 0 {
-		return sdkerrors.Wrap(ErrEmpty, "proposal")
+		return sdkerrors.Wrap(errors.ErrEmpty, "proposal")
 	}
 	return nil
 }

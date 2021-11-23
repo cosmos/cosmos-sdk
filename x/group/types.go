@@ -11,6 +11,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
@@ -51,7 +52,7 @@ func (p ThresholdDecisionPolicy) ValidateBasic() error {
 	timeout := p.Timeout
 
 	if timeout <= time.Nanosecond {
-		return sdkerrors.Wrap(ErrInvalid, "timeout")
+		return sdkerrors.Wrap(errors.ErrInvalid, "timeout")
 	}
 	return nil
 }
@@ -112,7 +113,7 @@ func (p *ThresholdDecisionPolicy) Validate(g GroupInfo) error {
 		return sdkerrors.Wrap(err, "group total weight")
 	}
 	if threshold.Cmp(totalWeight) > 0 {
-		return sdkerrors.Wrap(ErrInvalid, "policy threshold should not be greater than the total group weight")
+		return sdkerrors.Wrap(errors.ErrInvalid, "policy threshold should not be greater than the total group weight")
 	}
 	return nil
 }
@@ -186,22 +187,22 @@ func (g GroupAccountInfo) ValidateBasic() error {
 	}
 
 	if g.GroupId == 0 {
-		return sdkerrors.Wrap(ErrEmpty, "group")
+		return sdkerrors.Wrap(errors.ErrEmpty, "group")
 	}
 	if g.Version == 0 {
-		return sdkerrors.Wrap(ErrEmpty, "version")
+		return sdkerrors.Wrap(errors.ErrEmpty, "version")
 	}
 	policy := g.GetDecisionPolicy()
 
 	if policy == nil {
-		return sdkerrors.Wrap(ErrEmpty, "policy")
+		return sdkerrors.Wrap(errors.ErrEmpty, "policy")
 	}
 	if err := policy.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "policy")
 	}
 
 	if g.DerivationKey == nil {
-		return sdkerrors.Wrap(ErrEmpty, "derivationKey")
+		return sdkerrors.Wrap(errors.ErrEmpty, "derivationKey")
 	}
 	return nil
 }
@@ -216,7 +217,7 @@ func (g GroupMember) PrimaryKeyFields() []interface{} {
 
 func (g GroupMember) ValidateBasic() error {
 	if g.GroupId == 0 {
-		return sdkerrors.Wrap(ErrEmpty, "group")
+		return sdkerrors.Wrap(errors.ErrEmpty, "group")
 	}
 
 	err := g.Member.ValidateBasic()
@@ -306,7 +307,7 @@ func (t *Tally) operation(vote Vote, weight string, op operation) error {
 		}
 		t.VetoCount = vetoCount.String()
 	default:
-		return sdkerrors.Wrapf(ErrInvalid, "unknown choice %s", vote.Choice.String())
+		return sdkerrors.Wrapf(errors.ErrInvalid, "unknown choice %s", vote.Choice.String())
 	}
 	return nil
 }

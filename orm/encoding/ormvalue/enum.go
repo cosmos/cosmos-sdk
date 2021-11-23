@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+// EnumCodec encodes enum values as varints.
 type EnumCodec struct{}
 
 func (e EnumCodec) Decode(r *bytes.Reader) (protoreflect.Value, error) {

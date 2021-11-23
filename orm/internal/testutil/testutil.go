@@ -14,12 +14,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 )
 
-type TestKeyPartSpec struct {
+// TestFieldSpec defines a test field against the testpb.A message.
+type TestFieldSpec struct {
 	FieldName protoreflect.Name
 	Gen       *rapid.Generator
 }
 
-var TestKeyPartSpecs = []TestKeyPartSpec{
+var TestFieldSpecs = []TestFieldSpec{
 	{
 		"u32",
 		rapid.Uint32(),
@@ -101,7 +102,7 @@ var TestKeyPartSpecs = []TestKeyPartSpec{
 	},
 }
 
-func MakeTestPartCodec(fname protoreflect.Name, nonTerminal bool) (ormvalue.Codec, error) {
+func MakeTestCodec(fname protoreflect.Name, nonTerminal bool) (ormvalue.Codec, error) {
 	field := GetTestField(fname)
 	if field == nil {
 		return nil, fmt.Errorf("can't find field %s", fname)

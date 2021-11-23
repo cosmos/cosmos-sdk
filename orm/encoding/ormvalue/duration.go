@@ -8,13 +8,13 @@ import (
 )
 
 var (
-	DurationSecondsField = durationMsgType.Descriptor().Fields().ByName("seconds")
-	DurationNanosField   = durationMsgType.Descriptor().Fields().ByName("nanos")
+	durationSecondsField = durationMsgType.Descriptor().Fields().ByName("seconds")
+	durationNanosField   = durationMsgType.Descriptor().Fields().ByName("nanos")
 )
 
 func getDurationSecondsAndNanos(value protoreflect.Value) (protoreflect.Value, protoreflect.Value) {
 	msg := value.Message()
-	return msg.Get(DurationSecondsField), msg.Get(DurationNanosField)
+	return msg.Get(durationSecondsField), msg.Get(durationNanosField)
 }
 
 // DurationCodec encodes a google.protobuf.Duration value as 12 bytes using
@@ -32,8 +32,8 @@ func (d DurationCodec) Decode(r *bytes.Reader) (protoreflect.Value, error) {
 		return protoreflect.Value{}, err
 	}
 	msg := durationMsgType.New()
-	msg.Set(DurationSecondsField, seconds)
-	msg.Set(DurationNanosField, nanos)
+	msg.Set(durationSecondsField, seconds)
+	msg.Set(durationNanosField, nanos)
 	return protoreflect.ValueOfMessage(msg), nil
 }
 

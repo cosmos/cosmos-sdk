@@ -13,35 +13,35 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
 )
 
-func TestPartCodec(t *testing.T) {
-	for _, ks := range testutil.TestKeyPartSpecs {
-		testKeyPartCodec(t, ks)
+func TestCodec(t *testing.T) {
+	for _, ks := range testutil.TestFieldSpecs {
+		testCodec(t, ks)
 	}
 }
-func testKeyPartCodec(t *testing.T, spec testutil.TestKeyPartSpec) {
+func testCodec(t *testing.T, spec testutil.TestFieldSpec) {
 	t.Run(fmt.Sprintf("%s %v", spec.FieldName, false), func(t *testing.T) {
-		testKeyPartCodecNT(t, spec.FieldName, spec.Gen, false)
+		testCodecNT(t, spec.FieldName, spec.Gen, false)
 	})
 	t.Run(fmt.Sprintf("%s %v", spec.FieldName, true), func(t *testing.T) {
-		testKeyPartCodecNT(t, spec.FieldName, spec.Gen, true)
+		testCodecNT(t, spec.FieldName, spec.Gen, true)
 	})
 }
 
-func testKeyPartCodecNT(t *testing.T, fname protoreflect.Name, generator *rapid.Generator, nonTerminal bool) {
-	cdc, err := testutil.MakeTestPartCodec(fname, nonTerminal)
+func testCodecNT(t *testing.T, fname protoreflect.Name, generator *rapid.Generator, nonTerminal bool) {
+	cdc, err := testutil.MakeTestCodec(fname, nonTerminal)
 	assert.NilError(t, err)
 	rapid.Check(t, func(t *rapid.T) {
 		x := protoreflect.ValueOf(generator.Draw(t, string(fname)))
-		bz1 := assertEncDecPart(t, x, cdc)
+		bz1 := checkEncodeDecodeSize(t, x, cdc)
 		if cdc.IsOrdered() {
 			y := protoreflect.ValueOf(generator.Draw(t, fmt.Sprintf("%s 2", fname)))
-			bz2 := assertEncDecPart(t, y, cdc)
+			bz2 := checkEncodeDecodeSize(t, y, cdc)
 			assert.Equal(t, cdc.Compare(x, y), bytes.Compare(bz1, bz2))
 		}
 	})
 }
 
-func assertEncDecPart(t *rapid.T, x protoreflect.Value, cdc ormvalue.Codec) []byte {
+func checkEncodeDecodeSize(t *rapid.T, x protoreflect.Value, cdc ormvalue.Codec) []byte {
 	buf := &bytes.Buffer{}
 	err := cdc.Encode(x, buf)
 	assert.NilError(t, err)

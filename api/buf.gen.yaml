@@ -4,6 +4,6 @@ managed:
   go_package_prefix:
     default: github.com/cosmos/cosmos-sdk/api
 plugins:
-  - name: go
+  - name: go-pulsar
     out: .
     opt: paths=source_relative

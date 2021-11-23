@@ -1,9 +1,10 @@
-package group
+package keeper
 
 import (
 	app "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
 // func (s Keeper) execMsgs(ctx context.Context, derivationKey []byte, proposal group.Proposal) error {
@@ -25,7 +26,7 @@ import (
 
 // doExecuteMsgs routes the messages to the registered handlers. Messages are limited to those that require no authZ or
 // by the group account only. Otherwise this gives access to other peoples accounts as the sdk ant handler is bypassed
-func doExecuteMsgs(ctx sdk.Context, router app.MsgServiceRouter, proposal Proposal, groupAccount sdk.AccAddress) ([]sdk.Result, error) {
+func doExecuteMsgs(ctx sdk.Context, router app.MsgServiceRouter, proposal group.Proposal, groupAccount sdk.AccAddress) ([]sdk.Result, error) {
 	msgs := proposal.GetMsgs()
 
 	results := make([]sdk.Result, len(msgs))
@@ -35,7 +36,7 @@ func doExecuteMsgs(ctx sdk.Context, router app.MsgServiceRouter, proposal Propos
 	for i, msg := range msgs {
 		handler := router.Route(ctx, msg.Route())
 		if handler == nil {
-			return nil, errors.Wrapf(ErrInvalid, "no message handler found for %q", msg.Route())
+			return nil, errors.Wrapf(group.ErrInvalid, "no message handler found for %q", msg.Route())
 		}
 		r, err := handler(ctx, msg)
 		if err != nil {

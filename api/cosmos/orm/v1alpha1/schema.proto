@@ -4,8 +4,6 @@ package cosmos.orm.v1alpha1;
 
 import "google/protobuf/descriptor.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/orm/types/ormpb";
-
 // SchemaDescriptor describes an ORM schema that contains all the information
 // needed for a dynamic client to decode the stored data.
 message SchemaDescriptor {

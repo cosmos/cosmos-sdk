@@ -5,5 +5,6 @@
 # previous "buf.yaml" configuration.
 version: v1
 directories:
+  - api
   - proto
   - third_party/proto

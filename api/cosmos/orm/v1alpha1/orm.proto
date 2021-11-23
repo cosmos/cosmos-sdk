@@ -4,8 +4,6 @@ package cosmos.orm.v1alpha1;
 
 import "google/protobuf/descriptor.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/orm/types/ormpb";
-
 extend google.protobuf.MessageOptions {
 
   // table specifies that this message will be used as an ORM table. It cannot

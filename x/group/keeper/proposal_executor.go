@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"context"
-
 	app "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
@@ -10,26 +8,9 @@ import (
 	grouperrors "github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
-func (s Keeper) execMsgs(ctx context.Context, derivationKey []byte, proposal group.Proposal) error {
-	derivedKey := s.key.Derive(derivationKey)
-	msgs := proposal.GetMsgs()
-
-	for _, msg := range msgs {
-		var reply interface{}
-
-		// Execute the message using the derived key,
-		// this will verify that the message signer is the group account.
-		err := derivedKey.Invoke(ctx, sdk.MsgTypeURL(msg), msg, reply)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // doExecuteMsgs routes the messages to the registered handlers. Messages are limited to those that require no authZ or
 // by the group account only. Otherwise this gives access to other peoples accounts as the sdk ant handler is bypassed
-func doExecuteMsgs(ctx sdk.Context, router app.MsgServiceRouter, proposal group.Proposal, groupAccount sdk.AccAddress) ([]sdk.Result, error) {
+func (s Keeper) doExecuteMsgs(ctx sdk.Context, router app.MsgServiceRouter, proposal group.Proposal, groupAccount sdk.AccAddress) ([]sdk.Result, error) {
 	msgs := proposal.GetMsgs()
 
 	results := make([]sdk.Result, len(msgs))
@@ -37,13 +18,13 @@ func doExecuteMsgs(ctx sdk.Context, router app.MsgServiceRouter, proposal group.
 		return nil, err
 	}
 	for i, msg := range msgs {
-		handler := router.Route(ctx, msg.Route())
+		handler := s.router.Handler(msg)
 		if handler == nil {
-			return nil, errors.Wrapf(grouperrors.ErrInvalid, "no message handler found for %q", msg.Route())
+			return nil, errors.Wrapf(grouperrors.ErrInvalid, "no message handler found for %q", sdk.MsgTypeURL(msg))
 		}
 		r, err := handler(ctx, msg)
 		if err != nil {
-			return nil, errors.Wrapf(err, "message %q at position %d", msg.Type(), i)
+			return nil, errors.Wrapf(err, "message %q at position %d", msg, i)
 		}
 		if r != nil {
 			results[i] = *r

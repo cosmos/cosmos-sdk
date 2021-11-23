@@ -10,7 +10,7 @@ require (
 	github.com/coinbase/rosetta-sdk-go v0.7.1
 	github.com/confio/ics23/go v0.6.6
 	github.com/cosmos/btcutil v1.0.4
-	github.com/cosmos/cosmos-proto v0.0.0-20210914142853-23ed61ac79ce
+	github.com/cosmos/cosmos-proto v0.0.0-20211123144845-528f5002c9f8
 	github.com/cosmos/cosmos-sdk/db v0.0.0
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.17.2

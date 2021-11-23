@@ -33,6 +33,8 @@ const (
 	DefaultOffline = false
 	// DefaultSuggestGas defines the default gas limit for fee suggestion
 	DefaultSuggestGas = 200_000
+	// DefaultSuggestDenom defines the default denom for fee suggestion
+	DefaultSuggestDenom = "uatom"
 )
 
 // configuration flags
@@ -44,6 +46,8 @@ const (
 	FlagAddr               = "addr"
 	FlagRetries            = "retries"
 	FlagOffline            = "offline"
+	FlagSuggestGas         = "suggest-gas"
+	FlagSuggestDenom       = "suggest-denom"
 )
 
 // Config defines the configuration of the rosetta server
@@ -175,14 +179,24 @@ func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	suggest_gas, err := flags.GetInt(FlagSuggestGas)
+	if err != nil {
+		return nil, err
+	}
+	suggest_denom, err := flags.GetString(FlagSuggestDenom)
+	if err != nil {
+		return nil, err
+	}
 	conf := &Config{
-		Blockchain:    blockchain,
-		Network:       network,
-		TendermintRPC: tendermintRPC,
-		GRPCEndpoint:  gRPCEndpoint,
-		Addr:          addr,
-		Retries:       retries,
-		Offline:       offline,
+		Blockchain:          blockchain,
+		Network:             network,
+		TendermintRPC:       tendermintRPC,
+		GRPCEndpoint:        gRPCEndpoint,
+		Addr:                addr,
+		Retries:             retries,
+		Offline:             offline,
+		SuggestGas:          suggest_gas,
+		DefaultSuggestDenom: suggest_denom,
 	}
 	err = conf.validate()
 	if err != nil {
@@ -223,4 +237,6 @@ func SetFlags(flags *pflag.FlagSet) {
 	flags.String(FlagAddr, DefaultAddr, "the address rosetta will bind to")
 	flags.Int(FlagRetries, DefaultRetries, "the number of retries that will be done before quitting")
 	flags.Bool(FlagOffline, DefaultOffline, "run rosetta only with construction API")
+	flags.Int(FlagSuggestGas, DefaultSuggestGas, "default gas for fee suggestion")
+	flags.String(FlagSuggestDenom, DefaultSuggestDenom, "default denom to suggest fee")
 }

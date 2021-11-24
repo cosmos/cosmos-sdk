@@ -30,18 +30,18 @@ func (s *abciTestSuite) TestABCInfo() {
 		wantLog   string
 	}{
 		"plain SDK error": {
-			err:       ErrUnauthorized,
+			err:       errUnauthorized,
 			debug:     false,
 			wantLog:   "unauthorized",
-			wantCode:  ErrUnauthorized.code,
-			wantSpace: RootCodespace,
+			wantCode:  errUnauthorized.code,
+			wantSpace: testCodespace,
 		},
 		"wrapped SDK error": {
-			err:       Wrap(Wrap(ErrUnauthorized, "foo"), "bar"),
+			err:       Wrap(Wrap(errUnauthorized, "foo"), "bar"),
 			debug:     false,
 			wantLog:   "bar: foo: unauthorized",
-			wantCode:  ErrUnauthorized.code,
-			wantSpace: RootCodespace,
+			wantCode:  errUnauthorized.code,
+			wantSpace: testCodespace,
 		},
 		"nil is empty message": {
 			err:       nil,
@@ -78,8 +78,8 @@ func (s *abciTestSuite) TestABCInfo() {
 			wantCode:  1,
 			wantSpace: UndefinedCodespace,
 		},
-		// This is hard to test because of attached stacktrace. This
-		// case is tested in an another test.
+		// This is hard to testCodespace because of attached stacktrace. This
+		// case is tested in an another testCodespace.
 		//"wrapped stdlib is a full message in debug mode": {
 		//	err:      Wrap(io.EOF, "cannot read file"),
 		//	debug:    true,
@@ -118,13 +118,13 @@ func (s *abciTestSuite) TestABCIInfoStacktrace() {
 		wantErrMsg     string
 	}{
 		"wrapped SDK error in debug mode provides stacktrace": {
-			err:            Wrap(ErrUnauthorized, "wrapped"),
+			err:            Wrap(errUnauthorized, "wrapped"),
 			debug:          true,
 			wantStacktrace: true,
 			wantErrMsg:     "wrapped: unauthorized",
 		},
 		"wrapped SDK error in non-debug mode does not have stacktrace": {
-			err:            Wrap(ErrUnauthorized, "wrapped"),
+			err:            Wrap(errUnauthorized, "wrapped"),
 			debug:          false,
 			wantStacktrace: false,
 			wantErrMsg:     "wrapped: unauthorized",
@@ -158,7 +158,7 @@ func (s *abciTestSuite) TestABCIInfoStacktrace() {
 }
 
 func (s *abciTestSuite) TestABCIInfoHidesStacktrace() {
-	err := Wrap(ErrUnauthorized, "wrapped")
+	err := Wrap(errUnauthorized, "wrapped")
 	_, _, log := ABCIInfo(err, false)
 	s.Require().Equal("wrapped: unauthorized", log)
 }
@@ -174,7 +174,7 @@ func (s *abciTestSuite) TestRedact() {
 			changed: errPanicWithMsg,
 		},
 		"sdk errors untouched": {
-			err:       Wrap(ErrUnauthorized, "cannot drop db"),
+			err:       Wrap(errUnauthorized, "cannot drop db"),
 			untouched: true,
 		},
 		"pass though custom errors with ABCI code": {
@@ -206,8 +206,8 @@ func (s *abciTestSuite) TestRedact() {
 func (s *abciTestSuite) TestABCIInfoSerializeErr() {
 	var (
 		// Create errors with stacktrace for equal comparison.
-		myErrDecode = Wrap(ErrTxDecode, "test")
-		myErrAddr   = Wrap(ErrInvalidAddress, "tester")
+		myErrDecode = Wrap(errTxDecode, "testCodespace")
+		myErrAddr   = Wrap(errInvalidAddress, "tester")
 		myPanic     = ErrPanic
 	)
 
@@ -219,7 +219,7 @@ func (s *abciTestSuite) TestABCIInfoSerializeErr() {
 		"single error": {
 			src:   myErrDecode,
 			debug: false,
-			exp:   "test: tx parse error",
+			exp:   "testCodespace: tx parse error",
 		},
 		"second error": {
 			src:   myErrAddr,

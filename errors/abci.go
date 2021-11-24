@@ -51,7 +51,7 @@ type coder interface {
 	ABCICode() uint32
 }
 
-// abciCode test if given error contains an ABCI code and returns the value of
+// abciCode testCodespace if given error contains an ABCI code and returns the value of
 // it if available. This function is testing for the causer interface as well
 // and unwraps the error.
 func abciCode(err error) uint32 {

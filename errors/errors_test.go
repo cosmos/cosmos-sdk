@@ -60,7 +60,7 @@ func (s *errorsTestSuite) TestErrorIs() {
 		},
 		"two different coded errors": {
 			a:      ErrUnauthorized,
-			b:      ErrOutOfGas,
+			b:      errOutOfGas,
 			wantIs: false,
 		},
 		"successful comparison to a wrapped error": {
@@ -70,7 +70,7 @@ func (s *errorsTestSuite) TestErrorIs() {
 		},
 		"unsuccessful comparison to a wrapped error": {
 			a:      ErrUnauthorized,
-			b:      errors.Wrap(ErrInsufficientFee, "too big"),
+			b:      errors.Wrap(errInsufficientFee, "too big"),
 			wantIs: false,
 		},
 		"not equal to stdlib error": {
@@ -113,7 +113,7 @@ func (s *errorsTestSuite) TestIsOf() {
 	require := s.Require()
 
 	var errNil *Error
-	var err = ErrInvalidAddress
+	var err = errInvalidAddress
 	var errW = Wrap(ErrLogic, "more info")
 
 	require.False(IsOf(errNil), "nil error should always have no causer")
@@ -152,7 +152,7 @@ func (s *errorsTestSuite) TestWrappedIs() {
 	err = Wrap(err, "even more context")
 	require.True(stdlib.Is(err, ErrTxTooLarge))
 
-	err = Wrap(ErrInsufficientFee, "...")
+	err = Wrap(errInsufficientFee, "...")
 	require.False(stdlib.Is(err, ErrTxTooLarge))
 
 	errs := stdlib.New("other")
@@ -163,41 +163,41 @@ func (s *errorsTestSuite) TestWrappedIs() {
 }
 
 func (s *errorsTestSuite) TestWrappedIsMultiple() {
-	var errTest = errors.New("test error")
-	var errTest2 = errors.New("test error 2")
+	var errTest = errors.New("testCodespace error")
+	var errTest2 = errors.New("testCodespace error 2")
 	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
 	s.Require().True(stdlib.Is(err, errTest2))
 }
 
 func (s *errorsTestSuite) TestWrappedIsFail() {
-	var errTest = errors.New("test error")
-	var errTest2 = errors.New("test error 2")
+	var errTest = errors.New("testCodespace error")
+	var errTest2 = errors.New("testCodespace error 2")
 	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
 	s.Require().False(stdlib.Is(err, errTest))
 }
 
 func (s *errorsTestSuite) TestWrappedUnwrap() {
-	var errTest = errors.New("test error")
+	var errTest = errors.New("testCodespace error")
 	err := Wrap(errTest, "some random description")
 	s.Require().Equal(errTest, stdlib.Unwrap(err))
 }
 
 func (s *errorsTestSuite) TestWrappedUnwrapMultiple() {
-	var errTest = errors.New("test error")
-	var errTest2 = errors.New("test error 2")
+	var errTest = errors.New("testCodespace error")
+	var errTest2 = errors.New("testCodespace error 2")
 	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
 	s.Require().Equal(errTest2, stdlib.Unwrap(err))
 }
 
 func (s *errorsTestSuite) TestWrappedUnwrapFail() {
-	var errTest = errors.New("test error")
-	var errTest2 = errors.New("test error 2")
+	var errTest = errors.New("testCodespace error")
+	var errTest2 = errors.New("testCodespace error 2")
 	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
 	s.Require().NotEqual(errTest, stdlib.Unwrap(err))
 }
 
 func (s *errorsTestSuite) TestABCIError() {
-	s.Require().Equal("custom: tx parse error", ABCIError(RootCodespace, 2, "custom").Error())
+	s.Require().Equal("custom: tx parse error", ABCIError(testCodespace, 2, "custom").Error())
 	s.Require().Equal("custom: unknown", ABCIError("unknown", 1, "custom").Error())
 }
 

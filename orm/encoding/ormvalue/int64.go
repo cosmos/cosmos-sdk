@@ -1,7 +1,6 @@
 package ormvalue
 
 import (
-	"bytes"
 	"encoding/binary"
 	io "io"
 
@@ -17,7 +16,7 @@ var int64Codec = Int64Codec{}
 
 const int64Max = 9223372036854775807
 
-func (i Int64Codec) Decode(r *bytes.Reader) (protoreflect.Value, error) {
+func (i Int64Codec) Decode(r Reader) (protoreflect.Value, error) {
 	var x uint64
 	err := binary.Read(r, binary.BigEndian, &x)
 	if x >= int64Max {

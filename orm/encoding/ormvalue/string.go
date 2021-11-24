@@ -1,7 +1,6 @@
 package ormvalue
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"strings"
@@ -17,7 +16,7 @@ func (s StringCodec) FixedSize() int {
 }
 
 func (s StringCodec) Size(value protoreflect.Value) (int, error) {
-	return len(value.String()), nil
+	return len(value.Interface().(string)), nil
 }
 
 func (s StringCodec) IsOrdered() bool {
@@ -25,16 +24,16 @@ func (s StringCodec) IsOrdered() bool {
 }
 
 func (s StringCodec) Compare(v1, v2 protoreflect.Value) int {
-	return strings.Compare(v1.String(), v2.String())
+	return strings.Compare(v1.Interface().(string), v2.Interface().(string))
 }
 
-func (s StringCodec) Decode(r *bytes.Reader) (protoreflect.Value, error) {
+func (s StringCodec) Decode(r Reader) (protoreflect.Value, error) {
 	bz, err := io.ReadAll(r)
 	return protoreflect.ValueOfString(string(bz)), err
 }
 
 func (s StringCodec) Encode(value protoreflect.Value, w io.Writer) error {
-	_, err := w.Write([]byte(value.String()))
+	_, err := w.Write([]byte(value.Interface().(string)))
 	return err
 }
 
@@ -47,7 +46,7 @@ func (s NonTerminalStringCodec) FixedSize() int {
 }
 
 func (s NonTerminalStringCodec) Size(value protoreflect.Value) (int, error) {
-	return len(value.String()) + 1, nil
+	return len(value.Interface().(string)) + 1, nil
 }
 
 func (s NonTerminalStringCodec) IsOrdered() bool {
@@ -55,10 +54,10 @@ func (s NonTerminalStringCodec) IsOrdered() bool {
 }
 
 func (s NonTerminalStringCodec) Compare(v1, v2 protoreflect.Value) int {
-	return strings.Compare(v1.String(), v2.String())
+	return strings.Compare(v1.Interface().(string), v2.Interface().(string))
 }
 
-func (s NonTerminalStringCodec) Decode(r *bytes.Reader) (protoreflect.Value, error) {
+func (s NonTerminalStringCodec) Decode(r Reader) (protoreflect.Value, error) {
 	var bz []byte
 	for {
 		b, err := r.ReadByte()
@@ -70,7 +69,7 @@ func (s NonTerminalStringCodec) Decode(r *bytes.Reader) (protoreflect.Value, err
 }
 
 func (s NonTerminalStringCodec) Encode(value protoreflect.Value, w io.Writer) error {
-	str := value.String()
+	str := value.Interface().(string)
 	bz := []byte(str)
 	for _, b := range bz {
 		if b == 0 {

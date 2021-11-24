@@ -1,7 +1,6 @@
 package ormvalue
 
 import (
-	"bytes"
 	"encoding/binary"
 	io "io"
 
@@ -11,7 +10,7 @@ import (
 // EnumCodec encodes enum values as varints.
 type EnumCodec struct{}
 
-func (e EnumCodec) Decode(r *bytes.Reader) (protoreflect.Value, error) {
+func (e EnumCodec) Decode(r Reader) (protoreflect.Value, error) {
 	x, err := binary.ReadVarint(r)
 	return protoreflect.ValueOfEnum(protoreflect.EnumNumber(x)), err
 }

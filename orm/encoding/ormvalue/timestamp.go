@@ -1,7 +1,6 @@
 package ormvalue
 
 import (
-	"bytes"
 	"io"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -22,7 +21,7 @@ func getTimestampSecondsAndNanos(value protoreflect.Value) (protoreflect.Value, 
 	return msg.Get(timestampSecondsField), msg.Get(timestampNanosField)
 }
 
-func (t TimestampCodec) Decode(r *bytes.Reader) (protoreflect.Value, error) {
+func (t TimestampCodec) Decode(r Reader) (protoreflect.Value, error) {
 	seconds, err := int64Codec.Decode(r)
 	if err != nil {
 		return protoreflect.Value{}, err

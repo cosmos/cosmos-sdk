@@ -1,7 +1,6 @@
 package ormvalue
 
 import (
-	"bytes"
 	io "io"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -22,7 +21,7 @@ func getDurationSecondsAndNanos(value protoreflect.Value) (protoreflect.Value, p
 // sorted iteration.
 type DurationCodec struct{}
 
-func (d DurationCodec) Decode(r *bytes.Reader) (protoreflect.Value, error) {
+func (d DurationCodec) Decode(r Reader) (protoreflect.Value, error) {
 	seconds, err := int64Codec.Decode(r)
 	if err != nil {
 		return protoreflect.Value{}, err

@@ -1,7 +1,6 @@
 package ormvalue
 
 import (
-	"bytes"
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
@@ -16,7 +15,7 @@ import (
 type Codec interface {
 
 	// Decode decodes a value in a key.
-	Decode(r *bytes.Reader) (protoreflect.Value, error)
+	Decode(r Reader) (protoreflect.Value, error)
 
 	// Encode encodes a value in a key.
 	Encode(value protoreflect.Value, w io.Writer) error
@@ -41,6 +40,11 @@ type Codec interface {
 	// a varint. Encoders should only use the bytes actually written
 	// by Encode.
 	Size(value protoreflect.Value) (int, error)
+}
+
+type Reader interface {
+	io.Reader
+	io.ByteReader
 }
 
 var (

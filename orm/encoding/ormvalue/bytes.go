@@ -35,7 +35,7 @@ func (b BytesCodec) IsOrdered() bool {
 	return false
 }
 
-func (b BytesCodec) Decode(r *bytes.Reader) (protoreflect.Value, error) {
+func (b BytesCodec) Decode(r Reader) (protoreflect.Value, error) {
 	bz, err := io.ReadAll(r)
 	return protoreflect.ValueOfBytes(bz), err
 }
@@ -70,7 +70,7 @@ func (b NonTerminalBytesCodec) Compare(v1, v2 protoreflect.Value) int {
 	return bytes.Compare(v1.Bytes(), v2.Bytes())
 }
 
-func (b NonTerminalBytesCodec) Decode(r *bytes.Reader) (protoreflect.Value, error) {
+func (b NonTerminalBytesCodec) Decode(r Reader) (protoreflect.Value, error) {
 	n, err := r.ReadByte()
 	if err != nil {
 		return protoreflect.Value{}, err

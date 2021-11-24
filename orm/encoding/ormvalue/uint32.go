@@ -1,7 +1,6 @@
 package ormvalue
 
 import (
-	"bytes"
 	"encoding/binary"
 	"io"
 
@@ -27,7 +26,7 @@ func (u Uint32Codec) Compare(v1, v2 protoreflect.Value) int {
 	return compareUint(v1, v2)
 }
 
-func (u Uint32Codec) Decode(r *bytes.Reader) (protoreflect.Value, error) {
+func (u Uint32Codec) Decode(r Reader) (protoreflect.Value, error) {
 	var x uint32
 	err := binary.Read(r, binary.BigEndian, &x)
 	return protoreflect.ValueOfUint32(x), err

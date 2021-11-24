@@ -1,4 +1,4 @@
-package ormvalue
+package ormfield
 
 import (
 	"encoding/binary"
@@ -38,10 +38,10 @@ func (i Int32Codec) IsOrdered() bool {
 	return true
 }
 
-func (i Int32Codec) FixedSize() int {
+func (i Int32Codec) FixedBufferSize() int {
 	return 4
 }
 
-func (i Int32Codec) Size(protoreflect.Value) (int, error) {
-	return i.FixedSize(), nil
+func (i Int32Codec) ComputeBufferSize(protoreflect.Value) (int, error) {
+	return i.FixedBufferSize(), nil
 }

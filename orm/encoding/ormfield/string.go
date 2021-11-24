@@ -1,4 +1,4 @@
-package ormvalue
+package ormfield
 
 import (
 	"fmt"
@@ -11,11 +11,11 @@ import (
 // StringCodec encodes strings as raw bytes.
 type StringCodec struct{}
 
-func (s StringCodec) FixedSize() int {
+func (s StringCodec) FixedBufferSize() int {
 	return -1
 }
 
-func (s StringCodec) Size(value protoreflect.Value) (int, error) {
+func (s StringCodec) ComputeBufferSize(value protoreflect.Value) (int, error) {
 	return len(value.Interface().(string)), nil
 }
 
@@ -41,11 +41,11 @@ func (s StringCodec) Encode(value protoreflect.Value, w io.Writer) error {
 // values within strings will produce an error.
 type NonTerminalStringCodec struct{}
 
-func (s NonTerminalStringCodec) FixedSize() int {
+func (s NonTerminalStringCodec) FixedBufferSize() int {
 	return -1
 }
 
-func (s NonTerminalStringCodec) Size(value protoreflect.Value) (int, error) {
+func (s NonTerminalStringCodec) ComputeBufferSize(value protoreflect.Value) (int, error) {
 	return len(value.Interface().(string)) + 1, nil
 }
 

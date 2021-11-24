@@ -1,4 +1,4 @@
-package ormvalue
+package ormfield
 
 import (
 	"io"
@@ -60,10 +60,10 @@ func (t TimestampCodec) IsOrdered() bool {
 	return true
 }
 
-func (t TimestampCodec) FixedSize() int {
+func (t TimestampCodec) FixedBufferSize() int {
 	return 12
 }
 
-func (t TimestampCodec) Size(protoreflect.Value) (int, error) {
-	return t.FixedSize(), nil
+func (t TimestampCodec) ComputeBufferSize(protoreflect.Value) (int, error) {
+	return t.FixedBufferSize(), nil
 }

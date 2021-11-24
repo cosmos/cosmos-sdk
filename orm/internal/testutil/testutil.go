@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"pgregory.net/rapid"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormvalue"
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormfield"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 )
 
@@ -102,12 +102,12 @@ var TestFieldSpecs = []TestFieldSpec{
 	},
 }
 
-func MakeTestCodec(fname protoreflect.Name, nonTerminal bool) (ormvalue.Codec, error) {
+func MakeTestCodec(fname protoreflect.Name, nonTerminal bool) (ormfield.Codec, error) {
 	field := GetTestField(fname)
 	if field == nil {
 		return nil, fmt.Errorf("can't find field %s", fname)
 	}
-	return ormvalue.GetCodec(field, nonTerminal)
+	return ormfield.GetCodec(field, nonTerminal)
 }
 
 func GetTestField(fname protoreflect.Name) protoreflect.FieldDescriptor {

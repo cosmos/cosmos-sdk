@@ -1,4 +1,4 @@
-package ormvalue
+package ormfield
 
 import (
 	"io"
@@ -28,18 +28,14 @@ type Codec interface {
 	// is suitable for sorted iteration.
 	IsOrdered() bool
 
-	// FixedSize returns a positive value if encoders should assume a fixed size
-	// buffer for encoding. A codec may choose to estimate this value,
-	// in the case of a varint for example, so that computation with Size isn't
-	// needed. Encoders should only use the bytes actually written
-	// by Encode.
-	FixedSize() int
+	// FixedBufferSize returns a positive value if encoders should assume a
+	// fixed size buffer for encoding. Encoders will use at most this much size
+	// to encode the value.
+	FixedBufferSize() int
 
-	// Size estimates the size needed to encode the field. It may over-estimate
-	// by a small amount if this is more efficient, for instance in the case of
-	// a varint. Encoders should only use the bytes actually written
-	// by Encode.
-	Size(value protoreflect.Value) (int, error)
+	// ComputeBufferSize estimates the buffer size needed to encode the field.
+	// Encoders will use at most this much size to encode the value.
+	ComputeBufferSize(value protoreflect.Value) (int, error)
 }
 
 type Reader interface {
@@ -58,6 +54,9 @@ var (
 // nonTerminal should be set to true if this value is being encoded as a
 // non-terminal segment of a multi-part key.
 func GetCodec(field protoreflect.FieldDescriptor, nonTerminal bool) (Codec, error) {
+	if field == nil {
+		return nil, ormerrors.UnsupportedKeyField.Wrap("nil field")
+	}
 	if field.IsList() {
 		return nil, ormerrors.UnsupportedKeyField.Wrapf("repeated field %s", field.FullName())
 	}

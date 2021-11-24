@@ -1,4 +1,4 @@
-package ormvalue
+package ormfield
 
 import (
 	"encoding/binary"
@@ -39,10 +39,10 @@ func (e EnumCodec) IsOrdered() bool {
 	return false
 }
 
-func (e EnumCodec) FixedSize() int {
+func (e EnumCodec) FixedBufferSize() int {
 	return binary.MaxVarintLen32
 }
 
-func (e EnumCodec) Size(protoreflect.Value) (int, error) {
-	return e.FixedSize(), nil
+func (e EnumCodec) ComputeBufferSize(protoreflect.Value) (int, error) {
+	return e.FixedBufferSize(), nil
 }

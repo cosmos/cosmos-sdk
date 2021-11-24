@@ -1,8 +1,7 @@
-package ormvalue
+package ormfield
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -14,11 +13,11 @@ import (
 // than 255 bytes.
 type BytesCodec struct{}
 
-func (b BytesCodec) FixedSize() int {
+func (b BytesCodec) FixedBufferSize() int {
 	return -1
 }
 
-func (b BytesCodec) Size(value protoreflect.Value) (int, error) {
+func (b BytesCodec) ComputeBufferSize(value protoreflect.Value) (int, error) {
 	return bytesSize(value)
 }
 
@@ -53,11 +52,11 @@ func (b BytesCodec) Compare(v1, v2 protoreflect.Value) int {
 // byte. It errors if the byte array is longer than 255 bytes.
 type NonTerminalBytesCodec struct{}
 
-func (b NonTerminalBytesCodec) FixedSize() int {
+func (b NonTerminalBytesCodec) FixedBufferSize() int {
 	return -1
 }
 
-func (b NonTerminalBytesCodec) Size(value protoreflect.Value) (int, error) {
+func (b NonTerminalBytesCodec) ComputeBufferSize(value protoreflect.Value) (int, error) {
 	n, err := bytesSize(value)
 	return n + 1, err
 }
@@ -89,7 +88,7 @@ func (b NonTerminalBytesCodec) Encode(value protoreflect.Value, w io.Writer) err
 	bz := value.Bytes()
 	n := len(bz)
 	if n > 255 {
-		return fmt.Errorf("can't encode a byte array longer than 255 bytes as an index part")
+		return ormerrors.BytesFieldTooLong
 	}
 	_, err := w.Write([]byte{byte(n)})
 	if err != nil {

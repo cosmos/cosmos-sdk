@@ -1,4 +1,4 @@
-package ormvalue
+package ormfield
 
 import (
 	"encoding/binary"
@@ -10,12 +10,12 @@ import (
 // Uint32Codec encodes uint32 values as 4-byte big-endian integers.
 type Uint32Codec struct{}
 
-func (u Uint32Codec) FixedSize() int {
+func (u Uint32Codec) FixedBufferSize() int {
 	return 4
 }
 
-func (u Uint32Codec) Size(protoreflect.Value) (int, error) {
-	return u.FixedSize(), nil
+func (u Uint32Codec) ComputeBufferSize(protoreflect.Value) (int, error) {
+	return u.FixedBufferSize(), nil
 }
 
 func (u Uint32Codec) IsOrdered() bool {

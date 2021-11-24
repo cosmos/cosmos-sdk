@@ -1,4 +1,4 @@
-package ormvalue
+package ormfield
 
 import (
 	"encoding/binary"
@@ -48,12 +48,12 @@ func (i Int64Codec) IsOrdered() bool {
 	return true
 }
 
-func (i Int64Codec) FixedSize() int {
+func (i Int64Codec) FixedBufferSize() int {
 	return 8
 }
 
-func (i Int64Codec) Size(protoreflect.Value) (int, error) {
-	return i.FixedSize(), nil
+func (i Int64Codec) ComputeBufferSize(protoreflect.Value) (int, error) {
+	return i.FixedBufferSize(), nil
 }
 
 func compareInt(v1, v2 protoreflect.Value) int {

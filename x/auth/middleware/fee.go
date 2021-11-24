@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var _ tx.Handler = mempoolFeeTxHandler{}
@@ -30,7 +30,12 @@ func MempoolFeeMiddleware(txh tx.Handler) tx.Handler {
 	}
 }
 
-// CheckTx implements tx.Handler.CheckTx.
+// CheckTx implements tx.Handler.CheckTx. It is responsible for determining if a
+// transaction's fees meet the required minimum of the processing node. Note, a
+// node can have zero fees set as the minimum. If non-zero minimum fees are set
+// and the transaction does not meet the minimum, the transaction is rejected.
+//
+// Recall, a transaction's fee is determined by ceil(minGasPrice * gasLimit).
 func (txh mempoolFeeTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 

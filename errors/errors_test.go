@@ -29,12 +29,12 @@ func (s *errorsTestSuite) TestCause() {
 		root error
 	}{
 		"Errors are self-causing": {
-			err:  ErrUnauthorized,
-			root: ErrUnauthorized,
+			err:  errUnauthorized,
+			root: errUnauthorized,
 		},
 		"Wrap reveals root cause": {
-			err:  Wrap(ErrUnauthorized, "foo"),
-			root: ErrUnauthorized,
+			err:  Wrap(errUnauthorized, "foo"),
+			root: errUnauthorized,
 		},
 		"Cause works for stderr as root": {
 			err:  Wrap(std, "Some helpful text"),
@@ -54,32 +54,32 @@ func (s *errorsTestSuite) TestErrorIs() {
 		wantIs bool
 	}{
 		"instance of the same error": {
-			a:      ErrUnauthorized,
-			b:      ErrUnauthorized,
+			a:      errUnauthorized,
+			b:      errUnauthorized,
 			wantIs: true,
 		},
 		"two different coded errors": {
-			a:      ErrUnauthorized,
+			a:      errUnauthorized,
 			b:      errOutOfGas,
 			wantIs: false,
 		},
 		"successful comparison to a wrapped error": {
-			a:      ErrUnauthorized,
-			b:      errors.Wrap(ErrUnauthorized, "gone"),
+			a:      errUnauthorized,
+			b:      errors.Wrap(errUnauthorized, "gone"),
 			wantIs: true,
 		},
 		"unsuccessful comparison to a wrapped error": {
-			a:      ErrUnauthorized,
+			a:      errUnauthorized,
 			b:      errors.Wrap(errInsufficientFee, "too big"),
 			wantIs: false,
 		},
 		"not equal to stdlib error": {
-			a:      ErrUnauthorized,
+			a:      errUnauthorized,
 			b:      fmt.Errorf("stdlib error"),
 			wantIs: false,
 		},
 		"not equal to a wrapped stdlib error": {
-			a:      ErrUnauthorized,
+			a:      errUnauthorized,
 			b:      errors.Wrap(fmt.Errorf("stdlib error"), "wrapped"),
 			wantIs: false,
 		},
@@ -95,11 +95,11 @@ func (s *errorsTestSuite) TestErrorIs() {
 		},
 		"nil is not not-nil": {
 			a:      nil,
-			b:      ErrUnauthorized,
+			b:      errUnauthorized,
 			wantIs: false,
 		},
 		"not-nil is not nil": {
-			a:      ErrUnauthorized,
+			a:      errUnauthorized,
 			b:      nil,
 			wantIs: false,
 		},
@@ -202,8 +202,8 @@ func (s *errorsTestSuite) TestABCIError() {
 }
 
 func ExampleWrap() {
-	err1 := Wrap(ErrInsufficientFunds, "90 is smaller than 100")
-	err2 := errors.Wrap(ErrInsufficientFunds, "90 is smaller than 100")
+	err1 := Wrap(errInsufficientFunds, "90 is smaller than 100")
+	err2 := errors.Wrap(errInsufficientFunds, "90 is smaller than 100")
 	fmt.Println(err1.Error())
 	fmt.Println(err2.Error())
 	// Output:
@@ -212,8 +212,8 @@ func ExampleWrap() {
 }
 
 func ExampleWrapf() {
-	err1 := Wrap(ErrInsufficientFunds, "90 is smaller than 100")
-	err2 := errors.Wrap(ErrInsufficientFunds, "90 is smaller than 100")
+	err1 := Wrap(errInsufficientFunds, "90 is smaller than 100")
+	err2 := errors.Wrap(errInsufficientFunds, "90 is smaller than 100")
 	fmt.Println(err1.Error())
 	fmt.Println(err2.Error())
 	// Output:

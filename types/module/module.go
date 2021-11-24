@@ -395,10 +395,19 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 	// and the order of executing migrations matters)
 	// TODO: make the order user-configurable?
 	sortedModNames := make([]string, 0, len(m.Modules))
+	hasAuth := false
+	const authModulename = "auth" // using authtypes.ModuleName causes import cycle.
 	for key := range m.Modules {
-		sortedModNames = append(sortedModNames, key)
+		if key != authModulename {
+			sortedModNames = append(sortedModNames, key)
+		} else {
+			hasAuth = true
+		}
 	}
 	sort.Strings(sortedModNames)
+	if hasAuth {
+		sortedModNames = append(sortedModNames, authModulename)
+	}
 
 	for _, moduleName := range sortedModNames {
 		module := m.Modules[moduleName]

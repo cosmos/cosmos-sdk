@@ -441,9 +441,9 @@ func TestPruning(t *testing.T) {
 	}
 }
 
-func TestQuery(t *testing.T) {
-	path := func(skey types.StoreKey, endp string) string { return "/" + skey.Name() + endp }
+func queryPath(skey types.StoreKey, endp string) string { return "/" + skey.Name() + endp }
 
+func TestQuery(t *testing.T) {
 	k1, v1 := []byte("k1"), []byte("v1")
 	k2, v2 := []byte("k2"), []byte("v2")
 	v3 := []byte("v3")
@@ -476,8 +476,8 @@ func TestQuery(t *testing.T) {
 	require.NoError(t, err)
 	cid := store.Commit()
 	ver := cid.Version
-	query := abci.RequestQuery{Path: path(skey_1, "/key"), Data: k1, Height: ver}
-	querySub := abci.RequestQuery{Path: path(skey_1, "/subspace"), Data: ksub, Height: ver}
+	query := abci.RequestQuery{Path: queryPath(skey_1, "/key"), Data: k1, Height: ver}
+	querySub := abci.RequestQuery{Path: queryPath(skey_1, "/subspace"), Data: ksub, Height: ver}
 
 	// query subspace before anything set
 	qres := store.Query(querySub)
@@ -527,7 +527,7 @@ func TestQuery(t *testing.T) {
 	require.True(t, qres.IsOK(), qres.Log)
 	require.Equal(t, v3, qres.Value)
 
-	query2 := abci.RequestQuery{Path: path(skey_1, "/key"), Data: k2, Height: cid.Version}
+	query2 := abci.RequestQuery{Path: queryPath(skey_1, "/key"), Data: k2, Height: cid.Version}
 	qres = store.Query(query2)
 	require.True(t, qres.IsOK(), qres.Log)
 	require.Equal(t, v2, qres.Value)
@@ -538,7 +538,7 @@ func TestQuery(t *testing.T) {
 	require.Equal(t, valExpSub2, qres.Value)
 
 	// default (height 0) will show latest-1
-	query0 := abci.RequestQuery{Path: path(skey_1, "/key"), Data: k1}
+	query0 := abci.RequestQuery{Path: queryPath(skey_1, "/key"), Data: k1}
 	qres = store.Query(query0)
 	require.True(t, qres.IsOK(), qres.Log)
 	require.Equal(t, v1, qres.Value)
@@ -570,24 +570,24 @@ func TestQuery(t *testing.T) {
 	store2.Close()
 
 	// query with a nil or empty key fails
-	badquery := abci.RequestQuery{Path: path(skey_1, "/key"), Data: []byte{}}
+	badquery := abci.RequestQuery{Path: queryPath(skey_1, "/key"), Data: []byte{}}
 	qres = store.Query(badquery)
 	require.True(t, qres.IsErr())
 	badquery.Data = nil
 	qres = store.Query(badquery)
 	require.True(t, qres.IsErr())
 	// querying an invalid height will fail
-	badquery = abci.RequestQuery{Path: path(skey_1, "/key"), Data: k1, Height: store.LastCommitID().Version + 1}
+	badquery = abci.RequestQuery{Path: queryPath(skey_1, "/key"), Data: k1, Height: store.LastCommitID().Version + 1}
 	qres = store.Query(badquery)
 	require.True(t, qres.IsErr())
 	// or an invalid path
-	badquery = abci.RequestQuery{Path: path(skey_1, "/badpath"), Data: k1}
+	badquery = abci.RequestQuery{Path: queryPath(skey_1, "/badpath"), Data: k1}
 	qres = store.Query(badquery)
 	require.True(t, qres.IsErr())
 
 	// test that proofs are generated with single and separate DBs
 	testProve := func() {
-		queryProve0 := abci.RequestQuery{Path: path(skey_1, "/key"), Data: k1, Prove: true}
+		queryProve0 := abci.RequestQuery{Path: queryPath(skey_1, "/key"), Data: k1, Prove: true}
 		qres = store.Query(queryProve0)
 		require.True(t, qres.IsOK(), qres.Log)
 		require.Equal(t, v1, qres.Value)
@@ -734,7 +734,7 @@ func TestRootStoreMigration(t *testing.T) {
 	// store3 is gone
 	require.Panics(t, func() { s3 = restore.GetKVStore(skey_3) })
 
-	// store4 is mounted, with empty data
+	// store4 is valid
 	s4 := restore.GetKVStore(skey_4)
 	require.NotNil(t, s4)
 
@@ -750,7 +750,7 @@ func TestRootStoreMigration(t *testing.T) {
 	k4, v4 := []byte("fourth"), []byte("created")
 	s4.Set(k4, v4)
 
-	// store2 is no longer mounted
+	// store2 is no longer valid
 	require.Panics(t, func() { restore.GetKVStore(skey_2) })
 
 	// restore2 has the old data

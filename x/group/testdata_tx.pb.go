@@ -24,6 +24,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// MsgAuthenticated is used in group module's tests to check msg authorizations
 type MsgAuthenticated struct {
 	Signers []github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,rep,name=signers,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signers,omitempty"`
 }

@@ -7505,7 +7505,7 @@ Query is the cosmos.group.v1beta1 Query service.
 <a name="cosmos.group.v1beta1.MsgAuthenticated"></a>
 
 ### MsgAuthenticated
-
+MsgAuthenticated is used in group module's tests to check msg authorizations
 
 
 | Field | Type | Label | Description |

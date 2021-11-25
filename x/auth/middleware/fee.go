@@ -6,7 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -29,7 +28,12 @@ func MempoolFeeMiddleware(txh tx.Handler) tx.Handler {
 	}
 }
 
-// CheckTx implements tx.Handler.CheckTx.
+// CheckTx implements tx.Handler.CheckTx. It is responsible for determining if a
+// transaction's fees meet the required minimum of the processing node. Note, a
+// node can have zero fees set as the minimum. If non-zero minimum fees are set
+// and the transaction does not meet the minimum, the transaction is rejected.
+//
+// Recall, a transaction's fee is determined by ceil(minGasPrice * gasLimit).
 func (txh mempoolFeeTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 

@@ -69,7 +69,7 @@ func (s *TestSuite) SetupTest() {
 
 	policy := group.NewThresholdDecisionPolicy(
 		"2",
-		time.Duration(1),
+		time.Second,
 	)
 	accountReq := &group.MsgCreateGroupAccount{
 		Admin:    s.addrs[0].String(),
@@ -711,7 +711,7 @@ func (s *TestSuite) TestCreateGroupAccount() {
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
-				time.Duration(1),
+				time.Second,
 			),
 		},
 		"decision policy threshold > total group weight": {
@@ -722,7 +722,7 @@ func (s *TestSuite) TestCreateGroupAccount() {
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"10",
-				time.Duration(1),
+				time.Second,
 			),
 		},
 		"group id does not exists": {
@@ -733,7 +733,7 @@ func (s *TestSuite) TestCreateGroupAccount() {
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
-				time.Duration(1),
+				time.Second,
 			),
 			expErr: true,
 		},
@@ -745,7 +745,7 @@ func (s *TestSuite) TestCreateGroupAccount() {
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
-				time.Duration(1),
+				time.Second,
 			),
 			expErr: true,
 		},
@@ -757,7 +757,7 @@ func (s *TestSuite) TestCreateGroupAccount() {
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
-				time.Duration(1),
+				time.Second,
 			),
 			expErr: true,
 		},
@@ -996,7 +996,7 @@ func (s *TestSuite) TestUpdateGroupAccountDecisionPolicy() {
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"2",
-				time.Duration(2),
+				time.Duration(2)*time.Second,
 			),
 			expGroupAccount: &group.GroupAccountInfo{
 				Admin:          admin.String(),
@@ -1050,11 +1050,11 @@ func (s *TestSuite) TestGroupAccountsByAdminOrGroup() {
 	policies := []group.DecisionPolicy{
 		group.NewThresholdDecisionPolicy(
 			"1",
-			time.Duration(1),
+			time.Second,
 		),
 		group.NewThresholdDecisionPolicy(
 			"10",
-			time.Duration(1),
+			time.Second,
 		),
 	}
 
@@ -1144,7 +1144,7 @@ func (s *TestSuite) TestCreateProposal() {
 	}
 	policy := group.NewThresholdDecisionPolicy(
 		"100",
-		time.Duration(1),
+		time.Second,
 	)
 	err := accountReq.SetDecisionPolicy(policy)
 	s.Require().NoError(err)
@@ -1748,7 +1748,7 @@ func (s *TestSuite) TestVote() {
 					groupAccount,
 					&group.ThresholdDecisionPolicy{
 						Threshold: "1",
-						Timeout:   time.Duration(1),
+						Timeout:   time.Second,
 					},
 				)
 				s.Require().NoError(err)
@@ -2111,7 +2111,7 @@ func createGroupAndGroupAccount(
 
 	policy := group.NewThresholdDecisionPolicy(
 		"1",
-		time.Duration(1),
+		time.Second,
 	)
 	err = groupAccount.SetDecisionPolicy(policy)
 	s.Require().NoError(err)

@@ -65,7 +65,8 @@ To learn more about configuring migration scripts for your modules, see the [Mod
 
 ### Order Of Migrations
 
-All migrations are run in alphabetical order, except `x/auth` which is run the last. [hack] If you want to change the order of migration then you can run migrations in multiple stages. For example, you want to run `foo` last:
+By default all migrations are run in alphabetical order, except `x/auth` which is run the last, because of state dependencies between modules (you can read more in [issue #10606](https://github.com/cosmos/cosmos-sdk/issues/10606)).
+If you want to change the order of migration then you can run migrations in multiple stages. __Please beware that this is hacky, and make sure you understand what you are doing before running such migrations in production_. For example, you want to run `foo` last:
 
 ```go
 app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap)  (module.VersionMap, error) {

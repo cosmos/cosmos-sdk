@@ -344,9 +344,13 @@ func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) map[string
 // MigrationHandler is the migration function that each module registers.
 type MigrationHandler func(sdk.Context) error
 
-// VersionMap is a map of moduleName -> version, where version denotes the
-// version from which we should perform the migration for each module.
+// VersionMap is a map of moduleName -> version
 type VersionMap map[string]uint64
+
+type MigrationVersion struct {
+	StateVersion uint64
+	Order        uint64
+}
 
 // RunMigrations performs in-place store migrations for all modules. This
 // function MUST be called insde an x/upgrade UpgradeHandler.
@@ -397,13 +401,12 @@ type VersionMap map[string]uint64
 //   })
 //
 // Please also refer to docs/core/upgrade.md for more information.
-func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM VersionMap) (VersionMap, error) {
+func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM map[string]MigrationVersion) (VersionMap, error) {
 	c, ok := cfg.(configurator)
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
 	}
 
-	updatedVM := make(VersionMap)
 	// We need deterministic migration order
 	sortedModNames := make([]string, 0, len(m.Modules))
 	for key := range m.Modules {
@@ -416,6 +419,7 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 		sortedModNames = append(sortedModNames, authModulename)
 	}
 
+	updatedVM := VersionMap{}
 	for _, moduleName := range sortedModNames {
 		module := m.Modules[moduleName]
 		fromVersion, exists := fromVM[moduleName]

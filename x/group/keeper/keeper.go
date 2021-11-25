@@ -75,18 +75,11 @@ type Keeper struct {
 	router *authmiddleware.MsgServiceRouter
 }
 
-func NewGroupKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddleware.MsgServiceRouter) Keeper {
-	if storeKey == nil {
-		panic("storeKey must not be nil")
-	}
-
-	if router == nil {
-		panic("router must not be nil")
-	}
-
+func NewGroupKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddleware.MsgServiceRouter, accKeeper group.AccountKeeper) Keeper {
 	k := Keeper{
-		key:    storeKey,
-		router: router,
+		key:       storeKey,
+		router:    router,
+		accKeeper: accKeeper,
 	}
 
 	groupTable, err := orm.NewAutoUInt64Table([2]byte{GroupTablePrefix}, GroupTableSeqPrefix, &group.GroupInfo{}, cdc)

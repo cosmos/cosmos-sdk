@@ -2,7 +2,7 @@
 
 This release introduces bug fixes and improvements on the Cosmos SDK v0.44 series.
 
-v0.44.0 x/auth migration has a **vesting account bug**, which vanishes `delegated_vesting` field from `BaseVestingAccount`. Recovery, unfortunately, is complicated and either involves manually overwriting it or querying an old state.
+SDK v0.44.0-v0.44.3 x/auth migration have a **vesting account bug**, which vanishes `delegated_vesting` field from `BaseVestingAccount`. Recovery, unfortunately, is complicated and either involves manually overwriting it or querying an old state.
 We had to change the order of module migration by pushing x/auth to the end. Auth module state depends on x/stake and should be run last. We have updated the documentation to provide more details how to change module migration order. This is technically a breaking change, but only impacts updates between the major version change, hence migrating from the previous patch release (0.44.x) doesn't cause new migration and doesn't break the state.
 
 Other bug fixes:

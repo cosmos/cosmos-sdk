@@ -256,7 +256,7 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 	}
 
 	ctx := app.getContextForTx(mode, req.Tx)
-	res, _, err := app.txHandler.CheckTx(ctx, tx.Request{Tx: reqTx}, tx.RequestCheckTx{Type: req.Type})
+	res, checkRes, err := app.txHandler.CheckTx(ctx, tx.Request{Tx: reqTx, TxBytes: req.Tx}, tx.RequestCheckTx{Type: req.Type})
 	if err != nil {
 		return sdkerrors.ResponseCheckTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
 	}

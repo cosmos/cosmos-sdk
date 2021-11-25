@@ -407,9 +407,7 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM map[str
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
 	}
 
-	// TODO: make sure auth is the last one!
 	sortedModNames := sortMigrations(m.Modules, fromVM)
-
 	updatedVM := VersionMap{}
 	for _, moduleName := range sortedModNames {
 		module := m.Modules[moduleName]

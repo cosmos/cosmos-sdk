@@ -22,6 +22,7 @@ type ResponseSimulateTx struct {
 	Result  *sdk.Result
 }
 
+// Response is the tx response type used in middlewares.
 type Response struct {
 	GasWanted    uint64
 	GasUsed      uint64

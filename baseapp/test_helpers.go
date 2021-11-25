@@ -1,7 +1,6 @@
 package baseapp
 
 import (
-	"github.com/golang/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -27,13 +26,12 @@ func (app *BaseApp) SimCheck(txEncoder sdk.TxEncoder, sdkTx sdk.Tx) (sdk.GasInfo
 		return gInfo, nil, err
 	}
 
-	txMsgData := &sdk.TxMsgData{MsgResponses: res.MsgResponses}
-	data, err := proto.Marshal(txMsgData)
+	data, err := makeABCIData(res)
 	if err != nil {
 		return gInfo, nil, err
 	}
 
-	return gInfo, &sdk.Result{Data: data, Log: res.Log, Events: res.Events}, nil
+	return gInfo, &sdk.Result{Data: data, Log: res.Log, Events: res.Events, MsgResponses: res.MsgResponses}, nil
 }
 
 // Simulate executes a tx in simulate mode to get result and gas info.
@@ -53,8 +51,7 @@ func (app *BaseApp) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
 		return gasInfo, nil, err
 	}
 
-	txMsgData := &sdk.TxMsgData{MsgResponses: res.MsgResponses}
-	data, err := proto.Marshal(txMsgData)
+	data, err := makeABCIData(res)
 	if err != nil {
 		return gasInfo, nil, err
 	}
@@ -78,13 +75,12 @@ func (app *BaseApp) SimDeliver(txEncoder sdk.TxEncoder, sdkTx sdk.Tx) (sdk.GasIn
 		return gInfo, nil, err
 	}
 
-	txMsgData := &sdk.TxMsgData{MsgResponses: res.MsgResponses}
-	data, err := proto.Marshal(txMsgData)
+	data, err := makeABCIData(res)
 	if err != nil {
 		return gInfo, nil, err
 	}
 
-	return gInfo, &sdk.Result{Data: data, Log: res.Log, Events: res.Events}, nil
+	return gInfo, &sdk.Result{Data: data, Log: res.Log, Events: res.Events, MsgResponses: res.MsgResponses}, nil
 }
 
 // Context with current {check, deliver}State of the app used by tests.

@@ -912,6 +912,7 @@ func makeABCIData(txRes tx.Response) ([]byte, error) {
 	return proto.Marshal(&sdk.TxMsgData{MsgResponses: txRes.MsgResponses})
 }
 
+// convertTxResponseToCheckTx converts a tx.Response into a abci.ResponseCheckTx.
 func convertTxResponseToCheckTx(txRes tx.Response, checkRes tx.ResponseCheckTx) (abci.ResponseCheckTx, error) {
 	data, err := makeABCIData(txRes)
 	if err != nil {
@@ -926,6 +927,7 @@ func convertTxResponseToCheckTx(txRes tx.Response, checkRes tx.ResponseCheckTx) 
 	}, nil
 }
 
+// convertTxResponseToDeliverTx converts a tx.Response into a abci.ResponseDeliverTx.
 func convertTxResponseToDeliverTx(txRes tx.Response) (abci.ResponseDeliverTx, error) {
 	data, err := makeABCIData(txRes)
 	if err != nil {

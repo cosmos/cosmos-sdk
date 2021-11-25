@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
@@ -272,11 +273,7 @@ func (k Keeper) CreateGroupAccount(goCtx context.Context, req *group.MsgCreateGr
 		}
 
 		accountDerivationKey = buf.Bytes()
-		accountAddr := group.AccountCondition(k.groupAccountSeq.NextVal(ctx.KVStore(k.key))).Address()
-		// accountID := k.key.Derive(accountDerivationKey)
-		// accountAddr = accountID.Address()
-
-		// accountID := address.Derive(accountAddr, accountDerivationKey)
+		accountAddr = address.Module(group.ModuleName, accountDerivationKey)
 
 		if k.accKeeper.GetAccount(ctx, accountAddr) != nil {
 			// handle a rare collision

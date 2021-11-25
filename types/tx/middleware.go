@@ -24,8 +24,8 @@ type ResponseSimulateTx struct {
 
 // Response is the tx response type used in middlewares.
 type Response struct {
-	GasWanted    uint64
-	GasUsed      uint64
+	GasWanted uint64
+	GasUsed   uint64
 	// MsgResponses is an array containing each Msg service handler's response
 	// type, packed in an Any. This will get proto-serialized into the `Data` field
 	// in the ABCI Check/DeliverTx responses.
@@ -40,7 +40,7 @@ type Request struct {
 }
 
 type ResponseCheckTx struct {
-	priority uint64
+	Priority int64
 }
 
 type RequestCheckTx struct {

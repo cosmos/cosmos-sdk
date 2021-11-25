@@ -5,6 +5,7 @@ import (
 	"context"
 	"sort"
 	"strings"
+	"testing"
 	"time"
 
 	gogotypes "github.com/gogo/protobuf/types"
@@ -2121,4 +2122,8 @@ func createGroupAndGroupAccount(
 	s.Require().NoError(err)
 
 	return groupAccountRes.Address, myGroupID, policy, res.Info.DerivationKey
+}
+
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(TestSuite))
 }

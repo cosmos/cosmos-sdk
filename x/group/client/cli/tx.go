@@ -1,4 +1,4 @@
-package client
+package cli
 
 import (
 	"encoding/base64"
@@ -298,7 +298,7 @@ Note, the '--from' flag is ignored as it is implied from [admin].
 
 Example:
 $ %s tx group create-group-account [admin] [group-id] [metadata] \
-'{"@type":"/regen.group.v1alpha1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"1s"}'
+'{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"1s"}'
 `,
 				version.AppName,
 			),

@@ -5,6 +5,7 @@ import (
 	"context"
 	"sort"
 	"strings"
+	"testing"
 	"time"
 
 	gogotypes "github.com/gogo/protobuf/types"
@@ -33,6 +34,10 @@ type TestSuite struct {
 	groupAccountAddr sdk.AccAddress
 	bankKeeper       bankkeeper.Keeper
 	blockTime        time.Time
+}
+
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(TestSuite))
 }
 
 func (s *TestSuite) SetupTest() {

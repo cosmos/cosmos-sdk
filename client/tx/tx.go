@@ -64,12 +64,10 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx
 		return tx.AuxSignerData{}, err
 	}
 
-	tipAmt := f.fees
 	if f.tip != nil && f.tip.String() != "" {
-		tipAmt = f.tip.Amount
+		b.SetTip(&tx.Tip{Amount: f.tip.Amount, Tipper: fromAddress.String()})
 	}
 
-	b.SetTip(&tx.Tip{Amount: tipAmt, Tipper: fromAddress.String()})
 	err = b.SetSignMode(f.SignMode())
 	if err != nil {
 		return tx.AuxSignerData{}, err

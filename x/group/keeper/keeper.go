@@ -5,10 +5,10 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	app "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authmiddleware "github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
@@ -72,10 +72,10 @@ type Keeper struct {
 	voteByProposalIndex orm.Index
 	voteByVoterIndex    orm.Index
 
-	router *app.MsgServiceRouter
+	router *authmiddleware.MsgServiceRouter
 }
 
-func NewGroupKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *app.MsgServiceRouter) Keeper {
+func NewGroupKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddleware.MsgServiceRouter) Keeper {
 	if storeKey == nil {
 		panic("storeKey must not be nil")
 	}

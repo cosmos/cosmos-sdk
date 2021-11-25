@@ -1,16 +1,16 @@
 package keeper
 
 import (
-	app "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
+	authmiddleware "github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	grouperrors "github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 // doExecuteMsgs routes the messages to the registered handlers. Messages are limited to those that require no authZ or
 // by the group account only. Otherwise this gives access to other peoples accounts as the sdk ant handler is bypassed
-func (s Keeper) doExecuteMsgs(ctx sdk.Context, router app.MsgServiceRouter, proposal group.Proposal, groupAccount sdk.AccAddress) ([]sdk.Result, error) {
+func (s Keeper) doExecuteMsgs(ctx sdk.Context, router authmiddleware.MsgServiceRouter, proposal group.Proposal, groupAccount sdk.AccAddress) ([]sdk.Result, error) {
 	msgs := proposal.GetMsgs()
 
 	results := make([]sdk.Result, len(msgs))

@@ -51,7 +51,6 @@ type BaseApp struct { // nolint: maligned
 	storeLoader       StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
 	queryRouter       sdk.QueryRouter      // router for redirecting query calls
 	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
-	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
 	interfaceRegistry types.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 
@@ -141,16 +140,15 @@ func NewBaseApp(
 	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
 	app := &BaseApp{
-		logger:           logger,
-		name:             name,
-		db:               db,
-		cms:              store.NewCommitMultiStore(db),
-		storeLoader:      DefaultStoreLoader,
-		queryRouter:      NewQueryRouter(),
-		grpcQueryRouter:  NewGRPCQueryRouter(),
-		txDecoder:        txDecoder,
-		fauxMerkleMode:   false,
-		msgServiceRouter: NewMsgServiceRouter(),
+		logger:          logger,
+		name:            name,
+		db:              db,
+		cms:             store.NewCommitMultiStore(db),
+		storeLoader:     DefaultStoreLoader,
+		queryRouter:     NewQueryRouter(),
+		grpcQueryRouter: NewGRPCQueryRouter(),
+		txDecoder:       txDecoder,
+		fauxMerkleMode:  false,
 	}
 
 	for _, option := range options {
@@ -188,9 +186,6 @@ func (app *BaseApp) Logger() log.Logger {
 func (app *BaseApp) Trace() bool {
 	return app.trace
 }
-
-// MsgServiceRouter returns the MsgServiceRouter of a BaseApp.
-func (app *BaseApp) MsgServiceRouter() *MsgServiceRouter { return app.msgServiceRouter }
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
 // multistore.

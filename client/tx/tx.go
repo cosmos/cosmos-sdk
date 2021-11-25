@@ -24,7 +24,85 @@ import (
 // or sign it and broadcast it returning an error upon failure.
 func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) error {
 	txf := NewFactoryCLI(clientCtx, flagSet)
+
+	if flagAux, _ := flagSet.GetBool("aux"); flagAux {
+		auxSignerData, err := makeAuxSignerData(clientCtx, txf, msgs...)
+		if err != nil {
+			return err
+		}
+		return clientCtx.PrintProto(&auxSignerData)
+	}
+
 	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
+}
+
+func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx.AuxSignerData, error) {
+	b := NewAuxTxBuilder()
+	fromAddress, name, _, err := client.GetFromFields(clientCtx.Keyring, clientCtx.From, false)
+	if err != nil {
+		return tx.AuxSignerData{}, err
+	}
+	b.SetAddress(fromAddress.String())
+	if clientCtx.Offline {
+		b.SetAccountNumber(f.accountNumber)
+		b.SetSequence(f.sequence)
+	} else {
+		if err != nil {
+			return tx.AuxSignerData{}, err
+		}
+
+		accNum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, fromAddress)
+		if err != nil {
+			return tx.AuxSignerData{}, err
+		}
+		b.SetAccountNumber(accNum)
+		b.SetSequence(seq)
+	}
+
+	err = b.SetMsgs(msgs...)
+	if err != nil {
+		return tx.AuxSignerData{}, err
+	}
+
+	tipAmt := f.fees
+	if f.tip != nil && f.tip.String() != "" {
+		tipAmt = f.tip.Amount
+	}
+
+	b.SetTip(&tx.Tip{Amount: tipAmt, Tipper: fromAddress.String()})
+	err = b.SetSignMode(f.SignMode())
+	if err != nil {
+		return tx.AuxSignerData{}, err
+	}
+
+	key, err := clientCtx.Keyring.Key(name)
+	if err != nil {
+		return tx.AuxSignerData{}, err
+	}
+
+	pub, err := key.GetPubKey()
+	if err != nil {
+		return tx.AuxSignerData{}, err
+	}
+
+	err = b.SetPubKey(pub)
+	if err != nil {
+		return tx.AuxSignerData{}, err
+	}
+
+	b.SetChainID(clientCtx.ChainID)
+	signBz, err := b.GetSignBytes()
+	if err != nil {
+		return tx.AuxSignerData{}, err
+	}
+
+	sig, _, err := clientCtx.Keyring.Sign(name, signBz)
+	if err != nil {
+		return tx.AuxSignerData{}, err
+	}
+	b.SetSignature(sig)
+
+	return b.GetAuxSignerData()
 }
 
 // GenerateOrBroadcastTxWithFactory will either generate and print and unsigned transaction

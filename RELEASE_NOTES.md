@@ -1,13 +1,16 @@
-# Cosmos SDK v0.44.3 Release Notes
+# Cosmos SDK v0.44.4 Release Notes
 
 This release introduces bug fixes and improvements on the Cosmos SDK v0.44 series.
 
-The main performance improvement concerns gRPC queries, which are now able to run concurrently on the node ([\#10045](https://github.com/cosmos/cosmos-sdk/pull/10045)). To benefit from this performance boost, make sure to send your gRPC queries to the gRPC server directly (default port `9090`) instead of using the Tendermint RPC [`abci_query` endpoint](https://docs.tendermint.com/master/rpc/#/ABCI/abci_query) (default port `26657`).
+SDK v0.44.0-v0.44.3 x/auth migration have a **vesting account bug**, which vanishes `delegated_vesting` field from `BaseVestingAccount`. Recovery, unfortunately, is complicated and either involves manually overwriting it or querying an old state.
+We had to change the order of module migration by pushing x/auth to the end. Auth module state depends on x/stake and should be run last. We have updated the documentation to provide more details how to change module migration order. This is technically a breaking change, but only impacts updates between the major version change, hence migrating from the previous patch release (0.44.x) doesn't cause new migration and doesn't break the state.
 
-This release notably also:
+Other bug fixes:
++ grpc-gateway query account balance by IBC denom had an incorrect endpoint (correct one is `"/cosmos/bank/v1beta1/balances/{address}/by_denom"`)
++ use `sdk.GetConfig().GetFullBIP44Path()` instead `sdk.FullFundraiserPath` to generate key - this correctly resets hdpath when running `app testnet`.
 
-- bumps Tendermint to [v0.34.14](https://github.com/tendermint/tendermint/releases/tag/v0.34.14).
-- bumps the `gin-gonic/gin` version to 1.7.0 to fix the upstream [security vulnerability](https://github.com/advisories/GHSA-h395-qcrw-5vmq).
-- adds a null guard with a user-friendly error message for possible nil `Amount` in tx fee `Coins`.
+This release enables Auto Download feature to Cosmovisor >= v1.0.0. Now, you will be able to use Auto Download with the latest Cosmovisor when you will plan the next upgrade to the next major release (v0.45.0),
 
-See the [Cosmos SDK v0.44.3 milestone](https://github.com/cosmos/cosmos-sdk/blob/v0.44.3/CHANGELOG.md) on our issue tracker for the exhaustive list of all changes.
+Finally, we updated the IAVL to it's latest version and take a benefit of the new IAVL iterator, which improves the iteration performance.
+
+See the [Cosmos SDK v0.44.4 Changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.44.4/CHANGELOG.md) for the exhaustive list of all changes.

@@ -59,6 +59,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 		middleware.TxHandlerOptions{
 			LegacyRouter:     legacyRouter,
 			MsgServiceRouter: middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry),
+			TxDecoder:        encCfg.TxConfig.TxDecoder(),
 		},
 	)
 	baseApp.SetTxHandler(txHandler)

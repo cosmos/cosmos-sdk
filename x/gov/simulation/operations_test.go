@@ -38,7 +38,7 @@ func TestWeightedOperations(t *testing.T) {
 	cdc := app.AppCodec()
 	appParams := make(simtypes.AppParams)
 
-	weightesOps := simulation.WeightedOperations(appParams, cdc, app.AccountKeeper,
+	weightedOps := simulation.WeightedOperations(appParams, cdc, app.AccountKeeper,
 		app.BankKeeper, app.GovKeeper,
 	)
 
@@ -58,7 +58,7 @@ func TestWeightedOperations(t *testing.T) {
 		{simappparams.DefaultWeightMsgVoteWeighted, types.ModuleName, types.TypeMsgVoteWeighted},
 	}
 
-	for i, w := range weightesOps {
+	for i, w := range weightedOps {
 		operationMsg, _, _ := w.Op()(r, app.BaseApp, ctx, accs, ctx.ChainID())
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests

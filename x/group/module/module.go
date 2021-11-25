@@ -84,7 +84,7 @@ func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, m
 
 // RegisterInterfaces registers the group module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	group.RegisterTypes(registry)
+	group.RegisterInterfaces(registry)
 }
 
 // RegisterLegacyAminoCodec registers the group module's types for the given codec.
@@ -164,11 +164,6 @@ func (AppModule) RegisterRESTRoutes(_ sdkclient.Context, _ *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the group module.
 func (a AppModule) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
-}
-
-// RegisterInterfaces registers the group module's interface types
-func (AppModule) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	group.RegisterTypes(registry)
 }
 
 // RegisterLegacyAminoCodec registers the group module's types for the given codec.

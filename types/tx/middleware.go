@@ -34,17 +34,22 @@ type Response struct {
 	Events       []abci.Event
 }
 
+// Request is the tx request type used in middlewares.
 type Request struct {
 	Tx      sdk.Tx
 	TxBytes []byte
 }
 
-type ResponseCheckTx struct {
-	Priority int64
-}
-
+// RequestCheckTx is the additional request type used in middlewares CheckTx
+// method.
 type RequestCheckTx struct {
 	Type abci.CheckTxType
+}
+
+// RequestCheckTx is the additional response type used in middlewares CheckTx
+// method.
+type ResponseCheckTx struct {
+	Priority int64
 }
 
 // TxHandler defines the baseapp's CheckTx, DeliverTx and Simulate respective

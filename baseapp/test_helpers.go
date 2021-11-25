@@ -56,7 +56,7 @@ func (app *BaseApp) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
 		return gasInfo, nil, err
 	}
 
-	return gasInfo, &sdk.Result{Data: data, Log: res.Log, Events: res.Events}, nil
+	return gasInfo, &sdk.Result{Data: data, Log: res.Log, Events: res.Events, MsgResponses: res.MsgResponses}, nil
 }
 
 // SimDeliver defines a DeliverTx helper function that used in tests and

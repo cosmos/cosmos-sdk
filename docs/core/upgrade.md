@@ -125,7 +125,7 @@ func (app *MyApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.R
 
 This information is used by the Cosmos SDK to detect when modules with newer versions are introduced to the app.
 
-For a new module `foo`, `InitGenesis` is called by the `RunMigration` only when there is a new module registered in the module manager and there is no `A` entry in the `fromVM` registered in the state. So, if you don't want to call `InitGenesis` when a new module is added to the app, then you should set zero in the `fromVM` for module `foo`:
+For a new module `foo`, `InitGenesis` is called by the `RunMigration` only when there is a new module registered in the module manager and there is no `foo` entry in the `fromVM` registered in the state. Therefore, if you want to skip `InitGenesis` when a new module is added to the app, then you should set its module version in `fromVM` to the module package consensus version:
 
 ```go
 app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {

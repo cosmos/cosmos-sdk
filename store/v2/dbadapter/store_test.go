@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	types "github.com/cosmos/cosmos-sdk/store/v2"
 	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
-	"github.com/cosmos/cosmos-sdk/tests/mocks"
+	mocks "github.com/cosmos/cosmos-sdk/tests/mocks/db"
 )
 
 var errFoo = errors.New("dummy")
@@ -20,7 +20,7 @@ func TestAccessors(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	mockDB := mocks.NewMockDB(mockCtrl)
+	mockDB := mocks.NewMockDBReadWriter(mockCtrl)
 	store := dbadapter.Store{mockDB}
 	key := []byte("test")
 	value := []byte("testvalue")
@@ -34,6 +34,7 @@ func TestAccessors(t *testing.T) {
 	retFoo := []byte("xxx")
 	mockDB.EXPECT().Get(gomock.Eq(key)).Times(1).Return(retFoo, nil)
 	require.True(t, bytes.Equal(retFoo, store.Get(key)))
+	require.Equal(t, []byte{1, 2, 3}, []byte{1, 2, 3})
 
 	mockDB.EXPECT().Get(gomock.Eq(key)).Times(1).Return(nil, errFoo)
 	require.Panics(t, func() { store.Get(key) })
@@ -58,24 +59,40 @@ func TestAccessors(t *testing.T) {
 
 	mockDB.EXPECT().Delete(gomock.Eq(key)).Times(1).Return(errFoo)
 	require.Panics(t, func() { store.Delete(key) })
+}
 
-	start, end := []byte("start"), []byte("end")
-	mockDB.EXPECT().Iterator(gomock.Eq(start), gomock.Eq(end)).Times(1).Return(nil, nil)
-	require.NotPanics(t, func() { store.Iterator(start, end) })
+func TestIterators(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	mockDB := mocks.NewMockDBReadWriter(mockCtrl)
+	store := dbadapter.Store{mockDB}
+	key := []byte("test")
+	value := []byte("testvalue")
+
+	start, end := key, []byte("test_end")
 
 	mockDB.EXPECT().Iterator(gomock.Eq(start), gomock.Eq(end)).Times(1).Return(nil, errFoo)
 	require.Panics(t, func() { store.Iterator(start, end) })
 
-	mockDB.EXPECT().ReverseIterator(gomock.Eq(start), gomock.Eq(end)).Times(1).Return(nil, nil)
-	require.NotPanics(t, func() { store.ReverseIterator(start, end) })
-
 	mockDB.EXPECT().ReverseIterator(gomock.Eq(start), gomock.Eq(end)).Times(1).Return(nil, errFoo)
 	require.Panics(t, func() { store.ReverseIterator(start, end) })
+
+	mockIter := mocks.NewMockIterator(mockCtrl)
+	mockIter.EXPECT().Next().Times(1).Return(true)
+	mockIter.EXPECT().Key().Times(1).Return(key)
+	mockIter.EXPECT().Value().Times(1).Return(value)
+
+	mockDB.EXPECT().Iterator(gomock.Eq(start), gomock.Eq(end)).Times(1).Return(mockIter, nil)
+	iter := store.Iterator(start, end)
+
+	require.Equal(t, key, iter.Key())
+	require.Equal(t, value, iter.Value())
 }
 
 func TestCacheWraps(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
-	mockDB := mocks.NewMockDB(mockCtrl)
+	mockDB := mocks.NewMockDBReadWriter(mockCtrl)
 	store := dbadapter.Store{mockDB}
 
 	cacheWrapper := store.CacheWrap()

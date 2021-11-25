@@ -3,8 +3,6 @@ package dbadapter
 import (
 	"io"
 
-	// dbm "github.com/tendermint/tm-db"
-
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	dbutil "github.com/cosmos/cosmos-sdk/internal/db"
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
@@ -13,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-// dbm.DB implements KVStore so we can CacheKVStore it.
 var _ types.KVStore = Store{}
 
 // Wrapper type for dbm.Db with implementation of KVStore

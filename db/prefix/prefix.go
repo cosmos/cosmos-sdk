@@ -24,6 +24,8 @@ var _ dbm.DBReader = (*prefixR)(nil)
 var _ dbm.DBReadWriter = (*prefixRW)(nil)
 var _ dbm.DBWriter = (*prefixW)(nil)
 
+// NewPrefixReader returns a DBReader that only has access to the subset of DB keys
+// that contain the given prefix.
 func NewPrefixReader(db dbm.DBReader, prefix []byte) prefixR {
 	return prefixR{
 		prefix: prefix,
@@ -31,6 +33,8 @@ func NewPrefixReader(db dbm.DBReader, prefix []byte) prefixR {
 	}
 }
 
+// NewPrefixReadWriter returns a DBReader that only has access to the subset of DB keys
+// that contain the given prefix.
 func NewPrefixReadWriter(db dbm.DBReadWriter, prefix []byte) prefixRW {
 	return prefixRW{
 		prefix: prefix,
@@ -38,6 +42,8 @@ func NewPrefixReadWriter(db dbm.DBReadWriter, prefix []byte) prefixRW {
 	}
 }
 
+// NewPrefixWriter returns a DBWriter that reads/writes only from the subset of DB keys
+// that contain the given prefix
 func NewPrefixWriter(db dbm.DBWriter, prefix []byte) prefixW {
 	return prefixW{
 		prefix: prefix,
@@ -156,7 +162,7 @@ func (pdb prefixW) Set(key []byte, value []byte) error {
 	return pdb.db.Set(prefixed(pdb.prefix, key), value)
 }
 
-// Delete implements DBReadWriter.
+// Delete implements DBWriter.
 func (pdb prefixW) Delete(key []byte) error {
 	if len(key) == 0 {
 		return dbm.ErrKeyEmpty
@@ -164,7 +170,7 @@ func (pdb prefixW) Delete(key []byte) error {
 	return pdb.db.Delete(prefixed(pdb.prefix, key))
 }
 
-// Close implements DBReadWriter.
+// Close implements DBWriter.
 func (pdb prefixW) Commit() error { return pdb.db.Commit() }
 
 // Discard implements DBReadWriter.

@@ -404,10 +404,7 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 	}
 
 	updatedVM := make(VersionMap)
-	// for deterministic iteration order
-	// (as some migrations depend on other modules
-	// and the order of executing migrations matters)
-	// TODO: make the order user-configurable?
+	// We need deterministic migration order
 	sortedModNames := make([]string, 0, len(m.Modules))
 	for key := range m.Modules {
 		sortedModNames = append(sortedModNames, key)

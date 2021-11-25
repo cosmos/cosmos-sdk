@@ -1,10 +1,6 @@
 package middleware_test
 
 import (
-	"fmt"
-
-	"github.com/gogo/protobuf/proto"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,5 +27,5 @@ func (s *MWTestSuite) TestRunMsgs() {
 	res, err := txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: txBytes})
 	s.Require().NoError(err)
 	s.Require().Len(res.MsgResponses, 1)
-	s.Require().Equal(fmt.Sprintf("/%s", proto.MessageName(&testdata.MsgCreateDogResponse{})), res.MsgResponses[0].TypeUrl)
+	s.Require().Equal(sdk.MsgTypeURL(&testdata.MsgCreateDog{}), res.MsgResponses[0].TypeUrl)
 }

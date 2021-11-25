@@ -895,7 +895,7 @@ func splitPath(requestPath string) (path []string) {
 	return path
 }
 
-func convertTxResponseToCheckTx(txRes tx.Response) abci.ResponseCheckTx {
+func convertTxResponseToCheckTx(txRes tx.Response, checkRes tx.ResponseCheckTx) abci.ResponseCheckTx {
 	txMsgData := &sdk.TxMsgData{MsgResponses: txRes.MsgResponses}
 	data, err := proto.Marshal(txMsgData)
 	if err != nil {

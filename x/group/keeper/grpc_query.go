@@ -32,11 +32,7 @@ func (q Keeper) getGroupInfo(goCtx sdk.Context, id uint64) (group.GroupInfo, err
 
 func (q Keeper) GroupAccountInfo(goCtx context.Context, request *group.QueryGroupAccountInfo) (*group.QueryGroupAccountInfoResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	addr, err := sdk.AccAddressFromBech32(request.Address)
-	if err != nil {
-		return nil, err
-	}
-	groupAccountInfo, err := q.getGroupAccountInfo(ctx, addr)
+	groupAccountInfo, err := q.getGroupAccountInfo(ctx, request.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -44,9 +40,9 @@ func (q Keeper) GroupAccountInfo(goCtx context.Context, request *group.QueryGrou
 	return &group.QueryGroupAccountInfoResponse{Info: &groupAccountInfo}, nil
 }
 
-func (q Keeper) getGroupAccountInfo(goCtx sdk.Context, accountAddress sdk.AccAddress) (group.GroupAccountInfo, error) {
+func (q Keeper) getGroupAccountInfo(goCtx sdk.Context, accountAddress string) (group.GroupAccountInfo, error) {
 	var obj group.GroupAccountInfo
-	return obj, q.groupAccountTable.GetOne(goCtx.KVStore(q.key), accountAddress.Bytes(), &obj)
+	return obj, q.groupAccountTable.GetOne(goCtx.KVStore(q.key), orm.PrimaryKey(&group.GroupAccountInfo{Address: accountAddress}), &obj)
 }
 
 func (q Keeper) GroupMembers(goCtx context.Context, request *group.QueryGroupMembers) (*group.QueryGroupMembersResponse, error) {

@@ -390,7 +390,7 @@ func (k Keeper) CreateProposal(goCtx context.Context, req *group.MsgCreatePropos
 		return nil, err
 	}
 
-	account, err := k.getGroupAccountInfo(ctx, accountAddress.Bytes())
+	account, err := k.getGroupAccountInfo(ctx, req.Address)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "load group account")
 	}

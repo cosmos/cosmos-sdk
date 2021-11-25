@@ -84,7 +84,10 @@ func (s *TestSuite) SetupTest() {
 	s.Require().NoError(err)
 	s.groupAccountAddr = addr
 	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, s.groupAccountAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
+}
 
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(TestSuite))
 }
 
 func (s *TestSuite) TestCreateGroup() {
@@ -2123,8 +2126,4 @@ func createGroupAndGroupAccount(
 	s.Require().NoError(err)
 
 	return groupAccountRes.Address, myGroupID, policy, res.Info.DerivationKey
-}
-
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(TestSuite))
 }

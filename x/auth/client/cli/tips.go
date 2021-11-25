@@ -6,10 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 func GetTipsToFeeCommand() *cobra.Command {
@@ -23,41 +21,23 @@ func GetTipsToFeeCommand() *cobra.Command {
 				return err
 			}
 
-			auxTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
+			auxSignerData := &tx.AuxSignerData{}
+			err = authclient.ReadAuxSignerData(clientCtx.Codec, auxSignerData, args[0])
 			if err != nil {
 				return err
 			}
-
-			tipTx, ok := auxTx.(tx.TipTx)
-			if !ok {
-				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid transaction")
-			}
-
-			// b, err := clientCtx.TxConfig.WrapTxBuilder(tipTx)
-			// if err != nil {
-			// 	return err
-			// }
-
-			// b.AddAuxSignerData()
 
 			f := clienttx.NewFactoryCLI(clientCtx, cmd.Flags())
 
-			tipperSigsV2, err := tipTx.(authsigning.SigVerifiableTx).GetSignaturesV2()
+			txBuilder := clientCtx.TxConfig.NewTxBuilder()
+			err = txBuilder.AddAuxSignerData(*auxSignerData)
 			if err != nil {
 				return err
 			}
-			txBuilder := clientCtx.TxConfig.NewTxBuilder()
-			// err := txBuilder.AddAuxSignerData(auxSignerData)
 
-			txBuilder.SetMsgs(tipTx.GetMsgs()...)
 			txBuilder.SetFeePayer(clientCtx.FromAddress)
 			txBuilder.SetFeeAmount(f.Fees())
 			txBuilder.SetGasLimit(f.Gas())
-			txBuilder.SetTip(tipTx.GetTip())
-			err = txBuilder.SetSignatures(tipperSigsV2...)
-			if err != nil {
-				return err
-			}
 
 			err = authclient.SignTx(f, clientCtx, clientCtx.FromName, txBuilder, clientCtx.Offline, false)
 			if err != nil {

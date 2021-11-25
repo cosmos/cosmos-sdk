@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,7 +26,7 @@ import (
 func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) error {
 	txf := NewFactoryCLI(clientCtx, flagSet)
 
-	if flagAux, _ := flagSet.GetBool("aux"); flagAux {
+	if flagAux, _ := flagSet.GetBool(flags.FlagAux); flagAux {
 		auxSignerData, err := makeAuxSignerData(clientCtx, txf, msgs...)
 		if err != nil {
 			return err

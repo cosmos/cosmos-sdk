@@ -1548,31 +1548,21 @@ func (s *IntegrationTestSuite) TestTipsToFee() {
 		"test",
 		"test desc",
 		govtypes.ProposalTypeText,
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 		fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 		fmt.Sprintf("--%s=%s", flags.FlagTip, tip.String()),
+		fmt.Sprintf("--%s=true", flags.FlagAux),
 	)
 	require.NoError(err)
 	genTxFile := testutil.WriteToNewTempFile(s.T(), string(res.Bytes()))
 
-	// sign the generated tx with user1
-	res, err = TxSignExec(
-		val.ClientCtx,
-		tipper,
-		genTxFile.Name(),
-	)
-	s.Require().NoError(err)
-	auxSignedTxFile := testutil.WriteToNewTempFile(s.T(), string(res.Bytes()))
-
 	// broadcast the tx
 	res, err = TxTipsToFeeExec(
 		val.ClientCtx,
-		auxSignedTxFile.Name(),
+		genTxFile.Name(),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
-		fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
 	)
 
 	require.NoError(err)

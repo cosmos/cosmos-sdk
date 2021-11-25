@@ -77,6 +77,7 @@ const (
 	FlagFeeAccount       = "fee-account"
 	FlagReverse          = "reverse"
 	FlagTip              = "tip"
+	FlagAux              = "aux"
 
 	// Tendermint logging flags
 	FlagLogLevel  = "log_level"
@@ -119,6 +120,7 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().Uint64(FlagTimeoutHeight, 0, "Set a block timeout height to prevent the tx from being committed past a certain height")
 	cmd.Flags().String(FlagFeeAccount, "", "Fee account pays fees for the transaction instead of deducting from the signer")
 	cmd.Flags().String(FlagTip, "", "Tip amount for executing the tx; eg: 1000uatom")
+	cmd.Flags().Bool(FlagAux, false, "Aux mode transactions for tips")
 
 	// --gas can accept integers and "auto"
 	cmd.Flags().String(FlagGas, "", fmt.Sprintf("gas limit to set per-transaction; set to %q to calculate sufficient gas automatically (default %d)", GasFlagAuto, DefaultGasLimit))

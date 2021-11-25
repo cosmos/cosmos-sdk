@@ -246,7 +246,7 @@ func (k Keeper) CreateGroupAccount(goCtx context.Context, req *group.MsgCreateGr
 		return nil, err
 	}
 
-	g, err := k.getGroupInfo(ctx.Context(), groupID)
+	g, err := k.getGroupInfo(ctx, groupID)
 	if err != nil {
 		return nil, err
 	}
@@ -393,12 +393,12 @@ func (k Keeper) CreateProposal(goCtx context.Context, req *group.MsgCreatePropos
 		return nil, err
 	}
 
-	account, err := k.getGroupAccountInfo(ctx.Context(), accountAddress.Bytes())
+	account, err := k.getGroupAccountInfo(ctx, accountAddress.Bytes())
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "load group account")
 	}
 
-	g, err := k.getGroupInfo(ctx.Context(), account.GroupId)
+	g, err := k.getGroupInfo(ctx, account.GroupId)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "get group by account")
 	}
@@ -547,7 +547,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	}
 
 	// Ensure that group hasn't been modified since the proposal submission.
-	electorate, err := k.getGroupInfo(ctx.Context(), accountInfo.GroupId)
+	electorate, err := k.getGroupInfo(ctx, accountInfo.GroupId)
 	if err != nil {
 		return nil, err
 	}
@@ -668,7 +668,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 			return storeUpdates()
 		}
 
-		electorate, err := k.getGroupInfo(ctx.Context(), accountInfo.GroupId)
+		electorate, err := k.getGroupInfo(ctx, accountInfo.GroupId)
 		if err != nil {
 			return nil, sdkerrors.Wrap(err, "load group")
 		}
@@ -690,7 +690,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 		// Cashing context so that we don't update the store in case of failure.
 		ctx, flush := ctx.CacheContext()
 
-		_, err := k.doExecuteMsgs(ctx, k.router, proposal, sdk.AccAddress(accountInfo.Address))
+		_, err := k.doExecuteMsgs(ctx, *k.router, proposal, sdk.AccAddress(accountInfo.Address))
 		// err := k.execMsgs(sdk.WrapSDKContext(ctx), accountInfo.DerivationKey, proposal)
 		if err != nil {
 			proposal.ExecutorResult = group.ProposalExecutorResultFailure
@@ -779,7 +779,7 @@ func (k Keeper) doUpdateGroup(ctx types.Context, req authNGroupReq, action actio
 // doAuthenticated makes sure that the group admin initiated the request,
 // and perform the provided action on the
 func (k Keeper) doAuthenticated(ctx types.Context, req authNGroupReq, action actionFn, note string) error {
-	group, err := k.getGroupInfo(ctx.Context(), req.GetGroupID())
+	group, err := k.getGroupInfo(ctx, req.GetGroupID())
 	if err != nil {
 		return err
 	}

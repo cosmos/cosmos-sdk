@@ -72,11 +72,10 @@ type Keeper struct {
 	voteByProposalIndex orm.Index
 	voteByVoterIndex    orm.Index
 
-	router app.MsgServiceRouter
+	router *app.MsgServiceRouter
 }
 
-func NewGroupKeeper(storeKey storetypes.StoreKey, router *app.MsgServiceRouter, cdc codec.Codec) Keeper {
-
+func NewGroupKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *app.MsgServiceRouter) Keeper {
 	if storeKey == nil {
 		panic("storeKey must not be nil")
 	}
@@ -84,9 +83,10 @@ func NewGroupKeeper(storeKey storetypes.StoreKey, router *app.MsgServiceRouter, 
 	if router == nil {
 		panic("router must not be nil")
 	}
+
 	k := Keeper{
 		key:    storeKey,
-		router: *router,
+		router: router,
 	}
 
 	groupTable, err := orm.NewAutoUInt64Table([2]byte{GroupTablePrefix}, GroupTableSeqPrefix, &group.GroupInfo{}, cdc)

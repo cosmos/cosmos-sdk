@@ -16,7 +16,7 @@ var _ group.QueryServer = Keeper{}
 func (q Keeper) GroupInfo(goCtx context.Context, request *group.QueryGroupInfo) (*group.QueryGroupInfoResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	groupID := request.GroupId
-	groupInfo, err := q.getGroupInfo(ctx.Context(), groupID)
+	groupInfo, err := q.getGroupInfo(ctx, groupID)
 	if err != nil {
 		return nil, err
 	}
@@ -24,10 +24,9 @@ func (q Keeper) GroupInfo(goCtx context.Context, request *group.QueryGroupInfo) 
 	return &group.QueryGroupInfoResponse{Info: &groupInfo}, nil
 }
 
-func (q Keeper) getGroupInfo(goCtx context.Context, id uint64) (group.GroupInfo, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+func (q Keeper) getGroupInfo(goCtx sdk.Context, id uint64) (group.GroupInfo, error) {
 	var obj group.GroupInfo
-	_, err := q.groupTable.GetOne(ctx.KVStore(q.key), id, &obj)
+	_, err := q.groupTable.GetOne(goCtx.KVStore(q.key), id, &obj)
 	return obj, err
 }
 
@@ -37,7 +36,7 @@ func (q Keeper) GroupAccountInfo(goCtx context.Context, request *group.QueryGrou
 	if err != nil {
 		return nil, err
 	}
-	groupAccountInfo, err := q.getGroupAccountInfo(ctx.Context(), addr)
+	groupAccountInfo, err := q.getGroupAccountInfo(ctx, addr)
 	if err != nil {
 		return nil, err
 	}
@@ -45,16 +44,15 @@ func (q Keeper) GroupAccountInfo(goCtx context.Context, request *group.QueryGrou
 	return &group.QueryGroupAccountInfoResponse{Info: &groupAccountInfo}, nil
 }
 
-func (q Keeper) getGroupAccountInfo(goCtx context.Context, accountAddress sdk.AccAddress) (group.GroupAccountInfo, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+func (q Keeper) getGroupAccountInfo(goCtx sdk.Context, accountAddress sdk.AccAddress) (group.GroupAccountInfo, error) {
 	var obj group.GroupAccountInfo
-	return obj, q.groupAccountTable.GetOne(ctx.KVStore(q.key), accountAddress.Bytes(), &obj)
+	return obj, q.groupAccountTable.GetOne(goCtx.KVStore(q.key), accountAddress.Bytes(), &obj)
 }
 
 func (q Keeper) GroupMembers(goCtx context.Context, request *group.QueryGroupMembers) (*group.QueryGroupMembersResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	groupID := request.GroupId
-	it, err := q.getGroupMembers(ctx.Context(), groupID, request.Pagination)
+	it, err := q.getGroupMembers(ctx, groupID, request.Pagination)
 	if err != nil {
 		return nil, err
 	}
@@ -71,9 +69,8 @@ func (q Keeper) GroupMembers(goCtx context.Context, request *group.QueryGroupMem
 	}, nil
 }
 
-func (q Keeper) getGroupMembers(goCtx context.Context, id uint64, pageRequest *query.PageRequest) (orm.Iterator, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	return q.groupMemberByGroupIndex.GetPaginated(ctx.KVStore(q.key), id, pageRequest)
+func (q Keeper) getGroupMembers(goCtx sdk.Context, id uint64, pageRequest *query.PageRequest) (orm.Iterator, error) {
+	return q.groupMemberByGroupIndex.GetPaginated(goCtx.KVStore(q.key), id, pageRequest)
 }
 
 func (q Keeper) GroupsByAdmin(goCtx context.Context, request *group.QueryGroupsByAdmin) (*group.QueryGroupsByAdminResponse, error) {
@@ -82,7 +79,7 @@ func (q Keeper) GroupsByAdmin(goCtx context.Context, request *group.QueryGroupsB
 	if err != nil {
 		return nil, err
 	}
-	it, err := q.getGroupsByAdmin(ctx.Context(), addr, request.Pagination)
+	it, err := q.getGroupsByAdmin(ctx, addr, request.Pagination)
 	if err != nil {
 		return nil, err
 	}
@@ -99,9 +96,8 @@ func (q Keeper) GroupsByAdmin(goCtx context.Context, request *group.QueryGroupsB
 	}, nil
 }
 
-func (q Keeper) getGroupsByAdmin(goCtx context.Context, admin sdk.AccAddress, pageRequest *query.PageRequest) (orm.Iterator, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	return q.groupByAdminIndex.GetPaginated(ctx.KVStore(q.key), admin.Bytes(), pageRequest)
+func (q Keeper) getGroupsByAdmin(goCtx sdk.Context, admin sdk.AccAddress, pageRequest *query.PageRequest) (orm.Iterator, error) {
+	return q.groupByAdminIndex.GetPaginated(goCtx.KVStore(q.key), admin.Bytes(), pageRequest)
 }
 
 func (q Keeper) GroupAccountsByGroup(goCtx context.Context, request *group.QueryGroupAccountsByGroup) (*group.QueryGroupAccountsByGroupResponse, error) {

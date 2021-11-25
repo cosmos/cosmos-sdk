@@ -56,8 +56,9 @@ app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgrad
     // do upgrade logic
     // ...
 
+    orderedVersions = module.DefaultMigrationsOrder(fromVM)
     // returns a VersionMap with the updated module ConsensusVersions
-    return app.mm.RunMigrations(ctx, fromVM)
+    return app.mm.RunMigrations(ctx, orderedVersions)
 })
 ```
 
@@ -65,23 +66,19 @@ To learn more about configuring migration scripts for your modules, see the [Mod
 
 ### Order Of Migrations
 
-By default all migrations are run in alphabetical order, except `x/auth` which is run the last, because of state dependencies between modules (you can read more in [issue #10606](https://github.com/cosmos/cosmos-sdk/issues/10606)).
-If you want to change the order of migration then you can run migrations in multiple stages. __Please beware that this is hacky, and make sure you understand what you are doing before running such migrations in production_. For example, you want to run `foo` last:
+All migrations are run in (priority desc, alphabetical asc) based on the values in the `fromVM` map. By default all modules have the same priority = 100, except `x/auth` which is run last and has priority = 99. The reason is state dependencies between x/auth and other modules (you can read more in [issue #10606](https://github.com/cosmos/cosmos-sdk/issues/10606)).
+
+If you want to change the order of migration then you need to change module priority number. For example, you want to run `foo` last then you can use this code in `SetUpgradeHandler`:
 
 ```go
-app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap)  (module.VersionMap, error) {
-
-    fooFrom := fromVM["foo"]
-    fromVM["foo"] = foo.AppModule{}.ConsensusVersion()
-    toVM, err := app.mm.RunMigrations(ctx, cfg, fromVM)
-    if err != nil {
-        return toVM, err
+    max := 0
+    for _, mv := range orderedVersions {
+        if mv.Priority > max {
+            max = mv.Priority
+        }
     }
-
-    stage2 := module.VersionMap{"foo": fooFrom}
-    _, err = app.mm.RunMigrations(ctx, cfg, stage2)
-
-    return toVM, err
+    orderedVersions["foo"].Priority = max + 1
+    return app.mm.RunMigrations(ctx, cfg, orderedVersions)
 })
 ```
 

@@ -347,9 +347,9 @@ type MigrationHandler func(sdk.Context) error
 // VersionMap is a map of moduleName -> version
 type VersionMap map[string]uint64
 
-type MigrationVersion struct {
+type MigrationOrder struct {
 	StateVersion uint64
-	Order        uint64
+	Priority     uint64
 }
 
 // RunMigrations performs in-place store migrations for all modules. This
@@ -401,23 +401,14 @@ type MigrationVersion struct {
 //   })
 //
 // Please also refer to docs/core/upgrade.md for more information.
-func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM map[string]MigrationVersion) (VersionMap, error) {
+func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM map[string]MigrationOrder) (VersionMap, error) {
 	c, ok := cfg.(configurator)
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
 	}
 
-	// We need deterministic migration order
-	sortedModNames := make([]string, 0, len(m.Modules))
-	for key := range m.Modules {
-		sortedModNames = append(sortedModNames, key)
-	}
-	sort.Strings(sortedModNames)
-	// auth module must be pushed at the end because it might depend on the state from
-	// other modules, eg x/staking
-	if hasAuth {
-		sortedModNames = append(sortedModNames, authModulename)
-	}
+	// TODO: make sure auth is the last one!
+	sortedModNames := sortMigrations(m.Modules, fromVM)
 
 	updatedVM := VersionMap{}
 	for _, moduleName := range sortedModNames {
@@ -505,4 +496,38 @@ func (m *Manager) GetVersionMap() VersionMap {
 	}
 
 	return vermap
+}
+
+// TODO: write tests
+// deterministic migration order
+func sortMigrations(modules map[string]AppModule, fromVM map[string]MigrationOrder) []string {
+	sortedModNames := make([]string, 0, len(modules))
+	for key := range modules {
+		sortedModNames = append(sortedModNames, key)
+	}
+	sort.Slice(sortedModNames, func(i, j int) bool {
+		a, b := sortedModNames[i], sortedModNames[j]
+		aVer, aOK := fromVM[a]
+		bVer, bOK := fromVM[b]
+		// Existing modules should be migrated before new modules
+		if aOK != bOK {
+			return aOK
+		}
+		return aVer.Priority > bVer.Priority || a <= b
+	})
+	return sortedModNames
+}
+
+// Returns a default migrations ordres, where all modules have order=100 except x/auth having
+// order=99 (this way x/auth is run last).
+func DefaultMigrationsOrder(fromVM VersionMap) map[string]MigrationOrder {
+	out := make(map[string]MigrationOrder, len(fromVM))
+	for k, v := range fromVM {
+		if k == "auth" {
+			out[k] = MigrationOrder{v, 99}
+		} else {
+			out[k] = MigrationOrder{v, 100}
+		}
+	}
+	return out
 }

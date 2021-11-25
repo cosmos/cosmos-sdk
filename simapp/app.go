@@ -291,7 +291,7 @@ func NewSimApp(
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(keys[authzkeeper.StoreKey], appCodec, app.msgSvcRouter)
 
-	app.GroupKeeper = groupkeeper.NewGroupKeeper(keys[group.StoreKey], appCodec, app.msgSvcRouter)
+	app.GroupKeeper = groupkeeper.NewGroupKeeper(keys[group.StoreKey], appCodec, app.msgSvcRouter, app.AccountKeeper)
 
 	// register the proposal types
 	govRouter := govtypes.NewRouter()

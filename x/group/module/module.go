@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/client/cli"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 )
 
@@ -67,15 +68,13 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEn
 }
 
 // GetQueryCmd returns the cli query commands for the group module
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	// TODO: return CLI query commands
-	return nil
+func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.QueryCmd(a.Name())
 }
 
 // GetTxCmd returns the transaction commands for the group module
-func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	// TODO: return CLI tx commands
-	return nil
+func (a AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.TxCmd(a.Name())
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the group module.
@@ -132,42 +131,6 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 	// TODO: export genesis for group module
 	return nil
 }
-
-// DefaultGenesis returns default genesis state as raw bytes for the group
-// module.
-func (AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	// TODO: return default genesis state
-	return nil
-}
-
-// ValidateGenesis performs genesis state validation for the group module.
-func (AppModule) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
-	// TODO: perform genesis validation
-	return nil
-}
-
-// GetQueryCmd returns the cli query commands for the group module
-func (AppModule) GetQueryCmd() *cobra.Command {
-	// TODO: return CLI query commands
-	return nil
-}
-
-// GetTxCmd returns the transaction commands for the group module
-func (AppModule) GetTxCmd() *cobra.Command {
-	// TODO: return CLI tx commands
-	return nil
-}
-
-// RegisterRESTRoutes registers the REST routes for the group module.
-// Deprecated: RegisterRESTRoutes is deprecated.
-func (AppModule) RegisterRESTRoutes(_ sdkclient.Context, _ *mux.Router) {}
-
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the group module.
-func (a AppModule) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
-}
-
-// RegisterLegacyAminoCodec registers the group module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
 
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.

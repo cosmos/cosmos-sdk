@@ -1,5 +1,3 @@
-// RootStore supports a subset of the StoreType values: Persistent, Memory, and Transient
-
 package root
 
 import (
@@ -56,10 +54,11 @@ func ErrStoreNotFound(skey string) error {
 	return fmt.Errorf("store does not exist for key: %s", skey)
 }
 
-// StoreConfig is used to define a schema and pass options to the RootStore constructor.
+// StoreConfig is used to define a schema and other options and pass them to the RootStore constructor.
 type StoreConfig struct {
 	// Version pruning options for backing DBs.
-	Pruning        types.PruningOptions
+	Pruning types.PruningOptions
+	// The minimum allowed version number.
 	InitialVersion uint64
 	// The backing DB to use for the state commitment Merkle tree data.
 	// If nil, Merkle data is stored in the state storage DB under a separate prefix.
@@ -73,10 +72,14 @@ type StoreConfig struct {
 	*traceMixin
 }
 
-// A loaded mapping of substore keys to store types
+// StoreSchema defineds a mapping of substore keys to store types
 type StoreSchema map[string]types.StoreType
 
-// Main persistent store type
+// Store is the main persistent store type implementing CommitRootStore.
+// Substores consist of an SMT-based state commitment store and state storage.
+// Substores must be reserved in the StoreConfig or defined as part of a StoreUpgrade in order to be valid.
+// The state commitment store of each substore consists of a independent SMT.
+// The state commitment of the root store consists of a Merkle map of all registered persistent substore names to the root hash of their corresponding SMTs.
 type Store struct {
 	stateDB            dbm.DBConnection
 	stateTxn           dbm.DBReadWriter
@@ -88,8 +91,9 @@ type Store struct {
 	tran   *transkv.Store
 	mtx    sync.RWMutex
 
+	// Copied from StoreConfig
 	Pruning        types.PruningOptions
-	InitialVersion uint64
+	InitialVersion uint64 // if
 	*listenerMixin
 	*traceMixin
 	PersistentCache types.RootStorePersistentCache
@@ -443,6 +447,7 @@ func substorePrefix(key string) []byte {
 	return append(contentPrefix, key...)
 }
 
+// GetKVStore implements BasicRootStore.
 func (rs *Store) GetKVStore(skey types.StoreKey) types.KVStore {
 	key := skey.Name()
 	var sub types.KVStore
@@ -452,6 +457,9 @@ func (rs *Store) GetKVStore(skey types.StoreKey) types.KVStore {
 			sub = rs.mem
 		case types.StoreTypeTransient:
 			sub = rs.tran
+		case types.StoreTypePersistent:
+		default:
+			panic(fmt.Errorf("StoreType not supported: %v", typ)) // should never happen
 		}
 		if sub != nil {
 			if cached, has := rs.npSubstoreCache[key]; has {
@@ -464,9 +472,7 @@ func (rs *Store) GetKVStore(skey types.StoreKey) types.KVStore {
 	} else {
 		panic(ErrStoreNotFound(key))
 	}
-	if cached, has := rs.substoreCache[key]; has {
-		return cached
-	}
+	// store is persistent
 	ret, err := rs.getSubstore(key)
 	if err != nil {
 		panic(err)
@@ -475,8 +481,11 @@ func (rs *Store) GetKVStore(skey types.StoreKey) types.KVStore {
 	return ret
 }
 
-// Gets a persistent substore
+// Gets a persistent substore. This reads, but does not update the substore cache
 func (rs *Store) getSubstore(key string) (*substore, error) {
+	if cached, has := rs.substoreCache[key]; has {
+		return cached, nil
+	}
 	pfx := substorePrefix(key)
 	stateRW := prefixdb.NewPrefixReadWriter(rs.stateTxn, pfx)
 	stateCommitmentRW := prefixdb.NewPrefixReadWriter(rs.stateCommitmentTxn, pfx)
@@ -503,7 +512,7 @@ func (rs *Store) getSubstore(key string) (*substore, error) {
 	}, nil
 }
 
-// resets a substore's state after commit (stateTxn discarded)
+// Resets a substore's state after commit (because root stateTxn has been discarded)
 func (s *substore) refresh(rootHash []byte) {
 	pfx := substorePrefix(s.name)
 	stateRW := prefixdb.NewPrefixReadWriter(s.root.stateTxn, pfx)
@@ -517,7 +526,7 @@ func (s *substore) refresh(rootHash []byte) {
 func (s *Store) Commit() types.CommitID {
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
-
+	// Determine the target version
 	versions, err := s.stateDB.Versions()
 	if err != nil {
 		panic(err)
@@ -534,7 +543,7 @@ func (s *Store) Commit() types.CommitID {
 	if err != nil {
 		panic(err)
 	}
-
+	// Prune if necessary
 	previous := cid.Version - 1
 	if s.Pruning.KeepEvery != 1 && s.Pruning.Interval != 0 && cid.Version%int64(s.Pruning.Interval) == 0 {
 		// The range of newly prunable versions
@@ -569,6 +578,7 @@ func (s *Store) getMerkleRoots() (ret map[string][]byte, err error) {
 	return
 }
 
+// Calculates root hashes and commits to DB. Does not verify target version or perform pruning.
 func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
 	storeHashes, err := s.getMerkleRoots()
 	if err != nil {
@@ -637,7 +647,7 @@ func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
 
 	s.stateTxn = stateTxn
 	s.stateCommitmentTxn = stateCommitmentTxn
-	// the state on all living substores must be refreshed
+	// the state of all live substores must be refreshed
 	for key, sub := range s.substoreCache {
 		sub.refresh(storeHashes[key])
 	}
@@ -663,15 +673,18 @@ func (s *Store) LastCommitID() types.CommitID {
 	return types.CommitID{Version: int64(last), Hash: hash}
 }
 
+// SetInitialVersion implements CommitRootStore.
 func (rs *Store) SetInitialVersion(version uint64) error {
 	rs.InitialVersion = uint64(version)
 	return nil
 }
 
+// GetVersion implements CommitRootStore.
 func (rs *Store) GetVersion(version int64) (types.BasicRootStore, error) {
 	return rs.getView(version)
 }
 
+// CacheRootStore implements BasicRootStore.
 func (rs *Store) CacheRootStore() types.CacheRootStore {
 	return &cacheStore{
 		source:        rs,
@@ -793,6 +806,7 @@ func (rs *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	return res
 }
 
+// GetKVStore implements BasicRootStore.
 func (cs *cacheStore) GetKVStore(key types.StoreKey) types.KVStore {
 	ret, has := cs.substores[key.Name()]
 	if has {

@@ -133,9 +133,6 @@ func (vs *viewStore) GetKVStore(skey types.StoreKey) types.KVStore {
 	if _, has := vs.schema[key]; !has {
 		panic(ErrStoreNotFound(key))
 	}
-	if cached, has := vs.substoreCache[key]; has {
-		return cached
-	}
 	ret, err := vs.getSubstore(key)
 	if err != nil {
 		panic(err)
@@ -144,7 +141,11 @@ func (vs *viewStore) GetKVStore(skey types.StoreKey) types.KVStore {
 	return ret
 }
 
+// Reads but does not update substore cache
 func (vs *viewStore) getSubstore(key string) (*viewSubstore, error) {
+	if cached, has := vs.substoreCache[key]; has {
+		return cached, nil
+	}
 	pfx := substorePrefix(key)
 	stateR := prefixdb.NewPrefixReader(vs.stateView, pfx)
 	stateCommitmentR := prefixdb.NewPrefixReader(vs.stateCommitmentView, pfx)

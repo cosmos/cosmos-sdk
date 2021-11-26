@@ -7,7 +7,10 @@ import (
 	v1 "github.com/cosmos/cosmos-sdk/store/types"
 )
 
+// Re-export original store types
+
 type StoreKey = v1.StoreKey
+type StoreType = v1.StoreType
 type CommitID = v1.CommitID
 type StoreUpgrades = v1.StoreUpgrades
 type StoreRename = v1.StoreRename
@@ -35,6 +38,7 @@ var (
 	PruneNothing    = v1.PruneNothing
 )
 
+// BasicRootStore defines a minimal interface for accessing root state.
 type BasicRootStore interface {
 	// Returns a KVStore which has access only to the namespace of the StoreKey.
 	// Panics if the key is not found in the schema.
@@ -43,6 +47,7 @@ type BasicRootStore interface {
 	CacheRootStore() CacheRootStore
 }
 
+// mixin interface for trace and listen methods
 type rootStoreTraceListen interface {
 	TracingEnabled() bool
 	SetTracer(w io.Writer)
@@ -51,6 +56,8 @@ type rootStoreTraceListen interface {
 	AddListeners(key StoreKey, listeners []WriteListener)
 }
 
+// CommitRootStore defines a complete interface for persistent root state, including
+// (read-only) access to past versions, pruning, trace/listen, and state snapshots.
 type CommitRootStore interface {
 	BasicRootStore
 	rootStoreTraceListen
@@ -67,22 +74,18 @@ type CommitRootStore interface {
 	SetInitialVersion(uint64) error
 }
 
+// CacheRootStore defines a branch of the root state which can be written back to the source store.
 type CacheRootStore interface {
 	BasicRootStore
 	rootStoreTraceListen
 	Write()
 }
 
-// provides inter-block (persistent) caching capabilities for a CommitRootStore
-// TODO
+// RootStorePersistentCache provides inter-block (persistent) caching capabilities for a CommitRootStore.
 type RootStorePersistentCache = v1.MultiStorePersistentCache
 
-//----------------------------------------
-// Store types
+// Re-export relevant store type values and utility functions
 
-type StoreType = v1.StoreType
-
-// Valid types
 const StoreTypeMemory = v1.StoreTypeMemory
 const StoreTypeTransient = v1.StoreTypeTransient
 const StoreTypeDB = v1.StoreTypeDB

@@ -71,9 +71,6 @@ func (s *StdTxBuilder) SetTimeoutHeight(height uint64) {
 	s.TimeoutHeight = height
 }
 
-// SetFeePayer does nothing for stdtx
-func (s *StdTxBuilder) SetFeePayer(_ sdk.AccAddress) {}
-
 // SetFeeGranter does nothing for stdtx
 func (s *StdTxBuilder) SetFeeGranter(_ sdk.AccAddress) {}
 

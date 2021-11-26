@@ -778,8 +778,6 @@ func (s *TestSuite) TestCreateGroupAccount() {
 			s.Require().NoError(err)
 
 			groupAccount := groupAccountRes.Info
-			err = groupAccount.SetDecisionPolicy(spec.policy)
-
 			s.Assert().Equal(addr, groupAccount.Address)
 			s.Assert().Equal(myGroupID, groupAccount.GroupId)
 			s.Assert().Equal(spec.req.Admin, groupAccount.Admin)

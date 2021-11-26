@@ -15,7 +15,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
@@ -32,7 +31,6 @@ type TestSuite struct {
 	groupID          uint64
 	groupAccountAddr sdk.AccAddress
 	keeper           keeper.Keeper
-	bankKeeper       bankkeeper.Keeper
 	blockTime        time.Time
 }
 
@@ -377,7 +375,9 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 	for msg, spec := range specs {
 		spec := spec
 		s.Run(msg, func() {
-			_, err := s.keeper.UpdateGroupMetadata(s.ctx, spec.req)
+			sdkCtx, _ := s.sdkCtx.CacheContext()
+			ctx := sdk.WrapSDKContext(sdkCtx)
+			_, err := s.keeper.UpdateGroupMetadata(ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
 				return
@@ -385,7 +385,7 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 			s.Require().NoError(err)
 
 			// then
-			res, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfo{GroupId: groupID})
+			res, err := s.keeper.GroupInfo(ctx, &group.QueryGroupInfo{GroupId: groupID})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.expStored, res.Info)
 		})
@@ -647,7 +647,9 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 	for msg, spec := range specs {
 		spec := spec
 		s.Run(msg, func() {
-			_, err := s.keeper.UpdateGroupMembers(s.ctx, spec.req)
+			sdkCtx, _ := s.sdkCtx.CacheContext()
+			ctx := sdk.WrapSDKContext(sdkCtx)
+			_, err := s.keeper.UpdateGroupMembers(ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
 				return
@@ -655,12 +657,12 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			s.Require().NoError(err)
 
 			// then
-			res, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfo{GroupId: groupID})
+			res, err := s.keeper.GroupInfo(ctx, &group.QueryGroupInfo{GroupId: groupID})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.expGroup, res.Info)
 
 			// and members persisted
-			membersRes, err := s.keeper.GroupMembers(s.ctx, &group.QueryGroupMembers{GroupId: groupID})
+			membersRes, err := s.keeper.GroupMembers(ctx, &group.QueryGroupMembers{GroupId: groupID})
 			s.Require().NoError(err)
 			loadedMembers := membersRes.Members
 			s.Require().Equal(len(spec.expMembers), len(loadedMembers))
@@ -1275,10 +1277,10 @@ func (s *TestSuite) TestCreateProposal() {
 				ExecutorResult: group.ProposalExecutorResultSuccess,
 			},
 			postRun: func(sdkCtx sdk.Context) {
-				fromBalances := s.bankKeeper.GetAllBalances(sdkCtx, accountAddr)
-				s.Require().Equal(sdk.Coins{sdk.NewInt64Coin("test", 9900)}, fromBalances)
-				toBalances := s.bankKeeper.GetAllBalances(sdkCtx, addr2)
-				s.Require().Equal(sdk.Coins{sdk.NewInt64Coin("test", 100)}, toBalances)
+				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, accountAddr)
+				s.Require().Contains(fromBalances, sdk.NewInt64Coin("test", 9900))
+				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr2)
+				s.Require().Contains(toBalances, sdk.NewInt64Coin("test", 100))
 			},
 		},
 		"with try exec, not enough yes votes for proposal to pass": {
@@ -1432,7 +1434,7 @@ func (s *TestSuite) TestVote() {
 		srcCtx            sdk.Context
 		expVoteState      group.Tally
 		req               *group.MsgVote
-		doBefore          func(sdkCtx context.Context)
+		doBefore          func(ctx context.Context)
 		postRun           func(sdkCtx sdk.Context)
 		expProposalStatus group.Proposal_Status
 		expResult         group.Proposal_Result
@@ -1473,10 +1475,10 @@ func (s *TestSuite) TestVote() {
 			expResult:         group.ProposalResultAccepted,
 			expExecutorResult: group.ProposalExecutorResultSuccess,
 			postRun: func(sdkCtx sdk.Context) {
-				fromBalances := s.bankKeeper.GetAllBalances(sdkCtx, groupAccount)
-				s.Require().Equal(sdk.Coins{sdk.NewInt64Coin("test", 9900)}, fromBalances)
-				toBalances := s.bankKeeper.GetAllBalances(sdkCtx, addr2)
-				s.Require().Equal(sdk.Coins{sdk.NewInt64Coin("test", 100)}, toBalances)
+				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, groupAccount)
+				s.Require().Contains(fromBalances, sdk.NewInt64Coin("test", 9900))
+				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr2)
+				s.Require().Contains(toBalances, sdk.NewInt64Coin("test", 100))
 			},
 		},
 		"with try exec, not enough yes votes for proposal to pass": {
@@ -1571,8 +1573,8 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr4.String(),
 				Choice:     group.Choice_CHOICE_YES,
 			},
-			doBefore: func(sdkCtx context.Context) {
-				_, err := s.keeper.Vote(sdkCtx, &group.MsgVote{
+			doBefore: func(ctx context.Context) {
+				_, err := s.keeper.Vote(ctx, &group.MsgVote{
 					ProposalId: myProposalID,
 					Voter:      addr3.String(),
 					Choice:     group.Choice_CHOICE_VETO,
@@ -1669,8 +1671,8 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr4.String(),
 				Choice:     group.Choice_CHOICE_NO,
 			},
-			doBefore: func(sdkCtx context.Context) {
-				_, err := s.keeper.Vote(sdkCtx, &group.MsgVote{
+			doBefore: func(ctx context.Context) {
+				_, err := s.keeper.Vote(ctx, &group.MsgVote{
 					ProposalId: myProposalID,
 					Voter:      addr3.String(),
 					Choice:     group.Choice_CHOICE_YES,
@@ -1686,8 +1688,8 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr4.String(),
 				Choice:     group.Choice_CHOICE_NO,
 			},
-			doBefore: func(sdkCtx context.Context) {
-				_, err := s.keeper.Vote(sdkCtx, &group.MsgVote{
+			doBefore: func(ctx context.Context) {
+				_, err := s.keeper.Vote(ctx, &group.MsgVote{
 					ProposalId: myProposalID,
 					Voter:      addr4.String(),
 					Choice:     group.Choice_CHOICE_YES,
@@ -1703,8 +1705,8 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr4.String(),
 				Choice:     group.Choice_CHOICE_NO,
 			},
-			doBefore: func(sdkCtx context.Context) {
-				_, err = s.keeper.UpdateGroupMetadata(sdkCtx, &group.MsgUpdateGroupMetadata{
+			doBefore: func(ctx context.Context) {
+				_, err = s.keeper.UpdateGroupMetadata(ctx, &group.MsgUpdateGroupMetadata{
 					GroupId:  myGroupID,
 					Admin:    addr1.String(),
 					Metadata: []byte{1, 2, 3},
@@ -1720,7 +1722,7 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr4.String(),
 				Choice:     group.Choice_CHOICE_NO,
 			},
-			doBefore: func(sdkCtx context.Context) {
+			doBefore: func(ctx context.Context) {
 				m, err := group.NewMsgUpdateGroupAccountDecisionPolicyRequest(
 					addr1,
 					groupAccount,
@@ -1731,7 +1733,7 @@ func (s *TestSuite) TestVote() {
 				)
 				s.Require().NoError(err)
 
-				_, err = s.keeper.UpdateGroupAccountDecisionPolicy(sdkCtx, m)
+				_, err = s.keeper.UpdateGroupAccountDecisionPolicy(ctx, m)
 				s.Require().NoError(err)
 			},
 			expErr:  true,
@@ -1746,11 +1748,12 @@ func (s *TestSuite) TestVote() {
 				sdkCtx = spec.srcCtx
 			}
 			sdkCtx, _ = sdkCtx.CacheContext()
+			ctx := sdk.WrapSDKContext(sdkCtx)
 
 			if spec.doBefore != nil {
-				spec.doBefore(s.ctx)
+				spec.doBefore(ctx)
 			}
-			_, err := s.keeper.Vote(s.ctx, spec.req)
+			_, err := s.keeper.Vote(ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
 				return
@@ -1759,7 +1762,7 @@ func (s *TestSuite) TestVote() {
 
 			s.Require().NoError(err)
 			// vote is stored and all data persisted
-			res, err := s.keeper.VoteByProposalVoter(s.ctx, &group.QueryVoteByProposalVoter{
+			res, err := s.keeper.VoteByProposalVoter(ctx, &group.QueryVoteByProposalVoter{
 				ProposalId: spec.req.ProposalId,
 				Voter:      spec.req.Voter,
 			})
@@ -1776,7 +1779,7 @@ func (s *TestSuite) TestVote() {
 			s.Assert().Equal(s.blockTime, submittedAt)
 
 			// query votes by proposal
-			votesByProposalRes, err := s.keeper.VotesByProposal(s.ctx, &group.QueryVotesByProposal{
+			votesByProposalRes, err := s.keeper.VotesByProposal(ctx, &group.QueryVotesByProposal{
 				ProposalId: spec.req.ProposalId,
 			})
 			s.Require().NoError(err)
@@ -1795,7 +1798,7 @@ func (s *TestSuite) TestVote() {
 
 			// query votes by voter
 			voter := spec.req.Voter
-			votesByVoterRes, err := s.keeper.VotesByVoter(s.ctx, &group.QueryVotesByVoter{
+			votesByVoterRes, err := s.keeper.VotesByVoter(ctx, &group.QueryVotesByVoter{
 				Voter: voter,
 			})
 			s.Require().NoError(err)
@@ -1812,7 +1815,7 @@ func (s *TestSuite) TestVote() {
 			s.Assert().Equal(s.blockTime, submittedAt)
 
 			// and proposal is updated
-			proposalRes, err := s.keeper.Proposal(s.ctx, &group.QueryProposal{
+			proposalRes, err := s.keeper.Proposal(ctx, &group.QueryProposal{
 				ProposalId: spec.req.ProposalId,
 			})
 			s.Require().NoError(err)
@@ -1846,64 +1849,67 @@ func (s *TestSuite) TestExecProposal() {
 
 	specs := map[string]struct {
 		srcBlockTime      time.Time
-		setupProposal     func(sdkCtx context.Context) uint64
+		setupProposal     func(ctx context.Context) uint64
 		expErr            bool
 		expProposalStatus group.Proposal_Status
 		expProposalResult group.Proposal_Result
 		expExecutorResult group.Proposal_ExecutorResult
-		expFromBalances   sdk.Coins
-		expToBalances     sdk.Coins
+		expBalance        bool
+		expFromBalances   sdk.Coin
+		expToBalances     sdk.Coin
 	}{
 		"proposal executed when accepted": {
-			setupProposal: func(sdkCtx context.Context) uint64 {
+			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
-				return createProposalAndVote(sdkCtx, s, msgs, proposers, group.Choice_CHOICE_YES)
+				return createProposalAndVote(ctx, s, msgs, proposers, group.Choice_CHOICE_YES)
 			},
 			expProposalStatus: group.ProposalStatusClosed,
 			expProposalResult: group.ProposalResultAccepted,
 			expExecutorResult: group.ProposalExecutorResultSuccess,
-			expFromBalances:   sdk.Coins{sdk.NewInt64Coin("test", 9800)},
-			expToBalances:     sdk.Coins{sdk.NewInt64Coin("test", 200)},
+			expBalance:        true,
+			expFromBalances:   sdk.NewInt64Coin("test", 9800),
+			expToBalances:     sdk.NewInt64Coin("test", 200),
 		},
 
 		"proposal with multiple messages executed when accepted": {
-			setupProposal: func(sdkCtx context.Context) uint64 {
+			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1, msgSend1}
-				return createProposalAndVote(sdkCtx, s, msgs, proposers, group.Choice_CHOICE_YES)
+				return createProposalAndVote(ctx, s, msgs, proposers, group.Choice_CHOICE_YES)
 			},
 			expProposalStatus: group.ProposalStatusClosed,
 			expProposalResult: group.ProposalResultAccepted,
 			expExecutorResult: group.ProposalExecutorResultSuccess,
-			expFromBalances:   sdk.Coins{sdk.NewInt64Coin("test", 9700)},
-			expToBalances:     sdk.Coins{sdk.NewInt64Coin("test", 300)},
+			expBalance:        true,
+			expFromBalances:   sdk.NewInt64Coin("test", 9700),
+			expToBalances:     sdk.NewInt64Coin("test", 300),
 		},
 		"proposal not executed when rejected": {
-			setupProposal: func(sdkCtx context.Context) uint64 {
+			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
-				return createProposalAndVote(sdkCtx, s, msgs, proposers, group.Choice_CHOICE_NO)
+				return createProposalAndVote(ctx, s, msgs, proposers, group.Choice_CHOICE_NO)
 			},
 			expProposalStatus: group.ProposalStatusClosed,
 			expProposalResult: group.ProposalResultRejected,
 			expExecutorResult: group.ProposalExecutorResultNotRun,
 		},
 		"open proposal must not fail": {
-			setupProposal: func(sdkCtx context.Context) uint64 {
-				return createProposal(sdkCtx, s, []sdk.Msg{msgSend1}, proposers)
+			setupProposal: func(ctx context.Context) uint64 {
+				return createProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
 			},
 			expProposalStatus: group.ProposalStatusSubmitted,
 			expProposalResult: group.ProposalResultUnfinalized,
 			expExecutorResult: group.ProposalExecutorResultNotRun,
 		},
 		"existing proposal required": {
-			setupProposal: func(sdkCtx context.Context) uint64 {
+			setupProposal: func(ctx context.Context) uint64 {
 				return 9999
 			},
 			expErr: true,
 		},
 		"Decision policy also applied on timeout": {
-			setupProposal: func(sdkCtx context.Context) uint64 {
+			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
-				return createProposalAndVote(sdkCtx, s, msgs, proposers, group.Choice_CHOICE_NO)
+				return createProposalAndVote(ctx, s, msgs, proposers, group.Choice_CHOICE_NO)
 			},
 			srcBlockTime:      s.blockTime.Add(time.Second),
 			expProposalStatus: group.ProposalStatusClosed,
@@ -1911,9 +1917,9 @@ func (s *TestSuite) TestExecProposal() {
 			expExecutorResult: group.ProposalExecutorResultNotRun,
 		},
 		"Decision policy also applied after timeout": {
-			setupProposal: func(sdkCtx context.Context) uint64 {
+			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
-				return createProposalAndVote(sdkCtx, s, msgs, proposers, group.Choice_CHOICE_NO)
+				return createProposalAndVote(ctx, s, msgs, proposers, group.Choice_CHOICE_NO)
 			},
 			srcBlockTime:      s.blockTime.Add(time.Second).Add(time.Millisecond),
 			expProposalStatus: group.ProposalStatusClosed,
@@ -1921,11 +1927,11 @@ func (s *TestSuite) TestExecProposal() {
 			expExecutorResult: group.ProposalExecutorResultNotRun,
 		},
 		"with group modified before tally": {
-			setupProposal: func(sdkCtx context.Context) uint64 {
-				myProposalID := createProposal(sdkCtx, s, []sdk.Msg{msgSend1}, proposers)
+			setupProposal: func(ctx context.Context) uint64 {
+				myProposalID := createProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
 
 				// then modify group
-				_, err := s.keeper.UpdateGroupMetadata(sdkCtx, &group.MsgUpdateGroupMetadata{
+				_, err := s.keeper.UpdateGroupMetadata(ctx, &group.MsgUpdateGroupMetadata{
 					Admin:    addr1.String(),
 					GroupId:  s.groupID,
 					Metadata: []byte{1, 2, 3},
@@ -1938,9 +1944,9 @@ func (s *TestSuite) TestExecProposal() {
 			expExecutorResult: group.ProposalExecutorResultNotRun,
 		},
 		"with group account modified before tally": {
-			setupProposal: func(sdkCtx context.Context) uint64 {
-				myProposalID := createProposal(sdkCtx, s, []sdk.Msg{msgSend1}, proposers)
-				_, err := s.keeper.UpdateGroupAccountMetadata(sdkCtx, &group.MsgUpdateGroupAccountMetadata{
+			setupProposal: func(ctx context.Context) uint64 {
+				myProposalID := createProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
+				_, err := s.keeper.UpdateGroupAccountMetadata(ctx, &group.MsgUpdateGroupAccountMetadata{
 					Admin:    addr1.String(),
 					Address:  s.groupAccountAddr.String(),
 					Metadata: []byte("group account modified before tally"),
@@ -1953,36 +1959,38 @@ func (s *TestSuite) TestExecProposal() {
 			expExecutorResult: group.ProposalExecutorResultNotRun,
 		},
 		"prevent double execution when successful": {
-			setupProposal: func(sdkCtx context.Context) uint64 {
-				myProposalID := createProposalAndVote(sdkCtx, s, []sdk.Msg{msgSend1}, proposers, group.Choice_CHOICE_YES)
+			setupProposal: func(ctx context.Context) uint64 {
+				myProposalID := createProposalAndVote(ctx, s, []sdk.Msg{msgSend1}, proposers, group.Choice_CHOICE_YES)
 
-				_, err := s.keeper.Exec(sdkCtx, &group.MsgExec{Signer: addr1.String(), ProposalId: myProposalID})
+				_, err := s.keeper.Exec(ctx, &group.MsgExec{Signer: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
 				return myProposalID
 			},
 			expProposalStatus: group.ProposalStatusClosed,
 			expProposalResult: group.ProposalResultAccepted,
 			expExecutorResult: group.ProposalExecutorResultSuccess,
-			expFromBalances:   sdk.Coins{sdk.NewInt64Coin("test", 9800)},
-			expToBalances:     sdk.Coins{sdk.NewInt64Coin("test", 200)},
+			expBalance:        true,
+			expFromBalances:   sdk.NewInt64Coin("test", 9800),
+			expToBalances:     sdk.NewInt64Coin("test", 200),
 		},
 		"rollback all msg updates on failure": {
-			setupProposal: func(sdkCtx context.Context) uint64 {
+			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1, msgSend2}
-				return createProposalAndVote(sdkCtx, s, msgs, proposers, group.Choice_CHOICE_YES)
+				return createProposalAndVote(ctx, s, msgs, proposers, group.Choice_CHOICE_YES)
 			},
 			expProposalStatus: group.ProposalStatusClosed,
 			expProposalResult: group.ProposalResultAccepted,
 			expExecutorResult: group.ProposalExecutorResultFailure,
 		},
 		"executable when failed before": {
-			setupProposal: func(sdkCtx context.Context) uint64 {
+			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend2}
-				myProposalID := createProposalAndVote(sdkCtx, s, msgs, proposers, group.Choice_CHOICE_YES)
+				myProposalID := createProposalAndVote(ctx, s, msgs, proposers, group.Choice_CHOICE_YES)
 
-				_, err := s.keeper.Exec(sdkCtx, &group.MsgExec{Signer: addr1.String(), ProposalId: myProposalID})
+				_, err := s.keeper.Exec(ctx, &group.MsgExec{Signer: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
-				s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, s.groupAccountAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+				sdkCtx := sdk.UnwrapSDKContext(ctx)
+				s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, sdkCtx, s.groupAccountAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				return myProposalID
 			},
@@ -2002,7 +2010,8 @@ func (s *TestSuite) TestExecProposal() {
 				sdkCtx = sdkCtx.WithBlockTime(spec.srcBlockTime)
 			}
 
-			_, err := s.keeper.Exec(s.ctx, &group.MsgExec{Signer: addr1.String(), ProposalId: proposalID})
+			ctx := sdk.WrapSDKContext(sdkCtx)
+			_, err := s.keeper.Exec(ctx, &group.MsgExec{Signer: addr1.String(), ProposalId: proposalID})
 			if spec.expErr {
 				s.Require().Error(err)
 				return
@@ -2010,7 +2019,7 @@ func (s *TestSuite) TestExecProposal() {
 			s.Require().NoError(err)
 
 			// and proposal is updated
-			res, err := s.keeper.Proposal(s.ctx, &group.QueryProposal{ProposalId: proposalID})
+			res, err := s.keeper.Proposal(ctx, &group.QueryProposal{ProposalId: proposalID})
 			s.Require().NoError(err)
 			proposal := res.Proposal
 
@@ -2026,20 +2035,18 @@ func (s *TestSuite) TestExecProposal() {
 			got = group.Proposal_ExecutorResult_name[int32(proposal.ExecutorResult)]
 			s.Assert().Equal(exp, got)
 
-			if spec.expFromBalances != nil {
-				fromBalances := s.bankKeeper.GetAllBalances(sdkCtx, s.groupAccountAddr)
-				s.Require().Equal(spec.expFromBalances, fromBalances)
-			}
-			if spec.expToBalances != nil {
-				toBalances := s.bankKeeper.GetAllBalances(sdkCtx, addr2)
-				s.Require().Equal(spec.expToBalances, toBalances)
+			if spec.expBalance {
+				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, s.groupAccountAddr)
+				s.Require().Contains(fromBalances, spec.expFromBalances)
+				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr2)
+				s.Require().Contains(toBalances, spec.expToBalances)
 			}
 		})
 	}
 }
 
 func createProposal(
-	sdkCtx context.Context, s *TestSuite, msgs []sdk.Msg,
+	ctx context.Context, s *TestSuite, msgs []sdk.Msg,
 	proposers []string) uint64 {
 	proposalReq := &group.MsgCreateProposal{
 		Address:   s.groupAccountAddr.String(),
@@ -2049,18 +2056,18 @@ func createProposal(
 	err := proposalReq.SetMsgs(msgs)
 	s.Require().NoError(err)
 
-	proposalRes, err := s.keeper.CreateProposal(sdkCtx, proposalReq)
+	proposalRes, err := s.keeper.CreateProposal(ctx, proposalReq)
 	s.Require().NoError(err)
 	return proposalRes.ProposalId
 }
 
 func createProposalAndVote(
-	sdkCtx context.Context, s *TestSuite, msgs []sdk.Msg,
+	ctx context.Context, s *TestSuite, msgs []sdk.Msg,
 	proposers []string, choice group.Choice) uint64 {
 	s.Require().Greater(len(proposers), 0)
-	myProposalID := createProposal(sdkCtx, s, msgs, proposers)
+	myProposalID := createProposal(ctx, s, msgs, proposers)
 
-	_, err := s.keeper.Vote(sdkCtx, &group.MsgVote{
+	_, err := s.keeper.Vote(ctx, &group.MsgVote{
 		ProposalId: myProposalID,
 		Voter:      proposers[0],
 		Choice:     choice,

@@ -582,7 +582,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 
 	// Try to execute proposal immediately
 	if req.Exec == group.Exec_EXEC_TRY {
-		_, err = k.Exec(ctx.Context(), &group.MsgExec{
+		_, err = k.Exec(sdk.WrapSDKContext(ctx), &group.MsgExec{
 			ProposalId: id,
 			Signer:     voterAddr,
 		})
@@ -674,8 +674,11 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 		// Cashing context so that we don't update the store in case of failure.
 		ctx, flush := ctx.CacheContext()
 
-		_, err := k.doExecuteMsgs(ctx, *k.router, proposal, sdk.AccAddress(accountInfo.Address))
-		// err := k.execMsgs(sdk.WrapSDKContext(ctx), accountInfo.DerivationKey, proposal)
+		addr, err := sdk.AccAddressFromBech32(accountInfo.Address)
+		if err != nil {
+			return nil, err
+		}
+		_, err = k.doExecuteMsgs(ctx, k.router, proposal, addr)
 		if err != nil {
 			proposal.ExecutorResult = group.ProposalExecutorResultFailure
 			proposalType := reflect.TypeOf(proposal).String()

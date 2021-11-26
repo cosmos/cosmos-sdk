@@ -6,7 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 )
 
@@ -31,10 +30,10 @@ func CustomTxHandlerMiddleware(handler handlerFun) tx.Middleware {
 }
 
 // CheckTx implements tx.Handler.CheckTx method.
-func (txh customTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq abci.RequestCheckTx) (tx.Response, error) {
+func (txh customTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	sdkCtx, err := txh.runHandler(ctx, req.Tx, req.TxBytes, false)
 	if err != nil {
-		return tx.Response{}, err
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
 	return txh.next.CheckTx(sdk.WrapSDKContext(sdkCtx), req, checkReq)

@@ -23,6 +23,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
@@ -148,7 +149,14 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 		legacyRouter.AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			kv := msg.(*msgKeyValue)
 			bapp.CMS().GetCommitKVStore(capKey2).Set(kv.Key, kv.Value)
-			return &sdk.Result{}, nil
+			any, err := codectypes.NewAnyWithValue(msg)
+			if err != nil {
+				return nil, err
+			}
+
+			return &sdk.Result{
+				MsgResponses: []*codectypes.Any{any},
+			}, nil
 		}))
 		txHandler := testTxHandler(
 			middleware.TxHandlerOptions{
@@ -903,6 +911,14 @@ func handlerMsgCounter(t *testing.T, capKey storetypes.StoreKey, deliverKey []by
 		}
 
 		res.Events = ctx.EventManager().Events().ToABCIEvents()
+
+		any, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			return nil, err
+		}
+
+		res.MsgResponses = []*codectypes.Any{any}
+
 		return res, nil
 	}
 }
@@ -1153,7 +1169,13 @@ func TestSimulateTx(t *testing.T) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			ctx.GasMeter().ConsumeGas(gasConsumed, "test")
-			return &sdk.Result{}, nil
+			any, err := codectypes.NewAnyWithValue(msg)
+			if err != nil {
+				return nil, err
+			}
+			return &sdk.Result{
+				MsgResponses: []*codectypes.Any{any},
+			}, nil
 		})
 		legacyRouter.AddRoute(r)
 		txHandler := testTxHandler(
@@ -1651,7 +1673,14 @@ func TestQuery(t *testing.T) {
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			store := ctx.KVStore(capKey1)
 			store.Set(key, value)
-			return &sdk.Result{}, nil
+
+			any, err := codectypes.NewAnyWithValue(msg)
+			if err != nil {
+				return nil, err
+			}
+			return &sdk.Result{
+				MsgResponses: []*codectypes.Any{any},
+			}, nil
 		})
 		legacyRouter.AddRoute(r)
 		txHandler := testTxHandler(

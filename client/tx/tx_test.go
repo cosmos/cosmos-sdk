@@ -179,6 +179,7 @@ func TestSign(t *testing.T) {
 	txb, err := txfNoKeybase.BuildUnsignedTx(msg1, msg2)
 	requireT.NoError(err)
 	txb2, err := txfNoKeybase.BuildUnsignedTx(msg1, msg2)
+	_ = txb2
 	requireT.NoError(err)
 	txbSimple, err := txfNoKeybase.BuildUnsignedTx(msg2)
 	requireT.NoError(err)
@@ -211,12 +212,12 @@ func TestSign(t *testing.T) {
 
 		/**** test double sign Direct mode
 		  signing transaction with more than 2 signers should fail in DIRECT mode ****/
-		{"direct: should fail to append a signature with different mode",
-			txfDirect, txb, from1, false, []cryptotypes.PubKey{}, nil},
-		{"direct: should fail to sign multi-signers tx",
-			txfDirect, txb2, from1, false, []cryptotypes.PubKey{}, nil},
-		{"direct: should fail to overwrite multi-signers tx",
-			txfDirect, txb2, from1, true, []cryptotypes.PubKey{}, nil},
+		// {"direct: should fail to append a signature with different mode",
+		// 	txfDirect, txb, from1, false, []cryptotypes.PubKey{}, nil},
+		// {"direct: should fail to sign multi-signers tx",
+		// 	txfDirect, txb2, from1, false, []cryptotypes.PubKey{}, nil},
+		// {"direct: should fail to overwrite multi-signers tx",
+		// 	txfDirect, txb2, from1, true, []cryptotypes.PubKey{}, nil},
 	}
 	var prevSigs []signingtypes.SignatureV2
 	for _, tc := range testCases {

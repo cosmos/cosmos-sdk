@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -24,9 +23,9 @@ func (q Keeper) GroupInfo(goCtx context.Context, request *group.QueryGroupInfo) 
 	return &group.QueryGroupInfoResponse{Info: &groupInfo}, nil
 }
 
-func (q Keeper) getGroupInfo(goCtx sdk.Context, id uint64) (group.GroupInfo, error) {
+func (q Keeper) getGroupInfo(ctx sdk.Context, id uint64) (group.GroupInfo, error) {
 	var obj group.GroupInfo
-	_, err := q.groupTable.GetOne(goCtx.KVStore(q.key), id, &obj)
+	_, err := q.groupTable.GetOne(ctx.KVStore(q.key), id, &obj)
 	return obj, err
 }
 
@@ -40,9 +39,9 @@ func (q Keeper) GroupAccountInfo(goCtx context.Context, request *group.QueryGrou
 	return &group.QueryGroupAccountInfoResponse{Info: &groupAccountInfo}, nil
 }
 
-func (q Keeper) getGroupAccountInfo(goCtx sdk.Context, accountAddress string) (group.GroupAccountInfo, error) {
+func (q Keeper) getGroupAccountInfo(ctx sdk.Context, accountAddress string) (group.GroupAccountInfo, error) {
 	var obj group.GroupAccountInfo
-	return obj, q.groupAccountTable.GetOne(goCtx.KVStore(q.key), orm.PrimaryKey(&group.GroupAccountInfo{Address: accountAddress}), &obj)
+	return obj, q.groupAccountTable.GetOne(ctx.KVStore(q.key), orm.PrimaryKey(&group.GroupAccountInfo{Address: accountAddress}), &obj)
 }
 
 func (q Keeper) GroupMembers(goCtx context.Context, request *group.QueryGroupMembers) (*group.QueryGroupMembersResponse, error) {
@@ -65,8 +64,8 @@ func (q Keeper) GroupMembers(goCtx context.Context, request *group.QueryGroupMem
 	}, nil
 }
 
-func (q Keeper) getGroupMembers(goCtx sdk.Context, id uint64, pageRequest *query.PageRequest) (orm.Iterator, error) {
-	return q.groupMemberByGroupIndex.GetPaginated(goCtx.KVStore(q.key), id, pageRequest)
+func (q Keeper) getGroupMembers(ctx sdk.Context, id uint64, pageRequest *query.PageRequest) (orm.Iterator, error) {
+	return q.groupMemberByGroupIndex.GetPaginated(ctx.KVStore(q.key), id, pageRequest)
 }
 
 func (q Keeper) GroupsByAdmin(goCtx context.Context, request *group.QueryGroupsByAdmin) (*group.QueryGroupsByAdminResponse, error) {
@@ -92,8 +91,8 @@ func (q Keeper) GroupsByAdmin(goCtx context.Context, request *group.QueryGroupsB
 	}, nil
 }
 
-func (q Keeper) getGroupsByAdmin(goCtx sdk.Context, admin sdk.AccAddress, pageRequest *query.PageRequest) (orm.Iterator, error) {
-	return q.groupByAdminIndex.GetPaginated(goCtx.KVStore(q.key), admin.Bytes(), pageRequest)
+func (q Keeper) getGroupsByAdmin(ctx sdk.Context, admin sdk.AccAddress, pageRequest *query.PageRequest) (orm.Iterator, error) {
+	return q.groupByAdminIndex.GetPaginated(ctx.KVStore(q.key), admin.Bytes(), pageRequest)
 }
 
 func (q Keeper) GroupAccountsByGroup(goCtx context.Context, request *group.QueryGroupAccountsByGroup) (*group.QueryGroupAccountsByGroupResponse, error) {
@@ -257,10 +256,10 @@ func (q Keeper) getVote(ctx sdk.Context, proposalID uint64, voter sdk.AccAddress
 	return v, q.voteTable.GetOne(ctx.KVStore(q.key), orm.PrimaryKey(&group.Vote{ProposalId: proposalID, Voter: voter.String()}), &v)
 }
 
-func (q Keeper) getVotesByProposal(ctx types.Context, proposalID uint64, pageRequest *query.PageRequest) (orm.Iterator, error) {
+func (q Keeper) getVotesByProposal(ctx sdk.Context, proposalID uint64, pageRequest *query.PageRequest) (orm.Iterator, error) {
 	return q.voteByProposalIndex.GetPaginated(ctx.KVStore(q.key), proposalID, pageRequest)
 }
 
-func (q Keeper) getVotesByVoter(ctx types.Context, voter sdk.AccAddress, pageRequest *query.PageRequest) (orm.Iterator, error) {
+func (q Keeper) getVotesByVoter(ctx sdk.Context, voter sdk.AccAddress, pageRequest *query.PageRequest) (orm.Iterator, error) {
 	return q.voteByVoterIndex.GetPaginated(ctx.KVStore(q.key), voter.Bytes(), pageRequest)
 }

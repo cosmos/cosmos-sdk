@@ -9,7 +9,6 @@ import (
 
 	gogotypes "github.com/gogo/protobuf/types"
 
-	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -27,7 +26,7 @@ var _ group.MsgServer = Keeper{}
 const gasCostPerIteration = uint64(20)
 
 func (k Keeper) CreateGroup(goCtx context.Context, req *group.MsgCreateGroup) (*group.MsgCreateGroupResponse, error) {
-	ctx := types.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	metadata := req.Metadata
 	members := group.Members{Members: req.Members}
 	admin := req.Admin
@@ -98,7 +97,7 @@ func (k Keeper) CreateGroup(goCtx context.Context, req *group.MsgCreateGroup) (*
 }
 
 func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGroupMembers) (*group.MsgUpdateGroupMembersResponse, error) {
-	ctx := types.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	action := func(g *group.GroupInfo) error {
 		totalWeight, err := math.NewNonNegativeDecFromString(g.TotalWeight)
 		if err != nil {
@@ -197,7 +196,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 }
 
 func (k Keeper) UpdateGroupAdmin(goCtx context.Context, req *group.MsgUpdateGroupAdmin) (*group.MsgUpdateGroupAdminResponse, error) {
-	ctx := types.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	action := func(g *group.GroupInfo) error {
 		g.Admin = req.NewAdmin
 		g.Version++
@@ -214,7 +213,7 @@ func (k Keeper) UpdateGroupAdmin(goCtx context.Context, req *group.MsgUpdateGrou
 }
 
 func (k Keeper) UpdateGroupMetadata(goCtx context.Context, req *group.MsgUpdateGroupMetadata) (*group.MsgUpdateGroupMetadataResponse, error) {
-	ctx := types.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	action := func(g *group.GroupInfo) error {
 		g.Metadata = req.Metadata
 		g.Version++
@@ -234,7 +233,7 @@ func (k Keeper) UpdateGroupMetadata(goCtx context.Context, req *group.MsgUpdateG
 }
 
 func (k Keeper) CreateGroupAccount(goCtx context.Context, req *group.MsgCreateGroupAccount) (*group.MsgCreateGroupAccountResponse, error) {
-	ctx := types.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	admin, err := sdk.AccAddressFromBech32(req.GetAdmin())
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "request admin")
@@ -317,7 +316,7 @@ func (k Keeper) CreateGroupAccount(goCtx context.Context, req *group.MsgCreateGr
 }
 
 func (k Keeper) UpdateGroupAccountAdmin(goCtx context.Context, req *group.MsgUpdateGroupAccountAdmin) (*group.MsgUpdateGroupAccountAdminResponse, error) {
-	ctx := types.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	action := func(groupAccount *group.GroupAccountInfo) error {
 		groupAccount.Admin = req.NewAdmin
 		groupAccount.Version++
@@ -333,7 +332,7 @@ func (k Keeper) UpdateGroupAccountAdmin(goCtx context.Context, req *group.MsgUpd
 }
 
 func (k Keeper) UpdateGroupAccountDecisionPolicy(goCtx context.Context, req *group.MsgUpdateGroupAccountDecisionPolicy) (*group.MsgUpdateGroupAccountDecisionPolicyResponse, error) {
-	ctx := types.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	policy := req.GetDecisionPolicy()
 
 	action := func(groupAccount *group.GroupAccountInfo) error {
@@ -355,7 +354,7 @@ func (k Keeper) UpdateGroupAccountDecisionPolicy(goCtx context.Context, req *gro
 }
 
 func (k Keeper) UpdateGroupAccountMetadata(goCtx context.Context, req *group.MsgUpdateGroupAccountMetadata) (*group.MsgUpdateGroupAccountMetadataResponse, error) {
-	ctx := types.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	metadata := req.GetMetadata()
 
 	action := func(groupAccount *group.GroupAccountInfo) error {
@@ -377,7 +376,7 @@ func (k Keeper) UpdateGroupAccountMetadata(goCtx context.Context, req *group.Msg
 }
 
 func (k Keeper) CreateProposal(goCtx context.Context, req *group.MsgCreateProposal) (*group.MsgCreateProposalResponse, error) {
-	ctx := types.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	accountAddress, err := sdk.AccAddressFromBech32(req.Address)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "request group account")
@@ -432,10 +431,6 @@ func (k Keeper) CreateProposal(goCtx context.Context, req *group.MsgCreatePropos
 	// The voting window begins as soon as the proposal is submitted.
 	timeout := policy.GetTimeout()
 	window := timeout
-	// endTime, err := gogotypes.TimestampProto(ctx.BlockTime().Add(window))
-	// if err != nil {
-	// 	return nil, sdkerrors.Wrap(err, "end time conversion")
-	// }
 
 	m := &group.Proposal{
 		ProposalId:          k.proposalTable.Sequence().PeekNextVal(ctx.KVStore(k.key)),
@@ -475,7 +470,7 @@ func (k Keeper) CreateProposal(goCtx context.Context, req *group.MsgCreatePropos
 		// Consider proposers as Yes votes
 		for i := range proposers {
 			ctx.GasMeter().ConsumeGas(gasCostPerIteration, "vote on proposal")
-			_, err = k.Vote(ctx.Context(), &group.MsgVote{
+			_, err = k.Vote(sdk.WrapSDKContext(ctx), &group.MsgVote{
 				ProposalId: id,
 				Voter:      proposers[i],
 				Choice:     group.Choice_CHOICE_YES,
@@ -485,7 +480,7 @@ func (k Keeper) CreateProposal(goCtx context.Context, req *group.MsgCreatePropos
 			}
 		}
 		// Then try to execute the proposal
-		_, err = k.Exec(ctx.Context(), &group.MsgExec{
+		_, err = k.Exec(sdk.WrapSDKContext(ctx), &group.MsgExec{
 			ProposalId: id,
 			// We consider the first proposer as the MsgExecRequest signer
 			// but that could be revisited (eg using the group account)
@@ -500,7 +495,7 @@ func (k Keeper) CreateProposal(goCtx context.Context, req *group.MsgCreatePropos
 }
 
 func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteResponse, error) {
-	ctx := types.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	id := req.ProposalId
 	choice := req.Choice
 	metadata := req.Metadata
@@ -532,11 +527,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	var accountInfo group.GroupAccountInfo
 
 	// Ensure that group account hasn't been modified since the proposal submission.
-	address, err := sdk.AccAddressFromBech32(proposal.Address)
-	if err != nil {
-		return nil, sdkerrors.Wrap(err, "group account")
-	}
-	if err := k.groupAccountTable.GetOne(ctx.KVStore(k.key), address.Bytes(), &accountInfo); err != nil {
+	if accountInfo, err = k.getGroupAccountInfo(ctx, proposal.Address); err != nil {
 		return nil, sdkerrors.Wrap(err, "load group account")
 	}
 	if proposal.GroupAccountVersion != accountInfo.Version {
@@ -604,7 +595,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 }
 
 // doTally updates the proposal status and tally if necessary based on the group account's decision policy.
-func doTally(ctx types.Context, p *group.Proposal, electorate group.GroupInfo, accountInfo group.GroupAccountInfo) error {
+func doTally(ctx sdk.Context, p *group.Proposal, electorate group.GroupInfo, accountInfo group.GroupAccountInfo) error {
 	policy := accountInfo.GetDecisionPolicy()
 	pSubmittedAt, err := gogotypes.TimestampProto(p.SubmittedAt)
 	if err != nil {
@@ -629,7 +620,7 @@ func doTally(ctx types.Context, p *group.Proposal, electorate group.GroupInfo, a
 
 // Exec executes the messages from a proposal.
 func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecResponse, error) {
-	ctx := types.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	id := req.ProposalId
 
 	proposal, err := k.getProposal(ctx, id)
@@ -642,11 +633,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	}
 
 	var accountInfo group.GroupAccountInfo
-	address, err := sdk.AccAddressFromBech32(proposal.Address)
-	if err != nil {
-		return nil, sdkerrors.Wrap(err, "group account")
-	}
-	if err := k.groupAccountTable.GetOne(ctx.KVStore(k.key), address.Bytes(), &accountInfo); err != nil {
+	if accountInfo, err = k.getGroupAccountInfo(ctx, proposal.Address); err != nil {
 		return nil, sdkerrors.Wrap(err, "load group account")
 	}
 
@@ -723,14 +710,8 @@ type groupAccountActionFn func(m *group.GroupAccountInfo) error
 
 // doUpdateGroupAccount first makes sure that the group account admin initiated the group account update,
 // before performing the group account update and emitting an event.
-func (k Keeper) doUpdateGroupAccount(ctx types.Context, groupAccount string, admin string, action groupAccountActionFn, note string) error {
-	groupAccountAddress, err := sdk.AccAddressFromBech32(groupAccount)
-	if err != nil {
-		return sdkerrors.Wrap(err, "group admin")
-	}
-
-	var groupAccountInfo group.GroupAccountInfo
-	err = k.groupAccountTable.GetOne(ctx.KVStore(k.key), groupAccountAddress.Bytes(), &groupAccountInfo)
+func (k Keeper) doUpdateGroupAccount(ctx sdk.Context, groupAccount string, admin string, action groupAccountActionFn, note string) error {
+	groupAccountInfo, err := k.getGroupAccountInfo(ctx, groupAccount)
 	if err != nil {
 		return sdkerrors.Wrap(err, "load group account")
 	}
@@ -759,7 +740,7 @@ func (k Keeper) doUpdateGroupAccount(ctx types.Context, groupAccount string, adm
 
 // doUpdateGroup first makes sure that the group admin initiated the group update,
 // before performing the group update and emitting an event.
-func (k Keeper) doUpdateGroup(ctx types.Context, req authNGroupReq, action actionFn, note string) error {
+func (k Keeper) doUpdateGroup(ctx sdk.Context, req authNGroupReq, action actionFn, note string) error {
 	err := k.doAuthenticated(ctx, req, action, note)
 	if err != nil {
 		return err
@@ -775,16 +756,16 @@ func (k Keeper) doUpdateGroup(ctx types.Context, req authNGroupReq, action actio
 
 // doAuthenticated makes sure that the group admin initiated the request,
 // and perform the provided action on the
-func (k Keeper) doAuthenticated(ctx types.Context, req authNGroupReq, action actionFn, note string) error {
+func (k Keeper) doAuthenticated(ctx sdk.Context, req authNGroupReq, action actionFn, note string) error {
 	group, err := k.getGroupInfo(ctx, req.GetGroupID())
 	if err != nil {
 		return err
 	}
-	admin, err := types.AccAddressFromBech32(group.Admin)
+	admin, err := sdk.AccAddressFromBech32(group.Admin)
 	if err != nil {
 		return sdkerrors.Wrap(err, "group admin")
 	}
-	reqAdmin, err := types.AccAddressFromBech32(req.GetAdmin())
+	reqAdmin, err := sdk.AccAddressFromBech32(req.GetAdmin())
 	if err != nil {
 		return sdkerrors.Wrap(err, "request admin")
 	}

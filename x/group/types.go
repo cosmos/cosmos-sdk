@@ -21,9 +21,15 @@ import (
 // TODO: This could be used as params once x/params is upgraded to use protobuf
 const MaxMetadataLength = 255
 
+type ID uint64
+
 type DecisionPolicyResult struct {
 	Allow bool
 	Final bool
+}
+
+func (g ID) Uint64() uint64 {
+	return uint64(g)
 }
 
 // DecisionPolicy is the persistent set of rules to determine the result of election on a proposal.

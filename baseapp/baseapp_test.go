@@ -1360,7 +1360,14 @@ func TestTxGasLimits(t *testing.T) {
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			count := msg.(msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
-			return &sdk.Result{}, nil
+			any, err := codectypes.NewAnyWithValue(msg)
+			if err != nil {
+				return nil, err
+			}
+
+			return &sdk.Result{
+				MsgResponses: []*codectypes.Any{any},
+			}, nil
 		})
 		legacyRouter.AddRoute(r)
 		txHandler := testTxHandler(
@@ -1439,7 +1446,15 @@ func TestMaxBlockGasLimits(t *testing.T) {
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			count := msg.(msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
-			return &sdk.Result{}, nil
+
+			any, err := codectypes.NewAnyWithValue(msg)
+			if err != nil {
+				return nil, err
+			}
+
+			return &sdk.Result{
+				MsgResponses: []*codectypes.Any{any},
+			}, nil
 		})
 		legacyRouter.AddRoute(r)
 		txHandler := testTxHandler(

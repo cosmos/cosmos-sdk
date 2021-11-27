@@ -81,6 +81,7 @@ func NewResponseResultTx(res *coretypes.ResultTx, anyTx *codectypes.Any, timesta
 		GasUsed:   res.TxResult.GasUsed,
 		Tx:        anyTx,
 		Timestamp: timestamp,
+		Events:    res.TxResult.Events,
 	}
 }
 
@@ -121,6 +122,7 @@ func newTxResponseCheckTx(res *coretypes.ResultBroadcastTxCommit) *TxResponse {
 		Info:      res.CheckTx.Info,
 		GasWanted: res.CheckTx.GasWanted,
 		GasUsed:   res.CheckTx.GasUsed,
+		Events:    res.CheckTx.Events,
 	}
 }
 
@@ -147,6 +149,7 @@ func newTxResponseDeliverTx(res *coretypes.ResultBroadcastTxCommit) *TxResponse 
 		Info:      res.DeliverTx.Info,
 		GasWanted: res.DeliverTx.GasWanted,
 		GasUsed:   res.DeliverTx.GasUsed,
+		Events:    res.DeliverTx.Events,
 	}
 }
 
@@ -204,6 +207,10 @@ func (r TxResponse) String() string {
 	}
 	if r.Timestamp != "" {
 		sb.WriteString(fmt.Sprintf("  Timestamp: %s\n", r.Timestamp))
+	}
+	if len(r.Events) > 0 {
+		bz, _ := cdc.MarshalJSON(r.Events)
+		sb.WriteString(fmt.Sprintf("  Events: %s\n", string(bz)))
 	}
 
 	return strings.TrimSpace(sb.String())

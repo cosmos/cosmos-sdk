@@ -33,7 +33,7 @@ type WriteListener interface {
 	// if value is nil then it was deleted
 	// storeKey indicates the source KVStore, to facilitate using the same WriteListener across separate KVStores
 	// delete bool indicates if it was a delete; true: delete, false: set
-    OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error
+	OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error
 }
 ```
 
@@ -125,7 +125,7 @@ func (s *Store) Delete(key []byte) {
 	s.onWrite(true, key, nil)
 }
 
-// onWrite writes a KVStore operation to all of the WriteListeners
+// onWrite writes a KVStore operation to all the WriteListeners
 func (s *Store) onWrite(delete bool, key, value []byte) {
 	for _, l := range s.listeners {
 		if err := l.OnWrite(s.parentStoreKey, key, value, delete); err != nil {
@@ -207,8 +207,11 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 #### Streaming service
 
 We will introduce a new `StreamingService` interface for exposing `WriteListener` data streams to external consumers.
-In addition to streaming state changes as `StoreKVPair`s, the interface satisfies an `ABCIListener` interface that plugs into the BaseApp
-and relays ABCI requests and responses so that the service can group the state changes with the ABCI requests that affected them and the ABCI responses they affected.
+In addition to streaming state changes as `StoreKVPair`s, the interface satisfies an `ABCIListener` interface that plugs
+into the BaseApp and relays ABCI requests and responses so that the service can group the state changes with the ABCI
+requests that affected them and the ABCI responses they affected. The `ABCIListener` interface also exposes a
+`ListenSuccess` method which is (optionally) used by the `BaseApp` to await positive acknowledgement of message
+receipt from the `StreamingService`.
 
 ```go
 // ABCIListener interface used to hook into the ABCI message processing of the BaseApp
@@ -219,6 +222,9 @@ type ABCIListener interface {
 	ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
 	// ListenDeliverTx updates the steaming service with the latest DeliverTx messages
 	ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
+	// ListenSuccess returns a chan that is used to acknowledge successful receipt of messages by the external service
+	// after some configurable delay, `false` is sent to this channel from the service to signify failure of receipt
+	ListenSuccess() <-chan bool
 }
 
 // StreamingService interface for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks
@@ -248,6 +254,15 @@ func (app *BaseApp) SetStreamingService(s StreamingService) {
 	// register the StreamingService within the BaseApp
 	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context
 	app.abciListeners = append(app.abciListeners, s)
+}
+```
+
+We will add a new method to the `BaseApp` that is used to configure a global wait limit for receiving positive acknowledgement
+of message receipt from the integrated `StreamingService`s.
+
+```go
+func (app *BaseApp) SetGlobalWaitLimit(t time.Duration) {
+	app.globalWaitLimit = t
 }
 ```
 
@@ -291,7 +306,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 	if err != nil {
 		resultStr = "failed"
 		res := sdkerrors.ResponseDeliverTx(err, gInfo.GasWanted, gInfo.GasUsed, app.trace)
-		// If we throw and error, be sure to still call the streaming service's hook
+		// If we throw an error, be sure to still call the streaming service's hook
 		for _, listener := range app.abciListeners {
 			listener.ListenDeliverTx(app.deliverState.ctx, req, res)
 		}
@@ -315,12 +330,61 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 }
 ```
 
+We will also modify the `Commit` method to process `success/failure` signals from the integrated `StreamingService`s using
+the `ABCIListener.ListenSuccess()` method. Each `StreamingService` has an internal wait threshold after which it sends
+`false` to the `ListenSuccess()` channel, and the BaseApp also imposes a configurable global wait limit.
+If the `StreamingService` is operating in a "fire-and-forget" mode, `ListenSuccess()` should immediately return `true`
+off the channel despite the success status of the service.
+
+```go
+func (app *BaseApp) Commit() (res abci.ResponseCommit) {
+	
+	...
+
+	var halt bool
+
+	switch {
+	case app.haltHeight > 0 && uint64(header.Height) >= app.haltHeight:
+		halt = true
+
+	case app.haltTime > 0 && header.Time.Unix() >= int64(app.haltTime):
+		halt = true
+	}
+
+	// each listener has an internal wait threshold after which it sends `false` to the ListenSuccess() channel
+	// but the BaseApp also imposes a global wait limit
+	maxWait := time.NewTicker(app.globalWaitLimit)
+	for _, lis := range app.abciListeners {
+		select {
+		case success := <- lis.ListenSuccess():
+			if success == false {
+				halt = true
+				break
+			}
+		case <- maxWait.C:
+			halt = true
+			break
+		}
+	}
+
+	if halt {
+		// Halt the binary and allow Tendermint to receive the ResponseCommit
+		// response with the commit ID hash. This will allow the node to successfully
+		// restart and process blocks assuming the halt configuration has been
+		// reset or moved to a more distant value.
+		app.halt()
+	}
+
+	...
+
+}
+```
+
 #### Plugin system
 
-We will load and run different `StreamingService` implementations as plugins.
-We will introduce a plugin loading/preloading system that is used to load, initialize, inject, run, and stop Cosmos-SDK
-plugins. We will define a base `Plugin` interface for use with this plugin loading/preloading system.
-This base interface is extended to create plugins of different kinds.
+We propose a plugin architecture to load and run `StreamingService` implementations. We will introduce a plugin
+loading/preloading system that is used to load, initialize, inject, run, and stop Cosmos-SDK plugins. Each plugin
+must implement the following interface:
 
 ```go
 // Plugin is the base interface for all kinds of cosmos-sdk plugins
@@ -348,11 +412,11 @@ The `Init` method initializes a plugin with the provided `AppOptions`.
 The io.Closer is used to shut down the plugin service.
 
 For the purposes of this ADR we introduce a single kind of plugin- a state streaming plugin.
-We will define a `StateStreaming` plugin interface which extends the above `Plugin` interface to support a state streaming service.
+We will define a `StateStreamingPlugin` interface which extends the above `Plugin` interface to support a state streaming service.
 
 ```go
-// StateStreaming interface for plugins that load a baseapp.StreamingService onto a baseapp.BaseApp
-type StateStreaming interface {
+// StateStreamingPlugin interface for plugins that load a baseapp.StreamingService onto a baseapp.BaseApp
+type StateStreamingPlugin interface {
 	// Register configures and registers the plugin streaming service with the BaseApp
 	Register(bApp *baseapp.BaseApp, marshaller codec.BinaryCodec, keys map[string]*types.KVStoreKey) error
 
@@ -381,12 +445,12 @@ func NewSimApp(
 	// this loads the preloaded and any plugins found in `plugins.dir`
 	pluginLoader, err := loader.NewPluginLoader(appOpts, logger)
 	if err != nil {
-        tmos.Exit(err.Error())
+        // handle error
     }
 
 	// initialize the loaded plugins
 	if err := pluginLoader.Initialize(); err != nil {
-		tmos.Exit(err.Error())
+		// hanlde error
     }
 
 	keys := sdk.NewKVStoreKeys(
@@ -398,13 +462,13 @@ func NewSimApp(
 
 	// register the plugin(s) with the BaseApp
 	if err := pluginLoader.Inject(bApp, appCodec, keys); err != nil {
-		tmos.Exit(err.Error())
+		// handle error
     }
 
 	// start the plugin services, optionally use wg to synchronize shutdown using io.Closer
 	wg := new(sync.WaitGroup)
 	if err := pluginLoader.Start(wg); err != nil {
-		tmos.Exit(err.Error())
+		// handler error
     }
 
 	...
@@ -422,7 +486,7 @@ The plugin system will be configured within an app's app.toml file.
 [plugins]
     on = false # turn the plugin system, as a whole, on or off
     disabled = ["list", "of", "plugin", "names", "to", "disable"]
-    dir = "the directory to load non-preloaded plugins from; defaults to "
+    dir = "the directory to load non-preloaded plugins from; defaults to cosmos-sdk/plugin/plugins"
 ```
 
 There will be three parameters for configuring the plugin system: `plugins.on`, `plugins.disabled` and `plugins.dir`.
@@ -433,6 +497,10 @@ Configuration of a given plugin is ultimately specific to the plugin, but we wil
 
 Plugin TOML configuration should be split into separate sub-tables for each kind of plugin (e.g. `plugins.streaming`).
 Within these sub-tables, the parameters for a specific plugin of that kind are included in another sub-table (e.g. `plugins.streaming.file`).
+It is generally expected, but not required, that a streaming service plugin can be configured with a set of store keys
+(e.g. `plugins.streaming.file.keys`) for the stores it listens to and a mode (e.g. `plugins.streaming.file.mode`)
+that signifies whether the service operates in a fire-and-forget capacity (`faf`) or the BaseApp should require positive
+acknowledgement of message receipt by the service (`ack`).
 
 e.g.
 
@@ -446,6 +514,7 @@ e.g.
             keys = ["list", "of", "store", "keys", "we", "want", "to", "expose", "for", "this", "streaming", "service"]
             writeDir = "path to the write directory"
             prefix = "optional prefix to prepend to the generated file names"
+            mode = "faf" # faf == fire-and-forget; ack == require positive acknowledge of receipt
         [plugins.streaming.kafka]
             ...
     [plugins.modules]

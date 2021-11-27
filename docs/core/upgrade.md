@@ -15,26 +15,12 @@ The Cosmos SDK uses two methods to perform upgrades.
 - Exporting the entire application state to a JSON file using the `export` CLI command, making changes, and then starting a new binary with the changed JSON file as the genesis file. See [Chain Upgrade Guide to v0.42](/v0.42/migrations/chain-upgrade-guide-040.html).
 
 - Version v0.44 and later can perform upgrades in place to significantly decrease the upgrade time for chains with a larger state. Use the [Module Upgrade Guide](../building-modules/upgrade.md) to set up your application modules to take advantage of in-place upgrades.
-  
+
 This document provides steps to use the In-Place Store Migrations upgrade method.
 
 ## Tracking Module Versions
 
 Each module gets assigned a consensus version by the module developer. The consensus version serves as the breaking change version of the module. The SDK keeps track of all module consensus versions in the x/upgrade `VersionMap` store. During an upgrade, the difference between the old `VersionMap` stored in state and the new `VersionMap` is calculated by the Cosmos SDK. For each identified difference, the module-specific migrations are run and the respective consensus version of each upgraded module is incremented.
-
-## Genesis State
-
-When starting a new chain, the consensus version of each module must be saved to state during the application's genesis. To save the consensus version, add the following line to the `InitChainer` method in `app.go`:
-
-```diff
-func (app *MyApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-  ...
-+ app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
-  ...
-}
-```
-
-This information is used by the Cosmos SDK to detect when modules with newer versions are introduced to the app.
 
 ### Consensus Version
 
@@ -64,19 +50,39 @@ Migrations are run inside of an `UpgradeHandler` using  `app.mm.RunMigrations(ct
 
 ```go
 cfg := module.NewConfigurator(...)
-app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 
     // ...
     // do upgrade logic
     // ...
 
-    // RunMigrations returns the VersionMap
-    // with the updated module ConsensusVersions
-    return app.mm.RunMigrations(ctx, vm)
+    // returns a VersionMap with the updated module ConsensusVersions
+    return app.mm.RunMigrations(ctx, fromVM)
 })
 ```
 
 To learn more about configuring migration scripts for your modules, see the [Module Upgrade Guide](../building-modules/upgrade.md).
+
+### Order Of Migrations
+
+All migrations are run in alphabetical order, except `x/auth` which is run the last, because of state dependencies between modules (you can read more in [issue #10606](https://github.com/cosmos/cosmos-sdk/issues/10606)). If you want to change the order of migration then you can run migrations in multiple stages. __Please beware that this is hacky, and make sure you understand what you are doing before running such migrations in production_. For example, you want to run `foo` last:
+
+```go
+app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap)  (module.VersionMap, error) {
+
+    fooFrom := fromVM["foo"]
+    fromVM["foo"] = foo.AppModule{}.ConsensusVersion()
+    toVM, err := app.mm.RunMigrations(ctx, cfg, fromVM)
+    if err != nil {
+        return toVM, err
+    }
+
+    stage2 := module.VersionMap{"foo": fooFrom}
+    _, err = app.mm.RunMigrations(ctx, cfg, stage2)
+
+    return toVM, err
+})
+```
 
 ## Adding New Modules During Upgrades
 
@@ -95,7 +101,7 @@ if err != nil {
 if upgradeInfo.Name == "my-plan" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 	storeUpgrades := storetypes.StoreUpgrades{
 		// add store upgrades for new modules
-		// Example: 
+		// Example:
 		//    Added: []string{"foo", "bar"},
 		// ...
 	}
@@ -105,7 +111,35 @@ if upgradeInfo.Name == "my-plan" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.
 }
 ```
 
-## Overwriting Genesis Functions
+## Genesis State
+
+When starting a new chain, the consensus version of each module MUST be saved to state during the application's genesis. To save the consensus version, add the following line to the `InitChainer` method in `app.go`:
+
+```diff
+func (app *MyApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+  ...
++ app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
+  ...
+}
+```
+
+This information is used by the Cosmos SDK to detect when modules with newer versions are introduced to the app.
+
+For a new module `foo`, `InitGenesis` is called by the `RunMigration` only when there is a new module registered in the module manager and there is no `foo` entry in the `fromVM` registered in the state. Therefore, if you want to skip `InitGenesis` when a new module is added to the app, then you should set its module version in `fromVM` to the module package consensus version:
+
+```go
+app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+    // ...
+
+    // Set foo's version to the latest ConsensusVersion in the VersionMap.
+    // This will skip running InitGenesis on Foo
+    fromVM[foo.ModuleName] = foo.AppModule{}.ConsensusVersion()
+
+    return app.mm.RunMigrations(ctx, fromVM)
+})
+```
+
+### Overwriting Genesis Functions
 
 The Cosmos SDK offers modules that the application developer can import in their app. These modules often have an `InitGenesis` function already defined.
 
@@ -118,32 +152,17 @@ You MUST manually set the consensus version in the version map passed to the `Up
 ```go
 import foo "github.com/my/module/foo"
 
-app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap)  (module.VersionMap, error) {
-  
+app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap)  (module.VersionMap, error) {
+
     // Register the consensus version in the version map
     // to avoid the SDK from triggering the default
     // InitGenesis function.
-    vm["foo"] = foo.AppModule{}.ConsensusVersion()
+    fromVM["foo"] = foo.AppModule{}.ConsensusVersion()
 
     // Run custom InitGenesis for foo
     app.mm["foo"].InitGenesis(ctx, app.appCodec, myCustomGenesisState)
 
-    return app.mm.RunMigrations(ctx, cfg, vm)
-})
-```
-
-If you do not have a custom genesis function and want to skip the module's default genesis function, you can simply register the module with the version map in the `UpgradeHandler` as shown in the example:
-
-```go
-import foo "github.com/my/module/foo"
-
-app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap)  (module.VersionMap, error) {
-  
-    // Set foo's version to the latest ConsensusVersion in the VersionMap.
-    // This will skip running InitGenesis on Foo
-    vm["foo"] = foo.AppModule{}.ConsensusVersion()
-
-    return app.mm.RunMigrations(ctx, cfg, vm)
+    return app.mm.RunMigrations(ctx, cfg, fromVM)
 })
 ```
 

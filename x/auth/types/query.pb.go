@@ -33,6 +33,8 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // QueryAccountsRequest is the request type for the Query/Accounts RPC method.
+//
+// Since: cosmos-sdk 0.43
 type QueryAccountsRequest struct {
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -79,6 +81,8 @@ func (m *QueryAccountsRequest) GetPagination() *query.PageRequest {
 }
 
 // QueryAccountsResponse is the response type for the Query/Accounts RPC method.
+//
+// Since: cosmos-sdk 0.43
 type QueryAccountsResponse struct {
 	// accounts are the existing accounts
 	Accounts []*types.Any `protobuf:"bytes,1,rep,name=accounts,proto3" json:"accounts,omitempty"`
@@ -363,6 +367,8 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
 	// Accounts returns all the existing accounts
+	//
+	// Since: cosmos-sdk 0.43
 	Accounts(ctx context.Context, in *QueryAccountsRequest, opts ...grpc.CallOption) (*QueryAccountsResponse, error)
 	// Account returns account details based on address.
 	Account(ctx context.Context, in *QueryAccountRequest, opts ...grpc.CallOption) (*QueryAccountResponse, error)
@@ -408,6 +414,8 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Accounts returns all the existing accounts
+	//
+	// Since: cosmos-sdk 0.43
 	Accounts(context.Context, *QueryAccountsRequest) (*QueryAccountsResponse, error)
 	// Account returns account details based on address.
 	Account(context.Context, *QueryAccountRequest) (*QueryAccountResponse, error)

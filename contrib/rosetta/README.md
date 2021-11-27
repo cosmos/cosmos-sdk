@@ -17,7 +17,11 @@ Contains the required files to set up rosetta cli and make it work against its w
 
 ## node
 
-Contains the files for a deterministic network, with fixed keys and some actions on there, to test parsing of msgs and historical balances.
+Contains the files for a deterministic network, with fixed keys and some actions on there, to test parsing of msgs and historical balances.  This image is used to run a simapp node and to run the rosetta server.
+
+## Rosetta-cli
+
+The docker image for ./rosetta-cli/Dockerfile is on [docker hub](https://hub.docker.com/r/tendermintdev/rosetta-cli).  Whenever rosetta-cli releases a new version, rosetta-cli/Dockerfile should be updated to reflect the new version and pushed to docker hub.
 
 ## Notes
 

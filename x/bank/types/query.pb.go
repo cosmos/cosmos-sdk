@@ -220,6 +220,8 @@ func (m *QueryAllBalancesResponse) GetPagination() *query.PageResponse {
 // method.
 type QueryTotalSupplyRequest struct {
 	// pagination defines an optional pagination for the request.
+	//
+	// Since: cosmos-sdk 0.43
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -262,6 +264,8 @@ type QueryTotalSupplyResponse struct {
 	// supply is the supply of the coins
 	Supply github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=supply,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"supply"`
 	// pagination defines the pagination in the response.
+	//
+	// Since: cosmos-sdk 0.43
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 

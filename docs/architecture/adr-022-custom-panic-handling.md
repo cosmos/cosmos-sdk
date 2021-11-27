@@ -187,10 +187,6 @@ func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {
 
 This method would prepend handlers to an existing chain.
 
-## Status
-
-Proposed
-
 ## Consequences
 
 ### Positive

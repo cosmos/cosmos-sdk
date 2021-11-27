@@ -122,6 +122,8 @@ func (ProposalStatus) EnumDescriptor() ([]byte, []int) {
 }
 
 // WeightedVoteOption defines a unit of vote for vote split.
+//
+// Since: cosmos-sdk 0.43
 type WeightedVoteOption struct {
 	Option VoteOption                             `protobuf:"varint,1,opt,name=option,proto3,enum=cosmos.gov.v1beta1.VoteOption" json:"option,omitempty"`
 	Weight github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=weight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"weight" yaml:"weight"`
@@ -331,7 +333,8 @@ type Vote struct {
 	// Deprecated: Prefer to use `options` instead. This field is set in queries
 	// if and only if `len(options) == 1` and that option has weight 1. In all
 	// other cases, this field will default to VOTE_OPTION_UNSPECIFIED.
-	Option  VoteOption           `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.gov.v1beta1.VoteOption" json:"option,omitempty"` // Deprecated: Do not use.
+	Option VoteOption `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.gov.v1beta1.VoteOption" json:"option,omitempty"` // Deprecated: Do not use.
+	// Since: cosmos-sdk 0.43
 	Options []WeightedVoteOption `protobuf:"bytes,4,rep,name=options,proto3" json:"options"`
 }
 

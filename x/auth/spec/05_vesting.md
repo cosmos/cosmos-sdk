@@ -614,3 +614,5 @@ linearly over time.
 all coins at a given time.
 - PeriodicVestingAccount: A vesting account implementation that vests coins
 according to a custom vesting schedule.
+- PermanentLockedAccount: It does not ever release coins, locking them indefinitely.
+Coins in this account can still be used for delegating and for governance votes even while locked.

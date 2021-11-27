@@ -1,13 +1,21 @@
 # Updating the docs
 
-If you want to open a PR on the Cosmos SDK to update the documentation, please follow the guidelines in the [`CONTRIBUTING.md`](https://github.com/cosmos/cosmos-sdk/tree/master/CONTRIBUTING.md#updating-documentation)
+If you want to open a PR in Cosmos SDK to update the documentation, please follow the guidelines in [`CONTRIBUTING.md`](https://github.com/cosmos/cosmos-sdk/tree/master/CONTRIBUTING.md#updating-documentation).
 
-## Translating
+## Internationalization
 
-- Docs translations live in a `docs/country-code/` folder, where `country-code` stands for the country code of the language used (`cn` for Chinese, `kr` for Korea, `fr` for France, ...).
-- Always translate content living on `master`.
-- Only content under `/docs/intro/`, `/docs/basics/`, `/docs/core/`, `/docs/building-modules/` and `docs/run-node/` needs to be translated, as well as `docs/README.md`. It is also nice (but not mandatory) to translate `/docs/spec/`.
-- Specify the release/tag of the translation in the README of your translation folder. Update the release/tag each time you update the translation.
+- Translations for documentation live in a `docs/<locale>/` folder, where `<locale>` is the language code for a specific language. For example, `zh` for Chinese, `ko` for Korean, `ru` for Russian, etc.
+- Each `docs/<locale>/` folder must follow the same folder structure within `docs/`, but only content in the following folders needs to be translated and included in the respective `docs/<locale>/` folder:
+    - `docs/basics/`
+    - `docs/building-modules/`
+    - `docs/core/`
+    - `docs/ibc/`
+    - `docs/intro/`
+    - `docs/migrations/`
+    - `docs/run-node/`
+- Each `docs/<locale>/` folder must also have a `README.md` that includes a translated version of both the layout and content within the root-level [`README.md`](https://github.com/cosmos/cosmos-sdk/tree/master/docs/README.md). The layout defined in the `README.md` is used to build the homepage.
+- Always translate content living on `master` unless you are revising documentation for a specific release. Translated documentation like the root-level documentation is semantically versioned.
+- For additional configuration options, please see [VuePress Internationalization](https://vuepress.vuejs.org/guide/i18n.html).
 
 ## Docs Build Workflow
 

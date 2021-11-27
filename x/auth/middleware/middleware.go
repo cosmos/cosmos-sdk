@@ -89,10 +89,12 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		ValidateMemoMiddleware(options.AccountKeeper),
 		ConsumeTxSizeGasMiddleware(options.AccountKeeper),
 		DeductFeeMiddleware(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),
+		TxPriorityHandler,
 		SetPubKeyMiddleware(options.AccountKeeper),
 		ValidateSigCountMiddleware(options.AccountKeeper),
 		SigGasConsumeMiddleware(options.AccountKeeper, sigGasConsumer),
 		SigVerificationMiddleware(options.AccountKeeper, options.SignModeHandler),
+		NewTipMiddleware(options.BankKeeper),
 		IncrementSequenceMiddleware(options.AccountKeeper),
 	), nil
 }

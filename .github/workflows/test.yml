@@ -18,7 +18,7 @@ jobs:
       - name: install tparse
         run: |
           export GO111MODULE="on" && go get github.com/mfridman/tparse@v0.8.3
-      - uses: actions/cache@v2.1.6
+      - uses: actions/cache@v2.1.7
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-tparse-binary
@@ -48,6 +48,7 @@ jobs:
 
   test-submodules:
     runs-on: ubuntu-latest
+    container: tendermintdev/docker-tm-db-testing
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2.1.4
@@ -227,7 +228,7 @@ jobs:
 
   liveness-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2.1.4
@@ -242,7 +243,7 @@ jobs:
             go.sum
       - name: start localnet
         run: |
-          make clean build-simd-linux localnet-start
+          make clean localnet-start
         if: env.GIT_DIFF
       - name: test liveness
         run: |

@@ -8,11 +8,9 @@ import (
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
-
-	"sigs.k8s.io/yaml"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/rpc/coretypes"
+	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

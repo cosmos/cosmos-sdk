@@ -1,6 +1,8 @@
 package types
 
 import (
+	proto "github.com/gogo/protobuf/proto"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
@@ -8,6 +10,8 @@ import (
 type (
 	// Msg defines the interface a transaction message must fulfill.
 	Msg interface {
+		proto.Message
+
 		// ValidateBasic does a simple validation check that
 		// doesn't require access to any other information.
 		ValidateBasic() error

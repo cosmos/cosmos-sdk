@@ -96,12 +96,8 @@ func (any *Any) pack(v interface{}) error {
 		return sdkerrors.Wrap(sdkerrors.ErrPackAny, "Expecting non nil value to create a new Any")
 	}
 
-	msgName, err := MessageName(v)
-	if err != nil {
-		return err
-	}
-
 	var bz []byte
+	var err error
 	switch v := v.(type) {
 	case gogoproto.Message:
 		bz, err = gogoproto.Marshal(v)
@@ -113,6 +109,11 @@ func (any *Any) pack(v interface{}) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	msgName, err := MessageName(v)
+	if err != nil {
+		return err
 	}
 
 	any.TypeUrl = "/" + msgName

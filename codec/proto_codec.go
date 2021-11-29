@@ -41,8 +41,8 @@ func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {
 // implements proto.Message. For interface please use the codec.MarshalInterface
 func (pc *ProtoCodec) Marshal(o interface{}) ([]byte, error) {
 	switch o := o.(type) {
-	case gogoproto.Message:
-		return gogoproto.Marshal(o)
+	case ProtoMarshaler:
+		return o.Marshal()
 	case protov2.Message:
 		return protov2.MarshalOptions{Deterministic: true}.Marshal(o)
 	default:
@@ -89,8 +89,8 @@ func (pc *ProtoCodec) MustMarshalLengthPrefixed(o interface{}) []byte {
 // implements proto.Message. For interface please use the codec.UnmarshalInterface
 func (pc *ProtoCodec) Unmarshal(bz []byte, ptr interface{}) error {
 	switch ptr := ptr.(type) {
-	case gogoproto.Message:
-		err := gogoproto.Unmarshal(bz, ptr)
+	case ProtoMarshaler:
+		err := ptr.Unmarshal(bz)
 		if err != nil {
 			return err
 		}

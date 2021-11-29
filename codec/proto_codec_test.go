@@ -2,7 +2,6 @@ package codec_test
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
@@ -37,48 +36,8 @@ func TestProtoCodec(t *testing.T) {
 	testMarshaling(t, cdc)
 }
 
-type lyingProtoMarshaler struct {
-	codec.ProtoMarshaler
-	falseSize int
-}
-
-func (lpm *lyingProtoMarshaler) Size() int {
-	return lpm.falseSize
-}
-
 func TestProtoCodecUnmarshalLengthPrefixedChecks(t *testing.T) {
 	cdc := codec.NewProtoCodec(createTestInterfaceRegistry())
-
-	truth := &testdata.Cat{Lives: 9, Moniker: "glowing"}
-	realSize := len(cdc.MustMarshal(truth))
-
-	falseSizes := []int{
-		100,
-		5,
-	}
-
-	for _, falseSize := range falseSizes {
-		falseSize := falseSize
-
-		t.Run(fmt.Sprintf("ByMarshaling falseSize=%d", falseSize), func(t *testing.T) {
-			lpm := &lyingProtoMarshaler{
-				ProtoMarshaler: &testdata.Cat{Lives: 9, Moniker: "glowing"},
-				falseSize:      falseSize,
-			}
-			var serialized []byte
-			require.NotPanics(t, func() { serialized = cdc.MustMarshalLengthPrefixed(lpm) })
-
-			recv := new(testdata.Cat)
-			gotErr := cdc.UnmarshalLengthPrefixed(serialized, recv)
-			var wantErr error
-			if falseSize > realSize {
-				wantErr = fmt.Errorf("not enough bytes to read; want: %d, got: %d", falseSize, realSize)
-			} else {
-				wantErr = fmt.Errorf("too many bytes to read; want: %d, got: %d", falseSize, realSize)
-			}
-			require.Equal(t, gotErr, wantErr)
-		})
-	}
 
 	t.Run("Crafted bad uvarint size", func(t *testing.T) {
 		crafted := []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f}

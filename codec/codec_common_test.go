@@ -3,7 +3,6 @@ package codec_test
 import (
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -12,7 +11,7 @@ import (
 )
 
 type interfaceMarshaler struct {
-	marshal   func(i proto.Message) ([]byte, error)
+	marshal   func(i interface{}) ([]byte, error)
 	unmarshal func(bz []byte, ptr interface{}) error
 }
 
@@ -50,10 +49,10 @@ func testInterfaceMarshaling(require *require.Assertions, cdc interfaceMarshaler
 }
 
 type mustMarshaler struct {
-	marshal       func(i codec.ProtoMarshaler) ([]byte, error)
-	mustMarshal   func(i codec.ProtoMarshaler) []byte
-	unmarshal     func(bz []byte, ptr codec.ProtoMarshaler) error
-	mustUnmarshal func(bz []byte, ptr codec.ProtoMarshaler)
+	marshal       func(i interface{}) ([]byte, error)
+	mustMarshal   func(i interface{}) []byte
+	unmarshal     func(bz []byte, ptr interface{}) error
+	mustUnmarshal func(bz []byte, ptr interface{})
 }
 
 type testCase struct {
@@ -120,10 +119,10 @@ func testMarshaling(t *testing.T, cdc codec.Codec) {
 		m1 := mustMarshaler{cdc.Marshal, cdc.MustMarshal, cdc.Unmarshal, cdc.MustUnmarshal}
 		m2 := mustMarshaler{cdc.MarshalLengthPrefixed, cdc.MustMarshalLengthPrefixed, cdc.UnmarshalLengthPrefixed, cdc.MustUnmarshalLengthPrefixed}
 		m3 := mustMarshaler{
-			func(i codec.ProtoMarshaler) ([]byte, error) { return cdc.MarshalJSON(i) },
-			func(i codec.ProtoMarshaler) []byte { return cdc.MustMarshalJSON(i) },
-			func(bz []byte, ptr codec.ProtoMarshaler) error { return cdc.UnmarshalJSON(bz, ptr) },
-			func(bz []byte, ptr codec.ProtoMarshaler) { cdc.MustUnmarshalJSON(bz, ptr) }}
+			func(i interface{}) ([]byte, error) { return cdc.MarshalJSON(i) },
+			func(i interface{}) []byte { return cdc.MustMarshalJSON(i) },
+			func(bz []byte, ptr interface{}) error { return cdc.UnmarshalJSON(bz, ptr) },
+			func(bz []byte, ptr interface{}) { cdc.MustUnmarshalJSON(bz, ptr) }}
 
 		t.Run(tc.name+"_BinaryBare",
 			func(t *testing.T) { testMarshalingTestCase(require.New(t), tc, m1) })

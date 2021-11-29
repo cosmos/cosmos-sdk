@@ -6,8 +6,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
-
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -23,7 +21,7 @@ type doNothingUnmarshalJSON struct {
 	codec.JSONCodec
 }
 
-func (dnj *doNothingUnmarshalJSON) UnmarshalJSON(_ []byte, _ proto.Message) error {
+func (dnj *doNothingUnmarshalJSON) UnmarshalJSON(_ []byte, _ interface{}) error {
 	return nil
 }
 

@@ -1,0 +1,13 @@
+[plugins]
+    on = false # turn the plugin system, as a whole, on or off
+    disabled = ["list", "of", "plugin", "names", "to", "disable"]
+    dir = "the directory to load non-preloaded plugins from; defaults to cosmos-sdk/plugin/plugins"
+    [plugins.streaming] # a mapping of plugin-specific streaming service parameters, mapped to their pluginFileName
+    # maximum amount of time the BaseApp will await positive acknowledgement of message receipt from all streaming services
+    # in milliseconds
+    global_ack_wait_limit = 500
+        [plugins.streaming.file] # the specific parameters for the file streaming service plugin
+            keys = ["list", "of", "store", "keys", "we", "want", "to", "expose", "for", "this", "streaming", "service"]
+            write_dir = "path to the write directory"
+            prefix = "optional prefix to prepend to the generated file names"
+            ack = "false" # false == fire-and-forget; true == sends a message receipt success/fail signal

@@ -297,7 +297,6 @@ func (k Keeper) CreateGroupAccount(goCtx context.Context, req *group.MsgCreateGr
 		metadata,
 		1,
 		policy,
-		accountDerivationKey,
 	)
 	if err != nil {
 		return nil, err

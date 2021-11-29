@@ -128,14 +128,13 @@ var _ orm.Validateable = GroupAccountInfo{}
 
 // NewGroupAccountInfo creates a new GroupAccountInfo instance
 func NewGroupAccountInfo(address sdk.AccAddress, group uint64, admin sdk.AccAddress, metadata []byte,
-	version uint64, decisionPolicy DecisionPolicy, derivationKey []byte) (GroupAccountInfo, error) {
+	version uint64, decisionPolicy DecisionPolicy) (GroupAccountInfo, error) {
 	p := GroupAccountInfo{
-		Address:       address.String(),
-		GroupId:       group,
-		Admin:         admin.String(),
-		Metadata:      metadata,
-		Version:       version,
-		DerivationKey: derivationKey,
+		Address:  address.String(),
+		GroupId:  group,
+		Admin:    admin.String(),
+		Metadata: metadata,
+		Version:  version,
 	}
 
 	err := p.SetDecisionPolicy(decisionPolicy)
@@ -207,9 +206,6 @@ func (g GroupAccountInfo) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "policy")
 	}
 
-	if g.DerivationKey == nil {
-		return sdkerrors.Wrap(errors.ErrEmpty, "derivationKey")
-	}
 	return nil
 }
 

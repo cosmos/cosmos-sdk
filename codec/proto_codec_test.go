@@ -90,3 +90,7 @@ func BenchmarkProtoCodecMarshalLengthPrefixed(b *testing.B) {
 		b.SetBytes(int64(len(blob)))
 	}
 }
+
+func TestGogoPulsarInterop(t *testing.T) {
+
+}

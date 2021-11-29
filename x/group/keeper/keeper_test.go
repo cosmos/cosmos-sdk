@@ -797,7 +797,7 @@ func (s *TestSuite) TestUpdateGroupAccountAdmin() {
 	addr5 := addrs[4]
 
 	admin, newAdmin := addr1, addr2
-	groupAccountAddr, myGroupID, policy, derivationKey := createGroupAndGroupAccount(admin, s)
+	groupAccountAddr, myGroupID, policy := createGroupAndGroupAccount(admin, s)
 
 	specs := map[string]struct {
 		req             *group.MsgUpdateGroupAccountAdmin
@@ -817,7 +817,6 @@ func (s *TestSuite) TestUpdateGroupAccountAdmin() {
 				Metadata:       nil,
 				Version:        2,
 				DecisionPolicy: nil,
-				DerivationKey:  derivationKey,
 			},
 			expErr: true,
 		},
@@ -834,7 +833,6 @@ func (s *TestSuite) TestUpdateGroupAccountAdmin() {
 				Metadata:       nil,
 				Version:        2,
 				DecisionPolicy: nil,
-				DerivationKey:  derivationKey,
 			},
 			expErr: true,
 		},
@@ -851,7 +849,6 @@ func (s *TestSuite) TestUpdateGroupAccountAdmin() {
 				Metadata:       nil,
 				Version:        2,
 				DecisionPolicy: nil,
-				DerivationKey:  derivationKey,
 			},
 			expErr: false,
 		},
@@ -883,7 +880,7 @@ func (s *TestSuite) TestUpdateGroupAccountMetadata() {
 	addr5 := addrs[4]
 
 	admin := addr1
-	groupAccountAddr, myGroupID, policy, derivationKey := createGroupAndGroupAccount(admin, s)
+	groupAccountAddr, myGroupID, policy := createGroupAndGroupAccount(admin, s)
 
 	specs := map[string]struct {
 		req             *group.MsgUpdateGroupAccountMetadata
@@ -930,7 +927,6 @@ func (s *TestSuite) TestUpdateGroupAccountMetadata() {
 				Metadata:       []byte("hello"),
 				Version:        2,
 				DecisionPolicy: nil,
-				DerivationKey:  derivationKey,
 			},
 			expErr: false,
 		},
@@ -962,7 +958,7 @@ func (s *TestSuite) TestUpdateGroupAccountDecisionPolicy() {
 	addr5 := addrs[4]
 
 	admin := addr1
-	groupAccountAddr, myGroupID, policy, derivationKey := createGroupAndGroupAccount(admin, s)
+	groupAccountAddr, myGroupID, policy := createGroupAndGroupAccount(admin, s)
 
 	specs := map[string]struct {
 		req             *group.MsgUpdateGroupAccountDecisionPolicy
@@ -1004,7 +1000,6 @@ func (s *TestSuite) TestUpdateGroupAccountDecisionPolicy() {
 				Metadata:       nil,
 				Version:        2,
 				DecisionPolicy: nil,
-				DerivationKey:  derivationKey,
 			},
 			expErr: false,
 		},
@@ -2086,8 +2081,5 @@ func createGroupAndGroupAccount(
 	groupAccountRes, err := s.keeper.CreateGroupAccount(s.ctx, groupAccount)
 	s.Require().NoError(err)
 
-	res, err := s.keeper.GroupAccountInfo(s.ctx, &group.QueryGroupAccountInfo{Address: groupAccountRes.Address})
-	s.Require().NoError(err)
-
-	return groupAccountRes.Address, myGroupID, policy, res.Info.DerivationKey
+	return groupAccountRes.Address, myGroupID, policy
 }

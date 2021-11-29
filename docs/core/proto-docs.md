@@ -6890,7 +6890,6 @@ GroupAccountInfo represents the high-level on-chain information for a group acco
 | `metadata` | [bytes](#bytes) |  | metadata is any arbitrary metadata to attached to the group account. |
 | `version` | [uint64](#uint64) |  | version is used to track changes to a group's GroupAccountInfo structure that would create a different result on a running proposal. |
 | `decision_policy` | [google.protobuf.Any](#google.protobuf.Any) |  | decision_policy specifies the group account's decision policy. |
-| `derivation_key` | [bytes](#bytes) |  | derivation_key is the "derivation" key of the group account, which is needed to derive the group root module key and execute proposals. |
 
 
 

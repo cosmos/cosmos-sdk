@@ -1383,7 +1383,7 @@ func (s *TestSuite) TestVote() {
 	s.Require().NoError(err)
 	s.Require().NotNil(groupAccount)
 
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, s.groupAccountAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, groupAccount, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 
 	req := &group.MsgCreateProposal{
 		Address:   accountAddr,
@@ -1477,7 +1477,7 @@ func (s *TestSuite) TestVote() {
 			postRun: func(sdkCtx sdk.Context) {
 				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, groupAccount)
 				s.Require().Contains(fromBalances, sdk.NewInt64Coin("test", 9900))
-				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr2)
+				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr5)
 				s.Require().Contains(toBalances, sdk.NewInt64Coin("test", 100))
 			},
 		},
@@ -1624,23 +1624,6 @@ func (s *TestSuite) TestVote() {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr2.String(),
-				Choice:     group.Choice_CHOICE_NO,
-			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
-		},
-		"voter must not be empty": {
-			req: &group.MsgVote{
-				ProposalId: myProposalID,
-				Voter:      "",
-				Choice:     group.Choice_CHOICE_NO,
-			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
-		},
-		"voters must not be nil": {
-			req: &group.MsgVote{
-				ProposalId: myProposalID,
 				Choice:     group.Choice_CHOICE_NO,
 			},
 			expErr:  true,
@@ -1867,10 +1850,9 @@ func (s *TestSuite) TestExecProposal() {
 			expProposalResult: group.ProposalResultAccepted,
 			expExecutorResult: group.ProposalExecutorResultSuccess,
 			expBalance:        true,
-			expFromBalances:   sdk.NewInt64Coin("test", 9800),
-			expToBalances:     sdk.NewInt64Coin("test", 200),
+			expFromBalances:   sdk.NewInt64Coin("test", 9900),
+			expToBalances:     sdk.NewInt64Coin("test", 100),
 		},
-
 		"proposal with multiple messages executed when accepted": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1, msgSend1}
@@ -1880,8 +1862,8 @@ func (s *TestSuite) TestExecProposal() {
 			expProposalResult: group.ProposalResultAccepted,
 			expExecutorResult: group.ProposalExecutorResultSuccess,
 			expBalance:        true,
-			expFromBalances:   sdk.NewInt64Coin("test", 9700),
-			expToBalances:     sdk.NewInt64Coin("test", 300),
+			expFromBalances:   sdk.NewInt64Coin("test", 9800),
+			expToBalances:     sdk.NewInt64Coin("test", 200),
 		},
 		"proposal not executed when rejected": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -1970,8 +1952,8 @@ func (s *TestSuite) TestExecProposal() {
 			expProposalResult: group.ProposalResultAccepted,
 			expExecutorResult: group.ProposalExecutorResultSuccess,
 			expBalance:        true,
-			expFromBalances:   sdk.NewInt64Coin("test", 9800),
-			expToBalances:     sdk.NewInt64Coin("test", 200),
+			expFromBalances:   sdk.NewInt64Coin("test", 9900),
+			expToBalances:     sdk.NewInt64Coin("test", 100),
 		},
 		"rollback all msg updates on failure": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2003,14 +1985,14 @@ func (s *TestSuite) TestExecProposal() {
 		spec := spec
 		s.Run(msg, func() {
 			sdkCtx, _ := s.sdkCtx.CacheContext()
-
-			proposalID := spec.setupProposal(s.ctx)
+			ctx := sdk.WrapSDKContext(sdkCtx)
+			proposalID := spec.setupProposal(ctx)
 
 			if !spec.srcBlockTime.IsZero() {
 				sdkCtx = sdkCtx.WithBlockTime(spec.srcBlockTime)
 			}
 
-			ctx := sdk.WrapSDKContext(sdkCtx)
+			ctx = sdk.WrapSDKContext(sdkCtx)
 			_, err := s.keeper.Exec(ctx, &group.MsgExec{Signer: addr1.String(), ProposalId: proposalID})
 			if spec.expErr {
 				s.Require().Error(err)

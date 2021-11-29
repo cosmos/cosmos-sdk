@@ -170,3 +170,45 @@ func ValuesOf(values ...interface{}) []protoreflect.Value {
 	}
 	return res
 }
+
+func TestDecodePrefixKey(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: test cases
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+
+		})
+	}
+}
+
+func TestValidRangeIterationKeys(t *testing.T) {
+	cdc, err := ormkv.NewKeyCodec(nil, []protoreflect.FieldDescriptor{
+		testutil.GetTestField("u32"),
+		testutil.GetTestField("str"),
+		testutil.GetTestField("bz"),
+		testutil.GetTestField("i32"),
+	})
+	assert.NilError(t, err)
+
+	tests := []struct {
+		name      string
+		values1   []protoreflect.Value
+		values2   []protoreflect.Value
+		expectErr string
+	}{
+		// TODO: test cases
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := cdc.CheckValidRangeIterationKeys(test.values1, test.values2)
+			if test.expectErr != "" {
+				assert.ErrorContains(t, err, test.expectErr)
+			} else {
+				assert.NilError(t, err)
+			}
+		})
+	}
+}

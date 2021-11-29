@@ -362,6 +362,10 @@ type VersionMap map[string]uint64
 //      `InitGenesis` on that module.
 // - return the `updatedVM` to be persisted in the x/upgrade's store.
 //
+// Migrations are run in an alphabetical order, except x/auth which is run last. If you want
+// to change the order then you should run migrations in multiple stages as described in
+// docs/core/upgrade.md.
+//
 // As an app developer, if you wish to skip running InitGenesis for your new
 // module "foo", you need to manually pass a `fromVM` argument to this function
 // foo's module version set to its latest ConsensusVersion. That way, the diff
@@ -395,10 +399,21 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 	// and the order of executing migrations matters)
 	// TODO: make the order user-configurable?
 	sortedModNames := make([]string, 0, len(m.Modules))
+	hasAuth := false
+	const authModulename = "auth" // using authtypes.ModuleName causes import cycle.
 	for key := range m.Modules {
-		sortedModNames = append(sortedModNames, key)
+		if key != authModulename {
+			sortedModNames = append(sortedModNames, key)
+		} else {
+			hasAuth = true
+		}
 	}
 	sort.Strings(sortedModNames)
+	// auth module must be pushed at the end because it might depend on the state from
+	// other modules, eg x/staking
+	if hasAuth {
+		sortedModNames = append(sortedModNames, authModulename)
+	}
 
 	for _, moduleName := range sortedModNames {
 		module := m.Modules[moduleName]

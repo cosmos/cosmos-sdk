@@ -325,23 +325,35 @@ func (k Keeper) IsSkipHeight(height int64) bool {
 	return k.skipUpgradeHeights[height]
 }
 
-// DumpUpgradeInfoToDisk writes upgrade information to UpgradeInfoFileName.
+// DumpUpgradeInfoToDisk writes upgrade information to UpgradeInfoFileName. The function
+// doesn't save the `Plan.Info` data, hence it won't support auto download functionality
+// by cosmvisor.
+// NOTE: this function will be update in the next release.
 func (k Keeper) DumpUpgradeInfoToDisk(height int64, name string) error {
+	return k.DumpUpgradeInfoWithInfoToDisk(height, name, "")
+}
+
+// Deprecated: DumpUpgradeInfoWithInfoToDisk writes upgrade information to UpgradeInfoFileName.
+// `info` should be provided and contain Plan.Info data in order to support
+// auto download functionality by cosmovisor and other tools using upgarde-info.json
+// (GetUpgradeInfoPath()) file.
+func (k Keeper) DumpUpgradeInfoWithInfoToDisk(height int64, name string, info string) error {
 	upgradeInfoFilePath, err := k.GetUpgradeInfoPath()
 	if err != nil {
 		return err
 	}
 
-	upgradeInfo := store.UpgradeInfo{
+	upgradeInfo := upgradeInfo{
 		Name:   name,
 		Height: height,
+		Info:   info,
 	}
-	info, err := json.Marshal(upgradeInfo)
+	bz, err := json.Marshal(upgradeInfo)
 	if err != nil {
 		return err
 	}
 
-	return ioutil.WriteFile(upgradeInfoFilePath, info, 0600)
+	return ioutil.WriteFile(upgradeInfoFilePath, bz, 0600)
 }
 
 // GetUpgradeInfoPath returns the upgrade info file path
@@ -387,4 +399,14 @@ func (k Keeper) ReadUpgradeInfoFromDisk() (store.UpgradeInfo, error) {
 	}
 
 	return upgradeInfo, nil
+}
+
+// upgradeInfo is stripped types.Plan structure used to dump upgrade plan data.
+type upgradeInfo struct {
+	// Name has types.Plan.Name value
+	Name string `json:"name,omitempty"`
+	// Height has types.Plan.Height value
+	Height int64 `json:"height,omitempty"`
+	// Height has types.Plan.Height value
+	Info string `json:"info,omitempty"`
 }

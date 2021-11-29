@@ -85,8 +85,12 @@ message Metadata {
   // displayed in clients.
   string display = 4;
   // name defines the name of the token (eg: Cosmos Atom)
+  //
+  // Since: cosmos-sdk 0.43
   string name = 5;
   // symbol is the token symbol usually shown on exchanges (eg: ATOM). This can
   // be the same as the display.
+  //
+  // Since: cosmos-sdk 0.43
   string symbol = 6;
 }

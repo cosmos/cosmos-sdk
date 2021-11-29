@@ -332,9 +332,13 @@ type Metadata struct {
 	// displayed in clients.
 	Display string `protobuf:"bytes,4,opt,name=display,proto3" json:"display,omitempty"`
 	// name defines the name of the token (eg: Cosmos Atom)
+	//
+	// Since: cosmos-sdk 0.43
 	Name string `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty"`
 	// symbol is the token symbol usually shown on exchanges (eg: ATOM). This can
 	// be the same as the display.
+	//
+	// Since: cosmos-sdk 0.43
 	Symbol string `protobuf:"bytes,6,opt,name=symbol,proto3" json:"symbol,omitempty"`
 }
 

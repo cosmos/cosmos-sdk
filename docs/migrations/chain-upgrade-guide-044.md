@@ -18,6 +18,8 @@ You must upgrade to Stargate v0.42 before upgrading to v0.44. If you have not do
 
 Cosmos SDK v0.44 introduces a new way of handling chain upgrades that no longer requires exporting state to JSON, making the necessary changes, and then creating a new chain with the modified JSON as the new genesis file.
 
+The IBC module for the Cosmos SDK has moved to its [own repository](https://github.com/cosmos/ibc-go) for v0.42 and later versions. If you are using IBC, make sure to also go through the [IBC migration docs](https://github.com/cosmos/ibc-go/blob/main/docs/migrations/ibc-migration-043.md).
+
 Instead of starting a new chain, the upgrade binary will read the existing database and perform in-place store migrations. This new way of handling chain upgrades can be used alongside [Cosmovisor](../run-node/cosmovisor.html) to make the upgrade process seamless.
 
 ## In-Place Store Migrations

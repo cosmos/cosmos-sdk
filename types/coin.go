@@ -144,6 +144,11 @@ func (coin Coin) IsNegative() bool {
 	return coin.Amount.Sign() == -1
 }
 
+// IsNil returns true if the coin amount is nil and false otherwise.
+func (coin Coin) IsNil() bool {
+	return coin.Amount.i == nil
+}
+
 //-----------------------------------------------------------------------------
 // Coins
 
@@ -585,6 +590,19 @@ func (coins Coins) IsAnyNegative() bool {
 	return false
 }
 
+// IsAnyNil returns true if there is at least one coin whose amount
+// is nil; returns false otherwise. It returns false if the coin set
+// is empty too.
+func (coins Coins) IsAnyNil() bool {
+	for _, coin := range coins {
+		if coin.IsNil() {
+			return true
+		}
+	}
+
+	return false
+}
+
 // negative returns a set of coins with all amount negative.
 //
 // TODO: Remove once unsigned integers are used.
@@ -603,7 +621,18 @@ func (coins Coins) negative() Coins {
 
 // removeZeroCoins removes all zero coins from the given coin set in-place.
 func removeZeroCoins(coins Coins) Coins {
-	result := make([]Coin, 0, len(coins))
+	for i := 0; i < len(coins); i++ {
+		if coins[i].IsZero() {
+			break
+		} else if i == len(coins)-1 {
+			return coins
+		}
+	}
+
+	var result []Coin
+	if len(coins) > 0 {
+		result = make([]Coin, 0, len(coins)-1)
+	}
 
 	for _, coin := range coins {
 		if !coin.IsZero() {

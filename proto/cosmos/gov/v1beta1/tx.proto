@@ -18,6 +18,8 @@ service Msg {
   rpc Vote(MsgVote) returns (MsgVoteResponse);
 
   // VoteWeighted defines a method to add a weighted vote on a specific proposal.
+  //
+  // Since: cosmos-sdk 0.43
   rpc VoteWeighted(MsgVoteWeighted) returns (MsgVoteWeightedResponse);
 
   // Deposit defines a method to add deposit on a specific proposal.
@@ -62,6 +64,8 @@ message MsgVote {
 message MsgVoteResponse {}
 
 // MsgVoteWeighted defines a message to cast a vote.
+//
+// Since: cosmos-sdk 0.43
 message MsgVoteWeighted {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -74,6 +78,8 @@ message MsgVoteWeighted {
 }
 
 // MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.
+//
+// Since: cosmos-sdk 0.43
 message MsgVoteWeightedResponse {}
 
 // MsgDeposit defines a message to submit a deposit to an existing proposal.

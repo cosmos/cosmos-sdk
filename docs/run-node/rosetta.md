@@ -1,6 +1,57 @@
 # Rosetta
 
-Package rosetta implements the rosetta API for the current cosmos sdk release series.
+The `rosetta` package implements Coinbase's [Rosetta API](https://www.rosetta-api.org). This document provides instructions on how to use the Rosetta API integration. For information about the motivation and design choices, refer to [ADR 035](../architecture/adr-035-rosetta-api-support.md).
+
+## Add Rosetta Command
+
+The Rosetta API server is a stand-alone server that connects to a node of a chain developed with Cosmos SDK.
+
+To enable Rosetta API support, it's required to add the `RosettaCommand` to your application's root command file (e.g. `appd/cmd/root.go`).
+
+Import the `server` package:
+
+```go
+    "github.com/cosmos/cosmos-sdk/server"
+```
+
+Find the following line:
+
+```go
+initRootCmd(rootCmd, encodingConfig)
+```
+
+After that line, add the following:
+
+```go
+rootCmd.AddCommand(
+  server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler)
+)
+```
+
+The `RosettaCommand` function builds the `rosetta` root command and is defined in the `server` package within Cosmos SDK.
+
+Since we’ve updated the Cosmos SDK to work with the Rosetta API, updating the application's root command file is all you need to do.
+
+An implementation example can be found in `simapp` package.
+
+## Use Rosetta Command
+
+To run Rosetta in your application CLI, use the following command:
+
+```
+appd rosetta --help
+```
+
+To test and run Rosetta API endpoints for applications that are running and exposed, use the following command:
+
+```
+appd rosetta
+     --blockchain "your application name (ex: gaia)"
+     --network "your chain identifier (ex: testnet-1)"
+     --tendermint "tendermint endpoint (ex: localhost:26657)"
+     --grpc "gRPC endpoint (ex: localhost:9090)"
+     --addr "rosetta binding address (ex: :8080)"
+```
 
 ## Extension
 

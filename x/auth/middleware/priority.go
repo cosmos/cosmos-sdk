@@ -56,7 +56,7 @@ func GetTxPriority(fee sdk.Coins) int64 {
 	var priority int64
 	for _, c := range fee {
 		p := c.Amount.Int64()
-		if priority == 0 || p < priority {
+		if p < priority {
 			priority = p
 		}
 	}

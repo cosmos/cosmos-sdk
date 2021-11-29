@@ -56,8 +56,14 @@ type TxResponse struct {
 	// Time of the previous block. For heights > 1, it's the weighted median of
 	// the timestamps of the valid votes in the block.LastCommit. For height == 1,
 	// it's genesis time.
-	Timestamp string         `protobuf:"bytes,12,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	Events    []types1.Event `protobuf:"bytes,13,rep,name=events,proto3" json:"events"`
+	Timestamp string `protobuf:"bytes,12,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	// Events defines all the events emitted by processing a transaction. Note,
+	// these events include those emitted by processing all the messages and those
+	// emitted from the ante handler. Whereas Logs contains the events, with
+	// additional metadata, emitted only by processing the messages.
+	//
+	// Since: cosmos-sdk 0.45
+	Events []types1.Event `protobuf:"bytes,13,rep,name=events,proto3" json:"events"`
 }
 
 func (m *TxResponse) Reset()      { *m = TxResponse{} }

@@ -1169,7 +1169,8 @@ func TestSimulateTx(t *testing.T) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			ctx.GasMeter().ConsumeGas(gasConsumed, "test")
-			any, err := codectypes.NewAnyWithValue(msg)
+			// Return dummy MsgResponse for msgCounter.
+			any, err := codectypes.NewAnyWithValue(&testdata.Dog{})
 			if err != nil {
 				return nil, err
 			}

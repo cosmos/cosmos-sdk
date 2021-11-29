@@ -2,7 +2,6 @@ syntax = "proto3";
 package cosmos.gov.v1beta2;
 
 import "cosmos/base/v1beta1/coin.proto";
-import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
@@ -33,9 +32,6 @@ message WeightedVoteOption {
 // Deposit defines an amount deposited by an account address to an active
 // proposal.
 message Deposit {
-  // option (gogoproto.goproto_getters) = false;
-  // option (gogoproto.equal)           = false;
-
   uint64   proposal_id                     = 1;
   string   depositor                       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated cosmos.base.v1beta1.Coin amount = 3;
@@ -43,17 +39,15 @@ message Deposit {
 
 // Proposal defines the core field members of a governance proposal.
 message Proposal {
-  option (gogoproto.equal) = true;
-
   uint64   proposal_id                                = 1;
   repeated google.protobuf.Any messages               = 2;
   ProposalStatus               status                 = 3;
   TallyResult                  final_tally_result     = 4;
-  google.protobuf.Timestamp    submit_time            = 5 [(gogoproto.stdtime) = true];
-  google.protobuf.Timestamp    deposit_end_time       = 6 [(gogoproto.stdtime) = true];
+  google.protobuf.Timestamp    submit_time            = 5;
+  google.protobuf.Timestamp    deposit_end_time       = 6;
   repeated cosmos.base.v1beta1.Coin total_deposit     = 7;
-  google.protobuf.Timestamp         voting_start_time = 8 [(gogoproto.stdtime) = true];
-  google.protobuf.Timestamp         voting_end_time   = 9 [(gogoproto.stdtime) = true];
+  google.protobuf.Timestamp         voting_start_time = 8;
+  google.protobuf.Timestamp         voting_end_time   = 9;
 }
 
 // ProposalStatus enumerates the valid statuses of a proposal.
@@ -79,8 +73,6 @@ enum ProposalStatus {
 
 // TallyResult defines a standard tally for a governance proposal.
 message TallyResult {
-  option (gogoproto.equal) = true;
-
   string yes          = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
   string abstain      = 2 [(cosmos_proto.scalar) = "cosmos.Int"];
   string no           = 3 [(cosmos_proto.scalar) = "cosmos.Int"];

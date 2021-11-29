@@ -48,12 +48,15 @@ func (h txPriorityHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.R
 	return h.next.SimulateTx(ctx, req)
 }
 
-// GetTxPriority returns a naive tx priority based on the total sum of all fees
+// GetTxPriority returns a naive tx priority based on the amount of the smallest denomination of the fee
 // provided in a transaction.
 func GetTxPriority(fee sdk.Coins) int64 {
 	var priority int64
 	for _, c := range fee {
-		priority += c.Amount.Int64()
+		p := c.Amount.Int64()
+		if priority == 0 || p < priority {
+			priority = p
+		}
 	}
 
 	return priority

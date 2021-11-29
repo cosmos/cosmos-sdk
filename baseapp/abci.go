@@ -338,6 +338,22 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 		app.halt()
 	}
 
+	// each listener has an internal wait threshold after which it sends `false` to the ListenSuccess() channel
+	// but the BaseApp also imposes a global wait limit
+	if app.globalWaitLimit > 0 {
+		maxWait := time.NewTicker(app.globalWaitLimit)
+		for _, lis := range app.abciListeners {
+			select {
+			case success := <-lis.ListenSuccess():
+				if success == false {
+					app.halt()
+				}
+			case <-maxWait.C:
+				app.halt()
+			}
+		}
+	}
+
 	if app.snapshotInterval > 0 && uint64(header.Height)%app.snapshotInterval == 0 {
 		go app.snapshot(header.Height)
 	}

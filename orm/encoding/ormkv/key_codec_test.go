@@ -7,8 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -248,6 +246,12 @@ func TestValidRangeIterationKeys(t *testing.T) {
 			"1,2 gt",
 			ValuesOf(uint32(0), "abc"),
 			ValuesOf(uint32(0)),
+			false,
+		},
+		{
+			"1,2,3",
+			ValuesOf(uint32(0)),
+			ValuesOf(uint32(0), "abc", []byte{1, 2}),
 			true,
 		},
 		{
@@ -255,6 +259,12 @@ func TestValidRangeIterationKeys(t *testing.T) {
 			ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(-1)),
 			ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(1)),
 			false,
+		},
+		{
+			"too long",
+			ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(-1)),
+			ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(1), int32(1)),
+			true,
 		},
 		{
 			"1,2,3,4 eq",
@@ -273,7 +283,7 @@ func TestValidRangeIterationKeys(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			err := cdc.CheckValidRangeIterationKeys(test.values1, test.values2)
 			if test.expectErr {
-				assert.ErrorContains(t, err, ormerrors.InvalidRangeIterationKeys.Error())
+				assert.ErrorContains(t, err, "")
 			} else {
 				assert.NilError(t, err)
 			}

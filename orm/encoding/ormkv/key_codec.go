@@ -210,36 +210,26 @@ func (cdc *KeyCodec) SetValues(message protoreflect.Message, values []protorefle
 // those field types support ordered iteration.
 func (cdc KeyCodec) CheckValidRangeIterationKeys(start, end []protoreflect.Value) error {
 	lenStart := len(start)
-	n := lenStart
+	shortest := lenStart
+	longest := lenStart
 	lenEnd := len(end)
-	if lenEnd > n {
-		n = lenEnd
+	if lenEnd < shortest {
+		shortest = lenEnd
+	} else {
+		longest = lenEnd
 	}
 
-	if n > len(cdc.fieldCodecs) {
+	if longest > len(cdc.fieldCodecs) {
 		return ormerrors.IndexOutOfBounds
 	}
 
-	var x protoreflect.Value
-	var y protoreflect.Value
+	i := 0
 	var cmp int
 
-	for i := 0; i < n; i++ {
+	for ; i < shortest; i++ {
 		fieldCdc := cdc.fieldCodecs[i]
-
-		if i < lenStart {
-			x = start[i]
-		} else {
-			// if values are omitted use the default
-			x = fieldCdc.DefaultValue()
-		}
-
-		if i < lenEnd {
-			y = end[i]
-		} else {
-			// if values are omitted use the default
-			y = fieldCdc.DefaultValue()
-		}
+		x := start[i]
+		y := end[i]
 
 		cmp = fieldCdc.Compare(x, y)
 		if cmp > 0 {
@@ -250,7 +240,6 @@ func (cdc KeyCodec) CheckValidRangeIterationKeys(start, end []protoreflect.Value
 		} else if !fieldCdc.IsOrdered() && cmp != 0 {
 			descriptor := cdc.fieldDescriptors[i]
 			return ormerrors.InvalidRangeIterationKeys.Wrapf(
-
 				"field %s of kind %s doesn't support ordered range iteration",
 				descriptor.FullName(),
 				descriptor.Kind(),
@@ -258,12 +247,25 @@ func (cdc KeyCodec) CheckValidRangeIterationKeys(start, end []protoreflect.Value
 		}
 	}
 
-	// the last prefix value must not be equal
-	if cmp == 0 {
-		return ormerrors.InvalidRangeIterationKeys.Wrapf(
-			"start must be before end for field %s",
-			cdc.fieldDescriptors[n-1].FullName(),
-		)
+	// the last prefix value must not be equal if the key lengths are the same
+	if lenStart == lenEnd {
+		if cmp == 0 {
+			return ormerrors.InvalidRangeIterationKeys.Wrapf(
+				"start must be before end for field %s",
+				cdc.fieldDescriptors[shortest-1].FullName(),
+			)
+		}
+	} else {
+		// check any remaining values in start or end
+		for j := i; j < longest; j++ {
+			if !cdc.fieldCodecs[j].IsOrdered() {
+				return ormerrors.InvalidRangeIterationKeys.Wrapf(
+					"field %s of kind %s doesn't support ordered range iteration",
+					cdc.fieldDescriptors[j].FullName(),
+					cdc.fieldDescriptors[j].Kind(),
+				)
+			}
+		}
 	}
 
 	return nil

@@ -8163,12 +8163,12 @@ Class defines the class of the nft type.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `id` | [string](#string) |  | id defines the unique identifier of the NFT classification, similar to the contract address of ERC721 |
-| `name` | [string](#string) |  | name defines the human-readable name of the NFT classification,optional |
-| `symbol` | [string](#string) |  | symbol is an abbreviated name for nft classification,optional |
-| `description` | [string](#string) |  | description is a brief description of nft classification,optional |
-| `uri` | [string](#string) |  | uri is a URI may point to a JSON file that conforms to the nft classification Metadata JSON Schema.optional |
-| `uri_hash` | [string](#string) |  | uri_hash is a hash of the document pointed to uri,optional |
-| `data` | [google.protobuf.Any](#google.protobuf.Any) |  | data is the metadata of NFT classification,optional |
+| `name` | [string](#string) |  | name defines the human-readable name of the NFT classification. Optional |
+| `symbol` | [string](#string) |  | symbol is an abbreviated name for nft classification. Optional |
+| `description` | [string](#string) |  | description is a brief description of nft classification. Optional |
+| `uri` | [string](#string) |  | uri for the class metadata stored off chain. It can define schema for Class and NFT `Data` attributes. Optional |
+| `uri_hash` | [string](#string) |  | uri_hash is a hash of the document pointed by uri. Optional |
+| `data` | [google.protobuf.Any](#google.protobuf.Any) |  | data is the app specific metadata of the NFT class. Optional |
 
 
 
@@ -8183,11 +8183,11 @@ NFT defines the NFT.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `class_id` | [string](#string) |  | class_id defines the unique identifier of the NFT classification, similar to the contract address of ERC721 |
-| `id` | [string](#string) |  | id defines the unique identification of NFT |
-| `uri` | [string](#string) |  | uri defines NFT's metadata storage address outside the chain |
-| `uri_hash` | [string](#string) |  | uri_hash is a hash of the document pointed to uri |
-| `data` | [google.protobuf.Any](#google.protobuf.Any) |  | data is the metadata of the NFT,optional |
+| `class_id` | [string](#string) |  | class_id associated with the NFT, similar to the contract address of ERC721 |
+| `id` | [string](#string) |  | id is a unique identifier of the NFT |
+| `uri` | [string](#string) |  | uri for the NFT metadata stored off chain |
+| `uri_hash` | [string](#string) |  | uri_hash is a hash of the document pointed by uri |
+| `data` | [google.protobuf.Any](#google.protobuf.Any) |  | data is an app specific data of the NFT. Optional |
 
 
 

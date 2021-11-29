@@ -2056,7 +2056,7 @@ func createProposalAndVote(
 func createGroupAndGroupAccount(
 	admin sdk.AccAddress,
 	s *TestSuite,
-) (string, uint64, group.DecisionPolicy, []byte) {
+) (string, uint64, group.DecisionPolicy) {
 	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:    admin.String(),
 		Members:  nil,

@@ -78,8 +78,10 @@ type StoreSchema map[string]types.StoreType
 // Store is the main persistent store type implementing CommitRootStore.
 // Substores consist of an SMT-based state commitment store and state storage.
 // Substores must be reserved in the StoreConfig or defined as part of a StoreUpgrade in order to be valid.
-// The state commitment store of each substore consists of a independent SMT.
-// The state commitment of the root store consists of a Merkle map of all registered persistent substore names to the root hash of their corresponding SMTs.
+// Note:
+// The state commitment data and proof are structured in the same basic pattern as the MultiStore, but use an SMT rather than IAVL tree:
+// * The state commitment store of each substore consists of a independent SMT.
+// * The state commitment of the root store consists of a Merkle map of all registered persistent substore names to the root hash of their corresponding SMTs
 type Store struct {
 	stateDB            dbm.DBConnection
 	stateTxn           dbm.DBReadWriter
@@ -118,7 +120,7 @@ type cacheStore struct {
 	*traceMixin
 }
 
-// Read-only store for querying
+// Read-only store for querying past versions
 type viewStore struct {
 	stateView           dbm.DBReader
 	stateCommitmentView dbm.DBReader
@@ -448,6 +450,7 @@ func substorePrefix(key string) []byte {
 }
 
 // GetKVStore implements BasicRootStore.
+// Returns a substore whose contents
 func (rs *Store) GetKVStore(skey types.StoreKey) types.KVStore {
 	key := skey.Name()
 	var sub types.KVStore
@@ -524,6 +527,7 @@ func (s *substore) refresh(rootHash []byte) {
 
 // Commit implements Committer.
 func (s *Store) Commit() types.CommitID {
+	// Substores read-lock this mutex; lock to prevent racey invalidation of underlying txns
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
 	// Determine the target version
@@ -817,13 +821,16 @@ func (cs *cacheStore) GetKVStore(key types.StoreKey) types.KVStore {
 	return ret
 }
 
+// Write implements CacheRootStore.
 func (cs *cacheStore) Write() {
-	for _, sub := range cs.substores {
+	for skey, sub := range cs.substores {
 		sub.Write()
+		delete(cs.substores, skey)
 	}
 }
 
-// Recursively wraps the CacheRootStore in another cache store.
+// CacheRootStore implements BasicRootStore.
+// This recursively wraps the CacheRootStore in another cache store.
 func (cs *cacheStore) CacheRootStore() types.CacheRootStore {
 	return &cacheStore{
 		source:        cs,

@@ -10,7 +10,7 @@ import (
 
 // doExecuteMsgs routes the messages to the registered handlers. Messages are limited to those that require no authZ or
 // by the group account only. Otherwise this gives access to other peoples accounts as the sdk ant handler is bypassed
-func (s Keeper) doExecuteMsgs(ctx sdk.Context, router authmiddleware.MsgServiceRouter, proposal group.Proposal, groupAccount sdk.AccAddress) ([]sdk.Result, error) {
+func (s Keeper) doExecuteMsgs(ctx sdk.Context, router *authmiddleware.MsgServiceRouter, proposal group.Proposal, groupAccount sdk.AccAddress) ([]sdk.Result, error) {
 	msgs := proposal.GetMsgs()
 
 	results := make([]sdk.Result, len(msgs))

@@ -75,7 +75,7 @@ type Keeper struct {
 	router *authmiddleware.MsgServiceRouter
 }
 
-func NewGroupKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddleware.MsgServiceRouter, accKeeper group.AccountKeeper) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddleware.MsgServiceRouter, accKeeper group.AccountKeeper) Keeper {
 	k := Keeper{
 		key:       storeKey,
 		router:    router,

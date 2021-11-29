@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormfield"
+
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/known/durationpb"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormfield"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+
+	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
 )
 
 func TestCodec(t *testing.T) {
@@ -84,32 +84,4 @@ func TestNTBytesTooLong(t *testing.T) {
 	assert.ErrorContains(t, cdc.Encode(bz, buf), ormerrors.BytesFieldTooLong.Error())
 	_, err = cdc.ComputeBufferSize(bz)
 	assert.ErrorContains(t, err, ormerrors.BytesFieldTooLong.Error())
-}
-
-func TestDefaultValue(t *testing.T) {
-	tests := []struct {
-		name        string
-		nonTerminal bool
-		value       interface{}
-	}{
-		{name: "u32", value: uint32(0)},
-		{name: "u64", value: uint64(0)},
-		{name: "i32", value: int32(0)},
-		{name: "i64", value: int64(0)},
-		{name: "str", value: ""},
-		{name: "str", nonTerminal: true, value: ""},
-		{name: "bz", value: []byte{}},
-		{name: "bz", nonTerminal: true, value: []byte{}},
-		{name: "b", value: false},
-		{name: "ts", value: (&timestamppb.Timestamp{}).ProtoReflect()},
-		{name: "dur", value: (&durationpb.Duration{}).ProtoReflect()},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			field := testutil.GetTestField(protoreflect.Name(test.name))
-			cdc, err := ormfield.GetCodec(field, test.nonTerminal)
-			assert.NilError(t, err)
-			assert.Equal(t, 0, cdc.Compare(protoreflect.ValueOf(test.value), cdc.DefaultValue()))
-		})
-	}
 }

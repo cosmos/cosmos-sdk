@@ -10,12 +10,6 @@ import (
 // Uint32Codec encodes uint32 values as 4-byte big-endian integers.
 type Uint32Codec struct{}
 
-func (u Uint32Codec) DefaultValue() protoreflect.Value {
-	return protoreflect.ValueOfUint32(0)
-}
-
-func (u Uint32Codec) doNotImplement() {}
-
 func (u Uint32Codec) FixedBufferSize() int {
 	return 4
 }

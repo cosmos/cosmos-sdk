@@ -11,12 +11,6 @@ import (
 // sorted iteration.
 type TimestampCodec struct{}
 
-func (t TimestampCodec) DefaultValue() protoreflect.Value {
-	return protoreflect.ValueOfMessage(timestampMsgType.New())
-}
-
-func (t TimestampCodec) doNotImplement() {}
-
 var (
 	timestampSecondsField = timestampMsgType.Descriptor().Fields().ByName("seconds")
 	timestampNanosField   = timestampMsgType.Descriptor().Fields().ByName("nanos")

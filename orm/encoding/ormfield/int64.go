@@ -12,12 +12,6 @@ import (
 // that these values can be used for ordered iteration.
 type Int64Codec struct{}
 
-func (i Int64Codec) DefaultValue() protoreflect.Value {
-	return protoreflect.ValueOfInt64(0)
-}
-
-func (i Int64Codec) doNotImplement() {}
-
 var int64Codec = Int64Codec{}
 
 const int64Max = 9223372036854775807

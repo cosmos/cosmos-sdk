@@ -11,12 +11,6 @@ import (
 // StringCodec encodes strings as raw bytes.
 type StringCodec struct{}
 
-func (s StringCodec) DefaultValue() protoreflect.Value {
-	return protoreflect.ValueOfString("")
-}
-
-func (s StringCodec) doNotImplement() {}
-
 func (s StringCodec) FixedBufferSize() int {
 	return -1
 }
@@ -46,12 +40,6 @@ func (s StringCodec) Encode(value protoreflect.Value, w io.Writer) error {
 // NonTerminalStringCodec encodes strings as null-terminated raw bytes. Null
 // values within strings will produce an error.
 type NonTerminalStringCodec struct{}
-
-func (s NonTerminalStringCodec) DefaultValue() protoreflect.Value {
-	return protoreflect.ValueOfString("")
-}
-
-func (s NonTerminalStringCodec) doNotImplement() {}
 
 func (s NonTerminalStringCodec) FixedBufferSize() int {
 	return -1

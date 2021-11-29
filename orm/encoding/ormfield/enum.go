@@ -10,12 +10,6 @@ import (
 // EnumCodec encodes enum values as varints.
 type EnumCodec struct{}
 
-func (e EnumCodec) DefaultValue() protoreflect.Value {
-	return protoreflect.ValueOfEnum(0)
-}
-
-func (e EnumCodec) doNotImplement() {}
-
 func (e EnumCodec) Decode(r Reader) (protoreflect.Value, error) {
 	x, err := binary.ReadVarint(r)
 	return protoreflect.ValueOfEnum(protoreflect.EnumNumber(x)), err

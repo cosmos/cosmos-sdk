@@ -10,7 +10,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/rpc/coretypes"
-	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -19,12 +18,12 @@ import (
 var cdc = codec.NewLegacyAmino()
 
 func (gi GasInfo) String() string {
-	bz, _ := yaml.Marshal(gi)
+	bz, _ := codec.MarshalYAML(codec.NewProtoCodec(nil), &gi)
 	return string(bz)
 }
 
 func (r Result) String() string {
-	bz, _ := yaml.Marshal(r)
+	bz, _ := codec.MarshalYAML(codec.NewProtoCodec(nil), &r)
 	return string(bz)
 }
 

@@ -41,10 +41,10 @@ func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {
 // implements proto.Message. For interface please use the codec.MarshalInterface
 func (pc *ProtoCodec) Marshal(o interface{}) ([]byte, error) {
 	switch o := o.(type) {
-	case ProtoMarshaler:
-		return o.Marshal()
 	case protov2.Message:
 		return protov2.MarshalOptions{Deterministic: true}.Marshal(o)
+	case ProtoMarshaler:
+		return gogoproto.Marshal(o)
 	default:
 		return nil, fmt.Errorf("%T is not a v1 or v2 message", o)
 	}
@@ -89,13 +89,13 @@ func (pc *ProtoCodec) MustMarshalLengthPrefixed(o interface{}) []byte {
 // implements proto.Message. For interface please use the codec.UnmarshalInterface
 func (pc *ProtoCodec) Unmarshal(bz []byte, ptr interface{}) error {
 	switch ptr := ptr.(type) {
-	case ProtoMarshaler:
-		err := ptr.Unmarshal(bz)
+	case protov2.Message:
+		err := protov2.Unmarshal(bz, ptr)
 		if err != nil {
 			return err
 		}
-	case protov2.Message:
-		err := protov2.Unmarshal(bz, ptr)
+	case gogoproto.Message:
+		err := gogoproto.Unmarshal(bz, ptr)
 		if err != nil {
 			return err
 		}
@@ -170,14 +170,14 @@ func (pc *ProtoCodec) MustMarshalJSON(o interface{}) []byte {
 // implements proto.Message. For interface please use the codec.UnmarshalInterfaceJSON
 func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr interface{}) error {
 	switch ptr := ptr.(type) {
-	case gogoproto.Message:
-		unmarshaler := jsonpb.Unmarshaler{AnyResolver: pc.interfaceRegistry}
-		err := unmarshaler.Unmarshal(strings.NewReader(string(bz)), ptr)
+	case protov2.Message:
+		err := protojson.UnmarshalOptions{Resolver: pc.interfaceRegistry}.Unmarshal(bz, ptr)
 		if err != nil {
 			return err
 		}
-	case protov2.Message:
-		err := protojson.UnmarshalOptions{Resolver: pc.interfaceRegistry}.Unmarshal(bz, ptr)
+	case gogoproto.Message:
+		unmarshaler := jsonpb.Unmarshaler{AnyResolver: pc.interfaceRegistry}
+		err := unmarshaler.Unmarshal(strings.NewReader(string(bz)), ptr)
 		if err != nil {
 			return err
 		}

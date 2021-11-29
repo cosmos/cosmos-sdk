@@ -99,18 +99,20 @@ func (s *resultTestSuite) TestResponseResultTx() {
 
 	s.Require().Equal(want, sdk.NewResponseResultTx(resultTx, nil, "timestamp"))
 	s.Require().Equal((*sdk.TxResponse)(nil), sdk.NewResponseResultTx(nil, nil, "timestamp"))
-	s.Require().Equal(`Response:
-  Height: 10
-  TxHash: 74657374
-  Code: 1
-  Data: 64617461
-  Raw Log: []
-  Logs: []
-  Info: info
-  GasWanted: 100
-  GasUsed: 90
-  Codespace: codespace
-  Timestamp: timestamp`, sdk.NewResponseResultTx(resultTx, nil, "timestamp").String())
+	s.Require().Equal(`code: 1
+codespace: codespace
+data: "64617461"
+events: []
+gas_used: "90"
+gas_wanted: "100"
+height: "10"
+info: info
+logs: []
+raw_log: '[]'
+timestamp: timestamp
+tx: null
+txhash: "74657374"
+`, sdk.NewResponseResultTx(resultTx, nil, "timestamp").String())
 	s.Require().True(sdk.TxResponse{}.Empty())
 	s.Require().False(want.Empty())
 

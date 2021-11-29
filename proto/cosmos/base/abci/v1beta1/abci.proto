@@ -2,7 +2,7 @@ syntax = "proto3";
 package cosmos.base.abci.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "tendermint/abci/types.proto";
+import "tendermint/v0_35/abci/types.proto";
 import "google/protobuf/any.proto";
 
 option go_package                       = "github.com/cosmos/cosmos-sdk/types";
@@ -91,7 +91,7 @@ message Result {
 
   // Events contains a slice of Event objects that were emitted during message
   // or handler execution.
-  repeated tendermint.abci.Event events = 3 [(gogoproto.nullable) = false];
+  repeated tendermint.v0_35.abci.Event events = 3 [(gogoproto.nullable) = false];
 }
 
 // SimulationResponse defines the response generated when a transaction is

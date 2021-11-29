@@ -1,0 +1,15 @@
+syntax = "proto3";
+package tendermint.v0_35.types;
+
+option go_package = "github.com/cosmos/cosmos-sdk/tendermint/types";
+
+import "gogoproto/gogo.proto";
+import "tendermint/v0_35/types/types.proto";
+import "tendermint/v0_35/types/evidence.proto";
+
+message Block {
+  Header                              header      = 1 [(gogoproto.nullable) = false];
+  Data                                data        = 2 [(gogoproto.nullable) = false];
+  tendermint.v0_35.types.EvidenceList evidence    = 3 [(gogoproto.nullable) = false];
+  Commit                              last_commit = 4;
+}

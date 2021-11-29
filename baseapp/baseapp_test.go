@@ -16,9 +16,7 @@ import (
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -27,6 +25,8 @@ import (
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	abci "github.com/cosmos/cosmos-sdk/tendermint/abci/types"
+	tmproto "github.com/cosmos/cosmos-sdk/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -1432,8 +1432,8 @@ func TestMaxBlockGasLimits(t *testing.T) {
 	app := setupBaseApp(t, txHandlerOpt)
 
 	app.InitChain(abci.RequestInitChain{
-		ConsensusParams: &tmproto.ConsensusParams{
-			Block: &tmproto.BlockParams{
+		ConsensusParams: tmproto.ConsensusParams{
+			Block: tmproto.BlockParams{
 				MaxGas: 100,
 			},
 		},

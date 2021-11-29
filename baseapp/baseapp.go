@@ -5,9 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmabci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -15,6 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	abci "github.com/cosmos/cosmos-sdk/tendermint/abci/types"
+	tmproto "github.com/cosmos/cosmos-sdk/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
@@ -27,7 +28,7 @@ const (
 )
 
 var (
-	_ abci.Application = (*BaseApp)(nil)
+	_ tmabci.Application = (*BaseApp)(nil)
 )
 
 type (

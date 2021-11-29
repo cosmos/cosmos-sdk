@@ -14,7 +14,6 @@ import (
 	protoio "github.com/gogo/protobuf/io"
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
-	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
@@ -27,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
+	abci "github.com/cosmos/cosmos-sdk/tendermint/abci/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 

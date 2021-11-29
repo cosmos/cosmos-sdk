@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/types"
+	abci "github.com/cosmos/cosmos-sdk/tendermint/abci/types"
 )
 
 func TestVerifyIAVLStoreQueryProof(t *testing.T) {

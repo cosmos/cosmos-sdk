@@ -1,0 +1,9 @@
+syntax = "proto3";
+package tendermint.v0_35.libs.bits;
+
+option go_package = "github.com/cosmos/cosmos-sdk/tendermint/libs/bits";
+
+message BitArray {
+  int64           bits  = 1;
+  repeated uint64 elems = 2;
+}

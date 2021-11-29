@@ -1,6 +1,6 @@
 package types
 
-import abci "github.com/tendermint/tendermint/abci/types"
+import abci "github.com/cosmos/cosmos-sdk/tendermint/abci/types"
 
 // InitChainer initializes application state at genesis
 type InitChainer func(ctx Context, req abci.RequestInitChain) abci.ResponseInitChain

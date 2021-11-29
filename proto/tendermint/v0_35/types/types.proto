@@ -1,13 +1,13 @@
 syntax = "proto3";
-package tendermint.types;
+package tendermint.v0_35.types;
 
-option go_package = "github.com/tendermint/tendermint/proto/tendermint/types";
+option go_package = "github.com/cosmos/cosmos-sdk/tendermint/types";
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
-import "tendermint/crypto/proof.proto";
-import "tendermint/version/types.proto";
-import "tendermint/types/validator.proto";
+import "tendermint/v0_35/crypto/proof.proto";
+import "tendermint/v0_35/version/types.proto";
+import "tendermint/v0_35/types/validator.proto";
 
 // BlockIdFlag indicates which BlcokID the signature is for
 enum BlockIDFlag {
@@ -41,9 +41,9 @@ message PartSetHeader {
 }
 
 message Part {
-  uint32                  index = 1;
-  bytes                   bytes = 2;
-  tendermint.crypto.Proof proof = 3 [(gogoproto.nullable) = false];
+  uint32                        index = 1;
+  bytes                         bytes = 2;
+  tendermint.v0_35.crypto.Proof proof = 3 [(gogoproto.nullable) = false];
 }
 
 // BlockID
@@ -57,10 +57,10 @@ message BlockID {
 // Header defines the structure of a Tendermint block header.
 message Header {
   // basic block info
-  tendermint.version.Consensus version  = 1 [(gogoproto.nullable) = false];
-  string                       chain_id = 2 [(gogoproto.customname) = "ChainID"];
-  int64                        height   = 3;
-  google.protobuf.Timestamp    time     = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  tendermint.v0_35.version.Consensus version  = 1 [(gogoproto.nullable) = false];
+  string                             chain_id = 2 [(gogoproto.customname) = "ChainID"];
+  int64                              height   = 3;
+  google.protobuf.Timestamp          time     = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 
   // prev block info
   BlockID last_block_id = 5 [(gogoproto.nullable) = false];
@@ -106,10 +106,10 @@ message Vote {
 
 // Commit contains the evidence that a block was committed by a set of validators.
 message Commit {
-  int64                         height     = 1;
-  int32                         round      = 2;
-  BlockID                       block_id   = 3 [(gogoproto.nullable) = false, (gogoproto.customname) = "BlockID"];
-  repeated CommitSig            signatures = 4 [(gogoproto.nullable) = false];
+  int64              height     = 1;
+  int32              round      = 2;
+  BlockID            block_id   = 3 [(gogoproto.nullable) = false, (gogoproto.customname) = "BlockID"];
+  repeated CommitSig signatures = 4 [(gogoproto.nullable) = false];
 }
 
 // CommitSig is a part of the Vote included in a Commit.
@@ -138,8 +138,8 @@ message SignedHeader {
 }
 
 message LightBlock {
-  SignedHeader                  signed_header = 1;
-  tendermint.types.ValidatorSet validator_set = 2;
+  SignedHeader                        signed_header = 1;
+  tendermint.v0_35.types.ValidatorSet validator_set = 2;
 }
 
 message BlockMeta {
@@ -151,7 +151,7 @@ message BlockMeta {
 
 // TxProof represents a Merkle proof of the presence of a transaction in the Merkle tree.
 message TxProof {
-  bytes                   root_hash = 1;
-  bytes                   data      = 2;
-  tendermint.crypto.Proof proof     = 3;
+  bytes                         root_hash = 1;
+  bytes                         data      = 2;
+  tendermint.v0_35.crypto.Proof proof     = 3;
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cosmos/cosmos-sdk/tendermint/abci/types"
 )
 
 const (

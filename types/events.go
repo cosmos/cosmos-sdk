@@ -9,9 +9,9 @@ import (
 
 	"github.com/gogo/protobuf/jsonpb"
 	proto "github.com/gogo/protobuf/proto"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	abci "github.com/cosmos/cosmos-sdk/tendermint/abci/types"
 )
 
 // ----------------------------------------------------------------------------
@@ -275,7 +275,7 @@ func StringifyEvent(e abci.Event) StringEvent {
 	for _, attr := range e.Attributes {
 		res.Attributes = append(
 			res.Attributes,
-			Attribute{Key: attr.Key, Value: attr.Value},
+			Attribute{Key: string(attr.Key), Value: string(attr.Value)},
 		)
 	}
 

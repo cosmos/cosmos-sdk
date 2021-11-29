@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-
 	"github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
+	abci "github.com/cosmos/cosmos-sdk/tendermint/abci/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 

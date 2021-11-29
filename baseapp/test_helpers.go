@@ -1,9 +1,8 @@
 package baseapp
 
 import (
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
+	abci "github.com/cosmos/cosmos-sdk/tendermint/abci/types"
+	tmproto "github.com/cosmos/cosmos-sdk/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"

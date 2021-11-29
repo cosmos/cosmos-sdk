@@ -1,0 +1,16 @@
+syntax = "proto3";
+package tendermint.v0_35.version;
+
+option go_package = "github.com/cosmos/cosmos-sdk/tendermint/version";
+
+import "gogoproto/gogo.proto";
+
+// Consensus captures the consensus rules for processing a block in the
+// blockchain, including all blockchain data structures and the rules of the
+// application's state transition machine.
+message Consensus {
+  option (gogoproto.equal) = true;
+
+  uint64 block = 1;
+  uint64 app   = 2;
+}

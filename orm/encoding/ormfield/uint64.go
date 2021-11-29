@@ -10,6 +10,12 @@ import (
 // Uint64Codec encodes uint64 values as 8-byte big-endian integers.
 type Uint64Codec struct{}
 
+func (u Uint64Codec) DefaultValue() protoreflect.Value {
+	return protoreflect.ValueOfUint64(0)
+}
+
+func (u Uint64Codec) doNotImplement() {}
+
 func (u Uint64Codec) FixedBufferSize() int {
 	return 8
 }

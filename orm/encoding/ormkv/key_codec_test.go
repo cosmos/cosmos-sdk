@@ -2,7 +2,12 @@ package ormkv_test
 
 import (
 	"bytes"
+	"io"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
+
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 
@@ -172,14 +177,30 @@ func ValuesOf(values ...interface{}) []protoreflect.Value {
 }
 
 func TestDecodePrefixKey(t *testing.T) {
+	cdc, err := ormkv.NewKeyCodec(nil, []protoreflect.FieldDescriptor{
+		testutil.GetTestField("u32"),
+		testutil.GetTestField("str"),
+		testutil.GetTestField("bz"),
+		testutil.GetTestField("i32"),
+	})
+
+	assert.NilError(t, err)
 	tests := []struct {
-		name string
+		name   string
+		values []protoreflect.Value
 	}{
-		// TODO: test cases
+		{
+			"1",
+			ValuesOf(uint32(5), "abc"),
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-
+			bz, err := cdc.Encode(test.values)
+			assert.NilError(t, err)
+			values, err := cdc.Decode(bytes.NewReader(bz))
+			assert.ErrorType(t, err, io.EOF)
+			assert.Equal(t, 0, cdc.CompareValues(test.values, values))
 		})
 	}
 }
@@ -197,18 +218,86 @@ func TestValidRangeIterationKeys(t *testing.T) {
 		name      string
 		values1   []protoreflect.Value
 		values2   []protoreflect.Value
-		expectErr string
+		expectErr bool
 	}{
-		// TODO: test cases
+		{
+			"1 eq",
+			ValuesOf(uint32(0)),
+			ValuesOf(uint32(0)),
+			true,
+		},
+		{
+			"1 lt",
+			ValuesOf(uint32(0)),
+			ValuesOf(uint32(1)),
+			false,
+		},
+		{
+			"1 gt",
+			ValuesOf(uint32(1)),
+			ValuesOf(uint32(0)),
+			true,
+		},
+		{
+			"1,2 lt",
+			ValuesOf(uint32(0)),
+			ValuesOf(uint32(0), "abc"),
+			false,
+		},
+		{
+			"1,2 gt",
+			ValuesOf(uint32(0), "abc"),
+			ValuesOf(uint32(0)),
+			true,
+		},
+		{
+			"1,2,3,4 lt",
+			ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(-1)),
+			ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(1)),
+			false,
+		},
+		{
+			"1,2,3,4 eq",
+			ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(1)),
+			ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(1)),
+			true,
+		},
+		{
+			"1,2,3,4 bz err",
+			ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(-1)),
+			ValuesOf(uint32(0), "abc", []byte{1, 2, 3}, int32(1)),
+			true,
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			err := cdc.CheckValidRangeIterationKeys(test.values1, test.values2)
-			if test.expectErr != "" {
-				assert.ErrorContains(t, err, test.expectErr)
+			if test.expectErr {
+				assert.ErrorContains(t, err, ormerrors.InvalidRangeIterationKeys.Error())
 			} else {
 				assert.NilError(t, err)
 			}
 		})
 	}
+}
+
+func TestGetSet(t *testing.T) {
+	cdc, err := ormkv.NewKeyCodec(nil, []protoreflect.FieldDescriptor{
+		testutil.GetTestField("u32"),
+		testutil.GetTestField("str"),
+		testutil.GetTestField("i32"),
+	})
+	assert.NilError(t, err)
+
+	var a testpb.A
+	values := ValuesOf(uint32(4), "abc", int32(1))
+	cdc.SetValues(a.ProtoReflect(), values)
+	values2 := cdc.GetValues(a.ProtoReflect())
+	assert.Equal(t, 0, cdc.CompareValues(values, values2))
+	bz, err := cdc.Encode(values)
+	assert.NilError(t, err)
+	values3, bz2, err := cdc.EncodeFromMessage(a.ProtoReflect())
+	assert.NilError(t, err)
+	assert.Equal(t, 0, cdc.CompareValues(values, values3))
+	assert.Assert(t, bytes.Equal(bz, bz2))
 }

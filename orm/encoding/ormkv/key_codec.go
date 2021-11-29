@@ -112,19 +112,15 @@ func (cdc *KeyCodec) Decode(r *bytes.Reader) ([]protoreflect.Value, error) {
 	}
 
 	n := len(cdc.fieldCodecs)
-	values := make([]protoreflect.Value, n)
+	values := make([]protoreflect.Value, 0, n)
 	for i := 0; i < n; i++ {
 		value, err := cdc.fieldCodecs[i].Decode(r)
-		values[i] = value
 		if err == io.EOF {
-			if i == n-1 {
-				return values, nil
-			} else {
-				return nil, io.ErrUnexpectedEOF
-			}
+			return values, err
 		} else if err != nil {
 			return nil, err
 		}
+		values = append(values, value)
 	}
 	return values, nil
 }
@@ -213,22 +209,45 @@ func (cdc *KeyCodec) SetValues(message protoreflect.Message, values []protorefle
 // for range iteration meaning that for each non-equal field in the prefixes
 // those field types support ordered iteration.
 func (cdc KeyCodec) CheckValidRangeIterationKeys(start, end []protoreflect.Value) error {
-	n := len(start)
-	if len(end) < n {
-		n = len(end)
+	lenStart := len(start)
+	n := lenStart
+	lenEnd := len(end)
+	if lenEnd > n {
+		n = lenEnd
 	}
+
+	if n > len(cdc.fieldCodecs) {
+		return ormerrors.IndexOutOfBounds
+	}
+
+	var x protoreflect.Value
+	var y protoreflect.Value
+	var cmp int
 
 	for i := 0; i < n; i++ {
 		fieldCdc := cdc.fieldCodecs[i]
-		x := start[i]
-		y := end[i]
-		cmp := fieldCdc.Compare(x, y)
+
+		if i < lenStart {
+			x = start[i]
+		} else {
+			// if values are omitted use the default
+			x = fieldCdc.DefaultValue()
+		}
+
+		if i < lenEnd {
+			y = end[i]
+		} else {
+			// if values are omitted use the default
+			y = fieldCdc.DefaultValue()
+		}
+
+		cmp = fieldCdc.Compare(x, y)
 		if cmp > 0 {
 			return ormerrors.InvalidRangeIterationKeys.Wrapf(
 				"start must be before end for field %s",
 				cdc.fieldDescriptors[i].FullName(),
 			)
-		} else if cmp != 0 && !fieldCdc.IsOrdered() {
+		} else if !fieldCdc.IsOrdered() && cmp != 0 {
 			descriptor := cdc.fieldDescriptors[i]
 			return ormerrors.InvalidRangeIterationKeys.Wrapf(
 
@@ -238,5 +257,14 @@ func (cdc KeyCodec) CheckValidRangeIterationKeys(start, end []protoreflect.Value
 			)
 		}
 	}
+
+	// the last prefix value must not be equal
+	if cmp == 0 {
+		return ormerrors.InvalidRangeIterationKeys.Wrapf(
+			"start must be before end for field %s",
+			cdc.fieldDescriptors[n-1].FullName(),
+		)
+	}
+
 	return nil
 }

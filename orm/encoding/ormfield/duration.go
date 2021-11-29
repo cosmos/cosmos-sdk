@@ -21,6 +21,12 @@ func getDurationSecondsAndNanos(value protoreflect.Value) (protoreflect.Value, p
 // sorted iteration.
 type DurationCodec struct{}
 
+func (d DurationCodec) DefaultValue() protoreflect.Value {
+	return protoreflect.ValueOfMessage(durationMsgType.New())
+}
+
+func (d DurationCodec) doNotImplement() {}
+
 func (d DurationCodec) Decode(r Reader) (protoreflect.Value, error) {
 	seconds, err := int64Codec.Decode(r)
 	if err != nil {

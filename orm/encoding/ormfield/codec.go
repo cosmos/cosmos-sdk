@@ -36,6 +36,14 @@ type Codec interface {
 	// ComputeBufferSize estimates the buffer size needed to encode the field.
 	// Encoders will use at most this much size to encode the value.
 	ComputeBufferSize(value protoreflect.Value) (int, error)
+
+	// DefaultValue returns the default value for a field of this type.
+	DefaultValue() protoreflect.Value
+
+	// this interface is not intended to be implemented in third-party libraries
+	// in order to allow interfaces methods to be added without causing
+	// breaking changes
+	doNotImplement()
 }
 
 type Reader interface {

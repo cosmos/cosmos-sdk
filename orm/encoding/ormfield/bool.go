@@ -9,6 +9,12 @@ import (
 // BoolCodec encodes a bool value as a single byte 0 or 1.
 type BoolCodec struct{}
 
+func (b BoolCodec) DefaultValue() protoreflect.Value {
+	return protoreflect.ValueOfBool(false)
+}
+
+func (b BoolCodec) doNotImplement() {}
+
 func (b BoolCodec) Decode(r Reader) (protoreflect.Value, error) {
 	x, err := r.ReadByte()
 	return protoreflect.ValueOfBool(x != 0), err

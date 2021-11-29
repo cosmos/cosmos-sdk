@@ -13,6 +13,12 @@ import (
 // than 255 bytes.
 type BytesCodec struct{}
 
+func (b BytesCodec) DefaultValue() protoreflect.Value {
+	return protoreflect.ValueOfBytes([]byte{})
+}
+
+func (b BytesCodec) doNotImplement() {}
+
 func (b BytesCodec) FixedBufferSize() int {
 	return -1
 }
@@ -51,6 +57,12 @@ func (b BytesCodec) Compare(v1, v2 protoreflect.Value) int {
 // NonTerminalBytesCodec encodes bytes as raw bytes length prefixed by a single
 // byte. It errors if the byte array is longer than 255 bytes.
 type NonTerminalBytesCodec struct{}
+
+func (b NonTerminalBytesCodec) DefaultValue() protoreflect.Value {
+	return protoreflect.ValueOfBytes([]byte{})
+}
+
+func (b NonTerminalBytesCodec) doNotImplement() {}
 
 func (b NonTerminalBytesCodec) FixedBufferSize() int {
 	return -1

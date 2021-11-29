@@ -7,7 +7,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2";
 
 // Msg defines the gov Msg service.
 service Msg {
@@ -94,4 +94,3 @@ message MsgDeposit {
 
 // MsgDepositResponse defines the Msg/Deposit response type.
 message MsgDepositResponse {}
-

@@ -300,7 +300,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 				commonFlags...,
 			),
 			true,
-			"message validation failed: member weight: expected a positive decimal, got 0",
+			"expected a positive decimal, got 0: invalid decimal string",
 			nil,
 			0,
 		},

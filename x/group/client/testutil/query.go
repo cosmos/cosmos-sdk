@@ -213,13 +213,6 @@ func (s *IntegrationTestSuite) TestQueryGroupAccountInfo() {
 		expectedCode uint32
 	}{
 		{
-			"invalid account address",
-			[]string{"invalid", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			true,
-			"decoding bech32 failed: invalid bech32",
-			0,
-		},
-		{
 			"group account not found",
 			[]string{val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			true,

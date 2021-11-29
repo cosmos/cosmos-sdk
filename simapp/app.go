@@ -237,7 +237,7 @@ func NewSimApp(
 	pluginsOnKey := fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.PLUGINS_ON_TOML_KEY)
 	if cast.ToBool(appOpts.Get(pluginsOnKey)) {
 		// set the global wait limit for state streaming plugin message receipt acknowledgement
-		globalWaitLimitKey := fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.GLOBAL_ACK_WAIT_LIMIT_TOML_KEY)
+		globalWaitLimitKey := fmt.Sprintf("%s.%s.%s", plugin.PLUGINS_TOML_KEY, plugin.STREAMING_TOML_KEY, plugin.GLOBAL_ACK_WAIT_LIMIT_TOML_KEY)
 		globalWaitLimit := cast.ToDuration(appOpts.Get(globalWaitLimitKey))
 		if globalWaitLimit > 0 {
 			bApp.SetGlobalWaitLimit(globalWaitLimit)
@@ -246,23 +246,23 @@ func NewSimApp(
 		// this loads the preloaded and any plugins found in `plugins.dir`
 		pluginLoader, err := loader.NewPluginLoader(appOpts, logger)
 		if err != nil {
-			// handle error
+			tmos.Exit(err.Error())
 		}
 
 		// initialize the loaded plugins
 		if err := pluginLoader.Initialize(); err != nil {
-			// handle error
+			tmos.Exit(err.Error())
 		}
 
 		// register the plugin(s) with the BaseApp
 		if err := pluginLoader.Inject(bApp, appCodec, keys); err != nil {
-			// handle error
+			tmos.Exit(err.Error())
 		}
 
 		// start the plugin services, optionally use wg to synchronize shutdown using io.Closer
 		wg := new(sync.WaitGroup)
 		if err := pluginLoader.Start(wg); err != nil {
-			// handler error
+			tmos.Exit(err.Error())
 		}
 	}
 

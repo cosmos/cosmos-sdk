@@ -3,31 +3,16 @@ go 1.23.1
 module github.com/cosmos/cosmos-sdk
 
 require (
-	cosmossdk.io/api v0.7.5
-	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v1.0.0-alpha.3
-	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
-	cosmossdk.io/depinject v1.0.0
-	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/log v1.4.1
-	cosmossdk.io/math v1.3.0
-	cosmossdk.io/schema v0.3.0
-	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
-	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
-	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/tx v0.13.3
-	github.com/99designs/keyring v1.2.2
-	github.com/bgentry/speakeasy v0.2.0
-	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
-	github.com/cometbft/cometbft/api v1.0.0-rc.1
-	github.com/cosmos/btcutil v1.0.5
-	github.com/cosmos/cosmos-db v1.0.3-0.20240911104526-ddc3f09bfc22
-	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/crypto v0.1.2
+	github.com/99designs/keyring v1.1.6
+	github.com/armon/go-metrics v0.3.9
+	github.com/bgentry/speakeasy v0.1.0
+	github.com/btcsuite/btcd v0.22.0-beta
+	github.com/coinbase/rosetta-sdk-go v0.6.10
+	github.com/confio/ics23/go v0.6.6
+	github.com/cosmos/btcutil v1.0.4
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.17.2
 	github.com/cosmos/ledger-cosmos-go v0.11.1
-	github.com/enigmampc/btcutil v1.0.3-0.20200723161021-e2fb6adb2a25
 	github.com/gogo/gateway v1.1.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/mock v1.6.0

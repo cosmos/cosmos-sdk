@@ -7,10 +7,8 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/rpc/coretypes"
@@ -154,6 +152,18 @@ func (s *resultTestSuite) TestResponseFormatBroadcastTxCommit() {
 			GasWanted: 99,
 			GasUsed:   100,
 			Codespace: "codespace",
+			Events: []abci.Event{
+				{
+					Type: "message",
+					Attributes: []abci.EventAttribute{
+						{
+							Key:   "action",
+							Value: "foo",
+							Index: true,
+						},
+					},
+				},
+			},
 		},
 	}
 	deliverTxResult := &coretypes.ResultBroadcastTxCommit{
@@ -167,6 +177,18 @@ func (s *resultTestSuite) TestResponseFormatBroadcastTxCommit() {
 			GasWanted: 99,
 			GasUsed:   100,
 			Codespace: "codespace",
+			Events: []abci.Event{
+				{
+					Type: "message",
+					Attributes: []abci.EventAttribute{
+						{
+							Key:   "action",
+							Value: "foo",
+							Index: true,
+						},
+					},
+				},
+			},
 		},
 	}
 	want := &sdk.TxResponse{
@@ -180,6 +202,18 @@ func (s *resultTestSuite) TestResponseFormatBroadcastTxCommit() {
 		Info:      "info",
 		GasWanted: 99,
 		GasUsed:   100,
+		Events: []abci.Event{
+			{
+				Type: "message",
+				Attributes: []abci.EventAttribute{
+					{
+						Key:   "action",
+						Value: "foo",
+						Index: true,
+					},
+				},
+			},
+		},
 	}
 
 	s.Require().Equal(want, sdk.NewResponseFormatBroadcastTxCommit(checkTxResult))

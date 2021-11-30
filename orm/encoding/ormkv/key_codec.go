@@ -90,9 +90,9 @@ func (cdc *KeyCodec) Encode(values []protoreflect.Value) ([]byte, error) {
 
 // GetValues extracts the values specified by the key fields from the message.
 func (cdc *KeyCodec) GetValues(message protoreflect.Message) []protoreflect.Value {
-	var res []protoreflect.Value
-	for _, f := range cdc.fieldDescriptors {
-		res = append(res, message.Get(f))
+	res := make([]protoreflect.Value, len(cdc.fieldDescriptors))
+	for i, f := range cdc.fieldDescriptors {
+		res[i] = message.Get(f)
 	}
 	return res
 }

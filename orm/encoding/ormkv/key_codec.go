@@ -81,8 +81,7 @@ func (cdc *KeyCodec) Encode(values []protoreflect.Value) ([]byte, error) {
 	}
 
 	for i := 0; i < n; i++ {
-		err = cdc.fieldCodecs[i].Encode(values[i], w)
-		if err != nil {
+		if err = cdc.fieldCodecs[i].Encode(values[i], w); err != nil {
 			return nil, err
 		}
 	}

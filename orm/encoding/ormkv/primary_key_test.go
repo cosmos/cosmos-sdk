@@ -16,7 +16,7 @@ import (
 
 func TestPrimaryKeyCodec(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
-		keyCodec := testutil.TestKeyCodecGen.Draw(t, "keyCodec").(testutil.TestKeyCodec)
+		keyCodec := testutil.TestKeyCodecGen(0, 5).Draw(t, "keyCodec").(testutil.TestKeyCodec)
 		pkCodec := ormkv.NewPrimaryKeyCodec(keyCodec.Codec, (&testpb.A{}).ProtoReflect().Type(), proto.UnmarshalOptions{})
 		for i := 0; i < 100; i++ {
 			key := keyCodec.Draw(t, fmt.Sprintf("i%d", i))
@@ -42,6 +42,10 @@ func TestPrimaryKeyCodec(t *testing.T) {
 			pkCodec.SetValues(a1.ProtoReflect(), pk1.Key)
 			err = pkCodec.Unmarshal(pk1.Key, v, &a2)
 			assert.NilError(t, err)
+			assert.DeepEqual(t, &a1, &a2, protocmp.Transform())
+
+			pkCodec.ClearValues(a1.ProtoReflect())
+			pkCodec.SetValues(a1.ProtoReflect(), pk1.Key)
 			assert.DeepEqual(t, &a1, &a2, protocmp.Transform())
 		}
 	})

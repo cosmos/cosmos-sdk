@@ -120,31 +120,33 @@ type TestKeyCodec struct {
 	Codec    *ormkv.KeyCodec
 }
 
-var TestKeyCodecGen = rapid.Custom(func(t *rapid.T) TestKeyCodec {
-	xs := rapid.SliceOfNDistinct(rapid.IntRange(0, len(TestFieldSpecs)-1), 0, 5, func(i int) int { return i }).
-		Draw(t, "fieldSpecs").([]int)
+func TestKeyCodecGen(minLen, maxLen int) *rapid.Generator {
+	return rapid.Custom(func(t *rapid.T) TestKeyCodec {
+		xs := rapid.SliceOfNDistinct(rapid.IntRange(0, len(TestFieldSpecs)-1), minLen, maxLen, func(i int) int { return i }).
+			Draw(t, "fieldSpecs").([]int)
 
-	var specs []TestFieldSpec
-	var fields []protoreflect.FieldDescriptor
+		var specs []TestFieldSpec
+		var fields []protoreflect.FieldDescriptor
 
-	for _, x := range xs {
-		spec := TestFieldSpecs[x]
-		specs = append(specs, spec)
-		fields = append(fields, GetTestField(spec.FieldName))
-	}
+		for _, x := range xs {
+			spec := TestFieldSpecs[x]
+			specs = append(specs, spec)
+			fields = append(fields, GetTestField(spec.FieldName))
+		}
 
-	prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix").([]byte)
+		prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix").([]byte)
 
-	cdc, err := ormkv.NewKeyCodec(prefix, fields)
-	if err != nil {
-		panic(err)
-	}
+		cdc, err := ormkv.NewKeyCodec(prefix, fields)
+		if err != nil {
+			panic(err)
+		}
 
-	return TestKeyCodec{
-		Codec:    cdc,
-		KeySpecs: specs,
-	}
-})
+		return TestKeyCodec{
+			Codec:    cdc,
+			KeySpecs: specs,
+		}
+	})
+}
 
 func (k TestKeyCodec) Draw(t *rapid.T, id string) []protoreflect.Value {
 	n := len(k.KeySpecs)

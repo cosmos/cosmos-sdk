@@ -14,6 +14,14 @@ func CommaSeparatedFields(fields string) (Fields, error) {
 	return Fields{fields: fields}, nil
 }
 
+func FieldsFromDescriptors(fieldDescriptors []protoreflect.FieldDescriptor) Fields {
+	names := make([]protoreflect.Name, len(fieldDescriptors))
+	for i, descriptor := range fieldDescriptors {
+		names[i] = descriptor.Name()
+	}
+	return FieldsFromNames(names)
+}
+
 func FieldsFromNames(fieldNames []protoreflect.Name) Fields {
 	var names []string
 	for _, name := range fieldNames {

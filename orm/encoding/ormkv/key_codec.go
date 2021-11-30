@@ -271,3 +271,7 @@ func (cdc KeyCodec) CheckValidRangeIterationKeys(start, end []protoreflect.Value
 
 	return nil
 }
+
+func (cdc *KeyCodec) GetFieldDescriptors() []protoreflect.FieldDescriptor {
+	return cdc.fieldDescriptors
+}

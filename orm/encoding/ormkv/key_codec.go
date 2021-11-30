@@ -79,7 +79,7 @@ func (cdc *KeyCodec) Encode(values []protoreflect.Value) ([]byte, error) {
 
 	n := len(values)
 	if n > len(cdc.fieldCodecs) {
-		return nil, ormerrors.IndexOutOfBounds.Wrapf("cannot encode %d values into %d fields", n, len(cdc.fieldCodecs)
+		return nil, ormerrors.IndexOutOfBounds.Wrapf("cannot encode %d values into %d fields", n, len(cdc.fieldCodecs))
 	}
 
 	for i := 0; i < n; i++ {

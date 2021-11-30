@@ -3,6 +3,7 @@ package tx
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -192,8 +193,17 @@ func (m *SignerInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return unpacker.UnpackAny(m.PublicKey, new(cryptotypes.PubKey))
 }
 
-// RegisterInterfaces registers the sdk.Tx interface.
+// RegisterLegacyAminoCodec registers the sdk Tx and Msg types.
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
+	cdc.RegisterInterface((*sdk.Tx)(nil), nil)
+}
+
+// RegisterInterfaces registers the sdk.Tx and Msg interfaces.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	registry.RegisterInterface(MsgInterfaceProtoName, (*sdk.Msg)(nil))
+	registry.RegisterInterface(msgResponseInterfaceProtoName, (*MsgResponse)(nil))
+
 	registry.RegisterInterface("cosmos.tx.v1beta1.Tx", (*sdk.Tx)(nil))
 	registry.RegisterImplementations((*sdk.Tx)(nil), &Tx{})
 }

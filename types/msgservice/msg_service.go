@@ -8,6 +8,8 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/gogo/protobuf/proto"
 )
 
 // RegisterMsgServiceDesc registers all type_urls from Msg services described
@@ -21,7 +23,7 @@ func RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.Serv
 		// NOTE: This is how we pull the concrete request type for each handler for registering in the InterfaceRegistry.
 		// This approach is maybe a bit hacky, but less hacky than reflecting on the handler object itself.
 		// We use a no-op interceptor to avoid actually calling into the handler itself.
-		_, _ = methodHandler(nil, context.Background(), func(i interface{}) error {
+		r, _ := methodHandler(nil, context.Background(), func(i interface{}) error {
 			msg, ok := i.(sdk.Msg)
 			if !ok {
 				// We panic here because there is no other alternative and the app cannot be initialized correctly
@@ -35,6 +37,7 @@ func RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.Serv
 			return nil
 		}, noopInterceptor)
 
+		registry.RegisterImplementations((*tx.MsgResponse)(nil), r.(proto.Message))
 	}
 }
 

@@ -119,14 +119,6 @@ func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*
 		return nil, err
 	}
 
-	// Don't show the MsgResponses explicity, since they are already in
-	// result.Data.
-	// Moreover, `result.MsgResponses` are Anys, which means that we need to
-	// register all `Msg{...}Response` concrete types in the interface registry
-	// to make it work.
-	// This is doable, but not necessary for a first version.
-	result.MsgResponses = nil
-
 	return &txtypes.SimulateResponse{
 		GasInfo: &gasInfo,
 		Result:  result,

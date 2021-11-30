@@ -169,7 +169,7 @@ func newTxDescriptor(ir codectypes.InterfaceRegistry) (*TxDescriptor, error) {
 		return nil, fmt.Errorf("unable to get *tx.Tx protobuf name")
 	}
 	// get msgs
-	sdkMsgImplementers := ir.ListImplementations(sdk.MsgInterfaceProtoName)
+	sdkMsgImplementers := ir.ListImplementations(tx.MsgInterfaceProtoName)
 
 	msgsDesc := make([]*MsgDescriptor, 0, len(sdkMsgImplementers))
 

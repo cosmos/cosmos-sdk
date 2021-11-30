@@ -7,6 +7,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	// MsgInterfaceProtoName defines the protobuf name of the cosmos Msg interface
+	MsgInterfaceProtoName         = "cosmos.base.v1beta1.Msg"
+	msgResponseInterfaceProtoName = "cosmos.tx.v1beta1.MsgResponse"
+)
+
+// MsgResponse is the interface all Msg server handlers' response types need to
+// implement. It's the interface that's representing all Msg responses packin
+// in Anys.
+type MsgResponse interface{}
+
 // SetMsgs takes a slice of sdk.Msg's and turn them into Any's.
 func SetMsgs(msgs []sdk.Msg) ([]*types.Any, error) {
 	anys := make([]*types.Any, len(msgs))

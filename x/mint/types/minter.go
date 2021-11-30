@@ -40,29 +40,49 @@ func ValidateMinter(minter Minter) error {
 	return nil
 }
 
-// NextInflationRate returns the new inflation rate for the next hour.
-func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) sdk.Dec {
-	// The target annual inflation rate is recalculated for each previsions cycle. The
-	// inflation is also subject to a rate change (positive or negative) depending on
-	// the distance from the desired ratio (67%). The maximum rate change possible is
-	// defined to be 13% per year, however the annual inflation is capped as between
-	// 7% and 20%.
+// NextInflationRate returns the new inflation rate for the next hour
+func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec, totalSupply sdk.Int) sdk.Dec {
+	// NOM staking is defined by an initial hyper-inflationary regime followed by an
+	// infinite regime stabilizing % staked around a goal.
 
-	// (1 - bondedRatio/GoalBonded) * InflationRateChange
-	inflationRateChangePerYear := sdk.OneDec().
-		Sub(bondedRatio.Quo(params.GoalBonded)).
-		Mul(params.InflationRateChange)
-	inflationRateChange := inflationRateChangePerYear.Quo(sdk.NewDec(int64(params.BlocksPerYear)))
+	// End of the hyper-inflationary period. The hyperinflationary regime ends at 13.5%
+	endHyperInflation := sdk.NewIntWithDecimal(250_000_000, 18)
 
-	// adjust the new annual inflation for this next cycle
-	inflation := m.Inflation.Add(inflationRateChange) // note inflationRateChange may be negative
-	if inflation.GT(params.InflationMax) {
-		inflation = params.InflationMax
+	// Initialize the inflation variable
+	inflation := sdk.NewDec(int64(0))
+
+	if totalSupply.GTE(endHyperInflation) {
+		// Infinite stabilized regime
+		//
+		// The target annual inflation rate is recalculated for each previsions cycle. The
+		// inflation is also subject to a rate change (positive or negative) depending on
+		// the distance from the desired ratio (67%). The maximum rate change possible is
+		// defined to be 13% per year, however the annual inflation is capped as between
+		// 7% and 20%.
+
+		// (1 - bondedRatio/GoalBonded) * InflationRateChange
+		inflationRateChangePerYear := sdk.OneDec().
+			Sub(bondedRatio.Quo(params.GoalBonded)).
+			Mul(params.InflationRateChange)
+		inflationRateChange := inflationRateChangePerYear.Quo(sdk.NewDec(int64(params.BlocksPerYear)))
+
+		// adjust the new annual inflation for this next cycle
+		inflation = m.Inflation.Add(inflationRateChange) // note inflationRateChange may be negative
+		if inflation.GT(params.InflationMax) {
+			inflation = params.InflationMax
+		}
+		if inflation.LT(params.InflationMin) {
+			inflation = params.InflationMin
+		}
+	} else {
+		// Hyperinflationary regime
+		//
+		// The inflation rate is calculated as 100% * e^(-((x-peak_position)^2 / (2*(std_dev^2))))),
+		// where peak_position = 150_000_000 NOM and std_dev = 50_000_000 NOM (but note that the
+		// argument is in aNOM)
+
+		inflation = sdk.GlobalInflationCurve.CalculateInflationDec(totalSupply)
 	}
-	if inflation.LT(params.InflationMin) {
-		inflation = params.InflationMin
-	}
-
 	return inflation
 }
 

@@ -3,7 +3,6 @@ package types
 import (
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"math"
 	"strings"
 
@@ -19,12 +18,12 @@ import (
 var cdc = codec.NewLegacyAmino()
 
 func (gi GasInfo) String() string {
-	bz, _ := yaml.Marshal(gi)
+	bz, _ := codec.MarshalYAML(codec.NewProtoCodec(nil), &gi)
 	return string(bz)
 }
 
 func (r Result) String() string {
-	bz, _ := yaml.Marshal(r)
+	bz, _ := codec.MarshalYAML(codec.NewProtoCodec(nil), &r)
 	return string(bz)
 }
 
@@ -81,6 +80,7 @@ func NewResponseResultTx(res *coretypes.ResultTx, anyTx *codectypes.Any, timesta
 		GasUsed:   res.TxResult.GasUsed,
 		Tx:        anyTx,
 		Timestamp: timestamp,
+		Events:    res.TxResult.Events,
 	}
 }
 
@@ -121,6 +121,7 @@ func newTxResponseCheckTx(res *coretypes.ResultBroadcastTxCommit) *TxResponse {
 		Info:      res.CheckTx.Info,
 		GasWanted: res.CheckTx.GasWanted,
 		GasUsed:   res.CheckTx.GasUsed,
+		Events:    res.CheckTx.Events,
 	}
 }
 
@@ -147,6 +148,7 @@ func newTxResponseDeliverTx(res *coretypes.ResultBroadcastTxCommit) *TxResponse 
 		Info:      res.DeliverTx.Info,
 		GasWanted: res.DeliverTx.GasWanted,
 		GasUsed:   res.DeliverTx.GasUsed,
+		Events:    res.DeliverTx.Events,
 	}
 }
 
@@ -169,44 +171,8 @@ func NewResponseFormatBroadcastTx(res *coretypes.ResultBroadcastTx) *TxResponse 
 }
 
 func (r TxResponse) String() string {
-	var sb strings.Builder
-	sb.WriteString("Response:\n")
-
-	if r.Height > 0 {
-		sb.WriteString(fmt.Sprintf("  Height: %d\n", r.Height))
-	}
-	if r.TxHash != "" {
-		sb.WriteString(fmt.Sprintf("  TxHash: %s\n", r.TxHash))
-	}
-	if r.Code > 0 {
-		sb.WriteString(fmt.Sprintf("  Code: %d\n", r.Code))
-	}
-	if r.Data != "" {
-		sb.WriteString(fmt.Sprintf("  Data: %s\n", r.Data))
-	}
-	if r.RawLog != "" {
-		sb.WriteString(fmt.Sprintf("  Raw Log: %s\n", r.RawLog))
-	}
-	if r.Logs != nil {
-		sb.WriteString(fmt.Sprintf("  Logs: %s\n", r.Logs))
-	}
-	if r.Info != "" {
-		sb.WriteString(fmt.Sprintf("  Info: %s\n", r.Info))
-	}
-	if r.GasWanted != 0 {
-		sb.WriteString(fmt.Sprintf("  GasWanted: %d\n", r.GasWanted))
-	}
-	if r.GasUsed != 0 {
-		sb.WriteString(fmt.Sprintf("  GasUsed: %d\n", r.GasUsed))
-	}
-	if r.Codespace != "" {
-		sb.WriteString(fmt.Sprintf("  Codespace: %s\n", r.Codespace))
-	}
-	if r.Timestamp != "" {
-		sb.WriteString(fmt.Sprintf("  Timestamp: %s\n", r.Timestamp))
-	}
-
-	return strings.TrimSpace(sb.String())
+	bz, _ := codec.MarshalYAML(codec.NewProtoCodec(nil), &r)
+	return string(bz)
 }
 
 // Empty returns true if the response is empty

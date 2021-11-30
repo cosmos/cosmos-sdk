@@ -59,6 +59,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (deps) [\#10210](https://github.com/cosmos/cosmos-sdk/pull/10210) Bump Tendermint to [v0.35.0](https://github.com/tendermint/tendermint/releases/tag/v0.35.0).
 * [\#10486](https://github.com/cosmos/cosmos-sdk/pull/10486) store/cachekv's `Store.Write` conservatively looks up keys, but also uses the [map clearing idiom](https://bencher.orijtech.com/perfclinic/mapclearing/) to reduce the RAM usage, CPU time usage, and garbage collection pressure from clearing maps, instead of allocating new maps.
+* (types) [\#10630](https://github.com/cosmos/cosmos-sdk/pull/10630) Add an `Events` field to the `TxResponse` type that captures _all_ events emitted by a transaction, unlike `Logs` which only contains events emitted during message execution.
 
 ### API Breaking Changes
 

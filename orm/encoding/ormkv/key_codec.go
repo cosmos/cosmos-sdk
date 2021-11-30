@@ -101,8 +101,7 @@ func (cdc *KeyCodec) GetValues(message protoreflect.Message) []protoreflect.Valu
 // provided key is a prefix key, the values that could be decoded will
 // be returned with io.EOF as the error.
 func (cdc *KeyCodec) Decode(r *bytes.Reader) ([]protoreflect.Value, error) {
-	err := skipPrefix(r, cdc.prefix)
-	if err != nil {
+	if err := skipPrefix(r, cdc.prefix); err != nil {
 		return nil, err
 	}
 

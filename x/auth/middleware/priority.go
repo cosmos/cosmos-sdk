@@ -14,10 +14,10 @@ type txPriorityHandler struct {
 	next tx.Handler
 }
 
-// TxPriorityHandler implements tx handling middleware that determines a
+// TxPriorityMiddleware implements tx handling middleware that determines a
 // transaction's priority via a naive mechanism -- the total sum of fees provided.
 // It sets the Priority in ResponseCheckTx only.
-func TxPriorityHandler(txh tx.Handler) tx.Handler {
+func TxPriorityMiddleware(txh tx.Handler) tx.Handler {
 	return txPriorityHandler{next: txh}
 }
 

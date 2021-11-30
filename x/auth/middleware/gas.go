@@ -35,10 +35,8 @@ func (txh gasTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx
 	}
 
 	res, resCheckTx, err := txh.next.CheckTx(sdk.WrapSDKContext(sdkCtx), req, checkReq)
-	res.GasUsed = uint64(sdkCtx.GasMeter().GasConsumed())
-	res.GasWanted = uint64(sdkCtx.GasMeter().Limit())
 
-	return res, resCheckTx, err
+	return populateGas(res, sdkCtx), resCheckTx, err
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
@@ -49,10 +47,8 @@ func (txh gasTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Respo
 	}
 
 	res, err := txh.next.DeliverTx(sdk.WrapSDKContext(sdkCtx), req)
-	res.GasUsed = uint64(sdkCtx.GasMeter().GasConsumed())
-	res.GasWanted = uint64(sdkCtx.GasMeter().Limit())
 
-	return res, err
+	return populateGas(res, sdkCtx), err
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
@@ -63,10 +59,16 @@ func (txh gasTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Resp
 	}
 
 	res, err := txh.next.SimulateTx(sdk.WrapSDKContext(sdkCtx), req)
+
+	return populateGas(res, sdkCtx), err
+}
+
+// populateGas returns a new tx.Response with gas fields populated.
+func populateGas(res tx.Response, sdkCtx sdk.Context) tx.Response {
 	res.GasWanted = sdkCtx.GasMeter().Limit()
 	res.GasUsed = sdkCtx.GasMeter().GasConsumed()
 
-	return res, err
+	return res
 }
 
 // gasContext returns a new context with a gas meter set from a given context.

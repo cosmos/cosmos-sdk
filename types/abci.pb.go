@@ -467,6 +467,7 @@ func (m *MsgData) GetData() []byte {
 // TxMsgData defines a list of MsgData. A transaction will have a MsgData object
 // for each message.
 type TxMsgData struct {
+	// data field is deprecated and not populated.
 	Data []*MsgData `protobuf:"bytes,1,rep,name=data,proto3" json:"data,omitempty"` // Deprecated: Do not use.
 	// msg_responses contains the Msg handler responses type packed in Anys.
 	//

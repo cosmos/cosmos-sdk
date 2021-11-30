@@ -26,18 +26,7 @@ var _ tx.Handler = tipsTxHandler{}
 // CheckTx implements tx.Handler.CheckTx.
 func (txh tipsTxHandler) CheckTx(ctx context.Context, req tx.Request, checkTx tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	res, resCheckTx, err := txh.next.CheckTx(ctx, req, checkTx)
-	if err != nil {
-		return tx.Response{}, tx.ResponseCheckTx{}, err
-	}
-
-	tipTx, ok := req.Tx.(tx.TipTx)
-	if !ok || tipTx.GetTip() == nil {
-		return res, tx.ResponseCheckTx{}, err
-	}
-
-	if err := txh.transferTip(ctx, tipTx); err != nil {
-		return tx.Response{}, tx.ResponseCheckTx{}, err
-	}
+	res, err = txh.transferTip(ctx, req, res, err)
 
 	return res, resCheckTx, err
 }
@@ -45,48 +34,36 @@ func (txh tipsTxHandler) CheckTx(ctx context.Context, req tx.Request, checkTx tx
 // DeliverTx implements tx.Handler.DeliverTx.
 func (txh tipsTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
 	res, err := txh.next.DeliverTx(ctx, req)
-	if err != nil {
-		return tx.Response{}, err
-	}
 
-	tipTx, ok := req.Tx.(tx.TipTx)
-	if !ok || tipTx.GetTip() == nil {
-		return res, err
-	}
-
-	if err := txh.transferTip(ctx, tipTx); err != nil {
-		return tx.Response{}, err
-	}
-
-	return res, err
+	return txh.transferTip(ctx, req, res, err)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
 func (txh tipsTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
 	res, err := txh.next.SimulateTx(ctx, req)
-	if err != nil {
-		return tx.Response{}, err
-	}
 
+	return txh.transferTip(ctx, req, res, err)
+}
+
+// transferTip transfers the tip from the tipper to the fee payer.
+func (txh tipsTxHandler) transferTip(ctx context.Context, req tx.Request, res tx.Response, err error) (tx.Response, error) {
 	tipTx, ok := req.Tx.(tx.TipTx)
+
+	// No-op if the tx doesn't have tips.
 	if !ok || tipTx.GetTip() == nil {
 		return res, err
 	}
 
-	if err := txh.transferTip(ctx, tipTx); err != nil {
-		return tx.Response{}, err
-	}
-
-	return res, err
-}
-
-// transferTip transfers the tip from the tipper to the fee payer.
-func (txh tipsTxHandler) transferTip(ctx context.Context, tipTx tx.TipTx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	tipper, err := sdk.AccAddressFromBech32(tipTx.GetTip().Tipper)
 	if err != nil {
-		return err
+		return tx.Response{}, err
 	}
 
-	return txh.bankKeeper.SendCoins(sdkCtx, tipper, tipTx.FeePayer(), tipTx.GetTip().Amount)
+	err = txh.bankKeeper.SendCoins(sdkCtx, tipper, tipTx.FeePayer(), tipTx.GetTip().Amount)
+	if err != nil {
+		return tx.Response{}, err
+	}
+
+	return res, nil
 }

@@ -79,7 +79,7 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		RecoveryTxMiddleware,
 		// Choose which events to index in Tendermint. Make sure no events are
 		// emitted outside of this middleware.
-		NewIndexEventsTxMiddleware(options.IndexEvents),
+		NewIndexEventsMiddleware(options.IndexEvents),
 		// Reject all extension options which can optionally be included in the
 		// tx.
 		RejectExtensionOptionsMiddleware,
@@ -89,7 +89,7 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		ValidateMemoMiddleware(options.AccountKeeper),
 		ConsumeTxSizeGasMiddleware(options.AccountKeeper),
 		DeductFeeMiddleware(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),
-		TxPriorityHandler,
+		TxPriorityMiddleware,
 		SetPubKeyMiddleware(options.AccountKeeper),
 		ValidateSigCountMiddleware(options.AccountKeeper),
 		SigGasConsumeMiddleware(options.AccountKeeper, sigGasConsumer),

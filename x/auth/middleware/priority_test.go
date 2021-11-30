@@ -28,11 +28,11 @@ func (s *MWTestSuite) TestPriority() {
 	txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	sdkTx, txBz, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	testTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 	s.Require().NoError(err)
 
 	// txHandler errors with insufficient fees
-	_, checkRes, err := txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: sdkTx, TxBytes: txBz}, tx.RequestCheckTx{})
+	_, checkTxRes, err := txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, tx.RequestCheckTx{})
 	s.Require().NoError(err, "Middleware should not have errored on too low fee for local gasPrice")
-	s.Require().Equal(atomCoin.Amount.Int64(), checkRes.Priority, "priority should be atom amount")
+	s.Require().Equal(atomCoin.Amount.Int64(), checkTxRes.Priority, "priority should be atom amount")
 }

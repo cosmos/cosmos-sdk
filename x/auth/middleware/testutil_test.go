@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -69,7 +70,16 @@ func (s *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 	msr := middleware.NewMsgServiceRouter(encodingConfig.InterfaceRegistry)
 	testdata.RegisterMsgServer(msr, testdata.MsgServerImpl{})
 	legacyRouter := middleware.NewLegacyRouter()
-	legacyRouter.AddRoute(sdk.NewRoute((&testdata.TestMsg{}).Route(), func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) { return &sdk.Result{}, nil }))
+	legacyRouter.AddRoute(sdk.NewRoute((&testdata.TestMsg{}).Route(), func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+		any, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			return nil, err
+		}
+
+		return &sdk.Result{
+			MsgResponses: []*codectypes.Any{any},
+		}, nil
+	}))
 	txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 		Debug:            s.app.Trace(),
 		MsgServiceRouter: msr,

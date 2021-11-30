@@ -480,6 +480,9 @@
     - [Proposal.Result](#cosmos.group.v1beta1.Proposal.Result)
     - [Proposal.Status](#cosmos.group.v1beta1.Proposal.Status)
   
+- [cosmos/group/v1beta1/genesis.proto](#cosmos/group/v1beta1/genesis.proto)
+    - [GenesisState](#cosmos.group.v1beta1.GenesisState)
+  
 - [cosmos/group/v1beta1/query.proto](#cosmos/group/v1beta1/query.proto)
     - [QueryGroupAccountInfo](#cosmos.group.v1beta1.QueryGroupAccountInfo)
     - [QueryGroupAccountInfoResponse](#cosmos.group.v1beta1.QueryGroupAccountInfoResponse)
@@ -7104,6 +7107,44 @@ Status defines proposal statuses.
 | STATUS_CLOSED | 2 | Final status of a proposal when the final tally was executed. |
 | STATUS_ABORTED | 3 | Final status of a proposal when the group was modified before the final tally. |
 
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/group/v1beta1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/group/v1beta1/genesis.proto
+
+
+
+<a name="cosmos.group.v1beta1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the group module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `group_seq` | [uint64](#uint64) |  | group_seq is the group table orm.Sequence, it is used to get the next group ID. |
+| `groups` | [GroupInfo](#cosmos.group.v1beta1.GroupInfo) | repeated | groups is the list of groups info. |
+| `group_members` | [GroupMember](#cosmos.group.v1beta1.GroupMember) | repeated | group_members is the list of groups members. |
+| `group_account_seq` | [uint64](#uint64) |  | group_account_seq is the group account table orm.Sequence, it is used to generate the next group account address. |
+| `group_accounts` | [GroupAccountInfo](#cosmos.group.v1beta1.GroupAccountInfo) | repeated | group_accounts is the list of group accounts info. |
+| `proposal_seq` | [uint64](#uint64) |  | proposal_seq is the proposal table orm.Sequence, it is used to get the next proposal ID. |
+| `proposals` | [Proposal](#cosmos.group.v1beta1.Proposal) | repeated | proposals is the list of proposals. |
+| `votes` | [Vote](#cosmos.group.v1beta1.Vote) | repeated | votes is the list of votes. |
+
+
+
+
+
+ <!-- end messages -->
 
  <!-- end enums -->
 

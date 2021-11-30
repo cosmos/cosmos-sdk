@@ -37,8 +37,6 @@ const (
 	SignModeLegacyAminoJSON = "amino-json"
 	// SignModeDirectAux is the value of the --sign-mode flag for SIGN_MODE_DIRECT_AUX
 	SignModeDirectAux = "direct-aux"
-	// SignModeAminoAux is the value of the --sign-mode flag for SIGN_MODE_AMINO_AUX
-	SignModeAminoAux = "amino-aux"
 )
 
 // List of CLI flags

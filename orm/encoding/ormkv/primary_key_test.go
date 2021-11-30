@@ -1,6 +1,7 @@
 package ormkv_test
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 
@@ -27,6 +28,11 @@ func TestPrimaryKeyCodec(t *testing.T) {
 			}
 			k, v, err := pkCodec.EncodeEntry(pk1)
 			assert.NilError(t, err)
+
+			k2, v2, err := pkCodec.EncodeKVFromMessage(a.ProtoReflect())
+			assert.NilError(t, err)
+			assert.Assert(t, bytes.Equal(k, k2))
+			assert.Assert(t, bytes.Equal(v, v2))
 
 			entry2, err := pkCodec.DecodeEntry(k, v)
 			assert.NilError(t, err)

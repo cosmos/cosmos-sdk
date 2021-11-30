@@ -1,6 +1,7 @@
 package ormkv_test
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 
@@ -33,6 +34,11 @@ func TestUniqueKeyCodec(t *testing.T) {
 			}
 			k, v, err := uniqueKeyCdc.EncodeEntry(uniq1)
 			assert.NilError(t, err)
+
+			k2, v2, err := uniqueKeyCdc.EncodeKVFromMessage(a.ProtoReflect())
+			assert.NilError(t, err)
+			assert.Assert(t, bytes.Equal(k, k2))
+			assert.Assert(t, bytes.Equal(v, v2))
 
 			entry2, err := uniqueKeyCdc.DecodeEntry(k, v)
 			assert.NilError(t, err)

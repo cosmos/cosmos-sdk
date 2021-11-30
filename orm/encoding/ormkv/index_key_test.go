@@ -1,6 +1,7 @@
 package ormkv_test
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 
@@ -39,6 +40,11 @@ func TestIndexKeyCodec(t *testing.T) {
 			}
 			k, v, err := indexKeyCdc.EncodeEntry(idx1)
 			assert.NilError(t, err)
+
+			k2, v2, err := indexKeyCdc.EncodeKVFromMessage(a.ProtoReflect())
+			assert.NilError(t, err)
+			assert.Assert(t, bytes.Equal(k, k2))
+			assert.Assert(t, bytes.Equal(v, v2))
 
 			entry2, err := indexKeyCdc.DecodeEntry(k, v)
 			assert.NilError(t, err)

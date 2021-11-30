@@ -21,7 +21,7 @@ func TestPrimaryKeyCodec(t *testing.T) {
 		for i := 0; i < 100; i++ {
 			a := testutil.GenA.Draw(t, fmt.Sprintf("a%d", i)).(*testpb.A)
 			key := keyCodec.Codec.GetValues(a.ProtoReflect())
-			pk1 := ormkv.PrimaryKeyEntry{
+			pk1 := &ormkv.PrimaryKeyEntry{
 				Key:   key,
 				Value: a,
 			}
@@ -30,7 +30,7 @@ func TestPrimaryKeyCodec(t *testing.T) {
 
 			entry2, err := pkCodec.DecodeEntry(k, v)
 			assert.NilError(t, err)
-			pk2 := entry2.(ormkv.PrimaryKeyEntry)
+			pk2 := entry2.(*ormkv.PrimaryKeyEntry)
 			assert.Equal(t, 0, pkCodec.CompareValues(pk1.Key, pk2.Key))
 			assert.DeepEqual(t, pk1.Value, pk2.Value, protocmp.Transform())
 

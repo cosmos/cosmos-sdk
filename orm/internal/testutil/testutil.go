@@ -120,17 +120,28 @@ type TestKeyCodec struct {
 	Codec    *ormkv.KeyCodec
 }
 
-func TestKeyCodecGen(minLen, maxLen int) *rapid.Generator {
-	return rapid.Custom(func(t *rapid.T) TestKeyCodec {
+func TestFieldSpecsGen(minLen, maxLen int) *rapid.Generator {
+	return rapid.Custom(func(t *rapid.T) []TestFieldSpec {
 		xs := rapid.SliceOfNDistinct(rapid.IntRange(0, len(TestFieldSpecs)-1), minLen, maxLen, func(i int) int { return i }).
-			Draw(t, "fieldSpecs").([]int)
+			Draw(t, "fieldSpecIndexes").([]int)
 
 		var specs []TestFieldSpec
-		var fields []protoreflect.FieldDescriptor
 
 		for _, x := range xs {
 			spec := TestFieldSpecs[x]
 			specs = append(specs, spec)
+		}
+
+		return specs
+	})
+}
+
+func TestKeyCodecGen(minLen, maxLen int) *rapid.Generator {
+	return rapid.Custom(func(t *rapid.T) TestKeyCodec {
+		specs := TestFieldSpecsGen(minLen, maxLen).Draw(t, "fieldSpecs").([]TestFieldSpec)
+
+		var fields []protoreflect.FieldDescriptor
+		for _, spec := range specs {
 			fields = append(fields, GetTestField(spec.FieldName))
 		}
 

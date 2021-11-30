@@ -24,7 +24,7 @@ func TestUniqueKeyCodec(t *testing.T) {
 			a := testutil.GenA.Draw(t, fmt.Sprintf("a%d", i)).(*testpb.A)
 			key := keyCodec.Codec.GetValues(a.ProtoReflect())
 			pk := pkCodec.Codec.GetValues(a.ProtoReflect())
-			uniq1 := ormkv.IndexKeyEntry{
+			uniq1 := &ormkv.IndexKeyEntry{
 				TableName:   tableName,
 				Fields:      fields,
 				IsUnique:    true,
@@ -36,7 +36,7 @@ func TestUniqueKeyCodec(t *testing.T) {
 
 			entry2, err := uniqueKeyCdc.DecodeEntry(k, v)
 			assert.NilError(t, err)
-			uniq2 := entry2.(ormkv.IndexKeyEntry)
+			uniq2 := entry2.(*ormkv.IndexKeyEntry)
 			assert.Equal(t, 0, keyCodec.Codec.CompareValues(uniq1.IndexValues, uniq2.IndexValues))
 			assert.Equal(t, 0, pkCodec.Codec.CompareValues(uniq1.PrimaryKey, uniq2.PrimaryKey))
 			assert.Equal(t, true, uniq2.IsUnique)

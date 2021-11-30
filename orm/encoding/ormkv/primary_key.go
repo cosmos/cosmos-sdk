@@ -58,14 +58,14 @@ func (p PrimaryKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 		return nil, err
 	}
 
-	return PrimaryKeyEntry{
+	return &PrimaryKeyEntry{
 		Key:   values,
 		Value: msg,
 	}, nil
 }
 
 func (p PrimaryKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
-	pkEntry, ok := entry.(PrimaryKeyEntry)
+	pkEntry, ok := entry.(*PrimaryKeyEntry)
 	if !ok {
 		return nil, nil, ormerrors.BadDecodeEntry
 	}

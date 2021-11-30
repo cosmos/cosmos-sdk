@@ -109,7 +109,8 @@ func (u UniqueKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 	if err != nil {
 		return nil, err
 	}
-	return IndexKeyEntry{
+
+	return &IndexKeyEntry{
 		TableName:   u.tableName,
 		Fields:      u.indexFieldNames,
 		IsUnique:    true,
@@ -119,7 +120,7 @@ func (u UniqueKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 }
 
 func (u UniqueKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
-	indexEntry := entry.(IndexKeyEntry)
+	indexEntry := entry.(*IndexKeyEntry)
 	k, err = u.keyCodec.Encode(indexEntry.IndexValues)
 	if err != nil {
 		return nil, nil, err

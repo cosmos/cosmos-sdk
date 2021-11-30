@@ -71,8 +71,7 @@ func (cdc *KeyCodec) Encode(values []protoreflect.Value) ([]byte, error) {
 	}
 
 	w := bytes.NewBuffer(make([]byte, 0, sz))
-	_, err = w.Write(cdc.prefix)
-	if err != nil {
+	if _, err = w.Write(cdc.prefix); err != nil {
 		return nil, err
 	}
 

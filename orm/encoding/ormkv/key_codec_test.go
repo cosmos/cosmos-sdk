@@ -53,106 +53,123 @@ func TestCompareValues(t *testing.T) {
 	assert.NilError(t, err)
 
 	tests := []struct {
-		name    string
-		values1 []protoreflect.Value
-		values2 []protoreflect.Value
-		expect  int
+		name       string
+		values1    []protoreflect.Value
+		values2    []protoreflect.Value
+		expect     int
+		validRange bool
 	}{
 		{
 			"eq",
 			ValuesOf(uint32(0), "abc", int32(-3)),
 			ValuesOf(uint32(0), "abc", int32(-3)),
 			0,
+			false,
 		},
 		{
 			"eq prefix 0",
 			ValuesOf(),
 			ValuesOf(),
 			0,
+			false,
 		},
 		{
 			"eq prefix 1",
 			ValuesOf(uint32(0)),
 			ValuesOf(uint32(0)),
 			0,
+			false,
 		},
 		{
 			"eq prefix 2",
 			ValuesOf(uint32(0), "abc"),
 			ValuesOf(uint32(0), "abc"),
 			0,
+			false,
 		},
 		{
 			"lt1",
 			ValuesOf(uint32(0), "abc", int32(-3)),
 			ValuesOf(uint32(1), "abc", int32(-3)),
 			-1,
+			true,
 		},
 		{
 			"lt2",
 			ValuesOf(uint32(1), "abb", int32(-3)),
 			ValuesOf(uint32(1), "abc", int32(-3)),
 			-1,
+			true,
 		},
 		{
 			"lt3",
 			ValuesOf(uint32(1), "abb", int32(-4)),
 			ValuesOf(uint32(1), "abb", int32(-3)),
 			-1,
+			true,
 		},
 		{
 			"less prefix 0",
 			ValuesOf(),
 			ValuesOf(uint32(1), "abb", int32(-4)),
 			-1,
+			true,
 		},
 		{
 			"less prefix 1",
 			ValuesOf(uint32(1)),
 			ValuesOf(uint32(1), "abb", int32(-4)),
 			-1,
+			true,
 		},
 		{
 			"less prefix 2",
 			ValuesOf(uint32(1), "abb"),
 			ValuesOf(uint32(1), "abb", int32(-4)),
 			-1,
+			true,
 		},
 		{
 			"gt1",
 			ValuesOf(uint32(2), "abb", int32(-4)),
 			ValuesOf(uint32(1), "abb", int32(-4)),
 			1,
+			false,
 		},
 		{
 			"gt2",
 			ValuesOf(uint32(2), "abc", int32(-4)),
 			ValuesOf(uint32(2), "abb", int32(-4)),
 			1,
+			false,
 		},
 		{
 			"gt3",
 			ValuesOf(uint32(2), "abc", int32(1)),
 			ValuesOf(uint32(2), "abc", int32(-3)),
 			1,
+			false,
 		},
 		{
 			"gt prefix 0",
 			ValuesOf(uint32(2), "abc", int32(-3)),
 			ValuesOf(),
 			1,
+			true,
 		},
 		{
 			"gt prefix 1",
 			ValuesOf(uint32(2), "abc", int32(-3)),
 			ValuesOf(uint32(2)),
 			1,
+			true,
 		},
 		{
 			"gt prefix 2",
 			ValuesOf(uint32(2), "abc", int32(-3)),
 			ValuesOf(uint32(2), "abc"),
 			1,
+			true,
 		},
 	}
 	for _, test := range tests {
@@ -161,6 +178,13 @@ func TestCompareValues(t *testing.T) {
 				t, test.expect,
 				cdc.CompareValues(test.values1, test.values2),
 			)
+			// CheckValidRangeIterationKeys should give comparable results
+			err := cdc.CheckValidRangeIterationKeys(test.values1, test.values2)
+			if test.validRange {
+				assert.NilError(t, err)
+			} else {
+				assert.ErrorContains(t, err, "")
+			}
 		})
 	}
 }

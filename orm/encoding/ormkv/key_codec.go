@@ -143,7 +143,7 @@ func (cdc *KeyCodec) IsFullyOrdered() bool {
 }
 
 // CompareValues compares the provided values which must correspond to the
-// fields in this key. Prefix keys of different lengths are  supported but the
+// fields in this key. Prefix keys of different lengths are supported but the
 // function will panic if either array is too long.
 func (cdc *KeyCodec) CompareValues(values1, values2 []protoreflect.Value) int {
 	j := len(values1)
@@ -207,7 +207,9 @@ func (cdc *KeyCodec) SetValues(message protoreflect.Message, values []protorefle
 
 // CheckValidRangeIterationKeys checks if the start and end key prefixes are valid
 // for range iteration meaning that for each non-equal field in the prefixes
-// those field types support ordered iteration.
+// those field types support ordered iteration. If start or end is longer than
+// the other, the omitted values will function as the minimum and maximum
+// values of that type respectively.
 func (cdc KeyCodec) CheckValidRangeIterationKeys(start, end []protoreflect.Value) error {
 	lenStart := len(start)
 	shortest := lenStart
@@ -244,16 +246,15 @@ func (cdc KeyCodec) CheckValidRangeIterationKeys(start, end []protoreflect.Value
 				descriptor.FullName(),
 				descriptor.Kind(),
 			)
+		} else if cmp < 0 {
+			break
 		}
 	}
 
 	// the last prefix value must not be equal if the key lengths are the same
 	if lenStart == lenEnd {
 		if cmp == 0 {
-			return ormerrors.InvalidRangeIterationKeys.Wrapf(
-				"start must be before end for field %s",
-				cdc.fieldDescriptors[shortest-1].FullName(),
-			)
+			return ormerrors.InvalidRangeIterationKeys
 		}
 	} else {
 		// check any remaining values in start or end

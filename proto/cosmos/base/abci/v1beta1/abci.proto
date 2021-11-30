@@ -126,10 +126,13 @@ message TxMsgData {
   // data field is deprecated and not populated.
   repeated MsgData data = 1 [deprecated = true];
 
-  // msg_responses contains the Msg handler responses type packed in Anys.
+  // msg_responses contains the Msg handler responses, serialized using
+  // Protobuf. The bytes at index i correspond to the Protobuf serialization
+  // of the i-th Msg's response type in the tx. It can be decoded into the
+  // corresponding `Msg{...}Response` type.
   //
   // Since: cosmos-sdk 0.45
-  repeated google.protobuf.Any msg_responses = 2;
+  repeated bytes msg_responses = 2;
 }
 
 // SearchTxsResult defines a structure for querying txs pageable

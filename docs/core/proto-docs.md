@@ -2394,7 +2394,7 @@ for each message.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `data` | [MsgData](#cosmos.base.abci.v1beta1.MsgData) | repeated | **Deprecated.** data field is deprecated and not populated. |
-| `msg_responses` | [google.protobuf.Any](#google.protobuf.Any) | repeated | msg_responses contains the Msg handler responses type packed in Anys.
+| `msg_responses` | [bytes](#bytes) | repeated | msg_responses contains the Msg handler responses, serialized using Protobuf. The bytes at index i correspond to the Protobuf serialization of the i-th Msg's response type in the tx. It can be decoded into the corresponding `Msg{...}Response` type.
 
 Since: cosmos-sdk 0.45 |
 

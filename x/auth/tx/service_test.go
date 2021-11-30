@@ -137,10 +137,6 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
 }
 
 func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
-	// Skipping this test, pending on how to decode MsgResponses with interface registry.
-	// TODO https://github.com/cosmos/cosmos-sdk/issues/10496#issuecomment-982561928
-	s.T().Skip()
-
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	// Convert the txBuilder to a tx.Tx.

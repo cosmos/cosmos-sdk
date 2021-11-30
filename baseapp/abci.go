@@ -909,7 +909,12 @@ func splitPath(requestPath string) (path []string) {
 
 // makeABCIData generates the Data field to be sent to ABCI Check/DeliverTx.
 func makeABCIData(txRes tx.Response) ([]byte, error) {
-	return proto.Marshal(&sdk.TxMsgData{MsgResponses: txRes.MsgResponses})
+	msgResBz := make([][]byte, len(txRes.MsgResponses))
+	for i, any := range txRes.MsgResponses {
+		msgResBz[i] = any.Value
+	}
+
+	return proto.Marshal(&sdk.TxMsgData{MsgResponses: msgResBz})
 }
 
 // convertTxResponseToCheckTx converts a tx.Response into a abci.ResponseCheckTx.

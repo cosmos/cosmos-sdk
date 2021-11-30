@@ -64,7 +64,7 @@ func (s *MWTestSuite) TestSetup() {
 	}
 	for _, tc := range testcases {
 		s.Run(tc.name, func() {
-			res, _, err := txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, tx.RequestCheckTx{})
+			res, _, err := txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: tc.tx}, tx.RequestCheckTx{})
 			if tc.expErr {
 				s.Require().EqualError(err, tc.errorStr)
 			} else {

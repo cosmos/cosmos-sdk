@@ -2,13 +2,13 @@ package ormkv
 
 import "google.golang.org/protobuf/reflect/protoreflect"
 
-type Codec interface {
+type EntryCodec interface {
 	DecodeEntry(k, v []byte) (Entry, error)
 	EncodeEntry(entry Entry) (k, v []byte, err error)
 }
 
 type IndexCodec interface {
-	Codec
+	EntryCodec
 	DecodeIndexKey(k, v []byte) (indexFields, primaryKey []protoreflect.Value, err error)
 	EncodeKVFromMessage(message protoreflect.Message) (k, v []byte, err error)
 }

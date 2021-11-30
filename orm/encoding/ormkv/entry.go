@@ -21,11 +21,11 @@ type PrimaryKeyEntry struct {
 	Value proto.Message
 }
 
-func (p PrimaryKeyEntry) GetTableName() protoreflect.FullName {
+func (p *PrimaryKeyEntry) GetTableName() protoreflect.FullName {
 	return p.Value.ProtoReflect().Descriptor().FullName()
 }
 
-func (p PrimaryKeyEntry) String() string {
+func (p *PrimaryKeyEntry) String() string {
 	msg := p.Value
 	name := msg.ProtoReflect().Descriptor().FullName()
 	msgBz, err := protojson.Marshal(msg)
@@ -52,7 +52,7 @@ func fmtValues(values []protoreflect.Value) string {
 	return string(bz)
 }
 
-func (p PrimaryKeyEntry) doNotImplement() {}
+func (p *PrimaryKeyEntry) doNotImplement() {}
 
 type IndexKeyEntry struct {
 	TableName   protoreflect.FullName
@@ -63,21 +63,21 @@ type IndexKeyEntry struct {
 	PrimaryKey []protoreflect.Value
 }
 
-func (i IndexKeyEntry) GetTableName() protoreflect.FullName {
+func (i *IndexKeyEntry) GetTableName() protoreflect.FullName {
 	return i.TableName
 }
 
-func (i IndexKeyEntry) GetFields() Fields {
+func (i *IndexKeyEntry) GetFields() Fields {
 	return i.Fields
 }
 
-func (i IndexKeyEntry) doNotImplement() {}
+func (i *IndexKeyEntry) doNotImplement() {}
 
-func (i IndexKeyEntry) string() string {
+func (i *IndexKeyEntry) string() string {
 	return fmt.Sprintf("%s%s:%s:%s", i.TableName, i.Fields, fmtValues(i.IndexValues), fmtValues(i.PrimaryKey))
 }
 
-func (i IndexKeyEntry) String() string {
+func (i *IndexKeyEntry) String() string {
 	if i.IsUnique {
 		return fmt.Sprintf("UNIQ:%s", i.string())
 	} else {
@@ -91,14 +91,14 @@ type SeqEntry struct {
 	Value     uint64
 }
 
-func (s SeqEntry) GetTableName() protoreflect.FullName {
+func (s *SeqEntry) GetTableName() protoreflect.FullName {
 	return s.TableName
 }
 
-func (s SeqEntry) doNotImplement() {}
+func (s *SeqEntry) doNotImplement() {}
 
-func (s SeqEntry) String() string {
+func (s *SeqEntry) String() string {
 	return fmt.Sprintf("SEQ:%s:%d", s.TableName, s.Value)
 }
 
-var _, _, _ Entry = PrimaryKeyEntry{}, IndexKeyEntry{}, SeqEntry{}
+var _, _, _ Entry = &PrimaryKeyEntry{}, &IndexKeyEntry{}, &SeqEntry{}

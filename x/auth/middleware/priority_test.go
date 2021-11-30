@@ -4,8 +4,8 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func (s *MWTestSuite) TestPriority() {
@@ -28,11 +28,11 @@ func (s *MWTestSuite) TestPriority() {
 	txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	sdkTx, txBz, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 	s.Require().NoError(err)
 
 	// txHandler errors with insufficient fees
-	res, err := txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{})
+	_, checkRes, err := txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: sdkTx, TxBytes: txBz}, tx.RequestCheckTx{})
 	s.Require().NoError(err, "Middleware should not have errored on too low fee for local gasPrice")
-	s.Require().Equal(atomCoin.Amount.Int64(), res.Priority, "priority should be atom amount")
+	s.Require().Equal(atomCoin.Amount.Int64(), checkRes.Priority, "priority should be atom amount")
 }

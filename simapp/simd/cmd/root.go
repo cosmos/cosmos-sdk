@@ -215,7 +215,7 @@ func txCommand() *cobra.Command {
 		authcmd.GetBroadcastCommand(),
 		authcmd.GetEncodeCommand(),
 		authcmd.GetDecodeCommand(),
-		authcmd.GetTipsToFeeCommand(),
+		authcmd.GetAuxToFeeCommand(),
 	)
 
 	simapp.ModuleBasics.AddTxCommands(cmd)

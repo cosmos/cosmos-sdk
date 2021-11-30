@@ -251,6 +251,11 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		}
 	}
 
+	if !clientCtx.IsAux || flagSet.Changed(flags.FlagAux) {
+		isAux, _ := flagSet.GetBool(flags.FlagAux)
+		clientCtx = clientCtx.WithAux(isAux)
+	}
+
 	return clientCtx, nil
 }
 

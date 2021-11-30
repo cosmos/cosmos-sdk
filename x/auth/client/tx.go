@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	typestx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
@@ -105,16 +104,6 @@ func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) 
 	}
 
 	return ctx.TxConfig.TxJSONDecoder()(bytes)
-}
-
-func ReadAuxSignerData(cdc codec.Codec, auxSignerData *typestx.AuxSignerData, filename string) error {
-	bytes, err := os.ReadFile(filename)
-	if err != nil {
-		return err
-	}
-
-	cdc.UnmarshalJSON(bytes, auxSignerData)
-	return nil
 }
 
 // NewBatchScanner returns a new BatchScanner to read newline-delimited StdTx transactions from r.

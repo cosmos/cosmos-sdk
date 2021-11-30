@@ -116,11 +116,11 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().Bool(FlagOffline, false, "Offline mode (does not allow any online functionality)")
 	cmd.Flags().BoolP(FlagSkipConfirmation, "y", false, "Skip tx broadcasting prompt confirmation")
 	cmd.Flags().String(FlagKeyringBackend, DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test|memory)")
-	cmd.Flags().String(FlagSignMode, "", "Choose sign mode (direct|amino-json|direct-aux|amino-aux), this is an advanced feature")
+	cmd.Flags().String(FlagSignMode, "", "Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature")
 	cmd.Flags().Uint64(FlagTimeoutHeight, 0, "Set a block timeout height to prevent the tx from being committed past a certain height")
 	cmd.Flags().String(FlagFeeAccount, "", "Fee account pays fees for the transaction instead of deducting from the signer")
-	cmd.Flags().String(FlagTip, "", "Tip amount for executing the tx; eg: 1000uatom")
-	cmd.Flags().Bool(FlagAux, false, "Aux mode transactions for tips")
+	cmd.Flags().String(FlagTip, "", "Tip amount for executing the tx, comma-separated; eg: 1000uatom. This flag is only taken into account with using --aux")
+	cmd.Flags().Bool(FlagAux, false, "Generate aux signer data instead of sending a tx")
 
 	// --gas can accept integers and "auto"
 	cmd.Flags().String(FlagGas, "", fmt.Sprintf("gas limit to set per-transaction; set to %q to calculate sufficient gas automatically (default %d)", GasFlagAuto, DefaultGasLimit))

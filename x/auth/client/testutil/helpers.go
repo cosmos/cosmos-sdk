@@ -111,7 +111,7 @@ func TxTipsToFeeExec(clientCtx client.Context, filename string, extraArgs ...str
 		filename,
 	}
 
-	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetTipsToFeeCommand(), append(args, extraArgs...))
+	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetAuxToFeeCommand(), append(args, extraArgs...))
 }
 
 // DONTCOVER

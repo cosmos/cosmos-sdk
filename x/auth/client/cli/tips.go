@@ -1,18 +1,21 @@
 package cli
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
-func GetTipsToFeeCommand() *cobra.Command {
+func GetAuxToFeeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "tips-to-fee <aux_signed_tx.json>",
+		Use:   "aux-to-fee <aux_signed_tx.json>",
 		Short: "tips to fee broadcast the aux signed tx, and sends the tip amount to the broadcaster",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -22,7 +25,7 @@ func GetTipsToFeeCommand() *cobra.Command {
 			}
 
 			auxSignerData := &tx.AuxSignerData{}
-			err = authclient.ReadAuxSignerData(clientCtx.Codec, auxSignerData, args[0])
+			err = readAuxSignerData(clientCtx.Codec, auxSignerData, args[0])
 			if err != nil {
 				return err
 			}
@@ -61,4 +64,14 @@ func GetTipsToFeeCommand() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
+}
+
+func readAuxSignerData(cdc codec.Codec, auxSignerData *tx.AuxSignerData, filename string) error {
+	bytes, err := os.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+
+	cdc.UnmarshalJSON(bytes, auxSignerData)
+	return nil
 }

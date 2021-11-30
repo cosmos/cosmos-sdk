@@ -256,22 +256,6 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 	return tx, nil
 }
 
-func appendTips(clientCtx client.Context, tb client.TxBuilder, f Factory) client.TxBuilder {
-	tipAmt := f.fees
-	if f.tip != nil && f.tip.String() != "" {
-		tipAmt = f.tip.Amount
-	}
-
-	if f.SignMode() == signing.SignMode_SIGN_MODE_DIRECT_AUX {
-		tb.SetTip(&tx.Tip{
-			Tipper: clientCtx.FromAddress.String(),
-			Amount: tipAmt,
-		})
-	}
-
-	return tb
-}
-
 // PrintUnsignedTx will generate an unsigned transaction and print it to the writer
 // specified by ctx.Output. If simulation was requested, the gas will be
 // simulated and also printed to the same writer before the transaction is
@@ -295,8 +279,6 @@ func (f Factory) PrintUnsignedTx(clientCtx client.Context, msgs ...sdk.Msg) erro
 	if err != nil {
 		return err
 	}
-
-	unsignedTx = appendTips(clientCtx, unsignedTx, f)
 
 	json, err := clientCtx.TxConfig.TxJSONEncoder()(unsignedTx.GetTx())
 	if err != nil {

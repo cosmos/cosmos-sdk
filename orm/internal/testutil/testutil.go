@@ -156,3 +156,14 @@ func (k TestKeyCodec) Draw(t *rapid.T, id string) []protoreflect.Value {
 	}
 	return keyValues
 }
+
+var GenA = rapid.Custom(func(t *rapid.T) *testpb.A {
+	a := &testpb.A{}
+	ref := a.ProtoReflect()
+	for _, spec := range TestFieldSpecs {
+		field := GetTestField(spec.FieldName)
+		value := spec.Gen.Draw(t, string(spec.FieldName))
+		ref.Set(field, protoreflect.ValueOf(value))
+	}
+	return a
+})

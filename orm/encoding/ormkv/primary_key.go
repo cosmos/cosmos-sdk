@@ -46,7 +46,7 @@ func (p PrimaryKeyCodec) DecodeIndexKey(k, _ []byte) (indexFields, primaryKey []
 
 }
 
-func (p PrimaryKeyCodec) DecodeKV(k, v []byte) (Entry, error) {
+func (p PrimaryKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 	values, err := p.Decode(bytes.NewReader(k))
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func (p PrimaryKeyCodec) DecodeKV(k, v []byte) (Entry, error) {
 	}, nil
 }
 
-func (p PrimaryKeyCodec) EncodeKV(entry Entry) (k, v []byte, err error) {
+func (p PrimaryKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 	pkEntry, ok := entry.(PrimaryKeyEntry)
 	if !ok {
 		return nil, nil, ormerrors.BadDecodeEntry
@@ -74,17 +74,22 @@ func (p PrimaryKeyCodec) EncodeKV(entry Entry) (k, v []byte, err error) {
 		return nil, nil, ormerrors.BadDecodeEntry
 	}
 
-	bz, err := p.KeyCodec.Encode(pkEntry.Key)
+	k, err = p.KeyCodec.Encode(pkEntry.Key)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	v, err = proto.MarshalOptions{Deterministic: true}.Marshal(pkEntry.Value)
+	v, err = p.marshal(pkEntry.Value)
+	return k, v, err
+}
+
+func (p PrimaryKeyCodec) marshal(message proto.Message) (v []byte, err error) {
+	v, err = proto.MarshalOptions{Deterministic: true}.Marshal(message)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return bz, v, nil
+	return v, nil
 }
 
 func (p *PrimaryKeyCodec) ClearValues(message protoreflect.Message) {
@@ -102,4 +107,14 @@ func (p *PrimaryKeyCodec) Unmarshal(key []protoreflect.Value, value []byte, mess
 	// rehydrate primary key
 	p.SetValues(message.ProtoReflect(), key)
 	return nil
+}
+
+func (p PrimaryKeyCodec) EncodeKVFromMessage(message protoreflect.Message) (k, v []byte, err error) {
+	_, k, err = p.KeyCodec.EncodeFromMessage(message)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	v, err = p.marshal(message.Interface())
+	return k, v, err
 }

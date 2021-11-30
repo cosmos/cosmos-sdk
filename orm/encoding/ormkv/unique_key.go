@@ -31,7 +31,8 @@ func NewUniqueKeyCodec(keyCodec *KeyCodec, tableName protoreflect.FullName, prim
 		inKey bool
 		i     int
 	}
-	for i, field := range primaryKeyFields {
+	k := 0
+	for _, field := range primaryKeyFields {
 		if j, ok := haveFields[field.Name()]; ok {
 			pkFieldOrder = append(pkFieldOrder, struct {
 				inKey bool
@@ -42,7 +43,8 @@ func NewUniqueKeyCodec(keyCodec *KeyCodec, tableName protoreflect.FullName, prim
 			pkFieldOrder = append(pkFieldOrder, struct {
 				inKey bool
 				i     int
-			}{inKey: false, i: i})
+			}{inKey: false, i: k})
+			k++
 		}
 	}
 
@@ -102,7 +104,7 @@ func (cdc UniqueKeyCodec) extractPrimaryKey(keyValues, valueValues []protoreflec
 	return pkValues
 }
 
-func (u UniqueKeyCodec) DecodeKV(k, v []byte) (Entry, error) {
+func (u UniqueKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 	idxVals, pk, err := u.DecodeIndexKey(k, v)
 	if err != nil {
 		return nil, err
@@ -116,7 +118,7 @@ func (u UniqueKeyCodec) DecodeKV(k, v []byte) (Entry, error) {
 	}, err
 }
 
-func (u UniqueKeyCodec) EncodeKV(entry Entry) (k, v []byte, err error) {
+func (u UniqueKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 	indexEntry := entry.(IndexKeyEntry)
 	k, err = u.keyCodec.Encode(indexEntry.IndexValues)
 	if err != nil {
@@ -144,5 +146,15 @@ func (u UniqueKeyCodec) EncodeKV(entry Entry) (k, v []byte, err error) {
 	}
 
 	v, err = u.valueCodec.Encode(values)
+	return k, v, err
+}
+
+func (u UniqueKeyCodec) EncodeKVFromMessage(message protoreflect.Message) (k, v []byte, err error) {
+	_, k, err = u.keyCodec.EncodeFromMessage(message)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	_, v, err = u.valueCodec.EncodeFromMessage(message)
 	return k, v, err
 }

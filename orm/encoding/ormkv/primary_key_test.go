@@ -19,15 +19,16 @@ func TestPrimaryKeyCodec(t *testing.T) {
 		keyCodec := testutil.TestKeyCodecGen(0, 5).Draw(t, "keyCodec").(testutil.TestKeyCodec)
 		pkCodec := ormkv.NewPrimaryKeyCodec(keyCodec.Codec, (&testpb.A{}).ProtoReflect().Type(), proto.UnmarshalOptions{})
 		for i := 0; i < 100; i++ {
-			key := keyCodec.Draw(t, fmt.Sprintf("i%d", i))
+			a := testutil.GenA.Draw(t, fmt.Sprintf("a%d", i)).(*testpb.A)
+			key := keyCodec.Codec.GetValues(a.ProtoReflect())
 			pk1 := ormkv.PrimaryKeyEntry{
 				Key:   key,
-				Value: &testpb.A{},
+				Value: a,
 			}
-			k, v, err := pkCodec.EncodeKV(pk1)
+			k, v, err := pkCodec.EncodeEntry(pk1)
 			assert.NilError(t, err)
 
-			entry2, err := pkCodec.DecodeKV(k, v)
+			entry2, err := pkCodec.DecodeEntry(k, v)
 			assert.NilError(t, err)
 			pk2 := entry2.(ormkv.PrimaryKeyEntry)
 			assert.Equal(t, 0, pkCodec.CompareValues(pk1.Key, pk2.Key))
@@ -38,15 +39,9 @@ func TestPrimaryKeyCodec(t *testing.T) {
 			assert.Equal(t, 0, pkCodec.CompareValues(pk1.Key, pk3))
 			assert.Equal(t, 0, pkCodec.CompareValues(pk1.Key, idxFields))
 
-			var a1, a2 testpb.A
-			pkCodec.SetValues(a1.ProtoReflect(), pk1.Key)
-			err = pkCodec.Unmarshal(pk1.Key, v, &a2)
-			assert.NilError(t, err)
-			assert.DeepEqual(t, &a1, &a2, protocmp.Transform())
-
-			pkCodec.ClearValues(a1.ProtoReflect())
-			pkCodec.SetValues(a1.ProtoReflect(), pk1.Key)
-			assert.DeepEqual(t, &a1, &a2, protocmp.Transform())
+			pkCodec.ClearValues(a.ProtoReflect())
+			pkCodec.SetValues(a.ProtoReflect(), pk1.Key)
+			assert.DeepEqual(t, a, pk2.Value, protocmp.Transform())
 		}
 	})
 }

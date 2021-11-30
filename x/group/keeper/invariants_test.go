@@ -391,11 +391,10 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 				TotalWeight: "7",
 			},
 			groupAcc: &group.GroupAccountInfo{
-				Address:       addr1.String(),
-				GroupId:       1,
-				Admin:         adminAddr.String(),
-				Version:       1,
-				DerivationKey: []byte("derivation-key"),
+				Address: addr1.String(),
+				GroupId: 1,
+				Admin:   adminAddr.String(),
+				Version: 1,
 			},
 			groupMembers: []*group.GroupMember{
 				{
@@ -450,11 +449,10 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 				TotalWeight: "5",
 			},
 			groupAcc: &group.GroupAccountInfo{
-				Address:       addr1.String(),
-				GroupId:       1,
-				Admin:         adminAddr.String(),
-				Version:       1,
-				DerivationKey: []byte("derivation-key"),
+				Address: addr1.String(),
+				GroupId: 1,
+				Admin:   adminAddr.String(),
+				Version: 1,
 			},
 			groupMembers: []*group.GroupMember{
 				{
@@ -509,11 +507,10 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 				TotalWeight: "7",
 			},
 			groupAcc: &group.GroupAccountInfo{
-				Address:       addr1.String(),
-				GroupId:       1,
-				Admin:         adminAddr.String(),
-				Version:       1,
-				DerivationKey: []byte("derivation-key"),
+				Address: addr1.String(),
+				GroupId: 1,
+				Admin:   adminAddr.String(),
+				Version: 1,
 			},
 			groupMembers: []*group.GroupMember{
 				{

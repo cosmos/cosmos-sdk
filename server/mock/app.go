@@ -25,7 +25,7 @@ func testTxHandler(options middleware.TxHandlerOptions) tx.Handler {
 		middleware.NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
 		middleware.GasTxMiddleware,
 		middleware.RecoveryTxMiddleware,
-		middleware.NewIndexEventsTxMiddleware(options.IndexEvents),
+		middleware.NewIndexEventsMiddleware(options.IndexEvents),
 	)
 }
 

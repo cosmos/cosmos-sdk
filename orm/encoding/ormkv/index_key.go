@@ -9,6 +9,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+// IndexKeyCodec is the codec for (non-unique) index keys.
 type IndexKeyCodec struct {
 	*KeyCodec
 	tableName    protoreflect.FullName
@@ -18,6 +19,7 @@ type IndexKeyCodec struct {
 
 var _ IndexCodec = &IndexKeyCodec{}
 
+// NewIndexKeyCodec creates a new IndexKeyCodec.
 func NewIndexKeyCodec(prefix []byte, tableName protoreflect.FullName, indexFields []protoreflect.FieldDescriptor, primaryKeyFields []protoreflect.FieldDescriptor) (*IndexKeyCodec, error) {
 	indexFieldMap := map[protoreflect.Name]int{}
 

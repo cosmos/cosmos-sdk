@@ -11,12 +11,14 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+// PrimaryKeyCodec is the codec for primary keys.
 type PrimaryKeyCodec struct {
 	*KeyCodec
 	msgType          protoreflect.MessageType
 	unmarshalOptions proto.UnmarshalOptions
 }
 
+// NewPrimaryKeyCodec creates a new PrimaryKeyCodec.
 func NewPrimaryKeyCodec(keyCodec *KeyCodec, msgType protoreflect.MessageType, unmarshalOptions proto.UnmarshalOptions) *PrimaryKeyCodec {
 	return &PrimaryKeyCodec{
 		KeyCodec:         keyCodec,

@@ -6,14 +6,20 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+// Fields abstractly represents a list of fields with a comparable type which
+// can be used as a map kep.
 type Fields struct {
 	fields string
 }
 
+// CommaSeparatedFields creates a Fields instance from a list of comma-separated
+// fields.
 func CommaSeparatedFields(fields string) (Fields, error) {
 	return Fields{fields: fields}, nil
 }
 
+// FieldsFromDescriptors creates a Fields instance from an array of field
+// descriptors.
 func FieldsFromDescriptors(fieldDescriptors []protoreflect.FieldDescriptor) Fields {
 	names := make([]protoreflect.Name, len(fieldDescriptors))
 	for i, descriptor := range fieldDescriptors {
@@ -22,6 +28,8 @@ func FieldsFromDescriptors(fieldDescriptors []protoreflect.FieldDescriptor) Fiel
 	return FieldsFromNames(names)
 }
 
+// FieldsFromNames creates a Fields instance from an array of field
+// names.
 func FieldsFromNames(fieldNames []protoreflect.Name) Fields {
 	var names []string
 	for _, name := range fieldNames {
@@ -30,6 +38,7 @@ func FieldsFromNames(fieldNames []protoreflect.Name) Fields {
 	return Fields{fields: strings.Join(names, ",")}
 }
 
+// Names returns the array of names this Fields instance represents.
 func (f Fields) Names() []protoreflect.Name {
 	fields := strings.Split(f.fields, ",")
 	names := make([]protoreflect.Name, len(fields))

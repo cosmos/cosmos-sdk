@@ -9,15 +9,23 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
+// Entry defines a logical representation of a kv-store entry for ORM instances.
 type Entry interface {
 	fmt.Stringer
+
+	// GetTableName returns the table-name (equivalent to the fully-qualified
+	// proto message name) this entry corresponds to.
 	GetTableName() protoreflect.FullName
 
 	doNotImplement()
 }
 
+// PrimaryKeyEntry represents a logically decoded primary-key entry.
 type PrimaryKeyEntry struct {
-	Key   []protoreflect.Value
+	// Key represents the primary key values.
+	Key []protoreflect.Value
+
+	// Value represents the message stored under the primary key.
 	Value proto.Message
 }
 
@@ -54,12 +62,23 @@ func fmtValues(values []protoreflect.Value) string {
 
 func (p *PrimaryKeyEntry) doNotImplement() {}
 
+// IndexKeyEntry represents a logically decoded index entry.
 type IndexKeyEntry struct {
-	TableName   protoreflect.FullName
-	Fields      Fields
-	IsUnique    bool
+
+	// TableName is the table this entry represents.
+	TableName protoreflect.FullName
+
+	// Fields are the index fields this entry represents.
+	Fields Fields
+
+	// IsUnique indicates whether this index is unique or not.
+	IsUnique bool
+
+	// IndexValues represent the index values.
 	IndexValues []protoreflect.Value
-	// PrimaryKey is empty if this is a prefix key
+
+	// PrimaryKey represents the primary key values, it is empty if this is a
+	// prefix key
 	PrimaryKey []protoreflect.Value
 }
 
@@ -86,9 +105,14 @@ func (i *IndexKeyEntry) String() string {
 	}
 }
 
+// SeqEntry represents a sequence for tables with auto-incrementing primary keys.
 type SeqEntry struct {
+
+	// TableName is the table this entry represents.
 	TableName protoreflect.FullName
-	Value     uint64
+
+	// Value is the uint64 value stored for this sequence.
+	Value uint64
 }
 
 func (s *SeqEntry) GetTableName() protoreflect.FullName {

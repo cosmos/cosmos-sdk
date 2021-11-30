@@ -9,11 +9,13 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+// SeqCodec is the codec for auto-incrementing uint64 primary key sequences.
 type SeqCodec struct {
 	tableName protoreflect.FullName
 	prefix    []byte
 }
 
+// NewSeqCodec creates a new SeqCodec.
 func NewSeqCodec(tableName protoreflect.FullName, prefix []byte) *SeqCodec {
 	return &SeqCodec{tableName: tableName, prefix: prefix}
 }

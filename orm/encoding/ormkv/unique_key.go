@@ -9,6 +9,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+// UniqueKeyCodec is the codec for unique indexes.
 type UniqueKeyCodec struct {
 	tableName       protoreflect.FullName
 	indexFieldNames Fields
@@ -20,6 +21,7 @@ type UniqueKeyCodec struct {
 	valueCodec *KeyCodec
 }
 
+// NewUniqueKeyCodec creates a new UniqueKeyCodec.
 func NewUniqueKeyCodec(keyCodec *KeyCodec, tableName protoreflect.FullName, primaryKeyFields []protoreflect.FieldDescriptor) (*UniqueKeyCodec, error) {
 	haveFields := map[protoreflect.Name]int{}
 	for i, descriptor := range keyCodec.fieldDescriptors {

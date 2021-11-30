@@ -23,21 +23,23 @@ type KeyCodec struct {
 	fieldCodecs      []ormfield.Codec
 }
 
-func NewKeyCodec(prefix []byte, fieldDescs []protoreflect.FieldDescriptor) (*KeyCodec, error) {
-	n := len(fieldDescs)
-	var valueCodecs []ormfield.Codec
+// NewKeyCodec returns a new KeyCodec with the provided prefix and
+// codecs for the provided fields.
+func NewKeyCodec(prefix []byte, fieldDescriptors []protoreflect.FieldDescriptor) (*KeyCodec, error) {
+	n := len(fieldDescriptors)
+	var fieldCodecs []ormfield.Codec
 	var variableSizers []struct {
 		cdc ormfield.Codec
 		i   int
 	}
 	fixedSize := 0
-	names := make([]protoreflect.Name, len(fieldDescs))
+	names := make([]protoreflect.Name, len(fieldDescriptors))
 	for i := 0; i < n; i++ {
 		nonTerminal := true
 		if i == n-1 {
 			nonTerminal = false
 		}
-		field := fieldDescs[i]
+		field := fieldDescriptors[i]
 		cdc, err := ormfield.GetCodec(field, nonTerminal)
 		if err != nil {
 			return nil, err
@@ -50,13 +52,13 @@ func NewKeyCodec(prefix []byte, fieldDescs []protoreflect.FieldDescriptor) (*Key
 				i   int
 			}{cdc, i})
 		}
-		valueCodecs = append(valueCodecs, cdc)
+		fieldCodecs = append(fieldCodecs, cdc)
 		names[i] = field.Name()
 	}
 
 	return &KeyCodec{
-		fieldCodecs:      valueCodecs,
-		fieldDescriptors: fieldDescs,
+		fieldCodecs:      fieldCodecs,
+		fieldDescriptors: fieldDescriptors,
 		prefix:           prefix,
 		fixedSize:        fixedSize,
 		variableSizers:   variableSizers,
@@ -144,7 +146,9 @@ func (cdc *KeyCodec) IsFullyOrdered() bool {
 
 // CompareValues compares the provided values which must correspond to the
 // fields in this key. Prefix keys of different lengths are supported but the
-// function will panic if either array is too long.
+// function will panic if either array is too long. A negative value is returned
+// if values1 is less than values2, 0 is returned if the two arrays are equal,
+// and a positive value is returned if values2 is greater.
 func (cdc *KeyCodec) CompareValues(values1, values2 []protoreflect.Value) int {
 	j := len(values1)
 	k := len(values2)

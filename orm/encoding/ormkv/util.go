@@ -11,9 +11,7 @@ func skipPrefix(r *bytes.Reader, prefix []byte) error {
 		// we skip checking the prefix for performance reasons because we assume
 		// that it was checked by the caller
 		_, err := r.Seek(int64(n), io.SeekCurrent)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 	return nil
 }

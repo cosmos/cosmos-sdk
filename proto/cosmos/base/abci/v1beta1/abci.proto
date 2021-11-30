@@ -44,7 +44,7 @@ message TxResponse {
   // emitted from the ante handler. Whereas Logs contains the events, with
   // additional metadata, emitted only by processing the messages.
   //
-  // Since: cosmos-sdk 0.45
+  // Since: cosmos-sdk 0.42.11
   repeated tendermint.abci.Event events = 13 [(gogoproto.nullable) = false];
 }
 

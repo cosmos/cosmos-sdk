@@ -2,6 +2,7 @@ syntax = "proto3";
 package cosmos.gov.v1beta2;
 
 import "cosmos/base/v1beta1/coin.proto";
+import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
@@ -43,11 +44,11 @@ message Proposal {
   repeated google.protobuf.Any messages               = 2;
   ProposalStatus               status                 = 3;
   TallyResult                  final_tally_result     = 4;
-  google.protobuf.Timestamp    submit_time            = 5;
-  google.protobuf.Timestamp    deposit_end_time       = 6;
+  google.protobuf.Timestamp    submit_time            = 5 [(gogoproto.stdtime) = true];
+  google.protobuf.Timestamp    deposit_end_time       = 6 [(gogoproto.stdtime) = true];
   repeated cosmos.base.v1beta1.Coin total_deposit     = 7;
-  google.protobuf.Timestamp         voting_start_time = 8;
-  google.protobuf.Timestamp         voting_end_time   = 9;
+  google.protobuf.Timestamp         voting_start_time = 8 [(gogoproto.stdtime) = true];
+  google.protobuf.Timestamp         voting_end_time   = 9 [(gogoproto.stdtime) = true];
 }
 
 // ProposalStatus enumerates the valid statuses of a proposal.
@@ -98,13 +99,13 @@ message DepositParams {
 
   //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2
   //  months.
-  google.protobuf.Duration max_deposit_period = 2;
+  google.protobuf.Duration max_deposit_period = 2 [(gogoproto.stdduration) = true];
 }
 
 // VotingParams defines the params for voting on governance proposals.
 message VotingParams {
   //  Length of the voting period.
-  google.protobuf.Duration voting_period = 1;
+  google.protobuf.Duration voting_period = 1 [(gogoproto.stdduration) = true];
 }
 
 // TallyParams defines the params for tallying votes on governance proposals.

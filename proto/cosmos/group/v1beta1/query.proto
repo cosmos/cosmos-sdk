@@ -12,41 +12,41 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/group";
 service Query {
 
   // GroupInfo queries group info based on group id.
-  rpc GroupInfo(QueryGroupInfoRequest) returns (QueryGroupInfoResponse);
+  rpc GroupInfo(QueryGroupInfo) returns (QueryGroupInfoResponse);
 
   // GroupAccountInfo queries group account info based on group account address.
-  rpc GroupAccountInfo(QueryGroupAccountInfoRequest) returns (QueryGroupAccountInfoResponse);
+  rpc GroupAccountInfo(QueryGroupAccountInfo) returns (QueryGroupAccountInfoResponse);
 
   // GroupMembers queries members of a group
-  rpc GroupMembers(QueryGroupMembersRequest) returns (QueryGroupMembersResponse);
+  rpc GroupMembers(QueryGroupMembers) returns (QueryGroupMembersResponse);
 
   // GroupsByAdmin queries groups by admin address.
-  rpc GroupsByAdmin(QueryGroupsByAdminRequest) returns (QueryGroupsByAdminResponse);
+  rpc GroupsByAdmin(QueryGroupsByAdmin) returns (QueryGroupsByAdminResponse);
 
   // GroupAccountsByGroup queries group accounts by group id.
-  rpc GroupAccountsByGroup(QueryGroupAccountsByGroupRequest) returns (QueryGroupAccountsByGroupResponse);
+  rpc GroupAccountsByGroup(QueryGroupAccountsByGroup) returns (QueryGroupAccountsByGroupResponse);
 
   // GroupsByAdmin queries group accounts by admin address.
-  rpc GroupAccountsByAdmin(QueryGroupAccountsByAdminRequest) returns (QueryGroupAccountsByAdminResponse);
+  rpc GroupAccountsByAdmin(QueryGroupAccountsByAdmin) returns (QueryGroupAccountsByAdminResponse);
 
   // Proposal queries a proposal based on proposal id.
-  rpc Proposal(QueryProposalRequest) returns (QueryProposalResponse);
+  rpc Proposal(QueryProposal) returns (QueryProposalResponse);
 
   // ProposalsByGroupAccount queries proposals based on group account address.
-  rpc ProposalsByGroupAccount(QueryProposalsByGroupAccountRequest) returns (QueryProposalsByGroupAccountResponse);
+  rpc ProposalsByGroupAccount(QueryProposalsByGroupAccount) returns (QueryProposalsByGroupAccountResponse);
 
   // VoteByProposalVoter queries a vote by proposal id and voter.
-  rpc VoteByProposalVoter(QueryVoteByProposalVoterRequest) returns (QueryVoteByProposalVoterResponse);
+  rpc VoteByProposalVoter(QueryVoteByProposalVoter) returns (QueryVoteByProposalVoterResponse);
 
   // VotesByProposal queries a vote by proposal.
-  rpc VotesByProposal(QueryVotesByProposalRequest) returns (QueryVotesByProposalResponse);
+  rpc VotesByProposal(QueryVotesByProposal) returns (QueryVotesByProposalResponse);
 
   // VotesByVoter queries a vote by voter.
-  rpc VotesByVoter(QueryVotesByVoterRequest) returns (QueryVotesByVoterResponse);
+  rpc VotesByVoter(QueryVotesByVoter) returns (QueryVotesByVoterResponse);
 }
 
-// QueryGroupInfoRequest is the Query/GroupInfo request type.
-message QueryGroupInfoRequest {
+// QueryGroupInfo is the Query/GroupInfo request type.
+message QueryGroupInfo {
 
   // group_id is the unique ID of the group.
   uint64 group_id = 1;
@@ -59,8 +59,8 @@ message QueryGroupInfoResponse {
   GroupInfo info = 1;
 }
 
-// QueryGroupAccountInfoRequest is the Query/GroupAccountInfo request type.
-message QueryGroupAccountInfoRequest {
+// QueryGroupAccountInfo is the Query/GroupAccountInfo request type.
+message QueryGroupAccountInfo {
 
   // address is the account address of the group account.
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -73,8 +73,8 @@ message QueryGroupAccountInfoResponse {
   GroupAccountInfo info = 1;
 }
 
-// QueryGroupMembersRequest is the Query/GroupMembersRequest request type.
-message QueryGroupMembersRequest {
+// QueryGroupMembers is the Query/GroupMembers request type.
+message QueryGroupMembers {
 
   // group_id is the unique ID of the group.
   uint64 group_id = 1;
@@ -93,8 +93,8 @@ message QueryGroupMembersResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryGroupsByAdminRequest is the Query/GroupsByAdminRequest request type.
-message QueryGroupsByAdminRequest {
+// QueryGroupsByAdmin is the Query/GroupsByAdmin request type.
+message QueryGroupsByAdmin {
 
   // admin is the account address of a group's admin.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -113,8 +113,8 @@ message QueryGroupsByAdminResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryGroupAccountsByGroupRequest is the Query/GroupAccountsByGroup request type.
-message QueryGroupAccountsByGroupRequest {
+// QueryGroupAccountsByGroup is the Query/GroupAccountsByGroup request type.
+message QueryGroupAccountsByGroup {
 
   // group_id is the unique ID of the group account's group.
   uint64 group_id = 1;
@@ -133,8 +133,8 @@ message QueryGroupAccountsByGroupResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryGroupAccountsByAdminRequest is the Query/GroupAccountsByAdmin request type.
-message QueryGroupAccountsByAdminRequest {
+// QueryGroupAccountsByAdmin is the Query/GroupAccountsByAdmin request type.
+message QueryGroupAccountsByAdmin {
 
   // admin is the admin address of the group account.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -153,8 +153,8 @@ message QueryGroupAccountsByAdminResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryProposalRequest is the Query/Proposal request type.
-message QueryProposalRequest {
+// QueryProposal is the Query/Proposal request type.
+message QueryProposal {
 
   // proposal_id is the unique ID of a proposal.
   uint64 proposal_id = 1;
@@ -167,8 +167,8 @@ message QueryProposalResponse {
   Proposal proposal = 1;
 }
 
-// QueryProposalsByGroupAccountRequest is the Query/ProposalByGroupAccount request type.
-message QueryProposalsByGroupAccountRequest {
+// QueryProposalsByGroupAccount is the Query/ProposalByGroupAccount request type.
+message QueryProposalsByGroupAccount {
 
   // address is the group account address related to proposals.
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -187,8 +187,8 @@ message QueryProposalsByGroupAccountResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryVoteByProposalVoterResponse is the Query/VoteByProposalVoter request type.
-message QueryVoteByProposalVoterRequest {
+// QueryVoteByProposalVoter is the Query/VoteByProposalVoter request type.
+message QueryVoteByProposalVoter {
 
   // proposal_id is the unique ID of a proposal.
   uint64 proposal_id = 1;
@@ -204,8 +204,8 @@ message QueryVoteByProposalVoterResponse {
   Vote vote = 1;
 }
 
-// QueryVotesByProposalResponse is the Query/VotesByProposal request type.
-message QueryVotesByProposalRequest {
+// QueryVotesByProposal is the Query/VotesByProposal request type.
+message QueryVotesByProposal {
 
   // proposal_id is the unique ID of a proposal.
   uint64 proposal_id = 1;
@@ -224,8 +224,8 @@ message QueryVotesByProposalResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryVotesByVoterResponse is the Query/VotesByVoter request type.
-message QueryVotesByVoterRequest {
+// QueryVotesByVoter is the Query/VotesByVoter request type.
+message QueryVotesByVoter {
   // voter is a proposal voter account address.
   string voter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 

@@ -33,10 +33,7 @@ func NewKeyCodec(prefix []byte, fieldDescs []protoreflect.FieldDescriptor) (*Key
 	fixedSize := 0
 	names := make([]protoreflect.Name, len(fieldDescs))
 	for i := 0; i < n; i++ {
-		nonTerminal := true
-		if i == n-1 {
-			nonTerminal = false
-		}
+		nonTerminal := i != n-1
 		field := fieldDescs[i]
 		cdc, err := ormfield.GetCodec(field, nonTerminal)
 		if err != nil {

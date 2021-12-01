@@ -178,7 +178,7 @@ func (s *argsTestSuite) TestValidate() {
 			cfg:   Config{Home: absPath},
 			valid: false,
 		},
-		"relative path": {
+		"relative home path": {
 			cfg:   Config{Home: relPath, Name: "bind"},
 			valid: false,
 		},
@@ -186,8 +186,20 @@ func (s *argsTestSuite) TestValidate() {
 			cfg:   Config{Home: testdata, Name: "bind"},
 			valid: false,
 		},
-		"no such dir": {
+		"no such home dir": {
 			cfg:   Config{Home: filepath.FromSlash("/no/such/dir"), Name: "bind"},
+			valid: false,
+		},
+		"empty data backup path": {
+			cfg:   Config{Home: absPath, Name: "bind", AllowDownloadBinaries: true, DataBackupPath: ""},
+			valid: false,
+		},
+		"no such data backup path dir": {
+			cfg:   Config{Home: absPath, Name: "bind", AllowDownloadBinaries: true, DataBackupPath: filepath.FromSlash("/no/such/dir")},
+			valid: false,
+		},
+		"relative data backup path": {
+			cfg:   Config{Home: absPath, Name: "bind", AllowDownloadBinaries: true, DataBackupPath: relPath},
 			valid: false,
 		},
 	}
@@ -358,12 +370,12 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 			expectedCfg:      newConfig(absPath, "testname", absPath, true, false, true, 303, 1),
 			expectedErrCount: 0,
 		},
-		//{
-		//	name:             "nothing set",
-		//	envVals:          cosmovisorEnv{"", "", "", "", "", "", "", ""},
-		//	expectedCfg:      nil,
-		//	expectedErrCount: 3,
-		//},
+		{
+			name:             "nothing set",
+			envVals:          cosmovisorEnv{"", "", "", "", "", "", "", ""},
+			expectedCfg:      nil,
+			expectedErrCount: 3,
+		},
 		// Note: Home and Name tests are done in TestValidate
 		{
 			name:             "download bin bad",

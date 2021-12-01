@@ -14,9 +14,9 @@ type indexEventsTxHandler struct {
 	next        tx.Handler
 }
 
-// NewIndexEventsMiddleware defines a middleware to optionally only index a
+// NewIndexEventsTxMiddleware defines a middleware to optionally only index a
 // subset of the emitted events inside the Tendermint events indexer.
-func NewIndexEventsMiddleware(indexEvents map[string]struct{}) tx.Middleware {
+func NewIndexEventsTxMiddleware(indexEvents map[string]struct{}) tx.Middleware {
 	return func(txHandler tx.Handler) tx.Handler {
 		return indexEventsTxHandler{
 			indexEvents: indexEvents,

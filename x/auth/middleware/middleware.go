@@ -79,7 +79,7 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		RecoveryTxMiddleware,
 		// Choose which events to index in Tendermint. Make sure no events are
 		// emitted outside of this middleware.
-		NewIndexEventsMiddleware(options.IndexEvents),
+		NewIndexEventsTxMiddleware(options.IndexEvents),
 		// Reject all extension options which can optionally be included in the
 		// tx.
 		RejectExtensionOptionsMiddleware,

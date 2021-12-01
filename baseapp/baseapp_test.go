@@ -134,7 +134,7 @@ func testTxHandler(options middleware.TxHandlerOptions, customTxHandlerMiddlewar
 		middleware.NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
 		middleware.GasTxMiddleware,
 		middleware.RecoveryTxMiddleware,
-		middleware.NewIndexEventsMiddleware(options.IndexEvents),
+		middleware.NewIndexEventsTxMiddleware(options.IndexEvents),
 		middleware.ValidateBasicMiddleware,
 		CustomTxHandlerMiddleware(customTxHandlerMiddleware),
 	)

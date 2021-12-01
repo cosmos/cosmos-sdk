@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package cosmos.group.v1beta1;
 
-import "gogoproto/gogo.proto";
-
 option go_package = "github.com/cosmos/cosmos-sdk/x/group";
 
 // MsgAuthenticated is used in group module's tests to check msg authorizations

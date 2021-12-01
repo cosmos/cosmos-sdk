@@ -7,3 +7,5 @@ set -eo pipefail
 (cd api; buf generate .)
 
 (cd orm/internal; buf generate .)
+
+(cd testutil/testdata; buf generate .)

@@ -1,6 +1,7 @@
 package root
 
 import (
+	"bytes"
 	"math"
 	"testing"
 
@@ -8,6 +9,8 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/db/memdb"
 	types "github.com/cosmos/cosmos-sdk/store/v2"
@@ -823,4 +826,138 @@ func TestRootStoreMigration(t *testing.T) {
 	require.Panics(t, func() {
 		view.GetKVStore(skey_4)
 	})
+}
+
+func TestTrace(t *testing.T) {
+	key, value := []byte("test-key"), []byte("test-value")
+	tctx := types.TraceContext(map[string]interface{}{"blockHeight": 64})
+
+	expected_Set := "{\"operation\":\"write\",\"key\":\"dGVzdC1rZXk=\",\"value\":\"dGVzdC12YWx1ZQ==\",\"metadata\":{\"blockHeight\":64}}\n"
+	expected_Get := "{\"operation\":\"read\",\"key\":\"dGVzdC1rZXk=\",\"value\":\"dGVzdC12YWx1ZQ==\",\"metadata\":{\"blockHeight\":64}}\n"
+	expected_Get_missing := "{\"operation\":\"read\",\"key\":\"dGVzdC1rZXk=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n"
+	expected_Delete := "{\"operation\":\"delete\",\"key\":\"dGVzdC1rZXk=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n"
+	expected_IterKey := "{\"operation\":\"iterKey\",\"key\":\"dGVzdC1rZXk=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n"
+	expected_IterValue := "{\"operation\":\"iterValue\",\"key\":\"\",\"value\":\"dGVzdC12YWx1ZQ==\",\"metadata\":{\"blockHeight\":64}}\n"
+
+	db := memdb.NewDB()
+	opts := simpleStoreConfig(t)
+	require.NoError(t, opts.ReservePrefix(skey_2.Name(), types.StoreTypeMemory))
+	require.NoError(t, opts.ReservePrefix(skey_3.Name(), types.StoreTypeTransient))
+
+	store, err := NewStore(db, opts)
+	require.NoError(t, err)
+	store.SetTraceContext(tctx)
+	require.False(t, store.TracingEnabled())
+
+	var buf bytes.Buffer
+	store.SetTracer(&buf)
+	require.True(t, store.TracingEnabled())
+
+	for _, skey := range []types.StoreKey{skey_1, skey_2, skey_3} {
+		buf.Reset()
+		store.GetKVStore(skey).Get(key)
+		require.Equal(t, expected_Get_missing, buf.String())
+
+		buf.Reset()
+		store.GetKVStore(skey).Set(key, value)
+		require.Equal(t, expected_Set, buf.String())
+
+		buf.Reset()
+		require.Equal(t, value, store.GetKVStore(skey).Get(key))
+		require.Equal(t, expected_Get, buf.String())
+
+		iter := store.GetKVStore(skey).Iterator(nil, nil)
+		buf.Reset()
+		require.Equal(t, key, iter.Key())
+		require.Equal(t, expected_IterKey, buf.String())
+		buf.Reset()
+		require.Equal(t, value, iter.Value())
+		require.Equal(t, expected_IterValue, buf.String())
+		require.NoError(t, iter.Close())
+
+		buf.Reset()
+		store.GetKVStore(skey).Delete(key)
+		require.Equal(t, expected_Delete, buf.String())
+
+	}
+	store.SetTracer(nil)
+	require.False(t, store.TracingEnabled())
+	require.NoError(t, store.Close())
+}
+
+func TestListeners(t *testing.T) {
+	kvPairs := []types.KVPair{
+		{Key: []byte{1}, Value: []byte("v1")},
+		{Key: []byte{2}, Value: []byte("v2")},
+		{Key: []byte{3}, Value: []byte("v3")},
+	}
+
+	testCases := []struct {
+		key   []byte
+		value []byte
+		skey  types.StoreKey
+	}{
+		{
+			key:   kvPairs[0].Key,
+			value: kvPairs[0].Value,
+			skey:  skey_1,
+		},
+		{
+			key:   kvPairs[1].Key,
+			value: kvPairs[1].Value,
+			skey:  skey_2,
+		},
+		{
+			key:   kvPairs[2].Key,
+			value: kvPairs[2].Value,
+			skey:  skey_3,
+		},
+	}
+
+	var interfaceRegistry = codecTypes.NewInterfaceRegistry()
+	var marshaller = codec.NewProtoCodec(interfaceRegistry)
+
+	db := memdb.NewDB()
+	opts := simpleStoreConfig(t)
+	require.NoError(t, opts.ReservePrefix(skey_2.Name(), types.StoreTypeMemory))
+	require.NoError(t, opts.ReservePrefix(skey_3.Name(), types.StoreTypeTransient))
+
+	store, err := NewStore(db, opts)
+	require.NoError(t, err)
+
+	for i, tc := range testCases {
+		var buf bytes.Buffer
+		listener := types.NewStoreKVPairWriteListener(&buf, marshaller)
+		store.AddListeners(tc.skey, []types.WriteListener{listener})
+		require.True(t, store.ListeningEnabled(tc.skey))
+
+		// Set case
+		expected := types.StoreKVPair{
+			Key:      tc.key,
+			Value:    tc.value,
+			StoreKey: tc.skey.Name(),
+			Delete:   false,
+		}
+		var kvpair types.StoreKVPair
+
+		buf.Reset()
+		store.GetKVStore(tc.skey).Set(tc.key, tc.value)
+		require.NoError(t, marshaller.UnmarshalLengthPrefixed(buf.Bytes(), &kvpair))
+		require.Equal(t, expected, kvpair, i)
+
+		// Delete case
+		expected = types.StoreKVPair{
+			Key:      tc.key,
+			Value:    nil,
+			StoreKey: tc.skey.Name(),
+			Delete:   true,
+		}
+		kvpair = types.StoreKVPair{}
+
+		buf.Reset()
+		store.GetKVStore(tc.skey).Delete(tc.key)
+		require.NoError(t, marshaller.UnmarshalLengthPrefixed(buf.Bytes(), &kvpair))
+		require.Equal(t, expected, kvpair, i)
+	}
+	require.NoError(t, store.Close())
 }

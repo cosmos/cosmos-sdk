@@ -14,7 +14,9 @@ import (
 	prefixdb "github.com/cosmos/cosmos-sdk/db/prefix"
 	util "github.com/cosmos/cosmos-sdk/internal"
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	types "github.com/cosmos/cosmos-sdk/store/v2"
 	"github.com/cosmos/cosmos-sdk/store/v2/mem"
 	"github.com/cosmos/cosmos-sdk/store/v2/smt"
@@ -66,8 +68,7 @@ type StoreConfig struct {
 	PersistentCache types.RootStorePersistentCache
 	Upgrades        []types.StoreUpgrades
 
-	*listenerMixin
-	*traceMixin
+	*traceListenMixin
 }
 
 // StoreSchema defineds a mapping of substore keys to store types
@@ -94,11 +95,10 @@ type Store struct {
 	// Copied from StoreConfig
 	Pruning        types.PruningOptions
 	InitialVersion uint64 // if
-	*listenerMixin
-	*traceMixin
-	PersistentCache types.RootStorePersistentCache
+	*traceListenMixin
 
-	substoreCache map[string]*substore
+	PersistentCache types.RootStorePersistentCache
+	substoreCache   map[string]*substore
 }
 
 type substore struct {
@@ -113,8 +113,7 @@ type substore struct {
 type cacheStore struct {
 	source    types.BasicRootStore
 	substores map[string]types.CacheKVStore
-	*listenerMixin
-	*traceMixin
+	*traceListenMixin
 }
 
 // Read-only store for querying past versions
@@ -137,14 +136,15 @@ type prefixRegistry struct {
 	reserved []string
 }
 
-// Mixin types that will be composed into each distinct root store variant type
-type listenerMixin struct {
-	listeners map[types.StoreKey][]types.WriteListener
-}
-
-type traceMixin struct {
+// Mixin type that to compose trace & listen state into each root store variant type
+type traceListenMixin struct {
+	listeners    map[string][]types.WriteListener
 	TraceWriter  io.Writer
 	TraceContext types.TraceContext
+}
+
+func newTraceListenMixin() *traceListenMixin {
+	return &traceListenMixin{listeners: map[string][]types.WriteListener{}}
 }
 
 // DefaultStoreConfig returns a RootStore config with an empty schema, a single backing DB,
@@ -155,13 +155,7 @@ func DefaultStoreConfig() StoreConfig {
 		prefixRegistry: prefixRegistry{
 			StoreSchema: StoreSchema{},
 		},
-		listenerMixin: &listenerMixin{
-			listeners: map[types.StoreKey][]types.WriteListener{},
-		},
-		traceMixin: &traceMixin{
-			TraceWriter:  nil,
-			TraceContext: nil,
-		},
+		traceListenMixin: newTraceListenMixin(),
 	}
 }
 
@@ -271,9 +265,8 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 
 		substoreCache: map[string]*substore{},
 
-		listenerMixin:   opts.listenerMixin,
-		traceMixin:      opts.traceMixin,
-		PersistentCache: opts.PersistentCache,
+		traceListenMixin: opts.traceListenMixin,
+		PersistentCache:  opts.PersistentCache,
 
 		Pruning:        opts.Pruning,
 		InitialVersion: opts.InitialVersion,
@@ -449,33 +442,36 @@ func substorePrefix(key string) []byte {
 }
 
 // GetKVStore implements BasicRootStore.
-// Returns a substore whose contents
 func (rs *Store) GetKVStore(skey types.StoreKey) types.KVStore {
 	key := skey.Name()
-	var sub types.KVStore
-	if typ, has := rs.schema[key]; has {
-		switch typ {
-		case types.StoreTypeMemory:
-			sub = rs.mem
-		case types.StoreTypeTransient:
-			sub = rs.tran
-		case types.StoreTypePersistent:
-		default:
-			panic(fmt.Errorf("StoreType not supported: %v", typ)) // should never happen
-		}
-		if sub != nil {
-			return prefix.NewStore(sub, []byte(key))
-		}
-	} else {
+	var parent types.KVStore
+	typ, has := rs.schema[key]
+	if !has {
 		panic(ErrStoreNotFound(key))
 	}
-	// store is persistent
-	ret, err := rs.getSubstore(key)
-	if err != nil {
-		panic(err)
+	switch typ {
+	case types.StoreTypeMemory:
+		parent = rs.mem
+	case types.StoreTypeTransient:
+		parent = rs.tran
+	case types.StoreTypePersistent:
+	default:
+		panic(fmt.Errorf("StoreType not supported: %v", typ)) // should never happen
 	}
-	rs.substoreCache[key] = ret
-	return ret
+	var ret types.KVStore
+	if parent != nil { // store is non-persistent
+		ret = prefix.NewStore(parent, []byte(key))
+	} else { // store is persistent
+		sub, err := rs.getSubstore(key)
+		if err != nil {
+			panic(err)
+		}
+		rs.substoreCache[key] = sub
+		ret = sub
+	}
+	// Wrap with trace/listen if needed. Note: we don't cache this, so users must get a new substore after
+	// modifying tracers/listeners.
+	return rs.wrapTraceListen(ret, skey)
 }
 
 // Gets a persistent substore. This reads, but does not update the substore cache
@@ -685,10 +681,9 @@ func (rs *Store) GetVersion(version int64) (types.BasicRootStore, error) {
 // CacheRootStore implements BasicRootStore.
 func (rs *Store) CacheRootStore() types.CacheRootStore {
 	return &cacheStore{
-		source:        rs,
-		substores:     map[string]types.CacheKVStore{},
-		listenerMixin: &listenerMixin{},
-		traceMixin:    &traceMixin{},
+		source:           rs,
+		substores:        map[string]types.CacheKVStore{},
+		traceListenMixin: newTraceListenMixin(),
 	}
 }
 
@@ -865,30 +860,41 @@ func (pr *prefixRegistry) ReservePrefix(key string, typ types.StoreType) error {
 	return nil
 }
 
-func (lreg *listenerMixin) AddListeners(key types.StoreKey, listeners []types.WriteListener) {
-	if ls, has := lreg.listeners[key]; has {
-		lreg.listeners[key] = append(ls, listeners...)
+func (tlm *traceListenMixin) AddListeners(skey types.StoreKey, listeners []types.WriteListener) {
+	key := skey.Name()
+	if ls, has := tlm.listeners[key]; has {
+		tlm.listeners[key] = append(ls, listeners...)
 	} else {
-		lreg.listeners[key] = listeners
+		tlm.listeners[key] = listeners
 	}
 }
 
 // ListeningEnabled returns if listening is enabled for a specific KVStore
-func (lreg *listenerMixin) ListeningEnabled(key types.StoreKey) bool {
-	if ls, has := lreg.listeners[key]; has {
+func (tlm *traceListenMixin) ListeningEnabled(key types.StoreKey) bool {
+	if ls, has := tlm.listeners[key.Name()]; has {
 		return len(ls) != 0
 	}
 	return false
 }
 
-func (treg *traceMixin) TracingEnabled() bool {
-	return treg.TraceWriter != nil
+func (tlm *traceListenMixin) TracingEnabled() bool {
+	return tlm.TraceWriter != nil
 }
-func (treg *traceMixin) SetTracer(w io.Writer) {
-	treg.TraceWriter = w
+func (tlm *traceListenMixin) SetTracer(w io.Writer) {
+	tlm.TraceWriter = w
 }
-func (treg *traceMixin) SetTraceContext(tc types.TraceContext) {
-	treg.TraceContext = tc
+func (tlm *traceListenMixin) SetTraceContext(tc types.TraceContext) {
+	tlm.TraceContext = tc
+}
+
+func (tlm *traceListenMixin) wrapTraceListen(store types.KVStore, skey types.StoreKey) types.KVStore {
+	if tlm.TracingEnabled() {
+		store = tracekv.NewStore(store, tlm.TraceWriter, tlm.TraceContext)
+	}
+	if wls, has := tlm.listeners[skey.Name()]; has && len(wls) != 0 {
+		store = listenkv.NewStore(store, skey, wls)
+	}
+	return store
 }
 
 func (s *Store) GetPruning() types.PruningOptions   { return s.Pruning }

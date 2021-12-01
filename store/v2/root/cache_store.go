@@ -6,14 +6,16 @@ import (
 )
 
 // GetKVStore implements BasicRootStore.
-func (cs *cacheStore) GetKVStore(key types.StoreKey) types.KVStore {
-	ret, has := cs.substores[key.Name()]
-	if has {
-		return ret
+func (cs *cacheStore) GetKVStore(skey types.StoreKey) types.KVStore {
+	key := skey.Name()
+	sub, has := cs.substores[key]
+	if !has {
+		sub = cachekv.NewStore(cs.source.GetKVStore(skey))
+		cs.substores[key] = sub
 	}
-	ret = cachekv.NewStore(cs.source.GetKVStore(key))
-	cs.substores[key.Name()] = ret
-	return ret
+	// Wrap with trace/listen if needed. Note: we don't cache this, so users must get a new substore after
+	// modifying tracers/listeners.
+	return cs.wrapTraceListen(sub, skey)
 }
 
 // Write implements CacheRootStore.
@@ -28,9 +30,8 @@ func (cs *cacheStore) Write() {
 // This recursively wraps the CacheRootStore in another cache store.
 func (cs *cacheStore) CacheRootStore() types.CacheRootStore {
 	return &cacheStore{
-		source:        cs,
-		substores:     map[string]types.CacheKVStore{},
-		listenerMixin: &listenerMixin{},
-		traceMixin:    &traceMixin{},
+		source:           cs,
+		substores:        map[string]types.CacheKVStore{},
+		traceListenMixin: newTraceListenMixin(),
 	}
 }

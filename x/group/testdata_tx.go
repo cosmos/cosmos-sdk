@@ -28,3 +28,12 @@ func (m MsgAuthenticated) GetSignBytes() []byte {
 func (m MsgAuthenticated) ValidateBasic() error {
 	return nil
 }
+
+// GetSigners returns the expected signers for a MsgAuthenticated.
+func (m MsgAuthenticated) GetSigners() []sdk.AccAddress {
+	signer, err := sdk.AccAddressFromBech32(m.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{signer}
+}

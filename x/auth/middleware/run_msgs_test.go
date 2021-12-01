@@ -30,6 +30,6 @@ func (s *MWTestSuite) TestRunMsgs() {
 
 	res, err := txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: txBytes})
 	s.Require().NoError(err)
-	s.Require().NotEmpty(res.MsgResponses)
+	s.Require().Len(res.MsgResponses, 1)
 	s.Require().Equal(fmt.Sprintf("/%s", proto.MessageName(&testdata.MsgCreateDogResponse{})), res.MsgResponses[0].TypeUrl)
 }

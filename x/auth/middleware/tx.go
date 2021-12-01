@@ -55,17 +55,17 @@ func (h txDecoderTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.
 // populateReq takes a tx.Request, and if its Tx field is not set, then
 // decodes the TxBytes and populates the decoded Tx field.
 func (h txDecoderTxHandler) populateReq(req tx.Request) (tx.Request, error) {
-	if req.Tx != nil && req.TxBytes != nil {
-		return req, nil
+	if len(req.TxBytes) == 0 && req.Tx == nil {
+		return tx.Request{}, sdkerrors.ErrInvalidRequest.Wrap("got empty tx request")
 	}
 
-	if len(req.TxBytes) == 0 {
-		return tx.Request{}, sdkerrors.ErrInvalidRequest.Wrap("got empty tx bytes")
-	}
-
-	sdkTx, err := h.txDecoder(req.TxBytes)
-	if err != nil {
-		return tx.Request{}, err
+	sdkTx := req.Tx
+	var err error
+	if len(req.TxBytes) != 0 {
+		sdkTx, err = h.txDecoder(req.TxBytes)
+		if err != nil {
+			return tx.Request{}, err
+		}
 	}
 
 	return tx.Request{Tx: sdkTx, TxBytes: req.TxBytes}, nil

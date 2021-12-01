@@ -801,7 +801,7 @@ type HasNestedMsgs interface {
 // Note, gas execution info is always returned. A reference to a Result is
 // returned if the tx does not run out of gas and if all the messages are valid
 // and execute successfully. An error is returned otherwise.
-func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
+func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter, so we initialize upfront.
@@ -811,8 +811,14 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	ms := ctx.MultiStore()
 
 	// only run the tx if there is block gas remaining
-	if mode == execModeFinalize && ctx.BlockGasMeter().IsOutOfGas() {
-		return gInfo, nil, nil, errorsmod.Wrap(sdkerrors.ErrOutOfGas, "no block gas left to run tx")
+	if mode == runTxModeDeliver && ctx.BlockGasMeter().IsOutOfGas() {
+		gInfo = sdk.GasInfo{GasUsed: ctx.BlockGasMeter().GasConsumed()}
+		return gInfo, nil, nil, sdkerrors.Wrap(sdkerrors.ErrOutOfGas, "no block gas left to run tx")
+	}
+
+	var startingGas uint64
+	if mode == runTxModeDeliver {
+		startingGas = ctx.BlockGasMeter().GasConsumed()
 	}
 
 	defer func() {
@@ -851,16 +857,12 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 
 	tx, err := app.txDecoder(txBytes)
 	if err != nil {
-		return sdk.GasInfo{GasUsed: 0, GasWanted: 0}, nil, nil, sdkerrors.ErrTxDecode.Wrap(err.Error())
+		return sdk.GasInfo{}, nil, nil, err
 	}
 
 	msgs := tx.GetMsgs()
-	// run validate basic if mode != recheck.
-	// as validate basic is stateless, it is guaranteed to pass recheck, given that its passed checkTx.
-	if mode != execModeReCheck {
-		if err := validateBasicTxMsgs(app.msgServiceRouter, msgs); err != nil {
-			return sdk.GasInfo{}, nil, nil, err
-		}
+	if err := validateBasicTxMsgs(msgs); err != nil {
+		return sdk.GasInfo{}, nil, nil, err
 	}
 
 	if app.anteHandler != nil {
@@ -899,30 +901,11 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		gasWanted = ctx.GasMeter().Limit()
 
 		if err != nil {
-			if mode == execModeReCheck {
-				// if the ante handler fails on recheck, we want to remove the tx from the mempool
-				if mempoolErr := app.mempool.Remove(tx); mempoolErr != nil {
-					return gInfo, nil, anteEvents, errors.Join(err, mempoolErr)
-				}
-			}
 			return gInfo, nil, nil, err
 		}
 
 		msCache.Write()
 		anteEvents = events.ToABCIEvents()
-	}
-
-	if mode == execModeCheck {
-		err = app.mempool.Insert(ctx, tx)
-		if err != nil {
-			return gInfo, nil, anteEvents, err
-		}
-	} else if mode == execModeFinalize {
-		err = app.mempool.Remove(tx)
-		if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-			return gInfo, nil, anteEvents,
-				fmt.Errorf("failed to remove tx from mempool: %w", err)
-		}
 	}
 
 	// Create a new Context based off of the existing Context with a MultiStore branch
@@ -947,39 +930,9 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		}
 	}
 
-	// Run optional postHandlers (should run regardless of the execution result).
-	//
-	// Note: If the postHandler fails, we also revert the runMsgs state.
-	if app.postHandler != nil {
-		// The runMsgCtx context currently contains events emitted by the ante handler.
-		// We clear this to correctly order events without duplicates.
-		// Note that the state is still preserved.
-		postCtx := runMsgCtx.WithEventManager(sdk.NewEventManager())
-
-		newCtx, errPostHandler := app.postHandler(postCtx, tx, mode == execModeSimulate, err == nil)
-		if errPostHandler != nil {
-			return gInfo, nil, anteEvents, errors.Join(err, errPostHandler)
-		}
-
-		// we don't want runTx to panic if runMsgs has failed earlier
-		if result == nil {
-			result = &sdk.Result{}
-		}
-		result.Events = append(result.Events, newCtx.EventManager().ABCIEvents()...)
-	}
-
-	if err == nil {
-		if mode == execModeFinalize {
-			// When block gas exceeds, it'll panic and won't commit the cached store.
-			consumeBlockGas()
-
-			msCache.Write()
-		}
-
-		if len(anteEvents) > 0 && (mode == execModeFinalize || mode == execModeSimulate) {
+		if len(anteEvents) > 0 {
 			// append the events in the order of occurrence
-			result.Events = append(events.ToABCIEvents(), result.Events...)
-			app.deliverState.eventHistory = append(app.deliverState.eventHistory, result.Events...)
+			result.Events = append(anteEvents, result.Events...)
 		}
 	}
 

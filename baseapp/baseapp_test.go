@@ -821,7 +821,21 @@ func TestGetMaximumBlockGas(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))
 
-	err = suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: -1}})
+	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	// should emit ante event
+	require.NotEmpty(t, res.Events)
+	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+	ctx = app.getState(runTxModeDeliver).ctx
+	store = ctx.KVStore(capKey1)
+	require.Equal(t, int64(1), getIntFromStore(store, anteKey))
+	require.Equal(t, int64(0), getIntFromStore(store, deliverKey))
+
+	// execute a successful ante handler and message execution where state is
+	// implicitly checked by previous tx executions
+	tx = newTxCounter(1, 0)
+
+	txBytes, err = cdc.Marshal(tx)
 	require.NoError(t, err)
 	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))
 

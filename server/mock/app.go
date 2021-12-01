@@ -23,6 +23,7 @@ import (
 func testTxHandler(options middleware.TxHandlerOptions) tx.Handler {
 	return middleware.ComposeMiddlewares(
 		middleware.NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
+		middleware.NewTxDecoderMiddleware(options.TxDecoder),
 		middleware.GasTxMiddleware,
 		middleware.RecoveryTxMiddleware,
 		middleware.NewIndexEventsTxMiddleware(options.IndexEvents),
@@ -59,7 +60,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 		middleware.TxHandlerOptions{
 			LegacyRouter:     legacyRouter,
 			MsgServiceRouter: middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry),
-			TxDecoder:        encCfg.TxConfig.TxDecoder(),
+			TxDecoder:        decodeTx,
 		},
 	)
 	baseApp.SetTxHandler(txHandler)

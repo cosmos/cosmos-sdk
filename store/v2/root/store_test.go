@@ -217,21 +217,18 @@ func TestCommit(t *testing.T) {
 		require.NoError(t, err)
 		require.Zero(t, store.LastCommitID())
 		idNew := store.Commit()
+
+		// Adding one record changes the hash
 		s1 := store.GetKVStore(skey_1)
 		s1.Set([]byte{0}, []byte{0})
 		idOne := store.Commit()
 		require.Equal(t, idNew.Version+1, idOne.Version)
 		require.NotEqual(t, idNew.Hash, idOne.Hash)
 
-		// // Hash of emptied store is same as new store
-		// opts.Upgrades = []types.StoreUpgrades{
-		// 	types.StoreUpgrades{Deleted: []string{skey_1.Name()}},
-		// }
-		// store.Close()
-		// store, err = NewStore(db, opts)
-		// require.NoError(t, err)
-		// idEmptied := store.Commit()
-		// require.Equal(t, idNew.Hash, idEmptied.Hash)
+		// Hash of emptied store is same as new store
+		s1.Delete([]byte{0})
+		idEmptied := store.Commit()
+		require.Equal(t, idNew.Hash, idEmptied.Hash)
 
 		previd := idOne
 		for i := byte(1); i < 5; i++ {
@@ -660,8 +657,6 @@ func TestGetVersion(t *testing.T) {
 	require.NoError(t, err)
 
 	cid := store.Commit()
-	// opts := DefaultStoreConfig()
-
 	view, err := store.GetVersion(cid.Version)
 	require.NoError(t, err)
 	subview := view.GetKVStore(skey_1)

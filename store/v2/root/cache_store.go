@@ -5,7 +5,7 @@ import (
 	types "github.com/cosmos/cosmos-sdk/store/v2"
 )
 
-// GetKVStore implements BasicRootStore.
+// GetKVStore implements BasicMultiStore.
 func (cs *cacheStore) GetKVStore(skey types.StoreKey) types.KVStore {
 	key := skey.Name()
 	sub, has := cs.substores[key]
@@ -18,7 +18,7 @@ func (cs *cacheStore) GetKVStore(skey types.StoreKey) types.KVStore {
 	return cs.wrapTraceListen(sub, skey)
 }
 
-// Write implements CacheRootStore.
+// Write implements CacheMultiStore.
 func (cs *cacheStore) Write() {
 	for skey, sub := range cs.substores {
 		sub.Write()
@@ -26,9 +26,9 @@ func (cs *cacheStore) Write() {
 	}
 }
 
-// CacheRootStore implements BasicRootStore.
-// This recursively wraps the CacheRootStore in another cache store.
-func (cs *cacheStore) CacheRootStore() types.CacheRootStore {
+// CacheMultiStore implements BasicMultiStore.
+// This recursively wraps the CacheMultiStore in another cache store.
+func (cs *cacheStore) CacheMultiStore() types.CacheMultiStore {
 	return &cacheStore{
 		source:           cs,
 		substores:        map[string]types.CacheKVStore{},

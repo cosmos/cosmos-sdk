@@ -632,7 +632,7 @@ func TestStoreConfig(t *testing.T) {
 	require.Error(t, opts.ReservePrefix(skey_3.Name(), types.StoreTypePersistent))
 }
 
-func TestRootStoreBasic(t *testing.T) {
+func TestMultiStoreBasic(t *testing.T) {
 	opts := DefaultStoreConfig()
 	err := opts.ReservePrefix(skey_1.Name(), types.StoreTypePersistent)
 	require.NoError(t, err)
@@ -685,7 +685,7 @@ func TestGetVersion(t *testing.T) {
 	require.Equal(t, []byte{0}, subview.Get([]byte{0}))
 }
 
-func TestRootStoreMigration(t *testing.T) {
+func TestMultiStoreMigration(t *testing.T) {
 	db := memdb.NewDB()
 	opts := storeConfig123(t)
 	store, err := NewStore(db, opts)

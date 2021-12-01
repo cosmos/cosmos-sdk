@@ -244,27 +244,27 @@ See [ADR-040](../architecture/adr-040-storage-and-smt-state-commitments.md) for 
 
 An interface providing only the basic CRUD functionality (`Get`, `Set`, `Has`, and `Delete` methods), without iteration or caching. This is used to partially expose components of a larger store, such as a `flat.Store`.
 
-## Root Store
+## MultiStore
 
-This is the new interface for the main client store, replacing the function of `MultiStore`. There are a few significant differences in behavior compared with `MultiStore`:
+This is the new interface (or set of interfaces) for the main client store, replacing the function of `MultiStore`. There are a few significant differences in behavior compared with `MultiStore`:
   * Commits are atomic and are performed on the entire store state; individual substores cannot be committed separately and cannot have different version numbers.
   * The store's current version and version history track that of the backing `db.DBConnection`. Past versions are accessible read-only.
   * The set of valid substores is defined in at initialization and cannot be updated dynamically in an existing store instance.
 
-### `CommitRootStore`
+### `CommitMultiStore`
 
-This is the main interface for persisent application state, analogous to `CommitMultiStore`.
-  * Past versions are accessed with `GetVersion`, which returns a `BasicRootStore`.
+This is the main interface for persisent application state, analogous to the original `CommitMultiStore`.
+  * Past versions are accessed with `GetVersion`, which returns a `BasicMultiStore`.
   * Substores are accessed with `GetKVStore`. Trying to get a substore that was not defined at initialization will cause a panic.
   * `Close` must be called to release the DB resources being used by the store.
 
-### `BasicRootStore`
+### `BasicMultiStore`
 
-A minimal interface that only allows accessing substores. Note: substores returned by `BasicRootStore.GetKVStore` are read-only.
+A minimal interface that only allows accessing substores. Note: substores returned by `BasicMultiStore.GetKVStore` are read-only.
 
 ### Implementation (`root.Store`)
 
-The canonical implementation of `RootStore` is in `store/v2/root`. It internally decouples the concerns of state storage and state commitment: values are stored in, and read directly from, the backing key-value database, but are also mapped in a logically separate store which generates cryptographic proofs (the *state-commitment* store).
+The canonical implementation of `MultiStore` is in `store/v2/root`. It internally decouples the concerns of state storage and state commitment: values are stored in, and read directly from, the backing key-value database, but are also mapped in a logically separate store which generates cryptographic proofs (the *state-commitment* store).
 
 The state-commitment component of each substore is implemented as an independent `smt.Store`. Internally, each substore is allocated in a separate partition within the backing DB, such that commits apply to the state of all substores. Likewise, past version state includes the state of all substore storage and state-commitment stores.
 

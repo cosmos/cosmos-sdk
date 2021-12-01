@@ -58,8 +58,8 @@ var (
 	NewStoreKVPairWriteListener = v1.NewStoreKVPairWriteListener
 )
 
-// BasicRootStore defines a minimal interface for accessing root state.
-type BasicRootStore interface {
+// BasicMultiStore defines a minimal interface for accessing root state.
+type BasicMultiStore interface {
 	// Returns a KVStore which has access only to the namespace of the StoreKey.
 	// Panics if the key is not found in the schema.
 	GetKVStore(StoreKey) KVStore
@@ -74,36 +74,36 @@ type rootStoreTraceListen interface {
 	AddListeners(key StoreKey, listeners []WriteListener)
 }
 
-// CommitRootStore defines a complete interface for persistent root state, including
+// CommitMultiStore defines a complete interface for persistent root state, including
 // (read-only) access to past versions, pruning, trace/listen, and state snapshots.
-type CommitRootStore interface {
-	BasicRootStore
+type CommitMultiStore interface {
+	BasicMultiStore
 	rootStoreTraceListen
 	Committer
 	snapshottypes.Snapshotter
 
 	// Gets a read-only view of the store at a specific version.
 	// Returns an error if the version is not found.
-	GetVersion(int64) (BasicRootStore, error)
+	GetVersion(int64) (BasicMultiStore, error)
 	// Closes the store and all backing transactions.
 	Close() error
 	// Returns a branched whose modifications are later merged back in.
-	CacheRootStore() CacheRootStore
+	CacheMultiStore() CacheMultiStore
 	// Defines the minimum version number that can be saved by this store.
 	SetInitialVersion(uint64) error
 }
 
-// CacheRootStore defines a branch of the root state which can be written back to the source store.
-type CacheRootStore interface {
-	BasicRootStore
+// CacheMultiStore defines a branch of the root state which can be written back to the source store.
+type CacheMultiStore interface {
+	BasicMultiStore
 	rootStoreTraceListen
 
 	// Returns a branched whose modifications are later merged back in.
-	CacheRootStore() CacheRootStore
+	CacheMultiStore() CacheMultiStore
 	// Write all cached changes back to the source store. Note: this overwrites any intervening changes.
 	Write()
 }
 
-// RootStorePersistentCache provides inter-block (persistent) caching capabilities for a CommitRootStore.
+// MultiStorePersistentCache provides inter-block (persistent) caching capabilities for a CommitMultiStore.
 // TODO: placeholder. Implement and redefine this
-type RootStorePersistentCache = v1.MultiStorePersistentCache
+type MultiStorePersistentCache = v1.MultiStorePersistentCache

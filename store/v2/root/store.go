@@ -26,11 +26,11 @@ import (
 )
 
 var (
-	_ types.Queryable       = (*Store)(nil)
-	_ types.CommitRootStore = (*Store)(nil)
-	_ types.CacheRootStore  = (*cacheStore)(nil)
-	_ types.BasicRootStore  = (*viewStore)(nil)
-	_ types.KVStore         = (*substore)(nil)
+	_ types.Queryable        = (*Store)(nil)
+	_ types.CommitMultiStore = (*Store)(nil)
+	_ types.CacheMultiStore  = (*cacheStore)(nil)
+	_ types.BasicMultiStore  = (*viewStore)(nil)
+	_ types.KVStore          = (*substore)(nil)
 )
 
 var (
@@ -54,7 +54,7 @@ func ErrStoreNotFound(skey string) error {
 	return fmt.Errorf("store does not exist for key: %s", skey)
 }
 
-// StoreConfig is used to define a schema and other options and pass them to the RootStore constructor.
+// StoreConfig is used to define a schema and other options and pass them to the MultiStore constructor.
 type StoreConfig struct {
 	// Version pruning options for backing DBs.
 	Pruning types.PruningOptions
@@ -65,7 +65,7 @@ type StoreConfig struct {
 	StateCommitmentDB dbm.DBConnection
 
 	prefixRegistry
-	PersistentCache types.RootStorePersistentCache
+	PersistentCache types.MultiStorePersistentCache
 	Upgrades        []types.StoreUpgrades
 
 	*traceListenMixin
@@ -74,7 +74,7 @@ type StoreConfig struct {
 // StoreSchema defineds a mapping of substore keys to store types
 type StoreSchema map[string]types.StoreType
 
-// Store is the main persistent store type implementing CommitRootStore.
+// Store is the main persistent store type implementing CommitMultiStore.
 // Substores consist of an SMT-based state commitment store and state storage.
 // Substores must be reserved in the StoreConfig or defined as part of a StoreUpgrade in order to be valid.
 // Note:
@@ -97,7 +97,7 @@ type Store struct {
 	InitialVersion uint64 // if
 	*traceListenMixin
 
-	PersistentCache types.RootStorePersistentCache
+	PersistentCache types.MultiStorePersistentCache
 	substoreCache   map[string]*substore
 }
 
@@ -111,7 +111,7 @@ type substore struct {
 
 // Branched state
 type cacheStore struct {
-	source    types.BasicRootStore
+	source    types.BasicMultiStore
 	substores map[string]types.CacheKVStore
 	*traceListenMixin
 }
@@ -147,7 +147,7 @@ func newTraceListenMixin() *traceListenMixin {
 	return &traceListenMixin{listeners: map[string][]types.WriteListener{}}
 }
 
-// DefaultStoreConfig returns a RootStore config with an empty schema, a single backing DB,
+// DefaultStoreConfig returns a MultiStore config with an empty schema, a single backing DB,
 // pruning with PruneDefault, no listeners and no tracer.
 func DefaultStoreConfig() StoreConfig {
 	return StoreConfig{
@@ -159,7 +159,7 @@ func DefaultStoreConfig() StoreConfig {
 	}
 }
 
-// Returns true for valid store types for a RootStore schema
+// Returns true for valid store types for a MultiStore schema
 func validSubStoreType(sst types.StoreType) bool {
 	switch sst {
 	case types.StoreTypePersistent:
@@ -211,7 +211,7 @@ func readSavedSchema(bucket dbm.DBReader) (*prefixRegistry, error) {
 	return &ret, nil
 }
 
-// NewStore constructs a RootStore directly from a database.
+// NewStore constructs a MultiStore directly from a database.
 // Creates a new store if no data exists; otherwise loads existing data.
 func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 	versions, err := db.Versions()
@@ -441,7 +441,7 @@ func substorePrefix(key string) []byte {
 	return append(contentPrefix, key...)
 }
 
-// GetKVStore implements BasicRootStore.
+// GetKVStore implements BasicMultiStore.
 func (rs *Store) GetKVStore(skey types.StoreKey) types.KVStore {
 	key := skey.Name()
 	var parent types.KVStore
@@ -667,19 +667,19 @@ func (s *Store) LastCommitID() types.CommitID {
 	return types.CommitID{Version: int64(last), Hash: hash}
 }
 
-// SetInitialVersion implements CommitRootStore.
+// SetInitialVersion implements CommitMultiStore.
 func (rs *Store) SetInitialVersion(version uint64) error {
 	rs.InitialVersion = uint64(version)
 	return nil
 }
 
-// GetVersion implements CommitRootStore.
-func (rs *Store) GetVersion(version int64) (types.BasicRootStore, error) {
+// GetVersion implements CommitMultiStore.
+func (rs *Store) GetVersion(version int64) (types.BasicMultiStore, error) {
 	return rs.getView(version)
 }
 
-// CacheRootStore implements BasicRootStore.
-func (rs *Store) CacheRootStore() types.CacheRootStore {
+// CacheMultiStore implements BasicMultiStore.
+func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	return &cacheStore{
 		source:           rs,
 		substores:        map[string]types.CacheKVStore{},

@@ -79,7 +79,6 @@ func (cdc IndexKeyCodec) DecodeIndexKey(k, _ []byte) (indexFields, primaryKey []
 	return values, pkValues, nil
 }
 
-var _ IndexCodec = &IndexKeyCodec{}
 
 func (cdc IndexKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 	idxValues, pk, err := cdc.DecodeIndexKey(k, v)

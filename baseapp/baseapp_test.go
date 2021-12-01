@@ -165,7 +165,7 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 			middleware.TxHandlerOptions{
 				LegacyRouter:     legacyRouter,
 				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
-				TxDecoder:        encCfg.TxConfig.TxDecoder(),
+				TxDecoder:        testTxDecoder(codec),
 			},
 			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) { return ctx, nil },
 		)
@@ -951,6 +951,10 @@ func TestCheckTx(t *testing.T) {
 	// This ensures changes to the kvstore persist across successive CheckTx.
 	counterKey := []byte("counter-key")
 
+	// Create same codec used in txDecoder
+	codec := codec.NewLegacyAmino()
+	registerTestCodec(codec)
+
 	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		// TODO: can remove this once CheckTx doesnt process msgs.
@@ -961,7 +965,7 @@ func TestCheckTx(t *testing.T) {
 			middleware.TxHandlerOptions{
 				LegacyRouter:     legacyRouter,
 				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
-				TxDecoder:        encCfg.TxConfig.TxDecoder(),
+				TxDecoder:        testTxDecoder(codec),
 			},
 			customHandlerTxTest(t, capKey1, counterKey),
 		)
@@ -973,17 +977,13 @@ func TestCheckTx(t *testing.T) {
 	nTxs := int64(5)
 	app.InitChain(abci.RequestInitChain{})
 
-	// Create same codec used in txDecoder
-	codec := codec.NewLegacyAmino()
-	registerTestCodec(codec)
-
 	for i := int64(0); i < nTxs; i++ {
 		tx := newTxCounter(i, 0) // no messages
 		txBytes, err := codec.Marshal(tx)
 		require.NoError(t, err)
 		r := app.CheckTx(abci.RequestCheckTx{Tx: txBytes})
 		require.Empty(t, r.GetEvents())
-		require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
+		require.True(t, r.IsOK(), fmt.Sprintf("%+v", r))
 	}
 
 	checkStateStore := app.CheckState().Context().KVStore(capKey1)
@@ -1014,6 +1014,11 @@ func TestDeliverTx(t *testing.T) {
 	anteKey := []byte("ante-key")
 	// test increments in the handler
 	deliverKey := []byte("deliver-key")
+
+	// Create same codec used in txDecoder
+	codec := codec.NewLegacyAmino()
+	registerTestCodec(codec)
+
 	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
@@ -1022,7 +1027,7 @@ func TestDeliverTx(t *testing.T) {
 			middleware.TxHandlerOptions{
 				LegacyRouter:     legacyRouter,
 				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
-				TxDecoder:        encCfg.TxConfig.TxDecoder(),
+				TxDecoder:        testTxDecoder(codec),
 			},
 			customHandlerTxTest(t, capKey1, anteKey),
 		)
@@ -1030,10 +1035,6 @@ func TestDeliverTx(t *testing.T) {
 	}
 	app := setupBaseApp(t, txHandlerOpt)
 	app.InitChain(abci.RequestInitChain{})
-
-	// Create same codec used in txDecoder
-	codec := codec.NewLegacyAmino()
-	registerTestCodec(codec)
 
 	nBlocks := 3
 	txPerHeight := 5
@@ -1075,6 +1076,11 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 	// increment the msg counter
 	deliverKey := []byte("deliver-key")
 	deliverKey2 := []byte("deliver-key2")
+
+	// Create same codec used in txDecoder
+	codec := codec.NewLegacyAmino()
+	registerTestCodec(codec)
+
 	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r1 := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
@@ -1085,17 +1091,13 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 			middleware.TxHandlerOptions{
 				LegacyRouter:     legacyRouter,
 				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
-				TxDecoder:        encCfg.TxConfig.TxDecoder(),
+				TxDecoder:        testTxDecoder(codec),
 			},
 			customHandlerTxTest(t, capKey1, anteKey),
 		)
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)
-
-	// Create same codec used in txDecoder
-	codec := codec.NewLegacyAmino()
-	registerTestCodec(codec)
 
 	// run a multi-msg tx
 	// with all msgs the same route
@@ -1155,6 +1157,10 @@ func TestConcurrentCheckDeliver(t *testing.T) {
 func TestSimulateTx(t *testing.T) {
 	gasConsumed := uint64(5)
 
+	// Create same codec used in txDecoder
+	cdc := codec.NewLegacyAmino()
+	registerTestCodec(cdc)
+
 	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
@@ -1174,7 +1180,7 @@ func TestSimulateTx(t *testing.T) {
 			middleware.TxHandlerOptions{
 				LegacyRouter:     legacyRouter,
 				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
-				TxDecoder:        encCfg.TxConfig.TxDecoder(),
+				TxDecoder:        testTxDecoder(cdc),
 			},
 			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) { return ctx, nil },
 		)
@@ -1183,10 +1189,6 @@ func TestSimulateTx(t *testing.T) {
 	app := setupBaseApp(t, txHandlerOpt)
 
 	app.InitChain(abci.RequestInitChain{})
-
-	// Create same codec used in txDecoder
-	cdc := codec.NewLegacyAmino()
-	registerTestCodec(cdc)
 
 	nBlocks := 3
 	for blockN := 0; blockN < nBlocks; blockN++ {
@@ -1550,7 +1552,7 @@ func TestBaseAppMiddleware(t *testing.T) {
 			middleware.TxHandlerOptions{
 				LegacyRouter:     legacyRouter,
 				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
-				TxDecoder:        encCfg.TxConfig.TxDecoder(),
+				TxDecoder:        testTxDecoder(cdc),
 			},
 			customHandlerTxTest(t, capKey1, anteKey),
 		)
@@ -2023,22 +2025,22 @@ func TestWithRouter(t *testing.T) {
 	// test increments in the handler
 	deliverKey := []byte("deliver-key")
 
+	// Create same codec used in txDecoder
+	codec := codec.NewLegacyAmino()
+	registerTestCodec(codec)
+
 	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		customRouter := &testCustomRouter{routes: sync.Map{}}
 		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
 		customRouter.AddRoute(r)
 		txHandler := middleware.ComposeMiddlewares(
 			middleware.NewRunMsgsTxHandler(middleware.NewMsgServiceRouter(interfaceRegistry), customRouter),
-			middleware.NewTxDecoderMiddleware(encCfg.TxConfig.TxDecoder()),
+			middleware.NewTxDecoderMiddleware(testTxDecoder(codec)),
 		)
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)
 	app.InitChain(abci.RequestInitChain{})
-
-	// Create same codec used in txDecoder
-	codec := codec.NewLegacyAmino()
-	registerTestCodec(codec)
 
 	nBlocks := 3
 	txPerHeight := 5

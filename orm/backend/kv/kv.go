@@ -1,12 +1,14 @@
 package kv
 
-import sdkstore "github.com/cosmos/cosmos-sdk/store"
+import (
+	dbm "github.com/tendermint/tm-db"
+)
 
 type ReadStore interface {
 	Get(key []byte) ([]byte, error)
 	Has(key []byte) (bool, error)
-	Iterator(start, end []byte) Iterator
-	ReverseIterator(start, end []byte) Iterator
+	Iterator(start, end []byte) (Iterator, error)
+	ReverseIterator(start, end []byte) (Iterator, error)
 }
 
 type IndexCommitmentReadStore interface {
@@ -26,4 +28,4 @@ type IndexCommitmentStore interface {
 	IndexStore() Store
 }
 
-type Iterator = sdkstore.Iterator
+type Iterator = dbm.Iterator

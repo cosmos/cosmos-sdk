@@ -20,7 +20,7 @@ func (p PrimaryKey) PrefixIterator(store kv.IndexCommitmentReadStore, prefix []p
 		return nil, err
 	}
 
-	return prefixIterator(store.ReadCommitmentStore(), store, p, prefixBz, options), nil
+	return prefixIterator(store.ReadCommitmentStore(), store, p, prefixBz, options)
 }
 
 func (p PrimaryKey) RangeIterator(store kv.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error) {
@@ -39,7 +39,7 @@ func (p PrimaryKey) RangeIterator(store kv.IndexCommitmentReadStore, start, end 
 		return nil, err
 	}
 
-	return rangeIterator(store.ReadCommitmentStore(), store, p, startBz, endBz, options), nil
+	return rangeIterator(store.ReadCommitmentStore(), store, p, startBz, endBz, options)
 }
 
 func (p PrimaryKey) doNotImplement() {}

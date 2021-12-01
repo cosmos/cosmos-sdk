@@ -9,7 +9,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
-func prefixIterator(iteratorStore kv.ReadStore, store kv.IndexCommitmentReadStore, index Index, prefix []byte, options IteratorOptions) ormiterator.Iterator {
+func prefixIterator(iteratorStore kv.ReadStore, store kv.IndexCommitmentReadStore, index Index, prefix []byte, options IteratorOptions) (ormiterator.Iterator, error) {
 	if !options.Reverse {
 		var start []byte
 		if len(options.Cursor) != 0 {
@@ -19,13 +19,16 @@ func prefixIterator(iteratorStore kv.ReadStore, store kv.IndexCommitmentReadStor
 			start = prefix
 		}
 		end := storetypes.PrefixEndBytes(prefix)
-		it := iteratorStore.Iterator(start, end)
+		it, err := iteratorStore.Iterator(start, end)
+		if err != nil {
+			return nil, err
+		}
 		return &indexIterator{
 			index:    index,
 			store:    store,
 			iterator: it,
 			started:  false,
-		}
+		}, nil
 	} else {
 		var end []byte
 		if len(options.Cursor) != 0 {
@@ -34,41 +37,52 @@ func prefixIterator(iteratorStore kv.ReadStore, store kv.IndexCommitmentReadStor
 		} else {
 			end = storetypes.PrefixEndBytes(prefix)
 		}
-		it := iteratorStore.ReverseIterator(prefix, end)
+		it, err := iteratorStore.ReverseIterator(prefix, end)
+		if err != nil {
+			return nil, err
+		}
+
 		return &indexIterator{
 			index:    index,
 			store:    store,
 			iterator: it,
 			started:  false,
-		}
+		}, nil
 	}
 }
 
-func rangeIterator(iteratorStore kv.ReadStore, store kv.IndexCommitmentReadStore, index Index, start, end []byte, options IteratorOptions) ormiterator.Iterator {
+func rangeIterator(iteratorStore kv.ReadStore, store kv.IndexCommitmentReadStore, index Index, start, end []byte, options IteratorOptions) (ormiterator.Iterator, error) {
 	if !options.Reverse {
 		if len(options.Cursor) != 0 {
 			start = append(options.Cursor, 0)
 		}
-		it := iteratorStore.Iterator(start, storetypes.InclusiveEndBytes(end))
+		it, err := iteratorStore.Iterator(start, storetypes.InclusiveEndBytes(end))
+		if err != nil {
+			return nil, err
+		}
 		return &indexIterator{
 			index:    index,
 			store:    store,
 			iterator: it,
 			started:  false,
-		}
+		}, nil
 	} else {
 		if len(options.Cursor) != 0 {
 			end = options.Cursor
 		} else {
 			end = storetypes.PrefixEndBytes(end)
 		}
-		it := iteratorStore.ReverseIterator(start, storetypes.InclusiveEndBytes(end))
+		it, err := iteratorStore.ReverseIterator(start, storetypes.InclusiveEndBytes(end))
+		if err != nil {
+			return nil, err
+		}
+
 		return &indexIterator{
 			index:    index,
 			store:    store,
 			iterator: it,
 			started:  false,
-		}
+		}, nil
 	}
 }
 

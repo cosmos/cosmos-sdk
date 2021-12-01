@@ -23,7 +23,7 @@ func (u UniqueIndexImpl) PrefixIterator(store kv.IndexCommitmentReadStore, prefi
 		return nil, err
 	}
 
-	return prefixIterator(store.ReadIndexStore(), store, u, prefixBz, options), nil
+	return prefixIterator(store.ReadIndexStore(), store, u, prefixBz, options)
 }
 
 func (u UniqueIndexImpl) RangeIterator(store kv.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error) {
@@ -43,7 +43,7 @@ func (u UniqueIndexImpl) RangeIterator(store kv.IndexCommitmentReadStore, start,
 		return nil, err
 	}
 
-	return rangeIterator(store.ReadIndexStore(), store, u, startBz, endBz, options), nil
+	return rangeIterator(store.ReadIndexStore(), store, u, startBz, endBz, options)
 }
 
 func (u UniqueIndexImpl) doNotImplement() {}

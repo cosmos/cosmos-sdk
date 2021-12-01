@@ -23,7 +23,7 @@ func (s IndexImpl) PrefixIterator(store kv.IndexCommitmentReadStore, prefix []pr
 		return nil, err
 	}
 
-	return prefixIterator(store.ReadIndexStore(), store, s, prefixBz, options), nil
+	return prefixIterator(store.ReadIndexStore(), store, s, prefixBz, options)
 }
 
 func (s IndexImpl) RangeIterator(store kv.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error) {
@@ -42,7 +42,7 @@ func (s IndexImpl) RangeIterator(store kv.IndexCommitmentReadStore, start, end [
 		return nil, err
 	}
 
-	return rangeIterator(store.ReadIndexStore(), store, s, startBz, endBz, options), nil
+	return rangeIterator(store.ReadIndexStore(), store, s, startBz, endBz, options)
 }
 
 var _ Indexer = &IndexImpl{}

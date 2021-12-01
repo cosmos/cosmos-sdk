@@ -1249,7 +1249,7 @@ func (s *TestSuite) TestCreateProposal() {
 				Metadata:  nil,
 				Proposers: []string{addr2.String()},
 			},
-			msgs:    []sdk.Msg{&group.MsgAuthenticated{Signers: []sdk.AccAddress{addr1}}},
+			msgs:    []sdk.Msg{&group.MsgAuthenticated{Signers: addr1}},
 			expErr:  true,
 			postRun: func(sdkCtx sdk.Context) {},
 		},

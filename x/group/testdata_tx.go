@@ -12,7 +12,7 @@ var _ sdk.Msg = &MsgAuthenticated{}
 
 func (m MsgAuthenticated) Route() string { return "MsgAuthenticated" }
 
-func (m MsgAuthenticated) Type() string { return "Msg Authenticated" }
+func (m MsgAuthenticated) Type() string { return "MsgAuthenticated" }
 
 // GetSignBytes returns the bytes for the message signer to sign on
 func (m MsgAuthenticated) GetSignBytes() []byte {

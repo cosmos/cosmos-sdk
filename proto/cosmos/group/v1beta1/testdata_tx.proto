@@ -8,5 +8,5 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/group";
 
 // MsgAuthenticated is used in group module's tests to check msg authorizations
 message MsgAuthenticated {
-    repeated bytes signers = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    string signer = 1;
 }

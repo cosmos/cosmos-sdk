@@ -3,14 +3,15 @@ package types
 import (
 	"encoding/hex"
 	"encoding/json"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"math"
+	"strings"
+
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	yaml "gopkg.in/yaml.v2"
-	"math"
-	"strings"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 var cdc = codec.NewLegacyAmino()

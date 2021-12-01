@@ -25,7 +25,7 @@ const (
 	EnvDownloadBin          = "DAEMON_ALLOW_DOWNLOAD_BINARIES"
 	EnvRestartUpgrade       = "DAEMON_RESTART_AFTER_UPGRADE"
 	EnvSkipBackup           = "UNSAFE_SKIP_BACKUP"
-	EnvDataBackupPath       = "DATA_BACKUP_PATH"
+	EnvDataBackupPath       = "DAEMON_DATA_BACKUP_DIR"
 	EnvInterval             = "DAEMON_POLL_INTERVAL"
 	EnvPreupgradeMaxRetries = "DAEMON_PREUPGRADE_MAX_RETRIES"
 )

@@ -8,13 +8,11 @@ import (
 )
 
 const (
-	// MsgInterfaceProtoName defines the protobuf name of the cosmos Msg interface
-	MsgInterfaceProtoName         = "cosmos.base.v1beta1.Msg"
 	msgResponseInterfaceProtoName = "cosmos.tx.v1beta1.MsgResponse"
 )
 
 // MsgResponse is the interface all Msg server handlers' response types need to
-// implement. It's the interface that's representing all Msg responses packin
+// implement. It's the interface that's representing all Msg responses packed
 // in Anys.
 type MsgResponse interface{}
 

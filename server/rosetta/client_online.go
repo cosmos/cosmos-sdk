@@ -22,7 +22,6 @@ import (
 	crgtypes "github.com/cosmos/cosmos-sdk/server/rosetta/lib/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/version"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -61,7 +60,7 @@ func NewClient(cfg *Config) (*Client, error) {
 	txConfig := authtx.NewTxConfig(cfg.Codec, authtx.DefaultSignModes)
 
 	var supportedOperations []string
-	for _, ii := range cfg.InterfaceRegistry.ListImplementations(tx.MsgInterfaceProtoName) {
+	for _, ii := range cfg.InterfaceRegistry.ListImplementations(sdk.MsgInterfaceProtoName) {
 		resolvedMsg, err := cfg.InterfaceRegistry.Resolve(ii)
 		if err != nil {
 			continue

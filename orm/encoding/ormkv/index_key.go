@@ -94,17 +94,17 @@ func (cdc IndexKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 	}, nil
 }
 
-func (i IndexKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
+func (cdc IndexKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 	indexEntry, ok := entry.(*IndexKeyEntry)
 	if !ok {
 		return nil, nil, ormerrors.BadDecodeEntry
 	}
 
-	if indexEntry.TableName != i.tableName {
+	if indexEntry.TableName != cdc.tableName {
 		return nil, nil, ormerrors.BadDecodeEntry
 	}
 
-	bz, err := i.KeyCodec.Encode(indexEntry.IndexValues)
+	bz, err := cdc.KeyCodec.Encode(indexEntry.IndexValues)
 	if err != nil {
 		return nil, nil, err
 	}

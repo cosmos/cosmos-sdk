@@ -20,7 +20,7 @@ import (
 	types "github.com/cosmos/cosmos-sdk/store/v2"
 	"github.com/cosmos/cosmos-sdk/store/v2/mem"
 	"github.com/cosmos/cosmos-sdk/store/v2/smt"
-	transkv "github.com/cosmos/cosmos-sdk/store/v2/transient"
+	"github.com/cosmos/cosmos-sdk/store/v2/transient"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
@@ -90,7 +90,7 @@ type Store struct {
 
 	schema StoreSchema
 	mem    *mem.Store
-	tran   *transkv.Store
+	tran   *transient.Store
 	mtx    sync.RWMutex
 
 	// Copied from StoreConfig
@@ -340,7 +340,7 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 		}
 	}
 	ret.mem = mem.NewStore(memdb.NewDB())
-	ret.tran = transkv.NewStore(memdb.NewDB())
+	ret.tran = transient.NewStore(memdb.NewDB())
 	ret.schema = reg.StoreSchema
 	return
 }

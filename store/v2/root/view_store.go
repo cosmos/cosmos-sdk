@@ -159,12 +159,3 @@ func (vs *viewStore) getSubstore(key string) (*viewSubstore, error) {
 		stateCommitmentStore: loadSMT(dbm.ReaderAsReadWriter(stateCommitmentR), rootHash),
 	}, nil
 }
-
-func (vs *viewStore) CacheRootStore() types.CacheRootStore {
-	return &cacheStore{
-		source:        vs,
-		substores:     map[string]types.CacheKVStore{},
-		listenerMixin: &listenerMixin{},
-		traceMixin:    &traceMixin{},
-	}
-}

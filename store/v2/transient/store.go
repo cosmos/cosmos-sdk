@@ -2,6 +2,7 @@ package transient
 
 import (
 	dbm "github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db/memdb"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
 )
@@ -18,7 +19,8 @@ type Store struct {
 }
 
 // NewStore constructs a new transient store.
-func NewStore(db dbm.DBConnection) *Store {
+func NewStore() *Store {
+	db := memdb.NewDB()
 	return &Store{
 		Store: dbadapter.Store{DB: db.ReadWriter()},
 		conn:  db,

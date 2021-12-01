@@ -11,7 +11,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	dbm "github.com/cosmos/cosmos-sdk/db"
-	"github.com/cosmos/cosmos-sdk/db/memdb"
 	prefixdb "github.com/cosmos/cosmos-sdk/db/prefix"
 	util "github.com/cosmos/cosmos-sdk/internal"
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
@@ -341,8 +340,8 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 			return
 		}
 	}
-	ret.mem = mem.NewStore(memdb.NewDB())
-	ret.tran = transient.NewStore(memdb.NewDB())
+	ret.mem = mem.NewStore()
+	ret.tran = transient.NewStore()
 	ret.schema = reg.StoreSchema
 	return
 }

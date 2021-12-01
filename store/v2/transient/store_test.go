@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/db/memdb"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/store/v2/transient"
 )
@@ -14,7 +13,7 @@ import (
 var k, v = []byte("hello"), []byte("world")
 
 func TestTransientStore(t *testing.T) {
-	tstore := transient.NewStore(memdb.NewDB())
+	tstore := transient.NewStore()
 	require.Nil(t, tstore.Get(k))
 	tstore.Set(k, v)
 	require.Equal(t, v, tstore.Get(k))

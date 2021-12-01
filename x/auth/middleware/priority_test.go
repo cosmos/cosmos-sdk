@@ -1,11 +1,12 @@
 package middleware_test
 
 import (
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func (s *MWTestSuite) TestPriority() {

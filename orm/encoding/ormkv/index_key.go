@@ -22,7 +22,7 @@ var _ IndexCodec = &IndexKeyCodec{}
 func NewIndexKeyCodec(prefix []byte, messageDescriptor protoreflect.MessageDescriptor, indexFields, primaryKeyFields []protoreflect.Name) (*IndexKeyCodec, error) {
 	indexFieldMap := map[protoreflect.Name]int{}
 
-	var keyFields []protoreflect.Name
+	keyFields := make([]protoreflect.Name, 0, len(indexFields)+len(primaryKeyFields))
 	for i, f := range indexFields {
 		indexFieldMap[f] = i
 		keyFields = append(keyFields, f)

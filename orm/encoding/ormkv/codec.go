@@ -19,6 +19,8 @@ type EntryCodec interface {
 type IndexCodec interface {
 	EntryCodec
 
+	GetFieldNames() []protoreflect.Name
+
 	// DecodeIndexKey decodes a kv-pair into index-fields and primary-key field
 	// values. These fields may or may not overlap depending on the index.
 	DecodeIndexKey(k, v []byte) (indexFields, primaryKey []protoreflect.Value, err error)

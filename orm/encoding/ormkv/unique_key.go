@@ -168,3 +168,15 @@ func (u UniqueKeyCodec) EncodeKVFromMessage(message protoreflect.Message) (k, v 
 	_, v, err = u.valueCodec.EncodeFromMessage(message)
 	return k, v, err
 }
+
+func (u UniqueKeyCodec) GetFieldNames() []protoreflect.Name {
+	return u.keyCodec.GetFieldNames()
+}
+
+func (u UniqueKeyCodec) GetKeyCodec() *KeyCodec {
+	return u.keyCodec
+}
+
+func (u UniqueKeyCodec) GetValueCodec() *KeyCodec {
+	return u.valueCodec
+}

@@ -259,6 +259,7 @@ func TestCommit(t *testing.T) {
 		require.Panics(t, func() { store.Commit() })
 		require.NoError(t, store.Close())
 
+		// No version should be saved in the backing DB(s)
 		versions, _ := db.Versions()
 		require.Equal(t, 0, versions.Count())
 		if store.StateCommitmentDB != nil {
@@ -266,6 +267,7 @@ func TestCommit(t *testing.T) {
 			require.Equal(t, 0, versions.Count())
 		}
 
+		// The store should now be reloaded successfully
 		store, err := NewStore(db, opts)
 		require.NoError(t, err)
 		s1 = store.GetKVStore(skey_1)
@@ -276,26 +278,36 @@ func TestCommit(t *testing.T) {
 	opts := simpleStoreConfig(t)
 	opts.Pruning = types.PruneNothing
 
-	// Ensure storage commit is rolled back in each failure case
+	// Ensure Store's commit is rolled back in each failure case...
 	t.Run("recover after failed Commit", func(t *testing.T) {
 		store, err := NewStore(dbRWCommitFails{memdb.NewDB()}, opts)
 		require.NoError(t, err)
 		testFailedCommit(t, store, nil, opts)
 	})
-	t.Run("recover after failed SaveVersion", func(t *testing.T) {
-		store, err := NewStore(dbSaveVersionFails{memdb.NewDB()}, opts)
+	// If SaveVersion and Revert both fail during Store.Commit, the DB will contain
+	// committed data that belongs to no version: non-atomic behavior from the Store user's perspective.
+	// So, that data must be reverted when the store is reloaded.
+	t.Run("recover after failed SaveVersion and Revert", func(t *testing.T) {
+		var db dbm.DBConnection
+		db = dbSaveVersionFails{memdb.NewDB()}
+		// Revert should succeed in initial NewStore call, but fail during Commit
+		db = dbRevertFails{db, []bool{false, true}}
+		store, err := NewStore(db, opts)
 		require.NoError(t, err)
 		testFailedCommit(t, store, nil, opts)
 	})
-
+	// Repeat the above for StateCommitmentDB
 	t.Run("recover after failed StateCommitmentDB Commit", func(t *testing.T) {
 		opts.StateCommitmentDB = dbRWCommitFails{memdb.NewDB()}
 		store, err := NewStore(memdb.NewDB(), opts)
 		require.NoError(t, err)
 		testFailedCommit(t, store, nil, opts)
 	})
-	t.Run("recover after failed StateCommitmentDB SaveVersion", func(t *testing.T) {
-		opts.StateCommitmentDB = dbSaveVersionFails{memdb.NewDB()}
+	t.Run("recover after failed StateCommitmentDB SaveVersion and Revert", func(t *testing.T) {
+		var db dbm.DBConnection
+		db = dbSaveVersionFails{memdb.NewDB()}
+		db = dbRevertFails{db, []bool{false, true}}
+		opts.StateCommitmentDB = db
 		store, err := NewStore(memdb.NewDB(), opts)
 		require.NoError(t, err)
 		testFailedCommit(t, store, nil, opts)

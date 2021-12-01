@@ -5,13 +5,17 @@ import (
 	"errors"
 
 	dbm "github.com/cosmos/cosmos-sdk/db"
-	"github.com/cosmos/cosmos-sdk/db/memdb"
 )
 
 type dbDeleteVersionFails struct{ dbm.DBConnection }
-type dbRWCommitFails struct{ *memdb.MemDB }
+type dbRWCommitFails struct{ dbm.DBConnection }
 type dbRWCrudFails struct{ dbm.DBConnection }
-type dbSaveVersionFails struct{ *memdb.MemDB }
+type dbSaveVersionFails struct{ dbm.DBConnection }
+type dbRevertFails struct {
+	dbm.DBConnection
+	// order of calls to fail on (eg. [1, 0] => first call fails; second succeeds)
+	failOn []bool
+}
 type dbVersionsIs struct {
 	dbm.DBConnection
 	vset dbm.VersionSet
@@ -28,14 +32,24 @@ func (db dbVersionsIs) Versions() (dbm.VersionSet, error) { return db.vset, nil 
 func (db dbRWCrudFails) ReadWriter() dbm.DBReadWriter {
 	return rwCrudFails{db.DBConnection.ReadWriter(), nil}
 }
-func (dbSaveVersionFails) SaveVersion(uint64) error     { return errors.New("dbSaveVersionFails") }
+func (dbSaveVersionFails) SaveVersion(uint64) error { return errors.New("dbSaveVersionFails") }
+func (db dbRevertFails) Revert() error {
+	fail := false
+	if len(db.failOn) > 0 {
+		fail, db.failOn = db.failOn[0], db.failOn[1:]
+	}
+	if fail {
+		return errors.New("dbRevertFails")
+	}
+	return db.DBConnection.Revert()
+}
 func (dbDeleteVersionFails) DeleteVersion(uint64) error { return errors.New("dbDeleteVersionFails") }
 func (tx rwCommitFails) Commit() error {
 	tx.Discard()
 	return errors.New("rwCommitFails")
 }
 func (db dbRWCommitFails) ReadWriter() dbm.DBReadWriter {
-	return rwCommitFails{db.MemDB.ReadWriter()}
+	return rwCommitFails{db.DBConnection.ReadWriter()}
 }
 
 func (rw rwCrudFails) Get(k []byte) ([]byte, error) {

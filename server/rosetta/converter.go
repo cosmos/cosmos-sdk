@@ -297,7 +297,7 @@ func (c converter) Tx(rawTx tmtypes.Tx, txResult *abci.ResponseDeliverTx) (*rose
 	var balanceOps []*rosettatypes.Operation
 	// tx result might be nil, in case we're querying an unconfirmed tx from the mempool
 	if txResult != nil {
-		balanceOps = c.BalanceOps(status, txResult.Events)
+		balanceOps = c.BalanceOps(StatusTxSuccess, txResult.Events) // force set to success because no events for failed tx
 	}
 
 	// now normalize indexes

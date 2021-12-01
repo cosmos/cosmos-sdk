@@ -13,19 +13,18 @@ import (
 type IndexKeyCodec struct {
 	*KeyCodec
 	tableName    protoreflect.FullName
-	fieldNames   Fields
 	pkFieldOrder []int
 }
 
 var _ IndexCodec = &IndexKeyCodec{}
 
 // NewIndexKeyCodec creates a new IndexKeyCodec.
-func NewIndexKeyCodec(prefix []byte, tableName protoreflect.FullName, indexFields []protoreflect.FieldDescriptor, primaryKeyFields []protoreflect.FieldDescriptor) (*IndexKeyCodec, error) {
+func NewIndexKeyCodec(prefix []byte, messageDescriptor protoreflect.MessageDescriptor, indexFields, primaryKeyFields []protoreflect.Name) (*IndexKeyCodec, error) {
 	indexFieldMap := map[protoreflect.Name]int{}
 
-	var keyFields []protoreflect.FieldDescriptor
+	var keyFields []protoreflect.Name
 	for i, f := range indexFields {
-		indexFieldMap[f.Name()] = i
+		indexFieldMap[f] = i
 		keyFields = append(keyFields, f)
 	}
 
@@ -34,7 +33,7 @@ func NewIndexKeyCodec(prefix []byte, tableName protoreflect.FullName, indexField
 	pkFieldOrder := make([]int, numPrimaryKeyFields)
 	k := 0
 	for j, f := range primaryKeyFields {
-		if i, ok := indexFieldMap[f.Name()]; ok {
+		if i, ok := indexFieldMap[f]; ok {
 			pkFieldOrder[j] = i
 			continue
 		}
@@ -43,18 +42,15 @@ func NewIndexKeyCodec(prefix []byte, tableName protoreflect.FullName, indexField
 		k++
 	}
 
-	cdc, err := NewKeyCodec(prefix, keyFields)
+	cdc, err := NewKeyCodec(prefix, messageDescriptor, keyFields)
 	if err != nil {
 		return nil, err
 	}
 
-	fields := FieldsFromDescriptors(cdc.fieldDescriptors)
-
 	return &IndexKeyCodec{
 		KeyCodec:     cdc,
 		pkFieldOrder: pkFieldOrder,
-		fieldNames:   fields,
-		tableName:    tableName,
+		tableName:    messageDescriptor.FullName(),
 	}, nil
 }
 

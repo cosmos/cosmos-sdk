@@ -140,14 +140,15 @@ func TestKeyCodecGen(minLen, maxLen int) *rapid.Generator {
 	return rapid.Custom(func(t *rapid.T) TestKeyCodec {
 		specs := TestFieldSpecsGen(minLen, maxLen).Draw(t, "fieldSpecs").([]TestFieldSpec)
 
-		var fields []protoreflect.FieldDescriptor
+		var fields []protoreflect.Name
 		for _, spec := range specs {
-			fields = append(fields, GetTestField(spec.FieldName))
+			fields = append(fields, spec.FieldName)
 		}
 
 		prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix").([]byte)
 
-		cdc, err := ormkv.NewKeyCodec(prefix, fields)
+		desc := (&testpb.A{}).ProtoReflect().Descriptor()
+		cdc, err := ormkv.NewKeyCodec(prefix, desc, fields)
 		if err != nil {
 			panic(err)
 		}

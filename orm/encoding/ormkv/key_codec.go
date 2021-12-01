@@ -20,23 +20,26 @@ type KeyCodec struct {
 
 	prefix           []byte
 	fieldDescriptors []protoreflect.FieldDescriptor
+	fieldNames       []protoreflect.Name
 	fieldCodecs      []ormfield.Codec
 }
 
 // NewKeyCodec returns a new KeyCodec with the provided prefix and
 // codecs for the provided fields.
-func NewKeyCodec(prefix []byte, fieldDescriptors []protoreflect.FieldDescriptor) (*KeyCodec, error) {
-	n := len(fieldDescriptors)
-	var fieldCodecs []ormfield.Codec
+func NewKeyCodec(prefix []byte, messageDescriptor protoreflect.MessageDescriptor, fieldNames []protoreflect.Name) (*KeyCodec, error) {
+	n := len(fieldNames)
+	fieldCodecs := make([]ormfield.Codec, n)
+	fieldDescriptors := make([]protoreflect.FieldDescriptor, n)
 	var variableSizers []struct {
 		cdc ormfield.Codec
 		i   int
 	}
 	fixedSize := 0
-	names := make([]protoreflect.Name, len(fieldDescriptors))
+	messageFields := messageDescriptor.Fields()
+
 	for i := 0; i < n; i++ {
 		nonTerminal := i != n-1
-		field := fieldDescriptors[i]
+		field := messageFields.ByName(fieldNames[i])
 		cdc, err := ormfield.GetCodec(field, nonTerminal)
 		if err != nil {
 			return nil, err
@@ -49,13 +52,14 @@ func NewKeyCodec(prefix []byte, fieldDescriptors []protoreflect.FieldDescriptor)
 				i   int
 			}{cdc, i})
 		}
-		fieldCodecs = append(fieldCodecs, cdc)
-		names[i] = field.Name()
+		fieldCodecs[i] = cdc
+		fieldDescriptors[i] = field
 	}
 
 	return &KeyCodec{
 		fieldCodecs:      fieldCodecs,
 		fieldDescriptors: fieldDescriptors,
+		fieldNames:       fieldNames,
 		prefix:           prefix,
 		fixedSize:        fixedSize,
 		variableSizers:   variableSizers,
@@ -273,4 +277,13 @@ func (cdc KeyCodec) CheckValidRangeIterationKeys(start, end []protoreflect.Value
 // GetFieldDescriptors returns the field descriptors for this codec.
 func (cdc *KeyCodec) GetFieldDescriptors() []protoreflect.FieldDescriptor {
 	return cdc.fieldDescriptors
+}
+
+// GetFieldNames returns the field names for this codec.
+func (cdc *KeyCodec) GetFieldNames() []protoreflect.Name {
+	return cdc.fieldNames
+}
+
+func (cdc *KeyCodec) Prefix() []byte {
+	return cdc.prefix
 }

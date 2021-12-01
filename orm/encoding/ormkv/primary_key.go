@@ -19,12 +19,17 @@ type PrimaryKeyCodec struct {
 }
 
 // NewPrimaryKeyCodec creates a new PrimaryKeyCodec.
-func NewPrimaryKeyCodec(keyCodec *KeyCodec, msgType protoreflect.MessageType, unmarshalOptions proto.UnmarshalOptions) *PrimaryKeyCodec {
+func NewPrimaryKeyCodec(prefix []byte, msgType protoreflect.MessageType, fieldNames []protoreflect.Name, unmarshalOptions proto.UnmarshalOptions) (*PrimaryKeyCodec, error) {
+	keyCodec, err := NewKeyCodec(prefix, msgType.Descriptor(), fieldNames)
+	if err != nil {
+		return nil, err
+	}
+
 	return &PrimaryKeyCodec{
 		KeyCodec:         keyCodec,
 		msgType:          msgType,
 		unmarshalOptions: unmarshalOptions,
-	}
+	}, nil
 }
 
 var _ IndexCodec = PrimaryKeyCodec{}

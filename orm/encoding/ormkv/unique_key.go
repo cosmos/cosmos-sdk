@@ -11,9 +11,8 @@ import (
 
 // UniqueKeyCodec is the codec for unique indexes.
 type UniqueKeyCodec struct {
-	tableName       protoreflect.FullName
-	indexFieldNames Fields
-	pkFieldOrder    []struct {
+	tableName    protoreflect.FullName
+	pkFieldOrder []struct {
 		inKey bool
 		i     int
 	}
@@ -22,20 +21,25 @@ type UniqueKeyCodec struct {
 }
 
 // NewUniqueKeyCodec creates a new UniqueKeyCodec.
-func NewUniqueKeyCodec(keyCodec *KeyCodec, tableName protoreflect.FullName, primaryKeyFields []protoreflect.FieldDescriptor) (*UniqueKeyCodec, error) {
+func NewUniqueKeyCodec(prefix []byte, messageDescriptor protoreflect.MessageDescriptor, indexFields, primaryKeyFields []protoreflect.Name) (*UniqueKeyCodec, error) {
+	keyCodec, err := NewKeyCodec(prefix, messageDescriptor, indexFields)
+	if err != nil {
+		return nil, err
+	}
+
 	haveFields := map[protoreflect.Name]int{}
 	for i, descriptor := range keyCodec.fieldDescriptors {
 		haveFields[descriptor.Name()] = i
 	}
 
-	var valueFields []protoreflect.FieldDescriptor
+	var valueFields []protoreflect.Name
 	var pkFieldOrder []struct {
 		inKey bool
 		i     int
 	}
 	k := 0
 	for _, field := range primaryKeyFields {
-		if j, ok := haveFields[field.Name()]; ok {
+		if j, ok := haveFields[field]; ok {
 			pkFieldOrder = append(pkFieldOrder, struct {
 				inKey bool
 				i     int
@@ -50,17 +54,16 @@ func NewUniqueKeyCodec(keyCodec *KeyCodec, tableName protoreflect.FullName, prim
 		}
 	}
 
-	valueCodec, err := NewKeyCodec(nil, valueFields)
+	valueCodec, err := NewKeyCodec(nil, messageDescriptor, valueFields)
 	if err != nil {
 		return nil, err
 	}
 
 	return &UniqueKeyCodec{
-		tableName:       tableName,
-		indexFieldNames: FieldsFromDescriptors(keyCodec.fieldDescriptors),
-		pkFieldOrder:    pkFieldOrder,
-		keyCodec:        keyCodec,
-		valueCodec:      valueCodec,
+		tableName:    messageDescriptor.FullName(),
+		pkFieldOrder: pkFieldOrder,
+		keyCodec:     keyCodec,
+		valueCodec:   valueCodec,
 	}, nil
 }
 
@@ -114,7 +117,7 @@ func (u UniqueKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 
 	return &IndexKeyEntry{
 		TableName:   u.tableName,
-		Fields:      u.indexFieldNames,
+		Fields:      u.keyCodec.fieldNames,
 		IsUnique:    true,
 		IndexValues: idxVals,
 		PrimaryKey:  pk,

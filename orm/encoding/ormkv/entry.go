@@ -69,7 +69,7 @@ type IndexKeyEntry struct {
 	TableName protoreflect.FullName
 
 	// Fields are the index fields this entry represents.
-	Fields Fields
+	Fields []protoreflect.Name
 
 	// IsUnique indicates whether this index is unique or not.
 	IsUnique bool
@@ -84,10 +84,6 @@ type IndexKeyEntry struct {
 
 func (i *IndexKeyEntry) GetTableName() protoreflect.FullName {
 	return i.TableName
-}
-
-func (i *IndexKeyEntry) GetFields() Fields {
-	return i.Fields
 }
 
 func (i *IndexKeyEntry) doNotImplement() {}

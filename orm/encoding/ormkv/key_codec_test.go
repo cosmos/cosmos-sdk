@@ -45,11 +45,9 @@ func assertEncDecKey(t *rapid.T, key testutil.TestKeyCodec, keyValues []protoref
 }
 
 func TestCompareValues(t *testing.T) {
-	cdc, err := ormkv.NewKeyCodec(nil, []protoreflect.FieldDescriptor{
-		testutil.GetTestField("u32"),
-		testutil.GetTestField("str"),
-		testutil.GetTestField("i32"),
-	})
+	cdc, err := ormkv.NewKeyCodec(nil,
+		(&testpb.A{}).ProtoReflect().Descriptor(),
+		[]protoreflect.Name{"u32", "str", "i32"})
 	assert.NilError(t, err)
 
 	tests := []struct {
@@ -199,12 +197,9 @@ func ValuesOf(values ...interface{}) []protoreflect.Value {
 }
 
 func TestDecodePrefixKey(t *testing.T) {
-	cdc, err := ormkv.NewKeyCodec(nil, []protoreflect.FieldDescriptor{
-		testutil.GetTestField("u32"),
-		testutil.GetTestField("str"),
-		testutil.GetTestField("bz"),
-		testutil.GetTestField("i32"),
-	})
+	cdc, err := ormkv.NewKeyCodec(nil,
+		(&testpb.A{}).ProtoReflect().Descriptor(),
+		[]protoreflect.Name{"u32", "str", "bz", "i32"})
 
 	assert.NilError(t, err)
 	tests := []struct {
@@ -228,12 +223,9 @@ func TestDecodePrefixKey(t *testing.T) {
 }
 
 func TestValidRangeIterationKeys(t *testing.T) {
-	cdc, err := ormkv.NewKeyCodec(nil, []protoreflect.FieldDescriptor{
-		testutil.GetTestField("u32"),
-		testutil.GetTestField("str"),
-		testutil.GetTestField("bz"),
-		testutil.GetTestField("i32"),
-	})
+	cdc, err := ormkv.NewKeyCodec(nil,
+		(&testpb.A{}).ProtoReflect().Descriptor(),
+		[]protoreflect.Name{"u32", "str", "bz", "i32"})
 	assert.NilError(t, err)
 
 	tests := []struct {
@@ -316,11 +308,9 @@ func TestValidRangeIterationKeys(t *testing.T) {
 }
 
 func TestGetSet(t *testing.T) {
-	cdc, err := ormkv.NewKeyCodec(nil, []protoreflect.FieldDescriptor{
-		testutil.GetTestField("u32"),
-		testutil.GetTestField("str"),
-		testutil.GetTestField("i32"),
-	})
+	cdc, err := ormkv.NewKeyCodec(nil,
+		(&testpb.A{}).ProtoReflect().Descriptor(),
+		[]protoreflect.Name{"u32", "str", "i32"})
 	assert.NilError(t, err)
 
 	var a testpb.A

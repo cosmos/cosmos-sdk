@@ -6,6 +6,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
@@ -15,6 +16,7 @@ var (
 	_ sdk.Tx                             = (*StdTx)(nil)
 	_ sdk.TxWithMemo                     = (*StdTx)(nil)
 	_ sdk.FeeTx                          = (*StdTx)(nil)
+	_ tx.TipTx                           = (*StdTx)(nil)
 	_ codectypes.UnpackInterfacesMessage = (*StdTx)(nil)
 
 	_ codectypes.UnpackInterfacesMessage = (*StdSignature)(nil)
@@ -25,8 +27,10 @@ var (
 // which must be above some miminum to be accepted into the mempool.
 // [Deprecated]
 type StdFee struct {
-	Amount sdk.Coins `json:"amount" yaml:"amount"`
-	Gas    uint64    `json:"gas" yaml:"gas"`
+	Amount  sdk.Coins `json:"amount" yaml:"amount"`
+	Gas     uint64    `json:"gas" yaml:"gas"`
+	Payer   string    `json:"payer,omitempty" yaml:"payer"`
+	Granter string    `json:"granter,omitempty" yaml:"granter"`
 }
 
 // Deprecated: NewStdFee returns a new instance of StdFee
@@ -68,6 +72,12 @@ func (fee StdFee) Bytes() []byte {
 // as fee = ceil(gasWanted * gasPrices).
 func (fee StdFee) GasPrices() sdk.DecCoins {
 	return sdk.NewDecCoinsFromCoins(fee.Amount...).QuoDec(sdk.NewDec(int64(fee.Gas)))
+}
+
+// StdTip is the tips used in a tipped transaction.
+type StdTip struct {
+	Amount sdk.Coins `json:"amount" yaml:"amount"`
+	Tipper string    `json:"tipper" yaml:"tipper"`
 }
 
 // StdTx is the legacy transaction format for wrapping a Msg with Fee and Signatures.
@@ -223,6 +233,9 @@ func (tx StdTx) FeePayer() sdk.AccAddress {
 func (tx StdTx) FeeGranter() sdk.AccAddress {
 	return nil
 }
+
+// GetTip always returns nil for StdTx
+func (tx StdTx) GetTip() *tx.Tip { return nil }
 
 func (tx StdTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, m := range tx.Msgs {

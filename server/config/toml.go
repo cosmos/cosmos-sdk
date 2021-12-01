@@ -2,10 +2,12 @@ package config
 
 import (
 	"bytes"
+	"fmt"
+	"io/ioutil"
+	"os"
 	"text/template"
 
 	"github.com/spf13/viper"
-	tmos "github.com/tendermint/tendermint/libs/os"
 )
 
 const DefaultConfigTemplate = `# This is a TOML config file.
@@ -69,6 +71,10 @@ inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 # Example:
 # ["message.sender", "message.recipient"]
 index-events = [{{ range .BaseConfig.IndexEvents }}{{ printf "%q, " . }}{{end}}]
+
+# IavlCacheSize set the size of the iavl tree cache. 
+# Default cache size is 50mb.
+iavl-cache-size = {{ .BaseConfig.IAVLCacheSize }}
 
 ###############################################################################
 ###                         Telemetry Configuration                         ###
@@ -245,5 +251,12 @@ func WriteConfigFile(configFilePath string, config interface{}) {
 		panic(err)
 	}
 
-	tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0644)
+	mustWriteFile(configFilePath, buffer.Bytes(), 0644)
+}
+
+func mustWriteFile(filePath string, contents []byte, mode os.FileMode) {
+	if err := ioutil.WriteFile(filePath, contents, mode); err != nil {
+		fmt.Printf(fmt.Sprintf("failed to write file: %v", err) + "\n")
+		os.Exit(1)
+	}
 }

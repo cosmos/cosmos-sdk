@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	types "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
@@ -39,13 +39,31 @@ func (signModeDirectAuxHandler) GetSignBytes(
 		return nil, fmt.Errorf("can only handle a protobuf Tx, got %T", tx)
 	}
 
+	signerInfo := protoTx.tx.AuthInfo.SignerInfos[data.SignerIndex]
+	if signerInfo == nil || signerInfo.PublicKey == nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("got empty pubkey for signer #%d in %s handler", data.SignerIndex, signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
+	}
+
+	addr := data.Address
+	if addr == "" {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "got empty address in %s handler", signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
+	}
+
+	feePayer := protoTx.FeePayer().String()
+
+	// Fee payer cannot use SIGN_MODE_DIRECT_AUX, because SIGN_MODE_DIRECT_AUX
+	// does not sign over fees, which would create malleability issues.
+	if feePayer == data.Address {
+		return nil, sdkerrors.ErrUnauthorized.Wrapf("fee payer %s cannot sign with %s", feePayer, signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
+	}
+
 	signDocDirectAux := types.SignDocDirectAux{
 		BodyBytes:     protoTx.getBodyBytes(),
 		ChainId:       data.ChainID,
 		AccountNumber: data.AccountNumber,
-		Sequence:      data.Sequence,
+		Sequence:      signerInfo.Sequence,
 		Tip:           protoTx.tx.AuthInfo.Tip,
-		PublicKey:     protoTx.tx.AuthInfo.SignerInfos[data.SignerIndex].PublicKey,
+		PublicKey:     signerInfo.PublicKey,
 	}
 
 	return signDocDirectAux.Marshal()

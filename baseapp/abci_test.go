@@ -106,7 +106,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 
 		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 		tc.bapp.InitChain(abci.RequestInitChain{
-			ConsensusParams: &abci.ConsensusParams{
+			ConsensusParams: &tmprototypes.ConsensusParams{
 				Evidence: &tmprototypes.EvidenceParams{
 					MaxAgeNumBlocks: tc.maxAgeBlocks,
 				},

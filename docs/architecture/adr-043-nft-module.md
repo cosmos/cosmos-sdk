@@ -2,23 +2,28 @@
 
 ## Changelog
 
-- 05.05.2021: Initial Draft
-- 07.01.2021: Incorporate Billy's feedback
-- 07.02.2021: Incorporate feedbacks from Aaron, Shaun, Billy et al.
+- 2021-05-01: Initial Draft
+- 2021-07-02: Review updates
 
 ## Status
 
-DRAFT
+PROPOSED
 
 ## Abstract
 
-This ADR defines the `x/nft` module which is a generic implementation of NFTs, roughly "compatible" with ERC721.
+This ADR defines the `x/nft` module which is a generic implementation of NFTs, roughly "compatible" with ERC721. **Applications using the `x/nft` module must implement the following functions**:
+
+- `MsgNewClass` - Receive the user's request to create a class, and call the `NewClass` of the `x/nft` module.
+- `MsgUpdateClass` - Receive the user's request to update a class, and call the `UpdateClass` of the `x/nft` module.
+- `MsgMintNFT` - Receive the user's request to mint a nft, and call the `MintNFT` of the `x/nft` module.
+- `BurnNFT` - Receive the user's request to burn a nft, and call the `BurnNFT` of the `x/nft` module.
+- `UpdateNFT` - Receive the user's request to update a nft, and call the `UpdateNFT` of the `x/nft` module.
 
 ## Context
 
 NFTs are more than just crypto art, which is very helpful for accruing value to the Cosmos ecosystem. As a result, Cosmos Hub should implement NFT functions and enable a unified mechanism for storing and sending the ownership representative of NFTs as discussed in https://github.com/cosmos/cosmos-sdk/discussions/9065.
 
-As was discussed in [#9065](https://github.com/cosmos/cosmos-sdk/discussions/9065), several potential solutions can be considered:
+As discussed in [#9065](https://github.com/cosmos/cosmos-sdk/discussions/9065), several potential solutions can be considered:
 
 - irismod/nft and modules/incubator/nft
 - CW721
@@ -28,25 +33,33 @@ As was discussed in [#9065](https://github.com/cosmos/cosmos-sdk/discussions/906
 Since functions/use cases of NFTs are tightly connected with their logic, it is almost impossible to support all the NFTs' use cases in one Cosmos SDK module by defining and implementing different transaction types.
 
 Considering generic usage and compatibility of interchain protocols including IBC and Gravity Bridge, it is preferred to have a generic NFT module design which handles the generic NFTs logic.
-
 This design idea can enable composability that application-specific functions should be managed by other modules on Cosmos Hub or on other Zones by importing the NFT module.
 
 The current design is based on the work done by [IRISnet team](https://github.com/irisnet/irismod/tree/master/modules/nft) and an older implementation in the [Cosmos repository](https://github.com/cosmos/modules/tree/master/incubator/nft).
 
 ## Decision
 
-We will create a module `x/nft`, which contains the following functionality:
+We create a `x/nft` module, which contains the following functionality:
 
 - Store NFTs and track their ownership.
-- Expose `Keeper` interface for composing modules to mint and burn NFTs.
+- Expose `Keeper` interface for composing modules to transfer, mint and burn NFTs.
 - Expose external `Message` interface for users to transfer ownership of their NFTs.
 - Query NFTs and their supply information.
 
+The proposed module is a base module for NFT app logic. It's goal it to provide a common layer for storage, basic transfer functionality and IBC. The module should not be used as a standalone.
+Instead an app should create a specialized module to handle app specific logic (eg: NFT ID construction, royalty), user level minting and burning. Moreover an app specialized module should handle auxiliary data to support the app logic (eg indexes, ORM, business data).
+
+All data carried over IBC must be part of the `NFT` or `Class` type described below. The app specific NFT data should be encoded in `NFT.data` for cross-chain integrity. Other objects related to NFT, which are not important for integrity can be part of the app specific module.
+
 ### Types
+
+We propose two main types:
++ `Class` -- describes NFT class. We can think about it as a smart contract address.
++ `NFT` -- object representing unique, non fungible asset. Each NFT is associated with a Class.
 
 #### Class
 
-We define a model for NFT **Class**, which is comparable to an ERC721 Contract on Ethereum, under which a collection of NFTs can be created and managed.
+NFT **Class** is comparable to an ERC-721 smart contract (provides description of a smart contract), under which a collection of NFTs can be created and managed.
 
 ```protobuf
 message Class {
@@ -55,6 +68,8 @@ message Class {
   string symbol      = 3;
   string description = 4;
   string uri         = 5;
+  string uri_hash    = 6;
+  google.protobuf.Any data = 7;
 }
 ```
 
@@ -62,7 +77,9 @@ message Class {
 - `name` is a descriptive name of the NFT class; _optional_
 - `symbol` is the symbol usually shown on exchanges for the NFT class; _optional_
 - `description` is a detailed description of the NFT class; _optional_
-- `uri` is a URL pointing to an off-chain JSON file that contains metadata about this NFT class ([OpenSea example](https://docs.opensea.io/docs/contract-level-metadata)); _optional_
+- `uri` is a URI for the class metadata stored off chain. It should be a JSON file that contains metadata about the NFT class and NFT data schema ([OpenSea example](https://docs.opensea.io/docs/contract-level-metadata)); _optional_
+- `uri_hash` is a hash of the document pointed by uri; _optional_
+- `data` is app specific metadata of the class; _optional_
 
 #### NFT
 
@@ -73,17 +90,21 @@ message NFT {
   string class_id           = 1;
   string id                 = 2;
   string uri                = 3;
+  string uri_hash           = 4;
   google.protobuf.Any data  = 10;
 }
 ```
 
 - `class_id` is the identifier of the NFT class where the NFT belongs; _required_
 - `id` is an alphanumeric identifier of the NFT, unique within the scope of its class. It is specified by the creator of the NFT and may be expanded to use DID in the future. `class_id` combined with `id` uniquely identifies an NFT and is used as the primary index for storing the NFT; _required_
+
   ```
   {class_id}/{id} --> NFT (bytes)
   ```
-- `uri` is a URL pointing to an off-chain JSON file that contains metadata about this NFT (Ref: [ERC721 standard and OpenSea extension](https://docs.opensea.io/docs/metadata-standards)); _required_
-- `data` is a field that CAN be used by composing modules to specify additional properties for the NFT; _optional_
+
+- `uri` is a URI for the NFT metadata stored off chain. Should point to a JSON file that contains metadata about this NFT (Ref: [ERC721 standard and OpenSea extension](https://docs.opensea.io/docs/metadata-standards)); _required_
+- `uri_hash` is a hash of the document pointed by uri; _optional_
+- `data` is an app specific data of the NFT. CAN be used by composing modules to specify additional properties of the NFT; _optional_
 
 This ADR doesn't specify values that `data` can take; however, best practices recommend upper-level NFT modules clearly specify their contents.  Although the value of this field doesn't provide the additional context required to manage NFT records, which means that the field can technically be removed from the specification, the field's existence allows basic informational/UI functionality.
 
@@ -281,14 +302,12 @@ message QueryClassesResponse {
 }
 ```
 
-
 ### Interoperability
 
 Interoperability is all about reusing assets between modules and chains. The former one is achieved by ADR-33: Protobuf client - server communication. At the time of writing ADR-33 is not finalized. The latter is achieved by IBC. Here we will focus on the IBC side.
 IBC is implemented per module. Here, we aligned that NFTs will be recorded and managed in the x/nft. This requires creation of a new IBC standard and implementation of it.
 
 For IBC interoperability, NFT custom modules MUST use the NFT object type understood by the IBC client. So, for x/nft interoperability, custom NFT implementations (example: x/cryptokitty) should use the canonical x/nft module and proxy all NFT balance keeping functionality to x/nft or else re-implement all functionality using the NFT object type understood by the IBC client. In other words: x/nft becomes the standard NFT registry for all Cosmos NFTs (example: x/cryptokitty will register a kitty NFT in x/nft and use x/nft for book keeping). This was [discussed](https://github.com/cosmos/cosmos-sdk/discussions/9065#discussioncomment-873206) in the context of using x/bank as a general asset balance book. Not using x/nft will require implementing another module for IBC.
-
 
 ## Consequences
 
@@ -309,6 +328,7 @@ This specification conforms to the ERC-721 smart contract specification for NFT 
 ### Negative
 
 + New IBC app is required for x/nft
++ CW721 adapter is required
 
 ### Neutral
 
@@ -320,6 +340,7 @@ For other kinds of applications on the Hub, more app-specific modules can be dev
 
 - `x/nft/custody`: custody of NFTs to support trading functionality.
 - `x/nft/marketplace`: selling and buying NFTs using sdk.Coins.
+- `x/fractional`: a module to split an ownership of an asset (NFT or other assets) for multiple stakeholder. `x/group`  should work for most of the cases.
 
 Other networks in the Cosmos ecosystem could design and implement their own NFT modules for specific NFT applications and use cases.
 

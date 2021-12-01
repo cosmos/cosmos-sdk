@@ -89,6 +89,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	msigAddr := sdk.AccAddress(multisigPk.Address())
 	msg2 := testdata.NewTestMsg(msigAddr)
 	err := txBuilder.SetMsgs(msg, msg2)
+	txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
 	s.Require().NoError(err)
 
 	// check that validation fails
@@ -127,9 +128,11 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 
 	// sign transaction
 	signerData := signing.SignerData{
+		Address:       addr.String(),
 		ChainID:       "test",
 		AccountNumber: 1,
 		Sequence:      seq1,
+		SignerIndex:   0,
 	}
 	signBytes, err := signModeHandler.GetSignBytes(signModeHandler.DefaultMode(), signerData, sigTx)
 	s.Require().NoError(err)
@@ -137,9 +140,11 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	s.Require().NoError(err)
 
 	signerData = signing.SignerData{
+		Address:       msigAddr.String(),
 		ChainID:       "test",
 		AccountNumber: 3,
 		Sequence:      mseq,
+		SignerIndex:   0,
 	}
 	mSignBytes, err := signModeHandler.GetSignBytes(signModeHandler.DefaultMode(), signerData, sigTx)
 	s.Require().NoError(err)

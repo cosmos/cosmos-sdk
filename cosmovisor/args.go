@@ -11,7 +11,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog"
+
 	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
+	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // environment variable names
@@ -30,7 +34,6 @@ const (
 	genesisDir      = "genesis"
 	upgradesDir     = "upgrades"
 	currentLink     = "current"
-	upgradeFilename = "upgrade-info.json"
 )
 
 // must be the same as x/upgrade/types.UpgradeInfoFilename
@@ -47,7 +50,7 @@ type Config struct {
 	PreupgradeMaxRetries  int
 
 	// currently running upgrade
-	currentUpgrade UpgradeInfo
+	currentUpgrade upgradetypes.Plan
 }
 
 // Root returns the root directory where all info lives
@@ -143,13 +146,18 @@ func GetConfigFromEnv() (*Config, error) {
 
 	interval := os.Getenv(EnvInterval)
 	if interval != "" {
-		switch i, e := strconv.ParseUint(interval, 10, 32); {
-		case e != nil:
-			errs = append(errs, fmt.Errorf("invalid %s: %w", EnvInterval, err))
-		case i == 0:
-			errs = append(errs, fmt.Errorf("invalid %s: cannot be 0", EnvInterval))
-		default:
-			cfg.PollInterval = time.Millisecond * time.Duration(i)
+		var intervalUInt uint64
+		intervalUInt, err = strconv.ParseUint(interval, 10, 32)
+		if err == nil {
+			cfg.PollInterval = time.Millisecond * time.Duration(intervalUInt)
+		} else {
+			cfg.PollInterval, err = time.ParseDuration(interval)
+		}
+		switch {
+		case err != nil:
+			errs = append(errs, fmt.Errorf("invalid %s: could not parse \"%s\" into either a duration or uint (milliseconds)", EnvInterval, interval))
+		case cfg.PollInterval <= 0:
+			errs = append(errs, fmt.Errorf("invalid %s: must be greater than 0", EnvInterval))
 		}
 	} else {
 		cfg.PollInterval = 300 * time.Millisecond
@@ -166,6 +174,20 @@ func GetConfigFromEnv() (*Config, error) {
 		return nil, cverrors.FlattenErrors(errs...)
 	}
 	return cfg, nil
+}
+
+// LogConfigOrError logs either the config details or the error.
+func LogConfigOrError(logger zerolog.Logger, cfg *Config, err error) {
+	if cfg == nil && err == nil {
+		return
+	}
+	logger.Info().Msg("Configuration:")
+	switch {
+	case err != nil:
+		cverrors.LogErrors(logger, "configuration errors found", err)
+	case cfg != nil:
+		logger.Info().Msg(cfg.DetailString())
+	}
 }
 
 // validate returns an error if this config is invalid.
@@ -195,7 +217,7 @@ func (cfg *Config) validate() []error {
 }
 
 // SetCurrentUpgrade sets the named upgrade to be the current link, returns error if this binary doesn't exist
-func (cfg *Config) SetCurrentUpgrade(u UpgradeInfo) error {
+func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) error {
 	// ensure named upgrade exists
 	bin := cfg.UpgradeBin(u.Name)
 
@@ -219,7 +241,7 @@ func (cfg *Config) SetCurrentUpgrade(u UpgradeInfo) error {
 	}
 
 	cfg.currentUpgrade = u
-	f, err := os.Create(filepath.Join(upgrade, upgradeFilename))
+	f, err := os.Create(filepath.Join(upgrade, upgradekeeper.UpgradeInfoFileName))
 	if err != nil {
 		return err
 	}
@@ -233,14 +255,14 @@ func (cfg *Config) SetCurrentUpgrade(u UpgradeInfo) error {
 	return f.Close()
 }
 
-func (cfg *Config) UpgradeInfo() UpgradeInfo {
+func (cfg *Config) UpgradeInfo() upgradetypes.Plan {
 	if cfg.currentUpgrade.Name != "" {
 		return cfg.currentUpgrade
 	}
 
-	filename := filepath.Join(cfg.Root(), currentLink, upgradeFilename)
+	filename := filepath.Join(cfg.Root(), currentLink, upgradekeeper.UpgradeInfoFileName)
 	_, err := os.Lstat(filename)
-	var u UpgradeInfo
+	var u upgradetypes.Plan
 	var bz []byte
 	if err != nil { // no current directory
 		goto returnError

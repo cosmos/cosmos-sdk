@@ -14,7 +14,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 service Query {
   // Balance queries the balance of a single coin for a single account.
   rpc Balance(QueryBalanceRequest) returns (QueryBalanceResponse) {
-    option (google.api.http).get = "/cosmos/bank/v1beta1/balances/{address}/{denom}";
+    option (google.api.http).get = "/cosmos/bank/v1beta1/balances/{address}/by_denom";
   }
 
   // AllBalances queries the balance of all coins for a single account.
@@ -103,6 +103,8 @@ message QueryTotalSupplyRequest {
   option (gogoproto.goproto_getters) = false;
 
   // pagination defines an optional pagination for the request.
+  //
+  // Since: cosmos-sdk 0.43
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
@@ -114,6 +116,8 @@ message QueryTotalSupplyResponse {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   // pagination defines the pagination in the response.
+  //
+  // Since: cosmos-sdk 0.43
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
@@ -182,7 +186,8 @@ message QueryDenomOwnersRequest {
 // balance of the denominated token.
 message DenomOwner {
   // address defines the address that owns a particular denomination.
-  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];;
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  ;
 
   // balance is the balance of the denominated coin for an account.
   cosmos.base.v1beta1.Coin balance = 2 [(gogoproto.nullable) = false];

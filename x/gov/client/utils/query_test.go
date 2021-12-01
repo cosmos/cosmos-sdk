@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/rpc/client/mock"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/tendermint/tendermint/rpc/coretypes"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -24,7 +24,7 @@ type TxSearchMock struct {
 	txs []tmtypes.Tx
 }
 
-func (mock TxSearchMock) TxSearch(ctx context.Context, query string, prove bool, page, perPage *int, orderBy string) (*ctypes.ResultTxSearch, error) {
+func (mock TxSearchMock) TxSearch(ctx context.Context, query string, prove bool, page, perPage *int, orderBy string) (*coretypes.ResultTxSearch, error) {
 	if page == nil {
 		*page = 0
 	}
@@ -55,23 +55,23 @@ func (mock TxSearchMock) TxSearch(ctx context.Context, query string, prove bool,
 	start, end := client.Paginate(len(mock.txs), *page, *perPage, 100)
 	if start < 0 || end < 0 {
 		// nil result with nil error crashes utils.QueryTxsByEvents
-		return &ctypes.ResultTxSearch{}, nil
+		return &coretypes.ResultTxSearch{}, nil
 	}
 	if len(matchingTxs) < end {
-		return &ctypes.ResultTxSearch{}, nil
+		return &coretypes.ResultTxSearch{}, nil
 	}
 
 	txs := matchingTxs[start:end]
-	rst := &ctypes.ResultTxSearch{Txs: make([]*ctypes.ResultTx, len(txs)), TotalCount: len(txs)}
+	rst := &coretypes.ResultTxSearch{Txs: make([]*coretypes.ResultTx, len(txs)), TotalCount: len(txs)}
 	for i := range txs {
-		rst.Txs[i] = &ctypes.ResultTx{Tx: txs[i]}
+		rst.Txs[i] = &coretypes.ResultTx{Tx: txs[i]}
 	}
 	return rst, nil
 }
 
-func (mock TxSearchMock) Block(ctx context.Context, height *int64) (*ctypes.ResultBlock, error) {
+func (mock TxSearchMock) Block(ctx context.Context, height *int64) (*coretypes.ResultBlock, error) {
 	// any non nil Block needs to be returned. used to get time value
-	return &ctypes.ResultBlock{Block: &tmtypes.Block{}}, nil
+	return &coretypes.ResultBlock{Block: &tmtypes.Block{}}, nil
 }
 
 func TestGetPaginatedVotes(t *testing.T) {

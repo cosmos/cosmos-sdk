@@ -2,28 +2,18 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
 )
 
+// HelpArgs are the strings that indicate a cosmovisor help command.
+var HelpArgs = []string{"help", "--help", "-h"}
+
 // ShouldGiveHelp checks the env and provided args to see if help is needed or being requested.
 // Help is needed if either cosmovisor.EnvName and/or cosmovisor.EnvHome env vars aren't set.
-// Help is requested if any args are "help", "--help", or "-h".
-func ShouldGiveHelp(args []string) bool {
-	if len(os.Getenv(cosmovisor.EnvName)) == 0 || len(os.Getenv(cosmovisor.EnvHome)) == 0 {
-		return true
-	}
-	if len(args) == 0 {
-		return false
-	}
-	for _, arg := range args {
-		if strings.EqualFold(arg, "help") || strings.EqualFold(arg, "--help") || strings.EqualFold(arg, "-h") {
-			return true
-		}
-	}
-	return false
+// Help is requested if the first arg is "help", "--help", or "-h".
+func ShouldGiveHelp(arg string) bool {
+	return isOneOf(arg, HelpArgs)
 }
 
 // DoHelp outputs help text
@@ -45,5 +35,13 @@ and restart the App.
 
 Configuration of Cosmovisor is done through environment variables, which are
 documented in: https://github.com/cosmos/cosmos-sdk/tree/master/cosmovisor/README.md
+
+To get help for the configured binary:
+  cosmovisor run help
+
+Available Commands:
+  help     This help message
+  run      Runs app passing all subsequent parameters
+  version  Prints version of cosmovisor and the associated app.
 `, cosmovisor.EnvName, cosmovisor.EnvHome)
 }

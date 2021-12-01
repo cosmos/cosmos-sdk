@@ -4,7 +4,6 @@ order: 6
 
 # Client
 
-
 ## CLI
 
 A user can query and interact with the `mint` module using the CLI.
@@ -28,7 +27,7 @@ simd query mint annual-provisions [flags]
 Example:
 
 ```
-simd query mint annual-provisions 
+simd query mint annual-provisions
 ```
 
 Example Output:
@@ -36,7 +35,6 @@ Example Output:
 ```
 22268504368893.612100895088410693
 ```
-
 
 #### inflation
 
@@ -49,7 +47,7 @@ simd query mint inflation [flags]
 Example:
 
 ```
-simd query mint inflation 
+simd query mint inflation
 ```
 
 Example Output:
@@ -61,7 +59,6 @@ Example Output:
 #### params
 
 The `params` command allow users to query the current minting parameters
-
 
 ```
 simd query mint params [flags]
@@ -90,7 +87,7 @@ The `AnnualProvisions` endpoint allow users to query the current minting annual 
 /cosmos.mint.v1beta1.Query/AnnualProvisions
 ```
 
-Example: 
+Example:
 
 ```
 grpcurl -plaintext localhost:9090 cosmos.mint.v1beta1.Query/AnnualProvisions
@@ -130,7 +127,6 @@ Example Output:
 
 The `Params` endpoint allow users to query the current minting parameters
 
-
 ```
 /cosmos.mint.v1beta1.Query/Params
 ```
@@ -166,7 +162,7 @@ A user can query the `mint` module using REST endpoints.
 /cosmos/mint/v1beta1/annual_provisions
 ```
 
-Example: 
+Example:
 
 ```
 curl "localhost:1317/cosmos/mint/v1beta1/annual_provisions"

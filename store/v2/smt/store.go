@@ -26,7 +26,8 @@ type Store struct {
 	tree *smt.SparseMerkleTree
 }
 
-// MapStore that wraps Get to raise InvalidKeyError
+// An smt.MapStore that wraps Get to raise smt.InvalidKeyError;
+// smt.SparseMerkleTree expects this error to be returned when a key is not found
 type dbMapStore struct{ dbm.DBReadWriter }
 
 func NewStore(nodes, values dbm.DBReadWriter) *Store {

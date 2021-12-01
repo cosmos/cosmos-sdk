@@ -186,7 +186,7 @@ func cp(bz []byte) (ret []byte) {
 	return ret
 }
 
-// Returns a slice of the same length (big endian), but incremented by one.
+// Returns a new slice of the same length (big endian), but incremented by one.
 // Returns nil on overflow (e.g. if bz bytes are all 0xFF)
 // CONTRACT: len(bz) > 0
 func cpIncr(bz []byte) (ret []byte) {

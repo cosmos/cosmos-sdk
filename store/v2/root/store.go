@@ -98,8 +98,7 @@ type Store struct {
 	*traceMixin
 	PersistentCache types.RootStorePersistentCache
 
-	substoreCache   map[string]*substore
-	npSubstoreCache map[string]types.KVStore
+	substoreCache map[string]*substore
 }
 
 type substore struct {
@@ -270,8 +269,7 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 		StateCommitmentDB:  opts.StateCommitmentDB,
 		stateCommitmentTxn: stateCommitmentTxn,
 
-		substoreCache:   map[string]*substore{},
-		npSubstoreCache: map[string]types.KVStore{},
+		substoreCache: map[string]*substore{},
 
 		listenerMixin:   opts.listenerMixin,
 		traceMixin:      opts.traceMixin,
@@ -466,12 +464,7 @@ func (rs *Store) GetKVStore(skey types.StoreKey) types.KVStore {
 			panic(fmt.Errorf("StoreType not supported: %v", typ)) // should never happen
 		}
 		if sub != nil {
-			if cached, has := rs.npSubstoreCache[key]; has {
-				return cached
-			}
-			ret := prefix.NewStore(sub, []byte(key))
-			rs.npSubstoreCache[key] = ret
-			return ret
+			return prefix.NewStore(sub, []byte(key))
 		}
 	} else {
 		panic(ErrStoreNotFound(key))

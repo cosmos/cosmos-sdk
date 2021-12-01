@@ -1,20 +1,24 @@
+// Prefixed DB reader/writer types let you namespace multiple DBs within a single DB.
+
 package prefix
 
 import (
 	dbm "github.com/cosmos/cosmos-sdk/db"
 )
 
-// Prefix Reader/Writer lets you namespace multiple DBs within a single DB.
+// prefixed Reader
 type prefixR struct {
 	db     dbm.DBReader
 	prefix []byte
 }
 
+// prefixed ReadWriter
 type prefixRW struct {
 	db     dbm.DBReadWriter
 	prefix []byte
 }
 
+// prefixed Writer
 type prefixW struct {
 	db     dbm.DBWriter
 	prefix []byte

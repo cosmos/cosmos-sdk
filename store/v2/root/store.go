@@ -234,6 +234,9 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 				versions.Last(), opts.InitialVersion)
 		}
 	}
+	// To abide by atomicity constraints, revert the DB to the last saved version, in case it contains
+	// committed data in the "working" version.
+	// This should only happen if Store.Commit previously failed.
 	err = db.Revert()
 	if err != nil {
 		return

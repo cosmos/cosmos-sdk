@@ -492,6 +492,9 @@ localnet-stop:
 
 # Run a 4-node testnet locally
 localnet-start: localnet-stop localnet-build-env localnet-build-nodes
+
+# localnet-debug will run a local network with a node (or mutliple) in debug mode
+# you can read more about the debug mode here: ./contrib/images/simd-dlv/README.md
 localnet-debug: localnet-stop localnet-build-dlv localnet-build-nodes
 
 .PHONY: localnet-start localnet-stop localnet-debug localnet-build-env localnet-build-dlv localnet-build-nodes

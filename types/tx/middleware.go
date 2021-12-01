@@ -25,11 +25,11 @@ type ResponseSimulateTx struct {
 // Request is the tx request type used in middlewares.
 // At least one of Tx or TxBytes must be set. If only TxBytes is set, then
 // Tx will be populated by the TxDecoderMiddleware. If only Tx is set, then
-// some middleware (such as signature verification) will not work.
+// some middlewares (such as signature verification) will fail.
 //
 // In practice, the middleware stack is called from {Check,Deliver}Tx, which
-// on passes the TxBytes. Then, the TxDecoderMiddleware decodes the bytes into
-// the Tx field.
+// only passes the TxBytes. Then, the TxDecoderMiddleware decodes the bytes
+// intothe Tx field.
 type Request struct {
 	Tx      sdk.Tx
 	TxBytes []byte

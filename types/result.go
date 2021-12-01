@@ -7,12 +7,6 @@ import (
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
-<<<<<<< HEAD
-
-	yaml "gopkg.in/yaml.v2"
-
-=======
->>>>>>> c4bedf8a5 (fix: Add Events to TxResponse (#10630))
 	abci "github.com/tendermint/tendermint/abci/types"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 

@@ -24,8 +24,8 @@ type KeyCodec struct {
 	fieldCodecs      []ormfield.Codec
 }
 
-// NewKeyCodec returns a new KeyCodec with the provided prefix and
-// codecs for the provided fields.
+// NewKeyCodec returns a new KeyCodec with an optional prefix for the provided
+// message descriptor and fields.
 func NewKeyCodec(prefix []byte, messageDescriptor protoreflect.MessageDescriptor, fieldNames []protoreflect.Name) (*KeyCodec, error) {
 	n := len(fieldNames)
 	fieldCodecs := make([]ormfield.Codec, n)

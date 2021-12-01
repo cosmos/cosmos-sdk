@@ -18,7 +18,8 @@ type IndexKeyCodec struct {
 
 var _ IndexCodec = &IndexKeyCodec{}
 
-// NewIndexKeyCodec creates a new IndexKeyCodec.
+// NewIndexKeyCodec creates a new IndexKeyCodec with an optional prefix for the
+// provided message descriptor, index and primary key fields.
 func NewIndexKeyCodec(prefix []byte, messageDescriptor protoreflect.MessageDescriptor, indexFields, primaryKeyFields []protoreflect.Name) (*IndexKeyCodec, error) {
 	indexFieldMap := map[protoreflect.Name]int{}
 
@@ -78,7 +79,6 @@ func (cdc IndexKeyCodec) DecodeIndexKey(k, _ []byte) (indexFields, primaryKey []
 
 	return values, pkValues, nil
 }
-
 
 func (cdc IndexKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 	idxValues, pk, err := cdc.DecodeIndexKey(k, v)

@@ -20,7 +20,8 @@ type UniqueKeyCodec struct {
 	valueCodec *KeyCodec
 }
 
-// NewUniqueKeyCodec creates a new UniqueKeyCodec.
+// NewUniqueKeyCodec creates a new UniqueKeyCodec with an optional prefix for the
+// provided message descriptor, index and primary key fields.
 func NewUniqueKeyCodec(prefix []byte, messageDescriptor protoreflect.MessageDescriptor, indexFields, primaryKeyFields []protoreflect.Name) (*UniqueKeyCodec, error) {
 	keyCodec, err := NewKeyCodec(prefix, messageDescriptor, indexFields)
 	if err != nil {

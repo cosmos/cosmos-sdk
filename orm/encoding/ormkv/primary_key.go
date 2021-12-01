@@ -18,7 +18,8 @@ type PrimaryKeyCodec struct {
 	unmarshalOptions proto.UnmarshalOptions
 }
 
-// NewPrimaryKeyCodec creates a new PrimaryKeyCodec.
+// NewPrimaryKeyCodec creates a new PrimaryKeyCodec for the provided msg and
+// fields, with an optional prefix and unmarshal options.
 func NewPrimaryKeyCodec(prefix []byte, msgType protoreflect.MessageType, fieldNames []protoreflect.Name, unmarshalOptions proto.UnmarshalOptions) (*PrimaryKeyCodec, error) {
 	keyCodec, err := NewKeyCodec(prefix, msgType.Descriptor(), fieldNames)
 	if err != nil {
@@ -72,11 +73,15 @@ func (p PrimaryKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 func (p PrimaryKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 	pkEntry, ok := entry.(*PrimaryKeyEntry)
 	if !ok {
-		return nil, nil, ormerrors.BadDecodeEntry
+		return nil, nil, ormerrors.BadDecodeEntry.Wrapf("expected %T, got %T", &PrimaryKeyEntry{}, entry)
 	}
 
 	if pkEntry.TableName != p.msgType.Descriptor().FullName() {
-		return nil, nil, ormerrors.BadDecodeEntry
+		return nil, nil, ormerrors.BadDecodeEntry.Wrapf(
+			"wrong table name, got %s, expected %s",
+			pkEntry.TableName,
+			p.msgType.Descriptor().FullName(),
+		)
 	}
 
 	k, err = p.KeyCodec.Encode(pkEntry.Key)
@@ -89,6 +94,8 @@ func (p PrimaryKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 }
 
 func (p PrimaryKeyCodec) marshal(key []protoreflect.Value, message proto.Message) (v []byte, err error) {
+	// first clear the priamry key values because these are already stored in
+	// the key so we don't need to store them again in the value
 	p.ClearValues(message.ProtoReflect())
 
 	v, err = proto.MarshalOptions{Deterministic: true}.Marshal(message)
@@ -96,6 +103,7 @@ func (p PrimaryKeyCodec) marshal(key []protoreflect.Value, message proto.Message
 		return nil, err
 	}
 
+	// set the primary key values again returning the message to its original state
 	p.SetValues(message.ProtoReflect(), key)
 
 	return v, nil

@@ -17,11 +17,18 @@ type Entry interface {
 	// proto message name) this entry corresponds to.
 	GetTableName() protoreflect.FullName
 
+	// to allow new methods to be added without breakage, this interface
+	// shouldn't be implemented outside this package,
+	// see https://go.dev/blog/module-compatibility
 	doNotImplement()
 }
 
 // PrimaryKeyEntry represents a logically decoded primary-key entry.
 type PrimaryKeyEntry struct {
+
+	// TableName is the table this entry represents.
+	TableName protoreflect.FullName
+
 	// Key represents the primary key values.
 	Key []protoreflect.Value
 
@@ -30,18 +37,21 @@ type PrimaryKeyEntry struct {
 }
 
 func (p *PrimaryKeyEntry) GetTableName() protoreflect.FullName {
-	return p.Value.ProtoReflect().Descriptor().FullName()
+	return p.TableName
 }
 
 func (p *PrimaryKeyEntry) String() string {
 	msg := p.Value
-	name := msg.ProtoReflect().Descriptor().FullName()
-	msgBz, err := protojson.Marshal(msg)
-	msgStr := string(msgBz)
-	if err != nil {
-		msgStr = fmt.Sprintf("%s:%+v", name, msg)
+	msgStr := "_"
+	if msg != nil {
+		msgBz, err := protojson.Marshal(msg)
+		if err == nil {
+			msgStr = string(msgBz)
+		} else {
+			msgStr = fmt.Sprintf("ERR:%v", err)
+		}
 	}
-	return fmt.Sprintf("PK:%s:%s:%s", name, fmtValues(p.Key), msgStr)
+	return fmt.Sprintf("PK:%s:%s:%s", p.TableName, fmtValues(p.Key), msgStr)
 }
 
 func fmtValues(values []protoreflect.Value) string {

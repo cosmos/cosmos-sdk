@@ -59,113 +59,113 @@ func TestCompareValues(t *testing.T) {
 	}{
 		{
 			"eq",
-			ValuesOf(uint32(0), "abc", int32(-3)),
-			ValuesOf(uint32(0), "abc", int32(-3)),
+			testutil.ValuesOf(uint32(0), "abc", int32(-3)),
+			testutil.ValuesOf(uint32(0), "abc", int32(-3)),
 			0,
 			false,
 		},
 		{
 			"eq prefix 0",
-			ValuesOf(),
-			ValuesOf(),
+			testutil.ValuesOf(),
+			testutil.ValuesOf(),
 			0,
 			false,
 		},
 		{
 			"eq prefix 1",
-			ValuesOf(uint32(0)),
-			ValuesOf(uint32(0)),
+			testutil.ValuesOf(uint32(0)),
+			testutil.ValuesOf(uint32(0)),
 			0,
 			false,
 		},
 		{
 			"eq prefix 2",
-			ValuesOf(uint32(0), "abc"),
-			ValuesOf(uint32(0), "abc"),
+			testutil.ValuesOf(uint32(0), "abc"),
+			testutil.ValuesOf(uint32(0), "abc"),
 			0,
 			false,
 		},
 		{
 			"lt1",
-			ValuesOf(uint32(0), "abc", int32(-3)),
-			ValuesOf(uint32(1), "abc", int32(-3)),
+			testutil.ValuesOf(uint32(0), "abc", int32(-3)),
+			testutil.ValuesOf(uint32(1), "abc", int32(-3)),
 			-1,
 			true,
 		},
 		{
 			"lt2",
-			ValuesOf(uint32(1), "abb", int32(-3)),
-			ValuesOf(uint32(1), "abc", int32(-3)),
+			testutil.ValuesOf(uint32(1), "abb", int32(-3)),
+			testutil.ValuesOf(uint32(1), "abc", int32(-3)),
 			-1,
 			true,
 		},
 		{
 			"lt3",
-			ValuesOf(uint32(1), "abb", int32(-4)),
-			ValuesOf(uint32(1), "abb", int32(-3)),
+			testutil.ValuesOf(uint32(1), "abb", int32(-4)),
+			testutil.ValuesOf(uint32(1), "abb", int32(-3)),
 			-1,
 			true,
 		},
 		{
 			"less prefix 0",
-			ValuesOf(),
-			ValuesOf(uint32(1), "abb", int32(-4)),
+			testutil.ValuesOf(),
+			testutil.ValuesOf(uint32(1), "abb", int32(-4)),
 			-1,
 			true,
 		},
 		{
 			"less prefix 1",
-			ValuesOf(uint32(1)),
-			ValuesOf(uint32(1), "abb", int32(-4)),
+			testutil.ValuesOf(uint32(1)),
+			testutil.ValuesOf(uint32(1), "abb", int32(-4)),
 			-1,
 			true,
 		},
 		{
 			"less prefix 2",
-			ValuesOf(uint32(1), "abb"),
-			ValuesOf(uint32(1), "abb", int32(-4)),
+			testutil.ValuesOf(uint32(1), "abb"),
+			testutil.ValuesOf(uint32(1), "abb", int32(-4)),
 			-1,
 			true,
 		},
 		{
 			"gt1",
-			ValuesOf(uint32(2), "abb", int32(-4)),
-			ValuesOf(uint32(1), "abb", int32(-4)),
+			testutil.ValuesOf(uint32(2), "abb", int32(-4)),
+			testutil.ValuesOf(uint32(1), "abb", int32(-4)),
 			1,
 			false,
 		},
 		{
 			"gt2",
-			ValuesOf(uint32(2), "abc", int32(-4)),
-			ValuesOf(uint32(2), "abb", int32(-4)),
+			testutil.ValuesOf(uint32(2), "abc", int32(-4)),
+			testutil.ValuesOf(uint32(2), "abb", int32(-4)),
 			1,
 			false,
 		},
 		{
 			"gt3",
-			ValuesOf(uint32(2), "abc", int32(1)),
-			ValuesOf(uint32(2), "abc", int32(-3)),
+			testutil.ValuesOf(uint32(2), "abc", int32(1)),
+			testutil.ValuesOf(uint32(2), "abc", int32(-3)),
 			1,
 			false,
 		},
 		{
 			"gt prefix 0",
-			ValuesOf(uint32(2), "abc", int32(-3)),
-			ValuesOf(),
+			testutil.ValuesOf(uint32(2), "abc", int32(-3)),
+			testutil.ValuesOf(),
 			1,
 			true,
 		},
 		{
 			"gt prefix 1",
-			ValuesOf(uint32(2), "abc", int32(-3)),
-			ValuesOf(uint32(2)),
+			testutil.ValuesOf(uint32(2), "abc", int32(-3)),
+			testutil.ValuesOf(uint32(2)),
 			1,
 			true,
 		},
 		{
 			"gt prefix 2",
-			ValuesOf(uint32(2), "abc", int32(-3)),
-			ValuesOf(uint32(2), "abc"),
+			testutil.ValuesOf(uint32(2), "abc", int32(-3)),
+			testutil.ValuesOf(uint32(2), "abc"),
 			1,
 			true,
 		},
@@ -187,15 +187,6 @@ func TestCompareValues(t *testing.T) {
 	}
 }
 
-func ValuesOf(values ...interface{}) []protoreflect.Value {
-	n := len(values)
-	res := make([]protoreflect.Value, n)
-	for i := 0; i < n; i++ {
-		res[i] = protoreflect.ValueOf(values[i])
-	}
-	return res
-}
-
 func TestDecodePrefixKey(t *testing.T) {
 	cdc, err := ormkv.NewKeyCodec(nil,
 		(&testpb.A{}).ProtoReflect().Descriptor(),
@@ -208,7 +199,7 @@ func TestDecodePrefixKey(t *testing.T) {
 	}{
 		{
 			"1",
-			ValuesOf(uint32(5), "abc"),
+			testutil.ValuesOf(uint32(5), "abc"),
 		},
 	}
 	for _, test := range tests {
@@ -236,62 +227,62 @@ func TestValidRangeIterationKeys(t *testing.T) {
 	}{
 		{
 			"1 eq",
-			ValuesOf(uint32(0)),
-			ValuesOf(uint32(0)),
+			testutil.ValuesOf(uint32(0)),
+			testutil.ValuesOf(uint32(0)),
 			true,
 		},
 		{
 			"1 lt",
-			ValuesOf(uint32(0)),
-			ValuesOf(uint32(1)),
+			testutil.ValuesOf(uint32(0)),
+			testutil.ValuesOf(uint32(1)),
 			false,
 		},
 		{
 			"1 gt",
-			ValuesOf(uint32(1)),
-			ValuesOf(uint32(0)),
+			testutil.ValuesOf(uint32(1)),
+			testutil.ValuesOf(uint32(0)),
 			true,
 		},
 		{
 			"1,2 lt",
-			ValuesOf(uint32(0)),
-			ValuesOf(uint32(0), "abc"),
+			testutil.ValuesOf(uint32(0)),
+			testutil.ValuesOf(uint32(0), "abc"),
 			false,
 		},
 		{
 			"1,2 gt",
-			ValuesOf(uint32(0), "abc"),
-			ValuesOf(uint32(0)),
+			testutil.ValuesOf(uint32(0), "abc"),
+			testutil.ValuesOf(uint32(0)),
 			false,
 		},
 		{
 			"1,2,3",
-			ValuesOf(uint32(0)),
-			ValuesOf(uint32(0), "abc", []byte{1, 2}),
+			testutil.ValuesOf(uint32(0)),
+			testutil.ValuesOf(uint32(0), "abc", []byte{1, 2}),
 			true,
 		},
 		{
 			"1,2,3,4 lt",
-			ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(-1)),
-			ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(1)),
+			testutil.ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(-1)),
+			testutil.ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(1)),
 			false,
 		},
 		{
 			"too long",
-			ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(-1)),
-			ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(1), int32(1)),
+			testutil.ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(-1)),
+			testutil.ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(1), int32(1)),
 			true,
 		},
 		{
 			"1,2,3,4 eq",
-			ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(1)),
-			ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(1)),
+			testutil.ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(1)),
+			testutil.ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(1)),
 			true,
 		},
 		{
 			"1,2,3,4 bz err",
-			ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(-1)),
-			ValuesOf(uint32(0), "abc", []byte{1, 2, 3}, int32(1)),
+			testutil.ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(-1)),
+			testutil.ValuesOf(uint32(0), "abc", []byte{1, 2, 3}, int32(1)),
 			true,
 		},
 	}
@@ -314,7 +305,7 @@ func TestGetSet(t *testing.T) {
 	assert.NilError(t, err)
 
 	var a testpb.A
-	values := ValuesOf(uint32(4), "abc", int32(1))
+	values := testutil.ValuesOf(uint32(4), "abc", int32(1))
 	cdc.SetValues(a.ProtoReflect(), values)
 	values2 := cdc.GetValues(a.ProtoReflect())
 	assert.Equal(t, 0, cdc.CompareValues(values, values2))

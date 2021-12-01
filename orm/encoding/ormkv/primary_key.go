@@ -63,8 +63,9 @@ func (p PrimaryKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 	err = p.Unmarshal(values, v, msg)
 
 	return &PrimaryKeyEntry{
-		Key:   values,
-		Value: msg,
+		TableName: p.msgType.Descriptor().FullName(),
+		Key:       values,
+		Value:     msg,
 	}, err
 }
 
@@ -74,7 +75,7 @@ func (p PrimaryKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 		return nil, nil, ormerrors.BadDecodeEntry
 	}
 
-	if pkEntry.Value.ProtoReflect().Descriptor().FullName() != p.msgType.Descriptor().FullName() {
+	if pkEntry.TableName != p.msgType.Descriptor().FullName() {
 		return nil, nil, ormerrors.BadDecodeEntry
 	}
 

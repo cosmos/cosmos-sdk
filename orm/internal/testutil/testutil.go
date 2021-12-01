@@ -179,3 +179,12 @@ var GenA = rapid.Custom(func(t *rapid.T) *testpb.A {
 	}
 	return a
 })
+
+func ValuesOf(values ...interface{}) []protoreflect.Value {
+	n := len(values)
+	res := make([]protoreflect.Value, n)
+	for i := 0; i < n; i++ {
+		res[i] = protoreflect.ValueOf(values[i])
+	}
+	return res
+}

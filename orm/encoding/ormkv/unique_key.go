@@ -125,7 +125,10 @@ func (u UniqueKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 }
 
 func (u UniqueKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
-	indexEntry := entry.(*IndexKeyEntry)
+	indexEntry, ok := entry.(*IndexKeyEntry)
+	if !ok {
+		return nil, nil, ormerrors.BadDecodeEntry
+	}
 	k, err = u.keyCodec.Encode(indexEntry.IndexValues)
 	if err != nil {
 		return nil, nil, err

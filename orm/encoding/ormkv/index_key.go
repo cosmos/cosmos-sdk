@@ -22,7 +22,7 @@ var _ IndexCodec = &IndexKeyCodec{}
 func NewIndexKeyCodec(prefix []byte, messageDescriptor protoreflect.MessageDescriptor, indexFields, primaryKeyFields []protoreflect.Name) (*IndexKeyCodec, error) {
 	indexFieldMap := map[protoreflect.Name]int{}
 
-	var keyFields []protoreflect.Name
+	keyFields := make([]protoreflect.Name, 0, len(indexFields)+len(primaryKeyFields))
 	for i, f := range indexFields {
 		indexFieldMap[f] = i
 		keyFields = append(keyFields, f)
@@ -79,7 +79,6 @@ func (cdc IndexKeyCodec) DecodeIndexKey(k, _ []byte) (indexFields, primaryKey []
 	return values, pkValues, nil
 }
 
-var _ IndexCodec = &IndexKeyCodec{}
 
 func (cdc IndexKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 	idxValues, pk, err := cdc.DecodeIndexKey(k, v)
@@ -95,17 +94,17 @@ func (cdc IndexKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 	}, nil
 }
 
-func (i IndexKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
+func (cdc IndexKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 	indexEntry, ok := entry.(*IndexKeyEntry)
 	if !ok {
 		return nil, nil, ormerrors.BadDecodeEntry
 	}
 
-	if indexEntry.TableName != i.tableName {
+	if indexEntry.TableName != cdc.tableName {
 		return nil, nil, ormerrors.BadDecodeEntry
 	}
 
-	bz, err := i.KeyCodec.Encode(indexEntry.IndexValues)
+	bz, err := cdc.KeyCodec.Encode(indexEntry.IndexValues)
 	if err != nil {
 		return nil, nil, err
 	}

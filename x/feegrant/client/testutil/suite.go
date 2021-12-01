@@ -697,7 +697,7 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 	// any tx with it by using --fee-account shouldn't fail
 	out, err := govtestutil.MsgSubmitProposal(val.ClientCtx, grantee.String(),
 		"Text Proposal", "No desc", govtypes.ProposalTypeText,
-		fmt.Sprintf("--%s=%s", flags.FlagFeeAccount, granter.String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
 	)
 
 	s.Require().NoError(err)
@@ -837,7 +837,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 			func() (testutil.BufferWriter, error) {
 				return govtestutil.MsgSubmitProposal(val.ClientCtx, grantee.String(),
 					"Text Proposal", "No desc", govtypes.ProposalTypeText,
-					fmt.Sprintf("--%s=%s", flags.FlagFeeAccount, granter.String()),
+					fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
 				)
 			},
 			&sdk.TxResponse{},
@@ -847,7 +847,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 			"valid weighted_vote tx",
 			func() (testutil.BufferWriter, error) {
 				return govtestutil.MsgVote(val.ClientCtx, grantee.String(), "0", "yes",
-					fmt.Sprintf("--%s=%s", flags.FlagFeeAccount, granter.String()),
+					fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
 				)
 			},
 			&sdk.TxResponse{},
@@ -864,7 +864,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 								grantee.String(),
 								"cosmos14cm33pvnrv2497tyt8sp9yavhmw83nwej3m0e8",
 								fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
-								fmt.Sprintf("--%s=%s", flags.FlagFeeAccount, granter),
+								fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter),
 							},
 							commonFlags...,
 						)

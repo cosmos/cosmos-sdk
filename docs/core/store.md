@@ -232,24 +232,48 @@ Additional information about state streaming configuration can be found in the [
 
 When `KVStore.Set` or `KVStore.Delete` methods are called, `listenkv.Store` automatically writes the operations to the set of `Store.listeners`.
 
-## New Store package (`store/v2`)
+# New Store package (`store/v2`)
 
 The SDK is in the process of transitioning to use the types listed here as the default interface for state storage. At the time of writing, these cannot be used within an application and are not directly compatible with the `CommitMultiStore` and related types.
 
-### `BasicKVStore` interface
+These types use the new `db` sub-module of Cosmos-SDK (`github.com/cosmos/cosmos-sdk/db`), rather than TM-DB (`github.com/tendermint/tm-db`).
+
+See [ADR-040](../architecture/adr-040-storage-and-smt-state-commitments.md) for the motivations and design specifications of the change.
+
+## `BasicKVStore` interface
 
 An interface providing only the basic CRUD functionality (`Get`, `Set`, `Has`, and `Delete` methods), without iteration or caching. This is used to partially expose components of a larger store, such as a `flat.Store`.
 
-### Root Store
+## Root Store
 
-`RootStore` is the new interface for the main client store, replacing the function of `MultiStore`. It internally decouples the concerns of state storage and state commitment: values are stored and read directly from the backing key-value database, but are also mapped in a logically separate *state-commitment* store which generates cryptographic proofs.
+This is the new interface for the main client store, replacing the function of `MultiStore`. There are a few significant differences in behavior compared with `MultiStore`:
+  * Commits are atomic and are performed on the entire store state; individual substores cannot be committed separately and cannot have different version numbers.
+  * The store's current version and version history track that of the backing `db.DBConnection`. Past versions are accessible read-only.
+  * The set of valid substores is defined in at initialization and cannot be updated dynamically in an existing store instance.
 
-Implemented in `store/v2/root`. This can optionally be configured to use different backend databases for each bucket, e.g., `badgerdb` for the state storage DB and `memdb` for the state commitment DB. State commitment is implemented with an `smt.Store`.
+### `CommitRootStore`
 
-### SMT Store
+This is the main interface for persisent application state, analogous to `CommitMultiStore`.
+  * Past versions are accessed with `GetVersion`, which returns a `BasicRootStore`.
+  * Substores are accessed with `GetKVStore`. Trying to get a substore that was not defined at initialization will cause a panic.
+  * `Close` must be called to release the DB resources being used by the store.
 
-Maps values into a Sparse Merkle Tree, and supports a `BasicKVStore` interface as well as methods for cryptographic proof generation.
+### `BasicRootStore`
 
-## Next {hide}
+A minimal interface that only allows accessing substores. Note: substores returned by `BasicRootStore.GetKVStore` are read-only.
+
+### Implementation (`root.Store`)
+
+The canonical implementation of `RootStore` is in `store/v2/root`. It internally decouples the concerns of state storage and state commitment: values are stored in, and read directly from, the backing key-value database, but are also mapped in a logically separate store which generates cryptographic proofs (the *state-commitment* store).
+
+The state-commitment component of each substore is implemented as an independent `smt.Store`. Internally, each substore is allocated in a separate partition within the backing DB, such that commits apply to the state of all substores. Likewise, past version state includes the state of all substore storage and state-commitment stores.
+
+This store can optionally be configured to use different backend databases for each bucket (e.g., `badgerdb` for the state storage DB and `memdb` for the state-commitment DB).
+
+## SMT Store
+
+`store/v2/smt.Store` maps values into a Sparse Merkle Tree (SMT), and supports a `BasicKVStore` interface as well as methods for cryptographic proof generation.
+
+# Next {hide}
 
 Learn about [encoding](./encoding.md) {hide}

@@ -6,12 +6,9 @@ managed:
     except:
       - buf.build/googleapis/googleapis
       - buf.build/cosmos/gogo-proto
+      - buf.build/cosmos/cosmos-proto
     override:
-      buf.build/cosmos/cosmos-proto: github.com/cosmos/cosmos-proto/proto
 plugins:
-  - name: go-pulsar
+  - name: go
     out: ../api
     opt: paths=source_relative
-  - name: doc
-    out: ../doc
-    opt: ../docs/protodoc-markdown.tmpl,proto-docs.md

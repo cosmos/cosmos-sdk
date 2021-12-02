@@ -137,10 +137,10 @@ func MessageName(m interface{}) (string, error) {
 	switch impl := m.(type) {
 	case gogoproto.Message:
 		return gogoproto.MessageName(impl), nil
-	case protov2.Message:
-		return string(impl.ProtoReflect().Descriptor().FullName()), nil
+	case *protov2.Message:
+		return string((*impl).ProtoReflect().Descriptor().FullName()), nil
 	default:
-		return "", fmt.Errorf("%T is neither a v1 nor v2 proto message", impl)
+		return "", fmt.Errorf("%T is neither a gogoproto nor protobuf v2 message", impl)
 	}
 }
 

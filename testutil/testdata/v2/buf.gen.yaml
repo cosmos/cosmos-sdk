@@ -1,0 +1,10 @@
+version: v1
+managed:
+  enabled: true
+  go_package_prefix:
+    default: github.com/cosmos/cosmos-sdk/testutil/testdata
+plugins:
+  - name: go-pulsar
+    out: .
+    opt: paths=source_relative
+    path: /usr/local/bin/protoc-gen-go-pulsar

@@ -104,11 +104,13 @@ func (any *Any) pack(v interface{}) error {
 		if err != nil {
 			return err
 		}
-	case protov2.Message:
-		bz, err = protov2.MarshalOptions{Deterministic: true}.Marshal(v)
+	case *protov2.Message:
+		bz, err = protov2.MarshalOptions{Deterministic: true}.Marshal(*v)
 		if err != nil {
 			return err
 		}
+	default:
+		return fmt.Errorf("unable to pack unknown message type %T", &v)
 	}
 
 	msgName, err := MessageName(v)

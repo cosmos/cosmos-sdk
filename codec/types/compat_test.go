@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	v2 "github.com/cosmos/cosmos-sdk/testutil/testdata/v2"
 )
 
 type TypeWithInterface struct {
@@ -82,12 +83,41 @@ func (s *Suite) TestAminoJSON() {
 	s.Require().Equal(s.spot, c.Animal.GetCachedValue())
 }
 
+//func TestSimple(t *testing.T) {
+//	b := v2.B{X: "foobar!"}
+//	msg := b.ProtoReflect()
+//	fmt.Printf("msg is type %T\n", &msg)
+//	whatAmI(b)
+//
+//	var prmsg protoreflect.Message = b.ProtoReflect()
+//}
+//
+//func whatAmI(v interface{}) {
+//	switch t := v.(type) {
+//	case *protoreflect.Message:
+//		fmt.Printf("type %T is a protov2 message!\n", t)
+//	}
+//	msg, ok := v.(*protoreflect.Message)
+//	if ok {
+//		fmt.Println("all good!")
+//	} else {
+//		fmt.Println("BAD")
+//	}
+//
+//	fmt.Println(msg)
+//}
+
 func (s *Suite) TestNested() {
 	s.cdc.RegisterInterface((*testdata.HasAnimalI)(nil), nil)
 	s.cdc.RegisterInterface((*testdata.HasHasAnimalI)(nil), nil)
 	s.cdc.RegisterConcrete(&testdata.HasAnimal{}, "testdata/HasAnimal", nil)
 	s.cdc.RegisterConcrete(&testdata.HasHasAnimal{}, "testdata/HasHasAnimal", nil)
 	s.cdc.RegisterConcrete(&testdata.HasHasHasAnimal{}, "testdata/HasHasHasAnimal", nil)
+	s.cdc.RegisterConcrete(&v2.B{}, "testdata/v2/B", nil)
+
+	b := &v2.B{X: "foobar"}
+	_, err := types.NewAnyWithValue(b)
+	s.Require().NoError(err)
 
 	any, err := types.NewAnyWithValue(&s.b)
 	s.Require().NoError(err)

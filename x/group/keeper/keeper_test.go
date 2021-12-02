@@ -171,7 +171,7 @@ func (s *TestSuite) TestCreateGroup() {
 			res, err := s.keeper.CreateGroup(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
-				_, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfo{GroupId: uint64(seq + 1)})
+				_, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: uint64(seq + 1)})
 				s.Require().Error(err)
 				return
 			}
@@ -182,7 +182,7 @@ func (s *TestSuite) TestCreateGroup() {
 			s.Assert().Equal(uint64(seq), id)
 
 			// then all data persisted
-			loadedGroupRes, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfo{GroupId: id})
+			loadedGroupRes, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: id})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.req.Admin, loadedGroupRes.Info.Admin)
 			s.Assert().Equal(spec.req.Metadata, loadedGroupRes.Info.Metadata)
@@ -190,7 +190,7 @@ func (s *TestSuite) TestCreateGroup() {
 			s.Assert().Equal(uint64(1), loadedGroupRes.Info.Version)
 
 			// and members are stored as well
-			membersRes, err := s.keeper.GroupMembers(s.ctx, &group.QueryGroupMembers{GroupId: id})
+			membersRes, err := s.keeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{GroupId: id})
 			s.Require().NoError(err)
 			loadedMembers := membersRes.Members
 			s.Require().Equal(len(members), len(loadedMembers))
@@ -210,7 +210,7 @@ func (s *TestSuite) TestCreateGroup() {
 			}
 
 			// query groups by admin
-			groupsRes, err := s.keeper.GroupsByAdmin(s.ctx, &group.QueryGroupsByAdmin{Admin: addr1.String()})
+			groupsRes, err := s.keeper.GroupsByAdmin(s.ctx, &group.QueryGroupsByAdminRequest{Admin: addr1.String()})
 			s.Require().NoError(err)
 			loadedGroups := groupsRes.Groups
 			s.Require().Equal(len(spec.expGroups), len(loadedGroups))
@@ -308,7 +308,7 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 			s.Require().NoError(err)
 
 			// then
-			res, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfo{GroupId: groupID})
+			res, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: groupID})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.expStored, res.Info)
 		})
@@ -386,7 +386,7 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 			s.Require().NoError(err)
 
 			// then
-			res, err := s.keeper.GroupInfo(ctx, &group.QueryGroupInfo{GroupId: groupID})
+			res, err := s.keeper.GroupInfo(ctx, &group.QueryGroupInfoRequest{GroupId: groupID})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.expStored, res.Info)
 		})
@@ -658,12 +658,12 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			s.Require().NoError(err)
 
 			// then
-			res, err := s.keeper.GroupInfo(ctx, &group.QueryGroupInfo{GroupId: groupID})
+			res, err := s.keeper.GroupInfo(ctx, &group.QueryGroupInfoRequest{GroupId: groupID})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.expGroup, res.Info)
 
 			// and members persisted
-			membersRes, err := s.keeper.GroupMembers(ctx, &group.QueryGroupMembers{GroupId: groupID})
+			membersRes, err := s.keeper.GroupMembers(ctx, &group.QueryGroupMembersRequest{GroupId: groupID})
 			s.Require().NoError(err)
 			loadedMembers := membersRes.Members
 			s.Require().Equal(len(spec.expMembers), len(loadedMembers))
@@ -777,7 +777,7 @@ func (s *TestSuite) TestCreateGroupAccount() {
 			addr := res.Address
 
 			// then all data persisted
-			groupAccountRes, err := s.keeper.GroupAccountInfo(s.ctx, &group.QueryGroupAccountInfo{Address: addr})
+			groupAccountRes, err := s.keeper.GroupAccountInfo(s.ctx, &group.QueryGroupAccountInfoRequest{Address: addr})
 			s.Require().NoError(err)
 
 			groupAccount := groupAccountRes.Info
@@ -866,7 +866,7 @@ func (s *TestSuite) TestUpdateGroupAccountAdmin() {
 				return
 			}
 			s.Require().NoError(err)
-			res, err := s.keeper.GroupAccountInfo(s.ctx, &group.QueryGroupAccountInfo{
+			res, err := s.keeper.GroupAccountInfo(s.ctx, &group.QueryGroupAccountInfoRequest{
 				Address: groupAccountAddr,
 			})
 			s.Require().NoError(err)
@@ -944,7 +944,7 @@ func (s *TestSuite) TestUpdateGroupAccountMetadata() {
 				return
 			}
 			s.Require().NoError(err)
-			res, err := s.keeper.GroupAccountInfo(s.ctx, &group.QueryGroupAccountInfo{
+			res, err := s.keeper.GroupAccountInfo(s.ctx, &group.QueryGroupAccountInfoRequest{
 				Address: groupAccountAddr,
 			})
 			s.Require().NoError(err)
@@ -1020,7 +1020,7 @@ func (s *TestSuite) TestUpdateGroupAccountDecisionPolicy() {
 				return
 			}
 			s.Require().NoError(err)
-			res, err := s.keeper.GroupAccountInfo(s.ctx, &group.QueryGroupAccountInfo{
+			res, err := s.keeper.GroupAccountInfo(s.ctx, &group.QueryGroupAccountInfoRequest{
 				Address: groupAccountAddr,
 			})
 			s.Require().NoError(err)
@@ -1080,7 +1080,7 @@ func (s *TestSuite) TestGroupAccountsByAdminOrGroup() {
 	sort.Slice(expectAccs, func(i, j int) bool { return expectAccs[i].Address < expectAccs[j].Address })
 
 	// query group account by group
-	accountsByGroupRes, err := s.keeper.GroupAccountsByGroup(s.ctx, &group.QueryGroupAccountsByGroup{
+	accountsByGroupRes, err := s.keeper.GroupAccountsByGroup(s.ctx, &group.QueryGroupAccountsByGroupRequest{
 		GroupId: myGroupID,
 	})
 	s.Require().NoError(err)
@@ -1098,7 +1098,7 @@ func (s *TestSuite) TestGroupAccountsByAdminOrGroup() {
 	}
 
 	// query group account by admin
-	accountsByAdminRes, err := s.keeper.GroupAccountsByAdmin(s.ctx, &group.QueryGroupAccountsByAdmin{
+	accountsByAdminRes, err := s.keeper.GroupAccountsByAdmin(s.ctx, &group.QueryGroupAccountsByAdminRequest{
 		Admin: admin.String(),
 	})
 	s.Require().NoError(err)
@@ -1315,7 +1315,7 @@ func (s *TestSuite) TestCreateProposal() {
 			id := res.ProposalId
 
 			// then all data persisted
-			proposalRes, err := s.keeper.Proposal(s.ctx, &group.QueryProposal{ProposalId: id})
+			proposalRes, err := s.keeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: id})
 			s.Require().NoError(err)
 			proposal := proposalRes.Proposal
 
@@ -1399,7 +1399,7 @@ func (s *TestSuite) TestVote() {
 	myProposalID := proposalRes.ProposalId
 
 	// proposals by group account
-	proposalsRes, err := s.keeper.ProposalsByGroupAccount(s.ctx, &group.QueryProposalsByGroupAccount{
+	proposalsRes, err := s.keeper.ProposalsByGroupAccount(s.ctx, &group.QueryProposalsByGroupAccountRequest{
 		Address: accountAddr,
 	})
 	s.Require().NoError(err)
@@ -1741,7 +1741,7 @@ func (s *TestSuite) TestVote() {
 
 			s.Require().NoError(err)
 			// vote is stored and all data persisted
-			res, err := s.keeper.VoteByProposalVoter(ctx, &group.QueryVoteByProposalVoter{
+			res, err := s.keeper.VoteByProposalVoter(ctx, &group.QueryVoteByProposalVoterRequest{
 				ProposalId: spec.req.ProposalId,
 				Voter:      spec.req.Voter,
 			})
@@ -1758,7 +1758,7 @@ func (s *TestSuite) TestVote() {
 			s.Assert().Equal(s.blockTime, submittedAt)
 
 			// query votes by proposal
-			votesByProposalRes, err := s.keeper.VotesByProposal(ctx, &group.QueryVotesByProposal{
+			votesByProposalRes, err := s.keeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{
 				ProposalId: spec.req.ProposalId,
 			})
 			s.Require().NoError(err)
@@ -1777,7 +1777,7 @@ func (s *TestSuite) TestVote() {
 
 			// query votes by voter
 			voter := spec.req.Voter
-			votesByVoterRes, err := s.keeper.VotesByVoter(ctx, &group.QueryVotesByVoter{
+			votesByVoterRes, err := s.keeper.VotesByVoter(ctx, &group.QueryVotesByVoterRequest{
 				Voter: voter,
 			})
 			s.Require().NoError(err)
@@ -1794,7 +1794,7 @@ func (s *TestSuite) TestVote() {
 			s.Assert().Equal(s.blockTime, submittedAt)
 
 			// and proposal is updated
-			proposalRes, err := s.keeper.Proposal(ctx, &group.QueryProposal{
+			proposalRes, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{
 				ProposalId: spec.req.ProposalId,
 			})
 			s.Require().NoError(err)
@@ -1997,7 +1997,7 @@ func (s *TestSuite) TestExecProposal() {
 			s.Require().NoError(err)
 
 			// and proposal is updated
-			res, err := s.keeper.Proposal(ctx, &group.QueryProposal{ProposalId: proposalID})
+			res, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
 			s.Require().NoError(err)
 			proposal := res.Proposal
 

@@ -178,9 +178,6 @@ func TestSign(t *testing.T) {
 	msg2 := banktypes.NewMsgSend(addr2, sdk.AccAddress("to"), nil)
 	txb, err := txfNoKeybase.BuildUnsignedTx(msg1, msg2)
 	requireT.NoError(err)
-	txb2, err := txfNoKeybase.BuildUnsignedTx(msg1, msg2)
-	_ = txb2
-	requireT.NoError(err)
 	txbSimple, err := txfNoKeybase.BuildUnsignedTx(msg2)
 	requireT.NoError(err)
 
@@ -209,16 +206,8 @@ func TestSign(t *testing.T) {
 			txfAmino, txb, from2, false, []cryptotypes.PubKey{pubKey1, pubKey2}, []int{0, 0}},
 		{"amino: should overwrite a signature",
 			txfAmino, txb, from2, true, []cryptotypes.PubKey{pubKey2}, []int{1, 0}},
-
-		/**** test double sign Direct mode
-		  signing transaction with more than 2 signers should fail in DIRECT mode ****/
-		// {"direct: should fail to append a signature with different mode",
-		// 	txfDirect, txb, from1, false, []cryptotypes.PubKey{}, nil},
-		// {"direct: should fail to sign multi-signers tx",
-		// 	txfDirect, txb2, from1, false, []cryptotypes.PubKey{}, nil},
-		// {"direct: should fail to overwrite multi-signers tx",
-		// 	txfDirect, txb2, from1, true, []cryptotypes.PubKey{}, nil},
 	}
+
 	var prevSigs []signingtypes.SignatureV2
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

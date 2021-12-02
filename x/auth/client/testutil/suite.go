@@ -1461,7 +1461,7 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 	require.Equal(sdk.NewCoins(val0Coin, val1Coin), queryRes.Balances)
 }
 
-func (s *IntegrationTestSuite) TestTipsWithAux() {
+func (s *IntegrationTestSuite) TestTipsWithFee() {
 	require := s.Require()
 	val := s.network.Validators[0]
 	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10))
@@ -1541,7 +1541,7 @@ func (s *IntegrationTestSuite) TestTipsToFee() {
 	bal := s.getBalances(val.ClientCtx, tipper, tip.Denom)
 	s.Require().True(bal.Equal(tipperInitialBal.Amount))
 
-	// generate tx with --generate-only mode
+	// generate tx with --aux mode
 	res, err := govtestutil.MsgSubmitProposal(
 		val.ClientCtx,
 		tipper.String(),
@@ -1556,7 +1556,7 @@ func (s *IntegrationTestSuite) TestTipsToFee() {
 	genTxFile := testutil.WriteToNewTempFile(s.T(), string(res.Bytes()))
 
 	// broadcast the tx
-	res, err = TxTipsToFeeExec(
+	res, err = TxAuxToFeeExec(
 		val.ClientCtx,
 		genTxFile.Name(),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),

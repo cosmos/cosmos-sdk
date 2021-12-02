@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -74,12 +73,6 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 
 		txf = txf.WithGas(adjusted)
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n", GasEstimateResponse{GasEstimate: txf.Gas()})
-	}
-
-	if txf.SignMode() == signing.SignMode_SIGN_MODE_DIRECT_AUX {
-		if !clientCtx.GenerateOnly {
-			return sdkerrors.Wrap(sdkerrors.ErrNotSupported, "Signing in {DIRECT|AMINO}_AUX mode is required --generate-only flag")
-		}
 	}
 
 	if clientCtx.Simulate {
@@ -321,10 +314,6 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx
 		b.SetAccountNumber(f.accountNumber)
 		b.SetSequence(f.sequence)
 	} else {
-		if err != nil {
-			return tx.AuxSignerData{}, err
-		}
-
 		accNum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, fromAddress)
 		if err != nil {
 			return tx.AuxSignerData{}, err
@@ -338,7 +327,7 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx
 		return tx.AuxSignerData{}, err
 	}
 
-	if f.tip != nil && f.tip.String() != "" {
+	if f.tip != nil {
 		b.SetTip(&tx.Tip{Amount: f.tip.Amount, Tipper: fromAddress.String()})
 	}
 

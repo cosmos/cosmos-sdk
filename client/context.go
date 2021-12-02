@@ -48,6 +48,8 @@ type Context struct {
 	NodeURI           string
 	FeeGranter        sdk.AccAddress
 	Viper             *viper.Viper
+	
+	// IsAux is true when the signer is an auxiliary signer (e.g. the tipper).
 	IsAux             bool
 
 	// TODO: Deprecated (remove).

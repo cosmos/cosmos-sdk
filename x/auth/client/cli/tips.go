@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -16,7 +17,7 @@ import (
 func GetAuxToFeeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "aux-to-fee <aux_signed_tx.json>",
-		Short: "tips to fee broadcast the aux signed tx, and sends the tip amount to the broadcaster",
+		Short: "includes the aux signer data in the tx, broadcast the tx, and sends the tip amount to the broadcaster",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -41,6 +42,14 @@ func GetAuxToFeeCommand() *cobra.Command {
 			txBuilder.SetFeePayer(clientCtx.FromAddress)
 			txBuilder.SetFeeAmount(f.Fees())
 			txBuilder.SetGasLimit(f.Gas())
+
+			if clientCtx.GenerateOnly {
+				json, err := clientCtx.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
+				if err != nil {
+					return err
+				}
+				return clientCtx.PrintString(fmt.Sprintf("%s\n", json))
+			}
 
 			err = authclient.SignTx(f, clientCtx, clientCtx.FromName, txBuilder, clientCtx.Offline, false)
 			if err != nil {
@@ -72,6 +81,5 @@ func readAuxSignerData(cdc codec.Codec, auxSignerData *tx.AuxSignerData, filenam
 		return err
 	}
 
-	cdc.UnmarshalJSON(bytes, auxSignerData)
-	return nil
+	return cdc.UnmarshalJSON(bytes, auxSignerData)
 }

@@ -29,8 +29,9 @@ func TestPrimaryKeyCodec(t *testing.T) {
 			a := testutil.GenA.Draw(t, fmt.Sprintf("a%d", i)).(*testpb.A)
 			key := keyCodec.Codec.GetValues(a.ProtoReflect())
 			pk1 := &ormkv.PrimaryKeyEntry{
-				Key:   key,
-				Value: a,
+				TableName: aFullName,
+				Key:       key,
+				Value:     a,
 			}
 			k, v, err := pkCodec.EncodeEntry(pk1)
 			assert.NilError(t, err)

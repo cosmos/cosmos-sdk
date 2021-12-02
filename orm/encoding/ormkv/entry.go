@@ -2,6 +2,7 @@ package ormkv
 
 import (
 	"fmt"
+	"strings"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -51,23 +52,32 @@ func (p *PrimaryKeyEntry) String() string {
 			msgStr = fmt.Sprintf("ERR:%v", err)
 		}
 	}
-	return fmt.Sprintf("PK:%s:%s:%s", p.TableName, fmtValues(p.Key), msgStr)
+	return fmt.Sprintf("PK:%s/%s:%s", p.TableName, fmtValues(p.Key), msgStr)
 }
 
 func fmtValues(values []protoreflect.Value) string {
-	var xs []interface{}
-	for _, v := range values {
-		xs = append(xs, v.Interface())
+	if len(values) == 0 {
+		return "_"
 	}
-	list, err := structpb.NewList(xs)
-	if err != nil {
-		return fmt.Sprintf("%+v", values)
+
+	parts := make([]string, len(values))
+	for i, v := range values {
+		val, err := structpb.NewValue(v.Interface())
+		if err != nil {
+			parts[i] = "ERR"
+			continue
+		}
+
+		bz, err := protojson.Marshal(val)
+		if err != nil {
+			parts[i] = "ERR"
+			continue
+		}
+
+		parts[i] = string(bz)
 	}
-	bz, err := protojson.Marshal(list)
-	if err != nil {
-		return fmt.Sprintf("%+v", values)
-	}
-	return string(bz)
+
+	return strings.Join(parts, "/")
 }
 
 func (p *PrimaryKeyEntry) doNotImplement() {}
@@ -99,7 +109,15 @@ func (i *IndexKeyEntry) GetTableName() protoreflect.FullName {
 func (i *IndexKeyEntry) doNotImplement() {}
 
 func (i *IndexKeyEntry) string() string {
-	return fmt.Sprintf("%s%s:%s:%s", i.TableName, i.Fields, fmtValues(i.IndexValues), fmtValues(i.PrimaryKey))
+	return fmt.Sprintf("%s/%s:%s:%s", i.TableName, fmtFields(i.Fields), fmtValues(i.IndexValues), fmtValues(i.PrimaryKey))
+}
+
+func fmtFields(fields []protoreflect.Name) string {
+	strs := make([]string, len(fields))
+	for i, field := range fields {
+		strs[i] = string(field)
+	}
+	return strings.Join(strs, "/")
 }
 
 func (i *IndexKeyEntry) String() string {

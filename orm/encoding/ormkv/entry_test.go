@@ -21,7 +21,7 @@ func TestPrimaryKeyEntry(t *testing.T) {
 		Key:       testutil.ValuesOf(uint32(1), "abc"),
 		Value:     &testpb.A{I32: -1},
 	}
-	assert.Equal(t, `PK:testpb.A:[1,"abc"]:{"i32":-1}`, entry.String())
+	assert.Equal(t, `PK:testpb.A/1/"abc":{"i32":-1}`, entry.String())
 	assert.Equal(t, aFullName, entry.GetTableName())
 
 	// prefix key
@@ -30,7 +30,7 @@ func TestPrimaryKeyEntry(t *testing.T) {
 		Key:       testutil.ValuesOf(uint32(1), "abc"),
 		Value:     nil,
 	}
-	assert.Equal(t, `PK:testpb.A:[1,"abc"]:_`, entry.String())
+	assert.Equal(t, `PK:testpb.A/1/"abc":_`, entry.String())
 	assert.Equal(t, aFullName, entry.GetTableName())
 }
 
@@ -42,7 +42,7 @@ func TestIndexKeyEntry(t *testing.T) {
 		IndexValues: testutil.ValuesOf(uint32(10), int32(-1), "abc"),
 		PrimaryKey:  testutil.ValuesOf("abc", int32(-1)),
 	}
-	assert.Equal(t, `IDX:testpb.A[u32 i32 str]:[10, -1, "abc"]:["abc", -1]`, entry.String())
+	assert.Equal(t, `IDX:testpb.A/u32/i32/str:10/-1/"abc":"abc"/-1`, entry.String())
 	assert.Equal(t, aFullName, entry.GetTableName())
 
 	entry = &ormkv.IndexKeyEntry{
@@ -52,7 +52,7 @@ func TestIndexKeyEntry(t *testing.T) {
 		IndexValues: testutil.ValuesOf(uint32(10)),
 		PrimaryKey:  testutil.ValuesOf("abc", int32(-1)),
 	}
-	assert.Equal(t, `UNIQ:testpb.A[u32]:[10]:["abc", -1]`, entry.String())
+	assert.Equal(t, `UNIQ:testpb.A/u32:10:"abc"/-1`, entry.String())
 	assert.Equal(t, aFullName, entry.GetTableName())
 
 	// prefix key
@@ -62,7 +62,7 @@ func TestIndexKeyEntry(t *testing.T) {
 		IsUnique:    false,
 		IndexValues: testutil.ValuesOf(uint32(10), int32(-1)),
 	}
-	assert.Equal(t, `IDX:testpb.A[u32 i32 str]:[10, -1]:[]`, entry.String())
+	assert.Equal(t, `IDX:testpb.A/u32/i32/str:10/-1:_`, entry.String())
 	assert.Equal(t, aFullName, entry.GetTableName())
 
 	// prefix key
@@ -70,8 +70,8 @@ func TestIndexKeyEntry(t *testing.T) {
 		TableName:   aFullName,
 		Fields:      []protoreflect.Name{"str", "i32"},
 		IsUnique:    true,
-		IndexValues: testutil.ValuesOf("abc"),
+		IndexValues: testutil.ValuesOf("abc", int32(1)),
 	}
-	assert.Equal(t, `UNIQ:testpb.A[str i32]:["abc"]:[]`, entry.String())
+	assert.Equal(t, `UNIQ:testpb.A/str/i32:"abc"/1:_`, entry.String())
 	assert.Equal(t, aFullName, entry.GetTableName())
 }

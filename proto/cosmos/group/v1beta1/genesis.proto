@@ -4,7 +4,6 @@ package cosmos.group.v1beta1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/group";
 
-import "gogoproto/gogo.proto";
 import "cosmos/group/v1beta1/types.proto";
 
 // GenesisState defines the group module's genesis state.

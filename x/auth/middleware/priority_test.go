@@ -1,7 +1,6 @@
 package middleware_test
 
 import (
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"

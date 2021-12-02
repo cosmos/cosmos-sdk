@@ -29,7 +29,7 @@ type ResponseSimulateTx struct {
 //
 // In practice, the middleware stack is called from {Check,Deliver}Tx, which
 // only passes the TxBytes. Then, the TxDecoderMiddleware decodes the bytes
-// intothe Tx field.
+// into the Tx field.
 type Request struct {
 	Tx      sdk.Tx
 	TxBytes []byte

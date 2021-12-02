@@ -49,9 +49,9 @@ There are two types of fee allowances present at the moment:
 
 - `period_reset` keeps track of when a next period reset should happen.
 
-## FeeAccount flag
+## FeeGranter flag
 
-`feegrant` module introduces a `FeeAccount` flag for CLI for the sake of executing transactions with fee granter. When this flag is set, `clientCtx` will append the granter account address for transactions generated through CLI.
+`feegrant` module introduces a `FeeGranter` flag for CLI for the sake of executing transactions with fee granter. When this flag is set, `clientCtx` will append the granter account address for transactions generated through CLI.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/d97e7907f176777ed8a464006d360bb3e1a223e4/client/cmd.go#L224-L235
 
@@ -64,7 +64,7 @@ There are two types of fee allowances present at the moment:
 Example cmd:
 
 ```go
-./simd tx gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --from validator-key --fee-account=cosmos1xh44hxt7spr67hqaa7nyx5gnutrz5fraw6grxn --chain-id=testnet --fees="10stake"
+./simd tx gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --from validator-key --fee-granter=cosmos1xh44hxt7spr67hqaa7nyx5gnutrz5fraw6grxn --chain-id=testnet --fees="10stake"
 ```
 
 ## Granted Fee Deductions

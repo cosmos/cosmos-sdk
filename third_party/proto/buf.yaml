@@ -5,7 +5,7 @@
 # the previous configuration.
 version: v1
 deps:
-  - buf.build/gogo/protobuf
+  - buf.build/cosmos/gogo-proto
 build:
   excludes:
     - google/protobuf

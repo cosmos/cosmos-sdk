@@ -5,7 +5,9 @@
 # the previous configuration.
 version: v1
 deps:
-  - buf.build/gogo/protobuf
+  - buf.build/cosmos/cosmos-proto
+  - buf.build/cosmos/gogo-proto
+  - buf.build/googleapis/googleapis
 breaking:
   use:
     - FILE

@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -329,7 +330,11 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx
 	}
 
 	if f.tip != nil {
-		b.SetTip(f.tip)
+		if f.tip.Tipper == "" {
+			return tx.AuxSignerData{}, sdkerrors.Wrap(errors.New("tipper flag required"), "tipper")
+		} else {
+			b.SetTip(f.tip)
+		}
 	}
 
 	err = b.SetSignMode(f.SignMode())

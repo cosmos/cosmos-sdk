@@ -1518,7 +1518,7 @@ func (s *IntegrationTestSuite) TestTipsWithFee() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTipsToFee() {
+func (s *IntegrationTestSuite) TestAuxToFee() {
 	require := s.Require()
 	val := s.network.Validators[0]
 
@@ -1550,6 +1550,7 @@ func (s *IntegrationTestSuite) TestTipsToFee() {
 		govtypes.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 		fmt.Sprintf("--%s=%s", flags.FlagTip, tip.String()),
+		fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
 		fmt.Sprintf("--%s=true", flags.FlagAux),
 	)
 	require.NoError(err)

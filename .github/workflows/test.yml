@@ -49,6 +49,7 @@ jobs:
   test-submodules:
     runs-on: ubuntu-latest
     container: tendermintdev/docker-tm-db-testing
+    env: {ENABLE_ROCKSDB: true}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2.1.4

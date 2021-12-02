@@ -670,7 +670,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	// Execute proposal payload.
 	if proposal.Status == group.ProposalStatusClosed && proposal.Result == group.ProposalResultAccepted && proposal.ExecutorResult != group.ProposalExecutorResultSuccess {
 		logger := ctx.Logger().With("module", fmt.Sprintf("x/%s", group.ModuleName))
-		// Cashing context so that we don't update the store in case of failure.
+		// Caching context so that we don't update the store in case of failure.
 		ctx, flush := ctx.CacheContext()
 
 		addr, err := sdk.AccAddressFromBech32(accountInfo.Address)

@@ -137,10 +137,10 @@ Example Output:
 ```bash
 messages: [
   {
-    '@type': /cosmos.gov.v1beta2.MsgVote
-    proposal_id: 10,
-    voter: cosmos1r0tllwu5c9dtgwg3wr28lpvf76hg85f5zmh9l2,
-    option: VOTE_OPTION_YES
+    '@type': /cosmos.bank.v1beta1.MsgSend
+    from_address: "cosmos1..",
+    to_address: "cosmos1..",
+    amount: "100atom"
   }
 ],
 deposit_end_time: "2021-09-17T23:36:18.254995423Z"

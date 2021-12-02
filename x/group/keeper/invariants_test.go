@@ -43,7 +43,6 @@ func getCtxCodecKey() (sdk.Context, *codec.ProtoCodec, *storetypes.KVStoreKey) {
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	_ = cms.LoadLatestVersion()
-	// s.Require().NoError(err)
 	curCtx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
 	curCtx = curCtx.WithBlockHeight(10)
 	return curCtx, cdc, key

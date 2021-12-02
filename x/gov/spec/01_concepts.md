@@ -20,17 +20,17 @@ The governance process is divided in a few steps that are outlined below:
 
 ### Right to submit a proposal
 
-Every account, can submit proposals by sending a `MsgSubmitProposal` transaction.
+Every account can submit proposals by sending a `MsgSubmitProposal` transaction.
 Once a proposal is submitted, it is identified by its unique `proposalID`.
 
 ### Proposal Messages
 
 A proposal includes an array of `sdk.Msg`s which are executed automatically if the
-proposal passes. The messages are executed by the governance module itself. Modules
+proposal passes. The messages are executed by the governance `ModuleAccount` itself. Modules
 such as `x/upgrade`, that want to allow certain messages to be executed by governance
 only should add a whitelist within the respective msg server, granting the governance
 module the right to execute the message once a quorum has been reached. The governance
-module uses the message router to check that these messages are correctly constructed
+module uses the `MsgServiceRouter` to check that these messages are correctly constructed
 and have a respective path to execute on but do not perform a full validity check.
 
 ## Deposit

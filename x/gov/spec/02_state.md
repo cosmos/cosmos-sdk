@@ -22,7 +22,7 @@ proposal contains a special `metadata` field, an array of bytes, which can be us
 add context to the proposal. The `metadata` field allows custom use for networks, however,
 it is expected that the field contain a URL or some form of CID using a system such as
 [IPFS](https://docs.ipfs.io/concepts/content-addressing/). To support the case of
-interoperability across networks, the SDK recommends that the `metadata` resolves into
+interoperability across networks, the SDK recommends that the `metadata` represents
 the following `JSON` template:
 
 ```json
@@ -43,7 +43,7 @@ use governance to perform such as changing various parameters. This is very simp
 to do. First, write out your message types and `MsgServer` implementation. Add an
 `authority` field to the keeper which will be populated in the constructor with the
 governance module account: `govKeeper.GetGovernanceAccount().GetAddress()`. Then for
-the methods in the `msg_server.go` perform a check on the message that the signer
+the methods in the `msg_server.go`, perform a check on the message that the signer
 matches `authority`. This will prevent any user from executing that message.
 
 ## Parameters and base types

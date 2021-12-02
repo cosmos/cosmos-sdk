@@ -1,13 +1,19 @@
 package keeper
 
 import (
+	"encoding/json"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
-func (k Keeper) InitGenesis(ctx types.Context, cdc codec.JSONCodec, genesisState *group.GenesisState) {
+func (k Keeper) InitGenesis(ctx types.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+	var genesisState group.GenesisState
+	cdc.MustUnmarshalJSON(data, &genesisState)
 
 	if err := k.groupTable.Import(ctx.KVStore(k.key), genesisState.Groups, genesisState.GroupSeq); err != nil {
 		panic(errors.Wrap(err, "groups"))
@@ -33,9 +39,11 @@ func (k Keeper) InitGenesis(ctx types.Context, cdc codec.JSONCodec, genesisState
 		panic(errors.Wrap(err, "votes"))
 	}
 
+	return []abci.ValidatorUpdate{}
+
 }
 
-func (k Keeper) ExportGenesis(ctx types.Context, cdc codec.JSONCodec) *group.GenesisState {
+func (k Keeper) ExportGenesis(ctx types.Context, cdc codec.JSONCodec) json.RawMessage {
 	genesisState := group.NewGenesisState()
 
 	var groups []*group.GroupInfo
@@ -77,5 +85,6 @@ func (k Keeper) ExportGenesis(ctx types.Context, cdc codec.JSONCodec) *group.Gen
 	}
 	genesisState.Votes = votes
 
-	return genesisState
+	genesisBytes := cdc.MustMarshalJSON(genesisState)
+	return genesisBytes
 }

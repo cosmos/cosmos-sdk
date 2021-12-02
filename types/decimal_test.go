@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"sigs.k8s.io/yaml"
 
@@ -19,6 +20,29 @@ type decimalTestSuite struct {
 
 func TestDecimalTestSuite(t *testing.T) {
 	suite.Run(t, new(decimalTestSuite))
+}
+
+func TestDecApproxEq(t *testing.T) {
+	// d1 = 0.55, d2 = 0.6, tol = 0.1
+	d1 := sdk.NewDecWithPrec(55, 2)
+	d2 := sdk.NewDecWithPrec(6, 1)
+	tol := sdk.NewDecWithPrec(1, 1)
+
+	require.True(sdk.DecApproxEq(t, d1, d2, tol))
+
+	// d1 = 0.55, d2 = 0.6, tol = 1E-5
+	d1 = sdk.NewDecWithPrec(55, 2)
+	d2 = sdk.NewDecWithPrec(6, 1)
+	tol = sdk.NewDecWithPrec(1, 5)
+
+	require.False(sdk.DecApproxEq(t, d1, d2, tol))
+
+	// d1 = 0.6, d2 = 0.61, tol = 0.01
+	d1 = sdk.NewDecWithPrec(6, 1)
+	d2 = sdk.NewDecWithPrec(61, 2)
+	tol = sdk.NewDecWithPrec(1, 2)
+
+	require.True(sdk.DecApproxEq(t, d1, d2, tol))
 }
 
 // create a decimal from a decimal string (ex. "1234.5678")

@@ -14,6 +14,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -1253,7 +1254,7 @@ func (s *TestSuite) TestCreateProposal() {
 				Metadata:  nil,
 				Proposers: []string{addr2.String()},
 			},
-			msgs:    []sdk.Msg{&group.MsgAuthenticated{Signers: []sdk.AccAddress{addr1}}},
+			msgs:    []sdk.Msg{&testdata.TestMsg{Signers: []string{addr1.String()}}},
 			expErr:  true,
 			postRun: func(sdkCtx sdk.Context) {},
 		},

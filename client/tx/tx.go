@@ -47,6 +47,7 @@ func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msg
 		if err != nil {
 			return err
 		}
+
 		return clientCtx.PrintProto(&auxSignerData)
 	}
 
@@ -180,6 +181,20 @@ func SignWithPrivKey(
 	return sigV2, nil
 }
 
+func checkMultipleSigners(mode signing.SignMode, tx authsigning.Tx, signerIndex int) error {
+	if mode == signing.SignMode_SIGN_MODE_DIRECT &&
+		len(tx.GetSigners()) > 1 {
+
+		if signerIndex == (len(tx.GetSigners()) - 1) {
+			return nil
+		} else {
+			return sdkerrors.Wrap(sdkerrors.ErrNotSupported, "Signing in DIRECT mode is only supported for transactions with one signer only")
+		}
+	}
+
+	return nil
+}
+
 // Sign signs a given tx with a named key. The bytes signed over are canconical.
 // The resulting signature will be added to the transaction builder overwriting the previous
 // ones if overwrite=true (otherwise, the signature will be appended).
@@ -266,6 +281,10 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 		return err
 	}
 
+	if err := checkMultipleSigners(signMode, txBuilder.GetTx(), len(prevSignatures)); err != nil {
+		return err
+	}
+
 	// Generate the bytes to be signed.
 	bytesToSign, err := txf.txConfig.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
 	if err != nil {
@@ -305,6 +324,7 @@ func (gr GasEstimateResponse) String() string {
 	return fmt.Sprintf("gas estimate: %d", gr.GasEstimate)
 }
 
+// makeAuxSignerData generates an AuxSignerData from the client inputs.
 func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx.AuxSignerData, error) {
 	b := NewAuxTxBuilder()
 	fromAddress, name, _, err := client.GetFromFields(clientCtx.Keyring, clientCtx.From, false)

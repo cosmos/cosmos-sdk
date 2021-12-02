@@ -1472,7 +1472,7 @@ func (s *IntegrationTestSuite) TestTipsWithFee() {
 		expectErr bool
 	}{
 		{
-			"error with SIGN_MDOE_DIRECT_AUX and generate-only unset",
+			"error with SIGN_MODE_DIRECT_AUX and --aux unset",
 			[]string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 			},

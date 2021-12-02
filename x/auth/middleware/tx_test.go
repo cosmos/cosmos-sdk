@@ -22,38 +22,28 @@ func (s *MWTestSuite) TestTxDecoderMiddleware() {
 	sdkTx, txBz, err := s.createTestTx(txBuilder, []cryptotypes.PrivKey{priv1}, []uint64{1}, []uint64{0}, ctx.ChainID())
 	require.NoError(err)
 
+	// Create a custom tx.Handler that checks that the req.Tx field is
+	// correctly populated.
+	txReqChecker := customTxHandler{func(c context.Context, r tx.Request) (tx.Response, error) {
+		require.NotNil(r.Tx)
+		require.Equal(sdkTx.GetMsgs()[0], r.Tx.GetMsgs()[0])
+		return tx.Response{}, nil
+	}}
+
 	testcases := []struct {
-		name      string
-		txHandler tx.Handler
-		req       tx.Request
-		expErr    bool
+		name   string
+		req    tx.Request
+		expErr bool
 	}{
-		{"empty tx bz", noopTxHandler, tx.Request{}, true},
-		{
-			"tx bz and tx populated",
-			customTxHandler{func(c context.Context, r tx.Request) (tx.Response, error) {
-				require.NotNil(r.Tx)
-				require.Equal(sdkTx.GetMsgs()[0], r.Tx.GetMsgs()[0])
-				return tx.Response{}, nil
-			}},
-			tx.Request{Tx: sdkTx, TxBytes: txBz},
-			false,
-		},
-		{
-			"tx bz populated only",
-			customTxHandler{func(c context.Context, r tx.Request) (tx.Response, error) {
-				require.NotNil(r.Tx)
-				require.Equal(sdkTx.GetMsgs()[0], r.Tx.GetMsgs()[0])
-				return tx.Response{}, nil
-			}},
-			tx.Request{TxBytes: txBz},
-			false,
-		},
+		{"empty tx bz", tx.Request{}, true},
+		{"tx bz and tx both given as inputs", tx.Request{Tx: sdkTx, TxBytes: txBz}, false},
+		{"tx bz only given as input", tx.Request{TxBytes: txBz}, false},
+		{"tx only given as input", tx.Request{Tx: sdkTx}, false},
 	}
 	for _, tc := range testcases {
 		s.Run(tc.name, func() {
 			txHandler := middleware.ComposeMiddlewares(
-				tc.txHandler,
+				txReqChecker,
 				middleware.NewTxDecoderMiddleware(s.clientCtx.TxConfig.TxDecoder()),
 			)
 			_, err := txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tc.req)

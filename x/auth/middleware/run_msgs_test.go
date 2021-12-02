@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
-	"github.com/gogo/protobuf/proto"
 )
 
 func (s *MWTestSuite) TestRunMsgs() {

@@ -257,6 +257,10 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 	}
 
 	abciRes, err := convertTxResponseToCheckTx(res, checkRes)
+	if err != nil {
+		return sdkerrors.ResponseCheckTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
+	}
+
 	return abciRes
 }
 

@@ -12,7 +12,7 @@ import (
 
 var _ group.QueryServer = Keeper{}
 
-func (q Keeper) GroupInfo(goCtx context.Context, request *group.QueryGroupInfo) (*group.QueryGroupInfoResponse, error) {
+func (q Keeper) GroupInfo(goCtx context.Context, request *group.QueryGroupInfoRequest) (*group.QueryGroupInfoResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	groupID := request.GroupId
 	groupInfo, err := q.getGroupInfo(ctx, groupID)
@@ -29,7 +29,7 @@ func (q Keeper) getGroupInfo(ctx sdk.Context, id uint64) (group.GroupInfo, error
 	return obj, err
 }
 
-func (q Keeper) GroupAccountInfo(goCtx context.Context, request *group.QueryGroupAccountInfo) (*group.QueryGroupAccountInfoResponse, error) {
+func (q Keeper) GroupAccountInfo(goCtx context.Context, request *group.QueryGroupAccountInfoRequest) (*group.QueryGroupAccountInfoResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	groupAccountInfo, err := q.getGroupAccountInfo(ctx, request.Address)
 	if err != nil {
@@ -44,7 +44,7 @@ func (q Keeper) getGroupAccountInfo(ctx sdk.Context, accountAddress string) (gro
 	return obj, q.groupAccountTable.GetOne(ctx.KVStore(q.key), orm.PrimaryKey(&group.GroupAccountInfo{Address: accountAddress}), &obj)
 }
 
-func (q Keeper) GroupMembers(goCtx context.Context, request *group.QueryGroupMembers) (*group.QueryGroupMembersResponse, error) {
+func (q Keeper) GroupMembers(goCtx context.Context, request *group.QueryGroupMembersRequest) (*group.QueryGroupMembersResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	groupID := request.GroupId
 	it, err := q.getGroupMembers(ctx, groupID, request.Pagination)
@@ -68,7 +68,7 @@ func (q Keeper) getGroupMembers(ctx sdk.Context, id uint64, pageRequest *query.P
 	return q.groupMemberByGroupIndex.GetPaginated(ctx.KVStore(q.key), id, pageRequest)
 }
 
-func (q Keeper) GroupsByAdmin(goCtx context.Context, request *group.QueryGroupsByAdmin) (*group.QueryGroupsByAdminResponse, error) {
+func (q Keeper) GroupsByAdmin(goCtx context.Context, request *group.QueryGroupsByAdminRequest) (*group.QueryGroupsByAdminResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	addr, err := sdk.AccAddressFromBech32(request.Admin)
 	if err != nil {
@@ -95,7 +95,7 @@ func (q Keeper) getGroupsByAdmin(ctx sdk.Context, admin sdk.AccAddress, pageRequ
 	return q.groupByAdminIndex.GetPaginated(ctx.KVStore(q.key), admin.Bytes(), pageRequest)
 }
 
-func (q Keeper) GroupAccountsByGroup(goCtx context.Context, request *group.QueryGroupAccountsByGroup) (*group.QueryGroupAccountsByGroupResponse, error) {
+func (q Keeper) GroupAccountsByGroup(goCtx context.Context, request *group.QueryGroupAccountsByGroupRequest) (*group.QueryGroupAccountsByGroupResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	groupID := request.GroupId
 	it, err := q.getGroupAccountsByGroup(ctx, groupID, request.Pagination)
@@ -119,7 +119,7 @@ func (q Keeper) getGroupAccountsByGroup(ctx sdk.Context, id uint64, pageRequest 
 	return q.groupAccountByGroupIndex.GetPaginated(ctx.KVStore(q.key), id, pageRequest)
 }
 
-func (q Keeper) GroupAccountsByAdmin(goCtx context.Context, request *group.QueryGroupAccountsByAdmin) (*group.QueryGroupAccountsByAdminResponse, error) {
+func (q Keeper) GroupAccountsByAdmin(goCtx context.Context, request *group.QueryGroupAccountsByAdminRequest) (*group.QueryGroupAccountsByAdminResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	addr, err := sdk.AccAddressFromBech32(request.Admin)
 	if err != nil {
@@ -146,7 +146,7 @@ func (q Keeper) getGroupAccountsByAdmin(ctx sdk.Context, admin sdk.AccAddress, p
 	return q.groupAccountByAdminIndex.GetPaginated(ctx.KVStore(q.key), admin.Bytes(), pageRequest)
 }
 
-func (q Keeper) Proposal(goCtx context.Context, request *group.QueryProposal) (*group.QueryProposalResponse, error) {
+func (q Keeper) Proposal(goCtx context.Context, request *group.QueryProposalRequest) (*group.QueryProposalResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	proposalID := request.ProposalId
 	proposal, err := q.getProposal(ctx, proposalID)
@@ -157,7 +157,7 @@ func (q Keeper) Proposal(goCtx context.Context, request *group.QueryProposal) (*
 	return &group.QueryProposalResponse{Proposal: &proposal}, nil
 }
 
-func (q Keeper) ProposalsByGroupAccount(goCtx context.Context, request *group.QueryProposalsByGroupAccount) (*group.QueryProposalsByGroupAccountResponse, error) {
+func (q Keeper) ProposalsByGroupAccount(goCtx context.Context, request *group.QueryProposalsByGroupAccountRequest) (*group.QueryProposalsByGroupAccountResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	addr, err := sdk.AccAddressFromBech32(request.Address)
 	if err != nil {
@@ -192,7 +192,7 @@ func (q Keeper) getProposal(ctx sdk.Context, proposalID uint64) (group.Proposal,
 	return p, nil
 }
 
-func (q Keeper) VoteByProposalVoter(goCtx context.Context, request *group.QueryVoteByProposalVoter) (*group.QueryVoteByProposalVoterResponse, error) {
+func (q Keeper) VoteByProposalVoter(goCtx context.Context, request *group.QueryVoteByProposalVoterRequest) (*group.QueryVoteByProposalVoterResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	addr, err := sdk.AccAddressFromBech32(request.Voter)
 	if err != nil {
@@ -208,7 +208,7 @@ func (q Keeper) VoteByProposalVoter(goCtx context.Context, request *group.QueryV
 	}, nil
 }
 
-func (q Keeper) VotesByProposal(goCtx context.Context, request *group.QueryVotesByProposal) (*group.QueryVotesByProposalResponse, error) {
+func (q Keeper) VotesByProposal(goCtx context.Context, request *group.QueryVotesByProposalRequest) (*group.QueryVotesByProposalResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	proposalID := request.ProposalId
 	it, err := q.getVotesByProposal(ctx, proposalID, request.Pagination)
@@ -228,7 +228,7 @@ func (q Keeper) VotesByProposal(goCtx context.Context, request *group.QueryVotes
 	}, nil
 }
 
-func (q Keeper) VotesByVoter(goCtx context.Context, request *group.QueryVotesByVoter) (*group.QueryVotesByVoterResponse, error) {
+func (q Keeper) VotesByVoter(goCtx context.Context, request *group.QueryVotesByVoterRequest) (*group.QueryVotesByVoterResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	addr, err := sdk.AccAddressFromBech32(request.Voter)
 	if err != nil {

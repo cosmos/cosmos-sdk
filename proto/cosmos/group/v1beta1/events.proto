@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package cosmos.group.v1beta1;
 
+import "cosmos_proto/cosmos.proto";
+
 option go_package = "github.com/cosmos/cosmos-sdk/x/group";
 
 // EventCreateGroup is an event emitted when a group is created.
@@ -22,14 +24,14 @@ message EventUpdateGroup {
 message EventCreateGroupAccount {
   
   // address is the address of the group account.
-  string address = 1;
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];;
 }
   
 // EventUpdateGroupAccount is an event emitted when a group account is updated.
 message EventUpdateGroupAccount {
   
   // address is the address of the group account.
-  string address = 1;
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];;
 }
   
 // EventCreateProposal is an event emitted when a proposal is created.

@@ -7,13 +7,16 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/libs/log"
+
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
+
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,6 +27,11 @@ import (
 
 type invariantTestSuite struct {
 	suite.Suite
+
+	app *simapp.SimApp
+	ctx sdk.Context
+	cdc *codec.ProtoCodec
+	key *storetypes.KVStoreKey
 }
 
 func TestInvariantTestSuite(t *testing.T) {
@@ -31,10 +39,8 @@ func TestInvariantTestSuite(t *testing.T) {
 }
 
 func (s *invariantTestSuite) SetupSuite() {
-	s.T().Parallel()
-}
+	app := simapp.Setup(s.T(), false)
 
-func getCtxCodecKey() (sdk.Context, *codec.ProtoCodec, *storetypes.KVStoreKey) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	group.RegisterInterfaces(interfaceRegistry)
 	cdc := codec.NewProtoCodec(interfaceRegistry)
@@ -43,13 +49,18 @@ func getCtxCodecKey() (sdk.Context, *codec.ProtoCodec, *storetypes.KVStoreKey) {
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	_ = cms.LoadLatestVersion()
-	curCtx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
-	curCtx = curCtx.WithBlockHeight(10)
-	return curCtx, cdc, key
+	sdkCtx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
+
+	s.app = app
+	s.ctx = sdkCtx
+	s.cdc = cdc
+	s.key = key
+
 }
 
 func (s *invariantTestSuite) TestTallyVotesInvariant() {
-	curCtx, cdc, key := getCtxCodecKey()
+	sdkCtx, _ := s.ctx.CacheContext()
+	curCtx, cdc, key := sdkCtx, s.cdc, s.key
 	prevCtx, _ := curCtx.CacheContext()
 	prevCtx = prevCtx.WithBlockHeight(curCtx.BlockHeight() - 1)
 
@@ -235,7 +246,8 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 }
 
 func (s *invariantTestSuite) TestGroupTotalWeightInvariant() {
-	curCtx, cdc, key := getCtxCodecKey()
+	sdkCtx, _ := s.ctx.CacheContext()
+	curCtx, cdc, key := sdkCtx, s.cdc, s.key
 
 	// Group Table
 	groupTable, err := orm.NewAutoUInt64Table([2]byte{keeper.GroupTablePrefix}, keeper.GroupTableSeqPrefix, &group.GroupInfo{}, cdc)
@@ -332,7 +344,8 @@ func (s *invariantTestSuite) TestGroupTotalWeightInvariant() {
 }
 
 func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
-	curCtx, cdc, key := getCtxCodecKey()
+	sdkCtx, _ := s.ctx.CacheContext()
+	curCtx, cdc, key := sdkCtx, s.cdc, s.key
 
 	// Group Table
 	groupTable, err := orm.NewAutoUInt64Table([2]byte{keeper.GroupTablePrefix}, keeper.GroupTableSeqPrefix, &group.GroupInfo{}, cdc)

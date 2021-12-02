@@ -43,7 +43,7 @@ func (k Keeper) InitGenesis(ctx types.Context, cdc codec.JSONCodec, data json.Ra
 
 }
 
-func (k Keeper) ExportGenesis(ctx types.Context, cdc codec.JSONCodec) json.RawMessage {
+func (k Keeper) ExportGenesis(ctx types.Context, cdc codec.JSONCodec) *group.GenesisState {
 	genesisState := group.NewGenesisState()
 
 	var groups []*group.GroupInfo
@@ -85,6 +85,5 @@ func (k Keeper) ExportGenesis(ctx types.Context, cdc codec.JSONCodec) json.RawMe
 	}
 	genesisState.Votes = votes
 
-	genesisBytes := cdc.MustMarshalJSON(genesisState)
-	return genesisBytes
+	return genesisState
 }

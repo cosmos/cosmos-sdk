@@ -125,13 +125,15 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // InitGenesis performs genesis initialization for the group module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+	am.keeper.InitGenesis(ctx, cdc, data)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the group
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	return am.DefaultGenesis(cdc)
+	gs := am.keeper.ExportGenesis(ctx, cdc)
+	return cdc.MustMarshalJSON(gs)
 }
 
 // RegisterServices registers a gRPC query service to respond to the

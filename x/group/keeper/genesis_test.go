@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
@@ -168,9 +169,11 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	}
 
 	exported := s.keeper.ExportGenesis(genesisCtx, cdc)
+	bz, err := cdc.MarshalJSON(exported)
+	s.Require().NoError(err)
 
 	var exportedGenesisState group.GenesisState
-	err = cdc.UnmarshalJSON(exported, &exportedGenesisState)
+	err = cdc.UnmarshalJSON(bz, &exportedGenesisState)
 	s.Require().NoError(err)
 
 	s.Require().Equal(genesisState.Groups, exportedGenesisState.Groups)

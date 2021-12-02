@@ -12,7 +12,7 @@ to resolve and then execute if the proposal passes. `Proposal`'s are identified 
 unique id and contains a series of timestamps: `submit_time`, `deposit_end_time`,
 `voting_start_time`, `voting_end_time` which track the lifecycle of a proposal
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta2/gov.proto#L55-L77
++++ https://github.com/cosmos/cosmos-sdk/blob/4a129832eb16f37a89e97652a669f0cdc9196ca9/proto/cosmos/gov/v1beta2/gov.proto#L42-L52
 
 A proposal will generally require more than just a set of messages to explain its
 purpose but need some greater justification and allow a means for interested participants

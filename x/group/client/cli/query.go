@@ -55,7 +55,7 @@ func QueryGroupInfoCmd() *cobra.Command {
 
 			queryClient := group.NewQueryClient(clientCtx)
 
-			res, err := queryClient.GroupInfo(cmd.Context(), &group.QueryGroupInfo{
+			res, err := queryClient.GroupInfo(cmd.Context(), &group.QueryGroupInfoRequest{
 				GroupId: groupID,
 			})
 			if err != nil {
@@ -85,7 +85,7 @@ func QueryGroupAccountInfoCmd() *cobra.Command {
 
 			queryClient := group.NewQueryClient(clientCtx)
 
-			res, err := queryClient.GroupAccountInfo(cmd.Context(), &group.QueryGroupAccountInfo{
+			res, err := queryClient.GroupAccountInfo(cmd.Context(), &group.QueryGroupAccountInfoRequest{
 				Address: args[0],
 			})
 			if err != nil {
@@ -125,7 +125,7 @@ func QueryGroupMembersCmd() *cobra.Command {
 
 			queryClient := group.NewQueryClient(clientCtx)
 
-			res, err := queryClient.GroupMembers(cmd.Context(), &group.QueryGroupMembers{
+			res, err := queryClient.GroupMembers(cmd.Context(), &group.QueryGroupMembersRequest{
 				GroupId:    groupID,
 				Pagination: pageReq,
 			})
@@ -161,7 +161,7 @@ func QueryGroupsByAdminCmd() *cobra.Command {
 
 			queryClient := group.NewQueryClient(clientCtx)
 
-			res, err := queryClient.GroupsByAdmin(cmd.Context(), &group.QueryGroupsByAdmin{
+			res, err := queryClient.GroupsByAdmin(cmd.Context(), &group.QueryGroupsByAdminRequest{
 				Admin:      args[0],
 				Pagination: pageReq,
 			})
@@ -202,7 +202,7 @@ func QueryGroupAccountsByGroupCmd() *cobra.Command {
 
 			queryClient := group.NewQueryClient(clientCtx)
 
-			res, err := queryClient.GroupAccountsByGroup(cmd.Context(), &group.QueryGroupAccountsByGroup{
+			res, err := queryClient.GroupAccountsByGroup(cmd.Context(), &group.QueryGroupAccountsByGroupRequest{
 				GroupId:    groupID,
 				Pagination: pageReq,
 			})
@@ -238,7 +238,7 @@ func QueryGroupAccountsByAdminCmd() *cobra.Command {
 
 			queryClient := group.NewQueryClient(clientCtx)
 
-			res, err := queryClient.GroupAccountsByAdmin(cmd.Context(), &group.QueryGroupAccountsByAdmin{
+			res, err := queryClient.GroupAccountsByAdmin(cmd.Context(), &group.QueryGroupAccountsByAdminRequest{
 				Admin:      args[0],
 				Pagination: pageReq,
 			})
@@ -274,7 +274,7 @@ func QueryProposalCmd() *cobra.Command {
 
 			queryClient := group.NewQueryClient(clientCtx)
 
-			res, err := queryClient.Proposal(cmd.Context(), &group.QueryProposal{
+			res, err := queryClient.Proposal(cmd.Context(), &group.QueryProposalRequest{
 				ProposalId: proposalID,
 			})
 			if err != nil {
@@ -309,7 +309,7 @@ func QueryProposalsByGroupAccountCmd() *cobra.Command {
 
 			queryClient := group.NewQueryClient(clientCtx)
 
-			res, err := queryClient.ProposalsByGroupAccount(cmd.Context(), &group.QueryProposalsByGroupAccount{
+			res, err := queryClient.ProposalsByGroupAccount(cmd.Context(), &group.QueryProposalsByGroupAccountRequest{
 				Address:    args[0],
 				Pagination: pageReq,
 			})
@@ -345,7 +345,7 @@ func QueryVoteByProposalVoterCmd() *cobra.Command {
 
 			queryClient := group.NewQueryClient(clientCtx)
 
-			res, err := queryClient.VoteByProposalVoter(cmd.Context(), &group.QueryVoteByProposalVoter{
+			res, err := queryClient.VoteByProposalVoter(cmd.Context(), &group.QueryVoteByProposalVoterRequest{
 				ProposalId: proposalID,
 				Voter:      args[1],
 			})
@@ -386,7 +386,7 @@ func QueryVotesByProposalCmd() *cobra.Command {
 
 			queryClient := group.NewQueryClient(clientCtx)
 
-			res, err := queryClient.VotesByProposal(cmd.Context(), &group.QueryVotesByProposal{
+			res, err := queryClient.VotesByProposal(cmd.Context(), &group.QueryVotesByProposalRequest{
 				ProposalId: proposalID,
 				Pagination: pageReq,
 			})
@@ -422,7 +422,7 @@ func QueryVotesByVoterCmd() *cobra.Command {
 
 			queryClient := group.NewQueryClient(clientCtx)
 
-			res, err := queryClient.VotesByVoter(cmd.Context(), &group.QueryVotesByVoter{
+			res, err := queryClient.VotesByVoter(cmd.Context(), &group.QueryVotesByVoterRequest{
 				Voter:      args[0],
 				Pagination: pageReq,
 			})

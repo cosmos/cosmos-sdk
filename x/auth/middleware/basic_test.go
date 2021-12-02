@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
-	"github.com/tendermint/tendermint/abci/types"
 )
 
 func (s *MWTestSuite) TestValidateBasic() {
@@ -34,21 +33,21 @@ func (s *MWTestSuite) TestValidateBasic() {
 	invalidTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 	s.Require().NoError(err)
 
-	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), invalidTx, types.RequestDeliverTx{})
+	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: invalidTx})
 	s.Require().NotNil(err, "Did not error on invalid tx")
 
 	privs, accNums, accSeqs = []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	validTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 	s.Require().NoError(err)
 
-	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), validTx, types.RequestDeliverTx{})
+	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: validTx})
 	s.Require().Nil(err, "ValidateBasicMiddleware returned error on valid tx. err: %v", err)
 
 	// test middleware skips on recheck
 	ctx = ctx.WithIsReCheckTx(true)
 
 	// middleware should skip processing invalidTx on recheck and thus return nil-error
-	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), invalidTx, types.RequestDeliverTx{})
+	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: invalidTx})
 	s.Require().Nil(err, "ValidateBasicMiddleware ran on ReCheck")
 }
 
@@ -74,7 +73,7 @@ func (s *MWTestSuite) TestValidateMemo() {
 	s.Require().NoError(err)
 
 	// require that long memos get rejected
-	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), invalidTx, types.RequestDeliverTx{})
+	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: invalidTx})
 
 	s.Require().NotNil(err, "Did not error on tx with high memo")
 
@@ -83,7 +82,7 @@ func (s *MWTestSuite) TestValidateMemo() {
 	s.Require().NoError(err)
 
 	// require small memos pass ValidateMemo middleware
-	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), validTx, types.RequestDeliverTx{})
+	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: validTx})
 	s.Require().Nil(err, "ValidateBasicMiddleware returned error on valid tx. err: %v", err)
 }
 
@@ -137,7 +136,7 @@ func (s *MWTestSuite) TestConsumeGasForTxSize() {
 			expectedGas += afterGas - beforeGas
 
 			beforeGas = ctx.GasMeter().GasConsumed()
-			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), testTx, types.RequestDeliverTx{Tx: txBytes})
+			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: txBytes})
 
 			s.Require().Nil(err, "ConsumeTxSizeGasMiddleware returned error: %v", err)
 
@@ -162,7 +161,7 @@ func (s *MWTestSuite) TestConsumeGasForTxSize() {
 			beforeSimGas := ctx.GasMeter().GasConsumed()
 
 			// run txhandler in simulate mode
-			_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), testTx, tx.RequestSimulateTx{TxBytes: simTxBytes})
+			_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: simTxBytes})
 			consumedSimGas := ctx.GasMeter().GasConsumed() - beforeSimGas
 
 			// require that txhandler passes and does not underestimate middleware cost
@@ -215,7 +214,7 @@ func (s *MWTestSuite) TestTxHeightTimeoutMiddleware() {
 			s.Require().NoError(err)
 
 			ctx := ctx.WithBlockHeight(tc.height)
-			_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), testTx, tx.RequestSimulateTx{})
+			_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx})
 			s.Require().Equal(tc.expectErr, err != nil, err)
 		})
 	}

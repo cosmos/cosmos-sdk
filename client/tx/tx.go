@@ -329,7 +329,7 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx
 	}
 
 	if f.tip != nil {
-		b.SetTip(&tx.Tip{Amount: f.tip.Amount, Tipper: fromAddress.String()})
+		b.SetTip(f.tip)
 	}
 
 	err = b.SetSignMode(f.SignMode())

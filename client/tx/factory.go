@@ -80,6 +80,9 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 	tipsStr, _ := flagSet.GetString(flags.FlagTip)
 	f = f.WithTips(tipsStr, "")
 
+	tipper, _ := flagSet.GetString(flags.FlagTipper)
+	f = f.WithTips(tipsStr, tipper)
+
 	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
 	f = f.WithGasPrices(gasPricesStr)
 

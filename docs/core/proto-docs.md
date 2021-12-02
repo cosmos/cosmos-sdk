@@ -2435,7 +2435,199 @@ tags are stringified and the log is JSON decoded.
 | `timestamp` | [string](#string) |  | Time of the previous block. For heights > 1, it's the weighted median of the timestamps of the valid votes in the block.LastCommit. For height == 1, it's genesis time. |
 | `events` | [tendermint.abci.Event](#tendermint.abci.Event) | repeated | Events defines all the events emitted by processing a transaction. Note, these events include those emitted by processing all the messages and those emitted from the ante handler. Whereas Logs contains the events, with additional metadata, emitted only by processing the messages.
 
-Since: cosmos-sdk 0.42.11, 0.44.5, 0.45 |
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/base/kv/v1beta1/kv.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/base/kv/v1beta1/kv.proto
+
+
+
+<a name="cosmos.base.kv.v1beta1.Pair"></a>
+
+### Pair
+Pair defines a key/value bytes tuple.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [bytes](#bytes) |  |  |
+| `value` | [bytes](#bytes) |  |  |
+
+
+
+
+
+
+<a name="cosmos.base.kv.v1beta1.Pairs"></a>
+
+### Pairs
+Pairs defines a repeated slice of Pair objects.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pairs` | [Pair](#cosmos.base.kv.v1beta1.Pair) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.base.abci.v1beta1.GasInfo"></a>
+
+### GasInfo
+GasInfo defines tx execution gas context.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `gas_wanted` | [uint64](#uint64) |  | GasWanted is the maximum units of work we allow this tx to perform. |
+| `gas_used` | [uint64](#uint64) |  | GasUsed is the amount of gas actually consumed. |
+
+
+
+
+
+
+<a name="cosmos.base.abci.v1beta1.MsgData"></a>
+
+### MsgData
+MsgData defines the data returned in a Result object during message
+execution.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type` | [string](#string) |  |  |
+| `data` | [bytes](#bytes) |  |  |
+
+
+
+
+
+
+<a name="cosmos.base.abci.v1beta1.Result"></a>
+
+### Result
+Result is the union of ResponseFormat and ResponseCheckTx.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `data` | [bytes](#bytes) |  | Data is any data returned from message or handler execution. It MUST be length prefixed in order to separate data from multiple message executions. |
+| `log` | [string](#string) |  | Log contains the log information from message or handler execution. |
+| `events` | [tendermint.abci.Event](#tendermint.abci.Event) | repeated | Events contains a slice of Event objects that were emitted during message or handler execution. |
+
+
+
+
+
+
+<a name="cosmos.base.abci.v1beta1.SearchTxsResult"></a>
+
+### SearchTxsResult
+SearchTxsResult defines a structure for querying txs pageable
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `total_count` | [uint64](#uint64) |  | Count of all txs |
+| `count` | [uint64](#uint64) |  | Count of txs in current page |
+| `page_number` | [uint64](#uint64) |  | Index of current page, start from 1 |
+| `page_total` | [uint64](#uint64) |  | Count of total pages |
+| `limit` | [uint64](#uint64) |  | Max count txs per page |
+| `txs` | [TxResponse](#cosmos.base.abci.v1beta1.TxResponse) | repeated | List of txs in current page |
+
+
+
+
+
+
+<a name="cosmos.base.abci.v1beta1.SimulationResponse"></a>
+
+### SimulationResponse
+SimulationResponse defines the response generated when a transaction is
+successfully simulated.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `gas_info` | [GasInfo](#cosmos.base.abci.v1beta1.GasInfo) |  |  |
+| `result` | [Result](#cosmos.base.abci.v1beta1.Result) |  |  |
+
+
+
+
+
+
+<a name="cosmos.base.abci.v1beta1.StringEvent"></a>
+
+### StringEvent
+StringEvent defines en Event object wrapper where all the attributes
+contain key/value pairs that are strings instead of raw bytes.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `type` | [string](#string) |  |  |
+| `attributes` | [Attribute](#cosmos.base.abci.v1beta1.Attribute) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.base.abci.v1beta1.TxMsgData"></a>
+
+### TxMsgData
+TxMsgData defines a list of MsgData. A transaction will have a MsgData object
+for each message.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `data` | [MsgData](#cosmos.base.abci.v1beta1.MsgData) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.base.abci.v1beta1.TxResponse"></a>
+
+### TxResponse
+TxResponse defines a structure containing relevant tx data and metadata. The
+tags are stringified and the log is JSON decoded.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `height` | [int64](#int64) |  | The block height |
+| `txhash` | [string](#string) |  | The transaction hash. |
+| `codespace` | [string](#string) |  | Namespace for the Code |
+| `code` | [uint32](#uint32) |  | Response code. |
+| `data` | [string](#string) |  | Result bytes, if any. |
+| `raw_log` | [string](#string) |  | The output of the application's logger (raw string). May be non-deterministic. |
+| `logs` | [ABCIMessageLog](#cosmos.base.abci.v1beta1.ABCIMessageLog) | repeated | The output of the application's logger (typed). May be non-deterministic. |
+| `info` | [string](#string) |  | Additional information. May be non-deterministic. |
+| `gas_wanted` | [int64](#int64) |  | Amount of gas requested for transaction. |
+| `gas_used` | [int64](#int64) |  | Amount of gas consumed by transaction. |
+| `tx` | [google.protobuf.Any](#google.protobuf.Any) |  | The request transaction bytes. |
+| `timestamp` | [string](#string) |  | Time of the previous block. For heights > 1, it's the weighted median of the timestamps of the valid votes in the block.LastCommit. For height == 1, it's genesis time. |
 
 
 

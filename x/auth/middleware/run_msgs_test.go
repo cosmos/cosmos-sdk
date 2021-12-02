@@ -3,6 +3,8 @@ package middleware_test
 import (
 	"fmt"
 
+	"github.com/gogo/protobuf/proto"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"

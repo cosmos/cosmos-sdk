@@ -70,7 +70,8 @@ const (
 	FlagCountTotal       = "count-total"
 	FlagTimeoutHeight    = "timeout-height"
 	FlagKeyAlgorithm     = "algo"
-	FlagFeeAccount       = "fee-account"
+	FlagFeePayer         = "fee-payer"
+	FlagFeeGranter       = "fee-granter"
 	FlagReverse          = "reverse"
 
 	// Tendermint logging flags
@@ -112,7 +113,8 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().String(FlagKeyringBackend, DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test|memory)")
 	cmd.Flags().String(FlagSignMode, "", "Choose sign mode (direct|amino-json), this is an advanced feature")
 	cmd.Flags().Uint64(FlagTimeoutHeight, 0, "Set a block timeout height to prevent the tx from being committed past a certain height")
-	cmd.Flags().String(FlagFeeAccount, "", "Fee account pays fees for the transaction instead of deducting from the signer")
+	cmd.Flags().String(FlagFeePayer, "", "Fee payer pays fees for the transaction instead of deducting from the signer")
+	cmd.Flags().String(FlagFeeGranter, "", "Fee granter grants fees for the transaction")
 
 	// --gas can accept integers and "auto"
 	cmd.Flags().String(FlagGas, "", fmt.Sprintf("gas limit to set per-transaction; set to %q to calculate sufficient gas automatically (default %d)", GasFlagAuto, DefaultGasLimit))

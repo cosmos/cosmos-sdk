@@ -41,9 +41,9 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 			return nil, status.Errorf(codes.NotFound, "no authorization found for %s type", req.MsgTypeUrl)
 		}
 
-		authorization := grant.GetAuthorization()
-		if authorization == nil {
-			return nil, status.Errorf(codes.Internal, "expected authz.Authorization")
+		authorization, err := getAuthorization(grant)
+		if err != nil {
+			return nil, err
 		}
 
 		authorizationAny, err := codectypes.NewAnyWithValue(authorization)

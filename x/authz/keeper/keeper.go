@@ -93,9 +93,9 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 				return nil, sdkerrors.ErrUnauthorized.Wrap("authorization expired")
 			}
 
-			authorization := grant.GetAuthorization()
-			if authorization == nil {
-				return nil, sdkerrors.ErrInvalidType.Wrap("expecting authz.Authorization")
+			authorization, err := getAuthorization(grant)
+			if err != nil {
+				return nil, err
 			}
 
 			resp, err := authorization.Accept(ctx, msg)
@@ -246,4 +246,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *authz.GenesisState) {
 			panic(err)
 		}
 	}
+}
+
+func getAuthorization(g authz.Grant) (authz.Authorization, error) {
+	a, ok := g.Authorization.GetCachedValue().(authz.Authorization)
+	if !ok {
+		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (authz.Authorization)(nil), g.Authorization.GetCachedValue())
+	}
+
+	return a, nil
 }

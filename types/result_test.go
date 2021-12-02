@@ -7,12 +7,15 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	cmtt "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	cmt "github.com/cometbft/cometbft/types"
+	"github.com/golang/protobuf/proto"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/bytes"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -152,16 +155,81 @@ func (s *resultTestSuite) TestResponseResultBlock() {
 	timestamp := time.Now()
 	timestampStr := timestamp.UTC().Format(time.RFC3339)
 
-	//  create a block
-	resultBlock := &coretypes.ResultBlock{Block: &cmt.Block{
-		Header: cmt.Header{
-			Height: 10,
-			Time:   timestamp,
+	// test checkTx
+	checkTxResult := &ctypes.ResultBroadcastTxCommit{
+		Height: 10,
+		Hash:   bytes.HexBytes([]byte("test")),
+		CheckTx: abci.ResponseCheckTx{
+			Code:      90,
+			Data:      nil,
+			Log:       `[]`,
+			Info:      "info",
+			GasWanted: 99,
+			GasUsed:   100,
+			Codespace: "codespace",
+			Events: []abci.Event{
+				{
+					Type: "message",
+					Attributes: []abci.EventAttribute{
+						{
+							Key:   []byte("action"),
+							Value: []byte("foo"),
+							Index: true,
+						},
+					},
+				},
+			},
 		},
-		Evidence: cmt.EvidenceData{
-			Evidence: make(cmt.EvidenceList, 0),
+	}
+	deliverTxResult := &ctypes.ResultBroadcastTxCommit{
+		Height: 10,
+		Hash:   bytes.HexBytes([]byte("test")),
+		DeliverTx: abci.ResponseDeliverTx{
+			Code:      90,
+			Data:      nil,
+			Log:       `[]`,
+			Info:      "info",
+			GasWanted: 99,
+			GasUsed:   100,
+			Codespace: "codespace",
+			Events: []abci.Event{
+				{
+					Type: "message",
+					Attributes: []abci.EventAttribute{
+						{
+							Key:   []byte("action"),
+							Value: []byte("foo"),
+							Index: true,
+						},
+					},
+				},
+			},
 		},
-	}}
+	}
+	want := &sdk.TxResponse{
+		Height:    10,
+		TxHash:    "74657374",
+		Codespace: "codespace",
+		Code:      90,
+		Data:      "",
+		RawLog:    `[]`,
+		Logs:      logs,
+		Info:      "info",
+		GasWanted: 99,
+		GasUsed:   100,
+		Events: []abci.Event{
+			{
+				Type: "message",
+				Attributes: []abci.EventAttribute{
+					{
+						Key:   []byte("action"),
+						Value: []byte("foo"),
+						Index: true,
+					},
+				},
+			},
+		},
+	}
 
 	blk, err := resultBlock.Block.ToProto()
 	s.Require().NoError(err)

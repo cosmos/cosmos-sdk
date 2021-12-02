@@ -3,11 +3,12 @@ package types
 import (
 	"encoding/hex"
 	"encoding/json"
+	"math"
 	"strings"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+	"github.com/gogo/protobuf/proto"
+	abci "github.com/tendermint/tendermint/abci/types"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -86,16 +87,64 @@ func NewResponseResultBlock(res *coretypes.ResultBlock, timestamp string) *cmtpr
 		return nil
 	}
 
-	blk, err := res.Block.ToProto()
-	if err != nil {
+	if !res.CheckTx.IsOK() {
+		return newTxResponseCheckTx(res)
+	}
+
+	return newTxResponseDeliverTx(res)
+}
+
+func newTxResponseCheckTx(res *ctypes.ResultBroadcastTxCommit) *TxResponse {
+	if res == nil {
 		return nil
 	}
 
-	return &cmtproto.Block{
-		Header:     blk.Header,
-		Data:       blk.Data,
-		Evidence:   blk.Evidence,
-		LastCommit: blk.LastCommit,
+	var txHash string
+	if res.Hash != nil {
+		txHash = res.Hash.String()
+	}
+
+	parsedLogs, _ := ParseABCILogs(res.CheckTx.Log)
+
+	return &TxResponse{
+		Height:    res.Height,
+		TxHash:    txHash,
+		Codespace: res.CheckTx.Codespace,
+		Code:      res.CheckTx.Code,
+		Data:      strings.ToUpper(hex.EncodeToString(res.CheckTx.Data)),
+		RawLog:    res.CheckTx.Log,
+		Logs:      parsedLogs,
+		Info:      res.CheckTx.Info,
+		GasWanted: res.CheckTx.GasWanted,
+		GasUsed:   res.CheckTx.GasUsed,
+		Events:    res.CheckTx.Events,
+	}
+}
+
+func newTxResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) *TxResponse {
+	if res == nil {
+		return nil
+	}
+
+	var txHash string
+	if res.Hash != nil {
+		txHash = res.Hash.String()
+	}
+
+	parsedLogs, _ := ParseABCILogs(res.DeliverTx.Log)
+
+	return &TxResponse{
+		Height:    res.Height,
+		TxHash:    txHash,
+		Codespace: res.DeliverTx.Codespace,
+		Code:      res.DeliverTx.Code,
+		Data:      strings.ToUpper(hex.EncodeToString(res.DeliverTx.Data)),
+		RawLog:    res.DeliverTx.Log,
+		Logs:      parsedLogs,
+		Info:      res.DeliverTx.Info,
+		GasWanted: res.DeliverTx.GasWanted,
+		GasUsed:   res.DeliverTx.GasUsed,
+		Events:    res.DeliverTx.Events,
 	}
 }
 

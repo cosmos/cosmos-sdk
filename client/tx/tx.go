@@ -102,6 +102,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	}
 
 	tx.SetFeeGranter(clientCtx.GetFeeGranterAddress())
+	tx.SetFeePayer(clientCtx.GetFeePayerAddress())
 	err = Sign(txf, clientCtx.GetFromName(), tx, true)
 	if err != nil {
 		return err

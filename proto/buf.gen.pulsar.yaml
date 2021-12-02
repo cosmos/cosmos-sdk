@@ -12,3 +12,6 @@ plugins:
   - name: go-pulsar
     out: ../api
     opt: paths=source_relative
+  - name: doc
+    out: ../doc
+    opt: ../docs/protodoc-markdown.tmpl,proto-docs.md

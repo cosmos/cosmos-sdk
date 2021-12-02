@@ -5,9 +5,9 @@ deps:
     owner: cosmos
     repository: cosmos-proto
     branch: main
-    commit: 827fbd06f06e4e8896c045e5264c7332
-    digest: b1-3qNLBOV91jzs8_jbRgaRKnRZiv1dmSGjApPAzeo17Zw=
-    create_time: 2021-12-02T17:43:30.205821Z
+    commit: 1935555c206d4afb9e94615dfd0fad31
+    digest: b1-TNqW6xj2Pjha5Uoj9a-5uOeRo4mwswKfyqMcN3I_gZ0=
+    create_time: 2021-12-02T22:04:00.31049Z
   - remote: buf.build
     owner: cosmos
     repository: gogo-proto

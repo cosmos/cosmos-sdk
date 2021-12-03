@@ -326,11 +326,17 @@ func (gr GasEstimateResponse) String() string {
 
 // makeAuxSignerData generates an AuxSignerData from the client inputs.
 func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx.AuxSignerData, error) {
+	if f.SignMode() == signing.SignMode_SIGN_MODE_DIRECT {
+		return tx.AuxSignerData{}, sdkerrors.Wrap(errors.New("can't sign a aux tx in DIRECT mode"), "tipper")
+	}
+
 	b := NewAuxTxBuilder()
 	fromAddress, name, _, err := client.GetFromFields(clientCtx.Keyring, clientCtx.From, false)
+
 	if err != nil {
 		return tx.AuxSignerData{}, err
 	}
+
 	b.SetAddress(fromAddress.String())
 	if clientCtx.Offline {
 		b.SetAccountNumber(f.accountNumber)

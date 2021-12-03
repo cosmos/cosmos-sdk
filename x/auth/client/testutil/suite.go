@@ -1541,41 +1541,220 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 	bal := s.getBalances(val.ClientCtx, tipper, tip.Denom)
 	s.Require().True(bal.Equal(tipperInitialBal.Amount))
 
-	// generate tx with --aux mode
-	res, err := govtestutil.MsgSubmitProposal(
-		val.ClientCtx,
-		tipper.String(),
-		"test",
-		"test desc",
-		govtypes.ProposalTypeText,
-		fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
-		fmt.Sprintf("--%s=%s", flags.FlagTip, tip.String()),
-		fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
-		fmt.Sprintf("--%s=true", flags.FlagAux),
-	)
-	require.NoError(err)
-	genTxFile := testutil.WriteToNewTempFile(s.T(), string(res.Bytes()))
+	testCases := []struct {
+		name               string
+		tipper             sdk.AccAddress
+		feePayer           sdk.AccAddress
+		tip                sdk.Coin
+		expectErrAux       bool
+		expectErrBroadCast bool
+		errMsg             string
+		tipperArgs         []string
+		feePayerArgs       []string
+	}{
+		{
+			name:     "when --aux and --sign-mode = direct set: error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      tip,
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			expectErrAux: true,
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+		},
+		{
+			name:     "both tipper, fee payer uses AMINO",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      tip,
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+		},
+		{
+			name:     "tipper uses DIRECT_AUX, fee payer uses AMINO",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      tip,
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+		},
+		{
+			name:     "--tip flag unset",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdk.NewInt(0)},
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+		},
 
-	// broadcast the tx
-	res, err = TxAuxToFeeExec(
-		val.ClientCtx,
-		genTxFile.Name(),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
-	)
+		{
+			name:     "legacy amino json: no error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      tip,
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+		},
+		{
+			name:     "tipper uses direct aux, fee payer uses direct",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      tip,
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
 
-	require.NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+		},
+		{
+			name:     "wrong denom in tip: error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdk.NewInt(0)},
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagTip, "1000wrongDenom"),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+			errMsg: "insufficient funds",
+		},
+		{
+			name:     "insufficient fees: error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdk.NewInt(0)},
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				// fmt.Sprintf("--%s=%s", flags.FlagFees, fmt.Sprintf("0%stoken", val.Moniker)),
+			},
+			errMsg: "insufficient fees",
+		},
+	}
 
-	var txRes sdk.TxResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
-	s.Require().Equal(uint32(0), txRes.Code)
-	s.Require().NotNil(int64(0), txRes.Height)
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			// generate tx with --aux mode
+			res, err := govtestutil.MsgSubmitProposal(
+				val.ClientCtx,
+				tipper.String(),
+				"test",
+				"test desc",
+				govtypes.ProposalTypeText,
+				tc.tipperArgs...,
+			)
 
-	bal = s.getBalances(val.ClientCtx, tipper, tip.Denom)
-	s.Require().True(bal.Equal(tipperInitialBal.Sub(tip).Amount))
+			if tc.expectErrAux {
+				require.Error(err)
+			} else {
+				require.NoError(err)
+				genTxFile := testutil.WriteToNewTempFile(s.T(), string(res.Bytes()))
+
+				// broadcast the tx
+				res, err = TxAuxToFeeExec(
+					val.ClientCtx,
+					genTxFile.Name(),
+					tc.feePayerArgs...,
+				)
+
+				var txRes sdk.TxResponse
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
+
+				if tc.expectErrBroadCast {
+					// require.NotNil(txRes.RawLog)
+					require.Error(err)
+				} else if tc.errMsg != "" {
+					fmt.Println("error msg", txRes.RawLog)
+					require.Contains(txRes.RawLog, tc.errMsg)
+				} else {
+					require.NoError(err)
+
+					s.Require().Equal(uint32(0), txRes.Code)
+					s.Require().NotNil(int64(0), txRes.Height)
+
+					bal = s.getBalances(val.ClientCtx, tipper, tc.tip.Denom)
+					tipperInitialBal = tipperInitialBal.Sub(tc.tip)
+					s.Require().True(bal.Equal(tipperInitialBal.Amount))
+				}
+			}
+		})
+	}
 }
 
 func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.AccAddress, amount sdk.Coins, extraFlags ...string) (testutil.BufferWriter, error) {

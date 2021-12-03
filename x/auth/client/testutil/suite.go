@@ -1511,7 +1511,6 @@ func (s *IntegrationTestSuite) TestTipsWithFee() {
 			if tc.expectErr {
 				require.Error(err)
 			} else {
-				fmt.Println("err", err)
 				require.NoError(err)
 			}
 		})

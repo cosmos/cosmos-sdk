@@ -1479,7 +1479,7 @@ func (s *IntegrationTestSuite) TestTipsWithFee() {
 			true,
 		},
 		{
-			"no error with SIGN_MDOE_DIRECT_AUX mode and generate-only set",
+			"no error with SIGN_MDOE_DIRECT_AUX mode and generate-only set (ignores generate-only)",
 			[]string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
@@ -1500,7 +1500,7 @@ func (s *IntegrationTestSuite) TestTipsWithFee() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			res, err := govtestutil.MsgSubmitProposal(
+			_, err := govtestutil.MsgSubmitProposal(
 				val.ClientCtx,
 				val.Address.String(),
 				"test",
@@ -1511,8 +1511,8 @@ func (s *IntegrationTestSuite) TestTipsWithFee() {
 			if tc.expectErr {
 				require.Error(err)
 			} else {
+				fmt.Println("err", err)
 				require.NoError(err)
-				s.Require().False(strings.Contains(string(res.Bytes()), "\"tip\":null"))
 			}
 		})
 	}
@@ -1701,7 +1701,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
-				// fmt.Sprintf("--%s=%s", flags.FlagFees, fmt.Sprintf("0%stoken", val.Moniker)),
 			},
 			errMsg: "insufficient fees",
 		},
@@ -1740,7 +1739,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 					// require.NotNil(txRes.RawLog)
 					require.Error(err)
 				} else if tc.errMsg != "" {
-					fmt.Println("error msg", txRes.RawLog)
 					require.Contains(txRes.RawLog, tc.errMsg)
 				} else {
 					require.NoError(err)

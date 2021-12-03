@@ -12,7 +12,7 @@ message A {
   option (cosmos.orm.v1alpha1.table) = {
     id: 1;
     primary_key: {
-      fields: "u32,u64,str"
+      fields: "u32,i64,str"
     }
     index:{
       id: 1;
@@ -25,6 +25,11 @@ message A {
     index:{
       id: 3;
       fields:"bz,str"
+    }
+    index:{
+      id:4
+      fields:"str,u32,i64"
+      unique: true
     }
   };
 

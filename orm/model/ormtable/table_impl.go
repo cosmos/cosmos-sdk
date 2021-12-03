@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"math"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -46,7 +48,7 @@ func (t TableImpl) Save(store kv.IndexCommitmentStore, message proto.Message, mo
 
 	if haveExisting {
 		if mode == SAVE_MODE_CREATE {
-			return ormerrors.PrimaryKeyConstraintViolation.Wrapf("%q", mref.Descriptor().FullName())
+			return sdkerrors.Wrapf(ormerrors.PrimaryKeyConstraintViolation, "%q", mref.Descriptor().FullName())
 		}
 	} else {
 		if mode == SAVE_MODE_UPDATE {

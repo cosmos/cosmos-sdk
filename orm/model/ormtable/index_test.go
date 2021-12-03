@@ -20,16 +20,18 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func TestErr(t *testing.T) {
-	//assert.Assert(t, errors.Is(errors.Wrapf(ormerrors.PrimaryKeyConstraintViolation.Wrapf(), "test"), ormerrors.PrimaryKeyConstraintViolation))
-}
-
 func TestTable(t *testing.T) {
 	tableData := TableDataGen(100).Example().(*TableData)
 	for _, index := range tableData.table.Indexes() {
-		if uniq, ok := index.(ormindex.UniqueIndex); ok {
-			testUniqueIndex(t, tableData, uniq)
+		indexModel := &IndexModel{
+			TableData: tableData,
+			index:     index,
 		}
+		sort.Sort(indexModel)
+		if _, ok := index.(ormindex.UniqueIndex); ok {
+			testUniqueIndex(t, indexModel)
+		}
+		testIndex(t, indexModel)
 	}
 }
 
@@ -74,12 +76,9 @@ func TestUniqueKeyIndex(t *testing.T) {
 	})
 }
 
-func testUniqueIndex(t *testing.T, tableData *TableData, index ormindex.UniqueIndex) {
-	model := &IndexModel{
-		TableData: tableData,
-		index:     index,
-	}
-	sort.Sort(model)
+func testUniqueIndex(t *testing.T, model *IndexModel) {
+	index := model.index.(ormindex.UniqueIndex)
+	t.Logf("testing unique index %T %s", index, index.GetFieldNames())
 	for i := 0; i < len(model.data); i++ {
 		x := model.data[i]
 		ks, _, err := index.EncodeKeyFromMessage(x.ProtoReflect())
@@ -89,7 +88,7 @@ func testUniqueIndex(t *testing.T, tableData *TableData, index ormindex.UniqueIn
 		assert.NilError(t, err)
 		assert.Assert(t, found)
 
-		msg := tableData.table.MessageType().New().Interface()
+		msg := model.table.MessageType().New().Interface()
 		found, err = index.Get(model.store, ks, msg)
 		assert.NilError(t, err)
 		assert.Assert(t, found)
@@ -97,30 +96,32 @@ func testUniqueIndex(t *testing.T, tableData *TableData, index ormindex.UniqueIn
 	}
 }
 
-//func testIndex(t *rapid.T, model *IndexModel) {
-//	it, err := model.index.PrefixIterator(model.store, nil, ormindex.IteratorOptions{})
-//	assert.NilError(t, err)
-//	checkIteratorAgainstSlice(t, it, model.data, model.typ)
-//
-//	it, err = model.index.PrefixIterator(model.store, nil, ormindex.IteratorOptions{Reverse: true})
-//	assert.NilError(t, err)
-//	checkIteratorAgainstSlice(t, it, reverseData(model.data), model.typ)
-//
-//	i := rapid.IntRange(0, len(model.data)).Draw(t, "i").(int)
-//	j := rapid.IntRange(i, len(model.data)).Draw(t, "j").(int)
-//
-//	start, _, err := model.index.EncodeKeyFromMessage(model.data[i].ProtoReflect())
-//	assert.NilError(t, err)
-//	end, _, err := model.index.EncodeKeyFromMessage(model.data[j].ProtoReflect())
-//	assert.NilError(t, err)
-//	it, err = model.index.RangeIterator(model.store, start, end, ormindex.IteratorOptions{})
-//	assert.NilError(t, err)
-//	checkIteratorAgainstSlice(t, it, model.data[i:j], model.typ)
-//
-//	//it, err = model.index.RangeIterator(model.store, nil, nil, IteratorOptions{Reverse: true})
-//	//assert.NilError(t, err)
-//	//checkIteratorAgainstSlice(t, it, reverseData(model.data), model.typ)
-//}
+func testIndex(t *testing.T, model *IndexModel) {
+	index := model.index
+	t.Logf("testing index %T %s", index, index.GetFieldNames())
+	it, err := model.index.PrefixIterator(model.store, nil, ormindex.IteratorOptions{})
+	assert.NilError(t, err)
+	checkIteratorAgainstSlice(t, it, model.data, model.table.MessageType())
+
+	//it, err = model.index.PrefixIterator(model.store, nil, ormindex.IteratorOptions{Reverse: true})
+	//assert.NilError(t, err)
+	//checkIteratorAgainstSlice(t, it, reverseData(model.data), model.typ)
+	//
+	//i := rapid.IntRange(0, len(model.data)).Draw(t, "i").(int)
+	//j := rapid.IntRange(i, len(model.data)).Draw(t, "j").(int)
+	//
+	//start, _, err := model.index.EncodeKeyFromMessage(model.data[i].ProtoReflect())
+	//assert.NilError(t, err)
+	//end, _, err := model.index.EncodeKeyFromMessage(model.data[j].ProtoReflect())
+	//assert.NilError(t, err)
+	//it, err = model.index.RangeIterator(model.store, start, end, ormindex.IteratorOptions{})
+	//assert.NilError(t, err)
+	//checkIteratorAgainstSlice(t, it, model.data[i:j], model.typ)
+
+	//it, err = model.index.RangeIterator(model.store, nil, nil, IteratorOptions{Reverse: true})
+	//assert.NilError(t, err)
+	//checkIteratorAgainstSlice(t, it, reverseData(model.data), model.typ)
+}
 
 func reverseData(data []proto.Message) []proto.Message {
 	n := len(data)
@@ -131,7 +132,7 @@ func reverseData(data []proto.Message) []proto.Message {
 	return reverse
 }
 
-func checkIteratorAgainstSlice(t *rapid.T, iterator ormiterator.Iterator, data []proto.Message, typ protoreflect.MessageType) {
+func checkIteratorAgainstSlice(t *testing.T, iterator ormiterator.Iterator, data []proto.Message, typ protoreflect.MessageType) {
 	i := 0
 	for {
 		have, err := iterator.Next()

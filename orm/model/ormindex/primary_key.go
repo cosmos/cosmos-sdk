@@ -69,7 +69,11 @@ func (p PrimaryKeyIndex) Get(store kv.IndexCommitmentReadStore, keyValues []prot
 func (p PrimaryKeyIndex) GetByKeyBytes(store kv.IndexCommitmentReadStore, key []byte, keyValues []protoreflect.Value, message proto.Message) (found bool, err error) {
 	bz, err := store.ReadCommitmentStore().Get(key)
 	if err != nil {
-		return true, err
+		return false, err
+	}
+
+	if bz == nil {
+		return false, nil
 	}
 
 	return true, p.Unmarshal(keyValues, bz, message)

@@ -28,7 +28,6 @@ However, Cosmovisor will try to use the `info` field to automatically download a
 For the auto-download to work, Cosmovisor expects it to be either a stringified JSON object (with a specific structure defined through documentation), or a URL that will return such JSON.
 The JSON object identifies URLs used to download the new blockchain executable for different platforms (OS and Architecture, e.g. "linux/amd64").
 Such a URL can either return the executable file directly or can return an archive containing the executable and possibly other assets.
-If an archive contains a `bin/pre-upgrade` file, Cosmovisor executes it (and waits for it to finish) before attempting to restart the chain.
 
 Currently, there is no mechanism that makes Cosmovisor run a command after the upgraded chain has been restarted.
 
@@ -124,9 +123,8 @@ We will update Cosmovisor to look for and handle the new `UpgradeInstructions` i
 If the `UpgradeInstructions` are provided, we will do the following:
 1.  The `info` field will be ignored.
 1.  The `artifacts` field will be used to identify the artifact to download based on the `platform` that Cosmovisor is running in.
-1.  If the artifact is an archive that contains a `bin/pre-upgrade` file, that file will be ignored.
 1.  If a `checksum` is provided (either in the field or as a query param in the `url`), and the downloaded artifact has a different checksum, the upgrade process will be interrupted and Cosmovisor will exit with an error.
-1.  If a `pre_run` command is defined, it will be executed at the same point in the process where the `bin/pre-upgrade` file would have been executed.
+1.  If a `pre_run` command is defined, it will be executed at the same point in the process where the `app pre-upgrade` command would have been executed.
     It will be executed using the same environment as other commands run by Cosmovisor.
 1.  If a `post_run` command is defined, it will be executed after executing the command that restarts the chain.
     It will be executed in a background process using the same environment as the other commands.

@@ -14,13 +14,13 @@ type Debugger interface {
 }
 
 type TestStore struct {
-	db      dbm.DB
+	store   kv.Store
 	decoder Debugger
 	name    string
 }
 
 func (t TestStore) Get(key []byte) ([]byte, error) {
-	val, err := t.db.Get(key)
+	val, err := t.store.Get(key)
 	if err != nil {
 		if t.decoder != nil {
 			t.decoder.Log(fmt.Sprintf("ERR on GET %s: %v", t.decoder.Decode(t.name, key, nil), err))
@@ -34,7 +34,7 @@ func (t TestStore) Get(key []byte) ([]byte, error) {
 }
 
 func (t TestStore) Has(key []byte) (bool, error) {
-	has, err := t.db.Has(key)
+	has, err := t.store.Has(key)
 	if err != nil {
 		if t.decoder != nil {
 			t.decoder.Log(fmt.Sprintf("ERR on HAS %s: %v", t.decoder.Decode(t.name, key, nil), err))
@@ -61,7 +61,7 @@ func (t TestStore) Set(key, value []byte) error {
 	if t.decoder != nil {
 		t.decoder.Log(fmt.Sprintf("SET %s", t.decoder.Decode(t.name, key, value)))
 	}
-	err := t.db.Set(key, value)
+	err := t.store.Set(key, value)
 	if err != nil {
 		if t.decoder != nil {
 			t.decoder.Log(fmt.Sprintf("ERR on SET %s: %v", t.decoder.Decode(t.name, key, value), err))
@@ -75,7 +75,7 @@ func (t TestStore) Delete(key []byte) error {
 	if t.decoder != nil {
 		t.decoder.Log(fmt.Sprintf("DEL %s", t.decoder.Decode(t.name, key, nil)))
 	}
-	err := t.db.Delete(key)
+	err := t.store.Delete(key)
 	if err != nil {
 		if t.decoder != nil {
 			t.decoder.Log(fmt.Sprintf("ERR on SET %s: %v", t.decoder.Decode(t.name, key, nil), err))

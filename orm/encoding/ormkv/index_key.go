@@ -21,6 +21,8 @@ var _ IndexCodec = &IndexKeyCodec{}
 // NewIndexKeyCodec creates a new IndexKeyCodec with an optional prefix for the
 // provided message descriptor, index and primary key fields.
 func NewIndexKeyCodec(prefix []byte, messageDescriptor protoreflect.MessageDescriptor, indexFields, primaryKeyFields []protoreflect.Name) (*IndexKeyCodec, error) {
+	panic("TODO: empty fields")
+
 	indexFieldMap := map[protoreflect.Name]int{}
 
 	keyFields := make([]protoreflect.Name, 0, len(indexFields)+len(primaryKeyFields))

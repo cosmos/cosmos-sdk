@@ -12,9 +12,9 @@ type FieldNames struct {
 	fields string
 }
 
-// CommaSeparatedFields creates a FieldNames instance from a list of comma-separated
+// CommaSeparatedFieldNames creates a FieldNames instance from a list of comma-separated
 // fields.
-func CommaSeparatedFields(fields string) (FieldNames, error) {
+func CommaSeparatedFieldNames(fields string) (FieldNames, error) {
 	// normalize cases where there are spaces
 	if strings.IndexByte(fields, ' ') >= 0 {
 		parts := strings.Split(fields, ",")

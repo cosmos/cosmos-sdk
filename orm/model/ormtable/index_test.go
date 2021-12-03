@@ -1,9 +1,11 @@
-package ormindex
+package ormtable
 
 import (
 	"fmt"
 	"sort"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/orm/model/ormindex"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -46,7 +48,7 @@ func TestUniqueKeyIndex(t *testing.T) {
 		)
 		assert.NilError(t, err)
 
-		index := NewUniqueKeyIndex(uniqueKeyCodec, primaryKeyModel.index.(*PrimaryKeyIndex))
+		index := ormindex.NewUniqueKeyIndex(uniqueKeyCodec, primaryKeyModel.index.(*ormindex.PrimaryKeyIndex))
 
 		for _, datum := range primaryKeyModel.data {
 			err = index.OnCreate(primaryKeyModel.store.IndexStore(), datum.ProtoReflect())
@@ -68,7 +70,7 @@ func TestUniqueKeyIndex(t *testing.T) {
 }
 
 func testUniqueIndex(t *rapid.T, model *IndexModel) {
-	uniqueIndex := model.index.(UniqueIndex)
+	uniqueIndex := model.index.(ormindex.UniqueIndex)
 	for i := 0; i < len(model.data); i++ {
 		x := model.data[i]
 		ks, _, err := uniqueIndex.EncodeKeyFromMessage(x.ProtoReflect())
@@ -87,11 +89,11 @@ func testUniqueIndex(t *rapid.T, model *IndexModel) {
 }
 
 func testIndex(t *rapid.T, model *IndexModel) {
-	it, err := model.index.PrefixIterator(model.store, nil, IteratorOptions{})
+	it, err := model.index.PrefixIterator(model.store, nil, ormindex.IteratorOptions{})
 	assert.NilError(t, err)
 	checkIteratorAgainstSlice(t, it, model.data, model.typ)
 
-	it, err = model.index.PrefixIterator(model.store, nil, IteratorOptions{Reverse: true})
+	it, err = model.index.PrefixIterator(model.store, nil, ormindex.IteratorOptions{Reverse: true})
 	assert.NilError(t, err)
 	checkIteratorAgainstSlice(t, it, reverseData(model.data), model.typ)
 
@@ -102,7 +104,7 @@ func testIndex(t *rapid.T, model *IndexModel) {
 	assert.NilError(t, err)
 	end, _, err := model.index.EncodeKeyFromMessage(model.data[j].ProtoReflect())
 	assert.NilError(t, err)
-	it, err = model.index.RangeIterator(model.store, start, end, IteratorOptions{})
+	it, err = model.index.RangeIterator(model.store, start, end, ormindex.IteratorOptions{})
 	assert.NilError(t, err)
 	checkIteratorAgainstSlice(t, it, model.data[i:j], model.typ)
 
@@ -172,7 +174,7 @@ func PrimaryKeyIndexGen(n int) *rapid.Generator {
 		}
 
 		assert.NilError(t, err)
-		index := NewPrimaryKeyIndex(codec)
+		index := ormindex.NewPrimaryKeyIndex(codec)
 
 		model := &IndexModel{
 			prefix: prefix,
@@ -192,7 +194,7 @@ type IndexModel struct {
 	typ    protoreflect.MessageType
 	prefix []byte
 	data   []proto.Message
-	index  Index
+	index  ormindex.Index
 	store  *memkv.IndexCommitmentStore
 }
 

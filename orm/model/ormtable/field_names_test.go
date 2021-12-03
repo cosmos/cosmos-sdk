@@ -14,7 +14,7 @@ func TestFieldNames(t *testing.T) {
 	names := []protoreflect.Name{"a", "b", "c"}
 
 	abc := "a,b,c"
-	f, err := CommaSeparatedFields(abc)
+	f, err := CommaSeparatedFieldNames(abc)
 	assert.NilError(t, err)
 	assert.Equal(t, FieldNames{abc}, f)
 	assert.DeepEqual(t, names, f.Names())
@@ -22,14 +22,14 @@ func TestFieldNames(t *testing.T) {
 
 	assert.DeepEqual(t, names, f.Names())
 
-	f, err = CommaSeparatedFields("a, b ,c")
+	f, err = CommaSeparatedFieldNames("a, b ,c")
 	assert.NilError(t, err)
 	assert.Equal(t, FieldNames{abc}, f)
 	assert.DeepEqual(t, names, f.Names())
 	assert.Equal(t, abc, f.String())
 
 	// empty okay
-	f, err = CommaSeparatedFields("")
+	f, err = CommaSeparatedFieldNames("")
 	assert.NilError(t, err)
 	assert.Equal(t, FieldNames{""}, f)
 	assert.Equal(t, 0, len(f.Names()))

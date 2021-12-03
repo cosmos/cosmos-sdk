@@ -23,7 +23,13 @@ type UniqueKeyCodec struct {
 // NewUniqueKeyCodec creates a new UniqueKeyCodec with an optional prefix for the
 // provided message descriptor, index and primary key fields.
 func NewUniqueKeyCodec(prefix []byte, messageDescriptor protoreflect.MessageDescriptor, indexFields, primaryKeyFields []protoreflect.Name) (*UniqueKeyCodec, error) {
-	panic("TODO: empty fields")
+	if len(indexFields) == 0 {
+		return nil, ormerrors.InvalidTableDefinition.Wrapf("index fields are empty")
+	}
+
+	if len(primaryKeyFields) == 0 {
+		return nil, ormerrors.InvalidTableDefinition.Wrapf("primary key fields are empty")
+	}
 
 	keyCodec, err := NewKeyCodec(prefix, messageDescriptor, indexFields)
 	if err != nil {

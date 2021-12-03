@@ -65,6 +65,7 @@ func Build(options TableOptions) (Table, error) {
 	table.indexesByFields[pkFields] = pkIndex
 	table.uniqueIndexesByFields[pkFields] = pkIndex
 	table.indexesById[PrimaryKeyId] = pkIndex
+	table.indexes = append(table.indexes, pkIndex)
 
 	for _, idxDesc := range tableDesc.Index {
 		id := idxDesc.Id
@@ -82,8 +83,7 @@ func Build(options TableOptions) (Table, error) {
 		}
 
 		idxPrefix := AppendVarUInt32(options.Prefix, id)
-		var cdc ormkv.IndexCodec
-		var index ormindex.Index
+		var index ormindex.Indexer
 		if idxDesc.Unique {
 			uniqCdc, err := ormkv.NewUniqueKeyCodec(idxPrefix, messageDescriptor, idxFields.Names(), pkFieldNames)
 			if err != nil {
@@ -92,18 +92,17 @@ func Build(options TableOptions) (Table, error) {
 			uniqIdx := ormindex.NewUniqueKeyIndex(uniqCdc, pkIndex)
 			table.uniqueIndexesByFields[idxFields] = uniqIdx
 			index = ormindex.NewUniqueKeyIndex(uniqCdc, pkIndex)
-			cdc = uniqCdc
 		} else {
 			idxCdc, err := ormkv.NewIndexKeyCodec(idxPrefix, messageDescriptor, idxFields.Names(), pkFieldNames)
 			if err != nil {
 				return nil, err
 			}
-			panic("TODO")
-			//idx := ormindex.NewUniqueKeyIndex(uniqCdc, pkIndex)
-			//table.uniqueIndexesByFields[idxFields] = uniqIdx
-			//index = ormindex.NewUniqueKeyIndex(uniqCdc, pkIndex)
-			//cdc = uniqCdc
+			index = ormindex.NewIndexKeyIndex(idxCdc, pkIndex)
 		}
+		table.indexesByFields[idxFields] = index
+		table.indexesById[idxDesc.Id] = index
+		table.indexes = append(table.indexes, index)
+		table.indexers = append(table.indexers, index)
 	}
 
 	return table, nil

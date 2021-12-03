@@ -34,6 +34,8 @@ type IteratorOptions struct {
 }
 
 type Indexer interface {
+	Index
+
 	OnCreate(store kv.Store, message protoreflect.Message) error
 	OnUpdate(store kv.Store, new, existing protoreflect.Message) error
 	OnDelete(store kv.Store, message protoreflect.Message) error

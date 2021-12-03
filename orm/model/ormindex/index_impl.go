@@ -12,12 +12,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 )
 
-type IndexImpl struct {
+type IndexKeyIndex struct {
 	*ormkv.IndexKeyCodec
-	primaryKey PrimaryKeyIndex
+	primaryKey *PrimaryKeyIndex
 }
 
-func (s IndexImpl) PrefixIterator(store kv.IndexCommitmentReadStore, prefix []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error) {
+func NewIndexKeyIndex(indexKeyCodec *ormkv.IndexKeyCodec, primaryKey *PrimaryKeyIndex) *IndexKeyIndex {
+	return &IndexKeyIndex{IndexKeyCodec: indexKeyCodec, primaryKey: primaryKey}
+}
+
+func (s IndexKeyIndex) PrefixIterator(store kv.IndexCommitmentReadStore, prefix []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error) {
 	prefixBz, err := s.EncodeKey(prefix)
 	if err != nil {
 		return nil, err
@@ -26,7 +30,7 @@ func (s IndexImpl) PrefixIterator(store kv.IndexCommitmentReadStore, prefix []pr
 	return prefixIterator(store.ReadIndexStore(), store, s, prefixBz, options)
 }
 
-func (s IndexImpl) RangeIterator(store kv.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error) {
+func (s IndexKeyIndex) RangeIterator(store kv.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error) {
 	err := s.CheckValidRangeIterationKeys(start, end)
 	if err != nil {
 		return nil, err
@@ -45,14 +49,14 @@ func (s IndexImpl) RangeIterator(store kv.IndexCommitmentReadStore, start, end [
 	return rangeIterator(store.ReadIndexStore(), store, s, startBz, endBz, options)
 }
 
-var _ Indexer = &IndexImpl{}
-var _ Index = &IndexImpl{}
+var _ Indexer = &IndexKeyIndex{}
+var _ Index = &IndexKeyIndex{}
 
 var sentinelValue = []byte{0}
 
-func (s IndexImpl) doNotImplement() {}
+func (s IndexKeyIndex) doNotImplement() {}
 
-func (s IndexImpl) OnCreate(store kv.Store, message protoreflect.Message) error {
+func (s IndexKeyIndex) OnCreate(store kv.Store, message protoreflect.Message) error {
 	k, v, err := s.EncodeKVFromMessage(message)
 	if err != nil {
 		return err
@@ -60,7 +64,7 @@ func (s IndexImpl) OnCreate(store kv.Store, message protoreflect.Message) error 
 	return store.Set(k, v)
 }
 
-func (s IndexImpl) OnUpdate(store kv.Store, new, existing protoreflect.Message) error {
+func (s IndexKeyIndex) OnUpdate(store kv.Store, new, existing protoreflect.Message) error {
 	newValues := s.GetKeyValues(new)
 	existingValues := s.GetKeyValues(existing)
 	if s.CompareKeys(newValues, existingValues) == 0 {
@@ -83,7 +87,7 @@ func (s IndexImpl) OnUpdate(store kv.Store, new, existing protoreflect.Message) 
 	return store.Set(newKey, sentinelValue)
 }
 
-func (s IndexImpl) OnDelete(store kv.Store, message protoreflect.Message) error {
+func (s IndexKeyIndex) OnDelete(store kv.Store, message protoreflect.Message) error {
 	_, key, err := s.EncodeKeyFromMessage(message)
 	if err != nil {
 		return err
@@ -91,7 +95,7 @@ func (s IndexImpl) OnDelete(store kv.Store, message protoreflect.Message) error 
 	return store.Delete(key)
 }
 
-func (s IndexImpl) ReadValueFromIndexKey(store kv.IndexCommitmentReadStore, primaryKey []protoreflect.Value, _ []byte, message proto.Message) error {
+func (s IndexKeyIndex) ReadValueFromIndexKey(store kv.IndexCommitmentReadStore, primaryKey []protoreflect.Value, _ []byte, message proto.Message) error {
 	found, err := s.primaryKey.Get(store, primaryKey, message)
 	if err != nil {
 		return err

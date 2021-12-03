@@ -1000,7 +1000,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	var balRes banktypes.QueryAllBalancesResponse
 	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
-	s.Require().True(sendTokens.Amount.Equal(balRes.Balances.AmountOf(s.cfg.BondDenom)))
+	s.Require().Equal(sendTokens.String(), balRes.Balances[0].String())
 
 	// Generate multisig transaction.
 	multiGeneratedTx, err := bankcli.MsgSendExec(

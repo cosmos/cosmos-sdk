@@ -71,7 +71,7 @@ As examples, the following comments are valid:
 and the following ones are NOT valid:
 
 ```protobuf
-// Since cosmos-sdk 0.44
+// Since cosmos-sdk v0.44
 
 // Since: cosmos-sdk 0.42.11 0.44.5
 

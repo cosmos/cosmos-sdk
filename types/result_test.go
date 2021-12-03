@@ -229,14 +229,14 @@ func TestWrapServiceResult(t *testing.T) {
 	require.Nil(t, res)
 	require.NotNil(t, err)
 
-	res, err = sdk.WrapServiceResult(ctx, nil, nil)
+	res, err = sdk.WrapServiceResult(ctx, &testdata.Dog{}, nil)
 	require.NotNil(t, res)
 	require.Nil(t, err)
 	require.Empty(t, res.Events)
 
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	ctx.EventManager().EmitEvent(sdk.NewEvent("test"))
-	res, err = sdk.WrapServiceResult(ctx, nil, nil)
+	res, err = sdk.WrapServiceResult(ctx, &testdata.Dog{}, nil)
 	require.NotNil(t, res)
 	require.Nil(t, err)
 	require.Len(t, res.Events, 1)

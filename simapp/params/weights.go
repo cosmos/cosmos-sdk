@@ -17,8 +17,7 @@ const (
 	DefaultWeightMsgDelegate                    int = 100
 	DefaultWeightMsgUndelegate                  int = 100
 	DefaultWeightMsgBeginRedelegate             int = 100
-
-	DefaultWeightMsgSignalProposal int = 5
+	DefaultWeightMsgSubmitProposal int = 5
 
 	// feegrant
 	DefaultWeightGrantAllowance  int = 100

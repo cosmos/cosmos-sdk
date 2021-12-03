@@ -52,7 +52,7 @@ func TestWeightedOperations(t *testing.T) {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simappparams.DefaultWeightMsgSignalProposal, types.ModuleName, types.TypeMsgSubmitProposal},
+		{simappparams.DefaultWeightMsgSubmitProposal, types.ModuleName, types.TypeMsgSubmitProposal},
 		{simappparams.DefaultWeightMsgDeposit, types.ModuleName, types.TypeMsgDeposit},
 		{simappparams.DefaultWeightMsgVote, types.ModuleName, types.TypeMsgVote},
 		{simappparams.DefaultWeightMsgVoteWeighted, types.ModuleName, types.TypeMsgVoteWeighted},

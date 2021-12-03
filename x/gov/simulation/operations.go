@@ -41,7 +41,7 @@ func WeightedOperations(
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgSubmitProposal, &weightMsgSubmitProposal, nil,
 		func(_ *rand.Rand) {
-			weightMsgSubmitProposal = simappparams.DefaultWeightMsgSignalProposal
+			weightMsgSubmitProposal = simappparams.DefaultWeightMsgSubmitProposal
 		},
 	)
 

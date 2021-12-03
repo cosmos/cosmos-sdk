@@ -12,6 +12,7 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -74,7 +75,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 // them to the db
 func KVStoreHandler(storeKey storetypes.StoreKey) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		dTx, ok := msg.(kvstoreTx)
+		dTx, ok := msg.(*kvstoreTx)
 		if !ok {
 			return nil, errors.New("KVStoreHandler should only receive kvstoreTx")
 		}
@@ -86,8 +87,14 @@ func KVStoreHandler(storeKey storetypes.StoreKey) sdk.Handler {
 		store := ctx.KVStore(storeKey)
 		store.Set(key, value)
 
+		any, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			return nil, err
+		}
+
 		return &sdk.Result{
-			Log: fmt.Sprintf("set %s=%s", key, value),
+			Log:          fmt.Sprintf("set %s=%s", key, value),
+			MsgResponses: []*codectypes.Any{any},
 		}, nil
 	}
 }

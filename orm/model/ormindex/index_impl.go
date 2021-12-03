@@ -14,11 +14,11 @@ import (
 
 type IndexImpl struct {
 	*ormkv.IndexKeyCodec
-	primaryKey PrimaryKey
+	primaryKey PrimaryKeyIndex
 }
 
 func (s IndexImpl) PrefixIterator(store kv.IndexCommitmentReadStore, prefix []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error) {
-	prefixBz, err := s.Encode(prefix)
+	prefixBz, err := s.EncodeKey(prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -32,12 +32,12 @@ func (s IndexImpl) RangeIterator(store kv.IndexCommitmentReadStore, start, end [
 		return nil, err
 	}
 
-	startBz, err := s.Encode(start)
+	startBz, err := s.EncodeKey(start)
 	if err != nil {
 		return nil, err
 	}
 
-	endBz, err := s.Encode(end)
+	endBz, err := s.EncodeKey(end)
 	if err != nil {
 		return nil, err
 	}
@@ -61,13 +61,13 @@ func (s IndexImpl) OnCreate(store kv.Store, message protoreflect.Message) error 
 }
 
 func (s IndexImpl) OnUpdate(store kv.Store, new, existing protoreflect.Message) error {
-	newValues := s.GetValues(new)
-	existingValues := s.GetValues(existing)
-	if s.CompareValues(newValues, existingValues) == 0 {
+	newValues := s.GetKeyValues(new)
+	existingValues := s.GetKeyValues(existing)
+	if s.CompareKeys(newValues, existingValues) == 0 {
 		return nil
 	}
 
-	existingKey, err := s.Encode(existingValues)
+	existingKey, err := s.EncodeKey(existingValues)
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func (s IndexImpl) OnUpdate(store kv.Store, new, existing protoreflect.Message) 
 		return err
 	}
 
-	newKey, err := s.Encode(newValues)
+	newKey, err := s.EncodeKey(newValues)
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func (s IndexImpl) OnUpdate(store kv.Store, new, existing protoreflect.Message) 
 }
 
 func (s IndexImpl) OnDelete(store kv.Store, message protoreflect.Message) error {
-	_, key, err := s.EncodeFromMessage(message)
+	_, key, err := s.EncodeKeyFromMessage(message)
 	if err != nil {
 		return err
 	}

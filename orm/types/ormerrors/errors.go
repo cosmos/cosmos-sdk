@@ -28,4 +28,5 @@ var (
 	UnexpectedError               = errors.New(codespace, 21, "unexpected error")
 	InvalidRangeIterationKeys     = errors.New(codespace, 22, "invalid range iteration keys")
 	JSONImportError               = errors.New(codespace, 23, "json import error")
+	UniqueKeyViolation            = errors.New(codespace, 24, "unique key violation")
 )

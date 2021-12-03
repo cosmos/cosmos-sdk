@@ -66,12 +66,12 @@ func NewKeyCodec(prefix []byte, messageDescriptor protoreflect.MessageDescriptor
 	}, nil
 }
 
-// Encode encodes the values assuming that they correspond to the fields
+// EncodeKey encodes the values assuming that they correspond to the fields
 // specified for the key. If the array of values is shorter than the
 // number of fields in the key, a partial "prefix" key will be encoded
 // which can be used for constructing a prefix iterator.
-func (cdc *KeyCodec) Encode(values []protoreflect.Value) ([]byte, error) {
-	sz, err := cdc.ComputeBufferSize(values)
+func (cdc *KeyCodec) EncodeKey(values []protoreflect.Value) ([]byte, error) {
+	sz, err := cdc.ComputeKeyBufferSize(values)
 	if err != nil {
 		return nil, err
 	}
@@ -94,8 +94,8 @@ func (cdc *KeyCodec) Encode(values []protoreflect.Value) ([]byte, error) {
 	return w.Bytes(), nil
 }
 
-// GetValues extracts the values specified by the key fields from the message.
-func (cdc *KeyCodec) GetValues(message protoreflect.Message) []protoreflect.Value {
+// GetKeyValues extracts the values specified by the key fields from the message.
+func (cdc *KeyCodec) GetKeyValues(message protoreflect.Message) []protoreflect.Value {
 	res := make([]protoreflect.Value, len(cdc.fieldDescriptors))
 	for i, f := range cdc.fieldDescriptors {
 		res[i] = message.Get(f)
@@ -103,11 +103,11 @@ func (cdc *KeyCodec) GetValues(message protoreflect.Message) []protoreflect.Valu
 	return res
 }
 
-// Decode decodes the values in the key specified by the reader. If the
+// DecodeKey decodes the values in the key specified by the reader. If the
 // provided key is a prefix key, the values that could be decoded will
 // be returned with io.EOF as the error.
-func (cdc *KeyCodec) Decode(r *bytes.Reader) ([]protoreflect.Value, error) {
-	if err := skipPrefix(r, cdc.prefix); err != nil {
+func (cdc *KeyCodec) DecodeKey(r *bytes.Reader) ([]protoreflect.Value, error) {
+	if err := SkipPrefix(r, cdc.prefix); err != nil {
 		return nil, err
 	}
 
@@ -125,10 +125,10 @@ func (cdc *KeyCodec) Decode(r *bytes.Reader) ([]protoreflect.Value, error) {
 	return values, nil
 }
 
-// EncodeFromMessage combines GetValues and Encode.
-func (cdc *KeyCodec) EncodeFromMessage(message protoreflect.Message) ([]protoreflect.Value, []byte, error) {
-	values := cdc.GetValues(message)
-	bz, err := cdc.Encode(values)
+// EncodeKeyFromMessage combines GetKeyValues and EncodeKey.
+func (cdc *KeyCodec) EncodeKeyFromMessage(message protoreflect.Message) ([]protoreflect.Value, []byte, error) {
+	values := cdc.GetKeyValues(message)
+	bz, err := cdc.EncodeKey(values)
 	return values, bz, err
 }
 
@@ -142,12 +142,12 @@ func (cdc *KeyCodec) IsFullyOrdered() bool {
 	return true
 }
 
-// CompareValues compares the provided values which must correspond to the
+// CompareKeys compares the provided values which must correspond to the
 // fields in this key. Prefix keys of different lengths are supported but the
 // function will panic if either array is too long. A negative value is returned
 // if values1 is less than values2, 0 is returned if the two arrays are equal,
 // and a positive value is returned if values2 is greater.
-func (cdc *KeyCodec) CompareValues(values1, values2 []protoreflect.Value) int {
+func (cdc *KeyCodec) CompareKeys(values1, values2 []protoreflect.Value) int {
 	j := len(values1)
 	k := len(values2)
 	n := j
@@ -178,9 +178,9 @@ func (cdc *KeyCodec) CompareValues(values1, values2 []protoreflect.Value) int {
 	}
 }
 
-// ComputeBufferSize computes the required buffer size for the provided values
+// ComputeKeyBufferSize computes the required buffer size for the provided values
 // which can represent a full or prefix key.
-func (cdc KeyCodec) ComputeBufferSize(values []protoreflect.Value) (int, error) {
+func (cdc KeyCodec) ComputeKeyBufferSize(values []protoreflect.Value) (int, error) {
 	size := cdc.fixedSize
 	n := len(values)
 	for _, sz := range cdc.variableSizers {
@@ -198,10 +198,10 @@ func (cdc KeyCodec) ComputeBufferSize(values []protoreflect.Value) (int, error) 
 	return size, nil
 }
 
-// SetValues sets the provided values on the message which must correspond
+// SetKeyValues sets the provided values on the message which must correspond
 // exactly to the field descriptors for this key. Prefix keys aren't
 // supported.
-func (cdc *KeyCodec) SetValues(message protoreflect.Message, values []protoreflect.Value) {
+func (cdc *KeyCodec) SetKeyValues(message protoreflect.Message, values []protoreflect.Value) {
 	for i, f := range cdc.fieldDescriptors {
 		message.Set(f, values[i])
 	}

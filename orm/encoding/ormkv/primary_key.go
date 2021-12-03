@@ -36,7 +36,7 @@ func NewPrimaryKeyCodec(prefix []byte, msgType protoreflect.MessageType, fieldNa
 var _ IndexCodec = PrimaryKeyCodec{}
 
 func (p PrimaryKeyCodec) DecodeIndexKey(k, _ []byte) (indexFields, primaryKey []protoreflect.Value, err error) {
-	indexFields, err = p.Decode(bytes.NewReader(k))
+	indexFields, err = p.DecodeKey(bytes.NewReader(k))
 
 	// got prefix key
 	if err == io.EOF {
@@ -55,7 +55,7 @@ func (p PrimaryKeyCodec) DecodeIndexKey(k, _ []byte) (indexFields, primaryKey []
 }
 
 func (p PrimaryKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
-	values, err := p.Decode(bytes.NewReader(k))
+	values, err := p.DecodeKey(bytes.NewReader(k))
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (p PrimaryKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 		)
 	}
 
-	k, err = p.KeyCodec.Encode(pkEntry.Key)
+	k, err = p.KeyCodec.EncodeKey(pkEntry.Key)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -104,7 +104,7 @@ func (p PrimaryKeyCodec) marshal(key []protoreflect.Value, message proto.Message
 	}
 
 	// set the primary key values again returning the message to its original state
-	p.SetValues(message.ProtoReflect(), key)
+	p.SetKeyValues(message.ProtoReflect(), key)
 
 	return v, nil
 }
@@ -122,16 +122,20 @@ func (p *PrimaryKeyCodec) Unmarshal(key []protoreflect.Value, value []byte, mess
 	}
 
 	// rehydrate primary key
-	p.SetValues(message.ProtoReflect(), key)
+	p.SetKeyValues(message.ProtoReflect(), key)
 	return nil
 }
 
 func (p PrimaryKeyCodec) EncodeKVFromMessage(message protoreflect.Message) (k, v []byte, err error) {
-	ks, k, err := p.KeyCodec.EncodeFromMessage(message)
+	ks, k, err := p.KeyCodec.EncodeKeyFromMessage(message)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	v, err = p.marshal(ks, message.Interface())
 	return k, v, err
+}
+
+func (p PrimaryKeyCodec) MessageType() protoreflect.MessageType {
+	return p.msgType
 }

@@ -27,4 +27,8 @@ type IndexCodec interface {
 
 	// EncodeKVFromMessage encodes a kv-pair for the index from a message.
 	EncodeKVFromMessage(message protoreflect.Message) (k, v []byte, err error)
+
+	CompareKeys(key1, key2 []protoreflect.Value) int
+
+	EncodeKeyFromMessage(message protoreflect.Message) (keyValues []protoreflect.Value, key []byte, err error)
 }

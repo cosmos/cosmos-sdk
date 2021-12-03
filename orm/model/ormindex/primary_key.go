@@ -10,12 +10,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 )
 
-type PrimaryKey struct {
+type PrimaryKeyIndex struct {
 	*ormkv.PrimaryKeyCodec
 }
 
-func (p PrimaryKey) PrefixIterator(store kv.IndexCommitmentReadStore, prefix []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error) {
-	prefixBz, err := p.Encode(prefix)
+func NewPrimaryKeyIndex(primaryKeyCodec *ormkv.PrimaryKeyCodec) *PrimaryKeyIndex {
+	return &PrimaryKeyIndex{PrimaryKeyCodec: primaryKeyCodec}
+}
+
+func (p PrimaryKeyIndex) PrefixIterator(store kv.IndexCommitmentReadStore, prefix []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error) {
+	prefixBz, err := p.EncodeKey(prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -23,18 +27,18 @@ func (p PrimaryKey) PrefixIterator(store kv.IndexCommitmentReadStore, prefix []p
 	return prefixIterator(store.ReadCommitmentStore(), store, p, prefixBz, options)
 }
 
-func (p PrimaryKey) RangeIterator(store kv.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error) {
+func (p PrimaryKeyIndex) RangeIterator(store kv.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error) {
 	err := p.CheckValidRangeIterationKeys(start, end)
 	if err != nil {
 		return nil, err
 	}
 
-	startBz, err := p.Encode(start)
+	startBz, err := p.EncodeKey(start)
 	if err != nil {
 		return nil, err
 	}
 
-	endBz, err := p.Encode(end)
+	endBz, err := p.EncodeKey(end)
 	if err != nil {
 		return nil, err
 	}
@@ -42,10 +46,10 @@ func (p PrimaryKey) RangeIterator(store kv.IndexCommitmentReadStore, start, end 
 	return rangeIterator(store.ReadCommitmentStore(), store, p, startBz, endBz, options)
 }
 
-func (p PrimaryKey) doNotImplement() {}
+func (p PrimaryKeyIndex) doNotImplement() {}
 
-func (p PrimaryKey) Has(store kv.IndexCommitmentReadStore, key []protoreflect.Value) (found bool, err error) {
-	keyBz, err := p.Encode(key)
+func (p PrimaryKeyIndex) Has(store kv.IndexCommitmentReadStore, key []protoreflect.Value) (found bool, err error) {
+	keyBz, err := p.EncodeKey(key)
 	if err != nil {
 		return false, err
 	}
@@ -53,8 +57,8 @@ func (p PrimaryKey) Has(store kv.IndexCommitmentReadStore, key []protoreflect.Va
 	return store.ReadCommitmentStore().Has(keyBz)
 }
 
-func (p PrimaryKey) Get(store kv.IndexCommitmentReadStore, keyValues []protoreflect.Value, message proto.Message) (found bool, err error) {
-	key, err := p.Encode(keyValues)
+func (p PrimaryKeyIndex) Get(store kv.IndexCommitmentReadStore, keyValues []protoreflect.Value, message proto.Message) (found bool, err error) {
+	key, err := p.EncodeKey(keyValues)
 	if err != nil {
 		return false, err
 	}
@@ -62,7 +66,7 @@ func (p PrimaryKey) Get(store kv.IndexCommitmentReadStore, keyValues []protorefl
 	return p.GetByKeyBytes(store, key, keyValues, message)
 }
 
-func (p PrimaryKey) GetByKeyBytes(store kv.IndexCommitmentReadStore, key []byte, keyValues []protoreflect.Value, message proto.Message) (found bool, err error) {
+func (p PrimaryKeyIndex) GetByKeyBytes(store kv.IndexCommitmentReadStore, key []byte, keyValues []protoreflect.Value, message proto.Message) (found bool, err error) {
 	bz, err := store.ReadCommitmentStore().Get(key)
 	if err != nil {
 		return true, err
@@ -71,8 +75,8 @@ func (p PrimaryKey) GetByKeyBytes(store kv.IndexCommitmentReadStore, key []byte,
 	return true, p.Unmarshal(keyValues, bz, message)
 }
 
-func (p PrimaryKey) ReadValueFromIndexKey(_ kv.IndexCommitmentReadStore, primaryKey []protoreflect.Value, value []byte, message proto.Message) error {
+func (p PrimaryKeyIndex) ReadValueFromIndexKey(_ kv.IndexCommitmentReadStore, primaryKey []protoreflect.Value, value []byte, message proto.Message) error {
 	return p.Unmarshal(primaryKey, value, message)
 }
 
-var _ UniqueIndex = &PrimaryKey{}
+var _ UniqueIndex = &PrimaryKeyIndex{}

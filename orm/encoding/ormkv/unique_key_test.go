@@ -27,8 +27,8 @@ func TestUniqueKeyCodec(t *testing.T) {
 		assert.NilError(t, err)
 		for i := 0; i < 100; i++ {
 			a := testutil.GenA.Draw(t, fmt.Sprintf("a%d", i)).(*testpb.A)
-			key := keyCodec.Codec.GetValues(a.ProtoReflect())
-			pk := pkCodec.Codec.GetValues(a.ProtoReflect())
+			key := keyCodec.Codec.GetKeyValues(a.ProtoReflect())
+			pk := pkCodec.Codec.GetKeyValues(a.ProtoReflect())
 			uniq1 := &ormkv.IndexKeyEntry{
 				TableName:   desc.FullName(),
 				Fields:      keyCodec.Codec.GetFieldNames(),
@@ -47,16 +47,16 @@ func TestUniqueKeyCodec(t *testing.T) {
 			entry2, err := uniqueKeyCdc.DecodeEntry(k, v)
 			assert.NilError(t, err)
 			uniq2 := entry2.(*ormkv.IndexKeyEntry)
-			assert.Equal(t, 0, keyCodec.Codec.CompareValues(uniq1.IndexValues, uniq2.IndexValues))
-			assert.Equal(t, 0, pkCodec.Codec.CompareValues(uniq1.PrimaryKey, uniq2.PrimaryKey))
+			assert.Equal(t, 0, keyCodec.Codec.CompareKeys(uniq1.IndexValues, uniq2.IndexValues))
+			assert.Equal(t, 0, pkCodec.Codec.CompareKeys(uniq1.PrimaryKey, uniq2.PrimaryKey))
 			assert.Equal(t, true, uniq2.IsUnique)
 			assert.Equal(t, desc.FullName(), uniq2.TableName)
 			assert.DeepEqual(t, uniq1.Fields, uniq2.Fields)
 
 			idxFields, pk2, err := uniqueKeyCdc.DecodeIndexKey(k, v)
 			assert.NilError(t, err)
-			assert.Equal(t, 0, keyCodec.Codec.CompareValues(key, idxFields))
-			assert.Equal(t, 0, pkCodec.Codec.CompareValues(pk, pk2))
+			assert.Equal(t, 0, keyCodec.Codec.CompareKeys(key, idxFields))
+			assert.Equal(t, 0, pkCodec.Codec.CompareKeys(pk, pk2))
 		}
 	})
 }

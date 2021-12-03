@@ -12,13 +12,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 )
 
-type UniqueIndexImpl struct {
-	ormkv.UniqueKeyCodec
-	primaryKey PrimaryKey
+type UniqueKeyIndex struct {
+	*ormkv.UniqueKeyCodec
+	primaryKey *PrimaryKeyIndex
 }
 
-func (u UniqueIndexImpl) PrefixIterator(store kv.IndexCommitmentReadStore, prefix []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error) {
-	prefixBz, err := u.GetKeyCodec().Encode(prefix)
+func NewUniqueKeyIndex(uniqueKeyCodec *ormkv.UniqueKeyCodec, primaryKey *PrimaryKeyIndex) *UniqueKeyIndex {
+	return &UniqueKeyIndex{UniqueKeyCodec: uniqueKeyCodec, primaryKey: primaryKey}
+}
+
+func (u UniqueKeyIndex) PrefixIterator(store kv.IndexCommitmentReadStore, prefix []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error) {
+	prefixBz, err := u.GetKeyCodec().EncodeKey(prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -26,19 +30,19 @@ func (u UniqueIndexImpl) PrefixIterator(store kv.IndexCommitmentReadStore, prefi
 	return prefixIterator(store.ReadIndexStore(), store, u, prefixBz, options)
 }
 
-func (u UniqueIndexImpl) RangeIterator(store kv.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error) {
+func (u UniqueKeyIndex) RangeIterator(store kv.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error) {
 	keyCodec := u.GetKeyCodec()
 	err := keyCodec.CheckValidRangeIterationKeys(start, end)
 	if err != nil {
 		return nil, err
 	}
 
-	startBz, err := keyCodec.Encode(start)
+	startBz, err := keyCodec.EncodeKey(start)
 	if err != nil {
 		return nil, err
 	}
 
-	endBz, err := keyCodec.Encode(end)
+	endBz, err := keyCodec.EncodeKey(end)
 	if err != nil {
 		return nil, err
 	}
@@ -46,10 +50,10 @@ func (u UniqueIndexImpl) RangeIterator(store kv.IndexCommitmentReadStore, start,
 	return rangeIterator(store.ReadIndexStore(), store, u, startBz, endBz, options)
 }
 
-func (u UniqueIndexImpl) doNotImplement() {}
+func (u UniqueKeyIndex) doNotImplement() {}
 
-func (u UniqueIndexImpl) Has(store kv.IndexCommitmentReadStore, keyValues []protoreflect.Value) (found bool, err error) {
-	key, err := u.GetKeyCodec().Encode(keyValues)
+func (u UniqueKeyIndex) Has(store kv.IndexCommitmentReadStore, keyValues []protoreflect.Value) (found bool, err error) {
+	key, err := u.GetKeyCodec().EncodeKey(keyValues)
 	if err != nil {
 		return false, err
 	}
@@ -57,8 +61,8 @@ func (u UniqueIndexImpl) Has(store kv.IndexCommitmentReadStore, keyValues []prot
 	return store.ReadIndexStore().Has(key)
 }
 
-func (u UniqueIndexImpl) Get(store kv.IndexCommitmentReadStore, keyValues []protoreflect.Value, message proto.Message) (found bool, err error) {
-	key, err := u.GetKeyCodec().Encode(keyValues)
+func (u UniqueKeyIndex) Get(store kv.IndexCommitmentReadStore, keyValues []protoreflect.Value, message proto.Message) (found bool, err error) {
+	key, err := u.GetKeyCodec().EncodeKey(keyValues)
 	if err != nil {
 		return false, err
 	}
@@ -75,38 +79,57 @@ func (u UniqueIndexImpl) Get(store kv.IndexCommitmentReadStore, keyValues []prot
 	return true, proto.Unmarshal(bz, message)
 }
 
-func (u UniqueIndexImpl) OnCreate(store kv.Store, message protoreflect.Message) error {
+func (u UniqueKeyIndex) OnCreate(store kv.Store, message protoreflect.Message) error {
 	k, v, err := u.EncodeKVFromMessage(message)
 	if err != nil {
 		return err
 	}
 
-	return store.Set(k, v)
-}
-
-func (u UniqueIndexImpl) OnUpdate(store kv.Store, new, existing protoreflect.Message) error {
-	keyCodec := u.GetKeyCodec()
-	newValues := keyCodec.GetValues(new)
-	existingValues := keyCodec.GetValues(existing)
-	if keyCodec.CompareValues(newValues, existingValues) == 0 {
-		return nil
-	}
-
-	existingKey, err := keyCodec.Encode(existingValues)
+	has, err := store.Has(k)
 	if err != nil {
 		return err
 	}
+
+	if has {
+		return ormerrors.UniqueKeyViolation
+	}
+
+	return store.Set(k, v)
+}
+
+func (u UniqueKeyIndex) OnUpdate(store kv.Store, new, existing protoreflect.Message) error {
+	keyCodec := u.GetKeyCodec()
+	newValues := keyCodec.GetKeyValues(new)
+	existingValues := keyCodec.GetKeyValues(existing)
+	if keyCodec.CompareKeys(newValues, existingValues) == 0 {
+		return nil
+	}
+
+	newKey, err := keyCodec.EncodeKey(newValues)
+	if err != nil {
+		return err
+	}
+
+	has, err := store.Has(newKey)
+	if err != nil {
+		return err
+	}
+
+	if has {
+		return ormerrors.UniqueKeyViolation
+	}
+
+	existingKey, err := keyCodec.EncodeKey(existingValues)
+	if err != nil {
+		return err
+	}
+
 	err = store.Delete(existingKey)
 	if err != nil {
 		return err
 	}
 
-	newKey, err := keyCodec.Encode(newValues)
-	if err != nil {
-		return err
-	}
-
-	_, value, err := u.GetValueCodec().EncodeFromMessage(new)
+	_, value, err := u.GetValueCodec().EncodeKeyFromMessage(new)
 	if err != nil {
 		return err
 	}
@@ -114,8 +137,8 @@ func (u UniqueIndexImpl) OnUpdate(store kv.Store, new, existing protoreflect.Mes
 	return store.Set(newKey, value)
 }
 
-func (u UniqueIndexImpl) OnDelete(store kv.Store, message protoreflect.Message) error {
-	_, key, err := u.GetKeyCodec().EncodeFromMessage(message)
+func (u UniqueKeyIndex) OnDelete(store kv.Store, message protoreflect.Message) error {
+	_, key, err := u.GetKeyCodec().EncodeKeyFromMessage(message)
 	if err != nil {
 		return err
 	}
@@ -123,7 +146,7 @@ func (u UniqueIndexImpl) OnDelete(store kv.Store, message protoreflect.Message) 
 	return store.Delete(key)
 }
 
-func (u UniqueIndexImpl) ReadValueFromIndexKey(store kv.IndexCommitmentReadStore, primaryKey []protoreflect.Value, _ []byte, message proto.Message) error {
+func (u UniqueKeyIndex) ReadValueFromIndexKey(store kv.IndexCommitmentReadStore, primaryKey []protoreflect.Value, _ []byte, message proto.Message) error {
 	found, err := u.primaryKey.Get(store, primaryKey, message)
 	if err != nil {
 		return err
@@ -136,5 +159,5 @@ func (u UniqueIndexImpl) ReadValueFromIndexKey(store kv.IndexCommitmentReadStore
 	return nil
 }
 
-var _ Indexer = &UniqueIndexImpl{}
-var _ UniqueIndex = &UniqueIndexImpl{}
+var _ Indexer = &UniqueKeyIndex{}
+var _ UniqueIndex = &UniqueKeyIndex{}

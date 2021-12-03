@@ -57,7 +57,7 @@ func NewIndexKeyCodec(prefix []byte, messageDescriptor protoreflect.MessageDescr
 
 func (cdc IndexKeyCodec) DecodeIndexKey(k, _ []byte) (indexFields, primaryKey []protoreflect.Value, err error) {
 
-	values, err := cdc.Decode(bytes.NewReader(k))
+	values, err := cdc.DecodeKey(bytes.NewReader(k))
 	// got prefix key
 	if err == io.EOF {
 		return values, nil, nil
@@ -104,7 +104,7 @@ func (cdc IndexKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 		return nil, nil, ormerrors.BadDecodeEntry
 	}
 
-	bz, err := cdc.KeyCodec.Encode(indexEntry.IndexValues)
+	bz, err := cdc.KeyCodec.EncodeKey(indexEntry.IndexValues)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -115,6 +115,6 @@ func (cdc IndexKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 var sentinel = []byte{0}
 
 func (cdc IndexKeyCodec) EncodeKVFromMessage(message protoreflect.Message) (k, v []byte, err error) {
-	_, k, err = cdc.EncodeFromMessage(message)
+	_, k, err = cdc.EncodeKeyFromMessage(message)
 	return k, sentinel, err
 }

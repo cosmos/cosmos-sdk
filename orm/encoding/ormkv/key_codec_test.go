@@ -29,18 +29,18 @@ func TestKeyCodec(t *testing.T) {
 				keyValues2 := key.Draw(t, "values2")
 				bz2 := assertEncDecKey(t, key, keyValues2)
 				// bytes comparison should equal comparison of values
-				assert.Equal(t, key.Codec.CompareValues(keyValues, keyValues2), bytes.Compare(bz1, bz2))
+				assert.Equal(t, key.Codec.CompareKeys(keyValues, keyValues2), bytes.Compare(bz1, bz2))
 			}
 		}
 	})
 }
 
 func assertEncDecKey(t *rapid.T, key testutil.TestKeyCodec, keyValues []protoreflect.Value) []byte {
-	bz, err := key.Codec.Encode(keyValues)
+	bz, err := key.Codec.EncodeKey(keyValues)
 	assert.NilError(t, err)
-	keyValues2, err := key.Codec.Decode(bytes.NewReader(bz))
+	keyValues2, err := key.Codec.DecodeKey(bytes.NewReader(bz))
 	assert.NilError(t, err)
-	assert.Equal(t, 0, key.Codec.CompareValues(keyValues, keyValues2))
+	assert.Equal(t, 0, key.Codec.CompareKeys(keyValues, keyValues2))
 	return bz
 }
 
@@ -174,7 +174,7 @@ func TestCompareValues(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			assert.Equal(
 				t, test.expect,
-				cdc.CompareValues(test.values1, test.values2),
+				cdc.CompareKeys(test.values1, test.values2),
 			)
 			// CheckValidRangeIterationKeys should give comparable results
 			err := cdc.CheckValidRangeIterationKeys(test.values1, test.values2)
@@ -204,11 +204,11 @@ func TestDecodePrefixKey(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			bz, err := cdc.Encode(test.values)
+			bz, err := cdc.EncodeKey(test.values)
 			assert.NilError(t, err)
-			values, err := cdc.Decode(bytes.NewReader(bz))
+			values, err := cdc.DecodeKey(bytes.NewReader(bz))
 			assert.ErrorType(t, err, io.EOF)
-			assert.Equal(t, 0, cdc.CompareValues(test.values, values))
+			assert.Equal(t, 0, cdc.CompareKeys(test.values, values))
 		})
 	}
 }
@@ -306,13 +306,13 @@ func TestGetSet(t *testing.T) {
 
 	var a testpb.A
 	values := testutil.ValuesOf(uint32(4), "abc", int32(1))
-	cdc.SetValues(a.ProtoReflect(), values)
-	values2 := cdc.GetValues(a.ProtoReflect())
-	assert.Equal(t, 0, cdc.CompareValues(values, values2))
-	bz, err := cdc.Encode(values)
+	cdc.SetKeyValues(a.ProtoReflect(), values)
+	values2 := cdc.GetKeyValues(a.ProtoReflect())
+	assert.Equal(t, 0, cdc.CompareKeys(values, values2))
+	bz, err := cdc.EncodeKey(values)
 	assert.NilError(t, err)
-	values3, bz2, err := cdc.EncodeFromMessage(a.ProtoReflect())
+	values3, bz2, err := cdc.EncodeKeyFromMessage(a.ProtoReflect())
 	assert.NilError(t, err)
-	assert.Equal(t, 0, cdc.CompareValues(values, values3))
+	assert.Equal(t, 0, cdc.CompareKeys(values, values3))
 	assert.Assert(t, bytes.Equal(bz, bz2))
 }

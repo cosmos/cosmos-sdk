@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-func skipPrefix(r *bytes.Reader, prefix []byte) error {
+func SkipPrefix(r *bytes.Reader, prefix []byte) error {
 	n := len(prefix)
 	if n > 0 {
 		// we skip checking the prefix for performance reasons because we assume

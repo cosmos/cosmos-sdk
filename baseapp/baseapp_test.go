@@ -23,6 +23,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
@@ -148,7 +149,14 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 		legacyRouter.AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			kv := msg.(*msgKeyValue)
 			bapp.CMS().GetCommitKVStore(capKey2).Set(kv.Key, kv.Value)
-			return &sdk.Result{}, nil
+			any, err := codectypes.NewAnyWithValue(msg)
+			if err != nil {
+				return nil, err
+			}
+
+			return &sdk.Result{
+				MsgResponses: []*codectypes.Any{any},
+			}, nil
 		}))
 		txHandler := testTxHandler(
 			middleware.TxHandlerOptions{
@@ -716,7 +724,7 @@ func (tx *txTest) setFailOnAnte(fail bool) {
 
 func (tx *txTest) setFailOnHandler(fail bool) {
 	for i, msg := range tx.Msgs {
-		tx.Msgs[i] = msgCounter{msg.(msgCounter).Counter, fail}
+		tx.Msgs[i] = &msgCounter{msg.(*msgCounter).Counter, fail}
 	}
 }
 
@@ -744,16 +752,16 @@ type msgCounter struct {
 }
 
 // dummy implementation of proto.Message
-func (msg msgCounter) Reset()         {}
-func (msg msgCounter) String() string { return "TODO" }
-func (msg msgCounter) ProtoMessage()  {}
+func (msg *msgCounter) Reset()         {}
+func (msg *msgCounter) String() string { return "TODO" }
+func (msg *msgCounter) ProtoMessage()  {}
 
 // Implements Msg
-func (msg msgCounter) Route() string                { return routeMsgCounter }
-func (msg msgCounter) Type() string                 { return "counter1" }
-func (msg msgCounter) GetSignBytes() []byte         { return nil }
-func (msg msgCounter) GetSigners() []sdk.AccAddress { return nil }
-func (msg msgCounter) ValidateBasic() error {
+func (msg *msgCounter) Route() string                { return routeMsgCounter }
+func (msg *msgCounter) Type() string                 { return "counter1" }
+func (msg *msgCounter) GetSignBytes() []byte         { return nil }
+func (msg *msgCounter) GetSigners() []sdk.AccAddress { return nil }
+func (msg *msgCounter) ValidateBasic() error {
 	if msg.Counter >= 0 {
 		return nil
 	}
@@ -763,7 +771,7 @@ func (msg msgCounter) ValidateBasic() error {
 func newTxCounter(counter int64, msgCounters ...int64) txTest {
 	msgs := make([]sdk.Msg, 0, len(msgCounters))
 	for _, c := range msgCounters {
-		msgs = append(msgs, msgCounter{c, false})
+		msgs = append(msgs, &msgCounter{c, false})
 	}
 
 	return txTest{msgs, counter, false, math.MaxUint64}
@@ -903,6 +911,14 @@ func handlerMsgCounter(t *testing.T, capKey storetypes.StoreKey, deliverKey []by
 		}
 
 		res.Events = ctx.EventManager().Events().ToABCIEvents()
+
+		any, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			return nil, err
+		}
+
+		res.MsgResponses = []*codectypes.Any{any}
+
 		return res, nil
 	}
 }
@@ -1153,7 +1169,15 @@ func TestSimulateTx(t *testing.T) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			ctx.GasMeter().ConsumeGas(gasConsumed, "test")
-			return &sdk.Result{}, nil
+			// Return dummy MsgResponse for msgCounter.
+			any, err := codectypes.NewAnyWithValue(&testdata.Dog{})
+			if err != nil {
+				return nil, err
+			}
+
+			return &sdk.Result{
+				MsgResponses: []*codectypes.Any{any},
+			}, nil
 		})
 		legacyRouter.AddRoute(r)
 		txHandler := testTxHandler(
@@ -1221,7 +1245,14 @@ func TestRunInvalidTransaction(t *testing.T) {
 	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			return &sdk.Result{}, nil
+			any, err := codectypes.NewAnyWithValue(msg)
+			if err != nil {
+				return nil, err
+			}
+
+			return &sdk.Result{
+				MsgResponses: []*codectypes.Any{any},
+			}, nil
 		})
 		legacyRouter.AddRoute(r)
 		txHandler := testTxHandler(
@@ -1269,7 +1300,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 
 		for _, testCase := range testCases {
 			tx := testCase.tx
-			_, result, err := app.SimDeliver(aminoTxEncoder(), tx)
+			_, _, err := app.SimDeliver(aminoTxEncoder(), tx)
 
 			if testCase.fail {
 				require.Error(t, err)
@@ -1278,14 +1309,14 @@ func TestRunInvalidTransaction(t *testing.T) {
 				require.EqualValues(t, sdkerrors.ErrInvalidSequence.Codespace(), space, err)
 				require.EqualValues(t, sdkerrors.ErrInvalidSequence.ABCICode(), code, err)
 			} else {
-				require.NotNil(t, result)
+				require.NoError(t, err)
 			}
 		}
 	}
 
 	// transaction with no known route
 	{
-		unknownRouteTx := txTest{[]sdk.Msg{msgNoRoute{}}, 0, false, math.MaxUint64}
+		unknownRouteTx := txTest{[]sdk.Msg{&msgNoRoute{}}, 0, false, math.MaxUint64}
 		_, result, err := app.SimDeliver(aminoTxEncoder(), unknownRouteTx)
 		require.Error(t, err)
 		require.Nil(t, result)
@@ -1294,7 +1325,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), space, err)
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 
-		unknownRouteTx = txTest{[]sdk.Msg{msgCounter{}, msgNoRoute{}}, 0, false, math.MaxUint64}
+		unknownRouteTx = txTest{[]sdk.Msg{&msgCounter{}, &msgNoRoute{}}, 0, false, math.MaxUint64}
 		_, result, err = app.SimDeliver(aminoTxEncoder(), unknownRouteTx)
 		require.Error(t, err)
 		require.Nil(t, result)
@@ -1307,7 +1338,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 	// Transaction with an unregistered message
 	{
 		tx := newTxCounter(0, 0)
-		tx.Msgs = append(tx.Msgs, msgNoDecode{})
+		tx.Msgs = append(tx.Msgs, &msgNoDecode{})
 
 		// new codec so we can encode the tx, but we shouldn't be able to decode
 		newCdc := codec.NewLegacyAmino()
@@ -1336,9 +1367,16 @@ func TestTxGasLimits(t *testing.T) {
 	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			count := msg.(msgCounter).Counter
+			count := msg.(*msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
-			return &sdk.Result{}, nil
+			any, err := codectypes.NewAnyWithValue(msg)
+			if err != nil {
+				return nil, err
+			}
+
+			return &sdk.Result{
+				MsgResponses: []*codectypes.Any{any},
+			}, nil
 		})
 		legacyRouter.AddRoute(r)
 		txHandler := testTxHandler(
@@ -1415,9 +1453,17 @@ func TestMaxBlockGasLimits(t *testing.T) {
 	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			count := msg.(msgCounter).Counter
+			count := msg.(*msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
-			return &sdk.Result{}, nil
+
+			any, err := codectypes.NewAnyWithValue(msg)
+			if err != nil {
+				return nil, err
+			}
+
+			return &sdk.Result{
+				MsgResponses: []*codectypes.Any{any},
+			}, nil
 		})
 		legacyRouter.AddRoute(r)
 		txHandler := testTxHandler(
@@ -1595,7 +1641,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			count := msg.(msgCounter).Counter
+			count := msg.(*msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
 			return &sdk.Result{}, nil
 		})
@@ -1651,7 +1697,14 @@ func TestQuery(t *testing.T) {
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			store := ctx.KVStore(capKey1)
 			store.Set(key, value)
-			return &sdk.Result{}, nil
+
+			any, err := codectypes.NewAnyWithValue(msg)
+			if err != nil {
+				return nil, err
+			}
+			return &sdk.Result{
+				MsgResponses: []*codectypes.Any{any},
+			}, nil
 		})
 		legacyRouter.AddRoute(r)
 		txHandler := testTxHandler(

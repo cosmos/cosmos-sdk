@@ -14,21 +14,19 @@ import (
 // PrimaryKeyCodec is the codec for primary keys.
 type PrimaryKeyCodec struct {
 	*KeyCodec
-	msgType          protoreflect.MessageType
 	unmarshalOptions proto.UnmarshalOptions
 }
 
 // NewPrimaryKeyCodec creates a new PrimaryKeyCodec for the provided msg and
 // fields, with an optional prefix and unmarshal options.
 func NewPrimaryKeyCodec(prefix []byte, msgType protoreflect.MessageType, fieldNames []protoreflect.Name, unmarshalOptions proto.UnmarshalOptions) (*PrimaryKeyCodec, error) {
-	keyCodec, err := NewKeyCodec(prefix, msgType.Descriptor(), fieldNames)
+	keyCodec, err := NewKeyCodec(prefix, msgType, fieldNames)
 	if err != nil {
 		return nil, err
 	}
 
 	return &PrimaryKeyCodec{
 		KeyCodec:         keyCodec,
-		msgType:          msgType,
 		unmarshalOptions: unmarshalOptions,
 	}, nil
 }
@@ -60,11 +58,11 @@ func (p PrimaryKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 		return nil, err
 	}
 
-	msg := p.msgType.New().Interface()
+	msg := p.messageType.New().Interface()
 	err = p.Unmarshal(values, v, msg)
 
 	return &PrimaryKeyEntry{
-		TableName: p.msgType.Descriptor().FullName(),
+		TableName: p.messageType.Descriptor().FullName(),
 		Key:       values,
 		Value:     msg,
 	}, err
@@ -76,11 +74,11 @@ func (p PrimaryKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 		return nil, nil, ormerrors.BadDecodeEntry.Wrapf("expected %T, got %T", &PrimaryKeyEntry{}, entry)
 	}
 
-	if pkEntry.TableName != p.msgType.Descriptor().FullName() {
+	if pkEntry.TableName != p.messageType.Descriptor().FullName() {
 		return nil, nil, ormerrors.BadDecodeEntry.Wrapf(
 			"wrong table name, got %s, expected %s",
 			pkEntry.TableName,
-			p.msgType.Descriptor().FullName(),
+			p.messageType.Descriptor().FullName(),
 		)
 	}
 
@@ -134,8 +132,4 @@ func (p PrimaryKeyCodec) EncodeKVFromMessage(message protoreflect.Message) (k, v
 
 	v, err = p.marshal(ks, message.Interface())
 	return k, v, err
-}
-
-func (p PrimaryKeyCodec) MessageType() protoreflect.MessageType {
-	return p.msgType
 }

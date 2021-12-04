@@ -19,6 +19,8 @@ type EntryCodec interface {
 type IndexCodec interface {
 	EntryCodec
 
+	MessageType() protoreflect.MessageType
+
 	GetFieldNames() []protoreflect.Name
 
 	// DecodeIndexKey decodes a kv-pair into index-fields and primary-key field

@@ -1,6 +1,9 @@
 package ormtable
 
 import (
+	"encoding/json"
+	"io"
+
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -18,6 +21,11 @@ type Table interface {
 	GetIndex(fields FieldNames) Index
 	GetUniqueIndex(fields FieldNames) UniqueIndex
 	Indexes() []Index
+
+	DefaultJSON() json.RawMessage
+	ValidateJSON(io.Reader) error
+	ImportJSON(kv.IndexCommitmentStore, io.Reader) error
+	ExportJSON(kv.IndexCommitmentReadStore, io.Writer) error
 }
 
 type SaveMode int

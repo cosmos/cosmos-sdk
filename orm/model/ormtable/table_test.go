@@ -109,7 +109,7 @@ func checkIteratorAgainstSlice(t *testing.T, iterator ormiterator.Iterator, data
 		}
 
 		msg := typ.New().Interface()
-		err = iterator.GetMessage(msg)
+		err = iterator.UnmarshalMessage(msg)
 		assert.NilError(t, err)
 		assert.DeepEqual(t, data[i], msg, protocmp.Transform())
 		i++

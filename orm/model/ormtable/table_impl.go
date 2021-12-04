@@ -3,7 +3,11 @@ package ormtable
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
+	"io"
 	"math"
+
+	"google.golang.org/protobuf/encoding/protojson"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -25,6 +29,7 @@ type TableImpl struct {
 	indexesById           map[uint32]Index
 	tablePrefix           []byte
 	typeResolver          TypeResolver
+	customImportValidator func(message proto.Message) error
 }
 
 type TypeResolver interface {
@@ -139,7 +144,131 @@ func (t TableImpl) Indexes() []Index {
 	return t.indexes
 }
 
-func (t TableImpl) DecodeEntry(k, v []byte) (ormkv.Entry, error) {
+func (t TableImpl) DefaultJSON() json.RawMessage {
+	return json.RawMessage("[]")
+}
+
+func (t TableImpl) decodeJson(reader io.Reader, onMsg func(message proto.Message) error) error {
+	decoder := json.NewDecoder(reader)
+	token, err := decoder.Token()
+	if err != nil {
+		return err
+	}
+
+	if token != json.Delim('[') {
+		return ormerrors.JSONImportError.Wrapf("expected [ got %s", token)
+	}
+
+	for decoder.More() {
+		var rawJson json.RawMessage
+		err = decoder.Decode(&rawJson)
+		if err != nil {
+			return ormerrors.JSONImportError.Wrapf("%s", err)
+		}
+
+		msg := t.MessageType().New().Interface()
+		err = protojson.UnmarshalOptions{Resolver: t.typeResolver}.Unmarshal(rawJson, msg)
+		if err != nil {
+			return err
+		}
+
+		err = onMsg(msg)
+		if err != nil {
+			return err
+		}
+	}
+
+	token, err = decoder.Token()
+	if err != nil {
+		return err
+	}
+
+	if token != json.Delim(']') {
+		return ormerrors.JSONImportError.Wrapf("expected ] got %s", token)
+	}
+
+	return nil
+}
+
+func DefaultImportValidator(message proto.Message) error {
+	if v, ok := message.(interface{ ValidateBasic() error }); ok {
+		err := v.ValidateBasic()
+		if err != nil {
+			return err
+		}
+	}
+
+	if v, ok := message.(interface{ Validate() error }); ok {
+		err := v.Validate()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (t TableImpl) ValidateJSON(reader io.Reader) error {
+	return t.decodeJson(reader, func(message proto.Message) error {
+		if t.customImportValidator != nil {
+			return t.customImportValidator(message)
+		} else {
+			return DefaultImportValidator(message)
+		}
+	})
+}
+
+func (t TableImpl) ImportJSON(store kv.IndexCommitmentStore, reader io.Reader) error {
+	return t.decodeJson(reader, func(message proto.Message) error {
+		return t.Save(store, message, SAVE_MODE_DEFAULT)
+	})
+}
+
+func (t TableImpl) ExportJSON(store kv.IndexCommitmentReadStore, writer io.Writer) error {
+	_, err := writer.Write([]byte("["))
+	if err != nil {
+		return err
+	}
+
+	it, _ := t.PrefixIterator(store, nil, IteratorOptions{})
+	start := true
+	for {
+		found, err := it.Next()
+		if err != nil {
+			return err
+		}
+
+		if !found {
+			_, err = writer.Write([]byte("]"))
+			return err
+		} else if !start {
+			_, err = writer.Write([]byte(",\n"))
+			if err != nil {
+				return err
+			}
+		}
+		start = false
+
+		msg := t.MessageType().New().Interface()
+		err = it.UnmarshalMessage(msg)
+		if err != nil {
+			return err
+		}
+
+		bz, err := protojson.Marshal(msg)
+		if err != nil {
+			return err
+		}
+
+		_, err = writer.Write(bz)
+		if err != nil {
+			return err
+		}
+
+	}
+}
+
+func (t TableImpl) DecodeKV(k, v []byte) (ormkv.Entry, error) {
 	r := bytes.NewReader(k)
 	if bytes.HasPrefix(k, t.tablePrefix) {
 		err := ormkv.SkipPrefix(r, t.tablePrefix)

@@ -12,7 +12,6 @@ import (
 // IndexKeyCodec is the codec for (non-unique) index keys.
 type IndexKeyCodec struct {
 	*KeyCodec
-	tableName    protoreflect.FullName
 	pkFieldOrder []int
 }
 
@@ -20,7 +19,7 @@ var _ IndexCodec = &IndexKeyCodec{}
 
 // NewIndexKeyCodec creates a new IndexKeyCodec with an optional prefix for the
 // provided message descriptor, index and primary key fields.
-func NewIndexKeyCodec(prefix []byte, messageDescriptor protoreflect.MessageDescriptor, indexFields, primaryKeyFields []protoreflect.Name) (*IndexKeyCodec, error) {
+func NewIndexKeyCodec(prefix []byte, messageType protoreflect.MessageType, indexFields, primaryKeyFields []protoreflect.Name) (*IndexKeyCodec, error) {
 	if len(indexFields) == 0 {
 		return nil, ormerrors.InvalidTableDefinition.Wrapf("index fields are empty")
 	}
@@ -51,7 +50,7 @@ func NewIndexKeyCodec(prefix []byte, messageDescriptor protoreflect.MessageDescr
 		k++
 	}
 
-	cdc, err := NewKeyCodec(prefix, messageDescriptor, keyFields)
+	cdc, err := NewKeyCodec(prefix, messageType, keyFields)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +58,6 @@ func NewIndexKeyCodec(prefix []byte, messageDescriptor protoreflect.MessageDescr
 	return &IndexKeyCodec{
 		KeyCodec:     cdc,
 		pkFieldOrder: pkFieldOrder,
-		tableName:    messageDescriptor.FullName(),
 	}, nil
 }
 
@@ -95,7 +93,6 @@ func (cdc IndexKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 	}
 
 	return &IndexKeyEntry{
-		TableName:   cdc.tableName,
 		Fields:      cdc.fieldNames,
 		IndexValues: idxValues,
 		PrimaryKey:  pk,
@@ -108,7 +105,7 @@ func (cdc IndexKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 		return nil, nil, ormerrors.BadDecodeEntry
 	}
 
-	if indexEntry.TableName != cdc.tableName {
+	if indexEntry.TableName != cdc.messageType.Descriptor().FullName() {
 		return nil, nil, ormerrors.BadDecodeEntry
 	}
 

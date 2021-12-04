@@ -59,6 +59,7 @@ func Build(options TableOptions) (Table, error) {
 		indexesById:           map[uint32]Index{},
 		tablePrefix:           options.Prefix,
 		typeResolver:          options.TypeResolver,
+		customImportValidator: options.ImportValidator,
 	}
 
 	table.indexesByFields[pkFields] = pkIndex
@@ -84,7 +85,7 @@ func Build(options TableOptions) (Table, error) {
 		idxPrefix := AppendVarUInt32(options.Prefix, id)
 		var index Indexer
 		if idxDesc.Unique {
-			uniqCdc, err := ormkv.NewUniqueKeyCodec(idxPrefix, messageDescriptor, idxFields.Names(), pkFieldNames)
+			uniqCdc, err := ormkv.NewUniqueKeyCodec(idxPrefix, options.MessageType, idxFields.Names(), pkFieldNames)
 			if err != nil {
 				return nil, err
 			}
@@ -92,7 +93,7 @@ func Build(options TableOptions) (Table, error) {
 			table.uniqueIndexesByFields[idxFields] = uniqIdx
 			index = NewUniqueKeyIndex(uniqCdc, pkIndex)
 		} else {
-			idxCdc, err := ormkv.NewIndexKeyCodec(idxPrefix, messageDescriptor, idxFields.Names(), pkFieldNames)
+			idxCdc, err := ormkv.NewIndexKeyCodec(idxPrefix, options.MessageType, idxFields.Names(), pkFieldNames)
 			if err != nil {
 				return nil, err
 			}
@@ -113,4 +114,5 @@ type TableOptions struct {
 	TableDescriptor  *ormv1alpha1.TableDescriptor
 	UnmarshalOptions proto.UnmarshalOptions
 	TypeResolver     TypeResolver
+	ImportValidator  func(proto.Message) error
 }

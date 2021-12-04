@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/durationpb"
+
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"pgregory.net/rapid"
 
@@ -78,19 +79,23 @@ var TestFieldSpecs = []TestFieldSpec{
 	},
 	{
 		"ts",
-		rapid.ArrayOf(2, rapid.Int64()).Map(func(xs [2]int64) protoreflect.Message {
+		rapid.Custom(func(t *rapid.T) protoreflect.Message {
+			seconds := rapid.Int64Range(-9999999999, 9999999999).Draw(t, "seconds").(int64)
+			nanos := rapid.Int32Range(0, 999999999).Draw(t, "nanos").(int32)
 			return (&timestamppb.Timestamp{
-				Seconds: xs[0],
-				Nanos:   int32(xs[1]),
+				Seconds: seconds,
+				Nanos:   nanos,
 			}).ProtoReflect()
 		}),
 	},
 	{
 		"dur",
-		rapid.ArrayOf(2, rapid.Int64()).Map(func(xs [2]int64) protoreflect.Message {
+		rapid.Custom(func(t *rapid.T) protoreflect.Message {
+			seconds := rapid.Int64Range(0, 315576000000).Draw(t, "seconds").(int64)
+			nanos := rapid.Int32Range(0, 999999999).Draw(t, "nanos").(int32)
 			return (&durationpb.Duration{
-				Seconds: xs[0],
-				Nanos:   int32(xs[1]),
+				Seconds: seconds,
+				Nanos:   nanos,
 			}).ProtoReflect()
 		}),
 	},
@@ -147,8 +152,8 @@ func TestKeyCodecGen(minLen, maxLen int) *rapid.Generator {
 
 		prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix").([]byte)
 
-		desc := (&testpb.A{}).ProtoReflect().Descriptor()
-		cdc, err := ormkv.NewKeyCodec(prefix, desc, fields)
+		msgType := (&testpb.A{}).ProtoReflect().Type()
+		cdc, err := ormkv.NewKeyCodec(prefix, msgType, fields)
 		if err != nil {
 			panic(err)
 		}

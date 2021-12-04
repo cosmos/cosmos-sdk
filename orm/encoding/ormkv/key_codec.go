@@ -22,11 +22,12 @@ type KeyCodec struct {
 	fieldDescriptors []protoreflect.FieldDescriptor
 	fieldNames       []protoreflect.Name
 	fieldCodecs      []ormfield.Codec
+	messageType      protoreflect.MessageType
 }
 
 // NewKeyCodec returns a new KeyCodec with an optional prefix for the provided
 // message descriptor and fields.
-func NewKeyCodec(prefix []byte, messageDescriptor protoreflect.MessageDescriptor, fieldNames []protoreflect.Name) (*KeyCodec, error) {
+func NewKeyCodec(prefix []byte, messageType protoreflect.MessageType, fieldNames []protoreflect.Name) (*KeyCodec, error) {
 	n := len(fieldNames)
 	fieldCodecs := make([]ormfield.Codec, n)
 	fieldDescriptors := make([]protoreflect.FieldDescriptor, n)
@@ -35,7 +36,7 @@ func NewKeyCodec(prefix []byte, messageDescriptor protoreflect.MessageDescriptor
 		i   int
 	}
 	fixedSize := 0
-	messageFields := messageDescriptor.Fields()
+	messageFields := messageType.Descriptor().Fields()
 
 	for i := 0; i < n; i++ {
 		nonTerminal := i != n-1
@@ -63,6 +64,7 @@ func NewKeyCodec(prefix []byte, messageDescriptor protoreflect.MessageDescriptor
 		prefix:           prefix,
 		fixedSize:        fixedSize,
 		variableSizers:   variableSizers,
+		messageType:      messageType,
 	}, nil
 }
 
@@ -286,4 +288,8 @@ func (cdc *KeyCodec) GetFieldNames() []protoreflect.Name {
 
 func (cdc *KeyCodec) Prefix() []byte {
 	return cdc.prefix
+}
+
+func (cdc *KeyCodec) MessageType() protoreflect.MessageType {
+	return cdc.messageType
 }

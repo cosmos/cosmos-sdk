@@ -93,6 +93,7 @@ func (cdc IndexKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 	}
 
 	return &IndexKeyEntry{
+		TableName:   cdc.messageType.Descriptor().FullName(),
 		Fields:      cdc.fieldNames,
 		IndexValues: idxValues,
 		PrimaryKey:  pk,

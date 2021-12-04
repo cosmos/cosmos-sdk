@@ -46,7 +46,7 @@ func assertEncDecKey(t *rapid.T, key testutil.TestKeyCodec, keyValues []protoref
 
 func TestCompareValues(t *testing.T) {
 	cdc, err := ormkv.NewKeyCodec(nil,
-		(&testpb.A{}).ProtoReflect().Descriptor(),
+		(&testpb.A{}).ProtoReflect().Type(),
 		[]protoreflect.Name{"u32", "str", "i32"})
 	assert.NilError(t, err)
 
@@ -189,7 +189,7 @@ func TestCompareValues(t *testing.T) {
 
 func TestDecodePrefixKey(t *testing.T) {
 	cdc, err := ormkv.NewKeyCodec(nil,
-		(&testpb.A{}).ProtoReflect().Descriptor(),
+		(&testpb.A{}).ProtoReflect().Type(),
 		[]protoreflect.Name{"u32", "str", "bz", "i32"})
 
 	assert.NilError(t, err)
@@ -215,7 +215,7 @@ func TestDecodePrefixKey(t *testing.T) {
 
 func TestValidRangeIterationKeys(t *testing.T) {
 	cdc, err := ormkv.NewKeyCodec(nil,
-		(&testpb.A{}).ProtoReflect().Descriptor(),
+		(&testpb.A{}).ProtoReflect().Type(),
 		[]protoreflect.Name{"u32", "str", "bz", "i32"})
 	assert.NilError(t, err)
 
@@ -300,7 +300,7 @@ func TestValidRangeIterationKeys(t *testing.T) {
 
 func TestGetSet(t *testing.T) {
 	cdc, err := ormkv.NewKeyCodec(nil,
-		(&testpb.A{}).ProtoReflect().Descriptor(),
+		(&testpb.A{}).ProtoReflect().Type(),
 		[]protoreflect.Name{"u32", "str", "i32"})
 	assert.NilError(t, err)
 

@@ -18,10 +18,10 @@ func TestIndexKeyCodec(t *testing.T) {
 		idxPartCdc := testutil.TestKeyCodecGen(1, 5).Draw(t, "idxPartCdc").(testutil.TestKeyCodec)
 		pkCodec := testutil.TestKeyCodecGen(1, 5).Draw(t, "pkCdc").(testutil.TestKeyCodec)
 		prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix").([]byte)
-		desc := (&testpb.A{}).ProtoReflect().Descriptor()
+		messageType := (&testpb.A{}).ProtoReflect().Type()
 		indexKeyCdc, err := ormkv.NewIndexKeyCodec(
 			prefix,
-			desc,
+			messageType,
 			idxPartCdc.Codec.GetFieldNames(),
 			pkCodec.Codec.GetFieldNames(),
 		)
@@ -31,7 +31,7 @@ func TestIndexKeyCodec(t *testing.T) {
 			key := indexKeyCdc.GetKeyValues(a.ProtoReflect())
 			pk := pkCodec.Codec.GetKeyValues(a.ProtoReflect())
 			idx1 := &ormkv.IndexKeyEntry{
-				TableName:   desc.FullName(),
+				TableName:   messageType.Descriptor().FullName(),
 				Fields:      indexKeyCdc.GetFieldNames(),
 				IsUnique:    false,
 				IndexValues: key,
@@ -51,7 +51,7 @@ func TestIndexKeyCodec(t *testing.T) {
 			assert.Equal(t, 0, indexKeyCdc.CompareKeys(idx1.IndexValues, idx2.IndexValues))
 			assert.Equal(t, 0, pkCodec.Codec.CompareKeys(idx1.PrimaryKey, idx2.PrimaryKey))
 			assert.Equal(t, false, idx2.IsUnique)
-			assert.Equal(t, desc.FullName(), idx2.TableName)
+			assert.Equal(t, messageType.Descriptor().FullName(), idx2.TableName)
 			assert.DeepEqual(t, idx1.Fields, idx2.Fields)
 
 			idxFields, pk2, err := indexKeyCdc.DecodeIndexKey(k, v)

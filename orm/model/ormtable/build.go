@@ -54,9 +54,9 @@ func Build(options TableOptions) (Table, error) {
 		PrimaryKeyIndex:       pkIndex,
 		indexers:              []Indexer{},
 		indexes:               []Index{},
-		indexesByFields:       map[FieldNames]Index{},
+		indexesByFields:       map[FieldNames]concreteIndex{},
 		uniqueIndexesByFields: map[FieldNames]UniqueIndex{},
-		indexesById:           map[uint32]Index{},
+		indexesById:           map[uint32]concreteIndex{},
 		tablePrefix:           options.Prefix,
 		typeResolver:          options.TypeResolver,
 		customImportValidator: options.ImportValidator,
@@ -83,7 +83,7 @@ func Build(options TableOptions) (Table, error) {
 		}
 
 		idxPrefix := AppendVarUInt32(options.Prefix, id)
-		var index Indexer
+		var index concreteIndex
 		if idxDesc.Unique {
 			uniqCdc, err := ormkv.NewUniqueKeyCodec(idxPrefix, options.MessageType, idxFields.Names(), pkFieldNames)
 			if err != nil {
@@ -102,7 +102,7 @@ func Build(options TableOptions) (Table, error) {
 		table.indexesByFields[idxFields] = index
 		table.indexesById[idxDesc.Id] = index
 		table.indexes = append(table.indexes, index)
-		table.indexers = append(table.indexers, index)
+		table.indexers = append(table.indexers, index.(Indexer))
 	}
 
 	return table, nil

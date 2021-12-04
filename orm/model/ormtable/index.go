@@ -12,13 +12,21 @@ import (
 )
 
 type Index interface {
-	ormkv.IndexCodec
-
 	PrefixIterator(store kv.IndexCommitmentReadStore, prefix []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error)
 	RangeIterator(store kv.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error)
 	ReadValueFromIndexKey(store kv.IndexCommitmentReadStore, primaryKey []protoreflect.Value, value []byte, message proto.Message) error
 
+	MessageType() protoreflect.MessageType
+	GetFieldNames() []protoreflect.Name
+	IsFullyOrdered() bool
+	CompareKeys(key1, key2 []protoreflect.Value) int
+
 	doNotImplement()
+}
+
+type concreteIndex interface {
+	Index
+	ormkv.IndexCodec
 }
 
 type UniqueIndex interface {

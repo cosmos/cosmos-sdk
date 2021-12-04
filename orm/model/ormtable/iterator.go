@@ -9,7 +9,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
-func prefixIterator(iteratorStore kv.ReadStore, store kv.IndexCommitmentReadStore, index Index, prefix []byte, options IteratorOptions) (ormiterator.Iterator, error) {
+func prefixIterator(iteratorStore kv.ReadStore, store kv.IndexCommitmentReadStore, index concreteIndex, prefix []byte, options IteratorOptions) (ormiterator.Iterator, error) {
 	if !options.Reverse {
 		var start []byte
 		if len(options.Cursor) != 0 {
@@ -51,7 +51,7 @@ func prefixIterator(iteratorStore kv.ReadStore, store kv.IndexCommitmentReadStor
 	}
 }
 
-func rangeIterator(iteratorStore kv.ReadStore, store kv.IndexCommitmentReadStore, index Index, start, end []byte, options IteratorOptions) (ormiterator.Iterator, error) {
+func rangeIterator(iteratorStore kv.ReadStore, store kv.IndexCommitmentReadStore, index concreteIndex, start, end []byte, options IteratorOptions) (ormiterator.Iterator, error) {
 	if !options.Reverse {
 		if len(options.Cursor) != 0 {
 			start = append(options.Cursor, 0)
@@ -89,7 +89,7 @@ func rangeIterator(iteratorStore kv.ReadStore, store kv.IndexCommitmentReadStore
 type indexIterator struct {
 	ormiterator.UnimplementedIterator
 
-	index    Index
+	index    concreteIndex
 	store    kv.IndexCommitmentReadStore
 	iterator kv.Iterator
 

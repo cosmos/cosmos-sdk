@@ -24,9 +24,9 @@ type TableImpl struct {
 	*PrimaryKeyIndex
 	indexers              []Indexer
 	indexes               []Index
-	indexesByFields       map[FieldNames]Index
+	indexesByFields       map[FieldNames]concreteIndex
 	uniqueIndexesByFields map[FieldNames]UniqueIndex
-	indexesById           map[uint32]Index
+	indexesById           map[uint32]concreteIndex
 	tablePrefix           []byte
 	typeResolver          TypeResolver
 	customImportValidator func(message proto.Message) error

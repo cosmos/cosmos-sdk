@@ -6,6 +6,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/orm/backend/kv"
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 )
 
 type Debugger interface {
@@ -14,21 +15,25 @@ type Debugger interface {
 }
 
 type TestStore struct {
-	store   kv.Store
-	decoder Debugger
-	name    string
+	store    kv.Store
+	debugger Debugger
+	name     string
+}
+
+func NewTestStore(store kv.Store, debugger Debugger, name string) kv.Store {
+	return &TestStore{store: store, debugger: debugger, name: name}
 }
 
 func (t TestStore) Get(key []byte) ([]byte, error) {
 	val, err := t.store.Get(key)
 	if err != nil {
-		if t.decoder != nil {
-			t.decoder.Log(fmt.Sprintf("ERR on GET %s: %v", t.decoder.Decode(t.name, key, nil), err))
+		if t.debugger != nil {
+			t.debugger.Log(fmt.Sprintf("ERR on GET %s: %v", t.debugger.Decode(t.name, key, nil), err))
 		}
 		return nil, err
 	}
-	if t.decoder != nil {
-		t.decoder.Log(fmt.Sprintf("GET %s", t.decoder.Decode(t.name, key, val)))
+	if t.debugger != nil {
+		t.debugger.Log(fmt.Sprintf("GET %s", t.debugger.Decode(t.name, key, val)))
 	}
 	return val, nil
 }
@@ -36,35 +41,45 @@ func (t TestStore) Get(key []byte) ([]byte, error) {
 func (t TestStore) Has(key []byte) (bool, error) {
 	has, err := t.store.Has(key)
 	if err != nil {
-		if t.decoder != nil {
-			t.decoder.Log(fmt.Sprintf("ERR on HAS %s: %v", t.decoder.Decode(t.name, key, nil), err))
+		if t.debugger != nil {
+			t.debugger.Log(fmt.Sprintf("ERR on HAS %s: %v", t.debugger.Decode(t.name, key, nil), err))
 		}
 		return has, err
 	}
-	if t.decoder != nil {
-		t.decoder.Log(fmt.Sprintf("HAS %s", t.decoder.Decode(t.name, key, nil)))
+	if t.debugger != nil {
+		t.debugger.Log(fmt.Sprintf("HAS %s", t.debugger.Decode(t.name, key, nil)))
 	}
 	return has, nil
 }
 
 func (t TestStore) Iterator(start, end []byte) (kv.Iterator, error) {
-	//TODO implement me
-	panic("implement me")
+	if t.debugger != nil {
+		t.debugger.Log(fmt.Sprintf("ITERATOR %s -> %s",
+			t.debugger.Decode(t.name, start, nil),
+			t.debugger.Decode(t.name, end, nil),
+		))
+	}
+	return t.store.Iterator(start, end)
 }
 
 func (t TestStore) ReverseIterator(start, end []byte) (kv.Iterator, error) {
-	//TODO implement me
-	panic("implement me")
+	if t.debugger != nil {
+		t.debugger.Log(fmt.Sprintf("ITERATOR %s <- %s",
+			t.debugger.Decode(t.name, start, nil),
+			t.debugger.Decode(t.name, end, nil),
+		))
+	}
+	return t.store.ReverseIterator(start, end)
 }
 
 func (t TestStore) Set(key, value []byte) error {
-	if t.decoder != nil {
-		t.decoder.Log(fmt.Sprintf("SET %s", t.decoder.Decode(t.name, key, value)))
+	if t.debugger != nil {
+		t.debugger.Log(fmt.Sprintf("SET %s", t.debugger.Decode(t.name, key, value)))
 	}
 	err := t.store.Set(key, value)
 	if err != nil {
-		if t.decoder != nil {
-			t.decoder.Log(fmt.Sprintf("ERR on SET %s: %v", t.decoder.Decode(t.name, key, value), err))
+		if t.debugger != nil {
+			t.debugger.Log(fmt.Sprintf("ERR on SET %s: %v", t.debugger.Decode(t.name, key, value), err))
 		}
 		return err
 	}
@@ -72,13 +87,13 @@ func (t TestStore) Set(key, value []byte) error {
 }
 
 func (t TestStore) Delete(key []byte) error {
-	if t.decoder != nil {
-		t.decoder.Log(fmt.Sprintf("DEL %s", t.decoder.Decode(t.name, key, nil)))
+	if t.debugger != nil {
+		t.debugger.Log(fmt.Sprintf("DEL %s", t.debugger.Decode(t.name, key, nil)))
 	}
 	err := t.store.Delete(key)
 	if err != nil {
-		if t.decoder != nil {
-			t.decoder.Log(fmt.Sprintf("ERR on SET %s: %v", t.decoder.Decode(t.name, key, nil), err))
+		if t.debugger != nil {
+			t.debugger.Log(fmt.Sprintf("ERR on SET %s: %v", t.debugger.Decode(t.name, key, nil), err))
 		}
 		return err
 	}
@@ -88,14 +103,21 @@ func (t TestStore) Delete(key []byte) error {
 var _ kv.Store = &TestStore{}
 
 type IndexCommitmentStore struct {
-	commitment dbm.DB
-	index      dbm.DB
+	commitment kv.Store
+	index      kv.Store
 }
 
-func NewIndexCommitmentStore() *IndexCommitmentStore {
+func NewMemIndexCommitmentStore() *IndexCommitmentStore {
 	return &IndexCommitmentStore{
 		commitment: dbm.NewMemDB(),
 		index:      dbm.NewMemDB(),
+	}
+}
+
+func NewDebugIndexCommitmentStore(debugger Debugger) *IndexCommitmentStore {
+	return &IndexCommitmentStore{
+		commitment: NewTestStore(dbm.NewMemDB(), debugger, "commitment"),
+		index:      NewTestStore(dbm.NewMemDB(), debugger, "index"),
 	}
 }
 
@@ -115,4 +137,25 @@ func (i IndexCommitmentStore) CommitmentStore() kv.Store {
 
 func (i IndexCommitmentStore) IndexStore() kv.Store {
 	return i.index
+}
+
+type EntryCodecDebugger struct {
+	EntryCodec ormkv.EntryCodec
+	Print      func(string)
+}
+
+func (d EntryCodecDebugger) Log(s string) {
+	if d.Print != nil {
+		d.Print(s)
+	} else {
+		fmt.Println(s)
+	}
+}
+
+func (d EntryCodecDebugger) Decode(storeName string, key, value []byte) string {
+	entry, err := d.EntryCodec.DecodeEntry(key, value)
+	if err != nil {
+		return fmt.Sprintf("ERR:%v", err)
+	}
+	return entry.String()
 }

@@ -67,16 +67,22 @@ func (u UniqueKeyIndex) Get(store kv.IndexCommitmentReadStore, keyValues []proto
 		return false, err
 	}
 
-	bz, err := store.ReadIndexStore().Get(key)
+	value, err := store.ReadIndexStore().Get(key)
 	if err != nil {
 		return false, err
 	}
 
-	if len(bz) == 0 {
+	// for unique keys, value can be empty and the entry still exists
+	if value == nil {
 		return false, nil
 	}
 
-	return true, proto.Unmarshal(bz, message)
+	_, pk, err := u.DecodeIndexKey(key, value)
+	if err != nil {
+		return true, err
+	}
+
+	return u.primaryKey.Get(store, pk, message)
 }
 
 func (u UniqueKeyIndex) OnCreate(store kv.Store, message protoreflect.Message) error {

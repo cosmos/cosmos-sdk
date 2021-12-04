@@ -31,4 +31,6 @@ type IndexCodec interface {
 	CompareKeys(key1, key2 []protoreflect.Value) int
 
 	EncodeKeyFromMessage(message protoreflect.Message) (keyValues []protoreflect.Value, key []byte, err error)
+
+	IsFullyOrdered() bool
 }

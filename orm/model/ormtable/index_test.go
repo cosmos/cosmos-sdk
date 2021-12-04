@@ -12,7 +12,6 @@ import (
 	"pgregory.net/rapid"
 
 	"github.com/cosmos/cosmos-sdk/orm/internal/memkv"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormindex"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormiterator"
@@ -21,7 +20,10 @@ import (
 )
 
 func TestTable(t *testing.T) {
-	tableData := TableDataGen(100).Example().(*TableData)
+	testTable(t, TableDataGen(testutil.GenA, 100).Example().(*TableData))
+}
+
+func testTable(t *testing.T, tableData *TableData) {
 	for _, index := range tableData.table.Indexes() {
 		indexModel := &IndexModel{
 			TableData: tableData,
@@ -33,47 +35,6 @@ func TestTable(t *testing.T) {
 		}
 		testIndex(t, indexModel)
 	}
-}
-
-func TestUniqueKeyIndex(t *testing.T) {
-	rapid.Check(t, func(t *rapid.T) {
-		//primaryKeyModel := TableDataGen(100).Draw(t, "primaryKeyModel").(*IndexModel)
-		//keyPrefix := AppendVarUInt32(primaryKeyModel.prefix, 1)
-		//pkFields := primaryKeyModel.index.GetFieldNames()
-		//// to ensure uniqueness we just reverse the primary key
-		//n := len(pkFields)
-		//uniqueFields := make([]protoreflect.Name, n)
-		//for i := 0; i < n; i++ {
-		//	uniqueFields[n-i-1] = pkFields[i]
-		//}
-		//
-		//uniqueKeyCodec, err := ormkv.NewUniqueKeyCodec(
-		//	keyPrefix,
-		//	primaryKeyModel.typ.Descriptor(),
-		//	uniqueFields,
-		//	pkFields,
-		//)
-		//assert.NilError(t, err)
-		//
-		//index := ormindex.NewUniqueKeyIndex(uniqueKeyCodec, primaryKeyModel.index.(*ormindex.PrimaryKeyIndex))
-		//
-		//for _, datum := range primaryKeyModel.data {
-		//	err = index.OnCreate(primaryKeyModel.store.IndexStore(), datum.ProtoReflect())
-		//	assert.NilError(t, err)
-		//}
-		//
-		//model := &IndexModel{
-		//	typ:    primaryKeyModel.typ,
-		//	prefix: primaryKeyModel.prefix,
-		//	data:   primaryKeyModel.data,
-		//	index:  index,
-		//	store:  primaryKeyModel.store,
-		//}
-		//
-		//sort.Sort(model)
-		//
-		//testUniqueIndex(t, model)
-	})
 }
 
 func testUniqueIndex(t *testing.T, model *IndexModel) {
@@ -98,14 +59,21 @@ func testUniqueIndex(t *testing.T, model *IndexModel) {
 
 func testIndex(t *testing.T, model *IndexModel) {
 	index := model.index
-	t.Logf("testing index %T %s", index, index.GetFieldNames())
-	it, err := model.index.PrefixIterator(model.store, nil, ormindex.IteratorOptions{})
-	assert.NilError(t, err)
-	checkIteratorAgainstSlice(t, it, model.data, model.table.MessageType())
+	if index.IsFullyOrdered() {
+		t.Logf("testing index %T %s", index, index.GetFieldNames())
+		messageType := model.table.MessageType()
 
-	//it, err = model.index.PrefixIterator(model.store, nil, ormindex.IteratorOptions{Reverse: true})
-	//assert.NilError(t, err)
-	//checkIteratorAgainstSlice(t, it, reverseData(model.data), model.typ)
+		it, err := model.index.PrefixIterator(model.store, nil, ormindex.IteratorOptions{})
+		assert.NilError(t, err)
+		checkIteratorAgainstSlice(t, it, model.data, messageType)
+
+		it, err = model.index.PrefixIterator(model.store, nil, ormindex.IteratorOptions{Reverse: true})
+		assert.NilError(t, err)
+		checkIteratorAgainstSlice(t, it, reverseData(model.data), messageType)
+	} else {
+		t.Logf("can't automatically test unordered index %T %s", index, index.GetFieldNames())
+	}
+
 	//
 	//i := rapid.IntRange(0, len(model.data)).Draw(t, "i").(int)
 	//j := rapid.IntRange(i, len(model.data)).Draw(t, "j").(int)
@@ -149,29 +117,26 @@ func checkIteratorAgainstSlice(t *testing.T, iterator ormiterator.Iterator, data
 	}
 }
 
-var aType = (&testpb.A{}).ProtoReflect().Type()
-
-func TableDataGen(n int) *rapid.Generator {
+func TableDataGen(elemGen *rapid.Generator, n int) *rapid.Generator {
 	return rapid.Custom(func(t *rapid.T) *TableData {
 		prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix").([]byte)
+		message := elemGen.Draw(t, "message").(proto.Message)
 		table, err := Build(TableOptions{
 			Prefix:      prefix,
-			MessageType: aType,
+			MessageType: message.ProtoReflect().Type(),
 		})
 		if err != nil {
 			panic(err)
 		}
-		//assert.NilError(t, err)
 
 		data := make([]proto.Message, n)
-		store := memkv.NewIndexCommitmentStore()
+		store := memkv.NewMemIndexCommitmentStore()
 
 		for i := 0; i < n; i++ {
-			var a proto.Message
 			var err error
 			for {
-				a = testutil.GenA.Draw(t, fmt.Sprintf("a%d", i)).(*testpb.A)
-				err = table.Save(store, a, SAVE_MODE_CREATE)
+				message = elemGen.Draw(t, fmt.Sprintf("message[%d]", i)).(proto.Message)
+				err = table.Save(store, message, SAVE_MODE_CREATE)
 				if err == nil {
 					break
 				}
@@ -179,7 +144,7 @@ func TableDataGen(n int) *rapid.Generator {
 					panic(err)
 				}
 			}
-			data[i] = a
+			data[i] = message
 		}
 
 		return &TableData{

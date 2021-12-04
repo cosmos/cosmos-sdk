@@ -196,3 +196,7 @@ func (u UniqueKeyCodec) CompareKeys(key1, key2 []protoreflect.Value) int {
 func (u UniqueKeyCodec) EncodeKeyFromMessage(message protoreflect.Message) (keyValues []protoreflect.Value, key []byte, err error) {
 	return u.keyCodec.EncodeKeyFromMessage(message)
 }
+
+func (u UniqueKeyCodec) IsFullyOrdered() bool {
+	return u.keyCodec.IsFullyOrdered()
+}

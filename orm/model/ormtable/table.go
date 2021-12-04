@@ -5,20 +5,19 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/cosmos/cosmos-sdk/orm/backend/kv"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormindex"
 )
 
 type Table interface {
-	ormindex.UniqueIndex
+	UniqueIndex
 
 	MessageType() protoreflect.MessageType
 
 	Save(store kv.IndexCommitmentStore, message proto.Message, mode SaveMode) error
 	Delete(store kv.IndexCommitmentStore, primaryKey []protoreflect.Value) error
 
-	GetIndex(fields FieldNames) ormindex.Index
-	GetUniqueIndex(fields FieldNames) ormindex.UniqueIndex
-	Indexes() []ormindex.Index
+	GetIndex(fields FieldNames) Index
+	GetUniqueIndex(fields FieldNames) UniqueIndex
+	Indexes() []Index
 }
 
 type SaveMode int

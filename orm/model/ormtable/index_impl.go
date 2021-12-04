@@ -1,4 +1,4 @@
-package ormindex
+package ormtable
 
 import (
 	"github.com/cosmos/cosmos-sdk/orm/model/ormiterator"

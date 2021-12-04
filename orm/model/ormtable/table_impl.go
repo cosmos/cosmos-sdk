@@ -13,17 +13,16 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/orm/backend/kv"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormindex"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
 
 type TableImpl struct {
-	*ormindex.PrimaryKeyIndex
-	indexers              []ormindex.Indexer
-	indexes               []ormindex.Index
-	indexesByFields       map[FieldNames]ormindex.Index
-	uniqueIndexesByFields map[FieldNames]ormindex.UniqueIndex
-	indexesById           map[uint32]ormindex.Index
+	*PrimaryKeyIndex
+	indexers              []Indexer
+	indexes               []Index
+	indexesByFields       map[FieldNames]Index
+	uniqueIndexesByFields map[FieldNames]UniqueIndex
+	indexesById           map[uint32]Index
 	tablePrefix           []byte
 	typeResolver          TypeResolver
 }
@@ -128,15 +127,15 @@ func (t TableImpl) Delete(store kv.IndexCommitmentStore, primaryKey []protorefle
 	return nil
 }
 
-func (t TableImpl) GetIndex(fields FieldNames) ormindex.Index {
+func (t TableImpl) GetIndex(fields FieldNames) Index {
 	return t.indexesByFields[fields]
 }
 
-func (t TableImpl) GetUniqueIndex(fields FieldNames) ormindex.UniqueIndex {
+func (t TableImpl) GetUniqueIndex(fields FieldNames) UniqueIndex {
 	return t.uniqueIndexesByFields[fields]
 }
 
-func (t TableImpl) Indexes() []ormindex.Index {
+func (t TableImpl) Indexes() []Index {
 	return t.indexes
 }
 

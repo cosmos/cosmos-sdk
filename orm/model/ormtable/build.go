@@ -6,7 +6,6 @@ import (
 
 	ormv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormindex"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
 
@@ -49,15 +48,15 @@ func Build(options TableOptions) (Table, error) {
 		return nil, err
 	}
 
-	pkIndex := ormindex.NewPrimaryKeyIndex(pkCodec)
+	pkIndex := NewPrimaryKeyIndex(pkCodec)
 
 	table := &TableImpl{
 		PrimaryKeyIndex:       pkIndex,
-		indexers:              []ormindex.Indexer{},
-		indexes:               []ormindex.Index{},
-		indexesByFields:       map[FieldNames]ormindex.Index{},
-		uniqueIndexesByFields: map[FieldNames]ormindex.UniqueIndex{},
-		indexesById:           map[uint32]ormindex.Index{},
+		indexers:              []Indexer{},
+		indexes:               []Index{},
+		indexesByFields:       map[FieldNames]Index{},
+		uniqueIndexesByFields: map[FieldNames]UniqueIndex{},
+		indexesById:           map[uint32]Index{},
 		tablePrefix:           options.Prefix,
 		typeResolver:          options.TypeResolver,
 	}
@@ -83,21 +82,21 @@ func Build(options TableOptions) (Table, error) {
 		}
 
 		idxPrefix := AppendVarUInt32(options.Prefix, id)
-		var index ormindex.Indexer
+		var index Indexer
 		if idxDesc.Unique {
 			uniqCdc, err := ormkv.NewUniqueKeyCodec(idxPrefix, messageDescriptor, idxFields.Names(), pkFieldNames)
 			if err != nil {
 				return nil, err
 			}
-			uniqIdx := ormindex.NewUniqueKeyIndex(uniqCdc, pkIndex)
+			uniqIdx := NewUniqueKeyIndex(uniqCdc, pkIndex)
 			table.uniqueIndexesByFields[idxFields] = uniqIdx
-			index = ormindex.NewUniqueKeyIndex(uniqCdc, pkIndex)
+			index = NewUniqueKeyIndex(uniqCdc, pkIndex)
 		} else {
 			idxCdc, err := ormkv.NewIndexKeyCodec(idxPrefix, messageDescriptor, idxFields.Names(), pkFieldNames)
 			if err != nil {
 				return nil, err
 			}
-			index = ormindex.NewIndexKeyIndex(idxCdc, pkIndex)
+			index = NewIndexKeyIndex(idxCdc, pkIndex)
 		}
 		table.indexesByFields[idxFields] = index
 		table.indexesById[idxDesc.Id] = index

@@ -13,7 +13,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/orm/internal/memkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormindex"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormiterator"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -30,7 +29,7 @@ func testTable(t *testing.T, tableData *TableData) {
 			index:     index,
 		}
 		sort.Sort(indexModel)
-		if _, ok := index.(ormindex.UniqueIndex); ok {
+		if _, ok := index.(UniqueIndex); ok {
 			testUniqueIndex(t, indexModel)
 		}
 		testIndex(t, indexModel)
@@ -38,7 +37,7 @@ func testTable(t *testing.T, tableData *TableData) {
 }
 
 func testUniqueIndex(t *testing.T, model *IndexModel) {
-	index := model.index.(ormindex.UniqueIndex)
+	index := model.index.(UniqueIndex)
 	t.Logf("testing unique index %T %s", index, index.GetFieldNames())
 	for i := 0; i < len(model.data); i++ {
 		x := model.data[i]
@@ -63,11 +62,11 @@ func testIndex(t *testing.T, model *IndexModel) {
 		t.Logf("testing index %T %s", index, index.GetFieldNames())
 		messageType := model.table.MessageType()
 
-		it, err := model.index.PrefixIterator(model.store, nil, ormindex.IteratorOptions{})
+		it, err := model.index.PrefixIterator(model.store, nil, IteratorOptions{})
 		assert.NilError(t, err)
 		checkIteratorAgainstSlice(t, it, model.data, messageType)
 
-		it, err = model.index.PrefixIterator(model.store, nil, ormindex.IteratorOptions{Reverse: true})
+		it, err = model.index.PrefixIterator(model.store, nil, IteratorOptions{Reverse: true})
 		assert.NilError(t, err)
 		checkIteratorAgainstSlice(t, it, reverseData(model.data), messageType)
 	} else {
@@ -163,7 +162,7 @@ type TableData struct {
 
 type IndexModel struct {
 	*TableData
-	index ormindex.Index
+	index Index
 }
 
 func (m *IndexModel) Len() int {

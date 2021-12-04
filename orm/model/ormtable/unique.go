@@ -1,4 +1,4 @@
-package ormindex
+package ormtable
 
 import (
 	"google.golang.org/protobuf/proto"

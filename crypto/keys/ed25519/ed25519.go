@@ -1,12 +1,12 @@
 package ed25519
 
 import (
-	"crypto/ed25519"
+	goEd "crypto/ed25519"
 	"crypto/subtle"
 	"fmt"
 	"io"
 
-	"github.com/hdevalence/ed25519consensus"
+	"github.com/oasisprotocol/curve25519-voi/primitives/ed25519"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 
@@ -34,6 +34,13 @@ const (
 	keyType = "ed25519"
 )
 
+// curve25519-voi's Ed25519 implementation supports configurable
+// verification behavior, and tendermint/cosmos uses the ZIP-215
+//verification semantics.
+var verifyOptions = &ed25519.Options{
+	Verify: ed25519.VerifyOptionsZIP_215,
+}
+
 var _ cryptotypes.PrivKey = &PrivKey{}
 var _ codec.AminoMarshaler = &PrivKey{}
 
@@ -50,7 +57,7 @@ func (privKey *PrivKey) Bytes() []byte {
 // If these conditions aren't met, Sign will panic or produce an
 // incorrect signature.
 func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
-	return ed25519.Sign(privKey.Key, msg), nil
+	return ed25519.Sign(ed25519.PrivateKey(privKey.Key), msg), nil
 }
 
 // PubKey gets the corresponding public key from the private key.
@@ -134,7 +141,7 @@ func genPrivKey(rand io.Reader) *PrivKey {
 		panic(err)
 	}
 
-	return &PrivKey{Key: ed25519.NewKeyFromSeed(seed)}
+	return &PrivKey{Key: goEd.PrivateKey(ed25519.NewKeyFromSeed(seed))}
 }
 
 // GenPrivKeyFromSecret hashes the secret with SHA2, and uses
@@ -145,7 +152,7 @@ func genPrivKey(rand io.Reader) *PrivKey {
 func GenPrivKeyFromSecret(secret []byte) *PrivKey {
 	seed := crypto.Sha256(secret) // Not Ripemd160 because we want 32 bytes.
 
-	return &PrivKey{Key: ed25519.NewKeyFromSeed(seed)}
+	return &PrivKey{Key: goEd.PrivateKey(ed25519.NewKeyFromSeed(seed))}
 }
 
 //-------------------------------------
@@ -176,8 +183,8 @@ func (pubKey *PubKey) VerifySignature(msg []byte, sig []byte) bool {
 		return false
 	}
 
-	// uses https://github.com/hdevalence/ed25519consensus.Verify to comply with zip215 verification rules
-	return ed25519consensus.Verify(pubKey.Key, msg, sig)
+	// Uses the tendermint/cosmos-sdk verification options, which is ZIP-215.
+	return ed25519.VerifyWithOptions(ed25519.PublicKey(pubKey.Key), msg, sig, verifyOptions)
 }
 
 // String returns Hex representation of a pubkey with it's type

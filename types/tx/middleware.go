@@ -3,9 +3,8 @@ package tx
 import (
 	context "context"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

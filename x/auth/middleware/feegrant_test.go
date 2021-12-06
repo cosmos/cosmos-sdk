@@ -31,7 +31,7 @@ func (s *MWTestSuite) TestDeductFeesNoDelegation() {
 	protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(app.InterfaceRegistry()), tx.DefaultSignModes)
 
 	txHandler := middleware.ComposeMiddlewares(
-		noopTxHandler{},
+		noopTxHandler,
 		middleware.DeductFeeMiddleware(
 			s.app.AccountKeeper,
 			s.app.BankKeeper,

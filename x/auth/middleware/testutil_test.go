@@ -89,6 +89,7 @@ func (s *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 		FeegrantKeeper:   s.app.FeeGrantKeeper,
 		SignModeHandler:  encodingConfig.TxConfig.SignModeHandler(),
 		SigGasConsumer:   middleware.DefaultSigVerificationGasConsumer,
+		TxDecoder:        s.clientCtx.TxConfig.TxDecoder(),
 	})
 	s.Require().NoError(err)
 	s.txHandler = txHandler

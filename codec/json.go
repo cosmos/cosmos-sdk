@@ -3,13 +3,11 @@ package codec
 import (
 	"bytes"
 	"fmt"
-
 	"google.golang.org/protobuf/encoding/protojson"
-
-	gogoproto "github.com/gogo/protobuf/proto"
-	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/gogo/protobuf/jsonpb"
+	gogoproto "github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
@@ -38,8 +36,8 @@ func ProtoMarshalJSON(msg interface{}, resolver types.InterfaceRegistry) ([]byte
 		}
 
 		return buf.Bytes(), nil
-	case protov2.Message:
-		return protojson.MarshalOptions{Resolver: resolver}.Marshal(msg)
+	case *protoreflect.Message:
+		return protojson.MarshalOptions{Resolver: resolver}.Marshal((*msg).Interface())
 	default:
 		return nil, fmt.Errorf("%T is neither a v1 or v2 proto message", msg)
 	}

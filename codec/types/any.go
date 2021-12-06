@@ -2,6 +2,7 @@ package types
 
 import (
 	fmt "fmt"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	gogoproto "github.com/gogo/protobuf/proto"
 	protov2 "google.golang.org/protobuf/proto"
@@ -78,7 +79,7 @@ func NewAnyWithValue(v interface{}) (*Any, error) {
 // marshaled with amino and not protobuf.
 func UnsafePackAny(x interface{}) *Any {
 	_, v1 := x.(gogoproto.Message)
-	_, v2 := x.(protov2.Message)
+	_, v2 := x.(protoreflect.Message)
 	if v1 || v2 {
 		any, err := NewAnyWithValue(x)
 		if err == nil {
@@ -104,8 +105,8 @@ func (any *Any) pack(v interface{}) error {
 		if err != nil {
 			return err
 		}
-	case *protov2.Message:
-		bz, err = protov2.MarshalOptions{Deterministic: true}.Marshal(*v)
+	case *protoreflect.Message:
+		bz, err = protov2.MarshalOptions{Deterministic: true}.Marshal((*v).Interface())
 		if err != nil {
 			return err
 		}

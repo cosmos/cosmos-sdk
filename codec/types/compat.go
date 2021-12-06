@@ -2,13 +2,13 @@ package types
 
 import (
 	"fmt"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"reflect"
 	"runtime/debug"
 
 	"github.com/gogo/protobuf/jsonpb"
 	gogoproto "github.com/gogo/protobuf/proto"
 	"github.com/tendermint/go-amino"
-	protov2 "google.golang.org/protobuf/proto"
 )
 
 type anyCompat struct {
@@ -89,7 +89,7 @@ func (a AminoUnpacker) UnpackAny(any *Any, iface interface{}) error {
 		return err
 	}
 	_, v1 := val.(gogoproto.Message)
-	_, v2 := val.(protov2.Message)
+	_, v2 := val.(*protoreflect.Message)
 	if v1 || v2 {
 		if err = any.pack(val); err != nil {
 			return err
@@ -149,7 +149,7 @@ func (a AminoJSONUnpacker) UnpackAny(any *Any, iface interface{}) error {
 		return err
 	}
 	_, v1 := val.(gogoproto.Message)
-	_, v2 := val.(protov2.Message)
+	_, v2 := val.(*protoreflect.Message)
 	if v1 || v2 {
 		if err = any.pack(val); err != nil {
 			return err

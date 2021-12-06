@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	v2 "github.com/cosmos/cosmos-sdk/testutil/testdata/v2"
+	dv2 "github.com/cosmos/cosmos-sdk/testutil/testdata/v2"
 )
 
 type TypeWithInterface struct {
@@ -22,12 +22,23 @@ type Suite struct {
 	a    TypeWithInterface
 	b    testdata.HasAnimal
 	spot *testdata.Dog
+
+	snake       *dv2.Snake
+	v2interface TypeWithInterface
+	v2nested    testdata.HasAnimal
 }
 
 func (s *Suite) SetupTest() {
 	s.cdc = amino.NewCodec()
 	s.cdc.RegisterInterface((*testdata.Animal)(nil), nil)
 	s.cdc.RegisterConcrete(&testdata.Dog{}, "testdata/Dog", nil)
+	s.cdc.RegisterConcrete(&dv2.Snake{}, "testdata/v2/Snake", nil)
+
+	s.snake = &dv2.Snake{Name: "Carlos", Age: 28}
+	s.v2interface = TypeWithInterface{Animal: s.snake}
+	any2, err := types.NewAnyWithValue(s.snake)
+	s.Require().NoError(err)
+	s.v2nested = testdata.HasAnimal{Animal: any2}
 
 	s.spot = &testdata.Dog{Size_: "small", Name: "Spot"}
 	s.a = TypeWithInterface{Animal: s.spot}
@@ -60,6 +71,29 @@ func (s *Suite) TestAminoBinary() {
 	s.Require().Equal(s.spot, c.Animal.GetCachedValue())
 }
 
+func (s *Suite) TestAminoBinaryV2() {
+	bz, err := s.cdc.MarshalBinaryBare(s.v2interface)
+	s.Require().NoError(err)
+
+	// expect plain amino marshal to fail
+	_, err = s.cdc.MarshalBinaryBare(s.v2nested)
+	s.Require().Error(err)
+
+	// expect unpack interfaces before amino marshal to succeed
+	err = types.UnpackInterfaces(s.v2nested, types.AminoPacker{Cdc: s.cdc})
+	s.Require().NoError(err)
+	bz2, err := s.cdc.MarshalBinaryBare(s.v2nested)
+	s.Require().NoError(err)
+	s.Require().Equal(bz, bz2)
+
+	var c testdata.HasAnimal
+	err = s.cdc.UnmarshalBinaryBare(bz, &c)
+	s.Require().NoError(err)
+	err = types.UnpackInterfaces(c, types.AminoUnpacker{Cdc: s.cdc})
+	s.Require().NoError(err)
+	s.Require().Equal(s.snake, c.Animal.GetCachedValue())
+}
+
 func (s *Suite) TestAminoJSON() {
 	bz, err := s.cdc.MarshalJSON(s.a)
 	s.Require().NoError(err)
@@ -83,29 +117,28 @@ func (s *Suite) TestAminoJSON() {
 	s.Require().Equal(s.spot, c.Animal.GetCachedValue())
 }
 
-//func TestSimple(t *testing.T) {
-//	b := v2.B{X: "foobar!"}
-//	msg := b.ProtoReflect()
-//	fmt.Printf("msg is type %T\n", &msg)
-//	whatAmI(b)
-//
-//	var prmsg protoreflect.Message = b.ProtoReflect()
-//}
-//
-//func whatAmI(v interface{}) {
-//	switch t := v.(type) {
-//	case *protoreflect.Message:
-//		fmt.Printf("type %T is a protov2 message!\n", t)
-//	}
-//	msg, ok := v.(*protoreflect.Message)
-//	if ok {
-//		fmt.Println("all good!")
-//	} else {
-//		fmt.Println("BAD")
-//	}
-//
-//	fmt.Println(msg)
-//}
+func (s *Suite) TestAminoJSONV2() {
+	bz, err := s.cdc.MarshalJSON(s.v2interface)
+	s.Require().NoError(err)
+
+	// expect plain amino marshal to fail
+	_, err = s.cdc.MarshalJSON(s.v2nested)
+	s.Require().Error(err)
+
+	// expect unpack interfaces before amino marshal to succeed
+	err = types.UnpackInterfaces(s.v2nested, types.AminoJSONPacker{Cdc: s.cdc})
+	s.Require().NoError(err)
+	bz2, err := s.cdc.MarshalJSON(s.v2nested)
+	s.Require().NoError(err)
+	s.Require().Equal(string(bz), string(bz2))
+
+	var c testdata.HasAnimal
+	err = s.cdc.UnmarshalJSON(bz, &c)
+	s.Require().NoError(err)
+	err = types.UnpackInterfaces(c, types.AminoJSONUnpacker{Cdc: s.cdc})
+	s.Require().NoError(err)
+	s.Require().Equal(s.snake, c.Animal.GetCachedValue())
+}
 
 func (s *Suite) TestNested() {
 	s.cdc.RegisterInterface((*testdata.HasAnimalI)(nil), nil)
@@ -113,11 +146,6 @@ func (s *Suite) TestNested() {
 	s.cdc.RegisterConcrete(&testdata.HasAnimal{}, "testdata/HasAnimal", nil)
 	s.cdc.RegisterConcrete(&testdata.HasHasAnimal{}, "testdata/HasHasAnimal", nil)
 	s.cdc.RegisterConcrete(&testdata.HasHasHasAnimal{}, "testdata/HasHasHasAnimal", nil)
-	s.cdc.RegisterConcrete(&v2.B{}, "testdata/v2/B", nil)
-
-	b := &v2.B{X: "foobar"}
-	_, err := types.NewAnyWithValue(b)
-	s.Require().NoError(err)
 
 	any, err := types.NewAnyWithValue(&s.b)
 	s.Require().NoError(err)
@@ -155,6 +183,51 @@ func (s *Suite) TestNested() {
 	s.Require().NoError(err)
 
 	s.Require().Equal(s.spot, hhha3.TheHasHasAnimal().TheHasAnimal().TheAnimal())
+}
+
+func (s *Suite) TestNestedV2() {
+	s.cdc.RegisterInterface((*testdata.HasAnimalI)(nil), nil)
+	s.cdc.RegisterInterface((*testdata.HasHasAnimalI)(nil), nil)
+	s.cdc.RegisterConcrete(&testdata.HasAnimal{}, "testdata/HasAnimal", nil)
+	s.cdc.RegisterConcrete(&testdata.HasHasAnimal{}, "testdata/HasHasAnimal", nil)
+	s.cdc.RegisterConcrete(&testdata.HasHasHasAnimal{}, "testdata/HasHasHasAnimal", nil)
+
+	any, err := types.NewAnyWithValue(&s.v2nested)
+	s.Require().NoError(err)
+	hha := testdata.HasHasAnimal{HasAnimal: any}
+	any2, err := types.NewAnyWithValue(&hha)
+	s.Require().NoError(err)
+	hhha := testdata.HasHasHasAnimal{HasHasAnimal: any2}
+
+	// marshal
+	err = types.UnpackInterfaces(hhha, types.AminoPacker{Cdc: s.cdc})
+	s.Require().NoError(err)
+	bz, err := s.cdc.MarshalBinaryBare(hhha)
+	s.Require().NoError(err)
+
+	// unmarshal
+	var hhha2 testdata.HasHasHasAnimal
+	err = s.cdc.UnmarshalBinaryBare(bz, &hhha2)
+	s.Require().NoError(err)
+	err = types.UnpackInterfaces(hhha2, types.AminoUnpacker{Cdc: s.cdc})
+	s.Require().NoError(err)
+
+	s.Require().Equal(s.snake, hhha2.TheHasHasAnimal().TheHasAnimal().TheAnimal())
+
+	// json marshal
+	err = types.UnpackInterfaces(hhha, types.AminoJSONPacker{Cdc: s.cdc})
+	s.Require().NoError(err)
+	jsonBz, err := s.cdc.MarshalJSON(hhha)
+	s.Require().NoError(err)
+
+	// json unmarshal
+	var hhha3 testdata.HasHasHasAnimal
+	err = s.cdc.UnmarshalJSON(jsonBz, &hhha3)
+	s.Require().NoError(err)
+	err = types.UnpackInterfaces(hhha3, types.AminoJSONUnpacker{Cdc: s.cdc})
+	s.Require().NoError(err)
+
+	s.Require().Equal(s.snake, hhha3.TheHasHasAnimal().TheHasAnimal().TheAnimal())
 }
 
 func TestSuite(t *testing.T) {

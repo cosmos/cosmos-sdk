@@ -3,8 +3,6 @@ package middleware
 import (
 	"context"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -26,69 +24,46 @@ func NewTipMiddleware(bankKeeper types.BankKeeper) tx.Middleware {
 var _ tx.Handler = tipsTxHandler{}
 
 // CheckTx implements tx.Handler.CheckTx.
-func (txh tipsTxHandler) CheckTx(ctx context.Context, sdkTx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	res, err := txh.next.CheckTx(ctx, sdkTx, req)
-	if err != nil {
-		return abci.ResponseCheckTx{}, err
-	}
+func (txh tipsTxHandler) CheckTx(ctx context.Context, req tx.Request, checkTx tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
+	res, resCheckTx, err := txh.next.CheckTx(ctx, req, checkTx)
+	res, err = txh.transferTip(ctx, req, res, err)
 
-	tipTx, ok := sdkTx.(tx.TipTx)
-	if !ok || tipTx.GetTip() == nil {
-		return res, err
-	}
-
-	if err := txh.transferTip(ctx, tipTx); err != nil {
-		return abci.ResponseCheckTx{}, err
-	}
-
-	return res, err
+	return res, resCheckTx, err
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (txh tipsTxHandler) DeliverTx(ctx context.Context, sdkTx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	res, err := txh.next.DeliverTx(ctx, sdkTx, req)
-	if err != nil {
-		return abci.ResponseDeliverTx{}, err
-	}
+func (txh tipsTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	res, err := txh.next.DeliverTx(ctx, req)
 
-	tipTx, ok := sdkTx.(tx.TipTx)
-	if !ok || tipTx.GetTip() == nil {
-		return res, err
-	}
-
-	if err := txh.transferTip(ctx, tipTx); err != nil {
-		return abci.ResponseDeliverTx{}, err
-	}
-
-	return res, err
+	return txh.transferTip(ctx, req, res, err)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
-func (txh tipsTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	res, err := txh.next.SimulateTx(ctx, sdkTx, req)
-	if err != nil {
-		return tx.ResponseSimulateTx{}, err
-	}
+func (txh tipsTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	res, err := txh.next.SimulateTx(ctx, req)
 
-	tipTx, ok := sdkTx.(tx.TipTx)
+	return txh.transferTip(ctx, req, res, err)
+}
+
+// transferTip transfers the tip from the tipper to the fee payer.
+func (txh tipsTxHandler) transferTip(ctx context.Context, req tx.Request, res tx.Response, err error) (tx.Response, error) {
+	tipTx, ok := req.Tx.(tx.TipTx)
+
+	// No-op if the tx doesn't have tips.
 	if !ok || tipTx.GetTip() == nil {
 		return res, err
 	}
 
-	if err := txh.transferTip(ctx, tipTx); err != nil {
-		return tx.ResponseSimulateTx{}, err
-	}
-
-	return res, err
-}
-
-// transferTip transfers the tip from the tipper to the fee payer.
-func (txh tipsTxHandler) transferTip(ctx context.Context, tipTx tx.TipTx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	tipper, err := sdk.AccAddressFromBech32(tipTx.GetTip().Tipper)
 	if err != nil {
-		return err
+		return tx.Response{}, err
 	}
 
-	return txh.bankKeeper.SendCoins(sdkCtx, tipper, tipTx.FeePayer(), tipTx.GetTip().Amount)
+	err = txh.bankKeeper.SendCoins(sdkCtx, tipper, tipTx.FeePayer(), tipTx.GetTip().Amount)
+	if err != nil {
+		return tx.Response{}, err
+	}
+
+	return res, nil
 }

@@ -2,9 +2,10 @@ package ormtable
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"sort"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -70,7 +71,7 @@ func testIndex(t *testing.T, model *IndexModel) {
 		assert.NilError(t, err)
 		checkIteratorAgainstSlice(t, it, reverseData(model.data), messageType)
 	} else {
-		t.Logf("can't automatically test unordered index %T %s", index, index.GetFieldNames())
+		t.Logf("can't automatically test unordered index %T %s, TODO: test presence of all keys", index, index.GetFieldNames())
 	}
 
 	//

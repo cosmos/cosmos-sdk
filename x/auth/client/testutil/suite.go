@@ -987,6 +987,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
+	s.Require().NoError(s.network.WaitForNextBlock())
 	_, err = s.createBankMsg(
 		val1, addr,
 		sdk.NewCoins(sendTokens),

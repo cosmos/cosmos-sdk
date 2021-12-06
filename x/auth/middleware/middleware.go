@@ -32,6 +32,10 @@ func ComposeMiddlewares(txHandler tx.Handler, middlewares ...tx.Middleware) tx.H
 
 type TxHandlerOptions struct {
 	Debug bool
+
+	// TxDecoder is used to decode the raw tx bytes into a sdk.Tx.
+	TxDecoder sdk.TxDecoder
+
 	// IndexEvents defines the set of events in the form {eventType}.{attributeKey},
 	// which informs Tendermint what to index. If empty, all events will be indexed.
 	IndexEvents map[string]struct{}
@@ -49,16 +53,20 @@ type TxHandlerOptions struct {
 // NewDefaultTxHandler defines a TxHandler middleware stacks that should work
 // for most applications.
 func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
+	if options.TxDecoder == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "txDecoder is required for middlewares")
+	}
+
 	if options.AccountKeeper == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "account keeper is required for compose middlewares")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "account keeper is required for middlewares")
 	}
 
 	if options.BankKeeper == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "bank keeper is required for compose middlewares")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "bank keeper is required for middlewares")
 	}
 
 	if options.SignModeHandler == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "sign mode handler is required for compose middlewares")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "sign mode handler is required for middlewares")
 	}
 
 	var sigGasConsumer = options.SigGasConsumer
@@ -68,6 +76,7 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 
 	return ComposeMiddlewares(
 		NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
+		NewTxDecoderMiddleware(options.TxDecoder),
 		// Set a new GasMeter on sdk.Context.
 		//
 		// Make sure the Gas middleware is outside of all other middlewares
@@ -89,7 +98,7 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		ValidateMemoMiddleware(options.AccountKeeper),
 		ConsumeTxSizeGasMiddleware(options.AccountKeeper),
 		DeductFeeMiddleware(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),
-		TxPriorityHandler,
+		TxPriorityMiddleware,
 		SetPubKeyMiddleware(options.AccountKeeper),
 		ValidateSigCountMiddleware(options.AccountKeeper),
 		SigGasConsumeMiddleware(options.AccountKeeper, sigGasConsumer),

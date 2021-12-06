@@ -6,12 +6,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -70,7 +70,16 @@ func (s *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 	msr := middleware.NewMsgServiceRouter(encodingConfig.InterfaceRegistry)
 	testdata.RegisterMsgServer(msr, testdata.MsgServerImpl{})
 	legacyRouter := middleware.NewLegacyRouter()
-	legacyRouter.AddRoute(sdk.NewRoute((&testdata.TestMsg{}).Route(), func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) { return &sdk.Result{}, nil }))
+	legacyRouter.AddRoute(sdk.NewRoute((&testdata.TestMsg{}).Route(), func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+		any, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			return nil, err
+		}
+
+		return &sdk.Result{
+			MsgResponses: []*codectypes.Any{any},
+		}, nil
+	}))
 	txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 		Debug:            s.app.Trace(),
 		MsgServiceRouter: msr,
@@ -80,6 +89,7 @@ func (s *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 		FeegrantKeeper:   s.app.FeeGrantKeeper,
 		SignModeHandler:  encodingConfig.TxConfig.SignModeHandler(),
 		SigGasConsumer:   middleware.DefaultSigVerificationGasConsumer,
+		TxDecoder:        s.clientCtx.TxConfig.TxDecoder(),
 	})
 	s.Require().NoError(err)
 	s.txHandler = txHandler
@@ -174,8 +184,8 @@ func (s *MWTestSuite) runTestCase(ctx sdk.Context, txBuilder client.TxBuilder, p
 		// Theoretically speaking, middleware unit tests should only test
 		// middlewares, but here we sometimes also test the tx creation
 		// process.
-		tx, _, txErr := s.createTestTx(txBuilder, privs, accNums, accSeqs, chainID)
-		newCtx, txHandlerErr := s.txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, types.RequestDeliverTx{})
+		testTx, _, txErr := s.createTestTx(txBuilder, privs, accNums, accSeqs, chainID)
+		newCtx, txHandlerErr := s.txHandler.DeliverTx(sdk.WrapSDKContext(ctx), txtypes.Request{Tx: testTx})
 
 		if tc.expPass {
 			s.Require().NoError(txErr)

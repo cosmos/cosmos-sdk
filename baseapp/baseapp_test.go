@@ -23,6 +23,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
@@ -39,8 +41,12 @@ var (
 	capKey1 = sdk.NewKVStoreKey("key1")
 	capKey2 = sdk.NewKVStoreKey("key2")
 
-	interfaceRegistry = testdata.NewTestInterfaceRegistry()
+	encCfg = simapp.MakeTestEncodingConfig()
 )
+
+func init() {
+	registerTestCodec(encCfg.Amino)
+}
 
 type paramStore struct {
 	db *dbm.MemDB
@@ -89,13 +95,10 @@ func newBaseApp(name string, options ...func(*baseapp.BaseApp)) *baseapp.BaseApp
 	db := dbm.NewMemDB()
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
-	return baseapp.NewBaseApp(name, logger, db, testTxDecoder(codec), options...)
+	return baseapp.NewBaseApp(name, logger, db, options...)
 }
 
 func registerTestCodec(cdc *codec.LegacyAmino) {
-	// register Tx, Msg
-	sdk.RegisterLegacyAminoCodec(cdc)
-
 	// register test types
 	cdc.RegisterConcrete(&txTest{}, "cosmos-sdk/baseapp/txTest", nil)
 	cdc.RegisterConcrete(&msgCounter{}, "cosmos-sdk/baseapp/msgCounter", nil)
@@ -105,10 +108,7 @@ func registerTestCodec(cdc *codec.LegacyAmino) {
 }
 
 // aminoTxEncoder creates a amino TxEncoder for testing purposes.
-func aminoTxEncoder() sdk.TxEncoder {
-	cdc := codec.NewLegacyAmino()
-	registerTestCodec(cdc)
-
+func aminoTxEncoder(cdc *codec.LegacyAmino) sdk.TxEncoder {
 	return legacytx.StdTxConfig{Cdc: cdc}.TxEncoder()
 }
 
@@ -131,6 +131,7 @@ func setupBaseApp(t *testing.T, options ...func(*baseapp.BaseApp)) *baseapp.Base
 func testTxHandler(options middleware.TxHandlerOptions, customTxHandlerMiddleware handlerFun) tx.Handler {
 	return middleware.ComposeMiddlewares(
 		middleware.NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
+		middleware.NewTxDecoderMiddleware(options.TxDecoder),
 		middleware.GasTxMiddleware,
 		middleware.RecoveryTxMiddleware,
 		middleware.NewIndexEventsTxMiddleware(options.IndexEvents),
@@ -148,12 +149,20 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 		legacyRouter.AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			kv := msg.(*msgKeyValue)
 			bapp.CMS().GetCommitKVStore(capKey2).Set(kv.Key, kv.Value)
-			return &sdk.Result{}, nil
+			any, err := codectypes.NewAnyWithValue(msg)
+			if err != nil {
+				return nil, err
+			}
+
+			return &sdk.Result{
+				MsgResponses: []*codectypes.Any{any},
+			}, nil
 		}))
 		txHandler := testTxHandler(
 			middleware.TxHandlerOptions{
 				LegacyRouter:     legacyRouter,
-				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+				MsgServiceRouter: middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry),
+				TxDecoder:        testTxDecoder(encCfg.Amino),
 			},
 			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) { return ctx, nil },
 		)
@@ -192,7 +201,7 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 				tx.Msgs = append(tx.Msgs, msgKeyValue{Key: key, Value: value})
 				keyCounter++
 			}
-			txBytes, err := codec.Marshal(tx)
+			txBytes, err := encCfg.Amino.Marshal(tx)
 			require.NoError(t, err)
 			resp := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 			require.True(t, resp.IsOK(), "%v", resp.String())
@@ -237,7 +246,7 @@ func TestLoadVersion(t *testing.T) {
 	pruningOpt := baseapp.SetPruning(storetypes.PruneNothing)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
+	app := baseapp.NewBaseApp(name, logger, db, pruningOpt)
 
 	// make a cap key and mount the store
 	err := app.LoadLatestVersion() // needed to make stores non-nil
@@ -264,7 +273,7 @@ func TestLoadVersion(t *testing.T) {
 	commitID2 := storetypes.CommitID{Version: 2, Hash: res.Data}
 
 	// reload with LoadLatestVersion
-	app = baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
+	app = baseapp.NewBaseApp(name, logger, db, pruningOpt)
 	app.MountStores()
 	err = app.LoadLatestVersion()
 	require.Nil(t, err)
@@ -272,7 +281,7 @@ func TestLoadVersion(t *testing.T) {
 
 	// reload with LoadVersion, see if you can commit the same block and get
 	// the same result
-	app = baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
+	app = baseapp.NewBaseApp(name, logger, db, pruningOpt)
 	err = app.LoadVersion(1)
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(1), commitID1)
@@ -351,7 +360,7 @@ func TestSetLoader(t *testing.T) {
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)
 			}
-			app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
+			app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, opts...)
 			app.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
 			err := app.LoadLatestVersion()
 			require.Nil(t, err)
@@ -373,7 +382,7 @@ func TestVersionSetterGetter(t *testing.T) {
 	pruningOpt := baseapp.SetPruning(storetypes.PruneDefault)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
+	app := baseapp.NewBaseApp(name, logger, db, pruningOpt)
 
 	require.Equal(t, "", app.Version())
 	res := app.Query(abci.RequestQuery{Path: "app/version"})
@@ -393,7 +402,7 @@ func TestLoadVersionInvalid(t *testing.T) {
 	pruningOpt := baseapp.SetPruning(storetypes.PruneNothing)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
+	app := baseapp.NewBaseApp(name, logger, db, pruningOpt)
 
 	err := app.LoadLatestVersion()
 	require.Nil(t, err)
@@ -408,7 +417,7 @@ func TestLoadVersionInvalid(t *testing.T) {
 	commitID1 := storetypes.CommitID{Version: 1, Hash: res.Data}
 
 	// create a new app with the stores mounted under the same cap key
-	app = baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
+	app = baseapp.NewBaseApp(name, logger, db, pruningOpt)
 
 	// require we can load the latest version
 	err = app.LoadVersion(1)
@@ -430,7 +439,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	pruningOpt := baseapp.SetPruning(pruningOptions)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
+	app := baseapp.NewBaseApp(name, logger, db, pruningOpt)
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("key1")
@@ -468,7 +477,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	}
 
 	// reload with LoadLatestVersion, check it loads last version
-	app = baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
+	app = baseapp.NewBaseApp(name, logger, db, pruningOpt)
 	app.MountStores(capKey)
 
 	err = app.LoadLatestVersion()
@@ -486,7 +495,7 @@ func testLoadVersionHelper(t *testing.T, app *baseapp.BaseApp, expectedHeight in
 func TestOptionFunction(t *testing.T) {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
-	bap := baseapp.NewBaseApp("starting name", logger, db, nil, testChangeNameHelper("new name"))
+	bap := baseapp.NewBaseApp("starting name", logger, db, testChangeNameHelper("new name"))
 	require.Equal(t, bap.GetName(), "new name", "BaseApp should have had name changed via option function")
 }
 
@@ -494,23 +503,6 @@ func testChangeNameHelper(name string) func(*baseapp.BaseApp) {
 	return func(bap *baseapp.BaseApp) {
 		bap.SetName(name)
 	}
-}
-
-// Test that txs can be unmarshalled and read and that
-// correct error codes are returned when not
-func TestTxDecoder(t *testing.T) {
-	codec := codec.NewLegacyAmino()
-	registerTestCodec(codec)
-
-	app := newBaseApp(t.Name())
-	tx := newTxCounter(1, 0)
-	txBytes := codec.MustMarshal(tx)
-
-	dTx, err := app.TxDecoder(txBytes)
-	require.NoError(t, err)
-
-	cTx := dTx.(txTest)
-	require.Equal(t, tx.Counter, cTx.Counter)
 }
 
 // Test that Info returns the latest committed state.
@@ -581,7 +573,7 @@ func TestInitChainer(t *testing.T) {
 	// we can reload the same  app later
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := baseapp.NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, logger, db)
 	capKey := sdk.NewKVStoreKey("main")
 	capKey2 := sdk.NewKVStoreKey("key2")
 	app.MountStores(capKey, capKey2)
@@ -636,7 +628,7 @@ func TestInitChainer(t *testing.T) {
 	require.Equal(t, value, res.Value)
 
 	// reload app
-	app = baseapp.NewBaseApp(name, logger, db, nil)
+	app = baseapp.NewBaseApp(name, logger, db)
 	app.SetInitChainer(initChainer)
 	app.MountStores(capKey, capKey2)
 	err = app.LoadLatestVersion() // needed to make stores non-nil
@@ -660,7 +652,7 @@ func TestInitChain_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := baseapp.NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, logger, db)
 
 	app.InitChain(
 		abci.RequestInitChain{
@@ -676,7 +668,7 @@ func TestBeginBlock_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := baseapp.NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, logger, db)
 
 	app.InitChain(
 		abci.RequestInitChain{
@@ -716,7 +708,7 @@ func (tx *txTest) setFailOnAnte(fail bool) {
 
 func (tx *txTest) setFailOnHandler(fail bool) {
 	for i, msg := range tx.Msgs {
-		tx.Msgs[i] = msgCounter{msg.(msgCounter).Counter, fail}
+		tx.Msgs[i] = &msgCounter{msg.(*msgCounter).Counter, fail}
 	}
 }
 
@@ -744,16 +736,16 @@ type msgCounter struct {
 }
 
 // dummy implementation of proto.Message
-func (msg msgCounter) Reset()         {}
-func (msg msgCounter) String() string { return "TODO" }
-func (msg msgCounter) ProtoMessage()  {}
+func (msg *msgCounter) Reset()         {}
+func (msg *msgCounter) String() string { return "TODO" }
+func (msg *msgCounter) ProtoMessage()  {}
 
 // Implements Msg
-func (msg msgCounter) Route() string                { return routeMsgCounter }
-func (msg msgCounter) Type() string                 { return "counter1" }
-func (msg msgCounter) GetSignBytes() []byte         { return nil }
-func (msg msgCounter) GetSigners() []sdk.AccAddress { return nil }
-func (msg msgCounter) ValidateBasic() error {
+func (msg *msgCounter) Route() string                { return routeMsgCounter }
+func (msg *msgCounter) Type() string                 { return "counter1" }
+func (msg *msgCounter) GetSignBytes() []byte         { return nil }
+func (msg *msgCounter) GetSigners() []sdk.AccAddress { return nil }
+func (msg *msgCounter) ValidateBasic() error {
 	if msg.Counter >= 0 {
 		return nil
 	}
@@ -763,7 +755,7 @@ func (msg msgCounter) ValidateBasic() error {
 func newTxCounter(counter int64, msgCounters ...int64) txTest {
 	msgs := make([]sdk.Msg, 0, len(msgCounters))
 	for _, c := range msgCounters {
-		msgs = append(msgs, msgCounter{c, false})
+		msgs = append(msgs, &msgCounter{c, false})
 	}
 
 	return txTest{msgs, counter, false, math.MaxUint64}
@@ -903,6 +895,14 @@ func handlerMsgCounter(t *testing.T, capKey storetypes.StoreKey, deliverKey []by
 		}
 
 		res.Events = ctx.EventManager().Events().ToABCIEvents()
+
+		any, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			return nil, err
+		}
+
+		res.MsgResponses = []*codectypes.Any{any}
+
 		return res, nil
 	}
 }
@@ -957,7 +957,8 @@ func TestCheckTx(t *testing.T) {
 		txHandler := testTxHandler(
 			middleware.TxHandlerOptions{
 				LegacyRouter:     legacyRouter,
-				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+				MsgServiceRouter: middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry),
+				TxDecoder:        testTxDecoder(encCfg.Amino),
 			},
 			customHandlerTxTest(t, capKey1, counterKey),
 		)
@@ -969,17 +970,13 @@ func TestCheckTx(t *testing.T) {
 	nTxs := int64(5)
 	app.InitChain(abci.RequestInitChain{})
 
-	// Create same codec used in txDecoder
-	codec := codec.NewLegacyAmino()
-	registerTestCodec(codec)
-
 	for i := int64(0); i < nTxs; i++ {
 		tx := newTxCounter(i, 0) // no messages
-		txBytes, err := codec.Marshal(tx)
+		txBytes, err := encCfg.Amino.Marshal(tx)
 		require.NoError(t, err)
 		r := app.CheckTx(abci.RequestCheckTx{Tx: txBytes})
 		require.Empty(t, r.GetEvents())
-		require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
+		require.True(t, r.IsOK(), fmt.Sprintf("%+v", r))
 	}
 
 	checkStateStore := app.CheckState().Context().KVStore(capKey1)
@@ -1010,6 +1007,7 @@ func TestDeliverTx(t *testing.T) {
 	anteKey := []byte("ante-key")
 	// test increments in the handler
 	deliverKey := []byte("deliver-key")
+
 	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
@@ -1017,7 +1015,8 @@ func TestDeliverTx(t *testing.T) {
 		txHandler := testTxHandler(
 			middleware.TxHandlerOptions{
 				LegacyRouter:     legacyRouter,
-				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+				MsgServiceRouter: middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry),
+				TxDecoder:        testTxDecoder(encCfg.Amino),
 			},
 			customHandlerTxTest(t, capKey1, anteKey),
 		)
@@ -1025,10 +1024,6 @@ func TestDeliverTx(t *testing.T) {
 	}
 	app := setupBaseApp(t, txHandlerOpt)
 	app.InitChain(abci.RequestInitChain{})
-
-	// Create same codec used in txDecoder
-	codec := codec.NewLegacyAmino()
-	registerTestCodec(codec)
 
 	nBlocks := 3
 	txPerHeight := 5
@@ -1041,7 +1036,7 @@ func TestDeliverTx(t *testing.T) {
 			counter := int64(blockN*txPerHeight + i)
 			tx := newTxCounter(counter, counter)
 
-			txBytes, err := codec.Marshal(tx)
+			txBytes, err := encCfg.Amino.Marshal(tx)
 			require.NoError(t, err)
 
 			res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
@@ -1070,6 +1065,7 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 	// increment the msg counter
 	deliverKey := []byte("deliver-key")
 	deliverKey2 := []byte("deliver-key2")
+
 	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r1 := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
@@ -1079,7 +1075,8 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 		txHandler := testTxHandler(
 			middleware.TxHandlerOptions{
 				LegacyRouter:     legacyRouter,
-				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+				MsgServiceRouter: middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry),
+				TxDecoder:        testTxDecoder(encCfg.Amino),
 			},
 			customHandlerTxTest(t, capKey1, anteKey),
 		)
@@ -1087,17 +1084,13 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 	}
 	app := setupBaseApp(t, txHandlerOpt)
 
-	// Create same codec used in txDecoder
-	codec := codec.NewLegacyAmino()
-	registerTestCodec(codec)
-
 	// run a multi-msg tx
 	// with all msgs the same route
 
 	header := tmproto.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	tx := newTxCounter(0, 0, 1, 2)
-	txBytes, err := codec.Marshal(tx)
+	txBytes, err := encCfg.Amino.Marshal(tx)
 	require.NoError(t, err)
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
@@ -1117,7 +1110,7 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 	tx = newTxCounter(1, 3)
 	tx.Msgs = append(tx.Msgs, msgCounter2{0})
 	tx.Msgs = append(tx.Msgs, msgCounter2{1})
-	txBytes, err = codec.Marshal(tx)
+	txBytes, err = encCfg.Amino.Marshal(tx)
 	require.NoError(t, err)
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
@@ -1153,13 +1146,22 @@ func TestSimulateTx(t *testing.T) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			ctx.GasMeter().ConsumeGas(gasConsumed, "test")
-			return &sdk.Result{}, nil
+			// Return dummy MsgResponse for msgCounter.
+			any, err := codectypes.NewAnyWithValue(&testdata.Dog{})
+			if err != nil {
+				return nil, err
+			}
+
+			return &sdk.Result{
+				MsgResponses: []*codectypes.Any{any},
+			}, nil
 		})
 		legacyRouter.AddRoute(r)
 		txHandler := testTxHandler(
 			middleware.TxHandlerOptions{
 				LegacyRouter:     legacyRouter,
-				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+				MsgServiceRouter: middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry),
+				TxDecoder:        testTxDecoder(encCfg.Amino),
 			},
 			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) { return ctx, nil },
 		)
@@ -1169,10 +1171,6 @@ func TestSimulateTx(t *testing.T) {
 
 	app.InitChain(abci.RequestInitChain{})
 
-	// Create same codec used in txDecoder
-	cdc := codec.NewLegacyAmino()
-	registerTestCodec(cdc)
-
 	nBlocks := 3
 	for blockN := 0; blockN < nBlocks; blockN++ {
 		count := int64(blockN + 1)
@@ -1181,7 +1179,7 @@ func TestSimulateTx(t *testing.T) {
 
 		tx := newTxCounter(count, count)
 		tx.GasLimit = gasConsumed
-		txBytes, err := cdc.Marshal(tx)
+		txBytes, err := encCfg.Amino.Marshal(tx)
 		require.Nil(t, err)
 
 		// simulate a message, check gas reported
@@ -1221,13 +1219,21 @@ func TestRunInvalidTransaction(t *testing.T) {
 	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			return &sdk.Result{}, nil
+			any, err := codectypes.NewAnyWithValue(msg)
+			if err != nil {
+				return nil, err
+			}
+
+			return &sdk.Result{
+				MsgResponses: []*codectypes.Any{any},
+			}, nil
 		})
 		legacyRouter.AddRoute(r)
 		txHandler := testTxHandler(
 			middleware.TxHandlerOptions{
 				LegacyRouter:     legacyRouter,
-				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+				MsgServiceRouter: middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry),
+				TxDecoder:        testTxDecoder(encCfg.Amino),
 			},
 			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 				return
@@ -1243,7 +1249,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 	// transaction with no messages
 	{
 		emptyTx := &txTest{}
-		_, result, err := app.SimDeliver(aminoTxEncoder(), emptyTx)
+		_, result, err := app.SimDeliver(aminoTxEncoder(encCfg.Amino), emptyTx)
 		require.Nil(t, result)
 
 		space, code, _ := sdkerrors.ABCIInfo(err, false)
@@ -1269,7 +1275,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 
 		for _, testCase := range testCases {
 			tx := testCase.tx
-			_, result, err := app.SimDeliver(aminoTxEncoder(), tx)
+			_, _, err := app.SimDeliver(aminoTxEncoder(encCfg.Amino), tx)
 
 			if testCase.fail {
 				require.Error(t, err)
@@ -1278,15 +1284,15 @@ func TestRunInvalidTransaction(t *testing.T) {
 				require.EqualValues(t, sdkerrors.ErrInvalidSequence.Codespace(), space, err)
 				require.EqualValues(t, sdkerrors.ErrInvalidSequence.ABCICode(), code, err)
 			} else {
-				require.NotNil(t, result)
+				require.NoError(t, err)
 			}
 		}
 	}
 
 	// transaction with no known route
 	{
-		unknownRouteTx := txTest{[]sdk.Msg{msgNoRoute{}}, 0, false, math.MaxUint64}
-		_, result, err := app.SimDeliver(aminoTxEncoder(), unknownRouteTx)
+		unknownRouteTx := txTest{[]sdk.Msg{&msgNoRoute{}}, 0, false, math.MaxUint64}
+		_, result, err := app.SimDeliver(aminoTxEncoder(encCfg.Amino), unknownRouteTx)
 		require.Error(t, err)
 		require.Nil(t, result)
 
@@ -1294,8 +1300,8 @@ func TestRunInvalidTransaction(t *testing.T) {
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), space, err)
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 
-		unknownRouteTx = txTest{[]sdk.Msg{msgCounter{}, msgNoRoute{}}, 0, false, math.MaxUint64}
-		_, result, err = app.SimDeliver(aminoTxEncoder(), unknownRouteTx)
+		unknownRouteTx = txTest{[]sdk.Msg{&msgCounter{}, &msgNoRoute{}}, 0, false, math.MaxUint64}
+		_, result, err = app.SimDeliver(aminoTxEncoder(encCfg.Amino), unknownRouteTx)
 		require.Error(t, err)
 		require.Nil(t, result)
 
@@ -1307,10 +1313,12 @@ func TestRunInvalidTransaction(t *testing.T) {
 	// Transaction with an unregistered message
 	{
 		tx := newTxCounter(0, 0)
-		tx.Msgs = append(tx.Msgs, msgNoDecode{})
+		tx.Msgs = append(tx.Msgs, &msgNoDecode{})
 
-		// new codec so we can encode the tx, but we shouldn't be able to decode
+		// new codec so we can encode the tx, but we shouldn't be able to decode,
+		// because baseapp's codec is not aware of msgNoDecode.
 		newCdc := codec.NewLegacyAmino()
+		sdk.RegisterLegacyAminoCodec(newCdc) // register Tx, Msg
 		registerTestCodec(newCdc)
 		newCdc.RegisterConcrete(&msgNoDecode{}, "cosmos-sdk/baseapp/msgNoDecode", nil)
 
@@ -1336,15 +1344,23 @@ func TestTxGasLimits(t *testing.T) {
 	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			count := msg.(msgCounter).Counter
+			count := msg.(*msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
-			return &sdk.Result{}, nil
+			any, err := codectypes.NewAnyWithValue(msg)
+			if err != nil {
+				return nil, err
+			}
+
+			return &sdk.Result{
+				MsgResponses: []*codectypes.Any{any},
+			}, nil
 		})
 		legacyRouter.AddRoute(r)
 		txHandler := testTxHandler(
 			middleware.TxHandlerOptions{
 				LegacyRouter:     legacyRouter,
-				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+				MsgServiceRouter: middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry),
+				TxDecoder:        testTxDecoder(encCfg.Amino),
 			},
 			ante,
 		)
@@ -1383,7 +1399,7 @@ func TestTxGasLimits(t *testing.T) {
 	for i, tc := range testCases {
 		tx := tc.tx
 		tx.GasLimit = gasGranted
-		gInfo, result, err := app.SimDeliver(aminoTxEncoder(), tx)
+		gInfo, result, err := app.SimDeliver(aminoTxEncoder(encCfg.Amino), tx)
 
 		// check gas used and wanted
 		require.Equal(t, tc.gasUsed, gInfo.GasUsed, fmt.Sprintf("tc #%d; gas: %v, result: %v, err: %s", i, gInfo, result, err))
@@ -1415,15 +1431,24 @@ func TestMaxBlockGasLimits(t *testing.T) {
 	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			count := msg.(msgCounter).Counter
+			count := msg.(*msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
-			return &sdk.Result{}, nil
+
+			any, err := codectypes.NewAnyWithValue(msg)
+			if err != nil {
+				return nil, err
+			}
+
+			return &sdk.Result{
+				MsgResponses: []*codectypes.Any{any},
+			}, nil
 		})
 		legacyRouter.AddRoute(r)
 		txHandler := testTxHandler(
 			middleware.TxHandlerOptions{
 				LegacyRouter:     legacyRouter,
-				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+				MsgServiceRouter: middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry),
+				TxDecoder:        testTxDecoder(encCfg.Amino),
 			},
 			ante,
 		)
@@ -1468,7 +1493,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 
 		// execute the transaction multiple times
 		for j := 0; j < tc.numDelivers; j++ {
-			_, result, err := app.SimDeliver(aminoTxEncoder(), tx)
+			_, result, err := app.SimDeliver(aminoTxEncoder(encCfg.Amino), tx)
 
 			ctx := app.DeliverState().Context()
 
@@ -1500,7 +1525,6 @@ func TestMaxBlockGasLimits(t *testing.T) {
 func TestBaseAppMiddleware(t *testing.T) {
 	anteKey := []byte("ante-key")
 	deliverKey := []byte("deliver-key")
-	cdc := codec.NewLegacyAmino()
 
 	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
@@ -1509,7 +1533,8 @@ func TestBaseAppMiddleware(t *testing.T) {
 		txHandler := testTxHandler(
 			middleware.TxHandlerOptions{
 				LegacyRouter:     legacyRouter,
-				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+				MsgServiceRouter: middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry),
+				TxDecoder:        testTxDecoder(encCfg.Amino),
 			},
 			customHandlerTxTest(t, capKey1, anteKey),
 		)
@@ -1518,7 +1543,6 @@ func TestBaseAppMiddleware(t *testing.T) {
 	app := setupBaseApp(t, txHandlerOpt)
 
 	app.InitChain(abci.RequestInitChain{})
-	registerTestCodec(cdc)
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -1529,7 +1553,7 @@ func TestBaseAppMiddleware(t *testing.T) {
 	// the next txs ante handler execution (customHandlerTxTest).
 	tx := newTxCounter(0, 0)
 	tx.setFailOnAnte(true)
-	txBytes, err := cdc.Marshal(tx)
+	txBytes, err := encCfg.Amino.Marshal(tx)
 	require.NoError(t, err)
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Empty(t, res.Events)
@@ -1544,7 +1568,7 @@ func TestBaseAppMiddleware(t *testing.T) {
 	tx = newTxCounter(0, 0)
 	tx.setFailOnHandler(true)
 
-	txBytes, err = cdc.Marshal(tx)
+	txBytes, err = encCfg.Amino.Marshal(tx)
 	require.NoError(t, err)
 
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
@@ -1560,7 +1584,7 @@ func TestBaseAppMiddleware(t *testing.T) {
 	// implicitly checked by previous tx executions
 	tx = newTxCounter(1, 0)
 
-	txBytes, err = cdc.Marshal(tx)
+	txBytes, err = encCfg.Amino.Marshal(tx)
 	require.NoError(t, err)
 
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
@@ -1589,13 +1613,10 @@ func TestGasConsumptionBadTx(t *testing.T) {
 		return ctx, nil
 	}
 
-	cdc := codec.NewLegacyAmino()
-	registerTestCodec(cdc)
-
 	txHandlerOpt := func(bapp *baseapp.BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			count := msg.(msgCounter).Counter
+			count := msg.(*msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
 			return &sdk.Result{}, nil
 		})
@@ -1603,7 +1624,8 @@ func TestGasConsumptionBadTx(t *testing.T) {
 		txHandler := testTxHandler(
 			middleware.TxHandlerOptions{
 				LegacyRouter:     legacyRouter,
-				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+				MsgServiceRouter: middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry),
+				TxDecoder:        testTxDecoder(encCfg.Amino),
 			},
 			ante,
 		)
@@ -1627,7 +1649,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 	tx := newTxCounter(5, 0)
 	tx.GasLimit = gasWanted
 	tx.setFailOnAnte(true)
-	txBytes, err := cdc.Marshal(tx)
+	txBytes, err := encCfg.Amino.Marshal(tx)
 	require.NoError(t, err)
 
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
@@ -1635,7 +1657,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 
 	// require next tx to fail due to black gas limit
 	tx = newTxCounter(5, 0)
-	txBytes, err = cdc.Marshal(tx)
+	txBytes, err = encCfg.Amino.Marshal(tx)
 	require.NoError(t, err)
 
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
@@ -1651,13 +1673,21 @@ func TestQuery(t *testing.T) {
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			store := ctx.KVStore(capKey1)
 			store.Set(key, value)
-			return &sdk.Result{}, nil
+
+			any, err := codectypes.NewAnyWithValue(msg)
+			if err != nil {
+				return nil, err
+			}
+			return &sdk.Result{
+				MsgResponses: []*codectypes.Any{any},
+			}, nil
 		})
 		legacyRouter.AddRoute(r)
 		txHandler := testTxHandler(
 			middleware.TxHandlerOptions{
 				LegacyRouter:     legacyRouter,
-				MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+				MsgServiceRouter: middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry),
+				TxDecoder:        testTxDecoder(encCfg.Amino),
 			},
 			func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 				store := ctx.KVStore(capKey1)
@@ -1685,7 +1715,7 @@ func TestQuery(t *testing.T) {
 	require.Equal(t, 0, len(res.Value))
 
 	// query is still empty after a CheckTx
-	_, resTx, err := app.SimCheck(aminoTxEncoder(), tx)
+	_, resTx, err := app.SimCheck(aminoTxEncoder(encCfg.Amino), tx)
 	require.NoError(t, err)
 	require.NotNil(t, resTx)
 	res = app.Query(query)
@@ -1695,7 +1725,7 @@ func TestQuery(t *testing.T) {
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	_, resTx, err = app.SimDeliver(aminoTxEncoder(), tx)
+	_, resTx, err = app.SimDeliver(aminoTxEncoder(encCfg.Amino), tx)
 	require.NoError(t, err)
 	require.NotNil(t, resTx)
 	res = app.Query(query)
@@ -1977,15 +2007,14 @@ func TestWithRouter(t *testing.T) {
 		customRouter := &testCustomRouter{routes: sync.Map{}}
 		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
 		customRouter.AddRoute(r)
-		txHandler := middleware.NewRunMsgsTxHandler(middleware.NewMsgServiceRouter(interfaceRegistry), customRouter)
+		txHandler := middleware.ComposeMiddlewares(
+			middleware.NewRunMsgsTxHandler(middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry), customRouter),
+			middleware.NewTxDecoderMiddleware(testTxDecoder(encCfg.Amino)),
+		)
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)
 	app.InitChain(abci.RequestInitChain{})
-
-	// Create same codec used in txDecoder
-	codec := codec.NewLegacyAmino()
-	registerTestCodec(codec)
 
 	nBlocks := 3
 	txPerHeight := 5
@@ -1998,7 +2027,7 @@ func TestWithRouter(t *testing.T) {
 			counter := int64(blockN*txPerHeight + i)
 			tx := newTxCounter(counter, counter)
 
-			txBytes, err := codec.Marshal(tx)
+			txBytes, err := encCfg.Amino.Marshal(tx)
 			require.NoError(t, err)
 
 			res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
@@ -2021,7 +2050,7 @@ func TestBaseApp_EndBlock(t *testing.T) {
 		},
 	}
 
-	app := baseapp.NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, logger, db)
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: cp,

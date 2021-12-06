@@ -36,13 +36,8 @@ func (app *BaseApp) SimCheck(txEncoder sdk.TxEncoder, sdkTx sdk.Tx) (sdk.GasInfo
 
 // Simulate executes a tx in simulate mode to get result and gas info.
 func (app *BaseApp) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
-	sdkTx, err := app.txDecoder(txBytes)
-	if err != nil {
-		return sdk.GasInfo{}, nil, err
-	}
-
 	ctx := app.getContextForTx(runTxModeSimulate, txBytes)
-	res, err := app.txHandler.SimulateTx(ctx, tx.Request{Tx: sdkTx, TxBytes: txBytes})
+	res, err := app.txHandler.SimulateTx(ctx, tx.Request{TxBytes: txBytes})
 	gasInfo := sdk.GasInfo{
 		GasWanted: res.GasWanted,
 		GasUsed:   res.GasUsed,

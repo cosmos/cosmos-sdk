@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"strings"
 
-	"google.golang.org/protobuf/types/known/durationpb"
-
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"pgregory.net/rapid"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormfield"
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 )
 
@@ -113,4 +113,78 @@ func MakeTestCodec(fname protoreflect.Name, nonTerminal bool) (ormfield.Codec, e
 func GetTestField(fname protoreflect.Name) protoreflect.FieldDescriptor {
 	a := &testpb.A{}
 	return a.ProtoReflect().Descriptor().Fields().ByName(fname)
+}
+
+type TestKeyCodec struct {
+	KeySpecs []TestFieldSpec
+	Codec    *ormkv.KeyCodec
+}
+
+func TestFieldSpecsGen(minLen, maxLen int) *rapid.Generator {
+	return rapid.Custom(func(t *rapid.T) []TestFieldSpec {
+		xs := rapid.SliceOfNDistinct(rapid.IntRange(0, len(TestFieldSpecs)-1), minLen, maxLen, func(i int) int { return i }).
+			Draw(t, "fieldSpecIndexes").([]int)
+
+		var specs []TestFieldSpec
+
+		for _, x := range xs {
+			spec := TestFieldSpecs[x]
+			specs = append(specs, spec)
+		}
+
+		return specs
+	})
+}
+
+func TestKeyCodecGen(minLen, maxLen int) *rapid.Generator {
+	return rapid.Custom(func(t *rapid.T) TestKeyCodec {
+		specs := TestFieldSpecsGen(minLen, maxLen).Draw(t, "fieldSpecs").([]TestFieldSpec)
+
+		var fields []protoreflect.Name
+		for _, spec := range specs {
+			fields = append(fields, spec.FieldName)
+		}
+
+		prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix").([]byte)
+
+		desc := (&testpb.A{}).ProtoReflect().Descriptor()
+		cdc, err := ormkv.NewKeyCodec(prefix, desc, fields)
+		if err != nil {
+			panic(err)
+		}
+
+		return TestKeyCodec{
+			Codec:    cdc,
+			KeySpecs: specs,
+		}
+	})
+}
+
+func (k TestKeyCodec) Draw(t *rapid.T, id string) []protoreflect.Value {
+	n := len(k.KeySpecs)
+	keyValues := make([]protoreflect.Value, n)
+	for i, k := range k.KeySpecs {
+		keyValues[i] = protoreflect.ValueOf(k.Gen.Draw(t, fmt.Sprintf("%s[%d]", id, i)))
+	}
+	return keyValues
+}
+
+var GenA = rapid.Custom(func(t *rapid.T) *testpb.A {
+	a := &testpb.A{}
+	ref := a.ProtoReflect()
+	for _, spec := range TestFieldSpecs {
+		field := GetTestField(spec.FieldName)
+		value := spec.Gen.Draw(t, string(spec.FieldName))
+		ref.Set(field, protoreflect.ValueOf(value))
+	}
+	return a
+})
+
+func ValuesOf(values ...interface{}) []protoreflect.Value {
+	n := len(values)
+	res := make([]protoreflect.Value, n)
+	for i := 0; i < n; i++ {
+		res[i] = protoreflect.ValueOf(values[i])
+	}
+	return res
 }

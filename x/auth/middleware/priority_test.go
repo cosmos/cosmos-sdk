@@ -12,7 +12,7 @@ func (s *MWTestSuite) TestPriority() {
 	ctx := s.SetupTest(true) // setup
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
-	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.TxPriorityMiddleware)
+	txHandler := middleware.ComposeMiddlewares(noopTxHandler, middleware.TxPriorityMiddleware)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()

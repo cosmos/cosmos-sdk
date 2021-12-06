@@ -210,7 +210,7 @@ func TestSign(t *testing.T) {
 			txfAmino, txb, from2, true, []cryptotypes.PubKey{pubKey2}, []int{1, 0}},
 
 		/**** test double sign Direct mode
-		  signing transaction with 2 or mjore DIRECT signers should fail in DIRECT mode ****/
+		  signing transaction with 2 or more DIRECT signers should fail in DIRECT mode ****/
 		{"direct: should  append a DIRECT signature with existing AMINO",
 			// Note: txb already has 1 AMINO signature
 			txfDirect, txb, from1, false, []cryptotypes.PubKey{pubKey2, pubKey1}, nil},

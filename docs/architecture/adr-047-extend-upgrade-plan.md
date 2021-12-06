@@ -94,7 +94,7 @@ message Artifact {
   and a `checksum` of `"sha512:2cafa43204f0f51229c01c1bdd3b29b6a446bfdc313a474a7091a87fe122d3defaee0de7aa7534496385c8dad02a8d76a8c39634c742677d20c9fdc2da59448e"` SHOULD be allowed.
   If the `url` contains a `checksum` query parameter, this `checksum` field SHOULD still be populated and if populated MUST equal the query parameter `checksum` value.
 
-### Upgrade module updates.
+### Upgrade Module Updates
 
 If an upgrade `Plan` does not use the new `UpgradeInstructions` field, existing functionality will be maintained.
 
@@ -115,7 +115,7 @@ We will add the following validation:
     1.  The `url` MUST return either a file or an archive containing either `bin/{DAEMON_NAME}` or `{DAEMON_NAME}`.
     1.  If a `checksum` is provided (in the field or as a query param), the checksum of the result of the `url` MUST equal the provided checksum.
 
-### Cosmovisor updates
+### Cosmovisor Updates
 
 If the `upgrade-info.json` file does not contain any `UpgradeInstructions`, existing functionality will be maintained.
 

@@ -50,7 +50,7 @@ func (s *MWTestSuite) setupGasTx() (signing.Tx, []byte, sdk.Context, uint64) {
 
 func (s *MWTestSuite) TestSetup() {
 	testTx, _, ctx, gasLimit := s.setupGasTx()
-	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.GasTxMiddleware)
+	txHandler := middleware.ComposeMiddlewares(noopTxHandler, middleware.GasTxMiddleware)
 
 	testcases := []struct {
 		name        string
@@ -77,62 +77,48 @@ func (s *MWTestSuite) TestSetup() {
 
 func (s *MWTestSuite) TestRecoverPanic() {
 	testTx, txBytes, ctx, gasLimit := s.setupGasTx()
-	txHandler := middleware.ComposeMiddlewares(outOfGasTxHandler{}, middleware.GasTxMiddleware, middleware.RecoveryTxMiddleware)
+	txHandler := middleware.ComposeMiddlewares(outOfGasTxHandler, middleware.GasTxMiddleware, middleware.RecoveryTxMiddleware)
 	res, _, err := txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: txBytes}, tx.RequestCheckTx{})
 	s.Require().Error(err, "Did not return error on OutOfGas panic")
 	s.Require().True(errors.Is(sdkerrors.ErrOutOfGas, err), "Returned error is not an out of gas error")
 	s.Require().Equal(gasLimit, uint64(res.GasWanted))
 
-	txHandler = middleware.ComposeMiddlewares(outOfGasTxHandler{}, middleware.GasTxMiddleware)
+	txHandler = middleware.ComposeMiddlewares(outOfGasTxHandler, middleware.GasTxMiddleware)
 	s.Require().Panics(func() {
 		txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: txBytes}, tx.RequestCheckTx{})
 	}, "Recovered from non-Out-of-Gas panic")
 }
 
-// outOfGasTxHandler is a test middleware that will throw OutOfGas panic.
-type outOfGasTxHandler struct{}
-
-var _ tx.Handler = outOfGasTxHandler{}
-
-func (txh outOfGasTxHandler) DeliverTx(ctx context.Context, _ tx.Request) (tx.Response, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	overLimit := sdkCtx.GasMeter().Limit() + 1
-
-	// Should panic with outofgas error
-	sdkCtx.GasMeter().ConsumeGas(overLimit, "test panic")
-
-	panic("not reached")
-}
-func (txh outOfGasTxHandler) CheckTx(ctx context.Context, _ tx.Request, _ tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	overLimit := sdkCtx.GasMeter().Limit() + 1
-
-	// Should panic with outofgas error
-	sdkCtx.GasMeter().ConsumeGas(overLimit, "test panic")
-
-	panic("not reached")
-}
-func (txh outOfGasTxHandler) SimulateTx(ctx context.Context, _ tx.Request) (tx.Response, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	overLimit := sdkCtx.GasMeter().Limit() + 1
-
-	// Should panic with outofgas error
-	sdkCtx.GasMeter().ConsumeGas(overLimit, "test panic")
-
-	panic("not reached")
+// customTxHandler is a test middleware that will run a custom function.
+type customTxHandler struct {
+	fn func(context.Context, tx.Request) (tx.Response, error)
 }
 
-// noopTxHandler is a test middleware that does nothing.
-type noopTxHandler struct{}
+var _ tx.Handler = customTxHandler{}
 
-var _ tx.Handler = noopTxHandler{}
-
-func (txh noopTxHandler) CheckTx(_ context.Context, _ tx.Request, _ tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
-	return tx.Response{}, tx.ResponseCheckTx{}, nil
+func (h customTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	return h.fn(ctx, req)
 }
-func (txh noopTxHandler) SimulateTx(_ context.Context, _ tx.Request) (tx.Response, error) {
+func (h customTxHandler) CheckTx(ctx context.Context, req tx.Request, _ tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
+	res, err := h.fn(ctx, req)
+	return res, tx.ResponseCheckTx{}, err
+}
+func (h customTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	return h.fn(ctx, req)
+}
+
+// noopTxHandler is a test middleware that returns an empty response.
+var noopTxHandler = customTxHandler{func(_ context.Context, _ tx.Request) (tx.Response, error) {
 	return tx.Response{}, nil
-}
-func (txh noopTxHandler) DeliverTx(ctx context.Context, _ tx.Request) (tx.Response, error) {
-	return tx.Response{}, nil
-}
+}}
+
+// outOfGasTxHandler is a test middleware that panics with an outOfGas error.
+var outOfGasTxHandler = customTxHandler{func(ctx context.Context, _ tx.Request) (tx.Response, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	overLimit := sdkCtx.GasMeter().Limit() + 1
+
+	// Should panic with outofgas error
+	sdkCtx.GasMeter().ConsumeGas(overLimit, "test panic")
+
+	panic("not reached")
+}}

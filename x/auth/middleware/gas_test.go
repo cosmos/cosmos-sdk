@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -49,8 +51,8 @@ func (s *MWTestSuite) setupGasTx() (signing.Tx, []byte, sdk.Context, uint64) {
 }
 
 func (s *MWTestSuite) TestSetup() {
-	testTx, _, ctx, gasLimit := s.setupGasTx()
-	txHandler := middleware.ComposeMiddlewares(noopTxHandler, middleware.GasTxMiddleware)
+	tx, _, ctx, gasLimit := s.setupGasTx()
+	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.GasTxMiddleware)
 
 	testcases := []struct {
 		name        string
@@ -60,11 +62,11 @@ func (s *MWTestSuite) TestSetup() {
 		errorStr    string
 	}{
 		{"not a gas tx", txTest{}, 0, true, "Tx must be GasTx: tx parse error"},
-		{"tx with its own gas limit", testTx, gasLimit, false, ""},
+		{"tx with its own gas limit", tx, gasLimit, false, ""},
 	}
 	for _, tc := range testcases {
 		s.Run(tc.name, func() {
-			res, _, err := txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: tc.tx}, tx.RequestCheckTx{})
+			res, err := txHandler.CheckTx(sdk.WrapSDKContext(ctx), tc.tx, abci.RequestCheckTx{})
 			if tc.expErr {
 				s.Require().EqualError(err, tc.errorStr)
 			} else {
@@ -76,44 +78,23 @@ func (s *MWTestSuite) TestSetup() {
 }
 
 func (s *MWTestSuite) TestRecoverPanic() {
-	testTx, txBytes, ctx, gasLimit := s.setupGasTx()
-	txHandler := middleware.ComposeMiddlewares(outOfGasTxHandler, middleware.GasTxMiddleware, middleware.RecoveryTxMiddleware)
-	res, _, err := txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: txBytes}, tx.RequestCheckTx{})
+	tx, txBytes, ctx, gasLimit := s.setupGasTx()
+	txHandler := middleware.ComposeMiddlewares(outOfGasTxHandler{}, middleware.GasTxMiddleware, middleware.RecoveryTxMiddleware)
+	res, err := txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{Tx: txBytes})
 	s.Require().Error(err, "Did not return error on OutOfGas panic")
 	s.Require().True(errors.Is(sdkerrors.ErrOutOfGas, err), "Returned error is not an out of gas error")
 	s.Require().Equal(gasLimit, uint64(res.GasWanted))
 
-	txHandler = middleware.ComposeMiddlewares(outOfGasTxHandler, middleware.GasTxMiddleware)
-	s.Require().Panics(func() {
-		txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: txBytes}, tx.RequestCheckTx{})
-	}, "Recovered from non-Out-of-Gas panic")
+	txHandler = middleware.ComposeMiddlewares(outOfGasTxHandler{}, middleware.GasTxMiddleware)
+	s.Require().Panics(func() { txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{Tx: txBytes}) }, "Recovered from non-Out-of-Gas panic")
 }
 
-// customTxHandler is a test middleware that will run a custom function.
-type customTxHandler struct {
-	fn func(context.Context, tx.Request) (tx.Response, error)
-}
+// outOfGasTxHandler is a test middleware that will throw OutOfGas panic.
+type outOfGasTxHandler struct{}
 
-var _ tx.Handler = customTxHandler{}
+var _ tx.Handler = outOfGasTxHandler{}
 
-func (h customTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	return h.fn(ctx, req)
-}
-func (h customTxHandler) CheckTx(ctx context.Context, req tx.Request, _ tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
-	res, err := h.fn(ctx, req)
-	return res, tx.ResponseCheckTx{}, err
-}
-func (h customTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	return h.fn(ctx, req)
-}
-
-// noopTxHandler is a test middleware that returns an empty response.
-var noopTxHandler = customTxHandler{func(_ context.Context, _ tx.Request) (tx.Response, error) {
-	return tx.Response{}, nil
-}}
-
-// outOfGasTxHandler is a test middleware that panics with an outOfGas error.
-var outOfGasTxHandler = customTxHandler{func(ctx context.Context, _ tx.Request) (tx.Response, error) {
+func (txh outOfGasTxHandler) DeliverTx(ctx context.Context, _ sdk.Tx, _ abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	overLimit := sdkCtx.GasMeter().Limit() + 1
 
@@ -121,4 +102,37 @@ var outOfGasTxHandler = customTxHandler{func(ctx context.Context, _ tx.Request) 
 	sdkCtx.GasMeter().ConsumeGas(overLimit, "test panic")
 
 	panic("not reached")
-}}
+}
+func (txh outOfGasTxHandler) CheckTx(ctx context.Context, _ sdk.Tx, _ abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	overLimit := sdkCtx.GasMeter().Limit() + 1
+
+	// Should panic with outofgas error
+	sdkCtx.GasMeter().ConsumeGas(overLimit, "test panic")
+
+	panic("not reached")
+}
+func (txh outOfGasTxHandler) SimulateTx(ctx context.Context, _ sdk.Tx, _ tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	overLimit := sdkCtx.GasMeter().Limit() + 1
+
+	// Should panic with outofgas error
+	sdkCtx.GasMeter().ConsumeGas(overLimit, "test panic")
+
+	panic("not reached")
+}
+
+// noopTxHandler is a test middleware that does nothing.
+type noopTxHandler struct{}
+
+var _ tx.Handler = noopTxHandler{}
+
+func (txh noopTxHandler) CheckTx(_ context.Context, _ sdk.Tx, _ abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	return abci.ResponseCheckTx{}, nil
+}
+func (txh noopTxHandler) SimulateTx(_ context.Context, _ sdk.Tx, _ tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+	return tx.ResponseSimulateTx{}, nil
+}
+func (txh noopTxHandler) DeliverTx(ctx context.Context, _ sdk.Tx, _ abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+	return abci.ResponseDeliverTx{}, nil
+}

@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gogo/protobuf/proto"
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -29,19 +30,37 @@ func NewRunMsgsTxHandler(msr *MsgServiceRouter, legacyRouter sdk.Router) tx.Hand
 var _ tx.Handler = runMsgsTxHandler{}
 
 // CheckTx implements tx.Handler.CheckTx method.
-func (txh runMsgsTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
+func (txh runMsgsTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	// Don't run Msgs during CheckTx.
-	return tx.Response{}, tx.ResponseCheckTx{}, nil
+	return abci.ResponseCheckTx{}, nil
 }
 
 // DeliverTx implements tx.Handler.DeliverTx method.
-func (txh runMsgsTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	return txh.runMsgs(sdk.UnwrapSDKContext(ctx), req.Tx.GetMsgs(), req.TxBytes)
+func (txh runMsgsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+	res, err := txh.runMsgs(sdk.UnwrapSDKContext(ctx), tx.GetMsgs(), req.Tx)
+	if err != nil {
+		return abci.ResponseDeliverTx{}, err
+	}
+
+	return abci.ResponseDeliverTx{
+		// GasInfo will be populated by the Gas middleware.
+		Log:    res.Log,
+		Data:   res.Data,
+		Events: res.Events,
+	}, nil
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
-func (txh runMsgsTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	return txh.runMsgs(sdk.UnwrapSDKContext(ctx), req.Tx.GetMsgs(), req.TxBytes)
+func (txh runMsgsTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+	res, err := txh.runMsgs(sdk.UnwrapSDKContext(ctx), sdkTx.GetMsgs(), req.TxBytes)
+	if err != nil {
+		return tx.ResponseSimulateTx{}, err
+	}
+
+	return tx.ResponseSimulateTx{
+		// GasInfo will be populated by the Gas middleware.
+		Result: res,
+	}, nil
 }
 
 // runMsgs iterates through a list of messages and executes them with the provided
@@ -49,7 +68,7 @@ func (txh runMsgsTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.
 // and DeliverTx. An error is returned if any single message fails or if a
 // Handler does not exist for a given message route. Otherwise, a reference to a
 // Result is returned. The caller must not commit state if an error is returned.
-func (txh runMsgsTxHandler) runMsgs(sdkCtx sdk.Context, msgs []sdk.Msg, txBytes []byte) (tx.Response, error) {
+func (txh runMsgsTxHandler) runMsgs(sdkCtx sdk.Context, msgs []sdk.Msg, txBytes []byte) (*sdk.Result, error) {
 	// Create a new Context based off of the existing Context with a MultiStore branch
 	// in case message processing fails. At this point, the MultiStore
 	// is a branch of a branch.
@@ -60,7 +79,9 @@ func (txh runMsgsTxHandler) runMsgs(sdkCtx sdk.Context, msgs []sdk.Msg, txBytes 
 	// Result if any single message fails or does not have a registered Handler.
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 	events := sdkCtx.EventManager().Events()
-	msgResponses := make([]*codectypes.Any, len(msgs))
+	txMsgData := &sdk.TxMsgData{
+		Data: make([]*sdk.MsgData, 0, len(msgs)),
+	}
 
 	// NOTE: GasWanted is determined by the Gas TxHandler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
@@ -84,16 +105,16 @@ func (txh runMsgsTxHandler) runMsgs(sdkCtx sdk.Context, msgs []sdk.Msg, txBytes 
 			eventMsgName = legacyMsg.Type()
 			handler := txh.legacyRouter.Route(sdkCtx, msgRoute)
 			if handler == nil {
-				return tx.Response{}, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
 			}
 
 			msgResult, err = handler(sdkCtx, msg)
 		} else {
-			return tx.Response{}, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
 		}
 
 		if err != nil {
-			return tx.Response{}, sdkerrors.Wrapf(err, "failed to execute message; message index: %d", i)
+			return nil, sdkerrors.Wrapf(err, "failed to execute message; message index: %d", i)
 		}
 
 		msgEvents := sdk.Events{
@@ -107,22 +128,20 @@ func (txh runMsgsTxHandler) runMsgs(sdkCtx sdk.Context, msgs []sdk.Msg, txBytes 
 		// separate each result.
 		events = events.AppendEvents(msgEvents)
 
-		// Each individual sdk.Result has exactly one Msg response. We aggregate here.
-		msgResponse := msgResult.MsgResponses[0]
-		if msgResponse == nil {
-			return tx.Response{}, sdkerrors.ErrLogic.Wrapf("got nil Msg response at index %d for msg %s", i, sdk.MsgTypeURL(msg))
-		}
-		msgResponses[i] = msgResponse
+		txMsgData.Data = append(txMsgData.Data, &sdk.MsgData{MsgType: sdk.MsgTypeURL(msg), Data: msgResult.Data})
 		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint32(i), msgResult.Log, msgEvents))
 	}
 
 	msCache.Write()
+	data, err := proto.Marshal(txMsgData)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "failed to marshal tx data")
+	}
 
-	return tx.Response{
-		// GasInfo will be populated by the Gas middleware.
-		Log:          strings.TrimSpace(msgLogs.String()),
-		Events:       events.ToABCIEvents(),
-		MsgResponses: msgResponses,
+	return &sdk.Result{
+		Data:   data,
+		Log:    strings.TrimSpace(msgLogs.String()),
+		Events: events.ToABCIEvents(),
 	}, nil
 }
 

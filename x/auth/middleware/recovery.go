@@ -4,6 +4,8 @@ import (
 	"context"
 	"runtime/debug"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -24,7 +26,7 @@ func RecoveryTxMiddleware(txh tx.Handler) tx.Handler {
 var _ tx.Handler = recoveryTxHandler{}
 
 // CheckTx implements tx.Handler.CheckTx method.
-func (txh recoveryTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (res tx.Response, resCheckTx tx.ResponseCheckTx, err error) {
+func (txh recoveryTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (res abci.ResponseCheckTx, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Panic recovery.
 	defer func() {
@@ -33,11 +35,11 @@ func (txh recoveryTxHandler) CheckTx(ctx context.Context, req tx.Request, checkR
 		}
 	}()
 
-	return txh.next.CheckTx(ctx, req, checkReq)
+	return txh.next.CheckTx(ctx, tx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx method.
-func (txh recoveryTxHandler) DeliverTx(ctx context.Context, req tx.Request) (res tx.Response, err error) {
+func (txh recoveryTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (res abci.ResponseDeliverTx, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// only run the tx if there is block gas remaining
 	if sdkCtx.BlockGasMeter().IsOutOfGas() {
@@ -69,11 +71,11 @@ func (txh recoveryTxHandler) DeliverTx(ctx context.Context, req tx.Request) (res
 		}
 	}()
 
-	return txh.next.DeliverTx(ctx, req)
+	return txh.next.DeliverTx(ctx, tx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
-func (txh recoveryTxHandler) SimulateTx(ctx context.Context, req tx.Request) (res tx.Response, err error) {
+func (txh recoveryTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (res tx.ResponseSimulateTx, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Panic recovery.
 	defer func() {
@@ -82,7 +84,7 @@ func (txh recoveryTxHandler) SimulateTx(ctx context.Context, req tx.Request) (re
 		}
 	}()
 
-	return txh.next.SimulateTx(ctx, req)
+	return txh.next.SimulateTx(ctx, sdkTx, req)
 }
 
 func handleRecovery(r interface{}, sdkCtx sdk.Context) error {

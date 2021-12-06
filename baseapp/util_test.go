@@ -45,6 +45,13 @@ func (app *BaseApp) GetName() string {
 	return app.name
 }
 
+// GetName return name.
+//
+// This method is only accessible in baseapp tests.
+func (app *BaseApp) TxDecoder(txBytes []byte) (sdk.Tx, error) {
+	return app.txDecoder(txBytes)
+}
+
 // CreateQueryContext calls app's createQueryContext.
 //
 // This method is only accessible in baseapp tests.

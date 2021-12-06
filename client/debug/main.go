@@ -39,8 +39,8 @@ func getPubKeyFromString(ctx client.Context, pkstr string) (cryptotypes.PubKey, 
 func PubkeyCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "pubkey [pubkey]",
-		Short: "DecodeKey a pubkey from proto JSON",
-		Long: fmt.Sprintf(`DecodeKey a pubkey from proto JSON and display it's address.
+		Short: "Decode a pubkey from proto JSON",
+		Long: fmt.Sprintf(`Decode a pubkey from proto JSON and display it's address.
 
 Example:
 $ %s debug pubkey '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AurroA7jvfPd1AadmmOvWM2rJSwipXfRf8yD6pLbA2DJ"}'

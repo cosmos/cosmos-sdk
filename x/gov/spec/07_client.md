@@ -135,14 +135,10 @@ simd query gov proposal 1
 Example Output:
 
 ```bash
-messages: [
-  {
-    '@type': /cosmos.bank.v1beta1.MsgSend
-    from_address: "cosmos1..",
-    to_address: "cosmos1..",
-    amount: "100atom"
-  }
-],
+content:
+  '@type': /cosmos.gov.v1beta1.TextProposal
+  description: testing, testing, 1, 2, 3
+  title: Test Proposal
 deposit_end_time: "2021-09-17T23:36:18.254995423Z"
 final_tally_result:
   abstain: "0"

@@ -3,6 +3,8 @@ package middleware
 import (
 	"context"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -14,10 +16,10 @@ type txPriorityHandler struct {
 	next tx.Handler
 }
 
-// TxPriorityMiddleware implements tx handling middleware that determines a
+// TxPriorityHandler implements tx handling middleware that determines a
 // transaction's priority via a naive mechanism -- the total sum of fees provided.
 // It sets the Priority in ResponseCheckTx only.
-func TxPriorityMiddleware(txh tx.Handler) tx.Handler {
+func TxPriorityHandler(txh tx.Handler) tx.Handler {
 	return txPriorityHandler{next: txh}
 }
 
@@ -26,26 +28,26 @@ func TxPriorityMiddleware(txh tx.Handler) tx.Handler {
 // fees included. Applications that need more sophisticated mempool ordering
 // should look to implement their own fee handling middleware instead of using
 // TxPriorityHandler.
-func (h txPriorityHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
-	feeTx, ok := req.Tx.(sdk.FeeTx)
+func (h txPriorityHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
-		return tx.Response{}, tx.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+		return abci.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
 	feeCoins := feeTx.GetFee()
 
-	res, checkRes, err := h.next.CheckTx(ctx, req, checkReq)
-	checkRes.Priority = GetTxPriority(feeCoins)
+	res, err := h.next.CheckTx(ctx, tx, req)
+	res.Priority = GetTxPriority(feeCoins)
 
-	return res, checkRes, err
+	return res, err
 }
 
-func (h txPriorityHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	return h.next.DeliverTx(ctx, req)
+func (h txPriorityHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+	return h.next.DeliverTx(ctx, tx, req)
 }
 
-func (h txPriorityHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	return h.next.SimulateTx(ctx, req)
+func (h txPriorityHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+	return h.next.SimulateTx(ctx, sdkTx, req)
 }
 
 // GetTxPriority returns a naive tx priority based on the amount of the smallest denomination of the fee

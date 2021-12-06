@@ -15,8 +15,8 @@ import (
 func GetEncodeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "encode [file]",
-		Short: "EncodeKey transactions generated offline",
-		Long: `EncodeKey transactions created with the --generate-only flag and signed with the sign command.
+		Short: "Encode transactions generated offline",
+		Long: `Encode transactions created with the --generate-only flag and signed with the sign command.
 Read a transaction from <file>, serialize it to the Protobuf wire protocol, and output it as base64.
 If you supply a dash (-) argument in place of an input filename, the command reads from standard input.`,
 		Args: cobra.ExactArgs(1),

@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -855,14 +854,14 @@ func (s *MWTestSuite) TestTxHandlerSetPubKey() {
 				txBuilder.SetGasLimit(gasLimit)
 
 				// Manually create tx, and remove signature.
-				testTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+				tx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 				s.Require().NoError(err)
-				txBuilder, err := s.clientCtx.TxConfig.WrapTxBuilder(testTx)
+				txBuilder, err := s.clientCtx.TxConfig.WrapTxBuilder(tx)
 				s.Require().NoError(err)
 				s.Require().NoError(txBuilder.SetSignatures())
 
 				// Run txHandler manually, expect ErrNoSignatures.
-				_, _, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: txBuilder.GetTx()}, tx.RequestCheckTx{})
+				_, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), txBuilder.GetTx(), abci.RequestCheckTx{})
 				s.Require().Error(err)
 				s.Require().True(errors.Is(err, sdkerrors.ErrNoSignatures))
 
@@ -1026,7 +1025,6 @@ func (s *MWTestSuite) TestCustomSignatureVerificationGasConsumer() {
 					return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 				}
 			},
-			TxDecoder: s.clientCtx.TxConfig.TxDecoder(),
 		},
 	)
 	s.Require().NoError(err)
@@ -1062,9 +1060,9 @@ func (s *MWTestSuite) TestCustomSignatureVerificationGasConsumer() {
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			tc.malleate()
 
-			testTx, txBytes, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+			tx, txBytes, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 			s.Require().NoError(err)
-			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: txBytes})
+			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, abci.RequestDeliverTx{Tx: txBytes})
 			s.Require().Error(err)
 			s.Require().True(errors.Is(err, tc.expErr))
 		})
@@ -1093,21 +1091,21 @@ func (s *MWTestSuite) TestTxHandlerReCheck() {
 
 	// test that operations skipped on recheck do not run
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
-	testTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	tx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 	s.Require().NoError(err)
 
 	// make signature array empty which would normally cause ValidateBasicMiddleware and SigVerificationMiddleware fail
 	// since these middlewares don't run on recheck, the tx should pass the middleware
-	txBuilder, err = s.clientCtx.TxConfig.WrapTxBuilder(testTx)
+	txBuilder, err = s.clientCtx.TxConfig.WrapTxBuilder(tx)
 	s.Require().NoError(err)
 	s.Require().NoError(txBuilder.SetSignatures())
 
-	_, _, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: txBuilder.GetTx()}, tx.RequestCheckTx{Type: abci.CheckTxType_Recheck})
+	_, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), txBuilder.GetTx(), abci.RequestCheckTx{Type: abci.CheckTxType_Recheck})
 	s.Require().Nil(err, "TxHandler errored on recheck unexpectedly: %v", err)
 
-	testTx, _, err = s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	tx, _, err = s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 	s.Require().NoError(err)
-	txBytes, err := json.Marshal(testTx)
+	txBytes, err := json.Marshal(tx)
 	s.Require().Nil(err, "Error marshalling tx: %v", err)
 	ctx = ctx.WithTxBytes(txBytes)
 
@@ -1125,7 +1123,7 @@ func (s *MWTestSuite) TestTxHandlerReCheck() {
 		// set testcase parameters
 		s.app.AccountKeeper.SetParams(ctx, tc.params)
 
-		_, _, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: txBytes}, tx.RequestCheckTx{Type: abci.CheckTxType_Recheck})
+		_, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{Tx: txBytes, Type: abci.CheckTxType_Recheck})
 
 		s.Require().NotNil(err, "tx does not fail on recheck with updated params in test case: %s", tc.name)
 
@@ -1139,7 +1137,7 @@ func (s *MWTestSuite) TestTxHandlerReCheck() {
 		Denom:  "dnecoin", // fee does not have this denom
 		Amount: sdk.NewDec(5),
 	}})
-	_, _, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, tx.RequestCheckTx{})
+	_, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{})
 
 	s.Require().NotNil(err, "txhandler on recheck did not fail when mingasPrice was changed")
 	// reset min gasprice
@@ -1151,6 +1149,6 @@ func (s *MWTestSuite) TestTxHandlerReCheck() {
 	err = s.app.BankKeeper.SendCoinsFromAccountToModule(ctx, accounts[0].acc.GetAddress(), minttypes.ModuleName, balances)
 	s.Require().NoError(err)
 
-	_, _, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, tx.RequestCheckTx{})
+	_, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{})
 	s.Require().NotNil(err, "txhandler on recheck did not fail once feePayer no longer has sufficient funds")
 }

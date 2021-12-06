@@ -3,6 +3,8 @@ package middleware
 import (
 	"context"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -28,47 +30,47 @@ func GasTxMiddleware(txh tx.Handler) tx.Handler {
 var _ tx.Handler = gasTxHandler{}
 
 // CheckTx implements tx.Handler.CheckTx.
-func (txh gasTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
-	sdkCtx, err := gasContext(sdk.UnwrapSDKContext(ctx), req.Tx, false)
+func (txh gasTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	sdkCtx, err := gasContext(sdk.UnwrapSDKContext(ctx), tx, false)
 	if err != nil {
-		return tx.Response{}, tx.ResponseCheckTx{}, err
+		return abci.ResponseCheckTx{}, err
 	}
 
-	res, resCheckTx, err := txh.next.CheckTx(sdk.WrapSDKContext(sdkCtx), req, checkReq)
+	res, err := txh.next.CheckTx(sdk.WrapSDKContext(sdkCtx), tx, req)
+	res.GasUsed = int64(sdkCtx.GasMeter().GasConsumed())
+	res.GasWanted = int64(sdkCtx.GasMeter().Limit())
 
-	return populateGas(res, sdkCtx), resCheckTx, err
+	return res, err
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (txh gasTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	sdkCtx, err := gasContext(sdk.UnwrapSDKContext(ctx), req.Tx, false)
+func (txh gasTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+	sdkCtx, err := gasContext(sdk.UnwrapSDKContext(ctx), tx, false)
 	if err != nil {
-		return tx.Response{}, err
+		return abci.ResponseDeliverTx{}, err
 	}
 
-	res, err := txh.next.DeliverTx(sdk.WrapSDKContext(sdkCtx), req)
+	res, err := txh.next.DeliverTx(sdk.WrapSDKContext(sdkCtx), tx, req)
+	res.GasUsed = int64(sdkCtx.GasMeter().GasConsumed())
+	res.GasWanted = int64(sdkCtx.GasMeter().Limit())
 
-	return populateGas(res, sdkCtx), err
+	return res, err
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
-func (txh gasTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	sdkCtx, err := gasContext(sdk.UnwrapSDKContext(ctx), req.Tx, true)
+func (txh gasTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+	sdkCtx, err := gasContext(sdk.UnwrapSDKContext(ctx), sdkTx, true)
 	if err != nil {
-		return tx.Response{}, err
+		return tx.ResponseSimulateTx{}, err
 	}
 
-	res, err := txh.next.SimulateTx(sdk.WrapSDKContext(sdkCtx), req)
+	res, err := txh.next.SimulateTx(sdk.WrapSDKContext(sdkCtx), sdkTx, req)
+	res.GasInfo = sdk.GasInfo{
+		GasWanted: sdkCtx.GasMeter().Limit(),
+		GasUsed:   sdkCtx.GasMeter().GasConsumed(),
+	}
 
-	return populateGas(res, sdkCtx), err
-}
-
-// populateGas returns a new tx.Response with gas fields populated.
-func populateGas(res tx.Response, sdkCtx sdk.Context) tx.Response {
-	res.GasWanted = sdkCtx.GasMeter().Limit()
-	res.GasUsed = sdkCtx.GasMeter().GasConsumed()
-
-	return res
+	return res, err
 }
 
 // gasContext returns a new context with a gas meter set from a given context.

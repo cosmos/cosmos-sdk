@@ -53,9 +53,9 @@ func SetPubKeyMiddleware(ak AccountKeeper) tx.Middleware {
 	}
 }
 
-func (spkm setPubKeyTxHandler) setPubKey(ctx context.Context, req tx.Request, simulate bool) error {
+func (spkm setPubKeyTxHandler) setPubKey(ctx context.Context, tx sdk.Tx, simulate bool) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sigTx, ok := req.Tx.(authsigning.SigVerifiableTx)
+	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}
@@ -127,28 +127,28 @@ func (spkm setPubKeyTxHandler) setPubKey(ctx context.Context, req tx.Request, si
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (spkm setPubKeyTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
-	if err := spkm.setPubKey(ctx, req, false); err != nil {
-		return tx.Response{}, tx.ResponseCheckTx{}, err
+func (spkm setPubKeyTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	if err := spkm.setPubKey(ctx, tx, false); err != nil {
+		return abci.ResponseCheckTx{}, err
 	}
 
-	return spkm.next.CheckTx(ctx, req, checkReq)
+	return spkm.next.CheckTx(ctx, tx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (spkm setPubKeyTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	if err := spkm.setPubKey(ctx, req, false); err != nil {
-		return tx.Response{}, err
+func (spkm setPubKeyTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+	if err := spkm.setPubKey(ctx, tx, false); err != nil {
+		return abci.ResponseDeliverTx{}, err
 	}
-	return spkm.next.DeliverTx(ctx, req)
+	return spkm.next.DeliverTx(ctx, tx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (spkm setPubKeyTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	if err := spkm.setPubKey(ctx, req, true); err != nil {
-		return tx.Response{}, err
+func (spkm setPubKeyTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+	if err := spkm.setPubKey(ctx, sdkTx, true); err != nil {
+		return tx.ResponseSimulateTx{}, err
 	}
-	return spkm.next.SimulateTx(ctx, req)
+	return spkm.next.SimulateTx(ctx, sdkTx, req)
 }
 
 var _ tx.Handler = validateSigCountTxHandler{}
@@ -171,10 +171,10 @@ func ValidateSigCountMiddleware(ak AccountKeeper) tx.Middleware {
 	}
 }
 
-func (vscd validateSigCountTxHandler) checkSigCount(ctx context.Context, req tx.Request) error {
+func (vscd validateSigCountTxHandler) checkSigCount(ctx context.Context, tx sdk.Tx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	sigTx, ok := req.Tx.(authsigning.SigVerifiableTx)
+	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a sigTx")
 	}
@@ -197,30 +197,30 @@ func (vscd validateSigCountTxHandler) checkSigCount(ctx context.Context, req tx.
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (vscd validateSigCountTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
-	if err := vscd.checkSigCount(ctx, req); err != nil {
-		return tx.Response{}, tx.ResponseCheckTx{}, err
+func (vscd validateSigCountTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	if err := vscd.checkSigCount(ctx, tx); err != nil {
+		return abci.ResponseCheckTx{}, err
 	}
 
-	return vscd.next.CheckTx(ctx, req, checkReq)
+	return vscd.next.CheckTx(ctx, tx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (vscd validateSigCountTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	if err := vscd.checkSigCount(ctx, req); err != nil {
-		return tx.Response{}, err
+func (vscd validateSigCountTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+	if err := vscd.checkSigCount(ctx, sdkTx); err != nil {
+		return tx.ResponseSimulateTx{}, err
 	}
 
-	return vscd.next.DeliverTx(ctx, req)
+	return vscd.next.SimulateTx(ctx, sdkTx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (vscd validateSigCountTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	if err := vscd.checkSigCount(ctx, req); err != nil {
-		return tx.Response{}, err
+func (vscd validateSigCountTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+	if err := vscd.checkSigCount(ctx, tx); err != nil {
+		return abci.ResponseDeliverTx{}, err
 	}
 
-	return vscd.next.SimulateTx(ctx, req)
+	return vscd.next.DeliverTx(ctx, tx, req)
 }
 
 // DefaultSigVerificationGasConsumer is the default implementation of SignatureVerificationGasConsumer. It consumes gas
@@ -309,10 +309,10 @@ func SigGasConsumeMiddleware(ak AccountKeeper, sigGasConsumer SignatureVerificat
 	}
 }
 
-func (sgcm sigGasConsumeTxHandler) sigGasConsume(ctx context.Context, req tx.Request, simulate bool) error {
+func (sgcm sigGasConsumeTxHandler) sigGasConsume(ctx context.Context, tx sdk.Tx, simulate bool) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	sigTx, ok := req.Tx.(authsigning.SigVerifiableTx)
+	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
@@ -360,30 +360,30 @@ func (sgcm sigGasConsumeTxHandler) sigGasConsume(ctx context.Context, req tx.Req
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (sgcm sigGasConsumeTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
-	if err := sgcm.sigGasConsume(ctx, req, false); err != nil {
-		return tx.Response{}, tx.ResponseCheckTx{}, err
+func (sgcm sigGasConsumeTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	if err := sgcm.sigGasConsume(ctx, tx, false); err != nil {
+		return abci.ResponseCheckTx{}, err
 	}
 
-	return sgcm.next.CheckTx(ctx, req, checkReq)
+	return sgcm.next.CheckTx(ctx, tx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (sgcm sigGasConsumeTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	if err := sgcm.sigGasConsume(ctx, req, false); err != nil {
-		return tx.Response{}, err
+func (sgcm sigGasConsumeTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+	if err := sgcm.sigGasConsume(ctx, tx, false); err != nil {
+		return abci.ResponseDeliverTx{}, err
 	}
 
-	return sgcm.next.DeliverTx(ctx, req)
+	return sgcm.next.DeliverTx(ctx, tx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (sgcm sigGasConsumeTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	if err := sgcm.sigGasConsume(ctx, req, true); err != nil {
-		return tx.Response{}, err
+func (sgcm sigGasConsumeTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+	if err := sgcm.sigGasConsume(ctx, sdkTx, true); err != nil {
+		return tx.ResponseSimulateTx{}, err
 	}
 
-	return sgcm.next.SimulateTx(ctx, req)
+	return sgcm.next.SimulateTx(ctx, sdkTx, req)
 }
 
 var _ tx.Handler = sigVerificationTxHandler{}
@@ -430,13 +430,13 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	}
 }
 
-func (svd sigVerificationTxHandler) sigVerify(ctx context.Context, req tx.Request, isReCheckTx, simulate bool) error {
+func (svd sigVerificationTxHandler) sigVerify(ctx context.Context, tx sdk.Tx, isReCheckTx, simulate bool) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// no need to verify signatures on recheck tx
 	if isReCheckTx {
 		return nil
 	}
-	sigTx, ok := req.Tx.(authsigning.SigVerifiableTx)
+	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
@@ -492,7 +492,7 @@ func (svd sigVerificationTxHandler) sigVerify(ctx context.Context, req tx.Reques
 		}
 
 		if !simulate {
-			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, req.Tx)
+			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx)
 			if err != nil {
 				var errMsg string
 				if OnlyLegacyAminoSigners(sig.Data) {
@@ -512,30 +512,30 @@ func (svd sigVerificationTxHandler) sigVerify(ctx context.Context, req tx.Reques
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (svd sigVerificationTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
-	if err := svd.sigVerify(ctx, req, checkReq.Type == abci.CheckTxType_Recheck, false); err != nil {
-		return tx.Response{}, tx.ResponseCheckTx{}, err
+func (svd sigVerificationTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	if err := svd.sigVerify(ctx, tx, req.Type == abci.CheckTxType_Recheck, false); err != nil {
+		return abci.ResponseCheckTx{}, err
 	}
 
-	return svd.next.CheckTx(ctx, req, checkReq)
+	return svd.next.CheckTx(ctx, tx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (svd sigVerificationTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	if err := svd.sigVerify(ctx, req, false, false); err != nil {
-		return tx.Response{}, err
+func (svd sigVerificationTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+	if err := svd.sigVerify(ctx, tx, false, false); err != nil {
+		return abci.ResponseDeliverTx{}, err
 	}
 
-	return svd.next.DeliverTx(ctx, req)
+	return svd.next.DeliverTx(ctx, tx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (svd sigVerificationTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	if err := svd.sigVerify(ctx, req, false, true); err != nil {
-		return tx.Response{}, err
+func (svd sigVerificationTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+	if err := svd.sigVerify(ctx, sdkTx, false, true); err != nil {
+		return tx.ResponseSimulateTx{}, err
 	}
 
-	return svd.next.SimulateTx(ctx, req)
+	return svd.next.SimulateTx(ctx, sdkTx, req)
 }
 
 var _ tx.Handler = incrementSequenceTxHandler{}
@@ -563,9 +563,9 @@ func IncrementSequenceMiddleware(ak AccountKeeper) tx.Middleware {
 	}
 }
 
-func (isd incrementSequenceTxHandler) incrementSeq(ctx context.Context, req tx.Request) error {
+func (isd incrementSequenceTxHandler) incrementSeq(ctx context.Context, tx sdk.Tx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sigTx, ok := req.Tx.(authsigning.SigVerifiableTx)
+	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
@@ -584,30 +584,30 @@ func (isd incrementSequenceTxHandler) incrementSeq(ctx context.Context, req tx.R
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (isd incrementSequenceTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
-	if err := isd.incrementSeq(ctx, req); err != nil {
-		return tx.Response{}, tx.ResponseCheckTx{}, err
+func (isd incrementSequenceTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	if err := isd.incrementSeq(ctx, tx); err != nil {
+		return abci.ResponseCheckTx{}, err
 	}
 
-	return isd.next.CheckTx(ctx, req, checkReq)
+	return isd.next.CheckTx(ctx, tx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (isd incrementSequenceTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	if err := isd.incrementSeq(ctx, req); err != nil {
-		return tx.Response{}, err
+func (isd incrementSequenceTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+	if err := isd.incrementSeq(ctx, tx); err != nil {
+		return abci.ResponseDeliverTx{}, err
 	}
 
-	return isd.next.DeliverTx(ctx, req)
+	return isd.next.DeliverTx(ctx, tx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (isd incrementSequenceTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	if err := isd.incrementSeq(ctx, req); err != nil {
-		return tx.Response{}, err
+func (isd incrementSequenceTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+	if err := isd.incrementSeq(ctx, sdkTx); err != nil {
+		return tx.ResponseSimulateTx{}, err
 	}
 
-	return isd.next.SimulateTx(ctx, req)
+	return isd.next.SimulateTx(ctx, sdkTx, req)
 }
 
 // GetSignerAcc returns an account for a given address that is expected to sign

@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -205,7 +206,7 @@ func checkMultipleSigners(tx authsigning.Tx) error {
 	for _, sig := range sigsV2 {
 		directSigners += countDirectSigners(sig.Data)
 		if directSigners > 1 {
-			return fmt.Errorf("txs signed with CLI can have maximum 1 DIRECT signer")
+			return sdkerrors.ErrNotSupported.Wrap("txs signed with CLI can have maximum 1 DIRECT signer")
 		}
 	}
 

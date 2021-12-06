@@ -286,10 +286,13 @@ func (cdc *KeyCodec) GetFieldNames() []protoreflect.Name {
 	return cdc.fieldNames
 }
 
+// Prefix returns the prefix applied to keys in this codec before any field
+// values are encoded.
 func (cdc *KeyCodec) Prefix() []byte {
 	return cdc.prefix
 }
 
+// MessageType returns the message type of fields in this key.
 func (cdc *KeyCodec) MessageType() protoreflect.MessageType {
 	return cdc.messageType
 }

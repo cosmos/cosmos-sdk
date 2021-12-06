@@ -181,6 +181,8 @@ func SignWithPrivKey(
 	return sigV2, nil
 }
 
+// checkMultipleSigners checks that if there are multiple signers in a tx, only the last
+// one can use SIGN_MODE_DIRECT.
 func checkMultipleSigners(mode signing.SignMode, tx authsigning.Tx, signerIndex int) error {
 	if mode == signing.SignMode_SIGN_MODE_DIRECT &&
 		len(tx.GetSigners()) > 1 {
@@ -188,7 +190,7 @@ func checkMultipleSigners(mode signing.SignMode, tx authsigning.Tx, signerIndex 
 		if signerIndex == (len(tx.GetSigners()) - 1) {
 			return nil
 		} else {
-			return sdkerrors.Wrap(sdkerrors.ErrNotSupported, "Signing in DIRECT mode is only supported for transactions with one signer only")
+			return sdkerrors.Wrap(sdkerrors.ErrNotSupported, "Signing in DIRECT mode is only supported for the last signer in multi-signers transactions")
 		}
 	}
 
@@ -222,17 +224,22 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 		return err
 	}
 
-	pubkeys, err := txBuilder.GetTx().GetPubKeys()
+	signers := txBuilder.GetTx().GetSigners()
 	if err != nil {
 		return err
 	}
 
-	signerIndex := 0
-	for i, p := range pubkeys {
-		if p.Equals(pubKey) {
+	signerIndex := -1
+	signerAddr := sdk.AccAddress(pubKey.Address())
+	for i, a := range signers {
+		if a.Equals(signerAddr) {
 			signerIndex = i
 			break
 		}
+	}
+
+	if signerIndex < 0 {
+		return errors.New("cannot find the signer in signers list")
 	}
 
 	signerData := authsigning.SignerData{
@@ -281,7 +288,7 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 		return err
 	}
 
-	if err := checkMultipleSigners(signMode, txBuilder.GetTx(), len(prevSignatures)); err != nil {
+	if err := checkMultipleSigners(signMode, txBuilder.GetTx(), signerIndex); err != nil {
 		return err
 	}
 

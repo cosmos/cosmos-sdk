@@ -78,8 +78,6 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 	f = f.WithFees(feesStr)
 
 	tipsStr, _ := flagSet.GetString(flags.FlagTip)
-	f = f.WithTips(tipsStr, "")
-
 	tipper, _ := flagSet.GetString(flags.FlagTipper)
 	f = f.WithTips(tipsStr, tipper)
 

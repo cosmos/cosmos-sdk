@@ -991,6 +991,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 		val1, addr,
 		sdk.NewCoins(sendTokens),
 	)
+	s.Require().NoError(s.network.WaitForNextBlock())
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
@@ -1708,7 +1709,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			// generate tx with --aux mode
 			res, err := govtestutil.MsgSubmitProposal(
 				val.ClientCtx,
 				tipper.String(),

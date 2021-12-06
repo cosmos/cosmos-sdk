@@ -1361,7 +1361,6 @@ func (s *IntegrationTestSuite) TestTxWithoutPublicKey() {
 
 	// Create a file with the unsigned tx.
 	txJSON, err := txCfg.TxJSONEncoder()(txBuilder.GetTx())
-	fmt.Println(string(txJSON))
 	s.Require().NoError(err)
 	unsignedTxFile := testutil.WriteToNewTempFile(s.T(), string(txJSON))
 

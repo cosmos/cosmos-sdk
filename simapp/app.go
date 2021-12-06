@@ -25,6 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	"github.com/cosmos/cosmos-sdk/simapp/address"
 	"github.com/cosmos/cosmos-sdk/store/streaming"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -186,6 +187,7 @@ type SimApp struct {
 }
 
 func init() {
+	address.ConfigureBech32Prefix()
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)

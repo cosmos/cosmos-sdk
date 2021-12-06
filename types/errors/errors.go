@@ -254,6 +254,17 @@ func (e *Error) Is(err error) bool {
 	}
 }
 
+<<<<<<< HEAD
+=======
+// Wrap extends this error with an additional information.
+// It's a handy function to call Wrap with sdk errors.
+func (e *Error) Wrap(desc string) error { return Wrap(e, desc) }
+
+// Wrapf extends this error with an additional information.
+// It's a handy function to call Wrapf with sdk errors.
+func (e *Error) Wrapf(desc string, args ...interface{}) error { return Wrapf(e, desc, args...) }
+
+>>>>>>> 9566c9918 (fix: types/errors Wrap and Wrapf (#10674))
 func isNilErr(err error) bool {
 	// Reflect usage is necessary to correctly compare with
 	// a nil implementation of an error.

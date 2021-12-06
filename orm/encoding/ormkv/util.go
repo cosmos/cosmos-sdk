@@ -5,6 +5,8 @@ import (
 	"io"
 )
 
+// SkipPrefix skips the provided prefix in the reader or returns an error.
+// This is used for efficient logical decoding of keys.
 func SkipPrefix(r *bytes.Reader, prefix []byte) error {
 	n := len(prefix)
 	if n > 0 {

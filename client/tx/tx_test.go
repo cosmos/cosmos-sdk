@@ -212,12 +212,15 @@ func TestSign(t *testing.T) {
 		/**** test double sign Direct mode
 		  signing transaction with 2 or more DIRECT signers should fail in DIRECT mode ****/
 		{"direct: should  append a DIRECT signature with existing AMINO",
-			// Note: txb already has 1 AMINO signature
+			// txb already has 1 AMINO signature
 			txfDirect, txb, from1, false, []cryptotypes.PubKey{pubKey2, pubKey1}, nil},
 		{"direct: should add single DIRECT sig in multi-signers tx",
 			txfDirect, txb2, from1, false, []cryptotypes.PubKey{pubKey1}, nil},
 		{"direct: should fail to append 2nd DIRECT sig in multi-signers tx",
 			txfDirect, txb2, from2, false, []cryptotypes.PubKey{}, nil},
+		{"amino: should append 2nd AMINO sig in multi-signers tx with 1 DIRECT sig",
+			// txb2 already has 1 DIRECT signature
+			txfAmino, txb2, from2, false, []cryptotypes.PubKey{}, nil},
 		{"direct: should overwrite multi-signers tx with DIRECT sig",
 			txfDirect, txb2, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
 	}

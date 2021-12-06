@@ -174,25 +174,21 @@ func SignWithPrivKey(
 func countDirectSigners(data signing.SignatureData) int {
 	switch data := data.(type) {
 	case *signing.SingleSignatureData:
-		{
-			if data.SignMode == signing.SignMode_SIGN_MODE_DIRECT {
-				return 1
-			}
-
-			return 0
+		if data.SignMode == signing.SignMode_SIGN_MODE_DIRECT {
+			return 1
 		}
+
+		return 0
 	case *signing.MultiSignatureData:
-		{
-			directSigners := 0
-			for _, d := range data.Signatures {
-				directSigners += countDirectSigners(d)
-			}
-
-			return directSigners
+		directSigners := 0
+		for _, d := range data.Signatures {
+			directSigners += countDirectSigners(d)
 		}
-	}
 
-	panic("unreachable case")
+		return directSigners
+	default:
+		panic("unreachable case")
+	}
 }
 
 // checkMultipleSigners checks that there can be maximum one DIRECT signer in

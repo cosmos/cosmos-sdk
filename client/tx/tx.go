@@ -181,16 +181,39 @@ func SignWithPrivKey(
 	return sigV2, nil
 }
 
-// checkMultipleSigners checks that if there are multiple signers in a tx, only the last
-// one can use SIGN_MODE_DIRECT.
-func checkMultipleSigners(mode signing.SignMode, tx authsigning.Tx, signerIndex int) error {
-	if mode == signing.SignMode_SIGN_MODE_DIRECT &&
-		len(tx.GetSigners()) > 1 {
+// countDirectSigners counts the number of DIRECT signers in a signature data.
+func countDirectSigners(data signing.SignatureData) int {
+	switch data := data.(type) {
+	case *signing.SingleSignatureData:
+		if data.SignMode == signing.SignMode_SIGN_MODE_DIRECT {
+			return 1
+		}
 
-		if signerIndex == (len(tx.GetSigners()) - 1) {
-			return nil
-		} else {
-			return sdkerrors.Wrap(sdkerrors.ErrNotSupported, "Signing in DIRECT mode is only supported for the last signer in multi-signers transactions")
+		return 0
+	case *signing.MultiSignatureData:
+		directSigners := 0
+		for _, d := range data.Signatures {
+			directSigners += countDirectSigners(d)
+		}
+
+		return directSigners
+	default:
+		panic("unreachable case")
+	}
+}
+
+// checkMultipleSigners checks that there can be maximum one DIRECT signer in
+// a tx.
+func checkMultipleSigners(tx authsigning.Tx) error {
+	directSigners := 0
+	sigsV2, err := tx.GetSignaturesV2()
+	if err != nil {
+		return err
+	}
+	for _, sig := range sigsV2 {
+		directSigners += countDirectSigners(sig.Data)
+		if directSigners > 1 {
+			return sdkerrors.ErrNotSupported.Wrap("txs signed with CLI can have maximum 1 DIRECT signer")
 		}
 	}
 
@@ -288,7 +311,7 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 		return err
 	}
 
-	if err := checkMultipleSigners(signMode, txBuilder.GetTx(), signerIndex); err != nil {
+	if err := checkMultipleSigners(txBuilder.GetTx()); err != nil {
 		return err
 	}
 

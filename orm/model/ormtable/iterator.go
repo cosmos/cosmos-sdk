@@ -1,15 +1,28 @@
 package ormtable
 
 import (
+	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-
-	"github.com/cosmos/cosmos-sdk/orm/backend/kv"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormiterator"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
-func prefixIterator(iteratorStore kv.ReadStore, store kv.IndexCommitmentReadStore, index concreteIndex, prefix []byte, options IteratorOptions) (ormiterator.Iterator, error) {
+type Iterator interface {
+	Next() (bool, error)
+	IndexKey() ([]protoreflect.Value, error)
+	PrimaryKey() ([]protoreflect.Value, error)
+	UnmarshalMessage(proto.Message) error
+	GetMessage() (proto.Message, error)
+
+	Cursor() Cursor
+	Close()
+
+	doNotImplement()
+}
+
+type Cursor []byte
+
+func prefixIterator(iteratorStore kvstore.ReadStore, store kvstore.IndexCommitmentReadStore, index concreteIndex, prefix []byte, options IteratorOptions) (Iterator, error) {
 	if !options.Reverse {
 		var start []byte
 		if len(options.Cursor) != 0 {
@@ -51,7 +64,7 @@ func prefixIterator(iteratorStore kv.ReadStore, store kv.IndexCommitmentReadStor
 	}
 }
 
-func rangeIterator(iteratorStore kv.ReadStore, store kv.IndexCommitmentReadStore, index concreteIndex, start, end []byte, options IteratorOptions) (ormiterator.Iterator, error) {
+func rangeIterator(iteratorStore kvstore.ReadStore, store kvstore.IndexCommitmentReadStore, index concreteIndex, start, end []byte, options IteratorOptions) (Iterator, error) {
 	if !options.Reverse {
 		if len(options.Cursor) != 0 {
 			start = append(options.Cursor, 0)
@@ -87,11 +100,9 @@ func rangeIterator(iteratorStore kv.ReadStore, store kv.IndexCommitmentReadStore
 }
 
 type indexIterator struct {
-	ormiterator.UnimplementedIterator
-
 	index    concreteIndex
-	store    kv.IndexCommitmentReadStore
-	iterator kv.Iterator
+	store    kvstore.IndexCommitmentReadStore
+	iterator kvstore.Iterator
 
 	indexValues []protoreflect.Value
 	primaryKey  []protoreflect.Value
@@ -138,7 +149,7 @@ func (i *indexIterator) GetMessage() (proto.Message, error) {
 	return msg, err
 }
 
-func (i indexIterator) Cursor() ormiterator.Cursor {
+func (i indexIterator) Cursor() Cursor {
 	return i.iterator.Key()
 }
 
@@ -149,4 +160,8 @@ func (i indexIterator) Close() {
 	}
 }
 
-var _ ormiterator.Iterator = &indexIterator{}
+func (indexIterator) doNotImplement() {
+
+}
+
+var _ Iterator = &indexIterator{}

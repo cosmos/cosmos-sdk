@@ -1,15 +1,12 @@
 package ormtable
 
 import (
-	"github.com/cosmos/cosmos-sdk/orm/model/ormiterator"
-
+	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-
-	"github.com/cosmos/cosmos-sdk/orm/backend/kv"
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 )
 
 type IndexKeyIndex struct {
@@ -21,7 +18,7 @@ func NewIndexKeyIndex(indexKeyCodec *ormkv.IndexKeyCodec, primaryKey *PrimaryKey
 	return &IndexKeyIndex{IndexKeyCodec: indexKeyCodec, primaryKey: primaryKey}
 }
 
-func (s IndexKeyIndex) PrefixIterator(store kv.IndexCommitmentReadStore, prefix []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error) {
+func (s IndexKeyIndex) PrefixIterator(store kvstore.IndexCommitmentReadStore, prefix []protoreflect.Value, options IteratorOptions) (Iterator, error) {
 	prefixBz, err := s.EncodeKey(prefix)
 	if err != nil {
 		return nil, err
@@ -30,7 +27,7 @@ func (s IndexKeyIndex) PrefixIterator(store kv.IndexCommitmentReadStore, prefix 
 	return prefixIterator(store.ReadIndexStore(), store, s, prefixBz, options)
 }
 
-func (s IndexKeyIndex) RangeIterator(store kv.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error) {
+func (s IndexKeyIndex) RangeIterator(store kvstore.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (Iterator, error) {
 	err := s.CheckValidRangeIterationKeys(start, end)
 	if err != nil {
 		return nil, err
@@ -56,7 +53,7 @@ var sentinelValue = []byte{0}
 
 func (s IndexKeyIndex) doNotImplement() {}
 
-func (s IndexKeyIndex) OnCreate(store kv.Store, message protoreflect.Message) error {
+func (s IndexKeyIndex) OnCreate(store kvstore.Store, message protoreflect.Message) error {
 	k, v, err := s.EncodeKVFromMessage(message)
 	if err != nil {
 		return err
@@ -64,7 +61,7 @@ func (s IndexKeyIndex) OnCreate(store kv.Store, message protoreflect.Message) er
 	return store.Set(k, v)
 }
 
-func (s IndexKeyIndex) OnUpdate(store kv.Store, new, existing protoreflect.Message) error {
+func (s IndexKeyIndex) OnUpdate(store kvstore.Store, new, existing protoreflect.Message) error {
 	newValues := s.GetKeyValues(new)
 	existingValues := s.GetKeyValues(existing)
 	if s.CompareKeys(newValues, existingValues) == 0 {
@@ -87,7 +84,7 @@ func (s IndexKeyIndex) OnUpdate(store kv.Store, new, existing protoreflect.Messa
 	return store.Set(newKey, sentinelValue)
 }
 
-func (s IndexKeyIndex) OnDelete(store kv.Store, message protoreflect.Message) error {
+func (s IndexKeyIndex) OnDelete(store kvstore.Store, message protoreflect.Message) error {
 	_, key, err := s.EncodeKeyFromMessage(message)
 	if err != nil {
 		return err
@@ -95,7 +92,7 @@ func (s IndexKeyIndex) OnDelete(store kv.Store, message protoreflect.Message) er
 	return store.Delete(key)
 }
 
-func (s IndexKeyIndex) ReadValueFromIndexKey(store kv.IndexCommitmentReadStore, primaryKey []protoreflect.Value, _ []byte, message proto.Message) error {
+func (s IndexKeyIndex) ReadValueFromIndexKey(store kvstore.IndexCommitmentReadStore, primaryKey []protoreflect.Value, _ []byte, message proto.Message) error {
 	found, err := s.primaryKey.Get(store, primaryKey, message)
 	if err != nil {
 		return err

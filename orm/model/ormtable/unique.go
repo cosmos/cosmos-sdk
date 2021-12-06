@@ -1,15 +1,11 @@
 package ormtable
 
 import (
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
+	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
-	"github.com/cosmos/cosmos-sdk/orm/model/ormiterator"
-
-	"github.com/cosmos/cosmos-sdk/orm/backend/kv"
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 )
 
 type UniqueKeyIndex struct {
@@ -21,7 +17,7 @@ func NewUniqueKeyIndex(uniqueKeyCodec *ormkv.UniqueKeyCodec, primaryKey *Primary
 	return &UniqueKeyIndex{UniqueKeyCodec: uniqueKeyCodec, primaryKey: primaryKey}
 }
 
-func (u UniqueKeyIndex) PrefixIterator(store kv.IndexCommitmentReadStore, prefix []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error) {
+func (u UniqueKeyIndex) PrefixIterator(store kvstore.IndexCommitmentReadStore, prefix []protoreflect.Value, options IteratorOptions) (Iterator, error) {
 	prefixBz, err := u.GetKeyCodec().EncodeKey(prefix)
 	if err != nil {
 		return nil, err
@@ -30,7 +26,7 @@ func (u UniqueKeyIndex) PrefixIterator(store kv.IndexCommitmentReadStore, prefix
 	return prefixIterator(store.ReadIndexStore(), store, u, prefixBz, options)
 }
 
-func (u UniqueKeyIndex) RangeIterator(store kv.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error) {
+func (u UniqueKeyIndex) RangeIterator(store kvstore.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (Iterator, error) {
 	keyCodec := u.GetKeyCodec()
 	err := keyCodec.CheckValidRangeIterationKeys(start, end)
 	if err != nil {
@@ -52,7 +48,7 @@ func (u UniqueKeyIndex) RangeIterator(store kv.IndexCommitmentReadStore, start, 
 
 func (u UniqueKeyIndex) doNotImplement() {}
 
-func (u UniqueKeyIndex) Has(store kv.IndexCommitmentReadStore, keyValues []protoreflect.Value) (found bool, err error) {
+func (u UniqueKeyIndex) Has(store kvstore.IndexCommitmentReadStore, keyValues []protoreflect.Value) (found bool, err error) {
 	key, err := u.GetKeyCodec().EncodeKey(keyValues)
 	if err != nil {
 		return false, err
@@ -61,7 +57,7 @@ func (u UniqueKeyIndex) Has(store kv.IndexCommitmentReadStore, keyValues []proto
 	return store.ReadIndexStore().Has(key)
 }
 
-func (u UniqueKeyIndex) Get(store kv.IndexCommitmentReadStore, keyValues []protoreflect.Value, message proto.Message) (found bool, err error) {
+func (u UniqueKeyIndex) Get(store kvstore.IndexCommitmentReadStore, keyValues []protoreflect.Value, message proto.Message) (found bool, err error) {
 	key, err := u.GetKeyCodec().EncodeKey(keyValues)
 	if err != nil {
 		return false, err
@@ -85,7 +81,7 @@ func (u UniqueKeyIndex) Get(store kv.IndexCommitmentReadStore, keyValues []proto
 	return u.primaryKey.Get(store, pk, message)
 }
 
-func (u UniqueKeyIndex) OnCreate(store kv.Store, message protoreflect.Message) error {
+func (u UniqueKeyIndex) OnCreate(store kvstore.Store, message protoreflect.Message) error {
 	k, v, err := u.EncodeKVFromMessage(message)
 	if err != nil {
 		return err
@@ -103,7 +99,7 @@ func (u UniqueKeyIndex) OnCreate(store kv.Store, message protoreflect.Message) e
 	return store.Set(k, v)
 }
 
-func (u UniqueKeyIndex) OnUpdate(store kv.Store, new, existing protoreflect.Message) error {
+func (u UniqueKeyIndex) OnUpdate(store kvstore.Store, new, existing protoreflect.Message) error {
 	keyCodec := u.GetKeyCodec()
 	newValues := keyCodec.GetKeyValues(new)
 	existingValues := keyCodec.GetKeyValues(existing)
@@ -143,7 +139,7 @@ func (u UniqueKeyIndex) OnUpdate(store kv.Store, new, existing protoreflect.Mess
 	return store.Set(newKey, value)
 }
 
-func (u UniqueKeyIndex) OnDelete(store kv.Store, message protoreflect.Message) error {
+func (u UniqueKeyIndex) OnDelete(store kvstore.Store, message protoreflect.Message) error {
 	_, key, err := u.GetKeyCodec().EncodeKeyFromMessage(message)
 	if err != nil {
 		return err
@@ -152,7 +148,7 @@ func (u UniqueKeyIndex) OnDelete(store kv.Store, message protoreflect.Message) e
 	return store.Delete(key)
 }
 
-func (u UniqueKeyIndex) ReadValueFromIndexKey(store kv.IndexCommitmentReadStore, primaryKey []protoreflect.Value, _ []byte, message proto.Message) error {
+func (u UniqueKeyIndex) ReadValueFromIndexKey(store kvstore.IndexCommitmentReadStore, primaryKey []protoreflect.Value, _ []byte, message proto.Message) error {
 	found, err := u.primaryKey.Get(store, primaryKey, message)
 	if err != nil {
 		return err

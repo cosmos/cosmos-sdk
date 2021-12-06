@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 	"io"
 	"math"
 
@@ -15,7 +16,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	"github.com/cosmos/cosmos-sdk/orm/backend/kv"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
@@ -37,7 +37,7 @@ type TypeResolver interface {
 	protoregistry.ExtensionTypeResolver
 }
 
-func (t TableImpl) Save(store kv.IndexCommitmentStore, message proto.Message, mode SaveMode) error {
+func (t TableImpl) Save(store kvstore.IndexCommitmentStore, message proto.Message, mode SaveMode) error {
 	mref := message.ProtoReflect()
 	pkValues, pk, err := t.EncodeKeyFromMessage(mref)
 	if err != nil {
@@ -97,7 +97,7 @@ func (t TableImpl) Save(store kv.IndexCommitmentStore, message proto.Message, mo
 	return nil
 }
 
-func (t TableImpl) Delete(store kv.IndexCommitmentStore, primaryKey []protoreflect.Value) error {
+func (t TableImpl) Delete(store kvstore.IndexCommitmentStore, primaryKey []protoreflect.Value) error {
 	pk, err := t.EncodeKey(primaryKey)
 	if err != nil {
 		return err
@@ -218,13 +218,13 @@ func (t TableImpl) ValidateJSON(reader io.Reader) error {
 	})
 }
 
-func (t TableImpl) ImportJSON(store kv.IndexCommitmentStore, reader io.Reader) error {
+func (t TableImpl) ImportJSON(store kvstore.IndexCommitmentStore, reader io.Reader) error {
 	return t.decodeJson(reader, func(message proto.Message) error {
 		return t.Save(store, message, SAVE_MODE_DEFAULT)
 	})
 }
 
-func (t TableImpl) ExportJSON(store kv.IndexCommitmentReadStore, writer io.Writer) error {
+func (t TableImpl) ExportJSON(store kvstore.IndexCommitmentReadStore, writer io.Writer) error {
 	_, err := writer.Write([]byte("["))
 	if err != nil {
 		return err

@@ -4,12 +4,10 @@ import (
 	"fmt"
 
 	"google.golang.org/protobuf/proto"
-
-	"github.com/cosmos/cosmos-sdk/orm/model/ormiterator"
 )
 
 func Paginate(
-	getIterator func(IteratorOptions) (ormiterator.Iterator, error),
+	getIterator func(IteratorOptions) (Iterator, error),
 	request *PaginationRequest,
 ) (*PaginationResponse, error) {
 	if len(request.Cursor) != 0 && request.Offset > 0 {
@@ -32,7 +30,7 @@ func Paginate(
 
 	haveMore := false
 	var nodes []proto.Message
-	var cursors []ormiterator.Cursor
+	var cursors []Cursor
 	i := 0
 	for {
 		have, err := it.Next()
@@ -90,13 +88,13 @@ type PaginationRequest struct {
 	Offset     int
 	Reverse    bool
 	CountTotal bool
-	Cursor     ormiterator.Cursor
+	Cursor     Cursor
 	Filter     func(proto.Message) bool
 }
 
 type PaginationResponse struct {
 	Nodes      []proto.Message
-	Cursors    []ormiterator.Cursor
+	Cursors    []Cursor
 	HaveMore   bool
 	TotalCount int
 }

@@ -5,8 +5,8 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/orm/backend/kv"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
+	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 )
 
 type Debugger interface {
@@ -15,12 +15,12 @@ type Debugger interface {
 }
 
 type TestStore struct {
-	store    kv.Store
+	store    kvstore.Store
 	debugger Debugger
 	name     string
 }
 
-func NewTestStore(store kv.Store, debugger Debugger, name string) kv.Store {
+func NewTestStore(store kvstore.Store, debugger Debugger, name string) kvstore.Store {
 	return &TestStore{store: store, debugger: debugger, name: name}
 }
 
@@ -52,7 +52,7 @@ func (t TestStore) Has(key []byte) (bool, error) {
 	return has, nil
 }
 
-func (t TestStore) Iterator(start, end []byte) (kv.Iterator, error) {
+func (t TestStore) Iterator(start, end []byte) (kvstore.Iterator, error) {
 	if t.debugger != nil {
 		t.debugger.Log(fmt.Sprintf("ITERATOR %s -> %s",
 			t.debugger.Decode(t.name, start, nil),
@@ -62,7 +62,7 @@ func (t TestStore) Iterator(start, end []byte) (kv.Iterator, error) {
 	return t.store.Iterator(start, end)
 }
 
-func (t TestStore) ReverseIterator(start, end []byte) (kv.Iterator, error) {
+func (t TestStore) ReverseIterator(start, end []byte) (kvstore.Iterator, error) {
 	if t.debugger != nil {
 		t.debugger.Log(fmt.Sprintf("ITERATOR %s <- %s",
 			t.debugger.Decode(t.name, start, nil),
@@ -100,11 +100,11 @@ func (t TestStore) Delete(key []byte) error {
 	return nil
 }
 
-var _ kv.Store = &TestStore{}
+var _ kvstore.Store = &TestStore{}
 
 type IndexCommitmentStore struct {
-	commitment kv.Store
-	index      kv.Store
+	commitment kvstore.Store
+	index      kvstore.Store
 }
 
 func NewMemIndexCommitmentStore() *IndexCommitmentStore {
@@ -121,21 +121,21 @@ func NewDebugIndexCommitmentStore(debugger Debugger) *IndexCommitmentStore {
 	}
 }
 
-var _ kv.IndexCommitmentStore = &IndexCommitmentStore{}
+var _ kvstore.IndexCommitmentStore = &IndexCommitmentStore{}
 
-func (i IndexCommitmentStore) ReadCommitmentStore() kv.ReadStore {
+func (i IndexCommitmentStore) ReadCommitmentStore() kvstore.ReadStore {
 	return i.commitment
 }
 
-func (i IndexCommitmentStore) ReadIndexStore() kv.ReadStore {
+func (i IndexCommitmentStore) ReadIndexStore() kvstore.ReadStore {
 	return i.index
 }
 
-func (i IndexCommitmentStore) CommitmentStore() kv.Store {
+func (i IndexCommitmentStore) CommitmentStore() kvstore.Store {
 	return i.commitment
 }
 
-func (i IndexCommitmentStore) IndexStore() kv.Store {
+func (i IndexCommitmentStore) IndexStore() kvstore.Store {
 	return i.index
 }
 

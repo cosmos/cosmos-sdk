@@ -2,6 +2,7 @@ package ormtable
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"sort"
 	"testing"
 
@@ -13,7 +14,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/orm/internal/memkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormiterator"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -41,7 +41,7 @@ func testUniqueIndex(t *testing.T, model *IndexModel) {
 	t.Logf("testing unique index %T %s", index, index.GetFieldNames())
 	for i := 0; i < len(model.data); i++ {
 		x := model.data[i]
-		ks, _, err := index.EncodeKeyFromMessage(x.ProtoReflect())
+		ks, _, err := index.(ormkv.IndexCodec).EncodeKeyFromMessage(x.ProtoReflect())
 		assert.NilError(t, err)
 
 		found, err := index.Has(model.store, ks)
@@ -99,7 +99,7 @@ func reverseData(data []proto.Message) []proto.Message {
 	return reverse
 }
 
-func checkIteratorAgainstSlice(t *testing.T, iterator ormiterator.Iterator, data []proto.Message, typ protoreflect.MessageType) {
+func checkIteratorAgainstSlice(t *testing.T, iterator Iterator, data []proto.Message, typ protoreflect.MessageType) {
 	i := 0
 	for {
 		have, err := iterator.Next()
@@ -170,11 +170,11 @@ func (m *IndexModel) Len() int {
 }
 
 func (m *IndexModel) Less(i, j int) bool {
-	is, _, err := m.index.EncodeKeyFromMessage(m.data[i].ProtoReflect())
+	is, _, err := m.index.(ormkv.IndexCodec).EncodeKeyFromMessage(m.data[i].ProtoReflect())
 	if err != nil {
 		panic(err)
 	}
-	js, _, err := m.index.EncodeKeyFromMessage(m.data[j].ProtoReflect())
+	js, _, err := m.index.(ormkv.IndexCodec).EncodeKeyFromMessage(m.data[j].ProtoReflect())
 	if err != nil {
 		panic(err)
 	}

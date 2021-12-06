@@ -2,14 +2,12 @@ package ormtable
 
 import (
 	"encoding/json"
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-
+	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-
-	"github.com/cosmos/cosmos-sdk/orm/backend/kv"
 )
 
 type View interface {
@@ -24,13 +22,13 @@ type Table interface {
 
 	ormkv.EntryCodec
 
-	Save(store kv.IndexCommitmentStore, message proto.Message, mode SaveMode) error
-	Delete(store kv.IndexCommitmentStore, primaryKey []protoreflect.Value) error
+	Save(store kvstore.IndexCommitmentStore, message proto.Message, mode SaveMode) error
+	Delete(store kvstore.IndexCommitmentStore, primaryKey []protoreflect.Value) error
 
 	DefaultJSON() json.RawMessage
 	ValidateJSON(io.Reader) error
-	ImportJSON(kv.IndexCommitmentStore, io.Reader) error
-	ExportJSON(kv.IndexCommitmentReadStore, io.Writer) error
+	ImportJSON(kvstore.IndexCommitmentStore, io.Reader) error
+	ExportJSON(kvstore.IndexCommitmentReadStore, io.Writer) error
 }
 
 type SaveMode int

@@ -1,8 +1,6 @@
-package kv
+package kvstore
 
-import (
-	dbm "github.com/tendermint/tm-db"
-)
+import dbm "github.com/tendermint/tm-db"
 
 type ReadStore interface {
 	Get(key []byte) ([]byte, error)

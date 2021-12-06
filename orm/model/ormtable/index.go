@@ -1,20 +1,16 @@
 package ormtable
 
 import (
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
+	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-
-	"github.com/cosmos/cosmos-sdk/orm/model/ormiterator"
-
-	"github.com/cosmos/cosmos-sdk/orm/backend/kv"
 )
 
 type Index interface {
-	PrefixIterator(store kv.IndexCommitmentReadStore, prefix []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error)
-	RangeIterator(store kv.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (ormiterator.Iterator, error)
-	ReadValueFromIndexKey(store kv.IndexCommitmentReadStore, primaryKey []protoreflect.Value, value []byte, message proto.Message) error
+	PrefixIterator(store kvstore.IndexCommitmentReadStore, prefix []protoreflect.Value, options IteratorOptions) (Iterator, error)
+	RangeIterator(store kvstore.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (Iterator, error)
+	ReadValueFromIndexKey(store kvstore.IndexCommitmentReadStore, primaryKey []protoreflect.Value, value []byte, message proto.Message) error
 
 	MessageType() protoreflect.MessageType
 	GetFieldNames() []protoreflect.Name
@@ -32,8 +28,8 @@ type concreteIndex interface {
 type UniqueIndex interface {
 	Index
 
-	Has(store kv.IndexCommitmentReadStore, keyValues []protoreflect.Value) (found bool, err error)
-	Get(store kv.IndexCommitmentReadStore, keyValues []protoreflect.Value, message proto.Message) (found bool, err error)
+	Has(store kvstore.IndexCommitmentReadStore, keyValues []protoreflect.Value) (found bool, err error)
+	Get(store kvstore.IndexCommitmentReadStore, keyValues []protoreflect.Value, message proto.Message) (found bool, err error)
 }
 
 type IteratorOptions struct {
@@ -44,9 +40,9 @@ type IteratorOptions struct {
 type Indexer interface {
 	Index
 
-	OnCreate(store kv.Store, message protoreflect.Message) error
-	OnUpdate(store kv.Store, new, existing protoreflect.Message) error
-	OnDelete(store kv.Store, message protoreflect.Message) error
+	OnCreate(store kvstore.Store, message protoreflect.Message) error
+	OnUpdate(store kvstore.Store, new, existing protoreflect.Message) error
+	OnDelete(store kvstore.Store, message protoreflect.Message) error
 
 	doNotImplement()
 }

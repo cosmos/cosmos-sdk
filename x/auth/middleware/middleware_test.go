@@ -1025,6 +1025,7 @@ func (s *MWTestSuite) TestCustomSignatureVerificationGasConsumer() {
 					return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 				}
 			},
+			TxDecoder: s.clientCtx.TxConfig.TxDecoder(),
 		},
 	)
 	s.Require().NoError(err)

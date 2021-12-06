@@ -57,6 +57,13 @@ type TxResponse struct {
 	// the timestamps of the valid votes in the block.LastCommit. For height == 1,
 	// it's genesis time.
 	Timestamp string `protobuf:"bytes,12,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	// Events defines all the events emitted by processing a transaction. Note,
+	// these events include those emitted by processing all the messages and those
+	// emitted from the ante handler. Whereas Logs contains the events, with
+	// additional metadata, emitted only by processing the messages.
+	//
+	// Since: cosmos-sdk 0.42.11, 0.44.5, 0.45
+	Events []types1.Event `protobuf:"bytes,13,rep,name=events,proto3" json:"events"`
 }
 
 func (m *TxResponse) Reset()      { *m = TxResponse{} }
@@ -317,12 +324,18 @@ func (m *GasInfo) GetGasUsed() uint64 {
 type Result struct {
 	// Data is any data returned from message or handler execution. It MUST be
 	// length prefixed in order to separate data from multiple message executions.
-	Data []byte `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	// Deprecated. This field is still populated, but prefer msg_response instead
+	// because it also contains the Msg response typeURL.
+	Data []byte `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"` // Deprecated: Do not use.
 	// Log contains the log information from message or handler execution.
 	Log string `protobuf:"bytes,2,opt,name=log,proto3" json:"log,omitempty"`
 	// Events contains a slice of Event objects that were emitted during message
 	// or handler execution.
 	Events []types1.Event `protobuf:"bytes,3,rep,name=events,proto3" json:"events"`
+	// msg_responses contains the Msg handler responses type packed in Anys.
+	//
+	// Since: cosmos-sdk 0.45
+	MsgResponses []*types.Any `protobuf:"bytes,4,rep,name=msg_responses,json=msgResponses,proto3" json:"msg_responses,omitempty"`
 }
 
 func (m *Result) Reset()      { *m = Result{} }
@@ -405,6 +418,8 @@ func (m *SimulationResponse) GetResult() *Result {
 
 // MsgData defines the data returned in a Result object during message
 // execution.
+//
+// Deprecated: Do not use.
 type MsgData struct {
 	MsgType string `protobuf:"bytes,1,opt,name=msg_type,json=msgType,proto3" json:"msg_type,omitempty"`
 	Data    []byte `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
@@ -459,7 +474,12 @@ func (m *MsgData) GetData() []byte {
 // TxMsgData defines a list of MsgData. A transaction will have a MsgData object
 // for each message.
 type TxMsgData struct {
-	Data []*MsgData `protobuf:"bytes,1,rep,name=data,proto3" json:"data,omitempty"`
+	// data field is deprecated and not populated.
+	Data []*MsgData `protobuf:"bytes,1,rep,name=data,proto3" json:"data,omitempty"` // Deprecated: Do not use.
+	// msg_responses contains the Msg handler responses packed into Anys.
+	//
+	// Since: cosmos-sdk 0.45
+	MsgResponses []*types.Any `protobuf:"bytes,2,rep,name=msg_responses,json=msgResponses,proto3" json:"msg_responses,omitempty"`
 }
 
 func (m *TxMsgData) Reset()      { *m = TxMsgData{} }
@@ -494,9 +514,17 @@ func (m *TxMsgData) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TxMsgData proto.InternalMessageInfo
 
+// Deprecated: Do not use.
 func (m *TxMsgData) GetData() []*MsgData {
 	if m != nil {
 		return m.Data
+	}
+	return nil
+}
+
+func (m *TxMsgData) GetMsgResponses() []*types.Any {
+	if m != nil {
+		return m.MsgResponses
 	}
 	return nil
 }
@@ -688,6 +716,20 @@ func (m *TxResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.Events) > 0 {
+		for iNdEx := len(m.Events) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Events[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintAbci(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x6a
+		}
+	}
 	if len(m.Timestamp) > 0 {
 		i -= len(m.Timestamp)
 		copy(dAtA[i:], m.Timestamp)
@@ -962,6 +1004,20 @@ func (m *Result) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.MsgResponses) > 0 {
+		for iNdEx := len(m.MsgResponses) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.MsgResponses[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintAbci(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
 	if len(m.Events) > 0 {
 		for iNdEx := len(m.Events) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -1095,6 +1151,20 @@ func (m *TxMsgData) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.MsgResponses) > 0 {
+		for iNdEx := len(m.MsgResponses) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.MsgResponses[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintAbci(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
 	if len(m.Data) > 0 {
 		for iNdEx := len(m.Data) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -1237,6 +1307,12 @@ func (m *TxResponse) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovAbci(uint64(l))
 	}
+	if len(m.Events) > 0 {
+		for _, e := range m.Events {
+			l = e.Size()
+			n += 1 + l + sovAbci(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -1333,6 +1409,12 @@ func (m *Result) Size() (n int) {
 			n += 1 + l + sovAbci(uint64(l))
 		}
 	}
+	if len(m.MsgResponses) > 0 {
+		for _, e := range m.MsgResponses {
+			l = e.Size()
+			n += 1 + l + sovAbci(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -1376,6 +1458,12 @@ func (m *TxMsgData) Size() (n int) {
 	_ = l
 	if len(m.Data) > 0 {
 		for _, e := range m.Data {
+			l = e.Size()
+			n += 1 + l + sovAbci(uint64(l))
+		}
+	}
+	if len(m.MsgResponses) > 0 {
+		for _, e := range m.MsgResponses {
 			l = e.Size()
 			n += 1 + l + sovAbci(uint64(l))
 		}
@@ -1472,8 +1560,14 @@ func (this *TxMsgData) String() string {
 		repeatedStringForData += strings.Replace(f.String(), "MsgData", "MsgData", 1) + ","
 	}
 	repeatedStringForData += "}"
+	repeatedStringForMsgResponses := "[]*Any{"
+	for _, f := range this.MsgResponses {
+		repeatedStringForMsgResponses += strings.Replace(fmt.Sprintf("%v", f), "Any", "types.Any", 1) + ","
+	}
+	repeatedStringForMsgResponses += "}"
 	s := strings.Join([]string{`&TxMsgData{`,
 		`Data:` + repeatedStringForData + `,`,
+		`MsgResponses:` + repeatedStringForMsgResponses + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1872,6 +1966,40 @@ func (m *TxResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Timestamp = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 13:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Events", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAbci
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAbci
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAbci
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Events = append(m.Events, types1.Event{})
+			if err := m.Events[len(m.Events)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2476,6 +2604,40 @@ func (m *Result) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MsgResponses", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAbci
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAbci
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAbci
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MsgResponses = append(m.MsgResponses, &types.Any{})
+			if err := m.MsgResponses[len(m.MsgResponses)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAbci(dAtA[iNdEx:])
@@ -2792,6 +2954,40 @@ func (m *TxMsgData) Unmarshal(dAtA []byte) error {
 			}
 			m.Data = append(m.Data, &MsgData{})
 			if err := m.Data[len(m.Data)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MsgResponses", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAbci
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAbci
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAbci
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MsgResponses = append(m.MsgResponses, &types.Any{})
+			if err := m.MsgResponses[len(m.MsgResponses)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

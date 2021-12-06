@@ -2,12 +2,11 @@ syntax = "proto3";
 package cosmos.gov.v1beta2;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/gov/v1beta2/gov.proto";
 import "cosmos_proto/cosmos.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2";
 
 // Query defines the gRPC querier service for gov module
 service Query {
@@ -60,14 +59,11 @@ message QueryProposalRequest {
 
 // QueryProposalResponse is the response type for the Query/Proposal RPC method.
 message QueryProposalResponse {
-  Proposal proposal = 1 [(gogoproto.nullable) = false];
+  Proposal proposal = 1;
 }
 
 // QueryProposalsRequest is the request type for the Query/Proposals RPC method.
 message QueryProposalsRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
   // proposal_status defines the status of the proposals.
   ProposalStatus proposal_status = 1;
 
@@ -84,7 +80,7 @@ message QueryProposalsRequest {
 // QueryProposalsResponse is the response type for the Query/Proposals RPC
 // method.
 message QueryProposalsResponse {
-  repeated Proposal proposals = 1 [(gogoproto.nullable) = false];
+  repeated Proposal proposals = 1;
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -92,9 +88,6 @@ message QueryProposalsResponse {
 
 // QueryVoteRequest is the request type for the Query/Vote RPC method.
 message QueryVoteRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
   // proposal_id defines the unique id of the proposal.
   uint64 proposal_id = 1;
 
@@ -105,7 +98,7 @@ message QueryVoteRequest {
 // QueryVoteResponse is the response type for the Query/Vote RPC method.
 message QueryVoteResponse {
   // vote defined the queried vote.
-  Vote vote = 1 [(gogoproto.nullable) = false];
+  Vote vote = 1;
 }
 
 // QueryVotesRequest is the request type for the Query/Votes RPC method.
@@ -120,7 +113,7 @@ message QueryVotesRequest {
 // QueryVotesResponse is the response type for the Query/Votes RPC method.
 message QueryVotesResponse {
   // votes defined the queried votes.
-  repeated Vote votes = 1 [(gogoproto.nullable) = false];
+  repeated Vote votes = 1;
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -136,18 +129,15 @@ message QueryParamsRequest {
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
   // voting_params defines the parameters related to voting.
-  VotingParams voting_params = 1 [(gogoproto.nullable) = false];
+  VotingParams voting_params = 1;
   // deposit_params defines the parameters related to deposit.
-  DepositParams deposit_params = 2 [(gogoproto.nullable) = false];
+  DepositParams deposit_params = 2;
   // tally_params defines the parameters related to tally.
-  TallyParams tally_params = 3 [(gogoproto.nullable) = false];
+  TallyParams tally_params = 3;
 }
 
 // QueryDepositRequest is the request type for the Query/Deposit RPC method.
 message QueryDepositRequest {
-  option (gogoproto.goproto_getters) = false;
-  option (gogoproto.equal)           = false;
-
   // proposal_id defines the unique id of the proposal.
   uint64 proposal_id = 1;
 
@@ -158,7 +148,7 @@ message QueryDepositRequest {
 // QueryDepositResponse is the response type for the Query/Deposit RPC method.
 message QueryDepositResponse {
   // deposit defines the requested deposit.
-  Deposit deposit = 1 [(gogoproto.nullable) = false];
+  Deposit deposit = 1;
 }
 
 // QueryDepositsRequest is the request type for the Query/Deposits RPC method.
@@ -172,7 +162,7 @@ message QueryDepositsRequest {
 
 // QueryDepositsResponse is the response type for the Query/Deposits RPC method.
 message QueryDepositsResponse {
-  repeated Deposit deposits = 1 [(gogoproto.nullable) = false];
+  repeated Deposit deposits = 1;
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -187,5 +177,5 @@ message QueryTallyResultRequest {
 // QueryTallyResultResponse is the response type for the Query/Tally RPC method.
 message QueryTallyResultResponse {
   // tally defines the requested tally.
-  TallyResult tally = 1 [(gogoproto.nullable) = false];
+  TallyResult tally = 1;
 }

@@ -1,15 +1,19 @@
-# Cosmos SDK v0.42.10 "Stargate" Release Notes
+# Cosmos SDK v0.42.11 "Stargate" Release Notes
 
-This release includes a new `AnteHandler` that rejects redundant IBC transactions to save relayers fees. This is a backport of [ibc-go \#235](https://github.com/cosmos/ibc-go/pull/235).
+This release includes a client-breaking change for HTTP users querying account balances by denom:
 
-v0.42.10 also includes multiple performance improvements, such as:
+```diff
+- <base_url>/cosmos/bank/v1beta1/balances/<address>/<denom>
++ <base_url>/cosmos/bank/v1beta1/balances/<address>/by_denom?denom=<denom>
+```
 
-- improve ABCI performance under concurrent load via [Tendermint v0.34.13](https://github.com/tendermint/tendermint/blob/master/CHANGELOG.md#v03413),
-- improve CacheKVStore datastructures / algorithms, to no longer take O(N^2) time when interleaving iterators and insertions.
-- bump IAVL to v0.17.1 which includes performance improvements on a batch load.
+This change was made to fix querying IBC denoms via HTTP.
 
-We fixed the keyring to use pre-configured data for `add-genesis-account` command.
+v0.42.11 also includes multiple bugfixes and performance improvements, such as:
 
-Finally, when using the `client.Context`, we modified ABCI queries to use `abci.QueryRequest`'s `Height` field if it is non-zero, otherwise continue using `client.Context`'s height. This is a minor client-breaking change for users of the `client.Context`.
+- Upgrade IAVL to 0.17.3 to solve race condition bug in IAVL.
+- Bump Tendermint to [v0.34.14](https://github.com/tendermint/tendermint/releases/tag/v0.34.14).
 
-See the [Cosmos SDK v0.42.10 milestone](https://github.com/cosmos/cosmos-sdk/milestone/55?closed=1) on our issue tracker for the exhaustive list of all changes.
+Finally, when querying for transactions, we added an `Events` field to the `TxResponse` type that captures _all_ events emitted by a transaction, unlike `Logs` which only contains events emitted during message execution. `Logs` and `Events` may currently contain duplicate data, but `Logs` will be deprecated in a future version.
+
+See our [CHANGELOG](./CHANGELOG.md) for the exhaustive list of all changes, or a full [commit diff](https://github.com/cosmos/cosmos-sdk/compare/v0.42.09...v0.42.10).

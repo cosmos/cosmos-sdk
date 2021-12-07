@@ -1389,7 +1389,7 @@ func (s *IntegrationTestSuite) TestEditValidatorMoniker() {
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", cli.FlagMoniker, moniker),
+		fmt.Sprintf("--%s=%s", cli.FlagEditMoniker, moniker),
 		fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	})
@@ -1423,6 +1423,6 @@ func (s *IntegrationTestSuite) TestEditValidatorMoniker() {
 
 	require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &result))
 
-	require.NotEqual(result.GetMoniker(), moniker)
+	require.Equal(result.GetMoniker(), moniker)
 	require.True(false)
 }

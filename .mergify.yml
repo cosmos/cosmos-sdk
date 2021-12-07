@@ -13,7 +13,9 @@ pull_request_rules:
       queue:
         name: default
         method: squash
-        commit_message: title+body
+        commit_message_template: |
+           {{ title }} (#{{ number }})
+           {{ body }}
   - name: backport patches to v0.44.x branch
     conditions:
       - base=master

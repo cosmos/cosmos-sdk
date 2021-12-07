@@ -247,22 +247,17 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 		return err
 	}
 
-	signers := txBuilder.GetTx().GetSigners()
+	pubkeys, err := txBuilder.GetTx().GetPubKeys()
 	if err != nil {
 		return err
 	}
 
-	signerIndex := -1
-	signerAddr := sdk.AccAddress(pubKey.Address())
-	for i, a := range signers {
-		if a.Equals(signerAddr) {
+	signerIndex := 0
+	for i, p := range pubkeys {
+		if p.Equals(pubKey) {
 			signerIndex = i
 			break
 		}
-	}
-
-	if signerIndex < 0 {
-		return errors.New("cannot find the signer in signers list")
 	}
 
 	signerData := authsigning.SignerData{

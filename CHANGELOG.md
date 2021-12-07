@@ -118,6 +118,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
     - Message BaseAccount pub_key json representation is now `pub_key` previously it was `public_key`
     - Message Proposal in goverance `id` is now `proposal_id`
     - Message `MsgUnjail` `address` is no `validator_addr` 
+    - Message `GenesisState` json representation of Gentxs is now `gen_txs`, previously `gentxs`
+    - Message `DelegatorStartingInfo` json representation of Height is now `height`, previously `creation_height`
 
 ### Client Breaking Changes
 

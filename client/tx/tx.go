@@ -349,13 +349,8 @@ func (gr GasEstimateResponse) String() string {
 
 // makeAuxSignerData generates an AuxSignerData from the client inputs.
 func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx.AuxSignerData, error) {
-	if f.SignMode() == signing.SignMode_SIGN_MODE_DIRECT {
-		return tx.AuxSignerData{}, sdkerrors.Wrap(errors.New("can't sign a aux tx in DIRECT mode"), "tipper")
-	}
-
 	b := NewAuxTxBuilder()
 	fromAddress, name, _, err := client.GetFromFields(clientCtx.Keyring, clientCtx.From, false)
-
 	if err != nil {
 		return tx.AuxSignerData{}, err
 	}
@@ -382,6 +377,9 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx
 		if f.tip.Tipper == "" {
 			return tx.AuxSignerData{}, sdkerrors.Wrap(errors.New("tipper flag required"), "tipper")
 		} else {
+			if _, err := sdk.AccAddressFromBech32(f.tip.Tipper); err != nil {
+				return tx.AuxSignerData{}, sdkerrors.ErrInvalidAddress.Wrap("tipper must be a bech32 address")
+			}
 			b.SetTip(f.tip)
 		}
 	}

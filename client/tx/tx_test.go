@@ -180,7 +180,7 @@ func TestSign(t *testing.T) {
 	requireT.NoError(err)
 	txb2, err := txfNoKeybase.BuildUnsignedTx(msg1, msg2)
 	requireT.NoError(err)
-	txbSimple, err := txfNoKeybase.BuildUnsignedTx(msg1)
+	txbSimple, err := txfNoKeybase.BuildUnsignedTx(msg2)
 	requireT.NoError(err)
 
 	testCases := []struct {

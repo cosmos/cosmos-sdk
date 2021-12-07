@@ -1356,7 +1356,7 @@ func (s *IntegrationTestSuite) TestTxWithoutPublicKey() {
 	sigV2 := signing.SignatureV2{
 		PubKey: val1.PubKey,
 		Data: &signing.SingleSignatureData{
-			SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+			SignMode:  txCfg.SignModeHandler().DefaultMode(),
 			Signature: nil,
 		},
 	}
@@ -1464,7 +1464,7 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 	require.Equal(sdk.NewCoins(val0Coin, val1Coin), queryRes.Balances)
 }
 
-func (s *IntegrationTestSuite) TestTipsWithFee() {
+func (s *IntegrationTestSuite) TestAuxSigner() {
 	require := s.Require()
 	val := s.network.Validators[0]
 	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10))
@@ -1575,7 +1575,25 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			},
 		},
 		{
-			name:     "both tipper, fee payer uses AMINO",
+			name:     "when --aux and --sign-mode = direct set: error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      tip,
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			expectErrAux: true,
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+		},
+		{
+			name:     "both tipper, fee payer uses AMINO: no error",
 			tipper:   tipper,
 			feePayer: feePayer,
 			tip:      tip,
@@ -1594,7 +1612,7 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			},
 		},
 		{
-			name:     "tipper uses DIRECT_AUX, fee payer uses AMINO",
+			name:     "tipper uses DIRECT_AUX, fee payer uses AMINO: no error",
 			tipper:   tipper,
 			feePayer: feePayer,
 			tip:      tip,
@@ -1613,7 +1631,7 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			},
 		},
 		{
-			name:     "--tip flag unset",
+			name:     "--tip flag unset: no error",
 			tipper:   tipper,
 			feePayer: feePayer,
 			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdk.NewInt(0)},
@@ -1630,7 +1648,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
 			},
 		},
-
 		{
 			name:     "legacy amino json: no error",
 			tipper:   tipper,
@@ -1650,7 +1667,7 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			},
 		},
 		{
-			name:     "tipper uses direct aux, fee payer uses direct",
+			name:     "tipper uses direct aux, fee payer uses direct: happy case",
 			tipper:   tipper,
 			feePayer: feePayer,
 			tip:      tip,
@@ -1660,7 +1677,25 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
 			},
-
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+		},
+		{
+			name:     "wrong tipper address: error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      tip,
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=%s", flags.FlagTipper, "foobar"),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			expectErrAux: true,
 			feePayerArgs: []string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -1738,7 +1773,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
 
 				if tc.expectErrBroadCast {
-					// require.NotNil(txRes.RawLog)
 					require.Error(err)
 				} else if tc.errMsg != "" {
 					require.Contains(txRes.RawLog, tc.errMsg)

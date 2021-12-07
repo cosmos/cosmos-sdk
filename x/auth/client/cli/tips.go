@@ -25,8 +25,8 @@ func GetAuxToFeeCommand() *cobra.Command {
 				return err
 			}
 
-			auxSignerData := &tx.AuxSignerData{}
-			err = readAuxSignerData(clientCtx.Codec, auxSignerData, args[0])
+			auxSignerData := tx.AuxSignerData{}
+			err = readAuxSignerData(clientCtx.Codec, &auxSignerData, args[0])
 			if err != nil {
 				return err
 			}
@@ -34,7 +34,7 @@ func GetAuxToFeeCommand() *cobra.Command {
 			f := clienttx.NewFactoryCLI(clientCtx, cmd.Flags())
 
 			txBuilder := clientCtx.TxConfig.NewTxBuilder()
-			err = txBuilder.AddAuxSignerData(*auxSignerData)
+			err = txBuilder.AddAuxSignerData(auxSignerData)
 			if err != nil {
 				return err
 			}

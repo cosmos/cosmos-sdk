@@ -12,9 +12,7 @@ pull_request_rules:
     actions:
       queue:
         name: default
-      merge:
         method: squash
-        strict: true
         commit_message: title+body
   - name: backport patches to v0.44.x branch
     conditions:

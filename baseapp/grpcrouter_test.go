@@ -55,7 +55,7 @@ func TestRegisterQueryServiceTwice(t *testing.T) {
 	db := dbm.NewMemDB()
 	encCfg := simapp.MakeTestEncodingConfig()
 	logger, _ := log.NewDefaultLogger("plain", "info", false)
-	app := baseapp.NewBaseApp("test", logger, db, encCfg.TxConfig.TxDecoder())
+	app := baseapp.NewBaseApp("test", logger, db)
 	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
 

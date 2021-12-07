@@ -1375,12 +1375,11 @@ func (s *IntegrationTestSuite) TestEditValidatorMoniker() {
 	require := s.Require()
 
 	queryCmd := cli.GetCmdQueryValidator()
-	res, err := clitestutil.ExecTestCLICmd(
+	_, err := clitestutil.ExecTestCLICmd(
 		val.ClientCtx, queryCmd,
 		[]string{val.ValAddress.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 	)
 	require.NoError(err)
-	fmt.Println(res.String())
 
 	txCmd := cli.NewEditValidatorCmd()
 	moniker := "testing"
@@ -1395,7 +1394,7 @@ func (s *IntegrationTestSuite) TestEditValidatorMoniker() {
 	})
 	require.NoError(err)
 
-	res, err = clitestutil.ExecTestCLICmd(
+	res, err := clitestutil.ExecTestCLICmd(
 		val.ClientCtx, queryCmd,
 		[]string{val.ValAddress.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 	)
@@ -1419,10 +1418,7 @@ func (s *IntegrationTestSuite) TestEditValidatorMoniker() {
 		[]string{val.ValAddress.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 	)
 	require.NoError(err)
-	fmt.Println(res.String())
 
 	require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &result))
-
 	require.Equal(result.GetMoniker(), moniker)
-	require.True(false)
 }

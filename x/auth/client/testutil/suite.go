@@ -900,6 +900,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	s.Require().NoError(err)
 	intialCoins := balRes.Balances
 
+	s.Require().NoError(s.network.WaitForNextBlock())
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
 	_, err = s.createBankMsg(
@@ -1121,7 +1122,6 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	file2 := testutil.WriteToNewTempFile(s.T(), res.String())
 	_, err = TxMultiSignExec(val.ClientCtx, multisigRecord.Name, filename.Name(), file1.Name(), file2.Name())
 	s.Require().NoError(err)
-
 }
 
 func (s *IntegrationTestSuite) TestMultisignBatch() {
@@ -1356,7 +1356,7 @@ func (s *IntegrationTestSuite) TestTxWithoutPublicKey() {
 	sigV2 := signing.SignatureV2{
 		PubKey: val1.PubKey,
 		Data: &signing.SingleSignatureData{
-			SignMode:  txCfg.SignModeHandler().DefaultMode(),
+			SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 			Signature: nil,
 		},
 	}
@@ -1536,6 +1536,7 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 	fee := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1000))
 	tip := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(1000))
 
+	s.Require().NoError(s.network.WaitForNextBlock())
 	_, err = s.createBankMsg(val, tipper, sdk.NewCoins(tipperInitialBal))
 	require.NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())

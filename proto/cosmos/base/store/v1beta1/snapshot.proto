@@ -10,7 +10,8 @@ message SnapshotItem {
   // item is the specific type of snapshot item.
   oneof item {
     SnapshotStoreItem store = 1;
-    SnapshotIAVLItem  iavl  = 2 [(gogoproto.customname) = "IAVL"];
+    SnapshotIAVLItem  iavl = 2 [(gogoproto.customname) = "IAVL"];
+    SnapshotKVItem    kv = 3 [(gogoproto.customname) = "KV"];
   }
 }
 
@@ -21,8 +22,14 @@ message SnapshotStoreItem {
 
 // SnapshotIAVLItem is an exported IAVL node.
 message SnapshotIAVLItem {
-  bytes key     = 1;
-  bytes value   = 2;
+  bytes key = 1;
+  bytes value = 2;
   int64 version = 3;
-  int32 height  = 4;
+  int32 height = 4;
+}
+
+// SnapshotKVItem is an exported Key/Value Pair
+message SnapshotKVItem {
+  bytes key = 1;
+  bytes value = 2;
 }

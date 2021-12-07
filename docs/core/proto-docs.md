@@ -184,6 +184,7 @@
 - [cosmos/base/store/v1beta1/snapshot.proto](#cosmos/base/store/v1beta1/snapshot.proto)
     - [SnapshotIAVLItem](#cosmos.base.store.v1beta1.SnapshotIAVLItem)
     - [SnapshotItem](#cosmos.base.store.v1beta1.SnapshotItem)
+    - [SnapshotKVItem](#cosmos.base.store.v1beta1.SnapshotKVItem)
     - [SnapshotStoreItem](#cosmos.base.store.v1beta1.SnapshotStoreItem)
   
 - [cosmos/base/tendermint/v1beta1/query.proto](#cosmos/base/tendermint/v1beta1/query.proto)
@@ -3103,30 +3104,33 @@ SnapshotIAVLItem is an exported IAVL node.
 | `version` | [int64](#int64) |  |  |
 | `height` | [int32](#int32) |  |  |
 
-
-
-
-
-
 <a name="cosmos.base.store.v1beta1.SnapshotItem"></a>
 
 ### SnapshotItem
-SnapshotItem is an item contained in a rootmulti.Store snapshot.
 
+SnapshotItem is an item contained in a rootmulti.Store snapshot.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `store` | [SnapshotStoreItem](#cosmos.base.store.v1beta1.SnapshotStoreItem) |  |  |
 | `iavl` | [SnapshotIAVLItem](#cosmos.base.store.v1beta1.SnapshotIAVLItem) |  |  |
+| `kv` | [SnapshotKVItem](#cosmos.base.store.v1beta1.SnapshotKVItem) |  |  |
 
+<a name="cosmos.base.store.v1beta1.SnapshotKVItem"></a>
 
+### SnapshotKVItem
 
+SnapshotKVItem is an exported Key/Value Pair
 
-
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [bytes](#bytes) |  |  |
+| `value` | [bytes](#bytes) |  |  |
 
 <a name="cosmos.base.store.v1beta1.SnapshotStoreItem"></a>
 
 ### SnapshotStoreItem
+
 SnapshotStoreItem contains metadata about a snapshotted store.
 
 

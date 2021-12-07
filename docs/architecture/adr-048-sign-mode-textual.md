@@ -81,16 +81,22 @@ Fee: <coins>
 Memo: <string>                    // Skipped if no memo set
 *Gas Limit: <uint64>
 *Timeout Height:  <uint64>        // Skipped if no timeout_height set
-Tipper: cosmos1ghi...ghi          // If there's a tip
-Tip: 1.0 atom
+Tipper: <string>          // If there's a tip
+Tip: <string>
 *Signers:
 *Signer (1/3):
-*Public Key:                      // base64-encoded pk or hex TBD
-*Sign mode: DIRECT
+*Public Key:                      // base64/hex-encoded pk TBD
+*Sign mode: <string>              // "Direct", "Direct Aux", "Legacy Amino Json"
 *Signer (2/3):
 // --snip--
 End of signers
 ```
+
+### 8. Encoding of the Transaction Body
+
+We call "transaction body" the `Tx.TxBody.Messages` field, which is an array of Anys.
+
+TODO.
 
 ### Wire Format
 
@@ -108,8 +114,8 @@ JSON:
     "messages": [
       {
         "@type": "/cosmos.bank.v1beta1.MsgSend",
-        "from": "cosmos1abc...abc",
-        "to": "cosmos1def...def",
+        "from": "cosmos1...abc",
+        "to": "cosmos1...def",
         "amount": [
           {
             "denom": "uregen",
@@ -151,14 +157,93 @@ Account number: 10
 Sequence: 2
 This transaction has 1 message:
 Message (1/1): bank send coins
-from: cosmos1abc...abc
-to: cosmos1def...def
-amount: 10 regen            // Conversion from uregen to regen using value renderers
+From: cosmos1...abc
+To: cosmos1...def
+Amount: 10 regen            // Conversion from uregen to regen using value renderers
 End of messages
 Fee: 0.002 regen
 *Gas: 100,000
 This transaction has 1 signer:
 ```
+
+#### Complex Transaction with Nested Messages
+
+JSON:
+
+```json
+{
+  "body": {
+    "messages": [
+      {
+        "@type": "/cosmos.bank.v1beta1.MsgSend",
+        "from": "cosmos1...abc",
+        "to": "cosmos1...def",
+        "amount": [
+          {
+            "denom": "uregen",
+            "amount": 10000000
+          }
+        ]
+      },
+      {
+        "@type": "/cosmos.gov.v1beta2.MsgSubmitProposal",
+        "proposer": "cosmos1...",
+        "messages": [
+          {
+            "@type": "/cosmos.bank.v1beta1.MsgSend",
+            "from": "cosmos1...ghi",
+            "to": "cosmos1...jkl",
+            "amount": [
+              {
+                "denom": "uregen",
+                "amount": 20000000
+              }
+            ]
+          },
+          {
+            "@type": "/cosmos.authz.v1beta1.MsgExec",
+            "grantee": "cosmos1...mno",
+            "msgs": [
+              {
+                "@type": "/cosmos.bank.v1beta1.MsgSend",
+                "from": "cosmos1...pqr",
+                "to": "cosmos1...stu",
+                "amount": [
+                  {
+                    "denom": "uregen",
+                    "amount": 30000000
+                  }
+                ]
+              },
+              {
+                "@type": "/cosmos.bank.v1beta1.MsgSend",
+                "from": "cosmos1...vwx",
+                "to": "cosmos1...yz",
+                "amount": [
+                  {
+                    "denom": "uregen",
+                    "amount": 40000000
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "initial_deposit": [
+          {
+            "denom": "atom",
+            "amount": 100.01
+          }
+        ]
+      }
+    ]
+  }
+  // --snip--
+}
+```
+
+SIGN_MODE_TEXTUAL:
+TODO
 
 ## Consequences
 
@@ -178,3 +263,5 @@ Later, this section can optionally list ideas or improvements the author or revi
 ## References
 
 - Initial discussion: https://github.com/cosmos/cosmos-sdk/issues/6513
+- Living document used in the working group: https://hackmd.io/fsZAO-TfT0CKmLDtfMcKeA?both
+- Working group meeting notes: https://hackmd.io/7RkGfv_rQAaZzEigUYhcXw

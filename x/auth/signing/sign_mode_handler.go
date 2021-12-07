@@ -1,6 +1,7 @@
 package signing
 
 import (
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
@@ -38,6 +39,6 @@ type SignerData struct {
 	// info.
 	Sequence uint64
 
-	// SignerIndex index of signer in the signer_infos array.
-	SignerIndex int
+	// PubKey is the public key of the signer
+	PubKey cryptotypes.PubKey
 }

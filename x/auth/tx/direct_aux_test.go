@@ -66,13 +66,13 @@ func TestDirectAuxHandler(t *testing.T) {
 		Address:       addr.String(),
 		ChainID:       chainID,
 		AccountNumber: accNum,
-		SignerIndex:   0,
+		PubKey:        pubkey,
 	}
 	feePayerSigningData := signing.SignerData{
 		Address:       feePayerAddr.String(),
 		ChainID:       chainID,
 		AccountNumber: accNum,
-		SignerIndex:   1,
+		PubKey:        feePayerPubKey,
 	}
 
 	modeHandler := signModeDirectAuxHandler{}

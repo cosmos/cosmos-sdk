@@ -35,7 +35,7 @@ type Handler interface {
 type Middleware func(Handler) Handler
 ```
 
-where we define the following types:
+where we define the following arguments and return types:
 
 ```go
 type Request struct {
@@ -63,7 +63,7 @@ type ResponseCheckTx struct {
 }
 ```
 
-Please note that because CheckTx handles separate logic related mempool priotization, its signature is different than DeliverTx and SimulateTx.
+Please note that because CheckTx handles separate logic related to mempool priotization, its signature is different than DeliverTx and SimulateTx.
 
 BaseApp holds a reference to a `tx.Handler`:
 

@@ -66,12 +66,14 @@ func TestDirectAuxHandler(t *testing.T) {
 		Address:       addr.String(),
 		ChainID:       chainID,
 		AccountNumber: accNum,
+		Sequence:      accSeq,
 		PubKey:        pubkey,
 	}
 	feePayerSigningData := signing.SignerData{
 		Address:       feePayerAddr.String(),
 		ChainID:       chainID,
 		AccountNumber: accNum,
+		Sequence:      accSeq,
 		PubKey:        feePayerPubKey,
 	}
 

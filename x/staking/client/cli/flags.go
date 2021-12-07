@@ -81,7 +81,7 @@ func FlagSetPublicKey() *flag.FlagSet {
 }
 
 func flagSetDescriptionEdit() *flag.FlagSet {
-	fs := flag.NewFlagSet("edit-validator", flag.ContinueOnError)
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
 	fs.String(FlagEditMoniker, types.DoNotModifyDesc, "The validator's name")
 	fs.String(FlagIdentity, types.DoNotModifyDesc, "The (optional) identity signature (ex. UPort or Keybase)")

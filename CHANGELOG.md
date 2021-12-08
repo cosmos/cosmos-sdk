@@ -120,7 +120,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9995](https://github.com/cosmos/cosmos-sdk/pull/9995) Increased gas cost for creating proposals.
 * [\#10598](https://github.com/cosmos/cosmos-sdk/pull/10598) Remove `gogoproto.json_tag` from all proto files. 
   - The affected fields are:
-    - Message BaseAccount pub_key json representation is now `pub_key` previously it was `public_key`
     - Message Proposal in goverance `id` is now `proposal_id`
     - Message `MsgUnjail` `address` is no `validator_addr` 
     - Message `GenesisState` json representation of Gentxs is now `gen_txs`, previously `gentxs`

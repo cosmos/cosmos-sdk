@@ -26,7 +26,7 @@ import (
 // for options that need access to non-exported fields of the BaseApp
 
 // SetPruning sets a pruning option on the multistore associated with the app
-func SetPruning(opts pruningtypes.PruningOptions) func(*BaseApp) {
+func SetPruning(opts sdk.PruningOptions) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetPruning(opts) }
 }
 
@@ -38,15 +38,6 @@ func SetMinGasPrices(gasPricesStr string) func(*BaseApp) {
 	}
 
 	return func(bapp *BaseApp) { bapp.setMinGasPrices(gasPrices) }
-}
-
-// SetQueryGasLimit returns an option that sets a gas limit for queries.
-func SetQueryGasLimit(queryGasLimit uint64) func(*BaseApp) {
-	if queryGasLimit == 0 {
-		queryGasLimit = math.MaxUint64
-	}
-
-	return func(bapp *BaseApp) { bapp.queryGasLimit = queryGasLimit }
 }
 
 // SetHaltHeight returns a BaseApp option function that sets the halt block height.
@@ -79,11 +70,6 @@ func SetIndexEvents(ie []string) func(*BaseApp) {
 // SetIAVLCacheSize provides a BaseApp option function that sets the size of IAVL cache.
 func SetIAVLCacheSize(size int) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetIAVLCacheSize(size) }
-}
-
-// SetIAVLDisableFastNode enables(false)/disables(true) fast node usage from the IAVL store.
-func SetIAVLDisableFastNode(disable bool) func(*BaseApp) {
-	return func(bapp *BaseApp) { bapp.cms.SetIAVLDisableFastNode(disable) }
 }
 
 // SetInterBlockCache provides a BaseApp option function that sets the

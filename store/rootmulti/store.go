@@ -57,24 +57,23 @@ func keysFromStoreKeyMap[V any](m map[types.StoreKey]V) []types.StoreKey {
 // cacheMultiStore which is used for branching other MultiStores. It implements
 // the CommitMultiStore interface.
 type Store struct {
-	db                  corestore.KVStoreWithBatch
-	logger              iavltree.Logger
-	lastCommitInfo      *types.CommitInfo
-	pruningManager      *pruning.Manager
-	iavlCacheSize       int
-	iavlDisableFastNode bool
-	storesParams        map[types.StoreKey]storeParams
-	stores              map[types.StoreKey]types.CommitKVStore
-	keysByName          map[string]types.StoreKey
-	initialVersion      int64
-	removalMap          map[types.StoreKey]bool
-	traceWriter         io.Writer
-	traceContext        types.TraceContext
-	traceContextMutex   sync.Mutex
-	interBlockCache     types.MultiStorePersistentCache
-	listeners           map[types.StoreKey]*types.MemoryListener
-	metrics             metrics.StoreMetrics
-	commitHeader        cmtproto.Header
+	db             dbm.DB
+	lastCommitInfo *types.CommitInfo
+	pruningOpts    types.PruningOptions
+	iavlCacheSize  int
+	storesParams   map[types.StoreKey]storeParams
+	stores         map[types.StoreKey]types.CommitKVStore
+	keysByName     map[string]types.StoreKey
+	lazyLoading    bool
+	pruneHeights   []int64
+	initialVersion int64
+
+	traceWriter  io.Writer
+	traceContext types.TraceContext
+
+	interBlockCache types.MultiStorePersistentCache
+
+	listeners map[types.StoreKey][]types.WriteListener
 }
 
 var (
@@ -88,17 +87,14 @@ var (
 // LoadVersion must be called.
 func NewStore(db corestore.KVStoreWithBatch, logger iavltree.Logger, metricGatherer metrics.StoreMetrics) *Store {
 	return &Store{
-		db:                  db,
-		logger:              logger,
-		iavlCacheSize:       iavl.DefaultIAVLCacheSize,
-		iavlDisableFastNode: iavlDisablefastNodeDefault,
-		storesParams:        make(map[types.StoreKey]storeParams),
-		stores:              make(map[types.StoreKey]types.CommitKVStore),
-		keysByName:          make(map[string]types.StoreKey),
-		listeners:           make(map[types.StoreKey]*types.MemoryListener),
-		removalMap:          make(map[types.StoreKey]bool),
-		pruningManager:      pruning.NewManager(db, logger),
-		metrics:             metricGatherer,
+		db:            db,
+		pruningOpts:   types.PruneNothing,
+		iavlCacheSize: iavl.DefaultIAVLCacheSize,
+		storesParams:  make(map[types.StoreKey]storeParams),
+		stores:        make(map[types.StoreKey]types.CommitKVStore),
+		keysByName:    make(map[string]types.StoreKey),
+		pruneHeights:  make([]int64, 0),
+		listeners:     make(map[types.StoreKey][]types.WriteListener),
 	}
 }
 
@@ -114,23 +110,13 @@ func (rs *Store) SetPruning(pruningOpts pruningtypes.PruningOptions) {
 	rs.pruningManager.SetOptions(pruningOpts)
 }
 
-// SetMetrics sets the metrics gatherer for the store package
-func (rs *Store) SetMetrics(metrics metrics.StoreMetrics) {
-	rs.metrics = metrics
-}
-
-// SetSnapshotInterval sets the interval at which the snapshots are taken.
-// It is used by the store to determine which heights to retain until after the snapshot is complete.
-func (rs *Store) SetSnapshotInterval(snapshotInterval uint64) {
-	rs.pruningManager.SetSnapshotInterval(snapshotInterval)
-}
-
 func (rs *Store) SetIAVLCacheSize(cacheSize int) {
 	rs.iavlCacheSize = cacheSize
 }
 
-func (rs *Store) SetIAVLDisableFastNode(disableFastNode bool) {
-	rs.iavlDisableFastNode = disableFastNode
+// SetLazyLoading sets if the iavl store should be loaded lazily or not
+func (rs *Store) SetLazyLoading(lazyLoading bool) {
+	rs.lazyLoading = lazyLoading
 }
 
 // GetStoreType implements Store.
@@ -1047,9 +1033,9 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		var err error
 
 		if params.initialVersion == 0 {
-			store, err = iavl.LoadStore(db, rs.logger, key, id, rs.iavlCacheSize, rs.iavlDisableFastNode, rs.metrics)
+			store, err = iavl.LoadStore(db, id, rs.lazyLoading, rs.iavlCacheSize)
 		} else {
-			store, err = iavl.LoadStoreWithInitialVersion(db, rs.logger, key, id, params.initialVersion, rs.iavlCacheSize, rs.iavlDisableFastNode, rs.metrics)
+			store, err = iavl.LoadStoreWithInitialVersion(db, id, rs.lazyLoading, params.initialVersion, rs.iavlCacheSize)
 		}
 
 		if err != nil {

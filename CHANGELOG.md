@@ -47,7 +47,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [v0.44.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.44.5) - 2021-12-02
 
 ### Improvements
+
 * (baseapp) [\#10631](https://github.com/cosmos/cosmos-sdk/pull/10631)  Emit ante events even for the failed txs. 
+
+### Features
+
+* [\#10561](https://github.com/cosmos/cosmos-sdk/pull/10561) Add configurable IAVL cache size to app.toml
+
+### API Breaking Changes
+
+* [\#10561](https://github.com/cosmos/cosmos-sdk/pull/10561) The `CommitMultiStore` interface contains a new `SetIAVLCacheSize` method
 
 ### Bug Fixes
 

@@ -81,16 +81,8 @@ type BaseConfig struct {
 	// IndexEvents defines the set of events in the form {eventType}.{attributeKey},
 	// which informs CometBFT what to index. If empty, all events will be indexed.
 	IndexEvents []string `mapstructure:"index-events"`
-
 	// IavlCacheSize set the size of the iavl tree cache.
 	IAVLCacheSize uint64 `mapstructure:"iavl-cache-size"`
-
-	// IAVLDisableFastNode enables or disables the fast sync node.
-	IAVLDisableFastNode bool `mapstructure:"iavl-disable-fastnode"`
-
-	// AppDBBackend defines the type of Database to use for the application and snapshots databases.
-	// An empty string indicates that the CometBFT config's DBBackend value should be used.
-	AppDBBackend string `mapstructure:"app-db-backend"`
 }
 
 // APIConfig defines the API listener configuration.
@@ -212,17 +204,15 @@ func (c *Config) GetMinGasPrices() sdk.DecCoins {
 func DefaultConfig() *Config {
 	return &Config{
 		BaseConfig: BaseConfig{
-			MinGasPrices:        defaultMinGasPrices,
-			QueryGasLimit:       0,
-			InterBlockCache:     true,
-			Pruning:             pruningtypes.PruningOptionDefault,
-			PruningKeepRecent:   "0",
-			PruningInterval:     "0",
-			MinRetainBlocks:     0,
-			IndexEvents:         make([]string, 0),
-			IAVLCacheSize:       781250,
-			IAVLDisableFastNode: false,
-			AppDBBackend:        "",
+			MinGasPrices:      defaultMinGasPrices,
+			InterBlockCache:   true,
+			Pruning:           storetypes.PruningOptionDefault,
+			PruningKeepRecent: "0",
+			PruningKeepEvery:  "0",
+			PruningInterval:   "0",
+			MinRetainBlocks:   0,
+			IndexEvents:       make([]string, 0),
+			IAVLCacheSize:     781250, // 50 MB
 		},
 		Telemetry: telemetry.Config{
 			Enabled:      false,

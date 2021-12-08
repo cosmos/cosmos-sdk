@@ -474,7 +474,8 @@ func (rs *Store) GetKVStore(skey types.StoreKey) types.KVStore {
 	return rs.wrapTraceListen(ret, skey)
 }
 
-// Gets a persistent substore. This reads, but does not update the substore cache
+// Gets a persistent substore. This reads, but does not update the substore cache.
+// Use it in cases where we need to access a store internally (e.g. read/write Merkle keys, queries)
 func (rs *Store) getSubstore(key string) (*substore, error) {
 	if cached, has := rs.substoreCache[key]; has {
 		return cached, nil

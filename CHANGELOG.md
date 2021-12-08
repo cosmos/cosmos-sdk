@@ -103,6 +103,8 @@ Security Release. No breaking changes related to 0.44.x.
 * (x/genutil) [#10104](https://github.com/cosmos/cosmos-sdk/pull/10104) Ensure the `init` command reads the `--home` flag value correctly.
 * (x/feegrant) [\#10049](https://github.com/cosmos/cosmos-sdk/issues/10049) Fixed the error message when `period` or `period-limit` flag is not set on a feegrant grant transaction.
 
+### Client Breaking Changes
+
 * [\#9879](https://github.com/cosmos/cosmos-sdk/pull/9879) Modify ABCI Queries to use `abci.QueryRequest` Height field if it is non-zero, otherwise continue using context height.
 
 ## [v0.44.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.44.0) - 2021-09-01

@@ -63,6 +63,9 @@ func nftOfClassByOwnerStoreKey(owner sdk.AccAddress, classID string) []byte {
 	return key
 }
 
+// prefixNftOfClassByOwnerStoreKey returns the prefix of the result of the method nftOfClassByOwnerStoreKey
+// Items are stored with the following key: values
+// 0x03<owner><Delimiter>
 func prefixNftOfClassByOwnerStoreKey(owner sdk.AccAddress) []byte {
 	owner = address.MustLengthPrefix(owner)
 
@@ -73,6 +76,8 @@ func prefixNftOfClassByOwnerStoreKey(owner sdk.AccAddress) []byte {
 	return key
 }
 
+// Note: the full path of the nftOfClassByOwnerStoreKey stored in the store: 0x03<owner><Delimiter><classID><Delimiter><nftID>,
+// the key of the prefix store query result constructed using the prefixNftOfClassByOwnerStoreKey function needs to remove the 0x03<owner><Delimiter> prefix
 func parseNftOfClassByOwnerStoreKey(key []byte) (classID,nftID string) {
 	ret := bytes.Split(key, Delimiter)
 	if len(ret) != 2 {

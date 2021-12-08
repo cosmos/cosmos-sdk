@@ -82,7 +82,7 @@ func (k Keeper) NFTsOfClass(goCtx context.Context, r *nft.QueryNFTsOfClassReques
 		if err != nil {
 			return nil, err
 		}
-		nfts, pageRes, err:= k.queryNFTs(ctx, owner, r.ClassId,r.Pagination)
+		nfts, pageRes, err:= k.pageQueryNFTs(ctx, owner, r.ClassId,r.Pagination)
 		if err != nil {
 			return nil, err
 		}
@@ -116,6 +116,7 @@ func (k Keeper) NFTsOfClass(goCtx context.Context, r *nft.QueryNFTsOfClassReques
 	}, nil
 }
 
+// NFTsOfOwner return all NFTs of a given owner or optional class
 func (k Keeper) NFTsOfOwner(goCtx context.Context, r *nft.QueryNFTsOfOwnerRequest) (*nft.QueryNFTsOfOwnerResponse, error) {
 	owner, err := sdk.AccAddressFromBech32(r.Owner)
 	if err != nil {
@@ -127,7 +128,7 @@ func (k Keeper) NFTsOfOwner(goCtx context.Context, r *nft.QueryNFTsOfOwnerReques
 		if err := nft.ValidateClassID(r.ClassId); err != nil {
 			return nil, err
 		}
-		nfts, pageRes, err:= k.queryNFTs(ctx, owner, r.ClassId,r.Pagination)
+		nfts, pageRes, err:= k.pageQueryNFTs(ctx, owner, r.ClassId,r.Pagination)
 		if err != nil {
 			return nil, err
 		}
@@ -224,7 +225,7 @@ func (k Keeper) Classes(goCtx context.Context, r *nft.QueryClassesRequest) (*nft
 	}, nil
 }
 
-func (k Keeper) queryNFTs(ctx sdk.Context,
+func (k Keeper) pageQueryNFTs(ctx sdk.Context,
 	owner sdk.AccAddress,
 	classId    string,
 	pagination *query.PageRequest,

@@ -368,6 +368,66 @@ func (s *IntegrationTestSuite) TestQueryNFTsOfClassGRPC() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestQueryNFTsOfOwnerGRPC() {
+	val := s.network.Validators[0]
+	testCases := []struct {
+		name string
+		args struct {
+			ClassId string
+		}
+		expectErr    bool
+		errorMsg     string
+		expectResult []*nft.NFT
+	}{
+		{
+			name: "class id is invalid",
+			args: struct {
+				ClassId string
+			}{
+				ClassId: "invalid_class_id",
+			},
+			expectErr:    true,
+			expectResult: []*nft.NFT{},
+		},
+		{
+			name: "class id does not exist",
+			args: struct {
+				ClassId string
+			}{
+				ClassId: "class-id",
+			},
+			expectErr:    false,
+			expectResult: []*nft.NFT{},
+		},
+		{
+			name: "class id exist",
+			args: struct {
+				ClassId string
+			}{
+				ClassId: ExpNFT.ClassId,
+			},
+			expectErr:    false,
+			expectResult: []*nft.NFT{&ExpNFT},
+		},
+	}
+	nftsOfClassURL := val.APIAddress + "/cosmos/nft/v1beta1/nfts/%s"
+	for _, tc := range testCases {
+		uri := fmt.Sprintf(nftsOfClassURL, tc.args.ClassId)
+		s.Run(tc.name, func() {
+			resp, err := rest.GetRequest(uri)
+			if tc.expectErr {
+				s.Require().Contains(string(resp), tc.errorMsg)
+			} else {
+				s.Require().NoError(err)
+				var result nft.QueryNFTsOfClassResponse
+				err = val.ClientCtx.Codec.UnmarshalJSON(resp, &result)
+				s.Require().NoError(err)
+				s.Require().EqualValues(tc.expectResult, result.Nfts)
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestQueryNFTGRPC() {
 	val := s.network.Validators[0]
 	testCases := []struct {

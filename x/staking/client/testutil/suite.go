@@ -1374,16 +1374,9 @@ func (s *IntegrationTestSuite) TestEditValidatorMoniker() {
 	val := s.network.Validators[0]
 	require := s.Require()
 
-	queryCmd := cli.GetCmdQueryValidator()
-	_, err := clitestutil.ExecTestCLICmd(
-		val.ClientCtx, queryCmd,
-		[]string{val.ValAddress.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-	)
-	require.NoError(err)
-
 	txCmd := cli.NewEditValidatorCmd()
 	moniker := "testing"
-	_, err = clitestutil.ExecTestCLICmd(val.ClientCtx, txCmd, []string{
+	_, err := clitestutil.ExecTestCLICmd(val.ClientCtx, txCmd, []string{
 		val.ValAddress.String(),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),

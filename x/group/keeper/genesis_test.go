@@ -6,15 +6,12 @@ import (
 	"testing"
 	"time"
 
-	proto "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
@@ -39,8 +36,6 @@ func TestGenesisTestSuite(t *testing.T) {
 func (s *GenesisTestSuite) SetupSuite() {
 	checkTx := false
 	app := simapp.Setup(s.T(), checkTx)
-	interfaceRegistry := types.NewInterfaceRegistry()
-	group.RegisterInterfaces(interfaceRegistry)
 
 	s.app = app
 	s.genesisCtx = app.BaseApp.NewContext(checkTx, tmproto.Header{})
@@ -49,7 +44,6 @@ func (s *GenesisTestSuite) SetupSuite() {
 	s.ctx = sdk.WrapSDKContext(s.genesisCtx)
 	s.addrs = simapp.AddTestAddrsIncremental(app, s.genesisCtx, 3, sdk.NewInt(30000000))
 	s.groupAccountAddr = s.addrs[0]
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.genesisCtx, s.groupAccountAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 
 	s.T().Parallel()
 }
@@ -59,15 +53,8 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	ctx := s.ctx
 	cdc := s.cdc
 
-	now := time.Now()
-	psubmittedAt, err := proto.TimestampProto(now)
-	s.Require().NoError(err)
-	submittedAt, err := proto.TimestampFromProto(psubmittedAt)
-	s.Require().NoError(err)
-	ptimeout, err := proto.TimestampProto(now.Add(time.Second * 1))
-	s.Require().NoError(err)
-	timeout, err := proto.TimestampFromProto(ptimeout)
-	s.Require().NoError(err)
+	submittedAt := time.Now().UTC()
+	timeout := submittedAt.Add(time.Second * 1).UTC()
 
 	groupAccount := &group.GroupAccountInfo{
 		Address:  s.groupAccountAddr.String(),
@@ -76,7 +63,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		Version:  1,
 		Metadata: []byte("account metadata"),
 	}
-	err = groupAccount.SetDecisionPolicy(&group.ThresholdDecisionPolicy{
+	err := groupAccount.SetDecisionPolicy(&group.ThresholdDecisionPolicy{
 		Threshold: "1",
 		Timeout:   time.Second,
 	})
@@ -131,10 +118,11 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	s.keeper.InitGenesis(genesisCtx, cdc, genesisData[group.ModuleName])
 
 	for i, g := range genesisState.Groups {
-		_, err := s.keeper.GroupInfo(ctx, &group.QueryGroupInfo{
+		res, err := s.keeper.GroupInfo(ctx, &group.QueryGroupInfo{
 			GroupId: g.GroupId,
 		})
 		s.Require().NoError(err)
+		s.Require().Equal(g, res.Info)
 
 		membersRes, err := s.keeper.GroupMembers(ctx, &group.QueryGroupMembers{
 			GroupId: g.GroupId,

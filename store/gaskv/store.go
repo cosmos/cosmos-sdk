@@ -166,10 +166,8 @@ func (gi *gasIterator) Error() error {
 // based on the current value's length.
 func (gi *gasIterator) consumeSeekGas() {
 	if gi.Valid() {
-		key := gi.Key()
 		value := gi.Value()
 
-		gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*types.Gas(len(key)), types.GasValuePerByteDesc)
 		gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*types.Gas(len(value)), types.GasValuePerByteDesc)
 	}
 	gi.gasMeter.ConsumeGas(gi.gasConfig.IterNextCostFlat, types.GasIterNextCostFlatDesc)

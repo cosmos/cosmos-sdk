@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	dbm "github.com/tendermint/tm-db"
 
-	coretesting "cosmossdk.io/core/testing"
-	"cosmossdk.io/store/dbadapter"
-	"cosmossdk.io/store/gaskv"
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/gaskv"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 func bz(s string) []byte { return []byte(s) }
@@ -38,7 +38,7 @@ func TestGasKVStoreBasic(t *testing.T) {
 }
 
 func TestGasKVStoreIterator(t *testing.T) {
-	mem := dbadapter.Store{DB: coretesting.NewMemDB()}
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
 	meter := types.NewGasMeter(100000)
 	st := gaskv.NewStore(mem, meter, types.KVGasConfig())
 	require.False(t, st.Has(keyFmt(1)))
@@ -73,16 +73,16 @@ func TestGasKVStoreIterator(t *testing.T) {
 	vb := iterator.Value()
 	require.Equal(t, vb, valFmt(2))
 	iterator.Next()
-	require.Equal(t, types.Gas(14565), meter.GasConsumed())
+	require.Equal(t, types.Gas(13377), meter.GasConsumed())
 	kc := iterator.Key()
 	require.Equal(t, kc, keyFmt(3))
 	vc := iterator.Value()
 	require.Equal(t, vc, valFmt(0))
 	iterator.Next()
-	require.Equal(t, types.Gas(14667), meter.GasConsumed())
+	require.Equal(t, types.Gas(13446), meter.GasConsumed())
 	require.False(t, iterator.Valid())
 	require.Panics(t, iterator.Next)
-	require.Equal(t, types.Gas(14697), meter.GasConsumed())
+	require.Equal(t, types.Gas(13476), meter.GasConsumed())
 	require.NoError(t, iterator.Error())
 
 	reverseIterator := st.ReverseIterator(nil, nil)
@@ -99,7 +99,8 @@ func TestGasKVStoreIterator(t *testing.T) {
 	reverseIterator.Next()
 	require.False(t, reverseIterator.Valid())
 	require.Panics(t, reverseIterator.Next)
-	require.Equal(t, types.Gas(15135), meter.GasConsumed())
+
+	require.Equal(t, types.Gas(13782), meter.GasConsumed())
 }
 
 func TestGasKVStoreOutOfGasSet(t *testing.T) {

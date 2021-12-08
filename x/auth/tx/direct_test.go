@@ -72,7 +72,7 @@ func TestDirectModeHandler(t *testing.T) {
 		Address:       addr.String(),
 		ChainID:       "test-chain",
 		AccountNumber: 1,
-		SignerIndex:   0,
+		PubKey:        pubkey,
 	}
 
 	signBytes, err := modeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, txBuilder.GetTx())

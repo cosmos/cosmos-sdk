@@ -53,7 +53,7 @@ func nftOfClassByOwnerStoreKey(owner sdk.AccAddress, classID string) []byte {
 	owner = address.MustLengthPrefix(owner)
 	classIDBz := conv.UnsafeStrToBytes(classID)
 
-	var key = make([]byte, len(NFTOfClassByOwnerKey)+len(owner)+len(Delimiter))
+	var key = make([]byte, len(NFTOfClassByOwnerKey)+len(owner)+len(classIDBz)+len(Delimiter))
 	copy(key, NFTOfClassByOwnerKey)
 	copy(key[len(NFTOfClassByOwnerKey):], owner)
 	copy(key[len(NFTOfClassByOwnerKey)+len(owner):], classIDBz)

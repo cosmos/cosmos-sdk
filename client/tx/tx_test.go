@@ -224,6 +224,7 @@ func TestSign(t *testing.T) {
 		{"direct: should overwrite multi-signers tx with DIRECT sig",
 			txfDirect, txb2, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
 	}
+
 	var prevSigs []signingtypes.SignatureV2
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

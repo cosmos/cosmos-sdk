@@ -24,6 +24,7 @@ import (
 // or sign it and broadcast it returning an error upon failure.
 func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) error {
 	txf := NewFactoryCLI(clientCtx, flagSet)
+
 	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
 }
 
@@ -38,6 +39,16 @@ func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msg
 		if err := msg.ValidateBasic(); err != nil {
 			return err
 		}
+	}
+
+	// If the --aux flag is set, we simply generate and print the AuxSignerData.
+	if clientCtx.IsAux {
+		auxSignerData, err := makeAuxSignerData(clientCtx, txf, msgs...)
+		if err != nil {
+			return err
+		}
+
+		return clientCtx.PrintProto(&auxSignerData)
 	}
 
 	if clientCtx.GenerateOnly {
@@ -334,4 +345,76 @@ type GasEstimateResponse struct {
 
 func (gr GasEstimateResponse) String() string {
 	return fmt.Sprintf("gas estimate: %d", gr.GasEstimate)
+}
+
+// makeAuxSignerData generates an AuxSignerData from the client inputs.
+func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx.AuxSignerData, error) {
+	b := NewAuxTxBuilder()
+	fromAddress, name, _, err := client.GetFromFields(clientCtx.Keyring, clientCtx.From, false)
+	if err != nil {
+		return tx.AuxSignerData{}, err
+	}
+
+	b.SetAddress(fromAddress.String())
+	if clientCtx.Offline {
+		b.SetAccountNumber(f.accountNumber)
+		b.SetSequence(f.sequence)
+	} else {
+		accNum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, fromAddress)
+		if err != nil {
+			return tx.AuxSignerData{}, err
+		}
+		b.SetAccountNumber(accNum)
+		b.SetSequence(seq)
+	}
+
+	err = b.SetMsgs(msgs...)
+	if err != nil {
+		return tx.AuxSignerData{}, err
+	}
+
+	if f.tip != nil {
+		if f.tip.Tipper == "" {
+			return tx.AuxSignerData{}, sdkerrors.Wrap(errors.New("tipper flag required"), "tipper")
+		} else {
+			if _, err := sdk.AccAddressFromBech32(f.tip.Tipper); err != nil {
+				return tx.AuxSignerData{}, sdkerrors.ErrInvalidAddress.Wrap("tipper must be a bech32 address")
+			}
+			b.SetTip(f.tip)
+		}
+	}
+
+	err = b.SetSignMode(f.SignMode())
+	if err != nil {
+		return tx.AuxSignerData{}, err
+	}
+
+	key, err := clientCtx.Keyring.Key(name)
+	if err != nil {
+		return tx.AuxSignerData{}, err
+	}
+
+	pub, err := key.GetPubKey()
+	if err != nil {
+		return tx.AuxSignerData{}, err
+	}
+
+	err = b.SetPubKey(pub)
+	if err != nil {
+		return tx.AuxSignerData{}, err
+	}
+
+	b.SetChainID(clientCtx.ChainID)
+	signBz, err := b.GetSignBytes()
+	if err != nil {
+		return tx.AuxSignerData{}, err
+	}
+
+	sig, _, err := clientCtx.Keyring.Sign(name, signBz)
+	if err != nil {
+		return tx.AuxSignerData{}, err
+	}
+	b.SetSignature(sig)
+
+	return b.GetAuxSignerData()
 }

@@ -10,8 +10,8 @@ import (
 // DefaultSignModes are the default sign modes enabled for protobuf transactions.
 var DefaultSignModes = []signingtypes.SignMode{
 	signingtypes.SignMode_SIGN_MODE_DIRECT,
-	signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 	signingtypes.SignMode_SIGN_MODE_DIRECT_AUX,
+	signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 }
 
 // makeSignModeHandler returns the default protobuf SignModeHandler supporting

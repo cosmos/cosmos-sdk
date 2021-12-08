@@ -29,6 +29,11 @@ service Query {
     option (google.api.http).get = "/cosmos/nft/v1beta1/nfts/{class_id}";
   }
 
+  // NFTsOfClass queries all NFTs of a given owner or optional class
+  rpc NFTsOfOwner(QueryNFTsOfOwnerRequest) returns (QueryNFTsOfOwnerResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/nfts/{owner}";
+  }
+
   // NFT queries an NFT based on its class and id.
   rpc NFT(QueryNFTRequest) returns (QueryNFTResponse) {
     option (google.api.http).get = "/cosmos/nft/v1beta1/nfts/{class_id}/{id}";
@@ -86,6 +91,19 @@ message QueryNFTsOfClassRequest {
 
 // QueryNFTsOfClassResponse is the response type for the Query/NFTsOfClass and Query/NFTsOfClassByOwner RPC methods
 message QueryNFTsOfClassResponse {
+  repeated cosmos.nft.v1beta1.NFT        nfts       = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryNFTsOfOwnerRequest is the request type for the Query/NFTsOfOwner RPC method
+message QueryNFTsOfOwnerRequest {
+  string                                class_id   = 1;
+  string                                owner      = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+// QueryNFTsOfOwnerResponse is the response type for the Query/NFTsOfOwner RPC methods
+message QueryNFTsOfOwnerResponse {
   repeated cosmos.nft.v1beta1.NFT        nfts       = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

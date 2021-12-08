@@ -373,6 +373,126 @@ func (suite *TestSuite) TestNFTsOfClass() {
 	}
 }
 
+func (suite *TestSuite) TestNFTsOfOwner() {
+	var (
+		req  *nft.QueryNFTsOfOwnerRequest
+		nfts []*nft.NFT
+	)
+	testCases := []struct {
+		msg      string
+		malleate func(index int, require *require.Assertions)
+		expError string
+		postTest func(index int, require *require.Assertions, res *nft.QueryNFTsOfOwnerResponse)
+	}{
+		{
+			"fail empty Owner",
+			func(index int, require *require.Assertions) {
+				req = &nft.QueryNFTsOfOwnerRequest{
+					ClassId: "kitty1",
+				}
+			},
+			"empty address string is not allowed",
+			func(index int, require *require.Assertions, res *nft.QueryNFTsOfOwnerResponse) {},
+		},
+		{
+			"success, no nft",
+			func(index int, require *require.Assertions) {
+				req = &nft.QueryNFTsOfOwnerRequest{
+					Owner:   suite.addrs[1].String(),
+				}
+				suite.TestSaveClass()
+			},
+			"",
+			func(index int, require *require.Assertions, res *nft.QueryNFTsOfOwnerResponse) {
+				require.Len(res.Nfts, 0, "the error occurred on:%d", index)
+			},
+		},
+		{
+			"success, class id not exist",
+			func(index int, require *require.Assertions) {
+				req = &nft.QueryNFTsOfOwnerRequest{
+					Owner:   suite.addrs[0].String(),
+					ClassId: "kitty1",
+				}
+				n := nft.NFT{
+					ClassId: testClassID,
+					Id:      testID,
+					Uri:     testURI,
+				}
+				err := suite.app.NFTKeeper.Mint(suite.ctx, n, suite.addrs[0])
+				require.NoError(err, "the error occurred on:%d", index)
+			},
+			"",
+			func(index int, require *require.Assertions, res *nft.QueryNFTsOfOwnerResponse) {
+				require.Len(res.Nfts, 0, "the error occurred on:%d", index)
+			},
+		},
+		{
+			"Success,query by owner",
+			func(index int, require *require.Assertions) {
+				err := suite.app.NFTKeeper.SaveClass(suite.ctx,nft.Class{
+					Id:          "MyKitty",
+				})
+				require.NoError(err)
+
+				nfts = []*nft.NFT{}
+				for i := 0;i <5;i++{
+					n := nft.NFT{
+						ClassId:     "MyKitty",
+						Id:          fmt.Sprintf("MyCat%d",i),
+					}
+					err := suite.app.NFTKeeper.Mint(suite.ctx,n,suite.addrs[2])
+					require.NoError(err)
+					nfts = append(nfts,&n)
+				}
+
+				req = &nft.QueryNFTsOfOwnerRequest{
+					Owner:   suite.addrs[2].String(),
+				}
+			},
+			"",
+			func(index int, require *require.Assertions, res *nft.QueryNFTsOfOwnerResponse) {
+				require.EqualValues(res.Nfts, nfts, "the error occurred on:%d", index)
+			},
+		},
+		{
+			"Success,query by classId and owner",
+			func(index int, require *require.Assertions) {
+				req = &nft.QueryNFTsOfOwnerRequest{
+					ClassId: testClassID,
+					Owner:   suite.addrs[0].String(),
+				}
+				nfts = []*nft.NFT{
+					{
+						ClassId: testClassID,
+						Id:      testID,
+						Uri:     testURI,
+					},
+				}
+			},
+			"",
+			func(index int, require *require.Assertions, res *nft.QueryNFTsOfOwnerResponse) {
+				require.Equal(res.Nfts, nfts, "the error occurred on:%d", index)
+			},
+		},
+
+	}
+	for index, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			require := suite.Require()
+			tc.malleate(index, require)
+			result, err := suite.queryClient.NFTsOfOwner(gocontext.Background(), req)
+			if tc.expError == "" {
+				require.NoError(err)
+			} else {
+				require.Error(err)
+				require.Contains(err.Error(), tc.expError)
+			}
+			tc.postTest(index, require, result)
+		})
+	}
+}
+
 func (suite *TestSuite) TestNFT() {
 	var (
 		req    *nft.QueryNFTRequest

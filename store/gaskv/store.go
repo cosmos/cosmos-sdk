@@ -110,9 +110,7 @@ func (gs *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 	}
 
 	gi := newGasIterator(gs.gasMeter, gs.gasConfig, parent)
-	if gi.Valid() {
-		gi.(*gasIterator).consumeSeekGas()
-	}
+	gi.(*gasIterator).consumeSeekGas()
 
 	return gi
 }
@@ -145,10 +143,7 @@ func (gi *gasIterator) Valid() bool {
 // in the iterator. It incurs a flat gas cost for seeking and a variable gas
 // cost based on the current value's length if the iterator is valid.
 func (gi *gasIterator) Next() {
-	if gi.Valid() {
-		gi.consumeSeekGas()
-	}
-
+	gi.consumeSeekGas()
 	gi.parent.Next()
 }
 
@@ -179,11 +174,6 @@ func (gi *gasIterator) Error() error {
 // consumeSeekGas consumes on each iteration step a flat gas cost and a variable gas cost
 // based on the current value's length.
 func (gi *gasIterator) consumeSeekGas() {
-<<<<<<< HEAD
-	value := gi.Value()
-
-	gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*types.Gas(len(value)), types.GasValuePerByteDesc)
-=======
 	if gi.Valid() {
 		key := gi.Key()
 		value := gi.Value()
@@ -191,6 +181,6 @@ func (gi *gasIterator) consumeSeekGas() {
 		gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*types.Gas(len(key)), types.GasValuePerByteDesc)
 		gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*types.Gas(len(value)), types.GasValuePerByteDesc)
 	}
->>>>>>> dcf67d7ee (fix!: Charge gas for key length in gas meter (#10247))
+
 	gi.gasMeter.ConsumeGas(gi.gasConfig.IterNextCostFlat, types.GasIterNextCostFlatDesc)
 }

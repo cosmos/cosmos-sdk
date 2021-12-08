@@ -3,6 +3,7 @@
 ## Changelog
 
 - 28.06.2021: Initial Draft
+- 02.12.2021: Add `Since:` comment for new fields
 
 ## Status
 
@@ -47,9 +48,37 @@ For this reason, module developers MUST NOT add new fields to existing `Msg`s.
 
 It is worth mentioning that this does not limit adding fields to a `Msg`, but also to all nested structs and `Any`s inside a `Msg`.
 
-#### 2. Non-`Msg`-related Protobuf definitions MAY have new fields
+#### 2. Non-`Msg`-related Protobuf definitions MAY have new fields, but MUST add a `Since:` comment
 
 On the other hand, module developers MAY add new fields to Protobuf definitions related to the `Query` service or to objects which are saved in the store. This recommendation follows the Protobuf specification, but is added in this document for clarity.
+
+The SDK requires the Protobuf comment of the new field to contain one line with the following format:
+
+```protobuf
+// Since: cosmos-sdk <version>{, <version>...}
+```
+
+Where each `version` denotes a minor ("0.45") or patch ("0.44.5") version from which the field is available. This will greatly help client libraries, who can optionally use reflection or custom code generation to show/hide these fields depending on the targetted node version.
+
+As examples, the following comments are valid:
+
+```protobuf
+// Since: cosmos-sdk 0.44
+
+// Since: cosmos-sdk 0.42.11, 0.44.5
+```
+
+and the following ones are NOT valid:
+
+```protobuf
+// Since cosmos-sdk v0.44
+
+// since: cosmos-sdk 0.44
+
+// Since: cosmos-sdk 0.42.11 0.44.5
+
+// Since: Cosmos SDK 0.42.11, 0.44.5
+```
 
 #### 3. Fields MAY be marked as `deprecated`, and nodes MAY implement a protocol-breaking change for handling these fields
 
@@ -70,7 +99,7 @@ TODO, needs architecture review. Some topics:
 
 - Bumping versions frequency
 - When bumping versions, should the Cosmos SDK support both versions?
-    - i.e. v1beta1 -> v1, should we have two folders in the Cosmos SDK, and handlers for both versions?
+  - i.e. v1beta1 -> v1, should we have two folders in the Cosmos SDK, and handlers for both versions?
 - mention ADR-023 Protobuf naming
 
 ## Consequences

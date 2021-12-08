@@ -1387,6 +1387,7 @@ func (s *IntegrationTestSuite) TestEditValidatorMoniker() {
 	})
 	require.NoError(err)
 
+	queryCmd := cli.GetCmdQueryValidator()
 	res, err := clitestutil.ExecTestCLICmd(
 		val.ClientCtx, queryCmd,
 		[]string{val.ValAddress.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},

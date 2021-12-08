@@ -1,6 +1,8 @@
 package v043
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,7 +52,9 @@ func migrateSupply(store sdk.KVStore, cdc codec.BinaryCodec) error {
 // addresses.
 func migrateBalanceKeys(store sdk.KVStore) {
 	// old key is of format:
-	// prefix ("balances") || addrBytes (20 bytes) || denomBytes
+	// prefix ("balances") || addrBytes (20 bytes) OR addrBytes (32 bytes) || denomBytes
+	// We identify which addr byte length we are, by calculating the limited set of denomBytes lemgths
+	// and then we backwards derive the used address bytelen.
 	// new key is of format
 	// prefix (0x02) || addrLen (1 byte) || addrBytes || denomBytes
 	oldStore := prefix.NewStore(store, v040bank.BalancesPrefix)
@@ -58,9 +62,33 @@ func migrateBalanceKeys(store sdk.KVStore) {
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
 
+	// denom types on Osmosis and their lengths
+	// uion, uosmo, gamm/pool/1, gamm/pool/12, gamm/pool/123, ibc/EF9B097B0BF0E1CD55CEF1095DDE5518A201C99B8A8E82C183F8433E343C2A9E
+	// 4,    5,     11,        , 12,           13,          , 68
+	// thankfully the difference between any of these lengths is not 12 (the diff between 32 bytes and 20 bytes)
+	// So we can uniquely go from key length to 20 byte / 32 byte address length decisions
+	denomLenOptions := []int{4, 5, 11, 12, 13, 68}
+	normalAddrByteLens := make(map[int]bool)
+	customModuleAddrByteLens := make(map[int]bool)
+	for i := 0; i < len(denomLenOptions); i++ {
+		normalAddrByteLens[denomLenOptions[i]+20] = true
+		customModuleAddrByteLens[denomLenOptions[i]+32] = true
+	}
+
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
-		addr := v040bank.AddressFromBalancesStore(oldStoreIter.Key())
-		denom := oldStoreIter.Key()[v040auth.AddrLen:]
+		oldKey := oldStoreIter.Key()
+		var addr sdk.AccAddress
+		var addrLen int
+		if _, inMap := normalAddrByteLens[len(oldKey)]; inMap {
+			addr = v040bank.AddressFromBalancesStore(oldStoreIter.Key())
+			addrLen = v040auth.AddrLen
+		} else if _, inMap := customModuleAddrByteLens[len(oldKey)]; inMap {
+			addr = sdk.AccAddress(oldKey[:32])
+			addrLen = 32
+		} else {
+			panic(fmt.Sprintf("We have an issue ser, oldkey %v, len %d", oldKey, len(oldKey)))
+		}
+		denom := oldStoreIter.Key()[addrLen:]
 		newStoreKey := append(types.CreateAccountBalancesPrefix(addr), denom...)
 
 		// Set new key on store. Values don't change.

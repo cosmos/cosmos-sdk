@@ -48,6 +48,7 @@ type Store struct {
 	db             dbm.DB
 	lastCommitInfo *types.CommitInfo
 	pruningOpts    types.PruningOptions
+	iavlCacheSize  int
 	storesParams   map[types.StoreKey]storeParams
 	stores         map[types.StoreKey]types.CommitKVStore
 	keysByName     map[string]types.StoreKey
@@ -74,13 +75,14 @@ var (
 // LoadVersion must be called.
 func NewStore(db dbm.DB) *Store {
 	return &Store{
-		db:           db,
-		pruningOpts:  types.PruneNothing,
-		storesParams: make(map[types.StoreKey]storeParams),
-		stores:       make(map[types.StoreKey]types.CommitKVStore),
-		keysByName:   make(map[string]types.StoreKey),
-		pruneHeights: make([]int64, 0),
-		listeners:    make(map[types.StoreKey][]types.WriteListener),
+		db:            db,
+		pruningOpts:   types.PruneNothing,
+		iavlCacheSize: iavl.DefaultIAVLCacheSize,
+		storesParams:  make(map[types.StoreKey]storeParams),
+		stores:        make(map[types.StoreKey]types.CommitKVStore),
+		keysByName:    make(map[string]types.StoreKey),
+		pruneHeights:  make([]int64, 0),
+		listeners:     make(map[types.StoreKey][]types.WriteListener),
 	}
 }
 
@@ -94,6 +96,10 @@ func (rs *Store) GetPruning() types.PruningOptions {
 // LoadLatestVersion performs a no-op as the stores aren't mounted yet.
 func (rs *Store) SetPruning(pruningOpts types.PruningOptions) {
 	rs.pruningOpts = pruningOpts
+}
+
+func (rs *Store) SetIAVLCacheSize(cacheSize int) {
+	rs.iavlCacheSize = cacheSize
 }
 
 // SetLazyLoading sets if the iavl store should be loaded lazily or not
@@ -876,9 +882,9 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		var err error
 
 		if params.initialVersion == 0 {
-			store, err = iavl.LoadStore(db, id, rs.lazyLoading)
+			store, err = iavl.LoadStore(db, id, rs.lazyLoading, rs.iavlCacheSize)
 		} else {
-			store, err = iavl.LoadStoreWithInitialVersion(db, id, rs.lazyLoading, params.initialVersion)
+			store, err = iavl.LoadStoreWithInitialVersion(db, id, rs.lazyLoading, params.initialVersion, rs.iavlCacheSize)
 		}
 
 		if err != nil {

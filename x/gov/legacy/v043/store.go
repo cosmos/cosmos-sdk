@@ -1,8 +1,6 @@
 package v043
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -57,7 +55,6 @@ func migrateStoreWeightedVotes(store sdk.KVStore, cdc codec.BinaryCodec) error {
 		}
 
 		newVote := migrateVote(oldVote)
-		fmt.Println("migrateStoreWeightedVotes newVote=", newVote)
 		bz, err := cdc.Marshal(&newVote)
 		if err != nil {
 			return err

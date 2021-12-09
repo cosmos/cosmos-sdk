@@ -59,6 +59,7 @@ func (s InfoTestSuite) TestParseInfo() {
 	tests := []struct {
 		name            string
 		infoStrMaker    func(t *testing.T) string
+		requireChecksum bool
 		expectedInfo    *Info
 		expectedInError []string
 	}{
@@ -93,10 +94,39 @@ func (s InfoTestSuite) TestParseInfo() {
 			expectedInError: []string{"could not download url", "file:///this/file/does/not/exist"},
 		},
 		{
-			name:            "url good",
+			name:            "url good checksum required",
 			infoStrMaker:    makeInfoStrFuncURL(goodJSONPath),
+			requireChecksum: true,
 			expectedInfo:    goodJSONAsInfo,
 			expectedInError: nil,
+		},
+		{
+			name:            "url good checksum not required",
+			infoStrMaker:    makeInfoStrFuncURL(goodJSONPath),
+			requireChecksum: false,
+			expectedInfo:    goodJSONAsInfo,
+			expectedInError: nil,
+		},
+		{
+			name:            "url no checksum checksum required",
+			infoStrMaker:    makeInfoStrFuncString("file://" + goodJSONPath),
+			requireChecksum: true,
+			expectedInfo:    nil,
+			expectedInError: []string{"missing checksum query parameter"},
+		},
+		{
+			name:            "url no checksum checksum not required",
+			infoStrMaker:    makeInfoStrFuncString("file://" + goodJSONPath),
+			requireChecksum: false,
+			expectedInfo:    goodJSONAsInfo,
+			expectedInError: nil,
+		},
+		{
+			name:            "url wrong checksum checksum not required",
+			infoStrMaker:    makeInfoStrFuncString("file://" + goodJSONPath + "?checksum=sha256:8ffbfbd82a5b9932bae91ac4bda2c2d3955770b003a2143b4f7109ba788fd6b3"),
+			requireChecksum: false,
+			expectedInfo:    nil,
+			expectedInError: []string{"could not download url", "Checksums did not match"},
 		},
 		{
 			name:            "url binaries is wrong data type",
@@ -115,7 +145,193 @@ func (s InfoTestSuite) TestParseInfo() {
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
 			infoStr := tc.infoStrMaker(t)
-			actualInfo, actualErr := ParseInfo(infoStr)
+			actualInfo, actualErr := ParseInfo(infoStr, tc.requireChecksum)
+			if len(tc.expectedInError) > 0 {
+				require.Error(t, actualErr)
+				for _, expectedErr := range tc.expectedInError {
+					assert.Contains(t, actualErr.Error(), expectedErr)
+				}
+			} else {
+				require.NoError(t, actualErr)
+			}
+			assert.Equal(t, tc.expectedInfo, actualInfo)
+		})
+	}
+}
+
+func (s InfoTestSuite) TestResolveInfo() {
+	goodJSON := `{"binaries":{"os1/arch1":"url1","os2/arch2":"url2"}}`
+	binariesWrongJSON := `{"binaries":["foo","bar"]}`
+	binariesWrongValueJSON := `{"binaries":{"os1/arch1":1,"os2/arch2":2}}`
+	goodJSONPath := s.saveTestFile(NewTestFile("good.json", goodJSON))
+	binariesWrongJSONPath := s.saveTestFile(NewTestFile("binaries-wrong.json", binariesWrongJSON))
+	binariesWrongValueJSONPath := s.saveTestFile(NewTestFile("binaries-wrong-value.json", binariesWrongValueJSON))
+	makeInfoStrFuncString := func(val string) func(t *testing.T) string {
+		return func(t *testing.T) string {
+			return val
+		}
+	}
+	makeInfoStrFuncURL := func(file string) func(t *testing.T) string {
+		return func(t *testing.T) string {
+			return makeFileURL(t, file)
+		}
+	}
+
+	tests := []struct {
+		name            string
+		infoStrMaker    func(t *testing.T) string
+		requireChecksum bool
+		expectedStr     string
+		expectedInError []string
+	}{
+		{
+			name:            "json good",
+			infoStrMaker:    makeInfoStrFuncString(goodJSON),
+			expectedStr:     goodJSON,
+			expectedInError: nil,
+		},
+		{
+			name:            "json good whitespace padded",
+			infoStrMaker:    makeInfoStrFuncString("   " + goodJSON + "   "),
+			expectedStr:     goodJSON,
+			expectedInError: nil,
+		},
+		{
+			name:            "blank string",
+			infoStrMaker:    makeInfoStrFuncString("   "),
+			expectedStr:     "",
+			expectedInError: nil,
+		},
+		{
+			name:            "json binaries is wrong data type",
+			infoStrMaker:    makeInfoStrFuncString(binariesWrongJSON),
+			expectedStr:     binariesWrongJSON,
+			expectedInError: nil,
+		},
+		{
+			name:            "json wrong data type in binaries value",
+			infoStrMaker:    makeInfoStrFuncString(binariesWrongValueJSON),
+			expectedStr:     binariesWrongValueJSON,
+			expectedInError: nil,
+		},
+		{
+			name:            "url does not exist",
+			infoStrMaker:    makeInfoStrFuncString("file:///this/file/does/not/exist?checksum=sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+			expectedStr:     "",
+			expectedInError: []string{"could not download url", "file:///this/file/does/not/exist"},
+		},
+		{
+			name:            "url good checksum required",
+			infoStrMaker:    makeInfoStrFuncURL(goodJSONPath),
+			requireChecksum: true,
+			expectedStr:     goodJSON,
+			expectedInError: nil,
+		},
+		{
+			name:            "url good checksum not required",
+			infoStrMaker:    makeInfoStrFuncURL(goodJSONPath),
+			requireChecksum: false,
+			expectedStr:     goodJSON,
+			expectedInError: nil,
+		},
+		{
+			name:            "url no checksum checksum required",
+			infoStrMaker:    makeInfoStrFuncString("file://" + goodJSONPath),
+			requireChecksum: true,
+			expectedStr:     "",
+			expectedInError: []string{"missing checksum query parameter"},
+		},
+		{
+			name:            "url no checksum checksum not required",
+			infoStrMaker:    makeInfoStrFuncString("file://" + goodJSONPath),
+			requireChecksum: false,
+			expectedStr:     goodJSON,
+			expectedInError: nil,
+		},
+		{
+			name:            "url wrong checksum checksum not required",
+			infoStrMaker:    makeInfoStrFuncString("file://" + goodJSONPath + "?checksum=sha256:8ffbfbd82a5b9932bae91ac4bda2c2d3955770b003a2143b4f7109ba788fd6b3"),
+			requireChecksum: false,
+			expectedStr:     "",
+			expectedInError: []string{"could not download url", "Checksums did not match"},
+		},
+		{
+			name:            "url binaries is wrong data type",
+			infoStrMaker:    makeInfoStrFuncURL(binariesWrongJSONPath),
+			expectedStr:     binariesWrongJSON,
+			expectedInError: nil,
+		},
+		{
+			name:            "url wrong data type in binaries value",
+			infoStrMaker:    makeInfoStrFuncURL(binariesWrongValueJSONPath),
+			expectedStr:     binariesWrongValueJSON,
+			expectedInError: nil,
+		},
+	}
+
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			infoStr := tc.infoStrMaker(t)
+			actualInfo, actualErr := ResolveInfo(infoStr, tc.requireChecksum)
+			if len(tc.expectedInError) > 0 {
+				require.Error(t, actualErr)
+				for _, expectedErr := range tc.expectedInError {
+					assert.Contains(t, actualErr.Error(), expectedErr)
+				}
+			} else {
+				require.NoError(t, actualErr)
+			}
+			assert.Equal(t, tc.expectedStr, actualInfo)
+		})
+	}
+}
+
+func (s InfoTestSuite) TestParseInfoJSON() {
+	goodJSON := `{"binaries":{"os1/arch1":"url1","os2/arch2":"url2"}}`
+	binariesWrongJSON := `{"binaries":["foo","bar"]}`
+	binariesWrongValueJSON := `{"binaries":{"os1/arch1":1,"os2/arch2":2}}`
+	goodJSONAsInfo := &Info{
+		Binaries: BinaryDownloadURLMap{
+			"os1/arch1": "url1",
+			"os2/arch2": "url2",
+		},
+	}
+
+	tests := []struct {
+		name            string
+		infoJSON        string
+		expectedInfo    *Info
+		expectedInError []string
+	}{
+		{
+			name:            "json good",
+			infoJSON:        goodJSON,
+			expectedInfo:    goodJSONAsInfo,
+			expectedInError: nil,
+		},
+		{
+			name:            "blank string",
+			infoJSON:        "   ",
+			expectedInfo:    nil,
+			expectedInError: []string{"could not parse plan info json", "unexpected end of JSON input"},
+		},
+		{
+			name:            "json binaries is wrong data type",
+			infoJSON:        binariesWrongJSON,
+			expectedInfo:    nil,
+			expectedInError: []string{"could not parse plan info", "cannot unmarshal array into Go struct field Info.binaries"},
+		},
+		{
+			name:            "json wrong data type in binaries value",
+			infoJSON:        binariesWrongValueJSON,
+			expectedInfo:    nil,
+			expectedInError: []string{"could not parse plan info", "cannot unmarshal number into Go struct field Info.binaries"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			actualInfo, actualErr := ParseInfoJSON(tc.infoJSON)
 			if len(tc.expectedInError) > 0 {
 				require.Error(t, actualErr)
 				for _, expectedErr := range tc.expectedInError {
@@ -138,9 +354,10 @@ func (s InfoTestSuite) TestInfoValidateFull() {
 	linux386URL := makeFileURL(s.T(), linux386Path)
 
 	tests := []struct {
-		name     string
-		planInfo *Info
-		errs     []string
+		name             string
+		planInfo         *Info
+		requireChecksums bool
+		errs             []string
 	}{
 		// Positive test case
 		{
@@ -151,13 +368,26 @@ func (s InfoTestSuite) TestInfoValidateFull() {
 					"linux/386":    linux386URL,
 				},
 			},
-			errs: nil,
+			requireChecksums: true,
+			errs:             nil,
 		},
 		// a failure from BinaryDownloadURLMap.ValidateBasic
 		{
 			name:     "empty binaries",
 			planInfo: &Info{Binaries: BinaryDownloadURLMap{}},
 			errs:     []string{"no \"binaries\" entries found"},
+		},
+		// a failure from BinaryDownloadURLMap.ValidateAllURLsHaveChecksum
+		{
+			name: "checksum required not provided",
+			planInfo: &Info{
+				Binaries: BinaryDownloadURLMap{
+					"darwin/amd64": "file://" + darwinAMD64Path,
+					"linux/386":    linux386URL,
+				},
+			},
+			requireChecksums: true,
+			errs:             []string{"invalid url", "darwin/amd64", "missing checksum query parameter"},
 		},
 		// a failure from BinaryDownloadURLMap.CheckURLS
 		{
@@ -167,13 +397,14 @@ func (s InfoTestSuite) TestInfoValidateFull() {
 					"darwin/arm64": "file:///no/such/file/exists/hopefully.zip?checksum=sha256:b5a2c96250612366ea272ffac6d9744aaf4b45aacd96aa7cfcb931ee3b558259",
 				},
 			},
-			errs: []string{"error downloading binary", "darwin/arm64", "no such file or directory"},
+			requireChecksums: true,
+			errs:             []string{"error downloading binary", "darwin/arm64", "no such file or directory"},
 		},
 	}
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			actualErr := tc.planInfo.ValidateFull("daemon")
+			actualErr := tc.planInfo.ValidateFull("daemon", tc.requireChecksums)
 			if len(tc.errs) > 0 {
 				require.Error(t, actualErr)
 				for _, expectedErr := range tc.errs {
@@ -241,7 +472,7 @@ func (s InfoTestSuite) TestBinaryDownloadURLMapValidateBasic() {
 			urlMap: BinaryDownloadURLMap{
 				"darwin/amd64": "https://v1.cosmos.network/sdk",
 			},
-			errs: []string{"invalid url", "darwin/amd64", "missing checksum query parameter"},
+			errs: nil,
 		},
 		{
 			name: "multiple valid entries but one bad url",
@@ -270,6 +501,103 @@ func (s InfoTestSuite) TestBinaryDownloadURLMapValidateBasic() {
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
 			actualErr := tc.urlMap.ValidateBasic()
+			if len(tc.errs) > 0 {
+				require.Error(t, actualErr)
+				for _, expectedErr := range tc.errs {
+					assert.Contains(t, actualErr.Error(), expectedErr)
+				}
+			} else {
+				require.NoError(t, actualErr)
+			}
+		})
+	}
+}
+
+func (s InfoTestSuite) TestBinaryDownloadURLMapValidateAllURLsHaveChecksum() {
+	addDummyChecksum := func(url string) string {
+		return url + "?checksum=sha256:b5a2c96250612366ea272ffac6d9744aaf4b45aacd96aa7cfcb931ee3b558259"
+	}
+	tests := []struct {
+		name   string
+		urlMap BinaryDownloadURLMap
+		errs   []string
+	}{
+		{
+			name:   "empty map",
+			urlMap: BinaryDownloadURLMap{},
+			errs:   nil,
+		},
+		{
+			name: "key with empty string",
+			urlMap: BinaryDownloadURLMap{
+				"": addDummyChecksum("https://v1.cosmos.network/sdk"),
+			},
+			errs: nil,
+		},
+		{
+			name: "invalid key format",
+			urlMap: BinaryDownloadURLMap{
+				"badkey": addDummyChecksum("https://v1.cosmos.network/sdk"),
+			},
+			errs: nil,
+		},
+		{
+			name: "any key is valid",
+			urlMap: BinaryDownloadURLMap{
+				"any": addDummyChecksum("https://v1.cosmos.network/sdk"),
+			},
+			errs: nil,
+		},
+		{
+			name: "os arch key is valid",
+			urlMap: BinaryDownloadURLMap{
+				"darwin/amd64": addDummyChecksum("https://v1.cosmos.network/sdk"),
+			},
+			errs: nil,
+		},
+		{
+			name: "not a url",
+			urlMap: BinaryDownloadURLMap{
+				"isa/url":  addDummyChecksum("https://v1.cosmos.network/sdk"),
+				"nota/url": addDummyChecksum("https://v1.cosmos.network:not-a-port/sdk"),
+			},
+			errs: []string{"invalid url", "nota/url", "invalid port"},
+		},
+		{
+			name: "url without checksum",
+			urlMap: BinaryDownloadURLMap{
+				"has/cs":       addDummyChecksum("https://v1.cosmos.network/sdk"),
+				"darwin/amd64": "https://v1.cosmos.network/sdk",
+			},
+			errs: []string{"invalid url", "darwin/amd64", "missing checksum query parameter"},
+		},
+		{
+			name: "multiple valid entries but one bad url",
+			urlMap: BinaryDownloadURLMap{
+				"any":          addDummyChecksum("https://v1.cosmos.network/sdk"),
+				"darwin/amd64": addDummyChecksum("https://v1.cosmos.network/sdk"),
+				"darwin/arm64": addDummyChecksum("https://v1.cosmos.network/sdk"),
+				"windows/bad":  "https://v1.cosmos.network/sdk",
+				"linux/386":    addDummyChecksum("https://v1.cosmos.network/sdk"),
+			},
+			errs: []string{"invalid url", "windows/bad", "missing checksum query parameter"},
+		},
+		{
+			name: "multiple valid entries but one bad key",
+			urlMap: BinaryDownloadURLMap{
+				"any":          addDummyChecksum("https://v1.cosmos.network/sdk"),
+				"darwin/amd64": addDummyChecksum("https://v1.cosmos.network/sdk"),
+				"badkey":       addDummyChecksum("https://v1.cosmos.network/sdk"),
+				"darwin/arm64": addDummyChecksum("https://v1.cosmos.network/sdk"),
+				"linux/386":    addDummyChecksum("https://v1.cosmos.network/sdk"),
+			},
+			errs: nil,
+		},
+	}
+
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			actualErr := tc.urlMap.ValidateAllURLsHaveChecksum()
 			if len(tc.errs) > 0 {
 				require.Error(t, actualErr)
 				for _, expectedErr := range tc.errs {

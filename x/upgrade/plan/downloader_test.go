@@ -164,8 +164,10 @@ func (s *DownloaderTestSuite) TestDownloadUpgrade() {
 		dstRoot := getDstDir(t.Name())
 		url := "file://" + justAFilePath
 		err := DownloadUpgrade(dstRoot, url, justAFile.Name)
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "missing checksum query parameter")
+		require.NoError(t, err)
+		expectedFile := filepath.Join(dstRoot, "bin", justAFile.Name)
+		requireFileExistsAndIsExecutable(t, expectedFile)
+		requireFileEquals(t, expectedFile, justAFile)
 	})
 
 	s.T().Run("url has incorrect checksum", func(t *testing.T) {
@@ -268,9 +270,9 @@ func (s *DownloaderTestSuite) TestDownloadURLWithChecksum() {
 
 	s.T().Run("without checksum", func(t *testing.T) {
 		url := "file://" + planPath
-		_, err := DownloadURLWithChecksum(url)
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "missing checksum query parameter")
+		actual, err := DownloadURLWithChecksum(url)
+		require.NoError(t, err)
+		require.Equal(t, planContents, actual)
 	})
 
 	s.T().Run("with correct checksum", func(t *testing.T) {
@@ -296,4 +298,52 @@ func (s *DownloaderTestSuite) TestDownloadURLWithChecksum() {
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "no content returned")
 	})
+}
+
+func (s *DownloaderTestSuite) TestValidateIsURLWithChecksum() {
+	tests := []struct {
+		name  string
+		input string
+		inErr []string
+	}{
+		{
+			name:  "fails neturl parsing",
+			input: "https://v1.cosmos.network:bad-port/sdk",
+			inErr: []string{"parse", "invalid port", "bad-port"},
+		},
+		{
+			name:  "empty string",
+			input: "",
+			inErr: []string{"missing checksum query parameter"},
+		},
+		{
+			name:  "empty checksum value",
+			input: "https://v1.cosmos.network/sdk?checksum=",
+			inErr: []string{"missing checksum query parameter"},
+		},
+		{
+			name:  "checksum has silly value",
+			input: "https://v1.cosmos.network/sdk?checksum=silly",
+			inErr: nil,
+		},
+		{
+			name:  "checksum has normal value",
+			input: "https://v1.cosmos.network/sdk?checksum=sha256:b5a2c96250612366ea272ffac6d9744aaf4b45aacd96aa7cfcb931ee3b558259",
+			inErr: nil,
+		},
+	}
+
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			actual := ValidateIsURLWithChecksum(tc.input)
+			if len(tc.inErr) > 0 {
+				require.Error(t, actual)
+				for _, expectedErr := range tc.inErr {
+					assert.Contains(t, actual.Error(), expectedErr)
+				}
+			} else {
+				require.NoError(t, actual)
+			}
+		})
+	}
 }

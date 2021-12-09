@@ -16,7 +16,7 @@ type dbAsStoreIter struct {
 // (store/types).Iterator interface.
 func DBToStoreIterator(source dbm.Iterator) *dbAsStoreIter {
 	ret := &dbAsStoreIter{Iterator: source}
-	ret.Next()
+	ret.Next() // The DB iterator must be primed before it can access the first element, because Next also returns the validity status
 	return ret
 }
 

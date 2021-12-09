@@ -29,7 +29,6 @@ func TestAccessors(t *testing.T) {
 	require.Panics(t, func() { store.Set([]byte(""), []byte("value")) }, "setting an empty key should panic")
 
 	require.Equal(t, types.StoreTypeDB, store.GetStoreType())
-	store.GetStoreType()
 
 	retFoo := []byte("xxx")
 	mockDB.EXPECT().Get(gomock.Eq(key)).Times(1).Return(retFoo, nil)

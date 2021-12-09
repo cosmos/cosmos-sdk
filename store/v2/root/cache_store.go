@@ -20,9 +20,8 @@ func (cs *cacheStore) GetKVStore(skey types.StoreKey) types.KVStore {
 
 // Write implements CacheMultiStore.
 func (cs *cacheStore) Write() {
-	for skey, sub := range cs.substores {
+	for _, sub := range cs.substores {
 		sub.Write()
-		delete(cs.substores, skey)
 	}
 }
 

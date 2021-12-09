@@ -228,10 +228,8 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 		if f.chainID != "" {
 			return nil, fmt.Errorf("chain ID cannot be used when offline and generate-only flags are set")
 		}
-	} else {
-		if f.chainID == "" {
-			return nil, fmt.Errorf("chain ID required but not specified")
-		}
+	} else if f.chainID == "" {
+		return nil, fmt.Errorf("chain ID required but not specified")
 	}
 
 	fees := f.fees

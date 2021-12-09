@@ -1953,8 +1953,8 @@ func (suite *KeeperTestSuite) TestBalanceTrackingEvents() {
 	}
 
 	// check balance and supply tracking
-	require.True(suite.bankKeeper.HasSupply(suite.ctx, "utxo"))
-	savedSupply := suite.bankKeeper.GetSupply(suite.ctx, "utxo")
+	suite.Require().True(suite.app.BankKeeper.HasSupply(suite.ctx, "utxo"))
+	savedSupply := suite.app.BankKeeper.GetSupply(suite.ctx, "utxo")
 	utxoSupply := savedSupply
 	require.Equal(utxoSupply.Amount, supply.AmountOf("utxo"))
 	// iterate accounts and check balances

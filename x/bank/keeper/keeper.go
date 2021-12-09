@@ -23,31 +23,28 @@ var _ Keeper = (*BaseKeeper)(nil)
 // between accounts.
 type Keeper interface {
 	SendKeeper
-	WithMintCoinsRestriction(types.MintingRestrictionFn) BaseKeeper
 
-	InitGenesis(context.Context, *types.GenesisState) error
-	ExportGenesis(context.Context) (*types.GenesisState, error)
+	InitGenesis(sdk.Context, *types.GenesisState)
+	ExportGenesis(sdk.Context) *types.GenesisState
 
-	GetSupply(ctx context.Context, denom string) sdk.Coin
-	HasSupply(ctx context.Context, denom string) bool
-	GetPaginatedTotalSupply(ctx context.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
-	IterateTotalSupply(ctx context.Context, cb func(sdk.Coin) bool)
-	GetDenomMetaData(ctx context.Context, denom string) (types.Metadata, bool)
-	HasDenomMetaData(ctx context.Context, denom string) bool
-	SetDenomMetaData(ctx context.Context, denomMetaData types.Metadata)
-	GetAllDenomMetaData(ctx context.Context) []types.Metadata
-	IterateAllDenomMetaData(ctx context.Context, cb func(types.Metadata) bool)
+	GetSupply(ctx sdk.Context, denom string) sdk.Coin
+	HasSupply(ctx sdk.Context, denom string) bool
+	GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
+	IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bool)
+	GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool)
+	SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)
+	IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool)
 
-	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
-	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
-	DelegateCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
-	UndelegateCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
-	BurnCoins(ctx context.Context, address []byte, amt sdk.Coins) error
+	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	DelegateCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	UndelegateCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
+	BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 
-	DelegateCoins(ctx context.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
-	UndelegateCoins(ctx context.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
+	DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
+	UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
 
 	types.QueryServer
 }
@@ -200,6 +197,13 @@ func (k BaseKeeper) GetSupply(ctx context.Context, denom string) sdk.Coin {
 func (k BaseKeeper) HasSupply(ctx context.Context, denom string) bool {
 	has, err := k.Supply.Has(ctx, denom)
 	return has && err == nil
+}
+
+// HasSupply checks if the supply coin exists in store.
+func (k BaseKeeper) HasSupply(ctx sdk.Context, denom string) bool {
+	store := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
+	return supplyStore.Has([]byte(denom))
 }
 
 // GetDenomMetaData retrieves the denomination metadata. returns the metadata and true if the denom exists,

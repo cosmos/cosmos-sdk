@@ -191,7 +191,7 @@ func (s *MWTestSuite) mkFeePayerTxBuilder(
 		ChainID:       chainID,
 		AccountNumber: accNum,
 		Sequence:      accSeq,
-		SignerIndex:   1,
+		PubKey:        feePayerPriv.PubKey(),
 	}
 	feePayerSigV2, err = clienttx.SignWithPrivKey(
 		signMode, signerData,

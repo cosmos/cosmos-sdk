@@ -164,8 +164,10 @@ func (s *DownloaderTestSuite) TestDownloadUpgrade() {
 		dstRoot := getDstDir(t.Name())
 		url := "file://" + justAFilePath
 		err := DownloadUpgrade(dstRoot, url, justAFile.Name)
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "missing checksum query parameter")
+		require.NoError(t, err)
+		expectedFile := filepath.Join(dstRoot, "bin", justAFile.Name)
+		requireFileExistsAndIsExecutable(t, expectedFile)
+		requireFileEquals(t, expectedFile, justAFile)
 	})
 
 	s.T().Run("url has incorrect checksum", func(t *testing.T) {
@@ -268,9 +270,9 @@ func (s *DownloaderTestSuite) TestDownloadURLWithChecksum() {
 
 	s.T().Run("without checksum", func(t *testing.T) {
 		url := "file://" + planPath
-		_, err := DownloadURLWithChecksum(url)
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "missing checksum query parameter")
+		actual, err := DownloadURLWithChecksum(url)
+		require.NoError(t, err)
+		require.Equal(t, planContents, actual)
 	})
 
 	s.T().Run("with correct checksum", func(t *testing.T) {

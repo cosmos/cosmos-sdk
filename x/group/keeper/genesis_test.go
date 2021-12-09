@@ -118,13 +118,13 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	s.keeper.InitGenesis(genesisCtx, cdc, genesisData[group.ModuleName])
 
 	for i, g := range genesisState.Groups {
-		res, err := s.keeper.GroupInfo(ctx, &group.QueryGroupInfo{
+		res, err := s.keeper.GroupInfo(ctx, &group.QueryGroupInfoRequest{
 			GroupId: g.GroupId,
 		})
 		s.Require().NoError(err)
 		s.Require().Equal(g, res.Info)
 
-		membersRes, err := s.keeper.GroupMembers(ctx, &group.QueryGroupMembers{
+		membersRes, err := s.keeper.GroupMembers(ctx, &group.QueryGroupMembersRequest{
 			GroupId: g.GroupId,
 		})
 		s.Require().NoError(err)
@@ -133,7 +133,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	}
 
 	for _, g := range genesisState.GroupAccounts {
-		res, err := s.keeper.GroupAccountInfo(ctx, &group.QueryGroupAccountInfo{
+		res, err := s.keeper.GroupAccountInfo(ctx, &group.QueryGroupAccountInfoRequest{
 			Address: g.Address,
 		})
 		s.Require().NoError(err)
@@ -141,13 +141,13 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	}
 
 	for _, g := range genesisState.Proposals {
-		res, err := s.keeper.Proposal(ctx, &group.QueryProposal{
+		res, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{
 			ProposalId: g.ProposalId,
 		})
 		s.Require().NoError(err)
 		s.assertProposalsEqual(g, res.Proposal)
 
-		votesRes, err := s.keeper.VotesByProposal(ctx, &group.QueryVotesByProposal{
+		votesRes, err := s.keeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{
 			ProposalId: g.ProposalId,
 		})
 		s.Require().NoError(err)

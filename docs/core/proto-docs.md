@@ -484,33 +484,30 @@
     - [GenesisState](#cosmos.group.v1beta1.GenesisState)
   
 - [cosmos/group/v1beta1/query.proto](#cosmos/group/v1beta1/query.proto)
-    - [QueryGroupAccountInfo](#cosmos.group.v1beta1.QueryGroupAccountInfo)
+    - [QueryGroupAccountInfoRequest](#cosmos.group.v1beta1.QueryGroupAccountInfoRequest)
     - [QueryGroupAccountInfoResponse](#cosmos.group.v1beta1.QueryGroupAccountInfoResponse)
-    - [QueryGroupAccountsByAdmin](#cosmos.group.v1beta1.QueryGroupAccountsByAdmin)
+    - [QueryGroupAccountsByAdminRequest](#cosmos.group.v1beta1.QueryGroupAccountsByAdminRequest)
     - [QueryGroupAccountsByAdminResponse](#cosmos.group.v1beta1.QueryGroupAccountsByAdminResponse)
-    - [QueryGroupAccountsByGroup](#cosmos.group.v1beta1.QueryGroupAccountsByGroup)
+    - [QueryGroupAccountsByGroupRequest](#cosmos.group.v1beta1.QueryGroupAccountsByGroupRequest)
     - [QueryGroupAccountsByGroupResponse](#cosmos.group.v1beta1.QueryGroupAccountsByGroupResponse)
-    - [QueryGroupInfo](#cosmos.group.v1beta1.QueryGroupInfo)
+    - [QueryGroupInfoRequest](#cosmos.group.v1beta1.QueryGroupInfoRequest)
     - [QueryGroupInfoResponse](#cosmos.group.v1beta1.QueryGroupInfoResponse)
-    - [QueryGroupMembers](#cosmos.group.v1beta1.QueryGroupMembers)
+    - [QueryGroupMembersRequest](#cosmos.group.v1beta1.QueryGroupMembersRequest)
     - [QueryGroupMembersResponse](#cosmos.group.v1beta1.QueryGroupMembersResponse)
-    - [QueryGroupsByAdmin](#cosmos.group.v1beta1.QueryGroupsByAdmin)
+    - [QueryGroupsByAdminRequest](#cosmos.group.v1beta1.QueryGroupsByAdminRequest)
     - [QueryGroupsByAdminResponse](#cosmos.group.v1beta1.QueryGroupsByAdminResponse)
-    - [QueryProposal](#cosmos.group.v1beta1.QueryProposal)
+    - [QueryProposalRequest](#cosmos.group.v1beta1.QueryProposalRequest)
     - [QueryProposalResponse](#cosmos.group.v1beta1.QueryProposalResponse)
-    - [QueryProposalsByGroupAccount](#cosmos.group.v1beta1.QueryProposalsByGroupAccount)
+    - [QueryProposalsByGroupAccountRequest](#cosmos.group.v1beta1.QueryProposalsByGroupAccountRequest)
     - [QueryProposalsByGroupAccountResponse](#cosmos.group.v1beta1.QueryProposalsByGroupAccountResponse)
-    - [QueryVoteByProposalVoter](#cosmos.group.v1beta1.QueryVoteByProposalVoter)
+    - [QueryVoteByProposalVoterRequest](#cosmos.group.v1beta1.QueryVoteByProposalVoterRequest)
     - [QueryVoteByProposalVoterResponse](#cosmos.group.v1beta1.QueryVoteByProposalVoterResponse)
-    - [QueryVotesByProposal](#cosmos.group.v1beta1.QueryVotesByProposal)
+    - [QueryVotesByProposalRequest](#cosmos.group.v1beta1.QueryVotesByProposalRequest)
     - [QueryVotesByProposalResponse](#cosmos.group.v1beta1.QueryVotesByProposalResponse)
-    - [QueryVotesByVoter](#cosmos.group.v1beta1.QueryVotesByVoter)
+    - [QueryVotesByVoterRequest](#cosmos.group.v1beta1.QueryVotesByVoterRequest)
     - [QueryVotesByVoterResponse](#cosmos.group.v1beta1.QueryVotesByVoterResponse)
   
     - [Query](#cosmos.group.v1beta1.Query)
-  
-- [cosmos/group/v1beta1/testdata_tx.proto](#cosmos/group/v1beta1/testdata_tx.proto)
-    - [MsgAuthenticated](#cosmos.group.v1beta1.MsgAuthenticated)
   
 - [cosmos/group/v1beta1/tx.proto](#cosmos/group/v1beta1/tx.proto)
     - [MsgCreateGroup](#cosmos.group.v1beta1.MsgCreateGroup)
@@ -2441,199 +2438,7 @@ tags are stringified and the log is JSON decoded.
 | `timestamp` | [string](#string) |  | Time of the previous block. For heights > 1, it's the weighted median of the timestamps of the valid votes in the block.LastCommit. For height == 1, it's genesis time. |
 | `events` | [tendermint.abci.Event](#tendermint.abci.Event) | repeated | Events defines all the events emitted by processing a transaction. Note, these events include those emitted by processing all the messages and those emitted from the ante handler. Whereas Logs contains the events, with additional metadata, emitted only by processing the messages.
 
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="cosmos/base/kv/v1beta1/kv.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/base/kv/v1beta1/kv.proto
-
-
-
-<a name="cosmos.base.kv.v1beta1.Pair"></a>
-
-### Pair
-Pair defines a key/value bytes tuple.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [bytes](#bytes) |  |  |
-| `value` | [bytes](#bytes) |  |  |
-
-
-
-
-
-
-<a name="cosmos.base.kv.v1beta1.Pairs"></a>
-
-### Pairs
-Pairs defines a repeated slice of Pair objects.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `pairs` | [Pair](#cosmos.base.kv.v1beta1.Pair) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.GasInfo"></a>
-
-### GasInfo
-GasInfo defines tx execution gas context.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `gas_wanted` | [uint64](#uint64) |  | GasWanted is the maximum units of work we allow this tx to perform. |
-| `gas_used` | [uint64](#uint64) |  | GasUsed is the amount of gas actually consumed. |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.MsgData"></a>
-
-### MsgData
-MsgData defines the data returned in a Result object during message
-execution.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_type` | [string](#string) |  |  |
-| `data` | [bytes](#bytes) |  |  |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.Result"></a>
-
-### Result
-Result is the union of ResponseFormat and ResponseCheckTx.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `data` | [bytes](#bytes) |  | Data is any data returned from message or handler execution. It MUST be length prefixed in order to separate data from multiple message executions. |
-| `log` | [string](#string) |  | Log contains the log information from message or handler execution. |
-| `events` | [tendermint.abci.Event](#tendermint.abci.Event) | repeated | Events contains a slice of Event objects that were emitted during message or handler execution. |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.SearchTxsResult"></a>
-
-### SearchTxsResult
-SearchTxsResult defines a structure for querying txs pageable
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `total_count` | [uint64](#uint64) |  | Count of all txs |
-| `count` | [uint64](#uint64) |  | Count of txs in current page |
-| `page_number` | [uint64](#uint64) |  | Index of current page, start from 1 |
-| `page_total` | [uint64](#uint64) |  | Count of total pages |
-| `limit` | [uint64](#uint64) |  | Max count txs per page |
-| `txs` | [TxResponse](#cosmos.base.abci.v1beta1.TxResponse) | repeated | List of txs in current page |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.SimulationResponse"></a>
-
-### SimulationResponse
-SimulationResponse defines the response generated when a transaction is
-successfully simulated.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `gas_info` | [GasInfo](#cosmos.base.abci.v1beta1.GasInfo) |  |  |
-| `result` | [Result](#cosmos.base.abci.v1beta1.Result) |  |  |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.StringEvent"></a>
-
-### StringEvent
-StringEvent defines en Event object wrapper where all the attributes
-contain key/value pairs that are strings instead of raw bytes.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `type` | [string](#string) |  |  |
-| `attributes` | [Attribute](#cosmos.base.abci.v1beta1.Attribute) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.TxMsgData"></a>
-
-### TxMsgData
-TxMsgData defines a list of MsgData. A transaction will have a MsgData object
-for each message.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `data` | [MsgData](#cosmos.base.abci.v1beta1.MsgData) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.TxResponse"></a>
-
-### TxResponse
-TxResponse defines a structure containing relevant tx data and metadata. The
-tags are stringified and the log is JSON decoded.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `height` | [int64](#int64) |  | The block height |
-| `txhash` | [string](#string) |  | The transaction hash. |
-| `codespace` | [string](#string) |  | Namespace for the Code |
-| `code` | [uint32](#uint32) |  | Response code. |
-| `data` | [string](#string) |  | Result bytes, if any. |
-| `raw_log` | [string](#string) |  | The output of the application's logger (raw string). May be non-deterministic. |
-| `logs` | [ABCIMessageLog](#cosmos.base.abci.v1beta1.ABCIMessageLog) | repeated | The output of the application's logger (typed). May be non-deterministic. |
-| `info` | [string](#string) |  | Additional information. May be non-deterministic. |
-| `gas_wanted` | [int64](#int64) |  | Amount of gas requested for transaction. |
-| `gas_used` | [int64](#int64) |  | Amount of gas consumed by transaction. |
-| `tx` | [google.protobuf.Any](#google.protobuf.Any) |  | The request transaction bytes. |
-| `timestamp` | [string](#string) |  | Time of the previous block. For heights > 1, it's the weighted median of the timestamps of the valid votes in the block.LastCommit. For height == 1, it's genesis time. |
+Since: cosmos-sdk 0.42.11, 0.44.5, 0.45 |
 
 
 
@@ -6952,667 +6757,6 @@ Since: cosmos-sdk 0.43 | |
 
 
 
-<a name="cosmos/group/v1beta1/types.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/gov/v1beta2/gov.proto
-
-
-
-<a name="cosmos.gov.v1beta2.Deposit"></a>
-
-### Deposit
-Deposit defines an amount deposited by an account address to an active
-proposal.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposal_id` | [uint64](#uint64) |  |  |
-| `depositor` | [string](#string) |  |  |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.DepositParams"></a>
-
-### DepositParams
-DepositParams defines the params for deposits on governance proposals.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `min_deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | Minimum deposit for a proposal to enter voting period. |
-| `max_deposit_period` | [google.protobuf.Duration](#google.protobuf.Duration) |  | Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months. |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.Proposal"></a>
-
-### Proposal
-Proposal defines the core field members of a governance proposal.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposal_id` | [uint64](#uint64) |  |  |
-| `messages` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
-| `status` | [ProposalStatus](#cosmos.gov.v1beta2.ProposalStatus) |  |  |
-| `final_tally_result` | [TallyResult](#cosmos.gov.v1beta2.TallyResult) |  |  |
-| `submit_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `deposit_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `total_deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-| `voting_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `voting_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.TallyParams"></a>
-
-### TallyParams
-TallyParams defines the params for tallying votes on governance proposals.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `quorum` | [bytes](#bytes) |  | Minimum percentage of total stake needed to vote for a result to be considered valid. |
-| `threshold` | [bytes](#bytes) |  | Minimum proportion of Yes votes for proposal to pass. Default value: 0.5. |
-| `veto_threshold` | [bytes](#bytes) |  | Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Default value: 1/3. |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.TallyResult"></a>
-
-### TallyResult
-TallyResult defines a standard tally for a governance proposal.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `yes` | [string](#string) |  |  |
-| `abstain` | [string](#string) |  |  |
-| `no` | [string](#string) |  |  |
-| `no_with_veto` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.Vote"></a>
-
-### Vote
-Vote defines a vote on a governance proposal.
-A Vote consists of a proposal ID, the voter, and the vote option.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposal_id` | [uint64](#uint64) |  |  |
-| `voter` | [string](#string) |  |  |
-| `option` | [VoteOption](#cosmos.gov.v1beta2.VoteOption) |  | **Deprecated.** Deprecated: Prefer to use `options` instead. This field is set in queries if and only if `len(options) == 1` and that option has weight 1. In all other cases, this field will default to VOTE_OPTION_UNSPECIFIED. |
-| `options` | [WeightedVoteOption](#cosmos.gov.v1beta2.WeightedVoteOption) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.VotingParams"></a>
-
-### VotingParams
-VotingParams defines the params for voting on governance proposals.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `voting_period` | [google.protobuf.Duration](#google.protobuf.Duration) |  | Length of the voting period. |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.WeightedVoteOption"></a>
-
-### WeightedVoteOption
-WeightedVoteOption defines a unit of vote for vote split.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `option` | [VoteOption](#cosmos.gov.v1beta2.VoteOption) |  |  |
-| `weight` | [string](#string) |  |  |
-
-
-
-
-
- <!-- end messages -->
-
-
-<a name="cosmos.gov.v1beta2.ProposalStatus"></a>
-
-### ProposalStatus
-ProposalStatus enumerates the valid statuses of a proposal.
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| PROPOSAL_STATUS_UNSPECIFIED | 0 | PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status. |
-| PROPOSAL_STATUS_DEPOSIT_PERIOD | 1 | PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period. |
-| PROPOSAL_STATUS_VOTING_PERIOD | 2 | PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period. |
-| PROPOSAL_STATUS_PASSED | 3 | PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed. |
-| PROPOSAL_STATUS_REJECTED | 4 | PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected. |
-| PROPOSAL_STATUS_FAILED | 5 | PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed. |
-
-
-
-<a name="cosmos.gov.v1beta2.VoteOption"></a>
-
-### VoteOption
-VoteOption enumerates the valid vote options for a given governance proposal.
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| VOTE_OPTION_UNSPECIFIED | 0 | VOTE_OPTION_UNSPECIFIED defines a no-op vote option. |
-| VOTE_OPTION_YES | 1 | VOTE_OPTION_YES defines a yes vote option. |
-| VOTE_OPTION_ABSTAIN | 2 | VOTE_OPTION_ABSTAIN defines an abstain vote option. |
-| VOTE_OPTION_NO | 3 | VOTE_OPTION_NO defines a no vote option. |
-| VOTE_OPTION_NO_WITH_VETO | 4 | VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option. |
-
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="cosmos/gov/v1beta2/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/gov/v1beta2/genesis.proto
-
-
-
-<a name="cosmos.gov.v1beta2.GenesisState"></a>
-
-### GenesisState
-GenesisState defines the gov module's genesis state.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `starting_proposal_id` | [uint64](#uint64) |  | starting_proposal_id is the ID of the starting proposal. |
-| `deposits` | [Deposit](#cosmos.gov.v1beta2.Deposit) | repeated | deposits defines all the deposits present at genesis. |
-| `votes` | [Vote](#cosmos.gov.v1beta2.Vote) | repeated | votes defines all the votes present at genesis. |
-| `proposals` | [Proposal](#cosmos.gov.v1beta2.Proposal) | repeated | proposals defines all the proposals present at genesis. |
-| `deposit_params` | [DepositParams](#cosmos.gov.v1beta2.DepositParams) |  | params defines all the paramaters of related to deposit. |
-| `voting_params` | [VotingParams](#cosmos.gov.v1beta2.VotingParams) |  | params defines all the paramaters of related to voting. |
-| `tally_params` | [TallyParams](#cosmos.gov.v1beta2.TallyParams) |  | params defines all the paramaters of related to tally. |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="cosmos/gov/v1beta2/query.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/gov/v1beta2/query.proto
-
-
-
-<a name="cosmos.gov.v1beta2.QueryDepositRequest"></a>
-
-### QueryDepositRequest
-QueryDepositRequest is the request type for the Query/Deposit RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposal_id` | [uint64](#uint64) |  | proposal_id defines the unique id of the proposal. |
-| `depositor` | [string](#string) |  | depositor defines the deposit addresses from the proposals. |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.QueryDepositResponse"></a>
-
-### QueryDepositResponse
-QueryDepositResponse is the response type for the Query/Deposit RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `deposit` | [Deposit](#cosmos.gov.v1beta2.Deposit) |  | deposit defines the requested deposit. |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.QueryDepositsRequest"></a>
-
-### QueryDepositsRequest
-QueryDepositsRequest is the request type for the Query/Deposits RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposal_id` | [uint64](#uint64) |  | proposal_id defines the unique id of the proposal. |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.QueryDepositsResponse"></a>
-
-### QueryDepositsResponse
-QueryDepositsResponse is the response type for the Query/Deposits RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `deposits` | [Deposit](#cosmos.gov.v1beta2.Deposit) | repeated |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.QueryParamsRequest"></a>
-
-### QueryParamsRequest
-QueryParamsRequest is the request type for the Query/Params RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `params_type` | [string](#string) |  | params_type defines which parameters to query for, can be one of "voting", "tallying" or "deposit". |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.QueryParamsResponse"></a>
-
-### QueryParamsResponse
-QueryParamsResponse is the response type for the Query/Params RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `voting_params` | [VotingParams](#cosmos.gov.v1beta2.VotingParams) |  | voting_params defines the parameters related to voting. |
-| `deposit_params` | [DepositParams](#cosmos.gov.v1beta2.DepositParams) |  | deposit_params defines the parameters related to deposit. |
-| `tally_params` | [TallyParams](#cosmos.gov.v1beta2.TallyParams) |  | tally_params defines the parameters related to tally. |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.QueryProposalRequest"></a>
-
-### QueryProposalRequest
-QueryProposalRequest is the request type for the Query/Proposal RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposal_id` | [uint64](#uint64) |  | proposal_id defines the unique id of the proposal. |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.QueryProposalResponse"></a>
-
-### QueryProposalResponse
-QueryProposalResponse is the response type for the Query/Proposal RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposal` | [Proposal](#cosmos.gov.v1beta2.Proposal) |  |  |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.QueryProposalsRequest"></a>
-
-### QueryProposalsRequest
-QueryProposalsRequest is the request type for the Query/Proposals RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposal_status` | [ProposalStatus](#cosmos.gov.v1beta2.ProposalStatus) |  | proposal_status defines the status of the proposals. |
-| `voter` | [string](#string) |  | voter defines the voter address for the proposals. |
-| `depositor` | [string](#string) |  | depositor defines the deposit addresses from the proposals. |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.QueryProposalsResponse"></a>
-
-### QueryProposalsResponse
-QueryProposalsResponse is the response type for the Query/Proposals RPC
-method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposals` | [Proposal](#cosmos.gov.v1beta2.Proposal) | repeated |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.QueryTallyResultRequest"></a>
-
-### QueryTallyResultRequest
-QueryTallyResultRequest is the request type for the Query/Tally RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposal_id` | [uint64](#uint64) |  | proposal_id defines the unique id of the proposal. |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.QueryTallyResultResponse"></a>
-
-### QueryTallyResultResponse
-QueryTallyResultResponse is the response type for the Query/Tally RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `tally` | [TallyResult](#cosmos.gov.v1beta2.TallyResult) |  | tally defines the requested tally. |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.QueryVoteRequest"></a>
-
-### QueryVoteRequest
-QueryVoteRequest is the request type for the Query/Vote RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposal_id` | [uint64](#uint64) |  | proposal_id defines the unique id of the proposal. |
-| `voter` | [string](#string) |  | voter defines the oter address for the proposals. |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.QueryVoteResponse"></a>
-
-### QueryVoteResponse
-QueryVoteResponse is the response type for the Query/Vote RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `vote` | [Vote](#cosmos.gov.v1beta2.Vote) |  | vote defined the queried vote. |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.QueryVotesRequest"></a>
-
-### QueryVotesRequest
-QueryVotesRequest is the request type for the Query/Votes RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposal_id` | [uint64](#uint64) |  | proposal_id defines the unique id of the proposal. |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.QueryVotesResponse"></a>
-
-### QueryVotesResponse
-QueryVotesResponse is the response type for the Query/Votes RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `votes` | [Vote](#cosmos.gov.v1beta2.Vote) | repeated | votes defined the queried votes. |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="cosmos.gov.v1beta2.Query"></a>
-
-### Query
-Query defines the gRPC querier service for gov module
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Proposal` | [QueryProposalRequest](#cosmos.gov.v1beta2.QueryProposalRequest) | [QueryProposalResponse](#cosmos.gov.v1beta2.QueryProposalResponse) | Proposal queries proposal details based on ProposalID. | GET|/cosmos/gov/v1beta2/proposals/{proposal_id}|
-| `Proposals` | [QueryProposalsRequest](#cosmos.gov.v1beta2.QueryProposalsRequest) | [QueryProposalsResponse](#cosmos.gov.v1beta2.QueryProposalsResponse) | Proposals queries all proposals based on given status. | GET|/cosmos/gov/v1beta2/proposals|
-| `Vote` | [QueryVoteRequest](#cosmos.gov.v1beta2.QueryVoteRequest) | [QueryVoteResponse](#cosmos.gov.v1beta2.QueryVoteResponse) | Vote queries voted information based on proposalID, voterAddr. | GET|/cosmos/gov/v1beta2/proposals/{proposal_id}/votes/{voter}|
-| `Votes` | [QueryVotesRequest](#cosmos.gov.v1beta2.QueryVotesRequest) | [QueryVotesResponse](#cosmos.gov.v1beta2.QueryVotesResponse) | Votes queries votes of a given proposal. | GET|/cosmos/gov/v1beta2/proposals/{proposal_id}/votes|
-| `Params` | [QueryParamsRequest](#cosmos.gov.v1beta2.QueryParamsRequest) | [QueryParamsResponse](#cosmos.gov.v1beta2.QueryParamsResponse) | Params queries all parameters of the gov module. | GET|/cosmos/gov/v1beta2/params/{params_type}|
-| `Deposit` | [QueryDepositRequest](#cosmos.gov.v1beta2.QueryDepositRequest) | [QueryDepositResponse](#cosmos.gov.v1beta2.QueryDepositResponse) | Deposit queries single deposit information based proposalID, depositAddr. | GET|/cosmos/gov/v1beta2/proposals/{proposal_id}/deposits/{depositor}|
-| `Deposits` | [QueryDepositsRequest](#cosmos.gov.v1beta2.QueryDepositsRequest) | [QueryDepositsResponse](#cosmos.gov.v1beta2.QueryDepositsResponse) | Deposits queries all deposits of a single proposal. | GET|/cosmos/gov/v1beta2/proposals/{proposal_id}/deposits|
-| `TallyResult` | [QueryTallyResultRequest](#cosmos.gov.v1beta2.QueryTallyResultRequest) | [QueryTallyResultResponse](#cosmos.gov.v1beta2.QueryTallyResultResponse) | TallyResult queries the tally of a proposal vote. | GET|/cosmos/gov/v1beta2/proposals/{proposal_id}/tally|
-
- <!-- end services -->
-
-
-
-<a name="cosmos/gov/v1beta2/tx.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/gov/v1beta2/tx.proto
-
-
-
-<a name="cosmos.gov.v1beta2.MsgDeposit"></a>
-
-### MsgDeposit
-MsgDeposit defines a message to submit a deposit to an existing proposal.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposal_id` | [uint64](#uint64) |  |  |
-| `depositor` | [string](#string) |  |  |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.MsgDepositResponse"></a>
-
-### MsgDepositResponse
-MsgDepositResponse defines the Msg/Deposit response type.
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.MsgSubmitProposal"></a>
-
-### MsgSubmitProposal
-MsgSubmitProposal defines an sdk.Msg type that supports submitting arbitrary
-proposal Content.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `messages` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
-| `initial_deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-| `proposer` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.MsgSubmitProposalResponse"></a>
-
-### MsgSubmitProposalResponse
-MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposal_id` | [uint64](#uint64) |  |  |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.MsgVote"></a>
-
-### MsgVote
-MsgVote defines a message to cast a vote.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposal_id` | [uint64](#uint64) |  |  |
-| `voter` | [string](#string) |  |  |
-| `option` | [VoteOption](#cosmos.gov.v1beta2.VoteOption) |  |  |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.MsgVoteResponse"></a>
-
-### MsgVoteResponse
-MsgVoteResponse defines the Msg/Vote response type.
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.MsgVoteWeighted"></a>
-
-### MsgVoteWeighted
-MsgVoteWeighted defines a message to cast a vote.
-
-Since: cosmos-sdk 0.43
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposal_id` | [uint64](#uint64) |  |  |
-| `voter` | [string](#string) |  |  |
-| `options` | [WeightedVoteOption](#cosmos.gov.v1beta2.WeightedVoteOption) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta2.MsgVoteWeightedResponse"></a>
-
-### MsgVoteWeightedResponse
-MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.
-
-Since: cosmos-sdk 0.43
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="cosmos.gov.v1beta2.Msg"></a>
-
-### Msg
-Msg defines the gov Msg service.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `SubmitProposal` | [MsgSubmitProposal](#cosmos.gov.v1beta2.MsgSubmitProposal) | [MsgSubmitProposalResponse](#cosmos.gov.v1beta2.MsgSubmitProposalResponse) | SubmitProposal defines a method to create new proposal given a content. | |
-| `Vote` | [MsgVote](#cosmos.gov.v1beta2.MsgVote) | [MsgVoteResponse](#cosmos.gov.v1beta2.MsgVoteResponse) | Vote defines a method to add a vote on a specific proposal. | |
-| `VoteWeighted` | [MsgVoteWeighted](#cosmos.gov.v1beta2.MsgVoteWeighted) | [MsgVoteWeightedResponse](#cosmos.gov.v1beta2.MsgVoteWeightedResponse) | VoteWeighted defines a method to add a weighted vote on a specific proposal.
-
-Since: cosmos-sdk 0.43 | |
-| `Deposit` | [MsgDeposit](#cosmos.gov.v1beta2.MsgDeposit) | [MsgDepositResponse](#cosmos.gov.v1beta2.MsgDepositResponse) | Deposit defines a method to add deposit on a specific proposal. | |
-
- <!-- end services -->
-
-
-
 <a name="cosmos/group/v1beta1/events.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -8023,10 +7167,10 @@ GenesisState defines the group module's genesis state.
 
 
 
-<a name="cosmos.group.v1beta1.QueryGroupAccountInfo"></a>
+<a name="cosmos.group.v1beta1.QueryGroupAccountInfoRequest"></a>
 
-### QueryGroupAccountInfo
-QueryGroupAccountInfo is the Query/GroupAccountInfo request type.
+### QueryGroupAccountInfoRequest
+QueryGroupAccountInfoRequest is the Query/GroupAccountInfo request type.
 
 
 | Field | Type | Label | Description |
@@ -8053,10 +7197,10 @@ QueryGroupAccountInfoResponse is the Query/GroupAccountInfo response type.
 
 
 
-<a name="cosmos.group.v1beta1.QueryGroupAccountsByAdmin"></a>
+<a name="cosmos.group.v1beta1.QueryGroupAccountsByAdminRequest"></a>
 
-### QueryGroupAccountsByAdmin
-QueryGroupAccountsByAdmin is the Query/GroupAccountsByAdmin request type.
+### QueryGroupAccountsByAdminRequest
+QueryGroupAccountsByAdminRequest is the Query/GroupAccountsByAdmin request type.
 
 
 | Field | Type | Label | Description |
@@ -8085,10 +7229,10 @@ QueryGroupAccountsByAdminResponse is the Query/GroupAccountsByAdmin response typ
 
 
 
-<a name="cosmos.group.v1beta1.QueryGroupAccountsByGroup"></a>
+<a name="cosmos.group.v1beta1.QueryGroupAccountsByGroupRequest"></a>
 
-### QueryGroupAccountsByGroup
-QueryGroupAccountsByGroup is the Query/GroupAccountsByGroup request type.
+### QueryGroupAccountsByGroupRequest
+QueryGroupAccountsByGroupRequest is the Query/GroupAccountsByGroup request type.
 
 
 | Field | Type | Label | Description |
@@ -8117,10 +7261,10 @@ QueryGroupAccountsByGroupResponse is the Query/GroupAccountsByGroup response typ
 
 
 
-<a name="cosmos.group.v1beta1.QueryGroupInfo"></a>
+<a name="cosmos.group.v1beta1.QueryGroupInfoRequest"></a>
 
-### QueryGroupInfo
-QueryGroupInfo is the Query/GroupInfo request type.
+### QueryGroupInfoRequest
+QueryGroupInfoRequest is the Query/GroupInfo request type.
 
 
 | Field | Type | Label | Description |
@@ -8147,10 +7291,10 @@ QueryGroupInfoResponse is the Query/GroupInfo response type.
 
 
 
-<a name="cosmos.group.v1beta1.QueryGroupMembers"></a>
+<a name="cosmos.group.v1beta1.QueryGroupMembersRequest"></a>
 
-### QueryGroupMembers
-QueryGroupMembers is the Query/GroupMembers request type.
+### QueryGroupMembersRequest
+QueryGroupMembersRequest is the Query/GroupMembers request type.
 
 
 | Field | Type | Label | Description |
@@ -8179,10 +7323,10 @@ QueryGroupMembersResponse is the Query/GroupMembersResponse response type.
 
 
 
-<a name="cosmos.group.v1beta1.QueryGroupsByAdmin"></a>
+<a name="cosmos.group.v1beta1.QueryGroupsByAdminRequest"></a>
 
-### QueryGroupsByAdmin
-QueryGroupsByAdmin is the Query/GroupsByAdmin request type.
+### QueryGroupsByAdminRequest
+QueryGroupsByAdminRequest is the Query/GroupsByAdmin request type.
 
 
 | Field | Type | Label | Description |
@@ -8211,10 +7355,10 @@ QueryGroupsByAdminResponse is the Query/GroupsByAdminResponse response type.
 
 
 
-<a name="cosmos.group.v1beta1.QueryProposal"></a>
+<a name="cosmos.group.v1beta1.QueryProposalRequest"></a>
 
-### QueryProposal
-QueryProposal is the Query/Proposal request type.
+### QueryProposalRequest
+QueryProposalRequest is the Query/Proposal request type.
 
 
 | Field | Type | Label | Description |
@@ -8241,10 +7385,10 @@ QueryProposalResponse is the Query/Proposal response type.
 
 
 
-<a name="cosmos.group.v1beta1.QueryProposalsByGroupAccount"></a>
+<a name="cosmos.group.v1beta1.QueryProposalsByGroupAccountRequest"></a>
 
-### QueryProposalsByGroupAccount
-QueryProposalsByGroupAccount is the Query/ProposalByGroupAccount request type.
+### QueryProposalsByGroupAccountRequest
+QueryProposalsByGroupAccountRequest is the Query/ProposalByGroupAccount request type.
 
 
 | Field | Type | Label | Description |
@@ -8273,10 +7417,10 @@ QueryProposalsByGroupAccountResponse is the Query/ProposalByGroupAccount respons
 
 
 
-<a name="cosmos.group.v1beta1.QueryVoteByProposalVoter"></a>
+<a name="cosmos.group.v1beta1.QueryVoteByProposalVoterRequest"></a>
 
-### QueryVoteByProposalVoter
-QueryVoteByProposalVoter is the Query/VoteByProposalVoter request type.
+### QueryVoteByProposalVoterRequest
+QueryVoteByProposalVoterRequest is the Query/VoteByProposalVoter request type.
 
 
 | Field | Type | Label | Description |
@@ -8304,10 +7448,10 @@ QueryVoteByProposalVoterResponse is the Query/VoteByProposalVoter response type.
 
 
 
-<a name="cosmos.group.v1beta1.QueryVotesByProposal"></a>
+<a name="cosmos.group.v1beta1.QueryVotesByProposalRequest"></a>
 
-### QueryVotesByProposal
-QueryVotesByProposal is the Query/VotesByProposal request type.
+### QueryVotesByProposalRequest
+QueryVotesByProposalRequest is the Query/VotesByProposal request type.
 
 
 | Field | Type | Label | Description |
@@ -8336,10 +7480,10 @@ QueryVotesByProposalResponse is the Query/VotesByProposal response type.
 
 
 
-<a name="cosmos.group.v1beta1.QueryVotesByVoter"></a>
+<a name="cosmos.group.v1beta1.QueryVotesByVoterRequest"></a>
 
-### QueryVotesByVoter
-QueryVotesByVoter is the Query/VotesByVoter request type.
+### QueryVotesByVoterRequest
+QueryVotesByVoterRequest is the Query/VotesByVoter request type.
 
 
 | Field | Type | Label | Description |
@@ -8381,48 +7525,17 @@ Query is the cosmos.group.v1beta1 Query service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `GroupInfo` | [QueryGroupInfo](#cosmos.group.v1beta1.QueryGroupInfo) | [QueryGroupInfoResponse](#cosmos.group.v1beta1.QueryGroupInfoResponse) | GroupInfo queries group info based on group id. | |
-| `GroupAccountInfo` | [QueryGroupAccountInfo](#cosmos.group.v1beta1.QueryGroupAccountInfo) | [QueryGroupAccountInfoResponse](#cosmos.group.v1beta1.QueryGroupAccountInfoResponse) | GroupAccountInfo queries group account info based on group account address. | |
-| `GroupMembers` | [QueryGroupMembers](#cosmos.group.v1beta1.QueryGroupMembers) | [QueryGroupMembersResponse](#cosmos.group.v1beta1.QueryGroupMembersResponse) | GroupMembers queries members of a group | |
-| `GroupsByAdmin` | [QueryGroupsByAdmin](#cosmos.group.v1beta1.QueryGroupsByAdmin) | [QueryGroupsByAdminResponse](#cosmos.group.v1beta1.QueryGroupsByAdminResponse) | GroupsByAdmin queries groups by admin address. | |
-| `GroupAccountsByGroup` | [QueryGroupAccountsByGroup](#cosmos.group.v1beta1.QueryGroupAccountsByGroup) | [QueryGroupAccountsByGroupResponse](#cosmos.group.v1beta1.QueryGroupAccountsByGroupResponse) | GroupAccountsByGroup queries group accounts by group id. | |
-| `GroupAccountsByAdmin` | [QueryGroupAccountsByAdmin](#cosmos.group.v1beta1.QueryGroupAccountsByAdmin) | [QueryGroupAccountsByAdminResponse](#cosmos.group.v1beta1.QueryGroupAccountsByAdminResponse) | GroupsByAdmin queries group accounts by admin address. | |
-| `Proposal` | [QueryProposal](#cosmos.group.v1beta1.QueryProposal) | [QueryProposalResponse](#cosmos.group.v1beta1.QueryProposalResponse) | Proposal queries a proposal based on proposal id. | |
-| `ProposalsByGroupAccount` | [QueryProposalsByGroupAccount](#cosmos.group.v1beta1.QueryProposalsByGroupAccount) | [QueryProposalsByGroupAccountResponse](#cosmos.group.v1beta1.QueryProposalsByGroupAccountResponse) | ProposalsByGroupAccount queries proposals based on group account address. | |
-| `VoteByProposalVoter` | [QueryVoteByProposalVoter](#cosmos.group.v1beta1.QueryVoteByProposalVoter) | [QueryVoteByProposalVoterResponse](#cosmos.group.v1beta1.QueryVoteByProposalVoterResponse) | VoteByProposalVoter queries a vote by proposal id and voter. | |
-| `VotesByProposal` | [QueryVotesByProposal](#cosmos.group.v1beta1.QueryVotesByProposal) | [QueryVotesByProposalResponse](#cosmos.group.v1beta1.QueryVotesByProposalResponse) | VotesByProposal queries a vote by proposal. | |
-| `VotesByVoter` | [QueryVotesByVoter](#cosmos.group.v1beta1.QueryVotesByVoter) | [QueryVotesByVoterResponse](#cosmos.group.v1beta1.QueryVotesByVoterResponse) | VotesByVoter queries a vote by voter. | |
-
- <!-- end services -->
-
-
-
-<a name="cosmos/group/v1beta1/testdata_tx.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/group/v1beta1/testdata_tx.proto
-
-
-
-<a name="cosmos.group.v1beta1.MsgAuthenticated"></a>
-
-### MsgAuthenticated
-MsgAuthenticated is used in group module's tests to check msg authorizations
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `signers` | [bytes](#bytes) | repeated |  |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
+| `GroupInfo` | [QueryGroupInfoRequest](#cosmos.group.v1beta1.QueryGroupInfoRequest) | [QueryGroupInfoResponse](#cosmos.group.v1beta1.QueryGroupInfoResponse) | GroupInfo queries group info based on group id. | |
+| `GroupAccountInfo` | [QueryGroupAccountInfoRequest](#cosmos.group.v1beta1.QueryGroupAccountInfoRequest) | [QueryGroupAccountInfoResponse](#cosmos.group.v1beta1.QueryGroupAccountInfoResponse) | GroupAccountInfo queries group account info based on group account address. | |
+| `GroupMembers` | [QueryGroupMembersRequest](#cosmos.group.v1beta1.QueryGroupMembersRequest) | [QueryGroupMembersResponse](#cosmos.group.v1beta1.QueryGroupMembersResponse) | GroupMembers queries members of a group | |
+| `GroupsByAdmin` | [QueryGroupsByAdminRequest](#cosmos.group.v1beta1.QueryGroupsByAdminRequest) | [QueryGroupsByAdminResponse](#cosmos.group.v1beta1.QueryGroupsByAdminResponse) | GroupsByAdmin queries groups by admin address. | |
+| `GroupAccountsByGroup` | [QueryGroupAccountsByGroupRequest](#cosmos.group.v1beta1.QueryGroupAccountsByGroupRequest) | [QueryGroupAccountsByGroupResponse](#cosmos.group.v1beta1.QueryGroupAccountsByGroupResponse) | GroupAccountsByGroup queries group accounts by group id. | |
+| `GroupAccountsByAdmin` | [QueryGroupAccountsByAdminRequest](#cosmos.group.v1beta1.QueryGroupAccountsByAdminRequest) | [QueryGroupAccountsByAdminResponse](#cosmos.group.v1beta1.QueryGroupAccountsByAdminResponse) | GroupsByAdmin queries group accounts by admin address. | |
+| `Proposal` | [QueryProposalRequest](#cosmos.group.v1beta1.QueryProposalRequest) | [QueryProposalResponse](#cosmos.group.v1beta1.QueryProposalResponse) | Proposal queries a proposal based on proposal id. | |
+| `ProposalsByGroupAccount` | [QueryProposalsByGroupAccountRequest](#cosmos.group.v1beta1.QueryProposalsByGroupAccountRequest) | [QueryProposalsByGroupAccountResponse](#cosmos.group.v1beta1.QueryProposalsByGroupAccountResponse) | ProposalsByGroupAccount queries proposals based on group account address. | |
+| `VoteByProposalVoter` | [QueryVoteByProposalVoterRequest](#cosmos.group.v1beta1.QueryVoteByProposalVoterRequest) | [QueryVoteByProposalVoterResponse](#cosmos.group.v1beta1.QueryVoteByProposalVoterResponse) | VoteByProposalVoter queries a vote by proposal id and voter. | |
+| `VotesByProposal` | [QueryVotesByProposalRequest](#cosmos.group.v1beta1.QueryVotesByProposalRequest) | [QueryVotesByProposalResponse](#cosmos.group.v1beta1.QueryVotesByProposalResponse) | VotesByProposal queries a vote by proposal. | |
+| `VotesByVoter` | [QueryVotesByVoterRequest](#cosmos.group.v1beta1.QueryVotesByVoterRequest) | [QueryVotesByVoterResponse](#cosmos.group.v1beta1.QueryVotesByVoterResponse) | VotesByVoter queries a vote by voter. | |
 
  <!-- end services -->
 

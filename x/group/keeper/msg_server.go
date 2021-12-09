@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 	"encoding/binary"
 	"fmt"
@@ -261,18 +260,13 @@ func (k Keeper) CreateGroupAccount(goCtx context.Context, req *group.MsgCreateGr
 
 	// Generate group account address.
 	var accountAddr sdk.AccAddress
-	var accountDerivationKey []byte
 	// loop here in the rare case of a collision
 	for {
 		nextAccVal := k.groupAccountSeq.NextVal(ctx.KVStore(k.key))
-		buf := bytes.NewBuffer(nil)
-		err = binary.Write(buf, binary.LittleEndian, nextAccVal)
-		if err != nil {
-			return nil, err
-		}
+		var buf = make([]byte, 8)
+		binary.BigEndian.PutUint64(buf, nextAccVal)
 
-		accountDerivationKey = buf.Bytes()
-		accountAddr = address.Module(group.ModuleName, accountDerivationKey)
+		accountAddr = address.Module(group.ModuleName, buf)
 
 		if k.accKeeper.GetAccount(ctx, accountAddr) != nil {
 			// handle a rare collision
@@ -670,7 +664,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	// Execute proposal payload.
 	if proposal.Status == group.ProposalStatusClosed && proposal.Result == group.ProposalResultAccepted && proposal.ExecutorResult != group.ProposalExecutorResultSuccess {
 		logger := ctx.Logger().With("module", fmt.Sprintf("x/%s", group.ModuleName))
-		// Cashing context so that we don't update the store in case of failure.
+		// Caching context so that we don't update the store in case of failure.
 		ctx, flush := ctx.CacheContext()
 
 		addr, err := sdk.AccAddressFromBech32(accountInfo.Address)

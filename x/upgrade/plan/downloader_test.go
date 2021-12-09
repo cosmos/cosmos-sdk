@@ -299,3 +299,51 @@ func (s *DownloaderTestSuite) TestDownloadURLWithChecksum() {
 		assert.Contains(t, err.Error(), "no content returned")
 	})
 }
+
+func (s *DownloaderTestSuite) TestValidateIsURLWithChecksum() {
+	tests := []struct {
+		name  string
+		input string
+		inErr []string
+	}{
+		{
+			name:  "fails neturl parsing",
+			input: "https://v1.cosmos.network:bad-port/sdk",
+			inErr: []string{"parse", "invalid port", "bad-port"},
+		},
+		{
+			name:  "empty string",
+			input: "",
+			inErr: []string{"missing checksum query parameter"},
+		},
+		{
+			name:  "empty checksum value",
+			input: "https://v1.cosmos.network/sdk?checksum=",
+			inErr: []string{"missing checksum query parameter"},
+		},
+		{
+			name:  "checksum has silly value",
+			input: "https://v1.cosmos.network/sdk?checksum=silly",
+			inErr: nil,
+		},
+		{
+			name:  "checksum has normal value",
+			input: "https://v1.cosmos.network/sdk?checksum=sha256:b5a2c96250612366ea272ffac6d9744aaf4b45aacd96aa7cfcb931ee3b558259",
+			inErr: nil,
+		},
+	}
+
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			actual := ValidateIsURLWithChecksum(tc.input)
+			if len(tc.inErr) > 0 {
+				require.Error(t, actual)
+				for _, expectedErr := range tc.inErr {
+					assert.Contains(t, actual.Error(), expectedErr)
+				}
+			} else {
+				require.NoError(t, actual)
+			}
+		})
+	}
+}

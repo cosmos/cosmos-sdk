@@ -2,16 +2,21 @@ package keeper_test
 
 import (
 	"context"
+
 	"encoding/json"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
@@ -20,32 +25,35 @@ import (
 type GenesisTestSuite struct {
 	suite.Suite
 
-	app              *simapp.SimApp
-	ctx              context.Context
-	genesisCtx       sdk.Context
-	keeper           keeper.Keeper
-	cdc              *codec.ProtoCodec
-	addrs            []sdk.AccAddress
-	groupAccountAddr sdk.AccAddress
+	app        *simapp.SimApp
+	ctx        context.Context
+	genesisCtx sdk.Context
+	keeper     keeper.Keeper
+	cdc        *codec.ProtoCodec
 }
 
 func TestGenesisTestSuite(t *testing.T) {
 	suite.Run(t, new(GenesisTestSuite))
 }
 
+var (
+	memberPub  = secp256k1.GenPrivKey().PubKey()
+	accPub  = secp256k1.GenPrivKey().PubKey()
+	accAddr = sdk.AccAddress(accPub.Address())
+	memberAddr = sdk.AccAddress(memberPub.Address())
+)
+
 func (s *GenesisTestSuite) SetupSuite() {
 	checkTx := false
-	app := simapp.Setup(s.T(), checkTx)
+	db := dbm.NewMemDB()
+	encCdc := simapp.MakeTestEncodingConfig()
+	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, simapp.DefaultNodeHome, 5, encCdc, simapp.EmptyAppOptions{})
 
 	s.app = app
-	s.genesisCtx = app.BaseApp.NewContext(checkTx, tmproto.Header{})
+	s.genesisCtx = app.BaseApp.NewUncachedContext(checkTx, tmproto.Header{})
 	s.keeper = app.GroupKeeper
 	s.cdc = codec.NewProtoCodec(app.InterfaceRegistry())
 	s.ctx = sdk.WrapSDKContext(s.genesisCtx)
-	s.addrs = simapp.AddTestAddrsIncremental(app, s.genesisCtx, 3, sdk.NewInt(30000000))
-	s.groupAccountAddr = s.addrs[0]
-
-	s.T().Parallel()
 }
 
 func (s *GenesisTestSuite) TestInitExportGenesis() {
@@ -57,9 +65,9 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	timeout := submittedAt.Add(time.Second * 1).UTC()
 
 	groupAccount := &group.GroupAccountInfo{
-		Address:  s.groupAccountAddr.String(),
+		Address:  accAddr.String(),
 		GroupId:  1,
-		Admin:    s.addrs[0].String(),
+		Admin:    accAddr.String(),
 		Version:  1,
 		Metadata: []byte("account metadata"),
 	}
@@ -71,12 +79,12 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 
 	proposal := &group.Proposal{
 		ProposalId:          1,
-		Address:             s.groupAccountAddr.String(),
+		Address:             accAddr.String(),
 		Metadata:            []byte("proposal metadata"),
 		GroupVersion:        1,
 		GroupAccountVersion: 1,
 		Proposers: []string{
-			s.addrs[0].String(),
+			memberAddr.String(),
 		},
 		SubmittedAt: submittedAt,
 		Status:      group.ProposalStatusClosed,
@@ -91,23 +99,22 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		ExecutorResult: group.ProposalExecutorResultSuccess,
 	}
 	err = proposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
-		FromAddress: s.groupAccountAddr.String(),
-		ToAddress:   s.addrs[1].String(),
+		FromAddress: accAddr.String(),
+		ToAddress:   memberAddr.String(),
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}})
 	s.Require().NoError(err)
 
 	genesisState := &group.GenesisState{
 		GroupSeq:        2,
-		Groups:          []*group.GroupInfo{{GroupId: 1, Admin: s.addrs[0].String(), Metadata: []byte("1"), Version: 1, TotalWeight: "1"}, {GroupId: 2, Admin: s.addrs[1].String(), Metadata: []byte("2"), Version: 2, TotalWeight: "2"}},
-		GroupMembers:    []*group.GroupMember{{GroupId: 1, Member: &group.Member{Address: s.addrs[0].String(), Weight: "1", Metadata: []byte("member metadata")}}, {GroupId: 2, Member: &group.Member{Address: s.addrs[0].String(), Weight: "2", Metadata: []byte("member metadata")}}},
+		Groups:          []*group.GroupInfo{{GroupId: 1, Admin: accAddr.String(), Metadata: []byte("1"), Version: 1, TotalWeight: "1"}, {GroupId: 2, Admin: accAddr.String(), Metadata: []byte("2"), Version: 2, TotalWeight: "2"}},
+		GroupMembers:    []*group.GroupMember{{GroupId: 1, Member: &group.Member{Address: memberAddr.String(), Weight: "1", Metadata: []byte("member metadata")}}, {GroupId: 2, Member: &group.Member{Address: memberAddr.String(), Weight: "2", Metadata: []byte("member metadata")}}},
 		GroupAccountSeq: 1,
 		GroupAccounts:   []*group.GroupAccountInfo{groupAccount},
 		ProposalSeq:     1,
 		Proposals:       []*group.Proposal{proposal},
-		Votes:           []*group.Vote{{ProposalId: proposal.ProposalId, Voter: s.addrs[0].String(), SubmittedAt: submittedAt, Choice: group.Choice_CHOICE_YES}},
+		Votes:           []*group.Vote{{ProposalId: proposal.ProposalId, Voter: memberAddr.String(), SubmittedAt: submittedAt, Choice: group.Choice_CHOICE_YES}},
 	}
-
 	genesisBytes, err := cdc.MarshalJSON(genesisState)
 	s.Require().NoError(err)
 

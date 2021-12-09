@@ -1,5 +1,3 @@
-// +build linux
-
 package cosmovisor_test
 
 import (
@@ -76,7 +74,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	// chain3-zip_dir - doesn't upgrade
 	require := s.Require()
 	home := copyTestData(s.T(), "download")
-	cfg := &cosmovisor.Config{Home: home, Name: "autod", AllowDownloadBinaries: true, PollInterval: 100, UnsafeSkipBackup: true}
+	cfg := &cosmovisor.Config{Home: home, Name: "autod", AllowDownloadBinaries: true, PollInterval: 100, UnsafeSkipBackup: true, OSArch: "linux/amd64"}
 	upgradeFilename := cfg.UpgradeInfoFilePath()
 
 	// should run the genesis binary and produce expected output

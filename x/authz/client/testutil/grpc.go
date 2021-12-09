@@ -193,14 +193,14 @@ func (s *IntegrationTestSuite) TestQueryGranterGrantsGRPC() {
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/%s", val.APIAddress, val.Address.String()),
 			false,
 			"",
-			6,
+			2,
 		},
 		{
 			"valid query: expect two grants",
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/%s", val.APIAddress, val.Address.String()),
 			false,
 			"",
-			6,
+			2,
 		},
 	}
 	for _, tc := range testCases {
@@ -212,6 +212,8 @@ func (s *IntegrationTestSuite) TestQueryGranterGrantsGRPC() {
 				var authorizations authz.QueryGrantsResponse
 				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &authorizations)
 				require.NoError(err)
+				fmt.Println("-----")
+				fmt.Println(len(authorizations.Grants), tc.numItems)
 				require.Len(authorizations.Grants, tc.numItems)
 			}
 

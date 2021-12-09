@@ -240,13 +240,13 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 	}()
 	stateCommitmentTxn := stateTxn
 	if opts.StateCommitmentDB != nil {
-		var mversions dbm.VersionSet
-		mversions, err = opts.StateCommitmentDB.Versions()
+		var scVersions dbm.VersionSet
+		scVersions, err = opts.StateCommitmentDB.Versions()
 		if err != nil {
 			return
 		}
 		// Version sets of each DB must match
-		if !versions.Equal(mversions) {
+		if !versions.Equal(scVersions) {
 			err = fmt.Errorf("Storage and StateCommitment DB have different version history") //nolint:stylecheck
 			return
 		}
@@ -262,6 +262,8 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 		stateTxn:           stateTxn,
 		StateCommitmentDB:  opts.StateCommitmentDB,
 		stateCommitmentTxn: stateCommitmentTxn,
+		mem:                mem.NewStore(),
+		tran:               transient.NewStore(),
 
 		substoreCache: map[string]*substore{},
 
@@ -284,7 +286,7 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 	if err != nil {
 		return
 	}
-	// If the loaded schema is empty, just copy the config schema;
+	// If the loaded schema is empty (for new store), just copy the config schema;
 	// Otherwise, verify it is identical to the config schema
 	if len(reg.StoreSchema) == 0 {
 		for k, v := range opts.StoreSchema {
@@ -331,8 +333,6 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 			return
 		}
 	}
-	ret.mem = mem.NewStore()
-	ret.tran = transient.NewStore()
 	ret.schema = reg.StoreSchema
 	return
 }
@@ -530,7 +530,7 @@ func (s *Store) Commit() types.CommitID {
 	if target > math.MaxInt64 {
 		panic(ErrMaximumHeight)
 	}
-	// Fast forward to initialversion if needed
+	// Fast forward to initial version if needed
 	if s.InitialVersion != 0 && target < s.InitialVersion {
 		target = s.InitialVersion
 	}
@@ -560,7 +560,7 @@ func (s *Store) Commit() types.CommitID {
 
 func (s *Store) getMerkleRoots() (ret map[string][]byte, err error) {
 	ret = map[string][]byte{}
-	for key, _ := range s.schema {
+	for key := range s.schema {
 		sub, has := s.substoreCache[key]
 		if !has {
 			sub, err = s.getSubstore(key)

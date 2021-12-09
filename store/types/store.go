@@ -319,6 +319,9 @@ func (st StoreType) String() string {
 
 	case StoreTypeSMT:
 		return "StoreTypeSMT"
+
+	case StoreTypePersistent:
+		return "StoreTypePersistent"
 	}
 
 	return "unknown store type"

@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/hashicorp/go-getter"
@@ -53,7 +52,7 @@ func DoUpgrade(cfg *Config, info upgradetypes.Plan) error {
 
 // DownloadBinary will grab the binary and place it in the proper directory
 func DownloadBinary(cfg *Config, info upgradetypes.Plan) error {
-	url, err := GetDownloadURL(info)
+	url, err := GetDownloadURL(cfg, info)
 	if err != nil {
 		return err
 	}
@@ -105,7 +104,7 @@ type UpgradeConfig struct {
 }
 
 // GetDownloadURL will check if there is an arch-dependent binary specified in Info
-func GetDownloadURL(info upgradetypes.Plan) (string, error) {
+func GetDownloadURL(cfg *Config, info upgradetypes.Plan) (string, error) {
 	doc := strings.TrimSpace(info.Info)
 	// if this is a url, then we download that and try to get a new doc with the real info
 	if _, err := url.Parse(doc); err == nil {
@@ -132,22 +131,18 @@ func GetDownloadURL(info upgradetypes.Plan) (string, error) {
 	var config UpgradeConfig
 
 	if err := json.Unmarshal([]byte(doc), &config); err == nil {
-		url, ok := config.Binaries[OSArch()]
+		url, ok := config.Binaries[cfg.OSArch]
 		if !ok {
 			url, ok = config.Binaries["any"]
 		}
 		if !ok {
-			return "", fmt.Errorf("cannot find binary for os/arch: neither %s, nor any", OSArch())
+			return "", fmt.Errorf("cannot find binary for os/arch: neither %s, nor any", cfg.OSArch)
 		}
 
 		return url, nil
 	}
 
 	return "", errors.New("upgrade info doesn't contain binary map")
-}
-
-func OSArch() string {
-	return fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
 }
 
 // EnsureBinary ensures the file exists and is executable, or returns an error

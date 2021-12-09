@@ -1,6 +1,3 @@
-//go:build linux
-// +build linux
-
 package cosmovisor_test
 
 import (
@@ -126,11 +123,6 @@ func (s *upgradeTestSuite) TestDoUpgradeNoDownloadUrl() {
 	}
 }
 
-func (s *upgradeTestSuite) TestOsArch() {
-	// all download tests will fail if we are not on linux...
-	s.Require().Equal("linux/amd64", cosmovisor.OSArch())
-}
-
 func (s *upgradeTestSuite) TestGetDownloadURL() {
 	// all download tests will fail if we are not on linux...
 	ref, err := filepath.Abs(filepath.FromSlash("./testdata/repo/ref_to_chain3-zip_dir.json"))
@@ -189,7 +181,7 @@ func (s *upgradeTestSuite) TestGetDownloadURL() {
 
 	for name, tc := range cases {
 		s.Run(name, func() {
-			url, err := cosmovisor.GetDownloadURL(upgradetypes.Plan{Info: tc.info})
+			url, err := cosmovisor.GetDownloadURL(&cosmovisor.Config{OSArch: "linux/amd64"}, upgradetypes.Plan{Info: tc.info})
 			switch e := tc.err.(type) {
 			case nil:
 				s.Require().NoError(err)
@@ -258,6 +250,7 @@ func (s *upgradeTestSuite) TestDownloadBinary() {
 				Home:                  home,
 				Name:                  "autod",
 				AllowDownloadBinaries: true,
+				OSArch:                "linux/amd64",
 			}
 
 			url := tc.url
@@ -269,7 +262,7 @@ func (s *upgradeTestSuite) TestDownloadBinary() {
 			const upgrade = "amazonas"
 			info := upgradetypes.Plan{
 				Name: upgrade,
-				Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, cosmovisor.OSArch(), url),
+				Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, "linux/amd64", url),
 			}
 
 			err = cosmovisor.DownloadBinary(cfg, info)

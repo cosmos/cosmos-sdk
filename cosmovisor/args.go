@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -48,6 +49,7 @@ type Config struct {
 	PollInterval          time.Duration
 	UnsafeSkipBackup      bool
 	PreupgradeMaxRetries  int
+	OSArch                string
 
 	// currently running upgrade
 	currentUpgrade upgradetypes.Plan
@@ -129,8 +131,9 @@ func (cfg *Config) CurrentBin() (string, error) {
 func GetConfigFromEnv() (*Config, error) {
 	var errs []error
 	cfg := &Config{
-		Home: os.Getenv(EnvHome),
-		Name: os.Getenv(EnvName),
+		Home:   os.Getenv(EnvHome),
+		Name:   os.Getenv(EnvName),
+		OSArch: OSArch(),
 	}
 
 	var err error
@@ -174,6 +177,10 @@ func GetConfigFromEnv() (*Config, error) {
 		return nil, cverrors.FlattenErrors(errs...)
 	}
 	return cfg, nil
+}
+
+func OSArch() string {
+	return fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
 }
 
 // LogConfigOrError logs either the config details or the error.
@@ -306,6 +313,7 @@ func (cfg Config) DetailString() string {
 		{EnvInterval, fmt.Sprintf("%s", cfg.PollInterval)},
 		{EnvSkipBackup, fmt.Sprintf("%t", cfg.UnsafeSkipBackup)},
 		{EnvPreupgradeMaxRetries, fmt.Sprintf("%d", cfg.PreupgradeMaxRetries)},
+		{"os/arch", cfg.OSArch},
 	}
 	derivedEntries := []struct{ name, value string }{
 		{"Root Dir", cfg.Root()},

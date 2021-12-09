@@ -326,6 +326,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 			PollInterval:          time.Millisecond * time.Duration(interval),
 			UnsafeSkipBackup:      skipBackup,
 			PreupgradeMaxRetries:  preupgradeMaxRetries,
+			OSArch:                OSArch(),
 		}
 	}
 

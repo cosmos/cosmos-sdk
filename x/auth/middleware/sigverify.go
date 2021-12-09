@@ -487,7 +487,7 @@ func (svd sigVerificationTxHandler) sigVerify(ctx context.Context, req tx.Reques
 			ChainID:       chainID,
 			AccountNumber: accNum,
 			Sequence:      acc.GetSequence(),
-			SignerIndex:   i,
+			PubKey:        pubKey,
 		}
 
 		if !simulate {

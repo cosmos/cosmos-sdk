@@ -667,6 +667,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 		args         []string
 		expectedCode uint32
 		expectErr    bool
+		expectErrMsg string
 	}{
 		{
 			"valid txn",
@@ -679,6 +680,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 			},
 			0,
 			false,
+			"",
 		},
 		{
 			"error over grantee doesn't exist on chain",
@@ -691,6 +693,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 			},
 			0,
 			true,
+			"insufficient funds",
 		},
 		{
 			"error over spent",
@@ -703,6 +706,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 			},
 			4,
 			false,
+			"",
 		},
 	}
 
@@ -715,6 +719,13 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
+				var response sdk.TxResponse
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
+
+				fmt.Println("----------")
+				fmt.Println(tc.expectErrMsg)
+				fmt.Println("----------")
+				fmt.Println(response.RawLog)
 			} else {
 				var response sdk.TxResponse
 				s.Require().NoError(err)

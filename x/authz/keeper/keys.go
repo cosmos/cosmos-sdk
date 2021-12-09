@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -9,9 +11,18 @@ import (
 )
 
 // Keys for store prefixes
+// Items are stored with the following key: values
+//
+// - 0x01<grant_Bytes>: Grant
+//
+// - 0x02<grant_expiration_Bytes><grant_Bytes>: grantKey
+//
 var (
-	GrantKey = []byte{0x01} // prefix for each key
+	GrantKey                = []byte{0x01} // prefix for each key
+	ExpiredGrantQueuePrefix = []byte{0x02}
 )
+
+var lenTime = len(sdk.FormatTimeBytes(time.Now()))
 
 // StoreKey is the store key string for authz
 const StoreKey = authz.ModuleName
@@ -48,4 +59,52 @@ func addressesFromGrantStoreKey(key []byte) (granterAddr, granteeAddr sdk.AccAdd
 	granteeAddr = sdk.AccAddress(key[3+granterAddrLen : 3+granterAddrLen+byte(granteeAddrLen)])
 
 	return granterAddr, granteeAddr
+}
+
+func splitExpiredGrantQueueKey(key []byte) (expiration time.Time, grantee, granter sdk.AccAddress, msgType string) {
+	// key is of format:
+	// 0x02<grant_expiration_Bytes><granterAddressLen (1 Byte)><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes><msgType_Bytes>
+
+	expiration, err := sdk.ParseTimeBytes(key[1 : 1+lenTime])
+	if err != nil {
+		panic(err)
+	}
+
+	kv.AssertKeyAtLeastLength(key, 1+lenTime)
+	granterAddrLen := key[1+lenTime]
+	granter = sdk.AccAddress(key[2+lenTime : byte(2+lenTime)+granterAddrLen])
+
+	granteeAddrLen := key[byte(2+lenTime)+granterAddrLen]
+	granteeStart := byte(3+lenTime) + granterAddrLen
+	grantee = sdk.AccAddress(key[granteeStart : granteeStart+granteeAddrLen])
+
+	msgType = string(key[granteeStart+granteeAddrLen:])
+
+	return expiration, grantee, granter, msgType
+}
+
+// expiredGrantByTimeKey gets the expired grant queue key by expiration
+func expiredGrantByTimeKey(expiration time.Time) []byte {
+	return append(ExpiredGrantQueuePrefix, sdk.FormatTimeBytes(expiration)...)
+}
+
+// expiredGrantQueueKey - return expired grant queue store key
+// Items are stored with the following key: values
+//
+// - 0x02<grant_expiration_Bytes><granterAddressLen (1 Byte)><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes><msgType_Bytes>: grantKey
+func expiredGrantQueueKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType string, expiration time.Time) []byte {
+	expiredGrantKey := expiredGrantByTimeKey(expiration)
+	expiredGrantKeyLen := len(expiredGrantByTimeKey(expiration))
+
+	m := conv.UnsafeStrToBytes(msgType)
+	granter = address.MustLengthPrefix(granter)
+	grantee = address.MustLengthPrefix(grantee)
+
+	l := expiredGrantKeyLen + len(grantee) + len(granter) + len(m)
+	var key = make([]byte, l)
+	copy(key, expiredGrantKey)
+	copy(key[expiredGrantKeyLen:], granter)
+	copy(key[expiredGrantKeyLen+len(granter):], grantee)
+	copy(key[l-len(m):], m)
+	return key
 }

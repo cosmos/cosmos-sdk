@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -23,4 +24,17 @@ func TestGrantkey(t *testing.T) {
 	granter1, grantee1 := addressesFromGrantStoreKey(grantStoreKey(grantee, granter, msgType))
 	require.Equal(granter, granter1)
 	require.Equal(grantee, grantee1)
+}
+
+func TestExpiredQueueKey(t *testing.T) {
+	blockTime := time.Now().UTC()
+
+	key := expiredGrantQueueKey(grantee, granter, msgType, blockTime)
+
+	expiration, grantee1, granter1, authzType := splitExpiredGrantQueueKey(key)
+
+	require.Equal(t, blockTime, expiration)
+	require.Equal(t, granter, granter1)
+	require.Equal(t, grantee, grantee1)
+	require.Equal(t, msgType, authzType)
 }

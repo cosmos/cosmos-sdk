@@ -144,7 +144,7 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgCreateGroup,
-			SimulateMsgCreateGroup(ak, bk, appCdc),
+			SimulateMsgCreateGroup(ak, bk),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgCreateGroupAccount,
@@ -156,27 +156,27 @@ func WeightedOperations(
 		),
 		simulation.NewWeightedOperation(
 			weightMsgVote,
-			SimulateMsgVote(ak, bk, k, appCdc),
+			SimulateMsgVote(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgExec,
-			SimulateMsgExec(ak, bk, k, appCdc),
+			SimulateMsgExec(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgUpdateGroupMetadata,
-			SimulateMsgUpdateGroupMetadata(ak, bk, k, appCdc),
+			SimulateMsgUpdateGroupMetadata(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgUpdateGroupAdmin,
-			SimulateMsgUpdateGroupAdmin(ak, bk, k, appCdc),
+			SimulateMsgUpdateGroupAdmin(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgUpdateGroupMembers,
-			SimulateMsgUpdateGroupMembers(ak, bk, k, appCdc),
+			SimulateMsgUpdateGroupMembers(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgUpdateGroupAccountAdmin,
-			SimulateMsgUpdateGroupAccountAdmin(ak, bk, k, appCdc),
+			SimulateMsgUpdateGroupAccountAdmin(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgUpdateGroupAccountDecisionPolicy,
@@ -184,13 +184,13 @@ func WeightedOperations(
 		),
 		simulation.NewWeightedOperation(
 			weightMsgUpdateGroupAccountMetadata,
-			SimulateMsgUpdateGroupAccountMetadata(ak, bk, k, appCdc),
+			SimulateMsgUpdateGroupAccountMetadata(ak, bk, k),
 		),
 	}
 }
 
 // SimulateMsgCreateGroup generates a MsgCreateGroup with random values
-func SimulateMsgCreateGroup(ak group.AccountKeeper, bk group.BankKeeper, appCdc cdctypes.AnyUnpacker) simtypes.Operation {
+func SimulateMsgCreateGroup(ak group.AccountKeeper, bk group.BankKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		acc, _ := simtypes.RandomAcc(r, accounts)
@@ -238,7 +238,7 @@ func SimulateMsgCreateGroup(ak group.AccountKeeper, bk group.BankKeeper, appCdc 
 }
 
 // SimulateMsgCreateGroupAccount generates a NewMsgCreateGroupAccount with random values
-func SimulateMsgCreateGroupAccount(ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper, cdc codec.ProtoCodec) simtypes.Operation {
+func SimulateMsgCreateGroupAccount(ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper, appCdc cdctypes.AnyUnpacker) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		acc := accounts[0]
@@ -298,11 +298,11 @@ func SimulateMsgCreateGroupAccount(ak group.AccountKeeper, bk group.BankKeeper, 
 			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
-		err = msg.UnpackInterfaces(cdc)
+		err = msg.UnpackInterfaces(appCdc)
 		if err != nil {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "unmarshal error"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroupAccount, "unmarshal error"), nil, err
 		}
-		return simtypes.NewOperationMsg(msg, true, "", appCdc), nil, err
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
 	}
 }
 
@@ -375,12 +375,17 @@ func SimulateMsgCreateProposal(ak group.AccountKeeper, bk group.BankKeeper, k ke
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
-		return simtypes.NewOperationMsg(&msg, true, "", appCdc), nil, err
+
+		err = msg.UnpackInterfaces(appCdc)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, "unmarshal error"), nil, err
+		}
+		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
 	}
 }
 
 // SimulateMsgUpdateGroupAdmin generates a MsgUpdateGroupAccountAdmin with random values
-func SimulateMsgUpdateGroupAdmin(ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper, appCdc cdctypes.AnyUnpacker) simtypes.Operation {
+func SimulateMsgUpdateGroupAdmin(ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		acc1 := accounts[0]
@@ -435,12 +440,12 @@ func SimulateMsgUpdateGroupAdmin(ak group.AccountKeeper, bk group.BankKeeper, k 
 			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(&msg, true, "", appCdc), nil, err
+		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
 	}
 }
 
 // SimulateMsgUpdateGroupMetadata generates a MsgUpdateGroupMetadata with random values
-func SimulateMsgUpdateGroupMetadata(ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper, appCdc cdctypes.AnyUnpacker) simtypes.Operation {
+func SimulateMsgUpdateGroupMetadata(ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		acc := accounts[0]
@@ -488,13 +493,13 @@ func SimulateMsgUpdateGroupMetadata(ak group.AccountKeeper, bk group.BankKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(&msg, true, "", appCdc), nil, err
+		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
 	}
 }
 
 // SimulateMsgUpdateGroupMembers generates a MsgUpdateGroupMembers with random values
 func SimulateMsgUpdateGroupMembers(ak group.AccountKeeper,
-	bk group.BankKeeper, k keeper.Keeper, appCdc cdctypes.AnyUnpacker) simtypes.Operation {
+	bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		acc1 := accounts[0]
@@ -562,12 +567,12 @@ func SimulateMsgUpdateGroupMembers(ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(&msg, true, "", appCdc), nil, err
+		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
 	}
 }
 
 // SimulateMsgUpdateGroupAccountAdmin generates a MsgUpdateGroupAccountAdmin with random values
-func SimulateMsgUpdateGroupAccountAdmin(ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper, appCdc cdctypes.AnyUnpacker) simtypes.Operation {
+func SimulateMsgUpdateGroupAccountAdmin(ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		acc1 := accounts[0]
@@ -622,7 +627,7 @@ func SimulateMsgUpdateGroupAccountAdmin(ak group.AccountKeeper, bk group.BankKee
 			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(&msg, true, "", appCdc), nil, err
+		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
 	}
 }
 
@@ -692,14 +697,17 @@ func SimulateMsgUpdateGroupAccountDecisionPolicy(ak group.AccountKeeper,
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
-
-		return simtypes.NewOperationMsg(msg, true, "", appCdc), nil, err
+		err = msg.UnpackInterfaces(appCdc)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountDecisionPolicy, "unmarshal error"), nil, err
+		}
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
 	}
 }
 
 // SimulateMsgUpdateGroupAccountMetadata generates a MsgUpdateGroupAccountMetadata with random values
 func SimulateMsgUpdateGroupAccountMetadata(ak group.AccountKeeper,
-	bk group.BankKeeper, k keeper.Keeper, appCdc cdctypes.AnyUnpacker) simtypes.Operation {
+	bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		acc1 := accounts[0]
@@ -759,7 +767,7 @@ func SimulateMsgUpdateGroupAccountMetadata(ak group.AccountKeeper,
 
 // SimulateMsgVote generates a MsgVote with random values
 func SimulateMsgVote(ak group.AccountKeeper,
-	bk group.BankKeeper, k keeper.Keeper, appCdc cdctypes.AnyUnpacker) simtypes.Operation {
+	bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		acc1 := accounts[0]
@@ -847,13 +855,13 @@ func SimulateMsgVote(ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(&msg, true, "", appCdc), nil, err
+		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
 	}
 }
 
 // SimulateMsgExec generates a MsgExec with random values
 func SimulateMsgExec(ak group.AccountKeeper,
-	bk group.BankKeeper, k keeper.Keeper, appCdc cdctypes.AnyUnpacker) simtypes.Operation {
+	bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		acc1 := accounts[0]
@@ -931,7 +939,7 @@ func SimulateMsgExec(ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(&msg, true, "", appCdc), nil, err
+		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
 	}
 }
 

@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
+	upgradeplan "github.com/cosmos/cosmos-sdk/x/upgrade/plan"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -272,7 +273,7 @@ func (s *upgradeTestSuite) TestDownloadBinary() {
 				s.Require().NoError(err)
 			}
 
-			err = cosmovisor.EnsureBinary(cfg.UpgradeBin(upgrade))
+			err = upgradeplan.EnsureBinary(cfg.UpgradeBin(upgrade))
 			if tc.validBinary {
 				s.Require().NoError(err)
 			}

@@ -15,6 +15,7 @@ import (
 
 	"github.com/otiai10/copy"
 
+	upgradeplan "github.com/cosmos/cosmos-sdk/x/upgrade/plan"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -37,7 +38,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 		return false, fmt.Errorf("error creating symlink to genesis: %w", err)
 	}
 
-	if err := EnsureBinary(bin); err != nil {
+	if err := upgradeplan.EnsureBinary(bin); err != nil {
 		return false, fmt.Errorf("current binary is invalid: %w", err)
 	}
 	Logger.Info().Str("path", bin).Strs("args", args).Msg("running app")

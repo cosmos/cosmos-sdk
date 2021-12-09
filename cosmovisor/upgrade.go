@@ -14,7 +14,7 @@ import (
 // in a state, so we can make a proper restart
 func DoUpgrade(cfg *Config, info upgradetypes.Plan) error {
 	// Simplest case is to switch the link
-	err := EnsureBinary(cfg.UpgradeBin(info.Name))
+	err := upgradeplan.EnsureBinary(cfg.UpgradeBin(info.Name))
 	if err == nil {
 		// we have the binary - do it
 		return cfg.SetCurrentUpgrade(info)
@@ -37,7 +37,7 @@ func DoUpgrade(cfg *Config, info upgradetypes.Plan) error {
 	Logger.Info().Msg("Downloading binary complete")
 
 	// and then set the binary again
-	if err := EnsureBinary(cfg.UpgradeBin(info.Name)); err != nil {
+	if err = upgradeplan.EnsureBinary(cfg.UpgradeBin(info.Name)); err != nil {
 		return fmt.Errorf("downloaded binary doesn't check out: %w", err)
 	}
 
@@ -67,24 +67,4 @@ func GetDownloadURL(cfg *Config, plan upgradetypes.Plan) (string, error) {
 		}
 	}
 	return url, nil
-}
-
-// EnsureBinary ensures the file exists and is executable, or returns an error
-func EnsureBinary(path string) error {
-	info, err := os.Stat(path)
-	if err != nil {
-		return fmt.Errorf("cannot stat dir %s: %w", path, err)
-	}
-
-	if !info.Mode().IsRegular() {
-		return fmt.Errorf("%s is not a regular file", info.Name())
-	}
-
-	// this checks if the world-executable bit is set (we cannot check owner easily)
-	exec := info.Mode().Perm() & 0001
-	if exec == 0 {
-		return fmt.Errorf("%s is not world executable", info.Name())
-	}
-
-	return nil
 }

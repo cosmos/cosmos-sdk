@@ -166,12 +166,20 @@ func (g GroupAccountInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) erro
 	return unpacker.UnpackAny(g.DecisionPolicy, &decisionPolicy)
 }
 
+func (g GroupInfo) PrimaryKeyFields() []interface{} {
+	return []interface{}{g.GroupId}
+}
+
 func (g GroupAccountInfo) PrimaryKeyFields() []interface{} {
 	addr, err := sdk.AccAddressFromBech32(g.Address)
 	if err != nil {
 		panic(err)
 	}
 	return []interface{}{addr.Bytes()}
+}
+
+func (g Proposal) PrimaryKeyFields() []interface{} {
+	return []interface{}{g.ProposalId}
 }
 
 func (g GroupAccountInfo) ValidateBasic() error {

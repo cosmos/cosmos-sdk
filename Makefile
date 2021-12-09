@@ -483,8 +483,13 @@ localnet-build-dlv:
 	$(MAKE) -C contrib/images simd-dlv
 
 localnet-build-nodes:
-	$(DOCKER) run --rm -v $(CURDIR)/.testnets:/data cosmossdk/simd \
-    		  testnet init-files --v 4 --starting-ip-address 192.168.10.2 --keyring-backend=test
+	if ! [ -f .localnet/node0/simd/config/genesis.json ]; then \
+		$(DOCKER) run --rm -v $(CURDIR)/.testnets:/data cosmossdk/simd \
+    		testnet init-files \
+    		--v 4 \
+    		--starting-ip-address 192.168.10.2 \
+    		--keyring-backend=test \
+    ; fi
 	docker-compose up -d
 
 localnet-stop:

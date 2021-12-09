@@ -330,42 +330,11 @@ func (store *Store) dirtyItems(start, end []byte) {
 				unsorted = append(unsorted, &kv.Pair{Key: keyBz, Value: cacheValue.value})
 			}
 		}
-		store.clearUnsortedCacheSubset(unsorted, stateUnsorted)
-		return
 	}
-
-	// Otherwise it is large so perform a modified binary search to find
-	// the target ranges for the keys that we should be looking for.
-	strL := make([]string, 0, n)
-	for key := range store.unsortedCache {
-		strL = append(strL, key)
-	}
-	sort.Strings(strL)
-
-	// Now find the values within the domain
-	//  [start, end)
-	startIndex := findStartIndex(strL, startStr)
-	endIndex := findEndIndex(strL, endStr)
-
-	if endIndex < 0 {
-		endIndex = len(strL) - 1
-	}
-	if startIndex < 0 {
-		startIndex = 0
-	}
-
-	kvL := make([]*kv.Pair, 0)
-	for i := startIndex; i <= endIndex; i++ {
-		key := strL[i]
-		cacheValue := store.cache[key]
-		kvL = append(kvL, &kv.Pair{Key: []byte(key), Value: cacheValue.value})
-	}
-
-	// kvL was already sorted so pass it in as is.
-	store.clearUnsortedCacheSubset(kvL, stateAlreadySorted)
+	store.clearUnsortedCacheSubset(unsorted)
 }
 
-func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair, sortState sortState) {
+func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair) {
 	n := len(store.unsortedCache)
 	if len(unsorted) == n { // This pattern allows the Go compiler to emit the map clearing idiom for the entire map.
 		for key := range store.unsortedCache {
@@ -374,15 +343,12 @@ func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair, sortState sort
 		store.unsortedCache = make(map[string]struct{}, 300)
 	} else { // Otherwise, normally delete the unsorted keys from the map.
 		for _, kv := range unsorted {
-			delete(store.unsortedCache, conv.UnsafeBytesToStr(kv.Key))
+			delete(store.unsortedCache, byteSliceToStr(kv.Key))
 		}
 	}
-
-	if sortState == stateUnsorted {
-		sort.Slice(unsorted, func(i, j int) bool {
-			return bytes.Compare(unsorted[i].Key, unsorted[j].Key) < 0
-		})
-	}
+	sort.Slice(unsorted, func(i, j int) bool {
+		return bytes.Compare(unsorted[i].Key, unsorted[j].Key) < 0
+	})
 
 	for _, item := range unsorted {
 		if item.Value == nil {

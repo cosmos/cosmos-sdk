@@ -29,15 +29,10 @@ func newMemIterator(start, end []byte, items *dbm.MemDB, deleted map[string]stru
 		panic(err)
 	}
 
-	newDeleted := make(map[string]struct{})
-	for k, v := range deleted {
-		newDeleted[k] = v
-	}
-
 	return &memIterator{
 		Iterator: iter,
 
-		deleted: newDeleted,
+		deleted: deleted,
 	}
 }
 

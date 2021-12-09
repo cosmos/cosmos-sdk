@@ -429,7 +429,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 				fmt.Sprintf("--%s=true", flags.FlagOffline),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 			},
-			false, 0, &sdk.TxResponse{},
+			true, 0, &sdk.TxResponse{},
 		},
 		{
 			"not enough fees",
@@ -482,6 +482,8 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(bz.Bytes(), tc.respType), bz.String())
 				txResp := tc.respType.(*sdk.TxResponse)
+				fmt.Println("----------")
+				fmt.Println(tc.expectedCode, txResp.Code)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}
 		})

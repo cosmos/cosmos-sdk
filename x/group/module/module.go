@@ -18,6 +18,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
+	"github.com/cosmos/cosmos-sdk/x/group/simulation"
 )
 
 var (
@@ -28,10 +29,10 @@ var (
 
 type AppModule struct {
 	AppModuleBasic
-	keeper        groupkeeper.Keeper
-	BankKeeper    group.BankKeeper
-	AccountKeeper group.AccountKeeper
-	registry      cdctypes.InterfaceRegistry
+	keeper     groupkeeper.Keeper
+	bankKeeper group.BankKeeper
+	accKeeper  group.AccountKeeper
+	registry   cdctypes.InterfaceRegistry
 }
 
 // NewAppModule creates a new AppModule object
@@ -39,8 +40,8 @@ func NewAppModule(cdc codec.Codec, keeper groupkeeper.Keeper, ak group.AccountKe
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
-		BankKeeper:     bk,
-		AccountKeeper:  ak,
+		bankKeeper:     bk,
+		accKeeper:      ak,
 		registry:       registry,
 	}
 }
@@ -178,6 +179,8 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	// TODO
-	return nil
+	return simulation.WeightedOperations(
+		simState.AppParams, simState.Cdc,
+		am.accKeeper, am.bankKeeper, am.keeper, am.cdc,
+	)
 }

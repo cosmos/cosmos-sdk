@@ -12,19 +12,15 @@ import (
 )
 
 // DownloadUpgrade downloads the given url into the provided directory and ensures it's valid.
-// The provided url must contain a checksum parameter that matches the file being downloaded.
+// If the provided url contains a checksum parameter, it must match the file being downloaded.
 // If this returns nil, the download was successful, and {dstRoot}/bin/{daemonName} is a regular executable file.
 // This is an opinionated directory structure that corresponds with Cosmovisor requirements.
 // If the url is not an archive, it is downloaded and saved to {dstRoot}/bin/{daemonName}.
 // If the url is an archive, it is downloaded and unpacked to {dstRoot}.
 //    If the archive does not contain a /bin/{daemonName} file, then this will attempt to move /{daemonName} to /bin/{daemonName}.
 //    If the archive does not contain either /bin/{daemonName} or /{daemonName}, an error is returned.
-// Note: Because a checksum is required, this function cannot be used to download non-archive directories.
 // If dstRoot already exists, some or all of its contents might be updated.
 func DownloadUpgrade(dstRoot, url, daemonName string) error {
-	if err := ValidateIsURLWithChecksum(url); err != nil {
-		return err
-	}
 	target := filepath.Join(dstRoot, "bin", daemonName)
 	// First try to download it as a single file. If there's no error, it's okay and we're done.
 	if err := getter.GetFile(target, url); err != nil {
@@ -96,18 +92,15 @@ func EnsureBinary(path string) error {
 }
 
 // DownloadURLWithChecksum gets the contents of the given url, ensuring the checksum is correct.
-// The provided url must contain a checksum parameter that matches the file being downloaded.
+// The provided url should contain a checksum parameter that matches the file being downloaded.
 // If there isn't an error, the content returned by the url will be returned as a string.
 // Returns an error if:
-//  - The url is not a URL or does not contain a checksum parameter.
+//  - The url is not a URL.
 //  - Downloading the URL fails.
-//  - The checksum does not match what is returned by the URL.
+//  - The url has a checksum query parameter and the checksum does not match what is returned by the URL.
 //  - The URL does not return a regular file.
 //  - The downloaded file is empty or only whitespace.
 func DownloadURLWithChecksum(url string) (string, error) {
-	if err := ValidateIsURLWithChecksum(url); err != nil {
-		return "", err
-	}
 	tempDir, err := os.MkdirTemp("", "reference")
 	if err != nil {
 		return "", fmt.Errorf("could not create temp directory: %w", err)

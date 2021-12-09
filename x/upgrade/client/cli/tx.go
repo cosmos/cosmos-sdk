@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -16,10 +17,13 @@ import (
 )
 
 const (
-	FlagUpgradeHeight = "upgrade-height"
-	FlagUpgradeInfo   = "upgrade-info"
-	FlagNoValidate    = "no-validate"
-	FlagDaemonName    = "daemon-name"
+	FlagUpgradeHeight    = "upgrade-height"
+	FlagUpgradeInfo      = "upgrade-info"
+	FlagNoValidate       = "no-validate"
+	FlagNoValidateInfoCS = "no-validate-info-checksum"
+	FlagNoValidateBinCS  = "no validate-binary-checksums"
+	FlagNoValidateCS     = "no-validate-checksums"
+	FlagDaemonName       = "daemon-name"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -58,14 +62,24 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 			if !noValidate {
 				prop := content.(*types.SoftwareUpgradeProposal)
 				var daemonName string
+				var noValCS, noValInfoCS, noValBinCS bool
 				if daemonName, err = cmd.Flags().GetString(FlagDaemonName); err != nil {
 					return err
 				}
-				var planInfo *plan.Info
-				if planInfo, err = plan.ParseInfo(prop.Plan.Info); err != nil {
+				if noValCS, err = cmd.Flags().GetBool(FlagNoValidateCS); err != nil {
 					return err
 				}
-				if err = planInfo.ValidateFull(daemonName); err != nil {
+				if noValInfoCS, err = cmd.Flags().GetBool(FlagNoValidateInfoCS); err != nil {
+					return err
+				}
+				if noValBinCS, err = cmd.Flags().GetBool(FlagNoValidateBinCS); err != nil {
+					return err
+				}
+				var planInfo *plan.Info
+				if planInfo, err = plan.ParseInfo(prop.Plan.Info, !noValCS && !noValInfoCS); err != nil {
+					return err
+				}
+				if err = planInfo.ValidateFull(daemonName, !noValCS && !noValBinCS); err != nil {
 					return err
 				}
 			}
@@ -96,6 +110,9 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 	cmd.Flags().Int64(FlagUpgradeHeight, 0, "The height at which the upgrade must happen")
 	cmd.Flags().String(FlagUpgradeInfo, "", "Info for the upgrade plan such as new version download urls, etc.")
 	cmd.Flags().Bool(FlagNoValidate, false, "Skip validation of the upgrade info")
+	cmd.Flags().Bool(FlagNoValidateInfoCS, false, "Do not require a url in the info string to have a checksum")
+	cmd.Flags().Bool(FlagNoValidateBinCS, false, "Do not require urls to binaries to have a checksum")
+	cmd.Flags().Bool(FlagNoValidateCS, false, fmt.Sprintf("Do not require any urls to have a checksum. same as --%s --%s", FlagNoValidateInfoCS, FlagNoValidateBinCS))
 	cmd.Flags().String(FlagDaemonName, getDefaultDaemonName(), "The name of the executable being upgraded (for upgrade-info validation). Default is the DAEMON_NAME env var if set, or else this executable")
 
 	return cmd

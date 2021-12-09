@@ -681,6 +681,18 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 			false,
 		},
 		{
+			"error over grantee doesn't exist on chain",
+			[]string{
+				execMsg.Name(),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			0,
+			true,
+		},
+		{
 			"error over spent",
 			[]string{
 				execMsg.Name(),

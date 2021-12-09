@@ -1,17 +1,11 @@
 package cosmovisor
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net/url"
 	"os"
-	"path/filepath"
-	"strings"
 
-	"github.com/hashicorp/go-getter"
-	"github.com/otiai10/copy"
-
+	upgradeplan "github.com/cosmos/cosmos-sdk/x/upgrade/plan"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -37,7 +31,7 @@ func DoUpgrade(cfg *Config, info upgradetypes.Plan) error {
 
 	// If not there, then we try to download it... maybe
 	Logger.Info().Msg("No upgrade binary found, beginning to download it")
-	if err := DownloadBinary(cfg, info); err != nil {
+	if err = DownloadBinary(cfg, info); err != nil {
 		return fmt.Errorf("cannot download binary. %w", err)
 	}
 	Logger.Info().Msg("Downloading binary complete")
@@ -51,98 +45,28 @@ func DoUpgrade(cfg *Config, info upgradetypes.Plan) error {
 }
 
 // DownloadBinary will grab the binary and place it in the proper directory
-func DownloadBinary(cfg *Config, info upgradetypes.Plan) error {
-	url, err := GetDownloadURL(cfg, info)
+func DownloadBinary(cfg *Config, plan upgradetypes.Plan) error {
+	url, err := GetDownloadURL(cfg, plan)
 	if err != nil {
 		return err
 	}
+	return upgradeplan.DownloadUpgrade(cfg.UpgradeDir(plan.Name), url, cfg.Name)
+}
 
-	// download into the bin dir (works for one file)
-	binPath := cfg.UpgradeBin(info.Name)
-	err = getter.GetFile(binPath, url)
-
-	// if this fails, let's see if it is a zipped directory
+// GetDownloadURL gets the url for the arch-dependant binary download.
+func GetDownloadURL(cfg *Config, plan upgradetypes.Plan) (string, error) {
+	info, err := upgradeplan.ParseInfo(plan.Info)
 	if err != nil {
-		dirPath := cfg.UpgradeDir(info.Name)
-		err = getter.Get(dirPath, url)
-		if err != nil {
-			return err
-		}
-		err = EnsureBinary(binPath)
-		// copy binary to binPath from dirPath if zipped directory don't contain bin directory to wrap the binary
-		if err != nil {
-			err = copy.Copy(filepath.Join(dirPath, cfg.Name), binPath)
-			if err != nil {
-				return err
-			}
-		}
+		return "", err
 	}
-
-	// if it is successful, let's ensure the binary is executable
-	return MarkExecutable(binPath)
-}
-
-// MarkExecutable will try to set the executable bits if not already set
-// Fails if file doesn't exist or we cannot set those bits
-func MarkExecutable(path string) error {
-	info, err := os.Stat(path)
-	if err != nil {
-		return fmt.Errorf("stating binary: %w", err)
-	}
-	// end early if world exec already set
-	if info.Mode()&0001 == 1 {
-		return nil
-	}
-	// now try to set all exec bits
-	newMode := info.Mode().Perm() | 0111
-	return os.Chmod(path, newMode)
-}
-
-// UpgradeConfig is expected format for the info field to allow auto-download
-type UpgradeConfig struct {
-	Binaries map[string]string `json:"binaries"`
-}
-
-// GetDownloadURL will check if there is an arch-dependent binary specified in Info
-func GetDownloadURL(cfg *Config, info upgradetypes.Plan) (string, error) {
-	doc := strings.TrimSpace(info.Info)
-	// if this is a url, then we download that and try to get a new doc with the real info
-	if _, err := url.Parse(doc); err == nil {
-		tmpDir, err := os.MkdirTemp("", "upgrade-manager-reference")
-		if err != nil {
-			return "", fmt.Errorf("create tempdir for reference file: %w", err)
-		}
-		defer os.RemoveAll(tmpDir)
-
-		refPath := filepath.Join(tmpDir, "ref")
-		if err := getter.GetFile(refPath, doc); err != nil {
-			return "", fmt.Errorf("downloading reference link %s: %w", doc, err)
-		}
-
-		refBytes, err := os.ReadFile(refPath)
-		if err != nil {
-			return "", fmt.Errorf("reading downloaded reference: %w", err)
-		}
-		// if download worked properly, then we use this new file as the binary map to parse
-		doc = string(refBytes)
-	}
-
-	// check if it is the upgrade config
-	var config UpgradeConfig
-
-	if err := json.Unmarshal([]byte(doc), &config); err == nil {
-		url, ok := config.Binaries[cfg.OSArch]
-		if !ok {
-			url, ok = config.Binaries["any"]
-		}
-		if !ok {
+	url, found := info.Binaries[cfg.OSArch]
+	if !found {
+		url, found = info.Binaries["any"]
+		if !found {
 			return "", fmt.Errorf("cannot find binary for os/arch: neither %s, nor any", cfg.OSArch)
 		}
-
-		return url, nil
 	}
-
-	return "", errors.New("upgrade info doesn't contain binary map")
+	return url, nil
 }
 
 // EnsureBinary ensures the file exists and is executable, or returns an error

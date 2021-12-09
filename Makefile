@@ -488,8 +488,7 @@ localnet-build-nodes:
     		testnet init-files \
     		--v 4 \
     		--starting-ip-address 192.168.10.2 \
-    		--keyring-backend=test \
-    ; fi
+    		--keyring-backend=test; fi
 	docker-compose up -d
 
 localnet-stop:

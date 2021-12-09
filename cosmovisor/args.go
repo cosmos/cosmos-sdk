@@ -32,10 +32,10 @@ const (
 )
 
 const (
-	rootName        = "cosmovisor"
-	genesisDir      = "genesis"
-	upgradesDir     = "upgrades"
-	currentLink     = "current"
+	rootName    = "cosmovisor"
+	genesisDir  = "genesis"
+	upgradesDir = "upgrades"
+	currentLink = "current"
 )
 
 // must be the same as x/upgrade/types.UpgradeInfoFilename

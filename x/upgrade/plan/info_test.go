@@ -109,21 +109,21 @@ func (s InfoTestSuite) TestParseInfo() {
 		},
 		{
 			name:            "url no checksum checksum required",
-			infoStrMaker:    makeInfoStrFuncString("file://"+goodJSONPath),
+			infoStrMaker:    makeInfoStrFuncString("file://" + goodJSONPath),
 			requireChecksum: true,
 			expectedInfo:    nil,
 			expectedInError: []string{"missing checksum query parameter"},
 		},
 		{
 			name:            "url no checksum checksum not required",
-			infoStrMaker:    makeInfoStrFuncString("file://"+goodJSONPath),
+			infoStrMaker:    makeInfoStrFuncString("file://" + goodJSONPath),
 			requireChecksum: false,
 			expectedInfo:    goodJSONAsInfo,
 			expectedInError: nil,
 		},
 		{
 			name:            "url wrong checksum checksum not required",
-			infoStrMaker:    makeInfoStrFuncString("file://"+goodJSONPath+"?checksum=sha256:8ffbfbd82a5b9932bae91ac4bda2c2d3955770b003a2143b4f7109ba788fd6b3"),
+			infoStrMaker:    makeInfoStrFuncString("file://" + goodJSONPath + "?checksum=sha256:8ffbfbd82a5b9932bae91ac4bda2c2d3955770b003a2143b4f7109ba788fd6b3"),
 			requireChecksum: false,
 			expectedInfo:    nil,
 			expectedInError: []string{"could not download url", "Checksums did not match"},
@@ -192,7 +192,7 @@ func (s InfoTestSuite) TestResolveInfo() {
 		},
 		{
 			name:            "json good whitespace padded",
-			infoStrMaker:    makeInfoStrFuncString("   "+goodJSON+"   "),
+			infoStrMaker:    makeInfoStrFuncString("   " + goodJSON + "   "),
 			expectedStr:     goodJSON,
 			expectedInError: nil,
 		},
@@ -236,21 +236,21 @@ func (s InfoTestSuite) TestResolveInfo() {
 		},
 		{
 			name:            "url no checksum checksum required",
-			infoStrMaker:    makeInfoStrFuncString("file://"+goodJSONPath),
+			infoStrMaker:    makeInfoStrFuncString("file://" + goodJSONPath),
 			requireChecksum: true,
 			expectedStr:     "",
 			expectedInError: []string{"missing checksum query parameter"},
 		},
 		{
 			name:            "url no checksum checksum not required",
-			infoStrMaker:    makeInfoStrFuncString("file://"+goodJSONPath),
+			infoStrMaker:    makeInfoStrFuncString("file://" + goodJSONPath),
 			requireChecksum: false,
 			expectedStr:     goodJSON,
 			expectedInError: nil,
 		},
 		{
 			name:            "url wrong checksum checksum not required",
-			infoStrMaker:    makeInfoStrFuncString("file://"+goodJSONPath+"?checksum=sha256:8ffbfbd82a5b9932bae91ac4bda2c2d3955770b003a2143b4f7109ba788fd6b3"),
+			infoStrMaker:    makeInfoStrFuncString("file://" + goodJSONPath + "?checksum=sha256:8ffbfbd82a5b9932bae91ac4bda2c2d3955770b003a2143b4f7109ba788fd6b3"),
 			requireChecksum: false,
 			expectedStr:     "",
 			expectedInError: []string{"could not download url", "Checksums did not match"},
@@ -369,7 +369,7 @@ func (s InfoTestSuite) TestInfoValidateFull() {
 				},
 			},
 			requireChecksums: true,
-			errs: nil,
+			errs:             nil,
 		},
 		// a failure from BinaryDownloadURLMap.ValidateBasic
 		{
@@ -382,12 +382,12 @@ func (s InfoTestSuite) TestInfoValidateFull() {
 			name: "checksum required not provided",
 			planInfo: &Info{
 				Binaries: BinaryDownloadURLMap{
-					"darwin/amd64": "file://"+darwinAMD64Path,
+					"darwin/amd64": "file://" + darwinAMD64Path,
 					"linux/386":    linux386URL,
 				},
 			},
 			requireChecksums: true,
-			errs: []string{"invalid url", "darwin/amd64", "missing checksum query parameter"},
+			errs:             []string{"invalid url", "darwin/amd64", "missing checksum query parameter"},
 		},
 		// a failure from BinaryDownloadURLMap.CheckURLS
 		{
@@ -398,7 +398,7 @@ func (s InfoTestSuite) TestInfoValidateFull() {
 				},
 			},
 			requireChecksums: true,
-			errs: []string{"error downloading binary", "darwin/arm64", "no such file or directory"},
+			errs:             []string{"error downloading binary", "darwin/arm64", "no such file or directory"},
 		},
 	}
 
@@ -566,7 +566,7 @@ func (s InfoTestSuite) TestBinaryDownloadURLMapValidateAllURLsHaveChecksum() {
 		{
 			name: "url without checksum",
 			urlMap: BinaryDownloadURLMap{
-				"has/cs": addDummyChecksum("https://v1.cosmos.network/sdk"),
+				"has/cs":       addDummyChecksum("https://v1.cosmos.network/sdk"),
 				"darwin/amd64": "https://v1.cosmos.network/sdk",
 			},
 			errs: []string{"invalid url", "darwin/amd64", "missing checksum query parameter"},

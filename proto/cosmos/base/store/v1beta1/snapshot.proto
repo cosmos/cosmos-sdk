@@ -37,6 +37,5 @@ message SnapshotKVItem {
 
 // SnapshotSchema is an exported schema of store
 message SnapshotSchema{
-  bytes key = 1;
-  bytes type = 2;
+  repeated bytes keys = 1;
 }

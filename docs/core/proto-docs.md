@@ -2603,8 +2603,7 @@ SnapshotSchema is an exported schema of store
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [bytes](#bytes) |  |  |
-| `type` | [bytes](#bytes) |  |  |
+| `keys` | [bytes](#bytes) | repeated |  |
 
 <a name="cosmos.base.store.v1beta1.SnapshotStoreItem"></a>
 

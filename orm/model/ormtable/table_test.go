@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
@@ -364,35 +363,61 @@ func testIndex(t *testing.T, model *IndexModel) {
 	index := model.index
 	if index.IsFullyOrdered() {
 		t.Logf("testing index %T %s", index, index.GetFieldNames())
-		messageType := model.table.MessageType()
 
 		it, err := model.index.PrefixIterator(model.store, nil, IteratorOptions{})
 		assert.NilError(t, err)
-		checkIteratorAgainstSlice(t, it, model.data, messageType)
+		checkIteratorAgainstSlice(t, it, model.data)
 
 		it, err = model.index.PrefixIterator(model.store, nil, IteratorOptions{Reverse: true})
 		assert.NilError(t, err)
-		checkIteratorAgainstSlice(t, it, reverseData(model.data), messageType)
+		checkIteratorAgainstSlice(t, it, reverseData(model.data))
 
 		rapid.Check(t, func(t *rapid.T) {
 			i := rapid.IntRange(0, len(model.data)-2).Draw(t, "i").(int)
 			j := rapid.IntRange(i+1, len(model.data)-1).Draw(t, "j").(int)
 
-			t.Logf("%d %d", i, j)
 			start, _, err := model.index.(ormkv.IndexCodec).EncodeKeyFromMessage(model.data[i].ProtoReflect())
 			assert.NilError(t, err)
 			end, _, err := model.index.(ormkv.IndexCodec).EncodeKeyFromMessage(model.data[j].ProtoReflect())
 			assert.NilError(t, err)
+
 			it, err = model.index.RangeIterator(model.store, start, end, IteratorOptions{})
 			assert.NilError(t, err)
-			checkIteratorAgainstSlice(t, it, model.data[i:j], messageType)
+			checkIteratorAgainstSlice(t, it, model.data[i:j+1])
+
+			it, err = model.index.RangeIterator(model.store, start, end, IteratorOptions{Reverse: true})
+			assert.NilError(t, err)
+			checkIteratorAgainstSlice(t, it, reverseData(model.data[i:j+1]))
 		})
-		//
-		//it, err = model.index.RangeIterator(model.store, nil, nil, IteratorOptions{Reverse: true})
-		//assert.NilError(t, err)
-		//checkIteratorAgainstSlice(t, it, reverseData(model.data), messageType)
 	} else {
-		t.Logf("can't automatically test unordered index %T %s, TODO: test presence of all keys", index, index.GetFieldNames())
+		t.Logf("testing unordered index %T %s", index, index.GetFieldNames())
+
+		// get all the data
+		it, err := model.index.PrefixIterator(model.store, nil, IteratorOptions{})
+		assert.NilError(t, err)
+		var data2 []proto.Message
+		for it.Next() {
+			msg, err := it.GetMessage()
+			assert.NilError(t, err)
+			data2 = append(data2, msg)
+		}
+		assert.Equal(t, len(model.data), len(data2))
+
+		// sort it
+		model2 := &IndexModel{
+			TableData: &TableData{
+				table: model.table,
+				data:  data2,
+				store: model.store,
+			},
+			index: model.index,
+		}
+		sort.Sort(model2)
+
+		// compare
+		for i := 0; i < len(data2); i++ {
+			assert.DeepEqual(t, model.data[i], data2[i], protocmp.Transform())
+		}
 	}
 
 }
@@ -406,11 +431,11 @@ func reverseData(data []proto.Message) []proto.Message {
 	return reverse
 }
 
-func checkIteratorAgainstSlice(t assert.TestingT, iterator Iterator, data []proto.Message, typ protoreflect.MessageType) {
+func checkIteratorAgainstSlice(t assert.TestingT, iterator Iterator, data []proto.Message) {
 	i := 0
 	for iterator.Next() {
-		msg := typ.New().Interface()
-		err := iterator.UnmarshalMessage(msg)
+		assert.Assert(t, i < len(data), "too many elements in iterator")
+		msg, err := iterator.GetMessage()
 		assert.NilError(t, err)
 		assert.DeepEqual(t, data[i], msg, protocmp.Transform())
 		i++

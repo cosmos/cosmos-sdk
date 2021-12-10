@@ -55,7 +55,7 @@ func DownloadBinary(cfg *Config, plan upgradetypes.Plan) error {
 
 // GetDownloadURL gets the url for the arch-dependant binary download.
 func GetDownloadURL(cfg *Config, plan upgradetypes.Plan) (string, error) {
-	info, err := upgradeplan.ParseInfo(plan.Info)
+	info, err := upgradeplan.ParseInfo(plan.Info, false)
 	if err != nil {
 		return "", err
 	}

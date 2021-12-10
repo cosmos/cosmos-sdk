@@ -29,6 +29,12 @@ For the auto-download to work, Cosmovisor expects it to be either a stringified 
 The JSON object identifies URLs used to download the new blockchain executable for different platforms (OS and Architecture, e.g. "linux/amd64").
 Such a URL can either return the executable file directly or can return an archive containing the executable and possibly other assets.
 
+If the URL returns an archive, it is decompressed into `{DAEMON_HOME}/cosmovisor/{upgrade name}`.
+Then, if `{DAEMON_HOME}/cosmovisor/{upgrade name}/bin/{DAEMON_NAME}` does not exist, but `{DAEMON_HOME}/cosmovisor/{upgrade name}/{DAEMON_NAME}` does, the latter is copied to the former.
+If the URL returns something other than an archive, it is downloaded to `{DAEMON_HOME}/cosmovisor/{upgrade name}/bin/{DAEMON_NAME}`.
+
+Both `DAEMON_HOME` and `DAEMON_NAME` are [environment variables used to configure Cosmovisor](https://github.com/cosmos/cosmos-sdk/blob/cosmovisor/v1.0.0/cosmovisor/README.md#command-line-arguments-and-environment-variables).
+
 Currently, there is no mechanism that makes Cosmovisor run a command after the upgraded chain has been restarted.
 
 ## Decision
@@ -58,23 +64,25 @@ message UpgradeInstructions {
 }
 ```
 
-All fields in the `UpgradeInstructions` SHOULD be optional.
+All fields in the `UpgradeInstructions` are optional.
 - `pre_run` is a command to run prior to the upgraded chain restarting.
-  If defined, this command SHOULD behave the same as the current [pre-upgrade](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/docs/migrations/pre-upgrade.md) command.
-  The working directory this command runs from SHOULD be `{DAEMON_HOME}/{upgrade name}`.
-- `post_run` is a command to run after the upgraded chain has been started. If defined, this command SHOULD be only executed once.
+  If defined, then the app supervisors (e.g. Cosmovisor) MUST NOT run `app pre-run`.
+  If defined, this command MUST behave the same as the current [pre-upgrade](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/docs/migrations/pre-upgrade.md) command.
+  The working directory this command runs from MUST be `{DAEMON_HOME}/cosmovisor/{upgrade name}`.
+- `post_run` is a command to run after the upgraded chain has been started. If defined, this command MUST be only executed once.
   The output and exit code SHOULD be logged but SHOULD NOT affect the running of the upgraded chain.
-  The working directory this command runs from SHOULD be `{DAEMON_HOME}/{upgrade name}`.
-- `artifacts` SHOULD allow any number of entries.
+  The working directory this command runs from MUST be `{DAEMON_HOME}/cosmovisor/{upgrade name}`.
+- `artifacts` define items to be downloaded.
   It SHOULD have only one entry per platform.
-- `description` contains additional information about the upgrade and might contain references to external resources.
+- `description` contains human-readable information about the upgrade and might contain references to external resources.
   It SHOULD NOT be used for structured processing information.
 
 ```protobuf
 message Artifact {
-  string platform = 1;
-  string url      = 2;
-  string checksum = 3;
+  string platform      = 1;
+  string url           = 2;
+  string checksum      = 3;
+  string checksum_algo = 4;
 }
 ```
 
@@ -84,15 +92,20 @@ message Artifact {
   That is, if an `Artifact` exists with a `platform` that matches the system's OS and CPU, that should be used;
   otherwise, if an `Artifact` exists with a `platform` of `any`, that should be used;
   otherwise no artifact should be downloaded.
-- `url` is a required string that MUST conform to [RFC 1738: Uniform Resource Locators](https://www.ietf.org/rfc/rfc1738.txt).
-- `checksum` SHOULD be provided, but is not required.
-  It SHOULD be a hex encoded checksum of the expected result of a request to the `url`.
-  Implementations utilizing these `UpgradeInstructions` SHOULD fail if the checksum of the result of the `url` is not equal to this provided `checksum`.
-  SHA-256 SHOULD be the default hashing algorithm.
-  This `checksum` field SHOULD allow other hashing algorithms by allowing the checksum to be prefixed by the algorithm, then a colon.
-  E.g. A `checksum` of `"sha256:6e4003b3104a5936d8142191352ba6b7af530fcb883578946b538a816a9571f9"` SHOULD be equal to `"6e4003b3104a5936d8142191352ba6b7af530fcb883578946b538a816a9571f9"`,
-  and a `checksum` of `"sha512:2cafa43204f0f51229c01c1bdd3b29b6a446bfdc313a474a7091a87fe122d3defaee0de7aa7534496385c8dad02a8d76a8c39634c742677d20c9fdc2da59448e"` SHOULD be allowed.
-  If the `url` contains a `checksum` query parameter, this `checksum` field SHOULD still be populated and if populated MUST equal the query parameter `checksum` value.
+- `url` is a required URL string that MUST conform to [RFC 1738: Uniform Resource Locators](https://www.ietf.org/rfc/rfc1738.txt).
+  A request to this `url` MUST return either an executable file or an archive containing either `bin/{DAEMON_NAME}` or `{DAEMON_NAME}`.
+- `checksum` is a checksum of the expected result of a request to the `url`.
+  It is not required, but is recommended.
+  If provided, it MUST be a hex encoded checksum string.
+  Tools utilizing these `UpgradeInstructions` MUST fail if a `checksum` is provided but is different from the checksum of the result returned by the `url`.
+- `checksum_algo` is a string identify the algorithm used to generate the `checksum`.
+  Recommended algorithms: `sha256`, `sha512`.
+  Algorithms also supported (but not recommended): `sha1`, `md5`.
+  If a `checksum` is provided, a `checksum_algo` MUST also be provided.
+
+A `url` is not required to contain a `checksum` query parameter.
+If the `url` does contain a `checksum` query parameter, the `checksum` and `checksum_algo` fields MUST also be populated, and their values MUST match the value of the query parameter.
+For example, if the `url` is `"https://example.com?checksum=md5:d41d8cd98f00b204e9800998ecf8427e"`, then the `checksum` field must be `"d41d8cd98f00b204e9800998ecf8427e"` and the `checksum_algo` field must be `"md5"`.
 
 ### Upgrade Module Updates
 
@@ -105,6 +118,10 @@ We will add the following validation:
 1.  If `UpgradeInstructions` are provided:
     1.  There MUST be at least one entry in `artifacts`.
     1.  All of the `artifacts` MUST have a unique `platform`.
+    1.  For each `Artifact`, if the `url` contains a `checksum` query parameter:
+        1. The `checksum` query parameter value MUST be in the format of `{checksum_algo}:{checksum}`.
+        1. The `{checksum}` from the query parameter MUST equal the `checksum` provided in the `Artifact`.
+        1. The `{checksum_algo}` from the query parameter MUST equal the `checksum_algo` provided in the `Artifact`.
 1.  The following validation is currently done using the `info` field. We will apply similar validation to the `UpgradeInstructions`.
     For each `Artifact`:
     1.  The `platform` MUST have the format `{OS}/{CPU}` or be `"any"`.
@@ -114,6 +131,8 @@ We will add the following validation:
     1.  If the `checksum` field has a value and the `url` also has a `checksum` query parameter, the two values MUST be equal.
     1.  The `url` MUST return either a file or an archive containing either `bin/{DAEMON_NAME}` or `{DAEMON_NAME}`.
     1.  If a `checksum` is provided (in the field or as a query param), the checksum of the result of the `url` MUST equal the provided checksum.
+
+Downloading of an `Artifact` will happen the same way that URLs from `info` are currently downloaded.
 
 ### Cosmovisor Updates
 
@@ -181,7 +200,7 @@ In order to utilize the `UpgradeInstructions` as part of a software upgrade, bot
 
 - [Current upgrade.proto](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/proto/cosmos/upgrade/v1beta1/upgrade.proto)
 - [Upgrade Module README](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/x/upgrade/spec/README.md)
-- [Cosmovisor README](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/cosmovisor/README.md)
+- [Cosmovisor README](https://github.com/cosmos/cosmos-sdk/blob/cosmovisor/v1.0.0/cosmovisor/README.md)
 - [Pre-upgrade README](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/docs/migrations/pre-upgrade.md)
 - [Draft/POC PR #10032](https://github.com/cosmos/cosmos-sdk/pull/10032)
 - [RFC 1738: Uniform Resource Locators](https://www.ietf.org/rfc/rfc1738.txt)

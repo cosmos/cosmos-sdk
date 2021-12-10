@@ -482,6 +482,11 @@ localnet-build-env:
 localnet-build-dlv:
 	$(MAKE) -C contrib/images simd-dlv
 
+# localnet-build-nodes generates genesis files and bootstrap
+# node configuration files, and then builds the localnet nodes
+# through docker-compose.
+# If you don't have the images built on your machine you need to
+# run `make localnet-build-env` or `localnet-build-dlv` first.
 localnet-build-nodes:
 	if ! [ -f .localnet/node0/simd/config/genesis.json ]; then \
 		$(DOCKER) run --rm -v $(CURDIR)/.testnets:/data cosmossdk/simd \

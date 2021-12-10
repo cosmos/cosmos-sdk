@@ -7,13 +7,14 @@ require (
 	github.com/armon/go-metrics v0.3.10
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.22.0-beta
-	github.com/coinbase/rosetta-sdk-go v0.7.1
+	github.com/coinbase/rosetta-sdk-go v0.7.2
 	github.com/confio/ics23/go v0.6.6
 	github.com/cosmos/btcutil v1.0.4
 	github.com/cosmos/cosmos-proto v0.0.0-20211123144845-528f5002c9f8
 	github.com/cosmos/cosmos-sdk/db v0.0.0
+	github.com/cosmos/cosmos-sdk/x/group v0.0.0-00010101000000-000000000000
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/iavl v0.17.2
+	github.com/cosmos/iavl v0.17.3
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/gogo/gateway v1.1.0
 	github.com/gogo/protobuf v1.3.3
@@ -23,7 +24,6 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-getter v1.5.9
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
 	github.com/hdevalence/ed25519consensus v0.0.0-20210204194344-59a8610d2b87
@@ -66,6 +66,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.1.1 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
 	github.com/cosmos/ledger-go v0.9.2 // indirect
 	github.com/danieljoos/wincred v1.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -89,6 +90,7 @@ require (
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
+	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.2.1 // indirect
@@ -104,7 +106,7 @@ require (
 	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
-	github.com/mitchellh/mapstructure v1.4.2 // indirect
+	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20210609091139-0a56a4bca00b // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
@@ -151,3 +153,5 @@ replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
 replace github.com/cosmos/cosmos-sdk/db => ./db
+
+replace github.com/cosmos/cosmos-sdk/x/group => ./x/group

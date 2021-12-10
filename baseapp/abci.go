@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // InitChain implements the ABCI interface. It runs the initialization logic
@@ -249,18 +250,18 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 		panic(fmt.Sprintf("unknown RequestCheckTx type: %s", req.Type))
 	}
 
-	tx, err := app.txDecoder(req.Tx)
-	if err != nil {
-		return sdkerrors.ResponseCheckTx(err, 0, 0, app.trace)
-	}
-
 	ctx := app.getContextForTx(mode, req.Tx)
-	res, err := app.txHandler.CheckTx(ctx, tx, req)
+	res, checkRes, err := app.txHandler.CheckTx(ctx, tx.Request{TxBytes: req.Tx}, tx.RequestCheckTx{Type: req.Type})
 	if err != nil {
 		return sdkerrors.ResponseCheckTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
 	}
 
-	return res
+	abciRes, err := convertTxResponseToCheckTx(res, checkRes)
+	if err != nil {
+		return sdkerrors.ResponseCheckTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
+	}
+
+	return abciRes
 }
 
 // DeliverTx implements the ABCI interface and executes a tx in DeliverTx mode.
@@ -271,28 +272,29 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
 	defer telemetry.MeasureSince(time.Now(), "abci", "deliver_tx")
 
-	var res abci.ResponseDeliverTx
+	var abciRes abci.ResponseDeliverTx
 	defer func() {
 		for _, streamingListener := range app.abciListeners {
-			if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
+			if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, abciRes); err != nil {
 				app.logger.Error("DeliverTx listening hook failed", "err", err)
 			}
 		}
 	}()
-	tx, err := app.txDecoder(req.Tx)
-	if err != nil {
-		res = sdkerrors.ResponseDeliverTx(err, 0, 0, app.trace)
-		return res
-	}
 
 	ctx := app.getContextForTx(runTxModeDeliver, req.Tx)
-	res, err = app.txHandler.DeliverTx(ctx, tx, req)
+	res, err := app.txHandler.DeliverTx(ctx, tx.Request{TxBytes: req.Tx})
 	if err != nil {
-		res = sdkerrors.ResponseDeliverTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
-		return res
+		abciRes = sdkerrors.ResponseDeliverTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
+		return abciRes
 	}
 
-	return res
+	abciRes, err = convertTxResponseToDeliverTx(res)
+	if err != nil {
+		return sdkerrors.ResponseDeliverTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
+	}
+
+	return abciRes
+
 }
 
 // Commit implements the ABCI interface. It will commit all state that exists in
@@ -893,4 +895,38 @@ func splitPath(requestPath string) (path []string) {
 	}
 
 	return path
+}
+
+// makeABCIData generates the Data field to be sent to ABCI Check/DeliverTx.
+func makeABCIData(txRes tx.Response) ([]byte, error) {
+	return proto.Marshal(&sdk.TxMsgData{MsgResponses: txRes.MsgResponses})
+}
+
+// convertTxResponseToCheckTx converts a tx.Response into a abci.ResponseCheckTx.
+func convertTxResponseToCheckTx(txRes tx.Response, checkRes tx.ResponseCheckTx) (abci.ResponseCheckTx, error) {
+	data, err := makeABCIData(txRes)
+	if err != nil {
+		return abci.ResponseCheckTx{}, nil
+	}
+
+	return abci.ResponseCheckTx{
+		Data:     data,
+		Log:      txRes.Log,
+		Events:   txRes.Events,
+		Priority: checkRes.Priority,
+	}, nil
+}
+
+// convertTxResponseToDeliverTx converts a tx.Response into a abci.ResponseDeliverTx.
+func convertTxResponseToDeliverTx(txRes tx.Response) (abci.ResponseDeliverTx, error) {
+	data, err := makeABCIData(txRes)
+	if err != nil {
+		return abci.ResponseDeliverTx{}, nil
+	}
+
+	return abci.ResponseDeliverTx{
+		Data:   data,
+		Log:    txRes.Log,
+		Events: txRes.Events,
+	}, nil
 }

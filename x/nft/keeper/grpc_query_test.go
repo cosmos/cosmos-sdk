@@ -57,7 +57,7 @@ func (suite *TestSuite) TestBalance() {
 				}
 			},
 			"",
-			1,
+			2,
 			func(index int, require *require.Assertions, res *nft.QueryBalanceResponse, expBalance uint64) {
 				require.Equal(res.Amount, expBalance, "the error occurred on:%d", index)
 			},

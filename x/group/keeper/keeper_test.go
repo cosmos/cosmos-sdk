@@ -35,10 +35,6 @@ type TestSuite struct {
 	blockTime        time.Time
 }
 
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(TestSuite))
-}
-
 func (s *TestSuite) SetupTest() {
 	app := simapp.Setup(s.T(), false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})

@@ -3,6 +3,7 @@ package tx
 import (
 	"fmt"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	types "github.com/cosmos/cosmos-sdk/types/tx"
@@ -39,9 +40,9 @@ func (signModeDirectAuxHandler) GetSignBytes(
 		return nil, fmt.Errorf("can only handle a protobuf Tx, got %T", tx)
 	}
 
-	signerInfo := protoTx.tx.AuthInfo.SignerInfos[data.SignerIndex]
-	if signerInfo == nil || signerInfo.PublicKey == nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf("got empty pubkey for signer #%d in %s handler", data.SignerIndex, signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
+	pkAny, err := codectypes.NewAnyWithValue(data.PubKey)
+	if err != nil {
+		return nil, err
 	}
 
 	addr := data.Address
@@ -61,9 +62,9 @@ func (signModeDirectAuxHandler) GetSignBytes(
 		BodyBytes:     protoTx.getBodyBytes(),
 		ChainId:       data.ChainID,
 		AccountNumber: data.AccountNumber,
-		Sequence:      signerInfo.Sequence,
+		Sequence:      data.Sequence,
 		Tip:           protoTx.tx.AuthInfo.Tip,
-		PublicKey:     signerInfo.PublicKey,
+		PublicKey:     pkAny,
 	}
 
 	return signDocDirectAux.Marshal()

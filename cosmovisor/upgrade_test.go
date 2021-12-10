@@ -37,7 +37,7 @@ func (s *upgradeTestSuite) TestCurrentBin() {
 	s.Require().Equal(cfg.GenesisBin(), currentBin)
 
 	// ensure we cannot set this to an invalid value
-	for _, name := range []string{"missing", "nobin", "noexec"} {
+	for _, name := range []string{"missing", "nobin"} {
 		s.Require().Error(cfg.SetCurrentUpgrade(upgradetypes.Plan{Name: name}), name)
 
 		currentBin, err := cfg.CurrentBin()
@@ -47,7 +47,7 @@ func (s *upgradeTestSuite) TestCurrentBin() {
 	}
 
 	// try a few times to make sure this can be reproduced
-	for _, name := range []string{"chain2", "chain3", "chain2"} {
+	for _, name := range []string{"chain2", "chain3", "chain2", "noexec"} {
 		// now set it to a valid upgrade and make sure CurrentBin is now set properly
 		err = cfg.SetCurrentUpgrade(upgradetypes.Plan{Name: name})
 		s.Require().NoError(err)
@@ -100,7 +100,7 @@ func (s *upgradeTestSuite) TestDoUpgradeNoDownloadUrl() {
 	s.Require().Equal(cfg.GenesisBin(), currentBin)
 
 	// do upgrade ignores bad files
-	for _, name := range []string{"missing", "nobin", "noexec"} {
+	for _, name := range []string{"missing", "nobin"} {
 		info := upgradetypes.Plan{Name: name}
 		err = cosmovisor.DoUpgrade(cfg, info)
 		s.Require().Error(err, name)
@@ -110,7 +110,7 @@ func (s *upgradeTestSuite) TestDoUpgradeNoDownloadUrl() {
 	}
 
 	// make sure it updates a few times
-	for _, upgrade := range []string{"chain2", "chain3"} {
+	for _, upgrade := range []string{"chain2", "chain3", "noexec"} {
 		// now set it to a valid upgrade and make sure CurrentBin is now set properly
 		info := upgradetypes.Plan{Name: upgrade}
 		err = cosmovisor.DoUpgrade(cfg, info)
@@ -143,7 +143,7 @@ func (s *upgradeTestSuite) TestGetDownloadURL() {
 		// value.
 	}{
 		"missing": {
-			err: "downloading reference link : invalid source string:",
+			err: "plan info must not be blank",
 		},
 		"follow reference": {
 			info: ref,
@@ -151,7 +151,7 @@ func (s *upgradeTestSuite) TestGetDownloadURL() {
 		},
 		"malformated reference target": {
 			info: badref,
-			err:  "upgrade info doesn't contain binary map",
+			err:  "could not parse plan info json: invalid character '#' looking for beginning of value",
 		},
 		"missing link": {
 			info: "https://no.such.domain/exists.txt",

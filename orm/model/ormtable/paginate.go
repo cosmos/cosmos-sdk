@@ -3,91 +3,120 @@ package ormtable
 import (
 	"fmt"
 
+	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
+
+	"github.com/cosmos/cosmos-sdk/types/query"
+
 	"google.golang.org/protobuf/proto"
 )
 
+type PaginationRequest struct {
+	*query.PageRequest
+
+	Prefix []protoreflect.Value
+	Start  []protoreflect.Value
+	End    []protoreflect.Value
+	Filter func(message proto.Message) bool
+}
+
 func Paginate(
-	getIterator func(IteratorOptions) (Iterator, error),
+	index Index,
+	store kvstore.IndexCommitmentReadStore,
 	request *PaginationRequest,
 ) (*PaginationResponse, error) {
-	if len(request.Cursor) != 0 && request.Offset > 0 {
+	offset := int(request.Offset)
+	if len(request.Key) != 0 && offset > 0 {
 		return nil, fmt.Errorf("can only specify one of cursor or offset")
 	}
 
-	it, err := getIterator(IteratorOptions{
+	iteratorOpts := IteratorOptions{
 		Reverse: request.Reverse,
-		Cursor:  request.Cursor,
-	})
+		Cursor:  request.Key,
+	}
+	var it Iterator
+	var err error
+	if request.Start != nil || request.End != nil {
+		if request.Prefix != nil {
+			return nil, fmt.Errorf("can either use Start/End or Prefix, not both")
+		}
+
+		it, err = index.RangeIterator(store, request.Start, request.End, iteratorOpts)
+	} else {
+		it, err = index.PrefixIterator(store, request.Prefix, iteratorOpts)
+	}
 	if err != nil {
 		return nil, err
 	}
 	defer it.Close()
 
-	limit := request.Limit
+	limit := int(request.Limit)
 	if limit == 0 {
 		return nil, fmt.Errorf("limit not specified")
 	}
 
-	haveMore := false
-	var nodes []proto.Message
-	var cursors []Cursor
 	i := 0
-	for {
-		have := it.Next()
-		if !have {
-			break
+	if offset != 0 {
+		for ; i < offset; i++ {
+			if !it.Next() {
+				return &PaginationResponse{
+					PageResponse: &query.PageResponse{Total: uint64(i)},
+				}, nil
+			}
 		}
+	}
 
-		if i == limit {
+	haveMore := false
+	cursors := make([]Cursor, 0, limit)
+	items := make([]proto.Message, 0, limit)
+	done := limit + offset
+	for it.Next() {
+		if i == done {
 			haveMore = true
 			if request.CountTotal {
-				for {
-					have = it.Next()
-					if !have {
-						break
-					}
+				for it.Next() {
 					i++
 				}
 			}
 			break
 		}
 
-		node, err := it.GetMessage()
-		if request.Filter != nil && !request.Filter(node) {
+		message, err := it.GetMessage()
+		if err != nil {
+			return nil, err
+		}
+
+		if request.Filter != nil && !request.Filter(message) {
 			continue
 		}
 
 		i++
 		cursors = append(cursors, it.Cursor())
-		if err != nil {
-			return nil, err
-		}
-		nodes = append(nodes, node)
+		items = append(items, message)
 	}
 
-	res := &PaginationResponse{
-		Nodes:    nodes,
-		Cursors:  cursors,
-		HaveMore: haveMore,
-	}
+	pageRes := &query.PageResponse{}
 	if request.CountTotal {
-		res.TotalCount = i
+		pageRes.Total = uint64(i + 1)
 	}
-	return res, nil
+	n := len(cursors)
+	if n != 0 {
+		pageRes.NextKey = cursors[n-1]
+	}
+	return &PaginationResponse{
+		PageResponse: pageRes,
+		HaveMore:     haveMore,
+		Cursors:      cursors,
+		Items:        items,
+	}, nil
 }
 
-type PaginationRequest struct {
-	Limit      int
-	Offset     int
-	Reverse    bool
-	CountTotal bool
-	Cursor     Cursor
-	Filter     func(proto.Message) bool
-}
-
+// PaginationResponse contains extra pagination data that may be useful
+// for services like GraphQL.
 type PaginationResponse struct {
-	Nodes      []proto.Message
-	Cursors    []Cursor
-	HaveMore   bool
-	TotalCount int
+	*query.PageResponse
+	Items    []proto.Message
+	HaveMore bool
+	Cursors  []Cursor
 }

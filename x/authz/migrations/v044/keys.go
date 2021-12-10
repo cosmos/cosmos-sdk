@@ -1,6 +1,8 @@
-package v045
+package v044
 
 import (
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -13,7 +15,8 @@ import (
 // - 0x01<grant_Bytes>: Grant
 //
 var (
-	GrantKey = []byte{0x01}
+	GrantKey         = []byte{0x01}
+	GrantQueuePrefix = []byte{0x02}
 )
 
 // GrantStoreKey - return authorization store key
@@ -48,4 +51,24 @@ func ParseGrantStoreKey(key []byte) (granterAddr, granteeAddr sdk.AccAddress, ms
 	granteeAddr = sdk.AccAddress(key[2+granterAddrLen : 2+granterAddrLen+byte(granteeAddrLen)])
 
 	return granterAddr, granteeAddr, conv.UnsafeBytesToStr(key[2+granterAddrLen+byte(granteeAddrLen):])
+}
+
+// grantByTimeKey gets the grant queue key by expiration
+func grantByTimeKey(expiration time.Time) []byte {
+	return append(GrantQueuePrefix, sdk.FormatTimeBytes(expiration)...)
+}
+
+// GrantQueueKey - return grant queue store key
+// Key format is
+//
+// - 0x02<grant_expiration_Bytes><granterAddressLen (1 Byte)><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes><msgType_Bytes>: grantKey
+func GrantQueueKey(grantKey []byte, expiration time.Time) []byte {
+	expiredGrantKey := grantByTimeKey(expiration)
+	expiredGrantKeyLen := len(expiredGrantKey)
+
+	l := len(grantKey) - 1 + expiredGrantKeyLen
+	var key = make([]byte, l)
+	copy(key, expiredGrantKey)
+	copy(key[expiredGrantKeyLen:], grantKey[1:])
+	return key
 }

@@ -1,4 +1,4 @@
-package v046
+package v045
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -6,11 +6,10 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	v045 "github.com/cosmos/cosmos-sdk/x/authz/migrations/v045"
+	v044 "github.com/cosmos/cosmos-sdk/x/authz/migrations/v044"
 )
 
-// MigrateStore performs in-place store migrations from v0.45 to v0.46. The
+// MigrateStore performs in-place store migrations from v0.44 to v0.45. The
 // migration includes:
 //
 // - pruning expired authorizations
@@ -26,7 +25,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 }
 
 func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
-	grantsStore := prefix.NewStore(store, v045.GrantKey)
+	grantsStore := prefix.NewStore(store, v044.GrantKey)
 
 	grantsIter := grantsStore.Iterator(nil, nil)
 	defer grantsIter.Close()
@@ -42,7 +41,7 @@ func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.
 		if grant.Expiration.Before(ctx.BlockTime()) {
 			grantsStore.Delete(grantsIter.Key())
 		} else {
-			queueKey := keeper.GrantQueueKey(grantsIter.Key(), grant.Expiration)
+			queueKey := v044.GrantQueueKey(grantsIter.Key(), grant.Expiration)
 			store.Set(queueKey, grantsIter.Key())
 		}
 

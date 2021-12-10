@@ -37,6 +37,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.44.3.1](https://github.com/provenance-io/cosmos-sdk/tag/v0.44.3.1)
+
+### Improvements
+
+* Upgraded Rosetta to v0.7.2 which includes the following prs to cosmos upstream: [10432](https://github.com/cosmos/cosmos-sdk/pull/10432) and [10707](https://github.com/cosmos/cosmos-sdk/pull/10707)
+
 ## [v0.44.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.44.3) - 2021-10-21
 
 ### Improvements

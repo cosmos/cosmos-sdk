@@ -362,6 +362,7 @@ func NewSimApp(
 		authtypes.ModuleName, banktypes.ModuleName, govtypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName,
 		authz.ModuleName, feegrant.ModuleName, nft.ModuleName,
 		paramstypes.ModuleName, vestingtypes.ModuleName,
+		group.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName,
@@ -370,6 +371,7 @@ func NewSimApp(
 		genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
 		feegrant.ModuleName, nft.ModuleName,
 		paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName,
+		group.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -383,6 +385,7 @@ func NewSimApp(
 		genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName, group.ModuleName,
 		feegrant.ModuleName, nft.ModuleName,
 		paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName,
+		group.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)

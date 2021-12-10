@@ -719,7 +719,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 			},
 			0,
 			true,
-			"insufficient funds", // Earlier the error was account not found here.
+			"insufficient funds", // earlier the error was account not found here.
 		},
 		{
 			"error over spent",

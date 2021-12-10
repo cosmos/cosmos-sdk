@@ -121,10 +121,6 @@ message GroupAccountInfo {
 
   // decision_policy specifies the group account's decision policy.
   google.protobuf.Any decision_policy = 6 [(cosmos_proto.accepts_interface) = "DecisionPolicy"];
-
-  // derivation_key is the "derivation" key of the group account,
-  // which is needed to derive the group root module key and execute proposals.
-  bytes derivation_key = 7;
 }
 
 // Proposal defines a group proposal. Any member of a group can submit a proposal

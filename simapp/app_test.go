@@ -2,7 +2,6 @@ package simapp
 
 import (
 	"encoding/json"
-	"os"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -39,8 +38,9 @@ import (
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	encCfg := MakeTestEncodingConfig()
 	db := dbm.NewMemDB()
+	logger, _ := log.NewDefaultLogger("plain", "info", false)
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
-		Logger:             log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
+		Logger:             logger,
 		DB:                 db,
 		InvCheckPeriod:     0,
 		EncConfig:          encCfg,
@@ -59,8 +59,9 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 
 	app.Commit()
 
+	logger2, _ := log.NewDefaultLogger("plain", "info", false)
 	// Making a new app object with the db, so that initchain hasn't been called
-	app2 := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	app2 := NewSimApp(logger2, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
 	_, err := app2.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }
@@ -73,11 +74,11 @@ func TestGetMaccPerms(t *testing.T) {
 func TestRunMigrations(t *testing.T) {
 	db := dbm.NewMemDB()
 	encCfg := MakeTestEncodingConfig()
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	logger, _ := log.NewDefaultLogger("plain", "info", false)
 	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
 
 	// Create a new baseapp and configurator for the purpose of this test.
-	bApp := baseapp.NewBaseApp(appName, logger, db, encCfg.TxConfig.TxDecoder())
+	bApp := baseapp.NewBaseApp(appName, logger, db)
 	bApp.SetCommitMultiStoreTracer(nil)
 	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	msr := authmiddleware.NewMsgServiceRouter(encCfg.InterfaceRegistry)
@@ -202,7 +203,7 @@ func TestRunMigrations(t *testing.T) {
 func TestInitGenesisOnMigration(t *testing.T) {
 	db := dbm.NewMemDB()
 	encCfg := MakeTestEncodingConfig()
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	logger, _ := log.NewDefaultLogger("plain", "info", false)
 	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 
@@ -246,8 +247,9 @@ func TestInitGenesisOnMigration(t *testing.T) {
 func TestUpgradeStateOnGenesis(t *testing.T) {
 	encCfg := MakeTestEncodingConfig()
 	db := dbm.NewMemDB()
+	logger, _ := log.NewDefaultLogger("plain", "info", false)
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
-		Logger:             log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
+		Logger:             logger,
 		DB:                 db,
 		InvCheckPeriod:     0,
 		EncConfig:          encCfg,

@@ -2,17 +2,16 @@ package network
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"path/filepath"
 	"time"
 
+	abciclient "github.com/tendermint/tendermint/abci/client"
 	tmos "github.com/tendermint/tendermint/libs/os"
+	tmtime "github.com/tendermint/tendermint/libs/time"
 	"github.com/tendermint/tendermint/node"
-	"github.com/tendermint/tendermint/p2p"
-	pvm "github.com/tendermint/tendermint/privval"
-	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/rpc/client/local"
 	"github.com/tendermint/tendermint/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
@@ -32,36 +31,36 @@ func startInProcess(cfg Config, val *Validator) error {
 		return err
 	}
 
-	nodeKey, err := p2p.LoadOrGenNodeKey(tmCfg.NodeKeyFile())
+	app := cfg.AppConstructor(*val)
+
+	genDoc, err := types.GenesisDocFromFile(tmCfg.GenesisFile())
 	if err != nil {
 		return err
 	}
 
-	app := cfg.AppConstructor(*val)
-
-	genDocProvider := node.DefaultGenesisDocProviderFunc(tmCfg)
-	tmNode, err := node.NewNode(
+	val.tmNode, err = node.New(
 		tmCfg,
-		pvm.LoadOrGenFilePV(tmCfg.PrivValidatorKeyFile(), tmCfg.PrivValidatorStateFile()),
-		nodeKey,
-		proxy.NewLocalClientCreator(app),
-		genDocProvider,
-		node.DefaultDBProvider,
-		node.DefaultMetricsProvider(tmCfg.Instrumentation),
 		logger.With("module", val.Moniker),
+		abciclient.NewLocalCreator(app),
+		genDoc,
 	)
 	if err != nil {
 		return err
 	}
 
-	if err := tmNode.Start(); err != nil {
+	if err := val.tmNode.Start(); err != nil {
 		return err
 	}
 
-	val.tmNode = tmNode
-
 	if val.RPCAddress != "" {
-		val.RPCClient = local.New(tmNode)
+		node, ok := val.tmNode.(local.NodeService)
+		if !ok {
+			panic("can't cast service.Service to NodeService")
+		}
+		val.RPCClient, err = local.New(node)
+		if err != nil {
+			panic("cant create a local node")
+		}
 	}
 
 	// We'll need a RPC client if the validator exposes a gRPC or REST endpoint.
@@ -112,7 +111,6 @@ func startInProcess(cfg Config, val *Validator) error {
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -202,7 +200,7 @@ func writeFile(name string, dir string, contents []byte) error {
 		return err
 	}
 
-	err = tmos.WriteFile(file, contents, 0644)
+	err = ioutil.WriteFile(file, contents, 0644) // nolint: gosec
 	if err != nil {
 		return err
 	}

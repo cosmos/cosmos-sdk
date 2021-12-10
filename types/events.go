@@ -90,8 +90,8 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 	attrs := make([]abci.EventAttribute, 0, len(attrMap))
 	for k, v := range attrMap {
 		attrs = append(attrs, abci.EventAttribute{
-			Key:   []byte(k),
-			Value: v,
+			Key:   k,
+			Value: string(v),
 		})
 	}
 
@@ -122,7 +122,7 @@ func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 
 	attrMap := make(map[string]json.RawMessage)
 	for _, attr := range event.Attributes {
-		attrMap[string(attr.Key)] = attr.Value
+		attrMap[attr.Key] = json.RawMessage(attr.Value)
 	}
 
 	attrBytes, err := json.Marshal(attrMap)
@@ -178,7 +178,7 @@ func (a Attribute) String() string {
 
 // ToKVPair converts an Attribute object into a Tendermint key/value pair.
 func (a Attribute) ToKVPair() abci.EventAttribute {
-	return abci.EventAttribute{Key: toBytes(a.Key), Value: toBytes(a.Value)}
+	return abci.EventAttribute{Key: a.Key, Value: a.Value}
 }
 
 // AppendAttributes adds one or more attributes to an Event.
@@ -208,17 +208,6 @@ func (e Events) ToABCIEvents() []abci.Event {
 	}
 
 	return res
-}
-
-func toBytes(i interface{}) []byte {
-	switch x := i.(type) {
-	case []uint8:
-		return x
-	case string:
-		return []byte(x)
-	default:
-		panic(i)
-	}
 }
 
 // Common event types and attribute keys
@@ -286,7 +275,7 @@ func StringifyEvent(e abci.Event) StringEvent {
 	for _, attr := range e.Attributes {
 		res.Attributes = append(
 			res.Attributes,
-			Attribute{string(attr.Key), string(attr.Value)},
+			Attribute{Key: attr.Key, Value: attr.Value},
 		)
 	}
 

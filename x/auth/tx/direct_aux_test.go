@@ -17,6 +17,7 @@ import (
 
 func TestDirectAuxHandler(t *testing.T) {
 	privKey, pubkey, addr := testdata.KeyTestPubAddr()
+	_, feePayerPubKey, feePayerAddr := testdata.KeyTestPubAddr()
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
@@ -24,9 +25,10 @@ func TestDirectAuxHandler(t *testing.T) {
 	txConfig := NewTxConfig(marshaler, []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_DIRECT_AUX})
 	txBuilder := txConfig.NewTxBuilder()
 
+	chainID := "test-chain"
 	memo := "sometestmemo"
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
-	accSeq := uint64(2) // Arbitrary account sequence
+	accNum, accSeq := uint64(1), uint64(2) // Arbitrary account number/sequence
 
 	any, err := codectypes.NewAnyWithValue(pubkey)
 	require.NoError(t, err)
@@ -40,26 +42,48 @@ func TestDirectAuxHandler(t *testing.T) {
 		Data:     sigData,
 		Sequence: accSeq,
 	}
+	feePayerSig := signingtypes.SignatureV2{
+		PubKey:   feePayerPubKey,
+		Data:     sigData,
+		Sequence: accSeq,
+	}
 
 	fee := txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
+	tip := &txtypes.Tip{Amount: sdk.NewCoins(sdk.NewInt64Coin("tip-token", 10))}
 
 	err = txBuilder.SetMsgs(msgs...)
 	require.NoError(t, err)
 	txBuilder.SetMemo(memo)
 	txBuilder.SetFeeAmount(fee.Amount)
+	txBuilder.SetFeePayer(feePayerAddr)
 	txBuilder.SetGasLimit(fee.GasLimit)
+	txBuilder.SetTip(tip)
 
-	err = txBuilder.SetSignatures(sig)
+	err = txBuilder.SetSignatures(sig, feePayerSig)
 	require.NoError(t, err)
 
 	signingData := signing.SignerData{
 		Address:       addr.String(),
-		ChainID:       "test-chain",
-		AccountNumber: 1,
-		SignerIndex:   0,
+		ChainID:       chainID,
+		AccountNumber: accNum,
+		Sequence:      accSeq,
+		PubKey:        pubkey,
+	}
+	feePayerSigningData := signing.SignerData{
+		Address:       feePayerAddr.String(),
+		ChainID:       chainID,
+		AccountNumber: accNum,
+		Sequence:      accSeq,
+		PubKey:        feePayerPubKey,
 	}
 
 	modeHandler := signModeDirectAuxHandler{}
+
+	t.Log("verify fee payer cannot use SIGN_MODE_DIRECT_AUX")
+	_, err = modeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT_AUX, feePayerSigningData, txBuilder.GetTx())
+	require.EqualError(t, err, fmt.Sprintf("fee payer %s cannot sign with %s: unauthorized", feePayerAddr.String(), signingtypes.SignMode_SIGN_MODE_DIRECT_AUX))
+
+	t.Log("verify GetSignBytes with generating sign bytes by marshaling signDocDirectAux")
 	signBytes, err := modeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT_AUX, signingData, txBuilder.GetTx())
 	require.NoError(t, err)
 	require.NotNil(t, signBytes)
@@ -79,12 +103,13 @@ func TestDirectAuxHandler(t *testing.T) {
 	}
 	bodyBytes := marshaler.MustMarshal(txBody)
 
-	t.Log("verify GetSignBytes with generating sign bytes by marshaling signDocDirectAux")
 	signDocDirectAux := txtypes.SignDocDirectAux{
-		AccountNumber: 1,
+		AccountNumber: accNum,
 		BodyBytes:     bodyBytes,
 		ChainId:       "test-chain",
 		PublicKey:     any,
+		Sequence:      accSeq,
+		Tip:           tip,
 	}
 
 	expectedSignBytes, err := signDocDirectAux.Marshal()

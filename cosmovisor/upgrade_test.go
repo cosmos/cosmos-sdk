@@ -4,14 +4,16 @@
 package cosmovisor_test
 
 import (
+	"errors"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/otiai10/copy"
-	
+
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -139,7 +141,13 @@ func (s *upgradeTestSuite) TestGetDownloadURL() {
 	cases := map[string]struct {
 		info string
 		url  string
-		err  string
+		err  interface{}
+
+		// If err == nil, the test must not report an error.
+		// If err is a string, the test must report an error whose string has err
+		// as a substring.
+		// If err is a func(suite.Suite, error), it is called to check the error
+		// value.
 	}{
 		"missing": {
 			err: "downloading reference link : invalid source string:",
@@ -154,7 +162,12 @@ func (s *upgradeTestSuite) TestGetDownloadURL() {
 		},
 		"missing link": {
 			info: "https://no.such.domain/exists.txt",
-			err:  "dial tcp: lookup no.such.domain: no such host",
+			err: func(s suite.Suite, err error) {
+				var dns *net.DNSError
+				s.Require().True(errors.As(err, &dns), "result is not a DNSError")
+				s.Require().Equal("no.such.domain", dns.Name)
+				s.Require().Equal(true, dns.IsNotFound)
+			},
 		},
 		"proper binary": {
 			info: `{"binaries": {"linux/amd64": "https://foo.bar/", "windows/amd64": "https://something.else"}}`,
@@ -177,12 +190,17 @@ func (s *upgradeTestSuite) TestGetDownloadURL() {
 	for name, tc := range cases {
 		s.Run(name, func() {
 			url, err := cosmovisor.GetDownloadURL(upgradetypes.Plan{Info: tc.info})
-			if tc.err != "" {
-				s.Require().Error(err)
-				s.Require().Contains(err.Error(), tc.err)
-			} else {
+			switch e := tc.err.(type) {
+			case nil:
 				s.Require().NoError(err)
 				s.Require().Equal(tc.url, url)
+
+			case string:
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.err)
+
+			case func(suite.Suite, error):
+				e(s.Suite, err)
 			}
 		})
 	}
@@ -230,43 +248,42 @@ func (s *upgradeTestSuite) TestDownloadBinary() {
 		},
 	}
 
-	for _, tc := range cases {
-		var err error
-		// make temp dir
-		home := copyTestData(s.T(), "download")
+	for label, tc := range cases {
+		s.Run(label, func() {
+			var err error
+			// make temp dir
+			home := copyTestData(s.T(), "download")
 
-		cfg := &cosmovisor.Config{
-			Home:                  home,
-			Name:                  "autod",
-			AllowDownloadBinaries: true,
-		}
+			cfg := &cosmovisor.Config{
+				Home:                  home,
+				Name:                  "autod",
+				AllowDownloadBinaries: true,
+			}
 
-		// if we have a relative path, make it absolute, but don't change eg. https://... urls
-		url := tc.url
-		if strings.HasPrefix(url, "./") {
-			url, err = filepath.Abs(url)
-			s.Require().NoError(err)
-		}
+			url := tc.url
+			if strings.HasPrefix(url, "./") {
+				url, err = filepath.Abs(url)
+				s.Require().NoError(err)
+			}
 
-		upgrade := "amazonas"
-		info := upgradetypes.Plan{
-			Name: upgrade,
-			Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, cosmovisor.OSArch(), url),
-		}
+			const upgrade = "amazonas"
+			info := upgradetypes.Plan{
+				Name: upgrade,
+				Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, cosmovisor.OSArch(), url),
+			}
 
-		err = cosmovisor.DownloadBinary(cfg, info)
-		if !tc.canDownload {
-			s.Require().Error(err)
-		} else {
-			s.Require().NoError(err)
+			err = cosmovisor.DownloadBinary(cfg, info)
+			if !tc.canDownload {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+			}
 
 			err = cosmovisor.EnsureBinary(cfg.UpgradeBin(upgrade))
 			if tc.validBinary {
 				s.Require().NoError(err)
-			} else {
-				s.Require().Error(err)
 			}
-		}
+		})
 	}
 }
 

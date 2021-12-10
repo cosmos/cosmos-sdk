@@ -2,7 +2,6 @@ package baseapp_test
 
 import (
 	"context"
-	"os"
 	"sync"
 	"testing"
 
@@ -55,7 +54,8 @@ func TestRegisterQueryServiceTwice(t *testing.T) {
 	// Setup baseapp.
 	db := dbm.NewMemDB()
 	encCfg := simapp.MakeTestEncodingConfig()
-	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
+	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	app := baseapp.NewBaseApp("test", logger, db)
 	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
 

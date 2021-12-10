@@ -15,6 +15,8 @@ The `table` struct does not:
 - optimize Gas usage conditions
 The `table` struct is private, so that we only have custom tables built on top of it, that do satisfy these requirements.
 
+`table` provides methods for exporting (using a [`PrefixScan` `Iterator`](03_iterator_pagination.md#iterator)) and importing genesis data. For the import to be successful, objects have to be aware of their primary key by implementing the [`PrimaryKeyed`](#primarykeyed) interface.
+
 ## AutoUInt64Table
 
 `AutoUInt64Table` is a table type with an auto incrementing `uint64` ID.
@@ -26,6 +28,8 @@ It's based on the `Sequence` struct which is a persistent unique key generator b
 ## PrimaryKeyTable
 
 `PrimaryKeyTable` provides simpler object style orm methods where are persisted and loaded with a reference to their unique primary key.
+
+### PrimaryKeyed
 
 The model provided for creating a `PrimaryKeyTable` should implement the `PrimaryKeyed` interface:
 

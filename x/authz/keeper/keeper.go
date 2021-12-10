@@ -280,7 +280,7 @@ func (keeper Keeper) removeFromGrantQueue(ctx sdk.Context, grantKey []byte, expi
 func (k Keeper) DeleteAllMatureGrants(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := store.Iterator(GrantQueuePrefix, sdk.PrefixEndBytes(grantByTimeKey(ctx.BlockTime())))
+	iterator := store.Iterator(GrantQueuePrefix, sdk.InclusiveEndBytes(grantByTimeKey(ctx.BlockTime())))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

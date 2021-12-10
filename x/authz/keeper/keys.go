@@ -94,11 +94,6 @@ func grantByTimeKey(expiration time.Time) []byte {
 // - 0x02<grant_expiration_Bytes><granterAddressLen (1 Byte)><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes><msgType_Bytes>: grantKey
 func GrantQueueKey(grantKey []byte, expiration time.Time) []byte {
 	expiredGrantKey := grantByTimeKey(expiration)
-	expiredGrantKeyLen := len(expiredGrantKey)
+	return append(expiredGrantKey, grantKey[1:]...)
 
-	l := len(grantKey) - 1 + expiredGrantKeyLen
-	var key = make([]byte, l)
-	copy(key, expiredGrantKey)
-	copy(key[expiredGrantKeyLen:], grantKey[1:])
-	return key
 }

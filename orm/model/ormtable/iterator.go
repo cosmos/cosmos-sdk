@@ -1,16 +1,16 @@
 package ormtable
 
 import (
-	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 type Iterator interface {
-	Next() (bool, error)
-	IndexKey() ([]protoreflect.Value, error)
-	PrimaryKey() ([]protoreflect.Value, error)
+	Next() bool
+	Keys() (indexKey, primaryKey []protoreflect.Value, err error)
 	UnmarshalMessage(proto.Message) error
 	GetMessage() (proto.Message, error)
 
@@ -69,7 +69,7 @@ func rangeIterator(iteratorStore kvstore.ReadStore, store kvstore.IndexCommitmen
 		if len(options.Cursor) != 0 {
 			start = append(options.Cursor, 0)
 		}
-		it, err := iteratorStore.Iterator(start, storetypes.InclusiveEndBytes(end))
+		it, err := iteratorStore.Iterator(start, storetypes.PrefixEndBytes(end))
 		if err != nil {
 			return nil, err
 		}
@@ -110,7 +110,7 @@ type indexIterator struct {
 	started     bool
 }
 
-func (i *indexIterator) Next() (bool, error) {
+func (i *indexIterator) Next() bool {
 	if !i.started {
 		i.started = true
 	} else {
@@ -118,29 +118,32 @@ func (i *indexIterator) Next() (bool, error) {
 	}
 
 	if !i.iterator.Valid() {
-		return false, nil
+		return false
 	}
 
-	var err error
+	return true
+}
+
+func (i *indexIterator) Keys() (indexKey, primaryKey []protoreflect.Value, err error) {
+	if i.indexValues != nil {
+		return i.indexValues, i.primaryKey, nil
+	}
+
 	i.value = i.iterator.Value()
 	i.indexValues, i.primaryKey, err = i.index.DecodeIndexKey(i.iterator.Key(), i.value)
 	if err != nil {
-		return true, err
+		return nil, nil, err
 	}
 
-	return true, err
-}
-
-func (i indexIterator) IndexKey() ([]protoreflect.Value, error) {
-	return i.indexValues, nil
-}
-
-func (i indexIterator) PrimaryKey() ([]protoreflect.Value, error) {
-	return i.primaryKey, nil
+	return i.indexValues, i.primaryKey, nil
 }
 
 func (i indexIterator) UnmarshalMessage(message proto.Message) error {
-	return i.index.ReadValueFromIndexKey(i.store, i.primaryKey, i.value, message)
+	_, pk, err := i.Keys()
+	if err != nil {
+		return err
+	}
+	return i.index.ReadValueFromIndexKey(i.store, pk, i.value, message)
 }
 
 func (i *indexIterator) GetMessage() (proto.Message, error) {

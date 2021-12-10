@@ -33,11 +33,7 @@ func Paginate(
 	var cursors []Cursor
 	i := 0
 	for {
-		have, err := it.Next()
-		if err != nil {
-			return nil, err
-		}
-
+		have := it.Next()
 		if !have {
 			break
 		}
@@ -46,10 +42,7 @@ func Paginate(
 			haveMore = true
 			if request.CountTotal {
 				for {
-					have, err = it.Next()
-					if err != nil {
-						return nil, err
-					}
+					have = it.Next()
 					if !have {
 						break
 					}

@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
-	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 	"io"
 	"math"
+
+	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 
 	"google.golang.org/protobuf/encoding/protojson"
 
@@ -51,8 +52,8 @@ func (t TableImpl) Save(store kvstore.IndexCommitmentStore, message proto.Messag
 	}
 
 	if haveExisting {
-		if mode == SAVE_MODE_CREATE {
-			return sdkerrors.Wrapf(ormerrors.PrimaryKeyConstraintViolation, "%q", mref.Descriptor().FullName())
+		if mode == SAVE_MODE_INSERT {
+			return sdkerrors.Wrapf(ormerrors.PrimaryKeyConstraintViolation, "%q:%+v", mref.Descriptor().FullName(), pkValues)
 		}
 	} else {
 		if mode == SAVE_MODE_UPDATE {
@@ -71,7 +72,6 @@ func (t TableImpl) Save(store kvstore.IndexCommitmentStore, message proto.Messag
 	}
 
 	// set primary key again
-
 	t.SetKeyValues(mref, pkValues)
 
 	// set indexes
@@ -233,10 +233,7 @@ func (t TableImpl) ExportJSON(store kvstore.IndexCommitmentReadStore, writer io.
 	it, _ := t.PrefixIterator(store, nil, IteratorOptions{})
 	start := true
 	for {
-		found, err := it.Next()
-		if err != nil {
-			return err
-		}
+		found := it.Next()
 
 		if !found {
 			_, err = writer.Write([]byte("]"))

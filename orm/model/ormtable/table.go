@@ -2,12 +2,14 @@ package ormtable
 
 import (
 	"encoding/json"
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
+
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 )
 
 type View interface {
@@ -35,6 +37,6 @@ type SaveMode int
 
 const (
 	SAVE_MODE_DEFAULT SaveMode = iota
-	SAVE_MODE_CREATE
+	SAVE_MODE_INSERT
 	SAVE_MODE_UPDATE
 )

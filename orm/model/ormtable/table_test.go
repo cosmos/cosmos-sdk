@@ -102,15 +102,9 @@ func reverseData(data []proto.Message) []proto.Message {
 
 func checkIteratorAgainstSlice(t *testing.T, iterator Iterator, data []proto.Message, typ protoreflect.MessageType) {
 	i := 0
-	for {
-		have, err := iterator.Next()
-		assert.NilError(t, err)
-		if !have {
-			break
-		}
-
+	for iterator.Next() {
 		msg := typ.New().Interface()
-		err = iterator.UnmarshalMessage(msg)
+		err := iterator.UnmarshalMessage(msg)
 		assert.NilError(t, err)
 		assert.DeepEqual(t, data[i], msg, protocmp.Transform())
 		i++
@@ -136,7 +130,7 @@ func TableDataGen(elemGen *rapid.Generator, n int) *rapid.Generator {
 			var err error
 			for {
 				message = elemGen.Draw(t, fmt.Sprintf("message[%d]", i)).(proto.Message)
-				err = table.Save(store, message, SAVE_MODE_CREATE)
+				err = table.Save(store, message, SAVE_MODE_INSERT)
 				if err == nil {
 					break
 				}

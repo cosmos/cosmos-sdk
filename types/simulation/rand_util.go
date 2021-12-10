@@ -94,7 +94,7 @@ func RandTimestamp(r *rand.Rand) time.Time {
 	unixTime := r.Int63n(60*60*24*365*200) * 1000 // convert to milliseconds
 
 	// Get milliseconds for a time between Jan 1, 2062 and Jan 1, 2262
-	rtime := time.UnixMilli(start + unixTime).UnixMilli() / 1000
+	rtime := time.UnixMilli(start+unixTime).UnixMilli() / 1000
 	return time.Unix(rtime, 0)
 }
 

@@ -248,7 +248,7 @@ func (s *TestSuite) TestDispatchedEvents() {
 	}
 }
 
-func (s *TestSuite) TestIterExpiredGrantsQueue() {
+func (s *TestSuite) TestPruneAllGrantsQueue() {
 	require := s.Require()
 	app, addrs := s.app, s.addrs
 	granter := addrs[0]
@@ -269,14 +269,12 @@ func (s *TestSuite) TestIterExpiredGrantsQueue() {
 	err = app.AuthzKeeper.SaveGrant(s.ctx, granter, grantee, &banktypes.SendAuthorization{SpendLimit: smallCoin}, now.AddDate(2, 0, 0))
 	require.NoError(err)
 
-	futureTime := s.ctx.WithBlockTime(now.AddDate(1, 0, 0)).BlockTime()
-	app.AuthzKeeper.IterateExpiredGrantQueue(s.ctx, futureTime, func(gte, gtr sdk.AccAddress, msgType string) (stop bool) {
-		require.Contains([]sdk.AccAddress{grantee, grantee1}, gte)
-		require.Equal(granter, gtr)
-		require.Equal(msgType, bankSendAuthMsgType)
+	ctx := s.ctx.WithBlockTime(now.AddDate(1, 0, 0))
+	app.AuthzKeeper.DeleteAllMatureGrants(ctx)
 
-		return false
-	})
+	require.Len(app.AuthzKeeper.GetAuthorizations(ctx, grantee, granter), 0)
+	require.Len(app.AuthzKeeper.GetAuthorizations(ctx, grantee1, granter), 0)
+	require.Len(app.AuthzKeeper.GetAuthorizations(ctx, granter, granter), 0)
 }
 
 func TestTestSuite(t *testing.T) {

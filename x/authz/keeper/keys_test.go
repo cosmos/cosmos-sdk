@@ -26,12 +26,13 @@ func TestGrantkey(t *testing.T) {
 	require.Equal(grantee, grantee1)
 }
 
-func TestExpiredQueueKey(t *testing.T) {
+func TestGrantQueueKey(t *testing.T) {
 	blockTime := time.Now().UTC()
+	key := grantStoreKey(grantee, granter, msgType)
 
-	key := expiredGrantQueueKey(grantee, granter, msgType, blockTime)
+	queueKey := GrantQueueKey(key, blockTime)
 
-	expiration, grantee1, granter1, authzType := splitExpiredGrantQueueKey(key)
+	expiration, grantee1, granter1, authzType := splitGrantQueueKey(queueKey)
 
 	require.Equal(t, blockTime, expiration)
 	require.Equal(t, granter, granter1)

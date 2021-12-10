@@ -18,8 +18,8 @@ import (
 // - 0x02<grant_expiration_Bytes><grant_Bytes>: grantKey
 //
 var (
-	GrantKey                = []byte{0x01} // prefix for each key
-	ExpiredGrantQueuePrefix = []byte{0x02}
+	GrantKey         = []byte{0x01} // prefix for each key
+	GrantQueuePrefix = []byte{0x02}
 )
 
 var lenTime = len(sdk.FormatTimeBytes(time.Now()))
@@ -61,7 +61,7 @@ func addressesFromGrantStoreKey(key []byte) (granterAddr, granteeAddr sdk.AccAdd
 	return granterAddr, granteeAddr
 }
 
-func splitExpiredGrantQueueKey(key []byte) (expiration time.Time, grantee, granter sdk.AccAddress, msgType string) {
+func splitGrantQueueKey(key []byte) (expiration time.Time, grantee, granter sdk.AccAddress, msgType string) {
 	// key is of format:
 	// 0x02<grant_expiration_Bytes><granterAddressLen (1 Byte)><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes><msgType_Bytes>
 
@@ -83,28 +83,22 @@ func splitExpiredGrantQueueKey(key []byte) (expiration time.Time, grantee, grant
 	return expiration, grantee, granter, msgType
 }
 
-// expiredGrantByTimeKey gets the expired grant queue key by expiration
-func expiredGrantByTimeKey(expiration time.Time) []byte {
-	return append(ExpiredGrantQueuePrefix, sdk.FormatTimeBytes(expiration)...)
+// grantByTimeKey gets the grant queue key by expiration
+func grantByTimeKey(expiration time.Time) []byte {
+	return append(GrantQueuePrefix, sdk.FormatTimeBytes(expiration)...)
 }
 
-// expiredGrantQueueKey - return expired grant queue store key
-// Items are stored with the following key: values
+// GrantQueueKey - return grant queue store key
+// Key format is
 //
 // - 0x02<grant_expiration_Bytes><granterAddressLen (1 Byte)><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes><msgType_Bytes>: grantKey
-func expiredGrantQueueKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType string, expiration time.Time) []byte {
-	expiredGrantKey := expiredGrantByTimeKey(expiration)
-	expiredGrantKeyLen := len(expiredGrantByTimeKey(expiration))
+func GrantQueueKey(grantKey []byte, expiration time.Time) []byte {
+	expiredGrantKey := grantByTimeKey(expiration)
+	expiredGrantKeyLen := len(expiredGrantKey)
 
-	m := conv.UnsafeStrToBytes(msgType)
-	granter = address.MustLengthPrefix(granter)
-	grantee = address.MustLengthPrefix(grantee)
-
-	l := expiredGrantKeyLen + len(grantee) + len(granter) + len(m)
+	l := len(grantKey) - 1 + expiredGrantKeyLen
 	var key = make([]byte, l)
 	copy(key, expiredGrantKey)
-	copy(key[expiredGrantKeyLen:], granter)
-	copy(key[expiredGrantKeyLen+len(granter):], grantee)
-	copy(key[l-len(m):], m)
+	copy(key[expiredGrantKeyLen:], grantKey[1:])
 	return key
 }

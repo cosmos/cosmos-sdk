@@ -5,12 +5,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
 )
 
-// EndBlocker prunes expired authorizations from the state
+// EndBlocker is called at the end of every block
 func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 
-	// delete expired authorizations from store
-	keeper.IterateExpiredGrantQueue(ctx, ctx.BlockHeader().Time, func(grantee, granter sdk.AccAddress, msgType string) (stop bool) {
-		keeper.DeleteGrant(ctx, grantee, granter, msgType)
-		return false
-	})
+	// clears all the mature grants
+	keeper.DeleteAllMatureGrants(ctx)
 }

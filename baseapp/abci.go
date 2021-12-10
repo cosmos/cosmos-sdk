@@ -176,6 +176,9 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		WithBlockGasMeter(gasMeter).
 		WithHeaderHash(req.Hash)
 
+	app.deliverState.ctx = app.deliverState.ctx.
+		WithConsensusParams(app.GetConsensusParams(app.deliverState.ctx))
+
 	// we also set block gas meter to checkState in case the application needs to
 	// verify gas consumption during (Re)CheckTx
 	if app.checkState != nil {

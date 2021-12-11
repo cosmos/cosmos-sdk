@@ -27,7 +27,7 @@ func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadClos
 
 	versions, err := rs.stateDB.Versions()
 	if versions.Count() != 0 {
-		return sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot restore snapshot %v", height)
+		return sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot restore snapshot for non empty store at height %v", height)
 	}
 
 	// Signal readiness. Must be done before the readers below are set up, since the zlib
@@ -50,7 +50,7 @@ func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadClos
 
 	var subStore *substore
 	// initialisation empty store-schema for snapshot
-	ret := prefixRegistry{StoreSchema: StoreSchema{}}
+	preg := prefixRegistry{StoreSchema: StoreSchema{}}
 
 	for {
 		item := &storetypes.SnapshotItem{}
@@ -66,22 +66,24 @@ func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadClos
 			schemaWriter := prefixdb.NewPrefixWriter(rs.stateTxn, schemaPrefix)
 			sKeys := item.Schema.GetKeys()
 			for _, sKey := range sKeys {
-				ret.StoreSchema[string(sKey)] = types.StoreTypePersistent
-				ret.reserved = append(ret.reserved, string(sKey))
+				preg.StoreSchema[string(sKey)] = types.StoreTypePersistent
+				preg.reserved = append(preg.reserved, string(sKey))
 				err := schemaWriter.Set(sKey, []byte{byte(types.StoreTypePersistent)})
 				if err != nil {
 					return sdkerrors.Wrap(err, "error at set the store schema key values")
 				}
 			}
+			// set the new snapshot store schema to root-store
+			rs.schema = preg.StoreSchema
 
 		case *storetypes.SnapshotItem_Store:
 			storeName := item.Store.GetName()
-			_, _, err := ret.storeInfo(storeName)
-			if err != nil {
-				return sdkerrors.Wrap(sdkerrors.ErrLogic, "received store name before store schema")
+			// checking the store schema exists or not
+			if _, has := rs.schema[storeName]; !has {
+				return sdkerrors.Wrapf(sdkerrors.ErrLogic, "received store name before store schema %s", storeName)
 			}
-			// set the new snapshot store schema to root-store
-			rs.schema = ret.StoreSchema
+
+			// get the substore
 			subStore, err = rs.getSubstore(storeName)
 			if err != nil {
 				return sdkerrors.Wrap(err, fmt.Sprintf("error while getting the substore for key %s", storeName))

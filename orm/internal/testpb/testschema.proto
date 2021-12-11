@@ -80,6 +80,11 @@ message C {
       fields:"id"
       auto_increment: true
     }
+    index:{
+      id: 1
+      fields:"x"
+      unique: true
+    }
   };
 
   uint64 id = 1;

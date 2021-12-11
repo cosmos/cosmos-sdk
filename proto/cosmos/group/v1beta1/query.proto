@@ -12,10 +12,10 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/group";
 service Query {
 
   // GroupInfo queries group info based on group id.
-  rpc GroupInfo(QueryGroupInfo) returns (QueryGroupInfoResponse);
+  rpc GroupInfo(QueryGroupInfoRequest) returns (QueryGroupInfoResponse);
 
   // GroupAccountInfo queries group account info based on group account address.
-  rpc GroupAccountInfo(QueryGroupAccountInfo) returns (QueryGroupAccountInfoResponse);
+  rpc GroupAccountInfo(QueryGroupAccountInfoRequest) returns (QueryGroupAccountInfoResponse);
 
   // GroupMembers queries members of a group
   rpc GroupMembers(QueryGroupMembersRequest) returns (QueryGroupMembersResponse);
@@ -24,16 +24,16 @@ service Query {
   rpc GroupsByAdmin(QueryGroupsByAdminRequest) returns (QueryGroupsByAdminResponse);
 
   // GroupAccountsByGroup queries group accounts by group id.
-  rpc GroupAccountsByGroup(QueryGroupAccountsByGroup) returns (QueryGroupAccountsByGroupResponse);
+  rpc GroupAccountsByGroup(QueryGroupAccountsByGroupRequest) returns (QueryGroupAccountsByGroupResponse);
 
   // GroupsByAdmin queries group accounts by admin address.
-  rpc GroupAccountsByAdmin(QueryGroupAccountsByAdmin) returns (QueryGroupAccountsByAdminResponse);
+  rpc GroupAccountsByAdmin(QueryGroupAccountsByAdminRequest) returns (QueryGroupAccountsByAdminResponse);
 
   // Proposal queries a proposal based on proposal id.
-  rpc Proposal(QueryProposal) returns (QueryProposalResponse);
+  rpc Proposal(QueryProposalRequest) returns (QueryProposalResponse);
 
   // ProposalsByGroupAccount queries proposals based on group account address.
-  rpc ProposalsByGroupAccount(QueryProposalsByGroupAccount) returns (QueryProposalsByGroupAccountResponse);
+  rpc ProposalsByGroupAccount(QueryProposalsByGroupAccountRequest) returns (QueryProposalsByGroupAccountResponse);
 
   // VoteByProposalVoter queries a vote by proposal id and voter.
   rpc VoteByProposalVoter(QueryVoteByProposalVoterRequest) returns (QueryVoteByProposalVoterResponse);
@@ -45,8 +45,8 @@ service Query {
   rpc VotesByVoter(QueryVotesByVoterRequest) returns (QueryVotesByVoterResponse);
 }
 
-// QueryGroupInfo is the Query/GroupInfo request type.
-message QueryGroupInfo {
+// QueryGroupInfoRequest is the Query/GroupInfo request type.
+message QueryGroupInfoRequest {
 
   // group_id is the unique ID of the group.
   uint64 group_id = 1;
@@ -59,8 +59,8 @@ message QueryGroupInfoResponse {
   GroupInfo info = 1;
 }
 
-// QueryGroupAccountInfo is the Query/GroupAccountInfo request type.
-message QueryGroupAccountInfo {
+// QueryGroupAccountInfoRequest is the Query/GroupAccountInfo request type.
+message QueryGroupAccountInfoRequest {
 
   // address is the account address of the group account.
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -113,8 +113,8 @@ message QueryGroupsByAdminResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryGroupAccountsByGroup is the Query/GroupAccountsByGroup request type.
-message QueryGroupAccountsByGroup {
+// QueryGroupAccountsByGroupRequest is the Query/GroupAccountsByGroup request type.
+message QueryGroupAccountsByGroupRequest {
 
   // group_id is the unique ID of the group account's group.
   uint64 group_id = 1;
@@ -133,8 +133,8 @@ message QueryGroupAccountsByGroupResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryGroupAccountsByAdmin is the Query/GroupAccountsByAdmin request type.
-message QueryGroupAccountsByAdmin {
+// QueryGroupAccountsByAdminRequest is the Query/GroupAccountsByAdmin request type.
+message QueryGroupAccountsByAdminRequest {
 
   // admin is the admin address of the group account.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -153,8 +153,8 @@ message QueryGroupAccountsByAdminResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryProposal is the Query/Proposal request type.
-message QueryProposal {
+// QueryProposalRequest is the Query/Proposal request type.
+message QueryProposalRequest {
 
   // proposal_id is the unique ID of a proposal.
   uint64 proposal_id = 1;
@@ -167,8 +167,8 @@ message QueryProposalResponse {
   Proposal proposal = 1;
 }
 
-// QueryProposalsByGroupAccount is the Query/ProposalByGroupAccount request type.
-message QueryProposalsByGroupAccount {
+// QueryProposalsByGroupAccountRequest is the Query/ProposalByGroupAccount request type.
+message QueryProposalsByGroupAccountRequest {
 
   // address is the group account address related to proposals.
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];

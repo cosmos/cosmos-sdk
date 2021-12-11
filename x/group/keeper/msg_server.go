@@ -266,7 +266,8 @@ func (k Keeper) CreateGroupAccount(goCtx context.Context, req *group.MsgCreateGr
 		var buf = make([]byte, 8)
 		binary.BigEndian.PutUint64(buf, nextAccVal)
 
-		accountAddr = address.Module(group.ModuleName, buf)
+		parentAcc := address.Module(group.ModuleName, []byte{GroupAccountTablePrefix})
+		accountAddr = address.Derive(parentAcc, buf)
 
 		if k.accKeeper.GetAccount(ctx, accountAddr) != nil {
 			// handle a rare collision

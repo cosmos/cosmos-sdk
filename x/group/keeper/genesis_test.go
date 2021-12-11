@@ -38,8 +38,8 @@ func TestGenesisTestSuite(t *testing.T) {
 
 var (
 	memberPub  = secp256k1.GenPrivKey().PubKey()
-	accPub  = secp256k1.GenPrivKey().PubKey()
-	accAddr = sdk.AccAddress(accPub.Address())
+	accPub     = secp256k1.GenPrivKey().PubKey()
+	accAddr    = sdk.AccAddress(accPub.Address())
 	memberAddr = sdk.AccAddress(memberPub.Address())
 )
 

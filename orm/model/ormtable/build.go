@@ -1,8 +1,6 @@
 package ormtable
 
 import (
-	"math"
-
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -13,7 +11,8 @@ import (
 
 const (
 	PrimaryKeyId uint32 = 0
-	SeqId        uint32 = math.MaxInt32
+	IndexIdLimit uint32 = 32768
+	SeqId               = IndexIdLimit
 )
 
 func BuildTable(options TableOptions) (Table, error) {
@@ -24,7 +23,7 @@ func BuildTable(options TableOptions) (Table, error) {
 		indexes:               []Index{},
 		indexesByFields:       map[FieldNames]concreteIndex{},
 		uniqueIndexesByFields: map[FieldNames]UniqueIndex{},
-		indexesById:           map[uint32]concreteIndex{},
+		entryCodecsById:       map[uint32]ormkv.EntryCodec{},
 		tablePrefix:           options.Prefix,
 		typeResolver:          options.TypeResolver,
 		customJSONValidator:   options.JSONValidator,
@@ -90,16 +89,16 @@ func BuildTable(options TableOptions) (Table, error) {
 	table.PrimaryKeyIndex = pkIndex
 	table.indexesByFields[pkFields] = pkIndex
 	table.uniqueIndexesByFields[pkFields] = pkIndex
-	table.indexesById[PrimaryKeyId] = pkIndex
+	table.entryCodecsById[PrimaryKeyId] = pkIndex
 	table.indexes = append(table.indexes, pkIndex)
 
 	for _, idxDesc := range tableDesc.Index {
 		id := idxDesc.Id
-		if id == 0 || id >= math.MaxInt32 {
+		if id == 0 || id >= IndexIdLimit {
 			return nil, ormerrors.InvalidIndexId.Wrapf("index on table %s with fields %s, invalid id %d", messageDescriptor.FullName(), idxDesc.Fields, id)
 		}
 
-		if _, ok := table.indexesById[id]; ok {
+		if _, ok := table.entryCodecsById[id]; ok {
 			return nil, ormerrors.DuplicateIndexId.Wrapf("id %d on table %s", id, messageDescriptor.FullName())
 		}
 
@@ -126,7 +125,7 @@ func BuildTable(options TableOptions) (Table, error) {
 			index = NewIndexKeyIndex(idxCdc, pkIndex)
 		}
 		table.indexesByFields[idxFields] = index
-		table.indexesById[idxDesc.Id] = index
+		table.entryCodecsById[idxDesc.Id] = index
 		table.indexes = append(table.indexes, index)
 		table.indexers = append(table.indexers, index.(Indexer))
 	}
@@ -139,6 +138,7 @@ func BuildTable(options TableOptions) (Table, error) {
 
 		seqPrefix := AppendVarUInt32(options.Prefix, SeqId)
 		seqCodec := ormkv.NewSeqCodec(options.MessageType, seqPrefix)
+		table.entryCodecsById[SeqId] = seqCodec
 		return &AutoIncrementTable{
 			TableImpl:    table,
 			autoIncField: autoIncField,

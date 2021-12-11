@@ -27,7 +27,7 @@ type TableImpl struct {
 	indexes               []Index
 	indexesByFields       map[FieldNames]concreteIndex
 	uniqueIndexesByFields map[FieldNames]UniqueIndex
-	indexesById           map[uint32]concreteIndex
+	entryCodecsById       map[uint32]ormkv.EntryCodec
 	tablePrefix           []byte
 	typeResolver          TypeResolver
 	customJSONValidator   func(message proto.Message) error
@@ -149,25 +149,40 @@ func (t TableImpl) DefaultJSON() json.RawMessage {
 }
 
 func (t TableImpl) decodeJson(reader io.Reader, onMsg func(message proto.Message) error) error {
-	decoder := json.NewDecoder(reader)
-	token, err := decoder.Token()
+	decoder, err := t.startDecodeJson(reader)
 	if err != nil {
 		return err
 	}
 
-	if token != json.Delim('[') {
-		return ormerrors.JSONImportError.Wrapf("expected [ got %s", token)
+	return t.doDecodeJson(decoder, onMsg)
+}
+
+func (t TableImpl) startDecodeJson(reader io.Reader) (*json.Decoder, error) {
+	decoder := json.NewDecoder(reader)
+	token, err := decoder.Token()
+	if err != nil {
+		return nil, err
 	}
+
+	if token != json.Delim('[') {
+		return nil, ormerrors.JSONImportError.Wrapf("expected [ got %s", token)
+	}
+
+	return decoder, nil
+}
+
+func (t TableImpl) doDecodeJson(decoder *json.Decoder, onMsg func(message proto.Message) error) error {
+	unmarshalOptions := protojson.UnmarshalOptions{Resolver: t.typeResolver}
 
 	for decoder.More() {
 		var rawJson json.RawMessage
-		err = decoder.Decode(&rawJson)
+		err := decoder.Decode(&rawJson)
 		if err != nil {
 			return ormerrors.JSONImportError.Wrapf("%s", err)
 		}
 
 		msg := t.MessageType().New().Interface()
-		err = protojson.UnmarshalOptions{Resolver: t.typeResolver}.Unmarshal(rawJson, msg)
+		err = unmarshalOptions.Unmarshal(rawJson, msg)
 		if err != nil {
 			return err
 		}
@@ -178,7 +193,7 @@ func (t TableImpl) decodeJson(reader io.Reader, onMsg func(message proto.Message
 		}
 	}
 
-	token, err = decoder.Token()
+	token, err := decoder.Token()
 	if err != nil {
 		return err
 	}
@@ -230,6 +245,16 @@ func (t TableImpl) ExportJSON(store kvstore.IndexCommitmentReadStore, writer io.
 		return err
 	}
 
+	return t.doExportJSON(store, writer)
+}
+
+func (t TableImpl) doExportJSON(store kvstore.IndexCommitmentReadStore, writer io.Writer) error {
+	marshalOptions := protojson.MarshalOptions{
+		UseProtoNames: true,
+		Resolver:      t.typeResolver,
+	}
+
+	var err error
 	it, _ := t.PrefixIterator(store, nil, IteratorOptions{})
 	start := true
 	for {
@@ -252,7 +277,7 @@ func (t TableImpl) ExportJSON(store kvstore.IndexCommitmentReadStore, writer io.
 			return err
 		}
 
-		bz, err := protojson.Marshal(msg)
+		bz, err := marshalOptions.Marshal(msg)
 		if err != nil {
 			return err
 		}
@@ -286,7 +311,7 @@ func (t TableImpl) DecodeKV(k, v []byte) (ormkv.Entry, error) {
 			return nil, ormerrors.UnexpectedDecodePrefix.Wrapf("uint32 varint id out of range %d", id)
 		}
 
-		idx, ok := t.indexesById[uint32(id)]
+		idx, ok := t.entryCodecsById[uint32(id)]
 		if !ok {
 			return nil, ormerrors.UnexpectedDecodePrefix.Wrapf("can't find field with id %d", id)
 		}

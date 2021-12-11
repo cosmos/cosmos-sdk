@@ -11,7 +11,7 @@ var (
 	DuplicateKeyField             = errors.New(codespace, 4, "duplicate field in key")
 	FieldNotFound                 = errors.New(codespace, 5, "field not found")
 	InvalidAutoIncrementKey       = errors.New(codespace, 6, "an auto-increment primary key must specify a single uint64 field")
-	InvalidIndexId                = errors.New(codespace, 7, "invalid or missing index id, need a non-zero value")
+	InvalidIndexId                = errors.New(codespace, 7, "invalid or missing index id, need a value >= 0 and < int32 max")
 	DuplicateIndexId              = errors.New(codespace, 8, "duplicate index id")
 	PrimaryKeyConstraintViolation = errors.New(codespace, 9, "object with primary key already exists")
 	NotFoundOnUpdate              = errors.New(codespace, 10, "can't update object which doesn't exist")

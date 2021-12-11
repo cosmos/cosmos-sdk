@@ -1,6 +1,8 @@
 package ormtable
 
 import (
+	"math"
+
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -11,16 +13,51 @@ import (
 
 const (
 	PrimaryKeyId uint32 = 0
+	SeqId        uint32 = math.MaxInt32
 )
 
-func Build(options TableOptions) (Table, error) {
+func BuildTable(options TableOptions) (Table, error) {
 	messageDescriptor := options.MessageType.Descriptor()
+
+	table := &TableImpl{
+		indexers:              []Indexer{},
+		indexes:               []Index{},
+		indexesByFields:       map[FieldNames]concreteIndex{},
+		uniqueIndexesByFields: map[FieldNames]UniqueIndex{},
+		indexesById:           map[uint32]concreteIndex{},
+		tablePrefix:           options.Prefix,
+		typeResolver:          options.TypeResolver,
+		customJSONValidator:   options.JSONValidator,
+	}
+
 	tableDesc := options.TableDescriptor
 	if tableDesc == nil {
 		tableDesc = proto.GetExtension(messageDescriptor.Options(), ormv1alpha1.E_Table).(*ormv1alpha1.TableDescriptor)
-		if tableDesc == nil {
-			return nil, ormerrors.InvalidTableDefinition.Wrapf("missing table descriptor for %s", messageDescriptor.FullName())
+	}
+
+	singletonDesc := options.SingletonDescriptor
+	if singletonDesc == nil {
+		singletonDesc = proto.GetExtension(messageDescriptor.Options(), ormv1alpha1.E_Singleton).(*ormv1alpha1.SingletonDescriptor)
+	}
+
+	if tableDesc != nil {
+		if singletonDesc != nil {
+			return nil, ormerrors.InvalidTableDefinition.Wrapf("message %s cannot be declared as both a table and a singleton", messageDescriptor.FullName())
 		}
+	} else if singletonDesc != nil {
+		pkPrefix := AppendVarUInt32(options.Prefix, PrimaryKeyId)
+		pkCodec, err := ormkv.NewPrimaryKeyCodec(pkPrefix, options.MessageType, nil, options.UnmarshalOptions)
+		if err != nil {
+			return nil, err
+		}
+
+		table.PrimaryKeyIndex = NewPrimaryKeyIndex(pkCodec)
+
+		return &Singleton{
+			table,
+		}, nil
+	} else {
+		return nil, ormerrors.InvalidTableDefinition.Wrapf("missing table descriptor for %s", messageDescriptor.FullName())
 	}
 
 	tableId := tableDesc.Id
@@ -50,18 +87,7 @@ func Build(options TableOptions) (Table, error) {
 
 	pkIndex := NewPrimaryKeyIndex(pkCodec)
 
-	table := &TableImpl{
-		PrimaryKeyIndex:       pkIndex,
-		indexers:              []Indexer{},
-		indexes:               []Index{},
-		indexesByFields:       map[FieldNames]concreteIndex{},
-		uniqueIndexesByFields: map[FieldNames]UniqueIndex{},
-		indexesById:           map[uint32]concreteIndex{},
-		tablePrefix:           options.Prefix,
-		typeResolver:          options.TypeResolver,
-		customJSONValidator:   options.JSONValidator,
-	}
-
+	table.PrimaryKeyIndex = pkIndex
 	table.indexesByFields[pkFields] = pkIndex
 	table.uniqueIndexesByFields[pkFields] = pkIndex
 	table.indexesById[PrimaryKeyId] = pkIndex
@@ -69,8 +95,8 @@ func Build(options TableOptions) (Table, error) {
 
 	for _, idxDesc := range tableDesc.Index {
 		id := idxDesc.Id
-		if id == 0 {
-			return nil, ormerrors.InvalidIndexId.Wrapf("index on table %s with fields %s", messageDescriptor.FullName(), idxDesc.Fields)
+		if id == 0 || id >= math.MaxInt32 {
+			return nil, ormerrors.InvalidIndexId.Wrapf("index on table %s with fields %s, invalid id %d", messageDescriptor.FullName(), idxDesc.Fields, id)
 		}
 
 		if _, ok := table.indexesById[id]; ok {
@@ -105,14 +131,30 @@ func Build(options TableOptions) (Table, error) {
 		table.indexers = append(table.indexers, index.(Indexer))
 	}
 
+	if tableDesc.PrimaryKey.AutoIncrement {
+		autoIncField := pkCodec.GetFieldDescriptors()[0]
+		if len(pkFieldNames) != 1 && autoIncField.Kind() != protoreflect.Uint64Kind {
+			return nil, ormerrors.InvalidAutoIncrementKey.Wrapf("field", autoIncField.FullName())
+		}
+
+		seqPrefix := AppendVarUInt32(options.Prefix, SeqId)
+		seqCodec := ormkv.NewSeqCodec(options.MessageType, seqPrefix)
+		return &AutoIncrementTable{
+			TableImpl:    table,
+			autoIncField: autoIncField,
+			seqCodec:     seqCodec,
+		}, nil
+	}
+
 	return table, nil
 }
 
 type TableOptions struct {
-	Prefix           []byte
-	MessageType      protoreflect.MessageType
-	TableDescriptor  *ormv1alpha1.TableDescriptor
-	UnmarshalOptions proto.UnmarshalOptions
-	TypeResolver     TypeResolver
-	JSONValidator    func(proto.Message) error
+	Prefix              []byte
+	MessageType         protoreflect.MessageType
+	TableDescriptor     *ormv1alpha1.TableDescriptor
+	SingletonDescriptor *ormv1alpha1.SingletonDescriptor
+	UnmarshalOptions    proto.UnmarshalOptions
+	TypeResolver        TypeResolver
+	JSONValidator       func(proto.Message) error
 }

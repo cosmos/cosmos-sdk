@@ -25,7 +25,7 @@ import (
 )
 
 func TestScenario(t *testing.T) {
-	table, err := Build(TableOptions{
+	table, err := BuildTable(TableOptions{
 		MessageType: (&testpb.A{}).ProtoReflect().Type(),
 	})
 	assert.NilError(t, err)
@@ -455,7 +455,7 @@ func TableDataGen(elemGen *rapid.Generator, n int) *rapid.Generator {
 	return rapid.Custom(func(t *rapid.T) *TableData {
 		prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix").([]byte)
 		message := elemGen.Draw(t, "message").(proto.Message)
-		table, err := Build(TableOptions{
+		table, err := BuildTable(TableOptions{
 			Prefix:      prefix,
 			MessageType: message.ProtoReflect().Type(),
 		})
@@ -525,7 +525,7 @@ func (m *IndexModel) Swap(i, j int) {
 var _ sort.Interface = &IndexModel{}
 
 func TestJSONExportImport(t *testing.T) {
-	table, err := Build(TableOptions{
+	table, err := BuildTable(TableOptions{
 		MessageType: (&testpb.A{}).ProtoReflect().Type(),
 	})
 	assert.NilError(t, err)

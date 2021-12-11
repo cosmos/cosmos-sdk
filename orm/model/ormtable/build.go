@@ -134,7 +134,7 @@ func BuildTable(options TableOptions) (Table, error) {
 	if tableDesc.PrimaryKey.AutoIncrement {
 		autoIncField := pkCodec.GetFieldDescriptors()[0]
 		if len(pkFieldNames) != 1 && autoIncField.Kind() != protoreflect.Uint64Kind {
-			return nil, ormerrors.InvalidAutoIncrementKey.Wrapf("field", autoIncField.FullName())
+			return nil, ormerrors.InvalidAutoIncrementKey.Wrapf("field %s", autoIncField.FullName())
 		}
 
 		seqPrefix := AppendVarUInt32(options.Prefix, SeqId)

@@ -5,7 +5,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 type Iterator interface {
@@ -31,7 +30,7 @@ func prefixIterator(iteratorStore kvstore.ReadStore, store kvstore.IndexCommitme
 		} else {
 			start = prefix
 		}
-		end := storetypes.PrefixEndBytes(prefix)
+		end := prefixEndBytes(prefix)
 		it, err := iteratorStore.Iterator(start, end)
 		if err != nil {
 			return nil, err
@@ -48,7 +47,7 @@ func prefixIterator(iteratorStore kvstore.ReadStore, store kvstore.IndexCommitme
 			// end bytes is already exclusive by default
 			end = options.Cursor
 		} else {
-			end = storetypes.PrefixEndBytes(prefix)
+			end = prefixEndBytes(prefix)
 		}
 		it, err := iteratorStore.ReverseIterator(prefix, end)
 		if err != nil {
@@ -69,7 +68,7 @@ func rangeIterator(iteratorStore kvstore.ReadStore, store kvstore.IndexCommitmen
 		if len(options.Cursor) != 0 {
 			start = append(options.Cursor, 0)
 		}
-		it, err := iteratorStore.Iterator(start, storetypes.PrefixEndBytes(end))
+		it, err := iteratorStore.Iterator(start, prefixEndBytes(end))
 		if err != nil {
 			return nil, err
 		}
@@ -83,9 +82,9 @@ func rangeIterator(iteratorStore kvstore.ReadStore, store kvstore.IndexCommitmen
 		if len(options.Cursor) != 0 {
 			end = options.Cursor
 		} else {
-			end = storetypes.PrefixEndBytes(end)
+			end = prefixEndBytes(end)
 		}
-		it, err := iteratorStore.ReverseIterator(start, storetypes.InclusiveEndBytes(end))
+		it, err := iteratorStore.ReverseIterator(start, end)
 		if err != nil {
 			return nil, err
 		}

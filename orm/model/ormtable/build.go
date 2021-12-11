@@ -59,7 +59,7 @@ func Build(options TableOptions) (Table, error) {
 		indexesById:           map[uint32]concreteIndex{},
 		tablePrefix:           options.Prefix,
 		typeResolver:          options.TypeResolver,
-		customImportValidator: options.ImportValidator,
+		customJSONValidator:   options.JSONValidator,
 	}
 
 	table.indexesByFields[pkFields] = pkIndex
@@ -114,5 +114,5 @@ type TableOptions struct {
 	TableDescriptor  *ormv1alpha1.TableDescriptor
 	UnmarshalOptions proto.UnmarshalOptions
 	TypeResolver     TypeResolver
-	ImportValidator  func(proto.Message) error
+	JSONValidator    func(proto.Message) error
 }

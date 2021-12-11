@@ -75,8 +75,11 @@ func Paginate(
 		if i == done {
 			haveMore = true
 			if request.CountTotal {
-				for it.Next() {
+				for {
 					i++
+					if !it.Next() {
+						break
+					}
 				}
 			}
 			break
@@ -98,7 +101,7 @@ func Paginate(
 
 	pageRes := &query.PageResponse{}
 	if request.CountTotal {
-		pageRes.Total = uint64(i + 1)
+		pageRes.Total = uint64(i)
 	}
 	n := len(cursors)
 	if n != 0 {

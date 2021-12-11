@@ -6,6 +6,8 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
+
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -202,6 +204,20 @@ func TestScenario(t *testing.T) {
 	assert.Equal(t, 2, len(res.Cursors))
 	assertGotItems(res.Items, 7, 6)
 
+	// range query
+	res, err = Paginate(table, store, &PaginationRequest{
+		PageRequest: &query.PageRequest{
+			Limit: 10,
+		},
+		Start: testutil.ValuesOf(uint32(4), int64(-1), "abc"),
+		End:   testutil.ValuesOf(uint32(7), int64(-2), "abe"),
+	})
+	assert.NilError(t, err)
+	assert.Assert(t, res != nil)
+	assert.Assert(t, !res.HaveMore)
+	assert.Equal(t, 4, len(res.Cursors))
+	assertGotItems(res.Items, 2, 3, 4, 5)
+
 	// let's try an offset
 	res, err = Paginate(table, store, &PaginationRequest{
 		PageRequest: &query.PageRequest{
@@ -235,6 +251,32 @@ func TestScenario(t *testing.T) {
 	assert.Equal(t, 3, len(res.Cursors))
 	assertGotItems(res.Items, 4, 3, 2)
 
+	// now an offset that's slightly too big
+	res, err = Paginate(table, store, &PaginationRequest{
+		PageRequest: &query.PageRequest{
+			Limit:      1,
+			CountTotal: true,
+			Offset:     10,
+		},
+	})
+	assert.NilError(t, err)
+	assert.Equal(t, 0, len(res.Items))
+	assert.Assert(t, !res.HaveMore)
+	assert.Equal(t, uint64(10), res.Total)
+
+	// another offset that's too big
+	res, err = Paginate(table, store, &PaginationRequest{
+		PageRequest: &query.PageRequest{
+			Limit:      1,
+			CountTotal: true,
+			Offset:     14,
+		},
+	})
+	assert.NilError(t, err)
+	assert.Equal(t, 0, len(res.Items))
+	assert.Assert(t, !res.HaveMore)
+	assert.Equal(t, uint64(10), res.Total)
+
 	// now let's update some things
 	for i := 0; i < 5; i++ {
 		data[i].U64 = data[i].U64 * 2
@@ -266,6 +308,14 @@ func TestScenario(t *testing.T) {
 	assert.NilError(t, err)
 	assertIteratorItems(it, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
+	// let's export and import JSON
+	buf := &bytes.Buffer{}
+	assert.NilError(t, table.ExportJSON(store, buf))
+	assert.NilError(t, table.ValidateJSON(bytes.NewReader(buf.Bytes())))
+	store2 := memkv.NewMemIndexCommitmentStore()
+	assert.NilError(t, table.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
+	assertTablesEqual(t, table, store, store2)
+
 	// let's delete item 5
 	key5 := testutil.ValuesOf(uint32(7), int64(-2), "abe")
 	err = table.Delete(store, key5)
@@ -278,47 +328,6 @@ func TestScenario(t *testing.T) {
 	it, err = table.PrefixIterator(store, nil, IteratorOptions{})
 	assert.NilError(t, err)
 	assertIteratorItems(it, 0, 1, 2, 3, 4, 6, 7, 8, 9, 10)
-}
-
-func TestJSONExportImport(t *testing.T) {
-	table, err := Build(TableOptions{
-		MessageType: (&testpb.A{}).ProtoReflect().Type(),
-	})
-	assert.NilError(t, err)
-	store := memkv.NewMemIndexCommitmentStore()
-
-	for i := 0; i < 100; i++ {
-		x := testutil.GenA.Example().(proto.Message)
-		err = table.Save(store, x, SAVE_MODE_DEFAULT)
-		assert.NilError(t, err)
-	}
-
-	buf := &bytes.Buffer{}
-	assert.NilError(t, table.ExportJSON(store, buf))
-
-	store2 := memkv.NewMemIndexCommitmentStore()
-	assert.NilError(t, table.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
-
-	it, err := table.PrefixIterator(store, nil, IteratorOptions{})
-	assert.NilError(t, err)
-	it2, err := table.PrefixIterator(store2, nil, IteratorOptions{})
-	assert.NilError(t, err)
-
-	for {
-		have := it.Next()
-		have2 := it2.Next()
-		assert.Equal(t, have, have2)
-		if !have {
-			break
-		}
-
-		msg1, err := it.GetMessage()
-		assert.NilError(t, err)
-		msg2, err := it.GetMessage()
-		assert.NilError(t, err)
-
-		assert.DeepEqual(t, msg1, msg2, protocmp.Transform())
-	}
 }
 
 func TestRandomTableData(t *testing.T) {
@@ -514,3 +523,51 @@ func (m *IndexModel) Swap(i, j int) {
 }
 
 var _ sort.Interface = &IndexModel{}
+
+func TestJSONExportImport(t *testing.T) {
+	table, err := Build(TableOptions{
+		MessageType: (&testpb.A{}).ProtoReflect().Type(),
+	})
+	assert.NilError(t, err)
+	store := memkv.NewMemIndexCommitmentStore()
+
+	for i := 0; i < 100; i++ {
+		x := testutil.GenA.Example().(proto.Message)
+		err = table.Save(store, x, SAVE_MODE_DEFAULT)
+		assert.NilError(t, err)
+	}
+
+	buf := &bytes.Buffer{}
+	assert.NilError(t, table.ExportJSON(store, buf))
+
+	assert.NilError(t, table.ValidateJSON(bytes.NewReader(buf.Bytes())))
+
+	store2 := memkv.NewMemIndexCommitmentStore()
+	assert.NilError(t, table.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
+
+	assertTablesEqual(t, table, store, store2)
+}
+
+func assertTablesEqual(t assert.TestingT, table Table, store, store2 kvstore.IndexCommitmentReadStore) {
+
+	it, err := table.PrefixIterator(store, nil, IteratorOptions{})
+	assert.NilError(t, err)
+	it2, err := table.PrefixIterator(store2, nil, IteratorOptions{})
+	assert.NilError(t, err)
+
+	for {
+		have := it.Next()
+		have2 := it2.Next()
+		assert.Equal(t, have, have2)
+		if !have {
+			break
+		}
+
+		msg1, err := it.GetMessage()
+		assert.NilError(t, err)
+		msg2, err := it.GetMessage()
+		assert.NilError(t, err)
+
+		assert.DeepEqual(t, msg1, msg2, protocmp.Transform())
+	}
+}

@@ -30,7 +30,7 @@ type TableImpl struct {
 	indexesById           map[uint32]concreteIndex
 	tablePrefix           []byte
 	typeResolver          TypeResolver
-	customImportValidator func(message proto.Message) error
+	customJSONValidator   func(message proto.Message) error
 }
 
 type TypeResolver interface {
@@ -190,7 +190,7 @@ func (t TableImpl) decodeJson(reader io.Reader, onMsg func(message proto.Message
 	return nil
 }
 
-func DefaultImportValidator(message proto.Message) error {
+func DefaultJSONValidator(message proto.Message) error {
 	if v, ok := message.(interface{ ValidateBasic() error }); ok {
 		err := v.ValidateBasic()
 		if err != nil {
@@ -210,10 +210,10 @@ func DefaultImportValidator(message proto.Message) error {
 
 func (t TableImpl) ValidateJSON(reader io.Reader) error {
 	return t.decodeJson(reader, func(message proto.Message) error {
-		if t.customImportValidator != nil {
-			return t.customImportValidator(message)
+		if t.customJSONValidator != nil {
+			return t.customJSONValidator(message)
 		} else {
-			return DefaultImportValidator(message)
+			return DefaultJSONValidator(message)
 		}
 	})
 }

@@ -101,11 +101,16 @@ func benchmarkIteratorOnParentWithManyDeletes(b *testing.B, numDeletes int) {
 	// and take next D keys sequentially after.
 	startKey := randSlice(32)
 	keys := generateSequentialKeys(startKey, numDeletes)
+	// setup parent db with D keys.
 	for _, k := range keys {
 		mem.Set(k, value)
 	}
 	kvstore := cachekv.NewStore(mem)
-	// Has to be 1: due to a bug in the CacheKVStore
+	// Delete all keys from the cache KV store.
+	// The keys[1:] is to keep at least one entry in parent, due to a bug in the SDK iterator design.
+	// Essentially the iterator will never be valid, in that it should never run.
+	// However, this is incompatible with the for loop structure the SDK uses, hence
+	// causes a panic. Thus we do keys[1:].
 	for _, k := range keys[1:] {
 		kvstore.Delete(k)
 	}

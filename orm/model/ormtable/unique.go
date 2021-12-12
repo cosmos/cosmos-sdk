@@ -1,11 +1,12 @@
 package ormtable
 
 import (
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 type UniqueKeyIndex struct {
@@ -81,7 +82,7 @@ func (u UniqueKeyIndex) Get(store kvstore.IndexCommitmentReadStore, keyValues []
 	return u.primaryKey.Get(store, pk, message)
 }
 
-func (u UniqueKeyIndex) OnCreate(store kvstore.Store, message protoreflect.Message) error {
+func (u UniqueKeyIndex) OnInsert(store kvstore.Store, message protoreflect.Message) error {
 	k, v, err := u.EncodeKVFromMessage(message)
 	if err != nil {
 		return err

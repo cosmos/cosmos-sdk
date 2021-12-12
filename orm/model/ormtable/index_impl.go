@@ -4,9 +4,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 )
 
 type IndexKeyIndex struct {
@@ -53,7 +54,7 @@ var sentinelValue = []byte{0}
 
 func (s IndexKeyIndex) doNotImplement() {}
 
-func (s IndexKeyIndex) OnCreate(store kvstore.Store, message protoreflect.Message) error {
+func (s IndexKeyIndex) OnInsert(store kvstore.Store, message protoreflect.Message) error {
 	k, v, err := s.EncodeKVFromMessage(message)
 	if err != nil {
 		return err

@@ -27,6 +27,7 @@ func BuildTable(options TableOptions) (Table, error) {
 		tablePrefix:           options.Prefix,
 		typeResolver:          options.TypeResolver,
 		customJSONValidator:   options.JSONValidator,
+		hooks:                 options.Hooks,
 	}
 
 	tableDesc := options.TableDescriptor
@@ -157,4 +158,5 @@ type TableOptions struct {
 	UnmarshalOptions    proto.UnmarshalOptions
 	TypeResolver        TypeResolver
 	JSONValidator       func(proto.Message) error
+	Hooks               Hooks
 }

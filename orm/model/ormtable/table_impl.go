@@ -31,6 +31,7 @@ type TableImpl struct {
 	tablePrefix           []byte
 	typeResolver          TypeResolver
 	customJSONValidator   func(message proto.Message) error
+	hooks                 Hooks
 }
 
 type TypeResolver interface {
@@ -55,9 +56,23 @@ func (t TableImpl) Save(store kvstore.IndexCommitmentStore, message proto.Messag
 		if mode == SAVE_MODE_INSERT {
 			return sdkerrors.Wrapf(ormerrors.PrimaryKeyConstraintViolation, "%q:%+v", mref.Descriptor().FullName(), pkValues)
 		}
+
+		if t.hooks != nil {
+			err = t.hooks.OnUpdate(existing, message)
+			if err != nil {
+				return err
+			}
+		}
 	} else {
 		if mode == SAVE_MODE_UPDATE {
 			return ormerrors.NotFoundOnUpdate.Wrapf("%q", mref.Descriptor().FullName())
+		}
+
+		if t.hooks != nil {
+			err = t.hooks.OnInsert(message)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -78,7 +93,7 @@ func (t TableImpl) Save(store kvstore.IndexCommitmentStore, message proto.Messag
 	indexStore := store.IndexStore()
 	if !haveExisting {
 		for _, idx := range t.indexers {
-			err = idx.OnCreate(indexStore, mref)
+			err = idx.OnInsert(indexStore, mref)
 			if err != nil {
 				return err
 			}
@@ -111,6 +126,13 @@ func (t TableImpl) Delete(store kvstore.IndexCommitmentStore, primaryKey []proto
 
 	if !found {
 		return nil
+	}
+
+	if t.hooks != nil {
+		err = t.hooks.OnDelete(msg)
+		if err != nil {
+			return err
+		}
 	}
 
 	// delete object

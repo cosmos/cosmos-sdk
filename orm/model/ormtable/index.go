@@ -1,10 +1,11 @@
 package ormtable
 
 import (
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
+	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 )
 
 type Index interface {
@@ -40,7 +41,7 @@ type IteratorOptions struct {
 type Indexer interface {
 	Index
 
-	OnCreate(store kvstore.Store, message protoreflect.Message) error
+	OnInsert(store kvstore.Store, message protoreflect.Message) error
 	OnUpdate(store kvstore.Store, new, existing protoreflect.Message) error
 	OnDelete(store kvstore.Store, message protoreflect.Message) error
 

@@ -78,6 +78,48 @@ func benchmarkRandomSet(b *testing.B, keysize int) {
 	for _, k := range keys {
 		kvstore.Set(k, value)
 	}
+
+	iter := kvstore.Iterator(keys[0], keys[b.N])
+	defer iter.Close()
+
+	for _ = iter.Key(); iter.Valid(); iter.Next() {
+		// deadcode elimination stub
+		sink = iter
+	}
+}
+
+// Benchmark creating an iterator on a parent with D entries,
+// that are all deleted in the cacheKV store.
+// We essentially are benchmarking the cacheKV iterator creation & iteration times
+// with the number of entries deleted in the parent.
+func benchmarkIteratorOnParentWithManyDeletes(b *testing.B, numDeletes int) {
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+
+	// Use a singleton for value, to not waste time computing it
+	value := randSlice(32)
+	// Use simple values for keys, pick a random start,
+	// and take next D keys sequentially after.
+	startKey := randSlice(32)
+	keys := generateSequentialKeys(startKey, numDeletes)
+	for _, k := range keys {
+		mem.Set(k, value)
+	}
+	kvstore := cachekv.NewStore(mem)
+	// Has to be 1: in this commit due to a bug in the CacheKVStore
+	for _, k := range keys[1:] {
+		kvstore.Delete(k)
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	iter := kvstore.Iterator(keys[0], keys[b.N])
+	defer iter.Close()
+
+	for _ = iter.Key(); iter.Valid(); iter.Next() {
+		// deadcode elimination stub
+		sink = iter
+	}
 }
 
 func BenchmarkBlankParentIteratorNextKeySize32(b *testing.B) {
@@ -90,4 +132,8 @@ func BenchmarkBlankParentAppendKeySize32(b *testing.B) {
 
 func BenchmarkSetKeySize32(b *testing.B) {
 	benchmarkRandomSet(b, 32)
+}
+
+func BenchmarkIteratorOnParentWith1MDeletes(b *testing.B) {
+	benchmarkIteratorOnParentWithManyDeletes(b, 1_000_000)
 }

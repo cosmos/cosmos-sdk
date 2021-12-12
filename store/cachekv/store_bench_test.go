@@ -105,7 +105,7 @@ func benchmarkIteratorOnParentWithManyDeletes(b *testing.B, numDeletes int) {
 		mem.Set(k, value)
 	}
 	kvstore := cachekv.NewStore(mem)
-	// Has to be 1: in this commit due to a bug in the CacheKVStore
+	// Has to be 1: due to a bug in the CacheKVStore
 	for _, k := range keys[1:] {
 		kvstore.Delete(k)
 	}

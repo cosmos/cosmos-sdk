@@ -13,6 +13,7 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -230,7 +231,7 @@ func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) ([]
 // GetDoneHeight returns the height at which the given upgrade was executed
 func (k Keeper) GetDoneHeight(ctx sdk.Context, name string) int64 {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
-	bz := store.Get([]byte(name))
+	bz := store.Get(conv.UnsafeStrToBytes(name))
 	if len(bz) == 0 {
 		return 0
 	}

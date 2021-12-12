@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -196,7 +197,7 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
 	store := ctx.KVStore(k.storeKey)
 	supplyStore := prefix.NewStore(store, types.SupplyKey)
 
-	bz := supplyStore.Get([]byte(denom))
+	bz := supplyStore.Get(conv.UnsafeStrToBytes(denom))
 	if bz == nil {
 		return sdk.Coin{
 			Denom:  denom,
@@ -220,7 +221,7 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
 func (k BaseKeeper) HasSupply(ctx sdk.Context, denom string) bool {
 	store := ctx.KVStore(k.storeKey)
 	supplyStore := prefix.NewStore(store, types.SupplyKey)
-	return supplyStore.Has([]byte(denom))
+	return supplyStore.Has(conv.UnsafeStrToBytes(denom))
 }
 
 // GetDenomMetaData retrieves the denomination metadata. returns the metadata and true if the denom exists,
@@ -229,7 +230,7 @@ func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) (types.Metad
 	store := ctx.KVStore(k.storeKey)
 	store = prefix.NewStore(store, types.DenomMetadataPrefix)
 
-	bz := store.Get([]byte(denom))
+	bz := store.Get(conv.UnsafeStrToBytes(denom))
 	if bz == nil {
 		return types.Metadata{}, false
 	}
@@ -244,7 +245,7 @@ func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) (types.Metad
 func (k BaseKeeper) HasDenomMetaData(ctx sdk.Context, denom string) bool {
 	store := ctx.KVStore(k.storeKey)
 	store = prefix.NewStore(store, types.DenomMetadataPrefix)
-	return store.Has([]byte(denom))
+	return store.Has(conv.UnsafeStrToBytes(denom))
 }
 
 // GetAllDenomMetaData retrieves all denominations metadata
@@ -457,7 +458,7 @@ func (k BaseKeeper) setSupply(ctx sdk.Context, coin sdk.Coin) {
 
 	// Bank invariants and IBC requires to remove zero coins.
 	if coin.IsZero() {
-		supplyStore.Delete([]byte(coin.GetDenom()))
+		supplyStore.Delete(conv.UnsafeStrToBytes(coin.GetDenom()))
 	} else {
 		supplyStore.Set([]byte(coin.GetDenom()), intBytes)
 	}

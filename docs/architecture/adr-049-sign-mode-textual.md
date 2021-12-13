@@ -73,23 +73,22 @@ We define "transaction envelope" as all data in a transaction that is not in the
 ```
 Chain ID: <string>
 Account number: <uint64>
+*Public Key: <base64_string>
 Sequence: <uint64>
-<TxBody>                          // See 8.
+<TxBody>                                    // See 8.
 Fee: <coins>
-*Fee payer: <string>              // Skipped if no fee_payer set
-*Fee granter: <string>            // Skipped if no fee_granter set
-Memo: <string>                    // Skipped if no memo set
+*Fee payer: <string>                        // Skipped if no fee_payer set
+*Fee granter: <string>                      // Skipped if no fee_granter set
+Memo: <string>                              // Skipped if no memo set
 *Gas Limit: <uint64>
-*Timeout Height:  <uint64>        // Skipped if no timeout_height set
-Tipper: <string>          // If there's a tip
+*Timeout Height:  <uint64>                  // Skipped if no timeout_height set
+Tipper: <string>                            // If there's a tip
 Tip: <string>
-*Signers:
-*Signer (1/3):
-*Public Key:                      // base64/hex-encoded pk TBD
-*Sign mode: <string>              // "Direct", "Direct Aux", "Legacy Amino Json"
-*Signer (2/3):
-// --snip--
-End of signers
+*This transaction has <int> other signers:  // Skipped if there is only one signer
+*>Signer (2/2):
+*>Public Key: <base64_string>
+*>Sign mode: <string>                        // "Direct", "Direct Aux", "Legacy Amino Json", Enum value renderer
+*>Sequence: <uint64>
 ```
 
 ### 8. Encoding of the Transaction Body
@@ -104,7 +103,7 @@ This string array is encoded as a single `\n`-delimited string before transmitte
 
 ### Examples
 
-#### Simple MsgSend
+#### Example 1: Simple `MsgSend`
 
 JSON:
 
@@ -118,7 +117,7 @@ JSON:
         "to": "cosmos1...def",
         "amount": [
           {
-            "denom": "uregen",
+            "denom": "uatom",
             "amount": 10000000
           }
         ]
@@ -128,7 +127,7 @@ JSON:
   "auth_info": {
     "signer_infos": [
       {
-        "public_key": "iQ==",
+        "public_key": "iQ...==",
         "mode_info": { "single": { "mode": "SIGN_MODE_TEXTUAL" } },
         "sequence": 2
       }
@@ -136,15 +135,15 @@ JSON:
     "fee": {
       "amount": [
         {
-          "denom": "regen",
+          "denom": "atom",
           "amount": 0.002
         }
       ],
       "gas_limit": 100000
     }
   },
-  // Additional data used in sign doc.
-  "chain_id": "regen-1",
+  // Additional SignerData.
+  "chain_id": "simapp-1",
   "account_number": 10
 }
 ```
@@ -152,21 +151,27 @@ JSON:
 SIGN_MODE_TEXTUAL:
 
 ```
-Chain ID: regen-1
+Chain ID: simapp-1
 Account number: 10
+*Public Key: iQ...==        // Base64 pubkey
 Sequence: 2
 This transaction has 1 message:
-Message (1/1): bank send coins
+Message (1/1): bank v1beta1 send coins
 From: cosmos1...abc
 To: cosmos1...def
-Amount: 10 regen            // Conversion from uregen to regen using value renderers
+Amount: 10 atom            // Conversion from uatom to atom using value renderers
 End of messages
-Fee: 0.002 regen
-*Gas: 100,000
-This transaction has 1 signer:
+Fee: 0.002 atom
+*Gas: 100'000
 ```
 
-#### Complex Transaction with Nested Messages
+#### Example 2: Multi-Msg `MsgSend` & `MsgVote` with 2 signers
+
+#### Example 3: Legacy Multisig
+
+#### Example 4: Fee Payer with Tips
+
+#### Example 5: Complex Transaction with Nested Messages
 
 JSON:
 
@@ -180,48 +185,48 @@ JSON:
         "to": "cosmos1...def",
         "amount": [
           {
-            "denom": "uregen",
+            "denom": "uatom",
             "amount": 10000000
           }
         ]
       },
       {
         "@type": "/cosmos.gov.v1beta2.MsgSubmitProposal",
-        "proposer": "cosmos1...",
+        "proposer": "cosmos1...ghi",
         "messages": [
           {
             "@type": "/cosmos.bank.v1beta1.MsgSend",
-            "from": "cosmos1...ghi",
-            "to": "cosmos1...jkl",
+            "from": "cosmos1...jkl",
+            "to": "cosmos1...mno",
             "amount": [
               {
-                "denom": "uregen",
+                "denom": "uatom",
                 "amount": 20000000
               }
             ]
           },
           {
             "@type": "/cosmos.authz.v1beta1.MsgExec",
-            "grantee": "cosmos1...mno",
+            "grantee": "cosmos1...pqr",
             "msgs": [
               {
                 "@type": "/cosmos.bank.v1beta1.MsgSend",
-                "from": "cosmos1...pqr",
-                "to": "cosmos1...stu",
+                "from": "cosmos1...stu",
+                "to": "cosmos1...vwx",
                 "amount": [
                   {
-                    "denom": "uregen",
+                    "denom": "uatom",
                     "amount": 30000000
                   }
                 ]
               },
               {
                 "@type": "/cosmos.bank.v1beta1.MsgSend",
-                "from": "cosmos1...vwx",
-                "to": "cosmos1...yz",
+                "from": "cosmos1...abc",
+                "to": "cosmos1...def",
                 "amount": [
                   {
-                    "denom": "uregen",
+                    "denom": "uatom",
                     "amount": 40000000
                   }
                 ]
@@ -237,13 +242,76 @@ JSON:
         ]
       }
     ]
+  },
+  "auth_info": {
+    "signer_infos": [
+      {
+        "public_key": "iQ...==",
+        "mode_info": { "single": { "mode": "SIGN_MODE_TEXTUAL" } },
+        "sequence": 2
+      },
+      {
+        "public_key": "iR...==",
+        "mode_info": { "single": { "mode": "SIGN_MODE_DIRECT" } },
+        "sequence": 42
+      }
+    ],
+    "fee": {
+      "amount": [
+        {
+          "denom": "atom",
+          "amount": 0.002
+        }
+      ],
+      "gas_limit": 100000
+    }
   }
-  // --snip--
 }
 ```
 
-SIGN_MODE_TEXTUAL:
-TODO
+SIGN_MODE_TEXTUAL for 1st signer `cosmos1...abc`:
+
+```
+Chain ID: simapp-1
+Account number: 10
+*Public Key: iQ...==                    // Base64 pubkey
+Sequence: 2
+This transaction has 2 messages:
+Message (1/2): bank v1beta1 send coins
+From: cosmos1...abc
+To: cosmos1...def
+Amount: 10 atom
+Message (2/2): gov v1beta2 submit proposal
+Messages: 2 Messages
+> Message (1/2): bank v1beta1 send coins
+> From: cosmos1...jkl
+> To: cosmos1...mno
+> Amount: 20 atom
+> Message (2/2): authz v1beta exec
+> Grantee: cosmos1...pqr
+> Msgs: 2 Msgs
+>> Msg (1/2): bank v1beta1 send coins
+>> From: cosmos1...stu
+>> To: cosmos1...vwx
+>> Amount: 30 atom
+>> Msg (2/2): bank v1beta1 send coins
+>> From: cosmos1...abc
+>> To: cosmos1...def
+>> Amount: 40 atom
+> End of Msgs
+End of Messages
+Proposer: cosmos1...ghi
+Initial Deposit: 100.01 atom
+End of transaction messages
+Fee: 0.002 atom
+*Gas: 100'000
+*This transaction has 1 other signer:
+*Signer (2/2):
+*Public Key: iR...==
+*Sign mode: Direct
+*Sequence: 42
+End of signers
+```
 
 ## Consequences
 

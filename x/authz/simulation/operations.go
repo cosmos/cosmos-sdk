@@ -111,7 +111,10 @@ func SimulateMsgGrant(ak authz.AccountKeeper, bk authz.BankKeeper, _ keeper.Keep
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, "spend limit is nil"), nil, nil
 		}
 
-		expiration := ctx.BlockTime().AddDate(1, 0, 0)
+		expiration := simtypes.RandTimestamp(r)
+		if expiration.Before(ctx.BlockTime()) {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, "past time"), nil, nil
+		}
 		msg, err := authz.NewMsgGrant(granter.Address, grantee.Address, generateRandomAuthorization(r, spendLimit), expiration)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, err.Error()), nil, err
@@ -187,7 +190,7 @@ func SimulateMsgRevoke(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Kee
 			txCfg,
 			[]sdk.Msg{&msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			8517867,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},

@@ -25,3 +25,20 @@ message Grant {
   google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
   google.protobuf.Timestamp expiration    = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }
+
+// GrantQueueItem contains the list of granter-grantee-msgtype triple.
+message GrantQueueItem {
+  // GGMTriple is a list of GGMTriple
+  repeated GGMTriple ggm_triples = 1; 
+}
+
+// GGMTriple contains granter-grantee-msg_type triple. It can be
+// used to construct the grant key.
+message GGMTriple {
+  // Granter account address
+  string granter = 1;
+  // Grantee account address
+  string grantee = 2;
+  // msg_type_url contains the TypeURL of a sdk.Msg.
+  string msg_type_url = 3;
+}

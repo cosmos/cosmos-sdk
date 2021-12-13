@@ -21,21 +21,16 @@ func TestGrantkey(t *testing.T) {
 	key := grantStoreKey(grantee, granter, msgType)
 	require.Len(key, len(GrantKey)+len(address.MustLengthPrefix(grantee))+len(address.MustLengthPrefix(granter))+len([]byte(msgType)))
 
-	granter1, grantee1 := addressesFromGrantStoreKey(grantStoreKey(grantee, granter, msgType))
+	granter1, grantee1, msgType1 := parseGrantStoreKey(grantStoreKey(grantee, granter, msgType))
 	require.Equal(granter, granter1)
 	require.Equal(grantee, grantee1)
+	require.Equal(msgType1, msgType)
 }
 
 func TestGrantQueueKey(t *testing.T) {
 	blockTime := time.Now().UTC()
-	key := grantStoreKey(grantee, granter, msgType)
+	queueKey := GrantQueueKey(blockTime)
 
-	queueKey := GrantQueueKey(key, blockTime)
-
-	expiration, grantee1, granter1, authzType := splitGrantQueueKey(queueKey)
-
+	expiration := parseGrantQueueKey(queueKey)
 	require.Equal(t, blockTime, expiration)
-	require.Equal(t, granter, granter1)
-	require.Equal(t, grantee, grantee1)
-	require.Equal(t, msgType, authzType)
 }

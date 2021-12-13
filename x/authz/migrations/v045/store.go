@@ -1,6 +1,8 @@
 package v045
 
 import (
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -30,6 +32,8 @@ func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.
 	grantsIter := grantsStore.Iterator(nil, nil)
 	defer grantsIter.Close()
 
+	ggmTriples := make(map[time.Time][]*authz.GGMTriple)
+
 	for ; grantsIter.Valid(); grantsIter.Next() {
 		var grant authz.Grant
 		bz := grantsIter.Value()
@@ -41,10 +45,38 @@ func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.
 		if grant.Expiration.Before(ctx.BlockTime()) {
 			grantsStore.Delete(grantsIter.Key())
 		} else {
-			queueKey := v044.GrantQueueKey(grantsIter.Key(), grant.Expiration)
-			store.Set(queueKey, grantsIter.Key())
+			granter, grantee, msgType := v044.ParseGrantStoreKey(grantsIter.Key())
+			ggmTriple, ok := ggmTriples[grant.Expiration]
+
+			if !ok {
+				ggmTriples[grant.Expiration] = []*authz.GGMTriple{
+					{
+						Granter:    granter.String(),
+						Grantee:    grantee.String(),
+						MsgTypeUrl: msgType,
+					},
+				}
+			} else {
+				ggmTriple = append(ggmTriple, &authz.GGMTriple{
+					Granter:    granter.String(),
+					Grantee:    grantee.String(),
+					MsgTypeUrl: msgType,
+				})
+				ggmTriples[grant.Expiration] = ggmTriple
+			}
 		}
 
+	}
+
+	for k, v := range ggmTriples {
+		queueKey := v044.GrantQueueKey(k)
+		bz, err := cdc.Marshal(&authz.GrantQueueItem{
+			GgmTriples: v,
+		})
+		if err != nil {
+			return err
+		}
+		store.Set(queueKey, bz)
 	}
 
 	return nil

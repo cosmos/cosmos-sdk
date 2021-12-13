@@ -248,7 +248,7 @@ func (s *TestSuite) TestDispatchedEvents() {
 	}
 }
 
-func (s *TestSuite) TestPruneAllGrantsQueue() {
+func (s *TestSuite) TestDequeAllGrantsQueue() {
 	require := s.Require()
 	app, addrs := s.app, s.addrs
 	granter := addrs[0]
@@ -266,15 +266,17 @@ func (s *TestSuite) TestPruneAllGrantsQueue() {
 	err = app.AuthzKeeper.SaveGrant(s.ctx, grantee1, granter, &banktypes.SendAuthorization{SpendLimit: smallCoin}, now)
 	require.NoError(err)
 
+	err = app.AuthzKeeper.SaveGrant(s.ctx, granter, grantee1, &banktypes.SendAuthorization{SpendLimit: smallCoin}, now.AddDate(0, 1, 0))
+	require.NoError(err)
+
 	err = app.AuthzKeeper.SaveGrant(s.ctx, granter, grantee, &banktypes.SendAuthorization{SpendLimit: smallCoin}, now.AddDate(2, 0, 0))
 	require.NoError(err)
 
-	ctx := s.ctx.WithBlockTime(now.AddDate(1, 0, 0))
-	app.AuthzKeeper.DeleteAllMatureGrants(ctx)
+	newCtx := s.ctx.WithBlockTime(now.AddDate(1, 0, 0))
+	matureGrants, err := app.AuthzKeeper.DequeueAllMatureGrants(newCtx)
+	require.NoError(err)
 
-	require.Len(app.AuthzKeeper.GetAuthorizations(ctx, grantee, granter), 0)
-	require.Len(app.AuthzKeeper.GetAuthorizations(ctx, grantee1, granter), 0)
-	require.Len(app.AuthzKeeper.GetAuthorizations(ctx, granter, granter), 0)
+	require.Len(matureGrants, 3)
 }
 
 func TestTestSuite(t *testing.T) {

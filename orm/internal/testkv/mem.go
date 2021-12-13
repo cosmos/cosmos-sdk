@@ -1,13 +1,22 @@
 package testkv
 
 import (
-	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 )
 
-func NewMemIndexCommitmentStore() kvstore.IndexCommitmentStore {
+func NewSplitMemIndexCommitmentStore() kvstore.IndexCommitmentStore {
 	return &indexCommitmentStore{
 		commitment: dbm.NewMemDB(),
 		index:      dbm.NewMemDB(),
+	}
+}
+
+func NewSharedMemIndexCommitmentStore() kvstore.IndexCommitmentStore {
+	store := dbm.NewMemDB()
+	return &indexCommitmentStore{
+		commitment: store,
+		index:      store,
 	}
 }

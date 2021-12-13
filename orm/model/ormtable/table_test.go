@@ -30,22 +30,74 @@ func TestScenario(t *testing.T) {
 	})
 	assert.NilError(t, err)
 
+	// first run tests with a split index-commitment store
+	runTestScenario(t, table, testkv.NewSplitMemIndexCommitmentStore())
+
+	// now run tests with a shared index-commitment store
+
 	// we're going to wrap this test in a debug store and save the decoded debug
 	// messages, these will be checked against a golden file at the end of the
 	// test. the golden file can be used for fine-grained debugging of kv-store
 	// layout
 	debugBuf := &strings.Builder{}
+	var entryLog []ormkv.Entry
+	sharedStore := testkv.NewSharedMemIndexCommitmentStore()
 	store := testkv.NewDebugIndexCommitmentStore(
-		testkv.NewMemIndexCommitmentStore(),
-		testkv.EntryCodecDebugger{
+		sharedStore,
+		&testkv.EntryCodecDebugger{
 			EntryCodec: table,
 			Print: func(s string) {
 				debugBuf.WriteString(s)
 				debugBuf.WriteString("\n")
 			},
+			EntryLog: entryLog,
 		},
 	)
 
+	runTestScenario(t, table, store)
+
+	// we're going to store debug data in a golden file to make sure that
+	// logical decoding works successfully
+	// run `go test pkgname -test.update-golden` to update the golden file
+	// see https://pkg.go.dev/gotest.tools/v3/golden for docs
+	golden.Assert(t, debugBuf.String(), "test_scenario.golden")
+
+	// build a second db with the entry log and compare it to the first
+	store2 := testkv.NewSharedMemIndexCommitmentStore()
+	for _, entry := range entryLog {
+		k, v, err := table.EncodeEntry(entry)
+		assert.NilError(t, err)
+		// we can store everything in the commitment store because it's the same as the index store here
+		err = store2.CommitmentStore().Set(k, v)
+		assert.NilError(t, err)
+	}
+
+	// check that the same kv-store entries exist in all stores
+	kvEntries := map[string]string{}
+	it, err := store.ReadIndexStore().Iterator(nil, nil)
+	assert.NilError(t, err)
+	for it.Valid() {
+		kvEntries[string(it.Key())] = string(it.Value())
+		it.Next()
+	}
+
+	checkEntries := func(st kvstore.ReadStore) {
+		it, err := st.Iterator(nil, nil)
+		assert.NilError(t, err)
+		for it.Valid() {
+			val, ok := kvEntries[string(it.Key())]
+			assert.Assert(t, ok)
+			assert.Equal(t, string(it.Value()), val)
+			it.Next()
+		}
+	}
+
+	checkEntries(store.IndexStore())
+	checkEntries(store2.CommitmentStore())
+	checkEntries(store2.IndexStore())
+}
+
+func runTestScenario(t *testing.T, table Table, store kvstore.IndexCommitmentStore) {
 	// let's create 10 data items we'll use later and give them indexes
 	data := []*testpb.ExampleTable{
 		{U32: 4, I64: -2, Str: "abc", U64: 7},  // 0
@@ -75,7 +127,7 @@ func TestScenario(t *testing.T) {
 	}
 
 	// insert one record
-	err = table.Save(store, data[0], SAVE_MODE_INSERT)
+	err := table.Save(store, data[0], SAVE_MODE_INSERT)
 	// trivial prefix query has one record
 	it, err := table.PrefixIterator(store, nil, IteratorOptions{})
 	assert.NilError(t, err)
@@ -342,7 +394,7 @@ func TestScenario(t *testing.T) {
 	buf := &bytes.Buffer{}
 	assert.NilError(t, table.ExportJSON(store, buf))
 	assert.NilError(t, table.ValidateJSON(bytes.NewReader(buf.Bytes())))
-	store2 := testkv.NewMemIndexCommitmentStore()
+	store2 := testkv.NewSplitMemIndexCommitmentStore()
 	assert.NilError(t, table.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
 	assertTablesEqual(t, table, store, store2)
 
@@ -358,12 +410,6 @@ func TestScenario(t *testing.T) {
 	it, err = table.PrefixIterator(store, nil, IteratorOptions{})
 	assert.NilError(t, err)
 	assertIteratorItems(it, 0, 1, 2, 3, 4, 6, 7, 8, 9, 10)
-
-	// we're going to store debug data in a golden file to make sure that
-	// logical decoding works successfully
-	// run `go test pkgname -test.update-golden` to update the golden file
-	// see https://pkg.go.dev/gotest.tools/v3/golden for docs
-	golden.Assert(t, debugBuf.String(), "test_scenario.golden")
 }
 
 func TestRandomTableData(t *testing.T) {
@@ -500,7 +546,7 @@ func TableDataGen(elemGen *rapid.Generator, n int) *rapid.Generator {
 		}
 
 		data := make([]proto.Message, n)
-		store := testkv.NewMemIndexCommitmentStore()
+		store := testkv.NewSplitMemIndexCommitmentStore()
 
 		for i := 0; i < n; i++ {
 			var err error
@@ -565,7 +611,7 @@ func TestJSONExportImport(t *testing.T) {
 		MessageType: (&testpb.ExampleTable{}).ProtoReflect().Type(),
 	})
 	assert.NilError(t, err)
-	store := testkv.NewMemIndexCommitmentStore()
+	store := testkv.NewSplitMemIndexCommitmentStore()
 
 	for i := 0; i < 100; i++ {
 		x := testutil.GenA.Example().(proto.Message)
@@ -578,7 +624,7 @@ func TestJSONExportImport(t *testing.T) {
 
 	assert.NilError(t, table.ValidateJSON(bytes.NewReader(buf.Bytes())))
 
-	store2 := testkv.NewMemIndexCommitmentStore()
+	store2 := testkv.NewSplitMemIndexCommitmentStore()
 	assert.NilError(t, table.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
 
 	assertTablesEqual(t, table, store, store2)

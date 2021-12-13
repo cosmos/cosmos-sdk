@@ -18,7 +18,7 @@ func TestSingleton(t *testing.T) {
 		MessageType: val.ProtoReflect().Type(),
 	})
 	assert.NilError(t, err)
-	store := testkv.NewMemIndexCommitmentStore()
+	store := testkv.NewSplitMemIndexCommitmentStore()
 
 	found, err := singleton.Has(store, nil)
 	assert.NilError(t, err)
@@ -40,7 +40,7 @@ func TestSingleton(t *testing.T) {
 	buf := &bytes.Buffer{}
 	assert.NilError(t, singleton.ExportJSON(store, buf))
 	assert.NilError(t, singleton.ValidateJSON(bytes.NewReader(buf.Bytes())))
-	store2 := testkv.NewMemIndexCommitmentStore()
+	store2 := testkv.NewSplitMemIndexCommitmentStore()
 	assert.NilError(t, singleton.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
 
 	var val3 testpb.ExampleSingleton

@@ -115,12 +115,10 @@ func (cdc IndexKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 		return nil, nil, err
 	}
 
-	return bz, sentinel, nil
+	return bz, []byte{}, nil
 }
-
-var sentinel = []byte{0}
 
 func (cdc IndexKeyCodec) EncodeKVFromMessage(message protoreflect.Message) (k, v []byte, err error) {
 	_, k, err = cdc.EncodeKeyFromMessage(message)
-	return k, sentinel, err
+	return k, []byte{}, err
 }

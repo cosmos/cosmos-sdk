@@ -50,8 +50,6 @@ func (s IndexKeyIndex) RangeIterator(store kvstore.IndexCommitmentReadStore, sta
 var _ Indexer = &IndexKeyIndex{}
 var _ Index = &IndexKeyIndex{}
 
-var sentinelValue = []byte{0}
-
 func (s IndexKeyIndex) doNotImplement() {}
 
 func (s IndexKeyIndex) OnInsert(store kvstore.Store, message protoreflect.Message) error {
@@ -82,7 +80,7 @@ func (s IndexKeyIndex) OnUpdate(store kvstore.Store, new, existing protoreflect.
 	if err != nil {
 		return err
 	}
-	return store.Set(newKey, sentinelValue)
+	return store.Set(newKey, []byte{})
 }
 
 func (s IndexKeyIndex) OnDelete(store kvstore.Store, message protoreflect.Message) error {

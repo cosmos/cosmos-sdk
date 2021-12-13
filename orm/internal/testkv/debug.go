@@ -31,7 +31,8 @@ func (t debugStore) Get(key []byte) ([]byte, error) {
 		return nil, err
 	}
 	if t.debugger != nil {
-		t.debugger.Log(fmt.Sprintf("GET %s", t.debugger.Decode(t.storeName, key, val)))
+		t.debugger.Log(fmt.Sprintf("GET %x %x", key, val))
+		t.debugger.Log(fmt.Sprintf("    %s", t.debugger.Decode(t.storeName, key, val)))
 	}
 	return val, nil
 }
@@ -45,7 +46,8 @@ func (t debugStore) Has(key []byte) (bool, error) {
 		return has, err
 	}
 	if t.debugger != nil {
-		t.debugger.Log(fmt.Sprintf("HAS %s", t.debugger.Decode(t.storeName, key, nil)))
+		t.debugger.Log(fmt.Sprintf("HAS %x", key))
+		t.debugger.Log(fmt.Sprintf("    %s", t.debugger.Decode(t.storeName, key, nil)))
 	}
 	return has, nil
 }
@@ -82,7 +84,8 @@ func (t debugStore) ReverseIterator(start, end []byte) (kvstore.Iterator, error)
 
 func (t debugStore) Set(key, value []byte) error {
 	if t.debugger != nil {
-		t.debugger.Log(fmt.Sprintf("SET %s", t.debugger.Decode(t.storeName, key, value)))
+		t.debugger.Log(fmt.Sprintf("SET %x %x", key, value))
+		t.debugger.Log(fmt.Sprintf("    %s", t.debugger.Decode(t.storeName, key, value)))
 	}
 	err := t.store.Set(key, value)
 	if err != nil {
@@ -96,6 +99,7 @@ func (t debugStore) Set(key, value []byte) error {
 
 func (t debugStore) Delete(key []byte) error {
 	if t.debugger != nil {
+		t.debugger.Log(fmt.Sprintf("DEL %x", key))
 		t.debugger.Log(fmt.Sprintf("DEL %s", t.debugger.Decode(t.storeName, key, nil)))
 	}
 	err := t.store.Delete(key)
@@ -136,7 +140,8 @@ func (d debugIterator) Next() {
 func (d debugIterator) Key() (key []byte) {
 	key = d.iterator.Key()
 	value := d.iterator.Value()
-	d.debugger.Log(fmt.Sprintf("  KEY %s", d.debugger.Decode(d.storeName, key, value)))
+	d.debugger.Log(fmt.Sprintf("  KEY %x %x", key, value))
+	d.debugger.Log(fmt.Sprintf("      %s", d.debugger.Decode(d.storeName, key, value)))
 	return key
 }
 
@@ -160,9 +165,10 @@ var _ kvstore.Iterator = &debugIterator{}
 type EntryCodecDebugger struct {
 	EntryCodec ormkv.EntryCodec
 	Print      func(string)
+	EntryLog   []ormkv.Entry
 }
 
-func (d EntryCodecDebugger) Log(s string) {
+func (d *EntryCodecDebugger) Log(s string) {
 	if d.Print != nil {
 		d.Print(s)
 	} else {
@@ -170,10 +176,13 @@ func (d EntryCodecDebugger) Log(s string) {
 	}
 }
 
-func (d EntryCodecDebugger) Decode(storeName string, key, value []byte) string {
+func (d *EntryCodecDebugger) Decode(storeName string, key, value []byte) string {
 	entry, err := d.EntryCodec.DecodeEntry(key, value)
 	if err != nil {
 		return fmt.Sprintf("ERR:%v", err)
 	}
+
+	d.EntryLog = append(d.EntryLog, entry)
+
 	return entry.String()
 }

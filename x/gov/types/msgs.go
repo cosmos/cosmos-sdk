@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // Governance message types and routes
@@ -18,6 +19,7 @@ const (
 	TypeMsgVote           = "vote"
 	TypeMsgVoteWeighted   = "weighted_vote"
 	TypeMsgSubmitProposal = "submit_proposal"
+	TypeMsgSignal         = "signal"
 )
 
 var (
@@ -27,15 +29,16 @@ var (
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
 //nolint:interfacer
-func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) (*MsgSubmitProposal, error) {
+func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer sdk.AccAddress) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		InitialDeposit: initialDeposit,
 		Proposer:       proposer.String(),
 	}
-	err := m.SetContent(content)
-	if err != nil {
-		return nil, err
+
+	if err := m.SetMessages(messages); err != nil {
+		return &MsgSubmitProposal{}, err
 	}
+
 	return m, nil
 }
 
@@ -46,12 +49,8 @@ func (m *MsgSubmitProposal) GetProposer() sdk.AccAddress {
 	return proposer
 }
 
-func (m *MsgSubmitProposal) GetContent() Content {
-	content, ok := m.Content.GetCachedValue().(Content)
-	if !ok {
-		return nil
-	}
-	return content
+func (m *MsgSubmitProposal) GetMessages() ([]sdk.Msg, error) {
+	return sdktx.GetMsgs(m.Messages, "sdk.MsgProposal")
 }
 
 func (m *MsgSubmitProposal) SetInitialDeposit(coins sdk.Coins) {
@@ -62,16 +61,21 @@ func (m *MsgSubmitProposal) SetProposer(address fmt.Stringer) {
 	m.Proposer = address.String()
 }
 
-func (m *MsgSubmitProposal) SetContent(content Content) error {
-	msg, ok := content.(proto.Message)
-	if !ok {
-		return fmt.Errorf("can't proto marshal %T", msg)
+func (m *MsgSubmitProposal) SetMessages(messages []sdk.Msg) error {
+	msgs := make([]*types.Any, len(messages))
+	for i, msg := range messages {
+		m, ok := msg.(proto.Message)
+		if !ok {
+			return fmt.Errorf("can't proto marshal %T", msg)
+		}
+		any, err := types.NewAnyWithValue(m)
+		if err != nil {
+			return err
+		}
+
+		msgs[i] = any
 	}
-	any, err := types.NewAnyWithValue(msg)
-	if err != nil {
-		return err
-	}
-	m.Content = any
+	m.Messages = msgs
 	return nil
 }
 
@@ -93,15 +97,22 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.InitialDeposit.String())
 	}
 
-	content := m.GetContent()
-	if content == nil {
-		return sdkerrors.Wrap(ErrInvalidProposalContent, "missing content")
-	}
-	if !IsValidProposalType(content.ProposalType()) {
-		return sdkerrors.Wrap(ErrInvalidProposalType, content.ProposalType())
-	}
-	if err := content.ValidateBasic(); err != nil {
+	// Empty messages are not allowed
+	// TODO: ValidateBasic should check that either metadata or length is non nil
+	// if m.Messages == nil || len(m.Messages) == 0 {
+	// 	return ErrNoProposalMsgs
+	// }
+
+	msgs, err := m.GetMessages()
+	if err != nil {
 		return err
+	}
+
+	for idx, msg := range msgs {
+		if err := msg.ValidateBasic(); err != nil {
+			return sdkerrors.Wrap(ErrInvalidProposalMsg,
+				fmt.Sprintf("msg: %d, err: %s", idx, err.Error()))
+		}
 	}
 
 	return nil
@@ -127,8 +138,7 @@ func (m MsgSubmitProposal) String() string {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m MsgSubmitProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	var content Content
-	return unpacker.UnpackAny(m.Content, &content)
+	return sdktx.UnpackInterfaces(unpacker, m.Messages)
 }
 
 // NewMsgDeposit creates a new MsgDeposit instance

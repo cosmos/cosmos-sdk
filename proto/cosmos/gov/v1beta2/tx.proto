@@ -6,7 +6,7 @@ import "cosmos/gov/v1beta2/gov.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/any.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2";
+option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
 
 // Msg defines the gov Msg service.
 service Msg {

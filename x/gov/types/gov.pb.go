@@ -7,7 +7,6 @@ import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	types1 "github.com/cosmos/cosmos-sdk/codec/types"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
@@ -37,15 +36,15 @@ type VoteOption int32
 
 const (
 	// VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
-	OptionEmpty VoteOption = 0
+	VoteOption_VOTE_OPTION_UNSPECIFIED VoteOption = 0
 	// VOTE_OPTION_YES defines a yes vote option.
-	OptionYes VoteOption = 1
+	VoteOption_VOTE_OPTION_YES VoteOption = 1
 	// VOTE_OPTION_ABSTAIN defines an abstain vote option.
-	OptionAbstain VoteOption = 2
+	VoteOption_VOTE_OPTION_ABSTAIN VoteOption = 2
 	// VOTE_OPTION_NO defines a no vote option.
-	OptionNo VoteOption = 3
+	VoteOption_VOTE_OPTION_NO VoteOption = 3
 	// VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
-	OptionNoWithVeto VoteOption = 4
+	VoteOption_VOTE_OPTION_NO_WITH_VETO VoteOption = 4
 )
 
 var VoteOption_name = map[int32]string{
@@ -77,22 +76,22 @@ type ProposalStatus int32
 
 const (
 	// PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.
-	StatusNil ProposalStatus = 0
+	ProposalStatus_PROPOSAL_STATUS_UNSPECIFIED ProposalStatus = 0
 	// PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit
 	// period.
-	StatusDepositPeriod ProposalStatus = 1
+	ProposalStatus_PROPOSAL_STATUS_DEPOSIT_PERIOD ProposalStatus = 1
 	// PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting
 	// period.
-	StatusVotingPeriod ProposalStatus = 2
+	ProposalStatus_PROPOSAL_STATUS_VOTING_PERIOD ProposalStatus = 2
 	// PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has
 	// passed.
-	StatusPassed ProposalStatus = 3
+	ProposalStatus_PROPOSAL_STATUS_PASSED ProposalStatus = 3
 	// PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has
 	// been rejected.
-	StatusRejected ProposalStatus = 4
+	ProposalStatus_PROPOSAL_STATUS_REJECTED ProposalStatus = 4
 	// PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
 	// failed.
-	StatusFailed ProposalStatus = 5
+	ProposalStatus_PROPOSAL_STATUS_FAILED ProposalStatus = 5
 )
 
 var ProposalStatus_name = map[int32]string{
@@ -123,12 +122,13 @@ func (ProposalStatus) EnumDescriptor() ([]byte, []int) {
 
 // WeightedVoteOption defines a unit of vote for vote split.
 type WeightedVoteOption struct {
-	Option VoteOption                             `protobuf:"varint,1,opt,name=option,proto3,enum=cosmos.gov.v1beta2.VoteOption" json:"option,omitempty"`
-	Weight github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=weight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"weight"`
+	Option VoteOption `protobuf:"varint,1,opt,name=option,proto3,enum=cosmos.gov.v1beta2.VoteOption" json:"option,omitempty"`
+	Weight string     `protobuf:"bytes,2,opt,name=weight,proto3" json:"weight,omitempty"`
 }
 
-func (m *WeightedVoteOption) Reset()      { *m = WeightedVoteOption{} }
-func (*WeightedVoteOption) ProtoMessage() {}
+func (m *WeightedVoteOption) Reset()         { *m = WeightedVoteOption{} }
+func (m *WeightedVoteOption) String() string { return proto.CompactTextString(m) }
+func (*WeightedVoteOption) ProtoMessage()    {}
 func (*WeightedVoteOption) Descriptor() ([]byte, []int) {
 	return fileDescriptor_5abf7b8852811c49, []int{0}
 }
@@ -159,16 +159,31 @@ func (m *WeightedVoteOption) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_WeightedVoteOption proto.InternalMessageInfo
 
+func (m *WeightedVoteOption) GetOption() VoteOption {
+	if m != nil {
+		return m.Option
+	}
+	return VoteOption_VOTE_OPTION_UNSPECIFIED
+}
+
+func (m *WeightedVoteOption) GetWeight() string {
+	if m != nil {
+		return m.Weight
+	}
+	return ""
+}
+
 // Deposit defines an amount deposited by an account address to an active
 // proposal.
 type Deposit struct {
-	ProposalId uint64                                   `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	Depositor  string                                   `protobuf:"bytes,2,opt,name=depositor,proto3" json:"depositor,omitempty"`
-	Amount     github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	ProposalId uint64        `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	Depositor  string        `protobuf:"bytes,2,opt,name=depositor,proto3" json:"depositor,omitempty"`
+	Amount     []*types.Coin `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount,omitempty"`
 }
 
-func (m *Deposit) Reset()      { *m = Deposit{} }
-func (*Deposit) ProtoMessage() {}
+func (m *Deposit) Reset()         { *m = Deposit{} }
+func (m *Deposit) String() string { return proto.CompactTextString(m) }
+func (*Deposit) ProtoMessage()    {}
 func (*Deposit) Descriptor() ([]byte, []int) {
 	return fileDescriptor_5abf7b8852811c49, []int{1}
 }
@@ -199,21 +214,43 @@ func (m *Deposit) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Deposit proto.InternalMessageInfo
 
-// Proposal defines the core field members of a governance proposal.
-type Proposal struct {
-	ProposalId       uint64                                   `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"id" yaml:"id"`
-	Messages         []*types1.Any                            `protobuf:"bytes,2,rep,name=messages,proto3" json:"messages,omitempty"`
-	Status           ProposalStatus                           `protobuf:"varint,3,opt,name=status,proto3,enum=cosmos.gov.v1beta2.ProposalStatus" json:"status,omitempty" yaml:"proposal_status"`
-	FinalTallyResult TallyResult                              `protobuf:"bytes,4,opt,name=final_tally_result,json=finalTallyResult,proto3" json:"final_tally_result" yaml:"final_tally_result"`
-	SubmitTime       time.Time                                `protobuf:"bytes,5,opt,name=submit_time,json=submitTime,proto3,stdtime" json:"submit_time" yaml:"submit_time"`
-	DepositEndTime   time.Time                                `protobuf:"bytes,6,opt,name=deposit_end_time,json=depositEndTime,proto3,stdtime" json:"deposit_end_time" yaml:"deposit_end_time"`
-	TotalDeposit     github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,7,rep,name=total_deposit,json=totalDeposit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"total_deposit" yaml:"total_deposit"`
-	VotingStartTime  time.Time                                `protobuf:"bytes,8,opt,name=voting_start_time,json=votingStartTime,proto3,stdtime" json:"voting_start_time" yaml:"voting_start_time"`
-	VotingEndTime    time.Time                                `protobuf:"bytes,9,opt,name=voting_end_time,json=votingEndTime,proto3,stdtime" json:"voting_end_time" yaml:"voting_end_time"`
+func (m *Deposit) GetProposalId() uint64 {
+	if m != nil {
+		return m.ProposalId
+	}
+	return 0
 }
 
-func (m *Proposal) Reset()      { *m = Proposal{} }
-func (*Proposal) ProtoMessage() {}
+func (m *Deposit) GetDepositor() string {
+	if m != nil {
+		return m.Depositor
+	}
+	return ""
+}
+
+func (m *Deposit) GetAmount() []*types.Coin {
+	if m != nil {
+		return m.Amount
+	}
+	return nil
+}
+
+// Proposal defines the core field members of a governance proposal.
+type Proposal struct {
+	ProposalId       uint64         `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	Messages         []*types1.Any  `protobuf:"bytes,2,rep,name=messages,proto3" json:"messages,omitempty"`
+	Status           ProposalStatus `protobuf:"varint,3,opt,name=status,proto3,enum=cosmos.gov.v1beta2.ProposalStatus" json:"status,omitempty"`
+	FinalTallyResult *TallyResult   `protobuf:"bytes,4,opt,name=final_tally_result,json=finalTallyResult,proto3" json:"final_tally_result,omitempty"`
+	SubmitTime       *time.Time     `protobuf:"bytes,5,opt,name=submit_time,json=submitTime,proto3,stdtime" json:"submit_time,omitempty"`
+	DepositEndTime   *time.Time     `protobuf:"bytes,6,opt,name=deposit_end_time,json=depositEndTime,proto3,stdtime" json:"deposit_end_time,omitempty"`
+	TotalDeposit     []*types.Coin  `protobuf:"bytes,7,rep,name=total_deposit,json=totalDeposit,proto3" json:"total_deposit,omitempty"`
+	VotingStartTime  *time.Time     `protobuf:"bytes,8,opt,name=voting_start_time,json=votingStartTime,proto3,stdtime" json:"voting_start_time,omitempty"`
+	VotingEndTime    *time.Time     `protobuf:"bytes,9,opt,name=voting_end_time,json=votingEndTime,proto3,stdtime" json:"voting_end_time,omitempty"`
+}
+
+func (m *Proposal) Reset()         { *m = Proposal{} }
+func (m *Proposal) String() string { return proto.CompactTextString(m) }
+func (*Proposal) ProtoMessage()    {}
 func (*Proposal) Descriptor() ([]byte, []int) {
 	return fileDescriptor_5abf7b8852811c49, []int{2}
 }
@@ -244,16 +281,80 @@ func (m *Proposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Proposal proto.InternalMessageInfo
 
-// TallyResult defines a standard tally for a governance proposal.
-type TallyResult struct {
-	Yes        github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=yes,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"yes"`
-	Abstain    github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=abstain,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"abstain"`
-	No         github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=no,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"no"`
-	NoWithVeto github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=no_with_veto,json=noWithVeto,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"no_with_veto"`
+func (m *Proposal) GetProposalId() uint64 {
+	if m != nil {
+		return m.ProposalId
+	}
+	return 0
 }
 
-func (m *TallyResult) Reset()      { *m = TallyResult{} }
-func (*TallyResult) ProtoMessage() {}
+func (m *Proposal) GetMessages() []*types1.Any {
+	if m != nil {
+		return m.Messages
+	}
+	return nil
+}
+
+func (m *Proposal) GetStatus() ProposalStatus {
+	if m != nil {
+		return m.Status
+	}
+	return ProposalStatus_PROPOSAL_STATUS_UNSPECIFIED
+}
+
+func (m *Proposal) GetFinalTallyResult() *TallyResult {
+	if m != nil {
+		return m.FinalTallyResult
+	}
+	return nil
+}
+
+func (m *Proposal) GetSubmitTime() *time.Time {
+	if m != nil {
+		return m.SubmitTime
+	}
+	return nil
+}
+
+func (m *Proposal) GetDepositEndTime() *time.Time {
+	if m != nil {
+		return m.DepositEndTime
+	}
+	return nil
+}
+
+func (m *Proposal) GetTotalDeposit() []*types.Coin {
+	if m != nil {
+		return m.TotalDeposit
+	}
+	return nil
+}
+
+func (m *Proposal) GetVotingStartTime() *time.Time {
+	if m != nil {
+		return m.VotingStartTime
+	}
+	return nil
+}
+
+func (m *Proposal) GetVotingEndTime() *time.Time {
+	if m != nil {
+		return m.VotingEndTime
+	}
+	return nil
+}
+
+// TallyResult defines a standard tally for a governance proposal.
+type TallyResult struct {
+	Yes        string `protobuf:"bytes,1,opt,name=yes,proto3" json:"yes,omitempty"`
+	Abstain    string `protobuf:"bytes,2,opt,name=abstain,proto3" json:"abstain,omitempty"`
+	No         string `protobuf:"bytes,3,opt,name=no,proto3" json:"no,omitempty"`
+	NoWithVeto string `protobuf:"bytes,4,opt,name=no_with_veto,json=noWithVeto,proto3" json:"no_with_veto,omitempty"`
+}
+
+func (m *TallyResult) Reset()         { *m = TallyResult{} }
+func (m *TallyResult) String() string { return proto.CompactTextString(m) }
+func (*TallyResult) ProtoMessage()    {}
 func (*TallyResult) Descriptor() ([]byte, []int) {
 	return fileDescriptor_5abf7b8852811c49, []int{3}
 }
@@ -284,6 +385,34 @@ func (m *TallyResult) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TallyResult proto.InternalMessageInfo
 
+func (m *TallyResult) GetYes() string {
+	if m != nil {
+		return m.Yes
+	}
+	return ""
+}
+
+func (m *TallyResult) GetAbstain() string {
+	if m != nil {
+		return m.Abstain
+	}
+	return ""
+}
+
+func (m *TallyResult) GetNo() string {
+	if m != nil {
+		return m.No
+	}
+	return ""
+}
+
+func (m *TallyResult) GetNoWithVeto() string {
+	if m != nil {
+		return m.NoWithVeto
+	}
+	return ""
+}
+
 // Vote defines a vote on a governance proposal.
 // A Vote consists of a proposal ID, the voter, and the vote option.
 type Vote struct {
@@ -292,12 +421,13 @@ type Vote struct {
 	// Deprecated: Prefer to use `options` instead. This field is set in queries
 	// if and only if `len(options) == 1` and that option has weight 1. In all
 	// other cases, this field will default to VOTE_OPTION_UNSPECIFIED.
-	Option  VoteOption           `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.gov.v1beta2.VoteOption" json:"option,omitempty"` // Deprecated: Do not use.
-	Options []WeightedVoteOption `protobuf:"bytes,4,rep,name=options,proto3" json:"options"`
+	Option  VoteOption            `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.gov.v1beta2.VoteOption" json:"option,omitempty"` // Deprecated: Do not use.
+	Options []*WeightedVoteOption `protobuf:"bytes,4,rep,name=options,proto3" json:"options,omitempty"`
 }
 
-func (m *Vote) Reset()      { *m = Vote{} }
-func (*Vote) ProtoMessage() {}
+func (m *Vote) Reset()         { *m = Vote{} }
+func (m *Vote) String() string { return proto.CompactTextString(m) }
+func (*Vote) ProtoMessage()    {}
 func (*Vote) Descriptor() ([]byte, []int) {
 	return fileDescriptor_5abf7b8852811c49, []int{4}
 }
@@ -328,17 +458,47 @@ func (m *Vote) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Vote proto.InternalMessageInfo
 
+func (m *Vote) GetProposalId() uint64 {
+	if m != nil {
+		return m.ProposalId
+	}
+	return 0
+}
+
+func (m *Vote) GetVoter() string {
+	if m != nil {
+		return m.Voter
+	}
+	return ""
+}
+
+// Deprecated: Do not use.
+func (m *Vote) GetOption() VoteOption {
+	if m != nil {
+		return m.Option
+	}
+	return VoteOption_VOTE_OPTION_UNSPECIFIED
+}
+
+func (m *Vote) GetOptions() []*WeightedVoteOption {
+	if m != nil {
+		return m.Options
+	}
+	return nil
+}
+
 // DepositParams defines the params for deposits on governance proposals.
 type DepositParams struct {
 	//  Minimum deposit for a proposal to enter voting period.
-	MinDeposit github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=min_deposit,json=minDeposit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"min_deposit,omitempty"`
+	MinDeposit []*types.Coin `protobuf:"bytes,1,rep,name=min_deposit,json=minDeposit,proto3" json:"min_deposit,omitempty"`
 	//  Maximum period for Atom holders to deposit on a proposal. Initial value: 2
 	//  months.
-	MaxDepositPeriod time.Duration `protobuf:"bytes,2,opt,name=max_deposit_period,json=maxDepositPeriod,proto3,stdduration" json:"max_deposit_period,omitempty"`
+	MaxDepositPeriod *time.Duration `protobuf:"bytes,2,opt,name=max_deposit_period,json=maxDepositPeriod,proto3,stdduration" json:"max_deposit_period,omitempty"`
 }
 
-func (m *DepositParams) Reset()      { *m = DepositParams{} }
-func (*DepositParams) ProtoMessage() {}
+func (m *DepositParams) Reset()         { *m = DepositParams{} }
+func (m *DepositParams) String() string { return proto.CompactTextString(m) }
+func (*DepositParams) ProtoMessage()    {}
 func (*DepositParams) Descriptor() ([]byte, []int) {
 	return fileDescriptor_5abf7b8852811c49, []int{5}
 }
@@ -369,14 +529,29 @@ func (m *DepositParams) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DepositParams proto.InternalMessageInfo
 
+func (m *DepositParams) GetMinDeposit() []*types.Coin {
+	if m != nil {
+		return m.MinDeposit
+	}
+	return nil
+}
+
+func (m *DepositParams) GetMaxDepositPeriod() *time.Duration {
+	if m != nil {
+		return m.MaxDepositPeriod
+	}
+	return nil
+}
+
 // VotingParams defines the params for voting on governance proposals.
 type VotingParams struct {
 	//  Length of the voting period.
-	VotingPeriod time.Duration `protobuf:"bytes,1,opt,name=voting_period,json=votingPeriod,proto3,stdduration" json:"voting_period,omitempty"`
+	VotingPeriod *time.Duration `protobuf:"bytes,1,opt,name=voting_period,json=votingPeriod,proto3,stdduration" json:"voting_period,omitempty"`
 }
 
-func (m *VotingParams) Reset()      { *m = VotingParams{} }
-func (*VotingParams) ProtoMessage() {}
+func (m *VotingParams) Reset()         { *m = VotingParams{} }
+func (m *VotingParams) String() string { return proto.CompactTextString(m) }
+func (*VotingParams) ProtoMessage()    {}
 func (*VotingParams) Descriptor() ([]byte, []int) {
 	return fileDescriptor_5abf7b8852811c49, []int{6}
 }
@@ -407,20 +582,28 @@ func (m *VotingParams) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_VotingParams proto.InternalMessageInfo
 
+func (m *VotingParams) GetVotingPeriod() *time.Duration {
+	if m != nil {
+		return m.VotingPeriod
+	}
+	return nil
+}
+
 // TallyParams defines the params for tallying votes on governance proposals.
 type TallyParams struct {
 	//  Minimum percentage of total stake needed to vote for a result to be
 	//  considered valid.
-	Quorum github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=quorum,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"quorum,omitempty"`
+	Quorum []byte `protobuf:"bytes,1,opt,name=quorum,proto3" json:"quorum,omitempty"`
 	//  Minimum proportion of Yes votes for proposal to pass. Default value: 0.5.
-	Threshold github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=threshold,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"threshold,omitempty"`
+	Threshold []byte `protobuf:"bytes,2,opt,name=threshold,proto3" json:"threshold,omitempty"`
 	//  Minimum value of Veto votes to Total votes ratio for proposal to be
 	//  vetoed. Default value: 1/3.
-	VetoThreshold github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=veto_threshold,json=vetoThreshold,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"veto_threshold,omitempty"`
+	VetoThreshold []byte `protobuf:"bytes,3,opt,name=veto_threshold,json=vetoThreshold,proto3" json:"veto_threshold,omitempty"`
 }
 
-func (m *TallyParams) Reset()      { *m = TallyParams{} }
-func (*TallyParams) ProtoMessage() {}
+func (m *TallyParams) Reset()         { *m = TallyParams{} }
+func (m *TallyParams) String() string { return proto.CompactTextString(m) }
+func (*TallyParams) ProtoMessage()    {}
 func (*TallyParams) Descriptor() ([]byte, []int) {
 	return fileDescriptor_5abf7b8852811c49, []int{7}
 }
@@ -451,6 +634,27 @@ func (m *TallyParams) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TallyParams proto.InternalMessageInfo
 
+func (m *TallyParams) GetQuorum() []byte {
+	if m != nil {
+		return m.Quorum
+	}
+	return nil
+}
+
+func (m *TallyParams) GetThreshold() []byte {
+	if m != nil {
+		return m.Threshold
+	}
+	return nil
+}
+
+func (m *TallyParams) GetVetoThreshold() []byte {
+	if m != nil {
+		return m.VetoThreshold
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterEnum("cosmos.gov.v1beta2.VoteOption", VoteOption_name, VoteOption_value)
 	proto.RegisterEnum("cosmos.gov.v1beta2.ProposalStatus", ProposalStatus_name, ProposalStatus_value)
@@ -467,187 +671,73 @@ func init() {
 func init() { proto.RegisterFile("cosmos/gov/v1beta2/gov.proto", fileDescriptor_5abf7b8852811c49) }
 
 var fileDescriptor_5abf7b8852811c49 = []byte{
-	// 1386 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x57, 0x4f, 0x6f, 0x13, 0x47,
-	0x1b, 0xf7, 0xda, 0xc6, 0x49, 0x26, 0x4e, 0x58, 0x26, 0x79, 0x93, 0x8d, 0x5f, 0xde, 0xdd, 0x7d,
-	0x97, 0x0a, 0x45, 0x08, 0x1c, 0x48, 0x2b, 0xa4, 0xa6, 0xbd, 0x78, 0xf1, 0xa6, 0x18, 0x21, 0xdb,
-	0x5a, 0x2f, 0x46, 0x50, 0xa9, 0xab, 0x8d, 0x77, 0x70, 0xb6, 0xf5, 0xee, 0x18, 0xef, 0x38, 0x90,
-	0x5b, 0x2f, 0x95, 0x90, 0x4f, 0x1c, 0xb9, 0x58, 0x42, 0xed, 0xad, 0x67, 0xbe, 0x40, 0x6f, 0x1c,
-	0x7a, 0xa0, 0x9c, 0x50, 0x0f, 0xa6, 0x04, 0xb5, 0xa2, 0xf4, 0xc6, 0x27, 0xa8, 0x76, 0x66, 0x36,
-	0xb1, 0x9d, 0xa8, 0x26, 0xe5, 0x94, 0xf5, 0xcc, 0xef, 0xcf, 0xf3, 0x3c, 0x3b, 0xcf, 0xb3, 0x13,
-	0x70, 0xba, 0x81, 0x43, 0x1f, 0x87, 0x6b, 0x4d, 0xbc, 0xb3, 0xb6, 0x73, 0x69, 0x0b, 0x11, 0x67,
-	0x3d, 0x7a, 0xce, 0xb7, 0x3b, 0x98, 0x60, 0x08, 0xd9, 0x6e, 0x3e, 0x5a, 0xe1, 0xbb, 0x39, 0x99,
-	0x33, 0xb6, 0x9c, 0x10, 0x71, 0xca, 0xa5, 0xb5, 0x06, 0xf6, 0x02, 0xc6, 0xc9, 0x2d, 0x36, 0x71,
-	0x13, 0xd3, 0xc7, 0xb5, 0xe8, 0x89, 0xaf, 0x2a, 0x4d, 0x8c, 0x9b, 0x2d, 0xb4, 0x46, 0x7f, 0x6d,
-	0x75, 0xef, 0xac, 0x11, 0xcf, 0x47, 0x21, 0x71, 0xfc, 0x36, 0x07, 0xac, 0x8c, 0x03, 0x9c, 0x60,
-	0x97, 0x6f, 0xc9, 0xe3, 0x5b, 0x6e, 0xb7, 0xe3, 0x10, 0x0f, 0xc7, 0x8e, 0x2b, 0x2c, 0x22, 0x9b,
-	0x99, 0xf2, 0x90, 0xe9, 0x0f, 0xed, 0x7b, 0x01, 0xc0, 0x9b, 0xc8, 0x6b, 0x6e, 0x13, 0xe4, 0xd6,
-	0x31, 0x41, 0x95, 0x76, 0xc4, 0x83, 0x97, 0x41, 0x06, 0xd3, 0x27, 0x49, 0x50, 0x85, 0xd5, 0xf9,
-	0x75, 0x39, 0x7f, 0x38, 0xd1, 0xfc, 0x01, 0xde, 0xe4, 0x68, 0x68, 0x81, 0xcc, 0x3d, 0xaa, 0x26,
-	0x25, 0x55, 0x61, 0x75, 0x46, 0xff, 0xfc, 0xe9, 0x40, 0x49, 0xfc, 0x3a, 0x50, 0xce, 0x36, 0x3d,
-	0xb2, 0xdd, 0xdd, 0xca, 0x37, 0xb0, 0xcf, 0xfd, 0xf9, 0x9f, 0x0b, 0xa1, 0xfb, 0xcd, 0x1a, 0xd9,
-	0x6d, 0xa3, 0x30, 0x5f, 0x44, 0x8d, 0xe7, 0x4f, 0x2e, 0x00, 0x6e, 0x54, 0x44, 0x0d, 0x93, 0x6b,
-	0x69, 0xbf, 0x08, 0x60, 0xaa, 0x88, 0xda, 0x38, 0xf4, 0x08, 0x54, 0xc0, 0x6c, 0xbb, 0x83, 0xdb,
-	0x38, 0x74, 0x5a, 0xb6, 0xe7, 0xd2, 0xf0, 0xd2, 0x26, 0x88, 0x97, 0x4a, 0x2e, 0xbc, 0x0c, 0x66,
-	0x5c, 0x86, 0xc5, 0x1d, 0x1e, 0x85, 0xf4, 0xfc, 0xc9, 0x85, 0x45, 0xae, 0x5b, 0x70, 0xdd, 0x0e,
-	0x0a, 0xc3, 0x1a, 0xe9, 0x78, 0x41, 0xd3, 0x3c, 0x80, 0xc2, 0x06, 0xc8, 0x38, 0x3e, 0xee, 0x06,
-	0x44, 0x4a, 0xa9, 0xa9, 0xd5, 0xd9, 0xf5, 0x95, 0x38, 0xe5, 0xe8, 0x3d, 0xf2, 0x9c, 0x2f, 0xe5,
-	0xaf, 0x60, 0x2f, 0xd0, 0x2f, 0x46, 0x59, 0xfd, 0xf8, 0x52, 0x59, 0x7d, 0x8f, 0xac, 0x22, 0x42,
-	0x68, 0x72, 0xe9, 0x8d, 0xe9, 0x07, 0x8f, 0x95, 0xc4, 0x9b, 0xc7, 0x4a, 0x42, 0xfb, 0x2b, 0x03,
-	0xa6, 0xab, 0x3c, 0x6a, 0xf8, 0xc9, 0x11, 0x49, 0xe9, 0x0b, 0x6f, 0x07, 0x4a, 0xd2, 0x73, 0xdf,
-	0x0d, 0x94, 0x99, 0x5d, 0xc7, 0x6f, 0x6d, 0x68, 0x9e, 0xab, 0x8d, 0x64, 0x7a, 0x11, 0x4c, 0xfb,
-	0x28, 0x0c, 0x9d, 0x26, 0x0a, 0xa5, 0x24, 0x8d, 0x79, 0x31, 0xcf, 0x4e, 0x42, 0x3e, 0x3e, 0x09,
-	0xf9, 0x42, 0xb0, 0x6b, 0xee, 0xa3, 0x60, 0x1d, 0x64, 0x42, 0xe2, 0x90, 0x6e, 0x28, 0xa5, 0xe8,
-	0x6b, 0xd5, 0x8e, 0x7a, 0xad, 0x71, 0x54, 0x35, 0x8a, 0xd4, 0x73, 0xef, 0x06, 0xca, 0x12, 0x0b,
-	0x60, 0x3f, 0x46, 0x26, 0xa2, 0x99, 0x5c, 0x0d, 0xb6, 0x01, 0xbc, 0xe3, 0x05, 0x4e, 0xcb, 0x26,
-	0x4e, 0xab, 0xb5, 0x6b, 0x77, 0x50, 0xd8, 0x6d, 0x11, 0x29, 0xad, 0x0a, 0xab, 0xb3, 0xeb, 0xca,
-	0x51, 0x1e, 0x56, 0x84, 0x33, 0x29, 0x4c, 0xff, 0x7f, 0x54, 0xcd, 0x77, 0x03, 0x65, 0x85, 0x99,
-	0x1c, 0x16, 0xd2, 0x4c, 0x91, 0x2e, 0x0e, 0x91, 0xe0, 0x97, 0x60, 0x36, 0xec, 0x6e, 0xf9, 0x1e,
-	0xb1, 0xa3, 0x3e, 0x91, 0x4e, 0x50, 0xab, 0xdc, 0xa1, 0xf4, 0xad, 0xb8, 0x89, 0x74, 0x99, 0xbb,
-	0x40, 0xe6, 0x32, 0x44, 0xd6, 0x1e, 0xbe, 0x54, 0x04, 0x13, 0xb0, 0x95, 0x88, 0x00, 0x3d, 0x20,
-	0xf2, 0x73, 0x61, 0xa3, 0xc0, 0x65, 0x0e, 0x99, 0x89, 0x0e, 0x67, 0xb8, 0xc3, 0x32, 0x73, 0x18,
-	0x57, 0x60, 0x36, 0xf3, 0x7c, 0xd9, 0x08, 0x5c, 0x6a, 0xf5, 0x40, 0x00, 0x73, 0x04, 0x13, 0xa7,
-	0x65, 0xf3, 0x0d, 0x69, 0x6a, 0xd2, 0xe9, 0xbb, 0xca, 0x7d, 0x16, 0x99, 0xcf, 0x08, 0x5b, 0x3b,
-	0xd6, 0xa9, 0xcc, 0x52, 0x6e, 0xdc, 0x59, 0x2d, 0x70, 0x6a, 0x07, 0x13, 0x2f, 0x68, 0x46, 0xaf,
-	0xb7, 0xc3, 0x0b, 0x3b, 0x3d, 0x31, 0xed, 0x8f, 0x78, 0x38, 0x12, 0x0b, 0xe7, 0x90, 0x04, 0xcb,
-	0xfb, 0x24, 0x5b, 0xaf, 0x45, 0xcb, 0x34, 0xf1, 0x3b, 0x80, 0x2f, 0x1d, 0x94, 0x78, 0x66, 0xa2,
-	0x97, 0xc6, 0xbd, 0x96, 0x46, 0xbc, 0x46, 0x2b, 0x3c, 0xc7, 0x56, 0x79, 0x81, 0x37, 0xd2, 0x6f,
-	0x1e, 0x2b, 0x82, 0xf6, 0x67, 0x12, 0xcc, 0x0e, 0x1f, 0x9f, 0x32, 0x48, 0xed, 0xa2, 0x90, 0x36,
-	0xda, 0xf1, 0x86, 0x54, 0x29, 0x20, 0x43, 0x43, 0xaa, 0x14, 0x10, 0x33, 0x12, 0x82, 0x75, 0x30,
-	0xe5, 0x6c, 0x85, 0xc4, 0xf1, 0x82, 0x7f, 0x31, 0xf8, 0x0e, 0x6b, 0xc6, 0x62, 0xf0, 0x3a, 0x48,
-	0x06, 0x98, 0x36, 0xeb, 0x87, 0x4a, 0x26, 0x03, 0x0c, 0xbf, 0x02, 0xd9, 0x00, 0xdb, 0xf7, 0x3c,
-	0xb2, 0x6d, 0xef, 0x20, 0x82, 0x69, 0x83, 0x7e, 0xa8, 0x2e, 0x08, 0xf0, 0x4d, 0x8f, 0x6c, 0xd7,
-	0x11, 0xc1, 0xbc, 0xd6, 0xbf, 0x0b, 0x20, 0x1d, 0x7d, 0x1a, 0x26, 0x8f, 0xea, 0x3c, 0x38, 0xb1,
-	0x83, 0x09, 0x9a, 0x3c, 0xa6, 0x19, 0x0c, 0x6e, 0xec, 0x7f, 0x95, 0x52, 0xef, 0xf3, 0x55, 0xd2,
-	0x93, 0x92, 0xb0, 0xff, 0x65, 0xda, 0x04, 0x53, 0xec, 0x29, 0x94, 0xd2, 0xb4, 0xc3, 0xce, 0x1e,
-	0x45, 0x3e, 0xfc, 0x29, 0xd4, 0xd3, 0x51, 0x79, 0xcc, 0x98, 0xbc, 0x31, 0xfd, 0x28, 0x9e, 0xe0,
-	0xbd, 0x24, 0x98, 0xe3, 0xbd, 0x53, 0x75, 0x3a, 0x8e, 0x1f, 0xc2, 0xef, 0x04, 0x30, 0xeb, 0x7b,
-	0xc1, 0x7e, 0x2b, 0x0b, 0x93, 0x5a, 0xb9, 0x14, 0x69, 0xbf, 0x1d, 0x28, 0xff, 0x19, 0x62, 0x9d,
-	0xc7, 0xbe, 0x47, 0x90, 0xdf, 0x26, 0xbb, 0xc7, 0xea, 0x65, 0xe0, 0x7b, 0x41, 0xdc, 0xc9, 0x77,
-	0x01, 0xf4, 0x9d, 0xfb, 0xb1, 0xa0, 0xdd, 0x46, 0x1d, 0x0f, 0xbb, 0xb4, 0xc8, 0x51, 0x34, 0xe3,
-	0xed, 0x55, 0xe4, 0x97, 0x05, 0x7d, 0x95, 0x47, 0x73, 0xfa, 0x30, 0xf9, 0x20, 0xa8, 0x47, 0x51,
-	0x8f, 0x89, 0xbe, 0x73, 0x3f, 0x4e, 0x9d, 0xee, 0x6b, 0x21, 0xc8, 0xd6, 0x69, 0xdf, 0xf1, 0x52,
-	0x34, 0x00, 0xef, 0xc3, 0xd8, 0x5d, 0x98, 0xe4, 0x7e, 0x86, 0xbb, 0x2f, 0x8f, 0xf0, 0xc6, 0x8c,
-	0xb3, 0x6c, 0x93, 0x9b, 0xfe, 0x14, 0x77, 0x35, 0x37, 0xbd, 0x0d, 0x32, 0x77, 0xbb, 0xb8, 0xd3,
-	0xf5, 0xa9, 0x5b, 0x56, 0xd7, 0x8f, 0x77, 0xfb, 0x78, 0x3b, 0x50, 0x44, 0xc6, 0x3f, 0x70, 0x35,
-	0xb9, 0x22, 0x6c, 0x80, 0x19, 0xb2, 0xdd, 0x41, 0xe1, 0x36, 0x6e, 0xb1, 0x52, 0x66, 0x75, 0xe3,
-	0xd8, 0xf2, 0x0b, 0xfb, 0x12, 0x43, 0x0e, 0x07, 0xba, 0xf0, 0x2e, 0x98, 0x8f, 0x1a, 0xd3, 0x3e,
-	0x70, 0x4a, 0x51, 0xa7, 0x6b, 0xc7, 0x76, 0x92, 0x46, 0x75, 0x86, 0xec, 0xe6, 0xa2, 0x1d, 0x2b,
-	0xde, 0x38, 0xf7, 0x87, 0x00, 0xc0, 0xd0, 0xc5, 0xef, 0x3c, 0x58, 0xae, 0x57, 0x2c, 0xc3, 0xae,
-	0x54, 0xad, 0x52, 0xa5, 0x6c, 0xdf, 0x28, 0xd7, 0xaa, 0xc6, 0x95, 0xd2, 0x66, 0xc9, 0x28, 0x8a,
-	0x89, 0xdc, 0xc9, 0x5e, 0x5f, 0x9d, 0x65, 0x40, 0x23, 0xd2, 0x82, 0x1a, 0x38, 0x39, 0x8c, 0xbe,
-	0x65, 0xd4, 0x44, 0x21, 0x37, 0xd7, 0xeb, 0xab, 0x33, 0x0c, 0x75, 0x0b, 0x85, 0xf0, 0x1c, 0x58,
-	0x18, 0xc6, 0x14, 0xf4, 0x9a, 0x55, 0x28, 0x95, 0xc5, 0x64, 0xee, 0x54, 0xaf, 0xaf, 0xce, 0x31,
-	0x5c, 0x81, 0x8f, 0x3b, 0x15, 0xcc, 0x0f, 0x63, 0xcb, 0x15, 0x31, 0x95, 0xcb, 0xf6, 0xfa, 0xea,
-	0x34, 0x83, 0x95, 0x31, 0x5c, 0x07, 0xd2, 0x28, 0xc2, 0xbe, 0x59, 0xb2, 0xae, 0xda, 0x75, 0xc3,
-	0xaa, 0x88, 0xe9, 0xdc, 0x62, 0xaf, 0xaf, 0x8a, 0x31, 0x36, 0x1e, 0x4b, 0xb9, 0xf4, 0x83, 0x1f,
-	0xe4, 0xc4, 0xb9, 0x9f, 0x93, 0x60, 0x7e, 0xf4, 0x6a, 0x03, 0xf3, 0xe0, 0xbf, 0x55, 0xb3, 0x52,
-	0xad, 0xd4, 0x0a, 0xd7, 0xed, 0x9a, 0x55, 0xb0, 0x6e, 0xd4, 0xc6, 0x12, 0xa6, 0xa9, 0x30, 0x70,
-	0xd9, 0x6b, 0xc1, 0xcf, 0x80, 0x3c, 0x8e, 0x2f, 0x1a, 0xd5, 0x4a, 0xad, 0x64, 0xd9, 0x55, 0xc3,
-	0x2c, 0x55, 0x8a, 0xa2, 0x90, 0x5b, 0xee, 0xf5, 0xd5, 0x05, 0x46, 0x19, 0xe9, 0x10, 0xf8, 0x29,
-	0xf8, 0xdf, 0x38, 0xb9, 0x5e, 0xb1, 0x4a, 0xe5, 0x2f, 0x62, 0x6e, 0x32, 0xb7, 0xd4, 0xeb, 0xab,
-	0x90, 0x71, 0xeb, 0x43, 0xe7, 0x1c, 0x9e, 0x07, 0x4b, 0xe3, 0xd4, 0x6a, 0xa1, 0x56, 0x33, 0x8a,
-	0x62, 0x2a, 0x27, 0xf6, 0xfa, 0x6a, 0x96, 0x71, 0xaa, 0x4e, 0x18, 0xa2, 0xe8, 0x5a, 0x28, 0x8d,
-	0xa3, 0x4d, 0xe3, 0x9a, 0x71, 0xc5, 0x32, 0x8a, 0x62, 0x3a, 0x07, 0x7b, 0x7d, 0x75, 0x9e, 0xe1,
-	0x4d, 0xf4, 0x35, 0x6a, 0x10, 0x74, 0xa4, 0xfe, 0x66, 0xa1, 0x74, 0xdd, 0x28, 0x8a, 0x27, 0x86,
-	0xf5, 0x37, 0x1d, 0xaf, 0x85, 0x5c, 0x56, 0x4e, 0xbd, 0xfc, 0xf4, 0x95, 0x9c, 0x78, 0xf1, 0x4a,
-	0x4e, 0x7c, 0xbb, 0x27, 0x27, 0x9e, 0xee, 0xc9, 0xc2, 0xb3, 0x3d, 0x59, 0xf8, 0x6d, 0x4f, 0x16,
-	0x1e, 0xbe, 0x96, 0x13, 0xcf, 0x5e, 0xcb, 0x89, 0x17, 0xaf, 0xe5, 0xc4, 0xed, 0x7f, 0x9e, 0x5f,
-	0xf7, 0xe9, 0x7f, 0x55, 0xf4, 0xd8, 0x6e, 0x65, 0xe8, 0x44, 0xf8, 0xf8, 0xef, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0x0c, 0xf2, 0xd0, 0x1b, 0x70, 0x0d, 0x00, 0x00,
+	// 1010 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x56, 0x41, 0x6f, 0xdb, 0x36,
+	0x14, 0x8e, 0x6c, 0xc7, 0x49, 0x9e, 0x1d, 0x57, 0x63, 0x83, 0x56, 0x49, 0x33, 0x25, 0x33, 0xb0,
+	0xc2, 0x28, 0x10, 0xb9, 0xc9, 0x80, 0x1e, 0x76, 0x18, 0x66, 0x47, 0xea, 0xaa, 0x22, 0x8d, 0x0c,
+	0x49, 0x75, 0xb0, 0x5d, 0x04, 0x39, 0x62, 0x65, 0x6d, 0x96, 0xe8, 0x89, 0x74, 0x9a, 0xfc, 0x84,
+	0xdd, 0x7a, 0x19, 0x30, 0xec, 0x2f, 0xec, 0xda, 0x1f, 0xb1, 0xd3, 0x56, 0x14, 0x18, 0xb0, 0xdb,
+	0x86, 0xe4, 0x8f, 0x14, 0xa2, 0xa8, 0xc4, 0x71, 0x02, 0xc4, 0x27, 0x93, 0xef, 0x7d, 0xdf, 0xc7,
+	0xf7, 0xc8, 0x8f, 0x94, 0x61, 0xf3, 0x98, 0xd0, 0x98, 0xd0, 0x76, 0x48, 0x4e, 0xda, 0x27, 0xbb,
+	0x03, 0xcc, 0xfc, 0xbd, 0x6c, 0xac, 0x8d, 0x53, 0xc2, 0x08, 0x42, 0x79, 0x56, 0xcb, 0x22, 0x22,
+	0xbb, 0xa1, 0x0a, 0xc6, 0xc0, 0xa7, 0x58, 0x50, 0x76, 0xdb, 0xc7, 0x24, 0x4a, 0x72, 0xce, 0xc6,
+	0x5a, 0x48, 0x42, 0xc2, 0x87, 0xed, 0x6c, 0x24, 0xa2, 0x5b, 0x21, 0x21, 0xe1, 0x08, 0xb7, 0xf9,
+	0x6c, 0x30, 0x79, 0xd3, 0x66, 0x51, 0x8c, 0x29, 0xf3, 0xe3, 0xb1, 0x00, 0xac, 0xcf, 0x02, 0xfc,
+	0xe4, 0x4c, 0xa4, 0xd4, 0xd9, 0x54, 0x30, 0x49, 0x7d, 0x16, 0x91, 0x62, 0xc5, 0xf5, 0xbc, 0x22,
+	0x2f, 0x5f, 0x54, 0x94, 0xcc, 0x27, 0x4d, 0x06, 0xe8, 0x08, 0x47, 0xe1, 0x90, 0xe1, 0xa0, 0x4f,
+	0x18, 0xb6, 0xc6, 0x19, 0x0d, 0x3d, 0x83, 0x2a, 0xe1, 0x23, 0x45, 0xda, 0x96, 0x5a, 0x8d, 0x3d,
+	0x55, 0xbb, 0xd9, 0xa7, 0x76, 0x85, 0xb7, 0x05, 0x1a, 0x3d, 0x86, 0xea, 0x5b, 0xae, 0xa6, 0x94,
+	0xb6, 0xa5, 0xd6, 0x4a, 0xb7, 0xf1, 0xf1, 0xfd, 0x0e, 0x08, 0xaa, 0x8e, 0x8f, 0x6d, 0x91, 0x6d,
+	0xfe, 0x2a, 0xc1, 0x92, 0x8e, 0xc7, 0x84, 0x46, 0x0c, 0x6d, 0x41, 0x6d, 0x9c, 0x92, 0x31, 0xa1,
+	0xfe, 0xc8, 0x8b, 0x02, 0xbe, 0x60, 0xc5, 0x86, 0x22, 0x64, 0x06, 0xe8, 0x19, 0xac, 0x04, 0x39,
+	0x96, 0xa4, 0x42, 0x57, 0xf9, 0xf8, 0x7e, 0x67, 0x4d, 0xe8, 0x76, 0x82, 0x20, 0xc5, 0x94, 0x3a,
+	0x2c, 0x8d, 0x92, 0xd0, 0xbe, 0x82, 0xa2, 0x5d, 0xa8, 0xfa, 0x31, 0x99, 0x24, 0x4c, 0x29, 0x6f,
+	0x97, 0x5b, 0xb5, 0xbd, 0xf5, 0xa2, 0x89, 0xec, 0x60, 0x44, 0x17, 0xbb, 0xda, 0x3e, 0x89, 0x12,
+	0x5b, 0x00, 0x9b, 0x7f, 0x57, 0x60, 0xb9, 0x27, 0x56, 0xbe, 0xbb, 0xb0, 0xa7, 0xb0, 0x1c, 0x63,
+	0x4a, 0xfd, 0x10, 0x53, 0xa5, 0xc4, 0x97, 0x58, 0xd3, 0xf2, 0x93, 0xd0, 0x8a, 0x93, 0xd0, 0x3a,
+	0xc9, 0x99, 0x7d, 0x89, 0x42, 0x5f, 0x43, 0x95, 0x32, 0x9f, 0x4d, 0xa8, 0x52, 0xe6, 0xfb, 0xda,
+	0xbc, 0x6d, 0x5f, 0x8b, 0x02, 0x1c, 0x8e, 0xb4, 0x05, 0x03, 0xbd, 0x02, 0xf4, 0x26, 0x4a, 0xfc,
+	0x91, 0xc7, 0xfc, 0xd1, 0xe8, 0xcc, 0x4b, 0x31, 0x9d, 0x8c, 0x98, 0x52, 0xd9, 0x96, 0x5a, 0xb5,
+	0xbd, 0xad, 0xdb, 0x74, 0xdc, 0x0c, 0x67, 0x73, 0x98, 0x2d, 0x73, 0xea, 0x54, 0x04, 0x75, 0xa0,
+	0x46, 0x27, 0x83, 0x38, 0x62, 0x5e, 0x66, 0x34, 0x65, 0x91, 0xeb, 0x6c, 0xdc, 0xa8, 0xdf, 0x2d,
+	0x5c, 0xd8, 0xad, 0xbc, 0xfb, 0x6f, 0x4b, 0xb2, 0x21, 0x27, 0x65, 0x61, 0xf4, 0x12, 0x64, 0xb1,
+	0xdb, 0x1e, 0x4e, 0x82, 0x5c, 0xa7, 0x3a, 0xa7, 0x4e, 0x43, 0x30, 0x8d, 0x24, 0xe0, 0x5a, 0xdf,
+	0xc0, 0x2a, 0x23, 0xcc, 0x1f, 0x79, 0x22, 0xae, 0x2c, 0xdd, 0x75, 0x66, 0x75, 0x8e, 0x2f, 0x5c,
+	0x74, 0x00, 0x9f, 0x9d, 0x10, 0x16, 0x25, 0xa1, 0x47, 0x99, 0x9f, 0x8a, 0xa6, 0x96, 0xe7, 0x2c,
+	0xe6, 0x5e, 0x4e, 0x75, 0x32, 0x26, 0xaf, 0xe6, 0x05, 0x88, 0xd0, 0x55, 0x63, 0x2b, 0x73, 0x6a,
+	0xad, 0xe6, 0x44, 0xd1, 0x57, 0xf3, 0x0f, 0x09, 0x6a, 0xd3, 0xdb, 0xbe, 0x0d, 0xe5, 0x33, 0x4c,
+	0xb9, 0x99, 0xae, 0x5f, 0x0f, 0x33, 0x61, 0x76, 0x96, 0x42, 0x2d, 0x58, 0xf2, 0x07, 0x94, 0xf9,
+	0x51, 0x72, 0xcb, 0x25, 0xca, 0x50, 0x45, 0x1a, 0xa9, 0x50, 0x4a, 0x08, 0x77, 0xd2, 0x4d, 0x50,
+	0x29, 0x21, 0xe8, 0x29, 0xd4, 0x13, 0xe2, 0xbd, 0x8d, 0xd8, 0xd0, 0x3b, 0xc1, 0x8c, 0x70, 0xaf,
+	0xdc, 0x44, 0x42, 0x42, 0x8e, 0x22, 0x36, 0xec, 0x63, 0x46, 0x9a, 0xff, 0x48, 0x50, 0xc9, 0xae,
+	0xf5, 0xdd, 0xde, 0xd7, 0x60, 0xf1, 0x84, 0x30, 0x7c, 0xf7, 0x85, 0xcc, 0x61, 0x99, 0xf3, 0xc5,
+	0x8b, 0x52, 0x9e, 0xe7, 0x45, 0xe9, 0x96, 0x14, 0xe9, 0xf2, 0x55, 0xf9, 0x16, 0x96, 0xf2, 0x11,
+	0x55, 0x2a, 0xdc, 0x15, 0x8f, 0x6f, 0x23, 0xdf, 0x7c, 0xc6, 0xec, 0x82, 0xd6, 0xfc, 0x5d, 0x82,
+	0x55, 0xe1, 0x94, 0x9e, 0x9f, 0xfa, 0x71, 0x76, 0x13, 0x6b, 0x71, 0x94, 0x5c, 0xba, 0x4d, 0xba,
+	0xcb, 0x6d, 0x10, 0x47, 0x49, 0xe1, 0xb5, 0x57, 0x80, 0x62, 0xff, 0xb4, 0xe0, 0x7a, 0x63, 0x9c,
+	0x46, 0x24, 0xe0, 0x1b, 0x91, 0x49, 0xcc, 0x1a, 0x44, 0x17, 0x6f, 0x71, 0xb7, 0xf2, 0x5b, 0xe6,
+	0x0f, 0x39, 0xf6, 0x4f, 0x8b, 0x52, 0x38, 0xb1, 0xe9, 0x42, 0xbd, 0xcf, 0x3d, 0x23, 0x4a, 0xd3,
+	0x41, 0x78, 0xa8, 0x50, 0x96, 0xe6, 0x53, 0xae, 0xe7, 0x2c, 0xa1, 0xfa, 0xa3, 0xf0, 0x9d, 0x10,
+	0x7d, 0x00, 0xd5, 0x9f, 0x27, 0x24, 0x9d, 0xc4, 0x5c, 0xad, 0x6e, 0x8b, 0x19, 0xda, 0x84, 0x15,
+	0x36, 0x4c, 0x31, 0x1d, 0x92, 0x51, 0xde, 0x42, 0xdd, 0xbe, 0x0a, 0xa0, 0x2f, 0xa1, 0x91, 0x39,
+	0xc7, 0xbb, 0x82, 0x94, 0x39, 0x64, 0x35, 0x8b, 0xba, 0x45, 0xf0, 0xc9, 0x2f, 0x12, 0xc0, 0xd4,
+	0xd7, 0xe3, 0x11, 0x3c, 0xec, 0x5b, 0xae, 0xe1, 0x59, 0x3d, 0xd7, 0xb4, 0x0e, 0xbd, 0xd7, 0x87,
+	0x4e, 0xcf, 0xd8, 0x37, 0x9f, 0x9b, 0x86, 0x2e, 0x2f, 0xa0, 0xfb, 0x70, 0x6f, 0x3a, 0xf9, 0xbd,
+	0xe1, 0xc8, 0x12, 0x7a, 0x08, 0xf7, 0xa7, 0x83, 0x9d, 0xae, 0xe3, 0x76, 0xcc, 0x43, 0xb9, 0x84,
+	0x10, 0x34, 0xa6, 0x13, 0x87, 0x96, 0x5c, 0x46, 0x9b, 0xa0, 0x5c, 0x8f, 0x79, 0x47, 0xa6, 0xfb,
+	0xc2, 0xeb, 0x1b, 0xae, 0x25, 0x57, 0x9e, 0xfc, 0x25, 0x41, 0xe3, 0xfa, 0x0b, 0x8a, 0xb6, 0xe0,
+	0x51, 0xcf, 0xb6, 0x7a, 0x96, 0xd3, 0x39, 0xf0, 0x1c, 0xb7, 0xe3, 0xbe, 0x76, 0x66, 0x6a, 0x6a,
+	0x82, 0x3a, 0x0b, 0xd0, 0x8d, 0x9e, 0xe5, 0x98, 0xae, 0xd7, 0x33, 0x6c, 0xd3, 0xd2, 0x65, 0x09,
+	0x7d, 0x01, 0x9f, 0xcf, 0x62, 0xfa, 0x96, 0x6b, 0x1e, 0x7e, 0x57, 0x40, 0x4a, 0x68, 0x03, 0x1e,
+	0xcc, 0x42, 0x7a, 0x1d, 0xc7, 0x31, 0xf4, 0xbc, 0xe8, 0xd9, 0x9c, 0x6d, 0xbc, 0x34, 0xf6, 0x5d,
+	0x43, 0x97, 0x2b, 0xb7, 0x31, 0x9f, 0x77, 0xcc, 0x03, 0x43, 0x97, 0x17, 0xbb, 0xdd, 0x3f, 0xcf,
+	0x55, 0xe9, 0xc3, 0xb9, 0x2a, 0xfd, 0x7f, 0xae, 0x4a, 0xef, 0x2e, 0xd4, 0x85, 0x0f, 0x17, 0xea,
+	0xc2, 0xbf, 0x17, 0xea, 0xc2, 0x0f, 0xad, 0x30, 0x62, 0xc3, 0xc9, 0x40, 0x3b, 0x26, 0xb1, 0xf8,
+	0xa8, 0x8b, 0x9f, 0x1d, 0x1a, 0xfc, 0xd4, 0x3e, 0xe5, 0x7f, 0x59, 0xd8, 0xd9, 0x18, 0xd3, 0x41,
+	0x95, 0x7b, 0xe6, 0xab, 0x4f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x3e, 0xe3, 0x04, 0xa9, 0xcd, 0x08,
+	0x00, 0x00,
 }
 
-func (this *Proposal) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*Proposal)
-	if !ok {
-		that2, ok := that.(Proposal)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.ProposalId != that1.ProposalId {
-		return false
-	}
-	if len(this.Messages) != len(that1.Messages) {
-		return false
-	}
-	for i := range this.Messages {
-		if !this.Messages[i].Equal(that1.Messages[i]) {
-			return false
-		}
-	}
-	if this.Status != that1.Status {
-		return false
-	}
-	if !this.FinalTallyResult.Equal(&that1.FinalTallyResult) {
-		return false
-	}
-	if !this.SubmitTime.Equal(that1.SubmitTime) {
-		return false
-	}
-	if !this.DepositEndTime.Equal(that1.DepositEndTime) {
-		return false
-	}
-	if len(this.TotalDeposit) != len(that1.TotalDeposit) {
-		return false
-	}
-	for i := range this.TotalDeposit {
-		if !this.TotalDeposit[i].Equal(&that1.TotalDeposit[i]) {
-			return false
-		}
-	}
-	if !this.VotingStartTime.Equal(that1.VotingStartTime) {
-		return false
-	}
-	if !this.VotingEndTime.Equal(that1.VotingEndTime) {
-		return false
-	}
-	return true
-}
-func (this *TallyResult) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*TallyResult)
-	if !ok {
-		that2, ok := that.(TallyResult)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Yes.Equal(that1.Yes) {
-		return false
-	}
-	if !this.Abstain.Equal(that1.Abstain) {
-		return false
-	}
-	if !this.No.Equal(that1.No) {
-		return false
-	}
-	if !this.NoWithVeto.Equal(that1.NoWithVeto) {
-		return false
-	}
-	return true
-}
 func (m *WeightedVoteOption) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -668,16 +758,13 @@ func (m *WeightedVoteOption) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.Weight.Size()
-		i -= size
-		if _, err := m.Weight.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintGov(dAtA, i, uint64(size))
+	if len(m.Weight) > 0 {
+		i -= len(m.Weight)
+		copy(dAtA[i:], m.Weight)
+		i = encodeVarintGov(dAtA, i, uint64(len(m.Weight)))
+		i--
+		dAtA[i] = 0x12
 	}
-	i--
-	dAtA[i] = 0x12
 	if m.Option != 0 {
 		i = encodeVarintGov(dAtA, i, uint64(m.Option))
 		i--
@@ -755,22 +842,26 @@ func (m *Proposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	n1, err1 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.VotingEndTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.VotingEndTime):])
-	if err1 != nil {
-		return 0, err1
+	if m.VotingEndTime != nil {
+		n1, err1 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.VotingEndTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.VotingEndTime):])
+		if err1 != nil {
+			return 0, err1
+		}
+		i -= n1
+		i = encodeVarintGov(dAtA, i, uint64(n1))
+		i--
+		dAtA[i] = 0x4a
 	}
-	i -= n1
-	i = encodeVarintGov(dAtA, i, uint64(n1))
-	i--
-	dAtA[i] = 0x4a
-	n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.VotingStartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.VotingStartTime):])
-	if err2 != nil {
-		return 0, err2
+	if m.VotingStartTime != nil {
+		n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.VotingStartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.VotingStartTime):])
+		if err2 != nil {
+			return 0, err2
+		}
+		i -= n2
+		i = encodeVarintGov(dAtA, i, uint64(n2))
+		i--
+		dAtA[i] = 0x42
 	}
-	i -= n2
-	i = encodeVarintGov(dAtA, i, uint64(n2))
-	i--
-	dAtA[i] = 0x42
 	if len(m.TotalDeposit) > 0 {
 		for iNdEx := len(m.TotalDeposit) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -785,32 +876,38 @@ func (m *Proposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0x3a
 		}
 	}
-	n3, err3 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.DepositEndTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.DepositEndTime):])
-	if err3 != nil {
-		return 0, err3
-	}
-	i -= n3
-	i = encodeVarintGov(dAtA, i, uint64(n3))
-	i--
-	dAtA[i] = 0x32
-	n4, err4 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.SubmitTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.SubmitTime):])
-	if err4 != nil {
-		return 0, err4
-	}
-	i -= n4
-	i = encodeVarintGov(dAtA, i, uint64(n4))
-	i--
-	dAtA[i] = 0x2a
-	{
-		size, err := m.FinalTallyResult.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
+	if m.DepositEndTime != nil {
+		n3, err3 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.DepositEndTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.DepositEndTime):])
+		if err3 != nil {
+			return 0, err3
 		}
-		i -= size
-		i = encodeVarintGov(dAtA, i, uint64(size))
+		i -= n3
+		i = encodeVarintGov(dAtA, i, uint64(n3))
+		i--
+		dAtA[i] = 0x32
 	}
-	i--
-	dAtA[i] = 0x22
+	if m.SubmitTime != nil {
+		n4, err4 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.SubmitTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.SubmitTime):])
+		if err4 != nil {
+			return 0, err4
+		}
+		i -= n4
+		i = encodeVarintGov(dAtA, i, uint64(n4))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if m.FinalTallyResult != nil {
+		{
+			size, err := m.FinalTallyResult.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintGov(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x22
+	}
 	if m.Status != 0 {
 		i = encodeVarintGov(dAtA, i, uint64(m.Status))
 		i--
@@ -858,46 +955,34 @@ func (m *TallyResult) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.NoWithVeto.Size()
-		i -= size
-		if _, err := m.NoWithVeto.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintGov(dAtA, i, uint64(size))
+	if len(m.NoWithVeto) > 0 {
+		i -= len(m.NoWithVeto)
+		copy(dAtA[i:], m.NoWithVeto)
+		i = encodeVarintGov(dAtA, i, uint64(len(m.NoWithVeto)))
+		i--
+		dAtA[i] = 0x22
 	}
-	i--
-	dAtA[i] = 0x22
-	{
-		size := m.No.Size()
-		i -= size
-		if _, err := m.No.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintGov(dAtA, i, uint64(size))
+	if len(m.No) > 0 {
+		i -= len(m.No)
+		copy(dAtA[i:], m.No)
+		i = encodeVarintGov(dAtA, i, uint64(len(m.No)))
+		i--
+		dAtA[i] = 0x1a
 	}
-	i--
-	dAtA[i] = 0x1a
-	{
-		size := m.Abstain.Size()
-		i -= size
-		if _, err := m.Abstain.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintGov(dAtA, i, uint64(size))
+	if len(m.Abstain) > 0 {
+		i -= len(m.Abstain)
+		copy(dAtA[i:], m.Abstain)
+		i = encodeVarintGov(dAtA, i, uint64(len(m.Abstain)))
+		i--
+		dAtA[i] = 0x12
 	}
-	i--
-	dAtA[i] = 0x12
-	{
-		size := m.Yes.Size()
-		i -= size
-		if _, err := m.Yes.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintGov(dAtA, i, uint64(size))
+	if len(m.Yes) > 0 {
+		i -= len(m.Yes)
+		copy(dAtA[i:], m.Yes)
+		i = encodeVarintGov(dAtA, i, uint64(len(m.Yes)))
+		i--
+		dAtA[i] = 0xa
 	}
-	i--
-	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -975,14 +1060,16 @@ func (m *DepositParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	n6, err6 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.MaxDepositPeriod, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.MaxDepositPeriod):])
-	if err6 != nil {
-		return 0, err6
+	if m.MaxDepositPeriod != nil {
+		n6, err6 := github_com_gogo_protobuf_types.StdDurationMarshalTo(*m.MaxDepositPeriod, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(*m.MaxDepositPeriod):])
+		if err6 != nil {
+			return 0, err6
+		}
+		i -= n6
+		i = encodeVarintGov(dAtA, i, uint64(n6))
+		i--
+		dAtA[i] = 0x12
 	}
-	i -= n6
-	i = encodeVarintGov(dAtA, i, uint64(n6))
-	i--
-	dAtA[i] = 0x12
 	if len(m.MinDeposit) > 0 {
 		for iNdEx := len(m.MinDeposit) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -1020,14 +1107,16 @@ func (m *VotingParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	n7, err7 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.VotingPeriod, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.VotingPeriod):])
-	if err7 != nil {
-		return 0, err7
+	if m.VotingPeriod != nil {
+		n7, err7 := github_com_gogo_protobuf_types.StdDurationMarshalTo(*m.VotingPeriod, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(*m.VotingPeriod):])
+		if err7 != nil {
+			return 0, err7
+		}
+		i -= n7
+		i = encodeVarintGov(dAtA, i, uint64(n7))
+		i--
+		dAtA[i] = 0xa
 	}
-	i -= n7
-	i = encodeVarintGov(dAtA, i, uint64(n7))
-	i--
-	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -1051,36 +1140,27 @@ func (m *TallyParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.VetoThreshold.Size()
-		i -= size
-		if _, err := m.VetoThreshold.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintGov(dAtA, i, uint64(size))
+	if len(m.VetoThreshold) > 0 {
+		i -= len(m.VetoThreshold)
+		copy(dAtA[i:], m.VetoThreshold)
+		i = encodeVarintGov(dAtA, i, uint64(len(m.VetoThreshold)))
+		i--
+		dAtA[i] = 0x1a
 	}
-	i--
-	dAtA[i] = 0x1a
-	{
-		size := m.Threshold.Size()
-		i -= size
-		if _, err := m.Threshold.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintGov(dAtA, i, uint64(size))
+	if len(m.Threshold) > 0 {
+		i -= len(m.Threshold)
+		copy(dAtA[i:], m.Threshold)
+		i = encodeVarintGov(dAtA, i, uint64(len(m.Threshold)))
+		i--
+		dAtA[i] = 0x12
 	}
-	i--
-	dAtA[i] = 0x12
-	{
-		size := m.Quorum.Size()
-		i -= size
-		if _, err := m.Quorum.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintGov(dAtA, i, uint64(size))
+	if len(m.Quorum) > 0 {
+		i -= len(m.Quorum)
+		copy(dAtA[i:], m.Quorum)
+		i = encodeVarintGov(dAtA, i, uint64(len(m.Quorum)))
+		i--
+		dAtA[i] = 0xa
 	}
-	i--
-	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -1104,8 +1184,10 @@ func (m *WeightedVoteOption) Size() (n int) {
 	if m.Option != 0 {
 		n += 1 + sovGov(uint64(m.Option))
 	}
-	l = m.Weight.Size()
-	n += 1 + l + sovGov(uint64(l))
+	l = len(m.Weight)
+	if l > 0 {
+		n += 1 + l + sovGov(uint64(l))
+	}
 	return n
 }
 
@@ -1149,22 +1231,32 @@ func (m *Proposal) Size() (n int) {
 	if m.Status != 0 {
 		n += 1 + sovGov(uint64(m.Status))
 	}
-	l = m.FinalTallyResult.Size()
-	n += 1 + l + sovGov(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.SubmitTime)
-	n += 1 + l + sovGov(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.DepositEndTime)
-	n += 1 + l + sovGov(uint64(l))
+	if m.FinalTallyResult != nil {
+		l = m.FinalTallyResult.Size()
+		n += 1 + l + sovGov(uint64(l))
+	}
+	if m.SubmitTime != nil {
+		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.SubmitTime)
+		n += 1 + l + sovGov(uint64(l))
+	}
+	if m.DepositEndTime != nil {
+		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.DepositEndTime)
+		n += 1 + l + sovGov(uint64(l))
+	}
 	if len(m.TotalDeposit) > 0 {
 		for _, e := range m.TotalDeposit {
 			l = e.Size()
 			n += 1 + l + sovGov(uint64(l))
 		}
 	}
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.VotingStartTime)
-	n += 1 + l + sovGov(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.VotingEndTime)
-	n += 1 + l + sovGov(uint64(l))
+	if m.VotingStartTime != nil {
+		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.VotingStartTime)
+		n += 1 + l + sovGov(uint64(l))
+	}
+	if m.VotingEndTime != nil {
+		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.VotingEndTime)
+		n += 1 + l + sovGov(uint64(l))
+	}
 	return n
 }
 
@@ -1174,14 +1266,22 @@ func (m *TallyResult) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.Yes.Size()
-	n += 1 + l + sovGov(uint64(l))
-	l = m.Abstain.Size()
-	n += 1 + l + sovGov(uint64(l))
-	l = m.No.Size()
-	n += 1 + l + sovGov(uint64(l))
-	l = m.NoWithVeto.Size()
-	n += 1 + l + sovGov(uint64(l))
+	l = len(m.Yes)
+	if l > 0 {
+		n += 1 + l + sovGov(uint64(l))
+	}
+	l = len(m.Abstain)
+	if l > 0 {
+		n += 1 + l + sovGov(uint64(l))
+	}
+	l = len(m.No)
+	if l > 0 {
+		n += 1 + l + sovGov(uint64(l))
+	}
+	l = len(m.NoWithVeto)
+	if l > 0 {
+		n += 1 + l + sovGov(uint64(l))
+	}
 	return n
 }
 
@@ -1222,8 +1322,10 @@ func (m *DepositParams) Size() (n int) {
 			n += 1 + l + sovGov(uint64(l))
 		}
 	}
-	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.MaxDepositPeriod)
-	n += 1 + l + sovGov(uint64(l))
+	if m.MaxDepositPeriod != nil {
+		l = github_com_gogo_protobuf_types.SizeOfStdDuration(*m.MaxDepositPeriod)
+		n += 1 + l + sovGov(uint64(l))
+	}
 	return n
 }
 
@@ -1233,8 +1335,10 @@ func (m *VotingParams) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.VotingPeriod)
-	n += 1 + l + sovGov(uint64(l))
+	if m.VotingPeriod != nil {
+		l = github_com_gogo_protobuf_types.SizeOfStdDuration(*m.VotingPeriod)
+		n += 1 + l + sovGov(uint64(l))
+	}
 	return n
 }
 
@@ -1244,12 +1348,18 @@ func (m *TallyParams) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.Quorum.Size()
-	n += 1 + l + sovGov(uint64(l))
-	l = m.Threshold.Size()
-	n += 1 + l + sovGov(uint64(l))
-	l = m.VetoThreshold.Size()
-	n += 1 + l + sovGov(uint64(l))
+	l = len(m.Quorum)
+	if l > 0 {
+		n += 1 + l + sovGov(uint64(l))
+	}
+	l = len(m.Threshold)
+	if l > 0 {
+		n += 1 + l + sovGov(uint64(l))
+	}
+	l = len(m.VetoThreshold)
+	if l > 0 {
+		n += 1 + l + sovGov(uint64(l))
+	}
 	return n
 }
 
@@ -1337,9 +1447,7 @@ func (m *WeightedVoteOption) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Weight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Weight = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1471,7 +1579,7 @@ func (m *Deposit) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Amount = append(m.Amount, types.Coin{})
+			m.Amount = append(m.Amount, &types.Coin{})
 			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -1627,6 +1735,9 @@ func (m *Proposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
+			if m.FinalTallyResult == nil {
+				m.FinalTallyResult = &TallyResult{}
+			}
 			if err := m.FinalTallyResult.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -1660,7 +1771,10 @@ func (m *Proposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.SubmitTime, dAtA[iNdEx:postIndex]); err != nil {
+			if m.SubmitTime == nil {
+				m.SubmitTime = new(time.Time)
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(m.SubmitTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1693,7 +1807,10 @@ func (m *Proposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.DepositEndTime, dAtA[iNdEx:postIndex]); err != nil {
+			if m.DepositEndTime == nil {
+				m.DepositEndTime = new(time.Time)
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(m.DepositEndTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1726,7 +1843,7 @@ func (m *Proposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.TotalDeposit = append(m.TotalDeposit, types.Coin{})
+			m.TotalDeposit = append(m.TotalDeposit, &types.Coin{})
 			if err := m.TotalDeposit[len(m.TotalDeposit)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -1760,7 +1877,10 @@ func (m *Proposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.VotingStartTime, dAtA[iNdEx:postIndex]); err != nil {
+			if m.VotingStartTime == nil {
+				m.VotingStartTime = new(time.Time)
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(m.VotingStartTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1793,7 +1913,10 @@ func (m *Proposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.VotingEndTime, dAtA[iNdEx:postIndex]); err != nil {
+			if m.VotingEndTime == nil {
+				m.VotingEndTime = new(time.Time)
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(m.VotingEndTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1877,9 +2000,7 @@ func (m *TallyResult) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Yes.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Yes = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -1911,9 +2032,7 @@ func (m *TallyResult) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Abstain.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Abstain = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -1945,9 +2064,7 @@ func (m *TallyResult) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.No.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.No = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -1979,9 +2096,7 @@ func (m *TallyResult) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.NoWithVeto.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.NoWithVeto = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2132,7 +2247,7 @@ func (m *Vote) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Options = append(m.Options, WeightedVoteOption{})
+			m.Options = append(m.Options, &WeightedVoteOption{})
 			if err := m.Options[len(m.Options)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -2216,7 +2331,7 @@ func (m *DepositParams) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.MinDeposit = append(m.MinDeposit, types.Coin{})
+			m.MinDeposit = append(m.MinDeposit, &types.Coin{})
 			if err := m.MinDeposit[len(m.MinDeposit)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -2250,7 +2365,10 @@ func (m *DepositParams) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.MaxDepositPeriod, dAtA[iNdEx:postIndex]); err != nil {
+			if m.MaxDepositPeriod == nil {
+				m.MaxDepositPeriod = new(time.Duration)
+			}
+			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(m.MaxDepositPeriod, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2333,7 +2451,10 @@ func (m *VotingParams) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.VotingPeriod, dAtA[iNdEx:postIndex]); err != nil {
+			if m.VotingPeriod == nil {
+				m.VotingPeriod = new(time.Duration)
+			}
+			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(m.VotingPeriod, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2416,8 +2537,9 @@ func (m *TallyParams) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Quorum.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
+			m.Quorum = append(m.Quorum[:0], dAtA[iNdEx:postIndex]...)
+			if m.Quorum == nil {
+				m.Quorum = []byte{}
 			}
 			iNdEx = postIndex
 		case 2:
@@ -2449,8 +2571,9 @@ func (m *TallyParams) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Threshold.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
+			m.Threshold = append(m.Threshold[:0], dAtA[iNdEx:postIndex]...)
+			if m.Threshold == nil {
+				m.Threshold = []byte{}
 			}
 			iNdEx = postIndex
 		case 3:
@@ -2482,8 +2605,9 @@ func (m *TallyParams) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.VetoThreshold.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
+			m.VetoThreshold = append(m.VetoThreshold[:0], dAtA[iNdEx:postIndex]...)
+			if m.VetoThreshold == nil {
+				m.VetoThreshold = []byte{}
 			}
 			iNdEx = postIndex
 		default:

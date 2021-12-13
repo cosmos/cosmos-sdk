@@ -164,7 +164,7 @@ const (
 	ProposalTypeText string = "Text"
 
 	// Constants pertaining to a Content object
-	MaxDescriptionLength int = 5000
+	MaxDescriptionLength int = 10000
 	MaxTitleLength       int = 140
 )
 

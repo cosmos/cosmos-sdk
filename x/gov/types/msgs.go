@@ -20,10 +20,6 @@ const (
 	TypeMsgVoteWeighted   = "weighted_vote"
 	TypeMsgSubmitProposal = "submit_proposal"
 	TypeMsgSignal         = "signal"
-
-	// Constants pertaining to a Signal message
-	MaxDescriptionLength int = 5000
-	MaxTitleLength       int = 140
 )
 
 var (

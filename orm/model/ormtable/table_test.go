@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"gotest.tools/v3/golden"
+
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
@@ -27,7 +29,22 @@ func TestScenario(t *testing.T) {
 		MessageType: (&testpb.ExampleTable{}).ProtoReflect().Type(),
 	})
 	assert.NilError(t, err)
-	store := testkv.NewMemIndexCommitmentStore()
+
+	// we're going to wrap this test in a debug store and save the decoded debug
+	// messages, these will be checked against a golden file at the end of the
+	// test. the golden file can be used for fine-grained debugging of kv-store
+	// layout
+	debugBuf := &strings.Builder{}
+	store := testkv.NewDebugIndexCommitmentStore(
+		testkv.NewMemIndexCommitmentStore(),
+		testkv.EntryCodecDebugger{
+			EntryCodec: table,
+			Print: func(s string) {
+				debugBuf.WriteString(s)
+				debugBuf.WriteString("\n")
+			},
+		},
+	)
 
 	// let's create 10 data items we'll use later and give them indexes
 	data := []*testpb.ExampleTable{
@@ -341,6 +358,12 @@ func TestScenario(t *testing.T) {
 	it, err = table.PrefixIterator(store, nil, IteratorOptions{})
 	assert.NilError(t, err)
 	assertIteratorItems(it, 0, 1, 2, 3, 4, 6, 7, 8, 9, 10)
+
+	// we're going to store debug data in a golden file to make sure that
+	// logical decoding works successfully
+	// run `go test pkgname -test.update-golden` to update the golden file
+	// see https://pkg.go.dev/gotest.tools/v3/golden for docs
+	golden.Assert(t, debugBuf.String(), "test_scenario.golden")
 }
 
 func TestRandomTableData(t *testing.T) {
@@ -583,37 +606,4 @@ func assertTablesEqual(t assert.TestingT, table Table, store, store2 kvstore.Ind
 
 		assert.DeepEqual(t, msg1, msg2, protocmp.Transform())
 	}
-}
-
-func TestDebugAndDecode(t *testing.T) {
-	table, err := BuildTable(TableOptions{
-		MessageType: (&testpb.ExampleTable{}).ProtoReflect().Type(),
-	})
-	assert.NilError(t, err)
-	store := testkv.NewMemIndexCommitmentStore()
-	debugBuf := &strings.Builder{}
-	debugStore := testkv.NewDebugIndexCommitmentStore(store, testkv.EntryCodecDebugger{
-		EntryCodec: table,
-		Print: func(s string) {
-			debugBuf.WriteString(s)
-			debugBuf.WriteString("\n")
-		},
-	})
-
-	err = table.Save(debugStore, &testpb.ExampleTable{U32: 4, I64: -2, Str: "abc"}, SAVE_MODE_DEFAULT)
-	assert.NilError(t, err)
-
-	it, err := table.PrefixIterator(debugStore, nil, IteratorOptions{})
-	assert.NilError(t, err)
-
-	for it.Next() {
-		_, err = it.GetMessage()
-		assert.NilError(t, err)
-	}
-
-	err = table.Delete(debugStore, testutil.ValuesOf(uint32(4), int64(-2), "abc"))
-	assert.NilError(t, err)
-
-	//// see https://pkg.go.dev/gotest.tools/v3/golden for docs
-	//golden.Assert(t, debugBuf.String(), "table_debug_decode.golden")
 }

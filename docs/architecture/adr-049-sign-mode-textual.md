@@ -85,17 +85,24 @@ Memo: <string>                              // Skipped if no memo set
 Tipper: <string>                            // If there's a tip
 Tip: <string>
 *This transaction has <int> other signers:  // Skipped if there is only one signer
-*>Signer (2/2):
-*>Public Key: <base64_string>
-*>Sign mode: <string>                        // "Direct", "Direct Aux", "Legacy Amino Json", Enum value renderer
-*>Sequence: <uint64>
+*Signer (<int>/<int>):
+*Public Key: <base64_string>
+*Sign mode: <string>                        // "Direct", "Direct Aux", "Legacy Amino Json", Enum value renderer
+*Sequence: <uint64>
+*End of other signers
 ```
 
 ### 8. Encoding of the Transaction Body
 
 We call "transaction body" the `Tx.TxBody.Messages` field, which is an array of Anys.
 
-TODO.
+```
+This transaction has <int> messages:
+// For each Msg, print the following 2 lines:
+Msg (<int>/<int>): <string>           // E.g. Msg (1/2): bank v1beta1 send coins
+<value rendering of Msg struct>
+End of transaction messages
+```
 
 ### Wire Format
 
@@ -160,7 +167,7 @@ Message (1/1): bank v1beta1 send coins
 From: cosmos1...abc
 To: cosmos1...def
 Amount: 10 atom            // Conversion from uatom to atom using value renderers
-End of messages
+End of transaction messages
 Fee: 0.002 atom
 *Gas: 100'000
 ```
@@ -170,6 +177,88 @@ Fee: 0.002 atom
 #### Example 3: Legacy Multisig
 
 #### Example 4: Fee Payer with Tips
+
+```json
+{
+  "body": {
+    "messages": [
+      {
+        "@type": "/cosmos.bank.v1beta1.MsgSend",
+        "from": "cosmos1...tipper",
+        "to": "cosmos1...abc",
+        "amount": [
+          {
+            "denom": "uatom",
+            "amount": 10000000
+          }
+        ]
+      }
+    ]
+  },
+  "auth_info": {
+    "signer_infos": [
+      {
+        "public_key": "iQ...==",
+        "mode_info": { "single": { "mode": "SIGN_MODE_DIRECT_AUX" } },
+        "sequence": 42
+      },
+      {
+        "public_key": "iR...==",
+        "mode_info": { "single": { "mode": "SIGN_MODE_TEXTUAL" } },
+        "sequence": 2
+      }
+    ],
+    "fee": {
+      "amount": [
+        {
+          "denom": "atom",
+          "amount": 0.002
+        }
+      ],
+      "gas_limit": 100000,
+      "payer": "cosmos1...feepayer"
+    },
+    "tip": {
+      "amount": [
+        {
+          "denom": "ibc/CDC4587874B85BEA4FCEC3CEA5A1195139799A1FEE711A07D972537E18FDA39D",
+          "amount": 200
+        }
+      ],
+      "tipper": "cosmos1...tipper"
+    }
+  },
+  // Additional SignerData.
+  "chain_id": "simapp-1",
+  "account_number": 10
+}
+```
+
+SIGN_MODE_TEXTUAL for the feepayer:
+
+```
+Chain ID: simapp-1
+Account number: 10
+*Public Key: iR...==
+Sequence: 2
+This transaction has 1 message:
+Message (1/1): bank v1beta1 send coins
+From: cosmos1...abc
+To: cosmos1...def
+Amount: 10 atom
+End of transaction messages
+Fee: 0.002 atom
+Fee Payer: cosmos1...feepayer
+Tipper: cosmos1...tipper
+Tip: 200 ibc/CDC4587874B85BEA4FCEC3CEA5A1195139799A1FEE711A07D972537E18FDA39D
+*Gas: 100'000
+*This transaction has 1 other signer:
+*Signer (1/2):
+*Public Key: iQ...==
+*Sign mode: Direct Aux
+*Sequence: 42
+*End of other signers
+```
 
 #### Example 5: Complex Transaction with Nested Messages
 
@@ -265,7 +354,11 @@ JSON:
       ],
       "gas_limit": 100000
     }
-  }
+  },
+  // Additional SignerData.
+  "chain_id": "simapp-1",
+  "account_number": 10
+}
 }
 ```
 
@@ -274,7 +367,7 @@ SIGN_MODE_TEXTUAL for 1st signer `cosmos1...abc`:
 ```
 Chain ID: simapp-1
 Account number: 10
-*Public Key: iQ...==                    // Base64 pubkey
+*Public Key: iQ...==
 Sequence: 2
 This transaction has 2 messages:
 Message (1/2): bank v1beta1 send coins
@@ -299,7 +392,7 @@ Messages: 2 Messages
 >> To: cosmos1...def
 >> Amount: 40 atom
 > End of Msgs
-End of Messages
+End of transaction messages
 Proposer: cosmos1...ghi
 Initial Deposit: 100.01 atom
 End of transaction messages
@@ -310,7 +403,7 @@ Fee: 0.002 atom
 *Public Key: iR...==
 *Sign mode: Direct
 *Sequence: 42
-End of signers
+*End of other signers
 ```
 
 ## Consequences

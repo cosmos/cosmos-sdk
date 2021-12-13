@@ -7,7 +7,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.1 // indirect
 	github.com/hashicorp/go-getter v1.4.1
 	github.com/otiai10/copy v1.6.0
-	github.com/rs/zerolog v1.25.0
+	github.com/rs/zerolog v1.26.0
 	github.com/stretchr/testify v1.7.0
 	google.golang.org/api v0.44.0 // indirect
 	google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c // indirect
@@ -116,7 +116,7 @@ require (
 	golang.org/x/sys v0.0.0-20210903071746-97244b99971b // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
 	golang.org/x/text v0.3.6 // indirect
-	golang.org/x/tools v0.1.5 // indirect
+	golang.org/x/tools v0.1.7 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/grpc v1.40.0 // indirect

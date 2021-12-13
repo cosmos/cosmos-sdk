@@ -39,6 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [\#10710](https://github.com/cosmos/cosmos-sdk/pull/10710) Chain-id shouldn't be required for creating a transaction with both --generate-only and --offline flags.
 * [\#10703](https://github.com/cosmos/cosmos-sdk/pull/10703) Create a new grantee account, if the grantee of an authorization does not exist.
 * [\#10592](https://github.com/cosmos/cosmos-sdk/pull/10592) Add a `DecApproxEq` function that checks to see if `|d1 - d2| < tol` for some Dec `d1, d2, tol`.
 * [\#10393](https://github.com/cosmos/cosmos-sdk/pull/10393) Add `HasSupply` method to bank keeper to ensure that input denom actually exists on chain.
@@ -63,6 +64,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10486](https://github.com/cosmos/cosmos-sdk/pull/10486) store/cachekv's `Store.Write` conservatively looks up keys, but also uses the [map clearing idiom](https://bencher.orijtech.com/perfclinic/mapclearing/) to reduce the RAM usage, CPU time usage, and garbage collection pressure from clearing maps, instead of allocating new maps.
 * (types) [\#10630](https://github.com/cosmos/cosmos-sdk/pull/10630) Add an `Events` field to the `TxResponse` type that captures _all_ events emitted by a transaction, unlike `Logs` which only contains events emitted during message execution.
 * (deps) [\#10706](https://github.com/cosmos/cosmos-sdk/issues/10706) Bump rosetta-sdk-go to v0.7.2 and rosetta-cli to v0.7.3
+* (module) [\#10711](https://github.com/cosmos/cosmos-sdk/pull/10711) Panic at startup if the app developer forgot to add modules in the `SetOrder{BeginBlocker, EndBlocker, InitGenesis, ExportGenesis}` functions. This means that all modules, even those who have empty implementations for those methods, need to be added to `SetOrder*`.
 
 ### API Breaking Changes
 
@@ -147,6 +149,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10468](https://github.com/cosmos/cosmos-sdk/pull/10468) Allow futureOps to queue additional operations in simulations
 * [\#10625](https://github.com/cosmos/cosmos-sdk/pull/10625) Add `--fee-payer` CLI flag
 * (cli) [\#10683](https://github.com/cosmos/cosmos-sdk/pull/10683) In CLI, allow 1 SIGN_MODE_DIRECT signer in transactions with multiple signers.
+* (store) [\#10741](https://github.com/cosmos/cosmos-sdk/pull/10741) Significantly speedup iterator creation after delete heavy workloads. Significantly improves IBC migration times.
 
 ### Bug Fixes
 

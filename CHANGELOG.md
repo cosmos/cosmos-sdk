@@ -149,6 +149,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10468](https://github.com/cosmos/cosmos-sdk/pull/10468) Allow futureOps to queue additional operations in simulations
 * [\#10625](https://github.com/cosmos/cosmos-sdk/pull/10625) Add `--fee-payer` CLI flag
 * (cli) [\#10683](https://github.com/cosmos/cosmos-sdk/pull/10683) In CLI, allow 1 SIGN_MODE_DIRECT signer in transactions with multiple signers.
+* (x/gov) [\#10740](https://github.com/cosmos/cosmos-sdk/pull/10740) Increase maximum proposal description size from 5k characters to 10k characters.
+* (store) [\#10741](https://github.com/cosmos/cosmos-sdk/pull/10741) Significantly speedup iterator creation after delete heavy workloads. Significantly improves IBC migration times.
 
 ### Bug Fixes
 

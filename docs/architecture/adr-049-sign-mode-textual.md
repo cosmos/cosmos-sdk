@@ -1,4 +1,4 @@
-# ADR 048: SIGN_MODE_TEXTUAL
+# ADR 049: SIGN_MODE_TEXTUAL
 
 ## Changelog
 
@@ -172,7 +172,7 @@ Fee: 0.002 atom
 *Gas: 100'000
 ```
 
-#### Example 2: Multi-Msg `MsgSend` & `MsgVote` with 2 signers
+#### Example 2: Multi-Msg Transaction with 3 signers
 
 #### Example 3: Legacy Multisig
 

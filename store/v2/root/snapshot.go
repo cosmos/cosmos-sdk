@@ -49,8 +49,6 @@ func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadClos
 	defer protoReader.Close()
 
 	var subStore *substore
-	// initialisation empty store-schema for snapshot
-	preg := prefixRegistry{StoreSchema: StoreSchema{}}
 
 	for {
 		item := &storetypes.SnapshotItem{}
@@ -66,15 +64,12 @@ func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadClos
 			schemaWriter := prefixdb.NewPrefixWriter(rs.stateTxn, schemaPrefix)
 			sKeys := item.Schema.GetKeys()
 			for _, sKey := range sKeys {
-				preg.StoreSchema[string(sKey)] = types.StoreTypePersistent
-				preg.reserved = append(preg.reserved, string(sKey))
+				rs.schema[string(sKey)] = types.StoreTypePersistent
 				err := schemaWriter.Set(sKey, []byte{byte(types.StoreTypePersistent)})
 				if err != nil {
 					return sdkerrors.Wrap(err, "error at set the store schema key values")
 				}
 			}
-			// set the new snapshot store schema to root-store
-			rs.schema = preg.StoreSchema
 
 		case *storetypes.SnapshotItem_Store:
 			storeName := item.Store.GetName()

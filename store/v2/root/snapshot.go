@@ -13,10 +13,16 @@ import (
 	protoio "github.com/gogo/protobuf/io"
 	"io"
 	"math"
+	"sort"
+	"strings"
 )
 
 // Restore implements snapshottypes.Snapshotter.
 func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadCloser, ready chan<- struct{}) error {
+	if format != snapshottypes.CurrentFormat {
+		return sdkerrors.Wrapf(snapshottypes.ErrUnknownFormat, "format %v", format)
+	}
+
 	if height == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrLogic, "cannot restore snapshot at height 0")
 	}
@@ -52,7 +58,7 @@ func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadClos
 	defer protoReader.Close()
 
 	var subStore *substore
-	var storeSchemaReceived bool = false
+	var storeSchemaReceived = false
 
 	for {
 		item := &storetypes.SnapshotItem{}
@@ -116,6 +122,10 @@ func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadClos
 
 // Snapshot implements snapshottypes.Snapshotter.
 func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error) {
+	if format != snapshottypes.CurrentFormat {
+		return nil, sdkerrors.Wrapf(snapshottypes.ErrUnknownFormat, "format %v", format)
+	}
+
 	if height == 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "cannot snapshot height 0")
 	}
@@ -166,18 +176,27 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 			}
 		}()
 
-		var sKeys [][]byte
+		var sKeys []string
 		// sending the snapshot store schema
 		for sKey := range vs.schema {
 			if vs.schema[sKey] == storetypes.StoreTypePersistent {
-				sKeys = append(sKeys, []byte(sKey))
+				sKeys = append(sKeys, sKey)
 			}
+		}
+
+		sort.Slice(sKeys, func(i, j int) bool {
+			return strings.Compare(sKeys[i], sKeys[j]) == -1
+		})
+
+		var storeByteKeys [][]byte
+		for _, sKey := range sKeys {
+			storeByteKeys = append(storeByteKeys, []byte(sKey))
 		}
 
 		err = protoWriter.WriteMsg(&storetypes.SnapshotItem{
 			Item: &storetypes.SnapshotItem_Schema{
 				Schema: &storetypes.SnapshotSchema{
-					Keys: sKeys,
+					Keys: storeByteKeys,
 				},
 			},
 		})
@@ -186,7 +205,7 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 			return
 		}
 
-		for sKey := range vs.schema {
+		for _, sKey := range sKeys {
 			subStore, err := vs.getSubstore(sKey)
 			if err != nil {
 				chunkWriter.CloseWithError(err)

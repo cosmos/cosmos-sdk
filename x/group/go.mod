@@ -18,7 +18,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/spf13/cobra v1.2.1
 	github.com/tendermint/tendermint v0.35.0
-	github.com/tendermint/tm-db v0.6.4
+	github.com/tendermint/tm-db v0.6.6
 )
 
 require (
@@ -122,7 +122,7 @@ require (
 	github.com/tendermint/go-amino v0.16.0 // indirect
 	github.com/ulikunitz/xz v0.5.8 // indirect
 	github.com/zondax/hid v0.9.0 // indirect
-	go.etcd.io/bbolt v1.3.5 // indirect
+	go.etcd.io/bbolt v1.3.6 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2 // indirect

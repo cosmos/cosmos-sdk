@@ -23,7 +23,22 @@ func (t Singleton) DefaultJSON() json.RawMessage {
 }
 
 func (t Singleton) ValidateJSON(reader io.Reader) error {
-	panic("TODO")
+	bz, err := io.ReadAll(reader)
+	if err != nil {
+		return err
+	}
+
+	msg := t.MessageType().New().Interface()
+	err = protojson.Unmarshal(bz, msg)
+	if err != nil {
+		return err
+	}
+
+	if t.customJSONValidator != nil {
+		return t.customJSONValidator(msg)
+	} else {
+		return DefaultJSONValidator(msg)
+	}
 }
 
 func (t Singleton) ImportJSON(store kvstore.IndexCommitmentStore, reader io.Reader) error {

@@ -48,7 +48,7 @@ func TestFieldNames(t *testing.T) {
 	assert.Equal(t, 0, len(f.Names()))
 	assert.Equal(t, "", f.String())
 
-	aFields := (&testpb.A{}).ProtoReflect().Descriptor().Fields()
+	aFields := (&testpb.ExampleTable{}).ProtoReflect().Descriptor().Fields()
 	f = FieldsFromDescriptors([]protoreflect.FieldDescriptor{
 		aFields.ByName("u32"),
 		aFields.ByName("e"),

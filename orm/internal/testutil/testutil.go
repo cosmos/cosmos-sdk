@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 )
 
-// TestFieldSpec defines a test field against the testpb.A message.
+// TestFieldSpec defines a test field against the testpb.ExampleTable message.
 type TestFieldSpec struct {
 	FieldName protoreflect.Name
 	Gen       *rapid.Generator
@@ -116,7 +116,7 @@ func MakeTestCodec(fname protoreflect.Name, nonTerminal bool) (ormfield.Codec, e
 }
 
 func GetTestField(fname protoreflect.Name) protoreflect.FieldDescriptor {
-	a := &testpb.A{}
+	a := &testpb.ExampleTable{}
 	return a.ProtoReflect().Descriptor().Fields().ByName(fname)
 }
 
@@ -152,7 +152,7 @@ func TestKeyCodecGen(minLen, maxLen int) *rapid.Generator {
 
 		prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix").([]byte)
 
-		msgType := (&testpb.A{}).ProtoReflect().Type()
+		msgType := (&testpb.ExampleTable{}).ProtoReflect().Type()
 		cdc, err := ormkv.NewKeyCodec(prefix, msgType, fields)
 		if err != nil {
 			panic(err)
@@ -174,8 +174,8 @@ func (k TestKeyCodec) Draw(t *rapid.T, id string) []protoreflect.Value {
 	return keyValues
 }
 
-var GenA = rapid.Custom(func(t *rapid.T) *testpb.A {
-	a := &testpb.A{}
+var GenA = rapid.Custom(func(t *rapid.T) *testpb.ExampleTable {
+	a := &testpb.ExampleTable{}
 	ref := a.ProtoReflect()
 	for _, spec := range TestFieldSpecs {
 		field := GetTestField(spec.FieldName)

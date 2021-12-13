@@ -17,7 +17,7 @@ func TestUniqueKeyCodec(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
 		keyCodec := testutil.TestKeyCodecGen(1, 5).Draw(t, "keyCodec").(testutil.TestKeyCodec)
 		pkCodec := testutil.TestKeyCodecGen(1, 5).Draw(t, "primaryKeyCodec").(testutil.TestKeyCodec)
-		messageType := (&testpb.A{}).ProtoReflect().Type()
+		messageType := (&testpb.ExampleTable{}).ProtoReflect().Type()
 		uniqueKeyCdc, err := ormkv.NewUniqueKeyCodec(
 			keyCodec.Codec.Prefix(),
 			messageType,
@@ -26,7 +26,7 @@ func TestUniqueKeyCodec(t *testing.T) {
 		)
 		assert.NilError(t, err)
 		for i := 0; i < 100; i++ {
-			a := testutil.GenA.Draw(t, fmt.Sprintf("a%d", i)).(*testpb.A)
+			a := testutil.GenA.Draw(t, fmt.Sprintf("a%d", i)).(*testpb.ExampleTable)
 			key := keyCodec.Codec.GetKeyValues(a.ProtoReflect())
 			pk := pkCodec.Codec.GetKeyValues(a.ProtoReflect())
 			uniq1 := &ormkv.IndexKeyEntry{

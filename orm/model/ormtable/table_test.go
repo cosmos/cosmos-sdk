@@ -4,35 +4,33 @@ import (
 	"bytes"
 	"fmt"
 	"sort"
+	"strings"
 	"testing"
-
-	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
-
-	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
-	"github.com/cosmos/cosmos-sdk/types/query"
-
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/memkv"
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
+	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
+	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
+	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 func TestScenario(t *testing.T) {
 	table, err := BuildTable(TableOptions{
-		MessageType: (&testpb.A{}).ProtoReflect().Type(),
+		MessageType: (&testpb.ExampleTable{}).ProtoReflect().Type(),
 	})
 	assert.NilError(t, err)
-	store := memkv.NewMemIndexCommitmentStore()
+	store := testkv.NewMemIndexCommitmentStore()
 
 	// let's create 10 data items we'll use later and give them indexes
-	data := []*testpb.A{
+	data := []*testpb.ExampleTable{
 		{U32: 4, I64: -2, Str: "abc", U64: 7},  // 0
 		{U32: 4, I64: -2, Str: "abd", U64: 7},  // 1
 		{U32: 4, I64: -1, Str: "abc", U64: 8},  // 2
@@ -43,12 +41,6 @@ func TestScenario(t *testing.T) {
 		{U32: 8, I64: -4, Str: "abc", U64: 10}, // 7
 		{U32: 8, I64: 1, Str: "abc", U64: 10},  // 8
 		{U32: 8, I64: 1, Str: "abd", U64: 10},  // 9
-	}
-
-	// insert the data
-	for _, datum := range data {
-		err = table.Save(store, datum, SAVE_MODE_INSERT)
-		assert.NilError(t, err)
 	}
 
 	// let's make a function to match what's in our iterator with what we
@@ -65,8 +57,29 @@ func TestScenario(t *testing.T) {
 		assert.Assert(t, !it.Next())
 	}
 
+	// insert one record
+	err = table.Save(store, data[0], SAVE_MODE_INSERT)
+	// trivial prefix query has one record
+	it, err := table.PrefixIterator(store, nil, IteratorOptions{})
+	assert.NilError(t, err)
+	assertIteratorItems(it, 0)
+
+	// insert one record
+	err = table.Save(store, data[1], SAVE_MODE_INSERT)
+	// trivial prefix query has two records
+	it, err = table.PrefixIterator(store, nil, IteratorOptions{})
+	assert.NilError(t, err)
+	assertIteratorItems(it, 0, 1)
+
+	// insert the other records
+	assert.NilError(t, err)
+	for i := 2; i < len(data); i++ {
+		err = table.Save(store, data[i], SAVE_MODE_INSERT)
+		assert.NilError(t, err)
+	}
+
 	// let's do a prefix query on the primary key
-	it, err := table.PrefixIterator(store, testutil.ValuesOf(uint32(8)), IteratorOptions{})
+	it, err = table.PrefixIterator(store, testutil.ValuesOf(uint32(8)), IteratorOptions{})
 	assert.NilError(t, err)
 	assertIteratorItems(it, 7, 8, 9)
 
@@ -111,7 +124,7 @@ func TestScenario(t *testing.T) {
 	found, err := strU32I64Index.Has(store, testutil.ValuesOf("abc", uint32(8), int64(1)))
 	assert.NilError(t, err)
 	assert.Assert(t, found)
-	var a testpb.A
+	var a testpb.ExampleTable
 	found, err = strU32I64Index.Get(store, testutil.ValuesOf("abc", uint32(8), int64(1)), &a)
 	assert.NilError(t, err)
 	assert.Assert(t, found)
@@ -289,7 +302,7 @@ func TestScenario(t *testing.T) {
 	assertIteratorItems(it, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
 
 	// let's use SAVE_MODE_DEFAULT and add something
-	data = append(data, &testpb.A{U32: 9})
+	data = append(data, &testpb.ExampleTable{U32: 9})
 	err = table.Save(store, data[10], SAVE_MODE_DEFAULT)
 	assert.NilError(t, err)
 	found, err = table.Get(store, testutil.ValuesOf(uint32(9), int64(0), ""), &a)
@@ -312,7 +325,7 @@ func TestScenario(t *testing.T) {
 	buf := &bytes.Buffer{}
 	assert.NilError(t, table.ExportJSON(store, buf))
 	assert.NilError(t, table.ValidateJSON(bytes.NewReader(buf.Bytes())))
-	store2 := memkv.NewMemIndexCommitmentStore()
+	store2 := testkv.NewMemIndexCommitmentStore()
 	assert.NilError(t, table.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
 	assertTablesEqual(t, table, store, store2)
 
@@ -464,7 +477,7 @@ func TableDataGen(elemGen *rapid.Generator, n int) *rapid.Generator {
 		}
 
 		data := make([]proto.Message, n)
-		store := memkv.NewMemIndexCommitmentStore()
+		store := testkv.NewMemIndexCommitmentStore()
 
 		for i := 0; i < n; i++ {
 			var err error
@@ -492,7 +505,7 @@ func TableDataGen(elemGen *rapid.Generator, n int) *rapid.Generator {
 type TableData struct {
 	table Table
 	data  []proto.Message
-	store *memkv.IndexCommitmentStore
+	store kvstore.IndexCommitmentStore
 }
 
 type IndexModel struct {
@@ -526,10 +539,10 @@ var _ sort.Interface = &IndexModel{}
 
 func TestJSONExportImport(t *testing.T) {
 	table, err := BuildTable(TableOptions{
-		MessageType: (&testpb.A{}).ProtoReflect().Type(),
+		MessageType: (&testpb.ExampleTable{}).ProtoReflect().Type(),
 	})
 	assert.NilError(t, err)
-	store := memkv.NewMemIndexCommitmentStore()
+	store := testkv.NewMemIndexCommitmentStore()
 
 	for i := 0; i < 100; i++ {
 		x := testutil.GenA.Example().(proto.Message)
@@ -542,7 +555,7 @@ func TestJSONExportImport(t *testing.T) {
 
 	assert.NilError(t, table.ValidateJSON(bytes.NewReader(buf.Bytes())))
 
-	store2 := memkv.NewMemIndexCommitmentStore()
+	store2 := testkv.NewMemIndexCommitmentStore()
 	assert.NilError(t, table.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
 
 	assertTablesEqual(t, table, store, store2)
@@ -570,4 +583,37 @@ func assertTablesEqual(t assert.TestingT, table Table, store, store2 kvstore.Ind
 
 		assert.DeepEqual(t, msg1, msg2, protocmp.Transform())
 	}
+}
+
+func TestDebugAndDecode(t *testing.T) {
+	table, err := BuildTable(TableOptions{
+		MessageType: (&testpb.ExampleTable{}).ProtoReflect().Type(),
+	})
+	assert.NilError(t, err)
+	store := testkv.NewMemIndexCommitmentStore()
+	debugBuf := &strings.Builder{}
+	debugStore := testkv.NewDebugIndexCommitmentStore(store, testkv.EntryCodecDebugger{
+		EntryCodec: table,
+		Print: func(s string) {
+			debugBuf.WriteString(s)
+			debugBuf.WriteString("\n")
+		},
+	})
+
+	err = table.Save(debugStore, &testpb.ExampleTable{U32: 4, I64: -2, Str: "abc"}, SAVE_MODE_DEFAULT)
+	assert.NilError(t, err)
+
+	it, err := table.PrefixIterator(debugStore, nil, IteratorOptions{})
+	assert.NilError(t, err)
+
+	for it.Next() {
+		_, err = it.GetMessage()
+		assert.NilError(t, err)
+	}
+
+	err = table.Delete(debugStore, testutil.ValuesOf(uint32(4), int64(-2), "abc"))
+	assert.NilError(t, err)
+
+	//// see https://pkg.go.dev/gotest.tools/v3/golden for docs
+	//golden.Assert(t, debugBuf.String(), "table_debug_decode.golden")
 }

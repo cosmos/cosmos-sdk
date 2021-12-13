@@ -20,13 +20,13 @@ func TestPrimaryKeyCodec(t *testing.T) {
 		keyCodec := testutil.TestKeyCodecGen(0, 5).Draw(t, "keyCodec").(testutil.TestKeyCodec)
 		pkCodec, err := ormkv.NewPrimaryKeyCodec(
 			keyCodec.Codec.Prefix(),
-			(&testpb.A{}).ProtoReflect().Type(),
+			(&testpb.ExampleTable{}).ProtoReflect().Type(),
 			keyCodec.Codec.GetFieldNames(),
 			proto.UnmarshalOptions{},
 		)
 		assert.NilError(t, err)
 		for i := 0; i < 100; i++ {
-			a := testutil.GenA.Draw(t, fmt.Sprintf("a%d", i)).(*testpb.A)
+			a := testutil.GenA.Draw(t, fmt.Sprintf("a%d", i)).(*testpb.ExampleTable)
 			key := keyCodec.Codec.GetKeyValues(a.ProtoReflect())
 			pk1 := &ormkv.PrimaryKeyEntry{
 				TableName: aFullName,

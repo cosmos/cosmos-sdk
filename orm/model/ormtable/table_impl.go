@@ -176,7 +176,7 @@ func (t TableImpl) decodeJson(reader io.Reader, onMsg func(message proto.Message
 		return err
 	}
 
-	return t.doDecodeJson(decoder, onMsg)
+	return t.doDecodeJson(decoder, nil, onMsg)
 }
 
 func (t TableImpl) startDecodeJson(reader io.Reader) (*json.Decoder, error) {
@@ -193,14 +193,28 @@ func (t TableImpl) startDecodeJson(reader io.Reader) (*json.Decoder, error) {
 	return decoder, nil
 }
 
-func (t TableImpl) doDecodeJson(decoder *json.Decoder, onMsg func(message proto.Message) error) error {
+// onFirst is called on the first RawMessage and used for auto-increment tables
+// to decode the sequence in which case it should return true.
+// onMsg is called on every decoded message
+func (t TableImpl) doDecodeJson(decoder *json.Decoder, onFirst func(message json.RawMessage) bool, onMsg func(message proto.Message) error) error {
 	unmarshalOptions := protojson.UnmarshalOptions{Resolver: t.typeResolver}
 
+	first := true
 	for decoder.More() {
 		var rawJson json.RawMessage
 		err := decoder.Decode(&rawJson)
 		if err != nil {
 			return ormerrors.JSONImportError.Wrapf("%s", err)
+		}
+
+		if first {
+			first = false
+			if onFirst != nil {
+				if onFirst(rawJson) {
+					// if onFirst handled this, skip decoding into a proto message
+					continue
+				}
+			}
 		}
 
 		msg := t.MessageType().New().Interface()
@@ -312,7 +326,7 @@ func (t TableImpl) doExportJSON(store kvstore.IndexCommitmentReadStore, writer i
 	}
 }
 
-func (t TableImpl) DecodeKV(k, v []byte) (ormkv.Entry, error) {
+func (t TableImpl) DecodeEntry(k, v []byte) (ormkv.Entry, error) {
 	r := bytes.NewReader(k)
 	if bytes.HasPrefix(k, t.tablePrefix) {
 		err := ormkv.SkipPrefix(r, t.tablePrefix)

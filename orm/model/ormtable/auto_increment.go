@@ -2,6 +2,7 @@ package ormtable
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"google.golang.org/protobuf/proto"
@@ -19,21 +20,21 @@ type AutoIncrementTable struct {
 	seqCodec     *ormkv.SeqCodec
 }
 
-func (s *AutoIncrementTable) Save(store kvstore.IndexCommitmentStore, message proto.Message, mode SaveMode) error {
+func (t *AutoIncrementTable) Save(store kvstore.IndexCommitmentStore, message proto.Message, mode SaveMode) error {
 	messageRef := message.ProtoReflect()
-	val := messageRef.Get(s.autoIncField).Uint()
+	val := messageRef.Get(t.autoIncField).Uint()
 	if val == 0 {
 		if mode == SAVE_MODE_UPDATE {
 			return ormerrors.PrimaryKeyInvalidOnUpdate
 		}
 
 		mode = SAVE_MODE_INSERT
-		key, err := s.nextSeqValue(store.IndexStore())
+		key, err := t.nextSeqValue(store.IndexStore())
 		if err != nil {
 			return err
 		}
 
-		messageRef.Set(s.autoIncField, protoreflect.ValueOfUint64(key))
+		messageRef.Set(t.autoIncField, protoreflect.ValueOfUint64(key))
 	} else {
 		if mode == SAVE_MODE_INSERT {
 			return ormerrors.AutoIncrementKeyAlreadySet
@@ -41,27 +42,30 @@ func (s *AutoIncrementTable) Save(store kvstore.IndexCommitmentStore, message pr
 
 		mode = SAVE_MODE_UPDATE
 	}
-	return s.TableImpl.Save(store, message, mode)
+	return t.TableImpl.Save(store, message, mode)
 }
 
-func (s *AutoIncrementTable) curSeqValue(kv kvstore.ReadStore) (uint64, error) {
-	bz, err := kv.Get(s.seqCodec.Prefix())
+func (t *AutoIncrementTable) curSeqValue(kv kvstore.ReadStore) (uint64, error) {
+	bz, err := kv.Get(t.seqCodec.Prefix())
 	if err != nil {
 		return 0, err
 	}
 
-	return s.seqCodec.DecodeValue(bz)
+	return t.seqCodec.DecodeValue(bz)
 }
 
-func (s *AutoIncrementTable) nextSeqValue(kv kvstore.Store) (uint64, error) {
-	seq, err := s.curSeqValue(kv)
+func (t *AutoIncrementTable) nextSeqValue(kv kvstore.Store) (uint64, error) {
+	seq, err := t.curSeqValue(kv)
 	if err != nil {
 		return 0, err
 	}
 
 	seq++
-	err = kv.Set(s.seqCodec.Prefix(), s.seqCodec.EncodeValue(seq))
-	return seq, err
+	return seq, t.setSeqValue(kv, seq)
+}
+
+func (t *AutoIncrementTable) setSeqValue(kv kvstore.Store, seq uint64) error {
+	return kv.Set(t.seqCodec.Prefix(), t.seqCodec.EncodeValue(seq))
 }
 
 func (t AutoIncrementTable) EncodeEntry(entry ormkv.Entry) (k, v []byte, err error) {
@@ -72,7 +76,13 @@ func (t AutoIncrementTable) EncodeEntry(entry ormkv.Entry) (k, v []byte, err err
 }
 
 func (t AutoIncrementTable) ValidateJSON(reader io.Reader) error {
-	return t.decodeAutoIncJson(reader, func(message proto.Message, haveId bool) error {
+	return t.decodeAutoIncJson(nil, reader, func(message proto.Message, maxID uint64) error {
+		messageRef := message.ProtoReflect()
+		id := messageRef.Get(t.autoIncField).Uint()
+		if id > maxID {
+			return fmt.Errorf("invalid ID %d, expected a value <= %d", id, maxID)
+		}
+
 		if t.customJSONValidator != nil {
 			return t.customJSONValidator(message)
 		} else {
@@ -82,22 +92,52 @@ func (t AutoIncrementTable) ValidateJSON(reader io.Reader) error {
 }
 
 func (t AutoIncrementTable) ImportJSON(store kvstore.IndexCommitmentStore, reader io.Reader) error {
-	return t.decodeAutoIncJson(reader, func(message proto.Message, haveId bool) error {
-		return t.Save(store, message, SAVE_MODE_DEFAULT)
+	return t.decodeAutoIncJson(store, reader, func(message proto.Message, maxID uint64) error {
+		messageRef := message.ProtoReflect()
+		id := messageRef.Get(t.autoIncField).Uint()
+		if id == 0 {
+			// we don't have an ID in the JSON, so we call Save to insert and
+			// generate one
+			return t.Save(store, message, SAVE_MODE_INSERT)
+		} else {
+			if id > maxID {
+				return fmt.Errorf("invalid ID %d, expected a value <= %d", id, maxID)
+			}
+			// we do have an ID and calling Save will fail because it expects
+			// either no ID or SAVE_MODE_UPDATE. So instead we drop one level
+			// down and insert using TableImpl which doesn't know about
+			// auto-incrementing IDs
+			return t.TableImpl.Save(store, message, SAVE_MODE_INSERT)
+		}
 	})
 }
 
-func (t TableImpl) decodeAutoIncJson(reader io.Reader, onMsg func(message proto.Message, haveId bool) error) error {
+func (t AutoIncrementTable) decodeAutoIncJson(store kvstore.IndexCommitmentStore, reader io.Reader, onMsg func(message proto.Message, maxID uint64) error) error {
 	decoder, err := t.startDecodeJson(reader)
 	if err != nil {
 		return err
 	}
 
-	// TODO handle start with ID
+	var seq uint64
 
-	return t.doDecodeJson(decoder, func(message proto.Message) error {
-		return onMsg(message, false)
-	})
+	return t.doDecodeJson(decoder,
+		func(message json.RawMessage) bool {
+			err = json.Unmarshal(message, &seq)
+			if err != nil {
+				// store is nil during validation
+				if store != nil {
+					err = t.setSeqValue(store.IndexStore(), seq)
+					if err != nil {
+						panic(err)
+					}
+				}
+				return true
+			}
+			return false
+		},
+		func(message proto.Message) error {
+			return onMsg(message, seq)
+		})
 }
 
 func (t AutoIncrementTable) ExportJSON(store kvstore.IndexCommitmentReadStore, writer io.Writer) error {

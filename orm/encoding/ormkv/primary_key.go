@@ -54,7 +54,12 @@ func (p PrimaryKeyCodec) DecodeIndexKey(k, _ []byte) (indexFields, primaryKey []
 
 func (p PrimaryKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 	values, err := p.DecodeKey(bytes.NewReader(k))
-	if err != nil {
+	if err == io.EOF {
+		return &PrimaryKeyEntry{
+			TableName: p.messageType.Descriptor().FullName(),
+			Key:       values,
+		}, nil
+	} else if err != nil {
 		return nil, err
 	}
 

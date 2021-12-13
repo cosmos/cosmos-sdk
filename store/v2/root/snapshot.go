@@ -26,6 +26,9 @@ func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadClos
 	}
 
 	versions, err := rs.stateDB.Versions()
+	if err != nil {
+		return sdkerrors.Wrapf(err, "error while getting the snapshot versions at height %v", height)
+	}
 	if versions.Count() != 0 {
 		return sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot restore snapshot for non empty store at height %v", height)
 	}
@@ -49,6 +52,7 @@ func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadClos
 	defer protoReader.Close()
 
 	var subStore *substore
+	var storeSchemaReceived bool = false
 
 	for {
 		item := &storetypes.SnapshotItem{}
@@ -61,6 +65,7 @@ func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadClos
 
 		switch item := item.Item.(type) {
 		case *storetypes.SnapshotItem_Schema:
+			storeSchemaReceived = true
 			schemaWriter := prefixdb.NewPrefixWriter(rs.stateTxn, schemaPrefix)
 			sKeys := item.Schema.GetKeys()
 			for _, sKey := range sKeys {
@@ -73,9 +78,13 @@ func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadClos
 
 		case *storetypes.SnapshotItem_Store:
 			storeName := item.Store.GetName()
+			// checking the store schema is received or not
+			if !storeSchemaReceived {
+				return sdkerrors.Wrapf(sdkerrors.ErrLogic, "received store name before store schema %s", storeName)
+			}
 			// checking the store schema exists or not
 			if _, has := rs.schema[storeName]; !has {
-				return sdkerrors.Wrapf(sdkerrors.ErrLogic, "received store name before store schema %s", storeName)
+				return sdkerrors.Wrapf(sdkerrors.ErrLogic, "store is missing from schema %s", storeName)
 			}
 
 			// get the substore
@@ -114,6 +123,9 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot snapshot future height %v", height)
 	}
 	versions, err := rs.stateDB.Versions()
+	if err != nil {
+		return nil, sdkerrors.Wrapf(err, "error while getting the snapshot versions at height %v", height)
+	}
 	if !versions.Exists(height) {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "cannot find snapshot at height %v", height)
 	}
@@ -157,7 +169,9 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 		var sKeys [][]byte
 		// sending the snapshot store schema
 		for sKey := range vs.schema {
-			sKeys = append(sKeys, []byte(sKey))
+			if vs.schema[sKey] == storetypes.StoreTypePersistent {
+				sKeys = append(sKeys, []byte(sKey))
+			}
 		}
 
 		err = protoWriter.WriteMsg(&storetypes.SnapshotItem{
@@ -174,8 +188,9 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 
 		for sKey := range vs.schema {
 			subStore, err := vs.getSubstore(sKey)
-			if err := protoWriter.Close(); err != nil {
+			if err != nil {
 				chunkWriter.CloseWithError(err)
+				return
 			}
 
 			err = protoWriter.WriteMsg(&storetypes.SnapshotItem{

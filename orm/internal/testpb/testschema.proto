@@ -90,6 +90,7 @@ message ExampleAutoIncrementTable {
 
   uint64 id = 1;
   string x = 2;
+  int32 y = 3;
 }
 
 message ExampleSingleton {

@@ -7,8 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"gotest.tools/v3/golden"
-
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
@@ -40,17 +38,12 @@ func TestScenario(t *testing.T) {
 	// test. the golden file can be used for fine-grained debugging of kv-store
 	// layout
 	debugBuf := &strings.Builder{}
-	var entryLog []ormkv.Entry
 	sharedStore := testkv.NewSharedMemIndexCommitmentStore()
 	store := testkv.NewDebugIndexCommitmentStore(
 		sharedStore,
 		&testkv.EntryCodecDebugger{
 			EntryCodec: table,
-			Print: func(s string) {
-				debugBuf.WriteString(s)
-				debugBuf.WriteString("\n")
-			},
-			EntryLog: entryLog,
+			Print:      func(s string) { debugBuf.WriteString(s + "\n") },
 		},
 	)
 
@@ -60,41 +53,25 @@ func TestScenario(t *testing.T) {
 	// logical decoding works successfully
 	// run `go test pkgname -test.update-golden` to update the golden file
 	// see https://pkg.go.dev/gotest.tools/v3/golden for docs
-	golden.Assert(t, debugBuf.String(), "test_scenario.golden")
+	//golden.Assert(t, debugBuf.String(), "test_scenario.golden")
 
-	// build a second db with the entry log and compare it to the first
-	store2 := testkv.NewSharedMemIndexCommitmentStore()
-	for _, entry := range entryLog {
-		k, v, err := table.EncodeEntry(entry)
-		assert.NilError(t, err)
-		// we can store everything in the commitment store because it's the same as the index store here
-		err = store2.CommitmentStore().Set(k, v)
-		assert.NilError(t, err)
-	}
+	checkEncodeDecodeEntries(t, table, store.IndexStore())
+}
 
-	// check that the same kv-store entries exist in all stores
-	kvEntries := map[string]string{}
-	it, err := store.ReadIndexStore().Iterator(nil, nil)
+// check that the ormkv.Entry's decode and encode to the same bytes
+func checkEncodeDecodeEntries(t *testing.T, table Table, store kvstore.ReadStore) {
+	it, err := store.Iterator(nil, nil)
 	assert.NilError(t, err)
 	for it.Valid() {
-		kvEntries[string(it.Key())] = string(it.Value())
+		key := it.Key()
+		value := it.Value()
+		entry, err := table.DecodeEntry(key, value)
+		assert.NilError(t, err)
+		k, v, err := table.EncodeEntry(entry)
+		assert.Assert(t, bytes.Equal(key, k), "%x %x %s", key, k, entry)
+		assert.Assert(t, bytes.Equal(value, v), "%x %x %s", value, v, entry)
 		it.Next()
 	}
-
-	checkEntries := func(st kvstore.ReadStore) {
-		it, err := st.Iterator(nil, nil)
-		assert.NilError(t, err)
-		for it.Valid() {
-			val, ok := kvEntries[string(it.Key())]
-			assert.Assert(t, ok)
-			assert.Equal(t, string(it.Value()), val)
-			it.Next()
-		}
-	}
-
-	checkEntries(store.IndexStore())
-	checkEntries(store2.CommitmentStore())
-	checkEntries(store2.IndexStore())
 }
 
 func runTestScenario(t *testing.T, table Table, store kvstore.IndexCommitmentStore) {

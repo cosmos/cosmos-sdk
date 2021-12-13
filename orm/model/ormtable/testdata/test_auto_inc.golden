@@ -1,0 +1,30 @@
+GET 000000000000000005 
+    PK testpb.ExampleAutoIncrementTable 5 -> id:5
+GET 808002 
+    SEQ testpb.ExampleAutoIncrementTable 0
+SET 808002 01
+    SEQ testpb.ExampleAutoIncrementTable 1
+GET 000000000000000001 
+    PK testpb.ExampleAutoIncrementTable 1 -> id:1
+SET 000000000000000001 1203666f6f1805
+    PK testpb.ExampleAutoIncrementTable 1 -> id:1 x:"foo" y:5
+HAS 01666f6f
+    ERR:EOF
+SET 01666f6f 0000000000000001
+    UNIQ testpb.ExampleAutoIncrementTable x : "foo" -> 1
+GET 808002 01
+    SEQ testpb.ExampleAutoIncrementTable 1
+ITERATOR 00 -> 01
+  VALID true
+  KEY 000000000000000001 1203666f6f1805
+      PK testpb.ExampleAutoIncrementTable 1 -> id:1 x:"foo" y:5
+  NEXT
+  VALID false
+ITERATOR 00 -> 01
+  VALID true
+  KEY 000000000000000001 1203666f6f1805
+      PK testpb.ExampleAutoIncrementTable 1 -> id:1 x:"foo" y:5
+  KEY 000000000000000001 1203666f6f1805
+      PK testpb.ExampleAutoIncrementTable 1 -> id:1 x:"foo" y:5
+  NEXT
+  VALID false

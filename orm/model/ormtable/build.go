@@ -1,6 +1,8 @@
 package ormtable
 
 import (
+	"fmt"
+
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -111,22 +113,66 @@ func BuildTable(options TableOptions) (Table, error) {
 		idxPrefix := AppendVarUInt32(options.Prefix, id)
 		var index concreteIndex
 		if idxDesc.Unique {
-			uniqCdc, err := ormkv.NewUniqueKeyCodec(idxPrefix, options.MessageType, idxFields.Names(), pkFieldNames)
+			uniqCdc, err := ormkv.NewUniqueKeyCodec(
+				idxPrefix,
+				options.MessageType,
+				idxFields.Names(),
+				pkFieldNames,
+			)
 			if err != nil {
 				return nil, err
 			}
 			uniqIdx := NewUniqueKeyIndex(uniqCdc, pkIndex)
 			table.uniqueIndexesByFields[idxFields] = uniqIdx
 			index = NewUniqueKeyIndex(uniqCdc, pkIndex)
+			table.indexesByFields[idxFields] = index
 		} else {
-			idxCdc, err := ormkv.NewIndexKeyCodec(idxPrefix, options.MessageType, idxFields.Names(), pkFieldNames)
+			idxCdc, err := ormkv.NewIndexKeyCodec(
+				idxPrefix,
+				options.MessageType,
+				idxFields.Names(),
+				pkFieldNames,
+			)
 			if err != nil {
 				return nil, err
 			}
 			index = NewIndexKeyIndex(idxCdc, pkIndex)
+
+			// non-unique indexes can sometimes be named by several sub-lists of
+			// fields and we need to handle all of them. For example consider,
+			// a primary key for fields "a,b,c" and an index on field "c". Because the
+			// rest of the primary key gets appended to the index key, the index for "c"
+			// is actually stored as "c,a,b". So this index can be referred to
+			// by the fields "c", "c,a", or "c,a,b".
+			allFields := index.GetFieldNames()
+			allFieldNames := FieldsFromNames(allFields)
+			for i := 1; i <= len(allFields); i++ {
+				// we check this by generating a codec for each sub-list of fields,
+				// then we see if the full list of fields matches. We naively
+				// recheck the field names we already know about to make the
+				// algorithm simpler
+				altIdxCdc, err := ormkv.NewIndexKeyCodec(
+					idxPrefix,
+					options.MessageType,
+					allFields[:i],
+					pkFieldNames,
+				)
+				if err != nil {
+					return nil, err
+				}
+
+				if FieldsFromNames(altIdxCdc.GetFieldNames()) == allFieldNames {
+					altName := FieldsFromNames(allFields[:i])
+					if _, ok := table.indexesByFields[altName]; ok {
+						return nil, fmt.Errorf("duplicate index for fields %s", altName)
+					}
+
+					table.indexesByFields[altName] = index
+				}
+			}
 		}
-		table.indexesByFields[idxFields] = index
-		table.entryCodecsById[idxDesc.Id] = index
+
+		table.entryCodecsById[id] = index
 		table.indexes = append(table.indexes, index)
 		table.indexers = append(table.indexers, index.(Indexer))
 	}

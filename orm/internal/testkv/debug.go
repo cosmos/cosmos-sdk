@@ -165,7 +165,6 @@ var _ kvstore.Iterator = &debugIterator{}
 type EntryCodecDebugger struct {
 	EntryCodec ormkv.EntryCodec
 	Print      func(string)
-	EntryLog   []ormkv.Entry
 }
 
 func (d *EntryCodecDebugger) Log(s string) {
@@ -181,8 +180,6 @@ func (d *EntryCodecDebugger) Decode(storeName string, key, value []byte) string 
 	if err != nil {
 		return fmt.Sprintf("ERR:%v", err)
 	}
-
-	d.EntryLog = append(d.EntryLog, entry)
 
 	return entry.String()
 }

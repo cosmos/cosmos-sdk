@@ -123,7 +123,7 @@ func (t AutoIncrementTable) decodeAutoIncJson(store kvstore.IndexCommitmentStore
 	return t.doDecodeJson(decoder,
 		func(message json.RawMessage) bool {
 			err = json.Unmarshal(message, &seq)
-			if err != nil {
+			if err == nil {
 				// store is nil during validation
 				if store != nil {
 					err = t.setSeqValue(store.IndexStore(), seq)

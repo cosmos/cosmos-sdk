@@ -112,7 +112,11 @@ func BuildTable(options TableOptions) (Table, error) {
 
 		idxPrefix := AppendVarUInt32(options.Prefix, id)
 		var index concreteIndex
-		if idxDesc.Unique {
+
+		// altNames contains all the alternative "names" of this index
+		altNames := map[FieldNames]bool{idxFields: true}
+
+		if idxDesc.Unique && isNonTrivialUniqueKey(idxFields.Names(), pkFieldNames) {
 			uniqCdc, err := ormkv.NewUniqueKeyCodec(
 				idxPrefix,
 				options.MessageType,
@@ -125,7 +129,6 @@ func BuildTable(options TableOptions) (Table, error) {
 			uniqIdx := NewUniqueKeyIndex(uniqCdc, pkIndex)
 			table.uniqueIndexesByFields[idxFields] = uniqIdx
 			index = NewUniqueKeyIndex(uniqCdc, pkIndex)
-			table.indexesByFields[idxFields] = index
 		} else {
 			idxCdc, err := ormkv.NewIndexKeyCodec(
 				idxPrefix,
@@ -146,11 +149,15 @@ func BuildTable(options TableOptions) (Table, error) {
 			// by the fields "c", "c,a", or "c,a,b".
 			allFields := index.GetFieldNames()
 			allFieldNames := FieldsFromNames(allFields)
-			for i := 1; i <= len(allFields); i++ {
-				// we check this by generating a codec for each sub-list of fields,
-				// then we see if the full list of fields matches. We naively
-				// recheck the field names we already know about to make the
-				// algorithm simpler
+			altNames[allFieldNames] = true
+			for i := 1; i < len(allFields); i++ {
+				altName := FieldsFromNames(allFields[:i])
+				if altNames[altName] {
+					continue
+				}
+
+				// we check by generating a codec for each sub-list of fields,
+				// then we see if the full list of fields matches.
 				altIdxCdc, err := ormkv.NewIndexKeyCodec(
 					idxPrefix,
 					options.MessageType,
@@ -162,14 +169,17 @@ func BuildTable(options TableOptions) (Table, error) {
 				}
 
 				if FieldsFromNames(altIdxCdc.GetFieldNames()) == allFieldNames {
-					altName := FieldsFromNames(allFields[:i])
-					if _, ok := table.indexesByFields[altName]; ok {
-						return nil, fmt.Errorf("duplicate index for fields %s", altName)
-					}
-
-					table.indexesByFields[altName] = index
+					altNames[altName] = true
 				}
 			}
+		}
+
+		for name := range altNames {
+			if _, ok := table.indexesByFields[name]; ok {
+				return nil, fmt.Errorf("duplicate index for fields %s", name)
+			}
+
+			table.indexesByFields[name] = index
 		}
 
 		table.entryCodecsById[id] = index

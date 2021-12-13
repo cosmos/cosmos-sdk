@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"gotest.tools/v3/golden"
+
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
@@ -53,7 +55,7 @@ func TestScenario(t *testing.T) {
 	// logical decoding works successfully
 	// run `go test pkgname -test.update-golden` to update the golden file
 	// see https://pkg.go.dev/gotest.tools/v3/golden for docs
-	//golden.Assert(t, debugBuf.String(), "test_scenario.golden")
+	golden.Assert(t, debugBuf.String(), "test_scenario.golden")
 
 	checkEncodeDecodeEntries(t, table, store.IndexStore())
 }
@@ -82,10 +84,10 @@ func runTestScenario(t *testing.T, table Table, store kvstore.IndexCommitmentSto
 		{U32: 4, I64: -1, Str: "abc", U64: 8},  // 2
 		{U32: 5, I64: -2, Str: "abd", U64: 8},  // 3
 		{U32: 5, I64: -2, Str: "abe", U64: 9},  // 4
-		{U32: 7, I64: -2, Str: "abe", U64: 9},  // 5
-		{U32: 7, I64: -1, Str: "abe", U64: 10}, // 6
-		{U32: 8, I64: -4, Str: "abc", U64: 10}, // 7
-		{U32: 8, I64: 1, Str: "abc", U64: 10},  // 8
+		{U32: 7, I64: -2, Str: "abe", U64: 10}, // 5
+		{U32: 7, I64: -1, Str: "abe", U64: 11}, // 6
+		{U32: 8, I64: -4, Str: "abc", U64: 11}, // 7
+		{U32: 8, I64: 1, Str: "abc", U64: 12},  // 8
 		{U32: 8, I64: 1, Str: "abd", U64: 10},  // 9
 	}
 
@@ -148,30 +150,30 @@ func runTestScenario(t *testing.T, table Table, store kvstore.IndexCommitmentSto
 	assertIteratorItems(it, 3, 4, 5, 6, 7, 8)
 
 	// now a reverse range query on a different index
-	u64StrIndexFields, err := CommaSeparatedFieldNames("u64,str")
+	strU32Fields, err := CommaSeparatedFieldNames("str,u32")
 	assert.NilError(t, err)
-	u64StrIndex := table.GetIndex(u64StrIndexFields)
-	assert.Assert(t, u64StrIndex != nil)
-	it, err = u64StrIndex.RangeIterator(store, testutil.ValuesOf(uint64(8)), testutil.ValuesOf(uint64(9)), IteratorOptions{Reverse: true})
-	assertIteratorItems(it, 5, 4, 3, 2)
+	strU32Index := table.GetIndex(strU32Fields)
+	assert.Assert(t, strU32Index != nil)
+	it, err = strU32Index.RangeIterator(store, testutil.ValuesOf("abc"), testutil.ValuesOf("abd"), IteratorOptions{Reverse: true})
+	assertIteratorItems(it, 9, 3, 1, 8, 7, 2, 0)
 
 	// another prefix query forwards
-	it, err = u64StrIndex.PrefixIterator(store, testutil.ValuesOf(uint64(10), "abc"), IteratorOptions{})
-	assertIteratorItems(it, 7, 8)
+	it, err = strU32Index.PrefixIterator(store, testutil.ValuesOf("abe", uint32(7)), IteratorOptions{})
+	assertIteratorItems(it, 5, 6)
 	// and backwards
-	it, err = u64StrIndex.PrefixIterator(store, testutil.ValuesOf(uint64(10), "abc"), IteratorOptions{Reverse: true})
-	assertIteratorItems(it, 8, 7)
+	it, err = strU32Index.PrefixIterator(store, testutil.ValuesOf("abc", uint32(4)), IteratorOptions{Reverse: true})
+	assertIteratorItems(it, 2, 0)
 
 	// try an unique index
-	strU32I64Fields, err := CommaSeparatedFieldNames("str,u32,i64")
+	u64StrFields, err := CommaSeparatedFieldNames("u64,str")
 	assert.NilError(t, err)
-	strU32I64Index := table.GetUniqueIndex(strU32I64Fields)
-	assert.Assert(t, strU32I64Index != nil)
-	found, err := strU32I64Index.Has(store, testutil.ValuesOf("abc", uint32(8), int64(1)))
+	u64StrIndex := table.GetUniqueIndex(u64StrFields)
+	assert.Assert(t, u64StrIndex != nil)
+	found, err := u64StrIndex.Has(store, testutil.ValuesOf(uint64(12), "abc"))
 	assert.NilError(t, err)
 	assert.Assert(t, found)
 	var a testpb.ExampleTable
-	found, err = strU32I64Index.Get(store, testutil.ValuesOf("abc", uint32(8), int64(1)), &a)
+	found, err = u64StrIndex.Get(store, testutil.ValuesOf(uint64(12), "abc"), &a)
 	assert.NilError(t, err)
 	assert.Assert(t, found)
 	assert.DeepEqual(t, data[8], &a, protocmp.Transform())

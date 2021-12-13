@@ -17,6 +17,7 @@ message ExampleTable {
     index:{
       id: 1;
       fields:"u64,str"
+      unique: true
     }
     index:{
       id: 2;
@@ -25,11 +26,6 @@ message ExampleTable {
     index:{
       id: 3;
       fields:"bz,str"
-    }
-    index:{
-      id:4
-      fields:"str,u32,i64"
-      unique: true
     }
   };
 

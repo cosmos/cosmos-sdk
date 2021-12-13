@@ -19,7 +19,7 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 	// check if the deposits pool account exists
 	moduleAcc := k.GetGovernanceAccount(ctx)
 	if moduleAcc == nil {
-		panic(fmt.Sprintf("%s module account has not been set", v1beta1.ModuleName))
+		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
 	var totalDeposits sdk.Coins

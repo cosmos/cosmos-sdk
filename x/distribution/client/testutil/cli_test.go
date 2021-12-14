@@ -1,3 +1,4 @@
+//go:build norace
 // +build norace
 
 package testutil
@@ -12,7 +13,7 @@ import (
 
 func TestIntegrationTestSuite(t *testing.T) {
 	cfg := network.DefaultConfig()
-	cfg.NumValidators = 1
+	cfg.NumValidators = 2
 	suite.Run(t, NewIntegrationTestSuite(cfg))
 }
 

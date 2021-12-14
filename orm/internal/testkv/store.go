@@ -9,6 +9,8 @@ type indexCommitmentStore struct {
 	index      kvstore.Store
 }
 
+// NewDebugIndexCommitmentStore wraps both stores from an IndexCommitmentStore
+// with a debugger.
 func NewDebugIndexCommitmentStore(store kvstore.IndexCommitmentStore, debugger Debugger) kvstore.IndexCommitmentStore {
 	return &indexCommitmentStore{
 		commitment: NewDebugStore(store.CommitmentStore(), debugger, "commit"),

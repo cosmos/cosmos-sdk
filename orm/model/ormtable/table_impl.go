@@ -23,7 +23,7 @@ import (
 
 type TableImpl struct {
 	*PrimaryKeyIndex
-	indexers              []Indexer
+	indexers              []indexer
 	indexes               []Index
 	indexesByFields       map[FieldNames]concreteIndex
 	uniqueIndexesByFields map[FieldNames]UniqueIndex

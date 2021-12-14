@@ -48,7 +48,7 @@ type IndexCommitmentReadStore interface {
 	ReadIndexStore() ReadStore
 }
 
-// IndexCommitmentStore is a wrapper over two stores - an index store
+// IndexCommitmentStore is a wrapper around two stores - an index store
 // which does not need to be back by a merkle-tree and a commitment store
 // which should be backed by a merkle-tree if possible. This abstraction allows
 // the ORM access the two stores as a single data layer, storing all secondary

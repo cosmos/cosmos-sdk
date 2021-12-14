@@ -6,6 +6,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 )
 
+// NewSplitMemIndexCommitmentStore returns an IndexCommitmentStore instance
+// which uses two separate memory stores to simulate behavior when there
+// are really two separate backing stores.
 func NewSplitMemIndexCommitmentStore() kvstore.IndexCommitmentStore {
 	return &indexCommitmentStore{
 		commitment: dbm.NewMemDB(),
@@ -13,6 +16,9 @@ func NewSplitMemIndexCommitmentStore() kvstore.IndexCommitmentStore {
 	}
 }
 
+// NewSharedMemIndexCommitmentStore returns an IndexCommitmentStore instance
+// which uses a single backing memory store to simulate legacy scenarios
+// where only a single KV-store is available to modules.
 func NewSharedMemIndexCommitmentStore() kvstore.IndexCommitmentStore {
 	store := dbm.NewMemDB()
 	return &indexCommitmentStore{

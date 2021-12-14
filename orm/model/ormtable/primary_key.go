@@ -1,16 +1,19 @@
 package ormtable
 
 import (
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
+	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 )
 
+// PrimaryKeyIndex defines an UniqueIndex for the primary key.
 type PrimaryKeyIndex struct {
 	*ormkv.PrimaryKeyCodec
 }
 
+// NewPrimaryKeyIndex returns a new PrimaryKeyIndex.
 func NewPrimaryKeyIndex(primaryKeyCodec *ormkv.PrimaryKeyCodec) *PrimaryKeyIndex {
 	return &PrimaryKeyIndex{PrimaryKeyCodec: primaryKeyCodec}
 }

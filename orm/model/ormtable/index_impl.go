@@ -10,11 +10,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 )
 
+// IndexKeyIndex implements Index for a regular IndexKey.
 type IndexKeyIndex struct {
 	*ormkv.IndexKeyCodec
 	primaryKey *PrimaryKeyIndex
 }
 
+// NewIndexKeyIndex returns a new IndexKeyIndex.
 func NewIndexKeyIndex(indexKeyCodec *ormkv.IndexKeyCodec, primaryKey *PrimaryKeyIndex) *IndexKeyIndex {
 	return &IndexKeyIndex{IndexKeyCodec: indexKeyCodec, primaryKey: primaryKey}
 }
@@ -47,7 +49,7 @@ func (s IndexKeyIndex) RangeIterator(store kvstore.IndexCommitmentReadStore, sta
 	return rangeIterator(store.ReadIndexStore(), store, s, startBz, endBz, options)
 }
 
-var _ Indexer = &IndexKeyIndex{}
+var _ indexer = &IndexKeyIndex{}
 var _ Index = &IndexKeyIndex{}
 
 func (s IndexKeyIndex) doNotImplement() {}

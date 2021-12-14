@@ -17,11 +17,12 @@ const (
 	SeqId               = IndexIdLimit
 )
 
+// BuildTable builds a table instance from the provided TableOptions.
 func BuildTable(options TableOptions) (Table, error) {
 	messageDescriptor := options.MessageType.Descriptor()
 
 	table := &TableImpl{
-		indexers:              []Indexer{},
+		indexers:              []indexer{},
 		indexes:               []Index{},
 		indexesByFields:       map[FieldNames]concreteIndex{},
 		uniqueIndexesByFields: map[FieldNames]UniqueIndex{},
@@ -55,9 +56,7 @@ func BuildTable(options TableOptions) (Table, error) {
 
 		table.PrimaryKeyIndex = NewPrimaryKeyIndex(pkCodec)
 
-		return &Singleton{
-			table,
-		}, nil
+		return NewSingleton(table), nil
 	} else {
 		return nil, ormerrors.InvalidTableDefinition.Wrapf("missing table descriptor for %s", messageDescriptor.FullName())
 	}
@@ -184,7 +183,7 @@ func BuildTable(options TableOptions) (Table, error) {
 
 		table.entryCodecsById[id] = index
 		table.indexes = append(table.indexes, index)
-		table.indexers = append(table.indexers, index.(Indexer))
+		table.indexers = append(table.indexers, index.(indexer))
 	}
 
 	if tableDesc.PrimaryKey.AutoIncrement {

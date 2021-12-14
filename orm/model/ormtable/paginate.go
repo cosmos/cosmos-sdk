@@ -12,15 +12,46 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// PaginationRequest is a request to the Paginate function and extends the
+// options in query.PageRequest.
 type PaginationRequest struct {
 	*query.PageRequest
 
+	// Prefix is an optional prefix to create a prefix iterator against this
+	// index. It cannot be used together with Start and End.
 	Prefix []protoreflect.Value
-	Start  []protoreflect.Value
-	End    []protoreflect.Value
+
+	// Start is an optional start value to create a range iterator against this
+	// index. It cannot be used together with Prefix.
+	Start []protoreflect.Value
+
+	// End is an optional end value to create a range iterator against this
+	// index. It cannot be used together with Prefix.
+	End []protoreflect.Value
+
+	// Filter is an optional filter function that can be used to filter
+	// the results in the underlying iterator and should return true to include
+	// an item in the result.
 	Filter func(message proto.Message) bool
 }
 
+// PaginationResponse is a response from the Paginate function and extends the
+// options in query.PageResponse.
+type PaginationResponse struct {
+	*query.PageResponse
+
+	// Items are the items in this page.
+	Items []proto.Message
+
+	// HaveMore indicates whether there are more pages.
+	HaveMore bool
+
+	// Cursors returns a cursor for each item and can be used to implement
+	// GraphQL connection edges.
+	Cursors []Cursor
+}
+
+// Paginate retrieves a "page" of data from the provided index and store.
 func Paginate(
 	index Index,
 	store kvstore.IndexCommitmentReadStore,
@@ -113,13 +144,4 @@ func Paginate(
 		Cursors:      cursors,
 		Items:        items,
 	}, nil
-}
-
-// PaginationResponse contains extra pagination data that may be useful
-// for services like GraphQL.
-type PaginationResponse struct {
-	*query.PageResponse
-	Items    []proto.Message
-	HaveMore bool
-	Cursors  []Cursor
 }

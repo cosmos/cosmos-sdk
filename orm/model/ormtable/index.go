@@ -8,39 +8,72 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 )
 
+// Index defines an index on a table.
 type Index interface {
-	PrefixIterator(store kvstore.IndexCommitmentReadStore, prefix []protoreflect.Value, options IteratorOptions) (Iterator, error)
-	RangeIterator(store kvstore.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (Iterator, error)
-	ReadValueFromIndexKey(store kvstore.IndexCommitmentReadStore, primaryKey []protoreflect.Value, value []byte, message proto.Message) error
 
+	// PrefixIterator returns a prefix iterator for the provided prefix. Prefix
+	// can contain 0 or more values that must correspond to the fields in the index.
+	PrefixIterator(store kvstore.IndexCommitmentReadStore, prefix []protoreflect.Value, options IteratorOptions) (Iterator, error)
+
+	// RangeIterator returns a range iterator between the provided start and end.
+	// Start and end can contain 0 or more values that must correspond to the fields in the index.
+	// Range iterators can only be contained for start and end values which are
+	// well-ordered, meaning that any unordered components must be equal. Ex.
+	// the bytes type is considered unordered, so a range iterator is created
+	// over an index with a bytes field, both start and end must have the same
+	// value for bytes.
+	RangeIterator(store kvstore.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (Iterator, error)
+
+	// MessageType returns the protobuf message type of the index.
 	MessageType() protoreflect.MessageType
+
+	// GetFieldNames returns the field names of the index.
 	GetFieldNames() []protoreflect.Name
-	IsFullyOrdered() bool
+
+	// CompareKeys the two keys against the underlying IndexCodec, returning a
+	// negative value if key1 is less than key2, 0 if they are equal, and a
+	// positive value otherwise.
 	CompareKeys(key1, key2 []protoreflect.Value) int
+
+	// IsFullyOrdered returns true if all of the fields in the index are
+	// considered "well-ordered" in terms of sorted iteration.
+	IsFullyOrdered() bool
 
 	doNotImplement()
 }
 
+// concreteIndex is used internally by table implementations.
 type concreteIndex interface {
 	Index
 	ormkv.IndexCodec
+
+	ReadValueFromIndexKey(store kvstore.IndexCommitmentReadStore, primaryKey []protoreflect.Value, value []byte, message proto.Message) error
 }
 
+// UniqueIndex defines an unique index on a table.
 type UniqueIndex interface {
 	Index
 
+	// Has returns true if the keyValues are present in the store for this index.
 	Has(store kvstore.IndexCommitmentReadStore, keyValues []protoreflect.Value) (found bool, err error)
+
+	// Get retrieves the message if one exists in the store for the provided keyValues.
 	Get(store kvstore.IndexCommitmentReadStore, keyValues []protoreflect.Value, message proto.Message) (found bool, err error)
 }
 
+// IteratorOptions are options for creating an iterator.
 type IteratorOptions struct {
+
+	// Reverse specifies whether the iterator should be a reverse iterator.
 	Reverse bool
-	Cursor  []byte
+
+	// Cursor is an optional value that can be used to start iteration
+	// from a cursor returned by Iterator.Cursor() which can be used to
+	// support pagination.
+	Cursor Cursor
 }
 
-type Indexer interface {
-	Index
-
+type indexer interface {
 	OnInsert(store kvstore.Store, message protoreflect.Message) error
 	OnUpdate(store kvstore.Store, new, existing protoreflect.Message) error
 	OnDelete(store kvstore.Store, message protoreflect.Message) error

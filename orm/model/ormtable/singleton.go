@@ -9,8 +9,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 )
 
+// Singleton implements a Table instance for singletons.
 type Singleton struct {
 	*TableImpl
+}
+
+// NewSingleton returns a new singleton.
+func NewSingleton(tableImpl *TableImpl) *Singleton {
+	return &Singleton{TableImpl: tableImpl}
 }
 
 func (t Singleton) DefaultJSON() json.RawMessage {

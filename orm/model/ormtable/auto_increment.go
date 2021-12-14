@@ -14,6 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 )
 
+// AutoIncrementTable is a Table implementation for tables with an
+// auto-incrementing uint64 primary key.
 type AutoIncrementTable struct {
 	*TableImpl
 	autoIncField protoreflect.FieldDescriptor

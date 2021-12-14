@@ -162,7 +162,7 @@ func (u UniqueKeyIndex) ReadValueFromIndexKey(store kvstore.IndexCommitmentReadS
 	return nil
 }
 
-var _ Indexer = &UniqueKeyIndex{}
+var _ indexer = &UniqueKeyIndex{}
 var _ UniqueIndex = &UniqueKeyIndex{}
 
 // isNonTrivialUniqueKey checks if unique key fields are non-trivial, meaning that they

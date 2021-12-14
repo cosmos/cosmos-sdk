@@ -7,8 +7,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 )
 
+// Debugger is an interface that handles debug info from the debug store wrapper.
 type Debugger interface {
+
+	// Log logs a single log message.
 	Log(string)
+
+	// Decode decodes a key-value entry into a debug string.
 	Decode(storeName string, key, value []byte) string
 }
 
@@ -18,6 +23,7 @@ type debugStore struct {
 	storeName string
 }
 
+// NewDebugStore wraps the store with the debugger instance returning a debug store wrapper.
 func NewDebugStore(store kvstore.Store, debugger Debugger, storeName string) kvstore.Store {
 	return &debugStore{store: store, debugger: debugger, storeName: storeName}
 }
@@ -162,6 +168,8 @@ func (d debugIterator) Close() error {
 
 var _ kvstore.Iterator = &debugIterator{}
 
+// EntryCodecDebugger is a Debugger instance that uses an EntryCodec and Print
+// function for debugging.
 type EntryCodecDebugger struct {
 	EntryCodec ormkv.EntryCodec
 	Print      func(string)

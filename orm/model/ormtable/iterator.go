@@ -7,18 +7,38 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 )
 
+// Iterator defines the interface for iterating over indexes.
 type Iterator interface {
+
+	// Next advances the iterator and returns true if a valid entry is found.
+	// Next must be called before starting iteration.
 	Next() bool
+
+	// Keys returns the current index key and primary key values that the
+	// iterator points to.
 	Keys() (indexKey, primaryKey []protoreflect.Value, err error)
+
+	// UnmarshalMessage unmarshals the entry the iterator currently points to
+	// the provided proto.Message.
 	UnmarshalMessage(proto.Message) error
+
+	// GetMessage retrieves the proto.Message that the iterator currently points
+	// to.
 	GetMessage() (proto.Message, error)
 
+	// Cursor returns the cursor referencing the current iteration position
+	// and can be passed to IteratorOptions to restart iteration right after
+	// this position.
 	Cursor() Cursor
+
+	// Close closes the iterator and must always be called when done using
+	// the iterator. The defer keyword should generally be used for this.
 	Close()
 
 	doNotImplement()
 }
 
+// Cursor defines the cursor type.
 type Cursor []byte
 
 func prefixIterator(iteratorStore kvstore.ReadStore, store kvstore.IndexCommitmentReadStore, index concreteIndex, prefix []byte, options IteratorOptions) (Iterator, error) {

@@ -29,7 +29,9 @@ type Reader interface {
 	ReverseIterator(start, end []byte) (Iterator, error)
 }
 
-// Writer is an interface for read-write access to a kv-store.
+// Writer is an interface for writing to a kv-store. It shouldn't be assumed
+// the writes are automatically readable with this interface, but instead
+// that writes are batched and must be committed.
 type Writer interface {
 	Reader
 

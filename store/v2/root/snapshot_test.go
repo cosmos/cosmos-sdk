@@ -194,14 +194,14 @@ func TestMultistoreSnapshotRestore(t *testing.T) {
 		require.Equal(t, sourceSubStore, targetSubStore)
 	}
 
-	// checking snapshot restore for non-empty store with existed saved version
+	// checking snapshot restore for non-empty store with existing saved version
 	target2 := newMultiStoreWithBasicData(t, memdb.NewDB(), 4)
 	ready2 := make(chan struct{})
 	err = target2.Restore(version, snapshottypes.CurrentFormat, chunks, ready2)
 	require.Error(t, err)
 
-	// checking snapshot restoring for store with existed schema and without existed versions
-	target3 := newMultiStore(t, memdb.NewDB(), 4)
+	// checking snapshot restoring for store with existed schema and without existing versions
+	target3 := newMultiStore(t, memdb.NewDB(), 0)
 	ready3 := make(chan struct{})
 	chunks, err = source.Snapshot(version, snapshottypes.CurrentFormat)
 	require.NoError(t, err)

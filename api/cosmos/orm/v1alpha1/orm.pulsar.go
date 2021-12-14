@@ -2248,8 +2248,9 @@ type PrimaryKeyDescriptor struct {
 	//   string fields support sorted iteration.
 	//   - bytes are encoded as raw bytes in terminal segments and length-prefixed
 	//   with a single byte in non-terminal segments. Because of this byte arrays
-	//   longer than 255 bytes cannot be used in keys and bytes fields should not
-	//   be assumed to be lexically sorted.
+	//   longer than 255 bytes are unsupported and bytes fields should not
+	//   be assumed to be lexically sorted. If you have a byte array longer than
+	//   255 bytes that you'd like to index, you should consider hashing it first.
 	//   - int32, sint32, int64, sint64 are encoding as fixed width bytes with
 	//   an encoding that enables sorted iteration.
 	//   - google.protobuf.Timestamp and google.protobuf.Duration are encoded
@@ -2333,7 +2334,8 @@ type SecondaryIndexDescriptor struct {
 	// store the remaining primary key fields in the value..
 	Fields string `protobuf:"bytes,1,opt,name=fields,proto3" json:"fields,omitempty"`
 	// id is a non-zero integer ID that must be unique within the indexes for this
-	// table. It may be deprecated in the future when this can be auto-generated.
+	// table and less than 32768. It may be deprecated in the future when this can
+	// be auto-generated.
 	Id uint32 `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
 	// unique specifies that this an unique index.
 	Unique bool `protobuf:"varint,3,opt,name=unique,proto3" json:"unique,omitempty"`

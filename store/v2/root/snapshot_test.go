@@ -171,7 +171,7 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 
 func TestMultistoreSnapshotRestore(t *testing.T) {
 	source := newMultiStoreWithBasicData(t, memdb.NewDB(), 4)
-	target := newMultiStore(t, memdb.NewDB(), 4)
+	target := newMultiStore(t, memdb.NewDB(), 0)
 	require.Equal(t, source.LastCommitID().Version, int64(1))
 	version := uint64(source.LastCommitID().Version)
 	chunks, err := source.Snapshot(version, snapshottypes.CurrentFormat)
@@ -190,6 +190,12 @@ func TestMultistoreSnapshotRestore(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, sourceSubStore, targetSubStore)
 	}
+
+	// restore checking for non-empty store
+	target2 := newMultiStoreWithBasicData(t, memdb.NewDB(), 0)
+	ready2 := make(chan struct{})
+	err = target2.Restore(version, snapshottypes.CurrentFormat, chunks, ready2)
+	require.Error(t, err)
 }
 
 func BenchmarkMultistoreSnapshot100K(b *testing.B) {

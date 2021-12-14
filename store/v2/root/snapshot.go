@@ -46,7 +46,7 @@ func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadClos
 	}
 
 	// Set up a restore stream pipeline
-	// chan io.ReadCloser -> chunkReader -> zlib -> delimited Protobuf -> ExportNode
+	// chan io.ReadCloser -> chunkReader -> zlib -> delimited Protobuf -> Exported KV Item
 	chunkReader := snapshots.NewChunkReader(chunks)
 	defer chunkReader.Close()
 	zReader, err := zlib.NewReader(chunkReader)
@@ -71,6 +71,10 @@ func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadClos
 
 		switch item := item.Item.(type) {
 		case *storetypes.SnapshotItem_Schema:
+			if len(rs.schema) != 0 {
+				return sdkerrors.Wrap(sdkerrors.ErrLogic, "store schema is not empty")
+			}
+
 			storeSchemaReceived = true
 			schemaWriter := prefixdb.NewPrefixWriter(rs.stateTxn, schemaPrefix)
 			sKeys := item.Schema.GetKeys()
@@ -150,7 +154,7 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 	ch := make(chan io.ReadCloser)
 	go func() {
 		// Set up a stream pipeline to serialize snapshot nodes:
-		// ExportNode -> delimited Protobuf -> zlib -> buffer -> chunkWriter -> chan io.ReadCloser
+		// Export KV Item -> delimited Protobuf -> zlib -> buffer -> chunkWriter -> chan io.ReadCloser
 		chunkWriter := snapshots.NewChunkWriter(ch, snapshotChunkSize)
 		defer chunkWriter.Close()
 		bufWriter := bufio.NewWriterSize(chunkWriter, snapshotBufferSize)

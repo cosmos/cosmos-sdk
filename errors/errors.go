@@ -256,7 +256,7 @@ func IsOf(received error, targets ...error) bool {
 }
 
 // causer is an interface implemented by an error that supports wrapping. Use
-// it to testCodespace if an error wraps another error instance.
+// it to test if an error wraps another error instance.
 type causer interface {
 	Cause() error
 }

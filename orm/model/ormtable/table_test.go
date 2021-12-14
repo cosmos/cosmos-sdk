@@ -344,6 +344,7 @@ func runTestScenario(t *testing.T, table Table, store kvstore.IndexCommitmentSto
 	// now let's update some things
 	for i := 0; i < 5; i++ {
 		data[i].U64 = data[i].U64 * 2
+		data[i].Bz = []byte(data[i].Str)
 		err = table.Save(store, data[i], SAVE_MODE_UPDATE)
 		assert.NilError(t, err)
 	}

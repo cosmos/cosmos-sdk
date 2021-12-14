@@ -556,74 +556,94 @@ ITERATOR 00 -> 01
   CLOSE
 GET 00000000047ffffffffffffffe616263 1007
     PK testpb.ExampleTable 4/-2/"abc" -> u32:4 u64:7 str:"abc" i64:-2
-SET 00000000047ffffffffffffffe616263 100e
-    PK testpb.ExampleTable 4/-2/"abc" -> u32:4 u64:14 str:"abc" i64:-2
+SET 00000000047ffffffffffffffe616263 100e2203616263
+    PK testpb.ExampleTable 4/-2/"abc" -> u32:4 u64:14 str:"abc" bz:"abc" i64:-2
 HAS 01000000000000000e616263
     ERR:EOF
 DEL 010000000000000007616263
 DEL ERR:EOF
 SET 01000000000000000e616263 000000047ffffffffffffffe
     UNIQ testpb.ExampleTable u64/str : 14/"abc" -> 4/-2/"abc"
+DEL 030061626300000000047ffffffffffffffe
+DEL IDX testpb.ExampleTable bz/str/u32/i64 : ""/"abc"/4/-2 -> 4/-2/"abc"
+SET 030361626361626300000000047ffffffffffffffe 
+    IDX testpb.ExampleTable bz/str/u32/i64 : "YWJj"/"abc"/4/-2 -> 4/-2/"abc"
 GET 00000000047ffffffffffffffe616264 1007
     PK testpb.ExampleTable 4/-2/"abd" -> u32:4 u64:7 str:"abd" i64:-2
-SET 00000000047ffffffffffffffe616264 100e
-    PK testpb.ExampleTable 4/-2/"abd" -> u32:4 u64:14 str:"abd" i64:-2
+SET 00000000047ffffffffffffffe616264 100e2203616264
+    PK testpb.ExampleTable 4/-2/"abd" -> u32:4 u64:14 str:"abd" bz:"abd" i64:-2
 HAS 01000000000000000e616264
     ERR:EOF
 DEL 010000000000000007616264
 DEL ERR:EOF
 SET 01000000000000000e616264 000000047ffffffffffffffe
     UNIQ testpb.ExampleTable u64/str : 14/"abd" -> 4/-2/"abd"
+DEL 030061626400000000047ffffffffffffffe
+DEL IDX testpb.ExampleTable bz/str/u32/i64 : ""/"abd"/4/-2 -> 4/-2/"abd"
+SET 030361626461626400000000047ffffffffffffffe 
+    IDX testpb.ExampleTable bz/str/u32/i64 : "YWJk"/"abd"/4/-2 -> 4/-2/"abd"
 GET 00000000047fffffffffffffff616263 1008
     PK testpb.ExampleTable 4/-1/"abc" -> u32:4 u64:8 str:"abc" i64:-1
-SET 00000000047fffffffffffffff616263 1010
-    PK testpb.ExampleTable 4/-1/"abc" -> u32:4 u64:16 str:"abc" i64:-1
+SET 00000000047fffffffffffffff616263 10102203616263
+    PK testpb.ExampleTable 4/-1/"abc" -> u32:4 u64:16 str:"abc" bz:"abc" i64:-1
 HAS 010000000000000010616263
     ERR:EOF
 DEL 010000000000000008616263
 DEL ERR:EOF
 SET 010000000000000010616263 000000047fffffffffffffff
     UNIQ testpb.ExampleTable u64/str : 16/"abc" -> 4/-1/"abc"
+DEL 030061626300000000047fffffffffffffff
+DEL IDX testpb.ExampleTable bz/str/u32/i64 : ""/"abc"/4/-1 -> 4/-1/"abc"
+SET 030361626361626300000000047fffffffffffffff 
+    IDX testpb.ExampleTable bz/str/u32/i64 : "YWJj"/"abc"/4/-1 -> 4/-1/"abc"
 GET 00000000057ffffffffffffffe616264 1008
     PK testpb.ExampleTable 5/-2/"abd" -> u32:5 u64:8 str:"abd" i64:-2
-SET 00000000057ffffffffffffffe616264 1010
-    PK testpb.ExampleTable 5/-2/"abd" -> u32:5 u64:16 str:"abd" i64:-2
+SET 00000000057ffffffffffffffe616264 10102203616264
+    PK testpb.ExampleTable 5/-2/"abd" -> u32:5 u64:16 str:"abd" bz:"abd" i64:-2
 HAS 010000000000000010616264
     ERR:EOF
 DEL 010000000000000008616264
 DEL ERR:EOF
 SET 010000000000000010616264 000000057ffffffffffffffe
     UNIQ testpb.ExampleTable u64/str : 16/"abd" -> 5/-2/"abd"
+DEL 030061626400000000057ffffffffffffffe
+DEL IDX testpb.ExampleTable bz/str/u32/i64 : ""/"abd"/5/-2 -> 5/-2/"abd"
+SET 030361626461626400000000057ffffffffffffffe 
+    IDX testpb.ExampleTable bz/str/u32/i64 : "YWJk"/"abd"/5/-2 -> 5/-2/"abd"
 GET 00000000057ffffffffffffffe616265 1009
     PK testpb.ExampleTable 5/-2/"abe" -> u32:5 u64:9 str:"abe" i64:-2
-SET 00000000057ffffffffffffffe616265 1012
-    PK testpb.ExampleTable 5/-2/"abe" -> u32:5 u64:18 str:"abe" i64:-2
+SET 00000000057ffffffffffffffe616265 10122203616265
+    PK testpb.ExampleTable 5/-2/"abe" -> u32:5 u64:18 str:"abe" bz:"abe" i64:-2
 HAS 010000000000000012616265
     ERR:EOF
 DEL 010000000000000009616265
 DEL ERR:EOF
 SET 010000000000000012616265 000000057ffffffffffffffe
     UNIQ testpb.ExampleTable u64/str : 18/"abe" -> 5/-2/"abe"
+DEL 030061626500000000057ffffffffffffffe
+DEL IDX testpb.ExampleTable bz/str/u32/i64 : ""/"abe"/5/-2 -> 5/-2/"abe"
+SET 030361626561626500000000057ffffffffffffffe 
+    IDX testpb.ExampleTable bz/str/u32/i64 : "YWJl"/"abe"/5/-2 -> 5/-2/"abe"
 ITERATOR 00 -> 01
   VALID true
-  KEY 00000000047ffffffffffffffe616263 100e
-      PK testpb.ExampleTable 4/-2/"abc" -> u32:4 u64:14 str:"abc" i64:-2
+  KEY 00000000047ffffffffffffffe616263 100e2203616263
+      PK testpb.ExampleTable 4/-2/"abc" -> u32:4 u64:14 str:"abc" bz:"abc" i64:-2
   NEXT
   VALID true
-  KEY 00000000047ffffffffffffffe616264 100e
-      PK testpb.ExampleTable 4/-2/"abd" -> u32:4 u64:14 str:"abd" i64:-2
+  KEY 00000000047ffffffffffffffe616264 100e2203616264
+      PK testpb.ExampleTable 4/-2/"abd" -> u32:4 u64:14 str:"abd" bz:"abd" i64:-2
   NEXT
   VALID true
-  KEY 00000000047fffffffffffffff616263 1010
-      PK testpb.ExampleTable 4/-1/"abc" -> u32:4 u64:16 str:"abc" i64:-1
+  KEY 00000000047fffffffffffffff616263 10102203616263
+      PK testpb.ExampleTable 4/-1/"abc" -> u32:4 u64:16 str:"abc" bz:"abc" i64:-1
   NEXT
   VALID true
-  KEY 00000000057ffffffffffffffe616264 1010
-      PK testpb.ExampleTable 5/-2/"abd" -> u32:5 u64:16 str:"abd" i64:-2
+  KEY 00000000057ffffffffffffffe616264 10102203616264
+      PK testpb.ExampleTable 5/-2/"abd" -> u32:5 u64:16 str:"abd" bz:"abd" i64:-2
   NEXT
   VALID true
-  KEY 00000000057ffffffffffffffe616265 1012
-      PK testpb.ExampleTable 5/-2/"abe" -> u32:5 u64:18 str:"abe" i64:-2
+  KEY 00000000057ffffffffffffffe616265 10122203616265
+      PK testpb.ExampleTable 5/-2/"abe" -> u32:5 u64:18 str:"abe" bz:"abe" i64:-2
   NEXT
   VALID true
   KEY 00000000077ffffffffffffffe616265 100a
@@ -668,70 +688,24 @@ GET 00000000098000000000000000 7801
     PK testpb.ExampleTable 9/0/"" -> u32:9 b:true
 ITERATOR 00 -> 01
   VALID true
-  KEY 00000000047ffffffffffffffe616263 100e
-      PK testpb.ExampleTable 4/-2/"abc" -> u32:4 u64:14 str:"abc" i64:-2
+  KEY 00000000047ffffffffffffffe616263 100e2203616263
+      PK testpb.ExampleTable 4/-2/"abc" -> u32:4 u64:14 str:"abc" bz:"abc" i64:-2
   NEXT
   VALID true
-  KEY 00000000047ffffffffffffffe616264 100e
-      PK testpb.ExampleTable 4/-2/"abd" -> u32:4 u64:14 str:"abd" i64:-2
+  KEY 00000000047ffffffffffffffe616264 100e2203616264
+      PK testpb.ExampleTable 4/-2/"abd" -> u32:4 u64:14 str:"abd" bz:"abd" i64:-2
   NEXT
   VALID true
-  KEY 00000000047fffffffffffffff616263 1010
-      PK testpb.ExampleTable 4/-1/"abc" -> u32:4 u64:16 str:"abc" i64:-1
+  KEY 00000000047fffffffffffffff616263 10102203616263
+      PK testpb.ExampleTable 4/-1/"abc" -> u32:4 u64:16 str:"abc" bz:"abc" i64:-1
   NEXT
   VALID true
-  KEY 00000000057ffffffffffffffe616264 1010
-      PK testpb.ExampleTable 5/-2/"abd" -> u32:5 u64:16 str:"abd" i64:-2
+  KEY 00000000057ffffffffffffffe616264 10102203616264
+      PK testpb.ExampleTable 5/-2/"abd" -> u32:5 u64:16 str:"abd" bz:"abd" i64:-2
   NEXT
   VALID true
-  KEY 00000000057ffffffffffffffe616265 1012
-      PK testpb.ExampleTable 5/-2/"abe" -> u32:5 u64:18 str:"abe" i64:-2
-  NEXT
-  VALID true
-  KEY 00000000077ffffffffffffffe616265 100a
-      PK testpb.ExampleTable 7/-2/"abe" -> u32:7 u64:10 str:"abe" i64:-2
-  NEXT
-  VALID true
-  KEY 00000000077fffffffffffffff616265 100b
-      PK testpb.ExampleTable 7/-1/"abe" -> u32:7 u64:11 str:"abe" i64:-1
-  NEXT
-  VALID true
-  KEY 00000000087ffffffffffffffc616263 100b
-      PK testpb.ExampleTable 8/-4/"abc" -> u32:8 u64:11 str:"abc" i64:-4
-  NEXT
-  VALID true
-  KEY 00000000088000000000000001616263 100c
-      PK testpb.ExampleTable 8/1/"abc" -> u32:8 u64:12 str:"abc" i64:1
-  NEXT
-  VALID true
-  KEY 00000000088000000000000001616264 100a
-      PK testpb.ExampleTable 8/1/"abd" -> u32:8 u64:10 str:"abd" i64:1
-  NEXT
-  VALID true
-  KEY 00000000098000000000000000 7801
-      PK testpb.ExampleTable 9/0/"" -> u32:9 b:true
-  NEXT
-  VALID false
-ITERATOR 00 -> 01
-  VALID true
-  KEY 00000000047ffffffffffffffe616263 100e
-      PK testpb.ExampleTable 4/-2/"abc" -> u32:4 u64:14 str:"abc" i64:-2
-  NEXT
-  VALID true
-  KEY 00000000047ffffffffffffffe616264 100e
-      PK testpb.ExampleTable 4/-2/"abd" -> u32:4 u64:14 str:"abd" i64:-2
-  NEXT
-  VALID true
-  KEY 00000000047fffffffffffffff616263 1010
-      PK testpb.ExampleTable 4/-1/"abc" -> u32:4 u64:16 str:"abc" i64:-1
-  NEXT
-  VALID true
-  KEY 00000000057ffffffffffffffe616264 1010
-      PK testpb.ExampleTable 5/-2/"abd" -> u32:5 u64:16 str:"abd" i64:-2
-  NEXT
-  VALID true
-  KEY 00000000057ffffffffffffffe616265 1012
-      PK testpb.ExampleTable 5/-2/"abe" -> u32:5 u64:18 str:"abe" i64:-2
+  KEY 00000000057ffffffffffffffe616265 10122203616265
+      PK testpb.ExampleTable 5/-2/"abe" -> u32:5 u64:18 str:"abe" bz:"abe" i64:-2
   NEXT
   VALID true
   KEY 00000000077ffffffffffffffe616265 100a
@@ -760,34 +734,80 @@ ITERATOR 00 -> 01
   VALID false
 ITERATOR 00 -> 01
   VALID true
-  KEY 00000000047ffffffffffffffe616263 100e
-      PK testpb.ExampleTable 4/-2/"abc" -> u32:4 u64:14 str:"abc" i64:-2
-  KEY 00000000047ffffffffffffffe616263 100e
-      PK testpb.ExampleTable 4/-2/"abc" -> u32:4 u64:14 str:"abc" i64:-2
+  KEY 00000000047ffffffffffffffe616263 100e2203616263
+      PK testpb.ExampleTable 4/-2/"abc" -> u32:4 u64:14 str:"abc" bz:"abc" i64:-2
   NEXT
   VALID true
-  KEY 00000000047ffffffffffffffe616264 100e
-      PK testpb.ExampleTable 4/-2/"abd" -> u32:4 u64:14 str:"abd" i64:-2
-  KEY 00000000047ffffffffffffffe616264 100e
-      PK testpb.ExampleTable 4/-2/"abd" -> u32:4 u64:14 str:"abd" i64:-2
+  KEY 00000000047ffffffffffffffe616264 100e2203616264
+      PK testpb.ExampleTable 4/-2/"abd" -> u32:4 u64:14 str:"abd" bz:"abd" i64:-2
   NEXT
   VALID true
-  KEY 00000000047fffffffffffffff616263 1010
-      PK testpb.ExampleTable 4/-1/"abc" -> u32:4 u64:16 str:"abc" i64:-1
-  KEY 00000000047fffffffffffffff616263 1010
-      PK testpb.ExampleTable 4/-1/"abc" -> u32:4 u64:16 str:"abc" i64:-1
+  KEY 00000000047fffffffffffffff616263 10102203616263
+      PK testpb.ExampleTable 4/-1/"abc" -> u32:4 u64:16 str:"abc" bz:"abc" i64:-1
   NEXT
   VALID true
-  KEY 00000000057ffffffffffffffe616264 1010
-      PK testpb.ExampleTable 5/-2/"abd" -> u32:5 u64:16 str:"abd" i64:-2
-  KEY 00000000057ffffffffffffffe616264 1010
-      PK testpb.ExampleTable 5/-2/"abd" -> u32:5 u64:16 str:"abd" i64:-2
+  KEY 00000000057ffffffffffffffe616264 10102203616264
+      PK testpb.ExampleTable 5/-2/"abd" -> u32:5 u64:16 str:"abd" bz:"abd" i64:-2
   NEXT
   VALID true
-  KEY 00000000057ffffffffffffffe616265 1012
-      PK testpb.ExampleTable 5/-2/"abe" -> u32:5 u64:18 str:"abe" i64:-2
-  KEY 00000000057ffffffffffffffe616265 1012
-      PK testpb.ExampleTable 5/-2/"abe" -> u32:5 u64:18 str:"abe" i64:-2
+  KEY 00000000057ffffffffffffffe616265 10122203616265
+      PK testpb.ExampleTable 5/-2/"abe" -> u32:5 u64:18 str:"abe" bz:"abe" i64:-2
+  NEXT
+  VALID true
+  KEY 00000000077ffffffffffffffe616265 100a
+      PK testpb.ExampleTable 7/-2/"abe" -> u32:7 u64:10 str:"abe" i64:-2
+  NEXT
+  VALID true
+  KEY 00000000077fffffffffffffff616265 100b
+      PK testpb.ExampleTable 7/-1/"abe" -> u32:7 u64:11 str:"abe" i64:-1
+  NEXT
+  VALID true
+  KEY 00000000087ffffffffffffffc616263 100b
+      PK testpb.ExampleTable 8/-4/"abc" -> u32:8 u64:11 str:"abc" i64:-4
+  NEXT
+  VALID true
+  KEY 00000000088000000000000001616263 100c
+      PK testpb.ExampleTable 8/1/"abc" -> u32:8 u64:12 str:"abc" i64:1
+  NEXT
+  VALID true
+  KEY 00000000088000000000000001616264 100a
+      PK testpb.ExampleTable 8/1/"abd" -> u32:8 u64:10 str:"abd" i64:1
+  NEXT
+  VALID true
+  KEY 00000000098000000000000000 7801
+      PK testpb.ExampleTable 9/0/"" -> u32:9 b:true
+  NEXT
+  VALID false
+ITERATOR 00 -> 01
+  VALID true
+  KEY 00000000047ffffffffffffffe616263 100e2203616263
+      PK testpb.ExampleTable 4/-2/"abc" -> u32:4 u64:14 str:"abc" bz:"abc" i64:-2
+  KEY 00000000047ffffffffffffffe616263 100e2203616263
+      PK testpb.ExampleTable 4/-2/"abc" -> u32:4 u64:14 str:"abc" bz:"abc" i64:-2
+  NEXT
+  VALID true
+  KEY 00000000047ffffffffffffffe616264 100e2203616264
+      PK testpb.ExampleTable 4/-2/"abd" -> u32:4 u64:14 str:"abd" bz:"abd" i64:-2
+  KEY 00000000047ffffffffffffffe616264 100e2203616264
+      PK testpb.ExampleTable 4/-2/"abd" -> u32:4 u64:14 str:"abd" bz:"abd" i64:-2
+  NEXT
+  VALID true
+  KEY 00000000047fffffffffffffff616263 10102203616263
+      PK testpb.ExampleTable 4/-1/"abc" -> u32:4 u64:16 str:"abc" bz:"abc" i64:-1
+  KEY 00000000047fffffffffffffff616263 10102203616263
+      PK testpb.ExampleTable 4/-1/"abc" -> u32:4 u64:16 str:"abc" bz:"abc" i64:-1
+  NEXT
+  VALID true
+  KEY 00000000057ffffffffffffffe616264 10102203616264
+      PK testpb.ExampleTable 5/-2/"abd" -> u32:5 u64:16 str:"abd" bz:"abd" i64:-2
+  KEY 00000000057ffffffffffffffe616264 10102203616264
+      PK testpb.ExampleTable 5/-2/"abd" -> u32:5 u64:16 str:"abd" bz:"abd" i64:-2
+  NEXT
+  VALID true
+  KEY 00000000057ffffffffffffffe616265 10122203616265
+      PK testpb.ExampleTable 5/-2/"abe" -> u32:5 u64:18 str:"abe" bz:"abe" i64:-2
+  KEY 00000000057ffffffffffffffe616265 10122203616265
+      PK testpb.ExampleTable 5/-2/"abe" -> u32:5 u64:18 str:"abe" bz:"abe" i64:-2
   NEXT
   VALID true
   KEY 00000000077ffffffffffffffe616265 100a
@@ -840,24 +860,24 @@ HAS 00000000077ffffffffffffffe616265
     PK testpb.ExampleTable 7/-2/"abe" -> u32:7 str:"abe" i64:-2
 ITERATOR 00 -> 01
   VALID true
-  KEY 00000000047ffffffffffffffe616263 100e
-      PK testpb.ExampleTable 4/-2/"abc" -> u32:4 u64:14 str:"abc" i64:-2
+  KEY 00000000047ffffffffffffffe616263 100e2203616263
+      PK testpb.ExampleTable 4/-2/"abc" -> u32:4 u64:14 str:"abc" bz:"abc" i64:-2
   NEXT
   VALID true
-  KEY 00000000047ffffffffffffffe616264 100e
-      PK testpb.ExampleTable 4/-2/"abd" -> u32:4 u64:14 str:"abd" i64:-2
+  KEY 00000000047ffffffffffffffe616264 100e2203616264
+      PK testpb.ExampleTable 4/-2/"abd" -> u32:4 u64:14 str:"abd" bz:"abd" i64:-2
   NEXT
   VALID true
-  KEY 00000000047fffffffffffffff616263 1010
-      PK testpb.ExampleTable 4/-1/"abc" -> u32:4 u64:16 str:"abc" i64:-1
+  KEY 00000000047fffffffffffffff616263 10102203616263
+      PK testpb.ExampleTable 4/-1/"abc" -> u32:4 u64:16 str:"abc" bz:"abc" i64:-1
   NEXT
   VALID true
-  KEY 00000000057ffffffffffffffe616264 1010
-      PK testpb.ExampleTable 5/-2/"abd" -> u32:5 u64:16 str:"abd" i64:-2
+  KEY 00000000057ffffffffffffffe616264 10102203616264
+      PK testpb.ExampleTable 5/-2/"abd" -> u32:5 u64:16 str:"abd" bz:"abd" i64:-2
   NEXT
   VALID true
-  KEY 00000000057ffffffffffffffe616265 1012
-      PK testpb.ExampleTable 5/-2/"abe" -> u32:5 u64:18 str:"abe" i64:-2
+  KEY 00000000057ffffffffffffffe616265 10122203616265
+      PK testpb.ExampleTable 5/-2/"abe" -> u32:5 u64:18 str:"abe" bz:"abe" i64:-2
   NEXT
   VALID true
   KEY 00000000077fffffffffffffff616265 100b

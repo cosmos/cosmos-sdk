@@ -160,6 +160,11 @@ func (s *errorsTestSuite) TestWrappedIs() {
 
 	errw := &wrappedError{"msg", errs}
 	require.True(errw.Is(errw), "should match itself")
+
+	require.True(stdlib.Is(errInsufficientFee.Wrap("wrapped"), errInsufficientFee))
+	require.True(IsOf(errInsufficientFee.Wrap("wrapped"), errInsufficientFee))
+	require.True(stdlib.Is(errInsufficientFee.Wrapf("wrapped"), errInsufficientFee))
+	require.True(IsOf(errInsufficientFee.Wrapf("wrapped"), errInsufficientFee))
 }
 
 func (s *errorsTestSuite) TestWrappedIsMultiple() {

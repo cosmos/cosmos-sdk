@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -1166,6 +1167,46 @@ func (suite *IntegrationTestSuite) getTestMetadata() []types.Metadata {
 			Display: "token",
 		},
 	}
+}
+
+func (suite *IntegrationTestSuite) TestMintCoinRestriction() {
+	maccPerms := simapp.GetMaccPerms()
+	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
+
+	suite.app.AccountKeeper = authkeeper.NewAccountKeeper(
+		suite.app.AppCodec(), suite.app.GetKey(authtypes.StoreKey), suite.app.GetSubspace(authtypes.ModuleName),
+		authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
+	)
+	suite.app.AccountKeeper.SetModuleAccount(suite.ctx, multiPermAcc)
+
+	// only allow foo tokens to be minted
+	BankMintingRestriction := func(ctx sdk.Context, coins sdk.Coins) error {
+		for _, coin := range coins {
+			if coin.Denom != fooDenom {
+				return fmt.Errorf("Module %s attempted minting coins %s it did not have permission for", types.ModuleName, coin.Denom)
+			}
+		}
+		return nil
+	}
+	suite.app.BankKeeper = keeper.NewBaseKeeper(suite.app.AppCodec(), suite.app.GetKey(types.StoreKey),
+		suite.app.AccountKeeper, suite.app.GetSubspace(types.ModuleName), nil).WithMintCoinsRestriction(BankMintingRestriction)
+
+	suite.Require().NoError(
+		suite.app.BankKeeper.MintCoins(
+			suite.ctx,
+			multiPermAcc.Name,
+			sdk.NewCoins(newFooCoin(100)),
+		),
+	)
+
+	suite.Require().Error(
+		suite.app.BankKeeper.MintCoins(
+			suite.ctx,
+			multiPermAcc.Name,
+			sdk.NewCoins(newBarCoin(100)),
+		),
+	)
+
 }
 
 func TestKeeperTestSuite(t *testing.T) {

@@ -112,9 +112,6 @@ func (c *Config) validate() error {
 	if c.Network == "" {
 		return fmt.Errorf("network not provided")
 	}
-	if c.Offline {
-		return fmt.Errorf("offline mode is not supported for stargate implementation due to how sigv2 works")
-	}
 	if c.SuggestGas <= 0 {
 		c.SuggestGas = DefaultSuggestGas
 	}

@@ -10,12 +10,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ v1beta1.QueryServer = Keeper{}
 
 // Proposal returns proposal details based on ProposalID
-func (q Keeper) Proposal(c context.Context, req *types.QueryProposalRequest) (*types.QueryProposalResponse, error) {
+func (q Keeper) Proposal(c context.Context, req *v1beta1.QueryProposalRequest) (*v1beta1.QueryProposalResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -31,19 +32,19 @@ func (q Keeper) Proposal(c context.Context, req *types.QueryProposalRequest) (*t
 		return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
 	}
 
-	return &types.QueryProposalResponse{Proposal: proposal}, nil
+	return &v1beta1.QueryProposalResponse{Proposal: proposal}, nil
 }
 
 // Proposals implements the Query/Proposals gRPC method
-func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (*types.QueryProposalsResponse, error) {
-	var filteredProposals types.Proposals
+func (q Keeper) Proposals(c context.Context, req *v1beta1.QueryProposalsRequest) (*v1beta1.QueryProposalsResponse, error) {
+	var filteredProposals v1beta1.Proposals
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(q.storeKey)
 	proposalStore := prefix.NewStore(store, types.ProposalsKeyPrefix)
 
 	pageRes, err := query.FilteredPaginate(proposalStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var p types.Proposal
+		var p v1beta1.Proposal
 		if err := q.cdc.Unmarshal(value, &p); err != nil {
 			return false, status.Error(codes.Internal, err.Error())
 		}
@@ -51,7 +52,7 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 		matchVoter, matchDepositor, matchStatus := true, true, true
 
 		// match status (if supplied/valid)
-		if types.ValidProposalStatus(req.ProposalStatus) {
+		if v1beta1.ValidProposalStatus(req.ProposalStatus) {
 			matchStatus = p.Status == req.ProposalStatus
 		}
 
@@ -89,11 +90,11 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryProposalsResponse{Proposals: filteredProposals, Pagination: pageRes}, nil
+	return &v1beta1.QueryProposalsResponse{Proposals: filteredProposals, Pagination: pageRes}, nil
 }
 
 // Vote returns Voted information based on proposalID, voterAddr
-func (q Keeper) Vote(c context.Context, req *types.QueryVoteRequest) (*types.QueryVoteResponse, error) {
+func (q Keeper) Vote(c context.Context, req *v1beta1.QueryVoteRequest) (*v1beta1.QueryVoteResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -118,11 +119,11 @@ func (q Keeper) Vote(c context.Context, req *types.QueryVoteRequest) (*types.Que
 			"voter: %v not found for proposal: %v", req.Voter, req.ProposalId)
 	}
 
-	return &types.QueryVoteResponse{Vote: vote}, nil
+	return &v1beta1.QueryVoteResponse{Vote: vote}, nil
 }
 
 // Votes returns single proposal's votes
-func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.QueryVotesResponse, error) {
+func (q Keeper) Votes(c context.Context, req *v1beta1.QueryVotesRequest) (*v1beta1.QueryVotesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -131,14 +132,14 @@ func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.Q
 		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
-	var votes types.Votes
+	var votes v1beta1.Votes
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(q.storeKey)
 	votesStore := prefix.NewStore(store, types.VotesKey(req.ProposalId))
 
 	pageRes, err := query.Paginate(votesStore, req.Pagination, func(key []byte, value []byte) error {
-		var vote types.Vote
+		var vote v1beta1.Vote
 		if err := q.cdc.Unmarshal(value, &vote); err != nil {
 			return err
 		}
@@ -152,11 +153,11 @@ func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.Q
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryVotesResponse{Votes: votes, Pagination: pageRes}, nil
+	return &v1beta1.QueryVotesResponse{Votes: votes, Pagination: pageRes}, nil
 }
 
 // Params queries all params
-func (q Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (q Keeper) Params(c context.Context, req *v1beta1.QueryParamsRequest) (*v1beta1.QueryParamsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -164,17 +165,17 @@ func (q Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 	ctx := sdk.UnwrapSDKContext(c)
 
 	switch req.ParamsType {
-	case types.ParamDeposit:
+	case v1beta1.ParamDeposit:
 		depositParmas := q.GetDepositParams(ctx)
-		return &types.QueryParamsResponse{DepositParams: depositParmas}, nil
+		return &v1beta1.QueryParamsResponse{DepositParams: depositParmas}, nil
 
-	case types.ParamVoting:
+	case v1beta1.ParamVoting:
 		votingParmas := q.GetVotingParams(ctx)
-		return &types.QueryParamsResponse{VotingParams: votingParmas}, nil
+		return &v1beta1.QueryParamsResponse{VotingParams: votingParmas}, nil
 
-	case types.ParamTallying:
+	case v1beta1.ParamTallying:
 		tallyParams := q.GetTallyParams(ctx)
-		return &types.QueryParamsResponse{TallyParams: tallyParams}, nil
+		return &v1beta1.QueryParamsResponse{TallyParams: tallyParams}, nil
 
 	default:
 		return nil, status.Errorf(codes.InvalidArgument,
@@ -183,7 +184,7 @@ func (q Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 }
 
 // Deposit queries single deposit information based proposalID, depositAddr
-func (q Keeper) Deposit(c context.Context, req *types.QueryDepositRequest) (*types.QueryDepositResponse, error) {
+func (q Keeper) Deposit(c context.Context, req *v1beta1.QueryDepositRequest) (*v1beta1.QueryDepositResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -208,11 +209,11 @@ func (q Keeper) Deposit(c context.Context, req *types.QueryDepositRequest) (*typ
 			"depositer: %v not found for proposal: %v", req.Depositor, req.ProposalId)
 	}
 
-	return &types.QueryDepositResponse{Deposit: deposit}, nil
+	return &v1beta1.QueryDepositResponse{Deposit: deposit}, nil
 }
 
 // Deposits returns single proposal's all deposits
-func (q Keeper) Deposits(c context.Context, req *types.QueryDepositsRequest) (*types.QueryDepositsResponse, error) {
+func (q Keeper) Deposits(c context.Context, req *v1beta1.QueryDepositsRequest) (*v1beta1.QueryDepositsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -221,14 +222,14 @@ func (q Keeper) Deposits(c context.Context, req *types.QueryDepositsRequest) (*t
 		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
-	var deposits types.Deposits
+	var deposits v1beta1.Deposits
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(q.storeKey)
 	depositStore := prefix.NewStore(store, types.DepositsKey(req.ProposalId))
 
 	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key []byte, value []byte) error {
-		var deposit types.Deposit
+		var deposit v1beta1.Deposit
 		if err := q.cdc.Unmarshal(value, &deposit); err != nil {
 			return err
 		}
@@ -241,11 +242,11 @@ func (q Keeper) Deposits(c context.Context, req *types.QueryDepositsRequest) (*t
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryDepositsResponse{Deposits: deposits, Pagination: pageRes}, nil
+	return &v1beta1.QueryDepositsResponse{Deposits: deposits, Pagination: pageRes}, nil
 }
 
 // TallyResult queries the tally of a proposal vote
-func (q Keeper) TallyResult(c context.Context, req *types.QueryTallyResultRequest) (*types.QueryTallyResultResponse, error) {
+func (q Keeper) TallyResult(c context.Context, req *v1beta1.QueryTallyResultRequest) (*v1beta1.QueryTallyResultResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -261,13 +262,13 @@ func (q Keeper) TallyResult(c context.Context, req *types.QueryTallyResultReques
 		return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
 	}
 
-	var tallyResult types.TallyResult
+	var tallyResult v1beta1.TallyResult
 
 	switch {
-	case proposal.Status == types.StatusDepositPeriod:
-		tallyResult = types.EmptyTallyResult()
+	case proposal.Status == v1beta1.StatusDepositPeriod:
+		tallyResult = v1beta1.EmptyTallyResult()
 
-	case proposal.Status == types.StatusPassed || proposal.Status == types.StatusRejected:
+	case proposal.Status == v1beta1.StatusPassed || proposal.Status == v1beta1.StatusRejected:
 		tallyResult = proposal.FinalTallyResult
 
 	default:
@@ -275,5 +276,5 @@ func (q Keeper) TallyResult(c context.Context, req *types.QueryTallyResultReques
 		_, _, tallyResult = q.Tally(ctx, proposal)
 	}
 
-	return &types.QueryTallyResultResponse{Tally: tallyResult}, nil
+	return &v1beta1.QueryTallyResultResponse{Tally: tallyResult}, nil
 }

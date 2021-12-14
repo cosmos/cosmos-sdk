@@ -459,11 +459,7 @@ func testIndex(t *testing.T, model *IndexModel) {
 			end, _, err := model.index.(ormkv.IndexCodec).EncodeKeyFromMessage(model.data[j].ProtoReflect())
 			assert.NilError(t, err)
 
-			t.Logf("start %v end %v", start, end)
-			store := testkv.NewDebugIndexCommitmentStore(model.store, &testkv.EntryCodecDebugger{EntryCodec: model.table, Print: func(s string) {
-				t.Log(s)
-			}})
-			it, err = model.index.RangeIterator(store, start, end, IteratorOptions{})
+			it, err = model.index.RangeIterator(model.store, start, end, IteratorOptions{})
 			assert.NilError(t, err)
 			checkIteratorAgainstSlice(t, it, model.data[i:j+1])
 
@@ -518,8 +514,6 @@ func checkIteratorAgainstSlice(t assert.TestingT, iterator Iterator, data []prot
 	for iterator.Next() {
 		if i >= len(data) {
 			for iterator.Next() {
-				_, err := iterator.GetMessage()
-				assert.NilError(t, err)
 				i++
 			}
 			t.Log(fmt.Sprintf("too many elements in iterator, len(data) = %d, i = %d", len(data), i))

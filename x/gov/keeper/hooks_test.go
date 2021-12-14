@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 var _ types.GovHooks = &MockGovHooksReceiver{}
@@ -82,7 +83,7 @@ func TestHooks(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, govHooksReceiver.AfterProposalDepositValid)
 
-	err = app.GovKeeper.AddVote(ctx, p2.ProposalId, addrs[0], types.NewNonSplitVoteOption(types.OptionYes))
+	err = app.GovKeeper.AddVote(ctx, p2.ProposalId, addrs[0], v1beta1.NewNonSplitVoteOption(v1beta1.OptionYes))
 	require.NoError(t, err)
 	require.True(t, govHooksReceiver.AfterProposalVoteValid)
 

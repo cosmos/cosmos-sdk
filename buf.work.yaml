@@ -8,3 +8,4 @@ directories:
   - api
   - proto
   - third_party/proto
+  - orm/internal

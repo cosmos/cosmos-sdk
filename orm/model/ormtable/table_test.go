@@ -107,6 +107,7 @@ func runTestScenario(t *testing.T, table Table, store kvstore.IndexCommitmentSto
 
 	// insert one record
 	err := table.Save(store, data[0], SAVE_MODE_INSERT)
+	assert.NilError(t, store.Commit())
 	// trivial prefix query has one record
 	it, err := table.PrefixIterator(store, nil, IteratorOptions{})
 	assert.NilError(t, err)
@@ -114,6 +115,7 @@ func runTestScenario(t *testing.T, table Table, store kvstore.IndexCommitmentSto
 
 	// insert one record
 	err = table.Save(store, data[1], SAVE_MODE_INSERT)
+	assert.NilError(t, store.Commit())
 	// trivial prefix query has two records
 	it, err = table.PrefixIterator(store, nil, IteratorOptions{})
 	assert.NilError(t, err)
@@ -125,6 +127,7 @@ func runTestScenario(t *testing.T, table Table, store kvstore.IndexCommitmentSto
 		err = table.Save(store, data[i], SAVE_MODE_INSERT)
 		assert.NilError(t, err)
 	}
+	assert.NilError(t, store.Commit())
 
 	// let's do a prefix query on the primary key
 	it, err = table.PrefixIterator(store, testutil.ValuesOf(uint32(8)), IteratorOptions{})
@@ -344,6 +347,7 @@ func runTestScenario(t *testing.T, table Table, store kvstore.IndexCommitmentSto
 		err = table.Save(store, data[i], SAVE_MODE_UPDATE)
 		assert.NilError(t, err)
 	}
+	assert.NilError(t, store.Commit())
 	it, err = table.PrefixIterator(store, nil, IteratorOptions{})
 	assert.NilError(t, err)
 	// we should still get everything in the same order
@@ -353,13 +357,15 @@ func runTestScenario(t *testing.T, table Table, store kvstore.IndexCommitmentSto
 	data = append(data, &testpb.ExampleTable{U32: 9})
 	err = table.Save(store, data[10], SAVE_MODE_DEFAULT)
 	assert.NilError(t, err)
+	assert.NilError(t, store.Commit())
 	found, err = table.Get(store, testutil.ValuesOf(uint32(9), int64(0), ""), &a)
 	assert.NilError(t, err)
 	assert.Assert(t, found)
 	assert.DeepEqual(t, data[10], &a, protocmp.Transform())
 	// and update it
 	data[10].B = true
-	err = table.Save(store, data[10], SAVE_MODE_DEFAULT)
+	assert.NilError(t, table.Save(store, data[10], SAVE_MODE_DEFAULT))
+	assert.NilError(t, store.Commit())
 	found, err = table.Get(store, testutil.ValuesOf(uint32(9), int64(0), ""), &a)
 	assert.NilError(t, err)
 	assert.Assert(t, found)
@@ -375,11 +381,13 @@ func runTestScenario(t *testing.T, table Table, store kvstore.IndexCommitmentSto
 	assert.NilError(t, table.ValidateJSON(bytes.NewReader(buf.Bytes())))
 	store2 := testkv.NewSplitMemIndexCommitmentStore()
 	assert.NilError(t, table.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
+	assert.NilError(t, store2.Commit())
 	assertTablesEqual(t, table, store, store2)
 
 	// let's delete item 5
 	key5 := testutil.ValuesOf(uint32(7), int64(-2), "abe")
 	err = table.Delete(store, key5)
+	assert.NilError(t, store.Commit())
 	assert.NilError(t, err)
 	// it should be gone
 	found, err = table.Has(store, key5)
@@ -527,19 +535,18 @@ func TableDataGen(elemGen *rapid.Generator, n int) *rapid.Generator {
 		data := make([]proto.Message, n)
 		store := testkv.NewSplitMemIndexCommitmentStore()
 
-		for i := 0; i < n; i++ {
-			var err error
-			for {
-				message = elemGen.Draw(t, fmt.Sprintf("message[%d]", i)).(proto.Message)
-				err = table.Save(store, message, SAVE_MODE_INSERT)
-				if err == nil {
-					break
-				}
-				if !sdkerrors.IsOf(err, ormerrors.PrimaryKeyConstraintViolation, ormerrors.UniqueKeyViolation) {
-					panic(err)
-				}
+		for i := 0; i < n; {
+			message = elemGen.Draw(t, fmt.Sprintf("message[%d]", i)).(proto.Message)
+			err := table.Save(store, message, SAVE_MODE_INSERT)
+			if sdkerrors.IsOf(err, ormerrors.PrimaryKeyConstraintViolation, ormerrors.UniqueKeyViolation) {
+				assert.NilError(t, store.Rollback())
+				continue
+			} else {
+				assert.NilError(t, err)
 			}
 			data[i] = message
+			i++
+			assert.NilError(t, store.Commit())
 		}
 
 		return &TableData{
@@ -592,10 +599,17 @@ func TestJSONExportImport(t *testing.T) {
 	assert.NilError(t, err)
 	store := testkv.NewSplitMemIndexCommitmentStore()
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 100; {
 		x := testutil.GenA.Example().(proto.Message)
-		err = table.Save(store, x, SAVE_MODE_DEFAULT)
-		assert.NilError(t, err)
+		err = table.Save(store, x, SAVE_MODE_INSERT)
+		if sdkerrors.IsOf(err, ormerrors.PrimaryKeyConstraintViolation, ormerrors.UniqueKeyViolation) {
+			assert.NilError(t, store.Rollback())
+			continue
+		} else {
+			assert.NilError(t, err)
+		}
+		i++
+		assert.NilError(t, store.Commit())
 	}
 
 	buf := &bytes.Buffer{}
@@ -605,12 +619,12 @@ func TestJSONExportImport(t *testing.T) {
 
 	store2 := testkv.NewSplitMemIndexCommitmentStore()
 	assert.NilError(t, table.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
+	assert.NilError(t, store2.Commit())
 
 	assertTablesEqual(t, table, store, store2)
 }
 
 func assertTablesEqual(t assert.TestingT, table Table, store, store2 kvstore.IndexCommitmentReadStore) {
-
 	it, err := table.PrefixIterator(store, nil, IteratorOptions{})
 	assert.NilError(t, err)
 	it2, err := table.PrefixIterator(store2, nil, IteratorOptions{})

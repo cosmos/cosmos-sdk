@@ -56,8 +56,21 @@ type IndexCommitmentReadStore interface {
 // in the commitment store.
 type IndexCommitmentStore interface {
 	IndexCommitmentReadStore
+
+	// CommitmentStore returns the merklized commitment store.
 	CommitmentStore() Store
+
+	// IndexStore returns the index store if a separate one exists, otherwise
+	// it returns the commitment store.
 	IndexStore() Store
+
+	// Commit flushes pending writes and discards the transaction. It should
+	// be assumed that writes are not available to read until after Commit
+	// has been called although this may not be true of all backends.
+	Commit() error
+
+	// Rollback rolls back any writes in the current transaction.
+	Rollback() error
 }
 
 // Iterator aliases github.com/tendermint/tm-db.Iterator.

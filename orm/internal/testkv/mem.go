@@ -10,10 +10,7 @@ import (
 // which uses two separate memory stores to simulate behavior when there
 // are really two separate backing stores.
 func NewSplitMemIndexCommitmentStore() kvstore.IndexCommitmentStore {
-	return &indexCommitmentStore{
-		commitment: dbm.NewMemDB(),
-		index:      dbm.NewMemDB(),
-	}
+	return NewSharedMemIndexCommitmentStore()
 }
 
 // NewSharedMemIndexCommitmentStore returns an IndexCommitmentStore instance
@@ -21,8 +18,60 @@ func NewSplitMemIndexCommitmentStore() kvstore.IndexCommitmentStore {
 // where only a single KV-store is available to modules.
 func NewSharedMemIndexCommitmentStore() kvstore.IndexCommitmentStore {
 	store := dbm.NewMemDB()
-	return &indexCommitmentStore{
-		commitment: store,
-		index:      store,
+	return &sharedMemICS{
+		store,
+		&writeStore{
+			DB:    store,
+			batch: store.NewBatch(),
+		},
 	}
+}
+
+type sharedMemICS struct {
+	db         dbm.DB
+	writeStore *writeStore
+}
+
+func (s sharedMemICS) ReadCommitmentStore() kvstore.ReadStore {
+	return s.db
+}
+
+func (s sharedMemICS) ReadIndexStore() kvstore.ReadStore {
+	return s.db
+}
+
+func (s sharedMemICS) CommitmentStore() kvstore.Store {
+	return s.writeStore
+}
+
+func (s sharedMemICS) IndexStore() kvstore.Store {
+	return s.writeStore
+}
+
+func (s sharedMemICS) Commit() error {
+	err := s.writeStore.batch.Write()
+	if err != nil {
+		return err
+	}
+	err = s.writeStore.batch.Close()
+	s.writeStore.batch = s.db.NewBatch()
+	return err
+}
+
+func (s sharedMemICS) Rollback() error {
+	s.writeStore.batch = s.db.NewBatch()
+	return nil
+}
+
+type writeStore struct {
+	dbm.DB
+	batch dbm.Batch
+}
+
+func (w writeStore) Set(key, value []byte) error {
+	return w.batch.Set(key, value)
+}
+
+func (w writeStore) Delete(key []byte) error {
+	return w.batch.Delete(key)
 }

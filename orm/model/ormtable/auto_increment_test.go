@@ -48,6 +48,7 @@ func runAutoIncrementScenario(t *testing.T, table Table, store kvstore.IndexComm
 	ex1 := &testpb.ExampleAutoIncrementTable{X: "foo", Y: 5}
 	assert.NilError(t, table.Save(store, ex1, SAVE_MODE_DEFAULT))
 	assert.Equal(t, uint64(1), ex1.Id)
+	assert.NilError(t, store.Commit())
 
 	buf := &bytes.Buffer{}
 	assert.NilError(t, table.ExportJSON(store, buf))
@@ -56,6 +57,7 @@ func runAutoIncrementScenario(t *testing.T, table Table, store kvstore.IndexComm
 	assert.NilError(t, table.ValidateJSON(bytes.NewReader(buf.Bytes())))
 	store2 := testkv.NewSplitMemIndexCommitmentStore()
 	assert.NilError(t, table.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
+	assert.NilError(t, store2.Commit())
 	assertTablesEqual(t, table, store, store2)
 }
 

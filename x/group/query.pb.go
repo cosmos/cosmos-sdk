@@ -213,7 +213,7 @@ func (m *QueryGroupAccountInfoResponse) GetInfo() *GroupAccountInfo {
 	return nil
 }
 
-// QueryGroupMembersRequest is the Query/GroupMembersRequest request type.
+// QueryGroupMembersRequest is the Query/GroupMembers request type.
 type QueryGroupMembersRequest struct {
 	// group_id is the unique ID of the group.
 	GroupId uint64 `protobuf:"varint,1,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
@@ -323,7 +323,7 @@ func (m *QueryGroupMembersResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryGroupsByAdminRequest is the Query/GroupsByAdminRequest request type.
+// QueryGroupsByAdminRequest is the Query/GroupsByAdmin request type.
 type QueryGroupsByAdminRequest struct {
 	// admin is the account address of a group's admin.
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
@@ -855,7 +855,7 @@ func (m *QueryProposalsByGroupAccountResponse) GetPagination() *query.PageRespon
 	return nil
 }
 
-// QueryVoteByProposalVoterResponse is the Query/VoteByProposalVoter request type.
+// QueryVoteByProposalVoterRequest is the Query/VoteByProposalVoter request type.
 type QueryVoteByProposalVoterRequest struct {
 	// proposal_id is the unique ID of a proposal.
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
@@ -956,7 +956,7 @@ func (m *QueryVoteByProposalVoterResponse) GetVote() *Vote {
 	return nil
 }
 
-// QueryVotesByProposalResponse is the Query/VotesByProposal request type.
+// QueryVotesByProposalRequest is the Query/VotesByProposal request type.
 type QueryVotesByProposalRequest struct {
 	// proposal_id is the unique ID of a proposal.
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
@@ -1066,7 +1066,7 @@ func (m *QueryVotesByProposalResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryVotesByVoterResponse is the Query/VotesByVoter request type.
+// QueryVotesByVoterRequest is the Query/VotesByVoter request type.
 type QueryVotesByVoterRequest struct {
 	// voter is a proposal voter account address.
 	Voter string `protobuf:"bytes,1,opt,name=voter,proto3" json:"voter,omitempty"`

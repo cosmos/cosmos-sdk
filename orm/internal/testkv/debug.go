@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 )
 
-// Debugger is an interface that handles debug info from the debug store wrapper.
+// Debugger is an interface that handles debug info from the debug reader wrapper.
 type Debugger interface {
 
 	// Log logs a single log message.
@@ -17,19 +17,19 @@ type Debugger interface {
 	Decode(storeName string, key, value []byte) string
 }
 
-type debugStore struct {
-	store     kvstore.Store
+type debugReader struct {
+	reader    kvstore.Reader
 	debugger  Debugger
 	storeName string
 }
 
-// NewDebugStore wraps the store with the debugger instance returning a debug store wrapper.
-func NewDebugStore(store kvstore.Store, debugger Debugger, storeName string) kvstore.Store {
-	return &debugStore{store: store, debugger: debugger, storeName: storeName}
+type debugWriter struct {
+	debugReader
+	writer kvstore.Writer
 }
 
-func (t debugStore) Get(key []byte) ([]byte, error) {
-	val, err := t.store.Get(key)
+func (t debugReader) Get(key []byte) ([]byte, error) {
+	val, err := t.reader.Get(key)
 	if err != nil {
 		if t.debugger != nil {
 			t.debugger.Log(fmt.Sprintf("ERR on GET %s: %v", t.debugger.Decode(t.storeName, key, nil), err))
@@ -43,8 +43,8 @@ func (t debugStore) Get(key []byte) ([]byte, error) {
 	return val, nil
 }
 
-func (t debugStore) Has(key []byte) (bool, error) {
-	has, err := t.store.Has(key)
+func (t debugReader) Has(key []byte) (bool, error) {
+	has, err := t.reader.Has(key)
 	if err != nil {
 		if t.debugger != nil {
 			t.debugger.Log(fmt.Sprintf("ERR on HAS %s: %v", t.debugger.Decode(t.storeName, key, nil), err))
@@ -58,11 +58,11 @@ func (t debugStore) Has(key []byte) (bool, error) {
 	return has, nil
 }
 
-func (t debugStore) Iterator(start, end []byte) (kvstore.Iterator, error) {
+func (t debugReader) Iterator(start, end []byte) (kvstore.Iterator, error) {
 	if t.debugger != nil {
 		t.debugger.Log(fmt.Sprintf("ITERATOR %x -> %x", start, end))
 	}
-	it, err := t.store.Iterator(start, end)
+	it, err := t.reader.Iterator(start, end)
 	if err != nil {
 		return nil, err
 	}
@@ -73,11 +73,11 @@ func (t debugStore) Iterator(start, end []byte) (kvstore.Iterator, error) {
 	}, nil
 }
 
-func (t debugStore) ReverseIterator(start, end []byte) (kvstore.Iterator, error) {
+func (t debugReader) ReverseIterator(start, end []byte) (kvstore.Iterator, error) {
 	if t.debugger != nil {
 		t.debugger.Log(fmt.Sprintf("ITERATOR %x <- %x", start, end))
 	}
-	it, err := t.store.ReverseIterator(start, end)
+	it, err := t.reader.ReverseIterator(start, end)
 	if err != nil {
 		return nil, err
 	}
@@ -88,12 +88,12 @@ func (t debugStore) ReverseIterator(start, end []byte) (kvstore.Iterator, error)
 	}, nil
 }
 
-func (t debugStore) Set(key, value []byte) error {
+func (t debugWriter) Set(key, value []byte) error {
 	if t.debugger != nil {
 		t.debugger.Log(fmt.Sprintf("SET %x %x", key, value))
 		t.debugger.Log(fmt.Sprintf("    %s", t.debugger.Decode(t.storeName, key, value)))
 	}
-	err := t.store.Set(key, value)
+	err := t.writer.Set(key, value)
 	if err != nil {
 		if t.debugger != nil {
 			t.debugger.Log(fmt.Sprintf("ERR on SET %s: %v", t.debugger.Decode(t.storeName, key, value), err))
@@ -103,12 +103,12 @@ func (t debugStore) Set(key, value []byte) error {
 	return nil
 }
 
-func (t debugStore) Delete(key []byte) error {
+func (t debugWriter) Delete(key []byte) error {
 	if t.debugger != nil {
 		t.debugger.Log(fmt.Sprintf("DEL %x", key))
 		t.debugger.Log(fmt.Sprintf("DEL %s", t.debugger.Decode(t.storeName, key, nil)))
 	}
-	err := t.store.Delete(key)
+	err := t.writer.Delete(key)
 	if err != nil {
 		if t.debugger != nil {
 			t.debugger.Log(fmt.Sprintf("ERR on SET %s: %v", t.debugger.Decode(t.storeName, key, nil), err))
@@ -118,7 +118,8 @@ func (t debugStore) Delete(key []byte) error {
 	return nil
 }
 
-var _ kvstore.Store = &debugStore{}
+var _ kvstore.Reader = &debugReader{}
+var _ kvstore.Writer = &debugWriter{}
 
 type debugIterator struct {
 	iterator  kvstore.Iterator

@@ -25,13 +25,15 @@ type autoIncrementTable struct {
 func (t *autoIncrementTable) Save(store kvstore.IndexCommitmentStore, message proto.Message, mode SaveMode) error {
 	messageRef := message.ProtoReflect()
 	val := messageRef.Get(t.autoIncField).Uint()
+	writer := store.Writer()
+	defer writer.Close()
 	if val == 0 {
 		if mode == SAVE_MODE_UPDATE {
 			return ormerrors.PrimaryKeyInvalidOnUpdate
 		}
 
 		mode = SAVE_MODE_INSERT
-		key, err := t.nextSeqValue(store.IndexStore())
+		key, err := t.nextSeqValue(writer.IndexStoreWriter())
 		if err != nil {
 			return err
 		}
@@ -44,10 +46,10 @@ func (t *autoIncrementTable) Save(store kvstore.IndexCommitmentStore, message pr
 
 		mode = SAVE_MODE_UPDATE
 	}
-	return t.tableImpl.Save(store, message, mode)
+	return t.tableImpl.doSave(writer, message, mode)
 }
 
-func (t *autoIncrementTable) curSeqValue(kv kvstore.ReadStore) (uint64, error) {
+func (t *autoIncrementTable) curSeqValue(kv kvstore.Reader) (uint64, error) {
 	bz, err := kv.Get(t.seqCodec.Prefix())
 	if err != nil {
 		return 0, err
@@ -56,7 +58,7 @@ func (t *autoIncrementTable) curSeqValue(kv kvstore.ReadStore) (uint64, error) {
 	return t.seqCodec.DecodeValue(bz)
 }
 
-func (t *autoIncrementTable) nextSeqValue(kv kvstore.Store) (uint64, error) {
+func (t *autoIncrementTable) nextSeqValue(kv kvstore.Writer) (uint64, error) {
 	seq, err := t.curSeqValue(kv)
 	if err != nil {
 		return 0, err
@@ -66,7 +68,7 @@ func (t *autoIncrementTable) nextSeqValue(kv kvstore.Store) (uint64, error) {
 	return seq, t.setSeqValue(kv, seq)
 }
 
-func (t *autoIncrementTable) setSeqValue(kv kvstore.Store, seq uint64) error {
+func (t *autoIncrementTable) setSeqValue(kv kvstore.Writer, seq uint64) error {
 	return kv.Set(t.seqCodec.Prefix(), t.seqCodec.EncodeValue(seq))
 }
 
@@ -94,7 +96,9 @@ func (t autoIncrementTable) ValidateJSON(reader io.Reader) error {
 }
 
 func (t autoIncrementTable) ImportJSON(store kvstore.IndexCommitmentStore, reader io.Reader) error {
-	return t.decodeAutoIncJson(store, reader, func(message proto.Message, maxID uint64) error {
+	writer := store.Writer()
+	defer writer.Close()
+	return t.decodeAutoIncJson(writer, reader, func(message proto.Message, maxID uint64) error {
 		messageRef := message.ProtoReflect()
 		id := messageRef.Get(t.autoIncField).Uint()
 		if id == 0 {
@@ -114,7 +118,7 @@ func (t autoIncrementTable) ImportJSON(store kvstore.IndexCommitmentStore, reade
 	})
 }
 
-func (t autoIncrementTable) decodeAutoIncJson(store kvstore.IndexCommitmentStore, reader io.Reader, onMsg func(message proto.Message, maxID uint64) error) error {
+func (t autoIncrementTable) decodeAutoIncJson(writer kvstore.IndexCommitmentStoreWriter, reader io.Reader, onMsg func(message proto.Message, maxID uint64) error) error {
 	decoder, err := t.startDecodeJson(reader)
 	if err != nil {
 		return err
@@ -126,9 +130,9 @@ func (t autoIncrementTable) decodeAutoIncJson(store kvstore.IndexCommitmentStore
 		func(message json.RawMessage) bool {
 			err = json.Unmarshal(message, &seq)
 			if err == nil {
-				// store is nil during validation
-				if store != nil {
-					err = t.setSeqValue(store.IndexStore(), seq)
+				// writer is nil during validation
+				if writer != nil {
+					err = t.setSeqValue(writer.IndexStoreWriter(), seq)
 					if err != nil {
 						panic(err)
 					}
@@ -148,7 +152,7 @@ func (t autoIncrementTable) ExportJSON(store kvstore.IndexCommitmentReadStore, w
 		return err
 	}
 
-	seq, err := t.curSeqValue(store.ReadIndexStore())
+	seq, err := t.curSeqValue(store.IndexStoreReader())
 	if err != nil {
 		return err
 	}

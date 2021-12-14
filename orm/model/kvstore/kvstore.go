@@ -2,8 +2,8 @@ package kvstore
 
 import dbm "github.com/tendermint/tm-db"
 
-// ReadStore is an interface for readonly access to a kv-store.
-type ReadStore interface {
+// Reader is an interface for readonly access to a kv-store.
+type Reader interface {
 	// Get fetches the value of the given key, or nil if it does not exist.
 	// CONTRACT: key, value readonly []byte
 	Get(key []byte) ([]byte, error)
@@ -29,9 +29,9 @@ type ReadStore interface {
 	ReverseIterator(start, end []byte) (Iterator, error)
 }
 
-// Store is an interface for read-write access to a kv-store.
-type Store interface {
-	ReadStore
+// Writer is an interface for read-write access to a kv-store.
+type Writer interface {
+	Reader
 
 	// Set sets the value for the given key, replacing it if it already exists.
 	// CONTRACT: key, value readonly []byte
@@ -44,8 +44,8 @@ type Store interface {
 
 // IndexCommitmentReadStore is a read-only version of IndexCommitmentStore.
 type IndexCommitmentReadStore interface {
-	ReadCommitmentStore() ReadStore
-	ReadIndexStore() ReadStore
+	CommitmentStoreReader() Reader
+	IndexStoreReader() Reader
 }
 
 // IndexCommitmentStore is a wrapper around two stores - an index store
@@ -57,20 +57,30 @@ type IndexCommitmentReadStore interface {
 type IndexCommitmentStore interface {
 	IndexCommitmentReadStore
 
-	// CommitmentStore returns the merklized commitment store.
-	CommitmentStore() Store
+	// Writer returns a new IndexCommitmentStoreWriter.
+	Writer() IndexCommitmentStoreWriter
+}
 
-	// IndexStore returns the index store if a separate one exists, otherwise
-	// it returns the commitment store.
-	IndexStore() Store
+// IndexCommitmentStoreWriter is an interface which allows writing to the
+// commitment and index stores and committing them in a unified way.
+type IndexCommitmentStoreWriter interface {
+	IndexCommitmentReadStore
+
+	// CommitmentStoreWriter returns a writer for the merklized commitment store.
+	CommitmentStoreWriter() Writer
+
+	// IndexStoreWriter returns a writer for the index store if a separate one exists,
+	// otherwise it returns a writer for commitment store.
+	IndexStoreWriter() Writer
 
 	// Commit flushes pending writes and discards the transaction. It should
 	// be assumed that writes are not available to read until after Commit
 	// has been called although this may not be true of all backends.
 	Commit() error
 
-	// Rollback rolls back any writes in the current transaction.
-	Rollback() error
+	// Close should be called whenever the caller is done with this writer.
+	// If Commit was not called beforehand, the write batch is discarded.
+	Close()
 }
 
 // Iterator aliases github.com/tendermint/tm-db.Iterator.

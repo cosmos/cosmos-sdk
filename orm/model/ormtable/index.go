@@ -74,9 +74,9 @@ type IteratorOptions struct {
 }
 
 type indexer interface {
-	OnInsert(store kvstore.Store, message protoreflect.Message) error
-	OnUpdate(store kvstore.Store, new, existing protoreflect.Message) error
-	OnDelete(store kvstore.Store, message protoreflect.Message) error
+	OnInsert(store kvstore.Writer, message protoreflect.Message) error
+	OnUpdate(store kvstore.Writer, new, existing protoreflect.Message) error
+	OnDelete(store kvstore.Writer, message protoreflect.Message) error
 
 	doNotImplement()
 }

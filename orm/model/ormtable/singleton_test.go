@@ -24,7 +24,6 @@ func TestSingleton(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Assert(t, !found)
 	assert.NilError(t, singleton.Save(store, val, SAVE_MODE_DEFAULT))
-	assert.NilError(t, store.Commit())
 	found, err = singleton.Has(store, nil)
 	assert.NilError(t, err)
 	assert.Assert(t, found)
@@ -32,7 +31,6 @@ func TestSingleton(t *testing.T) {
 	val.Foo = "abc"
 	val.Bar = 3
 	assert.NilError(t, singleton.Save(store, val, SAVE_MODE_DEFAULT))
-	assert.NilError(t, store.Commit())
 
 	var val2 testpb.ExampleSingleton
 	found, err = singleton.Get(store, nil, &val2)

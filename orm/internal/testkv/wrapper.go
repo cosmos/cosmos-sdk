@@ -5,17 +5,54 @@ import (
 )
 
 type indexCommitmentStoreWrapper struct {
-	commitment kvstore.Store
-	index      kvstore.Store
+	commitment debugReader
+	index      debugReader
 	store      kvstore.IndexCommitmentStore
 }
 
-func (i indexCommitmentStoreWrapper) Commit() error {
-	return i.store.Commit()
+type icsWriterWrapper struct {
+	commitment debugWriter
+	index      debugWriter
+	writer     kvstore.IndexCommitmentStoreWriter
 }
 
-func (i indexCommitmentStoreWrapper) Rollback() error {
-	return i.store.Rollback()
+func (i icsWriterWrapper) CommitmentStoreReader() kvstore.Reader {
+	return i.writer.CommitmentStoreReader()
+}
+
+func (i icsWriterWrapper) IndexStoreReader() kvstore.Reader {
+	return i.writer.IndexStoreReader()
+}
+
+func (i icsWriterWrapper) CommitmentStoreWriter() kvstore.Writer {
+	return i.commitment
+}
+
+func (i icsWriterWrapper) IndexStoreWriter() kvstore.Writer {
+	return i.index
+}
+
+func (i icsWriterWrapper) Commit() error {
+	return i.writer.Commit()
+}
+
+func (i icsWriterWrapper) Close() {
+	i.writer.Close()
+}
+
+func (i indexCommitmentStoreWrapper) Writer() kvstore.IndexCommitmentStoreWriter {
+	writer := i.store.Writer()
+	return &icsWriterWrapper{
+		debugWriter{
+			debugReader: i.commitment,
+			writer:      writer.CommitmentStoreWriter(),
+		},
+		debugWriter{
+			debugReader: i.index,
+			writer:      writer.IndexStoreWriter(),
+		},
+		writer,
+	}
 }
 
 // NewDebugIndexCommitmentStore wraps both stores from an IndexCommitmentStore
@@ -23,26 +60,18 @@ func (i indexCommitmentStoreWrapper) Rollback() error {
 func NewDebugIndexCommitmentStore(store kvstore.IndexCommitmentStore, debugger Debugger) kvstore.IndexCommitmentStore {
 	return &indexCommitmentStoreWrapper{
 		store:      store,
-		commitment: NewDebugStore(store.CommitmentStore(), debugger, "commit"),
-		index:      NewDebugStore(store.IndexStore(), debugger, "index"),
+		commitment: debugReader{store.CommitmentStoreReader(), debugger, "commit"},
+		index:      debugReader{store.IndexStoreReader(), debugger, "index"},
 	}
 
 }
 
 var _ kvstore.IndexCommitmentStore = &indexCommitmentStoreWrapper{}
 
-func (i indexCommitmentStoreWrapper) ReadCommitmentStore() kvstore.ReadStore {
+func (i indexCommitmentStoreWrapper) CommitmentStoreReader() kvstore.Reader {
 	return i.commitment
 }
 
-func (i indexCommitmentStoreWrapper) ReadIndexStore() kvstore.ReadStore {
-	return i.index
-}
-
-func (i indexCommitmentStoreWrapper) CommitmentStore() kvstore.Store {
-	return i.commitment
-}
-
-func (i indexCommitmentStoreWrapper) IndexStore() kvstore.Store {
+func (i indexCommitmentStoreWrapper) IndexStoreReader() kvstore.Reader {
 	return i.index
 }

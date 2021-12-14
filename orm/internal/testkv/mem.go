@@ -11,11 +11,7 @@ import (
 // are really two separate backing stores.
 func NewSplitMemIndexCommitmentStore() kvstore.IndexCommitmentStore {
 	sharedMem := NewSharedMemIndexCommitmentStore().(*sharedMemICS)
-	return &splitMemICS{sharedMemICS: sharedMem}
-}
-
-type splitMemICS struct {
-	*sharedMemICS
+	return &splitMemICS{shared: sharedMem}
 }
 
 var (
@@ -23,20 +19,79 @@ var (
 	indexPrefix      = []byte{1}
 )
 
-func (s splitMemICS) ReadCommitmentStore() kvstore.ReadStore {
-	return dbm.NewPrefixDB(s.db, commitmentPrefix)
+type splitMemICS struct {
+	shared *sharedMemICS
 }
 
-func (s splitMemICS) ReadIndexStore() kvstore.ReadStore {
-	return dbm.NewPrefixDB(s.db, indexPrefix)
+type splitMemICSWriter struct {
+	dbm.DB
+	split splitMemICS
+	batch dbm.Batch
 }
 
-func (s splitMemICS) CommitmentStore() kvstore.Store {
-	return dbm.NewPrefixDB(s.writeStore, commitmentPrefix)
+func (s splitMemICSWriter) CommitmentStoreReader() kvstore.Reader {
+	return s.split.CommitmentStoreReader()
 }
 
-func (s splitMemICS) IndexStore() kvstore.Store {
-	return dbm.NewPrefixDB(s.writeStore, indexPrefix)
+func (s splitMemICSWriter) IndexStoreReader() kvstore.Reader {
+	return s.split.IndexStoreReader()
+}
+
+type splitMemWriter struct {
+	dbm.DB
+	batch  dbm.Batch
+	prefix []byte
+}
+
+func (s splitMemWriter) Set(key, value []byte) error {
+	return s.batch.Set(append(s.prefix, key...), value)
+}
+
+func (s splitMemWriter) Delete(key []byte) error {
+	return s.batch.Delete(append(s.prefix, key...))
+}
+
+func (s splitMemICSWriter) CommitmentStoreWriter() kvstore.Writer {
+	return &splitMemWriter{
+		DB:     dbm.NewPrefixDB(s.DB, commitmentPrefix),
+		batch:  s.batch,
+		prefix: commitmentPrefix,
+	}
+}
+
+func (s splitMemICSWriter) IndexStoreWriter() kvstore.Writer {
+	return &splitMemWriter{
+		DB:     dbm.NewPrefixDB(s.DB, indexPrefix),
+		batch:  s.batch,
+		prefix: indexPrefix,
+	}
+}
+
+func (s splitMemICSWriter) Commit() error {
+	return s.batch.Write()
+}
+
+func (s splitMemICSWriter) Close() {
+	err := s.batch.Close()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (s splitMemICS) Writer() kvstore.IndexCommitmentStoreWriter {
+	return &splitMemICSWriter{
+		DB:    s.shared.db,
+		batch: s.shared.db.NewBatch(),
+		split: s,
+	}
+}
+
+func (s splitMemICS) CommitmentStoreReader() kvstore.Reader {
+	return dbm.NewPrefixDB(s.shared.db, commitmentPrefix)
+}
+
+func (s splitMemICS) IndexStoreReader() kvstore.Reader {
+	return dbm.NewPrefixDB(s.shared.db, indexPrefix)
 }
 
 // NewSharedMemIndexCommitmentStore returns an IndexCommitmentStore instance
@@ -44,60 +99,64 @@ func (s splitMemICS) IndexStore() kvstore.Store {
 // where only a single KV-store is available to modules.
 func NewSharedMemIndexCommitmentStore() kvstore.IndexCommitmentStore {
 	store := dbm.NewMemDB()
-	return &sharedMemICS{
-		store,
-		&writeStore{
-			DB:    store,
-			batch: store.NewBatch(),
-		},
-	}
+	return &sharedMemICS{store}
 }
 
 type sharedMemICS struct {
-	db         dbm.DB
-	writeStore *writeStore
+	db dbm.DB
 }
 
-func (s sharedMemICS) ReadCommitmentStore() kvstore.ReadStore {
-	return s.db
-}
-
-func (s sharedMemICS) ReadIndexStore() kvstore.ReadStore {
-	return s.db
-}
-
-func (s sharedMemICS) CommitmentStore() kvstore.Store {
-	return s.writeStore
-}
-
-func (s sharedMemICS) IndexStore() kvstore.Store {
-	return s.writeStore
-}
-
-func (s sharedMemICS) Commit() error {
-	err := s.writeStore.batch.Write()
-	if err != nil {
-		return err
-	}
-	err = s.writeStore.batch.Close()
-	s.writeStore.batch = s.db.NewBatch()
-	return err
-}
-
-func (s sharedMemICS) Rollback() error {
-	s.writeStore.batch = s.db.NewBatch()
-	return nil
-}
-
-type writeStore struct {
+type sharedMemICSWriter struct {
 	dbm.DB
 	batch dbm.Batch
 }
 
-func (w writeStore) Set(key, value []byte) error {
-	return w.batch.Set(key, value)
+func (s sharedMemICSWriter) CommitmentStoreReader() kvstore.Reader {
+	return s.DB
 }
 
-func (w writeStore) Delete(key []byte) error {
-	return w.batch.Delete(key)
+func (s sharedMemICSWriter) IndexStoreReader() kvstore.Reader {
+	return s.DB
+}
+
+func (s sharedMemICSWriter) Set(key, value []byte) error {
+	return s.batch.Set(key, value)
+}
+
+func (s sharedMemICSWriter) Delete(key []byte) error {
+	return s.batch.Delete(key)
+}
+
+func (s sharedMemICSWriter) CommitmentStoreWriter() kvstore.Writer {
+	return s
+}
+
+func (s sharedMemICSWriter) IndexStoreWriter() kvstore.Writer {
+	return s
+}
+
+func (s sharedMemICSWriter) Commit() error {
+	return s.batch.Write()
+}
+
+func (s sharedMemICSWriter) Close() {
+	err := s.batch.Close()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (s sharedMemICS) Writer() kvstore.IndexCommitmentStoreWriter {
+	return &sharedMemICSWriter{
+		DB:    s.db,
+		batch: s.db.NewBatch(),
+	}
+}
+
+func (s sharedMemICS) CommitmentStoreReader() kvstore.Reader {
+	return s.db
+}
+
+func (s sharedMemICS) IndexStoreReader() kvstore.Reader {
+	return s.db
 }

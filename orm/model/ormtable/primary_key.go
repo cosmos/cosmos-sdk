@@ -24,7 +24,7 @@ func (p PrimaryKeyIndex) PrefixIterator(store kvstore.IndexCommitmentReadStore, 
 		return nil, err
 	}
 
-	return prefixIterator(store.ReadCommitmentStore(), store, p, prefixBz, options)
+	return prefixIterator(store.CommitmentStoreReader(), store, p, prefixBz, options)
 }
 
 func (p PrimaryKeyIndex) RangeIterator(store kvstore.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (Iterator, error) {
@@ -45,7 +45,7 @@ func (p PrimaryKeyIndex) RangeIterator(store kvstore.IndexCommitmentReadStore, s
 
 	fullEndKey := len(p.GetFieldNames()) == len(end)
 
-	return rangeIterator(store.ReadCommitmentStore(), store, p, startBz, endBz, fullEndKey, options)
+	return rangeIterator(store.CommitmentStoreReader(), store, p, startBz, endBz, fullEndKey, options)
 }
 
 func (p PrimaryKeyIndex) doNotImplement() {}
@@ -56,7 +56,7 @@ func (p PrimaryKeyIndex) Has(store kvstore.IndexCommitmentReadStore, key []proto
 		return false, err
 	}
 
-	return store.ReadCommitmentStore().Has(keyBz)
+	return store.CommitmentStoreReader().Has(keyBz)
 }
 
 func (p PrimaryKeyIndex) Get(store kvstore.IndexCommitmentReadStore, keyValues []protoreflect.Value, message proto.Message) (found bool, err error) {
@@ -69,7 +69,7 @@ func (p PrimaryKeyIndex) Get(store kvstore.IndexCommitmentReadStore, keyValues [
 }
 
 func (p PrimaryKeyIndex) GetByKeyBytes(store kvstore.IndexCommitmentReadStore, key []byte, keyValues []protoreflect.Value, message proto.Message) (found bool, err error) {
-	bz, err := store.ReadCommitmentStore().Get(key)
+	bz, err := store.CommitmentStoreReader().Get(key)
 	if err != nil {
 		return false, err
 	}

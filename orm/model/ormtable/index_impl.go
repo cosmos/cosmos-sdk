@@ -27,7 +27,7 @@ func (s IndexKeyIndex) PrefixIterator(store kvstore.IndexCommitmentReadStore, pr
 		return nil, err
 	}
 
-	return prefixIterator(store.ReadIndexStore(), store, s, prefixBz, options)
+	return prefixIterator(store.IndexStoreReader(), store, s, prefixBz, options)
 }
 
 func (s IndexKeyIndex) RangeIterator(store kvstore.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (Iterator, error) {
@@ -48,7 +48,7 @@ func (s IndexKeyIndex) RangeIterator(store kvstore.IndexCommitmentReadStore, sta
 
 	fullEndKey := len(s.GetFieldNames()) == len(end)
 
-	return rangeIterator(store.ReadIndexStore(), store, s, startBz, endBz, fullEndKey, options)
+	return rangeIterator(store.IndexStoreReader(), store, s, startBz, endBz, fullEndKey, options)
 }
 
 var _ indexer = &IndexKeyIndex{}
@@ -56,7 +56,7 @@ var _ Index = &IndexKeyIndex{}
 
 func (s IndexKeyIndex) doNotImplement() {}
 
-func (s IndexKeyIndex) OnInsert(store kvstore.Store, message protoreflect.Message) error {
+func (s IndexKeyIndex) OnInsert(store kvstore.Writer, message protoreflect.Message) error {
 	k, v, err := s.EncodeKVFromMessage(message)
 	if err != nil {
 		return err
@@ -64,7 +64,7 @@ func (s IndexKeyIndex) OnInsert(store kvstore.Store, message protoreflect.Messag
 	return store.Set(k, v)
 }
 
-func (s IndexKeyIndex) OnUpdate(store kvstore.Store, new, existing protoreflect.Message) error {
+func (s IndexKeyIndex) OnUpdate(store kvstore.Writer, new, existing protoreflect.Message) error {
 	newValues := s.GetKeyValues(new)
 	existingValues := s.GetKeyValues(existing)
 	if s.CompareKeys(newValues, existingValues) == 0 {
@@ -87,7 +87,7 @@ func (s IndexKeyIndex) OnUpdate(store kvstore.Store, new, existing protoreflect.
 	return store.Set(newKey, []byte{})
 }
 
-func (s IndexKeyIndex) OnDelete(store kvstore.Store, message protoreflect.Message) error {
+func (s IndexKeyIndex) OnDelete(store kvstore.Writer, message protoreflect.Message) error {
 	_, key, err := s.EncodeKeyFromMessage(message)
 	if err != nil {
 		return err

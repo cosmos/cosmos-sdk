@@ -35,6 +35,12 @@ type tableImpl struct {
 }
 
 func (t tableImpl) Save(store kvstore.IndexCommitmentStore, message proto.Message, mode SaveMode) error {
+	writer := store.Writer()
+	defer writer.Close()
+	return t.doSave(writer, message, mode)
+}
+
+func (t tableImpl) doSave(writer kvstore.IndexCommitmentStoreWriter, message proto.Message, mode SaveMode) error {
 	mref := message.ProtoReflect()
 	pkValues, pk, err := t.EncodeKeyFromMessage(mref)
 	if err != nil {
@@ -42,7 +48,7 @@ func (t tableImpl) Save(store kvstore.IndexCommitmentStore, message proto.Messag
 	}
 
 	existing := mref.New().Interface()
-	haveExisting, err := t.GetByKeyBytes(store, pk, pkValues, existing)
+	haveExisting, err := t.GetByKeyBytes(writer, pk, pkValues, existing)
 	if err != nil {
 		return err
 	}
@@ -76,7 +82,7 @@ func (t tableImpl) Save(store kvstore.IndexCommitmentStore, message proto.Messag
 
 	// store object
 	bz, err := proto.MarshalOptions{Deterministic: true}.Marshal(message)
-	err = store.CommitmentStore().Set(pk, bz)
+	err = writer.CommitmentStoreWriter().Set(pk, bz)
 	if err != nil {
 		return err
 	}
@@ -85,10 +91,10 @@ func (t tableImpl) Save(store kvstore.IndexCommitmentStore, message proto.Messag
 	t.SetKeyValues(mref, pkValues)
 
 	// set indexes
-	indexStore := store.IndexStore()
+	indexStoreWriter := writer.IndexStoreWriter()
 	if !haveExisting {
 		for _, idx := range t.indexers {
-			err = idx.OnInsert(indexStore, mref)
+			err = idx.OnInsert(indexStoreWriter, mref)
 			if err != nil {
 				return err
 			}
@@ -97,14 +103,14 @@ func (t tableImpl) Save(store kvstore.IndexCommitmentStore, message proto.Messag
 	} else {
 		existingMref := existing.ProtoReflect()
 		for _, idx := range t.indexers {
-			err = idx.OnUpdate(indexStore, mref, existingMref)
+			err = idx.OnUpdate(indexStoreWriter, mref, existingMref)
 			if err != nil {
 				return err
 			}
 		}
 	}
 
-	return nil
+	return writer.Commit()
 }
 
 func (t tableImpl) Delete(store kvstore.IndexCommitmentStore, primaryKey []protoreflect.Value) error {
@@ -131,22 +137,24 @@ func (t tableImpl) Delete(store kvstore.IndexCommitmentStore, primaryKey []proto
 	}
 
 	// delete object
-	err = store.CommitmentStore().Delete(pk)
+	writer := store.Writer()
+	defer writer.Close()
+	err = writer.CommitmentStoreWriter().Delete(pk)
 	if err != nil {
 		return err
 	}
 
 	// clear indexes
 	mref := msg.ProtoReflect()
-	indexStore := store.IndexStore()
+	indexStoreWriter := writer.IndexStoreWriter()
 	for _, idx := range t.indexers {
-		err := idx.OnDelete(indexStore, mref)
+		err := idx.OnDelete(indexStoreWriter, mref)
 		if err != nil {
 			return err
 		}
 	}
 
-	return nil
+	return writer.Commit()
 }
 
 func (t tableImpl) GetIndex(fields FieldNames) Index {

@@ -78,8 +78,8 @@ func (s *abciTestSuite) TestABCInfo() {
 			wantCode:  1,
 			wantSpace: UndefinedCodespace,
 		},
-		// This is hard to testCodespace because of attached stacktrace. This
-		// case is tested in an another testCodespace.
+		// This is hard to test because of attached stacktrace. This
+		// case is tested in an another test.
 		//"wrapped stdlib is a full message in debug mode": {
 		//	err:      Wrap(io.EOF, "cannot read file"),
 		//	debug:    true,
@@ -219,7 +219,7 @@ func (s *abciTestSuite) TestABCIInfoSerializeErr() {
 		"single error": {
 			src:   myErrDecode,
 			debug: false,
-			exp:   "testCodespace: tx parse error",
+			exp:   "test: tx parse error",
 		},
 		"second error": {
 			src:   myErrAddr,

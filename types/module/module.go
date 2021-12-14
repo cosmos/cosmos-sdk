@@ -447,6 +447,7 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 				return nil, err
 			}
 		} else {
+<<<<<<< HEAD
 			cfgtor, ok := cfg.(configurator)
 			if !ok {
 				// Currently, the only implementator of Configurator (the interface)
@@ -455,6 +456,10 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 			}
 
 			moduleValUpdates := module.InitGenesis(ctx, cfgtor.cdc, module.DefaultGenesis(cfgtor.cdc))
+=======
+			ctx.Logger().Info(fmt.Sprintf("adding a new module: %s", moduleName))
+			moduleValUpdates := module.InitGenesis(ctx, c.cdc, module.DefaultGenesis(c.cdc))
+>>>>>>> 8b74157c5 (feat: extra logging in in-place store migrations (#10768))
 			// The module manager assumes only one module will update the
 			// validator set, and that it will not be by a new module.
 			if len(moduleValUpdates) > 0 {

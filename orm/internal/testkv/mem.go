@@ -10,7 +10,33 @@ import (
 // which uses two separate memory stores to simulate behavior when there
 // are really two separate backing stores.
 func NewSplitMemIndexCommitmentStore() kvstore.IndexCommitmentStore {
-	return NewSharedMemIndexCommitmentStore()
+	sharedMem := NewSharedMemIndexCommitmentStore().(*sharedMemICS)
+	return &splitMemICS{sharedMemICS: sharedMem}
+}
+
+type splitMemICS struct {
+	*sharedMemICS
+}
+
+var (
+	commitmentPrefix = []byte{0}
+	indexPrefix      = []byte{1}
+)
+
+func (s splitMemICS) ReadCommitmentStore() kvstore.ReadStore {
+	return dbm.NewPrefixDB(s.db, commitmentPrefix)
+}
+
+func (s splitMemICS) ReadIndexStore() kvstore.ReadStore {
+	return dbm.NewPrefixDB(s.db, indexPrefix)
+}
+
+func (s splitMemICS) CommitmentStore() kvstore.Store {
+	return dbm.NewPrefixDB(s.writeStore, commitmentPrefix)
+}
+
+func (s splitMemICS) IndexStore() kvstore.Store {
+	return dbm.NewPrefixDB(s.writeStore, indexPrefix)
 }
 
 // NewSharedMemIndexCommitmentStore returns an IndexCommitmentStore instance

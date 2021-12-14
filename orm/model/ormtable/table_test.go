@@ -539,14 +539,20 @@ func TableDataGen(elemGen *rapid.Generator, n int) *rapid.Generator {
 			message = elemGen.Draw(t, fmt.Sprintf("message[%d]", i)).(proto.Message)
 			err := table.Save(store, message, SAVE_MODE_INSERT)
 			if sdkerrors.IsOf(err, ormerrors.PrimaryKeyConstraintViolation, ormerrors.UniqueKeyViolation) {
-				assert.NilError(t, store.Rollback())
+				err = store.Rollback()
+				if err != nil {
+					panic(err)
+				}
 				continue
-			} else {
-				assert.NilError(t, err)
+			} else if err != nil {
+				panic(err)
 			}
 			data[i] = message
 			i++
-			assert.NilError(t, store.Commit())
+			err = store.Commit()
+			if err != nil {
+				panic(err)
+			}
 		}
 
 		return &TableData{

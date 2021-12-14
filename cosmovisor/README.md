@@ -5,6 +5,7 @@
 #### Design
 
 Cosmovisor is designed to be used as a wrapper for a `Cosmos SDK` app:
+
 * it will pass arguments to the associated app (configured by `DAEMON_NAME` env variable).
   Running `cosmovisor run arg1 arg2 ....` will run `app arg1 arg2 ...`;
 * it will manage an app by restarting and upgrading if needed;
@@ -12,7 +13,7 @@ Cosmovisor is designed to be used as a wrapper for a `Cosmos SDK` app:
 
 *Note: If new versions of the application are not set up to run in-place store migrations, migrations will need to be run manually before restarting `cosmovisor` with the new binary. For this reason, we recommend applications adopt in-place store migrations.*
 
-*Note: If validators would like to enable the auto-download option (which [we don't recommend](#auto-download)), and they are currently running an application using Cosmos SDK `v0.42`, they will need to use Cosmovisor [`v0.1`](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv0.1.0). Later versions of Cosmovisor do not support Cosmos SDK `v0.42` or earlier if the auto-download option is enabled.*
+*Note: If validators would like to enable the auto-download option (which [we don't recommend](#auto-download)), and they are currently running an application using Cosmos SDK `v0.42`, they will need to use Cosmovisor [`v0.1`](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv0.1.0). Later versions of Cosmovisor do not support Cosmos SDK `v0.44.3` or earlier if the auto-download option is enabled.*
 
 ## Contributing
 
@@ -30,7 +31,7 @@ To install the latest version of `cosmovisor`, run the following command:
 go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@latest
 ```
 
-To install a previous version, you can specify the version. IMPORTANT: Chains that use Cosmos-SDK v0.42.x and want to use auto-download feature MUST use Cosmovisor v0.1.0
+To install a previous version, you can specify the version. IMPORTANT: Chains that use Cosmos-SDK v0.44.3 or earlier (eg v0.44.2) and want to use auto-download feature MUST use Cosmovisor v0.1.0
 
 ```
 go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v0.1.0
@@ -47,6 +48,7 @@ git checkout cosmovisor/vx.x.x
 cd cosmovisor
 make
 ```
+
 This will build cosmovisor in your current directory. Afterwards you may want to put it into your machine's PATH like as follows:
 
 ```
@@ -58,6 +60,7 @@ cp cosmovisor ~/go/bin/cosmovisor
 ### Command Line Arguments And Environment Variables
 
 The first argument passed to `cosmovisor` is the action for `cosmovisor` to take. Options are:
+
 * `help`, `--help`, or `-h` - Output `cosmovisor` help information and check your `cosmovisor` configuration.
 * `run` - Run the configured binary using the rest of the provided arguments.
 * `version`, or `--version` - Output the `cosmovisor` version and also run the binary with the `version` argument.
@@ -124,12 +127,14 @@ The `DAEMON` specific code and operations (e.g. tendermint config, the applicati
 
 `cosmovisor` is polling the `$DAEMON_HOME/data/upgrade-info.json` file for new upgrade instructions. The file is created by the x/upgrade module in `BeginBlocker` when an upgrade is detected and the blockchain reaches the upgrade height.
 The following heuristic is applied to detect the upgrade:
+
 + When starting, `cosmovisor` doesn't know much about currently running upgrade, except the binary which is `current/bin/`. It tries to read the `current/update-info.json` file to get information about the current upgrade name.
 + If neither `cosmovisor/current/upgrade-info.json` nor `data/upgrade-info.json` exist, then `cosmovisor` will wait for `data/upgrade-info.json` file to trigger an upgrade.
 + If `cosmovisor/current/upgrade-info.json` doesn't exist but `data/upgrade-info.json` exists, then `cosmovisor` assumes that whatever is in `data/upgrade-info.json` is a valid upgrade request. In this case `cosmovisor` tries immediately to make an upgrade according to the `name` attribute in `data/upgrade-info.json`.
 + Otherwise, `cosmovisor` waits for changes in `upgrade-info.json`. As soon as a new upgrade name is recorded in the file, `cosmovisor` will trigger an upgrade mechanism.
 
 When the upgrade mechanism is triggered, `cosmovisor` will:
+
 1. if `DAEMON_ALLOW_DOWNLOAD_BINARIES` is enabled, start by auto-downloading a new binary into `cosmovisor/<name>/bin` (where `<name>` is the `upgrade-info.json:name` attribute);
 2. update the `current` symbolic link to point to the new directory and save `data/upgrade-info.json` to `cosmovisor/current/upgrade-info.json`.
 

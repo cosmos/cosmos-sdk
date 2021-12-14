@@ -1,16 +1,17 @@
-package types
+package types_test
 
 import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
 )
 
 func TestProposalStatus_Format(t *testing.T) {
-	statusDepositPeriod, _ := ProposalStatusFromString("PROPOSAL_STATUS_DEPOSIT_PERIOD")
+	statusDepositPeriod, _ := types.ProposalStatusFromString("PROPOSAL_STATUS_DEPOSIT_PERIOD")
 	tests := []struct {
-		pt                   ProposalStatus
+		pt                   types.ProposalStatus
 		sprintFArgs          string
 		expectedStringOutput string
 	}{

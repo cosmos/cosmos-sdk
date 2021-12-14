@@ -1,13 +1,15 @@
 package crypto
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
+	"io/ioutil"
 
 	"github.com/tendermint/crypto/bcrypt"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/armor"
 	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
+	"golang.org/x/crypto/openpgp/armor" // nolint: staticcheck
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -50,7 +52,7 @@ func ArmorInfoBytes(bz []byte) string {
 		headerVersion: "0.0.0",
 	}
 
-	return armor.EncodeArmor(blockTypeKeyInfo, header, bz)
+	return EncodeArmor(blockTypeKeyInfo, header, bz)
 }
 
 // Armor the PubKeyBytes
@@ -62,7 +64,7 @@ func ArmorPubKeyBytes(bz []byte, algo string) string {
 		header[headerType] = algo
 	}
 
-	return armor.EncodeArmor(blockTypePubKey, header, bz)
+	return EncodeArmor(blockTypePubKey, header, bz)
 }
 
 //-----------------------------------------------------------------
@@ -107,7 +109,7 @@ func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 }
 
 func unarmorBytes(armorStr, blockType string) (bz []byte, header map[string]string, err error) {
-	bType, header, bz, err := armor.DecodeArmor(armorStr)
+	bType, header, bz, err := DecodeArmor(armorStr)
 	if err != nil {
 		return
 	}
@@ -135,7 +137,7 @@ func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase string, algo st
 		header[headerType] = algo
 	}
 
-	armorStr := armor.EncodeArmor(blockTypePrivKey, header, encBytes)
+	armorStr := EncodeArmor(blockTypePrivKey, header, encBytes)
 
 	return armorStr
 }
@@ -159,7 +161,7 @@ func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes [
 
 // UnarmorDecryptPrivKey returns the privkey byte slice, a string of the algo type, and an error
 func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey cryptotypes.PrivKey, algo string, err error) {
-	blockType, header, encBytes, err := armor.DecodeArmor(armorStr)
+	blockType, header, encBytes, err := DecodeArmor(armorStr)
 	if err != nil {
 		return privKey, "", err
 	}
@@ -206,4 +208,37 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (privK
 	}
 
 	return legacy.PrivKeyFromBytes(privKeyBytes)
+}
+
+//-----------------------------------------------------------------
+// encode/decode with armor
+
+func EncodeArmor(blockType string, headers map[string]string, data []byte) string {
+	buf := new(bytes.Buffer)
+	w, err := armor.Encode(buf, blockType, headers)
+	if err != nil {
+		panic(fmt.Errorf("could not encode ascii armor: %s", err))
+	}
+	_, err = w.Write(data)
+	if err != nil {
+		panic(fmt.Errorf("could not encode ascii armor: %s", err))
+	}
+	err = w.Close()
+	if err != nil {
+		panic(fmt.Errorf("could not encode ascii armor: %s", err))
+	}
+	return buf.String()
+}
+
+func DecodeArmor(armorStr string) (blockType string, headers map[string]string, data []byte, err error) {
+	buf := bytes.NewBufferString(armorStr)
+	block, err := armor.Decode(buf)
+	if err != nil {
+		return "", nil, nil, err
+	}
+	data, err = ioutil.ReadAll(block.Body)
+	if err != nil {
+		return "", nil, nil, err
+	}
+	return block.Type, block.Header, data, nil
 }

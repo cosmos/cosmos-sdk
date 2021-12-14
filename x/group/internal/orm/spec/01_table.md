@@ -8,11 +8,14 @@ In the prefix store, entities should be stored by an unique identifier called `R
 Regular CRUD operations can be performed on a table, these methods take a `sdk.KVStore` as parameter to get the table prefix store.
 
 The `table` struct does not:
- - enforce uniqueness of the `RowID`
- - enforce prefix uniqueness of keys, i.e. not allowing one key to be a prefix
+
+- enforce uniqueness of the `RowID`
+- enforce prefix uniqueness of keys, i.e. not allowing one key to be a prefix
  of another
- - optimize Gas usage conditions
+- optimize Gas usage conditions
 The `table` struct is private, so that we only have custom tables built on top of it, that do satisfy these requirements.
+
+`table` provides methods for exporting (using a [`PrefixScan` `Iterator`](03_iterator_pagination.md#iterator)) and importing genesis data. For the import to be successful, objects have to be aware of their primary key by implementing the [`PrimaryKeyed`](#primarykeyed) interface.
 
 ## AutoUInt64Table
 
@@ -26,13 +29,19 @@ It's based on the `Sequence` struct which is a persistent unique key generator b
 
 `PrimaryKeyTable` provides simpler object style orm methods where are persisted and loaded with a reference to their unique primary key.
 
+### PrimaryKeyed
+
 The model provided for creating a `PrimaryKeyTable` should implement the `PrimaryKeyed` interface:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/9f78f16ae75cc42fc5fe636bde18a453ba74831f/x/group/internal/orm/primary_key.go#L28-L41
 
 `PrimaryKeyFields()` method returns the list of key parts for a given object.
-The primary key parts can be []byte, string, and `uint64` types. 
- Key parts, except the last part, follow these rules:
-  - []byte is encoded with a single byte length prefix
-  - strings are null-terminated
-  - `uint64` are encoded using 8 byte big endian.
+The primary key parts can be []byte, string, and `uint64` types.
+
+### Key codec
+
+Key parts, except the last part, follow these rules:
+
+- []byte is encoded with a single byte length prefix
+- strings are null-terminated
+- `uint64` are encoded using 8 byte big endian.

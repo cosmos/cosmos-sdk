@@ -13,12 +13,6 @@ const RootCodespace = "sdk"
 // UndefinedCodespace when we explicitly declare no codespace
 const UndefinedCodespace = "undefined"
 
-// mathCodespace is the codespace for all errors defined in math package
-const mathCodespace = "math"
-
-// mathCodespace is the codespace for all errors defined in orm package
-const ormCodespace = "orm"
-
 var (
 	// errInternal should never be exposed, but we reserve this code for non-specified errors
 	errInternal = Register(UndefinedCodespace, 1, "internal")
@@ -153,27 +147,6 @@ var (
 
 	// ErrAppConfig defines an error occurred if min-gas-prices field in BaseConfig is empty.
 	ErrAppConfig = Register(RootCodespace, 40, "error in app.toml")
-
-	// ErrInvalidDecString defines an error for an invalid decimal string
-	ErrInvalidDecString = Register(mathCodespace, 41, "invalid decimal string")
-
-	// ErrORMIteratorDone defines an error when an iterator is done
-	ErrORMIteratorDone = Register(ormCodespace, 42, "iterator done")
-
-	// ErrORMInvalidIterator defines an error for an invalid iterator
-	ErrORMInvalidIterator = Register(ormCodespace, 43, "invalid iterator")
-
-	// ErrORMUniqueConstraint defines an error when a value already exists at a given key
-	ErrORMUniqueConstraint = Register(ormCodespace, 44, "unique constraint violation")
-
-	// ErrORMEmptyModel defines an error when an empty model is provided for building a table
-	ErrORMEmptyModel = Register(ormCodespace, 45, "invalid argument")
-
-	// ErrORMKeyMaxLength defines an error when a key exceeds max length
-	ErrORMKeyMaxLength = Register(ormCodespace, 46, "key exceeds max length")
-
-	// ErrORMEmptyKey defines an error for an empty key
-	ErrORMEmptyKey = Register(ormCodespace, 47, "cannot use empty key")
 )
 
 // Register returns an error instance that should be used as the base for
@@ -293,11 +266,11 @@ func (e *Error) Is(err error) bool {
 
 // Wrap extends this error with an additional information.
 // It's a handy function to call Wrap with sdk errors.
-func (e Error) Wrap(desc string) error { return Wrap(e, desc) }
+func (e *Error) Wrap(desc string) error { return Wrap(e, desc) }
 
 // Wrapf extends this error with an additional information.
 // It's a handy function to call Wrapf with sdk errors.
-func (e Error) Wrapf(desc string, args ...interface{}) error { return Wrapf(e, desc, args...) }
+func (e *Error) Wrapf(desc string, args ...interface{}) error { return Wrapf(e, desc, args...) }
 
 func isNilErr(err error) bool {
 	// Reflect usage is necessary to correctly compare with

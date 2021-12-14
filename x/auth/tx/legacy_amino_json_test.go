@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	_, _, addr1 = testdata.KeyTestPubAddr()
-	_, _, addr2 = testdata.KeyTestPubAddr()
+	_, pubkey1, addr1 = testdata.KeyTestPubAddr()
+	_, _, addr2       = testdata.KeyTestPubAddr()
 
 	coins   = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 	gas     = uint64(10000)
@@ -86,7 +86,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	for _, tc := range testcases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			bldr := newBuilder()
+			bldr := newBuilder(nil)
 			buildTx(t, bldr)
 			tx := bldr.GetTx()
 			tc.malleate(bldr)
@@ -104,7 +104,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 		})
 	}
 
-	bldr := newBuilder()
+	bldr := newBuilder(nil)
 	buildTx(t, bldr)
 	tx := bldr.GetTx()
 	signingData := signing.SignerData{
@@ -112,7 +112,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 		ChainID:       chainId,
 		AccountNumber: accNum,
 		Sequence:      seqNum,
-		SignerIndex:   0,
+		PubKey:        pubkey1,
 	}
 
 	// expect error with wrong sign mode
@@ -120,7 +120,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	require.Error(t, err)
 
 	// expect error with extension options
-	bldr = newBuilder()
+	bldr = newBuilder(nil)
 	buildTx(t, bldr)
 	any, err := cdctypes.NewAnyWithValue(testdata.NewTestMsg())
 	require.NoError(t, err)
@@ -130,7 +130,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	require.Error(t, err)
 
 	// expect error with non-critical extension options
-	bldr = newBuilder()
+	bldr = newBuilder(nil)
 	buildTx(t, bldr)
 	bldr.tx.Body.NonCriticalExtensionOptions = []*cdctypes.Any{any}
 	tx = bldr.GetTx()

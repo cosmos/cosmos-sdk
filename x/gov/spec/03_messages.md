@@ -18,7 +18,7 @@ set in the governance module.
 
 - Generate new `proposalID`
 - Create new `Proposal`
-- Initialise `Proposals` attributes
+- Initialise `Proposal`'s attributes
 - Decrease balance of sender by `InitialDeposit`
 - If `MinDeposit` is reached:
     - Push `proposalID` in `ProposalProcessingQueue`
@@ -34,7 +34,7 @@ pseudocode.
 upon receiving txGovSubmitProposal from sender do
 
   if !correctlyFormatted(txGovSubmitProposal)
-    // check if proposal is correctly formatted. Includes fee payment.
+    // check if proposal is correctly formatted and the messages have routes to other modules. Includes fee payment.
     throw
 
   initialDeposit = txGovSubmitProposal.InitialDeposit

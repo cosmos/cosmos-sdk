@@ -25,20 +25,20 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		expected     int64
 	}{
 		"defaults": {
-			bapp:         baseapp.NewBaseApp(name, logger, db, nil),
+			bapp:         baseapp.NewBaseApp(name, logger, db),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     0,
 		},
 		"pruning unbonding time only": {
-			bapp:         baseapp.NewBaseApp(name, logger, db, nil, baseapp.SetMinRetainBlocks(1)),
+			bapp:         baseapp.NewBaseApp(name, logger, db, baseapp.SetMinRetainBlocks(1)),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
 			expected:     136120,
 		},
 		"pruning iavl snapshot only": {
 			bapp: baseapp.NewBaseApp(
-				name, logger, db, nil,
+				name, logger, db,
 				baseapp.SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
 				baseapp.SetMinRetainBlocks(1),
 			),
@@ -48,7 +48,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		},
 		"pruning state sync snapshot only": {
 			bapp: baseapp.NewBaseApp(
-				name, logger, db, nil,
+				name, logger, db,
 				baseapp.SetSnapshotInterval(50000),
 				baseapp.SetSnapshotKeepRecent(3),
 				baseapp.SetMinRetainBlocks(1),
@@ -59,7 +59,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		},
 		"pruning min retention only": {
 			bapp: baseapp.NewBaseApp(
-				name, logger, db, nil,
+				name, logger, db,
 				baseapp.SetMinRetainBlocks(400000),
 			),
 			maxAgeBlocks: 0,
@@ -68,7 +68,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		},
 		"pruning all conditions": {
 			bapp: baseapp.NewBaseApp(
-				name, logger, db, nil,
+				name, logger, db,
 				baseapp.SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
 				baseapp.SetMinRetainBlocks(400000),
 				baseapp.SetSnapshotInterval(50000), baseapp.SetSnapshotKeepRecent(3),
@@ -79,7 +79,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		},
 		"no pruning due to no persisted state": {
 			bapp: baseapp.NewBaseApp(
-				name, logger, db, nil,
+				name, logger, db,
 				baseapp.SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
 				baseapp.SetMinRetainBlocks(400000),
 				baseapp.SetSnapshotInterval(50000), baseapp.SetSnapshotKeepRecent(3),
@@ -90,7 +90,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		},
 		"disable pruning": {
 			bapp: baseapp.NewBaseApp(
-				name, logger, db, nil,
+				name, logger, db,
 				baseapp.SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
 				baseapp.SetMinRetainBlocks(0),
 				baseapp.SetSnapshotInterval(50000), baseapp.SetSnapshotKeepRecent(3),
@@ -106,7 +106,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 
 		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 		tc.bapp.InitChain(abci.RequestInitChain{
-			ConsensusParams: &abci.ConsensusParams{
+			ConsensusParams: &tmprototypes.ConsensusParams{
 				Evidence: &tmprototypes.EvidenceParams{
 					MaxAgeNumBlocks: tc.maxAgeBlocks,
 				},
@@ -127,7 +127,7 @@ func TestBaseAppCreateQueryContextRejectsNegativeHeights(t *testing.T) {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := baseapp.NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, logger, db)
 
 	proves := []bool{
 		false, true,

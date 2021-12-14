@@ -16,7 +16,7 @@ The `query` commands allow users to query `upgrade` state.
 simd query upgrade --help
 ```
 
-#### applied 
+#### applied
 
 The `applied` command allows users to query the block header for height at which a completed upgrade was applied.
 
@@ -72,7 +72,7 @@ Example Output:
 }
 ```
 
-#### module versions 
+#### module versions
 
 The `module_versions` command gets a list of module names and their respective consensus versions.
 
@@ -82,6 +82,7 @@ that module's information.
 ```bash
 simd query upgrade module_versions [optional module_name] [flags]
 ```
+
 Example:
 
 ```bash
@@ -89,6 +90,7 @@ simd query upgrade module_versions
 ```
 
 Example Output:
+
 ```bash
 module_versions:
 - name: auth
@@ -167,7 +169,6 @@ time: "0001-01-01T00:00:00Z"
 upgraded_client_state: null
 ```
 
-
 ## REST
 
 A user can query the `upgrade` module using REST endpoints.
@@ -215,7 +216,6 @@ Example Output:
   "plan": "v2.1-upgrade"
 }
 ```
-
 
 ### Module versions
 
@@ -363,7 +363,6 @@ Example Output:
 }
 ```
 
-
 ### Module versions
 
 `ModuleVersions` queries the list of module versions from state.
@@ -458,5 +457,3 @@ Example Output:
   ]
 }
 ```
-
-

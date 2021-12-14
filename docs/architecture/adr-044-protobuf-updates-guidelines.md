@@ -3,6 +3,7 @@
 ## Changelog
 
 - 28.06.2021: Initial Draft
+- 02.12.2021: Add `Since:` comment for new fields
 
 ## Status
 
@@ -37,7 +38,7 @@ On top of Buf's recommendations we add the following guidelines that are specifi
 
 ### Updating Protobuf Definition Without Bumping Version
 
-#### 1. `Msg`s MUST NOT have new fields.
+#### 1. `Msg`s MUST NOT have new fields
 
 When processing `Msg`s, the Cosmos SDK's antehandlers are strict and don't allow unknown fields in `Msg`s. This is checked by the unknown field rejection in the [`codec/unknownproto` package](https://github.com/cosmos/cosmos-sdk/blob/master/codec/unknownproto).
 
@@ -47,11 +48,39 @@ For this reason, module developers MUST NOT add new fields to existing `Msg`s.
 
 It is worth mentioning that this does not limit adding fields to a `Msg`, but also to all nested structs and `Any`s inside a `Msg`.
 
-#### 2. Non-`Msg`-related Protobuf definitions MAY have new fields.
+#### 2. Non-`Msg`-related Protobuf definitions MAY have new fields, but MUST add a `Since:` comment
 
 On the other hand, module developers MAY add new fields to Protobuf definitions related to the `Query` service or to objects which are saved in the store. This recommendation follows the Protobuf specification, but is added in this document for clarity.
 
-#### 3. Fields MAY be marked as `deprecated`, and nodes MAY implement a protocol-breaking change for handling these fields.
+The SDK requires the Protobuf comment of the new field to contain one line with the following format:
+
+```protobuf
+// Since: cosmos-sdk <version>{, <version>...}
+```
+
+Where each `version` denotes a minor ("0.45") or patch ("0.44.5") version from which the field is available. This will greatly help client libraries, who can optionally use reflection or custom code generation to show/hide these fields depending on the targetted node version.
+
+As examples, the following comments are valid:
+
+```protobuf
+// Since: cosmos-sdk 0.44
+
+// Since: cosmos-sdk 0.42.11, 0.44.5
+```
+
+and the following ones are NOT valid:
+
+```protobuf
+// Since cosmos-sdk v0.44
+
+// since: cosmos-sdk 0.44
+
+// Since: cosmos-sdk 0.42.11 0.44.5
+
+// Since: Cosmos SDK 0.42.11, 0.44.5
+```
+
+#### 3. Fields MAY be marked as `deprecated`, and nodes MAY implement a protocol-breaking change for handling these fields
 
 Protobuf supports the [`deprecated` field option](https://developers.google.com/protocol-buffers/docs/proto#options), and this option MAY be used on any field, including `Msg` fields. If a node handles a Protobuf message with a non-empty deprecated field, the node MAY change its behavior upon processing it, even in a protocol-breaking way. When possible, the node MUST handle backwards compatibility without breaking the consensus (unless we increment the proto version).
 
@@ -60,7 +89,7 @@ As an example, the Cosmos SDK v0.42 to v0.43 update contained two Protobuf-break
 - The Cosmos SDK recently removed support for [time-based software upgrades](https://github.com/cosmos/cosmos-sdk/pull/8849). As such, the `time` field has been marked as deprecated in `cosmos.upgrade.v1beta1.Plan`. Moreover, the node will reject any proposal containing an upgrade Plan whose `time` field is non-empty.
 - The Cosmos SDK now supports [governance split votes](./adr-037-gov-split-vote.md). When querying for votes, the returned `cosmos.gov.v1beta1.Vote` message has its `option` field (used for 1 vote option) deprecated in favor of its `options` field (allowing multiple vote options). Whenever possible, the SDK still populates the deprecated `option` field, that is, if and only if the `len(options) == 1` and `options[0].Weight == 1.0`.
 
-#### 4. Fields MUST NOT be renamed.
+#### 4. Fields MUST NOT be renamed
 
 Whereas the official Protobuf recommendations do not prohibit renaming fields, as it does not break the Protobuf binary representation, the SDK explicitly forbids renaming fields in Protobuf structs. The main reason for this choice is to avoid introducing breaking changes for clients, which often rely on hard-coded fields from generated types. Moreover, renaming fields will lead to client-breaking JSON representations of Protobuf definitions, used in REST endpoints and in the CLI.
 

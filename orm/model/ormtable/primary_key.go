@@ -43,7 +43,9 @@ func (p PrimaryKeyIndex) RangeIterator(store kvstore.IndexCommitmentReadStore, s
 		return nil, err
 	}
 
-	return rangeIterator(store.ReadCommitmentStore(), store, p, startBz, endBz, options)
+	fullEndKey := len(p.GetFieldNames()) == len(end)
+
+	return rangeIterator(store.ReadCommitmentStore(), store, p, startBz, endBz, fullEndKey, options)
 }
 
 func (p PrimaryKeyIndex) doNotImplement() {}

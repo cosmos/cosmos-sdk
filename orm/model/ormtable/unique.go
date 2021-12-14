@@ -44,7 +44,9 @@ func (u UniqueKeyIndex) RangeIterator(store kvstore.IndexCommitmentReadStore, st
 		return nil, err
 	}
 
-	return rangeIterator(store.ReadIndexStore(), store, u, startBz, endBz, options)
+	fullEndKey := len(keyCodec.GetFieldNames()) == len(end)
+
+	return rangeIterator(store.ReadIndexStore(), store, u, startBz, endBz, fullEndKey, options)
 }
 
 func (u UniqueKeyIndex) doNotImplement() {}

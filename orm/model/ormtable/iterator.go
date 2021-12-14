@@ -83,12 +83,21 @@ func prefixIterator(iteratorStore kvstore.ReadStore, store kvstore.IndexCommitme
 	}
 }
 
-func rangeIterator(iteratorStore kvstore.ReadStore, store kvstore.IndexCommitmentReadStore, index concreteIndex, start, end []byte, options IteratorOptions) (Iterator, error) {
+// NOTE: fullEndKey indicates whether the end key contained all the fields of the key,
+// if it did then we need to use inclusive end bytes, otherwise we prefix the end bytes
+func rangeIterator(iteratorStore kvstore.ReadStore, store kvstore.IndexCommitmentReadStore, index concreteIndex, start, end []byte, fullEndKey bool, options IteratorOptions) (Iterator, error) {
 	if !options.Reverse {
 		if len(options.Cursor) != 0 {
 			start = append(options.Cursor, 0)
 		}
-		it, err := iteratorStore.Iterator(start, prefixEndBytes(end))
+
+		if fullEndKey {
+			end = inclusiveEndBytes(end)
+		} else {
+			end = prefixEndBytes(end)
+		}
+
+		it, err := iteratorStore.Iterator(start, end)
 		if err != nil {
 			return nil, err
 		}
@@ -102,7 +111,11 @@ func rangeIterator(iteratorStore kvstore.ReadStore, store kvstore.IndexCommitmen
 		if len(options.Cursor) != 0 {
 			end = options.Cursor
 		} else {
-			end = prefixEndBytes(end)
+			if fullEndKey {
+				end = inclusiveEndBytes(end)
+			} else {
+				end = prefixEndBytes(end)
+			}
 		}
 		it, err := iteratorStore.ReverseIterator(start, end)
 		if err != nil {

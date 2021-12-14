@@ -46,7 +46,9 @@ func (s IndexKeyIndex) RangeIterator(store kvstore.IndexCommitmentReadStore, sta
 		return nil, err
 	}
 
-	return rangeIterator(store.ReadIndexStore(), store, s, startBz, endBz, options)
+	fullEndKey := len(s.GetFieldNames()) == len(end)
+
+	return rangeIterator(store.ReadIndexStore(), store, s, startBz, endBz, fullEndKey, options)
 }
 
 var _ indexer = &IndexKeyIndex{}

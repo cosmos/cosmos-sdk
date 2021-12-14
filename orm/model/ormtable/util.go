@@ -39,3 +39,9 @@ func prefixEndBytes(prefix []byte) []byte {
 
 	return end
 }
+
+// inclusiveEndBytes returns the []byte that would end a
+// range query such that the input would be included
+func inclusiveEndBytes(inclusiveBytes []byte) []byte {
+	return append(inclusiveBytes, byte(0x00))
+}

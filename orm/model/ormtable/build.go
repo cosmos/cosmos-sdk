@@ -21,7 +21,7 @@ const (
 func BuildTable(options TableOptions) (Table, error) {
 	messageDescriptor := options.MessageType.Descriptor()
 
-	table := &TableImpl{
+	table := &tableImpl{
 		indexers:              []indexer{},
 		indexes:               []Index{},
 		indexesByFields:       map[FieldNames]concreteIndex{},
@@ -56,7 +56,7 @@ func BuildTable(options TableOptions) (Table, error) {
 
 		table.PrimaryKeyIndex = NewPrimaryKeyIndex(pkCodec)
 
-		return NewSingleton(table), nil
+		return &singleton{table}, nil
 	} else {
 		return nil, ormerrors.InvalidTableDefinition.Wrapf("missing table descriptor for %s", messageDescriptor.FullName())
 	}
@@ -195,8 +195,8 @@ func BuildTable(options TableOptions) (Table, error) {
 		seqPrefix := AppendVarUInt32(options.Prefix, SeqId)
 		seqCodec := ormkv.NewSeqCodec(options.MessageType, seqPrefix)
 		table.entryCodecsById[SeqId] = seqCodec
-		return &AutoIncrementTable{
-			TableImpl:    table,
+		return &autoIncrementTable{
+			tableImpl:    table,
 			autoIncField: autoIncField,
 			seqCodec:     seqCodec,
 		}, nil

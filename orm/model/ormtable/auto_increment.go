@@ -14,15 +14,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 )
 
-// AutoIncrementTable is a Table implementation for tables with an
+// autoIncrementTable is a Table implementation for tables with an
 // auto-incrementing uint64 primary key.
-type AutoIncrementTable struct {
-	*TableImpl
+type autoIncrementTable struct {
+	*tableImpl
 	autoIncField protoreflect.FieldDescriptor
 	seqCodec     *ormkv.SeqCodec
 }
 
-func (t *AutoIncrementTable) Save(store kvstore.IndexCommitmentStore, message proto.Message, mode SaveMode) error {
+func (t *autoIncrementTable) Save(store kvstore.IndexCommitmentStore, message proto.Message, mode SaveMode) error {
 	messageRef := message.ProtoReflect()
 	val := messageRef.Get(t.autoIncField).Uint()
 	if val == 0 {
@@ -44,10 +44,10 @@ func (t *AutoIncrementTable) Save(store kvstore.IndexCommitmentStore, message pr
 
 		mode = SAVE_MODE_UPDATE
 	}
-	return t.TableImpl.Save(store, message, mode)
+	return t.tableImpl.Save(store, message, mode)
 }
 
-func (t *AutoIncrementTable) curSeqValue(kv kvstore.ReadStore) (uint64, error) {
+func (t *autoIncrementTable) curSeqValue(kv kvstore.ReadStore) (uint64, error) {
 	bz, err := kv.Get(t.seqCodec.Prefix())
 	if err != nil {
 		return 0, err
@@ -56,7 +56,7 @@ func (t *AutoIncrementTable) curSeqValue(kv kvstore.ReadStore) (uint64, error) {
 	return t.seqCodec.DecodeValue(bz)
 }
 
-func (t *AutoIncrementTable) nextSeqValue(kv kvstore.Store) (uint64, error) {
+func (t *autoIncrementTable) nextSeqValue(kv kvstore.Store) (uint64, error) {
 	seq, err := t.curSeqValue(kv)
 	if err != nil {
 		return 0, err
@@ -66,18 +66,18 @@ func (t *AutoIncrementTable) nextSeqValue(kv kvstore.Store) (uint64, error) {
 	return seq, t.setSeqValue(kv, seq)
 }
 
-func (t *AutoIncrementTable) setSeqValue(kv kvstore.Store, seq uint64) error {
+func (t *autoIncrementTable) setSeqValue(kv kvstore.Store, seq uint64) error {
 	return kv.Set(t.seqCodec.Prefix(), t.seqCodec.EncodeValue(seq))
 }
 
-func (t AutoIncrementTable) EncodeEntry(entry ormkv.Entry) (k, v []byte, err error) {
+func (t autoIncrementTable) EncodeEntry(entry ormkv.Entry) (k, v []byte, err error) {
 	if _, ok := entry.(*ormkv.SeqEntry); ok {
 		return t.seqCodec.EncodeEntry(entry)
 	}
-	return t.TableImpl.EncodeEntry(entry)
+	return t.tableImpl.EncodeEntry(entry)
 }
 
-func (t AutoIncrementTable) ValidateJSON(reader io.Reader) error {
+func (t autoIncrementTable) ValidateJSON(reader io.Reader) error {
 	return t.decodeAutoIncJson(nil, reader, func(message proto.Message, maxID uint64) error {
 		messageRef := message.ProtoReflect()
 		id := messageRef.Get(t.autoIncField).Uint()
@@ -93,7 +93,7 @@ func (t AutoIncrementTable) ValidateJSON(reader io.Reader) error {
 	})
 }
 
-func (t AutoIncrementTable) ImportJSON(store kvstore.IndexCommitmentStore, reader io.Reader) error {
+func (t autoIncrementTable) ImportJSON(store kvstore.IndexCommitmentStore, reader io.Reader) error {
 	return t.decodeAutoIncJson(store, reader, func(message proto.Message, maxID uint64) error {
 		messageRef := message.ProtoReflect()
 		id := messageRef.Get(t.autoIncField).Uint()
@@ -107,14 +107,14 @@ func (t AutoIncrementTable) ImportJSON(store kvstore.IndexCommitmentStore, reade
 			}
 			// we do have an ID and calling Save will fail because it expects
 			// either no ID or SAVE_MODE_UPDATE. So instead we drop one level
-			// down and insert using TableImpl which doesn't know about
+			// down and insert using tableImpl which doesn't know about
 			// auto-incrementing IDs
-			return t.TableImpl.Save(store, message, SAVE_MODE_INSERT)
+			return t.tableImpl.Save(store, message, SAVE_MODE_INSERT)
 		}
 	})
 }
 
-func (t AutoIncrementTable) decodeAutoIncJson(store kvstore.IndexCommitmentStore, reader io.Reader, onMsg func(message proto.Message, maxID uint64) error) error {
+func (t autoIncrementTable) decodeAutoIncJson(store kvstore.IndexCommitmentStore, reader io.Reader, onMsg func(message proto.Message, maxID uint64) error) error {
 	decoder, err := t.startDecodeJson(reader)
 	if err != nil {
 		return err
@@ -142,7 +142,7 @@ func (t AutoIncrementTable) decodeAutoIncJson(store kvstore.IndexCommitmentStore
 		})
 }
 
-func (t AutoIncrementTable) ExportJSON(store kvstore.IndexCommitmentReadStore, writer io.Writer) error {
+func (t autoIncrementTable) ExportJSON(store kvstore.IndexCommitmentReadStore, writer io.Writer) error {
 	_, err := writer.Write([]byte("["))
 	if err != nil {
 		return err

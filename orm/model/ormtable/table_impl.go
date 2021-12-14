@@ -21,7 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
 
-type TableImpl struct {
+// tableImpl implements Table.
+type tableImpl struct {
 	*PrimaryKeyIndex
 	indexers              []indexer
 	indexes               []Index
@@ -39,7 +40,7 @@ type TypeResolver interface {
 	protoregistry.ExtensionTypeResolver
 }
 
-func (t TableImpl) Save(store kvstore.IndexCommitmentStore, message proto.Message, mode SaveMode) error {
+func (t tableImpl) Save(store kvstore.IndexCommitmentStore, message proto.Message, mode SaveMode) error {
 	mref := message.ProtoReflect()
 	pkValues, pk, err := t.EncodeKeyFromMessage(mref)
 	if err != nil {
@@ -112,7 +113,7 @@ func (t TableImpl) Save(store kvstore.IndexCommitmentStore, message proto.Messag
 	return nil
 }
 
-func (t TableImpl) Delete(store kvstore.IndexCommitmentStore, primaryKey []protoreflect.Value) error {
+func (t tableImpl) Delete(store kvstore.IndexCommitmentStore, primaryKey []protoreflect.Value) error {
 	pk, err := t.EncodeKey(primaryKey)
 	if err != nil {
 		return err
@@ -154,23 +155,23 @@ func (t TableImpl) Delete(store kvstore.IndexCommitmentStore, primaryKey []proto
 	return nil
 }
 
-func (t TableImpl) GetIndex(fields FieldNames) Index {
+func (t tableImpl) GetIndex(fields FieldNames) Index {
 	return t.indexesByFields[fields]
 }
 
-func (t TableImpl) GetUniqueIndex(fields FieldNames) UniqueIndex {
+func (t tableImpl) GetUniqueIndex(fields FieldNames) UniqueIndex {
 	return t.uniqueIndexesByFields[fields]
 }
 
-func (t TableImpl) Indexes() []Index {
+func (t tableImpl) Indexes() []Index {
 	return t.indexes
 }
 
-func (t TableImpl) DefaultJSON() json.RawMessage {
+func (t tableImpl) DefaultJSON() json.RawMessage {
 	return json.RawMessage("[]")
 }
 
-func (t TableImpl) decodeJson(reader io.Reader, onMsg func(message proto.Message) error) error {
+func (t tableImpl) decodeJson(reader io.Reader, onMsg func(message proto.Message) error) error {
 	decoder, err := t.startDecodeJson(reader)
 	if err != nil {
 		return err
@@ -179,7 +180,7 @@ func (t TableImpl) decodeJson(reader io.Reader, onMsg func(message proto.Message
 	return t.doDecodeJson(decoder, nil, onMsg)
 }
 
-func (t TableImpl) startDecodeJson(reader io.Reader) (*json.Decoder, error) {
+func (t tableImpl) startDecodeJson(reader io.Reader) (*json.Decoder, error) {
 	decoder := json.NewDecoder(reader)
 	token, err := decoder.Token()
 	if err != nil {
@@ -196,7 +197,7 @@ func (t TableImpl) startDecodeJson(reader io.Reader) (*json.Decoder, error) {
 // onFirst is called on the first RawMessage and used for auto-increment tables
 // to decode the sequence in which case it should return true.
 // onMsg is called on every decoded message
-func (t TableImpl) doDecodeJson(decoder *json.Decoder, onFirst func(message json.RawMessage) bool, onMsg func(message proto.Message) error) error {
+func (t tableImpl) doDecodeJson(decoder *json.Decoder, onFirst func(message json.RawMessage) bool, onMsg func(message proto.Message) error) error {
 	unmarshalOptions := protojson.UnmarshalOptions{Resolver: t.typeResolver}
 
 	first := true
@@ -259,7 +260,7 @@ func DefaultJSONValidator(message proto.Message) error {
 	return nil
 }
 
-func (t TableImpl) ValidateJSON(reader io.Reader) error {
+func (t tableImpl) ValidateJSON(reader io.Reader) error {
 	return t.decodeJson(reader, func(message proto.Message) error {
 		if t.customJSONValidator != nil {
 			return t.customJSONValidator(message)
@@ -269,13 +270,13 @@ func (t TableImpl) ValidateJSON(reader io.Reader) error {
 	})
 }
 
-func (t TableImpl) ImportJSON(store kvstore.IndexCommitmentStore, reader io.Reader) error {
+func (t tableImpl) ImportJSON(store kvstore.IndexCommitmentStore, reader io.Reader) error {
 	return t.decodeJson(reader, func(message proto.Message) error {
 		return t.Save(store, message, SAVE_MODE_DEFAULT)
 	})
 }
 
-func (t TableImpl) ExportJSON(store kvstore.IndexCommitmentReadStore, writer io.Writer) error {
+func (t tableImpl) ExportJSON(store kvstore.IndexCommitmentReadStore, writer io.Writer) error {
 	_, err := writer.Write([]byte("["))
 	if err != nil {
 		return err
@@ -284,7 +285,7 @@ func (t TableImpl) ExportJSON(store kvstore.IndexCommitmentReadStore, writer io.
 	return t.doExportJSON(store, writer)
 }
 
-func (t TableImpl) doExportJSON(store kvstore.IndexCommitmentReadStore, writer io.Writer) error {
+func (t tableImpl) doExportJSON(store kvstore.IndexCommitmentReadStore, writer io.Writer) error {
 	marshalOptions := protojson.MarshalOptions{
 		UseProtoNames: true,
 		Resolver:      t.typeResolver,
@@ -326,7 +327,7 @@ func (t TableImpl) doExportJSON(store kvstore.IndexCommitmentReadStore, writer i
 	}
 }
 
-func (t TableImpl) DecodeEntry(k, v []byte) (ormkv.Entry, error) {
+func (t tableImpl) DecodeEntry(k, v []byte) (ormkv.Entry, error) {
 	r := bytes.NewReader(k)
 	if bytes.HasPrefix(k, t.tablePrefix) {
 		err := ormkv.SkipPrefix(r, t.tablePrefix)
@@ -358,7 +359,7 @@ func (t TableImpl) DecodeEntry(k, v []byte) (ormkv.Entry, error) {
 	}
 }
 
-func (t TableImpl) EncodeEntry(entry ormkv.Entry) (k, v []byte, err error) {
+func (t tableImpl) EncodeEntry(entry ormkv.Entry) (k, v []byte, err error) {
 	switch entry := entry.(type) {
 	case *ormkv.PrimaryKeyEntry:
 		return t.PrimaryKeyCodec.EncodeEntry(entry)
@@ -374,4 +375,4 @@ func (t TableImpl) EncodeEntry(entry ormkv.Entry) (k, v []byte, err error) {
 	}
 }
 
-var _ Table = &TableImpl{}
+var _ Table = &tableImpl{}

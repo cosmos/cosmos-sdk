@@ -9,17 +9,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 )
 
-// Singleton implements a Table instance for singletons.
-type Singleton struct {
-	*TableImpl
+// singleton implements a Table instance for singletons.
+type singleton struct {
+	*tableImpl
 }
 
-// NewSingleton returns a new singleton.
-func NewSingleton(tableImpl *TableImpl) *Singleton {
-	return &Singleton{TableImpl: tableImpl}
-}
-
-func (t Singleton) DefaultJSON() json.RawMessage {
+func (t singleton) DefaultJSON() json.RawMessage {
 	msg := t.MessageType().New().Interface()
 	bz, err := t.jsonMarshalOptions().Marshal(msg)
 	if err != nil {
@@ -28,7 +23,7 @@ func (t Singleton) DefaultJSON() json.RawMessage {
 	return bz
 }
 
-func (t Singleton) ValidateJSON(reader io.Reader) error {
+func (t singleton) ValidateJSON(reader io.Reader) error {
 	bz, err := io.ReadAll(reader)
 	if err != nil {
 		return err
@@ -47,7 +42,7 @@ func (t Singleton) ValidateJSON(reader io.Reader) error {
 	}
 }
 
-func (t Singleton) ImportJSON(store kvstore.IndexCommitmentStore, reader io.Reader) error {
+func (t singleton) ImportJSON(store kvstore.IndexCommitmentStore, reader io.Reader) error {
 	bz, err := io.ReadAll(reader)
 	if err != nil {
 		return err
@@ -62,7 +57,7 @@ func (t Singleton) ImportJSON(store kvstore.IndexCommitmentStore, reader io.Read
 	return t.Save(store, msg, SAVE_MODE_DEFAULT)
 }
 
-func (t Singleton) ExportJSON(store kvstore.IndexCommitmentReadStore, writer io.Writer) error {
+func (t singleton) ExportJSON(store kvstore.IndexCommitmentReadStore, writer io.Writer) error {
 	msg := t.MessageType().New().Interface()
 	found, err := t.Get(store, nil, msg)
 	if err != nil {
@@ -83,7 +78,7 @@ func (t Singleton) ExportJSON(store kvstore.IndexCommitmentReadStore, writer io.
 	return err
 }
 
-func (t Singleton) jsonMarshalOptions() protojson.MarshalOptions {
+func (t singleton) jsonMarshalOptions() protojson.MarshalOptions {
 	return protojson.MarshalOptions{
 		Multiline:       true,
 		Indent:          "",

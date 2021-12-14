@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 type msgServer struct {
@@ -19,13 +20,13 @@ type msgServer struct {
 
 // NewMsgServerImpl returns an implementation of the gov MsgServer interface
 // for the provided Keeper.
-func NewMsgServerImpl(keeper Keeper) types.MsgServer {
+func NewMsgServerImpl(keeper Keeper) v1beta1.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-var _ types.MsgServer = msgServer{}
+var _ v1beta1.MsgServer = msgServer{}
 
-func (k msgServer) SubmitProposal(goCtx context.Context, msg *types.MsgSubmitProposal) (*types.MsgSubmitProposalResponse, error) {
+func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1beta1.MsgSubmitProposal) (*v1beta1.MsgSubmitProposalResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	proposal, err := k.Keeper.SubmitProposal(ctx, msg.GetContent())
 	if err != nil {
@@ -43,7 +44,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *types.MsgSubmitPro
 		"submit proposal",
 	)
 
-	defer telemetry.IncrCounter(1, types.ModuleName, "proposal")
+	defer telemetry.IncrCounter(1, v1beta1.ModuleName, "proposal")
 
 	votingStarted, err := k.Keeper.AddDeposit(ctx, proposal.ProposalId, msg.GetProposer(), msg.GetInitialDeposit())
 	if err != nil {
@@ -66,24 +67,24 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *types.MsgSubmitPro
 	}
 
 	ctx.EventManager().EmitEvent(submitEvent)
-	return &types.MsgSubmitProposalResponse{
+	return &v1beta1.MsgSubmitProposalResponse{
 		ProposalId: proposal.ProposalId,
 	}, nil
 }
 
-func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVoteResponse, error) {
+func (k msgServer) Vote(goCtx context.Context, msg *v1beta1.MsgVote) (*v1beta1.MsgVoteResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	accAddr, accErr := sdk.AccAddressFromBech32(msg.Voter)
 	if accErr != nil {
 		return nil, accErr
 	}
-	err := k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, types.NewNonSplitVoteOption(msg.Option))
+	err := k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, v1beta1.NewNonSplitVoteOption(msg.Option))
 	if err != nil {
 		return nil, err
 	}
 
 	defer telemetry.IncrCounterWithLabels(
-		[]string{types.ModuleName, "vote"},
+		[]string{v1beta1.ModuleName, "vote"},
 		1,
 		[]metrics.Label{
 			telemetry.NewLabel("proposal_id", strconv.Itoa(int(msg.ProposalId))),
@@ -98,10 +99,10 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 		),
 	)
 
-	return &types.MsgVoteResponse{}, nil
+	return &v1beta1.MsgVoteResponse{}, nil
 }
 
-func (k msgServer) VoteWeighted(goCtx context.Context, msg *types.MsgVoteWeighted) (*types.MsgVoteWeightedResponse, error) {
+func (k msgServer) VoteWeighted(goCtx context.Context, msg *v1beta1.MsgVoteWeighted) (*v1beta1.MsgVoteWeightedResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	accAddr, accErr := sdk.AccAddressFromBech32(msg.Voter)
 	if accErr != nil {
@@ -113,7 +114,7 @@ func (k msgServer) VoteWeighted(goCtx context.Context, msg *types.MsgVoteWeighte
 	}
 
 	defer telemetry.IncrCounterWithLabels(
-		[]string{types.ModuleName, "vote"},
+		[]string{v1beta1.ModuleName, "vote"},
 		1,
 		[]metrics.Label{
 			telemetry.NewLabel("proposal_id", strconv.Itoa(int(msg.ProposalId))),
@@ -128,10 +129,10 @@ func (k msgServer) VoteWeighted(goCtx context.Context, msg *types.MsgVoteWeighte
 		),
 	)
 
-	return &types.MsgVoteWeightedResponse{}, nil
+	return &v1beta1.MsgVoteWeightedResponse{}, nil
 }
 
-func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDeposit) (*types.MsgDepositResponse, error) {
+func (k msgServer) Deposit(goCtx context.Context, msg *v1beta1.MsgDeposit) (*v1beta1.MsgDepositResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	accAddr, err := sdk.AccAddressFromBech32(msg.Depositor)
 	if err != nil {
@@ -143,7 +144,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDeposit) (*types
 	}
 
 	defer telemetry.IncrCounterWithLabels(
-		[]string{types.ModuleName, "deposit"},
+		[]string{v1beta1.ModuleName, "deposit"},
 		1,
 		[]metrics.Label{
 			telemetry.NewLabel("proposal_id", strconv.Itoa(int(msg.ProposalId))),
@@ -167,5 +168,5 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDeposit) (*types
 		)
 	}
 
-	return &types.MsgDepositResponse{}, nil
+	return &v1beta1.MsgDepositResponse{}, nil
 }

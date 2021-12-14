@@ -42,6 +42,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -230,6 +231,7 @@ type Manager struct {
 	OrderExportGenesis []string
 	OrderBeginBlockers []string
 	OrderEndBlockers   []string
+	OrderMigrations    []string
 }
 
 // NewManager creates a new Manager object
@@ -269,6 +271,30 @@ func (m *Manager) SetOrderBeginBlockers(moduleNames ...string) {
 // SetOrderEndBlockers sets the order of set end-blocker calls
 func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
 	m.OrderEndBlockers = moduleNames
+}
+
+// SetOrderMigrations sets the order of migrations to be run. If not set
+// then migrations will be run with an order defined in `DefaultMigrationsOrder`.
+// Function will return error if the order is not complete (eg a module won't be defined).
+func (m *Manager) SetOrderMigrations(moduleNames ...string) error {
+	// check if all modules are defiend
+	ms := make(map[string]bool)
+	for _, m := range moduleNames {
+		ms[m] = true
+	}
+	var missing []string
+	for m := range m.Modules {
+		if !ms[m] {
+			missing = append(missing, m)
+		}
+	}
+	if len(missing) != 0 {
+		return errors.ErrAppWiring.Wrapf(
+			"All modules must be defined when setting SetOrderMigrations, missing: %v", missing)
+	}
+
+	m.OrderMigrations = moduleNames
+	return nil
 }
 
 // RegisterInvariants registers all module invariants
@@ -347,11 +373,6 @@ type MigrationHandler func(sdk.Context) error
 // VersionMap is a map of moduleName -> version
 type VersionMap map[string]uint64
 
-type MigrationOrder struct {
-	StateVersion uint64
-	Priority     uint64
-}
-
 // RunMigrations performs in-place store migrations for all modules. This
 // function MUST be called insde an x/upgrade UpgradeHandler.
 //
@@ -401,15 +422,14 @@ type MigrationOrder struct {
 //   })
 //
 // Please also refer to docs/core/upgrade.md for more information.
-func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM map[string]MigrationOrder) (VersionMap, error) {
+func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM VersionMap) (VersionMap, error) {
 	c, ok := cfg.(configurator)
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
 	}
 
-	sortedModNames := sortMigrations(m.Modules, fromVM)
 	updatedVM := VersionMap{}
-	for _, moduleName := range sortedModNames {
+	for _, moduleName := range m.OrderMigrations {
 		module := m.Modules[moduleName]
 		fromVersion, exists := fromVM[moduleName]
 		toVersion := module.ConsensusVersion()
@@ -496,36 +516,23 @@ func (m *Manager) GetVersionMap() VersionMap {
 	return vermap
 }
 
+// Returns a default migrations ordres: ascending alphabetical by module name,
+// except x/auth which will run last.
 // TODO: write tests
-// deterministic migration order
-func sortMigrations(modules map[string]AppModule, fromVM map[string]MigrationOrder) []string {
-	sortedModNames := make([]string, 0, len(modules))
-	for key := range modules {
-		sortedModNames = append(sortedModNames, key)
-	}
-	sort.Slice(sortedModNames, func(i, j int) bool {
-		a, b := sortedModNames[i], sortedModNames[j]
-		aVer, aOK := fromVM[a]
-		bVer, bOK := fromVM[b]
-		// Existing modules should be migrated before new modules
-		if aOK != bOK {
-			return aOK
-		}
-		return aVer.Priority > bVer.Priority || a <= b
-	})
-	return sortedModNames
-}
-
-// Returns a default migrations ordres, where all modules have order=100 except x/auth having
-// order=99 (this way x/auth is run last).
-func DefaultMigrationsOrder(fromVM VersionMap) map[string]MigrationOrder {
-	out := make(map[string]MigrationOrder, len(fromVM))
-	for k, v := range fromVM {
-		if k == "auth" {
-			out[k] = MigrationOrder{v, 99}
+func DefaultMigrationsOrder(modules []string) []string {
+	const authName = "auth"
+	out := make([]string, 0, len(modules))
+	hasAuth := false
+	for _, m := range modules {
+		if m == authName {
+			hasAuth = true
 		} else {
-			out[k] = MigrationOrder{v, 100}
+			out = append(out, m)
 		}
+	}
+	sort.Strings(out)
+	if hasAuth {
+		out = append(out, authName)
 	}
 	return out
 }

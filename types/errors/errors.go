@@ -141,12 +141,15 @@ var (
 	// Examples: not DB domain error, file writing etc...
 	ErrIO = Register(RootCodespace, 39, "Internal IO error")
 
+	// ErrAppConfig defines an error occurred if min-gas-prices field in BaseConfig is empty.
+	ErrAppConfig = Register(RootCodespace, 40, "error in app.toml")
+
+	// ErrAppConfig defines an error related to app or module wiring
+	ErrAppWiring = Register(RootCodespace, 41, "error related to app wiring or module setup")
+
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")
-
-	// ErrAppConfig defines an error occurred if min-gas-prices field in BaseConfig is empty.
-	ErrAppConfig = Register(RootCodespace, 40, "error in app.toml")
 )
 
 // Register returns an error instance that should be used as the base for

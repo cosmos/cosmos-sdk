@@ -366,6 +366,10 @@ func NewSimApp(
 		feegrant.ModuleName, nft.ModuleName,
 	)
 
+	if err := app.mm.SetOrderMigrations(); err != nil {
+		panic(err)
+	}
+
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.legacyRouter, app.QueryRouter(), encodingConfig.Amino)
 	app.configurator = module.NewConfigurator(app.appCodec, app.msgSvcRouter, app.GRPCQueryRouter())

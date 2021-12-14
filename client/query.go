@@ -62,6 +62,11 @@ func (ctx Context) GetFromAddress() sdk.AccAddress {
 	return ctx.FromAddress
 }
 
+// GetFeePayerAddress returns the fee granter address from the context
+func (ctx Context) GetFeePayerAddress() sdk.AccAddress {
+	return ctx.FeePayer
+}
+
 // GetFeeGranterAddress returns the fee granter address from the context
 func (ctx Context) GetFeeGranterAddress() sdk.AccAddress {
 	return ctx.FeeGranter

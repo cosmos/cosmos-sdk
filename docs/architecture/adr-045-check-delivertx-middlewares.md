@@ -3,6 +3,7 @@
 ## Changelog
 
 - 20.08.2021: Initial draft.
+- 07.12.2021: Update `tx.Handler` interface ([\#10693](https://github.com/cosmos/cosmos-sdk/pull/10693)).
 
 ## Status
 
@@ -26,13 +27,43 @@ The two following interfaces are the base of the middleware design, and are defi
 
 ```go
 type Handler interface {
-    CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error)
-    DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error)
-    SimulateTx(ctx context.Context, tx sdk.Tx, req RequestSimulateTx) (ResponseSimulateTx, error)
+    CheckTx(ctx context.Context, req Request, checkReq RequestCheckTx) (Response, ResponseCheckTx, error)
+    DeliverTx(ctx context.Context, req Request) (Response, error)
+    SimulateTx(ctx context.Context, req Request (Response, error)
 }
 
 type Middleware func(Handler) Handler
 ```
+
+where we define the following arguments and return types:
+
+```go
+type Request struct {
+	Tx      sdk.Tx
+	TxBytes []byte
+}
+
+type Response struct {
+	GasWanted uint64
+	GasUsed   uint64
+	// MsgResponses is an array containing each Msg service handler's response
+	// type, packed in an Any. This will get proto-serialized into the `Data` field
+	// in the ABCI Check/DeliverTx responses.
+	MsgResponses []*codectypes.Any
+	Log          string
+	Events       []abci.Event
+}
+
+type RequestCheckTx struct {
+	Type abci.CheckTxType
+}
+
+type ResponseCheckTx struct {
+	Priority int64
+}
+```
+
+Please note that because CheckTx handles separate logic related to mempool priotization, its signature is different than DeliverTx and SimulateTx.
 
 BaseApp holds a reference to a `tx.Handler`:
 
@@ -47,18 +78,39 @@ Baseapp's ABCI `{Check,Deliver}Tx()` and `Simulate()` methods simply call `app.t
 
 ```go
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
-    tx, err := app.txDecoder(req.Tx)
-    if err != nil {
-        return sdkerrors.ResponseDeliverTx(err, 0, 0, app.trace)
-    }
+    var abciRes abci.ResponseDeliverTx
+	ctx := app.getContextForTx(runTxModeDeliver, req.Tx)
+	res, err := app.txHandler.DeliverTx(ctx, tx.Request{TxBytes: req.Tx})
+	if err != nil {
+		abciRes = sdkerrors.ResponseDeliverTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
+		return abciRes
+	}
 
-    ctx := app.getContextForTx(runTxModeDeliver, req.Tx)
-    res, err := app.txHandler.DeliverTx(ctx, tx, req)
-    if err != nil {
-        return sdkerrors.ResponseDeliverTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
-    }
+	abciRes, err = convertTxResponseToDeliverTx(res)
+	if err != nil {
+		return sdkerrors.ResponseDeliverTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
+	}
 
-    return res
+	return abciRes
+}
+
+// convertTxResponseToDeliverTx converts a tx.Response into a abci.ResponseDeliverTx.
+func convertTxResponseToDeliverTx(txRes tx.Response) (abci.ResponseDeliverTx, error) {
+	data, err := makeABCIData(txRes)
+	if err != nil {
+		return abci.ResponseDeliverTx{}, nil
+	}
+
+	return abci.ResponseDeliverTx{
+		Data:   data,
+		Log:    txRes.Log,
+		Events: txRes.Events,
+	}, nil
+}
+
+// makeABCIData generates the Data field to be sent to ABCI Check/DeliverTx.
+func makeABCIData(txRes tx.Response) ([]byte, error) {
+	return proto.Marshal(&sdk.TxMsgData{MsgResponses: txRes.MsgResponses})
 }
 ```
 
@@ -94,18 +146,18 @@ func NewMyMiddleware(arg1, arg2) tx.Middleware {
 // Assert myTxHandler is a tx.Handler.
 var _ tx.Handler = myTxHandler{}
 
-func (txh myTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (h myTxHandler) CheckTx(ctx context.Context, req Request, checkReq RequestcheckTx) (Response, ResponseCheckTx, error) {
     // CheckTx specific pre-processing logic
 
     // run the next middleware
-    res, err := txh.next.CheckTx(ctx, tx, req)
+    res, checkRes, err := txh.next.CheckTx(ctx, req, checkReq)
 
     // CheckTx specific post-processing logic
 
-    return res, err
+    return res, checkRes, err
 }
 
-func (txh myTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+func (h myTxHandler) DeliverTx(ctx context.Context, req Request) (Response, error) {
     // DeliverTx specific pre-processing logic
 
     // run the next middleware
@@ -116,7 +168,7 @@ func (txh myTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.Reques
     return res, err
 }
 
-func (txh myTxHandler) SimulateTx(ctx context.Context, tx sdk.Tx, req tx.RequestSimulateTx) (abci.ResponseSimulateTx, error) {
+func (h myTxHandler) SimulateTx(ctx context.Context, req Request) (Response, error) {
     // SimulateTx specific pre-processing logic
 
     // run the next middleware
@@ -168,6 +220,7 @@ While the app developer can define and compose the middlewares of their choice, 
 | Middleware              | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | RunMsgsTxHandler        | This is the base `tx.Handler`. It replaces the old baseapp's `runMsgs`, and executes a transaction's `Msg`s.                                                                                                                                                                                                                                                                                                                                                                             |
+| TxDecoderMiddleware     | This middleware takes in transaction raw bytes, and decodes them into a `sdk.Tx`. It replaces the `baseapp.txDecoder` field, so that BaseApp stays as thin as possible. Since most middlewares read the contents of the `sdk.Tx`, the TxDecoderMiddleware should be run first in the middelware stack.                                                                                                                                                                                   |
 | {Antehandlers}          | Each antehandler is converted to its own middleware. These middlewares perform signature verification, fee deductions and other validations on the incoming transaction.                                                                                                                                                                                                                                                                                                                 |
 | IndexEventsTxMiddleware | This is a simple middleware that chooses which events to index in Tendermint. Replaces `baseapp.indexEvents` (which unfortunately still exists in baseapp too, because it's used to index Begin/EndBlock events)                                                                                                                                                                                                                                                                         |
 | RecoveryTxMiddleware    | This index recovers from panics. It replaces baseapp.runTx's panic recovery described in [ADR-022](./adr-022-custom-panic-handling.md).                                                                                                                                                                                                                                                                                                                                                  |
@@ -182,6 +235,7 @@ The middleware-based design builds upon the existing antehandlers design describ
 - Designed as chaining/composing small modular pieces.
 - Allow code reuse for `{Check,Deliver}Tx` and for `Simulate`.
 - Set up in `app.go`, and easily customizable by app developers.
+- Order is important.
 
 #### Differences with Antehandlers
 
@@ -212,6 +266,7 @@ Since this refactor removes some logic away from BaseApp and into middlewares, i
 +    LegacyRouter:      app.legacyRouter,
 +    MsgServiceRouter:  app.msgSvcRouter,
 +    LegacyAnteHandler: anteHandler,
++    TxDecoder:         encodingConfig.TxConfig.TxDecoder,
 +})
 if err != nil {
     panic(err)
@@ -228,11 +283,11 @@ This ADR does not introduce any state-machine-, client- or CLI-breaking changes.
 
 - Allow custom logic to be run before an after `Msg` execution. This enables the [tips](https://github.com/cosmos/cosmos-sdk/issues/9406) and [gas refund](https://github.com/cosmos/cosmos-sdk/issues/2150) uses cases, and possibly other ones.
 - Make BaseApp more lightweight, and defer complex logic to small modular components.
-- Separate paths for `{Check,Deliver,Simulate}Tx` with different returns types. This allows for improved readability (replace `if sdkCtx.IsRecheckTx() && !simulate {...}` with separate methods) and more flexibility (e.g. returning a `priority` in `abci.ResponseCheckTx`).
+- Separate paths for `{Check,Deliver,Simulate}Tx` with different returns types. This allows for improved readability (replace `if sdkCtx.IsRecheckTx() && !simulate {...}` with separate methods) and more flexibility (e.g. returning a `priority` in `ResponseCheckTx`).
 
 ### Negative
 
-- It is hard to understand at first glance the state updates that would occur after a middleware runs given the `sdk.Context` and `tx`. A middleware can have an arbitrary number of nested middleware being called within its function body, each possibly doing some pre- and post-processing before calling the next middleware on the chain. Thus to understand what a middleware is doing, one must also understand what every other middleware further along the chain is also doing. This can get quite complicated to understand.
+- It is hard to understand at first glance the state updates that would occur after a middleware runs given the `sdk.Context` and `tx`. A middleware can have an arbitrary number of nested middleware being called within its function body, each possibly doing some pre- and post-processing before calling the next middleware on the chain. Thus to understand what a middleware is doing, one must also understand what every other middleware further along the chain is also doing, and the order of middlewares matters. This can get quite complicated to understand.
 - API-breaking changes for app developers.
 
 ### Neutral

@@ -1,6 +1,6 @@
 go 1.15
 
-module github.com/terra-money/cosmos-sdk
+module github.com/cosmos/cosmos-sdk
 
 require (
 	github.com/99designs/keyring v1.1.6

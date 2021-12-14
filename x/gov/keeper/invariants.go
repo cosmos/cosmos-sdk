@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 // RegisterInvariants registers all governance invariants
@@ -27,7 +28,7 @@ func ModuleAccountInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		var expectedDeposits sdk.Coins
 
-		keeper.IterateAllDeposits(ctx, func(deposit types.Deposit) bool {
+		keeper.IterateAllDeposits(ctx, func(deposit v1beta1.Deposit) bool {
 			expectedDeposits = expectedDeposits.Add(deposit.Amount...)
 			return false
 		})

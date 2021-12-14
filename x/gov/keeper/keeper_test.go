@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 type KeeperTestSuite struct {
@@ -18,7 +19,7 @@ type KeeperTestSuite struct {
 
 	app         *simapp.SimApp
 	ctx         sdk.Context
-	queryClient types.QueryClient
+	queryClient v1beta1.QueryClient
 	addrs       []sdk.AccAddress
 }
 
@@ -27,8 +28,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.GovKeeper)
-	queryClient := types.NewQueryClient(queryHelper)
+	v1beta1.RegisterQueryServer(queryHelper, app.GovKeeper)
+	queryClient := v1beta1.NewQueryClient(queryHelper)
 
 	suite.app = app
 	suite.ctx = ctx

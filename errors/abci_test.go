@@ -206,7 +206,7 @@ func (s *abciTestSuite) TestRedact() {
 func (s *abciTestSuite) TestABCIInfoSerializeErr() {
 	var (
 		// Create errors with stacktrace for equal comparison.
-		myErrDecode = Wrap(errTxDecode, "testCodespace")
+		myErrDecode = Wrap(errTxDecode, "test")
 		myErrAddr   = Wrap(errInvalidAddress, "tester")
 		myPanic     = ErrPanic
 	)

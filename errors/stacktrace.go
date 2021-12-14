@@ -58,7 +58,7 @@ func trimInternal(st errors.StackTrace) errors.StackTrace {
 	) {
 		st = st[1:]
 	}
-	// trim out outer wrappers (runtime.goexit and testCodespace library if present)
+	// trim out outer wrappers (runtime.goexit and test library if present)
 	for l := len(st) - 1; l > 0 && matchesFunc(st[l], "runtime.", "testing."); l-- {
 		st = st[:l]
 	}

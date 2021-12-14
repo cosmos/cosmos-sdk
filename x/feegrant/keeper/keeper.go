@@ -49,6 +49,11 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 
 	store := ctx.KVStore(k.storeKey)
 	key := feegrant.FeeAllowanceKey(granter, grantee)
+
+	existedGrant, err := k.getGrant(ctx, grantee, granter)
+	if err != nil && existedGrant.GetAllowance() != nil {
+		// k.removeFromGrantKey(ctx, feegrant.FeeAllowancePrefixQueue(feeAllowance))
+	}
 	grant, err := feegrant.NewGrant(granter, grantee, feeAllowance)
 	if err != nil {
 		return err
@@ -227,4 +232,11 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (*feegrant.GenesisState, error) {
 	return &feegrant.GenesisState{
 		Allowances: grants,
 	}, err
+}
+
+func (k Keeper) removeFromGrantKey(ctx sdk.Context, key []byte) error {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(key)
+
+	return nil
 }

@@ -1,6 +1,8 @@
 package feegrant
 
 import (
+	time "time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
@@ -21,7 +23,8 @@ const (
 
 var (
 	// FeeAllowanceKeyPrefix is the set of the kvstore for fee allowance data
-	FeeAllowanceKeyPrefix = []byte{0x00}
+	FeeAllowanceKeyPrefix   = []byte{0x00}
+	FeeAllowanceQueuePrefix = []byte{0x01}
 )
 
 // FeeAllowanceKey is the canonical key to store a grant from granter to grantee
@@ -33,4 +36,13 @@ func FeeAllowanceKey(granter sdk.AccAddress, grantee sdk.AccAddress) []byte {
 // FeeAllowancePrefixByGrantee returns a prefix to scan for all grants to this given address.
 func FeeAllowancePrefixByGrantee(grantee sdk.AccAddress) []byte {
 	return append(FeeAllowanceKeyPrefix, address.MustLengthPrefix(grantee.Bytes())...)
+}
+
+func FeeAllowancePrefixQueue(exp time.Time, allowanceKey []byte) []byte {
+	allowanceByExpTimeKey := AllowanceByExpTimeKey(exp)
+	return append(allowanceByExpTimeKey, allowanceKey[1:]...)
+}
+
+func AllowanceByExpTimeKey(exp time.Time) []byte {
+	return append(FeeAllowanceQueuePrefix, sdk.FormatTimeBytes(exp)...)
 }

@@ -366,7 +366,7 @@ func NewSimApp(
 		feegrant.ModuleName, nft.ModuleName,
 	)
 
-	if err := app.mm.SetOrderMigrations(); err != nil {
+	if err := app.mm.SetOrderMigrations(module.DefaultMigrationsOrder(app.mm.Modules)...); err != nil {
 		panic(err)
 	}
 

@@ -14,9 +14,9 @@ import (
 )
 
 const (
-	PrimaryKeyId uint32 = 0
-	IndexIdLimit uint32 = 32768
-	SeqId               = IndexIdLimit
+	primaryKeyId uint32 = 0
+	indexIdLimit uint32 = 32768
+	seqId               = indexIdLimit
 )
 
 // Options are options for building a Table.
@@ -90,7 +90,7 @@ func Build(options Options) (Table, error) {
 			return nil, ormerrors.InvalidTableDefinition.Wrapf("message %s cannot be declared as both a table and a singleton", messageDescriptor.FullName())
 		}
 	} else if singletonDesc != nil {
-		pkPrefix := AppendVarUInt32(options.Prefix, PrimaryKeyId)
+		pkPrefix := AppendVarUInt32(options.Prefix, primaryKeyId)
 		pkCodec, err := ormkv.NewPrimaryKeyCodec(
 			pkPrefix,
 			options.MessageType,
@@ -127,7 +127,7 @@ func Build(options Options) (Table, error) {
 		return nil, ormerrors.InvalidTableDefinition.Wrapf("empty primary key fields for %s", messageDescriptor.FullName())
 	}
 
-	pkPrefix := AppendVarUInt32(options.Prefix, PrimaryKeyId)
+	pkPrefix := AppendVarUInt32(options.Prefix, primaryKeyId)
 	pkCodec, err := ormkv.NewPrimaryKeyCodec(
 		pkPrefix,
 		options.MessageType,
@@ -143,12 +143,12 @@ func Build(options Options) (Table, error) {
 	table.PrimaryKeyIndex = pkIndex
 	table.indexesByFields[pkFields] = pkIndex
 	table.uniqueIndexesByFields[pkFields] = pkIndex
-	table.entryCodecsById[PrimaryKeyId] = pkIndex
+	table.entryCodecsById[primaryKeyId] = pkIndex
 	table.indexes = append(table.indexes, pkIndex)
 
 	for _, idxDesc := range tableDesc.Index {
 		id := idxDesc.Id
-		if id == 0 || id >= IndexIdLimit {
+		if id == 0 || id >= indexIdLimit {
 			return nil, ormerrors.InvalidIndexId.Wrapf("index on table %s with fields %s, invalid id %d", messageDescriptor.FullName(), idxDesc.Fields, id)
 		}
 
@@ -244,9 +244,9 @@ func Build(options Options) (Table, error) {
 			return nil, ormerrors.InvalidAutoIncrementKey.Wrapf("field %s", autoIncField.FullName())
 		}
 
-		seqPrefix := AppendVarUInt32(options.Prefix, SeqId)
+		seqPrefix := AppendVarUInt32(options.Prefix, seqId)
 		seqCodec := ormkv.NewSeqCodec(options.MessageType, seqPrefix)
-		table.entryCodecsById[SeqId] = seqCodec
+		table.entryCodecsById[seqId] = seqCodec
 		return &autoIncrementTable{
 			tableImpl:    table,
 			autoIncField: autoIncField,

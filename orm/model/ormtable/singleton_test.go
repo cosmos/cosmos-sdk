@@ -14,7 +14,7 @@ import (
 
 func TestSingleton(t *testing.T) {
 	val := &testpb.ExampleSingleton{}
-	singleton, err := BuildTable(TableOptions{
+	singleton, err := Build(Options{
 		MessageType: val.ProtoReflect().Type(),
 	})
 	assert.NilError(t, err)

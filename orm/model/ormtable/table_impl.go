@@ -15,7 +15,6 @@ import (
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
@@ -33,11 +32,6 @@ type tableImpl struct {
 	typeResolver          TypeResolver
 	customJSONValidator   func(message proto.Message) error
 	hooks                 Hooks
-}
-
-type TypeResolver interface {
-	protoregistry.MessageTypeResolver
-	protoregistry.ExtensionTypeResolver
 }
 
 func (t tableImpl) Save(store kvstore.IndexCommitmentStore, message proto.Message, mode SaveMode) error {
@@ -242,6 +236,9 @@ func (t tableImpl) doDecodeJson(decoder *json.Decoder, onFirst func(message json
 	return nil
 }
 
+// DefaultJSONValidator is the default validator used when calling
+// Table.ValidateJSON(). It will call methods with the signature `ValidateBasic() error`
+// and/or `Validate() error` to validate the message.
 func DefaultJSONValidator(message proto.Message) error {
 	if v, ok := message.(interface{ ValidateBasic() error }); ok {
 		err := v.ValidateBasic()

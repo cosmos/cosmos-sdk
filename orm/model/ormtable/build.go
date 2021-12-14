@@ -3,6 +3,8 @@ package ormtable
 import (
 	"fmt"
 
+	"google.golang.org/protobuf/reflect/protoregistry"
+
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -17,8 +19,48 @@ const (
 	SeqId               = IndexIdLimit
 )
 
-// BuildTable builds a table instance from the provided TableOptions.
-func BuildTable(options TableOptions) (Table, error) {
+// Options are options for building a Table.
+type Options struct {
+	// Prefix is an optional prefix for the table within the store.
+	Prefix []byte
+
+	// MessageType is the protobuf message type of the table.
+	MessageType protoreflect.MessageType
+
+	// TableDescriptor is an optional table descriptor to be explicitly used
+	// with the table. Generally this should be nil and the table descriptor
+	// should be pulled from the table message option. TableDescriptor
+	// cannot be used together with SingletonDescriptor.
+	TableDescriptor *ormv1alpha1.TableDescriptor
+
+	// SingletonDescriptor is an optional singleton descriptor to be explicitly used.
+	// Generally this should be nil and the table descriptor
+	// should be pulled from the singleton message option. SingletonDescriptor
+	// cannot be used together with TableDescriptor.
+	SingletonDescriptor *ormv1alpha1.SingletonDescriptor
+
+	// TypeResolver is an optional type resolver to be used when unmarshaling
+	// protobuf messages.
+	TypeResolver TypeResolver
+
+	// JSONValidator is an optional validator that can be used for validating
+	// messaging when using ValidateJSON. If it is nil, DefaultJSONValidator
+	// will be used
+	JSONValidator func(proto.Message) error
+
+	// Hooks is an optional hooks instance for intercepting insert, update and
+	// delete events.
+	Hooks Hooks
+}
+
+// TypeResolver is an interface that can be used for the protoreflect.UnmarshalOptions.Resolver option.
+type TypeResolver interface {
+	protoregistry.MessageTypeResolver
+	protoregistry.ExtensionTypeResolver
+}
+
+// Build builds a Table instance from the provided Options.
+func Build(options Options) (Table, error) {
 	messageDescriptor := options.MessageType.Descriptor()
 
 	table := &tableImpl{
@@ -49,7 +91,12 @@ func BuildTable(options TableOptions) (Table, error) {
 		}
 	} else if singletonDesc != nil {
 		pkPrefix := AppendVarUInt32(options.Prefix, PrimaryKeyId)
-		pkCodec, err := ormkv.NewPrimaryKeyCodec(pkPrefix, options.MessageType, nil, options.UnmarshalOptions)
+		pkCodec, err := ormkv.NewPrimaryKeyCodec(
+			pkPrefix,
+			options.MessageType,
+			nil,
+			proto.UnmarshalOptions{Resolver: options.TypeResolver},
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -81,7 +128,12 @@ func BuildTable(options TableOptions) (Table, error) {
 	}
 
 	pkPrefix := AppendVarUInt32(options.Prefix, PrimaryKeyId)
-	pkCodec, err := ormkv.NewPrimaryKeyCodec(pkPrefix, options.MessageType, pkFieldNames, options.UnmarshalOptions)
+	pkCodec, err := ormkv.NewPrimaryKeyCodec(
+		pkPrefix,
+		options.MessageType,
+		pkFieldNames,
+		proto.UnmarshalOptions{Resolver: options.TypeResolver},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -203,15 +255,4 @@ func BuildTable(options TableOptions) (Table, error) {
 	}
 
 	return table, nil
-}
-
-type TableOptions struct {
-	Prefix              []byte
-	MessageType         protoreflect.MessageType
-	TableDescriptor     *ormv1alpha1.TableDescriptor
-	SingletonDescriptor *ormv1alpha1.SingletonDescriptor
-	UnmarshalOptions    proto.UnmarshalOptions
-	TypeResolver        TypeResolver
-	JSONValidator       func(proto.Message) error
-	Hooks               Hooks
 }

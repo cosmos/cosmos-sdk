@@ -7,7 +7,7 @@ import (
 )
 
 // FieldNames abstractly represents a list of fields with a comparable type which
-// can be used as a map kep.
+// can be used as a map key. It is used primarily to lookup indexes.
 type FieldNames struct {
 	fields string
 }

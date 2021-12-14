@@ -17,7 +17,7 @@ import (
 )
 
 func TestAutoIncrementScenario(t *testing.T) {
-	table, err := BuildTable(TableOptions{
+	table, err := Build(Options{
 		MessageType: (&testpb.ExampleAutoIncrementTable{}).ProtoReflect().Type(),
 	})
 	assert.NilError(t, err)
@@ -60,7 +60,7 @@ func runAutoIncrementScenario(t *testing.T, table Table, store kvstore.IndexComm
 }
 
 func TestBadJSON(t *testing.T) {
-	table, err := BuildTable(TableOptions{
+	table, err := Build(Options{
 		MessageType: (&testpb.ExampleAutoIncrementTable{}).ProtoReflect().Type(),
 	})
 	assert.NilError(t, err)

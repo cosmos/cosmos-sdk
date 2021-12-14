@@ -35,16 +35,26 @@ type View interface {
 	Indexes() []Index
 }
 
-// Table is an abstract interface around a concrete table.
+// Table is an abstract interface around a concrete table. Table instances
+// are stateless, with all state existing only in the store passed
+// to table and index methods.
 type Table interface {
 	View
 
 	ormkv.EntryCodec
 
-	// Save saves the provided entry in the store.
+	// Save saves the provided entry in the store with provided save mode.
+	// Save is atomic with respect to the underlying store, meaning that
+	// either the full save operation is written or the store is left unchanged.
+	// If store implement the Hooks interface, the appropriate OnInsert or
+	// OnUpdate hook method will be called.
 	Save(store kvstore.IndexCommitmentStore, message proto.Message, mode SaveMode) error
 
 	// Delete deletes the entry with the provided primary key values from the store.
+	// Delete is atomic with respect to the underlying store, meaning that
+	// either the full delete operation is written or the store is left unchanged.
+	// If store implement the Hooks interface, the OnDelete hook method will
+	// be called.
 	Delete(store kvstore.IndexCommitmentStore, primaryKey []protoreflect.Value) error
 
 	// DefaultJSON returns default JSON that can be used as a template for
@@ -72,6 +82,11 @@ type Table interface {
 	// contain the primary key as this will be auto-assigned.
 	//
 	// Singletons should define a single object and not an array.
+	//
+	// ImportJSON is not atomic with respect to the underlying store, meaning
+	// that in the case of an error, some records may already have been
+	// imported. It is assumed that ImportJSON is called in the context of some
+	// larger transaction isolation.
 	ImportJSON(kvstore.IndexCommitmentStore, io.Reader) error
 
 	// ExportJSON exports JSON in the format accepted by ImportJSON.

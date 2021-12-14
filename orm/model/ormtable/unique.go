@@ -84,7 +84,7 @@ func (u UniqueKeyIndex) Get(store kvstore.IndexCommitmentReadStore, keyValues []
 	return u.primaryKey.Get(store, pk, message)
 }
 
-func (u UniqueKeyIndex) OnInsert(store kvstore.Writer, message protoreflect.Message) error {
+func (u UniqueKeyIndex) onInsert(store kvstore.Writer, message protoreflect.Message) error {
 	k, v, err := u.EncodeKVFromMessage(message)
 	if err != nil {
 		return err
@@ -102,7 +102,7 @@ func (u UniqueKeyIndex) OnInsert(store kvstore.Writer, message protoreflect.Mess
 	return store.Set(k, v)
 }
 
-func (u UniqueKeyIndex) OnUpdate(store kvstore.Writer, new, existing protoreflect.Message) error {
+func (u UniqueKeyIndex) onUpdate(store kvstore.Writer, new, existing protoreflect.Message) error {
 	keyCodec := u.GetKeyCodec()
 	newValues := keyCodec.GetKeyValues(new)
 	existingValues := keyCodec.GetKeyValues(existing)
@@ -142,7 +142,7 @@ func (u UniqueKeyIndex) OnUpdate(store kvstore.Writer, new, existing protoreflec
 	return store.Set(newKey, value)
 }
 
-func (u UniqueKeyIndex) OnDelete(store kvstore.Writer, message protoreflect.Message) error {
+func (u UniqueKeyIndex) onDelete(store kvstore.Writer, message protoreflect.Message) error {
 	_, key, err := u.GetKeyCodec().EncodeKeyFromMessage(message)
 	if err != nil {
 		return err
@@ -151,7 +151,7 @@ func (u UniqueKeyIndex) OnDelete(store kvstore.Writer, message protoreflect.Mess
 	return store.Delete(key)
 }
 
-func (u UniqueKeyIndex) ReadValueFromIndexKey(store kvstore.IndexCommitmentReadStore, primaryKey []protoreflect.Value, _ []byte, message proto.Message) error {
+func (u UniqueKeyIndex) readValueFromIndexKey(store kvstore.IndexCommitmentReadStore, primaryKey []protoreflect.Value, _ []byte, message proto.Message) error {
 	found, err := u.primaryKey.Get(store, primaryKey, message)
 	if err != nil {
 		return err

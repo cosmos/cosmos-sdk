@@ -175,7 +175,7 @@ func (i indexIterator) UnmarshalMessage(message proto.Message) error {
 	if err != nil {
 		return err
 	}
-	return i.index.ReadValueFromIndexKey(i.store, pk, i.value, message)
+	return i.index.readValueFromIndexKey(i.store, pk, i.value, message)
 }
 
 func (i *indexIterator) GetMessage() (proto.Message, error) {

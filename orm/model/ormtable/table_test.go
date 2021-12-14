@@ -640,3 +640,70 @@ func assertTablesEqual(t assert.TestingT, table Table, store, store2 kvstore.Ind
 		assert.DeepEqual(t, msg1, msg2, protocmp.Transform())
 	}
 }
+
+func TestHooks(t *testing.T) {
+	table, err := Build(Options{
+		MessageType: (&testpb.ExampleTable{}).ProtoReflect().Type(),
+	})
+	assert.NilError(t, err)
+
+	store := testkv.NewSharedMemIndexCommitmentStore()
+	storeWithHooks := &testHooks{
+		IndexCommitmentStore: store,
+	}
+
+	a := &testpb.ExampleTable{U32: 10, I64: -1, Str: "foo"}
+	a2 := &testpb.ExampleTable{U32: 10, I64: -1, Str: "foo", E: testpb.Enum_ENUM_FIVE}
+
+	assert.NilError(t, table.Save(storeWithHooks, a, SAVE_MODE_INSERT))
+	assert.NilError(t, table.Save(storeWithHooks, a2, SAVE_MODE_UPDATE))
+	assert.NilError(t, table.Delete(storeWithHooks, testutil.ValuesOf(uint32(10), int64(-1), "foo")))
+
+	events := storeWithHooks.events
+	assert.Equal(t, 3, len(events))
+	assert.Equal(t, "insert", events[0].event)
+	assert.DeepEqual(t, a, events[0].message, protocmp.Transform())
+	assert.Equal(t, "update", events[1].event)
+	assert.DeepEqual(t, a, events[1].existing, protocmp.Transform())
+	assert.DeepEqual(t, a2, events[1].message, protocmp.Transform())
+	assert.Equal(t, "delete", events[2].event)
+	assert.DeepEqual(t, a2, events[2].message, protocmp.Transform())
+}
+
+type testHooks struct {
+	kvstore.IndexCommitmentStore
+	events []*testEvent
+}
+
+func (t *testHooks) OnInsert(message proto.Message) error {
+	t.events = append(t.events, &testEvent{
+		event:   "insert",
+		message: message,
+	})
+	return nil
+}
+
+func (t *testHooks) OnUpdate(existing, new proto.Message) error {
+	t.events = append(t.events, &testEvent{
+		event:    "update",
+		message:  new,
+		existing: existing,
+	})
+	return nil
+}
+
+func (t *testHooks) OnDelete(message proto.Message) error {
+	t.events = append(t.events, &testEvent{
+		event:   "delete",
+		message: message,
+	})
+	return nil
+}
+
+var _ Hooks = &testHooks{}
+
+type testEvent struct {
+	event    string
+	message  proto.Message
+	existing proto.Message
+}

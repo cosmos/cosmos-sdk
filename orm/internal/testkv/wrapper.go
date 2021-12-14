@@ -32,16 +32,16 @@ func (i icsWriterWrapper) IndexStoreWriter() kvstore.Writer {
 	return i.index
 }
 
-func (i icsWriterWrapper) Commit() error {
-	return i.writer.Commit()
+func (i icsWriterWrapper) Write() error {
+	return i.writer.Write()
 }
 
 func (i icsWriterWrapper) Close() {
 	i.writer.Close()
 }
 
-func (i indexCommitmentStoreWrapper) Writer() kvstore.IndexCommitmentStoreWriter {
-	writer := i.store.Writer()
+func (i indexCommitmentStoreWrapper) NewWriter() kvstore.IndexCommitmentStoreWriter {
+	writer := i.store.NewWriter()
 	return &icsWriterWrapper{
 		debugWriter{
 			debugReader: i.commitment,

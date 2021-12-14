@@ -81,7 +81,7 @@ func (p PrimaryKeyIndex) GetByKeyBytes(store kvstore.IndexCommitmentReadStore, k
 	return true, p.Unmarshal(keyValues, bz, message)
 }
 
-func (p PrimaryKeyIndex) ReadValueFromIndexKey(_ kvstore.IndexCommitmentReadStore, primaryKey []protoreflect.Value, value []byte, message proto.Message) error {
+func (p PrimaryKeyIndex) readValueFromIndexKey(_ kvstore.IndexCommitmentReadStore, primaryKey []protoreflect.Value, value []byte, message proto.Message) error {
 	return p.Unmarshal(primaryKey, value, message)
 }
 

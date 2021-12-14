@@ -59,8 +59,13 @@ type IndexCommitmentReadStore interface {
 type IndexCommitmentStore interface {
 	IndexCommitmentReadStore
 
-	// Writer returns a new IndexCommitmentStoreWriter.
-	Writer() IndexCommitmentStoreWriter
+	// NewWriter returns a new IndexCommitmentStoreWriter. It is expected that
+	// each writer represents a batch of writes that will be written atomically
+	// to the underlying store when the writer's Write method is called. This
+	// should usually be done with a batching layer on top of any
+	// transaction-level isolation as writes do not need to be readable until
+	// after the writer is done.
+	NewWriter() IndexCommitmentStoreWriter
 }
 
 // IndexCommitmentStoreWriter is an interface which allows writing to the
@@ -75,13 +80,13 @@ type IndexCommitmentStoreWriter interface {
 	// otherwise it returns a writer for commitment store.
 	IndexStoreWriter() Writer
 
-	// Commit flushes pending writes and discards the transaction. It should
-	// be assumed that writes are not available to read until after Commit
-	// has been called although this may not be true of all backends.
-	Commit() error
+	// Write flushes pending writes to the underlying store. Reads will not
+	// be available in the underlying store until after Write has been called.
+	// Close should be the only method called on this writer after Write is called.
+	Write() error
 
 	// Close should be called whenever the caller is done with this writer.
-	// If Commit was not called beforehand, the write batch is discarded.
+	// If Write was not called beforehand, the write batch is discarded.
 	Close()
 }
 

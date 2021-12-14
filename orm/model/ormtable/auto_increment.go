@@ -25,8 +25,9 @@ type autoIncrementTable struct {
 func (t *autoIncrementTable) Save(store kvstore.IndexCommitmentStore, message proto.Message, mode SaveMode) error {
 	messageRef := message.ProtoReflect()
 	val := messageRef.Get(t.autoIncField).Uint()
-	writer := store.Writer()
+	writer := store.NewWriter()
 	defer writer.Close()
+
 	if val == 0 {
 		if mode == SAVE_MODE_UPDATE {
 			return ormerrors.PrimaryKeyInvalidOnUpdate
@@ -46,7 +47,9 @@ func (t *autoIncrementTable) Save(store kvstore.IndexCommitmentStore, message pr
 
 		mode = SAVE_MODE_UPDATE
 	}
-	return t.tableImpl.doSave(writer, message, mode)
+
+	hooks, _ := store.(Hooks)
+	return t.tableImpl.doSave(writer, hooks, message, mode)
 }
 
 func (t *autoIncrementTable) curSeqValue(kv kvstore.Reader) (uint64, error) {
@@ -130,13 +133,13 @@ func (t autoIncrementTable) decodeAutoIncJson(store kvstore.IndexCommitmentStore
 			if err == nil {
 				// writer is nil during validation
 				if store != nil {
-					writer := store.Writer()
+					writer := store.NewWriter()
 					defer writer.Close()
 					err = t.setSeqValue(writer.IndexStoreWriter(), seq)
 					if err != nil {
 						panic(err)
 					}
-					err = writer.Commit()
+					err = writer.Write()
 					if err != nil {
 						panic(err)
 					}

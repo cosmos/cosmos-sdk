@@ -56,7 +56,7 @@ var _ Index = &IndexKeyIndex{}
 
 func (s IndexKeyIndex) doNotImplement() {}
 
-func (s IndexKeyIndex) OnInsert(store kvstore.Writer, message protoreflect.Message) error {
+func (s IndexKeyIndex) onInsert(store kvstore.Writer, message protoreflect.Message) error {
 	k, v, err := s.EncodeKVFromMessage(message)
 	if err != nil {
 		return err
@@ -64,7 +64,7 @@ func (s IndexKeyIndex) OnInsert(store kvstore.Writer, message protoreflect.Messa
 	return store.Set(k, v)
 }
 
-func (s IndexKeyIndex) OnUpdate(store kvstore.Writer, new, existing protoreflect.Message) error {
+func (s IndexKeyIndex) onUpdate(store kvstore.Writer, new, existing protoreflect.Message) error {
 	newValues := s.GetKeyValues(new)
 	existingValues := s.GetKeyValues(existing)
 	if s.CompareKeys(newValues, existingValues) == 0 {
@@ -87,7 +87,7 @@ func (s IndexKeyIndex) OnUpdate(store kvstore.Writer, new, existing protoreflect
 	return store.Set(newKey, []byte{})
 }
 
-func (s IndexKeyIndex) OnDelete(store kvstore.Writer, message protoreflect.Message) error {
+func (s IndexKeyIndex) onDelete(store kvstore.Writer, message protoreflect.Message) error {
 	_, key, err := s.EncodeKeyFromMessage(message)
 	if err != nil {
 		return err
@@ -95,7 +95,7 @@ func (s IndexKeyIndex) OnDelete(store kvstore.Writer, message protoreflect.Messa
 	return store.Delete(key)
 }
 
-func (s IndexKeyIndex) ReadValueFromIndexKey(store kvstore.IndexCommitmentReadStore, primaryKey []protoreflect.Value, _ []byte, message proto.Message) error {
+func (s IndexKeyIndex) readValueFromIndexKey(store kvstore.IndexCommitmentReadStore, primaryKey []protoreflect.Value, _ []byte, message proto.Message) error {
 	found, err := s.primaryKey.Get(store, primaryKey, message)
 	if err != nil {
 		return err

@@ -8,7 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 )
 
-// Index defines an index on a table.
+// Index defines an index on a table. Index instances
+// are stateless, with all state existing only in the store passed
+// to index methods.
 type Index interface {
 
 	// PrefixIterator returns a prefix iterator for the provided prefix. Prefix
@@ -47,7 +49,7 @@ type concreteIndex interface {
 	Index
 	ormkv.IndexCodec
 
-	ReadValueFromIndexKey(store kvstore.IndexCommitmentReadStore, primaryKey []protoreflect.Value, value []byte, message proto.Message) error
+	readValueFromIndexKey(store kvstore.IndexCommitmentReadStore, primaryKey []protoreflect.Value, value []byte, message proto.Message) error
 }
 
 // UniqueIndex defines an unique index on a table.
@@ -74,9 +76,7 @@ type IteratorOptions struct {
 }
 
 type indexer interface {
-	OnInsert(store kvstore.Writer, message protoreflect.Message) error
-	OnUpdate(store kvstore.Writer, new, existing protoreflect.Message) error
-	OnDelete(store kvstore.Writer, message protoreflect.Message) error
-
-	doNotImplement()
+	onInsert(store kvstore.Writer, message protoreflect.Message) error
+	onUpdate(store kvstore.Writer, new, existing protoreflect.Message) error
+	onDelete(store kvstore.Writer, message protoreflect.Message) error
 }

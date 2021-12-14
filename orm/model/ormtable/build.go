@@ -47,10 +47,6 @@ type Options struct {
 	// messaging when using ValidateJSON. If it is nil, DefaultJSONValidator
 	// will be used
 	JSONValidator func(proto.Message) error
-
-	// Hooks is an optional hooks instance for intercepting insert, update and
-	// delete events.
-	Hooks Hooks
 }
 
 // TypeResolver is an interface that can be used for the protoreflect.UnmarshalOptions.Resolver option.
@@ -72,7 +68,6 @@ func Build(options Options) (Table, error) {
 		tablePrefix:           options.Prefix,
 		typeResolver:          options.TypeResolver,
 		customJSONValidator:   options.JSONValidator,
-		hooks:                 options.Hooks,
 	}
 
 	tableDesc := options.TableDescriptor

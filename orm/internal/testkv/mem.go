@@ -67,7 +67,7 @@ func (s splitMemICSWriter) IndexStoreWriter() kvstore.Writer {
 	}
 }
 
-func (s splitMemICSWriter) Commit() error {
+func (s splitMemICSWriter) Write() error {
 	return s.batch.Write()
 }
 
@@ -78,7 +78,7 @@ func (s splitMemICSWriter) Close() {
 	}
 }
 
-func (s splitMemICS) Writer() kvstore.IndexCommitmentStoreWriter {
+func (s splitMemICS) NewWriter() kvstore.IndexCommitmentStoreWriter {
 	return &splitMemICSWriter{
 		DB:    s.shared.db,
 		batch: s.shared.db.NewBatch(),
@@ -135,7 +135,7 @@ func (s sharedMemICSWriter) IndexStoreWriter() kvstore.Writer {
 	return s
 }
 
-func (s sharedMemICSWriter) Commit() error {
+func (s sharedMemICSWriter) Write() error {
 	return s.batch.Write()
 }
 
@@ -146,7 +146,7 @@ func (s sharedMemICSWriter) Close() {
 	}
 }
 
-func (s sharedMemICS) Writer() kvstore.IndexCommitmentStoreWriter {
+func (s sharedMemICS) NewWriter() kvstore.IndexCommitmentStoreWriter {
 	return &sharedMemICSWriter{
 		DB:    s.db,
 		batch: s.db.NewBatch(),

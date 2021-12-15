@@ -47,13 +47,13 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, "905stake", govGenesis.DepositParams.MinDeposit[0].String())
 	require.Equal(t, "77h26m10s", govGenesis.DepositParams.MaxDepositPeriod.String())
 	require.Equal(t, float64(148296), govGenesis.VotingParams.VotingPeriod.Seconds())
-	require.Equal(t, dec1, govGenesis.TallyParams.Quorum)
-	require.Equal(t, dec2, govGenesis.TallyParams.Threshold)
-	require.Equal(t, dec3, govGenesis.TallyParams.VetoThreshold)
+	require.Equal(t, dec1.String(), govGenesis.TallyParams.Quorum)
+	require.Equal(t, dec2.String(), govGenesis.TallyParams.Threshold)
+	require.Equal(t, dec3.String(), govGenesis.TallyParams.VetoThreshold)
 	require.Equal(t, uint64(0x28), govGenesis.StartingProposalId)
-	require.Equal(t, types.Deposits{}, govGenesis.Deposits)
-	require.Equal(t, types.Votes{}, govGenesis.Votes)
-	require.Equal(t, types.Proposals{}, govGenesis.Proposals)
+	require.Equal(t, []*types.Deposit{}, govGenesis.Deposits)
+	require.Equal(t, []*types.Vote{}, govGenesis.Votes)
+	require.Equal(t, []*types.Proposal{}, govGenesis.Proposals)
 }
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.

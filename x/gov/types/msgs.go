@@ -234,7 +234,7 @@ func (msg MsgVoteWeighted) ValidateBasic() error {
 		}
 		weight, err := sdk.NewDecFromStr(option.Weight)
 		if err != nil {
-			return sdkerrors.Wrapf(ErrInvalidVote, "Invalid weight: %w", err)
+			return sdkerrors.Wrapf(ErrInvalidVote, "Invalid weight: %s", err)
 		}
 		totalWeight = totalWeight.Add(weight)
 		if usedOptions[option.Option] {
@@ -277,7 +277,7 @@ func NewCoins(coins []*sdk.Coin) sdk.Coins {
 }
 
 func ToCoinSlice(coins sdk.Coins) []*sdk.Coin {
-	slice := make([]*sdk.Coin, 0, len(coins))
+	slice := make([]*sdk.Coin, len(coins))
 	for idx, coin := range coins {
 		slice[idx] = &coin
 	}

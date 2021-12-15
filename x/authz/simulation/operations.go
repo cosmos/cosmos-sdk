@@ -190,7 +190,7 @@ func SimulateMsgRevoke(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Kee
 			txCfg,
 			[]sdk.Msg{&msg},
 			fees,
-			8517867,
+			helpers.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -230,20 +230,20 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "no grant found"), nil, nil
 		}
 
-		grantee, ok := simtypes.FindAccount(accs, granteeAddr)
-		if !ok {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "Account not found"), nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "grantee account not found")
-		}
-
-		if _, ok := simtypes.FindAccount(accs, granterAddr); !ok {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "Account not found"), nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "granter account not found")
-		}
-
 		if targetGrant.Expiration.Before(ctx.BlockHeader().Time) {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "grant expired"), nil, nil
 		}
 
-		coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(int64(simtypes.RandIntBetween(r, 100, 1000000)))))
+		grantee, ok := simtypes.FindAccount(accs, granteeAddr)
+		if !ok {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "account not found"), nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "grantee account not found")
+		}
+
+		if _, ok := simtypes.FindAccount(accs, granterAddr); !ok {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "account not found"), nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "granter account not found")
+		}
+
+		coins := sdk.NewCoins(sdk.NewInt64Coin("stake", int64(simtypes.RandIntBetween(r, 100, 100000))))
 
 		// Check send_enabled status of each sent coin denom
 		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
@@ -255,6 +255,8 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 			if sendAuthorization.SpendLimit.IsAllLT(coins) {
 				return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "over spend limit"), nil, nil
 			}
+		} else {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "not send authorization"), nil, nil
 		}
 
 		granterspendableCoins := bk.SpendableCoins(ctx, granterAddr)

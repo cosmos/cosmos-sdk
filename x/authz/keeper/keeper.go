@@ -336,6 +336,7 @@ func (keeper Keeper) removeFromGrantQueue(ctx sdk.Context, grantKey []byte, expi
 
 	granter, grantee, msgType := parseGrantStoreKey(grantKey)
 	queueItems := queueItem.GgmTriples
+
 	for index, ggmTriple := range queueItems {
 		if ggmTriple.Granter == granter.String() &&
 			ggmTriple.Grantee == grantee.String() &&

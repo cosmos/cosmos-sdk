@@ -22,6 +22,7 @@ func genGrant(r *rand.Rand, accounts []simtypes.Account) []authz.GrantAuthorizat
 			Granter:       granter.Address.String(),
 			Grantee:       grantee.Address.String(),
 			Authorization: generateRandomGrant(r),
+			Expiration:    simtypes.RandTimestamp(r).AddDate(i, 0, 0),
 		}
 	}
 

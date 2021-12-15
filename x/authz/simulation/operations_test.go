@@ -46,13 +46,12 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	accs := suite.getTestingAccounts(r, 3)
 
 	expected := []struct {
-		weight     int
-		opMsgRoute string
-		opMsgName  string
+		weight    int
+		opMsgName string
 	}{
-		{simulation.WeightGrant, authz.ModuleName, simulation.TypeMsgGrant},
-		{simulation.WeightRevoke, authz.ModuleName, simulation.TypeMsgRevoke},
-		{simulation.WeightExec, authz.ModuleName, simulation.TypeMsgExec},
+		{simulation.WeightGrant, simulation.TypeMsgGrant},
+		{simulation.WeightRevoke, simulation.TypeMsgRevoke},
+		{simulation.WeightExec, simulation.TypeMsgExec},
 	}
 
 	for i, w := range weightedOps {
@@ -61,7 +60,6 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail
 		suite.Require().Equal(expected[i].weight, w.Weight(), "weight should be the same")
-		suite.Require().Equal(expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
 		suite.Require().Equal(expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
 	}
 }

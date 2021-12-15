@@ -86,11 +86,6 @@ func (cfg *Config) UpgradeInfoFilePath() string {
 	return filepath.Join(cfg.Home, "data", defaultFilename)
 }
 
-// the upgradePath is the data backup path, default is cfg.Home
-func (cfg *Config) UpgradeDataBackupPath() string {
-	return cfg.DataBackupPath
-}
-
 // SymLinkToGenesis creates a symbolic link from "./current" to the genesis directory.
 func (cfg *Config) SymLinkToGenesis() (string, error) {
 	genesis := filepath.Join(cfg.Root(), genesisDir)
@@ -344,7 +339,7 @@ func (cfg Config) DetailString() string {
 		{"Upgrade Dir", cfg.BaseUpgradeDir()},
 		{"Genesis Bin", cfg.GenesisBin()},
 		{"Monitored File", cfg.UpgradeInfoFilePath()},
-		{"Data Backup Dir", cfg.UpgradeDataBackupPath()},
+		{"Data Backup Dir", cfg.DataBackupPath},
 	}
 
 	var sb strings.Builder

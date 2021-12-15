@@ -34,7 +34,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased]
+## v1.0.0
 
 ### Features
 * [\#10779](https://github.com/cosmos/cosmos-sdk/pull/10779) Import code from the `github.com/cosmos/cosmos-sdk/types/errors` package.

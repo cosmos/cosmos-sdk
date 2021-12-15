@@ -30,7 +30,7 @@ func TestMigrateStore(t *testing.T) {
 	// Use real values for votes, as we're testing weighted votes.
 	oldVote := types.Vote{ProposalId: 1, Voter: "foobar", Option: types.OptionNoWithVeto}
 	oldVoteValue := cdc.MustMarshal(&oldVote)
-	newVote := types.Vote{ProposalId: 1, Voter: "foobar", Options: types.WeightedVoteOptions{{Option: types.OptionNoWithVeto, Weight: sdk.NewDec(1)}}}
+	newVote := types.Vote{ProposalId: 1, Voter: "foobar", Options: types.WeightedVoteOptions{{Option: types.OptionNoWithVeto, Weight: sdk.NewDec(1).String()}}}
 	newVoteValue := cdc.MustMarshal(&newVote)
 
 	testCases := []struct {

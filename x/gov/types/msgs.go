@@ -3,8 +3,6 @@ package types
 import (
 	"fmt"
 
-	"sigs.k8s.io/yaml"
-
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -31,7 +29,7 @@ var (
 //nolint:interfacer
 func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer sdk.AccAddress) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
-		InitialDeposit: initialDeposit,
+		InitialDeposit: ToCoinSlice(initialDeposit),
 		Proposer:       proposer.String(),
 	}
 
@@ -42,19 +40,12 @@ func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer
 	return m, nil
 }
 
-func (m *MsgSubmitProposal) GetInitialDeposit() sdk.Coins { return m.InitialDeposit }
-
-func (m *MsgSubmitProposal) GetProposer() sdk.AccAddress {
-	proposer, _ := sdk.AccAddressFromBech32(m.Proposer)
-	return proposer
-}
-
-func (m *MsgSubmitProposal) GetMessages() ([]sdk.Msg, error) {
+func (m *MsgSubmitProposal) GetMsgs() ([]sdk.Msg, error) {
 	return sdktx.GetMsgs(m.Messages, "sdk.MsgProposal")
 }
 
 func (m *MsgSubmitProposal) SetInitialDeposit(coins sdk.Coins) {
-	m.InitialDeposit = coins
+	m.InitialDeposit = ToCoinSlice(coins)
 }
 
 func (m *MsgSubmitProposal) SetProposer(address fmt.Stringer) {
@@ -90,11 +81,14 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Proposer); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
 	}
-	if !m.InitialDeposit.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.InitialDeposit.String())
+
+	deposit := NewCoins(m.InitialDeposit)
+	if !deposit.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
 	}
-	if m.InitialDeposit.IsAnyNegative() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.InitialDeposit.String())
+
+	if deposit.IsAnyNegative() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
 	}
 
 	// Empty messages are not allowed
@@ -103,7 +97,7 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 	// 	return ErrNoProposalMsgs
 	// }
 
-	msgs, err := m.GetMessages()
+	msgs, err := m.GetMsgs()
 	if err != nil {
 		return err
 	}
@@ -130,12 +124,6 @@ func (m MsgSubmitProposal) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{proposer}
 }
 
-// String implements the Stringer interface
-func (m MsgSubmitProposal) String() string {
-	out, _ := yaml.Marshal(m)
-	return string(out)
-}
-
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m MsgSubmitProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return sdktx.UnpackInterfaces(unpacker, m.Messages)
@@ -144,7 +132,7 @@ func (m MsgSubmitProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 // NewMsgDeposit creates a new MsgDeposit instance
 //nolint:interfacer
 func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins) *MsgDeposit {
-	return &MsgDeposit{proposalID, depositor.String(), amount}
+	return &MsgDeposit{proposalID, depositor.String(), ToCoinSlice(amount)}
 }
 
 // Route implements Msg
@@ -158,20 +146,15 @@ func (msg MsgDeposit) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Depositor); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
 	}
-	if !msg.Amount.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+	amount := NewCoins(msg.Amount)
+	if !amount.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
 	}
-	if msg.Amount.IsAnyNegative() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+	if amount.IsAnyNegative() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
 	}
 
 	return nil
-}
-
-// String implements the Stringer interface
-func (msg MsgDeposit) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
 }
 
 // GetSignBytes implements Msg
@@ -210,12 +193,6 @@ func (msg MsgVote) ValidateBasic() error {
 	return nil
 }
 
-// String implements the Stringer interface
-func (msg MsgVote) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
 // GetSignBytes implements Msg
 func (msg MsgVote) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)
@@ -252,10 +229,14 @@ func (msg MsgVoteWeighted) ValidateBasic() error {
 	totalWeight := sdk.NewDec(0)
 	usedOptions := make(map[VoteOption]bool)
 	for _, option := range msg.Options {
-		if !ValidWeightedVoteOption(option) {
+		if !option.IsValid() {
 			return sdkerrors.Wrap(ErrInvalidVote, option.String())
 		}
-		totalWeight = totalWeight.Add(option.Weight)
+		weight, err := sdk.NewDecFromStr(option.Weight)
+		if err != nil {
+			return sdkerrors.Wrapf(ErrInvalidVote, "Invalid weight: %w", err)
+		}
+		totalWeight = totalWeight.Add(weight)
 		if usedOptions[option.Option] {
 			return sdkerrors.Wrap(ErrInvalidVote, "Duplicated vote option")
 		}
@@ -273,12 +254,6 @@ func (msg MsgVoteWeighted) ValidateBasic() error {
 	return nil
 }
 
-// String implements the Stringer interface
-func (msg MsgVoteWeighted) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
 // GetSignBytes implements Msg
 func (msg MsgVoteWeighted) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)
@@ -289,4 +264,22 @@ func (msg MsgVoteWeighted) GetSignBytes() []byte {
 func (msg MsgVoteWeighted) GetSigners() []sdk.AccAddress {
 	voter, _ := sdk.AccAddressFromBech32(msg.Voter)
 	return []sdk.AccAddress{voter}
+}
+
+func NewCoins(coins []*sdk.Coin) sdk.Coins {
+	var c []sdk.Coin
+	for _, coin := range coins {
+		if coin != nil {
+			c = append(c, *coin)
+		}
+	}
+	return sdk.NewCoins(c...)
+}
+
+func ToCoinSlice(coins sdk.Coins) []*sdk.Coin {
+	slice := make([]*sdk.Coin, 0, len(coins))
+	for idx, coin := range coins {
+		slice[idx] = &coin
+	}
+	return slice
 }

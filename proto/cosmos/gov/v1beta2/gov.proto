@@ -112,12 +112,12 @@ message VotingParams {
 message TallyParams {
   //  Minimum percentage of total stake needed to vote for a result to be
   //  considered valid.
-  bytes quorum = 1;
+  string quorum = 1 [(cosmos_proto.scalar) = "cosmos.Dec"];
 
   //  Minimum proportion of Yes votes for proposal to pass. Default value: 0.5.
-  bytes threshold = 2;
+  string threshold = 2 [(cosmos_proto.scalar) = "cosmos.Dec"];
 
   //  Minimum value of Veto votes to Total votes ratio for proposal to be
   //  vetoed. Default value: 1/3.
-  bytes veto_threshold = 3;
+  string veto_threshold = 3 [(cosmos_proto.scalar) = "cosmos.Dec"];
 }

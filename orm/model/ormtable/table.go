@@ -44,17 +44,23 @@ type Table interface {
 	ormkv.EntryCodec
 
 	// Save saves the provided entry in the store with provided save mode.
-	// Save is atomic with respect to the underlying store, meaning that
-	// either the full save operation is written or the store is left unchanged.
+	//
 	// If store implement the Hooks interface, the appropriate OnInsert or
 	// OnUpdate hook method will be called.
+	//
+	// Save attempts to be atomic with respect to the underlying store,
+	// meaning that either the full save operation is written or the store is
+	// left unchanged, unless there is an error with the underlying store.
 	Save(store kvstore.IndexCommitmentStore, message proto.Message, mode SaveMode) error
 
 	// Delete deletes the entry with the provided primary key values from the store.
-	// Delete is atomic with respect to the underlying store, meaning that
-	// either the full delete operation is written or the store is left unchanged.
+	//
 	// If store implement the Hooks interface, the OnDelete hook method will
 	// be called.
+	//
+	// Delete attempts to be atomic with respect to the underlying store,
+	// meaning that either the full save operation is written or the store is
+	// left unchanged, unless there is an error with the underlying store.
 	Delete(store kvstore.IndexCommitmentStore, primaryKey []protoreflect.Value) error
 
 	// DeleteMessage calls delete with the primary key extracted from the provided message.

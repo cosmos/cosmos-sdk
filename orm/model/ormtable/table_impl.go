@@ -32,13 +32,13 @@ type tableImpl struct {
 }
 
 func (t tableImpl) Save(store kvstore.IndexCommitmentStore, message proto.Message, mode SaveMode) error {
-	writer := store.NewWriter()
+	writer := newBatchIndexCommitmentWriter(store)
 	defer writer.Close()
 	hooks, _ := store.(Hooks)
 	return t.doSave(writer, hooks, message, mode)
 }
 
-func (t tableImpl) doSave(writer kvstore.IndexCommitmentStoreWriter, hooks Hooks, message proto.Message, mode SaveMode) error {
+func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, hooks Hooks, message proto.Message, mode SaveMode) error {
 	mref := message.ProtoReflect()
 	pkValues, pk, err := t.EncodeKeyFromMessage(mref)
 	if err != nil {
@@ -80,7 +80,7 @@ func (t tableImpl) doSave(writer kvstore.IndexCommitmentStoreWriter, hooks Hooks
 
 	// store object
 	bz, err := proto.MarshalOptions{Deterministic: true}.Marshal(message)
-	err = writer.CommitmentStoreWriter().Set(pk, bz)
+	err = writer.CommitmentStore().Set(pk, bz)
 	if err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func (t tableImpl) doSave(writer kvstore.IndexCommitmentStoreWriter, hooks Hooks
 	t.SetKeyValues(mref, pkValues)
 
 	// set indexes
-	indexStoreWriter := writer.IndexStoreWriter()
+	indexStoreWriter := writer.IndexStore()
 	if !haveExisting {
 		for _, idx := range t.indexers {
 			err = idx.onInsert(indexStoreWriter, mref)
@@ -135,16 +135,16 @@ func (t tableImpl) Delete(store kvstore.IndexCommitmentStore, primaryKey []proto
 	}
 
 	// delete object
-	writer := store.NewWriter()
+	writer := newBatchIndexCommitmentWriter(store)
 	defer writer.Close()
-	err = writer.CommitmentStoreWriter().Delete(pk)
+	err = writer.CommitmentStore().Delete(pk)
 	if err != nil {
 		return err
 	}
 
 	// clear indexes
 	mref := msg.ProtoReflect()
-	indexStoreWriter := writer.IndexStoreWriter()
+	indexStoreWriter := writer.IndexStore()
 	for _, idx := range t.indexers {
 		err := idx.onDelete(indexStoreWriter, mref)
 		if err != nil {

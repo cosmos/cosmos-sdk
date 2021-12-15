@@ -29,9 +29,7 @@ type Reader interface {
 	ReverseIterator(start, end []byte) (Iterator, error)
 }
 
-// Writer is an interface for writing to a kv-store. It shouldn't be assumed
-// the writes are automatically readable with this interface, but instead
-// that writes are batched and must be committed.
+// Writer is an interface for writing to a kv-store.
 type Writer interface {
 	Reader
 
@@ -42,6 +40,12 @@ type Writer interface {
 	// Delete deletes the key, or does nothing if the key does not exist.
 	// CONTRACT: key readonly []byte
 	Delete(key []byte) error
+}
+
+// Store combines reader and writer.
+type Store interface {
+	Reader
+	Writer
 }
 
 // IndexCommitmentReadStore is a read-only version of IndexCommitmentStore.
@@ -59,35 +63,12 @@ type IndexCommitmentReadStore interface {
 type IndexCommitmentStore interface {
 	IndexCommitmentReadStore
 
-	// NewWriter returns a new IndexCommitmentStoreWriter. It is expected that
-	// each writer represents a batch of writes that will be written atomically
-	// to the underlying store when the writer's Write method is called. This
-	// should usually be done with a batching layer on top of any
-	// transaction-level isolation as writes do not need to be readable until
-	// after the writer is done.
-	NewWriter() IndexCommitmentStoreWriter
-}
+	// CommitmentStore returns the merklized commitment store.
+	CommitmentStore() Store
 
-// IndexCommitmentStoreWriter is an interface which allows writing to the
-// commitment and index stores and committing them in a unified way.
-type IndexCommitmentStoreWriter interface {
-	IndexCommitmentReadStore
-
-	// CommitmentStoreWriter returns a writer for the merklized commitment store.
-	CommitmentStoreWriter() Writer
-
-	// IndexStoreWriter returns a writer for the index store if a separate one exists,
-	// otherwise it returns a writer for commitment store.
-	IndexStoreWriter() Writer
-
-	// Write flushes pending writes to the underlying store. Reads will not
-	// be available in the underlying store until after Write has been called.
-	// Close should be the only method called on this writer after Write is called.
-	Write() error
-
-	// Close should be called whenever the caller is done with this writer.
-	// If Write was not called beforehand, the write batch is discarded.
-	Close()
+	// IndexStore returns the index store if a separate one exists,
+	// otherwise it the commitment store.
+	IndexStore() Store
 }
 
 // Iterator aliases github.com/tendermint/tm-db.Iterator.

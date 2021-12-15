@@ -1825,14 +1825,13 @@ func (s *TestSuite) TestExecProposal() {
 	addr1 := addrs0
 	addr2 := addrs1
 
-	groupAccountAddr1 := s.groupAccountAddr
 	msgSend1 := &banktypes.MsgSend{
-		FromAddress: groupAccountAddr1.String(),
+		FromAddress: s.groupAccountAddr.String(),
 		ToAddress:   addr2.String(),
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}
 	msgSend2 := &banktypes.MsgSend{
-		FromAddress: groupAccountAddr1.String(),
+		FromAddress: s.groupAccountAddr.String(),
 		ToAddress:   addr2.String(),
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 10001)},
 	}
@@ -1938,7 +1937,7 @@ func (s *TestSuite) TestExecProposal() {
 				myProposalID := createProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
 				_, err := s.keeper.UpdateGroupAccountMetadata(ctx, &group.MsgUpdateGroupAccountMetadata{
 					Admin:    addr1.String(),
-					Address:  groupAccountAddr.String(),
+					Address:  s.groupAccountAddr.String(),
 					Metadata: []byte("group account modified before tally"),
 				})
 				s.Require().NoError(err)

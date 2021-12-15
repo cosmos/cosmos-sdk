@@ -25,6 +25,7 @@ func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) {
 	ir.RegisterRoute(group.ModuleName, votesSumInvariant, TallyVotesSumInvariant(keeper))
 }
 
+// TallyVotesInvariant checks that vote tally sums must never have less than the block before.
 func TallyVotesInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		if ctx.BlockHeight()-1 < 0 {
@@ -37,6 +38,7 @@ func TallyVotesInvariant(keeper Keeper) sdk.Invariant {
 	}
 }
 
+// GroupTotalWeightInvariant checks that group's TotalWeight must be equal to the sum of its members.
 func GroupTotalWeightInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		msg, broken := GroupTotalWeightInvariantHelper(ctx, keeper.key, keeper.groupTable, keeper.groupMemberByGroupIndex)
@@ -44,6 +46,7 @@ func GroupTotalWeightInvariant(keeper Keeper) sdk.Invariant {
 	}
 }
 
+// TallyVotesSumInvariant checks that proposal VoteState must correspond to the vote choice.
 func TallyVotesSumInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		msg, broken := TallyVotesSumInvariantHelper(ctx, keeper.key, keeper.groupTable, keeper.proposalTable, keeper.groupMemberTable, keeper.voteByProposalIndex, keeper.groupAccountTable)

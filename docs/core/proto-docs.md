@@ -506,9 +506,6 @@
   
     - [Query](#cosmos.group.v1beta1.Query)
   
-- [cosmos/group/v1beta1/testdata_tx.proto](#cosmos/group/v1beta1/testdata_tx.proto)
-    - [MsgAuthenticated](#cosmos.group.v1beta1.MsgAuthenticated)
-  
 - [cosmos/group/v1beta1/tx.proto](#cosmos/group/v1beta1/tx.proto)
     - [MsgCreateGroup](#cosmos.group.v1beta1.MsgCreateGroup)
     - [MsgCreateGroupAccount](#cosmos.group.v1beta1.MsgCreateGroupAccount)
@@ -7498,37 +7495,6 @@ Query is the cosmos.group.v1beta1 Query service.
 | `VoteByProposalVoter` | [QueryVoteByProposalVoterRequest](#cosmos.group.v1beta1.QueryVoteByProposalVoterRequest) | [QueryVoteByProposalVoterResponse](#cosmos.group.v1beta1.QueryVoteByProposalVoterResponse) | VoteByProposalVoter queries a vote by proposal id and voter. | |
 | `VotesByProposal` | [QueryVotesByProposalRequest](#cosmos.group.v1beta1.QueryVotesByProposalRequest) | [QueryVotesByProposalResponse](#cosmos.group.v1beta1.QueryVotesByProposalResponse) | VotesByProposal queries a vote by proposal. | |
 | `VotesByVoter` | [QueryVotesByVoterRequest](#cosmos.group.v1beta1.QueryVotesByVoterRequest) | [QueryVotesByVoterResponse](#cosmos.group.v1beta1.QueryVotesByVoterResponse) | VotesByVoter queries a vote by voter. | |
-
- <!-- end services -->
-
-
-
-<a name="cosmos/group/v1beta1/testdata_tx.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/group/v1beta1/testdata_tx.proto
-
-
-
-<a name="cosmos.group.v1beta1.MsgAuthenticated"></a>
-
-### MsgAuthenticated
-MsgAuthenticated is used in group module's tests to check msg authorizations
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `signers` | [bytes](#bytes) | repeated |  |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
 
  <!-- end services -->
 

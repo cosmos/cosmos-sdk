@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 func (s *IntegrationTestSuite) TestGetProposalGRPC() {
@@ -43,7 +43,7 @@ func (s *IntegrationTestSuite) TestGetProposalGRPC() {
 			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
-			var proposal types.QueryProposalResponse
+			var proposal v1beta1.QueryProposalResponse
 			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &proposal)
 
 			if tc.expErr {
@@ -97,7 +97,7 @@ func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
 			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 			s.Require().NoError(err)
 
-			var proposals types.QueryProposalsResponse
+			var proposals v1beta1.QueryProposalsResponse
 			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &proposals)
 
 			if tc.expErr {
@@ -119,41 +119,41 @@ func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
 		name           string
 		url            string
 		expErr         bool
-		expVoteOptions types.WeightedVoteOptions
+		expVoteOptions v1beta1.WeightedVoteOptions
 	}{
 		{
 			"empty proposal",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "", voterAddressBech32),
 			true,
-			types.NewNonSplitVoteOption(types.OptionYes),
+			v1beta1.NewNonSplitVoteOption(v1beta1.OptionYes),
 		},
 		{
 			"get non existing proposal",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "10", voterAddressBech32),
 			true,
-			types.NewNonSplitVoteOption(types.OptionYes),
+			v1beta1.NewNonSplitVoteOption(v1beta1.OptionYes),
 		},
 		{
 			"get proposal with wrong voter address",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "1", "wrongVoterAddress"),
 			true,
-			types.NewNonSplitVoteOption(types.OptionYes),
+			v1beta1.NewNonSplitVoteOption(v1beta1.OptionYes),
 		},
 		{
 			"get proposal with id",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "1", voterAddressBech32),
 			false,
-			types.NewNonSplitVoteOption(types.OptionYes),
+			v1beta1.NewNonSplitVoteOption(v1beta1.OptionYes),
 		},
 		{
 			"get proposal with id for split vote",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "3", voterAddressBech32),
 			false,
-			types.WeightedVoteOptions{
-				types.WeightedVoteOption{Option: types.OptionYes, Weight: sdk.NewDecWithPrec(60, 2)},
-				types.WeightedVoteOption{Option: types.OptionNo, Weight: sdk.NewDecWithPrec(30, 2)},
-				types.WeightedVoteOption{Option: types.OptionAbstain, Weight: sdk.NewDecWithPrec(5, 2)},
-				types.WeightedVoteOption{Option: types.OptionNoWithVeto, Weight: sdk.NewDecWithPrec(5, 2)},
+			v1beta1.WeightedVoteOptions{
+				v1beta1.WeightedVoteOption{Option: v1beta1.OptionYes, Weight: sdk.NewDecWithPrec(60, 2)},
+				v1beta1.WeightedVoteOption{Option: v1beta1.OptionNo, Weight: sdk.NewDecWithPrec(30, 2)},
+				v1beta1.WeightedVoteOption{Option: v1beta1.OptionAbstain, Weight: sdk.NewDecWithPrec(5, 2)},
+				v1beta1.WeightedVoteOption{Option: v1beta1.OptionNoWithVeto, Weight: sdk.NewDecWithPrec(5, 2)},
 			},
 		},
 	}
@@ -164,7 +164,7 @@ func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
 			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
-			var vote types.QueryVoteResponse
+			var vote v1beta1.QueryVoteResponse
 			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &vote)
 
 			if tc.expErr {
@@ -208,7 +208,7 @@ func (s *IntegrationTestSuite) TestGetProposalVotesGRPC() {
 			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
-			var votes types.QueryVotesResponse
+			var votes v1beta1.QueryVotesResponse
 			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &votes)
 
 			if tc.expErr {
@@ -257,7 +257,7 @@ func (s *IntegrationTestSuite) TestGetProposalDepositGRPC() {
 			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
-			var deposit types.QueryDepositResponse
+			var deposit v1beta1.QueryDepositResponse
 			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &deposit)
 
 			if tc.expErr {
@@ -296,7 +296,7 @@ func (s *IntegrationTestSuite) TestGetProposalDepositsGRPC() {
 			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
-			var deposits types.QueryDepositsResponse
+			var deposits v1beta1.QueryDepositsResponse
 			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &deposits)
 
 			if tc.expErr {
@@ -341,7 +341,7 @@ func (s *IntegrationTestSuite) TestGetTallyGRPC() {
 			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
-			var tally types.QueryTallyResultResponse
+			var tally v1beta1.QueryTallyResultResponse
 			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &tally)
 
 			if tc.expErr {
@@ -371,29 +371,29 @@ func (s *IntegrationTestSuite) TestGetParamsGRPC() {
 		},
 		{
 			"get deposit params",
-			fmt.Sprintf("%s/cosmos/gov/v1beta1/params/%s", val.APIAddress, types.ParamDeposit),
+			fmt.Sprintf("%s/cosmos/gov/v1beta1/params/%s", val.APIAddress, v1beta1.ParamDeposit),
 			false,
-			&types.QueryParamsResponse{},
-			&types.QueryParamsResponse{
-				DepositParams: types.DefaultDepositParams(),
+			&v1beta1.QueryParamsResponse{},
+			&v1beta1.QueryParamsResponse{
+				DepositParams: v1beta1.DefaultDepositParams(),
 			},
 		},
 		{
 			"get vote params",
-			fmt.Sprintf("%s/cosmos/gov/v1beta1/params/%s", val.APIAddress, types.ParamVoting),
+			fmt.Sprintf("%s/cosmos/gov/v1beta1/params/%s", val.APIAddress, v1beta1.ParamVoting),
 			false,
-			&types.QueryParamsResponse{},
-			&types.QueryParamsResponse{
-				VotingParams: types.DefaultVotingParams(),
+			&v1beta1.QueryParamsResponse{},
+			&v1beta1.QueryParamsResponse{
+				VotingParams: v1beta1.DefaultVotingParams(),
 			},
 		},
 		{
 			"get tally params",
-			fmt.Sprintf("%s/cosmos/gov/v1beta1/params/%s", val.APIAddress, types.ParamTallying),
+			fmt.Sprintf("%s/cosmos/gov/v1beta1/params/%s", val.APIAddress, v1beta1.ParamTallying),
 			false,
-			&types.QueryParamsResponse{},
-			&types.QueryParamsResponse{
-				TallyParams: types.DefaultTallyParams(),
+			&v1beta1.QueryParamsResponse{},
+			&v1beta1.QueryParamsResponse{
+				TallyParams: v1beta1.DefaultTallyParams(),
 			},
 		},
 	}

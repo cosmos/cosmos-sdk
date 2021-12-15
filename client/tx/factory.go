@@ -28,6 +28,8 @@ type Factory struct {
 	timeoutHeight      uint64
 	gasAdjustment      float64
 	chainID            string
+	offline            bool
+	generateOnly       bool
 	memo               string
 	fees               sdk.Coins
 	tip                *tx.Tip
@@ -64,6 +66,8 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 		accountRetriever:   clientCtx.AccountRetriever,
 		keybase:            clientCtx.Keyring,
 		chainID:            clientCtx.ChainID,
+		offline:            clientCtx.Offline,
+		generateOnly:       clientCtx.GenerateOnly,
 		gas:                gasSetting.Gas,
 		simulateAndExecute: gasSetting.Simulate,
 		accountNumber:      accNum,
@@ -220,7 +224,11 @@ func (f Factory) WithTimeoutHeight(height uint64) Factory {
 // BuildUnsignedTx builds a transaction to be signed given a set of messages.
 // Once created, the fee, memo, and messages are set.
 func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
-	if f.chainID == "" {
+	if f.offline && f.generateOnly {
+		if f.chainID != "" {
+			return nil, fmt.Errorf("chain ID cannot be used when offline and generate-only flags are set")
+		}
+	} else if f.chainID == "" {
 		return nil, fmt.Errorf("chain ID required but not specified")
 	}
 

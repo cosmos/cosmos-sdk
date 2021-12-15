@@ -16,9 +16,15 @@ func NewVote(proposalID uint64, voter sdk.AccAddress, options WeightedVoteOption
 	return Vote{ProposalId: proposalID, Voter: voter.String(), Options: options}
 }
 
+// String returns a string representation of Vote
 func (v Vote) String() string {
 	out, _ := yaml.Marshal(v)
 	return string(out)
+}
+
+// Empty returns whether a vote is empty.
+func (v Vote) Empty() bool {
+	return v.String() == Vote{}.String()
 }
 
 // Votes is a collection of Vote objects
@@ -48,11 +54,6 @@ func (v Votes) String() string {
 		out += fmt.Sprintf("\n  %s: %s", vot.Voter, vot.Options)
 	}
 	return out
-}
-
-// Empty returns whether a vote is empty.
-func (v Vote) Empty() bool {
-	return v.String() == Vote{}.String()
 }
 
 // NewNonSplitVoteOption creates a single option vote with weight 1

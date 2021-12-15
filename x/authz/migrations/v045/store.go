@@ -13,7 +13,7 @@ import (
 // migration includes:
 //
 // - pruning expired authorizations
-// -
+// - create secondary index for pruning expired authorizations
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
 	err := addExpiredGrantsIndex(ctx, store, cdc)

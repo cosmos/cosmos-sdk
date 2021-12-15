@@ -139,6 +139,7 @@ func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, auth
 	skey := grantStoreKey(grantee, granter, authorization.MsgTypeURL())
 
 	grant, found := k.getGrant(ctx, skey)
+	// remove old grant key from the grant queue
 	if found {
 		k.removeFromGrantQueue(ctx, skey, grant.Expiration)
 	}

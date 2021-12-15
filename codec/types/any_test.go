@@ -2,11 +2,10 @@ package types_test
 
 import (
 	"fmt"
-	"testing"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/gogo/protobuf/proto"
+	"testing"
 )
 
 type errOnMarshal struct {

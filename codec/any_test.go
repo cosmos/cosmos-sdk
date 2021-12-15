@@ -1,9 +1,9 @@
 package codec_test
 
 import (
+	"google.golang.org/protobuf/testing/protocmp"
+	"gotest.tools/v3/assert"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -12,6 +12,8 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	testdatav2 "github.com/cosmos/cosmos-sdk/testutil/testdata/v2"
+	"github.com/stretchr/testify/require"
 )
 
 func NewTestInterfaceRegistry() types.InterfaceRegistry {
@@ -21,8 +23,13 @@ func NewTestInterfaceRegistry() types.InterfaceRegistry {
 		(*testdata.Animal)(nil),
 		&testdata.Dog{},
 		&testdata.Cat{},
+		&testdatav2.Snake{},
 	)
 	return registry
+}
+
+func TestRegistry(t *testing.T) {
+	NewTestInterfaceRegistry()
 }
 
 func TestMarshalAny(t *testing.T) {
@@ -133,4 +140,45 @@ func TestMarshalProtoInterfacePubKey(t *testing.T) {
 	err = ccfg.Codec.UnmarshalInterface(bz, &pk2)
 	require.NoError(err)
 	require.True(pk2.Equals(pk))
+}
+
+func TestMarshalAnyV2(t *testing.T) {
+	registry := NewTestInterfaceRegistry()
+	cdc := codec.NewProtoCodec(registry)
+
+	snakey := testdatav2.Snake{Name: "Snakey", Age: 42}
+	bz, err := cdc.MarshalInterface(&snakey)
+	require.NoError(t, err)
+
+	var animal testdata.Animal
+
+	// should pass
+	err = cdc.UnmarshalInterface(bz, &animal)
+	require.NoError(t, err)
+	assert.DeepEqual(t, &snakey, animal, protocmp.Transform())
+	require.Equal(t, snakey.Greet(), animal.Greet())
+
+	// get Any for snake
+	any, err := codectypes.NewAnyWithValue(&snakey)
+	require.NoError(t, err)
+
+	// wrap Any into HasAnimal
+	hasAnimal := testdata.HasAnimal{
+		Animal: any,
+		X:      15,
+	}
+
+	// marshal this message
+	bz, err = cdc.MarshalJSON(&hasAnimal)
+	require.NoError(t, err)
+
+	// unmarshal this message
+	var hasAnimal2 testdata.HasAnimal
+	err = cdc.UnmarshalJSON(bz, &hasAnimal2)
+	require.NoError(t, err)
+
+	// nil should fail
+	registry = NewTestInterfaceRegistry()
+	err = cdc.UnmarshalInterface(bz, nil)
+	require.Error(t, err)
 }

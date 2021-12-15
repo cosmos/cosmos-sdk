@@ -2,7 +2,9 @@ package types
 
 import (
 	"fmt"
-	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/encoding/protojson"
+	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 	"reflect"
 	"runtime/debug"
 
@@ -89,7 +91,7 @@ func (a AminoUnpacker) UnpackAny(any *Any, iface interface{}) error {
 		return err
 	}
 	_, v1 := val.(gogoproto.Message)
-	_, v2 := val.(*protoreflect.Message)
+	_, v2 := val.(protov2.Message)
 	if v1 || v2 {
 		if err = any.pack(val); err != nil {
 			return err
@@ -149,7 +151,7 @@ func (a AminoJSONUnpacker) UnpackAny(any *Any, iface interface{}) error {
 		return err
 	}
 	_, v1 := val.(gogoproto.Message)
-	_, v2 := val.(*protoreflect.Message)
+	_, v2 := val.(protov2.Message)
 	if v1 || v2 {
 		if err = any.pack(val); err != nil {
 			return err
@@ -188,7 +190,8 @@ func (a AminoJSONPacker) UnpackAny(any *Any, _ interface{}) error {
 
 // ProtoJSONPacker is an AnyUnpacker provided for compatibility with jsonpb
 type ProtoJSONPacker struct {
-	JSONPBMarshaler *jsonpb.Marshaler
+	JSONPBMarshaler  *jsonpb.Marshaler
+	V2MarshalOptions protojson.MarshalOptions
 }
 
 var _ AnyUnpacker = ProtoJSONPacker{}
@@ -205,9 +208,24 @@ func (a ProtoJSONPacker) UnpackAny(any *Any, _ interface{}) error {
 		}
 	}
 
-	bz, err := a.JSONPBMarshaler.MarshalToString(any)
+	var bz []byte
+	var err error
+	if msg, ok := any.cachedValue.(protov2.Message); ok {
+		anyv2, err := anypb.New(msg)
+		if err != nil {
+			return err
+		}
+		bz, err = a.V2MarshalOptions.Marshal(anyv2)
+	} else {
+		str, err := a.JSONPBMarshaler.MarshalToString(any)
+		if err != nil {
+			return err
+		}
+		bz = []byte(str)
+	}
+
 	any.compat = &anyCompat{
-		jsonBz: []byte(bz),
+		jsonBz: bz,
 		err:    err,
 	}
 

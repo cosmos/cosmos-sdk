@@ -2,8 +2,6 @@ package types
 
 import (
 	fmt "fmt"
-	"google.golang.org/protobuf/reflect/protoreflect"
-
 	gogoproto "github.com/gogo/protobuf/proto"
 	protov2 "google.golang.org/protobuf/proto"
 
@@ -79,7 +77,7 @@ func NewAnyWithValue(v interface{}) (*Any, error) {
 // marshaled with amino and not protobuf.
 func UnsafePackAny(x interface{}) *Any {
 	_, v1 := x.(gogoproto.Message)
-	_, v2 := x.(protoreflect.Message)
+	_, v2 := x.(protov2.Message)
 	if v1 || v2 {
 		any, err := NewAnyWithValue(x)
 		if err == nil {
@@ -99,19 +97,19 @@ func (any *Any) pack(v interface{}) error {
 
 	var bz []byte
 	var err error
-	switch v := v.(type) {
-	case gogoproto.Message:
-		bz, err = gogoproto.Marshal(v)
+	switch impl := v.(type) {
+	case protov2.Message:
+		bz, err = protov2.MarshalOptions{Deterministic: true}.Marshal(impl.ProtoReflect().Interface())
 		if err != nil {
 			return err
 		}
-	case *protoreflect.Message:
-		bz, err = protov2.MarshalOptions{Deterministic: true}.Marshal((*v).Interface())
+	case gogoproto.Message:
+		bz, err = gogoproto.Marshal(impl)
 		if err != nil {
 			return err
 		}
 	default:
-		return fmt.Errorf("unable to pack unknown message type %T", &v)
+		return fmt.Errorf("unable to pack unknown message type %T", v)
 	}
 
 	msgName, err := MessageName(v)

@@ -135,8 +135,8 @@ func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, im
 // MessageName returns the message name of a proto v1 or v2 message or an error.
 func MessageName(m interface{}) (string, error) {
 	switch impl := m.(type) {
-	case *protoreflect.Message:
-		return string((*impl).Descriptor().FullName()), nil
+	case protov2.Message:
+		return string(impl.ProtoReflect().Descriptor().FullName()), nil
 	case gogoproto.Message:
 		return gogoproto.MessageName(impl), nil
 	default:
@@ -260,13 +260,13 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 	msg := reflect.New(typ.Elem()).Interface()
 
 	switch msg := msg.(type) {
-	case gogoproto.Message:
-		err := gogoproto.Unmarshal(any.Value, msg)
+	case protov2.Message:
+		err := protov2.Unmarshal(any.Value, msg)
 		if err != nil {
 			return err
 		}
-	case protoreflect.Message:
-		err := protov2.Unmarshal(any.Value, msg.Interface())
+	case gogoproto.Message:
+		err := gogoproto.Unmarshal(any.Value, msg)
 		if err != nil {
 			return err
 		}

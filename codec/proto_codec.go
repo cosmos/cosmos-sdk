@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"google.golang.org/protobuf/reflect/protoreflect"
 	"strings"
 
 	"google.golang.org/protobuf/encoding/protojson"
@@ -44,8 +43,8 @@ func (pc *ProtoCodec) Marshal(o interface{}) ([]byte, error) {
 	switch o := o.(type) {
 	case ProtoMarshaler:
 		return o.Marshal()
-	case *protoreflect.Message:
-		return protov2.MarshalOptions{Deterministic: true}.Marshal((*o).Interface())
+	case protov2.Message:
+		return protov2.MarshalOptions{Deterministic: true}.Marshal(o.ProtoReflect().Interface())
 	default:
 		return nil, fmt.Errorf("%T is not a v1 or v2 message", o)
 	}
@@ -90,14 +89,16 @@ func (pc *ProtoCodec) MustMarshalLengthPrefixed(o interface{}) []byte {
 // implements proto.Message. For interface please use the codec.UnmarshalInterface
 func (pc *ProtoCodec) Unmarshal(bz []byte, ptr interface{}) error {
 	switch ptr := ptr.(type) {
-	case ProtoMarshaler:
-		err := ptr.Unmarshal(bz)
+	case protov2.Message:
+		err := protov2.Unmarshal(bz, ptr.ProtoReflect().Interface())
 		if err != nil {
 			return err
 		}
-	case *protoreflect.Message:
-		err := protov2.Unmarshal(bz, (*ptr).Interface())
-		if err != nil {
+	case ProtoMarshaler:
+		err := ptr.Unmarshal(bz)
+		if err == nil {
+			return err
+		} else {
 			return err
 		}
 	default:
@@ -177,8 +178,8 @@ func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr interface{}) error {
 		if err != nil {
 			return err
 		}
-	case *protoreflect.Message:
-		err := protojson.UnmarshalOptions{Resolver: pc.interfaceRegistry}.Unmarshal(bz, (*ptr).Interface())
+	case protov2.Message:
+		err := protojson.UnmarshalOptions{Resolver: pc.interfaceRegistry}.Unmarshal(bz, ptr)
 		if err != nil {
 			return err
 		}

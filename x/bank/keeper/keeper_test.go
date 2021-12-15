@@ -1169,7 +1169,9 @@ func (suite *IntegrationTestSuite) getTestMetadata() []types.Metadata {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestMintCoinRestriction() {
+func (suite *IntegrationTestSuite) TestMintCoinRestrictions() {
+	type BankMintingRestrictionFn func(ctx sdk.Context, coins sdk.Coins) error
+
 	maccPerms := simapp.GetMaccPerms()
 	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
 
@@ -1179,34 +1181,62 @@ func (suite *IntegrationTestSuite) TestMintCoinRestriction() {
 	)
 	suite.app.AccountKeeper.SetModuleAccount(suite.ctx, multiPermAcc)
 
-	// only allow foo tokens to be minted
-	BankMintingRestriction := func(ctx sdk.Context, coins sdk.Coins) error {
-		for _, coin := range coins {
-			if coin.Denom != fooDenom {
-				return fmt.Errorf("Module %s attempted minting coins %s it did not have permission for", types.ModuleName, coin.Denom)
+	type testCase struct {
+		coinsToTry sdk.Coin
+		expectPass bool
+	}
+
+	tests := []struct {
+		name          string
+		restrictionFn BankMintingRestrictionFn
+		testCases     []testCase
+	}{
+		{
+			"restriction",
+			func(ctx sdk.Context, coins sdk.Coins) error {
+				for _, coin := range coins {
+					if coin.Denom != fooDenom {
+						return fmt.Errorf("Module %s only has perms for minting %s coins, tried minting %s coins", types.ModuleName, fooDenom, coin.Denom)
+					}
+				}
+				return nil
+			},
+			[]testCase{
+				{
+					coinsToTry: newFooCoin(100),
+					expectPass: true,
+				},
+				{
+					coinsToTry: newBarCoin(100),
+					expectPass: false,
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		suite.app.BankKeeper = keeper.NewBaseKeeper(suite.app.AppCodec(), suite.app.GetKey(types.StoreKey),
+			suite.app.AccountKeeper, suite.app.GetSubspace(types.ModuleName), nil).WithMintCoinsRestriction(keeper.BankMintingRestrictionFn(test.restrictionFn))
+		for _, testCase := range test.testCases {
+			if testCase.expectPass {
+				suite.Require().NoError(
+					suite.app.BankKeeper.MintCoins(
+						suite.ctx,
+						multiPermAcc.Name,
+						sdk.NewCoins(testCase.coinsToTry),
+					),
+				)
+			} else {
+				suite.Require().Error(
+					suite.app.BankKeeper.MintCoins(
+						suite.ctx,
+						multiPermAcc.Name,
+						sdk.NewCoins(testCase.coinsToTry),
+					),
+				)
 			}
 		}
-		return nil
 	}
-	suite.app.BankKeeper = keeper.NewBaseKeeper(suite.app.AppCodec(), suite.app.GetKey(types.StoreKey),
-		suite.app.AccountKeeper, suite.app.GetSubspace(types.ModuleName), nil).WithMintCoinsRestriction(BankMintingRestriction)
-
-	suite.Require().NoError(
-		suite.app.BankKeeper.MintCoins(
-			suite.ctx,
-			multiPermAcc.Name,
-			sdk.NewCoins(newFooCoin(100)),
-		),
-	)
-
-	suite.Require().Error(
-		suite.app.BankKeeper.MintCoins(
-			suite.ctx,
-			multiPermAcc.Name,
-			sdk.NewCoins(newBarCoin(100)),
-		),
-	)
-
 }
 
 func TestKeeperTestSuite(t *testing.T) {

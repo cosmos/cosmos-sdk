@@ -446,6 +446,7 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 				return nil, err
 			}
 		} else {
+			ctx.Logger().Info(fmt.Sprintf("adding a new module: %s", moduleName))
 			moduleValUpdates := module.InitGenesis(ctx, c.cdc, module.DefaultGenesis(c.cdc))
 			// The module manager assumes only one module will update the
 			// validator set, and it can't be a new module.

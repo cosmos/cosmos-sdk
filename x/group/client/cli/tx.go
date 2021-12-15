@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -13,8 +15,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
@@ -103,7 +103,7 @@ Where members.json contains:
 				return err
 			}
 
-			b, err := base64.StdEncoding.DecodeString(args[1])
+			metadata, err := base64.StdEncoding.DecodeString(args[1])
 			if err != nil {
 				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "metadata is malformed, proper base64 string is required")
 			}
@@ -111,7 +111,7 @@ Where members.json contains:
 			msg := &group.MsgCreateGroup{
 				Admin:    clientCtx.GetFromAddress().String(),
 				Members:  members,
-				Metadata: b,
+				Metadata: metadata,
 			}
 			if err = msg.ValidateBasic(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)

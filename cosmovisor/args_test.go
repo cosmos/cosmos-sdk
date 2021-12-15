@@ -170,6 +170,22 @@ func (s *argsTestSuite) TestValidate() {
 			cfg:   Config{Home: absPath, Name: "bind", AllowDownloadBinaries: true, DataBackupPath: absPath},
 			valid: true,
 		},
+		"happy with skip data backup": {
+			cfg:   Config{Home: absPath, Name: "bind", UnsafeSkipBackup: true, DataBackupPath: absPath},
+			valid: true,
+		},
+		"happy with skip data backup and empty data backup path": {
+			cfg:   Config{Home: absPath, Name: "bind", UnsafeSkipBackup: true, DataBackupPath: ""},
+			valid: true,
+		},
+		"happy with skip data backup and no such data backup path dir": {
+			cfg:   Config{Home: absPath, Name: "bind", UnsafeSkipBackup: true, DataBackupPath: filepath.FromSlash("/no/such/dir")},
+			valid: true,
+		},
+		"happy with skip data backup and relative data backup path": {
+			cfg:   Config{Home: absPath, Name: "bind", UnsafeSkipBackup: true, DataBackupPath: relPath},
+			valid: true,
+		},
 		"missing home": {
 			cfg:   Config{Name: "bind"},
 			valid: false,
@@ -191,15 +207,15 @@ func (s *argsTestSuite) TestValidate() {
 			valid: false,
 		},
 		"empty data backup path": {
-			cfg:   Config{Home: absPath, Name: "bind", AllowDownloadBinaries: true, DataBackupPath: ""},
+			cfg:   Config{Home: absPath, Name: "bind", DataBackupPath: ""},
 			valid: false,
 		},
 		"no such data backup path dir": {
-			cfg:   Config{Home: absPath, Name: "bind", AllowDownloadBinaries: true, DataBackupPath: filepath.FromSlash("/no/such/dir")},
+			cfg:   Config{Home: absPath, Name: "bind", DataBackupPath: filepath.FromSlash("/no/such/dir")},
 			valid: false,
 		},
 		"relative data backup path": {
-			cfg:   Config{Home: absPath, Name: "bind", AllowDownloadBinaries: true, DataBackupPath: relPath},
+			cfg:   Config{Home: absPath, Name: "bind", DataBackupPath: relPath},
 			valid: false,
 		},
 	}

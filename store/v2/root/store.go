@@ -863,11 +863,7 @@ func (pr *prefixRegistry) ReservePrefix(key string, typ types.StoreType) error {
 
 func (tlm *traceListenMixin) AddListeners(skey types.StoreKey, listeners []types.WriteListener) {
 	key := skey.Name()
-	if ls, has := tlm.listeners[key]; has {
-		tlm.listeners[key] = append(ls, listeners...)
-	} else {
-		tlm.listeners[key] = listeners
-	}
+	tlm.listeners[key] = append(tlm.listeners[key], listeners...)
 }
 
 // ListeningEnabled returns if listening is enabled for a specific KVStore
@@ -892,8 +888,8 @@ func (tlm *traceListenMixin) wrapTraceListen(store types.KVStore, skey types.Sto
 	if tlm.TracingEnabled() {
 		store = tracekv.NewStore(store, tlm.TraceWriter, tlm.TraceContext)
 	}
-	if wls, has := tlm.listeners[skey.Name()]; has && len(wls) != 0 {
-		store = listenkv.NewStore(store, skey, wls)
+	if tlm.ListeningEnabled(skey) {
+		store = listenkv.NewStore(store, skey, tlm.listeners[skey.Name()])
 	}
 	return store
 }

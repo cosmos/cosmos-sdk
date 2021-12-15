@@ -1,6 +1,10 @@
 package kvstore
 
-import dbm "github.com/tendermint/tm-db"
+import (
+	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/cosmos-sdk/orm/types/ormhooks"
+)
 
 // Reader is an interface for readonly access to a kv-store.
 type Reader interface {
@@ -73,3 +77,13 @@ type IndexCommitmentStore interface {
 
 // Iterator aliases github.com/tendermint/tm-db.Iterator.
 type Iterator = dbm.Iterator
+
+// IndexCommitmentStoreWithHooks wraps kvstore.IndexCommitmentStore
+// and adds a ORMHooks method for store layers to optionally listen to ORM hooks
+// directly.
+type IndexCommitmentStoreWithHooks interface {
+	IndexCommitmentStore
+
+	// ORMHooks returns a Hooks instance or nil.
+	ORMHooks() ormhooks.Hooks
+}

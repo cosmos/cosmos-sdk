@@ -41,7 +41,7 @@ func TestAutoIncrementScenario(t *testing.T) {
 	checkEncodeDecodeEntries(t, table, store.IndexStoreReader())
 }
 
-func runAutoIncrementScenario(t *testing.T, table Table, store kvstore.IndexCommitmentStore) {
+func runAutoIncrementScenario(t *testing.T, table Table, store kvstore.IndexCommitmentStoreWithHooks) {
 	err := table.Save(store, &testpb.ExampleAutoIncrementTable{Id: 5}, SAVE_MODE_DEFAULT)
 	assert.ErrorContains(t, err, "update")
 

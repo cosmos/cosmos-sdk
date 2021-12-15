@@ -3,6 +3,8 @@ package testkv
 import (
 	"fmt"
 
+	"google.golang.org/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 )
@@ -15,6 +17,16 @@ type Debugger interface {
 
 	// Decode decodes a key-value entry into a debug string.
 	Decode(key, value []byte) string
+}
+
+// NewDebugIndexCommitmentStore wraps both stores from an IndexCommitmentStore
+// with a debugger.
+func NewDebugIndexCommitmentStore(store kvstore.IndexCommitmentStore, debugger Debugger) kvstore.IndexCommitmentStoreWithHooks {
+	return &indexCommitmentStore{
+		commitment: NewDebugStore(store.CommitmentStore(), debugger, "commit"),
+		index:      NewDebugStore(store.IndexStore(), debugger, "index"),
+		hooks:      debugHooks{debugger},
+	}
 }
 
 type debugStore struct {
@@ -190,4 +202,36 @@ func (d *EntryCodecDebugger) Decode(key, value []byte) string {
 	}
 
 	return entry.String()
+}
+
+type debugHooks struct {
+	debugger Debugger
+}
+
+func (d debugHooks) OnInsert(message proto.Message) error {
+	d.debugger.Log(fmt.Sprintf(
+		"ORM INSERT %s %s",
+		message.ProtoReflect().Descriptor().FullName(),
+		message,
+	))
+	return nil
+}
+
+func (d debugHooks) OnUpdate(existing, new proto.Message) error {
+	d.debugger.Log(fmt.Sprintf(
+		"ORM UPDATE %s %s -> %s",
+		existing.ProtoReflect().Descriptor().FullName(),
+		existing,
+		new,
+	))
+	return nil
+}
+
+func (d debugHooks) OnDelete(message proto.Message) error {
+	d.debugger.Log(fmt.Sprintf(
+		"ORM DELETE %s %s",
+		message.ProtoReflect().Descriptor().FullName(),
+		message,
+	))
+	return nil
 }

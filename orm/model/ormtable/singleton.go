@@ -42,7 +42,7 @@ func (t singleton) ValidateJSON(reader io.Reader) error {
 	}
 }
 
-func (t singleton) ImportJSON(store kvstore.IndexCommitmentStore, reader io.Reader) error {
+func (t singleton) ImportJSON(store kvstore.IndexCommitmentStoreWithHooks, reader io.Reader) error {
 	bz, err := io.ReadAll(reader)
 	if err != nil {
 		return err

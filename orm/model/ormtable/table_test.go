@@ -31,7 +31,7 @@ func TestScenario(t *testing.T) {
 	assert.NilError(t, err)
 
 	// first run tests with a split index-commitment store
-	runTestScenario(t, table, indexCommitmentStoreHooksWrapper{IndexCommitmentStore: testkv.NewSplitMemIndexCommitmentStore()})
+	runTestScenario(t, table, testkv.NewSplitMemIndexCommitmentStore())
 
 	// now run tests with a shared index-commitment store
 
@@ -76,7 +76,7 @@ func checkEncodeDecodeEntries(t *testing.T, table Table, store kvstore.Reader) {
 	}
 }
 
-func runTestScenario(t *testing.T, table Table, store IndexCommitmentStoreWithHooks) {
+func runTestScenario(t *testing.T, table Table, store kvstore.IndexCommitmentStoreWithHooks) {
 	// let's create 10 data items we'll use later and give them indexes
 	data := []*testpb.ExampleTable{
 		{U32: 4, I64: -2, Str: "abc", U64: 7},  // 0
@@ -532,7 +532,7 @@ func TableDataGen(elemGen *rapid.Generator, n int) *rapid.Generator {
 		}
 
 		data := make([]proto.Message, n)
-		store := indexCommitmentStoreHooksWrapper{IndexCommitmentStore: testkv.NewSplitMemIndexCommitmentStore()}
+		store := testkv.NewSplitMemIndexCommitmentStore()
 
 		for i := 0; i < n; {
 			message = elemGen.Draw(t, fmt.Sprintf("message[%d]", i)).(proto.Message)
@@ -594,7 +594,7 @@ func TestJSONExportImport(t *testing.T) {
 		MessageType: (&testpb.ExampleTable{}).ProtoReflect().Type(),
 	})
 	assert.NilError(t, err)
-	store := indexCommitmentStoreHooksWrapper{IndexCommitmentStore: testkv.NewSplitMemIndexCommitmentStore()}
+	store := testkv.NewSplitMemIndexCommitmentStore()
 
 	for i := 0; i < 100; {
 		x := testutil.GenA.Example().(proto.Message)
@@ -639,83 +639,4 @@ func assertTablesEqual(t assert.TestingT, table Table, store, store2 kvstore.Ind
 
 		assert.DeepEqual(t, msg1, msg2, protocmp.Transform())
 	}
-}
-
-func TestHooks(t *testing.T) {
-	table, err := Build(Options{
-		MessageType: (&testpb.ExampleTable{}).ProtoReflect().Type(),
-	})
-	assert.NilError(t, err)
-
-	store := testkv.NewSharedMemIndexCommitmentStore()
-	hooks := &testHooks{}
-	storeWithHooks := &indexCommitmentStoreHooksWrapper{
-		IndexCommitmentStore: store,
-		Hooks:                hooks,
-	}
-
-	a := &testpb.ExampleTable{U32: 10, I64: -1, Str: "foo"}
-	a2 := &testpb.ExampleTable{U32: 10, I64: -1, Str: "foo", E: testpb.Enum_ENUM_FIVE}
-
-	assert.NilError(t, table.Save(storeWithHooks, a, SAVE_MODE_INSERT))
-	assert.NilError(t, table.Save(storeWithHooks, a2, SAVE_MODE_UPDATE))
-	assert.NilError(t, table.DeleteMessage(storeWithHooks, a2))
-
-	events := hooks.events
-	assert.Equal(t, 3, len(events))
-	assert.Equal(t, "insert", events[0].event)
-	assert.DeepEqual(t, a, events[0].message, protocmp.Transform())
-	assert.Equal(t, "update", events[1].event)
-	assert.DeepEqual(t, a, events[1].existing, protocmp.Transform())
-	assert.DeepEqual(t, a2, events[1].message, protocmp.Transform())
-	assert.Equal(t, "delete", events[2].event)
-	assert.DeepEqual(t, a2, events[2].message, protocmp.Transform())
-}
-
-type indexCommitmentStoreHooksWrapper struct {
-	kvstore.IndexCommitmentStore
-	Hooks Hooks
-}
-
-func (i indexCommitmentStoreHooksWrapper) ORMHooks() Hooks {
-	return i.Hooks
-}
-
-var _ IndexCommitmentStoreWithHooks = indexCommitmentStoreHooksWrapper{}
-
-type testHooks struct {
-	events []*testEvent
-}
-
-func (t *testHooks) OnInsert(message proto.Message) error {
-	t.events = append(t.events, &testEvent{
-		event:   "insert",
-		message: message,
-	})
-	return nil
-}
-
-func (t *testHooks) OnUpdate(existing, new proto.Message) error {
-	t.events = append(t.events, &testEvent{
-		event:    "update",
-		message:  new,
-		existing: existing,
-	})
-	return nil
-}
-
-func (t *testHooks) OnDelete(message proto.Message) error {
-	t.events = append(t.events, &testEvent{
-		event:   "delete",
-		message: message,
-	})
-	return nil
-}
-
-var _ Hooks = &testHooks{}
-
-type testEvent struct {
-	event    string
-	message  proto.Message
-	existing proto.Message
 }

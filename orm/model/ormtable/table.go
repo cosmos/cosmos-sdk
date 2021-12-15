@@ -51,7 +51,7 @@ type Table interface {
 	// Save attempts to be atomic with respect to the underlying store,
 	// meaning that either the full save operation is written or the store is
 	// left unchanged, unless there is an error with the underlying store.
-	Save(store IndexCommitmentStoreWithHooks, message proto.Message, mode SaveMode) error
+	Save(store kvstore.IndexCommitmentStoreWithHooks, message proto.Message, mode SaveMode) error
 
 	// Delete deletes the entry with the provided primary key values from the store.
 	//
@@ -61,10 +61,10 @@ type Table interface {
 	// Delete attempts to be atomic with respect to the underlying store,
 	// meaning that either the full save operation is written or the store is
 	// left unchanged, unless there is an error with the underlying store.
-	Delete(store IndexCommitmentStoreWithHooks, primaryKey []protoreflect.Value) error
+	Delete(store kvstore.IndexCommitmentStoreWithHooks, primaryKey []protoreflect.Value) error
 
 	// DeleteMessage calls delete with the primary key extracted from the provided message.
-	DeleteMessage(store IndexCommitmentStoreWithHooks, message proto.Message) error
+	DeleteMessage(store kvstore.IndexCommitmentStoreWithHooks, message proto.Message) error
 
 	// DefaultJSON returns default JSON that can be used as a template for
 	// genesis files.
@@ -96,7 +96,7 @@ type Table interface {
 	// that in the case of an error, some records may already have been
 	// imported. It is assumed that ImportJSON is called in the context of some
 	// larger transaction isolation.
-	ImportJSON(kvstore.IndexCommitmentStore, io.Reader) error
+	ImportJSON(kvstore.IndexCommitmentStoreWithHooks, io.Reader) error
 
 	// ExportJSON exports JSON in the format accepted by ImportJSON.
 	// Auto-incrementing tables will export the last sequence number as the

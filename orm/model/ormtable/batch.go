@@ -3,14 +3,14 @@ package ormtable
 import "github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 
 type batchIndexCommitmentWriter struct {
-	store            kvstore.IndexCommitmentStore
+	kvstore.IndexCommitmentStoreWithHooks
 	commitmentWriter *batchStoreWriter
 	indexWriter      *batchStoreWriter
 }
 
-func newBatchIndexCommitmentWriter(store kvstore.IndexCommitmentStore) *batchIndexCommitmentWriter {
+func newBatchIndexCommitmentWriter(store kvstore.IndexCommitmentStoreWithHooks) *batchIndexCommitmentWriter {
 	return &batchIndexCommitmentWriter{
-		store: store,
+		IndexCommitmentStoreWithHooks: store,
 		// optimal array capacities are estimated here:
 		commitmentWriter: &batchStoreWriter{
 			Reader: store.CommitmentStoreReader(),
@@ -23,14 +23,6 @@ func newBatchIndexCommitmentWriter(store kvstore.IndexCommitmentStore) *batchInd
 	}
 }
 
-func (w batchIndexCommitmentWriter) CommitmentStoreReader() kvstore.Reader {
-	return w.store.CommitmentStoreReader()
-}
-
-func (w batchIndexCommitmentWriter) IndexStoreReader() kvstore.Reader {
-	return w.store.IndexStoreReader()
-}
-
 func (w *batchIndexCommitmentWriter) CommitmentStore() kvstore.Store {
 	return w.commitmentWriter
 }
@@ -41,12 +33,12 @@ func (w *batchIndexCommitmentWriter) IndexStore() kvstore.Store {
 
 // Write flushes any pending writes.
 func (w *batchIndexCommitmentWriter) Write() error {
-	err := flushWrites(w.store.CommitmentStore(), w.commitmentWriter.writes)
+	err := flushWrites(w.IndexCommitmentStoreWithHooks.CommitmentStore(), w.commitmentWriter.writes)
 	if err != nil {
 		return err
 	}
 
-	err = flushWrites(w.store.IndexStore(), w.indexWriter.writes)
+	err = flushWrites(w.IndexCommitmentStoreWithHooks.IndexStore(), w.indexWriter.writes)
 	if err != nil {
 		return err
 	}

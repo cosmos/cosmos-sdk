@@ -31,14 +31,13 @@ type tableImpl struct {
 	customJSONValidator   func(message proto.Message) error
 }
 
-func (t tableImpl) Save(store kvstore.IndexCommitmentStore, message proto.Message, mode SaveMode) error {
+func (t tableImpl) Save(store kvstore.IndexCommitmentStoreWithHooks, message proto.Message, mode SaveMode) error {
 	writer := newBatchIndexCommitmentWriter(store)
 	defer writer.Close()
-	hooks, _ := store.(Hooks)
-	return t.doSave(writer, hooks, message, mode)
+	return t.doSave(writer, message, mode)
 }
 
-func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, hooks Hooks, message proto.Message, mode SaveMode) error {
+func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, message proto.Message, mode SaveMode) error {
 	mref := message.ProtoReflect()
 	pkValues, pk, err := t.EncodeKeyFromMessage(mref)
 	if err != nil {
@@ -56,7 +55,7 @@ func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, hooks Hooks, messa
 			return sdkerrors.Wrapf(ormerrors.PrimaryKeyConstraintViolation, "%q:%+v", mref.Descriptor().FullName(), pkValues)
 		}
 
-		if hooks != nil {
+		if hooks := writer.ORMHooks(); hooks != nil {
 			err = hooks.OnUpdate(existing, message)
 			if err != nil {
 				return err
@@ -67,7 +66,7 @@ func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, hooks Hooks, messa
 			return ormerrors.NotFoundOnUpdate.Wrapf("%q", mref.Descriptor().FullName())
 		}
 
-		if hooks != nil {
+		if hooks := writer.ORMHooks(); hooks != nil {
 			err = hooks.OnInsert(message)
 			if err != nil {
 				return err
@@ -111,7 +110,7 @@ func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, hooks Hooks, messa
 	return writer.Write()
 }
 
-func (t tableImpl) Delete(store kvstore.IndexCommitmentStore, primaryKey []protoreflect.Value) error {
+func (t tableImpl) Delete(store kvstore.IndexCommitmentStoreWithHooks, primaryKey []protoreflect.Value) error {
 	pk, err := t.EncodeKey(primaryKey)
 	if err != nil {
 		return err
@@ -127,7 +126,7 @@ func (t tableImpl) Delete(store kvstore.IndexCommitmentStore, primaryKey []proto
 		return nil
 	}
 
-	if hooks, ok := store.(Hooks); ok {
+	if hooks := store.ORMHooks(); hooks != nil {
 		err = hooks.OnDelete(msg)
 		if err != nil {
 			return err
@@ -155,7 +154,7 @@ func (t tableImpl) Delete(store kvstore.IndexCommitmentStore, primaryKey []proto
 	return writer.Write()
 }
 
-func (t tableImpl) DeleteMessage(store kvstore.IndexCommitmentStore, message proto.Message) error {
+func (t tableImpl) DeleteMessage(store kvstore.IndexCommitmentStoreWithHooks, message proto.Message) error {
 	pk := t.PrimaryKeyCodec.GetKeyValues(message.ProtoReflect())
 	return t.Delete(store, pk)
 }
@@ -278,7 +277,7 @@ func (t tableImpl) ValidateJSON(reader io.Reader) error {
 	})
 }
 
-func (t tableImpl) ImportJSON(store kvstore.IndexCommitmentStore, reader io.Reader) error {
+func (t tableImpl) ImportJSON(store kvstore.IndexCommitmentStoreWithHooks, reader io.Reader) error {
 	return t.decodeJson(reader, func(message proto.Message) error {
 		return t.Save(store, message, SAVE_MODE_DEFAULT)
 	})

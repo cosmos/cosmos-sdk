@@ -18,7 +18,7 @@ func NewUniqueKeyIndex(uniqueKeyCodec *ormkv.UniqueKeyCodec, primaryKey *Primary
 	return &UniqueKeyIndex{UniqueKeyCodec: uniqueKeyCodec, primaryKey: primaryKey}
 }
 
-func (u UniqueKeyIndex) PrefixIterator(store kvstore.IndexCommitmentReadStore, prefix []protoreflect.Value, options IteratorOptions) (Iterator, error) {
+func (u UniqueKeyIndex) PrefixIterator(store kvstore.ReadBackend, prefix []protoreflect.Value, options IteratorOptions) (Iterator, error) {
 	prefixBz, err := u.GetKeyCodec().EncodeKey(prefix)
 	if err != nil {
 		return nil, err
@@ -27,7 +27,7 @@ func (u UniqueKeyIndex) PrefixIterator(store kvstore.IndexCommitmentReadStore, p
 	return prefixIterator(store.IndexStoreReader(), store, u, prefixBz, options)
 }
 
-func (u UniqueKeyIndex) RangeIterator(store kvstore.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (Iterator, error) {
+func (u UniqueKeyIndex) RangeIterator(store kvstore.ReadBackend, start, end []protoreflect.Value, options IteratorOptions) (Iterator, error) {
 	keyCodec := u.GetKeyCodec()
 	err := keyCodec.CheckValidRangeIterationKeys(start, end)
 	if err != nil {
@@ -51,7 +51,7 @@ func (u UniqueKeyIndex) RangeIterator(store kvstore.IndexCommitmentReadStore, st
 
 func (u UniqueKeyIndex) doNotImplement() {}
 
-func (u UniqueKeyIndex) Has(store kvstore.IndexCommitmentReadStore, keyValues []protoreflect.Value) (found bool, err error) {
+func (u UniqueKeyIndex) Has(store kvstore.ReadBackend, keyValues []protoreflect.Value) (found bool, err error) {
 	key, err := u.GetKeyCodec().EncodeKey(keyValues)
 	if err != nil {
 		return false, err
@@ -60,7 +60,7 @@ func (u UniqueKeyIndex) Has(store kvstore.IndexCommitmentReadStore, keyValues []
 	return store.IndexStoreReader().Has(key)
 }
 
-func (u UniqueKeyIndex) Get(store kvstore.IndexCommitmentReadStore, keyValues []protoreflect.Value, message proto.Message) (found bool, err error) {
+func (u UniqueKeyIndex) Get(store kvstore.ReadBackend, keyValues []protoreflect.Value, message proto.Message) (found bool, err error) {
 	key, err := u.GetKeyCodec().EncodeKey(keyValues)
 	if err != nil {
 		return false, err
@@ -151,7 +151,7 @@ func (u UniqueKeyIndex) onDelete(store kvstore.Writer, message protoreflect.Mess
 	return store.Delete(key)
 }
 
-func (u UniqueKeyIndex) readValueFromIndexKey(store kvstore.IndexCommitmentReadStore, primaryKey []protoreflect.Value, _ []byte, message proto.Message) error {
+func (u UniqueKeyIndex) readValueFromIndexKey(store kvstore.ReadBackend, primaryKey []protoreflect.Value, _ []byte, message proto.Message) error {
 	found, err := u.primaryKey.Get(store, primaryKey, message)
 	if err != nil {
 		return err

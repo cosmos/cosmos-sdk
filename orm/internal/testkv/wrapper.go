@@ -5,30 +5,30 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/types/ormhooks"
 )
 
-type indexCommitmentStore struct {
+type backend struct {
 	commitment kvstore.Writer
 	index      kvstore.Writer
 	hooks      ormhooks.Hooks
 }
 
-var _ kvstore.IndexCommitmentStore = &indexCommitmentStore{}
+var _ kvstore.Backend = &backend{}
 
-func (i indexCommitmentStore) CommitmentStoreReader() kvstore.Reader {
+func (i backend) CommitmentStoreReader() kvstore.Reader {
 	return i.commitment
 }
 
-func (i indexCommitmentStore) IndexStoreReader() kvstore.Reader {
+func (i backend) IndexStoreReader() kvstore.Reader {
 	return i.index
 }
 
-func (i indexCommitmentStore) CommitmentStore() kvstore.Store {
+func (i backend) CommitmentStore() kvstore.Store {
 	return i.commitment
 }
 
-func (i indexCommitmentStore) IndexStore() kvstore.Store {
+func (i backend) IndexStore() kvstore.Store {
 	return i.index
 }
 
-func (i indexCommitmentStore) ORMHooks() ormhooks.Hooks {
+func (i backend) ORMHooks() ormhooks.Hooks {
 	return i.hooks
 }

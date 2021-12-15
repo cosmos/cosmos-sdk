@@ -21,7 +21,7 @@ func NewIndexKeyIndex(indexKeyCodec *ormkv.IndexKeyCodec, primaryKey *PrimaryKey
 	return &IndexKeyIndex{IndexKeyCodec: indexKeyCodec, primaryKey: primaryKey}
 }
 
-func (s IndexKeyIndex) PrefixIterator(store kvstore.IndexCommitmentReadStore, prefix []protoreflect.Value, options IteratorOptions) (Iterator, error) {
+func (s IndexKeyIndex) PrefixIterator(store kvstore.ReadBackend, prefix []protoreflect.Value, options IteratorOptions) (Iterator, error) {
 	prefixBz, err := s.EncodeKey(prefix)
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func (s IndexKeyIndex) PrefixIterator(store kvstore.IndexCommitmentReadStore, pr
 	return prefixIterator(store.IndexStoreReader(), store, s, prefixBz, options)
 }
 
-func (s IndexKeyIndex) RangeIterator(store kvstore.IndexCommitmentReadStore, start, end []protoreflect.Value, options IteratorOptions) (Iterator, error) {
+func (s IndexKeyIndex) RangeIterator(store kvstore.ReadBackend, start, end []protoreflect.Value, options IteratorOptions) (Iterator, error) {
 	err := s.CheckValidRangeIterationKeys(start, end)
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func (s IndexKeyIndex) onDelete(store kvstore.Writer, message protoreflect.Messa
 	return store.Delete(key)
 }
 
-func (s IndexKeyIndex) readValueFromIndexKey(store kvstore.IndexCommitmentReadStore, primaryKey []protoreflect.Value, _ []byte, message proto.Message) error {
+func (s IndexKeyIndex) readValueFromIndexKey(store kvstore.ReadBackend, primaryKey []protoreflect.Value, _ []byte, message proto.Message) error {
 	found, err := s.primaryKey.Get(store, primaryKey, message)
 	if err != nil {
 		return err

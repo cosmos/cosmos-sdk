@@ -19,10 +19,9 @@ type Debugger interface {
 	Decode(key, value []byte) string
 }
 
-// NewDebugIndexCommitmentStore wraps both stores from an IndexCommitmentStore
-// with a debugger.
-func NewDebugIndexCommitmentStore(store kvstore.IndexCommitmentStore, debugger Debugger) kvstore.IndexCommitmentStoreWithHooks {
-	return &indexCommitmentStore{
+// NewDebugBackend wraps both stores from a Backend with a debugger.
+func NewDebugBackend(store kvstore.Backend, debugger Debugger) kvstore.Backend {
+	return &backend{
 		commitment: NewDebugStore(store.CommitmentStore(), debugger, "commit"),
 		index:      NewDebugStore(store.IndexStore(), debugger, "index"),
 		hooks:      debugHooks{debugger},

@@ -23,12 +23,12 @@ func TestAutoIncrementScenario(t *testing.T) {
 	assert.NilError(t, err)
 
 	// first run tests with a split index-commitment store
-	runAutoIncrementScenario(t, table, testkv.NewSplitMemIndexCommitmentStore())
+	runAutoIncrementScenario(t, table, testkv.NewSplitMemBackend())
 
 	// now run with shared store and debugging
 	debugBuf := &strings.Builder{}
-	sharedStore := testkv.NewSharedMemIndexCommitmentStore()
-	store := testkv.NewDebugIndexCommitmentStore(
+	sharedStore := testkv.NewSharedMemBackend()
+	store := testkv.NewDebugBackend(
 		sharedStore,
 		&testkv.EntryCodecDebugger{
 			EntryCodec: table,
@@ -41,7 +41,7 @@ func TestAutoIncrementScenario(t *testing.T) {
 	checkEncodeDecodeEntries(t, table, store.IndexStoreReader())
 }
 
-func runAutoIncrementScenario(t *testing.T, table Table, store kvstore.IndexCommitmentStoreWithHooks) {
+func runAutoIncrementScenario(t *testing.T, table Table, store kvstore.Backend) {
 	err := table.Save(store, &testpb.ExampleAutoIncrementTable{Id: 5}, SAVE_MODE_DEFAULT)
 	assert.ErrorContains(t, err, "update")
 
@@ -54,7 +54,7 @@ func runAutoIncrementScenario(t *testing.T, table Table, store kvstore.IndexComm
 	golden.Assert(t, string(buf.Bytes()), "auto_inc_json.golden")
 
 	assert.NilError(t, table.ValidateJSON(bytes.NewReader(buf.Bytes())))
-	store2 := testkv.NewSplitMemIndexCommitmentStore()
+	store2 := testkv.NewSplitMemBackend()
 	assert.NilError(t, table.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
 	assertTablesEqual(t, table, store, store2)
 }
@@ -65,7 +65,7 @@ func TestBadJSON(t *testing.T) {
 	})
 	assert.NilError(t, err)
 
-	store := testkv.NewSplitMemIndexCommitmentStore()
+	store := testkv.NewSplitMemBackend()
 	f, err := os.Open("testdata/bad_auto_inc.json")
 	assert.NilError(t, err)
 	assert.ErrorContains(t, table.ImportJSON(store, f), "invalid ID")

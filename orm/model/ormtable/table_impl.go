@@ -31,7 +31,7 @@ type tableImpl struct {
 	customJSONValidator   func(message proto.Message) error
 }
 
-func (t tableImpl) Save(store kvstore.IndexCommitmentStoreWithHooks, message proto.Message, mode SaveMode) error {
+func (t tableImpl) Save(store kvstore.Backend, message proto.Message, mode SaveMode) error {
 	writer := newBatchIndexCommitmentWriter(store)
 	defer writer.Close()
 	return t.doSave(writer, message, mode)
@@ -110,7 +110,7 @@ func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, message proto.Mess
 	return writer.Write()
 }
 
-func (t tableImpl) Delete(store kvstore.IndexCommitmentStoreWithHooks, primaryKey []protoreflect.Value) error {
+func (t tableImpl) Delete(store kvstore.Backend, primaryKey []protoreflect.Value) error {
 	pk, err := t.EncodeKey(primaryKey)
 	if err != nil {
 		return err
@@ -154,7 +154,7 @@ func (t tableImpl) Delete(store kvstore.IndexCommitmentStoreWithHooks, primaryKe
 	return writer.Write()
 }
 
-func (t tableImpl) DeleteMessage(store kvstore.IndexCommitmentStoreWithHooks, message proto.Message) error {
+func (t tableImpl) DeleteMessage(store kvstore.Backend, message proto.Message) error {
 	pk := t.PrimaryKeyCodec.GetKeyValues(message.ProtoReflect())
 	return t.Delete(store, pk)
 }
@@ -277,13 +277,13 @@ func (t tableImpl) ValidateJSON(reader io.Reader) error {
 	})
 }
 
-func (t tableImpl) ImportJSON(store kvstore.IndexCommitmentStoreWithHooks, reader io.Reader) error {
+func (t tableImpl) ImportJSON(store kvstore.Backend, reader io.Reader) error {
 	return t.decodeJson(reader, func(message proto.Message) error {
 		return t.Save(store, message, SAVE_MODE_DEFAULT)
 	})
 }
 
-func (t tableImpl) ExportJSON(store kvstore.IndexCommitmentReadStore, writer io.Writer) error {
+func (t tableImpl) ExportJSON(store kvstore.ReadBackend, writer io.Writer) error {
 	_, err := writer.Write([]byte("["))
 	if err != nil {
 		return err
@@ -292,7 +292,7 @@ func (t tableImpl) ExportJSON(store kvstore.IndexCommitmentReadStore, writer io.
 	return t.doExportJSON(store, writer)
 }
 
-func (t tableImpl) doExportJSON(store kvstore.IndexCommitmentReadStore, writer io.Writer) error {
+func (t tableImpl) doExportJSON(store kvstore.ReadBackend, writer io.Writer) error {
 	marshalOptions := protojson.MarshalOptions{
 		UseProtoNames: true,
 		Resolver:      t.typeResolver,

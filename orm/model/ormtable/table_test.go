@@ -31,7 +31,7 @@ func TestScenario(t *testing.T) {
 	assert.NilError(t, err)
 
 	// first run tests with a split index-commitment store
-	runTestScenario(t, table, testkv.NewSplitMemIndexCommitmentStore())
+	runTestScenario(t, table, testkv.NewSplitMemBackend())
 
 	// now run tests with a shared index-commitment store
 
@@ -40,8 +40,8 @@ func TestScenario(t *testing.T) {
 	// test. the golden file can be used for fine-grained debugging of kv-store
 	// layout
 	debugBuf := &strings.Builder{}
-	sharedStore := testkv.NewSharedMemIndexCommitmentStore()
-	store := testkv.NewDebugIndexCommitmentStore(
+	sharedStore := testkv.NewSharedMemBackend()
+	store := testkv.NewDebugBackend(
 		sharedStore,
 		&testkv.EntryCodecDebugger{
 			EntryCodec: table,
@@ -76,7 +76,7 @@ func checkEncodeDecodeEntries(t *testing.T, table Table, store kvstore.Reader) {
 	}
 }
 
-func runTestScenario(t *testing.T, table Table, store kvstore.IndexCommitmentStoreWithHooks) {
+func runTestScenario(t *testing.T, table Table, store kvstore.Backend) {
 	// let's create 10 data items we'll use later and give them indexes
 	data := []*testpb.ExampleTable{
 		{U32: 4, I64: -2, Str: "abc", U64: 7},  // 0
@@ -374,7 +374,7 @@ func runTestScenario(t *testing.T, table Table, store kvstore.IndexCommitmentSto
 	buf := &bytes.Buffer{}
 	assert.NilError(t, table.ExportJSON(store, buf))
 	assert.NilError(t, table.ValidateJSON(bytes.NewReader(buf.Bytes())))
-	store2 := testkv.NewSplitMemIndexCommitmentStore()
+	store2 := testkv.NewSplitMemBackend()
 	assert.NilError(t, table.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
 	assertTablesEqual(t, table, store, store2)
 
@@ -532,7 +532,7 @@ func TableDataGen(elemGen *rapid.Generator, n int) *rapid.Generator {
 		}
 
 		data := make([]proto.Message, n)
-		store := testkv.NewSplitMemIndexCommitmentStore()
+		store := testkv.NewSplitMemBackend()
 
 		for i := 0; i < n; {
 			message = elemGen.Draw(t, fmt.Sprintf("message[%d]", i)).(proto.Message)
@@ -557,7 +557,7 @@ func TableDataGen(elemGen *rapid.Generator, n int) *rapid.Generator {
 type TableData struct {
 	table Table
 	data  []proto.Message
-	store kvstore.IndexCommitmentStore
+	store kvstore.Backend
 }
 
 type IndexModel struct {
@@ -594,7 +594,7 @@ func TestJSONExportImport(t *testing.T) {
 		MessageType: (&testpb.ExampleTable{}).ProtoReflect().Type(),
 	})
 	assert.NilError(t, err)
-	store := testkv.NewSplitMemIndexCommitmentStore()
+	store := testkv.NewSplitMemBackend()
 
 	for i := 0; i < 100; {
 		x := testutil.GenA.Example().(proto.Message)
@@ -612,13 +612,13 @@ func TestJSONExportImport(t *testing.T) {
 
 	assert.NilError(t, table.ValidateJSON(bytes.NewReader(buf.Bytes())))
 
-	store2 := testkv.NewSplitMemIndexCommitmentStore()
+	store2 := testkv.NewSplitMemBackend()
 	assert.NilError(t, table.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
 
 	assertTablesEqual(t, table, store, store2)
 }
 
-func assertTablesEqual(t assert.TestingT, table Table, store, store2 kvstore.IndexCommitmentReadStore) {
+func assertTablesEqual(t assert.TestingT, table Table, store, store2 kvstore.ReadBackend) {
 	it, err := table.PrefixIterator(store, nil, IteratorOptions{})
 	assert.NilError(t, err)
 	it2, err := table.PrefixIterator(store2, nil, IteratorOptions{})

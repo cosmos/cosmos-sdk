@@ -33,6 +33,9 @@ type Reader interface {
 	ReverseIterator(start, end []byte) (Iterator, error)
 }
 
+// Iterator aliases github.com/tendermint/tm-db.Iterator.
+type Iterator = dbm.Iterator
+
 // Writer is an interface for writing to a kv-store.
 type Writer interface {
 	Reader
@@ -52,20 +55,24 @@ type Store interface {
 	Writer
 }
 
-// IndexCommitmentReadStore is a read-only version of IndexCommitmentStore.
-type IndexCommitmentReadStore interface {
+// ReadBackend is the kv-store backend that the ORM uses for readonly operations.
+type ReadBackend interface {
 	CommitmentStoreReader() Reader
 	IndexStoreReader() Reader
 }
 
-// IndexCommitmentStore is a wrapper around two stores - an index store
+// Backend is the kv-store backend that the ORM uses for state mutations.
+//
+// It is primarily a wrapper around two stores - an index store
 // which does not need to be back by a merkle-tree and a commitment store
 // which should be backed by a merkle-tree if possible. This abstraction allows
 // the ORM access the two stores as a single data layer, storing all secondary
 // index data in the index layer for efficiency and only storing primary records
 // in the commitment store.
-type IndexCommitmentStore interface {
-	IndexCommitmentReadStore
+//
+// Backend can optionally contain hooks to listen to ORM operations directly.
+type Backend interface {
+	ReadBackend
 
 	// CommitmentStore returns the merklized commitment store.
 	CommitmentStore() Store
@@ -73,16 +80,6 @@ type IndexCommitmentStore interface {
 	// IndexStore returns the index store if a separate one exists,
 	// otherwise it the commitment store.
 	IndexStore() Store
-}
-
-// Iterator aliases github.com/tendermint/tm-db.Iterator.
-type Iterator = dbm.Iterator
-
-// IndexCommitmentStoreWithHooks wraps kvstore.IndexCommitmentStore
-// and adds a ORMHooks method for store layers to optionally listen to ORM hooks
-// directly.
-type IndexCommitmentStoreWithHooks interface {
-	IndexCommitmentStore
 
 	// ORMHooks returns a Hooks instance or nil.
 	ORMHooks() ormhooks.Hooks

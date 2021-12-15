@@ -51,7 +51,7 @@ type Table interface {
 	// Save attempts to be atomic with respect to the underlying store,
 	// meaning that either the full save operation is written or the store is
 	// left unchanged, unless there is an error with the underlying store.
-	Save(store kvstore.IndexCommitmentStoreWithHooks, message proto.Message, mode SaveMode) error
+	Save(store kvstore.Backend, message proto.Message, mode SaveMode) error
 
 	// Delete deletes the entry with the provided primary key values from the store.
 	//
@@ -61,10 +61,10 @@ type Table interface {
 	// Delete attempts to be atomic with respect to the underlying store,
 	// meaning that either the full save operation is written or the store is
 	// left unchanged, unless there is an error with the underlying store.
-	Delete(store kvstore.IndexCommitmentStoreWithHooks, primaryKey []protoreflect.Value) error
+	Delete(store kvstore.Backend, primaryKey []protoreflect.Value) error
 
 	// DeleteMessage calls delete with the primary key extracted from the provided message.
-	DeleteMessage(store kvstore.IndexCommitmentStoreWithHooks, message proto.Message) error
+	DeleteMessage(store kvstore.Backend, message proto.Message) error
 
 	// DefaultJSON returns default JSON that can be used as a template for
 	// genesis files.
@@ -96,12 +96,12 @@ type Table interface {
 	// that in the case of an error, some records may already have been
 	// imported. It is assumed that ImportJSON is called in the context of some
 	// larger transaction isolation.
-	ImportJSON(kvstore.IndexCommitmentStoreWithHooks, io.Reader) error
+	ImportJSON(kvstore.Backend, io.Reader) error
 
 	// ExportJSON exports JSON in the format accepted by ImportJSON.
 	// Auto-incrementing tables will export the last sequence number as the
 	// first element in the JSON array.
-	ExportJSON(kvstore.IndexCommitmentReadStore, io.Writer) error
+	ExportJSON(kvstore.ReadBackend, io.Writer) error
 
 	// ID is the ID of this table within the schema of its FileDescriptor.
 	ID() uint32

@@ -54,7 +54,7 @@ type PaginationResponse struct {
 // Paginate retrieves a "page" of data from the provided index and store.
 func Paginate(
 	index Index,
-	store kvstore.IndexCommitmentReadStore,
+	store kvstore.ReadBackend,
 	request *PaginationRequest,
 ) (*PaginationResponse, error) {
 	offset := int(request.Offset)

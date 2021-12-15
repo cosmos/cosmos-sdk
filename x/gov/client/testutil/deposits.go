@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 type DepositTestSuite struct {
@@ -41,7 +41,7 @@ func (s *DepositTestSuite) SetupSuite() {
 
 	deposits := sdk.Coins{
 		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(0)),
-		sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Sub(sdk.NewInt(50))),
+		sdk.NewCoin(s.cfg.BondDenom, v1beta1.DefaultMinDepositTokens.Sub(sdk.NewInt(50))),
 	}
 	s.deposits = deposits
 
@@ -78,7 +78,7 @@ func (s *DepositTestSuite) createProposal(val *network.Validator, initialDeposit
 		val.Address.String(),
 		fmt.Sprintf("Text Proposal %d", id),
 		"Where is the title!?",
-		types.ProposalTypeText,
+		v1beta1.ProposalTypeText,
 		exactArgs...,
 	)
 
@@ -98,7 +98,7 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	proposalID := s.proposalIDs[0]
 
 	// deposit amount
-	depositAmount := sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Add(sdk.NewInt(50))).String()
+	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1beta1.DefaultMinDepositTokens.Add(sdk.NewInt(50))).String()
 	_, err := MsgDeposit(clientCtx, val.Address.String(), proposalID, depositAmount)
 	s.Require().NoError(err)
 
@@ -146,14 +146,14 @@ func (s *DepositTestSuite) TestRejectedProposalDeposits() {
 
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-	initialDeposit := sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens)
+	initialDeposit := sdk.NewCoin(s.cfg.BondDenom, v1beta1.DefaultMinDepositTokens)
 	id := 1
 	proposalID := fmt.Sprintf("%d", id)
 
 	s.createProposal(val, initialDeposit, id)
 
 	// query deposits
-	var deposits types.QueryDepositsResponse
+	var deposits v1beta1.QueryDepositsResponse
 	args := []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
 	cmd := cli.GetCmdQueryDeposits()
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
@@ -183,9 +183,9 @@ func (s *DepositTestSuite) TestRejectedProposalDeposits() {
 	s.Require().Equal(depositsRes.Deposits[0].Amount.String(), initialDeposit.String())
 }
 
-func (s *DepositTestSuite) queryDeposits(val *network.Validator, proposalID string, exceptErr bool, message string) *types.QueryDepositsResponse {
+func (s *DepositTestSuite) queryDeposits(val *network.Validator, proposalID string, exceptErr bool, message string) *v1beta1.QueryDepositsResponse {
 	args := []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
-	var depositsRes *types.QueryDepositsResponse
+	var depositsRes *v1beta1.QueryDepositsResponse
 	cmd := cli.GetCmdQueryDeposits()
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 
@@ -200,9 +200,9 @@ func (s *DepositTestSuite) queryDeposits(val *network.Validator, proposalID stri
 	return depositsRes
 }
 
-func (s *DepositTestSuite) queryDeposit(val *network.Validator, proposalID string, exceptErr bool, message string) *types.Deposit {
+func (s *DepositTestSuite) queryDeposit(val *network.Validator, proposalID string, exceptErr bool, message string) *v1beta1.Deposit {
 	args := []string{proposalID, val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
-	var depositRes *types.Deposit
+	var depositRes *v1beta1.Deposit
 	cmd := cli.GetCmdQueryDeposit()
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 	if exceptErr {

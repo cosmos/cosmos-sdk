@@ -243,7 +243,7 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "account not found"), nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "granter account not found")
 		}
 
-		coins := sdk.NewCoins(sdk.NewInt64Coin("stake", int64(simtypes.RandIntBetween(r, 100, 100000))))
+		coins := sdk.NewCoins(sdk.NewInt64Coin("stake", int64(simtypes.RandIntBetween(r, 100, 1000000))))
 
 		// Check send_enabled status of each sent coin denom
 		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {

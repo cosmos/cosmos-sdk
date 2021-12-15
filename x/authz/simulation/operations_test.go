@@ -46,12 +46,13 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	accs := suite.getTestingAccounts(r, 3)
 
 	expected := []struct {
-		weight    int
-		opMsgName string
+		weight     int
+		opMsgRoute string
+		opMsgName  string
 	}{
-		{simulation.WeightGrant, simulation.TypeMsgGrant},
-		{simulation.WeightRevoke, simulation.TypeMsgRevoke},
-		{simulation.WeightExec, simulation.TypeMsgExec},
+		{simulation.WeightGrant, simulation.TypeMsgGrant, simulation.TypeMsgGrant},
+		{simulation.WeightRevoke, simulation.TypeMsgRevoke, simulation.TypeMsgRevoke},
+		{simulation.WeightExec, authz.ModuleName, simulation.TypeMsgExec},
 	}
 
 	for i, w := range weightedOps {
@@ -60,6 +61,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail
 		suite.Require().Equal(expected[i].weight, w.Weight(), "weight should be the same")
+		suite.Require().Equal(expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
 		suite.Require().Equal(expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
 	}
 }
@@ -167,7 +169,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	grantee := accounts[1]
 	authorization := banktypes.NewSendAuthorization(initCoins)
 
-	err := suite.app.AuthzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
+	err := suite.app.AuthzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, authorization, suite.ctx.BlockTime().Add(1*time.Hour))
 	suite.Require().NoError(err)
 
 	// execute operation

@@ -35,8 +35,10 @@
     - [Query](#cosmos.auth.v1beta1.Query)
   
 - [cosmos/authz/v1beta1/authz.proto](#cosmos/authz/v1beta1/authz.proto)
+    - [GGMTriple](#cosmos.authz.v1beta1.GGMTriple)
     - [GenericAuthorization](#cosmos.authz.v1beta1.GenericAuthorization)
     - [Grant](#cosmos.authz.v1beta1.Grant)
+    - [GrantQueueItem](#cosmos.authz.v1beta1.GrantQueueItem)
   
 - [cosmos/authz/v1beta1/event.proto](#cosmos/authz/v1beta1/event.proto)
     - [EventGrant](#cosmos.authz.v1beta1.EventGrant)
@@ -1194,6 +1196,24 @@ Since: cosmos-sdk 0.43 | GET|/cosmos/auth/v1beta1/accounts|
 Since: cosmos-sdk 0.43
 
 
+<a name="cosmos.authz.v1beta1.GGMTriple"></a>
+
+### GGMTriple
+GGMTriple contains granter-grantee-msg_type triple. It can be
+used to construct the grant key.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  | Granter account address |
+| `grantee` | [string](#string) |  | Grantee account address |
+| `msg_type_url` | [string](#string) |  | msg_type_url contains the TypeURL of a sdk.Msg. |
+
+
+
+
+
+
 <a name="cosmos.authz.v1beta1.GenericAuthorization"></a>
 
 ### GenericAuthorization
@@ -1221,6 +1241,21 @@ the provide method with expiration time.
 | ----- | ---- | ----- | ----------- |
 | `authorization` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 | `expiration` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+
+
+
+
+
+
+<a name="cosmos.authz.v1beta1.GrantQueueItem"></a>
+
+### GrantQueueItem
+GrantQueueItem contains the list of granter-grantee-msgtype triple.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ggm_triples` | [GGMTriple](#cosmos.authz.v1beta1.GGMTriple) | repeated | GGMTriple is a list of GGMTriple |
 
 
 

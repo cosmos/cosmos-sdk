@@ -151,7 +151,7 @@ func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, auth
 
 	bz := k.cdc.MustMarshal(&grant)
 	store.Set(skey, bz)
-	k.insertIntoGrantQueue(ctx, skey, expiration)
+	k.insertIntoGrantQueue(ctx, granter, grantee, authorization.MsgTypeURL(), expiration)
 
 	return ctx.EventManager().EmitTypedEvent(&authz.EventGrant{
 		MsgTypeUrl: authorization.MsgTypeURL(),
@@ -220,7 +220,7 @@ func (k Keeper) IterateGrants(ctx sdk.Context,
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var grant authz.Grant
-		granterAddr, granteeAddr := addressesFromGrantStoreKey(iter.Key())
+		granterAddr, granteeAddr, _ := parseGrantStoreKey(iter.Key())
 		k.cdc.MustUnmarshal(iter.Value(), &grant)
 		if handler(granterAddr, granteeAddr, grant) {
 			break
@@ -268,27 +268,132 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *authz.GenesisState) {
 	}
 }
 
-// insertIntoGrantQueue Inserts a grant key into the grant queue
-func (keeper Keeper) insertIntoGrantQueue(ctx sdk.Context, grantKey []byte, expiration time.Time) {
+func (keeper Keeper) getGrantQueueItem(ctx sdk.Context, expiration time.Time) (*authz.GrantQueueItem, error) {
 	store := ctx.KVStore(keeper.storeKey)
-	store.Set(GrantQueueKey(grantKey, expiration), grantKey)
+	bz := store.Get(GrantQueueKey(expiration))
+	if bz == nil {
+		return &authz.GrantQueueItem{}, nil
+	}
+
+	var queueItems authz.GrantQueueItem
+	if err := keeper.cdc.Unmarshal(bz, &queueItems); err != nil {
+		return nil, err
+	}
+	return &queueItems, nil
+}
+
+func (k Keeper) setGrantQueueItem(ctx sdk.Context, expiration time.Time, queueItems *authz.GrantQueueItem) error {
+	store := ctx.KVStore(k.storeKey)
+	bz, err := k.cdc.Marshal(queueItems)
+	if err != nil {
+		return err
+	}
+	store.Set(GrantQueueKey(expiration), bz)
+
+	return nil
+}
+
+// insertIntoGrantQueue Inserts a grant key into the grant queue
+func (keeper Keeper) insertIntoGrantQueue(ctx sdk.Context, granter, grantee sdk.AccAddress, msgType string,
+	expiration time.Time) error {
+	queueItems, err := keeper.getGrantQueueItem(ctx, expiration)
+	if err != nil {
+		return err
+	}
+
+	ggmTriple := authz.GGMTriple{
+		Granter:    granter.String(),
+		Grantee:    grantee.String(),
+		MsgTypeUrl: msgType,
+	}
+	if len(queueItems.GgmTriples) == 0 {
+		keeper.setGrantQueueItem(ctx, expiration, &authz.GrantQueueItem{
+			GgmTriples: []*authz.GGMTriple{
+				&ggmTriple,
+			},
+		})
+	} else {
+		queueItems.GgmTriples = append(queueItems.GgmTriples, &ggmTriple)
+		keeper.setGrantQueueItem(ctx, expiration, queueItems)
+	}
+
+	return nil
 }
 
 // removeFromGrantQueue removes a grant key from the grant queue
-func (keeper Keeper) removeFromGrantQueue(ctx sdk.Context, grantKey []byte, expiration time.Time) {
+func (keeper Keeper) removeFromGrantQueue(ctx sdk.Context, grantKey []byte, expiration time.Time) error {
 	store := ctx.KVStore(keeper.storeKey)
-	store.Delete(GrantQueueKey(grantKey, expiration))
+	key := GrantQueueKey(expiration)
+	bz := store.Get(key)
+	if bz == nil {
+		return sdkerrors.ErrLogic.Wrap("grant key not found")
+	}
+
+	var queueItem authz.GrantQueueItem
+	if err := keeper.cdc.Unmarshal(bz, &queueItem); err != nil {
+		return err
+	}
+
+	granter, grantee, msgType := parseGrantStoreKey(grantKey)
+	queueItems := queueItem.GgmTriples
+	for index, ggmTriple := range queueItems {
+		if ggmTriple.Granter == granter.String() &&
+			ggmTriple.Grantee == grantee.String() &&
+			ggmTriple.MsgTypeUrl == msgType {
+			end := len(queueItem.GgmTriples) - 1
+			queueItems[index] = queueItems[end]
+			queueItems = queueItems[:end]
+
+			if err := keeper.setGrantQueueItem(ctx, expiration, &authz.GrantQueueItem{
+				GgmTriples: queueItems,
+			}); err != nil {
+				return err
+			}
+			break
+		}
+	}
+
+	return nil
 }
 
-// DeleteAllMatureGrants deletes expired grants from the queue and deletes grant from the store.
-func (k Keeper) DeleteAllMatureGrants(ctx sdk.Context) {
+// DequeueAllMatureGrants returns a concatenated list of all the queue items, and deletes them from the grant queue
+func (k Keeper) DequeueAllMatureGrants(ctx sdk.Context) ([]*authz.GGMTriple, error) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := store.Iterator(GrantQueuePrefix, sdk.InclusiveEndBytes(grantByTimeKey(ctx.BlockTime())))
+	iterator := store.Iterator(GrantQueuePrefix, sdk.InclusiveEndBytes(GrantQueueKey(ctx.BlockTime())))
 	defer iterator.Close()
 
+	var matureGrants []*authz.GGMTriple
 	for ; iterator.Valid(); iterator.Next() {
+		var queueItem authz.GrantQueueItem
+		if err := k.cdc.Unmarshal(iterator.Value(), &queueItem); err != nil {
+			return nil, err
+		}
+
+		matureGrants = append(matureGrants, queueItem.GgmTriples...)
 		store.Delete(iterator.Key())
-		store.Delete(iterator.Value())
 	}
+
+	return matureGrants, nil
+}
+
+// DeleteExpiredGrants deletes expired grants from the state
+func (k Keeper) DeleteExpiredGrants(ctx sdk.Context, grants []*authz.GGMTriple) error {
+	store := ctx.KVStore(k.storeKey)
+
+	for _, grant := range grants {
+		granter, err := sdk.AccAddressFromBech32(grant.Granter)
+		if err != nil {
+			return err
+		}
+
+		grantee, err := sdk.AccAddressFromBech32(grant.Grantee)
+		if err != nil {
+			return err
+		}
+
+		store.Delete(grantStoreKey(grantee, granter, grant.MsgTypeUrl))
+	}
+
+	return nil
 }

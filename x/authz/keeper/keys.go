@@ -15,7 +15,7 @@ import (
 //
 // - 0x01<grant_Bytes>: Grant
 //
-// - 0x02<grant_expiration_Bytes><grant_Bytes>: grantKey
+// - 0x02<grant_expiration_Bytes>: GrantQueueItem
 //
 var (
 	GrantKey         = []byte{0x01} // prefix for each key
@@ -46,8 +46,8 @@ func grantStoreKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType strin
 	return key
 }
 
-// addressesFromGrantStoreKey - split granter & grantee address from the authorization key
-func addressesFromGrantStoreKey(key []byte) (granterAddr, granteeAddr sdk.AccAddress) {
+// parseGrantStoreKey - split granter, grantee address and msg type from the authorization key
+func parseGrantStoreKey(key []byte) (granterAddr, granteeAddr sdk.AccAddress, msgType string) {
 	// key is of format:
 	// 0x01<granterAddressLen (1 Byte)><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes><msgType_Bytes>
 	kv.AssertKeyAtLeastLength(key, 2)
@@ -58,42 +58,25 @@ func addressesFromGrantStoreKey(key []byte) (granterAddr, granteeAddr sdk.AccAdd
 	kv.AssertKeyAtLeastLength(key, 4+int(granterAddrLen+byte(granteeAddrLen)))
 	granteeAddr = sdk.AccAddress(key[3+granterAddrLen : 3+granterAddrLen+byte(granteeAddrLen)])
 
-	return granterAddr, granteeAddr
+	return granterAddr, granteeAddr, conv.UnsafeBytesToStr(key[3+granterAddrLen+byte(granteeAddrLen):])
 }
 
-func splitGrantQueueKey(key []byte) (expiration time.Time, grantee, granter sdk.AccAddress, msgType string) {
+func parseGrantQueueKey(key []byte) (expiration time.Time) {
 	// key is of format:
-	// 0x02<grant_expiration_Bytes><granterAddressLen (1 Byte)><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes><msgType_Bytes>
+	// 0x02<grant_expiration_Bytes>
 
 	expiration, err := sdk.ParseTimeBytes(key[1 : 1+lenTime])
 	if err != nil {
 		panic(err)
 	}
 
-	kv.AssertKeyAtLeastLength(key, 1+lenTime)
-	granterAddrLen := key[1+lenTime]
-	granter = sdk.AccAddress(key[2+lenTime : byte(2+lenTime)+granterAddrLen])
-
-	granteeAddrLen := key[byte(2+lenTime)+granterAddrLen]
-	granteeStart := byte(3+lenTime) + granterAddrLen
-	grantee = sdk.AccAddress(key[granteeStart : granteeStart+granteeAddrLen])
-
-	msgType = string(key[granteeStart+granteeAddrLen:])
-
-	return expiration, grantee, granter, msgType
-}
-
-// grantByTimeKey gets the grant queue key by expiration
-func grantByTimeKey(expiration time.Time) []byte {
-	return append(GrantQueuePrefix, sdk.FormatTimeBytes(expiration)...)
+	return expiration
 }
 
 // GrantQueueKey - return grant queue store key
 // Key format is
 //
-// - 0x02<grant_expiration_Bytes><granterAddressLen (1 Byte)><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes><msgType_Bytes>: grantKey
-func GrantQueueKey(grantKey []byte, expiration time.Time) []byte {
-	expiredGrantKey := grantByTimeKey(expiration)
-	return append(expiredGrantKey, grantKey[1:]...)
-
+// - 0x02<grant_expiration_Bytes>: GrantQueueItem
+func GrantQueueKey(expiration time.Time) []byte {
+	return append(GrantQueuePrefix, sdk.FormatTimeBytes(expiration)...)
 }

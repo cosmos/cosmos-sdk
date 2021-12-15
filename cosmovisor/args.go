@@ -234,13 +234,13 @@ func (cfg *Config) validate() []error {
 	case cfg.DataBackupPath == "":
 		errs = append(errs, errors.New(EnvDataBackupPath+ " must not be empty"))
 	case !filepath.IsAbs(cfg.DataBackupPath):
-		errs = append(errs, errors.New(EnvHome+" must be an absolute path"))
+		errs = append(errs, errors.New(cfg.DataBackupPath + " must be an absolute path"))
 	default:
 		switch info, err := os.Stat(cfg.DataBackupPath); {
 		case err != nil:
-			errs = append(errs, fmt.Errorf("cannot stat data backup dir: %w", err))
+			errs = append(errs, fmt.Errorf("%q must be a valid directory: %w", cfg.DataBackupPath, err))
 		case !info.IsDir():
-			errs = append(errs, fmt.Errorf("%s is not a directory", cfg.DataBackupPath))
+			errs = append(errs, fmt.Errorf("%q must be a valid directory", cfg.DataBackupPath))
 		}
 	}
 

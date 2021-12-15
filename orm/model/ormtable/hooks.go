@@ -1,6 +1,20 @@
 package ormtable
 
-import "google.golang.org/protobuf/proto"
+import (
+	"google.golang.org/protobuf/proto"
+
+	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
+)
+
+// IndexCommitmentStoreWithHooks wraps kvstore.IndexCommitmentStore
+// and adds a ORMHooks method for store layers to optionally listen to ORM hooks
+// directly.
+type IndexCommitmentStoreWithHooks interface {
+	kvstore.IndexCommitmentStore
+
+	// ORMHooks returns a Hooks instance or nil
+	ORMHooks() Hooks
+}
 
 // Hooks defines an interface for a table hooks which can intercept
 // insert, update and delete operations. Table.Save and Table.Delete methods will
@@ -19,3 +33,6 @@ type Hooks interface {
 	// If error is not nil the operation will fail.
 	OnDelete(proto.Message) error
 }
+
+// IndexCommitmentStoreHooksWrapper wraps an kvstore.IndexCommitmentStore
+// with hooks for tests.

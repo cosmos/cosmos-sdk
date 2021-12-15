@@ -657,7 +657,7 @@ func TestHooks(t *testing.T) {
 
 	assert.NilError(t, table.Save(storeWithHooks, a, SAVE_MODE_INSERT))
 	assert.NilError(t, table.Save(storeWithHooks, a2, SAVE_MODE_UPDATE))
-	assert.NilError(t, table.Delete(storeWithHooks, testutil.ValuesOf(uint32(10), int64(-1), "foo")))
+	assert.NilError(t, table.DeleteMessage(storeWithHooks, a2))
 
 	events := storeWithHooks.events
 	assert.Equal(t, 3, len(events))

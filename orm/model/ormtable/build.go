@@ -21,7 +21,7 @@ const (
 
 // Options are options for building a Table.
 type Options struct {
-	// Prefix is an optional prefix for the table within the store.
+	// Prefix is an optional prefix used to build the table's prefix.
 	Prefix []byte
 
 	// MessageType is the protobuf message type of the table.
@@ -65,7 +65,6 @@ func Build(options Options) (Table, error) {
 		indexesByFields:       map[FieldNames]concreteIndex{},
 		uniqueIndexesByFields: map[FieldNames]UniqueIndex{},
 		entryCodecsById:       map[uint32]ormkv.EntryCodec{},
-		tablePrefix:           options.Prefix,
 		typeResolver:          options.TypeResolver,
 		customJSONValidator:   options.JSONValidator,
 	}
@@ -85,9 +84,13 @@ func Build(options Options) (Table, error) {
 			return nil, ormerrors.InvalidTableDefinition.Wrapf("message %s cannot be declared as both a table and a singleton", messageDescriptor.FullName())
 		}
 	} else if singletonDesc != nil {
-		pkPrefix := AppendVarUInt32(options.Prefix, primaryKeyId)
+		if singletonDesc.Id == 0 {
+			return nil, ormerrors.InvalidTableId.Wrapf("%s", messageDescriptor.FullName())
+		}
+
+		prefix := AppendVarUInt32(options.Prefix, singletonDesc.Id)
 		pkCodec, err := ormkv.NewPrimaryKeyCodec(
-			pkPrefix,
+			prefix,
 			options.MessageType,
 			nil,
 			proto.UnmarshalOptions{Resolver: options.TypeResolver},
@@ -96,6 +99,8 @@ func Build(options Options) (Table, error) {
 			return nil, err
 		}
 
+		table.tablePrefix = prefix
+		table.tableId = singletonDesc.Id
 		table.PrimaryKeyIndex = NewPrimaryKeyIndex(pkCodec)
 
 		return &singleton{table}, nil
@@ -107,6 +112,11 @@ func Build(options Options) (Table, error) {
 	if tableId == 0 {
 		return nil, ormerrors.InvalidTableId.Wrapf("table %s", messageDescriptor.FullName())
 	}
+
+	prefix := options.Prefix
+	prefix = AppendVarUInt32(prefix, tableId)
+	table.tablePrefix = prefix
+	table.tableId = tableId
 
 	if tableDesc.PrimaryKey == nil {
 		return nil, ormerrors.MissingPrimaryKey.Wrap(string(messageDescriptor.FullName()))
@@ -122,7 +132,7 @@ func Build(options Options) (Table, error) {
 		return nil, ormerrors.InvalidTableDefinition.Wrapf("empty primary key fields for %s", messageDescriptor.FullName())
 	}
 
-	pkPrefix := AppendVarUInt32(options.Prefix, primaryKeyId)
+	pkPrefix := AppendVarUInt32(prefix, primaryKeyId)
 	pkCodec, err := ormkv.NewPrimaryKeyCodec(
 		pkPrefix,
 		options.MessageType,
@@ -156,7 +166,7 @@ func Build(options Options) (Table, error) {
 			return nil, err
 		}
 
-		idxPrefix := AppendVarUInt32(options.Prefix, id)
+		idxPrefix := AppendVarUInt32(prefix, id)
 		var index concreteIndex
 
 		// altNames contains all the alternative "names" of this index
@@ -239,7 +249,7 @@ func Build(options Options) (Table, error) {
 			return nil, ormerrors.InvalidAutoIncrementKey.Wrapf("field %s", autoIncField.FullName())
 		}
 
-		seqPrefix := AppendVarUInt32(options.Prefix, seqId)
+		seqPrefix := AppendVarUInt32(prefix, seqId)
 		seqCodec := ormkv.NewSeqCodec(options.MessageType, seqPrefix)
 		table.entryCodecsById[seqId] = seqCodec
 		return &autoIncrementTable{

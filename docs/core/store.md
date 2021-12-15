@@ -242,14 +242,14 @@ See [ADR-040](../architecture/adr-040-storage-and-smt-state-commitments.md) for 
 
 ## `BasicKVStore` interface
 
-An interface providing only the basic CRUD functionality (`Get`, `Set`, `Has`, and `Delete` methods), without iteration or caching. This is used to partially expose components of a larger store, such as a `flat.Store`.
+An interface providing only the basic CRUD functionality (`Get`, `Set`, `Has`, and `Delete` methods), without iteration or caching. This is used to partially expose components of a larger store, such as a `root.Store`.
 
 ## MultiStore
 
 This is the new interface (or set of interfaces) for the main client store, replacing the function of `MultiStore`. There are a few significant differences in behavior compared with `MultiStore`:
   * Commits are atomic and are performed on the entire store state; individual substores cannot be committed separately and cannot have different version numbers.
   * The store's current version and version history track that of the backing `db.DBConnection`. Past versions are accessible read-only.
-  * The set of valid substores is defined in at initialization and cannot be updated dynamically in an existing store instance.
+  * The set of valid substores is defined at initialization and cannot be updated dynamically in an existing store instance.
 
 ### `CommitMultiStore`
 

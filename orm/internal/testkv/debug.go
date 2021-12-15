@@ -14,7 +14,7 @@ type Debugger interface {
 	Log(string)
 
 	// Decode decodes a key-value entry into a debug string.
-	Decode(storeName string, key, value []byte) string
+	Decode(key, value []byte) string
 }
 
 type debugStore struct {
@@ -32,13 +32,13 @@ func (t debugStore) Get(key []byte) ([]byte, error) {
 	val, err := t.store.Get(key)
 	if err != nil {
 		if t.debugger != nil {
-			t.debugger.Log(fmt.Sprintf("ERR on GET %s: %v", t.debugger.Decode(t.storeName, key, nil), err))
+			t.debugger.Log(fmt.Sprintf("ERR on GET %s: %v", t.debugger.Decode(key, nil), err))
 		}
 		return nil, err
 	}
 	if t.debugger != nil {
 		t.debugger.Log(fmt.Sprintf("GET %x %x", key, val))
-		t.debugger.Log(fmt.Sprintf("    %s", t.debugger.Decode(t.storeName, key, val)))
+		t.debugger.Log(fmt.Sprintf("    %s", t.debugger.Decode(key, val)))
 	}
 	return val, nil
 }
@@ -47,13 +47,13 @@ func (t debugStore) Has(key []byte) (bool, error) {
 	has, err := t.store.Has(key)
 	if err != nil {
 		if t.debugger != nil {
-			t.debugger.Log(fmt.Sprintf("ERR on HAS %s: %v", t.debugger.Decode(t.storeName, key, nil), err))
+			t.debugger.Log(fmt.Sprintf("ERR on HAS %s: %v", t.debugger.Decode(key, nil), err))
 		}
 		return has, err
 	}
 	if t.debugger != nil {
 		t.debugger.Log(fmt.Sprintf("HAS %x", key))
-		t.debugger.Log(fmt.Sprintf("    %s", t.debugger.Decode(t.storeName, key, nil)))
+		t.debugger.Log(fmt.Sprintf("    %s", t.debugger.Decode(key, nil)))
 	}
 	return has, nil
 }
@@ -91,12 +91,12 @@ func (t debugStore) ReverseIterator(start, end []byte) (kvstore.Iterator, error)
 func (t debugStore) Set(key, value []byte) error {
 	if t.debugger != nil {
 		t.debugger.Log(fmt.Sprintf("SET %x %x", key, value))
-		t.debugger.Log(fmt.Sprintf("    %s", t.debugger.Decode(t.storeName, key, value)))
+		t.debugger.Log(fmt.Sprintf("    %s", t.debugger.Decode(key, value)))
 	}
 	err := t.store.Set(key, value)
 	if err != nil {
 		if t.debugger != nil {
-			t.debugger.Log(fmt.Sprintf("ERR on SET %s: %v", t.debugger.Decode(t.storeName, key, value), err))
+			t.debugger.Log(fmt.Sprintf("ERR on SET %s: %v", t.debugger.Decode(key, value), err))
 		}
 		return err
 	}
@@ -106,12 +106,12 @@ func (t debugStore) Set(key, value []byte) error {
 func (t debugStore) Delete(key []byte) error {
 	if t.debugger != nil {
 		t.debugger.Log(fmt.Sprintf("DEL %x", key))
-		t.debugger.Log(fmt.Sprintf("DEL %s", t.debugger.Decode(t.storeName, key, nil)))
+		t.debugger.Log(fmt.Sprintf("DEL %s", t.debugger.Decode(key, nil)))
 	}
 	err := t.store.Delete(key)
 	if err != nil {
 		if t.debugger != nil {
-			t.debugger.Log(fmt.Sprintf("ERR on SET %s: %v", t.debugger.Decode(t.storeName, key, nil), err))
+			t.debugger.Log(fmt.Sprintf("ERR on SET %s: %v", t.debugger.Decode(key, nil), err))
 		}
 		return err
 	}
@@ -147,7 +147,7 @@ func (d debugIterator) Key() (key []byte) {
 	key = d.iterator.Key()
 	value := d.iterator.Value()
 	d.debugger.Log(fmt.Sprintf("  KEY %x %x", key, value))
-	d.debugger.Log(fmt.Sprintf("      %s", d.debugger.Decode(d.storeName, key, value)))
+	d.debugger.Log(fmt.Sprintf("      %s", d.debugger.Decode(key, value)))
 	return key
 }
 
@@ -183,7 +183,7 @@ func (d *EntryCodecDebugger) Log(s string) {
 	}
 }
 
-func (d *EntryCodecDebugger) Decode(storeName string, key, value []byte) string {
+func (d *EntryCodecDebugger) Decode(key, value []byte) string {
 	entry, err := d.EntryCodec.DecodeEntry(key, value)
 	if err != nil {
 		return fmt.Sprintf("ERR:%v", err)

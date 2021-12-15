@@ -1979,7 +1979,7 @@ func (s *TestSuite) TestExecProposal() {
 				_, err := s.keeper.Exec(ctx, &group.MsgExec{Signer: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, sdkCtx, groupAccountAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+				s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, sdkCtx, s.groupAccountAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				return myProposalID
 			},
@@ -2025,7 +2025,7 @@ func (s *TestSuite) TestExecProposal() {
 			s.Assert().Equal(exp, got)
 
 			if spec.expBalance {
-				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, groupAccountAddr)
+				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, s.groupAccountAddr)
 				s.Require().Contains(fromBalances, spec.expFromBalances)
 				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr2)
 				s.Require().Contains(toBalances, spec.expToBalances)

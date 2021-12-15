@@ -3,7 +3,7 @@ package kvstore
 import (
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/ormhooks"
+	"github.com/cosmos/cosmos-sdk/orm/model/ormhooks"
 )
 
 // Reader is an interface for readonly access to a kv-store.

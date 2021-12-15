@@ -2,7 +2,7 @@ package testkv
 
 import (
 	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormhooks"
+	"github.com/cosmos/cosmos-sdk/orm/model/ormhooks"
 )
 
 type backend struct {

@@ -28,12 +28,13 @@ import (
 type TestSuite struct {
 	suite.Suite
 
-	app       *simapp.SimApp
-	sdkCtx    sdk.Context
-	ctx       context.Context
-	groupID   uint64
-	keeper    keeper.Keeper
-	blockTime time.Time
+	app              *simapp.SimApp
+	sdkCtx           sdk.Context
+	ctx              context.Context
+	groupID          uint64
+	keeper           keeper.Keeper
+	blockTime        time.Time
+	groupAccountAddr sdk.AccAddress
 }
 
 var (
@@ -61,6 +62,7 @@ func (s *TestSuite) SetupTest() {
 
 	s.blockTime = tmtime.Now()
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: s.blockTime})
+	app.BankKeeper.SetParams(ctx, banktypes.DefaultParams())
 
 	s.app = app
 	s.sdkCtx = ctx
@@ -93,6 +95,9 @@ func (s *TestSuite) SetupTest() {
 	accountRes, err := s.keeper.CreateGroupAccount(s.ctx, accountReq)
 	s.Require().NoError(err)
 	groupAccountAddr, err := sdk.AccAddressFromBech32(accountRes.Address)
+	s.Require().NoError(err)
+
+	s.groupAccountAddr, err = sdk.AccAddressFromBech32(accountRes.Address)
 	s.Require().NoError(err)
 	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, groupAccountAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 }
@@ -1132,10 +1137,10 @@ func (s *TestSuite) TestCreateProposal() {
 	addr5 := addrs4
 
 	myGroupID := s.groupID
-	accountAddr := groupAccountAddr
+	accountAddr := s.groupAccountAddr
 
 	msgSend := &banktypes.MsgSend{
-		FromAddress: groupAccountAddr.String(),
+		FromAddress: s.groupAccountAddr.String(),
 		ToAddress:   addr2.String(),
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}
@@ -1820,13 +1825,14 @@ func (s *TestSuite) TestExecProposal() {
 	addr1 := addrs0
 	addr2 := addrs1
 
+	groupAccountAddr1 := s.groupAccountAddr
 	msgSend1 := &banktypes.MsgSend{
-		FromAddress: groupAccountAddr.String(),
+		FromAddress: groupAccountAddr1.String(),
 		ToAddress:   addr2.String(),
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}
 	msgSend2 := &banktypes.MsgSend{
-		FromAddress: groupAccountAddr.String(),
+		FromAddress: groupAccountAddr1.String(),
 		ToAddress:   addr2.String(),
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 10001)},
 	}
@@ -2033,7 +2039,7 @@ func createProposal(
 	ctx context.Context, s *TestSuite, msgs []sdk.Msg,
 	proposers []string) uint64 {
 	proposalReq := &group.MsgCreateProposal{
-		Address:   groupAccountAddr.String(),
+		Address:   s.groupAccountAddr.String(),
 		Proposers: proposers,
 		Metadata:  nil,
 	}

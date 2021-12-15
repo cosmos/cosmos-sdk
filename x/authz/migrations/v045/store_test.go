@@ -102,7 +102,7 @@ func TestMigration(t *testing.T) {
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(1 * time.Hour))
 	require.NoError(t, v045.MigrateStore(ctx, authzKey, cdc))
 
-	// require.NotNil(t, store.Get(v044.GrantStoreKey(grantee1, granter2, genericMsgType)))
-	// require.NotNil(t, store.Get(v044.GrantStoreKey(grantee1, granter1, sendMsgType)))
-	// require.Nil(t, store.Get(v044.GrantStoreKey(grantee2, granter2, genericMsgType)))
+	require.NotNil(t, store.Get(v044.GrantStoreKey(grantee1, granter2, genericMsgType)))
+	require.NotNil(t, store.Get(v044.GrantStoreKey(grantee1, granter1, sendMsgType)))
+	require.Nil(t, store.Get(v044.GrantStoreKey(grantee2, granter2, genericMsgType)))
 }

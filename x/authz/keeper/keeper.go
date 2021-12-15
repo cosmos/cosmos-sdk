@@ -325,7 +325,7 @@ func (keeper Keeper) removeFromGrantQueue(ctx sdk.Context, grantKey []byte, expi
 	key := GrantQueueKey(expiration)
 	bz := store.Get(key)
 	if bz == nil {
-		return nil // TODO: return err
+		return sdkerrors.ErrLogic.Wrap("grant key not found")
 	}
 
 	var queueItem authz.GrantQueueItem

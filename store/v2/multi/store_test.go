@@ -34,16 +34,16 @@ var (
 
 func simpleStoreConfig(t *testing.T) StoreConfig {
 	opts := DefaultStoreConfig()
-	require.NoError(t, opts.ReservePrefix(skey_1.Name(), types.StoreTypePersistent))
+	require.NoError(t, opts.RegisterSubstore(skey_1.Name(), types.StoreTypePersistent))
 	return opts
 }
 
 func storeConfig123(t *testing.T) StoreConfig {
 	opts := DefaultStoreConfig()
 	opts.Pruning = types.PruneNothing
-	require.NoError(t, opts.ReservePrefix(skey_1.Name(), types.StoreTypePersistent))
-	require.NoError(t, opts.ReservePrefix(skey_2.Name(), types.StoreTypePersistent))
-	require.NoError(t, opts.ReservePrefix(skey_3.Name(), types.StoreTypePersistent))
+	require.NoError(t, opts.RegisterSubstore(skey_1.Name(), types.StoreTypePersistent))
+	require.NoError(t, opts.RegisterSubstore(skey_2.Name(), types.StoreTypePersistent))
+	require.NoError(t, opts.RegisterSubstore(skey_3.Name(), types.StoreTypePersistent))
 	return opts
 }
 
@@ -639,20 +639,20 @@ func TestQuery(t *testing.T) {
 func TestStoreConfig(t *testing.T) {
 	opts := DefaultStoreConfig()
 	// Fail with invalid types
-	require.Error(t, opts.ReservePrefix(skey_1.Name(), types.StoreTypeDB))
-	require.Error(t, opts.ReservePrefix(skey_1.Name(), types.StoreTypeSMT))
+	require.Error(t, opts.RegisterSubstore(skey_1.Name(), types.StoreTypeDB))
+	require.Error(t, opts.RegisterSubstore(skey_1.Name(), types.StoreTypeSMT))
 	// Ensure that no prefix conflicts are allowed
-	require.NoError(t, opts.ReservePrefix(skey_1.Name(), types.StoreTypePersistent))
-	require.NoError(t, opts.ReservePrefix(skey_2.Name(), types.StoreTypeMemory))
-	require.NoError(t, opts.ReservePrefix(skey_3b.Name(), types.StoreTypeTransient))
-	require.Error(t, opts.ReservePrefix(skey_1b.Name(), types.StoreTypePersistent))
-	require.Error(t, opts.ReservePrefix(skey_2b.Name(), types.StoreTypePersistent))
-	require.Error(t, opts.ReservePrefix(skey_3.Name(), types.StoreTypePersistent))
+	require.NoError(t, opts.RegisterSubstore(skey_1.Name(), types.StoreTypePersistent))
+	require.NoError(t, opts.RegisterSubstore(skey_2.Name(), types.StoreTypeMemory))
+	require.NoError(t, opts.RegisterSubstore(skey_3b.Name(), types.StoreTypeTransient))
+	require.Error(t, opts.RegisterSubstore(skey_1b.Name(), types.StoreTypePersistent))
+	require.Error(t, opts.RegisterSubstore(skey_2b.Name(), types.StoreTypePersistent))
+	require.Error(t, opts.RegisterSubstore(skey_3.Name(), types.StoreTypePersistent))
 }
 
 func TestMultiStoreBasic(t *testing.T) {
 	opts := DefaultStoreConfig()
-	err := opts.ReservePrefix(skey_1.Name(), types.StoreTypePersistent)
+	err := opts.RegisterSubstore(skey_1.Name(), types.StoreTypePersistent)
 	require.NoError(t, err)
 	db := memdb.NewDB()
 	store, err := NewStore(db, opts)
@@ -798,11 +798,11 @@ func TestMultiStoreMigration(t *testing.T) {
 
 		// pass in a schema reflecting the migrations
 		migratedOpts := DefaultStoreConfig()
-		err = migratedOpts.ReservePrefix(skey_1.Name(), types.StoreTypePersistent)
+		err = migratedOpts.RegisterSubstore(skey_1.Name(), types.StoreTypePersistent)
 		require.NoError(t, err)
-		err = migratedOpts.ReservePrefix(skey_2b.Name(), types.StoreTypePersistent)
+		err = migratedOpts.RegisterSubstore(skey_2b.Name(), types.StoreTypePersistent)
 		require.NoError(t, err)
-		err = migratedOpts.ReservePrefix(skey_4.Name(), types.StoreTypePersistent)
+		err = migratedOpts.RegisterSubstore(skey_4.Name(), types.StoreTypePersistent)
 		require.NoError(t, err)
 		store, err = NewStore(db, migratedOpts)
 		require.Nil(t, err)
@@ -858,8 +858,8 @@ func TestTrace(t *testing.T) {
 
 	db := memdb.NewDB()
 	opts := simpleStoreConfig(t)
-	require.NoError(t, opts.ReservePrefix(skey_2.Name(), types.StoreTypeMemory))
-	require.NoError(t, opts.ReservePrefix(skey_3.Name(), types.StoreTypeTransient))
+	require.NoError(t, opts.RegisterSubstore(skey_2.Name(), types.StoreTypeMemory))
+	require.NoError(t, opts.RegisterSubstore(skey_3.Name(), types.StoreTypeTransient))
 
 	store, err := NewStore(db, opts)
 	require.NoError(t, err)
@@ -936,8 +936,8 @@ func TestListeners(t *testing.T) {
 
 	db := memdb.NewDB()
 	opts := simpleStoreConfig(t)
-	require.NoError(t, opts.ReservePrefix(skey_2.Name(), types.StoreTypeMemory))
-	require.NoError(t, opts.ReservePrefix(skey_3.Name(), types.StoreTypeTransient))
+	require.NoError(t, opts.RegisterSubstore(skey_2.Name(), types.StoreTypeMemory))
+	require.NoError(t, opts.RegisterSubstore(skey_3.Name(), types.StoreTypeTransient))
 
 	store, err := NewStore(db, opts)
 	require.NoError(t, err)

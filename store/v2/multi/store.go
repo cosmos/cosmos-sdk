@@ -397,7 +397,7 @@ func (pr *prefixRegistry) migrate(store *Store, upgrades types.StoreUpgrades) er
 		}
 		pr.reserved = append(pr.reserved[:ix], pr.reserved[ix+1:]...)
 		delete(pr.StoreSchema, rename.OldKey)
-		err = pr.ReservePrefix(rename.NewKey, types.StoreTypePersistent)
+		err = pr.RegisterSubstore(rename.NewKey, types.StoreTypePersistent)
 		if err != nil {
 			return err
 		}
@@ -429,7 +429,7 @@ func (pr *prefixRegistry) migrate(store *Store, upgrades types.StoreUpgrades) er
 	}
 
 	for _, key := range upgrades.Added {
-		err := pr.ReservePrefix(key, types.StoreTypePersistent)
+		err := pr.RegisterSubstore(key, types.StoreTypePersistent)
 		if err != nil {
 			return err
 		}
@@ -838,7 +838,7 @@ func (pr *prefixRegistry) storeInfo(key string) (sst types.StoreType, ix int, er
 	return
 }
 
-func (pr *prefixRegistry) ReservePrefix(key string, typ types.StoreType) error {
+func (pr *prefixRegistry) RegisterSubstore(key string, typ types.StoreType) error {
 	if !validSubStoreType(typ) {
 		return fmt.Errorf("StoreType not supported: %v", typ)
 	}

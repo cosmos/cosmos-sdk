@@ -11,6 +11,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
@@ -336,7 +337,7 @@ func (t tableImpl) doExportJSON(store kvstore.ReadBackend, writer io.Writer) err
 
 func (t tableImpl) DecodeEntry(k, v []byte) (ormkv.Entry, error) {
 	r := bytes.NewReader(k)
-	err := ormkv.SkipPrefix(r, t.tablePrefix)
+	err := encodeutil.SkipPrefix(r, t.tablePrefix)
 	if err != nil {
 		return nil, err
 	}

@@ -2,6 +2,7 @@ package ormtable
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
 
 	"google.golang.org/protobuf/reflect/protoregistry"
 
@@ -88,7 +89,7 @@ func Build(options Options) (Table, error) {
 			return nil, ormerrors.InvalidTableId.Wrapf("%s", messageDescriptor.FullName())
 		}
 
-		prefix := AppendVarUInt32(options.Prefix, singletonDesc.Id)
+		prefix := encodeutil.AppendVarUInt32(options.Prefix, singletonDesc.Id)
 		pkCodec, err := ormkv.NewPrimaryKeyCodec(
 			prefix,
 			options.MessageType,
@@ -114,7 +115,7 @@ func Build(options Options) (Table, error) {
 	}
 
 	prefix := options.Prefix
-	prefix = AppendVarUInt32(prefix, tableId)
+	prefix = encodeutil.AppendVarUInt32(prefix, tableId)
 	table.tablePrefix = prefix
 	table.tableId = tableId
 
@@ -132,7 +133,7 @@ func Build(options Options) (Table, error) {
 		return nil, ormerrors.InvalidTableDefinition.Wrapf("empty primary key fields for %s", messageDescriptor.FullName())
 	}
 
-	pkPrefix := AppendVarUInt32(prefix, primaryKeyId)
+	pkPrefix := encodeutil.AppendVarUInt32(prefix, primaryKeyId)
 	pkCodec, err := ormkv.NewPrimaryKeyCodec(
 		pkPrefix,
 		options.MessageType,
@@ -166,7 +167,7 @@ func Build(options Options) (Table, error) {
 			return nil, err
 		}
 
-		idxPrefix := AppendVarUInt32(prefix, id)
+		idxPrefix := encodeutil.AppendVarUInt32(prefix, id)
 		var index concreteIndex
 
 		// altNames contains all the alternative "names" of this index
@@ -249,7 +250,7 @@ func Build(options Options) (Table, error) {
 			return nil, ormerrors.InvalidAutoIncrementKey.Wrapf("field %s", autoIncField.FullName())
 		}
 
-		seqPrefix := AppendVarUInt32(prefix, seqId)
+		seqPrefix := encodeutil.AppendVarUInt32(prefix, seqId)
 		seqCodec := ormkv.NewSeqCodec(options.MessageType, seqPrefix)
 		table.entryCodecsById[seqId] = seqCodec
 		return &autoIncrementTable{

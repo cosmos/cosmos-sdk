@@ -5,14 +5,13 @@ import (
 	"io"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
-
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
+	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
+	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
 )
 
@@ -59,113 +58,113 @@ func TestCompareValues(t *testing.T) {
 	}{
 		{
 			"eq",
-			testutil.ValuesOf(uint32(0), "abc", int32(-3)),
-			testutil.ValuesOf(uint32(0), "abc", int32(-3)),
+			encodeutil.ValuesOf(uint32(0), "abc", int32(-3)),
+			encodeutil.ValuesOf(uint32(0), "abc", int32(-3)),
 			0,
 			false,
 		},
 		{
 			"eq prefix 0",
-			testutil.ValuesOf(),
-			testutil.ValuesOf(),
+			encodeutil.ValuesOf(),
+			encodeutil.ValuesOf(),
 			0,
 			false,
 		},
 		{
 			"eq prefix 1",
-			testutil.ValuesOf(uint32(0)),
-			testutil.ValuesOf(uint32(0)),
+			encodeutil.ValuesOf(uint32(0)),
+			encodeutil.ValuesOf(uint32(0)),
 			0,
 			false,
 		},
 		{
 			"eq prefix 2",
-			testutil.ValuesOf(uint32(0), "abc"),
-			testutil.ValuesOf(uint32(0), "abc"),
+			encodeutil.ValuesOf(uint32(0), "abc"),
+			encodeutil.ValuesOf(uint32(0), "abc"),
 			0,
 			false,
 		},
 		{
 			"lt1",
-			testutil.ValuesOf(uint32(0), "abc", int32(-3)),
-			testutil.ValuesOf(uint32(1), "abc", int32(-3)),
+			encodeutil.ValuesOf(uint32(0), "abc", int32(-3)),
+			encodeutil.ValuesOf(uint32(1), "abc", int32(-3)),
 			-1,
 			true,
 		},
 		{
 			"lt2",
-			testutil.ValuesOf(uint32(1), "abb", int32(-3)),
-			testutil.ValuesOf(uint32(1), "abc", int32(-3)),
+			encodeutil.ValuesOf(uint32(1), "abb", int32(-3)),
+			encodeutil.ValuesOf(uint32(1), "abc", int32(-3)),
 			-1,
 			true,
 		},
 		{
 			"lt3",
-			testutil.ValuesOf(uint32(1), "abb", int32(-4)),
-			testutil.ValuesOf(uint32(1), "abb", int32(-3)),
+			encodeutil.ValuesOf(uint32(1), "abb", int32(-4)),
+			encodeutil.ValuesOf(uint32(1), "abb", int32(-3)),
 			-1,
 			true,
 		},
 		{
 			"less prefix 0",
-			testutil.ValuesOf(),
-			testutil.ValuesOf(uint32(1), "abb", int32(-4)),
+			encodeutil.ValuesOf(),
+			encodeutil.ValuesOf(uint32(1), "abb", int32(-4)),
 			-1,
 			true,
 		},
 		{
 			"less prefix 1",
-			testutil.ValuesOf(uint32(1)),
-			testutil.ValuesOf(uint32(1), "abb", int32(-4)),
+			encodeutil.ValuesOf(uint32(1)),
+			encodeutil.ValuesOf(uint32(1), "abb", int32(-4)),
 			-1,
 			true,
 		},
 		{
 			"less prefix 2",
-			testutil.ValuesOf(uint32(1), "abb"),
-			testutil.ValuesOf(uint32(1), "abb", int32(-4)),
+			encodeutil.ValuesOf(uint32(1), "abb"),
+			encodeutil.ValuesOf(uint32(1), "abb", int32(-4)),
 			-1,
 			true,
 		},
 		{
 			"gt1",
-			testutil.ValuesOf(uint32(2), "abb", int32(-4)),
-			testutil.ValuesOf(uint32(1), "abb", int32(-4)),
+			encodeutil.ValuesOf(uint32(2), "abb", int32(-4)),
+			encodeutil.ValuesOf(uint32(1), "abb", int32(-4)),
 			1,
 			false,
 		},
 		{
 			"gt2",
-			testutil.ValuesOf(uint32(2), "abc", int32(-4)),
-			testutil.ValuesOf(uint32(2), "abb", int32(-4)),
+			encodeutil.ValuesOf(uint32(2), "abc", int32(-4)),
+			encodeutil.ValuesOf(uint32(2), "abb", int32(-4)),
 			1,
 			false,
 		},
 		{
 			"gt3",
-			testutil.ValuesOf(uint32(2), "abc", int32(1)),
-			testutil.ValuesOf(uint32(2), "abc", int32(-3)),
+			encodeutil.ValuesOf(uint32(2), "abc", int32(1)),
+			encodeutil.ValuesOf(uint32(2), "abc", int32(-3)),
 			1,
 			false,
 		},
 		{
 			"gt prefix 0",
-			testutil.ValuesOf(uint32(2), "abc", int32(-3)),
-			testutil.ValuesOf(),
+			encodeutil.ValuesOf(uint32(2), "abc", int32(-3)),
+			encodeutil.ValuesOf(),
 			1,
 			true,
 		},
 		{
 			"gt prefix 1",
-			testutil.ValuesOf(uint32(2), "abc", int32(-3)),
-			testutil.ValuesOf(uint32(2)),
+			encodeutil.ValuesOf(uint32(2), "abc", int32(-3)),
+			encodeutil.ValuesOf(uint32(2)),
 			1,
 			true,
 		},
 		{
 			"gt prefix 2",
-			testutil.ValuesOf(uint32(2), "abc", int32(-3)),
-			testutil.ValuesOf(uint32(2), "abc"),
+			encodeutil.ValuesOf(uint32(2), "abc", int32(-3)),
+			encodeutil.ValuesOf(uint32(2), "abc"),
 			1,
 			true,
 		},
@@ -199,7 +198,7 @@ func TestDecodePrefixKey(t *testing.T) {
 	}{
 		{
 			"1",
-			testutil.ValuesOf(uint32(5), "abc"),
+			encodeutil.ValuesOf(uint32(5), "abc"),
 		},
 	}
 	for _, test := range tests {
@@ -227,62 +226,62 @@ func TestValidRangeIterationKeys(t *testing.T) {
 	}{
 		{
 			"1 eq",
-			testutil.ValuesOf(uint32(0)),
-			testutil.ValuesOf(uint32(0)),
+			encodeutil.ValuesOf(uint32(0)),
+			encodeutil.ValuesOf(uint32(0)),
 			true,
 		},
 		{
 			"1 lt",
-			testutil.ValuesOf(uint32(0)),
-			testutil.ValuesOf(uint32(1)),
+			encodeutil.ValuesOf(uint32(0)),
+			encodeutil.ValuesOf(uint32(1)),
 			false,
 		},
 		{
 			"1 gt",
-			testutil.ValuesOf(uint32(1)),
-			testutil.ValuesOf(uint32(0)),
+			encodeutil.ValuesOf(uint32(1)),
+			encodeutil.ValuesOf(uint32(0)),
 			true,
 		},
 		{
 			"1,2 lt",
-			testutil.ValuesOf(uint32(0)),
-			testutil.ValuesOf(uint32(0), "abc"),
+			encodeutil.ValuesOf(uint32(0)),
+			encodeutil.ValuesOf(uint32(0), "abc"),
 			false,
 		},
 		{
 			"1,2 gt",
-			testutil.ValuesOf(uint32(0), "abc"),
-			testutil.ValuesOf(uint32(0)),
+			encodeutil.ValuesOf(uint32(0), "abc"),
+			encodeutil.ValuesOf(uint32(0)),
 			false,
 		},
 		{
 			"1,2,3",
-			testutil.ValuesOf(uint32(0)),
-			testutil.ValuesOf(uint32(0), "abc", []byte{1, 2}),
+			encodeutil.ValuesOf(uint32(0)),
+			encodeutil.ValuesOf(uint32(0), "abc", []byte{1, 2}),
 			true,
 		},
 		{
 			"1,2,3,4 lt",
-			testutil.ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(-1)),
-			testutil.ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(1)),
+			encodeutil.ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(-1)),
+			encodeutil.ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(1)),
 			false,
 		},
 		{
 			"too long",
-			testutil.ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(-1)),
-			testutil.ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(1), int32(1)),
+			encodeutil.ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(-1)),
+			encodeutil.ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(1), int32(1)),
 			true,
 		},
 		{
 			"1,2,3,4 eq",
-			testutil.ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(1)),
-			testutil.ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(1)),
+			encodeutil.ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(1)),
+			encodeutil.ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(1)),
 			true,
 		},
 		{
 			"1,2,3,4 bz err",
-			testutil.ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(-1)),
-			testutil.ValuesOf(uint32(0), "abc", []byte{1, 2, 3}, int32(1)),
+			encodeutil.ValuesOf(uint32(0), "abc", []byte{1, 2}, int32(-1)),
+			encodeutil.ValuesOf(uint32(0), "abc", []byte{1, 2, 3}, int32(1)),
 			true,
 		},
 	}
@@ -305,7 +304,7 @@ func TestGetSet(t *testing.T) {
 	assert.NilError(t, err)
 
 	var a testpb.ExampleTable
-	values := testutil.ValuesOf(uint32(4), "abc", int32(1))
+	values := encodeutil.ValuesOf(uint32(4), "abc", int32(1))
 	cdc.SetKeyValues(a.ProtoReflect(), values)
 	values2 := cdc.GetKeyValues(a.ProtoReflect())
 	assert.Equal(t, 0, cdc.CompareKeys(values, values2))

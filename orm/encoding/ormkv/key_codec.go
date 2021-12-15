@@ -8,6 +8,7 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormfield"
 )
 
@@ -109,7 +110,7 @@ func (cdc *KeyCodec) GetKeyValues(message protoreflect.Message) []protoreflect.V
 // provided key is a prefix key, the values that could be decoded will
 // be returned with io.EOF as the error.
 func (cdc *KeyCodec) DecodeKey(r *bytes.Reader) ([]protoreflect.Value, error) {
-	if err := SkipPrefix(r, cdc.prefix); err != nil {
+	if err := encodeutil.SkipPrefix(r, cdc.prefix); err != nil {
 		return nil, err
 	}
 

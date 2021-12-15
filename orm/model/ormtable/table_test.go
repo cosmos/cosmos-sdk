@@ -7,11 +7,12 @@ import (
 	"strings"
 	"testing"
 
-	"gotest.tools/v3/golden"
+	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
+	"gotest.tools/v3/golden"
 	"pgregory.net/rapid"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
@@ -127,24 +128,24 @@ func runTestScenario(t *testing.T, table Table, store kvstore.Backend) {
 	}
 
 	// let's do a prefix query on the primary key
-	it, err = table.PrefixIterator(store, testutil.ValuesOf(uint32(8)), IteratorOptions{})
+	it, err = table.PrefixIterator(store, encodeutil.ValuesOf(uint32(8)), IteratorOptions{})
 	assert.NilError(t, err)
 	assertIteratorItems(it, 7, 8, 9)
 
 	// let's try a reverse prefix query
-	it, err = table.PrefixIterator(store, testutil.ValuesOf(uint32(4)), IteratorOptions{Reverse: true})
+	it, err = table.PrefixIterator(store, encodeutil.ValuesOf(uint32(4)), IteratorOptions{Reverse: true})
 	defer it.Close()
 	assert.NilError(t, err)
 	assertIteratorItems(it, 2, 1, 0)
 
 	// let's try a range query
-	it, err = table.RangeIterator(store, testutil.ValuesOf(uint32(4), int64(-1)), testutil.ValuesOf(uint32(7)), IteratorOptions{})
+	it, err = table.RangeIterator(store, encodeutil.ValuesOf(uint32(4), int64(-1)), encodeutil.ValuesOf(uint32(7)), IteratorOptions{})
 	defer it.Close()
 	assert.NilError(t, err)
 	assertIteratorItems(it, 2, 3, 4, 5, 6)
 
 	// and another range query
-	it, err = table.RangeIterator(store, testutil.ValuesOf(uint32(5), int64(-3)), testutil.ValuesOf(uint32(8), int64(1), "abc"), IteratorOptions{})
+	it, err = table.RangeIterator(store, encodeutil.ValuesOf(uint32(5), int64(-3)), encodeutil.ValuesOf(uint32(8), int64(1), "abc"), IteratorOptions{})
 	defer it.Close()
 	assert.NilError(t, err)
 	assertIteratorItems(it, 3, 4, 5, 6, 7, 8)
@@ -154,14 +155,14 @@ func runTestScenario(t *testing.T, table Table, store kvstore.Backend) {
 	assert.NilError(t, err)
 	strU32Index := table.GetIndex(strU32Fields)
 	assert.Assert(t, strU32Index != nil)
-	it, err = strU32Index.RangeIterator(store, testutil.ValuesOf("abc"), testutil.ValuesOf("abd"), IteratorOptions{Reverse: true})
+	it, err = strU32Index.RangeIterator(store, encodeutil.ValuesOf("abc"), encodeutil.ValuesOf("abd"), IteratorOptions{Reverse: true})
 	assertIteratorItems(it, 9, 3, 1, 8, 7, 2, 0)
 
 	// another prefix query forwards
-	it, err = strU32Index.PrefixIterator(store, testutil.ValuesOf("abe", uint32(7)), IteratorOptions{})
+	it, err = strU32Index.PrefixIterator(store, encodeutil.ValuesOf("abe", uint32(7)), IteratorOptions{})
 	assertIteratorItems(it, 5, 6)
 	// and backwards
-	it, err = strU32Index.PrefixIterator(store, testutil.ValuesOf("abc", uint32(4)), IteratorOptions{Reverse: true})
+	it, err = strU32Index.PrefixIterator(store, encodeutil.ValuesOf("abc", uint32(4)), IteratorOptions{Reverse: true})
 	assertIteratorItems(it, 2, 0)
 
 	// try an unique index
@@ -169,11 +170,11 @@ func runTestScenario(t *testing.T, table Table, store kvstore.Backend) {
 	assert.NilError(t, err)
 	u64StrIndex := table.GetUniqueIndex(u64StrFields)
 	assert.Assert(t, u64StrIndex != nil)
-	found, err := u64StrIndex.Has(store, testutil.ValuesOf(uint64(12), "abc"))
+	found, err := u64StrIndex.Has(store, encodeutil.ValuesOf(uint64(12), "abc"))
 	assert.NilError(t, err)
 	assert.Assert(t, found)
 	var a testpb.ExampleTable
-	found, err = u64StrIndex.Get(store, testutil.ValuesOf(uint64(12), "abc"), &a)
+	found, err = u64StrIndex.Get(store, encodeutil.ValuesOf(uint64(12), "abc"), &a)
 	assert.NilError(t, err)
 	assert.Assert(t, found)
 	assert.DeepEqual(t, data[8], &a, protocmp.Transform())
@@ -270,8 +271,8 @@ func runTestScenario(t *testing.T, table Table, store kvstore.Backend) {
 		PageRequest: &query.PageRequest{
 			Limit: 10,
 		},
-		Start: testutil.ValuesOf(uint32(4), int64(-1), "abc"),
-		End:   testutil.ValuesOf(uint32(7), int64(-2), "abe"),
+		Start: encodeutil.ValuesOf(uint32(4), int64(-1), "abc"),
+		End:   encodeutil.ValuesOf(uint32(7), int64(-2), "abe"),
 	})
 	assert.NilError(t, err)
 	assert.Assert(t, res != nil)
@@ -354,14 +355,14 @@ func runTestScenario(t *testing.T, table Table, store kvstore.Backend) {
 	data = append(data, &testpb.ExampleTable{U32: 9})
 	err = table.Save(store, data[10], SAVE_MODE_DEFAULT)
 	assert.NilError(t, err)
-	found, err = table.Get(store, testutil.ValuesOf(uint32(9), int64(0), ""), &a)
+	found, err = table.Get(store, encodeutil.ValuesOf(uint32(9), int64(0), ""), &a)
 	assert.NilError(t, err)
 	assert.Assert(t, found)
 	assert.DeepEqual(t, data[10], &a, protocmp.Transform())
 	// and update it
 	data[10].B = true
 	assert.NilError(t, table.Save(store, data[10], SAVE_MODE_DEFAULT))
-	found, err = table.Get(store, testutil.ValuesOf(uint32(9), int64(0), ""), &a)
+	found, err = table.Get(store, encodeutil.ValuesOf(uint32(9), int64(0), ""), &a)
 	assert.NilError(t, err)
 	assert.Assert(t, found)
 	assert.DeepEqual(t, data[10], &a, protocmp.Transform())
@@ -379,7 +380,7 @@ func runTestScenario(t *testing.T, table Table, store kvstore.Backend) {
 	assertTablesEqual(t, table, store, store2)
 
 	// let's delete item 5
-	key5 := testutil.ValuesOf(uint32(7), int64(-2), "abe")
+	key5 := encodeutil.ValuesOf(uint32(7), int64(-2), "abe")
 	err = table.Delete(store, key5)
 	assert.NilError(t, err)
 	// it should be gone

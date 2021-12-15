@@ -9,6 +9,6 @@ managed:
       - buf.build/cosmos/cosmos-proto
     override:
 plugins:
-  - name: go
+  - name: go-pulsar
     out: ../api
     opt: paths=source_relative

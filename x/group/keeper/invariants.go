@@ -262,7 +262,7 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, grou
 			return msg, broken
 		}
 
-		_, err = groupTable.GetOne(ctx.KVStore(key), group.ID(groupAcc.GroupId).Uint64(), &groupInfo)
+		_, err = groupTable.GetOne(ctx.KVStore(key), groupAcc.GroupId, &groupInfo)
 		if err != nil {
 			msg += fmt.Sprintf("group info not found for group id %d\n%v\n", groupAcc.GroupId, err)
 			return msg, broken

@@ -28,10 +28,6 @@ type DecisionPolicyResult struct {
 	Final bool
 }
 
-func (g ID) Uint64() uint64 {
-	return uint64(g)
-}
-
 // DecisionPolicy is the persistent set of rules to determine the result of election on a proposal.
 type DecisionPolicy interface {
 	codec.ProtoMarshaler

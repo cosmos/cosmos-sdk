@@ -14,7 +14,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -28,7 +27,6 @@ import (
 type invariantTestSuite struct {
 	suite.Suite
 
-	app *simapp.SimApp
 	ctx sdk.Context
 	cdc *codec.ProtoCodec
 	key *storetypes.KVStoreKey
@@ -39,8 +37,6 @@ func TestInvariantTestSuite(t *testing.T) {
 }
 
 func (s *invariantTestSuite) SetupSuite() {
-	app := simapp.Setup(s.T(), false)
-
 	interfaceRegistry := types.NewInterfaceRegistry()
 	group.RegisterInterfaces(interfaceRegistry)
 	cdc := codec.NewProtoCodec(interfaceRegistry)
@@ -51,7 +47,6 @@ func (s *invariantTestSuite) SetupSuite() {
 	_ = cms.LoadLatestVersion()
 	sdkCtx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
 
-	s.app = app
 	s.ctx = sdkCtx
 	s.cdc = cdc
 	s.key = key

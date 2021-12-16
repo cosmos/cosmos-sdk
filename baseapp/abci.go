@@ -174,7 +174,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	app.deliverState.ctx = app.deliverState.ctx.
 		WithBlockGasMeter(gasMeter).
-		WithHeaderHash(req.Hash)
+		WithHeaderHash(req.Hash).
+		WithConsensusParams(app.GetConsensusParams(app.deliverState.ctx))
 
 	// we also set block gas meter to checkState in case the application needs to
 	// verify gas consumption during (Re)CheckTx
@@ -250,13 +251,8 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 		panic(fmt.Sprintf("unknown RequestCheckTx type: %s", req.Type))
 	}
 
-	reqTx, err := app.txDecoder(req.Tx)
-	if err != nil {
-		return sdkerrors.ResponseCheckTx(err, 0, 0, app.trace)
-	}
-
 	ctx := app.getContextForTx(mode, req.Tx)
-	res, checkRes, err := app.txHandler.CheckTx(ctx, tx.Request{Tx: reqTx, TxBytes: req.Tx}, tx.RequestCheckTx{Type: req.Type})
+	res, checkRes, err := app.txHandler.CheckTx(ctx, tx.Request{TxBytes: req.Tx}, tx.RequestCheckTx{Type: req.Type})
 	if err != nil {
 		return sdkerrors.ResponseCheckTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
 	}
@@ -285,14 +281,9 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 			}
 		}
 	}()
-	reqTx, err := app.txDecoder(req.Tx)
-	if err != nil {
-		abciRes = sdkerrors.ResponseDeliverTx(err, 0, 0, app.trace)
-		return abciRes
-	}
 
 	ctx := app.getContextForTx(runTxModeDeliver, req.Tx)
-	res, err := app.txHandler.DeliverTx(ctx, tx.Request{Tx: reqTx, TxBytes: req.Tx})
+	res, err := app.txHandler.DeliverTx(ctx, tx.Request{TxBytes: req.Tx})
 	if err != nil {
 		abciRes = sdkerrors.ResponseDeliverTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
 		return abciRes

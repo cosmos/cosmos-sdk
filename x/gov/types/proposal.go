@@ -10,8 +10,6 @@ import (
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-const ()
-
 const (
 	// DefaultStartingProposalID is 1
 	DefaultStartingProposalID uint64 = 1

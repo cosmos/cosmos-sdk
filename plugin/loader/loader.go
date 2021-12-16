@@ -92,15 +92,17 @@ type PluginLoader struct {
 // NewPluginLoader creates new plugin loader
 func NewPluginLoader(opts serverTypes.AppOptions, logger logging.Logger) (*PluginLoader, error) {
 	loader := &PluginLoader{plugins: make(map[string]plugin.Plugin, len(preloadPlugins)), opts: opts, logger: logger}
+	loader.disabled = cast.ToStringSlice(opts.Get(fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.PLUGINS_DISABLED_TOML_KEY)))
 	for _, v := range preloadPlugins {
+		logger.Info("loading preloaded plugin", "plugin name", v.Name())
 		if err := loader.Load(v); err != nil {
 			return nil, err
 		}
 	}
-	loader.disabled = cast.ToStringSlice(opts.Get(plugin.PLUGINS_DISABLED_TOML_KEY))
-	pluginDir := cast.ToString(opts.Get(plugin.PLUGINS_DIR_TOML_KEY))
+	pluginDir := cast.ToString(opts.Get(fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.PLUGINS_DIR_TOML_KEY)))
 	if pluginDir == "" {
 		pluginDir = filepath.Join(os.Getenv("GOPATH"), plugin.DEFAULT_PLUGINS_DIRECTORY)
+		logger.Info("no plugin directory provided, using default plugin path", "path", pluginDir)
 	}
 	if err := loader.LoadDirectory(pluginDir); err != nil {
 		return nil, err

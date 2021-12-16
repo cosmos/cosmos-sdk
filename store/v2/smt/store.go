@@ -4,14 +4,16 @@ import (
 	"crypto/sha256"
 	"errors"
 
+	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	"github.com/lazyledger/smt"
+	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
 var (
 	_ types.BasicKVStore = (*Store)(nil)
+	_ smt.MapStore       = (dbMapStore{})
 )
 
 var (
@@ -24,15 +26,19 @@ type Store struct {
 	tree *smt.SparseMerkleTree
 }
 
-func NewStore(nodes, values smt.MapStore) *Store {
+// An smt.MapStore that wraps Get to raise smt.InvalidKeyError;
+// smt.SparseMerkleTree expects this error to be returned when a key is not found
+type dbMapStore struct{ dbm.DBReadWriter }
+
+func NewStore(nodes, values dbm.DBReadWriter) *Store {
 	return &Store{
-		tree: smt.NewSparseMerkleTree(nodes, values, sha256.New()),
+		tree: smt.NewSparseMerkleTree(dbMapStore{nodes}, dbMapStore{values}, sha256.New()),
 	}
 }
 
-func LoadStore(nodes, values smt.MapStore, root []byte) *Store {
+func LoadStore(nodes, values dbm.DBReadWriter, root []byte) *Store {
 	return &Store{
-		tree: smt.ImportSparseMerkleTree(nodes, values, sha256.New(), root),
+		tree: smt.ImportSparseMerkleTree(dbMapStore{nodes}, dbMapStore{values}, sha256.New(), root),
 	}
 }
 
@@ -96,4 +102,15 @@ func (s *Store) Delete(key []byte) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (ms dbMapStore) Get(key []byte) ([]byte, error) {
+	val, err := ms.DBReadWriter.Get(key)
+	if err != nil {
+		return nil, err
+	}
+	if val == nil {
+		return nil, &smt.InvalidKeyError{key}
+	}
+	return val, nil
 }

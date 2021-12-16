@@ -46,6 +46,11 @@ var (
 	merkleNodePrefix      = []byte{3} // Prefix for Merkle tree nodes
 	merkleValuePrefix     = []byte{4} // Prefix for Merkle value mappings
 
+	// Do not change chunk size without new snapshot format (must be uniform across nodes)
+	snapshotChunkSize   = uint64(10e6)
+	snapshotBufferSize  = int(snapshotChunkSize)
+	snapshotMaxItemSize = int(64e6) // SDK has no key/value size limit, so we set an arbitrary limit
+
 	ErrVersionDoesNotExist = errors.New("version does not exist")
 	ErrMaximumHeight       = errors.New("maximum block height reached")
 )
@@ -896,10 +901,3 @@ func (tlm *traceListenMixin) wrapTraceListen(store types.KVStore, skey types.Sto
 
 func (s *Store) GetPruning() types.PruningOptions   { return s.Pruning }
 func (s *Store) SetPruning(po types.PruningOptions) { s.Pruning = po }
-
-func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadCloser, ready chan<- struct{}) error {
-	return nil
-}
-func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error) {
-	return nil, nil
-}

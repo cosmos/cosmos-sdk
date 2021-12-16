@@ -33,6 +33,8 @@ client/lcd/keys/*
 coverage.txt
 profile.out
 sim_log_file
+x/genutil/config
+x/genutil/data
 
 # Vagrant
 .vagrant/

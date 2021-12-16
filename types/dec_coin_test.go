@@ -883,7 +883,7 @@ func (s *decCoinTestSuite) TestDecCoins_MulDecTruncate() {
 		{"Multiple coins - zero multiplier", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(10, 3)},
 			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(30, 2)},
-		}, sdk.NewDec(0), sdk.DecCoins(nil), true},
+		}, sdk.NewDec(0), sdk.DecCoins{}, false},
 
 		{"Multiple coins - positive multiplier", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(15, 1)},

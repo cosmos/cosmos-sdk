@@ -373,12 +373,12 @@ func (coins DecCoins) MulDec(d Dec) DecCoins {
 }
 
 // MulDecTruncate multiplies all the decimal coins by a decimal, truncating. It
-// panics if d is zero.
+// returns nil DecCoins if d is zero.
 //
 // CONTRACT: No zero coins will be returned.
 func (coins DecCoins) MulDecTruncate(d Dec) DecCoins {
 	if d.IsZero() {
-		panic("invalid zero decimal")
+		return DecCoins{}
 	}
 
 	var res DecCoins

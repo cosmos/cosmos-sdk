@@ -118,6 +118,44 @@ We need to be able to process transactions and roll-back state updates if a tran
 
 We identified use-cases, where modules will need to save an object commitment without storing an object itself. Sometimes clients are receiving complex objects, and they have no way to prove a correctness of that object without knowing the storage layout. For those use cases it would be easier to commit to the object without storing it directly.
 
+### Low Level Interface
+
+Modules should be able to commit a value fully managed by the module itself. For example, a module can manage its own special database and commit its state by setting a value only to `SC`.
+Similarly, a module can save a value without committing it - this is useful for ORM module or secondary indexes (eg x/staking `UnbondingDelegationKey` and `UnbondingDelegationByValIndexKey`).
+
+Currently, a module can access a store only through `sdk.Context`. We add the following methods to the `sdk.Context`:
+
+```
+type StoreAccess inteface {
+    KVStore(key []byte) KVStore  // the existing method in sdk.Context, reads and writes to combined store (SS & SC) in combined namespace.
+    SCStore(key []byte) KVStore  // reads and writes only to the SC in reserved SC namespace
+    SSStore(key []byte) KVStore  // reads and writes only to the SS in reserved SS namespace
+}
+```
+
+The `KVStore(key)` will provide an access to the combined `SS` and `SC` store:
+
+- `Get` will return `SS` value
+- `Has` will return true if value key is present in `SS`
+- `Set` will store a value in both `SS`. It panics when key or value are nil
+- `Delete` will delete key both from `SS` and `SC`. It panics when key is nil
+- `Iterator` will iterate over `SS`
+- `ReverseIterator` will iterate over `SS`
+
+and will be implemented on a cache level with the following helper structure:
+
+```go
+type CombinedKVStore {
+    ss KVStore
+    sc KVStore
+}
+```
+
+`SCStore()` and `SSStore()` returns a KVStore with access and operations only for `SC` and `SS` respectively. Moreover, they will use a unique namespace to avoid conflicts with `KVStore`. Naive implementation could cause race conditions (when someone writes to the combined `KVStore` and later writes to `SSStore` in the same transaction).
+
+The Cache store must be aware if writes happen to a combined `KVStore` or `SCStore`.
+The proposed solution is to return different cache instances for each method of `StoreAccess` interface. More specifically, when starting a transaction, we will create create 3 cache instances (for CombinedKVStore, SS and SC).
+
 ### Refactor MultiStore
 
 The Stargate `/store` implementation (store/v1) adds an additional layer in the SDK store construction - the `MultiStore` structure. The multistore exists to support the modularity of the Cosmos SDK - each module is using its own instance of IAVL, but in the current implementation, all instances share the same database. The latter indicates, however, that the implementation doesn't provide true modularity. Instead it causes problems related to race condition and atomic DB commits (see: [\#6370](https://github.com/cosmos/cosmos-sdk/issues/6370) and [discussion](https://github.com/cosmos/cosmos-sdk/discussions/8297#discussioncomment-757043)).

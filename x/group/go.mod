@@ -14,13 +14,11 @@ require (
 )
 
 require (
-	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/spf13/cobra v1.2.1
 	github.com/tendermint/tendermint v0.35.0
 	github.com/tendermint/tm-db v0.6.6
-	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa
 )
 
 require (
@@ -60,6 +58,7 @@ require (
 	github.com/gogo/gateway v1.1.0 // indirect
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.0.1 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect

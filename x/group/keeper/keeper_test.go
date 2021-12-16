@@ -8,12 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/suite"
 	tmtime "github.com/tendermint/tendermint/libs/time"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -22,7 +20,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
 type TestSuite struct {
@@ -31,48 +28,32 @@ type TestSuite struct {
 	app              *simapp.SimApp
 	sdkCtx           sdk.Context
 	ctx              context.Context
+	addrs            []sdk.AccAddress
 	groupID          uint64
+	groupAccountAddr sdk.AccAddress
 	keeper           keeper.Keeper
 	blockTime        time.Time
-	groupAccountAddr sdk.AccAddress
 }
 
-var (
-	addr1Pub = secp256k1.GenPrivKey().PubKey()
-	addr2Pub = secp256k1.GenPrivKey().PubKey()
-	addr3Pub = secp256k1.GenPrivKey().PubKey()
-	addr4Pub = secp256k1.GenPrivKey().PubKey()
-	addr5Pub = secp256k1.GenPrivKey().PubKey()
-	addr6Pub = secp256k1.GenPrivKey().PubKey()
-	addr1    = sdk.AccAddress(addr1Pub.Address())
-	addr2    = sdk.AccAddress(addr2Pub.Address())
-	addr3    = sdk.AccAddress(addr3Pub.Address())
-	addr4    = sdk.AccAddress(addr4Pub.Address())
-	addr5    = sdk.AccAddress(addr5Pub.Address())
-	addr6    = sdk.AccAddress(addr6Pub.Address())
-)
-
 func (s *TestSuite) SetupTest() {
-	db := dbm.NewMemDB()
-	encCdc := simapp.MakeTestEncodingConfig()
-	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, simapp.DefaultNodeHome, 5, encCdc, simapp.EmptyAppOptions{})
-	ctx := app.BaseApp.NewUncachedContext(false, tmproto.Header{})
+	app := simapp.Setup(s.T(), false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	s.blockTime = tmtime.Now()
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: s.blockTime})
-	app.BankKeeper.SetParams(ctx, banktypes.DefaultParams())
 
 	s.app = app
 	s.sdkCtx = ctx
 	s.ctx = sdk.WrapSDKContext(ctx)
 	s.keeper = s.app.GroupKeeper
+	s.addrs = simapp.AddTestAddrsIncremental(app, ctx, 6, sdk.NewInt(30000000))
 
 	// Initial group, group account and balance setup
 	members := []group.Member{
-		{Address: addr5.String(), Weight: "1"}, {Address: addr2.String(), Weight: "2"},
+		{Address: s.addrs[4].String(), Weight: "1"}, {Address: s.addrs[1].String(), Weight: "2"},
 	}
 	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
-		Admin:    addr1.String(),
+		Admin:    s.addrs[0].String(),
 		Members:  members,
 		Metadata: nil,
 	})
@@ -84,7 +65,7 @@ func (s *TestSuite) SetupTest() {
 		time.Second,
 	)
 	accountReq := &group.MsgCreateGroupAccount{
-		Admin:    addr1.String(),
+		Admin:    s.addrs[0].String(),
 		GroupId:  s.groupID,
 		Metadata: nil,
 	}
@@ -92,12 +73,10 @@ func (s *TestSuite) SetupTest() {
 	s.Require().NoError(err)
 	accountRes, err := s.keeper.CreateGroupAccount(s.ctx, accountReq)
 	s.Require().NoError(err)
-	groupAccountAddr, err := sdk.AccAddressFromBech32(accountRes.Address)
+	addr, err := sdk.AccAddressFromBech32(accountRes.Address)
 	s.Require().NoError(err)
-
-	s.groupAccountAddr, err = sdk.AccAddressFromBech32(accountRes.Address)
-	s.Require().NoError(err)
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, groupAccountAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
+	s.groupAccountAddr = addr
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, s.groupAccountAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -105,6 +84,12 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *TestSuite) TestCreateGroup() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr3 := addrs[2]
+	addr5 := addrs[4]
+	addr6 := addrs[5]
+
 	members := []group.Member{{
 		Address:  addr5.String(),
 		Weight:   "1",
@@ -242,6 +227,12 @@ func (s *TestSuite) TestCreateGroup() {
 }
 
 func (s *TestSuite) TestUpdateGroupAdmin() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr2 := addrs[1]
+	addr3 := addrs[2]
+	addr4 := addrs[3]
+
 	members := []group.Member{{
 		Address:  addr1.String(),
 		Weight:   "1",
@@ -325,6 +316,10 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 }
 
 func (s *TestSuite) TestUpdateGroupMetadata() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr3 := addrs[2]
+
 	oldAdmin := addr1.String()
 	groupID := s.groupID
 
@@ -399,6 +394,12 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 }
 
 func (s *TestSuite) TestUpdateGroupMembers() {
+	addrs := s.addrs
+	addr3 := addrs[2]
+	addr4 := addrs[3]
+	addr5 := addrs[4]
+	addr6 := addrs[5]
+
 	member1 := addr5.String()
 	member2 := addr6.String()
 	members := []group.Member{{
@@ -685,6 +686,10 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 }
 
 func (s *TestSuite) TestCreateGroupAccount() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr4 := addrs[3]
+
 	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:    addr1.String(),
 		Members:  nil,
@@ -787,6 +792,11 @@ func (s *TestSuite) TestCreateGroupAccount() {
 }
 
 func (s *TestSuite) TestUpdateGroupAccountAdmin() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr2 := addrs[1]
+	addr5 := addrs[4]
+
 	admin, newAdmin := addr1, addr2
 	groupAccountAddr, myGroupID, policy := createGroupAndGroupAccount(admin, s)
 
@@ -866,6 +876,10 @@ func (s *TestSuite) TestUpdateGroupAccountAdmin() {
 }
 
 func (s *TestSuite) TestUpdateGroupAccountMetadata() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr5 := addrs[4]
+
 	admin := addr1
 	groupAccountAddr, myGroupID, policy := createGroupAndGroupAccount(admin, s)
 
@@ -940,6 +954,10 @@ func (s *TestSuite) TestUpdateGroupAccountMetadata() {
 }
 
 func (s *TestSuite) TestUpdateGroupAccountDecisionPolicy() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr5 := addrs[4]
+
 	admin := addr1
 	groupAccountAddr, myGroupID, policy := createGroupAndGroupAccount(admin, s)
 
@@ -1012,6 +1030,9 @@ func (s *TestSuite) TestUpdateGroupAccountDecisionPolicy() {
 }
 
 func (s *TestSuite) TestGroupAccountsByAdminOrGroup() {
+	addrs := s.addrs
+	addr2 := addrs[1]
+
 	admin := addr2
 	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:    admin.String(),
@@ -1096,6 +1117,12 @@ func (s *TestSuite) TestGroupAccountsByAdminOrGroup() {
 }
 
 func (s *TestSuite) TestCreateProposal() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr2 := addrs[1]
+	addr4 := addrs[3]
+	addr5 := addrs[4]
+
 	myGroupID := s.groupID
 	accountAddr := s.groupAccountAddr
 
@@ -1316,6 +1343,12 @@ func (s *TestSuite) TestCreateProposal() {
 }
 
 func (s *TestSuite) TestVote() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr2 := addrs[1]
+	addr3 := addrs[2]
+	addr4 := addrs[3]
+	addr5 := addrs[4]
 	members := []group.Member{
 		{Address: addr4.String(), Weight: "1"},
 		{Address: addr3.String(), Weight: "2"},
@@ -1777,6 +1810,10 @@ func (s *TestSuite) TestVote() {
 }
 
 func (s *TestSuite) TestExecProposal() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr2 := addrs[1]
+
 	msgSend1 := &banktypes.MsgSend{
 		FromAddress: s.groupAccountAddr.String(),
 		ToAddress:   addr2.String(),

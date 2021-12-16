@@ -17,9 +17,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/group"
-	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
+	"github.com/cosmos/cosmos-sdk/x/group/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/x/group/simulation"
-	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
 )
 
 var (
@@ -30,14 +30,14 @@ var (
 
 type AppModule struct {
 	AppModuleBasic
-	keeper     groupkeeper.Keeper
+	keeper     keeper.Keeper
 	bankKeeper group.BankKeeper
 	accKeeper  group.AccountKeeper
 	registry   cdctypes.InterfaceRegistry
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper groupkeeper.Keeper, ak group.AccountKeeper, bk group.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak group.AccountKeeper, bk group.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
@@ -72,15 +72,13 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEn
 }
 
 // GetQueryCmd returns the cli query commands for the group module
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	// TODO: return CLI query commands
-	return nil
+func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.QueryCmd(a.Name())
 }
 
 // GetTxCmd returns the transaction commands for the group module
-func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	// TODO: return CLI tx commands
-	return nil
+func (a AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.TxCmd(a.Name())
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the group module.

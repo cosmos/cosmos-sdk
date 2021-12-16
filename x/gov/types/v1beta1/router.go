@@ -1,4 +1,4 @@
-package types
+package v1beta1
 
 import (
 	"fmt"

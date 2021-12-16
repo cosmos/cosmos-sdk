@@ -13,6 +13,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -125,21 +126,21 @@ func SimulateMsgSubmitProposal(
 		// 1) submit proposal now
 		content := contentSim(r, ctx, accs)
 		if content == nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSubmitProposal, "content is nil"), nil, nil
+			return simtypes.NoOpMsg(v1beta1.ModuleName, v1beta1.TypeMsgSubmitProposal, "content is nil"), nil, nil
 		}
 
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address)
 		switch {
 		case skip:
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSubmitProposal, "skip deposit"), nil, nil
+			return simtypes.NoOpMsg(v1beta1.ModuleName, v1beta1.TypeMsgSubmitProposal, "skip deposit"), nil, nil
 		case err != nil:
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSubmitProposal, "unable to generate deposit"), nil, err
+			return simtypes.NoOpMsg(v1beta1.ModuleName, v1beta1.TypeMsgSubmitProposal, "unable to generate deposit"), nil, err
 		}
 
-		msg, err := types.NewMsgSubmitProposal(content, deposit, simAccount.Address)
+		msg, err := v1beta1.NewMsgSubmitProposal(content, deposit, simAccount.Address)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate a submit proposal msg"), nil, err
+			return simtypes.NoOpMsg(v1beta1.ModuleName, msg.Type(), "unable to generate a submit proposal msg"), nil, err
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
@@ -150,7 +151,7 @@ func SimulateMsgSubmitProposal(
 		if !hasNeg {
 			fees, err = simtypes.RandomFees(r, ctx, coins)
 			if err != nil {
-				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate fees"), nil, err
+				return simtypes.NoOpMsg(v1beta1.ModuleName, msg.Type(), "unable to generate fees"), nil, err
 			}
 		}
 
@@ -166,12 +167,12 @@ func SimulateMsgSubmitProposal(
 			simAccount.PrivKey,
 		)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
+			return simtypes.NoOpMsg(v1beta1.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(v1beta1.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
 		opMsg := simtypes.NewOperationMsg(msg, true, "", nil)
@@ -179,7 +180,7 @@ func SimulateMsgSubmitProposal(
 		// get the submitted proposal ID
 		proposalID, err := k.GetProposalID(ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate proposalID"), nil, err
+			return simtypes.NoOpMsg(v1beta1.ModuleName, msg.Type(), "unable to generate proposalID"), nil, err
 		}
 
 		// 2) Schedule operations for votes
@@ -214,20 +215,20 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
-		proposalID, ok := randomProposalID(r, k, ctx, types.StatusDepositPeriod)
+		proposalID, ok := randomProposalID(r, k, ctx, v1beta1.StatusDepositPeriod)
 		if !ok {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeposit, "unable to generate proposalID"), nil, nil
+			return simtypes.NoOpMsg(v1beta1.ModuleName, v1beta1.TypeMsgDeposit, "unable to generate proposalID"), nil, nil
 		}
 
 		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address)
 		switch {
 		case skip:
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeposit, "skip deposit"), nil, nil
+			return simtypes.NoOpMsg(v1beta1.ModuleName, v1beta1.TypeMsgDeposit, "skip deposit"), nil, nil
 		case err != nil:
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeposit, "unable to generate deposit"), nil, err
+			return simtypes.NoOpMsg(v1beta1.ModuleName, v1beta1.TypeMsgDeposit, "unable to generate deposit"), nil, err
 		}
 
-		msg := types.NewMsgDeposit(simAccount.Address, proposalID, deposit)
+		msg := v1beta1.NewMsgDeposit(simAccount.Address, proposalID, deposit)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
@@ -237,7 +238,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 		if !hasNeg {
 			fees, err = simtypes.RandomFees(r, ctx, coins)
 			if err != nil {
-				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate fees"), nil, err
+				return simtypes.NoOpMsg(v1beta1.ModuleName, msg.Type(), "unable to generate fees"), nil, err
 			}
 		}
 
@@ -250,7 +251,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 			Context:       ctx,
 			SimAccount:    simAccount,
 			AccountKeeper: ak,
-			ModuleName:    types.ModuleName,
+			ModuleName:    v1beta1.ModuleName,
 		}
 
 		return simulation.GenAndDeliverTx(txCtx, fees)
@@ -277,16 +278,16 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k kee
 		switch {
 		case proposalIDInt < 0:
 			var ok bool
-			proposalID, ok = randomProposalID(r, k, ctx, types.StatusVotingPeriod)
+			proposalID, ok = randomProposalID(r, k, ctx, v1beta1.StatusVotingPeriod)
 			if !ok {
-				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgVote, "unable to generate proposalID"), nil, nil
+				return simtypes.NoOpMsg(v1beta1.ModuleName, v1beta1.TypeMsgVote, "unable to generate proposalID"), nil, nil
 			}
 		default:
 			proposalID = uint64(proposalIDInt)
 		}
 
 		option := randomVotingOption(r)
-		msg := types.NewMsgVote(simAccount.Address, proposalID, option)
+		msg := v1beta1.NewMsgVote(simAccount.Address, proposalID, option)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
@@ -302,7 +303,7 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k kee
 			SimAccount:      simAccount,
 			AccountKeeper:   ak,
 			Bankkeeper:      bk,
-			ModuleName:      types.ModuleName,
+			ModuleName:      v1beta1.ModuleName,
 			CoinsSpentInMsg: spendable,
 		}
 
@@ -330,16 +331,16 @@ func operationSimulateMsgVoteWeighted(ak types.AccountKeeper, bk types.BankKeepe
 		switch {
 		case proposalIDInt < 0:
 			var ok bool
-			proposalID, ok = randomProposalID(r, k, ctx, types.StatusVotingPeriod)
+			proposalID, ok = randomProposalID(r, k, ctx, v1beta1.StatusVotingPeriod)
 			if !ok {
-				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgVoteWeighted, "unable to generate proposalID"), nil, nil
+				return simtypes.NoOpMsg(v1beta1.ModuleName, v1beta1.TypeMsgVoteWeighted, "unable to generate proposalID"), nil, nil
 			}
 		default:
 			proposalID = uint64(proposalIDInt)
 		}
 
 		options := randomWeightedVotingOptions(r)
-		msg := types.NewMsgVoteWeighted(simAccount.Address, proposalID, options)
+		msg := v1beta1.NewMsgVoteWeighted(simAccount.Address, proposalID, options)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
@@ -355,7 +356,7 @@ func operationSimulateMsgVoteWeighted(ak types.AccountKeeper, bk types.BankKeepe
 			SimAccount:      simAccount,
 			AccountKeeper:   ak,
 			Bankkeeper:      bk,
-			ModuleName:      types.ModuleName,
+			ModuleName:      v1beta1.ModuleName,
 			CoinsSpentInMsg: spendable,
 		}
 
@@ -404,7 +405,7 @@ func randomDeposit(r *rand.Rand, ctx sdk.Context,
 // that matches a given Status.
 // It does not provide a default ID.
 func randomProposalID(r *rand.Rand, k keeper.Keeper,
-	ctx sdk.Context, status types.ProposalStatus) (proposalID uint64, found bool) {
+	ctx sdk.Context, status v1beta1.ProposalStatus) (proposalID uint64, found bool) {
 	proposalID, _ = k.GetProposalID(ctx)
 
 	switch {
@@ -427,49 +428,49 @@ func randomProposalID(r *rand.Rand, k keeper.Keeper,
 }
 
 // Pick a random voting option
-func randomVotingOption(r *rand.Rand) types.VoteOption {
+func randomVotingOption(r *rand.Rand) v1beta1.VoteOption {
 	switch r.Intn(4) {
 	case 0:
-		return types.OptionYes
+		return v1beta1.OptionYes
 	case 1:
-		return types.OptionAbstain
+		return v1beta1.OptionAbstain
 	case 2:
-		return types.OptionNo
+		return v1beta1.OptionNo
 	case 3:
-		return types.OptionNoWithVeto
+		return v1beta1.OptionNoWithVeto
 	default:
 		panic("invalid vote option")
 	}
 }
 
 // Pick a random weighted voting options
-func randomWeightedVotingOptions(r *rand.Rand) types.WeightedVoteOptions {
+func randomWeightedVotingOptions(r *rand.Rand) v1beta1.WeightedVoteOptions {
 	w1 := r.Intn(100 + 1)
 	w2 := r.Intn(100 - w1 + 1)
 	w3 := r.Intn(100 - w1 - w2 + 1)
 	w4 := 100 - w1 - w2 - w3
-	weightedVoteOptions := types.WeightedVoteOptions{}
+	weightedVoteOptions := v1beta1.WeightedVoteOptions{}
 	if w1 > 0 {
-		weightedVoteOptions = append(weightedVoteOptions, types.WeightedVoteOption{
-			Option: types.OptionYes,
+		weightedVoteOptions = append(weightedVoteOptions, v1beta1.WeightedVoteOption{
+			Option: v1beta1.OptionYes,
 			Weight: sdk.NewDecWithPrec(int64(w1), 2),
 		})
 	}
 	if w2 > 0 {
-		weightedVoteOptions = append(weightedVoteOptions, types.WeightedVoteOption{
-			Option: types.OptionAbstain,
+		weightedVoteOptions = append(weightedVoteOptions, v1beta1.WeightedVoteOption{
+			Option: v1beta1.OptionAbstain,
 			Weight: sdk.NewDecWithPrec(int64(w2), 2),
 		})
 	}
 	if w3 > 0 {
-		weightedVoteOptions = append(weightedVoteOptions, types.WeightedVoteOption{
-			Option: types.OptionNo,
+		weightedVoteOptions = append(weightedVoteOptions, v1beta1.WeightedVoteOption{
+			Option: v1beta1.OptionNo,
 			Weight: sdk.NewDecWithPrec(int64(w3), 2),
 		})
 	}
 	if w4 > 0 {
-		weightedVoteOptions = append(weightedVoteOptions, types.WeightedVoteOption{
-			Option: types.OptionNoWithVeto,
+		weightedVoteOptions = append(weightedVoteOptions, v1beta1.WeightedVoteOption{
+			Option: v1beta1.OptionNoWithVeto,
 			Weight: sdk.NewDecWithPrec(int64(w4), 2),
 		})
 	}

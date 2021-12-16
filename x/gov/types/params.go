@@ -41,7 +41,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 // NewDepositParams creates a new DepositParams object
 func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration) DepositParams {
 	return DepositParams{
-		MinDeposit:       ToCoinSlice(minDeposit),
+		MinDeposit:       minDeposit,
 		MaxDepositPeriod: &maxDepositPeriod,
 	}
 }
@@ -56,7 +56,7 @@ func DefaultDepositParams() DepositParams {
 
 // Equal checks equality of DepositParams
 func (dp DepositParams) Equal(dp2 DepositParams) bool {
-	return NewCoins(dp.MinDeposit).IsEqual(NewCoins(dp2.MinDeposit)) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
+	return sdk.NewCoins(dp.MinDeposit...).IsEqual(sdk.NewCoins(dp2.MinDeposit...)) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
 }
 
 func validateDepositParams(i interface{}) error {
@@ -65,7 +65,7 @@ func validateDepositParams(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	minDeposit := NewCoins(v.MinDeposit)
+	minDeposit := sdk.NewCoins(v.MinDeposit...)
 	if !minDeposit.IsValid() {
 		return fmt.Errorf("invalid minimum deposit: %s", v.MinDeposit)
 	}

@@ -9,7 +9,7 @@ import (
 // NewDeposit creates a new Deposit instance
 //nolint:interfacer
 func NewDeposit(proposalID uint64, depositor sdk.AccAddress, amount sdk.Coins) Deposit {
-	return Deposit{proposalID, depositor.String(), ToCoinSlice(amount)}
+	return Deposit{proposalID, depositor.String(), amount}
 }
 
 // Deposits is a collection of Deposit objects
@@ -39,9 +39,4 @@ func (d Deposits) String() string {
 		out += fmt.Sprintf("\n  %s: %s", dep.Depositor, dep.Amount)
 	}
 	return out
-}
-
-// Empty returns whether a deposit is empty.
-func (d Deposit) Empty() bool {
-	return NewCoins(d.Amount).Empty()
 }

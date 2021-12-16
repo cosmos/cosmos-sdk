@@ -29,7 +29,7 @@ var (
 //nolint:interfacer
 func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer sdk.AccAddress) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
-		InitialDeposit: ToCoinSlice(initialDeposit),
+		InitialDeposit: initialDeposit,
 		Proposer:       proposer.String(),
 	}
 
@@ -45,7 +45,7 @@ func (m *MsgSubmitProposal) GetMsgs() ([]sdk.Msg, error) {
 }
 
 func (m *MsgSubmitProposal) SetInitialDeposit(coins sdk.Coins) {
-	m.InitialDeposit = ToCoinSlice(coins)
+	m.InitialDeposit = coins
 }
 
 func (m *MsgSubmitProposal) SetProposer(address fmt.Stringer) {
@@ -82,7 +82,7 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
 	}
 
-	deposit := NewCoins(m.InitialDeposit)
+	deposit := sdk.NewCoins(m.InitialDeposit...)
 	if !deposit.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
 	}
@@ -132,7 +132,7 @@ func (m MsgSubmitProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 // NewMsgDeposit creates a new MsgDeposit instance
 //nolint:interfacer
 func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins) *MsgDeposit {
-	return &MsgDeposit{proposalID, depositor.String(), ToCoinSlice(amount)}
+	return &MsgDeposit{proposalID, depositor.String(), amount}
 }
 
 // Route implements Msg
@@ -146,7 +146,7 @@ func (msg MsgDeposit) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Depositor); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
 	}
-	amount := NewCoins(msg.Amount)
+	amount := sdk.NewCoins(msg.Amount...)
 	if !amount.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
 	}
@@ -264,22 +264,4 @@ func (msg MsgVoteWeighted) GetSignBytes() []byte {
 func (msg MsgVoteWeighted) GetSigners() []sdk.AccAddress {
 	voter, _ := sdk.AccAddressFromBech32(msg.Voter)
 	return []sdk.AccAddress{voter}
-}
-
-func NewCoins(coins []*sdk.Coin) sdk.Coins {
-	var c []sdk.Coin
-	for _, coin := range coins {
-		if coin != nil {
-			c = append(c, *coin)
-		}
-	}
-	return sdk.NewCoins(c...)
-}
-
-func ToCoinSlice(coins sdk.Coins) []*sdk.Coin {
-	slice := make([]*sdk.Coin, len(coins))
-	for idx, coin := range coins {
-		slice[idx] = &coin
-	}
-	return slice
 }

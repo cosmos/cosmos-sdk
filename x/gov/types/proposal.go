@@ -37,7 +37,7 @@ func NewProposal(messages []sdk.Msg, id uint64, submitTime, depositEndTime time.
 		Messages:         msgs,
 		Status:           StatusDepositPeriod,
 		FinalTallyResult: EmptyTallyResult(),
-		TotalDeposit:     make([]*sdk.Coin, 0),
+		TotalDeposit:     sdk.NewCoins(),
 		SubmitTime:       &submitTime,
 		DepositEndTime:   &depositEndTime,
 	}

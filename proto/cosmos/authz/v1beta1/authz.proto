@@ -28,13 +28,13 @@ message Grant {
 
 // GrantQueueItem contains the list of granter-grantee-msgtype triple.
 message GrantQueueItem {
-  // GGMTriple is a list of GGMTriple
-  repeated GGMTriple ggm_triples = 1; 
+  // GrantStoreKey is a list of GrantStoreKey
+  repeated GrantStoreKey ggm_triples = 1; 
 }
 
-// GGMTriple contains granter-grantee-msg_type triple. It can be
+// GrantStoreKey contains granter-grantee-msg_type triple. It can be
 // used to construct the grant key.
-message GGMTriple {
+message GrantStoreKey {
   // Granter account address
   string granter = 1;
   // Grantee account address

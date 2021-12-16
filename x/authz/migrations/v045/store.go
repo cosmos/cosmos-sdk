@@ -32,7 +32,7 @@ func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.
 	grantsIter := grantsStore.Iterator(nil, nil)
 	defer grantsIter.Close()
 
-	ggmTriples := make(map[time.Time][]*authz.GGMTriple)
+	ggmTriples := make(map[time.Time][]*authz.GrantStoreKey)
 
 	for ; grantsIter.Valid(); grantsIter.Next() {
 		var grant authz.Grant
@@ -49,7 +49,7 @@ func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.
 			ggmTriple, ok := ggmTriples[grant.Expiration]
 
 			if !ok {
-				ggmTriples[grant.Expiration] = []*authz.GGMTriple{
+				ggmTriples[grant.Expiration] = []*authz.GrantStoreKey{
 					{
 						Granter:    granter.String(),
 						Grantee:    grantee.String(),
@@ -57,7 +57,7 @@ func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.
 					},
 				}
 			} else {
-				ggmTriple = append(ggmTriple, &authz.GGMTriple{
+				ggmTriple = append(ggmTriple, &authz.GrantStoreKey{
 					Granter:    granter.String(),
 					Grantee:    grantee.String(),
 					MsgTypeUrl: msgType,

@@ -39,10 +39,10 @@ func FeeAllowancePrefixByGrantee(grantee sdk.AccAddress) []byte {
 }
 
 func FeeAllowancePrefixQueue(exp *time.Time, allowanceKey []byte) []byte {
-	allowanceByExpTimeKey := AllowanceByExpTimeKey(*exp)
+	allowanceByExpTimeKey := AllowanceByExpTimeKey(exp)
 	return append(allowanceByExpTimeKey, allowanceKey[1:]...)
 }
 
-func AllowanceByExpTimeKey(exp time.Time) []byte {
-	return append(FeeAllowanceQueuePrefix, sdk.FormatTimeBytes(exp)...)
+func AllowanceByExpTimeKey(exp *time.Time) []byte {
+	return append(FeeAllowanceQueuePrefix, sdk.FormatTimeBytes(*exp)...)
 }

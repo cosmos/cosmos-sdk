@@ -259,3 +259,15 @@ func (k Keeper) insertAllowanceKey(ctx sdk.Context, grantKey []byte, exp *time.T
 	store := ctx.KVStore(k.storeKey)
 	store.Set(feegrant.FeeAllowancePrefixQueue(exp, grantKey), grantKey)
 }
+
+// RemoveExpiredAllowances iterates grantsByExpiryQueue and deletes the expired grants.
+func (k Keeper) RemoveExpiredAllowances(ctx sdk.Context, exp *time.Time) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := store.Iterator(feegrant.FeeAllowanceQueuePrefix, sdk.FormatTimeBytes(*exp))
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		store.Delete(iterator.Key())
+		store.Delete(iterator.Value())
+	}
+}

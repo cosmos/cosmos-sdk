@@ -24,7 +24,7 @@ func init() {
 
 func TestMsgDepositGetSignBytes(t *testing.T) {
 	addr := sdk.AccAddress("addr1")
-	msg := NewMsgDeposit(addr, 1, coinsPos)
+	msg := NewMsgDeposit(addr, 0, coinsPos)
 	res := msg.GetSignBytes()
 
 	expected := `{"type":"cosmos-sdk/MsgDeposit","value":{"amount":[{"amount":"1000","denom":"stake"}],"depositor":"cosmos1v9jxgu33kfsgr5"}}`

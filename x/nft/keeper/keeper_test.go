@@ -158,6 +158,22 @@ func (s *TestSuite) TestMint() {
 	// test GetTotalSupply
 	supply := s.app.NFTKeeper.GetTotalSupply(s.ctx, testClassID)
 	s.Require().EqualValues(uint64(1), supply)
+
+	expNFT2 := nft.NFT{
+		ClassId: testClassID,
+		Id:      testID + "2",
+		Uri:     testURI + "2",
+	}
+	err = s.app.NFTKeeper.Mint(s.ctx, expNFT2, s.addrs[0])
+	s.Require().NoError(err)
+
+	// test GetNFTsOfClassByOwner
+	actNFTs = s.app.NFTKeeper.GetNFTsOfClassByOwner(s.ctx, testClassID, s.addrs[0])
+	s.Require().EqualValues([]nft.NFT{expNFT, expNFT2}, actNFTs)
+
+	// test GetBalance
+	balance = s.app.NFTKeeper.GetBalance(s.ctx, testClassID, s.addrs[0])
+	s.Require().EqualValues(uint64(2), balance)
 }
 
 func (s *TestSuite) TestBurn() {

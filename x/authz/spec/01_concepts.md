@@ -6,13 +6,16 @@ order: 1
 
 ## Authorization and Grant
 
-The `x/authz` module defines interfaces and messages grant authorizations to perform actions
-on behalf of one account to other accounts. The design is defined in the [ADR 030](../../../architecture/adr-030-authz-module.md).
+The `x/authz` module defines interfaces and messages grant authorizations to perform actions on behalf of one account to
+other accounts. The design is defined in the [ADR 030](../../../docs/architecture/adr-030-authz-module.md).
 
-A *grant* is an allowance to execute a Msg by the grantee on behalf of the granter.
-Authorization is an interface that must be implemented by a concrete authorization logic to validate and execute grants. Authorizations are extensible and can be defined for any Msg service method even outside of the module where the Msg method is defined. See the `SendAuthorization` example in the next section for more details.
+A *grant* is an allowance to execute a Msg by the grantee on behalf of the granter. Authorization is an interface that
+must be implemented by a concrete authorization logic to validate and execute grants. Authorizations are extensible and
+can be defined for any Msg service method even outside of the module where the Msg method is defined. See
+the `SendAuthorization` example in the next section for more details.
 
-**Note:** The authz module is different from the [auth (authentication)](../modules/auth/) module that is responsible for specifying the base transaction and account types.
+**Note:** The authz module is different from the [auth (authentication)](../modules/auth/) module that is responsible
+for specifying the base transaction and account types.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/x/authz/authorizations.go#L11-L25
 
@@ -22,7 +25,9 @@ The Cosmos SDK `x/authz` module comes with following authorization types:
 
 ### SendAuthorization
 
-`SendAuthorization` implements the `Authorization` interface for the `cosmos.bank.v1beta1.MsgSend` Msg. It takes a `SpendLimit` that specifies the maximum amount of tokens the grantee can spend. The `SpendLimit` is updated as the tokens are spent.
+`SendAuthorization` implements the `Authorization` interface for the `cosmos.bank.v1beta1.MsgSend` Msg. It takes
+a `SpendLimit` that specifies the maximum amount of tokens the grantee can spend. The `SpendLimit` is updated as the
+tokens are spent.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/proto/cosmos/bank/v1beta1/authz.proto#L10-L19
 
@@ -32,7 +37,8 @@ The Cosmos SDK `x/authz` module comes with following authorization types:
 
 ### GenericAuthorization
 
-`GenericAuthorization` implements the `Authorization` interface that gives unrestricted permission to execute the provided Msg on behalf of granter's account.
+`GenericAuthorization` implements the `Authorization` interface that gives unrestricted permission to execute the
+provided Msg on behalf of granter's account.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/proto/cosmos/authz/v1beta1/authz.proto#L14-L19
 
@@ -42,4 +48,7 @@ The Cosmos SDK `x/authz` module comes with following authorization types:
 
 ## Gas
 
-In order to prevent DoS attacks, granting `StakeAuthorizaiton`s with `x/authz` incurs gas. `StakeAuthorization` allows you to authorize another account to delegate, undelegate, or redelegate to validators. The authorizer can define a list of validators they allow or deny delegations to. The Cosmos SDK iterates over these lists and charge 10 gas for each validator in both of the lists.
+In order to prevent DoS attacks, granting `StakeAuthorization`s with `x/authz` incurs gas. `StakeAuthorization` allows
+you to authorize another account to delegate, undelegate, or redelegate to validators. The authorizer can define a list
+of validators they allow or deny delegations to. The Cosmos SDK iterates over these lists and charge 10 gas for each
+validator in both of the lists.

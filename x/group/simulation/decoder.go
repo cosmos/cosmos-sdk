@@ -23,7 +23,7 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 
 			return fmt.Sprintf("%v\n%v", groupA, groupB)
 		case bytes.Equal(kvA.Key[:1], []byte{keeper.GroupMemberTablePrefix}):
-			var memberA, memberB group.GroupInfo
+			var memberA, memberB group.GroupMember
 
 			cdc.MustUnmarshal(kvA.Value, &memberA)
 			cdc.MustUnmarshal(kvB.Value, &memberB)

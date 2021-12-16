@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
@@ -18,12 +19,37 @@ func TestDecodeStore(t *testing.T) {
 	cdc := simapp.MakeTestEncodingConfig().Codec
 	dec := simulation.NewDecodeStore(cdc)
 
-	g := group.GroupInfo{}
+	g := group.GroupInfo{GroupId: 1}
 	groupBz, err := cdc.Marshal(&g)
 	require.NoError(t, err)
+
+	_, _, addr := testdata.KeyTestPubAddr()
+	member := group.GroupMember{GroupId: 1, Member: &group.Member{
+		Address: addr.String(),
+	}}
+	memberBz, err := cdc.Marshal(&member)
+	require.NoError(t, err)
+
+	_, _, accAddr := testdata.KeyTestPubAddr()
+	acc := group.GroupAccountInfo{Address: accAddr.String()}
+	accBz, err := cdc.Marshal(&acc)
+	require.NoError(t, err)
+
+	proposal := group.Proposal{ProposalId: 1}
+	proposalBz, err := cdc.Marshal(&proposal)
+	require.NoError(t, err)
+
+	vote := group.Vote{Voter: addr.String(), ProposalId: 1}
+	voteBz, err := cdc.Marshal(&vote)
+	require.NoError(t, err)
+
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
 			{Key: append([]byte{keeper.GroupTablePrefix}, orm.PrimaryKey(&g)...), Value: groupBz},
+			{Key: append([]byte{keeper.GroupMemberTablePrefix}, orm.PrimaryKey(&member)...), Value: memberBz},
+			{Key: append([]byte{keeper.GroupAccountTablePrefix}, orm.PrimaryKey(&acc)...), Value: accBz},
+			{Key: append([]byte{keeper.ProposalTablePrefix}, orm.PrimaryKey(&proposal)...), Value: proposalBz},
+			{Key: append([]byte{keeper.VoteTablePrefix}, orm.PrimaryKey(&vote)...), Value: voteBz},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
 	}
@@ -34,6 +60,10 @@ func TestDecodeStore(t *testing.T) {
 		expectedLog string
 	}{
 		{"Group", false, fmt.Sprintf("%v\n%v", g, g)},
+		{"GroupMember", false, fmt.Sprintf("%v\n%v", member, member)},
+		{"GroupAccount", false, fmt.Sprintf("%v\n%v", acc, acc)},
+		{"Proposal", false, fmt.Sprintf("%v\n%v", proposal, proposal)},
+		{"Vote", false, fmt.Sprintf("%v\n%v", vote, vote)},
 		{"other", true, ""},
 	}
 

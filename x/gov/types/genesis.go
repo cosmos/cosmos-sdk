@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -36,6 +37,10 @@ func (data GenesisState) Empty() bool {
 
 // ValidateGenesis checks if parameters are within valid ranges
 func ValidateGenesis(data *GenesisState) error {
+	if data.StartingProposalId == 0 {
+		return errors.New("Starting proposal id must be greater than 0")
+	}
+
 	if err := validateTallyParams(data.TallyParams); err != nil {
 		return fmt.Errorf("invalid tally params: %w", err)
 	}

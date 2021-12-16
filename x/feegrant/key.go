@@ -38,8 +38,8 @@ func FeeAllowancePrefixByGrantee(grantee sdk.AccAddress) []byte {
 	return append(FeeAllowanceKeyPrefix, address.MustLengthPrefix(grantee.Bytes())...)
 }
 
-func FeeAllowancePrefixQueue(exp time.Time, allowanceKey []byte) []byte {
-	allowanceByExpTimeKey := AllowanceByExpTimeKey(exp)
+func FeeAllowancePrefixQueue(exp *time.Time, allowanceKey []byte) []byte {
+	allowanceByExpTimeKey := AllowanceByExpTimeKey(*exp)
 	return append(allowanceByExpTimeKey, allowanceKey[1:]...)
 }
 

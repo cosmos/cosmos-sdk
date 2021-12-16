@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -50,10 +51,24 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	store := ctx.KVStore(k.storeKey)
 	key := feegrant.FeeAllowanceKey(granter, grantee)
 
-	existedGrant, err := k.getGrant(ctx, grantee, granter)
-	if err != nil && existedGrant.GetAllowance() != nil {
-		// k.removeFromGrantKey(ctx, feegrant.FeeAllowancePrefixQueue(feeAllowance))
+	var exp *time.Time
+	existingGrant, err := k.getGrant(ctx, grantee, granter)
+	if err != nil && existingGrant.GetAllowance() != nil {
+		grant1, err := existingGrant.GetGrant()
+		if err != nil {
+			return err
+		}
+
+		exp, err = grant1.ExpTime()
+		if err != nil {
+			return err
+		}
+
+		if exp != nil {
+			k.removeFromGrantQueue(ctx, feegrant.FeeAllowancePrefixQueue(exp, key))
+		}
 	}
+
 	grant, err := feegrant.NewGrant(granter, grantee, feeAllowance)
 	if err != nil {
 		return err
@@ -65,6 +80,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	}
 
 	store.Set(key, bz)
+	k.insertAllowanceKey(ctx, key, exp)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -234,9 +250,12 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (*feegrant.GenesisState, error) {
 	}, err
 }
 
-func (k Keeper) removeFromGrantKey(ctx sdk.Context, key []byte) error {
+func (k Keeper) removeFromGrantQueue(ctx sdk.Context, key []byte) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(key)
+}
 
-	return nil
+func (k Keeper) insertAllowanceKey(ctx sdk.Context, grantKey []byte, exp *time.Time) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(feegrant.FeeAllowancePrefixQueue(exp, grantKey), grantKey)
 }

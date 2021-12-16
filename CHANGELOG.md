@@ -36,6 +36,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Bug Fixes
+
+* [#10725](https://github.com/cosmos/cosmos-sdk/pull/10725) populate `ctx.ConsensusParams` for begin/end blockers.
+
 ## [v0.42.11](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.42.11) - 2021-12-07
 
 ### Improvements

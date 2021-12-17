@@ -19,7 +19,7 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
@@ -43,7 +43,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
-	s.grantee = make([]sdk.AccAddress, 2)
+	s.grantee = make([]sdk.AccAddress, 3)
 
 	// Send some funds to the new account.
 	// Create new account in the keyring.
@@ -79,6 +79,31 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
+
+	// Create new account in the keyring.
+	s.grantee[2] = s.createAccount("grantee3")
+
+	// grant send authorization to grantee3
+	out, err = ExecGrant(val, []string{
+		s.grantee[2].String(),
+		"send",
+		fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%d", cli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix()),
+	})
+	s.Require().NoError(err)
+
+	err = s.network.WaitForNextBlock()
+	s.Require().NoError(err)
+
+	var response sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
+	s.Require().Equal(int(response.Code), 0)
+	s.Require().NotEqual(int(response.Height), 0)
+
 }
 
 func (s *IntegrationTestSuite) createAccount(uid string) sdk.AccAddress {
@@ -631,6 +656,7 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[0]
+	grantee1 := s.grantee[2]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	_, err := ExecGrant(
@@ -667,6 +693,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 		args         []string
 		expectedCode uint32
 		expectErr    bool
+		expectErrMsg string
 	}{
 		{
 			"valid txn",
@@ -679,6 +706,20 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 			},
 			0,
 			false,
+			"",
+		},
+		{
+			"error over grantee doesn't exist on chain",
+			[]string{
+				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee1.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			},
+			0,
+			true,
+			"insufficient funds", // earlier the error was account not found here.
 		},
 		{
 			"error over spent",
@@ -691,6 +732,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 			},
 			4,
 			false,
+			"",
 		},
 	}
 
@@ -701,10 +743,13 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
+			var response sdk.TxResponse
+			if tc.expectErrMsg != "" {
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
+				s.Require().Contains(response.RawLog, tc.expectErrMsg)
+			} else if tc.expectErr {
 				s.Require().Error(err)
 			} else {
-				var response sdk.TxResponse
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 				s.Require().Equal(tc.expectedCode, response.Code, out.String())

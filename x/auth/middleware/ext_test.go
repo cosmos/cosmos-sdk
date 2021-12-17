@@ -13,7 +13,7 @@ func (s *MWTestSuite) TestRejectExtensionOptionsMiddleware() {
 	ctx := s.SetupTest(true) // setup
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
-	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.RejectExtensionOptionsMiddleware)
+	txHandler := middleware.ComposeMiddlewares(noopTxHandler, middleware.RejectExtensionOptionsMiddleware)
 
 	// no extension options should not trigger an error
 	theTx := txBuilder.GetTx()

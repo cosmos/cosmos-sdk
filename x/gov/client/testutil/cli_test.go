@@ -17,9 +17,11 @@ func TestIntegrationTestSuite(t *testing.T) {
 	cfg.NumValidators = 1
 	suite.Run(t, NewIntegrationTestSuite(cfg))
 
+	dp := types.NewDepositParams(sdk.NewCoins(sdk.NewCoin(cfg.BondDenom, types.DefaultMinDepositTokens)), time.Duration(15)*time.Second)
+	vp := types.NewVotingParams(time.Duration(5) * time.Second)
 	genesisState := types.DefaultGenesisState()
-	genesisState.DepositParams = types.NewDepositParams(sdk.NewCoins(sdk.NewCoin(cfg.BondDenom, types.DefaultMinDepositTokens)), time.Duration(15)*time.Second)
-	genesisState.VotingParams = types.NewVotingParams(time.Duration(5) * time.Second)
+	genesisState.DepositParams = &dp
+	genesisState.VotingParams = &vp
 	bz, err := cfg.Codec.MarshalJSON(genesisState)
 	require.NoError(t, err)
 	cfg.GenesisState["gov"] = bz

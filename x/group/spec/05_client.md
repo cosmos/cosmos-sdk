@@ -221,11 +221,96 @@ pagination:
   total: "2"
 ```
 
+#### proposal
 
+The `proposal` command allows users to query for proposal by id.
 
+```bash
+simd query group proposal [id] [flags]
+```
 
+Example:
 
+```bash
+simd query group proposal 1
+```
 
+Example Output:
+
+```bash
+proposal:
+  address: regen1m73npu5jn89syq23568a44ymrj7za9qa7mxgh0
+  executor_result: EXECUTOR_RESULT_NOT_RUN
+  group_account_version: "1"
+  group_version: "1"
+  metadata: null
+  msgs:
+  - '@type': /cosmos.bank.v1beta1.MsgSend
+    amount:
+    - amount: "100000000"
+      denom: stake
+    from_address: regen1m73npu5jn89syq23568a44ymrj7za9qa7mxgh0
+    to_address: regen1musjzdcjdze8ume4u8mnaztldjeys0vwdycwuz
+  proposal_id: "1"
+  proposers:
+  - regen1musjzdcjdze8ume4u8mnaztldjeys0vwdycwuz
+  result: RESULT_UNFINALIZED
+  status: STATUS_SUBMITTED
+  submitted_at: "2021-12-17T07:06:26.310638964Z"
+  timeout: "2021-12-17T07:06:27.310638964Z"
+  vote_state:
+    abstain_count: "0"
+    no_count: "0"
+    veto_count: "0"
+    yes_count: "0"
+```
+
+#### proposals-by-group-account
+
+The `proposals-by-group-account` allows users to query for proposals by group account address with pagination flags.
+
+```bash
+simd query group proposals-by-group-account [group-account] [flags]
+```
+
+Example:
+
+```bash
+simd query group proposals-by-group-account cosmos1..
+```
+
+Example Output:
+
+```bash
+pagination:
+  next_key: null
+  total: "1"
+proposals:
+- address: regen1m73npu5jn89syq23568a44ymrj7za9qa7mxgh0
+  executor_result: EXECUTOR_RESULT_NOT_RUN
+  group_account_version: "1"
+  group_version: "1"
+  metadata: null
+  msgs:
+  - '@type': /cosmos.bank.v1beta1.MsgSend
+    amount:
+    - amount: "100000000"
+      denom: stake
+    from_address: regen1m73npu5jn89syq23568a44ymrj7za9qa7mxgh0
+    to_address: regen1musjzdcjdze8ume4u8mnaztldjeys0vwdycwuz
+  proposal_id: "1"
+  proposers:
+  - regen1musjzdcjdze8ume4u8mnaztldjeys0vwdycwuz
+  result: RESULT_UNFINALIZED
+  status: STATUS_SUBMITTED
+  submitted_at: "2021-12-17T07:06:26.310638964Z"
+  timeout: "2021-12-17T07:06:27.310638964Z"
+  vote_state:
+    abstain_count: "0"
+    no_count: "0"
+    veto_count: "0"
+    yes_count: "0"
+```
 
 
 ### Transactions
@@ -361,6 +446,20 @@ Example:
 
 ```bash
 simd tx group create-proposal cosmos1.. cosmos1.. msg_tx.json metadata
+```
+
+#### vote 
+
+The `vote` command allows users to vote on a proposal.
+
+```bash
+simd tx group vote proposal-id] [voter] [choice] [metadata] [flags]
+```
+
+Example:
+
+```bash
+simd tx group vote 1 cosmos1.. CHOICE_YES metadata
 ```
 
 #### exec

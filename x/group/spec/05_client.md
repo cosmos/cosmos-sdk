@@ -40,49 +40,6 @@ total_weight: "3"
 version: "1"
 ```
 
-#### group-accounts-by-admin
-
-The `group-accounts-by-admin` command allows users to query for group accounts by admin account address with pagination flags.
-
-```bash
-simd query group group-accounts-by-admin [admin] [flags]
-```
-
-Example:
-
-```bash
-simd query group group-accounts-by-admin cosmos1..
-```
-
-Example Output:
-
-```bash
-group_accounts:
-- address: cosmos1..
-  admin: cosmos1..
-  decision_policy:
-    '@type': /regen.group.v1alpha1.ThresholdDecisionPolicy
-    threshold: "1"
-    timeout: 1s
-  derivation_key: AgAAAAAAAAA=
-  group_id: "1"
-  metadata: metadata
-  version: "1"
-- address: cosmos1..
-  admin: cosmos1..
-  decision_policy:
-    '@type': /regen.group.v1alpha1.ThresholdDecisionPolicy
-    threshold: "1"
-    timeout: 1s
-  derivation_key: AQAAAAAAAAA=
-  group_id: "1"
-  metadata: null
-  version: "1"
-pagination:
-  next_key: null
-  total: "2"
-```
-
 #### group-account-info
 
 The `group-account-info` command allows users to query  for group account info by group account address
@@ -103,89 +60,13 @@ Example Output:
 address: cosmos1..
 admin: cosmos1..
 decision_policy:
-  '@type': /regen.group.v1alpha1.ThresholdDecisionPolicy
+  '@type': /cosmos.group.v1beta1.ThresholdDecisionPolicy
   threshold: "1"
   timeout: 1s
 derivation_key: AgAAAAAAAAA=
 group_id: "1"
 metadata: metadata
 version: "1"
-```
-
-#### group-accounts-by-group
-
-The `group-accounts-by-group` command allows users to query for group accounts by group id with pagination flags.
-
-```bash
-simd query group group-accounts-by-group [group-id] [flags]
-```
-
-Example:
-
-```bash
-simd query group group-accounts-by-group 1 
-```
-
-Example Output:
-
-```bash
-group_accounts:
-- address: cosmos1..
-  admin: cosmos1..
-  decision_policy:
-    '@type': /regen.group.v1alpha1.ThresholdDecisionPolicy
-    threshold: "1"
-    timeout: 1s
-  derivation_key: AgAAAAAAAAA=
-  group_id: "1"
-  metadata: metadata
-  version: "1"
-- address: cosmos1..
-  admin: cosmos1..
-  decision_policy:
-    '@type': /regen.group.v1alpha1.ThresholdDecisionPolicy
-    threshold: "1"
-    timeout: 1s
-  derivation_key: AQAAAAAAAAA=
-  group_id: "1"
-  metadata: null
-  version: "1"
-pagination:
-  next_key: null
-  total: "2"
-```
-
-#### groups-by-admin
-
-The `groups-by-admin` command allows users to query for groups by admin account address with pagination flags.
-
-```bash
-simd query group groups-by-admin [admin] [flags]
-```
-
-Example:
-
-```bash
-simd query group groups-by-admin cosmos1..
-```
-
-Example Output:
-
-```bash
-groups:
-- admin: regen15ehk66keu65g3vnce0k0w2a7c72gzmlufn39aa
-  group_id: "1"
-  metadata: null
-  total_weight: "3"
-  version: "1"
-- admin: regen15ehk66keu65g3vnce0k0w2a7c72gzmlufn39aa
-  group_id: "2"
-  metadata: null
-  total_weight: "3"
-  version: "1"
-pagination:
-  next_key: null
-  total: "2"
 ```
 
 #### group-members
@@ -221,6 +102,125 @@ pagination:
   total: "2"
 ```
 
+#### groups-by-admin
+
+The `groups-by-admin` command allows users to query for groups by admin account address with pagination flags.
+
+```bash
+simd query group groups-by-admin [admin] [flags]
+```
+
+Example:
+
+```bash
+simd query group groups-by-admin cosmos1..
+```
+
+Example Output:
+
+```bash
+groups:
+- admin: cosmos1..
+  group_id: "1"
+  metadata: null
+  total_weight: "3"
+  version: "1"
+- admin: cosmos1..
+  group_id: "2"
+  metadata: null
+  total_weight: "3"
+  version: "1"
+pagination:
+  next_key: null
+  total: "2"
+```
+
+#### group-accounts-by-admin
+
+The `group-accounts-by-admin` command allows users to query for group accounts by admin account address with pagination flags.
+
+```bash
+simd query group group-accounts-by-admin [admin] [flags]
+```
+
+Example:
+
+```bash
+simd query group group-accounts-by-admin cosmos1..
+```
+
+Example Output:
+
+```bash
+group_accounts:
+- address: cosmos1..
+  admin: cosmos1..
+  decision_policy:
+    '@type': /cosmos.group.v1beta1.ThresholdDecisionPolicy
+    threshold: "1"
+    timeout: 1s
+  derivation_key: AgAAAAAAAAA=
+  group_id: "1"
+  metadata: metadata
+  version: "1"
+- address: cosmos1..
+  admin: cosmos1..
+  decision_policy:
+    '@type': /cosmos.group.v1beta1.ThresholdDecisionPolicy
+    threshold: "1"
+    timeout: 1s
+  derivation_key: AQAAAAAAAAA=
+  group_id: "1"
+  metadata: null
+  version: "1"
+pagination:
+  next_key: null
+  total: "2"
+```
+
+#### group-accounts-by-group
+
+The `group-accounts-by-group` command allows users to query for group accounts by group id with pagination flags.
+
+```bash
+simd query group group-accounts-by-group [group-id] [flags]
+```
+
+Example:
+
+```bash
+simd query group group-accounts-by-group 1 
+```
+
+Example Output:
+
+```bash
+group_accounts:
+- address: cosmos1..
+  admin: cosmos1..
+  decision_policy:
+    '@type': /cosmos.group.v1beta1.ThresholdDecisionPolicy
+    threshold: "1"
+    timeout: 1s
+  derivation_key: AgAAAAAAAAA=
+  group_id: "1"
+  metadata: metadata
+  version: "1"
+- address: cosmos1..
+  admin: cosmos1..
+  decision_policy:
+    '@type': /cosmos.group.v1beta1.ThresholdDecisionPolicy
+    threshold: "1"
+    timeout: 1s
+  derivation_key: AQAAAAAAAAA=
+  group_id: "1"
+  metadata: null
+  version: "1"
+pagination:
+  next_key: null
+  total: "2"
+```
+
 #### proposal
 
 The `proposal` command allows users to query for proposal by id.
@@ -239,7 +239,7 @@ Example Output:
 
 ```bash
 proposal:
-  address: regen1m73npu5jn89syq23568a44ymrj7za9qa7mxgh0
+  address: cosmos1..
   executor_result: EXECUTOR_RESULT_NOT_RUN
   group_account_version: "1"
   group_version: "1"
@@ -249,11 +249,11 @@ proposal:
     amount:
     - amount: "100000000"
       denom: stake
-    from_address: regen1m73npu5jn89syq23568a44ymrj7za9qa7mxgh0
-    to_address: regen1musjzdcjdze8ume4u8mnaztldjeys0vwdycwuz
+    from_address: cosmos1..
+    to_address: cosmos1..
   proposal_id: "1"
   proposers:
-  - regen1musjzdcjdze8ume4u8mnaztldjeys0vwdycwuz
+  - cosmos1..
   result: RESULT_UNFINALIZED
   status: STATUS_SUBMITTED
   submitted_at: "2021-12-17T07:06:26.310638964Z"
@@ -267,7 +267,7 @@ proposal:
 
 #### proposals-by-group-account
 
-The `proposals-by-group-account` allows users to query for proposals by group account address with pagination flags.
+The `proposals-by-group-account` command allows users to query for proposals by group account address with pagination flags.
 
 ```bash
 simd query group proposals-by-group-account [group-account] [flags]
@@ -286,7 +286,7 @@ pagination:
   next_key: null
   total: "1"
 proposals:
-- address: regen1m73npu5jn89syq23568a44ymrj7za9qa7mxgh0
+- address: cosmos1..
   executor_result: EXECUTOR_RESULT_NOT_RUN
   group_account_version: "1"
   group_version: "1"
@@ -296,11 +296,11 @@ proposals:
     amount:
     - amount: "100000000"
       denom: stake
-    from_address: regen1m73npu5jn89syq23568a44ymrj7za9qa7mxgh0
-    to_address: regen1musjzdcjdze8ume4u8mnaztldjeys0vwdycwuz
+    from_address: cosmos1..
+    to_address: cosmos1..
   proposal_id: "1"
   proposers:
-  - regen1musjzdcjdze8ume4u8mnaztldjeys0vwdycwuz
+  - cosmos1..
   result: RESULT_UNFINALIZED
   status: STATUS_SUBMITTED
   submitted_at: "2021-12-17T07:06:26.310638964Z"
@@ -312,6 +312,86 @@ proposals:
     yes_count: "0"
 ```
 
+#### vote
+
+The `vote` command allows users to query for vote by proposal id and voter account address.
+
+```bash
+simd query group vote [proposal-id] [voter] [flags]
+```
+
+Example:
+
+```bash
+simd query group vote 1 cosmos1..
+```
+
+Example Output:
+
+```bash
+vote:
+  choice: CHOICE_YES
+  metadata: null
+  proposal_id: "1"
+  submitted_at: "2021-12-17T08:05:02.490164009Z"
+  voter: cosmos1..
+```
+
+#### votes-by-proposal
+
+The `votes-by-proposal` command allows users to query for votes by proposal id with pagination flags.
+
+```bash
+simd query group votes-by-proposal [proposal-id] [flags]
+```
+
+Example:
+
+```bash
+simd query group votes-by-proposal 1 
+```
+
+Example Output:
+
+```bash
+pagination:
+  next_key: null
+  total: "1"
+votes:
+- choice: CHOICE_YES
+  metadata: null
+  proposal_id: "1"
+  submitted_at: "2021-12-17T08:05:02.490164009Z"
+  voter: cosmos1..
+```
+
+#### votes-by-voter
+
+The `votes-by-voter` command allows users to query for votes by voter account address with pagination flags.
+
+```bash
+simd query group votes-by-voter [voter] [flags]
+```
+
+Example:
+
+```bash
+simd query group votes-by-voter cosmos1..
+```
+
+Example Output:
+
+```bash
+pagination:
+  next_key: null
+  total: "1"
+votes:
+- choice: CHOICE_YES
+  metadata: null
+  proposal_id: "1"
+  submitted_at: "2021-12-17T08:05:02.490164009Z"
+  voter: cosmos1..
+```
 
 ### Transactions
 
@@ -334,20 +414,6 @@ Example:
 
 ```bash
 simd tx group create-group cosmos1.. metadata members.json 
-```
-
-#### create-group-account
-
-The `create-group-account` command allows users to create a group account which is an account associated with a group and a decision policy. 
-
-```bash
-simd tx group create-group-account [admin] [group-id] [metadata] [decision-policy] [flags]
-```
-
-Example:
-
-```bash
-simd tx group create-group-account cosmos1.. 1 metadata '{"@type":"/regen.group.v1alpha1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"1s"}' 
 ```
 
 #### update-group-admin
@@ -392,6 +458,20 @@ Example:
 simd tx group update-group-metadata cosmos1.. 1 newmetadata
 ```
 
+#### create-group-account
+
+The `create-group-account` command allows users to create a group account which is an account associated with a group and a decision policy. 
+
+```bash
+simd tx group create-group-account [admin] [group-id] [metadata] [decision-policy] [flags]
+```
+
+Example:
+
+```bash
+simd tx group create-group-account cosmos1.. 1 metadata '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"600s"}' 
+```
+
 #### update-group-account-admin
 
 The `update-group-account-admin` command allows users to update a group account admin.
@@ -431,7 +511,7 @@ simd  tx group update-group-account-policy [admin] [group-account] [decision-pol
 Example:
 
 ```bash
-simd tx group update-group-account-policy cosmos1.. cosmos1.. '{"@type":"/regen.group.v1alpha1.ThresholdDecisionPolicy", "threshold":"2", "timeout":"2s"}' 
+simd tx group update-group-account-policy cosmos1.. cosmos1.. '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"2", "timeout":"1000s"}' 
 ```
 
 #### create-proposal

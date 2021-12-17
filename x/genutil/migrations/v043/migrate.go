@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	v040gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v040"
 	v043gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v043"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 // Migrate migrates exported state from v0.40 to a v0.43 genesis state.

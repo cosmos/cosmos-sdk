@@ -29,12 +29,12 @@ func (s *errorsTestSuite) TestCause() {
 		root error
 	}{
 		"Errors are self-causing": {
-			err:  errUnauthorized,
-			root: errUnauthorized,
+			err:  ErrUnauthorized,
+			root: ErrUnauthorized,
 		},
 		"Wrap reveals root cause": {
-			err:  Wrap(errUnauthorized, "foo"),
-			root: errUnauthorized,
+			err:  Wrap(ErrUnauthorized, "foo"),
+			root: ErrUnauthorized,
 		},
 		"Cause works for stderr as root": {
 			err:  Wrap(std, "Some helpful text"),
@@ -54,32 +54,32 @@ func (s *errorsTestSuite) TestErrorIs() {
 		wantIs bool
 	}{
 		"instance of the same error": {
-			a:      errUnauthorized,
-			b:      errUnauthorized,
+			a:      ErrUnauthorized,
+			b:      ErrUnauthorized,
 			wantIs: true,
 		},
 		"two different coded errors": {
-			a:      errUnauthorized,
-			b:      errOutOfGas,
+			a:      ErrUnauthorized,
+			b:      ErrOutOfGas,
 			wantIs: false,
 		},
 		"successful comparison to a wrapped error": {
-			a:      errUnauthorized,
-			b:      errors.Wrap(errUnauthorized, "gone"),
+			a:      ErrUnauthorized,
+			b:      errors.Wrap(ErrUnauthorized, "gone"),
 			wantIs: true,
 		},
 		"unsuccessful comparison to a wrapped error": {
-			a:      errUnauthorized,
-			b:      errors.Wrap(errInsufficientFee, "too big"),
+			a:      ErrUnauthorized,
+			b:      errors.Wrap(ErrInsufficientFee, "too big"),
 			wantIs: false,
 		},
 		"not equal to stdlib error": {
-			a:      errUnauthorized,
+			a:      ErrUnauthorized,
 			b:      fmt.Errorf("stdlib error"),
 			wantIs: false,
 		},
 		"not equal to a wrapped stdlib error": {
-			a:      errUnauthorized,
+			a:      ErrUnauthorized,
 			b:      errors.Wrap(fmt.Errorf("stdlib error"), "wrapped"),
 			wantIs: false,
 		},
@@ -95,11 +95,11 @@ func (s *errorsTestSuite) TestErrorIs() {
 		},
 		"nil is not not-nil": {
 			a:      nil,
-			b:      errUnauthorized,
+			b:      ErrUnauthorized,
 			wantIs: false,
 		},
 		"not-nil is not nil": {
-			a:      errUnauthorized,
+			a:      ErrUnauthorized,
 			b:      nil,
 			wantIs: false,
 		},
@@ -113,7 +113,7 @@ func (s *errorsTestSuite) TestIsOf() {
 	require := s.Require()
 
 	var errNil *Error
-	var err = errInvalidAddress
+	var err = ErrInvalidAddress
 	var errW = Wrap(ErrLogic, "more info")
 
 	require.False(IsOf(errNil), "nil error should always have no causer")
@@ -152,7 +152,7 @@ func (s *errorsTestSuite) TestWrappedIs() {
 	err = Wrap(err, "even more context")
 	require.True(stdlib.Is(err, ErrTxTooLarge))
 
-	err = Wrap(errInsufficientFee, "...")
+	err = Wrap(ErrInsufficientFee, "...")
 	require.False(stdlib.Is(err, ErrTxTooLarge))
 
 	errs := stdlib.New("other")
@@ -161,10 +161,10 @@ func (s *errorsTestSuite) TestWrappedIs() {
 	errw := &wrappedError{"msg", errs}
 	require.True(errw.Is(errw), "should match itself")
 
-	require.True(stdlib.Is(errInsufficientFee.Wrap("wrapped"), errInsufficientFee))
-	require.True(IsOf(errInsufficientFee.Wrap("wrapped"), errInsufficientFee))
-	require.True(stdlib.Is(errInsufficientFee.Wrapf("wrapped"), errInsufficientFee))
-	require.True(IsOf(errInsufficientFee.Wrapf("wrapped"), errInsufficientFee))
+	require.True(stdlib.Is(ErrInsufficientFee.Wrap("wrapped"), ErrInsufficientFee))
+	require.True(IsOf(ErrInsufficientFee.Wrap("wrapped"), ErrInsufficientFee))
+	require.True(stdlib.Is(ErrInsufficientFee.Wrapf("wrapped"), ErrInsufficientFee))
+	require.True(IsOf(ErrInsufficientFee.Wrapf("wrapped"), ErrInsufficientFee))
 }
 
 func (s *errorsTestSuite) TestWrappedIsMultiple() {
@@ -207,8 +207,8 @@ func (s *errorsTestSuite) TestABCIError() {
 }
 
 func ExampleWrap() {
-	err1 := Wrap(errInsufficientFunds, "90 is smaller than 100")
-	err2 := errors.Wrap(errInsufficientFunds, "90 is smaller than 100")
+	err1 := Wrap(ErrInsufficientFunds, "90 is smaller than 100")
+	err2 := errors.Wrap(ErrInsufficientFunds, "90 is smaller than 100")
 	fmt.Println(err1.Error())
 	fmt.Println(err2.Error())
 	// Output:
@@ -217,11 +217,45 @@ func ExampleWrap() {
 }
 
 func ExampleWrapf() {
-	err1 := Wrap(errInsufficientFunds, "90 is smaller than 100")
-	err2 := errors.Wrap(errInsufficientFunds, "90 is smaller than 100")
+	err1 := Wrap(ErrInsufficientFunds, "90 is smaller than 100")
+	err2 := errors.Wrap(ErrInsufficientFunds, "90 is smaller than 100")
 	fmt.Println(err1.Error())
 	fmt.Println(err2.Error())
 	// Output:
 	// 90 is smaller than 100: insufficient funds
 	// 90 is smaller than 100: insufficient funds
 }
+
+const testCodespace = "testtesttest"
+
+var (
+	ErrTxDecode                = Register(testCodespace, 2, "tx parse error")
+	ErrInvalidSequence         = Register(testCodespace, 3, "invalid sequence")
+	ErrUnauthorized            = Register(testCodespace, 4, "unauthorized")
+	ErrInsufficientFunds       = Register(testCodespace, 5, "insufficient funds")
+	ErrUnknownRequest          = Register(testCodespace, 6, "unknown request")
+	ErrInvalidAddress          = Register(testCodespace, 7, "invalid address")
+	ErrInvalidPubKey           = Register(testCodespace, 8, "invalid pubkey")
+	ErrUnknownAddress          = Register(testCodespace, 9, "unknown address")
+	ErrInvalidCoins            = Register(testCodespace, 10, "invalid coins")
+	ErrOutOfGas                = Register(testCodespace, 11, "out of gas")
+	ErrInsufficientFee         = Register(testCodespace, 13, "insufficient fee")
+	ErrTooManySignatures       = Register(testCodespace, 14, "maximum number of signatures exceeded")
+	ErrNoSignatures            = Register(testCodespace, 15, "no signatures supplied")
+	ErrJSONMarshal             = Register(testCodespace, 16, "failed to marshal JSON bytes")
+	ErrJSONUnmarshal           = Register(testCodespace, 17, "failed to unmarshal JSON bytes")
+	ErrInvalidRequest          = Register(testCodespace, 18, "invalid request")
+	ErrMempoolIsFull           = Register(testCodespace, 20, "mempool is full")
+	ErrTxTooLarge              = Register(testCodespace, 21, "tx too large")
+	ErrKeyNotFound             = Register(testCodespace, 22, "key not found")
+	ErrorInvalidSigner         = Register(testCodespace, 24, "tx intended signer does not match the given signer")
+	ErrInvalidChainID          = Register(testCodespace, 28, "invalid chain-id")
+	ErrInvalidType             = Register(testCodespace, 29, "invalid type")
+	ErrUnknownExtensionOptions = Register(testCodespace, 31, "unknown extension options")
+	ErrPackAny                 = Register(testCodespace, 33, "failed packing protobuf message to Any")
+	ErrLogic                   = Register(testCodespace, 35, "internal logic error")
+	ErrConflict                = Register(testCodespace, 36, "conflict")
+	ErrNotSupported            = Register(testCodespace, 37, "feature not supported")
+	ErrNotFound                = Register(testCodespace, 38, "not found")
+	ErrIO                      = Register(testCodespace, 39, "Internal IO error")
+)

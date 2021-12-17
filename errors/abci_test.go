@@ -30,17 +30,17 @@ func (s *abciTestSuite) TestABCInfo() {
 		wantLog   string
 	}{
 		"plain SDK error": {
-			err:       errUnauthorized,
+			err:       ErrUnauthorized,
 			debug:     false,
 			wantLog:   "unauthorized",
-			wantCode:  errUnauthorized.code,
+			wantCode:  ErrUnauthorized.code,
 			wantSpace: testCodespace,
 		},
 		"wrapped SDK error": {
-			err:       Wrap(Wrap(errUnauthorized, "foo"), "bar"),
+			err:       Wrap(Wrap(ErrUnauthorized, "foo"), "bar"),
 			debug:     false,
 			wantLog:   "bar: foo: unauthorized",
-			wantCode:  errUnauthorized.code,
+			wantCode:  ErrUnauthorized.code,
 			wantSpace: testCodespace,
 		},
 		"nil is empty message": {
@@ -118,13 +118,13 @@ func (s *abciTestSuite) TestABCIInfoStacktrace() {
 		wantErrMsg     string
 	}{
 		"wrapped SDK error in debug mode provides stacktrace": {
-			err:            Wrap(errUnauthorized, "wrapped"),
+			err:            Wrap(ErrUnauthorized, "wrapped"),
 			debug:          true,
 			wantStacktrace: true,
 			wantErrMsg:     "wrapped: unauthorized",
 		},
 		"wrapped SDK error in non-debug mode does not have stacktrace": {
-			err:            Wrap(errUnauthorized, "wrapped"),
+			err:            Wrap(ErrUnauthorized, "wrapped"),
 			debug:          false,
 			wantStacktrace: false,
 			wantErrMsg:     "wrapped: unauthorized",
@@ -158,7 +158,7 @@ func (s *abciTestSuite) TestABCIInfoStacktrace() {
 }
 
 func (s *abciTestSuite) TestABCIInfoHidesStacktrace() {
-	err := Wrap(errUnauthorized, "wrapped")
+	err := Wrap(ErrUnauthorized, "wrapped")
 	_, _, log := ABCIInfo(err, false)
 	s.Require().Equal("wrapped: unauthorized", log)
 }
@@ -174,7 +174,7 @@ func (s *abciTestSuite) TestRedact() {
 			changed: errPanicWithMsg,
 		},
 		"sdk errors untouched": {
-			err:       Wrap(errUnauthorized, "cannot drop db"),
+			err:       Wrap(ErrUnauthorized, "cannot drop db"),
 			untouched: true,
 		},
 		"pass though custom errors with ABCI code": {
@@ -206,8 +206,8 @@ func (s *abciTestSuite) TestRedact() {
 func (s *abciTestSuite) TestABCIInfoSerializeErr() {
 	var (
 		// Create errors with stacktrace for equal comparison.
-		myErrDecode = Wrap(errTxDecode, "test")
-		myErrAddr   = Wrap(errInvalidAddress, "tester")
+		myErrDecode = Wrap(ErrTxDecode, "test")
+		myErrAddr   = Wrap(ErrInvalidAddress, "tester")
 		myPanic     = ErrPanic
 	)
 

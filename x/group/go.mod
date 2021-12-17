@@ -42,6 +42,7 @@ require (
 	github.com/confio/ics23/go v0.6.6 // indirect
 	github.com/cosmos/btcutil v1.0.4 // indirect
 	github.com/cosmos/cosmos-sdk/db v0.0.0 // indirect
+	github.com/cosmos/cosmos-sdk/errors v0.0.0 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/iavl v0.17.3 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.11.1 // indirect
@@ -150,3 +151,5 @@ replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alp
 replace github.com/cosmos/cosmos-sdk => ../../
 
 replace github.com/cosmos/cosmos-sdk/db => ../../db
+
+replace github.com/cosmos/cosmos-sdk/errors => ../../errors

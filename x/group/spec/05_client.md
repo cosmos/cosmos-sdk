@@ -1,5 +1,5 @@
 <!--
-order: 6
+order: 5
 -->
 
 # Client
@@ -35,7 +35,7 @@ Example Output:
 ```bash
 admin: cosmos1..
 group_id: "1"
-metadata: null
+metadata: AQ==
 total_weight: "3"
 version: "1"
 ```
@@ -62,10 +62,9 @@ admin: cosmos1..
 decision_policy:
   '@type': /cosmos.group.v1beta1.ThresholdDecisionPolicy
   threshold: "1"
-  timeout: 1s
-derivation_key: AgAAAAAAAAA=
+  timeout: 600s
 group_id: "1"
-metadata: metadata
+metadata: AQ==
 version: "1"
 ```
 
@@ -90,12 +89,12 @@ members:
 - group_id: "1"
   member:
     address: cosmos1..
-    metadata: null
+    metadata: AQ==
     weight: "2"
 - group_id: "1"
   member:
     address: cosmos1..
-    metadata: null
+    metadata: AQ==
     weight: "1"
 pagination:
   next_key: null
@@ -122,12 +121,12 @@ Example Output:
 groups:
 - admin: cosmos1..
   group_id: "1"
-  metadata: null
+  metadata: AQ==
   total_weight: "3"
   version: "1"
 - admin: cosmos1..
   group_id: "2"
-  metadata: null
+  metadata: AQ==
   total_weight: "3"
   version: "1"
 pagination:
@@ -158,20 +157,18 @@ group_accounts:
   decision_policy:
     '@type': /cosmos.group.v1beta1.ThresholdDecisionPolicy
     threshold: "1"
-    timeout: 1s
-  derivation_key: AgAAAAAAAAA=
+    timeout: 600s
   group_id: "1"
-  metadata: metadata
+  metadata: AQ==
   version: "1"
 - address: cosmos1..
   admin: cosmos1..
   decision_policy:
     '@type': /cosmos.group.v1beta1.ThresholdDecisionPolicy
     threshold: "1"
-    timeout: 1s
-  derivation_key: AQAAAAAAAAA=
+    timeout: 600s
   group_id: "1"
-  metadata: null
+  metadata: AQ==
   version: "1"
 pagination:
   next_key: null
@@ -201,20 +198,18 @@ group_accounts:
   decision_policy:
     '@type': /cosmos.group.v1beta1.ThresholdDecisionPolicy
     threshold: "1"
-    timeout: 1s
-  derivation_key: AgAAAAAAAAA=
+    timeout: 600s
   group_id: "1"
-  metadata: metadata
+  metadata: AQ==
   version: "1"
 - address: cosmos1..
   admin: cosmos1..
   decision_policy:
     '@type': /cosmos.group.v1beta1.ThresholdDecisionPolicy
     threshold: "1"
-    timeout: 1s
-  derivation_key: AQAAAAAAAAA=
+    timeout: 600s
   group_id: "1"
-  metadata: null
+  metadata: AQ==
   version: "1"
 pagination:
   next_key: null
@@ -243,7 +238,7 @@ proposal:
   executor_result: EXECUTOR_RESULT_NOT_RUN
   group_account_version: "1"
   group_version: "1"
-  metadata: null
+  metadata: AQ==
   msgs:
   - '@type': /cosmos.bank.v1beta1.MsgSend
     amount:
@@ -290,7 +285,7 @@ proposals:
   executor_result: EXECUTOR_RESULT_NOT_RUN
   group_account_version: "1"
   group_version: "1"
-  metadata: null
+  metadata: AQ==
   msgs:
   - '@type': /cosmos.bank.v1beta1.MsgSend
     amount:
@@ -331,7 +326,7 @@ Example Output:
 ```bash
 vote:
   choice: CHOICE_YES
-  metadata: null
+  metadata: AQ==
   proposal_id: "1"
   submitted_at: "2021-12-17T08:05:02.490164009Z"
   voter: cosmos1..
@@ -359,7 +354,7 @@ pagination:
   total: "1"
 votes:
 - choice: CHOICE_YES
-  metadata: null
+  metadata: AQ==
   proposal_id: "1"
   submitted_at: "2021-12-17T08:05:02.490164009Z"
   voter: cosmos1..
@@ -387,7 +382,7 @@ pagination:
   total: "1"
 votes:
 - choice: CHOICE_YES
-  metadata: null
+  metadata: AQ==
   proposal_id: "1"
   submitted_at: "2021-12-17T08:05:02.490164009Z"
   voter: cosmos1..
@@ -413,7 +408,7 @@ simd tx group create-group [admin] [metadata] [members-json-file]
 Example:
 
 ```bash
-simd tx group create-group cosmos1.. metadata members.json 
+simd tx group create-group cosmos1.. "AQ==" members.json 
 ```
 
 #### update-group-admin
@@ -455,7 +450,7 @@ simd tx group update-group-metadata [admin] [group-id] [metadata] [flags]
 Example:
 
 ```bash
-simd tx group update-group-metadata cosmos1.. 1 newmetadata
+simd tx group update-group-metadata cosmos1.. 1 "AQ=="
 ```
 
 #### create-group-account
@@ -469,7 +464,7 @@ simd tx group create-group-account [admin] [group-id] [metadata] [decision-polic
 Example:
 
 ```bash
-simd tx group create-group-account cosmos1.. 1 metadata '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"600s"}' 
+simd tx group create-group-account cosmos1.. 1 "AQ==" '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"600s"}' 
 ```
 
 #### update-group-account-admin
@@ -497,7 +492,7 @@ simd tx group update-group-account-metadata [admin] [group-account] [new-metadat
 Example:
 
 ```bash
-simd tx group update-group-account-metadata cosmos1.. cosmos1.. newmetadata
+simd tx group update-group-account-metadata cosmos1.. cosmos1.. "AQ=="
 ```
 
 #### update-group-account-policy
@@ -525,7 +520,7 @@ simd tx group create-proposal [group-account] [proposer[,proposer]*] [msg_tx_jso
 Example:
 
 ```bash
-simd tx group create-proposal cosmos1.. cosmos1.. msg_tx.json metadata
+simd tx group create-proposal cosmos1.. cosmos1.. msg_tx.json "AQ=="
 ```
 
 #### vote 
@@ -539,7 +534,7 @@ simd tx group vote proposal-id] [voter] [choice] [metadata] [flags]
 Example:
 
 ```bash
-simd tx group vote 1 cosmos1.. CHOICE_YES metadata
+simd tx group vote 1 cosmos1.. CHOICE_YES "AQ=="
 ```
 
 #### exec

@@ -49,3 +49,6 @@ This module allows the creation and management of on-chain multisig accounts and
     - [EventVote](04_events.md#eventvote)
     - [EventExec](04_events.md#eventexec)
 5. **[Client](05_client.md)**
+    - [CLI](05_client.md#cli)
+    - [gRPC](05_client.md#grpc)
+    - [REST](05_client.md#rest)

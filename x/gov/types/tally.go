@@ -1,8 +1,6 @@
 package types
 
 import (
-	"sigs.k8s.io/yaml"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -29,17 +27,17 @@ func NewValidatorGovInfo(address sdk.ValAddress, bondedTokens sdk.Int, delegator
 }
 
 // NewTallyResult creates a new TallyResult instance
-func NewTallyResult(yes, abstain, no, noWithVeto sdk.Int) TallyResult {
-	return TallyResult{
-		Yes:        yes,
-		Abstain:    abstain,
-		No:         no,
-		NoWithVeto: noWithVeto,
+func NewTallyResult(yes, abstain, no, noWithVeto sdk.Int) *TallyResult {
+	return &TallyResult{
+		Yes:        yes.String(),
+		Abstain:    abstain.String(),
+		No:         no.String(),
+		NoWithVeto: noWithVeto.String(),
 	}
 }
 
 // NewTallyResultFromMap creates a new TallyResult instance from a Option -> Dec map
-func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) TallyResult {
+func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) *TallyResult {
 	return NewTallyResult(
 		results[OptionYes].TruncateInt(),
 		results[OptionAbstain].TruncateInt(),
@@ -49,20 +47,14 @@ func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) TallyResult {
 }
 
 // EmptyTallyResult returns an empty TallyResult.
-func EmptyTallyResult() TallyResult {
+func EmptyTallyResult() *TallyResult {
 	return NewTallyResult(sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt())
 }
 
-// Equals returns if two proposals are equal.
+// Equals returns if two tally results are equal.
 func (tr TallyResult) Equals(comp TallyResult) bool {
-	return tr.Yes.Equal(comp.Yes) &&
-		tr.Abstain.Equal(comp.Abstain) &&
-		tr.No.Equal(comp.No) &&
-		tr.NoWithVeto.Equal(comp.NoWithVeto)
-}
-
-// String implements stringer interface
-func (tr TallyResult) String() string {
-	out, _ := yaml.Marshal(tr)
-	return string(out)
+	return tr.Yes == comp.Yes &&
+		tr.Abstain == comp.Abstain &&
+		tr.No == comp.No &&
+		tr.NoWithVeto == comp.NoWithVeto
 }

@@ -1,10 +1,9 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"time"
-
-	"sigs.k8s.io/yaml"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -43,7 +42,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration) DepositParams {
 	return DepositParams{
 		MinDeposit:       minDeposit,
-		MaxDepositPeriod: maxDepositPeriod,
+		MaxDepositPeriod: &maxDepositPeriod,
 	}
 }
 
@@ -55,15 +54,9 @@ func DefaultDepositParams() DepositParams {
 	)
 }
 
-// String implements stringer insterface
-func (dp DepositParams) String() string {
-	out, _ := yaml.Marshal(dp)
-	return string(out)
-}
-
 // Equal checks equality of DepositParams
 func (dp DepositParams) Equal(dp2 DepositParams) bool {
-	return dp.MinDeposit.IsEqual(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
+	return sdk.NewCoins(dp.MinDeposit...).IsEqual(sdk.NewCoins(dp2.MinDeposit...)) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
 }
 
 func validateDepositParams(i interface{}) error {
@@ -72,10 +65,11 @@ func validateDepositParams(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if !v.MinDeposit.IsValid() {
+	minDeposit := sdk.NewCoins(v.MinDeposit...)
+	if !minDeposit.IsValid() {
 		return fmt.Errorf("invalid minimum deposit: %s", v.MinDeposit)
 	}
-	if v.MaxDepositPeriod <= 0 {
+	if v.MaxDepositPeriod == nil || v.MaxDepositPeriod.Seconds() <= 0 {
 		return fmt.Errorf("maximum deposit period must be positive: %d", v.MaxDepositPeriod)
 	}
 
@@ -85,9 +79,9 @@ func validateDepositParams(i interface{}) error {
 // NewTallyParams creates a new TallyParams object
 func NewTallyParams(quorum, threshold, vetoThreshold sdk.Dec) TallyParams {
 	return TallyParams{
-		Quorum:        quorum,
-		Threshold:     threshold,
-		VetoThreshold: vetoThreshold,
+		Quorum:        quorum.String(),
+		Threshold:     threshold.String(),
+		VetoThreshold: vetoThreshold.String(),
 	}
 }
 
@@ -98,13 +92,7 @@ func DefaultTallyParams() TallyParams {
 
 // Equal checks equality of TallyParams
 func (tp TallyParams) Equal(other TallyParams) bool {
-	return tp.Quorum.Equal(other.Quorum) && tp.Threshold.Equal(other.Threshold) && tp.VetoThreshold.Equal(other.VetoThreshold)
-}
-
-// String implements stringer insterface
-func (tp TallyParams) String() string {
-	out, _ := yaml.Marshal(tp)
-	return string(out)
+	return tp.Quorum == other.Quorum && tp.Threshold == other.Threshold && tp.VetoThreshold == other.VetoThreshold
 }
 
 func validateTallyParams(i interface{}) error {
@@ -113,22 +101,36 @@ func validateTallyParams(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.Quorum.IsNegative() {
-		return fmt.Errorf("quorom cannot be negative: %s", v.Quorum)
+	quorum, err := sdk.NewDecFromStr(v.Quorum)
+	if err != nil {
+		return fmt.Errorf("invalid quorum string: %w", err)
 	}
-	if v.Quorum.GT(sdk.OneDec()) {
+	if quorum.IsNegative() {
+		return fmt.Errorf("quorom cannot be negative: %s", quorum)
+	}
+	if quorum.GT(sdk.OneDec()) {
 		return fmt.Errorf("quorom too large: %s", v)
 	}
-	if !v.Threshold.IsPositive() {
-		return fmt.Errorf("vote threshold must be positive: %s", v.Threshold)
+
+	threshold, err := sdk.NewDecFromStr(v.Threshold)
+	if err != nil {
+		return fmt.Errorf("invalid threshold string: %w", err)
 	}
-	if v.Threshold.GT(sdk.OneDec()) {
+	if !threshold.IsPositive() {
+		return fmt.Errorf("vote threshold must be positive: %s", threshold)
+	}
+	if threshold.GT(sdk.OneDec()) {
 		return fmt.Errorf("vote threshold too large: %s", v)
 	}
-	if !v.VetoThreshold.IsPositive() {
-		return fmt.Errorf("veto threshold must be positive: %s", v.Threshold)
+
+	vetoThreshold, err := sdk.NewDecFromStr(v.VetoThreshold)
+	if err != nil {
+		return fmt.Errorf("invalid vetoThreshold string: %w", err)
 	}
-	if v.VetoThreshold.GT(sdk.OneDec()) {
+	if !vetoThreshold.IsPositive() {
+		return fmt.Errorf("veto threshold must be positive: %s", vetoThreshold)
+	}
+	if vetoThreshold.GT(sdk.OneDec()) {
 		return fmt.Errorf("veto threshold too large: %s", v)
 	}
 
@@ -138,7 +140,7 @@ func validateTallyParams(i interface{}) error {
 // NewVotingParams creates a new VotingParams object
 func NewVotingParams(votingPeriod time.Duration) VotingParams {
 	return VotingParams{
-		VotingPeriod: votingPeriod,
+		VotingPeriod: &votingPeriod,
 	}
 }
 
@@ -152,19 +154,17 @@ func (vp VotingParams) Equal(other VotingParams) bool {
 	return vp.VotingPeriod == other.VotingPeriod
 }
 
-// String implements stringer interface
-func (vp VotingParams) String() string {
-	out, _ := yaml.Marshal(vp)
-	return string(out)
-}
-
 func validateVotingParams(i interface{}) error {
 	v, ok := i.(VotingParams)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.VotingPeriod <= 0 {
+	if v.VotingPeriod == nil {
+		return errors.New("voting period must not be nil")
+	}
+
+	if v.VotingPeriod.Seconds() <= 0 {
 		return fmt.Errorf("voting period must be positive: %s", v.VotingPeriod)
 	}
 

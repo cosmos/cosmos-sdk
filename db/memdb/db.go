@@ -25,7 +25,9 @@ const (
 //
 // Versioning is implemented by maintaining references to copy-on-write clones of the backing btree.
 //
-// TODO: Currently transactions do not detect write conflicts, so writers cannot be used concurrently.
+// Note: Currently, transactions do not detect write conflicts, so multiple writers cannot be
+// safely committed to overlapping domains. Because of this, the number of open writers is
+// limited to 1.
 type MemDB struct {
 	btree       *btree.BTree            // Main contents
 	mtx         sync.RWMutex            // Guards version history

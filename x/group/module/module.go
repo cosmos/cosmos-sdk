@@ -1,6 +1,7 @@
 package module
 
 import (
+	"context"
 	"encoding/json"
 	"math/rand"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/client/cli"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 )
 
@@ -67,19 +69,20 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEn
 }
 
 // GetQueryCmd returns the cli query commands for the group module
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	// TODO: return CLI query commands
-	return nil
+func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.QueryCmd(a.Name())
 }
 
 // GetTxCmd returns the transaction commands for the group module
-func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	// TODO: return CLI tx commands
-	return nil
+func (a AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.TxCmd(a.Name())
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the group module.
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
+	if err := group.RegisterQueryHandlerClient(context.Background(), mux, group.NewQueryClient(clientCtx)); err != nil {
+		panic(err)
+	}
 }
 
 // RegisterInterfaces registers the group module's interface types
@@ -100,7 +103,9 @@ func (AppModule) Name() string {
 }
 
 // RegisterInvariants does nothing, there are no invariants to enforce
-func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
+	groupkeeper.RegisterInvariants(ir, am.keeper)
+}
 
 // Deprecated: Route returns the message routing key for the group module.
 func (am AppModule) Route() sdk.Route {

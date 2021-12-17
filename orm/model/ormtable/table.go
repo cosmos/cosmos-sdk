@@ -1,15 +1,13 @@
 package ormtable
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 )
 
 // View defines a read-only table.
@@ -43,7 +41,8 @@ type Table interface {
 
 	ormkv.EntryCodec
 
-	// Save saves the provided entry in the store with provided save mode.
+	// Save saves the provided entry in the store either inserting it or
+	// updating it if needed.
 	//
 	// If store implement the Hooks interface, the appropriate OnInsert or
 	// OnUpdate hook method will be called.
@@ -51,9 +50,18 @@ type Table interface {
 	// Save attempts to be atomic with respect to the underlying store,
 	// meaning that either the full save operation is written or the store is
 	// left unchanged, unless there is an error with the underlying store.
-	Save(store kvstore.Backend, message proto.Message, mode SaveMode) error
+	Save(context context.Context, message proto.Message) error
 
-	// Delete deletes the entry with the provided primary key values from the store.
+	// Insert inserts the provided entry in the store and fails if there is
+	// an unique key violation. See Save for more details on behavior.
+	Insert(context context.Context, message proto.Message) error
+
+	// Update updates the provided entry in the store and fails if an entry
+	// with a matching primary key does not exist. See Save for more details
+	// on behavior.
+	Update(context context.Context, message proto.Message) error
+
+	// Delete deletes the entry with the provided primary key from the store.
 	//
 	// If store implement the Hooks interface, the OnDelete hook method will
 	// be called.
@@ -61,10 +69,7 @@ type Table interface {
 	// Delete attempts to be atomic with respect to the underlying store,
 	// meaning that either the full save operation is written or the store is
 	// left unchanged, unless there is an error with the underlying store.
-	Delete(store kvstore.Backend, primaryKey []protoreflect.Value) error
-
-	// DeleteMessage calls delete with the primary key extracted from the provided message.
-	DeleteMessage(store kvstore.Backend, message proto.Message) error
+	Delete(context context.Context, message proto.Message) error
 
 	// DefaultJSON returns default JSON that can be used as a template for
 	// genesis files.
@@ -96,30 +101,13 @@ type Table interface {
 	// that in the case of an error, some records may already have been
 	// imported. It is assumed that ImportJSON is called in the context of some
 	// larger transaction isolation.
-	ImportJSON(kvstore.Backend, io.Reader) error
+	ImportJSON(context.Context, io.Reader) error
 
 	// ExportJSON exports JSON in the format accepted by ImportJSON.
 	// Auto-incrementing tables will export the last sequence number as the
 	// first element in the JSON array.
-	ExportJSON(kvstore.ReadBackend, io.Writer) error
+	ExportJSON(context.Context, io.Writer) error
 
 	// ID is the ID of this table within the schema of its FileDescriptor.
 	ID() uint32
 }
-
-// SaveMode defines the save mode for the Table.Save() method.
-type SaveMode int
-
-const (
-	// SAVE_MODE_DEFAULT instructs Table.Save() to insert or update the
-	// entry depending on whether or not the entry already exists in the store.
-	SAVE_MODE_DEFAULT SaveMode = iota
-
-	// SAVE_MODE_INSERT instructs Table.Save() to insert the entry or return
-	// an error if an entry with the same primary key already exists.
-	SAVE_MODE_INSERT
-
-	// SAVE_MODE_UPDATE instructs Table.Save() to update the entry or return
-	// an error if an entry with the same primary key does not already exist.
-	SAVE_MODE_UPDATE
-)

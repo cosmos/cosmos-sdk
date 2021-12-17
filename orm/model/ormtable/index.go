@@ -1,6 +1,8 @@
 package ormtable
 
 import (
+	"context"
+
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -15,7 +17,7 @@ type Index interface {
 
 	// PrefixIterator returns a prefix iterator for the provided prefix. Prefix
 	// can contain 0 or more values that must correspond to the fields in the index.
-	PrefixIterator(store kvstore.ReadBackend, prefix []protoreflect.Value, options IteratorOptions) (Iterator, error)
+	PrefixIterator(context context.Context, prefix []protoreflect.Value, options IteratorOptions) (Iterator, error)
 
 	// RangeIterator returns a range iterator between the provided start and end.
 	// Start and end can contain 0 or more values that must correspond to the fields in the index.
@@ -24,7 +26,7 @@ type Index interface {
 	// the bytes type is considered unordered, so a range iterator is created
 	// over an index with a bytes field, both start and end must have the same
 	// value for bytes.
-	RangeIterator(store kvstore.ReadBackend, start, end []protoreflect.Value, options IteratorOptions) (Iterator, error)
+	RangeIterator(context context.Context, start, end []protoreflect.Value, options IteratorOptions) (Iterator, error)
 
 	// MessageType returns the protobuf message type of the index.
 	MessageType() protoreflect.MessageType
@@ -49,18 +51,21 @@ type concreteIndex interface {
 	Index
 	ormkv.IndexCodec
 
-	readValueFromIndexKey(store kvstore.ReadBackend, primaryKey []protoreflect.Value, value []byte, message proto.Message) error
+	readValueFromIndexKey(context ReadBackend, primaryKey []protoreflect.Value, value []byte, message proto.Message) error
 }
 
 // UniqueIndex defines an unique index on a table.
 type UniqueIndex interface {
 	Index
 
-	// Has returns true if the keyValues are present in the store for this index.
-	Has(store kvstore.ReadBackend, keyValues []protoreflect.Value) (found bool, err error)
+	// Has returns true if the key values are present in the store for this index.
+	Has(context context.Context, keyValues ...interface{}) (found bool, err error)
 
-	// Get retrieves the message if one exists in the store for the provided keyValues.
-	Get(store kvstore.ReadBackend, keyValues []protoreflect.Value, message proto.Message) (found bool, err error)
+	// Get retrieves the message if one exists for the provided key values.
+	Get(context context.Context, message proto.Message, keyValues ...interface{}) (found bool, err error)
+
+	// DeleteByKey deletes the message if one exists in for the provided key values.
+	DeleteByKey(context context.Context, keyValues ...interface{}) error
 }
 
 // IteratorOptions are options for creating an iterator.

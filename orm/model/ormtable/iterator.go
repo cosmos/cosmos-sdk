@@ -41,7 +41,7 @@ type Iterator interface {
 // Cursor defines the cursor type.
 type Cursor []byte
 
-func prefixIterator(iteratorStore kvstore.Reader, store kvstore.ReadBackend, index concreteIndex, prefix []byte, options IteratorOptions) (Iterator, error) {
+func prefixIterator(iteratorStore kvstore.Reader, context ReadBackend, index concreteIndex, prefix []byte, options IteratorOptions) (Iterator, error) {
 	if !options.Reverse {
 		var start []byte
 		if len(options.Cursor) != 0 {
@@ -57,7 +57,7 @@ func prefixIterator(iteratorStore kvstore.Reader, store kvstore.ReadBackend, ind
 		}
 		return &indexIterator{
 			index:    index,
-			store:    store,
+			store:    context,
 			iterator: it,
 			started:  false,
 		}, nil
@@ -76,7 +76,7 @@ func prefixIterator(iteratorStore kvstore.Reader, store kvstore.ReadBackend, ind
 
 		return &indexIterator{
 			index:    index,
-			store:    store,
+			store:    context,
 			iterator: it,
 			started:  false,
 		}, nil
@@ -85,7 +85,7 @@ func prefixIterator(iteratorStore kvstore.Reader, store kvstore.ReadBackend, ind
 
 // NOTE: fullEndKey indicates whether the end key contained all the fields of the key,
 // if it did then we need to use inclusive end bytes, otherwise we prefix the end bytes
-func rangeIterator(iteratorStore kvstore.Reader, store kvstore.ReadBackend, index concreteIndex, start, end []byte, fullEndKey bool, options IteratorOptions) (Iterator, error) {
+func rangeIterator(iteratorStore kvstore.Reader, context ReadBackend, index concreteIndex, start, end []byte, fullEndKey bool, options IteratorOptions) (Iterator, error) {
 	if !options.Reverse {
 		if len(options.Cursor) != 0 {
 			start = append(options.Cursor, 0)
@@ -103,7 +103,7 @@ func rangeIterator(iteratorStore kvstore.Reader, store kvstore.ReadBackend, inde
 		}
 		return &indexIterator{
 			index:    index,
-			store:    store,
+			store:    context,
 			iterator: it,
 			started:  false,
 		}, nil
@@ -124,7 +124,7 @@ func rangeIterator(iteratorStore kvstore.Reader, store kvstore.ReadBackend, inde
 
 		return &indexIterator{
 			index:    index,
-			store:    store,
+			store:    context,
 			iterator: it,
 			started:  false,
 		}, nil
@@ -133,7 +133,7 @@ func rangeIterator(iteratorStore kvstore.Reader, store kvstore.ReadBackend, inde
 
 type indexIterator struct {
 	index    concreteIndex
-	store    kvstore.ReadBackend
+	store    ReadBackend
 	iterator kvstore.Iterator
 
 	indexValues []protoreflect.Value

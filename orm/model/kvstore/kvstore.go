@@ -2,8 +2,6 @@ package kvstore
 
 import (
 	dbm "github.com/tendermint/tm-db"
-
-	"github.com/cosmos/cosmos-sdk/orm/model/ormhooks"
 )
 
 // Reader is an interface for readonly access to a kv-store.
@@ -53,34 +51,4 @@ type Writer interface {
 type Store interface {
 	Reader
 	Writer
-}
-
-// ReadBackend is the kv-store backend that the ORM uses for readonly operations.
-type ReadBackend interface {
-	CommitmentStoreReader() Reader
-	IndexStoreReader() Reader
-}
-
-// Backend is the kv-store backend that the ORM uses for state mutations.
-//
-// It is primarily a wrapper around two stores - an index store
-// which does not need to be back by a merkle-tree and a commitment store
-// which should be backed by a merkle-tree if possible. This abstraction allows
-// the ORM access the two stores as a single data layer, storing all secondary
-// index data in the index layer for efficiency and only storing primary records
-// in the commitment store.
-//
-// Backend can optionally contain hooks to listen to ORM operations directly.
-type Backend interface {
-	ReadBackend
-
-	// CommitmentStore returns the merklized commitment store.
-	CommitmentStore() Store
-
-	// IndexStore returns the index store if a separate one exists,
-	// otherwise it the commitment store.
-	IndexStore() Store
-
-	// ORMHooks returns a Hooks instance or nil.
-	ORMHooks() ormhooks.Hooks
 }

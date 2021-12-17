@@ -1,6 +1,8 @@
 package ormtable
 
 import (
+	"context"
+
 	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 
@@ -10,28 +12,34 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 )
 
-// IndexKeyIndex implements Index for a regular IndexKey.
-type IndexKeyIndex struct {
+// indexKeyIndex implements Index for a regular IndexKey.
+type indexKeyIndex struct {
 	*ormkv.IndexKeyCodec
-	primaryKey *PrimaryKeyIndex
+	primaryKey     *primaryKeyIndex
+	getReadBackend func(context.Context) (ReadBackend, error)
 }
 
-// NewIndexKeyIndex returns a new IndexKeyIndex.
-func NewIndexKeyIndex(indexKeyCodec *ormkv.IndexKeyCodec, primaryKey *PrimaryKeyIndex) *IndexKeyIndex {
-	return &IndexKeyIndex{IndexKeyCodec: indexKeyCodec, primaryKey: primaryKey}
-}
+func (s indexKeyIndex) PrefixIterator(context context.Context, prefix []protoreflect.Value, options IteratorOptions) (Iterator, error) {
+	backend, err := s.getReadBackend(context)
+	if err != nil {
+		return nil, err
+	}
 
-func (s IndexKeyIndex) PrefixIterator(store kvstore.ReadBackend, prefix []protoreflect.Value, options IteratorOptions) (Iterator, error) {
 	prefixBz, err := s.EncodeKey(prefix)
 	if err != nil {
 		return nil, err
 	}
 
-	return prefixIterator(store.IndexStoreReader(), store, s, prefixBz, options)
+	return prefixIterator(backend.IndexStoreReader(), backend, s, prefixBz, options)
 }
 
-func (s IndexKeyIndex) RangeIterator(store kvstore.ReadBackend, start, end []protoreflect.Value, options IteratorOptions) (Iterator, error) {
-	err := s.CheckValidRangeIterationKeys(start, end)
+func (s indexKeyIndex) RangeIterator(context context.Context, start, end []protoreflect.Value, options IteratorOptions) (Iterator, error) {
+	backend, err := s.getReadBackend(context)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.CheckValidRangeIterationKeys(start, end)
 	if err != nil {
 		return nil, err
 	}
@@ -48,15 +56,15 @@ func (s IndexKeyIndex) RangeIterator(store kvstore.ReadBackend, start, end []pro
 
 	fullEndKey := len(s.GetFieldNames()) == len(end)
 
-	return rangeIterator(store.IndexStoreReader(), store, s, startBz, endBz, fullEndKey, options)
+	return rangeIterator(backend.IndexStoreReader(), backend, s, startBz, endBz, fullEndKey, options)
 }
 
-var _ indexer = &IndexKeyIndex{}
-var _ Index = &IndexKeyIndex{}
+var _ indexer = &indexKeyIndex{}
+var _ Index = &indexKeyIndex{}
 
-func (s IndexKeyIndex) doNotImplement() {}
+func (s indexKeyIndex) doNotImplement() {}
 
-func (s IndexKeyIndex) onInsert(store kvstore.Writer, message protoreflect.Message) error {
+func (s indexKeyIndex) onInsert(store kvstore.Writer, message protoreflect.Message) error {
 	k, v, err := s.EncodeKVFromMessage(message)
 	if err != nil {
 		return err
@@ -64,7 +72,7 @@ func (s IndexKeyIndex) onInsert(store kvstore.Writer, message protoreflect.Messa
 	return store.Set(k, v)
 }
 
-func (s IndexKeyIndex) onUpdate(store kvstore.Writer, new, existing protoreflect.Message) error {
+func (s indexKeyIndex) onUpdate(store kvstore.Writer, new, existing protoreflect.Message) error {
 	newValues := s.GetKeyValues(new)
 	existingValues := s.GetKeyValues(existing)
 	if s.CompareKeys(newValues, existingValues) == 0 {
@@ -87,7 +95,7 @@ func (s IndexKeyIndex) onUpdate(store kvstore.Writer, new, existing protoreflect
 	return store.Set(newKey, []byte{})
 }
 
-func (s IndexKeyIndex) onDelete(store kvstore.Writer, message protoreflect.Message) error {
+func (s indexKeyIndex) onDelete(store kvstore.Writer, message protoreflect.Message) error {
 	_, key, err := s.EncodeKeyFromMessage(message)
 	if err != nil {
 		return err
@@ -95,8 +103,8 @@ func (s IndexKeyIndex) onDelete(store kvstore.Writer, message protoreflect.Messa
 	return store.Delete(key)
 }
 
-func (s IndexKeyIndex) readValueFromIndexKey(store kvstore.ReadBackend, primaryKey []protoreflect.Value, _ []byte, message proto.Message) error {
-	found, err := s.primaryKey.Get(store, primaryKey, message)
+func (s indexKeyIndex) readValueFromIndexKey(backend ReadBackend, primaryKey []protoreflect.Value, _ []byte, message proto.Message) error {
+	found, err := s.primaryKey.get(backend, message, primaryKey)
 	if err != nil {
 		return err
 	}

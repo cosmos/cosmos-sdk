@@ -2,6 +2,7 @@ package ormtable
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"encoding/json"
 	"io"
@@ -9,19 +10,16 @@ import (
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // tableImpl implements Table.
 type tableImpl struct {
-	*PrimaryKeyIndex
-	indexers              []indexer
+	*primaryKeyIndex
 	indexes               []Index
 	indexesByFields       map[FieldNames]concreteIndex
 	uniqueIndexesByFields map[FieldNames]UniqueIndex
@@ -32,13 +30,40 @@ type tableImpl struct {
 	customJSONValidator   func(message proto.Message) error
 }
 
-func (t tableImpl) Save(store kvstore.Backend, message proto.Message, mode SaveMode) error {
-	writer := newBatchIndexCommitmentWriter(store)
+func (t tableImpl) Save(ctx context.Context, message proto.Message) error {
+	backend, err := t.getBackend(ctx)
+	if err != nil {
+		return err
+	}
+
+	return t.save(backend, message, saveModeDefault)
+}
+
+func (t tableImpl) Insert(ctx context.Context, message proto.Message) error {
+	backend, err := t.getBackend(ctx)
+	if err != nil {
+		return err
+	}
+
+	return t.save(backend, message, saveModeInsert)
+}
+
+func (t tableImpl) Update(ctx context.Context, message proto.Message) error {
+	backend, err := t.getBackend(ctx)
+	if err != nil {
+		return err
+	}
+
+	return t.save(backend, message, saveModeUpdate)
+}
+
+func (t tableImpl) save(backend Backend, message proto.Message, mode saveMode) error {
+	writer := newBatchIndexCommitmentWriter(backend)
 	defer writer.Close()
 	return t.doSave(writer, message, mode)
 }
 
-func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, message proto.Message, mode SaveMode) error {
+func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, message proto.Message, mode saveMode) error {
 	mref := message.ProtoReflect()
 	pkValues, pk, err := t.EncodeKeyFromMessage(mref)
 	if err != nil {
@@ -46,28 +71,28 @@ func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, message proto.Mess
 	}
 
 	existing := mref.New().Interface()
-	haveExisting, err := t.GetByKeyBytes(writer, pk, pkValues, existing)
+	haveExisting, err := t.getByKeyBytes(writer, pk, pkValues, existing)
 	if err != nil {
 		return err
 	}
 
 	if haveExisting {
-		if mode == SAVE_MODE_INSERT {
+		if mode == saveModeInsert {
 			return sdkerrors.Wrapf(ormerrors.PrimaryKeyConstraintViolation, "%q:%+v", mref.Descriptor().FullName(), pkValues)
 		}
 
-		if hooks := writer.ORMHooks(); hooks != nil {
+		if hooks := writer.Hooks(); hooks != nil {
 			err = hooks.OnUpdate(existing, message)
 			if err != nil {
 				return err
 			}
 		}
 	} else {
-		if mode == SAVE_MODE_UPDATE {
+		if mode == saveModeUpdate {
 			return ormerrors.NotFoundOnUpdate.Wrapf("%q", mref.Descriptor().FullName())
 		}
 
-		if hooks := writer.ORMHooks(); hooks != nil {
+		if hooks := writer.Hooks(); hooks != nil {
 			err = hooks.OnInsert(message)
 			if err != nil {
 				return err
@@ -111,53 +136,9 @@ func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, message proto.Mess
 	return writer.Write()
 }
 
-func (t tableImpl) Delete(store kvstore.Backend, primaryKey []protoreflect.Value) error {
-	pk, err := t.EncodeKey(primaryKey)
-	if err != nil {
-		return err
-	}
-
-	msg := t.MessageType().New().Interface()
-	found, err := t.GetByKeyBytes(store, pk, primaryKey, msg)
-	if err != nil {
-		return err
-	}
-
-	if !found {
-		return nil
-	}
-
-	if hooks := store.ORMHooks(); hooks != nil {
-		err = hooks.OnDelete(msg)
-		if err != nil {
-			return err
-		}
-	}
-
-	// delete object
-	writer := newBatchIndexCommitmentWriter(store)
-	defer writer.Close()
-	err = writer.CommitmentStore().Delete(pk)
-	if err != nil {
-		return err
-	}
-
-	// clear indexes
-	mref := msg.ProtoReflect()
-	indexStoreWriter := writer.IndexStore()
-	for _, idx := range t.indexers {
-		err := idx.onDelete(indexStoreWriter, mref)
-		if err != nil {
-			return err
-		}
-	}
-
-	return writer.Write()
-}
-
-func (t tableImpl) DeleteMessage(store kvstore.Backend, message proto.Message) error {
+func (t tableImpl) Delete(context context.Context, message proto.Message) error {
 	pk := t.PrimaryKeyCodec.GetKeyValues(message.ProtoReflect())
-	return t.Delete(store, pk)
+	return t.DeleteByKey(context, pk)
 }
 
 func (t tableImpl) GetIndex(fields FieldNames) Index {
@@ -278,29 +259,34 @@ func (t tableImpl) ValidateJSON(reader io.Reader) error {
 	})
 }
 
-func (t tableImpl) ImportJSON(store kvstore.Backend, reader io.Reader) error {
+func (t tableImpl) ImportJSON(ctx context.Context, reader io.Reader) error {
+	backend, err := t.getBackend(ctx)
+	if err != nil {
+		return err
+	}
+
 	return t.decodeJson(reader, func(message proto.Message) error {
-		return t.Save(store, message, SAVE_MODE_DEFAULT)
+		return t.save(backend, message, saveModeDefault)
 	})
 }
 
-func (t tableImpl) ExportJSON(store kvstore.ReadBackend, writer io.Writer) error {
+func (t tableImpl) ExportJSON(context context.Context, writer io.Writer) error {
 	_, err := writer.Write([]byte("["))
 	if err != nil {
 		return err
 	}
 
-	return t.doExportJSON(store, writer)
+	return t.doExportJSON(context, writer)
 }
 
-func (t tableImpl) doExportJSON(store kvstore.ReadBackend, writer io.Writer) error {
+func (t tableImpl) doExportJSON(ctx context.Context, writer io.Writer) error {
 	marshalOptions := protojson.MarshalOptions{
 		UseProtoNames: true,
 		Resolver:      t.typeResolver,
 	}
 
 	var err error
-	it, _ := t.PrefixIterator(store, nil, IteratorOptions{})
+	it, _ := t.PrefixIterator(ctx, nil, IteratorOptions{})
 	start := true
 	for {
 		found := it.Next()
@@ -380,3 +366,11 @@ func (t tableImpl) ID() uint32 {
 }
 
 var _ Table = &tableImpl{}
+
+type saveMode int
+
+const (
+	saveModeDefault saveMode = iota
+	saveModeInsert
+	saveModeUpdate
+)

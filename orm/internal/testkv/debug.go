@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
+	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 )
 
 // Debugger is an interface that handles debug info from the debug store wrapper.
@@ -20,12 +21,12 @@ type Debugger interface {
 }
 
 // NewDebugBackend wraps both stores from a Backend with a debugger.
-func NewDebugBackend(store kvstore.Backend, debugger Debugger) kvstore.Backend {
-	return &backend{
-		commitment: NewDebugStore(store.CommitmentStore(), debugger, "commit"),
-		index:      NewDebugStore(store.IndexStore(), debugger, "index"),
-		hooks:      debugHooks{debugger},
-	}
+func NewDebugBackend(backend ormtable.Backend, debugger Debugger) ormtable.Backend {
+	return ormtable.NewBackend(ormtable.BackendOptions{
+		CommitmentStore: NewDebugStore(backend.CommitmentStore(), debugger, "commit"),
+		IndexStore:      NewDebugStore(backend.IndexStore(), debugger, "index"),
+		Hooks:           debugHooks{debugger: debugger, hooks: backend.Hooks()},
+	})
 }
 
 type debugStore struct {
@@ -205,6 +206,7 @@ func (d *EntryCodecDebugger) Decode(key, value []byte) string {
 
 type debugHooks struct {
 	debugger Debugger
+	hooks    ormtable.Hooks
 }
 
 func (d debugHooks) OnInsert(message proto.Message) error {
@@ -213,6 +215,9 @@ func (d debugHooks) OnInsert(message proto.Message) error {
 		message.ProtoReflect().Descriptor().FullName(),
 		message,
 	))
+	if d.hooks != nil {
+		return d.hooks.OnInsert(message)
+	}
 	return nil
 }
 
@@ -223,6 +228,9 @@ func (d debugHooks) OnUpdate(existing, new proto.Message) error {
 		existing,
 		new,
 	))
+	if d.hooks != nil {
+		return d.hooks.OnUpdate(existing, new)
+	}
 	return nil
 }
 
@@ -232,5 +240,8 @@ func (d debugHooks) OnDelete(message proto.Message) error {
 		message.ProtoReflect().Descriptor().FullName(),
 		message,
 	))
+	if d.hooks != nil {
+		return d.hooks.OnDelete(message)
+	}
 	return nil
 }

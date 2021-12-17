@@ -1,12 +1,11 @@
 package ormtable
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 
 	"google.golang.org/protobuf/encoding/protojson"
-
-	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 )
 
 // singleton implements a Table instance for singletons.
@@ -42,7 +41,12 @@ func (t singleton) ValidateJSON(reader io.Reader) error {
 	}
 }
 
-func (t singleton) ImportJSON(store kvstore.Backend, reader io.Reader) error {
+func (t singleton) ImportJSON(ctx context.Context, reader io.Reader) error {
+	backend, err := t.getBackend(ctx)
+	if err != nil {
+		return err
+	}
+
 	bz, err := io.ReadAll(reader)
 	if err != nil {
 		return err
@@ -54,12 +58,12 @@ func (t singleton) ImportJSON(store kvstore.Backend, reader io.Reader) error {
 		return err
 	}
 
-	return t.Save(store, msg, SAVE_MODE_DEFAULT)
+	return t.save(backend, msg, saveModeDefault)
 }
 
-func (t singleton) ExportJSON(store kvstore.ReadBackend, writer io.Writer) error {
+func (t singleton) ExportJSON(ctx context.Context, writer io.Writer) error {
 	msg := t.MessageType().New().Interface()
-	found, err := t.Get(store, nil, msg)
+	found, err := t.Get(ctx, msg)
 	if err != nil {
 		return err
 	}

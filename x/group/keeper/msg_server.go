@@ -404,11 +404,6 @@ func (k Keeper) CreateProposal(goCtx context.Context, req *group.MsgCreatePropos
 		return nil, err
 	}
 
-	// blockTime, err := gogotypes.TimestampProto(ctx.BlockTime())
-	if err != nil {
-		return nil, sdkerrors.Wrap(err, "block time conversion")
-	}
-
 	policy := account.GetDecisionPolicy()
 	if policy == nil {
 		return nil, sdkerrors.Wrap(errors.ErrEmpty, "nil policy")

@@ -21,8 +21,6 @@ import (
 // TODO: This could be used as params once x/params is upgraded to use protobuf
 const MaxMetadataLength = 255
 
-type ID uint64
-
 type DecisionPolicyResult struct {
 	Allow bool
 	Final bool

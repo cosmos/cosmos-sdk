@@ -1,4 +1,4 @@
-module errors
+module github.com/cosmos/cosmos-sdk/errors
 
 go 1.17
 

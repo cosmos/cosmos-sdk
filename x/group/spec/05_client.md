@@ -42,7 +42,7 @@ version: "1"
 
 #### group-account-info
 
-The `group-account-info` command allows users to query  for group account info by group account address
+The `group-account-info` command allows users to query for group account info by group account address.
 
 ```bash
 simd query group group-account-info [group-account] [flags]
@@ -134,18 +134,18 @@ pagination:
   total: "2"
 ```
 
-#### group-accounts-by-admin
+#### group-accounts-by-group
 
-The `group-accounts-by-admin` command allows users to query for group accounts by admin account address with pagination flags.
+The `group-accounts-by-group` command allows users to query for group accounts by group id with pagination flags.
 
 ```bash
-simd query group group-accounts-by-admin [admin] [flags]
+simd query group group-accounts-by-group [group-id] [flags]
 ```
 
 Example:
 
 ```bash
-simd query group group-accounts-by-admin cosmos1..
+simd query group group-accounts-by-group 1 
 ```
 
 Example Output:
@@ -175,18 +175,18 @@ pagination:
   total: "2"
 ```
 
-#### group-accounts-by-group
+#### group-accounts-by-admin
 
-The `group-accounts-by-group` command allows users to query for group accounts by group id with pagination flags.
+The `group-accounts-by-admin` command allows users to query for group accounts by admin account address with pagination flags.
 
 ```bash
-simd query group group-accounts-by-group [group-id] [flags]
+simd query group group-accounts-by-admin [admin] [flags]
 ```
 
 Example:
 
 ```bash
-simd query group group-accounts-by-group 1 
+simd query group group-accounts-by-admin cosmos1..
 ```
 
 Example Output:
@@ -549,4 +549,880 @@ Example:
 
 ```bash
 simd tx group exec 1
+```
+
+## gRPC
+
+A user can query the `group` module using gRPC endpoints.
+
+### GroupInfo
+
+The `GroupInfo` endpoint allows users to query for group info by given group id.
+
+```bash
+cosmos.group.v1beta1.Query/GroupInfo
+```
+
+Example: 
+
+```bash
+grpcurl -plaintext \
+    -d '{"group_id":1}' localhost:9090 cosmos.group.v1beta1.Query/GroupInfo
+```
+
+Example Output:
+
+```bash
+{
+  "info": {
+    "groupId": "1",
+    "admin": "cosmos1..",
+    "metadata": "AQ==",
+    "version": "1",
+    "totalWeight": "3"
+  }
+}
+```
+
+### GroupAccountInfo
+
+The `GroupAccountInfo` endpoint allows users to query for group account info by group account address.
+
+```bash
+cosmos.group.v1beta1.Query/GroupAccountInfo
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    -d '{"address":"cosmos1.."}'  localhost:9090 cosmos.group.v1beta1.Query/GroupAccountInfo
+```
+
+Example Output:
+
+```bash
+{
+  "info": {
+    "address": "cosmos1..",
+    "groupId": "1",
+    "admin": "cosmos1..",
+    "version": "1",
+    "decisionPolicy": {"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy","threshold":"1","timeout":"600s"},
+  }
+}
+```
+
+### GroupMembers
+
+The `GroupMembers` endpoint allows users to query for group members by group id with pagination flags.
+
+```bash
+cosmos.group.v1beta1.Query/GroupMembers
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    -d '{"group_id":"1"}'  localhost:9090 cosmos.group.v1beta1.Query/GroupMembers
+```
+
+Example Output:
+
+```bash
+{
+  "members": [
+    {
+      "groupId": "1",
+      "member": {
+        "address": "cosmos1..",
+        "weight": "1"
+      }
+    },
+    {
+      "groupId": "1",
+      "member": {
+        "address": "cosmos1..",
+        "weight": "2"
+      }
+    }
+  ],
+  "pagination": {
+    "total": "2"
+  }
+}
+```
+
+### GroupsByAdmin
+
+The `GroupsByAdmin` endpoint allows users to query for groups by admin account address with pagination flags.
+
+```bash
+cosmos.group.v1beta1.Query/GroupsByAdmin
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    -d '{"admin":"cosmos1.."}'  localhost:9090 cosmos.group.v1beta1.Query/GroupsByAdmin
+```
+
+Example Output:
+
+```bash
+{
+  "groups": [
+    {
+      "groupId": "1",
+      "admin": "cosmos1..",
+      "metadata": "AQ==",
+      "version": "1",
+      "totalWeight": "3"
+    },
+    {
+      "groupId": "2",
+      "admin": "cosmos1..",
+      "metadata": "AQ==",
+      "version": "1",
+      "totalWeight": "3"
+    }
+  ],
+  "pagination": {
+    "total": "2"
+  }
+}
+```
+
+### GroupAccountsByGroup
+
+The `GroupAccountsByGroup` endpoint allows users to query for group accounts by group id with pagination flags.
+
+```bash
+cosmos.group.v1beta1.Query/GroupAccountsByGroup
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    -d '{"group_id":"1"}'  localhost:9090 cosmos.group.v1beta1.Query/GroupAccountsByGroup
+```
+
+Example Output:
+
+```bash
+{
+  "groupAccounts": [
+    {
+      "address": "cosmos1..",
+      "groupId": "1",
+      "admin": "cosmos1..",
+      "version": "1",
+      "decisionPolicy": {"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy","threshold":"1","timeout":"600s"},
+    },
+    {
+      "address": "cosmos1..",
+      "groupId": "1",
+      "admin": "cosmos1..",
+      "version": "1",
+      "decisionPolicy": {"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy","threshold":"1","timeout":"600s"},
+    }
+  ],
+  "pagination": {
+    "total": "2"
+  }
+}
+```
+
+### GroupAccountsByAdmin
+
+The `GroupAccountsByAdmin` endpoint allows users to query for group accounts by admin account address with pagination flags.
+
+```bash
+cosmos.group.v1beta1.Query/GroupAccountsByAdmin
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    -d '{"admin":"cosmos1.."}'  localhost:9090 cosmos.group.v1beta1.Query/GroupAccountsByAdmin
+```
+
+Example Output:
+
+```bash
+{
+  "groupAccounts": [
+    {
+      "address": "cosmos1..",
+      "groupId": "1",
+      "admin": "cosmos1..",
+      "version": "1",
+      "decisionPolicy": {"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy","threshold":"1","timeout":"600s"},
+    },
+    {
+      "address": "cosmos1..",
+      "groupId": "1",
+      "admin": "cosmos1..",
+      "version": "1",
+      "decisionPolicy": {"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy","threshold":"1","timeout":"600s"},
+    }
+  ],
+  "pagination": {
+    "total": "2"
+  }
+}
+```
+
+### Proposal
+
+The `Proposal` endpoint allows users to query for proposal by id.
+
+```bash
+cosmos.group.v1beta1.Query/Proposal
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1"}'  localhost:9090 cosmos.group.v1beta1.Query/Proposal
+```
+
+Example Output:
+
+```bash
+{
+  "proposal": {
+    "proposalId": "1",
+    "address": "cosmos1..",
+    "proposers": [
+      "cosmos1.."
+    ],
+    "submittedAt": "2021-12-17T07:06:26.310638964Z",
+    "groupVersion": "1",
+    "groupAccountVersion": "1",
+    "status": "STATUS_SUBMITTED",
+    "result": "RESULT_UNFINALIZED",
+    "voteState": {
+      "yesCount": "0",
+      "noCount": "0",
+      "abstainCount": "0",
+      "vetoCount": "0"
+    },
+    "timeout": "2021-12-17T07:06:27.310638964Z",
+    "executorResult": "EXECUTOR_RESULT_NOT_RUN",
+    "msgs": [
+      {"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"stake","amount":"100000000"}],"fromAddress":"cosmos1..","toAddress":"cosmos1.."}
+    ]
+  }
+}
+```
+
+### ProposalsByGroupAccount
+
+The `ProposalsByGroupAccount` endpoint allows users to query for proposals by group account address with pagination flags.
+
+```bash
+cosmos.group.v1beta1.Query/ProposalsByGroupAccount
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    -d '{"address":"cosmos1.."}'  localhost:9090 cosmos.group.v1beta1.Query/ProposalsByGroupAccount
+```
+
+Example Output:
+
+```bash
+{
+  "proposals": [
+    {
+      "proposalId": "1",
+      "address": "cosmos1..",
+      "proposers": [
+        "cosmos1.."
+      ],
+      "submittedAt": "2021-12-17T08:03:27.099649352Z",
+      "groupVersion": "1",
+      "groupAccountVersion": "1",
+      "status": "STATUS_CLOSED",
+      "result": "RESULT_ACCEPTED",
+      "voteState": {
+        "yesCount": "1",
+        "noCount": "0",
+        "abstainCount": "0",
+        "vetoCount": "0"
+      },
+      "timeout": "2021-12-17T08:13:27.099649352Z",
+      "executorResult": "EXECUTOR_RESULT_NOT_RUN",
+      "msgs": [
+        {"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"stake","amount":"100000000"}],"fromAddress":"cosmos1..","toAddress":"cosmos1.."}
+      ]
+    }
+  ],
+  "pagination": {
+    "total": "1"
+  }
+}
+```
+
+### VoteByProposalVoter
+
+The `VoteByProposalVoter` endpoint allows users to query for vote by proposal id and voter account address.
+
+```bash
+cosmos.group.v1beta1.Query/VoteByProposalVoter
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1","voter":"cosmos1.."}'  localhost:9090 cosmos.group.v1beta1.Query/VoteByProposalVoter
+```
+
+Example Output:
+
+```bash
+{
+  "vote": {
+    "proposalId": "1",
+    "voter": "cosmos1..",
+    "choice": "CHOICE_YES",
+    "submittedAt": "2021-12-17T08:05:02.490164009Z"
+  }
+}
+```
+
+### VotesByProposal
+
+The `VotesByProposal` endpoint allows users to query for votes by proposal id with pagination flags.
+
+```bash
+cosmos.group.v1beta1.Query/VotesByProposal
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1"}'  localhost:9090 cosmos.group.v1beta1.Query/VotesByProposal
+```
+
+Example Output:
+
+```bash
+{
+  "votes": [
+    {
+      "proposalId": "1",
+      "voter": "cosmos1..",
+      "choice": "CHOICE_YES",
+      "submittedAt": "2021-12-17T08:05:02.490164009Z"
+    }
+  ],
+  "pagination": {
+    "total": "1"
+  }
+}
+```
+
+### VotesByVoter
+
+The `VotesByVoter` endpoint allows users to query for votes by voter account address with pagination flags.
+
+```bash
+cosmos.group.v1beta1.Query/VotesByVoter
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    -d '{"voter":"cosmos1.."}'  localhost:9090 cosmos.group.v1beta1.Query/VotesByVoter
+```
+
+Example Output:
+
+```bash
+{
+  "votes": [
+    {
+      "proposalId": "1",
+      "voter": "cosmos1..",
+      "choice": "CHOICE_YES",
+      "submittedAt": "2021-12-17T08:05:02.490164009Z"
+    }
+  ],
+  "pagination": {
+    "total": "1"
+  }
+}
+```
+
+## REST
+
+A user can query the `group` module using REST endpoints.
+
+### GroupInfo
+
+The `GroupInfo` endpoint allows users to query for group info by given group id.
+
+```bash
+/cosmos/group/v1beta1/group_info/{group_id}
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/group/v1beta1/group_info/1
+```
+
+Example Output:
+
+```bash
+{
+  "info": {
+    "group_id": "1",
+    "admin": "cosmos1..",
+    "metadata": "AQ==",
+    "version": "1",
+    "total_weight": "3"
+  }
+}
+```
+
+### GroupAccountInfo
+
+The `GroupAccountInfo` endpoint allows users to query for group account info by group account address.
+
+```bash
+/cosmos/group/v1beta1/group_account_info/{address}
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/group/v1beta1/group_account_info/cosmos1..
+```
+
+Example Output:
+
+```bash
+{
+  "info": {
+    "address": "cosmos1..",
+    "group_id": "1",
+    "admin": "cosmos1..",
+    "metadata": "AQ==",
+    "version": "1",
+    "decision_policy": {
+      "@type": "/cosmos.group.v1beta1.ThresholdDecisionPolicy",
+      "threshold": "1",
+      "timeout": "600s"
+    },
+  }
+}
+```
+
+### GroupMembers
+
+The `GroupMembers` endpoint allows users to query for group members by group id with pagination flags.
+
+```bash
+/cosmos/group/v1beta1/group_members/{group_id}
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/group/v1beta1/group_members/1
+```
+
+Example Output:
+
+```bash
+{
+  "members": [
+    {
+      "group_id": "1",
+      "member": {
+        "address": "cosmos1..",
+        "weight": "1",
+        "metadata": "AQ=="
+      }
+    },
+    {
+      "group_id": "1",
+      "member": {
+        "address": "cosmos1..",
+        "weight": "2",
+        "metadata": "AQ=="
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "2"
+  }
+}
+```
+
+### GroupsByAdmin
+
+The `GroupsByAdmin` endpoint allows users to query for groups by admin account address with pagination flags.
+
+```bash
+/cosmos/group/v1beta1/groups_by_admin/{admin}
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/group/v1beta1/groups_by_admin/cosmos1..
+```
+
+Example Output:
+
+```bash
+{
+  "groups": [
+    {
+      "group_id": "1",
+      "admin": "cosmos1..",
+      "metadata": "AQ==",
+      "version": "1",
+      "total_weight": "3"
+    },
+    {
+      "group_id": "2",
+      "admin": "cosmos1..",
+      "metadata": "AQ==",
+      "version": "1",
+      "total_weight": "3"
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "2"
+  }
+}
+```
+
+### GroupAccountsByGroup
+
+The `GroupAccountsByGroup` endpoint allows users to query for group accounts by group id with pagination flags.
+
+```bash
+/cosmos/group/v1beta1/group_accounts_by_group/{group_id}
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/group/v1beta1/group_accounts_by_group/1
+```
+
+Example Output:
+
+```bash
+{
+  "group_accounts": [
+    {
+      "address": "cosmos1..",
+      "group_id": "1",
+      "admin": "cosmos1..",
+      "metadata": "AQ==",
+      "version": "1",
+      "decision_policy": {
+        "@type": "/cosmos.group.v1beta1.ThresholdDecisionPolicy",
+        "threshold": "1",
+        "timeout": "600s"
+      },
+    },
+    {
+      "address": "cosmos1..",
+      "group_id": "1",
+      "admin": "cosmos1..",
+      "metadata": "AQ==",
+      "version": "1",
+      "decision_policy": {
+        "@type": "/cosmos.group.v1beta1.ThresholdDecisionPolicy",
+        "threshold": "1",
+        "timeout": "600s"
+      },
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "2"
+  }
+}
+```
+
+### GroupAccountsByAdmin
+
+The `GroupAccountsByAdmin` endpoint allows users to query for group accounts by admin account address with pagination flags.
+
+```bash
+/cosmos/group/v1beta1/group_accounts_by_admin/{admin}
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/group/v1beta1/group_accounts_by_admin/cosmos1..
+```
+
+Example Output:
+
+```bash
+{
+  "group_accounts": [
+    {
+      "address": "cosmos1..",
+      "group_id": "1",
+      "admin": "cosmos1..",
+      "metadata": "AQ==",
+      "version": "1",
+      "decision_policy": {
+        "@type": "/cosmos.group.v1beta1.ThresholdDecisionPolicy",
+        "threshold": "1",
+        "timeout": "600s"
+      },
+    },
+    {
+      "address": "cosmos1..",
+      "group_id": "1",
+      "admin": "cosmos1..",
+      "metadata": "AQ==",
+      "version": "1",
+      "decision_policy": {
+        "@type": "/cosmos.group.v1beta1.ThresholdDecisionPolicy",
+        "threshold": "1",
+        "timeout": "600s"
+      },
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "2"
+  }
+```
+
+### Proposal
+
+The `Proposal` endpoint allows users to query for proposal by id.
+
+```bash
+/cosmos/group/v1beta1/proposal/{proposal_id}
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/group/v1beta1/proposal/1
+```
+
+Example Output:
+
+```bash
+{
+  "proposal": {
+    "proposal_id": "1",
+    "address": "cosmos1..",
+    "metadata": "AQ==",
+    "proposers": [
+      "cosmos1.."
+    ],
+    "submitted_at": "2021-12-17T07:06:26.310638964Z",
+    "group_version": "1",
+    "group_account_version": "1",
+    "status": "STATUS_SUBMITTED",
+    "result": "RESULT_UNFINALIZED",
+    "vote_state": {
+      "yes_count": "0",
+      "no_count": "0",
+      "abstain_count": "0",
+      "veto_count": "0"
+    },
+    "timeout": "2021-12-17T07:06:27.310638964Z",
+    "executor_result": "EXECUTOR_RESULT_NOT_RUN",
+    "msgs": [
+      {
+        "@type": "/cosmos.bank.v1beta1.MsgSend",
+        "from_address": "cosmos1..",
+        "to_address": "cosmos1..",
+        "amount": [
+          {
+            "denom": "stake",
+            "amount": "100000000"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### ProposalsByGroupAccount
+
+The `ProposalsByGroupAccount` endpoint allows users to query for proposals by group account address with pagination flags.
+
+```bash
+/cosmos/group/v1beta1/proposals_by_group_account/{address}
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/group/v1beta1/proposals_by_group_account/cosmos1..
+```
+
+Example Output:
+
+```bash
+{
+  "proposals": [
+    {
+      "proposal_id": "1",
+      "address": "cosmos1..",
+      "metadata": "AQ==",
+      "proposers": [
+        "cosmos1.."
+      ],
+      "submitted_at": "2021-12-17T08:03:27.099649352Z",
+      "group_version": "1",
+      "group_account_version": "1",
+      "status": "STATUS_CLOSED",
+      "result": "RESULT_ACCEPTED",
+      "vote_state": {
+        "yes_count": "1",
+        "no_count": "0",
+        "abstain_count": "0",
+        "veto_count": "0"
+      },
+      "timeout": "2021-12-17T08:13:27.099649352Z",
+      "executor_result": "EXECUTOR_RESULT_NOT_RUN",
+      "msgs": [
+        {
+          "@type": "/cosmos.bank.v1beta1.MsgSend",
+          "from_address": "cosmos1..",
+          "to_address": "cosmos1..",
+          "amount": [
+            {
+              "denom": "stake",
+              "amount": "100000000"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
+}
+```
+
+### VoteByProposalVoter
+
+The `VoteByProposalVoter` endpoint allows users to query for vote by proposal id and voter account address.
+
+```bash
+/cosmos/group/v1beta1/vote_by_proposal_voter/{proposal_id}/{voter}
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/group/v1beta1/vote_by_proposal_voter/1/cosmos1..
+```
+
+Example Output:
+
+```bash
+{
+  "vote": {
+    "proposal_id": "1",
+    "voter": "cosmos1..",
+    "choice": "CHOICE_YES",
+    "metadata": "AQ==",
+    "submitted_at": "2021-12-17T08:05:02.490164009Z"
+  }
+}
+```
+
+### VotesByProposal
+
+The `VotesByProposal` endpoint allows users to query for votes by proposal id with pagination flags.
+
+```bash
+/cosmos/group/v1beta1/votes_by_proposal/{proposal_id}
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/group/v1beta1/votes_by_proposal/1
+```
+
+Example Output:
+
+```bash
+{
+  "votes": [
+    {
+      "proposal_id": "1",
+      "voter": "cosmos1..",
+      "choice": "CHOICE_YES",
+      "metadata": "AQ==",
+      "submitted_at": "2021-12-17T08:05:02.490164009Z"
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
+}
+```
+
+### VotesByVoter
+
+The `VotesByVoter` endpoint allows users to query for votes by voter account address with pagination flags.
+
+```bash
+/cosmos/group/v1beta1/votes_by_voter/{voter}
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/group/v1beta1/votes_by_voter/cosmos1..
+```
+
+Example Output:
+
+```bash
+{
+  "votes": [
+    {
+      "proposal_id": "1",
+      "voter": "cosmos1..",
+      "choice": "CHOICE_YES",
+      "metadata": "AQ==",
+      "submitted_at": "2021-12-17T08:05:02.490164009Z"
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
+}
 ```

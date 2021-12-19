@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -785,7 +786,137 @@ func (k Keeper) Delegate(
 	return newShares, nil
 }
 
-// Unbond unbonds a particular delegation and perform associated store operations.
+// TransferDelegation changes the ownership of at most the desired number of shares.
+// Returns the actual number of shares transferred. Will also transfer redelegation
+// entries to ensure that all redelegations are matched by sufficient shares.
+func (k Keeper) TransferDelegation(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, valAddr sdk.ValAddress, wantShares sdk.Dec) sdk.Dec {
+	transferred := sdk.ZeroDec()
+
+	// sanity checks
+	if !wantShares.IsPositive() {
+		return transferred
+	}
+	validator, found := k.GetValidator(ctx, valAddr)
+	if !found {
+		return transferred
+	}
+	delFrom, found := k.GetDelegation(ctx, fromAddr, valAddr)
+	if !found {
+		return transferred
+	}
+
+	// compute shares to transfer, amount left behind
+	transferred = delFrom.Shares
+	if transferred.GT(wantShares) {
+		transferred = wantShares
+	}
+	remaining := delFrom.Shares.Sub(transferred)
+
+	// Update or create the delTo object, calling appropriate hooks
+	delTo, found := k.GetDelegation(ctx, toAddr, validator.GetOperator())
+	if !found {
+		delTo = types.NewDelegation(toAddr, validator.GetOperator(), sdk.ZeroDec())
+	}
+	if found {
+		k.BeforeDelegationSharesModified(ctx, toAddr, validator.GetOperator())
+	} else {
+		k.BeforeDelegationCreated(ctx, toAddr, validator.GetOperator())
+	}
+	delTo.Shares = delTo.Shares.Add(transferred)
+	k.SetDelegation(ctx, delTo)
+	k.AfterDelegationModified(ctx, toAddr, valAddr) // XXX cross check vs Delegate() code
+
+	// Update source delegation
+	if remaining.IsZero() {
+		k.BeforeDelegationRemoved(ctx, fromAddr, valAddr)
+		k.RemoveDelegation(ctx, delFrom)
+	} else {
+		k.BeforeDelegationSharesModified(ctx, fromAddr, valAddr)
+		delFrom.Shares = remaining
+		k.SetDelegation(ctx, delFrom)
+		k.AfterDelegationModified(ctx, fromAddr, valAddr) // XXX cross check vs Delegate() code
+	}
+
+	// XXX check for max redelegation entries at dst
+
+	// If there are not enough remaining shares to be responsible for
+	// the redelegations, transfer some redelegations.
+	// For instance, if the original delegation of 300 shares to validator A
+	// had redelegations for 100 shares each from validators B, C, and D,
+	// and if we're transferring 175 shares, then we might keep the redelegation
+	// from B, transfer the one from D, and split the redelegation from C
+	// keeping a liability for 25 shares and transferring one for 75 shares.
+	// Of course, the redelegations themselves can have multiple entries for
+	// different timestamps, so we're actually working at a finer granularity.
+	redelegations := k.GetRedelegations(ctx, fromAddr, math.MaxUint16)
+	for _, redelegation := range redelegations {
+		// There's no redelegation index by delegator and dstVal or vice-versa.
+		// The minimum cardinality is to look up by delegator, so scan and skip.
+		if redelegation.ValidatorDstAddress != valAddr.String() {
+			continue
+		}
+		redelegationModified := false
+		entriesRemaining := false
+		for i := 0; i < len(redelegation.Entries); i++ {
+			entry := redelegation.Entries[i]
+
+			// Partition SharesDst between keeping and sending
+			sharesToKeep := entry.SharesDst
+			sharesToSend := sdk.ZeroDec()
+			if entry.SharesDst.GT(remaining) {
+				sharesToKeep = remaining
+				sharesToSend = entry.SharesDst.Sub(sharesToKeep)
+			}
+			remaining = remaining.Sub(sharesToKeep) // fewer local shares available to cover liability
+
+			if sharesToSend.IsZero() {
+				// Leave the entry here
+				entriesRemaining = true
+				continue
+			}
+			if sharesToKeep.IsZero() {
+				// Transfer the whole entry, delete locally
+				toRed := k.SetRedelegationEntry(
+					ctx, toAddr, sdk.ValAddress(redelegation.ValidatorSrcAddress),
+					sdk.ValAddress(redelegation.ValidatorDstAddress),
+					entry.CreationHeight, entry.CompletionTime, entry.InitialBalance, sdk.ZeroDec(), sharesToSend,
+				)
+				k.InsertRedelegationQueue(ctx, toRed, entry.CompletionTime)
+				(&redelegation).RemoveEntry(int64(i))
+				i--
+				// okay to leave an obsolete entry in the queue for the removed entry
+				redelegationModified = true
+			} else {
+				// Proportionally divide the entry
+				fracSending := sharesToSend.Quo(entry.SharesDst)
+				balanceToSend := fracSending.MulInt(entry.InitialBalance).TruncateInt()
+				balanceToKeep := entry.InitialBalance.Sub(balanceToSend)
+				toRed := k.SetRedelegationEntry(
+					ctx, toAddr, sdk.ValAddress(redelegation.ValidatorSrcAddress),
+					sdk.ValAddress(redelegation.ValidatorDstAddress),
+					entry.CreationHeight, entry.CompletionTime, balanceToSend, sdk.ZeroDec(), sharesToSend,
+				)
+				k.InsertRedelegationQueue(ctx, toRed, entry.CompletionTime)
+				entry.InitialBalance = balanceToKeep
+				entry.SharesDst = sharesToKeep
+				redelegation.Entries[i] = entry
+				// not modifying the completion time, so no need to change the queue
+				redelegationModified = true
+				entriesRemaining = true
+			}
+		}
+		if redelegationModified {
+			if entriesRemaining {
+				k.SetRedelegation(ctx, redelegation)
+			} else {
+				k.RemoveRedelegation(ctx, redelegation)
+			}
+		}
+	}
+	return transferred
+}
+
+// Unbond a particular delegation and perform associated store operations.
 func (k Keeper) Unbond(
 	ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares math.LegacyDec,
 ) (amount math.Int, err error) {
@@ -968,6 +1099,58 @@ func (k Keeper) Undelegate(
 	}
 
 	return completionTime, returnAmount, nil
+}
+
+// TransferUnbonding changes the ownership of UnbondingDelegation entries
+// until the desired number of tokens have changed hands. Returns the actual
+// number of tokens transferred.
+func (k Keeper) TransferUnbonding(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, valAddr sdk.ValAddress, wantAmt sdk.Int) sdk.Int {
+	transferred := sdk.ZeroInt()
+	ubdFrom, found := k.GetUnbondingDelegation(ctx, fromAddr, valAddr)
+	if !found {
+		return transferred
+	}
+	ubdFromModified := false
+
+	for i := 0; i < len(ubdFrom.Entries) && !wantAmt.IsPositive(); i++ {
+		entry := ubdFrom.Entries[i]
+		toXfer := entry.Balance
+		if toXfer.GT(wantAmt) {
+			toXfer = wantAmt
+		}
+		if toXfer.IsPositive() {
+			continue
+		}
+
+		if k.HasMaxUnbondingDelegationEntries(ctx, toAddr, valAddr) {
+			// TODO pre-compute the maximum entries we can add rather than checking each time
+			break
+		}
+		ubdTo := k.SetUnbondingDelegationEntry(ctx, toAddr, valAddr, entry.CreationHeight, entry.CompletionTime, toXfer)
+		k.InsertUBDQueue(ctx, ubdTo, entry.CompletionTime)
+
+		ubdFromModified = true
+		remaining := entry.Balance.Sub(toXfer)
+		if remaining.IsZero() {
+			ubdFrom.RemoveEntry(int64(i))
+			i--
+			continue
+		}
+		entry.Balance = remaining
+		ubdFrom.Entries[i] = entry
+
+		transferred = transferred.Add(toXfer)
+		wantAmt = wantAmt.Sub(toXfer)
+	}
+
+	if ubdFromModified {
+		if len(ubdFrom.Entries) == 0 {
+			k.RemoveUnbondingDelegation(ctx, ubdFrom)
+		} else {
+			k.SetUnbondingDelegation(ctx, ubdFrom)
+		}
+	}
+	return transferred
 }
 
 // CompleteUnbonding completes the unbonding of all mature entries in the

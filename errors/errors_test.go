@@ -103,46 +103,6 @@ func (s *errorsTestSuite) TestErrorIs() {
 			b:      nil,
 			wantIs: false,
 		},
-		// "multierr with the same error": {
-		// 	a:      ErrUnauthorized,
-		// 	b:      Append(ErrUnauthorized, ErrState),
-		// 	wantIs: true,
-		// },
-		// "multierr with random order": {
-		// 	a:      ErrUnauthorized,
-		// 	b:      Append(ErrState, ErrUnauthorized),
-		// 	wantIs: true,
-		// },
-		// "multierr with wrapped err": {
-		// 	a:      ErrUnauthorized,
-		// 	b:      Append(ErrState, Wrap(ErrUnauthorized, "test")),
-		// 	wantIs: true,
-		// },
-		// "multierr with nil error": {
-		// 	a:      ErrUnauthorized,
-		// 	b:      Append(nil, nil),
-		// 	wantIs: false,
-		// },
-		// "multierr with different error": {
-		// 	a:      ErrUnauthorized,
-		// 	b:      Append(ErrState, nil),
-		// 	wantIs: false,
-		// },
-		// "multierr from nil": {
-		// 	a:      nil,
-		// 	b:      Append(ErrState, ErrUnauthorized),
-		// 	wantIs: false,
-		// },
-		// "field error wrapper": {
-		// 	a:      ErrEmpty,
-		// 	b:      Field("name", ErrEmpty, "name is required"),
-		// 	wantIs: true,
-		// },
-		// "nil field error wrapper": {
-		// 	a:      nil,
-		// 	b:      Field("name", nil, "name is required"),
-		// 	wantIs: true,
-		// },
 	}
 	for testName, tc := range cases {
 		s.Require().Equal(tc.wantIs, tc.a.Is(tc.b), testName)
@@ -242,7 +202,7 @@ func (s *errorsTestSuite) TestWrappedUnwrapFail() {
 }
 
 func (s *errorsTestSuite) TestABCIError() {
-	s.Require().Equal("custom: tx parse error", ABCIError(RootCodespace, 2, "custom").Error())
+	s.Require().Equal("custom: tx parse error", ABCIError(testCodespace, 2, "custom").Error())
 	s.Require().Equal("custom: unknown", ABCIError("unknown", 1, "custom").Error())
 }
 
@@ -265,3 +225,37 @@ func ExampleWrapf() {
 	// 90 is smaller than 100: insufficient funds
 	// 90 is smaller than 100: insufficient funds
 }
+
+const testCodespace = "testtesttest"
+
+var (
+	ErrTxDecode                = Register(testCodespace, 2, "tx parse error")
+	ErrInvalidSequence         = Register(testCodespace, 3, "invalid sequence")
+	ErrUnauthorized            = Register(testCodespace, 4, "unauthorized")
+	ErrInsufficientFunds       = Register(testCodespace, 5, "insufficient funds")
+	ErrUnknownRequest          = Register(testCodespace, 6, "unknown request")
+	ErrInvalidAddress          = Register(testCodespace, 7, "invalid address")
+	ErrInvalidPubKey           = Register(testCodespace, 8, "invalid pubkey")
+	ErrUnknownAddress          = Register(testCodespace, 9, "unknown address")
+	ErrInvalidCoins            = Register(testCodespace, 10, "invalid coins")
+	ErrOutOfGas                = Register(testCodespace, 11, "out of gas")
+	ErrInsufficientFee         = Register(testCodespace, 13, "insufficient fee")
+	ErrTooManySignatures       = Register(testCodespace, 14, "maximum number of signatures exceeded")
+	ErrNoSignatures            = Register(testCodespace, 15, "no signatures supplied")
+	ErrJSONMarshal             = Register(testCodespace, 16, "failed to marshal JSON bytes")
+	ErrJSONUnmarshal           = Register(testCodespace, 17, "failed to unmarshal JSON bytes")
+	ErrInvalidRequest          = Register(testCodespace, 18, "invalid request")
+	ErrMempoolIsFull           = Register(testCodespace, 20, "mempool is full")
+	ErrTxTooLarge              = Register(testCodespace, 21, "tx too large")
+	ErrKeyNotFound             = Register(testCodespace, 22, "key not found")
+	ErrorInvalidSigner         = Register(testCodespace, 24, "tx intended signer does not match the given signer")
+	ErrInvalidChainID          = Register(testCodespace, 28, "invalid chain-id")
+	ErrInvalidType             = Register(testCodespace, 29, "invalid type")
+	ErrUnknownExtensionOptions = Register(testCodespace, 31, "unknown extension options")
+	ErrPackAny                 = Register(testCodespace, 33, "failed packing protobuf message to Any")
+	ErrLogic                   = Register(testCodespace, 35, "internal logic error")
+	ErrConflict                = Register(testCodespace, 36, "conflict")
+	ErrNotSupported            = Register(testCodespace, 37, "feature not supported")
+	ErrNotFound                = Register(testCodespace, 38, "not found")
+	ErrIO                      = Register(testCodespace, 39, "Internal IO error")
+)

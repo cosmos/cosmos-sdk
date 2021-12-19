@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/suite"
 	tmtime "github.com/tendermint/tendermint/libs/time"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -1408,12 +1407,7 @@ func (s *TestSuite) TestVote() {
 	s.Assert().Equal(req.Address, proposals[0].Address)
 	s.Assert().Equal(req.Metadata, proposals[0].Metadata)
 	s.Assert().Equal(req.Proposers, proposals[0].Proposers)
-
-	psubmittedAt, err := gogotypes.TimestampProto(proposals[0].SubmittedAt)
-	s.Require().NoError(err)
-	submittedAt, err := gogotypes.TimestampFromProto(psubmittedAt)
-	s.Require().NoError(err)
-	s.Assert().Equal(s.blockTime, submittedAt)
+	s.Assert().Equal(s.blockTime, proposals[0].SubmittedAt)
 
 	s.Assert().Equal(uint64(1), proposals[0].GroupVersion)
 	s.Assert().Equal(uint64(1), proposals[0].GroupAccountVersion)
@@ -1751,11 +1745,7 @@ func (s *TestSuite) TestVote() {
 			s.Assert().Equal(spec.req.Voter, loaded.Voter)
 			s.Assert().Equal(spec.req.Choice, loaded.Choice)
 			s.Assert().Equal(spec.req.Metadata, loaded.Metadata)
-			lsubmittedAt, err := gogotypes.TimestampProto(loaded.SubmittedAt)
-			s.Require().NoError(err)
-			submittedAt, err := gogotypes.TimestampFromProto(lsubmittedAt)
-			s.Require().NoError(err)
-			s.Assert().Equal(s.blockTime, submittedAt)
+			s.Assert().Equal(s.blockTime, loaded.SubmittedAt)
 
 			// query votes by proposal
 			votesByProposalRes, err := s.keeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{
@@ -1769,11 +1759,7 @@ func (s *TestSuite) TestVote() {
 			s.Assert().Equal(spec.req.Voter, vote.Voter)
 			s.Assert().Equal(spec.req.Choice, vote.Choice)
 			s.Assert().Equal(spec.req.Metadata, vote.Metadata)
-			vsubmittedAt, err := gogotypes.TimestampProto(vote.SubmittedAt)
-			s.Require().NoError(err)
-			submittedAt, err = gogotypes.TimestampFromProto(vsubmittedAt)
-			s.Require().NoError(err)
-			s.Assert().Equal(s.blockTime, submittedAt)
+			s.Assert().Equal(s.blockTime, vote.SubmittedAt)
 
 			// query votes by voter
 			voter := spec.req.Voter
@@ -1787,11 +1773,7 @@ func (s *TestSuite) TestVote() {
 			s.Assert().Equal(voter, votesByVoter[0].Voter)
 			s.Assert().Equal(spec.req.Choice, votesByVoter[0].Choice)
 			s.Assert().Equal(spec.req.Metadata, votesByVoter[0].Metadata)
-			vsubmittedAt, err = gogotypes.TimestampProto(votesByVoter[0].SubmittedAt)
-			s.Require().NoError(err)
-			submittedAt, err = gogotypes.TimestampFromProto(vsubmittedAt)
-			s.Require().NoError(err)
-			s.Assert().Equal(s.blockTime, submittedAt)
+			s.Assert().Equal(s.blockTime, votesByVoter[0].SubmittedAt)
 
 			// and proposal is updated
 			proposalRes, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{

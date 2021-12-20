@@ -52,7 +52,7 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 		},
 		"msg not contained": {
 			allowance: &feegrant.BasicAllowance{},
-			msgs:      []string{"/cosmos.feegrant.v1beta1.MsgGrantAllowance"},
+			msgs:      []string{"/cosmos.bank.v1beta1.MsgSend"},
 			accept:    false,
 		},
 		"small fee without expire": {

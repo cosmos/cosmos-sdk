@@ -21,8 +21,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
+
+// I've increased this very dramatically
+// The result is dramatically reduced disk rw usage for running nodes, as well as dramatically increased RAM consumption.
+// Likely not suited for machines with less than 128gb ram. 
 const (
-	defaultIAVLCacheSize = 50000000
+	defaultIAVLCacheSize = 100000000
 )
 
 var (

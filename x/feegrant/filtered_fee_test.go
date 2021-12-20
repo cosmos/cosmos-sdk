@@ -18,14 +18,7 @@ import (
 func TestFilteredFeeValidAllow(t *testing.T) {
 	app := simapp.Setup(t, false)
 
-	ctx := app.BaseApp.NewContext(false, ocproto.Header{})
-	badTime := ctx.BlockTime().AddDate(0, 0, -1)
-	allowace := &feegrant.BasicAllowance{
-		Expiration: &badTime,
-	}
-	require.Error(t, allowace.ValidateBasic())
-
-	ctx = app.BaseApp.NewContext(false, ocproto.Header{
+	ctx := app.BaseApp.NewContext(false, ocproto.Header{
 		Time: time.Now(),
 	})
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 10))

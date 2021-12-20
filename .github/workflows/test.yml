@@ -157,7 +157,7 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: "${{ github.sha }}-go-submodules-coverage"
-        if: env.GIT_DIFF
+        # if: env.GIT_DIFF
       - run: |
           cat ./*profile.out | grep -v "mode: atomic" >> coverage.txt
         # if: env.GIT_DIFF

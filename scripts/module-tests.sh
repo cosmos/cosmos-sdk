@@ -12,12 +12,12 @@ execute_mod_tests() {
     mod_dir=${mod_dir:2}; # remove "./" prefix
     root_dir=$(pwd);
 
-    # TODO: in the future we will need to disable it once we go into multi module setup, because
-    # we will have cross module dependencies.
-    if [ -n "$GIT_DIFF" ] && ! grep $mod_dir <<< $GIT_DIFF; then
-        echo ">>> ignoring module $mod_dir - no changes in the module";
-        return;
-    fi;
+    # # TODO: in the future we will need to disable it once we go into multi module setup, because
+    # # we will have cross module dependencies.
+    # if [ -n "$GIT_DIFF" ] && ! grep $mod_dir <<< $GIT_DIFF; then
+    #     echo ">>> ignoring module $mod_dir - no changes in the module";
+    #     return;
+    # fi;
 
     echo ">>> running $go_mod tests"
     cd $mod_dir;

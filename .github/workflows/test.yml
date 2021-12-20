@@ -64,7 +64,7 @@ jobs:
       - name: Run submodule tests and create test coverage profile.
         # GIT_DIFF is passed to the scripts
         run: bash scripts/module-tests.sh
-        if: env.GIT_DIFF
+        # if: env.GIT_DIFF
       - uses: actions/upload-artifact@v2
         with:
           name: "${{ github.sha }}-go-submodules-coverage"
@@ -160,7 +160,7 @@ jobs:
         if: env.GIT_DIFF
       - run: |
           cat ./*profile.out | grep -v "mode: atomic" >> coverage.txt
-        if: env.GIT_DIFF
+        # if: env.GIT_DIFF
       - name: filter out DONTCOVER
         run: |
           excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER')"
@@ -172,11 +172,11 @@ jobs:
             echo "Excluding ${filename} from coverage report..."
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
-        if: env.GIT_DIFF
+        # if: env.GIT_DIFF
       - uses: codecov/codecov-action@v2.1.0
         with:
           file: ./coverage.txt
-        if: env.GIT_DIFF
+        # if: env.GIT_DIFF
 
   test-race:
     runs-on: ubuntu-latest

@@ -128,7 +128,11 @@ message DelegatorStartingInfo {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
+<<<<<<< HEAD
   uint64 height = 3 [(gogoproto.moretags) = "yaml:\"creation_height\"", (gogoproto.jsontag) = "creation_height"];
+=======
+  uint64 height = 3;
+>>>>>>> 3cbc38dda (fix: remove json tag (#10598))
 }
 
 // DelegationDelegatorReward represents the properties

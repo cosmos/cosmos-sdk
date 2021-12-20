@@ -249,12 +249,3 @@ jobs:
         run: |
           ./contrib/localnet_liveness.sh 100 5 50 localhost
         if: env.GIT_DIFF
-
-  docker-build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v2
-      - name: build docker image
-        run: |
-          docker build --pull --rm -f "Dockerfile" -t simapp:latest "."

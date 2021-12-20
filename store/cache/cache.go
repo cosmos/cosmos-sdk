@@ -15,7 +15,9 @@ var (
 
 	// DefaultCommitKVStoreCacheSize defines the persistent ARC cache size for a
 	// CommitKVStoreCache.
-	DefaultCommitKVStoreCacheSize uint = 500000
+	// This is what I'm using for the write-through cache in the whisky patches. 
+	// It is at best a temporary measure but does super well when served on the rocks(db).
+	DefaultCommitKVStoreCacheSize uint = 1000000
 )
 
 type (

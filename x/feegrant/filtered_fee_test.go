@@ -149,15 +149,11 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 			ctx := app.BaseApp.NewContext(false, ocproto.Header{}).WithBlockTime(tc.blockTime)
 
 			// create grant
-			createGrant := func() feegrant.Grant {
-				var granter, grantee sdk.AccAddress
-				allowance, err := feegrant.NewAllowedMsgAllowance(tc.allowance, tc.msgs)
-				require.NoError(t, err)
-				grant, err := feegrant.NewGrant(granter, grantee, allowance)
-				require.NoError(t, err)
-				return grant
-			}
-			grant := createGrant()
+			var granter, grantee sdk.AccAddress
+			allowance, err := feegrant.NewAllowedMsgAllowance(tc.allowance, tc.msgs)
+			require.NoError(t, err)
+			grant, err := feegrant.NewGrant(granter, grantee, allowance)
+			require.NoError(t, err)
 
 			// create some msg
 			call := feegrant.MsgRevokeAllowance{
@@ -166,8 +162,6 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 			}
 
 			// now try to deduct
-			allowance, err := grant.GetGrant()
-			require.NoError(t, err)
 			removed, err := allowance.Accept(ctx, tc.fee, []sdk.Msg{&call})
 			if !tc.accept {
 				require.Error(t, err)
@@ -177,25 +171,21 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 
 			require.Equal(t, tc.remove, removed)
 			if !removed {
-				updatedGrant := func(granter, grantee sdk.AccAddress,
-					allowance feegrant.FeeAllowanceI) feegrant.Grant {
-					newGrant, err := feegrant.NewGrant(
-						granter,
-						grantee,
-						allowance)
-					require.NoError(t, err)
+				// save the new grant
+				newGrant, err := feegrant.NewGrant(
+					sdk.AccAddress(grant.Granter),
+					sdk.AccAddress(grant.Grantee),
+					allowance)
+				require.NoError(t, err)
 
-					cdc := simapp.MakeTestEncodingConfig().Codec
-					bz, err := cdc.Marshal(&newGrant)
-					require.NoError(t, err)
+				cdc := simapp.MakeTestEncodingConfig().Codec
+				bz, err := cdc.Marshal(&newGrant)
+				require.NoError(t, err)
 
-					var loaded feegrant.Grant
-					err = cdc.Unmarshal(bz, &loaded)
-					require.NoError(t, err)
-					return loaded
-				}
-				newGrant := updatedGrant(sdk.AccAddress(grant.Granter),
-					sdk.AccAddress(grant.Grantee), allowance)
+				// load the grant
+				var loadedGrant feegrant.Grant
+				err = cdc.Unmarshal(bz, &loadedGrant)
+				require.NoError(t, err)
 
 				newAllowance, err := newGrant.GetGrant()
 				require.NoError(t, err)

@@ -11,6 +11,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestFilteredFeeValidAllow(t *testing.T) {
@@ -34,6 +36,12 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 	now := ctx.BlockTime()
 	oneHour := now.Add(1 * time.Hour)
 
+	// msg we will call in the all cases
+	call := banktypes.MsgSend{
+		FromAddress: "",
+		ToAddress: "",
+		Amount: sdk.Coins{},
+	}
 	cases := map[string]struct {
 		allowance *feegrant.BasicAllowance
 		msgs      []string
@@ -47,19 +55,19 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 	}{
 		"msg contained": {
 			allowance: &feegrant.BasicAllowance{},
-			msgs:      []string{"/cosmos.feegrant.v1beta1.MsgRevokeAllowance"},
+			msgs:      []string{sdk.MsgTypeURL(&call)},
 			accept:    true,
 		},
 		"msg not contained": {
 			allowance: &feegrant.BasicAllowance{},
-			msgs:      []string{"/cosmos.bank.v1beta1.MsgSend"},
+			msgs:      []string{"/cosmos.gov.v1beta1.MsgVote"},
 			accept:    false,
 		},
 		"small fee without expire": {
 			allowance: &feegrant.BasicAllowance{
 				SpendLimit: atom,
 			},
-			msgs:    []string{"/cosmos.feegrant.v1beta1.MsgRevokeAllowance"},
+			msgs:    []string{sdk.MsgTypeURL(&call)},
 			fee:     smallAtom,
 			accept:  true,
 			remove:  false,
@@ -69,7 +77,7 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 			allowance: &feegrant.BasicAllowance{
 				SpendLimit: smallAtom,
 			},
-			msgs:   []string{"/cosmos.feegrant.v1beta1.MsgRevokeAllowance"},
+			msgs:   []string{sdk.MsgTypeURL(&call)},
 			fee:    smallAtom,
 			accept: true,
 			remove: true,
@@ -78,7 +86,7 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 			allowance: &feegrant.BasicAllowance{
 				SpendLimit: smallAtom,
 			},
-			msgs:   []string{"/cosmos.feegrant.v1beta1.MsgRevokeAllowance"},
+			msgs:   []string{sdk.MsgTypeURL(&call)},
 			fee:    eth,
 			accept: false,
 		},
@@ -87,7 +95,7 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 				SpendLimit: atom,
 				Expiration: &oneHour,
 			},
-			msgs:      []string{"/cosmos.feegrant.v1beta1.MsgRevokeAllowance"},
+			msgs:      []string{sdk.MsgTypeURL(&call)},
 			valid:     true,
 			fee:       smallAtom,
 			blockTime: now,
@@ -100,7 +108,7 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 				SpendLimit: atom,
 				Expiration: &now,
 			},
-			msgs:      []string{"/cosmos.feegrant.v1beta1.MsgRevokeAllowance"},
+			msgs:      []string{sdk.MsgTypeURL(&call)},
 			valid:     true,
 			fee:       smallAtom,
 			blockTime: oneHour,
@@ -112,7 +120,7 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 				SpendLimit: atom,
 				Expiration: &oneHour,
 			},
-			msgs:      []string{"/cosmos.feegrant.v1beta1.MsgRevokeAllowance"},
+			msgs:      []string{sdk.MsgTypeURL(&call)},
 			valid:     true,
 			fee:       bigAtom,
 			blockTime: now,
@@ -122,7 +130,7 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 			allowance: &feegrant.BasicAllowance{
 				Expiration: &oneHour,
 			},
-			msgs:      []string{"/cosmos.feegrant.v1beta1.MsgRevokeAllowance"},
+			msgs:      []string{sdk.MsgTypeURL(&call)},
 			valid:     true,
 			fee:       bigAtom,
 			blockTime: now,
@@ -132,7 +140,7 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 			allowance: &feegrant.BasicAllowance{
 				Expiration: &now,
 			},
-			msgs:      []string{"/cosmos.feegrant.v1beta1.MsgRevokeAllowance"},
+			msgs:      []string{sdk.MsgTypeURL(&call)},
 			valid:     true,
 			fee:       bigAtom,
 			blockTime: oneHour,
@@ -154,12 +162,6 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 			require.NoError(t, err)
 			grant, err := feegrant.NewGrant(granter, grantee, allowance)
 			require.NoError(t, err)
-
-			// create some msg
-			call := feegrant.MsgRevokeAllowance{
-				Granter: "",
-				Grantee: "",
-			}
 
 			// now try to deduct
 			removed, err := allowance.Accept(ctx, tc.fee, []sdk.Msg{&call})

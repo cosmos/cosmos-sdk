@@ -118,7 +118,7 @@ message SimulationResponse {
 // MsgData defines the data returned in a Result object during message
 // execution.
 message MsgData {
-  option deprecated = true;
+  option deprecated           = true;
   option (gogoproto.stringer) = true;
 
   string msg_type = 1;

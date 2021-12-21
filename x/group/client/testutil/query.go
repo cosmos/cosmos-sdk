@@ -69,6 +69,75 @@ func (s *IntegrationTestSuite) TestQueryGroupInfo() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestQueryGroupsByMembers() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+	require := s.Require()
+
+	cmd := client.QueryGroupsByAdminCmd()
+	out, err := cli.ExecTestCLICmd(clientCtx, cmd, []string{val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	require.NoError(err)
+
+	var groups group.QueryGroupsByAdminResponse
+	val.ClientCtx.Codec.MustUnmarshalJSON(out.Bytes(), &groups)
+	require.Len(groups.Groups, 1)
+
+	cmd = client.QueryGroupMembersCmd()
+	out, err = cli.ExecTestCLICmd(clientCtx, cmd, []string{fmt.Sprintf("%d",groups.Groups[0].GroupId), fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	require.NoError(err)
+
+	var members group.QueryGroupMembersResponse
+	val.ClientCtx.Codec.MustUnmarshalJSON(out.Bytes(), &members)
+	require.Len(members.Members, 1)
+
+	testCases := []struct {
+		name          string
+		args          []string
+		expectErr     bool
+		expectErrMsg  string
+		numItems int
+	}{
+		{
+			"invalid address",
+			[]string{"abcd",fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+			"invalid bech32 string",
+			0,
+		},
+		{
+			"not part of any group",
+			[]string{val.Address.String(),fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+			"",
+			0,
+		},
+		{
+			"expect one group",
+			[]string{members.Members[0].Member.Address,fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+			"",
+			1,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := client.QueryGroupsByMemberCmd()
+			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				require.Contains(out.String(), tc.expectErrMsg)
+			} else {
+				require.NoError(err, out.String())
+				var resp group.QueryGroupsByMemberResponse
+				val.ClientCtx.Codec.MustUnmarshalJSON(out.Bytes(), &resp)
+				require.Len(resp.Groups, tc.numItems)
+
+			}
+		})
+		}
+}
+
 func (s *IntegrationTestSuite) TestQueryGroupMembers() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx

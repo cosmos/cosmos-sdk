@@ -2,7 +2,7 @@ package types
 
 import (
 	"errors"
-	"fmt"
+	"math"
 	"time"
 
 	"cosmossdk.io/math"
@@ -295,34 +295,11 @@ func NewPeriodicVestingAccount(baseAcc *authtypes.BaseAccount, originalVesting s
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
 // nil is returned.
 func (pva PeriodicVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins {
-	var vestedCoins sdk.Coins
-
-	// We must handle the case where the start time for a vesting account has
-	// been set into the future or when the start of the chain is not exactly
-	// known.
-	if blockTime.Unix() <= pva.StartTime {
-		return vestedCoins
-	} else if blockTime.Unix() >= pva.EndTime {
-		return pva.OriginalVesting
+	coins := ReadSchedule(pva.StartTime, pva.EndTime, pva.VestingPeriods, pva.OriginalVesting, blockTime.Unix())
+	if coins.IsZero() {
+		return nil
 	}
-
-	// track the start time of the next period
-	currentPeriodStartTime := pva.StartTime
-
-	// for each period, if the period is over, add those coins as vested and check the next period.
-	for _, period := range pva.VestingPeriods {
-		x := blockTime.Unix() - currentPeriodStartTime
-		if x < period.Length {
-			break
-		}
-
-		vestedCoins = vestedCoins.Add(period.Amount...)
-
-		// update the start time of the next period
-		currentPeriodStartTime += period.Length
-	}
-
-	return vestedCoins
+	return coins
 }
 
 // GetVestingCoins returns the total number of vesting coins. If no coins are
@@ -517,4 +494,240 @@ func (plva PermanentLockedAccount) Validate() error {
 	}
 
 	return plva.BaseVestingAccount.Validate()
+}
+
+func (plva PermanentLockedAccount) String() string {
+	out, _ := plva.MarshalYAML()
+	return out.(string)
+}
+
+type getPK interface {
+	GetPubKey() cryptotypes.PubKey
+}
+
+func getPKString(g getPK) string {
+	if pk := g.GetPubKey(); pk != nil {
+		return pk.String()
+	}
+	return ""
+}
+
+func marshalYaml(i interface{}) (interface{}, error) {
+	bz, err := yaml.Marshal(i)
+	if err != nil {
+		return nil, err
+	}
+	return string(bz), nil
+}
+
+// True Vesting Account
+
+var _ vestexported.VestingAccount = (*TrueVestingAccount)(nil)
+var _ authtypes.GenesisAccount = (*TrueVestingAccount)(nil)
+
+// NewTrueVestingAccountRaw creates a new TrueVestingAccount object from BaseVestingAccount
+func NewTrueVestingAccountRaw(bva *BaseVestingAccount, startTime int64, lockupPeriods, vestingPeriods Periods) *TrueVestingAccount {
+	return (&TrueVestingAccount{
+		BaseVestingAccount: bva,
+		StartTime:          startTime,
+		LockupPeriods:      lockupPeriods,
+		VestingPeriods:     vestingPeriods,
+	}).UpdateCombined()
+}
+
+// NewTrueVestingAccount returns a new TrueVestingAccount
+func NewTrueVestingAccount(baseAcc *authtypes.BaseAccount, originalVesting sdk.Coins, startTime int64, lockupPeriods, vestingPeriods Periods) *TrueVestingAccount {
+	endTime := startTime
+	for _, p := range vestingPeriods {
+		endTime += p.Length
+	}
+	baseVestingAcc := &BaseVestingAccount{
+		BaseAccount:     baseAcc,
+		OriginalVesting: originalVesting,
+		EndTime:         endTime,
+	}
+
+	return (&TrueVestingAccount{
+		BaseVestingAccount: baseVestingAcc,
+		StartTime:          startTime,
+		LockupPeriods:      lockupPeriods,
+		VestingPeriods:     vestingPeriods,
+	}).UpdateCombined()
+}
+
+func (tva *TrueVestingAccount) UpdateCombined() *TrueVestingAccount {
+	// XXX validate that lockup and vesting schedules sum to OriginalVesting
+	start, end, combined := ConjunctPeriods(tva.StartTime, tva.StartTime, tva.LockupPeriods, tva.VestingPeriods)
+	tva.StartTime = start
+	tva.EndTime = end
+	tva.CombinedPeriods = combined
+	return tva
+}
+
+// GetVestedCoins returns the total number of vested coins. If no coins are vested,
+// nil is returned.
+func (tva TrueVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins {
+	// XXX consider not precomputing the combined schedule and just take the
+	// min of the lockup and vesting separately. It's likely that one or the
+	// other schedule will be nearly trivial, so there should be little overhead
+	// in recomputing the conjunction each time.
+	coins := ReadSchedule(tva.StartTime, tva.EndTime, tva.CombinedPeriods, tva.OriginalVesting, blockTime.Unix())
+	if coins.IsZero() {
+		return nil
+	}
+	return coins
+}
+
+// GetVestingCoins returns the total number of vesting coins. If no coins are
+// vesting, nil is returned.
+func (tva TrueVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins {
+	return tva.OriginalVesting.Sub(tva.GetVestedCoins(blockTime))
+}
+
+// LockedCoins returns the set of coins that are not spendable (i.e. locked),
+// defined as the vesting coins that are not delegated.
+func (tva TrueVestingAccount) LockedCoins(ctx sdk.Context) sdk.Coins {
+	return tva.BaseVestingAccount.LockedCoinsFromVesting(tva.GetVestingCoins(ctx.BlockTime()))
+}
+
+// TrackDelegation tracks a desired delegation amount by setting the appropriate
+// values for the amount of delegated vesting, delegated free, and reducing the
+// overall amount of base coins.
+func (tva *TrueVestingAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) {
+	tva.BaseVestingAccount.TrackDelegation(balance, tva.GetVestingCoins(blockTime), amount)
+}
+
+// GetStartTime returns the time when vesting starts for a periodic vesting
+// account.
+func (tva TrueVestingAccount) GetStartTime() int64 {
+	return tva.StartTime
+}
+
+// GetVestingPeriods returns vesting periods associated with periodic vesting account.
+func (tva TrueVestingAccount) GetVestingPeriods() Periods {
+	return tva.VestingPeriods
+}
+
+// Validate checks for errors on the account fields
+func (tva TrueVestingAccount) Validate() error {
+	// XXX ensure that lockup and vesting schedules both sum to OriginalVesting
+	if tva.GetStartTime() >= tva.GetEndTime() {
+		return errors.New("vesting start-time cannot be before end-time")
+	}
+	endTime := tva.StartTime
+	originalVesting := sdk.NewCoins()
+	for _, p := range tva.VestingPeriods {
+		endTime += p.Length
+		originalVesting = originalVesting.Add(p.Amount...)
+	}
+	if endTime != tva.EndTime {
+		return errors.New("vesting end time does not match length of all vesting periods")
+	}
+	if !originalVesting.IsEqual(tva.OriginalVesting) {
+		return errors.New("original vesting coins does not match the sum of all coins in vesting periods")
+	}
+
+	return tva.BaseVestingAccount.Validate()
+}
+
+func (pva TrueVestingAccount) String() string {
+	out, _ := pva.MarshalYAML()
+	return out.(string)
+}
+
+// MarshalYAML returns the YAML representation of a TrueVestingAccount.
+func (pva TrueVestingAccount) MarshalYAML() (interface{}, error) {
+	accAddr, err := sdk.AccAddressFromBech32(pva.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	out := vestingAccountYAML{
+		Address:          accAddr,
+		AccountNumber:    pva.AccountNumber,
+		PubKey:           getPKString(pva),
+		Sequence:         pva.Sequence,
+		OriginalVesting:  pva.OriginalVesting,
+		DelegatedFree:    pva.DelegatedFree,
+		DelegatedVesting: pva.DelegatedVesting,
+		EndTime:          pva.EndTime,
+		StartTime:        pva.StartTime,
+		VestingPeriods:   pva.VestingPeriods,
+	}
+	return marshalYaml(out)
+}
+
+// ComputeClawback returns an account with all future vesting events removed,
+// plus the total sum of these events. When removing the future vesting events,
+// the lockup schedule will also have to be capped to keep the total sums the same.
+// (But future unlocking events might be preserved if they unlock currently vested coins.)
+// If the amount returned is zero, then the returned account should be unchanged.
+// XXX think about what, if any, adjustments need to be made to DelegatedFree/Vesting.
+func (tva TrueVestingAccount) ComputeClawback(time int64) (TrueVestingAccount, sdk.Coins) {
+	// XXX implement
+	return tva, sdk.NewCoins()
+}
+
+// Clawback
+func (tva TrueVestingAccount) Clawback(ctx sdk.Context, dest sdk.AccAddress, ak AccountKeeper, bk BankKeeper, sk StakingKeeper) error {
+	updatedAcc, toClawBack := tva.ComputeClawback(ctx.BlockTime().Unix())
+	if toClawBack.IsZero() {
+		return nil
+	}
+	ak.SetAccount(ctx, &updatedAcc)
+	addr := updatedAcc.GetAddress()
+
+	// Now that future vesting events (and associated lockup) are removed,
+	// the balance of the account is unlocked and can be freely transferred.
+	spendable := bk.SpendableCoins(ctx, addr)
+	toXfer := coinsMin(toClawBack, spendable)
+	err := bk.SendCoins(ctx, addr, dest, toXfer)
+	if err != nil {
+		return err
+	}
+	toClawBack = toClawBack.Sub(toXfer)
+	if toClawBack.IsZero() {
+		return nil
+	}
+
+	// If we need more, transfer UnbondingDelegations.
+	bondDenom := sk.BondDenom(ctx)
+	// XXX verify that the remaining toClawBack is denominated entiry by bondDenom.
+	// Staking is the only way unvested tokens would be missing from the bank balance.
+	want := toClawBack.AmountOf(bondDenom)
+	unbondings := sk.GetUnbondingDelegations(ctx, addr, math.MaxUint16)
+	for _, unbonding := range unbondings {
+		transferred := sk.TransferUnbonding(ctx, addr, dest, sdk.ValAddress(unbonding.ValidatorAddress), want)
+		want = want.Sub(transferred)
+		if !want.IsPositive() {
+			return nil
+		}
+	}
+
+	// If we need more, transfer Delegations.
+	delegations := sk.GetDelegatorDelegations(ctx, addr, math.MaxUint16)
+	for _, delegation := range delegations {
+		validatorAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+		if err != nil {
+			panic(err) // shouldn't happen
+		}
+		validator, found := sk.GetValidator(ctx, validatorAddr)
+		if !found {
+			panic("validator not found") // shoudn't happen
+		}
+		wantShares, err := validator.SharesFromTokensTruncated(want)
+		if err != nil {
+			return err // XXX or something
+		}
+		transferredShares := sk.TransferDelegation(ctx, addr, dest, delegation.GetValidatorAddr(), wantShares)
+		transferred := validator.TokensFromSharesRoundUp(transferredShares).RoundInt() // XXX rounding
+		want = want.Sub(transferred)                                                   // XXX underflow from rounding?
+		if !want.IsPositive() {
+			return nil
+		}
+	}
+
+	// If we've transferred everything and still haven't transferred the desired clawback amount,
+	// then the account must have most some unvested tokens from slashing.
+	return nil
 }

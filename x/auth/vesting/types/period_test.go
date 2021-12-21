@@ -1,15 +1,14 @@
-package vesting
+package types
 
 import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
-func TestMergePeriods(t *testing.T) {
-	mkper := func(length int64, amount int64) types.Period {
-		return types.Period{
+func TestDisjunctPeriods(t *testing.T) {
+	mkper := func(length int64, amount int64) Period {
+		return Period{
 			Length: length,
 			Amount: sdk.NewCoins(sdk.NewInt64Coin("test", amount)),
 		}
@@ -17,71 +16,71 @@ func TestMergePeriods(t *testing.T) {
 	for _, tt := range []struct {
 		name      string
 		startP    int64
-		p         []types.Period
+		p         []Period
 		startQ    int64
-		q         []types.Period
+		q         []Period
 		wantStart int64
 		wantEnd   int64
-		want      []types.Period
+		want      []Period
 	}{
 		{
 			name:      "empty_empty",
 			startP:    0,
-			p:         []types.Period{},
+			p:         []Period{},
 			startQ:    0,
-			q:         []types.Period{},
+			q:         []Period{},
 			wantStart: 0,
-			want:      []types.Period{},
+			want:      []Period{},
 		},
 		{
 			name:      "some_empty",
 			startP:    -123,
-			p:         []types.Period{mkper(45, 8), mkper(67, 13)},
+			p:         []Period{mkper(45, 8), mkper(67, 13)},
 			startQ:    -124,
-			q:         []types.Period{},
+			q:         []Period{},
 			wantStart: -124,
 			wantEnd:   -11,
-			want:      []types.Period{mkper(46, 8), mkper(67, 13)},
+			want:      []Period{mkper(46, 8), mkper(67, 13)},
 		},
 		{
 			name:      "one_one",
 			startP:    0,
-			p:         []types.Period{mkper(12, 34)},
+			p:         []Period{mkper(12, 34)},
 			startQ:    0,
-			q:         []types.Period{mkper(25, 68)},
+			q:         []Period{mkper(25, 68)},
 			wantStart: 0,
 			wantEnd:   25,
-			want:      []types.Period{mkper(12, 34), mkper(13, 68)},
+			want:      []Period{mkper(12, 34), mkper(13, 68)},
 		},
 		{
 			name:      "tied",
 			startP:    12,
-			p:         []types.Period{mkper(24, 3)},
+			p:         []Period{mkper(24, 3)},
 			startQ:    0,
-			q:         []types.Period{mkper(36, 7)},
+			q:         []Period{mkper(36, 7)},
 			wantStart: 0,
 			wantEnd:   36,
-			want:      []types.Period{mkper(36, 10)},
+			want:      []Period{mkper(36, 10)},
 		},
 		{
 			name:      "residual",
 			startP:    105,
-			p:         []types.Period{mkper(45, 309), mkper(80, 243), mkper(30, 401)},
+			p:         []Period{mkper(45, 309), mkper(80, 243), mkper(30, 401)},
 			startQ:    120,
-			q:         []types.Period{mkper(40, 823)},
+			q:         []Period{mkper(40, 823)},
 			wantStart: 105,
 			wantEnd:   260,
-			want:      []types.Period{mkper(45, 309), mkper(10, 823), mkper(70, 243), mkper(30, 401)},
+			want:      []Period{mkper(45, 309), mkper(10, 823), mkper(70, 243), mkper(30, 401)},
 		},
 		{
 			name:      "typical",
 			startP:    1000,
-			p:         []types.Period{mkper(100, 25), mkper(100, 25), mkper(100, 25), mkper(100, 25)},
+			p:         []Period{mkper(100, 25), mkper(100, 25), mkper(100, 25), mkper(100, 25)},
 			startQ:    1200,
-			q:         []types.Period{mkper(100, 10), mkper(100, 10), mkper(100, 10), mkper(100, 10)},
+			q:         []Period{mkper(100, 10), mkper(100, 10), mkper(100, 10), mkper(100, 10)},
 			wantStart: 1000,
 			wantEnd:   1600,
-			want:      []types.Period{mkper(100, 25), mkper(100, 25), mkper(100, 35), mkper(100, 35), mkper(100, 10), mkper(100, 10)},
+			want:      []Period{mkper(100, 25), mkper(100, 25), mkper(100, 35), mkper(100, 35), mkper(100, 10), mkper(100, 10)},
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
@@ -89,11 +88,11 @@ func TestMergePeriods(t *testing.T) {
 			// for the price of one.  TODO: sub-t.Run() for distinct names.
 			for i := 0; i < 2; i++ {
 				var gotStart, gotEnd int64
-				var got []types.Period
+				var got []Period
 				if i == 0 {
-					gotStart, gotEnd, got = mergePeriods(tt.startP, tt.startQ, tt.p, tt.q)
+					gotStart, gotEnd, got = DisjunctPeriods(tt.startP, tt.startQ, tt.p, tt.q)
 				} else {
-					gotStart, gotEnd, got = mergePeriods(tt.startQ, tt.startP, tt.q, tt.p)
+					gotStart, gotEnd, got = DisjunctPeriods(tt.startQ, tt.startP, tt.q, tt.p)
 				}
 				if gotStart != tt.wantStart {
 					t.Errorf("wrong start time: got %d, want %d", gotStart, tt.wantStart)

@@ -15,6 +15,11 @@ service Msg {
   // CreatePeriodicVestingAccount defines a method that enables creating a
   // periodic vesting account.
   rpc CreatePeriodicVestingAccount(MsgCreatePeriodicVestingAccount) returns (MsgCreatePeriodicVestingAccountResponse);
+  // CreateTrueVestingAccount defines a method that enables creating a
+  // "true" vesting account - one subject to clawback.
+  rpc CreateTrueVestingAccount(MsgCreateTrueVestingAccount) returns (MsgCreateTrueVestingAccountResponse);
+  // Clawback removes the un-true-vested tokens from a true vesting account.
+  rpc Clawback(MsgClawback) returns (MsgClawbackResponse);
 }
 
 // MsgCreateVestingAccount defines a message that enables creating a vesting
@@ -31,7 +36,7 @@ message MsgCreateVestingAccount {
   bool  delayed  = 5;
 }
 
-// MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount response type.
+// MsgCreateVestingAccountResponse defines the MsgCreateVestingAccount response type.
 message MsgCreateVestingAccountResponse {}
 
 // MsgCreatePeriodicVestingAccount defines a message that enables creating a vesting
@@ -46,6 +51,33 @@ message MsgCreatePeriodicVestingAccount {
   bool merge = 5;
 }
 
-// MsgCreatePeriodicVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount
+// MsgCreatePeriodicVestingAccountResponse defines the MsgCreatePeriodicVestingAccount
 // response type.
 message MsgCreatePeriodicVestingAccountResponse {}
+
+// MsgCreateTrueVestingAccount defines a message that enables creating a true vesting account.
+message MsgCreateTrueVestingAccount {
+  option (gogoproto.equal) = false;
+
+  string from_address = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
+  string   to_address                      = 2 [(gogoproto.moretags) = "yaml:\"to_address\""];
+  int64    start_time                      = 3 [(gogoproto.moretags) = "yaml:\"start_time\""];
+  repeated Period lockup_periods = 4 [(gogoproto.nullable) = false];
+  repeated Period vesting_periods = 5 [(gogoproto.nullable) = false];
+  bool merge = 6;
+}
+
+// MsgCreateTrueVestingAccountResponse defines the MsgCreateTrueVestingAccount response type.
+message MsgCreateTrueVestingAccountResponse {}
+
+// MsgClaback defines a message that removes unvested (in the true vesting sense) tokens
+// from a periodic vesting account.
+message MsgClawback {
+  string address = 1;
+  // dest_address specifies where the clawed-back tokens should be transferred.
+  // If empty, the tokens will be transferred back to the original funder of the account.
+  string dest_address = 2;
+}
+
+// MsgClawbackResponse defines the MsgClawback response type.
+message MsgClawbackResponse {}

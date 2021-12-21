@@ -99,6 +99,39 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	return nil
 }
 
+// UpdateAllowance updates the existing grant.
+func (k Keeper) UpdateAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
+	store := ctx.KVStore(k.storeKey)
+	key := feegrant.FeeAllowanceKey(granter, grantee)
+
+	_, err := k.getGrant(ctx, granter, grantee)
+	if err != nil {
+		return err
+	}
+
+	grant, err := feegrant.NewGrant(granter, grantee, feeAllowance)
+	if err != nil {
+		return err
+	}
+
+	bz, err := k.cdc.Marshal(&grant)
+	if err != nil {
+		return err
+	}
+
+	store.Set(key, bz)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			feegrant.EventTypeUpdateFeeGrant,
+			sdk.NewAttribute(feegrant.AttributeKeyGranter, grant.Granter),
+			sdk.NewAttribute(feegrant.AttributeKeyGrantee, grant.Grantee),
+		),
+	)
+
+	return nil
+}
+
 // revokeAllowance removes an existing grant
 func (k Keeper) revokeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) error {
 	_, err := k.getGrant(ctx, granter, grantee)
@@ -204,7 +237,7 @@ func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	emitUseGrantEvent(ctx, granter.String(), grantee.String())
 
 	// if fee allowance is accepted, store the updated state of the allowance
-	return k.GrantAllowance(ctx, granter, grantee, grant)
+	return k.UpdateAllowance(ctx, granter, grantee, grant)
 }
 
 func emitUseGrantEvent(ctx sdk.Context, granter, grantee string) {

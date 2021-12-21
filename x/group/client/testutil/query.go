@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	client "github.com/cosmos/cosmos-sdk/x/group/client/cli"
 
@@ -83,37 +85,39 @@ func (s *IntegrationTestSuite) TestQueryGroupsByMembers() {
 	require.Len(groups.Groups, 1)
 
 	cmd = client.QueryGroupMembersCmd()
-	out, err = cli.ExecTestCLICmd(clientCtx, cmd, []string{fmt.Sprintf("%d",groups.Groups[0].GroupId), fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err = cli.ExecTestCLICmd(clientCtx, cmd, []string{fmt.Sprintf("%d", groups.Groups[0].GroupId), fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	require.NoError(err)
 
 	var members group.QueryGroupMembersResponse
 	val.ClientCtx.Codec.MustUnmarshalJSON(out.Bytes(), &members)
 	require.Len(members.Members, 1)
 
+	testAddr := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
+
 	testCases := []struct {
-		name          string
-		args          []string
-		expectErr     bool
-		expectErrMsg  string
-		numItems int
+		name         string
+		args         []string
+		expectErr    bool
+		expectErrMsg string
+		numItems     int
 	}{
 		{
 			"invalid address",
-			[]string{"abcd",fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{"abcd", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			true,
 			"invalid bech32 string",
 			0,
 		},
 		{
 			"not part of any group",
-			[]string{val.Address.String(),fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{testAddr.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			"",
 			0,
 		},
 		{
 			"expect one group",
-			[]string{members.Members[0].Member.Address,fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{members.Members[0].Member.Address, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			"",
 			1,
@@ -135,7 +139,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByMembers() {
 
 			}
 		})
-		}
+	}
 }
 
 func (s *IntegrationTestSuite) TestQueryGroupMembers() {

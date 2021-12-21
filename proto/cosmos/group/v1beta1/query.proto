@@ -66,6 +66,11 @@ service Query {
   rpc VotesByVoter(QueryVotesByVoterRequest) returns (QueryVotesByVoterResponse) {
     option (google.api.http).get = "/cosmos/group/v1beta1/votes_by_voter/{voter}";
   };
+
+  // GroupsByMember queries groups by member address.
+  rpc GroupsByMember(QueryGroupsByMemberRequest) returns (QueryGroupsByMemberResponse) {
+    option (google.api.http).get = "/cosmos/group/v1beta1/groups_by_member/{address}";
+  };
 }
 
 // QueryGroupInfoRequest is the Query/GroupInfo request type.
@@ -263,5 +268,23 @@ message QueryVotesByVoterResponse {
   repeated Vote votes = 1;
 
   // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryGroupsByMemberRequest is the Query/GroupsByMember request type.
+message QueryGroupsByMemberRequest {
+  // address is the group member address.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryGroupsByMemberResponse is the Query/GroupsByMember response type.
+message QueryGroupsByMemberResponse {
+  // groups are the groups info with the provided group member.
+  repeated GroupInfo groups = 1;
+
+   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

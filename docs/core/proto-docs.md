@@ -493,6 +493,8 @@
     - [QueryGroupMembersResponse](#cosmos.group.v1beta1.QueryGroupMembersResponse)
     - [QueryGroupsByAdminRequest](#cosmos.group.v1beta1.QueryGroupsByAdminRequest)
     - [QueryGroupsByAdminResponse](#cosmos.group.v1beta1.QueryGroupsByAdminResponse)
+    - [QueryGroupsByMemberRequest](#cosmos.group.v1beta1.QueryGroupsByMemberRequest)
+    - [QueryGroupsByMemberResponse](#cosmos.group.v1beta1.QueryGroupsByMemberResponse)
     - [QueryProposalRequest](#cosmos.group.v1beta1.QueryProposalRequest)
     - [QueryProposalResponse](#cosmos.group.v1beta1.QueryProposalResponse)
     - [QueryProposalsByGroupAccountRequest](#cosmos.group.v1beta1.QueryProposalsByGroupAccountRequest)
@@ -7314,6 +7316,38 @@ QueryGroupsByAdminResponse is the Query/GroupsByAdminResponse response type.
 
 
 
+<a name="cosmos.group.v1beta1.QueryGroupsByMemberRequest"></a>
+
+### QueryGroupsByMemberRequest
+QueryGroupsByMemberRequest is the Query/GroupsByMember request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the group member address. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryGroupsByMemberResponse"></a>
+
+### QueryGroupsByMemberResponse
+QueryGroupsByMemberResponse is the Query/GroupsByMember response type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `groups` | [GroupInfo](#cosmos.group.v1beta1.GroupInfo) | repeated | groups are the groups info with the provided group member. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
 <a name="cosmos.group.v1beta1.QueryProposalRequest"></a>
 
 ### QueryProposalRequest
@@ -7495,6 +7529,7 @@ Query is the cosmos.group.v1beta1 Query service.
 | `VoteByProposalVoter` | [QueryVoteByProposalVoterRequest](#cosmos.group.v1beta1.QueryVoteByProposalVoterRequest) | [QueryVoteByProposalVoterResponse](#cosmos.group.v1beta1.QueryVoteByProposalVoterResponse) | VoteByProposalVoter queries a vote by proposal id and voter. | GET|/cosmos/group/v1beta1/vote_by_proposal_voter/{proposal_id}/{voter}|
 | `VotesByProposal` | [QueryVotesByProposalRequest](#cosmos.group.v1beta1.QueryVotesByProposalRequest) | [QueryVotesByProposalResponse](#cosmos.group.v1beta1.QueryVotesByProposalResponse) | VotesByProposal queries a vote by proposal. | GET|/cosmos/group/v1beta1/votes_by_proposal/{proposal_id}|
 | `VotesByVoter` | [QueryVotesByVoterRequest](#cosmos.group.v1beta1.QueryVotesByVoterRequest) | [QueryVotesByVoterResponse](#cosmos.group.v1beta1.QueryVotesByVoterResponse) | VotesByVoter queries a vote by voter. | GET|/cosmos/group/v1beta1/votes_by_voter/{voter}|
+| `GroupsByMember` | [QueryGroupsByMemberRequest](#cosmos.group.v1beta1.QueryGroupsByMemberRequest) | [QueryGroupsByMemberResponse](#cosmos.group.v1beta1.QueryGroupsByMemberResponse) | GroupsByMember queries groups by member address. | GET|/cosmos/group/v1beta1/groups_by_member/{address}|
 
  <!-- end services -->
 

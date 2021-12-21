@@ -80,7 +80,13 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	}
 
 	store.Set(key, bz)
-	k.insertAllowanceKey(ctx, key, exp)
+	expiration, err := feeAllowance.ExpTime()
+
+	if err != nil {
+		return err
+	} else if expiration != nil {
+		k.insertAllowanceKey(ctx, key, expiration)
+	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -261,9 +267,10 @@ func (k Keeper) insertAllowanceKey(ctx sdk.Context, grantKey []byte, exp *time.T
 }
 
 // RemoveExpiredAllowances iterates grantsByExpiryQueue and deletes the expired grants.
-func (k Keeper) RemoveExpiredAllowances(ctx sdk.Context, exp *time.Time) {
+func (k Keeper) RemoveExpiredAllowances(ctx sdk.Context) {
+	exp := ctx.BlockTime()
 	store := ctx.KVStore(k.storeKey)
-	iterator := store.Iterator(feegrant.FeeAllowanceQueuePrefix, sdk.FormatTimeBytes(*exp))
+	iterator := store.Iterator(feegrant.FeeAllowanceQueuePrefix, sdk.InclusiveEndBytes(feegrant.AllowanceByExpTimeKey(&exp)))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

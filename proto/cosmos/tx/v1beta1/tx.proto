@@ -217,7 +217,8 @@ message Fee {
 // Tip is the tip used for meta-transactions.
 message Tip {
   // amount is the amount of the tip
-  repeated cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   // tipper is the address of the account paying for the tip
   string tipper = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }

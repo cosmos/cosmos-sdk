@@ -93,3 +93,22 @@ message PermanentLockedAccount {
 
   BaseVestingAccount base_vesting_account = 1 [(gogoproto.embed) = true];
 }
+
+// TrueVestingAccount implements the VestingAccount interface. It provides
+// an account that can hold contributions subject to "lockup" (like a
+// PeriodicVestingAccount), or "true vesting" which is subject to clawback
+// of unvested tokens, or a combination (tokens vest, but are still locked).
+message TrueVestingAccount {
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  BaseVestingAccount base_vesting_account = 1 [(gogoproto.embed) = true];
+
+  // funder_address specifies the account which can perform clawback.
+  string funder_address = 2;
+  int64 start_time = 3 [(gogoproto.moretags) = "yaml:\"start_time\""];
+  repeated Period combined_periods = 4 [(gogoproto.moretags) = "yaml:\"combined_periods\"", (gogoproto.nullable) = false];
+  repeated Period lockup_periods = 5 [(gogoproto.moretags) = "yaml:\"lockup_periods\"", (gogoproto.nullable) = false];
+  repeated Period vesting_lockup_periods = 6 [(gogoproto.moretags) = "yaml:\"vesting_lockup_periods\"", (gogoproto.nullable) = false];
+  repeated Period vesting_periods = 7 [(gogoproto.moretags) = "yaml:\"vesting_periods\"", (gogoproto.nullable) = false];
+}

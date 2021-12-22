@@ -8,7 +8,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	v044 "github.com/cosmos/cosmos-sdk/x/authz/migrations/v044"
 )
 
 // MigrateStore performs in-place store migrations from v0.44 to v0.45. The
@@ -27,7 +26,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 }
 
 func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
-	grantsStore := prefix.NewStore(store, v044.GrantPrefix)
+	grantsStore := prefix.NewStore(store, GrantPrefix)
 
 	grantsIter := grantsStore.Iterator(nil, nil)
 	defer grantsIter.Close()
@@ -45,7 +44,7 @@ func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.
 		if grant.Expiration.Before(ctx.BlockTime()) {
 			grantsStore.Delete(grantsIter.Key())
 		} else {
-			granter, grantee, msgType := v044.ParseGrantKey(grantsIter.Key())
+			granter, grantee, msgType := ParseGrantKey(grantsIter.Key())
 			ggmTriple, ok := ggmTriples[grant.Expiration]
 
 			if !ok {

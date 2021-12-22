@@ -27,7 +27,7 @@ func TestMsgDepositGetSignBytes(t *testing.T) {
 	msg := NewMsgDeposit(addr, 0, coinsPos)
 	res := msg.GetSignBytes()
 
-	expected := `{"type":"cosmos-sdk/MsgDeposit","value":{"amount":[{"amount":"1000","denom":"stake"}],"depositor":"cosmos1v9jxgu33kfsgr5","proposal_id":"0"}}`
+	expected := `{"type":"cosmos-sdk/MsgDeposit","value":{"amount":[{"amount":"1000","denom":"stake"}],"depositor":"cosmos1v9jxgu33kfsgr5"}}`
 	require.Equal(t, expected, string(res))
 }
 
@@ -95,23 +95,23 @@ func TestMsgVoteWeighted(t *testing.T) {
 		{0, addrs[0], NewNonSplitVoteOption(OptionNoWithVeto), true},
 		{0, addrs[0], NewNonSplitVoteOption(OptionAbstain), true},
 		{0, addrs[0], WeightedVoteOptions{ // weight sum > 1
-			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDec(1)},
-			WeightedVoteOption{Option: OptionAbstain, Weight: sdk.NewDec(1)},
+			NewWeightedVoteOption(OptionYes, sdk.NewDec(1)),
+			NewWeightedVoteOption(OptionAbstain, sdk.NewDec(1)),
 		}, false},
 		{0, addrs[0], WeightedVoteOptions{ // duplicate option
-			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDecWithPrec(5, 1)},
-			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDecWithPrec(5, 1)},
+			NewWeightedVoteOption(OptionYes, sdk.NewDecWithPrec(5, 1)),
+			NewWeightedVoteOption(OptionYes, sdk.NewDecWithPrec(5, 1)),
 		}, false},
 		{0, addrs[0], WeightedVoteOptions{ // zero weight
-			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDec(0)},
+			NewWeightedVoteOption(OptionYes, sdk.NewDec(0)),
 		}, false},
 		{0, addrs[0], WeightedVoteOptions{ // negative weight
-			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDec(-1)},
+			NewWeightedVoteOption(OptionYes, sdk.NewDec(-1)),
 		}, false},
 		{0, addrs[0], WeightedVoteOptions{}, false},
 		{0, addrs[0], NewNonSplitVoteOption(VoteOption(0x13)), false},
 		{0, addrs[0], WeightedVoteOptions{ // weight sum <1
-			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDecWithPrec(5, 1)},
+			NewWeightedVoteOption(OptionYes, sdk.NewDecWithPrec(5, 1)),
 		}, false},
 	}
 

@@ -6200,9 +6200,9 @@ TallyParams defines the params for tallying votes on governance proposals.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `quorum` | [bytes](#bytes) |  | Minimum percentage of total stake needed to vote for a result to be considered valid. |
-| `threshold` | [bytes](#bytes) |  | Minimum proportion of Yes votes for proposal to pass. Default value: 0.5. |
-| `veto_threshold` | [bytes](#bytes) |  | Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Default value: 1/3. |
+| `quorum` | [string](#string) |  | Minimum percentage of total stake needed to vote for a result to be considered valid. |
+| `threshold` | [string](#string) |  | Minimum proportion of Yes votes for proposal to pass. Default value: 0.5. |
+| `veto_threshold` | [string](#string) |  | Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Default value: 1/3. |
 
 
 
@@ -7519,17 +7519,17 @@ Query is the cosmos.group.v1beta1 Query service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `GroupInfo` | [QueryGroupInfoRequest](#cosmos.group.v1beta1.QueryGroupInfoRequest) | [QueryGroupInfoResponse](#cosmos.group.v1beta1.QueryGroupInfoResponse) | GroupInfo queries group info based on group id. | |
-| `GroupAccountInfo` | [QueryGroupAccountInfoRequest](#cosmos.group.v1beta1.QueryGroupAccountInfoRequest) | [QueryGroupAccountInfoResponse](#cosmos.group.v1beta1.QueryGroupAccountInfoResponse) | GroupAccountInfo queries group account info based on group account address. | |
-| `GroupMembers` | [QueryGroupMembersRequest](#cosmos.group.v1beta1.QueryGroupMembersRequest) | [QueryGroupMembersResponse](#cosmos.group.v1beta1.QueryGroupMembersResponse) | GroupMembers queries members of a group | |
-| `GroupsByAdmin` | [QueryGroupsByAdminRequest](#cosmos.group.v1beta1.QueryGroupsByAdminRequest) | [QueryGroupsByAdminResponse](#cosmos.group.v1beta1.QueryGroupsByAdminResponse) | GroupsByAdmin queries groups by admin address. | |
-| `GroupAccountsByGroup` | [QueryGroupAccountsByGroupRequest](#cosmos.group.v1beta1.QueryGroupAccountsByGroupRequest) | [QueryGroupAccountsByGroupResponse](#cosmos.group.v1beta1.QueryGroupAccountsByGroupResponse) | GroupAccountsByGroup queries group accounts by group id. | |
-| `GroupAccountsByAdmin` | [QueryGroupAccountsByAdminRequest](#cosmos.group.v1beta1.QueryGroupAccountsByAdminRequest) | [QueryGroupAccountsByAdminResponse](#cosmos.group.v1beta1.QueryGroupAccountsByAdminResponse) | GroupsByAdmin queries group accounts by admin address. | |
-| `Proposal` | [QueryProposalRequest](#cosmos.group.v1beta1.QueryProposalRequest) | [QueryProposalResponse](#cosmos.group.v1beta1.QueryProposalResponse) | Proposal queries a proposal based on proposal id. | |
-| `ProposalsByGroupAccount` | [QueryProposalsByGroupAccountRequest](#cosmos.group.v1beta1.QueryProposalsByGroupAccountRequest) | [QueryProposalsByGroupAccountResponse](#cosmos.group.v1beta1.QueryProposalsByGroupAccountResponse) | ProposalsByGroupAccount queries proposals based on group account address. | |
-| `VoteByProposalVoter` | [QueryVoteByProposalVoterRequest](#cosmos.group.v1beta1.QueryVoteByProposalVoterRequest) | [QueryVoteByProposalVoterResponse](#cosmos.group.v1beta1.QueryVoteByProposalVoterResponse) | VoteByProposalVoter queries a vote by proposal id and voter. | |
-| `VotesByProposal` | [QueryVotesByProposalRequest](#cosmos.group.v1beta1.QueryVotesByProposalRequest) | [QueryVotesByProposalResponse](#cosmos.group.v1beta1.QueryVotesByProposalResponse) | VotesByProposal queries a vote by proposal. | |
-| `VotesByVoter` | [QueryVotesByVoterRequest](#cosmos.group.v1beta1.QueryVotesByVoterRequest) | [QueryVotesByVoterResponse](#cosmos.group.v1beta1.QueryVotesByVoterResponse) | VotesByVoter queries a vote by voter. | |
+| `GroupInfo` | [QueryGroupInfoRequest](#cosmos.group.v1beta1.QueryGroupInfoRequest) | [QueryGroupInfoResponse](#cosmos.group.v1beta1.QueryGroupInfoResponse) | GroupInfo queries group info based on group id. | GET|/cosmos/group/v1beta1/group_info/{group_id}|
+| `GroupAccountInfo` | [QueryGroupAccountInfoRequest](#cosmos.group.v1beta1.QueryGroupAccountInfoRequest) | [QueryGroupAccountInfoResponse](#cosmos.group.v1beta1.QueryGroupAccountInfoResponse) | GroupAccountInfo queries group account info based on group account address. | GET|/cosmos/group/v1beta1/group_account_info/{address}|
+| `GroupMembers` | [QueryGroupMembersRequest](#cosmos.group.v1beta1.QueryGroupMembersRequest) | [QueryGroupMembersResponse](#cosmos.group.v1beta1.QueryGroupMembersResponse) | GroupMembers queries members of a group | GET|/cosmos/group/v1beta1/group_members/{group_id}|
+| `GroupsByAdmin` | [QueryGroupsByAdminRequest](#cosmos.group.v1beta1.QueryGroupsByAdminRequest) | [QueryGroupsByAdminResponse](#cosmos.group.v1beta1.QueryGroupsByAdminResponse) | GroupsByAdmin queries groups by admin address. | GET|/cosmos/group/v1beta1/groups_by_admin/{admin}|
+| `GroupAccountsByGroup` | [QueryGroupAccountsByGroupRequest](#cosmos.group.v1beta1.QueryGroupAccountsByGroupRequest) | [QueryGroupAccountsByGroupResponse](#cosmos.group.v1beta1.QueryGroupAccountsByGroupResponse) | GroupAccountsByGroup queries group accounts by group id. | GET|/cosmos/group/v1beta1/group_accounts_by_group/{group_id}|
+| `GroupAccountsByAdmin` | [QueryGroupAccountsByAdminRequest](#cosmos.group.v1beta1.QueryGroupAccountsByAdminRequest) | [QueryGroupAccountsByAdminResponse](#cosmos.group.v1beta1.QueryGroupAccountsByAdminResponse) | GroupsByAdmin queries group accounts by admin address. | GET|/cosmos/group/v1beta1/group_accounts_by_admin/{admin}|
+| `Proposal` | [QueryProposalRequest](#cosmos.group.v1beta1.QueryProposalRequest) | [QueryProposalResponse](#cosmos.group.v1beta1.QueryProposalResponse) | Proposal queries a proposal based on proposal id. | GET|/cosmos/group/v1beta1/proposal/{proposal_id}|
+| `ProposalsByGroupAccount` | [QueryProposalsByGroupAccountRequest](#cosmos.group.v1beta1.QueryProposalsByGroupAccountRequest) | [QueryProposalsByGroupAccountResponse](#cosmos.group.v1beta1.QueryProposalsByGroupAccountResponse) | ProposalsByGroupAccount queries proposals based on group account address. | GET|/cosmos/group/v1beta1/proposals_by_group_account/{address}|
+| `VoteByProposalVoter` | [QueryVoteByProposalVoterRequest](#cosmos.group.v1beta1.QueryVoteByProposalVoterRequest) | [QueryVoteByProposalVoterResponse](#cosmos.group.v1beta1.QueryVoteByProposalVoterResponse) | VoteByProposalVoter queries a vote by proposal id and voter. | GET|/cosmos/group/v1beta1/vote_by_proposal_voter/{proposal_id}/{voter}|
+| `VotesByProposal` | [QueryVotesByProposalRequest](#cosmos.group.v1beta1.QueryVotesByProposalRequest) | [QueryVotesByProposalResponse](#cosmos.group.v1beta1.QueryVotesByProposalResponse) | VotesByProposal queries a vote by proposal. | GET|/cosmos/group/v1beta1/votes_by_proposal/{proposal_id}|
+| `VotesByVoter` | [QueryVotesByVoterRequest](#cosmos.group.v1beta1.QueryVotesByVoterRequest) | [QueryVotesByVoterResponse](#cosmos.group.v1beta1.QueryVotesByVoterResponse) | VotesByVoter queries a vote by voter. | GET|/cosmos/group/v1beta1/votes_by_voter/{voter}|
 
  <!-- end services -->
 

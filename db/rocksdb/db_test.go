@@ -1,7 +1,10 @@
+//go:build rocksdb_build
+
 package rocksdb
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -46,18 +49,29 @@ func TestRevertRecovery(t *testing.T) {
 	dir := t.TempDir()
 	db, err := NewDB(dir)
 	require.NoError(t, err)
-	_, err = db.SaveNextVersion()
-	require.NoError(t, err)
 	txn := db.Writer()
 	require.NoError(t, txn.Set([]byte{1}, []byte{1}))
+	require.NoError(t, txn.Commit())
+	_, err = db.SaveNextVersion()
+	require.NoError(t, err)
+	txn = db.Writer()
 	require.NoError(t, txn.Set([]byte{2}, []byte{2}))
 	require.NoError(t, txn.Commit())
 
-	// make checkpoints dir temporarily unreadable to trigger an error
-	require.NoError(t, os.Chmod(db.checkpointsDir(), 0000))
+	// move checkpoints dir temporarily to trigger an error
+	hideDir := filepath.Join(dir, "hide_checkpoints")
+	require.NoError(t, os.Rename(db.checkpointsDir(), hideDir))
 	require.Error(t, db.Revert())
+	require.NoError(t, os.Rename(hideDir, db.checkpointsDir()))
 
-	require.NoError(t, os.Chmod(db.checkpointsDir(), 0755))
 	db, err = NewDB(dir)
 	require.NoError(t, err)
+	view := db.Reader()
+	val, err := view.Get([]byte{1})
+	require.NoError(t, err)
+	require.Equal(t, []byte{1}, val)
+	val, err = view.Get([]byte{2})
+	require.NoError(t, err)
+	require.Nil(t, val)
+	view.Discard()
 }

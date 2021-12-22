@@ -230,15 +230,16 @@ func TestMarshalInterfacev2(t *testing.T) {
 	require.Error(err) // error! cant find this type!
 	require.Contains(err.Error(), "not found")
 
-	// now lets use gogo's jsonpb marshaler without an AnyResolver, we see it still works!
+	// using gogo's jsonpb marshaler without AnyResolver, still works!
 	var gogoJM = &gogopb.Marshaler{OrigName: true, EmitDefaults: true, AnyResolver: nil}
 	buf = new(bytes.Buffer)
 	err = gogoJM.Marshal(buf, any)
 	require.NoError(err)
 
-	// works with or without a resolver
+	// pass in our own registry, works fine as it should
 	gogoJM.AnyResolver = ccfg.InterfaceRegistry
 	buf = new(bytes.Buffer)
 	err = gogoJM.Marshal(buf, any)
 	require.NoError(err)
+
 }

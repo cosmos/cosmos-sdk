@@ -314,6 +314,16 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 				Expiration: &oneYearExpiry,
 			},
 		},
+		{
+			name:    "no expiry: no error",
+			ctx:     suite.sdkCtx.WithBlockTime(now.AddDate(1, 0, 0)),
+			granter: suite.addrs[1],
+			grantee: suite.addrs[2],
+			allowance: &feegrant.BasicAllowance{
+				SpendLimit: eth,
+				Expiration: &oneYearExpiry,
+			},
+		},
 	}
 
 	for _, tc := range testCases {

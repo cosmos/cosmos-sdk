@@ -303,7 +303,7 @@ func (k Keeper) insertAllowanceKey(ctx sdk.Context, grantKey []byte, exp *time.T
 func (k Keeper) RemoveExpiredAllowances(ctx sdk.Context) {
 	exp := ctx.BlockTime()
 	store := ctx.KVStore(k.storeKey)
-	iterator := store.Iterator(feegrant.FeeAllowanceQueuePrefix, sdk.InclusiveEndBytes(feegrant.AllowanceByExpTimeKey(&exp)))
+	iterator := store.Iterator(feegrant.FeeAllowanceQueueKeyPrefix, sdk.InclusiveEndBytes(feegrant.AllowanceByExpTimeKey(&exp)))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

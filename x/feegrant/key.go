@@ -23,8 +23,10 @@ const (
 
 var (
 	// FeeAllowanceKeyPrefix is the set of the kvstore for fee allowance data
-	FeeAllowanceKeyPrefix   = []byte{0x00}
-	FeeAllowanceQueuePrefix = []byte{0x01}
+	FeeAllowanceKeyPrefix = []byte{0x00}
+
+	// FeeAllowanceQueueKeyPrefix is the set of the kvstore for fee allowance keys data
+	FeeAllowanceQueueKeyPrefix = []byte{0x01}
 )
 
 // FeeAllowanceKey is the canonical key to store a grant from granter to grantee
@@ -38,11 +40,12 @@ func FeeAllowancePrefixByGrantee(grantee sdk.AccAddress) []byte {
 	return append(FeeAllowanceKeyPrefix, address.MustLengthPrefix(grantee.Bytes())...)
 }
 
+// FeeAllowancePrefixQueue is the canonical key to store grant key.
 func FeeAllowancePrefixQueue(exp *time.Time, allowanceKey []byte) []byte {
 	allowanceByExpTimeKey := AllowanceByExpTimeKey(exp)
 	return append(allowanceByExpTimeKey, allowanceKey[1:]...)
 }
 
 func AllowanceByExpTimeKey(exp *time.Time) []byte {
-	return append(FeeAllowanceQueuePrefix, sdk.FormatTimeBytes(*exp)...)
+	return append(FeeAllowanceQueueKeyPrefix, sdk.FormatTimeBytes(*exp)...)
 }

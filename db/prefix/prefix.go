@@ -1,23 +1,35 @@
+// Prefixed DB reader/writer types let you namespace multiple DBs within a single DB.
+
 package prefix
 
 import (
 	dbm "github.com/cosmos/cosmos-sdk/db"
 )
 
-// Prefix Reader/Writer lets you namespace multiple DBs within a single DB.
+// prefixed Reader
 type prefixR struct {
 	db     dbm.DBReader
 	prefix []byte
 }
 
+// prefixed ReadWriter
 type prefixRW struct {
 	db     dbm.DBReadWriter
 	prefix []byte
 }
 
+// prefixed Writer
+type prefixW struct {
+	db     dbm.DBWriter
+	prefix []byte
+}
+
 var _ dbm.DBReader = (*prefixR)(nil)
 var _ dbm.DBReadWriter = (*prefixRW)(nil)
+var _ dbm.DBWriter = (*prefixW)(nil)
 
+// NewPrefixReader returns a DBReader that only has access to the subset of DB keys
+// that contain the given prefix.
 func NewPrefixReader(db dbm.DBReader, prefix []byte) prefixR {
 	return prefixR{
 		prefix: prefix,
@@ -25,6 +37,8 @@ func NewPrefixReader(db dbm.DBReader, prefix []byte) prefixR {
 	}
 }
 
+// NewPrefixReadWriter returns a DBReader that only has access to the subset of DB keys
+// that contain the given prefix.
 func NewPrefixReadWriter(db dbm.DBReadWriter, prefix []byte) prefixRW {
 	return prefixRW{
 		prefix: prefix,
@@ -32,8 +46,17 @@ func NewPrefixReadWriter(db dbm.DBReadWriter, prefix []byte) prefixRW {
 	}
 }
 
+// NewPrefixWriter returns a DBWriter that reads/writes only from the subset of DB keys
+// that contain the given prefix
+func NewPrefixWriter(db dbm.DBWriter, prefix []byte) prefixW {
+	return prefixW{
+		prefix: prefix,
+		db:     db,
+	}
+}
+
 func prefixed(prefix, key []byte) []byte {
-	return append(prefix, key...)
+	return append(cp(prefix), key...)
 }
 
 // Get implements DBReader.
@@ -135,15 +158,42 @@ func (pdb prefixRW) Commit() error { return pdb.db.Commit() }
 // Discard implements DBReadWriter.
 func (pdb prefixRW) Discard() error { return pdb.db.Discard() }
 
-// Returns a slice of the same length (big endian), but incremented by one.
+// Set implements DBReadWriter.
+func (pdb prefixW) Set(key []byte, value []byte) error {
+	if len(key) == 0 {
+		return dbm.ErrKeyEmpty
+	}
+	return pdb.db.Set(prefixed(pdb.prefix, key), value)
+}
+
+// Delete implements DBWriter.
+func (pdb prefixW) Delete(key []byte) error {
+	if len(key) == 0 {
+		return dbm.ErrKeyEmpty
+	}
+	return pdb.db.Delete(prefixed(pdb.prefix, key))
+}
+
+// Close implements DBWriter.
+func (pdb prefixW) Commit() error { return pdb.db.Commit() }
+
+// Discard implements DBReadWriter.
+func (pdb prefixW) Discard() error { return pdb.db.Discard() }
+
+func cp(bz []byte) (ret []byte) {
+	ret = make([]byte, len(bz))
+	copy(ret, bz)
+	return ret
+}
+
+// Returns a new slice of the same length (big endian), but incremented by one.
 // Returns nil on overflow (e.g. if bz bytes are all 0xFF)
 // CONTRACT: len(bz) > 0
 func cpIncr(bz []byte) (ret []byte) {
 	if len(bz) == 0 {
 		panic("cpIncr expects non-zero bz length")
 	}
-	ret = make([]byte, len(bz))
-	copy(ret, bz)
+	ret = cp(bz)
 	for i := len(bz) - 1; i >= 0; i-- {
 		if ret[i] < byte(0xFF) {
 			ret[i]++

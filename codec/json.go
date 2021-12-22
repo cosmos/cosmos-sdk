@@ -25,7 +25,8 @@ func ProtoMarshalJSON(msg interface{}, resolver types.InterfaceRegistry) ([]byte
 		// EmitDefaults is also often the more expected behavior for CLI users
 		jm := defaultJM
 		if resolver != nil {
-			jm = &jsonpb.Marshaler{OrigName: true, EmitDefaults: true, AnyResolver: resolver}
+			jm.AnyResolver = resolver
+			// protoJM.AnyResolver = resolver
 		}
 		err := types.UnpackInterfaces(msg, types.ProtoJSONPacker{JSONPBMarshaler: jm, V2MarshalOptions: protojson.MarshalOptions{
 			NoUnkeyedLiterals: struct{}{},

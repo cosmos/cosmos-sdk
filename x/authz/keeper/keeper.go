@@ -301,19 +301,19 @@ func (keeper Keeper) insertIntoGrantQueue(ctx sdk.Context, granter, grantee sdk.
 		return err
 	}
 
-	ggmTriple := authz.GrantStoreKey{
+	ggmPair := authz.GrantStoreKey{
 		Granter:    granter.String(),
 		Grantee:    grantee.String(),
 		MsgTypeUrl: msgType,
 	}
-	if len(queueItems.GgmTriples) == 0 {
+	if len(queueItems.GgmPairs) == 0 {
 		keeper.setGrantQueueItem(ctx, expiration, &authz.GrantQueueItem{
-			GgmTriples: []*authz.GrantStoreKey{
-				&ggmTriple,
+			GgmPairs: []*authz.GrantStoreKey{
+				&ggmPair,
 			},
 		})
 	} else {
-		queueItems.GgmTriples = append(queueItems.GgmTriples, &ggmTriple)
+		queueItems.GgmPairs = append(queueItems.GgmPairs, &ggmPair)
 		keeper.setGrantQueueItem(ctx, expiration, queueItems)
 	}
 
@@ -335,18 +335,18 @@ func (keeper Keeper) removeFromGrantQueue(ctx sdk.Context, grantKey []byte, expi
 	}
 
 	granter, grantee, msgType := parseGrantStoreKey(grantKey)
-	queueItems := queueItem.GgmTriples
+	queueItems := queueItem.GgmPairs
 
 	for index, ggmTriple := range queueItems {
 		if ggmTriple.Granter == granter.String() &&
 			ggmTriple.Grantee == grantee.String() &&
 			ggmTriple.MsgTypeUrl == msgType {
-			end := len(queueItem.GgmTriples) - 1
+			end := len(queueItem.GgmPairs) - 1
 			queueItems[index] = queueItems[end]
 			queueItems = queueItems[:end]
 
 			if err := keeper.setGrantQueueItem(ctx, expiration, &authz.GrantQueueItem{
-				GgmTriples: queueItems,
+				GgmPairs: queueItems,
 			}); err != nil {
 				return err
 			}
@@ -371,7 +371,7 @@ func (k Keeper) DequeueAllMatureGrants(ctx sdk.Context) ([]*authz.GrantStoreKey,
 			return nil, err
 		}
 
-		matureGrants = append(matureGrants, queueItem.GgmTriples...)
+		matureGrants = append(matureGrants, queueItem.GgmPairs...)
 		store.Delete(iterator.Key())
 	}
 

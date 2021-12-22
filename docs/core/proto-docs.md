@@ -1237,7 +1237,7 @@ GrantQueueItem contains the list of granter-grantee-msgtype triple.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `ggm_triples` | [GrantStoreKey](#cosmos.authz.v1beta1.GrantStoreKey) | repeated | GrantStoreKey is a list of GrantStoreKey |
+| `ggm_pairs` | [GrantStoreKey](#cosmos.authz.v1beta1.GrantStoreKey) | repeated | ggm_pairs is a list of GrantStoreKey |
 
 
 

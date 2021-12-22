@@ -3,8 +3,8 @@ package v045
 import (
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
@@ -13,7 +13,7 @@ import (
 // Items are stored with the following key: values
 //
 // - 0x01<grant_Bytes>: Grant
-// - 0x02<grant_expiration_Bytes>: GGMTriple
+// - 0x02<grant_expiration_Bytes>: GrantQueueItem
 //
 var (
 	GrantPrefix      = []byte{0x01}
@@ -27,7 +27,6 @@ var (
 func GrantQueueKey(expiration time.Time) []byte {
 	return append(GrantQueuePrefix, sdk.FormatTimeBytes(expiration)...)
 }
-
 
 // GrantStoreKey - return authorization store key
 // Items are stored with the following key: values

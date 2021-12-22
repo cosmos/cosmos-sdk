@@ -28,8 +28,8 @@ message Grant {
 
 // GrantQueueItem contains the list of granter-grantee-msgtype triple.
 message GrantQueueItem {
-  // GrantStoreKey is a list of GrantStoreKey
-  repeated GrantStoreKey ggm_triples = 1; 
+  // ggm_pairs is a list of GrantStoreKey
+  repeated GrantStoreKey ggm_pairs = 1; 
 }
 
 // GrantStoreKey contains granter-grantee-msg_type triple. It can be

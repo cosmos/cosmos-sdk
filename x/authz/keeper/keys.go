@@ -14,7 +14,6 @@ import (
 // Items are stored with the following key: values
 //
 // - 0x01<grant_Bytes>: Grant
-//
 // - 0x02<grant_expiration_Bytes>: GrantQueueItem
 //
 var (

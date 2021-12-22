@@ -265,3 +265,24 @@ func (msg MsgVoteWeighted) GetSigners() []sdk.AccAddress {
 	voter, _ := sdk.AccAddressFromBech32(msg.Voter)
 	return []sdk.AccAddress{voter}
 }
+
+func NewMsgContent(content *types.Any, authority string) *MsgContent {
+	return &MsgContent{
+		Content:   content,
+		Authority: authority,
+	}
+}
+
+func (c MsgContent) GetSigners() []sdk.AccAddress {
+	authority, _ := sdk.AccAddressFromBech32(c.Authority)
+	return []sdk.AccAddress{authority}
+}
+
+func (c MsgContent) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(c.Authority)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -410,6 +410,7 @@
 - [cosmos/gov/v1beta2/gov.proto](#cosmos/gov/v1beta2/gov.proto)
     - [Deposit](#cosmos.gov.v1beta2.Deposit)
     - [DepositParams](#cosmos.gov.v1beta2.DepositParams)
+    - [MsgContent](#cosmos.gov.v1beta2.MsgContent)
     - [Proposal](#cosmos.gov.v1beta2.Proposal)
     - [TallyParams](#cosmos.gov.v1beta2.TallyParams)
     - [TallyResult](#cosmos.gov.v1beta2.TallyResult)
@@ -6128,6 +6129,22 @@ DepositParams defines the params for deposits on governance proposals.
 | ----- | ---- | ----- | ----------- |
 | `min_deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | Minimum deposit for a proposal to enter voting period. |
 | `max_deposit_period` | [google.protobuf.Duration](#google.protobuf.Duration) |  | Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months. |
+
+
+
+
+
+
+<a name="cosmos.gov.v1beta2.MsgContent"></a>
+
+### MsgContent
+Content is used to wrap the legacy content field into a message. This ensures backwards compatibility
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `content` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `authority` | [string](#string) |  |  |
 
 
 

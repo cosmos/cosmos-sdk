@@ -28,7 +28,7 @@ func TestDeposits(t *testing.T) {
 	addr0Initial := app.BankKeeper.GetAllBalances(ctx, TestAddrs[0])
 	addr1Initial := app.BankKeeper.GetAllBalances(ctx, TestAddrs[1])
 
-	require.True(t, proposal.TotalDeposit.IsEqual(sdk.NewCoins()))
+	require.True(t, sdk.NewCoins(proposal.TotalDeposit...).IsEqual(sdk.NewCoins()))
 
 	// Check no deposits at beginning
 	deposit, found := app.GovKeeper.GetDeposit(ctx, proposalID, TestAddrs[1])

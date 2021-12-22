@@ -30,11 +30,13 @@ func NewProposal(messages []sdk.Msg, id uint64, submitTime, depositEndTime time.
 		return Proposal{}, err
 	}
 
+	tally := EmptyTallyResult()
+
 	p := Proposal{
 		ProposalId:       id,
 		Messages:         msgs,
 		Status:           StatusDepositPeriod,
-		FinalTallyResult: EmptyTallyResult(),
+		FinalTallyResult: &tally,
 		TotalDeposit:     sdk.NewCoins(),
 		SubmitTime:       &submitTime,
 		DepositEndTime:   &depositEndTime,

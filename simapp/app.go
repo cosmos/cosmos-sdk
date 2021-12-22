@@ -303,7 +303,7 @@ func NewSimApp(
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper))
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
-		&stakingKeeper, govRouter,
+		&stakingKeeper, govRouter, app.msgSvcRouter,
 	)
 
 	app.GovKeeper = *govKeeper.SetHooks(

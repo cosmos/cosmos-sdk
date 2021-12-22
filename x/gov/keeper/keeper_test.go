@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 type KeeperTestSuite struct {
@@ -19,7 +18,7 @@ type KeeperTestSuite struct {
 
 	app         *simapp.SimApp
 	ctx         sdk.Context
-	queryClient v1beta1.QueryClient
+	queryClient types.QueryClient
 	addrs       []sdk.AccAddress
 }
 
@@ -28,8 +27,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	v1beta1.RegisterQueryServer(queryHelper, app.GovKeeper)
-	queryClient := v1beta1.NewQueryClient(queryHelper)
+	types.RegisterQueryServer(queryHelper, app.GovKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
 
 	suite.app = app
 	suite.ctx = ctx
@@ -67,7 +66,7 @@ func TestProposalQueues(t *testing.T) {
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 
-	inactiveIterator := app.GovKeeper.InactiveProposalQueueIterator(ctx, proposal.DepositEndTime)
+	inactiveIterator := app.GovKeeper.InactiveProposalQueueIterator(ctx, *proposal.DepositEndTime)
 	require.True(t, inactiveIterator.Valid())
 
 	proposalID := types.GetProposalIDFromBytes(inactiveIterator.Value())
@@ -79,7 +78,7 @@ func TestProposalQueues(t *testing.T) {
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposal.ProposalId)
 	require.True(t, ok)
 
-	activeIterator := app.GovKeeper.ActiveProposalQueueIterator(ctx, proposal.VotingEndTime)
+	activeIterator := app.GovKeeper.ActiveProposalQueueIterator(ctx, *proposal.VotingEndTime)
 	require.True(t, activeIterator.Valid())
 
 	proposalID, _ = types.SplitActiveProposalQueueKey(activeIterator.Key())

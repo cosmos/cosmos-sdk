@@ -31,9 +31,39 @@ func QueryCmd(name string) *cobra.Command {
 		QueryVoteByProposalVoterCmd(),
 		QueryVotesByProposalCmd(),
 		QueryVotesByVoterCmd(),
+		QueryGroupsByMemberCmd(),
 	)
 
 	return queryCmd
+}
+
+// QueryGroupsByMemberCmd creates a CLI command for Query/GroupsByMember.
+func QueryGroupsByMemberCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "groups-by-member [address]",
+		Short: "Query for groups by member address with pagination flags",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := group.NewQueryClient(clientCtx)
+			res, err := queryClient.GroupsByMember(cmd.Context(), &group.QueryGroupsByMemberRequest{
+				Address: args[0],
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "groups-by-members")
+	return cmd
 }
 
 // QueryGroupInfoCmd creates a CLI command for Query/GroupInfo.

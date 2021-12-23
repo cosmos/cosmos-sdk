@@ -285,6 +285,6 @@ message QueryGroupsByMemberResponse {
   // groups are the groups info with the provided group member.
   repeated GroupInfo groups = 1;
 
-   // pagination defines the pagination in the response.
+  // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

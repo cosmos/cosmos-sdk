@@ -55,6 +55,6 @@ func (a BasicAllowance) ValidateBasic() error {
 	return nil
 }
 
-func (a BasicAllowance) Expiry() (*time.Time, error) {
+func (a BasicAllowance) ExpiresAt() (*time.Time, error) {
 	return a.Expiration, nil
 }

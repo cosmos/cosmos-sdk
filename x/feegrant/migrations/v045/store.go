@@ -25,7 +25,7 @@ func addAllowancesByExpTimeQueue(ctx types.Context, store storetypes.KVStore, cd
 			return err
 		}
 
-		exp, err := grantInfo.Expiry()
+		exp, err := grantInfo.ExpiresAt()
 		if err != nil {
 			return err
 		}

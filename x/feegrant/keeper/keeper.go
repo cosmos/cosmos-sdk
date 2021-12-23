@@ -59,7 +59,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 			return err
 		}
 
-		exp, err = grant1.Expiry()
+		exp, err = grant1.ExpiresAt()
 		if err != nil {
 			return err
 		}
@@ -80,7 +80,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	}
 
 	store.Set(key, bz)
-	expiration, err := feeAllowance.Expiry()
+	expiration, err := feeAllowance.ExpiresAt()
 
 	if err != nil {
 		return err

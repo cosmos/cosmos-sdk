@@ -106,6 +106,6 @@ func (a PeriodicAllowance) ValidateBasic() error {
 	return nil
 }
 
-func (a PeriodicAllowance) Expiry() (*time.Time, error) {
-	return a.Basic.Expiry()
+func (a PeriodicAllowance) ExpiresAt() (*time.Time, error) {
+	return a.Basic.ExpiresAt()
 }

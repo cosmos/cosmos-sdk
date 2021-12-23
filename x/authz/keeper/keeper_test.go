@@ -248,7 +248,7 @@ func (s *TestSuite) TestDispatchedEvents() {
 	}
 }
 
-func (s *TestSuite) TestDequeAllGrantsQueue() {
+func (s *TestSuite) TestDequeueAllGrantsQueue() {
 	require := s.Require()
 	app, addrs := s.app, s.addrs
 	granter := addrs[0]

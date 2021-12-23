@@ -293,7 +293,7 @@ func (k Keeper) setGrantQueueItem(ctx sdk.Context, expiration time.Time, queueIt
 	return nil
 }
 
-// insertIntoGrantQueue Inserts a grant key into the grant queue
+// insertIntoGrantQueue inserts a grant key into the grant queue
 func (keeper Keeper) insertIntoGrantQueue(ctx sdk.Context, granter, grantee sdk.AccAddress, msgType string,
 	expiration time.Time) error {
 	queueItems, err := keeper.getGrantQueueItem(ctx, expiration)

@@ -373,7 +373,6 @@ func NewSimApp(
 		feegrant.ModuleName, nft.ModuleName,
 		paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName,
 		group.ModuleName,
-		authz.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are

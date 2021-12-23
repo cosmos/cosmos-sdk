@@ -50,11 +50,9 @@ func QueryGroupsByMemberCmd() *cobra.Command {
 			}
 
 			queryClient := group.NewQueryClient(clientCtx)
-
 			res, err := queryClient.GroupsByMember(cmd.Context(), &group.QueryGroupsByMemberRequest{
 				Address: args[0],
 			})
-
 			if err != nil {
 				return err
 			}

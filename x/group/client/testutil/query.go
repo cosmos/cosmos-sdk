@@ -100,6 +100,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByMembers() {
 		expectErr    bool
 		expectErrMsg string
 		numItems     int
+		expectGroups []*group.GroupInfo
 	}{
 		{
 			"invalid address",
@@ -107,6 +108,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByMembers() {
 			true,
 			"invalid bech32 string",
 			0,
+			[]*group.GroupInfo{},
 		},
 		{
 			"not part of any group",
@@ -114,6 +116,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByMembers() {
 			false,
 			"",
 			0,
+			[]*group.GroupInfo{},
 		},
 		{
 			"expect one group",
@@ -121,6 +124,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByMembers() {
 			false,
 			"",
 			1,
+			groups.Groups,
 		},
 	}
 
@@ -133,10 +137,12 @@ func (s *IntegrationTestSuite) TestQueryGroupsByMembers() {
 				require.Contains(out.String(), tc.expectErrMsg)
 			} else {
 				require.NoError(err, out.String())
+
 				var resp group.QueryGroupsByMemberResponse
 				val.ClientCtx.Codec.MustUnmarshalJSON(out.Bytes(), &resp)
 				require.Len(resp.Groups, tc.numItems)
 
+				require.Equal(tc.expectGroups, resp.Groups)
 			}
 		})
 	}

@@ -237,3 +237,12 @@ func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 	app.grpcQueryRouter.SetInterfaceRegistry(registry)
 	app.msgServiceRouter.SetInterfaceRegistry(registry)
 }
+
+// SetFeeHandler sets the FeeHandler which if set will change the behavior of fee handling
+func (app *BaseApp) SetFeeHandler(feeHandler sdk.FeeHandler) {
+	if app.sealed {
+		panic("SetKeeperHandler() on sealed BaseApp")
+	}
+
+	app.feeHandler = feeHandler
+}

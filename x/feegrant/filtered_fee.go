@@ -106,10 +106,10 @@ func (a *AllowedMsgAllowance) ValidateBasic() error {
 	return allowance.ValidateBasic()
 }
 
-func (a *AllowedMsgAllowance) ExpTime() (*time.Time, error) {
+func (a *AllowedMsgAllowance) Expiry() (*time.Time, error) {
 	allowance, err := a.GetAllowance()
 	if err != nil {
 		return nil, err
 	}
-	return allowance.ExpTime()
+	return allowance.Expiry()
 }

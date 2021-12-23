@@ -25,6 +25,6 @@ type FeeAllowanceI interface {
 	// Don't allow negative amounts, or negative periods for example.
 	ValidateBasic() error
 
-	// ExpTime returns the expiry time of the allowance.
-	ExpTime() (*time.Time, error)
+	// Expiry returns the expiry time of the allowance.
+	Expiry() (*time.Time, error)
 }

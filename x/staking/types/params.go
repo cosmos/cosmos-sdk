@@ -33,11 +33,17 @@ const (
 )
 
 var (
-	KeyUnbondingTime     = []byte("UnbondingTime")
-	KeyMaxValidators     = []byte("MaxValidators")
-	KeyMaxEntries        = []byte("MaxEntries")
-	KeyBondDenom         = []byte("BondDenom")
-	KeyHistoricalEntries = []byte("HistoricalEntries")
+	// DefaultMinGlobalSelfDelegation is zero.
+	DefaultMinGlobalSelfDelegation = sdk.ZeroInt()
+)
+
+var (
+	KeyUnbondingTime           = []byte("UnbondingTime")
+	KeyMaxValidators           = []byte("MaxValidators")
+	KeyMaxEntries              = []byte("MaxEntries")
+	KeyBondDenom               = []byte("BondDenom")
+	KeyHistoricalEntries       = []byte("HistoricalEntries")
+	KeyMinGlobalSelfDelegation = []byte("MinGlobalSelfDelegation")
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
@@ -48,13 +54,14 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
-func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string) Params {
+func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string, minGlobalSelfDelegation sdk.Int) Params {
 	return Params{
-		UnbondingTime:     unbondingTime,
-		MaxValidators:     maxValidators,
-		MaxEntries:        maxEntries,
-		HistoricalEntries: historicalEntries,
-		BondDenom:         bondDenom,
+		UnbondingTime:           unbondingTime,
+		MaxValidators:           maxValidators,
+		MaxEntries:              maxEntries,
+		HistoricalEntries:       historicalEntries,
+		BondDenom:               bondDenom,
+		MinGlobalSelfDelegation: minGlobalSelfDelegation,
 	}
 }
 
@@ -66,6 +73,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyMaxEntries, &p.MaxEntries, validateMaxEntries),
 		paramtypes.NewParamSetPair(KeyHistoricalEntries, &p.HistoricalEntries, validateHistoricalEntries),
 		paramtypes.NewParamSetPair(KeyBondDenom, &p.BondDenom, validateBondDenom),
+		paramtypes.NewParamSetPair(KeyMinGlobalSelfDelegation, &p.MinGlobalSelfDelegation, validateMinGlobalSelfDelegation),
 	}
 }
 
@@ -77,6 +85,7 @@ func DefaultParams() Params {
 		DefaultMaxEntries,
 		DefaultHistoricalEntries,
 		sdk.DefaultBondDenom,
+		DefaultMinGlobalSelfDelegation,
 	)
 }
 
@@ -121,6 +130,10 @@ func (p Params) Validate() error {
 	}
 
 	if err := validateBondDenom(p.BondDenom); err != nil {
+		return err
+	}
+
+	if err := validateMinGlobalSelfDelegation(p.MinGlobalSelfDelegation); err != nil {
 		return err
 	}
 
@@ -187,6 +200,19 @@ func validateBondDenom(i interface{}) error {
 
 	if err := sdk.ValidateDenom(v); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func validateMinGlobalSelfDelegation(i interface{}) error {
+	v, ok := i.(sdk.Int)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return errors.New("MinGlobalSelfDelegation can't be negative")
 	}
 
 	return nil

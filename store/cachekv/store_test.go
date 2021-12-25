@@ -120,6 +120,7 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 		i++
 	}
 	require.Equal(t, nItems, i)
+	itr.Close()
 
 	// iterate over none
 	itr = st.Iterator(bz("money"), nil)
@@ -128,6 +129,7 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 		i++
 	}
 	require.Equal(t, 0, i)
+	itr.Close()
 
 	// iterate over lower
 	itr = st.Iterator(keyFmt(0), keyFmt(3))
@@ -139,6 +141,7 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 		i++
 	}
 	require.Equal(t, 3, i)
+	itr.Close()
 
 	// iterate over upper
 	itr = st.Iterator(keyFmt(2), keyFmt(4))
@@ -150,6 +153,7 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 		i++
 	}
 	require.Equal(t, 4, i)
+	itr.Close()
 }
 
 func TestCacheKVMergeIteratorBasics(t *testing.T) {
@@ -388,12 +392,15 @@ func assertIterateDomain(t *testing.T, st types.KVStore, expectedN int) {
 		i++
 	}
 	require.Equal(t, expectedN, i)
+	itr.Close()
 }
 
 func assertIterateDomainCheck(t *testing.T, st types.KVStore, mem dbm.DB, r []keyRange) {
 	// iterate over each and check they match the other
 	itr := st.Iterator(nil, nil)
 	itr2, err := mem.Iterator(nil, nil) // ground truth
+	defer itr.Close()
+	defer itr2.Close()
 	require.NoError(t, err)
 
 	krc := newKeyRangeCounter(r)
@@ -428,6 +435,8 @@ func assertIterateDomainCompare(t *testing.T, st types.KVStore, mem dbm.DB) {
 	require.NoError(t, err)
 	checkIterators(t, itr, itr2)
 	checkIterators(t, itr2, itr)
+	itr.Close()
+	itr2.Close()
 }
 
 func checkIterators(t *testing.T, itr, itr2 types.Iterator) {

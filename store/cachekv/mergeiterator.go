@@ -18,15 +18,18 @@ type cacheMergeIterator struct {
 	parent    types.Iterator
 	cache     types.Iterator
 	ascending bool
+
+	storePtr *Store
 }
 
 var _ types.Iterator = (*cacheMergeIterator)(nil)
 
-func newCacheMergeIterator(parent, cache types.Iterator, ascending bool) *cacheMergeIterator {
+func newCacheMergeIterator(storePtr *Store, parent, cache types.Iterator, ascending bool) *cacheMergeIterator {
 	iter := &cacheMergeIterator{
 		parent:    parent,
 		cache:     cache,
 		ascending: ascending,
+		storePtr:  storePtr,
 	}
 
 	return iter
@@ -155,8 +158,11 @@ func (iter *cacheMergeIterator) Close() error {
 	if err := iter.parent.Close(); err != nil {
 		return err
 	}
-
-	return iter.cache.Close()
+	if err := iter.cache.Close(); err != nil {
+		return err
+	}
+	iter.storePtr.decrementActiveIteratorCount()
+	return nil
 }
 
 // Error returns an error if the cacheMergeIterator is invalid defined by the

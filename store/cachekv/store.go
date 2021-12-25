@@ -30,6 +30,8 @@ type Store struct {
 	unsortedCache map[string]struct{}
 	sortedCache   *dbm.MemDB // always ascending sorted
 	parent        types.KVStore
+
+	activeIterators int
 }
 
 var _ types.CacheKVStore = (*Store)(nil)
@@ -176,6 +178,7 @@ func (store *Store) ReverseIterator(start, end []byte) types.Iterator {
 func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
+	store.activeIterators += 1
 
 	var parent, cache types.Iterator
 
@@ -188,7 +191,13 @@ func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 	store.dirtyItems(start, end)
 	cache = newMemIterator(start, end, store.sortedCache, store.deleted, ascending)
 
-	return newCacheMergeIterator(parent, cache, ascending)
+	return newCacheMergeIterator(store, parent, cache, ascending)
+}
+
+func (store *Store) decrementActiveIteratorCount() {
+	store.mtx.Lock()
+	defer store.mtx.Unlock()
+	store.activeIterators -= 1
 }
 
 func findStartIndex(strL []string, startQ string) int {
@@ -330,6 +339,18 @@ func (store *Store) dirtyItems(start, end []byte) {
 }
 
 func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair, sortState sortState) {
+	// no-op if we have multiple iterators open, as this causes writes to MemDB.
+	// This will cause a write to mem-db, which could potentially be thread-safe per
+	// golang btree's docs, but will definitely cause deadlocks in tm-db's memdb abstractions.
+	// This is only safe if you are either:
+	// - only doing one iterator at a time
+	// - doing multiple iterators, over the same data, and you didn't write to the subset between
+	//   first iterator creation and current iterator creation
+	// - doing multiple iterators over disjoint pieces of data, \
+	//   and have done no sets over any iterated component since first iterator creation
+	if store.activeIterators > 1 {
+		return
+	}
 	n := len(store.unsortedCache)
 	if len(unsorted) == n { // This pattern allows the Go compiler to emit the map clearing idiom for the entire map.
 		for key := range store.unsortedCache {

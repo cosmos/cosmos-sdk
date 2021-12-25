@@ -200,86 +200,6 @@ func (store *Store) decrementActiveIteratorCount() {
 	store.activeIterators -= 1
 }
 
-func findStartIndex(strL []string, startQ string) int {
-	// Modified binary search to find the very first element in >=startQ.
-	if len(strL) == 0 {
-		return -1
-	}
-
-	var left, right, mid int
-	right = len(strL) - 1
-	for left <= right {
-		mid = (left + right) >> 1
-		midStr := strL[mid]
-		if midStr == startQ {
-			// Handle condition where there might be multiple values equal to startQ.
-			// We are looking for the very first value < midStL, that i+1 will be the first
-			// element >= midStr.
-			for i := mid - 1; i >= 0; i-- {
-				if strL[i] != midStr {
-					return i + 1
-				}
-			}
-			return 0
-		}
-		if midStr < startQ {
-			left = mid + 1
-		} else { // midStrL > startQ
-			right = mid - 1
-		}
-	}
-	if left >= 0 && left < len(strL) && strL[left] >= startQ {
-		return left
-	}
-	return -1
-}
-
-func findEndIndex(strL []string, endQ string) int {
-	if len(strL) == 0 {
-		return -1
-	}
-
-	// Modified binary search to find the very first element <endQ.
-	var left, right, mid int
-	right = len(strL) - 1
-	for left <= right {
-		mid = (left + right) >> 1
-		midStr := strL[mid]
-		if midStr == endQ {
-			// Handle condition where there might be multiple values equal to startQ.
-			// We are looking for the very first value < midStL, that i+1 will be the first
-			// element >= midStr.
-			for i := mid - 1; i >= 0; i-- {
-				if strL[i] < midStr {
-					return i + 1
-				}
-			}
-			return 0
-		}
-		if midStr < endQ {
-			left = mid + 1
-		} else { // midStrL > startQ
-			right = mid - 1
-		}
-	}
-
-	// Binary search failed, now let's find a value less than endQ.
-	for i := right; i >= 0; i-- {
-		if strL[i] < endQ {
-			return i
-		}
-	}
-
-	return -1
-}
-
-type sortState int
-
-const (
-	stateUnsorted sortState = iota
-	stateAlreadySorted
-)
-
 // Constructs a slice of dirty items, to use w/ memIterator.
 func (store *Store) dirtyItems(start, end []byte) {
 	startStr, endStr := conv.UnsafeBytesToStr(start), conv.UnsafeBytesToStr(end)
@@ -288,57 +208,18 @@ func (store *Store) dirtyItems(start, end []byte) {
 		return
 	}
 
-	n := len(store.unsortedCache)
 	unsorted := make([]*kv.Pair, 0)
-	// If the unsortedCache is too big, its costs too much to determine
-	// whats in the subset we are concerned about.
-	// If you are interleaving iterator calls with writes, this can easily become an
-	// O(N^2) overhead.
-	// Even without that, too many range checks eventually becomes more expensive
-	// than just not having the cache.
-	if n < 1024 {
-		for key := range store.unsortedCache {
-			if dbm.IsKeyInDomain(conv.UnsafeStrToBytes(key), start, end) {
-				cacheValue := store.cache[key]
-				unsorted = append(unsorted, &kv.Pair{Key: []byte(key), Value: cacheValue.value})
-			}
-		}
-		store.clearUnsortedCacheSubset(unsorted, stateUnsorted)
-		return
-	}
-
-	// Otherwise it is large so perform a modified binary search to find
-	// the target ranges for the keys that we should be looking for.
-	strL := make([]string, 0, n)
 	for key := range store.unsortedCache {
-		strL = append(strL, key)
-	}
-	sort.Strings(strL)
-
-	// Now find the values within the domain
-	//  [start, end)
-	startIndex := findStartIndex(strL, startStr)
-	endIndex := findEndIndex(strL, endStr)
-
-	if endIndex < 0 {
-		endIndex = len(strL) - 1
-	}
-	if startIndex < 0 {
-		startIndex = 0
-	}
-
-	kvL := make([]*kv.Pair, 0)
-	for i := startIndex; i <= endIndex; i++ {
-		key := strL[i]
 		cacheValue := store.cache[key]
-		kvL = append(kvL, &kv.Pair{Key: []byte(key), Value: cacheValue.value})
+		keyBz := conv.UnsafeStrToBytes(key)
+		unsorted = append(unsorted, &kv.Pair{Key: keyBz, Value: cacheValue.value})
 	}
 
 	// kvL was already sorted so pass it in as is.
-	store.clearUnsortedCacheSubset(kvL, stateAlreadySorted)
+	store.clearUnsortedCacheSubset(unsorted)
 }
 
-func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair, sortState sortState) {
+func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair) {
 	// no-op if we have multiple iterators open, as this causes writes to MemDB.
 	// This will cause a write to mem-db, which could potentially be thread-safe per
 	// golang btree's docs, but will definitely cause deadlocks in tm-db's memdb abstractions.
@@ -362,11 +243,9 @@ func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair, sortState sort
 		}
 	}
 
-	if sortState == stateUnsorted {
-		sort.Slice(unsorted, func(i, j int) bool {
-			return bytes.Compare(unsorted[i].Key, unsorted[j].Key) < 0
-		})
-	}
+	sort.Slice(unsorted, func(i, j int) bool {
+		return bytes.Compare(unsorted[i].Key, unsorted[j].Key) < 0
+	})
 
 	for _, item := range unsorted {
 		if item.Value == nil {

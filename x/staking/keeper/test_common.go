@@ -23,7 +23,6 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 	deleted := false
 
 	iterator := sdk.KVStorePrefixIterator(store, types.ValidatorsByPowerIndexKey)
-	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
 		valAddr := types.ParseValidatorPowerRankKey(iterator.Key())
@@ -37,6 +36,7 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 			store.Delete(iterator.Key())
 		}
 	}
+	iterator.Close()
 
 	keeper.SetValidatorByPowerIndex(ctx, validator)
 

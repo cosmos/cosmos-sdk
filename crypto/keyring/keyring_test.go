@@ -1064,6 +1064,43 @@ func TestAltKeyring_SaveOfflineKey(t *testing.T) {
 	require.Len(t, list, 1)
 }
 
+func TestNonConsistentKeyring_SavePubKey(t *testing.T) {
+	cdc := getCodec()
+	kr, err := New(t.Name(), BackendTest, t.TempDir(), nil, cdc)
+	require.NoError(t, err)
+
+	list, err := kr.List()
+	require.NoError(t, err)
+	require.Empty(t, list)
+
+	key := someKey
+	priv := ed25519.GenPrivKey()
+	pub := priv.PubKey()
+
+	k, err := kr.SaveOfflineKey(key, pub)
+	require.Nil(t, err)
+
+	// broken keyring state test
+	unsafeKr, ok := kr.(keystore)
+	require.True(t, ok)
+	// we lost public key for some reason, but still have an address record
+	unsafeKr.db.Remove(infoKey(key))
+	list, err = kr.List()
+	require.NoError(t, err)
+	require.Equal(t, 0, len(list))
+
+	k, err = kr.SaveOfflineKey(key, pub)
+	require.Nil(t, err)
+	pubKey, err := k.GetPubKey()
+	require.NoError(t, err)
+	require.Equal(t, pub, pubKey)
+	require.Equal(t, key, k.Name)
+
+	list, err = kr.List()
+	require.NoError(t, err)
+	require.Equal(t, 1, len(list))
+}
+
 func TestAltKeyring_SaveMultisig(t *testing.T) {
 	cdc := getCodec()
 	kr, err := New(t.Name(), BackendTest, t.TempDir(), nil, cdc)

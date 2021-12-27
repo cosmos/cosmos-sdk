@@ -39,6 +39,12 @@ func (k Keeper) BondDenom(ctx sdk.Context) (res string) {
 	return
 }
 
+// MinGlobalSelfDelegation - MinGlobalSelfDelegation amount
+func (k Keeper) MinGlobalSelfDelegation(ctx sdk.Context) (res sdk.Int) {
+	k.paramstore.Get(ctx, types.KeyMinGlobalSelfDelegation, &res)
+	return
+}
+
 // Get all parameteras as types.Params
 func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 	return types.NewParams(
@@ -47,6 +53,7 @@ func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 		k.MaxEntries(ctx),
 		k.HistoricalEntries(ctx),
 		k.BondDenom(ctx),
+		k.MinGlobalSelfDelegation(ctx),
 	)
 }
 

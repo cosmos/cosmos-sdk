@@ -786,9 +786,8 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsWithMode() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 	cmd := stakingcli.NewDelegateCmd()
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	require.NoError(err)
-	fmt.Println("1st delegate", out.String())
 
 	// delegate 500 tokens to validator2
 	args = []string{
@@ -799,9 +798,8 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsWithMode() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
-	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	require.NoError(err)
-	fmt.Println("2nd delegate", out.String())
 
 	clientCtx = clientCtx.WithBroadcastMode("sync")
 	args = []string{
@@ -813,47 +811,21 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsWithMode() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 	cmd = cli.NewWithdrawAllRewardsCmd()
-	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	require.NoError(err)
-
-	// var result sdk.TxResponse
-	// require.NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
-
-	// fmt.Println(result.TxHash)
-
-	fmt.Println("1st withdrawal of all rewards", out.String())
+	s.Require().Equal(2, len(strings.Split(strings.Trim(out.String(), "\n"), "\n")))
 
 	clientCtx = clientCtx.WithBroadcastMode("async")
 	args = []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-		fmt.Sprintf("--%s=1", cli.FlagMaxMessagesPerTx),
+		fmt.Sprintf("--%s=2", cli.FlagMaxMessagesPerTx),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastAsync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 	cmd = cli.NewWithdrawAllRewardsCmd()
 	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	require.NoError(err)
-
-	// require.NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
-
-	// fmt.Println(result.TxHash)
-
-	fmt.Println("2nd withdrawal of all rewards", out.String())
-
-	// waiting txn to include in the block
-	// time.Sleep(10 * time.Second)
-	// // Query txn details by Hash
-	// args = []string{
-	// 	result.TxHash,
-	// 	fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-	// }
-
-	// cmd = authcli.QueryTxCmd()
-	// out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	// require.NoError(err)
-	// fmt.Println(out.String())
-
-	require.True(false)
+	s.Require().Equal(1, len(strings.Split(strings.Trim(out.String(), "\n"), "\n")))
 }

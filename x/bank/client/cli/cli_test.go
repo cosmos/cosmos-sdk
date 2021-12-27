@@ -182,7 +182,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 			expected: &types.QueryTotalSupplyResponse{
 				Supply: sdk.NewCoins(
 					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
-					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens),
+					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
 				)},
 		},
 		{
@@ -193,7 +193,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			respType: &sdk.Coin{},
-			expected: &sdk.Coin{s.cfg.BondDenom, s.cfg.StakingTokens},
+			expected: &sdk.Coin{s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))},
 		},
 		{
 			name: "total supply of a bogus denom",

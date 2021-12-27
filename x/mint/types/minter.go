@@ -6,6 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// EndHyperInflation is end of the hyper-inflationary period. The hyperinflationary regime ends at 13.5%.
+var EndHyperInflation = sdk.NewIntWithDecimal(250_000_000, 18)
+
 // NewMinter returns a new Minter object with the given inflation and annual
 // provisions values.
 func NewMinter(inflation, annualProvisions sdk.Dec) Minter {
@@ -31,7 +34,7 @@ func DefaultInitialMinter() Minter {
 	)
 }
 
-// validate minter
+// ValidateMinter validates minter
 func ValidateMinter(minter Minter) error {
 	if minter.Inflation.IsNegative() {
 		return fmt.Errorf("mint parameter Inflation should be positive, is %s",
@@ -40,18 +43,15 @@ func ValidateMinter(minter Minter) error {
 	return nil
 }
 
-// NextInflationRate returns the new inflation rate for the next hour
+// NextInflationRate returns the new inflation rate for the next hour.
 func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec, totalSupply sdk.Int) sdk.Dec {
 	// NOM staking is defined by an initial hyper-inflationary regime followed by an
 	// infinite regime stabilizing % staked around a goal.
 
-	// End of the hyper-inflationary period. The hyperinflationary regime ends at 13.5%
-	endHyperInflation := sdk.NewIntWithDecimal(250_000_000, 18)
-
 	// Initialize the inflation variable
 	inflation := sdk.NewDec(int64(0))
 
-	if totalSupply.GTE(endHyperInflation) {
+	if totalSupply.GTE(EndHyperInflation) {
 		// Infinite stabilized regime
 		//
 		// The target annual inflation rate is recalculated for each previsions cycle. The
@@ -74,16 +74,10 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec, totalSuppl
 		if inflation.LT(params.InflationMin) {
 			inflation = params.InflationMin
 		}
-	} else {
-		// Hyperinflationary regime
-		//
-		// The inflation rate is calculated as 100% * e^(-((x-peak_position)^2 / (2*(std_dev^2))))),
-		// where peak_position = 150_000_000 NOM and std_dev = 50_000_000 NOM (but note that the
-		// argument is in aNOM)
-
-		inflation = sdk.GlobalInflationCurve.CalculateInflationDec(totalSupply)
+		return inflation
 	}
-	return inflation
+
+	return globalInflationCurve.CalculateInflationDec(totalSupply)
 }
 
 // NextAnnualProvisions returns the annual provisions based on current total

@@ -17,7 +17,7 @@ func TestNextInflation(t *testing.T) {
 	// Governing Mechanism:
 	//    inflationRateChangePerYear = (1- BondedRatio/ GoalBonded) * MaxInflationRateChange
 
-	var stableSupply = sdk.NewIntWithDecimal(250_000_000, 18)
+	var stableSupply = EndHyperInflation
 	var dec50m, _ = sdk.NewDecFromStr("0.135335283236612691")
 	var dec150m, _ = sdk.NewDecFromStr("1.000000000000000000")
 	var dec200m, _ = sdk.NewDecFromStr("0.606530659712633423")

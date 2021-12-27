@@ -2,15 +2,20 @@ package store
 
 import (
 	crand "crypto/rand"
+	"encoding/binary"
 	"fmt"
-	"math/big"
+	"math"
+	"math/rand"
+	"sort"
 	"testing"
 
 	"github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/db/memdb"
+	"github.com/cosmos/cosmos-sdk/db/badgerdb"
+	"github.com/cosmos/cosmos-sdk/db/rocksdb"
 	storev1 "github.com/cosmos/cosmos-sdk/store/iavl"
+	"github.com/cosmos/cosmos-sdk/store/types"
 	storev2 "github.com/cosmos/cosmos-sdk/store/v2/flat"
 	dbm "github.com/tendermint/tm-db"
 )
@@ -25,8 +30,24 @@ func randBytes(numBytes int) []byte {
 	return b
 }
 
-func generateRatioGrid() [][4]uint {
-	var ratioGrid [][4]uint
+type percentages struct {
+	has    uint
+	get    uint
+	set    uint
+	delete uint
+}
+
+type counts struct {
+	has    int
+	get    int
+	set    int
+	delete int
+}
+
+func generateSampledPercentages() []*percentages {
+	var sampledPercentages []*percentages
+	sampleX := &percentages{has: 5, get: 65, set: 30, delete: 0}
+	sampledPercentages = append(sampledPercentages, sampleX)
 	for a := uint(0); a < 100; a += 20 {
 		for b := uint(0); b < 100; b += 20 {
 			if a+b > 100 {
@@ -36,170 +57,222 @@ func generateRatioGrid() [][4]uint {
 					if a+b+c > 100 {
 						break
 					} else {
-						d := 100 - a - b - c
-						ratio := [4]uint{a, b, c, d}
-						ratioGrid = append(ratioGrid, ratio)
+						sample := percentages{
+							has:    a,
+							get:    b,
+							set:    c,
+							delete: 100 - a - b - c,
+						}
+						sampledPercentages = append(sampledPercentages, &sample)
 					}
 				}
 			}
 		}
 	}
-	return ratioGrid
+	return sampledPercentages
 }
 
 type benchmark struct {
-	name  string
-	ratio [4]uint
+	name        string
+	percentages *percentages
+	dbType      dbm.BackendType
+	counts      *counts
 }
 
-func generateBenchmarks() []benchmark {
+func generateBenchmarks(dbBackendTypes []dbm.BackendType, sampledPercentages []*percentages, sampledCounts []*counts) []benchmark {
 	var benchmarks []benchmark
-	ratios := generateRatioGrid()
-	for _, ratio := range ratios {
-		name := fmt.Sprintf("%d-%d-%d-%d", ratio[0], ratio[1], ratio[2], ratio[3])
-		benchmarks = append(benchmarks, benchmark{name: name, ratio: ratio})
+	for _, dbType := range dbBackendTypes {
+		if len(sampledPercentages) > 0 {
+			for _, p := range sampledPercentages {
+				name := fmt.Sprintf("r-%s-%d-%d-%d-%d", dbType, p.has, p.get, p.set, p.delete)
+				benchmarks = append(benchmarks, benchmark{name: name, percentages: p, dbType: dbType, counts: (*counts)(nil)})
+			}
+		} else if len(sampledCounts) > 0 {
+			for _, c := range sampledCounts {
+				name := fmt.Sprintf("d-%s-%d-%d-%d-%d", dbType, c.has, c.get, c.set, c.delete)
+				benchmarks = append(benchmarks, benchmark{name: name, percentages: (*percentages)(nil), dbType: dbType, counts: c})
+			}
+		}
 	}
 	return benchmarks
 }
 
-func remove(s []string, i int) []string {
-	s[i] = s[len(s)-1]
-	return s[:len(s)-1]
+type store interface {
+	Has(key []byte) bool
+	Get(key []byte) []byte
+	Set(key []byte, value []byte)
+	Delete(key []byte)
+	Commit() types.CommitID
 }
 
-func runLoadStoreV1(b *testing.B, operationsCount uint, ratio [4]uint) {
-	db := dbm.NewMemDB()
+func sampleOperation(p *percentages) (string, error) {
+	ops := []string{"Has", "Get", "Set", "Delete"}
+	thresholds := []uint{p.has, p.has + p.get, p.has + p.get + p.set}
+	r := rand.Intn(100)
+	if r >= int(thresholds[2]) {
+		return ops[3], nil
+	} else {
+		for i := 0; i < len(thresholds); i++ {
+			if r < int(thresholds[i]) {
+				return ops[i], nil
+			}
+		}
+	}
+	return "", fmt.Errorf("failed to smaple operation")
+}
+
+func runRandomizedOperations(b *testing.B, s store, totalOpsCount int, p *percentages) {
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < totalOpsCount; j++ {
+			b.StopTimer()
+			op, err := sampleOperation(p)
+			require.NoError(b, err)
+			b.StartTimer()
+
+			switch op {
+			case "Has":
+				s.Has(randBytes(12))
+			case "Get":
+				s.Get(randBytes(12))
+			case "Set":
+				s.Set(randBytes(12), randBytes(50))
+			case "Delete":
+				s.Delete(randBytes(12))
+			}
+			if j%200 == 0 || j == totalOpsCount-1 {
+				s.Commit()
+			}
+		}
+	}
+}
+
+func prepareValues() [][]byte {
+	var data [][]byte
+	for i := 0; i < 5000; i++ {
+		data[i] = randBytes(50)
+	}
+	return data
+}
+
+func createKey(i int) []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, uint64(math.Sin(float64(i))*100000))
+	return b
+}
+
+func runDeterministicOperations(b *testing.B, s store, values [][]byte, c *counts) {
+	counts := []int{c.has, c.get, c.set, c.delete}
+	sort.Ints(counts)
+	step := counts[len(counts)-1]
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		idx := i * step
+
+		b.StopTimer()
+		if idx >= len(values) {
+			for j := len(values); j < (idx + step); j++ {
+				values = append(values, randBytes(50))
+			}
+		}
+
+		b.StartTimer()
+		for j := 0; j < c.set; j++ {
+			key := createKey(idx + j)
+			s.Set(key, values[idx+j])
+		}
+		for j := 0; j < c.has; j++ {
+			key := createKey(idx + j)
+			s.Has(key)
+		}
+		for j := 0; j < c.get; j++ {
+			key := createKey(idx + j)
+			s.Get(key)
+		}
+		for j := 0; j < c.delete; j++ {
+			key := createKey(idx + j)
+			s.Delete(key)
+		}
+		s.Commit()
+	}
+}
+
+type newStore func(string, dbm.BackendType, string, int) (store, error)
+
+func newStoreV1(dbName string, dbType dbm.BackendType, dir string, cacheSize int) (store, error) {
+	db, err := dbm.NewDB(dbName, dbType, dir)
+	if err != nil {
+		return (*storev1.Store)(nil), err
+	}
 	tree, err := iavl.NewMutableTree(db, cacheSize)
-	require.NoError(b, err)
-	store := storev1.UnsafeNewStore(tree)
-
-	opLimit := map[string]uint{}
-	opLimit["Has"] = operationsCount * ratio[0] / 100
-	opLimit["Get"] = operationsCount * ratio[1] / 100
-	opLimit["Set"] = operationsCount * ratio[2] / 100
-	opLimit["Delete"] = operationsCount * ratio[3] / 100
-
-	opCount := map[string]uint{}
-	keys := []string{"Has", "Get", "Set", "Delete"}
-	for j := 0; j < int(operationsCount); j++ {
-		r, _ := crand.Int(crand.Reader, big.NewInt(int64(len(keys))))
-		k := int(r.Uint64())
-		key := keys[k]
-		switch key {
-		case "Has":
-			store.Has(randBytes(12))
-			opCount["Has"] += 1
-			if opCount["Has"] >= opLimit["Has"] {
-				keys = remove(keys, k)
-			}
-		case "Get":
-			store.Get(randBytes(12))
-			opCount["Get"] += 1
-			if opCount["Get"] >= opLimit["Get"] {
-				keys = remove(keys, k)
-			}
-		case "Set":
-			store.Set(randBytes(12), randBytes(50))
-			opCount["Set"] += 1
-			if opCount["Set"] >= opLimit["Set"] {
-				keys = remove(keys, k)
-			}
-		case "Delete":
-			store.Delete(randBytes(12))
-			opCount["Delete"] += 1
-			if opCount["Delete"] >= opLimit["Delete"] {
-				keys = remove(keys, k)
-			}
-		}
+	if err != nil {
+		return (*storev1.Store)(nil), err
 	}
+	s := storev1.UnsafeNewStore(tree)
+	return s, nil
+}
 
-	id := store.Commit()
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_, err = storev1.LoadStore(db, id, false, storev1.DefaultIAVLCacheSize)
-		require.NoError(b, err)
+func newStoreV2(_ string, dbType dbm.BackendType, dir string, _ int) (store, error) {
+	switch dbType {
+	case dbm.RocksDBBackend:
+		db, err := rocksdb.NewDB(dir)
+		if err != nil {
+			return (*storev2.Store)(nil), err
+		}
+		s, err := storev2.NewStore(db, storev2.DefaultStoreConfig)
+		if err != nil {
+			return (*storev2.Store)(nil), err
+		}
+		return s, nil
+	case dbm.BadgerDBBackend:
+		db, err := badgerdb.NewDB(dir)
+		if err != nil {
+			return (*storev2.Store)(nil), err
+		}
+		s, err := storev2.NewStore(db, storev2.DefaultStoreConfig)
+		if err != nil {
+			return (*storev2.Store)(nil), err
+		}
+		return s, nil
+	default:
+		return (*storev2.Store)(nil), fmt.Errorf("not supported backend for store v2")
 	}
 }
 
-func runLoadStoreV2(b *testing.B, operationsCount uint, ratio [4]uint) {
-	db := memdb.NewDB()
-	store, err := storev2.NewStore(db, storev2.DefaultStoreConfig)
-	require.NoError(b, err)
+func runSuit(b *testing.B, newStore newStore, dbBackendTypes []dbm.BackendType) {
+	// run randomized operations subbenchmarks for various scenarios
+	// dbBackendTypes := []dbm.BackendType{dbm.GoLevelDBBackend, dbm.RocksDBBackend, dbm.BadgerDBBackend}
 
-	opLimit := map[string]uint{}
-	opLimit["Has"] = operationsCount * ratio[0] / 100
-	opLimit["Get"] = operationsCount * ratio[1] / 100
-	opLimit["Set"] = operationsCount * ratio[2] / 100
-	opLimit["Delete"] = operationsCount * ratio[3] / 100
-
-	opCount := map[string]uint{}
-	keys := []string{"Has", "Get", "Set", "Delete"}
-	for j := 0; j < int(operationsCount); j++ {
-		r, _ := crand.Int(crand.Reader, big.NewInt(int64(len(keys))))
-		k := int(r.Uint64())
-		key := keys[k]
-		switch key {
-		case "Has":
-			store.Has(randBytes(12))
-			opCount["Has"] += 1
-			if opCount["Has"] >= opLimit["Has"] {
-				keys = remove(keys, k)
-			}
-		case "Get":
-			store.Get(randBytes(12))
-			opCount["Get"] += 1
-			if opCount["Get"] >= opLimit["Get"] {
-				keys = remove(keys, k)
-			}
-		case "Set":
-			store.Set(randBytes(12), randBytes(50))
-			opCount["Set"] += 1
-			if opCount["Set"] >= opLimit["Set"] {
-				keys = remove(keys, k)
-			}
-		case "Delete":
-			store.Delete(randBytes(12))
-			opCount["Delete"] += 1
-			if opCount["Delete"] >= opLimit["Delete"] {
-				keys = remove(keys, k)
-			}
-		}
+	sampledPercentages := generateSampledPercentages()
+	benchmarks := generateBenchmarks(dbBackendTypes, sampledPercentages, nil)
+	for _, bm := range benchmarks {
+		s, err := newStore(bm.name, bm.dbType, bm.name, cacheSize)
+		require.NoError(b, err)
+		b.Run(bm.name, func(sub *testing.B) {
+			runRandomizedOperations(sub, s, 10000, bm.percentages)
+		})
 	}
 
-	_ = store.Commit()
-	require.NoError(b, store.Close())
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		store, err = storev2.NewStore(db, storev2.DefaultStoreConfig)
+	// run deterministic operations subbenchmarks for various scenarios
+	c := &counts{has: 5, get: 20, set: 5, delete: 1}
+	sampledCounts := []*counts{c}
+	benchmarks = generateBenchmarks(dbBackendTypes, nil, sampledCounts)
+	values := prepareValues()
+	for _, bm := range benchmarks {
+		s, err := newStore(bm.name, bm.dbType, bm.name, cacheSize)
 		require.NoError(b, err)
-		require.NoError(b, store.Close())
+		b.Run(bm.name, func(sub *testing.B) {
+			runDeterministicOperations(sub, s, values, bm.counts)
+		})
 	}
 }
 
 func BenchmarkLoadStoreV1(b *testing.B) {
-	bm := benchmark{name: "test", ratio: [4]uint{5, 65, 30, 0}}
-	b.Run(bm.name, func(sub *testing.B) {
-		runLoadStoreV1(sub, 10000, bm.ratio)
-	})
+	dbBackendTypes := []dbm.BackendType{dbm.GoLevelDBBackend, dbm.RocksDBBackend, dbm.BadgerDBBackend}
+	runSuit(b, newStoreV1, dbBackendTypes)
 }
 
 func BenchmarkLoadStoreV2(b *testing.B) {
-	bm := benchmark{name: "test", ratio: [4]uint{5, 65, 30, 0}}
-	b.Run(bm.name, func(sub *testing.B) {
-		runLoadStoreV2(sub, 10000, bm.ratio)
-	})
-}
-
-func BenchmarkLoadStore(b *testing.B) {
-	benchmarks := generateBenchmarks()
-	for _, bm := range benchmarks {
-		b.Run(fmt.Sprintf("%s-%s", "v1", bm.name), func(sub *testing.B) {
-			runLoadStoreV1(sub, 10000, bm.ratio)
-		})
-		b.Run(fmt.Sprintf("%s-%s", "v2", bm.name), func(sub *testing.B) {
-			runLoadStoreV2(sub, 10000, bm.ratio)
-		})
-	}
+	dbBackendTypes := []dbm.BackendType{dbm.RocksDBBackend, dbm.BadgerDBBackend}
+	runSuit(b, newStoreV2, dbBackendTypes)
 }

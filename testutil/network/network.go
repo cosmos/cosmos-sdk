@@ -43,6 +43,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -96,6 +97,9 @@ type Config struct {
 // testing requirements.
 func DefaultConfig() Config {
 	encCfg := simapp.MakeTestEncodingConfig()
+
+	// disable the EndHyperInflation mint functionality for the integration tests to keep backward compatibility.
+	minttypes.EndHyperInflation = sdk.ZeroInt()
 
 	return Config{
 		Codec:             encCfg.Marshaler,

@@ -17,36 +17,46 @@ func TestNextInflation(t *testing.T) {
 	// Governing Mechanism:
 	//    inflationRateChangePerYear = (1- BondedRatio/ GoalBonded) * MaxInflationRateChange
 
+	var stableSupply = EndHyperInflation
+	var dec50m, _ = sdk.NewDecFromStr("0.135335283236612691")
+	var dec150m, _ = sdk.NewDecFromStr("1.000000000000000000")
+	var dec200m, _ = sdk.NewDecFromStr("0.606530659712633423")
 	tests := []struct {
 		bondedRatio, setInflation, expChange sdk.Dec
+		totalSupply                          sdk.Int
 	}{
 		// with 0% bonded atom supply the inflation should increase by InflationRateChange
-		{sdk.ZeroDec(), sdk.NewDecWithPrec(7, 2), params.InflationRateChange.Quo(blocksPerYr)},
+		{sdk.ZeroDec(), sdk.NewDecWithPrec(7, 2), params.InflationRateChange.Quo(blocksPerYr), stableSupply},
 
 		// 100% bonded, starting at 20% inflation and being reduced
 		// (1 - (1/0.67))*(0.13/8667)
 		{sdk.OneDec(), sdk.NewDecWithPrec(20, 2),
-			sdk.OneDec().Sub(sdk.OneDec().Quo(params.GoalBonded)).Mul(params.InflationRateChange).Quo(blocksPerYr)},
+			sdk.OneDec().Sub(sdk.OneDec().Quo(params.GoalBonded)).Mul(params.InflationRateChange).Quo(blocksPerYr), stableSupply},
 
 		// 50% bonded, starting at 10% inflation and being increased
 		{sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(10, 2),
-			sdk.OneDec().Sub(sdk.NewDecWithPrec(5, 1).Quo(params.GoalBonded)).Mul(params.InflationRateChange).Quo(blocksPerYr)},
+			sdk.OneDec().Sub(sdk.NewDecWithPrec(5, 1).Quo(params.GoalBonded)).Mul(params.InflationRateChange).Quo(blocksPerYr), stableSupply},
 
 		// test 7% minimum stop (testing with 100% bonded)
-		{sdk.OneDec(), sdk.NewDecWithPrec(7, 2), sdk.ZeroDec()},
-		{sdk.OneDec(), sdk.NewDecWithPrec(700000001, 10), sdk.NewDecWithPrec(-1, 10)},
+		{sdk.OneDec(), sdk.NewDecWithPrec(7, 2), sdk.ZeroDec(), stableSupply},
+		{sdk.OneDec(), sdk.NewDecWithPrec(700000001, 10), sdk.NewDecWithPrec(-1, 10), stableSupply},
 
 		// test 20% maximum stop (testing with 0% bonded)
-		{sdk.ZeroDec(), sdk.NewDecWithPrec(20, 2), sdk.ZeroDec()},
-		{sdk.ZeroDec(), sdk.NewDecWithPrec(1999999999, 10), sdk.NewDecWithPrec(1, 10)},
+		{sdk.ZeroDec(), sdk.NewDecWithPrec(20, 2), sdk.ZeroDec(), stableSupply},
+		{sdk.ZeroDec(), sdk.NewDecWithPrec(1999999999, 10), sdk.NewDecWithPrec(1, 10), stableSupply},
 
 		// perfect balance shouldn't change inflation
-		{sdk.NewDecWithPrec(67, 2), sdk.NewDecWithPrec(15, 2), sdk.ZeroDec()},
+		{sdk.NewDecWithPrec(67, 2), sdk.NewDecWithPrec(15, 2), sdk.ZeroDec(), stableSupply},
+
+		// test hyperinflationary regime
+		{sdk.ZeroDec(), dec50m, sdk.ZeroDec(), sdk.NewIntWithDecimal(50_000_000, 18)},
+		{sdk.ZeroDec(), dec150m, sdk.ZeroDec(), sdk.NewIntWithDecimal(150_000_000, 18)},
+		{sdk.ZeroDec(), dec200m, sdk.ZeroDec(), sdk.NewIntWithDecimal(200_000_000, 18)},
 	}
 	for i, tc := range tests {
 		minter.Inflation = tc.setInflation
 
-		inflation := minter.NextInflationRate(params, tc.bondedRatio)
+		inflation := minter.NextInflationRate(params, tc.bondedRatio, tc.totalSupply)
 		diffInflation := inflation.Sub(tc.setInflation)
 
 		require.True(t, diffInflation.Equal(tc.expChange),
@@ -111,9 +121,9 @@ func BenchmarkNextInflation(b *testing.B) {
 
 	// run the NextInflationRate function b.N times
 	for n := 0; n < b.N; n++ {
-		minter.NextInflationRate(params, bondedRatio)
+		// the hyperinflationary regime is by far the most expensive to calculate
+		minter.NextInflationRate(params, bondedRatio, sdk.NewInt(100_000_000))
 	}
-
 }
 
 // Next annual provisions benchmarking
@@ -127,5 +137,4 @@ func BenchmarkNextAnnualProvisions(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		minter.NextAnnualProvisions(params, totalSupply)
 	}
-
 }

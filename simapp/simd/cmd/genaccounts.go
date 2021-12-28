@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -21,9 +23,11 @@ import (
 )
 
 const (
-	flagVestingStart = "vesting-start-time"
-	flagVestingEnd   = "vesting-end-time"
-	flagVestingAmt   = "vesting-amount"
+	FlagVestingStart         = "vesting-start-time"
+	FlagVestingEnd           = "vesting-end-time"
+	FlagVestingAmt           = "vesting-amount"
+	FlagVestingPeriodsNumber = "vesting-periods-number"
+	FlagVestingPeriodsAmts   = "vesting-periods-amounts"
 )
 
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
@@ -71,9 +75,11 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 				return fmt.Errorf("failed to parse coins: %w", err)
 			}
 
-			vestingStart, _ := cmd.Flags().GetInt64(flagVestingStart)
-			vestingEnd, _ := cmd.Flags().GetInt64(flagVestingEnd)
-			vestingAmtStr, _ := cmd.Flags().GetString(flagVestingAmt)
+			vestingStart, _ := cmd.Flags().GetInt64(FlagVestingStart)
+			vestingEnd, _ := cmd.Flags().GetInt64(FlagVestingEnd)
+			vestingAmtStr, _ := cmd.Flags().GetString(FlagVestingAmt)
+			vestingPeriodsNumber, _ := cmd.Flags().GetInt64(FlagVestingPeriodsNumber)
+			vestingPeriodsAmts, _ := cmd.Flags().GetString(FlagVestingPeriodsAmts)
 
 			vestingAmt, err := sdk.ParseCoinsNormalized(vestingAmtStr)
 			if err != nil {
@@ -95,6 +101,73 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 				}
 
 				switch {
+
+				case vestingStart > 0 && vestingEnd > 0 && (vestingPeriodsNumber > 0 || vestingPeriodsAmts != ""):
+					{
+						if vestingPeriodsNumber > 0 && vestingPeriodsAmts != "" {
+							return fmt.Errorf("the flags %s and %s can't be used at the same time", FlagVestingPeriodsNumber, FlagVestingPeriodsAmts)
+						}
+
+						periods := make(authvesting.Periods, 0)
+
+						if vestingPeriodsNumber > 0 {
+
+							if vestingPeriodsNumber < 1 {
+								return fmt.Errorf("parameter %s must be >=2 since at least 2 periods start and and are required", FlagVestingPeriodsNumber)
+							}
+
+							vestingDenom := vestingAmt.GetDenomByIndex(0)
+							periodLength := (vestingEnd - vestingStart) / (vestingPeriodsNumber - 1)
+							periodAmount := vestingAmt.AmountOf(vestingDenom).Quo(sdk.NewInt(vestingPeriodsNumber))
+							periodCoins := sdk.NewCoins(sdk.NewCoin(vestingDenom, periodAmount))
+
+							for i := 0; i < int(vestingPeriodsNumber); i++ {
+								periods = append(periods, authvesting.Period{
+									Length: periodLength,
+									Amount: periodCoins,
+								})
+							}
+							if len(periods) > 0 {
+								// execute the first period at the start date
+								periods[0].Length = 0
+							}
+						}
+
+						if vestingPeriodsAmts != "" {
+							amtSum := make(sdk.Coins, 0)
+							periodLengthSum := 0
+
+							vestingPeriodsAmtsStrings := strings.Split(vestingPeriodsAmts, ",")
+							for _, vestingPeriodString := range vestingPeriodsAmtsStrings {
+								vestingPeriodPair := strings.Split(vestingPeriodString, "|")
+								if len(vestingPeriodPair) != 2 {
+									return fmt.Errorf("vestingPeriodPair %s is invalid", vestingPeriodString)
+								}
+								epochString := vestingPeriodPair[0]
+								periodLength, err := strconv.Atoi(epochString)
+								if err != nil || periodLength <= 0 {
+									return fmt.Errorf("invalid epoch in periods: %w", err)
+								}
+
+								coinAmountString := vestingPeriodPair[1]
+								periodCoins, err := sdk.ParseCoinsNormalized(coinAmountString)
+								if err != nil {
+									return fmt.Errorf("failed to parse vesting amount: %w", err)
+								}
+
+								periods = append(periods, authvesting.Period{
+									Length: int64(periodLength),
+									Amount: periodCoins,
+								})
+
+								amtSum = amtSum.Add(periodCoins...)
+								periodLengthSum += periodLength
+							}
+						}
+
+						genAccount = authvesting.NewPeriodicVestingAccountRaw(baseVestingAccount, vestingStart, periods)
+					}
+
 				case vestingStart != 0 && vestingEnd != 0:
 					genAccount = authvesting.NewContinuousVestingAccountRaw(baseVestingAccount, vestingStart)
 
@@ -171,9 +244,11 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
-	cmd.Flags().String(flagVestingAmt, "", "amount of coins for vesting accounts")
-	cmd.Flags().Int64(flagVestingStart, 0, "schedule start time (unix epoch) for vesting accounts")
-	cmd.Flags().Int64(flagVestingEnd, 0, "schedule end time (unix epoch) for vesting accounts")
+	cmd.Flags().String(FlagVestingAmt, "", "amount of coins for vesting accounts")
+	cmd.Flags().Int64(FlagVestingStart, 0, "schedule start time (unix epoch) for vesting accounts")
+	cmd.Flags().Int64(FlagVestingEnd, 0, "schedule end time (unix epoch) for vesting accounts")
+	cmd.Flags().Int64(FlagVestingPeriodsNumber, 0, "number of periods for vesting before the start and end time")
+	cmd.Flags().String(FlagVestingPeriodsAmts, "", "the array of the \"epoch|amountDenom,epoch|amountDenom\", values for the periodic for vesting")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

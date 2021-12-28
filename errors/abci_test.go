@@ -34,14 +34,14 @@ func (s *abciTestSuite) TestABCInfo() {
 			debug:     false,
 			wantLog:   "unauthorized",
 			wantCode:  ErrUnauthorized.code,
-			wantSpace: RootCodespace,
+			wantSpace: testCodespace,
 		},
 		"wrapped SDK error": {
 			err:       Wrap(Wrap(ErrUnauthorized, "foo"), "bar"),
 			debug:     false,
 			wantLog:   "bar: foo: unauthorized",
 			wantCode:  ErrUnauthorized.code,
-			wantSpace: RootCodespace,
+			wantSpace: testCodespace,
 		},
 		"nil is empty message": {
 			err:       nil,

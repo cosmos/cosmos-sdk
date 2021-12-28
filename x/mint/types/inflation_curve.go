@@ -15,18 +15,19 @@ var (
 type InflationCurve struct {
 	// for exp2m1
 	constants [30]*big.Int
-	// for base change
+	// for base change with the fixed point at 128
 	lbE *big.Int
-	// for large 1.0 value
+	// for large 1.0 value with 128 fixed point
 	exp2FwOne *big.Int
-	// for curve peak position
+	// for curve peak position = 150_000_000 NOM
 	peakOffset *big.Int
-	// adjusts peak height
+	// adjusts peak height, `-1/(2*(std_dev^2))` with 384 fixed point, std_dev = 50_000_000 NOM
 	peakScale *big.Int
 }
 
 // NewInflationCurve create a new `globalInflationCurve` instance.
 func NewInflationCurve() *InflationCurve {
+	// Constant `C_n = ln(2)^n / n!` (ordering of the list is reversed) in 128 bit fracint with truncation rounding
 	curveConstants := [30]*big.Int{
 		newBigIntWithTenBase("21"),
 		newBigIntWithTenBase("931"),
@@ -98,6 +99,8 @@ func (ic *InflationCurve) exp2m1Fracint(x *big.Int) *big.Int {
 		return nil
 	}
 	var h = new(big.Int)
+	// `2^x = 1 + (ln(2)/1!)*x + (ln(2)^2/2!)*x^2 + (ln(2)^3/3!)*x^3`
+	// `2^x - 1 = x*(C_1 + x*(C_2 + x*(C_3 + ...)))` where `C_n = ln(2)^n / n!`
 	for _, c := range ic.constants {
 		h.Add(h, c)
 		h.Mul(h, x)
@@ -119,6 +122,10 @@ func unsignedAbs(x int) uint {
 // Calculates `e^x`. Input and output are {i,u}128f64 bit fixed point integers.
 // Returns `nil` if the result overflows 128 bits.
 func (ic *InflationCurve) exp(x *big.Int) *big.Int {
+	// `e^x = 2^(x*lb(e))`
+	// `2^x = (2^floor(x)) * 2^(x - floor(x))`
+	// let `y = x*lb(e)`
+	// `e^x = (2^floor(y)) * 2^(y - floor(y))`
 	if x.BitLen() > 128 {
 		return nil
 	}
@@ -175,7 +182,7 @@ func (ic *InflationCurve) exp(x *big.Int) *big.Int {
 	return res
 }
 
-// Calculates `e^(-((x-peak_position)^2 / (2*(std_dev^2)))))`.
+// Calculates `e^(-((x-peakOffset)^2 / (2*(std_dev^2)))))`
 // `tokenSupply` is in units of token. Returns a fixed point integer capped at 1.0u65f64.
 func (ic *InflationCurve) calculateInflationBinary(tokenSupply *big.Int) *big.Int {
 	if tokenSupply.BitLen() >= 90 {

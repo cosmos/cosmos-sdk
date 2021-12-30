@@ -1,11 +1,36 @@
 package types
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"fmt"
 	"math"
 	"math/big"
 	"testing"
 	"github.com/stretchr/testify/require"
 )
+
+func mustNewDecFromStr(t *testing.T, str string) (d sdk.Dec) {
+	d, err := sdk.NewDecFromStr(str)
+	require.NoError(t, err)
+
+	return d
+}
+
+func TestDecExp(t *testing.T) {
+	tests := []struct {
+		sdkDec sdk.Dec
+		want   sdk.Dec
+	}{
+		{mustNewDecFromStr(t, "12.34567"), mustNewDecFromStr(t, "229962.147896858174618390")},
+		{mustNewDecFromStr(t, "0.5"), mustNewDecFromStr(t, "1.648721270700128146")},
+		{mustNewDecFromStr(t, "-0.5"), mustNewDecFromStr(t, "0.606530659712633423")},
+		{mustNewDecFromStr(t, "-7.654321"), mustNewDecFromStr(t, "0.000473991580066384")},
+	}
+	for i, tc := range tests {
+		got := globalInflationCurve.DecExp(tc.sdkDec)
+		require.True(t, tc.want.Equal(*got), "Incorrect result on test case %d", i)
+	}
+}
 
 func TestInflationMonotonicity(t *testing.T) {
 	var max = new(big.Int).Mul(big.NewInt(300_000_000), new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
@@ -230,14 +255,15 @@ func (bounds FPBounds) String() string {
 // base to calculate `2^x`, calculate `lb(x)`, and finally `lb(e)` which
 // completes the bootstrapping constants we need.
 
+// Note: the following functions are intended to be rigorous but not fast, see the `exp` function
+// for `InflationCurve`
+
 // Returns the lower and upper bounds for `e^x` using a series approximation in `x`'s fp type.
 // Returns `None` if one of the bounds overflows or some internal error condition occurs.
 //
 // Note: `x` is assumed to be perfect numerically, if the user's `x` is a truncated version of some
 // numerical value, then the lower bound of `x.ExpBounds` and upper bound of
 // `xIncremented.ExpBounds` are the real bounds.
-//
-// This function is intended to be rigorous but is not fast
 func (input *FP) ExpBounds(maxBitLen int) *FPBounds {
 	var x = NewFP(new(big.Int).Set(input.bits), input.fp)
 	var sign = x.isNeg()

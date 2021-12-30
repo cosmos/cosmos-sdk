@@ -70,7 +70,26 @@ func NewInflationCurve() *InflationCurve {
 	}
 }
 
+// Quickly calculates `e^x` as a `Dec`. Returns `nil` if overflow occurs
+//
+// This should be called on `globalInflationCurve` so that constants can be reused
+func (ic *InflationCurve) DecExp(x sdk.Dec) *sdk.Dec {
+	// convert to i128f64 binary fixed point
+	var tmp0 = x.BigInt()
+	tmp0.Lsh(tmp0, 64)
+	tmp0.Div(tmp0, precisionReuse)
+	var tmp1 = ic.exp(tmp0)
+	// multiply by 10^18 to get to maximum precision allowed by `Dec`
+	tmp1.Mul(tmp1, precisionReuse)
+	// remove binary fixed point component
+	tmp1.Rsh(tmp1, 64)
+	var res = sdk.NewDecFromBigIntWithPrec(tmp1, sdk.Precision)
+	return &res
+}
+
 // CalculateInflationDec is the same as `calculateInflationBinary` but with an `Int` input and `Dec` output
+//
+// This should be called on `globalInflationCurve` so that constants can be reused
 func (ic *InflationCurve) CalculateInflationDec(tokenSupply sdk.Int) sdk.Dec {
 	// People keep committing the same horrible mistake of using base 10 fixed point numbers at the
 	// computational layer instead of converting between binary fixed point at the human-machine

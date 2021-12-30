@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"os"
+	"path/filepath"
 	"sort"
 	"testing"
 
@@ -53,7 +55,7 @@ func generateSampledPercentages() []*percentages {
 			if a+b > 100 {
 				break
 			} else {
-				for c := uint(0); c < 100; c += 10 {
+				for c := uint(0); c < 100; c += 20 {
 					if a+b+c > 100 {
 						break
 					} else {
@@ -149,7 +151,7 @@ func runRandomizedOperations(b *testing.B, s store, totalOpsCount int, p *percen
 func prepareValues() [][]byte {
 	var data [][]byte
 	for i := 0; i < 5000; i++ {
-		data[i] = randBytes(50)
+		data = append(data, randBytes(50))
 	}
 	return data
 }
@@ -239,17 +241,20 @@ func newStoreV2(_ string, dbType dbm.BackendType, dir string, _ int) (store, err
 	}
 }
 
-func runSuit(b *testing.B, newStore newStore, dbBackendTypes []dbm.BackendType) {
+func runSuit(b *testing.B, newStore newStore, dbBackendTypes []dbm.BackendType, dir string) {
 	// run randomized operations subbenchmarks for various scenarios
-	// dbBackendTypes := []dbm.BackendType{dbm.GoLevelDBBackend, dbm.RocksDBBackend, dbm.BadgerDBBackend}
-
 	sampledPercentages := generateSampledPercentages()
 	benchmarks := generateBenchmarks(dbBackendTypes, sampledPercentages, nil)
 	for _, bm := range benchmarks {
-		s, err := newStore(bm.name, bm.dbType, bm.name, cacheSize)
+		d := filepath.Join(dir, bm.name, bm.name+".db")
+		err := os.MkdirAll(d, os.ModePerm)
+		if err != nil {
+			panic(err)
+		}
+		s, err := newStore(bm.name, bm.dbType, d, cacheSize)
 		require.NoError(b, err)
 		b.Run(bm.name, func(sub *testing.B) {
-			runRandomizedOperations(sub, s, 10000, bm.percentages)
+			runRandomizedOperations(sub, s, 1000, bm.percentages)
 		})
 	}
 
@@ -259,7 +264,12 @@ func runSuit(b *testing.B, newStore newStore, dbBackendTypes []dbm.BackendType) 
 	benchmarks = generateBenchmarks(dbBackendTypes, nil, sampledCounts)
 	values := prepareValues()
 	for _, bm := range benchmarks {
-		s, err := newStore(bm.name, bm.dbType, bm.name, cacheSize)
+		d := filepath.Join(dir, bm.name, bm.name+".db")
+		err := os.MkdirAll(d, os.ModePerm)
+		if err != nil {
+			panic(err)
+		}
+		s, err := newStore(bm.name, bm.dbType, d, cacheSize)
 		require.NoError(b, err)
 		b.Run(bm.name, func(sub *testing.B) {
 			runDeterministicOperations(sub, s, values, bm.counts)
@@ -269,10 +279,11 @@ func runSuit(b *testing.B, newStore newStore, dbBackendTypes []dbm.BackendType) 
 
 func BenchmarkLoadStoreV1(b *testing.B) {
 	dbBackendTypes := []dbm.BackendType{dbm.GoLevelDBBackend, dbm.RocksDBBackend, dbm.BadgerDBBackend}
-	runSuit(b, newStoreV1, dbBackendTypes)
+	// dbBackendTypes := []dbm.BackendType{dbm.RocksDBBackend, dbm.BadgerDBBackend}
+	runSuit(b, newStoreV1, dbBackendTypes, "testdbs/v1")
 }
 
 func BenchmarkLoadStoreV2(b *testing.B) {
 	dbBackendTypes := []dbm.BackendType{dbm.RocksDBBackend, dbm.BadgerDBBackend}
-	runSuit(b, newStoreV2, dbBackendTypes)
+	runSuit(b, newStoreV2, dbBackendTypes, "testdbs/v2")
 }

@@ -48,6 +48,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * (store) [\#10741](https://github.com/cosmos/cosmos-sdk/pull/10741) Significantly speedup iterator creation after delete heavy workloads. Significantly improves IBC migration times.
+* (types) [\#10076](https://github.com/cosmos/cosmos-sdk/pull/10076) Significantly speedup and lower allocations for `Coins.String()`.
 
 ### Bug Fixes
 

@@ -808,20 +808,19 @@ func (ks keystore) writeRecord(k *Record) error {
 	return nil
 }
 
-
 // existsInDb returns (true, nil) if either addr or name exist is in keystore DB.
 // On the other hand, it returns (false, error) if Get method returns error different from keyring.ErrKeyNotFound
 // In case of inconsistent keyring, it recovers it automatically.
 func (ks keystore) existsInDb(addr sdk.Address, name string) (bool, error) {
 	_, errAddr := ks.db.Get(addrHexKeyAsString(addr))
-	if errAddr != nil && errAddr != keyring.ErrKeyNotFound {
-		return false, errAddr // received unexpected error - returns error
+	if errAddr != nil && !errors.Is(errAddr, keyring.ErrKeyNotFound) {
+		return false, errAddr
 	}
 
 	_, errInfo := ks.db.Get(infoKey(name))
 	if errInfo == nil {
 		return true, nil // uid lookup succeeds - info exists
-	} else if errInfo != keyring.ErrKeyNotFound {
+	} else if !errors.Is(errInfo, keyring.ErrKeyNotFound) {
 		return false, errInfo // received unexpected error - returns
 	}
 

@@ -127,6 +127,13 @@ func NewFP(bits *big.Int, fp int) FP {
 	}
 }
 
+func CopyFP(x *FP) FP {
+	return FP {
+		bits: new(big.Int).Set(x.bits),
+		fp: x.fp,
+	}
+}
+
 func NewZeroFP(fp int) FP {
 	return NewFP(new(big.Int), fp)
 }
@@ -428,6 +435,31 @@ func (x *FP) LnBounds(maxBitLen int) *FPBounds {
 	}
 }
 
+// Returns the lower and upper bounds for `e^(x * rhsLo)` and `e^(x *
+// rhsHi)`. Returns `None` if `self` and `rhs` do not have the same fixed
+// point type. Useful for general exponentiation.
+func (x *FP) MulExpBounds(rhs *FPBounds, maxBitLen int) *FPBounds {
+	var tmp0 = CopyFP(x)
+	tmp0.FpMulAssign(&rhs.lo)
+	var tmp1 = CopyFP(x)
+	tmp1.FpMulAssign(&rhs.hi)
+	// a negative `x` complicates things, just swap so `tmp0 < tmp1` and widen both bounds
+	if tmp1.Lt(&tmp0) {
+		var swap = tmp0
+		tmp0 = tmp1
+		tmp1 = swap
+	}
+	tmp0.DecAssign()
+	tmp1.IncAssign()
+	var res0 = tmp0.ExpBounds(maxBitLen)
+	var res1 = tmp1.ExpBounds(maxBitLen)
+	if (res0 == nil) || (res1 == nil) {
+		return nil
+	}
+	var res = NewFPBounds(res0.lo, res1.hi)
+	return &res
+}
+
 func TestTranscendentals(t *testing.T) {
 	var x0 = NewOneFP(32)
 	var expBounds = x0.ExpBounds(128)
@@ -456,4 +488,19 @@ func TestTranscendentals(t *testing.T) {
 	var tmp3 = new(big.Int).SetUint64(2977044449)
 	tmp3.Neg(tmp3)
 	require.True(t, lnBounds1.hi.bits.Cmp(tmp3) == 0)
+
+	// (1.234).MulExpBounds((-4.321..1.337))
+	var x4 = NewFP(new(big.Int).SetUint64(5299989643), 32)
+	var rhsLo = NewFP(new(big.Int).SetUint64(18558553686), 32)
+	rhsLo.Neg()
+	var rhsHi = NewFP(new(big.Int).SetUint64(5742371275), 32)
+	var bounds = NewFPBounds(rhsLo, rhsHi)
+	var res = x4.MulExpBounds(&bounds, 128)
+	require.True(t, res.lo.bits.Cmp(new(big.Int).SetUint64(20761109)) == 0)
+	require.True(t, res.hi.bits.Cmp(new(big.Int).SetUint64(22360632655)) == 0)
+	// (-1.234).MulExpBounds((-4.321..1.337))
+	x4.Neg()
+	res = x4.MulExpBounds(&bounds, 128)
+	require.True(t, res.lo.bits.Cmp(new(big.Int).SetUint64(824965199)) == 0)
+	require.True(t, res.hi.bits.Cmp(new(big.Int).SetUint64(888520696425)) == 0)
 }

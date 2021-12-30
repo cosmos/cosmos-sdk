@@ -87,3 +87,347 @@ func TestInflationApproximate(t *testing.T) {
 		anom.Add(anom, step)
 	}
 }
+
+// Fixed point integer combining a `big.Int` with a fixed point position. The numerical value is
+// interpreted as `bits * 2.0^(-fp)`
+type FP struct {
+	bits *big.Int
+	fp int
+}
+
+func NewFP(bits *big.Int, fp int) FP {
+	return FP {
+		bits,
+		fp,
+	}
+}
+
+func NewZeroFP(fp int) FP {
+	return NewFP(new(big.Int), fp)
+}
+
+// Returns an `FP` with value 1.0. Returns `nil` if `fp < 0`, because a representation of 1 is not possible.
+func NewOneFP(fp int) *FP {
+	if fp < 0 {
+		return nil
+	} else {
+		var x = NewFP(new(big.Int).SetUint64(1), fp)
+		x.bits.Lsh(x.bits, uint(fp))
+		return &x
+	}
+}
+
+func (x FP) String() string {
+	return fmt.Sprintf("FP(bits: %v, fp: %v)", *x.bits, x.fp)
+}
+
+// If `x < 0.0`
+func (x FP) isNeg() bool {
+	return x.bits.Sign() == -1
+}
+
+// If `x == 0.0`
+func (x FP) isZero() bool {
+	return x.bits.Cmp(new(big.Int)) == 0
+}
+
+func (x *FP) Cmp(y *FP) int {
+	return x.bits.Cmp(y.bits)
+}
+
+func (x *FP) Lt(y *FP) bool {
+	var cmp = x.bits.Cmp(y.bits)
+	return cmp == -1
+}
+
+func (x *FP) Le(y *FP) bool {
+	var cmp = x.bits.Cmp(y.bits)
+	return (cmp == -1) || (cmp == 0)
+}
+
+// negate
+func (x *FP) Neg() {
+	x.bits.Neg(x.bits)
+}
+
+// Increments `lhs` at the ULP level
+func (lhs *FP) IncAssign() {
+	lhs.bits.Add(lhs.bits, new(big.Int).SetUint64(1))
+}
+
+// Decrements `lhs` at the ULP level
+func (lhs *FP) DecAssign() {
+	lhs.bits.Sub(lhs.bits, new(big.Int).SetUint64(1))
+}
+
+// Add `rhs` to `lhs`. Sets `lhs` to `nil` if the fixed points are not equal
+func (lhs *FP) SameFpAddAssign(rhs *FP) {
+	if lhs.fp != rhs.fp {
+		lhs = nil
+	} else {
+		lhs.bits.Add(lhs.bits, rhs.bits)
+	}
+}
+
+// Subtract `rhs` from `lhs`. Sets `lhs` to `nil` if the fixed points are not equal
+func (lhs *FP) SameFpSubAssign(rhs *FP) {
+	if lhs.fp != rhs.fp {
+		lhs = nil
+	} else {
+		lhs.bits.Sub(lhs.bits, rhs.bits)
+	}
+}
+
+// Adds `rhs` to `lhs` if `b == false`, else Subtracts `rhs` from `lhs`
+func (lhs *FP) SameFpNegAddAssign(b bool, rhs *FP) {
+	if lhs.fp != rhs.fp {
+		lhs = nil
+	} else if b {
+		lhs.bits.Sub(lhs.bits, rhs.bits)
+	} else {
+		lhs.bits.Add(lhs.bits, rhs.bits)
+	}
+}
+
+// Fixed point multiply-assign `lhs` by `rhs`
+func (lhs *FP) FpMulAssign(rhs *FP) {
+	lhs.bits.Mul(lhs.bits, rhs.bits)
+	// the numerical fixed point is now at `lhs.fp + rhs.fp`, shift so that we get back to `lhs.fp`
+	var abs = unsignedAbs(rhs.fp)
+	if rhs.fp <= 0 {
+		lhs.bits.Lsh(lhs.bits, abs)
+	} else {
+		lhs.bits.Rsh(lhs.bits, abs)
+	}
+}
+
+// Divides `lhs` by an integer (no fixed point shifts applied)
+func (lhs *FP) ShortUDivideAssign(rhs uint64) {
+	lhs.bits.Div(lhs.bits, new(big.Int).SetUint64(rhs))
+}
+
+// Bounds for some numerical value, with the lower bound being inclusive and the upper bound being exclusive
+type FPBounds struct {
+	lo FP
+	hi FP
+}
+
+func NewFPBounds(lo FP, hi FP) FPBounds {
+	return FPBounds {
+		lo,
+		hi,
+	}
+}
+
+func (bounds FPBounds) String() string {
+	return fmt.Sprintf("FPBounds(lo: %v, hi: %v)", bounds.lo, bounds.hi)
+}
+
+// Faster exponential calculations requires `2^x` and different kinds
+// logarithms, so we have to bootstrap our way with these slow functions that
+// depend on nothing but basic arithmetic. `e^x` allows us to use bisection to
+// calculate `ln(x)` which allows us to calculate `ln(2)`, then we can change
+// base to calculate `2^x`, calculate `lb(x)`, and finally `lb(e)` which
+// completes the bootstrapping constants we need.
+
+// Returns the lower and upper bounds for `e^x` using a series approximation in `x`'s fp type.
+// Returns `None` if one of the bounds overflows or some internal error condition occurs.
+//
+// Note: `x` is assumed to be perfect numerically, if the user's `x` is a truncated version of some
+// numerical value, then the lower bound of `x.ExpBounds` and upper bound of
+// `xIncremented.ExpBounds` are the real bounds.
+//
+// This function is intended to be rigorous but is not fast
+func (input *FP) ExpBounds(maxBitLen int) *FPBounds {
+	var x = NewFP(new(big.Int).Set(input.bits), input.fp)
+	var sign = x.isNeg()
+	x.bits.Abs(x.bits)
+	// these are set to the initial +1 in the taylor series
+	var loMul = NewOneFP(x.fp)
+	var hiMul = NewOneFP(x.fp)
+	// partial sums of the taylor series
+	var loSum = NewZeroFP(x.fp)
+	var hiSum = NewZeroFP(x.fp)
+	for i := uint64(1); ; i++ {
+		if sign && ((i & 1) == 0) {
+			// note what we do here: `hiMul` is subtracted from `loSum` and `loMul` is
+			// subtracted from `hiSum` in order to capture the maximally pessimistic bounds.
+			loSum.SameFpSubAssign(hiMul)
+			hiSum.SameFpSubAssign(loMul)
+		} else {
+			loSum.SameFpAddAssign(loMul)
+			hiSum.SameFpAddAssign(hiMul)
+		}
+		// increase the power of x in `loMul` and `hiMul`
+		loMul.FpMulAssign(&x)
+		hiMul.FpMulAssign(&x)
+		// (exclusive) upper bound of what the truncation in the fixed point multiplication above
+		// removed
+		hiMul.IncAssign()
+		// increase the factorial in the divisor
+		loMul.ShortUDivideAssign(i)
+		hiMul.ShortUDivideAssign(i)
+		if hiMul.isZero() {
+			break
+		}
+		hiMul.IncAssign()
+		if hiMul.bits.BitLen() > maxBitLen {
+			return nil
+		}
+	}
+	// if `sign` and the result should be in the range 0.0..1.0, the `hiMul` 1.0 value will be
+	// subtracted first from `loSum` before the `break`, so there aren't any weird low fp cases
+	// where `loMul` would need to be decremented
+
+	// be really conservative and add 4 because of the last increment for `hiMul` after the `break`,
+	// plus 3 for low fp cases where the remaining partials could add up to `e` and/or be enough to
+	// roll over the ULP.
+	hiSum.bits.Add(hiSum.bits, new(big.Int).SetUint64(4))
+
+	// be extra conservative for cases 
+	var bounds = NewFPBounds(loSum, hiSum)
+	return &bounds
+}
+
+// Computes a bound on the natural logarithm of `x`. Uses bisection of `ExpBounds` starting with a
+// value `2^startBitLen` (in ULPs).
+func (x *FP) LnBounds(maxBitLen int) *FPBounds {
+	// Uses a two stage bisection separately for both bounds, starting with
+	// increasing steps until overshoot happens, then decreasing steps to narrow
+	// down the tightest bounds. We need two stages because if we start with large
+	// steps, `exp_bounds` can produce valid but incredibly wide bounds that
+	// act in a metastable way to confuse the decreasing stage.
+	if x.isNeg() {
+		return nil
+	}
+	var ltOne = x.Lt(NewOneFP(x.fp))
+
+	// stage 1, separately for both bounds. Steps exponentially negative if
+	// `ltOne`, else steps exponentially positive until passing `x`.
+	var bisectLo = NewZeroFP(x.fp)
+	var stepLo = NewFP(new(big.Int).SetUint64(1), x.fp)
+	for {
+		var tmp0 = bisectLo.ExpBounds(maxBitLen)
+		if tmp0 == nil {
+			return nil
+		}
+		var hi = tmp0.hi
+		bisectLo.SameFpNegAddAssign(ltOne, &stepLo)
+		if ltOne {
+			if hi.Le(x) {
+				break
+			}
+		} else if x.Lt(&hi) {
+			break
+		}
+		stepLo.bits.Lsh(stepLo.bits, 1)
+		if stepLo.isZero() {
+			// prevent infinite loops in case `step_lo` zeroes before `exp_bounds` returns
+			// `None`
+			return nil
+		}
+	}
+	var bisectHi = NewZeroFP(x.fp)
+	var stepHi = NewFP(new(big.Int).SetUint64(1), x.fp)
+	for {
+		var tmp0 = bisectHi.ExpBounds(maxBitLen)
+		if tmp0 == nil {
+			return nil
+		}
+		var lo = tmp0.lo
+		bisectHi.SameFpNegAddAssign(ltOne, &stepHi)
+		if ltOne {
+			if lo.Lt(x) {
+				break
+			}
+		} else if x.Le(&lo) {
+			break
+		}
+		stepHi.bits.Lsh(stepHi.bits, 1)
+		if stepHi.isZero() {
+			// prevent infinite loops in case `step_lo` zeroes before `exp_bounds` returns
+			// `None`
+			return nil
+		}
+	}
+
+	// stage 2, hone in. Finds bounds such that `expBounds(bisectLo).upperBound
+	// <= self < expBounds(bisectHi).lowerBound`.
+	for {
+		var tmp0 = bisectLo.ExpBounds(maxBitLen)
+		if tmp0 == nil {
+			return nil
+		}
+		var hi = tmp0.hi
+		bisectLo.SameFpNegAddAssign(x.Le(&hi), &stepLo)
+		stepLo.bits.Rsh(stepLo.bits, 1)
+		if stepLo.isZero() {
+			break
+		}
+	}
+	for {
+		var tmp0 = bisectHi.ExpBounds(maxBitLen)
+		if tmp0 == nil {
+			return nil
+		}
+		var lo = tmp0.lo
+		bisectHi.SameFpNegAddAssign(x.Lt(&lo), &stepHi)
+		stepHi.bits.Rsh(stepHi.bits, 1)
+		if stepHi.isZero() {
+			break
+		}
+	}
+
+	// If bisection hits `self` perfectly in one step, the following steps will
+	// bring it 1 ULP away. We do one extra increment to insure that the bisection
+	// isn't one off.
+	bisectLo.DecAssign()
+	bisectHi.IncAssign()
+	// final check
+	var tmp0 = bisectLo.ExpBounds(maxBitLen)
+	if tmp0 == nil {
+		return nil
+	}
+	var hi = tmp0.hi
+	var tmp1 = bisectHi.ExpBounds(maxBitLen)
+	if tmp1 == nil {
+		return nil
+	}
+	var lo = tmp1.lo
+	if hi.Le(x) && x.Lt(&lo) {
+		var bounds = NewFPBounds(bisectLo, bisectHi)
+		return &bounds
+	} else {
+		return nil
+	}
+}
+
+func TestTranscendentals(t *testing.T) {
+	var x0 = NewOneFP(32)
+	var expBounds = x0.ExpBounds(128)
+	// This bounds the value of Euler's number which is best truncated to `11674931554 * 2^(-32)`
+	require.True(t, expBounds.lo.bits.Cmp(new(big.Int).SetUint64(11674931549)) == 0)
+	require.True(t, expBounds.hi.bits.Cmp(new(big.Int).SetUint64(11674931571)) == 0)
+	var x1 = NewOneFP(32)
+	x1.Neg()
+	var expNegBounds = x1.ExpBounds(128)
+	// 1/e
+	require.True(t, expNegBounds.lo.bits.Cmp(new(big.Int).SetUint64(1580030160)) == 0)
+	require.True(t, expNegBounds.hi.bits.Cmp(new(big.Int).SetUint64(1580030182)) == 0)
+
+	// ln(3.123)
+	var x2 = NewFP(new(big.Int).SetUint64(13413182865), 32)
+	var lnBounds0 = x2.LnBounds(128)
+	require.True(t, lnBounds0.lo.bits.Cmp(new(big.Int).SetUint64(4891083317)) == 0)
+	require.True(t, lnBounds0.hi.bits.Cmp(new(big.Int).SetUint64(4891083327)) == 0)
+	// ln(0.5)
+	var x3 = NewOneFP(32)
+	x3.bits.Rsh(x3.bits, 1)
+	var lnBounds1 = x3.LnBounds(128)
+	var tmp2 = new(big.Int).SetUint64(2977044497)
+	tmp2.Neg(tmp2)
+	require.True(t, lnBounds1.lo.bits.Cmp(tmp2) == 0)
+	var tmp3 = new(big.Int).SetUint64(2977044449)
+	tmp3.Neg(tmp3)
+	require.True(t, lnBounds1.hi.bits.Cmp(tmp3) == 0)
+}

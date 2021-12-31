@@ -192,28 +192,28 @@ func (lhs *FP) DecAssign() {
 	lhs.bits.Sub(lhs.bits, new(big.Int).SetUint64(1))
 }
 
-// Add `rhs` to `lhs`. Sets `lhs` to `nil` if the fixed points are not equal
-func (lhs *FP) SameFpAddAssign(rhs *FP) {
-	if lhs.fp != rhs.fp {
-		lhs = nil
-	} else {
+// Add `rhs` to `lhs`. Assumes the fixed points are equal
+func (lhs *FP) SameFpAddAssign(rhs *FP, o *bool) {
+	if lhs.fp == rhs.fp {
 		lhs.bits.Add(lhs.bits, rhs.bits)
+	} else {
+		*o = true
 	}
 }
 
-// Subtract `rhs` from `lhs`. Sets `lhs` to `nil` if the fixed points are not equal
-func (lhs *FP) SameFpSubAssign(rhs *FP) {
-	if lhs.fp != rhs.fp {
-		lhs = nil
-	} else {
+// Subtract `rhs` from `lhs`. Sets `o` to `true` if the fixed points are not equal
+func (lhs *FP) SameFpSubAssign(rhs *FP, o *bool) {
+	if lhs.fp == rhs.fp {
 		lhs.bits.Sub(lhs.bits, rhs.bits)
+	} else {
+		*o = true
 	}
 }
 
 // Adds `rhs` to `lhs` if `b == false`, else Subtracts `rhs` from `lhs`
-func (lhs *FP) SameFpNegAddAssign(b bool, rhs *FP) {
+func (lhs *FP) SameFpNegAddAssign(b bool, rhs *FP, o *bool) {
 	if lhs.fp != rhs.fp {
-		lhs = nil
+		*o = true
 	} else if b {
 		lhs.bits.Sub(lhs.bits, rhs.bits)
 	} else {
@@ -239,7 +239,7 @@ func (lhs *FP) ShortUDivideAssign(rhs uint64) {
 }
 
 // Divides `duo` by `div` and sets `quo` to the quotient and `rem` to the remainder.
-// Returns `nil` if `quo` and `rem` do not have same fp types, or `div` is zero.
+// Sets `o` to `true` if `quo` and `rem` do not have same fp types, or `div` is zero.
 //
 // This function works numerically by calculating
 // `(duo * 2^duo.fp * 2^(-div.fp) * 2^quo.fp) / div`
@@ -247,10 +247,10 @@ func (quo *FP) FpDivideAssign(
 	rem *FP,
 	duo *FP,
 	div *FP,
+	o *bool,
 ) {
 	if div.IsZero() || (quo.fp != rem.fp) {
-		quo = nil
-		rem = nil
+		*o = true
 		return
 	}
 	var num_fp = duo.fp - div.fp + quo.fp
@@ -262,6 +262,23 @@ func (quo *FP) FpDivideAssign(
 		duoC.bits.Lsh(duoC.bits, unsignedAbs(num_fp))
 	}
 	quo.bits.DivMod(duoC.bits, divC.bits, rem.bits)
+}
+
+// Truncate-assigns `rhs` to `x` (trying to copy the numerical value while keeping `x.fp` the same).
+// Sets `o` to `true` if the most significant bit of `rhs` would be cut off.
+func (x *FP) OTruncateAssign(rhs *FP, o *bool) {
+	var tmp = new(big.Int)
+	if x.fp <= rhs.fp {
+		var s = rhs.fp - x.fp
+		if s >= rhs.bits.BitLen() {
+			*o = true
+		}
+		tmp.Rsh(rhs.bits, uint(rhs.fp - x.fp))
+	} else {
+		var s = x.fp - rhs.fp
+		tmp.Lsh(rhs.bits, uint(s))
+	}
+	x.bits.Set(tmp)
 }
 
 // Bounds for some numerical value, with the lower bound being inclusive and the upper bound being exclusive
@@ -308,14 +325,15 @@ func (input *FP) ExpBounds(maxBitLen int) *FPBounds {
 	var loSum = NewZeroFP(x.fp)
 	var hiSum = NewZeroFP(x.fp)
 	for i := uint64(1); ; i++ {
+		var o = false
 		if sign && ((i & 1) == 0) {
 			// note what we do here: `hiMul` is subtracted from `loSum` and `loMul` is
 			// subtracted from `hiSum` in order to capture the maximally pessimistic bounds.
-			loSum.SameFpSubAssign(hiMul)
-			hiSum.SameFpSubAssign(loMul)
+			loSum.SameFpSubAssign(hiMul, &o)
+			hiSum.SameFpSubAssign(loMul, &o)
 		} else {
-			loSum.SameFpAddAssign(loMul)
-			hiSum.SameFpAddAssign(hiMul)
+			loSum.SameFpAddAssign(loMul, &o)
+			hiSum.SameFpAddAssign(hiMul, &o)
 		}
 		// increase the power of x in `loMul` and `hiMul`
 		loMul.FpMulAssign(&x)
@@ -326,6 +344,9 @@ func (input *FP) ExpBounds(maxBitLen int) *FPBounds {
 		// increase the factorial in the divisor
 		loMul.ShortUDivideAssign(i)
 		hiMul.ShortUDivideAssign(i)
+		if o == true {
+			return nil
+		}
 		if hiMul.IsZero() {
 			break
 		}
@@ -365,13 +386,17 @@ func (x *FP) LnBounds(maxBitLen int) *FPBounds {
 	// `ltOne`, else steps exponentially positive until passing `x`.
 	var bisectLo = NewZeroFP(x.fp)
 	var stepLo = NewFP(new(big.Int).SetUint64(1), x.fp)
+	var o = false
 	for {
 		var tmp0 = bisectLo.ExpBounds(maxBitLen)
 		if tmp0 == nil {
 			return nil
 		}
 		var hi = tmp0.hi
-		bisectLo.SameFpNegAddAssign(ltOne, &stepLo)
+		bisectLo.SameFpNegAddAssign(ltOne, &stepLo, &o)
+		if o {
+			return nil
+		}
 		if ltOne {
 			if hi.Le(x) {
 				break
@@ -394,7 +419,10 @@ func (x *FP) LnBounds(maxBitLen int) *FPBounds {
 			return nil
 		}
 		var lo = tmp0.lo
-		bisectHi.SameFpNegAddAssign(ltOne, &stepHi)
+		bisectHi.SameFpNegAddAssign(ltOne, &stepHi, &o)
+		if o {
+			return nil
+		}
 		if ltOne {
 			if lo.Lt(x) {
 				break
@@ -418,7 +446,10 @@ func (x *FP) LnBounds(maxBitLen int) *FPBounds {
 			return nil
 		}
 		var hi = tmp0.hi
-		bisectLo.SameFpNegAddAssign(x.Le(&hi), &stepLo)
+		bisectLo.SameFpNegAddAssign(x.Le(&hi), &stepLo, &o)
+		if o {
+			return nil
+		}
 		stepLo.bits.Rsh(stepLo.bits, 1)
 		if stepLo.IsZero() {
 			break
@@ -430,7 +461,10 @@ func (x *FP) LnBounds(maxBitLen int) *FPBounds {
 			return nil
 		}
 		var lo = tmp0.lo
-		bisectHi.SameFpNegAddAssign(x.Lt(&lo), &stepHi)
+		bisectHi.SameFpNegAddAssign(x.Lt(&lo), &stepHi, &o)
+		if o {
+			return nil
+		}
 		stepHi.bits.Rsh(stepHi.bits, 1)
 		if stepHi.IsZero() {
 			break
@@ -515,10 +549,14 @@ func (x *FP) LbBounds(maxBitLen int) *FPBounds {
 	var rem = NewZeroFP(x.fp)
 	var quoLo = NewZeroFP(x.fp)
 	var quoHi = NewZeroFP(x.fp)
+	var o = false
 	// smallest dividend and largest divisor
-	quoLo.FpDivideAssign(&rem, &lnX.lo, &ln2.hi)
+	quoLo.FpDivideAssign(&rem, &lnX.lo, &ln2.hi, &o)
 	// largest dividend and smallest divisor
-	quoHi.FpDivideAssign(&rem, &lnX.hi, &ln2.lo)
+	quoHi.FpDivideAssign(&rem, &lnX.hi, &ln2.lo, &o)
+	if o {
+		return nil
+	}
 	var res = NewFPBounds(quoLo, quoHi)
 	return &res
 }
@@ -581,4 +619,101 @@ func TestTranscendentals(t *testing.T) {
 	require.True(t, res.lo.bits.Cmp(new(big.Int).SetUint64(44105563196)) == 0)
 	// accurate truncated value is 44105563245
 	require.True(t, res.hi.bits.Cmp(new(big.Int).SetUint64(44105563376)) == 0)
+}
+
+// There is a problem when calculating transcendental functions like `e^x`. We
+// know that its Taylor series is `x^0/0! + x^1/1! + x^2/2! + x^3/3! + ...`.
+// Besides error incurred in calculating the individual terms, we must
+// eventually stop adding terms. If all are terms are positive (which can be
+// enforced with identities like `e^(-abs(x)) = 1 / e(abs(x))`), then cutting
+// off some terms will result in a lower bound on the function. If the
+// individual terms are also biased to have truncation errors (note: we choose
+// use truncation rounding and no other kind of rounding, because the horner
+// evaluation in exp2m1 must not result in a partial greater than 1.0, or
+// else we could get exponential growth problems) that lower bound the
+// function, then the whole thing will be a lower bound of the true value
+// of `e^x`. It would be great if we could always get a perfectly rounded
+// bitstring for a given fixed point numerical function, for the purposes of
+// determinisim. What I mean by "perfect" is that no larger intermediate fixed
+// point computations with more terms would change the truncated bitstring
+// further. Unfortunately, as far as I currently know, there is no property of
+// `e^x` that prevents one of the many inputs from forming an arbitrarily long
+// string of binary ones in the fraction that will roll over from a very low
+// term, and change the target truncation (thus messing up the perfect
+// determinism). I have decided to use an intermediate fixed point type double
+// the bitwidth and fixed point of the desired type we are operating on. Any
+// precomputed constants will be computed with a high enough precompute fixed
+// point such that they have perfect trunctions, and thus we can have a higher
+// level determinism. Note that if the intermediate fixed point type is
+// changed (say, we move from `exp2Fp = 128` to `exp2Fp = 256`), there is a
+// slim but nonzero chance that one of the inputs in the `exp2Fp = 128` domain
+// did not have a perfect truncated output, that would be incremented in the
+// new `exp2Fp = 256` output. The new functions _must_ be considered
+// deterministically incompatible with the old functions even if it appears
+// from extensive fuzzing that all the outputs are equal.
+
+func TestFastExp(t *testing.T) {
+	//var targetBw = 128
+	//var targetFp = 64
+	// intermediate bitwidth
+	var exp2Fp = 128
+	// precompute for perfect constants
+	var precomputeBw = 256
+	var precomputeFp = 192
+	var one = NewOneFP(precomputeFp)
+	var e = one.ExpBounds(precomputeBw)
+	var lbE = NewFPBounds(e.lo.LbBounds(precomputeBw).lo, e.hi.LbBounds(precomputeBw).hi)
+	var target0 = NewZeroFP(exp2Fp)
+	var target1 = NewZeroFP(exp2Fp)
+	// We will now truncate the bounds on `lb(e)` to the target fixed point.
+	// If they are equal and the msb was not cut off, then the truncation is
+	// perfect.
+	var o = false
+	target0.OTruncateAssign(&lbE.lo, &o)
+	target1.OTruncateAssign(&lbE.hi, &o)
+	require.True(t, !o)
+	require.True(t, target0.bits.Cmp(target1.bits) == 0)
+	require.True(t, target0.bits.Cmp(globalFastExp.lbE) == 0)
+
+	var two = NewOneFP(precomputeFp)
+	two.bits.Lsh(two.bits, 1)
+	var ln2 = two.LnBounds(precomputeBw)
+
+	// skip to `C_1`
+	var product = NewFPBounds(CopyFP(&ln2.lo), CopyFP(&ln2.hi))
+
+	var constants = []FP{}
+
+	// check the perfection of the `C_n = ln(2)^n / n!` constants
+	for i := uint64(0); ; i++ {
+		target0.OTruncateAssign(&product.lo, &o)
+		target1.OTruncateAssign(&product.hi, &o)
+		require.True(t, target0.bits.Cmp(target1.bits) == 0)
+		// The constants become zero at the same time the truncation starts to overflow
+		// note: this must go after the above require
+		if o {
+			break
+		}
+		constants = append(constants, CopyFP(&target0))
+
+		// multiply by both bounds of `ln2`
+		product.lo.FpMulAssign(&ln2.lo)
+		product.hi.FpMulAssign(&ln2.hi)
+		product.hi.IncAssign()
+		// divide to increase factorial
+		product.lo.ShortUDivideAssign(i + 2)
+		product.hi.ShortUDivideAssign(i + 2)
+		product.hi.IncAssign()
+	}
+
+	var actualLen = len(globalFastExp.exp2m1Constants)
+	// check that the number of constants is correct
+	require.True(t, len(constants) == actualLen)
+
+	for i := range constants {
+		// the order is reversed
+		require.True(t, constants[actualLen - 1 - i].bits.Cmp(globalFastExp.exp2m1Constants[i]) == 0)
+		// print out the constants for usage in `newFastExp()`
+		//fmt.Printf("newBigIntWithTenBase(\"%s\"),\n", constants[actualLen - 1 - i].bits.String());
+	}
 }

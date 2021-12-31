@@ -30,6 +30,9 @@ type AccountKeeper interface {
 	// Check if an account exists in the store.
 	HasAccount(context.Context, sdk.AccAddress) bool
 
+	// Check if an account exists in the store.
+	HasAccount(sdk.Context, sdk.AccAddress) bool
+
 	// Retrieve an account from the store.
 	GetAccount(context.Context, sdk.AccAddress) sdk.AccountI
 

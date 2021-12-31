@@ -29,6 +29,12 @@ func (ak accountKeeper) NewAccount(ctx sdk.Context, acc types.AccountI) types.Ac
 	return acc
 }
 
+// HasAccount implements AccountKeeperI.
+func (ak AccountKeeper) HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
+	store := ctx.KVStore(ak.key)
+	return store.Has(types.AddressStoreKey(addr))
+}
+
 // GetAccount implements AccountKeeperI.
 func (ak accountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI {
 	store := ctx.KVStore(ak.key)

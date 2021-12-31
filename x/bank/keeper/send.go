@@ -165,17 +165,22 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 			return err
 		}
 
-		if err := k.addCoins(ctx, outAddress, out.Coins); err != nil {
-			return err
-		}
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeTransfer,
+				sdk.NewAttribute(types.AttributeKeyRecipient, out.Address),
+				sdk.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
+			),
+		)
 
-		if err := k.EventService.EventManager(ctx).EmitKV(
-			types.EventTypeTransfer,
-			event.NewAttribute(types.AttributeKeyRecipient, out.Address),
-			event.NewAttribute(types.AttributeKeySender, input.Address),
-			event.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
-		); err != nil {
-			return err
+		// Create account if recipient does not exist.
+		//
+		// NOTE: This should ultimately be removed in favor a more flexible approach
+		// such as delegated fee messages.
+		accExists := k.ak.HasAccount(ctx, outAddress)
+		if !accExists {
+			defer telemetry.IncrCounter(1, "new", "account")
+			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, outAddress))
 		}
 	}
 
@@ -200,9 +205,14 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 		return err
 	}
 
-	err = k.addCoins(ctx, toAddr, amt)
-	if err != nil {
-		return err
+	// Create account if recipient does not exist.
+	//
+	// NOTE: This should ultimately be removed in favor a more flexible approach
+	// such as delegated fee messages.
+	accExists := k.ak.HasAccount(ctx, toAddr)
+	if !accExists {
+		defer telemetry.IncrCounter(1, "new", "account")
+		k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
 	}
 
 	fromAddrString, err := k.ak.AddressCodec().BytesToString(fromAddr)

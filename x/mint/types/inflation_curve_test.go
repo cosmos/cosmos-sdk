@@ -154,12 +154,12 @@ func (x FP) String() string {
 }
 
 // If `x < 0.0`
-func (x FP) isNeg() bool {
+func (x FP) IsNeg() bool {
 	return x.bits.Sign() == -1
 }
 
 // If `x == 0.0`
-func (x FP) isZero() bool {
+func (x FP) IsZero() bool {
 	return x.bits.Cmp(new(big.Int)) == 0
 }
 
@@ -238,6 +238,32 @@ func (lhs *FP) ShortUDivideAssign(rhs uint64) {
 	lhs.bits.Div(lhs.bits, new(big.Int).SetUint64(rhs))
 }
 
+// Divides `duo` by `div` and sets `quo` to the quotient and `rem` to the remainder.
+// Returns `nil` if `quo` and `rem` do not have same fp types, or `div` is zero.
+//
+// This function works numerically by calculating
+// `(duo * 2^duo.fp * 2^(-div.fp) * 2^quo.fp) / div`
+func (quo *FP) FpDivideAssign(
+	rem *FP,
+	duo *FP,
+	div *FP,
+) {
+	if div.IsZero() || (quo.fp != rem.fp) {
+		quo = nil
+		rem = nil
+		return
+	}
+	var num_fp = duo.fp - div.fp + quo.fp
+	var duoC = CopyFP(duo)
+	var divC = CopyFP(div)
+	if num_fp < 0 {
+		duoC.bits.Rsh(duoC.bits, unsignedAbs(num_fp))
+	} else {
+		duoC.bits.Lsh(duoC.bits, unsignedAbs(num_fp))
+	}
+	quo.bits.DivMod(duoC.bits, divC.bits, rem.bits)
+}
+
 // Bounds for some numerical value, with the lower bound being inclusive and the upper bound being exclusive
 type FPBounds struct {
 	lo FP
@@ -273,7 +299,7 @@ func (bounds FPBounds) String() string {
 // `xIncremented.ExpBounds` are the real bounds.
 func (input *FP) ExpBounds(maxBitLen int) *FPBounds {
 	var x = NewFP(new(big.Int).Set(input.bits), input.fp)
-	var sign = x.isNeg()
+	var sign = x.IsNeg()
 	x.bits.Abs(x.bits)
 	// these are set to the initial +1 in the taylor series
 	var loMul = NewOneFP(x.fp)
@@ -300,7 +326,7 @@ func (input *FP) ExpBounds(maxBitLen int) *FPBounds {
 		// increase the factorial in the divisor
 		loMul.ShortUDivideAssign(i)
 		hiMul.ShortUDivideAssign(i)
-		if hiMul.isZero() {
+		if hiMul.IsZero() {
 			break
 		}
 		hiMul.IncAssign()
@@ -330,7 +356,7 @@ func (x *FP) LnBounds(maxBitLen int) *FPBounds {
 	// down the tightest bounds. We need two stages because if we start with large
 	// steps, `exp_bounds` can produce valid but incredibly wide bounds that
 	// act in a metastable way to confuse the decreasing stage.
-	if x.isNeg() {
+	if x.IsNeg() {
 		return nil
 	}
 	var ltOne = x.Lt(NewOneFP(x.fp))
@@ -354,7 +380,7 @@ func (x *FP) LnBounds(maxBitLen int) *FPBounds {
 			break
 		}
 		stepLo.bits.Lsh(stepLo.bits, 1)
-		if stepLo.isZero() {
+		if stepLo.IsZero() {
 			// prevent infinite loops in case `step_lo` zeroes before `exp_bounds` returns
 			// `None`
 			return nil
@@ -377,7 +403,7 @@ func (x *FP) LnBounds(maxBitLen int) *FPBounds {
 			break
 		}
 		stepHi.bits.Lsh(stepHi.bits, 1)
-		if stepHi.isZero() {
+		if stepHi.IsZero() {
 			// prevent infinite loops in case `step_lo` zeroes before `exp_bounds` returns
 			// `None`
 			return nil
@@ -394,7 +420,7 @@ func (x *FP) LnBounds(maxBitLen int) *FPBounds {
 		var hi = tmp0.hi
 		bisectLo.SameFpNegAddAssign(x.Le(&hi), &stepLo)
 		stepLo.bits.Rsh(stepLo.bits, 1)
-		if stepLo.isZero() {
+		if stepLo.IsZero() {
 			break
 		}
 	}
@@ -406,7 +432,7 @@ func (x *FP) LnBounds(maxBitLen int) *FPBounds {
 		var lo = tmp0.lo
 		bisectHi.SameFpNegAddAssign(x.Lt(&lo), &stepHi)
 		stepHi.bits.Rsh(stepHi.bits, 1)
-		if stepHi.isZero() {
+		if stepHi.IsZero() {
 			break
 		}
 	}
@@ -460,6 +486,43 @@ func (x *FP) MulExpBounds(rhs *FPBounds, maxBitLen int) *FPBounds {
 	return &res
 }
 
+// Returns the lower and upper bounds for `2^x`
+func (x *FP) Exp2Bounds(maxBitLen int) *FPBounds {
+	var two = NewOneFP(x.fp)
+	if two == nil {
+		return nil
+	}
+	two.bits.Lsh(two.bits, 1)
+	var ln2 = two.LnBounds(maxBitLen)
+	if ln2 == nil {
+		return nil
+	}
+	// use `2^x = e^(x*ln(2))``
+	var res = x.MulExpBounds(ln2, maxBitLen)
+	return res
+}
+
+// Returns the lower and upper bounds for `lb(x)` (`lb` is the binary logarithm or base 2 logarithm)
+func (x *FP) LbBounds(maxBitLen int) *FPBounds {
+	var two = NewOneFP(x.fp)
+	if two == nil {
+		return nil
+	}
+	two.bits.Lsh(two.bits, 1)
+	var ln2 = two.LnBounds(maxBitLen)
+	// use `lb(x) = ln(x)/ln(2)`
+	var lnX = x.LnBounds(maxBitLen)
+	var rem = NewZeroFP(x.fp)
+	var quoLo = NewZeroFP(x.fp)
+	var quoHi = NewZeroFP(x.fp)
+	// smallest dividend and largest divisor
+	quoLo.FpDivideAssign(&rem, &lnX.lo, &ln2.hi)
+	// largest dividend and smallest divisor
+	quoHi.FpDivideAssign(&rem, &lnX.hi, &ln2.lo)
+	var res = NewFPBounds(quoLo, quoHi)
+	return &res
+}
+
 func TestTranscendentals(t *testing.T) {
 	var x0 = NewOneFP(32)
 	var expBounds = x0.ExpBounds(128)
@@ -503,4 +566,19 @@ func TestTranscendentals(t *testing.T) {
 	res = x4.MulExpBounds(&bounds, 128)
 	require.True(t, res.lo.bits.Cmp(new(big.Int).SetUint64(824965199)) == 0)
 	require.True(t, res.hi.bits.Cmp(new(big.Int).SetUint64(888520696425)) == 0)
+
+	// `2^(-0.42)`
+	var x5 = NewFP(new(big.Int).SetUint64(1803886264), 32)
+	x5.Neg()
+	res = x5.Exp2Bounds(128)
+	require.True(t, res.lo.bits.Cmp(new(big.Int).SetUint64(3210164309)) == 0)
+	// accurate truncated value is 3210164317
+	require.True(t, res.hi.bits.Cmp(new(big.Int).SetUint64(3210164328)) == 0)
+
+	// `lb(1234)`
+	var x6 = NewFP(new(big.Int).SetUint64(5299989643264), 32)
+	res = x6.LbBounds(128)
+	require.True(t, res.lo.bits.Cmp(new(big.Int).SetUint64(44105563196)) == 0)
+	// accurate truncated value is 44105563245
+	require.True(t, res.hi.bits.Cmp(new(big.Int).SetUint64(44105563376)) == 0)
 }

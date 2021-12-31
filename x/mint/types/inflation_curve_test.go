@@ -27,7 +27,7 @@ func TestDecExp(t *testing.T) {
 		{mustNewDecFromStr(t, "-7.654321"), mustNewDecFromStr(t, "0.000473991580066384")},
 	}
 	for i, tc := range tests {
-		got := globalInflationCurve.DecExp(tc.sdkDec)
+		got := globalFastExp.DecExp(tc.sdkDec)
 		require.True(t, tc.want.Equal(*got), "Incorrect result on test case %d", i)
 	}
 }

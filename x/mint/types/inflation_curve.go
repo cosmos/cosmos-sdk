@@ -8,27 +8,24 @@ import (
 
 var (
 	precisionReuse       = new(big.Int).Exp(big.NewInt(10), big.NewInt(sdk.Precision), nil)
-	globalInflationCurve = NewInflationCurve()
+	globalFastExp = newFastExp()
+	globalInflationCurve = newInflationCurve()
 )
 
-// InflationCurve is the struct used for the inflation curve calculation.
-type InflationCurve struct {
-	// for exp2m1
-	constants [30]*big.Int
-	// for base change with the fixed point at 128
+// Contains the constants needed for fast computation of i128f64 fixed point exponential functions.
+// Use the instance `globalFastExp` so that only one copy of the constants is needed.
+type FastExp struct {
+	// Constants `C_n = ln(2)^n / n!` (ordering of the list is reversed and starts with the highest
+	// `n` that doesn't result in zero) as 128 bit fracints with truncation rounding
+	exp2m1Constants [30]*big.Int
+	// for base change in `exp`
 	lbE *big.Int
 	// for large 1.0 value with 128 fixed point
-	exp2FwOne *big.Int
-	// for curve peak position = 150_000_000 NOM
-	peakOffset *big.Int
-	// adjusts peak height, `-1/(2*(std_dev^2))` with 384 fixed point, std_dev = 50_000_000 NOM
-	peakScale *big.Int
+	exp2FpOne *big.Int
 }
 
-// NewInflationCurve create a new `globalInflationCurve` instance.
-func NewInflationCurve() *InflationCurve {
-	// Constant `C_n = ln(2)^n / n!` (ordering of the list is reversed) in 128 bit fracint with truncation rounding
-	curveConstants := [30]*big.Int{
+func newFastExp() *FastExp {
+	constants := [30]*big.Int{
 		newBigIntWithTenBase("21"),
 		newBigIntWithTenBase("931"),
 		newBigIntWithTenBase("38977"),
@@ -60,11 +57,27 @@ func NewInflationCurve() *InflationCurve {
 		newBigIntWithTenBase("81744844385192085827234082247051493269"),
 		newBigIntWithTenBase("235865763225513294137944142764154484399"),
 	}
-
-	return &InflationCurve{
-		constants:  curveConstants,
+	return &FastExp{
+		exp2m1Constants:  constants,
 		lbE:        newBigIntWithTenBase("490923683258796565746369346286093237521"),
-		exp2FwOne:  newBigIntWithTenBase("340282366920938463463374607431768211456"),
+		exp2FpOne:  newBigIntWithTenBase("340282366920938463463374607431768211456"),
+	}
+}
+
+// InflationCurve is the struct used for the inflation curve calculation. Use the instance
+// `globalInflationCurve` so that only one copy of the constants is needed
+type InflationCurve struct {
+	fastExp *FastExp
+	// for curve peak position = 150_000_000 NOM
+	peakOffset *big.Int
+	// adjusts peak height, `-1/(2*(std_dev^2))` with 384 fixed point, std_dev = 50_000_000 NOM
+	peakScale *big.Int
+}
+
+// Fast calculation of a bell curve for the hyperinflation regime.
+func newInflationCurve() *InflationCurve {
+	return &InflationCurve{
+		fastExp: globalFastExp,
 		peakOffset: newBigIntWithTenBase("-150000000000000000000000000"),
 		peakScale:  newBigIntWithTenBase("-7880401239278895842455808020028722761015947854093089333589658680"),
 	}
@@ -73,12 +86,12 @@ func NewInflationCurve() *InflationCurve {
 // Quickly calculates `e^x` as a `Dec`. Returns `nil` if overflow occurs
 //
 // This should be called on `globalInflationCurve` so that constants can be reused
-func (ic *InflationCurve) DecExp(x sdk.Dec) *sdk.Dec {
+func (fe *FastExp) DecExp(x sdk.Dec) *sdk.Dec {
 	// convert to i128f64 binary fixed point
 	var tmp0 = x.BigInt()
 	tmp0.Lsh(tmp0, 64)
 	tmp0.Div(tmp0, precisionReuse)
-	var tmp1 = ic.exp(tmp0)
+	var tmp1 = fe.exp(tmp0)
 	// multiply by 10^18 to get to maximum precision allowed by `Dec`
 	tmp1.Mul(tmp1, precisionReuse)
 	// remove binary fixed point component
@@ -111,7 +124,7 @@ func newBigIntWithTenBase(s string) *big.Int {
 }
 
 // exp2m1Fracint calculates `2^x - 1` using a 128 bit fractint.
-func (ic *InflationCurve) exp2m1Fracint(x *big.Int) *big.Int {
+func (fe *FastExp) exp2m1Fracint(x *big.Int) *big.Int {
 	// upstream invariants should prevent this, but check
 	// just in case because a width explosion happens otherwise
 	if x.BitLen() > 128 {
@@ -120,7 +133,7 @@ func (ic *InflationCurve) exp2m1Fracint(x *big.Int) *big.Int {
 	var h = new(big.Int)
 	// `2^x = 1 + (ln(2)/1!)*x + (ln(2)^2/2!)*x^2 + (ln(2)^3/3!)*x^3`
 	// `2^x - 1 = x*(C_1 + x*(C_2 + x*(C_3 + ...)))` where `C_n = ln(2)^n / n!`
-	for _, c := range ic.constants {
+	for _, c := range fe.exp2m1Constants {
 		h.Add(h, c)
 		h.Mul(h, x)
 		// shift from fp = 256 to fp = 128
@@ -138,9 +151,9 @@ func unsignedAbs(x int) uint {
 	return uint(x)
 }
 
-// Calculates `e^x`. Input and output are {i,u}128f64 bit fixed point integers.
+// Calculates `e^x`. Input and output are i128f64 bit fixed point integers.
 // Returns `nil` if the result overflows 128 bits.
-func (ic *InflationCurve) exp(x *big.Int) *big.Int {
+func (fe *FastExp) exp(x *big.Int) *big.Int {
 	// `e^x = 2^(x*lb(e))`
 	// `2^x = (2^floor(x)) * 2^(x - floor(x))`
 	// let `y = x*lb(e)`
@@ -152,7 +165,7 @@ func (ic *InflationCurve) exp(x *big.Int) *big.Int {
 	// make unsigned
 	x.Abs(x)
 	// convert bases
-	x.Mul(x, ic.lbE)
+	x.Mul(x, fe.lbE)
 	// lbE.fp + x.fp = 128 + 64 = 192
 	var intPart = new(big.Int).Rsh(x, 192)
 	// extract the fractional part
@@ -171,14 +184,14 @@ func (ic *InflationCurve) exp(x *big.Int) *big.Int {
 	if msb {
 		shift = -shift - 1
 		// two's complement without changing the sign
-		fracPart.Sub(ic.exp2FwOne, fracPart)
+		fracPart.Sub(fe.exp2FpOne, fracPart)
 	}
 	// include shift from fp=128 to fp=64
 	shift -= 64
 
 	// calculate exp2
-	var res = ic.exp2m1Fracint(fracPart)
-	res.Or(res, ic.exp2FwOne)
+	var res = fe.exp2m1Fracint(fracPart)
+	res.Or(res, fe.exp2FpOne)
 
 	switch {
 	case shift < 0:
@@ -216,7 +229,7 @@ func (ic *InflationCurve) calculateInflationBinary(tokenSupply *big.Int) *big.In
 	tmp.Mul(tmp, ic.peakScale)
 	// keep at fp = 64
 	tmp.Rsh(tmp, 320)
-	var res = ic.exp(tmp)
+	var res = ic.fastExp.exp(tmp)
 	if res == nil {
 		// return zero
 		return new(big.Int)

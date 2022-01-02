@@ -70,12 +70,13 @@ type InflationCurve struct {
 	fastExp *FastExp
 	// for curve peak position = 150_000_000 NOM
 	peakOffset *big.Int
-	// adjusts peak height, `-1/(2*(std_dev^2))` with 384 fixed point, std_dev = 50_000_000 NOM
+	// adjusts peak height, `-1/(2*(stdDev^2))` with 384 fixed point, stdDev = 50_000_000 NOM
 	peakScale *big.Int
 }
 
 // Fast calculation of a bell curve for the hyperinflation regime.
 func newInflationCurve() *InflationCurve {
+	// see TestInflationConstants for calculation
 	return &InflationCurve{
 		fastExp: globalFastExp,
 		peakOffset: newBigIntWithTenBase("-150000000000000000000000000"),

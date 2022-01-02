@@ -716,4 +716,51 @@ func TestFastExp(t *testing.T) {
 		// print out the constants for usage in `newFastExp()`
 		//fmt.Printf("newBigIntWithTenBase(\"%s\"),\n", constants[actualLen - 1 - i].bits.String());
 	}
+
+	var bigOne = NewOneFP(exp2Fp)
+	require.True(t, bigOne.bits.Cmp(globalFastExp.exp2FpOne) == 0)
+}
+
+func TestInflationConstants(t *testing.T) {
+	var aNomConversion = new(big.Int).Exp(big.NewInt(10), big.NewInt(sdk.Precision), nil)
+
+	var peakOffset, _ = new(big.Int).SetString("150000000", 10)
+	// we move the subtraction in the peak offset to the constant as a negative sign for technical reasons
+	peakOffset.Neg(peakOffset)
+	peakOffset.Mul(peakOffset, aNomConversion)
+
+	// for usage in `newInflationCurve()`
+	//fmt.Printf("newBigIntWithTenBase(\"%s\"),\n", peakOffset);
+	require.True(t, peakOffset.Cmp(globalInflationCurve.peakOffset) == 0)
+
+	// we calculate `peakScale` as `-1/(2*(stdDev^2))` in 384 fixed point. The fixed point needs to
+	// be very high because this in aNom is a very small number (log_2(peakScale) ~= -171 zero bits
+	// below the fixed point, so large that our fixed point will be more than the storage bits we
+	// need). We choose to be conservative and want 192 significant bits to avoid losing precision
+	// before getting to the exponential function in the bell curve calculation, so when rounding to
+	// 64 bit multiples we get a i256f384 representation.
+	// If this value is changed, it is safe to do without needing to change the representation so
+	// long as it does not exceed about 1e29 aNom = 1e11 Nom. Note that if we use a 256 fixed
+	// bitwidth then the value must also be larger than about 3e19 aNom = 30 Nom, or else the
+	// number of significant digits will be excessive.
+	var stdDev, _ = new(big.Int).SetString("50000000", 10)
+	stdDev.Mul(stdDev, aNomConversion)
+
+	// square
+	stdDev.Mul(stdDev, stdDev)
+	// multiply by 2
+	stdDev.Lsh(stdDev, 1)
+	// invert last
+	var peakScale = NewZeroFP(384)
+	var rem = NewZeroFP(384)
+	var one = NewOneFP(0)
+	var o = false
+	var div = NewFP(stdDev, 0)
+	// just use the natural truncation rounding from this divide
+	peakScale.FpDivideAssign(&rem, one, &div, &o)
+	peakScale.Neg()
+	require.False(t, o)
+	// for usage in `newInflationCurve()`
+	//fmt.Printf("newBigIntWithTenBase(\"%s\"),\n", peakScale.bits);
+	require.True(t, peakScale.bits.Cmp(globalInflationCurve.peakScale) == 0)
 }

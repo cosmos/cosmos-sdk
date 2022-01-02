@@ -33,7 +33,7 @@ func TestDecExp(t *testing.T) {
 }
 
 func TestInflationMonotonicity(t *testing.T) {
-	var max = new(big.Int).Mul(big.NewInt(300_000_000), new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
+	var max = new(big.Int).Mul(big.NewInt(300_000_000), new(big.Int).Exp(big.NewInt(10), big.NewInt(sdk.Precision), nil))
 	var peak = new(big.Int).Rsh(max, 1)
 	// use a large prime number in case monotonicity only happens for high trailing
     // zero numbers or some other regular condition
@@ -82,7 +82,7 @@ func TestInflationMonotonicity(t *testing.T) {
 
 // Test using floating point that the curve is approximately what it should be
 func TestInflationApproximate(t *testing.T) {
-	var max = new(big.Int).Mul(big.NewInt(300_000_000), new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
+	var max = new(big.Int).Mul(big.NewInt(300_000_000), new(big.Int).Exp(big.NewInt(10), big.NewInt(sdk.Precision), nil))
 	var numSteps = int64(104729)
 	var step = new(big.Int).Div(max, big.NewInt(numSteps))
 	var anom = new(big.Int)
@@ -105,12 +105,42 @@ func TestInflationApproximate(t *testing.T) {
 
 		var result = globalInflationCurve.calculateInflationBinary(anom)
 
+		// note that the limiting factor here is float precision
 		var diff = new(big.Int).Sub(outputTmp, result)
 		diff.Abs(diff)
 		require.True(t, diff.Cmp(maxDiff) == -1, "%v not under maxDiff", diff)
 
 		anom.Add(anom, step)
 	}
+}
+
+// Test some specific values
+func TestInflationExact(t *testing.T) {
+	var aNomConversion = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(sdk.Precision), nil))
+	var input = sdk.NewInt(50_000_000).Mul(aNomConversion)
+	var actual = globalInflationCurve.CalculateInflationDec(input)
+	// an independent high precision calculator says
+	// the (10^18 adjusted) value is  135335283236612691.8939...
+	var expected = sdk.NewDecWithPrec(135335283236612691, sdk.Precision)
+	require.True(t, actual.BigInt().Cmp(expected.BigInt()) == 0)
+
+	input = sdk.NewInt(123_456_789).Mul(aNomConversion)
+	actual = globalInflationCurve.CalculateInflationDec(input)
+	// perfect truncation again
+	expected = sdk.NewDecWithPrec(868568860243501720, sdk.Precision)
+	require.True(t, actual.BigInt().Cmp(expected.BigInt()) == 0)
+
+	// test exactly at peak in case there is some edge case
+	input = sdk.NewInt(150_000_000).Mul(aNomConversion)
+	actual = globalInflationCurve.CalculateInflationDec(input)
+	expected = sdk.NewDecWithPrec(1000000000000000000, sdk.Precision)
+	require.True(t, actual.BigInt().Cmp(expected.BigInt()) == 0)
+
+	input = sdk.NewInt(150_000_000).Mul(aNomConversion).Sub(sdk.NewInt(1))
+	actual = globalInflationCurve.CalculateInflationDec(input)
+	// truncation works as expected
+	expected = sdk.NewDecWithPrec(999999999999999999, sdk.Precision)
+	require.True(t, actual.BigInt().Cmp(expected.BigInt()) == 0)
 }
 
 // Fixed point integer combining a `big.Int` with a fixed point position. The numerical value is

@@ -156,11 +156,11 @@ type CombinedKVStore {
 The Cache store must be aware if writes happen to a combined `KVStore` or `SCStore`.
 The proposed solution is to return different cache instances for each method of `StoreAccess` interface. More specifically, when starting a transaction, we will create create 3 cache instances (for CombinedKVStore, SS and SC).
 
-### Refactor MultiStore
+### MultiStore Refactor
 
-The Stargate `/store` implementation (store/v1) adds an additional layer in the SDK store construction - the `MultiStore` structure. The multistore exists to support the modularity of the Cosmos SDK - each module is using its own instance of IAVL, but in the current implementation, all instances share the same database. The latter indicates, however, that the implementation doesn't provide true modularity. Instead it causes problems related to race condition and atomic DB commits (see: [\#6370](https://github.com/cosmos/cosmos-sdk/issues/6370) and [discussion](https://github.com/cosmos/cosmos-sdk/discussions/8297#discussioncomment-757043)).
+The Stargate `/store` implementation (store/v1) has an additional layer in the SDK store construction - the `MultiStore` structure. The multistore exists to support the modularity of the Cosmos SDK - each module is using its own instance of IAVL with independent commit phase. It causes problems related to race condition and atomic DB commits (see: [\#6370](https://github.com/cosmos/cosmos-sdk/issues/6370) and [discussion](https://github.com/cosmos/cosmos-sdk/discussions/8297#discussioncomment-757043)).
 
-We propose to reduce the multistore concept from the SDK, and to use a single instance of `SC` and `SS` in a `RootStore` object. To avoid confusion, we should rename the `MultiStore` interface to `RootStore`. The `RootStore` will have the following interface; the methods for configuring tracing and listeners are omitted for brevity.
+We propose to simplify the multistore concept in the Cosmos SDK: use a single instance of `SC` and `SS` in a `RootStore` object. To avoid confusion, we should rename the `MultiStore` interface to `RootStore`. The `RootStore` will have the following interface; the methods for configuring tracing and listeners are omitted for brevity.
 
 ```go
 // Used where read-only access to versions is needed.

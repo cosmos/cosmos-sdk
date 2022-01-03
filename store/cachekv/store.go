@@ -208,41 +208,63 @@ func (store *Store) dirtyItems(start, end []byte) {
 		return
 	}
 
-	unsorted := make([]*kv.Pair, 0)
-	for key := range store.unsortedCache {
-		cacheValue := store.cache[key]
-		keyBz := conv.UnsafeStrToBytes(key)
-		unsorted = append(unsorted, &kv.Pair{Key: keyBz, Value: cacheValue.value})
-	}
-
-	// kvL was already sorted so pass it in as is.
-	store.clearUnsortedCacheSubset(unsorted)
-}
-
-func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair) {
-	// no-op if we have multiple iterators open, as this causes writes to MemDB.
-	// This will cause a write to mem-db, which could potentially be thread-safe per
-	// golang btree's docs, but will definitely cause deadlocks in tm-db's memdb abstractions.
-	// This is only safe if you are either:
+	// dirty items needs to clear the unsorted items from the unsortedCache, then put them into the sortedCache.
+	// Subsequently an iterator is constructed using the sorted cache and parent store.
+	//
+	// However:
+	// if we have multiple iterators open, we have to avoid writes to the store.sortedCache MemDB.
+	// This is because a write to mem-db will definitely cause deadlocks in tm-db's memdb abstractions.
+	// (Though it could potentially be thread-safe per golang btree's docs)
+	// Thus we can only safely clear the unsorted cache to construct an iterator if we are:
 	// - only doing one iterator at a time
 	// - doing multiple iterators, over the same data, and you didn't write to the subset between
 	//   first iterator creation and current iterator creation
-	// - doing multiple iterators over disjoint pieces of data, \
-	//   and have done no sets over any iterated component since first iterator creation
+	// - doing multiple iterators over disjoint pieces of data,
+	//   and have done no writes over any iterated component since first iterator creation
+	//
+	// To reword, in order to better accomodate multiple iterators,
+	// every time we construct an iterator when no others are active, we clear the entire unsorted cache.
+	// otherwise we don't do any clearing of the unsorted cache,
+	// and panic if we would be constructing an invalid iterator.
+	// TODO: Come back and vastly simplify the cacheKV store / iterator architecture,
+	// so we don't have these messy issues.
+
+	numUnsortedEntries := len(store.unsortedCache)
 	if store.activeIterators > 1 {
-		return
+		numUnsortedEntries = 0
 	}
-	n := len(store.unsortedCache)
-	if len(unsorted) == n { // This pattern allows the Go compiler to emit the map clearing idiom for the entire map.
-		for key := range store.unsortedCache {
-			delete(store.unsortedCache, key)
-		}
-	} else { // Otherwise, normally delete the unsorted keys from the map.
-		for _, kv := range unsorted {
-			delete(store.unsortedCache, conv.UnsafeBytesToStr(kv.Key))
+	unsorted := make([]*kv.Pair, 0, numUnsortedEntries)
+	for key := range store.unsortedCache {
+		cacheValue := store.cache[key]
+		keyBz := conv.UnsafeStrToBytes(key)
+		if store.activeIterators == 1 {
+			// if we have one iterator, build a list of every KV pair thats not sorted.
+			unsorted = append(unsorted, &kv.Pair{Key: keyBz, Value: cacheValue.value})
+		} else if store.activeIterators > 1 {
+			// if we have more than one iterator we can't clear unsorted.
+			// therefore we check here if any of the unsorted values are in our iterator range, and if so panic.
+			if dbm.IsKeyInDomain(conv.UnsafeStrToBytes(key), start, end) {
+				panic("Invalid concurrent iterator construction!" +
+					" If you are using multiple iterators concurrently, there must be no writes after the first" + "concurrent iterator's creations over data ranges you will iterate over." +
+					" Writes over these data ranges can resume once all concurrent iterators have been created," + " or the iterators have been closed.")
+			}
 		}
 	}
 
+	if store.activeIterators == 1 {
+		store.clearEntireUnsortedCache()
+		store.updateSortedCache(unsorted)
+	}
+}
+
+func (store *Store) clearEntireUnsortedCache() {
+	// This pattern allows the Go compiler to emit the map clearing idiom for the entire map.
+	for key := range store.unsortedCache {
+		delete(store.unsortedCache, key)
+	}
+}
+
+func (store *Store) updateSortedCache(unsorted []*kv.Pair) {
 	sort.Slice(unsorted, func(i, j int) bool {
 		return bytes.Compare(unsorted[i].Key, unsorted[j].Key) < 0
 	})

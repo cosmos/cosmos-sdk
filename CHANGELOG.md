@@ -185,6 +185,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   ibc-denom.
 * [\#10593](https://github.com/cosmos/cosmos-sdk/pull/10593) Update swagger-ui to v4.1.0 to fix xss vulnerability.
 * [\#10674](https://github.com/cosmos/cosmos-sdk/pull/10674) Fix issue with `Error.Wrap` and `Error.Wrapf` usage with `errors.Is`.
+* (x/authz) [\#10633](https://github.com/cosmos/cosmos-sdk/pull/10633) Fixed authorization not found error when executing message
 
 ### State Machine Breaking
 

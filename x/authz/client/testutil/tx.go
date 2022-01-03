@@ -548,7 +548,7 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 	})
 	s.Require().NoError(err)
-	s.Require().Contains(res.String(), "authorization not found")
+	s.Require().Contains(res.String(), "authorization expired")
 }
 
 func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {

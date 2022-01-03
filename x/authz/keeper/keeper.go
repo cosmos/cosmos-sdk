@@ -87,10 +87,20 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 
 		// if granter != grantee then check authorization.Accept, otherwise we implicitly accept.
 		if !granter.Equals(grantee) {
-			authorization, _ := k.GetCleanAuthorization(ctx, grantee, granter, sdk.MsgTypeURL(msg))
-			if authorization == nil {
+			grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, sdk.MsgTypeURL(msg)))
+			if !found {
 				return nil, sdkerrors.ErrUnauthorized.Wrap("authorization not found")
 			}
+
+			if grant.Expiration.Before(ctx.BlockHeader().Time) {
+				return nil, sdkerrors.ErrUnauthorized.Wrap("authorization expired")
+			}
+
+			authorization, err := getAuthorization(grant)
+			if err != nil {
+				return nil, err
+			}
+
 			resp, err := authorization.Accept(ctx, msg)
 			if err != nil {
 				return nil, err
@@ -192,22 +202,6 @@ func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, grant
 		authorizations = append(authorizations, authorization.GetAuthorization())
 	}
 	return authorizations
-}
-
-// GetCleanAuthorization returns an `Authorization` and it's expiration time for
-// (grantee, granter, message name) grant. If there is no grant `nil` is returned.
-// If the grant is expired, the grant is revoked, removed from the storage, and `nil` is returned.
-func (k Keeper) GetCleanAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (cap authz.Authorization, expiration time.Time) {
-	grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, msgType))
-	if !found {
-		return nil, time.Time{}
-	}
-	if grant.Expiration.Before(ctx.BlockHeader().Time) {
-		k.DeleteGrant(ctx, grantee, granter, msgType)
-		return nil, time.Time{}
-	}
-
-	return grant.GetAuthorization(), grant.Expiration
 }
 
 // IterateGrants iterates over all authorization grants
@@ -397,4 +391,13 @@ func (k Keeper) DeleteExpiredGrants(ctx sdk.Context, grants []*authz.GrantStoreK
 	}
 
 	return nil
+}
+
+func getAuthorization(g authz.Grant) (authz.Authorization, error) {
+	a, ok := g.Authorization.GetCachedValue().(authz.Authorization)
+	if !ok {
+		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (authz.Authorization)(nil), g.Authorization.GetCachedValue())
+	}
+
+	return a, nil
 }

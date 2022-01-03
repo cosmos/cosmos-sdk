@@ -33,17 +33,19 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 	if err != nil {
 		return nil, err
 	}
+
 	ctx := sdk.UnwrapSDKContext(c)
-
-	store := ctx.KVStore(k.storeKey)
-	key := grantStoreKey(grantee, granter, "")
-	authStore := prefix.NewStore(store, key)
-
 	if req.MsgTypeUrl != "" {
-		authorization, expiration := k.GetCleanAuthorization(ctx, grantee, granter, req.MsgTypeUrl)
-		if authorization == nil {
+		grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, req.MsgTypeUrl))
+		if !found {
 			return nil, status.Errorf(codes.NotFound, "no authorization found for %s type", req.MsgTypeUrl)
 		}
+
+		authorization, err := getAuthorization(grant)
+		if err != nil {
+			return nil, err
+		}
+
 		authorizationAny, err := codectypes.NewAnyWithValue(authorization)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, err.Error())
@@ -51,10 +53,14 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 		return &authz.QueryGrantsResponse{
 			Grants: []*authz.Grant{{
 				Authorization: authorizationAny,
-				Expiration:    expiration,
+				Expiration:    grant.Expiration,
 			}},
 		}, nil
 	}
+
+	store := ctx.KVStore(k.storeKey)
+	key := grantStoreKey(grantee, granter, "")
+	authStore := prefix.NewStore(store, key)
 
 	var authorizations []*authz.Grant
 	pageRes, err := query.FilteredPaginate(authStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {

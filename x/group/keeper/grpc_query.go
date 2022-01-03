@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -247,6 +249,44 @@ func (q Keeper) VotesByVoter(goCtx context.Context, request *group.QueryVotesByV
 
 	return &group.QueryVotesByVoterResponse{
 		Votes:      votes,
+		Pagination: pageRes,
+	}, nil
+}
+
+func (q Keeper) GroupsByMember(goCtx context.Context, request *group.QueryGroupsByMemberRequest) (*group.QueryGroupsByMemberResponse, error) {
+	if request == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	member, err := sdk.AccAddressFromBech32(request.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	iter, err := q.groupMemberByMemberIndex.GetPaginated(ctx.KVStore(q.key), member.Bytes(), request.Pagination)
+	if err != nil {
+		return nil, err
+	}
+	defer iter.Close()
+
+	var members []*group.GroupMember
+	pageRes, err := orm.Paginate(iter, request.Pagination, &members)
+	if err != nil {
+		return nil, err
+	}
+
+	var groups []*group.GroupInfo
+	for _, gm := range members {
+		groupInfo, err := q.getGroupInfo(ctx, gm.GroupId)
+		if err != nil {
+			return nil, err
+		}
+		groups = append(groups, &groupInfo)
+	}
+
+	return &group.QueryGroupsByMemberResponse{
+		Groups:     groups,
 		Pagination: pageRes,
 	}, nil
 }

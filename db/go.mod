@@ -31,6 +31,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
 
-// FIXME: gorocksdb bindings for OptimisticTransactionDB are not merged upstream, so we use a fork
+// Note: gorocksdb bindings for OptimisticTransactionDB are not merged upstream, so we use a fork
 // See https://github.com/tecbot/gorocksdb/pull/216
-replace github.com/tecbot/gorocksdb => github.com/roysc/gorocksdb v1.1.1
+replace github.com/tecbot/gorocksdb => github.com/cosmos/gorocksdb v1.1.1

@@ -8,7 +8,7 @@ import (
 
 var (
 	precisionReuse       = new(big.Int).Exp(big.NewInt(10), big.NewInt(sdk.Precision), nil)
-	globalFastExp = newFastExp()
+	globalFastExp        = newFastExp()
 	globalInflationCurve = newInflationCurve()
 )
 
@@ -58,9 +58,9 @@ func newFastExp() *FastExp {
 		newBigIntWithTenBase("235865763225513294137944142764154484399"),
 	}
 	return &FastExp{
-		exp2m1Constants:  constants,
-		lbE:        newBigIntWithTenBase("490923683258796565746369346286093237521"),
-		exp2FpOne:  newBigIntWithTenBase("340282366920938463463374607431768211456"),
+		exp2m1Constants: constants,
+		lbE:             newBigIntWithTenBase("490923683258796565746369346286093237521"),
+		exp2FpOne:       newBigIntWithTenBase("340282366920938463463374607431768211456"),
 	}
 }
 
@@ -78,7 +78,7 @@ type InflationCurve struct {
 func newInflationCurve() *InflationCurve {
 	// see TestInflationConstants for calculation
 	return &InflationCurve{
-		fastExp: globalFastExp,
+		fastExp:    globalFastExp,
 		peakOffset: newBigIntWithTenBase("-150000000000000000000000000"),
 		peakScale:  newBigIntWithTenBase("-7880401239278895842455808020028722761015947854093089333589658680"),
 	}

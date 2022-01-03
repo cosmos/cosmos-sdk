@@ -1,12 +1,12 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 	"math"
 	"math/big"
 	"testing"
-	"github.com/stretchr/testify/require"
 )
 
 func mustNewDecFromStr(t *testing.T, str string) (d sdk.Dec) {
@@ -36,15 +36,15 @@ func TestInflationMonotonicity(t *testing.T) {
 	var max = new(big.Int).Mul(big.NewInt(300_000_000), new(big.Int).Exp(big.NewInt(10), big.NewInt(sdk.Precision), nil))
 	var peak = new(big.Int).Rsh(max, 1)
 	// use a large prime number in case monotonicity only happens for high trailing
-    // zero numbers or some other regular condition
+	// zero numbers or some other regular condition
 	var numSteps = int64(104729)
 	var step = new(big.Int).Div(max, big.NewInt(numSteps))
 	// a small amount large enough that neighboring inflation rates are not equal,
-    // check that the curve is monotonic and smooth with increments of this
-	var small = new(big.Int).Exp(big.NewInt(10), big.NewInt(18 - 7), nil)
+	// check that the curve is monotonic and smooth with increments of this
+	var small = new(big.Int).Exp(big.NewInt(10), big.NewInt(18-7), nil)
 	var anom = new(big.Int)
 	var maxDiff = big.NewInt(100000)
-    // second order smoothness should be very smooth
+	// second order smoothness should be very smooth
 	var maxSecondDiff = big.NewInt(10)
 	for i := int64(0); i < numSteps; i++ {
 		var beforePeak0 = anom.Cmp(peak) == -1
@@ -91,15 +91,15 @@ func TestInflationApproximate(t *testing.T) {
 	for i := int64(0); i < numSteps; i++ {
 		var inputTmp = new(big.Int).Set(anom)
 		// 3e26 has 88 significant bits, shift by 36 to get 52 bits which will be
-        // suitable for getting the precision into 64 bit IEEE floats
+		// suitable for getting the precision into 64 bit IEEE floats
 		inputTmp.Rsh(inputTmp, 36)
 		var anomF = float64(inputTmp.Uint64())
-        // undo the shift on the float side
+		// undo the shift on the float side
 		anomF *= math.Pow(float64(2.0), 36)
-		var resultF = math.Exp(math.Pow(anomF - 150_000_000.0e18, 2) / (-float64(2.0) * math.Pow(float64(50_000_000.0e18), 2)))
+		var resultF = math.Exp(math.Pow(anomF-150_000_000.0e18, 2) / (-float64(2.0) * math.Pow(float64(50_000_000.0e18), 2)))
 
 		// conversion to 64 bit fracint
-		resultF *= math.Pow(float64(2.0), 52);
+		resultF *= math.Pow(float64(2.0), 52)
 		var outputTmp = new(big.Int).SetUint64(uint64(resultF))
 		outputTmp.Lsh(outputTmp, 12)
 
@@ -147,20 +147,20 @@ func TestInflationExact(t *testing.T) {
 // interpreted as `bits * 2.0^(-fp)`
 type FP struct {
 	bits *big.Int
-	fp int
+	fp   int
 }
 
 func NewFP(bits *big.Int, fp int) FP {
-	return FP {
+	return FP{
 		bits,
 		fp,
 	}
 }
 
 func CopyFP(x *FP) FP {
-	return FP {
+	return FP{
 		bits: new(big.Int).Set(x.bits),
-		fp: x.fp,
+		fp:   x.fp,
 	}
 }
 
@@ -303,7 +303,7 @@ func (x *FP) OTruncateAssign(rhs *FP, o *bool) {
 		if s >= rhs.bits.BitLen() {
 			*o = true
 		}
-		tmp.Rsh(rhs.bits, uint(rhs.fp - x.fp))
+		tmp.Rsh(rhs.bits, uint(rhs.fp-x.fp))
 	} else {
 		var s = x.fp - rhs.fp
 		tmp.Lsh(rhs.bits, uint(s))
@@ -318,7 +318,7 @@ type FPBounds struct {
 }
 
 func NewFPBounds(lo FP, hi FP) FPBounds {
-	return FPBounds {
+	return FPBounds{
 		lo,
 		hi,
 	}
@@ -394,7 +394,7 @@ func (input *FP) ExpBounds(maxBitLen int) *FPBounds {
 	// roll over the ULP.
 	hiSum.bits.Add(hiSum.bits, new(big.Int).SetUint64(4))
 
-	// be extra conservative for cases 
+	// be extra conservative for cases
 	var bounds = NewFPBounds(loSum, hiSum)
 	return &bounds
 }
@@ -742,7 +742,7 @@ func TestFastExp(t *testing.T) {
 
 	for i := range constants {
 		// the order is reversed
-		require.True(t, constants[actualLen - 1 - i].bits.Cmp(globalFastExp.exp2m1Constants[i]) == 0)
+		require.True(t, constants[actualLen-1-i].bits.Cmp(globalFastExp.exp2m1Constants[i]) == 0)
 		// print out the constants for usage in `newFastExp()`
 		//fmt.Printf("newBigIntWithTenBase(\"%s\"),\n", constants[actualLen - 1 - i].bits.String());
 	}

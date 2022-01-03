@@ -113,11 +113,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10612](https://github.com/cosmos/cosmos-sdk/pull/10612) `baseapp.NewBaseApp` constructor function doesn't take the `sdk.TxDecoder` anymore. This logic has been moved into the TxDecoderMiddleware.
 * [\#10692](https://github.com/cosmos/cosmos-sdk/pull/10612) `SignerData` takes 2 new fields, `Address` and `PubKey`, which need to get populated when using SIGN_MODE_DIRECT_AUX.
 * [\#10748](https://github.com/cosmos/cosmos-sdk/pull/10748) Move legacy `x/gov` api to `v1beta1` directory.
+* [\#10816](https://github.com/cosmos/cosmos-sdk/pull/10816) Reuse blocked addresses from the bank module. No need to pass them to distribution. 
 
 ### Client Breaking Changes
 
 * [\#9594](https://github.com/cosmos/cosmos-sdk/pull/9594) Remove legacy REST API. Please see the [REST Endpoints Migration guide](https://docs.cosmos.network/master/migrations/rest.html) to migrate to the new REST endpoints.
 * [\#9995](https://github.com/cosmos/cosmos-sdk/pull/9995) Increased gas cost for creating proposals.
+* [\#10598](https://github.com/cosmos/cosmos-sdk/pull/10598) Remove `gogoproto.json_tag` from all proto files. 
+  - The affected fields are:
+    - Message Proposal in goverance `id` is now `proposal_id`
+    - Message `MsgUnjail` `address` is no `validator_addr` 
+    - Message `GenesisState` json representation of Gentxs is now `gen_txs`, previously `gentxs`
+    - Message `DelegatorStartingInfo` json representation of Height is now `height`, previously `creation_height`
 
 ### CLI Breaking Changes
 
@@ -150,6 +157,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types) [\#10630](https://github.com/cosmos/cosmos-sdk/pull/10630) Add an `Events` field to the `TxResponse` type that captures _all_ events emitted by a transaction, unlike `Logs` which only contains events emitted during message execution.
 * (deps) [\#10706](https://github.com/cosmos/cosmos-sdk/issues/10706) Bump rosetta-sdk-go to v0.7.2 and rosetta-cli to v0.7.3
 * (module) [\#10711](https://github.com/cosmos/cosmos-sdk/pull/10711) Panic at startup if the app developer forgot to add modules in the `SetOrder{BeginBlocker, EndBlocker, InitGenesis, ExportGenesis}` functions. This means that all modules, even those who have empty implementations for those methods, need to be added to `SetOrder*`.
+* (types/errors) [\#10779](https://github.com/cosmos/cosmos-sdk/pull/10779) Move most functionality in `types/errors` to a standalone `errors` go module, except the `RootCodespace` errors and ABCI response helpers. All functions and types that used to live in `types/errors` are now aliased so this is not a breaking change.
 
 ### Bug Fixes
 

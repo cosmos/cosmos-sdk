@@ -152,22 +152,34 @@ func (store *Store) Write() {
 	// TODO: Consider allowing usage of Batch, which would allow the write to
 	// at least happen atomically.
 	for _, key := range keys {
-		cacheValue := store.cache[key]
-
-		switch {
-		case store.isDeleted(key):
+		if store.isDeleted(key) {
+			// We use []byte(key) instead of conv.UnsafeStrToBytes because we cannot
+			// be sure if the underlying store might do a save with the byteslice or
+			// not. Once we get confirmation that .Delete is guaranteed not to
+			// save the byteslice, then we can assume only a read-only copy is sufficient.
 			store.parent.Delete([]byte(key))
-		case cacheValue.value == nil:
-			// Skip, it already doesn't exist in parent.
-		default:
+			continue
+		}
+
+		cacheValue := store.cache[key]
+		if cacheValue.value != nil {
+			// It already exists in the parent, hence delete it.
 			store.parent.Set([]byte(key), cacheValue.value)
 		}
 	}
 
-	// Clear the cache
-	store.cache = make(map[string]*cValue)
-	store.deleted = make(map[string]struct{})
-	store.unsortedCache = make(map[string]struct{})
+	// Clear the cache using the map clearing idiom
+	// and not allocating fresh objects.
+	// Please see https://bencher.orijtech.com/perfclinic/mapclearing/
+	for key := range store.cache {
+		delete(store.cache, key)
+	}
+	for key := range store.deleted {
+		delete(store.deleted, key)
+	}
+	for key := range store.unsortedCache {
+		delete(store.unsortedCache, key)
+	}
 	store.sortedCache = dbm.NewMemDB()
 }
 

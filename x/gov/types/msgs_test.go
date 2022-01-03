@@ -1,7 +1,6 @@
 package types
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -23,48 +22,12 @@ func init() {
 	coinsMulti.Sort()
 }
 
-// test ValidateBasic for MsgCreateValidator
-func TestMsgSubmitProposal(t *testing.T) {
-	tests := []struct {
-		title, description string
-		proposalType       string
-		proposerAddr       sdk.AccAddress
-		initialDeposit     sdk.Coins
-		expectPass         bool
-	}{
-		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsPos, true},
-		{"", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsPos, false},
-		{"Test Proposal", "", ProposalTypeText, addrs[0], coinsPos, false},
-		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, sdk.AccAddress{}, coinsPos, false},
-		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsZero, true},
-		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsMulti, true},
-		{strings.Repeat("#", MaxTitleLength*2), "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsMulti, false},
-		{"Test Proposal", strings.Repeat("#", MaxDescriptionLength*2), ProposalTypeText, addrs[0], coinsMulti, false},
-	}
-
-	for i, tc := range tests {
-		msg, err := NewMsgSubmitProposal(
-			ContentFromProposalType(tc.title, tc.description, tc.proposalType),
-			tc.initialDeposit,
-			tc.proposerAddr,
-		)
-
-		require.NoError(t, err)
-
-		if tc.expectPass {
-			require.NoError(t, msg.ValidateBasic(), "test: %v", i)
-		} else {
-			require.Error(t, msg.ValidateBasic(), "test: %v", i)
-		}
-	}
-}
-
 func TestMsgDepositGetSignBytes(t *testing.T) {
 	addr := sdk.AccAddress("addr1")
 	msg := NewMsgDeposit(addr, 0, coinsPos)
 	res := msg.GetSignBytes()
 
-	expected := `{"type":"cosmos-sdk/MsgDeposit","value":{"amount":[{"amount":"1000","denom":"stake"}],"depositor":"cosmos1v9jxgu33kfsgr5","proposal_id":"0"}}`
+	expected := `{"type":"cosmos-sdk/MsgDeposit","value":{"amount":[{"amount":"1000","denom":"stake"}],"depositor":"cosmos1v9jxgu33kfsgr5"}}`
 	require.Equal(t, expected, string(res))
 }
 
@@ -132,23 +95,23 @@ func TestMsgVoteWeighted(t *testing.T) {
 		{0, addrs[0], NewNonSplitVoteOption(OptionNoWithVeto), true},
 		{0, addrs[0], NewNonSplitVoteOption(OptionAbstain), true},
 		{0, addrs[0], WeightedVoteOptions{ // weight sum > 1
-			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDec(1)},
-			WeightedVoteOption{Option: OptionAbstain, Weight: sdk.NewDec(1)},
+			NewWeightedVoteOption(OptionYes, sdk.NewDec(1)),
+			NewWeightedVoteOption(OptionAbstain, sdk.NewDec(1)),
 		}, false},
 		{0, addrs[0], WeightedVoteOptions{ // duplicate option
-			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDecWithPrec(5, 1)},
-			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDecWithPrec(5, 1)},
+			NewWeightedVoteOption(OptionYes, sdk.NewDecWithPrec(5, 1)),
+			NewWeightedVoteOption(OptionYes, sdk.NewDecWithPrec(5, 1)),
 		}, false},
 		{0, addrs[0], WeightedVoteOptions{ // zero weight
-			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDec(0)},
+			NewWeightedVoteOption(OptionYes, sdk.NewDec(0)),
 		}, false},
 		{0, addrs[0], WeightedVoteOptions{ // negative weight
-			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDec(-1)},
+			NewWeightedVoteOption(OptionYes, sdk.NewDec(-1)),
 		}, false},
 		{0, addrs[0], WeightedVoteOptions{}, false},
 		{0, addrs[0], NewNonSplitVoteOption(VoteOption(0x13)), false},
 		{0, addrs[0], WeightedVoteOptions{ // weight sum <1
-			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDecWithPrec(5, 1)},
+			NewWeightedVoteOption(OptionYes, sdk.NewDecWithPrec(5, 1)),
 		}, false},
 	}
 
@@ -164,13 +127,13 @@ func TestMsgVoteWeighted(t *testing.T) {
 
 // this tests that Amino JSON MsgSubmitProposal.GetSignBytes() still works with Content as Any using the ModuleCdc
 func TestMsgSubmitProposal_GetSignBytes(t *testing.T) {
-	msg, err := NewMsgSubmitProposal(NewTextProposal("test", "abcd"), sdk.NewCoins(), sdk.AccAddress{})
+	proposal := []sdk.Msg{NewMsgVote(addrs[0], 1, OptionYes)}
+	msg, err := NewMsgSubmitProposal(proposal, sdk.NewCoins(), sdk.AccAddress{})
 	require.NoError(t, err)
 	var bz []byte
 	require.NotPanics(t, func() {
 		bz = msg.GetSignBytes()
 	})
-	require.Equal(t,
-		`{"type":"cosmos-sdk/MsgSubmitProposal","value":{"content":{"type":"cosmos-sdk/TextProposal","value":{"description":"abcd","title":"test"}},"initial_deposit":[]}}`,
+	require.Equal(t, "{\"type\":\"cosmos-sdk/MsgSubmitProposal\",\"value\":{\"initial_deposit\":[],\"messages\":[{\"type\":\"cosmos-sdk/MsgVote\",\"value\":{\"option\":1,\"proposal_id\":\"1\",\"voter\":\"cosmos1w3jhxap3gempvr\"}}]}}",
 		string(bz))
 }

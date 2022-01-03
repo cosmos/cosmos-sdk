@@ -8,16 +8,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 // EndBlocker called every block, process inflation, update validator set.
 func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
+	defer telemetry.ModuleMeasureSince(v1beta1.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
 	logger := keeper.Logger(ctx)
 
 	// delete dead proposals from store and burn theirs deposits. A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
-	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal types.Proposal) bool {
+	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal v1beta1.Proposal) bool {
 		keeper.DeleteProposal(ctx, proposal.ProposalId)
 		keeper.DeleteAndBurnDeposits(ctx, proposal.ProposalId)
 
@@ -44,7 +45,7 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	})
 
 	// fetch active proposals whose voting periods have ended (are passed the block time)
-	keeper.IterateActiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal types.Proposal) bool {
+	keeper.IterateActiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal v1beta1.Proposal) bool {
 		var tagValue, logMsg string
 
 		passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
@@ -64,7 +65,7 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 			// is written and the error message is logged.
 			err := handler(cacheCtx, proposal.GetContent())
 			if err == nil {
-				proposal.Status = types.StatusPassed
+				proposal.Status = v1beta1.StatusPassed
 				tagValue = types.AttributeValueProposalPassed
 				logMsg = "passed"
 
@@ -77,12 +78,12 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 				// write state to the underlying multi-store
 				writeCache()
 			} else {
-				proposal.Status = types.StatusFailed
+				proposal.Status = v1beta1.StatusFailed
 				tagValue = types.AttributeValueProposalFailed
 				logMsg = fmt.Sprintf("passed, but failed on execution: %s", err)
 			}
 		} else {
-			proposal.Status = types.StatusRejected
+			proposal.Status = v1beta1.StatusRejected
 			tagValue = types.AttributeValueProposalRejected
 			logMsg = "rejected"
 		}

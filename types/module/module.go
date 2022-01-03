@@ -255,21 +255,25 @@ func NewManager(modules ...AppModule) *Manager {
 
 // SetOrderInitGenesis sets the order of init genesis calls
 func (m *Manager) SetOrderInitGenesis(moduleNames ...string) {
+	m.checkForgottenModules("SetOrderInitGenesis", moduleNames)
 	m.OrderInitGenesis = moduleNames
 }
 
 // SetOrderExportGenesis sets the order of export genesis calls
 func (m *Manager) SetOrderExportGenesis(moduleNames ...string) {
+	m.checkForgottenModules("SetOrderExportGenesis", moduleNames)
 	m.OrderExportGenesis = moduleNames
 }
 
 // SetOrderBeginBlockers sets the order of set begin-blocker calls
 func (m *Manager) SetOrderBeginBlockers(moduleNames ...string) {
+	m.checkForgottenModules("SetOrderBeginBlockers", moduleNames)
 	m.OrderBeginBlockers = moduleNames
 }
 
 // SetOrderEndBlockers sets the order of set end-blocker calls
 func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
+	m.checkForgottenModules("SetOrderEndBlockers", moduleNames)
 	m.OrderEndBlockers = moduleNames
 }
 
@@ -367,6 +371,19 @@ func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) map[string
 	return genesisData
 }
 
+// checkForgottenModules checks that we didn't forget any modules in the
+// SetOrder* functions.
+func (m *Manager) checkForgottenModules(setOrderFnName string, moduleNames []string) {
+	setOrderMap := map[string]struct{}{}
+	for _, m := range moduleNames {
+		setOrderMap[m] = struct{}{}
+	}
+
+	if len(setOrderMap) != len(m.Modules) {
+		panic(fmt.Sprintf("got %d modules in the module manager, but %d modules in %s", len(m.Modules), len(setOrderMap), setOrderFnName))
+	}
+}
+
 // MigrationHandler is the migration function that each module registers.
 type MigrationHandler func(sdk.Context) error
 
@@ -448,6 +465,7 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 				return nil, err
 			}
 		} else {
+			ctx.Logger().Info(fmt.Sprintf("adding a new module: %s", moduleName))
 			moduleValUpdates := module.InitGenesis(ctx, c.cdc, module.DefaultGenesis(c.cdc))
 			// The module manager assumes only one module will update the
 			// validator set, and it can't be a new module.

@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -15,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -31,7 +31,7 @@ func (s *MWTestSuite) TestDeductFeesNoDelegation() {
 	protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(app.InterfaceRegistry()), tx.DefaultSignModes)
 
 	txHandler := middleware.ComposeMiddlewares(
-		noopTxHandler{},
+		noopTxHandler,
 		middleware.DeductFeeMiddleware(
 			s.app.AccountKeeper,
 			s.app.BankKeeper,
@@ -145,11 +145,11 @@ func (s *MWTestSuite) TestDeductFeesNoDelegation() {
 				accNums, seqs = []uint64{acc.GetAccountNumber()}, []uint64{acc.GetSequence()}
 			}
 
-			tx, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
+			testTx, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
 			s.Require().NoError(err)
 
 			// tests only feegrant middleware
-			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, abci.RequestDeliverTx{})
+			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), txtypes.Request{Tx: testTx})
 			if tc.valid {
 				s.Require().NoError(err)
 			} else {
@@ -157,7 +157,7 @@ func (s *MWTestSuite) TestDeductFeesNoDelegation() {
 			}
 
 			// tests while stack
-			_, err = s.txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, abci.RequestDeliverTx{})
+			_, err = s.txHandler.DeliverTx(sdk.WrapSDKContext(ctx), txtypes.Request{Tx: testTx})
 			if tc.valid {
 				s.Require().NoError(err)
 			} else {
@@ -216,7 +216,7 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
-			SignerIndex:   i,
+			PubKey:        p.PubKey(),
 		}
 		signBytes, err := gen.SignModeHandler().GetSignBytes(signMode, signerData, tx.GetTx())
 		if err != nil {

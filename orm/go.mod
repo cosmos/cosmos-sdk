@@ -3,8 +3,8 @@ module github.com/cosmos/cosmos-sdk/orm
 go 1.17
 
 require (
-	github.com/cosmos/cosmos-proto v1.0.0-alpha1
-	github.com/cosmos/cosmos-sdk v0.44.3
+	github.com/cosmos/cosmos-proto v1.0.0-alpha4
+	github.com/cosmos/cosmos-sdk v0.44.5
 	github.com/cosmos/cosmos-sdk/api v0.1.0-alpha1
 	google.golang.org/protobuf v1.27.1
 	gotest.tools/v3 v3.0.3
@@ -20,12 +20,13 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sasha-s/go-deadlock v0.2.1-0.20190427202633-1595213edefa // indirect
 	github.com/tendermint/tendermint v0.34.14 // indirect
-	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a // indirect
+	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
 	golang.org/x/net v0.0.0-20210903162142-ad29c8ab022f // indirect
 	golang.org/x/sys v0.0.0-20210903071746-97244b99971b // indirect
 	golang.org/x/text v0.3.6 // indirect
-	google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c // indirect
-	google.golang.org/grpc v1.40.0 // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	google.golang.org/genproto v0.0.0-20210828152312-66f60bf46e71 // indirect
+	google.golang.org/grpc v1.42.0 // indirect
 )
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1

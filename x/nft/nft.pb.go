@@ -27,17 +27,17 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type Class struct {
 	// id defines the unique identifier of the NFT classification, similar to the contract address of ERC721
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// name defines the human-readable name of the NFT classification,optional
+	// name defines the human-readable name of the NFT classification. Optional
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	// symbol is an abbreviated name for nft classification,optional
+	// symbol is an abbreviated name for nft classification. Optional
 	Symbol string `protobuf:"bytes,3,opt,name=symbol,proto3" json:"symbol,omitempty"`
-	// description is a brief description of nft classification,optional
+	// description is a brief description of nft classification. Optional
 	Description string `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
-	// uri is a URI may point to a JSON file that conforms to the nft classification Metadata JSON Schema.optional
+	// uri for the class metadata stored off chain. It can define schema for Class and NFT `Data` attributes. Optional
 	Uri string `protobuf:"bytes,5,opt,name=uri,proto3" json:"uri,omitempty"`
-	// uri_hash is a hash of the document pointed to uri,optional
+	// uri_hash is a hash of the document pointed by uri. Optional
 	UriHash string `protobuf:"bytes,6,opt,name=uri_hash,json=uriHash,proto3" json:"uri_hash,omitempty"`
-	// data is the metadata of NFT classification,optional
+	// data is the app specific metadata of the NFT class. Optional
 	Data *types.Any `protobuf:"bytes,7,opt,name=data,proto3" json:"data,omitempty"`
 }
 
@@ -125,15 +125,15 @@ func (m *Class) GetData() *types.Any {
 
 // NFT defines the NFT.
 type NFT struct {
-	// class_id defines the unique identifier of the NFT classification, similar to the contract address of ERC721
+	// class_id associated with the NFT, similar to the contract address of ERC721
 	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
-	// id defines the unique identification of NFT
+	// id is a unique identifier of the NFT
 	Id string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
-	// uri defines NFT's metadata storage address outside the chain
+	// uri for the NFT metadata stored off chain
 	Uri string `protobuf:"bytes,3,opt,name=uri,proto3" json:"uri,omitempty"`
-	// uri_hash is a hash of the document pointed to uri
+	// uri_hash is a hash of the document pointed by uri
 	UriHash string `protobuf:"bytes,4,opt,name=uri_hash,json=uriHash,proto3" json:"uri_hash,omitempty"`
-	// data is the metadata of the NFT,optional
+	// data is an app specific data of the NFT. Optional
 	Data *types.Any `protobuf:"bytes,10,opt,name=data,proto3" json:"data,omitempty"`
 }
 

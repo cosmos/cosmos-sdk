@@ -1,3 +1,5 @@
+//go:build rocksdb_build
+
 package rocksdb
 
 import (

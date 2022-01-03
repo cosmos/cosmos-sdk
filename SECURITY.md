@@ -1,7 +1,7 @@
 # Security
 
-> **IMPORTANT**: If you find a security issue, you can contact our team directly at
-security@tendermint.com, or report it to our [bug bounty program](https://hackerone.com/tendermint) on HackerOne. *DO NOT* open a public issue on the repository.
+> **IMPORTANT**: If you find a security issue, you can
+report it to our [bug bounty program](https://hackerone.com/cosmos) on HackerOne. *DO NOT* open a public issue on the repository.
 
 ## Bug Bounty
 

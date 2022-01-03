@@ -209,7 +209,7 @@ func (ma ModuleAccount) GetPermissions() []string {
 
 // SetPubKey - Implements AccountI
 func (ma ModuleAccount) SetPubKey(pubKey cryptotypes.PubKey) error {
-	return errors.New("not supported for module accounts")
+	return fmt.Errorf("not supported for module accounts")
 }
 
 // Validate checks for errors on the account fields
@@ -230,12 +230,39 @@ func (ma ModuleAccount) Validate() error {
 }
 
 type moduleAccountPretty struct {
-	Address       sdk.AccAddress `json:"address"`
-	PubKey        string         `json:"public_key"`
-	AccountNumber uint64         `json:"account_number"`
-	Sequence      uint64         `json:"sequence"`
-	Name          string         `json:"name"`
-	Permissions   []string       `json:"permissions"`
+	Address       sdk.AccAddress `json:"address" yaml:"address"`
+	PubKey        string         `json:"public_key" yaml:"public_key"`
+	AccountNumber uint64         `json:"account_number" yaml:"account_number"`
+	Sequence      uint64         `json:"sequence" yaml:"sequence"`
+	Name          string         `json:"name" yaml:"name"`
+	Permissions   []string       `json:"permissions" yaml:"permissions"`
+}
+
+func (ma ModuleAccount) String() string {
+	out, _ := ma.MarshalYAML()
+	return out.(string)
+}
+
+// MarshalYAML returns the YAML representation of a ModuleAccount.
+func (ma ModuleAccount) MarshalYAML() (interface{}, error) {
+	accAddr, err := sdk.AccAddressFromBech32(ma.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	bs, err := yaml.Marshal(moduleAccountPretty{
+		Address:       accAddr,
+		PubKey:        "",
+		AccountNumber: ma.AccountNumber,
+		Sequence:      ma.Sequence,
+		Name:          ma.Name,
+		Permissions:   ma.Permissions,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return string(bs), nil
 }
 
 // MarshalJSON returns the JSON representation of a ModuleAccount.

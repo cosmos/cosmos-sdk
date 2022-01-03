@@ -22,6 +22,7 @@ package module
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"sort"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
@@ -332,56 +333,28 @@ func (m *Manager) DefaultGenesis() map[string]json.RawMessage {
 	return genesisData
 }
 
-// ValidateGenesis performs genesis state validation for all modules
-func (m *Manager) ValidateGenesis(genesisData map[string]json.RawMessage) error {
-	for name, b := range m.Modules {
-		if mod, ok := b.(HasGenesisBasics); ok {
-			if err := mod.ValidateGenesis(genesisData[name]); err != nil {
-				return err
-			}
-		} else if mod, ok := b.(appmodule.HasGenesis); ok {
-			if err := mod.ValidateGenesis(genesisData[name]); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
+// SetOrderInitGenesis sets the order of init genesis calls
+func (m *Manager) SetOrderInitGenesis(moduleNames ...string) {
+	m.checkForgottenModules("SetOrderInitGenesis", moduleNames)
+	m.OrderInitGenesis = moduleNames
 }
 
-// RegisterGRPCGatewayRoutes registers all module rest routes
-func (m *Manager) RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *runtime.ServeMux) {
-	for _, b := range m.Modules {
-		if mod, ok := b.(HasGRPCGateway); ok {
-			mod.RegisterGRPCGatewayRoutes(clientCtx, rtr)
-		}
-	}
+// SetOrderExportGenesis sets the order of export genesis calls
+func (m *Manager) SetOrderExportGenesis(moduleNames ...string) {
+	m.checkForgottenModules("SetOrderExportGenesis", moduleNames)
+	m.OrderExportGenesis = moduleNames
 }
 
-// AddTxCommands adds all tx commands to the rootTxCmd.
-func (m *Manager) AddTxCommands(rootTxCmd *cobra.Command) {
-	for _, b := range m.Modules {
-		if mod, ok := b.(interface {
-			GetTxCmd() *cobra.Command
-		}); ok {
-			if cmd := mod.GetTxCmd(); cmd != nil {
-				rootTxCmd.AddCommand(cmd)
-			}
-		}
-	}
+// SetOrderBeginBlockers sets the order of set begin-blocker calls
+func (m *Manager) SetOrderBeginBlockers(moduleNames ...string) {
+	m.checkForgottenModules("SetOrderBeginBlockers", moduleNames)
+	m.OrderBeginBlockers = moduleNames
 }
 
-// AddQueryCommands adds all query commands to the rootQueryCmd.
-func (m *Manager) AddQueryCommands(rootQueryCmd *cobra.Command) {
-	for _, b := range m.Modules {
-		if mod, ok := b.(interface {
-			GetQueryCmd() *cobra.Command
-		}); ok {
-			if cmd := mod.GetQueryCmd(); cmd != nil {
-				rootQueryCmd.AddCommand(cmd)
-			}
-		}
-	}
+// SetOrderEndBlockers sets the order of set end-blocker calls
+func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
+	m.checkForgottenModules("SetOrderEndBlockers", moduleNames)
+	m.OrderEndBlockers = moduleNames
 }
 
 // RegisterInvariants registers all module invariants
@@ -569,30 +542,21 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, modulesToExport []str
 	return genesisData, nil
 }
 
-// checkModulesExists verifies that all modules in the list exist in the app
-func (m *Manager) checkModulesExists(moduleName []string) error {
-	for _, name := range moduleName {
-		if _, ok := m.Modules[name]; !ok {
-			return fmt.Errorf("module %s does not exist", name)
-		}
+// checkForgottenModules checks that we didn't forget any modules in the
+// SetOrder* functions.
+func (m *Manager) checkForgottenModules(setOrderFnName string, moduleNames []string) {
+	setOrderMap := map[string]struct{}{}
+	for _, m := range moduleNames {
+		setOrderMap[m] = struct{}{}
 	}
 
-	return nil
+	if len(setOrderMap) != len(m.Modules) {
+		panic(fmt.Sprintf("got %d modules in the module manager, but %d modules in %s", len(m.Modules), len(setOrderMap), setOrderFnName))
+	}
 }
 
-// assertNoForgottenModules checks that we didn't forget any modules in the SetOrder* functions.
-// `pass` is a closure which allows one to omit modules from `moduleNames`.
-// If you provide non-nil `pass` and it returns true, the module would not be subject of the assertion.
-func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []string, pass func(moduleName string) bool) {
-	ms := make(map[string]bool)
-	for _, m := range moduleNames {
-		ms[m] = true
-	}
-	var missing []string
-	for m := range m.Modules {
-		if pass != nil && pass(m) {
-			continue
-		}
+// MigrationHandler is the migration function that each module registers.
+type MigrationHandler func(sdk.Context) error
 
 		if !ms[m] {
 			missing = append(missing, m)

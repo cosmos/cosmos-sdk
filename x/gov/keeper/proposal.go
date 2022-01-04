@@ -36,6 +36,9 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg) (types.
 		// check if the message wraps the legacy content type
 		if contentMsg, ok := msg.(*types.MsgContent); ok {
 			content := ContentFromMessage(contentMsg)
+			if content == nil {
+				return types.Proposal{}, sdkerrors.Wrap(v1beta1.ErrInvalidProposalContent, "content is nil")
+			}
 
 			// if so ensure that the content has a respective handler
 			if !keeper.legacyRouter.HasRoute(content.ProposalRoute()) {

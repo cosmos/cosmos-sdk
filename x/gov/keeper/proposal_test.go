@@ -4,7 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -128,4 +131,12 @@ func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 			}
 		})
 	}
+}
+
+func TestMigrateProposalMessages(t *testing.T) {
+	content := v1beta1.NewTextProposal("Test", "description")
+	contentMsg, err := keeper.NewContentProposal(content, sdk.AccAddress("test1").String())
+	require.NoError(t, err)
+	content = keeper.ContentFromMessage(contentMsg)
+	require.NotNil(t, content)
 }

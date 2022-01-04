@@ -50,7 +50,7 @@ func (a *AllowedMsgAllowance) GetAllowance() (FeeAllowanceI, error) {
 	return allowance, nil
 }
 
-// SetAllowance returns allowed fee allowance.
+// SetAllowance sets allowed fee allowance.
 func (a *AllowedMsgAllowance) SetAllowance(allowance FeeAllowanceI) error {
 	var err error
 	a.Allowance, err = types.NewAnyWithValue(allowance.(proto.Message))

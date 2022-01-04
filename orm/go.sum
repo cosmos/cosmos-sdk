@@ -5,6 +5,8 @@ github.com/cosmos/cosmos-sdk/api v0.1.0-alpha1 h1:inilHdPSVUHHp8R+uW2MNPXkC3AFmT
 github.com/cosmos/cosmos-sdk/api v0.1.0-alpha1/go.mod h1:cJoD3zcka5CZsRloy0auZiVDQtlXAfZSUxLyJMVJ/uk=
 github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.1 h1:rPnG9IDvfhH7DupNAVVbgUoIZHTTxSj7U3ZPafOaSgU=
 github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.1/go.mod h1:Gi7pzVRnvZ1N16JAXpLADzng0ePoE7YeEHaULSFB2Ts=
+github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.2 h1:bBglNlra8ZHb4dmbEE8V85ihLA+DkriSm7tcx6x/JWo=
+github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.2/go.mod h1:Gi7pzVRnvZ1N16JAXpLADzng0ePoE7YeEHaULSFB2Ts=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

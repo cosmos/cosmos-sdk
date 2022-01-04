@@ -275,6 +275,8 @@ github.com/cosmos/btcutil v1.0.4 h1:n7C2ngKXo7UC9gNyMNLbzqz7Asuf+7Qv4gnX/rOdQ44=
 github.com/cosmos/btcutil v1.0.4/go.mod h1:Ffqc8Hn6TJUdDgHBwIZLtrLQC1KdJ9jGJl/TvgUaxbU=
 github.com/cosmos/cosmos-proto v0.0.0-20211123144845-528f5002c9f8 h1:JOVLjm4qgBMnjZIciFqfFMzeIIuJTOXdlpzJdvXQbVA=
 github.com/cosmos/cosmos-proto v0.0.0-20211123144845-528f5002c9f8/go.mod h1:msdDWOvfStHLG+Z2y2SJ0dcqimZ2vc8M1MPnZ4jOF7U=
+github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.1 h1:rPnG9IDvfhH7DupNAVVbgUoIZHTTxSj7U3ZPafOaSgU=
+github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.1/go.mod h1:Gi7pzVRnvZ1N16JAXpLADzng0ePoE7YeEHaULSFB2Ts=
 github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d/go.mod h1:tSxLoYXyBmiFeKpvmq4dzayMdCjCnu8uqmCysIGBT2Y=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=
@@ -642,6 +644,8 @@ github.com/hashicorp/go-cleanhttp v0.5.2 h1:035FKYIWjmULyFRBKPs8TBQoi0x6d9G4xc9n
 github.com/hashicorp/go-cleanhttp v0.5.2/go.mod h1:kO/YDlP8L1346E6Sodw+PrpBSV4/SoxCXGY6BqNFT48=
 github.com/hashicorp/go-getter v1.5.9 h1:b7ahZW50iQiUek/at3CvZhPK1/jiV6CtKcsJiR6E4R0=
 github.com/hashicorp/go-getter v1.5.9/go.mod h1:BrrV/1clo8cCYu6mxvboYg+KutTiFnXjMEgDD8+i7ZI=
+github.com/hashicorp/go-getter v1.5.10 h1:EN9YigTlv5Ola0IuleFzQGuaYPPHHtWusP/5AypWEMs=
+github.com/hashicorp/go-getter v1.5.10/go.mod h1:9i48BP6wpWweI/0/+FBjqLrp9S8XtwUGjiu0QkWHEaY=
 github.com/hashicorp/go-hclog v0.12.0/go.mod h1:whpDNt7SSdeAju8AWKIWsul05p54N/39EeqMAyrmvFQ=
 github.com/hashicorp/go-hclog v0.16.2/go.mod h1:whpDNt7SSdeAju8AWKIWsul05p54N/39EeqMAyrmvFQ=
 github.com/hashicorp/go-hclog v1.0.0/go.mod h1:whpDNt7SSdeAju8AWKIWsul05p54N/39EeqMAyrmvFQ=

@@ -59,6 +59,7 @@ The base keeper provides full-permission access: the ability to arbitrary modify
 // between accounts.
 type Keeper interface {
     SendKeeper
+    WithMintCoinsRestriction(NewRestrictionFn BankMintingRestrictionFn) BaseKeeper 
 
     InitGenesis(sdk.Context, *types.GenesisState)
     ExportGenesis(sdk.Context) *types.GenesisState

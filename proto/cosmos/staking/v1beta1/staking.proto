@@ -302,7 +302,7 @@ message RedelegationEntryResponse {
   option (gogoproto.equal) = true;
 
   RedelegationEntry redelegation_entry = 1 [(gogoproto.nullable) = false];
-  string balance = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string            balance            = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
 // RedelegationResponse is equivalent to a Redelegation except that its entries
@@ -325,11 +325,6 @@ message Pool {
     (gogoproto.nullable)   = false
   ];
   string bonded_tokens = 2 [
-<<<<<<< HEAD
-    (gogoproto.jsontag)    = "bonded_tokens",
-=======
-    (cosmos_proto.scalar)  = "cosmos.Int",
->>>>>>> 3cbc38dda (fix: remove json tag (#10598))
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false,
     (gogoproto.moretags)   = "yaml:\"bonded_tokens\""

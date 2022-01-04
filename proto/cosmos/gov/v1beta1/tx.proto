@@ -45,11 +45,7 @@ message MsgSubmitProposal {
 
 // MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.
 message MsgSubmitProposalResponse {
-<<<<<<< HEAD
-  uint64 proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
-=======
-  uint64 proposal_id = 1;
->>>>>>> 3cbc38dda (fix: remove json tag (#10598))
+  uint64 proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
 }
 
 // MsgVote defines a message to cast a vote.
@@ -59,13 +55,8 @@ message MsgVote {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-<<<<<<< HEAD
-  uint64     proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
+  uint64     proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
   string     voter       = 2;
-=======
-  uint64     proposal_id = 1;
-  string     voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
->>>>>>> 3cbc38dda (fix: remove json tag (#10598))
   VoteOption option      = 3;
 }
 
@@ -98,13 +89,8 @@ message MsgDeposit {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-<<<<<<< HEAD
-  uint64   proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
-  string   depositor   = 2;
-=======
-  uint64   proposal_id                     = 1;
-  string   depositor                       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
->>>>>>> 3cbc38dda (fix: remove json tag (#10598))
+  uint64   proposal_id                     = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
+  string   depositor                       = 2;
   repeated cosmos.base.v1beta1.Coin amount = 3
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }

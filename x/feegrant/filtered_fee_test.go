@@ -30,11 +30,7 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 	oneHour := now.Add(1 * time.Hour)
 
 	// msg we will call in the all cases
-	call := banktypes.MsgSend{
-		FromAddress: "",
-		ToAddress: "",
-		Amount: sdk.Coins{},
-	}
+	call := banktypes.MsgSend{}
 	cases := map[string]struct {
 		allowance *feegrant.BasicAllowance
 		msgs      []string

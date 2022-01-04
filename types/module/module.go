@@ -278,7 +278,6 @@ func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
 
 // SetOrderMigrations sets the order of migrations to be run. If not set
 // then migrations will be run with an order defined in `DefaultMigrationsOrder`.
-// Function will return error if the order is not complete (eg a module won't be defined).
 func (m *Manager) SetOrderMigrations(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderMigrations", moduleNames)
 	m.OrderMigrations = moduleNames
@@ -403,9 +402,8 @@ type VersionMap map[string]uint64
 //      `InitGenesis` on that module.
 // - return the `updatedVM` to be persisted in the x/upgrade's store.
 //
-// Migrations are run in an alphabetical order, except x/auth which is run last. If you want
-// to change the order then you should run migrations in multiple stages as described in
-// docs/core/upgrade.md.
+// Migrations are run in an order defined by `Manager.OrderMigrations` or (if not set) defined by
+// `DefaultMigrationsOrder` function.
 //
 // As an app developer, if you wish to skip running InitGenesis for your new
 // module "foo", you need to manually pass a `fromVM` argument to this function
@@ -433,9 +431,13 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
 	}
+	var modules = m.OrderMigrations
+	if modules == nil {
+		modules = DefaultMigrationsOrder(m.ModuleNames())
+	}
 
 	updatedVM := VersionMap{}
-	for _, moduleName := range m.OrderMigrations {
+	for _, moduleName := range modules {
 		module := m.Modules[moduleName]
 		fromVersion, exists := fromVM[moduleName]
 		toVersion := module.ConsensusVersion()
@@ -523,9 +525,19 @@ func (m *Manager) GetVersionMap() VersionMap {
 	return vermap
 }
 
+// ModuleNames returns list of all module names
+func (m *Manager) ModuleNames() []string {
+	ms := make([]string, len(m.Modules))
+	i := 0
+	for m := range m.Modules {
+		ms[i] = m
+		i++
+	}
+	return ms
+}
+
 // Returns a default migrations ordres: ascending alphabetical by module name,
 // except x/auth which will run last.
-// TODO: write tests
 func DefaultMigrationsOrder(modules []string) []string {
 	const authName = "auth"
 	out := make([]string, 0, len(modules))

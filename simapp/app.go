@@ -389,9 +389,7 @@ func NewSimApp(
 		group.ModuleName,
 	)
 
-	if err := app.mm.SetOrderMigrations(module.DefaultMigrationsOrder(app.mm.Modules)...); err != nil {
-		panic(err)
-	}
+	app.mm.SetOrderMigrations(module.DefaultMigrationsOrder(app.mm.ModuleNames())...)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.legacyRouter, app.QueryRouter(), encodingConfig.Amino)

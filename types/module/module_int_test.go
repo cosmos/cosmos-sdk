@@ -35,3 +35,21 @@ func (s TestSuite) TestAssertNoForgottenModules() {
 		}
 	}
 }
+
+func (s TestSuite) TestModuleNames() {
+	m := Manager{
+		Modules: map[string]AppModule{"a": nil, "b": nil},
+	}
+	ms := m.ModuleNames()
+	s.Require().Equal([]string{"a", "b"}, ms)
+}
+
+func (s TestSuite) TestDefaultMigrationsOrder() {
+	require := s.Require()
+	require.Equal(
+		[]string{"auth2", "d", "z", "auth"},
+		DefaultMigrationsOrder([]string{"d", "auth", "auth2", "z"}), "alphabetical, but auth should be last")
+	require.Equal(
+		[]string{"auth2", "d", "z"},
+		DefaultMigrationsOrder([]string{"d", "auth2", "z"}), "alphabetical")
+}

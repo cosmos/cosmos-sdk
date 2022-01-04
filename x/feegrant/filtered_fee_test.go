@@ -38,10 +38,8 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 	cases := map[string]struct {
 		allowance *feegrant.BasicAllowance
 		msgs      []string
-		// all other checks are ignored if valid=false
 		fee       sdk.Coins
 		blockTime time.Time
-		valid     bool
 		accept    bool
 		remove    bool
 		remains   sdk.Coins
@@ -89,7 +87,6 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 				Expiration: &oneHour,
 			},
 			msgs:      []string{sdk.MsgTypeURL(&call)},
-			valid:     true,
 			fee:       smallAtom,
 			blockTime: now,
 			accept:    true,
@@ -102,7 +99,6 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 				Expiration: &now,
 			},
 			msgs:      []string{sdk.MsgTypeURL(&call)},
-			valid:     true,
 			fee:       smallAtom,
 			blockTime: oneHour,
 			accept:    false,
@@ -114,7 +110,6 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 				Expiration: &oneHour,
 			},
 			msgs:      []string{sdk.MsgTypeURL(&call)},
-			valid:     true,
 			fee:       bigAtom,
 			blockTime: now,
 			accept:    false,
@@ -124,7 +119,6 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 				Expiration: &oneHour,
 			},
 			msgs:      []string{sdk.MsgTypeURL(&call)},
-			valid:     true,
 			fee:       bigAtom,
 			blockTime: now,
 			accept:    true,
@@ -134,7 +128,6 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 				Expiration: &now,
 			},
 			msgs:      []string{sdk.MsgTypeURL(&call)},
-			valid:     true,
 			fee:       bigAtom,
 			blockTime: oneHour,
 			accept:    false,

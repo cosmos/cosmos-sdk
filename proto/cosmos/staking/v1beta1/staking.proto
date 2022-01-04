@@ -275,13 +275,19 @@ message Params {
   google.protobuf.Duration unbonding_time = 1
       [(gogoproto.nullable) = false, (gogoproto.stdduration) = true, (gogoproto.moretags) = "yaml:\"unbonding_time\""];
   // max_validators is the maximum number of validators.
-  uint32 max_validators     = 2 [(gogoproto.moretags) = "yaml:\"max_validators\""];
+  uint32 max_validators = 2 [(gogoproto.moretags) = "yaml:\"max_validators\""];
   // max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio).
-  uint32 max_entries        = 3 [(gogoproto.moretags) = "yaml:\"max_entries\""];
+  uint32 max_entries = 3 [(gogoproto.moretags) = "yaml:\"max_entries\""];
   // historical_entries is the number of historical entries to persist.
   uint32 historical_entries = 4 [(gogoproto.moretags) = "yaml:\"historical_entries\""];
   // bond_denom defines the bondable coin denomination.
-  string bond_denom         = 5 [(gogoproto.moretags) = "yaml:\"bond_denom\""];
+  string bond_denom = 5 [(gogoproto.moretags) = "yaml:\"bond_denom\""];
+  // min_global_self_delegation is the validators' self declared minimum self delegation.
+  string min_global_self_delegation = 10 [
+    (gogoproto.moretags)   = "yaml:\"min_global_self_delegation\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 // DelegationResponse is equivalent to Delegation except that it contains a

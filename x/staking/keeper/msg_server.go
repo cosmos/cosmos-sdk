@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	metrics "github.com/armon/go-metrics"
+	"github.com/armon/go-metrics"
 	tmstrings "github.com/tendermint/tendermint/libs/strings"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -84,6 +84,15 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
 		return nil, err
+	}
+
+	minGlobalSelfDelegation := k.MinGlobalSelfDelegation(ctx)
+	if msg.MinSelfDelegation.LT(minGlobalSelfDelegation) {
+		return nil, sdkerrors.Wrapf(
+			types.ErrSelfDelegationBelowMinimum,
+			"min_global_self_delegation %q must be less or equal min_self_delegation %q and ",
+			minGlobalSelfDelegation, msg.MinSelfDelegation,
+		)
 	}
 
 	validator.MinSelfDelegation = msg.MinSelfDelegation

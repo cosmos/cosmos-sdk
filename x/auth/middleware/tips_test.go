@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -32,7 +32,7 @@ func (s *MWTestSuite) setupAcctsForTips(ctx sdk.Context) (sdk.Context, []testAcc
 	s.Require().NoError(err)
 
 	// Create dummy proposal for tipper to vote on.
-	prop, err := govtypes.NewProposal(govtypes.NewTextProposal("foo", "bar"), 1, time.Now(), time.Now().Add(time.Hour))
+	prop, err := govtypes.NewProposal([]sdk.Msg{}, 1, time.Now(), time.Now().Add(time.Hour))
 	s.Require().NoError(err)
 	s.app.GovKeeper.SetProposal(ctx, prop)
 	s.app.GovKeeper.ActivateVotingPeriod(ctx, prop)

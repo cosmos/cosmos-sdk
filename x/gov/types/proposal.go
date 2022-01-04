@@ -56,7 +56,7 @@ func (p Proposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 }
 
 // Proposals is an array of proposal
-type Proposals []Proposal
+type Proposals []*Proposal
 
 var _ types.UnpackInterfacesMessage = Proposals{}
 

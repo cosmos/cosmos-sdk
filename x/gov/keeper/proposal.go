@@ -13,22 +13,47 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-// SubmitProposal create new proposal given a content
-// SubmitProposal create new proposal given a content
+// SubmitProposal create new proposal given an array of messages
 func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg) (types.Proposal, error) {
 	// Loop through all messages and confirm that each has a handler and the gov module account
 	// as the only signer
 	for _, msg := range messages {
+		// perform a basic validation of the message
+		if err := msg.ValidateBasic(); err != nil {
+			return types.Proposal{}, sdkerrors.Wrap(types.ErrInvalidProposalMsg, err.Error())
+		}
+
 		signers := msg.GetSigners()
 		if len(signers) != 1 {
 			return types.Proposal{}, types.ErrInvalidSigner
 		}
 
+		// assert that the governance module account is the only signer of the messages
 		if !signers[0].Equals(keeper.GetGovernanceAccount(ctx).GetAddress()) {
 			return types.Proposal{}, sdkerrors.Wrap(types.ErrInvalidSigner, signers[0].String())
 		}
 
-		if keeper.router.Handler(msg) == nil {
+		// check if the message wraps the legacy content type
+		if contentMsg, ok := msg.(*types.MsgContent); ok {
+			content := ContentFromMessage(contentMsg)
+
+			// if so ensure that the content has a respective handler
+			if !keeper.legacyRouter.HasRoute(content.ProposalRoute()) {
+				return types.Proposal{}, sdkerrors.Wrap(types.ErrNoProposalHandlerExists, content.ProposalRoute())
+			}
+
+			// Execute the proposal content in a new context branch (with branched store)
+			// to validate the actual parameter changes before the proposal proceeds
+			// through the governance process. State is not persisted.
+			cacheCtx, _ := ctx.CacheContext()
+			handler := keeper.legacyRouter.GetRoute(content.ProposalRoute())
+			if err := handler(cacheCtx, content); err != nil {
+				return types.Proposal{}, sdkerrors.Wrap(v1beta1.ErrInvalidProposalContent, err.Error())
+			}
+
+		// for all other message types use the msg service router to see that there is a valid route for that
+		// message. NOTE: we do not verify the proposal messages any further. They may fail upon execution
+		} else if keeper.router.Handler(msg) == nil {
 			return types.Proposal{}, sdkerrors.Wrap(types.ErrUnroutableProposalMsg, sdk.MsgTypeURL(msg))
 		}
 	}
@@ -130,7 +155,7 @@ func (keeper Keeper) IterateProposals(ctx sdk.Context, cb func(proposal types.Pr
 // GetProposals returns all the proposals from store
 func (keeper Keeper) GetProposals(ctx sdk.Context) (proposals types.Proposals) {
 	keeper.IterateProposals(ctx, func(proposal types.Proposal) bool {
-		proposals = append(proposals, proposal)
+		proposals = append(proposals, &proposal)
 		return false
 	})
 	return
@@ -147,7 +172,7 @@ func (keeper Keeper) GetProposals(ctx sdk.Context) (proposals types.Proposals) {
 // form.
 func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, params types.QueryProposalsParams) types.Proposals {
 	proposals := keeper.GetProposals(ctx)
-	filteredProposals := make([]types.Proposal, 0, len(proposals))
+	filteredProposals := make([]*types.Proposal, 0, len(proposals))
 
 	for _, p := range proposals {
 		matchVoter, matchDepositor, matchStatus := true, true, true
@@ -174,7 +199,7 @@ func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, params types.QueryPro
 
 	start, end := client.Paginate(len(filteredProposals), params.Page, params.Limit, 100)
 	if start < 0 || end < 0 {
-		filteredProposals = []types.Proposal{}
+		filteredProposals = []*types.Proposal{}
 	} else {
 		filteredProposals = filteredProposals[start:end]
 	}
@@ -229,6 +254,7 @@ func (keeper Keeper) UnmarshalProposal(bz []byte, proposal *types.Proposal) erro
 	return nil
 }
 
+// TODO: move both these functions to the migration package
 func NewContentProposal(content v1beta1.Content, authority string) (*types.MsgContent, error) {
 	msg, ok := content.(proto.Message)
 	if !ok {
@@ -240,4 +266,12 @@ func NewContentProposal(content v1beta1.Content, authority string) (*types.MsgCo
 		return nil, err
 	}
 	return types.NewMsgContent(any, authority), nil
+}
+
+func ContentFromMessage(msg *types.MsgContent) v1beta1.Content {
+	content, ok := msg.Content.GetCachedValue().(v1beta1.Content)
+	if !ok {
+		return nil
+	}
+	return content
 }

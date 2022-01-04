@@ -137,10 +137,14 @@ func SimulateMsgSubmitProposal(
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSubmitProposal, "unable to generate deposit"), nil, err
 		}
 
-		NewContentProposal(content, app.GovKeeper.GetGovernanceAccount().GetAddress().String())
-		msg, err := types.NewMsgSubmitProposal(content, deposit, simAccount.Address)
+		contentMsg, err := keeper.NewContentProposal(content, k.GetGovernanceAccount(ctx).GetAddress().String())
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate a submit proposal msg"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSubmitProposal, "unable to create a content proposal message"), nil, err
+		}
+
+		msg, err := types.NewMsgSubmitProposal([]sdk.Msg{contentMsg}, deposit, simAccount.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSubmitProposal, "unable to generate a submit proposal msg"), nil, err
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
@@ -451,27 +455,27 @@ func randomWeightedVotingOptions(r *rand.Rand) types.WeightedVoteOptions {
 	w4 := 100 - w1 - w2 - w3
 	weightedVoteOptions := types.WeightedVoteOptions{}
 	if w1 > 0 {
-		weightedVoteOptions = append(weightedVoteOptions, types.WeightedVoteOption{
+		weightedVoteOptions = append(weightedVoteOptions, &types.WeightedVoteOption{
 			Option: types.OptionYes,
-			Weight: sdk.NewDecWithPrec(int64(w1), 2),
+			Weight: sdk.NewDecWithPrec(int64(w1), 2).String(),
 		})
 	}
 	if w2 > 0 {
-		weightedVoteOptions = append(weightedVoteOptions, types.WeightedVoteOption{
+		weightedVoteOptions = append(weightedVoteOptions, &types.WeightedVoteOption{
 			Option: types.OptionAbstain,
-			Weight: sdk.NewDecWithPrec(int64(w2), 2),
+			Weight: sdk.NewDecWithPrec(int64(w2), 2).String(),
 		})
 	}
 	if w3 > 0 {
-		weightedVoteOptions = append(weightedVoteOptions, types.WeightedVoteOption{
+		weightedVoteOptions = append(weightedVoteOptions, &types.WeightedVoteOption{
 			Option: types.OptionNo,
-			Weight: sdk.NewDecWithPrec(int64(w3), 2),
+			Weight: sdk.NewDecWithPrec(int64(w3), 2).String(),
 		})
 	}
 	if w4 > 0 {
-		weightedVoteOptions = append(weightedVoteOptions, types.WeightedVoteOption{
+		weightedVoteOptions = append(weightedVoteOptions, &types.WeightedVoteOption{
 			Option: types.OptionNoWithVeto,
-			Weight: sdk.NewDecWithPrec(int64(w4), 2),
+			Weight: sdk.NewDecWithPrec(int64(w4), 2).String(),
 		})
 	}
 	return weightedVoteOptions

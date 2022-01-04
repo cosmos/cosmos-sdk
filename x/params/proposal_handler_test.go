@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
@@ -62,8 +63,8 @@ func (suite *HandlerTestSuite) TestProposalHandler() {
 		{
 			"omit empty fields",
 			testProposal(proposal.ParamChange{
-				Subspace: govtypes.ModuleName,
-				Key:      string(govtypes.ParamStoreKeyDepositParams),
+				Subspace: gov.ModuleName,
+				Key:      string(gov.ParamStoreKeyDepositParams),
 				Value:    `{"min_deposit": [{"denom": "uatom","amount": "64000000"}]}`,
 			}),
 			func() {

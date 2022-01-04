@@ -93,7 +93,12 @@ func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// Router returns the gov Keeper's Router
+// Router returns the gov keeper's router 
+func (keeper Keeper) Router() *middleware.MsgServiceRouter {
+	return keeper.router
+}
+
+// LegacyRouter returns the gov keeper's legacy router
 func (keeper Keeper) LegacyRouter() v1beta1.Router {
 	return keeper.legacyRouter
 }

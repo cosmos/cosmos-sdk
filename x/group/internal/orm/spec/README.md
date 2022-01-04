@@ -13,4 +13,3 @@ The orm package provides a framework for creating relational database tables wit
 3. **[Iterator and Pagination](03_iterator_pagination.md)**
    - [Iterator](03_iterator_pagination.md#iterator)
    - [Pagination](03_iterator_pagination.md#pagination)
-

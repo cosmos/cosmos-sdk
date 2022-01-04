@@ -3,8 +3,6 @@ package types
 import (
 	"fmt"
 
-	"sigs.k8s.io/yaml"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -12,11 +10,6 @@ import (
 //nolint:interfacer
 func NewDeposit(proposalID uint64, depositor sdk.AccAddress, amount sdk.Coins) Deposit {
 	return Deposit{proposalID, depositor.String(), amount}
-}
-
-func (d Deposit) String() string {
-	out, _ := yaml.Marshal(d)
-	return string(out)
 }
 
 // Deposits is a collection of Deposit objects
@@ -46,9 +39,4 @@ func (d Deposits) String() string {
 		out += fmt.Sprintf("\n  %s: %s", dep.Depositor, dep.Amount)
 	}
 	return out
-}
-
-// Empty returns whether a deposit is empty.
-func (d Deposit) Empty() bool {
-	return d.String() == Deposit{}.String()
 }

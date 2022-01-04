@@ -53,7 +53,7 @@ func TestVerifySignature(t *testing.T) {
 		ChainID:       chainId,
 		AccountNumber: acc.GetAccountNumber(),
 		Sequence:      acc.GetSequence(),
-		SignerIndex:   0,
+		PubKey:        pubKey,
 	}
 	signBytes := legacytx.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.Sequence, 10, fee, msgs, memo, nil)
 	signature, err := priv.Sign(signBytes)

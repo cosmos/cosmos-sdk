@@ -1,13 +1,18 @@
 package types
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
-	"sigs.k8s.io/yaml"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+const (
+	OptionEmpty      = VoteOption_VOTE_OPTION_UNSPECIFIED
+	OptionYes        = VoteOption_VOTE_OPTION_YES
+	OptionNo         = VoteOption_VOTE_OPTION_NO
+	OptionNoWithVeto = VoteOption_VOTE_OPTION_NO_WITH_VETO
+	OptionAbstain    = VoteOption_VOTE_OPTION_ABSTAIN
 )
 
 // NewVote creates a new Vote instance
@@ -16,13 +21,13 @@ func NewVote(proposalID uint64, voter sdk.AccAddress, options WeightedVoteOption
 	return Vote{ProposalId: proposalID, Voter: voter.String(), Options: options}
 }
 
-func (v Vote) String() string {
-	out, _ := yaml.Marshal(v)
-	return string(out)
+// Empty returns whether a vote is empty.
+func (v Vote) Empty() bool {
+	return v.ProposalId == 0 || v.Voter == "" || len(v.Options) == 0
 }
 
 // Votes is a collection of Vote objects
-type Votes []Vote
+type Votes []*Vote
 
 // Equal returns true if two slices (order-dependant) of votes are equal.
 func (v Votes) Equal(other Votes) bool {
@@ -50,23 +55,31 @@ func (v Votes) String() string {
 	return out
 }
 
-// Empty returns whether a vote is empty.
-func (v Vote) Empty() bool {
-	return v.String() == Vote{}.String()
+func NewWeightedVoteOption(option VoteOption, weight sdk.Dec) *WeightedVoteOption {
+	return &WeightedVoteOption{Option: option, Weight: weight.String()}
+}
+
+// IsValid returns true if the sub vote is valid and false otherwise.
+func (w *WeightedVoteOption) IsValid() bool {
+	weight, err := sdk.NewDecFromStr(w.Weight)
+	if err != nil {
+		return false
+	}
+
+	if !weight.IsPositive() || weight.GT(sdk.NewDec(1)) {
+		return false
+	}
+
+	return ValidVoteOption(w.Option)
 }
 
 // NewNonSplitVoteOption creates a single option vote with weight 1
 func NewNonSplitVoteOption(option VoteOption) WeightedVoteOptions {
-	return WeightedVoteOptions{{option, sdk.NewDec(1)}}
-}
-
-func (v WeightedVoteOption) String() string {
-	out, _ := json.Marshal(v)
-	return string(out)
+	return WeightedVoteOptions{{option, sdk.NewDec(1).String()}}
 }
 
 // WeightedVoteOptions describes array of WeightedVoteOptions
-type WeightedVoteOptions []WeightedVoteOption
+type WeightedVoteOptions []*WeightedVoteOption
 
 func (v WeightedVoteOptions) String() (out string) {
 	for _, opt := range v {
@@ -74,14 +87,6 @@ func (v WeightedVoteOptions) String() (out string) {
 	}
 
 	return strings.TrimSpace(out)
-}
-
-// ValidWeightedVoteOption returns true if the sub vote is valid and false otherwise.
-func ValidWeightedVoteOption(option WeightedVoteOption) bool {
-	if !option.Weight.IsPositive() || option.Weight.GT(sdk.NewDec(1)) {
-		return false
-	}
-	return ValidVoteOption(option.Option)
 }
 
 // VoteOptionFromString returns a VoteOption from a string. It returns an error
@@ -111,7 +116,7 @@ func WeightedVoteOptionsFromString(str string) (WeightedVoteOptions, error) {
 		if err != nil {
 			return options, err
 		}
-		options = append(options, WeightedVoteOption{option, weight})
+		options = append(options, NewWeightedVoteOption(option, weight))
 	}
 	return options, nil
 }

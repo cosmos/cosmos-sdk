@@ -8,5 +8,5 @@ const (
 
 // GenesisState defines the raw genesis transaction in JSON
 type GenesisState struct {
-	GenTxs []json.RawMessage `json:"gentxs" yaml:"gentxs"`
+	GenTxs []json.RawMessage `json:"gen_txs" yaml:"gentxs"`
 }

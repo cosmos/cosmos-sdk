@@ -159,13 +159,19 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 
 			require.Equal(t, tc.remove, removed)
 			if !removed {
-				// save the new grant
+				// mimic save & load process (#10564)
+				// the cached allowance was correct even before the fix,
+				// however, the saved value was not.
+				// so we need this to catch the bug.
+
+				// create a new updated grant
 				newGrant, err := feegrant.NewGrant(
 					sdk.AccAddress(grant.Granter),
 					sdk.AccAddress(grant.Grantee),
 					allowance)
 				require.NoError(t, err)
 
+				// save the grant
 				cdc := simapp.MakeTestEncodingConfig().Codec
 				bz, err := cdc.Marshal(&newGrant)
 				require.NoError(t, err)
@@ -175,7 +181,7 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 				err = cdc.Unmarshal(bz, &loadedGrant)
 				require.NoError(t, err)
 
-				newAllowance, err := newGrant.GetGrant()
+				newAllowance, err := loadedGrant.GetGrant()
 				require.NoError(t, err)
 				feeAllowance, err := newAllowance.(*feegrant.AllowedMsgAllowance).GetAllowance()
 				require.NoError(t, err)

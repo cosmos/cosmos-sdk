@@ -64,7 +64,7 @@ func (suite *HandlerTestSuite) TestProposalHandler() {
 			testProposal(proposal.ParamChange{
 				Subspace: govtypes.ModuleName,
 				Key:      string(govtypes.ParamStoreKeyDepositParams),
-				Value:    `{"min_deposit": [{"denom": "uatom","amount": "64000000"}]}`,
+				Value:    `{"min_deposit": [{"denom": "uatom","amount": "64000000"}], "max_deposit_period": "172800000000000"}`,
 			}),
 			func() {
 				depositParams := suite.app.GovKeeper.GetDepositParams(suite.ctx)

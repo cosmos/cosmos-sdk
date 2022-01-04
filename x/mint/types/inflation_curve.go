@@ -12,7 +12,7 @@ var (
 	globalInflationCurve = newInflationCurve()
 )
 
-// Contains the constants needed for fast computation of i128f64 fixed point exponential functions.
+// FastExp contains the constants needed for fast computation of i128f64 fixed point exponential functions.
 // Use the instance `globalFastExp` so that only one copy of the constants is needed.
 type FastExp struct {
 	// Constants `C_n = ln(2)^n / n!` (ordering of the list is reversed and starts with the highest
@@ -65,7 +65,7 @@ func newFastExp() *FastExp {
 }
 
 // InflationCurve is the struct used for the inflation curve calculation. Use the instance
-// `globalInflationCurve` so that only one copy of the constants is needed
+// `globalInflationCurve` so that only one copy of the constants is needed.
 type InflationCurve struct {
 	fastExp *FastExp
 	// for curve peak position = 150_000_000 NOM
@@ -84,9 +84,8 @@ func newInflationCurve() *InflationCurve {
 	}
 }
 
-// Quickly calculates `e^x` as a `Dec`. Returns `nil` if overflow occurs
-//
-// This should be called on `globalInflationCurve` so that constants can be reused
+// DecExp quickly calculates `e^x` as a `Dec`. Returns `nil` if overflow occurs.
+// This should be called on `globalInflationCurve` so that constants can be reused.
 func (fe *FastExp) DecExp(x sdk.Dec) *sdk.Dec {
 	// convert to i128f64 binary fixed point
 	var tmp0 = x.BigInt()
@@ -101,9 +100,8 @@ func (fe *FastExp) DecExp(x sdk.Dec) *sdk.Dec {
 	return &res
 }
 
-// CalculateInflationDec is the same as `calculateInflationBinary` but with an `Int` input and `Dec` output
-//
-// This should be called on `globalInflationCurve` so that constants can be reused
+// CalculateInflationDec is the same as `calculateInflationBinary` but with an `Int` input and `Dec` output.
+// This should be called on `globalInflationCurve` so that constants can be reused.
 func (ic *InflationCurve) CalculateInflationDec(tokenSupply sdk.Int) sdk.Dec {
 	// People keep committing the same horrible mistake of using base 10 fixed point numbers at the
 	// computational layer instead of converting between binary fixed point at the human-machine

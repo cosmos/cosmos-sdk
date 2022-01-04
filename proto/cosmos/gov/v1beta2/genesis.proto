@@ -4,7 +4,7 @@ package cosmos.gov.v1beta2;
 
 import "cosmos/gov/v1beta2/gov.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2";
 
 // GenesisState defines the gov module's genesis state.
 message GenesisState {

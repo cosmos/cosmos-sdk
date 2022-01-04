@@ -1,4 +1,4 @@
-package types
+package v1beta2
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // Governance message types and routes
@@ -104,7 +105,7 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 
 	for idx, msg := range msgs {
 		if err := msg.ValidateBasic(); err != nil {
-			return sdkerrors.Wrap(ErrInvalidProposalMsg,
+			return sdkerrors.Wrap(govtypes.ErrInvalidProposalMsg,
 				fmt.Sprintf("msg: %d, err: %s", idx, err.Error()))
 		}
 	}
@@ -187,7 +188,7 @@ func (msg MsgVote) ValidateBasic() error {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
 	}
 	if !ValidVoteOption(msg.Option) {
-		return sdkerrors.Wrap(ErrInvalidVote, msg.Option.String())
+		return sdkerrors.Wrap(govtypes.ErrInvalidVote, msg.Option.String())
 	}
 
 	return nil
@@ -230,25 +231,25 @@ func (msg MsgVoteWeighted) ValidateBasic() error {
 	usedOptions := make(map[VoteOption]bool)
 	for _, option := range msg.Options {
 		if !option.IsValid() {
-			return sdkerrors.Wrap(ErrInvalidVote, option.String())
+			return sdkerrors.Wrap(govtypes.ErrInvalidVote, option.String())
 		}
 		weight, err := sdk.NewDecFromStr(option.Weight)
 		if err != nil {
-			return sdkerrors.Wrapf(ErrInvalidVote, "Invalid weight: %s", err)
+			return sdkerrors.Wrapf(govtypes.ErrInvalidVote, "Invalid weight: %s", err)
 		}
 		totalWeight = totalWeight.Add(weight)
 		if usedOptions[option.Option] {
-			return sdkerrors.Wrap(ErrInvalidVote, "Duplicated vote option")
+			return sdkerrors.Wrap(govtypes.ErrInvalidVote, "Duplicated vote option")
 		}
 		usedOptions[option.Option] = true
 	}
 
 	if totalWeight.GT(sdk.NewDec(1)) {
-		return sdkerrors.Wrap(ErrInvalidVote, "Total weight overflow 1.00")
+		return sdkerrors.Wrap(govtypes.ErrInvalidVote, "Total weight overflow 1.00")
 	}
 
 	if totalWeight.LT(sdk.NewDec(1)) {
-		return sdkerrors.Wrap(ErrInvalidVote, "Total weight lower than 1.00")
+		return sdkerrors.Wrap(govtypes.ErrInvalidVote, "Total weight lower than 1.00")
 	}
 
 	return nil

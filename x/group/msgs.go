@@ -15,17 +15,17 @@ import (
 
 // Group message types and routes
 const (
-	TypeMsgCreateGroup                      = "create_group"
-	TypeMsgUpdateGroupAdmin                 = "update_group_admin"
-	TypeMsgUpdateGroupComment               = "update_group_comment"
-	TypeMsgUpdateGroupMembers               = "update_group_members"
-	TypeMsgCreateGroupAccount               = "create_group_account"
-	TypeMsgUpdateGroupAccountAdmin          = "update_group_account_admin"
-	TypeMsgUpdateGroupAccountDecisionPolicy = "update_group_account_decision_policy"
-	TypeMsgUpdateGroupAccountComment        = "update_group_account_comment"
-	TypeMsgCreateProposal                   = "create_proposal"
-	TypeMsgVote                             = "vote"
-	TypeMsgExec                             = "exec"
+	TypeMsgCreateGroup                     = "create_group"
+	TypeMsgUpdateGroupAdmin                = "update_group_admin"
+	TypeMsgUpdateGroupComment              = "update_group_comment"
+	TypeMsgUpdateGroupMembers              = "update_group_members"
+	TypeMsgCreateGroupPolicy               = "create_group_policy"
+	TypeMsgUpdateGroupPolicyAdmin          = "update_group_policy_admin"
+	TypeMsgUpdateGroupPolicyDecisionPolicy = "update_group_policy_decision_policy"
+	TypeMsgUpdateGroupPolicyComment        = "update_group_policy_comment"
+	TypeMsgCreateProposal                  = "create_proposal"
+	TypeMsgVote                            = "vote"
+	TypeMsgExec                            = "exec"
 )
 
 var _ sdk.Msg = &MsgCreateGroup{}
@@ -226,23 +226,23 @@ func (m *MsgUpdateGroupMembers) GetGroupID() uint64 {
 	return m.GroupId
 }
 
-var _ sdk.Msg = &MsgCreateGroupAccount{}
+var _ sdk.Msg = &MsgCreateGroupPolicy{}
 
 // Route Implements Msg.
-func (m MsgCreateGroupAccount) Route() string {
+func (m MsgCreateGroupPolicy) Route() string {
 	return RouterKey
 }
 
 // Type Implements Msg.
-func (m MsgCreateGroupAccount) Type() string { return TypeMsgCreateGroupAccount }
+func (m MsgCreateGroupPolicy) Type() string { return TypeMsgCreateGroupPolicy }
 
 // GetSignBytes Implements Msg.
-func (m MsgCreateGroupAccount) GetSignBytes() []byte {
+func (m MsgCreateGroupPolicy) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
-// GetSigners returns the expected signers for a MsgCreateGroupAccount.
-func (m MsgCreateGroupAccount) GetSigners() []sdk.AccAddress {
+// GetSigners returns the expected signers for a MsgCreateGroupPolicy.
+func (m MsgCreateGroupPolicy) GetSigners() []sdk.AccAddress {
 	admin, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
 		panic(err)
@@ -251,7 +251,7 @@ func (m MsgCreateGroupAccount) GetSigners() []sdk.AccAddress {
 }
 
 // ValidateBasic does a sanity check on the provided data
-func (m MsgCreateGroupAccount) ValidateBasic() error {
+func (m MsgCreateGroupPolicy) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
 		return sdkerrors.Wrap(err, "admin")
@@ -271,23 +271,23 @@ func (m MsgCreateGroupAccount) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgUpdateGroupAccountAdmin{}
+var _ sdk.Msg = &MsgUpdateGroupPolicyAdmin{}
 
 // Route Implements Msg.
-func (m MsgUpdateGroupAccountAdmin) Route() string {
+func (m MsgUpdateGroupPolicyAdmin) Route() string {
 	return RouterKey
 }
 
 // Type Implements Msg.
-func (m MsgUpdateGroupAccountAdmin) Type() string { return TypeMsgUpdateGroupAccountAdmin }
+func (m MsgUpdateGroupPolicyAdmin) Type() string { return TypeMsgUpdateGroupPolicyAdmin }
 
 // GetSignBytes Implements Msg.
-func (m MsgUpdateGroupAccountAdmin) GetSignBytes() []byte {
+func (m MsgUpdateGroupPolicyAdmin) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
-// GetSigners returns the expected signers for a MsgUpdateGroupAccountAdmin.
-func (m MsgUpdateGroupAccountAdmin) GetSigners() []sdk.AccAddress {
+// GetSigners returns the expected signers for a MsgUpdateGroupPolicyAdmin.
+func (m MsgUpdateGroupPolicyAdmin) GetSigners() []sdk.AccAddress {
 	admin, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
 		panic(err)
@@ -296,7 +296,7 @@ func (m MsgUpdateGroupAccountAdmin) GetSigners() []sdk.AccAddress {
 }
 
 // ValidateBasic does a sanity check on the provided data
-func (m MsgUpdateGroupAccountAdmin) ValidateBasic() error {
+func (m MsgUpdateGroupPolicyAdmin) ValidateBasic() error {
 	admin, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
 		return sdkerrors.Wrap(err, "admin")
@@ -309,7 +309,7 @@ func (m MsgUpdateGroupAccountAdmin) ValidateBasic() error {
 
 	_, err = sdk.AccAddressFromBech32(m.Address)
 	if err != nil {
-		return sdkerrors.Wrap(err, "group account")
+		return sdkerrors.Wrap(err, "group policy")
 	}
 
 	if admin.Equals(newAdmin) {
@@ -318,11 +318,11 @@ func (m MsgUpdateGroupAccountAdmin) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgUpdateGroupAccountDecisionPolicy{}
-var _ types.UnpackInterfacesMessage = MsgUpdateGroupAccountDecisionPolicy{}
+var _ sdk.Msg = &MsgUpdateGroupPolicyDecisionPolicy{}
+var _ types.UnpackInterfacesMessage = MsgUpdateGroupPolicyDecisionPolicy{}
 
-func NewMsgUpdateGroupAccountDecisionPolicyRequest(admin sdk.AccAddress, address sdk.AccAddress, decisionPolicy DecisionPolicy) (*MsgUpdateGroupAccountDecisionPolicy, error) {
-	m := &MsgUpdateGroupAccountDecisionPolicy{
+func NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin sdk.AccAddress, address sdk.AccAddress, decisionPolicy DecisionPolicy) (*MsgUpdateGroupPolicyDecisionPolicy, error) {
+	m := &MsgUpdateGroupPolicyDecisionPolicy{
 		Admin:   admin.String(),
 		Address: address.String(),
 	}
@@ -333,7 +333,7 @@ func NewMsgUpdateGroupAccountDecisionPolicyRequest(admin sdk.AccAddress, address
 	return m, nil
 }
 
-func (m *MsgUpdateGroupAccountDecisionPolicy) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
+func (m *MsgUpdateGroupPolicyDecisionPolicy) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
 	msg, ok := decisionPolicy.(proto.Message)
 	if !ok {
 		return fmt.Errorf("can't proto marshal %T", msg)
@@ -347,22 +347,22 @@ func (m *MsgUpdateGroupAccountDecisionPolicy) SetDecisionPolicy(decisionPolicy D
 }
 
 // Route Implements Msg.
-func (m MsgUpdateGroupAccountDecisionPolicy) Route() string {
+func (m MsgUpdateGroupPolicyDecisionPolicy) Route() string {
 	return RouterKey
 }
 
 // Type Implements Msg.
-func (m MsgUpdateGroupAccountDecisionPolicy) Type() string {
-	return TypeMsgUpdateGroupAccountDecisionPolicy
+func (m MsgUpdateGroupPolicyDecisionPolicy) Type() string {
+	return TypeMsgUpdateGroupPolicyDecisionPolicy
 }
 
 // GetSignBytes Implements Msg.
-func (m MsgUpdateGroupAccountDecisionPolicy) GetSignBytes() []byte {
+func (m MsgUpdateGroupPolicyDecisionPolicy) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
-// GetSigners returns the expected signers for a MsgUpdateGroupAccountDecisionPolicy.
-func (m MsgUpdateGroupAccountDecisionPolicy) GetSigners() []sdk.AccAddress {
+// GetSigners returns the expected signers for a MsgUpdateGroupPolicyDecisionPolicy.
+func (m MsgUpdateGroupPolicyDecisionPolicy) GetSigners() []sdk.AccAddress {
 	admin, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
 		panic(err)
@@ -371,7 +371,7 @@ func (m MsgUpdateGroupAccountDecisionPolicy) GetSigners() []sdk.AccAddress {
 }
 
 // ValidateBasic does a sanity check on the provided data
-func (m MsgUpdateGroupAccountDecisionPolicy) ValidateBasic() error {
+func (m MsgUpdateGroupPolicyDecisionPolicy) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
 		return sdkerrors.Wrap(err, "admin")
@@ -379,7 +379,7 @@ func (m MsgUpdateGroupAccountDecisionPolicy) ValidateBasic() error {
 
 	_, err = sdk.AccAddressFromBech32(m.Address)
 	if err != nil {
-		return sdkerrors.Wrap(err, "group account")
+		return sdkerrors.Wrap(err, "group policy")
 	}
 
 	policy := m.GetDecisionPolicy()
@@ -394,7 +394,7 @@ func (m MsgUpdateGroupAccountDecisionPolicy) ValidateBasic() error {
 	return nil
 }
 
-func (m *MsgUpdateGroupAccountDecisionPolicy) GetDecisionPolicy() DecisionPolicy {
+func (m *MsgUpdateGroupPolicyDecisionPolicy) GetDecisionPolicy() DecisionPolicy {
 	decisionPolicy, ok := m.DecisionPolicy.GetCachedValue().(DecisionPolicy)
 	if !ok {
 		return nil
@@ -403,28 +403,28 @@ func (m *MsgUpdateGroupAccountDecisionPolicy) GetDecisionPolicy() DecisionPolicy
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgUpdateGroupAccountDecisionPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (m MsgUpdateGroupPolicyDecisionPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var decisionPolicy DecisionPolicy
 	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
 }
 
-var _ sdk.Msg = &MsgUpdateGroupAccountMetadata{}
+var _ sdk.Msg = &MsgUpdateGroupPolicyMetadata{}
 
 // Route Implements Msg.
-func (m MsgUpdateGroupAccountMetadata) Route() string {
+func (m MsgUpdateGroupPolicyMetadata) Route() string {
 	return RouterKey
 }
 
 // Type Implements Msg.
-func (m MsgUpdateGroupAccountMetadata) Type() string { return TypeMsgUpdateGroupAccountComment }
+func (m MsgUpdateGroupPolicyMetadata) Type() string { return TypeMsgUpdateGroupPolicyComment }
 
 // GetSignBytes Implements Msg.
-func (m MsgUpdateGroupAccountMetadata) GetSignBytes() []byte {
+func (m MsgUpdateGroupPolicyMetadata) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
-// GetSigners returns the expected signers for a MsgUpdateGroupAccountMetadata.
-func (m MsgUpdateGroupAccountMetadata) GetSigners() []sdk.AccAddress {
+// GetSigners returns the expected signers for a MsgUpdateGroupPolicyMetadata.
+func (m MsgUpdateGroupPolicyMetadata) GetSigners() []sdk.AccAddress {
 	admin, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
 		panic(err)
@@ -433,7 +433,7 @@ func (m MsgUpdateGroupAccountMetadata) GetSigners() []sdk.AccAddress {
 }
 
 // ValidateBasic does a sanity check on the provided data
-func (m MsgUpdateGroupAccountMetadata) ValidateBasic() error {
+func (m MsgUpdateGroupPolicyMetadata) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
 		return sdkerrors.Wrap(err, "admin")
@@ -441,18 +441,18 @@ func (m MsgUpdateGroupAccountMetadata) ValidateBasic() error {
 
 	_, err = sdk.AccAddressFromBech32(m.Address)
 	if err != nil {
-		return sdkerrors.Wrap(err, "group account")
+		return sdkerrors.Wrap(err, "group policy")
 	}
 
 	return nil
 }
 
-var _ sdk.Msg = &MsgCreateGroupAccount{}
-var _ types.UnpackInterfacesMessage = MsgCreateGroupAccount{}
+var _ sdk.Msg = &MsgCreateGroupPolicy{}
+var _ types.UnpackInterfacesMessage = MsgCreateGroupPolicy{}
 
-// NewMsgCreateGroupAccount creates a new MsgCreateGroupAccount.
-func NewMsgCreateGroupAccount(admin sdk.AccAddress, group uint64, metadata []byte, decisionPolicy DecisionPolicy) (*MsgCreateGroupAccount, error) {
-	m := &MsgCreateGroupAccount{
+// NewMsgCreateGroupPolicy creates a new MsgCreateGroupPolicy.
+func NewMsgCreateGroupPolicy(admin sdk.AccAddress, group uint64, metadata []byte, decisionPolicy DecisionPolicy) (*MsgCreateGroupPolicy, error) {
+	m := &MsgCreateGroupPolicy{
 		Admin:    admin.String(),
 		GroupId:  group,
 		Metadata: metadata,
@@ -464,19 +464,19 @@ func NewMsgCreateGroupAccount(admin sdk.AccAddress, group uint64, metadata []byt
 	return m, nil
 }
 
-func (m *MsgCreateGroupAccount) GetAdmin() string {
+func (m *MsgCreateGroupPolicy) GetAdmin() string {
 	return m.Admin
 }
 
-func (m *MsgCreateGroupAccount) GetGroupID() uint64 {
+func (m *MsgCreateGroupPolicy) GetGroupID() uint64 {
 	return m.GroupId
 }
 
-func (m *MsgCreateGroupAccount) GetMetadata() []byte {
+func (m *MsgCreateGroupPolicy) GetMetadata() []byte {
 	return m.Metadata
 }
 
-func (m *MsgCreateGroupAccount) GetDecisionPolicy() DecisionPolicy {
+func (m *MsgCreateGroupPolicy) GetDecisionPolicy() DecisionPolicy {
 	decisionPolicy, ok := m.DecisionPolicy.GetCachedValue().(DecisionPolicy)
 	if !ok {
 		return nil
@@ -484,7 +484,7 @@ func (m *MsgCreateGroupAccount) GetDecisionPolicy() DecisionPolicy {
 	return decisionPolicy
 }
 
-func (m *MsgCreateGroupAccount) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
+func (m *MsgCreateGroupPolicy) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
 	msg, ok := decisionPolicy.(proto.Message)
 	if !ok {
 		return fmt.Errorf("can't proto marshal %T", msg)
@@ -498,7 +498,7 @@ func (m *MsgCreateGroupAccount) SetDecisionPolicy(decisionPolicy DecisionPolicy)
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgCreateGroupAccount) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (m MsgCreateGroupPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var decisionPolicy DecisionPolicy
 	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
 }
@@ -550,7 +550,7 @@ func (m MsgCreateProposal) GetSigners() []sdk.AccAddress {
 func (m MsgCreateProposal) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Address)
 	if err != nil {
-		return sdkerrors.Wrap(err, "group account")
+		return sdkerrors.Wrap(err, "group policy")
 	}
 
 	if len(m.Proposers) == 0 {

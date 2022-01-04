@@ -51,8 +51,8 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg) (types.
 				return types.Proposal{}, sdkerrors.Wrap(v1beta1.ErrInvalidProposalContent, err.Error())
 			}
 
-		// for all other message types use the msg service router to see that there is a valid route for that
-		// message. NOTE: we do not verify the proposal messages any further. They may fail upon execution
+			// for all other message types use the msg service router to see that there is a valid route for that
+			// message. NOTE: we do not verify the proposal messages any further. They may fail upon execution
 		} else if keeper.router.Handler(msg) == nil {
 			return types.Proposal{}, sdkerrors.Wrap(types.ErrUnroutableProposalMsg, sdk.MsgTypeURL(msg))
 		}

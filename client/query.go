@@ -121,8 +121,8 @@ func sdkErrorToGRPCError(resp abci.QueryResponse) error {
 // query performs a query to a CometBFT node with the provided store name
 // and path. It returns the result and height of the query upon success
 // or an error if the query fails.
-func (ctx Context) query(path string, key []byte) ([]byte, int64, error) {
-	resp, err := ctx.queryABCI(abci.QueryRequest{
+func (ctx Context) query(path string, key tmbytes.HexBytes) ([]byte, int64, error) {
+	resp, err := ctx.queryABCI(abci.RequestQuery{
 		Path:   path,
 		Data:   key,
 		Height: ctx.Height,

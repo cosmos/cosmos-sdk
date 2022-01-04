@@ -938,8 +938,10 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.ExtendVoteRequest) (
 		return &abci.ExtendVoteResponse{VoteExtension: []byte{}}, nil
 	}
 
-	return resp, err
-}
+	// branch the commit-multistore for safety
+	ctx := sdk.NewContext(
+		cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger,
+	).WithMinGasPrices(app.minGasPrices).WithBlockHeight(height)
 
 // VerifyVoteExtension implements the VerifyVoteExtension ABCI method and returns
 // a ResponseVerifyVoteExtension. It calls the applications' VerifyVoteExtension

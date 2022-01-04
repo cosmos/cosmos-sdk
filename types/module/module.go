@@ -42,7 +42,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -255,50 +254,34 @@ func NewManager(modules ...AppModule) *Manager {
 
 // SetOrderInitGenesis sets the order of init genesis calls
 func (m *Manager) SetOrderInitGenesis(moduleNames ...string) {
-	m.checkForgottenModules("SetOrderInitGenesis", moduleNames)
+	m.assertNoForgottenModules("SetOrderInitGenesis", moduleNames)
 	m.OrderInitGenesis = moduleNames
 }
 
 // SetOrderExportGenesis sets the order of export genesis calls
 func (m *Manager) SetOrderExportGenesis(moduleNames ...string) {
-	m.checkForgottenModules("SetOrderExportGenesis", moduleNames)
+	m.assertNoForgottenModules("SetOrderExportGenesis", moduleNames)
 	m.OrderExportGenesis = moduleNames
 }
 
 // SetOrderBeginBlockers sets the order of set begin-blocker calls
 func (m *Manager) SetOrderBeginBlockers(moduleNames ...string) {
-	m.checkForgottenModules("SetOrderBeginBlockers", moduleNames)
+	m.assertNoForgottenModules("SetOrderBeginBlockers", moduleNames)
 	m.OrderBeginBlockers = moduleNames
 }
 
 // SetOrderEndBlockers sets the order of set end-blocker calls
 func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
-	m.checkForgottenModules("SetOrderEndBlockers", moduleNames)
+	m.assertNoForgottenModules("SetOrderEndBlockers", moduleNames)
 	m.OrderEndBlockers = moduleNames
 }
 
 // SetOrderMigrations sets the order of migrations to be run. If not set
 // then migrations will be run with an order defined in `DefaultMigrationsOrder`.
 // Function will return error if the order is not complete (eg a module won't be defined).
-func (m *Manager) SetOrderMigrations(moduleNames ...string) error {
-	// check if all modules are defiend
-	ms := make(map[string]bool)
-	for _, m := range moduleNames {
-		ms[m] = true
-	}
-	var missing []string
-	for m := range m.Modules {
-		if !ms[m] {
-			missing = append(missing, m)
-		}
-	}
-	if len(missing) != 0 {
-		return errors.ErrAppWiring.Wrapf(
-			"All modules must be defined when setting SetOrderMigrations, missing: %v", missing)
-	}
-
+func (m *Manager) SetOrderMigrations(moduleNames ...string) {
+	m.assertNoForgottenModules("SetOrderMigrations", moduleNames)
 	m.OrderMigrations = moduleNames
-	return nil
 }
 
 // RegisterInvariants registers all module invariants
@@ -371,16 +354,22 @@ func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) map[string
 	return genesisData
 }
 
-// checkForgottenModules checks that we didn't forget any modules in the
+// assertNoForgottenModules checks that we didn't forget any modules in the
 // SetOrder* functions.
-func (m *Manager) checkForgottenModules(setOrderFnName string, moduleNames []string) {
-	setOrderMap := map[string]struct{}{}
+func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []string) {
+	ms := make(map[string]bool)
 	for _, m := range moduleNames {
-		setOrderMap[m] = struct{}{}
+		ms[m] = true
 	}
-
-	if len(setOrderMap) != len(m.Modules) {
-		panic(fmt.Sprintf("got %d modules in the module manager, but %d modules in %s", len(m.Modules), len(setOrderMap), setOrderFnName))
+	var missing []string
+	for m := range m.Modules {
+		if !ms[m] {
+			missing = append(missing, m)
+		}
+	}
+	if len(missing) != 0 {
+		panic(fmt.Sprintf(
+			"%s: all modules must be defined when setting SetOrderMigrations, missing: %v", setOrderFnName, missing))
 	}
 }
 

@@ -2,11 +2,11 @@
 // source: cosmos/gov/v1beta2/query.proto
 
 /*
-Package types is a reverse proxy.
+Package v1beta2 is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package types
+package v1beta2
 
 import (
 	"context"

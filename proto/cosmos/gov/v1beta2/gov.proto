@@ -8,7 +8,7 @@ import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
 import "cosmos_proto/cosmos.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2";
 
 // VoteOption enumerates the valid vote options for a given governance proposal.
 enum VoteOption {

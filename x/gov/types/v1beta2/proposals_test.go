@@ -1,17 +1,17 @@
-package types_test
+package v1beta2_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 	"github.com/stretchr/testify/require"
 )
 
 func TestProposalStatus_Format(t *testing.T) {
-	statusDepositPeriod, _ := types.ProposalStatusFromString("PROPOSAL_STATUS_DEPOSIT_PERIOD")
+	statusDepositPeriod, _ := v1beta2.ProposalStatusFromString("PROPOSAL_STATUS_DEPOSIT_PERIOD")
 	tests := []struct {
-		pt                   types.ProposalStatus
+		pt                   v1beta2.ProposalStatus
 		sprintFArgs          string
 		expectedStringOutput string
 	}{

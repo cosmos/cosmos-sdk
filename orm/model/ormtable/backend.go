@@ -136,6 +136,10 @@ func NewBackend(options BackendOptions) Backend {
 	}
 }
 
+// WrapContextDefault performs the default wrapping of a backend in a context.
+// This should be used primarily for testing purposes and production code
+// should use some other framework specific wrapping (for instance using
+// "store keys").
 func WrapContextDefault(backend ReadBackend) context.Context {
 	return context.WithValue(context.Background(), defaultContextKey, backend)
 }

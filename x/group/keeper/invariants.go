@@ -49,7 +49,7 @@ func GroupTotalWeightInvariant(keeper Keeper) sdk.Invariant {
 // TallyVotesSumInvariant checks that proposal VoteState must correspond to the vote choice.
 func TallyVotesSumInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-		msg, broken := TallyVotesSumInvariantHelper(ctx, keeper.key, keeper.groupTable, keeper.proposalTable, keeper.groupMemberTable, keeper.voteByProposalIndex, keeper.groupAccountTable)
+		msg, broken := TallyVotesSumInvariantHelper(ctx, keeper.key, keeper.groupTable, keeper.proposalTable, keeper.groupMemberTable, keeper.voteByProposalIndex, keeper.groupPolicyTable)
 		return sdk.FormatInvariant(group.ModuleName, votesSumInvariant, msg), broken
 	}
 }
@@ -200,13 +200,13 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 	return msg, broken
 }
 
-func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, groupTable orm.AutoUInt64Table, proposalTable orm.AutoUInt64Table, groupMemberTable orm.PrimaryKeyTable, voteByProposalIndex orm.Index, groupAccountTable orm.PrimaryKeyTable) (string, bool) {
+func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, groupTable orm.AutoUInt64Table, proposalTable orm.AutoUInt64Table, groupMemberTable orm.PrimaryKeyTable, voteByProposalIndex orm.Index, groupPolicyTable orm.PrimaryKeyTable) (string, bool) {
 	var msg string
 	var broken bool
 
 	var groupInfo group.GroupInfo
 	var proposal group.Proposal
-	var groupAcc group.GroupAccountInfo
+	var groupPolicy group.GroupPolicyInfo
 	var groupMem group.GroupMember
 	var vote group.Vote
 
@@ -251,20 +251,20 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, grou
 			break
 		}
 
-		err = groupAccountTable.GetOne(ctx.KVStore(key), orm.PrimaryKey(&group.GroupAccountInfo{Address: proposal.Address}), &groupAcc)
+		err = groupPolicyTable.GetOne(ctx.KVStore(key), orm.PrimaryKey(&group.GroupPolicyInfo{Address: proposal.Address}), &groupPolicy)
 		if err != nil {
-			msg += fmt.Sprintf("group account not found for address: %s\n%v\n", proposal.Address, err)
+			msg += fmt.Sprintf("group policy not found for address: %s\n%v\n", proposal.Address, err)
 			return msg, broken
 		}
 
-		if proposal.GroupAccountVersion != groupAcc.Version {
-			msg += fmt.Sprintf("group account with address %s was modified\n", groupAcc.Address)
+		if proposal.GroupPolicyVersion != groupPolicy.Version {
+			msg += fmt.Sprintf("group policy with address %s was modified\n", groupPolicy.Address)
 			return msg, broken
 		}
 
-		_, err = groupTable.GetOne(ctx.KVStore(key), groupAcc.GroupId, &groupInfo)
+		_, err = groupTable.GetOne(ctx.KVStore(key), groupPolicy.GroupId, &groupInfo)
 		if err != nil {
-			msg += fmt.Sprintf("group info not found for group id %d\n%v\n", groupAcc.GroupId, err)
+			msg += fmt.Sprintf("group info not found for group id %d\n%v\n", groupPolicy.GroupId, err)
 			return msg, broken
 		}
 
@@ -286,9 +286,9 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, grou
 				break
 			}
 
-			err = groupMemberTable.GetOne(ctx.KVStore(key), orm.PrimaryKey(&group.GroupMember{GroupId: groupAcc.GroupId, Member: &group.Member{Address: vote.Voter}}), &groupMem)
+			err = groupMemberTable.GetOne(ctx.KVStore(key), orm.PrimaryKey(&group.GroupMember{GroupId: groupPolicy.GroupId, Member: &group.Member{Address: vote.Voter}}), &groupMem)
 			if err != nil {
-				msg += fmt.Sprintf("group member not found with group ID %d and group member %s\n%v\n", groupAcc.GroupId, vote.Voter, err)
+				msg += fmt.Sprintf("group member not found with group ID %d and group member %s\n%v\n", groupPolicy.GroupId, vote.Voter, err)
 				return msg, broken
 			}
 

@@ -280,7 +280,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByAdmin() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryGroupAccountInfo() {
+func (s *IntegrationTestSuite) TestQueryGroupPolicyInfo() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -292,15 +292,15 @@ func (s *IntegrationTestSuite) TestQueryGroupAccountInfo() {
 		expectedCode uint32
 	}{
 		{
-			"group account not found",
+			"group policy not found",
 			[]string{val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			true,
 			"not found: invalid request",
 			0,
 		},
 		{
-			"group account found",
-			[]string{s.groupAccounts[0].Address, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			"group policy found",
+			[]string{s.groupPolicies[0].Address, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			"",
 			0,
@@ -311,7 +311,7 @@ func (s *IntegrationTestSuite) TestQueryGroupAccountInfo() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := client.QueryGroupAccountInfoCmd()
+			cmd := client.QueryGroupPolicyInfoCmd()
 
 			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
@@ -319,20 +319,20 @@ func (s *IntegrationTestSuite) TestQueryGroupAccountInfo() {
 			} else {
 				s.Require().NoError(err, out.String())
 
-				var g group.GroupAccountInfo
+				var g group.GroupPolicyInfo
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &g))
-				s.Require().Equal(s.groupAccounts[0].GroupId, g.GroupId)
-				s.Require().Equal(s.groupAccounts[0].Address, g.Address)
-				s.Require().Equal(s.groupAccounts[0].Admin, g.Admin)
-				s.Require().Equal(s.groupAccounts[0].Metadata, g.Metadata)
-				s.Require().Equal(s.groupAccounts[0].Version, g.Version)
-				s.Require().Equal(s.groupAccounts[0].GetDecisionPolicy(), g.GetDecisionPolicy())
+				s.Require().Equal(s.groupPolicies[0].GroupId, g.GroupId)
+				s.Require().Equal(s.groupPolicies[0].Address, g.Address)
+				s.Require().Equal(s.groupPolicies[0].Admin, g.Admin)
+				s.Require().Equal(s.groupPolicies[0].Metadata, g.Metadata)
+				s.Require().Equal(s.groupPolicies[0].Version, g.Version)
+				s.Require().Equal(s.groupPolicies[0].GetDecisionPolicy(), g.GetDecisionPolicy())
 			}
 		})
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryGroupAccountsByGroup() {
+func (s *IntegrationTestSuite) TestQueryGroupPoliciesByGroup() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -342,7 +342,7 @@ func (s *IntegrationTestSuite) TestQueryGroupAccountsByGroup() {
 		expectErr           bool
 		expectErrMsg        string
 		expectedCode        uint32
-		expectGroupAccounts []*group.GroupAccountInfo
+		expectGroupPolicies []*group.GroupPolicyInfo
 	}{
 		{
 			"invalid group id",
@@ -350,28 +350,28 @@ func (s *IntegrationTestSuite) TestQueryGroupAccountsByGroup() {
 			true,
 			"strconv.ParseUint: parsing \"\": invalid syntax",
 			0,
-			[]*group.GroupAccountInfo{},
+			[]*group.GroupPolicyInfo{},
 		},
 		{
-			"no group account",
+			"no group policy",
 			[]string{"12345", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			"",
 			0,
-			[]*group.GroupAccountInfo{},
+			[]*group.GroupPolicyInfo{},
 		},
 		{
-			"found group accounts",
+			"found group policies",
 			[]string{strconv.FormatUint(s.group.GroupId, 10), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			"",
 			0,
-			[]*group.GroupAccountInfo{
-				s.groupAccounts[0],
-				s.groupAccounts[1],
-				s.groupAccounts[2],
-				s.groupAccounts[3],
-				s.groupAccounts[4],
+			[]*group.GroupPolicyInfo{
+				s.groupPolicies[0],
+				s.groupPolicies[1],
+				s.groupPolicies[2],
+				s.groupPolicies[3],
+				s.groupPolicies[4],
 			},
 		},
 	}
@@ -380,7 +380,7 @@ func (s *IntegrationTestSuite) TestQueryGroupAccountsByGroup() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := client.QueryGroupAccountsByGroupCmd()
+			cmd := client.QueryGroupPoliciesByGroupCmd()
 
 			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
@@ -388,22 +388,22 @@ func (s *IntegrationTestSuite) TestQueryGroupAccountsByGroup() {
 			} else {
 				s.Require().NoError(err, out.String())
 
-				var res group.QueryGroupAccountsByGroupResponse
+				var res group.QueryGroupPoliciesByGroupResponse
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
-				s.Require().Equal(len(res.GroupAccounts), len(tc.expectGroupAccounts))
-				for i := range res.GroupAccounts {
-					s.Require().Equal(res.GroupAccounts[i].GroupId, tc.expectGroupAccounts[i].GroupId)
-					s.Require().Equal(res.GroupAccounts[i].Metadata, tc.expectGroupAccounts[i].Metadata)
-					s.Require().Equal(res.GroupAccounts[i].Version, tc.expectGroupAccounts[i].Version)
-					s.Require().Equal(res.GroupAccounts[i].Admin, tc.expectGroupAccounts[i].Admin)
-					s.Require().Equal(res.GroupAccounts[i].GetDecisionPolicy(), tc.expectGroupAccounts[i].GetDecisionPolicy())
+				s.Require().Equal(len(res.GroupPolicies), len(tc.expectGroupPolicies))
+				for i := range res.GroupPolicies {
+					s.Require().Equal(res.GroupPolicies[i].GroupId, tc.expectGroupPolicies[i].GroupId)
+					s.Require().Equal(res.GroupPolicies[i].Metadata, tc.expectGroupPolicies[i].Metadata)
+					s.Require().Equal(res.GroupPolicies[i].Version, tc.expectGroupPolicies[i].Version)
+					s.Require().Equal(res.GroupPolicies[i].Admin, tc.expectGroupPolicies[i].Admin)
+					s.Require().Equal(res.GroupPolicies[i].GetDecisionPolicy(), tc.expectGroupPolicies[i].GetDecisionPolicy())
 				}
 			}
 		})
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryGroupAccountsByAdmin() {
+func (s *IntegrationTestSuite) TestQueryGroupPoliciesByAdmin() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -413,7 +413,7 @@ func (s *IntegrationTestSuite) TestQueryGroupAccountsByAdmin() {
 		expectErr           bool
 		expectErrMsg        string
 		expectedCode        uint32
-		expectGroupAccounts []*group.GroupAccountInfo
+		expectGroupPolicies []*group.GroupPolicyInfo
 	}{
 		{
 			"invalid admin address",
@@ -421,28 +421,28 @@ func (s *IntegrationTestSuite) TestQueryGroupAccountsByAdmin() {
 			true,
 			"decoding bech32 failed: invalid bech32 string",
 			0,
-			[]*group.GroupAccountInfo{},
+			[]*group.GroupPolicyInfo{},
 		},
 		{
-			"no group account",
+			"no group policy",
 			[]string{s.network.Validators[1].Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			"",
 			0,
-			[]*group.GroupAccountInfo{},
+			[]*group.GroupPolicyInfo{},
 		},
 		{
-			"found group accounts",
+			"found group policies",
 			[]string{val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			"",
 			0,
-			[]*group.GroupAccountInfo{
-				s.groupAccounts[0],
-				s.groupAccounts[1],
-				s.groupAccounts[2],
-				s.groupAccounts[3],
-				s.groupAccounts[4],
+			[]*group.GroupPolicyInfo{
+				s.groupPolicies[0],
+				s.groupPolicies[1],
+				s.groupPolicies[2],
+				s.groupPolicies[3],
+				s.groupPolicies[4],
 			},
 		},
 	}
@@ -451,7 +451,7 @@ func (s *IntegrationTestSuite) TestQueryGroupAccountsByAdmin() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := client.QueryGroupAccountsByAdminCmd()
+			cmd := client.QueryGroupPoliciesByAdminCmd()
 
 			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
@@ -459,15 +459,15 @@ func (s *IntegrationTestSuite) TestQueryGroupAccountsByAdmin() {
 			} else {
 				s.Require().NoError(err, out.String())
 
-				var res group.QueryGroupAccountsByAdminResponse
+				var res group.QueryGroupPoliciesByAdminResponse
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
-				s.Require().Equal(len(res.GroupAccounts), len(tc.expectGroupAccounts))
-				for i := range res.GroupAccounts {
-					s.Require().Equal(res.GroupAccounts[i].GroupId, tc.expectGroupAccounts[i].GroupId)
-					s.Require().Equal(res.GroupAccounts[i].Metadata, tc.expectGroupAccounts[i].Metadata)
-					s.Require().Equal(res.GroupAccounts[i].Version, tc.expectGroupAccounts[i].Version)
-					s.Require().Equal(res.GroupAccounts[i].Admin, tc.expectGroupAccounts[i].Admin)
-					s.Require().Equal(res.GroupAccounts[i].GetDecisionPolicy(), tc.expectGroupAccounts[i].GetDecisionPolicy())
+				s.Require().Equal(len(res.GroupPolicies), len(tc.expectGroupPolicies))
+				for i := range res.GroupPolicies {
+					s.Require().Equal(res.GroupPolicies[i].GroupId, tc.expectGroupPolicies[i].GroupId)
+					s.Require().Equal(res.GroupPolicies[i].Metadata, tc.expectGroupPolicies[i].Metadata)
+					s.Require().Equal(res.GroupPolicies[i].Version, tc.expectGroupPolicies[i].Version)
+					s.Require().Equal(res.GroupPolicies[i].Admin, tc.expectGroupPolicies[i].Admin)
+					s.Require().Equal(res.GroupPolicies[i].GetDecisionPolicy(), tc.expectGroupPolicies[i].GetDecisionPolicy())
 				}
 			}
 		})
@@ -517,7 +517,7 @@ func (s *IntegrationTestSuite) TestQueryProposal() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryProposalsByGroupAccount() {
+func (s *IntegrationTestSuite) TestQueryProposalsByGroupPolicy() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -530,7 +530,7 @@ func (s *IntegrationTestSuite) TestQueryProposalsByGroupAccount() {
 		expectProposals []*group.Proposal
 	}{
 		{
-			"invalid group account address",
+			"invalid group policy address",
 			[]string{"invalid"},
 			true,
 			"decoding bech32 failed: invalid bech32 string",
@@ -538,7 +538,7 @@ func (s *IntegrationTestSuite) TestQueryProposalsByGroupAccount() {
 			[]*group.Proposal{},
 		},
 		{
-			"no group account",
+			"no group policy",
 			[]string{s.network.Validators[1].Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			"",
@@ -547,7 +547,7 @@ func (s *IntegrationTestSuite) TestQueryProposalsByGroupAccount() {
 		},
 		{
 			"found proposals",
-			[]string{s.groupAccounts[0].Address, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{s.groupPolicies[0].Address, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			"",
 			0,
@@ -561,7 +561,7 @@ func (s *IntegrationTestSuite) TestQueryProposalsByGroupAccount() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := client.QueryProposalsByGroupAccountCmd()
+			cmd := client.QueryProposalsByGroupPolicyCmd()
 
 			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
@@ -569,7 +569,7 @@ func (s *IntegrationTestSuite) TestQueryProposalsByGroupAccount() {
 			} else {
 				s.Require().NoError(err, out.String())
 
-				var res group.QueryProposalsByGroupAccountResponse
+				var res group.QueryProposalsByGroupPolicyResponse
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
 				s.Require().Equal(len(res.Proposals), len(tc.expectProposals))
 				for i := range res.Proposals {
@@ -708,7 +708,7 @@ func (s *IntegrationTestSuite) TestQueryVotesByVoter() {
 		},
 		{
 			"no votes",
-			[]string{s.groupAccounts[0].Address, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{s.groupPolicies[0].Address, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			true,
 			"",
 			0,

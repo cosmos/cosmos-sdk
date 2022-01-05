@@ -21,6 +21,7 @@ const (
 	OpWeightMsgDelegate        = "op_weight_msg_delegate"
 	OpWeightMsgUndelegate      = "op_weight_msg_undelegate"
 	OpWeightMsgBeginRedelegate = "op_weight_msg_begin_redelegate"
+	OpWeightMsgCancelUnbondingDelegation = "op_weight_msg_cancel_unbonding_delegation"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -34,6 +35,7 @@ func WeightedOperations(
 		weightMsgDelegate        int
 		weightMsgUndelegate      int
 		weightMsgBeginRedelegate int
+		weightMsgCancelUnbondingDelegation int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreateValidator, &weightMsgCreateValidator, nil,
@@ -66,6 +68,12 @@ func WeightedOperations(
 		},
 	)
 
+	appParams.GetOrGenerate(cdc, OpWeightMsgCancelUnbondingDelegation, &weightMsgCancelUnbondingDelegation, nil,
+		func(_ *rand.Rand) {
+			weightMsgCancelUnbondingDelegation = simappparams.DefaultWeightMsgBeginRedelegate
+		},
+	)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgCreateValidator,
@@ -86,6 +94,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgBeginRedelegate,
 			SimulateMsgBeginRedelegate(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgCancelUnbondingDelegation,
+			SimulateMsgCancelUndelegate(ak, bk, k),
 		),
 	}
 }
@@ -350,6 +362,80 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 
 		account := ak.GetAccount(ctx, delAddr)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+	}
+}
+
+
+// SimulateMsgCancelUndelegate generates a MsgUndelegate with random values
+func SimulateMsgCancelUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		if len(k.GetAllValidators(ctx)) == 0 {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDelegate, "number of validators equal zero"), nil, nil
+		}
+		// get random account
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+		// get random validator
+		validator, ok := keeper.RandomValidator(r, k, ctx)
+		if !ok {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "validator is not ok"), nil, nil
+		}
+
+		valAddr := validator.GetOperator()
+		unbondingDelegation, found := k.GetUnbondingDelegation(ctx,  simAccount.Address,validator.GetOperator())
+		if !found {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "account does have any unbonding delegations"), nil, nil
+		}
+
+		if k.HasMaxUnbondingDelegationEntries(ctx, simAccount.Address, valAddr) {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "validator does have a max unbonding delegation entries"), nil, nil
+		}
+
+		// get random unbonding delegation entry at block height
+		unbondingDelegationEntry := unbondingDelegation.Entries[r.Intn(len(unbondingDelegation.Entries))]
+
+		if !unbondingDelegationEntry.Balance.IsPositive() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "total bond is negative"), nil, nil
+		}
+
+		reDelegateAmount, err := simtypes.RandPositiveInt(r, unbondingDelegationEntry.Balance)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "invalid reDelegateAmount amount"), nil, err
+		}
+
+		if reDelegateAmount.IsZero() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "reDelegateAmount amount is zero"), nil, nil
+		}
+
+		msg := types.NewMsgCancelUnbondingDelegation(
+			simAccount.Address, valAddr, unbondingDelegationEntry.CreationHeight, sdk.NewCoin(k.BondDenom(ctx), reDelegateAmount),
+		)
+
+		// if simaccount.PrivKey == nil, delegation address does not exist in accs. Return error
+		if simAccount.PrivKey == nil {
+			//return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "account private key is nil"), nil, fmt.Errorf("delegation addr: %s does not exist in simulation accounts", delAddr)
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "account private key is nil"), nil, nil
+		}
+
+		spendable := bk.SpendableCoins(ctx, simAccount.Address)
 
 		txCtx := simulation.OperationInput{
 			R:               r,

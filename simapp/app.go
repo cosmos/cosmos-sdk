@@ -389,7 +389,8 @@ func NewSimApp(
 		group.ModuleName,
 	)
 
-	app.mm.SetOrderMigrations(module.DefaultMigrationsOrder(app.mm.ModuleNames())...)
+	// you can set migrations order here
+	// app.mm.SetOrderMigrations(custom order)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.legacyRouter, app.QueryRouter(), encodingConfig.Amino)

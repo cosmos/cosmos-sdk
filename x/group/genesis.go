@@ -31,27 +31,27 @@ func (s GenesisState) Validate() error {
 		}
 	}
 
-	for _, f := range s.GroupAccounts {
+	for _, f := range s.GroupPolicies {
 		_, err := sdk.AccAddressFromBech32(f.Admin)
 		if err != nil {
-			return sdkerrors.Wrap(err, "group account admin")
+			return sdkerrors.Wrap(err, "group policy admin")
 		}
 		_, err = sdk.AccAddressFromBech32(f.Address)
 		if err != nil {
-			return sdkerrors.Wrap(err, "group account address")
+			return sdkerrors.Wrap(err, "group policy account address")
 		}
 		if f.GroupId == 0 {
-			return sdkerrors.Wrap(errors.ErrEmpty, "group account's group id")
+			return sdkerrors.Wrap(errors.ErrEmpty, "group policy's group id")
 		}
 		if f.Version == 0 {
-			return sdkerrors.Wrap(errors.ErrEmpty, "group account version")
+			return sdkerrors.Wrap(errors.ErrEmpty, "group policy version")
 		}
 		policy := f.GetDecisionPolicy()
 		if policy == nil {
-			return sdkerrors.Wrap(errors.ErrEmpty, "group account policy")
+			return sdkerrors.Wrap(errors.ErrEmpty, "group policy's decision policy")
 		}
 		if err := policy.ValidateBasic(); err != nil {
-			return sdkerrors.Wrap(err, "group account policy")
+			return sdkerrors.Wrap(err, "group policy's decision policy")
 		}
 	}
 
@@ -76,7 +76,7 @@ func (s GenesisState) Validate() error {
 		if f.GroupVersion == 0 {
 			return sdkerrors.Wrap(errors.ErrEmpty, "proposal group version")
 		}
-		if f.GroupAccountVersion == 0 {
+		if f.GroupPolicyVersion == 0 {
 			return sdkerrors.Wrap(errors.ErrEmpty, "proposal group account version")
 		}
 		_, err = f.VoteState.GetYesCount()
@@ -120,7 +120,7 @@ func (s GenesisState) Validate() error {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (s GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	for _, g := range s.GroupAccounts {
+	for _, g := range s.GroupPolicies {
 		err := g.UnpackInterfaces(unpacker)
 		if err != nil {
 			return err

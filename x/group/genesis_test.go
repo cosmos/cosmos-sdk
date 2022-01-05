@@ -21,7 +21,7 @@ func TestGenesisStateValidate(t *testing.T) {
 	submittedAt := time.Now().UTC()
 	timeout := submittedAt.Add(time.Second * 1).UTC()
 
-	groupAccount := &GroupAccountInfo{
+	groupAccount := &GroupPolicyInfo{
 		Address:  accAddr.String(),
 		GroupId:  1,
 		Admin:    accAddr.String(),
@@ -34,7 +34,7 @@ func TestGenesisStateValidate(t *testing.T) {
 	})
 
 	// create another group account to set invalid decision policy for testing
-	groupAccount2 := &GroupAccountInfo{
+	groupAccount2 := &GroupPolicyInfo{
 		Address:  accAddr.String(),
 		GroupId:  1,
 		Admin:    accAddr.String(),
@@ -48,11 +48,11 @@ func TestGenesisStateValidate(t *testing.T) {
 	require.NoError(t, err)
 
 	proposal := &Proposal{
-		ProposalId:          1,
-		Address:             accAddr.String(),
-		Metadata:            []byte("proposal metadata"),
-		GroupVersion:        1,
-		GroupAccountVersion: 1,
+		ProposalId:         1,
+		Address:            accAddr.String(),
+		Metadata:           []byte("proposal metadata"),
+		GroupVersion:       1,
+		GroupPolicyVersion: 1,
 		Proposers: []string{
 			memberAddr.String(),
 		},
@@ -83,14 +83,14 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"valid genesisState",
 			GenesisState{
-				GroupSeq:        2,
-				Groups:          []*GroupInfo{{GroupId: 1, Admin: accAddr.String(), Metadata: []byte("1"), Version: 1, TotalWeight: "1"}, {GroupId: 2, Admin: accAddr.String(), Metadata: []byte("2"), Version: 2, TotalWeight: "2"}},
-				GroupMembers:    []*GroupMember{{GroupId: 1, Member: &Member{Address: memberAddr.String(), Weight: "1", Metadata: []byte("member metadata")}}, {GroupId: 2, Member: &Member{Address: memberAddr.String(), Weight: "2", Metadata: []byte("member metadata")}}},
-				GroupAccountSeq: 1,
-				GroupAccounts:   []*GroupAccountInfo{groupAccount},
-				ProposalSeq:     1,
-				Proposals:       []*Proposal{proposal},
-				Votes:           []*Vote{{ProposalId: proposal.ProposalId, Voter: memberAddr.String(), SubmittedAt: submittedAt, Choice: Choice_CHOICE_YES}},
+				GroupSeq:              2,
+				Groups:                []*GroupInfo{{GroupId: 1, Admin: accAddr.String(), Metadata: []byte("1"), Version: 1, TotalWeight: "1"}, {GroupId: 2, Admin: accAddr.String(), Metadata: []byte("2"), Version: 2, TotalWeight: "2"}},
+				GroupMembers:          []*GroupMember{{GroupId: 1, Member: &Member{Address: memberAddr.String(), Weight: "1", Metadata: []byte("member metadata")}}, {GroupId: 2, Member: &Member{Address: memberAddr.String(), Weight: "2", Metadata: []byte("member metadata")}}},
+				GroupPolicyAccountSeq: 1,
+				GroupPolicies:         []*GroupPolicyInfo{groupAccount},
+				ProposalSeq:           1,
+				Proposals:             []*Proposal{proposal},
+				Votes:                 []*Vote{{ProposalId: proposal.ProposalId, Voter: memberAddr.String(), SubmittedAt: submittedAt, Choice: Choice_CHOICE_YES}},
 			},
 			false,
 		},
@@ -162,7 +162,7 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid group account address",
 			GenesisState{
-				GroupAccounts: []*GroupAccountInfo{
+				GroupPolicies: []*GroupPolicyInfo{
 					{
 						Address:  "invalid address",
 						GroupId:  1,
@@ -177,7 +177,7 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid group account admin",
 			GenesisState{
-				GroupAccounts: []*GroupAccountInfo{
+				GroupPolicies: []*GroupPolicyInfo{
 					{
 						Address:  accAddr.String(),
 						GroupId:  1,
@@ -192,7 +192,7 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid group account's group id",
 			GenesisState{
-				GroupAccounts: []*GroupAccountInfo{
+				GroupPolicies: []*GroupPolicyInfo{
 					{
 						Address:  accAddr.String(),
 						GroupId:  0,
@@ -207,7 +207,7 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid group account version",
 			GenesisState{
-				GroupAccounts: []*GroupAccountInfo{
+				GroupPolicies: []*GroupPolicyInfo{
 					{
 						Address:  accAddr.String(),
 						GroupId:  1,
@@ -222,7 +222,7 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid group account policy",
 			GenesisState{
-				GroupAccounts: []*GroupAccountInfo{
+				GroupPolicies: []*GroupPolicyInfo{
 					{
 						Address:        accAddr.String(),
 						GroupId:        1,
@@ -285,11 +285,11 @@ func TestGenesisStateValidate(t *testing.T) {
 			GenesisState{
 				Proposals: []*Proposal{
 					{
-						ProposalId:          0,
-						Address:             accAddr.String(),
-						Metadata:            []byte("proposal metadata"),
-						GroupVersion:        1,
-						GroupAccountVersion: 1,
+						ProposalId:         0,
+						Address:            accAddr.String(),
+						Metadata:           []byte("proposal metadata"),
+						GroupVersion:       1,
+						GroupPolicyVersion: 1,
 					},
 				},
 			},
@@ -300,11 +300,11 @@ func TestGenesisStateValidate(t *testing.T) {
 			GenesisState{
 				Proposals: []*Proposal{
 					{
-						ProposalId:          1,
-						Address:             "invalid address",
-						Metadata:            []byte("proposal metadata"),
-						GroupVersion:        1,
-						GroupAccountVersion: 1,
+						ProposalId:         1,
+						Address:            "invalid address",
+						Metadata:           []byte("proposal metadata"),
+						GroupVersion:       1,
+						GroupPolicyVersion: 1,
 					},
 				},
 			},
@@ -315,11 +315,11 @@ func TestGenesisStateValidate(t *testing.T) {
 			GenesisState{
 				Proposals: []*Proposal{
 					{
-						ProposalId:          1,
-						Address:             accAddr.String(),
-						Metadata:            []byte("proposal metadata"),
-						GroupVersion:        0,
-						GroupAccountVersion: 1,
+						ProposalId:         1,
+						Address:            accAddr.String(),
+						Metadata:           []byte("proposal metadata"),
+						GroupVersion:       0,
+						GroupPolicyVersion: 1,
 					},
 				},
 			},
@@ -330,11 +330,11 @@ func TestGenesisStateValidate(t *testing.T) {
 			GenesisState{
 				Proposals: []*Proposal{
 					{
-						ProposalId:          1,
-						Address:             accAddr.String(),
-						Metadata:            []byte("proposal metadata"),
-						GroupVersion:        1,
-						GroupAccountVersion: 0,
+						ProposalId:         1,
+						Address:            accAddr.String(),
+						Metadata:           []byte("proposal metadata"),
+						GroupVersion:       1,
+						GroupPolicyVersion: 0,
 					},
 				},
 			},
@@ -345,11 +345,11 @@ func TestGenesisStateValidate(t *testing.T) {
 			GenesisState{
 				Proposals: []*Proposal{
 					{
-						ProposalId:          1,
-						Address:             accAddr.String(),
-						Metadata:            []byte("proposal metadata"),
-						GroupVersion:        1,
-						GroupAccountVersion: 1,
+						ProposalId:         1,
+						Address:            accAddr.String(),
+						Metadata:           []byte("proposal metadata"),
+						GroupVersion:       1,
+						GroupPolicyVersion: 1,
 						Proposers: []string{
 							memberAddr.String(),
 						},
@@ -372,11 +372,11 @@ func TestGenesisStateValidate(t *testing.T) {
 			GenesisState{
 				Proposals: []*Proposal{
 					{
-						ProposalId:          1,
-						Address:             accAddr.String(),
-						Metadata:            []byte("proposal metadata"),
-						GroupVersion:        1,
-						GroupAccountVersion: 1,
+						ProposalId:         1,
+						Address:            accAddr.String(),
+						Metadata:           []byte("proposal metadata"),
+						GroupVersion:       1,
+						GroupPolicyVersion: 1,
 						Proposers: []string{
 							memberAddr.String(),
 						},
@@ -399,11 +399,11 @@ func TestGenesisStateValidate(t *testing.T) {
 			GenesisState{
 				Proposals: []*Proposal{
 					{
-						ProposalId:          1,
-						Address:             accAddr.String(),
-						Metadata:            []byte("proposal metadata"),
-						GroupVersion:        1,
-						GroupAccountVersion: 1,
+						ProposalId:         1,
+						Address:            accAddr.String(),
+						Metadata:           []byte("proposal metadata"),
+						GroupVersion:       1,
+						GroupPolicyVersion: 1,
 						Proposers: []string{
 							memberAddr.String(),
 						},
@@ -426,11 +426,11 @@ func TestGenesisStateValidate(t *testing.T) {
 			GenesisState{
 				Proposals: []*Proposal{
 					{
-						ProposalId:          1,
-						Address:             accAddr.String(),
-						Metadata:            []byte("proposal metadata"),
-						GroupVersion:        1,
-						GroupAccountVersion: 1,
+						ProposalId:         1,
+						Address:            accAddr.String(),
+						Metadata:           []byte("proposal metadata"),
+						GroupVersion:       1,
+						GroupPolicyVersion: 1,
 						Proposers: []string{
 							memberAddr.String(),
 						},

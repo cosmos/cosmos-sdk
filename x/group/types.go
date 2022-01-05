@@ -122,13 +122,14 @@ var _ orm.Validateable = GroupAccountInfo{}
 
 // NewGroupAccountInfo creates a new GroupAccountInfo instance
 func NewGroupAccountInfo(address sdk.AccAddress, group uint64, admin sdk.AccAddress, metadata []byte,
-	version uint64, decisionPolicy DecisionPolicy) (GroupAccountInfo, error) {
+	version uint64, decisionPolicy DecisionPolicy, createdAt time.Time) (GroupAccountInfo, error) {
 	p := GroupAccountInfo{
-		Address:  address.String(),
-		GroupId:  group,
-		Admin:    admin.String(),
-		Metadata: metadata,
-		Version:  version,
+		Address:   address.String(),
+		GroupId:   group,
+		Admin:     admin.String(),
+		Metadata:  metadata,
+		Version:   version,
+		CreatedAt: createdAt,
 	}
 
 	err := p.SetDecisionPolicy(decisionPolicy)

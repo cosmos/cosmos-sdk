@@ -45,6 +45,9 @@ service Msg {
 
   // Exec executes a proposal.
   rpc Exec(MsgExec) returns (MsgExecResponse);
+
+  // LeaveGroup allows a group member to leave the group.
+  rpc LeaveGroup(MsgLeaveGroup) returns (MsgLeaveGroupResponse);
 }
 
 //
@@ -279,3 +282,15 @@ message MsgExec {
 
 // MsgExecResponse is the Msg/Exec request type.
 message MsgExecResponse {}
+
+// MsgLeaveGroup is the Msg/LeaveGroup request type.
+message MsgLeaveGroup {
+  // member_address is the account address of the group member.
+  string member_address = 1;
+
+  // group_id is the unique ID of the group.
+  uint64 group_id = 2;
+}
+
+// MsgLeaveGroupResponse is the Msg/LeaveGroup response type.
+message MsgLeaveGroupResponse {}

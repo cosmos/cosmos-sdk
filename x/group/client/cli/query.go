@@ -21,13 +21,13 @@ func QueryCmd(name string) *cobra.Command {
 
 	queryCmd.AddCommand(
 		QueryGroupInfoCmd(),
-		QueryGroupAccountInfoCmd(),
+		QueryGroupPolicyInfoCmd(),
 		QueryGroupMembersCmd(),
 		QueryGroupsByAdminCmd(),
-		QueryGroupAccountsByGroupCmd(),
-		QueryGroupAccountsByAdminCmd(),
+		QueryGroupPoliciesByGroupCmd(),
+		QueryGroupPoliciesByAdminCmd(),
 		QueryProposalCmd(),
-		QueryProposalsByGroupAccountCmd(),
+		QueryProposalsByGroupPolicyCmd(),
 		QueryVoteByProposalVoterCmd(),
 		QueryVotesByProposalCmd(),
 		QueryVotesByVoterCmd(),
@@ -101,11 +101,11 @@ func QueryGroupInfoCmd() *cobra.Command {
 	return cmd
 }
 
-// QueryGroupAccountInfoCmd creates a CLI command for Query/GroupAccountInfo.
-func QueryGroupAccountInfoCmd() *cobra.Command {
+// QueryGroupPolicyInfoCmd creates a CLI command for Query/GroupPolicyInfo.
+func QueryGroupPolicyInfoCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "group-account-info [group-account]",
-		Short: "Query for group account info by group account address",
+		Use:   "group-policy-info [group-policy-account]",
+		Short: "Query for group policy info by account address of group policy",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -115,7 +115,7 @@ func QueryGroupAccountInfoCmd() *cobra.Command {
 
 			queryClient := group.NewQueryClient(clientCtx)
 
-			res, err := queryClient.GroupAccountInfo(cmd.Context(), &group.QueryGroupAccountInfoRequest{
+			res, err := queryClient.GroupPolicyInfo(cmd.Context(), &group.QueryGroupPolicyInfoRequest{
 				Address: args[0],
 			})
 			if err != nil {
@@ -208,11 +208,11 @@ func QueryGroupsByAdminCmd() *cobra.Command {
 	return cmd
 }
 
-// QueryGroupAccountsByGroupCmd creates a CLI command for Query/GroupAccountsByGroup.
-func QueryGroupAccountsByGroupCmd() *cobra.Command {
+// QueryGroupPoliciesByGroupCmd creates a CLI command for Query/GroupPoliciesByGroup.
+func QueryGroupPoliciesByGroupCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "group-accounts-by-group [group-id]",
-		Short: "Query for group accounts by group id with pagination flags",
+		Use:   "group-policies-by-group [group-id]",
+		Short: "Query for group policies by group id with pagination flags",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -232,7 +232,7 @@ func QueryGroupAccountsByGroupCmd() *cobra.Command {
 
 			queryClient := group.NewQueryClient(clientCtx)
 
-			res, err := queryClient.GroupAccountsByGroup(cmd.Context(), &group.QueryGroupAccountsByGroupRequest{
+			res, err := queryClient.GroupPoliciesByGroup(cmd.Context(), &group.QueryGroupPoliciesByGroupRequest{
 				GroupId:    groupID,
 				Pagination: pageReq,
 			})
@@ -249,11 +249,11 @@ func QueryGroupAccountsByGroupCmd() *cobra.Command {
 	return cmd
 }
 
-// QueryGroupAccountsByAdminCmd creates a CLI command for Query/GroupAccountsByAdmin.
-func QueryGroupAccountsByAdminCmd() *cobra.Command {
+// QueryGroupPoliciesByAdminCmd creates a CLI command for Query/GroupPoliciesByAdmin.
+func QueryGroupPoliciesByAdminCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "group-accounts-by-admin [admin]",
-		Short: "Query for group accounts by admin account address with pagination flags",
+		Use:   "group-policies-by-admin [admin]",
+		Short: "Query for group policies by admin account address with pagination flags",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -268,7 +268,7 @@ func QueryGroupAccountsByAdminCmd() *cobra.Command {
 
 			queryClient := group.NewQueryClient(clientCtx)
 
-			res, err := queryClient.GroupAccountsByAdmin(cmd.Context(), &group.QueryGroupAccountsByAdminRequest{
+			res, err := queryClient.GroupPoliciesByAdmin(cmd.Context(), &group.QueryGroupPoliciesByAdminRequest{
 				Admin:      args[0],
 				Pagination: pageReq,
 			})
@@ -320,11 +320,11 @@ func QueryProposalCmd() *cobra.Command {
 	return cmd
 }
 
-// QueryProposalsByGroupAccountCmd creates a CLI command for Query/ProposalsByGroupAccount.
-func QueryProposalsByGroupAccountCmd() *cobra.Command {
+// QueryProposalsByGroupPolicyCmd creates a CLI command for Query/ProposalsByGroupPolicy.
+func QueryProposalsByGroupPolicyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "proposals-by-group-account [group-account]",
-		Short: "Query for proposals by group account address with pagination flags",
+		Use:   "proposals-by-group-policy [group-policy-account]",
+		Short: "Query for proposals by account address of group policy with pagination flags",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -339,7 +339,7 @@ func QueryProposalsByGroupAccountCmd() *cobra.Command {
 
 			queryClient := group.NewQueryClient(clientCtx)
 
-			res, err := queryClient.ProposalsByGroupAccount(cmd.Context(), &group.QueryProposalsByGroupAccountRequest{
+			res, err := queryClient.ProposalsByGroupPolicy(cmd.Context(), &group.QueryProposalsByGroupPolicyRequest{
 				Address:    args[0],
 				Pagination: pageReq,
 			})

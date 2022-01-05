@@ -24,7 +24,7 @@ message Member {
   bytes metadata = 3;
 
   // added_at is a timestamp specifying when a member was added.
-  google.protobuf.Timestamp added_at = 6 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp added_at = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
 
 // Members defines a repeated slice of Member objects.

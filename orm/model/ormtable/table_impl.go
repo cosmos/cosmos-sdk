@@ -11,10 +11,10 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/errors"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // tableImpl implements Table.
@@ -286,7 +286,7 @@ func (t tableImpl) doExportJSON(ctx context.Context, writer io.Writer) error {
 	}
 
 	var err error
-	it, _ := t.PrefixIterator(ctx, nil, IteratorOptions{})
+	it, _ := t.Iterator(ctx)
 	start := true
 	for {
 		found := it.Next()

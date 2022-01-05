@@ -4,29 +4,16 @@ import (
 	"context"
 	"fmt"
 
-	"google.golang.org/protobuf/reflect/protoreflect"
-
-	"github.com/cosmos/cosmos-sdk/types/query"
-
 	"google.golang.org/protobuf/proto"
+
+	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 // PaginationRequest is a request to the Paginate function and extends the
 // options in query.PageRequest.
 type PaginationRequest struct {
 	*query.PageRequest
-
-	// Prefix is an optional prefix to create a prefix iterator against this
-	// index. It cannot be used together with Start and End.
-	Prefix []protoreflect.Value
-
-	// Start is an optional start value to create a range iterator against this
-	// index. It cannot be used together with Prefix.
-	Start []protoreflect.Value
-
-	// End is an optional end value to create a range iterator against this
-	// index. It cannot be used together with Prefix.
-	End []protoreflect.Value
 
 	// Filter is an optional filter function that can be used to filter
 	// the results in the underlying iterator and should return true to include
@@ -47,35 +34,30 @@ type PaginationResponse struct {
 
 	// Cursors returns a cursor for each item and can be used to implement
 	// GraphQL connection edges.
-	Cursors []Cursor
+	Cursors []ormlist.CursorT
 }
 
-// Paginate retrieves a "page" of data from the provided index and store.
+// Paginate retrieves a "page" of data from the provided index and context.
 func Paginate(
 	index Index,
 	ctx context.Context,
 	request *PaginationRequest,
+	options ...ormlist.Option,
 ) (*PaginationResponse, error) {
 	offset := int(request.Offset)
-	if len(request.Key) != 0 && offset > 0 {
-		return nil, fmt.Errorf("can only specify one of cursor or offset")
-	}
-
-	iteratorOpts := IteratorOptions{
-		Reverse: request.Reverse,
-		Cursor:  request.Key,
-	}
-	var it Iterator
-	var err error
-	if request.Start != nil || request.End != nil {
-		if request.Prefix != nil {
-			return nil, fmt.Errorf("can either use Start/End or Prefix, not both")
+	if len(request.Key) != 0 {
+		if offset > 0 {
+			return nil, fmt.Errorf("can only specify one of cursor or offset")
 		}
 
-		it, err = index.RangeIterator(ctx, request.Start, request.End, iteratorOpts)
-	} else {
-		it, err = index.PrefixIterator(ctx, request.Prefix, iteratorOpts)
+		options = append(options, ormlist.Cursor(request.Key))
 	}
+
+	if request.Reverse {
+		options = append(options, ormlist.Reverse())
+	}
+
+	it, err := index.Iterator(ctx, options...)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +80,7 @@ func Paginate(
 	}
 
 	haveMore := false
-	cursors := make([]Cursor, 0, limit)
+	cursors := make([]ormlist.CursorT, 0, limit)
 	items := make([]proto.Message, 0, limit)
 	done := limit + offset
 	for it.Next() {

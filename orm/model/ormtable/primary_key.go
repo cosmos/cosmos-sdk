@@ -3,6 +3,8 @@ package ormtable
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
+
 	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
 
 	"google.golang.org/protobuf/proto"
@@ -19,44 +21,13 @@ type primaryKeyIndex struct {
 	getReadBackend func(context.Context) (ReadBackend, error)
 }
 
-func (p primaryKeyIndex) PrefixIterator(ctx context.Context, prefix []protoreflect.Value, options IteratorOptions) (Iterator, error) {
+func (p primaryKeyIndex) Iterator(ctx context.Context, options ...ormlist.Option) (Iterator, error) {
 	backend, err := p.getReadBackend(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	prefixBz, err := p.EncodeKey(prefix)
-	if err != nil {
-		return nil, err
-	}
-
-	return prefixIterator(backend.CommitmentStoreReader(), backend, p, prefixBz, options)
-}
-
-func (p primaryKeyIndex) RangeIterator(ctx context.Context, start, end []protoreflect.Value, options IteratorOptions) (Iterator, error) {
-	backend, err := p.getReadBackend(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	err = p.CheckValidRangeIterationKeys(start, end)
-	if err != nil {
-		return nil, err
-	}
-
-	startBz, err := p.EncodeKey(start)
-	if err != nil {
-		return nil, err
-	}
-
-	endBz, err := p.EncodeKey(end)
-	if err != nil {
-		return nil, err
-	}
-
-	fullEndKey := len(p.GetFieldNames()) == len(end)
-
-	return rangeIterator(backend.CommitmentStoreReader(), backend, p, startBz, endBz, fullEndKey, options)
+	return iterator(backend, backend.CommitmentStoreReader(), p, p.KeyCodec, options)
 }
 
 func (p primaryKeyIndex) doNotImplement() {}

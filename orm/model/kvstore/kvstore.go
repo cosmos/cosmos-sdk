@@ -1,3 +1,5 @@
+// Package kvstore defines the abstract interfaces which ORM tables and indexes
+// use for reading and writing data against a KV-store backend.
 package kvstore
 
 import (

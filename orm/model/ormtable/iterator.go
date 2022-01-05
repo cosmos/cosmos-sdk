@@ -4,7 +4,10 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
+	"github.com/cosmos/cosmos-sdk/orm/internal/listinternal"
 	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
+	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 )
 
 // Iterator defines the interface for iterating over indexes.
@@ -27,9 +30,8 @@ type Iterator interface {
 	GetMessage() (proto.Message, error)
 
 	// Cursor returns the cursor referencing the current iteration position
-	// and can be passed to IteratorOptions to restart iteration right after
-	// this position.
-	Cursor() Cursor
+	// and can be used to restart iteration right after this position.
+	Cursor() ormlist.CursorT
 
 	// Close closes the iterator and must always be called when done using
 	// the iterator. The defer keyword should generally be used for this.
@@ -38,10 +40,49 @@ type Iterator interface {
 	doNotImplement()
 }
 
-// Cursor defines the cursor type.
-type Cursor []byte
+func iterator(
+	backend ReadBackend,
+	reader kvstore.Reader,
+	index concreteIndex,
+	codec *ormkv.KeyCodec,
+	options []listinternal.Option,
+) (Iterator, error) {
+	opts := &listinternal.Options{}
+	listinternal.ApplyOptions(opts, options)
+	if err := opts.Validate(); err != nil {
+		return nil, err
+	}
 
-func prefixIterator(iteratorStore kvstore.Reader, context ReadBackend, index concreteIndex, prefix []byte, options IteratorOptions) (Iterator, error) {
+	if opts.Start != nil || opts.End != nil {
+		err := codec.CheckValidRangeIterationKeys(opts.Start, opts.End)
+		if err != nil {
+			return nil, err
+		}
+
+		startBz, err := codec.EncodeKey(opts.Start)
+		if err != nil {
+			return nil, err
+		}
+
+		endBz, err := codec.EncodeKey(opts.End)
+		if err != nil {
+			return nil, err
+		}
+
+		fullEndKey := len(codec.GetFieldNames()) == len(opts.End)
+
+		return rangeIterator(reader, backend, index, startBz, endBz, fullEndKey, opts)
+	} else {
+		prefixBz, err := codec.EncodeKey(opts.Prefix)
+		if err != nil {
+			return nil, err
+		}
+
+		return prefixIterator(reader, backend, index, prefixBz, opts)
+	}
+}
+
+func prefixIterator(iteratorStore kvstore.Reader, backend ReadBackend, index concreteIndex, prefix []byte, options *listinternal.Options) (Iterator, error) {
 	if !options.Reverse {
 		var start []byte
 		if len(options.Cursor) != 0 {
@@ -57,7 +98,7 @@ func prefixIterator(iteratorStore kvstore.Reader, context ReadBackend, index con
 		}
 		return &indexIterator{
 			index:    index,
-			store:    context,
+			store:    backend,
 			iterator: it,
 			started:  false,
 		}, nil
@@ -76,7 +117,7 @@ func prefixIterator(iteratorStore kvstore.Reader, context ReadBackend, index con
 
 		return &indexIterator{
 			index:    index,
-			store:    context,
+			store:    backend,
 			iterator: it,
 			started:  false,
 		}, nil
@@ -85,7 +126,7 @@ func prefixIterator(iteratorStore kvstore.Reader, context ReadBackend, index con
 
 // NOTE: fullEndKey indicates whether the end key contained all the fields of the key,
 // if it did then we need to use inclusive end bytes, otherwise we prefix the end bytes
-func rangeIterator(iteratorStore kvstore.Reader, context ReadBackend, index concreteIndex, start, end []byte, fullEndKey bool, options IteratorOptions) (Iterator, error) {
+func rangeIterator(iteratorStore kvstore.Reader, reader ReadBackend, index concreteIndex, start, end []byte, fullEndKey bool, options *listinternal.Options) (Iterator, error) {
 	if !options.Reverse {
 		if len(options.Cursor) != 0 {
 			start = append(options.Cursor, 0)
@@ -103,7 +144,7 @@ func rangeIterator(iteratorStore kvstore.Reader, context ReadBackend, index conc
 		}
 		return &indexIterator{
 			index:    index,
-			store:    context,
+			store:    reader,
 			iterator: it,
 			started:  false,
 		}, nil
@@ -124,7 +165,7 @@ func rangeIterator(iteratorStore kvstore.Reader, context ReadBackend, index conc
 
 		return &indexIterator{
 			index:    index,
-			store:    context,
+			store:    reader,
 			iterator: it,
 			started:  false,
 		}, nil
@@ -184,7 +225,7 @@ func (i *indexIterator) GetMessage() (proto.Message, error) {
 	return msg, err
 }
 
-func (i indexIterator) Cursor() Cursor {
+func (i indexIterator) Cursor() ormlist.CursorT {
 	return i.iterator.Key()
 }
 

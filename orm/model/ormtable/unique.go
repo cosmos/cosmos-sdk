@@ -3,6 +3,8 @@ package ormtable
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
+
 	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
 
 	"google.golang.org/protobuf/proto"
@@ -19,45 +21,13 @@ type uniqueKeyIndex struct {
 	getReadBackend func(context.Context) (ReadBackend, error)
 }
 
-func (u uniqueKeyIndex) PrefixIterator(ctx context.Context, prefix []protoreflect.Value, options IteratorOptions) (Iterator, error) {
+func (u uniqueKeyIndex) Iterator(ctx context.Context, options ...ormlist.Option) (Iterator, error) {
 	backend, err := u.getReadBackend(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	prefixBz, err := u.GetKeyCodec().EncodeKey(prefix)
-	if err != nil {
-		return nil, err
-	}
-
-	return prefixIterator(backend.IndexStoreReader(), backend, u, prefixBz, options)
-}
-
-func (u uniqueKeyIndex) RangeIterator(ctx context.Context, start, end []protoreflect.Value, options IteratorOptions) (Iterator, error) {
-	backend, err := u.getReadBackend(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	keyCodec := u.GetKeyCodec()
-	err = keyCodec.CheckValidRangeIterationKeys(start, end)
-	if err != nil {
-		return nil, err
-	}
-
-	startBz, err := keyCodec.EncodeKey(start)
-	if err != nil {
-		return nil, err
-	}
-
-	endBz, err := keyCodec.EncodeKey(end)
-	if err != nil {
-		return nil, err
-	}
-
-	fullEndKey := len(keyCodec.GetFieldNames()) == len(end)
-
-	return rangeIterator(backend.IndexStoreReader(), backend, u, startBz, endBz, fullEndKey, options)
+	return iterator(backend, backend.IndexStoreReader(), u, u.GetKeyCodec(), options)
 }
 
 func (u uniqueKeyIndex) doNotImplement() {}

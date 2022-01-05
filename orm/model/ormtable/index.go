@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
+	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 )
 
 // Index defines an index on a table. Index instances
@@ -15,18 +16,8 @@ import (
 // to index methods.
 type Index interface {
 
-	// PrefixIterator returns a prefix iterator for the provided prefix. Prefix
-	// can contain 0 or more values that must correspond to the fields in the index.
-	PrefixIterator(context context.Context, prefix []protoreflect.Value, options IteratorOptions) (Iterator, error)
-
-	// RangeIterator returns a range iterator between the provided start and end.
-	// Start and end can contain 0 or more values that must correspond to the fields in the index.
-	// Range iterators can only be contained for start and end values which are
-	// well-ordered, meaning that any unordered components must be equal. Ex.
-	// the bytes type is considered unordered, so a range iterator is created
-	// over an index with a bytes field, both start and end must have the same
-	// value for bytes.
-	RangeIterator(context context.Context, start, end []protoreflect.Value, options IteratorOptions) (Iterator, error)
+	// Iterator returns an iterator for this index with the provided list options.
+	Iterator(ctx context.Context, options ...ormlist.Option) (Iterator, error)
 
 	// MessageType returns the protobuf message type of the index.
 	MessageType() protoreflect.MessageType
@@ -66,18 +57,6 @@ type UniqueIndex interface {
 
 	// DeleteByKey deletes the message if one exists in for the provided key values.
 	DeleteByKey(context context.Context, keyValues ...interface{}) error
-}
-
-// IteratorOptions are options for creating an iterator.
-type IteratorOptions struct {
-
-	// Reverse specifies whether the iterator should be a reverse iterator.
-	Reverse bool
-
-	// Cursor is an optional value that can be used to start iteration
-	// from a cursor returned by Iterator.Cursor() which can be used to
-	// support pagination.
-	Cursor Cursor
 }
 
 type indexer interface {

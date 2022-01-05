@@ -196,7 +196,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			`{"commission":[{"denom":"stake","amount":"457.342500000000000000"}]}`,
+			`{"commission":[{"denom":"stake","amount":"473.167500000000000000"}]}`,
 		},
 		{
 			"text output",
@@ -207,7 +207,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
 			},
 			false,
 			`commission:
-- amount: "457.342500000000000000"
+- amount: "473.167500000000000000"
   denom: stake`,
 		},
 	}

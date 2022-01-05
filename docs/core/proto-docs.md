@@ -696,6 +696,8 @@
 - [cosmos/staking/v1beta1/tx.proto](#cosmos/staking/v1beta1/tx.proto)
     - [MsgBeginRedelegate](#cosmos.staking.v1beta1.MsgBeginRedelegate)
     - [MsgBeginRedelegateResponse](#cosmos.staking.v1beta1.MsgBeginRedelegateResponse)
+    - [MsgCancelUnbond](#cosmos.staking.v1beta1.MsgCancelUnbond)
+    - [MsgCancelUnbondResponse](#cosmos.staking.v1beta1.MsgCancelUnbondResponse)
     - [MsgCreateValidator](#cosmos.staking.v1beta1.MsgCreateValidator)
     - [MsgCreateValidatorResponse](#cosmos.staking.v1beta1.MsgCreateValidatorResponse)
     - [MsgDelegate](#cosmos.staking.v1beta1.MsgDelegate)
@@ -10040,6 +10042,34 @@ MsgBeginRedelegateResponse defines the Msg/BeginRedelegate response type.
 
 
 
+<a name="cosmos.staking.v1beta1.MsgCancelUnbond"></a>
+
+### MsgCancelUnbond
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `delegator_address` | [string](#string) |  |  |
+| `validator_address` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `creation_height` | [int64](#int64) |  | creation_height is the height which the unbonding took place. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.MsgCancelUnbondResponse"></a>
+
+### MsgCancelUnbondResponse
+
+
+
+
+
+
+
 <a name="cosmos.staking.v1beta1.MsgCreateValidator"></a>
 
 ### MsgCreateValidator
@@ -10178,6 +10208,7 @@ Msg defines the staking Msg service.
 | `Delegate` | [MsgDelegate](#cosmos.staking.v1beta1.MsgDelegate) | [MsgDelegateResponse](#cosmos.staking.v1beta1.MsgDelegateResponse) | Delegate defines a method for performing a delegation of coins from a delegator to a validator. | |
 | `BeginRedelegate` | [MsgBeginRedelegate](#cosmos.staking.v1beta1.MsgBeginRedelegate) | [MsgBeginRedelegateResponse](#cosmos.staking.v1beta1.MsgBeginRedelegateResponse) | BeginRedelegate defines a method for performing a redelegation of coins from a delegator and source validator to a destination validator. | |
 | `Undelegate` | [MsgUndelegate](#cosmos.staking.v1beta1.MsgUndelegate) | [MsgUndelegateResponse](#cosmos.staking.v1beta1.MsgUndelegateResponse) | Undelegate defines a method for performing an undelegation from a delegate and a validator. | |
+| `CancelUnbond` | [MsgCancelUnbond](#cosmos.staking.v1beta1.MsgCancelUnbond) | [MsgCancelUnbondResponse](#cosmos.staking.v1beta1.MsgCancelUnbondResponse) | CancelUnbond | |
 
  <!-- end services -->
 

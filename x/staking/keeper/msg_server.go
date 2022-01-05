@@ -2,6 +2,9 @@ package keeper
 
 import (
 	"context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"strconv"
 	"time"
 
 	"github.com/armon/go-metrics"
@@ -16,6 +19,93 @@ import (
 
 type msgServer struct {
 	Keeper
+}
+
+func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.MsgCancelUnbondingDelegation) (*types.MsgCancelUnbondingDelegationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	bondDenom := k.BondDenom(ctx)
+	if msg.Amount.Denom != bondDenom {
+		return nil, sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", msg.Amount.Denom, bondDenom,
+		)
+	}
+
+	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddress, valAddr)
+	if !found {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"unbonding delegation with delegator %s not found for validator %s",
+			msg.DelegatorAddress, msg.ValidatorAddress)
+	}
+
+	var foundUnBondingAtHeight = false
+	var unbondEntry types.UnbondingDelegationEntry
+	var unbondEntryIndex int64
+	for i := 0; i < len(ubd.Entries); i++ {
+		entry := ubd.Entries[i]
+		if entry.CreationHeight == msg.CreationHeight {
+			foundUnBondingAtHeight = true
+			unbondEntry = entry
+			unbondEntryIndex = int64(i)
+			break
+		}
+	}
+
+	if !foundUnBondingAtHeight {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "unbonding delegation is not found at block height %d", msg.CreationHeight)
+	}
+
+	if unbondEntry.Balance.LT(msg.Amount.Amount) {
+		return nil, sdkerrors.Wrap(types.ErrNotEnoughDelegationShares, msg.Amount.String())
+	}
+
+	amount := unbondEntry.Balance.Sub(msg.Amount.Amount)
+	if amount.Equal(sdk.NewInt(0)) {
+		// remove from unbondQueue
+		ubd.RemoveEntry(unbondEntryIndex)
+	} else {
+		// update in unbondingDelegationEntryBalance
+		ubd.Entries[unbondEntryIndex].Balance = amount
+	}
+
+	// set the unbonding delegation or remove it if there are no more entries
+	if len(ubd.Entries) == 0 {
+		k.RemoveUnbondingDelegation(ctx, ubd)
+	} else {
+		k.SetUnbondingDelegation(ctx, ubd)
+	}
+
+	// get validator
+	validator, found := k.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
+	// delegate the unbonding delegation amount to validator back
+	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, types.Unbonding, validator, false)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeCancelUnbondDelegation,
+			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
+			sdk.NewAttribute(types.AttributeKeyCreationHeight, strconv.FormatInt(msg.CreationHeight, 10)),
+		),
+	)
+
+	return &types.MsgCancelUnbondingDelegationResponse{}, nil
 }
 
 // NewMsgServerImpl returns an implementation of the bank MsgServer interface
@@ -173,7 +263,7 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 			return nil, types.ErrSelfDelegationBelowMinimum
 		}
 
-		validator.MinSelfDelegation = (*msg.MinSelfDelegation)
+		validator.MinSelfDelegation = *msg.MinSelfDelegation
 	}
 
 	k.SetValidator(ctx, validator)

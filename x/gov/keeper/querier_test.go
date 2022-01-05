@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 const custom = "custom"
@@ -202,7 +203,7 @@ func TestQueries(t *testing.T) {
 
 	proposal2.TotalDeposit = proposal2.TotalDeposit.Add(deposit4.Amount...)
 	proposal2.Status = v1beta1.StatusVotingPeriod
-	proposal2.VotingEndTime = proposal2.VotingEndTime.Add(types.DefaultPeriod)
+	proposal2.VotingEndTime = proposal2.VotingEndTime.Add(v1beta2.DefaultPeriod)
 
 	deposit5 := v1beta1.NewDeposit(proposal3.ProposalId, TestAddrs[1], depositParams.MinDeposit)
 	depositer5, err := sdk.AccAddressFromBech32(deposit5.Depositor)
@@ -212,7 +213,7 @@ func TestQueries(t *testing.T) {
 
 	proposal3.TotalDeposit = proposal3.TotalDeposit.Add(deposit5.Amount...)
 	proposal3.Status = v1beta1.StatusVotingPeriod
-	proposal3.VotingEndTime = proposal3.VotingEndTime.Add(types.DefaultPeriod)
+	proposal3.VotingEndTime = proposal3.VotingEndTime.Add(v1beta2.DefaultPeriod)
 	// total deposit of TestAddrs[1] on proposal #3 is worth the proposal deposit + individual deposit
 	deposit5.Amount = deposit5.Amount.Add(deposit3.Amount...)
 

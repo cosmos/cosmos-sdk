@@ -160,14 +160,18 @@ The proposed solution is to return different cache instances for each method of 
 
 The Stargate `/store` implementation (store/v1) has an additional layer in the SDK store construction - the `MultiStore` structure. The multistore exists to support the modularity of the Cosmos SDK - each module is using its own instance of IAVL with independent commit phase. It causes problems related to race condition and atomic DB commits (see: [\#6370](https://github.com/cosmos/cosmos-sdk/issues/6370) and [discussion](https://github.com/cosmos/cosmos-sdk/discussions/8297#discussioncomment-757043)).
 
-We propose to simplify the multistore concept in the Cosmos SDK: use a single instance of `SC` and `SS` in a root store object. The following interfaces are proposed; the methods for configuring tracing and listeners are omitted for brevity.
+We propose to simplify the multistore concept in the Cosmos SDK: 
++ As in store/v1, MultiStore allows to mount substores. Each substore has exactly one instance of `SS` and `SC`. This provides expected modularity for modules.
++ Multistore maintains a mapping (we call it _scheme_) between substore key (usually a module store key) and a compressed key prefix - see _Optimization: compress module key prefixes_ section below.
++ Multistore is responsible for creating and maintaining the substores. User should not be able to create and mount substore by his own. All stores managed by Multistore use the same underlying database preserving atomic operations.
+
+The following interfaces are proposed; the methods for configuring tracing and listeners are omitted for brevity.
 
 ```go
 // Used where read-only access to versions is needed.
 type BasicMultiStore interface {
-    Store
+    // returns a substore
     GetKVStore(StoreKey) KVStore
-    CacheMultiStore() CacheMultiStore
 }
 
 // Used as the main app state, replacing CommitMultiStore.
@@ -177,17 +181,15 @@ type CommitMultiStore interface {
     Snapshotter
 
     GetVersion(uint64) (BasicMultiStore, error)
+	CacheMultiStore() CacheMultiStore
     SetInitialVersion(uint64) error
-
-    ... // Trace and Listen methods
 }
 
 // Replaces CacheMultiStore for branched state.
 type CacheMultiStore interface {
     BasicMultiStore
     Write()
-
-    ... // Trace and Listen methods
+	CacheMultiStore() CacheMultiStore
 }
 
 // Example of constructor parameters for the concrete type.
@@ -199,29 +201,26 @@ type MultiStoreConfig struct {
 }
 ```
 
-<!-- TODO: Review whether these types can be further reduced or simplified -->
-<!-- TODO: RootStorePersistentCache type -->
-
 NOTE: modules will be able to use a special commitment and their own DBs. For example: a module which will use ZK proofs for state can store and commit this proof in the `MultiStore` (usually as a single record) and manage the specialized store privately or using the `SC` low level interface.
 
 #### Compatibility support
 
-To ease the transition to this new interface for users, we can create a shim which wraps a `CommitMultiStore` but provides a `CommitRootStore` interface, and expose functions to safely create and access the underlying `CommitMultiStore`.
+Cosmos SDK users should be only concerned about the module interface, which currently relies on the `KVStore`. We don't change this interface, so the proposed store/v2 is 100% compatible with existing modules.
 
-The new `RootStore` and supporting types can be implemented in a `store/v2` package to avoid breaking existing code.
+The new `MultiStore` and supporting types are implemented in `store/v2` package to provide Cosmos SDK users chocie to use the new store or the old IAVL based on.
 
 #### Merkle Proofs and IBC
 
-Currently, an IBC (v1.0) Merkle proof path consists of two elements (`["<store-key>", "<record-key>"]`), with each key corresponding to a separate proof. These are each verified according to individual [ICS-23 specs](https://github.com/cosmos/ibc-go/blob/f7051429e1cf833a6f65d51e6c3df1609290a549/modules/core/23-commitment/types/merkle.go#L17), and the result hash of each step is used as the committed value of the next step, until a root commitment hash is obtained.
-The root hash of the proof for `"<record-key>"` is hashed with the `"<store-key>"` to validate against the App Hash.
+IBC v1.0 Merkle proof are influenced by the MultiStore design: they consists of two elements (`["<store-key>", "<record-key>"]`), with each key corresponding to a separate proof. `<record-key>` is a key in a substore identified by `<store-key>`. The x/ibc module implementation requires that the `<store-key>` is not empty and assumes that the proofs are broken down according to the [ICS-23 specs](https://github.com/cosmos/ibc-go/blob/f7051429e1cf833a6f65d51e6c3df1609290a549/modules/core/23-commitment/types/merkle.go#L17).  
+IBC verification has two steps: firstly we make a standard Merkle proof verification for the `<record-key>`. In the second step, we hash the the `<store-key>` with the root hash of the first step and validate it against the App Hash.
 
-This is not compatible with the `RootStore`, which stores all records in a single Merkle tree structure, and won't produce separate proofs for the store- and record-key. Ideally, the store-key component of the proof could just be omitted, and updated to use a "no-op" spec, so only the record-key is used. However, because the IBC verification code hardcodes the `"ibc"` prefix and applies it to the SDK proof as a separate element of the proof path, this isn't possible without a breaking change. Breaking this behavior would severely impact the Cosmos ecosystem which already widely adopts the IBC module. Requesting an update of the IBC module across the chains is a time consuming effort and not easily feasible.
+IBC client is configured with a proof spec to know how to hash individual elements on the path. 
+SMT IBC proof spec is required to support the IBC client.
 
-As a workaround, the `RootStore` will have to use two separate SMTs (they could use the same underlying DB): one for IBC state and one for everything else. A simple Merkle map that reference these SMTs will act as a Merkle Tree to create a final App hash. The Merkle map is not stored in a DBs - it's constructed in the runtime. The IBC substore key must be `"ibc"`.
-
-The workaround can still guarantee atomic syncs: the [proposed DB backends](#evaluated-kv-databases) support atomic transactions and efficient rollbacks, which will be used in the commit phase.
-
-The presented workaround can be used until the IBC module is fully upgraded to supports single-element commitment proofs.
+The x/ibc module client hardcodes the `"ibc"` as the `<store-key>` (IBC store-key component proof could be omitted if a "no-op" spec was defined in the x/ibc client).
+Breaking this behavior would severely impact the Cosmos ecosystem which already widely adopts the IBC module. Requesting an update of the IBC module across the chains is a time consuming effort and not easily feasible.
+We want to support ICS-23 for all modules. This means that all modules must use a separate SMT instance.
+This functionality is preserved in the `MultiStore` implementation.
 
 ### Optimization: compress module key prefixes
 
@@ -240,26 +239,6 @@ TODO: need to make decision about the key compression.
 Some objects may be saved with key, which contains a Protobuf message type. Such keys are long. We could save a lot of space if we can map Protobuf message types in varints.
 
 TODO: finalize this or move to another ADR.
-
-## Migration
-
-Using the new store will require a migration. 2 Migrations are proposed:
-1. Genesis export -- it will reset the blockchain history.
-2. In place migration: we can reuse `UpgradeKeeper.SetUpgradeHandler` to provide the migration logic:
-
-    ```go 
-app.UpgradeKeeper.SetUpgradeHandler("adr-40", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
-
-    storev2.Migrate(iavlstore, )
-
-    // RunMigrations returns the VersionMap
-    // with the updated module ConsensusVersions
-    return app.mm.RunMigrations(ctx, vm)
-})
-    ```
-
-    The `Migrate` function will read all entries from the save them to the AD-40 combined KV store. Cash layer should not be used and the operation must finish with a single Commit call.
-
 
 ## Consequences
 

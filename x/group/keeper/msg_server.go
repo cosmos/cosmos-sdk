@@ -113,7 +113,6 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 					Address:  req.MemberUpdates[i].Address,
 					Weight:   req.MemberUpdates[i].Weight,
 					Metadata: req.MemberUpdates[i].Metadata,
-					AddedAt:  ctx.BlockTime(),
 				},
 			}
 

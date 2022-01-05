@@ -11,10 +11,9 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/tecbot/gorocksdb"
-
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	dbutil "github.com/cosmos/cosmos-sdk/db/internal"
+	"github.com/tecbot/gorocksdb"
 )
 
 var (

@@ -5,9 +5,8 @@ package rocksdb
 import (
 	"bytes"
 
-	"github.com/tecbot/gorocksdb"
-
 	dbm "github.com/cosmos/cosmos-sdk/db"
+	"github.com/tecbot/gorocksdb"
 )
 
 type rocksDBIterator struct {

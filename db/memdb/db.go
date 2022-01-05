@@ -6,10 +6,9 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/google/btree"
-
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	dbutil "github.com/cosmos/cosmos-sdk/db/internal"
+	"github.com/google/btree"
 )
 
 const (
@@ -179,7 +178,7 @@ func (db *MemDB) Revert() error {
 	if !has {
 		return fmt.Errorf("bad version history: version %v not saved", last)
 	}
-	for ver := range db.saved {
+	for ver, _ := range db.saved {
 		if ver > last {
 			delete(db.saved, ver)
 		}

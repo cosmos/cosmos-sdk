@@ -13,6 +13,13 @@ protoc_gen_gocosmos() {
 
 protoc_gen_gocosmos
 
+protoc_gen_gopulsar() {
+  go install github.com/cosmos/cosmos-proto/cmd/protoc-gen-go-pulsar@latest 2>/dev/null
+}
+
+protoc_gen_gopulsar
+
+echo "Generating gogo proto code"
 cd proto
 proto_dirs=$(find ./cosmos -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
 for dir in $proto_dirs; do
@@ -35,4 +42,5 @@ rm -rf github.com
 go mod tidy
 
 # generate api module
+echo "Generating API module"
 (cd proto; buf generate --template buf.gen.pulsar.yaml)

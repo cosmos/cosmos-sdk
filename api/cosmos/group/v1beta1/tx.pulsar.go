@@ -19,81 +19,81 @@ import (
 	anypb "google.golang.org/protobuf/types/known/anypb"
 )
 
-var _ protoreflect.List = (*_MsgCreateGroupRequest_2_list)(nil)
+var _ protoreflect.List = (*_MsgCreateGroup_2_list)(nil)
 
-type _MsgCreateGroupRequest_2_list struct {
+type _MsgCreateGroup_2_list struct {
 	list *[]*Member
 }
 
-func (x *_MsgCreateGroupRequest_2_list) Len() int {
+func (x *_MsgCreateGroup_2_list) Len() int {
 	if x.list == nil {
 		return 0
 	}
 	return len(*x.list)
 }
 
-func (x *_MsgCreateGroupRequest_2_list) Get(i int) protoreflect.Value {
+func (x *_MsgCreateGroup_2_list) Get(i int) protoreflect.Value {
 	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
 }
 
-func (x *_MsgCreateGroupRequest_2_list) Set(i int, value protoreflect.Value) {
+func (x *_MsgCreateGroup_2_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
 	concreteValue := valueUnwrapped.Interface().(*Member)
 	(*x.list)[i] = concreteValue
 }
 
-func (x *_MsgCreateGroupRequest_2_list) Append(value protoreflect.Value) {
+func (x *_MsgCreateGroup_2_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
 	concreteValue := valueUnwrapped.Interface().(*Member)
 	*x.list = append(*x.list, concreteValue)
 }
 
-func (x *_MsgCreateGroupRequest_2_list) AppendMutable() protoreflect.Value {
+func (x *_MsgCreateGroup_2_list) AppendMutable() protoreflect.Value {
 	v := new(Member)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_MsgCreateGroupRequest_2_list) Truncate(n int) {
+func (x *_MsgCreateGroup_2_list) Truncate(n int) {
 	for i := n; i < len(*x.list); i++ {
 		(*x.list)[i] = nil
 	}
 	*x.list = (*x.list)[:n]
 }
 
-func (x *_MsgCreateGroupRequest_2_list) NewElement() protoreflect.Value {
+func (x *_MsgCreateGroup_2_list) NewElement() protoreflect.Value {
 	v := new(Member)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_MsgCreateGroupRequest_2_list) IsValid() bool {
+func (x *_MsgCreateGroup_2_list) IsValid() bool {
 	return x.list != nil
 }
 
 var (
-	md_MsgCreateGroupRequest          protoreflect.MessageDescriptor
-	fd_MsgCreateGroupRequest_admin    protoreflect.FieldDescriptor
-	fd_MsgCreateGroupRequest_members  protoreflect.FieldDescriptor
-	fd_MsgCreateGroupRequest_metadata protoreflect.FieldDescriptor
+	md_MsgCreateGroup          protoreflect.MessageDescriptor
+	fd_MsgCreateGroup_admin    protoreflect.FieldDescriptor
+	fd_MsgCreateGroup_members  protoreflect.FieldDescriptor
+	fd_MsgCreateGroup_metadata protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1beta1_tx_proto_init()
-	md_MsgCreateGroupRequest = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgCreateGroupRequest")
-	fd_MsgCreateGroupRequest_admin = md_MsgCreateGroupRequest.Fields().ByName("admin")
-	fd_MsgCreateGroupRequest_members = md_MsgCreateGroupRequest.Fields().ByName("members")
-	fd_MsgCreateGroupRequest_metadata = md_MsgCreateGroupRequest.Fields().ByName("metadata")
+	md_MsgCreateGroup = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgCreateGroup")
+	fd_MsgCreateGroup_admin = md_MsgCreateGroup.Fields().ByName("admin")
+	fd_MsgCreateGroup_members = md_MsgCreateGroup.Fields().ByName("members")
+	fd_MsgCreateGroup_metadata = md_MsgCreateGroup.Fields().ByName("metadata")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgCreateGroupRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgCreateGroup)(nil)
 
-type fastReflection_MsgCreateGroupRequest MsgCreateGroupRequest
+type fastReflection_MsgCreateGroup MsgCreateGroup
 
-func (x *MsgCreateGroupRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgCreateGroupRequest)(x)
+func (x *MsgCreateGroup) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgCreateGroup)(x)
 }
 
-func (x *MsgCreateGroupRequest) slowProtoReflect() protoreflect.Message {
+func (x *MsgCreateGroup) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -105,43 +105,43 @@ func (x *MsgCreateGroupRequest) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgCreateGroupRequest_messageType fastReflection_MsgCreateGroupRequest_messageType
-var _ protoreflect.MessageType = fastReflection_MsgCreateGroupRequest_messageType{}
+var _fastReflection_MsgCreateGroup_messageType fastReflection_MsgCreateGroup_messageType
+var _ protoreflect.MessageType = fastReflection_MsgCreateGroup_messageType{}
 
-type fastReflection_MsgCreateGroupRequest_messageType struct{}
+type fastReflection_MsgCreateGroup_messageType struct{}
 
-func (x fastReflection_MsgCreateGroupRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgCreateGroupRequest)(nil)
+func (x fastReflection_MsgCreateGroup_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgCreateGroup)(nil)
 }
-func (x fastReflection_MsgCreateGroupRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgCreateGroupRequest)
+func (x fastReflection_MsgCreateGroup_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateGroup)
 }
-func (x fastReflection_MsgCreateGroupRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgCreateGroupRequest
+func (x fastReflection_MsgCreateGroup_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateGroup
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgCreateGroupRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgCreateGroupRequest
+func (x *fastReflection_MsgCreateGroup) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateGroup
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgCreateGroupRequest) Type() protoreflect.MessageType {
-	return _fastReflection_MsgCreateGroupRequest_messageType
+func (x *fastReflection_MsgCreateGroup) Type() protoreflect.MessageType {
+	return _fastReflection_MsgCreateGroup_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgCreateGroupRequest) New() protoreflect.Message {
-	return new(fastReflection_MsgCreateGroupRequest)
+func (x *fastReflection_MsgCreateGroup) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateGroup)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgCreateGroupRequest) Interface() protoreflect.ProtoMessage {
-	return (*MsgCreateGroupRequest)(x)
+func (x *fastReflection_MsgCreateGroup) Interface() protoreflect.ProtoMessage {
+	return (*MsgCreateGroup)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -149,22 +149,22 @@ func (x *fastReflection_MsgCreateGroupRequest) Interface() protoreflect.ProtoMes
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgCreateGroupRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgCreateGroup) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Admin != "" {
 		value := protoreflect.ValueOfString(x.Admin)
-		if !f(fd_MsgCreateGroupRequest_admin, value) {
+		if !f(fd_MsgCreateGroup_admin, value) {
 			return
 		}
 	}
 	if len(x.Members) != 0 {
-		value := protoreflect.ValueOfList(&_MsgCreateGroupRequest_2_list{list: &x.Members})
-		if !f(fd_MsgCreateGroupRequest_members, value) {
+		value := protoreflect.ValueOfList(&_MsgCreateGroup_2_list{list: &x.Members})
+		if !f(fd_MsgCreateGroup_members, value) {
 			return
 		}
 	}
 	if len(x.Metadata) != 0 {
 		value := protoreflect.ValueOfBytes(x.Metadata)
-		if !f(fd_MsgCreateGroupRequest_metadata, value) {
+		if !f(fd_MsgCreateGroup_metadata, value) {
 			return
 		}
 	}
@@ -181,19 +181,19 @@ func (x *fastReflection_MsgCreateGroupRequest) Range(f func(protoreflect.FieldDe
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgCreateGroupRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgCreateGroup) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateGroupRequest.admin":
+	case "cosmos.group.v1beta1.MsgCreateGroup.admin":
 		return x.Admin != ""
-	case "cosmos.group.v1beta1.MsgCreateGroupRequest.members":
+	case "cosmos.group.v1beta1.MsgCreateGroup.members":
 		return len(x.Members) != 0
-	case "cosmos.group.v1beta1.MsgCreateGroupRequest.metadata":
+	case "cosmos.group.v1beta1.MsgCreateGroup.metadata":
 		return len(x.Metadata) != 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroup"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroup does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -203,19 +203,19 @@ func (x *fastReflection_MsgCreateGroupRequest) Has(fd protoreflect.FieldDescript
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateGroupRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgCreateGroup) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateGroupRequest.admin":
+	case "cosmos.group.v1beta1.MsgCreateGroup.admin":
 		x.Admin = ""
-	case "cosmos.group.v1beta1.MsgCreateGroupRequest.members":
+	case "cosmos.group.v1beta1.MsgCreateGroup.members":
 		x.Members = nil
-	case "cosmos.group.v1beta1.MsgCreateGroupRequest.metadata":
+	case "cosmos.group.v1beta1.MsgCreateGroup.metadata":
 		x.Metadata = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroup"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroup does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -225,25 +225,25 @@ func (x *fastReflection_MsgCreateGroupRequest) Clear(fd protoreflect.FieldDescri
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgCreateGroupRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCreateGroup) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateGroupRequest.admin":
+	case "cosmos.group.v1beta1.MsgCreateGroup.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "cosmos.group.v1beta1.MsgCreateGroupRequest.members":
+	case "cosmos.group.v1beta1.MsgCreateGroup.members":
 		if len(x.Members) == 0 {
-			return protoreflect.ValueOfList(&_MsgCreateGroupRequest_2_list{})
+			return protoreflect.ValueOfList(&_MsgCreateGroup_2_list{})
 		}
-		listValue := &_MsgCreateGroupRequest_2_list{list: &x.Members}
+		listValue := &_MsgCreateGroup_2_list{list: &x.Members}
 		return protoreflect.ValueOfList(listValue)
-	case "cosmos.group.v1beta1.MsgCreateGroupRequest.metadata":
+	case "cosmos.group.v1beta1.MsgCreateGroup.metadata":
 		value := x.Metadata
 		return protoreflect.ValueOfBytes(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroup"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroup does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -257,21 +257,21 @@ func (x *fastReflection_MsgCreateGroupRequest) Get(descriptor protoreflect.Field
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateGroupRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgCreateGroup) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateGroupRequest.admin":
+	case "cosmos.group.v1beta1.MsgCreateGroup.admin":
 		x.Admin = value.Interface().(string)
-	case "cosmos.group.v1beta1.MsgCreateGroupRequest.members":
+	case "cosmos.group.v1beta1.MsgCreateGroup.members":
 		lv := value.List()
-		clv := lv.(*_MsgCreateGroupRequest_2_list)
+		clv := lv.(*_MsgCreateGroup_2_list)
 		x.Members = *clv.list
-	case "cosmos.group.v1beta1.MsgCreateGroupRequest.metadata":
+	case "cosmos.group.v1beta1.MsgCreateGroup.metadata":
 		x.Metadata = value.Bytes()
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroup"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroup does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -285,53 +285,53 @@ func (x *fastReflection_MsgCreateGroupRequest) Set(fd protoreflect.FieldDescript
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateGroupRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCreateGroup) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateGroupRequest.members":
+	case "cosmos.group.v1beta1.MsgCreateGroup.members":
 		if x.Members == nil {
 			x.Members = []*Member{}
 		}
-		value := &_MsgCreateGroupRequest_2_list{list: &x.Members}
+		value := &_MsgCreateGroup_2_list{list: &x.Members}
 		return protoreflect.ValueOfList(value)
-	case "cosmos.group.v1beta1.MsgCreateGroupRequest.admin":
-		panic(fmt.Errorf("field admin of message cosmos.group.v1beta1.MsgCreateGroupRequest is not mutable"))
-	case "cosmos.group.v1beta1.MsgCreateGroupRequest.metadata":
-		panic(fmt.Errorf("field metadata of message cosmos.group.v1beta1.MsgCreateGroupRequest is not mutable"))
+	case "cosmos.group.v1beta1.MsgCreateGroup.admin":
+		panic(fmt.Errorf("field admin of message cosmos.group.v1beta1.MsgCreateGroup is not mutable"))
+	case "cosmos.group.v1beta1.MsgCreateGroup.metadata":
+		panic(fmt.Errorf("field metadata of message cosmos.group.v1beta1.MsgCreateGroup is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroup"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroup does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgCreateGroupRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCreateGroup) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateGroupRequest.admin":
+	case "cosmos.group.v1beta1.MsgCreateGroup.admin":
 		return protoreflect.ValueOfString("")
-	case "cosmos.group.v1beta1.MsgCreateGroupRequest.members":
+	case "cosmos.group.v1beta1.MsgCreateGroup.members":
 		list := []*Member{}
-		return protoreflect.ValueOfList(&_MsgCreateGroupRequest_2_list{list: &list})
-	case "cosmos.group.v1beta1.MsgCreateGroupRequest.metadata":
+		return protoreflect.ValueOfList(&_MsgCreateGroup_2_list{list: &list})
+	case "cosmos.group.v1beta1.MsgCreateGroup.metadata":
 		return protoreflect.ValueOfBytes(nil)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroup"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroup does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgCreateGroupRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgCreateGroup) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgCreateGroupRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgCreateGroup", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -339,7 +339,7 @@ func (x *fastReflection_MsgCreateGroupRequest) WhichOneof(d protoreflect.OneofDe
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgCreateGroupRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgCreateGroup) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -350,7 +350,7 @@ func (x *fastReflection_MsgCreateGroupRequest) GetUnknown() protoreflect.RawFiel
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateGroupRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgCreateGroup) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -362,7 +362,7 @@ func (x *fastReflection_MsgCreateGroupRequest) SetUnknown(fields protoreflect.Ra
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgCreateGroupRequest) IsValid() bool {
+func (x *fastReflection_MsgCreateGroup) IsValid() bool {
 	return x != nil
 }
 
@@ -372,9 +372,9 @@ func (x *fastReflection_MsgCreateGroupRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgCreateGroupRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgCreateGroup) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgCreateGroupRequest)
+		x := input.Message.Interface().(*MsgCreateGroup)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -410,7 +410,7 @@ func (x *fastReflection_MsgCreateGroupRequest) ProtoMethods() *protoiface.Method
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgCreateGroupRequest)
+		x := input.Message.Interface().(*MsgCreateGroup)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -470,7 +470,7 @@ func (x *fastReflection_MsgCreateGroupRequest) ProtoMethods() *protoiface.Method
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgCreateGroupRequest)
+		x := input.Message.Interface().(*MsgCreateGroup)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -502,10 +502,10 @@ func (x *fastReflection_MsgCreateGroupRequest) ProtoMethods() *protoiface.Method
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateGroupRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateGroup: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateGroupRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateGroup: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -1047,81 +1047,81 @@ func (x *fastReflection_MsgCreateGroupResponse) ProtoMethods() *protoiface.Metho
 	}
 }
 
-var _ protoreflect.List = (*_MsgUpdateGroupMembersRequest_3_list)(nil)
+var _ protoreflect.List = (*_MsgUpdateGroupMembers_3_list)(nil)
 
-type _MsgUpdateGroupMembersRequest_3_list struct {
+type _MsgUpdateGroupMembers_3_list struct {
 	list *[]*Member
 }
 
-func (x *_MsgUpdateGroupMembersRequest_3_list) Len() int {
+func (x *_MsgUpdateGroupMembers_3_list) Len() int {
 	if x.list == nil {
 		return 0
 	}
 	return len(*x.list)
 }
 
-func (x *_MsgUpdateGroupMembersRequest_3_list) Get(i int) protoreflect.Value {
+func (x *_MsgUpdateGroupMembers_3_list) Get(i int) protoreflect.Value {
 	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
 }
 
-func (x *_MsgUpdateGroupMembersRequest_3_list) Set(i int, value protoreflect.Value) {
+func (x *_MsgUpdateGroupMembers_3_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
 	concreteValue := valueUnwrapped.Interface().(*Member)
 	(*x.list)[i] = concreteValue
 }
 
-func (x *_MsgUpdateGroupMembersRequest_3_list) Append(value protoreflect.Value) {
+func (x *_MsgUpdateGroupMembers_3_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
 	concreteValue := valueUnwrapped.Interface().(*Member)
 	*x.list = append(*x.list, concreteValue)
 }
 
-func (x *_MsgUpdateGroupMembersRequest_3_list) AppendMutable() protoreflect.Value {
+func (x *_MsgUpdateGroupMembers_3_list) AppendMutable() protoreflect.Value {
 	v := new(Member)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_MsgUpdateGroupMembersRequest_3_list) Truncate(n int) {
+func (x *_MsgUpdateGroupMembers_3_list) Truncate(n int) {
 	for i := n; i < len(*x.list); i++ {
 		(*x.list)[i] = nil
 	}
 	*x.list = (*x.list)[:n]
 }
 
-func (x *_MsgUpdateGroupMembersRequest_3_list) NewElement() protoreflect.Value {
+func (x *_MsgUpdateGroupMembers_3_list) NewElement() protoreflect.Value {
 	v := new(Member)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_MsgUpdateGroupMembersRequest_3_list) IsValid() bool {
+func (x *_MsgUpdateGroupMembers_3_list) IsValid() bool {
 	return x.list != nil
 }
 
 var (
-	md_MsgUpdateGroupMembersRequest                protoreflect.MessageDescriptor
-	fd_MsgUpdateGroupMembersRequest_admin          protoreflect.FieldDescriptor
-	fd_MsgUpdateGroupMembersRequest_group_id       protoreflect.FieldDescriptor
-	fd_MsgUpdateGroupMembersRequest_member_updates protoreflect.FieldDescriptor
+	md_MsgUpdateGroupMembers                protoreflect.MessageDescriptor
+	fd_MsgUpdateGroupMembers_admin          protoreflect.FieldDescriptor
+	fd_MsgUpdateGroupMembers_group_id       protoreflect.FieldDescriptor
+	fd_MsgUpdateGroupMembers_member_updates protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1beta1_tx_proto_init()
-	md_MsgUpdateGroupMembersRequest = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgUpdateGroupMembersRequest")
-	fd_MsgUpdateGroupMembersRequest_admin = md_MsgUpdateGroupMembersRequest.Fields().ByName("admin")
-	fd_MsgUpdateGroupMembersRequest_group_id = md_MsgUpdateGroupMembersRequest.Fields().ByName("group_id")
-	fd_MsgUpdateGroupMembersRequest_member_updates = md_MsgUpdateGroupMembersRequest.Fields().ByName("member_updates")
+	md_MsgUpdateGroupMembers = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgUpdateGroupMembers")
+	fd_MsgUpdateGroupMembers_admin = md_MsgUpdateGroupMembers.Fields().ByName("admin")
+	fd_MsgUpdateGroupMembers_group_id = md_MsgUpdateGroupMembers.Fields().ByName("group_id")
+	fd_MsgUpdateGroupMembers_member_updates = md_MsgUpdateGroupMembers.Fields().ByName("member_updates")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgUpdateGroupMembersRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgUpdateGroupMembers)(nil)
 
-type fastReflection_MsgUpdateGroupMembersRequest MsgUpdateGroupMembersRequest
+type fastReflection_MsgUpdateGroupMembers MsgUpdateGroupMembers
 
-func (x *MsgUpdateGroupMembersRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgUpdateGroupMembersRequest)(x)
+func (x *MsgUpdateGroupMembers) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgUpdateGroupMembers)(x)
 }
 
-func (x *MsgUpdateGroupMembersRequest) slowProtoReflect() protoreflect.Message {
+func (x *MsgUpdateGroupMembers) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1133,43 +1133,43 @@ func (x *MsgUpdateGroupMembersRequest) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgUpdateGroupMembersRequest_messageType fastReflection_MsgUpdateGroupMembersRequest_messageType
-var _ protoreflect.MessageType = fastReflection_MsgUpdateGroupMembersRequest_messageType{}
+var _fastReflection_MsgUpdateGroupMembers_messageType fastReflection_MsgUpdateGroupMembers_messageType
+var _ protoreflect.MessageType = fastReflection_MsgUpdateGroupMembers_messageType{}
 
-type fastReflection_MsgUpdateGroupMembersRequest_messageType struct{}
+type fastReflection_MsgUpdateGroupMembers_messageType struct{}
 
-func (x fastReflection_MsgUpdateGroupMembersRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgUpdateGroupMembersRequest)(nil)
+func (x fastReflection_MsgUpdateGroupMembers_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgUpdateGroupMembers)(nil)
 }
-func (x fastReflection_MsgUpdateGroupMembersRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateGroupMembersRequest)
+func (x fastReflection_MsgUpdateGroupMembers_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateGroupMembers)
 }
-func (x fastReflection_MsgUpdateGroupMembersRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateGroupMembersRequest
+func (x fastReflection_MsgUpdateGroupMembers_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateGroupMembers
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgUpdateGroupMembersRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateGroupMembersRequest
+func (x *fastReflection_MsgUpdateGroupMembers) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateGroupMembers
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgUpdateGroupMembersRequest) Type() protoreflect.MessageType {
-	return _fastReflection_MsgUpdateGroupMembersRequest_messageType
+func (x *fastReflection_MsgUpdateGroupMembers) Type() protoreflect.MessageType {
+	return _fastReflection_MsgUpdateGroupMembers_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgUpdateGroupMembersRequest) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateGroupMembersRequest)
+func (x *fastReflection_MsgUpdateGroupMembers) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateGroupMembers)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgUpdateGroupMembersRequest) Interface() protoreflect.ProtoMessage {
-	return (*MsgUpdateGroupMembersRequest)(x)
+func (x *fastReflection_MsgUpdateGroupMembers) Interface() protoreflect.ProtoMessage {
+	return (*MsgUpdateGroupMembers)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -1177,22 +1177,22 @@ func (x *fastReflection_MsgUpdateGroupMembersRequest) Interface() protoreflect.P
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgUpdateGroupMembersRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgUpdateGroupMembers) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Admin != "" {
 		value := protoreflect.ValueOfString(x.Admin)
-		if !f(fd_MsgUpdateGroupMembersRequest_admin, value) {
+		if !f(fd_MsgUpdateGroupMembers_admin, value) {
 			return
 		}
 	}
 	if x.GroupId != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.GroupId)
-		if !f(fd_MsgUpdateGroupMembersRequest_group_id, value) {
+		if !f(fd_MsgUpdateGroupMembers_group_id, value) {
 			return
 		}
 	}
 	if len(x.MemberUpdates) != 0 {
-		value := protoreflect.ValueOfList(&_MsgUpdateGroupMembersRequest_3_list{list: &x.MemberUpdates})
-		if !f(fd_MsgUpdateGroupMembersRequest_member_updates, value) {
+		value := protoreflect.ValueOfList(&_MsgUpdateGroupMembers_3_list{list: &x.MemberUpdates})
+		if !f(fd_MsgUpdateGroupMembers_member_updates, value) {
 			return
 		}
 	}
@@ -1209,19 +1209,19 @@ func (x *fastReflection_MsgUpdateGroupMembersRequest) Range(f func(protoreflect.
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgUpdateGroupMembersRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgUpdateGroupMembers) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupMembersRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMembers.admin":
 		return x.Admin != ""
-	case "cosmos.group.v1beta1.MsgUpdateGroupMembersRequest.group_id":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMembers.group_id":
 		return x.GroupId != uint64(0)
-	case "cosmos.group.v1beta1.MsgUpdateGroupMembersRequest.member_updates":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMembers.member_updates":
 		return len(x.MemberUpdates) != 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMembersRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMembers"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMembersRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMembers does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1231,19 +1231,19 @@ func (x *fastReflection_MsgUpdateGroupMembersRequest) Has(fd protoreflect.FieldD
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupMembersRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgUpdateGroupMembers) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupMembersRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMembers.admin":
 		x.Admin = ""
-	case "cosmos.group.v1beta1.MsgUpdateGroupMembersRequest.group_id":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMembers.group_id":
 		x.GroupId = uint64(0)
-	case "cosmos.group.v1beta1.MsgUpdateGroupMembersRequest.member_updates":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMembers.member_updates":
 		x.MemberUpdates = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMembersRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMembers"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMembersRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMembers does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1253,25 +1253,25 @@ func (x *fastReflection_MsgUpdateGroupMembersRequest) Clear(fd protoreflect.Fiel
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgUpdateGroupMembersRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupMembers) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupMembersRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMembers.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "cosmos.group.v1beta1.MsgUpdateGroupMembersRequest.group_id":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMembers.group_id":
 		value := x.GroupId
 		return protoreflect.ValueOfUint64(value)
-	case "cosmos.group.v1beta1.MsgUpdateGroupMembersRequest.member_updates":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMembers.member_updates":
 		if len(x.MemberUpdates) == 0 {
-			return protoreflect.ValueOfList(&_MsgUpdateGroupMembersRequest_3_list{})
+			return protoreflect.ValueOfList(&_MsgUpdateGroupMembers_3_list{})
 		}
-		listValue := &_MsgUpdateGroupMembersRequest_3_list{list: &x.MemberUpdates}
+		listValue := &_MsgUpdateGroupMembers_3_list{list: &x.MemberUpdates}
 		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMembersRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMembers"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMembersRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMembers does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1285,21 +1285,21 @@ func (x *fastReflection_MsgUpdateGroupMembersRequest) Get(descriptor protoreflec
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupMembersRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgUpdateGroupMembers) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupMembersRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMembers.admin":
 		x.Admin = value.Interface().(string)
-	case "cosmos.group.v1beta1.MsgUpdateGroupMembersRequest.group_id":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMembers.group_id":
 		x.GroupId = value.Uint()
-	case "cosmos.group.v1beta1.MsgUpdateGroupMembersRequest.member_updates":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMembers.member_updates":
 		lv := value.List()
-		clv := lv.(*_MsgUpdateGroupMembersRequest_3_list)
+		clv := lv.(*_MsgUpdateGroupMembers_3_list)
 		x.MemberUpdates = *clv.list
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMembersRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMembers"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMembersRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMembers does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1313,53 +1313,53 @@ func (x *fastReflection_MsgUpdateGroupMembersRequest) Set(fd protoreflect.FieldD
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupMembersRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupMembers) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupMembersRequest.member_updates":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMembers.member_updates":
 		if x.MemberUpdates == nil {
 			x.MemberUpdates = []*Member{}
 		}
-		value := &_MsgUpdateGroupMembersRequest_3_list{list: &x.MemberUpdates}
+		value := &_MsgUpdateGroupMembers_3_list{list: &x.MemberUpdates}
 		return protoreflect.ValueOfList(value)
-	case "cosmos.group.v1beta1.MsgUpdateGroupMembersRequest.admin":
-		panic(fmt.Errorf("field admin of message cosmos.group.v1beta1.MsgUpdateGroupMembersRequest is not mutable"))
-	case "cosmos.group.v1beta1.MsgUpdateGroupMembersRequest.group_id":
-		panic(fmt.Errorf("field group_id of message cosmos.group.v1beta1.MsgUpdateGroupMembersRequest is not mutable"))
+	case "cosmos.group.v1beta1.MsgUpdateGroupMembers.admin":
+		panic(fmt.Errorf("field admin of message cosmos.group.v1beta1.MsgUpdateGroupMembers is not mutable"))
+	case "cosmos.group.v1beta1.MsgUpdateGroupMembers.group_id":
+		panic(fmt.Errorf("field group_id of message cosmos.group.v1beta1.MsgUpdateGroupMembers is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMembersRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMembers"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMembersRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMembers does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgUpdateGroupMembersRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupMembers) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupMembersRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMembers.admin":
 		return protoreflect.ValueOfString("")
-	case "cosmos.group.v1beta1.MsgUpdateGroupMembersRequest.group_id":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMembers.group_id":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "cosmos.group.v1beta1.MsgUpdateGroupMembersRequest.member_updates":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMembers.member_updates":
 		list := []*Member{}
-		return protoreflect.ValueOfList(&_MsgUpdateGroupMembersRequest_3_list{list: &list})
+		return protoreflect.ValueOfList(&_MsgUpdateGroupMembers_3_list{list: &list})
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMembersRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMembers"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMembersRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMembers does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgUpdateGroupMembersRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgUpdateGroupMembers) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgUpdateGroupMembersRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgUpdateGroupMembers", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1367,7 +1367,7 @@ func (x *fastReflection_MsgUpdateGroupMembersRequest) WhichOneof(d protoreflect.
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgUpdateGroupMembersRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgUpdateGroupMembers) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -1378,7 +1378,7 @@ func (x *fastReflection_MsgUpdateGroupMembersRequest) GetUnknown() protoreflect.
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupMembersRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgUpdateGroupMembers) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -1390,7 +1390,7 @@ func (x *fastReflection_MsgUpdateGroupMembersRequest) SetUnknown(fields protoref
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgUpdateGroupMembersRequest) IsValid() bool {
+func (x *fastReflection_MsgUpdateGroupMembers) IsValid() bool {
 	return x != nil
 }
 
@@ -1400,9 +1400,9 @@ func (x *fastReflection_MsgUpdateGroupMembersRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgUpdateGroupMembersRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgUpdateGroupMembers) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgUpdateGroupMembersRequest)
+		x := input.Message.Interface().(*MsgUpdateGroupMembers)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1437,7 +1437,7 @@ func (x *fastReflection_MsgUpdateGroupMembersRequest) ProtoMethods() *protoiface
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateGroupMembersRequest)
+		x := input.Message.Interface().(*MsgUpdateGroupMembers)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1495,7 +1495,7 @@ func (x *fastReflection_MsgUpdateGroupMembersRequest) ProtoMethods() *protoiface
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateGroupMembersRequest)
+		x := input.Message.Interface().(*MsgUpdateGroupMembers)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1527,10 +1527,10 @@ func (x *fastReflection_MsgUpdateGroupMembersRequest) ProtoMethods() *protoiface
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupMembersRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupMembers: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupMembersRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupMembers: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -2010,29 +2010,29 @@ func (x *fastReflection_MsgUpdateGroupMembersResponse) ProtoMethods() *protoifac
 }
 
 var (
-	md_MsgUpdateGroupAdminRequest           protoreflect.MessageDescriptor
-	fd_MsgUpdateGroupAdminRequest_admin     protoreflect.FieldDescriptor
-	fd_MsgUpdateGroupAdminRequest_group_id  protoreflect.FieldDescriptor
-	fd_MsgUpdateGroupAdminRequest_new_admin protoreflect.FieldDescriptor
+	md_MsgUpdateGroupAdmin           protoreflect.MessageDescriptor
+	fd_MsgUpdateGroupAdmin_admin     protoreflect.FieldDescriptor
+	fd_MsgUpdateGroupAdmin_group_id  protoreflect.FieldDescriptor
+	fd_MsgUpdateGroupAdmin_new_admin protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1beta1_tx_proto_init()
-	md_MsgUpdateGroupAdminRequest = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgUpdateGroupAdminRequest")
-	fd_MsgUpdateGroupAdminRequest_admin = md_MsgUpdateGroupAdminRequest.Fields().ByName("admin")
-	fd_MsgUpdateGroupAdminRequest_group_id = md_MsgUpdateGroupAdminRequest.Fields().ByName("group_id")
-	fd_MsgUpdateGroupAdminRequest_new_admin = md_MsgUpdateGroupAdminRequest.Fields().ByName("new_admin")
+	md_MsgUpdateGroupAdmin = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgUpdateGroupAdmin")
+	fd_MsgUpdateGroupAdmin_admin = md_MsgUpdateGroupAdmin.Fields().ByName("admin")
+	fd_MsgUpdateGroupAdmin_group_id = md_MsgUpdateGroupAdmin.Fields().ByName("group_id")
+	fd_MsgUpdateGroupAdmin_new_admin = md_MsgUpdateGroupAdmin.Fields().ByName("new_admin")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgUpdateGroupAdminRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgUpdateGroupAdmin)(nil)
 
-type fastReflection_MsgUpdateGroupAdminRequest MsgUpdateGroupAdminRequest
+type fastReflection_MsgUpdateGroupAdmin MsgUpdateGroupAdmin
 
-func (x *MsgUpdateGroupAdminRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgUpdateGroupAdminRequest)(x)
+func (x *MsgUpdateGroupAdmin) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgUpdateGroupAdmin)(x)
 }
 
-func (x *MsgUpdateGroupAdminRequest) slowProtoReflect() protoreflect.Message {
+func (x *MsgUpdateGroupAdmin) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2044,43 +2044,43 @@ func (x *MsgUpdateGroupAdminRequest) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgUpdateGroupAdminRequest_messageType fastReflection_MsgUpdateGroupAdminRequest_messageType
-var _ protoreflect.MessageType = fastReflection_MsgUpdateGroupAdminRequest_messageType{}
+var _fastReflection_MsgUpdateGroupAdmin_messageType fastReflection_MsgUpdateGroupAdmin_messageType
+var _ protoreflect.MessageType = fastReflection_MsgUpdateGroupAdmin_messageType{}
 
-type fastReflection_MsgUpdateGroupAdminRequest_messageType struct{}
+type fastReflection_MsgUpdateGroupAdmin_messageType struct{}
 
-func (x fastReflection_MsgUpdateGroupAdminRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgUpdateGroupAdminRequest)(nil)
+func (x fastReflection_MsgUpdateGroupAdmin_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgUpdateGroupAdmin)(nil)
 }
-func (x fastReflection_MsgUpdateGroupAdminRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateGroupAdminRequest)
+func (x fastReflection_MsgUpdateGroupAdmin_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateGroupAdmin)
 }
-func (x fastReflection_MsgUpdateGroupAdminRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateGroupAdminRequest
+func (x fastReflection_MsgUpdateGroupAdmin_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateGroupAdmin
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgUpdateGroupAdminRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateGroupAdminRequest
+func (x *fastReflection_MsgUpdateGroupAdmin) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateGroupAdmin
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgUpdateGroupAdminRequest) Type() protoreflect.MessageType {
-	return _fastReflection_MsgUpdateGroupAdminRequest_messageType
+func (x *fastReflection_MsgUpdateGroupAdmin) Type() protoreflect.MessageType {
+	return _fastReflection_MsgUpdateGroupAdmin_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgUpdateGroupAdminRequest) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateGroupAdminRequest)
+func (x *fastReflection_MsgUpdateGroupAdmin) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateGroupAdmin)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgUpdateGroupAdminRequest) Interface() protoreflect.ProtoMessage {
-	return (*MsgUpdateGroupAdminRequest)(x)
+func (x *fastReflection_MsgUpdateGroupAdmin) Interface() protoreflect.ProtoMessage {
+	return (*MsgUpdateGroupAdmin)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -2088,22 +2088,22 @@ func (x *fastReflection_MsgUpdateGroupAdminRequest) Interface() protoreflect.Pro
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgUpdateGroupAdminRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgUpdateGroupAdmin) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Admin != "" {
 		value := protoreflect.ValueOfString(x.Admin)
-		if !f(fd_MsgUpdateGroupAdminRequest_admin, value) {
+		if !f(fd_MsgUpdateGroupAdmin_admin, value) {
 			return
 		}
 	}
 	if x.GroupId != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.GroupId)
-		if !f(fd_MsgUpdateGroupAdminRequest_group_id, value) {
+		if !f(fd_MsgUpdateGroupAdmin_group_id, value) {
 			return
 		}
 	}
 	if x.NewAdmin != "" {
 		value := protoreflect.ValueOfString(x.NewAdmin)
-		if !f(fd_MsgUpdateGroupAdminRequest_new_admin, value) {
+		if !f(fd_MsgUpdateGroupAdmin_new_admin, value) {
 			return
 		}
 	}
@@ -2120,19 +2120,19 @@ func (x *fastReflection_MsgUpdateGroupAdminRequest) Range(f func(protoreflect.Fi
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgUpdateGroupAdminRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgUpdateGroupAdmin) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAdminRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupAdmin.admin":
 		return x.Admin != ""
-	case "cosmos.group.v1beta1.MsgUpdateGroupAdminRequest.group_id":
+	case "cosmos.group.v1beta1.MsgUpdateGroupAdmin.group_id":
 		return x.GroupId != uint64(0)
-	case "cosmos.group.v1beta1.MsgUpdateGroupAdminRequest.new_admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupAdmin.new_admin":
 		return x.NewAdmin != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAdminRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAdmin"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAdminRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAdmin does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2142,19 +2142,19 @@ func (x *fastReflection_MsgUpdateGroupAdminRequest) Has(fd protoreflect.FieldDes
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAdminRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgUpdateGroupAdmin) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAdminRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupAdmin.admin":
 		x.Admin = ""
-	case "cosmos.group.v1beta1.MsgUpdateGroupAdminRequest.group_id":
+	case "cosmos.group.v1beta1.MsgUpdateGroupAdmin.group_id":
 		x.GroupId = uint64(0)
-	case "cosmos.group.v1beta1.MsgUpdateGroupAdminRequest.new_admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupAdmin.new_admin":
 		x.NewAdmin = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAdminRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAdmin"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAdminRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAdmin does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2164,22 +2164,22 @@ func (x *fastReflection_MsgUpdateGroupAdminRequest) Clear(fd protoreflect.FieldD
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgUpdateGroupAdminRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupAdmin) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAdminRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupAdmin.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "cosmos.group.v1beta1.MsgUpdateGroupAdminRequest.group_id":
+	case "cosmos.group.v1beta1.MsgUpdateGroupAdmin.group_id":
 		value := x.GroupId
 		return protoreflect.ValueOfUint64(value)
-	case "cosmos.group.v1beta1.MsgUpdateGroupAdminRequest.new_admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupAdmin.new_admin":
 		value := x.NewAdmin
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAdminRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAdmin"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAdminRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAdmin does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -2193,19 +2193,19 @@ func (x *fastReflection_MsgUpdateGroupAdminRequest) Get(descriptor protoreflect.
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAdminRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgUpdateGroupAdmin) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAdminRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupAdmin.admin":
 		x.Admin = value.Interface().(string)
-	case "cosmos.group.v1beta1.MsgUpdateGroupAdminRequest.group_id":
+	case "cosmos.group.v1beta1.MsgUpdateGroupAdmin.group_id":
 		x.GroupId = value.Uint()
-	case "cosmos.group.v1beta1.MsgUpdateGroupAdminRequest.new_admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupAdmin.new_admin":
 		x.NewAdmin = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAdminRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAdmin"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAdminRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAdmin does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2219,48 +2219,48 @@ func (x *fastReflection_MsgUpdateGroupAdminRequest) Set(fd protoreflect.FieldDes
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAdminRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupAdmin) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAdminRequest.admin":
-		panic(fmt.Errorf("field admin of message cosmos.group.v1beta1.MsgUpdateGroupAdminRequest is not mutable"))
-	case "cosmos.group.v1beta1.MsgUpdateGroupAdminRequest.group_id":
-		panic(fmt.Errorf("field group_id of message cosmos.group.v1beta1.MsgUpdateGroupAdminRequest is not mutable"))
-	case "cosmos.group.v1beta1.MsgUpdateGroupAdminRequest.new_admin":
-		panic(fmt.Errorf("field new_admin of message cosmos.group.v1beta1.MsgUpdateGroupAdminRequest is not mutable"))
+	case "cosmos.group.v1beta1.MsgUpdateGroupAdmin.admin":
+		panic(fmt.Errorf("field admin of message cosmos.group.v1beta1.MsgUpdateGroupAdmin is not mutable"))
+	case "cosmos.group.v1beta1.MsgUpdateGroupAdmin.group_id":
+		panic(fmt.Errorf("field group_id of message cosmos.group.v1beta1.MsgUpdateGroupAdmin is not mutable"))
+	case "cosmos.group.v1beta1.MsgUpdateGroupAdmin.new_admin":
+		panic(fmt.Errorf("field new_admin of message cosmos.group.v1beta1.MsgUpdateGroupAdmin is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAdminRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAdmin"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAdminRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAdmin does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgUpdateGroupAdminRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupAdmin) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAdminRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupAdmin.admin":
 		return protoreflect.ValueOfString("")
-	case "cosmos.group.v1beta1.MsgUpdateGroupAdminRequest.group_id":
+	case "cosmos.group.v1beta1.MsgUpdateGroupAdmin.group_id":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "cosmos.group.v1beta1.MsgUpdateGroupAdminRequest.new_admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupAdmin.new_admin":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAdminRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAdmin"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAdminRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAdmin does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgUpdateGroupAdminRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgUpdateGroupAdmin) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgUpdateGroupAdminRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgUpdateGroupAdmin", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -2268,7 +2268,7 @@ func (x *fastReflection_MsgUpdateGroupAdminRequest) WhichOneof(d protoreflect.On
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgUpdateGroupAdminRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgUpdateGroupAdmin) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -2279,7 +2279,7 @@ func (x *fastReflection_MsgUpdateGroupAdminRequest) GetUnknown() protoreflect.Ra
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAdminRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgUpdateGroupAdmin) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -2291,7 +2291,7 @@ func (x *fastReflection_MsgUpdateGroupAdminRequest) SetUnknown(fields protorefle
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgUpdateGroupAdminRequest) IsValid() bool {
+func (x *fastReflection_MsgUpdateGroupAdmin) IsValid() bool {
 	return x != nil
 }
 
@@ -2301,9 +2301,9 @@ func (x *fastReflection_MsgUpdateGroupAdminRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgUpdateGroupAdminRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgUpdateGroupAdmin) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgUpdateGroupAdminRequest)
+		x := input.Message.Interface().(*MsgUpdateGroupAdmin)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2336,7 +2336,7 @@ func (x *fastReflection_MsgUpdateGroupAdminRequest) ProtoMethods() *protoiface.M
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateGroupAdminRequest)
+		x := input.Message.Interface().(*MsgUpdateGroupAdmin)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2385,7 +2385,7 @@ func (x *fastReflection_MsgUpdateGroupAdminRequest) ProtoMethods() *protoiface.M
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateGroupAdminRequest)
+		x := input.Message.Interface().(*MsgUpdateGroupAdmin)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2417,10 +2417,10 @@ func (x *fastReflection_MsgUpdateGroupAdminRequest) ProtoMethods() *protoiface.M
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupAdminRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupAdmin: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupAdminRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupAdmin: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -2898,29 +2898,29 @@ func (x *fastReflection_MsgUpdateGroupAdminResponse) ProtoMethods() *protoiface.
 }
 
 var (
-	md_MsgUpdateGroupMetadataRequest          protoreflect.MessageDescriptor
-	fd_MsgUpdateGroupMetadataRequest_admin    protoreflect.FieldDescriptor
-	fd_MsgUpdateGroupMetadataRequest_group_id protoreflect.FieldDescriptor
-	fd_MsgUpdateGroupMetadataRequest_metadata protoreflect.FieldDescriptor
+	md_MsgUpdateGroupMetadata          protoreflect.MessageDescriptor
+	fd_MsgUpdateGroupMetadata_admin    protoreflect.FieldDescriptor
+	fd_MsgUpdateGroupMetadata_group_id protoreflect.FieldDescriptor
+	fd_MsgUpdateGroupMetadata_metadata protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1beta1_tx_proto_init()
-	md_MsgUpdateGroupMetadataRequest = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgUpdateGroupMetadataRequest")
-	fd_MsgUpdateGroupMetadataRequest_admin = md_MsgUpdateGroupMetadataRequest.Fields().ByName("admin")
-	fd_MsgUpdateGroupMetadataRequest_group_id = md_MsgUpdateGroupMetadataRequest.Fields().ByName("group_id")
-	fd_MsgUpdateGroupMetadataRequest_metadata = md_MsgUpdateGroupMetadataRequest.Fields().ByName("metadata")
+	md_MsgUpdateGroupMetadata = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgUpdateGroupMetadata")
+	fd_MsgUpdateGroupMetadata_admin = md_MsgUpdateGroupMetadata.Fields().ByName("admin")
+	fd_MsgUpdateGroupMetadata_group_id = md_MsgUpdateGroupMetadata.Fields().ByName("group_id")
+	fd_MsgUpdateGroupMetadata_metadata = md_MsgUpdateGroupMetadata.Fields().ByName("metadata")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgUpdateGroupMetadataRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgUpdateGroupMetadata)(nil)
 
-type fastReflection_MsgUpdateGroupMetadataRequest MsgUpdateGroupMetadataRequest
+type fastReflection_MsgUpdateGroupMetadata MsgUpdateGroupMetadata
 
-func (x *MsgUpdateGroupMetadataRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgUpdateGroupMetadataRequest)(x)
+func (x *MsgUpdateGroupMetadata) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgUpdateGroupMetadata)(x)
 }
 
-func (x *MsgUpdateGroupMetadataRequest) slowProtoReflect() protoreflect.Message {
+func (x *MsgUpdateGroupMetadata) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2932,43 +2932,43 @@ func (x *MsgUpdateGroupMetadataRequest) slowProtoReflect() protoreflect.Message 
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgUpdateGroupMetadataRequest_messageType fastReflection_MsgUpdateGroupMetadataRequest_messageType
-var _ protoreflect.MessageType = fastReflection_MsgUpdateGroupMetadataRequest_messageType{}
+var _fastReflection_MsgUpdateGroupMetadata_messageType fastReflection_MsgUpdateGroupMetadata_messageType
+var _ protoreflect.MessageType = fastReflection_MsgUpdateGroupMetadata_messageType{}
 
-type fastReflection_MsgUpdateGroupMetadataRequest_messageType struct{}
+type fastReflection_MsgUpdateGroupMetadata_messageType struct{}
 
-func (x fastReflection_MsgUpdateGroupMetadataRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgUpdateGroupMetadataRequest)(nil)
+func (x fastReflection_MsgUpdateGroupMetadata_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgUpdateGroupMetadata)(nil)
 }
-func (x fastReflection_MsgUpdateGroupMetadataRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateGroupMetadataRequest)
+func (x fastReflection_MsgUpdateGroupMetadata_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateGroupMetadata)
 }
-func (x fastReflection_MsgUpdateGroupMetadataRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateGroupMetadataRequest
+func (x fastReflection_MsgUpdateGroupMetadata_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateGroupMetadata
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgUpdateGroupMetadataRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateGroupMetadataRequest
+func (x *fastReflection_MsgUpdateGroupMetadata) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateGroupMetadata
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgUpdateGroupMetadataRequest) Type() protoreflect.MessageType {
-	return _fastReflection_MsgUpdateGroupMetadataRequest_messageType
+func (x *fastReflection_MsgUpdateGroupMetadata) Type() protoreflect.MessageType {
+	return _fastReflection_MsgUpdateGroupMetadata_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgUpdateGroupMetadataRequest) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateGroupMetadataRequest)
+func (x *fastReflection_MsgUpdateGroupMetadata) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateGroupMetadata)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgUpdateGroupMetadataRequest) Interface() protoreflect.ProtoMessage {
-	return (*MsgUpdateGroupMetadataRequest)(x)
+func (x *fastReflection_MsgUpdateGroupMetadata) Interface() protoreflect.ProtoMessage {
+	return (*MsgUpdateGroupMetadata)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -2976,22 +2976,22 @@ func (x *fastReflection_MsgUpdateGroupMetadataRequest) Interface() protoreflect.
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgUpdateGroupMetadataRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgUpdateGroupMetadata) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Admin != "" {
 		value := protoreflect.ValueOfString(x.Admin)
-		if !f(fd_MsgUpdateGroupMetadataRequest_admin, value) {
+		if !f(fd_MsgUpdateGroupMetadata_admin, value) {
 			return
 		}
 	}
 	if x.GroupId != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.GroupId)
-		if !f(fd_MsgUpdateGroupMetadataRequest_group_id, value) {
+		if !f(fd_MsgUpdateGroupMetadata_group_id, value) {
 			return
 		}
 	}
 	if len(x.Metadata) != 0 {
 		value := protoreflect.ValueOfBytes(x.Metadata)
-		if !f(fd_MsgUpdateGroupMetadataRequest_metadata, value) {
+		if !f(fd_MsgUpdateGroupMetadata_metadata, value) {
 			return
 		}
 	}
@@ -3008,19 +3008,19 @@ func (x *fastReflection_MsgUpdateGroupMetadataRequest) Range(f func(protoreflect
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgUpdateGroupMetadataRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgUpdateGroupMetadata) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.admin":
 		return x.Admin != ""
-	case "cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest.group_id":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.group_id":
 		return x.GroupId != uint64(0)
-	case "cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest.metadata":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.metadata":
 		return len(x.Metadata) != 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadata"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMetadata does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3030,19 +3030,19 @@ func (x *fastReflection_MsgUpdateGroupMetadataRequest) Has(fd protoreflect.Field
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupMetadataRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgUpdateGroupMetadata) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.admin":
 		x.Admin = ""
-	case "cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest.group_id":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.group_id":
 		x.GroupId = uint64(0)
-	case "cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest.metadata":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.metadata":
 		x.Metadata = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadata"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMetadata does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3052,22 +3052,22 @@ func (x *fastReflection_MsgUpdateGroupMetadataRequest) Clear(fd protoreflect.Fie
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgUpdateGroupMetadataRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupMetadata) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest.group_id":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.group_id":
 		value := x.GroupId
 		return protoreflect.ValueOfUint64(value)
-	case "cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest.metadata":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.metadata":
 		value := x.Metadata
 		return protoreflect.ValueOfBytes(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadata"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMetadata does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -3081,19 +3081,19 @@ func (x *fastReflection_MsgUpdateGroupMetadataRequest) Get(descriptor protorefle
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupMetadataRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgUpdateGroupMetadata) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.admin":
 		x.Admin = value.Interface().(string)
-	case "cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest.group_id":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.group_id":
 		x.GroupId = value.Uint()
-	case "cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest.metadata":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.metadata":
 		x.Metadata = value.Bytes()
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadata"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMetadata does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3107,48 +3107,48 @@ func (x *fastReflection_MsgUpdateGroupMetadataRequest) Set(fd protoreflect.Field
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupMetadataRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupMetadata) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest.admin":
-		panic(fmt.Errorf("field admin of message cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest is not mutable"))
-	case "cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest.group_id":
-		panic(fmt.Errorf("field group_id of message cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest is not mutable"))
-	case "cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest.metadata":
-		panic(fmt.Errorf("field metadata of message cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest is not mutable"))
+	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.admin":
+		panic(fmt.Errorf("field admin of message cosmos.group.v1beta1.MsgUpdateGroupMetadata is not mutable"))
+	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.group_id":
+		panic(fmt.Errorf("field group_id of message cosmos.group.v1beta1.MsgUpdateGroupMetadata is not mutable"))
+	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.metadata":
+		panic(fmt.Errorf("field metadata of message cosmos.group.v1beta1.MsgUpdateGroupMetadata is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadata"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMetadata does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgUpdateGroupMetadataRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupMetadata) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.admin":
 		return protoreflect.ValueOfString("")
-	case "cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest.group_id":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.group_id":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest.metadata":
+	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.metadata":
 		return protoreflect.ValueOfBytes(nil)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadata"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupMetadata does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgUpdateGroupMetadataRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgUpdateGroupMetadata) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgUpdateGroupMetadata", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -3156,7 +3156,7 @@ func (x *fastReflection_MsgUpdateGroupMetadataRequest) WhichOneof(d protoreflect
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgUpdateGroupMetadataRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgUpdateGroupMetadata) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -3167,7 +3167,7 @@ func (x *fastReflection_MsgUpdateGroupMetadataRequest) GetUnknown() protoreflect
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupMetadataRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgUpdateGroupMetadata) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -3179,7 +3179,7 @@ func (x *fastReflection_MsgUpdateGroupMetadataRequest) SetUnknown(fields protore
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgUpdateGroupMetadataRequest) IsValid() bool {
+func (x *fastReflection_MsgUpdateGroupMetadata) IsValid() bool {
 	return x != nil
 }
 
@@ -3189,9 +3189,9 @@ func (x *fastReflection_MsgUpdateGroupMetadataRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgUpdateGroupMetadataRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgUpdateGroupMetadata) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgUpdateGroupMetadataRequest)
+		x := input.Message.Interface().(*MsgUpdateGroupMetadata)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -3224,7 +3224,7 @@ func (x *fastReflection_MsgUpdateGroupMetadataRequest) ProtoMethods() *protoifac
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateGroupMetadataRequest)
+		x := input.Message.Interface().(*MsgUpdateGroupMetadata)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -3273,7 +3273,7 @@ func (x *fastReflection_MsgUpdateGroupMetadataRequest) ProtoMethods() *protoifac
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateGroupMetadataRequest)
+		x := input.Message.Interface().(*MsgUpdateGroupMetadata)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -3305,10 +3305,10 @@ func (x *fastReflection_MsgUpdateGroupMetadataRequest) ProtoMethods() *protoifac
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupMetadataRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupMetadata: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupMetadataRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupMetadata: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -3788,31 +3788,31 @@ func (x *fastReflection_MsgUpdateGroupMetadataResponse) ProtoMethods() *protoifa
 }
 
 var (
-	md_MsgCreateGroupAccountRequest                 protoreflect.MessageDescriptor
-	fd_MsgCreateGroupAccountRequest_admin           protoreflect.FieldDescriptor
-	fd_MsgCreateGroupAccountRequest_group_id        protoreflect.FieldDescriptor
-	fd_MsgCreateGroupAccountRequest_metadata        protoreflect.FieldDescriptor
-	fd_MsgCreateGroupAccountRequest_decision_policy protoreflect.FieldDescriptor
+	md_MsgCreateGroupPolicy                 protoreflect.MessageDescriptor
+	fd_MsgCreateGroupPolicy_admin           protoreflect.FieldDescriptor
+	fd_MsgCreateGroupPolicy_group_id        protoreflect.FieldDescriptor
+	fd_MsgCreateGroupPolicy_metadata        protoreflect.FieldDescriptor
+	fd_MsgCreateGroupPolicy_decision_policy protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1beta1_tx_proto_init()
-	md_MsgCreateGroupAccountRequest = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgCreateGroupAccountRequest")
-	fd_MsgCreateGroupAccountRequest_admin = md_MsgCreateGroupAccountRequest.Fields().ByName("admin")
-	fd_MsgCreateGroupAccountRequest_group_id = md_MsgCreateGroupAccountRequest.Fields().ByName("group_id")
-	fd_MsgCreateGroupAccountRequest_metadata = md_MsgCreateGroupAccountRequest.Fields().ByName("metadata")
-	fd_MsgCreateGroupAccountRequest_decision_policy = md_MsgCreateGroupAccountRequest.Fields().ByName("decision_policy")
+	md_MsgCreateGroupPolicy = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgCreateGroupPolicy")
+	fd_MsgCreateGroupPolicy_admin = md_MsgCreateGroupPolicy.Fields().ByName("admin")
+	fd_MsgCreateGroupPolicy_group_id = md_MsgCreateGroupPolicy.Fields().ByName("group_id")
+	fd_MsgCreateGroupPolicy_metadata = md_MsgCreateGroupPolicy.Fields().ByName("metadata")
+	fd_MsgCreateGroupPolicy_decision_policy = md_MsgCreateGroupPolicy.Fields().ByName("decision_policy")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgCreateGroupAccountRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgCreateGroupPolicy)(nil)
 
-type fastReflection_MsgCreateGroupAccountRequest MsgCreateGroupAccountRequest
+type fastReflection_MsgCreateGroupPolicy MsgCreateGroupPolicy
 
-func (x *MsgCreateGroupAccountRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgCreateGroupAccountRequest)(x)
+func (x *MsgCreateGroupPolicy) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgCreateGroupPolicy)(x)
 }
 
-func (x *MsgCreateGroupAccountRequest) slowProtoReflect() protoreflect.Message {
+func (x *MsgCreateGroupPolicy) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -3824,43 +3824,43 @@ func (x *MsgCreateGroupAccountRequest) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgCreateGroupAccountRequest_messageType fastReflection_MsgCreateGroupAccountRequest_messageType
-var _ protoreflect.MessageType = fastReflection_MsgCreateGroupAccountRequest_messageType{}
+var _fastReflection_MsgCreateGroupPolicy_messageType fastReflection_MsgCreateGroupPolicy_messageType
+var _ protoreflect.MessageType = fastReflection_MsgCreateGroupPolicy_messageType{}
 
-type fastReflection_MsgCreateGroupAccountRequest_messageType struct{}
+type fastReflection_MsgCreateGroupPolicy_messageType struct{}
 
-func (x fastReflection_MsgCreateGroupAccountRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgCreateGroupAccountRequest)(nil)
+func (x fastReflection_MsgCreateGroupPolicy_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgCreateGroupPolicy)(nil)
 }
-func (x fastReflection_MsgCreateGroupAccountRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgCreateGroupAccountRequest)
+func (x fastReflection_MsgCreateGroupPolicy_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateGroupPolicy)
 }
-func (x fastReflection_MsgCreateGroupAccountRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgCreateGroupAccountRequest
+func (x fastReflection_MsgCreateGroupPolicy_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateGroupPolicy
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgCreateGroupAccountRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgCreateGroupAccountRequest
+func (x *fastReflection_MsgCreateGroupPolicy) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateGroupPolicy
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgCreateGroupAccountRequest) Type() protoreflect.MessageType {
-	return _fastReflection_MsgCreateGroupAccountRequest_messageType
+func (x *fastReflection_MsgCreateGroupPolicy) Type() protoreflect.MessageType {
+	return _fastReflection_MsgCreateGroupPolicy_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgCreateGroupAccountRequest) New() protoreflect.Message {
-	return new(fastReflection_MsgCreateGroupAccountRequest)
+func (x *fastReflection_MsgCreateGroupPolicy) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateGroupPolicy)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgCreateGroupAccountRequest) Interface() protoreflect.ProtoMessage {
-	return (*MsgCreateGroupAccountRequest)(x)
+func (x *fastReflection_MsgCreateGroupPolicy) Interface() protoreflect.ProtoMessage {
+	return (*MsgCreateGroupPolicy)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -3868,28 +3868,28 @@ func (x *fastReflection_MsgCreateGroupAccountRequest) Interface() protoreflect.P
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgCreateGroupAccountRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgCreateGroupPolicy) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Admin != "" {
 		value := protoreflect.ValueOfString(x.Admin)
-		if !f(fd_MsgCreateGroupAccountRequest_admin, value) {
+		if !f(fd_MsgCreateGroupPolicy_admin, value) {
 			return
 		}
 	}
 	if x.GroupId != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.GroupId)
-		if !f(fd_MsgCreateGroupAccountRequest_group_id, value) {
+		if !f(fd_MsgCreateGroupPolicy_group_id, value) {
 			return
 		}
 	}
 	if len(x.Metadata) != 0 {
 		value := protoreflect.ValueOfBytes(x.Metadata)
-		if !f(fd_MsgCreateGroupAccountRequest_metadata, value) {
+		if !f(fd_MsgCreateGroupPolicy_metadata, value) {
 			return
 		}
 	}
 	if x.DecisionPolicy != nil {
 		value := protoreflect.ValueOfMessage(x.DecisionPolicy.ProtoReflect())
-		if !f(fd_MsgCreateGroupAccountRequest_decision_policy, value) {
+		if !f(fd_MsgCreateGroupPolicy_decision_policy, value) {
 			return
 		}
 	}
@@ -3906,21 +3906,21 @@ func (x *fastReflection_MsgCreateGroupAccountRequest) Range(f func(protoreflect.
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgCreateGroupAccountRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgCreateGroupPolicy) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.admin":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.admin":
 		return x.Admin != ""
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.group_id":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.group_id":
 		return x.GroupId != uint64(0)
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.metadata":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.metadata":
 		return len(x.Metadata) != 0
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.decision_policy":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.decision_policy":
 		return x.DecisionPolicy != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupAccountRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupPolicy"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupAccountRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupPolicy does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3930,21 +3930,21 @@ func (x *fastReflection_MsgCreateGroupAccountRequest) Has(fd protoreflect.FieldD
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateGroupAccountRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgCreateGroupPolicy) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.admin":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.admin":
 		x.Admin = ""
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.group_id":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.group_id":
 		x.GroupId = uint64(0)
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.metadata":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.metadata":
 		x.Metadata = nil
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.decision_policy":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.decision_policy":
 		x.DecisionPolicy = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupAccountRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupPolicy"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupAccountRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupPolicy does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3954,25 +3954,25 @@ func (x *fastReflection_MsgCreateGroupAccountRequest) Clear(fd protoreflect.Fiel
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgCreateGroupAccountRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCreateGroupPolicy) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.admin":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.group_id":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.group_id":
 		value := x.GroupId
 		return protoreflect.ValueOfUint64(value)
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.metadata":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.metadata":
 		value := x.Metadata
 		return protoreflect.ValueOfBytes(value)
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.decision_policy":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.decision_policy":
 		value := x.DecisionPolicy
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupAccountRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupPolicy"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupAccountRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupPolicy does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -3986,21 +3986,21 @@ func (x *fastReflection_MsgCreateGroupAccountRequest) Get(descriptor protoreflec
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateGroupAccountRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgCreateGroupPolicy) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.admin":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.admin":
 		x.Admin = value.Interface().(string)
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.group_id":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.group_id":
 		x.GroupId = value.Uint()
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.metadata":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.metadata":
 		x.Metadata = value.Bytes()
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.decision_policy":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.decision_policy":
 		x.DecisionPolicy = value.Message().Interface().(*anypb.Any)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupAccountRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupPolicy"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupAccountRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupPolicy does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4014,56 +4014,56 @@ func (x *fastReflection_MsgCreateGroupAccountRequest) Set(fd protoreflect.FieldD
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateGroupAccountRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCreateGroupPolicy) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.decision_policy":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.decision_policy":
 		if x.DecisionPolicy == nil {
 			x.DecisionPolicy = new(anypb.Any)
 		}
 		return protoreflect.ValueOfMessage(x.DecisionPolicy.ProtoReflect())
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.admin":
-		panic(fmt.Errorf("field admin of message cosmos.group.v1beta1.MsgCreateGroupAccountRequest is not mutable"))
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.group_id":
-		panic(fmt.Errorf("field group_id of message cosmos.group.v1beta1.MsgCreateGroupAccountRequest is not mutable"))
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.metadata":
-		panic(fmt.Errorf("field metadata of message cosmos.group.v1beta1.MsgCreateGroupAccountRequest is not mutable"))
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.admin":
+		panic(fmt.Errorf("field admin of message cosmos.group.v1beta1.MsgCreateGroupPolicy is not mutable"))
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.group_id":
+		panic(fmt.Errorf("field group_id of message cosmos.group.v1beta1.MsgCreateGroupPolicy is not mutable"))
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.metadata":
+		panic(fmt.Errorf("field metadata of message cosmos.group.v1beta1.MsgCreateGroupPolicy is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupAccountRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupPolicy"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupAccountRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupPolicy does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgCreateGroupAccountRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCreateGroupPolicy) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.admin":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.admin":
 		return protoreflect.ValueOfString("")
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.group_id":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.group_id":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.metadata":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.metadata":
 		return protoreflect.ValueOfBytes(nil)
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountRequest.decision_policy":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.decision_policy":
 		m := new(anypb.Any)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupAccountRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupPolicy"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupAccountRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupPolicy does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgCreateGroupAccountRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgCreateGroupPolicy) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgCreateGroupAccountRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgCreateGroupPolicy", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -4071,7 +4071,7 @@ func (x *fastReflection_MsgCreateGroupAccountRequest) WhichOneof(d protoreflect.
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgCreateGroupAccountRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgCreateGroupPolicy) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -4082,7 +4082,7 @@ func (x *fastReflection_MsgCreateGroupAccountRequest) GetUnknown() protoreflect.
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateGroupAccountRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgCreateGroupPolicy) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -4094,7 +4094,7 @@ func (x *fastReflection_MsgCreateGroupAccountRequest) SetUnknown(fields protoref
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgCreateGroupAccountRequest) IsValid() bool {
+func (x *fastReflection_MsgCreateGroupPolicy) IsValid() bool {
 	return x != nil
 }
 
@@ -4104,9 +4104,9 @@ func (x *fastReflection_MsgCreateGroupAccountRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgCreateGroupAccountRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgCreateGroupPolicy) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgCreateGroupAccountRequest)
+		x := input.Message.Interface().(*MsgCreateGroupPolicy)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -4143,7 +4143,7 @@ func (x *fastReflection_MsgCreateGroupAccountRequest) ProtoMethods() *protoiface
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgCreateGroupAccountRequest)
+		x := input.Message.Interface().(*MsgCreateGroupPolicy)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -4206,7 +4206,7 @@ func (x *fastReflection_MsgCreateGroupAccountRequest) ProtoMethods() *protoiface
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgCreateGroupAccountRequest)
+		x := input.Message.Interface().(*MsgCreateGroupPolicy)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -4238,10 +4238,10 @@ func (x *fastReflection_MsgCreateGroupAccountRequest) ProtoMethods() *protoiface
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateGroupAccountRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateGroupPolicy: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateGroupAccountRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateGroupPolicy: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -4401,25 +4401,25 @@ func (x *fastReflection_MsgCreateGroupAccountRequest) ProtoMethods() *protoiface
 }
 
 var (
-	md_MsgCreateGroupAccountResponse         protoreflect.MessageDescriptor
-	fd_MsgCreateGroupAccountResponse_address protoreflect.FieldDescriptor
+	md_MsgCreateGroupPolicyResponse         protoreflect.MessageDescriptor
+	fd_MsgCreateGroupPolicyResponse_address protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1beta1_tx_proto_init()
-	md_MsgCreateGroupAccountResponse = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgCreateGroupAccountResponse")
-	fd_MsgCreateGroupAccountResponse_address = md_MsgCreateGroupAccountResponse.Fields().ByName("address")
+	md_MsgCreateGroupPolicyResponse = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgCreateGroupPolicyResponse")
+	fd_MsgCreateGroupPolicyResponse_address = md_MsgCreateGroupPolicyResponse.Fields().ByName("address")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgCreateGroupAccountResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgCreateGroupPolicyResponse)(nil)
 
-type fastReflection_MsgCreateGroupAccountResponse MsgCreateGroupAccountResponse
+type fastReflection_MsgCreateGroupPolicyResponse MsgCreateGroupPolicyResponse
 
-func (x *MsgCreateGroupAccountResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgCreateGroupAccountResponse)(x)
+func (x *MsgCreateGroupPolicyResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgCreateGroupPolicyResponse)(x)
 }
 
-func (x *MsgCreateGroupAccountResponse) slowProtoReflect() protoreflect.Message {
+func (x *MsgCreateGroupPolicyResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -4431,43 +4431,43 @@ func (x *MsgCreateGroupAccountResponse) slowProtoReflect() protoreflect.Message 
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgCreateGroupAccountResponse_messageType fastReflection_MsgCreateGroupAccountResponse_messageType
-var _ protoreflect.MessageType = fastReflection_MsgCreateGroupAccountResponse_messageType{}
+var _fastReflection_MsgCreateGroupPolicyResponse_messageType fastReflection_MsgCreateGroupPolicyResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgCreateGroupPolicyResponse_messageType{}
 
-type fastReflection_MsgCreateGroupAccountResponse_messageType struct{}
+type fastReflection_MsgCreateGroupPolicyResponse_messageType struct{}
 
-func (x fastReflection_MsgCreateGroupAccountResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgCreateGroupAccountResponse)(nil)
+func (x fastReflection_MsgCreateGroupPolicyResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgCreateGroupPolicyResponse)(nil)
 }
-func (x fastReflection_MsgCreateGroupAccountResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgCreateGroupAccountResponse)
+func (x fastReflection_MsgCreateGroupPolicyResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateGroupPolicyResponse)
 }
-func (x fastReflection_MsgCreateGroupAccountResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgCreateGroupAccountResponse
+func (x fastReflection_MsgCreateGroupPolicyResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateGroupPolicyResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgCreateGroupAccountResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgCreateGroupAccountResponse
+func (x *fastReflection_MsgCreateGroupPolicyResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateGroupPolicyResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgCreateGroupAccountResponse) Type() protoreflect.MessageType {
-	return _fastReflection_MsgCreateGroupAccountResponse_messageType
+func (x *fastReflection_MsgCreateGroupPolicyResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgCreateGroupPolicyResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgCreateGroupAccountResponse) New() protoreflect.Message {
-	return new(fastReflection_MsgCreateGroupAccountResponse)
+func (x *fastReflection_MsgCreateGroupPolicyResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateGroupPolicyResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgCreateGroupAccountResponse) Interface() protoreflect.ProtoMessage {
-	return (*MsgCreateGroupAccountResponse)(x)
+func (x *fastReflection_MsgCreateGroupPolicyResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgCreateGroupPolicyResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -4475,10 +4475,10 @@ func (x *fastReflection_MsgCreateGroupAccountResponse) Interface() protoreflect.
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgCreateGroupAccountResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgCreateGroupPolicyResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Address != "" {
 		value := protoreflect.ValueOfString(x.Address)
-		if !f(fd_MsgCreateGroupAccountResponse_address, value) {
+		if !f(fd_MsgCreateGroupPolicyResponse_address, value) {
 			return
 		}
 	}
@@ -4495,15 +4495,15 @@ func (x *fastReflection_MsgCreateGroupAccountResponse) Range(f func(protoreflect
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgCreateGroupAccountResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgCreateGroupPolicyResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountResponse.address":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicyResponse.address":
 		return x.Address != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupAccountResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupPolicyResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupAccountResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupPolicyResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4513,15 +4513,15 @@ func (x *fastReflection_MsgCreateGroupAccountResponse) Has(fd protoreflect.Field
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateGroupAccountResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgCreateGroupPolicyResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountResponse.address":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicyResponse.address":
 		x.Address = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupAccountResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupPolicyResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupAccountResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupPolicyResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4531,16 +4531,16 @@ func (x *fastReflection_MsgCreateGroupAccountResponse) Clear(fd protoreflect.Fie
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgCreateGroupAccountResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCreateGroupPolicyResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountResponse.address":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicyResponse.address":
 		value := x.Address
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupAccountResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupPolicyResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupAccountResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupPolicyResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -4554,15 +4554,15 @@ func (x *fastReflection_MsgCreateGroupAccountResponse) Get(descriptor protorefle
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateGroupAccountResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgCreateGroupPolicyResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountResponse.address":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicyResponse.address":
 		x.Address = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupAccountResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupPolicyResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupAccountResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupPolicyResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4576,40 +4576,40 @@ func (x *fastReflection_MsgCreateGroupAccountResponse) Set(fd protoreflect.Field
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateGroupAccountResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCreateGroupPolicyResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountResponse.address":
-		panic(fmt.Errorf("field address of message cosmos.group.v1beta1.MsgCreateGroupAccountResponse is not mutable"))
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicyResponse.address":
+		panic(fmt.Errorf("field address of message cosmos.group.v1beta1.MsgCreateGroupPolicyResponse is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupAccountResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupPolicyResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupAccountResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupPolicyResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgCreateGroupAccountResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCreateGroupPolicyResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateGroupAccountResponse.address":
+	case "cosmos.group.v1beta1.MsgCreateGroupPolicyResponse.address":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupAccountResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroupPolicyResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupAccountResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateGroupPolicyResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgCreateGroupAccountResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgCreateGroupPolicyResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgCreateGroupAccountResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgCreateGroupPolicyResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -4617,7 +4617,7 @@ func (x *fastReflection_MsgCreateGroupAccountResponse) WhichOneof(d protoreflect
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgCreateGroupAccountResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgCreateGroupPolicyResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -4628,7 +4628,7 @@ func (x *fastReflection_MsgCreateGroupAccountResponse) GetUnknown() protoreflect
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateGroupAccountResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgCreateGroupPolicyResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -4640,7 +4640,7 @@ func (x *fastReflection_MsgCreateGroupAccountResponse) SetUnknown(fields protore
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgCreateGroupAccountResponse) IsValid() bool {
+func (x *fastReflection_MsgCreateGroupPolicyResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -4650,9 +4650,9 @@ func (x *fastReflection_MsgCreateGroupAccountResponse) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgCreateGroupAccountResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgCreateGroupPolicyResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgCreateGroupAccountResponse)
+		x := input.Message.Interface().(*MsgCreateGroupPolicyResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -4678,7 +4678,7 @@ func (x *fastReflection_MsgCreateGroupAccountResponse) ProtoMethods() *protoifac
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgCreateGroupAccountResponse)
+		x := input.Message.Interface().(*MsgCreateGroupPolicyResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -4715,7 +4715,7 @@ func (x *fastReflection_MsgCreateGroupAccountResponse) ProtoMethods() *protoifac
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgCreateGroupAccountResponse)
+		x := input.Message.Interface().(*MsgCreateGroupPolicyResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -4747,10 +4747,10 @@ func (x *fastReflection_MsgCreateGroupAccountResponse) ProtoMethods() *protoifac
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateGroupAccountResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateGroupPolicyResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateGroupAccountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateGroupPolicyResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -4821,29 +4821,29 @@ func (x *fastReflection_MsgCreateGroupAccountResponse) ProtoMethods() *protoifac
 }
 
 var (
-	md_MsgUpdateGroupAccountAdminRequest           protoreflect.MessageDescriptor
-	fd_MsgUpdateGroupAccountAdminRequest_admin     protoreflect.FieldDescriptor
-	fd_MsgUpdateGroupAccountAdminRequest_address   protoreflect.FieldDescriptor
-	fd_MsgUpdateGroupAccountAdminRequest_new_admin protoreflect.FieldDescriptor
+	md_MsgUpdateGroupPolicyAdmin           protoreflect.MessageDescriptor
+	fd_MsgUpdateGroupPolicyAdmin_admin     protoreflect.FieldDescriptor
+	fd_MsgUpdateGroupPolicyAdmin_address   protoreflect.FieldDescriptor
+	fd_MsgUpdateGroupPolicyAdmin_new_admin protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1beta1_tx_proto_init()
-	md_MsgUpdateGroupAccountAdminRequest = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgUpdateGroupAccountAdminRequest")
-	fd_MsgUpdateGroupAccountAdminRequest_admin = md_MsgUpdateGroupAccountAdminRequest.Fields().ByName("admin")
-	fd_MsgUpdateGroupAccountAdminRequest_address = md_MsgUpdateGroupAccountAdminRequest.Fields().ByName("address")
-	fd_MsgUpdateGroupAccountAdminRequest_new_admin = md_MsgUpdateGroupAccountAdminRequest.Fields().ByName("new_admin")
+	md_MsgUpdateGroupPolicyAdmin = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgUpdateGroupPolicyAdmin")
+	fd_MsgUpdateGroupPolicyAdmin_admin = md_MsgUpdateGroupPolicyAdmin.Fields().ByName("admin")
+	fd_MsgUpdateGroupPolicyAdmin_address = md_MsgUpdateGroupPolicyAdmin.Fields().ByName("address")
+	fd_MsgUpdateGroupPolicyAdmin_new_admin = md_MsgUpdateGroupPolicyAdmin.Fields().ByName("new_admin")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgUpdateGroupAccountAdminRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgUpdateGroupPolicyAdmin)(nil)
 
-type fastReflection_MsgUpdateGroupAccountAdminRequest MsgUpdateGroupAccountAdminRequest
+type fastReflection_MsgUpdateGroupPolicyAdmin MsgUpdateGroupPolicyAdmin
 
-func (x *MsgUpdateGroupAccountAdminRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgUpdateGroupAccountAdminRequest)(x)
+func (x *MsgUpdateGroupPolicyAdmin) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgUpdateGroupPolicyAdmin)(x)
 }
 
-func (x *MsgUpdateGroupAccountAdminRequest) slowProtoReflect() protoreflect.Message {
+func (x *MsgUpdateGroupPolicyAdmin) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -4855,43 +4855,43 @@ func (x *MsgUpdateGroupAccountAdminRequest) slowProtoReflect() protoreflect.Mess
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgUpdateGroupAccountAdminRequest_messageType fastReflection_MsgUpdateGroupAccountAdminRequest_messageType
-var _ protoreflect.MessageType = fastReflection_MsgUpdateGroupAccountAdminRequest_messageType{}
+var _fastReflection_MsgUpdateGroupPolicyAdmin_messageType fastReflection_MsgUpdateGroupPolicyAdmin_messageType
+var _ protoreflect.MessageType = fastReflection_MsgUpdateGroupPolicyAdmin_messageType{}
 
-type fastReflection_MsgUpdateGroupAccountAdminRequest_messageType struct{}
+type fastReflection_MsgUpdateGroupPolicyAdmin_messageType struct{}
 
-func (x fastReflection_MsgUpdateGroupAccountAdminRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgUpdateGroupAccountAdminRequest)(nil)
+func (x fastReflection_MsgUpdateGroupPolicyAdmin_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgUpdateGroupPolicyAdmin)(nil)
 }
-func (x fastReflection_MsgUpdateGroupAccountAdminRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateGroupAccountAdminRequest)
+func (x fastReflection_MsgUpdateGroupPolicyAdmin_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateGroupPolicyAdmin)
 }
-func (x fastReflection_MsgUpdateGroupAccountAdminRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateGroupAccountAdminRequest
+func (x fastReflection_MsgUpdateGroupPolicyAdmin_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateGroupPolicyAdmin
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateGroupAccountAdminRequest
+func (x *fastReflection_MsgUpdateGroupPolicyAdmin) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateGroupPolicyAdmin
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) Type() protoreflect.MessageType {
-	return _fastReflection_MsgUpdateGroupAccountAdminRequest_messageType
+func (x *fastReflection_MsgUpdateGroupPolicyAdmin) Type() protoreflect.MessageType {
+	return _fastReflection_MsgUpdateGroupPolicyAdmin_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateGroupAccountAdminRequest)
+func (x *fastReflection_MsgUpdateGroupPolicyAdmin) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateGroupPolicyAdmin)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) Interface() protoreflect.ProtoMessage {
-	return (*MsgUpdateGroupAccountAdminRequest)(x)
+func (x *fastReflection_MsgUpdateGroupPolicyAdmin) Interface() protoreflect.ProtoMessage {
+	return (*MsgUpdateGroupPolicyAdmin)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -4899,22 +4899,22 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) Interface() protorefl
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgUpdateGroupPolicyAdmin) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Admin != "" {
 		value := protoreflect.ValueOfString(x.Admin)
-		if !f(fd_MsgUpdateGroupAccountAdminRequest_admin, value) {
+		if !f(fd_MsgUpdateGroupPolicyAdmin_admin, value) {
 			return
 		}
 	}
 	if x.Address != "" {
 		value := protoreflect.ValueOfString(x.Address)
-		if !f(fd_MsgUpdateGroupAccountAdminRequest_address, value) {
+		if !f(fd_MsgUpdateGroupPolicyAdmin_address, value) {
 			return
 		}
 	}
 	if x.NewAdmin != "" {
 		value := protoreflect.ValueOfString(x.NewAdmin)
-		if !f(fd_MsgUpdateGroupAccountAdminRequest_new_admin, value) {
+		if !f(fd_MsgUpdateGroupPolicyAdmin_new_admin, value) {
 			return
 		}
 	}
@@ -4931,19 +4931,19 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) Range(f func(protoref
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgUpdateGroupPolicyAdmin) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin.admin":
 		return x.Admin != ""
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest.address":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin.address":
 		return x.Address != ""
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest.new_admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin.new_admin":
 		return x.NewAdmin != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4953,19 +4953,19 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) Has(fd protoreflect.F
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgUpdateGroupPolicyAdmin) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin.admin":
 		x.Admin = ""
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest.address":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin.address":
 		x.Address = ""
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest.new_admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin.new_admin":
 		x.NewAdmin = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4975,22 +4975,22 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) Clear(fd protoreflect
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupPolicyAdmin) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest.address":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin.address":
 		value := x.Address
 		return protoreflect.ValueOfString(value)
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest.new_admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin.new_admin":
 		value := x.NewAdmin
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -5004,19 +5004,19 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) Get(descriptor protor
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgUpdateGroupPolicyAdmin) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin.admin":
 		x.Admin = value.Interface().(string)
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest.address":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin.address":
 		x.Address = value.Interface().(string)
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest.new_admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin.new_admin":
 		x.NewAdmin = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5030,48 +5030,48 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) Set(fd protoreflect.F
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupPolicyAdmin) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest.admin":
-		panic(fmt.Errorf("field admin of message cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest is not mutable"))
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest.address":
-		panic(fmt.Errorf("field address of message cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest is not mutable"))
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest.new_admin":
-		panic(fmt.Errorf("field new_admin of message cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest is not mutable"))
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin.admin":
+		panic(fmt.Errorf("field admin of message cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin is not mutable"))
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin.address":
+		panic(fmt.Errorf("field address of message cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin is not mutable"))
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin.new_admin":
+		panic(fmt.Errorf("field new_admin of message cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupPolicyAdmin) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin.admin":
 		return protoreflect.ValueOfString("")
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest.address":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin.address":
 		return protoreflect.ValueOfString("")
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest.new_admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin.new_admin":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgUpdateGroupPolicyAdmin) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -5079,7 +5079,7 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) WhichOneof(d protoref
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgUpdateGroupPolicyAdmin) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -5090,7 +5090,7 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) GetUnknown() protoref
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgUpdateGroupPolicyAdmin) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -5102,7 +5102,7 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) SetUnknown(fields pro
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) IsValid() bool {
+func (x *fastReflection_MsgUpdateGroupPolicyAdmin) IsValid() bool {
 	return x != nil
 }
 
@@ -5112,9 +5112,9 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgUpdateGroupPolicyAdmin) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgUpdateGroupAccountAdminRequest)
+		x := input.Message.Interface().(*MsgUpdateGroupPolicyAdmin)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -5148,7 +5148,7 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) ProtoMethods() *proto
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateGroupAccountAdminRequest)
+		x := input.Message.Interface().(*MsgUpdateGroupPolicyAdmin)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -5199,7 +5199,7 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) ProtoMethods() *proto
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateGroupAccountAdminRequest)
+		x := input.Message.Interface().(*MsgUpdateGroupPolicyAdmin)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -5231,10 +5231,10 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) ProtoMethods() *proto
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupAccountAdminRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupPolicyAdmin: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupAccountAdminRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupPolicyAdmin: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -5369,23 +5369,23 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminRequest) ProtoMethods() *proto
 }
 
 var (
-	md_MsgUpdateGroupAccountAdminResponse protoreflect.MessageDescriptor
+	md_MsgUpdateGroupPolicyAdminResponse protoreflect.MessageDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1beta1_tx_proto_init()
-	md_MsgUpdateGroupAccountAdminResponse = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgUpdateGroupAccountAdminResponse")
+	md_MsgUpdateGroupPolicyAdminResponse = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgUpdateGroupPolicyAdminResponse")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgUpdateGroupAccountAdminResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgUpdateGroupPolicyAdminResponse)(nil)
 
-type fastReflection_MsgUpdateGroupAccountAdminResponse MsgUpdateGroupAccountAdminResponse
+type fastReflection_MsgUpdateGroupPolicyAdminResponse MsgUpdateGroupPolicyAdminResponse
 
-func (x *MsgUpdateGroupAccountAdminResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgUpdateGroupAccountAdminResponse)(x)
+func (x *MsgUpdateGroupPolicyAdminResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgUpdateGroupPolicyAdminResponse)(x)
 }
 
-func (x *MsgUpdateGroupAccountAdminResponse) slowProtoReflect() protoreflect.Message {
+func (x *MsgUpdateGroupPolicyAdminResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -5397,43 +5397,43 @@ func (x *MsgUpdateGroupAccountAdminResponse) slowProtoReflect() protoreflect.Mes
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgUpdateGroupAccountAdminResponse_messageType fastReflection_MsgUpdateGroupAccountAdminResponse_messageType
-var _ protoreflect.MessageType = fastReflection_MsgUpdateGroupAccountAdminResponse_messageType{}
+var _fastReflection_MsgUpdateGroupPolicyAdminResponse_messageType fastReflection_MsgUpdateGroupPolicyAdminResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgUpdateGroupPolicyAdminResponse_messageType{}
 
-type fastReflection_MsgUpdateGroupAccountAdminResponse_messageType struct{}
+type fastReflection_MsgUpdateGroupPolicyAdminResponse_messageType struct{}
 
-func (x fastReflection_MsgUpdateGroupAccountAdminResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgUpdateGroupAccountAdminResponse)(nil)
+func (x fastReflection_MsgUpdateGroupPolicyAdminResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgUpdateGroupPolicyAdminResponse)(nil)
 }
-func (x fastReflection_MsgUpdateGroupAccountAdminResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateGroupAccountAdminResponse)
+func (x fastReflection_MsgUpdateGroupPolicyAdminResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateGroupPolicyAdminResponse)
 }
-func (x fastReflection_MsgUpdateGroupAccountAdminResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateGroupAccountAdminResponse
+func (x fastReflection_MsgUpdateGroupPolicyAdminResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateGroupPolicyAdminResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateGroupAccountAdminResponse
+func (x *fastReflection_MsgUpdateGroupPolicyAdminResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateGroupPolicyAdminResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) Type() protoreflect.MessageType {
-	return _fastReflection_MsgUpdateGroupAccountAdminResponse_messageType
+func (x *fastReflection_MsgUpdateGroupPolicyAdminResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgUpdateGroupPolicyAdminResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateGroupAccountAdminResponse)
+func (x *fastReflection_MsgUpdateGroupPolicyAdminResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateGroupPolicyAdminResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) Interface() protoreflect.ProtoMessage {
-	return (*MsgUpdateGroupAccountAdminResponse)(x)
+func (x *fastReflection_MsgUpdateGroupPolicyAdminResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgUpdateGroupPolicyAdminResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -5441,7 +5441,7 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) Interface() protoref
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgUpdateGroupPolicyAdminResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 }
 
 // Has reports whether a field is populated.
@@ -5455,13 +5455,13 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) Range(f func(protore
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgUpdateGroupPolicyAdminResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountAdminResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyAdminResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountAdminResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyAdminResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5471,13 +5471,13 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) Has(fd protoreflect.
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgUpdateGroupPolicyAdminResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountAdminResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyAdminResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountAdminResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyAdminResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5487,13 +5487,13 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) Clear(fd protoreflec
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupPolicyAdminResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountAdminResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyAdminResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountAdminResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyAdminResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -5507,13 +5507,13 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) Get(descriptor proto
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgUpdateGroupPolicyAdminResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountAdminResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyAdminResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountAdminResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyAdminResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5527,36 +5527,36 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) Set(fd protoreflect.
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupPolicyAdminResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountAdminResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyAdminResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountAdminResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyAdminResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupPolicyAdminResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountAdminResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyAdminResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountAdminResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyAdminResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgUpdateGroupPolicyAdminResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgUpdateGroupAccountAdminResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgUpdateGroupPolicyAdminResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -5564,7 +5564,7 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) WhichOneof(d protore
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgUpdateGroupPolicyAdminResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -5575,7 +5575,7 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) GetUnknown() protore
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgUpdateGroupPolicyAdminResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -5587,7 +5587,7 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) SetUnknown(fields pr
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) IsValid() bool {
+func (x *fastReflection_MsgUpdateGroupPolicyAdminResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -5597,9 +5597,9 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgUpdateGroupPolicyAdminResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgUpdateGroupAccountAdminResponse)
+		x := input.Message.Interface().(*MsgUpdateGroupPolicyAdminResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -5621,7 +5621,7 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) ProtoMethods() *prot
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateGroupAccountAdminResponse)
+		x := input.Message.Interface().(*MsgUpdateGroupPolicyAdminResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -5651,7 +5651,7 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) ProtoMethods() *prot
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateGroupAccountAdminResponse)
+		x := input.Message.Interface().(*MsgUpdateGroupPolicyAdminResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -5683,10 +5683,10 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) ProtoMethods() *prot
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupAccountAdminResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupPolicyAdminResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupAccountAdminResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupPolicyAdminResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			default:
@@ -5725,29 +5725,29 @@ func (x *fastReflection_MsgUpdateGroupAccountAdminResponse) ProtoMethods() *prot
 }
 
 var (
-	md_MsgUpdateGroupAccountDecisionPolicyRequest                 protoreflect.MessageDescriptor
-	fd_MsgUpdateGroupAccountDecisionPolicyRequest_admin           protoreflect.FieldDescriptor
-	fd_MsgUpdateGroupAccountDecisionPolicyRequest_address         protoreflect.FieldDescriptor
-	fd_MsgUpdateGroupAccountDecisionPolicyRequest_decision_policy protoreflect.FieldDescriptor
+	md_MsgUpdateGroupPolicyDecisionPolicy                 protoreflect.MessageDescriptor
+	fd_MsgUpdateGroupPolicyDecisionPolicy_admin           protoreflect.FieldDescriptor
+	fd_MsgUpdateGroupPolicyDecisionPolicy_address         protoreflect.FieldDescriptor
+	fd_MsgUpdateGroupPolicyDecisionPolicy_decision_policy protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1beta1_tx_proto_init()
-	md_MsgUpdateGroupAccountDecisionPolicyRequest = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgUpdateGroupAccountDecisionPolicyRequest")
-	fd_MsgUpdateGroupAccountDecisionPolicyRequest_admin = md_MsgUpdateGroupAccountDecisionPolicyRequest.Fields().ByName("admin")
-	fd_MsgUpdateGroupAccountDecisionPolicyRequest_address = md_MsgUpdateGroupAccountDecisionPolicyRequest.Fields().ByName("address")
-	fd_MsgUpdateGroupAccountDecisionPolicyRequest_decision_policy = md_MsgUpdateGroupAccountDecisionPolicyRequest.Fields().ByName("decision_policy")
+	md_MsgUpdateGroupPolicyDecisionPolicy = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgUpdateGroupPolicyDecisionPolicy")
+	fd_MsgUpdateGroupPolicyDecisionPolicy_admin = md_MsgUpdateGroupPolicyDecisionPolicy.Fields().ByName("admin")
+	fd_MsgUpdateGroupPolicyDecisionPolicy_address = md_MsgUpdateGroupPolicyDecisionPolicy.Fields().ByName("address")
+	fd_MsgUpdateGroupPolicyDecisionPolicy_decision_policy = md_MsgUpdateGroupPolicyDecisionPolicy.Fields().ByName("decision_policy")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgUpdateGroupPolicyDecisionPolicy)(nil)
 
-type fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest MsgUpdateGroupAccountDecisionPolicyRequest
+type fastReflection_MsgUpdateGroupPolicyDecisionPolicy MsgUpdateGroupPolicyDecisionPolicy
 
-func (x *MsgUpdateGroupAccountDecisionPolicyRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest)(x)
+func (x *MsgUpdateGroupPolicyDecisionPolicy) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgUpdateGroupPolicyDecisionPolicy)(x)
 }
 
-func (x *MsgUpdateGroupAccountDecisionPolicyRequest) slowProtoReflect() protoreflect.Message {
+func (x *MsgUpdateGroupPolicyDecisionPolicy) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -5759,43 +5759,43 @@ func (x *MsgUpdateGroupAccountDecisionPolicyRequest) slowProtoReflect() protoref
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest_messageType fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest_messageType
-var _ protoreflect.MessageType = fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest_messageType{}
+var _fastReflection_MsgUpdateGroupPolicyDecisionPolicy_messageType fastReflection_MsgUpdateGroupPolicyDecisionPolicy_messageType
+var _ protoreflect.MessageType = fastReflection_MsgUpdateGroupPolicyDecisionPolicy_messageType{}
 
-type fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest_messageType struct{}
+type fastReflection_MsgUpdateGroupPolicyDecisionPolicy_messageType struct{}
 
-func (x fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest)(nil)
+func (x fastReflection_MsgUpdateGroupPolicyDecisionPolicy_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgUpdateGroupPolicyDecisionPolicy)(nil)
 }
-func (x fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest)
+func (x fastReflection_MsgUpdateGroupPolicyDecisionPolicy_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateGroupPolicyDecisionPolicy)
 }
-func (x fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateGroupAccountDecisionPolicyRequest
+func (x fastReflection_MsgUpdateGroupPolicyDecisionPolicy_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateGroupPolicyDecisionPolicy
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateGroupAccountDecisionPolicyRequest
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicy) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateGroupPolicyDecisionPolicy
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) Type() protoreflect.MessageType {
-	return _fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest_messageType
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicy) Type() protoreflect.MessageType {
+	return _fastReflection_MsgUpdateGroupPolicyDecisionPolicy_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest)
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicy) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateGroupPolicyDecisionPolicy)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) Interface() protoreflect.ProtoMessage {
-	return (*MsgUpdateGroupAccountDecisionPolicyRequest)(x)
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicy) Interface() protoreflect.ProtoMessage {
+	return (*MsgUpdateGroupPolicyDecisionPolicy)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -5803,22 +5803,22 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) Interface() 
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicy) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Admin != "" {
 		value := protoreflect.ValueOfString(x.Admin)
-		if !f(fd_MsgUpdateGroupAccountDecisionPolicyRequest_admin, value) {
+		if !f(fd_MsgUpdateGroupPolicyDecisionPolicy_admin, value) {
 			return
 		}
 	}
 	if x.Address != "" {
 		value := protoreflect.ValueOfString(x.Address)
-		if !f(fd_MsgUpdateGroupAccountDecisionPolicyRequest_address, value) {
+		if !f(fd_MsgUpdateGroupPolicyDecisionPolicy_address, value) {
 			return
 		}
 	}
 	if x.DecisionPolicy != nil {
 		value := protoreflect.ValueOfMessage(x.DecisionPolicy.ProtoReflect())
-		if !f(fd_MsgUpdateGroupAccountDecisionPolicyRequest_decision_policy, value) {
+		if !f(fd_MsgUpdateGroupPolicyDecisionPolicy_decision_policy, value) {
 			return
 		}
 	}
@@ -5835,19 +5835,19 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) Range(f func
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicy) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.admin":
 		return x.Admin != ""
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest.address":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.address":
 		return x.Address != ""
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest.decision_policy":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.decision_policy":
 		return x.DecisionPolicy != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5857,19 +5857,19 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) Has(fd proto
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicy) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.admin":
 		x.Admin = ""
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest.address":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.address":
 		x.Address = ""
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest.decision_policy":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.decision_policy":
 		x.DecisionPolicy = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5879,22 +5879,22 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) Clear(fd pro
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicy) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest.address":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.address":
 		value := x.Address
 		return protoreflect.ValueOfString(value)
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest.decision_policy":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.decision_policy":
 		value := x.DecisionPolicy
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -5908,19 +5908,19 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) Get(descript
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicy) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.admin":
 		x.Admin = value.Interface().(string)
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest.address":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.address":
 		x.Address = value.Interface().(string)
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest.decision_policy":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.decision_policy":
 		x.DecisionPolicy = value.Message().Interface().(*anypb.Any)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5934,52 +5934,52 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) Set(fd proto
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicy) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest.decision_policy":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.decision_policy":
 		if x.DecisionPolicy == nil {
 			x.DecisionPolicy = new(anypb.Any)
 		}
 		return protoreflect.ValueOfMessage(x.DecisionPolicy.ProtoReflect())
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest.admin":
-		panic(fmt.Errorf("field admin of message cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest is not mutable"))
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest.address":
-		panic(fmt.Errorf("field address of message cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest is not mutable"))
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.admin":
+		panic(fmt.Errorf("field admin of message cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy is not mutable"))
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.address":
+		panic(fmt.Errorf("field address of message cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicy) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.admin":
 		return protoreflect.ValueOfString("")
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest.address":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.address":
 		return protoreflect.ValueOfString("")
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest.decision_policy":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.decision_policy":
 		m := new(anypb.Any)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicy) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -5987,7 +5987,7 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) WhichOneof(d
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicy) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -5998,7 +5998,7 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) GetUnknown()
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicy) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -6010,7 +6010,7 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) SetUnknown(f
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) IsValid() bool {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicy) IsValid() bool {
 	return x != nil
 }
 
@@ -6020,9 +6020,9 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) IsValid() bo
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicy) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgUpdateGroupAccountDecisionPolicyRequest)
+		x := input.Message.Interface().(*MsgUpdateGroupPolicyDecisionPolicy)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6056,7 +6056,7 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) ProtoMethods
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateGroupAccountDecisionPolicyRequest)
+		x := input.Message.Interface().(*MsgUpdateGroupPolicyDecisionPolicy)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6114,7 +6114,7 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) ProtoMethods
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateGroupAccountDecisionPolicyRequest)
+		x := input.Message.Interface().(*MsgUpdateGroupPolicyDecisionPolicy)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6146,10 +6146,10 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) ProtoMethods
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupAccountDecisionPolicyRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupPolicyDecisionPolicy: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupAccountDecisionPolicyRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupPolicyDecisionPolicy: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -6288,23 +6288,23 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyRequest) ProtoMethods
 }
 
 var (
-	md_MsgUpdateGroupAccountDecisionPolicyResponse protoreflect.MessageDescriptor
+	md_MsgUpdateGroupPolicyDecisionPolicyResponse protoreflect.MessageDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1beta1_tx_proto_init()
-	md_MsgUpdateGroupAccountDecisionPolicyResponse = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgUpdateGroupAccountDecisionPolicyResponse")
+	md_MsgUpdateGroupPolicyDecisionPolicyResponse = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgUpdateGroupPolicyDecisionPolicyResponse")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse)(nil)
 
-type fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse MsgUpdateGroupAccountDecisionPolicyResponse
+type fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse MsgUpdateGroupPolicyDecisionPolicyResponse
 
-func (x *MsgUpdateGroupAccountDecisionPolicyResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse)(x)
+func (x *MsgUpdateGroupPolicyDecisionPolicyResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse)(x)
 }
 
-func (x *MsgUpdateGroupAccountDecisionPolicyResponse) slowProtoReflect() protoreflect.Message {
+func (x *MsgUpdateGroupPolicyDecisionPolicyResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -6316,43 +6316,43 @@ func (x *MsgUpdateGroupAccountDecisionPolicyResponse) slowProtoReflect() protore
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse_messageType fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse_messageType
-var _ protoreflect.MessageType = fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse_messageType{}
+var _fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse_messageType fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse_messageType{}
 
-type fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse_messageType struct{}
+type fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse_messageType struct{}
 
-func (x fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse)(nil)
+func (x fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse)(nil)
 }
-func (x fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse)
+func (x fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse)
 }
-func (x fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateGroupAccountDecisionPolicyResponse
+func (x fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateGroupPolicyDecisionPolicyResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateGroupAccountDecisionPolicyResponse
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateGroupPolicyDecisionPolicyResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) Type() protoreflect.MessageType {
-	return _fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse_messageType
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse)
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) Interface() protoreflect.ProtoMessage {
-	return (*MsgUpdateGroupAccountDecisionPolicyResponse)(x)
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgUpdateGroupPolicyDecisionPolicyResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -6360,7 +6360,7 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) Interface()
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 }
 
 // Has reports whether a field is populated.
@@ -6374,13 +6374,13 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) Range(f fun
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6390,13 +6390,13 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) Has(fd prot
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6406,13 +6406,13 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) Clear(fd pr
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -6426,13 +6426,13 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) Get(descrip
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6446,36 +6446,36 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) Set(fd prot
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -6483,7 +6483,7 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) WhichOneof(
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -6494,7 +6494,7 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) GetUnknown(
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -6506,7 +6506,7 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) SetUnknown(
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) IsValid() bool {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -6516,9 +6516,9 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) IsValid() b
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgUpdateGroupPolicyDecisionPolicyResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgUpdateGroupAccountDecisionPolicyResponse)
+		x := input.Message.Interface().(*MsgUpdateGroupPolicyDecisionPolicyResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6540,7 +6540,7 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) ProtoMethod
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateGroupAccountDecisionPolicyResponse)
+		x := input.Message.Interface().(*MsgUpdateGroupPolicyDecisionPolicyResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6570,7 +6570,7 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) ProtoMethod
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateGroupAccountDecisionPolicyResponse)
+		x := input.Message.Interface().(*MsgUpdateGroupPolicyDecisionPolicyResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6602,10 +6602,10 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) ProtoMethod
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupAccountDecisionPolicyResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupPolicyDecisionPolicyResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupAccountDecisionPolicyResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupPolicyDecisionPolicyResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			default:
@@ -6644,29 +6644,29 @@ func (x *fastReflection_MsgUpdateGroupAccountDecisionPolicyResponse) ProtoMethod
 }
 
 var (
-	md_MsgUpdateGroupAccountMetadataRequest          protoreflect.MessageDescriptor
-	fd_MsgUpdateGroupAccountMetadataRequest_admin    protoreflect.FieldDescriptor
-	fd_MsgUpdateGroupAccountMetadataRequest_address  protoreflect.FieldDescriptor
-	fd_MsgUpdateGroupAccountMetadataRequest_metadata protoreflect.FieldDescriptor
+	md_MsgUpdateGroupPolicyMetadata          protoreflect.MessageDescriptor
+	fd_MsgUpdateGroupPolicyMetadata_admin    protoreflect.FieldDescriptor
+	fd_MsgUpdateGroupPolicyMetadata_address  protoreflect.FieldDescriptor
+	fd_MsgUpdateGroupPolicyMetadata_metadata protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1beta1_tx_proto_init()
-	md_MsgUpdateGroupAccountMetadataRequest = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgUpdateGroupAccountMetadataRequest")
-	fd_MsgUpdateGroupAccountMetadataRequest_admin = md_MsgUpdateGroupAccountMetadataRequest.Fields().ByName("admin")
-	fd_MsgUpdateGroupAccountMetadataRequest_address = md_MsgUpdateGroupAccountMetadataRequest.Fields().ByName("address")
-	fd_MsgUpdateGroupAccountMetadataRequest_metadata = md_MsgUpdateGroupAccountMetadataRequest.Fields().ByName("metadata")
+	md_MsgUpdateGroupPolicyMetadata = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgUpdateGroupPolicyMetadata")
+	fd_MsgUpdateGroupPolicyMetadata_admin = md_MsgUpdateGroupPolicyMetadata.Fields().ByName("admin")
+	fd_MsgUpdateGroupPolicyMetadata_address = md_MsgUpdateGroupPolicyMetadata.Fields().ByName("address")
+	fd_MsgUpdateGroupPolicyMetadata_metadata = md_MsgUpdateGroupPolicyMetadata.Fields().ByName("metadata")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgUpdateGroupAccountMetadataRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgUpdateGroupPolicyMetadata)(nil)
 
-type fastReflection_MsgUpdateGroupAccountMetadataRequest MsgUpdateGroupAccountMetadataRequest
+type fastReflection_MsgUpdateGroupPolicyMetadata MsgUpdateGroupPolicyMetadata
 
-func (x *MsgUpdateGroupAccountMetadataRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgUpdateGroupAccountMetadataRequest)(x)
+func (x *MsgUpdateGroupPolicyMetadata) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgUpdateGroupPolicyMetadata)(x)
 }
 
-func (x *MsgUpdateGroupAccountMetadataRequest) slowProtoReflect() protoreflect.Message {
+func (x *MsgUpdateGroupPolicyMetadata) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -6678,43 +6678,43 @@ func (x *MsgUpdateGroupAccountMetadataRequest) slowProtoReflect() protoreflect.M
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgUpdateGroupAccountMetadataRequest_messageType fastReflection_MsgUpdateGroupAccountMetadataRequest_messageType
-var _ protoreflect.MessageType = fastReflection_MsgUpdateGroupAccountMetadataRequest_messageType{}
+var _fastReflection_MsgUpdateGroupPolicyMetadata_messageType fastReflection_MsgUpdateGroupPolicyMetadata_messageType
+var _ protoreflect.MessageType = fastReflection_MsgUpdateGroupPolicyMetadata_messageType{}
 
-type fastReflection_MsgUpdateGroupAccountMetadataRequest_messageType struct{}
+type fastReflection_MsgUpdateGroupPolicyMetadata_messageType struct{}
 
-func (x fastReflection_MsgUpdateGroupAccountMetadataRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgUpdateGroupAccountMetadataRequest)(nil)
+func (x fastReflection_MsgUpdateGroupPolicyMetadata_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgUpdateGroupPolicyMetadata)(nil)
 }
-func (x fastReflection_MsgUpdateGroupAccountMetadataRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateGroupAccountMetadataRequest)
+func (x fastReflection_MsgUpdateGroupPolicyMetadata_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateGroupPolicyMetadata)
 }
-func (x fastReflection_MsgUpdateGroupAccountMetadataRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateGroupAccountMetadataRequest
+func (x fastReflection_MsgUpdateGroupPolicyMetadata_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateGroupPolicyMetadata
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateGroupAccountMetadataRequest
+func (x *fastReflection_MsgUpdateGroupPolicyMetadata) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateGroupPolicyMetadata
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) Type() protoreflect.MessageType {
-	return _fastReflection_MsgUpdateGroupAccountMetadataRequest_messageType
+func (x *fastReflection_MsgUpdateGroupPolicyMetadata) Type() protoreflect.MessageType {
+	return _fastReflection_MsgUpdateGroupPolicyMetadata_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateGroupAccountMetadataRequest)
+func (x *fastReflection_MsgUpdateGroupPolicyMetadata) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateGroupPolicyMetadata)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) Interface() protoreflect.ProtoMessage {
-	return (*MsgUpdateGroupAccountMetadataRequest)(x)
+func (x *fastReflection_MsgUpdateGroupPolicyMetadata) Interface() protoreflect.ProtoMessage {
+	return (*MsgUpdateGroupPolicyMetadata)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -6722,22 +6722,22 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) Interface() protor
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadata) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Admin != "" {
 		value := protoreflect.ValueOfString(x.Admin)
-		if !f(fd_MsgUpdateGroupAccountMetadataRequest_admin, value) {
+		if !f(fd_MsgUpdateGroupPolicyMetadata_admin, value) {
 			return
 		}
 	}
 	if x.Address != "" {
 		value := protoreflect.ValueOfString(x.Address)
-		if !f(fd_MsgUpdateGroupAccountMetadataRequest_address, value) {
+		if !f(fd_MsgUpdateGroupPolicyMetadata_address, value) {
 			return
 		}
 	}
 	if len(x.Metadata) != 0 {
 		value := protoreflect.ValueOfBytes(x.Metadata)
-		if !f(fd_MsgUpdateGroupAccountMetadataRequest_metadata, value) {
+		if !f(fd_MsgUpdateGroupPolicyMetadata_metadata, value) {
 			return
 		}
 	}
@@ -6754,19 +6754,19 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) Range(f func(proto
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadata) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.admin":
 		return x.Admin != ""
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest.address":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.address":
 		return x.Address != ""
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest.metadata":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.metadata":
 		return len(x.Metadata) != 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6776,19 +6776,19 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) Has(fd protoreflec
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadata) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.admin":
 		x.Admin = ""
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest.address":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.address":
 		x.Address = ""
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest.metadata":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.metadata":
 		x.Metadata = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6798,22 +6798,22 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) Clear(fd protorefl
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadata) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest.address":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.address":
 		value := x.Address
 		return protoreflect.ValueOfString(value)
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest.metadata":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.metadata":
 		value := x.Metadata
 		return protoreflect.ValueOfBytes(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -6827,19 +6827,19 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) Get(descriptor pro
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadata) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.admin":
 		x.Admin = value.Interface().(string)
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest.address":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.address":
 		x.Address = value.Interface().(string)
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest.metadata":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.metadata":
 		x.Metadata = value.Bytes()
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6853,48 +6853,48 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) Set(fd protoreflec
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadata) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest.admin":
-		panic(fmt.Errorf("field admin of message cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest is not mutable"))
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest.address":
-		panic(fmt.Errorf("field address of message cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest is not mutable"))
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest.metadata":
-		panic(fmt.Errorf("field metadata of message cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest is not mutable"))
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.admin":
+		panic(fmt.Errorf("field admin of message cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata is not mutable"))
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.address":
+		panic(fmt.Errorf("field address of message cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata is not mutable"))
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.metadata":
+		panic(fmt.Errorf("field metadata of message cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadata) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest.admin":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.admin":
 		return protoreflect.ValueOfString("")
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest.address":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.address":
 		return protoreflect.ValueOfString("")
-	case "cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest.metadata":
+	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.metadata":
 		return protoreflect.ValueOfBytes(nil)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadata) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -6902,7 +6902,7 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) WhichOneof(d proto
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadata) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -6913,7 +6913,7 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) GetUnknown() proto
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadata) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -6925,7 +6925,7 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) SetUnknown(fields 
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) IsValid() bool {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadata) IsValid() bool {
 	return x != nil
 }
 
@@ -6935,9 +6935,9 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadata) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgUpdateGroupAccountMetadataRequest)
+		x := input.Message.Interface().(*MsgUpdateGroupPolicyMetadata)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6971,7 +6971,7 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) ProtoMethods() *pr
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateGroupAccountMetadataRequest)
+		x := input.Message.Interface().(*MsgUpdateGroupPolicyMetadata)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -7022,7 +7022,7 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) ProtoMethods() *pr
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateGroupAccountMetadataRequest)
+		x := input.Message.Interface().(*MsgUpdateGroupPolicyMetadata)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -7054,10 +7054,10 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) ProtoMethods() *pr
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupAccountMetadataRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupPolicyMetadata: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupAccountMetadataRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupPolicyMetadata: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -7194,23 +7194,23 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataRequest) ProtoMethods() *pr
 }
 
 var (
-	md_MsgUpdateGroupAccountMetadataResponse protoreflect.MessageDescriptor
+	md_MsgUpdateGroupPolicyMetadataResponse protoreflect.MessageDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1beta1_tx_proto_init()
-	md_MsgUpdateGroupAccountMetadataResponse = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgUpdateGroupAccountMetadataResponse")
+	md_MsgUpdateGroupPolicyMetadataResponse = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgUpdateGroupPolicyMetadataResponse")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgUpdateGroupAccountMetadataResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgUpdateGroupPolicyMetadataResponse)(nil)
 
-type fastReflection_MsgUpdateGroupAccountMetadataResponse MsgUpdateGroupAccountMetadataResponse
+type fastReflection_MsgUpdateGroupPolicyMetadataResponse MsgUpdateGroupPolicyMetadataResponse
 
-func (x *MsgUpdateGroupAccountMetadataResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgUpdateGroupAccountMetadataResponse)(x)
+func (x *MsgUpdateGroupPolicyMetadataResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgUpdateGroupPolicyMetadataResponse)(x)
 }
 
-func (x *MsgUpdateGroupAccountMetadataResponse) slowProtoReflect() protoreflect.Message {
+func (x *MsgUpdateGroupPolicyMetadataResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -7222,43 +7222,43 @@ func (x *MsgUpdateGroupAccountMetadataResponse) slowProtoReflect() protoreflect.
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgUpdateGroupAccountMetadataResponse_messageType fastReflection_MsgUpdateGroupAccountMetadataResponse_messageType
-var _ protoreflect.MessageType = fastReflection_MsgUpdateGroupAccountMetadataResponse_messageType{}
+var _fastReflection_MsgUpdateGroupPolicyMetadataResponse_messageType fastReflection_MsgUpdateGroupPolicyMetadataResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgUpdateGroupPolicyMetadataResponse_messageType{}
 
-type fastReflection_MsgUpdateGroupAccountMetadataResponse_messageType struct{}
+type fastReflection_MsgUpdateGroupPolicyMetadataResponse_messageType struct{}
 
-func (x fastReflection_MsgUpdateGroupAccountMetadataResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgUpdateGroupAccountMetadataResponse)(nil)
+func (x fastReflection_MsgUpdateGroupPolicyMetadataResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgUpdateGroupPolicyMetadataResponse)(nil)
 }
-func (x fastReflection_MsgUpdateGroupAccountMetadataResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateGroupAccountMetadataResponse)
+func (x fastReflection_MsgUpdateGroupPolicyMetadataResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateGroupPolicyMetadataResponse)
 }
-func (x fastReflection_MsgUpdateGroupAccountMetadataResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateGroupAccountMetadataResponse
+func (x fastReflection_MsgUpdateGroupPolicyMetadataResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateGroupPolicyMetadataResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateGroupAccountMetadataResponse
+func (x *fastReflection_MsgUpdateGroupPolicyMetadataResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateGroupPolicyMetadataResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) Type() protoreflect.MessageType {
-	return _fastReflection_MsgUpdateGroupAccountMetadataResponse_messageType
+func (x *fastReflection_MsgUpdateGroupPolicyMetadataResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgUpdateGroupPolicyMetadataResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateGroupAccountMetadataResponse)
+func (x *fastReflection_MsgUpdateGroupPolicyMetadataResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateGroupPolicyMetadataResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) Interface() protoreflect.ProtoMessage {
-	return (*MsgUpdateGroupAccountMetadataResponse)(x)
+func (x *fastReflection_MsgUpdateGroupPolicyMetadataResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgUpdateGroupPolicyMetadataResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -7266,7 +7266,7 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) Interface() proto
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadataResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 }
 
 // Has reports whether a field is populated.
@@ -7280,13 +7280,13 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) Range(f func(prot
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadataResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7296,13 +7296,13 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) Has(fd protorefle
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadataResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7312,13 +7312,13 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) Clear(fd protoref
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadataResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -7332,13 +7332,13 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) Get(descriptor pr
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadataResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7352,36 +7352,36 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) Set(fd protorefle
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadataResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadataResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadataResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -7389,7 +7389,7 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) WhichOneof(d prot
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadataResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -7400,7 +7400,7 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) GetUnknown() prot
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadataResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -7412,7 +7412,7 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) SetUnknown(fields
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) IsValid() bool {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadataResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -7422,9 +7422,9 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgUpdateGroupPolicyMetadataResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgUpdateGroupAccountMetadataResponse)
+		x := input.Message.Interface().(*MsgUpdateGroupPolicyMetadataResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -7446,7 +7446,7 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) ProtoMethods() *p
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateGroupAccountMetadataResponse)
+		x := input.Message.Interface().(*MsgUpdateGroupPolicyMetadataResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -7476,7 +7476,7 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) ProtoMethods() *p
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateGroupAccountMetadataResponse)
+		x := input.Message.Interface().(*MsgUpdateGroupPolicyMetadataResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -7508,10 +7508,10 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) ProtoMethods() *p
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupAccountMetadataResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupPolicyMetadataResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupAccountMetadataResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateGroupPolicyMetadataResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			default:
@@ -7549,131 +7549,131 @@ func (x *fastReflection_MsgUpdateGroupAccountMetadataResponse) ProtoMethods() *p
 	}
 }
 
-var _ protoreflect.List = (*_MsgCreateProposalRequest_2_list)(nil)
+var _ protoreflect.List = (*_MsgCreateProposal_2_list)(nil)
 
-type _MsgCreateProposalRequest_2_list struct {
+type _MsgCreateProposal_2_list struct {
 	list *[]string
 }
 
-func (x *_MsgCreateProposalRequest_2_list) Len() int {
+func (x *_MsgCreateProposal_2_list) Len() int {
 	if x.list == nil {
 		return 0
 	}
 	return len(*x.list)
 }
 
-func (x *_MsgCreateProposalRequest_2_list) Get(i int) protoreflect.Value {
+func (x *_MsgCreateProposal_2_list) Get(i int) protoreflect.Value {
 	return protoreflect.ValueOfString((*x.list)[i])
 }
 
-func (x *_MsgCreateProposalRequest_2_list) Set(i int, value protoreflect.Value) {
+func (x *_MsgCreateProposal_2_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.String()
 	concreteValue := valueUnwrapped
 	(*x.list)[i] = concreteValue
 }
 
-func (x *_MsgCreateProposalRequest_2_list) Append(value protoreflect.Value) {
+func (x *_MsgCreateProposal_2_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.String()
 	concreteValue := valueUnwrapped
 	*x.list = append(*x.list, concreteValue)
 }
 
-func (x *_MsgCreateProposalRequest_2_list) AppendMutable() protoreflect.Value {
-	panic(fmt.Errorf("AppendMutable can not be called on message MsgCreateProposalRequest at list field Proposers as it is not of Message kind"))
+func (x *_MsgCreateProposal_2_list) AppendMutable() protoreflect.Value {
+	panic(fmt.Errorf("AppendMutable can not be called on message MsgCreateProposal at list field Proposers as it is not of Message kind"))
 }
 
-func (x *_MsgCreateProposalRequest_2_list) Truncate(n int) {
+func (x *_MsgCreateProposal_2_list) Truncate(n int) {
 	*x.list = (*x.list)[:n]
 }
 
-func (x *_MsgCreateProposalRequest_2_list) NewElement() protoreflect.Value {
+func (x *_MsgCreateProposal_2_list) NewElement() protoreflect.Value {
 	v := ""
 	return protoreflect.ValueOfString(v)
 }
 
-func (x *_MsgCreateProposalRequest_2_list) IsValid() bool {
+func (x *_MsgCreateProposal_2_list) IsValid() bool {
 	return x.list != nil
 }
 
-var _ protoreflect.List = (*_MsgCreateProposalRequest_4_list)(nil)
+var _ protoreflect.List = (*_MsgCreateProposal_4_list)(nil)
 
-type _MsgCreateProposalRequest_4_list struct {
+type _MsgCreateProposal_4_list struct {
 	list *[]*anypb.Any
 }
 
-func (x *_MsgCreateProposalRequest_4_list) Len() int {
+func (x *_MsgCreateProposal_4_list) Len() int {
 	if x.list == nil {
 		return 0
 	}
 	return len(*x.list)
 }
 
-func (x *_MsgCreateProposalRequest_4_list) Get(i int) protoreflect.Value {
+func (x *_MsgCreateProposal_4_list) Get(i int) protoreflect.Value {
 	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
 }
 
-func (x *_MsgCreateProposalRequest_4_list) Set(i int, value protoreflect.Value) {
+func (x *_MsgCreateProposal_4_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
 	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
 	(*x.list)[i] = concreteValue
 }
 
-func (x *_MsgCreateProposalRequest_4_list) Append(value protoreflect.Value) {
+func (x *_MsgCreateProposal_4_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
 	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
 	*x.list = append(*x.list, concreteValue)
 }
 
-func (x *_MsgCreateProposalRequest_4_list) AppendMutable() protoreflect.Value {
+func (x *_MsgCreateProposal_4_list) AppendMutable() protoreflect.Value {
 	v := new(anypb.Any)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_MsgCreateProposalRequest_4_list) Truncate(n int) {
+func (x *_MsgCreateProposal_4_list) Truncate(n int) {
 	for i := n; i < len(*x.list); i++ {
 		(*x.list)[i] = nil
 	}
 	*x.list = (*x.list)[:n]
 }
 
-func (x *_MsgCreateProposalRequest_4_list) NewElement() protoreflect.Value {
+func (x *_MsgCreateProposal_4_list) NewElement() protoreflect.Value {
 	v := new(anypb.Any)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_MsgCreateProposalRequest_4_list) IsValid() bool {
+func (x *_MsgCreateProposal_4_list) IsValid() bool {
 	return x.list != nil
 }
 
 var (
-	md_MsgCreateProposalRequest           protoreflect.MessageDescriptor
-	fd_MsgCreateProposalRequest_address   protoreflect.FieldDescriptor
-	fd_MsgCreateProposalRequest_proposers protoreflect.FieldDescriptor
-	fd_MsgCreateProposalRequest_metadata  protoreflect.FieldDescriptor
-	fd_MsgCreateProposalRequest_msgs      protoreflect.FieldDescriptor
-	fd_MsgCreateProposalRequest_exec      protoreflect.FieldDescriptor
+	md_MsgCreateProposal           protoreflect.MessageDescriptor
+	fd_MsgCreateProposal_address   protoreflect.FieldDescriptor
+	fd_MsgCreateProposal_proposers protoreflect.FieldDescriptor
+	fd_MsgCreateProposal_metadata  protoreflect.FieldDescriptor
+	fd_MsgCreateProposal_msgs      protoreflect.FieldDescriptor
+	fd_MsgCreateProposal_exec      protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1beta1_tx_proto_init()
-	md_MsgCreateProposalRequest = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgCreateProposalRequest")
-	fd_MsgCreateProposalRequest_address = md_MsgCreateProposalRequest.Fields().ByName("address")
-	fd_MsgCreateProposalRequest_proposers = md_MsgCreateProposalRequest.Fields().ByName("proposers")
-	fd_MsgCreateProposalRequest_metadata = md_MsgCreateProposalRequest.Fields().ByName("metadata")
-	fd_MsgCreateProposalRequest_msgs = md_MsgCreateProposalRequest.Fields().ByName("msgs")
-	fd_MsgCreateProposalRequest_exec = md_MsgCreateProposalRequest.Fields().ByName("exec")
+	md_MsgCreateProposal = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgCreateProposal")
+	fd_MsgCreateProposal_address = md_MsgCreateProposal.Fields().ByName("address")
+	fd_MsgCreateProposal_proposers = md_MsgCreateProposal.Fields().ByName("proposers")
+	fd_MsgCreateProposal_metadata = md_MsgCreateProposal.Fields().ByName("metadata")
+	fd_MsgCreateProposal_msgs = md_MsgCreateProposal.Fields().ByName("msgs")
+	fd_MsgCreateProposal_exec = md_MsgCreateProposal.Fields().ByName("exec")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgCreateProposalRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgCreateProposal)(nil)
 
-type fastReflection_MsgCreateProposalRequest MsgCreateProposalRequest
+type fastReflection_MsgCreateProposal MsgCreateProposal
 
-func (x *MsgCreateProposalRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgCreateProposalRequest)(x)
+func (x *MsgCreateProposal) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgCreateProposal)(x)
 }
 
-func (x *MsgCreateProposalRequest) slowProtoReflect() protoreflect.Message {
+func (x *MsgCreateProposal) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -7685,43 +7685,43 @@ func (x *MsgCreateProposalRequest) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgCreateProposalRequest_messageType fastReflection_MsgCreateProposalRequest_messageType
-var _ protoreflect.MessageType = fastReflection_MsgCreateProposalRequest_messageType{}
+var _fastReflection_MsgCreateProposal_messageType fastReflection_MsgCreateProposal_messageType
+var _ protoreflect.MessageType = fastReflection_MsgCreateProposal_messageType{}
 
-type fastReflection_MsgCreateProposalRequest_messageType struct{}
+type fastReflection_MsgCreateProposal_messageType struct{}
 
-func (x fastReflection_MsgCreateProposalRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgCreateProposalRequest)(nil)
+func (x fastReflection_MsgCreateProposal_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgCreateProposal)(nil)
 }
-func (x fastReflection_MsgCreateProposalRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgCreateProposalRequest)
+func (x fastReflection_MsgCreateProposal_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateProposal)
 }
-func (x fastReflection_MsgCreateProposalRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgCreateProposalRequest
+func (x fastReflection_MsgCreateProposal_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateProposal
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgCreateProposalRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgCreateProposalRequest
+func (x *fastReflection_MsgCreateProposal) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateProposal
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgCreateProposalRequest) Type() protoreflect.MessageType {
-	return _fastReflection_MsgCreateProposalRequest_messageType
+func (x *fastReflection_MsgCreateProposal) Type() protoreflect.MessageType {
+	return _fastReflection_MsgCreateProposal_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgCreateProposalRequest) New() protoreflect.Message {
-	return new(fastReflection_MsgCreateProposalRequest)
+func (x *fastReflection_MsgCreateProposal) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateProposal)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgCreateProposalRequest) Interface() protoreflect.ProtoMessage {
-	return (*MsgCreateProposalRequest)(x)
+func (x *fastReflection_MsgCreateProposal) Interface() protoreflect.ProtoMessage {
+	return (*MsgCreateProposal)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -7729,34 +7729,34 @@ func (x *fastReflection_MsgCreateProposalRequest) Interface() protoreflect.Proto
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgCreateProposalRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgCreateProposal) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Address != "" {
 		value := protoreflect.ValueOfString(x.Address)
-		if !f(fd_MsgCreateProposalRequest_address, value) {
+		if !f(fd_MsgCreateProposal_address, value) {
 			return
 		}
 	}
 	if len(x.Proposers) != 0 {
-		value := protoreflect.ValueOfList(&_MsgCreateProposalRequest_2_list{list: &x.Proposers})
-		if !f(fd_MsgCreateProposalRequest_proposers, value) {
+		value := protoreflect.ValueOfList(&_MsgCreateProposal_2_list{list: &x.Proposers})
+		if !f(fd_MsgCreateProposal_proposers, value) {
 			return
 		}
 	}
 	if len(x.Metadata) != 0 {
 		value := protoreflect.ValueOfBytes(x.Metadata)
-		if !f(fd_MsgCreateProposalRequest_metadata, value) {
+		if !f(fd_MsgCreateProposal_metadata, value) {
 			return
 		}
 	}
 	if len(x.Msgs) != 0 {
-		value := protoreflect.ValueOfList(&_MsgCreateProposalRequest_4_list{list: &x.Msgs})
-		if !f(fd_MsgCreateProposalRequest_msgs, value) {
+		value := protoreflect.ValueOfList(&_MsgCreateProposal_4_list{list: &x.Msgs})
+		if !f(fd_MsgCreateProposal_msgs, value) {
 			return
 		}
 	}
 	if x.Exec != 0 {
 		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Exec))
-		if !f(fd_MsgCreateProposalRequest_exec, value) {
+		if !f(fd_MsgCreateProposal_exec, value) {
 			return
 		}
 	}
@@ -7773,23 +7773,23 @@ func (x *fastReflection_MsgCreateProposalRequest) Range(f func(protoreflect.Fiel
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgCreateProposalRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgCreateProposal) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.address":
+	case "cosmos.group.v1beta1.MsgCreateProposal.address":
 		return x.Address != ""
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.proposers":
+	case "cosmos.group.v1beta1.MsgCreateProposal.proposers":
 		return len(x.Proposers) != 0
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.metadata":
+	case "cosmos.group.v1beta1.MsgCreateProposal.metadata":
 		return len(x.Metadata) != 0
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.msgs":
+	case "cosmos.group.v1beta1.MsgCreateProposal.msgs":
 		return len(x.Msgs) != 0
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.exec":
+	case "cosmos.group.v1beta1.MsgCreateProposal.exec":
 		return x.Exec != 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposalRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposal"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposalRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposal does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7799,23 +7799,23 @@ func (x *fastReflection_MsgCreateProposalRequest) Has(fd protoreflect.FieldDescr
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateProposalRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgCreateProposal) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.address":
+	case "cosmos.group.v1beta1.MsgCreateProposal.address":
 		x.Address = ""
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.proposers":
+	case "cosmos.group.v1beta1.MsgCreateProposal.proposers":
 		x.Proposers = nil
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.metadata":
+	case "cosmos.group.v1beta1.MsgCreateProposal.metadata":
 		x.Metadata = nil
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.msgs":
+	case "cosmos.group.v1beta1.MsgCreateProposal.msgs":
 		x.Msgs = nil
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.exec":
+	case "cosmos.group.v1beta1.MsgCreateProposal.exec":
 		x.Exec = 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposalRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposal"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposalRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposal does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7825,34 +7825,34 @@ func (x *fastReflection_MsgCreateProposalRequest) Clear(fd protoreflect.FieldDes
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgCreateProposalRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCreateProposal) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.address":
+	case "cosmos.group.v1beta1.MsgCreateProposal.address":
 		value := x.Address
 		return protoreflect.ValueOfString(value)
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.proposers":
+	case "cosmos.group.v1beta1.MsgCreateProposal.proposers":
 		if len(x.Proposers) == 0 {
-			return protoreflect.ValueOfList(&_MsgCreateProposalRequest_2_list{})
+			return protoreflect.ValueOfList(&_MsgCreateProposal_2_list{})
 		}
-		listValue := &_MsgCreateProposalRequest_2_list{list: &x.Proposers}
+		listValue := &_MsgCreateProposal_2_list{list: &x.Proposers}
 		return protoreflect.ValueOfList(listValue)
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.metadata":
+	case "cosmos.group.v1beta1.MsgCreateProposal.metadata":
 		value := x.Metadata
 		return protoreflect.ValueOfBytes(value)
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.msgs":
+	case "cosmos.group.v1beta1.MsgCreateProposal.msgs":
 		if len(x.Msgs) == 0 {
-			return protoreflect.ValueOfList(&_MsgCreateProposalRequest_4_list{})
+			return protoreflect.ValueOfList(&_MsgCreateProposal_4_list{})
 		}
-		listValue := &_MsgCreateProposalRequest_4_list{list: &x.Msgs}
+		listValue := &_MsgCreateProposal_4_list{list: &x.Msgs}
 		return protoreflect.ValueOfList(listValue)
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.exec":
+	case "cosmos.group.v1beta1.MsgCreateProposal.exec":
 		value := x.Exec
 		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposalRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposal"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposalRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposal does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -7866,27 +7866,27 @@ func (x *fastReflection_MsgCreateProposalRequest) Get(descriptor protoreflect.Fi
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateProposalRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgCreateProposal) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.address":
+	case "cosmos.group.v1beta1.MsgCreateProposal.address":
 		x.Address = value.Interface().(string)
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.proposers":
+	case "cosmos.group.v1beta1.MsgCreateProposal.proposers":
 		lv := value.List()
-		clv := lv.(*_MsgCreateProposalRequest_2_list)
+		clv := lv.(*_MsgCreateProposal_2_list)
 		x.Proposers = *clv.list
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.metadata":
+	case "cosmos.group.v1beta1.MsgCreateProposal.metadata":
 		x.Metadata = value.Bytes()
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.msgs":
+	case "cosmos.group.v1beta1.MsgCreateProposal.msgs":
 		lv := value.List()
-		clv := lv.(*_MsgCreateProposalRequest_4_list)
+		clv := lv.(*_MsgCreateProposal_4_list)
 		x.Msgs = *clv.list
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.exec":
+	case "cosmos.group.v1beta1.MsgCreateProposal.exec":
 		x.Exec = (Exec)(value.Enum())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposalRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposal"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposalRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposal does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7900,66 +7900,66 @@ func (x *fastReflection_MsgCreateProposalRequest) Set(fd protoreflect.FieldDescr
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateProposalRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCreateProposal) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.proposers":
+	case "cosmos.group.v1beta1.MsgCreateProposal.proposers":
 		if x.Proposers == nil {
 			x.Proposers = []string{}
 		}
-		value := &_MsgCreateProposalRequest_2_list{list: &x.Proposers}
+		value := &_MsgCreateProposal_2_list{list: &x.Proposers}
 		return protoreflect.ValueOfList(value)
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.msgs":
+	case "cosmos.group.v1beta1.MsgCreateProposal.msgs":
 		if x.Msgs == nil {
 			x.Msgs = []*anypb.Any{}
 		}
-		value := &_MsgCreateProposalRequest_4_list{list: &x.Msgs}
+		value := &_MsgCreateProposal_4_list{list: &x.Msgs}
 		return protoreflect.ValueOfList(value)
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.address":
-		panic(fmt.Errorf("field address of message cosmos.group.v1beta1.MsgCreateProposalRequest is not mutable"))
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.metadata":
-		panic(fmt.Errorf("field metadata of message cosmos.group.v1beta1.MsgCreateProposalRequest is not mutable"))
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.exec":
-		panic(fmt.Errorf("field exec of message cosmos.group.v1beta1.MsgCreateProposalRequest is not mutable"))
+	case "cosmos.group.v1beta1.MsgCreateProposal.address":
+		panic(fmt.Errorf("field address of message cosmos.group.v1beta1.MsgCreateProposal is not mutable"))
+	case "cosmos.group.v1beta1.MsgCreateProposal.metadata":
+		panic(fmt.Errorf("field metadata of message cosmos.group.v1beta1.MsgCreateProposal is not mutable"))
+	case "cosmos.group.v1beta1.MsgCreateProposal.exec":
+		panic(fmt.Errorf("field exec of message cosmos.group.v1beta1.MsgCreateProposal is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposalRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposal"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposalRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposal does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgCreateProposalRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgCreateProposal) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.address":
+	case "cosmos.group.v1beta1.MsgCreateProposal.address":
 		return protoreflect.ValueOfString("")
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.proposers":
+	case "cosmos.group.v1beta1.MsgCreateProposal.proposers":
 		list := []string{}
-		return protoreflect.ValueOfList(&_MsgCreateProposalRequest_2_list{list: &list})
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.metadata":
+		return protoreflect.ValueOfList(&_MsgCreateProposal_2_list{list: &list})
+	case "cosmos.group.v1beta1.MsgCreateProposal.metadata":
 		return protoreflect.ValueOfBytes(nil)
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.msgs":
+	case "cosmos.group.v1beta1.MsgCreateProposal.msgs":
 		list := []*anypb.Any{}
-		return protoreflect.ValueOfList(&_MsgCreateProposalRequest_4_list{list: &list})
-	case "cosmos.group.v1beta1.MsgCreateProposalRequest.exec":
+		return protoreflect.ValueOfList(&_MsgCreateProposal_4_list{list: &list})
+	case "cosmos.group.v1beta1.MsgCreateProposal.exec":
 		return protoreflect.ValueOfEnum(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposalRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposal"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposalRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposal does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgCreateProposalRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgCreateProposal) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgCreateProposalRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgCreateProposal", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -7967,7 +7967,7 @@ func (x *fastReflection_MsgCreateProposalRequest) WhichOneof(d protoreflect.Oneo
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgCreateProposalRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgCreateProposal) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -7978,7 +7978,7 @@ func (x *fastReflection_MsgCreateProposalRequest) GetUnknown() protoreflect.RawF
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateProposalRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgCreateProposal) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -7990,7 +7990,7 @@ func (x *fastReflection_MsgCreateProposalRequest) SetUnknown(fields protoreflect
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgCreateProposalRequest) IsValid() bool {
+func (x *fastReflection_MsgCreateProposal) IsValid() bool {
 	return x != nil
 }
 
@@ -8000,9 +8000,9 @@ func (x *fastReflection_MsgCreateProposalRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgCreateProposalRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgCreateProposal) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgCreateProposalRequest)
+		x := input.Message.Interface().(*MsgCreateProposal)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -8047,7 +8047,7 @@ func (x *fastReflection_MsgCreateProposalRequest) ProtoMethods() *protoiface.Met
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgCreateProposalRequest)
+		x := input.Message.Interface().(*MsgCreateProposal)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -8121,7 +8121,7 @@ func (x *fastReflection_MsgCreateProposalRequest) ProtoMethods() *protoiface.Met
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgCreateProposalRequest)
+		x := input.Message.Interface().(*MsgCreateProposal)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -8153,10 +8153,10 @@ func (x *fastReflection_MsgCreateProposalRequest) ProtoMethods() *protoiface.Met
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateProposalRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateProposal: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateProposalRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateProposal: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -8750,33 +8750,33 @@ func (x *fastReflection_MsgCreateProposalResponse) ProtoMethods() *protoiface.Me
 }
 
 var (
-	md_MsgVoteRequest             protoreflect.MessageDescriptor
-	fd_MsgVoteRequest_proposal_id protoreflect.FieldDescriptor
-	fd_MsgVoteRequest_voter       protoreflect.FieldDescriptor
-	fd_MsgVoteRequest_choice      protoreflect.FieldDescriptor
-	fd_MsgVoteRequest_metadata    protoreflect.FieldDescriptor
-	fd_MsgVoteRequest_exec        protoreflect.FieldDescriptor
+	md_MsgVote             protoreflect.MessageDescriptor
+	fd_MsgVote_proposal_id protoreflect.FieldDescriptor
+	fd_MsgVote_voter       protoreflect.FieldDescriptor
+	fd_MsgVote_choice      protoreflect.FieldDescriptor
+	fd_MsgVote_metadata    protoreflect.FieldDescriptor
+	fd_MsgVote_exec        protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1beta1_tx_proto_init()
-	md_MsgVoteRequest = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgVoteRequest")
-	fd_MsgVoteRequest_proposal_id = md_MsgVoteRequest.Fields().ByName("proposal_id")
-	fd_MsgVoteRequest_voter = md_MsgVoteRequest.Fields().ByName("voter")
-	fd_MsgVoteRequest_choice = md_MsgVoteRequest.Fields().ByName("choice")
-	fd_MsgVoteRequest_metadata = md_MsgVoteRequest.Fields().ByName("metadata")
-	fd_MsgVoteRequest_exec = md_MsgVoteRequest.Fields().ByName("exec")
+	md_MsgVote = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgVote")
+	fd_MsgVote_proposal_id = md_MsgVote.Fields().ByName("proposal_id")
+	fd_MsgVote_voter = md_MsgVote.Fields().ByName("voter")
+	fd_MsgVote_choice = md_MsgVote.Fields().ByName("choice")
+	fd_MsgVote_metadata = md_MsgVote.Fields().ByName("metadata")
+	fd_MsgVote_exec = md_MsgVote.Fields().ByName("exec")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgVoteRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgVote)(nil)
 
-type fastReflection_MsgVoteRequest MsgVoteRequest
+type fastReflection_MsgVote MsgVote
 
-func (x *MsgVoteRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgVoteRequest)(x)
+func (x *MsgVote) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgVote)(x)
 }
 
-func (x *MsgVoteRequest) slowProtoReflect() protoreflect.Message {
+func (x *MsgVote) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -8788,43 +8788,43 @@ func (x *MsgVoteRequest) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgVoteRequest_messageType fastReflection_MsgVoteRequest_messageType
-var _ protoreflect.MessageType = fastReflection_MsgVoteRequest_messageType{}
+var _fastReflection_MsgVote_messageType fastReflection_MsgVote_messageType
+var _ protoreflect.MessageType = fastReflection_MsgVote_messageType{}
 
-type fastReflection_MsgVoteRequest_messageType struct{}
+type fastReflection_MsgVote_messageType struct{}
 
-func (x fastReflection_MsgVoteRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgVoteRequest)(nil)
+func (x fastReflection_MsgVote_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgVote)(nil)
 }
-func (x fastReflection_MsgVoteRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgVoteRequest)
+func (x fastReflection_MsgVote_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgVote)
 }
-func (x fastReflection_MsgVoteRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgVoteRequest
+func (x fastReflection_MsgVote_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgVote
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgVoteRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgVoteRequest
+func (x *fastReflection_MsgVote) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgVote
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgVoteRequest) Type() protoreflect.MessageType {
-	return _fastReflection_MsgVoteRequest_messageType
+func (x *fastReflection_MsgVote) Type() protoreflect.MessageType {
+	return _fastReflection_MsgVote_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgVoteRequest) New() protoreflect.Message {
-	return new(fastReflection_MsgVoteRequest)
+func (x *fastReflection_MsgVote) New() protoreflect.Message {
+	return new(fastReflection_MsgVote)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgVoteRequest) Interface() protoreflect.ProtoMessage {
-	return (*MsgVoteRequest)(x)
+func (x *fastReflection_MsgVote) Interface() protoreflect.ProtoMessage {
+	return (*MsgVote)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -8832,34 +8832,34 @@ func (x *fastReflection_MsgVoteRequest) Interface() protoreflect.ProtoMessage {
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgVoteRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgVote) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.ProposalId != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.ProposalId)
-		if !f(fd_MsgVoteRequest_proposal_id, value) {
+		if !f(fd_MsgVote_proposal_id, value) {
 			return
 		}
 	}
 	if x.Voter != "" {
 		value := protoreflect.ValueOfString(x.Voter)
-		if !f(fd_MsgVoteRequest_voter, value) {
+		if !f(fd_MsgVote_voter, value) {
 			return
 		}
 	}
 	if x.Choice != 0 {
 		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Choice))
-		if !f(fd_MsgVoteRequest_choice, value) {
+		if !f(fd_MsgVote_choice, value) {
 			return
 		}
 	}
 	if len(x.Metadata) != 0 {
 		value := protoreflect.ValueOfBytes(x.Metadata)
-		if !f(fd_MsgVoteRequest_metadata, value) {
+		if !f(fd_MsgVote_metadata, value) {
 			return
 		}
 	}
 	if x.Exec != 0 {
 		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Exec))
-		if !f(fd_MsgVoteRequest_exec, value) {
+		if !f(fd_MsgVote_exec, value) {
 			return
 		}
 	}
@@ -8876,23 +8876,23 @@ func (x *fastReflection_MsgVoteRequest) Range(f func(protoreflect.FieldDescripto
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgVoteRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgVote) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgVoteRequest.proposal_id":
+	case "cosmos.group.v1beta1.MsgVote.proposal_id":
 		return x.ProposalId != uint64(0)
-	case "cosmos.group.v1beta1.MsgVoteRequest.voter":
+	case "cosmos.group.v1beta1.MsgVote.voter":
 		return x.Voter != ""
-	case "cosmos.group.v1beta1.MsgVoteRequest.choice":
+	case "cosmos.group.v1beta1.MsgVote.choice":
 		return x.Choice != 0
-	case "cosmos.group.v1beta1.MsgVoteRequest.metadata":
+	case "cosmos.group.v1beta1.MsgVote.metadata":
 		return len(x.Metadata) != 0
-	case "cosmos.group.v1beta1.MsgVoteRequest.exec":
+	case "cosmos.group.v1beta1.MsgVote.exec":
 		return x.Exec != 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgVoteRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgVote"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgVoteRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgVote does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -8902,23 +8902,23 @@ func (x *fastReflection_MsgVoteRequest) Has(fd protoreflect.FieldDescriptor) boo
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgVoteRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgVote) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgVoteRequest.proposal_id":
+	case "cosmos.group.v1beta1.MsgVote.proposal_id":
 		x.ProposalId = uint64(0)
-	case "cosmos.group.v1beta1.MsgVoteRequest.voter":
+	case "cosmos.group.v1beta1.MsgVote.voter":
 		x.Voter = ""
-	case "cosmos.group.v1beta1.MsgVoteRequest.choice":
+	case "cosmos.group.v1beta1.MsgVote.choice":
 		x.Choice = 0
-	case "cosmos.group.v1beta1.MsgVoteRequest.metadata":
+	case "cosmos.group.v1beta1.MsgVote.metadata":
 		x.Metadata = nil
-	case "cosmos.group.v1beta1.MsgVoteRequest.exec":
+	case "cosmos.group.v1beta1.MsgVote.exec":
 		x.Exec = 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgVoteRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgVote"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgVoteRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgVote does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -8928,28 +8928,28 @@ func (x *fastReflection_MsgVoteRequest) Clear(fd protoreflect.FieldDescriptor) {
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgVoteRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgVote) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.group.v1beta1.MsgVoteRequest.proposal_id":
+	case "cosmos.group.v1beta1.MsgVote.proposal_id":
 		value := x.ProposalId
 		return protoreflect.ValueOfUint64(value)
-	case "cosmos.group.v1beta1.MsgVoteRequest.voter":
+	case "cosmos.group.v1beta1.MsgVote.voter":
 		value := x.Voter
 		return protoreflect.ValueOfString(value)
-	case "cosmos.group.v1beta1.MsgVoteRequest.choice":
+	case "cosmos.group.v1beta1.MsgVote.choice":
 		value := x.Choice
 		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
-	case "cosmos.group.v1beta1.MsgVoteRequest.metadata":
+	case "cosmos.group.v1beta1.MsgVote.metadata":
 		value := x.Metadata
 		return protoreflect.ValueOfBytes(value)
-	case "cosmos.group.v1beta1.MsgVoteRequest.exec":
+	case "cosmos.group.v1beta1.MsgVote.exec":
 		value := x.Exec
 		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgVoteRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgVote"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgVoteRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgVote does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -8963,23 +8963,23 @@ func (x *fastReflection_MsgVoteRequest) Get(descriptor protoreflect.FieldDescrip
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgVoteRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgVote) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgVoteRequest.proposal_id":
+	case "cosmos.group.v1beta1.MsgVote.proposal_id":
 		x.ProposalId = value.Uint()
-	case "cosmos.group.v1beta1.MsgVoteRequest.voter":
+	case "cosmos.group.v1beta1.MsgVote.voter":
 		x.Voter = value.Interface().(string)
-	case "cosmos.group.v1beta1.MsgVoteRequest.choice":
+	case "cosmos.group.v1beta1.MsgVote.choice":
 		x.Choice = (Choice)(value.Enum())
-	case "cosmos.group.v1beta1.MsgVoteRequest.metadata":
+	case "cosmos.group.v1beta1.MsgVote.metadata":
 		x.Metadata = value.Bytes()
-	case "cosmos.group.v1beta1.MsgVoteRequest.exec":
+	case "cosmos.group.v1beta1.MsgVote.exec":
 		x.Exec = (Exec)(value.Enum())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgVoteRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgVote"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgVoteRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgVote does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -8993,56 +8993,56 @@ func (x *fastReflection_MsgVoteRequest) Set(fd protoreflect.FieldDescriptor, val
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgVoteRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgVote) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgVoteRequest.proposal_id":
-		panic(fmt.Errorf("field proposal_id of message cosmos.group.v1beta1.MsgVoteRequest is not mutable"))
-	case "cosmos.group.v1beta1.MsgVoteRequest.voter":
-		panic(fmt.Errorf("field voter of message cosmos.group.v1beta1.MsgVoteRequest is not mutable"))
-	case "cosmos.group.v1beta1.MsgVoteRequest.choice":
-		panic(fmt.Errorf("field choice of message cosmos.group.v1beta1.MsgVoteRequest is not mutable"))
-	case "cosmos.group.v1beta1.MsgVoteRequest.metadata":
-		panic(fmt.Errorf("field metadata of message cosmos.group.v1beta1.MsgVoteRequest is not mutable"))
-	case "cosmos.group.v1beta1.MsgVoteRequest.exec":
-		panic(fmt.Errorf("field exec of message cosmos.group.v1beta1.MsgVoteRequest is not mutable"))
+	case "cosmos.group.v1beta1.MsgVote.proposal_id":
+		panic(fmt.Errorf("field proposal_id of message cosmos.group.v1beta1.MsgVote is not mutable"))
+	case "cosmos.group.v1beta1.MsgVote.voter":
+		panic(fmt.Errorf("field voter of message cosmos.group.v1beta1.MsgVote is not mutable"))
+	case "cosmos.group.v1beta1.MsgVote.choice":
+		panic(fmt.Errorf("field choice of message cosmos.group.v1beta1.MsgVote is not mutable"))
+	case "cosmos.group.v1beta1.MsgVote.metadata":
+		panic(fmt.Errorf("field metadata of message cosmos.group.v1beta1.MsgVote is not mutable"))
+	case "cosmos.group.v1beta1.MsgVote.exec":
+		panic(fmt.Errorf("field exec of message cosmos.group.v1beta1.MsgVote is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgVoteRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgVote"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgVoteRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgVote does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgVoteRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgVote) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgVoteRequest.proposal_id":
+	case "cosmos.group.v1beta1.MsgVote.proposal_id":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "cosmos.group.v1beta1.MsgVoteRequest.voter":
+	case "cosmos.group.v1beta1.MsgVote.voter":
 		return protoreflect.ValueOfString("")
-	case "cosmos.group.v1beta1.MsgVoteRequest.choice":
+	case "cosmos.group.v1beta1.MsgVote.choice":
 		return protoreflect.ValueOfEnum(0)
-	case "cosmos.group.v1beta1.MsgVoteRequest.metadata":
+	case "cosmos.group.v1beta1.MsgVote.metadata":
 		return protoreflect.ValueOfBytes(nil)
-	case "cosmos.group.v1beta1.MsgVoteRequest.exec":
+	case "cosmos.group.v1beta1.MsgVote.exec":
 		return protoreflect.ValueOfEnum(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgVoteRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgVote"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgVoteRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgVote does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgVoteRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgVote) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgVoteRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgVote", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -9050,7 +9050,7 @@ func (x *fastReflection_MsgVoteRequest) WhichOneof(d protoreflect.OneofDescripto
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgVoteRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgVote) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -9061,7 +9061,7 @@ func (x *fastReflection_MsgVoteRequest) GetUnknown() protoreflect.RawFields {
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgVoteRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgVote) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -9073,7 +9073,7 @@ func (x *fastReflection_MsgVoteRequest) SetUnknown(fields protoreflect.RawFields
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgVoteRequest) IsValid() bool {
+func (x *fastReflection_MsgVote) IsValid() bool {
 	return x != nil
 }
 
@@ -9083,9 +9083,9 @@ func (x *fastReflection_MsgVoteRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgVoteRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgVote) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgVoteRequest)
+		x := input.Message.Interface().(*MsgVote)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -9124,7 +9124,7 @@ func (x *fastReflection_MsgVoteRequest) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgVoteRequest)
+		x := input.Message.Interface().(*MsgVote)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -9183,7 +9183,7 @@ func (x *fastReflection_MsgVoteRequest) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgVoteRequest)
+		x := input.Message.Interface().(*MsgVote)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -9215,10 +9215,10 @@ func (x *fastReflection_MsgVoteRequest) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgVoteRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgVote: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgVoteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgVote: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -9736,27 +9736,27 @@ func (x *fastReflection_MsgVoteResponse) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_MsgExecRequest             protoreflect.MessageDescriptor
-	fd_MsgExecRequest_proposal_id protoreflect.FieldDescriptor
-	fd_MsgExecRequest_signer      protoreflect.FieldDescriptor
+	md_MsgExec             protoreflect.MessageDescriptor
+	fd_MsgExec_proposal_id protoreflect.FieldDescriptor
+	fd_MsgExec_signer      protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1beta1_tx_proto_init()
-	md_MsgExecRequest = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgExecRequest")
-	fd_MsgExecRequest_proposal_id = md_MsgExecRequest.Fields().ByName("proposal_id")
-	fd_MsgExecRequest_signer = md_MsgExecRequest.Fields().ByName("signer")
+	md_MsgExec = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgExec")
+	fd_MsgExec_proposal_id = md_MsgExec.Fields().ByName("proposal_id")
+	fd_MsgExec_signer = md_MsgExec.Fields().ByName("signer")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgExecRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgExec)(nil)
 
-type fastReflection_MsgExecRequest MsgExecRequest
+type fastReflection_MsgExec MsgExec
 
-func (x *MsgExecRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgExecRequest)(x)
+func (x *MsgExec) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgExec)(x)
 }
 
-func (x *MsgExecRequest) slowProtoReflect() protoreflect.Message {
+func (x *MsgExec) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -9768,43 +9768,43 @@ func (x *MsgExecRequest) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgExecRequest_messageType fastReflection_MsgExecRequest_messageType
-var _ protoreflect.MessageType = fastReflection_MsgExecRequest_messageType{}
+var _fastReflection_MsgExec_messageType fastReflection_MsgExec_messageType
+var _ protoreflect.MessageType = fastReflection_MsgExec_messageType{}
 
-type fastReflection_MsgExecRequest_messageType struct{}
+type fastReflection_MsgExec_messageType struct{}
 
-func (x fastReflection_MsgExecRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgExecRequest)(nil)
+func (x fastReflection_MsgExec_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgExec)(nil)
 }
-func (x fastReflection_MsgExecRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgExecRequest)
+func (x fastReflection_MsgExec_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgExec)
 }
-func (x fastReflection_MsgExecRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgExecRequest
+func (x fastReflection_MsgExec_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgExec
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgExecRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgExecRequest
+func (x *fastReflection_MsgExec) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgExec
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgExecRequest) Type() protoreflect.MessageType {
-	return _fastReflection_MsgExecRequest_messageType
+func (x *fastReflection_MsgExec) Type() protoreflect.MessageType {
+	return _fastReflection_MsgExec_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgExecRequest) New() protoreflect.Message {
-	return new(fastReflection_MsgExecRequest)
+func (x *fastReflection_MsgExec) New() protoreflect.Message {
+	return new(fastReflection_MsgExec)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgExecRequest) Interface() protoreflect.ProtoMessage {
-	return (*MsgExecRequest)(x)
+func (x *fastReflection_MsgExec) Interface() protoreflect.ProtoMessage {
+	return (*MsgExec)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -9812,16 +9812,16 @@ func (x *fastReflection_MsgExecRequest) Interface() protoreflect.ProtoMessage {
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgExecRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgExec) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.ProposalId != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.ProposalId)
-		if !f(fd_MsgExecRequest_proposal_id, value) {
+		if !f(fd_MsgExec_proposal_id, value) {
 			return
 		}
 	}
 	if x.Signer != "" {
 		value := protoreflect.ValueOfString(x.Signer)
-		if !f(fd_MsgExecRequest_signer, value) {
+		if !f(fd_MsgExec_signer, value) {
 			return
 		}
 	}
@@ -9838,17 +9838,17 @@ func (x *fastReflection_MsgExecRequest) Range(f func(protoreflect.FieldDescripto
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgExecRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgExec) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgExecRequest.proposal_id":
+	case "cosmos.group.v1beta1.MsgExec.proposal_id":
 		return x.ProposalId != uint64(0)
-	case "cosmos.group.v1beta1.MsgExecRequest.signer":
+	case "cosmos.group.v1beta1.MsgExec.signer":
 		return x.Signer != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgExecRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgExec"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgExecRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgExec does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9858,17 +9858,17 @@ func (x *fastReflection_MsgExecRequest) Has(fd protoreflect.FieldDescriptor) boo
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgExecRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgExec) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgExecRequest.proposal_id":
+	case "cosmos.group.v1beta1.MsgExec.proposal_id":
 		x.ProposalId = uint64(0)
-	case "cosmos.group.v1beta1.MsgExecRequest.signer":
+	case "cosmos.group.v1beta1.MsgExec.signer":
 		x.Signer = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgExecRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgExec"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgExecRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgExec does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9878,19 +9878,19 @@ func (x *fastReflection_MsgExecRequest) Clear(fd protoreflect.FieldDescriptor) {
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgExecRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgExec) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.group.v1beta1.MsgExecRequest.proposal_id":
+	case "cosmos.group.v1beta1.MsgExec.proposal_id":
 		value := x.ProposalId
 		return protoreflect.ValueOfUint64(value)
-	case "cosmos.group.v1beta1.MsgExecRequest.signer":
+	case "cosmos.group.v1beta1.MsgExec.signer":
 		value := x.Signer
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgExecRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgExec"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgExecRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgExec does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -9904,17 +9904,17 @@ func (x *fastReflection_MsgExecRequest) Get(descriptor protoreflect.FieldDescrip
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgExecRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgExec) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgExecRequest.proposal_id":
+	case "cosmos.group.v1beta1.MsgExec.proposal_id":
 		x.ProposalId = value.Uint()
-	case "cosmos.group.v1beta1.MsgExecRequest.signer":
+	case "cosmos.group.v1beta1.MsgExec.signer":
 		x.Signer = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgExecRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgExec"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgExecRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgExec does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9928,44 +9928,44 @@ func (x *fastReflection_MsgExecRequest) Set(fd protoreflect.FieldDescriptor, val
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgExecRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgExec) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgExecRequest.proposal_id":
-		panic(fmt.Errorf("field proposal_id of message cosmos.group.v1beta1.MsgExecRequest is not mutable"))
-	case "cosmos.group.v1beta1.MsgExecRequest.signer":
-		panic(fmt.Errorf("field signer of message cosmos.group.v1beta1.MsgExecRequest is not mutable"))
+	case "cosmos.group.v1beta1.MsgExec.proposal_id":
+		panic(fmt.Errorf("field proposal_id of message cosmos.group.v1beta1.MsgExec is not mutable"))
+	case "cosmos.group.v1beta1.MsgExec.signer":
+		panic(fmt.Errorf("field signer of message cosmos.group.v1beta1.MsgExec is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgExecRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgExec"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgExecRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgExec does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgExecRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgExec) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgExecRequest.proposal_id":
+	case "cosmos.group.v1beta1.MsgExec.proposal_id":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "cosmos.group.v1beta1.MsgExecRequest.signer":
+	case "cosmos.group.v1beta1.MsgExec.signer":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgExecRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgExec"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgExecRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgExec does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgExecRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgExec) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgExecRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgExec", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -9973,7 +9973,7 @@ func (x *fastReflection_MsgExecRequest) WhichOneof(d protoreflect.OneofDescripto
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgExecRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgExec) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -9984,7 +9984,7 @@ func (x *fastReflection_MsgExecRequest) GetUnknown() protoreflect.RawFields {
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgExecRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgExec) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -9996,7 +9996,7 @@ func (x *fastReflection_MsgExecRequest) SetUnknown(fields protoreflect.RawFields
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgExecRequest) IsValid() bool {
+func (x *fastReflection_MsgExec) IsValid() bool {
 	return x != nil
 }
 
@@ -10006,9 +10006,9 @@ func (x *fastReflection_MsgExecRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgExecRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgExec) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgExecRequest)
+		x := input.Message.Interface().(*MsgExec)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -10037,7 +10037,7 @@ func (x *fastReflection_MsgExecRequest) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgExecRequest)
+		x := input.Message.Interface().(*MsgExec)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -10079,7 +10079,7 @@ func (x *fastReflection_MsgExecRequest) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgExecRequest)
+		x := input.Message.Interface().(*MsgExec)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -10111,10 +10111,10 @@ func (x *fastReflection_MsgExecRequest) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgExecRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgExec: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgExecRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgExec: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -10569,27 +10569,27 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MsgClient interface {
 	// CreateGroup creates a new group with an admin account address, a list of members and some optional metadata.
-	CreateGroup(ctx context.Context, in *MsgCreateGroupRequest, opts ...grpc.CallOption) (*MsgCreateGroupResponse, error)
+	CreateGroup(ctx context.Context, in *MsgCreateGroup, opts ...grpc.CallOption) (*MsgCreateGroupResponse, error)
 	// UpdateGroupMembers updates the group members with given group id and admin address.
-	UpdateGroupMembers(ctx context.Context, in *MsgUpdateGroupMembersRequest, opts ...grpc.CallOption) (*MsgUpdateGroupMembersResponse, error)
+	UpdateGroupMembers(ctx context.Context, in *MsgUpdateGroupMembers, opts ...grpc.CallOption) (*MsgUpdateGroupMembersResponse, error)
 	// UpdateGroupAdmin updates the group admin with given group id and previous admin address.
-	UpdateGroupAdmin(ctx context.Context, in *MsgUpdateGroupAdminRequest, opts ...grpc.CallOption) (*MsgUpdateGroupAdminResponse, error)
+	UpdateGroupAdmin(ctx context.Context, in *MsgUpdateGroupAdmin, opts ...grpc.CallOption) (*MsgUpdateGroupAdminResponse, error)
 	// UpdateGroupMetadata updates the group metadata with given group id and admin address.
-	UpdateGroupMetadata(ctx context.Context, in *MsgUpdateGroupMetadataRequest, opts ...grpc.CallOption) (*MsgUpdateGroupMetadataResponse, error)
-	// CreateGroupAccount creates a new group account using given DecisionPolicy.
-	CreateGroupAccount(ctx context.Context, in *MsgCreateGroupAccountRequest, opts ...grpc.CallOption) (*MsgCreateGroupAccountResponse, error)
-	// UpdateGroupAccountAdmin updates a group account admin.
-	UpdateGroupAccountAdmin(ctx context.Context, in *MsgUpdateGroupAccountAdminRequest, opts ...grpc.CallOption) (*MsgUpdateGroupAccountAdminResponse, error)
-	// UpdateGroupAccountDecisionPolicy allows a group account decision policy to be updated.
-	UpdateGroupAccountDecisionPolicy(ctx context.Context, in *MsgUpdateGroupAccountDecisionPolicyRequest, opts ...grpc.CallOption) (*MsgUpdateGroupAccountDecisionPolicyResponse, error)
-	// UpdateGroupAccountMetadata updates a group account metadata.
-	UpdateGroupAccountMetadata(ctx context.Context, in *MsgUpdateGroupAccountMetadataRequest, opts ...grpc.CallOption) (*MsgUpdateGroupAccountMetadataResponse, error)
+	UpdateGroupMetadata(ctx context.Context, in *MsgUpdateGroupMetadata, opts ...grpc.CallOption) (*MsgUpdateGroupMetadataResponse, error)
+	// CreateGroupPolicy creates a new group policy using given DecisionPolicy.
+	CreateGroupPolicy(ctx context.Context, in *MsgCreateGroupPolicy, opts ...grpc.CallOption) (*MsgCreateGroupPolicyResponse, error)
+	// UpdateGroupPolicyAdmin updates a group policy admin.
+	UpdateGroupPolicyAdmin(ctx context.Context, in *MsgUpdateGroupPolicyAdmin, opts ...grpc.CallOption) (*MsgUpdateGroupPolicyAdminResponse, error)
+	// UpdateGroupPolicyDecisionPolicy allows a group policy's decision policy to be updated.
+	UpdateGroupPolicyDecisionPolicy(ctx context.Context, in *MsgUpdateGroupPolicyDecisionPolicy, opts ...grpc.CallOption) (*MsgUpdateGroupPolicyDecisionPolicyResponse, error)
+	// UpdateGroupPolicyMetadata updates a group policy metadata.
+	UpdateGroupPolicyMetadata(ctx context.Context, in *MsgUpdateGroupPolicyMetadata, opts ...grpc.CallOption) (*MsgUpdateGroupPolicyMetadataResponse, error)
 	// CreateProposal submits a new proposal.
-	CreateProposal(ctx context.Context, in *MsgCreateProposalRequest, opts ...grpc.CallOption) (*MsgCreateProposalResponse, error)
+	CreateProposal(ctx context.Context, in *MsgCreateProposal, opts ...grpc.CallOption) (*MsgCreateProposalResponse, error)
 	// Vote allows a voter to vote on a proposal.
-	Vote(ctx context.Context, in *MsgVoteRequest, opts ...grpc.CallOption) (*MsgVoteResponse, error)
+	Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error)
 	// Exec executes a proposal.
-	Exec(ctx context.Context, in *MsgExecRequest, opts ...grpc.CallOption) (*MsgExecResponse, error)
+	Exec(ctx context.Context, in *MsgExec, opts ...grpc.CallOption) (*MsgExecResponse, error)
 }
 
 type msgClient struct {
@@ -10600,7 +10600,7 @@ func NewMsgClient(cc grpc.ClientConnInterface) MsgClient {
 	return &msgClient{cc}
 }
 
-func (c *msgClient) CreateGroup(ctx context.Context, in *MsgCreateGroupRequest, opts ...grpc.CallOption) (*MsgCreateGroupResponse, error) {
+func (c *msgClient) CreateGroup(ctx context.Context, in *MsgCreateGroup, opts ...grpc.CallOption) (*MsgCreateGroupResponse, error) {
 	out := new(MsgCreateGroupResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/CreateGroup", in, out, opts...)
 	if err != nil {
@@ -10609,7 +10609,7 @@ func (c *msgClient) CreateGroup(ctx context.Context, in *MsgCreateGroupRequest, 
 	return out, nil
 }
 
-func (c *msgClient) UpdateGroupMembers(ctx context.Context, in *MsgUpdateGroupMembersRequest, opts ...grpc.CallOption) (*MsgUpdateGroupMembersResponse, error) {
+func (c *msgClient) UpdateGroupMembers(ctx context.Context, in *MsgUpdateGroupMembers, opts ...grpc.CallOption) (*MsgUpdateGroupMembersResponse, error) {
 	out := new(MsgUpdateGroupMembersResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/UpdateGroupMembers", in, out, opts...)
 	if err != nil {
@@ -10618,7 +10618,7 @@ func (c *msgClient) UpdateGroupMembers(ctx context.Context, in *MsgUpdateGroupMe
 	return out, nil
 }
 
-func (c *msgClient) UpdateGroupAdmin(ctx context.Context, in *MsgUpdateGroupAdminRequest, opts ...grpc.CallOption) (*MsgUpdateGroupAdminResponse, error) {
+func (c *msgClient) UpdateGroupAdmin(ctx context.Context, in *MsgUpdateGroupAdmin, opts ...grpc.CallOption) (*MsgUpdateGroupAdminResponse, error) {
 	out := new(MsgUpdateGroupAdminResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/UpdateGroupAdmin", in, out, opts...)
 	if err != nil {
@@ -10627,7 +10627,7 @@ func (c *msgClient) UpdateGroupAdmin(ctx context.Context, in *MsgUpdateGroupAdmi
 	return out, nil
 }
 
-func (c *msgClient) UpdateGroupMetadata(ctx context.Context, in *MsgUpdateGroupMetadataRequest, opts ...grpc.CallOption) (*MsgUpdateGroupMetadataResponse, error) {
+func (c *msgClient) UpdateGroupMetadata(ctx context.Context, in *MsgUpdateGroupMetadata, opts ...grpc.CallOption) (*MsgUpdateGroupMetadataResponse, error) {
 	out := new(MsgUpdateGroupMetadataResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/UpdateGroupMetadata", in, out, opts...)
 	if err != nil {
@@ -10636,43 +10636,43 @@ func (c *msgClient) UpdateGroupMetadata(ctx context.Context, in *MsgUpdateGroupM
 	return out, nil
 }
 
-func (c *msgClient) CreateGroupAccount(ctx context.Context, in *MsgCreateGroupAccountRequest, opts ...grpc.CallOption) (*MsgCreateGroupAccountResponse, error) {
-	out := new(MsgCreateGroupAccountResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/CreateGroupAccount", in, out, opts...)
+func (c *msgClient) CreateGroupPolicy(ctx context.Context, in *MsgCreateGroupPolicy, opts ...grpc.CallOption) (*MsgCreateGroupPolicyResponse, error) {
+	out := new(MsgCreateGroupPolicyResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/CreateGroupPolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) UpdateGroupAccountAdmin(ctx context.Context, in *MsgUpdateGroupAccountAdminRequest, opts ...grpc.CallOption) (*MsgUpdateGroupAccountAdminResponse, error) {
-	out := new(MsgUpdateGroupAccountAdminResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/UpdateGroupAccountAdmin", in, out, opts...)
+func (c *msgClient) UpdateGroupPolicyAdmin(ctx context.Context, in *MsgUpdateGroupPolicyAdmin, opts ...grpc.CallOption) (*MsgUpdateGroupPolicyAdminResponse, error) {
+	out := new(MsgUpdateGroupPolicyAdminResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/UpdateGroupPolicyAdmin", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) UpdateGroupAccountDecisionPolicy(ctx context.Context, in *MsgUpdateGroupAccountDecisionPolicyRequest, opts ...grpc.CallOption) (*MsgUpdateGroupAccountDecisionPolicyResponse, error) {
-	out := new(MsgUpdateGroupAccountDecisionPolicyResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/UpdateGroupAccountDecisionPolicy", in, out, opts...)
+func (c *msgClient) UpdateGroupPolicyDecisionPolicy(ctx context.Context, in *MsgUpdateGroupPolicyDecisionPolicy, opts ...grpc.CallOption) (*MsgUpdateGroupPolicyDecisionPolicyResponse, error) {
+	out := new(MsgUpdateGroupPolicyDecisionPolicyResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/UpdateGroupPolicyDecisionPolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) UpdateGroupAccountMetadata(ctx context.Context, in *MsgUpdateGroupAccountMetadataRequest, opts ...grpc.CallOption) (*MsgUpdateGroupAccountMetadataResponse, error) {
-	out := new(MsgUpdateGroupAccountMetadataResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/UpdateGroupAccountMetadata", in, out, opts...)
+func (c *msgClient) UpdateGroupPolicyMetadata(ctx context.Context, in *MsgUpdateGroupPolicyMetadata, opts ...grpc.CallOption) (*MsgUpdateGroupPolicyMetadataResponse, error) {
+	out := new(MsgUpdateGroupPolicyMetadataResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/UpdateGroupPolicyMetadata", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) CreateProposal(ctx context.Context, in *MsgCreateProposalRequest, opts ...grpc.CallOption) (*MsgCreateProposalResponse, error) {
+func (c *msgClient) CreateProposal(ctx context.Context, in *MsgCreateProposal, opts ...grpc.CallOption) (*MsgCreateProposalResponse, error) {
 	out := new(MsgCreateProposalResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/CreateProposal", in, out, opts...)
 	if err != nil {
@@ -10681,7 +10681,7 @@ func (c *msgClient) CreateProposal(ctx context.Context, in *MsgCreateProposalReq
 	return out, nil
 }
 
-func (c *msgClient) Vote(ctx context.Context, in *MsgVoteRequest, opts ...grpc.CallOption) (*MsgVoteResponse, error) {
+func (c *msgClient) Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error) {
 	out := new(MsgVoteResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/Vote", in, out, opts...)
 	if err != nil {
@@ -10690,7 +10690,7 @@ func (c *msgClient) Vote(ctx context.Context, in *MsgVoteRequest, opts ...grpc.C
 	return out, nil
 }
 
-func (c *msgClient) Exec(ctx context.Context, in *MsgExecRequest, opts ...grpc.CallOption) (*MsgExecResponse, error) {
+func (c *msgClient) Exec(ctx context.Context, in *MsgExec, opts ...grpc.CallOption) (*MsgExecResponse, error) {
 	out := new(MsgExecResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/Exec", in, out, opts...)
 	if err != nil {
@@ -10704,27 +10704,27 @@ func (c *msgClient) Exec(ctx context.Context, in *MsgExecRequest, opts ...grpc.C
 // for forward compatibility
 type MsgServer interface {
 	// CreateGroup creates a new group with an admin account address, a list of members and some optional metadata.
-	CreateGroup(context.Context, *MsgCreateGroupRequest) (*MsgCreateGroupResponse, error)
+	CreateGroup(context.Context, *MsgCreateGroup) (*MsgCreateGroupResponse, error)
 	// UpdateGroupMembers updates the group members with given group id and admin address.
-	UpdateGroupMembers(context.Context, *MsgUpdateGroupMembersRequest) (*MsgUpdateGroupMembersResponse, error)
+	UpdateGroupMembers(context.Context, *MsgUpdateGroupMembers) (*MsgUpdateGroupMembersResponse, error)
 	// UpdateGroupAdmin updates the group admin with given group id and previous admin address.
-	UpdateGroupAdmin(context.Context, *MsgUpdateGroupAdminRequest) (*MsgUpdateGroupAdminResponse, error)
+	UpdateGroupAdmin(context.Context, *MsgUpdateGroupAdmin) (*MsgUpdateGroupAdminResponse, error)
 	// UpdateGroupMetadata updates the group metadata with given group id and admin address.
-	UpdateGroupMetadata(context.Context, *MsgUpdateGroupMetadataRequest) (*MsgUpdateGroupMetadataResponse, error)
-	// CreateGroupAccount creates a new group account using given DecisionPolicy.
-	CreateGroupAccount(context.Context, *MsgCreateGroupAccountRequest) (*MsgCreateGroupAccountResponse, error)
-	// UpdateGroupAccountAdmin updates a group account admin.
-	UpdateGroupAccountAdmin(context.Context, *MsgUpdateGroupAccountAdminRequest) (*MsgUpdateGroupAccountAdminResponse, error)
-	// UpdateGroupAccountDecisionPolicy allows a group account decision policy to be updated.
-	UpdateGroupAccountDecisionPolicy(context.Context, *MsgUpdateGroupAccountDecisionPolicyRequest) (*MsgUpdateGroupAccountDecisionPolicyResponse, error)
-	// UpdateGroupAccountMetadata updates a group account metadata.
-	UpdateGroupAccountMetadata(context.Context, *MsgUpdateGroupAccountMetadataRequest) (*MsgUpdateGroupAccountMetadataResponse, error)
+	UpdateGroupMetadata(context.Context, *MsgUpdateGroupMetadata) (*MsgUpdateGroupMetadataResponse, error)
+	// CreateGroupPolicy creates a new group policy using given DecisionPolicy.
+	CreateGroupPolicy(context.Context, *MsgCreateGroupPolicy) (*MsgCreateGroupPolicyResponse, error)
+	// UpdateGroupPolicyAdmin updates a group policy admin.
+	UpdateGroupPolicyAdmin(context.Context, *MsgUpdateGroupPolicyAdmin) (*MsgUpdateGroupPolicyAdminResponse, error)
+	// UpdateGroupPolicyDecisionPolicy allows a group policy's decision policy to be updated.
+	UpdateGroupPolicyDecisionPolicy(context.Context, *MsgUpdateGroupPolicyDecisionPolicy) (*MsgUpdateGroupPolicyDecisionPolicyResponse, error)
+	// UpdateGroupPolicyMetadata updates a group policy metadata.
+	UpdateGroupPolicyMetadata(context.Context, *MsgUpdateGroupPolicyMetadata) (*MsgUpdateGroupPolicyMetadataResponse, error)
 	// CreateProposal submits a new proposal.
-	CreateProposal(context.Context, *MsgCreateProposalRequest) (*MsgCreateProposalResponse, error)
+	CreateProposal(context.Context, *MsgCreateProposal) (*MsgCreateProposalResponse, error)
 	// Vote allows a voter to vote on a proposal.
-	Vote(context.Context, *MsgVoteRequest) (*MsgVoteResponse, error)
+	Vote(context.Context, *MsgVote) (*MsgVoteResponse, error)
 	// Exec executes a proposal.
-	Exec(context.Context, *MsgExecRequest) (*MsgExecResponse, error)
+	Exec(context.Context, *MsgExec) (*MsgExecResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -10732,37 +10732,37 @@ type MsgServer interface {
 type UnimplementedMsgServer struct {
 }
 
-func (UnimplementedMsgServer) CreateGroup(context.Context, *MsgCreateGroupRequest) (*MsgCreateGroupResponse, error) {
+func (UnimplementedMsgServer) CreateGroup(context.Context, *MsgCreateGroup) (*MsgCreateGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateGroup not implemented")
 }
-func (UnimplementedMsgServer) UpdateGroupMembers(context.Context, *MsgUpdateGroupMembersRequest) (*MsgUpdateGroupMembersResponse, error) {
+func (UnimplementedMsgServer) UpdateGroupMembers(context.Context, *MsgUpdateGroupMembers) (*MsgUpdateGroupMembersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroupMembers not implemented")
 }
-func (UnimplementedMsgServer) UpdateGroupAdmin(context.Context, *MsgUpdateGroupAdminRequest) (*MsgUpdateGroupAdminResponse, error) {
+func (UnimplementedMsgServer) UpdateGroupAdmin(context.Context, *MsgUpdateGroupAdmin) (*MsgUpdateGroupAdminResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroupAdmin not implemented")
 }
-func (UnimplementedMsgServer) UpdateGroupMetadata(context.Context, *MsgUpdateGroupMetadataRequest) (*MsgUpdateGroupMetadataResponse, error) {
+func (UnimplementedMsgServer) UpdateGroupMetadata(context.Context, *MsgUpdateGroupMetadata) (*MsgUpdateGroupMetadataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroupMetadata not implemented")
 }
-func (UnimplementedMsgServer) CreateGroupAccount(context.Context, *MsgCreateGroupAccountRequest) (*MsgCreateGroupAccountResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateGroupAccount not implemented")
+func (UnimplementedMsgServer) CreateGroupPolicy(context.Context, *MsgCreateGroupPolicy) (*MsgCreateGroupPolicyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateGroupPolicy not implemented")
 }
-func (UnimplementedMsgServer) UpdateGroupAccountAdmin(context.Context, *MsgUpdateGroupAccountAdminRequest) (*MsgUpdateGroupAccountAdminResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroupAccountAdmin not implemented")
+func (UnimplementedMsgServer) UpdateGroupPolicyAdmin(context.Context, *MsgUpdateGroupPolicyAdmin) (*MsgUpdateGroupPolicyAdminResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroupPolicyAdmin not implemented")
 }
-func (UnimplementedMsgServer) UpdateGroupAccountDecisionPolicy(context.Context, *MsgUpdateGroupAccountDecisionPolicyRequest) (*MsgUpdateGroupAccountDecisionPolicyResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroupAccountDecisionPolicy not implemented")
+func (UnimplementedMsgServer) UpdateGroupPolicyDecisionPolicy(context.Context, *MsgUpdateGroupPolicyDecisionPolicy) (*MsgUpdateGroupPolicyDecisionPolicyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroupPolicyDecisionPolicy not implemented")
 }
-func (UnimplementedMsgServer) UpdateGroupAccountMetadata(context.Context, *MsgUpdateGroupAccountMetadataRequest) (*MsgUpdateGroupAccountMetadataResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroupAccountMetadata not implemented")
+func (UnimplementedMsgServer) UpdateGroupPolicyMetadata(context.Context, *MsgUpdateGroupPolicyMetadata) (*MsgUpdateGroupPolicyMetadataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroupPolicyMetadata not implemented")
 }
-func (UnimplementedMsgServer) CreateProposal(context.Context, *MsgCreateProposalRequest) (*MsgCreateProposalResponse, error) {
+func (UnimplementedMsgServer) CreateProposal(context.Context, *MsgCreateProposal) (*MsgCreateProposalResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateProposal not implemented")
 }
-func (UnimplementedMsgServer) Vote(context.Context, *MsgVoteRequest) (*MsgVoteResponse, error) {
+func (UnimplementedMsgServer) Vote(context.Context, *MsgVote) (*MsgVoteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Vote not implemented")
 }
-func (UnimplementedMsgServer) Exec(context.Context, *MsgExecRequest) (*MsgExecResponse, error) {
+func (UnimplementedMsgServer) Exec(context.Context, *MsgExec) (*MsgExecResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Exec not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
@@ -10779,7 +10779,7 @@ func RegisterMsgServer(s grpc.ServiceRegistrar, srv MsgServer) {
 }
 
 func _Msg_CreateGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCreateGroupRequest)
+	in := new(MsgCreateGroup)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -10791,13 +10791,13 @@ func _Msg_CreateGroup_Handler(srv interface{}, ctx context.Context, dec func(int
 		FullMethod: "/cosmos.group.v1beta1.Msg/CreateGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CreateGroup(ctx, req.(*MsgCreateGroupRequest))
+		return srv.(MsgServer).CreateGroup(ctx, req.(*MsgCreateGroup))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_UpdateGroupMembers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgUpdateGroupMembersRequest)
+	in := new(MsgUpdateGroupMembers)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -10809,13 +10809,13 @@ func _Msg_UpdateGroupMembers_Handler(srv interface{}, ctx context.Context, dec f
 		FullMethod: "/cosmos.group.v1beta1.Msg/UpdateGroupMembers",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UpdateGroupMembers(ctx, req.(*MsgUpdateGroupMembersRequest))
+		return srv.(MsgServer).UpdateGroupMembers(ctx, req.(*MsgUpdateGroupMembers))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_UpdateGroupAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgUpdateGroupAdminRequest)
+	in := new(MsgUpdateGroupAdmin)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -10827,13 +10827,13 @@ func _Msg_UpdateGroupAdmin_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/cosmos.group.v1beta1.Msg/UpdateGroupAdmin",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UpdateGroupAdmin(ctx, req.(*MsgUpdateGroupAdminRequest))
+		return srv.(MsgServer).UpdateGroupAdmin(ctx, req.(*MsgUpdateGroupAdmin))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_UpdateGroupMetadata_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgUpdateGroupMetadataRequest)
+	in := new(MsgUpdateGroupMetadata)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -10845,85 +10845,85 @@ func _Msg_UpdateGroupMetadata_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: "/cosmos.group.v1beta1.Msg/UpdateGroupMetadata",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UpdateGroupMetadata(ctx, req.(*MsgUpdateGroupMetadataRequest))
+		return srv.(MsgServer).UpdateGroupMetadata(ctx, req.(*MsgUpdateGroupMetadata))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_CreateGroupAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCreateGroupAccountRequest)
+func _Msg_CreateGroupPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateGroupPolicy)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).CreateGroupAccount(ctx, in)
+		return srv.(MsgServer).CreateGroupPolicy(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Msg/CreateGroupAccount",
+		FullMethod: "/cosmos.group.v1beta1.Msg/CreateGroupPolicy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CreateGroupAccount(ctx, req.(*MsgCreateGroupAccountRequest))
+		return srv.(MsgServer).CreateGroupPolicy(ctx, req.(*MsgCreateGroupPolicy))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_UpdateGroupAccountAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgUpdateGroupAccountAdminRequest)
+func _Msg_UpdateGroupPolicyAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateGroupPolicyAdmin)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).UpdateGroupAccountAdmin(ctx, in)
+		return srv.(MsgServer).UpdateGroupPolicyAdmin(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Msg/UpdateGroupAccountAdmin",
+		FullMethod: "/cosmos.group.v1beta1.Msg/UpdateGroupPolicyAdmin",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UpdateGroupAccountAdmin(ctx, req.(*MsgUpdateGroupAccountAdminRequest))
+		return srv.(MsgServer).UpdateGroupPolicyAdmin(ctx, req.(*MsgUpdateGroupPolicyAdmin))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_UpdateGroupAccountDecisionPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgUpdateGroupAccountDecisionPolicyRequest)
+func _Msg_UpdateGroupPolicyDecisionPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateGroupPolicyDecisionPolicy)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).UpdateGroupAccountDecisionPolicy(ctx, in)
+		return srv.(MsgServer).UpdateGroupPolicyDecisionPolicy(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Msg/UpdateGroupAccountDecisionPolicy",
+		FullMethod: "/cosmos.group.v1beta1.Msg/UpdateGroupPolicyDecisionPolicy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UpdateGroupAccountDecisionPolicy(ctx, req.(*MsgUpdateGroupAccountDecisionPolicyRequest))
+		return srv.(MsgServer).UpdateGroupPolicyDecisionPolicy(ctx, req.(*MsgUpdateGroupPolicyDecisionPolicy))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_UpdateGroupAccountMetadata_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgUpdateGroupAccountMetadataRequest)
+func _Msg_UpdateGroupPolicyMetadata_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateGroupPolicyMetadata)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).UpdateGroupAccountMetadata(ctx, in)
+		return srv.(MsgServer).UpdateGroupPolicyMetadata(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Msg/UpdateGroupAccountMetadata",
+		FullMethod: "/cosmos.group.v1beta1.Msg/UpdateGroupPolicyMetadata",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UpdateGroupAccountMetadata(ctx, req.(*MsgUpdateGroupAccountMetadataRequest))
+		return srv.(MsgServer).UpdateGroupPolicyMetadata(ctx, req.(*MsgUpdateGroupPolicyMetadata))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_CreateProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCreateProposalRequest)
+	in := new(MsgCreateProposal)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -10935,13 +10935,13 @@ func _Msg_CreateProposal_Handler(srv interface{}, ctx context.Context, dec func(
 		FullMethod: "/cosmos.group.v1beta1.Msg/CreateProposal",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CreateProposal(ctx, req.(*MsgCreateProposalRequest))
+		return srv.(MsgServer).CreateProposal(ctx, req.(*MsgCreateProposal))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_Vote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgVoteRequest)
+	in := new(MsgVote)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -10953,13 +10953,13 @@ func _Msg_Vote_Handler(srv interface{}, ctx context.Context, dec func(interface{
 		FullMethod: "/cosmos.group.v1beta1.Msg/Vote",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).Vote(ctx, req.(*MsgVoteRequest))
+		return srv.(MsgServer).Vote(ctx, req.(*MsgVote))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_Exec_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgExecRequest)
+	in := new(MsgExec)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -10971,7 +10971,7 @@ func _Msg_Exec_Handler(srv interface{}, ctx context.Context, dec func(interface{
 		FullMethod: "/cosmos.group.v1beta1.Msg/Exec",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).Exec(ctx, req.(*MsgExecRequest))
+		return srv.(MsgServer).Exec(ctx, req.(*MsgExec))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -11000,20 +11000,20 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_UpdateGroupMetadata_Handler,
 		},
 		{
-			MethodName: "CreateGroupAccount",
-			Handler:    _Msg_CreateGroupAccount_Handler,
+			MethodName: "CreateGroupPolicy",
+			Handler:    _Msg_CreateGroupPolicy_Handler,
 		},
 		{
-			MethodName: "UpdateGroupAccountAdmin",
-			Handler:    _Msg_UpdateGroupAccountAdmin_Handler,
+			MethodName: "UpdateGroupPolicyAdmin",
+			Handler:    _Msg_UpdateGroupPolicyAdmin_Handler,
 		},
 		{
-			MethodName: "UpdateGroupAccountDecisionPolicy",
-			Handler:    _Msg_UpdateGroupAccountDecisionPolicy_Handler,
+			MethodName: "UpdateGroupPolicyDecisionPolicy",
+			Handler:    _Msg_UpdateGroupPolicyDecisionPolicy_Handler,
 		},
 		{
-			MethodName: "UpdateGroupAccountMetadata",
-			Handler:    _Msg_UpdateGroupAccountMetadata_Handler,
+			MethodName: "UpdateGroupPolicyMetadata",
+			Handler:    _Msg_UpdateGroupPolicyMetadata_Handler,
 		},
 		{
 			MethodName: "CreateProposal",
@@ -11035,7 +11035,7 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
-// 	protoc        v3.19.1
+// 	protoc        (unknown)
 // source: cosmos/group/v1beta1/tx.proto
 
 const (
@@ -11098,8 +11098,8 @@ func (Exec) EnumDescriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{0}
 }
 
-// MsgCreateGroupRequest is the Msg/CreateGroup request type.
-type MsgCreateGroupRequest struct {
+// MsgCreateGroup is the Msg/CreateGroup request type.
+type MsgCreateGroup struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -11112,8 +11112,8 @@ type MsgCreateGroupRequest struct {
 	Metadata []byte `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
 
-func (x *MsgCreateGroupRequest) Reset() {
-	*x = MsgCreateGroupRequest{}
+func (x *MsgCreateGroup) Reset() {
+	*x = MsgCreateGroup{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11121,32 +11121,32 @@ func (x *MsgCreateGroupRequest) Reset() {
 	}
 }
 
-func (x *MsgCreateGroupRequest) String() string {
+func (x *MsgCreateGroup) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgCreateGroupRequest) ProtoMessage() {}
+func (*MsgCreateGroup) ProtoMessage() {}
 
-// Deprecated: Use MsgCreateGroupRequest.ProtoReflect.Descriptor instead.
-func (*MsgCreateGroupRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgCreateGroup.ProtoReflect.Descriptor instead.
+func (*MsgCreateGroup) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *MsgCreateGroupRequest) GetAdmin() string {
+func (x *MsgCreateGroup) GetAdmin() string {
 	if x != nil {
 		return x.Admin
 	}
 	return ""
 }
 
-func (x *MsgCreateGroupRequest) GetMembers() []*Member {
+func (x *MsgCreateGroup) GetMembers() []*Member {
 	if x != nil {
 		return x.Members
 	}
 	return nil
 }
 
-func (x *MsgCreateGroupRequest) GetMetadata() []byte {
+func (x *MsgCreateGroup) GetMetadata() []byte {
 	if x != nil {
 		return x.Metadata
 	}
@@ -11190,8 +11190,8 @@ func (x *MsgCreateGroupResponse) GetGroupId() uint64 {
 	return 0
 }
 
-// MsgUpdateGroupMembersRequest is the Msg/UpdateGroupMembers request type.
-type MsgUpdateGroupMembersRequest struct {
+// MsgUpdateGroupMembers is the Msg/UpdateGroupMembers request type.
+type MsgUpdateGroupMembers struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -11205,8 +11205,8 @@ type MsgUpdateGroupMembersRequest struct {
 	MemberUpdates []*Member `protobuf:"bytes,3,rep,name=member_updates,json=memberUpdates,proto3" json:"member_updates,omitempty"`
 }
 
-func (x *MsgUpdateGroupMembersRequest) Reset() {
-	*x = MsgUpdateGroupMembersRequest{}
+func (x *MsgUpdateGroupMembers) Reset() {
+	*x = MsgUpdateGroupMembers{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11214,32 +11214,32 @@ func (x *MsgUpdateGroupMembersRequest) Reset() {
 	}
 }
 
-func (x *MsgUpdateGroupMembersRequest) String() string {
+func (x *MsgUpdateGroupMembers) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgUpdateGroupMembersRequest) ProtoMessage() {}
+func (*MsgUpdateGroupMembers) ProtoMessage() {}
 
-// Deprecated: Use MsgUpdateGroupMembersRequest.ProtoReflect.Descriptor instead.
-func (*MsgUpdateGroupMembersRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgUpdateGroupMembers.ProtoReflect.Descriptor instead.
+func (*MsgUpdateGroupMembers) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *MsgUpdateGroupMembersRequest) GetAdmin() string {
+func (x *MsgUpdateGroupMembers) GetAdmin() string {
 	if x != nil {
 		return x.Admin
 	}
 	return ""
 }
 
-func (x *MsgUpdateGroupMembersRequest) GetGroupId() uint64 {
+func (x *MsgUpdateGroupMembers) GetGroupId() uint64 {
 	if x != nil {
 		return x.GroupId
 	}
 	return 0
 }
 
-func (x *MsgUpdateGroupMembersRequest) GetMemberUpdates() []*Member {
+func (x *MsgUpdateGroupMembers) GetMemberUpdates() []*Member {
 	if x != nil {
 		return x.MemberUpdates
 	}
@@ -11273,8 +11273,8 @@ func (*MsgUpdateGroupMembersResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{3}
 }
 
-// MsgUpdateGroupAdminRequest is the Msg/UpdateGroupAdmin request type.
-type MsgUpdateGroupAdminRequest struct {
+// MsgUpdateGroupAdmin is the Msg/UpdateGroupAdmin request type.
+type MsgUpdateGroupAdmin struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -11287,8 +11287,8 @@ type MsgUpdateGroupAdminRequest struct {
 	NewAdmin string `protobuf:"bytes,3,opt,name=new_admin,json=newAdmin,proto3" json:"new_admin,omitempty"`
 }
 
-func (x *MsgUpdateGroupAdminRequest) Reset() {
-	*x = MsgUpdateGroupAdminRequest{}
+func (x *MsgUpdateGroupAdmin) Reset() {
+	*x = MsgUpdateGroupAdmin{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11296,32 +11296,32 @@ func (x *MsgUpdateGroupAdminRequest) Reset() {
 	}
 }
 
-func (x *MsgUpdateGroupAdminRequest) String() string {
+func (x *MsgUpdateGroupAdmin) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgUpdateGroupAdminRequest) ProtoMessage() {}
+func (*MsgUpdateGroupAdmin) ProtoMessage() {}
 
-// Deprecated: Use MsgUpdateGroupAdminRequest.ProtoReflect.Descriptor instead.
-func (*MsgUpdateGroupAdminRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgUpdateGroupAdmin.ProtoReflect.Descriptor instead.
+func (*MsgUpdateGroupAdmin) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *MsgUpdateGroupAdminRequest) GetAdmin() string {
+func (x *MsgUpdateGroupAdmin) GetAdmin() string {
 	if x != nil {
 		return x.Admin
 	}
 	return ""
 }
 
-func (x *MsgUpdateGroupAdminRequest) GetGroupId() uint64 {
+func (x *MsgUpdateGroupAdmin) GetGroupId() uint64 {
 	if x != nil {
 		return x.GroupId
 	}
 	return 0
 }
 
-func (x *MsgUpdateGroupAdminRequest) GetNewAdmin() string {
+func (x *MsgUpdateGroupAdmin) GetNewAdmin() string {
 	if x != nil {
 		return x.NewAdmin
 	}
@@ -11355,8 +11355,8 @@ func (*MsgUpdateGroupAdminResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{5}
 }
 
-// MsgUpdateGroupMetadataRequest is the Msg/UpdateGroupMetadata request type.
-type MsgUpdateGroupMetadataRequest struct {
+// MsgUpdateGroupMetadata is the Msg/UpdateGroupMetadata request type.
+type MsgUpdateGroupMetadata struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -11369,8 +11369,8 @@ type MsgUpdateGroupMetadataRequest struct {
 	Metadata []byte `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
 
-func (x *MsgUpdateGroupMetadataRequest) Reset() {
-	*x = MsgUpdateGroupMetadataRequest{}
+func (x *MsgUpdateGroupMetadata) Reset() {
+	*x = MsgUpdateGroupMetadata{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11378,32 +11378,32 @@ func (x *MsgUpdateGroupMetadataRequest) Reset() {
 	}
 }
 
-func (x *MsgUpdateGroupMetadataRequest) String() string {
+func (x *MsgUpdateGroupMetadata) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgUpdateGroupMetadataRequest) ProtoMessage() {}
+func (*MsgUpdateGroupMetadata) ProtoMessage() {}
 
-// Deprecated: Use MsgUpdateGroupMetadataRequest.ProtoReflect.Descriptor instead.
-func (*MsgUpdateGroupMetadataRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgUpdateGroupMetadata.ProtoReflect.Descriptor instead.
+func (*MsgUpdateGroupMetadata) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *MsgUpdateGroupMetadataRequest) GetAdmin() string {
+func (x *MsgUpdateGroupMetadata) GetAdmin() string {
 	if x != nil {
 		return x.Admin
 	}
 	return ""
 }
 
-func (x *MsgUpdateGroupMetadataRequest) GetGroupId() uint64 {
+func (x *MsgUpdateGroupMetadata) GetGroupId() uint64 {
 	if x != nil {
 		return x.GroupId
 	}
 	return 0
 }
 
-func (x *MsgUpdateGroupMetadataRequest) GetMetadata() []byte {
+func (x *MsgUpdateGroupMetadata) GetMetadata() []byte {
 	if x != nil {
 		return x.Metadata
 	}
@@ -11437,8 +11437,8 @@ func (*MsgUpdateGroupMetadataResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{7}
 }
 
-// MsgCreateGroupAccountRequest is the Msg/CreateGroupAccount request type.
-type MsgCreateGroupAccountRequest struct {
+// MsgCreateGroupPolicy is the Msg/CreateGroupPolicy request type.
+type MsgCreateGroupPolicy struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -11447,14 +11447,14 @@ type MsgCreateGroupAccountRequest struct {
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
 	// group_id is the unique ID of the group.
 	GroupId uint64 `protobuf:"varint,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
-	// metadata is any arbitrary metadata to attached to the group account.
+	// metadata is any arbitrary metadata attached to the group policy.
 	Metadata []byte `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
-	// decision_policy specifies the group account's decision policy.
+	// decision_policy specifies the group policy's decision policy.
 	DecisionPolicy *anypb.Any `protobuf:"bytes,4,opt,name=decision_policy,json=decisionPolicy,proto3" json:"decision_policy,omitempty"`
 }
 
-func (x *MsgCreateGroupAccountRequest) Reset() {
-	*x = MsgCreateGroupAccountRequest{}
+func (x *MsgCreateGroupPolicy) Reset() {
+	*x = MsgCreateGroupPolicy{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11462,57 +11462,57 @@ func (x *MsgCreateGroupAccountRequest) Reset() {
 	}
 }
 
-func (x *MsgCreateGroupAccountRequest) String() string {
+func (x *MsgCreateGroupPolicy) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgCreateGroupAccountRequest) ProtoMessage() {}
+func (*MsgCreateGroupPolicy) ProtoMessage() {}
 
-// Deprecated: Use MsgCreateGroupAccountRequest.ProtoReflect.Descriptor instead.
-func (*MsgCreateGroupAccountRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgCreateGroupPolicy.ProtoReflect.Descriptor instead.
+func (*MsgCreateGroupPolicy) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *MsgCreateGroupAccountRequest) GetAdmin() string {
+func (x *MsgCreateGroupPolicy) GetAdmin() string {
 	if x != nil {
 		return x.Admin
 	}
 	return ""
 }
 
-func (x *MsgCreateGroupAccountRequest) GetGroupId() uint64 {
+func (x *MsgCreateGroupPolicy) GetGroupId() uint64 {
 	if x != nil {
 		return x.GroupId
 	}
 	return 0
 }
 
-func (x *MsgCreateGroupAccountRequest) GetMetadata() []byte {
+func (x *MsgCreateGroupPolicy) GetMetadata() []byte {
 	if x != nil {
 		return x.Metadata
 	}
 	return nil
 }
 
-func (x *MsgCreateGroupAccountRequest) GetDecisionPolicy() *anypb.Any {
+func (x *MsgCreateGroupPolicy) GetDecisionPolicy() *anypb.Any {
 	if x != nil {
 		return x.DecisionPolicy
 	}
 	return nil
 }
 
-// MsgCreateGroupAccountResponse is the Msg/CreateGroupAccount response type.
-type MsgCreateGroupAccountResponse struct {
+// MsgCreateGroupPolicyResponse is the Msg/CreateGroupPolicy response type.
+type MsgCreateGroupPolicyResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// address is the account address of the newly created group account.
+	// address is the account address of the newly created group policy.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 }
 
-func (x *MsgCreateGroupAccountResponse) Reset() {
-	*x = MsgCreateGroupAccountResponse{}
+func (x *MsgCreateGroupPolicyResponse) Reset() {
+	*x = MsgCreateGroupPolicyResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11520,40 +11520,40 @@ func (x *MsgCreateGroupAccountResponse) Reset() {
 	}
 }
 
-func (x *MsgCreateGroupAccountResponse) String() string {
+func (x *MsgCreateGroupPolicyResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgCreateGroupAccountResponse) ProtoMessage() {}
+func (*MsgCreateGroupPolicyResponse) ProtoMessage() {}
 
-// Deprecated: Use MsgCreateGroupAccountResponse.ProtoReflect.Descriptor instead.
-func (*MsgCreateGroupAccountResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgCreateGroupPolicyResponse.ProtoReflect.Descriptor instead.
+func (*MsgCreateGroupPolicyResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *MsgCreateGroupAccountResponse) GetAddress() string {
+func (x *MsgCreateGroupPolicyResponse) GetAddress() string {
 	if x != nil {
 		return x.Address
 	}
 	return ""
 }
 
-// MsgUpdateGroupAccountAdminRequest is the Msg/UpdateGroupAccountAdmin request type.
-type MsgUpdateGroupAccountAdminRequest struct {
+// MsgUpdateGroupPolicyAdmin is the Msg/UpdateGroupPolicyAdmin request type.
+type MsgUpdateGroupPolicyAdmin struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	// admin is the account address of the group admin.
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
-	// address is the group account address.
+	// address is the account address of the group policy.
 	Address string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
-	// new_admin is the new group account admin.
+	// new_admin is the new group policy admin.
 	NewAdmin string `protobuf:"bytes,3,opt,name=new_admin,json=newAdmin,proto3" json:"new_admin,omitempty"`
 }
 
-func (x *MsgUpdateGroupAccountAdminRequest) Reset() {
-	*x = MsgUpdateGroupAccountAdminRequest{}
+func (x *MsgUpdateGroupPolicyAdmin) Reset() {
+	*x = MsgUpdateGroupPolicyAdmin{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11561,47 +11561,47 @@ func (x *MsgUpdateGroupAccountAdminRequest) Reset() {
 	}
 }
 
-func (x *MsgUpdateGroupAccountAdminRequest) String() string {
+func (x *MsgUpdateGroupPolicyAdmin) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgUpdateGroupAccountAdminRequest) ProtoMessage() {}
+func (*MsgUpdateGroupPolicyAdmin) ProtoMessage() {}
 
-// Deprecated: Use MsgUpdateGroupAccountAdminRequest.ProtoReflect.Descriptor instead.
-func (*MsgUpdateGroupAccountAdminRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgUpdateGroupPolicyAdmin.ProtoReflect.Descriptor instead.
+func (*MsgUpdateGroupPolicyAdmin) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *MsgUpdateGroupAccountAdminRequest) GetAdmin() string {
+func (x *MsgUpdateGroupPolicyAdmin) GetAdmin() string {
 	if x != nil {
 		return x.Admin
 	}
 	return ""
 }
 
-func (x *MsgUpdateGroupAccountAdminRequest) GetAddress() string {
+func (x *MsgUpdateGroupPolicyAdmin) GetAddress() string {
 	if x != nil {
 		return x.Address
 	}
 	return ""
 }
 
-func (x *MsgUpdateGroupAccountAdminRequest) GetNewAdmin() string {
+func (x *MsgUpdateGroupPolicyAdmin) GetNewAdmin() string {
 	if x != nil {
 		return x.NewAdmin
 	}
 	return ""
 }
 
-// MsgUpdateGroupAccountAdminResponse is the Msg/UpdateGroupAccountAdmin response type.
-type MsgUpdateGroupAccountAdminResponse struct {
+// MsgUpdateGroupPolicyAdminResponse is the Msg/UpdateGroupPolicyAdmin response type.
+type MsgUpdateGroupPolicyAdminResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 }
 
-func (x *MsgUpdateGroupAccountAdminResponse) Reset() {
-	*x = MsgUpdateGroupAccountAdminResponse{}
+func (x *MsgUpdateGroupPolicyAdminResponse) Reset() {
+	*x = MsgUpdateGroupPolicyAdminResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11609,33 +11609,33 @@ func (x *MsgUpdateGroupAccountAdminResponse) Reset() {
 	}
 }
 
-func (x *MsgUpdateGroupAccountAdminResponse) String() string {
+func (x *MsgUpdateGroupPolicyAdminResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgUpdateGroupAccountAdminResponse) ProtoMessage() {}
+func (*MsgUpdateGroupPolicyAdminResponse) ProtoMessage() {}
 
-// Deprecated: Use MsgUpdateGroupAccountAdminResponse.ProtoReflect.Descriptor instead.
-func (*MsgUpdateGroupAccountAdminResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgUpdateGroupPolicyAdminResponse.ProtoReflect.Descriptor instead.
+func (*MsgUpdateGroupPolicyAdminResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{11}
 }
 
-// MsgUpdateGroupAccountDecisionPolicyRequest is the Msg/UpdateGroupAccountDecisionPolicy request type.
-type MsgUpdateGroupAccountDecisionPolicyRequest struct {
+// MsgUpdateGroupPolicyDecisionPolicy is the Msg/UpdateGroupPolicyDecisionPolicy request type.
+type MsgUpdateGroupPolicyDecisionPolicy struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	// admin is the account address of the group admin.
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
-	// address is the group account address.
+	// address is the account address of group policy.
 	Address string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
-	// decision_policy is the updated group account decision policy.
+	// decision_policy is the updated group policy's decision policy.
 	DecisionPolicy *anypb.Any `protobuf:"bytes,3,opt,name=decision_policy,json=decisionPolicy,proto3" json:"decision_policy,omitempty"`
 }
 
-func (x *MsgUpdateGroupAccountDecisionPolicyRequest) Reset() {
-	*x = MsgUpdateGroupAccountDecisionPolicyRequest{}
+func (x *MsgUpdateGroupPolicyDecisionPolicy) Reset() {
+	*x = MsgUpdateGroupPolicyDecisionPolicy{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11643,47 +11643,47 @@ func (x *MsgUpdateGroupAccountDecisionPolicyRequest) Reset() {
 	}
 }
 
-func (x *MsgUpdateGroupAccountDecisionPolicyRequest) String() string {
+func (x *MsgUpdateGroupPolicyDecisionPolicy) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgUpdateGroupAccountDecisionPolicyRequest) ProtoMessage() {}
+func (*MsgUpdateGroupPolicyDecisionPolicy) ProtoMessage() {}
 
-// Deprecated: Use MsgUpdateGroupAccountDecisionPolicyRequest.ProtoReflect.Descriptor instead.
-func (*MsgUpdateGroupAccountDecisionPolicyRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgUpdateGroupPolicyDecisionPolicy.ProtoReflect.Descriptor instead.
+func (*MsgUpdateGroupPolicyDecisionPolicy) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *MsgUpdateGroupAccountDecisionPolicyRequest) GetAdmin() string {
+func (x *MsgUpdateGroupPolicyDecisionPolicy) GetAdmin() string {
 	if x != nil {
 		return x.Admin
 	}
 	return ""
 }
 
-func (x *MsgUpdateGroupAccountDecisionPolicyRequest) GetAddress() string {
+func (x *MsgUpdateGroupPolicyDecisionPolicy) GetAddress() string {
 	if x != nil {
 		return x.Address
 	}
 	return ""
 }
 
-func (x *MsgUpdateGroupAccountDecisionPolicyRequest) GetDecisionPolicy() *anypb.Any {
+func (x *MsgUpdateGroupPolicyDecisionPolicy) GetDecisionPolicy() *anypb.Any {
 	if x != nil {
 		return x.DecisionPolicy
 	}
 	return nil
 }
 
-// MsgUpdateGroupAccountDecisionPolicyResponse is the Msg/UpdateGroupAccountDecisionPolicy response type.
-type MsgUpdateGroupAccountDecisionPolicyResponse struct {
+// MsgUpdateGroupPolicyDecisionPolicyResponse is the Msg/UpdateGroupPolicyDecisionPolicy response type.
+type MsgUpdateGroupPolicyDecisionPolicyResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 }
 
-func (x *MsgUpdateGroupAccountDecisionPolicyResponse) Reset() {
-	*x = MsgUpdateGroupAccountDecisionPolicyResponse{}
+func (x *MsgUpdateGroupPolicyDecisionPolicyResponse) Reset() {
+	*x = MsgUpdateGroupPolicyDecisionPolicyResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11691,33 +11691,33 @@ func (x *MsgUpdateGroupAccountDecisionPolicyResponse) Reset() {
 	}
 }
 
-func (x *MsgUpdateGroupAccountDecisionPolicyResponse) String() string {
+func (x *MsgUpdateGroupPolicyDecisionPolicyResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgUpdateGroupAccountDecisionPolicyResponse) ProtoMessage() {}
+func (*MsgUpdateGroupPolicyDecisionPolicyResponse) ProtoMessage() {}
 
-// Deprecated: Use MsgUpdateGroupAccountDecisionPolicyResponse.ProtoReflect.Descriptor instead.
-func (*MsgUpdateGroupAccountDecisionPolicyResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgUpdateGroupPolicyDecisionPolicyResponse.ProtoReflect.Descriptor instead.
+func (*MsgUpdateGroupPolicyDecisionPolicyResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{13}
 }
 
-// MsgUpdateGroupAccountMetadataRequest is the Msg/UpdateGroupAccountMetadata request type.
-type MsgUpdateGroupAccountMetadataRequest struct {
+// MsgUpdateGroupPolicyMetadata is the Msg/UpdateGroupPolicyMetadata request type.
+type MsgUpdateGroupPolicyMetadata struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	// admin is the account address of the group admin.
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
-	// address is the group account address.
+	// address is the account address of group policy.
 	Address string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
-	// metadata is the updated group account metadata.
+	// metadata is the updated group policy metadata.
 	Metadata []byte `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
 
-func (x *MsgUpdateGroupAccountMetadataRequest) Reset() {
-	*x = MsgUpdateGroupAccountMetadataRequest{}
+func (x *MsgUpdateGroupPolicyMetadata) Reset() {
+	*x = MsgUpdateGroupPolicyMetadata{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11725,47 +11725,47 @@ func (x *MsgUpdateGroupAccountMetadataRequest) Reset() {
 	}
 }
 
-func (x *MsgUpdateGroupAccountMetadataRequest) String() string {
+func (x *MsgUpdateGroupPolicyMetadata) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgUpdateGroupAccountMetadataRequest) ProtoMessage() {}
+func (*MsgUpdateGroupPolicyMetadata) ProtoMessage() {}
 
-// Deprecated: Use MsgUpdateGroupAccountMetadataRequest.ProtoReflect.Descriptor instead.
-func (*MsgUpdateGroupAccountMetadataRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgUpdateGroupPolicyMetadata.ProtoReflect.Descriptor instead.
+func (*MsgUpdateGroupPolicyMetadata) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{14}
 }
 
-func (x *MsgUpdateGroupAccountMetadataRequest) GetAdmin() string {
+func (x *MsgUpdateGroupPolicyMetadata) GetAdmin() string {
 	if x != nil {
 		return x.Admin
 	}
 	return ""
 }
 
-func (x *MsgUpdateGroupAccountMetadataRequest) GetAddress() string {
+func (x *MsgUpdateGroupPolicyMetadata) GetAddress() string {
 	if x != nil {
 		return x.Address
 	}
 	return ""
 }
 
-func (x *MsgUpdateGroupAccountMetadataRequest) GetMetadata() []byte {
+func (x *MsgUpdateGroupPolicyMetadata) GetMetadata() []byte {
 	if x != nil {
 		return x.Metadata
 	}
 	return nil
 }
 
-// MsgUpdateGroupAccountMetadataResponse is the Msg/UpdateGroupAccountMetadata response type.
-type MsgUpdateGroupAccountMetadataResponse struct {
+// MsgUpdateGroupPolicyMetadataResponse is the Msg/UpdateGroupPolicyMetadata response type.
+type MsgUpdateGroupPolicyMetadataResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 }
 
-func (x *MsgUpdateGroupAccountMetadataResponse) Reset() {
-	*x = MsgUpdateGroupAccountMetadataResponse{}
+func (x *MsgUpdateGroupPolicyMetadataResponse) Reset() {
+	*x = MsgUpdateGroupPolicyMetadataResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11773,24 +11773,24 @@ func (x *MsgUpdateGroupAccountMetadataResponse) Reset() {
 	}
 }
 
-func (x *MsgUpdateGroupAccountMetadataResponse) String() string {
+func (x *MsgUpdateGroupPolicyMetadataResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgUpdateGroupAccountMetadataResponse) ProtoMessage() {}
+func (*MsgUpdateGroupPolicyMetadataResponse) ProtoMessage() {}
 
-// Deprecated: Use MsgUpdateGroupAccountMetadataResponse.ProtoReflect.Descriptor instead.
-func (*MsgUpdateGroupAccountMetadataResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgUpdateGroupPolicyMetadataResponse.ProtoReflect.Descriptor instead.
+func (*MsgUpdateGroupPolicyMetadataResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{15}
 }
 
-// MsgCreateProposalRequest is the Msg/CreateProposal request type.
-type MsgCreateProposalRequest struct {
+// MsgCreateProposal is the Msg/CreateProposal request type.
+type MsgCreateProposal struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// address is the group account address.
+	// address is the account address of group policy.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 	// proposers are the account addresses of the proposers.
 	// Proposers signatures will be counted as yes votes.
@@ -11805,8 +11805,8 @@ type MsgCreateProposalRequest struct {
 	Exec Exec `protobuf:"varint,5,opt,name=exec,proto3,enum=cosmos.group.v1beta1.Exec" json:"exec,omitempty"`
 }
 
-func (x *MsgCreateProposalRequest) Reset() {
-	*x = MsgCreateProposalRequest{}
+func (x *MsgCreateProposal) Reset() {
+	*x = MsgCreateProposal{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11814,46 +11814,46 @@ func (x *MsgCreateProposalRequest) Reset() {
 	}
 }
 
-func (x *MsgCreateProposalRequest) String() string {
+func (x *MsgCreateProposal) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgCreateProposalRequest) ProtoMessage() {}
+func (*MsgCreateProposal) ProtoMessage() {}
 
-// Deprecated: Use MsgCreateProposalRequest.ProtoReflect.Descriptor instead.
-func (*MsgCreateProposalRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgCreateProposal.ProtoReflect.Descriptor instead.
+func (*MsgCreateProposal) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{16}
 }
 
-func (x *MsgCreateProposalRequest) GetAddress() string {
+func (x *MsgCreateProposal) GetAddress() string {
 	if x != nil {
 		return x.Address
 	}
 	return ""
 }
 
-func (x *MsgCreateProposalRequest) GetProposers() []string {
+func (x *MsgCreateProposal) GetProposers() []string {
 	if x != nil {
 		return x.Proposers
 	}
 	return nil
 }
 
-func (x *MsgCreateProposalRequest) GetMetadata() []byte {
+func (x *MsgCreateProposal) GetMetadata() []byte {
 	if x != nil {
 		return x.Metadata
 	}
 	return nil
 }
 
-func (x *MsgCreateProposalRequest) GetMsgs() []*anypb.Any {
+func (x *MsgCreateProposal) GetMsgs() []*anypb.Any {
 	if x != nil {
 		return x.Msgs
 	}
 	return nil
 }
 
-func (x *MsgCreateProposalRequest) GetExec() Exec {
+func (x *MsgCreateProposal) GetExec() Exec {
 	if x != nil {
 		return x.Exec
 	}
@@ -11897,8 +11897,8 @@ func (x *MsgCreateProposalResponse) GetProposalId() uint64 {
 	return 0
 }
 
-// MsgVoteRequest is the Msg/Vote request type.
-type MsgVoteRequest struct {
+// MsgVote is the Msg/Vote request type.
+type MsgVote struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -11916,8 +11916,8 @@ type MsgVoteRequest struct {
 	Exec Exec `protobuf:"varint,5,opt,name=exec,proto3,enum=cosmos.group.v1beta1.Exec" json:"exec,omitempty"`
 }
 
-func (x *MsgVoteRequest) Reset() {
-	*x = MsgVoteRequest{}
+func (x *MsgVote) Reset() {
+	*x = MsgVote{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11925,46 +11925,46 @@ func (x *MsgVoteRequest) Reset() {
 	}
 }
 
-func (x *MsgVoteRequest) String() string {
+func (x *MsgVote) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgVoteRequest) ProtoMessage() {}
+func (*MsgVote) ProtoMessage() {}
 
-// Deprecated: Use MsgVoteRequest.ProtoReflect.Descriptor instead.
-func (*MsgVoteRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgVote.ProtoReflect.Descriptor instead.
+func (*MsgVote) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{18}
 }
 
-func (x *MsgVoteRequest) GetProposalId() uint64 {
+func (x *MsgVote) GetProposalId() uint64 {
 	if x != nil {
 		return x.ProposalId
 	}
 	return 0
 }
 
-func (x *MsgVoteRequest) GetVoter() string {
+func (x *MsgVote) GetVoter() string {
 	if x != nil {
 		return x.Voter
 	}
 	return ""
 }
 
-func (x *MsgVoteRequest) GetChoice() Choice {
+func (x *MsgVote) GetChoice() Choice {
 	if x != nil {
 		return x.Choice
 	}
 	return Choice_CHOICE_UNSPECIFIED
 }
 
-func (x *MsgVoteRequest) GetMetadata() []byte {
+func (x *MsgVote) GetMetadata() []byte {
 	if x != nil {
 		return x.Metadata
 	}
 	return nil
 }
 
-func (x *MsgVoteRequest) GetExec() Exec {
+func (x *MsgVote) GetExec() Exec {
 	if x != nil {
 		return x.Exec
 	}
@@ -11998,8 +11998,8 @@ func (*MsgVoteResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{19}
 }
 
-// MsgExecRequest is the Msg/Exec request type.
-type MsgExecRequest struct {
+// MsgExec is the Msg/Exec request type.
+type MsgExec struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -12010,8 +12010,8 @@ type MsgExecRequest struct {
 	Signer string `protobuf:"bytes,2,opt,name=signer,proto3" json:"signer,omitempty"`
 }
 
-func (x *MsgExecRequest) Reset() {
-	*x = MsgExecRequest{}
+func (x *MsgExec) Reset() {
+	*x = MsgExec{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -12019,25 +12019,25 @@ func (x *MsgExecRequest) Reset() {
 	}
 }
 
-func (x *MsgExecRequest) String() string {
+func (x *MsgExec) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgExecRequest) ProtoMessage() {}
+func (*MsgExec) ProtoMessage() {}
 
-// Deprecated: Use MsgExecRequest.ProtoReflect.Descriptor instead.
-func (*MsgExecRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgExec.ProtoReflect.Descriptor instead.
+func (*MsgExec) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{20}
 }
 
-func (x *MsgExecRequest) GetProposalId() uint64 {
+func (x *MsgExec) GetProposalId() uint64 {
 	if x != nil {
 		return x.ProposalId
 	}
 	return 0
 }
 
-func (x *MsgExecRequest) GetSigner() string {
+func (x *MsgExec) GetSigner() string {
 	if x != nil {
 		return x.Signer
 	}
@@ -12084,110 +12084,106 @@ var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
 	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x61, 0x6e, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x1a, 0x20, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2f,
 	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x22, 0xa1, 0x01, 0x0a, 0x15, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74,
-	0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a,
-	0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
-	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x3c, 0x0a,
-	0x07, 0x6d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1c,
-	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x42, 0x04, 0xc8, 0xde,
-	0x1f, 0x00, 0x52, 0x07, 0x6d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x12, 0x1a, 0x0a, 0x08, 0x6d,
-	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x6d,
-	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x22, 0x33, 0x0a, 0x16, 0x4d, 0x73, 0x67, 0x43, 0x72,
-	0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x19, 0x0a, 0x08, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x04, 0x52, 0x07, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x64, 0x22, 0xb4, 0x01, 0x0a,
-	0x1c, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d,
-	0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a,
-	0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
-	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x19, 0x0a,
-	0x08, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52,
-	0x07, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x64, 0x12, 0x49, 0x0a, 0x0e, 0x6d, 0x65, 0x6d, 0x62,
-	0x65, 0x72, 0x5f, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b,
-	0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x42, 0x04,
-	0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0d, 0x6d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x55, 0x70, 0x64, 0x61,
-	0x74, 0x65, 0x73, 0x22, 0x1f, 0x0a, 0x1d, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
-	0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x9e, 0x01, 0x0a, 0x1a, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61,
-	0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64,
-	0x6d, 0x69, 0x6e, 0x12, 0x19, 0x0a, 0x08, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x69, 0x64, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x64, 0x12, 0x35,
-	0x0a, 0x09, 0x6e, 0x65, 0x77, 0x5f, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28,
-	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x08, 0x6e, 0x65, 0x77,
-	0x41, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x1d, 0x0a, 0x1b, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61,
-	0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x86, 0x01, 0x0a, 0x1d, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61,
-	0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18,
+	0x6f, 0x74, 0x6f, 0x22, 0x9a, 0x01, 0x0a, 0x0e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74,
+	0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
 	0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52,
-	0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x19, 0x0a, 0x08, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f,
-	0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x49,
-	0x64, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x22, 0x20, 0x0a,
-	0x1e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d,
-	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
-	0xde, 0x01, 0x0a, 0x1c, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f,
-	0x75, 0x70, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42,
-	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e,
-	0x12, 0x19, 0x0a, 0x08, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x04, 0x52, 0x07, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x64, 0x12, 0x1a, 0x0a, 0x08, 0x6d,
-	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x6d,
-	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x51, 0x0a, 0x0f, 0x64, 0x65, 0x63, 0x69, 0x73,
-	0x69, 0x6f, 0x6e, 0x5f, 0x70, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
-	0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x42, 0x12, 0xca, 0xb4, 0x2d, 0x0e, 0x44, 0x65, 0x63, 0x69,
-	0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x52, 0x0e, 0x64, 0x65, 0x63, 0x69,
-	0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x3a, 0x04, 0x88, 0xa0, 0x1f, 0x00,
-	0x22, 0x53, 0x0a, 0x1d, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f,
-	0x75, 0x70, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x32, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x61, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0xbe, 0x01, 0x0a, 0x21, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64,
-	0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x41,
-	0x64, 0x6d, 0x69, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61,
+	0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x3c, 0x0a, 0x07, 0x6d, 0x65, 0x6d, 0x62, 0x65, 0x72,
+	0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d,
+	0x65, 0x6d, 0x62, 0x65, 0x72, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x07, 0x6d, 0x65, 0x6d,
+	0x62, 0x65, 0x72, 0x73, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
+	0x22, 0x33, 0x0a, 0x16, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f,
+	0x75, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x67, 0x72,
+	0x6f, 0x75, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x67, 0x72,
+	0x6f, 0x75, 0x70, 0x49, 0x64, 0x22, 0xad, 0x01, 0x0a, 0x15, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64,
+	0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x12,
+	0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
+	0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12,
+	0x19, 0x0a, 0x08, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x04, 0x52, 0x07, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x64, 0x12, 0x49, 0x0a, 0x0e, 0x6d, 0x65,
+	0x6d, 0x62, 0x65, 0x72, 0x5f, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x73, 0x18, 0x03, 0x20, 0x03,
+	0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75,
+	0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72,
+	0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0d, 0x6d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x55, 0x70,
+	0x64, 0x61, 0x74, 0x65, 0x73, 0x22, 0x1f, 0x0a, 0x1d, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61,
+	0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x97, 0x01, 0x0a, 0x13, 0x4d, 0x73, 0x67, 0x55, 0x70,
+	0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x2e,
+	0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2,
+	0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x19,
+	0x0a, 0x08, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04,
+	0x52, 0x07, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x64, 0x12, 0x35, 0x0a, 0x09, 0x6e, 0x65, 0x77,
+	0x5f, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
+	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x08, 0x6e, 0x65, 0x77, 0x41, 0x64, 0x6d, 0x69, 0x6e,
+	0x22, 0x1d, 0x0a, 0x1b, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f,
+	0x75, 0x70, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x7f, 0x0a, 0x16, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75,
+	0x70, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d,
+	0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
+	0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x19, 0x0a, 0x08, 0x67, 0x72, 0x6f,
+	0x75, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x67, 0x72, 0x6f,
+	0x75, 0x70, 0x49, 0x64, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
+	0x22, 0x20, 0x0a, 0x1e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f,
+	0x75, 0x70, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x22, 0xd6, 0x01, 0x0a, 0x14, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
+	0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x12, 0x2e, 0x0a, 0x05, 0x61,
 	0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
 	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74,
-	0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x32, 0x0a, 0x07, 0x61,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
+	0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x19, 0x0a, 0x08, 0x67,
+	0x72, 0x6f, 0x75, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x67,
+	0x72, 0x6f, 0x75, 0x70, 0x49, 0x64, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61,
+	0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61,
+	0x74, 0x61, 0x12, 0x51, 0x0a, 0x0f, 0x64, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x70,
+	0x6f, 0x6c, 0x69, 0x63, 0x79, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f,
+	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e,
+	0x79, 0x42, 0x12, 0xca, 0xb4, 0x2d, 0x0e, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50,
+	0x6f, 0x6c, 0x69, 0x63, 0x79, 0x52, 0x0e, 0x64, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50,
+	0x6f, 0x6c, 0x69, 0x63, 0x79, 0x3a, 0x04, 0x88, 0xa0, 0x1f, 0x00, 0x22, 0x52, 0x0a, 0x1c, 0x4d,
+	0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c,
+	0x69, 0x63, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x32, 0x0a, 0x07, 0x61,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
 	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12,
-	0x35, 0x0a, 0x09, 0x6e, 0x65, 0x77, 0x5f, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x08, 0x6e, 0x65,
-	0x77, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x24, 0x0a, 0x22, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64,
-	0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x41,
-	0x64, 0x6d, 0x69, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xe9, 0x01, 0x0a,
-	0x2a, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41,
-	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f,
-	0x6c, 0x69, 0x63, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61,
-	0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74,
-	0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x32, 0x0a, 0x07, 0x61,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
+	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22,
+	0xb6, 0x01, 0x0a, 0x19, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f,
+	0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x2e, 0x0a,
+	0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
 	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12,
-	0x51, 0x0a, 0x0f, 0x64, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x70, 0x6f, 0x6c, 0x69,
-	0x63, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
-	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x42, 0x12,
-	0xca, 0xb4, 0x2d, 0x0e, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69,
-	0x63, 0x79, 0x52, 0x0e, 0x64, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69,
-	0x63, 0x79, 0x3a, 0x04, 0x88, 0xa0, 0x1f, 0x00, 0x22, 0x2d, 0x0a, 0x2b, 0x4d, 0x73, 0x67, 0x55,
-	0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e,
-	0x74, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xa6, 0x01, 0x0a, 0x24, 0x4d, 0x73, 0x67, 0x55,
-	0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e,
-	0x74, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x32, 0x0a,
+	0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
+	0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x12, 0x35, 0x0a, 0x09, 0x6e, 0x65, 0x77, 0x5f, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x08,
+	0x6e, 0x65, 0x77, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x23, 0x0a, 0x21, 0x4d, 0x73, 0x67, 0x55,
+	0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79,
+	0x41, 0x64, 0x6d, 0x69, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xe1, 0x01,
+	0x0a, 0x22, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70,
+	0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f,
+	0x6c, 0x69, 0x63, 0x79, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61,
+	0x64, 0x6d, 0x69, 0x6e, 0x12, 0x32, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52,
+	0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x51, 0x0a, 0x0f, 0x64, 0x65, 0x63, 0x69,
+	0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x70, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x42, 0x12, 0xca, 0xb4, 0x2d, 0x0e, 0x44, 0x65, 0x63,
+	0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x52, 0x0e, 0x64, 0x65, 0x63,
+	0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x3a, 0x04, 0x88, 0xa0, 0x1f,
+	0x00, 0x22, 0x2c, 0x0a, 0x2a, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72,
+	0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f,
+	0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x9e, 0x01, 0x0a, 0x1c, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f,
+	0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
 	0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42,
 	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
 	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e,
@@ -12196,137 +12192,130 @@ var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
 	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x61, 0x64, 0x64,
 	0x72, 0x65, 0x73, 0x73, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
 	0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
-	0x22, 0x27, 0x0a, 0x25, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f,
-	0x75, 0x70, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
-	0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xe8, 0x01, 0x0a, 0x18, 0x4d, 0x73,
-	0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x32, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
-	0x67, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x1c, 0x0a, 0x09, 0x70, 0x72,
-	0x6f, 0x70, 0x6f, 0x73, 0x65, 0x72, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x09, 0x52, 0x09, 0x70,
-	0x72, 0x6f, 0x70, 0x6f, 0x73, 0x65, 0x72, 0x73, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0x12, 0x28, 0x0a, 0x04, 0x6d, 0x73, 0x67, 0x73, 0x18, 0x04, 0x20, 0x03,
-	0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x04, 0x6d, 0x73, 0x67, 0x73, 0x12, 0x2e,
-	0x0a, 0x04, 0x65, 0x78, 0x65, 0x63, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x1a, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2e, 0x45, 0x78, 0x65, 0x63, 0x52, 0x04, 0x65, 0x78, 0x65, 0x63, 0x3a, 0x04,
-	0x88, 0xa0, 0x1f, 0x00, 0x22, 0x3c, 0x0a, 0x19, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74,
-	0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x5f, 0x69, 0x64,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c,
-	0x49, 0x64, 0x22, 0xe3, 0x01, 0x0a, 0x0e, 0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61,
-	0x6c, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x70, 0x72, 0x6f, 0x70,
-	0x6f, 0x73, 0x61, 0x6c, 0x49, 0x64, 0x12, 0x2e, 0x0a, 0x05, 0x76, 0x6f, 0x74, 0x65, 0x72, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52,
-	0x05, 0x76, 0x6f, 0x74, 0x65, 0x72, 0x12, 0x34, 0x0a, 0x06, 0x63, 0x68, 0x6f, 0x69, 0x63, 0x65,
-	0x18, 0x03, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x68,
-	0x6f, 0x69, 0x63, 0x65, 0x52, 0x06, 0x63, 0x68, 0x6f, 0x69, 0x63, 0x65, 0x12, 0x1a, 0x0a, 0x08,
-	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08,
-	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x2e, 0x0a, 0x04, 0x65, 0x78, 0x65, 0x63,
-	0x18, 0x05, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x1a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x45, 0x78,
-	0x65, 0x63, 0x52, 0x04, 0x65, 0x78, 0x65, 0x63, 0x22, 0x11, 0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x56,
-	0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x63, 0x0a, 0x0e, 0x4d,
-	0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1f, 0x0a,
-	0x0b, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x04, 0x52, 0x0a, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x49, 0x64, 0x12, 0x30,
-	0x0a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
-	0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72,
-	0x22, 0x11, 0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x2a, 0x2a, 0x0a, 0x04, 0x45, 0x78, 0x65, 0x63, 0x12, 0x14, 0x0a, 0x10, 0x45,
-	0x58, 0x45, 0x43, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10,
-	0x00, 0x12, 0x0c, 0x0a, 0x08, 0x45, 0x58, 0x45, 0x43, 0x5f, 0x54, 0x52, 0x59, 0x10, 0x01, 0x32,
-	0xd7, 0x0a, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x68, 0x0a, 0x0b, 0x43, 0x72, 0x65, 0x61, 0x74,
-	0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x12, 0x2b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x22, 0x26, 0x0a, 0x24, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f,
+	0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xe1, 0x01, 0x0a, 0x11, 0x4d, 0x73, 0x67,
+	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x32,
+	0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42,
+	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x12, 0x1c, 0x0a, 0x09, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x65, 0x72, 0x73, 0x18,
+	0x02, 0x20, 0x03, 0x28, 0x09, 0x52, 0x09, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x65, 0x72, 0x73,
+	0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x28, 0x0a, 0x04,
+	0x6d, 0x73, 0x67, 0x73, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f,
+	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79,
+	0x52, 0x04, 0x6d, 0x73, 0x67, 0x73, 0x12, 0x2e, 0x0a, 0x04, 0x65, 0x78, 0x65, 0x63, 0x18, 0x05,
+	0x20, 0x01, 0x28, 0x0e, 0x32, 0x1a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72,
+	0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x45, 0x78, 0x65, 0x63,
+	0x52, 0x04, 0x65, 0x78, 0x65, 0x63, 0x3a, 0x04, 0x88, 0xa0, 0x1f, 0x00, 0x22, 0x3c, 0x0a, 0x19,
+	0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61,
+	0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x6f,
+	0x70, 0x6f, 0x73, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a,
+	0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x49, 0x64, 0x22, 0xdc, 0x01, 0x0a, 0x07, 0x4d,
+	0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73,
+	0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x70, 0x72, 0x6f,
+	0x70, 0x6f, 0x73, 0x61, 0x6c, 0x49, 0x64, 0x12, 0x2e, 0x0a, 0x05, 0x76, 0x6f, 0x74, 0x65, 0x72,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
+	0x52, 0x05, 0x76, 0x6f, 0x74, 0x65, 0x72, 0x12, 0x34, 0x0a, 0x06, 0x63, 0x68, 0x6f, 0x69, 0x63,
+	0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43,
+	0x68, 0x6f, 0x69, 0x63, 0x65, 0x52, 0x06, 0x63, 0x68, 0x6f, 0x69, 0x63, 0x65, 0x12, 0x1a, 0x0a,
+	0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52,
+	0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x2e, 0x0a, 0x04, 0x65, 0x78, 0x65,
+	0x63, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x1a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x45,
+	0x78, 0x65, 0x63, 0x52, 0x04, 0x65, 0x78, 0x65, 0x63, 0x22, 0x11, 0x0a, 0x0f, 0x4d, 0x73, 0x67,
+	0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x5c, 0x0a, 0x07,
+	0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x6f, 0x70, 0x6f,
+	0x73, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x70, 0x72,
+	0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x49, 0x64, 0x12, 0x30, 0x0a, 0x06, 0x73, 0x69, 0x67, 0x6e,
+	0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
+	0x6e, 0x67, 0x52, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x22, 0x11, 0x0a, 0x0f, 0x4d, 0x73,
+	0x67, 0x45, 0x78, 0x65, 0x63, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x2a, 0x2a, 0x0a,
+	0x04, 0x45, 0x78, 0x65, 0x63, 0x12, 0x14, 0x0a, 0x10, 0x45, 0x58, 0x45, 0x43, 0x5f, 0x55, 0x4e,
+	0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x0c, 0x0a, 0x08, 0x45,
+	0x58, 0x45, 0x43, 0x5f, 0x54, 0x52, 0x59, 0x10, 0x01, 0x32, 0xfd, 0x09, 0x0a, 0x03, 0x4d, 0x73,
+	0x67, 0x12, 0x61, 0x0a, 0x0b, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70,
+	0x12, 0x24, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74,
+	0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x1a, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
 	0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73,
-	0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x1a, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f,
-	0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72,
-	0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x7d, 0x0a, 0x12, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70,
-	0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x12, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x76, 0x0a, 0x12, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72,
+	0x6f, 0x75, 0x70, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x12, 0x2b, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70,
+	0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x1a, 0x33, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
 	0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d,
 	0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x6d,
-	0x62, 0x65, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x33, 0x2e, 0x63, 0x6f,
+	0x62, 0x65, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x70, 0x0a, 0x10,
+	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x64, 0x6d, 0x69, 0x6e,
+	0x12, 0x29, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74,
+	0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x1a, 0x31, 0x2e, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
 	0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75,
-	0x70, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x77, 0x0a, 0x10, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41,
-	0x64, 0x6d, 0x69, 0x6e, 0x12, 0x30, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72,
-	0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55,
-	0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x31, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73,
-	0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x64, 0x6d, 0x69,
-	0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x80, 0x01, 0x0a, 0x13, 0x55, 0x70,
-	0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
-	0x61, 0x12, 0x33, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70,
-	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61,
-	0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x34, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73,
-	0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x7d, 0x0a, 0x12,
-	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x63, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x12, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75,
-	0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65,
-	0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x33, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73,
-	0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x63, 0x63, 0x6f,
-	0x75, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x8c, 0x01, 0x0a, 0x17,
-	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x63, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d,
-	0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x63, 0x63,
-	0x6f, 0x75, 0x6e, 0x74, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x38, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74,
-	0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x41, 0x64, 0x6d,
-	0x69, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0xa7, 0x01, 0x0a, 0x20, 0x55,
-	0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e,
-	0x74, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x12,
-	0x40, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
-	0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x44, 0x65, 0x63, 0x69,
-	0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x41, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70,
-	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61,
-	0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x44, 0x65,
-	0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x95, 0x01, 0x0a, 0x1a, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47,
-	0x72, 0x6f, 0x75, 0x70, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x4d, 0x65, 0x74, 0x61, 0x64,
-	0x61, 0x74, 0x61, 0x12, 0x3a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f,
+	0x70, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x79,
+	0x0a, 0x13, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x74,
+	0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67,
+	0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67,
+	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x74, 0x61, 0x64,
+	0x61, 0x74, 0x61, 0x1a, 0x34, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f,
 	0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70,
-	0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
-	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
-	0x3b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
-	0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x4d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x71, 0x0a, 0x0e,
-	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x2e,
+	0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
+	0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x73, 0x0a, 0x11, 0x43, 0x72, 0x65,
+	0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x12, 0x2a,
 	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50,
-	0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2f,
-	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50,
-	0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x53, 0x0a, 0x04, 0x56, 0x6f, 0x74, 0x65, 0x12, 0x24, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47,
+	0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x1a, 0x32, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70,
+	0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x82,
+	0x01, 0x0a, 0x16, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f,
+	0x6c, 0x69, 0x63, 0x79, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50,
+	0x6f, 0x6c, 0x69, 0x63, 0x79, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x1a, 0x37, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70,
+	0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x9d, 0x01, 0x0a, 0x1f, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72,
+	0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f,
+	0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x12, 0x38, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
 	0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d,
-	0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x25, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62,
-	0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x53, 0x0a, 0x04, 0x45, 0x78, 0x65, 0x63, 0x12, 0x24, 0x2e, 0x63,
+	0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c,
+	0x69, 0x63, 0x79, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63,
+	0x79, 0x1a, 0x40, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61,
+	0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x44, 0x65, 0x63,
+	0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x8b, 0x01, 0x0a, 0x19, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72,
+	0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
+	0x61, 0x12, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61,
+	0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x4d, 0x65, 0x74,
+	0x61, 0x64, 0x61, 0x74, 0x61, 0x1a, 0x3a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67,
+	0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67,
+	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63,
+	0x79, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x6a, 0x0a, 0x0e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f,
+	0x73, 0x61, 0x6c, 0x12, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f,
+	0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72,
+	0x65, 0x61, 0x74, 0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x1a, 0x2f, 0x2e, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75,
+	0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x72, 0x6f,
+	0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4c, 0x0a,
+	0x04, 0x56, 0x6f, 0x74, 0x65, 0x12, 0x1d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67,
+	0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67,
+	0x56, 0x6f, 0x74, 0x65, 0x1a, 0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72,
+	0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x56,
+	0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4c, 0x0a, 0x04, 0x45,
+	0x78, 0x65, 0x63, 0x12, 0x1d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f,
+	0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78,
+	0x65, 0x63, 0x1a, 0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75,
 	0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65,
 	0x63, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0xd9, 0x01, 0x0a, 0x18, 0x63, 0x6f,
 	0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76,
@@ -12360,61 +12349,61 @@ func file_cosmos_group_v1beta1_tx_proto_rawDescGZIP() []byte {
 var file_cosmos_group_v1beta1_tx_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_cosmos_group_v1beta1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_cosmos_group_v1beta1_tx_proto_goTypes = []interface{}{
-	(Exec)(0),                                           // 0: cosmos.group.v1beta1.Exec
-	(*MsgCreateGroupRequest)(nil),                       // 1: cosmos.group.v1beta1.MsgCreateGroupRequest
-	(*MsgCreateGroupResponse)(nil),                      // 2: cosmos.group.v1beta1.MsgCreateGroupResponse
-	(*MsgUpdateGroupMembersRequest)(nil),                // 3: cosmos.group.v1beta1.MsgUpdateGroupMembersRequest
-	(*MsgUpdateGroupMembersResponse)(nil),               // 4: cosmos.group.v1beta1.MsgUpdateGroupMembersResponse
-	(*MsgUpdateGroupAdminRequest)(nil),                  // 5: cosmos.group.v1beta1.MsgUpdateGroupAdminRequest
-	(*MsgUpdateGroupAdminResponse)(nil),                 // 6: cosmos.group.v1beta1.MsgUpdateGroupAdminResponse
-	(*MsgUpdateGroupMetadataRequest)(nil),               // 7: cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest
-	(*MsgUpdateGroupMetadataResponse)(nil),              // 8: cosmos.group.v1beta1.MsgUpdateGroupMetadataResponse
-	(*MsgCreateGroupAccountRequest)(nil),                // 9: cosmos.group.v1beta1.MsgCreateGroupAccountRequest
-	(*MsgCreateGroupAccountResponse)(nil),               // 10: cosmos.group.v1beta1.MsgCreateGroupAccountResponse
-	(*MsgUpdateGroupAccountAdminRequest)(nil),           // 11: cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest
-	(*MsgUpdateGroupAccountAdminResponse)(nil),          // 12: cosmos.group.v1beta1.MsgUpdateGroupAccountAdminResponse
-	(*MsgUpdateGroupAccountDecisionPolicyRequest)(nil),  // 13: cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest
-	(*MsgUpdateGroupAccountDecisionPolicyResponse)(nil), // 14: cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyResponse
-	(*MsgUpdateGroupAccountMetadataRequest)(nil),        // 15: cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest
-	(*MsgUpdateGroupAccountMetadataResponse)(nil),       // 16: cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataResponse
-	(*MsgCreateProposalRequest)(nil),                    // 17: cosmos.group.v1beta1.MsgCreateProposalRequest
-	(*MsgCreateProposalResponse)(nil),                   // 18: cosmos.group.v1beta1.MsgCreateProposalResponse
-	(*MsgVoteRequest)(nil),                              // 19: cosmos.group.v1beta1.MsgVoteRequest
-	(*MsgVoteResponse)(nil),                             // 20: cosmos.group.v1beta1.MsgVoteResponse
-	(*MsgExecRequest)(nil),                              // 21: cosmos.group.v1beta1.MsgExecRequest
-	(*MsgExecResponse)(nil),                             // 22: cosmos.group.v1beta1.MsgExecResponse
-	(*Member)(nil),                                      // 23: cosmos.group.v1beta1.Member
-	(*anypb.Any)(nil),                                   // 24: google.protobuf.Any
-	(Choice)(0),                                         // 25: cosmos.group.v1beta1.Choice
+	(Exec)(0),                                          // 0: cosmos.group.v1beta1.Exec
+	(*MsgCreateGroup)(nil),                             // 1: cosmos.group.v1beta1.MsgCreateGroup
+	(*MsgCreateGroupResponse)(nil),                     // 2: cosmos.group.v1beta1.MsgCreateGroupResponse
+	(*MsgUpdateGroupMembers)(nil),                      // 3: cosmos.group.v1beta1.MsgUpdateGroupMembers
+	(*MsgUpdateGroupMembersResponse)(nil),              // 4: cosmos.group.v1beta1.MsgUpdateGroupMembersResponse
+	(*MsgUpdateGroupAdmin)(nil),                        // 5: cosmos.group.v1beta1.MsgUpdateGroupAdmin
+	(*MsgUpdateGroupAdminResponse)(nil),                // 6: cosmos.group.v1beta1.MsgUpdateGroupAdminResponse
+	(*MsgUpdateGroupMetadata)(nil),                     // 7: cosmos.group.v1beta1.MsgUpdateGroupMetadata
+	(*MsgUpdateGroupMetadataResponse)(nil),             // 8: cosmos.group.v1beta1.MsgUpdateGroupMetadataResponse
+	(*MsgCreateGroupPolicy)(nil),                       // 9: cosmos.group.v1beta1.MsgCreateGroupPolicy
+	(*MsgCreateGroupPolicyResponse)(nil),               // 10: cosmos.group.v1beta1.MsgCreateGroupPolicyResponse
+	(*MsgUpdateGroupPolicyAdmin)(nil),                  // 11: cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin
+	(*MsgUpdateGroupPolicyAdminResponse)(nil),          // 12: cosmos.group.v1beta1.MsgUpdateGroupPolicyAdminResponse
+	(*MsgUpdateGroupPolicyDecisionPolicy)(nil),         // 13: cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy
+	(*MsgUpdateGroupPolicyDecisionPolicyResponse)(nil), // 14: cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse
+	(*MsgUpdateGroupPolicyMetadata)(nil),               // 15: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata
+	(*MsgUpdateGroupPolicyMetadataResponse)(nil),       // 16: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse
+	(*MsgCreateProposal)(nil),                          // 17: cosmos.group.v1beta1.MsgCreateProposal
+	(*MsgCreateProposalResponse)(nil),                  // 18: cosmos.group.v1beta1.MsgCreateProposalResponse
+	(*MsgVote)(nil),                                    // 19: cosmos.group.v1beta1.MsgVote
+	(*MsgVoteResponse)(nil),                            // 20: cosmos.group.v1beta1.MsgVoteResponse
+	(*MsgExec)(nil),                                    // 21: cosmos.group.v1beta1.MsgExec
+	(*MsgExecResponse)(nil),                            // 22: cosmos.group.v1beta1.MsgExecResponse
+	(*Member)(nil),                                     // 23: cosmos.group.v1beta1.Member
+	(*anypb.Any)(nil),                                  // 24: google.protobuf.Any
+	(Choice)(0),                                        // 25: cosmos.group.v1beta1.Choice
 }
 var file_cosmos_group_v1beta1_tx_proto_depIdxs = []int32{
-	23, // 0: cosmos.group.v1beta1.MsgCreateGroupRequest.members:type_name -> cosmos.group.v1beta1.Member
-	23, // 1: cosmos.group.v1beta1.MsgUpdateGroupMembersRequest.member_updates:type_name -> cosmos.group.v1beta1.Member
-	24, // 2: cosmos.group.v1beta1.MsgCreateGroupAccountRequest.decision_policy:type_name -> google.protobuf.Any
-	24, // 3: cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest.decision_policy:type_name -> google.protobuf.Any
-	24, // 4: cosmos.group.v1beta1.MsgCreateProposalRequest.msgs:type_name -> google.protobuf.Any
-	0,  // 5: cosmos.group.v1beta1.MsgCreateProposalRequest.exec:type_name -> cosmos.group.v1beta1.Exec
-	25, // 6: cosmos.group.v1beta1.MsgVoteRequest.choice:type_name -> cosmos.group.v1beta1.Choice
-	0,  // 7: cosmos.group.v1beta1.MsgVoteRequest.exec:type_name -> cosmos.group.v1beta1.Exec
-	1,  // 8: cosmos.group.v1beta1.Msg.CreateGroup:input_type -> cosmos.group.v1beta1.MsgCreateGroupRequest
-	3,  // 9: cosmos.group.v1beta1.Msg.UpdateGroupMembers:input_type -> cosmos.group.v1beta1.MsgUpdateGroupMembersRequest
-	5,  // 10: cosmos.group.v1beta1.Msg.UpdateGroupAdmin:input_type -> cosmos.group.v1beta1.MsgUpdateGroupAdminRequest
-	7,  // 11: cosmos.group.v1beta1.Msg.UpdateGroupMetadata:input_type -> cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest
-	9,  // 12: cosmos.group.v1beta1.Msg.CreateGroupAccount:input_type -> cosmos.group.v1beta1.MsgCreateGroupAccountRequest
-	11, // 13: cosmos.group.v1beta1.Msg.UpdateGroupAccountAdmin:input_type -> cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest
-	13, // 14: cosmos.group.v1beta1.Msg.UpdateGroupAccountDecisionPolicy:input_type -> cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest
-	15, // 15: cosmos.group.v1beta1.Msg.UpdateGroupAccountMetadata:input_type -> cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest
-	17, // 16: cosmos.group.v1beta1.Msg.CreateProposal:input_type -> cosmos.group.v1beta1.MsgCreateProposalRequest
-	19, // 17: cosmos.group.v1beta1.Msg.Vote:input_type -> cosmos.group.v1beta1.MsgVoteRequest
-	21, // 18: cosmos.group.v1beta1.Msg.Exec:input_type -> cosmos.group.v1beta1.MsgExecRequest
+	23, // 0: cosmos.group.v1beta1.MsgCreateGroup.members:type_name -> cosmos.group.v1beta1.Member
+	23, // 1: cosmos.group.v1beta1.MsgUpdateGroupMembers.member_updates:type_name -> cosmos.group.v1beta1.Member
+	24, // 2: cosmos.group.v1beta1.MsgCreateGroupPolicy.decision_policy:type_name -> google.protobuf.Any
+	24, // 3: cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.decision_policy:type_name -> google.protobuf.Any
+	24, // 4: cosmos.group.v1beta1.MsgCreateProposal.msgs:type_name -> google.protobuf.Any
+	0,  // 5: cosmos.group.v1beta1.MsgCreateProposal.exec:type_name -> cosmos.group.v1beta1.Exec
+	25, // 6: cosmos.group.v1beta1.MsgVote.choice:type_name -> cosmos.group.v1beta1.Choice
+	0,  // 7: cosmos.group.v1beta1.MsgVote.exec:type_name -> cosmos.group.v1beta1.Exec
+	1,  // 8: cosmos.group.v1beta1.Msg.CreateGroup:input_type -> cosmos.group.v1beta1.MsgCreateGroup
+	3,  // 9: cosmos.group.v1beta1.Msg.UpdateGroupMembers:input_type -> cosmos.group.v1beta1.MsgUpdateGroupMembers
+	5,  // 10: cosmos.group.v1beta1.Msg.UpdateGroupAdmin:input_type -> cosmos.group.v1beta1.MsgUpdateGroupAdmin
+	7,  // 11: cosmos.group.v1beta1.Msg.UpdateGroupMetadata:input_type -> cosmos.group.v1beta1.MsgUpdateGroupMetadata
+	9,  // 12: cosmos.group.v1beta1.Msg.CreateGroupPolicy:input_type -> cosmos.group.v1beta1.MsgCreateGroupPolicy
+	11, // 13: cosmos.group.v1beta1.Msg.UpdateGroupPolicyAdmin:input_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin
+	13, // 14: cosmos.group.v1beta1.Msg.UpdateGroupPolicyDecisionPolicy:input_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy
+	15, // 15: cosmos.group.v1beta1.Msg.UpdateGroupPolicyMetadata:input_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata
+	17, // 16: cosmos.group.v1beta1.Msg.CreateProposal:input_type -> cosmos.group.v1beta1.MsgCreateProposal
+	19, // 17: cosmos.group.v1beta1.Msg.Vote:input_type -> cosmos.group.v1beta1.MsgVote
+	21, // 18: cosmos.group.v1beta1.Msg.Exec:input_type -> cosmos.group.v1beta1.MsgExec
 	2,  // 19: cosmos.group.v1beta1.Msg.CreateGroup:output_type -> cosmos.group.v1beta1.MsgCreateGroupResponse
 	4,  // 20: cosmos.group.v1beta1.Msg.UpdateGroupMembers:output_type -> cosmos.group.v1beta1.MsgUpdateGroupMembersResponse
 	6,  // 21: cosmos.group.v1beta1.Msg.UpdateGroupAdmin:output_type -> cosmos.group.v1beta1.MsgUpdateGroupAdminResponse
 	8,  // 22: cosmos.group.v1beta1.Msg.UpdateGroupMetadata:output_type -> cosmos.group.v1beta1.MsgUpdateGroupMetadataResponse
-	10, // 23: cosmos.group.v1beta1.Msg.CreateGroupAccount:output_type -> cosmos.group.v1beta1.MsgCreateGroupAccountResponse
-	12, // 24: cosmos.group.v1beta1.Msg.UpdateGroupAccountAdmin:output_type -> cosmos.group.v1beta1.MsgUpdateGroupAccountAdminResponse
-	14, // 25: cosmos.group.v1beta1.Msg.UpdateGroupAccountDecisionPolicy:output_type -> cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyResponse
-	16, // 26: cosmos.group.v1beta1.Msg.UpdateGroupAccountMetadata:output_type -> cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataResponse
+	10, // 23: cosmos.group.v1beta1.Msg.CreateGroupPolicy:output_type -> cosmos.group.v1beta1.MsgCreateGroupPolicyResponse
+	12, // 24: cosmos.group.v1beta1.Msg.UpdateGroupPolicyAdmin:output_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyAdminResponse
+	14, // 25: cosmos.group.v1beta1.Msg.UpdateGroupPolicyDecisionPolicy:output_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse
+	16, // 26: cosmos.group.v1beta1.Msg.UpdateGroupPolicyMetadata:output_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse
 	18, // 27: cosmos.group.v1beta1.Msg.CreateProposal:output_type -> cosmos.group.v1beta1.MsgCreateProposalResponse
 	20, // 28: cosmos.group.v1beta1.Msg.Vote:output_type -> cosmos.group.v1beta1.MsgVoteResponse
 	22, // 29: cosmos.group.v1beta1.Msg.Exec:output_type -> cosmos.group.v1beta1.MsgExecResponse
@@ -12433,7 +12422,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 	file_cosmos_group_v1beta1_types_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_cosmos_group_v1beta1_tx_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgCreateGroupRequest); i {
+			switch v := v.(*MsgCreateGroup); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12457,7 +12446,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_tx_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateGroupMembersRequest); i {
+			switch v := v.(*MsgUpdateGroupMembers); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12481,7 +12470,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_tx_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateGroupAdminRequest); i {
+			switch v := v.(*MsgUpdateGroupAdmin); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12505,7 +12494,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_tx_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateGroupMetadataRequest); i {
+			switch v := v.(*MsgUpdateGroupMetadata); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12529,7 +12518,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_tx_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgCreateGroupAccountRequest); i {
+			switch v := v.(*MsgCreateGroupPolicy); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12541,7 +12530,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_tx_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgCreateGroupAccountResponse); i {
+			switch v := v.(*MsgCreateGroupPolicyResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12553,7 +12542,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_tx_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateGroupAccountAdminRequest); i {
+			switch v := v.(*MsgUpdateGroupPolicyAdmin); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12565,7 +12554,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_tx_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateGroupAccountAdminResponse); i {
+			switch v := v.(*MsgUpdateGroupPolicyAdminResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12577,7 +12566,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_tx_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateGroupAccountDecisionPolicyRequest); i {
+			switch v := v.(*MsgUpdateGroupPolicyDecisionPolicy); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12589,7 +12578,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_tx_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateGroupAccountDecisionPolicyResponse); i {
+			switch v := v.(*MsgUpdateGroupPolicyDecisionPolicyResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12601,7 +12590,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_tx_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateGroupAccountMetadataRequest); i {
+			switch v := v.(*MsgUpdateGroupPolicyMetadata); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12613,7 +12602,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_tx_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateGroupAccountMetadataResponse); i {
+			switch v := v.(*MsgUpdateGroupPolicyMetadataResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12625,7 +12614,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_tx_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgCreateProposalRequest); i {
+			switch v := v.(*MsgCreateProposal); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12649,7 +12638,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_tx_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgVoteRequest); i {
+			switch v := v.(*MsgVote); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12673,7 +12662,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_tx_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgExecRequest); i {
+			switch v := v.(*MsgExec); i {
 			case 0:
 				return &v.state
 			case 1:

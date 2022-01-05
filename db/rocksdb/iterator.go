@@ -1,10 +1,13 @@
+//go:build rocksdb_build
+
 package rocksdb
 
 import (
 	"bytes"
 
-	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/tecbot/gorocksdb"
+
+	dbm "github.com/cosmos/cosmos-sdk/db"
 )
 
 type rocksDBIterator struct {

@@ -131,7 +131,7 @@ func doBackup(cfg *Config) error {
 		// a destination directory, Format YYYY-MM-DD
 		st := time.Now()
 		stStr := fmt.Sprintf("%d-%d-%d", st.Year(), st.Month(), st.Day())
-		dst := filepath.Join(cfg.Home, fmt.Sprintf("data"+"-backup-%s", stStr))
+		dst := filepath.Join(cfg.DataBackupPath, fmt.Sprintf("data"+"-backup-%s", stStr))
 
 		Logger.Info().Time("backup start time", st).Msg("starting to take backup of data directory")
 

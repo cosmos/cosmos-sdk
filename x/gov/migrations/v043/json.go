@@ -1,12 +1,12 @@
 package v043
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 // migrateWeightedVotes migrates the ADR-037 weighted votes.
-func migrateJSONWeightedVotes(oldVotes types.Votes) types.Votes {
-	newVotes := make(types.Votes, len(oldVotes))
+func migrateJSONWeightedVotes(oldVotes v1beta1.Votes) v1beta1.Votes {
+	newVotes := make(v1beta1.Votes, len(oldVotes))
 	for i, oldVote := range oldVotes {
 		newVotes[i] = migrateVote(oldVote)
 	}
@@ -18,8 +18,8 @@ func migrateJSONWeightedVotes(oldVotes types.Votes) types.Votes {
 // v0.43 x/gov genesis state. The migration includes:
 //
 // - Gov weighted votes.
-func MigrateJSON(oldState *types.GenesisState) *types.GenesisState {
-	return &types.GenesisState{
+func MigrateJSON(oldState *v1beta1.GenesisState) *v1beta1.GenesisState {
+	return &v1beta1.GenesisState{
 		StartingProposalId: oldState.StartingProposalId,
 		Deposits:           oldState.Deposits,
 		Votes:              migrateJSONWeightedVotes(oldState.Votes),

@@ -146,14 +146,7 @@ var (
 
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
-<<<<<<< HEAD
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")
-
-	// ErrAppConfig defines an error occurred if min-gas-prices field in BaseConfig is empty.
-	ErrAppConfig = Register(RootCodespace, 40, "error in app.toml")
-=======
-	ErrPanic = errorsmod.ErrPanic
->>>>>>> da929211d (feat: support in-place migration ordering (#10614))
 )
 
 // Register returns an error instance that should be used as the base for

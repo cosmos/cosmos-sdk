@@ -1,4 +1,4 @@
-package types
+package v1beta2_test
 
 import (
 	"testing"
@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 var (
@@ -24,10 +25,10 @@ func init() {
 
 func TestMsgDepositGetSignBytes(t *testing.T) {
 	addr := sdk.AccAddress("addr1")
-	msg := NewMsgDeposit(addr, 0, coinsPos)
+	msg := v1beta2.NewMsgDeposit(addr, 0, coinsPos)
 	res := msg.GetSignBytes()
 
-	expected := `{"type":"cosmos-sdk/MsgDeposit","value":{"amount":[{"amount":"1000","denom":"stake"}],"depositor":"cosmos1v9jxgu33kfsgr5","proposal_id":"0"}}`
+	expected := `{"type":"cosmos-sdk/MsgDeposit","value":{"amount":[{"amount":"1000","denom":"stake"}],"depositor":"cosmos1v9jxgu33kfsgr5"}}`
 	require.Equal(t, expected, string(res))
 }
 
@@ -46,7 +47,7 @@ func TestMsgDeposit(t *testing.T) {
 	}
 
 	for i, tc := range tests {
-		msg := NewMsgDeposit(tc.depositorAddr, tc.proposalID, tc.depositAmount)
+		msg := v1beta2.NewMsgDeposit(tc.depositorAddr, tc.proposalID, tc.depositAmount)
 		if tc.expectPass {
 			require.NoError(t, msg.ValidateBasic(), "test: %v", i)
 		} else {
@@ -60,19 +61,19 @@ func TestMsgVote(t *testing.T) {
 	tests := []struct {
 		proposalID uint64
 		voterAddr  sdk.AccAddress
-		option     VoteOption
+		option     v1beta2.VoteOption
 		expectPass bool
 	}{
-		{0, addrs[0], OptionYes, true},
-		{0, sdk.AccAddress{}, OptionYes, false},
-		{0, addrs[0], OptionNo, true},
-		{0, addrs[0], OptionNoWithVeto, true},
-		{0, addrs[0], OptionAbstain, true},
-		{0, addrs[0], VoteOption(0x13), false},
+		{0, addrs[0], v1beta2.OptionYes, true},
+		{0, sdk.AccAddress{}, v1beta2.OptionYes, false},
+		{0, addrs[0], v1beta2.OptionNo, true},
+		{0, addrs[0], v1beta2.OptionNoWithVeto, true},
+		{0, addrs[0], v1beta2.OptionAbstain, true},
+		{0, addrs[0], v1beta2.VoteOption(0x13), false},
 	}
 
 	for i, tc := range tests {
-		msg := NewMsgVote(tc.voterAddr, tc.proposalID, tc.option)
+		msg := v1beta2.NewMsgVote(tc.voterAddr, tc.proposalID, tc.option)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", i)
 		} else {
@@ -86,37 +87,37 @@ func TestMsgVoteWeighted(t *testing.T) {
 	tests := []struct {
 		proposalID uint64
 		voterAddr  sdk.AccAddress
-		options    WeightedVoteOptions
+		options    v1beta2.WeightedVoteOptions
 		expectPass bool
 	}{
-		{0, addrs[0], NewNonSplitVoteOption(OptionYes), true},
-		{0, sdk.AccAddress{}, NewNonSplitVoteOption(OptionYes), false},
-		{0, addrs[0], NewNonSplitVoteOption(OptionNo), true},
-		{0, addrs[0], NewNonSplitVoteOption(OptionNoWithVeto), true},
-		{0, addrs[0], NewNonSplitVoteOption(OptionAbstain), true},
-		{0, addrs[0], WeightedVoteOptions{ // weight sum > 1
-			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDec(1)},
-			WeightedVoteOption{Option: OptionAbstain, Weight: sdk.NewDec(1)},
+		{0, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), true},
+		{0, sdk.AccAddress{}, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), false},
+		{0, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionNo), true},
+		{0, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionNoWithVeto), true},
+		{0, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionAbstain), true},
+		{0, addrs[0], v1beta2.WeightedVoteOptions{ // weight sum > 1
+			v1beta2.NewWeightedVoteOption(v1beta2.OptionYes, sdk.NewDec(1)),
+			v1beta2.NewWeightedVoteOption(v1beta2.OptionAbstain, sdk.NewDec(1)),
 		}, false},
-		{0, addrs[0], WeightedVoteOptions{ // duplicate option
-			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDecWithPrec(5, 1)},
-			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDecWithPrec(5, 1)},
+		{0, addrs[0], v1beta2.WeightedVoteOptions{ // duplicate option
+			v1beta2.NewWeightedVoteOption(v1beta2.OptionYes, sdk.NewDecWithPrec(5, 1)),
+			v1beta2.NewWeightedVoteOption(v1beta2.OptionYes, sdk.NewDecWithPrec(5, 1)),
 		}, false},
-		{0, addrs[0], WeightedVoteOptions{ // zero weight
-			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDec(0)},
+		{0, addrs[0], v1beta2.WeightedVoteOptions{ // zero weight
+			v1beta2.NewWeightedVoteOption(v1beta2.OptionYes, sdk.NewDec(0)),
 		}, false},
-		{0, addrs[0], WeightedVoteOptions{ // negative weight
-			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDec(-1)},
+		{0, addrs[0], v1beta2.WeightedVoteOptions{ // negative weight
+			v1beta2.NewWeightedVoteOption(v1beta2.OptionYes, sdk.NewDec(-1)),
 		}, false},
-		{0, addrs[0], WeightedVoteOptions{}, false},
-		{0, addrs[0], NewNonSplitVoteOption(VoteOption(0x13)), false},
-		{0, addrs[0], WeightedVoteOptions{ // weight sum <1
-			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDecWithPrec(5, 1)},
+		{0, addrs[0], v1beta2.WeightedVoteOptions{}, false},
+		{0, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.VoteOption(0x13)), false},
+		{0, addrs[0], v1beta2.WeightedVoteOptions{ // weight sum <1
+			v1beta2.NewWeightedVoteOption(v1beta2.OptionYes, sdk.NewDecWithPrec(5, 1)),
 		}, false},
 	}
 
 	for i, tc := range tests {
-		msg := NewMsgVoteWeighted(tc.voterAddr, tc.proposalID, tc.options)
+		msg := v1beta2.NewMsgVoteWeighted(tc.voterAddr, tc.proposalID, tc.options)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", i)
 		} else {
@@ -127,8 +128,8 @@ func TestMsgVoteWeighted(t *testing.T) {
 
 // this tests that Amino JSON MsgSubmitProposal.GetSignBytes() still works with Content as Any using the ModuleCdc
 func TestMsgSubmitProposal_GetSignBytes(t *testing.T) {
-	proposal := []sdk.Msg{NewMsgVote(addrs[0], 1, OptionYes)}
-	msg, err := NewMsgSubmitProposal(proposal, sdk.NewCoins(), sdk.AccAddress{})
+	proposal := []sdk.Msg{v1beta2.NewMsgVote(addrs[0], 1, v1beta2.OptionYes)}
+	msg, err := v1beta2.NewMsgSubmitProposal(proposal, sdk.NewCoins(), sdk.AccAddress{})
 	require.NoError(t, err)
 	var bz []byte
 	require.NotPanics(t, func() {

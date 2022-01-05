@@ -34,14 +34,14 @@ func (s *abciTestSuite) TestABCInfo() {
 			debug:     false,
 			wantLog:   "unauthorized",
 			wantCode:  ErrUnauthorized.code,
-			wantSpace: RootCodespace,
+			wantSpace: testCodespace,
 		},
 		"wrapped SDK error": {
 			err:       Wrap(Wrap(ErrUnauthorized, "foo"), "bar"),
 			debug:     false,
 			wantLog:   "bar: foo: unauthorized",
 			wantCode:  ErrUnauthorized.code,
-			wantSpace: RootCodespace,
+			wantSpace: testCodespace,
 		},
 		"nil is empty message": {
 			err:       nil,
@@ -143,7 +143,7 @@ func (s *abciTestSuite) TestABCIInfoStacktrace() {
 		},
 	}
 
-	const thisTestSrc = "github.com/cosmos/cosmos-sdk/types/errors.(*abciTestSuite).TestABCIInfoStacktrace"
+	const thisTestSrc = "github.com/cosmos/cosmos-sdk/errors.(*abciTestSuite).TestABCIInfoStacktrace"
 
 	for testName, tc := range cases {
 		_, _, log := ABCIInfo(tc.err, tc.debug)

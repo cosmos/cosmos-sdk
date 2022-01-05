@@ -48,9 +48,9 @@ func trimInternal(st errors.StackTrace) errors.StackTrace {
 	// manual error creation, or runtime for caught panics
 	for matchesFunc(st[0],
 		// where we create errors
-		"github.com/cosmos/cosmos-sdk/types/errors.Wrap",
-		"github.com/cosmos/cosmos-sdk/types/errors.Wrapf",
-		"github.com/cosmos/cosmos-sdk/types/errors.WithType",
+		"github.com/cosmos/cosmos-sdk/errors.Wrap",
+		"github.com/cosmos/cosmos-sdk/errors.Wrapf",
+		"github.com/cosmos/cosmos-sdk/errors.WithType",
 		// runtime are added on panics
 		"runtime.",
 		// _test is defined in coverage tests, causing failure
@@ -73,7 +73,7 @@ func writeSimpleFrame(s io.Writer, f errors.Frame) {
 	if len(chunks) == 2 {
 		file = chunks[1]
 	}
-	fmt.Fprintf(s, " [%s:%d]", file, line)
+	_, _ = fmt.Fprintf(s, " [%s:%d]", file, line)
 }
 
 // Format works like pkg/errors, with additions.
@@ -86,16 +86,16 @@ func writeSimpleFrame(s io.Writer, f errors.Frame) {
 func (e *wrappedError) Format(s fmt.State, verb rune) {
 	// normal output here....
 	if verb != 'v' {
-		fmt.Fprint(s, e.Error())
+		_, _ = fmt.Fprint(s, e.Error())
 		return
 	}
 	// work with the stack trace... whole or part
 	stack := trimInternal(stackTrace(e))
 	if s.Flag('+') {
-		fmt.Fprintf(s, "%+v\n", stack)
-		fmt.Fprint(s, e.Error())
+		_, _ = fmt.Fprintf(s, "%+v\n", stack)
+		_, _ = fmt.Fprint(s, e.Error())
 	} else {
-		fmt.Fprint(s, e.Error())
+		_, _ = fmt.Fprint(s, e.Error())
 		writeSimpleFrame(s, stack[0])
 	}
 }

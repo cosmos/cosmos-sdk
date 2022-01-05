@@ -1,19 +1,26 @@
-package types
+package v1beta2
 
 import (
 	"fmt"
 	"strings"
 	"time"
 
-	"sigs.k8s.io/yaml"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-// DefaultStartingProposalID is 1
-const DefaultStartingProposalID uint64 = 1
+const (
+	// DefaultStartingProposalID is 1
+	DefaultStartingProposalID uint64 = 1
+
+	StatusNil           = ProposalStatus_PROPOSAL_STATUS_UNSPECIFIED
+	StatusDepositPeriod = ProposalStatus_PROPOSAL_STATUS_DEPOSIT_PERIOD
+	StatusVotingPeriod  = ProposalStatus_PROPOSAL_STATUS_VOTING_PERIOD
+	StatusPassed        = ProposalStatus_PROPOSAL_STATUS_PASSED
+	StatusRejected      = ProposalStatus_PROPOSAL_STATUS_REJECTED
+	StatusFailed        = ProposalStatus_PROPOSAL_STATUS_FAILED
+)
 
 // NewProposal creates a new Proposal instance
 func NewProposal(messages []sdk.Msg, id uint64, submitTime, depositEndTime time.Time) (Proposal, error) {
@@ -29,21 +36,15 @@ func NewProposal(messages []sdk.Msg, id uint64, submitTime, depositEndTime time.
 		Status:           StatusDepositPeriod,
 		FinalTallyResult: EmptyTallyResult(),
 		TotalDeposit:     sdk.NewCoins(),
-		SubmitTime:       submitTime,
-		DepositEndTime:   depositEndTime,
+		SubmitTime:       &submitTime,
+		DepositEndTime:   &depositEndTime,
 	}
 
 	return p, nil
 }
 
-// String implements stringer interface
-func (p Proposal) String() string {
-	out, _ := yaml.Marshal(p)
-	return string(out)
-}
-
 // GetMessages returns the proposal messages
-func (p Proposal) GetMessages() ([]sdk.Msg, error) {
+func (p Proposal) GetMsgs() ([]sdk.Msg, error) {
 	return sdktx.GetMsgs(p.Messages, "sdk.MsgProposal")
 }
 
@@ -56,21 +57,6 @@ func (p Proposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 type Proposals []Proposal
 
 var _ types.UnpackInterfacesMessage = Proposals{}
-
-// Equal returns true if two slices (order-dependant) of proposals are equal.
-func (p Proposals) Equal(other Proposals) bool {
-	if len(p) != len(other) {
-		return false
-	}
-
-	for i, proposal := range p {
-		if !proposal.Equal(other[i]) {
-			return false
-		}
-	}
-
-	return true
-}
 
 // String implements stringer interface
 func (p Proposals) String() string {

@@ -41,6 +41,4 @@ rm -rf github.com
 
 go mod tidy
 
-# generate api module
-echo "Generating API module"
-(cd proto; buf generate --template buf.gen.pulsar.yaml)
+./scripts/protocgen2.sh

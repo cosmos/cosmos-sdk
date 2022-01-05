@@ -3406,8 +3406,8 @@ func (x *fastReflection_Vote) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_Vote) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Type != 0 {
-		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Type))
+	if x.Type_ != 0 {
+		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Type_))
 		if !f(fd_Vote_type, value) {
 			return
 		}
@@ -3470,7 +3470,7 @@ func (x *fastReflection_Vote) Range(f func(protoreflect.FieldDescriptor, protore
 func (x *fastReflection_Vote) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "tendermint.types.Vote.type":
-		return x.Type != 0
+		return x.Type_ != 0
 	case "tendermint.types.Vote.height":
 		return x.Height != int64(0)
 	case "tendermint.types.Vote.round":
@@ -3502,7 +3502,7 @@ func (x *fastReflection_Vote) Has(fd protoreflect.FieldDescriptor) bool {
 func (x *fastReflection_Vote) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "tendermint.types.Vote.type":
-		x.Type = 0
+		x.Type_ = 0
 	case "tendermint.types.Vote.height":
 		x.Height = int64(0)
 	case "tendermint.types.Vote.round":
@@ -3534,7 +3534,7 @@ func (x *fastReflection_Vote) Clear(fd protoreflect.FieldDescriptor) {
 func (x *fastReflection_Vote) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
 	case "tendermint.types.Vote.type":
-		value := x.Type
+		value := x.Type_
 		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
 	case "tendermint.types.Vote.height":
 		value := x.Height
@@ -3578,7 +3578,7 @@ func (x *fastReflection_Vote) Get(descriptor protoreflect.FieldDescriptor) proto
 func (x *fastReflection_Vote) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "tendermint.types.Vote.type":
-		x.Type = (SignedMsgType)(value.Enum())
+		x.Type_ = (SignedMsgType)(value.Enum())
 	case "tendermint.types.Vote.height":
 		x.Height = value.Int()
 	case "tendermint.types.Vote.round":
@@ -3735,8 +3735,8 @@ func (x *fastReflection_Vote) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		if x.Type != 0 {
-			n += 1 + runtime.Sov(uint64(x.Type))
+		if x.Type_ != 0 {
+			n += 1 + runtime.Sov(uint64(x.Type_))
 		}
 		if x.Height != 0 {
 			n += 1 + runtime.Sov(uint64(x.Height))
@@ -3849,8 +3849,8 @@ func (x *fastReflection_Vote) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x10
 		}
-		if x.Type != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.Type))
+		if x.Type_ != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Type_))
 			i--
 			dAtA[i] = 0x8
 		}
@@ -3905,9 +3905,9 @@ func (x *fastReflection_Vote) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Type_", wireType)
 				}
-				x.Type = 0
+				x.Type_ = 0
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -3917,7 +3917,7 @@ func (x *fastReflection_Vote) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Type |= SignedMsgType(b&0x7F) << shift
+					x.Type_ |= SignedMsgType(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -5526,8 +5526,8 @@ func (x *fastReflection_Proposal) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_Proposal) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Type != 0 {
-		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Type))
+	if x.Type_ != 0 {
+		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Type_))
 		if !f(fd_Proposal_type, value) {
 			return
 		}
@@ -5584,7 +5584,7 @@ func (x *fastReflection_Proposal) Range(f func(protoreflect.FieldDescriptor, pro
 func (x *fastReflection_Proposal) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "tendermint.types.Proposal.type":
-		return x.Type != 0
+		return x.Type_ != 0
 	case "tendermint.types.Proposal.height":
 		return x.Height != int64(0)
 	case "tendermint.types.Proposal.round":
@@ -5614,7 +5614,7 @@ func (x *fastReflection_Proposal) Has(fd protoreflect.FieldDescriptor) bool {
 func (x *fastReflection_Proposal) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "tendermint.types.Proposal.type":
-		x.Type = 0
+		x.Type_ = 0
 	case "tendermint.types.Proposal.height":
 		x.Height = int64(0)
 	case "tendermint.types.Proposal.round":
@@ -5644,7 +5644,7 @@ func (x *fastReflection_Proposal) Clear(fd protoreflect.FieldDescriptor) {
 func (x *fastReflection_Proposal) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
 	case "tendermint.types.Proposal.type":
-		value := x.Type
+		value := x.Type_
 		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
 	case "tendermint.types.Proposal.height":
 		value := x.Height
@@ -5685,7 +5685,7 @@ func (x *fastReflection_Proposal) Get(descriptor protoreflect.FieldDescriptor) p
 func (x *fastReflection_Proposal) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "tendermint.types.Proposal.type":
-		x.Type = (SignedMsgType)(value.Enum())
+		x.Type_ = (SignedMsgType)(value.Enum())
 	case "tendermint.types.Proposal.height":
 		x.Height = value.Int()
 	case "tendermint.types.Proposal.round":
@@ -5836,8 +5836,8 @@ func (x *fastReflection_Proposal) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		if x.Type != 0 {
-			n += 1 + runtime.Sov(uint64(x.Type))
+		if x.Type_ != 0 {
+			n += 1 + runtime.Sov(uint64(x.Type_))
 		}
 		if x.Height != 0 {
 			n += 1 + runtime.Sov(uint64(x.Height))
@@ -5939,8 +5939,8 @@ func (x *fastReflection_Proposal) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x10
 		}
-		if x.Type != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.Type))
+		if x.Type_ != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Type_))
 			i--
 			dAtA[i] = 0x8
 		}
@@ -5995,9 +5995,9 @@ func (x *fastReflection_Proposal) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Type_", wireType)
 				}
-				x.Type = 0
+				x.Type_ = 0
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -6007,7 +6007,7 @@ func (x *fastReflection_Proposal) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Type |= SignedMsgType(b&0x7F) << shift
+					x.Type_ |= SignedMsgType(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -8866,7 +8866,7 @@ type Vote struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Type             SignedMsgType          `protobuf:"varint,1,opt,name=type,proto3,enum=tendermint.types.SignedMsgType" json:"type,omitempty"`
+	Type_            SignedMsgType          `protobuf:"varint,1,opt,name=type,proto3,enum=tendermint.types.SignedMsgType" json:"type,omitempty"`
 	Height           int64                  `protobuf:"varint,2,opt,name=height,proto3" json:"height,omitempty"`
 	Round            int32                  `protobuf:"varint,3,opt,name=round,proto3" json:"round,omitempty"`
 	BlockId          *BlockID               `protobuf:"bytes,4,opt,name=block_id,json=blockId,proto3" json:"block_id,omitempty"` // zero if vote is nil.
@@ -8896,9 +8896,9 @@ func (*Vote) Descriptor() ([]byte, []int) {
 	return file_tendermint_types_types_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *Vote) GetType() SignedMsgType {
+func (x *Vote) GetType_() SignedMsgType {
 	if x != nil {
-		return x.Type
+		return x.Type_
 	}
 	return SignedMsgType_SIGNED_MSG_TYPE_UNKNOWN
 }
@@ -9077,7 +9077,7 @@ type Proposal struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Type      SignedMsgType          `protobuf:"varint,1,opt,name=type,proto3,enum=tendermint.types.SignedMsgType" json:"type,omitempty"`
+	Type_     SignedMsgType          `protobuf:"varint,1,opt,name=type,proto3,enum=tendermint.types.SignedMsgType" json:"type,omitempty"`
 	Height    int64                  `protobuf:"varint,2,opt,name=height,proto3" json:"height,omitempty"`
 	Round     int32                  `protobuf:"varint,3,opt,name=round,proto3" json:"round,omitempty"`
 	PolRound  int32                  `protobuf:"varint,4,opt,name=pol_round,json=polRound,proto3" json:"pol_round,omitempty"`
@@ -9106,9 +9106,9 @@ func (*Proposal) Descriptor() ([]byte, []int) {
 	return file_tendermint_types_types_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *Proposal) GetType() SignedMsgType {
+func (x *Proposal) GetType_() SignedMsgType {
 	if x != nil {
-		return x.Type
+		return x.Type_
 	}
 	return SignedMsgType_SIGNED_MSG_TYPE_UNKNOWN
 }

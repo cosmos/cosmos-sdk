@@ -4,6 +4,7 @@
 
 set -eo pipefail
 
-(cd api; buf generate .)
+echo "Generating API module"
+(cd proto; buf generate --template buf.gen.pulsar.yaml)
 
 (cd orm/internal; buf generate .)

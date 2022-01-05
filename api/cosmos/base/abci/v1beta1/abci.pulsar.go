@@ -2038,8 +2038,8 @@ func (x *fastReflection_StringEvent) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_StringEvent) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Type != "" {
-		value := protoreflect.ValueOfString(x.Type)
+	if x.Type_ != "" {
+		value := protoreflect.ValueOfString(x.Type_)
 		if !f(fd_StringEvent_type, value) {
 			return
 		}
@@ -2066,7 +2066,7 @@ func (x *fastReflection_StringEvent) Range(f func(protoreflect.FieldDescriptor, 
 func (x *fastReflection_StringEvent) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "cosmos.base.abci.v1beta1.StringEvent.type":
-		return x.Type != ""
+		return x.Type_ != ""
 	case "cosmos.base.abci.v1beta1.StringEvent.attributes":
 		return len(x.Attributes) != 0
 	default:
@@ -2086,7 +2086,7 @@ func (x *fastReflection_StringEvent) Has(fd protoreflect.FieldDescriptor) bool {
 func (x *fastReflection_StringEvent) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "cosmos.base.abci.v1beta1.StringEvent.type":
-		x.Type = ""
+		x.Type_ = ""
 	case "cosmos.base.abci.v1beta1.StringEvent.attributes":
 		x.Attributes = nil
 	default:
@@ -2106,7 +2106,7 @@ func (x *fastReflection_StringEvent) Clear(fd protoreflect.FieldDescriptor) {
 func (x *fastReflection_StringEvent) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
 	case "cosmos.base.abci.v1beta1.StringEvent.type":
-		value := x.Type
+		value := x.Type_
 		return protoreflect.ValueOfString(value)
 	case "cosmos.base.abci.v1beta1.StringEvent.attributes":
 		if len(x.Attributes) == 0 {
@@ -2135,7 +2135,7 @@ func (x *fastReflection_StringEvent) Get(descriptor protoreflect.FieldDescriptor
 func (x *fastReflection_StringEvent) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "cosmos.base.abci.v1beta1.StringEvent.type":
-		x.Type = value.Interface().(string)
+		x.Type_ = value.Interface().(string)
 	case "cosmos.base.abci.v1beta1.StringEvent.attributes":
 		lv := value.List()
 		clv := lv.(*_StringEvent_2_list)
@@ -2255,7 +2255,7 @@ func (x *fastReflection_StringEvent) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		l = len(x.Type)
+		l = len(x.Type_)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -2310,10 +2310,10 @@ func (x *fastReflection_StringEvent) ProtoMethods() *protoiface.Methods {
 				dAtA[i] = 0x12
 			}
 		}
-		if len(x.Type) > 0 {
-			i -= len(x.Type)
-			copy(dAtA[i:], x.Type)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Type)))
+		if len(x.Type_) > 0 {
+			i -= len(x.Type_)
+			copy(dAtA[i:], x.Type_)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Type_)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -2368,7 +2368,7 @@ func (x *fastReflection_StringEvent) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Type_", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -2396,7 +2396,7 @@ func (x *fastReflection_StringEvent) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Type = string(dAtA[iNdEx:postIndex])
+				x.Type_ = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
@@ -6759,7 +6759,7 @@ type StringEvent struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Type       string       `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	Type_      string       `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
 	Attributes []*Attribute `protobuf:"bytes,2,rep,name=attributes,proto3" json:"attributes,omitempty"`
 }
 
@@ -6783,9 +6783,9 @@ func (*StringEvent) Descriptor() ([]byte, []int) {
 	return file_cosmos_base_abci_v1beta1_abci_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *StringEvent) GetType() string {
+func (x *StringEvent) GetType_() string {
 	if x != nil {
-		return x.Type
+		return x.Type_
 	}
 	return ""
 }

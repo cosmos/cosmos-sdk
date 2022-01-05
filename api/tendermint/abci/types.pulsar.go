@@ -5947,8 +5947,8 @@ func (x *fastReflection_RequestCheckTx) Range(f func(protoreflect.FieldDescripto
 			return
 		}
 	}
-	if x.Type != 0 {
-		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Type))
+	if x.Type_ != 0 {
+		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Type_))
 		if !f(fd_RequestCheckTx_type, value) {
 			return
 		}
@@ -5971,7 +5971,7 @@ func (x *fastReflection_RequestCheckTx) Has(fd protoreflect.FieldDescriptor) boo
 	case "tendermint.abci.RequestCheckTx.tx":
 		return len(x.Tx) != 0
 	case "tendermint.abci.RequestCheckTx.type":
-		return x.Type != 0
+		return x.Type_ != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: tendermint.abci.RequestCheckTx"))
@@ -5991,7 +5991,7 @@ func (x *fastReflection_RequestCheckTx) Clear(fd protoreflect.FieldDescriptor) {
 	case "tendermint.abci.RequestCheckTx.tx":
 		x.Tx = nil
 	case "tendermint.abci.RequestCheckTx.type":
-		x.Type = 0
+		x.Type_ = 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: tendermint.abci.RequestCheckTx"))
@@ -6012,7 +6012,7 @@ func (x *fastReflection_RequestCheckTx) Get(descriptor protoreflect.FieldDescrip
 		value := x.Tx
 		return protoreflect.ValueOfBytes(value)
 	case "tendermint.abci.RequestCheckTx.type":
-		value := x.Type
+		value := x.Type_
 		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
 	default:
 		if descriptor.IsExtension() {
@@ -6037,7 +6037,7 @@ func (x *fastReflection_RequestCheckTx) Set(fd protoreflect.FieldDescriptor, val
 	case "tendermint.abci.RequestCheckTx.tx":
 		x.Tx = value.Bytes()
 	case "tendermint.abci.RequestCheckTx.type":
-		x.Type = (CheckTxType)(value.Enum())
+		x.Type_ = (CheckTxType)(value.Enum())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: tendermint.abci.RequestCheckTx"))
@@ -6152,8 +6152,8 @@ func (x *fastReflection_RequestCheckTx) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.Type != 0 {
-			n += 1 + runtime.Sov(uint64(x.Type))
+		if x.Type_ != 0 {
+			n += 1 + runtime.Sov(uint64(x.Type_))
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -6184,8 +6184,8 @@ func (x *fastReflection_RequestCheckTx) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.Type != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.Type))
+		if x.Type_ != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Type_))
 			i--
 			dAtA[i] = 0x10
 		}
@@ -6281,9 +6281,9 @@ func (x *fastReflection_RequestCheckTx) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 2:
 				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Type_", wireType)
 				}
-				x.Type = 0
+				x.Type_ = 0
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -6293,7 +6293,7 @@ func (x *fastReflection_RequestCheckTx) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Type |= CheckTxType(b&0x7F) << shift
+					x.Type_ |= CheckTxType(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -22648,8 +22648,8 @@ func (x *fastReflection_Event) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_Event) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Type != "" {
-		value := protoreflect.ValueOfString(x.Type)
+	if x.Type_ != "" {
+		value := protoreflect.ValueOfString(x.Type_)
 		if !f(fd_Event_type, value) {
 			return
 		}
@@ -22676,7 +22676,7 @@ func (x *fastReflection_Event) Range(f func(protoreflect.FieldDescriptor, protor
 func (x *fastReflection_Event) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "tendermint.abci.Event.type":
-		return x.Type != ""
+		return x.Type_ != ""
 	case "tendermint.abci.Event.attributes":
 		return len(x.Attributes) != 0
 	default:
@@ -22696,7 +22696,7 @@ func (x *fastReflection_Event) Has(fd protoreflect.FieldDescriptor) bool {
 func (x *fastReflection_Event) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "tendermint.abci.Event.type":
-		x.Type = ""
+		x.Type_ = ""
 	case "tendermint.abci.Event.attributes":
 		x.Attributes = nil
 	default:
@@ -22716,7 +22716,7 @@ func (x *fastReflection_Event) Clear(fd protoreflect.FieldDescriptor) {
 func (x *fastReflection_Event) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
 	case "tendermint.abci.Event.type":
-		value := x.Type
+		value := x.Type_
 		return protoreflect.ValueOfString(value)
 	case "tendermint.abci.Event.attributes":
 		if len(x.Attributes) == 0 {
@@ -22745,7 +22745,7 @@ func (x *fastReflection_Event) Get(descriptor protoreflect.FieldDescriptor) prot
 func (x *fastReflection_Event) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "tendermint.abci.Event.type":
-		x.Type = value.Interface().(string)
+		x.Type_ = value.Interface().(string)
 	case "tendermint.abci.Event.attributes":
 		lv := value.List()
 		clv := lv.(*_Event_2_list)
@@ -22865,7 +22865,7 @@ func (x *fastReflection_Event) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		l = len(x.Type)
+		l = len(x.Type_)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -22920,10 +22920,10 @@ func (x *fastReflection_Event) ProtoMethods() *protoiface.Methods {
 				dAtA[i] = 0x12
 			}
 		}
-		if len(x.Type) > 0 {
-			i -= len(x.Type)
-			copy(dAtA[i:], x.Type)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Type)))
+		if len(x.Type_) > 0 {
+			i -= len(x.Type_)
+			copy(dAtA[i:], x.Type_)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Type_)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -22978,7 +22978,7 @@ func (x *fastReflection_Event) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Type_", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -23006,7 +23006,7 @@ func (x *fastReflection_Event) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Type = string(dAtA[iNdEx:postIndex])
+				x.Type_ = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
@@ -25742,8 +25742,8 @@ func (x *fastReflection_Evidence) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_Evidence) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Type != 0 {
-		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Type))
+	if x.Type_ != 0 {
+		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Type_))
 		if !f(fd_Evidence_type, value) {
 			return
 		}
@@ -25788,7 +25788,7 @@ func (x *fastReflection_Evidence) Range(f func(protoreflect.FieldDescriptor, pro
 func (x *fastReflection_Evidence) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "tendermint.abci.Evidence.type":
-		return x.Type != 0
+		return x.Type_ != 0
 	case "tendermint.abci.Evidence.validator":
 		return x.Validator != nil
 	case "tendermint.abci.Evidence.height":
@@ -25814,7 +25814,7 @@ func (x *fastReflection_Evidence) Has(fd protoreflect.FieldDescriptor) bool {
 func (x *fastReflection_Evidence) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "tendermint.abci.Evidence.type":
-		x.Type = 0
+		x.Type_ = 0
 	case "tendermint.abci.Evidence.validator":
 		x.Validator = nil
 	case "tendermint.abci.Evidence.height":
@@ -25840,7 +25840,7 @@ func (x *fastReflection_Evidence) Clear(fd protoreflect.FieldDescriptor) {
 func (x *fastReflection_Evidence) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
 	case "tendermint.abci.Evidence.type":
-		value := x.Type
+		value := x.Type_
 		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
 	case "tendermint.abci.Evidence.validator":
 		value := x.Validator
@@ -25875,7 +25875,7 @@ func (x *fastReflection_Evidence) Get(descriptor protoreflect.FieldDescriptor) p
 func (x *fastReflection_Evidence) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "tendermint.abci.Evidence.type":
-		x.Type = (EvidenceType)(value.Enum())
+		x.Type_ = (EvidenceType)(value.Enum())
 	case "tendermint.abci.Evidence.validator":
 		x.Validator = value.Message().Interface().(*Validator)
 	case "tendermint.abci.Evidence.height":
@@ -26014,8 +26014,8 @@ func (x *fastReflection_Evidence) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		if x.Type != 0 {
-			n += 1 + runtime.Sov(uint64(x.Type))
+		if x.Type_ != 0 {
+			n += 1 + runtime.Sov(uint64(x.Type_))
 		}
 		if x.Validator != nil {
 			l = options.Size(x.Validator)
@@ -26098,8 +26098,8 @@ func (x *fastReflection_Evidence) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x12
 		}
-		if x.Type != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.Type))
+		if x.Type_ != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Type_))
 			i--
 			dAtA[i] = 0x8
 		}
@@ -26154,9 +26154,9 @@ func (x *fastReflection_Evidence) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Type_", wireType)
 				}
-				x.Type = 0
+				x.Type_ = 0
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -26166,7 +26166,7 @@ func (x *fastReflection_Evidence) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Type |= EvidenceType(b&0x7F) << shift
+					x.Type_ |= EvidenceType(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -28371,8 +28371,8 @@ type RequestCheckTx struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Tx   []byte      `protobuf:"bytes,1,opt,name=tx,proto3" json:"tx,omitempty"`
-	Type CheckTxType `protobuf:"varint,2,opt,name=type,proto3,enum=tendermint.abci.CheckTxType" json:"type,omitempty"`
+	Tx    []byte      `protobuf:"bytes,1,opt,name=tx,proto3" json:"tx,omitempty"`
+	Type_ CheckTxType `protobuf:"varint,2,opt,name=type,proto3,enum=tendermint.abci.CheckTxType" json:"type,omitempty"`
 }
 
 func (x *RequestCheckTx) Reset() {
@@ -28402,9 +28402,9 @@ func (x *RequestCheckTx) GetTx() []byte {
 	return nil
 }
 
-func (x *RequestCheckTx) GetType() CheckTxType {
+func (x *RequestCheckTx) GetType_() CheckTxType {
 	if x != nil {
-		return x.Type
+		return x.Type_
 	}
 	return CheckTxType_NEW
 }
@@ -29938,7 +29938,7 @@ type Event struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Type       string            `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	Type_      string            `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
 	Attributes []*EventAttribute `protobuf:"bytes,2,rep,name=attributes,proto3" json:"attributes,omitempty"`
 }
 
@@ -29962,9 +29962,9 @@ func (*Event) Descriptor() ([]byte, []int) {
 	return file_tendermint_abci_types_proto_rawDescGZIP(), []int{36}
 }
 
-func (x *Event) GetType() string {
+func (x *Event) GetType_() string {
 	if x != nil {
-		return x.Type
+		return x.Type_
 	}
 	return ""
 }
@@ -30228,7 +30228,7 @@ type Evidence struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Type EvidenceType `protobuf:"varint,1,opt,name=type,proto3,enum=tendermint.abci.EvidenceType" json:"type,omitempty"`
+	Type_ EvidenceType `protobuf:"varint,1,opt,name=type,proto3,enum=tendermint.abci.EvidenceType" json:"type,omitempty"`
 	// The offending validator
 	Validator *Validator `protobuf:"bytes,2,opt,name=validator,proto3" json:"validator,omitempty"`
 	// The height when the offense occurred
@@ -30261,9 +30261,9 @@ func (*Evidence) Descriptor() ([]byte, []int) {
 	return file_tendermint_abci_types_proto_rawDescGZIP(), []int{42}
 }
 
-func (x *Evidence) GetType() EvidenceType {
+func (x *Evidence) GetType_() EvidenceType {
 	if x != nil {
-		return x.Type
+		return x.Type_
 	}
 	return EvidenceType_UNKNOWN
 }

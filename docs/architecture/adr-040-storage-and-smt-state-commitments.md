@@ -137,7 +137,7 @@ The `KVStore(key)` will provide an access to the combined `SS` and `SC` store:
 
 - `Get` will return `SS` value
 - `Has` will return true if value key is present in `SS`
-- `Set` will store a value in both `SS`. It panics when key or value are nil
+- `Set` will store a value in both `SS` and `SC`. It panics when key or value are nil
 - `Delete` will delete key both from `SS` and `SC`. It panics when key is nil
 - `Iterator` will iterate over `SS`
 - `ReverseIterator` will iterate over `SS`
@@ -153,7 +153,7 @@ type CombinedKVStore {
 
 `SCStore()` and `SSStore()` returns a KVStore with access and operations only for `SC` and `SS` respectively. Moreover, they will use a unique namespace to avoid conflicts with `KVStore`. Naive implementation could cause race conditions (when someone writes to the combined `KVStore` and later writes to `SSStore` in the same transaction).
 
-The Cache store must be aware if writes happen to a combined `KVStore` or `SCStore`.
+The Cache store must be aware if writes happen to a combined `KVStore` or `SCStore` only.
 The proposed solution is to return different cache instances for each method of `StoreAccess` interface. More specifically, when starting a transaction, we will create create 3 cache instances (for CombinedKVStore, SS and SC).
 
 ### MultiStore Refactor
@@ -242,6 +242,26 @@ TODO: need to make decision about the key compression.
 Some objects may be saved with key, which contains a Protobuf message type. Such keys are long. We could save a lot of space if we can map Protobuf message types in varints.
 
 TODO: finalize this or move to another ADR.
+
+## Migration
+
+Using the new store will require a migration. 2 Migrations are proposed:
+1. Genesis export -- it will reset the blockchain history.
+2. In place migration: we can reuse `UpgradeKeeper.SetUpgradeHandler` to provide the migration logic:
+
+    ```go 
+app.UpgradeKeeper.SetUpgradeHandler("adr-40", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+
+    storev2.Migrate(iavlstore, )
+
+    // RunMigrations returns the VersionMap
+    // with the updated module ConsensusVersions
+    return app.mm.RunMigrations(ctx, vm)
+})
+    ```
+
+    The `Migrate` function will read all entries from the save them to the AD-40 combined KV store. Cash layer should not be used and the operation must finish with a single Commit call.
+
 
 ## Consequences
 

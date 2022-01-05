@@ -14,19 +14,19 @@ func NewGenesisState() *GenesisState {
 }
 
 func (s GenesisState) Validate() error {
-	for _, f := range s.Groups {
-		groupId := f.GetGroupId()
+	for _, g := range s.Groups {
+		groupId := g.GroupId
 		if groupId == 0 {
 			return sdkerrors.Wrap(errors.ErrEmpty, "group's group id")
 		}
-		_, err := sdk.AccAddressFromBech32(f.GetAdmin())
+		_, err := sdk.AccAddressFromBech32(g.GetAdmin())
 		if err != nil {
 			return sdkerrors.Wrap(err, "admin")
 		}
-		if _, err := math.NewNonNegativeDecFromString(f.GetTotalWeight()); err != nil {
+		if _, err := math.NewNonNegativeDecFromString(g.GetTotalWeight()); err != nil {
 			return sdkerrors.Wrap(err, "total weight")
 		}
-		if f.GetVersion() == 0 {
+		if g.GetVersion() == 0 {
 			return sdkerrors.Wrap(errors.ErrEmpty, "version")
 		}
 	}
@@ -56,7 +56,7 @@ func (s GenesisState) Validate() error {
 	}
 
 	for _, f := range s.GroupMembers {
-		if f.GetGroupId() == 0 {
+		if f.GroupId == 0 {
 			return sdkerrors.Wrap(errors.ErrEmpty, "group member")
 		}
 		err := f.GetMember().ValidateBasic()

@@ -25,11 +25,11 @@ import (
 type GenesisTestSuite struct {
 	suite.Suite
 
-	app        *simapp.SimApp
-	ctx        context.Context
-	genesisCtx sdk.Context
-	keeper     keeper.Keeper
-	cdc        *codec.ProtoCodec
+	app    *simapp.SimApp
+	ctx    context.Context
+	sdkCtx sdk.Context
+	keeper keeper.Keeper
+	cdc    *codec.ProtoCodec
 }
 
 func TestGenesisTestSuite(t *testing.T) {
@@ -50,14 +50,14 @@ func (s *GenesisTestSuite) SetupSuite() {
 	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, simapp.DefaultNodeHome, 5, encCdc, simapp.EmptyAppOptions{})
 
 	s.app = app
-	s.genesisCtx = app.BaseApp.NewUncachedContext(checkTx, tmproto.Header{})
+	s.sdkCtx = app.BaseApp.NewUncachedContext(checkTx, tmproto.Header{})
 	s.keeper = app.GroupKeeper
 	s.cdc = codec.NewProtoCodec(app.InterfaceRegistry())
-	s.ctx = sdk.WrapSDKContext(s.genesisCtx)
+	s.ctx = sdk.WrapSDKContext(s.sdkCtx)
 }
 
 func (s *GenesisTestSuite) TestInitExportGenesis() {
-	genesisCtx := s.genesisCtx
+	sdkCtx := s.sdkCtx
 	ctx := s.ctx
 	cdc := s.cdc
 
@@ -122,7 +122,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		group.ModuleName: genesisBytes,
 	}
 
-	s.keeper.InitGenesis(genesisCtx, cdc, genesisData[group.ModuleName])
+	s.keeper.InitGenesis(sdkCtx, cdc, genesisData[group.ModuleName])
 
 	for i, g := range genesisState.Groups {
 		res, err := s.keeper.GroupInfo(ctx, &group.QueryGroupInfoRequest{
@@ -162,7 +162,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		s.Require().Equal(votesRes.Votes[0], genesisState.Votes[0])
 	}
 
-	exported := s.keeper.ExportGenesis(genesisCtx, cdc)
+	exported := s.keeper.ExportGenesis(sdkCtx, cdc)
 	bz, err := cdc.MarshalJSON(exported)
 	s.Require().NoError(err)
 

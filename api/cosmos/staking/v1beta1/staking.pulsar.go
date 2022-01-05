@@ -2,12 +2,10 @@ package stakingv1beta1
 
 import (
 	fmt "fmt"
-	io "io"
-	reflect "reflect"
-	sync "sync"
-
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
+	v1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/v1beta1"
+	types "github.com/cosmos/cosmos-sdk/api/tendermint/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
@@ -15,9 +13,9 @@ import (
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
-
-	v1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/v1beta1"
-	types "github.com/cosmos/cosmos-sdk/api/tendermint/types"
+	io "io"
+	reflect "reflect"
+	sync "sync"
 )
 
 var _ protoreflect.List = (*_HistoricalInfo_2_list)(nil)

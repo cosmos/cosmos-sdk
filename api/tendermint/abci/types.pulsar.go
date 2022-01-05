@@ -3,11 +3,9 @@ package abci
 import (
 	context "context"
 	fmt "fmt"
-	io "io"
-	reflect "reflect"
-	sync "sync"
-
 	runtime "github.com/cosmos/cosmos-proto/runtime"
+	crypto "github.com/cosmos/cosmos-sdk/api/tendermint/crypto"
+	types "github.com/cosmos/cosmos-sdk/api/tendermint/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -16,9 +14,9 @@ import (
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
-
-	crypto "github.com/cosmos/cosmos-sdk/api/tendermint/crypto"
-	types "github.com/cosmos/cosmos-sdk/api/tendermint/types"
+	io "io"
+	reflect "reflect"
+	sync "sync"
 )
 
 var (

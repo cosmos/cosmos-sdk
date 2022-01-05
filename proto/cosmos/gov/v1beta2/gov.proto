@@ -85,6 +85,7 @@ message TallyResult {
 message Vote {
   uint64 proposal_id = 1;
   string voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  reserved 3;
   repeated WeightedVoteOption options = 4;
 }
 

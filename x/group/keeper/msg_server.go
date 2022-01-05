@@ -273,7 +273,6 @@ func (k Keeper) CreateGroupAccount(goCtx context.Context, req *group.MsgCreateGr
 			// handle a rare collision
 			continue
 		}
-
 		acc := k.accKeeper.NewAccount(ctx, &authtypes.ModuleAccount{
 			BaseAccount: &authtypes.BaseAccount{
 				Address: accountAddr.String(),
@@ -403,11 +402,6 @@ func (k Keeper) CreateProposal(goCtx context.Context, req *group.MsgCreatePropos
 	// Check that if the messages require signers, they are all equal to the given group account.
 	if err := ensureMsgAuthZ(msgs, accountAddress); err != nil {
 		return nil, err
-	}
-
-	// blockTime, err := gogotypes.TimestampProto(ctx.BlockTime())
-	if err != nil {
-		return nil, sdkerrors.Wrap(err, "block time conversion")
 	}
 
 	policy := account.GetDecisionPolicy()

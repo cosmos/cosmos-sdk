@@ -87,7 +87,7 @@ Some DB engines support snapshotting. Hence, we propose to reuse that functional
 
 One of the Stargate core features is a _snapshot sync_ delivered in the `/snapshot` package. It provides a way to trustlessly sync a blockchain without repeating all transactions from the genesis. This feature is implemented in Cosmos SDK and requires storage support. Currently IAVL is the only supported backend. It works by streaming to a client a snapshot of a `SS` at a certain version together with a header chain.
 
-A new database snapshot will be created in every `EndBlocker` and identified by a block height. The `root` store keeps track of the available snapshots to offer `SS` at a certain version. The `root` store implements the `RootStore` interface described below. In essence, `RootStore` encapsulates a `Committer` interface. `Committer` has a `Commit`, `SetPruning`, `GetPruning` functions which will be used for creating and removing snapshots. The `rootStore.Commit` function creates a new snapshot and increments the version on each call, and checks if it needs to remove old versions. We will need to update the SMT interface to implement the `Committer` interface.
+A new database snapshot will be created in every `EndBlocker` and identified by a block height. The `root` store keeps track of the available snapshots to offer `SS` at a certain version. The `root` store implements the `MultiStore` interface described below. In essence, `MultiStore` extends the `Committer` interface. `Committer` has a `Commit`, `SetPruning`, `GetPruning` functions which will be used for creating and removing snapshots. The `rootStore.Commit` function creates a new snapshot and increments the version on each call, and checks if it needs to remove old versions. We will need to update the SMT interface to implement the `Committer` interface.
 NOTE: `Commit` must be called exactly once per block. Otherwise we risk going out of sync for the version number and block height.
 NOTE: For the Cosmos SDK storage, we may consider splitting that interface into `Committer` and `PruningCommitter` - only the multiroot should implement `PruningCommitter` (cache and prefix store don't need pruning).
 
@@ -118,7 +118,7 @@ We need to be able to process transactions and roll-back state updates if a tran
 
 We identified use-cases, where modules will need to save an object commitment without storing an object itself. Sometimes clients are receiving complex objects, and they have no way to prove a correctness of that object without knowing the storage layout. For those use cases it would be easier to commit to the object without storing it directly.
 
-### Low Level Interface
+### Direct SS and SC access
 
 Modules should be able to commit a value fully managed by the module itself. For example, a module can manage its own special database and commit its state by setting a value only to `SC`.
 Similarly, a module can save a value without committing it - this is useful for ORM module or secondary indexes (eg x/staking `UnbondingDelegationKey` and `UnbondingDelegationByValIndexKey`).
@@ -160,38 +160,38 @@ The proposed solution is to return different cache instances for each method of 
 
 The Stargate `/store` implementation (store/v1) has an additional layer in the SDK store construction - the `MultiStore` structure. The multistore exists to support the modularity of the Cosmos SDK - each module is using its own instance of IAVL with independent commit phase. It causes problems related to race condition and atomic DB commits (see: [\#6370](https://github.com/cosmos/cosmos-sdk/issues/6370) and [discussion](https://github.com/cosmos/cosmos-sdk/discussions/8297#discussioncomment-757043)).
 
-We propose to simplify the multistore concept in the Cosmos SDK: use a single instance of `SC` and `SS` in a `RootStore` object. To avoid confusion, we should rename the `MultiStore` interface to `RootStore`. The `RootStore` will have the following interface; the methods for configuring tracing and listeners are omitted for brevity.
+We propose to simplify the multistore concept in the Cosmos SDK: use a single instance of `SC` and `SS` in a root store object. The following interfaces are proposed; the methods for configuring tracing and listeners are omitted for brevity.
 
 ```go
 // Used where read-only access to versions is needed.
-type BasicRootStore interface {
+type BasicMultiStore interface {
     Store
     GetKVStore(StoreKey) KVStore
-    CacheRootStore() CacheRootStore
+    CacheMultiStore() CacheMultiStore
 }
 
 // Used as the main app state, replacing CommitMultiStore.
-type CommitRootStore interface {
-    BasicRootStore
+type CommitMultiStore interface {
+    BasicMultiStore
     Committer
     Snapshotter
 
-    GetVersion(uint64) (BasicRootStore, error)
+    GetVersion(uint64) (BasicMultiStore, error)
     SetInitialVersion(uint64) error
 
     ... // Trace and Listen methods
 }
 
 // Replaces CacheMultiStore for branched state.
-type CacheRootStore interface {
-    BasicRootStore
+type CacheMultiStore interface {
+    BasicMultiStore
     Write()
 
     ... // Trace and Listen methods
 }
 
 // Example of constructor parameters for the concrete type.
-type RootStoreConfig struct {
+type MultiStoreConfig struct {
     Upgrades        *StoreUpgrades
     InitialVersion  uint64
 
@@ -202,9 +202,7 @@ type RootStoreConfig struct {
 <!-- TODO: Review whether these types can be further reduced or simplified -->
 <!-- TODO: RootStorePersistentCache type -->
 
-In contrast to `MultiStore`, `RootStore` doesn't allow to dynamically mount sub-stores or provide an arbitrary backing DB for individual sub-stores.
-
-NOTE: modules will be able to use a special commitment and their own DBs. For example: a module which will use ZK proofs for state can store and commit this proof in the `RootStore` (usually as a single record) and manage the specialized store privately or using the `SC` low level interface.
+NOTE: modules will be able to use a special commitment and their own DBs. For example: a module which will use ZK proofs for state can store and commit this proof in the `MultiStore` (usually as a single record) and manage the specialized store privately or using the `SC` low level interface.
 
 #### Compatibility support
 

@@ -74,6 +74,7 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 	} else {
 		// update in unbondingDelegationEntryBalance
 		ubd.Entries[unbondEntryIndex].Balance = amount
+		ubd.Entries[unbondEntryIndex].InitialBalance = amount
 	}
 
 	// set the unbonding delegation or remove it if there are no more entries

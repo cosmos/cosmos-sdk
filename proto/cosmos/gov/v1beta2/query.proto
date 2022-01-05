@@ -6,7 +6,7 @@ import "google/api/annotations.proto";
 import "cosmos/gov/v1beta2/gov.proto";
 import "cosmos_proto/cosmos.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2";
 
 // Query defines the gRPC querier service for gov module
 service Query {

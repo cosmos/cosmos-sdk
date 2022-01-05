@@ -57,6 +57,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10561](https://github.com/cosmos/cosmos-sdk/pull/10561) Add configurable IAVL cache size to app.toml
 * [\#10507](https://github.com/cosmos/cosmos-sdk/pull/10507) Add middleware for tx priority.
 * [\#10311](https://github.com/cosmos/cosmos-sdk/pull/10311) Adds cli to use tips transactions. It adds an `--aux` flag to all CLI tx commands to generate the aux signer data (with optional tip), and a new `tx aux-to-fee` subcommand to let the fee payer gather aux signer data and broadcast the tx
+* [\#10430](https://github.com/cosmos/cosmos-sdk/pull/10430) ADR-040: Add store/v2 `MultiStore` implementation
 
 ### API Breaking Changes
 
@@ -112,11 +113,19 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10612](https://github.com/cosmos/cosmos-sdk/pull/10612) `baseapp.NewBaseApp` constructor function doesn't take the `sdk.TxDecoder` anymore. This logic has been moved into the TxDecoderMiddleware.
 * [\#10692](https://github.com/cosmos/cosmos-sdk/pull/10612) `SignerData` takes 2 new fields, `Address` and `PubKey`, which need to get populated when using SIGN_MODE_DIRECT_AUX.
 * [\#10748](https://github.com/cosmos/cosmos-sdk/pull/10748) Move legacy `x/gov` api to `v1beta1` directory.
+* [\#10816](https://github.com/cosmos/cosmos-sdk/pull/10816) Reuse blocked addresses from the bank module. No need to pass them to distribution. 
+* [\#10852](https://github.com/cosmos/cosmos-sdk/pull/10852) Move `x/gov/types` to `x/gov/types/v1beta2`.
 
 ### Client Breaking Changes
 
 * [\#9594](https://github.com/cosmos/cosmos-sdk/pull/9594) Remove legacy REST API. Please see the [REST Endpoints Migration guide](https://docs.cosmos.network/master/migrations/rest.html) to migrate to the new REST endpoints.
 * [\#9995](https://github.com/cosmos/cosmos-sdk/pull/9995) Increased gas cost for creating proposals.
+* [\#10598](https://github.com/cosmos/cosmos-sdk/pull/10598) Remove `gogoproto.json_tag` from all proto files. 
+  - The affected fields are:
+    - Message Proposal in goverance `id` is now `proposal_id`
+    - Message `MsgUnjail` `address` is no `validator_addr` 
+    - Message `GenesisState` json representation of Gentxs is now `gen_txs`, previously `gentxs`
+    - Message `DelegatorStartingInfo` json representation of Height is now `height`, previously `creation_height`
 
 ### CLI Breaking Changes
 
@@ -150,8 +159,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (deps) [\#10706](https://github.com/cosmos/cosmos-sdk/issues/10706) Bump rosetta-sdk-go to v0.7.2 and rosetta-cli to v0.7.3
 * (module) [\#10711](https://github.com/cosmos/cosmos-sdk/pull/10711) Panic at startup if the app developer forgot to add modules in the `SetOrder{BeginBlocker, EndBlocker, InitGenesis, ExportGenesis}` functions. This means that all modules, even those who have empty implementations for those methods, need to be added to `SetOrder*`.
 * (x/bank) [\#10771](https://github.com/cosmos/cosmos-sdk/pull/10771) Add safety check on bank module perms to allow module-specific mint restrictions (e.g. only minting a certain denom).
+* (types/errors) [\#10779](https://github.com/cosmos/cosmos-sdk/pull/10779) Move most functionality in `types/errors` to a standalone `errors` go module, except the `RootCodespace` errors and ABCI response helpers. All functions and types that used to live in `types/errors` are now aliased so this is not a breaking change.
+
 ### Bug Fixes
 
+* [\#10827](https://github.com/cosmos/cosmos-sdk/pull/10827) Create query `Context` with requested block height
 * [\#10414](https://github.com/cosmos/cosmos-sdk/pull/10414) Use `sdk.GetConfig().GetFullBIP44Path()` instead `sdk.FullFundraiserPath` to generate key
 * (rosetta) [\#10340](https://github.com/cosmos/cosmos-sdk/pull/10340) Use `GenesisChunked(ctx)` instead `Genesis(ctx)` to get genesis block height
 * [#10180](https://github.com/cosmos/cosmos-sdk/issues/10180) Documentation: make references to Cosmos SDK consistent
@@ -179,8 +191,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Machine Breaking
 
+* [\#10564](https://github.com/cosmos/cosmos-sdk/pull/10564) Fix bug when updating allowance inside AllowedMsgAllowance
 * [\#10536](https://github.com/cosmos/cosmos-sdk/pull/10536]) Enable `SetSequence` for `ModuleAccount`.
-* (x/staking) [#10254](https://github.com/cosmos/cosmos-sdk/pull/10254) Instead of using the shares to determine if a delegation should be removed, use the truncated (token) amount.
 * (store) [#10247](https://github.com/cosmos/cosmos-sdk/pull/10247) Charge gas for the key length in gas meter.
 * (store) [#10218](https://github.com/cosmos/cosmos-sdk/pull/10218) Charge gas even when there are no entries while seeking.
 * (x/auth)[\#9596](https://github.com/cosmos/cosmos-sdk/pull/9596) Enable creating periodic vesting accounts with a transactions instead of requiring them to be created in genesis.
@@ -190,6 +202,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank) [\#9890] (https://github.com/cosmos/cosmos-sdk/pull/9890) Remove duplicate denom from denom metadata key.
 * (x/upgrade) [\#10189](https://github.com/cosmos/cosmos-sdk/issues/10189) Removed potential sources of non-determinism in upgrades
 * [\#10393](https://github.com/cosmos/cosmos-sdk/pull/10422) Add `MinCommissionRate` param to `x/staking` module.
+* [#10725](https://github.com/cosmos/cosmos-sdk/pull/10725) populate `ctx.ConsensusParams` for begin/end blockers.
+* [#10763](https://github.com/cosmos/cosmos-sdk/pull/10763) modify the fields in `TallyParams` to use `string` instead of `bytes`
 
  ### Deprecated
 
@@ -199,6 +213,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [\#10768](https://github.com/cosmos/cosmos-sdk/pull/10768) Added extra logging for tracking in-place store migrations
 * [\#10262](https://github.com/cosmos/cosmos-sdk/pull/10262) Remove unnecessary logging in `x/feegrant` simulation.
 * [\#10327](https://github.com/cosmos/cosmos-sdk/pull/10327) Add null guard for possible nil `Amount` in tx fee `Coins`
 * [\#10339](https://github.com/cosmos/cosmos-sdk/pull/10339) Improve performance of `removeZeroCoins` by only allocating memory when necessary

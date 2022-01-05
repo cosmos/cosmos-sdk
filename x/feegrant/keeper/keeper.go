@@ -53,7 +53,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 
 	var exp *time.Time
 	existingGrant, err := k.getGrant(ctx, grantee, granter)
-	if err != nil && existingGrant.GetAllowance() != nil {
+	if err != nil && existingGrant != nil && existingGrant.GetAllowance() != nil {
 		grant1, err := existingGrant.GetGrant()
 		if err != nil {
 			return err
@@ -65,7 +65,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 		}
 
 		if exp != nil {
-			k.removeFromGrantQueue(ctx, feegrant.FeeAllowancePrefixQueue(exp, key))
+			k.removeFromGrantQueue(ctx, exp, key)
 		}
 	}
 
@@ -85,7 +85,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	if err != nil {
 		return err
 	} else if expiration != nil {
-		k.insertAllowanceKey(ctx, key, expiration)
+		k.addToFeeAllowanceQueue(ctx, key, expiration)
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -289,14 +289,15 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (*feegrant.GenesisState, error) {
 	}, err
 }
 
-func (k Keeper) removeFromGrantQueue(ctx sdk.Context, key []byte) {
+func (k Keeper) removeFromGrantQueue(ctx sdk.Context, exp *time.Time, allowanceKey []byte) {
+	key := feegrant.FeeAllowancePrefixQueue(exp, allowanceKey)
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(key)
 }
 
-func (k Keeper) insertAllowanceKey(ctx sdk.Context, grantKey []byte, exp *time.Time) {
+func (k Keeper) addToFeeAllowanceQueue(ctx sdk.Context, grantKey []byte, exp *time.Time) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(feegrant.FeeAllowancePrefixQueue(exp, grantKey), grantKey)
+	store.Set(feegrant.FeeAllowancePrefixQueue(exp, grantKey), []byte{})
 }
 
 // RemoveExpiredAllowances iterates grantsByExpiryQueue and deletes the expired grants.
@@ -308,6 +309,9 @@ func (k Keeper) RemoveExpiredAllowances(ctx sdk.Context) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		store.Delete(iterator.Key())
-		store.Delete(iterator.Value())
+		expLen := len(sdk.FormatTimeBytes(time.Now()))
+
+		// extract the fee allowance key by removing the allowance queue prefix length, expiration length from key.
+		store.Delete(append(feegrant.FeeAllowanceKeyPrefix, iterator.Key()[1+expLen:]...))
 	}
 }

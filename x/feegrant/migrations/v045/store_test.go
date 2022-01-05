@@ -25,7 +25,8 @@ func TestMigration(t *testing.T) {
 
 	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))
 	now := ctx.BlockTime()
-	oneDay := ctx.BlockTime().AddDate(0, 0, 1)
+	oneDay := now.AddDate(0, 0, 1)
+	twoDays := now.AddDate(0, 0, 2)
 
 	grants := []struct {
 		granter    sdk.AccAddress
@@ -37,13 +38,13 @@ func TestMigration(t *testing.T) {
 			granter:    granter1,
 			grantee:    grantee1,
 			spendLimit: spendLimit,
-			expiration: &oneDay,
+			expiration: &twoDays,
 		},
 		{
 			granter:    granter2,
 			grantee:    grantee2,
 			spendLimit: spendLimit,
-			expiration: &now,
+			expiration: &oneDay,
 		},
 		{
 			granter:    granter1,
@@ -53,7 +54,7 @@ func TestMigration(t *testing.T) {
 		{
 			granter:    granter2,
 			grantee:    grantee1,
-			expiration: &now,
+			expiration: &oneDay,
 		},
 	}
 
@@ -71,7 +72,7 @@ func TestMigration(t *testing.T) {
 		store.Set(feegrant.FeeAllowanceKey(grant.granter, grant.grantee), bz)
 	}
 
-	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(1 * time.Hour))
+	ctx = ctx.WithBlockTime(now.Add(30 * time.Hour))
 	require.NoError(t, v045.MigrateStore(ctx, feegrantKey, cdc))
 	store = ctx.KVStore(feegrantKey)
 

@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (std/codec) [/#10595](https://github.com/cosmos/cosmos-sdk/pull/10595) Add evidence to std/codec to be able to decode evidence in client interactions. 
 * [#10725](https://github.com/cosmos/cosmos-sdk/pull/10725) populate `ctx.ConsensusParams` for begin/end blockers.
+* [\#10061](https://github.com/cosmos/cosmos-sdk/pull/10061) and [\#10515](https://github.com/cosmos/cosmos-sdk/pull/10515) Ensure that `LegacyAminoPubKey` struct correctly unmarshals from JSON
 
 ### Improvements
 * [#10823](https://github.com/cosmos/cosmos-sdk/pull/10823) updated ambiguous cli description for creating feegrant.

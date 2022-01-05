@@ -4,6 +4,7 @@
 # This module represents the "proto" root found in
 # the previous configuration.
 version: v1
+name: buf.build/cosmos/cosmos-sdk
 deps:
   - buf.build/cosmos/cosmos-proto
   - buf.build/cosmos/gogo-proto

@@ -1,6 +1,7 @@
 package module
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -41,6 +42,7 @@ func (s TestSuite) TestModuleNames() {
 		Modules: map[string]AppModule{"a": nil, "b": nil},
 	}
 	ms := m.ModuleNames()
+	sort.Strings(ms)
 	s.Require().Equal([]string{"a", "b"}, ms)
 }
 

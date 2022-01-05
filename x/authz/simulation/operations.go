@@ -49,19 +49,13 @@ func WeightedOperations(
 
 	var (
 		weightMsgGrant int
-		weightRevoke   int
 		weightExec     int
+		weightRevoke   int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgGrant, &weightMsgGrant, nil,
 		func(_ *rand.Rand) {
 			weightMsgGrant = WeightGrant
-		},
-	)
-
-	appParams.GetOrGenerate(cdc, OpWeightRevoke, &weightRevoke, nil,
-		func(_ *rand.Rand) {
-			weightRevoke = WeightRevoke
 		},
 	)
 
@@ -71,18 +65,24 @@ func WeightedOperations(
 		},
 	)
 
+	appParams.GetOrGenerate(cdc, OpWeightRevoke, &weightRevoke, nil,
+		func(_ *rand.Rand) {
+			weightRevoke = WeightRevoke
+		},
+	)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgGrant,
 			SimulateMsgGrant(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
-			weightRevoke,
-			SimulateMsgRevoke(ak, bk, k),
-		),
-		simulation.NewWeightedOperation(
 			weightExec,
 			SimulateMsgExec(ak, bk, k, appCdc),
+		),
+		simulation.NewWeightedOperation(
+			weightRevoke,
+			SimulateMsgRevoke(ak, bk, k),
 		),
 	}
 }

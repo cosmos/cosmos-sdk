@@ -41,18 +41,17 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	)
 
 	// setup 3 accounts
-	s := rand.NewSource(1)
+	s := rand.NewSource(2)
 	r := rand.New(s)
 	accs := suite.getTestingAccounts(r, 3)
 
 	expected := []struct {
 		weight     int
 		opMsgRoute string
-		opMsgName  string
 	}{
-		{simulation.WeightGrant, simulation.TypeMsgGrant, simulation.TypeMsgGrant},
-		{simulation.WeightRevoke, simulation.TypeMsgRevoke, simulation.TypeMsgRevoke},
-		{simulation.WeightExec, authz.ModuleName, simulation.TypeMsgExec},
+		{simulation.WeightGrant, simulation.TypeMsgGrant},
+		{simulation.WeightExec, simulation.TypeMsgExec},
+		{simulation.WeightRevoke, simulation.TypeMsgRevoke},
 	}
 
 	for i, w := range weightedOps {
@@ -62,7 +61,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		// will fail
 		suite.Require().Equal(expected[i].weight, w.Weight(), "weight should be the same")
 		suite.Require().Equal(expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
-		suite.Require().Equal(expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
+		suite.Require().Equal(expected[i].opMsgRoute, operationMsg.Name, "operation Msg name should be the same")
 	}
 }
 

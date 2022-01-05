@@ -20,7 +20,11 @@ This document provides steps to use the In-Place Store Migrations upgrade method
 
 ## Tracking Module Versions
 
+<<<<<<< HEAD
 Each module gets assigned a consensus version by the module developer. The consensus version serves as the breaking change version of the module. The SDK keeps track of all module consensus versions in the x/upgrade `VersionMap` store. During an upgrade, the difference between the old `VersionMap` stored in state and the new `VersionMap` is calculated by the Cosmos SDK. For each identified difference, the module-specific migrations are run and the respective consensus version of each upgraded module is incremented.
+=======
+Each module gets assigned a consensus version by the module developer. The consensus version serves as the breaking change version of the module. The Cosmos SDK keeps track of all module consensus versions in the x/upgrade `VersionMap` store. During an upgrade, the difference between the old `VersionMap` stored in state and the new `VersionMap` is calculated by the Cosmos SDK. For each identified difference, the module-specific migrations are run and the respective consensus version of each upgraded module is incremented.
+>>>>>>> da929211d (feat: support in-place migration ordering (#10614))
 
 ### Consensus Version
 
@@ -28,7 +32,7 @@ The consensus version is defined on each app module by the module developer and 
 
 ### Version Map
 
-The version map is a mapping of module names to consensus versions. The map is persisted to x/upgrade's state for use during in-place migrations. When migrations finish, the updated version map is persisted to state.
+The version map is a mapping of module names to consensus versions. The map is persisted to x/upgrade's state for use during in-place migrations. When migrations finish, the updated version map is persisted in the state.
 
 ## Upgrade Handlers
 
@@ -46,14 +50,14 @@ Inside these functions, you must perform any upgrade logic to include in the pro
 
 ## Running Migrations
 
-Migrations are run inside of an `UpgradeHandler` using  `app.mm.RunMigrations(ctx, cfg, vm)`. The `UpgradeHandler` functions describe the functionality to occur during an upgrade. The `RunMigration` function loops through the `VersionMap` argument and runs the migration scripts for all versions that are less than the versions of the new binary app module. After the migrations are finished, a new `VersionMap` is returned to persist the upgraded module versions to state.
+Migrations are run inside of an `UpgradeHandler` using `app.mm.RunMigrations(ctx, cfg, vm)`. The `UpgradeHandler` functions describe the functionality to occur during an upgrade. The `RunMigration` function loops through the `VersionMap` argument and runs the migration scripts for all versions that are less than the versions of the new binary app module. After the migrations are finished, a new `VersionMap` is returned to persist the upgraded module versions to state.
 
 ```go
 cfg := module.NewConfigurator(...)
 app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 
     // ...
-    // do upgrade logic
+    // additional upgrade logic
     // ...
 
     // returns a VersionMap with the updated module ConsensusVersions
@@ -65,6 +69,7 @@ To learn more about configuring migration scripts for your modules, see the [Mod
 
 ### Order Of Migrations
 
+<<<<<<< HEAD
 All migrations are run in alphabetical order, except `x/auth` which is run the last, because of state dependencies between modules (you can read more in [issue #10606](https://github.com/cosmos/cosmos-sdk/issues/10606)). If you want to change the order of migration then you can run migrations in multiple stages. __Please beware that this is hacky, and make sure you understand what you are doing before running such migrations in production_. For example, you want to run `foo` last:
 
 ```go
@@ -83,6 +88,11 @@ app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgrad
     return toVM, err
 })
 ```
+=======
+By default, all migrations are run in module name alphabetical ascending order, except `x/auth` which is run last. The reason is state dependencies between x/auth and other modules (you can read more in [issue #10606](https://github.com/cosmos/cosmos-sdk/issues/10606)).
+
+If you want to change the order of migration then you should call `app.mm.SetOrderMigrations(module1, module2, ...)` in your app.go file. The function will panic if you forget to include a module in the argument list.
+>>>>>>> da929211d (feat: support in-place migration ordering (#10614))
 
 ## Adding New Modules During Upgrades
 
@@ -125,7 +135,11 @@ func (app *MyApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.R
 
 This information is used by the Cosmos SDK to detect when modules with newer versions are introduced to the app.
 
+<<<<<<< HEAD
 For a new module `foo`, `InitGenesis` is called by the `RunMigration` only when there is a new module registered in the module manager and there is no `foo` entry in the `fromVM` registered in the state. Therefore, if you want to skip `InitGenesis` when a new module is added to the app, then you should set its module version in `fromVM` to the module package consensus version:
+=======
+For a new module `foo`, `InitGenesis` is called by `RunMigration` only when `foo` is registered in the module manager but it's not set in the `fromVM`. Therefore, if you want to skip `InitGenesis` when a new module is added to the app, then you should set its module version in `fromVM` to the module consensus version:
+>>>>>>> da929211d (feat: support in-place migration ordering (#10614))
 
 ```go
 app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {

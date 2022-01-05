@@ -389,7 +389,7 @@ func NewSimApp(
 		group.ModuleName,
 	)
 
-	// you can set migrations order here
+	// Uncomment if you want to set a custom migration order here.
 	// app.mm.SetOrderMigrations(custom order)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)

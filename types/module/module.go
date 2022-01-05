@@ -525,7 +525,7 @@ func (m *Manager) GetVersionMap() VersionMap {
 	return vermap
 }
 
-// ModuleNames returns list of all module names
+// ModuleNames returns list of all module names, without any particular order.
 func (m *Manager) ModuleNames() []string {
 	ms := make([]string, len(m.Modules))
 	i := 0
@@ -536,8 +536,9 @@ func (m *Manager) ModuleNames() []string {
 	return ms
 }
 
-// Returns a default migrations ordres: ascending alphabetical by module name,
-// except x/auth which will run last.
+// DefaultMigrationsOrder returns a default migrations order: ascending alphabetical by module name,
+// except x/auth which will run last, see:
+// https://github.com/cosmos/cosmos-sdk/issues/10591
 func DefaultMigrationsOrder(modules []string) []string {
 	const authName = "auth"
 	out := make([]string, 0, len(modules))

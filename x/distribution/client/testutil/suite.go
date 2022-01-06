@@ -804,7 +804,6 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	require := s.Require()
 	val := s.network.Validators[0]
-	// val1 := s.network.Validators[1]
 	clientCtx := val.ClientCtx
 
 	// info, _, err := val.ClientCtx.Keyring.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)

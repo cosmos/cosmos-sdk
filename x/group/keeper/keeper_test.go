@@ -30,6 +30,7 @@ type TestSuite struct {
 	addrs           []sdk.AccAddress
 	groupID         uint64
 	groupPolicyAddr sdk.AccAddress
+	groupAdmin      sdk.AccAddress
 	keeper          keeper.Keeper
 	blockTime       time.Time
 }
@@ -58,6 +59,7 @@ func (s *TestSuite) SetupTest() {
 	})
 	s.Require().NoError(err)
 	s.groupID = groupRes.GroupId
+	s.groupAdmin = s.addrs[0]
 
 	policy := group.NewThresholdDecisionPolicy(
 		"2",
@@ -1337,6 +1339,84 @@ func (s *TestSuite) TestCreateProposal() {
 			}
 
 			spec.postRun(s.sdkCtx)
+		})
+	}
+}
+
+func (s *TestSuite) TestWithdrawProposal() {
+	addrs := s.addrs
+	addr2 := addrs[1]
+	addr5 := addrs[4]
+	groupAdmin := s.groupAdmin
+
+	msgSend := &banktypes.MsgSend{
+		FromAddress: s.groupPolicyAddr.String(),
+		ToAddress:   addr2.String(),
+		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+	}
+
+	proposers := []string{addr2.String()}
+	proposalID := createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+
+	specs := map[string]struct {
+		req        *group.MsgWithdrawProposal
+		preRun     func(sdkCtx sdk.Context) uint64
+		proposalId uint64
+		admin      string
+		expErr     bool
+		expErrMsg  string
+		postRun    func(sdkCtx sdk.Context)
+	}{
+		"wrong admin": {
+			proposalId: proposalID,
+			admin:      addr5.String(),
+			expErrMsg:  "given admin address is neither policy address nor in proposers",
+		},
+		"wrong proposalId": {
+			proposalId: 1111,
+			admin:      proposers[0],
+			expErrMsg:  "not found",
+		},
+		"happy case with proposer": {
+			proposalId: proposalID,
+			admin:      proposers[0],
+		},
+		"already closed proposal": {
+			proposalId: proposalID,
+			admin:      proposers[0],
+			expErrMsg:  "proposal is already closed or aborted",
+		},
+		"happy case with group admin address": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+			},
+			proposalId: proposalID,
+			admin:      groupAdmin.String(),
+		},
+	}
+	for msg, spec := range specs {
+		spec := spec
+		s.Run(msg, func() {
+			pId := spec.proposalId
+			if spec.preRun != nil {
+				pId = spec.preRun(s.sdkCtx)
+			}
+
+			_, err := s.keeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
+				ProposalId: pId,
+				Admin:      spec.admin,
+			})
+
+			if spec.expErrMsg != "" {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), spec.expErrMsg)
+				return
+			}
+
+			s.Require().NoError(err)
+			resp, err := s.keeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: pId})
+			s.Require().NoError(err)
+			s.Require().Equal(resp.GetProposal().Status, group.ProposalStatusAborted)
 		})
 	}
 }

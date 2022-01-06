@@ -535,7 +535,7 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawPr
 	}
 
 	if !validProposer {
-		return nil, sdkerrors.Wrapf(errors.ErrUnauthorized, "given admin address neither policy address nor in proposal proposers: %s", admin)
+		return nil, sdkerrors.Wrapf(errors.ErrUnauthorized, "given admin address is neither policy address nor in proposers: %s", admin)
 	}
 
 	proposal.Result = group.ProposalResultUnfinalized

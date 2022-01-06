@@ -24,6 +24,7 @@ const (
 	TypeMsgUpdateGroupPolicyDecisionPolicy = "update_group_policy_decision_policy"
 	TypeMsgUpdateGroupPolicyComment        = "update_group_policy_comment"
 	TypeMsgCreateProposal                  = "create_proposal"
+	TypeMsgWithdrawProposal                = "withdraw_proposal"
 	TypeMsgVote                            = "vote"
 	TypeMsgExec                            = "exec"
 )
@@ -599,6 +600,42 @@ func (m MsgCreateProposal) GetMsgs() []sdk.Msg {
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m MsgCreateProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return tx.UnpackInterfaces(unpacker, m.Msgs)
+}
+
+var _ sdk.Msg = &MsgWithdrawProposal{}
+
+// Route Implements Msg.
+func (m MsgWithdrawProposal) Route() string { return RouterKey }
+
+// Type Implements Msg.
+func (m MsgWithdrawProposal) Type() string { return TypeMsgWithdrawProposal }
+
+// GetSignBytes Implements Msg.
+func (m MsgWithdrawProposal) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+// GetSigners returns the expected signers for a MsgWithdrawProposal.
+func (m MsgWithdrawProposal) GetSigners() []sdk.AccAddress {
+	admin, err := sdk.AccAddressFromBech32(m.Admin)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{admin}
+}
+
+// ValidateBasic does a sanity check on the provided data
+func (m MsgWithdrawProposal) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Admin)
+	if err != nil {
+		return sdkerrors.Wrap(err, "admin")
+	}
+
+	if m.ProposalId == 0 {
+		return sdkerrors.Wrap(errors.ErrEmpty, "proposal")
+	}
+
+	return nil
 }
 
 var _ sdk.Msg = &MsgVote{}

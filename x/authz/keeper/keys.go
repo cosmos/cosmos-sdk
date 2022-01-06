@@ -60,6 +60,7 @@ func parseGrantStoreKey(key []byte) (granterAddr, granteeAddr sdk.AccAddress, ms
 	return granterAddr, granteeAddr, conv.UnsafeBytesToStr(key[3+granterAddrLen+byte(granteeAddrLen):])
 }
 
+// parseGrantQueueKey split expiration time from the grant queue key
 func parseGrantQueueKey(key []byte) (expiration time.Time) {
 	// key is of format:
 	// 0x02<grant_expiration_Bytes>

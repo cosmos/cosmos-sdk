@@ -56,32 +56,39 @@ func (s *TestSuite) TestKeeper() {
 	granteeAddr := addrs[1]
 
 	s.T().Log("verify that no authorization returns nil")
-	authorizations := app.AuthzKeeper.GetAuthorizations(ctx, granteeAddr, granterAddr)
+	authorizations, err := app.AuthzKeeper.GetAuthorizations(ctx, granteeAddr, granterAddr)
+	require.NoError(err)
 	require.Len(authorizations, 0)
 
 	s.T().Log("verify save, get and delete")
 	sendAutz := &banktypes.SendAuthorization{SpendLimit: coins100}
-	err := app.AuthzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, sendAutz, now.AddDate(1, 0, 0))
+	err = app.AuthzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, sendAutz, now.AddDate(1, 0, 0))
 	require.NoError(err)
-	authorizations = app.AuthzKeeper.GetAuthorizations(ctx, granteeAddr, granterAddr)
+
+	authorizations, err = app.AuthzKeeper.GetAuthorizations(ctx, granteeAddr, granterAddr)
+	require.NoError(err)
 	require.Len(authorizations, 1)
 
 	err = app.AuthzKeeper.DeleteGrant(ctx, granteeAddr, granterAddr, sendAutz.MsgTypeURL())
 	require.NoError(err)
 
-	authorizations = app.AuthzKeeper.GetAuthorizations(ctx, granteeAddr, granterAddr)
+	authorizations, err = app.AuthzKeeper.GetAuthorizations(ctx, granteeAddr, granterAddr)
+	require.NoError(err)
 	require.Len(authorizations, 0)
 
 	s.T().Log("verify granting same authorization overwrite existing authorization")
 	err = app.AuthzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, sendAutz, now.AddDate(1, 0, 0))
 	require.NoError(err)
-	authorizations = app.AuthzKeeper.GetAuthorizations(ctx, granteeAddr, granterAddr)
+
+	authorizations, err = app.AuthzKeeper.GetAuthorizations(ctx, granteeAddr, granterAddr)
+	require.NoError(err)
 	require.Len(authorizations, 1)
 
 	sendAutz = &banktypes.SendAuthorization{SpendLimit: coins1000}
 	err = app.AuthzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, sendAutz, now.AddDate(1, 0, 0))
 	require.NoError(err)
-	authorizations = app.AuthzKeeper.GetAuthorizations(ctx, granteeAddr, granterAddr)
+	authorizations, err = app.AuthzKeeper.GetAuthorizations(ctx, granteeAddr, granterAddr)
+	require.NoError(err)
 	require.Len(authorizations, 1)
 	authorization := authorizations[0]
 	sendAuth := authorization.(*banktypes.SendAuthorization)
@@ -197,7 +204,8 @@ func (s *TestSuite) TestDispatchAction() {
 				require.NoError(err)
 			},
 			func() {
-				authzs := app.AuthzKeeper.GetAuthorizations(s.ctx, granteeAddr, granterAddr)
+				authzs, err := app.AuthzKeeper.GetAuthorizations(s.ctx, granteeAddr, granterAddr)
+				require.NoError(err)
 				require.Len(authzs, 1)
 				authorization := authzs[0].(*banktypes.SendAuthorization)
 				require.NotNil(authorization)
@@ -220,7 +228,8 @@ func (s *TestSuite) TestDispatchAction() {
 				require.NoError(err)
 			},
 			func() {
-				authzs := app.AuthzKeeper.GetAuthorizations(s.ctx, granteeAddr, granterAddr)
+				authzs, err := app.AuthzKeeper.GetAuthorizations(s.ctx, granteeAddr, granterAddr)
+				require.NoError(err)
 				require.Len(authzs, 0)
 			},
 		},
@@ -267,7 +276,8 @@ func (s *TestSuite) TestDispatchedEvents() {
 	// grant authorization
 	err := app.AuthzKeeper.SaveGrant(s.ctx, granteeAddr, granterAddr, &banktypes.SendAuthorization{SpendLimit: coins10}, now)
 	require.NoError(err)
-	authorizations := app.AuthzKeeper.GetAuthorizations(s.ctx, granteeAddr, granterAddr)
+	authorizations, err := app.AuthzKeeper.GetAuthorizations(s.ctx, granteeAddr, granterAddr)
+	require.NoError(err)
 	require.Len(authorizations, 1)
 	authorization := authorizations[0].(*banktypes.SendAuthorization)
 	require.Equal(authorization.MsgTypeURL(), bankSendAuthMsgType)
@@ -328,10 +338,21 @@ func (s *TestSuite) TestDequeueAllGrantsQueue() {
 	require.NoError(app.AuthzKeeper.DeleteExpiredGrants(newCtx, matureGrants))
 
 	s.T().Log("verify expired grants are pruned from the state")
-	require.Len(app.AuthzKeeper.GetAuthorizations(newCtx, grantee, granter), 0)
-	require.Len(app.AuthzKeeper.GetAuthorizations(newCtx, granter, grantee1), 0)
-	require.Len(app.AuthzKeeper.GetAuthorizations(newCtx, grantee1, granter), 0)
-	require.Len(app.AuthzKeeper.GetAuthorizations(newCtx, granter, grantee), 1)
+	authzs, err := app.AuthzKeeper.GetAuthorizations(newCtx, grantee, granter)
+	require.NoError(err)
+	require.Len(authzs, 0)
+
+	authzs, err = app.AuthzKeeper.GetAuthorizations(newCtx, granter, grantee1)
+	require.NoError(err)
+	require.Len(authzs, 0)
+
+	authzs, err = app.AuthzKeeper.GetAuthorizations(newCtx, grantee1, granter)
+	require.NoError(err)
+	require.Len(authzs, 0)
+
+	authzs, err = app.AuthzKeeper.GetAuthorizations(newCtx, granter, grantee)
+	require.NoError(err)
+	require.Len(authzs, 1)
 }
 
 func TestTestSuite(t *testing.T) {

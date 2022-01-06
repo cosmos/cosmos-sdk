@@ -41,7 +41,7 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 			return nil, status.Errorf(codes.NotFound, "no authorization found for %s type", req.MsgTypeUrl)
 		}
 
-		authorization, err := getAuthorization(grant)
+		authorization, err := grant.GetAuthorization()
 		if err != nil {
 			return nil, err
 		}
@@ -68,7 +68,12 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 		if err != nil {
 			return false, err
 		}
-		auth1 := auth.GetAuthorization()
+
+		auth1, err := auth.GetAuthorization()
+		if err != nil {
+			return false, err
+		}
+
 		if accumulate {
 			msg, ok := auth1.(proto.Message)
 			if !ok {
@@ -119,7 +124,11 @@ func (k Keeper) GranterGrants(c context.Context, req *authz.QueryGranterGrantsRe
 			return false, err
 		}
 
-		auth1 := auth.GetAuthorization()
+		auth1, err := auth.GetAuthorization()
+		if err != nil {
+			return false, err
+		}
+
 		if accumulate {
 			any, err := codectypes.NewAnyWithValue(auth1)
 			if err != nil {

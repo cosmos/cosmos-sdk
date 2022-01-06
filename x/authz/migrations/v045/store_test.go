@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	v045 "github.com/cosmos/cosmos-sdk/x/authz/migrations/v045"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/stretchr/testify/require"
 )
 

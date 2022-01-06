@@ -182,7 +182,11 @@ func SimulateMsgRevoke(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Kee
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "fee error"), nil, err
 		}
 
-		a := grant.GetAuthorization()
+		a, err := grant.GetAuthorization()
+		if err != nil {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "authorization error"), nil, err
+		}
+
 		msg := authz.NewMsgRevoke(granterAddr, granteeAddr, a.MsgTypeURL())
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
 		account := ak.GetAccount(ctx, granterAddr)
@@ -251,7 +255,12 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 		}
 
 		if targetGrant.Authorization.TypeUrl == fmt.Sprintf("/%s", proto.MessageName(&banktype.SendAuthorization{})) {
-			sendAuthorization := targetGrant.GetAuthorization().(*banktype.SendAuthorization)
+			a, err := targetGrant.GetAuthorization()
+			if err != nil {
+				return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "authorization error"), nil, err
+			}
+
+			sendAuthorization := a.(*banktype.SendAuthorization)
 			if sendAuthorization.SpendLimit.IsAllLT(coins) {
 				return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "over spend limit"), nil, nil
 			}

@@ -72,7 +72,8 @@ func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 				require.NoError(err)
 				require.Len(g.Grants, 1)
 				g.Grants[0].UnpackInterfaces(val.ClientCtx.InterfaceRegistry)
-				auth := g.Grants[0].GetAuthorization()
+				auth, err := g.Grants[0].GetAuthorization()
+				require.NoError(err)
 				require.Equal(auth.MsgTypeURL(), banktypes.SendAuthorization{}.MsgTypeURL())
 			}
 		})

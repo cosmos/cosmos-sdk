@@ -96,7 +96,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 				return nil, sdkerrors.ErrUnauthorized.Wrap("authorization expired")
 			}
 
-			authorization, err := getAuthorization(grant)
+			authorization, err := grant.GetAuthorization()
 			if err != nil {
 				return nil, err
 			}
@@ -191,17 +191,28 @@ func (k Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk
 }
 
 // GetAuthorizations Returns list of `Authorizations` granted to the grantee by the granter.
-func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress) (authorizations []authz.Authorization) {
+func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress) ([]authz.Authorization, error) {
 	store := ctx.KVStore(k.storeKey)
 	key := grantStoreKey(grantee, granter, "")
 	iter := sdk.KVStorePrefixIterator(store, key)
 	defer iter.Close()
+
 	var authorization authz.Grant
+	var authorizations []authz.Authorization
 	for ; iter.Valid(); iter.Next() {
-		k.cdc.MustUnmarshal(iter.Value(), &authorization)
-		authorizations = append(authorizations, authorization.GetAuthorization())
+		if err := k.cdc.Unmarshal(iter.Value(), &authorization); err != nil {
+			return nil, err
+		}
+
+		a, err := authorization.GetAuthorization()
+		if err != nil {
+			return nil, err
+		}
+
+		authorizations = append(authorizations, a)
 	}
-	return authorizations
+
+	return authorizations, nil
 }
 
 // IterateGrants iterates over all authorization grants
@@ -242,6 +253,11 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *authz.GenesisState {
 // InitGenesis new authz genesis
 func (k Keeper) InitGenesis(ctx sdk.Context, data *authz.GenesisState) {
 	for _, entry := range data.Authorization {
+		// ignore expired authorizations
+		if entry.Expiration.Before(ctx.BlockTime()) {
+			continue
+		}
+
 		grantee, err := sdk.AccAddressFromBech32(entry.Grantee)
 		if err != nil {
 			panic(err)
@@ -391,13 +407,4 @@ func (k Keeper) DeleteExpiredGrants(ctx sdk.Context, grants []*authz.GrantStoreK
 	}
 
 	return nil
-}
-
-func getAuthorization(g authz.Grant) (authz.Authorization, error) {
-	a, ok := g.Authorization.GetCachedValue().(authz.Authorization)
-	if !ok {
-		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (authz.Authorization)(nil), g.Authorization.GetCachedValue())
-	}
-
-	return a, nil
 }

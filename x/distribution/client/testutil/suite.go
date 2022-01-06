@@ -58,7 +58,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 
-	_, err = s.network.WaitForHeight(1)
+	_, err = s.network.WaitForHeight(6)
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]

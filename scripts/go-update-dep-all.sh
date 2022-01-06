@@ -20,6 +20,6 @@ for modfile in $(find . -name go.mod); do
   if grep $dependency_mod $modfile &> /dev/null; then
     echo "Updating $modfile"
     DIR=$(dirname $modfile)
-    (cd $DIR; go get -u $dependency; go mod tidy)
+    (cd $DIR; go get -u $dependency)
   fi
 done

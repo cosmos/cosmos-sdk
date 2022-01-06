@@ -14,8 +14,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	// banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/simulation"
 )
@@ -58,10 +56,10 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{simulation.WeightMsgExec, group.MsgExec{}.Route(), simulation.TypeMsgExec},
 		{simulation.WeightMsgUpdateGroupMetadata, group.MsgUpdateGroupMetadata{}.Route(), simulation.TypeMsgUpdateGroupMetadata},
 		{simulation.WeightMsgUpdateGroupAdmin, group.MsgUpdateGroupAdmin{}.Route(), simulation.TypeMsgUpdateGroupAdmin},
-		// {simulation.WeightMsgUpdateGroupMembers, group.MsgUpdateGroupMembers{}.Route(), simulation.TypeMsgUpdateGroupMembers},
-		// {simulation.WeightMsgUpdateGroupAccountAdmin, group.MsgUpdateGroupAccountAdmin{}.Route(), simulation.TypeMsgUpdateGroupAccountAdmin},
-		// {simulation.WeightMsgUpdateGroupAccountDecisionPolicy, group.MsgUpdateGroupAccountDecisionPolicy{}.Route(), simulation.TypeMsgUpdateGroupAccountDecisionPolicy},
-		// {simulation.WeightMsgUpdateGroupAccountMetadata, group.MsgUpdateGroupAccountMetadata{}.Route(), simulation.TypeMsgUpdateGroupAccountMetadata},
+		{simulation.WeightMsgUpdateGroupMembers, group.MsgUpdateGroupMembers{}.Route(), simulation.TypeMsgUpdateGroupMembers},
+		{simulation.WeightMsgUpdateGroupAccountAdmin, group.MsgUpdateGroupAccountAdmin{}.Route(), simulation.TypeMsgUpdateGroupAccountAdmin},
+		{simulation.WeightMsgUpdateGroupAccountDecisionPolicy, group.MsgUpdateGroupAccountDecisionPolicy{}.Route(), simulation.TypeMsgUpdateGroupAccountDecisionPolicy},
+		{simulation.WeightMsgUpdateGroupAccountMetadata, group.MsgUpdateGroupAccountMetadata{}.Route(), simulation.TypeMsgUpdateGroupAccountMetadata},
 	}
 
 	for i, w := range weightedOps {
@@ -440,6 +438,210 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupMetadata() {
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(acc.Address.String(), msg.Admin)
+	suite.Require().Len(futureOperations, 0)
+}
+
+func (suite *SimTestSuite) TestSimulateUpdateGroupMembers() {
+	// setup 1 account
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := suite.getTestingAccounts(r, 2)
+	acc := accounts[0]
+
+	// setup a group
+	_, err := suite.app.GroupKeeper.CreateGroup(sdk.WrapSDKContext(suite.ctx),
+		&group.MsgCreateGroup{
+			Admin: acc.Address.String(),
+			Members: []group.Member{
+				{
+					Address: acc.Address.String(),
+					Weight:  "1",
+				},
+			},
+		},
+	)
+	suite.Require().NoError(err)
+
+	// begin a new block
+	suite.app.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{
+			Height:  suite.app.LastBlockHeight() + 1,
+			AppHash: suite.app.LastCommitID().Hash,
+		},
+	})
+
+	// execute operation
+	op := simulation.SimulateMsgUpdateGroupMembers(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.GroupKeeper)
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	suite.Require().NoError(err)
+
+	var msg group.MsgUpdateGroupMembers
+	err = group.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.Require().NoError(err)
+	suite.Require().True(operationMsg.OK)
+	suite.Require().Equal(acc.Address.String(), msg.Admin)
+	suite.Require().Len(futureOperations, 0)
+}
+
+func (suite *SimTestSuite) TestSimulateUpdateGroupAccountAdmin() {
+	// setup 1 account
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := suite.getTestingAccounts(r, 2)
+	acc := accounts[0]
+
+	// setup a group
+	ctx := sdk.WrapSDKContext(suite.ctx)
+	groupRes, err := suite.app.GroupKeeper.CreateGroup(ctx,
+		&group.MsgCreateGroup{
+			Admin: acc.Address.String(),
+			Members: []group.Member{
+				{
+					Address: acc.Address.String(),
+					Weight:  "1",
+				},
+			},
+		},
+	)
+	suite.Require().NoError(err)
+
+	// setup a group account
+	accountReq := &group.MsgCreateGroupAccount{
+		Admin:    acc.Address.String(),
+		GroupId:  groupRes.GroupId,
+		Metadata: nil,
+	}
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
+	suite.Require().NoError(err)
+	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupAccount(ctx, accountReq)
+	suite.Require().NoError(err)
+
+	// begin a new block
+	suite.app.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{
+			Height:  suite.app.LastBlockHeight() + 1,
+			AppHash: suite.app.LastCommitID().Hash,
+		},
+	})
+
+	// execute operation
+	op := simulation.SimulateMsgUpdateGroupAccountAdmin(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.GroupKeeper)
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	suite.Require().NoError(err)
+
+	var msg group.MsgUpdateGroupAccountAdmin
+	err = group.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.Require().NoError(err)
+	suite.Require().True(operationMsg.OK)
+	suite.Require().Equal(groupPolicyRes.Address, msg.Address)
+	suite.Require().Len(futureOperations, 0)
+}
+
+func (suite *SimTestSuite) TestSimulateUpdateGroupAccountDecisionPolicy() {
+	// setup 1 account
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := suite.getTestingAccounts(r, 2)
+	acc := accounts[0]
+
+	// setup a group
+	ctx := sdk.WrapSDKContext(suite.ctx)
+	groupRes, err := suite.app.GroupKeeper.CreateGroup(ctx,
+		&group.MsgCreateGroup{
+			Admin: acc.Address.String(),
+			Members: []group.Member{
+				{
+					Address: acc.Address.String(),
+					Weight:  "1",
+				},
+			},
+		},
+	)
+	suite.Require().NoError(err)
+
+	// setup a group account
+	accountReq := &group.MsgCreateGroupAccount{
+		Admin:    acc.Address.String(),
+		GroupId:  groupRes.GroupId,
+		Metadata: nil,
+	}
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
+	suite.Require().NoError(err)
+	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupAccount(ctx, accountReq)
+	suite.Require().NoError(err)
+
+	// begin a new block
+	suite.app.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{
+			Height:  suite.app.LastBlockHeight() + 1,
+			AppHash: suite.app.LastCommitID().Hash,
+		},
+	})
+
+	// execute operation
+	op := simulation.SimulateMsgUpdateGroupAccountDecisionPolicy(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.GroupKeeper)
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	suite.Require().NoError(err)
+
+	var msg group.MsgUpdateGroupAccountDecisionPolicy
+	err = group.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.Require().NoError(err)
+	suite.Require().True(operationMsg.OK)
+	suite.Require().Equal(groupPolicyRes.Address, msg.Address)
+	suite.Require().Len(futureOperations, 0)
+}
+
+func (suite *SimTestSuite) TestSimulateUpdateGroupAccountMetadata() {
+	// setup 1 account
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := suite.getTestingAccounts(r, 2)
+	acc := accounts[0]
+
+	// setup a group
+	ctx := sdk.WrapSDKContext(suite.ctx)
+	groupRes, err := suite.app.GroupKeeper.CreateGroup(ctx,
+		&group.MsgCreateGroup{
+			Admin: acc.Address.String(),
+			Members: []group.Member{
+				{
+					Address: acc.Address.String(),
+					Weight:  "1",
+				},
+			},
+		},
+	)
+	suite.Require().NoError(err)
+
+	// setup a group account
+	accountReq := &group.MsgCreateGroupAccount{
+		Admin:    acc.Address.String(),
+		GroupId:  groupRes.GroupId,
+		Metadata: nil,
+	}
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
+	suite.Require().NoError(err)
+	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupAccount(ctx, accountReq)
+	suite.Require().NoError(err)
+
+	// begin a new block
+	suite.app.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{
+			Height:  suite.app.LastBlockHeight() + 1,
+			AppHash: suite.app.LastCommitID().Hash,
+		},
+	})
+
+	// execute operation
+	op := simulation.SimulateMsgUpdateGroupAccountMetadata(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.GroupKeeper)
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	suite.Require().NoError(err)
+
+	var msg group.MsgUpdateGroupAccountMetadata
+	err = group.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.Require().NoError(err)
+	suite.Require().True(operationMsg.OK)
+	suite.Require().Equal(groupPolicyRes.Address, msg.Address)
 	suite.Require().Len(futureOperations, 0)
 }
 

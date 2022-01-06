@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"context"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -174,22 +173,22 @@ func WeightedOperations(
 			weightMsgUpdateGroupAdmin,
 			SimulateMsgUpdateGroupAdmin(ak, bk, k),
 		),
-		// simulation.NewWeightedOperation(
-		// 	weightMsgUpdateGroupMembers,
-		// 	SimulateMsgUpdateGroupMembers(ak, bk, k),
-		// ),
-		// simulation.NewWeightedOperation(
-		// 	weightMsgUpdateGroupAccountAdmin,
-		// 	SimulateMsgUpdateGroupAccountAdmin(ak, bk, k),
-		// ),
-		// simulation.NewWeightedOperation(
-		// 	weightMsgUpdateGroupAccountDecisionPolicy,
-		// 	SimulateMsgUpdateGroupAccountDecisionPolicy(ak, bk, k, appCdc),
-		// ),
-		// simulation.NewWeightedOperation(
-		// 	weightMsgUpdateGroupAccountMetadata,
-		// 	SimulateMsgUpdateGroupAccountMetadata(ak, bk, k),
-		// ),
+		simulation.NewWeightedOperation(
+			weightMsgUpdateGroupMembers,
+			SimulateMsgUpdateGroupMembers(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgUpdateGroupAccountAdmin,
+			SimulateMsgUpdateGroupAccountAdmin(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgUpdateGroupAccountDecisionPolicy,
+			SimulateMsgUpdateGroupAccountDecisionPolicy(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgUpdateGroupAccountMetadata,
+			SimulateMsgUpdateGroupAccountMetadata(ak, bk, k),
+		),
 	}
 }
 
@@ -306,7 +305,7 @@ func SimulateMsgCreateProposal(ak group.AccountKeeper, bk group.BankKeeper, k ke
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, ""), nil, err
 		}
 		if groupPolicyAddr == "" {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, ""), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, "no group policy found"), nil, nil
 		}
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
@@ -358,7 +357,7 @@ func SimulateMsgUpdateGroupAdmin(ak group.AccountKeeper, bk group.BankKeeper, k 
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroupAccount, ""), nil, err
 		}
 		if groupID == 0 {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroupAccount, ""), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroupAccount, "no group found"), nil, nil
 		}
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
@@ -367,6 +366,9 @@ func SimulateMsgUpdateGroupAdmin(ak group.AccountKeeper, bk group.BankKeeper, k 
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAdmin, "fee error"), nil, err
 		}
 
+		if len(accounts) == 1 {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAdmin, "can't set a new admin with only one account"), nil, nil
+		}
 		newAdmin, _ := simtypes.RandomAcc(r, accounts)
 		// disallow setting current admin as new admin
 		for acc.PubKey.Equals(newAdmin.PubKey) {
@@ -412,7 +414,7 @@ func SimulateMsgUpdateGroupMetadata(ak group.AccountKeeper, bk group.BankKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroupAccount, ""), nil, err
 		}
 		if groupID == 0 {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroupAccount, ""), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroupAccount, "no group found"), nil, nil
 		}
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
@@ -451,273 +453,225 @@ func SimulateMsgUpdateGroupMetadata(ak group.AccountKeeper, bk group.BankKeeper,
 	}
 }
 
-// // SimulateMsgUpdateGroupMembers generates a MsgUpdateGroupMembers with random values
-// func SimulateMsgUpdateGroupMembers(ak group.AccountKeeper,
-// 	bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
-// 	return func(
-// 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-// 		acc1 := accounts[0]
-// 		acc2 := accounts[1]
-// 		acc3 := accounts[2]
-// 		account := ak.GetAccount(sdkCtx, acc1.Address)
+// SimulateMsgUpdateGroupMembers generates a MsgUpdateGroupMembers with random values
+func SimulateMsgUpdateGroupMembers(ak group.AccountKeeper,
+	bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		groupID, acc, account, err := randomGroup(r, k, ak, sdkCtx, accounts)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroupAccount, ""), nil, err
+		}
+		if groupID == 0 {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroupAccount, "no group found"), nil, nil
+		}
 
-// 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
-// 		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
-// 		if err != nil {
-// 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupMembers, "fee error"), nil, err
-// 		}
+		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
+		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupMembers, "fee error"), nil, err
+		}
 
-// 		ctx := sdk.WrapSDKContext(sdkCtx)
+		member, _ := simtypes.RandomAcc(r, accounts)
 
-// 		groupAdmin, groupID, op, err := getGroupDetails(ctx, k, acc1)
-// 		if err != nil {
-// 			return op, nil, err
-// 		}
-// 		if groupAdmin == "" {
-// 			return op, nil, nil
-// 		}
+		members := []group.Member{
+			{
+				Address:  member.Address.String(),
+				Weight:   fmt.Sprintf("%d", GroupMemberWeight),
+				Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
+			},
+		}
 
-// 		groupAccounts, opMsg, err := groupAccountsByAdmin(ctx, k, groupAdmin)
-// 		if groupAccounts == nil {
-// 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupMembers, opMsg), nil, err
-// 		}
+		msg := group.MsgUpdateGroupMembers{
+			GroupId:       groupID,
+			Admin:         acc.Address.String(),
+			MemberUpdates: members,
+		}
 
-// 		members := []group.Member{
-// 			{
-// 				Address:  acc2.Address.String(),
-// 				Weight:   fmt.Sprintf("%d", GroupMemberWeight),
-// 				Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
-// 			},
-// 			{
-// 				Address:  acc3.Address.String(),
-// 				Weight:   fmt.Sprintf("%d", GroupMemberWeight),
-// 				Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
-// 			},
-// 		}
+		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		tx, err := helpers.GenTx(
+			txGen,
+			[]sdk.Msg{&msg},
+			fees,
+			helpers.DefaultGenTxGas,
+			chainID,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			acc.PrivKey,
+		)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupMembers, "unable to generate mock tx"), nil, err
+		}
 
-// 		msg := group.MsgUpdateGroupMembers{
-// 			GroupId:       groupID,
-// 			Admin:         groupAdmin,
-// 			MemberUpdates: members,
-// 		}
+		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+		}
 
-// 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-// 		tx, err := helpers.GenTx(
-// 			txGen,
-// 			[]sdk.Msg{&msg},
-// 			fees,
-// 			helpers.DefaultGenTxGas,
-// 			chainID,
-// 			[]uint64{account.GetAccountNumber()},
-// 			[]uint64{account.GetSequence()},
-// 			acc1.PrivKey,
-// 		)
-// 		if err != nil {
-// 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupMembers, "unable to generate mock tx"), nil, err
-// 		}
+		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
+	}
+}
 
-// 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
-// 		if err != nil {
-// 			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
-// 		}
+// SimulateMsgUpdateGroupAccountAdmin generates a MsgUpdateGroupAccountAdmin with random values
+func SimulateMsgUpdateGroupAccountAdmin(ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		groupPolicyAddr, acc, account, err := randomGroupPolicy(r, k, ak, sdkCtx, accounts)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, ""), nil, err
+		}
+		if groupPolicyAddr == "" {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, "no group policy found"), nil, nil
+		}
 
-// 		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
-// 	}
-// }
+		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
+		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountAdmin, "fee error"), nil, err
+		}
 
-// // SimulateMsgUpdateGroupAccountAdmin generates a MsgUpdateGroupAccountAdmin with random values
-// func SimulateMsgUpdateGroupAccountAdmin(ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
-// 	return func(
-// 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-// 		acc1 := accounts[0]
-// 		acc2 := accounts[1]
+		if len(accounts) == 1 {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountAdmin, "can't set a new admin with only one account"), nil, nil
+		}
+		newAdmin, _ := simtypes.RandomAcc(r, accounts)
+		// disallow setting current admin as new admin
+		for acc.PubKey.Equals(newAdmin.PubKey) {
+			newAdmin, _ = simtypes.RandomAcc(r, accounts)
+		}
 
-// 		account := ak.GetAccount(sdkCtx, acc1.Address)
+		msg := group.MsgUpdateGroupAccountAdmin{
+			Admin:    acc.Address.String(),
+			Address:  groupPolicyAddr,
+			NewAdmin: newAdmin.Address.String(),
+		}
 
-// 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
-// 		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
-// 		if err != nil {
-// 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountAdmin, "fee error"), nil, err
-// 		}
+		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		tx, err := helpers.GenTx(
+			txGen,
+			[]sdk.Msg{&msg},
+			fees,
+			helpers.DefaultGenTxGas,
+			chainID,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			acc.PrivKey,
+		)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountAdmin, "unable to generate mock tx"), nil, err
+		}
 
-// 		ctx := sdk.WrapSDKContext(sdkCtx)
+		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+		}
 
-// 		groupAdmin, _, op, err := getGroupDetails(ctx, k, acc1)
-// 		if err != nil {
-// 			return op, nil, err
-// 		}
-// 		if groupAdmin == "" {
-// 			return op, nil, nil
-// 		}
-
-// 		groupAccounts, opMsg, err := groupAccountsByAdmin(ctx, k, groupAdmin)
-// 		if groupAccounts == nil {
-// 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountAdmin, opMsg), nil, err
-// 		}
-
-// 		msg := group.MsgUpdateGroupAccountAdmin{
-// 			Admin:    groupAccounts[0].Admin,
-// 			Address:  groupAccounts[0].Address,
-// 			NewAdmin: acc2.Address.String(),
-// 		}
-
-// 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-// 		tx, err := helpers.GenTx(
-// 			txGen,
-// 			[]sdk.Msg{&msg},
-// 			fees,
-// 			helpers.DefaultGenTxGas,
-// 			chainID,
-// 			[]uint64{account.GetAccountNumber()},
-// 			[]uint64{account.GetSequence()},
-// 			acc1.PrivKey,
-// 		)
-// 		if err != nil {
-// 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountAdmin, "unable to generate mock tx"), nil, err
-// 		}
-
-// 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
-// 		if err != nil {
-// 			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
-// 		}
-
-// 		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
-// 	}
-// }
+		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
+	}
+}
 
 // // SimulateMsgUpdateGroupAccountDecisionPolicy generates a NewMsgUpdateGroupAccountDecisionPolicyRequest with random values
-// func SimulateMsgUpdateGroupAccountDecisionPolicy(ak group.AccountKeeper,
-// 	bk group.BankKeeper, k keeper.Keeper, appCdc cdctypes.AnyUnpacker) simtypes.Operation {
-// 	return func(
-// 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-// 		acc1 := accounts[0]
-// 		account := ak.GetAccount(sdkCtx, acc1.Address)
+func SimulateMsgUpdateGroupAccountDecisionPolicy(ak group.AccountKeeper,
+	bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		groupPolicyAddr, acc, account, err := randomGroupPolicy(r, k, ak, sdkCtx, accounts)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, ""), nil, err
+		}
+		if groupPolicyAddr == "" {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, "no group policy found"), nil, nil
+		}
 
-// 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
-// 		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
-// 		if err != nil {
-// 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountDecisionPolicy, "fee error"), nil, err
-// 		}
+		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
+		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountDecisionPolicy, "fee error"), nil, err
+		}
 
-// 		ctx := sdk.WrapSDKContext(sdkCtx)
+		groupAccountBech32, err := sdk.AccAddressFromBech32(groupPolicyAddr)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountDecisionPolicy, fmt.Sprintf("fail to decide bech32 address: %s", err.Error())), nil, nil
+		}
 
-// 		groupAdmin, _, op, err := getGroupDetails(ctx, k, acc1)
-// 		if err != nil {
-// 			return op, nil, err
-// 		}
-// 		if groupAdmin == "" {
-// 			return op, nil, nil
-// 		}
+		msg, err := group.NewMsgUpdateGroupAccountDecisionPolicyRequest(acc.Address, groupAccountBech32, &group.ThresholdDecisionPolicy{
+			Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 20)),
+			Timeout:   time.Second * time.Duration(simtypes.RandIntBetween(r, 100, 1000)),
+		})
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountDecisionPolicy, err.Error()), nil, err
+		}
 
-// 		groupAccounts, opMsg, err := groupAccountsByAdmin(ctx, k, groupAdmin)
-// 		if groupAccounts == nil {
-// 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountDecisionPolicy, opMsg), nil, err
-// 		}
+		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		tx, err := helpers.GenTx(
+			txGen,
+			[]sdk.Msg{msg},
+			fees,
+			helpers.DefaultGenTxGas,
+			chainID,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			acc.PrivKey,
+		)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountDecisionPolicy, "unable to generate mock tx"), nil, err
+		}
 
-// 		adminBech32, err := sdk.AccAddressFromBech32(groupAccounts[0].Admin)
-// 		if err != nil {
-// 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountDecisionPolicy, fmt.Sprintf("fail to decide bech32 address: %s", err.Error())), nil, nil
-// 		}
-
-// 		groupAccountBech32, err := sdk.AccAddressFromBech32(groupAccounts[0].Address)
-// 		if err != nil {
-// 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountDecisionPolicy, fmt.Sprintf("fail to decide bech32 address: %s", err.Error())), nil, nil
-// 		}
-
-// 		msg, err := group.NewMsgUpdateGroupAccountDecisionPolicyRequest(adminBech32, groupAccountBech32, &group.ThresholdDecisionPolicy{
-// 			Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 20)),
-// 			Timeout:   time.Second * time.Duration(simtypes.RandIntBetween(r, 100, 1000)),
-// 		})
-// 		if err != nil {
-// 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountDecisionPolicy, err.Error()), nil, err
-// 		}
-
-// 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-// 		tx, err := helpers.GenTx(
-// 			txGen,
-// 			[]sdk.Msg{msg},
-// 			fees,
-// 			helpers.DefaultGenTxGas,
-// 			chainID,
-// 			[]uint64{account.GetAccountNumber()},
-// 			[]uint64{account.GetSequence()},
-// 			acc1.PrivKey,
-// 		)
-// 		if err != nil {
-// 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountDecisionPolicy, "unable to generate mock tx"), nil, err
-// 		}
-
-// 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
-// 		if err != nil {
-// 			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
-// 		}
-// 		err = msg.UnpackInterfaces(appCdc)
-// 		if err != nil {
-// 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountDecisionPolicy, "unmarshal error"), nil, err
-// 		}
-// 		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
-// 	}
-// }
+		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+		}
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+	}
+}
 
 // // SimulateMsgUpdateGroupAccountMetadata generates a MsgUpdateGroupAccountMetadata with random values
-// func SimulateMsgUpdateGroupAccountMetadata(ak group.AccountKeeper,
-// 	bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
-// 	return func(
-// 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-// 		acc1 := accounts[0]
+func SimulateMsgUpdateGroupAccountMetadata(ak group.AccountKeeper,
+	bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		groupPolicyAddr, acc, account, err := randomGroupPolicy(r, k, ak, sdkCtx, accounts)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, ""), nil, err
+		}
+		if groupPolicyAddr == "" {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, "no group policy found"), nil, nil
+		}
 
-// 		account := ak.GetAccount(sdkCtx, acc1.Address)
+		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
+		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountMetadata, "fee error"), nil, err
+		}
 
-// 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
-// 		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
-// 		if err != nil {
-// 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountMetadata, "fee error"), nil, err
-// 		}
+		msg := group.MsgUpdateGroupAccountMetadata{
+			Admin:    acc.Address.String(),
+			Address:  groupPolicyAddr,
+			Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
+		}
 
-// 		ctx := sdk.WrapSDKContext(sdkCtx)
+		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		tx, err := helpers.GenTx(
+			txGen,
+			[]sdk.Msg{&msg},
+			fees,
+			helpers.DefaultGenTxGas,
+			chainID,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			acc.PrivKey,
+		)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountMetadata, "unable to generate mock tx"), nil, err
+		}
 
-// 		groupAdmin, _, op, err := getGroupDetails(ctx, k, acc1)
-// 		if err != nil {
-// 			return op, nil, err
-// 		}
-// 		if groupAdmin == "" {
-// 			return op, nil, nil
-// 		}
+		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+		}
 
-// 		groupAccounts, opMsg, err := groupAccountsByAdmin(ctx, k, groupAdmin)
-// 		if groupAccounts == nil {
-// 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountMetadata, opMsg), nil, err
-// 		}
-
-// 		msg := group.MsgUpdateGroupAccountMetadata{
-// 			Admin:    groupAccounts[0].Admin,
-// 			Address:  groupAccounts[0].Address,
-// 			Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
-// 		}
-
-// 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-// 		tx, err := helpers.GenTx(
-// 			txGen,
-// 			[]sdk.Msg{&msg},
-// 			fees,
-// 			helpers.DefaultGenTxGas,
-// 			chainID,
-// 			[]uint64{account.GetAccountNumber()},
-// 			[]uint64{account.GetSequence()},
-// 			acc1.PrivKey,
-// 		)
-// 		if err != nil {
-// 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAccountMetadata, "unable to generate mock tx"), nil, err
-// 		}
-
-// 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
-// 		if err != nil {
-// 			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
-// 		}
-
-// 		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
-// 	}
-// }
+		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
+	}
+}
 
 // SimulateMsgVote generates a MsgVote with random values
 func SimulateMsgVote(ak group.AccountKeeper,
@@ -729,7 +683,7 @@ func SimulateMsgVote(ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, ""), nil, err
 		}
 		if groupPolicyAddr == "" {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, ""), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "no group policy found"), nil, nil
 		}
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
@@ -813,7 +767,7 @@ func SimulateMsgExec(ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, ""), nil, err
 		}
 		if groupPolicyAddr == "" {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, ""), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "no group policy found"), nil, nil
 		}
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
@@ -915,7 +869,7 @@ func randomGroup(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 
 func randomGroupPolicy(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 	ctx sdk.Context, accounts []simtypes.Account) (groupPolicyAddr string, acc simtypes.Account, account authtypes.AccountI, err error) {
-	groupID, acc, account, err := randomGroup(r, k, ak, ctx, accounts)
+	groupID, _, _, err := randomGroup(r, k, ak, ctx, accounts)
 	if err != nil {
 		return "", simtypes.Account{}, nil, err
 	}
@@ -934,40 +888,21 @@ func randomGroupPolicy(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 	} else {
 		n = uint64(simtypes.RandIntBetween(r, 0, l-1))
 	}
-	groupPolicyAddr = result.GroupAccounts[n].Address
+	groupPolicy := result.GroupAccounts[n]
+	groupPolicyAddr = groupPolicy.Address
+
+	admin := groupPolicy.Admin
+	found := -1
+	for i := range accounts {
+		if accounts[i].Address.String() == admin {
+			found = i
+			break
+		}
+	}
+	if found < 0 {
+		return "", simtypes.Account{}, nil, nil
+	}
+	acc = accounts[found]
+	account = ak.GetAccount(ctx, acc.Address)
 	return groupPolicyAddr, acc, account, nil
-}
-
-// func randomActiveProposal(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
-// 	ctx sdk.Context, accounts []simtypes.Account) (proposalID uint64, acc simtypes.Account, account authtypes.AccountI, err error) {
-// 	groupPolicyAddr, acc, account, err := randomGroupPolicy(r, k, ak, ctx, accounts)
-// }
-
-func getGroupDetails(ctx context.Context, k keeper.Keeper, acc simtypes.Account) (groupAdmin string, groupID uint64, op simtypes.OperationMsg, err error) {
-	groups, err := k.GroupsByAdmin(ctx, &group.QueryGroupsByAdminRequest{Admin: acc.Address.String()})
-	if err != nil {
-		return "", 0, simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroupAccount, "fail to query groups"), err
-	}
-
-	if len(groups.Groups) == 0 {
-		return "", 0, simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroupAccount, ""), nil
-	}
-
-	groupAdmin = groups.Groups[0].Admin
-	groupID = groups.Groups[0].GroupId
-
-	return groupAdmin, groupID, simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroupAccount, ""), nil
-}
-
-func groupAccountsByAdmin(ctx context.Context, k keeper.Keeper, admin string) ([]*group.GroupAccountInfo, string, error) {
-	result, err := k.GroupAccountsByAdmin(ctx, &group.QueryGroupAccountsByAdminRequest{Admin: admin})
-	if err != nil {
-		return nil, "fail to query group info", err
-	}
-
-	groupAccounts := result.GetGroupAccounts()
-	if len(groupAccounts) == 0 {
-		return nil, "no group account found", nil
-	}
-	return groupAccounts, "", nil
 }

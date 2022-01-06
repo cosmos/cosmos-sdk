@@ -6,14 +6,14 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
+	queryv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/query/v1beta1"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
-	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 // PaginationRequest is a request to the Paginate function and extends the
 // options in query.PageRequest.
 type PaginationRequest struct {
-	*query.PageRequest
+	*queryv1beta1.PageRequest
 
 	// Filter is an optional filter function that can be used to filter
 	// the results in the underlying iterator and should return true to include
@@ -24,7 +24,7 @@ type PaginationRequest struct {
 // PaginationResponse is a response from the Paginate function and extends the
 // options in query.PageResponse.
 type PaginationResponse struct {
-	*query.PageResponse
+	*queryv1beta1.PageResponse
 
 	// Items are the items in this page.
 	Items []proto.Message
@@ -73,7 +73,7 @@ func Paginate(
 		for ; i < offset; i++ {
 			if !it.Next() {
 				return &PaginationResponse{
-					PageResponse: &query.PageResponse{Total: uint64(i)},
+					PageResponse: &queryv1beta1.PageResponse{Total: uint64(i)},
 				}, nil
 			}
 		}
@@ -111,7 +111,7 @@ func Paginate(
 		items = append(items, message)
 	}
 
-	pageRes := &query.PageResponse{}
+	pageRes := &queryv1beta1.PageResponse{}
 	if request.CountTotal {
 		pageRes.Total = uint64(i)
 	}

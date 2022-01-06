@@ -8,26 +8,23 @@ import (
 	"strings"
 	"testing"
 
-	"google.golang.org/protobuf/reflect/protoreflect"
-
-	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
-
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 	"pgregory.net/rapid"
 
+	queryv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/query/v1beta1"
 	sdkerrors "github.com/cosmos/cosmos-sdk/errors"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
 	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
+	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
+	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 func TestScenario(t *testing.T) {
@@ -210,7 +207,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 
 	// now do some pagination
 	res, err := ormtable.Paginate(table, ctx, &ormtable.PaginationRequest{
-		PageRequest: &query.PageRequest{
+		PageRequest: &queryv1beta1.PageRequest{
 			Limit:      4,
 			CountTotal: true,
 		},
@@ -225,7 +222,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 
 	// read another page
 	res, err = ormtable.Paginate(table, ctx, &ormtable.PaginationRequest{
-		PageRequest: &query.PageRequest{
+		PageRequest: &queryv1beta1.PageRequest{
 			Key:   res.NextKey,
 			Limit: 4,
 		},
@@ -239,7 +236,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 
 	// and the last page
 	res, err = ormtable.Paginate(table, ctx, &ormtable.PaginationRequest{
-		PageRequest: &query.PageRequest{
+		PageRequest: &queryv1beta1.PageRequest{
 			Key:   res.NextKey,
 			Limit: 4,
 		},
@@ -253,7 +250,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 
 	// let's go backwards
 	res, err = ormtable.Paginate(table, ctx, &ormtable.PaginationRequest{
-		PageRequest: &query.PageRequest{
+		PageRequest: &queryv1beta1.PageRequest{
 			Limit:      2,
 			CountTotal: true,
 			Reverse:    true,
@@ -269,7 +266,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 
 	// a bit more
 	res, err = ormtable.Paginate(table, ctx, &ormtable.PaginationRequest{
-		PageRequest: &query.PageRequest{
+		PageRequest: &queryv1beta1.PageRequest{
 			Key:     res.NextKey,
 			Limit:   2,
 			Reverse: true,
@@ -285,7 +282,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	// range query
 	res, err = ormtable.Paginate(table, ctx,
 		&ormtable.PaginationRequest{
-			PageRequest: &query.PageRequest{
+			PageRequest: &queryv1beta1.PageRequest{
 				Limit: 10,
 			},
 		},
@@ -300,7 +297,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 
 	// let's try an offset
 	res, err = ormtable.Paginate(table, ctx, &ormtable.PaginationRequest{
-		PageRequest: &query.PageRequest{
+		PageRequest: &queryv1beta1.PageRequest{
 			Limit:      2,
 			CountTotal: true,
 			Offset:     3,
@@ -316,7 +313,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 
 	// and reverse
 	res, err = ormtable.Paginate(table, ctx, &ormtable.PaginationRequest{
-		PageRequest: &query.PageRequest{
+		PageRequest: &queryv1beta1.PageRequest{
 			Limit:      3,
 			CountTotal: true,
 			Offset:     5,
@@ -333,7 +330,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 
 	// now an offset that's slightly too big
 	res, err = ormtable.Paginate(table, ctx, &ormtable.PaginationRequest{
-		PageRequest: &query.PageRequest{
+		PageRequest: &queryv1beta1.PageRequest{
 			Limit:      1,
 			CountTotal: true,
 			Offset:     10,
@@ -346,7 +343,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 
 	// another offset that's too big
 	res, err = ormtable.Paginate(table, ctx, &ormtable.PaginationRequest{
-		PageRequest: &query.PageRequest{
+		PageRequest: &queryv1beta1.PageRequest{
 			Limit:      1,
 			CountTotal: true,
 			Offset:     14,

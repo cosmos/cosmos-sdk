@@ -144,17 +144,19 @@ func TestNested(t *testing.T) {
 }
 
 func TestAny_ProtoJSON(t *testing.T) {
+	registry := testdata.NewTestInterfaceRegistry()
 	spot := &testdata.Dog{Name: "Spot"}
 	any, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)
 
-	jm := &jsonpb.Marshaler{}
+	jm := &jsonpb.Marshaler{
+		AnyResolver: registry,
+	}
 	json, err := jm.MarshalToString(any)
 	require.NoError(t, err)
 	require.Equal(t, "{\"@type\":\"/testdata.Dog\",\"name\":\"Spot\"}", json)
 
-	registry := testdata.NewTestInterfaceRegistry()
-	jum := &jsonpb.Unmarshaler{}
+	jum := &jsonpb.Unmarshaler{AnyResolver: registry}
 	var any2 types.Any
 	err = jum.Unmarshal(strings.NewReader(json), &any2)
 	require.NoError(t, err)

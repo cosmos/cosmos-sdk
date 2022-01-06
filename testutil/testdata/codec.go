@@ -1,6 +1,7 @@
 package testdata
 
 import (
+	"github.com/cosmos/cosmos-sdk/testutil/testdata/v2"
 	amino "github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -22,6 +23,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*Animal)(nil),
 		&Dog{},
 		&Cat{},
+		&testdata.Snake{},
 	)
 	registry.RegisterImplementations(
 		(*HasAnimalI)(nil),

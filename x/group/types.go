@@ -170,6 +170,25 @@ func (g GroupInfo) PrimaryKeyFields() []interface{} {
 	return []interface{}{g.GroupId}
 }
 
+func (g GroupInfo) ValidateBasic() error {
+	if g.GroupId == 0 {
+		return sdkerrors.Wrap(errors.ErrEmpty, "group's GroupId")
+	}
+
+	_, err := sdk.AccAddressFromBech32(g.Admin)
+	if err != nil {
+		return sdkerrors.Wrap(err, "admin")
+	}
+
+	if _, err := math.NewNonNegativeDecFromString(g.TotalWeight); err != nil {
+		return sdkerrors.Wrap(err, "total weight")
+	}
+	if g.Version == 0 {
+		return sdkerrors.Wrap(errors.ErrEmpty, "version")
+	}
+	return nil
+}
+
 func (g GroupPolicyInfo) PrimaryKeyFields() []interface{} {
 	addr, err := sdk.AccAddressFromBech32(g.Address)
 	if err != nil {
@@ -185,29 +204,27 @@ func (g Proposal) PrimaryKeyFields() []interface{} {
 func (g GroupPolicyInfo) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(g.Admin)
 	if err != nil {
-		return sdkerrors.Wrap(err, "admin")
+		return sdkerrors.Wrap(err, "group policy admin")
 	}
-
 	_, err = sdk.AccAddressFromBech32(g.Address)
 	if err != nil {
-		return sdkerrors.Wrap(err, "group policy")
+		return sdkerrors.Wrap(err, "group policy account address")
 	}
 
 	if g.GroupId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group")
+		return sdkerrors.Wrap(errors.ErrEmpty, "group policy's group id")
 	}
 	if g.Version == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "version")
+		return sdkerrors.Wrap(errors.ErrEmpty, "group policy version")
 	}
 	policy := g.GetDecisionPolicy()
 
 	if policy == nil {
-		return sdkerrors.Wrap(errors.ErrEmpty, "policy")
+		return sdkerrors.Wrap(errors.ErrEmpty, "group policy's decision policy")
 	}
 	if err := policy.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "policy")
+		return sdkerrors.Wrap(err, "group policy's decision policy")
 	}
-
 	return nil
 }
 
@@ -221,12 +238,46 @@ func (g GroupMember) PrimaryKeyFields() []interface{} {
 
 func (g GroupMember) ValidateBasic() error {
 	if g.GroupId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group")
+		return sdkerrors.Wrap(errors.ErrEmpty, "group member's group id")
 	}
 
 	err := g.Member.ValidateBasic()
 	if err != nil {
-		return sdkerrors.Wrap(err, "member")
+		return sdkerrors.Wrap(err, "group member")
+	}
+	return nil
+}
+
+func (p Proposal) ValidateBasic() error {
+
+	if p.ProposalId == 0 {
+		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
+	}
+	_, err := sdk.AccAddressFromBech32(p.Address)
+	if err != nil {
+		return sdkerrors.Wrap(err, "proposer group account address")
+	}
+	if p.GroupVersion == 0 {
+		return sdkerrors.Wrap(errors.ErrEmpty, "proposal group version")
+	}
+	if p.GroupPolicyVersion == 0 {
+		return sdkerrors.Wrap(errors.ErrEmpty, "proposal group account version")
+	}
+	_, err = p.VoteState.GetYesCount()
+	if err != nil {
+		return sdkerrors.Wrap(err, "proposal VoteState yes count")
+	}
+	_, err = p.VoteState.GetNoCount()
+	if err != nil {
+		return sdkerrors.Wrap(err, "proposal VoteState no count")
+	}
+	_, err = p.VoteState.GetAbstainCount()
+	if err != nil {
+		return sdkerrors.Wrap(err, "proposal VoteState abstain count")
+	}
+	_, err = p.VoteState.GetVetoCount()
+	if err != nil {
+		return sdkerrors.Wrap(err, "proposal VoteState veto count")
 	}
 	return nil
 }
@@ -237,6 +288,29 @@ func (v Vote) PrimaryKeyFields() []interface{} {
 		panic(err)
 	}
 	return []interface{}{v.ProposalId, addr.Bytes()}
+}
+
+var _ orm.Validateable = Vote{}
+
+func (v Vote) ValidateBasic() error {
+
+	_, err := sdk.AccAddressFromBech32(v.Voter)
+	if err != nil {
+		return sdkerrors.Wrap(err, "voter")
+	}
+	if v.ProposalId == 0 {
+		return sdkerrors.Wrap(errors.ErrEmpty, "voter ProposalId")
+	}
+	if v.Choice == Choice_CHOICE_UNSPECIFIED {
+		return sdkerrors.Wrap(errors.ErrEmpty, "voter choice")
+	}
+	if _, ok := Choice_name[int32(v.Choice)]; !ok {
+		return sdkerrors.Wrap(errors.ErrInvalid, "choice")
+	}
+	if v.GetSubmittedAt().IsZero() {
+		return sdkerrors.Wrap(errors.ErrEmpty, "submitted at")
+	}
+	return nil
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces

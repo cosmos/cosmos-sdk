@@ -1,11 +1,10 @@
 package group
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/group/errors"
-	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 )
 
 // NewGenesisState creates a new genesis state with default values.
@@ -14,105 +13,83 @@ func NewGenesisState() *GenesisState {
 }
 
 func (s GenesisState) Validate() error {
+	groups := make(map[uint64]GroupInfo)
+	groupPolicies := make(map[string]GroupPolicyInfo)
+	groupPoliciesWithId := make(map[uint64]GroupPolicyInfo)
+	groupMembers := make(map[uint64]GroupMember)
+	proposals := make(map[uint64]Proposal)
+
 	for _, g := range s.Groups {
-		groupId := g.GroupId
-		if groupId == 0 {
-			return sdkerrors.Wrap(errors.ErrEmpty, "group's group id")
+		if err := g.ValidateBasic(); err != nil {
+			return sdkerrors.Wrap(err, "Group validation failed")
 		}
-		_, err := sdk.AccAddressFromBech32(g.GetAdmin())
-		if err != nil {
-			return sdkerrors.Wrap(err, "admin")
-		}
-		if _, err := math.NewNonNegativeDecFromString(g.GetTotalWeight()); err != nil {
-			return sdkerrors.Wrap(err, "total weight")
-		}
-		if g.GetVersion() == 0 {
-			return sdkerrors.Wrap(errors.ErrEmpty, "version")
-		}
+		groups[g.GroupId] = *g
 	}
 
-	for _, f := range s.GroupPolicies {
-		_, err := sdk.AccAddressFromBech32(f.Admin)
-		if err != nil {
-			return sdkerrors.Wrap(err, "group policy admin")
+	for _, g := range s.GroupPolicies {
+
+		// check that group with group policy's GroupId exists
+		if _, exists := groups[g.GroupId]; !exists {
+			return sdkerrors.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("group with GroupId %d doesn't exist", g.GroupId))
 		}
-		_, err = sdk.AccAddressFromBech32(f.Address)
-		if err != nil {
-			return sdkerrors.Wrap(err, "group policy account address")
+
+		if err := g.ValidateBasic(); err != nil {
+			return sdkerrors.Wrap(err, "GroupPolicy validation failed")
 		}
-		if f.GroupId == 0 {
-			return sdkerrors.Wrap(errors.ErrEmpty, "group policy's group id")
-		}
-		if f.Version == 0 {
-			return sdkerrors.Wrap(errors.ErrEmpty, "group policy version")
-		}
-		policy := f.GetDecisionPolicy()
-		if policy == nil {
-			return sdkerrors.Wrap(errors.ErrEmpty, "group policy's decision policy")
-		}
-		if err := policy.ValidateBasic(); err != nil {
-			return sdkerrors.Wrap(err, "group policy's decision policy")
-		}
+		groupPolicies[g.Address] = *g
+		groupPoliciesWithId[g.GroupId] = *g
 	}
 
-	for _, f := range s.GroupMembers {
-		if f.GroupId == 0 {
-			return sdkerrors.Wrap(errors.ErrEmpty, "group member")
+	for _, g := range s.GroupMembers {
+
+		// check that group with group member's GroupId exists
+		if _, exists := groups[g.GroupId]; !exists {
+			return sdkerrors.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("group member with GroupId %d doesn't exist", g.GroupId))
 		}
-		err := f.GetMember().ValidateBasic()
-		if err != nil {
-			return sdkerrors.Wrap(err, "group member")
+
+		if err := g.ValidateBasic(); err != nil {
+			return sdkerrors.Wrap(err, "GroupMember validation failed")
 		}
+		groupMembers[g.GroupId] = *g
 	}
 
-	for _, f := range s.Proposals {
-		if f.ProposalId == 0 {
-			return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
+	for _, p := range s.Proposals {
+
+		// check that group policy with proposal address exists
+		if _, exists := groupPolicies[p.Address]; !exists {
+			return sdkerrors.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("group policy account with address %s doesn't correspond to proposal address", p.Address))
 		}
-		_, err := sdk.AccAddressFromBech32(f.Address)
-		if err != nil {
-			return sdkerrors.Wrap(err, "proposer group account address")
+
+		if err := p.ValidateBasic(); err != nil {
+			return sdkerrors.Wrap(err, "Proposal validation failed")
 		}
-		if f.GroupVersion == 0 {
-			return sdkerrors.Wrap(errors.ErrEmpty, "proposal group version")
-		}
-		if f.GroupPolicyVersion == 0 {
-			return sdkerrors.Wrap(errors.ErrEmpty, "proposal group account version")
-		}
-		_, err = f.VoteState.GetYesCount()
-		if err != nil {
-			return sdkerrors.Wrap(err, "proposal VoteState yes count")
-		}
-		_, err = f.VoteState.GetNoCount()
-		if err != nil {
-			return sdkerrors.Wrap(err, "proposal VoteState no count")
-		}
-		_, err = f.VoteState.GetAbstainCount()
-		if err != nil {
-			return sdkerrors.Wrap(err, "proposal VoteState abstain count")
-		}
-		_, err = f.VoteState.GetVetoCount()
-		if err != nil {
-			return sdkerrors.Wrap(err, "proposal VoteState veto count")
-		}
+		proposals[p.ProposalId] = *p
 	}
 
-	for _, f := range s.Votes {
-		_, err := sdk.AccAddressFromBech32(f.GetVoter())
-		if err != nil {
-			return sdkerrors.Wrap(err, "voter")
+	for _, v := range s.Votes {
+
+		if err := v.ValidateBasic(); err != nil {
+			return sdkerrors.Wrap(err, "Vote validation failed")
 		}
-		if f.GetProposalId() == 0 {
-			return sdkerrors.Wrap(errors.ErrEmpty, "voter proposal id")
-		}
-		if f.GetChoice() == Choice_CHOICE_UNSPECIFIED {
-			return sdkerrors.Wrap(errors.ErrEmpty, "voter choice")
-		}
-		if _, ok := Choice_name[int32(f.GetChoice())]; !ok {
-			return sdkerrors.Wrap(errors.ErrInvalid, "choice")
-		}
-		if f.GetSubmittedAt().IsZero() {
-			return sdkerrors.Wrap(errors.ErrEmpty, "submitted at")
+
+		// check that proposal exists
+		if _, exists := proposals[v.ProposalId]; exists {
+			proposalAddr := proposals[v.ProposalId].Address
+			// check that voter is a group member corresponding to proposal id
+			if _, exists := groupPolicies[proposalAddr]; exists {
+				groupId := groupPolicies[proposalAddr].GroupId
+				if _, exists := groups[groupId]; exists {
+					groupMember := groupMembers[groupId]
+					if groupMember.Member.Address == v.Voter {
+						return nil
+					}
+					return sdkerrors.Wrap(sdkerrors.ErrNotFound, "voter is not a group member corresponding to proposal id")
+				}
+				return sdkerrors.Wrap(sdkerrors.ErrNotFound, "voter is not a group member corresponding to proposal id")
+			}
+			return sdkerrors.Wrap(sdkerrors.ErrNotFound, "voter is not a group member corresponding to proposal id")
+		} else {
+			return sdkerrors.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("proposal with ProposalId %d doesn't exist", v.ProposalId))
 		}
 	}
 	return nil

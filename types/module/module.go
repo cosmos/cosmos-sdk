@@ -289,17 +289,15 @@ func (m *Manager) SetOrderMigrations(moduleNames ...string) {
 	m.OrderMigrations = moduleNames
 }
 
-// RegisterLegacyAminoCodec registers all module codecs
-func (m *Manager) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
-	for name, b := range m.Modules {
-		if _, ok := b.(interface{ RegisterLegacyAminoCodec(*codec.LegacyAmino) }); ok {
-			panic(fmt.Sprintf("%s uses a deprecated amino registration api, implement HasAminoCodec instead if necessary", name))
-		}
-
-		if mod, ok := b.(HasAminoCodec); ok {
-			mod.RegisterLegacyAminoCodec(registrar)
-		}
-	}
+// Manager defines a module manager that provides the high level utility for managing and executing
+// operations for a group of modules
+type Manager struct {
+	Modules            map[string]AppModule
+	OrderInitGenesis   []string
+	OrderExportGenesis []string
+	OrderBeginBlockers []string
+	OrderEndBlockers   []string
+	OrderMigrations    []string
 }
 
 // RegisterInterfaces registers all module interface types
@@ -335,26 +333,33 @@ func (m *Manager) DefaultGenesis() map[string]json.RawMessage {
 
 // SetOrderInitGenesis sets the order of init genesis calls
 func (m *Manager) SetOrderInitGenesis(moduleNames ...string) {
-	m.checkForgottenModules("SetOrderInitGenesis", moduleNames)
+	m.assertNoForgottenModules("SetOrderInitGenesis", moduleNames)
 	m.OrderInitGenesis = moduleNames
 }
 
 // SetOrderExportGenesis sets the order of export genesis calls
 func (m *Manager) SetOrderExportGenesis(moduleNames ...string) {
-	m.checkForgottenModules("SetOrderExportGenesis", moduleNames)
+	m.assertNoForgottenModules("SetOrderExportGenesis", moduleNames)
 	m.OrderExportGenesis = moduleNames
 }
 
 // SetOrderBeginBlockers sets the order of set begin-blocker calls
 func (m *Manager) SetOrderBeginBlockers(moduleNames ...string) {
-	m.checkForgottenModules("SetOrderBeginBlockers", moduleNames)
+	m.assertNoForgottenModules("SetOrderBeginBlockers", moduleNames)
 	m.OrderBeginBlockers = moduleNames
 }
 
 // SetOrderEndBlockers sets the order of set end-blocker calls
 func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
-	m.checkForgottenModules("SetOrderEndBlockers", moduleNames)
+	m.assertNoForgottenModules("SetOrderEndBlockers", moduleNames)
 	m.OrderEndBlockers = moduleNames
+}
+
+// SetOrderMigrations sets the order of migrations to be run. If not set
+// then migrations will be run with an order defined in `DefaultMigrationsOrder`.
+func (m *Manager) SetOrderMigrations(moduleNames ...string) {
+	m.assertNoForgottenModules("SetOrderMigrations", moduleNames)
+	m.OrderMigrations = moduleNames
 }
 
 // RegisterInvariants registers all module invariants
@@ -542,32 +547,30 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, modulesToExport []str
 	return genesisData, nil
 }
 
-// checkForgottenModules checks that we didn't forget any modules in the
+// assertNoForgottenModules checks that we didn't forget any modules in the
 // SetOrder* functions.
-func (m *Manager) checkForgottenModules(setOrderFnName string, moduleNames []string) {
-	setOrderMap := map[string]struct{}{}
+func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []string) {
+	ms := make(map[string]bool)
 	for _, m := range moduleNames {
-		setOrderMap[m] = struct{}{}
+		ms[m] = true
 	}
-
-	if len(setOrderMap) != len(m.Modules) {
-		panic(fmt.Sprintf("got %d modules in the module manager, but %d modules in %s", len(m.Modules), len(setOrderMap), setOrderFnName))
+	var missing []string
+	for m := range m.Modules {
+		if !ms[m] {
+			missing = append(missing, m)
+		}
+	}
+	if len(missing) != 0 {
+		panic(fmt.Sprintf(
+			"%s: all modules must be defined when setting SetOrderMigrations, missing: %v", setOrderFnName, missing))
 	}
 }
 
 // MigrationHandler is the migration function that each module registers.
 type MigrationHandler func(sdk.Context) error
 
-		if !ms[m] {
-			missing = append(missing, m)
-		}
-	}
-	if len(missing) != 0 {
-		sort.Strings(missing)
-		panic(fmt.Sprintf(
-			"all modules must be defined when setting %s, missing: %v", setOrderFnName, missing))
-	}
-}
+// VersionMap is a map of moduleName -> version
+type VersionMap map[string]uint64
 
 // RunMigrations performs in-place store migrations for all modules. This
 // function MUST be called inside an x/upgrade UpgradeHandler.
@@ -595,9 +598,8 @@ type MigrationHandler func(sdk.Context) error
 //
 // - return the `updatedVM` to be persisted in the x/upgrade's store.
 //
-// Migrations are run in an alphabetical order, except x/auth which is run last. If you want
-// to change the order then you should run migrations in multiple stages as described in
-// docs/core/upgrade.md.
+// Migrations are run in an order defined by `Manager.OrderMigrations` or (if not set) defined by
+// `DefaultMigrationsOrder` function.
 //
 // As an app developer, if you wish to skip running InitGenesis for your new
 // module "foo", you need to manually pass a `fromVM` argument to this function
@@ -630,30 +632,13 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM app
 	if modules == nil {
 		modules = DefaultMigrationsOrder(m.ModuleNames())
 	}
-
-	updatedVM := make(VersionMap)
-	// for deterministic iteration order
-	// (as some migrations depend on other modules
-	// and the order of executing migrations matters)
-	// TODO: make the order user-configurable?
-	sortedModNames := make([]string, 0, len(m.Modules))
-	hasAuth := false
-	const authModulename = "auth" // using authtypes.ModuleName causes import cycle.
-	for key := range m.Modules {
-		if key != authModulename {
-			sortedModNames = append(sortedModNames, key)
-		} else {
-			hasAuth = true
-		}
-	}
-	sort.Strings(sortedModNames)
-	// auth module must be pushed at the end because it might depend on the state from
-	// other modules, eg x/staking
-	if hasAuth {
-		sortedModNames = append(sortedModNames, authModulename)
+	var modules = m.OrderMigrations
+	if modules == nil {
+		modules = DefaultMigrationsOrder(m.ModuleNames())
 	}
 
-	for _, moduleName := range sortedModNames {
+	updatedVM := VersionMap{}
+	for _, moduleName := range modules {
 		module := m.Modules[moduleName]
 		fromVersion, exists := fromVM[moduleName]
 		toVersion := uint64(0)
@@ -826,7 +811,13 @@ func (m *Manager) GetVersionMap() appmodule.VersionMap {
 
 // ModuleNames returns list of all module names, without any particular order.
 func (m *Manager) ModuleNames() []string {
-	return slices.Collect(maps.Keys(m.Modules))
+	ms := make([]string, len(m.Modules))
+	i := 0
+	for m := range m.Modules {
+		ms[i] = m
+		i++
+	}
+	return ms
 }
 
 // DefaultMigrationsOrder returns a default migrations order: ascending alphabetical by module name,

@@ -132,16 +132,13 @@ var (
 	// Examples: not DB domain error, file writing etc...
 	ErrIO = errorsmod.Register(RootCodespace, 39, "Internal IO error")
 
-	// ErrAppConfig defines an error occurred if application configuration is
-	// misconfigured.
-	ErrAppConfig = errorsmod.Register(RootCodespace, 40, "error in app.toml")
+	// ErrAppConfig defines an error occurred if min-gas-prices field in BaseConfig is empty.
+	ErrAppConfig = Register(RootCodespace, 40, "error in app.toml")
 
-	// ErrInvalidGasLimit defines an error when an invalid GasWanted value is
-	// supplied.
-	ErrInvalidGasLimit = errorsmod.Register(RootCodespace, 41, "invalid gas limit")
-
-	// ErrPanic should only be set when we recovering from a panic
-	ErrPanic = errorsmod.ErrPanic
+	// ErrPanic is only set when we recover from a panic, so we know to
+	// redact potentially sensitive system info
+	ErrPanic = Register(UndefinedCodespace, 111222, "panic")
+)
 
 // Register returns an error instance that should be used as the base for
 // creating error instances during runtime.

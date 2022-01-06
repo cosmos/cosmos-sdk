@@ -307,9 +307,6 @@ func (v Vote) ValidateBasic() error {
 	if _, ok := Choice_name[int32(v.Choice)]; !ok {
 		return sdkerrors.Wrap(errors.ErrInvalid, "choice")
 	}
-	if v.GetSubmittedAt().IsZero() {
-		return sdkerrors.Wrap(errors.ErrEmpty, "submitted at")
-	}
 	return nil
 }
 

@@ -27,6 +27,7 @@ func (s *MWTestSuite) TestBranchStore() {
 		{"less than block gas meter", 10, false, false},
 		{"more than block gas meter", blockMaxGas, false, true},
 		{"more than block gas meter", uint64(float64(blockMaxGas) * 1.2), false, true},
+		{"consume MaxUint64", math.MaxUint64, false, true},
 		{"consume block gas when paniced", 10, true, true},
 	}
 
@@ -107,7 +108,8 @@ func (s *MWTestSuite) TestBranchStore() {
 			}
 			// block gas is always consumed
 			baseGas := uint64(24564) // baseGas is the gas consumed by middlewares
-			s.Require().Equal(tc.gasToConsume+baseGas, ctx.BlockGasMeter().GasConsumed())
+			expGasConsumed := addUint64Saturating(tc.gasToConsume, baseGas)
+			s.Require().Equal(expGasConsumed, ctx.BlockGasMeter().GasConsumed())
 			// tx fee is always deducted
 			s.Require().Equal(int64(0), s.app.BankKeeper.GetBalance(ctx, addr1, feeCoin.Denom).Amount.Int64())
 			// sender's sequence is always increased
@@ -116,5 +118,12 @@ func (s *MWTestSuite) TestBranchStore() {
 			s.Require().Equal(uint64(1), seq)
 		})
 	}
+}
 
+func addUint64Saturating(a, b uint64) uint64 {
+	if math.MaxUint64-a < b {
+		return math.MaxUint64
+	}
+
+	return a + b
 }

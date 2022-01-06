@@ -22,27 +22,27 @@ func TestGenesisStateValidate(t *testing.T) {
 	submittedAt := time.Now().UTC()
 	timeout := submittedAt.Add(time.Second * 1).UTC()
 
-	groupAccount := &GroupPolicyInfo{
+	groupPolicy := &GroupPolicyInfo{
 		Address:  accAddr.String(),
 		GroupId:  1,
 		Admin:    accAddr.String(),
 		Version:  1,
-		Metadata: []byte("account metadata"),
+		Metadata: []byte("policy metadata"),
 	}
-	err := groupAccount.SetDecisionPolicy(&ThresholdDecisionPolicy{
+	err := groupPolicy.SetDecisionPolicy(&ThresholdDecisionPolicy{
 		Threshold: "1",
 		Timeout:   time.Second,
 	})
 
-	// create another group account to set invalid decision policy for testing
-	groupAccount2 := &GroupPolicyInfo{
+	// create another group policy to set invalid decision policy for testing
+	groupPolicy2 := &GroupPolicyInfo{
 		Address:  accAddr.String(),
 		GroupId:  1,
 		Admin:    accAddr.String(),
 		Version:  1,
-		Metadata: []byte("account metadata"),
+		Metadata: []byte("policy metadata"),
 	}
-	err = groupAccount2.SetDecisionPolicy(&ThresholdDecisionPolicy{
+	err = groupPolicy2.SetDecisionPolicy(&ThresholdDecisionPolicy{
 		Threshold: "1",
 		Timeout:   0,
 	})
@@ -88,7 +88,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups:                []*GroupInfo{{GroupId: 1, Admin: accAddr.String(), Metadata: []byte("1"), Version: 1, TotalWeight: "1"}, {GroupId: 2, Admin: accAddr.String(), Metadata: []byte("2"), Version: 2, TotalWeight: "2"}},
 				GroupMembers:          []*GroupMember{{GroupId: 1, Member: &Member{Address: memberAddr.String(), Weight: "1", Metadata: []byte("member metadata")}}, {GroupId: 2, Member: &Member{Address: memberAddr.String(), Weight: "2", Metadata: []byte("member metadata")}}},
 				GroupPolicyAccountSeq: 1,
-				GroupPolicies:         []*GroupPolicyInfo{groupAccount},
+				GroupPolicies:         []*GroupPolicyInfo{groupPolicy},
 				ProposalSeq:           1,
 				Proposals:             []*Proposal{proposal},
 				Votes:                 []*Vote{{ProposalId: proposal.ProposalId, Voter: memberAddr.String(), SubmittedAt: submittedAt, Choice: Choice_CHOICE_YES}},
@@ -161,7 +161,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			true,
 		},
 		{
-			"invalid group account address",
+			"invalid group policy address",
 			GenesisState{
 				GroupPolicies: []*GroupPolicyInfo{
 					{
@@ -169,14 +169,14 @@ func TestGenesisStateValidate(t *testing.T) {
 						GroupId:  1,
 						Admin:    accAddr.String(),
 						Version:  1,
-						Metadata: []byte("account metadata"),
+						Metadata: []byte("policy metadata"),
 					},
 				},
 			},
 			true,
 		},
 		{
-			"invalid group account admin",
+			"invalid group policy admin",
 			GenesisState{
 				GroupPolicies: []*GroupPolicyInfo{
 					{
@@ -184,14 +184,14 @@ func TestGenesisStateValidate(t *testing.T) {
 						GroupId:  1,
 						Admin:    "invalid admin",
 						Version:  1,
-						Metadata: []byte("account metadata"),
+						Metadata: []byte("policy metadata"),
 					},
 				},
 			},
 			true,
 		},
 		{
-			"invalid group account's group id",
+			"invalid group policy's group id",
 			GenesisState{
 				GroupPolicies: []*GroupPolicyInfo{
 					{
@@ -199,14 +199,14 @@ func TestGenesisStateValidate(t *testing.T) {
 						GroupId:  0,
 						Admin:    accAddr.String(),
 						Version:  1,
-						Metadata: []byte("account metadata"),
+						Metadata: []byte("policy metadata"),
 					},
 				},
 			},
 			true,
 		},
 		{
-			"invalid group account version",
+			"invalid group policy version",
 			GenesisState{
 				GroupPolicies: []*GroupPolicyInfo{
 					{
@@ -214,14 +214,14 @@ func TestGenesisStateValidate(t *testing.T) {
 						GroupId:  1,
 						Admin:    accAddr.String(),
 						Version:  0,
-						Metadata: []byte("account metadata"),
+						Metadata: []byte("policy metadata"),
 					},
 				},
 			},
 			true,
 		},
 		{
-			"invalid group account policy",
+			"invalid group policy's decision policy",
 			GenesisState{
 				GroupPolicies: []*GroupPolicyInfo{
 					{
@@ -229,8 +229,8 @@ func TestGenesisStateValidate(t *testing.T) {
 						GroupId:        1,
 						Admin:          accAddr.String(),
 						Version:        1,
-						Metadata:       []byte("account metadata"),
-						DecisionPolicy: groupAccount2.DecisionPolicy,
+						Metadata:       []byte("policy metadata"),
+						DecisionPolicy: groupPolicy2.DecisionPolicy,
 					},
 				},
 			},
@@ -297,7 +297,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			true,
 		},
 		{
-			"invalid group account address of proposal",
+			"invalid group policy address of proposal",
 			GenesisState{
 				Proposals: []*Proposal{
 					{
@@ -327,7 +327,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			true,
 		},
 		{
-			"invalid group account version",
+			"invalid group policy version",
 			GenesisState{
 				Proposals: []*Proposal{
 					{

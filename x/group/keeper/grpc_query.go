@@ -106,14 +106,14 @@ func (q Keeper) GroupPoliciesByGroup(goCtx context.Context, request *group.Query
 		return nil, err
 	}
 
-	var accounts []*group.GroupPolicyInfo
-	pageRes, err := orm.Paginate(it, request.Pagination, &accounts)
+	var policies []*group.GroupPolicyInfo
+	pageRes, err := orm.Paginate(it, request.Pagination, &policies)
 	if err != nil {
 		return nil, err
 	}
 
 	return &group.QueryGroupPoliciesByGroupResponse{
-		GroupPolicies: accounts,
+		GroupPolicies: policies,
 		Pagination:    pageRes,
 	}, nil
 }
@@ -133,14 +133,14 @@ func (q Keeper) GroupPoliciesByAdmin(goCtx context.Context, request *group.Query
 		return nil, err
 	}
 
-	var accounts []*group.GroupPolicyInfo
-	pageRes, err := orm.Paginate(it, request.Pagination, &accounts)
+	var policies []*group.GroupPolicyInfo
+	pageRes, err := orm.Paginate(it, request.Pagination, &policies)
 	if err != nil {
 		return nil, err
 	}
 
 	return &group.QueryGroupPoliciesByAdminResponse{
-		GroupPolicies: accounts,
+		GroupPolicies: policies,
 		Pagination:    pageRes,
 	}, nil
 }

@@ -134,7 +134,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			`{"rewards":[{"denom":"stake","amount":"1144.440000000000000000"}]}`,
+			`{"rewards":[{"denom":"stake","amount":"1184.040000000000000000"}]}`,
 		},
 		{
 			"text output",
@@ -145,7 +145,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 			},
 			false,
 			`rewards:
-- amount: "1144.440000000000000000"
+- amount: "1184.040000000000000000"
   denom: stake`,
 		},
 	}

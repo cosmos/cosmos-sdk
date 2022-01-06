@@ -860,6 +860,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	cmd := cli.NewWithdrawAllRewardsCmd()
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	require.NoError(err)
+	// expect 2 transactions in the generated file when --max-msgs in a tx set 1.
 	s.Require().Equal(2, len(strings.Split(strings.Trim(out.String(), "\n"), "\n")))
 
 	args = []string{
@@ -873,5 +874,6 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	cmd = cli.NewWithdrawAllRewardsCmd()
 	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	require.NoError(err)
+	// expect 1 transaction in the generated file when --max-msgs in a tx set 2, since there are only delegations.
 	s.Require().Equal(1, len(strings.Split(strings.Trim(out.String(), "\n"), "\n")))
 }

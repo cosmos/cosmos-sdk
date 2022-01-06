@@ -69,7 +69,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		GroupId:  1,
 		Admin:    accAddr.String(),
 		Version:  1,
-		Metadata: []byte("account metadata"),
+		Metadata: []byte("policy metadata"),
 	}
 	err := groupPolicy.SetDecisionPolicy(&group.ThresholdDecisionPolicy{
 		Threshold: "1",

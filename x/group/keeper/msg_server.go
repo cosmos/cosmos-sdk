@@ -482,6 +482,67 @@ func (k Keeper) CreateProposal(goCtx context.Context, req *group.MsgCreatePropos
 	return &group.MsgCreateProposalResponse{ProposalId: id}, nil
 }
 
+func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawProposal) (*group.MsgWithdrawProposalResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	id := req.ProposalId
+	admin := req.Admin
+
+	proposal, err := k.getProposal(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Ensure that proposal isn't already closed or aborted
+	if proposal.Status == group.ProposalStatusClosed || proposal.Status == group.ProposalStatusAborted {
+		return nil, sdkerrors.Wrap(errors.ErrInvalid, "proposal is already closed or aborted")
+	}
+
+	var policyInfo group.GroupPolicyInfo
+	if policyInfo, err = k.getGroupPolicyInfo(ctx, proposal.Address); err != nil {
+		return nil, sdkerrors.Wrap(err, "load group policy")
+	}
+
+	groupInfo, err := k.getGroupInfo(ctx, policyInfo.GroupId)
+	if err != nil {
+		return nil, err
+	}
+
+	if groupInfo.Version != proposal.GroupVersion {
+		return nil, sdkerrors.Wrap(errors.ErrModified, "group was already modified")
+	}
+
+	storeUpdates := func() (*group.MsgWithdrawProposalResponse, error) {
+		if err := k.proposalTable.Update(ctx.KVStore(k.key), id, &proposal); err != nil {
+			return nil, err
+		}
+		return &group.MsgWithdrawProposalResponse{}, nil
+	}
+
+	// check admin address is the group admin.
+	if admin == groupInfo.Admin {
+		proposal.Result = group.ProposalResultUnfinalized
+		proposal.Status = group.ProposalStatusAborted
+		return storeUpdates()
+	}
+
+	// if admin address is not group admin then check whether he is in proposers list.
+	validProposer := false
+	for _, proposer := range proposal.Proposers {
+		if proposer == admin {
+			validProposer = true
+			break
+		}
+	}
+
+	if !validProposer {
+		return nil, sdkerrors.Wrapf(errors.ErrUnauthorized, "given admin address neither policy address nor in proposal proposers: %s", admin)
+	}
+
+	proposal.Result = group.ProposalResultUnfinalized
+	proposal.Status = group.ProposalStatusAborted
+	return storeUpdates()
+}
+
 func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	id := req.ProposalId

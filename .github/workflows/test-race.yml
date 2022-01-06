@@ -25,9 +25,6 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go-arch: ["amd64", "arm", "arm64"]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2.1.5
@@ -51,7 +48,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Create a file with all core Cosmos SDK pkgs
-        run:  go list ./... > pkgs.txt
+        run: go list ./... > pkgs.txt
       - name: Split pkgs into 4 files
         run: split -d -n l/4 pkgs.txt pkgs.txt.part.
       # cache multiple

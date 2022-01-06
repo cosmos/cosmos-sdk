@@ -54,7 +54,7 @@ func (s *MWTestSuite) TestBranchStore() {
 			var testMsgTxHandler = customTxHandler{func(ctx context.Context, req tx.Request) (tx.Response, error) {
 				msg, ok := req.Tx.GetMsgs()[0].(*testdata.TestMsg)
 				if !ok {
-					return tx.Response{}, fmt.Errorf("expected %T, got %T", (*testdata.TestMsg)(nil), msg)
+					return tx.Response{}, fmt.Errorf("Wrong Msg type, expected %T, got %T", (*testdata.TestMsg)(nil), msg)
 				}
 
 				sdkCtx := sdk.UnwrapSDKContext(ctx)

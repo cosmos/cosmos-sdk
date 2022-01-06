@@ -49,5 +49,5 @@ jobs:
           context: ./contrib/devtools
           file: ./contrib/devtools/dockerfile
           platforms: linux/amd64,linux/arm64
-          # push: ${{ github.event_name != 'pull_request' }}
+          push: true
           tags: ${{ steps.prep.outputs.tags }}

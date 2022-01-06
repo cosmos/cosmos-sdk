@@ -3,6 +3,7 @@ package testutil
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
@@ -315,7 +316,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
 	addr := val.Address
 	valAddr := sdk.ValAddress(addr)
 
-	_, err := s.network.WaitForHeight(6)
+	_, err := s.network.WaitForHeightWithTimeout(11, time.Minute)
 	s.Require().NoError(err)
 
 	testCases := []struct {

@@ -11,9 +11,6 @@ import (
 	protov2 "google.golang.org/protobuf/proto"
 )
 
-var defaultJM = &jsonpb.Marshaler{OrigName: true, EmitDefaults: true, AnyResolver: nil}
-var protoJM = &protopb.Marshaler{OrigName: true, EmitDefaults: true, AnyResolver: nil}
-
 // ProtoMarshalJSON provides an auxiliary function to return Proto3 JSON encoded
 // bytes of a message.
 func ProtoMarshalJSON(msg interface{}, resolver types.InterfaceRegistry) ([]byte, error) {
@@ -23,10 +20,11 @@ func ProtoMarshalJSON(msg interface{}, resolver types.InterfaceRegistry) ([]byte
 	case gogoproto.Message:
 		// We use the OrigName because camel casing fields just doesn't make sense.
 		// EmitDefaults is also often the more expected behavior for CLI users
-		jm := defaultJM
+		jm := &jsonpb.Marshaler{OrigName: true, EmitDefaults: true, AnyResolver: nil}
+		protoJM := &protopb.Marshaler{OrigName: true, EmitDefaults: true, AnyResolver: nil}
 		if resolver != nil {
 			jm.AnyResolver = resolver
-			// protoJM.AnyResolver = resolver
+			protoJM.AnyResolver = resolver.GetV2Resolver()
 		}
 		err := types.UnpackInterfaces(msg, types.ProtoJSONPacker{JSONPBMarshaler: jm, V2MarshalOptions: protojson.MarshalOptions{
 			NoUnkeyedLiterals: struct{}{},

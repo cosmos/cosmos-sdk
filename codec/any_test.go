@@ -1,10 +1,9 @@
 package codec_test
 
 import (
-	"bytes"
 	"fmt"
-	gogopb "github.com/gogo/protobuf/jsonpb"
-	"github.com/golang/protobuf/jsonpb"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	types2 "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
 	"testing"
@@ -17,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	testdatav2 "github.com/cosmos/cosmos-sdk/testutil/testdata/v2"
-	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/require"
 )
 
@@ -187,59 +185,90 @@ func TestMarshalAnyV2(t *testing.T) {
 	require.Error(t, err)
 }
 
-type FakeRegistry struct {
-	typeMap map[string]proto.Message
-}
+//type FakeRegistry struct {
+//	typeMap map[string]proto.Message
+//}
+//
+//var _ jsonpb.AnyResolver = &FakeRegistry{}
+//
+//func (f *FakeRegistry) RegisterInterface(msg proto.Message) {
+//	fmt.Println("regstering: ", proto.MessageName(msg))
+//	f.typeMap["/"+proto.MessageName(msg)] = msg
+//}
+//
+//func (f *FakeRegistry) Resolve(typeURL string) (proto.Message, error) {
+//
+//	if msg, ok := f.typeMap[typeURL]; ok {
+//		return msg, nil
+//	}
+//	return nil, fmt.Errorf("no msg found for type url %s\n", typeURL)
+//}
 
-var _ jsonpb.AnyResolver = &FakeRegistry{}
-
-func (f *FakeRegistry) RegisterInterface(msg proto.Message) {
-	fmt.Println("regstering: ", proto.MessageName(msg))
-	f.typeMap["/"+proto.MessageName(msg)] = msg
-}
-
-func (f *FakeRegistry) Resolve(typeURL string) (proto.Message, error) {
-
-	if msg, ok := f.typeMap[typeURL]; ok {
-		return msg, nil
+func TestMarshalGogoV2(t *testing.T) {
+	require := require.New(t)
+	cfg := simapp.MakeTestEncodingConfig()
+	msend := types2.MsgSend{
+		FromAddress: "foobar",
+		ToAddress:   "foobar2",
+		Amount:      sdk.NewCoins(sdk.NewInt64Coin("GamerCoin", 420)),
 	}
-	return nil, fmt.Errorf("no msg found for type url %s\n", typeURL)
+
+	bz, err := cfg.Codec.MarshalJSON(&msend)
+	require.NoError(err)
+	fmt.Println(string(bz))
 }
 
 func TestMarshalInterfacev2(t *testing.T) {
 	require := require.New(t)
 	privKey := ed25519.GenPrivKey()
 	ccfg := simapp.MakeTestEncodingConfig()
-	registry := &FakeRegistry{typeMap: make(map[string]proto.Message)}
 	pk := privKey.PubKey()
-	registry.RegisterInterface(pk)
+
+	ccfg.InterfaceRegistry.RegisterInterface("PubKey", (*cryptotypes.PubKey)(nil))
+
+	bz, err := ccfg.Codec.MarshalInterfaceJSON(pk)
+	require.NoError(err)
+	fmt.Println(bz)
+
+	var pk1 ed25519.PrivKey
+	err = ccfg.Codec.UnmarshalInterfaceJSON(bz, &pk1)
+	require.NoError(err)
+	fmt.Println(pk1)
+
+	//	registry.RegisterInterface("Animal", (*testdata.Animal)(nil))
+	//	registry.RegisterImplementations(
+	//		(*testdata.Animal)(nil),
+	//		&testdata.Dog{},
+	//		&testdata.Cat{},
+	//		&testdatav2.Snake{},
+	//	)
 
 	// we mimick the internals of MarshalInterfaceJSON here so we can pass in our fake test registry!
 	// with the resolver, this works fine.
-	any, err := types.NewAnyWithValue(pk)
-	require.NoError(err)
-	var protoJM = &jsonpb.Marshaler{OrigName: true, EmitDefaults: true, AnyResolver: registry}
-	buf := new(bytes.Buffer)
-	err = protoJM.Marshal(buf, any)
-	require.NoError(err)
+	//any, err := types.NewAnyWithValue(pk)
+	//require.NoError(err)
+	//var protoJM = &jsonpb.Marshaler{OrigName: true, EmitDefaults: true, AnyResolver: registry}
+	//buf := new(bytes.Buffer)
+	//err = protoJM.Marshal(buf, any)
+	//require.NoError(err)
 
-	// now lets set the resolver to nil, which will give us an error when marshaling
-	protoJM.AnyResolver = nil
-	buf = new(bytes.Buffer)
-	err = protoJM.Marshal(buf, any)
-	require.Error(err) // error! cant find this type!
-	require.Contains(err.Error(), "not found")
-
-	// using gogo's jsonpb marshaler without AnyResolver, still works!
-	var gogoJM = &gogopb.Marshaler{OrigName: true, EmitDefaults: true, AnyResolver: nil}
-	buf = new(bytes.Buffer)
-	err = gogoJM.Marshal(buf, any)
-	require.NoError(err)
-
-	// pass in our own registry, works fine as it should
-	gogoJM.AnyResolver = ccfg.InterfaceRegistry
-	buf = new(bytes.Buffer)
-	err = gogoJM.Marshal(buf, any)
-	require.NoError(err)
+	//// now lets set the resolver to nil, which will give us an error when marshaling
+	//protoJM.AnyResolver = nil
+	//buf = new(bytes.Buffer)
+	//err = protoJM.Marshal(buf, any)
+	//require.Error(err) // error! cant find this type!
+	//require.Contains(err.Error(), "not found")
+	//
+	//// using gogo's jsonpb marshaler without AnyResolver, still works!
+	//var gogoJM = &gogopb.Marshaler{OrigName: true, EmitDefaults: true, AnyResolver: nil}
+	//buf = new(bytes.Buffer)
+	//err = gogoJM.Marshal(buf, any)
+	//require.NoError(err)
+	//
+	//// pass in our own registry, works fine as it should
+	//gogoJM.AnyResolver = ccfg.InterfaceRegistry
+	//buf = new(bytes.Buffer)
+	//err = gogoJM.Marshal(buf, any)
+	//require.NoError(err)
 
 }

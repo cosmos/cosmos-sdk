@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"google.golang.org/protobuf/runtime/protoiface"
 	"reflect"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -34,6 +35,7 @@ type InterfaceRegistry interface {
 
 	AnyUnpacker
 	jsonpb.AnyResolver
+	GetV2Resolver() *ProtoV2Resolver
 	protoregistry.ExtensionTypeResolver
 	protoregistry.MessageTypeResolver
 
@@ -88,23 +90,44 @@ type UnpackInterfacesMessage interface {
 }
 
 type interfaceRegistry struct {
-	interfaceNames map[string]reflect.Type
-	interfaceImpls map[reflect.Type]interfaceMap
-	typeURLMap     map[string]reflect.Type
+	interfaceNames  map[string]reflect.Type
+	interfaceImpls  map[reflect.Type]interfaceMap
+	typeURLMap      map[string]reflect.Type
+	protov2Resolver *ProtoV2Resolver
 }
 
 type interfaceMap = map[string]reflect.Type
 
 // NewInterfaceRegistry returns a new InterfaceRegistry
 func NewInterfaceRegistry() InterfaceRegistry {
-	return &interfaceRegistry{
+	ir := &interfaceRegistry{
 		interfaceNames: map[string]reflect.Type{},
 		interfaceImpls: map[reflect.Type]interfaceMap{},
 		typeURLMap:     map[string]reflect.Type{},
 	}
+
+	pv2r := &ProtoV2Resolver{
+		registry: ir,
+	}
+
+	ir.protov2Resolver = pv2r
+
+	return ir
 }
 
 func (interfaceRegistry) isInterfaceRegistry() {}
+
+type ProtoV2Resolver struct {
+	registry *interfaceRegistry
+}
+
+func (p *ProtoV2Resolver) Resolve(typeURL string) (protoiface.MessageV1, error) {
+	return p.registry.Resolve(typeURL)
+}
+
+func (registry *interfaceRegistry) GetV2Resolver() *ProtoV2Resolver {
+	return registry.protov2Resolver
+}
 
 func (registry *interfaceRegistry) RegisterInterface(protoName string, iface interface{}, impls ...interface{}) {
 	typ := reflect.TypeOf(iface)

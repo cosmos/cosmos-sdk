@@ -25,8 +25,9 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	cfg     network.Config
-	network *network.Network
+	cfg       network.Config
+	network   *network.Network
+	delegator sdk.AccAddress
 }
 
 func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
@@ -59,6 +60,53 @@ func (s *IntegrationTestSuite) SetupTest() {
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
+
+	val := s.network.Validators[0]
+	val1 := s.network.Validators[1]
+	clientCtx := val.ClientCtx
+
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	s.Require().NoError(err)
+
+	pubkey, err := info.GetPubKey()
+	s.Require().NoError(err)
+
+	newAddr := sdk.AccAddress(pubkey.Address())
+	_, err = banktestutil.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		newAddr,
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(2000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	)
+	s.Require().NoError(err)
+
+	// delegate 500 tokens to validator1
+	args := []string{
+		val.ValAddress.String(),
+		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(500)).String(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	}
+	cmd := stakingcli.NewDelegateCmd()
+	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	s.Require().NoError(err)
+
+	// delegate 500 tokens to validator2
+	args = []string{
+		val1.ValAddress.String(),
+		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(500)).String(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	}
+	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	s.Require().NoError(err)
+	s.delegator = newAddr
 }
 
 // TearDownTest cleans up the curret test network after _each_ test.
@@ -756,52 +804,53 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	require := s.Require()
 	val := s.network.Validators[0]
-	val1 := s.network.Validators[1]
+	// val1 := s.network.Validators[1]
 	clientCtx := val.ClientCtx
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	require.NoError(err)
+	// info, _, err := val.ClientCtx.Keyring.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	// require.NoError(err)
 
-	pubkey, err := info.GetPubKey()
-	require.NoError(err)
+	// pubkey, err := info.GetPubKey()
+	// require.NoError(err)
 
-	newAddr := sdk.AccAddress(pubkey.Address())
-	_, err = banktestutil.MsgSendExec(
-		val.ClientCtx,
-		val.Address,
-		newAddr,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(2000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	)
-	require.NoError(err)
+	// newAddr := sdk.AccAddress(pubkey.Address())
+	// _, err = banktestutil.MsgSendExec(
+	// 	val.ClientCtx,
+	// 	val.Address,
+	// 	newAddr,
+	// 	sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(2000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+	// 	fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+	// 	fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	// )
+	// require.NoError(err)
 
-	// delegate 500 tokens to validator1
+	// // delegate 500 tokens to validator1
+	// args := []string{
+	// 	val.ValAddress.String(),
+	// 	sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(500)).String(),
+	// 	fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
+	// 	fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+	// 	fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+	// 	fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	// }
+	// cmd := stakingcli.NewDelegateCmd()
+	// _, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	// require.NoError(err)
+
+	// // delegate 500 tokens to validator2
+	// args = []string{
+	// 	val1.ValAddress.String(),
+	// 	sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(500)).String(),
+	// 	fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
+	// 	fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+	// 	fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+	// 	fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	// }
+	// _, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	// require.NoError(err)
+
+	newAddr := s.delegator
 	args := []string{
-		val.ValAddress.String(),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(500)).String(),
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-	cmd := stakingcli.NewDelegateCmd()
-	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	require.NoError(err)
-
-	// delegate 500 tokens to validator2
-	args = []string{
-		val1.ValAddress.String(),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(500)).String(),
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	require.NoError(err)
-
-	args = []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
@@ -809,7 +858,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
-	cmd = cli.NewWithdrawAllRewardsCmd()
+	cmd := cli.NewWithdrawAllRewardsCmd()
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	require.NoError(err)
 	s.Require().Equal(2, len(strings.Split(strings.Trim(out.String(), "\n"), "\n")))

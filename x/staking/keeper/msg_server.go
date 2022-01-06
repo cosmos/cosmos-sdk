@@ -21,6 +21,7 @@ type msgServer struct {
 	Keeper
 }
 
+// CancelUnbondingDelegation defines a method for canceling the unbonding delegation
 func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.MsgCancelUnbondingDelegation) (*types.MsgCancelUnbondingDelegationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
@@ -46,12 +47,14 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 			msg.DelegatorAddress, msg.ValidatorAddress)
 	}
 
-	var foundUnBondingAtHeight = false
-	var unbondEntry types.UnbondingDelegationEntry
-	var unbondEntryIndex int64
-	for i := 0; i < len(ubd.Entries); i++ {
-		entry := ubd.Entries[i]
-		if entry.CreationHeight == msg.CreationHeight {
+	var (
+		foundUnBondingAtHeight = false
+		unbondEntry            types.UnbondingDelegationEntry
+		unbondEntryIndex       int64
+	)
+
+	for i, entry := range ubd.Entries {
+		if entry.CreationHeight == int64(msg.CreationHeight) {
 			foundUnBondingAtHeight = true
 			unbondEntry = entry
 			unbondEntryIndex = int64(i)
@@ -69,12 +72,12 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 
 	amount := unbondEntry.Balance.Sub(msg.Amount.Amount)
 	if amount.Equal(sdk.NewInt(0)) {
-		// remove from unbondQueue
+		// remove from ubd
 		ubd.RemoveEntry(unbondEntryIndex)
 	} else {
-		// update in unbondingDelegationEntryBalance
+		// update the unbondingDelegationEntryBalance and InitialBalance for ubd entry
 		ubd.Entries[unbondEntryIndex].Balance = amount
-		ubd.Entries[unbondEntryIndex].InitialBalance = amount
+		ubd.Entries[unbondEntryIndex].InitialBalance = ubd.Entries[unbondEntryIndex].InitialBalance.Sub(msg.Amount.Amount)
 	}
 
 	// set the unbonding delegation or remove it if there are no more entries
@@ -102,7 +105,7 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
-			sdk.NewAttribute(types.AttributeKeyCreationHeight, strconv.FormatInt(msg.CreationHeight, 10)),
+			sdk.NewAttribute(types.AttributeKeyCreationHeight, strconv.FormatUint(msg.CreationHeight, 10)),
 		),
 	)
 

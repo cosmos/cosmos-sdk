@@ -31,7 +31,8 @@ service Msg {
   // delegate and a validator.
   rpc Undelegate(MsgUndelegate) returns (MsgUndelegateResponse);
 
-  // CancelUnbondingDelegation
+  // CancelUnbondingDelegation defines a method for performing canceling the unbonding delegation
+  // and delegate back to previous validator
   rpc CancelUnbondingDelegation(MsgCancelUnbondingDelegation) returns (MsgCancelUnbondingDelegationResponse);
 }
 
@@ -133,7 +134,7 @@ message MsgCancelUnbondingDelegation{
   string                   validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   cosmos.base.v1beta1.Coin amount            = 3 [(gogoproto.nullable) = false];
   // creation_height is the height which the unbonding took place.
-  int64 creation_height = 4;
+  uint64 creation_height = 4;
 }
 
 // MsgCancelUnbondingDelegationResponse

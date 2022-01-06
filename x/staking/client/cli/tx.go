@@ -315,7 +315,7 @@ $ %s tx staking cancel-unbonding-delegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldm
 				return sdkerrors.ErrInvalidCoins
 			}
 
-			msg := types.NewMsgCancelUnbondingDelegation(delAddr, valAddr, creationHeight.Int64(), amount)
+			msg := types.NewMsgCancelUnbondingDelegation(delAddr, valAddr, creationHeight.Uint64(), amount)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

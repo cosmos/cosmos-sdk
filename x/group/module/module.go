@@ -108,7 +108,7 @@ func (AppModule) Name() string {
 
 // RegisterInvariants does nothing, there are no invariants to enforce
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	groupkeeper.RegisterInvariants(ir, am.keeper)
+	keeper.RegisterInvariants(ir, am.keeper)
 }
 
 // Deprecated: Route returns the message routing key for the group module.

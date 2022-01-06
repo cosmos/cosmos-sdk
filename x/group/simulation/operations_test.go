@@ -50,16 +50,16 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgName  string
 	}{
 		{simulation.WeightMsgCreateGroup, group.MsgCreateGroup{}.Route(), simulation.TypeMsgCreateGroup},
-		{simulation.WeightMsgCreateGroupAccount, group.MsgCreateGroupAccount{}.Route(), simulation.TypeMsgCreateGroupAccount},
+		{simulation.WeightMsgCreateGroupPolicy, group.MsgCreateGroupPolicy{}.Route(), simulation.TypeMsgCreateGroupPolicy},
 		{simulation.WeightMsgCreateProposal, group.MsgCreateProposal{}.Route(), simulation.TypeMsgCreateProposal},
 		{simulation.WeightMsgVote, group.MsgVote{}.Route(), simulation.TypeMsgVote},
 		{simulation.WeightMsgExec, group.MsgExec{}.Route(), simulation.TypeMsgExec},
 		{simulation.WeightMsgUpdateGroupMetadata, group.MsgUpdateGroupMetadata{}.Route(), simulation.TypeMsgUpdateGroupMetadata},
 		{simulation.WeightMsgUpdateGroupAdmin, group.MsgUpdateGroupAdmin{}.Route(), simulation.TypeMsgUpdateGroupAdmin},
 		{simulation.WeightMsgUpdateGroupMembers, group.MsgUpdateGroupMembers{}.Route(), simulation.TypeMsgUpdateGroupMembers},
-		{simulation.WeightMsgUpdateGroupAccountAdmin, group.MsgUpdateGroupAccountAdmin{}.Route(), simulation.TypeMsgUpdateGroupAccountAdmin},
-		{simulation.WeightMsgUpdateGroupAccountDecisionPolicy, group.MsgUpdateGroupAccountDecisionPolicy{}.Route(), simulation.TypeMsgUpdateGroupAccountDecisionPolicy},
-		{simulation.WeightMsgUpdateGroupAccountMetadata, group.MsgUpdateGroupAccountMetadata{}.Route(), simulation.TypeMsgUpdateGroupAccountMetadata},
+		{simulation.WeightMsgUpdateGroupPolicyAdmin, group.MsgUpdateGroupPolicyAdmin{}.Route(), simulation.TypeMsgUpdateGroupPolicyAdmin},
+		{simulation.WeightMsgUpdateGroupPolicyDecisionPolicy, group.MsgUpdateGroupPolicyDecisionPolicy{}.Route(), simulation.TypeMsgUpdateGroupPolicyDecisionPolicy},
+		{simulation.WeightMsgUpdateGroupPolicyMetadata, group.MsgUpdateGroupPolicyMetadata{}.Route(), simulation.TypeMsgUpdateGroupPolicyMetadata},
 	}
 
 	for i, w := range weightedOps {
@@ -119,7 +119,7 @@ func (suite *SimTestSuite) TestSimulateCreateGroup() {
 	suite.Require().Len(futureOperations, 0)
 }
 
-func (suite *SimTestSuite) TestSimulateCreateGroupAccount() {
+func (suite *SimTestSuite) TestSimulateCreateGroupPolicy() {
 	// setup 1 account
 	s := rand.NewSource(1)
 	r := rand.New(s)
@@ -149,11 +149,11 @@ func (suite *SimTestSuite) TestSimulateCreateGroupAccount() {
 	})
 
 	// execute operation
-	op := simulation.SimulateMsgCreateGroupAccount(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.GroupKeeper)
+	op := simulation.SimulateMsgCreateGroupPolicy(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.GroupKeeper)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg group.MsgCreateGroupAccount
+	var msg group.MsgCreateGroupPolicy
 	err = group.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
@@ -184,14 +184,14 @@ func (suite *SimTestSuite) TestSimulateCreateProposal() {
 	suite.Require().NoError(err)
 
 	// setup a group account
-	accountReq := &group.MsgCreateGroupAccount{
+	accountReq := &group.MsgCreateGroupPolicy{
 		Admin:    acc.Address.String(),
 		GroupId:  groupRes.GroupId,
 		Metadata: nil,
 	}
 	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
 	suite.Require().NoError(err)
-	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupAccount(ctx, accountReq)
+	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
 
 	// begin a new block
@@ -239,14 +239,14 @@ func (suite *SimTestSuite) TestSimulateVote() {
 	suite.Require().NoError(err)
 
 	// setup a group account
-	accountReq := &group.MsgCreateGroupAccount{
+	accountReq := &group.MsgCreateGroupPolicy{
 		Admin:    addr,
 		GroupId:  groupRes.GroupId,
 		Metadata: nil,
 	}
 	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
 	suite.Require().NoError(err)
-	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupAccount(ctx, accountReq)
+	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
 
 	// setup a proposal
@@ -306,14 +306,14 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	suite.Require().NoError(err)
 
 	// setup a group account
-	accountReq := &group.MsgCreateGroupAccount{
+	accountReq := &group.MsgCreateGroupPolicy{
 		Admin:    addr,
 		GroupId:  groupRes.GroupId,
 		Metadata: nil,
 	}
 	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
 	suite.Require().NoError(err)
-	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupAccount(ctx, accountReq)
+	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
 
 	// setup a proposal
@@ -483,7 +483,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupMembers() {
 	suite.Require().Len(futureOperations, 0)
 }
 
-func (suite *SimTestSuite) TestSimulateUpdateGroupAccountAdmin() {
+func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyAdmin() {
 	// setup 1 account
 	s := rand.NewSource(1)
 	r := rand.New(s)
@@ -506,14 +506,14 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupAccountAdmin() {
 	suite.Require().NoError(err)
 
 	// setup a group account
-	accountReq := &group.MsgCreateGroupAccount{
+	accountReq := &group.MsgCreateGroupPolicy{
 		Admin:    acc.Address.String(),
 		GroupId:  groupRes.GroupId,
 		Metadata: nil,
 	}
 	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
 	suite.Require().NoError(err)
-	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupAccount(ctx, accountReq)
+	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
 
 	// begin a new block
@@ -525,11 +525,11 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupAccountAdmin() {
 	})
 
 	// execute operation
-	op := simulation.SimulateMsgUpdateGroupAccountAdmin(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.GroupKeeper)
+	op := simulation.SimulateMsgUpdateGroupPolicyAdmin(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.GroupKeeper)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg group.MsgUpdateGroupAccountAdmin
+	var msg group.MsgUpdateGroupPolicyAdmin
 	err = group.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
@@ -537,7 +537,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupAccountAdmin() {
 	suite.Require().Len(futureOperations, 0)
 }
 
-func (suite *SimTestSuite) TestSimulateUpdateGroupAccountDecisionPolicy() {
+func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyDecisionPolicy() {
 	// setup 1 account
 	s := rand.NewSource(1)
 	r := rand.New(s)
@@ -560,14 +560,14 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupAccountDecisionPolicy() {
 	suite.Require().NoError(err)
 
 	// setup a group account
-	accountReq := &group.MsgCreateGroupAccount{
+	accountReq := &group.MsgCreateGroupPolicy{
 		Admin:    acc.Address.String(),
 		GroupId:  groupRes.GroupId,
 		Metadata: nil,
 	}
 	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
 	suite.Require().NoError(err)
-	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupAccount(ctx, accountReq)
+	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
 
 	// begin a new block
@@ -579,11 +579,11 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupAccountDecisionPolicy() {
 	})
 
 	// execute operation
-	op := simulation.SimulateMsgUpdateGroupAccountDecisionPolicy(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.GroupKeeper)
+	op := simulation.SimulateMsgUpdateGroupPolicyDecisionPolicy(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.GroupKeeper)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg group.MsgUpdateGroupAccountDecisionPolicy
+	var msg group.MsgUpdateGroupPolicyDecisionPolicy
 	err = group.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
@@ -591,7 +591,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupAccountDecisionPolicy() {
 	suite.Require().Len(futureOperations, 0)
 }
 
-func (suite *SimTestSuite) TestSimulateUpdateGroupAccountMetadata() {
+func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyMetadata() {
 	// setup 1 account
 	s := rand.NewSource(1)
 	r := rand.New(s)
@@ -614,14 +614,14 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupAccountMetadata() {
 	suite.Require().NoError(err)
 
 	// setup a group account
-	accountReq := &group.MsgCreateGroupAccount{
+	accountReq := &group.MsgCreateGroupPolicy{
 		Admin:    acc.Address.String(),
 		GroupId:  groupRes.GroupId,
 		Metadata: nil,
 	}
 	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
 	suite.Require().NoError(err)
-	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupAccount(ctx, accountReq)
+	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
 
 	// begin a new block
@@ -633,11 +633,11 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupAccountMetadata() {
 	})
 
 	// execute operation
-	op := simulation.SimulateMsgUpdateGroupAccountMetadata(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.GroupKeeper)
+	op := simulation.SimulateMsgUpdateGroupPolicyMetadata(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.GroupKeeper)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg group.MsgUpdateGroupAccountMetadata
+	var msg group.MsgUpdateGroupPolicyMetadata
 	err = group.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)

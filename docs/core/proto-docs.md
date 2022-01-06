@@ -1,4 +1,5 @@
 # Protobuf Documentation
+<<<<<<< HEAD
 <a name="top"></a>
 
 ## Table of Contents
@@ -11263,5 +11264,7 @@ Msg defines the bank Msg service.
 | <a name="bool" /> bool |  | bool | boolean | boolean | bool | bool | boolean | TrueClass/FalseClass |
 | <a name="string" /> string | A string must always contain UTF-8 encoded or 7-bit ASCII text. | string | String | str/unicode | string | string | string | String (UTF-8) |
 | <a name="bytes" /> bytes | May contain any arbitrary sequence of bytes. | string | ByteString | str | []byte | ByteString | string | String (ASCII-8BIT) |
+=======
+>>>>>>> likhita/add-group-genesis
 
 This file has been replaced by [Cosmos-SDK Buf Proto-docs](https://buf.build/cosmos/cosmos-sdk/docs/main)

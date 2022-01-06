@@ -14,11 +14,11 @@ import (
 )
 
 const (
-	GroupInfo        = "group-info"
-	GroupMembers     = "group-members"
-	GroupAccountInfo = "group-accout-info"
-	GroupProposals   = "group-proposals"
-	GroupVote        = "group-vote"
+	GroupInfo       = "group-info"
+	GroupMembers    = "group-members"
+	GroupPolicyInfo = "group-policy-info"
+	GroupProposals  = "group-proposals"
+	GroupVote       = "group-vote"
 )
 
 func getGroups(r *rand.Rand, accounts []simtypes.Account) []*group.GroupInfo {
@@ -52,15 +52,15 @@ func getGroupMembers(r *rand.Rand, accounts []simtypes.Account) []*group.GroupMe
 	return groupMembers
 }
 
-func getGroupAccounts(r *rand.Rand, simState *module.SimulationState) []*group.GroupAccountInfo {
-	groupAccounts := make([]*group.GroupAccountInfo, 3)
+func getGroupPolicies(r *rand.Rand, simState *module.SimulationState) []*group.GroupPolicyInfo {
+	groupPolicies := make([]*group.GroupPolicyInfo, 3)
 	for i := 0; i < 3; i++ {
 		acc, _ := simtypes.RandomAcc(r, simState.Accounts)
 		any, err := codectypes.NewAnyWithValue(group.NewThresholdDecisionPolicy("10", time.Second*time.Duration(1)))
 		if err != nil {
 			panic(err)
 		}
-		groupAccounts[i] = &group.GroupAccountInfo{
+		groupPolicies[i] = &group.GroupPolicyInfo{
 			GroupId:        uint64(i + 1),
 			Admin:          acc.Address.String(),
 			Address:        acc.Address.String(),
@@ -69,7 +69,7 @@ func getGroupAccounts(r *rand.Rand, simState *module.SimulationState) []*group.G
 			Metadata:       []byte(simtypes.RandStringOfLength(r, 10)),
 		}
 	}
-	return groupAccounts
+	return groupPolicies
 }
 
 func getProposals(r *rand.Rand, simState *module.SimulationState) []*group.Proposal {
@@ -84,13 +84,13 @@ func getProposals(r *rand.Rand, simState *module.SimulationState) []*group.Propo
 		timeout := submittedAt.Add(time.Second * 1000).UTC()
 
 		proposal := &group.Proposal{
-			ProposalId:          uint64(i + 1),
-			Proposers:           proposers,
-			Address:             fromAddr,
-			GroupVersion:        uint64(i + 1),
-			GroupAccountVersion: uint64(i + 1),
-			Status:              group.ProposalStatusSubmitted,
-			Result:              group.ProposalResultAccepted,
+			ProposalId:         uint64(i + 1),
+			Proposers:          proposers,
+			Address:            fromAddr,
+			GroupVersion:       uint64(i + 1),
+			GroupPolicyVersion: uint64(i + 1),
+			Status:             group.ProposalStatusSubmitted,
+			Result:             group.ProposalResultAccepted,
 			VoteState: group.Tally{
 				YesCount:     "1",
 				NoCount:      "1",
@@ -164,10 +164,10 @@ func RandomizedGenState(simState *module.SimulationState) {
 	)
 
 	// group accounts
-	var groupAccounts []*group.GroupAccountInfo
+	var groupPolicies []*group.GroupPolicyInfo
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, GroupAccountInfo, &groupAccounts, simState.Rand,
-		func(r *rand.Rand) { groupAccounts = getGroupAccounts(r, simState) },
+		simState.Cdc, GroupPolicyInfo, &groupPolicies, simState.Rand,
+		func(r *rand.Rand) { groupPolicies = getGroupPolicies(r, simState) },
 	)
 
 	// proposals
@@ -185,14 +185,14 @@ func RandomizedGenState(simState *module.SimulationState) {
 	)
 
 	groupGenesis := group.GenesisState{
-		GroupSeq:        3,
-		Groups:          groups,
-		GroupMembers:    members,
-		GroupAccountSeq: 3,
-		GroupAccounts:   groupAccounts,
-		ProposalSeq:     3,
-		Proposals:       proposals,
-		Votes:           votes,
+		GroupSeq:       3,
+		Groups:         groups,
+		GroupMembers:   members,
+		GroupPolicySeq: 3,
+		GroupPolicies:  groupPolicies,
+		ProposalSeq:    3,
+		Proposals:      proposals,
+		Votes:          votes,
 	}
 
 	simState.GenState[group.ModuleName] = simState.Cdc.MustMarshalJSON(&groupGenesis)

@@ -31,7 +31,7 @@ func TestDecodeStore(t *testing.T) {
 	require.NoError(t, err)
 
 	_, _, accAddr := testdata.KeyTestPubAddr()
-	acc := group.GroupAccountInfo{Address: accAddr.String()}
+	acc := group.GroupPolicyInfo{Address: accAddr.String()}
 	accBz, err := cdc.Marshal(&acc)
 	require.NoError(t, err)
 
@@ -47,7 +47,7 @@ func TestDecodeStore(t *testing.T) {
 		Pairs: []kv.Pair{
 			{Key: append([]byte{keeper.GroupTablePrefix}, orm.PrimaryKey(&g)...), Value: groupBz},
 			{Key: append([]byte{keeper.GroupMemberTablePrefix}, orm.PrimaryKey(&member)...), Value: memberBz},
-			{Key: append([]byte{keeper.GroupAccountTablePrefix}, orm.PrimaryKey(&acc)...), Value: accBz},
+			{Key: append([]byte{keeper.GroupPolicyTablePrefix}, orm.PrimaryKey(&acc)...), Value: accBz},
 			{Key: append([]byte{keeper.ProposalTablePrefix}, orm.PrimaryKey(&proposal)...), Value: proposalBz},
 			{Key: append([]byte{keeper.VoteTablePrefix}, orm.PrimaryKey(&vote)...), Value: voteBz},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
@@ -61,7 +61,7 @@ func TestDecodeStore(t *testing.T) {
 	}{
 		{"Group", false, fmt.Sprintf("%v\n%v", g, g)},
 		{"GroupMember", false, fmt.Sprintf("%v\n%v", member, member)},
-		{"GroupAccount", false, fmt.Sprintf("%v\n%v", acc, acc)},
+		{"GroupPolicy", false, fmt.Sprintf("%v\n%v", acc, acc)},
 		{"Proposal", false, fmt.Sprintf("%v\n%v", proposal, proposal)},
 		{"Vote", false, fmt.Sprintf("%v\n%v", vote, vote)},
 		{"other", true, ""},

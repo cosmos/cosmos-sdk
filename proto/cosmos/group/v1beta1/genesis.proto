@@ -19,12 +19,12 @@ message GenesisState {
   // group_members is the list of groups members.
   repeated GroupMember group_members = 3;
 
-  // group_account_seq is the group account table orm.Sequence,
-  // it is used to generate the next group account address.
-  uint64 group_account_seq = 4;
+  // group_policy_seq is the group policy table orm.Sequence,
+  // it is used to generate the next group policy account address.
+  uint64 group_policy_seq = 4;
 
-  // group_accounts is the list of group accounts info.
-  repeated GroupAccountInfo group_accounts = 5;
+  // group_policies is the list of group policies info.
+  repeated GroupPolicyInfo group_policies = 5;
 
   // proposal_seq is the proposal table orm.Sequence,
   // it is used to get the next proposal ID.

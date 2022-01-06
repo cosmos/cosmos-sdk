@@ -29,8 +29,8 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvB.Value, &memberB)
 
 			return fmt.Sprintf("%v\n%v", memberA, memberB)
-		case bytes.Equal(kvA.Key[:1], []byte{keeper.GroupAccountTablePrefix}):
-			var accA, accB group.GroupAccountInfo
+		case bytes.Equal(kvA.Key[:1], []byte{keeper.GroupPolicyTablePrefix}):
+			var accA, accB group.GroupPolicyInfo
 
 			cdc.MustUnmarshal(kvA.Value, &accA)
 			cdc.MustUnmarshal(kvB.Value, &accB)
@@ -48,7 +48,7 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 
 			cdc.MustUnmarshal(kvA.Value, &voteA)
 			cdc.MustUnmarshal(kvB.Value, &voteB)
-			
+
 			return fmt.Sprintf("%v\n%v", voteA, voteB)
 		default:
 			panic(fmt.Sprintf("invalid group key %X", kvA.Key))

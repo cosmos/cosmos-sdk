@@ -23,12 +23,12 @@ func (k Keeper) InitGenesis(ctx types.Context, cdc codec.JSONCodec, data json.Ra
 		panic(errors.Wrap(err, "group members"))
 	}
 
-	if err := k.groupAccountTable.Import(ctx.KVStore(k.key), genesisState.GroupAccounts, 0); err != nil {
-		panic(errors.Wrap(err, "group accounts"))
+	if err := k.groupPolicyTable.Import(ctx.KVStore(k.key), genesisState.GroupPolicies, 0); err != nil {
+		panic(errors.Wrap(err, "group policies"))
 	}
 
-	if err := k.groupAccountSeq.InitVal(ctx.KVStore(k.key), genesisState.GroupAccountSeq); err != nil {
-		panic(errors.Wrap(err, "group account seq"))
+	if err := k.groupPolicySeq.InitVal(ctx.KVStore(k.key), genesisState.GroupPolicySeq); err != nil {
+		panic(errors.Wrap(err, "group policy account seq"))
 	}
 
 	if err := k.proposalTable.Import(ctx.KVStore(k.key), genesisState.Proposals, genesisState.ProposalSeq); err != nil {
@@ -62,13 +62,13 @@ func (k Keeper) ExportGenesis(ctx types.Context, cdc codec.JSONCodec) *group.Gen
 	}
 	genesisState.GroupMembers = groupMembers
 
-	var groupAccounts []*group.GroupAccountInfo
-	_, err = k.groupAccountTable.Export(ctx.KVStore(k.key), &groupAccounts)
+	var groupPolicies []*group.GroupPolicyInfo
+	_, err = k.groupPolicyTable.Export(ctx.KVStore(k.key), &groupPolicies)
 	if err != nil {
-		panic(errors.Wrap(err, "group accounts"))
+		panic(errors.Wrap(err, "group policies"))
 	}
-	genesisState.GroupAccounts = groupAccounts
-	genesisState.GroupAccountSeq = k.groupAccountSeq.CurVal(ctx.KVStore(k.key))
+	genesisState.GroupPolicies = groupPolicies
+	genesisState.GroupPolicySeq = k.groupPolicySeq.CurVal(ctx.KVStore(k.key))
 
 	var proposals []*group.Proposal
 	proposalSeq, err := k.proposalTable.Export(ctx.KVStore(k.key), &proposals)

@@ -51,6 +51,7 @@ func TestWeightedOperations(t *testing.T) {
 		{simappparams.DefaultWeightMsgDelegate, types.ModuleName, types.TypeMsgDelegate},
 		{simappparams.DefaultWeightMsgUndelegate, types.ModuleName, types.TypeMsgUndelegate},
 		{simappparams.DefaultWeightMsgBeginRedelegate, types.ModuleName, types.TypeMsgBeginRedelegate},
+		{simappparams.DefaultWeightMsgCancelUnbondingDelegation, types.ModuleName, types.TypeMsgCancelUnbondingDelegation},
 	}
 
 	for i, w := range weightesOps {
@@ -90,6 +91,56 @@ func TestSimulateMsgCreateValidator(t *testing.T) {
 	require.Equal(t, []byte{0xa, 0x20, 0x51, 0xde, 0xbd, 0xe8, 0xfa, 0xdf, 0x4e, 0xfc, 0x33, 0xa5, 0x16, 0x94, 0xf6, 0xee, 0xd3, 0x69, 0x7a, 0x7a, 0x1c, 0x2d, 0x50, 0xb6, 0x2, 0xf7, 0x16, 0x4e, 0x66, 0x9f, 0xff, 0x38, 0x91, 0x9b}, msg.Pubkey.Value)
 	require.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.DelegatorAddress)
 	require.Equal(t, "cosmosvaloper1ghekyjucln7y67ntx7cf27m9dpuxxemnsvnaes", msg.ValidatorAddress)
+	require.Len(t, futureOperations, 0)
+}
+
+// TestSimulateMsgCancelUnbondingDelegation tests the normal scenario of a valid message of type TypeMsgCancelUnbondingDelegation.
+// Abonormal scenarios, where the message is
+func TestSimulateMsgCancelUnbondingDelegation(t *testing.T) {
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	app, ctx, accounts := createTestApp(t, false, r, 3)
+
+	blockTime := time.Now().UTC()
+	ctx = ctx.WithBlockTime(blockTime)
+
+	// remove genesis validator account
+	accounts = accounts[1:]
+
+	// setup accounts[0] as validator
+	validator0 := getTestingValidator0(t, app, ctx, accounts)
+
+	// setup delegation
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
+	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
+	delegator := accounts[1]
+	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
+	app.StakingKeeper.SetDelegation(ctx, delegation)
+	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
+
+	setupValidatorRewards(app, ctx, validator0.GetOperator())
+
+	// unbonding delegation
+	udb := types.NewUnbondingDelegation(delegator.Address, validator0.GetOperator(), app.LastBlockHeight(), blockTime.Add(2*time.Minute), delTokens)
+	app.StakingKeeper.SetUnbondingDelegation(ctx, udb)
+	setupValidatorRewards(app, ctx, validator0.GetOperator())
+
+	// begin a new block
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
+
+	// execute operation
+	op := simulation.SimulateMsgCancelUnbondingDelegate(app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
+	accounts = []simtypes.Account{accounts[1]}
+	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
+	require.NoError(t, err)
+
+	var msg types.MsgCancelUnbondingDelegation
+	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+
+	require.True(t, operationMsg.OK)
+	require.Equal(t, types.TypeMsgCancelUnbondingDelegation, msg.Type())
+	require.Equal(t, delegator.Address.String(), msg.DelegatorAddress)
+	require.Equal(t, validator0.GetOperator().String(), msg.ValidatorAddress)
 	require.Len(t, futureOperations, 0)
 }
 

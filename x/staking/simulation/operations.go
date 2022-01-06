@@ -35,7 +35,7 @@ func WeightedOperations(
 		weightMsgDelegate                  int
 		weightMsgUndelegate                int
 		weightMsgBeginRedelegate           int
-		weightMsgCancelUnbondingDelegation int
+		//weightMsgCancelUnbondingDelegation int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreateValidator, &weightMsgCreateValidator, nil,
@@ -68,11 +68,11 @@ func WeightedOperations(
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgCancelUnbondingDelegation, &weightMsgCancelUnbondingDelegation, nil,
-		func(_ *rand.Rand) {
-			weightMsgCancelUnbondingDelegation = simappparams.DefaultWeightMsgBeginRedelegate
-		},
-	)
+	//appParams.GetOrGenerate(cdc, OpWeightMsgCancelUnbondingDelegation, &weightMsgCancelUnbondingDelegation, nil,
+	//	func(_ *rand.Rand) {
+	//		weightMsgCancelUnbondingDelegation = simappparams.DefaultWeightMsgCancelUnbondingDelegation
+	//	},
+	//)
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
@@ -95,10 +95,10 @@ func WeightedOperations(
 			weightMsgBeginRedelegate,
 			SimulateMsgBeginRedelegate(ak, bk, k),
 		),
-		simulation.NewWeightedOperation(
-			weightMsgCancelUnbondingDelegation,
-			SimulateMsgCancelUndelegate(ak, bk, k),
-		),
+		//simulation.NewWeightedOperation(
+		//	weightMsgCancelUnbondingDelegation,
+		//	SimulateMsgCancelUnbondingDelegate(ak, bk, k),
+		//),
 	}
 }
 
@@ -382,8 +382,8 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 	}
 }
 
-// SimulateMsgCancelUndelegate generates a MsgUndelegate with random values
-func SimulateMsgCancelUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
+// SimulateMsgCancelUnbondingDelegate generates a MsgCancelUnbondingDelegate with random values
+func SimulateMsgCancelUnbondingDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {

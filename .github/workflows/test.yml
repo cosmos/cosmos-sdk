@@ -10,7 +10,7 @@ jobs:
   install-tparse:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v2.1.4
+      - uses: actions/setup-go@v2.1.5
         with:
           go-version: 1.17
       - name: Display go version
@@ -30,10 +30,10 @@ jobs:
         go-arch: ["amd64", "arm", "arm64"]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.4
+      - uses: actions/setup-go@v2.1.5
         with:
           go-version: 1.17
-      - uses: technote-space/get-diff-action@v5
+      - uses: technote-space/get-diff-action@v6.0.1
         id: git_diff
         with:
           PATTERNS: |
@@ -51,10 +51,10 @@ jobs:
     container: tendermintdev/docker-tm-db-testing
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.4
+      - uses: actions/setup-go@v2.1.5
         with:
           go-version: 1.17
-      - uses: technote-space/get-diff-action@v5
+      - uses: technote-space/get-diff-action@v6.0.1
         id: git_diff
         with:
           PATTERNS: |
@@ -105,10 +105,10 @@ jobs:
         part: ["00", "01", "02", "03"]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.4
+      - uses: actions/setup-go@v2.1.5
         with:
           go-version: 1.17
-      - uses: technote-space/get-diff-action@v5
+      - uses: technote-space/get-diff-action@v6.0.1
         with:
           PATTERNS: |
             **/**.go
@@ -132,7 +132,7 @@ jobs:
     needs: tests
     steps:
       - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v5
+      - uses: technote-space/get-diff-action@v6.0.1
         with:
           PATTERNS: |
             **/**.go
@@ -187,10 +187,10 @@ jobs:
         part: ["00", "01", "02", "03"]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.4
+      - uses: actions/setup-go@v2.1.5
         with:
           go-version: 1.17
-      - uses: technote-space/get-diff-action@v5
+      - uses: technote-space/get-diff-action@v6.0.1
         with:
           PATTERNS: |
             **/**.go
@@ -214,7 +214,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v5
+      - uses: technote-space/get-diff-action@v6.0.1
         id: git_diff
         with:
           PATTERNS: |
@@ -231,10 +231,10 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.4
+      - uses: actions/setup-go@v2.1.5
         with:
           go-version: 1.17
-      - uses: technote-space/get-diff-action@v5
+      - uses: technote-space/get-diff-action@v6.0.1
         id: git_diff
         with:
           PATTERNS: |

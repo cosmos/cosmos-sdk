@@ -1,4 +1,3 @@
-<!-- This file is auto-generated. Please do not modify it yourself. -->
 # Protobuf Documentation
 <a name="top"></a>
 
@@ -11265,3 +11264,4 @@ Msg defines the bank Msg service.
 | <a name="string" /> string | A string must always contain UTF-8 encoded or 7-bit ASCII text. | string | String | str/unicode | string | string | string | String (UTF-8) |
 | <a name="bytes" /> bytes | May contain any arbitrary sequence of bytes. | string | ByteString | str | []byte | ByteString | string | String (ASCII-8BIT) |
 
+This file has been replaced by [Cosmos-SDK Buf Proto-docs](https://buf.build/cosmos/cosmos-sdk/docs/main)

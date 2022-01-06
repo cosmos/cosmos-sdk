@@ -753,7 +753,7 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsWithMode() {
+func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	require := s.Require()
 	val := s.network.Validators[0]
 	val1 := s.network.Validators[1]
@@ -801,7 +801,6 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsWithMode() {
 	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	require.NoError(err)
 
-	clientCtx = clientCtx.WithBroadcastMode("sync")
 	args = []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -815,7 +814,6 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsWithMode() {
 	require.NoError(err)
 	s.Require().Equal(2, len(strings.Split(strings.Trim(out.String(), "\n"), "\n")))
 
-	clientCtx = clientCtx.WithBroadcastMode("async")
 	args = []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),

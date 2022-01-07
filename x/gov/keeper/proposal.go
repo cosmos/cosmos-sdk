@@ -130,8 +130,14 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 	if !ok {
 		panic(fmt.Sprintf("couldn't find proposal with id#%d", proposalID))
 	}
-	keeper.RemoveFromInactiveProposalQueue(ctx, proposalID, *proposal.DepositEndTime)
-	keeper.RemoveFromActiveProposalQueue(ctx, proposalID, *proposal.VotingEndTime)
+
+	if proposal.DepositEndTime != nil {
+		keeper.RemoveFromInactiveProposalQueue(ctx, proposalID, *proposal.DepositEndTime)
+	}
+	if proposal.VotingEndTime != nil {
+		keeper.RemoveFromActiveProposalQueue(ctx, proposalID, *proposal.VotingEndTime)
+	}
+	
 	store.Delete(types.ProposalKey(proposalID))
 }
 

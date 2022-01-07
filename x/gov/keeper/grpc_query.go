@@ -229,12 +229,12 @@ func (q Keeper) Deposits(c context.Context, req *v1beta2.QueryDepositsRequest) (
 	depositStore := prefix.NewStore(store, types.DepositsKey(req.ProposalId))
 
 	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key []byte, value []byte) error {
-		var deposit *v1beta2.Deposit
-		if err := q.cdc.Unmarshal(value, deposit); err != nil {
+		var deposit v1beta2.Deposit
+		if err := q.cdc.Unmarshal(value, &deposit); err != nil {
 			return err
 		}
 
-		deposits = append(deposits, deposit)
+		deposits = append(deposits, &deposit)
 		return nil
 	})
 

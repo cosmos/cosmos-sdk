@@ -67,4 +67,4 @@ replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
-replace github.com/tendermint/tendermint => github.com/terra-money/tendermint v0.34.14
+replace github.com/tendermint/tendermint => github.com/terra-money/tendermint v0.34.14-terra.1

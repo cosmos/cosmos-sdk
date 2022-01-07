@@ -1,6 +1,6 @@
 github.com/cosmos/cosmos-proto v1.0.0-alpha1/go.mod h1:msdDWOvfStHLG+Z2y2SJ0dcqimZ2vc8M1MPnZ4jOF7U=
-github.com/cosmos/cosmos-proto v1.0.0-alpha4 h1:96Imv2begXbNTj/SQyPftxKOCgy4ANwbPGafLHTlGoc=
-github.com/cosmos/cosmos-proto v1.0.0-alpha4/go.mod h1:msdDWOvfStHLG+Z2y2SJ0dcqimZ2vc8M1MPnZ4jOF7U=
+github.com/cosmos/cosmos-proto v1.0.0-alpha6 h1:N2BvV2AyzGAXCJnvlw1pMzEQ+76tj5FDBrkYQYIDCdU=
+github.com/cosmos/cosmos-proto v1.0.0-alpha6/go.mod h1:msdDWOvfStHLG+Z2y2SJ0dcqimZ2vc8M1MPnZ4jOF7U=
 github.com/cosmos/cosmos-sdk/api v0.1.0-alpha1 h1:inilHdPSVUHHp8R+uW2MNPXkC3AFmTySE1kHWwc8XjM=
 github.com/cosmos/cosmos-sdk/api v0.1.0-alpha1/go.mod h1:cJoD3zcka5CZsRloy0auZiVDQtlXAfZSUxLyJMVJ/uk=
 github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.2 h1:bBglNlra8ZHb4dmbEE8V85ihLA+DkriSm7tcx6x/JWo=

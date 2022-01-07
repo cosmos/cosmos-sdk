@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	govutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 // Proposal flags
@@ -52,7 +53,7 @@ var ProposalFlags = []string{
 // under the governance CLI (eg. parameter change proposals).
 func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
 	govTxCmd := &cobra.Command{
-		Use:                        v1beta1.ModuleName,
+		Use:                        v1beta2.ModuleName,
 		Short:                      "Governance transactions subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
@@ -78,8 +79,8 @@ func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
 // NewCmdSubmitProposal implements submitting a proposal transaction command.
 func NewCmdSubmitProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "submit-proposal",
-		Short: "Submit a proposal along with an initial deposit",
+		Use:   "legacy-submit-proposal",
+		Short: "Submit a legacy proposal along with an initial deposit",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Submit a proposal along with an initial deposit.
 Proposal title, description, type and deposit can be given directly or through a proposal JSON file.
@@ -177,7 +178,7 @@ $ %s tx gov deposit 1 10stake --from mykey
 				return err
 			}
 
-			msg := v1beta1.NewMsgDeposit(from, proposalID, amount)
+			msg := v1beta2.NewMsgDeposit(from, proposalID, amount)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -219,13 +220,13 @@ $ %s tx gov vote 1 yes --from mykey
 			}
 
 			// Find out which vote option user chose
-			byteVoteOption, err := v1beta1.VoteOptionFromString(govutils.NormalizeVoteOption(args[1]))
+			byteVoteOption, err := v1beta2.VoteOptionFromString(govutils.NormalizeVoteOption(args[1]))
 			if err != nil {
 				return err
 			}
 
 			// Build vote message and run basic validation
-			msg := v1beta1.NewMsgVote(from, proposalID, byteVoteOption)
+			msg := v1beta2.NewMsgVote(from, proposalID, byteVoteOption)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -268,13 +269,13 @@ $ %s tx gov weighted-vote 1 yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05 --from
 			}
 
 			// Figure out which vote options user chose
-			options, err := v1beta1.WeightedVoteOptionsFromString(govutils.NormalizeWeightedVoteOptions(args[1]))
+			options, err := v1beta2.WeightedVoteOptionsFromString(govutils.NormalizeWeightedVoteOptions(args[1]))
 			if err != nil {
 				return err
 			}
 
 			// Build vote message and run basic validation
-			msg := v1beta1.NewMsgVoteWeighted(from, proposalID, options)
+			msg := v1beta2.NewMsgVoteWeighted(from, proposalID, options)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

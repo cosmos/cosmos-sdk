@@ -13,6 +13,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 // Keeper defines the governance module Keeper
@@ -140,7 +141,7 @@ func (keeper Keeper) RemoveFromInactiveProposalQueue(ctx sdk.Context, proposalID
 
 // IterateActiveProposalsQueue iterates over the proposals in the active proposal queue
 // and performs a callback function
-func (keeper Keeper) IterateActiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal types.Proposal) (stop bool)) {
+func (keeper Keeper) IterateActiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal v1beta2.Proposal) (stop bool)) {
 	iterator := keeper.ActiveProposalQueueIterator(ctx, endTime)
 
 	defer iterator.Close()
@@ -159,7 +160,7 @@ func (keeper Keeper) IterateActiveProposalsQueue(ctx sdk.Context, endTime time.T
 
 // IterateInactiveProposalsQueue iterates over the proposals in the inactive proposal queue
 // and performs a callback function
-func (keeper Keeper) IterateInactiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal types.Proposal) (stop bool)) {
+func (keeper Keeper) IterateInactiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal v1beta2.Proposal) (stop bool)) {
 	iterator := keeper.InactiveProposalQueueIterator(ctx, endTime)
 
 	defer iterator.Close()

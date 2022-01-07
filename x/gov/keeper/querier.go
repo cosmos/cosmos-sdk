@@ -223,7 +223,7 @@ func queryProposals(ctx sdk.Context, _ []string, req abci.RequestQuery, keeper K
 
 	proposals := keeper.GetProposalsFiltered(ctx, params)
 	if proposals == nil {
-		proposals = types.Proposals{}
+		proposals = v1beta2.Proposals{}
 	}
 
 	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, proposals)

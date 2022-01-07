@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -115,7 +116,7 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 
-	var proposal types.MsgSubmitProposal
+	var proposal v1beta2.MsgSubmitProposal
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &proposal)
 
 	require.True(t, operationMsg.OK)
@@ -124,7 +125,7 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 	msgs, err := proposal.GetMsgs()
 	require.NoError(t, err)
 	require.Len(t, msgs, 1)
-	contentMsg, ok := msgs[0].(*types.MsgContent)
+	contentMsg, ok := msgs[0].(*v1beta2.MsgContent)
 	require.True(t, ok)
 	content := keeper.ContentFromMessage(contentMsg)
 	require.Equal(t, "title-3: ZBSpYuLyYggwexjxusrBqDOTtGTOWeLrQKjLxzIivHSlcxgdXhhuTSkuxKGLwQvuyNhYFmBZHeAerqyNEUzXPFGkqEGqiQWIXnku", content.GetTitle())
@@ -167,7 +168,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 
-	var msg types.MsgDeposit
+	var msg v1beta2.MsgDeposit
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)
@@ -212,13 +213,13 @@ func TestSimulateMsgVote(t *testing.T) {
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 
-	var msg types.MsgVote
+	var msg v1beta2.MsgVote
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, uint64(1), msg.ProposalId)
 	require.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Voter)
-	require.Equal(t, types.OptionYes, msg.Option)
+	require.Equal(t, v1beta2.OptionYes, msg.Option)
 	require.Equal(t, "gov", msg.Route())
 	require.Equal(t, types.TypeMsgVote, msg.Type())
 }
@@ -256,7 +257,7 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 
-	var msg types.MsgVoteWeighted
+	var msg v1beta2.MsgVoteWeighted
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)

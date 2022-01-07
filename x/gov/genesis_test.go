@@ -18,6 +18,7 @@ import (
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -51,8 +52,8 @@ func TestImportExportQueues(t *testing.T) {
 	require.True(t, ok)
 	proposal2, ok = app.GovKeeper.GetProposal(ctx, proposalID2)
 	require.True(t, ok)
-	require.True(t, proposal1.Status == types.StatusDepositPeriod)
-	require.True(t, proposal2.Status == types.StatusVotingPeriod)
+	require.True(t, proposal1.Status == v1beta2.StatusDepositPeriod)
+	require.True(t, proposal2.Status == v1beta2.StatusVotingPeriod)
 
 	authGenState := auth.ExportGenesis(ctx, app.AccountKeeper)
 	bankGenState := app.BankKeeper.ExportGenesis(ctx)
@@ -122,8 +123,8 @@ func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	require.Panics(t, func() {
-		gov.InitGenesis(ctx, app.AccountKeeper, app.BankKeeper, app.GovKeeper, &types.GenesisState{
-			Deposits: types.Deposits{
+		gov.InitGenesis(ctx, app.AccountKeeper, app.BankKeeper, app.GovKeeper, &v1beta2.GenesisState{
+			Deposits: v1beta2.Deposits{
 				{
 					ProposalId: 1234,
 					Depositor:  "me",

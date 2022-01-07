@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 func (suite *KeeperTestSuite) TestGetSetProposal() {
@@ -78,20 +79,20 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 
 func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 	proposalID := uint64(1)
-	status := []types.ProposalStatus{types.StatusDepositPeriod, types.StatusVotingPeriod}
+	status := []v1beta2.ProposalStatus{v1beta2.StatusDepositPeriod, v1beta2.StatusVotingPeriod}
 
 	addr1 := sdk.AccAddress("foo_________________")
 
 	for _, s := range status {
 		for i := 0; i < 50; i++ {
-			p, err := types.NewProposal(TestProposal, proposalID, time.Now(), time.Now())
+			p, err := v1beta2.NewProposal(TestProposal, proposalID, time.Now(), time.Now())
 			suite.Require().NoError(err)
 
 			p.Status = s
 
 			if i%2 == 0 {
-				d := types.NewDeposit(proposalID, addr1, nil)
-				v := types.NewVote(proposalID, addr1, types.NewNonSplitVoteOption(types.OptionYes))
+				d := v1beta2.NewDeposit(proposalID, addr1, nil)
+				v := v1beta2.NewVote(proposalID, addr1, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))
 				suite.app.GovKeeper.SetDeposit(suite.ctx, d)
 				suite.app.GovKeeper.SetVote(suite.ctx, v)
 			}
@@ -102,21 +103,21 @@ func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 	}
 
 	testCases := []struct {
-		params             types.QueryProposalsParams
+		params             v1beta2.QueryProposalsParams
 		expectedNumResults int
 	}{
-		{types.NewQueryProposalsParams(1, 50, types.StatusNil, nil, nil), 50},
-		{types.NewQueryProposalsParams(1, 50, types.StatusDepositPeriod, nil, nil), 50},
-		{types.NewQueryProposalsParams(1, 50, types.StatusVotingPeriod, nil, nil), 50},
-		{types.NewQueryProposalsParams(1, 25, types.StatusNil, nil, nil), 25},
-		{types.NewQueryProposalsParams(2, 25, types.StatusNil, nil, nil), 25},
-		{types.NewQueryProposalsParams(1, 50, types.StatusRejected, nil, nil), 0},
-		{types.NewQueryProposalsParams(1, 50, types.StatusNil, addr1, nil), 50},
-		{types.NewQueryProposalsParams(1, 50, types.StatusNil, nil, addr1), 50},
-		{types.NewQueryProposalsParams(1, 50, types.StatusNil, addr1, addr1), 50},
-		{types.NewQueryProposalsParams(1, 50, types.StatusDepositPeriod, addr1, addr1), 25},
-		{types.NewQueryProposalsParams(1, 50, types.StatusDepositPeriod, nil, nil), 50},
-		{types.NewQueryProposalsParams(1, 50, types.StatusVotingPeriod, nil, nil), 50},
+		{v1beta2.NewQueryProposalsParams(1, 50, v1beta2.StatusNil, nil, nil), 50},
+		{v1beta2.NewQueryProposalsParams(1, 50, v1beta2.StatusDepositPeriod, nil, nil), 50},
+		{v1beta2.NewQueryProposalsParams(1, 50, v1beta2.StatusVotingPeriod, nil, nil), 50},
+		{v1beta2.NewQueryProposalsParams(1, 25, v1beta2.StatusNil, nil, nil), 25},
+		{v1beta2.NewQueryProposalsParams(2, 25, v1beta2.StatusNil, nil, nil), 25},
+		{v1beta2.NewQueryProposalsParams(1, 50, v1beta2.StatusRejected, nil, nil), 0},
+		{v1beta2.NewQueryProposalsParams(1, 50, v1beta2.StatusNil, addr1, nil), 50},
+		{v1beta2.NewQueryProposalsParams(1, 50, v1beta2.StatusNil, nil, addr1), 50},
+		{v1beta2.NewQueryProposalsParams(1, 50, v1beta2.StatusNil, addr1, addr1), 50},
+		{v1beta2.NewQueryProposalsParams(1, 50, v1beta2.StatusDepositPeriod, addr1, addr1), 25},
+		{v1beta2.NewQueryProposalsParams(1, 50, v1beta2.StatusDepositPeriod, nil, nil), 50},
+		{v1beta2.NewQueryProposalsParams(1, 50, v1beta2.StatusVotingPeriod, nil, nil), 50},
 	}
 
 	for i, tc := range testCases {
@@ -125,7 +126,7 @@ func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 			suite.Require().Len(proposals, tc.expectedNumResults)
 
 			for _, p := range proposals {
-				if types.ValidProposalStatus(tc.params.ProposalStatus) {
+				if v1beta2.ValidProposalStatus(tc.params.ProposalStatus) {
 					suite.Require().Equal(tc.params.ProposalStatus, p.Status)
 				}
 			}

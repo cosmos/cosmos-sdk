@@ -15,7 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
@@ -23,7 +22,7 @@ const custom = "custom"
 
 func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier) (v1beta2.DepositParams, v1beta2.VotingParams, v1beta2.TallyParams) {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, v1beta2.QuerierRoute, v1beta2.QueryParams, v1beta2.ParamDeposit}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, v1beta2.QueryParams, v1beta2.ParamDeposit}, "/"),
 		Data: []byte{},
 	}
 
@@ -35,7 +34,7 @@ func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, que
 	require.NoError(t, cdc.UnmarshalJSON(bz, &depositParams))
 
 	query = abci.RequestQuery{
-		Path: strings.Join([]string{custom, v1beta2.QuerierRoute, v1beta2.QueryParams, v1beta2.ParamVoting}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, v1beta2.QueryParams, v1beta2.ParamVoting}, "/"),
 		Data: []byte{},
 	}
 
@@ -47,7 +46,7 @@ func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, que
 	require.NoError(t, cdc.UnmarshalJSON(bz, &votingParams))
 
 	query = abci.RequestQuery{
-		Path: strings.Join([]string{custom, v1beta2.QuerierRoute, v1beta2.QueryParams, v1beta2.ParamTallying}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, v1beta2.QueryParams, v1beta2.ParamTallying}, "/"),
 		Data: []byte{},
 	}
 
@@ -67,7 +66,7 @@ func getQueriedProposals(
 ) []*v1beta2.Proposal {
 
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, v1beta2.QuerierRoute, v1beta2.QueryProposals}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, v1beta2.QueryProposals}, "/"),
 		Data: cdc.MustMarshalJSON(v1beta2.NewQueryProposalsParams(page, limit, status, voter, depositor)),
 	}
 
@@ -83,7 +82,7 @@ func getQueriedProposals(
 
 func getQueriedDeposit(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier, proposalID uint64, depositor sdk.AccAddress) v1beta2.Deposit {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, v1beta2.QuerierRoute, v1beta2.QueryDeposit}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, v1beta2.QueryDeposit}, "/"),
 		Data: cdc.MustMarshalJSON(v1beta2.NewQueryDepositParams(proposalID, depositor)),
 	}
 
@@ -99,7 +98,7 @@ func getQueriedDeposit(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, qu
 
 func getQueriedDeposits(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier, proposalID uint64) []v1beta2.Deposit {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, v1beta2.QuerierRoute, v1beta2.QueryDeposits}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, v1beta2.QueryDeposits}, "/"),
 		Data: cdc.MustMarshalJSON(v1beta2.NewQueryProposalParams(proposalID)),
 	}
 
@@ -115,7 +114,7 @@ func getQueriedDeposits(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, q
 
 func getQueriedVote(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier, proposalID uint64, voter sdk.AccAddress) v1beta2.Vote {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, v1beta2.QuerierRoute, v1beta2.QueryVote}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, v1beta2.QueryVote}, "/"),
 		Data: cdc.MustMarshalJSON(v1beta2.NewQueryVoteParams(proposalID, voter)),
 	}
 
@@ -132,7 +131,7 @@ func getQueriedVote(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, queri
 func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier,
 	proposalID uint64, page, limit int) []v1beta2.Vote {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, v1beta2.QuerierRoute, v1beta2.QueryVote}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, v1beta2.QueryVote}, "/"),
 		Data: cdc.MustMarshalJSON(v1beta2.NewQueryProposalVotesParams(proposalID, page, limit)),
 	}
 
@@ -201,9 +200,10 @@ func TestQueries(t *testing.T) {
 	_, err = app.GovKeeper.AddDeposit(ctx, deposit4.ProposalId, depositer4, deposit4.Amount)
 	require.NoError(t, err)
 
-	proposal2.TotalDeposit = proposal2.TotalDeposit.Add(deposit4.Amount...)
-	proposal2.Status = v1beta1.StatusVotingPeriod
-	proposal2.VotingEndTime = proposal2.VotingEndTime.Add(v1beta2.DefaultPeriod)
+	proposal2.TotalDeposit = sdk.NewCoins(proposal2.TotalDeposit...).Add(deposit4.Amount...)
+	proposal2.Status = v1beta2.StatusVotingPeriod
+	votingEndTime := proposal2.VotingEndTime.Add(v1beta2.DefaultPeriod)
+	proposal2.VotingEndTime = &votingEndTime
 
 	deposit5 := v1beta2.NewDeposit(proposal3.ProposalId, TestAddrs[1], depositParams.MinDeposit)
 	depositer5, err := sdk.AccAddressFromBech32(deposit5.Depositor)
@@ -211,9 +211,10 @@ func TestQueries(t *testing.T) {
 	_, err = app.GovKeeper.AddDeposit(ctx, deposit5.ProposalId, depositer5, deposit5.Amount)
 	require.NoError(t, err)
 
-	proposal3.TotalDeposit = proposal3.TotalDeposit.Add(deposit5.Amount...)
-	proposal3.Status = v1beta1.StatusVotingPeriod
-	proposal3.VotingEndTime = proposal3.VotingEndTime.Add(v1beta2.DefaultPeriod)
+	proposal3.TotalDeposit = sdk.NewCoins(proposal3.TotalDeposit...).Add(deposit5.Amount...)
+	proposal3.Status = v1beta2.StatusVotingPeriod
+	votingEndTime = proposal3.VotingEndTime.Add(v1beta2.DefaultPeriod)
+	proposal3.VotingEndTime = &votingEndTime
 	// total deposit of TestAddrs[1] on proposal #3 is worth the proposal deposit + individual deposit
 	deposit5.Amount = sdk.NewCoins(deposit5.Amount...).Add(deposit3.Amount...)
 

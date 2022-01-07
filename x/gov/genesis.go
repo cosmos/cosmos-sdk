@@ -6,10 +6,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 // InitGenesis - store genesis parameters
-func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, data *types.GenesisState) {
+func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, data *v1beta2.GenesisState) {
 	k.SetProposalID(ctx, data.StartingProposalId)
 	k.SetDepositParams(ctx, *data.DepositParams)
 	k.SetVotingParams(ctx, *data.VotingParams)
@@ -54,15 +55,15 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 }
 
 // ExportGenesis - output genesis parameters
-func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
+func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *v1beta2.GenesisState {
 	startingProposalID, _ := k.GetProposalID(ctx)
 	depositParams := k.GetDepositParams(ctx)
 	votingParams := k.GetVotingParams(ctx)
 	tallyParams := k.GetTallyParams(ctx)
 	proposals := k.GetProposals(ctx)
 
-	var proposalsDeposits types.Deposits
-	var proposalsVotes types.Votes
+	var proposalsDeposits v1beta2.Deposits
+	var proposalsVotes v1beta2.Votes
 	for _, proposal := range proposals {
 		deposits := k.GetDeposits(ctx, proposal.ProposalId)
 		proposalsDeposits = append(proposalsDeposits, deposits...)
@@ -71,7 +72,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		proposalsVotes = append(proposalsVotes, votes...)
 	}
 
-	return &types.GenesisState{
+	return &v1beta2.GenesisState{
 		StartingProposalId: startingProposalID,
 		Deposits:           proposalsDeposits,
 		Votes:              proposalsVotes,

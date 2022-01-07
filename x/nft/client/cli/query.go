@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -14,7 +15,7 @@ import (
 
 // Flag names and values
 const (
-	FlagOwner = "owner"
+	FlagOwner   = "owner"
 	FlagClassID = "class-id"
 )
 
@@ -153,12 +154,24 @@ $ %s query %s nfts <class-id> --owner=<owner>
 				return err
 			}
 
-			classID,err := cmd.Flags().GetString(FlagClassID)
+			if len(owner) > 0 {
+				if _, err := sdk.AccAddressFromBech32(owner); err != nil {
+					return err
+				}
+			}
+
+			classID, err := cmd.Flags().GetString(FlagClassID)
 			if err != nil {
 				return err
 			}
 
-			if len(owner) == 0  && len(classID) == 0 {
+			if len(classID) > 0 {
+				if err := nft.ValidateClassID(classID); err != nil {
+					return err
+				}
+			}
+
+			if len(owner) == 0 && len(classID) == 0 {
 				return fmt.Errorf("must provide at least one of classID or owner")
 			}
 

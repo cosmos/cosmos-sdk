@@ -21,97 +21,6 @@ type msgServer struct {
 	Keeper
 }
 
-// CancelUnbondingDelegation defines a method for canceling the unbonding delegation
-func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.MsgCancelUnbondingDelegation) (*types.MsgCancelUnbondingDelegationResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
-	if err != nil {
-		return nil, err
-	}
-	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	if err != nil {
-		return nil, err
-	}
-	bondDenom := k.BondDenom(ctx)
-	if msg.Amount.Denom != bondDenom {
-		return nil, sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", msg.Amount.Denom, bondDenom,
-		)
-	}
-
-	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddress, valAddr)
-	if !found {
-		return nil, status.Errorf(
-			codes.NotFound,
-			"unbonding delegation with delegator %s not found for validator %s",
-			msg.DelegatorAddress, msg.ValidatorAddress)
-	}
-
-	var (
-		foundUnBondingAtHeight = false
-		unbondEntry            types.UnbondingDelegationEntry
-		unbondEntryIndex       int64
-	)
-
-	for i, entry := range ubd.Entries {
-		if entry.CreationHeight == int64(msg.CreationHeight) {
-			foundUnBondingAtHeight = true
-			unbondEntry = entry
-			unbondEntryIndex = int64(i)
-			break
-		}
-	}
-
-	if !foundUnBondingAtHeight {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "unbonding delegation is not found at block height %d", msg.CreationHeight)
-	}
-
-	if unbondEntry.Balance.LT(msg.Amount.Amount) {
-		return nil, sdkerrors.Wrap(types.ErrNotEnoughDelegationShares, msg.Amount.String())
-	}
-
-	amount := unbondEntry.Balance.Sub(msg.Amount.Amount)
-	if amount.Equal(sdk.NewInt(0)) {
-		// remove from ubd
-		ubd.RemoveEntry(unbondEntryIndex)
-	} else {
-		// update the unbondingDelegationEntryBalance and InitialBalance for ubd entry
-		ubd.Entries[unbondEntryIndex].Balance = amount
-		ubd.Entries[unbondEntryIndex].InitialBalance = ubd.Entries[unbondEntryIndex].InitialBalance.Sub(msg.Amount.Amount)
-	}
-
-	// set the unbonding delegation or remove it if there are no more entries
-	if len(ubd.Entries) == 0 {
-		k.RemoveUnbondingDelegation(ctx, ubd)
-	} else {
-		k.SetUnbondingDelegation(ctx, ubd)
-	}
-
-	// get validator
-	validator, found := k.GetValidator(ctx, valAddr)
-	if !found {
-		return nil, types.ErrNoValidatorFound
-	}
-
-	// delegate the unbonding delegation amount to validator back
-	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, types.Unbonding, validator, false)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeCancelUnbondDelegation,
-			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
-			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
-			sdk.NewAttribute(types.AttributeKeyCreationHeight, strconv.FormatUint(msg.CreationHeight, 10)),
-		),
-	)
-
-	return &types.MsgCancelUnbondingDelegationResponse{}, nil
-}
-
 // NewMsgServerImpl returns an implementation of the bank MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(keeper Keeper) types.MsgServer {
@@ -474,4 +383,95 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	return &types.MsgUndelegateResponse{
 		CompletionTime: completionTime,
 	}, nil
+}
+
+// CancelUnbondingDelegation defines a method for canceling the unbonding delegation
+// and delegate back to validator
+func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.MsgCancelUnbondingDelegation) (*types.MsgCancelUnbondingDelegationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	bondDenom := k.BondDenom(ctx)
+	if msg.Amount.Denom != bondDenom {
+		return nil, sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", msg.Amount.Denom, bondDenom,
+		)
+	}
+
+	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddress, valAddr)
+	if !found {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"unbonding delegation with delegator %s not found for validator %s",
+			msg.DelegatorAddress, msg.ValidatorAddress)
+	}
+
+	var (
+		foundUnBondingAtHeight = false
+		unbondEntry            types.UnbondingDelegationEntry
+		unbondEntryIndex       int64
+	)
+
+	for i, entry := range ubd.Entries {
+		if entry.CreationHeight == int64(msg.CreationHeight) {
+			foundUnBondingAtHeight = true
+			unbondEntry = entry
+			unbondEntryIndex = int64(i)
+			break
+		}
+	}
+	if !foundUnBondingAtHeight {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "unbonding delegation is not found at block height %d", msg.CreationHeight)
+	}
+
+	if unbondEntry.Balance.LT(msg.Amount.Amount) {
+		return nil, sdkerrors.Wrap(types.ErrNotEnoughDelegationShares, msg.Amount.String())
+	}
+
+	amount := unbondEntry.Balance.Sub(msg.Amount.Amount)
+	if amount.Equal(sdk.NewInt(0)) {
+		// remove from ubd
+		ubd.RemoveEntry(unbondEntryIndex)
+	} else {
+		// update the unbondingDelegationEntryBalance and InitialBalance for ubd entry
+		ubd.Entries[unbondEntryIndex].Balance = amount
+		ubd.Entries[unbondEntryIndex].InitialBalance = ubd.Entries[unbondEntryIndex].InitialBalance.Sub(msg.Amount.Amount)
+	}
+
+	// set the unbonding delegation or remove it if there are no more entries
+	if len(ubd.Entries) == 0 {
+		k.RemoveUnbondingDelegation(ctx, ubd)
+	} else {
+		k.SetUnbondingDelegation(ctx, ubd)
+	}
+
+	// get validator
+	validator, found := k.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
+	// delegate the unbonding delegation amount to validator back
+	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, types.Unbonding, validator, false)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeCancelUnbondDelegation,
+			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
+			sdk.NewAttribute(types.AttributeKeyCreationHeight, strconv.FormatUint(msg.CreationHeight, 10)),
+		),
+	)
+
+	return &types.MsgCancelUnbondingDelegationResponse{}, nil
 }

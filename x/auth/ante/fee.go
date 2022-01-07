@@ -69,11 +69,8 @@ func (dfd *DeductFeeDecorator) innerValidateTx(ctx context.Context, tx transacti
 		return 0, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must implement the FeeTx interface")
 	}
 
-	execMode := dfd.accountKeeper.GetEnvironment().TransactionService.ExecMode(ctx)
-	headerInfo := dfd.accountKeeper.GetEnvironment().HeaderService.HeaderInfo(ctx)
-
-	if execMode != transaction.ExecModeSimulate && headerInfo.Height > 0 && feeTx.GetGas() == 0 {
-		return 0, errorsmod.Wrap(sdkerrors.ErrInvalidGasLimit, "must provide positive gas")
+	if addr := dfd.ak.GetModuleAddress(types.FeeCollectorName); addr == nil {
+		return ctx, fmt.Errorf("Fee collector module account (%s) has not been set", types.FeeCollectorName)
 	}
 
 	fee := feeTx.GetFee()

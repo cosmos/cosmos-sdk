@@ -377,14 +377,14 @@ func (s *IntegrationTestSuite) TestCmdGetProposal() {
 		args      []string
 		expectErr bool
 	}{
-		// {
-		// 	"get non existing proposal",
-		// 	[]string{
-		// 		"10",
-		// 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-		// 	},
-		// 	true,
-		// },
+		{
+			"get non existing proposal",
+			[]string{
+				"10",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
 		{
 			"get proposal with json response",
 			[]string{

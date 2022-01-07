@@ -3,7 +3,8 @@
 set -euo pipefail
 
 if [ -z ${1+x} ]; then
-  echo "Usage:
+  echo "USAGE:
+    ./scripts/go-update-dep-all.sh <go-mod-dependency>
   This command updates a dependency in all of the go.mod files which import it.
   It should be called with a single argument which is the go module path of the dependency,
   with an optional version specified by @."

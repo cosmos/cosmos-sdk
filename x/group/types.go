@@ -256,13 +256,13 @@ func (p Proposal) ValidateBasic() error {
 	}
 	_, err := sdk.AccAddressFromBech32(p.Address)
 	if err != nil {
-		return sdkerrors.Wrap(err, "proposer group account address")
+		return sdkerrors.Wrap(err, "proposer group policy address")
 	}
 	if p.GroupVersion == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal group version")
 	}
 	if p.GroupPolicyVersion == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "proposal group account version")
+		return sdkerrors.Wrap(errors.ErrEmpty, "proposal group policy version")
 	}
 	_, err = p.VoteState.GetYesCount()
 	if err != nil {

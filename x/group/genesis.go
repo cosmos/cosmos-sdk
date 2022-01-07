@@ -15,7 +15,6 @@ func NewGenesisState() *GenesisState {
 func (s GenesisState) Validate() error {
 	groups := make(map[uint64]GroupInfo)
 	groupPolicies := make(map[string]GroupPolicyInfo)
-	groupPoliciesWithId := make(map[uint64]GroupPolicyInfo)
 	groupMembers := make(map[uint64]GroupMember)
 	proposals := make(map[uint64]Proposal)
 
@@ -37,7 +36,6 @@ func (s GenesisState) Validate() error {
 			return sdkerrors.Wrap(err, "GroupPolicy validation failed")
 		}
 		groupPolicies[g.Address] = *g
-		groupPoliciesWithId[g.GroupId] = *g
 	}
 
 	for _, g := range s.GroupMembers {
@@ -73,22 +71,7 @@ func (s GenesisState) Validate() error {
 		}
 
 		// check that proposal exists
-		if _, exists := proposals[v.ProposalId]; exists {
-			proposalAddr := proposals[v.ProposalId].Address
-			// check that voter is a group member corresponding to proposal id
-			if _, exists := groupPolicies[proposalAddr]; exists {
-				groupId := groupPolicies[proposalAddr].GroupId
-				if _, exists := groups[groupId]; exists {
-					groupMember := groupMembers[groupId]
-					if groupMember.Member.Address == v.Voter {
-						return nil
-					}
-					return sdkerrors.Wrap(sdkerrors.ErrNotFound, "voter is not a group member corresponding to proposal id")
-				}
-				return sdkerrors.Wrap(sdkerrors.ErrNotFound, "voter is not a group member corresponding to proposal id")
-			}
-			return sdkerrors.Wrap(sdkerrors.ErrNotFound, "voter is not a group member corresponding to proposal id")
-		} else {
+		if _, exists := proposals[v.ProposalId]; !exists {
 			return sdkerrors.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("proposal with ProposalId %d doesn't exist", v.ProposalId))
 		}
 	}

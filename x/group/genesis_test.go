@@ -33,6 +33,7 @@ func TestGenesisStateValidate(t *testing.T) {
 		Threshold: "1",
 		Timeout:   time.Second,
 	})
+	require.NoError(t, err)
 
 	// create another group policy to set invalid decision policy for testing
 	groupPolicy2 := &GroupPolicyInfo{
@@ -163,6 +164,15 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid group policy address",
 			GenesisState{
+				Groups: []*GroupInfo{
+					{
+						GroupId:     1,
+						Admin:       accAddr.String(),
+						Metadata:    []byte("1"),
+						Version:     1,
+						TotalWeight: "1",
+					},
+				},
 				GroupPolicies: []*GroupPolicyInfo{
 					{
 						Address:  "invalid address",
@@ -178,6 +188,15 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid group policy admin",
 			GenesisState{
+				Groups: []*GroupInfo{
+					{
+						GroupId:     1,
+						Admin:       accAddr.String(),
+						Metadata:    []byte("1"),
+						Version:     1,
+						TotalWeight: "1",
+					},
+				},
 				GroupPolicies: []*GroupPolicyInfo{
 					{
 						Address:  accAddr.String(),
@@ -193,6 +212,15 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid group policy's group id",
 			GenesisState{
+				Groups: []*GroupInfo{
+					{
+						GroupId:     1,
+						Admin:       accAddr.String(),
+						Metadata:    []byte("1"),
+						Version:     1,
+						TotalWeight: "1",
+					},
+				},
 				GroupPolicies: []*GroupPolicyInfo{
 					{
 						Address:  accAddr.String(),
@@ -208,6 +236,15 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid group policy version",
 			GenesisState{
+				Groups: []*GroupInfo{
+					{
+						GroupId:     1,
+						Admin:       accAddr.String(),
+						Metadata:    []byte("1"),
+						Version:     1,
+						TotalWeight: "1",
+					},
+				},
 				GroupPolicies: []*GroupPolicyInfo{
 					{
 						Address:  accAddr.String(),
@@ -223,6 +260,15 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid group policy's decision policy",
 			GenesisState{
+				Groups: []*GroupInfo{
+					{
+						GroupId:     1,
+						Admin:       accAddr.String(),
+						Metadata:    []byte("1"),
+						Version:     1,
+						TotalWeight: "1",
+					},
+				},
 				GroupPolicies: []*GroupPolicyInfo{
 					{
 						Address:        accAddr.String(),
@@ -239,6 +285,15 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid group member's group id",
 			GenesisState{
+				Groups: []*GroupInfo{
+					{
+						GroupId:     1,
+						Admin:       accAddr.String(),
+						Metadata:    []byte("1"),
+						Version:     1,
+						TotalWeight: "1",
+					},
+				},
 				GroupMembers: []*GroupMember{
 					{
 						GroupId: 0,
@@ -254,6 +309,15 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid group member address",
 			GenesisState{
+				Groups: []*GroupInfo{
+					{
+						GroupId:     1,
+						Admin:       accAddr.String(),
+						Metadata:    []byte("1"),
+						Version:     1,
+						TotalWeight: "1",
+					},
+				},
 				GroupMembers: []*GroupMember{
 					{
 						GroupId: 1,
@@ -269,12 +333,21 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid group member weight",
 			GenesisState{
+				Groups: []*GroupInfo{
+					{
+						GroupId:     1,
+						Admin:       accAddr.String(),
+						Metadata:    []byte("1"),
+						Version:     1,
+						TotalWeight: "1",
+					},
+				},
 				GroupMembers: []*GroupMember{
 					{
-						GroupId: 0,
+						GroupId: 1,
 						Member: &Member{
 							Address: memberAddr.String(),
-							Weight:  "0", Metadata: []byte("member metadata"),
+							Weight:  "-1", Metadata: []byte("member metadata"),
 						},
 					},
 				},
@@ -284,6 +357,18 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid proposal id",
 			GenesisState{
+				Groups: []*GroupInfo{
+					{
+						GroupId:     1,
+						Admin:       accAddr.String(),
+						Metadata:    []byte("1"),
+						Version:     1,
+						TotalWeight: "1",
+					},
+				},
+				GroupPolicies: []*GroupPolicyInfo{
+					groupPolicy,
+				},
 				Proposals: []*Proposal{
 					{
 						ProposalId:         0,
@@ -299,6 +384,18 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid group policy address of proposal",
 			GenesisState{
+				Groups: []*GroupInfo{
+					{
+						GroupId:     1,
+						Admin:       accAddr.String(),
+						Metadata:    []byte("1"),
+						Version:     1,
+						TotalWeight: "1",
+					},
+				},
+				GroupPolicies: []*GroupPolicyInfo{
+					groupPolicy,
+				},
 				Proposals: []*Proposal{
 					{
 						ProposalId:         1,
@@ -314,6 +411,18 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid group version of proposal",
 			GenesisState{
+				Groups: []*GroupInfo{
+					{
+						GroupId:     1,
+						Admin:       accAddr.String(),
+						Metadata:    []byte("1"),
+						Version:     1,
+						TotalWeight: "1",
+					},
+				},
+				GroupPolicies: []*GroupPolicyInfo{
+					groupPolicy,
+				},
 				Proposals: []*Proposal{
 					{
 						ProposalId:         1,
@@ -329,6 +438,18 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid group policy version",
 			GenesisState{
+				Groups: []*GroupInfo{
+					{
+						GroupId:     1,
+						Admin:       accAddr.String(),
+						Metadata:    []byte("1"),
+						Version:     1,
+						TotalWeight: "1",
+					},
+				},
+				GroupPolicies: []*GroupPolicyInfo{
+					groupPolicy,
+				},
 				Proposals: []*Proposal{
 					{
 						ProposalId:         1,
@@ -344,6 +465,18 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid VoteState with negative YesCount",
 			GenesisState{
+				Groups: []*GroupInfo{
+					{
+						GroupId:     1,
+						Admin:       accAddr.String(),
+						Metadata:    []byte("1"),
+						Version:     1,
+						TotalWeight: "1",
+					},
+				},
+				GroupPolicies: []*GroupPolicyInfo{
+					groupPolicy,
+				},
 				Proposals: []*Proposal{
 					{
 						ProposalId:         1,
@@ -371,6 +504,18 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid VoteState with negative NoCount",
 			GenesisState{
+				Groups: []*GroupInfo{
+					{
+						GroupId:     1,
+						Admin:       accAddr.String(),
+						Metadata:    []byte("1"),
+						Version:     1,
+						TotalWeight: "1",
+					},
+				},
+				GroupPolicies: []*GroupPolicyInfo{
+					groupPolicy,
+				},
 				Proposals: []*Proposal{
 					{
 						ProposalId:         1,
@@ -398,6 +543,18 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid VoteState with negative AbstainCount",
 			GenesisState{
+				Groups: []*GroupInfo{
+					{
+						GroupId:     1,
+						Admin:       accAddr.String(),
+						Metadata:    []byte("1"),
+						Version:     1,
+						TotalWeight: "1",
+					},
+				},
+				GroupPolicies: []*GroupPolicyInfo{
+					groupPolicy,
+				},
 				Proposals: []*Proposal{
 					{
 						ProposalId:         1,
@@ -425,6 +582,18 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid VoteState with negative VetoCount",
 			GenesisState{
+				Groups: []*GroupInfo{
+					{
+						GroupId:     1,
+						Admin:       accAddr.String(),
+						Metadata:    []byte("1"),
+						Version:     1,
+						TotalWeight: "1",
+					},
+				},
+				GroupPolicies: []*GroupPolicyInfo{
+					groupPolicy,
+				},
 				Proposals: []*Proposal{
 					{
 						ProposalId:         1,
@@ -452,6 +621,39 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid voter",
 			GenesisState{
+				Groups: []*GroupInfo{
+					{
+						GroupId:     1,
+						Admin:       accAddr.String(),
+						Metadata:    []byte("1"),
+						Version:     1,
+						TotalWeight: "1",
+					},
+				},
+				GroupPolicies: []*GroupPolicyInfo{
+					groupPolicy,
+				},
+				Proposals: []*Proposal{
+					{
+						ProposalId:         1,
+						Address:            accAddr.String(),
+						Metadata:           []byte("proposal metadata"),
+						GroupVersion:       1,
+						GroupPolicyVersion: 1,
+						Proposers: []string{
+							memberAddr.String(),
+						},
+						SubmittedAt: submittedAt,
+						Status:      ProposalStatusClosed,
+						Result:      ProposalResultAccepted,
+						VoteState: Tally{
+							YesCount:     "0",
+							NoCount:      "0",
+							AbstainCount: "0",
+							VetoCount:    "0",
+						},
+					},
+				},
 				Votes: []*Vote{
 					{
 						ProposalId:  proposal.ProposalId,
@@ -466,6 +668,39 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid proposal id",
 			GenesisState{
+				Groups: []*GroupInfo{
+					{
+						GroupId:     1,
+						Admin:       accAddr.String(),
+						Metadata:    []byte("1"),
+						Version:     1,
+						TotalWeight: "1",
+					},
+				},
+				GroupPolicies: []*GroupPolicyInfo{
+					groupPolicy,
+				},
+				Proposals: []*Proposal{
+					{
+						ProposalId:         1,
+						Address:            accAddr.String(),
+						Metadata:           []byte("proposal metadata"),
+						GroupVersion:       1,
+						GroupPolicyVersion: 1,
+						Proposers: []string{
+							memberAddr.String(),
+						},
+						SubmittedAt: submittedAt,
+						Status:      ProposalStatusClosed,
+						Result:      ProposalResultAccepted,
+						VoteState: Tally{
+							YesCount:     "0",
+							NoCount:      "0",
+							AbstainCount: "0",
+							VetoCount:    "0",
+						},
+					},
+				},
 				Votes: []*Vote{
 					{
 						ProposalId:  0,
@@ -480,6 +715,39 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"invalid choice",
 			GenesisState{
+				Groups: []*GroupInfo{
+					{
+						GroupId:     1,
+						Admin:       accAddr.String(),
+						Metadata:    []byte("1"),
+						Version:     1,
+						TotalWeight: "1",
+					},
+				},
+				GroupPolicies: []*GroupPolicyInfo{
+					groupPolicy,
+				},
+				Proposals: []*Proposal{
+					{
+						ProposalId:         1,
+						Address:            accAddr.String(),
+						Metadata:           []byte("proposal metadata"),
+						GroupVersion:       1,
+						GroupPolicyVersion: 1,
+						Proposers: []string{
+							memberAddr.String(),
+						},
+						SubmittedAt: submittedAt,
+						Status:      ProposalStatusClosed,
+						Result:      ProposalResultAccepted,
+						VoteState: Tally{
+							YesCount:     "0",
+							NoCount:      "0",
+							AbstainCount: "0",
+							VetoCount:    "0",
+						},
+					},
+				},
 				Votes: []*Vote{
 					{
 						ProposalId:  proposal.ProposalId,

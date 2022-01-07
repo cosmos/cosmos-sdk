@@ -98,6 +98,7 @@ func (rs *Store) SetPruning(pruningOpts types.PruningOptions) {
 	rs.pruningOpts = pruningOpts
 }
 
+// SetIAVLCacheSize sets the size of IAVL cache tree.
 func (rs *Store) SetIAVLCacheSize(cacheSize int) {
 	rs.iavlCacheSize = cacheSize
 }

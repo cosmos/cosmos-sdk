@@ -22,7 +22,10 @@ import (
 )
 
 const (
-	DefaultIAVLCacheSize = 500000
+	// DefaultIAVLCacheSize defines the number of iavl cache item, which is supposed to be 100MB size.
+	// Each cache item consumes 128 bytes, 64 bytes for the left sibling, and 64 bytes for the right sibling.
+	// The number of cache item is calculated as 100 MB = 10,000,000 / 128 = 781_250
+	DefaultIAVLCacheSize = 781_250
 )
 
 var (

@@ -13,9 +13,11 @@ var (
 	_ types.CommitKVStore             = (*CommitKVStoreCache)(nil)
 	_ types.MultiStorePersistentCache = (*CommitKVStoreCacheManager)(nil)
 
-	// DefaultCommitKVStoreCacheSize defines the persistent ARC cache size for a
-	// CommitKVStoreCache.
-	DefaultCommitKVStoreCacheSize uint = 1000
+	// DefaultCommitKVStoreCacheSize defines the number of persistent ARC cache item for a
+	// CommitKVStoreCache, which is supposed to be 10MB size.
+	// Each cache item consumes 128 bytes, 64 bytes for the left sibling, and 64 bytes for the right sibling.
+	// The number of cache item is calculated as 10 MB = 10,000,000 / 128 = 78_125
+	DefaultCommitKVStoreCacheSize uint = 78_125
 )
 
 type (
@@ -57,6 +59,11 @@ func NewCommitKVStoreCacheManager(size uint) *CommitKVStoreCacheManager {
 		cacheSize: size,
 		caches:    make(map[string]types.CommitKVStore),
 	}
+}
+
+// SetCacheSize sets the cache size of the CommitKVStore.
+func (cmgr *CommitKVStoreCacheManager) SetCacheSize(size uint) {
+	cmgr.cacheSize = size
 }
 
 // GetStoreCache returns a Cache from the CommitStoreCacheManager for a given

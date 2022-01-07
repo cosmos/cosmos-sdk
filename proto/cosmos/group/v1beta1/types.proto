@@ -22,6 +22,9 @@ message Member {
 
   // metadata is any arbitrary metadata to attached to the member.
   bytes metadata = 3;
+
+  // added_at is a timestamp specifying when a member was added.
+  google.protobuf.Timestamp added_at = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
 
 // Members defines a repeated slice of Member objects.
@@ -86,6 +89,9 @@ message GroupInfo {
 
   // total_weight is the sum of the group members' weights.
   string total_weight = 5;
+
+  // created_at is a timestamp specifying when a group was created.
+  google.protobuf.Timestamp created_at = 6 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
 
 // GroupMember represents the relationship between a group and a member.
@@ -98,12 +104,12 @@ message GroupMember {
   Member member = 2;
 }
 
-// GroupAccountInfo represents the high-level on-chain information for a group account.
-message GroupAccountInfo {
+// GroupPolicyInfo represents the high-level on-chain information for a group policy.
+message GroupPolicyInfo {
   option (gogoproto.equal)           = true;
   option (gogoproto.goproto_getters) = false;
 
-  // address is the group account address.
+  // address is the account address of group policy.
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // group_id is the unique ID of the group.
@@ -112,19 +118,22 @@ message GroupAccountInfo {
   // admin is the account address of the group admin.
   string admin = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // metadata is any arbitrary metadata to attached to the group account.
+  // metadata is any arbitrary metadata to attached to the group policy.
   bytes metadata = 4;
 
-  // version is used to track changes to a group's GroupAccountInfo structure that
+  // version is used to track changes to a group's GroupPolicyInfo structure that
   // would create a different result on a running proposal.
   uint64 version = 5;
 
-  // decision_policy specifies the group account's decision policy.
+  // decision_policy specifies the group policy's decision policy.
   google.protobuf.Any decision_policy = 6 [(cosmos_proto.accepts_interface) = "DecisionPolicy"];
+
+  // created_at is a timestamp specifying when a group policy was created.
+  google.protobuf.Timestamp created_at = 7 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
 
 // Proposal defines a group proposal. Any member of a group can submit a proposal
-// for a group account to decide upon.
+// for a group policy to decide upon.
 // A proposal consists of a set of `sdk.Msg`s that will be executed if the proposal
 // passes as well as some optional metadata associated with the proposal.
 message Proposal {
@@ -133,7 +142,7 @@ message Proposal {
   // proposal_id is the unique id of the proposal.
   uint64 proposal_id = 1;
 
-  // address is the group account address.
+  // address is the account address of group policy.
   string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // metadata is any arbitrary metadata to attached to the proposal.
@@ -149,9 +158,9 @@ message Proposal {
   // When group membership is changed, existing proposals from previous group versions will become invalid.
   uint64 group_version = 6;
 
-  // group_account_version tracks the version of the group account that this proposal corresponds to.
+  // group_policy_version tracks the version of the group policy that this proposal corresponds to.
   // When a decision policy is changed, existing proposals from previous policy versions will become invalid.
-  uint64 group_account_version = 7;
+  uint64 group_policy_version = 7;
 
   // Status defines proposal statuses.
   enum Status {

@@ -118,28 +118,29 @@ func (p *ThresholdDecisionPolicy) Validate(g GroupInfo) error {
 	return nil
 }
 
-var _ orm.Validateable = GroupAccountInfo{}
+var _ orm.Validateable = GroupPolicyInfo{}
 
-// NewGroupAccountInfo creates a new GroupAccountInfo instance
-func NewGroupAccountInfo(address sdk.AccAddress, group uint64, admin sdk.AccAddress, metadata []byte,
-	version uint64, decisionPolicy DecisionPolicy) (GroupAccountInfo, error) {
-	p := GroupAccountInfo{
-		Address:  address.String(),
-		GroupId:  group,
-		Admin:    admin.String(),
-		Metadata: metadata,
-		Version:  version,
+// NewGroupPolicyInfo creates a new GroupPolicyInfo instance
+func NewGroupPolicyInfo(address sdk.AccAddress, group uint64, admin sdk.AccAddress, metadata []byte,
+	version uint64, decisionPolicy DecisionPolicy, createdAt time.Time) (GroupPolicyInfo, error) {
+	p := GroupPolicyInfo{
+		Address:   address.String(),
+		GroupId:   group,
+		Admin:     admin.String(),
+		Metadata:  metadata,
+		Version:   version,
+		CreatedAt: createdAt,
 	}
 
 	err := p.SetDecisionPolicy(decisionPolicy)
 	if err != nil {
-		return GroupAccountInfo{}, err
+		return GroupPolicyInfo{}, err
 	}
 
 	return p, nil
 }
 
-func (g *GroupAccountInfo) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
+func (g *GroupPolicyInfo) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
 	msg, ok := decisionPolicy.(proto.Message)
 	if !ok {
 		return fmt.Errorf("can't proto marshal %T", msg)
@@ -152,7 +153,7 @@ func (g *GroupAccountInfo) SetDecisionPolicy(decisionPolicy DecisionPolicy) erro
 	return nil
 }
 
-func (g GroupAccountInfo) GetDecisionPolicy() DecisionPolicy {
+func (g GroupPolicyInfo) GetDecisionPolicy() DecisionPolicy {
 	decisionPolicy, ok := g.DecisionPolicy.GetCachedValue().(DecisionPolicy)
 	if !ok {
 		return nil
@@ -161,12 +162,12 @@ func (g GroupAccountInfo) GetDecisionPolicy() DecisionPolicy {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (g GroupAccountInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (g GroupPolicyInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var decisionPolicy DecisionPolicy
 	return unpacker.UnpackAny(g.DecisionPolicy, &decisionPolicy)
 }
 
-func (g GroupAccountInfo) PrimaryKeyFields() []interface{} {
+func (g GroupPolicyInfo) PrimaryKeyFields() []interface{} {
 	addr, err := sdk.AccAddressFromBech32(g.Address)
 	if err != nil {
 		panic(err)
@@ -174,7 +175,7 @@ func (g GroupAccountInfo) PrimaryKeyFields() []interface{} {
 	return []interface{}{addr.Bytes()}
 }
 
-func (g GroupAccountInfo) ValidateBasic() error {
+func (g GroupPolicyInfo) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(g.Admin)
 	if err != nil {
 		return sdkerrors.Wrap(err, "admin")
@@ -182,7 +183,7 @@ func (g GroupAccountInfo) ValidateBasic() error {
 
 	_, err = sdk.AccAddressFromBech32(g.Address)
 	if err != nil {
-		return sdkerrors.Wrap(err, "group account")
+		return sdkerrors.Wrap(err, "group policy")
 	}
 
 	if g.GroupId == 0 {
@@ -232,16 +233,16 @@ func (v Vote) PrimaryKeyFields() []interface{} {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (q QueryGroupAccountsByGroupResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	return unpackGroupAccounts(unpacker, q.GroupAccounts)
+func (q QueryGroupPoliciesByGroupResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return unpackGroupPolicies(unpacker, q.GroupPolicies)
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (q QueryGroupAccountsByAdminResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	return unpackGroupAccounts(unpacker, q.GroupAccounts)
+func (q QueryGroupPoliciesByAdminResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return unpackGroupPolicies(unpacker, q.GroupPolicies)
 }
 
-func unpackGroupAccounts(unpacker codectypes.AnyUnpacker, accs []*GroupAccountInfo) error {
+func unpackGroupPolicies(unpacker codectypes.AnyUnpacker, accs []*GroupPolicyInfo) error {
 	for _, g := range accs {
 		err := g.UnpackInterfaces(unpacker)
 		if err != nil {
@@ -384,4 +385,14 @@ func (t Tally) TotalCounts() (math.Dec, error) {
 		return math.Dec{}, err
 	}
 	return totalCounts, nil
+}
+
+// ChoiceFromString returns a Choice from a string. It returns an error
+// if the string is invalid.
+func ChoiceFromString(str string) (Choice, error) {
+	choice, ok := Choice_value[str]
+	if !ok {
+		return Choice_CHOICE_UNSPECIFIED, fmt.Errorf("'%s' is not a valid vote choice", str)
+	}
+	return Choice(choice), nil
 }

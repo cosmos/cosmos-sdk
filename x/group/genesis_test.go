@@ -634,25 +634,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					groupPolicy,
 				},
 				Proposals: []*Proposal{
-					{
-						ProposalId:         1,
-						Address:            accAddr.String(),
-						Metadata:           []byte("proposal metadata"),
-						GroupVersion:       1,
-						GroupPolicyVersion: 1,
-						Proposers: []string{
-							memberAddr.String(),
-						},
-						SubmittedAt: submittedAt,
-						Status:      ProposalStatusClosed,
-						Result:      ProposalResultAccepted,
-						VoteState: Tally{
-							YesCount:     "0",
-							NoCount:      "0",
-							AbstainCount: "0",
-							VetoCount:    "0",
-						},
-					},
+					proposal,
 				},
 				Votes: []*Vote{
 					{
@@ -681,29 +663,40 @@ func TestGenesisStateValidate(t *testing.T) {
 					groupPolicy,
 				},
 				Proposals: []*Proposal{
-					{
-						ProposalId:         1,
-						Address:            accAddr.String(),
-						Metadata:           []byte("proposal metadata"),
-						GroupVersion:       1,
-						GroupPolicyVersion: 1,
-						Proposers: []string{
-							memberAddr.String(),
-						},
-						SubmittedAt: submittedAt,
-						Status:      ProposalStatusClosed,
-						Result:      ProposalResultAccepted,
-						VoteState: Tally{
-							YesCount:     "0",
-							NoCount:      "0",
-							AbstainCount: "0",
-							VetoCount:    "0",
-						},
-					},
+					proposal,
 				},
 				Votes: []*Vote{
 					{
 						ProposalId:  0,
+						Voter:       memberAddr.String(),
+						SubmittedAt: submittedAt,
+						Choice:      Choice_CHOICE_YES,
+					},
+				},
+			},
+			true,
+		},
+		{
+			"vote on proposal that doesn't exist",
+			GenesisState{
+				Groups: []*GroupInfo{
+					{
+						GroupId:     1,
+						Admin:       accAddr.String(),
+						Metadata:    []byte("1"),
+						Version:     1,
+						TotalWeight: "1",
+					},
+				},
+				GroupPolicies: []*GroupPolicyInfo{
+					groupPolicy,
+				},
+				Proposals: []*Proposal{
+					proposal,
+				},
+				Votes: []*Vote{
+					{
+						ProposalId:  2,
 						Voter:       memberAddr.String(),
 						SubmittedAt: submittedAt,
 						Choice:      Choice_CHOICE_YES,
@@ -728,25 +721,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					groupPolicy,
 				},
 				Proposals: []*Proposal{
-					{
-						ProposalId:         1,
-						Address:            accAddr.String(),
-						Metadata:           []byte("proposal metadata"),
-						GroupVersion:       1,
-						GroupPolicyVersion: 1,
-						Proposers: []string{
-							memberAddr.String(),
-						},
-						SubmittedAt: submittedAt,
-						Status:      ProposalStatusClosed,
-						Result:      ProposalResultAccepted,
-						VoteState: Tally{
-							YesCount:     "0",
-							NoCount:      "0",
-							AbstainCount: "0",
-							VetoCount:    "0",
-						},
-					},
+					proposal,
 				},
 				Votes: []*Vote{
 					{

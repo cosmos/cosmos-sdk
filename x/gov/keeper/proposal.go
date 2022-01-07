@@ -11,38 +11,39 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 // SubmitProposal create new proposal given an array of messages
-func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg) (types.Proposal, error) {
+func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg) (v1beta2.Proposal, error) {
 	// Loop through all messages and confirm that each has a handler and the gov module account
 	// as the only signer
 	for _, msg := range messages {
 		// perform a basic validation of the message
 		if err := msg.ValidateBasic(); err != nil {
-			return types.Proposal{}, sdkerrors.Wrap(types.ErrInvalidProposalMsg, err.Error())
+			return v1beta2.Proposal{}, sdkerrors.Wrap(types.ErrInvalidProposalMsg, err.Error())
 		}
 
 		signers := msg.GetSigners()
 		if len(signers) != 1 {
-			return types.Proposal{}, types.ErrInvalidSigner
+			return v1beta2.Proposal{}, types.ErrInvalidSigner
 		}
 
 		// assert that the governance module account is the only signer of the messages
 		if !signers[0].Equals(keeper.GetGovernanceAccount(ctx).GetAddress()) {
-			return types.Proposal{}, sdkerrors.Wrap(types.ErrInvalidSigner, signers[0].String())
+			return v1beta2.Proposal{}, sdkerrors.Wrap(types.ErrInvalidSigner, signers[0].String())
 		}
 
 		// check if the message wraps the legacy content type
-		if contentMsg, ok := msg.(*types.MsgContent); ok {
+		if contentMsg, ok := msg.(*v1beta2.MsgContent); ok {
 			content := ContentFromMessage(contentMsg)
 			if content == nil {
-				return types.Proposal{}, sdkerrors.Wrap(v1beta1.ErrInvalidProposalContent, "content is nil")
+				return v1beta2.Proposal{}, sdkerrors.Wrap(v1beta1.ErrInvalidProposalContent, "content is nil")
 			}
 
 			// if so ensure that the content has a respective handler
 			if !keeper.legacyRouter.HasRoute(content.ProposalRoute()) {
-				return types.Proposal{}, sdkerrors.Wrap(types.ErrNoProposalHandlerExists, content.ProposalRoute())
+				return v1beta2.Proposal{}, sdkerrors.Wrap(types.ErrNoProposalHandlerExists, content.ProposalRoute())
 			}
 
 			// Execute the proposal content in a new context branch (with branched store)
@@ -51,27 +52,27 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg) (types.
 			cacheCtx, _ := ctx.CacheContext()
 			handler := keeper.legacyRouter.GetRoute(content.ProposalRoute())
 			if err := handler(cacheCtx, content); err != nil {
-				return types.Proposal{}, sdkerrors.Wrap(v1beta1.ErrInvalidProposalContent, err.Error())
+				return v1beta2.Proposal{}, sdkerrors.Wrap(v1beta1.ErrInvalidProposalContent, err.Error())
 			}
 
 			// for all other message types use the msg service router to see that there is a valid route for that
 			// message. NOTE: we do not verify the proposal messages any further. They may fail upon execution
 		} else if keeper.router.Handler(msg) == nil {
-			return types.Proposal{}, sdkerrors.Wrap(types.ErrUnroutableProposalMsg, sdk.MsgTypeURL(msg))
+			return v1beta2.Proposal{}, sdkerrors.Wrap(types.ErrUnroutableProposalMsg, sdk.MsgTypeURL(msg))
 		}
 	}
 
 	proposalID, err := keeper.GetProposalID(ctx)
 	if err != nil {
-		return types.Proposal{}, err
+		return v1beta2.Proposal{}, err
 	}
 
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := keeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal, err := types.NewProposal(messages, proposalID, submitTime, submitTime.Add(*depositPeriod))
+	proposal, err := v1beta2.NewProposal(messages, proposalID, submitTime, submitTime.Add(*depositPeriod))
 	if err != nil {
-		return types.Proposal{}, err
+		return v1beta2.Proposal{}, err
 	}
 
 	keeper.SetProposal(ctx, proposal)
@@ -93,15 +94,15 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg) (types.
 
 // GetProposal get proposal from store by ProposalID.
 // Panics if can't unmarshal the proposal.
-func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (types.Proposal, bool) {
+func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1beta2.Proposal, bool) {
 	store := ctx.KVStore(keeper.storeKey)
 
 	bz := store.Get(types.ProposalKey(proposalID))
 	if bz == nil {
-		return types.Proposal{}, false
+		return v1beta2.Proposal{}, false
 	}
 
-	var proposal types.Proposal
+	var proposal v1beta2.Proposal
 	if err := keeper.UnmarshalProposal(bz, &proposal); err != nil {
 		panic(err)
 	}
@@ -111,7 +112,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (types.Prop
 
 // SetProposal set a proposal to store.
 // Panics if can't marshal the proposal.
-func (keeper Keeper) SetProposal(ctx sdk.Context, proposal types.Proposal) {
+func (keeper Keeper) SetProposal(ctx sdk.Context, proposal v1beta2.Proposal) {
 	bz, err := keeper.MarshalProposal(proposal)
 	if err != nil {
 		panic(err)
@@ -136,14 +137,14 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 
 // IterateProposals iterates over the all the proposals and performs a callback function.
 // Panics when the iterator encounters a proposal which can't be unmarshaled.
-func (keeper Keeper) IterateProposals(ctx sdk.Context, cb func(proposal types.Proposal) (stop bool)) {
+func (keeper Keeper) IterateProposals(ctx sdk.Context, cb func(proposal v1beta2.Proposal) (stop bool)) {
 	store := ctx.KVStore(keeper.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.ProposalsKeyPrefix)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		var proposal types.Proposal
+		var proposal v1beta2.Proposal
 		err := keeper.UnmarshalProposal(iterator.Value(), &proposal)
 		if err != nil {
 			panic(err)
@@ -156,8 +157,8 @@ func (keeper Keeper) IterateProposals(ctx sdk.Context, cb func(proposal types.Pr
 }
 
 // GetProposals returns all the proposals from store
-func (keeper Keeper) GetProposals(ctx sdk.Context) (proposals types.Proposals) {
-	keeper.IterateProposals(ctx, func(proposal types.Proposal) bool {
+func (keeper Keeper) GetProposals(ctx sdk.Context) (proposals v1beta2.Proposals) {
+	keeper.IterateProposals(ctx, func(proposal v1beta2.Proposal) bool {
 		proposals = append(proposals, &proposal)
 		return false
 	})
@@ -173,15 +174,15 @@ func (keeper Keeper) GetProposals(ctx sdk.Context) (proposals types.Proposals) {
 //
 // NOTE: If no filters are provided, all proposals will be returned in paginated
 // form.
-func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, params types.QueryProposalsParams) types.Proposals {
+func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, params v1beta2.QueryProposalsParams) v1beta2.Proposals {
 	proposals := keeper.GetProposals(ctx)
-	filteredProposals := make([]*types.Proposal, 0, len(proposals))
+	filteredProposals := make([]*v1beta2.Proposal, 0, len(proposals))
 
 	for _, p := range proposals {
 		matchVoter, matchDepositor, matchStatus := true, true, true
 
 		// match status (if supplied/valid)
-		if types.ValidProposalStatus(params.ProposalStatus) {
+		if v1beta2.ValidProposalStatus(params.ProposalStatus) {
 			matchStatus = p.Status == params.ProposalStatus
 		}
 
@@ -202,7 +203,7 @@ func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, params types.QueryPro
 
 	start, end := client.Paginate(len(filteredProposals), params.Page, params.Limit, 100)
 	if start < 0 || end < 0 {
-		filteredProposals = []*types.Proposal{}
+		filteredProposals = []*v1beta2.Proposal{}
 	} else {
 		filteredProposals = filteredProposals[start:end]
 	}
@@ -228,20 +229,20 @@ func (keeper Keeper) SetProposalID(ctx sdk.Context, proposalID uint64) {
 	store.Set(types.ProposalIDKey, types.GetProposalIDBytes(proposalID))
 }
 
-func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal types.Proposal) {
+func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal v1beta2.Proposal) {
 	startTime := ctx.BlockHeader().Time
 	proposal.VotingStartTime = &startTime
 	votingPeriod := keeper.GetVotingParams(ctx).VotingPeriod
 	endTime := proposal.VotingStartTime.Add(*votingPeriod)
 	proposal.VotingEndTime = &endTime
-	proposal.Status = types.StatusVotingPeriod
+	proposal.Status = v1beta2.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
 	keeper.RemoveFromInactiveProposalQueue(ctx, proposal.ProposalId, *proposal.DepositEndTime)
 	keeper.InsertActiveProposalQueue(ctx, proposal.ProposalId, *proposal.VotingEndTime)
 }
 
-func (keeper Keeper) MarshalProposal(proposal types.Proposal) ([]byte, error) {
+func (keeper Keeper) MarshalProposal(proposal v1beta2.Proposal) ([]byte, error) {
 	bz, err := keeper.cdc.Marshal(&proposal)
 	if err != nil {
 		return nil, err
@@ -249,7 +250,7 @@ func (keeper Keeper) MarshalProposal(proposal types.Proposal) ([]byte, error) {
 	return bz, nil
 }
 
-func (keeper Keeper) UnmarshalProposal(bz []byte, proposal *types.Proposal) error {
+func (keeper Keeper) UnmarshalProposal(bz []byte, proposal *v1beta2.Proposal) error {
 	err := keeper.cdc.Unmarshal(bz, proposal)
 	if err != nil {
 		return err
@@ -258,7 +259,7 @@ func (keeper Keeper) UnmarshalProposal(bz []byte, proposal *types.Proposal) erro
 }
 
 // TODO: move both these functions to the migration package
-func NewContentProposal(content v1beta1.Content, authority string) (*types.MsgContent, error) {
+func NewContentProposal(content v1beta1.Content, authority string) (*v1beta2.MsgContent, error) {
 	msg, ok := content.(proto.Message)
 	if !ok {
 		return nil, fmt.Errorf("%T does not implement proto.Message", content)
@@ -268,10 +269,10 @@ func NewContentProposal(content v1beta1.Content, authority string) (*types.MsgCo
 	if err != nil {
 		return nil, err
 	}
-	return types.NewMsgContent(any, authority), nil
+	return v1beta2.NewMsgContent(any, authority), nil
 }
 
-func ContentFromMessage(msg *types.MsgContent) v1beta1.Content {
+func ContentFromMessage(msg *v1beta2.MsgContent) v1beta1.Content {
 	content, ok := msg.Content.GetCachedValue().(v1beta1.Content)
 	if !ok {
 		return nil

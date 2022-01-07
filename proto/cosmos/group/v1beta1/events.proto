@@ -20,20 +20,18 @@ message EventUpdateGroup {
   uint64 group_id = 1;
 }
 
-// EventCreateGroupAccount is an event emitted when a group account is created.
-message EventCreateGroupAccount {
+// EventCreateGroupPolicy is an event emitted when a group policy is created.
+message EventCreateGroupPolicy {
 
-  // address is the address of the group account.
+  // address is the account address of the group policy.
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  ;
 }
 
-// EventUpdateGroupAccount is an event emitted when a group account is updated.
-message EventUpdateGroupAccount {
+// EventUpdateGroupPolicy is an event emitted when a group policy is updated.
+message EventUpdateGroupPolicy {
 
-  // address is the address of the group account.
+  // address is the account address of the group policy.
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  ;
 }
 
 // EventCreateProposal is an event emitted when a proposal is created.

@@ -32,6 +32,7 @@ type cosmovisorEnv struct {
 	DownloadBin          string
 	RestartUpgrade       string
 	SkipBackup           string
+	DataBackupPath       string
 	Interval             string
 	PreupgradeMaxRetries string
 }
@@ -44,6 +45,7 @@ func (c cosmovisorEnv) ToMap() map[string]string {
 		EnvDownloadBin:          c.DownloadBin,
 		EnvRestartUpgrade:       c.RestartUpgrade,
 		EnvSkipBackup:           c.SkipBackup,
+		EnvDataBackupPath:       c.DataBackupPath,
 		EnvInterval:             c.Interval,
 		EnvPreupgradeMaxRetries: c.PreupgradeMaxRetries,
 	}
@@ -62,6 +64,8 @@ func (c *cosmovisorEnv) Set(envVar, envVal string) {
 		c.RestartUpgrade = envVal
 	case EnvSkipBackup:
 		c.SkipBackup = envVal
+	case EnvDataBackupPath:
+		c.DataBackupPath = envVal
 	case EnvInterval:
 		c.Interval = envVal
 	case EnvPreupgradeMaxRetries:
@@ -145,6 +149,7 @@ func (s *argsTestSuite) TestConfigPaths() {
 }
 
 // Test validate
+// add more test in test validate
 func (s *argsTestSuite) TestValidate() {
 	relPath := filepath.Join("testdata", "validate")
 	absPath, err := filepath.Abs(relPath)
@@ -158,11 +163,27 @@ func (s *argsTestSuite) TestValidate() {
 		valid bool
 	}{
 		"happy": {
-			cfg:   Config{Home: absPath, Name: "bind"},
+			cfg:   Config{Home: absPath, Name: "bind", DataBackupPath: absPath},
 			valid: true,
 		},
 		"happy with download": {
-			cfg:   Config{Home: absPath, Name: "bind", AllowDownloadBinaries: true},
+			cfg:   Config{Home: absPath, Name: "bind", AllowDownloadBinaries: true, DataBackupPath: absPath},
+			valid: true,
+		},
+		"happy with skip data backup": {
+			cfg:   Config{Home: absPath, Name: "bind", UnsafeSkipBackup: true, DataBackupPath: absPath},
+			valid: true,
+		},
+		"happy with skip data backup and empty data backup path": {
+			cfg:   Config{Home: absPath, Name: "bind", UnsafeSkipBackup: true, DataBackupPath: ""},
+			valid: true,
+		},
+		"happy with skip data backup and no such data backup path dir": {
+			cfg:   Config{Home: absPath, Name: "bind", UnsafeSkipBackup: true, DataBackupPath: filepath.FromSlash("/no/such/dir")},
+			valid: true,
+		},
+		"happy with skip data backup and relative data backup path": {
+			cfg:   Config{Home: absPath, Name: "bind", UnsafeSkipBackup: true, DataBackupPath: relPath},
 			valid: true,
 		},
 		"missing home": {
@@ -173,7 +194,7 @@ func (s *argsTestSuite) TestValidate() {
 			cfg:   Config{Home: absPath},
 			valid: false,
 		},
-		"relative path": {
+		"relative home path": {
 			cfg:   Config{Home: relPath, Name: "bind"},
 			valid: false,
 		},
@@ -181,8 +202,20 @@ func (s *argsTestSuite) TestValidate() {
 			cfg:   Config{Home: testdata, Name: "bind"},
 			valid: false,
 		},
-		"no such dir": {
+		"no such home dir": {
 			cfg:   Config{Home: filepath.FromSlash("/no/such/dir"), Name: "bind"},
+			valid: false,
+		},
+		"empty data backup path": {
+			cfg:   Config{Home: absPath, Name: "bind", DataBackupPath: ""},
+			valid: false,
+		},
+		"no such data backup path dir": {
+			cfg:   Config{Home: absPath, Name: "bind", DataBackupPath: filepath.FromSlash("/no/such/dir")},
+			valid: false,
+		},
+		"relative data backup path": {
+			cfg:   Config{Home: absPath, Name: "bind", DataBackupPath: relPath},
 			valid: false,
 		},
 	}
@@ -202,7 +235,7 @@ func (s *argsTestSuite) TestEnsureBin() {
 	absPath, err := filepath.Abs(relPath)
 	s.Require().NoError(err)
 
-	cfg := Config{Home: absPath, Name: "dummyd"}
+	cfg := Config{Home: absPath, Name: "dummyd", DataBackupPath: absPath}
 	s.Require().Len(cfg.validate(), 0, "validation errors")
 
 	s.Require().NoError(EnsureBinary(cfg.GenesisBin()))
@@ -275,6 +308,7 @@ func (s *argsTestSuite) TestDetailString() {
 	restartAfterUpgrade := true
 	pollInterval := 406 * time.Millisecond
 	unsafeSkipBackup := false
+	dataBackupPath := "/home"
 	preupgradeMaxRetries := 8
 	cfg := &Config{
 		Home:                  home,
@@ -283,6 +317,7 @@ func (s *argsTestSuite) TestDetailString() {
 		RestartAfterUpgrade:   restartAfterUpgrade,
 		PollInterval:          pollInterval,
 		UnsafeSkipBackup:      unsafeSkipBackup,
+		DataBackupPath:        dataBackupPath,
 		PreupgradeMaxRetries:  preupgradeMaxRetries,
 	}
 
@@ -294,12 +329,14 @@ func (s *argsTestSuite) TestDetailString() {
 		fmt.Sprintf("%s: %t", EnvRestartUpgrade, restartAfterUpgrade),
 		fmt.Sprintf("%s: %s", EnvInterval, pollInterval),
 		fmt.Sprintf("%s: %t", EnvSkipBackup, unsafeSkipBackup),
+		fmt.Sprintf("%s: %s", EnvDataBackupPath, home),
 		fmt.Sprintf("%s: %d", EnvPreupgradeMaxRetries, preupgradeMaxRetries),
 		"Derived Values:",
 		fmt.Sprintf("Root Dir: %s", home),
 		fmt.Sprintf("Upgrade Dir: %s", home),
 		fmt.Sprintf("Genesis Bin: %s", home),
 		fmt.Sprintf("Monitored File: %s", home),
+		fmt.Sprintf("Data Backup Dir: %s", home),
 	}
 
 	actual := cfg.DetailString()
@@ -317,7 +354,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 	absPath, perr := filepath.Abs(relPath)
 	s.Require().NoError(perr)
 
-	newConfig := func(home, name string, downloadBin, restartUpgrade, skipBackup bool, interval, preupgradeMaxRetries int) *Config {
+	newConfig := func(home, name, dataBackupPath string, downloadBin, restartUpgrade, skipBackup bool, interval, preupgradeMaxRetries int) *Config {
 		return &Config{
 			Home:                  home,
 			Name:                  name,
@@ -325,6 +362,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 			RestartAfterUpgrade:   restartUpgrade,
 			PollInterval:          time.Millisecond * time.Duration(interval),
 			UnsafeSkipBackup:      skipBackup,
+			DataBackupPath:        dataBackupPath,
 			PreupgradeMaxRetries:  preupgradeMaxRetries,
 		}
 	}
@@ -335,160 +373,160 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 		expectedCfg      *Config
 		expectedErrCount int
 	}{
-		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval, EnvPreupgradeMaxRetries
+		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvDataBackupPath, EnvDataBackupPath, EnvInterval, EnvPreupgradeMaxRetries
 		{
 			name:             "all bad",
-			envVals:          cosmovisorEnv{"", "", "bad", "bad", "bad", "bad", "bad"},
+			envVals:          cosmovisorEnv{"", "", "bad", "bad", "bad", "", "bad", "bad"},
 			expectedCfg:      nil,
-			expectedErrCount: 7,
+			expectedErrCount: 8,
 		},
 		{
 			name:             "all good",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "true", "303", "1"},
-			expectedCfg:      newConfig(absPath, "testname", true, false, true, 303, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "true", "", "303", "1"},
+			expectedCfg:      newConfig(absPath, "testname", absPath, true, false, true, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "nothing set",
-			envVals:          cosmovisorEnv{"", "", "", "", "", "", ""},
+			envVals:          cosmovisorEnv{"", "", "", "", "", "", "", ""},
 			expectedCfg:      nil,
-			expectedErrCount: 2,
+			expectedErrCount: 3,
 		},
 		// Note: Home and Name tests are done in TestValidate
 		{
 			name:             "download bin bad",
-			envVals:          cosmovisorEnv{absPath, "testname", "bad", "false", "true", "303", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "bad", "false", "true", "", "303", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "download bin not set",
-			envVals:          cosmovisorEnv{absPath, "testname", "", "false", "true", "303", "1"},
-			expectedCfg:      newConfig(absPath, "testname", false, false, true, 303, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "", "false", "true", "", "303", "1"},
+			expectedCfg:      newConfig(absPath, "testname", absPath, false, false, true, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "download bin true",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "true", "303", "1"},
-			expectedCfg:      newConfig(absPath, "testname", true, false, true, 303, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "true", "", "303", "1"},
+			expectedCfg:      newConfig(absPath, "testname", absPath, true, false, true, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "download bin false",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "true", "303", "1"},
-			expectedCfg:      newConfig(absPath, "testname", false, false, true, 303, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "true", "", "303", "1"},
+			expectedCfg:      newConfig(absPath, "testname", absPath, false, false, true, 303, 1),
 			expectedErrCount: 0,
 		},
-		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval, EnvPreupgradeMaxRetries
+		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvDataBackupPath, EnvInterval, EnvPreupgradeMaxRetries
 		{
 			name:             "restart upgrade bad",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "bad", "true", "303", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "bad", "true", "", "303", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "restart upgrade not set",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "", "true", "303", "1"},
-			expectedCfg:      newConfig(absPath, "testname", true, true, true, 303, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "", "true", "", "303", "1"},
+			expectedCfg:      newConfig(absPath, "testname", absPath, true, true, true, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "restart upgrade true",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "true", "303", "1"},
-			expectedCfg:      newConfig(absPath, "testname", true, true, true, 303, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "true", "", "303", "1"},
+			expectedCfg:      newConfig(absPath, "testname", absPath, true, true, true, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "restart upgrade true",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "true", "303", "1"},
-			expectedCfg:      newConfig(absPath, "testname", true, false, true, 303, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "true", "", "303", "1"},
+			expectedCfg:      newConfig(absPath, "testname", absPath, true, false, true, 303, 1),
 			expectedErrCount: 0,
 		},
-		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval, EnvPreupgradeMaxRetries
+		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvDataBackupPath, EnvInterval, EnvPreupgradeMaxRetries
 		{
 			name:             "skip unsafe backups bad",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "bad", "303", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "bad", "", "303", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "skip unsafe backups not set",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "", "303", "1"},
-			expectedCfg:      newConfig(absPath, "testname", true, false, false, 303, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "", "", "303", "1"},
+			expectedCfg:      newConfig(absPath, "testname", absPath, true, false, false, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "skip unsafe backups true",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "true", "303", "1"},
-			expectedCfg:      newConfig(absPath, "testname", true, false, true, 303, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "true", "", "303", "1"},
+			expectedCfg:      newConfig(absPath, "testname", absPath, true, false, true, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "skip unsafe backups false",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "false", "303", "1"},
-			expectedCfg:      newConfig(absPath, "testname", true, false, false, 303, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "false", "", "303", "1"},
+			expectedCfg:      newConfig(absPath, "testname", absPath, true, false, false, 303, 1),
 			expectedErrCount: 0,
 		},
-		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval, EnvPreupgradeMaxRetries
+		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvDataBackupPath, EnvInterval, EnvPreupgradeMaxRetries
 		{
 			name:             "poll interval bad",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "bad", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "bad", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "poll interval 0",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "0", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "0", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "poll interval not set",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "1"},
-			expectedCfg:      newConfig(absPath, "testname", false, false, false, 300, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "", "1"},
+			expectedCfg:      newConfig(absPath, "testname", absPath, false, false, false, 300, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "poll interval 987",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "987", "1"},
-			expectedCfg:      newConfig(absPath, "testname", false, false, false, 987, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "987", "1"},
+			expectedCfg:      newConfig(absPath, "testname", absPath, false, false, false, 987, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "poll interval 1s",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "1s", "1"},
-			expectedCfg:      newConfig(absPath, "testname", false, false, false, 1000, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "1s", "1"},
+			expectedCfg:      newConfig(absPath, "testname", absPath, false, false, false, 1000, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "poll interval -3m",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "-3m", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "-3m", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
-		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvInterval, EnvPreupgradeMaxRetries
+		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvDataBackupPath, EnvInterval, EnvPreupgradeMaxRetries
 		{
 			name:             "prepupgrade max retries bad",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "406", "bad"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "406", "bad"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "prepupgrade max retries 0",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "406", "0"},
-			expectedCfg:      newConfig(absPath, "testname", false, false, false, 406, 0),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "406", "0"},
+			expectedCfg:      newConfig(absPath, "testname", absPath, false, false, false, 406, 0),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "prepupgrade max retries not set",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "406", ""},
-			expectedCfg:      newConfig(absPath, "testname", false, false, false, 406, 0),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "406", ""},
+			expectedCfg:      newConfig(absPath, "testname", absPath, false, false, false, 406, 0),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "prepupgrade max retries 5",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "406", "5"},
-			expectedCfg:      newConfig(absPath, "testname", false, false, false, 406, 5),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "406", "5"},
+			expectedCfg:      newConfig(absPath, "testname", absPath, false, false, false, 406, 5),
 			expectedErrCount: 0,
 		},
 	}
@@ -521,6 +559,7 @@ func (s *argsTestSuite) TestLogConfigOrError() {
 		RestartAfterUpgrade:   true,
 		PollInterval:          999,
 		UnsafeSkipBackup:      false,
+		DataBackupPath:        "/no/place/like/it",
 		PreupgradeMaxRetries:  20,
 	}
 	errNormal := fmt.Errorf("this is a single error")

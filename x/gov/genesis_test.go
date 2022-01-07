@@ -102,8 +102,8 @@ func TestImportExportQueues(t *testing.T) {
 	require.True(t, ok)
 	proposal2, ok = app2.GovKeeper.GetProposal(ctx2, proposalID2)
 	require.True(t, ok)
-	require.True(t, proposal1.Status == types.StatusDepositPeriod)
-	require.True(t, proposal2.Status == types.StatusVotingPeriod)
+	require.True(t, proposal1.Status == v1beta2.StatusDepositPeriod)
+	require.True(t, proposal2.Status == v1beta2.StatusVotingPeriod)
 
 	macc := app2.GovKeeper.GetGovernanceAccount(ctx2)
 	require.Equal(t, app2.GovKeeper.GetDepositParams(ctx2).MinDeposit, app2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
@@ -116,7 +116,7 @@ func TestImportExportQueues(t *testing.T) {
 
 	proposal2, ok = app2.GovKeeper.GetProposal(ctx2, proposalID2)
 	require.True(t, ok)
-	require.True(t, proposal2.Status == types.StatusRejected)
+	require.True(t, proposal2.Status == v1beta2.StatusRejected)
 }
 
 func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {

@@ -106,7 +106,7 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 
 // RegisterInterfaces implements InterfaceModule.RegisterInterfaces
 func (a AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-	types.RegisterInterfaces(registry)
+	v1beta2.RegisterInterfaces(registry)
 	v1beta1.RegisterInterfaces(registry)
 }
 

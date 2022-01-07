@@ -256,7 +256,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	activeProposalID := types.GetProposalIDFromBytes(activeQueue.Value())
 	proposal, ok := app.GovKeeper.GetProposal(ctx, activeProposalID)
 	require.True(t, ok)
-	require.Equal(t, types.StatusVotingPeriod, proposal.Status)
+	require.Equal(t, v1beta2.StatusVotingPeriod, proposal.Status)
 
 	activeQueue.Close()
 

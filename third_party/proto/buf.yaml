@@ -4,6 +4,8 @@
 # This module represents the "third_party/proto" root found in
 # the previous configuration.
 version: v1
+deps:
+  - buf.build/cosmos/gogo-proto
 build:
   excludes:
     - google/protobuf

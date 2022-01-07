@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.
@@ -37,8 +37,8 @@ func TestRandomizedGenState(t *testing.T) {
 
 	simulation.RandomizedGenState(&simState)
 
-	var govGenesis types.GenesisState
-	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &govGenesis)
+	var govGenesis v1beta2.GenesisState
+	simState.Cdc.MustUnmarshalJSON(simState.GenState[v1beta2.ModuleName], &govGenesis)
 
 	dec1, _ := sdk.NewDecFromStr("0.361000000000000000")
 	dec2, _ := sdk.NewDecFromStr("0.512000000000000000")
@@ -51,9 +51,9 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, dec2.String(), govGenesis.TallyParams.Threshold)
 	require.Equal(t, dec3.String(), govGenesis.TallyParams.VetoThreshold)
 	require.Equal(t, uint64(0x28), govGenesis.StartingProposalId)
-	require.Equal(t, []*types.Deposit{}, govGenesis.Deposits)
-	require.Equal(t, []*types.Vote{}, govGenesis.Votes)
-	require.Equal(t, []*types.Proposal{}, govGenesis.Proposals)
+	require.Equal(t, []*v1beta2.Deposit{}, govGenesis.Deposits)
+	require.Equal(t, []*v1beta2.Vote{}, govGenesis.Votes)
+	require.Equal(t, []*v1beta2.Proposal{}, govGenesis.Proposals)
 }
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.

@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -308,6 +309,7 @@ func SimulateMsgCreateProposal(ak group.AccountKeeper, bk group.BankKeeper, k ke
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, "no group policy found"), nil, nil
 		}
 
+		// Return a no-op if we know the proposal cannot be created
 		ctx := sdk.WrapSDKContext(sdkCtx)
 		groupRes, err := k.GroupInfo(ctx, &group.QueryGroupInfoRequest{GroupId: groupID})
 		if err != nil {
@@ -324,22 +326,13 @@ func SimulateMsgCreateProposal(ak group.AccountKeeper, bk group.BankKeeper, k ke
 		}
 
 		// Pick a random member from the group
-		res, err := k.GroupMembers(ctx, &group.QueryGroupMembersRequest{
-			GroupId: groupID,
-		})
+		acc, account, err := randomMember(r, k, ak, ctx, accounts, groupID)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, ""), nil, err
 		}
-		n := randIntInRange(r, len(res.Members))
-		if n < 0 {
+		if account == nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, "no group member found"), nil, nil
 		}
-		idx := findAccount(accounts, res.Members[n].Member.Address)
-		if idx < 0 {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, "no account found for group member"), nil, nil
-		}
-		acc := accounts[idx]
-		account := ak.GetAccount(sdkCtx, acc.Address)
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
 		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
@@ -711,12 +704,22 @@ func SimulateMsgVote(ak group.AccountKeeper,
 	bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		_, groupPolicyAddr, acc1, account, err := randomGroupPolicy(r, k, ak, sdkCtx, accounts)
+		groupID, groupPolicyAddr, _, _, err := randomGroupPolicy(r, k, ak, sdkCtx, accounts)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, ""), nil, err
 		}
 		if groupPolicyAddr == "" {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "no group policy found"), nil, nil
+		}
+
+		// Pick a random member from the group
+		ctx := sdk.WrapSDKContext(sdkCtx)
+		acc, account, err := randomMember(r, k, ak, ctx, accounts, groupID)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, ""), nil, err
+		}
+		if account == nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, "no group member found"), nil, nil
 		}
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
@@ -725,7 +728,6 @@ func SimulateMsgVote(ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "fee error"), nil, err
 		}
 
-		ctx := sdk.WrapSDKContext(sdkCtx)
 		proposalsResult, err := k.ProposalsByGroupPolicy(ctx, &group.QueryProposalsByGroupPolicyRequest{Address: groupPolicyAddr})
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "fail to query group info"), nil, err
@@ -758,7 +760,7 @@ func SimulateMsgVote(ak group.AccountKeeper,
 
 		msg := group.MsgVote{
 			ProposalId: uint64(proposalID),
-			Voter:      acc1.Address.String(),
+			Voter:      acc.Address.String(),
 			Choice:     group.Choice_CHOICE_YES,
 			Metadata:   []byte(simtypes.RandStringOfLength(r, 10)),
 		}
@@ -771,7 +773,7 @@ func SimulateMsgVote(ak group.AccountKeeper,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
-			acc1.PrivKey,
+			acc.PrivKey,
 		)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyMetadata, "unable to generate mock tx"), nil, err
@@ -795,7 +797,7 @@ func SimulateMsgExec(ak group.AccountKeeper,
 	bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		_, groupPolicyAddr, acc1, account, err := randomGroupPolicy(r, k, ak, sdkCtx, accounts)
+		_, groupPolicyAddr, acc, account, err := randomGroupPolicy(r, k, ak, sdkCtx, accounts)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, ""), nil, err
 		}
@@ -835,7 +837,7 @@ func SimulateMsgExec(ak group.AccountKeeper,
 
 		msg := group.MsgExec{
 			ProposalId: uint64(proposalID),
-			Signer:     acc1.Address.String(),
+			Signer:     acc.Address.String(),
 		}
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
@@ -846,7 +848,7 @@ func SimulateMsgExec(ak group.AccountKeeper,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
-			acc1.PrivKey,
+			acc.PrivKey,
 		)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyMetadata, "unable to generate mock tx"), nil, err
@@ -929,6 +931,27 @@ func randomGroupPolicy(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 	acc = accounts[idx]
 	account = ak.GetAccount(ctx, acc.Address)
 	return groupID, groupPolicyAddr, acc, account, nil
+}
+
+func randomMember(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
+	ctx context.Context, accounts []simtypes.Account, groupID uint64) (acc simtypes.Account, account authtypes.AccountI, err error) {
+	res, err := k.GroupMembers(ctx, &group.QueryGroupMembersRequest{
+		GroupId: groupID,
+	})
+	if err != nil {
+		return simtypes.Account{}, nil, err
+	}
+	n := randIntInRange(r, len(res.Members))
+	if n < 0 {
+		return simtypes.Account{}, nil, err
+	}
+	idx := findAccount(accounts, res.Members[n].Member.Address)
+	if idx < 0 {
+		return simtypes.Account{}, nil, err
+	}
+	acc = accounts[idx]
+	account = ak.GetAccount(sdk.UnwrapSDKContext(ctx), acc.Address)
+	return acc, account, nil
 }
 
 func randIntInRange(r *rand.Rand, l int) int {

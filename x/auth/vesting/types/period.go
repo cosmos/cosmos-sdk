@@ -52,6 +52,37 @@ func (p Periods) String() string {
 		%s`, strings.Join(periodsListString, ", ")))
 }
 
+// A schedule is an increasing step function of Coins over time.
+// It's specified as an absolute start time and a sequence of relative
+// periods, with each steps at the end of a period. A schedule may also
+// give the time and total value at the last step, which can speed
+// evaluation of the step function after the last step.
+
+// ReadSchedule returns the value of a schedule at readTime.
+func ReadSchedule(startTime, endTime int64, periods []Period, totalCoins sdk.Coins, readTime int64) sdk.Coins {
+	coins := sdk.NewCoins()
+
+	if readTime <= startTime {
+		return coins
+	}
+	if readTime >= endTime {
+		return totalCoins
+	}
+
+	time := startTime
+
+	for _, period := range periods {
+		x := readTime - time
+		if x < period.Length {
+			break
+		}
+		coins = coins.Add(period.Amount...)
+		time += period.Length
+	}
+
+	return coins
+}
+
 // min64 returns the minimum of its inputs.
 func min64(i, j int64) int64 {
 	if i < j {
@@ -242,35 +273,4 @@ func ConjunctPeriods(startP, startQ int64, p, q []Period) (startTime int64, endT
 
 	endTime = time
 	return
-}
-
-// A schedule is an increasing step function of Coins over time.
-// It's specified as an absolute start time and a sequence of relative
-// periods, with each steps at the end of a period. A schedule may also
-// give the time and total value at the last step, which can speed
-// evaluation of the step function after the last step.
-
-// ReadSchedule returns the value of a schedule at readTime.
-func ReadSchedule(startTime, endTime int64, periods []Period, totalCoins sdk.Coins, readTime int64) sdk.Coins {
-	coins := sdk.NewCoins()
-
-	if readTime <= startTime {
-		return coins
-	}
-	if readTime >= endTime {
-		return totalCoins
-	}
-
-	time := startTime
-
-	for _, period := range periods {
-		x := readTime - time
-		if x < period.Length {
-			break
-		}
-		coins = coins.Add(period.Amount...)
-		time += period.Length
-	}
-
-	return coins
 }

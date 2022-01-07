@@ -662,26 +662,66 @@ func (pva TrueVestingAccount) MarshalYAML() (interface{}, error) {
 // the lockup schedule will also have to be capped to keep the total sums the same.
 // (But future unlocking events might be preserved if they unlock currently vested coins.)
 // If the amount returned is zero, then the returned account should be unchanged.
-// XXX think about what, if any, adjustments need to be made to DelegatedFree/Vesting.
-func (tva TrueVestingAccount) ComputeClawback(time int64) (TrueVestingAccount, sdk.Coins) {
-	// XXX implement
-	return tva, sdk.NewCoins()
+// Does not adjust DelegatedVesting
+func (tva TrueVestingAccount) ComputeClawback(clawbackTime int64) (TrueVestingAccount, sdk.Coins) {
+	// Compute the truncated vesting schedule and amounts.
+	// Work with the schedule as the primary data and recompute derived fields, e.g. OriginalVesting.
+	t := tva.StartTime
+	totalVested := sdk.NewCoins()
+	totalUnvested := sdk.NewCoins()
+	unvestedIdx := 0
+	for i, period := range tva.VestingPeriods {
+		t += period.Length
+		// tie in time goes to clawback
+		if t < clawbackTime {
+			totalVested = totalVested.Add(period.Amount...)
+			unvestedIdx = i + 1
+		} else {
+			totalUnvested = totalUnvested.Add(period.Amount...)
+		}
+	}
+	newVestingPeriods := tva.VestingPeriods[:unvestedIdx]
+
+	// To cap the unlocking schedule to the new total vested, conjunct with a limiting schedule
+	capPeriods := []Period{
+		{
+			Length: 0,
+			Amount: totalVested,
+		},
+	}
+	_, _, newLockupPeriods := ConjunctPeriods(tva.StartTime, tva.StartTime, tva.LockupPeriods, capPeriods)
+
+	_, _, newCombinedPeriods := ConjunctPeriods(tva.StartTime, tva.StartTime, newLockupPeriods, newVestingPeriods)
+
+	// Now construct the new account state
+	tva.OriginalVesting = totalVested
+	tva.EndTime = t
+	tva.LockupPeriods = newLockupPeriods
+	tva.VestingPeriods = newVestingPeriods
+	tva.CombinedPeriods = newCombinedPeriods
+	// DelegatedVesting will be adjusted elsewhere
+
+	return tva, totalUnvested
 }
 
-// Clawback
+// Clawback transfers unvested tokens in a TrueVestingAccount to dest.
+// Future vesting events are removed. Unstaked tokens
 func (tva TrueVestingAccount) Clawback(ctx sdk.Context, dest sdk.AccAddress, ak AccountKeeper, bk BankKeeper, sk StakingKeeper) error {
 	updatedAcc, toClawBack := tva.ComputeClawback(ctx.BlockTime().Unix())
 	if toClawBack.IsZero() {
 		return nil
 	}
-	ak.SetAccount(ctx, &updatedAcc)
 	addr := updatedAcc.GetAddress()
+
+	accPtr := &updatedAcc
+	writeAcc := func() { ak.SetAccount(ctx, accPtr) }
+	writeAcc() // do this now so that unvested tokens are unlocked
 
 	// Now that future vesting events (and associated lockup) are removed,
 	// the balance of the account is unlocked and can be freely transferred.
 	spendable := bk.SpendableCoins(ctx, addr)
 	toXfer := coinsMin(toClawBack, spendable)
-	err := bk.SendCoins(ctx, addr, dest, toXfer)
+	err := bk.SendCoins(ctx, addr, dest, toXfer) // unvested tokens are be unlocked now
 	if err != nil {
 		return err
 	}
@@ -690,14 +730,22 @@ func (tva TrueVestingAccount) Clawback(ctx sdk.Context, dest sdk.AccAddress, ak 
 		return nil
 	}
 
-	// If we need more, transfer UnbondingDelegations.
+	// If we need more, we'll have to transfer unbonding or bonded tokens
+	// Staking is the only way unvested tokens should be missing from the bank balance.
 	bondDenom := sk.BondDenom(ctx)
-	// XXX verify that the remaining toClawBack is denominated entiry by bondDenom.
-	// Staking is the only way unvested tokens would be missing from the bank balance.
+	// Safely subtract amt of bondDenom from coins, with a floor of zero.
+	subBond := func(coins sdk.Coins, amt sdk.Int) sdk.Coins {
+		coinsB := sdk.NewCoins(sdk.NewCoin(bondDenom, amt))
+		return coins.Sub(coinsMin(coins, coinsB))
+	}
+	defer writeAcc() // write again when we're done to update DelegatedVesting
+
+	// If we need more, transfer UnbondingDelegations.
 	want := toClawBack.AmountOf(bondDenom)
 	unbondings := sk.GetUnbondingDelegations(ctx, addr, math.MaxUint16)
 	for _, unbonding := range unbondings {
 		transferred := sk.TransferUnbonding(ctx, addr, dest, sdk.ValAddress(unbonding.ValidatorAddress), want)
+		updatedAcc.DelegatedVesting = subBond(updatedAcc.DelegatedVesting, transferred)
 		want = want.Sub(transferred)
 		if !want.IsPositive() {
 			return nil
@@ -721,7 +769,8 @@ func (tva TrueVestingAccount) Clawback(ctx sdk.Context, dest sdk.AccAddress, ak 
 		}
 		transferredShares := sk.TransferDelegation(ctx, addr, dest, delegation.GetValidatorAddr(), wantShares)
 		transferred := validator.TokensFromSharesRoundUp(transferredShares).RoundInt() // XXX rounding
-		want = want.Sub(transferred)                                                   // XXX underflow from rounding?
+		updatedAcc.DelegatedVesting = subBond(updatedAcc.DelegatedVesting, transferred)
+		want = want.Sub(transferred) // XXX underflow from rounding?
 		if !want.IsPositive() {
 			return nil
 		}
@@ -730,4 +779,126 @@ func (tva TrueVestingAccount) Clawback(ctx sdk.Context, dest sdk.AccAddress, ak 
 	// If we've transferred everything and still haven't transferred the desired clawback amount,
 	// then the account must have most some unvested tokens from slashing.
 	return nil
+}
+
+// findBalance computes the current account balance on the staking dimension.
+// Returns the number of bonded, unbonding, and unbonded statking tokens.
+func (tva TrueVestingAccount) findBalance(ctx sdk.Context, bk BankKeeper, sk StakingKeeper) (bonded, unbonding, unbonded sdk.Int) {
+	bondDenom := sk.BondDenom(ctx)
+	unbonded = bk.GetBalance(ctx, tva.GetAddress(), bondDenom).Amount
+
+	unbonding = sdk.ZeroInt()
+	unbondings := sk.GetUnbondingDelegations(ctx, tva.GetAddress(), math.MaxUint16)
+	for _, unbonding := range unbondings {
+		for _, entry := range unbonding.Entries {
+			unbonded = unbonded.Add(entry.Balance)
+		}
+	}
+
+	bonded = sdk.ZeroInt()
+	delegations := sk.GetDelegatorDelegations(ctx, tva.GetAddress(), math.MaxUint16)
+	for _, delegation := range delegations {
+		validatorAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+		if err != nil {
+			panic(err) // shouldn't happen
+		}
+		validator, found := sk.GetValidator(ctx, validatorAddr)
+		if !found {
+			panic("validator not found") // shoudn't happen
+		}
+		shares := delegation.Shares
+		tokens := validator.TokensFromSharesRoundUp(shares).RoundInt() // XXX rounding
+		bonded = bonded.Add(tokens)
+	}
+	return
+}
+
+// distributeReward adds the reward to the future vesting schedule in proportion to the future vesting
+// staking tokens.
+func (tva TrueVestingAccount) distributeReward(ctx sdk.Context, ak AccountKeeper, bondDenom string, reward sdk.Coins) error {
+	now := ctx.BlockTime().Unix()
+	t := tva.StartTime
+	firstUnvestedPeriod := 0
+	unvestedTokens := sdk.ZeroInt()
+	for i, period := range tva.VestingPeriods {
+		t += period.Length
+		if t <= now {
+			firstUnvestedPeriod = i + 1
+			continue
+		}
+		unvestedTokens = unvestedTokens.Add(period.Amount.AmountOf(bondDenom))
+	}
+
+	runningTotReward := sdk.NewCoins()
+	runningTotStaking := sdk.ZeroInt()
+	for i := firstUnvestedPeriod; i < len(tva.VestingPeriods); i++ {
+		period := tva.VestingPeriods[i]
+		runningTotStaking = runningTotStaking.Add(period.Amount.AmountOf(bondDenom))
+		runningTotRatio := runningTotStaking.ToDec().Quo(unvestedTokens.ToDec())
+		targetCoins := scaleCoins(reward, runningTotRatio)
+		thisReward := targetCoins.Sub(runningTotReward)
+		runningTotReward = targetCoins
+		period.Amount = period.Amount.Add(thisReward...)
+		tva.VestingPeriods[i] = period
+	}
+
+	tva.OriginalVesting = tva.OriginalVesting.Add(reward...)
+	ak.SetAccount(ctx, &tva)
+	return nil
+}
+
+func scaleCoins(coins sdk.Coins, scale sdk.Dec) sdk.Coins {
+	scaledCoins := sdk.NewCoins()
+	for _, coin := range coins {
+		amt := coin.Amount.ToDec().Mul(scale).RoundInt() // XXX rounding
+		scaledCoins = scaledCoins.Add(sdk.NewCoin(coin.Denom, amt))
+	}
+	return scaledCoins
+}
+
+// PostReward encumbers a previously-deposited reward according to the current vesting apportionment of staking.
+// Note that rewards might be unvested, but are unlocked.
+func (tva TrueVestingAccount) PostReward(ctx sdk.Context, reward sdk.Coins, ak AccountKeeper, bk BankKeeper, sk StakingKeeper) error {
+	// Find the scheduled amount of vested and unvested staking tokens
+	bondDenom := sk.BondDenom(ctx)
+	vested := ReadSchedule(tva.StartTime, tva.EndTime, tva.VestingPeriods, tva.OriginalVesting, ctx.BlockTime().Unix()).AmountOf(bondDenom)
+	unvested := tva.OriginalVesting.AmountOf(bondDenom).Sub(vested)
+
+	if unvested.IsZero() {
+		// no need to adjust the vesting schedule
+		return nil
+	}
+
+	if vested.IsZero() {
+		// all staked tokens must be unvested
+		return tva.distributeReward(ctx, ak, bondDenom, reward)
+	}
+
+	// Find current split of account balance on staking axis
+	bonded, unbonding, unbonded := tva.findBalance(ctx, bk, sk)
+	total := bonded.Add(unbonding).Add(unbonded)
+
+	// Adjust vested/unvested for the actual amount in the account (transfers, slashing)
+	if unvested.GT(total) {
+		// must have been reduced by slashing
+		unvested = total
+	}
+	vested = total.Sub(unvested)
+
+	// Now restrict to just the bonded tokens, preferring them to be vested
+	if vested.GT(bonded) {
+		vested = bonded
+	}
+	unvested = bonded.Sub(vested)
+
+	// Compute the unvested amount of reward and add to vesting schedule
+	if unvested.IsZero() {
+		return nil
+	}
+	if vested.IsZero() {
+		return tva.distributeReward(ctx, ak, bondDenom, reward)
+	}
+	unvestedRatio := unvested.ToDec().Quo(bonded.ToDec()) // XXX rounding
+	unvestedReward := scaleCoins(reward, unvestedRatio)
+	return tva.distributeReward(ctx, ak, bondDenom, unvestedReward)
 }

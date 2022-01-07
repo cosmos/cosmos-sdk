@@ -308,8 +308,23 @@ func SimulateMsgCreateProposal(ak group.AccountKeeper, bk group.BankKeeper, k ke
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, "no group policy found"), nil, nil
 		}
 
+		ctx := sdk.WrapSDKContext(sdkCtx)
+		groupRes, err := k.GroupInfo(ctx, &group.QueryGroupInfoRequest{GroupId: groupID})
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, ""), nil, err
+		}
+		groupPolicyRes, err := k.GroupPolicyInfo(ctx, &group.QueryGroupPolicyInfoRequest{Address: groupPolicyAddr})
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, ""), nil, err
+		}
+		policy := groupPolicyRes.Info.GetDecisionPolicy()
+		err = policy.Validate(*groupRes.Info)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, ""), nil, err
+		}
+
 		// Pick a random member from the group
-		res, err := k.GroupMembers(sdk.WrapSDKContext(sdkCtx), &group.QueryGroupMembersRequest{
+		res, err := k.GroupMembers(ctx, &group.QueryGroupMembersRequest{
 			GroupId: groupID,
 		})
 		if err != nil {

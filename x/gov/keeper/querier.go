@@ -167,10 +167,10 @@ func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 	var tallyResult v1beta2.TallyResult
 
 	switch {
-	case proposal.Status == types.StatusDepositPeriod:
+	case proposal.Status == v1beta2.StatusDepositPeriod:
 		tallyResult = v1beta2.EmptyTallyResult()
 
-	case proposal.Status == types.StatusPassed || proposal.Status == types.StatusRejected:
+	case proposal.Status == v1beta2.StatusPassed || proposal.Status == v1beta2.StatusRejected:
 		tallyResult = *proposal.FinalTallyResult
 
 	default:

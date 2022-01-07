@@ -61,10 +61,10 @@ func TestMsgSubmitProposal(t *testing.T) {
 
 func TestMsgDepositGetSignBytes(t *testing.T) {
 	addr := sdk.AccAddress("addr1")
-	msg := NewMsgDeposit(addr, 0, coinsPos)
+	msg := NewMsgDeposit(addr, 1, coinsPos)
 	res := msg.GetSignBytes()
 
-	expected := `{"type":"cosmos-sdk/MsgDeposit","value":{"amount":[{"amount":"1000","denom":"stake"}],"depositor":"cosmos1v9jxgu33kfsgr5","proposal_id":"0"}}`
+	expected := `{"type":"cosmos-sdk/MsgDeposit","value":{"amount":[{"amount":"1000","denom":"stake"}],"depositor":"cosmos1v9jxgu33kfsgr5","proposal_id":"1"}}`
 	require.Equal(t, expected, string(res))
 }
 

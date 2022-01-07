@@ -315,10 +315,10 @@ func SimulateMsgCreateProposal(ak group.AccountKeeper, bk group.BankKeeper, k ke
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, ""), nil, err
 		}
-		if len(res.Members) == 0 {
+		n := randIntInRange(r, len(res.Members))
+		if n < 0 {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, "no group member found"), nil, nil
 		}
-		n := randIntInRange(r, len(res.Members))
 		idx := findAccount(accounts, res.Members[n].Member.Address)
 		if idx < 0 {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, "no account found for group member"), nil, nil
@@ -901,6 +901,9 @@ func randomGroupPolicy(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 	}
 
 	n := randIntInRange(r, len(result.GroupPolicies))
+	if n < 0 {
+		return groupID, "", simtypes.Account{}, nil, nil
+	}
 	groupPolicy := result.GroupPolicies[n]
 	groupPolicyAddr = groupPolicy.Address
 
@@ -913,11 +916,14 @@ func randomGroupPolicy(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 	return groupID, groupPolicyAddr, acc, account, nil
 }
 
-func randIntInRange(r *rand.Rand, l int) uint64 {
+func randIntInRange(r *rand.Rand, l int) int {
+	if l == 0 {
+		return -1
+	}
 	if l == 1 {
 		return 0
 	} else {
-		return uint64(simtypes.RandIntBetween(r, 0, l-1))
+		return simtypes.RandIntBetween(r, 0, l-1)
 	}
 }
 

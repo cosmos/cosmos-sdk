@@ -1,0 +1,14 @@
+version: v1
+plugins:
+  - remote: buf.build/protocolbuffers/plugins/kotlin
+    out: kotlin
+  - remote: buf.build/grpc/plugins/kotlin
+    out: kotlin
+  - remote: buf.build/protocolbuffers/plugins/python
+    out: python
+  - remote: buf.build/grpc/plugins/python
+    out: python
+  - remote: buf.build/protocolbuffers/plugins/java
+    out: java
+  - remote: buf.build/grpc/plugins/java
+    out: java

@@ -13,10 +13,16 @@ import (
 
 func TestIntegrationTestSuite(t *testing.T) {
 	cfg := network.DefaultConfig()
-	cfg.NumValidators = 2
+	cfg.NumValidators = 1
 	suite.Run(t, NewIntegrationTestSuite(cfg))
 }
 
 func TestGRPCQueryTestSuite(t *testing.T) {
 	suite.Run(t, new(GRPCQueryTestSuite))
+}
+
+func TestWithdrawAllSuite(t *testing.T) {
+	cfg1 := network.DefaultConfig()
+	cfg1.NumValidators = 2
+	suite.Run(t, NewWithdrawAllTestSuite(cfg1))
 }

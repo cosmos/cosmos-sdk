@@ -10,16 +10,12 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
 type IntegrationTestSuite struct {
@@ -59,8 +55,6 @@ func (s *IntegrationTestSuite) SetupTest() {
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
-
-	// s.delegator = newAddr
 }
 
 // TearDownTest cleans up the curret test network after _each_ test.
@@ -135,7 +129,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			`{"rewards":[{"denom":"stake","amount":"1144.440000000000000000"}]}`,
+			`{"rewards":[{"denom":"stake","amount":"1164.240000000000000000"}]}`,
 		},
 		{
 			"text output",
@@ -146,7 +140,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 			},
 			false,
 			`rewards:
-- amount: "1144.440000000000000000"
+- amount: "1164.240000000000000000"
   denom: stake`,
 		},
 	}
@@ -198,7 +192,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			`{"commission":[{"denom":"stake","amount":"457.342500000000000000"}]}`,
+			`{"commission":[{"denom":"stake","amount":"464.520000000000000000"}]}`,
 		},
 		{
 			"text output",
@@ -209,7 +203,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
 			},
 			false,
 			`commission:
-- amount: "457.342500000000000000"
+- amount: "464.520000000000000000"
   denom: stake`,
 		},
 	}
@@ -351,7 +345,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			fmt.Sprintf(`{"rewards":[{"validator_address":"%s","reward":[{"denom":"stake","amount":"391.050000000000000000"}]}],"total":[{"denom":"stake","amount":"391.050000000000000000"}]}`, valAddr.String()),
+			fmt.Sprintf(`{"rewards":[{"validator_address":"%s","reward":[{"denom":"stake","amount":"387.100000000000000000"}]}],"total":[{"denom":"stake","amount":"387.100000000000000000"}]}`, valAddr.String()),
 		},
 		{
 			"json output (specific validator)",
@@ -361,7 +355,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			`{"rewards":[{"denom":"stake","amount":"391.050000000000000000"}]}`,
+			`{"rewards":[{"denom":"stake","amount":"387.100000000000000000"}]}`,
 		},
 		{
 			"text output",
@@ -373,11 +367,11 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
 			false,
 			fmt.Sprintf(`rewards:
 - reward:
-  - amount: "391.050000000000000000"
+  - amount: "387.100000000000000000"
     denom: stake
   validator_address: %s
 total:
-- amount: "391.050000000000000000"
+- amount: "387.100000000000000000"
   denom: stake`, valAddr.String()),
 		},
 		{
@@ -389,7 +383,7 @@ total:
 			},
 			false,
 			`rewards:
-- amount: "391.050000000000000000"
+- amount: "387.100000000000000000"
   denom: stake`,
 		},
 	}
@@ -413,6 +407,7 @@ total:
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryCommunityPool() {
+	s.SetupTest()
 	val := s.network.Validators[0]
 
 	_, err := s.network.WaitForHeight(4)
@@ -426,13 +421,13 @@ func (s *IntegrationTestSuite) TestGetCmdQueryCommunityPool() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=3", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`{"pool":[{"denom":"stake","amount":"9.480000000000000000"}]}`,
+			`{"pool":[{"denom":"stake","amount":"4.740000000000000000"}]}`,
 		},
 		{
 			"text output",
 			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag), fmt.Sprintf("--%s=3", flags.FlagHeight)},
 			`pool:
-- amount: "9.480000000000000000"
+- amount: "4.740000000000000000"
   denom: stake`,
 		},
 	}
@@ -753,84 +748,4 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 			}
 		})
 	}
-}
-
-func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
-	require := s.Require()
-	val := s.network.Validators[0]
-	val1 := s.network.Validators[1]
-	clientCtx := val.ClientCtx
-
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	require.NoError(err)
-
-	pubkey, err := info.GetPubKey()
-	require.NoError(err)
-
-	_, err = s.network.WaitForHeight(6)
-	require.NoError(err)
-
-	newAddr := sdk.AccAddress(pubkey.Address())
-	_, err = banktestutil.MsgSendExec(
-		val.ClientCtx,
-		val.Address,
-		newAddr,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(2000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	)
-	require.NoError(err)
-
-	// delegate 500 tokens to validator1
-	args := []string{
-		val.ValAddress.String(),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(500)).String(),
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-	cmd := stakingcli.NewDelegateCmd()
-	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	require.NoError(err)
-
-	// delegate 500 tokens to validator2
-	args = []string{
-		val1.ValAddress.String(),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(500)).String(),
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	require.NoError(err)
-
-	args = []string{
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-		fmt.Sprintf("--%s=1", cli.FlagMaxMessagesPerTx),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-	cmd = cli.NewWithdrawAllRewardsCmd()
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	require.NoError(err)
-	// expect 2 transactions in the generated file when --max-msgs in a tx set 1.
-	s.Require().Equal(2, len(strings.Split(strings.Trim(out.String(), "\n"), "\n")))
-
-	args = []string{
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-		fmt.Sprintf("--%s=2", cli.FlagMaxMessagesPerTx),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastAsync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-	cmd = cli.NewWithdrawAllRewardsCmd()
-	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	require.NoError(err)
-	// expect 1 transaction in the generated file when --max-msgs in a tx set 2, since there are only delegations.
-	s.Require().Equal(1, len(strings.Split(strings.Trim(out.String(), "\n"), "\n")))
 }

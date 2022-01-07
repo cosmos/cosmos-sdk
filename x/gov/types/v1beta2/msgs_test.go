@@ -28,7 +28,7 @@ func TestMsgDepositGetSignBytes(t *testing.T) {
 	msg := v1beta2.NewMsgDeposit(addr, 0, coinsPos)
 	res := msg.GetSignBytes()
 
-	expected := `{"type":"cosmos-sdk/MsgDeposit","value":{"amount":[{"amount":"1000","denom":"stake"}],"depositor":"cosmos1v9jxgu33kfsgr5"}}`
+	expected := `{"type":"cosmos-sdk/v1beta2/MsgDeposit","value":{"amount":[{"amount":"1000","denom":"stake"}],"depositor":"cosmos1v9jxgu33kfsgr5"}}`
 	require.Equal(t, expected, string(res))
 }
 

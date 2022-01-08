@@ -23,11 +23,11 @@ type WithdrawAllTestSuite struct {
 	network *network.Network
 }
 
-func NewWithdrawAllTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
-}
+func (s *WithdrawAllTestSuite) SetupSuite() {
+	cfg := network.DefaultConfig()
+	cfg.NumValidators = 2
+	s.cfg = cfg
 
-func (s *WithdrawAllTestSuite) SetupTest() {
 	s.T().Log("setting up integration test suite")
 	network, err := network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
@@ -37,6 +37,14 @@ func (s *WithdrawAllTestSuite) SetupTest() {
 	s.Require().NoError(err)
 }
 
+// TearDownSuite cleans up the curret test network after _each_ test.
+func (s *WithdrawAllTestSuite) TearDownSuite() {
+	s.T().Log("tearing down integration test suite")
+	s.network.Cleanup()
+}
+
+// This test requires multiple validators, if I add this test to `IntegrationTestSuite` by increasing
+// `NumValidators` the existing tests are leading to non-determnism so created new suite for this test.
 func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	require := s.Require()
 	val := s.network.Validators[0]
@@ -90,7 +98,7 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 		fmt.Sprintf("--%s=1", cli.FlagMaxMessagesPerTx),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 	cmd = cli.NewWithdrawAllRewardsCmd()
@@ -104,7 +112,7 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 		fmt.Sprintf("--%s=2", cli.FlagMaxMessagesPerTx),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastAsync),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 	cmd = cli.NewWithdrawAllRewardsCmd()

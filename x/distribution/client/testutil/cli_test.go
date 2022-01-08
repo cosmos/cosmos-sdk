@@ -1,20 +1,13 @@
-//go:build norace
-// +build norace
-
 package testutil
 
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil/network"
-
 	"github.com/stretchr/testify/suite"
 )
 
 func TestIntegrationTestSuite(t *testing.T) {
-	cfg := network.DefaultConfig()
-	cfg.NumValidators = 1
-	suite.Run(t, NewIntegrationTestSuite(cfg))
+	suite.Run(t, new(IntegrationTestSuite))
 }
 
 func TestGRPCQueryTestSuite(t *testing.T) {
@@ -22,7 +15,5 @@ func TestGRPCQueryTestSuite(t *testing.T) {
 }
 
 func TestWithdrawAllSuite(t *testing.T) {
-	cfg1 := network.DefaultConfig()
-	cfg1.NumValidators = 2
-	suite.Run(t, NewWithdrawAllTestSuite(cfg1))
+	suite.Run(t, new(WithdrawAllTestSuite))
 }

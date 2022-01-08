@@ -815,7 +815,7 @@ func (tva TrueVestingAccount) findBalance(ctx sdk.Context, bk BankKeeper, sk Sta
 
 // distributeReward adds the reward to the future vesting schedule in proportion to the future vesting
 // staking tokens.
-func (tva TrueVestingAccount) distributeReward(ctx sdk.Context, ak AccountKeeper, bondDenom string, reward sdk.Coins) error {
+func (tva TrueVestingAccount) distributeReward(ctx sdk.Context, ak AccountKeeper, bondDenom string, reward sdk.Coins) {
 	now := ctx.BlockTime().Unix()
 	t := tva.StartTime
 	firstUnvestedPeriod := 0
@@ -844,7 +844,6 @@ func (tva TrueVestingAccount) distributeReward(ctx sdk.Context, ak AccountKeeper
 
 	tva.OriginalVesting = tva.OriginalVesting.Add(reward...)
 	ak.SetAccount(ctx, &tva)
-	return nil
 }
 
 func scaleCoins(coins sdk.Coins, scale sdk.Dec) sdk.Coins {
@@ -858,7 +857,13 @@ func scaleCoins(coins sdk.Coins, scale sdk.Dec) sdk.Coins {
 
 // PostReward encumbers a previously-deposited reward according to the current vesting apportionment of staking.
 // Note that rewards might be unvested, but are unlocked.
-func (tva TrueVestingAccount) PostReward(ctx sdk.Context, reward sdk.Coins, ak AccountKeeper, bk BankKeeper, sk StakingKeeper) error {
+func (tva TrueVestingAccount) PostReward(ctx sdk.Context, reward sdk.Coins, rak, rbk, rsk interface{}) {
+	// Cast keepers to expected interfaces.
+	// Necessary due to difference in expected keepers between us and caller.
+	ak := rak.(AccountKeeper)
+	bk := rbk.(BankKeeper)
+	sk := rsk.(StakingKeeper)
+
 	// Find the scheduled amount of vested and unvested staking tokens
 	bondDenom := sk.BondDenom(ctx)
 	vested := ReadSchedule(tva.StartTime, tva.EndTime, tva.VestingPeriods, tva.OriginalVesting, ctx.BlockTime().Unix()).AmountOf(bondDenom)
@@ -866,12 +871,13 @@ func (tva TrueVestingAccount) PostReward(ctx sdk.Context, reward sdk.Coins, ak A
 
 	if unvested.IsZero() {
 		// no need to adjust the vesting schedule
-		return nil
+		return
 	}
 
 	if vested.IsZero() {
 		// all staked tokens must be unvested
-		return tva.distributeReward(ctx, ak, bondDenom, reward)
+		tva.distributeReward(ctx, ak, bondDenom, reward)
+		return
 	}
 
 	// Find current split of account balance on staking axis
@@ -893,12 +899,13 @@ func (tva TrueVestingAccount) PostReward(ctx sdk.Context, reward sdk.Coins, ak A
 
 	// Compute the unvested amount of reward and add to vesting schedule
 	if unvested.IsZero() {
-		return nil
+		return
 	}
 	if vested.IsZero() {
-		return tva.distributeReward(ctx, ak, bondDenom, reward)
+		tva.distributeReward(ctx, ak, bondDenom, reward)
+		return
 	}
 	unvestedRatio := unvested.ToDec().Quo(bonded.ToDec()) // XXX rounding
 	unvestedReward := scaleCoins(reward, unvestedRatio)
-	return tva.distributeReward(ctx, ak, bondDenom, unvestedReward)
+	tva.distributeReward(ctx, ak, bondDenom, unvestedReward)
 }

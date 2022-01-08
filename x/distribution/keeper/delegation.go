@@ -200,18 +200,17 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val sdk.Validato
 	return rewards, nil
 }
 
-func (k Keeper) withdrawDelegationRewards(ctx context.Context, val sdk.ValidatorI, del sdk.DelegationI) (sdk.Coins, error) {
-	addrCodec := k.authKeeper.AddressCodec()
-	delAddr, err := addrCodec.StringToBytes(del.GetDelegatorAddr())
-	if err != nil {
-		return nil, err
-	}
+// SmartRewardAccount is an account with a post-reward processing function.
+// Such an account ignores a non-default withdrawal address, as this can
+// be implemented in the post-reward processing if desired.
+type SmartRewardAccount interface {
+	// PostReward is called after reward has been transferred to the account.
+	// The named keepers should be provided. They are given the trivial type
+	// here to handle the mismatch in expected methods with the callee.
+	PostReward(ctx sdk.Context, reward sdk.Coins, authKeeper, bankKeeper, stakingKeeper interface{})
+}
 
-	valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(del.GetValidatorAddr())
-	if err != nil {
-		return nil, err
-	}
-
+func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI) (sdk.Coins, error) {
 	// check existence of delegator starting info
 	hasInfo, err := k.DelegatorStartingInfo.Has(ctx, collections.Join(sdk.ValAddress(valAddr), sdk.AccAddress(delAddr)))
 	if err != nil {
@@ -255,15 +254,20 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val sdk.Validator
 	finalRewards, remainder := rewards.TruncateDecimal()
 
 	// add coins to user account
-	if !finalRewards.IsZero() {
-		withdrawAddr, err := k.GetDelegatorWithdrawAddr(ctx, delAddr)
+	if !coins.IsZero() {
+		addr := del.GetDelegatorAddr()
+		acc := k.authKeeper.GetAccount(ctx, addr)
+		smartAcc, isSmart := acc.(SmartRewardAccount)
+		withdrawAddr := addr
+		if !isSmart {
+			withdrawAddr = k.GetDelegatorWithdrawAddr(ctx, addr)
+		}
+		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, coins)
 		if err != nil {
 			return nil, err
 		}
-
-		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, finalRewards)
-		if err != nil {
-			return nil, err
+		if isSmart {
+			smartAcc.PostReward(ctx, coins, k.authKeeper, k.bankKeeper, k.stakingKeeper)
 		}
 	}
 

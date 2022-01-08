@@ -35,7 +35,7 @@ func WeightedOperations(
 		weightMsgDelegate                  int
 		weightMsgUndelegate                int
 		weightMsgBeginRedelegate           int
-		//weightMsgCancelUnbondingDelegation int
+		weightMsgCancelUnbondingDelegation int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreateValidator, &weightMsgCreateValidator, nil,
@@ -68,11 +68,11 @@ func WeightedOperations(
 		},
 	)
 
-	//appParams.GetOrGenerate(cdc, OpWeightMsgCancelUnbondingDelegation, &weightMsgCancelUnbondingDelegation, nil,
-	//	func(_ *rand.Rand) {
-	//		weightMsgCancelUnbondingDelegation = simappparams.DefaultWeightMsgCancelUnbondingDelegation
-	//	},
-	//)
+	appParams.GetOrGenerate(cdc, OpWeightMsgCancelUnbondingDelegation, &weightMsgCancelUnbondingDelegation, nil,
+		func(_ *rand.Rand) {
+			weightMsgCancelUnbondingDelegation = simappparams.DefaultWeightMsgCancelUnbondingDelegation
+		},
+	)
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
@@ -95,10 +95,10 @@ func WeightedOperations(
 			weightMsgBeginRedelegate,
 			SimulateMsgBeginRedelegate(ak, bk, k),
 		),
-		//simulation.NewWeightedOperation(
-		//	weightMsgCancelUnbondingDelegation,
-		//	SimulateMsgCancelUnbondingDelegate(ak, bk, k),
-		//),
+		simulation.NewWeightedOperation(
+			weightMsgCancelUnbondingDelegation,
+			SimulateMsgCancelUnbondingDelegate(ak, bk, k),
+		),
 	}
 }
 

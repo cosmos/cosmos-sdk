@@ -109,6 +109,5 @@ message TrueVestingAccount {
   int64 start_time = 3 [(gogoproto.moretags) = "yaml:\"start_time\""];
   repeated Period combined_periods = 4 [(gogoproto.moretags) = "yaml:\"combined_periods\"", (gogoproto.nullable) = false];
   repeated Period lockup_periods = 5 [(gogoproto.moretags) = "yaml:\"lockup_periods\"", (gogoproto.nullable) = false];
-  repeated Period vesting_lockup_periods = 6 [(gogoproto.moretags) = "yaml:\"vesting_lockup_periods\"", (gogoproto.nullable) = false];
-  repeated Period vesting_periods = 7 [(gogoproto.moretags) = "yaml:\"vesting_periods\"", (gogoproto.nullable) = false];
+  repeated Period vesting_periods = 6 [(gogoproto.moretags) = "yaml:\"vesting_periods\"", (gogoproto.nullable) = false];
 }

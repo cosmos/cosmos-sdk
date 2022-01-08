@@ -8287,7 +8287,6 @@ of unvested tokens, or a combination (tokens vest, but are still locked).
 | `start_time` | [int64](#int64) |  |  |
 | `combined_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated |  |
 | `lockup_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated |  |
-| `vesting_lockup_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated |  |
 | `vesting_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated |  |
 
 

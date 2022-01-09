@@ -265,7 +265,7 @@ func (msg MsgClawback) GetSignBytes() []byte {
 
 // ValidateBasic Implements Msg.
 func (msg MsgClawback) ValidateBasic() error {
-	funder, err := sdk.AccAddressFromBech32(msg.FunderAddress)
+	funder, err := sdk.AccAddressFromBech32(msg.GetFunderAddress())
 	if err != nil {
 		return err
 	}
@@ -273,7 +273,7 @@ func (msg MsgClawback) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid funder address: %s", err)
 	}
 
-	addr, err := sdk.AccAddressFromBech32(msg.FunderAddress)
+	addr, err := sdk.AccAddressFromBech32(msg.GetAddress())
 	if err != nil {
 		return err
 	}
@@ -281,8 +281,8 @@ func (msg MsgClawback) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid account address: %s", err)
 	}
 
-	if msg.FunderAddress != "" {
-		dest, err := sdk.AccAddressFromBech32(msg.FunderAddress)
+	if msg.GetDestAddress() != "" {
+		dest, err := sdk.AccAddressFromBech32(msg.GetDestAddress())
 		if err != nil {
 			return err
 		}

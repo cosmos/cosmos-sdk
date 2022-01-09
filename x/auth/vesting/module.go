@@ -14,22 +14,44 @@ var _ appmodule.AppModule = AppModule{}
 type AppModule struct {
 	accountKeeper keeper.AccountKeeper
 	bankKeeper    types.BankKeeper
+	stakingKeeper types.StakingKeeper
 }
 
-func NewAppModule(ak keeper.AccountKeeper, bk types.BankKeeper) AppModule {
+// NewAppModule returns a new vesting AppModule.
+func NewAppModule(ak keeper.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper) AppModule {
 	return AppModule{
-		accountKeeper: ak,
-		bankKeeper:    bk,
+		AppModuleBasic: AppModuleBasic{},
+		accountKeeper:  ak,
+		bankKeeper:     bk,
+		stakingKeeper:  sk,
 	}
 }
 
-// IsAppModule implements the appmodule.AppModule interface.
-func (am AppModule) IsAppModule() {}
+// RegisterInvariants performs a no-op; there are no invariants to enforce.
+func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Name returns the module's name.
-// Deprecated: kept for legacy reasons.
-func (AppModule) Name() string {
-	return types.ModuleName
+// Route returns the module's message router and handler.
+func (am AppModule) Route() sdk.Route {
+	return sdk.NewRoute(types.RouterKey, NewHandler(am.accountKeeper, am.bankKeeper, am.stakingKeeper))
+}
+
+// QuerierRoute returns an empty string as the module contains no query
+// functionality.
+func (AppModule) QuerierRoute() string { return "" }
+
+// RegisterServices registers module services.
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), NewMsgServerImpl(am.accountKeeper, am.bankKeeper, am.stakingKeeper))
+}
+
+// LegacyQuerierHandler performs a no-op.
+func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
+	return nil
+}
+
+// InitGenesis performs a no-op.
+func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
 }
 
 // RegisterLegacyAminoCodec registers the module's types with the given codec.

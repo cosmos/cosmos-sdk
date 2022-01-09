@@ -24,7 +24,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 	checkTx := false
 	app := simapp.Setup(checkTx)
 
-	suite.handler = vesting.NewHandler(app.AccountKeeper, app.BankKeeper)
+	suite.handler = vesting.NewHandler(app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
 	suite.app = app
 }
 
@@ -244,6 +244,18 @@ func (suite *HandlerTestSuite) TestMsgCreatePeriodicVestingAccount_Merge() {
 	suite.Require().Equal(funderBalance, tst(700))
 	balance = suite.app.BankKeeper.GetBalance(ctx, addr4, "test")
 	suite.Require().Equal(balance, tst(100))
+}
+
+func (suite *HandlerTestSuite) TestMsgCreateTrueVestingAccount() {
+	// XXX TODO
+}
+
+func (suite *HandlerTestSuite) TestMsgCreateTrueVestingAccount_Merge() {
+	// XXX TODO
+}
+
+func (suite *HandlerTestSuite) TestMsgClawback() {
+	// XXX TODO
 }
 
 func TestHandlerTestSuite(t *testing.T) {

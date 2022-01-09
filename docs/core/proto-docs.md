@@ -8319,7 +8319,8 @@ from a periodic vesting account.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
+| `funder_address` | [string](#string) |  | funder_address is the address which funded the account |
+| `address` | [string](#string) |  | address is the address of the TrueVestingAccount to claw back from. |
 | `dest_address` | [string](#string) |  | dest_address specifies where the clawed-back tokens should be transferred. If empty, the tokens will be transferred back to the original funder of the account. |
 
 

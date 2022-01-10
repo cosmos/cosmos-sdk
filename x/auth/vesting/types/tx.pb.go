@@ -385,7 +385,7 @@ func (m *MsgCreateTrueVestingAccountResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreateTrueVestingAccountResponse proto.InternalMessageInfo
 
-// MsgClaback defines a message that removes unvested (in the true vesting sense) tokens
+// MsgClawback defines a message that removes unvested (in the true vesting sense) tokens
 // from a periodic vesting account.
 type MsgClawback struct {
 	// funder_address is the address which funded the account

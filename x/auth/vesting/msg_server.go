@@ -239,15 +239,17 @@ func (s msgServer) CreateTrueVestingAccount(goCtx context.Context, msg *types.Ms
 		vestingCoins = lockupCoins
 	}
 
-	if !vestingCoins.IsEqual(lockupCoins) { // XXX IsEqual can crash
+	if !vestingCoins.IsEqual(lockupCoins) { // XXX IsEqual can panic
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "lockup and vesting amounts must be equal")
 	}
 
 	madeNewAcc := false
 	acc := ak.GetAccount(ctx, to)
+	var va *types.TrueVestingAccount
 
 	if acc != nil {
-		pva, ok := acc.(*types.TrueVestingAccount)
+		var ok bool
+		va, ok = acc.(*types.TrueVestingAccount)
 		if !msg.Merge {
 			if ok {
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists; consider using --merge", msg.ToAddress)
@@ -257,27 +259,27 @@ func (s msgServer) CreateTrueVestingAccount(goCtx context.Context, msg *types.Ms
 		if !ok {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrNotSupported, "account %s must be a true vesting account", msg.ToAddress)
 		}
-		if msg.FromAddress != pva.FunderAddress {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s can only accept grants from account %s", msg.ToAddress, pva.FunderAddress)
+		if msg.FromAddress != va.FunderAddress {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s can only accept grants from account %s", msg.ToAddress, va.FunderAddress)
 		}
-		newStart, newEnd, newLockupPeriods := types.DisjunctPeriods(pva.StartTime, msg.GetStartTime(), pva.LockupPeriods, msg.LockupPeriods)
-		newStartX, newEndX, newVestingPeriods := types.DisjunctPeriods(pva.StartTime, msg.GetStartTime(),
-			pva.GetVestingPeriods(), msg.GetVestingPeriods())
+		newStart, newEnd, newLockupPeriods := types.DisjunctPeriods(va.StartTime, msg.GetStartTime(), va.LockupPeriods, msg.LockupPeriods)
+		newStartX, newEndX, newVestingPeriods := types.DisjunctPeriods(va.StartTime, msg.GetStartTime(),
+			va.GetVestingPeriods(), msg.GetVestingPeriods())
 		if newStart != newStartX {
 			panic("bad start time calculation")
 		}
-		pva.StartTime = newStart
-		pva.EndTime = max64(newEnd, newEndX)
-		pva.LockupPeriods = newLockupPeriods
-		pva.VestingPeriods = newVestingPeriods
-		pva.OriginalVesting = pva.OriginalVesting.Add(vestingCoins...)
+		va.StartTime = newStart
+		va.EndTime = max64(newEnd, newEndX)
+		va.LockupPeriods = newLockupPeriods
+		va.VestingPeriods = newVestingPeriods
+		va.OriginalVesting = va.OriginalVesting.Add(vestingCoins...)
 	} else {
 		baseAccount := ak.NewAccountWithAddress(ctx, to)
-		acc = types.NewTrueVestingAccount(baseAccount.(*authtypes.BaseAccount), vestingCoins, msg.StartTime, msg.LockupPeriods, msg.VestingPeriods)
+		va = types.NewTrueVestingAccount(baseAccount.(*authtypes.BaseAccount), vestingCoins, msg.StartTime, msg.LockupPeriods, msg.VestingPeriods)
 		madeNewAcc = true
 	}
 
-	ak.SetAccount(ctx, acc)
+	ak.SetAccount(ctx, va)
 
 	if madeNewAcc {
 		defer func() {
@@ -311,7 +313,7 @@ func (s msgServer) CreateTrueVestingAccount(goCtx context.Context, msg *types.Ms
 }
 
 // Clawback removes the unvested amount from a TrueVestingAccount.
-// The destination defaults to the funder address, but
+// The destination defaults to the funder address, but can be overridden.
 func (s msgServer) Clawback(goCtx context.Context, msg *types.MsgClawback) (*types.MsgClawbackResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -339,16 +341,16 @@ func (s msgServer) Clawback(goCtx context.Context, msg *types.MsgClawback) (*typ
 	}
 
 	acc := ak.GetAccount(ctx, addr)
-	tva, ok := acc.(*types.TrueVestingAccount)
+	va, ok := acc.(*types.TrueVestingAccount)
 	if !ok {
 		return nil, fmt.Errorf("account not subject to clawback: %s", msg.Address)
 	}
 
-	if tva.FunderAddress != msg.GetFunderAddress() {
-		return nil, fmt.Errorf("clawback can only be requested by original funder %s", tva.FunderAddress)
+	if va.FunderAddress != msg.GetFunderAddress() {
+		return nil, fmt.Errorf("clawback can only be requested by original funder %s", va.FunderAddress)
 	}
 
-	err = tva.Clawback(ctx, dest, ak, bk, s.StakingKeeper)
+	err = va.Clawback(ctx, dest, ak, bk, s.StakingKeeper)
 	if err != nil {
 		return nil, err
 	}

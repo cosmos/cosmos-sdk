@@ -97,6 +97,8 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		TxTimeoutHeightMiddleware,
 		ValidateMemoMiddleware(options.AccountKeeper),
 		ConsumeTxSizeGasMiddleware(options.AccountKeeper),
+		// No gas should be consumed in any middleware above in a "post" handler part. See
+		// ComposeMiddlewares godoc for details.
 		DeductFeeMiddleware(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),
 		TxPriorityMiddleware,
 		SetPubKeyMiddleware(options.AccountKeeper),

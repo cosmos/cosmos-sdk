@@ -80,20 +80,21 @@ type Config struct {
 	TimeoutCommit    time.Duration              // the consensus commitment timeout
 	ChainID          string                     // the network chain-id
 	NumValidators    int                        // the total number of validators to create and bond
-	BondDenom        string                     // the staking bond denomination
-	MinGasPrices     string                     // the minimum gas prices each validator will accept
-	AccountTokens    sdk.Int                    // the amount of unique validator tokens (e.g. 1000node0)
-	StakingTokens    sdk.Int                    // the amount of tokens each validator has available to stake
-	BondedTokens     sdk.Int                    // the amount of tokens each validator stakes
-	PruningStrategy  string                     // the pruning strategy each validator will have
-	EnableTMLogging  bool                       // enable Tendermint logging to STDOUT
-	CleanupDir       bool                       // remove base temporary directory during cleanup
-	SigningAlgo      string                     // signing algorithm for keys
-	KeyringOptions   []keyring.Option           // keyring configuration options
-	RPCAddress       string                     // RPC listen address (including port)
-	APIAddress       string                     // REST API listen address (including port)
-	GRPCAddress      string                     // GRPC server listen address (including port)
-	PrintMnemonic    bool                       // print the mnemonic of first validator as log output for testing
+	Mnemonics        []string
+	BondDenom        string           // the staking bond denomination
+	MinGasPrices     string           // the minimum gas prices each validator will accept
+	AccountTokens    sdk.Int          // the amount of unique validator tokens (e.g. 1000node0)
+	StakingTokens    sdk.Int          // the amount of tokens each validator has available to stake
+	BondedTokens     sdk.Int          // the amount of tokens each validator stakes
+	PruningStrategy  string           // the pruning strategy each validator will have
+	EnableTMLogging  bool             // enable Tendermint logging to STDOUT
+	CleanupDir       bool             // remove base temporary directory during cleanup
+	SigningAlgo      string           // signing algorithm for keys
+	KeyringOptions   []keyring.Option // keyring configuration options
+	RPCAddress       string           // RPC listen address (including port)
+	APIAddress       string           // REST API listen address (including port)
+	GRPCAddress      string           // GRPC server listen address (including port)
+	PrintMnemonic    bool             // print the mnemonic of first validator as log output for testing
 }
 
 // DefaultConfig returns a sane default configuration suitable for nearly all
@@ -327,14 +328,25 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		tmCfg.P2P.ListenAddress = p2pAddr
 		tmCfg.P2P.AddrBookStrict = false
 		tmCfg.P2P.AllowDuplicateIP = true
 
-		nodeID, pubKey, err := genutil.InitializeNodeValidatorFiles(tmCfg)
+		var (
+			nodeID string
+			pubKey cryptotypes.PubKey
+		)
+
+		if i < len(cfg.Mnemonics) && cfg.Mnemonics[i] != "" {
+			nodeID, pubKey, err = genutil.InitializeNodeValidatorFilesFromMnemonic(tmCfg, cfg.Mnemonics[i])
+		} else {
+			nodeID, pubKey, err = genutil.InitializeNodeValidatorFiles(tmCfg)
+		}
 		if err != nil {
 			return nil, err
 		}
+
 		nodeIDs[i] = nodeID
 		valPubKeys[i] = pubKey
 

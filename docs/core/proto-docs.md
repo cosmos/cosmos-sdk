@@ -8313,7 +8313,7 @@ of unvested tokens, or a combination (tokens vest, but are still locked).
 <a name="cosmos.vesting.v1beta1.MsgClawback"></a>
 
 ### MsgClawback
-MsgClaback defines a message that removes unvested (in the true vesting sense) tokens
+MsgClawback defines a message that removes unvested (in the true vesting sense) tokens
 from a periodic vesting account.
 
 

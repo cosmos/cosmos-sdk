@@ -612,7 +612,7 @@ func (tva TrueVestingAccount) GetVestingPeriods() Periods {
 func (tva TrueVestingAccount) Validate() error {
 	// XXX ensure that lockup and vesting schedules both sum to OriginalVesting
 	if tva.GetStartTime() >= tva.GetEndTime() {
-		return errors.New("vesting start-time cannot be before end-time")
+		return errors.New("vesting start-time must be before end-time")
 	}
 	endTime := tva.StartTime
 	originalVesting := sdk.NewCoins()
@@ -705,7 +705,9 @@ func (tva TrueVestingAccount) ComputeClawback(clawbackTime int64) (TrueVestingAc
 }
 
 // Clawback transfers unvested tokens in a TrueVestingAccount to dest.
-// Future vesting events are removed. Unstaked tokens
+// Future vesting events are removed. Unstaked tokens are simply sent.
+// Unbonding and staked tokens are transferred with their staking state
+// intact.
 func (tva TrueVestingAccount) Clawback(ctx sdk.Context, dest sdk.AccAddress, ak AccountKeeper, bk BankKeeper, sk StakingKeeper) error {
 	updatedAcc, toClawBack := tva.ComputeClawback(ctx.BlockTime().Unix())
 	if toClawBack.IsZero() {
@@ -715,7 +717,10 @@ func (tva TrueVestingAccount) Clawback(ctx sdk.Context, dest sdk.AccAddress, ak 
 
 	accPtr := &updatedAcc
 	writeAcc := func() { ak.SetAccount(ctx, accPtr) }
-	writeAcc() // do this now so that unvested tokens are unlocked
+	// Write now now so that the bank module sees unvested tokens are unlocked.
+	// Note that all store writes are aborted if there is a panic, so there is
+	// no danger in writing incomplete results.
+	writeAcc()
 
 	// Now that future vesting events (and associated lockup) are removed,
 	// the balance of the account is unlocked and can be freely transferred.

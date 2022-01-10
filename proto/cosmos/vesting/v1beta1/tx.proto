@@ -70,7 +70,7 @@ message MsgCreateTrueVestingAccount {
 // MsgCreateTrueVestingAccountResponse defines the MsgCreateTrueVestingAccount response type.
 message MsgCreateTrueVestingAccountResponse {}
 
-// MsgClaback defines a message that removes unvested (in the true vesting sense) tokens
+// MsgClawback defines a message that removes unvested (in the true vesting sense) tokens
 // from a periodic vesting account.
 message MsgClawback {
   // funder_address is the address which funded the account

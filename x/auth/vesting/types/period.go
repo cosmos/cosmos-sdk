@@ -283,7 +283,7 @@ func ConjunctPeriods(startP, startQ int64, p, q []Period) (startTime int64, endT
 	return
 }
 
-// AlighSchedules rewrites the first period length to aligh the two arguments to the same start time.
+// AlignSchedules rewrites the first period length to align the two arguments to the same start time.
 func AlignSchedules(startP, startQ int64, p, q []Period) (startTime, endTime int64) {
 	startTime = min64(startP, startQ)
 

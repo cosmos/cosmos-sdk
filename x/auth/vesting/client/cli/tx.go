@@ -109,7 +109,7 @@ type InputPeriod struct {
 }
 
 // readScheduleFile reads the file at path and unmarshals it to get the schedule.
-// Returrns start time, periods, and error.
+// Returns start time, periods, and error.
 func readScheduleFile(path string) (int64, []types.Period, error) {
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {

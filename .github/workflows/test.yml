@@ -120,7 +120,7 @@ jobs:
         if: env.GIT_DIFF
       - name: test & coverage report creation
         run: |
-          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='norace ledger test_ledger_mock'
+          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='ledger test_ledger_mock' -race
         if: env.GIT_DIFF
       - uses: actions/upload-artifact@v2
         with:
@@ -178,37 +178,6 @@ jobs:
           file: ./coverage.txt
         if: env.GIT_DIFF
 
-  test-race:
-    runs-on: ubuntu-latest
-    needs: split-test-files
-    strategy:
-      fail-fast: false
-      matrix:
-        part: ["00", "01", "02", "03"]
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.5
-        with:
-          go-version: 1.17
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-      - uses: actions/download-artifact@v2
-        with:
-          name: "${{ github.sha }}-${{ matrix.part }}"
-        if: env.GIT_DIFF
-      - name: test & coverage report creation
-        run: |
-          xargs --arg-file=pkgs.txt.part.${{ matrix.part }} go test -mod=readonly -timeout 30m -race -tags='cgo ledger test_ledger_mock'
-        if: env.GIT_DIFF
-      - uses: actions/upload-artifact@v2
-        with:
-          name: "${{ github.sha }}-${{ matrix.part }}-race-output"
-          path: ./${{ matrix.part }}-race-output.txt
-
   test-rosetta:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -249,12 +218,3 @@ jobs:
         run: |
           ./contrib/localnet_liveness.sh 100 5 50 localhost
         if: env.GIT_DIFF
-
-  docker-build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v2
-      - name: build docker image
-        run: |
-          docker build --pull --rm -f "Dockerfile" -t simapp:latest "."

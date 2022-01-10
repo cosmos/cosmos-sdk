@@ -1,5 +1,3 @@
-// +build norace
-
 package client_test
 
 import (

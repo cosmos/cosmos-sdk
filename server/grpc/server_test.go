@@ -1,5 +1,3 @@
-// +build norace
-
 package grpc_test
 
 import (

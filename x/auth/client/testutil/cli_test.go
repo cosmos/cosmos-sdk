@@ -1,5 +1,3 @@
-// +build norace
-
 package testutil
 
 import (

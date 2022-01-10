@@ -116,3 +116,7 @@ func TestDisjunctPeriods(t *testing.T) {
 		})
 	}
 }
+
+func TestConjunctPeriods(t *testing.T) {
+	// XXX implement
+}

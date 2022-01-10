@@ -60,11 +60,6 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 	k.upgradeHandlers[name] = upgradeHandler
 }
 
-// DeleteUpgradeHandler removes an UpgradeHandler for the given upgrade name
-func (k Keeper) DeleteUpgradeHandler(name string) {
-	delete(k.upgradeHandlers, name)
-}
-
 // setProtocolVersion sets the protocol version to state
 func (k Keeper) setProtocolVersion(ctx sdk.Context, v uint64) {
 	store := ctx.KVStore(k.storeKey)

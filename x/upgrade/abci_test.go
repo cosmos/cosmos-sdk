@@ -411,6 +411,7 @@ func TestDumpUpgradeInfoToFile(t *testing.T) {
 	require.Nil(err)
 }
 
+// TODO: add testcase to for `no upgrade handler is present for last applied upgrade`.
 func TestBinaryVersion(t *testing.T) {
 	var skipHeight int64 = 15
 	s := setupTest(t, 10, map[int64]bool{skipHeight: true})
@@ -448,31 +449,6 @@ func TestBinaryVersion(t *testing.T) {
 				return newCtx, req
 			},
 			false,
-		},
-		{
-			"test panic: no upgrade handler is present for last upgrade",
-			func() (sdk.Context, abci.RequestBeginBlock) {
-
-				newCtx := s.ctx.WithBlockHeight(13)
-				req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-				upgrade.ResetDowngradeVerified()
-
-				// delete last applied upgrade
-				s.keeper.DeleteUpgradeHandler("test0")
-				return newCtx, req
-			},
-			true,
-		},
-		{
-			"test panic: no upgrade handler is present for last upgrade with skip upgrade",
-			func() (sdk.Context, abci.RequestBeginBlock) {
-				upgrade.ResetDowngradeVerified()
-
-				newCtx := s.ctx.WithBlockHeight(15)
-				req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-				return newCtx, req
-			},
-			true,
 		},
 		{
 			"test panic: upgrade needed",

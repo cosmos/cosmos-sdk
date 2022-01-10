@@ -83,6 +83,14 @@ func ReadSchedule(startTime, endTime int64, periods []Period, totalCoins sdk.Coi
 	return coins
 }
 
+// max64 returns the maximum of its inputs.
+func max64(i, j int64) int64 {
+	if i > j {
+		return i
+	}
+	return j
+}
+
 // min64 returns the minimum of its inputs.
 func min64(i, j int64) int64 {
 	if i < j {
@@ -272,5 +280,28 @@ func ConjunctPeriods(startP, startQ int64, p, q []Period) (startTime int64, endT
 	}
 
 	endTime = time
+	return
+}
+
+// AlighSchedules rewrites the first period length to aligh the two arguments to the same start time.
+func AlignSchedules(startP, startQ int64, p, q []Period) (startTime, endTime int64) {
+	startTime = min64(startP, startQ)
+
+	if len(p) > 0 {
+		p[0].Length += startP - startTime
+	}
+	if len(q) > 0 {
+		q[0].Length += startQ - startTime
+	}
+
+	endP := startTime
+	for _, period := range p {
+		endP += period.Length
+	}
+	endQ := startTime
+	for _, period := range q {
+		endQ += period.Length
+	}
+	endTime = max64(endP, endQ)
 	return
 }

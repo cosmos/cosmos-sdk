@@ -125,11 +125,7 @@ func UnsafeResetAllCmd() *cobra.Command {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
 
-<<<<<<< HEAD
-			tcmd.ResetAll(cfg.DBDir(), cfg.P2P.AddrBookFile(), cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile(), serverCtx.Logger)
-=======
 			tcmd.ResetAll(cfg.DBDir(), cfg.P2P.AddrBookFile(), cfg.PrivValidator.KeyFile(), cfg.PrivValidator.StateFile(), serverCtx.Logger)
->>>>>>> 60a0935d6 (fix(cli): reset the app data (#10882))
 			return nil
 		},
 	}

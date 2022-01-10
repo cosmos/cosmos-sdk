@@ -352,7 +352,7 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 				}
 			},
 			true,
-			"group-id: value is empty",
+			"group id: value is empty",
 		},
 		{
 			"admin: invalid bech32 address",
@@ -399,6 +399,76 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, msg.Type(), group.TypeMsgCreateGroupPolicy)
+			}
+		})
+	}
+}
+
+func TestMsgUpdateGroupPolicyDecisionPolicy(t *testing.T) {
+	validPolicy := group.NewThresholdDecisionPolicy("1", time.Second)
+	msg1, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member1, validPolicy)
+	require.NoError(t, err)
+
+	invalidPolicy := group.NewThresholdDecisionPolicy("-1", time.Second)
+	msg2, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member2, invalidPolicy)
+	require.NoError(t, err)
+
+	testCases := []struct {
+		name   string
+		msg    *group.MsgUpdateGroupPolicyDecisionPolicy
+		expErr bool
+		errMsg string
+	}{
+		{
+			"admin: invalid bech32 address",
+			&group.MsgUpdateGroupPolicyDecisionPolicy{
+				Admin: "admin",
+			},
+			true,
+			"admin: decoding bech32 failed",
+		},
+		{
+			"group policy: invalid bech32 address",
+			&group.MsgUpdateGroupPolicyDecisionPolicy{
+				Admin:   admin.String(),
+				Address: "address",
+			},
+			true,
+			"group policy: decoding bech32 failed",
+		},
+		{
+			"group policy: invalid bech32 address",
+			&group.MsgUpdateGroupPolicyDecisionPolicy{
+				Admin:   admin.String(),
+				Address: "address",
+			},
+			true,
+			"group policy: decoding bech32 failed",
+		},
+		{
+			"invalid decision policy",
+			msg2,
+			true,
+			"decision policy: threshold: expected a positive decimal",
+		},
+		{
+			"invalid decision policy",
+			msg1,
+			false,
+			"",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := tc.msg
+			err := msg.ValidateBasic()
+			if tc.expErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.errMsg)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, msg.Type(), group.TypeMsgUpdateGroupPolicyDecisionPolicy)
 			}
 		})
 	}

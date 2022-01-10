@@ -5,12 +5,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/cosmos/cosmos-sdk/db/memdb"
 	store "github.com/cosmos/cosmos-sdk/store/v2/smt"
-	"github.com/lazyledger/smt"
 )
 
 func TestGetSetHasDelete(t *testing.T) {
-	s := store.NewStore(smt.NewSimpleMap(), smt.NewSimpleMap())
+	nodes, values := memdb.NewDB(), memdb.NewDB()
+	s := store.NewStore(nodes.ReadWriter(), values.ReadWriter())
 
 	s.Set([]byte("foo"), []byte("bar"))
 	assert.Equal(t, []byte("bar"), s.Get([]byte("foo")))
@@ -28,15 +29,16 @@ func TestGetSetHasDelete(t *testing.T) {
 }
 
 func TestLoadStore(t *testing.T) {
-	nodes, values := smt.NewSimpleMap(), smt.NewSimpleMap()
-	s := store.NewStore(nodes, values)
+	nodes, values := memdb.NewDB(), memdb.NewDB()
+	nmap, vmap := nodes.ReadWriter(), values.ReadWriter()
+	s := store.NewStore(nmap, vmap)
 
 	s.Set([]byte{0}, []byte{0})
 	s.Set([]byte{1}, []byte{1})
 	s.Delete([]byte{1})
 	root := s.Root()
 
-	s = store.LoadStore(nodes, values, root)
+	s = store.LoadStore(nmap, vmap, root)
 	assert.Equal(t, []byte{0}, s.Get([]byte{0}))
 	assert.False(t, s.Has([]byte{1}))
 }

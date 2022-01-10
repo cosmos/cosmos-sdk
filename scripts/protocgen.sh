@@ -13,31 +13,26 @@ protoc_gen_gocosmos() {
 
 protoc_gen_gocosmos
 
-proto_dirs=$(find ./proto -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
+echo "Generating gogo proto code"
+cd proto
+proto_dirs=$(find ./cosmos -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
 for dir in $proto_dirs; do
-  buf protoc \
-    -I "proto" \
-    -I "third_party/proto" \
-    --gocosmos_out=plugins=grpc,\
-Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
-    --grpc-gateway_out=logtostderr=true,allow_colon_final_segments=true:. \
-  $(find "${dir}" -maxdepth 1 -name '*.proto')
-
+  for file in $(find "${dir}" -maxdepth 1 -name '*.proto'); do
+    if grep go_package $file &> /dev/null ; then
+      buf generate --template buf.gen.gogo.yaml $file
+    fi
+  done
 done
 
-# command to generate docs using protoc-gen-doc
-buf protoc \
-  -I "proto" \
-  -I "third_party/proto" \
-  --doc_out=./docs/core \
-  --doc_opt=./docs/protodoc-markdown.tmpl,proto-docs.md \
-  $(find "$(pwd)/proto" -maxdepth 5 -name '*.proto')
-go mod tidy
+cd ..
 
 # generate codec/testdata proto code
-buf protoc -I "proto" -I "third_party/proto" -I "testutil/testdata" --gocosmos_out=plugins=grpc,\
-Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. ./testutil/testdata/*.proto
+(cd testutil/testdata; buf generate)
 
 # move proto files to the right places
 cp -r github.com/cosmos/cosmos-sdk/* ./
 rm -rf github.com
+
+go mod tidy
+
+./scripts/protocgen2.sh

@@ -3,23 +3,23 @@ package utils
 import (
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 // NormalizeVoteOption - normalize user specified vote option
 func NormalizeVoteOption(option string) string {
 	switch option {
 	case "Yes", "yes":
-		return types.OptionYes.String()
+		return v1beta1.OptionYes.String()
 
 	case "Abstain", "abstain":
-		return types.OptionAbstain.String()
+		return v1beta1.OptionAbstain.String()
 
 	case "No", "no":
-		return types.OptionNo.String()
+		return v1beta1.OptionNo.String()
 
 	case "NoWithVeto", "no_with_veto":
-		return types.OptionNoWithVeto.String()
+		return v1beta1.OptionNoWithVeto.String()
 
 	default:
 		return option
@@ -44,7 +44,7 @@ func NormalizeWeightedVoteOptions(options string) string {
 func NormalizeProposalType(proposalType string) string {
 	switch proposalType {
 	case "Text", "text":
-		return types.ProposalTypeText
+		return v1beta1.ProposalTypeText
 
 	default:
 		return ""
@@ -55,13 +55,13 @@ func NormalizeProposalType(proposalType string) string {
 func NormalizeProposalStatus(status string) string {
 	switch status {
 	case "DepositPeriod", "deposit_period":
-		return types.StatusDepositPeriod.String()
+		return v1beta1.StatusDepositPeriod.String()
 	case "VotingPeriod", "voting_period":
-		return types.StatusVotingPeriod.String()
+		return v1beta1.StatusVotingPeriod.String()
 	case "Passed", "passed":
-		return types.StatusPassed.String()
+		return v1beta1.StatusPassed.String()
 	case "Rejected", "rejected":
-		return types.StatusRejected.String()
+		return v1beta1.StatusRejected.String()
 	default:
 		return status
 	}

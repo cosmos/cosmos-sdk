@@ -953,7 +953,7 @@ func (m *MsgCreateProposalResponse) GetProposalId() uint64 {
 type MsgWithdrawProposal struct {
 	// proposal is the unique ID of the proposal.
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	// admin is the account address of the policy or one of the proposer of the proposal.
+	// admin is the admin of the group or one of the proposer of the proposal.
 	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
 }
 

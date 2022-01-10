@@ -93,10 +93,12 @@ func (s *TestSuite) TestCreateGroup() {
 		Address:  addr5.String(),
 		Weight:   "1",
 		Metadata: nil,
+		AddedAt:  s.blockTime,
 	}, {
 		Address:  addr6.String(),
 		Weight:   "2",
 		Metadata: nil,
+		AddedAt:  s.blockTime,
 	}}
 
 	expGroups := []*group.GroupInfo{
@@ -106,6 +108,7 @@ func (s *TestSuite) TestCreateGroup() {
 			Admin:       addr1.String(),
 			TotalWeight: "3",
 			Metadata:    nil,
+			CreatedAt:   s.blockTime,
 		},
 		{
 			GroupId:     2,
@@ -113,6 +116,7 @@ func (s *TestSuite) TestCreateGroup() {
 			Admin:       addr1.String(),
 			TotalWeight: "3",
 			Metadata:    nil,
+			CreatedAt:   s.blockTime,
 		},
 	}
 
@@ -205,6 +209,7 @@ func (s *TestSuite) TestCreateGroup() {
 				s.Assert().Equal(members[i].Metadata, loadedMembers[i].Member.Metadata)
 				s.Assert().Equal(members[i].Address, loadedMembers[i].Member.Address)
 				s.Assert().Equal(members[i].Weight, loadedMembers[i].Member.Weight)
+				s.Assert().Equal(members[i].AddedAt, loadedMembers[i].Member.AddedAt)
 				s.Assert().Equal(id, loadedMembers[i].GroupId)
 			}
 
@@ -219,6 +224,7 @@ func (s *TestSuite) TestCreateGroup() {
 				s.Assert().Equal(spec.expGroups[i].TotalWeight, loadedGroups[i].TotalWeight)
 				s.Assert().Equal(spec.expGroups[i].GroupId, loadedGroups[i].GroupId)
 				s.Assert().Equal(spec.expGroups[i].Version, loadedGroups[i].Version)
+				s.Assert().Equal(spec.expGroups[i].CreatedAt, loadedGroups[i].CreatedAt)
 			}
 		})
 	}
@@ -236,6 +242,7 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 		Address:  addr1.String(),
 		Weight:   "1",
 		Metadata: nil,
+		AddedAt:  s.blockTime,
 	}}
 	oldAdmin := addr2.String()
 	newAdmin := addr3.String()
@@ -263,6 +270,7 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 				Metadata:    nil,
 				TotalWeight: "1",
 				Version:     2,
+				CreatedAt:   s.blockTime,
 			},
 		},
 		"with wrong admin": {
@@ -278,6 +286,7 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 				Metadata:    nil,
 				TotalWeight: "1",
 				Version:     1,
+				CreatedAt:   s.blockTime,
 			},
 		},
 		"with unknown groupID": {
@@ -293,6 +302,7 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 				Metadata:    nil,
 				TotalWeight: "1",
 				Version:     1,
+				CreatedAt:   s.blockTime,
 			},
 		},
 	}
@@ -339,6 +349,7 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 				Metadata:    []byte{1, 2, 3},
 				TotalWeight: "3",
 				Version:     2,
+				CreatedAt:   s.blockTime,
 			},
 		},
 		"with wrong admin": {
@@ -354,6 +365,7 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 				Metadata:    nil,
 				TotalWeight: "1",
 				Version:     1,
+				CreatedAt:   s.blockTime,
 			},
 		},
 		"with unknown groupid": {
@@ -369,6 +381,7 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 				Metadata:    nil,
 				TotalWeight: "1",
 				Version:     1,
+				CreatedAt:   s.blockTime,
 			},
 		},
 	}
@@ -438,6 +451,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				Metadata:    nil,
 				TotalWeight: "3",
 				Version:     2,
+				CreatedAt:   s.blockTime,
 			},
 			expMembers: []*group.GroupMember{
 				{
@@ -474,6 +488,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				Metadata:    nil,
 				TotalWeight: "2",
 				Version:     2,
+				CreatedAt:   s.blockTime,
 			},
 			expMembers: []*group.GroupMember{
 				{
@@ -501,6 +516,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				Metadata:    nil,
 				TotalWeight: "1",
 				Version:     2,
+				CreatedAt:   s.blockTime,
 			},
 			expMembers: []*group.GroupMember{
 				{
@@ -535,6 +551,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				Metadata:    nil,
 				TotalWeight: "1",
 				Version:     2,
+				CreatedAt:   s.blockTime,
 			},
 			expMembers: []*group.GroupMember{{
 				GroupId: groupID,
@@ -561,6 +578,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				Metadata:    nil,
 				TotalWeight: "0",
 				Version:     2,
+				CreatedAt:   s.blockTime,
 			},
 			expMembers: []*group.GroupMember{},
 		},
@@ -581,6 +599,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				Metadata:    nil,
 				TotalWeight: "1",
 				Version:     1,
+				CreatedAt:   s.blockTime,
 			},
 			expMembers: []*group.GroupMember{{
 				GroupId: groupID,
@@ -608,6 +627,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				Metadata:    nil,
 				TotalWeight: "1",
 				Version:     1,
+				CreatedAt:   s.blockTime,
 			},
 			expMembers: []*group.GroupMember{{
 				GroupId: groupID,
@@ -634,6 +654,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				Metadata:    nil,
 				TotalWeight: "1",
 				Version:     1,
+				CreatedAt:   s.blockTime,
 			},
 			expMembers: []*group.GroupMember{{
 				GroupId: groupID,
@@ -817,6 +838,7 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 				Metadata:       nil,
 				Version:        2,
 				DecisionPolicy: nil,
+				CreatedAt:      s.blockTime,
 			},
 			expErr: true,
 		},
@@ -833,6 +855,7 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 				Metadata:       nil,
 				Version:        2,
 				DecisionPolicy: nil,
+				CreatedAt:      s.blockTime,
 			},
 			expErr: true,
 		},
@@ -849,6 +872,7 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 				Metadata:       nil,
 				Version:        2,
 				DecisionPolicy: nil,
+				CreatedAt:      s.blockTime,
 			},
 			expErr: false,
 		},
@@ -927,6 +951,7 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 				Metadata:       []byte("hello"),
 				Version:        2,
 				DecisionPolicy: nil,
+				CreatedAt:      s.blockTime,
 			},
 			expErr: false,
 		},
@@ -1000,6 +1025,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 				Metadata:       nil,
 				Version:        2,
 				DecisionPolicy: nil,
+				CreatedAt:      s.blockTime,
 			},
 			expErr: false,
 		},
@@ -1066,11 +1092,12 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 		s.Require().NoError(err)
 
 		expectAcc := &group.GroupPolicyInfo{
-			Address:  res.Address,
-			Admin:    admin.String(),
-			Metadata: nil,
-			GroupId:  myGroupID,
-			Version:  uint64(1),
+			Address:   res.Address,
+			Admin:     admin.String(),
+			Metadata:  nil,
+			GroupId:   myGroupID,
+			Version:   uint64(1),
+			CreatedAt: s.blockTime,
 		}
 		err = expectAcc.SetDecisionPolicy(policies[i])
 		s.Require().NoError(err)
@@ -1093,6 +1120,7 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 		s.Assert().Equal(policyAccs[i].Admin, expectAccs[i].Admin)
 		s.Assert().Equal(policyAccs[i].Metadata, expectAccs[i].Metadata)
 		s.Assert().Equal(policyAccs[i].Version, expectAccs[i].Version)
+		s.Assert().Equal(policyAccs[i].CreatedAt, expectAccs[i].CreatedAt)
 		s.Assert().Equal(policyAccs[i].GetDecisionPolicy(), expectAccs[i].GetDecisionPolicy())
 	}
 
@@ -1111,6 +1139,7 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 		s.Assert().Equal(policyAccs[i].Admin, expectAccs[i].Admin)
 		s.Assert().Equal(policyAccs[i].Metadata, expectAccs[i].Metadata)
 		s.Assert().Equal(policyAccs[i].Version, expectAccs[i].Version)
+		s.Assert().Equal(policyAccs[i].CreatedAt, expectAccs[i].CreatedAt)
 		s.Assert().Equal(policyAccs[i].GetDecisionPolicy(), expectAccs[i].GetDecisionPolicy())
 	}
 }
@@ -1349,8 +1378,8 @@ func (s *TestSuite) TestVote() {
 	addr4 := addrs[3]
 	addr5 := addrs[4]
 	members := []group.Member{
-		{Address: addr4.String(), Weight: "1"},
-		{Address: addr3.String(), Weight: "2"},
+		{Address: addr4.String(), Weight: "1", AddedAt: s.blockTime},
+		{Address: addr3.String(), Weight: "2", AddedAt: s.blockTime},
 	}
 	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:    addr1.String(),

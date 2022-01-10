@@ -330,7 +330,7 @@ func NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin sdk.AccAddress, address 
 func (m *MsgUpdateGroupPolicyDecisionPolicy) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
 	msg, ok := decisionPolicy.(proto.Message)
 	if !ok {
-		return fmt.Errorf("can't proto marshal %T", msg)
+		return sdkerrors.ErrInvalidType.Wrapf("can't proto marshal %T", msg)
 	}
 	any, err := types.NewAnyWithValue(msg)
 	if err != nil {

@@ -253,7 +253,7 @@ message MsgWithdrawProposal {
   // proposal is the unique ID of the proposal.
   uint64 proposal_id = 1;
 
-  // admin is the account address of the policy or one of the proposer of the proposal.
+  // admin is the admin of the group or one of the proposer of the proposal.
   string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 

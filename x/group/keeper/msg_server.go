@@ -492,9 +492,9 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawPr
 		return nil, err
 	}
 
-	// Ensure that proposal isn't already closed or aborted
-	if proposal.Status == group.ProposalStatusClosed || proposal.Status == group.ProposalStatusAborted {
-		return nil, sdkerrors.Wrap(errors.ErrInvalid, "proposal is already closed or aborted")
+	// Ensure the proposal can be withdrawn.
+	if proposal.Status != group.ProposalStatusSubmitted {
+		return nil, sdkerrors.Wrapf(errors.ErrInvalid, "cannot withdraw a proposal with a status of %s", proposal.Status.String())
 	}
 
 	var policyInfo group.GroupPolicyInfo
@@ -521,7 +521,7 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawPr
 	// check admin address is the group admin.
 	if admin == groupInfo.Admin {
 		proposal.Result = group.ProposalResultUnfinalized
-		proposal.Status = group.ProposalStatusAborted
+		proposal.Status = group.ProposalStatusWithdrawn
 		return storeUpdates()
 	}
 
@@ -535,11 +535,11 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawPr
 	}
 
 	if !validProposer {
-		return nil, sdkerrors.Wrapf(errors.ErrUnauthorized, "given admin address is neither policy address nor in proposers: %s", admin)
+		return nil, sdkerrors.Wrapf(errors.ErrUnauthorized, "given admin address is neither group admin address nor in proposers: %s", admin)
 	}
 
 	proposal.Result = group.ProposalResultUnfinalized
-	proposal.Status = group.ProposalStatusAborted
+	proposal.Status = group.ProposalStatusWithdrawn
 	return storeUpdates()
 }
 

@@ -1370,7 +1370,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 		"wrong admin": {
 			proposalId: proposalID,
 			admin:      addr5.String(),
-			expErrMsg:  "given admin address is neither policy address nor in proposers",
+			expErrMsg:  "unauthorized",
 		},
 		"wrong proposalId": {
 			proposalId: 1111,
@@ -1384,7 +1384,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 		"already closed proposal": {
 			proposalId: proposalID,
 			admin:      proposers[0],
-			expErrMsg:  "proposal is already closed or aborted",
+			expErrMsg:  "cannot withdraw a proposal with a status of STATUS_WITHDRAWN",
 		},
 		"happy case with group admin address": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -1416,7 +1416,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 			s.Require().NoError(err)
 			resp, err := s.keeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: pId})
 			s.Require().NoError(err)
-			s.Require().Equal(resp.GetProposal().Status, group.ProposalStatusAborted)
+			s.Require().Equal(resp.GetProposal().Status, group.ProposalStatusWithdrawn)
 		})
 	}
 }

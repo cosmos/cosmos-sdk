@@ -333,16 +333,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		tmCfg.P2P.AddrBookStrict = false
 		tmCfg.P2P.AllowDuplicateIP = true
 
-		var (
-			nodeID string
-			pubKey cryptotypes.PubKey
-		)
-
-		if i < len(cfg.Mnemonics) && cfg.Mnemonics[i] != "" {
-			nodeID, pubKey, err = genutil.InitializeNodeValidatorFilesFromMnemonic(tmCfg, cfg.Mnemonics[i])
-		} else {
-			nodeID, pubKey, err = genutil.InitializeNodeValidatorFiles(tmCfg)
-		}
+		nodeID, pubKey, err := genutil.InitializeNodeValidatorFiles(tmCfg)
 		if err != nil {
 			return nil, err
 		}
@@ -361,7 +352,12 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			return nil, err
 		}
 
-		addr, secret, err := server.GenerateSaveCoinKey(kb, nodeDirName, true, algo)
+		var mnemonic string
+		if i < len(cfg.Mnemonics) {
+			mnemonic = cfg.Mnemonics[i]
+		}
+
+		addr, secret, err := server.GenerateSaveCoinKey(kb, nodeDirName, mnemonic, true, algo)
 		if err != nil {
 			return nil, err
 		}

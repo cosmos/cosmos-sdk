@@ -690,9 +690,15 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		// if err from FeeInvoke then don't write to cache
 		if err == nil {
 			msCache.Write()
+			// additional fee events
 			if len(events) > 0 {
 				// append the events in the order of occurrence
 				result.Events = append(events.ToABCIEvents(), result.Events...)
+			}
+			// these are the ante events propagated only on success, that now means that fee charging has happened successfully.
+			if len(anteEvents) > 0 {
+				// append the events in the order of occurrence
+				result.Events = append(anteEvents, result.Events...)
 			}
 		}
 	}

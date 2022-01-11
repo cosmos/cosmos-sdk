@@ -397,11 +397,29 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 	if err != nil {
 		return nil, err
 	}
+
 	bondDenom := k.BondDenom(ctx)
 	if msg.Amount.Denom != bondDenom {
 		return nil, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", msg.Amount.Denom, bondDenom,
 		)
+	}
+
+	// get validator
+	validator, found := k.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
+	//// In some situations, the exchange rate becomes invalid, e.g. if
+	//// Validator loses all tokens due to slashing. In this case,
+	//// make all future delegations invalid.
+	if validator.InvalidExRate() {
+		return nil, types.ErrDelegatorShareExRateInvalid
+	}
+
+	if validator.IsJailed(){
+		return nil, types.ErrValidatorJailed
 	}
 
 	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddress, valAddr)
@@ -434,6 +452,16 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 		return nil, sdkerrors.Wrap(types.ErrNotEnoughDelegationShares, msg.Amount.String())
 	}
 
+	if !ubd.Entries[unbondEntryIndex].CompletionTime.After(ctx.BlockTime()){
+		return nil, sdkerrors.Wrap(types.ErrNotEnoughDelegationShares, msg.Amount.String())
+	}
+
+	// delegate the unbonding delegation amount to validator back
+	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, types.Unbonding, validator, false)
+	if err != nil {
+		return nil, err
+	}
+
 	amount := unbondEntry.Balance.Sub(msg.Amount.Amount)
 	if amount.Equal(sdk.NewInt(0)) {
 		// remove from ubd
@@ -449,18 +477,6 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 		k.RemoveUnbondingDelegation(ctx, ubd)
 	} else {
 		k.SetUnbondingDelegation(ctx, ubd)
-	}
-
-	// get validator
-	validator, found := k.GetValidator(ctx, valAddr)
-	if !found {
-		return nil, types.ErrNoValidatorFound
-	}
-
-	// delegate the unbonding delegation amount to validator back
-	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, types.Unbonding, validator, false)
-	if err != nil {
-		return nil, err
 	}
 
 	ctx.EventManager().EmitEvent(

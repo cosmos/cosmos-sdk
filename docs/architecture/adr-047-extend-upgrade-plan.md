@@ -10,7 +10,7 @@ PROPOSED Not Implemented
 
 ## Abstract
 
-This ADR expands the existing x/upgrade `Plan` proto message to include new fields for defining pre-run and post-run processes.
+This ADR expands the existing x/upgrade `Plan` proto message to include new fields for defining pre-run and post-run processes within upgrade tooling.
 It also defines a structure for providing downloadable artifacts involved in an upgrade.
 
 ## Context
@@ -44,6 +44,7 @@ Currently, there is no mechanism that makes Cosmovisor run a command after the u
 We will update the `x/upgrade.Plan` message for providing upgrade instructions.
 The upgrade instructions will contain a list of artifacts available for each platform.
 It allows for the definition of a pre-run and post-run commands.
+These commands are not consensus guaranteed; they will be executed by cosmosvisor (or other) during its upgrade handling.
 
 ```protobuf
 message Plan {

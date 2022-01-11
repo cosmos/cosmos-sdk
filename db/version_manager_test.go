@@ -6,12 +6,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	dbm "github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db"
 )
 
 // Test that VersionManager satisfies the behavior of VersionSet
 func TestVersionManager(t *testing.T) {
-	vm := dbm.NewVersionManager(nil)
+	vm := db.NewVersionManager(nil)
 	require.Equal(t, uint64(0), vm.Last())
 	require.Equal(t, 0, vm.Count())
 	require.True(t, vm.Equal(vm))
@@ -54,6 +54,6 @@ func TestVersionManager(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, vm.Exists(id5)) // true copy is made
 
-	vm2 := dbm.NewVersionManager([]uint64{id2, id3})
+	vm2 := db.NewVersionManager([]uint64{id2, id3})
 	require.True(t, vm.Equal(vm2))
 }

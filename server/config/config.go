@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/viper"
 
+	clientflags "github.com/cosmos/cosmos-sdk/client/flags"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -242,7 +243,7 @@ func DefaultConfig() *Config {
 			Network:             "network",
 			Retries:             3,
 			Offline:             false,
-			SuggestGas:          200000,
+			SuggestGas:          clientflags.DefaultGasLimit,
 			DefaultSuggestDenom: "uatom",
 		},
 		GRPCWeb: GRPCWebConfig{

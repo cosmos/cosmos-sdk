@@ -36,7 +36,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
-
+* Updated baseapp and added custom fee handler to support provenance message fee module. (https://github.com/provenance-io/provenance/issues/354)
 
 ## [v0.44.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.44.5) - 2021-12-02
 

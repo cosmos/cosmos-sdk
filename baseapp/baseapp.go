@@ -134,7 +134,6 @@ type BaseApp struct { // nolint: maligned
 	// which informs Tendermint what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
 
-	// fee handler
 	feeHandler sdk.FeeHandler
 }
 

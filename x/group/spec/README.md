@@ -17,7 +17,7 @@ This module allows the creation and management of on-chain multisig accounts and
 
 1. **[Concepts](01_concepts.md)**
     - [Group](01_concepts.md#group)
-    - [Group Account](01_concepts.md#group-account)
+    - [Group Policy](01_concepts.md#group-policy)
     - [Decision Policy](01_concepts.md#decision-policy)
     - [Proposal](01_concepts.md#proposal)
     - [Voting](01_concepts.md#voting)
@@ -25,7 +25,7 @@ This module allows the creation and management of on-chain multisig accounts and
 2. **[State](02_state.md)**
     - [Group Table](02_state.md#group-table)
     - [Group Member Table](02_state.md#group-member-table)
-    - [Group Account Table](02_state.md#group-account-table)
+    - [Group Policy Table](02_state.md#group-policy-table)
     - [Proposal](02_state.md#proposal-table)
     - [Vote Table](02_state.md#vote-table)
 3. **[Msg Service](03_messages.md)**

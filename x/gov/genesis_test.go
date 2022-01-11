@@ -106,7 +106,7 @@ func TestImportExportQueues(t *testing.T) {
 	require.True(t, proposal2.Status == v1beta2.StatusVotingPeriod)
 
 	macc := app2.GovKeeper.GetGovernanceAccount(ctx2)
-	require.Equal(t, app2.GovKeeper.GetDepositParams(ctx2).MinDeposit, app2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
+	require.Equal(t, sdk.Coins(app2.GovKeeper.GetDepositParams(ctx2).MinDeposit), app2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
 
 	// Run the endblocker. Check to make sure that proposal1 is removed from state, and proposal2 is finished VotingPeriod.
 	gov.EndBlocker(ctx2, app2.GovKeeper)

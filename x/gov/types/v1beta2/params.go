@@ -39,15 +39,15 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewDepositParams creates a new DepositParams object
-func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration) DepositParams {
-	return DepositParams{
+func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration) *DepositParams {
+	return &DepositParams{
 		MinDeposit:       minDeposit,
 		MaxDepositPeriod: &maxDepositPeriod,
 	}
 }
 
 // DefaultDepositParams default parameters for deposits
-func DefaultDepositParams() DepositParams {
+func DefaultDepositParams() *DepositParams {
 	return NewDepositParams(
 		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinDepositTokens)),
 		DefaultPeriod,
@@ -77,8 +77,8 @@ func validateDepositParams(i interface{}) error {
 }
 
 // NewTallyParams creates a new TallyParams object
-func NewTallyParams(quorum, threshold, vetoThreshold sdk.Dec) TallyParams {
-	return TallyParams{
+func NewTallyParams(quorum, threshold, vetoThreshold sdk.Dec) *TallyParams {
+	return &TallyParams{
 		Quorum:        quorum.String(),
 		Threshold:     threshold.String(),
 		VetoThreshold: vetoThreshold.String(),
@@ -86,7 +86,7 @@ func NewTallyParams(quorum, threshold, vetoThreshold sdk.Dec) TallyParams {
 }
 
 // DefaultTallyParams default parameters for tallying
-func DefaultTallyParams() TallyParams {
+func DefaultTallyParams() *TallyParams {
 	return NewTallyParams(DefaultQuorum, DefaultThreshold, DefaultVetoThreshold)
 }
 
@@ -138,14 +138,14 @@ func validateTallyParams(i interface{}) error {
 }
 
 // NewVotingParams creates a new VotingParams object
-func NewVotingParams(votingPeriod time.Duration) VotingParams {
-	return VotingParams{
+func NewVotingParams(votingPeriod time.Duration) *VotingParams {
+	return &VotingParams{
 		VotingPeriod: &votingPeriod,
 	}
 }
 
 // DefaultVotingParams default parameters for voting
-func DefaultVotingParams() VotingParams {
+func DefaultVotingParams() *VotingParams {
 	return NewVotingParams(DefaultPeriod)
 }
 
@@ -173,9 +173,9 @@ func validateVotingParams(i interface{}) error {
 
 // Params returns all of the governance params
 type Params struct {
-	VotingParams  VotingParams  `json:"voting_params" yaml:"voting_params"`
-	TallyParams   TallyParams   `json:"tally_params" yaml:"tally_params"`
-	DepositParams DepositParams `json:"deposit_params" yaml:"deposit_params"`
+	VotingParams  *VotingParams  `json:"voting_params" yaml:"voting_params"`
+	TallyParams   *TallyParams   `json:"tally_params" yaml:"tally_params"`
+	DepositParams *DepositParams `json:"deposit_params" yaml:"deposit_params"`
 }
 
 func (gp Params) String() string {
@@ -184,7 +184,7 @@ func (gp Params) String() string {
 }
 
 // NewParams creates a new gov Params instance
-func NewParams(vp VotingParams, tp TallyParams, dp DepositParams) Params {
+func NewParams(vp *VotingParams, tp *TallyParams, dp *DepositParams) Params {
 	return Params{
 		VotingParams:  vp,
 		DepositParams: dp,

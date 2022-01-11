@@ -10,7 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	govv1beta2 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 	paramscutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
@@ -76,7 +77,12 @@ Where proposal.json contains:
 				return err
 			}
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msgContent, err := govkeeper.NewContentProposal(content, clientCtx.GetFromAddress().String())
+			if err != nil {
+				return err
+			}
+
+			msg, err := govv1beta2.NewMsgSubmitProposal([]sdk.Msg{msgContent}, deposit, from)
 			if err != nil {
 				return err
 			}

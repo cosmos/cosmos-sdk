@@ -137,7 +137,7 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 	if proposal.VotingEndTime != nil {
 		keeper.RemoveFromActiveProposalQueue(ctx, proposalID, *proposal.VotingEndTime)
 	}
-	
+
 	store.Delete(types.ProposalKey(proposalID))
 }
 

@@ -42,7 +42,7 @@ func TestMsgCreateGroup(t *testing.T) {
 				},
 			},
 			true,
-			"members: address: decoding bech32 failed",
+			"address: decoding bech32 failed",
 		},
 		{
 			"negitive member's weight not allowed",
@@ -314,6 +314,22 @@ func TestMsgUpdateGroupMembers(t *testing.T) {
 					group.Member{
 						Address:  member1.String(),
 						Weight:   "1",
+						Metadata: []byte("metadata"),
+					},
+				},
+			},
+			false,
+			"",
+		},
+		{
+			"valid test with zero weight",
+			&group.MsgUpdateGroupMembers{
+				GroupId: 1,
+				Admin:   admin.String(),
+				MemberUpdates: []group.Member{
+					group.Member{
+						Address:  member1.String(),
+						Weight:   "0",
 						Metadata: []byte("metadata"),
 					},
 				},

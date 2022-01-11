@@ -57,9 +57,27 @@ func (m MsgCreateGroup) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "admin")
 	}
 
-	members := Members{Members: m.Members}
-	if err := members.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "members")
+	return m.validateMembers()
+}
+
+func (m MsgCreateGroup) validateMembers() error {
+	index := make(map[string]struct{}, len(m.Members))
+	for i := range m.Members {
+		member := m.Members[i]
+		_, err := sdk.AccAddressFromBech32(member.Address)
+		if err != nil {
+			return sdkerrors.Wrap(err, "address")
+		}
+		
+		if _, err := math.NewPositiveDecFromString(member.Weight); err != nil {
+			return sdkerrors.Wrap(err, "weight")
+		}
+
+		addr := member.Address
+		if _, exists := index[addr]; exists {
+			return sdkerrors.Wrapf(errors.ErrDuplicate, "address: %s", addr)
+		}
+		index[addr] = struct{}{}
 	}
 
 	return nil
@@ -70,7 +88,7 @@ func (m Member) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrap(err, "address")
 	}
-	if _, err := math.NewPositiveDecFromString(m.Weight); err != nil {
+	if _, err := math.NewDecFromString(m.Weight); err != nil {
 		return sdkerrors.Wrap(err, "weight")
 	}
 

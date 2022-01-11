@@ -559,7 +559,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 
 	validUpdatedMembersFileName := testutil.WriteToNewTempFile(s.T(), fmt.Sprintf(`{"members": [{
 		"address": "%s",
-		"weight": "1",
+		"weight": "0",
 		"metadata": "%s"
 	}, {
 		"address": "%s",

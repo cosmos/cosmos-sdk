@@ -176,11 +176,11 @@ func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	suggest_gas, err := flags.GetInt(FlagSuggestGas)
+	suggestGas, err := flags.GetInt(FlagSuggestGas)
 	if err != nil {
 		return nil, err
 	}
-	suggest_denom, err := flags.GetString(FlagSuggestDenom)
+	suggestDenom, err := flags.GetString(FlagSuggestDenom)
 	if err != nil {
 		return nil, err
 	}
@@ -192,8 +192,8 @@ func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 		Addr:                addr,
 		Retries:             retries,
 		Offline:             offline,
-		SuggestGas:          suggest_gas,
-		DefaultSuggestDenom: suggest_denom,
+		SuggestGas:          suggestGas,
+		DefaultSuggestDenom: suggestDenom,
 	}
 	err = conf.validate()
 	if err != nil {

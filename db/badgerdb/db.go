@@ -11,7 +11,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	db "github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db"
 	dbutil "github.com/cosmos/cosmos-sdk/db/internal"
 
 	"github.com/dgraph-io/badger/v3"

@@ -137,6 +137,7 @@ func testTxHandler(options middleware.TxHandlerOptions, customTxHandlerMiddlewar
 		middleware.RecoveryTxMiddleware,
 		middleware.NewIndexEventsTxMiddleware(options.IndexEvents),
 		middleware.ValidateBasicMiddleware,
+		middleware.ConsumeBlockGasMiddleware,
 		CustomTxHandlerMiddleware(customTxHandlerMiddleware),
 	)
 }

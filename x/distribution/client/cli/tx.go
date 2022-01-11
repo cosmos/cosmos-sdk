@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 // Transaction flags for the x/distribution module
@@ -312,7 +312,7 @@ Where proposal.json contains:
 			}
 			content := types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, recpAddr, amount)
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := govv1beta1.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err
 			}

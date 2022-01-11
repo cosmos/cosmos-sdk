@@ -66,8 +66,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	govv1beta2 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
-	oldgovtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
@@ -297,8 +297,8 @@ func NewSimApp(
 	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.msgSvcRouter, app.AccountKeeper)
 
 	// register the proposal types
-	govRouter := oldgovtypes.NewRouter()
-	govRouter.AddRoute(govtypes.RouterKey, oldgovtypes.ProposalHandler).
+	govRouter := govv1beta1.NewRouter()
+	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper))

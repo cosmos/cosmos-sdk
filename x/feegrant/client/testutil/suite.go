@@ -21,7 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/client/cli"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	govv1beta2 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 const (
@@ -696,7 +697,7 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 	// granted fee allowance for an account which is not in state and creating
 	// any tx with it by using --fee-account shouldn't fail
 	out, err := govtestutil.MsgSubmitProposal(val.ClientCtx, grantee.String(),
-		"Text Proposal", "No desc", govtypes.ProposalTypeText,
+		"Text Proposal", "No desc", govv1beta1.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
 	)
 
@@ -725,7 +726,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 	}
 	spendLimit := sdk.NewCoin("stake", sdk.NewInt(1000))
 
-	allowMsgs := strings.Join([]string{sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{}), sdk.MsgTypeURL(&govtypes.MsgVoteWeighted{})}, ",")
+	allowMsgs := strings.Join([]string{sdk.MsgTypeURL(&govv1beta2.MsgSubmitProposal{}), sdk.MsgTypeURL(&govv1beta2.MsgVoteWeighted{})}, ",")
 
 	testCases := []struct {
 		name         string
@@ -836,7 +837,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 			"valid proposal tx",
 			func() (testutil.BufferWriter, error) {
 				return govtestutil.MsgSubmitProposal(val.ClientCtx, grantee.String(),
-					"Text Proposal", "No desc", govtypes.ProposalTypeText,
+					"Text Proposal", "No desc", govv1beta1.ProposalTypeText,
 					fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
 				)
 			},

@@ -715,7 +715,6 @@ func FeeInvoke(mode runTxMode, app *BaseApp, runMsgCtx sdk.Context, events sdk.E
 		}
 	}
 	return events, nil
->>>>>>> release-pio/v0.44.3.x
 }
 
 // runMsgs iterates through a list of messages and executes them with the provided

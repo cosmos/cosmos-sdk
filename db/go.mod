@@ -7,7 +7,9 @@ require (
 	github.com/dgraph-io/ristretto v0.1.0
 	github.com/google/btree v1.0.1
 	github.com/stretchr/testify v1.7.0
-	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c
+	// Note: gorocksdb bindings for OptimisticTransactionDB are not merged upstream, so we use a fork
+	// See https://github.com/tecbot/gorocksdb/pull/216
+	github.com/cosmos/gorocksdb v1.1.1
 )
 
 require (
@@ -31,6 +33,3 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
 
-// Note: gorocksdb bindings for OptimisticTransactionDB are not merged upstream, so we use a fork
-// See https://github.com/tecbot/gorocksdb/pull/216
-replace github.com/tecbot/gorocksdb => github.com/cosmos/gorocksdb v1.1.1

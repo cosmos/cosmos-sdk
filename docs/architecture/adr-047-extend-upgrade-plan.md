@@ -6,7 +6,7 @@
 
 ## Status
 
-DRAFT Not Implemented
+PROPOSED Not Implemented
 
 ## Abstract
 
@@ -41,19 +41,19 @@ Currently, there is no mechanism that makes Cosmovisor run a command after the u
 
 ### Protobuf Updates
 
-We will define a new message for providing upgrade instructions and add it as a new field in the `Plan` message.
+We will update the `x/upgrade.Plan` message for providing upgrade instructions.
 The upgrade instructions will contain a list of artifacts available for each platform.
-It will also allow for the definition of a pre-run and post-run command.
+It allows for the definition of a pre-run and post-run commands.
 
 ```protobuf
 message Plan {
   // ... (existing fields)
 
-  UpgradeInstructions upgrade = 6;
+  UpgradeInstructions instructions = 6;
 }
 ```
 
-The new `UpgradeInstructions upgrade` field MUST be optional.
+The new `UpgradeInstructions instructions` field MUST be optional.
 
 ```protobuf
 message UpgradeInstructions {
@@ -66,16 +66,27 @@ message UpgradeInstructions {
 
 All fields in the `UpgradeInstructions` are optional.
 - `pre_run` is a command to run prior to the upgraded chain restarting.
-  If defined, then the app supervisors (e.g. Cosmovisor) MUST NOT run `app pre-run`.
-  If defined, this command MUST behave the same as the current [pre-upgrade](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/docs/migrations/pre-upgrade.md) command.
+  If defined, it will be executed after halting and downloading the new artifact but before restarting the upgraded chain.
   The working directory this command runs from MUST be `{DAEMON_HOME}/cosmovisor/{upgrade name}`.
-- `post_run` is a command to run after the upgraded chain has been started. If defined, this command MUST be only executed once.
+  This command MUST behave the same as the current [pre-upgrade](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/docs/migrations/pre-upgrade.md) command.
+  It does not take in any command-line arguments and is expected to terminate with the following exit codes:
+
+  | Exit status code | How it is handled in Cosmosvisor                                                                                    |
+  |------------------|---------------------------------------------------------------------------------------------------------------------|
+  | `0`              | Assumes `pre-upgrade` command executed successfully and continues the upgrade.                                      |
+  | `1`              | Default exit code when `pre-upgrade` command has not been implemented.                                              |
+  | `30`             | `pre-upgrade` command was executed but failed. This fails the entire upgrade.                                       |
+  | `31`             | `pre-upgrade` command was executed but failed. But the command is retried until exit code `1` or `30` are returned. |
+  If defined, then the app supervisors (e.g. Cosmovisor) MUST NOT run `app pre-run`.
+- `post_run` is a command to run after the upgraded chain has been started. If defined, this command MUST be only executed at most once by an upgrading node.
   The output and exit code SHOULD be logged but SHOULD NOT affect the running of the upgraded chain.
   The working directory this command runs from MUST be `{DAEMON_HOME}/cosmovisor/{upgrade name}`.
 - `artifacts` define items to be downloaded.
   It SHOULD have only one entry per platform.
 - `description` contains human-readable information about the upgrade and might contain references to external resources.
   It SHOULD NOT be used for structured processing information.
+
+
 
 ```protobuf
 message Artifact {
@@ -94,6 +105,7 @@ message Artifact {
   otherwise no artifact should be downloaded.
 - `url` is a required URL string that MUST conform to [RFC 1738: Uniform Resource Locators](https://www.ietf.org/rfc/rfc1738.txt).
   A request to this `url` MUST return either an executable file or an archive containing either `bin/{DAEMON_NAME}` or `{DAEMON_NAME}`.
+  The URL should not contain checksum - it should be specified by the `checksum` attribute.
 - `checksum` is a checksum of the expected result of a request to the `url`.
   It is not required, but is recommended.
   If provided, it MUST be a hex encoded checksum string.
@@ -158,7 +170,7 @@ When parsing the `info` field, Cosmovisor will first look for the new `UpgradeIn
 
 ### Backwards Compatibility
 
-Since the only change to existing definitions is the addition of the `upgrade` field to the `Plan` message, and that field is optional, there are no backwards incompatibilities with respects to the proto messages.
+Since the only change to existing definitions is the addition of the `instructions` field to the `Plan` message, and that field is optional, there are no backwards incompatibilities with respects to the proto messages.
 Additionally, current behavior will be maintained when no `UpgradeInstructions` are provided, so there are no backwards incompatibilities with respects to either the upgrade module or Cosmovisor.
 
 ### Forwards Compatibility
@@ -186,7 +198,7 @@ In order to utilize the `UpgradeInstructions` as part of a software upgrade, bot
 ## Further Discussions
 
 1.  [Draft PR #10032 Comment](https://github.com/cosmos/cosmos-sdk/pull/10032/files?authenticity_token=pLtzpnXJJB%2Fif2UWiTp9Td3MvRrBF04DvjSuEjf1azoWdLF%2BSNymVYw9Ic7VkqHgNLhNj6iq9bHQYnVLzMXd4g%3D%3D&file-filters%5B%5D=.go&file-filters%5B%5D=.proto#r698708349):
-    Consider different names for `UpgradeInstructions upgrade` (either the message type or field name).
+    Consider different names for `UpgradeInstructions instructions` (either the message type or field name).
 1.  [Draft PR #10032 Comment](https://github.com/cosmos/cosmos-sdk/pull/10032/files?authenticity_token=pLtzpnXJJB%2Fif2UWiTp9Td3MvRrBF04DvjSuEjf1azoWdLF%2BSNymVYw9Ic7VkqHgNLhNj6iq9bHQYnVLzMXd4g%3D%3D&file-filters%5B%5D=.go&file-filters%5B%5D=.proto#r754655072):
     1.  Consider putting the `string platform` field inside `UpgradeInstructions` and make `UpgradeInstructions` a repeated field in `Plan`.
     1.  Consider using a `oneof` field in the `Plan` which could either be `UpgradeInstructions` or else a URL that should return the `UpgradeInstructions`.

@@ -8,13 +8,8 @@ import (
 // EndBlocker is called at the end of every block
 func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 
-	matureGrants, err := keeper.DequeueAllMatureGrants(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	// clears all the mature grants
-	if err := keeper.DeleteExpiredGrants(ctx, matureGrants); err != nil {
+	// delete all the mature grants
+	if err := keeper.DequeueAndDeleteExpiredGrants(ctx); err != nil {
 		panic(err)
 	}
 }

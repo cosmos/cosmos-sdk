@@ -61,16 +61,11 @@ func parseGrantStoreKey(key []byte) (granterAddr, granteeAddr sdk.AccAddress, ms
 }
 
 // parseGrantQueueKey split expiration time from the grant queue key
-func parseGrantQueueKey(key []byte) (expiration time.Time) {
+func parseGrantQueueKey(key []byte) (time.Time, error) {
 	// key is of format:
 	// 0x02<grant_expiration_Bytes>
 
-	expiration, err := sdk.ParseTimeBytes(key[1 : 1+lenTime])
-	if err != nil {
-		panic(err)
-	}
-
-	return expiration
+	return sdk.ParseTimeBytes(key[1 : 1+lenTime])
 }
 
 // GrantQueueKey - return grant queue store key

@@ -330,12 +330,8 @@ func (s *TestSuite) TestDequeueAllGrantsQueue() {
 	require.NoError(err)
 
 	newCtx := s.ctx.WithBlockTime(now.AddDate(1, 0, 0))
-	matureGrants, err := app.AuthzKeeper.DequeueAllMatureGrants(newCtx)
+	err = app.AuthzKeeper.DequeueAndDeleteExpiredGrants(newCtx)
 	require.NoError(err)
-
-	require.Len(matureGrants, 3)
-
-	require.NoError(app.AuthzKeeper.DeleteExpiredGrants(newCtx, matureGrants))
 
 	s.T().Log("verify expired grants are pruned from the state")
 	authzs, err := app.AuthzKeeper.GetAuthorizations(newCtx, grantee, granter)

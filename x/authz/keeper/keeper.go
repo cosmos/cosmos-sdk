@@ -18,6 +18,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
+// TODO: Revisit this once we have propoer gas fee framework.
+// Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054,
+// https://github.com/cosmos/cosmos-sdk/discussions/9072
+const gasCostPerIteration = uint64(20)
+
 type Keeper struct {
 	storeKey   storetypes.StoreKey
 	cdc        codec.BinaryCodec
@@ -151,7 +156,9 @@ func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, auth
 	grant, found := k.getGrant(ctx, skey)
 	// remove old grant key from the grant queue
 	if found {
-		k.removeFromGrantQueue(ctx, skey, grant.Expiration)
+		if err := k.removeFromGrantQueue(ctx, skey, grant.Expiration); err != nil {
+			return err
+		}
 	}
 
 	grant, err := authz.NewGrant(authorization, expiration)
@@ -181,7 +188,9 @@ func (k Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk
 	}
 
 	store.Delete(skey)
-	k.removeFromGrantQueue(ctx, skey, grant.Expiration)
+	if err := k.removeFromGrantQueue(ctx, skey, grant.Expiration); err != nil {
+		return err
+	}
 
 	return ctx.EventManager().EmitTypedEvent(&authz.EventRevoke{
 		MsgTypeUrl: msgType,
@@ -348,6 +357,8 @@ func (keeper Keeper) removeFromGrantQueue(ctx sdk.Context, grantKey []byte, expi
 	queueItems := queueItem.GgmPairs
 
 	for index, ggmTriple := range queueItems {
+		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "grant queue")
+
 		if ggmTriple.Granter == granter.String() &&
 			ggmTriple.Grantee == grantee.String() &&
 			ggmTriple.MsgTypeUrl == msgType {
@@ -367,43 +378,34 @@ func (keeper Keeper) removeFromGrantQueue(ctx sdk.Context, grantKey []byte, expi
 	return nil
 }
 
-// DequeueAllMatureGrants returns a concatenated list of all the queue items, and deletes them from the grant queue
-func (k Keeper) DequeueAllMatureGrants(ctx sdk.Context) ([]*authz.GrantStoreKey, error) {
+// DequeueAndDeleteExpiredGrants deletes expired grants from the state and grant queue.
+func (k Keeper) DequeueAndDeleteExpiredGrants(ctx sdk.Context) error {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := store.Iterator(GrantQueuePrefix, sdk.InclusiveEndBytes(GrantQueueKey(ctx.BlockTime())))
 	defer iterator.Close()
 
-	var matureGrants []*authz.GrantStoreKey
 	for ; iterator.Valid(); iterator.Next() {
 		var queueItem authz.GrantQueueItem
 		if err := k.cdc.Unmarshal(iterator.Value(), &queueItem); err != nil {
-			return nil, err
+			return err
 		}
 
-		matureGrants = append(matureGrants, queueItem.GgmPairs...)
 		store.Delete(iterator.Key())
-	}
 
-	return matureGrants, nil
-}
+		for _, ggmPair := range queueItem.GgmPairs {
+			granter, err := sdk.AccAddressFromBech32(ggmPair.Granter)
+			if err != nil {
+				return err
+			}
 
-// DeleteExpiredGrants deletes expired grants from the state
-func (k Keeper) DeleteExpiredGrants(ctx sdk.Context, grants []*authz.GrantStoreKey) error {
-	store := ctx.KVStore(k.storeKey)
+			grantee, err := sdk.AccAddressFromBech32(ggmPair.Grantee)
+			if err != nil {
+				return err
+			}
 
-	for _, grant := range grants {
-		granter, err := sdk.AccAddressFromBech32(grant.Granter)
-		if err != nil {
-			return err
+			store.Delete(grantStoreKey(grantee, granter, ggmPair.MsgTypeUrl))
 		}
-
-		grantee, err := sdk.AccAddressFromBech32(grant.Grantee)
-		if err != nil {
-			return err
-		}
-
-		store.Delete(grantStoreKey(grantee, granter, grant.MsgTypeUrl))
 	}
 
 	return nil

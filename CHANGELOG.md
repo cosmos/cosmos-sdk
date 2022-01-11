@@ -36,7 +36,19 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
+
+# Provenance Specific releases
+
+## [v0.44.3-pio-1.8.rc1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.44.3-pio-1.8.rc1)
+
 * Updated baseapp and added custom fee handler to support provenance message fee module. (https://github.com/provenance-io/provenance/issues/354)
+
+## [v0.44.3-rosetta-fix](https://github.com/provenance-io/cosmos-sdk/tag/v0.44.3-rosetta-fix)
+
+* Upgraded Rosetta to v0.7.2 which includes the following prs to cosmos upstream: [10432](https://github.com/cosmos/cosmos-sdk/pull/10432) and [10707](https://github.com/cosmos/cosmos-sdk/pull/10707)
+
+
+# Upstream releases
 
 ## [v0.44.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.44.5) - 2021-12-02
 
@@ -60,13 +72,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10414](https://github.com/cosmos/cosmos-sdk/pull/10414) Use `sdk.GetConfig().GetFullBIP44Path()` instead `sdk.FullFundraiserPath` to generate key
 * (bank) [\#10394](https://github.com/cosmos/cosmos-sdk/pull/10394) Fix: query account balance by ibc denom.
 * [\10608](https://github.com/cosmos/cosmos-sdk/pull/10608) Change the order of module migration by pushing x/auth to the end. Auth module depends on other modules and should be run last. We have updated the documentation to provide more details how to change module migration order. This is technically a breaking change, but only impacts updates between the upgrades with version change, hence migrating from the previous patch release doesn't cause new migration and doesn't break the state.
-
-
-## [v0.44.3-rosetta-fix](https://github.com/provenance-io/cosmos-sdk/tag/v0.44.3-rosetta-fix)
-
-### Improvements
-
-* Upgraded Rosetta to v0.7.2 which includes the following prs to cosmos upstream: [10432](https://github.com/cosmos/cosmos-sdk/pull/10432) and [10707](https://github.com/cosmos/cosmos-sdk/pull/10707)
 
 
 ## [v0.44.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.44.3) - 2021-10-21

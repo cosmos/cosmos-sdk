@@ -687,7 +687,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
 	if err == nil && mode == runTxModeDeliver {
 		// apply fee logic calls
-		events, err = FeeInvoke(mode, app, runMsgCtx, events)
+		events, err := FeeInvoke(mode, app, runMsgCtx, ctx.EventManager().Events())
 		// if err from FeeInvoke then don't write to cache
 		if err == nil {
 			msCache.Write()

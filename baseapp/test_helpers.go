@@ -15,7 +15,7 @@ func (app *BaseApp) Check(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk
 	if err != nil {
 		return sdk.GasInfo{}, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
-	gasInfo, result, _, err := app.runTx(runTxModeCheck, bz)
+	gasInfo, result, _, _, err := app.runTx(runTxModeCheck, bz)
 	return gasInfo, result, err
 }
 
@@ -30,7 +30,7 @@ func (app *BaseApp) Deliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *s
 	if err != nil {
 		return sdk.GasInfo{}, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
-	gasInfo, result, _, err := app.runTx(runTxModeDeliver, bz)
+	gasInfo, result, _, _, err := app.runTx(runTxModeDeliver, bz)
 	return gasInfo, result, err
 }
 

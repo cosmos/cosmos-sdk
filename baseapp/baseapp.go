@@ -135,7 +135,7 @@ type BaseApp struct { // nolint: maligned
 	indexEvents map[string]struct{}
 
 	// fee handler
-	feeHandler sdk.FeeHandler // ante handler for fee and auth
+	feeHandler sdk.FeeHandler
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

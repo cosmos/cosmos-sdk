@@ -219,8 +219,10 @@ func (msg MsgCreateTrueVestingAccount) ValidateBasic() error {
 		vestingCoins = vestingCoins.Add(period.Amount...)
 	}
 
-	// XXX IsEqual can panic
-	if len(msg.LockupPeriods) > 0 && len(msg.VestingPeriods) > 0 && !lockupCoins.IsEqual(vestingCoins) {
+	// If both schedules are present, the must describe the same total amount.
+	// IsEqual can panic, so use (a == b) <=> (a <= b && b <= a).
+	if len(msg.LockupPeriods) > 0 && len(msg.VestingPeriods) > 0 &&
+		!(lockupCoins.IsAllLTE(vestingCoins) && vestingCoins.IsAllLTE(lockupCoins)) {
 		return fmt.Errorf("vesting and lockup schedules must have same total coins")
 	}
 

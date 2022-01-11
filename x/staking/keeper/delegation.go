@@ -789,6 +789,8 @@ func (k Keeper) Delegate(
 // TransferDelegation changes the ownership of at most the desired number of shares.
 // Returns the actual number of shares transferred. Will also transfer redelegation
 // entries to ensure that all redelegations are matched by sufficient shares.
+// Note that no tokens are transferred to or from any pool or account, since no
+// delegation is actually changing state.
 func (k Keeper) TransferDelegation(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, valAddr sdk.ValAddress, wantShares sdk.Dec) sdk.Dec {
 	transferred := sdk.ZeroDec()
 
@@ -803,6 +805,22 @@ func (k Keeper) TransferDelegation(ctx sdk.Context, fromAddr, toAddr sdk.AccAddr
 	delFrom, found := k.GetDelegation(ctx, fromAddr, valAddr)
 	if !found {
 		return transferred
+	}
+
+	// Check redelegation entry limits while we can still return early.
+	// Assume the worst case that we need to transfer all redelegation entries
+	toRedelegations := k.GetRedelegations(ctx, toAddr, math.MaxUint16)
+	for _, toRedelegation := range toRedelegations {
+		// There's no redelegation index by delegator and dstVal or vice-versa.
+		// The minimum cardinality is to look up by delegator, so scan and skip.
+		if toRedelegation.ValidatorDstAddress != valAddr.String() {
+			continue
+		}
+		fromRedelegation, found := k.GetRedelegation(ctx, fromAddr, sdk.ValAddress(toRedelegation.ValidatorSrcAddress), sdk.ValAddress(toRedelegation.ValidatorDstAddress))
+		if found && len(toRedelegation.Entries)+len(fromRedelegation.Entries) >= int(k.MaxEntries(ctx)) {
+			// avoid types.ErrMaxRedelegationEntries
+			return transferred
+		}
 	}
 
 	// compute shares to transfer, amount left behind
@@ -824,7 +842,7 @@ func (k Keeper) TransferDelegation(ctx sdk.Context, fromAddr, toAddr sdk.AccAddr
 	}
 	delTo.Shares = delTo.Shares.Add(transferred)
 	k.SetDelegation(ctx, delTo)
-	k.AfterDelegationModified(ctx, toAddr, valAddr) // XXX cross check vs Delegate() code
+	k.AfterDelegationModified(ctx, toAddr, valAddr)
 
 	// Update source delegation
 	if remaining.IsZero() {
@@ -834,10 +852,8 @@ func (k Keeper) TransferDelegation(ctx sdk.Context, fromAddr, toAddr sdk.AccAddr
 		k.BeforeDelegationSharesModified(ctx, fromAddr, valAddr)
 		delFrom.Shares = remaining
 		k.SetDelegation(ctx, delFrom)
-		k.AfterDelegationModified(ctx, fromAddr, valAddr) // XXX cross check vs Delegate() code
+		k.AfterDelegationModified(ctx, fromAddr, valAddr)
 	}
-
-	// XXX check for max redelegation entries at dst
 
 	// If there are not enough remaining shares to be responsible for
 	// the redelegations, transfer some redelegations.

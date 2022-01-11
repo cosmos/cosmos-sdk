@@ -239,7 +239,9 @@ func (s msgServer) CreateTrueVestingAccount(goCtx context.Context, msg *types.Ms
 		vestingCoins = lockupCoins
 	}
 
-	if !vestingCoins.IsEqual(lockupCoins) { // XXX IsEqual can panic
+	// The vesting and lockup schedules must describe the same total amount.
+	// IsEqual can panic, so use (a == b) <=> (a <= b && b <= a).
+	if !(vestingCoins.IsAllLTE(lockupCoins) && lockupCoins.IsAllLTE(vestingCoins)) {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "lockup and vesting amounts must be equal")
 	}
 

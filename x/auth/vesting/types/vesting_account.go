@@ -556,7 +556,6 @@ func NewTrueVestingAccount(baseAcc *authtypes.BaseAccount, originalVesting sdk.C
 }
 
 func (tva *TrueVestingAccount) UpdateCombined() *TrueVestingAccount {
-	// XXX validate that lockup and vesting schedules sum to OriginalVesting
 	start, end, combined := ConjunctPeriods(tva.StartTime, tva.StartTime, tva.LockupPeriods, tva.VestingPeriods)
 	tva.StartTime = start
 	tva.EndTime = end
@@ -608,22 +607,41 @@ func (tva TrueVestingAccount) GetVestingPeriods() Periods {
 	return tva.VestingPeriods
 }
 
+// coinEq returns whether two Coins are equal.
+// The IsEqual() method can panic.
+func coinEq(a, b sdk.Coins) bool {
+	return a.IsAllLTE(b) && b.IsAllLTE(a)
+}
+
 // Validate checks for errors on the account fields
 func (tva TrueVestingAccount) Validate() error {
-	// XXX ensure that lockup and vesting schedules both sum to OriginalVesting
 	if tva.GetStartTime() >= tva.GetEndTime() {
 		return errors.New("vesting start-time must be before end-time")
 	}
-	endTime := tva.StartTime
-	originalVesting := sdk.NewCoins()
+
+	lockupEnd := tva.StartTime
+	lockupCoins := sdk.NewCoins()
+	for _, p := range tva.LockupPeriods {
+		lockupEnd += p.Length
+		lockupCoins = lockupCoins.Add(p.Amount...)
+	}
+	if lockupEnd > tva.EndTime {
+		return errors.New("lockup schedule extends beyond account end time")
+	}
+	if !coinEq(lockupCoins, tva.OriginalVesting) {
+		return errors.New("original vesting coins does not match the sum of all coins in lockup periods")
+	}
+
+	vestingEnd := tva.StartTime
+	vestingCoins := sdk.NewCoins()
 	for _, p := range tva.VestingPeriods {
-		endTime += p.Length
-		originalVesting = originalVesting.Add(p.Amount...)
+		vestingEnd += p.Length
+		vestingCoins = vestingCoins.Add(p.Amount...)
 	}
-	if endTime != tva.EndTime {
-		return errors.New("vesting end time does not match length of all vesting periods")
+	if vestingEnd > tva.EndTime {
+		return errors.New("vesting schedule exteds beyond account end time")
 	}
-	if !originalVesting.IsEqual(tva.OriginalVesting) {
+	if !coinEq(vestingCoins, tva.OriginalVesting) {
 		return errors.New("original vesting coins does not match the sum of all coins in vesting periods")
 	}
 
@@ -770,13 +788,17 @@ func (tva TrueVestingAccount) Clawback(ctx sdk.Context, dest sdk.AccAddress, ak 
 		}
 		wantShares, err := validator.SharesFromTokensTruncated(want)
 		if err != nil {
-			return err // XXX or something
+			// validator has no tokens
+			continue
 		}
 		transferredShares := sk.TransferDelegation(ctx, addr, dest, delegation.GetValidatorAddr(), wantShares)
-		transferred := validator.TokensFromSharesRoundUp(transferredShares).RoundInt() // XXX rounding
+		// to be conservative in what we're clawing back, round transferred shares up
+		transferred := validator.TokensFromSharesRoundUp(transferredShares).RoundInt()
 		updatedAcc.DelegatedVesting = subBond(updatedAcc.DelegatedVesting, transferred)
-		want = want.Sub(transferred) // XXX underflow from rounding?
+		want = want.Sub(transferred)
 		if !want.IsPositive() {
+			// Could be slightly negative, due to rounding?
+			// Don't think so, due to the precautions above.
 			return nil
 		}
 	}
@@ -788,6 +810,8 @@ func (tva TrueVestingAccount) Clawback(ctx sdk.Context, dest sdk.AccAddress, ak 
 
 // findBalance computes the current account balance on the staking dimension.
 // Returns the number of bonded, unbonding, and unbonded statking tokens.
+// Rounds down when computing the bonded tokens to err on the side of vested fraction
+// (smaller number of bonded tokens means vested amount covers more of them).
 func (tva TrueVestingAccount) findBalance(ctx sdk.Context, bk BankKeeper, sk StakingKeeper) (bonded, unbonding, unbonded sdk.Int) {
 	bondDenom := sk.BondDenom(ctx)
 	unbonded = bk.GetBalance(ctx, tva.GetAddress(), bondDenom).Amount
@@ -812,7 +836,7 @@ func (tva TrueVestingAccount) findBalance(ctx sdk.Context, bk BankKeeper, sk Sta
 			panic("validator not found") // shoudn't happen
 		}
 		shares := delegation.Shares
-		tokens := validator.TokensFromSharesRoundUp(shares).RoundInt() // XXX rounding
+		tokens := validator.TokensFromSharesTruncated(shares).RoundInt()
 		bonded = bonded.Add(tokens)
 	}
 	return
@@ -851,10 +875,11 @@ func (tva TrueVestingAccount) distributeReward(ctx sdk.Context, ak AccountKeeper
 	ak.SetAccount(ctx, &tva)
 }
 
+// scaleCoins scales the given coins, rounding down.
 func scaleCoins(coins sdk.Coins, scale sdk.Dec) sdk.Coins {
 	scaledCoins := sdk.NewCoins()
 	for _, coin := range coins {
-		amt := coin.Amount.ToDec().Mul(scale).RoundInt() // XXX rounding
+		amt := coin.Amount.ToDec().Mul(scale).TruncateInt() // round down
 		scaledCoins = scaledCoins.Add(sdk.NewCoin(coin.Denom, amt))
 	}
 	return scaledCoins
@@ -910,7 +935,7 @@ func (tva TrueVestingAccount) PostReward(ctx sdk.Context, reward sdk.Coins, rak,
 		tva.distributeReward(ctx, ak, bondDenom, reward)
 		return
 	}
-	unvestedRatio := unvested.ToDec().Quo(bonded.ToDec()) // XXX rounding
+	unvestedRatio := unvested.ToDec().QuoTruncate(bonded.ToDec()) // round down
 	unvestedReward := scaleCoins(reward, unvestedRatio)
 	tva.distributeReward(ctx, ak, bondDenom, unvestedReward)
 }

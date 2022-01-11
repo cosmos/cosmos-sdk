@@ -77,3 +77,19 @@ func (k Keeper) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, 
 		k.hooks.BeforeValidatorSlashed(ctx, valAddr, fraction)
 	}
 }
+
+// BeforeSlashingUnbondingDelegation - call hook if registered
+func (k Keeper) BeforeSlashingUnbondingDelegation(ctx sdk.Context, unbondingDelegation types.UnbondingDelegation,
+	infractionHeight int64, slashFactor sdk.Dec) {
+	if k.hooks != nil {
+		k.hooks.BeforeSlashingUnbondingDelegation(ctx, unbondingDelegation, infractionHeight, slashFactor)
+	}
+}
+
+// BeforeSlashingRedelegation - call hook if registered
+func (k Keeper) BeforeSlashingRedelegation(ctx sdk.Context, srcValidator types.Validator, redelegation types.Redelegation,
+	infractionHeight int64, slashFactor sdk.Dec) {
+	if k.hooks != nil {
+		k.hooks.BeforeSlashingRedelegation(ctx, srcValidator, redelegation, infractionHeight, slashFactor)
+	}
+}

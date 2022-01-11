@@ -165,6 +165,9 @@ func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 // insufficient stake remaining)
 func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation types.UnbondingDelegation,
 	infractionHeight int64, slashFactor sdk.Dec) (totalSlashAmount sdk.Int) {
+	// hook before slashing unbonding delegation
+	k.BeforeSlashingUnbondingDelegation(ctx, unbondingDelegation, infractionHeight, slashFactor)
+
 	now := ctx.BlockHeader().Time
 	totalSlashAmount = sdk.ZeroInt()
 	burnedAmount := sdk.ZeroInt()
@@ -218,6 +221,9 @@ func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 // NOTE this is only slashing for prior infractions from the source validator
 func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator, redelegation types.Redelegation,
 	infractionHeight int64, slashFactor sdk.Dec) (totalSlashAmount sdk.Int) {
+	// hook before slashing redelegation
+	k.BeforeSlashingRedelegation(ctx, srcValidator, redelegation, infractionHeight, slashFactor)
+
 	now := ctx.BlockHeader().Time
 	totalSlashAmount = sdk.ZeroInt()
 	bondedBurnedAmount, notBondedBurnedAmount := sdk.ZeroInt(), sdk.ZeroInt()

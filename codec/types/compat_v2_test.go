@@ -32,7 +32,7 @@ func TestMarshalUnmarshalGogo(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, bz)
 
-	any2, err := types.NewAnyWithValue(&testdata.Dog{})
+	any2 := &types.Any{}
 	require.NoError(t, err)
 	jum := &jsonpb.Unmarshaler{
 		AllowUnknownFields: true,
@@ -65,8 +65,7 @@ func TestMarshalUnmarshalV2(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, bz)
 
-	snakey2 := &testdatav2.Snake{}
-	any, err = types.NewAnyWithValue(snakey2)
+	any = &types.Any{}
 	require.NoError(t, err)
 	require.NotNil(t, any)
 

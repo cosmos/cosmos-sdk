@@ -2,6 +2,8 @@ package types
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gogo/protobuf/jsonpb"
 	gogoproto "github.com/gogo/protobuf/proto"
@@ -50,7 +52,13 @@ func (any *Any) MarshalJSONPB(m *jsonpb.Marshaler) ([]byte, error) {
 }
 
 func (any *Any) UnmarshalJSONPB(u *jsonpb.Unmarshaler, bz []byte) error {
-	msg, err := u.AnyResolver.Resolve(any.TypeUrl)
+
+	typeURL, err := typeUrlFromBytes(bz)
+	if err != nil {
+		return err
+	}
+
+	msg, err := u.AnyResolver.Resolve(typeURL)
 	if err != nil {
 		return err
 	}
@@ -79,4 +87,23 @@ func (any *Any) UnmarshalJSONPB(u *jsonpb.Unmarshaler, bz []byte) error {
 	default:
 		return fmt.Errorf("the message resolved from the Any was not a gogoproto nor a protov2 message, got: %T", msg)
 	}
+}
+
+func typeUrlFromBytes(bz []byte) (string, error) {
+	// we need to extract the typeURL from the bytes in order to correctly decide
+	// if this is a gogo message or a proto v2 message
+	var objmap map[string]json.RawMessage
+	err := json.Unmarshal(bz, &objmap)
+	if err != nil {
+		return "", err
+	}
+
+	raw, ok := objmap["@type"]
+	if !ok {
+		return "", errors.New("field @type not found in message bytes")
+	}
+
+	var typeURL string
+	err = json.Unmarshal(raw, &typeURL)
+	return typeURL, err
 }

@@ -691,10 +691,10 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		// if err from FeeInvoke then don't write to cache
 		if err == nil {
 			msCache.Write()
-            if len(events) > 0 {
-            	// append the events in the order of occurrence
-            	result.Events = append(events.ToABCIEvents(), result.Events...)
-            }
+			if len(events) > 0 {
+				// append the events in the order of occurrence
+				result.Events = append(events.ToABCIEvents(), result.Events...)
+			}
 		}
 	}
 

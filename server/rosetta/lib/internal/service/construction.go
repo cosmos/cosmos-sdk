@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"strconv"
 	"strings"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -77,7 +78,7 @@ func (on OnlineNetwork) ConstructionMetadata(ctx context.Context, request *types
 	gas := sdk.NewIntFromUint64(uint64(metadata["gas_limit"].(float64)))
 
 	suggestedFee := types.Amount{
-		Value: price.Amount.MulInt64(gas.Int64()).String(),
+		Value: strconv.FormatInt(price.Amount.MulInt64(gas.Int64()).Ceil().TruncateInt64(), 10),
 		Currency: &(types.Currency{
 			Symbol:   price.Denom,
 			Decimals: 0,

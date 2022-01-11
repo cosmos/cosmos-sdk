@@ -33,6 +33,8 @@ If the URL returns an archive, it is decompressed into `{DAEMON_HOME}/cosmovisor
 Then, if `{DAEMON_HOME}/cosmovisor/{upgrade name}/bin/{DAEMON_NAME}` does not exist, but `{DAEMON_HOME}/cosmovisor/{upgrade name}/{DAEMON_NAME}` does, the latter is copied to the former.
 If the URL returns something other than an archive, it is downloaded to `{DAEMON_HOME}/cosmovisor/{upgrade name}/bin/{DAEMON_NAME}`.
 
+If an upgrade height is reached and the new version of the executable version isn't available, Cosmovisor will stop running.
+
 Both `DAEMON_HOME` and `DAEMON_NAME` are [environment variables used to configure Cosmovisor](https://github.com/cosmos/cosmos-sdk/blob/cosmovisor/v1.0.0/cosmovisor/README.md#command-line-arguments-and-environment-variables).
 
 Currently, there is no mechanism that makes Cosmovisor run a command after the upgraded chain has been restarted.

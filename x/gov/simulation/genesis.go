@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 // Simulation parameter constants
@@ -94,11 +94,11 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { veto = GenTallyParamsVeto(r) },
 	)
 
-	govGenesis := types.NewGenesisState(
+	govGenesis := v1beta2.NewGenesisState(
 		startingProposalID,
-		types.NewDepositParams(minDeposit, depositPeriod),
-		types.NewVotingParams(votingPeriod),
-		types.NewTallyParams(quorum, threshold, veto),
+		v1beta2.NewDepositParams(minDeposit, depositPeriod),
+		v1beta2.NewVotingParams(votingPeriod),
+		v1beta2.NewTallyParams(quorum, threshold, veto),
 	)
 
 	bz, err := json.MarshalIndent(&govGenesis, "", " ")
@@ -106,5 +106,5 @@ func RandomizedGenState(simState *module.SimulationState) {
 		panic(err)
 	}
 	fmt.Printf("Selected randomly generated governance parameters:\n%s\n", bz)
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(govGenesis)
+	simState.GenState[v1beta2.ModuleName] = simState.Cdc.MustMarshalJSON(govGenesis)
 }

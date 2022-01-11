@@ -38,10 +38,10 @@ func TxCmd(name string) *cobra.Command {
 		MsgUpdateGroupAdminCmd(),
 		MsgUpdateGroupMetadataCmd(),
 		MsgUpdateGroupMembersCmd(),
-		MsgCreateGroupAccountCmd(),
-		MsgUpdateGroupAccountAdminCmd(),
-		MsgUpdateGroupAccountDecisionPolicyCmd(),
-		MsgUpdateGroupAccountMetadataCmd(),
+		MsgCreateGroupPolicyCmd(),
+		MsgUpdateGroupPolicyAdminCmd(),
+		MsgUpdateGroupPolicyDecisionPolicyCmd(),
+		MsgUpdateGroupPolicyMetadataCmd(),
 		MsgCreateProposalCmd(),
 		MsgVoteCmd(),
 		MsgExecCmd(),
@@ -284,20 +284,20 @@ func MsgUpdateGroupMetadataCmd() *cobra.Command {
 	return cmd
 }
 
-// MsgCreateGroupAccountCmd creates a CLI command for Msg/CreateGroupAccount.
-func MsgCreateGroupAccountCmd() *cobra.Command {
+// MsgCreateGroupPolicyCmd creates a CLI command for Msg/CreateGroupPolicy.
+func MsgCreateGroupPolicyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "create-group-account [admin] [group-id] [metadata] [decision-policy]",
-		Short: "Create a group account which is an account " +
+		Use: "create-group-policy [admin] [group-id] [metadata] [decision-policy]",
+		Short: "Create a group policy which is an account " +
 			"associated with a group and a decision policy. " +
 			"Note, the '--from' flag is " +
 			"ignored as it is implied from [admin].",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Create a group account which is an account associated with a group and a decision policy.
+			fmt.Sprintf(`Create a group policy which is an account associated with a group and a decision policy.
 Note, the '--from' flag is ignored as it is implied from [admin].
 
 Example:
-$ %s tx group create-group-account [admin] [group-id] [metadata] \
+$ %s tx group create-group-policy [admin] [group-id] [metadata] \
 '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"1s"}'
 `,
 				version.AppName,
@@ -330,7 +330,7 @@ $ %s tx group create-group-account [admin] [group-id] [metadata] \
 				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "metadata is malformed, proper base64 string is required")
 			}
 
-			msg, err := group.NewMsgCreateGroupAccount(
+			msg, err := group.NewMsgCreateGroupPolicy(
 				clientCtx.GetFromAddress(),
 				groupID,
 				b,
@@ -352,11 +352,11 @@ $ %s tx group create-group-account [admin] [group-id] [metadata] \
 	return cmd
 }
 
-// MsgUpdateGroupAccountAdminCmd creates a CLI command for Msg/UpdateGroupAccountAdmin.
-func MsgUpdateGroupAccountAdminCmd() *cobra.Command {
+// MsgUpdateGroupPolicyAdminCmd creates a CLI command for Msg/UpdateGroupPolicyAdmin.
+func MsgUpdateGroupPolicyAdminCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-group-account-admin [admin] [group-account] [new-admin]",
-		Short: "Update a group account admin",
+		Use:   "update-group-policy-admin [admin] [group-policy-account] [new-admin]",
+		Short: "Update a group policy admin",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := cmd.Flags().Set(flags.FlagFrom, args[0])
@@ -369,7 +369,7 @@ func MsgUpdateGroupAccountAdminCmd() *cobra.Command {
 				return err
 			}
 
-			msg := &group.MsgUpdateGroupAccountAdmin{
+			msg := &group.MsgUpdateGroupPolicyAdmin{
 				Admin:    clientCtx.GetFromAddress().String(),
 				Address:  args[1],
 				NewAdmin: args[2],
@@ -387,11 +387,11 @@ func MsgUpdateGroupAccountAdminCmd() *cobra.Command {
 	return cmd
 }
 
-// MsgUpdateGroupAccountDecisionPolicyCmd creates a CLI command for Msg/UpdateGroupAccountDecisionPolicy.
-func MsgUpdateGroupAccountDecisionPolicyCmd() *cobra.Command {
+// MsgUpdateGroupPolicyDecisionPolicyCmd creates a CLI command for Msg/UpdateGroupPolicyDecisionPolicy.
+func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-group-account-policy [admin] [group-account] [decision-policy]",
-		Short: "Update a group account decision policy",
+		Use:   "update-group-policy-decision-policy [admin] [group-policy-account] [decision-policy]",
+		Short: "Update a group policy's decision policy",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := cmd.Flags().Set(flags.FlagFrom, args[0])
@@ -414,7 +414,7 @@ func MsgUpdateGroupAccountDecisionPolicyCmd() *cobra.Command {
 				return err
 			}
 
-			msg, err := group.NewMsgUpdateGroupAccountDecisionPolicyRequest(
+			msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(
 				clientCtx.GetFromAddress(),
 				accountAddress,
 				policy,
@@ -436,11 +436,11 @@ func MsgUpdateGroupAccountDecisionPolicyCmd() *cobra.Command {
 	return cmd
 }
 
-// MsgUpdateGroupAccountMetadataCmd creates a CLI command for Msg/MsgUpdateGroupAccountMetadata.
-func MsgUpdateGroupAccountMetadataCmd() *cobra.Command {
+// MsgUpdateGroupPolicyMetadataCmd creates a CLI command for Msg/MsgUpdateGroupPolicyMetadata.
+func MsgUpdateGroupPolicyMetadataCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-group-account-metadata [admin] [group-account] [new-metadata]",
-		Short: "Update a group account metadata",
+		Use:   "update-group-policy-metadata [admin] [group-policy-account] [new-metadata]",
+		Short: "Update a group policy metadata",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := cmd.Flags().Set(flags.FlagFrom, args[0])
@@ -458,7 +458,7 @@ func MsgUpdateGroupAccountMetadataCmd() *cobra.Command {
 				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "metadata is malformed, proper base64 string is required")
 			}
 
-			msg := &group.MsgUpdateGroupAccountMetadata{
+			msg := &group.MsgUpdateGroupPolicyMetadata{
 				Admin:    clientCtx.GetFromAddress().String(),
 				Address:  args[1],
 				Metadata: b,
@@ -479,12 +479,12 @@ func MsgUpdateGroupAccountMetadataCmd() *cobra.Command {
 // MsgCreateProposalCmd creates a CLI command for Msg/CreateProposal.
 func MsgCreateProposalCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-proposal [group-account] [proposer[,proposer]*] [msg_tx_json_file] [metadata]",
+		Use:   "create-proposal [group-policy-account] [proposer[,proposer]*] [msg_tx_json_file] [metadata]",
 		Short: "Submit a new proposal",
 		Long: `Submit a new proposal.
 
 Parameters:
-			group-account: address of the group account
+			group-policy-account: account address of the group policy
 			proposer: comma separated (no spaces) list of proposer account addresses. Example: "addr1,addr2" 
 			Metadata: metadata for the proposal
 			msg_tx_json_file: path to json file with messages that will be executed if the proposal is accepted.

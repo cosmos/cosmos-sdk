@@ -68,7 +68,7 @@ func (m MsgCreateGroup) validateMembers() error {
 		if err != nil {
 			return sdkerrors.Wrap(err, "address")
 		}
-		
+
 		if _, err := math.NewPositiveDecFromString(member.Weight); err != nil {
 			return sdkerrors.Wrap(err, "weight")
 		}
@@ -88,6 +88,7 @@ func (m Member) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrap(err, "address")
 	}
+
 	if _, err := math.NewDecFromString(m.Weight); err != nil {
 		return sdkerrors.Wrap(err, "weight")
 	}

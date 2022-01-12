@@ -242,6 +242,30 @@ func (m *MsgUpdateGroupMembers) GetGroupID() uint64 {
 
 var _ sdk.Msg = &MsgCreateGroupWithPolicy{}
 
+func (m *MsgCreateGroupWithPolicy) GetAdmin() string {
+	return m.Admin
+}
+
+func (m *MsgCreateGroupWithPolicy) GetGroupMetadata() []byte {
+	return m.GroupMetadata
+}
+
+func (m *MsgCreateGroupWithPolicy) GetGroupPolicyMetadata() []byte {
+	return m.GroupPolicyMetadata
+}
+
+func (m *MsgCreateGroupWithPolicy) GetGroupPolicyAsAdmin() bool {
+	return m.GroupPolicyAsAdmin
+}
+
+func (m *MsgCreateGroupWithPolicy) GetDecisionPolicy() DecisionPolicy {
+	decisionPolicy, ok := m.DecisionPolicy.GetCachedValue().(DecisionPolicy)
+	if !ok {
+		return nil
+	}
+	return decisionPolicy
+}
+
 // Route Implements Msg.
 func (m MsgCreateGroupWithPolicy) Route() string { return RouterKey }
 
@@ -260,14 +284,6 @@ func (m MsgCreateGroupWithPolicy) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{admin}
-}
-
-func (m *MsgCreateGroupWithPolicy) GetDecisionPolicy() DecisionPolicy {
-	decisionPolicy, ok := m.DecisionPolicy.GetCachedValue().(DecisionPolicy)
-	if !ok {
-		return nil
-	}
-	return decisionPolicy
 }
 
 // ValidateBasic does a sanity check on the provided data

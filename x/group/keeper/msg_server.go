@@ -307,19 +307,22 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 		admin = groupWithPolicyAddr
 	}
 
-	// Create a new group with policy in the groupWithPolicyTable.
-	groupWithPolicyInfo := &group.GroupWithPolicyInfo{
-		GroupId:             k.groupWithPolicySeq.PeekNextVal(ctx.KVStore(k.key)),
-		Admin:               admin.String(),
-		GroupPolicyAddress:  groupWithPolicyAddr.String(),
-		GroupMetadata:       groupMetadata,
-		GroupPolicyMetadata: groupPolicyMetadata,
-		TotalWeight:         totalWeight.String(),
-		Version:             1,
-		DecisionPolicy:      policy,
-		CreatedAt:           ctx.BlockTime(),
+	groupWithPolicyInfo, err := group.NewGroupWithPolicyInfo(
+		k.groupWithPolicySeq.PeekNextVal(ctx.KVStore(k.key)),
+		admin,
+		groupWithPolicyAddr,
+		groupMetadata,
+		groupPolicyMetadata,
+		totalWeight.String(),
+		1,
+		policy,
+		ctx.BlockTime(),
+	)
+	if err != nil {
+		return nil, err
 	}
-	err = k.groupWithPolicyTable.Create(ctx.KVStore(k.key), groupWithPolicyInfo)
+
+	err = k.groupWithPolicyTable.Create(ctx.KVStore(k.key), &groupWithPolicyInfo)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "could not create group with policy")
 	}

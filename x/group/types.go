@@ -118,6 +118,29 @@ func (p *ThresholdDecisionPolicy) Validate(g GroupInfo) error {
 	return nil
 }
 
+var _ orm.Validateable = GroupWithPolicyInfo{}
+
+// NewGroupWithPolicyInfo creates a new GroupWithPolicyInfo instance
+func NewGroupWithPolicyInfo(groupId uint64, admin sdk.AccAddress, groupPolicyAddr sdk.AccAddress, groupMetadata []byte,
+	groupPolicyMetadata []byte, totalWeight string, version uint64, decisionPolicy DecisionPolicy, createdAt time.Time) (GroupWithPolicyInfo, error) {
+	p := GroupWithPolicyInfo{
+		GroupId:             groupId,
+		Admin:               admin.String(),
+		GroupPolicyAddress:  groupPolicyAddr.String(),
+		GroupMetadata:       groupMetadata,
+		GroupPolicyMetadata: groupPolicyMetadata,
+		TotalWeight:         totalWeight,
+		Version:             version,
+		CreatedAt:           createdAt,
+	}
+
+	err := p.SetDecisionPolicy(decisionPolicy)
+	if err != nil {
+		return GroupWithPolicyInfo{}, err
+	}
+	return p, nil
+}
+
 var _ orm.Validateable = GroupPolicyInfo{}
 
 // NewGroupPolicyInfo creates a new GroupPolicyInfo instance
@@ -198,6 +221,19 @@ func (g GroupWithPolicyInfo) PrimaryKeyFields() []interface{} {
 	return []interface{}{g.GroupId, addr.Bytes()}
 }
 
+func (g *GroupWithPolicyInfo) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
+	msg, ok := decisionPolicy.(proto.Message)
+	if !ok {
+		return fmt.Errorf("can't proto marshal %T", msg)
+	}
+	any, err := codectypes.NewAnyWithValue(msg)
+	if err != nil {
+		return err
+	}
+	g.DecisionPolicy = any
+	return nil
+}
+
 func (g GroupWithPolicyInfo) GetDecisionPolicy() DecisionPolicy {
 	decisionPolicy, ok := g.DecisionPolicy.GetCachedValue().(DecisionPolicy)
 	if !ok {
@@ -228,7 +264,7 @@ func (g GroupWithPolicyInfo) ValidateBasic() error {
 	if err := policy.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "group policy's decision policy")
 	}
-
+	return nil
 }
 
 func (g GroupPolicyInfo) PrimaryKeyFields() []interface{} {

@@ -15,6 +15,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 
 	// fetch the validator public key
 	consAddr := sdk.ConsAddress(addr)
+
 	if _, err := k.GetPubkey(ctx, addr); err != nil {
 		panic(fmt.Sprintf("Validator consensus-address %s not found", consAddr))
 	}
@@ -101,7 +102,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 			// We need to reset the counter & array so that the validator won't be immediately slashed for downtime upon rebonding.
 			signInfo.MissedBlocksCounter = 0
 			signInfo.IndexOffset = 0
-			k.clearValidatorMissedBlockBitArray(ctx, consAddr)
+			k.ClearValidatorMissedBlockBitArray(ctx, consAddr)
 
 			logger.Info(
 				"slashing and jailing validator due to liveness fault",
@@ -119,6 +120,10 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 				"validator", consAddr.String(),
 			)
 		}
+
+		// hook is triggered for each downtime detection
+		// and defered to keep safe the write operations on SignInfo
+		defer k.AfterValidatorDowntime(ctx, consAddr, power)
 	}
 
 	// Set the updated signing info

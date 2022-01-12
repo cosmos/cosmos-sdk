@@ -686,19 +686,19 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
 	if err == nil && mode == runTxModeDeliver {
 		// apply fee logic calls
-		events, err := FeeInvoke(mode, app, runMsgCtx, ctx.EventManager().Events())
+		feeEvents, err := FeeInvoke(mode, app, runMsgCtx)
 		// if err from FeeInvoke then don't write to cache
 		if err == nil {
 			msCache.Write()
-			// additional fee events
-			if len(events) > 0 {
-				// append the events in the order of occurrence
-				result.Events = append(events.ToABCIEvents(), result.Events...)
-			}
 			// these are the ante events propagated only on success, that now means that fee charging has happened successfully.
 			if len(anteEvents) > 0 {
 				// append the events in the order of occurrence
 				result.Events = append(anteEvents, result.Events...)
+			}
+			// additional fee events
+			if len(feeEvents) > 0 {
+				// append the fee events at the end of the other events, since they get charged at the end of the Tx
+				result.Events = append(result.Events, feeEvents.ToABCIEvents()...)
 			}
 		}
 	}
@@ -707,19 +707,16 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 }
 
 // FeeInvoke apply fee logic and append events
-func FeeInvoke(mode runTxMode, app *BaseApp, runMsgCtx sdk.Context, events sdk.Events) (sdk.Events, error) {
+func FeeInvoke(mode runTxMode, app *BaseApp, runMsgCtx sdk.Context) (sdk.Events, error) {
 	if app.feeHandler != nil {
 		// call the msgFee
 		_, eventsFromFeeHandler, err := app.feeHandler(runMsgCtx, mode == runTxModeSimulate)
 		if err != nil {
 			return nil, err
 		}
-		// append any events emitted by FeeHandler
-		if events != nil && len(events) > 0 {
-			events = events.AppendEvents(eventsFromFeeHandler)
-		}
+		return eventsFromFeeHandler, nil
 	}
-	return events, nil
+	return nil, nil
 }
 
 // runMsgs iterates through a list of messages and executes them with the provided

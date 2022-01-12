@@ -277,7 +277,7 @@ func (s msgServer) CreateTrueVestingAccount(goCtx context.Context, msg *types.Ms
 		va.OriginalVesting = va.OriginalVesting.Add(vestingCoins...)
 	} else {
 		baseAccount := ak.NewAccountWithAddress(ctx, to)
-		va = types.NewTrueVestingAccount(baseAccount.(*authtypes.BaseAccount), vestingCoins, msg.StartTime, msg.LockupPeriods, msg.VestingPeriods)
+		va = types.NewTrueVestingAccount(baseAccount.(*authtypes.BaseAccount), from, vestingCoins, msg.StartTime, msg.LockupPeriods, msg.VestingPeriods)
 		madeNewAcc = true
 	}
 

@@ -4,7 +4,7 @@ Cosmos SDK v0.45.0 is a logical continuation of the v0.44.\* series, but brings 
 
 ### State-Breaking Changes
 
-There has been some changes in **gas consumption**, namely:
+There are few important changes in **gas consumption**, which improve the gas economics:
 
 - We now charge gas in two new places: on `.Seek()` even if there are no entries, and for the key length (on top of the value length).
 - When block gas limit is exceeded, we comsume the maximum gas possible.

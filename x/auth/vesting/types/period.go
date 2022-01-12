@@ -210,7 +210,7 @@ func ConjunctPeriods(startP, startQ int64, p, q []Period) (startTime int64, endT
 		}
 		merged = append(merged, period)
 		time = nextTime
-		amount = coins
+		amount = amount.Add(coins...)
 	}
 
 	consumeP := func(nextTime int64) {

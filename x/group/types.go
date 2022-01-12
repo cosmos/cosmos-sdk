@@ -198,6 +198,39 @@ func (g GroupWithPolicyInfo) PrimaryKeyFields() []interface{} {
 	return []interface{}{g.GroupId, addr.Bytes()}
 }
 
+func (g GroupWithPolicyInfo) GetDecisionPolicy() DecisionPolicy {
+	decisionPolicy, ok := g.DecisionPolicy.GetCachedValue().(DecisionPolicy)
+	if !ok {
+		return nil
+	}
+	return decisionPolicy
+}
+
+func (g GroupWithPolicyInfo) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(g.Admin)
+	if err != nil {
+		return sdkerrors.Wrap(err, "group with policy admin")
+	}
+	_, err = sdk.AccAddressFromBech32(g.GroupPolicyAddress)
+	if err != nil {
+		return sdkerrors.Wrap(err, "group with policy account address")
+	}
+	if g.GroupId == 0 {
+		return sdkerrors.Wrap(errors.ErrEmpty, "group with policy's group id")
+	}
+	if g.Version == 0 {
+		return sdkerrors.Wrap(errors.ErrEmpty, "group with policy's version")
+	}
+	policy := g.GetDecisionPolicy()
+	if policy == nil {
+		return sdkerrors.Wrap(errors.ErrEmpty, "group policy's decision policy")
+	}
+	if err := policy.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "group policy's decision policy")
+	}
+
+}
+
 func (g GroupPolicyInfo) PrimaryKeyFields() []interface{} {
 	addr, err := sdk.AccAddressFromBech32(g.Address)
 	if err != nil {

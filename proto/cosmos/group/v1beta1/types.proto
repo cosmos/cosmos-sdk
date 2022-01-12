@@ -106,6 +106,7 @@ message GroupMember {
 
 // GroupWithPolicyInfo represents the high-level on-chain information for a group with policy.
 message GroupWithPolicyInfo {
+  option (gogoproto.goproto_getters) = false;
 
   // group_id is the unique ID of the newly created group with policy.
   uint64 group_id = 1;

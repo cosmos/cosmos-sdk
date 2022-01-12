@@ -23,6 +23,8 @@ Finally, when using the `SetOrder*` functions in simapp, e.g. `SetOrderBeginBloc
 
 ### Improvements
 
-Some speedup improvements (e.g. speedup iterator creation after delete heavy workloads, lower allocations for `Coins.String()`, reduce RAM/CPU usage inside store/cachekv's `Store.Write`) are included in this release.
+* Speedup improvements (e.g. speedup iterator creation after delete heavy workloads, lower allocations for `Coins.String()`, reduce RAM/CPU usage inside store/cachekv's `Store.Write`) are included in this release.
+* Upgrade Rosetta to v0.7.0 .
+* Support in-place migration ordering.
 
 See our [CHANGELOG](./CHANGELOG.md) for the exhaustive list of all changes, or a full [commit diff](https://github.com/cosmos/cosmos-sdk/compare/v0.44.5...v0.45.0).

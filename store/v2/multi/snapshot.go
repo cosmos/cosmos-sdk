@@ -4,6 +4,11 @@ import (
 	"bufio"
 	"compress/zlib"
 	"fmt"
+	"io"
+	"math"
+	"sort"
+	"strings"
+
 	prefixdb "github.com/cosmos/cosmos-sdk/db/prefix"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
@@ -11,10 +16,6 @@ import (
 	types "github.com/cosmos/cosmos-sdk/store/v2"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	protoio "github.com/gogo/protobuf/io"
-	"io"
-	"math"
-	"sort"
-	"strings"
 )
 
 // Snapshot implements snapshottypes.Snapshotter.
@@ -57,6 +58,12 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 			}
 		}()
 		// zlib compression levels:  https://www.euccas.me/zlib/#zlib_compression_levels
+		// zlib default compression level 6
+		// level 0 :  no compression and fastest
+		// ....
+		// level 7 : average compression and average speed
+		// ...
+		// level 9 : highest compression and speed is slower
 		zWriter, err := zlib.NewWriterLevel(bufWriter, 7)
 		if err != nil {
 			chunkWriter.CloseWithError(sdkerrors.Wrap(err, "zlib failure"))
@@ -245,7 +252,7 @@ func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadClos
 	// commit the all key/values to store
 	_, err = rs.commit(height)
 	if err != nil {
-		return sdkerrors.Wrap(err, fmt.Sprintf("error while commit the store at height %d", height))
+		return sdkerrors.Wrap(err, fmt.Sprintf("error during commit the store at height %d", height))
 	}
 
 	return nil

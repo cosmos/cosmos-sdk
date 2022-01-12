@@ -1,18 +1,12 @@
-.PHONY: build test testgen
+.PHONY: testgen
 
 GENDIR ?= ./testdata
 
 # make sure we turn on go modules
 export GO111MODULE := on
 
-build:
-	go build -mod=readonly ./cmd/testgen-iavl
-
-test:
-	go test -mod=readonly .
-
+# Usage: GENDIR=../ics23/testdata/iavl make testgen
 testgen:
-	# Usage: GENDIR=../ics23/testdata/iavl make testgen
 	@mkdir -p "$(GENDIR)"
 	go run -mod=readonly ./cmd/testgen-iavl exist left 987 > "$(GENDIR)"/exist_left.json
 	go run -mod=readonly ./cmd/testgen-iavl exist middle 812 > "$(GENDIR)"/exist_middle.json

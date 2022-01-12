@@ -166,6 +166,7 @@ message MsgUpdateGroupPolicyAdmin {
 
 // MsgCreateGroupWithPolicy is the Msg/CreateGroupWithPolicy request type.
 message MsgCreateGroupWithPolicy {
+  option (gogoproto.goproto_getters) = false;
 
   // admin is the account address of the group admin.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];

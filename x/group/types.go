@@ -190,6 +190,14 @@ func (g GroupInfo) ValidateBasic() error {
 	return nil
 }
 
+func (g GroupWithPolicyInfo) PrimaryKeyFields() []interface{} {
+	addr, err := sdk.AccAddressFromBech32(g.GroupPolicyAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []interface{}{g.GroupId, addr.Bytes()}
+}
+
 func (g GroupPolicyInfo) PrimaryKeyFields() []interface{} {
 	addr, err := sdk.AccAddressFromBech32(g.Address)
 	if err != nil {

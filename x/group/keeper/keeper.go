@@ -40,6 +40,9 @@ const (
 	VoteTablePrefix           byte = 0x40
 	VoteByProposalIndexPrefix byte = 0x41
 	VoteByVoterIndexPrefix    byte = 0x42
+
+	// Group With Policy Table
+	GroupWithPolicyTablePrefix byte = 0x50
 )
 
 type Keeper struct {
@@ -55,6 +58,10 @@ type Keeper struct {
 	groupMemberTable         orm.PrimaryKeyTable
 	groupMemberByGroupIndex  orm.Index
 	groupMemberByMemberIndex orm.Index
+
+	// Group With Policy Table
+	groupWithPolicySeq   orm.Sequence
+	groupWithPolicyTable orm.PrimaryKeyTable
 
 	// Group Policy Table
 	groupPolicySeq          orm.Sequence

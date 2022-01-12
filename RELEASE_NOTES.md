@@ -7,7 +7,7 @@ Cosmos SDK v0.45.0 is a logical continuation of the v0.44.\* series, but brings 
 There are few important changes in **gas consumption**, which improve the gas economics:
 
 - We now charge gas in two new places: on `.Seek()` even if there are no entries, and for the key length (on top of the value length).
-- When block gas limit is exceeded, we comsume the maximum gas possible.
+- When block gas limit is exceeded, we consume the maximum gas possible (to charge for the performed computation).
 
 We also fixed the bug when the last transaction in a block exceeds the block gas limit, it returns an error result, but the tx is actually committed successfully.
 

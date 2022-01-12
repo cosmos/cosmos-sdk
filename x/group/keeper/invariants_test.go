@@ -72,146 +72,146 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 	}{
 		"invariant not broken": {
 			prevProposal: &group.Proposal{
-				ProposalId:          1,
-				Address:             addr1.String(),
-				Proposers:           []string{addr1.String()},
-				SubmittedAt:         prevCtx.BlockTime(),
-				GroupVersion:        1,
-				GroupAccountVersion: 1,
-				Status:              group.ProposalStatusSubmitted,
-				Result:              group.ProposalResultUnfinalized,
-				VoteState:           group.Tally{YesCount: "1", NoCount: "0", AbstainCount: "0", VetoCount: "0"},
-				Timeout:             prevCtx.BlockTime().Add(time.Second * 600),
-				ExecutorResult:      group.ProposalExecutorResultNotRun,
+				ProposalId:         1,
+				Address:            addr1.String(),
+				Proposers:          []string{addr1.String()},
+				SubmittedAt:        prevCtx.BlockTime(),
+				GroupVersion:       1,
+				GroupPolicyVersion: 1,
+				Status:             group.ProposalStatusSubmitted,
+				Result:             group.ProposalResultUnfinalized,
+				VoteState:          group.Tally{YesCount: "1", NoCount: "0", AbstainCount: "0", VetoCount: "0"},
+				Timeout:            prevCtx.BlockTime().Add(time.Second * 600),
+				ExecutorResult:     group.ProposalExecutorResultNotRun,
 			},
 
 			curProposal: &group.Proposal{
-				ProposalId:          1,
-				Address:             addr2.String(),
-				Proposers:           []string{addr2.String()},
-				SubmittedAt:         curCtx.BlockTime(),
-				GroupVersion:        1,
-				GroupAccountVersion: 1,
-				Status:              group.ProposalStatusSubmitted,
-				Result:              group.ProposalResultUnfinalized,
-				VoteState:           group.Tally{YesCount: "2", NoCount: "0", AbstainCount: "0", VetoCount: "0"},
-				Timeout:             curCtx.BlockTime().Add(time.Second * 600),
-				ExecutorResult:      group.ProposalExecutorResultNotRun,
+				ProposalId:         1,
+				Address:            addr2.String(),
+				Proposers:          []string{addr2.String()},
+				SubmittedAt:        curCtx.BlockTime(),
+				GroupVersion:       1,
+				GroupPolicyVersion: 1,
+				Status:             group.ProposalStatusSubmitted,
+				Result:             group.ProposalResultUnfinalized,
+				VoteState:          group.Tally{YesCount: "2", NoCount: "0", AbstainCount: "0", VetoCount: "0"},
+				Timeout:            curCtx.BlockTime().Add(time.Second * 600),
+				ExecutorResult:     group.ProposalExecutorResultNotRun,
 			},
 		},
 		"current block yes vote count must be greater than previous block yes vote count": {
 			prevProposal: &group.Proposal{
-				ProposalId:          1,
-				Address:             addr1.String(),
-				Proposers:           []string{addr1.String()},
-				SubmittedAt:         prevCtx.BlockTime(),
-				GroupVersion:        1,
-				GroupAccountVersion: 1,
-				Status:              group.ProposalStatusSubmitted,
-				Result:              group.ProposalResultUnfinalized,
-				VoteState:           group.Tally{YesCount: "2", NoCount: "0", AbstainCount: "0", VetoCount: "0"},
-				Timeout:             prevCtx.BlockTime().Add(time.Second * 600),
-				ExecutorResult:      group.ProposalExecutorResultNotRun,
+				ProposalId:         1,
+				Address:            addr1.String(),
+				Proposers:          []string{addr1.String()},
+				SubmittedAt:        prevCtx.BlockTime(),
+				GroupVersion:       1,
+				GroupPolicyVersion: 1,
+				Status:             group.ProposalStatusSubmitted,
+				Result:             group.ProposalResultUnfinalized,
+				VoteState:          group.Tally{YesCount: "2", NoCount: "0", AbstainCount: "0", VetoCount: "0"},
+				Timeout:            prevCtx.BlockTime().Add(time.Second * 600),
+				ExecutorResult:     group.ProposalExecutorResultNotRun,
 			},
 			curProposal: &group.Proposal{
-				ProposalId:          1,
-				Address:             addr2.String(),
-				Proposers:           []string{addr2.String()},
-				SubmittedAt:         curCtx.BlockTime(),
-				GroupVersion:        1,
-				GroupAccountVersion: 1,
-				Status:              group.ProposalStatusSubmitted,
-				Result:              group.ProposalResultUnfinalized,
-				VoteState:           group.Tally{YesCount: "1", NoCount: "0", AbstainCount: "0", VetoCount: "0"},
-				Timeout:             curCtx.BlockTime().Add(time.Second * 600),
-				ExecutorResult:      group.ProposalExecutorResultNotRun,
+				ProposalId:         1,
+				Address:            addr2.String(),
+				Proposers:          []string{addr2.String()},
+				SubmittedAt:        curCtx.BlockTime(),
+				GroupVersion:       1,
+				GroupPolicyVersion: 1,
+				Status:             group.ProposalStatusSubmitted,
+				Result:             group.ProposalResultUnfinalized,
+				VoteState:          group.Tally{YesCount: "1", NoCount: "0", AbstainCount: "0", VetoCount: "0"},
+				Timeout:            curCtx.BlockTime().Add(time.Second * 600),
+				ExecutorResult:     group.ProposalExecutorResultNotRun,
 			},
 			expBroken: true,
 		},
 		"current block no vote count must be greater than previous block no vote count": {
 			prevProposal: &group.Proposal{
-				ProposalId:          1,
-				Address:             addr1.String(),
-				Proposers:           []string{addr1.String()},
-				SubmittedAt:         prevCtx.BlockTime(),
-				GroupVersion:        1,
-				GroupAccountVersion: 1,
-				Status:              group.ProposalStatusSubmitted,
-				Result:              group.ProposalResultUnfinalized,
-				VoteState:           group.Tally{YesCount: "0", NoCount: "2", AbstainCount: "0", VetoCount: "0"},
-				Timeout:             prevCtx.BlockTime().Add(time.Second * 600),
-				ExecutorResult:      group.ProposalExecutorResultNotRun,
+				ProposalId:         1,
+				Address:            addr1.String(),
+				Proposers:          []string{addr1.String()},
+				SubmittedAt:        prevCtx.BlockTime(),
+				GroupVersion:       1,
+				GroupPolicyVersion: 1,
+				Status:             group.ProposalStatusSubmitted,
+				Result:             group.ProposalResultUnfinalized,
+				VoteState:          group.Tally{YesCount: "0", NoCount: "2", AbstainCount: "0", VetoCount: "0"},
+				Timeout:            prevCtx.BlockTime().Add(time.Second * 600),
+				ExecutorResult:     group.ProposalExecutorResultNotRun,
 			},
 			curProposal: &group.Proposal{
-				ProposalId:          1,
-				Address:             addr2.String(),
-				Proposers:           []string{addr2.String()},
-				SubmittedAt:         curCtx.BlockTime(),
-				GroupVersion:        1,
-				GroupAccountVersion: 1,
-				Status:              group.ProposalStatusSubmitted,
-				Result:              group.ProposalResultUnfinalized,
-				VoteState:           group.Tally{YesCount: "0", NoCount: "1", AbstainCount: "0", VetoCount: "0"},
-				Timeout:             curCtx.BlockTime().Add(time.Second * 600),
-				ExecutorResult:      group.ProposalExecutorResultNotRun,
+				ProposalId:         1,
+				Address:            addr2.String(),
+				Proposers:          []string{addr2.String()},
+				SubmittedAt:        curCtx.BlockTime(),
+				GroupVersion:       1,
+				GroupPolicyVersion: 1,
+				Status:             group.ProposalStatusSubmitted,
+				Result:             group.ProposalResultUnfinalized,
+				VoteState:          group.Tally{YesCount: "0", NoCount: "1", AbstainCount: "0", VetoCount: "0"},
+				Timeout:            curCtx.BlockTime().Add(time.Second * 600),
+				ExecutorResult:     group.ProposalExecutorResultNotRun,
 			},
 			expBroken: true,
 		},
 		"current block abstain vote count must be greater than previous block abstain vote count": {
 			prevProposal: &group.Proposal{
-				ProposalId:          1,
-				Address:             addr1.String(),
-				Proposers:           []string{addr1.String()},
-				SubmittedAt:         prevCtx.BlockTime(),
-				GroupVersion:        1,
-				GroupAccountVersion: 1,
-				Status:              group.ProposalStatusSubmitted,
-				Result:              group.ProposalResultUnfinalized,
-				VoteState:           group.Tally{YesCount: "0", NoCount: "0", AbstainCount: "2", VetoCount: "0"},
-				Timeout:             prevCtx.BlockTime().Add(time.Second * 600),
-				ExecutorResult:      group.ProposalExecutorResultNotRun,
+				ProposalId:         1,
+				Address:            addr1.String(),
+				Proposers:          []string{addr1.String()},
+				SubmittedAt:        prevCtx.BlockTime(),
+				GroupVersion:       1,
+				GroupPolicyVersion: 1,
+				Status:             group.ProposalStatusSubmitted,
+				Result:             group.ProposalResultUnfinalized,
+				VoteState:          group.Tally{YesCount: "0", NoCount: "0", AbstainCount: "2", VetoCount: "0"},
+				Timeout:            prevCtx.BlockTime().Add(time.Second * 600),
+				ExecutorResult:     group.ProposalExecutorResultNotRun,
 			},
 			curProposal: &group.Proposal{
-				ProposalId:          1,
-				Address:             addr2.String(),
-				Proposers:           []string{addr2.String()},
-				SubmittedAt:         curCtx.BlockTime(),
-				GroupVersion:        1,
-				GroupAccountVersion: 1,
-				Status:              group.ProposalStatusSubmitted,
-				Result:              group.ProposalResultUnfinalized,
-				VoteState:           group.Tally{YesCount: "0", NoCount: "0", AbstainCount: "1", VetoCount: "0"},
-				Timeout:             curCtx.BlockTime().Add(time.Second * 600),
-				ExecutorResult:      group.ProposalExecutorResultNotRun,
+				ProposalId:         1,
+				Address:            addr2.String(),
+				Proposers:          []string{addr2.String()},
+				SubmittedAt:        curCtx.BlockTime(),
+				GroupVersion:       1,
+				GroupPolicyVersion: 1,
+				Status:             group.ProposalStatusSubmitted,
+				Result:             group.ProposalResultUnfinalized,
+				VoteState:          group.Tally{YesCount: "0", NoCount: "0", AbstainCount: "1", VetoCount: "0"},
+				Timeout:            curCtx.BlockTime().Add(time.Second * 600),
+				ExecutorResult:     group.ProposalExecutorResultNotRun,
 			},
 			expBroken: true,
 		},
 		"current block veto vote count must be greater than previous block veto vote count": {
 			prevProposal: &group.Proposal{
-				ProposalId:          1,
-				Address:             addr1.String(),
-				Proposers:           []string{addr1.String()},
-				SubmittedAt:         prevCtx.BlockTime(),
-				GroupVersion:        1,
-				GroupAccountVersion: 1,
-				Status:              group.ProposalStatusSubmitted,
-				Result:              group.ProposalResultUnfinalized,
-				VoteState:           group.Tally{YesCount: "0", NoCount: "0", AbstainCount: "0", VetoCount: "2"},
-				Timeout:             prevCtx.BlockTime().Add(time.Second * 600),
-				ExecutorResult:      group.ProposalExecutorResultNotRun,
+				ProposalId:         1,
+				Address:            addr1.String(),
+				Proposers:          []string{addr1.String()},
+				SubmittedAt:        prevCtx.BlockTime(),
+				GroupVersion:       1,
+				GroupPolicyVersion: 1,
+				Status:             group.ProposalStatusSubmitted,
+				Result:             group.ProposalResultUnfinalized,
+				VoteState:          group.Tally{YesCount: "0", NoCount: "0", AbstainCount: "0", VetoCount: "2"},
+				Timeout:            prevCtx.BlockTime().Add(time.Second * 600),
+				ExecutorResult:     group.ProposalExecutorResultNotRun,
 			},
 			curProposal: &group.Proposal{
-				ProposalId:          1,
-				Address:             addr2.String(),
-				Proposers:           []string{addr2.String()},
-				SubmittedAt:         curCtx.BlockTime(),
-				GroupVersion:        1,
-				GroupAccountVersion: 1,
-				Status:              group.ProposalStatusSubmitted,
-				Result:              group.ProposalResultUnfinalized,
-				VoteState:           group.Tally{YesCount: "0", NoCount: "0", AbstainCount: "0", VetoCount: "1"},
-				Timeout:             curCtx.BlockTime().Add(time.Second * 600),
-				ExecutorResult:      group.ProposalExecutorResultNotRun,
+				ProposalId:         1,
+				Address:            addr2.String(),
+				Proposers:          []string{addr2.String()},
+				SubmittedAt:        curCtx.BlockTime(),
+				GroupVersion:       1,
+				GroupPolicyVersion: 1,
+				Status:             group.ProposalStatusSubmitted,
+				Result:             group.ProposalResultUnfinalized,
+				VoteState:          group.Tally{YesCount: "0", NoCount: "0", AbstainCount: "0", VetoCount: "1"},
+				Timeout:            curCtx.BlockTime().Add(time.Second * 600),
+				ExecutorResult:     group.ProposalExecutorResultNotRun,
 			},
 			expBroken: true,
 		},
@@ -341,8 +341,8 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 	groupTable, err := orm.NewAutoUInt64Table([2]byte{keeper.GroupTablePrefix}, keeper.GroupTableSeqPrefix, &group.GroupInfo{}, cdc)
 	s.Require().NoError(err)
 
-	// Group Account Table
-	groupAccountTable, err := orm.NewPrimaryKeyTable([2]byte{keeper.GroupAccountTablePrefix}, &group.GroupAccountInfo{}, cdc)
+	// Group Policy Table
+	groupPolicyTable, err := orm.NewPrimaryKeyTable([2]byte{keeper.GroupPolicyTablePrefix}, &group.GroupPolicyInfo{}, cdc)
 	s.Require().NoError(err)
 
 	// Group Member Table
@@ -368,7 +368,7 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 
 	specs := map[string]struct {
 		groupsInfo   *group.GroupInfo
-		groupAcc     *group.GroupAccountInfo
+		groupPolicy  *group.GroupPolicyInfo
 		groupMembers []*group.GroupMember
 		proposal     *group.Proposal
 		votes        []*group.Vote
@@ -381,7 +381,7 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 				Version:     1,
 				TotalWeight: "7",
 			},
-			groupAcc: &group.GroupAccountInfo{
+			groupPolicy: &group.GroupPolicyInfo{
 				Address: addr1.String(),
 				GroupId: 1,
 				Admin:   adminAddr.String(),
@@ -404,17 +404,17 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 				},
 			},
 			proposal: &group.Proposal{
-				ProposalId:          1,
-				Address:             addr1.String(),
-				Proposers:           []string{addr1.String()},
-				SubmittedAt:         curCtx.BlockTime(),
-				GroupVersion:        1,
-				GroupAccountVersion: 1,
-				Status:              group.ProposalStatusSubmitted,
-				Result:              group.ProposalResultUnfinalized,
-				VoteState:           group.Tally{YesCount: "4", NoCount: "3", AbstainCount: "0", VetoCount: "0"},
-				Timeout:             curCtx.BlockTime().Add(time.Second * 600),
-				ExecutorResult:      group.ProposalExecutorResultNotRun,
+				ProposalId:         1,
+				Address:            addr1.String(),
+				Proposers:          []string{addr1.String()},
+				SubmittedAt:        curCtx.BlockTime(),
+				GroupVersion:       1,
+				GroupPolicyVersion: 1,
+				Status:             group.ProposalStatusSubmitted,
+				Result:             group.ProposalResultUnfinalized,
+				VoteState:          group.Tally{YesCount: "4", NoCount: "3", AbstainCount: "0", VetoCount: "0"},
+				Timeout:            curCtx.BlockTime().Add(time.Second * 600),
+				ExecutorResult:     group.ProposalExecutorResultNotRun,
 			},
 			votes: []*group.Vote{
 				{
@@ -439,7 +439,7 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 				Version:     1,
 				TotalWeight: "5",
 			},
-			groupAcc: &group.GroupAccountInfo{
+			groupPolicy: &group.GroupPolicyInfo{
 				Address: addr1.String(),
 				GroupId: 1,
 				Admin:   adminAddr.String(),
@@ -462,17 +462,17 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 				},
 			},
 			proposal: &group.Proposal{
-				ProposalId:          1,
-				Address:             addr1.String(),
-				Proposers:           []string{addr1.String()},
-				SubmittedAt:         curCtx.BlockTime(),
-				GroupVersion:        1,
-				GroupAccountVersion: 1,
-				Status:              group.ProposalStatusSubmitted,
-				Result:              group.ProposalResultUnfinalized,
-				VoteState:           group.Tally{YesCount: "6", NoCount: "0", AbstainCount: "0", VetoCount: "0"},
-				Timeout:             curCtx.BlockTime().Add(time.Second * 600),
-				ExecutorResult:      group.ProposalExecutorResultNotRun,
+				ProposalId:         1,
+				Address:            addr1.String(),
+				Proposers:          []string{addr1.String()},
+				SubmittedAt:        curCtx.BlockTime(),
+				GroupVersion:       1,
+				GroupPolicyVersion: 1,
+				Status:             group.ProposalStatusSubmitted,
+				Result:             group.ProposalResultUnfinalized,
+				VoteState:          group.Tally{YesCount: "6", NoCount: "0", AbstainCount: "0", VetoCount: "0"},
+				Timeout:            curCtx.BlockTime().Add(time.Second * 600),
+				ExecutorResult:     group.ProposalExecutorResultNotRun,
 			},
 			votes: []*group.Vote{
 				{
@@ -497,7 +497,7 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 				Version:     1,
 				TotalWeight: "7",
 			},
-			groupAcc: &group.GroupAccountInfo{
+			groupPolicy: &group.GroupPolicyInfo{
 				Address: addr1.String(),
 				GroupId: 1,
 				Admin:   adminAddr.String(),
@@ -520,17 +520,17 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 				},
 			},
 			proposal: &group.Proposal{
-				ProposalId:          1,
-				Address:             addr1.String(),
-				Proposers:           []string{addr1.String()},
-				SubmittedAt:         curCtx.BlockTime(),
-				GroupVersion:        1,
-				GroupAccountVersion: 1,
-				Status:              group.ProposalStatusSubmitted,
-				Result:              group.ProposalResultUnfinalized,
-				VoteState:           group.Tally{YesCount: "4", NoCount: "3", AbstainCount: "0", VetoCount: "0"},
-				Timeout:             curCtx.BlockTime().Add(time.Second * 600),
-				ExecutorResult:      group.ProposalExecutorResultNotRun,
+				ProposalId:         1,
+				Address:            addr1.String(),
+				Proposers:          []string{addr1.String()},
+				SubmittedAt:        curCtx.BlockTime(),
+				GroupVersion:       1,
+				GroupPolicyVersion: 1,
+				Status:             group.ProposalStatusSubmitted,
+				Result:             group.ProposalResultUnfinalized,
+				VoteState:          group.Tally{YesCount: "4", NoCount: "3", AbstainCount: "0", VetoCount: "0"},
+				Timeout:            curCtx.BlockTime().Add(time.Second * 600),
+				ExecutorResult:     group.ProposalExecutorResultNotRun,
 			},
 			votes: []*group.Vote{
 				{
@@ -554,16 +554,16 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 		cacheCurCtx, _ := curCtx.CacheContext()
 		groupsInfo := spec.groupsInfo
 		proposal := spec.proposal
-		groupAcc := spec.groupAcc
+		groupPolicy := spec.groupPolicy
 		groupMembers := spec.groupMembers
 		votes := spec.votes
 
 		_, err := groupTable.Create(cacheCurCtx.KVStore(key), groupsInfo)
 		s.Require().NoError(err)
 
-		err = groupAcc.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Second))
+		err = groupPolicy.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Second))
 		s.Require().NoError(err)
-		err = groupAccountTable.Create(cacheCurCtx.KVStore(key), groupAcc)
+		err = groupPolicyTable.Create(cacheCurCtx.KVStore(key), groupPolicy)
 		s.Require().NoError(err)
 
 		for i := 0; i < len(groupMembers); i++ {
@@ -579,7 +579,7 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 			s.Require().NoError(err)
 		}
 
-		_, broken := keeper.TallyVotesSumInvariantHelper(cacheCurCtx, key, *groupTable, *proposalTable, *groupMemberTable, voteByProposalIndex, *groupAccountTable)
+		_, broken := keeper.TallyVotesSumInvariantHelper(cacheCurCtx, key, *groupTable, *proposalTable, *groupMemberTable, voteByProposalIndex, *groupPolicyTable)
 		s.Require().Equal(spec.expBroken, broken)
 	}
 }

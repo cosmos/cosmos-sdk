@@ -87,7 +87,7 @@ Some DB engines support snapshotting. Hence, we propose to reuse that functional
 
 One of the Stargate core features is a _snapshot sync_ delivered in the `/snapshot` package. It provides a way to trustlessly sync a blockchain without repeating all transactions from the genesis. This feature is implemented in Cosmos SDK and requires storage support. Currently IAVL is the only supported backend. It works by streaming to a client a snapshot of a `SS` at a certain version together with a header chain.
 
-A new database snapshot will be created in every `EndBlocker` and identified by a block height. The `root` store keeps track of the available snapshots to offer `SS` at a certain version. The `root` store implements the `MultiStore` interface described below. In essence, `MultiStore` extends the `Committer` interface. `Committer` has a `Commit`, `SetPruning`, `GetPruning` functions which will be used for creating and removing snapshots. The `rootStore.Commit` function creates a new snapshot and increments the version on each call, and checks if it needs to remove old versions. We will need to update the SMT interface to implement the `Committer` interface.
+A new database snapshot will be created in every `EndBlocker` and identified by a block height. The `root` store keeps track of the available snapshots to offer `SS` at a certain version. The `root` store implements the `MultiStore` interface described below. In essence, `MultiStore` extends the `Committer` interface. `Committer` has `Commit`, `SetPruning`, and `GetPruning` functions which will be used for creating and removing snapshots. The `rootStore.Commit` function creates a new snapshot and increments the version on each call, and checks if it needs to remove old versions. We will need to update the SMT interface to implement the `Committer` interface.
 NOTE: `Commit` must be called exactly once per block. Otherwise we risk going out of sync for the version number and block height.
 NOTE: For the Cosmos SDK storage, we may consider splitting that interface into `Committer` and `PruningCommitter` - only the multiroot should implement `PruningCommitter` (cache and prefix store don't need pruning).
 
@@ -99,7 +99,7 @@ To manage the active snapshots we will either use a DB _max number of snapshots_
 
 #### Accessing old state versions
 
-One of the functional requirements is to access old state. This is done through `abci.RequestQuery` structure. The version is specified by a block height (so we query for an object by a key `K` at block height `H`). The number of old versions supported for `abci.RequestQuery` is configurable. Accessing an old state is done by using available snapshots.
+One of the functional requirements is to access old state. This is done through an `abci.RequestQuery` structure. The version is specified by a block height (so we query for an object by a key `K` at block height `H`). The number of old versions supported for `abci.RequestQuery` is configurable. Accessing an old state is done by using available snapshots.
 `abci.RequestQuery` doesn't need old state of `SC` unless the `prove=true` parameter is set. The SMT merkle proof must be included in the `abci.ResponseQuery` only if both `SC` and `SS` have a snapshot for requested version.
 
 Moreover, Cosmos SDK could provide a way to directly access a historical state. However, a state machine shouldn't do that - since the number of snapshots is configurable, it would lead to nondeterministic execution.
@@ -207,7 +207,7 @@ NOTE: modules will be able to use a special commitment and their own DBs. For ex
 
 Cosmos SDK users should be only concerned about the module interface, which currently relies on the `KVStore`. We don't change this interface, so the proposed store/v2 is 100% compatible with existing modules.
 
-The new `MultiStore` and supporting types are implemented in `store/v2` package to provide Cosmos SDK users chocie to use the new store or the old IAVL based on.
+The new `MultiStore` and supporting types are implemented in `store/v2` package to provide Cosmos SDK users the choice to use the new store or the old IAVL based on.
 
 #### Merkle Proofs and IBC
 
@@ -250,9 +250,9 @@ We change the storage layout of the state machine, a storage hard fork and netwo
 
 ### Positive
 
-- Decoupling state from state commitment introduce better engineering opportunities for further optimizations and better storage patterns.
+- Decoupling state from state commitment introduces better engineering opportunities for further optimizations and better storage patterns.
 - Performance improvements.
-- Joining SMT based camp which has wider and proven adoption than IAVL. Example projects which decided on SMT: Ethereum2, Diem (Libra), Trillan, Tezos, Celestia.
+- Joining SMT based camp which has wider and more proven adoption than IAVL. Example projects which decided on SMT: Ethereum2, Diem (Libra), Trillan, Tezos, Celestia.
 - Multistore removal fixes a longstanding issue with the current MultiStore design.
 - Simplifies merkle proofs - all modules, except IBC, have only one pass for merkle proof.
 
@@ -284,7 +284,7 @@ Use of RDBMS instead of simple KV store for state. Use of RDBMS will require a C
 
 ### Off Chain Store
 
-We were discussing use case where modules can use a support database, which is not automatically committed. Module will responsible for having a sound storage model and can optionally use the feature discussed in \__Committing to an object without saving it_ section.
+We were discussing use case where modules can use a support database, which is not automatically committed. Module will be responsible for having a sound storage model and can optionally use the feature discussed in \__Committing to an object without saving it_ section.
 
 ## References
 

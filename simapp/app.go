@@ -37,16 +37,16 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -332,8 +332,18 @@ func NewSimApp(
 	app.mm.SetOrderBeginBlockers(
 		upgradetypes.ModuleName, capabilitytypes.ModuleName, minttypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
 		evidencetypes.ModuleName, stakingtypes.ModuleName,
+		authtypes.ModuleName, banktypes.ModuleName, govtypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName,
+		authz.ModuleName, feegrant.ModuleName,
+		paramstypes.ModuleName, vestingtypes.ModuleName,
 	)
-	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName)
+	app.mm.SetOrderEndBlockers(
+		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName,
+		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName,
+		slashingtypes.ModuleName, minttypes.ModuleName,
+		genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
+		feegrant.ModuleName,
+		paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName,
+	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
@@ -345,7 +355,11 @@ func NewSimApp(
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
 		genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
 		feegrant.ModuleName,
+		paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName,
 	)
+
+	// Uncomment if you want to set a custom migration order here.
+	// app.mm.SetOrderMigrations(custom order)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)

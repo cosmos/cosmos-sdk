@@ -126,8 +126,9 @@ func sdkErrorToGRPCError(resp abci.ResponseQuery) error {
 // or an error if the query fails.
 func (ctx Context) query(path string, key tmbytes.HexBytes) ([]byte, int64, error) {
 	resp, err := ctx.queryABCI(abci.RequestQuery{
-		Path: path,
-		Data: key,
+		Path:   path,
+		Data:   key,
+		Height: ctx.Height,
 	})
 	if err != nil {
 		return nil, 0, err

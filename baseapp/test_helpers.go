@@ -70,3 +70,7 @@ func (app *BaseApp) GetContextForFinalizeBlock(txBytes []byte) sdk.Context {
 func (app *BaseApp) GetContextForCheckTx(txBytes []byte) sdk.Context {
 	return app.getContextForTx(execModeCheck, txBytes)
 }
+
+func (app *BaseApp) GetContextForDeliverTx(txBytes []byte) sdk.Context {
+	return app.getContextForTx(runTxModeDeliver, txBytes)
+}

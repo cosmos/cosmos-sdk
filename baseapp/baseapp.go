@@ -586,11 +586,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		return gInfo, nil, nil, sdkerrors.Wrap(sdkerrors.ErrOutOfGas, "no block gas left to run tx")
 	}
 
-	var startingGas uint64
-	if mode == runTxModeDeliver {
-		startingGas = ctx.BlockGasMeter().GasConsumed()
-	}
-
 	defer func() {
 		if r := recover(); r != nil {
 			recoveryMW := newOutOfGasRecoveryMiddleware(gasWanted, ctx, app.runTxRecoveryMiddleware)
@@ -600,22 +595,26 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		gInfo = sdk.GasInfo{GasWanted: gasWanted, GasUsed: ctx.GasMeter().GasConsumed()}
 	}()
 
+	blockGasConsumed := false
+	// consumeBlockGas makes sure block gas is consumed at most once. It must happen after
+	// tx processing, and must be execute even if tx processing fails. Hence we use trick with `defer`
+	consumeBlockGas := func() {
+		if !blockGasConsumed {
+			blockGasConsumed = true
+			ctx.BlockGasMeter().ConsumeGas(
+				ctx.GasMeter().GasConsumedToLimit(), "block gas meter",
+			)
+		}
+	}
+
 	// If BlockGasMeter() panics it will be caught by the above recover and will
 	// return an error - in any case BlockGasMeter will consume gas past the limit.
 	//
 	// NOTE: This must exist in a separate defer function for the above recovery
 	// to recover from this one.
-	defer func() {
-		if mode == runTxModeDeliver {
-			ctx.BlockGasMeter().ConsumeGas(
-				ctx.GasMeter().GasConsumedToLimit(), "block gas meter",
-			)
-
-			if ctx.BlockGasMeter().GasConsumed() < startingGas {
-				panic(sdk.ErrorGasOverflow{Descriptor: "tx gas summation"})
-			}
-		}
-	}()
+	if mode == runTxModeDeliver {
+		defer consumeBlockGas()
+	}
 
 	tx, err := app.txDecoder(txBytes)
 	if err != nil {
@@ -677,6 +676,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// Result if any single message fails or does not have a registered Handler.
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
 	if err == nil && mode == runTxModeDeliver {
+		// When block gas exceeds, it'll panic and won't commit the cached store.
+		consumeBlockGas()
+
 		msCache.Write()
 
 		if len(anteEvents) > 0 {

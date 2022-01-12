@@ -173,7 +173,7 @@ message MsgCreateGroupWithPolicy {
   // members defines the group members.
   repeated Member members = 2 [(gogoproto.nullable) = false];
 
-  // group_metadata is any arbitrary metadata to attached to the group.
+  // group_metadata is any arbitrary metadata attached to the group.
   bytes group_metadata = 3;
 
   // group_policy_metadata is any arbitrary metadata attached to the group policy.

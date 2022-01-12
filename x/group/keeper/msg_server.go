@@ -233,6 +233,34 @@ func (k Keeper) UpdateGroupMetadata(goCtx context.Context, req *group.MsgUpdateG
 	return &group.MsgUpdateGroupMetadataResponse{}, nil
 }
 
+func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreateGroupWithPolicy) (*group.MsgCreateGroupWithPolicyResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	admin, err := sdk.AccAddressFromBech32(req.GetAdmin())
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "request admin")
+	}
+	policy := req.GetDecisionPolicy()
+	groupMetadata := req.GetGroupMetadata()
+	if err := assertMetadataLength(groupMetadata, "group metadata"); err != nil {
+		return nil, err
+	}
+	groupPolicyMetadata := req.GetGroupPolicyMetadata()
+	if err := assertMetadataLength(groupPolicyMetadata, "group policy metadata"); err != nil {
+		return nil, err
+	}
+	groupPolicyAsAdmin := req.GetGroupPolicyAsAdmin()
+
+	// Create a new group with policy in the groupWithPolicyTable.
+	// groupWithPolicyInfo := &group.
+
+	// // Generate account address of group with policy.
+	// var accountAddr sdk.AccAddress
+	// // loop here in the rare case of a collision
+	// for {
+	// 	nextAccVal := k.group
+	// }
+}
+
 func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGroupPolicy) (*group.MsgCreateGroupPolicyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	admin, err := sdk.AccAddressFromBech32(req.GetAdmin())

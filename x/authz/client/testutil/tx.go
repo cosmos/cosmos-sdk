@@ -54,10 +54,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	// create a proposal with deposit
-	_, err = govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
+	out, err := govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 1", "Where is the title!?", govv1beta1.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", govcli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, govv1beta2.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
+	s.Require().Contains(out.String(), `"code":0`)
 
 	// Create new account in the keyring.
 	s.grantee[1] = s.createAccount("grantee2")
@@ -65,7 +66,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.msgSendExec(s.grantee[1])
 
 	// grant send authorization to grantee2
-	out, err := ExecGrant(val, []string{
+	out, err = ExecGrant(val, []string{
 		s.grantee[1].String(),
 		"send",
 		fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),

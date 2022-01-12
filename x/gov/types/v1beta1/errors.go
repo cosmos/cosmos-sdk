@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	ErrInvalidProposalContent = sdkerrors.Register(ModuleName, 5, "invalid proposal content")
-	ErrInvalidProposalType    = sdkerrors.Register(ModuleName, 6, "invalid proposal type")
-	ErrInvalidVote            = sdkerrors.Register(ModuleName, 7, "invalid vote option")
+	ErrInvalidProposalContent = sdkerrors.Register(moduleName, 5, "invalid proposal content")
+	ErrInvalidProposalType    = sdkerrors.Register(moduleName, 6, "invalid proposal type")
+	ErrInvalidVote            = sdkerrors.Register(moduleName, 7, "invalid vote option")
 )

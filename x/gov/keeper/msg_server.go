@@ -51,7 +51,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1beta2.MsgSubmitP
 		"submit proposal",
 	)
 
-	defer telemetry.IncrCounter(1, v1beta2.ModuleName, "proposal")
+	defer telemetry.IncrCounter(1, types.ModuleName, "proposal")
 
 	proposer, _ := sdk.AccAddressFromBech32(msg.GetProposer())
 	votingStarted, err := k.Keeper.AddDeposit(ctx, proposal.ProposalId, proposer, msg.GetInitialDeposit())
@@ -92,7 +92,7 @@ func (k msgServer) Vote(goCtx context.Context, msg *v1beta2.MsgVote) (*v1beta2.M
 	}
 
 	defer telemetry.IncrCounterWithLabels(
-		[]string{v1beta2.ModuleName, "vote"},
+		[]string{types.ModuleName, "vote"},
 		1,
 		[]metrics.Label{
 			telemetry.NewLabel("proposal_id", strconv.Itoa(int(msg.ProposalId))),
@@ -122,7 +122,7 @@ func (k msgServer) VoteWeighted(goCtx context.Context, msg *v1beta2.MsgVoteWeigh
 	}
 
 	defer telemetry.IncrCounterWithLabels(
-		[]string{v1beta2.ModuleName, "vote"},
+		[]string{types.ModuleName, "vote"},
 		1,
 		[]metrics.Label{
 			telemetry.NewLabel("proposal_id", strconv.Itoa(int(msg.ProposalId))),
@@ -152,7 +152,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1beta2.MsgDeposit) (*v1b
 	}
 
 	defer telemetry.IncrCounterWithLabels(
-		[]string{v1beta2.ModuleName, "deposit"},
+		[]string{types.ModuleName, "deposit"},
 		1,
 		[]metrics.Label{
 			telemetry.NewLabel("proposal_id", strconv.Itoa(int(msg.ProposalId))),
@@ -180,19 +180,20 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1beta2.MsgDeposit) (*v1b
 }
 
 type legacyMsgServer struct {
-	Server v1beta2.MsgServer
+	govAcct string
+	server  v1beta2.MsgServer
 }
 
 // NewLegacyMsgServerImpl returns an implementation of the v1beta1 legacy MsgServer interface. It wraps around
 // the current MsgServer
-func NewLegacyMsgServerImpl(keeper Keeper) v1beta1.MsgServer {
-	return &legacyMsgServer{Server: NewMsgServerImpl(keeper)}
+func NewLegacyMsgServerImpl(govAcct string, v1beta2Server v1beta2.MsgServer) v1beta1.MsgServer {
+	return &legacyMsgServer{govAcct: govAcct, server: v1beta2Server}
 }
 
 var _ v1beta1.MsgServer = legacyMsgServer{}
 
 func (k legacyMsgServer) SubmitProposal(goCtx context.Context, msg *v1beta1.MsgSubmitProposal) (*v1beta1.MsgSubmitProposalResponse, error) {
-	contentMsg, err := NewContentProposal(msg.GetContent(), msg.Proposer)
+	contentMsg, err := NewContentProposal(msg.GetContent(), k.govAcct)
 	if err != nil {
 		return nil, fmt.Errorf("error converting legacy content into proposal message: %w", err)
 	}
@@ -206,7 +207,7 @@ func (k legacyMsgServer) SubmitProposal(goCtx context.Context, msg *v1beta1.MsgS
 		return nil, err
 	}
 
-	resp, err := k.Server.SubmitProposal(goCtx, proposal)
+	resp, err := k.server.SubmitProposal(goCtx, proposal)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +216,7 @@ func (k legacyMsgServer) SubmitProposal(goCtx context.Context, msg *v1beta1.MsgS
 }
 
 func (k legacyMsgServer) Vote(goCtx context.Context, msg *v1beta1.MsgVote) (*v1beta1.MsgVoteResponse, error) {
-	_, err := k.Server.Vote(goCtx, &v1beta2.MsgVote{
+	_, err := k.server.Vote(goCtx, &v1beta2.MsgVote{
 		ProposalId: msg.ProposalId,
 		Voter:      msg.Voter,
 		Option:     v1beta2.VoteOption(msg.Option),
@@ -235,7 +236,7 @@ func (k legacyMsgServer) VoteWeighted(goCtx context.Context, msg *v1beta1.MsgVot
 		}
 	}
 
-	_, err := k.Server.VoteWeighted(goCtx, &v1beta2.MsgVoteWeighted{
+	_, err := k.server.VoteWeighted(goCtx, &v1beta2.MsgVoteWeighted{
 		ProposalId: msg.ProposalId,
 		Voter:      msg.Voter,
 		Options:    opts,
@@ -247,7 +248,7 @@ func (k legacyMsgServer) VoteWeighted(goCtx context.Context, msg *v1beta1.MsgVot
 }
 
 func (k legacyMsgServer) Deposit(goCtx context.Context, msg *v1beta1.MsgDeposit) (*v1beta1.MsgDepositResponse, error) {
-	_, err := k.Server.Deposit(goCtx, &v1beta2.MsgDeposit{
+	_, err := k.server.Deposit(goCtx, &v1beta2.MsgDeposit{
 		ProposalId: msg.ProposalId,
 		Depositor:  msg.Depositor,
 		Amount:     msg.Amount,

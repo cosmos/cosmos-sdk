@@ -12,12 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 // Proposal flags
@@ -56,7 +53,7 @@ var ProposalFlags = []string{
 // under the governance CLI (eg. parameter change proposals).
 func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
 	govTxCmd := &cobra.Command{
-		Use:                        v1beta1.ModuleName,
+		Use:                        types.ModuleName,
 		Short:                      "Governance transactions subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
@@ -124,14 +121,7 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 			}
 
 			content := v1beta1.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
-			// The signer of the MsgContent must be the gov module.
-			govModuleAcct := authtypes.NewModuleAddress(types.ModuleName)
-			msgContent, err := keeper.NewContentProposal(content, govModuleAcct.String())
-			if err != nil {
-				return err
-			}
-
-			msg, err := v1beta2.NewMsgSubmitProposal([]sdk.Msg{msgContent}, amount, clientCtx.GetFromAddress())
+			msg, err := v1beta1.NewMsgSubmitProposal(content, amount, clientCtx.GetFromAddress())
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}

@@ -59,7 +59,7 @@ func (keeper Keeper) DeleteAndBurnDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 
 	keeper.IterateDeposits(ctx, proposalID, func(deposit v1beta2.Deposit) bool {
-		err := keeper.bankKeeper.BurnCoins(ctx, v1beta2.ModuleName, deposit.Amount)
+		err := keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, deposit.Amount)
 		if err != nil {
 			panic(err)
 		}
@@ -124,7 +124,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	}
 
 	// update the governance module's account coins pool
-	err := keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, depositorAddr, v1beta2.ModuleName, depositAmount)
+	err := keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, depositorAddr, types.ModuleName, depositAmount)
 	if err != nil {
 		return false, err
 	}
@@ -177,7 +177,7 @@ func (keeper Keeper) RefundAndDeleteDeposits(ctx sdk.Context, proposalID uint64)
 			panic(err)
 		}
 
-		err = keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, v1beta2.ModuleName, depositor, deposit.Amount)
+		err = keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, depositor, deposit.Amount)
 		if err != nil {
 			panic(err)
 		}

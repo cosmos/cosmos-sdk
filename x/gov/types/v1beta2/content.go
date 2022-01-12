@@ -4,9 +4,9 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 
 // Copied over from /x/gov/types/keys.go to avoid circular imports
 const (
-	ModuleName = "gov"
+	moduleName = "gov"
 
-	RouterKey = ModuleName
+	routerKey = moduleName
 )
 
 // Content defines an interface that a proposal must implement. It contains

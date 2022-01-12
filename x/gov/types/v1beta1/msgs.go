@@ -76,7 +76,7 @@ func (m *MsgSubmitProposal) SetContent(content Content) error {
 }
 
 // Route implements Msg
-func (m MsgSubmitProposal) Route() string { return RouterKey }
+func (m MsgSubmitProposal) Route() string { return routerKey }
 
 // Type implements Msg
 func (m MsgSubmitProposal) Type() string { return TypeMsgSubmitProposal }
@@ -138,7 +138,7 @@ func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins
 }
 
 // Route implements Msg
-func (msg MsgDeposit) Route() string { return RouterKey }
+func (msg MsgDeposit) Route() string { return routerKey }
 
 // Type implements Msg
 func (msg MsgDeposit) Type() string { return TypeMsgDeposit }
@@ -183,7 +183,7 @@ func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) *Msg
 }
 
 // Route implements Msg
-func (msg MsgVote) Route() string { return RouterKey }
+func (msg MsgVote) Route() string { return routerKey }
 
 // Type implements Msg
 func (msg MsgVote) Type() string { return TypeMsgVote }
@@ -225,7 +225,7 @@ func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options Weighte
 }
 
 // Route implements Msg
-func (msg MsgVoteWeighted) Route() string { return RouterKey }
+func (msg MsgVoteWeighted) Route() string { return routerKey }
 
 // Type implements Msg
 func (msg MsgVoteWeighted) Type() string { return TypeMsgVoteWeighted }

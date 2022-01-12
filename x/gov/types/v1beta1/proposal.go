@@ -183,7 +183,7 @@ func (tp *TextProposal) GetTitle() string { return tp.Title }
 func (tp *TextProposal) GetDescription() string { return tp.Description }
 
 // ProposalRoute returns the proposal router key
-func (tp *TextProposal) ProposalRoute() string { return RouterKey }
+func (tp *TextProposal) ProposalRoute() string { return routerKey }
 
 // ProposalType is "Text"
 func (tp *TextProposal) ProposalType() string { return ProposalTypeText }

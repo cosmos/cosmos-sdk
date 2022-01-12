@@ -150,7 +150,7 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 			tc.preRun()
 			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
-			
+
 			if tc.expectErr {
 				s.Require().Contains(string(resp), tc.errMsg)
 			} else {

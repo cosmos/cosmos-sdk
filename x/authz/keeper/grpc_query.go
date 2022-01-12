@@ -122,8 +122,8 @@ func (k Keeper) GranterGrants(c context.Context, req *authz.QueryGranterGrantsRe
 
 			grantee := firstAddressFromGrantStoreKey(key)
 			grants = append(grants, &authz.GrantAuthorization{
-				Granter:		granter.String(),
-				Grantee: grantee.String(),
+				Granter:       granter.String(),
+				Grantee:       grantee.String(),
 				Authorization: any,
 				Expiration:    auth.Expiration,
 			})

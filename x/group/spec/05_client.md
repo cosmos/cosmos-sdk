@@ -495,18 +495,18 @@ Example:
 simd tx group update-group-policy-metadata cosmos1.. cosmos1.. "AQ=="
 ```
 
-#### update-group-account-policy
+#### update-group-policy-decision-policy
 
-The `update-group-account-policy` command allows users to update a group policy's decision policy.
+The `update-group-policy-decision-policy` command allows users to update a group policy's decision policy.
 
 ```bash
-simd  tx group update-group-account-policy [admin] [group-policy-account] [decision-policy] [flags]
+simd  tx group update-group-policy-decision-policy [admin] [group-policy-account] [decision-policy] [flags]
 ```
 
 Example:
 
 ```bash
-simd tx group update-group-account-policy cosmos1.. cosmos1.. '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"2", "timeout":"1000s"}' 
+simd tx group update-group-policy-decision-policy cosmos1.. cosmos1.. '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"2", "timeout":"1000s"}' 
 ```
 
 #### create-proposal

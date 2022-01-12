@@ -637,7 +637,7 @@ type MsgCreateGroupWithPolicy struct {
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
 	// members defines the group members.
 	Members []Member `protobuf:"bytes,2,rep,name=members,proto3" json:"members"`
-	// group_metadata is any arbitrary metadata attached to the group.
+	// group_metadata is any arbitrary metadata to attached to the group.
 	GroupMetadata []byte `protobuf:"bytes,3,opt,name=group_metadata,json=groupMetadata,proto3" json:"group_metadata,omitempty"`
 	// group_policy_metadata is any arbitrary metadata attached to the group policy.
 	GroupPolicyMetadata []byte `protobuf:"bytes,4,opt,name=group_policy_metadata,json=groupPolicyMetadata,proto3" json:"group_policy_metadata,omitempty"`

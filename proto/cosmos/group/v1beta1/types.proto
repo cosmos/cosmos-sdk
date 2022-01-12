@@ -104,6 +104,40 @@ message GroupMember {
   Member member = 2;
 }
 
+// GroupWithPolicyInfo represents the high-level on-chain information for a group with policy.
+message GroupWithPolicyInfo {
+
+  // group_id is the unique ID of the newly created group with policy.
+  uint64 group_id = 1;
+
+  // admin is the account address of the group admin.
+  string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // group_policy_address is the account address of the newly created group policy.
+   string group_policy_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // group_metadata is any arbitrary metadata attached to the group.
+  bytes group_metadata = 4;
+
+  // group_policy_metadata is any arbitrary metadata attached to the group policy.
+  bytes group_policy_metadata = 5;
+
+  // total_weight is the sum of the groupWithPolicy members' weights.
+  string total_weight = 6;
+
+  // version is used to track changes to a groupWithPolicy's membership structure that
+  // would break existing proposals. Whenever any members weight is changed,
+  // or any member is added or removed this version is incremented and will
+  // cause proposals based on older versions of this groupWithPolicy to fail
+  uint64 version = 7;
+
+  // decision_policy specifies the groupWithPolicy's decision policy.
+  google.protobuf.Any decision_policy = 8 [(cosmos_proto.accepts_interface) = "DecisionPolicy"];
+
+  // created_at is a timestamp specifying when a groupWithPolicy was created.
+  google.protobuf.Timestamp created_at = 9 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}
+
 // GroupPolicyInfo represents the high-level on-chain information for a group policy.
 message GroupPolicyInfo {
   option (gogoproto.equal)           = true;

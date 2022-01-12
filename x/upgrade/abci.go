@@ -12,16 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-// downgradeVerified is a variable that tells if we've already sanity checked that this binary version isn't being used against an old state.
-// If so, we dont run that check every beginblock.
-var downgradeVerified = false
-
-// ResetDowngradeVerified resets downgradeVerified.
-// Note: It should be use only for testing purposes.
-func ResetDowngradeVerified() {
-	downgradeVerified = false
-}
-
 // BeginBlock will check if there is a scheduled plan and if it is ready to be executed.
 // If the current height is in the provided set of heights to skip, it will skip and clear the upgrade plan.
 // If it is ready, it will execute it if the handler is installed, and panic/abort otherwise.
@@ -35,8 +25,8 @@ func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 
 	plan, found := k.GetUpgradePlan(ctx)
 
-	if !downgradeVerified {
-		downgradeVerified = true
+	if !k.DowngradeVerified() {
+		k.SetDowngradeVerified(true)
 		lastAppliedPlan, _ := k.GetLastCompletedUpgrade(ctx)
 		// This check will make sure that we are using a valid binary.
 		// It'll panic in these cases if there is no upgrade handler registered for the last applied upgrade.

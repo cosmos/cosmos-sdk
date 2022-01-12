@@ -596,7 +596,8 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	}()
 
 	blockGasConsumed := false
-	// consumeBlockGas makes sure block gas is consumed at most once.
+	// consumeBlockGas makes sure block gas is consumed at most once. It must happen after
+	// tx processing, and must be execute even if tx processing fails. Hence we use trick with `defer`
 	consumeBlockGas := func() {
 		if !blockGasConsumed {
 			blockGasConsumed = true

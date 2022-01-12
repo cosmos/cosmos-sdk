@@ -16,9 +16,14 @@ service Query {
     option (google.api.http).get = "/cosmos/authz/v1beta1/grants";
   }
 
-  // GranterGrants returns list of `Authorization`, granted by granter.
+  // GranterGrants returns list of `GrantAuthorization`, granted by granter.
   rpc GranterGrants(QueryGranterGrantsRequest) returns (QueryGranterGrantsResponse) {
-    option (google.api.http).get = "/cosmos/authz/v1beta1/grants/{granter}";
+    option (google.api.http).get = "/cosmos/authz/v1beta1/grants/granter/{granter}";
+  }
+
+  // GranteeGrants returns a list of `GrantAuthorization` by grantee.
+  rpc GranteeGrants(QueryGranteeGrantsRequest) returns (QueryGranteeGrantsResponse) {
+    option (google.api.http).get = "/cosmos/authz/v1beta1/grants/grantee/{grantee}";
   }
 }
 
@@ -50,8 +55,24 @@ message QueryGranterGrantsRequest {
 
 // QueryGranterGrantsResponse is the response type for the Query/GranterGrants RPC method.
 message QueryGranterGrantsResponse {
-  // authorizations is a list of grants granted for grantee by granter.
-  repeated cosmos.authz.v1beta1.Grant grants = 1;
+  // grants is a list of grants granted by the granter.
+  repeated cosmos.authz.v1beta1.GrantAuthorization grants = 1;
+  // pagination defines an pagination for the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryGranteeGrantsRequest is the request type for the Query/IssuedGrants RPC method.
+message QueryGranteeGrantsRequest {
+  string grantee = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // pagination defines an pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryGranteeGrantsResponse is the response type for the Query/GranteeGrants RPC method.
+message QueryGranteeGrantsResponse {
+  // grants is a list of grants granted to the grantee.
+  repeated cosmos.authz.v1beta1.GrantAuthorization grants = 1;
   // pagination defines an pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

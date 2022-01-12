@@ -10,13 +10,14 @@ import (
 
 // RegisterLegacyAminoCodec registers the vesting interfaces and concrete types on the
 // provided LegacyAmino codec. These types are used for Amino JSON serialization
-func RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
-	registrar.RegisterInterface((*exported.VestingAccount)(nil), nil)
-	registrar.RegisterConcrete(&BaseVestingAccount{}, "cosmos-sdk/BaseVestingAccount")
-	registrar.RegisterConcrete(&ContinuousVestingAccount{}, "cosmos-sdk/ContinuousVestingAccount")
-	registrar.RegisterConcrete(&DelayedVestingAccount{}, "cosmos-sdk/DelayedVestingAccount")
-	registrar.RegisterConcrete(&PeriodicVestingAccount{}, "cosmos-sdk/PeriodicVestingAccount")
-	registrar.RegisterConcrete(&PermanentLockedAccount{}, "cosmos-sdk/PermanentLockedAccount")
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	cdc.RegisterInterface((*exported.VestingAccount)(nil), nil)
+	cdc.RegisterConcrete(&BaseVestingAccount{}, "cosmos-sdk/BaseVestingAccount", nil)
+	cdc.RegisterConcrete(&ContinuousVestingAccount{}, "cosmos-sdk/ContinuousVestingAccount", nil)
+	cdc.RegisterConcrete(&DelayedVestingAccount{}, "cosmos-sdk/DelayedVestingAccount", nil)
+	cdc.RegisterConcrete(&PeriodicVestingAccount{}, "cosmos-sdk/PeriodicVestingAccount", nil)
+	cdc.RegisterConcrete(&PermanentLockedAccount{}, "cosmos-sdk/PermanentLockedAccount", nil)
+	cdc.RegisterConcrete(&TrueVestingAccount{}, "cosmos-sdk/TrueVestingAccount", nil)
 }
 
 // RegisterInterfaces associates protoName with AccountI and VestingAccount
@@ -29,6 +30,7 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 		&DelayedVestingAccount{},
 		&PeriodicVestingAccount{},
 		&PermanentLockedAccount{},
+		&TrueVestingAccount{},
 	)
 
 	registrar.RegisterImplementations(
@@ -38,6 +40,7 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 		&ContinuousVestingAccount{},
 		&PeriodicVestingAccount{},
 		&PermanentLockedAccount{},
+		&TrueVestingAccount{},
 	)
 
 	registrar.RegisterImplementations(
@@ -47,5 +50,23 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 		&ContinuousVestingAccount{},
 		&PeriodicVestingAccount{},
 		&PermanentLockedAccount{},
+		&TrueVestingAccount{},
 	)
+
+	registry.RegisterImplementations(
+		(*sdk.Msg)(nil),
+		&MsgClawback{},
+		&MsgCreateVestingAccount{},
+		&MsgCreatePeriodicVestingAccount{},
+		&MsgCreateTrueVestingAccount{},
+	)
+
+	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+}
+
+var amino = codec.NewLegacyAmino()
+
+func init() {
+	RegisterLegacyAminoCodec(amino)
+	amino.Seal()
 }

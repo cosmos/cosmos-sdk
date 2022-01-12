@@ -525,22 +525,14 @@ func marshalYaml(i interface{}) (interface{}, error) {
 var _ vestexported.VestingAccount = (*TrueVestingAccount)(nil)
 var _ authtypes.GenesisAccount = (*TrueVestingAccount)(nil)
 
-// NewTrueVestingAccountRaw creates a new TrueVestingAccount object from BaseVestingAccount
-func NewTrueVestingAccountRaw(bva *BaseVestingAccount, startTime int64, lockupPeriods, vestingPeriods Periods) *TrueVestingAccount {
-	return (&TrueVestingAccount{
-		BaseVestingAccount: bva,
-		StartTime:          startTime,
-		LockupPeriods:      lockupPeriods,
-		VestingPeriods:     vestingPeriods,
-	}).UpdateCombined()
-}
-
 // NewTrueVestingAccount returns a new TrueVestingAccount
-func NewTrueVestingAccount(baseAcc *authtypes.BaseAccount, originalVesting sdk.Coins, startTime int64, lockupPeriods, vestingPeriods Periods) *TrueVestingAccount {
-	endTime := startTime
-	for _, p := range vestingPeriods {
-		endTime += p.Length
-	}
+func NewTrueVestingAccount(baseAcc *authtypes.BaseAccount, funder sdk.AccAddress, originalVesting sdk.Coins, startTime int64, lockupPeriods, vestingPeriods Periods) *TrueVestingAccount {
+	// copy and align schedules to avoid mutating inputs
+	lp := make(Periods, len(lockupPeriods))
+	copy(lp, lockupPeriods)
+	vp := make(Periods, len(vestingPeriods))
+	copy(vp, vestingPeriods)
+	_, endTime := AlignSchedules(startTime, startTime, lp, vp)
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
 		OriginalVesting: originalVesting,
@@ -549,9 +541,10 @@ func NewTrueVestingAccount(baseAcc *authtypes.BaseAccount, originalVesting sdk.C
 
 	return (&TrueVestingAccount{
 		BaseVestingAccount: baseVestingAcc,
+		FunderAddress:      funder.String(),
 		StartTime:          startTime,
-		LockupPeriods:      lockupPeriods,
-		VestingPeriods:     vestingPeriods,
+		LockupPeriods:      lp,
+		VestingPeriods:     vp,
 	}).UpdateCombined()
 }
 
@@ -784,7 +777,7 @@ func (tva TrueVestingAccount) Clawback(ctx sdk.Context, dest sdk.AccAddress, ak 
 		}
 		validator, found := sk.GetValidator(ctx, validatorAddr)
 		if !found {
-			panic("validator not found") // shoudn't happen
+			panic("validator not found") // shouldn't happen
 		}
 		wantShares, err := validator.SharesFromTokensTruncated(want)
 		if err != nil {

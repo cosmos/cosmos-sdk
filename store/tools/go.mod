@@ -3,7 +3,7 @@ module github.com/confio/ics23-iavl
 go 1.17
 
 require (
-	github.com/confio/ics23/go v0.0.0-20200323120010-7d9a00f0a2fa // update-proto-spec
+	github.com/confio/ics23/go v0.7.0
 	github.com/cosmos/cosmos-sdk/store/tools v0.0.0-00010101000000-000000000000
 	github.com/lazyledger/smt v0.2.1-0.20210709230900-03ea40719554
 	github.com/tendermint/iavl v0.13.2
@@ -26,3 +26,6 @@ require (
 	golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413 // indirect
 	golang.org/x/sys v0.0.0-20200122134326-e047566fdf82 // indirect
 )
+
+replace github.com/cosmos/cosmos-sdk/store/tools => ./
+

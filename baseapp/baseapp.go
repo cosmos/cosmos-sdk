@@ -612,11 +612,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	//
 	// NOTE: This must exist in a separate defer function for the above recovery
 	// to recover from this one.
-	defer func() {
-		if mode == runTxModeDeliver {
-			consumeBlockGas()
-		}
-	}()
+	if mode == runTxModeDeliver {
+		defer consumeBlockGas()
+	}
 
 	tx, err := app.txDecoder(txBytes)
 	if err != nil {

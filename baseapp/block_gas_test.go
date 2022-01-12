@@ -112,7 +112,6 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			okValue := ctx.KVStore(app.GetKey(banktypes.ModuleName)).Get([]byte("ok"))
 
 			if tc.expErr {
-				require.NotEqual(t, uint32(0), rsp.Code)
 				if tc.panicTx {
 					require.Equal(t, sdkerrors.ErrPanic.ABCICode(), rsp.Code)
 				} else {

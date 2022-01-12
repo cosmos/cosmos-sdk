@@ -49,7 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
-* (auth) [\#10022](https://github.com/cosmos/cosmos-sdk/pull/10022) `AuthKeeper` interface in `x/auth` now includes a function `HasAccount`.
+* [\#10561](https://github.com/cosmos/cosmos-sdk/pull/10561) The `CommitMultiStore` interface contains a new `SetIAVLCacheSize` method
 
 ### Features
 
@@ -64,6 +64,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (store) [\#10741](https://github.com/cosmos/cosmos-sdk/pull/10741) Significantly speedup iterator creation after delete heavy workloads. Significantly improves IBC migration times.
 * (module) [\#10711](https://github.com/cosmos/cosmos-sdk/pull/10711) Panic at startup if the app developer forgot to add modules in the `SetOrder{BeginBlocker, EndBlocker, InitGenesis, ExportGenesis}` functions. This means that all modules, even those who have empty implementations for those methods, need to be added to `SetOrder*`.
 * (types) [\#10076](https://github.com/cosmos/cosmos-sdk/pull/10076) Significantly speedup and lower allocations for `Coins.String()`.
+* (auth) [\#10022](https://github.com/cosmos/cosmos-sdk/pull/10022) `AuthKeeper` interface in `x/auth` now includes a function `HasAccount`.
+* [\#10393](https://github.com/cosmos/cosmos-sdk/pull/10393) Add `HasSupply` method to bank keeper to ensure that input denom actually exists on chain.
 
 ### Bug Fixes
 
@@ -78,15 +80,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * (baseapp) [\#10631](https://github.com/cosmos/cosmos-sdk/pull/10631)  Emit ante events even for the failed txs. 
-* [\#10393](https://github.com/cosmos/cosmos-sdk/pull/10393) Add `HasSupply` method to bank keeper to ensure that input denom actually exists on chain.
 
 ### Features
 
 * [\#10561](https://github.com/cosmos/cosmos-sdk/pull/10561) Add configurable IAVL cache size to app.toml
-
-### API Breaking Changes
-
-* [\#10561](https://github.com/cosmos/cosmos-sdk/pull/10561) The `CommitMultiStore` interface contains a new `SetIAVLCacheSize` method
 
 ### Bug Fixes
 

@@ -55,7 +55,7 @@ type BaseApp struct { // nolint: maligned
 	router            sdk.Router           // handle any kind of message
 	queryRouter       sdk.QueryRouter      // router for redirecting query calls
 	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
-	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
+	msgServiceRouter  IMsgServiceRouter    // router for redirecting Msg service messages
 	interfaceRegistry types.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 
@@ -133,6 +133,8 @@ type BaseApp struct { // nolint: maligned
 	// indexEvents defines the set of events in the form {eventType}.{attributeKey},
 	// which informs Tendermint what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
+
+	feeHandler sdk.FeeHandler
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -195,8 +197,13 @@ func (app *BaseApp) Trace() bool {
 	return app.trace
 }
 
+// sets MsgServiceRouter of the BaseApp.
+func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter IMsgServiceRouter) {
+	app.msgServiceRouter = msgServiceRouter
+}
+
 // MsgServiceRouter returns the MsgServiceRouter of a BaseApp.
-func (app *BaseApp) MsgServiceRouter() *MsgServiceRouter { return app.msgServiceRouter }
+func (app *BaseApp) MsgServiceRouter() IMsgServiceRouter { return app.msgServiceRouter }
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
 // multistore.
@@ -572,7 +579,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 // Note, gas execution info is always returned. A reference to a Result is
 // returned if the tx does not run out of gas and if all the messages are valid
 // and execute successfully. An error is returned otherwise.
-func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
+func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, txCtx sdk.Context, err error) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter so we initialize upfront.
@@ -584,7 +591,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// only run the tx if there is block gas remaining
 	if mode == runTxModeDeliver && ctx.BlockGasMeter().IsOutOfGas() {
 		gInfo = sdk.GasInfo{GasUsed: ctx.BlockGasMeter().GasConsumed()}
-		return gInfo, nil, nil, sdkerrors.Wrap(sdkerrors.ErrOutOfGas, "no block gas left to run tx")
+		return gInfo, nil, nil, ctx, sdkerrors.Wrap(sdkerrors.ErrOutOfGas, "no block gas left to run tx")
 	}
 
 	var startingGas uint64
@@ -620,12 +627,12 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 
 	tx, err := app.txDecoder(txBytes)
 	if err != nil {
-		return sdk.GasInfo{}, nil, nil, err
+		return sdk.GasInfo{}, nil, nil, ctx, err
 	}
 
 	msgs := tx.GetMsgs()
 	if err := validateBasicTxMsgs(msgs); err != nil {
-		return sdk.GasInfo{}, nil, nil, err
+		return sdk.GasInfo{}, nil, nil, ctx, err
 	}
 
 	if app.anteHandler != nil {
@@ -661,7 +668,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		gasWanted = ctx.GasMeter().Limit()
 
 		if err != nil {
-			return gInfo, nil, nil, err
+			return gInfo, nil, nil, ctx, err
 		}
 
 		msCache.Write()
@@ -678,15 +685,38 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// Result if any single message fails or does not have a registered Handler.
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
 	if err == nil && mode == runTxModeDeliver {
-		msCache.Write()
-
-		if len(anteEvents) > 0 {
-			// append the events in the order of occurrence
-			result.Events = append(anteEvents, result.Events...)
+		// apply fee logic calls
+		feeEvents, err := FeeInvoke(mode, app, runMsgCtx)
+		// if err from FeeInvoke then don't write to cache
+		if err == nil {
+			msCache.Write()
+			// these are the ante events propagated only on success, that now means that fee charging has happened successfully.
+			if len(anteEvents) > 0 {
+				// append the events in the order of occurrence
+				result.Events = append(anteEvents, result.Events...)
+			}
+			// additional fee events
+			if len(feeEvents) > 0 {
+				// append the fee events at the end of the other events, since they get charged at the end of the Tx
+				result.Events = append(result.Events, feeEvents.ToABCIEvents()...)
+			}
 		}
 	}
 
-	return gInfo, result, anteEvents, err
+	return gInfo, result, anteEvents, ctx, err
+}
+
+// FeeInvoke apply fee logic and append events
+func FeeInvoke(mode runTxMode, app *BaseApp, runMsgCtx sdk.Context) (sdk.Events, error) {
+	if app.feeHandler != nil {
+		// call the msgFee
+		_, eventsFromFeeHandler, err := app.feeHandler(runMsgCtx, mode == runTxModeSimulate)
+		if err != nil {
+			return nil, err
+		}
+		return eventsFromFeeHandler, nil
+	}
+	return nil, nil
 }
 
 // runMsgs iterates through a list of messages and executes them with the provided

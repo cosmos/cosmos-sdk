@@ -20,8 +20,8 @@ func TestIntegrationTestSuite(t *testing.T) {
 	dp := v1beta2.NewDepositParams(sdk.NewCoins(sdk.NewCoin(cfg.BondDenom, v1beta2.DefaultMinDepositTokens)), time.Duration(15)*time.Second)
 	vp := v1beta2.NewVotingParams(time.Duration(5) * time.Second)
 	genesisState := v1beta2.DefaultGenesisState()
-	genesisState.DepositParams = &dp
-	genesisState.VotingParams = &vp
+	genesisState.DepositParams = dp
+	genesisState.VotingParams = vp
 	bz, err := cfg.Codec.MarshalJSON(genesisState)
 	require.NoError(t, err)
 	cfg.GenesisState["gov"] = bz

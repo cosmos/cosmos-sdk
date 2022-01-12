@@ -10,6 +10,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 // Governance message types and routes
@@ -22,8 +23,8 @@ const (
 )
 
 var (
-	_, _, _, _ sdk.Msg                       = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}
-	_          types.UnpackInterfacesMessage = &MsgSubmitProposal{}
+	_, _, _, _, _ sdk.Msg                       = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}, &MsgContent{}
+	_, _          types.UnpackInterfacesMessage = &MsgSubmitProposal{}, &MsgContent{}
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
@@ -286,4 +287,10 @@ func (c MsgContent) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (m MsgContent) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	var content v1beta1.Content
+	return unpacker.UnpackAny(m.Content, &content)
 }

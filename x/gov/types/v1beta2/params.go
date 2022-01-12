@@ -60,7 +60,7 @@ func (dp DepositParams) Equal(dp2 DepositParams) bool {
 }
 
 func validateDepositParams(i interface{}) error {
-	v, ok := i.(DepositParams)
+	v, ok := i.(*DepositParams)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -96,7 +96,7 @@ func (tp TallyParams) Equal(other TallyParams) bool {
 }
 
 func validateTallyParams(i interface{}) error {
-	v, ok := i.(TallyParams)
+	v, ok := i.(*TallyParams)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -155,7 +155,7 @@ func (vp VotingParams) Equal(other VotingParams) bool {
 }
 
 func validateVotingParams(i interface{}) error {
-	v, ok := i.(VotingParams)
+	v, ok := i.(*VotingParams)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

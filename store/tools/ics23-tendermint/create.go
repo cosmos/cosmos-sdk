@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/confio/ics23-tendermint/helpers"
 	ics23 "github.com/confio/ics23/go"
 	"github.com/tendermint/tendermint/crypto/merkle"
+
+	"github.com/cosmos/cosmos-sdk/store/tools/ics23-tendermint/helpers"
 )
 
 // TendermintSpec constrains the format from ics23-tendermint (crypto/merkle SimpleProof)

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/confio/ics23-tendermint/helpers"
+	"github.com/cosmos/cosmos-sdk/store/tools/ics23-tendermint/helpers"
 )
 
 func TestLeafOp(t *testing.T) {

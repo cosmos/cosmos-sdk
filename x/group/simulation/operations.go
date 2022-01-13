@@ -319,7 +319,7 @@ func SimulateMsgCreateProposal(ak group.AccountKeeper, bk group.BankKeeper, k ke
 		policy := groupPolicy.GetDecisionPolicy()
 		err = policy.Validate(*g)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, ""), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, ""), nil, nil
 		}
 
 		// Pick a random member from the group

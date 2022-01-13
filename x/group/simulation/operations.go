@@ -773,6 +773,15 @@ func SimulateMsgVote(ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "group has been modified"), nil, nil
 		}
 
+		// Ensure member hasn't already voted
+		res, _ := k.VoteByProposalVoter(ctx, &group.QueryVoteByProposalVoterRequest{
+			Voter:      acc.Address.String(),
+			ProposalId: uint64(proposalID),
+		})
+		if res != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "member has already voted"), nil, nil
+		}
+
 		msg := group.MsgVote{
 			ProposalId: uint64(proposalID),
 			Voter:      acc.Address.String(),

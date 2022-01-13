@@ -32,7 +32,7 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	authz.RegisterQueryServer(queryHelper, app.AuthzKeeper)
 	queryClient := authz.NewQueryClient(queryHelper)
 
-	authzmodule.EndBlocker(ctx, app.AuthzKeeper)
+	authzmodule.BeginBlocker(ctx, app.AuthzKeeper)
 
 	res, err := queryClient.GranterGrants(ctx.Context(), &authz.QueryGranterGrantsRequest{
 		Granter: granter.String(),
@@ -42,7 +42,7 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	require.Len(t, res.Grants, 3)
 
 	ctx = ctx.WithBlockTime(expiration.AddDate(0, 2, 0))
-	authzmodule.EndBlocker(ctx, app.AuthzKeeper)
+	authzmodule.BeginBlocker(ctx, app.AuthzKeeper)
 	res, err = queryClient.GranterGrants(ctx.Context(), &authz.QueryGranterGrantsRequest{
 		Granter: granter.String(),
 	})

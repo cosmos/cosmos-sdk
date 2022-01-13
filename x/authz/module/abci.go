@@ -5,8 +5,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
 )
 
-// EndBlocker is called at the end of every block
-func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
+// BeginBlocker is called at the begining of every block
+func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 
 	// delete all the mature grants
 	if err := keeper.DequeueAndDeleteExpiredGrants(ctx); err != nil {

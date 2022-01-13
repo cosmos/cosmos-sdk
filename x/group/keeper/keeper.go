@@ -217,8 +217,3 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
 	return k.groupTable.Sequence().CurVal(ctx.KVStore(k.key))
 }
-
-// GetProposalSequence returns the current value of the proposal table sequence
-func (k Keeper) GetProposalSequence(ctx sdk.Context) uint64 {
-	return k.proposalTable.Sequence().CurVal(ctx.KVStore(k.key))
-}

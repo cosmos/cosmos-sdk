@@ -34,6 +34,9 @@ const (
 
 	// DefaultKeyPass contains the default key password for genesis transactions
 	DefaultKeyPass = "12345678"
+
+	// Default CoinType for Secret Ledger App
+	DefaultLedgerCoinType = 529
 )
 
 // AddKeyCommand defines a keys command to add a generated or recovered private key to keybase.
@@ -208,7 +211,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		if legacyHdPath {
 			coinType = sdk.CoinType
 		} else {
-			return errors.New("ledger does not currently support new coin type. Use the legacy hd path flag")
+			coinType = DefaultLedgerCoinType
 		}
 
 		bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()

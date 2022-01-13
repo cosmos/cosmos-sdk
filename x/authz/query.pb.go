@@ -212,7 +212,7 @@ func (m *QueryGranterGrantsRequest) GetPagination() *query.PageRequest {
 
 // QueryGranterGrantsResponse is the response type for the Query/GranterGrants RPC method.
 type QueryGranterGrantsResponse struct {
-	// authorizations is a list of grants granted for grantee by granter.
+	// grants is a list of grants granted by the granter.
 	Grants []*GrantAuthorization `protobuf:"bytes,1,rep,name=grants,proto3" json:"grants,omitempty"`
 	// pagination defines an pagination for the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -321,7 +321,7 @@ func (m *QueryGranteeGrantsRequest) GetPagination() *query.PageRequest {
 
 // QueryGranteeGrantsResponse is the response type for the Query/GranteeGrants RPC method.
 type QueryGranteeGrantsResponse struct {
-	// authorizations is a list of grants granted for grantee by Grantee.
+	// grants is a list of grants granted to the grantee.
 	Grants []*GrantAuthorization `protobuf:"bytes,1,rep,name=grants,proto3" json:"grants,omitempty"`
 	// pagination defines an pagination for the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`

@@ -47,7 +47,7 @@ func GenerateSaveCoinKey(
 
 	// remove the old key by name if it exists
 	if exists {
-		if err = keybase.Delete(keyName); err != nil {
+		if err := keybase.Delete(keyName); err != nil {
 			return sdk.AccAddress{}, "", fmt.Errorf("failed to overwrite key")
 		}
 	}

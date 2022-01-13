@@ -121,9 +121,3 @@ message TallyParams {
   //  vetoed. Default value: 1/3.
   string veto_threshold = 3 [(cosmos_proto.scalar) = "cosmos.Dec"];
 }
-
-// Content is used to wrap the legacy content field into a message. This ensures backwards compatibility
-message MsgContent {
-  google.protobuf.Any content   = 1 [(cosmos_proto.accepts_interface) = "Content"];
-  string              authority = 2;
-}

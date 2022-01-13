@@ -3,10 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
-
 	"github.com/cosmos/cosmos-sdk/client"
-	codec "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -35,8 +32,8 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg) (v1beta
 		}
 
 		// check if the message wraps the legacy content type
-		if contentMsg, ok := msg.(*v1beta2.MsgContent); ok {
-			content := ContentFromMessage(contentMsg)
+		if contentMsg, ok := msg.(*v1beta2.MsgExecLegacyContent); ok {
+			content := v1beta2.LegacyContentFromMessage(contentMsg)
 			if content == nil {
 				return v1beta2.Proposal{}, sdkerrors.Wrap(v1beta1.ErrInvalidProposalContent, "content is nil")
 			}
@@ -262,26 +259,4 @@ func (keeper Keeper) UnmarshalProposal(bz []byte, proposal *v1beta2.Proposal) er
 		return err
 	}
 	return nil
-}
-
-// TODO: move both these functions to the migration package
-func NewContentProposal(content v1beta1.Content, authority string) (*v1beta2.MsgContent, error) {
-	msg, ok := content.(proto.Message)
-	if !ok {
-		return nil, fmt.Errorf("%T does not implement proto.Message", content)
-	}
-
-	any, err := codec.NewAnyWithValue(msg)
-	if err != nil {
-		return nil, err
-	}
-	return v1beta2.NewMsgContent(any, authority), nil
-}
-
-func ContentFromMessage(msg *v1beta2.MsgContent) v1beta1.Content {
-	content, ok := msg.Content.GetCachedValue().(v1beta1.Content)
-	if !ok {
-		return nil
-	}
-	return content
 }

@@ -80,6 +80,10 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1beta2.MsgSubmitP
 	}, nil
 }
 
+func (k msgServer) ExecLegacyContent(goCtx context.Context, msg *v1beta2.MsgExecLegacyContent) (*v1beta2.MsgExecLegacyContentResponse, error) {
+	panic("todo")
+}
+
 func (k msgServer) Vote(goCtx context.Context, msg *v1beta2.MsgVote) (*v1beta2.MsgVoteResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	accAddr, accErr := sdk.AccAddressFromBech32(msg.Voter)
@@ -193,7 +197,7 @@ func NewLegacyMsgServerImpl(govAcct string, v1beta2Server v1beta2.MsgServer) v1b
 var _ v1beta1.MsgServer = legacyMsgServer{}
 
 func (k legacyMsgServer) SubmitProposal(goCtx context.Context, msg *v1beta1.MsgSubmitProposal) (*v1beta1.MsgSubmitProposalResponse, error) {
-	contentMsg, err := NewContentProposal(msg.GetContent(), k.govAcct)
+	contentMsg, err := v1beta2.NewLegacyContent(msg.GetContent(), k.govAcct)
 	if err != nil {
 		return nil, fmt.Errorf("error converting legacy content into proposal message: %w", err)
 	}

@@ -36,7 +36,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	newProposalMsg, err := v1beta2.NewMsgSubmitProposal(
 		[]sdk.Msg{},
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
-		addrs[0],
+		addrs[0].String(),
 	)
 	require.NoError(t, err)
 
@@ -88,7 +88,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	newProposalMsg, err := v1beta2.NewMsgSubmitProposal(
 		[]sdk.Msg{},
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
-		addrs[0],
+		addrs[0].String(),
 	)
 	require.NoError(t, err)
 
@@ -111,7 +111,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	newProposalMsg2, err := v1beta2.NewMsgSubmitProposal(
 		[]sdk.Msg{},
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
-		addrs[0],
+		addrs[0].String(),
 	)
 	require.NoError(t, err)
 
@@ -168,7 +168,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	newProposalMsg, err := v1beta2.NewMsgSubmitProposal(
 		[]sdk.Msg{},
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
-		addrs[0],
+		addrs[0].String(),
 	)
 	require.NoError(t, err)
 
@@ -221,7 +221,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	activeQueue.Close()
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 5))}
-	newProposalMsg, err := v1beta2.NewMsgSubmitProposal([]sdk.Msg{}, proposalCoins, addrs[0])
+	newProposalMsg, err := v1beta2.NewMsgSubmitProposal([]sdk.Msg{}, proposalCoins, addrs[0].String())
 	require.NoError(t, err)
 
 	wrapCtx := sdk.WrapSDKContext(ctx)

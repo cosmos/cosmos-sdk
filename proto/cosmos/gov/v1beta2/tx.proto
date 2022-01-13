@@ -14,6 +14,10 @@ service Msg {
   // SubmitProposal defines a method to create new proposal given a content.
   rpc SubmitProposal(MsgSubmitProposal) returns (MsgSubmitProposalResponse);
 
+  // ExecLegacyContent defines a Msg to be in included in a MsgSubmitProposal
+  // to execute a legacy content-based proposal.
+  rpc ExecLegacyContent(MsgExecLegacyContent) returns (MsgExecLegacyContentResponse);
+
   // Vote defines a method to add a vote on a specific proposal.
   rpc Vote(MsgVote) returns (MsgVoteResponse);
 
@@ -36,6 +40,20 @@ message MsgSubmitProposal {
 
 // MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.
 message MsgSubmitProposalResponse {
+  uint64 proposal_id = 1;
+}
+
+// MsgExecLegacyContent is used to wrap the legacy content field into a message.
+// This ensures backwards compatibility with v1beta1.MsgSubmitProposal.
+message MsgExecLegacyContent {
+  // content is the proposal's content.
+  google.protobuf.Any content   = 1 [(cosmos_proto.accepts_interface) = "Content"];
+  // authority must be the gov module address.
+  string              authority = 2;
+}
+
+// MsgExecLegacyContentResponse defines the Msg/ExecLegacyContent response type.
+message MsgExecLegacyContentResponse {
   uint64 proposal_id = 1;
 }
 

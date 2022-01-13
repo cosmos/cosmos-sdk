@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
@@ -70,7 +69,7 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 	}
 
 	for i, tc := range testCases {
-		prop, err := keeper.NewContentProposal(tc.content, suite.app.GovKeeper.GetGovernanceAccount(suite.ctx).GetAddress().String())
+		prop, err := v1beta2.NewLegacyContent(tc.content, suite.app.GovKeeper.GetGovernanceAccount(suite.ctx).GetAddress().String())
 		suite.Require().NoError(err)
 		_, err = suite.app.GovKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop})
 		suite.Require().True(errors.Is(tc.expectedErr, err), "tc #%d; got: %v, expected: %v", i, err, tc.expectedErr)
@@ -136,8 +135,8 @@ func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 
 func TestMigrateProposalMessages(t *testing.T) {
 	content := v1beta1.NewTextProposal("Test", "description")
-	contentMsg, err := keeper.NewContentProposal(content, sdk.AccAddress("test1").String())
+	contentMsg, err := v1beta2.NewLegacyContent(content, sdk.AccAddress("test1").String())
 	require.NoError(t, err)
-	content = keeper.ContentFromMessage(contentMsg)
+	content = v1beta2.LegacyContentFromMessage(contentMsg)
 	require.NotNil(t, content)
 }

@@ -23,8 +23,8 @@ const (
 )
 
 var (
-	_, _, _, _, _ sdk.Msg                       = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}, &MsgContent{}
-	_, _          types.UnpackInterfacesMessage = &MsgSubmitProposal{}, &MsgContent{}
+	_, _, _, _, _ sdk.Msg                       = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}, &MsgExecLegacyContent{}
+	_, _          types.UnpackInterfacesMessage = &MsgSubmitProposal{}, &MsgExecLegacyContent{}
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
@@ -260,19 +260,19 @@ func (msg MsgVoteWeighted) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{voter}
 }
 
-func NewMsgContent(content *types.Any, authority string) *MsgContent {
-	return &MsgContent{
+func NewMsgExecLegacyContent(content *types.Any, authority string) *MsgExecLegacyContent {
+	return &MsgExecLegacyContent{
 		Content:   content,
 		Authority: authority,
 	}
 }
 
-func (c MsgContent) GetSigners() []sdk.AccAddress {
+func (c MsgExecLegacyContent) GetSigners() []sdk.AccAddress {
 	authority, _ := sdk.AccAddressFromBech32(c.Authority)
 	return []sdk.AccAddress{authority}
 }
 
-func (c MsgContent) ValidateBasic() error {
+func (c MsgExecLegacyContent) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(c.Authority)
 	if err != nil {
 		return err
@@ -282,7 +282,7 @@ func (c MsgContent) ValidateBasic() error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgContent) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (m MsgExecLegacyContent) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var content v1beta1.Content
 	return unpacker.UnpackAny(m.Content, &content)
 }

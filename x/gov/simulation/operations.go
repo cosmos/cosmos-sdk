@@ -138,7 +138,7 @@ func SimulateMsgSubmitProposal(
 			return simtypes.NoOpMsg(types.ModuleName, v1beta2.TypeMsgSubmitProposal, "unable to generate deposit"), nil, err
 		}
 
-		contentMsg, err := keeper.NewContentProposal(content, k.GetGovernanceAccount(ctx).GetAddress().String())
+		contentMsg, err := v1beta2.NewLegacyContent(content, k.GetGovernanceAccount(ctx).GetAddress().String())
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, v1beta2.TypeMsgSubmitProposal, "unable to create a content proposal message"), nil, err
 		}

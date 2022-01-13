@@ -1,9 +1,8 @@
 package v045
 
 import (
-	"time"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,8 +30,7 @@ func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.
 	grantsIter := grantsStore.Iterator(nil, nil)
 	defer grantsIter.Close()
 
-	queueItems := make(map[time.Time][]*authz.GrantStoreKey)
-
+	queueItems := make(map[string][]string)
 	for ; grantsIter.Valid(); grantsIter.Next() {
 		var grant authz.Grant
 		bz := grantsIter.Value()
@@ -45,37 +43,26 @@ func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.
 			grantsStore.Delete(grantsIter.Key())
 		} else {
 			granter, grantee, msgType := ParseGrantKey(grantsIter.Key())
-			queueItem, ok := queueItems[grant.Expiration]
+			key := GrantQueueKey(grant.Expiration, granter, grantee)
 
+			queueItem, ok := queueItems[conv.UnsafeBytesToStr(key)]
 			if !ok {
-				queueItems[grant.Expiration] = []*authz.GrantStoreKey{
-					{
-						Granter:    granter.String(),
-						Grantee:    grantee.String(),
-						MsgTypeUrl: msgType,
-					},
-				}
+				queueItems[string(key)] = []string{msgType}
 			} else {
-				queueItem = append(queueItem, &authz.GrantStoreKey{
-					Granter:    granter.String(),
-					Grantee:    grantee.String(),
-					MsgTypeUrl: msgType,
-				})
-				queueItems[grant.Expiration] = queueItem
+				queueItem = append(queueItem, msgType)
+				queueItems[string(key)] = queueItem
 			}
 		}
-
 	}
 
-	for k, v := range queueItems {
-		queueKey := GrantQueueKey(k)
+	for key, v := range queueItems {
 		bz, err := cdc.Marshal(&authz.GrantQueueItem{
-			GgmPairs: v,
+			MsgTypeUrls: v,
 		})
 		if err != nil {
 			return err
 		}
-		store.Set(queueKey, bz)
+		store.Set(conv.UnsafeStrToBytes(key), bz)
 	}
 
 	return nil

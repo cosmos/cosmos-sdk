@@ -60,18 +60,48 @@ func parseGrantStoreKey(key []byte) (granterAddr, granteeAddr sdk.AccAddress, ms
 	return granterAddr, granteeAddr, conv.UnsafeBytesToStr(key[3+granterAddrLen+byte(granteeAddrLen):])
 }
 
-// parseGrantQueueKey split expiration time from the grant queue key
-func parseGrantQueueKey(key []byte) (time.Time, error) {
+// parseGrantQueueKey split expiration time, granter and grantee from the grant queue key
+func parseGrantQueueKey(key []byte) (time.Time, sdk.AccAddress, sdk.AccAddress, error) {
 	// key is of format:
-	// 0x02<grant_expiration_Bytes>
+	// 0x02<grant_expiration_Bytes><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes>
 
-	return sdk.ParseTimeBytes(key[1 : 1+lenTime])
+	kv.AssertKeyAtLeastLength(key, 1+lenTime)
+	exp, err := sdk.ParseTimeBytes(key[1 : 1+lenTime])
+	if err != nil {
+		return exp, nil, nil, err
+	}
+
+	granterAddrLen := key[1+lenTime]
+	kv.AssertKeyAtLeastLength(key, 1+lenTime+int(granterAddrLen))
+	granter := sdk.AccAddress(key[2+lenTime : byte(2+lenTime)+granterAddrLen])
+
+	granteeAddrLen := key[byte(2+lenTime)+granterAddrLen]
+	granteeStart := byte(3+lenTime) + granterAddrLen
+	kv.AssertKeyAtLeastLength(key, int(granteeStart))
+	grantee := sdk.AccAddress(key[granteeStart : granteeStart+granteeAddrLen])
+
+	return exp, granter, grantee, nil
 }
 
 // GrantQueueKey - return grant queue store key
 // Key format is
 //
 // - 0x02<grant_expiration_Bytes>: GrantQueueItem
-func GrantQueueKey(expiration time.Time) []byte {
+func GrantQueueKey(expiration time.Time, granter sdk.AccAddress, grantee sdk.AccAddress) []byte {
+	exp := sdk.FormatTimeBytes(expiration)
+	granter = address.MustLengthPrefix(granter)
+	grantee = address.MustLengthPrefix(grantee)
+
+	l := 1 + len(exp) + len(granter) + len(grantee)
+	var key = make([]byte, l)
+	copy(key, GrantQueuePrefix)
+	copy(key[1:], exp)
+	copy(key[1+len(exp):], granter)
+	copy(key[1+len(exp)+len(granter):], grantee)
+	return key
+}
+
+// GrantQueueTimePrefix - return grant queue time prefix
+func GrantQueueTimePrefix(expiration time.Time) []byte {
 	return append(GrantQueuePrefix, sdk.FormatTimeBytes(expiration)...)
 }

@@ -23,9 +23,19 @@ var (
 // GrantQueueKey - return grant queue store key
 // Key format is
 //
-// - 0x02<grant_expiration_Bytes>
-func GrantQueueKey(expiration time.Time) []byte {
-	return append(GrantQueuePrefix, sdk.FormatTimeBytes(expiration)...)
+// - 0x02<grant_expiration_Bytes>: GrantQueueItem
+func GrantQueueKey(expiration time.Time, granter sdk.AccAddress, grantee sdk.AccAddress) []byte {
+	exp := sdk.FormatTimeBytes(expiration)
+	granter = address.MustLengthPrefix(granter)
+	grantee = address.MustLengthPrefix(grantee)
+
+	l := 1 + len(exp) + len(granter) + len(grantee)
+	var key = make([]byte, l)
+	copy(key, GrantQueuePrefix)
+	copy(key[1:], exp)
+	copy(key[1+len(exp):], granter)
+	copy(key[1+len(exp)+len(granter):], grantee)
+	return key
 }
 
 // GrantStoreKey - return authorization store key

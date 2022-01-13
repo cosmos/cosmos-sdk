@@ -26,19 +26,9 @@ message Grant {
   google.protobuf.Timestamp expiration    = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }
 
-// GrantQueueItem contains the list of granter-grantee-msgtype triple.
+// GrantQueueItem contains the list of TypeURL of a sdk.Msg.
 message GrantQueueItem {
-  // ggm_pairs is a list of GrantStoreKey
-  repeated GrantStoreKey ggm_pairs = 1; 
+  // msg_type_urls contains the list of TypeURL of a sdk.Msg.
+  repeated string msg_type_urls = 1; 
 }
 
-// GrantStoreKey contains granter-grantee-msg_type triple. It can be
-// used to construct the grant key.
-message GrantStoreKey {
-  // Granter account address
-  string granter = 1;
-  // Grantee account address
-  string grantee = 2;
-  // msg_type_url contains the TypeURL of a sdk.Msg.
-  string msg_type_url = 3;
-}

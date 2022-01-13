@@ -21,13 +21,13 @@ type View interface {
 
 	// GetIndex returns the index referenced by the provided fields if
 	// one exists or nil. Note that some concrete indexes can be retrieved by
-	// multiple FieldNames.
-	GetIndex(fields FieldNames) Index
+	// multiple lists of fields.
+	GetIndex(fields string) Index
 
 	// GetUniqueIndex returns the unique index referenced by the provided fields if
 	// one exists or nil. Note that some concrete indexes can be retrieved by
-	// multiple FieldNames.
-	GetUniqueIndex(fields FieldNames) UniqueIndex
+	// multiple lists of fields.
+	GetUniqueIndex(fields string) UniqueIndex
 
 	// Indexes returns all the concrete indexes for the table.
 	Indexes() []Index

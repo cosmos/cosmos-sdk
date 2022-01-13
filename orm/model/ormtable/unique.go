@@ -17,6 +17,7 @@ import (
 
 type uniqueKeyIndex struct {
 	*ormkv.UniqueKeyCodec
+	fields         fieldNames
 	primaryKey     *primaryKeyIndex
 	getReadBackend func(context.Context) (ReadBackend, error)
 }
@@ -182,6 +183,10 @@ func (u uniqueKeyIndex) readValueFromIndexKey(store ReadBackend, primaryKey []pr
 	}
 
 	return nil
+}
+
+func (p uniqueKeyIndex) Fields() string {
+	return p.fields.String()
 }
 
 var _ indexer = &uniqueKeyIndex{}

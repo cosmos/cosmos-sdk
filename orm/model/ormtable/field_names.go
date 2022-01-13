@@ -6,15 +6,15 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-// FieldNames abstractly represents a list of fields with a comparable type which
+// fieldNames abstractly represents a list of fields with a comparable type which
 // can be used as a map key. It is used primarily to lookup indexes.
-type FieldNames struct {
+type fieldNames struct {
 	fields string
 }
 
-// CommaSeparatedFieldNames creates a FieldNames instance from a list of comma-separated
+// commaSeparatedFieldNames creates a fieldNames instance from a list of comma-separated
 // fields.
-func CommaSeparatedFieldNames(fields string) (FieldNames, error) {
+func commaSeparatedFieldNames(fields string) fieldNames {
 	// normalize cases where there are spaces
 	if strings.IndexByte(fields, ' ') >= 0 {
 		parts := strings.Split(fields, ",")
@@ -23,31 +23,21 @@ func CommaSeparatedFieldNames(fields string) (FieldNames, error) {
 		}
 		fields = strings.Join(parts, ",")
 	}
-	return FieldNames{fields: fields}, nil
+	return fieldNames{fields: fields}
 }
 
-// FieldsFromDescriptors creates a FieldNames instance from an array of field
-// descriptors.
-func FieldsFromDescriptors(fieldDescriptors []protoreflect.FieldDescriptor) FieldNames {
-	names := make([]protoreflect.Name, len(fieldDescriptors))
-	for i, descriptor := range fieldDescriptors {
-		names[i] = descriptor.Name()
-	}
-	return FieldsFromNames(names)
-}
-
-// FieldsFromNames creates a FieldNames instance from an array of field
+// fieldsFromNames creates a fieldNames instance from an array of field
 // names.
-func FieldsFromNames(fieldNames []protoreflect.Name) FieldNames {
+func fieldsFromNames(fnames []protoreflect.Name) fieldNames {
 	var names []string
-	for _, name := range fieldNames {
+	for _, name := range fnames {
 		names = append(names, string(name))
 	}
-	return FieldNames{fields: strings.Join(names, ",")}
+	return fieldNames{fields: strings.Join(names, ",")}
 }
 
-// Names returns the array of names this FieldNames instance represents.
-func (f FieldNames) Names() []protoreflect.Name {
+// Names returns the array of names this fieldNames instance represents.
+func (f fieldNames) Names() []protoreflect.Name {
 	if f.fields == "" {
 		return nil
 	}
@@ -60,6 +50,6 @@ func (f FieldNames) Names() []protoreflect.Name {
 	return names
 }
 
-func (f FieldNames) String() string {
+func (f fieldNames) String() string {
 	return f.fields
 }

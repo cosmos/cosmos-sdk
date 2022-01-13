@@ -17,6 +17,7 @@ import (
 // indexKeyIndex implements Index for a regular IndexKey.
 type indexKeyIndex struct {
 	*ormkv.IndexKeyCodec
+	fields         fieldNames
 	primaryKey     *primaryKeyIndex
 	getReadBackend func(context.Context) (ReadBackend, error)
 }
@@ -85,4 +86,8 @@ func (i indexKeyIndex) readValueFromIndexKey(backend ReadBackend, primaryKey []p
 	}
 
 	return nil
+}
+
+func (p indexKeyIndex) Fields() string {
+	return p.fields.String()
 }

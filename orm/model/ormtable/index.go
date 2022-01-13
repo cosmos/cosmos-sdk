@@ -22,8 +22,8 @@ type Index interface {
 	// MessageType returns the protobuf message type of the index.
 	MessageType() protoreflect.MessageType
 
-	// GetFieldNames returns the field names of the index.
-	GetFieldNames() []protoreflect.Name
+	// Fields returns the canonical field names of the index.
+	Fields() string
 
 	doNotImplement()
 }

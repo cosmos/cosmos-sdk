@@ -91,8 +91,8 @@ func Build(options Options) (Table, error) {
 			getReadBackend: getReadBackend,
 		},
 		indexes:               []Index{},
-		indexesByFields:       map[FieldNames]concreteIndex{},
-		uniqueIndexesByFields: map[FieldNames]UniqueIndex{},
+		indexesByFields:       map[fieldNames]concreteIndex{},
+		uniqueIndexesByFields: map[fieldNames]UniqueIndex{},
 		entryCodecsById:       map[uint32]ormkv.EntryCodec{},
 		typeResolver:          options.TypeResolver,
 		customJSONValidator:   options.JSONValidator,
@@ -153,11 +153,8 @@ func Build(options Options) (Table, error) {
 		return nil, ormerrors.MissingPrimaryKey.Wrap(string(messageDescriptor.FullName()))
 	}
 
-	pkFields, err := CommaSeparatedFieldNames(tableDesc.PrimaryKey.Fields)
-	if err != nil {
-		return nil, err
-	}
-
+	pkFields := commaSeparatedFieldNames(tableDesc.PrimaryKey.Fields)
+	table.primaryKeyIndex.fields = pkFields
 	pkFieldNames := pkFields.Names()
 	if len(pkFieldNames) == 0 {
 		return nil, ormerrors.InvalidTableDefinition.Wrapf("empty primary key fields for %s", messageDescriptor.FullName())
@@ -190,16 +187,12 @@ func Build(options Options) (Table, error) {
 			return nil, ormerrors.DuplicateIndexId.Wrapf("id %d on table %s", id, messageDescriptor.FullName())
 		}
 
-		idxFields, err := CommaSeparatedFieldNames(idxDesc.Fields)
-		if err != nil {
-			return nil, err
-		}
-
+		idxFields := commaSeparatedFieldNames(idxDesc.Fields)
 		idxPrefix := encodeutil.AppendVarUInt32(prefix, id)
 		var index concreteIndex
 
 		// altNames contains all the alternative "names" of this index
-		altNames := map[FieldNames]bool{idxFields: true}
+		altNames := map[fieldNames]bool{idxFields: true}
 
 		if idxDesc.Unique && isNonTrivialUniqueKey(idxFields.Names(), pkFieldNames) {
 			uniqCdc, err := ormkv.NewUniqueKeyCodec(
@@ -213,6 +206,7 @@ func Build(options Options) (Table, error) {
 			}
 			uniqIdx := &uniqueKeyIndex{
 				UniqueKeyCodec: uniqCdc,
+				fields:         idxFields,
 				primaryKey:     pkIndex,
 				getReadBackend: getReadBackend,
 			}
@@ -230,6 +224,7 @@ func Build(options Options) (Table, error) {
 			}
 			index = &indexKeyIndex{
 				IndexKeyCodec:  idxCdc,
+				fields:         idxFields,
 				primaryKey:     pkIndex,
 				getReadBackend: getReadBackend,
 			}
@@ -241,10 +236,10 @@ func Build(options Options) (Table, error) {
 			// is actually stored as "c,a,b". So this index can be referred to
 			// by the fields "c", "c,a", or "c,a,b".
 			allFields := index.GetFieldNames()
-			allFieldNames := FieldsFromNames(allFields)
+			allFieldNames := fieldsFromNames(allFields)
 			altNames[allFieldNames] = true
 			for i := 1; i < len(allFields); i++ {
-				altName := FieldsFromNames(allFields[:i])
+				altName := fieldsFromNames(allFields[:i])
 				if altNames[altName] {
 					continue
 				}
@@ -261,7 +256,7 @@ func Build(options Options) (Table, error) {
 					return nil, err
 				}
 
-				if FieldsFromNames(altIdxCdc.GetFieldNames()) == allFieldNames {
+				if fieldsFromNames(altIdxCdc.GetFieldNames()) == allFieldNames {
 					altNames[altName] = true
 				}
 			}

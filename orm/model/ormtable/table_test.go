@@ -160,9 +160,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assertIteratorItems(it, 3, 4, 5, 6, 7, 8)
 
 	// now a reverse range query on a different index
-	strU32Fields, err := ormtable.CommaSeparatedFieldNames("str,u32")
-	assert.NilError(t, err)
-	strU32Index := table.GetIndex(strU32Fields)
+	strU32Index := table.GetIndex("str,u32")
 	assert.Assert(t, strU32Index != nil)
 	it, err = strU32Index.Iterator(ctx,
 		ormlist.Start("abc"),
@@ -179,9 +177,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assertIteratorItems(it, 2, 0)
 
 	// try an unique index
-	u64StrFields, err := ormtable.CommaSeparatedFieldNames("u64,str")
-	assert.NilError(t, err)
-	u64StrIndex := table.GetUniqueIndex(u64StrFields)
+	u64StrIndex := table.GetUniqueIndex("u64,str")
 	assert.Assert(t, u64StrIndex != nil)
 	found, err := u64StrIndex.Has(ctx, uint64(12), "abc")
 	assert.NilError(t, err)
@@ -432,7 +428,7 @@ func testTable(t *testing.T, tableData *TableData) {
 
 func testUniqueIndex(t *testing.T, model *IndexModel) {
 	index := model.index.(ormtable.UniqueIndex)
-	t.Logf("testing unique index %T %s", index, index.GetFieldNames())
+	t.Logf("testing unique index %T %s", index, index.Fields())
 	for i := 0; i < len(model.data); i++ {
 		x := model.data[i]
 		ks, _, err := index.(ormkv.IndexCodec).EncodeKeyFromMessage(x.ProtoReflect())
@@ -455,7 +451,7 @@ func testUniqueIndex(t *testing.T, model *IndexModel) {
 func testIndex(t *testing.T, model *IndexModel) {
 	index := model.index
 	if index.IsFullyOrdered() {
-		t.Logf("testing index %T %s", index, index.GetFieldNames())
+		t.Logf("testing index %T %s", index, index.Fields())
 
 		it, err := model.index.Iterator(model.context)
 		assert.NilError(t, err)
@@ -486,7 +482,7 @@ func testIndex(t *testing.T, model *IndexModel) {
 			checkIteratorAgainstSlice(t, it, reverseData(model.data[i:j+1]))
 		})
 	} else {
-		t.Logf("testing unordered index %T %s", index, index.GetFieldNames())
+		t.Logf("testing unordered index %T %s", index, index.Fields())
 
 		// get all the data
 		it, err := model.index.Iterator(model.context)

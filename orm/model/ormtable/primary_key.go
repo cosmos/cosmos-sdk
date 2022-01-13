@@ -16,6 +16,7 @@ import (
 // primaryKeyIndex defines an UniqueIndex for the primary key.
 type primaryKeyIndex struct {
 	*ormkv.PrimaryKeyCodec
+	fields         fieldNames
 	indexers       []indexer
 	getBackend     func(context.Context) (Backend, error)
 	getReadBackend func(context.Context) (ReadBackend, error)
@@ -132,6 +133,10 @@ func (p primaryKeyIndex) getByKeyBytes(store ReadBackend, key []byte, keyValues 
 
 func (p primaryKeyIndex) readValueFromIndexKey(_ ReadBackend, primaryKey []protoreflect.Value, value []byte, message proto.Message) error {
 	return p.Unmarshal(primaryKey, value, message)
+}
+
+func (p primaryKeyIndex) Fields() string {
+	return p.fields.String()
 }
 
 var _ UniqueIndex = &primaryKeyIndex{}

@@ -50,7 +50,7 @@ func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 			"fail invalid msg-type",
 			fmt.Sprintf(grantsURL, val.Address.String(), grantee.String(), "invalidMsg"),
 			true,
-			"rpc error: code = NotFound desc = no authorization found for invalidMsg type: key not found",
+			"no authorization found for invalidMsg type",
 		},
 		{
 			"valid query",

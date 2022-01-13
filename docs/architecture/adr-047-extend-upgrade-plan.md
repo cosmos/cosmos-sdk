@@ -210,6 +210,10 @@ In order to utilize the `UpgradeInstructions` as part of a software upgrade, bot
     Consider not including the `UpgradeInstructions.description` field, using the `info` field for that purpose instead.
 1.  [Draft PR #10032 Comment](https://github.com/cosmos/cosmos-sdk/pull/10032/files?authenticity_token=pLtzpnXJJB%2Fif2UWiTp9Td3MvRrBF04DvjSuEjf1azoWdLF%2BSNymVYw9Ic7VkqHgNLhNj6iq9bHQYnVLzMXd4g%3D%3D&file-filters%5B%5D=.go&file-filters%5B%5D=.proto#r754643691):
     Consider allowing multiple artifacts to be downloaded for any given `platform` by adding a `name` field to the `Artifact` message.
+1.  [PR #10502 Comment](https://github.com/cosmos/cosmos-sdk/pull/10602#discussion_r781438288)
+    Allow the new `UpgradeInstructions` to be provided via URL.
+1.  [PR #10502 Comment](https://github.com/cosmos/cosmos-sdk/pull/10602#discussion_r781438288)
+    Allow definition of a `signer` for assets (as an alternative to using a `checksum`).
 
 ## References
 

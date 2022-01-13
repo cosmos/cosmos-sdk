@@ -5,10 +5,9 @@ package rocksdb
 import (
 	"sync/atomic"
 
-	"github.com/cosmos/gorocksdb"
-
 	"github.com/cosmos/cosmos-sdk/db"
 	dbutil "github.com/cosmos/cosmos-sdk/db/internal"
+	"github.com/cosmos/gorocksdb"
 )
 
 type rocksDBBatch struct {

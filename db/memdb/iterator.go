@@ -4,9 +4,8 @@ import (
 	"bytes"
 	"context"
 
-	"github.com/google/btree"
-
 	"github.com/cosmos/cosmos-sdk/db"
+	"github.com/google/btree"
 )
 
 const (

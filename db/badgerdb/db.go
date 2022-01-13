@@ -150,7 +150,7 @@ func writeVersionsFile(vm *versionManager, path string) error {
 	defer file.Close()
 	w := csv.NewWriter(file)
 	rows := [][]string{
-		{"0", strconv.FormatUint(vm.lastTs, 10)},
+		[]string{"0", strconv.FormatUint(vm.lastTs, 10)},
 	}
 	for it := vm.Iterator(); it.Next(); {
 		version := it.Value()

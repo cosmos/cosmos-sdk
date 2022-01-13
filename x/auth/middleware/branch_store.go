@@ -3,10 +3,9 @@ package middleware
 import (
 	"context"
 
-	tmtypes "github.com/tendermint/tendermint/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 type branchStoreHandler struct {

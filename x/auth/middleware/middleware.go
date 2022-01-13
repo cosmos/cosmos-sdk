@@ -110,7 +110,7 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		IncrementSequenceMiddleware(options.AccountKeeper),
 		// Creates a new MultiStore branch, discards downstream writes if the downstream returns error.
 		// These kinds of middlewares should be put under this:
-		// - Could return error after messages executed successfully.
+		// - Could return error after messages executed succesfully.
 		// - Storage writes should be discarded together when tx failed.
 		WithBranchedStore,
 		// Consume block gas. All middlewares whose gas consumption after their `next` handler

@@ -880,12 +880,10 @@ func (s *decCoinTestSuite) TestDecCoins_MulDecTruncate() {
 	}{
 		{"No Coins", sdk.DecCoins{}, sdk.NewDec(1), sdk.DecCoins(nil), false},
 
-		// TODO - Fix test - Function comment documentation for MulDecTruncate says if multiplier d is zero, it should panic.
-		// However, that is not the observed behaviour. Currently nil is returned.
 		{"Multiple coins - zero multiplier", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(10, 3)},
 			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(30, 2)},
-		}, sdk.NewDec(0), sdk.DecCoins(nil), false},
+		}, sdk.NewDec(0), sdk.DecCoins{}, false},
 
 		{"Multiple coins - positive multiplier", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(15, 1)},

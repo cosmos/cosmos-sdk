@@ -410,7 +410,7 @@ func (s *IntegrationTestSuite) TestCmdGetProposal() {
 				s.Require().NoError(err)
 				var proposal v1beta2.Proposal
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &proposal), out.String())
-				s.Require().Equal(title, proposal.Messages[0].GetCachedValue().(*v1beta2.MsgContent).Content.GetCachedValue().(v1beta1.Content).GetTitle())
+				s.Require().Equal(title, proposal.Messages[0].GetCachedValue().(*v1beta2.MsgExecLegacyContent).Content.GetCachedValue().(v1beta1.Content).GetTitle())
 			}
 		})
 	}
@@ -760,12 +760,12 @@ func (s *IntegrationTestSuite) TestCmdQueryVote() {
 			} else {
 				s.Require().NoError(err)
 
-				var vote v1beta1.Vote
+				var vote v1beta2.Vote
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &vote), out.String())
 				s.Require().Equal(len(vote.Options), len(tc.expVoteOptions))
 				for i, option := range tc.expVoteOptions {
 					s.Require().Equal(option.Option, vote.Options[i].Option)
-					s.Require().Equal(option.Weight, (vote.Options[i].Weight).String())
+					s.Require().Equal(option.Weight, vote.Options[i].Weight)
 				}
 			}
 		})

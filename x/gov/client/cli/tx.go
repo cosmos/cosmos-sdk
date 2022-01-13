@@ -15,6 +15,7 @@ import (
 	govutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 // Proposal flags
@@ -177,7 +178,7 @@ $ %s tx gov deposit 1 10stake --from mykey
 				return err
 			}
 
-			msg := v1beta1.NewMsgDeposit(from, proposalID, amount)
+			msg := v1beta2.NewMsgDeposit(from, proposalID, amount)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -219,13 +220,13 @@ $ %s tx gov vote 1 yes --from mykey
 			}
 
 			// Find out which vote option user chose
-			byteVoteOption, err := v1beta1.VoteOptionFromString(govutils.NormalizeVoteOption(args[1]))
+			byteVoteOption, err := v1beta2.VoteOptionFromString(govutils.NormalizeVoteOption(args[1]))
 			if err != nil {
 				return err
 			}
 
 			// Build vote message and run basic validation
-			msg := v1beta1.NewMsgVote(from, proposalID, byteVoteOption)
+			msg := v1beta2.NewMsgVote(from, proposalID, byteVoteOption)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -268,13 +269,13 @@ $ %s tx gov weighted-vote 1 yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05 --from
 			}
 
 			// Figure out which vote options user chose
-			options, err := v1beta1.WeightedVoteOptionsFromString(govutils.NormalizeWeightedVoteOptions(args[1]))
+			options, err := v1beta2.WeightedVoteOptionsFromString(govutils.NormalizeWeightedVoteOptions(args[1]))
 			if err != nil {
 				return err
 			}
 
 			// Build vote message and run basic validation
-			msg := v1beta1.NewMsgVoteWeighted(from, proposalID, options)
+			msg := v1beta2.NewMsgVoteWeighted(from, proposalID, options)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

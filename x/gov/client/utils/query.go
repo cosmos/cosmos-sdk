@@ -76,6 +76,14 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params v1beta2.QueryPropos
 
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
+			if depMsg, ok := msg.(*v1beta1.MsgDeposit); ok {
+				deposits = append(deposits, v1beta2.Deposit{
+					Depositor:  depMsg.Depositor,
+					ProposalId: params.ProposalID,
+					Amount:     depMsg.Amount,
+				})
+			}
+
 			if depMsg, ok := msg.(*v1beta2.MsgDeposit); ok {
 				deposits = append(deposits, v1beta2.Deposit{
 					Depositor:  depMsg.Depositor,
@@ -99,7 +107,7 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params v1beta2.QueryPropos
 // marshalled result or any error that occurred.
 func QueryVotesByTxQuery(clientCtx client.Context, params v1beta2.QueryProposalVotesParams) ([]byte, error) {
 	var (
-		votes      []v1beta2.Vote
+		votes      []*v1beta2.Vote
 		nextTxPage = defaultPage
 		totalLimit = params.Limit * params.Page
 	)
@@ -146,16 +154,28 @@ func QueryVotesByTxQuery(clientCtx client.Context, params v1beta2.QueryProposalV
 
 		for _, info := range searchResult.Txs {
 			for _, msg := range info.GetTx().GetMsgs() {
+				if voteMsg, ok := msg.(*v1beta1.MsgVote); ok {
+					votes = append(votes, &v1beta2.Vote{
+						Voter:      voteMsg.Voter,
+						ProposalId: params.ProposalID,
+						Options:    v1beta2.NewNonSplitVoteOption(v1beta2.VoteOption(voteMsg.Option)),
+					})
+				}
+
 				if voteMsg, ok := msg.(*v1beta2.MsgVote); ok {
-					votes = append(votes, v1beta2.Vote{
+					votes = append(votes, &v1beta2.Vote{
 						Voter:      voteMsg.Voter,
 						ProposalId: params.ProposalID,
 						Options:    v1beta2.NewNonSplitVoteOption(voteMsg.Option),
 					})
 				}
 
+				if voteWeightedMsg, ok := msg.(*v1beta1.MsgVoteWeighted); ok {
+					votes = append(votes, convertVote(voteWeightedMsg))
+				}
+
 				if voteWeightedMsg, ok := msg.(*v1beta2.MsgVoteWeighted); ok {
-					votes = append(votes, v1beta2.Vote{
+					votes = append(votes, &v1beta2.Vote{
 						Voter:      voteWeightedMsg.Voter,
 						ProposalId: params.ProposalID,
 						Options:    voteWeightedMsg.Options,
@@ -171,7 +191,7 @@ func QueryVotesByTxQuery(clientCtx client.Context, params v1beta2.QueryProposalV
 	}
 	start, end := client.Paginate(len(votes), params.Page, params.Limit, 100)
 	if start < 0 || end < 0 {
-		votes = []v1beta2.Vote{}
+		votes = []*v1beta2.Vote{}
 	} else {
 		votes = votes[start:end]
 	}
@@ -233,12 +253,24 @@ func QueryVoteByTxQuery(clientCtx client.Context, params v1beta2.QueryVoteParams
 		for _, msg := range info.GetTx().GetMsgs() {
 			// there should only be a single vote under the given conditions
 			var vote *v1beta2.Vote
+			if voteMsg, ok := msg.(*v1beta1.MsgVote); ok {
+				vote = &v1beta2.Vote{
+					Voter:      voteMsg.Voter,
+					ProposalId: params.ProposalID,
+					Options:    v1beta2.NewNonSplitVoteOption(v1beta2.VoteOption(voteMsg.Option)),
+				}
+			}
+
 			if voteMsg, ok := msg.(*v1beta2.MsgVote); ok {
 				vote = &v1beta2.Vote{
 					Voter:      voteMsg.Voter,
 					ProposalId: params.ProposalID,
 					Options:    v1beta2.NewNonSplitVoteOption(voteMsg.Option),
 				}
+			}
+
+			if voteWeightedMsg, ok := msg.(*v1beta1.MsgVoteWeighted); ok {
+				vote = convertVote(voteWeightedMsg)
 			}
 
 			if voteWeightedMsg, ok := msg.(*v1beta2.MsgVoteWeighted); ok {
@@ -310,6 +342,21 @@ func QueryDepositByTxQuery(clientCtx client.Context, params v1beta2.QueryDeposit
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
 			// there should only be a single deposit under the given conditions
+			if depMsg, ok := msg.(*v1beta1.MsgDeposit); ok {
+				deposit := v1beta2.Deposit{
+					Depositor:  depMsg.Depositor,
+					ProposalId: params.ProposalID,
+					Amount:     depMsg.Amount,
+				}
+
+				bz, err := clientCtx.Codec.MarshalJSON(&deposit)
+				if err != nil {
+					return nil, err
+				}
+
+				return bz, nil
+			}
+
 			if depMsg, ok := msg.(*v1beta2.MsgDeposit); ok {
 				deposit := v1beta2.Deposit{
 					Depositor:  depMsg.Depositor,
@@ -359,6 +406,9 @@ func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Propos
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
 			// there should only be a single proposal under the given conditions
+			if subMsg, ok := msg.(*v1beta1.MsgSubmitProposal); ok {
+				return NewProposer(proposalID, subMsg.Proposer), nil
+			}
 			if subMsg, ok := msg.(*v1beta2.MsgSubmitProposal); ok {
 				return NewProposer(proposalID, subMsg.Proposer), nil
 			}
@@ -435,6 +485,14 @@ func queryInitialDepositByTxQuery(clientCtx client.Context, proposalID uint64) (
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
 			// there should only be a single proposal under the given conditions
+			if subMsg, ok := msg.(*v1beta1.MsgSubmitProposal); ok {
+				return v1beta2.Deposit{
+					ProposalId: proposalID,
+					Depositor:  subMsg.Proposer,
+					Amount:     subMsg.InitialDeposit,
+				}, nil
+			}
+
 			if subMsg, ok := msg.(*v1beta2.MsgSubmitProposal); ok {
 				return v1beta2.Deposit{
 					ProposalId: proposalID,
@@ -446,4 +504,20 @@ func queryInitialDepositByTxQuery(clientCtx client.Context, proposalID uint64) (
 	}
 
 	return v1beta2.Deposit{}, sdkerrors.ErrNotFound.Wrapf("failed to find the initial deposit for proposalID %d", proposalID)
+}
+
+// convertVote converts a MsgVoteWeighted into a *v1beta2.Vote.
+func convertVote(v *v1beta1.MsgVoteWeighted) *v1beta2.Vote {
+	opts := make([]*v1beta2.WeightedVoteOption, len(v.Options))
+	for i, o := range v.Options {
+		opts[i] = &v1beta2.WeightedVoteOption{
+			Option: v1beta2.VoteOption(o.Option),
+			Weight: o.Weight.String(),
+		}
+	}
+	return &v1beta2.Vote{
+		Voter:      v.Voter,
+		ProposalId: v.ProposalId,
+		Options:    opts,
+	}
 }

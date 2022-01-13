@@ -113,7 +113,7 @@ func (p *ThresholdDecisionPolicy) Validate(g GroupInfo) error {
 		return sdkerrors.Wrap(err, "group total weight")
 	}
 	if threshold.Cmp(totalWeight) > 0 {
-		return sdkerrors.Wrap(errors.ErrInvalid, "policy threshold should not be greater than the total group weight")
+		return sdkerrors.Wrapf(errors.ErrInvalid, "policy threshold %s should not be greater than the total group weight %s", p.Threshold, g.TotalWeight)
 	}
 	return nil
 }

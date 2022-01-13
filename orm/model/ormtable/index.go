@@ -25,15 +25,6 @@ type Index interface {
 	// GetFieldNames returns the field names of the index.
 	GetFieldNames() []protoreflect.Name
 
-	// CompareKeys the two keys against the underlying IndexCodec, returning a
-	// negative value if key1 is less than key2, 0 if they are equal, and a
-	// positive value otherwise.
-	CompareKeys(key1, key2 []protoreflect.Value) int
-
-	// IsFullyOrdered returns true if all of the fields in the index are
-	// considered "well-ordered" in terms of sorted iteration.
-	IsFullyOrdered() bool
-
 	doNotImplement()
 }
 

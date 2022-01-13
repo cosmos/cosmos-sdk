@@ -420,7 +420,7 @@ func testTable(t *testing.T, tableData *TableData) {
 	for _, index := range tableData.table.Indexes() {
 		indexModel := &IndexModel{
 			TableData: tableData,
-			index:     index,
+			index:     index.(TestIndex),
 		}
 		sort.Sort(indexModel)
 		if _, ok := index.(ormtable.UniqueIndex); ok {
@@ -587,7 +587,22 @@ type TableData struct {
 
 type IndexModel struct {
 	*TableData
-	index ormtable.Index
+	index TestIndex
+}
+
+// TestIndex exposes methods that all index implementations expose publicly
+// but on private structs because they are intended only to be used for testing.
+type TestIndex interface {
+	ormtable.Index
+
+	// CompareKeys the two keys against the underlying IndexCodec, returning a
+	// negative value if key1 is less than key2, 0 if they are equal, and a
+	// positive value otherwise.
+	CompareKeys(key1, key2 []protoreflect.Value) int
+
+	// IsFullyOrdered returns true if all of the fields in the index are
+	// considered "well-ordered" in terms of sorted iteration.
+	IsFullyOrdered() bool
 }
 
 func (m *IndexModel) Len() int {

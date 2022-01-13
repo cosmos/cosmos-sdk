@@ -426,17 +426,12 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		cmtCfg.P2P.AddrBookStrict = false
 		cmtCfg.P2P.AllowDuplicateIP = true
 
-		cmtConfigs[i] = cmtCfg
+		p2pAddr, _, err := server.FreeTCPAddr()
+		require.NoError(t, err)
 
-		var mnemonic string
-		if i < len(cfg.Mnemonics) {
-			mnemonic = cfg.Mnemonics[i]
-		}
-
-		nodeID, pubKey, err := genutil.InitializeNodeValidatorFilesFromMnemonic(cmtCfg, mnemonic, ed25519.PrivKeyName)
-		if err != nil {
-			return nil, err
-		}
+		tmCfg.P2P.ListenAddress = p2pAddr
+		tmCfg.P2P.AddrBookStrict = false
+		tmCfg.P2P.AllowDuplicateIP = true
 
 		nodeIDs[i] = nodeID
 		valPubKeys[i] = pubKey
@@ -452,16 +447,13 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			return nil, err
 		}
 
-		addr, secret, err := testutil.GenerateSaveCoinKey(kb, nodeDirName, mnemonic, true, algo, sdk.GetFullBIP44Path())
-		if err != nil {
-			return nil, err
+		var mnemonic string
+		if i < len(cfg.Mnemonics) {
+			mnemonic = cfg.Mnemonics[i]
 		}
 
-		// if PrintMnemonic is set to true, we print the first validator node's secret to the network's logger
-		// for debugging and manual testing
-		if cfg.PrintMnemonic && i == 0 {
-			printMnemonic(l, secret)
-		}
+		addr, secret, err := server.GenerateSaveCoinKey(kb, nodeDirName, mnemonic, true, algo)
+		require.NoError(t, err)
 
 		info := map[string]string{"secret": secret}
 		infoBz, err := json.Marshal(info)

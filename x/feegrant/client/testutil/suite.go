@@ -197,7 +197,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestCmdGetFeeGrants() {
+func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGrantee() {
 	val := s.network.Validators[0]
 	grantee := s.addedGrantee
 	clientCtx := val.ClientCtx
@@ -239,7 +239,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrants() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryFeeGrants()
+			cmd := cli.GetCmdQueryFeeGrantsByGrantee()
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {

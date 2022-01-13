@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	ocproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	ocproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"

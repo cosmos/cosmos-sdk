@@ -148,6 +148,72 @@ func (suite *KeeperTestSuite) TestFeeAllowances() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestFeeIssuedAllowances() {
+	testCases := []struct {
+		name      string
+		req       *feegrant.QueryIssuedAllowancesRequest
+		expectErr bool
+		preRun    func()
+		postRun   func(_ *feegrant.QueryIssuedAllowancesResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			func() {},
+			func(*feegrant.QueryIssuedAllowancesResponse) {},
+		},
+		{
+			"fail: invalid grantee",
+			&feegrant.QueryIssuedAllowancesRequest{
+				Granter: "invalid_grantee",
+			},
+			true,
+			func() {},
+			func(*feegrant.QueryIssuedAllowancesResponse) {},
+		},
+		{
+			"no grants",
+			&feegrant.QueryIssuedAllowancesRequest{
+				Granter: suite.addrs[0].String(),
+			},
+			false,
+			func() {},
+			func(resp *feegrant.QueryIssuedAllowancesResponse) {
+				suite.Require().Equal(len(resp.Allowances), 0)
+			},
+		},
+		{
+			"valid query: expect single grant",
+			&feegrant.QueryIssuedAllowancesRequest{
+				Granter: suite.addrs[0].String(),
+			},
+			false,
+			func() {
+				grantFeeAllowance(suite)
+			},
+			func(resp *feegrant.QueryIssuedAllowancesResponse) {
+				suite.Require().Equal(len(resp.Allowances), 1)
+				suite.Require().Equal(resp.Allowances[0].Granter, suite.addrs[0].String())
+				suite.Require().Equal(resp.Allowances[0].Grantee, suite.addrs[1].String())
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			tc.preRun()
+			resp, err := suite.keeper.IssuedAllowances(suite.ctx, tc.req)
+			if tc.expectErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
+}
+
 func grantFeeAllowance(suite *KeeperTestSuite) {
 	exp := suite.sdkCtx.BlockTime().AddDate(1, 0, 0)
 	err := suite.app.FeeGrantKeeper.GrantAllowance(suite.sdkCtx, suite.addrs[0], suite.addrs[1], &feegrant.BasicAllowance{

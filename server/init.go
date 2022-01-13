@@ -12,21 +12,18 @@ import (
 // phrase to recover the private key.
 func GenerateCoinKey(algo keyring.SignatureAlgo) (sdk.AccAddress, string, error) {
 	// generate a private key, with recovery phrase
-	info, secret, err := keyring.NewInMemory().NewMnemonic("name", keyring.English, sdk.GetConfig().GetFullBIP44Path(), keyring.DefaultBIP39Passphrase, algo)
+	info, secret, err := keyring.NewInMemory().NewMnemonic(
+		"name",
+		keyring.English,
+		sdk.GetConfig().GetFullBIP44Path(),
+		keyring.DefaultBIP39Passphrase,
+		algo,
+	)
 	if err != nil {
 		return sdk.AccAddress{}, "", err
 	}
-<<<<<<< HEAD
+
 	return sdk.AccAddress(info.GetPubKey().Address()), secret, nil
-=======
-
-	addr, err := k.GetAddress()
-	if err != nil {
-		return nil, "", err
-	}
-
-	return addr, secret, nil
->>>>>>> b0190834c (feat: support custom mnemonics in in-process testing network (#10922))
 }
 
 // GenerateSaveCoinKey returns the address of a public key, along with the secret
@@ -55,34 +52,32 @@ func GenerateSaveCoinKey(
 		}
 	}
 
-<<<<<<< HEAD
-	info, secret, err := keybase.NewMnemonic(keyName, keyring.English, sdk.GetConfig().GetFullBIP44Path(), keyring.DefaultBIP39Passphrase, algo)
-=======
 	var (
-		record *keyring.Record
+		info   keyring.Info
 		secret string
 	)
 
-	// generate or recover a new account
 	if mnemonic != "" {
 		secret = mnemonic
-		record, err = keybase.NewAccount(keyName, mnemonic, keyring.DefaultBIP39Passphrase, sdk.GetConfig().GetFullBIP44Path(), algo)
+		info, err = keybase.NewAccount(
+			keyName,
+			mnemonic,
+			keyring.DefaultBIP39Passphrase,
+			sdk.GetConfig().GetFullBIP44Path(),
+			algo,
+		)
 	} else {
-		record, secret, err = keybase.NewMnemonic(keyName, keyring.English, sdk.GetConfig().GetFullBIP44Path(), keyring.DefaultBIP39Passphrase, algo)
+		info, secret, err = keybase.NewMnemonic(
+			keyName,
+			keyring.English,
+			sdk.GetConfig().GetFullBIP44Path(),
+			keyring.DefaultBIP39Passphrase,
+			algo,
+		)
 	}
->>>>>>> b0190834c (feat: support custom mnemonics in in-process testing network (#10922))
 	if err != nil {
 		return sdk.AccAddress{}, "", err
 	}
 
-<<<<<<< HEAD
 	return sdk.AccAddress(info.GetPubKey().Address()), secret, nil
-=======
-	addr, err := record.GetAddress()
-	if err != nil {
-		return nil, "", err
-	}
-
-	return addr, secret, nil
->>>>>>> b0190834c (feat: support custom mnemonics in in-process testing network (#10922))
 }

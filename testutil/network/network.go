@@ -265,27 +265,14 @@ func New(t *testing.T, cfg Config) *Network {
 		tmCfg.ProxyApp = proxyAddr
 
 		p2pAddr, _, err := server.FreeTCPAddr()
-<<<<<<< HEAD
 		require.NoError(t, err)
-=======
-		if err != nil {
-			return nil, err
-		}
 
->>>>>>> b0190834c (feat: support custom mnemonics in in-process testing network (#10922))
 		tmCfg.P2P.ListenAddress = p2pAddr
 		tmCfg.P2P.AddrBookStrict = false
 		tmCfg.P2P.AllowDuplicateIP = true
 
 		nodeID, pubKey, err := genutil.InitializeNodeValidatorFiles(tmCfg)
-<<<<<<< HEAD
 		require.NoError(t, err)
-=======
-		if err != nil {
-			return nil, err
-		}
-
->>>>>>> b0190834c (feat: support custom mnemonics in in-process testing network (#10922))
 		nodeIDs[i] = nodeID
 		valPubKeys[i] = pubKey
 
@@ -296,26 +283,13 @@ func New(t *testing.T, cfg Config) *Network {
 		algo, err := keyring.NewSigningAlgoFromString(cfg.SigningAlgo, keyringAlgos)
 		require.NoError(t, err)
 
-<<<<<<< HEAD
-		addr, secret, err := server.GenerateSaveCoinKey(kb, nodeDirName, true, algo)
-		require.NoError(t, err)
-=======
 		var mnemonic string
 		if i < len(cfg.Mnemonics) {
 			mnemonic = cfg.Mnemonics[i]
 		}
 
 		addr, secret, err := server.GenerateSaveCoinKey(kb, nodeDirName, mnemonic, true, algo)
-		if err != nil {
-			return nil, err
-		}
-
-		// if PrintMnemonic is set to true, we print the first validator node's secret to the network's logger
-		// for debugging and manual testing
-		if cfg.PrintMnemonic && i == 0 {
-			printMnemonic(l, secret)
-		}
->>>>>>> b0190834c (feat: support custom mnemonics in in-process testing network (#10922))
+		require.NoError(t, err)
 
 		info := map[string]string{"secret": secret}
 		infoBz, err := json.Marshal(info)

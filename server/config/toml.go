@@ -20,15 +20,18 @@ const DefaultConfigTemplate = `# This is a TOML config file.
 # specified in this config (e.g. 0.25token1;0.0001token2).
 minimum-gas-prices = "{{ .BaseConfig.MinGasPrices }}"
 
-# default: the last 100 states are kept in addition to every 500th state; pruning at 10 block intervals
+# default: only the last 100,000 states(approximately 1 week worth of state) are kept; pruning at 100 block intervals
 # nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
-# everything: all saved states will be deleted, storing only the current state; pruning at 10 block intervals
+# everything: all saved states will be deleted, storing only the current state; pruning at 10 block intervals.
 # custom: allow pruning options to be manually specified through 'pruning-keep-recent', 'pruning-keep-every', and 'pruning-interval'
 pruning = "{{ .BaseConfig.Pruning }}"
 
 # These are applied if and only if the pruning strategy is custom.
+# pruning-keep-recent = N means keep all of the last N states
 pruning-keep-recent = "{{ .BaseConfig.PruningKeepRecent }}"
+# pruning-keep-every = N means keep every Nth state, in addition to keep-recent
 pruning-keep-every = "{{ .BaseConfig.PruningKeepEvery }}"
+# pruning-interval = N means we delete old states from disk every Nth block.
 pruning-interval = "{{ .BaseConfig.PruningInterval }}"
 
 # HaltHeight contains a non-zero block height at which a node will gracefully

@@ -143,7 +143,7 @@ func SimulateMsgSubmitProposal(
 			return simtypes.NoOpMsg(types.ModuleName, v1beta2.TypeMsgSubmitProposal, "unable to create a content proposal message"), nil, err
 		}
 
-		msg, err := v1beta2.NewMsgSubmitProposal([]sdk.Msg{contentMsg}, deposit, simAccount.Address)
+		msg, err := v1beta2.NewMsgSubmitProposal([]sdk.Msg{contentMsg}, deposit, simAccount.Address.String())
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, v1beta2.TypeMsgSubmitProposal, "unable to generate a submit proposal msg"), nil, err
 		}

@@ -201,7 +201,7 @@ func (k legacyMsgServer) SubmitProposal(goCtx context.Context, msg *v1beta1.MsgS
 	proposal, err := v1beta2.NewMsgSubmitProposal(
 		[]sdk.Msg{contentMsg},
 		msg.InitialDeposit,
-		sdk.AccAddress(msg.Proposer),
+		msg.Proposer,
 	)
 	if err != nil {
 		return nil, err

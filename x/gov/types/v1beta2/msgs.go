@@ -29,13 +29,13 @@ var (
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
 //nolint:interfacer
-func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer sdk.AccAddress) (*MsgSubmitProposal, error) {
+func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer string) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		InitialDeposit: initialDeposit,
-		Proposer:       proposer.String(),
+		Proposer:       proposer,
 	}
 
-	if err := m.SetMessages(messages); err != nil {
+	if err := m.setMessages(messages); err != nil {
 		return &MsgSubmitProposal{}, err
 	}
 
@@ -46,15 +46,7 @@ func (m *MsgSubmitProposal) GetMsgs() ([]sdk.Msg, error) {
 	return sdktx.GetMsgs(m.Messages, "sdk.MsgProposal")
 }
 
-func (m *MsgSubmitProposal) SetInitialDeposit(coins sdk.Coins) {
-	m.InitialDeposit = coins
-}
-
-func (m *MsgSubmitProposal) SetProposer(address fmt.Stringer) {
-	m.Proposer = address.String()
-}
-
-func (m *MsgSubmitProposal) SetMessages(messages []sdk.Msg) error {
+func (m *MsgSubmitProposal) setMessages(messages []sdk.Msg) error {
 	msgs := make([]*types.Any, len(messages))
 	for i, msg := range messages {
 		m, ok := msg.(proto.Message)

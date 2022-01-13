@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"context"
 
-	tmdb "github.com/cosmos/cosmos-sdk/db"
 	"github.com/google/btree"
+
+	"github.com/cosmos/cosmos-sdk/db"
 )
 
 const (
@@ -24,7 +25,7 @@ type memDBIterator struct {
 	end    []byte
 }
 
-var _ tmdb.Iterator = (*memDBIterator)(nil)
+var _ db.Iterator = (*memDBIterator)(nil)
 
 // newMemDBIterator creates a new memDBIterator.
 // A visitor is passed to the btree which streams items to the iterator over a channel. Advancing

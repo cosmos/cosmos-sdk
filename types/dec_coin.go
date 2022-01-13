@@ -373,12 +373,15 @@ func (coins DecCoins) MulDec(d Dec) DecCoins {
 }
 
 // MulDecTruncate multiplies all the decimal coins by a decimal, truncating. It
-// panics if d is zero.
+// returns nil DecCoins if d is zero.
 //
 // CONTRACT: No zero coins will be returned.
 func (coins DecCoins) MulDecTruncate(d Dec) DecCoins {
-	var res DecCoins
+	if d.IsZero() {
+		return DecCoins{}
+	}
 
+	var res DecCoins
 	for _, coin := range coins {
 		product := DecCoin{
 			Denom:  coin.Denom,

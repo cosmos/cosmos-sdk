@@ -5,9 +5,10 @@ package rocksdb
 import (
 	"sync/atomic"
 
-	dbm "github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/gorocksdb"
+
+	"github.com/cosmos/cosmos-sdk/db"
 	dbutil "github.com/cosmos/cosmos-sdk/db/internal"
-	"github.com/tecbot/gorocksdb"
 )
 
 type rocksDBBatch struct {
@@ -15,7 +16,7 @@ type rocksDBBatch struct {
 	mgr   *dbManager
 }
 
-var _ dbm.DBWriter = (*rocksDBBatch)(nil)
+var _ db.DBWriter = (*rocksDBBatch)(nil)
 
 func (mgr *dbManager) newRocksDBBatch() *rocksDBBatch {
 	return &rocksDBBatch{
@@ -30,7 +31,7 @@ func (b *rocksDBBatch) Set(key, value []byte) error {
 		return err
 	}
 	if b.batch == nil {
-		return dbm.ErrTransactionClosed
+		return db.ErrTransactionClosed
 	}
 	b.batch.Put(key, value)
 	return nil
@@ -39,10 +40,10 @@ func (b *rocksDBBatch) Set(key, value []byte) error {
 // Delete implements DBWriter.
 func (b *rocksDBBatch) Delete(key []byte) error {
 	if len(key) == 0 {
-		return dbm.ErrKeyEmpty
+		return db.ErrKeyEmpty
 	}
 	if b.batch == nil {
-		return dbm.ErrTransactionClosed
+		return db.ErrTransactionClosed
 	}
 	b.batch.Delete(key)
 	return nil
@@ -51,7 +52,7 @@ func (b *rocksDBBatch) Delete(key []byte) error {
 // Write implements DBWriter.
 func (b *rocksDBBatch) Commit() (err error) {
 	if b.batch == nil {
-		return dbm.ErrTransactionClosed
+		return db.ErrTransactionClosed
 	}
 	defer func() { err = dbutil.CombineErrors(err, b.Discard(), "Discard also failed") }()
 	err = b.mgr.current.Write(b.mgr.opts.wo, b.batch)

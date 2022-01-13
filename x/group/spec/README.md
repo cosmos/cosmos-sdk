@@ -17,7 +17,7 @@ This module allows the creation and management of on-chain multisig accounts and
 
 1. **[Concepts](01_concepts.md)**
     - [Group](01_concepts.md#group)
-    - [Group Account](01_concepts.md#group-account)
+    - [Group Policy](01_concepts.md#group-policy)
     - [Decision Policy](01_concepts.md#decision-policy)
     - [Proposal](01_concepts.md#proposal)
     - [Voting](01_concepts.md#voting)
@@ -25,7 +25,7 @@ This module allows the creation and management of on-chain multisig accounts and
 2. **[State](02_state.md)**
     - [Group Table](02_state.md#group-table)
     - [Group Member Table](02_state.md#group-member-table)
-    - [Group Account Table](02_state.md#group-account-table)
+    - [Group Policy Table](02_state.md#group-policy-table)
     - [Proposal](02_state.md#proposal-table)
     - [Vote Table](02_state.md#vote-table)
 3. **[Msg Service](03_messages.md)**
@@ -33,18 +33,18 @@ This module allows the creation and management of on-chain multisig accounts and
     - [Msg/UpdateGroupMembers](03_messages.md#msgupdategroupmembers)
     - [Msg/UpdateGroupAdmin](03_messages.md#msgupdategroupadmin)
     - [Msg/UpdateGroupMetadata](03_messages.md#msgupdategroupmetadata)
-    - [Msg/CreateGroupAccount](03_messages.md#msgcreategroupaccount)
-    - [Msg/UpdateGroupAccountAdmin](03_messages.md#msgupdategroupaccountadmin)
-    - [Msg/UpdateGroupAccountDecisionPolicy](03_messages.md#msgupdategroupaccountdecisionpolicy)
-    - [Msg/UpdateGroupAccountMetadata](03_messages.md#msgupdategroupaccountmetadata)
+    - [Msg/CreateGroupPolicy](03_messages.md#msgcreategrouppolicy)
+    - [Msg/UpdateGroupPolicyAdmin](03_messages.md#msgupdategrouppolicyadmin)
+    - [Msg/UpdateGroupPolicyDecisionPolicy](03_messages.md#msgupdategrouppolicydecisionpolicy)
+    - [Msg/UpdateGroupPolicyMetadata](03_messages.md#msgupdategrouppolicymetadata)
     - [Msg/CreateProposal](03_messages.md#msgcreateproposal)
     - [Msg/Vote](03_messages.md#msgvote)
     - [Msg/Exec](03_messages.md#msgexec)
 4. **[Events](04_events.md)**
     - [EventCreateGroup](04_events.md#eventcreategroup)
     - [EventUpdateGroup](04_events.md#eventupdategroup)
-    - [EventCreateGroupAccount](04_events.md#eventcreategroupaccount)
-    - [EventUpdateGroupAccount](04_events.md#eventupdategroupaccount)
+    - [EventCreateGroupPolicy](04_events.md#eventcreategrouppolicy)
+    - [EventUpdateGroupPolicy](04_events.md#eventupdategrouppolicy)
     - [EventCreateProposal](04_events.md#eventcreateproposal)
     - [EventVote](04_events.md#eventvote)
     - [EventExec](04_events.md#eventexec)

@@ -5,6 +5,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gogo/protobuf/proto"
+	"github.com/stretchr/testify/suite"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -12,9 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
-	"github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/x/group"
@@ -285,7 +286,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 				commonFlags...,
 			),
 			true,
-			"message validation failed: members: address: empty address string is not allowed",
+			"message validation failed: address: empty address string is not allowed",
 			nil,
 			0,
 		},

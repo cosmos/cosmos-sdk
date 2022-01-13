@@ -2,15 +2,17 @@ package signingv1beta1
 
 import (
 	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
 	runtime "github.com/cosmos/cosmos-proto/runtime"
-	v1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/crypto/multisig/v1beta1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"
-	io "io"
-	reflect "reflect"
-	sync "sync"
+
+	v1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/crypto/multisig/v1beta1"
 )
 
 var _ protoreflect.List = (*_SignatureDescriptors_1_list)(nil)
@@ -1655,7 +1657,7 @@ var (
 
 func init() {
 	file_cosmos_tx_signing_v1beta1_signing_proto_init()
-	md_SignatureDescriptor_Data_Single = File_cosmos_tx_signing_v1beta1_signing_proto.Messages().ByName("Data").Messages().ByName("Single")
+	md_SignatureDescriptor_Data_Single = File_cosmos_tx_signing_v1beta1_signing_proto.Messages().ByName("SignatureDescriptor").Messages().ByName("Data").Messages().ByName("Single")
 	fd_SignatureDescriptor_Data_Single_mode = md_SignatureDescriptor_Data_Single.Fields().ByName("mode")
 	fd_SignatureDescriptor_Data_Single_signature = md_SignatureDescriptor_Data_Single.Fields().ByName("signature")
 }
@@ -2176,7 +2178,7 @@ var (
 
 func init() {
 	file_cosmos_tx_signing_v1beta1_signing_proto_init()
-	md_SignatureDescriptor_Data_Multi = File_cosmos_tx_signing_v1beta1_signing_proto.Messages().ByName("Data").Messages().ByName("Multi")
+	md_SignatureDescriptor_Data_Multi = File_cosmos_tx_signing_v1beta1_signing_proto.Messages().ByName("SignatureDescriptor").Messages().ByName("Data").Messages().ByName("Multi")
 	fd_SignatureDescriptor_Data_Multi_bitarray = md_SignatureDescriptor_Data_Multi.Fields().ByName("bitarray")
 	fd_SignatureDescriptor_Data_Multi_signatures = md_SignatureDescriptor_Data_Multi.Fields().ByName("signatures")
 }

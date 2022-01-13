@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/orm
 go 1.17
 
 require (
-	github.com/cosmos/cosmos-proto v1.0.0-alpha4
+	github.com/cosmos/cosmos-proto v1.0.0-alpha6
 	github.com/cosmos/cosmos-sdk/api v0.1.0-alpha2
 	github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.2
 	github.com/tendermint/tm-db v0.6.6

@@ -561,9 +561,9 @@ $ %s query gov params
 			}
 
 			params := v1beta2.NewParams(
-				votingRes.GetVotingParams(),
-				tallyRes.GetTallyParams(),
-				depositRes.GetDepositParams(),
+				*votingRes.GetVotingParams(),
+				*tallyRes.GetTallyParams(),
+				*depositRes.GetDepositParams(),
 			)
 
 			return clientCtx.PrintObjectLegacy(params)

@@ -39,15 +39,15 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewDepositParams creates a new DepositParams object
-func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration) *DepositParams {
-	return &DepositParams{
+func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration) DepositParams {
+	return DepositParams{
 		MinDeposit:       minDeposit,
 		MaxDepositPeriod: &maxDepositPeriod,
 	}
 }
 
 // DefaultDepositParams default parameters for deposits
-func DefaultDepositParams() *DepositParams {
+func DefaultDepositParams() DepositParams {
 	return NewDepositParams(
 		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinDepositTokens)),
 		DefaultPeriod,
@@ -56,17 +56,16 @@ func DefaultDepositParams() *DepositParams {
 
 // Equal checks equality of DepositParams
 func (dp DepositParams) Equal(dp2 DepositParams) bool {
-	return sdk.NewCoins(dp.MinDeposit...).IsEqual(sdk.NewCoins(dp2.MinDeposit...)) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
+	return sdk.Coins(dp.MinDeposit).IsEqual(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
 }
 
 func validateDepositParams(i interface{}) error {
-	v, ok := i.(*DepositParams)
+	v, ok := i.(DepositParams)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	minDeposit := sdk.NewCoins(v.MinDeposit...)
-	if !minDeposit.IsValid() {
+	if !sdk.Coins(v.MinDeposit).IsValid() {
 		return fmt.Errorf("invalid minimum deposit: %s", v.MinDeposit)
 	}
 	if v.MaxDepositPeriod == nil || v.MaxDepositPeriod.Seconds() <= 0 {
@@ -77,8 +76,8 @@ func validateDepositParams(i interface{}) error {
 }
 
 // NewTallyParams creates a new TallyParams object
-func NewTallyParams(quorum, threshold, vetoThreshold sdk.Dec) *TallyParams {
-	return &TallyParams{
+func NewTallyParams(quorum, threshold, vetoThreshold sdk.Dec) TallyParams {
+	return TallyParams{
 		Quorum:        quorum.String(),
 		Threshold:     threshold.String(),
 		VetoThreshold: vetoThreshold.String(),
@@ -86,7 +85,7 @@ func NewTallyParams(quorum, threshold, vetoThreshold sdk.Dec) *TallyParams {
 }
 
 // DefaultTallyParams default parameters for tallying
-func DefaultTallyParams() *TallyParams {
+func DefaultTallyParams() TallyParams {
 	return NewTallyParams(DefaultQuorum, DefaultThreshold, DefaultVetoThreshold)
 }
 
@@ -96,7 +95,7 @@ func (tp TallyParams) Equal(other TallyParams) bool {
 }
 
 func validateTallyParams(i interface{}) error {
-	v, ok := i.(*TallyParams)
+	v, ok := i.(TallyParams)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -138,14 +137,14 @@ func validateTallyParams(i interface{}) error {
 }
 
 // NewVotingParams creates a new VotingParams object
-func NewVotingParams(votingPeriod time.Duration) *VotingParams {
-	return &VotingParams{
+func NewVotingParams(votingPeriod time.Duration) VotingParams {
+	return VotingParams{
 		VotingPeriod: &votingPeriod,
 	}
 }
 
 // DefaultVotingParams default parameters for voting
-func DefaultVotingParams() *VotingParams {
+func DefaultVotingParams() VotingParams {
 	return NewVotingParams(DefaultPeriod)
 }
 
@@ -155,7 +154,7 @@ func (vp VotingParams) Equal(other VotingParams) bool {
 }
 
 func validateVotingParams(i interface{}) error {
-	v, ok := i.(*VotingParams)
+	v, ok := i.(VotingParams)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -173,9 +172,9 @@ func validateVotingParams(i interface{}) error {
 
 // Params returns all of the governance params
 type Params struct {
-	VotingParams  *VotingParams  `json:"voting_params" yaml:"voting_params"`
-	TallyParams   *TallyParams   `json:"tally_params" yaml:"tally_params"`
-	DepositParams *DepositParams `json:"deposit_params" yaml:"deposit_params"`
+	VotingParams  VotingParams  `json:"voting_params" yaml:"voting_params"`
+	TallyParams   TallyParams   `json:"tally_params" yaml:"tally_params"`
+	DepositParams DepositParams `json:"deposit_params" yaml:"deposit_params"`
 }
 
 func (gp Params) String() string {
@@ -184,7 +183,7 @@ func (gp Params) String() string {
 }
 
 // NewParams creates a new gov Params instance
-func NewParams(vp *VotingParams, tp *TallyParams, dp *DepositParams) Params {
+func NewParams(vp VotingParams, tp TallyParams, dp DepositParams) Params {
 	return Params{
 		VotingParams:  vp,
 		DepositParams: dp,

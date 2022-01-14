@@ -357,6 +357,10 @@ func (s *IntegrationTestSuite) TestGetTallyGRPC() {
 func (s *IntegrationTestSuite) TestGetParamsGRPC() {
 	val := s.network.Validators[0]
 
+	dp := v1beta2.DefaultDepositParams()
+	vp := v1beta2.DefaultVotingParams()
+	tp := v1beta2.DefaultTallyParams()
+
 	testCases := []struct {
 		name       string
 		url        string
@@ -374,27 +378,21 @@ func (s *IntegrationTestSuite) TestGetParamsGRPC() {
 			fmt.Sprintf("%s/cosmos/gov/v1beta2/params/%s", val.APIAddress, v1beta2.ParamDeposit),
 			false,
 			&v1beta2.QueryParamsResponse{},
-			&v1beta2.QueryParamsResponse{
-				DepositParams: v1beta2.DefaultDepositParams(),
-			},
+			&v1beta2.QueryParamsResponse{DepositParams: &dp},
 		},
 		{
 			"get vote params",
 			fmt.Sprintf("%s/cosmos/gov/v1beta2/params/%s", val.APIAddress, v1beta2.ParamVoting),
 			false,
 			&v1beta2.QueryParamsResponse{},
-			&v1beta2.QueryParamsResponse{
-				VotingParams: v1beta2.DefaultVotingParams(),
-			},
+			&v1beta2.QueryParamsResponse{VotingParams: &vp},
 		},
 		{
 			"get tally params",
 			fmt.Sprintf("%s/cosmos/gov/v1beta2/params/%s", val.APIAddress, v1beta2.ParamTallying),
 			false,
 			&v1beta2.QueryParamsResponse{},
-			&v1beta2.QueryParamsResponse{
-				TallyParams: v1beta2.DefaultTallyParams(),
-			},
+			&v1beta2.QueryParamsResponse{TallyParams: &tp},
 		},
 	}
 

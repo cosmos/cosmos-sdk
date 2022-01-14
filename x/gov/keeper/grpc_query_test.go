@@ -460,7 +460,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 				req = &v1beta2.QueryParamsRequest{ParamsType: v1beta2.ParamDeposit}
 				depositParams := v1beta2.DefaultDepositParams()
 				expRes = &v1beta2.QueryParamsResponse{
-					DepositParams: depositParams,
+					DepositParams: &depositParams,
 				}
 			},
 			true,
@@ -471,7 +471,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 				req = &v1beta2.QueryParamsRequest{ParamsType: v1beta2.ParamVoting}
 				votingParams := v1beta2.DefaultVotingParams()
 				expRes = &v1beta2.QueryParamsResponse{
-					VotingParams: votingParams,
+					VotingParams: &votingParams,
 				}
 			},
 			true,
@@ -482,7 +482,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 				req = &v1beta2.QueryParamsRequest{ParamsType: v1beta2.ParamTallying}
 				tallyParams := v1beta2.DefaultTallyParams()
 				expRes = &v1beta2.QueryParamsResponse{
-					TallyParams: tallyParams,
+					TallyParams: &tallyParams,
 				}
 			},
 			true,

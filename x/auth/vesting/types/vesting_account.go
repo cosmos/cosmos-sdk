@@ -718,7 +718,7 @@ func (tva TrueVestingAccount) ComputeClawback(clawbackTime int64) (TrueVestingAc
 // Clawback transfers unvested tokens in a TrueVestingAccount to dest.
 // Future vesting events are removed. Unstaked tokens are simply sent.
 // Unbonding and staked tokens are transferred with their staking state
-// intact.
+// intact.  Account state is updated to reflect the removals.
 func (tva TrueVestingAccount) Clawback(ctx sdk.Context, dest sdk.AccAddress, ak AccountKeeper, bk BankKeeper, sk StakingKeeper) error {
 	updatedAcc, toClawBack := tva.ComputeClawback(ctx.BlockTime().Unix())
 	if toClawBack.IsZero() {
@@ -726,75 +726,71 @@ func (tva TrueVestingAccount) Clawback(ctx sdk.Context, dest sdk.AccAddress, ak 
 	}
 	addr := updatedAcc.GetAddress()
 
-	accPtr := &updatedAcc
-	writeAcc := func() { ak.SetAccount(ctx, accPtr) }
 	// Write now now so that the bank module sees unvested tokens are unlocked.
 	// Note that all store writes are aborted if there is a panic, so there is
 	// no danger in writing incomplete results.
-	writeAcc()
+	ak.SetAccount(ctx, &updatedAcc)
 
 	// Now that future vesting events (and associated lockup) are removed,
 	// the balance of the account is unlocked and can be freely transferred.
 	spendable := bk.SpendableCoins(ctx, addr)
 	toXfer := coinsMin(toClawBack, spendable)
-	err := bk.SendCoins(ctx, addr, dest, toXfer) // unvested tokens are be unlocked now
+	err := bk.SendCoins(ctx, addr, dest, toXfer)
 	if err != nil {
-		return err
+		return err // shouldn't happen, given spendable check
 	}
 	toClawBack = toClawBack.Sub(toXfer)
-	if toClawBack.IsZero() {
-		return nil
-	}
 
-	// If we need more, we'll have to transfer unbonding or bonded tokens
+	// We need to traverse the staking data structures to update the
+	// vesting account bookkeeping, and to recover more funds if necessary.
 	// Staking is the only way unvested tokens should be missing from the bank balance.
 	bondDenom := sk.BondDenom(ctx)
-	// Safely subtract amt of bondDenom from coins, with a floor of zero.
-	subBond := func(coins sdk.Coins, amt sdk.Int) sdk.Coins {
-		coinsB := sdk.NewCoins(sdk.NewCoin(bondDenom, amt))
-		return coins.Sub(coinsMin(coins, coinsB))
-	}
-	defer writeAcc() // write again when we're done to update DelegatedVesting
 
 	// If we need more, transfer UnbondingDelegations.
 	want := toClawBack.AmountOf(bondDenom)
 	unbondings := sk.GetUnbondingDelegations(ctx, addr, math.MaxUint16)
 	for _, unbonding := range unbondings {
 		transferred := sk.TransferUnbonding(ctx, addr, dest, sdk.ValAddress(unbonding.ValidatorAddress), want)
-		updatedAcc.DelegatedVesting = subBond(updatedAcc.DelegatedVesting, transferred)
 		want = want.Sub(transferred)
 		if !want.IsPositive() {
-			return nil
+			break
 		}
 	}
 
 	// If we need more, transfer Delegations.
-	delegations := sk.GetDelegatorDelegations(ctx, addr, math.MaxUint16)
-	for _, delegation := range delegations {
-		validatorAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
-		if err != nil {
-			panic(err) // shouldn't happen
-		}
-		validator, found := sk.GetValidator(ctx, validatorAddr)
-		if !found {
-			panic("validator not found") // shouldn't happen
-		}
-		wantShares, err := validator.SharesFromTokensTruncated(want)
-		if err != nil {
-			// validator has no tokens
-			continue
-		}
-		transferredShares := sk.TransferDelegation(ctx, addr, dest, delegation.GetValidatorAddr(), wantShares)
-		// to be conservative in what we're clawing back, round transferred shares up
-		transferred := validator.TokensFromSharesRoundUp(transferredShares).RoundInt()
-		updatedAcc.DelegatedVesting = subBond(updatedAcc.DelegatedVesting, transferred)
-		want = want.Sub(transferred)
-		if !want.IsPositive() {
-			// Could be slightly negative, due to rounding?
-			// Don't think so, due to the precautions above.
-			return nil
+	if want.IsPositive() {
+		delegations := sk.GetDelegatorDelegations(ctx, addr, math.MaxUint16)
+		for _, delegation := range delegations {
+			validatorAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+			if err != nil {
+				panic(err) // shouldn't happen
+			}
+			validator, found := sk.GetValidator(ctx, validatorAddr)
+			if !found {
+				panic("validator not found") // shouldn't happen
+			}
+			wantShares, err := validator.SharesFromTokensTruncated(want)
+			if err != nil {
+				// validator has no tokens
+				continue
+			}
+			transferredShares := sk.TransferDelegation(ctx, addr, dest, delegation.GetValidatorAddr(), wantShares)
+			// to be conservative in what we're clawing back, round transferred shares up
+			transferred := validator.TokensFromSharesRoundUp(transferredShares).RoundInt()
+			want = want.Sub(transferred)
+			if !want.IsPositive() {
+				// Could be slightly negative, due to rounding?
+				// Don't think so, due to the precautions above.
+				break
+			}
 		}
 	}
+
+	// Update the account bookkeeping. All delegated and undelegating amounts are free.
+	bonded, unbonding, _ := updatedAcc.findBalance(ctx, bk, sk)
+	updatedAcc.DelegatedFree = sdk.NewCoins(sdk.NewCoin(bondDenom, bonded.Add(unbonding)))
+	updatedAcc.DelegatedVesting = sdk.NewCoins()
+	ak.SetAccount(ctx, &updatedAcc)
 
 	// If we've transferred everything and still haven't transferred the desired clawback amount,
 	// then the account must have most some unvested tokens from slashing.

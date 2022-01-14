@@ -89,6 +89,7 @@ func (s *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 		FeegrantKeeper:   s.app.FeeGrantKeeper,
 		SignModeHandler:  encodingConfig.TxConfig.SignModeHandler(),
 		SigGasConsumer:   middleware.DefaultSigVerificationGasConsumer,
+		TxDecoder:        s.clientCtx.TxConfig.TxDecoder(),
 	})
 	s.Require().NoError(err)
 	s.txHandler = txHandler
@@ -150,7 +151,7 @@ func (s *MWTestSuite) createTestTx(txBuilder client.TxBuilder, privs []cryptotyp
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
-			SignerIndex:   i,
+			PubKey:        priv.PubKey(),
 		}
 		sigV2, err := tx.SignWithPrivKey(
 			s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,

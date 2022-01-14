@@ -1,19 +1,22 @@
+//go:build rocksdb_build
+
 package rocksdb
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	dbm "github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/db/dbtest"
 )
 
-func load(t *testing.T, dir string) dbm.DBConnection {
-	db, err := NewDB(dir)
+func load(t *testing.T, dir string) db.DBConnection {
+	d, err := NewDB(dir)
 	require.NoError(t, err)
-	return db
+	return d
 }
 
 func TestGetSetHasDelete(t *testing.T) {
@@ -44,20 +47,31 @@ func TestReloadDB(t *testing.T) {
 // Test that the DB can be reloaded after a failed Revert
 func TestRevertRecovery(t *testing.T) {
 	dir := t.TempDir()
-	db, err := NewDB(dir)
+	d, err := NewDB(dir)
 	require.NoError(t, err)
-	_, err = db.SaveNextVersion()
-	require.NoError(t, err)
-	txn := db.Writer()
+	txn := d.Writer()
 	require.NoError(t, txn.Set([]byte{1}, []byte{1}))
+	require.NoError(t, txn.Commit())
+	_, err = d.SaveNextVersion()
+	require.NoError(t, err)
+	txn = d.Writer()
 	require.NoError(t, txn.Set([]byte{2}, []byte{2}))
 	require.NoError(t, txn.Commit())
 
-	// make checkpoints dir temporarily unreadable to trigger an error
-	require.NoError(t, os.Chmod(db.checkpointsDir(), 0000))
-	require.Error(t, db.Revert())
+	// move checkpoints dir temporarily to trigger an error
+	hideDir := filepath.Join(dir, "hide_checkpoints")
+	require.NoError(t, os.Rename(d.checkpointsDir(), hideDir))
+	require.Error(t, d.Revert())
+	require.NoError(t, os.Rename(hideDir, d.checkpointsDir()))
 
-	require.NoError(t, os.Chmod(db.checkpointsDir(), 0755))
-	db, err = NewDB(dir)
+	d, err = NewDB(dir)
 	require.NoError(t, err)
+	view := d.Reader()
+	val, err := view.Get([]byte{1})
+	require.NoError(t, err)
+	require.Equal(t, []byte{1}, val)
+	val, err = view.Get([]byte{2})
+	require.NoError(t, err)
+	require.Nil(t, val)
+	view.Discard()
 }

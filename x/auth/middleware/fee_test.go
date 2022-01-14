@@ -13,7 +13,7 @@ func (s *MWTestSuite) TestEnsureMempoolFees() {
 	ctx := s.SetupTest(true) // setup
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
-	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.MempoolFeeMiddleware)
+	txHandler := middleware.ComposeMiddlewares(noopTxHandler, middleware.MempoolFeeMiddleware)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -55,7 +55,7 @@ func (s *MWTestSuite) TestDeductFees() {
 	ctx := s.SetupTest(false) // setup
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 	txHandler := middleware.ComposeMiddlewares(
-		noopTxHandler{},
+		noopTxHandler,
 		middleware.DeductFeeMiddleware(
 			s.app.AccountKeeper,
 			s.app.BankKeeper,

@@ -139,13 +139,13 @@ func (q Keeper) Votes(c context.Context, req *v1beta2.QueryVotesRequest) (*v1bet
 	votesStore := prefix.NewStore(store, types.VotesKey(req.ProposalId))
 
 	pageRes, err := query.Paginate(votesStore, req.Pagination, func(key []byte, value []byte) error {
-		var vote *v1beta2.Vote
-		if err := q.cdc.Unmarshal(value, vote); err != nil {
+		var vote v1beta2.Vote
+		if err := q.cdc.Unmarshal(value, &vote); err != nil {
 			return err
 		}
-		populateLegacyOption(vote)
+		populateLegacyOption(&vote)
 
-		votes = append(votes, vote)
+		votes = append(votes, &vote)
 		return nil
 	})
 

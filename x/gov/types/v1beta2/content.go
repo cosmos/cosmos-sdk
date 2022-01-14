@@ -9,13 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-// Copied over from /x/gov/types/keys.go to avoid circular imports
-const (
-	moduleName = "gov"
-
-	routerKey = moduleName
-)
-
 // NewLegacyContent creates a new MsgExecLegacyContent from a legacy Content
 // interface.
 func NewLegacyContent(content v1beta1.Content, authority string) (*MsgExecLegacyContent, error) {

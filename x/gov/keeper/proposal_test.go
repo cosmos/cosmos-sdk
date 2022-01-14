@@ -36,10 +36,9 @@ func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 
 	suite.app.GovKeeper.ActivateVotingPeriod(suite.ctx, proposal)
 
-	suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
-
 	proposal, ok := suite.app.GovKeeper.GetProposal(suite.ctx, proposal.ProposalId)
 	suite.Require().True(ok)
+	suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
 
 	activeIterator := suite.app.GovKeeper.ActiveProposalQueueIterator(suite.ctx, *proposal.VotingEndTime)
 	suite.Require().True(activeIterator.Valid())

@@ -364,10 +364,6 @@ func SimulateMsgCreateProposal(ak group.AccountKeeper, bk group.BankKeeper, k ke
 			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
-		// err = msg.UnpackInterfaces(appCdc)
-		// if err != nil {
-		// 	return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, "unmarshal error"), nil, err
-		// }
 		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
 	}
 }

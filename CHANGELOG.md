@@ -58,6 +58,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10507](https://github.com/cosmos/cosmos-sdk/pull/10507) Add middleware for tx priority.
 * [\#10311](https://github.com/cosmos/cosmos-sdk/pull/10311) Adds cli to use tips transactions. It adds an `--aux` flag to all CLI tx commands to generate the aux signer data (with optional tip), and a new `tx aux-to-fee` subcommand to let the fee payer gather aux signer data and broadcast the tx
 * [\#10430](https://github.com/cosmos/cosmos-sdk/pull/10430) ADR-040: Add store/v2 `MultiStore` implementation
+* [\#10614](https://github.com/cosmos/cosmos-sdk/pull/10614) Support in-place migration ordering
 
 ### API Breaking Changes
 
@@ -188,6 +189,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
   ibc-denom.
 * [\#10593](https://github.com/cosmos/cosmos-sdk/pull/10593) Update swagger-ui to v4.1.0 to fix xss vulnerability.
 * [\#10674](https://github.com/cosmos/cosmos-sdk/pull/10674) Fix issue with `Error.Wrap` and `Error.Wrapf` usage with `errors.Is`.
+* [\#10897](https://github.com/cosmos/cosmos-sdk/pull/10897) Fix: set a non-zero value on gas overflow.
+* [#9790](https://github.com/cosmos/cosmos-sdk/pull/10687) Fix behavior of `DecCoins.MulDecTruncate`.
 
 ### State Machine Breaking
 
@@ -201,9 +204,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank) [\#9832] (https://github.com/cosmos/cosmos-sdk/pull/9832) Account balance is stored as `sdk.Int` rather than `sdk.Coin`.
 * (x/bank) [\#9890] (https://github.com/cosmos/cosmos-sdk/pull/9890) Remove duplicate denom from denom metadata key.
 * (x/upgrade) [\#10189](https://github.com/cosmos/cosmos-sdk/issues/10189) Removed potential sources of non-determinism in upgrades
-* [\#10393](https://github.com/cosmos/cosmos-sdk/pull/10422) Add `MinCommissionRate` param to `x/staking` module.
+* [\#10422](https://github.com/cosmos/cosmos-sdk/pull/10422) and [\#10529](https://github.com/cosmos/cosmos-sdk/pull/10529) Add `MinCommissionRate` param to `x/staking` module.
 * [#10725](https://github.com/cosmos/cosmos-sdk/pull/10725) populate `ctx.ConsensusParams` for begin/end blockers.
 * [#10763](https://github.com/cosmos/cosmos-sdk/pull/10763) modify the fields in `TallyParams` to use `string` instead of `bytes`
+* [#10770](https://github.com/cosmos/cosmos-sdk/pull/10770) revert tx when block gas limit exceeded
 
  ### Deprecated
 

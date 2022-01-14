@@ -686,9 +686,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
 	if err == nil && mode == runTxModeDeliver {
 		// apply fee logic calls
-		feeEvents, err := FeeInvoke(mode, app, runMsgCtx)
+		feeEvents, errFromFeeInvoker := FeeInvoke(mode, app, runMsgCtx)
 		// if err from FeeInvoke then don't write to cache
-		if err == nil {
+		if errFromFeeInvoker == nil {
 			msCache.Write()
 			// these are the ante events propagated only on success, that now means that fee charging has happened successfully.
 			if len(anteEvents) > 0 {
@@ -700,6 +700,8 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 				// append the fee events at the end of the other events, since they get charged at the end of the Tx
 				result.Events = append(result.Events, feeEvents.ToABCIEvents()...)
 			}
+		} else {
+			err = errFromFeeInvoker
 		}
 	}
 

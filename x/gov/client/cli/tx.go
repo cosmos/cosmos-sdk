@@ -61,6 +61,8 @@ func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
+	// TODO Add CLI for new submit proposal
+	// https://github.com/cosmos/cosmos-sdk/issues/10952
 	cmdSubmitProp := NewCmdSubmitProposal()
 	for _, propCmd := range propCmds {
 		flags.AddTxFlagsToCmd(propCmd)

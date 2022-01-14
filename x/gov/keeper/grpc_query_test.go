@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
@@ -48,7 +49,10 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 			"valid request",
 			func() {
 				req = &v1beta2.QueryProposalRequest{ProposalId: 1}
-				submittedProposal, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{})
+				testProposal := v1beta1.NewTextProposal("Proposal", "testing proposal")
+				msgContent, err := v1beta2.NewLegacyContent(testProposal, govAcct.String())
+				suite.Require().NoError(err)
+				submittedProposal, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent})
 				suite.Require().NoError(err)
 				suite.Require().NotEmpty(submittedProposal)
 

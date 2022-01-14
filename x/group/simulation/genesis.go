@@ -80,7 +80,7 @@ func getProposals(r *rand.Rand, simState *module.SimulationState) []*group.Propo
 		to, _ := simtypes.RandomAcc(r, simState.Accounts)
 		fromAddr := from.Address.String()
 
-		submittedAt := time.Now().UTC()
+		submittedAt := time.Unix(0, 0)
 		timeout := submittedAt.Add(time.Second * 1000).UTC()
 
 		proposal := &group.Proposal{
@@ -126,7 +126,7 @@ func getVotes(r *rand.Rand, simState *module.SimulationState) []*group.Vote {
 			Voter:       simState.Accounts[i].Address.String(),
 			Choice:      getVoteChoice(i),
 			Metadata:    []byte(simtypes.RandStringOfLength(r, 50)),
-			SubmittedAt: time.Now().UTC(),
+			SubmittedAt: time.Unix(0, 0),
 		}
 	}
 

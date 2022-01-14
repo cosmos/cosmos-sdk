@@ -190,11 +190,7 @@ func (i *indexIterator) Next() bool {
 		i.iterator.Next()
 	}
 
-	if !i.iterator.Valid() {
-		return false
-	}
-
-	return true
+	return i.iterator.Valid()
 }
 
 func (i *indexIterator) Keys() (indexKey, primaryKey []protoreflect.Value, err error) {

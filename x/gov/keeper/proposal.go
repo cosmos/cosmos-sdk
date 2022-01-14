@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
@@ -31,30 +30,9 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg) (v1beta
 			return v1beta2.Proposal{}, sdkerrors.Wrap(types.ErrInvalidSigner, signers[0].String())
 		}
 
-		// check if the message wraps the legacy content type
-		if contentMsg, ok := msg.(*v1beta2.MsgExecLegacyContent); ok {
-			content := v1beta2.LegacyContentFromMessage(contentMsg)
-			if content == nil {
-				return v1beta2.Proposal{}, sdkerrors.Wrap(v1beta1.ErrInvalidProposalContent, "content is nil")
-			}
-
-			// if so ensure that the content has a respective handler
-			if !keeper.legacyRouter.HasRoute(content.ProposalRoute()) {
-				return v1beta2.Proposal{}, sdkerrors.Wrap(types.ErrNoProposalHandlerExists, content.ProposalRoute())
-			}
-
-			// Execute the proposal content in a new context branch (with branched store)
-			// to validate the actual parameter changes before the proposal proceeds
-			// through the governance process. State is not persisted.
-			cacheCtx, _ := ctx.CacheContext()
-			handler := keeper.legacyRouter.GetRoute(content.ProposalRoute())
-			if err := handler(cacheCtx, content); err != nil {
-				return v1beta2.Proposal{}, sdkerrors.Wrap(v1beta1.ErrInvalidProposalContent, err.Error())
-			}
-
-			// for all other message types use the msg service router to see that there is a valid route for that
-			// message. NOTE: we do not verify the proposal messages any further. They may fail upon execution
-		} else if keeper.router.Handler(msg) == nil {
+		// for all other message types use the msg service router to see that there is a valid route for that
+		// message. NOTE: we do not verify the proposal messages any further. They may fail upon execution.
+		if keeper.router.Handler(msg) == nil {
 			return v1beta2.Proposal{}, sdkerrors.Wrap(types.ErrUnroutableProposalMsg, sdk.MsgTypeURL(msg))
 		}
 	}

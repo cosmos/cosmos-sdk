@@ -6,6 +6,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
@@ -27,10 +28,11 @@ func NewLegacyContent(content v1beta1.Content, authority string) (*MsgExecLegacy
 
 // LegacyContentFromMessage extracts the legacy Content interface from a
 // MsgExecLegacyContent.
-func LegacyContentFromMessage(msg *MsgExecLegacyContent) v1beta1.Content {
+func LegacyContentFromMessage(msg *MsgExecLegacyContent) (v1beta1.Content, error) {
 	content, ok := msg.Content.GetCachedValue().(v1beta1.Content)
 	if !ok {
-		return nil
+		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (*v1beta1.Content)(nil), msg.Content.GetCachedValue())
 	}
-	return content
+
+	return content, nil
 }

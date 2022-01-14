@@ -136,6 +136,8 @@ func TestMigrateProposalMessages(t *testing.T) {
 	content := v1beta1.NewTextProposal("Test", "description")
 	contentMsg, err := v1beta2.NewLegacyContent(content, sdk.AccAddress("test1").String())
 	require.NoError(t, err)
-	content = v1beta2.LegacyContentFromMessage(contentMsg)
-	require.NotNil(t, content)
+	content, err = v1beta2.LegacyContentFromMessage(contentMsg)
+	require.NoError(t, err)
+	require.Equal(t, "Test", content.GetTitle())
+	require.Equal(t, "description", content.GetDescription())
 }

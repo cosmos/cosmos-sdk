@@ -10,6 +10,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
@@ -20,7 +21,7 @@ type msgServer struct {
 }
 
 // NewMsgServerImpl returns an implementation of the gov MsgServer interface
-// for the provided Keeper.
+// for the provided k.Keeper.
 func NewMsgServerImpl(keeper Keeper) v1beta2.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
@@ -81,7 +82,29 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1beta2.MsgSubmitP
 }
 
 func (k msgServer) ExecLegacyContent(goCtx context.Context, msg *v1beta2.MsgExecLegacyContent) (*v1beta2.MsgExecLegacyContentResponse, error) {
-	panic("todo")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	content, err := v1beta2.LegacyContentFromMessage(msg)
+	if err != nil {
+		return nil, sdkerrors.Wrapf(v1beta1.ErrInvalidProposalContent, "%+v", err)
+	}
+
+	// if so ensure that the content has a respective handler
+	if !k.Keeper.legacyRouter.HasRoute(content.ProposalRoute()) {
+		return nil, sdkerrors.Wrap(types.ErrNoProposalHandlerExists, content.ProposalRoute())
+	}
+
+	// Execute the proposal content in a new context branch (with branched store)
+	// to validate the actual parameter changes before the proposal proceeds
+	// through the governance process. State is not persisted.
+	cacheCtx, _ := ctx.CacheContext()
+	handler := k.Keeper.legacyRouter.GetRoute(content.ProposalRoute())
+	if err := handler(cacheCtx, content); err != nil {
+		return nil, sdkerrors.Wrapf(v1beta1.ErrInvalidProposalContent, "failed to run legacy handler %s, %+v", content.ProposalRoute(), err)
+	}
+
+	return &v1beta2.MsgExecLegacyContentResponse{}, nil
+
 }
 
 func (k msgServer) Vote(goCtx context.Context, msg *v1beta2.MsgVote) (*v1beta2.MsgVoteResponse, error) {

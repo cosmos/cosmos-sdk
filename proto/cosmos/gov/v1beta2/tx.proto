@@ -53,9 +53,7 @@ message MsgExecLegacyContent {
 }
 
 // MsgExecLegacyContentResponse defines the Msg/ExecLegacyContent response type.
-message MsgExecLegacyContentResponse {
-  uint64 proposal_id = 1;
-}
+message MsgExecLegacyContentResponse {}
 
 // MsgVote defines a message to cast a vote.
 message MsgVote {

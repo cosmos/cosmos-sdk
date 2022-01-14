@@ -57,10 +57,8 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 
 		if passes {
 			var (
-				messages []sdk.Msg
-				err      error
-				idx      int
-				msg      sdk.Msg
+				idx int
+				msg sdk.Msg
 			)
 
 			// attempt to execute all messages within the passed proposal
@@ -68,8 +66,8 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 			// the handlers fails, no state mutation is written and the error
 			// message is logged.
 			cacheCtx, writeCache := ctx.CacheContext()
-			messages, err = proposal.GetMsgs()
-			if err != nil {
+			messages, err := proposal.GetMsgs()
+			if err == nil {
 				for idx, msg = range messages {
 					handler := keeper.Router().Handler(msg)
 					_, err = handler(cacheCtx, msg)
@@ -79,6 +77,8 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 				}
 			}
 
+			// `err == nil` when all handlers passed.
+			// Or else, `idx` and `err` are populated with the msg index and error.
 			if err == nil {
 				proposal.Status = v1beta2.StatusPassed
 				tagValue = types.AttributeValueProposalPassed
@@ -95,7 +95,7 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 			} else {
 				proposal.Status = v1beta2.StatusFailed
 				tagValue = types.AttributeValueProposalFailed
-				logMsg = fmt.Sprintf("passed, but msg %d failed on execution: %s", idx, err)
+				logMsg = fmt.Sprintf("passed, but msg %d (%s) failed on execution: %s", idx, sdk.MsgTypeURL(msg), err)
 			}
 		} else {
 			proposal.Status = v1beta2.StatusRejected

@@ -24,7 +24,6 @@ type Backend interface {
 	ReadBackend
 
 	// CommitmentStore returns the merklized commitment store.
-
 	CommitmentStore() kvstore.Store
 
 	// IndexStore returns the index store if a separate one exists,

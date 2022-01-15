@@ -247,15 +247,159 @@ func (suite *HandlerTestSuite) TestMsgCreatePeriodicVestingAccount_Merge() {
 }
 
 func (suite *HandlerTestSuite) TestMsgCreateTrueVestingAccount() {
-	// XXX TODO
-}
+	ctx := suite.app.BaseApp.NewContext(false, tmproto.Header{Height: suite.app.LastBlockHeight() + 1})
 
-func (suite *HandlerTestSuite) TestMsgCreateTrueVestingAccount_Merge() {
-	// XXX TODO
+	balances := sdk.NewCoins(sdk.NewInt64Coin("test", 1000))
+	quarter := sdk.NewCoins(sdk.NewInt64Coin("test", 250))
+	addr1 := sdk.AccAddress([]byte("addr1_______________"))
+	addr2 := sdk.AccAddress([]byte("addr2_______________"))
+	addr3 := sdk.AccAddress([]byte("addr3_______________"))
+	addr4 := sdk.AccAddress([]byte("addr4_______________"))
+
+	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
+	suite.app.AccountKeeper.SetAccount(ctx, acc1)
+
+	lockupPeriods := []types.Period{{Length: 5000, Amount: balances}}
+	vestingPeriods := []types.Period{
+		{Length: 2000, Amount: quarter}, {Length: 2000, Amount: quarter},
+		{Length: 2000, Amount: quarter}, {Length: 2000, Amount: quarter},
+	}
+
+	testCases := []struct {
+		name               string
+		msg                *types.MsgCreateTrueVestingAccount
+		expectErr          bool
+		expectExtraBalance int64
+	}{
+		{
+			name:      "create periodic vesting account",
+			msg:       types.NewMsgCreateTrueVestingAccount(addr1, addr2, 0, lockupPeriods, vestingPeriods, false),
+			expectErr: false,
+		},
+		{
+			name: "bad from addr",
+			msg: &types.MsgCreateTrueVestingAccount{
+				FromAddress:    "foo",
+				ToAddress:      addr2.String(),
+				StartTime:      0,
+				LockupPeriods:  lockupPeriods,
+				VestingPeriods: vestingPeriods,
+			},
+			expectErr: true,
+		},
+		{
+			name: "bad to addr",
+			msg: &types.MsgCreateTrueVestingAccount{
+				FromAddress:    addr1.String(),
+				ToAddress:      "foo",
+				StartTime:      0,
+				LockupPeriods:  lockupPeriods,
+				VestingPeriods: vestingPeriods,
+			},
+			expectErr: true,
+		},
+		{
+			name:      "default lockup",
+			msg:       types.NewMsgCreateTrueVestingAccount(addr1, addr3, 0, nil, vestingPeriods, false),
+			expectErr: false,
+		},
+		{
+			name:      "default vesting",
+			msg:       types.NewMsgCreateTrueVestingAccount(addr1, addr4, 0, lockupPeriods, nil, false),
+			expectErr: false,
+		},
+		{
+			name:      "different amounts",
+			msg:       types.NewMsgCreateTrueVestingAccount(addr1, addr2, 0, []types.Period{{Length: 5000, Amount: quarter}}, vestingPeriods, false),
+			expectErr: true,
+		},
+		{
+			name:      "account exists",
+			msg:       types.NewMsgCreateTrueVestingAccount(addr1, addr1, 0, lockupPeriods, vestingPeriods, false),
+			expectErr: true,
+		},
+		{
+			name:      "account exists no merge",
+			msg:       types.NewMsgCreateTrueVestingAccount(addr1, addr2, 0, lockupPeriods, vestingPeriods, false),
+			expectErr: true,
+		},
+		{
+			name:               "account exists merge",
+			msg:                types.NewMsgCreateTrueVestingAccount(addr1, addr2, 0, lockupPeriods, vestingPeriods, true),
+			expectErr:          false,
+			expectExtraBalance: 1000,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			if !tc.expectErr {
+				suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, ctx, addr1, balances))
+			}
+			res, err := suite.handler(ctx, tc.msg)
+			if tc.expectErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+
+				toAddr, err := sdk.AccAddressFromBech32(tc.msg.ToAddress)
+
+				suite.Require().NoError(err)
+				fromAddr, err := sdk.AccAddressFromBech32(tc.msg.FromAddress)
+				suite.Require().NoError(err)
+
+				accI := suite.app.AccountKeeper.GetAccount(ctx, toAddr)
+				suite.Require().NotNil(accI)
+				suite.Require().IsType(&types.TrueVestingAccount{}, accI)
+				balanceSource := suite.app.BankKeeper.GetBalance(ctx, fromAddr, "test")
+				suite.Require().Equal(balanceSource, sdk.NewInt64Coin("test", 0))
+				balanceDest := suite.app.BankKeeper.GetBalance(ctx, toAddr, "test")
+				suite.Require().Equal(balanceDest, sdk.NewInt64Coin("test", 1000+tc.expectExtraBalance))
+
+			}
+		})
+	}
 }
 
 func (suite *HandlerTestSuite) TestMsgClawback() {
-	// XXX TODO
+	ctx := suite.app.BaseApp.NewContext(false, tmproto.Header{Height: suite.app.LastBlockHeight() + 1})
+
+	balances := sdk.NewCoins(sdk.NewInt64Coin("test", 1000))
+	quarter := sdk.NewCoins(sdk.NewInt64Coin("test", 250))
+	addr1 := sdk.AccAddress([]byte("addr1_______________"))
+	addr2 := sdk.AccAddress([]byte("addr2_______________"))
+	addr3 := sdk.AccAddress([]byte("addr3_______________"))
+
+	funder := suite.app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
+	suite.app.AccountKeeper.SetAccount(ctx, funder)
+	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, ctx, addr1, balances))
+
+	lockupPeriods := []types.Period{{Length: 5000, Amount: balances}}
+	vestingPeriods := []types.Period{
+		{Length: 2000, Amount: quarter}, {Length: 2000, Amount: quarter},
+		{Length: 2000, Amount: quarter}, {Length: 2000, Amount: quarter},
+	}
+
+	createMsg := types.NewMsgCreateTrueVestingAccount(addr1, addr2, 0, lockupPeriods, vestingPeriods, false)
+	res, err := suite.handler(ctx, createMsg)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+
+	balanceDest := suite.app.BankKeeper.GetBalance(ctx, addr2, "test")
+	suite.Require().Equal(balanceDest, sdk.NewInt64Coin("test", 1000))
+
+	clawbackMsg := types.NewMsgClawback(addr1, addr2, addr3)
+	clawRes, err := suite.handler(ctx, clawbackMsg)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(clawRes)
+
+	balanceDest = suite.app.BankKeeper.GetBalance(ctx, addr2, "test")
+	suite.Require().Equal(balanceDest, sdk.NewInt64Coin("test", 0))
+	balanceClaw := suite.app.BankKeeper.GetBalance(ctx, addr3, "test")
+	suite.Require().Equal(balanceClaw, sdk.NewInt64Coin("test", 1000))
 }
 
 func TestHandlerTestSuite(t *testing.T) {

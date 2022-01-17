@@ -242,6 +242,15 @@ func (s *IntegrationTestSuite) TestQueryNFTsGRPC() {
 		expectResult []*nft.NFT
 	}{
 		{
+			name: "classID and owner are both empty",
+			args: struct {
+				ClassId string
+				Owner   string
+			}{},
+			expectErr:    true,
+			expectResult: []*nft.NFT{},
+		},
+		{
 			name: "classID is invalid",
 			args: struct {
 				ClassId string

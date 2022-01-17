@@ -1128,13 +1128,13 @@ func (k Keeper) TransferUnbonding(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 	}
 	ubdFromModified := false
 
-	for i := 0; i < len(ubdFrom.Entries) && !wantAmt.IsPositive(); i++ {
+	for i := 0; i < len(ubdFrom.Entries) && wantAmt.IsPositive(); i++ {
 		entry := ubdFrom.Entries[i]
 		toXfer := entry.Balance
 		if toXfer.GT(wantAmt) {
 			toXfer = wantAmt
 		}
-		if toXfer.IsPositive() {
+		if !toXfer.IsPositive() {
 			continue
 		}
 
@@ -1144,6 +1144,8 @@ func (k Keeper) TransferUnbonding(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 		}
 		ubdTo := k.SetUnbondingDelegationEntry(ctx, toAddr, valAddr, entry.CreationHeight, entry.CompletionTime, toXfer)
 		k.InsertUBDQueue(ctx, ubdTo, entry.CompletionTime)
+		transferred = transferred.Add(toXfer)
+		wantAmt = wantAmt.Sub(toXfer)
 
 		ubdFromModified = true
 		remaining := entry.Balance.Sub(toXfer)
@@ -1154,9 +1156,6 @@ func (k Keeper) TransferUnbonding(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 		}
 		entry.Balance = remaining
 		ubdFrom.Entries[i] = entry
-
-		transferred = transferred.Add(toXfer)
-		wantAmt = wantAmt.Sub(toXfer)
 	}
 
 	if ubdFromModified {

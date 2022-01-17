@@ -32,6 +32,11 @@ func (q Keeper) getGroupInfo(ctx sdk.Context, id uint64) (group.GroupInfo, error
 	return obj, err
 }
 
+func (q Keeper) GroupWithPolicyInfo(goCtx context.Context, request *group.QueryGroupWithPolicyInfoRequest) (*group.QueryGroupWithPolicyInfoResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+}
+
 func (q Keeper) GroupPolicyInfo(goCtx context.Context, request *group.QueryGroupPolicyInfoRequest) (*group.QueryGroupPolicyInfoResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	groupPolicyInfo, err := q.getGroupPolicyInfo(ctx, request.Address)
@@ -106,14 +111,14 @@ func (q Keeper) GroupPoliciesByGroup(goCtx context.Context, request *group.Query
 		return nil, err
 	}
 
-	var accounts []*group.GroupPolicyInfo
-	pageRes, err := orm.Paginate(it, request.Pagination, &accounts)
+	var policies []*group.GroupPolicyInfo
+	pageRes, err := orm.Paginate(it, request.Pagination, &policies)
 	if err != nil {
 		return nil, err
 	}
 
 	return &group.QueryGroupPoliciesByGroupResponse{
-		GroupPolicies: accounts,
+		GroupPolicies: policies,
 		Pagination:    pageRes,
 	}, nil
 }
@@ -133,14 +138,14 @@ func (q Keeper) GroupPoliciesByAdmin(goCtx context.Context, request *group.Query
 		return nil, err
 	}
 
-	var accounts []*group.GroupPolicyInfo
-	pageRes, err := orm.Paginate(it, request.Pagination, &accounts)
+	var policies []*group.GroupPolicyInfo
+	pageRes, err := orm.Paginate(it, request.Pagination, &policies)
 	if err != nil {
 		return nil, err
 	}
 
 	return &group.QueryGroupPoliciesByAdminResponse{
-		GroupPolicies: accounts,
+		GroupPolicies: policies,
 		Pagination:    pageRes,
 	}, nil
 }

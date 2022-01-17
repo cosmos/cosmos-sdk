@@ -42,7 +42,8 @@ const (
 	VoteByVoterIndexPrefix    byte = 0x42
 
 	// Group With Policy Table
-	GroupWithPolicyTablePrefix byte = 0x50
+	GroupWithPolicyTablePrefix    byte = 0x50
+	GroupWithPolicyTableSeqPrefix byte = 0x51
 )
 
 type Keeper struct {
@@ -129,6 +130,14 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 		panic(err.Error())
 	}
 	k.groupMemberTable = *groupMemberTable
+
+	// Group With Policy Table
+	k.groupWithPolicySeq = orm.NewSequence(GroupWithPolicyTableSeqPrefix)
+	groupWithPolicyTable, err := orm.NewPrimaryKeyTable([2]byte{GroupWithPolicyTablePrefix}, &group.GroupWithPolicyInfo{}, cdc)
+	if err != nil {
+		panic(err.Error())
+	}
+	k.groupWithPolicyTable = *groupWithPolicyTable
 
 	// Group Policy Table
 	k.groupPolicySeq = orm.NewSequence(GroupPolicyTableSeqPrefix)

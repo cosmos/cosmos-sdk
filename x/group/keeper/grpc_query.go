@@ -34,7 +34,16 @@ func (q Keeper) getGroupInfo(ctx sdk.Context, id uint64) (group.GroupInfo, error
 
 func (q Keeper) GroupWithPolicyInfo(goCtx context.Context, request *group.QueryGroupWithPolicyInfoRequest) (*group.QueryGroupWithPolicyInfoResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	groupWithPolicyInfo, err := q.getGroupWithPolicyInfo(ctx, request.GroupId, request.GroupPolicyAddress)
+	if err != nil {
+		return nil, err
+	}
+	return &group.QueryGroupWithPolicyInfoResponse{Info: &groupWithPolicyInfo}, nil
+}
 
+func (q Keeper) getGroupWithPolicyInfo(ctx sdk.Context, id uint64, accountAddress string) (group.GroupWithPolicyInfo, error) {
+	var obj group.GroupWithPolicyInfo
+	return obj, q.groupWithPolicyTable.GetOne(ctx.KVStore(q.key), orm.PrimaryKey(&group.GroupWithPolicyInfo{GroupId: id, GroupPolicyAddress: accountAddress}), &obj)
 }
 
 func (q Keeper) GroupPolicyInfo(goCtx context.Context, request *group.QueryGroupPolicyInfoRequest) (*group.QueryGroupPolicyInfoResponse, error) {

@@ -247,6 +247,7 @@ func (s *IntegrationTestSuite) TestQueryNFTsGRPC() {
 				ClassId string
 				Owner   string
 			}{},
+			errorMsg:     "must provide at least one of classID or owner",
 			expectErr:    true,
 			expectResult: []*nft.NFT{},
 		},

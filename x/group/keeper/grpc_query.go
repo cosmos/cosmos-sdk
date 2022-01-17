@@ -32,6 +32,11 @@ func (q Keeper) getGroupInfo(ctx sdk.Context, id uint64) (group.GroupInfo, error
 	return obj, err
 }
 
+func (q Keeper) GroupWithPolicyInfo(goCtx context.Context, request *group.QueryGroupWithPolicyInfoRequest) (*group.QueryGroupWithPolicyInfoResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+}
+
 func (q Keeper) GroupPolicyInfo(goCtx context.Context, request *group.QueryGroupPolicyInfoRequest) (*group.QueryGroupPolicyInfoResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	groupPolicyInfo, err := q.getGroupPolicyInfo(ctx, request.Address)

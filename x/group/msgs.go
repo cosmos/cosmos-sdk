@@ -241,6 +241,23 @@ func (m *MsgUpdateGroupMembers) GetGroupID() uint64 {
 }
 
 var _ sdk.Msg = &MsgCreateGroupWithPolicy{}
+var _ types.UnpackInterfacesMessage = MsgCreateGroupWithPolicy{}
+
+// NewMsgCreateGroupWithPolicy creates a new MsgCreateGroupWithPolicy.
+func NewMsgCreateGroupWithPolicy(admin sdk.AccAddress, members []Member, group_metadata []byte, group_policy_metadata []byte, groupPolicyAsAdmin bool, decisionPolicy DecisionPolicy) (*MsgCreateGroupWithPolicy, error) {
+	m := &MsgCreateGroupWithPolicy{
+		Admin:               TypeMsgUpdateGroupAdmin,
+		Members:             members,
+		GroupMetadata:       group_metadata,
+		GroupPolicyMetadata: group_policy_metadata,
+		GroupPolicyAsAdmin:  groupPolicyAsAdmin,
+	}
+	err := m.SetDecisionPolicy(decisionPolicy)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
+}
 
 func (m *MsgCreateGroupWithPolicy) GetAdmin() string {
 	return m.Admin
@@ -264,6 +281,25 @@ func (m *MsgCreateGroupWithPolicy) GetDecisionPolicy() DecisionPolicy {
 		return nil
 	}
 	return decisionPolicy
+}
+
+func (m *MsgCreateGroupWithPolicy) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
+	msg, ok := decisionPolicy.(proto.Message)
+	if !ok {
+		return fmt.Errorf("can't proto marshal %T", msg)
+	}
+	any, err := types.NewAnyWithValue(msg)
+	if err != nil {
+		return err
+	}
+	m.DecisionPolicy = any
+	return nil
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (m MsgCreateGroupWithPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	var decisionPolicy DecisionPolicy
+	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
 }
 
 // Route Implements Msg.

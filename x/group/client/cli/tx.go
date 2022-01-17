@@ -362,7 +362,7 @@ where members.json contains:
 			}
 
 			msg, err := group.NewMsgCreateGroupWithPolicy(
-				clientCtx.GetFromAddress(),
+				clientCtx.GetFromAddress().String(),
 				members,
 				groupMetadata,
 				groupPolicyMetadata,

@@ -244,9 +244,9 @@ var _ sdk.Msg = &MsgCreateGroupWithPolicy{}
 var _ types.UnpackInterfacesMessage = MsgCreateGroupWithPolicy{}
 
 // NewMsgCreateGroupWithPolicy creates a new MsgCreateGroupWithPolicy.
-func NewMsgCreateGroupWithPolicy(admin sdk.AccAddress, members []Member, group_metadata []byte, group_policy_metadata []byte, groupPolicyAsAdmin bool, decisionPolicy DecisionPolicy) (*MsgCreateGroupWithPolicy, error) {
+func NewMsgCreateGroupWithPolicy(admin string, members []Member, group_metadata []byte, group_policy_metadata []byte, groupPolicyAsAdmin bool, decisionPolicy DecisionPolicy) (*MsgCreateGroupWithPolicy, error) {
 	m := &MsgCreateGroupWithPolicy{
-		Admin:               TypeMsgUpdateGroupAdmin,
+		Admin:               admin,
 		Members:             members,
 		GroupMetadata:       group_metadata,
 		GroupPolicyMetadata: group_policy_metadata,

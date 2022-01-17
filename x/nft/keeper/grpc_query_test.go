@@ -275,7 +275,7 @@ func (s *TestSuite) TestNFTs() {
 			"success,empty ClassId and no nft",
 			func(index int, require *require.Assertions) {
 				req = &nft.QueryNFTsRequest{
-					Owner:   s.addrs[1].String(),
+					Owner: s.addrs[1].String(),
 				}
 				s.TestSaveClass()
 			},
@@ -306,24 +306,24 @@ func (s *TestSuite) TestNFTs() {
 		{
 			"Success,query by owner",
 			func(index int, require *require.Assertions) {
-				err := s.app.NFTKeeper.SaveClass(s.ctx,nft.Class{
-					Id:          "MyKitty",
+				err := s.app.NFTKeeper.SaveClass(s.ctx, nft.Class{
+					Id: "MyKitty",
 				})
 				require.NoError(err)
 
 				nfts = []*nft.NFT{}
-				for i := 0;i <5;i++{
+				for i := 0; i < 5; i++ {
 					n := nft.NFT{
-						ClassId:     "MyKitty",
-						Id:          fmt.Sprintf("MyCat%d",i),
+						ClassId: "MyKitty",
+						Id:      fmt.Sprintf("MyCat%d", i),
 					}
-					err := s.app.NFTKeeper.Mint(s.ctx,n,s.addrs[2])
+					err := s.app.NFTKeeper.Mint(s.ctx, n, s.addrs[2])
 					require.NoError(err)
-					nfts = append(nfts,&n)
+					nfts = append(nfts, &n)
 				}
 
 				req = &nft.QueryNFTsRequest{
-					Owner:   s.addrs[2].String(),
+					Owner: s.addrs[2].String(),
 				}
 			},
 			"",
@@ -335,7 +335,7 @@ func (s *TestSuite) TestNFTs() {
 			"Success,query by classID",
 			func(index int, require *require.Assertions) {
 				req = &nft.QueryNFTsRequest{
-					ClassId:     "MyKitty",
+					ClassId: "MyKitty",
 				}
 			},
 			"",
@@ -363,7 +363,6 @@ func (s *TestSuite) TestNFTs() {
 				require.Equal(res.Nfts, nfts, "the error occurred on:%d", index)
 			},
 		},
-
 	}
 	for index, tc := range testCases {
 		s.Run(fmt.Sprintf("Case %s", tc.msg), func() {

@@ -78,7 +78,7 @@ func prefixNftOfClassByOwnerStoreKey(owner sdk.AccAddress) []byte {
 
 // Note: the full path of the nftOfClassByOwnerStoreKey stored in the store: 0x03<owner><Delimiter><classID><Delimiter><nftID>,
 // the key of the prefix store query result constructed using the prefixNftOfClassByOwnerStoreKey function needs to remove the 0x03<owner><Delimiter> prefix
-func parseNftOfClassByOwnerStoreKey(key []byte) (classID,nftID string) {
+func parseNftOfClassByOwnerStoreKey(key []byte) (classID, nftID string) {
 	ret := bytes.Split(key, Delimiter)
 	if len(ret) != 2 {
 		panic("invalid nftOfClassByOwnerStoreKey")

@@ -161,7 +161,7 @@ func (s *IntegrationTestSuite) TestQueryOwnerGRPC() {
 				var result nft.QueryOwnerResponse
 				err = val.ClientCtx.Codec.UnmarshalJSON(resp, &result)
 				s.Require().NoError(err)
-				s.Require().EqualValues(tc.expectResult,result.Owner)
+				s.Require().EqualValues(tc.expectResult, result.Owner)
 			}
 		})
 	}
@@ -235,7 +235,7 @@ func (s *IntegrationTestSuite) TestQueryNFTsGRPC() {
 		name string
 		args struct {
 			ClassId string
-			Owner string
+			Owner   string
 		}
 		expectErr    bool
 		errorMsg     string
@@ -245,7 +245,7 @@ func (s *IntegrationTestSuite) TestQueryNFTsGRPC() {
 			name: "classID is invalid",
 			args: struct {
 				ClassId string
-				Owner string
+				Owner   string
 			}{
 				ClassId: "invalid_class_id",
 			},
@@ -256,7 +256,7 @@ func (s *IntegrationTestSuite) TestQueryNFTsGRPC() {
 			name: "classID does not exist",
 			args: struct {
 				ClassId string
-				Owner string
+				Owner   string
 			}{
 				ClassId: "class-id",
 			},
@@ -267,7 +267,7 @@ func (s *IntegrationTestSuite) TestQueryNFTsGRPC() {
 			name: "success query by classID",
 			args: struct {
 				ClassId string
-				Owner string
+				Owner   string
 			}{
 				ClassId: ExpNFT.ClassId,
 			},
@@ -278,7 +278,7 @@ func (s *IntegrationTestSuite) TestQueryNFTsGRPC() {
 			name: "success query by owner",
 			args: struct {
 				ClassId string
-				Owner string
+				Owner   string
 			}{
 				Owner: val.Address.String(),
 			},
@@ -289,10 +289,10 @@ func (s *IntegrationTestSuite) TestQueryNFTsGRPC() {
 			name: "success query by owner and classID",
 			args: struct {
 				ClassId string
-				Owner string
+				Owner   string
 			}{
 				ClassId: ExpNFT.ClassId,
-				Owner:  val.Address.String(),
+				Owner:   val.Address.String(),
 			},
 			expectErr:    false,
 			expectResult: []*nft.NFT{&ExpNFT},
@@ -300,7 +300,7 @@ func (s *IntegrationTestSuite) TestQueryNFTsGRPC() {
 	}
 	nftsOfClassURL := val.APIAddress + "/cosmos/nft/v1beta1/nfts?class_id=%s&owner=%s"
 	for _, tc := range testCases {
-		uri := fmt.Sprintf(nftsOfClassURL, tc.args.ClassId,tc.args.Owner)
+		uri := fmt.Sprintf(nftsOfClassURL, tc.args.ClassId, tc.args.Owner)
 		s.Run(tc.name, func() {
 			resp, err := rest.GetRequest(uri)
 			if tc.expectErr {

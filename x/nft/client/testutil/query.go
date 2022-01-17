@@ -176,8 +176,7 @@ func (s *IntegrationTestSuite) TestQueryNFTs() {
 			args: struct {
 				ClassID string
 				Owner   string
-			}{
-			},
+			}{},
 			expectErr:    true,
 			expectResult: []*nft.NFT{},
 		},

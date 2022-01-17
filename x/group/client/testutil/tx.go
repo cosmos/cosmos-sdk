@@ -28,7 +28,7 @@ type IntegrationTestSuite struct {
 	network *network.Network
 
 	group         *group.GroupInfo
-	groupAccounts []*group.GroupAccountInfo
+	groupPolicies []*group.GroupPolicyInfo
 	proposal      *group.Proposal
 	vote          *group.Vote
 }
@@ -100,13 +100,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.group = &group.GroupInfo{GroupId: 1, Admin: val.Address.String(), Metadata: []byte{1}, TotalWeight: "3", Version: 1}
 
-	// create 5 group accounts
+	// create 5 group policies
 	for i := 0; i < 5; i++ {
 		threshold := i + 1
 		if threshold > 3 {
 			threshold = 3
 		}
-		out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateGroupAccountCmd(),
+		out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateGroupPolicyCmd(),
 			append(
 				[]string{
 					val.Address.String(),
@@ -121,21 +121,21 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 		s.Require().Equal(uint32(0), txResp.Code, out.String())
 
-		out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupAccountsByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+		out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 		s.Require().NoError(err, out.String())
 	}
 
-	var res group.QueryGroupAccountsByGroupResponse
+	var res group.QueryGroupPoliciesByGroupResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
-	s.Require().Equal(len(res.GroupAccounts), 5)
-	s.groupAccounts = res.GroupAccounts
+	s.Require().Equal(len(res.GroupPolicies), 5)
+	s.groupPolicies = res.GroupPolicies
 
 	// create a proposal
-	validTxFileName := getTxSendFileName(s, s.groupAccounts[0].Address, val.Address.String())
+	validTxFileName := getTxSendFileName(s, s.groupPolicies[0].Address, val.Address.String())
 	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateProposalCmd(),
 		append(
 			[]string{
-				s.groupAccounts[0].Address,
+				s.groupPolicies[0].Address,
 				val.Address.String(),
 				validTxFileName,
 				"",
@@ -285,7 +285,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 				commonFlags...,
 			),
 			true,
-			"message validation failed: members: address: empty address string is not allowed",
+			"message validation failed: address: empty address string is not allowed",
 			nil,
 			0,
 		},
@@ -565,7 +565,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 		"address": "%s",
 		"weight": "1",
 		"metadata": "%s"
-	}]}`, val.Address.String(), validMetadata, s.groupAccounts[0].Address, validMetadata)).Name()
+	}]}`, val.Address.String(), validMetadata, s.groupPolicies[0].Address, validMetadata)).Name()
 
 	invalidMembersMetadata := fmt.Sprintf(`{"members": [{
 	  "address": "%s",
@@ -607,7 +607,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 		"address": "%s",
 		"weight": "2",
 		"metadata": "%s"
-	}]}`, s.groupAccounts[0].Address, validMetadata)).Name(),
+	}]}`, s.groupPolicies[0].Address, validMetadata)).Name(),
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
 				commonFlags...,
@@ -669,7 +669,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTxCreateGroupAccount() {
+func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 	val := s.network.Validators[0]
 	wrongAdmin := s.network.Validators[1].Address
 	clientCtx := val.ClientCtx
@@ -751,7 +751,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupAccount() {
 				commonFlags...,
 			),
 			true,
-			"group account metadata: limit exceeded",
+			"group policy metadata: limit exceeded",
 			&sdk.TxResponse{},
 			0,
 		},
@@ -777,7 +777,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupAccount() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := client.MsgCreateGroupAccountCmd()
+			cmd := client.MsgCreateGroupPolicyCmd()
 
 			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
@@ -793,11 +793,11 @@ func (s *IntegrationTestSuite) TestTxCreateGroupAccount() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTxUpdateGroupAccountAdmin() {
+func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyAdmin() {
 	val := s.network.Validators[0]
 	newAdmin := s.network.Validators[1].Address
 	clientCtx := val.ClientCtx
-	groupAccount := s.groupAccounts[3]
+	groupPolicy := s.groupPolicies[3]
 
 	var commonFlags = []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -817,8 +817,8 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAccountAdmin() {
 			"correct data",
 			append(
 				[]string{
-					groupAccount.Admin,
-					groupAccount.Address,
+					groupPolicy.Admin,
+					groupPolicy.Address,
 					newAdmin.String(),
 				},
 				commonFlags...,
@@ -832,8 +832,8 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAccountAdmin() {
 			"with amino-json",
 			append(
 				[]string{
-					groupAccount.Admin,
-					s.groupAccounts[4].Address,
+					groupPolicy.Admin,
+					s.groupPolicies[4].Address,
 					newAdmin.String(),
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
@@ -849,7 +849,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAccountAdmin() {
 			append(
 				[]string{
 					newAdmin.String(),
-					groupAccount.Address,
+					groupPolicy.Address,
 					newAdmin.String(),
 				},
 				commonFlags...,
@@ -860,17 +860,17 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAccountAdmin() {
 			0,
 		},
 		{
-			"wrong group account",
+			"wrong group policy",
 			append(
 				[]string{
-					groupAccount.Admin,
+					groupPolicy.Admin,
 					newAdmin.String(),
 					newAdmin.String(),
 				},
 				commonFlags...,
 			),
 			true,
-			"load group account: not found",
+			"load group policy: not found",
 			&sdk.TxResponse{},
 			0,
 		},
@@ -880,7 +880,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAccountAdmin() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := client.MsgUpdateGroupAccountAdminCmd()
+			cmd := client.MsgUpdateGroupPolicyAdminCmd()
 
 			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
@@ -896,11 +896,11 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAccountAdmin() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTxUpdateGroupAccountDecisionPolicy() {
+func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 	val := s.network.Validators[0]
 	newAdmin := s.network.Validators[1].Address
 	clientCtx := val.ClientCtx
-	groupAccount := s.groupAccounts[2]
+	groupPolicy := s.groupPolicies[2]
 
 	var commonFlags = []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -920,8 +920,8 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAccountDecisionPolicy() {
 			"correct data",
 			append(
 				[]string{
-					groupAccount.Admin,
-					groupAccount.Address,
+					groupPolicy.Admin,
+					groupPolicy.Address,
 					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"timeout\":\"40000s\"}",
 				},
 				commonFlags...,
@@ -935,8 +935,8 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAccountDecisionPolicy() {
 			"with amino-json",
 			append(
 				[]string{
-					groupAccount.Admin,
-					groupAccount.Address,
+					groupPolicy.Admin,
+					groupPolicy.Address,
 					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"timeout\":\"50000s\"}",
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
@@ -952,7 +952,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAccountDecisionPolicy() {
 			append(
 				[]string{
 					newAdmin.String(),
-					groupAccount.Address,
+					groupPolicy.Address,
 					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"timeout\":\"1s\"}",
 				},
 				commonFlags...,
@@ -963,17 +963,17 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAccountDecisionPolicy() {
 			0,
 		},
 		{
-			"wrong group account",
+			"wrong group policy",
 			append(
 				[]string{
-					groupAccount.Admin,
+					groupPolicy.Admin,
 					newAdmin.String(),
 					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"timeout\":\"1s\"}",
 				},
 				commonFlags...,
 			),
 			true,
-			"load group account: not found",
+			"load group policy: not found",
 			&sdk.TxResponse{},
 			0,
 		},
@@ -983,7 +983,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAccountDecisionPolicy() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := client.MsgUpdateGroupAccountDecisionPolicyCmd()
+			cmd := client.MsgUpdateGroupPolicyDecisionPolicyCmd()
 
 			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
@@ -999,11 +999,11 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAccountDecisionPolicy() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTxUpdateGroupAccountMetadata() {
+func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 	val := s.network.Validators[0]
 	newAdmin := s.network.Validators[1].Address
 	clientCtx := val.ClientCtx
-	groupAccount := s.groupAccounts[2]
+	groupPolicy := s.groupPolicies[2]
 
 	var commonFlags = []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -1023,8 +1023,8 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAccountMetadata() {
 			"correct data",
 			append(
 				[]string{
-					groupAccount.Admin,
-					groupAccount.Address,
+					groupPolicy.Admin,
+					groupPolicy.Address,
 					validMetadata,
 				},
 				commonFlags...,
@@ -1038,8 +1038,8 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAccountMetadata() {
 			"with amino-json",
 			append(
 				[]string{
-					groupAccount.Admin,
-					groupAccount.Address,
+					groupPolicy.Admin,
+					groupPolicy.Address,
 					validMetadata,
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
@@ -1054,14 +1054,14 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAccountMetadata() {
 			"long metadata",
 			append(
 				[]string{
-					groupAccount.Admin,
-					groupAccount.Address,
+					groupPolicy.Admin,
+					groupPolicy.Address,
 					strings.Repeat("a", 500),
 				},
 				commonFlags...,
 			),
 			true,
-			"group account metadata: limit exceeded",
+			"group policy metadata: limit exceeded",
 			&sdk.TxResponse{},
 			0,
 		},
@@ -1070,7 +1070,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAccountMetadata() {
 			append(
 				[]string{
 					newAdmin.String(),
-					groupAccount.Address,
+					groupPolicy.Address,
 					validMetadata,
 				},
 				commonFlags...,
@@ -1081,17 +1081,17 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAccountMetadata() {
 			0,
 		},
 		{
-			"wrong group account",
+			"wrong group policy",
 			append(
 				[]string{
-					groupAccount.Admin,
+					groupPolicy.Admin,
 					newAdmin.String(),
 					validMetadata,
 				},
 				commonFlags...,
 			),
 			true,
-			"load group account: not found",
+			"load group policy: not found",
 			&sdk.TxResponse{},
 			0,
 		},
@@ -1101,7 +1101,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAccountMetadata() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := client.MsgUpdateGroupAccountMetadataCmd()
+			cmd := client.MsgUpdateGroupPolicyMetadataCmd()
 
 			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
@@ -1127,9 +1127,9 @@ func (s *IntegrationTestSuite) TestTxCreateProposal() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
-	validTxFileName := getTxSendFileName(s, s.groupAccounts[0].Address, val.Address.String())
-	unauthzTxFileName := getTxSendFileName(s, val.Address.String(), s.groupAccounts[0].Address)
-	validTxFileName2 := getTxSendFileName(s, s.groupAccounts[3].Address, val.Address.String())
+	validTxFileName := getTxSendFileName(s, s.groupPolicies[0].Address, val.Address.String())
+	unauthzTxFileName := getTxSendFileName(s, val.Address.String(), s.groupPolicies[0].Address)
+	validTxFileName2 := getTxSendFileName(s, s.groupPolicies[3].Address, val.Address.String())
 
 	testCases := []struct {
 		name         string
@@ -1143,7 +1143,7 @@ func (s *IntegrationTestSuite) TestTxCreateProposal() {
 			"correct data",
 			append(
 				[]string{
-					s.groupAccounts[0].Address,
+					s.groupPolicies[0].Address,
 					val.Address.String(),
 					validTxFileName,
 					"",
@@ -1160,7 +1160,7 @@ func (s *IntegrationTestSuite) TestTxCreateProposal() {
 			"with try exec",
 			append(
 				[]string{
-					s.groupAccounts[0].Address,
+					s.groupPolicies[0].Address,
 					val.Address.String(),
 					validTxFileName,
 					"",
@@ -1178,7 +1178,7 @@ func (s *IntegrationTestSuite) TestTxCreateProposal() {
 			"with try exec, not enough yes votes for proposal to pass",
 			append(
 				[]string{
-					s.groupAccounts[3].Address,
+					s.groupPolicies[3].Address,
 					val.Address.String(),
 					validTxFileName2,
 					"",
@@ -1196,7 +1196,7 @@ func (s *IntegrationTestSuite) TestTxCreateProposal() {
 			"with amino-json",
 			append(
 				[]string{
-					s.groupAccounts[0].Address,
+					s.groupPolicies[0].Address,
 					val.Address.String(),
 					validTxFileName,
 					"",
@@ -1214,7 +1214,7 @@ func (s *IntegrationTestSuite) TestTxCreateProposal() {
 			"metadata too long",
 			append(
 				[]string{
-					s.groupAccounts[0].Address,
+					s.groupPolicies[0].Address,
 					val.Address.String(),
 					validTxFileName,
 					"AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ==",
@@ -1231,7 +1231,7 @@ func (s *IntegrationTestSuite) TestTxCreateProposal() {
 			"unauthorized msg",
 			append(
 				[]string{
-					s.groupAccounts[0].Address,
+					s.groupPolicies[0].Address,
 					val.Address.String(),
 					unauthzTxFileName,
 					"",
@@ -1240,7 +1240,7 @@ func (s *IntegrationTestSuite) TestTxCreateProposal() {
 				commonFlags...,
 			),
 			true,
-			"msg does not have group account authorization: unauthorized",
+			"msg does not have group policy authorization: unauthorized",
 			nil,
 			0,
 		},
@@ -1248,7 +1248,7 @@ func (s *IntegrationTestSuite) TestTxCreateProposal() {
 			"invalid proposers",
 			append(
 				[]string{
-					s.groupAccounts[0].Address,
+					s.groupPolicies[0].Address,
 					"invalid",
 					validTxFileName,
 					"",
@@ -1262,7 +1262,7 @@ func (s *IntegrationTestSuite) TestTxCreateProposal() {
 			0,
 		},
 		{
-			"invalid group account",
+			"invalid group policy",
 			append(
 				[]string{
 					"invalid",
@@ -1274,12 +1274,12 @@ func (s *IntegrationTestSuite) TestTxCreateProposal() {
 				commonFlags...,
 			),
 			true,
-			"group account: decoding bech32 failed",
+			"group policy: decoding bech32 failed",
 			nil,
 			0,
 		},
 		{
-			"no group account",
+			"no group policy",
 			append(
 				[]string{
 					val.Address.String(),
@@ -1291,7 +1291,7 @@ func (s *IntegrationTestSuite) TestTxCreateProposal() {
 				commonFlags...,
 			),
 			true,
-			"group account: not found",
+			"group policy: not found",
 			nil,
 			0,
 		},
@@ -1327,12 +1327,12 @@ func (s *IntegrationTestSuite) TestTxVote() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
-	validTxFileName := getTxSendFileName(s, s.groupAccounts[1].Address, val.Address.String())
+	validTxFileName := getTxSendFileName(s, s.groupPolicies[1].Address, val.Address.String())
 	for i := 0; i < 2; i++ {
 		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateProposalCmd(),
 			append(
 				[]string{
-					s.groupAccounts[1].Address,
+					s.groupPolicies[1].Address,
 					val.Address.String(),
 					validTxFileName,
 					"",
@@ -1517,11 +1517,11 @@ func (s *IntegrationTestSuite) TestTxExec() {
 
 	// create proposals and vote
 	for i := 3; i <= 4; i++ {
-		validTxFileName := getTxSendFileName(s, s.groupAccounts[0].Address, val.Address.String())
+		validTxFileName := getTxSendFileName(s, s.groupPolicies[0].Address, val.Address.String())
 		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateProposalCmd(),
 			append(
 				[]string{
-					s.groupAccounts[0].Address,
+					s.groupPolicies[0].Address,
 					val.Address.String(),
 					validTxFileName,
 					"",

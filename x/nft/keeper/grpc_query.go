@@ -15,7 +15,7 @@ var _ nft.QueryServer = Keeper{}
 // Balance return the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
 func (k Keeper) Balance(goCtx context.Context, r *nft.QueryBalanceRequest) (*nft.QueryBalanceResponse, error) {
 	if r == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty request")
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
 	if err := nft.ValidateClassID(r.ClassId); err != nil {
@@ -35,7 +35,7 @@ func (k Keeper) Balance(goCtx context.Context, r *nft.QueryBalanceRequest) (*nft
 // Owner return the owner of the NFT based on its class and id, same as ownerOf in ERC721
 func (k Keeper) Owner(goCtx context.Context, r *nft.QueryOwnerRequest) (*nft.QueryOwnerResponse, error) {
 	if r == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty request")
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
 	if err := nft.ValidateClassID(r.ClassId); err != nil {
@@ -54,7 +54,7 @@ func (k Keeper) Owner(goCtx context.Context, r *nft.QueryOwnerRequest) (*nft.Que
 // Supply return the number of NFTs from the given class, same as totalSupply of ERC721.
 func (k Keeper) Supply(goCtx context.Context, r *nft.QuerySupplyRequest) (*nft.QuerySupplyResponse, error) {
 	if r == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty request")
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
 	if err := nft.ValidateClassID(r.ClassId); err != nil {
@@ -65,10 +65,10 @@ func (k Keeper) Supply(goCtx context.Context, r *nft.QuerySupplyRequest) (*nft.Q
 	return &nft.QuerySupplyResponse{Amount: supply}, nil
 }
 
-// NFTs queries all NFTs of a given class or owner,choose at least one of the two, similar to tokenByIndex in ERC721Enumerable
+// NFTs queries all NFTs of a given class or owner (at least one must be provided), similar to tokenByIndex in ERC721Enumerable
 func (k Keeper) NFTs(goCtx context.Context, r *nft.QueryNFTsRequest) (*nft.QueryNFTsResponse, error) {
 	if r == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty request")
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
 	var err error
@@ -124,7 +124,7 @@ func (k Keeper) NFTs(goCtx context.Context, r *nft.QueryNFTsRequest) (*nft.Query
 			return nil, err
 		}
 	default:
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "must provide at least one of classID or owner")
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("must provide at least one of classID or owner")
 	}
 	return &nft.QueryNFTsResponse{
 		Nfts:       nfts,
@@ -135,7 +135,7 @@ func (k Keeper) NFTs(goCtx context.Context, r *nft.QueryNFTsRequest) (*nft.Query
 // NFT return an NFT based on its class and id.
 func (k Keeper) NFT(goCtx context.Context, r *nft.QueryNFTRequest) (*nft.QueryNFTResponse, error) {
 	if r == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty request")
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
 	if err := nft.ValidateClassID(r.ClassId); err != nil {
@@ -148,7 +148,7 @@ func (k Keeper) NFT(goCtx context.Context, r *nft.QueryNFTRequest) (*nft.QueryNF
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	n, has := k.GetNFT(ctx, r.ClassId, r.Id)
 	if !has {
-		return nil, sdkerrors.Wrapf(nft.ErrNFTNotExists, "not found nft: class: %s, id: %s", r.ClassId, r.Id)
+		return nil, nft.ErrNFTNotExists.Wrapf("not found nft: class: %s, id: %s", r.ClassId, r.Id)
 	}
 	return &nft.QueryNFTResponse{Nft: &n}, nil
 
@@ -157,7 +157,7 @@ func (k Keeper) NFT(goCtx context.Context, r *nft.QueryNFTRequest) (*nft.QueryNF
 // Class return an NFT class based on its id
 func (k Keeper) Class(goCtx context.Context, r *nft.QueryClassRequest) (*nft.QueryClassResponse, error) {
 	if r == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty request")
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
 	if err := nft.ValidateClassID(r.ClassId); err != nil {
@@ -167,7 +167,7 @@ func (k Keeper) Class(goCtx context.Context, r *nft.QueryClassRequest) (*nft.Que
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	class, has := k.GetClass(ctx, r.ClassId)
 	if !has {
-		return nil, sdkerrors.Wrapf(nft.ErrClassNotExists, "not found class: %s", r.ClassId)
+		return nil, nft.ErrClassNotExists.Wrapf("not found class: %s", r.ClassId)
 	}
 	return &nft.QueryClassResponse{Class: &class}, nil
 }
@@ -175,7 +175,7 @@ func (k Keeper) Class(goCtx context.Context, r *nft.QueryClassRequest) (*nft.Que
 // Classes return all NFT classes
 func (k Keeper) Classes(goCtx context.Context, r *nft.QueryClassesRequest) (*nft.QueryClassesResponse, error) {
 	if r == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty request")
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)

@@ -2,13 +2,13 @@ package cli
 
 import (
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"strings"
-
 	"github.com/spf13/cobra"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/nft"
 )
@@ -172,7 +172,7 @@ $ %s query %s nfts <class-id> --owner=<owner>
 			}
 
 			if len(owner) == 0 && len(classID) == 0 {
-				return fmt.Errorf("must provide at least one of classID or owner")
+				return errors.ErrInvalidRequest.Wrap("must provide at least one of classID or owner")
 			}
 
 			request := &nft.QueryNFTsRequest{

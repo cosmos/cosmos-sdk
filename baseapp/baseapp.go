@@ -260,6 +260,18 @@ func DefaultStoreLoader(ms sdk.CommitMultiStore) error {
 	return ms.LoadLatestVersion()
 }
 
+// CommitMultiStore returns the root multi-store.
+// Extension snapshotter use this to read storage.
+func (app *BaseApp) CommitMultiStore() sdk.CommitMultiStore {
+	return app.cms
+}
+
+// SnapshotManager returns the snapshot manager.
+// application use this to register extra extension snapshotters.
+func (app *BaseApp) SnapshotManager() *snapshots.Manager {
+	return app.snapshotManager
+}
+
 // LoadVersion loads the BaseApp application version. It will panic if called
 // more than once on a running baseapp.
 func (app *BaseApp) LoadVersion(version int64) error {

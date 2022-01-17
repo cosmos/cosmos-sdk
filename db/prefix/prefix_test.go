@@ -5,13 +5,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	dbm "github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/db/dbtest"
 	"github.com/cosmos/cosmos-sdk/db/memdb"
 	pfx "github.com/cosmos/cosmos-sdk/db/prefix"
 )
 
-func fillDBWithStuff(t *testing.T, dbw dbm.DBWriter) {
+func fillDBWithStuff(t *testing.T, dbw db.DBWriter) {
 	// Under "key" prefix
 	require.NoError(t, dbw.Set([]byte("key"), []byte("value")))
 	require.NoError(t, dbw.Set([]byte("key1"), []byte("value1")))
@@ -24,14 +24,14 @@ func fillDBWithStuff(t *testing.T, dbw dbm.DBWriter) {
 	require.NoError(t, dbw.Commit())
 }
 
-func mockDBWithStuff(t *testing.T) dbm.DBConnection {
-	db := memdb.NewDB()
-	fillDBWithStuff(t, db.Writer())
-	return db
+func mockDBWithStuff(t *testing.T) db.DBConnection {
+	dbm := memdb.NewDB()
+	fillDBWithStuff(t, dbm.Writer())
+	return dbm
 }
 
-func makePrefixReader(t *testing.T, db dbm.DBConnection, pre []byte) dbm.DBReader {
-	view := db.Reader()
+func makePrefixReader(t *testing.T, dbc db.DBConnection, pre []byte) db.DBReader {
+	view := dbc.Reader()
 	require.NotNil(t, view)
 	return pfx.NewPrefixReader(view, pre)
 }
@@ -133,18 +133,18 @@ func TestPrefixDBReverseIterator7(t *testing.T) {
 
 func TestPrefixDBViewVersion(t *testing.T) {
 	prefix := []byte("key")
-	db := memdb.NewDB()
-	fillDBWithStuff(t, db.Writer())
-	id, err := db.SaveNextVersion()
+	dbm := memdb.NewDB()
+	fillDBWithStuff(t, dbm.Writer())
+	id, err := dbm.SaveNextVersion()
 	require.NoError(t, err)
-	pdb := pfx.NewPrefixReadWriter(db.ReadWriter(), prefix)
+	pdb := pfx.NewPrefixReadWriter(dbm.ReadWriter(), prefix)
 
 	pdb.Set([]byte("1"), []byte("newvalue1"))
 	pdb.Delete([]byte("2"))
 	pdb.Set([]byte("4"), []byte("newvalue4"))
 	pdb.Discard()
 
-	dbview, err := db.ReaderAt(id)
+	dbview, err := dbm.ReaderAt(id)
 	require.NotNil(t, dbview)
 	require.NoError(t, err)
 	view := pfx.NewPrefixReader(dbview, prefix)

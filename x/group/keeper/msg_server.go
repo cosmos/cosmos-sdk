@@ -281,11 +281,11 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 	var groupWithPolicyAddr sdk.AccAddress
 	// loop here in the rare case of a collision
 	for {
-		nextAccVal := k.groupWithPolicySeq.NextVal(ctx.KVStore(k.key))
+		nextAccVal := k.groupPolicySeq.NextVal(ctx.KVStore(k.key))
 		var buf = make([]byte, 8)
 		binary.BigEndian.PutUint64(buf, nextAccVal)
 
-		parentAcc := address.Module(group.ModuleName, []byte{GroupWithPolicyTablePrefix})
+		parentAcc := address.Module(group.ModuleName, []byte{GroupTablePrefix})
 		groupWithPolicyAddr = address.Derive(parentAcc, buf)
 
 		if k.accKeeper.GetAccount(ctx, groupWithPolicyAddr) != nil {
@@ -303,12 +303,13 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 	}
 
 	groupPolicyAsAdmin := req.GetGroupPolicyAsAdmin()
-	if groupPolicyAsAdmin == true {
+	if groupPolicyAsAdmin {
 		admin = groupWithPolicyAddr
 	}
 
+	// Create a new group with policy in the groupTable.
 	groupWithPolicyInfo, err := group.NewGroupWithPolicyInfo(
-		k.groupWithPolicySeq.PeekNextVal(ctx.KVStore(k.key)),
+		k.groupPolicySeq.PeekNextVal(ctx.KVStore(k.key)),
 		admin,
 		groupWithPolicyAddr,
 		groupMetadata,
@@ -322,16 +323,16 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 		return nil, err
 	}
 
-	err = k.groupWithPolicyTable.Create(ctx.KVStore(k.key), &groupWithPolicyInfo)
+	groupID, err := k.groupTable.Create(ctx.KVStore(k.key), &groupWithPolicyInfo)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "could not create group with policy")
+		return nil, sdkerrors.Wrap(err, "could not create group")
 	}
 
 	// Create new group members in the groupMemberTable.
 	for i := range members.Members {
 		m := members.Members[i]
 		err := k.groupMemberTable.Create(ctx.KVStore(k.key), &group.GroupMember{
-			GroupId: groupWithPolicyInfo.GroupId,
+			GroupId: groupID,
 			Member: &group.Member{
 				Address:  m.Address,
 				Weight:   m.Weight,
@@ -344,7 +345,7 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 		}
 	}
 
-	err = ctx.EventManager().EmitTypedEvent(&group.EventCreateGroupWithPolicy{GroupId: groupWithPolicyInfo.GroupId, GroupPolicyAddress: groupWithPolicyAddr.String()})
+	err = ctx.EventManager().EmitTypedEvent(&group.EventCreateGroupWithPolicy{GroupId: groupID, GroupPolicyAddress: groupWithPolicyAddr.String()})
 	if err != nil {
 		return nil, err
 	}

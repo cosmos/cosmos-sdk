@@ -39,9 +39,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Provenance Specific releases
 
-## [v0.45-pio-1.8.rc1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.45-pio-1.8.rc1)
+## [v0.45-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.45-pio-1.8.rc1)
 
-* Updated baseapp and added custom fee handler to support provenance message fee module. (https://github.com/provenance-io/provenance/issues/354)
+* Updated baseapp and added custom fee handler to support provenance message fee module [354](https://github.com/provenance-io/provenance/issues/354), for upstream cosmos-sdk release [v0.45.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.0) 
 
 ## [v0.44.3-rosetta-fix](https://github.com/provenance-io/cosmos-sdk/tag/v0.44.3-rosetta-fix)
 

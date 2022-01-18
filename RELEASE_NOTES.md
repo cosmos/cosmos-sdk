@@ -16,6 +16,8 @@ Finally, a small improvement in gov, we increased the maximum proposal descripti
 - The `BankKeeper` interface has a new `HasSupply` method to ensure that input denom actually exists on chain.
 - The `CommitMultiStore` interface contains a new `SetIAVLCacheSize` method for a configurable IAVL cache size.
 - `AuthKeeper` interface in `x/auth` now includes a function `HasAccount`.
+- Moved `TestMnemonic` from `testutil` package to `testdata`.
+
 
 Finally, when using the `SetOrder*` functions in simapp, e.g. `SetOrderBeginBlocker`, we now require that all modules be present in the function arguments, or else the node panics at startup. We also added a new `SetOrderMigration` function to set the order of running module migrations.
 
@@ -24,5 +26,6 @@ Finally, when using the `SetOrder*` functions in simapp, e.g. `SetOrderBeginBloc
 - Speedup improvements (e.g. speedup iterator creation after delete heavy workloads, lower allocations for `Coins.String()`, reduce RAM/CPU usage inside store/cachekv's `Store.Write`) are included in this release.
 - Upgrade Rosetta to v0.7.0 .
 - Support in-place migration ordering.
+- Copied and updated `server.GenerateCoinKey` and `server.GenerateServerCoinKey` functions to the `testutil` package. These functions in `server` package are marked deprecated and will be removed in the next release. In the `testutil.GenerateServerCoinKey` version we  added support for custom mnemonics in in-process testing network.
 
 See our [CHANGELOG](./CHANGELOG.md) for the exhaustive list of all changes, or a full [commit diff](https://github.com/cosmos/cosmos-sdk/compare/v0.44.5...v0.45.0).

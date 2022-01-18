@@ -33,11 +33,17 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // MsgCreateVestingAccount defines a message that enables creating a vesting
 // account.
 type MsgCreateVestingAccount struct {
-	FromAddress string                                   `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty" yaml:"from_address"`
-	ToAddress   string                                   `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty" yaml:"to_address"`
-	Amount      github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
-	EndTime     int64                                    `protobuf:"varint,4,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty" yaml:"end_time"`
-	Delayed     bool                                     `protobuf:"varint,5,opt,name=delayed,proto3" json:"delayed,omitempty"`
+	// Address of the account providing the funds, which must also sign the request.
+	FromAddress string `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty" yaml:"from_address"`
+	// Address of the vesting account to create.
+	ToAddress string `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty" yaml:"to_address"`
+	// Amount to transfer to the new account.
+	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	// End time of the vesting duration.
+	EndTime int64 `protobuf:"varint,4,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty" yaml:"end_time"`
+	// If true, creates a DelayedVestingAccount,
+	// otherwise creates a ContinuousVestingAccount.
+	Delayed bool `protobuf:"varint,5,opt,name=delayed,proto3" json:"delayed,omitempty"`
 }
 
 func (m *MsgCreateVestingAccount) Reset()         { *m = MsgCreateVestingAccount{} }
@@ -148,11 +154,18 @@ var xxx_messageInfo_MsgCreateVestingAccountResponse proto.InternalMessageInfo
 // MsgCreatePeriodicVestingAccount defines a message that enables creating a vesting
 // account.
 type MsgCreatePeriodicVestingAccount struct {
-	FromAddress    string   `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty" yaml:"from_address"`
-	ToAddress      string   `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty" yaml:"to_address"`
-	StartTime      int64    `protobuf:"varint,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty" yaml:"start_time"`
+	// Address of the account providing the funds, which must also sign the request.
+	FromAddress string `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty" yaml:"from_address"`
+	// Address of the account to receive the funds.
+	ToAddress string `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty" yaml:"to_address"`
+	// Start time of the vesting. Periods start relative to this time.
+	StartTime int64 `protobuf:"varint,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty" yaml:"start_time"`
+	// Vesting events as a sequence of durations and amounts, starting relative to start_time.
 	VestingPeriods []Period `protobuf:"bytes,4,rep,name=vesting_periods,json=vestingPeriods,proto3" json:"vesting_periods"`
-	Merge          bool     `protobuf:"varint,5,opt,name=merge,proto3" json:"merge,omitempty"`
+	// If true, merge this new grant into an existing PeriodicVestingAccount,
+	// or create it if it does not exist. If false, creates a new account,
+	// or fails if an account already exists
+	Merge bool `protobuf:"varint,5,opt,name=merge,proto3" json:"merge,omitempty"`
 }
 
 func (m *MsgCreatePeriodicVestingAccount) Reset()         { *m = MsgCreatePeriodicVestingAccount{} }
@@ -265,12 +278,20 @@ var xxx_messageInfo_MsgCreatePeriodicVestingAccountResponse proto.InternalMessag
 
 // MsgCreateTrueVestingAccount defines a message that enables creating a true vesting account.
 type MsgCreateTrueVestingAccount struct {
-	FromAddress    string   `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty" yaml:"from_address"`
-	ToAddress      string   `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty" yaml:"to_address"`
-	StartTime      int64    `protobuf:"varint,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty" yaml:"start_time"`
-	LockupPeriods  []Period `protobuf:"bytes,4,rep,name=lockup_periods,json=lockupPeriods,proto3" json:"lockup_periods"`
+	// Address of the account providing the funds, which must also sign the request.
+	FromAddress string `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty" yaml:"from_address"`
+	// Address of the account to receive the funds.
+	ToAddress string `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty" yaml:"to_address"`
+	// Start time of the vesting. Periods start relative to this time.
+	StartTime int64 `protobuf:"varint,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty" yaml:"start_time"`
+	// Unlocking events as a sequence of durations and amounts, starting relative to start_time.
+	LockupPeriods []Period `protobuf:"bytes,4,rep,name=lockup_periods,json=lockupPeriods,proto3" json:"lockup_periods"`
+	// Vesting events as a sequence of durations and amounts, starting relative to start_time.
 	VestingPeriods []Period `protobuf:"bytes,5,rep,name=vesting_periods,json=vestingPeriods,proto3" json:"vesting_periods"`
-	Merge          bool     `protobuf:"varint,6,opt,name=merge,proto3" json:"merge,omitempty"`
+	// If true, merge this new grant into an existing TrueVestingAccount,
+	// or create it if it does not exist. If false, creates a new account.
+	// New grants to an existing account must be from the same from_address.
+	Merge bool `protobuf:"varint,6,opt,name=merge,proto3" json:"merge,omitempty"`
 }
 
 func (m *MsgCreateTrueVestingAccount) Reset()         { *m = MsgCreateTrueVestingAccount{} }

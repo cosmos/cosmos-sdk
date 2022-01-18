@@ -7,23 +7,26 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// TypeMsgCreateVestingAccount defines the type value for a MsgCreateVestingAccount.
-const TypeMsgCreateVestingAccount = "msg_create_vesting_account"
+const (
+	// TypeMsgCreateVestingAccount defines the type value for a MsgCreateVestingAccount.
+	TypeMsgCreateVestingAccount = "msg_create_vesting_account"
 
-// TypeMsgCreatePeriodicVestingAccount defines the type value for a MsgCreateVestingAccount.
-const TypeMsgCreatePeriodicVestingAccount = "msg_create_periodic_vesting_account"
+	// TypeMsgCreatePeriodicVestingAccount defines the type value for a MsgCreateVestingAccount.
+	TypeMsgCreatePeriodicVestingAccount = "msg_create_periodic_vesting_account"
 
-const TypeMsgCreateTrueVestingAccount = "msg_create_true_vesting_account"
+	// TypeMsgCreateTrueVestingAccount defines the type value for a MsgCreateTrueVestingAcount.
+	TypeMsgCreateTrueVestingAccount = "msg_create_true_vesting_account"
 
-const TypeMsgClawback = "msg_clawback"
+	// TypeMsgClawback defines the type value for a MsgClawback.
+	TypeMsgClawback = "msg_clawback"
+)
 
-var _ sdk.Msg = &MsgCreateVestingAccount{}
-
-var _ sdk.Msg = &MsgCreatePeriodicVestingAccount{}
-
-var _ sdk.Msg = &MsgCreateTrueVestingAccount{}
-
-var _ sdk.Msg = &MsgClawback{}
+var (
+	_ sdk.Msg = &MsgCreateVestingAccount{}
+	_ sdk.Msg = &MsgCreatePeriodicVestingAccount{}
+	_ sdk.Msg = &MsgCreateTrueVestingAccount{}
+	_ sdk.Msg = &MsgClawback{}
+)
 
 // NewMsgCreateVestingAccount returns a reference to a new MsgCreateVestingAccount.
 //nolint:interfacer

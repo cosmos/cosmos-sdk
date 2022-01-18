@@ -837,7 +837,8 @@ func (tva TrueVestingAccount) Clawback(ctx sdk.Context, dest sdk.AccAddress, ak 
 			}
 			validator, found := sk.GetValidator(ctx, validatorAddr)
 			if !found {
-				panic("validator not found") // shouldn't happen
+				// validator has been removed
+				continue
 			}
 			wantShares, err := validator.SharesFromTokensTruncated(want)
 			if err != nil {
@@ -877,9 +878,9 @@ func (tva TrueVestingAccount) findBalance(ctx sdk.Context, bk BankKeeper, sk Sta
 
 	unbonding = sdk.ZeroInt()
 	unbondings := sk.GetUnbondingDelegations(ctx, tva.GetAddress(), math.MaxUint16)
-	for _, unbonding := range unbondings {
-		for _, entry := range unbonding.Entries {
-			unbonded = unbonded.Add(entry.Balance)
+	for _, ubd := range unbondings {
+		for _, entry := range ubd.Entries {
+			unbonding = unbonding.Add(entry.Balance)
 		}
 	}
 
@@ -892,13 +893,14 @@ func (tva TrueVestingAccount) findBalance(ctx sdk.Context, bk BankKeeper, sk Sta
 		}
 		validator, found := sk.GetValidator(ctx, validatorAddr)
 		if !found {
-			panic("validator not found") // shoudn't happen
+			// validator has been removed
+			continue
 		}
 		shares := delegation.Shares
 		tokens := validator.TokensFromSharesTruncated(shares).RoundInt()
 		bonded = bonded.Add(tokens)
 	}
-	return
+	return bonded, unbonding, unbonded
 }
 
 // distributeReward adds the reward to the future vesting schedule in proportion to the future vesting

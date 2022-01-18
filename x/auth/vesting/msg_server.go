@@ -343,6 +343,9 @@ func (s msgServer) Clawback(goCtx context.Context, msg *types.MsgClawback) (*typ
 	}
 
 	acc := ak.GetAccount(ctx, addr)
+	if acc == nil {
+		return nil, fmt.Errorf("account %s does not exist", msg.Address)
+	}
 	va, ok := acc.(*types.TrueVestingAccount)
 	if !ok {
 		return nil, fmt.Errorf("account not subject to clawback: %s", msg.Address)

@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	dbm "github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db/badgerdb"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -39,7 +40,7 @@ func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DBConnectio
 		return simtypes.Config{}, nil, "", nil, false, err
 	}
 
-	db, err := sdk.NewLevelDB(dbName, dir)
+	db, err := badgerdb.NewDB(dbName)
 	if err != nil {
 		return simtypes.Config{}, nil, "", nil, false, err
 	}

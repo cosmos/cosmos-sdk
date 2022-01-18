@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/types"
 	types2 "github.com/cosmos/cosmos-sdk/store/v2"
-	"github.com/cosmos/cosmos-sdk/store/v2/flat"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
@@ -24,14 +23,13 @@ type (
 	// CacheMultiStore           = types.CacheMultiStore
 	// CommitMultiStore          = types.CommitMultiStore
 	// MultiStorePersistentCache = types.MultiStorePersistentCache
-	KVStore         = types.KVStore
-	Iterator        = types.Iterator
-	RootStoreConfig = flat.RootStoreConfig
-	BasicRootStore  = types2.BasicRootStore
-	// RootStore                = types2.RootStore
-	CommitRootStore          = types2.CommitRootStore
-	CacheRootStore           = types2.CacheRootStore
-	RootStorePersistentCache = types2.RootStorePersistentCache
+	KVStore  = types.KVStore
+	Iterator = types.Iterator
+	// MultiStoreConfig          = multi.StoreConfig
+	BasicMultiStore           = types2.BasicMultiStore
+	CommitMultiStore          = types2.CommitMultiStore
+	CacheMultiStore           = types2.CacheMultiStore
+	MultiStorePersistentCache = types2.MultiStorePersistentCache
 )
 
 // StoreDecoderRegistry defines each of the modules store decoders. Used for ImportExport

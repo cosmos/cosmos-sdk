@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	db "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/db/memdb"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
 )
@@ -107,7 +107,7 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = os.RemoveAll(tempdir) })
 
-	store, err := snapshots.NewStore(db.NewMemDB(), tempdir)
+	store, err := snapshots.NewStore(memdb.NewDB(), tempdir)
 	require.NoError(t, err)
 	hung := newHungSnapshotter()
 	mgr := snapshots.NewManager(store, hung)

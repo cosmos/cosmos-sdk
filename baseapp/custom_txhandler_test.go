@@ -65,7 +65,7 @@ func (txh customTxHandler) runHandler(ctx context.Context, tx sdk.Tx, txBytes []
 		return sdkCtx, nil
 	}
 
-	store := sdkCtx.RootStore()
+	store := sdkCtx.MultiStore()
 
 	// Branch context before Handler call in case it aborts.
 	// This is required for both CheckTx and DeliverTx.
@@ -88,7 +88,7 @@ func (txh customTxHandler) runHandler(ctx context.Context, tx sdk.Tx, txBytes []
 		// Also, in the case of the tx aborting, we need to track gas consumed via
 		// the instantiated gas meter in the Handler, so we update the context
 		// prior to returning.
-		sdkCtx = newCtx.WithRootStore(store)
+		sdkCtx = newCtx.WithMultiStore(store)
 	}
 
 	storeCache.Write()
@@ -98,12 +98,12 @@ func (txh customTxHandler) runHandler(ctx context.Context, tx sdk.Tx, txBytes []
 
 // cacheTxContext returns a new context based off of the provided context with
 // a branched multi-store.
-func cacheTxContext(sdkCtx sdk.Context, txBytes []byte) (sdk.Context, sdk.CacheRootStore) {
-	store := sdkCtx.RootStore()
+func cacheTxContext(sdkCtx sdk.Context, txBytes []byte) (sdk.Context, sdk.CacheMultiStore) {
+	store := sdkCtx.MultiStore()
 	// TODO: https://github.com/cosmos/cosmos-sdk/issues/2824
-	storeCache := store.CacheRootStore()
+	storeCache := store.CacheWrap()
 	if storeCache.TracingEnabled() {
-		storeCache.SetTraceContext(
+		storeCache.SetTracingContext(
 			sdk.TraceContext(
 				map[string]interface{}{
 					"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
@@ -112,5 +112,5 @@ func cacheTxContext(sdkCtx sdk.Context, txBytes []byte) (sdk.Context, sdk.CacheR
 		)
 	}
 
-	return sdkCtx.WithRootStore(storeCache), storeCache
+	return sdkCtx.WithMultiStore(storeCache), storeCache
 }

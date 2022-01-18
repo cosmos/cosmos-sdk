@@ -16,7 +16,7 @@ import (
 	// "github.com/cosmos/cosmos-sdk/store"
 	// "github.com/cosmos/cosmos-sdk/store/rootmulti"
 	stypes "github.com/cosmos/cosmos-sdk/store/v2"
-	"github.com/cosmos/cosmos-sdk/store/v2/flat"
+	"github.com/cosmos/cosmos-sdk/store/v2/multi"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
@@ -36,17 +36,18 @@ type (
 	// Enum mode for app.runTx
 	runTxMode uint8
 
-	// StoreLoader defines a customizable function to control how we load the CommitRootStore
+	// StoreLoader defines a customizable function to control how we load the CommitMultiStore
 	// from disk. This is useful for state migration, when loading a datastore written with
 	// an older version of the software. In particular, if a module changed the substore key name
 	// (or removed a substore) between two versions of the software.
-	// StoreLoader func(ms sdk.CommitRootStore) error
+	// StoreLoader func(ms sdk.CommitMultiStore) error
 
-	// StoreLoader func(initialVersion uint64) (sdk.CommitRootStore, error)
-	// StoreLoader func(sdk.RootStoreConfig) (sdk.CommitRootStore, error)
-	// StoreLoader func(*sdk.RootStoreConfig, uint64) (sdk.CommitRootStore, error)
-	StoreOption      func(*sdk.RootStoreConfig, uint64) error
-	StoreConstructor func(dbm.DBConnection, sdk.RootStoreConfig) (sdk.CommitRootStore, error)
+	// StoreLoader func(initialVersion uint64) (sdk.CommitMultiStore, error)
+	// StoreLoader func(multi.StoreConfig) (sdk.CommitMultiStore, error)
+	// StoreLoader func(*multi.StoreConfig, uint64) (sdk.CommitMultiStore, error)
+	StoreConfig      = multi.StoreConfig
+	StoreOption      func(*StoreConfig, uint64) error
+	StoreConstructor func(dbm.DBConnection, multi.StoreConfig) (sdk.CommitMultiStore, error)
 )
 
 // BaseApp reflects the ABCI application implementation.
@@ -56,8 +57,8 @@ type BaseApp struct { // nolint: maligned
 	name      string // application name from abci.Info
 	db        dbm.DBConnection
 	storeCtor StoreConstructor
-	storeOpts []StoreOption       // options to configure root store
-	store     sdk.CommitRootStore // Main (uncached) state
+	storeOpts []StoreOption        // options to configure root store
+	store     sdk.CommitMultiStore // Main (uncached) state
 	// storeLoader StoreLoader         // function to handle store loading
 	queryRouter       sdk.QueryRouter  // router for redirecting query calls
 	grpcQueryRouter   *GRPCQueryRouter // router for redirecting gRPC query calls
@@ -163,6 +164,7 @@ func (opt AppOptionOrdered) Order() OptionOrder { return opt.order }
 func (opt AppOptionFunc) Apply(app *BaseApp) { opt(app) }
 func (opt AppOptionFunc) Order() OptionOrder { return OptionOrderDefault }
 
+// StoreOption implements AppOption, and can be passed to the app constructor.
 func (opt StoreOption) Apply(app *BaseApp) { app.storeOpts = append(app.storeOpts, opt) }
 func (opt StoreOption) Order() OptionOrder { return OptionOrderDefault }
 
@@ -175,7 +177,6 @@ func NewBaseApp(
 	name string,
 	logger log.Logger,
 	db dbm.DBConnection,
-	txDecoder sdk.TxDecoder,
 	options ...AppOption,
 ) *BaseApp {
 	app := &BaseApp{
@@ -206,16 +207,14 @@ func NewBaseApp(
 	}
 
 	// // TODO: conditional loading of multistore/rootstore
-	// if true {
-	// 	var err error
-	// 	opts := store.RootStoreConfig{PersistentCache: app.interBlockCache}
-	// 	app.store, err = store.NewCommitRootStore(db, opts)
+	// if loadv2 {
+	// 	opts := store.StoreConfig{PersistentCache: app.interBlockCache}
+	// 	store, err := multi.NewStore(db, opts)
 	// 	if err != nil {
 	// 		panic(err)
 	// 	}
 	// } else {
-	// 	// app.store = nil store.NewCommitMultiStore(dbutil.ConnectionAsTmdb(db))
-	// 	app.store = store.MultiStoreAsRootStore(db)
+	// 	app.store = NewCommitMultiStore(dbutil.ConnectionAsTmdb(db))
 	// }
 
 	return app
@@ -252,13 +251,13 @@ func (app *BaseApp) loadStore() error {
 		return err
 	}
 	latest := versions.Last()
-	config := flat.DefaultRootStoreConfig()
+	config := multi.DefaultStoreConfig()
 	for _, opt := range app.storeOpts {
 		opt(&config, latest)
 	}
 	app.store, err = app.storeCtor(app.db, config)
 	if err != nil {
-		return fmt.Errorf("failed to load latest version: %w", err)
+		return fmt.Errorf("failed to load store: %w", err)
 	}
 	return nil
 }
@@ -268,8 +267,8 @@ func (app *BaseApp) CloseStore() error {
 }
 
 // DefaultStoreConstructor attempts to create a new store, but loads from existing data if present.
-func DefaultStoreConstructor(db dbm.DBConnection, config sdk.RootStoreConfig) (stypes.CommitRootStore, error) {
-	return flat.NewRootStore(db, config)
+func DefaultStoreConstructor(db dbm.DBConnection, config multi.StoreConfig) (stypes.CommitMultiStore, error) {
+	return multi.NewStore(db, config)
 }
 
 // LastCommitID returns the last CommitID of the multistore.
@@ -348,7 +347,7 @@ func (app *BaseApp) IsSealed() bool { return app.sealed }
 // provided header, and minimum gas prices set. It is set on InitChain and reset
 // on Commit.
 func (app *BaseApp) setCheckState(header tmproto.Header) {
-	ms := app.store.CacheRootStore()
+	ms := app.store.CacheWrap()
 	app.checkState = &state{
 		ms:  ms,
 		ctx: sdk.NewContext(ms, header, true, app.logger).WithMinGasPrices(app.minGasPrices),
@@ -360,7 +359,7 @@ func (app *BaseApp) setCheckState(header tmproto.Header) {
 // and provided header. It is set on InitChain and BeginBlock and set to nil on
 // Commit.
 func (app *BaseApp) setDeliverState(header tmproto.Header) {
-	ms := app.store.CacheRootStore()
+	ms := app.store.CacheWrap()
 	app.deliverState = &state{
 		ms:  ms,
 		ctx: sdk.NewContext(ms, header, false, app.logger),

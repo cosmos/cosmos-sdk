@@ -27,7 +27,7 @@ func (app *BaseApp) DeliverState() *state {
 // Store is an exported method to be able to access baseapp's root store in tests.
 //
 // This method is only accessible in baseapp tests.
-func (app *BaseApp) Store() types.CommitRootStore {
+func (app *BaseApp) Store() types.CommitMultiStore {
 	return app.store
 }
 

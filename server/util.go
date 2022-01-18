@@ -24,6 +24,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	dbm "github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db/badgerdb"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -372,8 +373,9 @@ func addrToIP(addr net.Addr) net.IP {
 }
 
 func openDB(rootDir string) (dbm.DBConnection, error) {
-	dataDir := filepath.Join(rootDir, "data")
-	return sdk.NewLevelDB("application", dataDir)
+	// dataDir := filepath.Join(rootDir, "data")
+	// return sdk.NewLevelDB("application", dataDir)
+	return badgerdb.NewDB(rootDir)
 }
 
 func openTraceWriter(traceWriterFile string) (w io.Writer, err error) {

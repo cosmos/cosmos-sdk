@@ -16,7 +16,7 @@ import (
 
 // SetPruning sets a pruning option on the multistore associated with the app
 func SetPruning(opts sdk.PruningOptions) StoreOption {
-	return func(config *sdk.RootStoreConfig, _ uint64) error { config.Pruning = opts; return nil }
+	return func(config *StoreConfig, _ uint64) error { config.Pruning = opts; return nil }
 }
 
 // SetMinGasPrices returns an option that sets the minimum gas prices on the app.
@@ -56,15 +56,10 @@ func SetIndexEvents(ie []string) AppOptionFunc {
 	return func(app *BaseApp) { app.setIndexEvents(ie) }
 }
 
-// SetIAVLCacheSize provides a BaseApp option function that sets the size of IAVL cache.
-func SetIAVLCacheSize(size int) func(*BaseApp) {
-	return func(bapp *BaseApp) { bapp.cms.SetIAVLCacheSize(size) }
-}
-
 // SetInterBlockCache provides a BaseApp option function that sets the
 // inter-block cache.
-func SetInterBlockCache(cache sdk.RootStorePersistentCache) AppOptionFunc {
-	opt := func(cfg *sdk.RootStoreConfig, v uint64) error {
+func SetInterBlockCache(cache sdk.MultiStorePersistentCache) AppOptionFunc {
+	opt := func(cfg *StoreConfig, v uint64) error {
 		cfg.PersistentCache = cache
 		return nil
 	}
@@ -89,15 +84,15 @@ func SetSnapshotStore(snapshotStore *snapshots.Store) AppOptionOrdered {
 	}
 }
 
-// SetStorePrefixes store reserves prefix according to app configuration
-func SetStorePrefixes(keys ...storetypes.StoreKey) StoreOption {
-	return func(config *sdk.RootStoreConfig, _ uint64) error {
+// SetSubstores store registers substores according to app configuration
+func SetSubstores(keys ...storetypes.StoreKey) StoreOption {
+	return func(config *StoreConfig, _ uint64) error {
 		for _, key := range keys {
 			typ, err := storetypes.StoreKeyToType(key)
 			if err != nil {
 				return err
 			}
-			if err = config.ReservePrefix(key, typ); err != nil {
+			if err = config.RegisterSubstore(key.Name(), typ); err != nil {
 				return err
 			}
 		}
@@ -194,7 +189,7 @@ func (app *BaseApp) SetFauxMerkleMode() {
 // SetCommitMultiStoreTracer sets the store tracer on the BaseApp's underlying
 // CommitMultiStore.
 func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
-	opt := func(cfg *sdk.RootStoreConfig, v uint64) error {
+	opt := func(cfg *StoreConfig, v uint64) error {
 		cfg.TraceWriter = w
 		return nil
 	}
@@ -248,7 +243,7 @@ func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 func (app *BaseApp) SetStreamingService(s StreamingService) {
 	// add the listeners for each StoreKey
 	for key, lis := range s.Listeners() {
-		app.cms.AddListeners(key, lis)
+		app.store.AddListeners(key, lis)
 	}
 	// register the StreamingService within the BaseApp
 	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context

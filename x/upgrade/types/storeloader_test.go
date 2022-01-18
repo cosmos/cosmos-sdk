@@ -11,20 +11,15 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	dbm "github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db/memdb"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/multi"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-func useUpgradeLoader(height int64, upgrades *storetypes.StoreUpgrades) func(*baseapp.BaseApp) {
-	return func(app *baseapp.BaseApp) {
-		app.SetStoreLoader(UpgradeStoreLoader(height, upgrades))
-	}
-}
 
 func defaultLogger() log.Logger {
 	writer := zerolog.ConsoleWriter{Out: os.Stderr}
@@ -33,37 +28,38 @@ func defaultLogger() log.Logger {
 	}
 }
 
-func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
-	rs := rootmulti.NewStore(db)
-	rs.SetPruning(storetypes.PruneNothing)
+func initStore(t *testing.T, db dbm.DBConnection, config multi.StoreConfig, storeKey string, k, v []byte) {
 	key := sdk.NewKVStoreKey(storeKey)
-	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
-	err := rs.LoadLatestVersion()
-	require.Nil(t, err)
+	rs, err := multi.NewStore(db, config)
+	require.NoError(t, err)
+	rs.SetPruning(storetypes.PruneNothing)
 	require.Equal(t, int64(0), rs.LastCommitID().Version)
 
 	// write some data in substore
-	kv, _ := rs.GetStore(key).(storetypes.KVStore)
+	kv := rs.GetKVStore(key)
 	require.NotNil(t, kv)
 	kv.Set(k, v)
 	commitID := rs.Commit()
 	require.Equal(t, int64(1), commitID.Version)
+	require.NoError(t, rs.Close())
 }
 
-func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
-	rs := rootmulti.NewStore(db)
-	rs.SetPruning(storetypes.PruneNothing)
+func checkStore(t *testing.T, db dbm.DBConnection, config multi.StoreConfig, ver int64, storeKey string, k, v []byte) {
 	key := sdk.NewKVStoreKey(storeKey)
-	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
-	err := rs.LoadLatestVersion()
-	require.Nil(t, err)
+	rs, err := multi.NewStore(db, config)
+	require.NoError(t, err)
+	rs.SetPruning(storetypes.PruneNothing)
 	require.Equal(t, ver, rs.LastCommitID().Version)
 
-	// query data in substore
-	kv, _ := rs.GetStore(key).(storetypes.KVStore)
-
-	require.NotNil(t, kv)
-	require.Equal(t, v, kv.Get(k))
+	if v != nil {
+		kv := rs.GetKVStore(key)
+		require.NotNil(t, kv)
+		require.Equal(t, v, kv.Get(k))
+	} else {
+		// v == nil indicates the substore was moved and no longer exists
+		require.Panics(t, func() { _ = rs.GetKVStore(key) })
+	}
+	require.NoError(t, rs.Close())
 }
 
 // Test that we can make commits and then reload old versions.
@@ -89,7 +85,7 @@ func TestSetLoader(t *testing.T) {
 	require.NoError(t, err)
 
 	cases := map[string]struct {
-		setLoader    func(*baseapp.BaseApp)
+		setLoader    baseapp.AppOption
 		origStoreKey string
 		loadStoreKey string
 	}{
@@ -99,7 +95,7 @@ func TestSetLoader(t *testing.T) {
 			loadStoreKey: "foo",
 		},
 		"rename with inline opts": {
-			setLoader: useUpgradeLoader(upgradeHeight, &storetypes.StoreUpgrades{
+			setLoader: UpgradeStoreOption(uint64(upgradeHeight), &storetypes.StoreUpgrades{
 				Renamed: []storetypes.StoreRename{{
 					OldKey: "foo",
 					NewKey: "bar",
@@ -116,47 +112,54 @@ func TestSetLoader(t *testing.T) {
 	for name, tc := range cases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			// prepare a db with some data
-			db := dbm.NewMemDB()
+			origConfig := multi.DefaultStoreConfig()
+			loadConfig := multi.DefaultStoreConfig()
+			require.NoError(t, origConfig.RegisterSubstore(tc.origStoreKey, storetypes.StoreTypePersistent))
+			require.NoError(t, loadConfig.RegisterSubstore(tc.loadStoreKey, storetypes.StoreTypePersistent))
 
-			initStore(t, db, tc.origStoreKey, k, v)
+			// prepare a db with some data
+			db := memdb.NewDB()
+			initStore(t, db, origConfig, tc.origStoreKey, k, v)
 
 			// load the app with the existing db
-			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(storetypes.PruneNothing)}
-
+			opts := []baseapp.AppOption{
+				baseapp.SetPruning(storetypes.PruneNothing),
+				baseapp.SetSubstores(sdk.NewKVStoreKey(tc.origStoreKey)),
+			}
 			origapp := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, opts...)
-			origapp.MountStores(sdk.NewKVStoreKey(tc.origStoreKey))
-			err := origapp.LoadLatestVersion()
-			require.Nil(t, err)
+			require.NoError(t, origapp.Init())
 
 			for i := int64(2); i <= upgradeHeight-1; i++ {
 				origapp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: i}})
 				res := origapp.Commit()
 				require.NotNil(t, res.Data)
 			}
+			require.NoError(t, origapp.CloseStore())
 
+			// load the new app with the original app db
+			opts = []baseapp.AppOption{
+				baseapp.SetPruning(storetypes.PruneNothing),
+				baseapp.SetSubstores(sdk.NewKVStoreKey(tc.loadStoreKey)),
+			}
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)
 			}
-
-			// load the new app with the original app db
 			app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, opts...)
-			app.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
-			err = app.LoadLatestVersion()
-			require.Nil(t, err)
+			require.NoError(t, app.Init())
 
 			// "execute" one block
 			app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: upgradeHeight}})
 			res := app.Commit()
 			require.NotNil(t, res.Data)
+			require.NoError(t, app.CloseStore())
 
 			// checking the case of the store being renamed
 			if tc.setLoader != nil {
-				checkStore(t, db, upgradeHeight, tc.origStoreKey, k, nil)
+				checkStore(t, db, loadConfig, upgradeHeight, tc.origStoreKey, k, nil)
 			}
 
 			// check db is properly updated
-			checkStore(t, db, upgradeHeight, tc.loadStoreKey, k, v)
+			checkStore(t, db, loadConfig, upgradeHeight, tc.loadStoreKey, k, v)
 		})
 	}
 }

@@ -13,6 +13,7 @@ import (
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/db/badgerdb"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,7 +35,7 @@ func testTxHandler(options middleware.TxHandlerOptions) tx.Handler {
 // similar to a real app. Make sure rootDir is empty before running the test,
 // in order to guarantee consistent results
 func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
-	db, err := sdk.NewLevelDB("mock", filepath.Join(rootDir, "data"))
+	db, err := badgerdb.NewDB(filepath.Join(rootDir, "data", "mock"))
 	if err != nil {
 		return nil, err
 	}
@@ -43,10 +44,8 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	capKeyMainStore := sdk.NewKVStoreKey("main")
 
 	// Create BaseApp.
-	baseApp := bam.NewBaseApp("kvstore", logger, db)
-
-	// Set mounts for BaseApp's MultiStore.
-	baseApp.MountStores(capKeyMainStore)
+	opt := bam.SetSubstores(capKeyMainStore)
+	baseApp := bam.NewBaseApp("kvstore", logger, db, opt)
 
 	baseApp.SetInitChainer(InitChainer(capKeyMainStore))
 
@@ -64,12 +63,6 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 		},
 	)
 	baseApp.SetTxHandler(txHandler)
-
-	// Load latest version.
-	if err := baseApp.LoadLatestVersion(); err != nil {
-		return nil, err
-	}
-
 	return baseApp, nil
 }
 

@@ -47,11 +47,6 @@ func (txh runMsgsTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.
 // Handler does not exist for a given message route. Otherwise, a reference to a
 // Result is returned. The caller must not commit state if an error is returned.
 func (txh runMsgsTxHandler) runMsgs(sdkCtx sdk.Context, msgs []sdk.Msg, txBytes []byte) (tx.Response, error) {
-	// Create a new Context based off of the existing Context with a RootStore branch
-	// in case message processing fails. At this point, the RootStore
-	// is a branch of a branch.
-	runMsgCtx, msCache := cacheTxContext(sdkCtx, txBytes)
-
 	// Attempt to execute all messages and only update state if all messages pass
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
@@ -119,23 +114,4 @@ func (txh runMsgsTxHandler) runMsgs(sdkCtx sdk.Context, msgs []sdk.Msg, txBytes 
 		Events:       events.ToABCIEvents(),
 		MsgResponses: msgResponses,
 	}, nil
-}
-
-// cacheTxContext returns a new context based off of the provided context with
-// a branched multi-store.
-func cacheTxContext(sdkCtx sdk.Context, txBytes []byte) (sdk.Context, sdk.CacheRootStore) {
-	ms := sdkCtx.RootStore()
-	// TODO: https://github.com/cosmos/cosmos-sdk/issues/2824
-	msCache := ms.CacheRootStore()
-	if msCache.TracingEnabled() {
-		msCache.SetTraceContext(
-			sdk.TraceContext(
-				map[string]interface{}{
-					"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
-				},
-			),
-		)
-	}
-
-	return sdkCtx.WithRootStore(msCache), msCache
 }

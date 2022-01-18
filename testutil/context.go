@@ -7,26 +7,32 @@ import (
 	"github.com/cosmos/cosmos-sdk/db/memdb"
 	// "github.com/cosmos/cosmos-sdk/store"
 	stypes "github.com/cosmos/cosmos-sdk/store/v2"
-	"github.com/cosmos/cosmos-sdk/store/v2/flat"
+	"github.com/cosmos/cosmos-sdk/store/v2/multi"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // DefaultContext creates a sdk.Context with a fresh MemDB that can be used in tests.
-func DefaultContext(key, tkey stypes.StoreKey) (ret sdk.Context, err error) {
+func DefaultContext(key, tkey stypes.StoreKey) (ret sdk.Context) {
+	var err error
+	defer func() {
+		if err != nil {
+			panic(err)
+		}
+	}()
 	db := memdb.NewDB()
-	opts := flat.DefaultRootStoreConfig()
-	err = opts.ReservePrefix(key, stypes.StoreTypePersistent)
+	opts := multi.DefaultStoreConfig()
+	err = opts.RegisterSubstore(key.Name(), stypes.StoreTypePersistent)
 	if err != nil {
 		return
 	}
-	err = opts.ReservePrefix(tkey, stypes.StoreTypeTransient)
+	err = opts.RegisterSubstore(tkey.Name(), stypes.StoreTypeTransient)
 	if err != nil {
 		return
 	}
-	rs, err := flat.NewRootStore(db, opts)
+	rs, err := multi.NewStore(db, opts)
 	if err != nil {
 		return
 	}
-	ret = sdk.NewContext(rs, tmproto.Header{}, false, log.NewNopLogger())
+	ret = sdk.NewContext(rs.CacheWrap(), tmproto.Header{}, false, log.NewNopLogger())
 	return
 }

@@ -38,6 +38,7 @@ import (
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	encCfg := MakeTestEncodingConfig()
+	logger, _ := log.NewDefaultLogger("plain", "info", false)
 	db := memdb.NewDB()
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
 		Logger:             logger,
@@ -79,7 +80,7 @@ func TestRunMigrations(t *testing.T) {
 	app := NewSimApp(logger, memdb.NewDB(), nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
 
 	// Create a new baseapp and configurator for the purpose of this test.
-	bApp := baseapp.NewBaseApp(appName, logger, memdb.NewDB(), encCfg.TxConfig.TxDecoder())
+	bApp := baseapp.NewBaseApp(appName, logger, memdb.NewDB())
 	bApp.SetCommitMultiStoreTracer(nil)
 	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	msr := authmiddleware.NewMsgServiceRouter(encCfg.InterfaceRegistry)
@@ -251,6 +252,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 func TestUpgradeStateOnGenesis(t *testing.T) {
 	encCfg := MakeTestEncodingConfig()
 	db := memdb.NewDB()
+	logger, _ := log.NewDefaultLogger("plain", "info", false)
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
 		Logger:             logger,
 		DB:                 db,

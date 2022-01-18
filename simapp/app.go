@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cast"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
-	// tmos "github.com/tendermint/tendermint/libs/os"
+	tmos "github.com/tendermint/tendermint/libs/os"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -28,6 +28,7 @@ import (
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/store/streaming"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storev2 "github.com/cosmos/cosmos-sdk/store/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -49,13 +50,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	storev2 "github.com/cosmos/cosmos-sdk/store/v2"
-	authmiddleware "github.com/cosmos/cosmos-sdk/x/auth/middleware"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -212,7 +206,6 @@ func init() {
 func NewSimApp(
 	logger log.Logger,
 	db dbm.DBConnection,
-	// rootStore sdk.CommitRootStore,
 	traceStore io.Writer,
 	loadLatest bool,
 	skipUpgradeHeights map[int64]bool,
@@ -238,13 +231,13 @@ func NewSimApp(
 	// not include this key.
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, "testingkey")
 	// initialize stores
-	setNamespaces := func(config *sdk.RootStoreConfig, ver uint64) error {
+	setNamespaces := func(config *baseapp.StoreConfig, ver uint64) error {
 		for _, key := range keys {
 			typ, err := storev2.StoreKeyToType(key)
 			if err != nil {
 				return err
 			}
-			if err = config.ReservePrefix(key, typ); err != nil {
+			if err = config.RegisterSubstore(key.Name(), typ); err != nil {
 				return err
 			}
 		}
@@ -253,7 +246,7 @@ func NewSimApp(
 			if err != nil {
 				return err
 			}
-			if err = config.ReservePrefix(key, typ); err != nil {
+			if err = config.RegisterSubstore(key.Name(), typ); err != nil {
 				return err
 			}
 		}
@@ -262,7 +255,7 @@ func NewSimApp(
 			if err != nil {
 				return err
 			}
-			if err = config.ReservePrefix(key, typ); err != nil {
+			if err = config.RegisterSubstore(key.Name(), typ); err != nil {
 				return err
 			}
 		}
@@ -270,7 +263,7 @@ func NewSimApp(
 	}
 	baseAppOptions = append(baseAppOptions, baseapp.StoreOption(setNamespaces))
 
-	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
+	bApp := baseapp.NewBaseApp(appName, logger, db, baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)

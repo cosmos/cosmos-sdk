@@ -3,8 +3,8 @@ package capability_test
 import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/db/memdb"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -33,7 +33,7 @@ func (suite *CapabilityTestSuite) TestGenesis() {
 
 	// create new app that does not share persistent or in-memory state
 	// and initialize app from exported genesis state above.
-	db := dbm.NewMemDB()
+	db := memdb.NewDB()
 	encCdc := simapp.MakeTestEncodingConfig()
 	newApp := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, simapp.DefaultNodeHome, 5, encCdc, simapp.EmptyAppOptions{})
 

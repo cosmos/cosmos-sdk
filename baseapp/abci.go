@@ -17,6 +17,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/multi"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -137,7 +138,7 @@ func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 
 	if app.store.TracingEnabled() {
-		app.store.SetTraceContext(sdk.TraceContext(
+		app.store.SetTracingContext(sdk.TraceContext(
 			map[string]interface{}{"blockHeight": req.Header.Height},
 		))
 	}
@@ -203,7 +204,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 
 	if app.deliverState.ms.TracingEnabled() {
-		app.deliverState.ms.SetTraceContext(nil)
+		app.deliverState.ms.SetTracingContext(nil)
 	}
 
 	if app.endBlocker != nil {
@@ -637,7 +638,7 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 			)
 	}
 
-	cacheMS, err := app.store.GetVersion(height)
+	version, err := app.store.GetVersion(height)
 	if err != nil {
 		return sdk.Context{},
 			sdkerrors.Wrapf(
@@ -645,6 +646,7 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 				"failed to load state at height %d; %s (latest height: %d)", height, err, app.LastBlockHeight(),
 			)
 	}
+	cacheMS := multi.BasicAsCacheStore(version)
 
 	// branch the commit-multistore for safety
 	ctx := sdk.NewContext(

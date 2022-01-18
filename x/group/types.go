@@ -120,27 +120,6 @@ func (p *ThresholdDecisionPolicy) Validate(g GroupInfo) error {
 
 var _ orm.Validateable = GroupWithPolicyInfo{}
 
-// NewGroupWithPolicyInfo creates a new GroupWithPolicyInfo instance
-func NewGroupWithPolicyInfo(groupId uint64, admin sdk.AccAddress, groupPolicyAddr sdk.AccAddress, groupMetadata []byte,
-	groupPolicyMetadata []byte, totalWeight string, version uint64, decisionPolicy DecisionPolicy, createdAt time.Time) (GroupWithPolicyInfo, error) {
-	p := GroupWithPolicyInfo{
-		GroupId:             groupId,
-		Admin:               admin.String(),
-		GroupPolicyAddress:  groupPolicyAddr.String(),
-		GroupMetadata:       groupMetadata,
-		GroupPolicyMetadata: groupPolicyMetadata,
-		TotalWeight:         totalWeight,
-		Version:             version,
-		CreatedAt:           createdAt,
-	}
-
-	err := p.SetDecisionPolicy(decisionPolicy)
-	if err != nil {
-		return GroupWithPolicyInfo{}, err
-	}
-	return p, nil
-}
-
 var _ orm.Validateable = GroupPolicyInfo{}
 
 // NewGroupPolicyInfo creates a new GroupPolicyInfo instance

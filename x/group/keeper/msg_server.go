@@ -307,23 +307,16 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 		admin = groupWithPolicyAddr
 	}
 
-	// Create a new group with policy in the groupTable.
-	groupWithPolicyInfo, err := group.NewGroupWithPolicyInfo(
-		k.groupPolicySeq.PeekNextVal(ctx.KVStore(k.key)),
-		admin,
-		groupWithPolicyAddr,
-		groupMetadata,
-		groupPolicyMetadata,
-		totalWeight.String(),
-		1,
-		policy,
-		ctx.BlockTime(),
-	)
-	if err != nil {
-		return nil, err
+	// Create a new group in the groupTable.
+	groupInfo := &group.GroupInfo{
+		GroupId:     k.groupTable.Sequence().PeekNextVal(ctx.KVStore(k.key)),
+		Admin:       admin.String(),
+		Metadata:    groupMetadata,
+		Version:     1,
+		TotalWeight: totalWeight.String(),
+		CreatedAt:   ctx.BlockTime(),
 	}
-
-	groupID, err := k.groupTable.Create(ctx.KVStore(k.key), &groupWithPolicyInfo)
+	groupID, err := k.groupTable.Create(ctx.KVStore(k.key), groupInfo)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "could not create group")
 	}
@@ -345,12 +338,30 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 		}
 	}
 
+	groupPolicyInfo, err := group.NewGroupPolicyInfo(
+		groupWithPolicyAddr,
+		groupID,
+		admin,
+		groupPolicyMetadata,
+		1,
+		policy,
+		ctx.BlockTime(),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.groupPolicyTable.Create(ctx.KVStore(k.key), &groupPolicyInfo)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "could not create group policy")
+	}
+
 	err = ctx.EventManager().EmitTypedEvent(&group.EventCreateGroupWithPolicy{GroupId: groupID, GroupPolicyAddress: groupWithPolicyAddr.String()})
 	if err != nil {
 		return nil, err
 	}
 
-	return &group.MsgCreateGroupWithPolicyResponse{GroupId: groupWithPolicyInfo.GroupId, GroupPolicyAddress: groupWithPolicyAddr.String()}, nil
+	return &group.MsgCreateGroupWithPolicyResponse{GroupId: groupID, GroupPolicyAddress: groupWithPolicyAddr.String()}, nil
 }
 
 func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGroupPolicy) (*group.MsgCreateGroupPolicyResponse, error) {

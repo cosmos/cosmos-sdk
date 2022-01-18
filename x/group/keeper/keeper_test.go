@@ -205,7 +205,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 				GroupPolicyAsAdmin:  false,
 			},
 			policy: group.NewThresholdDecisionPolicy(
-				"1",
+				"10",
 				time.Second,
 			),
 			expErr: false,

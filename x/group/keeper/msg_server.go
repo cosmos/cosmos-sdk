@@ -303,7 +303,7 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 	}
 
 	groupPolicyAsAdmin := req.GetGroupPolicyAsAdmin()
-	if groupPolicyAsAdmin == true {
+	if groupPolicyAsAdmin {
 		admin = groupWithPolicyAddr
 	}
 

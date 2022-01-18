@@ -13,7 +13,6 @@ import (
 	tmtime "github.com/tendermint/tendermint/libs/time"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	// "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -95,8 +94,7 @@ func (s *TestSuite) SetupTest() {
 	s.Require().NoError(err)
 	groupWithPolicyAddr, err := sdk.AccAddressFromBech32(groupWithPolicyRes.GroupPolicyAddress)
 	s.Require().NoError(err)
-	groupPolicyId := groupWithPolicyRes.GroupId
-	s.groupWithPolicyId = groupPolicyId
+	s.groupWithPolicyId = groupWithPolicyRes.GroupId
 	fmt.Println("---------")
 	fmt.Println(s.groupWithPolicyId)
 	s.groupWithPolicyAddr = groupWithPolicyAddr

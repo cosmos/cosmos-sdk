@@ -235,16 +235,15 @@ func (k Keeper) UpdateGroupMetadata(goCtx context.Context, req *group.MsgUpdateG
 
 func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreateGroupWithPolicy) (*group.MsgCreateGroupWithPolicyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	policy := req.GetDecisionPolicy()
-	members := group.Members{Members: req.Members}
-	if err := members.ValidateBasic(); err != nil {
-		return nil, err
-	}
-
 	var admin sdk.AccAddress
 	admin, err := sdk.AccAddressFromBech32(req.GetAdmin())
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "request admin")
+	}
+
+	members := group.Members{Members: req.Members}
+	if err := members.ValidateBasic(); err != nil {
+		return nil, err
 	}
 
 	groupMetadata := req.GetGroupMetadata()
@@ -257,111 +256,63 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 		return nil, err
 	}
 
-	totalWeight := math.NewDecFromInt64(0)
-	for i := range members.Members {
-		m := members.Members[i]
-		if err := assertMetadataLength(m.Metadata, "member metadata"); err != nil {
-			return nil, err
-		}
-
-		// Members of a group must have a positive weight.
-		weight, err := math.NewPositiveDecFromString(m.Weight)
-		if err != nil {
-			return nil, err
-		}
-
-		// Adding up members weights to compute group total weight.
-		totalWeight, err = totalWeight.Add(weight)
-		if err != nil {
-			return nil, err
-		}
+	groupRes, err := k.CreateGroup(goCtx, &group.MsgCreateGroup{
+		Admin:    admin.String(),
+		Members:  members.Members,
+		Metadata: groupMetadata,
+	})
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "group response")
 	}
+	groupId := groupRes.GroupId
 
-	// Generate account address of groupWithPolicy.
-	var groupWithPolicyAddr sdk.AccAddress
-	// loop here in the rare case of a collision
-	for {
-		nextAccVal := k.groupPolicySeq.NextVal(ctx.KVStore(k.key))
-		var buf = make([]byte, 8)
-		binary.BigEndian.PutUint64(buf, nextAccVal)
+	var groupPolicyAddr sdk.AccAddress
+	groupPolicyRes, err := k.CreateGroupPolicy(goCtx, &group.MsgCreateGroupPolicy{
+		Admin:          admin.String(),
+		GroupId:        groupId,
+		Metadata:       groupPolicyMetadata,
+		DecisionPolicy: req.DecisionPolicy,
+	})
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "group policy response")
+	}
+	policyAddr := groupPolicyRes.Address
 
-		parentAcc := address.Module(group.ModuleName, []byte{GroupTablePrefix})
-		groupWithPolicyAddr = address.Derive(parentAcc, buf)
-
-		if k.accKeeper.GetAccount(ctx, groupWithPolicyAddr) != nil {
-			// handle a rare collision
-			continue
-		}
-		acc := k.accKeeper.NewAccount(ctx, &authtypes.ModuleAccount{
-			BaseAccount: &authtypes.BaseAccount{
-				Address: groupWithPolicyAddr.String(),
-			},
-			Name: groupWithPolicyAddr.String(),
-		})
-		k.accKeeper.SetAccount(ctx, acc)
-		break
+	groupPolicyAddr, err = sdk.AccAddressFromBech32(policyAddr)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "group policy address")
 	}
 
 	groupPolicyAsAdmin := req.GetGroupPolicyAsAdmin()
 	if groupPolicyAsAdmin {
-		admin = groupWithPolicyAddr
-	}
-
-	// Create a new group in the groupTable.
-	groupInfo := &group.GroupInfo{
-		GroupId:     k.groupTable.Sequence().PeekNextVal(ctx.KVStore(k.key)),
-		Admin:       admin.String(),
-		Metadata:    groupMetadata,
-		Version:     1,
-		TotalWeight: totalWeight.String(),
-		CreatedAt:   ctx.BlockTime(),
-	}
-	groupID, err := k.groupTable.Create(ctx.KVStore(k.key), groupInfo)
-	if err != nil {
-		return nil, sdkerrors.Wrap(err, "could not create group")
-	}
-
-	// Create new group members in the groupMemberTable.
-	for i := range members.Members {
-		m := members.Members[i]
-		err := k.groupMemberTable.Create(ctx.KVStore(k.key), &group.GroupMember{
-			GroupId: groupID,
-			Member: &group.Member{
-				Address:  m.Address,
-				Weight:   m.Weight,
-				Metadata: m.Metadata,
-				AddedAt:  ctx.BlockTime(),
-			},
-		})
+		newAdmin := groupPolicyAddr
+		updateAdminReq := &group.MsgUpdateGroupAdmin{
+			GroupId:  groupId,
+			Admin:    admin.String(),
+			NewAdmin: newAdmin.String(),
+		}
+		_, err = k.UpdateGroupAdmin(goCtx, updateAdminReq)
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "could not store member %d", i)
+			return nil, err
+		}
+
+		updatePolicyAddressReq := &group.MsgUpdateGroupPolicyAdmin{
+			Admin:    admin.String(),
+			Address:  groupPolicyAddr.String(),
+			NewAdmin: newAdmin.String(),
+		}
+		_, err = k.UpdateGroupPolicyAdmin(goCtx, updatePolicyAddressReq)
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	groupPolicyInfo, err := group.NewGroupPolicyInfo(
-		groupWithPolicyAddr,
-		groupID,
-		admin,
-		groupPolicyMetadata,
-		1,
-		policy,
-		ctx.BlockTime(),
-	)
+	err = ctx.EventManager().EmitTypedEvent(&group.EventCreateGroupWithPolicy{GroupId: groupId, GroupPolicyAddress: groupPolicyAddr.String()})
 	if err != nil {
 		return nil, err
 	}
 
-	err = k.groupPolicyTable.Create(ctx.KVStore(k.key), &groupPolicyInfo)
-	if err != nil {
-		return nil, sdkerrors.Wrap(err, "could not create group policy")
-	}
-
-	err = ctx.EventManager().EmitTypedEvent(&group.EventCreateGroupWithPolicy{GroupId: groupID, GroupPolicyAddress: groupWithPolicyAddr.String()})
-	if err != nil {
-		return nil, err
-	}
-
-	return &group.MsgCreateGroupWithPolicyResponse{GroupId: groupID, GroupPolicyAddress: groupWithPolicyAddr.String()}, nil
+	return &group.MsgCreateGroupWithPolicyResponse{GroupId: groupId, GroupPolicyAddress: groupPolicyAddr.String()}, nil
 }
 
 func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGroupPolicy) (*group.MsgCreateGroupPolicyResponse, error) {

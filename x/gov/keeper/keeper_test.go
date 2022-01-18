@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 type KeeperTestSuite struct {
@@ -26,6 +27,14 @@ type KeeperTestSuite struct {
 func (suite *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(suite.T(), false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	// Populate the gov account with some coins, as the TestProposal we have
+	// is a MsgSend from the gov account.
+	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100000)))
+	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
+	suite.NoError(err)
+	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)
+	suite.NoError(err)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	v1beta2.RegisterQueryServer(queryHelper, app.GovKeeper)

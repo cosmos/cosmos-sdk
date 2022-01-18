@@ -70,7 +70,13 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 
 			if testCase.expPass {
 				suite.Require().NoError(err)
-				suite.Require().Equal(expProposal.String(), proposalRes.Proposal.String())
+				// Instead of using MashalJSON, we could compare .String() output too.
+				// https://github.com/cosmos/cosmos-sdk/issues/10965
+				expJSON, err := suite.app.AppCodec().MarshalJSON(&expProposal)
+				suite.Require().NoError(err)
+				actualJSON, err := suite.app.AppCodec().MarshalJSON(proposalRes.Proposal)
+				suite.Require().NoError(err)
+				suite.Require().Equal(expJSON, actualJSON)
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(proposalRes)
@@ -212,7 +218,14 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 
 				suite.Require().Len(proposals.GetProposals(), len(expRes.GetProposals()))
 				for i := 0; i < len(proposals.GetProposals()); i++ {
-					suite.Require().Equal(proposals.GetProposals()[i].String(), expRes.GetProposals()[i].String())
+					// Instead of using MashalJSON, we could compare .String() output too.
+					// https://github.com/cosmos/cosmos-sdk/issues/10965
+					expJSON, err := suite.app.AppCodec().MarshalJSON(expRes.GetProposals()[i])
+					suite.Require().NoError(err)
+					actualJSON, err := suite.app.AppCodec().MarshalJSON(proposals.GetProposals()[i])
+					suite.Require().NoError(err)
+
+					suite.Require().Equal(expJSON, actualJSON)
 				}
 
 			} else {
@@ -783,7 +796,10 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 
 				expRes = &v1beta2.QueryTallyResultResponse{
 					Tally: &v1beta2.TallyResult{
-						Yes: sdk.NewInt(3 * 5 * 1000000).String(),
+						Yes:        sdk.NewInt(3 * 5 * 1000000).String(),
+						No:         "0",
+						Abstain:    "0",
+						NoWithVeto: "0",
 					},
 				}
 			},

@@ -309,7 +309,7 @@ func Test_runAddCmdDryRun(t *testing.T) {
 				WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
 			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
-			path := sdk.GetFullBIP44Path()
+			path := sdk.GetConfig().GetFullBIP44Path()
 			_, err = kb.NewAccount("subkey", testdata.TestMnemonic, "", path, hd.Secp256k1)
 			require.NoError(t, err)
 

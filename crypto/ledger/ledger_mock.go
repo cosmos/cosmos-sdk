@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	csecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // If ledger support (build tag) has been enabled, which implies a CGO dependency,
@@ -40,6 +41,10 @@ func (mock LedgerSECP256K1Mock) Close() error {
 func (mock LedgerSECP256K1Mock) GetPublicKeySECP256K1(derivationPath []uint32) ([]byte, error) {
 	if derivationPath[0] != 44 {
 		return nil, errors.New("invalid derivation path")
+	}
+
+	if derivationPath[1] != sdk.GetConfig().GetCoinType() {
+		return nil, errors.New("Invalid derivation path")
 	}
 
 	seed, err := bip39.NewSeedWithErrorChecking(testdata.TestMnemonic, "")

@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -50,7 +49,9 @@ func Test_runListCmd(t *testing.T) {
 		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
 		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
 
-	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+	path := "" //sdk.GetConfig().GetFullBIP44Path()
+	_, err = kb.NewAccount("something", testdata.TestMnemonic, "", path, hd.Secp256k1)
+	require.NoError(t, err)
 
 	path := "" // sdk.GetConfig().GetFullBIP44Path()
 	_, err = kb.NewAccount("something", testdata.TestMnemonic, "", path, hd.Secp256k1)

@@ -4,14 +4,13 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// GenerateCoinKey returns the address of a public key, along with the secret
-// phrase to recover the private key.
+// Deprecated: GenerateCoinKey generates a new key mnemonic along with its addrress.
+// Please use testutils.GenerateCoinKey instead.
 func GenerateCoinKey(algo keyring.SignatureAlgo) (sdk.AccAddress, string, error) {
-	// generate a private key, with recovery phrase
+	// generate a private key, with mnemonic
 	info, secret, err := keyring.NewInMemory().NewMnemonic(
 		"name",
 		keyring.English,
@@ -26,11 +25,14 @@ func GenerateCoinKey(algo keyring.SignatureAlgo) (sdk.AccAddress, string, error)
 	return sdk.AccAddress(info.GetPubKey().Address()), secret, nil
 }
 
-// GenerateSaveCoinKey returns the address of a public key, along with the secret
-// phrase to recover the private key.
+// Deprecated: GenerateSaveCoinKey generates a new key mnemonic with its addrress.
+// If mnemonic is provided then it's used for key generation.
+// The key is saved in the keyring. The function returns error if overwrite=true and the key
+// already exists.
+// Please use testutils.GenerateSaveCoinKey instead.
 func GenerateSaveCoinKey(
 	keybase keyring.Keyring,
-	keyName, mnemonic string,
+	keyName string,
 	overwrite bool,
 	algo keyring.SignatureAlgo,
 ) (sdk.AccAddress, string, error) {
@@ -52,32 +54,10 @@ func GenerateSaveCoinKey(
 		}
 	}
 
-	var (
-		info   keyring.Info
-		secret string
-	)
-
-	if mnemonic != "" {
-		secret = mnemonic
-		info, err = keybase.NewAccount(
-			keyName,
-			mnemonic,
-			keyring.DefaultBIP39Passphrase,
-			sdk.GetConfig().GetFullBIP44Path(),
-			algo,
-		)
-	} else {
-		info, secret, err = keybase.NewMnemonic(
-			keyName,
-			keyring.English,
-			sdk.GetConfig().GetFullBIP44Path(),
-			keyring.DefaultBIP39Passphrase,
-			algo,
-		)
-	}
+	k, mnemonic, err := keybase.NewMnemonic(keyName, keyring.English, sdk.GetConfig().GetFullBIP44Path(), keyring.DefaultBIP39Passphrase, algo)
 	if err != nil {
 		return sdk.AccAddress{}, "", err
 	}
 
-	return sdk.AccAddress(info.GetPubKey().Address()), secret, nil
+	return sdk.AccAddress(k.GetAddress()), mnemonic, nil
 }

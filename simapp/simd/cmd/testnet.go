@@ -29,7 +29,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -311,7 +310,7 @@ func initTestnetFiles(
 			return err
 		}
 
-		addr, secret, err := server.GenerateSaveCoinKey(kb, nodeDirName, "", true, algo)
+		addr, secret, err := testutil.GenerateSaveCoinKey(kb, nodeDirName, "", true, algo)
 		if err != nil {
 			_ = os.RemoveAll(args.outputDir)
 			return err

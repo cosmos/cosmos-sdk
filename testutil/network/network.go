@@ -47,9 +47,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/simapp/params"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -452,7 +453,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			mnemonic = cfg.Mnemonics[i]
 		}
 
-		addr, secret, err := server.GenerateSaveCoinKey(kb, nodeDirName, mnemonic, true, algo)
+		addr, secret, err := testutil.GenerateSaveCoinKey(kb, nodeDirName, mnemonic, true, algo)
 		require.NoError(t, err)
 
 		info := map[string]string{"secret": secret}

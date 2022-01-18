@@ -9,6 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -93,7 +97,7 @@ func Test_runExportCmd(t *testing.T) {
 			})
 
 			path := sdk.GetConfig().GetFullBIP44Path()
-			_, err = kb.NewAccount("keyname1", testutil.TestMnemonic, "", path, hd.Secp256k1)
+			_, err = kb.NewAccount("keyname1", testdata.TestMnemonic, "", path, hd.Secp256k1)
 			require.NoError(t, err)
 
 			clientCtx := client.Context{}.

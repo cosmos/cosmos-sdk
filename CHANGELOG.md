@@ -50,6 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### API Breaking Changes
 
 * [\#10561](https://github.com/cosmos/cosmos-sdk/pull/10561) The `CommitMultiStore` interface contains a new `SetIAVLCacheSize` method
+* [\#10922](https://github.com/cosmos/cosmos-sdk/pull/10922), [/#10956](https://github.com/cosmos/cosmos-sdk/pull/10956) Deprecate key `server.Generate*` functions and move them to `testutil` and support custom mnemonics in in-process testing network. Moved `TestMnemonic` from `testutil` package to `testdata`.
 
 ### Features
 

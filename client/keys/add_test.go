@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -201,7 +202,7 @@ func Test_runAddCmdDryRun(t *testing.T) {
 			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 			path := sdk.GetConfig().GetFullBIP44Path()
-			_, err = kb.NewAccount("subkey", testutil.TestMnemonic, "", path, hd.Secp256k1)
+			_, err = kb.NewAccount("subkey", testdata.TestMnemonic, "", path, hd.Secp256k1)
 			require.NoError(t, err)
 
 			t.Cleanup(func() {

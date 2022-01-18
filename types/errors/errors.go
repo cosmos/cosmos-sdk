@@ -141,12 +141,12 @@ var (
 	// Examples: not DB domain error, file writing etc...
 	ErrIO = Register(RootCodespace, 39, "Internal IO error")
 
+	// ErrAppConfig defines an error occurred if min-gas-prices field in BaseConfig is empty.
+	ErrAppConfig = Register(RootCodespace, 40, "error in app.toml")
+
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")
-
-	// ErrAppConfig defines an error occurred if min-gas-prices field in BaseConfig is empty.
-	ErrAppConfig = Register(RootCodespace, 40, "error in app.toml")
 )
 
 // Register returns an error instance that should be used as the base for
@@ -266,11 +266,11 @@ func (e *Error) Is(err error) bool {
 
 // Wrap extends this error with an additional information.
 // It's a handy function to call Wrap with sdk errors.
-func (e Error) Wrap(desc string) error { return Wrap(e, desc) }
+func (e *Error) Wrap(desc string) error { return Wrap(e, desc) }
 
 // Wrapf extends this error with an additional information.
 // It's a handy function to call Wrapf with sdk errors.
-func (e Error) Wrapf(desc string, args ...interface{}) error { return Wrapf(e, desc, args...) }
+func (e *Error) Wrapf(desc string, args ...interface{}) error { return Wrapf(e, desc, args...) }
 
 func isNilErr(err error) bool {
 	// Reflect usage is necessary to correctly compare with

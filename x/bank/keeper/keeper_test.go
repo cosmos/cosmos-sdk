@@ -1113,6 +1113,7 @@ func (suite *IntegrationTestSuite) TestBalanceTrackingEvents() {
 	}
 
 	// check balance and supply tracking
+	suite.Require().True(suite.app.BankKeeper.HasSupply(suite.ctx, "utxo"))
 	savedSupply := suite.app.BankKeeper.GetSupply(suite.ctx, "utxo")
 	utxoSupply := savedSupply
 	suite.Require().Equal(utxoSupply.Amount, supply.AmountOf("utxo"))

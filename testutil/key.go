@@ -1,4 +1,4 @@
-package server
+package testutil
 
 import (
 	"fmt"
@@ -8,25 +8,30 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// GenerateCoinKey returns the address of a public key, along with the secret
-// phrase to recover the private key.
+// GenerateCoinKey generates a new key mnemonic along with its addrress.
 func GenerateCoinKey(algo keyring.SignatureAlgo, cdc codec.Codec) (sdk.AccAddress, string, error) {
-	// generate a private key, with recovery phrase
-	k, secret, err := keyring.NewInMemory(cdc).NewMnemonic("name", keyring.English, sdk.GetConfig().GetFullBIP44Path(), keyring.DefaultBIP39Passphrase, algo)
+	// generate a private key, with mnemonic
+	info, secret, err := keyring.NewInMemory(cdc).NewMnemonic(
+		"name",
+		keyring.English,
+		sdk.GetConfig().GetFullBIP44Path(),
+		keyring.DefaultBIP39Passphrase,
+		algo,
+	)
 	if err != nil {
 		return sdk.AccAddress{}, "", err
 	}
-
-	addr, err := k.GetAddress()
+	addr, err := info.GetAddress()
 	if err != nil {
-		return nil, "", err
+		return sdk.AccAddress{}, "", err
 	}
-
 	return addr, secret, nil
 }
 
-// GenerateSaveCoinKey returns the address of a public key, along with the secret
-// phrase to recover the private key.
+// GenerateSaveCoinKey generates a new key mnemonic with its addrress.
+// If mnemonic is provided then it's used for key generation.
+// The key is saved in the keyring. The function returns error if overwrite=true and the key
+// already exists.
 func GenerateSaveCoinKey(
 	keybase keyring.Keyring,
 	keyName, mnemonic string,
@@ -44,9 +49,8 @@ func GenerateSaveCoinKey(
 		return sdk.AccAddress{}, "", fmt.Errorf("key already exists, overwrite is disabled")
 	}
 
-	// remove the old key by name if it exists
 	if exists {
-		if err = keybase.Delete(keyName); err != nil {
+		if err := keybase.Delete(keyName); err != nil {
 			return sdk.AccAddress{}, "", fmt.Errorf("failed to overwrite key")
 		}
 	}
@@ -71,6 +75,5 @@ func GenerateSaveCoinKey(
 	if err != nil {
 		return nil, "", err
 	}
-
 	return addr, secret, nil
 }

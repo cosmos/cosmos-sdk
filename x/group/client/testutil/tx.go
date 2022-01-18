@@ -285,7 +285,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 				commonFlags...,
 			),
 			true,
-			"message validation failed: members: address: empty address string is not allowed",
+			"message validation failed: address: empty address string is not allowed",
 			nil,
 			0,
 		},

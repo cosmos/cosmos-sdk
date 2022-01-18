@@ -22,6 +22,9 @@ message Member {
 
   // metadata is any arbitrary metadata to attached to the member.
   bytes metadata = 3;
+
+  // added_at is a timestamp specifying when a member was added.
+  google.protobuf.Timestamp added_at = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
 
 // Members defines a repeated slice of Member objects.
@@ -86,6 +89,9 @@ message GroupInfo {
 
   // total_weight is the sum of the group members' weights.
   string total_weight = 5;
+
+  // created_at is a timestamp specifying when a group was created.
+  google.protobuf.Timestamp created_at = 6 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
 
 // GroupMember represents the relationship between a group and a member.
@@ -121,6 +127,9 @@ message GroupPolicyInfo {
 
   // decision_policy specifies the group policy's decision policy.
   google.protobuf.Any decision_policy = 6 [(cosmos_proto.accepts_interface) = "DecisionPolicy"];
+
+  // created_at is a timestamp specifying when a group policy was created.
+  google.protobuf.Timestamp created_at = 7 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
 
 // Proposal defines a group proposal. Any member of a group can submit a proposal

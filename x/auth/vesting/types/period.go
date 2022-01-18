@@ -52,28 +52,27 @@ func (p Periods) String() string {
 		%s`, strings.Join(periodsListString, ", ")))
 }
 
-// A schedule is an increasing step function of Coins over time.
+// A "schedule" is an increasing step function of Coins over time.
 // It's specified as an absolute start time and a sequence of relative
-// periods, with each steps at the end of a period. A schedule may also
+// periods, with each step at the end of a period. A schedule may also
 // give the time and total value at the last step, which can speed
 // evaluation of the step function after the last step.
 
 // ReadSchedule returns the value of a schedule at readTime.
 func ReadSchedule(startTime, endTime int64, periods []Period, totalCoins sdk.Coins, readTime int64) sdk.Coins {
-	coins := sdk.NewCoins()
-
 	if readTime <= startTime {
-		return coins
+		return sdk.NewCoins()
 	}
 	if readTime >= endTime {
 		return totalCoins
 	}
 
+	coins := sdk.NewCoins() // sum of amounts for events before readTime
 	time := startTime
 
 	for _, period := range periods {
-		x := readTime - time
-		if x < period.Length {
+		if readTime < time+period.Length {
+			// we're reading before the next event
 			break
 		}
 		coins = coins.Add(period.Amount...)
@@ -99,6 +98,7 @@ func min64(i, j int64) int64 {
 	return j
 }
 
+// coinsMin returns the minimum of its inputs for all denominations.
 func coinsMin(a, b sdk.Coins) sdk.Coins {
 	min := sdk.NewCoins()
 	for _, coinA := range a {
@@ -118,20 +118,21 @@ func coinsMin(a, b sdk.Coins) sdk.Coins {
 // DisjunctPeriods returns the union of two vesting period schedules.
 // The returned schedule is the union of the vesting events, with simultaneous
 // events combined into a single event.
+// Input schedules P and Q are defined by their start times and periods.
 // Returns new start time, new end time, and merged vesting events, relative to
 // the new start time.
-func DisjunctPeriods(startP, startQ int64, p, q []Period) (int64, int64, []Period) {
+func DisjunctPeriods(startP, startQ int64, periodsP, periodsQ []Period) (int64, int64, []Period) {
 	timeP := startP // time of last merged p event, next p event is relative to this time
 	timeQ := startQ // time of last merged q event, next q event is relative to this time
 	iP := 0         // p indexes before this have been merged
 	iQ := 0         // q indexes before this have been merged
-	lenP := len(p)
-	lenQ := len(q)
+	lenP := len(periodsP)
+	lenQ := len(periodsQ)
 	startTime := min64(startP, startQ) // we pick the earlier time
 	time := startTime                  // time of last merged event, or the start time
 	merged := []Period{}
 
-	// emit adds a merged period and updates the last event time
+	// emit adds an output period and updates the last event time
 	emit := func(nextTime int64, amount sdk.Coins) {
 		period := Period{
 			Length: nextTime - time,
@@ -143,30 +144,31 @@ func DisjunctPeriods(startP, startQ int64, p, q []Period) (int64, int64, []Perio
 
 	// consumeP emits the next period from p, updating indexes
 	consumeP := func(nextP int64) {
-		emit(nextP, p[iP].Amount)
+		emit(nextP, periodsP[iP].Amount)
 		timeP = nextP
 		iP++
 	}
 
 	// consumeQ emits the next period from q, updating indexes
 	consumeQ := func(nextQ int64) {
-		emit(nextQ, q[iQ].Amount)
+		emit(nextQ, periodsQ[iQ].Amount)
 		timeQ = nextQ
 		iQ++
 	}
 
 	// consumeBoth emits a merge of the next periods from p and q, updating indexes
 	consumeBoth := func(nextTime int64) {
-		emit(nextTime, p[iP].Amount.Add(q[iQ].Amount...))
+		emit(nextTime, periodsP[iP].Amount.Add(periodsQ[iQ].Amount...))
 		timeP = nextTime
 		timeQ = nextTime
 		iP++
 		iQ++
 	}
 
+	// while there are more events in both schedules, handle the next one, merge if concurrent
 	for iP < lenP && iQ < lenQ {
-		nextP := timeP + p[iP].Length // next p event in absolute time
-		nextQ := timeQ + q[iQ].Length // next q event in absolute time
+		nextP := timeP + periodsP[iP].Length // next p event in absolute time
+		nextQ := timeQ + periodsQ[iQ].Length // next q event in absolute time
 		if nextP < nextQ {
 			consumeP(nextP)
 		} else if nextP > nextQ {
@@ -175,27 +177,27 @@ func DisjunctPeriods(startP, startQ int64, p, q []Period) (int64, int64, []Perio
 			consumeBoth(nextP)
 		}
 	}
+	// consume remaining events in schedule P
 	for iP < lenP {
-		// Ragged end - consume remaining p
-		nextP := timeP + p[iP].Length
+		nextP := timeP + periodsP[iP].Length
 		consumeP(nextP)
 	}
+	// consume remaining events in schedule Q
 	for iQ < lenQ {
-		// Ragged end - consume remaining q
-		nextQ := timeQ + q[iQ].Length
+		nextQ := timeQ + periodsQ[iQ].Length
 		consumeQ(nextQ)
 	}
 	return startTime, time, merged
 }
 
 // ConjunctPeriods returns the combination of two period schedules where the result is the minimum of the two schedules.
-func ConjunctPeriods(startP, startQ int64, p, q []Period) (startTime int64, endTime int64, merged []Period) {
+func ConjunctPeriods(startP, startQ int64, periodsP, periodsQ []Period) (startTime int64, endTime int64, merged []Period) {
 	timeP := startP
 	timeQ := startQ
 	iP := 0
 	iQ := 0
-	lenP := len(p)
-	lenQ := len(q)
+	lenP := len(periodsP)
+	lenQ := len(periodsQ)
 	startTime = min64(startP, startQ)
 	time := startTime
 	merged = []Period{}
@@ -203,6 +205,7 @@ func ConjunctPeriods(startP, startQ int64, p, q []Period) (startTime int64, endT
 	amountP := amount
 	amountQ := amount
 
+	// emit adds an output period and updates the last event time
 	emit := func(nextTime int64, coins sdk.Coins) {
 		period := Period{
 			Length: nextTime - time,
@@ -213,8 +216,10 @@ func ConjunctPeriods(startP, startQ int64, p, q []Period) (startTime int64, endT
 		amount = amount.Add(coins...)
 	}
 
+	// consumeP processes the next event in P and emits an event
+	// if the minimum of P and Q changes
 	consumeP := func(nextTime int64) {
-		amountP = amountP.Add(p[iP].Amount...)
+		amountP = amountP.Add(periodsP[iP].Amount...)
 		min := coinsMin(amountP, amountQ)
 		if amount.IsAllLTE(min) {
 			diff := min.Sub(amount)
@@ -226,8 +231,10 @@ func ConjunctPeriods(startP, startQ int64, p, q []Period) (startTime int64, endT
 		iP++
 	}
 
+	// consumeQ processes the next event in Q and emits an event
+	// if the minimum of P and Q changes
 	consumeQ := func(nextTime int64) {
-		amountQ = amountQ.Add(q[iQ].Amount...)
+		amountQ = amountQ.Add(periodsQ[iQ].Amount...)
 		min := coinsMin(amountP, amountQ)
 		if amount.IsAllLTE(min) {
 			diff := min.Sub(amount)
@@ -239,9 +246,11 @@ func ConjunctPeriods(startP, startQ int64, p, q []Period) (startTime int64, endT
 		iQ++
 	}
 
+	// consumeBoth processes simultaneous events in P and Q and emits an
+	// event if the minumum of P and Q changes
 	consumeBoth := func(nextTime int64) {
-		amountP = amountP.Add(p[iP].Amount...)
-		amountQ = amountQ.Add(q[iQ].Amount...)
+		amountP = amountP.Add(periodsP[iP].Amount...)
+		amountQ = amountQ.Add(periodsQ[iQ].Amount...)
 		min := coinsMin(amountP, amountQ)
 		if amount.IsAllLTE(min) {
 			diff := min.Sub(amount)
@@ -255,9 +264,10 @@ func ConjunctPeriods(startP, startQ int64, p, q []Period) (startTime int64, endT
 		iQ++
 	}
 
+	// while there are events left in both schedules, process the next one
 	for iP < lenP && iQ < lenQ {
-		nextP := timeP + p[iP].Length // next p event in absolute time
-		nextQ := timeQ + q[iQ].Length // next q event in absolute time
+		nextP := timeP + periodsP[iP].Length // next p event in absolute time
+		nextQ := timeQ + periodsQ[iQ].Length // next q event in absolute time
 		if nextP < nextQ {
 			consumeP(nextP)
 		} else if nextP > nextQ {
@@ -267,15 +277,15 @@ func ConjunctPeriods(startP, startQ int64, p, q []Period) (startTime int64, endT
 		}
 	}
 
+	// consume remaining events in schedule P
 	for iP < lenP {
-		// ragged end, consume remaining p
-		nextP := timeP + p[iP].Length
+		nextP := timeP + periodsP[iP].Length
 		consumeP(nextP)
 	}
 
+	// consume remaining events in schedule Q
 	for iQ < lenQ {
-		// ragged end, consume remaining q
-		nextQ := timeQ + q[iQ].Length
+		nextQ := timeQ + periodsQ[iQ].Length
 		consumeQ(nextQ)
 	}
 

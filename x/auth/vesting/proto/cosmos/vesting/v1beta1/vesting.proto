@@ -59,6 +59,9 @@ message DelayedVestingAccount {
 }
 
 // Period defines a length of time and amount of coins that will vest.
+// A sequence of periods defines a sequence of vesting events, with the
+// first period relative to an externally-provided start time,
+// and subsequent periods relatie to their predecessor.
 message Period {
   // Period duration in seconds.
   int64    length                          = 1;
@@ -77,8 +80,9 @@ message PeriodicVestingAccount {
   option (gogoproto.goproto_getters) = false;
 
   BaseVestingAccount base_vesting_account = 1 [(gogoproto.embed) = true];
-  int64              start_time           = 2;
-  repeated Period    vesting_periods      = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  int64              start_time           = 2 [(gogoproto.moretags) = "yaml:\"start_time\""];
+  // unlocking schedule relative to the BaseVestingAccount start_time.
+  repeated Period vesting_periods = 3 [(gogoproto.moretags) = "yaml:\"vesting_periods\"", (gogoproto.nullable) = false];
 }
 
 // PermanentLockedAccount implements the VestingAccount interface. It does
@@ -107,7 +111,11 @@ message TrueVestingAccount {
   // funder_address specifies the account which can perform clawback.
   string funder_address = 2;
   int64 start_time = 3 [(gogoproto.moretags) = "yaml:\"start_time\""];
+  // schedule of coins being vested and unlocked, relative to the BaseVestingAccount start_time.
+  // This determines when tokens are available for transfer.
   repeated Period combined_periods = 4 [(gogoproto.moretags) = "yaml:\"combined_periods\"", (gogoproto.nullable) = false];
+  // unlocking schedule relative to the BaseVestingAccount start_time.
   repeated Period lockup_periods = 5 [(gogoproto.moretags) = "yaml:\"lockup_periods\"", (gogoproto.nullable) = false];
+  // vesting (i.e. immunity from clawback) schedule relative to the BaseVestingAccount start_time.
   repeated Period vesting_periods = 6 [(gogoproto.moretags) = "yaml:\"vesting_periods\"", (gogoproto.nullable) = false];
 }

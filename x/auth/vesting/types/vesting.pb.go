@@ -153,6 +153,9 @@ func (m *DelayedVestingAccount) XXX_DiscardUnknown() {
 var xxx_messageInfo_DelayedVestingAccount proto.InternalMessageInfo
 
 // Period defines a length of time and amount of coins that will vest.
+// A sequence of periods defines a sequence of vesting events, with the
+// first period relative to an externally-provided start time,
+// and subsequent periods relatie to their predecessor.
 type Period struct {
 	// Period duration in seconds.
 	Length int64                                    `protobuf:"varint,1,opt,name=length,proto3" json:"length,omitempty"`
@@ -210,8 +213,9 @@ func (m *Period) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
 // periodically vests by unlocking coins during each specified period.
 type PeriodicVestingAccount struct {
 	*BaseVestingAccount `protobuf:"bytes,1,opt,name=base_vesting_account,json=baseVestingAccount,proto3,embedded=base_vesting_account" json:"base_vesting_account,omitempty"`
-	StartTime           int64    `protobuf:"varint,2,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
-	VestingPeriods      []Period `protobuf:"bytes,3,rep,name=vesting_periods,json=vestingPeriods,proto3" json:"vesting_periods"`
+	StartTime           int64 `protobuf:"varint,2,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty" yaml:"start_time"`
+	// unlocking schedule relative to the BaseVestingAccount start_time.
+	VestingPeriods []Period `protobuf:"bytes,3,rep,name=vesting_periods,json=vestingPeriods,proto3" json:"vesting_periods" yaml:"vesting_periods"`
 }
 
 func (m *PeriodicVestingAccount) Reset()         { *m = PeriodicVestingAccount{} }
@@ -296,11 +300,15 @@ var xxx_messageInfo_PermanentLockedAccount proto.InternalMessageInfo
 type TrueVestingAccount struct {
 	*BaseVestingAccount `protobuf:"bytes,1,opt,name=base_vesting_account,json=baseVestingAccount,proto3,embedded=base_vesting_account" json:"base_vesting_account,omitempty"`
 	// funder_address specifies the account which can perform clawback.
-	FunderAddress   string   `protobuf:"bytes,2,opt,name=funder_address,json=funderAddress,proto3" json:"funder_address,omitempty"`
-	StartTime       int64    `protobuf:"varint,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty" yaml:"start_time"`
+	FunderAddress string `protobuf:"bytes,2,opt,name=funder_address,json=funderAddress,proto3" json:"funder_address,omitempty"`
+	StartTime     int64  `protobuf:"varint,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty" yaml:"start_time"`
+	// schedule of coins being vested and unlocked, relative to the BaseVestingAccount start_time.
+	// This determines when tokens are available for transfer.
 	CombinedPeriods []Period `protobuf:"bytes,4,rep,name=combined_periods,json=combinedPeriods,proto3" json:"combined_periods" yaml:"combined_periods"`
-	LockupPeriods   []Period `protobuf:"bytes,5,rep,name=lockup_periods,json=lockupPeriods,proto3" json:"lockup_periods" yaml:"lockup_periods"`
-	VestingPeriods  []Period `protobuf:"bytes,6,rep,name=vesting_periods,json=vestingPeriods,proto3" json:"vesting_periods" yaml:"vesting_periods"`
+	// unlocking schedule relative to the BaseVestingAccount start_time.
+	LockupPeriods []Period `protobuf:"bytes,5,rep,name=lockup_periods,json=lockupPeriods,proto3" json:"lockup_periods" yaml:"lockup_periods"`
+	// vesting (i.e. immunity from clawback) schedule relative to the BaseVestingAccount start_time.
+	VestingPeriods []Period `protobuf:"bytes,6,rep,name=vesting_periods,json=vestingPeriods,proto3" json:"vesting_periods" yaml:"vesting_periods"`
 }
 
 func (m *TrueVestingAccount) Reset()      { *m = TrueVestingAccount{} }

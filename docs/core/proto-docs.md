@@ -8222,6 +8222,9 @@ locked until a specified time.
 
 ### Period
 Period defines a length of time and amount of coins that will vest.
+A sequence of periods defines a sequence of vesting events, with the
+first period relative to an externally-provided start time,
+and subsequent periods relatie to their predecessor.
 
 
 | Field | Type | Label | Description |
@@ -8245,7 +8248,7 @@ periodically vests by unlocking coins during each specified period.
 | ----- | ---- | ----- | ----------- |
 | `base_vesting_account` | [BaseVestingAccount](#cosmos.vesting.v1beta1.BaseVestingAccount) |  |  |
 | `start_time` | [int64](#int64) |  |  |
-| `vesting_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated |  |
+| `vesting_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated | unlocking schedule relative to the BaseVestingAccount start_time. |
 
 
 
@@ -8285,9 +8288,9 @@ of unvested tokens, or a combination (tokens vest, but are still locked).
 | `base_vesting_account` | [BaseVestingAccount](#cosmos.vesting.v1beta1.BaseVestingAccount) |  |  |
 | `funder_address` | [string](#string) |  | funder_address specifies the account which can perform clawback. |
 | `start_time` | [int64](#int64) |  |  |
-| `combined_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated |  |
-| `lockup_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated |  |
-| `vesting_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated |  |
+| `combined_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated | schedule of coins being vested and unlocked, relative to the BaseVestingAccount start_time. This determines when tokens are available for transfer. |
+| `lockup_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated | unlocking schedule relative to the BaseVestingAccount start_time. |
+| `vesting_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated | vesting (i.e. immunity from clawback) schedule relative to the BaseVestingAccount start_time. |
 
 
 
@@ -8347,11 +8350,11 @@ account.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `from_address` | [string](#string) |  |  |
-| `to_address` | [string](#string) |  |  |
-| `start_time` | [int64](#int64) |  |  |
-| `vesting_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated |  |
-| `merge` | [bool](#bool) |  |  |
+| `from_address` | [string](#string) |  | Address of the account providing the funds, which must also sign the request. |
+| `to_address` | [string](#string) |  | Address of the account to receive the funds. |
+| `start_time` | [int64](#int64) |  | Start time of the vesting. Periods start relative to this time. |
+| `vesting_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated | Vesting events as a sequence of durations and amounts, starting relative to start_time. |
+| `merge` | [bool](#bool) |  | If true, merge this new grant into an existing PeriodicVestingAccount, or create it if it does not exist. If false, creates a new account, or fails if an account already exists |
 
 
 
@@ -8377,12 +8380,12 @@ MsgCreateTrueVestingAccount defines a message that enables creating a true vesti
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `from_address` | [string](#string) |  |  |
-| `to_address` | [string](#string) |  |  |
-| `start_time` | [int64](#int64) |  |  |
-| `lockup_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated |  |
-| `vesting_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated |  |
-| `merge` | [bool](#bool) |  |  |
+| `from_address` | [string](#string) |  | Address of the account providing the funds, which must also sign the request. |
+| `to_address` | [string](#string) |  | Address of the account to receive the funds. |
+| `start_time` | [int64](#int64) |  | Start time of the vesting. Periods start relative to this time. |
+| `lockup_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated | Unlocking events as a sequence of durations and amounts, starting relative to start_time. |
+| `vesting_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated | Vesting events as a sequence of durations and amounts, starting relative to start_time. |
+| `merge` | [bool](#bool) |  | If true, merge this new grant into an existing TrueVestingAccount, or create it if it does not exist. If false, creates a new account. New grants to an existing account must be from the same from_address. |
 
 
 
@@ -8408,11 +8411,11 @@ account.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `from_address` | [string](#string) |  |  |
-| `to_address` | [string](#string) |  |  |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-| `end_time` | [int64](#int64) |  |  |
-| `delayed` | [bool](#bool) |  |  |
+| `from_address` | [string](#string) |  | Address of the account providing the funds, which must also sign the request. |
+| `to_address` | [string](#string) |  | Address of the vesting account to create. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | Amount to transfer to the new account. |
+| `end_time` | [int64](#int64) |  | End time of the vesting duration. |
+| `delayed` | [bool](#bool) |  | If true, creates a DelayedVestingAccount, otherwise creates a ContinuousVestingAccount. |
 
 
 

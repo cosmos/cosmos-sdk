@@ -1,0 +1,18 @@
+syntax="proto3";
+
+package cosmos.msg.v1beta1;
+
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.MessageOptions {
+  // signers must be used in cosmos messages in order
+  // to signal to external clients which fields in a
+  // given cosmos message must be filled with signer
+  // information (address).
+  // The field must be the protobuf name of the message
+  // field extended with this MessageOption.
+  // The field must either be of string kind, or of message
+  // kind in case the signer information is contained within
+  // a message inside the cosmos message.
+  repeated string signers = 11110000;
+}

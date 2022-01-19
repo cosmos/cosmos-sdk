@@ -5,7 +5,7 @@ module github.com/cosmos/cosmos-sdk/x/group
 require (
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cosmos/cosmos-proto v1.0.0-alpha6
-	github.com/cosmos/cosmos-sdk v0.44.0
+	github.com/cosmos/cosmos-sdk v0.45.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/stretchr/testify v1.7.0
 	google.golang.org/grpc v1.43.0

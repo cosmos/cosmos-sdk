@@ -51,6 +51,7 @@ type ConfiguratorOption func(*configurator)
 // import paths. It's used in those instances in which a protobuf file
 // is imported in a way in a protobuf file but the generated code of the
 // import registers itself in a different way.
+// See: https://github.com/cosmos/cosmos-sdk/issues/10978#issuecomment-1016644826
 func WithProtoImportsRemap(m map[string]string) ConfiguratorOption {
 	return func(c *configurator) {
 

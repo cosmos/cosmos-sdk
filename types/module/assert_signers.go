@@ -23,7 +23,8 @@ import (
 // correctly signal message signers.
 type msgServerAssertSigners struct {
 	// importRemap exists because devs make the common mistake with proto imports
-	// in which they don't import
+	// in which they don't import them as the codegen registers them.
+	// See: https://github.com/cosmos/cosmos-sdk/issues/10978#issuecomment-1016644826
 	importRemap map[string]string
 	s           gogogrpc.Server
 	files       *protoregistry.Files

@@ -17,6 +17,8 @@ type PrimaryKeyCodec struct {
 	unmarshalOptions proto.UnmarshalOptions
 }
 
+var _ IndexCodec = &PrimaryKeyCodec{}
+
 // NewPrimaryKeyCodec creates a new PrimaryKeyCodec for the provided msg and
 // fields, with an optional prefix and unmarshal options.
 func NewPrimaryKeyCodec(prefix []byte, msgType protoreflect.MessageType, fieldNames []protoreflect.Name, unmarshalOptions proto.UnmarshalOptions) (*PrimaryKeyCodec, error) {

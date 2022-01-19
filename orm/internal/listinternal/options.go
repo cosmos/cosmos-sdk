@@ -6,6 +6,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+// Options is the internal list options struct.
 type Options struct {
 	Start, End, Prefix []protoreflect.Value
 	Reverse            bool

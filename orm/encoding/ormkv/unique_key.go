@@ -19,6 +19,8 @@ type UniqueKeyCodec struct {
 	valueCodec *KeyCodec
 }
 
+var _ IndexCodec = &UniqueKeyCodec{}
+
 // NewUniqueKeyCodec creates a new UniqueKeyCodec with an optional prefix for the
 // provided message descriptor, index and primary key fields.
 func NewUniqueKeyCodec(prefix []byte, messageType protoreflect.MessageType, indexFields, primaryKeyFields []protoreflect.Name) (*UniqueKeyCodec, error) {
@@ -73,8 +75,6 @@ func NewUniqueKeyCodec(prefix []byte, messageType protoreflect.MessageType, inde
 		valueCodec:   valueCodec,
 	}, nil
 }
-
-var _ IndexCodec = &UniqueKeyCodec{}
 
 func (u UniqueKeyCodec) DecodeIndexKey(k, v []byte) (indexFields, primaryKey []protoreflect.Value, err error) {
 	ks, err := u.keyCodec.DecodeKey(bytes.NewReader(k))

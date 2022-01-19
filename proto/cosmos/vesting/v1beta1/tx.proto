@@ -6,6 +6,8 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/vesting/v1beta1/vesting.proto";
 
+import "cosmos/msg/v1beta1/msg.proto";
+
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/vesting/types";
 
 // Msg defines the bank Msg service.
@@ -21,6 +23,8 @@ service Msg {
 // MsgCreateVestingAccount defines a message that enables creating a vesting
 // account.
 message MsgCreateVestingAccount {
+  option (cosmos.msg.v1beta1.signers) = "from_address";
+
   option (gogoproto.equal) = true;
 
   string   from_address                    = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -38,6 +42,8 @@ message MsgCreateVestingAccountResponse {}
 // MsgCreateVestingAccount defines a message that enables creating a vesting
 // account.
 message MsgCreatePeriodicVestingAccount {
+  option (cosmos.msg.v1beta1.signers) = "from_address";
+
   option (gogoproto.equal) = false;
 
   string          from_address    = 1;

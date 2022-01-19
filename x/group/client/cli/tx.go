@@ -569,7 +569,7 @@ Parameters:
 
 			msg := &group.MsgWithdrawProposal{
 				ProposalId: proposalID,
-				Admin:      args[1],
+				Address:    args[1],
 			}
 
 			if err != nil {

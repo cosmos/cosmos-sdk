@@ -630,7 +630,7 @@ func (m MsgWithdrawProposal) GetSignBytes() []byte {
 
 // GetSigners returns the expected signers for a MsgWithdrawProposal.
 func (m MsgWithdrawProposal) GetSigners() []sdk.AccAddress {
-	admin, err := sdk.AccAddressFromBech32(m.Admin)
+	admin, err := sdk.AccAddressFromBech32(m.Address)
 	if err != nil {
 		panic(err)
 	}
@@ -639,7 +639,7 @@ func (m MsgWithdrawProposal) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic does a sanity check on the provided data
 func (m MsgWithdrawProposal) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(m.Admin)
+	_, err := sdk.AccAddressFromBech32(m.Address)
 	if err != nil {
 		return sdkerrors.Wrap(err, "admin")
 	}

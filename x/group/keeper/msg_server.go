@@ -488,7 +488,7 @@ func (k Keeper) CreateProposal(goCtx context.Context, req *group.MsgCreatePropos
 func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawProposal) (*group.MsgWithdrawProposalResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	id := req.ProposalId
-	admin := req.Admin
+	admin := req.Address
 
 	proposal, err := k.getProposal(ctx, id)
 	if err != nil {

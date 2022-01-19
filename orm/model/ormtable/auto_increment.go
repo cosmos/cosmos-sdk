@@ -9,10 +9,9 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
+	"github.com/cosmos/cosmos-sdk/orm/model/kv"
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
 
 // autoIncrementTable is a Table implementation for tables with an
@@ -79,7 +78,7 @@ func (t *autoIncrementTable) save(backend Backend, message proto.Message, mode s
 	return t.tableImpl.doSave(writer, message, mode)
 }
 
-func (t *autoIncrementTable) curSeqValue(kv kvstore.Reader) (uint64, error) {
+func (t *autoIncrementTable) curSeqValue(kv kv.ReadonlyStore) (uint64, error) {
 	bz, err := kv.Get(t.seqCodec.Prefix())
 	if err != nil {
 		return 0, err
@@ -88,7 +87,7 @@ func (t *autoIncrementTable) curSeqValue(kv kvstore.Reader) (uint64, error) {
 	return t.seqCodec.DecodeValue(bz)
 }
 
-func (t *autoIncrementTable) nextSeqValue(kv kvstore.Writer) (uint64, error) {
+func (t *autoIncrementTable) nextSeqValue(kv kv.Store) (uint64, error) {
 	seq, err := t.curSeqValue(kv)
 	if err != nil {
 		return 0, err
@@ -98,7 +97,7 @@ func (t *autoIncrementTable) nextSeqValue(kv kvstore.Writer) (uint64, error) {
 	return seq, t.setSeqValue(kv, seq)
 }
 
-func (t *autoIncrementTable) setSeqValue(kv kvstore.Writer, seq uint64) error {
+func (t *autoIncrementTable) setSeqValue(kv kv.Store, seq uint64) error {
 	return kv.Set(t.seqCodec.Prefix(), t.seqCodec.EncodeValue(seq))
 }
 

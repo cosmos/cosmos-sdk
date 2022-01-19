@@ -3,16 +3,16 @@ package ormtable
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
+	"github.com/cosmos/cosmos-sdk/orm/model/kv"
 )
 
 // ReadBackend defines the type used for read-only ORM operations.
 type ReadBackend interface {
 	// CommitmentStoreReader returns the reader for the commitment store.
-	CommitmentStoreReader() kvstore.Reader
+	CommitmentStoreReader() kv.ReadonlyStore
 
 	// IndexStoreReader returns the reader for the index store.
-	IndexStoreReader() kvstore.Reader
+	IndexStoreReader() kv.ReadonlyStore
 
 	private()
 }
@@ -24,11 +24,11 @@ type Backend interface {
 	ReadBackend
 
 	// CommitmentStore returns the merklized commitment store.
-	CommitmentStore() kvstore.Store
+	CommitmentStore() kv.Store
 
 	// IndexStore returns the index store if a separate one exists,
 	// otherwise it the commitment store.
-	IndexStore() kvstore.Store
+	IndexStore() kv.Store
 
 	// Hooks returns a Hooks instance or nil.
 	Hooks() Hooks
@@ -42,23 +42,23 @@ type Backend interface {
 type ReadBackendOptions struct {
 
 	// CommitmentStoreReader is a reader for the commitment store.
-	CommitmentStoreReader kvstore.Reader
+	CommitmentStoreReader kv.ReadonlyStore
 
 	// IndexStoreReader is an optional reader for the index store.
 	// If it is nil the CommitmentStoreReader will be used.
-	IndexStoreReader kvstore.Reader
+	IndexStoreReader kv.ReadonlyStore
 }
 
 type readBackend struct {
-	commitmentReader kvstore.Reader
-	indexReader      kvstore.Reader
+	commitmentReader kv.ReadonlyStore
+	indexReader      kv.ReadonlyStore
 }
 
-func (r readBackend) CommitmentStoreReader() kvstore.Reader {
+func (r readBackend) CommitmentStoreReader() kv.ReadonlyStore {
 	return r.commitmentReader
 }
 
-func (r readBackend) IndexStoreReader() kvstore.Reader {
+func (r readBackend) IndexStoreReader() kv.ReadonlyStore {
 	return r.indexReader
 }
 
@@ -77,26 +77,26 @@ func NewReadBackend(options ReadBackendOptions) ReadBackend {
 }
 
 type backend struct {
-	commitmentStore kvstore.Store
-	indexStore      kvstore.Store
+	commitmentStore kv.Store
+	indexStore      kv.Store
 	hooks           Hooks
 }
 
 func (backend) private() {}
 
-func (c backend) CommitmentStoreReader() kvstore.Reader {
+func (c backend) CommitmentStoreReader() kv.ReadonlyStore {
 	return c.commitmentStore
 }
 
-func (c backend) IndexStoreReader() kvstore.Reader {
+func (c backend) IndexStoreReader() kv.ReadonlyStore {
 	return c.indexStore
 }
 
-func (c backend) CommitmentStore() kvstore.Store {
+func (c backend) CommitmentStore() kv.Store {
 	return c.commitmentStore
 }
 
-func (c backend) IndexStore() kvstore.Store {
+func (c backend) IndexStore() kv.Store {
 	return c.indexStore
 }
 
@@ -112,11 +112,11 @@ func (c backend) Hooks() Hooks {
 type BackendOptions struct {
 
 	// CommitmentStore is the commitment store.
-	CommitmentStore kvstore.Store
+	CommitmentStore kv.Store
 
 	// IndexStore is the optional index store.
 	// If it is nil the CommitmentStore will be used.
-	IndexStore kvstore.Store
+	IndexStore kv.Store
 
 	// Hooks are optional hooks into ORM insert, update and delete operations.
 	Hooks Hooks

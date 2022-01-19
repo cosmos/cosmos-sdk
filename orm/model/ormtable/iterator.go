@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/listinternal"
-	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
+	"github.com/cosmos/cosmos-sdk/orm/model/kv"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 )
 
@@ -42,7 +42,7 @@ type Iterator interface {
 
 func iterator(
 	backend ReadBackend,
-	reader kvstore.Reader,
+	reader kv.ReadonlyStore,
 	index concreteIndex,
 	codec *ormkv.KeyCodec,
 	options []listinternal.Option,
@@ -82,7 +82,7 @@ func iterator(
 	}
 }
 
-func prefixIterator(iteratorStore kvstore.Reader, backend ReadBackend, index concreteIndex, prefix []byte, options *listinternal.Options) (Iterator, error) {
+func prefixIterator(iteratorStore kv.ReadonlyStore, backend ReadBackend, index concreteIndex, prefix []byte, options *listinternal.Options) (Iterator, error) {
 	if !options.Reverse {
 		var start []byte
 		if len(options.Cursor) != 0 {
@@ -126,7 +126,7 @@ func prefixIterator(iteratorStore kvstore.Reader, backend ReadBackend, index con
 
 // NOTE: fullEndKey indicates whether the end key contained all the fields of the key,
 // if it did then we need to use inclusive end bytes, otherwise we prefix the end bytes
-func rangeIterator(iteratorStore kvstore.Reader, reader ReadBackend, index concreteIndex, start, end []byte, fullEndKey bool, options *listinternal.Options) (Iterator, error) {
+func rangeIterator(iteratorStore kv.ReadonlyStore, reader ReadBackend, index concreteIndex, start, end []byte, fullEndKey bool, options *listinternal.Options) (Iterator, error) {
 	if !options.Reverse {
 		if len(options.Cursor) != 0 {
 			start = append(options.Cursor, 0)
@@ -175,7 +175,7 @@ func rangeIterator(iteratorStore kvstore.Reader, reader ReadBackend, index concr
 type indexIterator struct {
 	index    concreteIndex
 	store    ReadBackend
-	iterator kvstore.Iterator
+	iterator kv.Iterator
 
 	indexValues []protoreflect.Value
 	primaryKey  []protoreflect.Value

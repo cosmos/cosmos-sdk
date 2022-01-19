@@ -3,9 +3,9 @@ package ormtable
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/orm/model/kv"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 
-	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 
 	"google.golang.org/protobuf/proto"
@@ -36,7 +36,7 @@ var _ Index = &indexKeyIndex{}
 
 func (i indexKeyIndex) doNotImplement() {}
 
-func (i indexKeyIndex) onInsert(store kvstore.Writer, message protoreflect.Message) error {
+func (i indexKeyIndex) onInsert(store kv.Store, message protoreflect.Message) error {
 	k, v, err := i.EncodeKVFromMessage(message)
 	if err != nil {
 		return err
@@ -44,7 +44,7 @@ func (i indexKeyIndex) onInsert(store kvstore.Writer, message protoreflect.Messa
 	return store.Set(k, v)
 }
 
-func (i indexKeyIndex) onUpdate(store kvstore.Writer, new, existing protoreflect.Message) error {
+func (i indexKeyIndex) onUpdate(store kv.Store, new, existing protoreflect.Message) error {
 	newValues := i.GetKeyValues(new)
 	existingValues := i.GetKeyValues(existing)
 	if i.CompareKeys(newValues, existingValues) == 0 {
@@ -67,7 +67,7 @@ func (i indexKeyIndex) onUpdate(store kvstore.Writer, new, existing protoreflect
 	return store.Set(newKey, []byte{})
 }
 
-func (i indexKeyIndex) onDelete(store kvstore.Writer, message protoreflect.Message) error {
+func (i indexKeyIndex) onDelete(store kv.Store, message protoreflect.Message) error {
 	_, key, err := i.EncodeKeyFromMessage(message)
 	if err != nil {
 		return err

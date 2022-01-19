@@ -6,7 +6,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
+	"github.com/cosmos/cosmos-sdk/orm/model/kv"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 )
 
@@ -30,13 +30,13 @@ func NewDebugBackend(backend ormtable.Backend, debugger Debugger) ormtable.Backe
 }
 
 type debugStore struct {
-	store     kvstore.Store
+	store     kv.Store
 	debugger  Debugger
 	storeName string
 }
 
 // NewDebugStore wraps the store with the debugger instance returning a debug store wrapper.
-func NewDebugStore(store kvstore.Store, debugger Debugger, storeName string) kvstore.Store {
+func NewDebugStore(store kv.Store, debugger Debugger, storeName string) kv.Store {
 	return &debugStore{store: store, debugger: debugger, storeName: storeName}
 }
 
@@ -70,7 +70,7 @@ func (t debugStore) Has(key []byte) (bool, error) {
 	return has, nil
 }
 
-func (t debugStore) Iterator(start, end []byte) (kvstore.Iterator, error) {
+func (t debugStore) Iterator(start, end []byte) (kv.Iterator, error) {
 	if t.debugger != nil {
 		t.debugger.Log(fmt.Sprintf("ITERATOR %x -> %x", start, end))
 	}
@@ -85,7 +85,7 @@ func (t debugStore) Iterator(start, end []byte) (kvstore.Iterator, error) {
 	}, nil
 }
 
-func (t debugStore) ReverseIterator(start, end []byte) (kvstore.Iterator, error) {
+func (t debugStore) ReverseIterator(start, end []byte) (kv.Iterator, error) {
 	if t.debugger != nil {
 		t.debugger.Log(fmt.Sprintf("ITERATOR %x <- %x", start, end))
 	}
@@ -130,10 +130,10 @@ func (t debugStore) Delete(key []byte) error {
 	return nil
 }
 
-var _ kvstore.Store = &debugStore{}
+var _ kv.Store = &debugStore{}
 
 type debugIterator struct {
-	iterator  kvstore.Iterator
+	iterator  kv.Iterator
 	storeName string
 	debugger  Debugger
 }
@@ -178,7 +178,7 @@ func (d debugIterator) Close() error {
 	return d.iterator.Close()
 }
 
-var _ kvstore.Iterator = &debugIterator{}
+var _ kv.Iterator = &debugIterator{}
 
 // EntryCodecDebugger is a Debugger instance that uses an EntryCodec and Print
 // function for debugging.

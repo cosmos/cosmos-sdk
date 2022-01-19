@@ -7,7 +7,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
+	"github.com/cosmos/cosmos-sdk/orm/model/kv"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 )
 
@@ -51,7 +51,7 @@ type UniqueIndex interface {
 }
 
 type indexer interface {
-	onInsert(store kvstore.Writer, message protoreflect.Message) error
-	onUpdate(store kvstore.Writer, new, existing protoreflect.Message) error
-	onDelete(store kvstore.Writer, message protoreflect.Message) error
+	onInsert(store kv.Store, message protoreflect.Message) error
+	onUpdate(store kv.Store, new, existing protoreflect.Message) error
+	onDelete(store kv.Store, message protoreflect.Message) error
 }

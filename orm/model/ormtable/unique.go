@@ -3,6 +3,7 @@ package ormtable
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/orm/model/kv"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
@@ -11,7 +12,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
 
@@ -105,7 +105,7 @@ func (u uniqueKeyIndex) DeleteByKey(ctx context.Context, keyValues ...interface{
 	return u.primaryKey.doDeleteByKey(ctx, pk)
 }
 
-func (u uniqueKeyIndex) onInsert(store kvstore.Writer, message protoreflect.Message) error {
+func (u uniqueKeyIndex) onInsert(store kv.Store, message protoreflect.Message) error {
 	k, v, err := u.EncodeKVFromMessage(message)
 	if err != nil {
 		return err
@@ -123,7 +123,7 @@ func (u uniqueKeyIndex) onInsert(store kvstore.Writer, message protoreflect.Mess
 	return store.Set(k, v)
 }
 
-func (u uniqueKeyIndex) onUpdate(store kvstore.Writer, new, existing protoreflect.Message) error {
+func (u uniqueKeyIndex) onUpdate(store kv.Store, new, existing protoreflect.Message) error {
 	keyCodec := u.GetKeyCodec()
 	newValues := keyCodec.GetKeyValues(new)
 	existingValues := keyCodec.GetKeyValues(existing)
@@ -163,7 +163,7 @@ func (u uniqueKeyIndex) onUpdate(store kvstore.Writer, new, existing protoreflec
 	return store.Set(newKey, value)
 }
 
-func (u uniqueKeyIndex) onDelete(store kvstore.Writer, message protoreflect.Message) error {
+func (u uniqueKeyIndex) onDelete(store kv.Store, message protoreflect.Message) error {
 	_, key, err := u.GetKeyCodec().EncodeKeyFromMessage(message)
 	if err != nil {
 		return err

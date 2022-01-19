@@ -21,7 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
-	"github.com/cosmos/cosmos-sdk/orm/model/kvstore"
+	"github.com/cosmos/cosmos-sdk/orm/model/kv"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
@@ -63,7 +63,7 @@ func TestScenario(t *testing.T) {
 }
 
 // check that the ormkv.Entry's decode and encode to the same bytes
-func checkEncodeDecodeEntries(t *testing.T, table ormtable.Table, store kvstore.Reader) {
+func checkEncodeDecodeEntries(t *testing.T, table ormtable.Table, store kv.ReadonlyStore) {
 	it, err := store.Iterator(nil, nil)
 	assert.NilError(t, err)
 	for it.Valid() {

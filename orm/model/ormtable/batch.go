@@ -1,6 +1,6 @@
 package ormtable
 
-import "github.com/cosmos/cosmos-sdk/orm/model/kvstore"
+import "github.com/cosmos/cosmos-sdk/orm/model/kv"
 
 type batchIndexCommitmentWriter struct {
 	Backend
@@ -13,21 +13,21 @@ func newBatchIndexCommitmentWriter(store Backend) *batchIndexCommitmentWriter {
 		Backend: store,
 		// optimal array capacities are estimated here:
 		commitmentWriter: &batchStoreWriter{
-			Reader: store.CommitmentStoreReader(),
-			writes: make([]batchWriterEntry, 0, 2),
+			ReadonlyStore: store.CommitmentStoreReader(),
+			writes:        make([]batchWriterEntry, 0, 2),
 		},
 		indexWriter: &batchStoreWriter{
-			Reader: store.IndexStoreReader(),
-			writes: make([]batchWriterEntry, 0, 16),
+			ReadonlyStore: store.IndexStoreReader(),
+			writes:        make([]batchWriterEntry, 0, 16),
 		},
 	}
 }
 
-func (w *batchIndexCommitmentWriter) CommitmentStore() kvstore.Store {
+func (w *batchIndexCommitmentWriter) CommitmentStore() kv.Store {
 	return w.commitmentWriter
 }
 
-func (w *batchIndexCommitmentWriter) IndexStore() kvstore.Store {
+func (w *batchIndexCommitmentWriter) IndexStore() kv.Store {
 	return w.indexWriter
 }
 
@@ -49,7 +49,7 @@ func (w *batchIndexCommitmentWriter) Write() error {
 	return err
 }
 
-func flushWrites(writer kvstore.Writer, writes []batchWriterEntry) error {
+func flushWrites(writer kv.Store, writes []batchWriterEntry) error {
 	for _, write := range writes {
 		if !write.delete {
 			err := writer.Set(write.key, write.value)
@@ -79,7 +79,7 @@ type batchWriterEntry struct {
 }
 
 type batchStoreWriter struct {
-	kvstore.Reader
+	kv.ReadonlyStore
 	writes []batchWriterEntry
 }
 

@@ -1,13 +1,13 @@
 // Package kvstore defines the abstract interfaces which ORM tables and indexes
 // use for reading and writing data against a KV-store backend.
-package kvstore
+package kv
 
 import (
 	dbm "github.com/tendermint/tm-db"
 )
 
-// Reader is an interface for readonly access to a kv-store.
-type Reader interface {
+// ReadonlyStore is an interface for readonly access to a kv-store.
+type ReadonlyStore interface {
 	// Get fetches the value of the given key, or nil if it does not exist.
 	// CONTRACT: key, value readonly []byte
 	Get(key []byte) ([]byte, error)
@@ -36,9 +36,9 @@ type Reader interface {
 // Iterator aliases github.com/tendermint/tm-db.Iterator.
 type Iterator = dbm.Iterator
 
-// Writer is an interface for writing to a kv-store.
-type Writer interface {
-	Reader
+// Store is an interface for writing to a kv-store.
+type Store interface {
+	ReadonlyStore
 
 	// Set sets the value for the given key, replacing it if it already exists.
 	// CONTRACT: key, value readonly []byte
@@ -47,10 +47,4 @@ type Writer interface {
 	// Delete deletes the key, or does nothing if the key does not exist.
 	// CONTRACT: key readonly []byte
 	Delete(key []byte) error
-}
-
-// Store combines reader and writer.
-type Store interface {
-	Reader
-	Writer
 }

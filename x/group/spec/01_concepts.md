@@ -26,8 +26,7 @@ those "sub-accounts" using the `x/authz` module.
 
 ## Group With Policy
 
-A group with policy is an UX improvement of the group. It is about having a single msg for creating a group and a group policy at the same time in a single tx with same underlying entities. It also allows us to optionally set group and group policy admin to group policy account address.
-
+A group with policy is an UX improvement of the group. It is about having a single msg for creating a group and a group policy at the same time in a single tx with the same underlying entities. It also allows us to optionally set group and group policy admin to group policy account address, which would make all edits to a group or its policy a proposal instead of a sole admin decision.
 
 ## Decision Policy
 

@@ -1,4 +1,4 @@
-package server_test
+package testutil
 
 import (
 	"testing"
@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -15,7 +14,7 @@ import (
 func TestGenerateCoinKey(t *testing.T) {
 	t.Parallel()
 	cdc := simapp.MakeTestEncodingConfig().Codec
-	addr, mnemonic, err := server.GenerateCoinKey(hd.Secp256k1, cdc)
+	addr, mnemonic, err := GenerateCoinKey(hd.Secp256k1, cdc)
 	require.NoError(t, err)
 
 	// Test creation
@@ -33,7 +32,7 @@ func TestGenerateSaveCoinKey(t *testing.T) {
 	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Codec)
 	require.NoError(t, err)
 
-	addr, mnemonic, err := server.GenerateSaveCoinKey(kb, "keyname", false, hd.Secp256k1)
+	addr, mnemonic, err := GenerateSaveCoinKey(kb, "keyname", "", false, hd.Secp256k1)
 	require.NoError(t, err)
 
 	// Test key was actually saved
@@ -59,15 +58,15 @@ func TestGenerateSaveCoinKeyOverwriteFlag(t *testing.T) {
 	require.NoError(t, err)
 
 	keyname := "justakey"
-	addr1, _, err := server.GenerateSaveCoinKey(kb, keyname, false, hd.Secp256k1)
+	addr1, _, err := GenerateSaveCoinKey(kb, keyname, "", false, hd.Secp256k1)
 	require.NoError(t, err)
 
 	// Test overwrite with overwrite=false
-	_, _, err = server.GenerateSaveCoinKey(kb, keyname, false, hd.Secp256k1)
+	_, _, err = GenerateSaveCoinKey(kb, keyname, "", false, hd.Secp256k1)
 	require.Error(t, err)
 
 	// Test overwrite with overwrite=true
-	addr2, _, err := server.GenerateSaveCoinKey(kb, keyname, true, hd.Secp256k1)
+	addr2, _, err := GenerateSaveCoinKey(kb, keyname, "", true, hd.Secp256k1)
 	require.NoError(t, err)
 
 	require.NotEqual(t, addr1, addr2)

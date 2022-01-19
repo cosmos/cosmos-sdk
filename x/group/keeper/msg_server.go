@@ -307,7 +307,7 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 		}
 	}
 
-	err = ctx.EventManager().EmitTypedEvent(&group.EventCreateGroupWithPolicy{GroupId: groupId, GroupPolicyAddress: groupPolicyAddr.String()})
+	err = ctx.EventManager().EmitTypedEvents(&group.EventCreateGroup{GroupId: groupId}, &group.EventCreateGroupPolicy{Address: groupPolicyAddr.String()})
 	if err != nil {
 		return nil, err
 	}

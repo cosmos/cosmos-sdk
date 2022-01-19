@@ -10,14 +10,16 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/go-bip39"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/go-bip39"
 )
 
 func Test_runAddCmdBasic(t *testing.T) {
@@ -202,7 +204,7 @@ func Test_runAddCmdDryRun(t *testing.T) {
 			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 			path := sdk.GetConfig().GetFullBIP44Path()
-			_, err = kb.NewAccount("subkey", testutil.TestMnemonic, "", path, hd.Secp256k1)
+			_, err = kb.NewAccount("subkey", testdata.TestMnemonic, "", path, hd.Secp256k1)
 			require.NoError(t, err)
 
 			t.Cleanup(func() {

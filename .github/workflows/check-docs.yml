@@ -4,6 +4,8 @@ name: Check docs build
 on:
   pull_request:
     types: [ labeled ]
+    paths: 
+    - "docs/**"
 
 jobs:
   check-docs-build:

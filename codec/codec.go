@@ -8,7 +8,7 @@ import (
 
 type (
 	// Codec defines a functionality for serializing other objects.
-	// Users can defin a custom Protobuf-based serialization.
+	// Users can define a custom Protobuf-based serialization.
 	// Note, Amino can still be used without any dependency on Protobuf.
 	// SDK provides to Codec implementations:
 	//
@@ -37,7 +37,7 @@ type (
 		// MustUnmarshal calls Unmarshal and panics if error is returned.
 		MustUnmarshal(bz []byte, ptr interface{})
 
-		// Unmarshal parses the data encoded with UnmarshalLengthPrefixed method and stores
+		// UnmarshalLengthPrefixed parses the data encoded with UnmarshalLengthPrefixed method and stores
 		// the result in the value pointed to by v.
 		UnmarshalLengthPrefixed(bz []byte, ptr interface{}) error
 		// MustUnmarshalLengthPrefixed calls UnmarshalLengthPrefixed and panics if error
@@ -63,7 +63,7 @@ type (
 		// MarshalInterfaceJSON is a helper method which will wrap `i` into `Any` for correct
 		// JSON interface (de)serialization.
 		MarshalInterfaceJSON(i interface{}) ([]byte, error)
-		// UnmarshalInterfaceJSON is a helper method which will parse JSON enoded data
+		// UnmarshalInterfaceJSON is a helper method which will parse JSON encoded data
 		// into `Any` and unpack any into the `ptr`. It fails if the target interface type
 		// is not registered in codec, or is not compatible with the serialized data
 		UnmarshalInterfaceJSON(bz []byte, ptr interface{}) error

@@ -96,9 +96,7 @@ func (pc *ProtoCodec) Unmarshal(bz []byte, ptr interface{}) error {
 		}
 	case ProtoMarshaler:
 		err := ptr.Unmarshal(bz)
-		if err == nil {
-			return err
-		} else {
+		if err != nil {
 			return err
 		}
 	default:

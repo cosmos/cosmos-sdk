@@ -223,9 +223,11 @@ app.UpgradeKeeper.SetUpgradeHandler("adr-40", func(ctx sdk.Context, plan upgrade
 })
     ```
 
-    The `Migrate` function will read all entries from the save them to the AD-40 combined KV store. Cache layer should not be used and the operation must finish with a single Commit call.
+The `Migrate` function will read all entries from a store/v1 DB and save them to the AD-40 combined KV store. 
+Cache layer should not be used and the operation must finish with a single Commit call.
 
-Inserting records to the `SC` (SMT) component should be the bottleneck. Unfortunately SMT doesn't support batch transactions. 
+Inserting records to the `SC` (SMT) component is the bottleneck. Unfortunately SMT doesn't support batch transactions. 
+Adding batch transactions to `SC` layer is considered as a feature after the main release.
 
 ## Consequences
 

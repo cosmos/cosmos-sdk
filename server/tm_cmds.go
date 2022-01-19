@@ -130,7 +130,7 @@ func UnsafeResetAllCmd() *cobra.Command {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
 
-			tcmd.ResetAll(cfg.DBDir(), cfg.P2P.AddrBookFile(), cfg.PrivValidator.Key, cfg.PrivValidator.State, serverCtx.Logger)
+			tcmd.ResetAll(cfg.DBDir(), cfg.P2P.AddrBookFile(), cfg.PrivValidator.KeyFile(), cfg.PrivValidator.StateFile(), serverCtx.Logger)
 			return nil
 		},
 	}

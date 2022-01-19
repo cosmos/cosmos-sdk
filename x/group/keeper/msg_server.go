@@ -65,6 +65,7 @@ func (k Keeper) CreateGroup(goCtx context.Context, req *group.MsgCreateGroup) (*
 		Metadata:    metadata,
 		Version:     1,
 		TotalWeight: totalWeight.String(),
+		CreatedAt:   ctx.BlockTime(),
 	}
 	groupID, err := k.groupTable.Create(ctx.KVStore(k.key), groupInfo)
 	if err != nil {
@@ -80,6 +81,7 @@ func (k Keeper) CreateGroup(goCtx context.Context, req *group.MsgCreateGroup) (*
 				Address:  m.Address,
 				Weight:   m.Weight,
 				Metadata: m.Metadata,
+				AddedAt:  ctx.BlockTime(),
 			},
 		})
 		if err != nil {
@@ -291,6 +293,7 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 		metadata,
 		1,
 		policy,
+		ctx.BlockTime(),
 	)
 	if err != nil {
 		return nil, err

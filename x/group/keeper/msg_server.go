@@ -497,7 +497,7 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawPr
 
 	// Ensure the proposal can be withdrawn.
 	if proposal.Status != group.ProposalStatusSubmitted {
-		return nil, sdkerrors.Wrapf(errors.ErrInvalid, "cannot withdraw a proposal with a status of %s", proposal.Status.String())
+		return nil, sdkerrors.Wrapf(errors.ErrInvalid, "cannot withdraw a proposal with the status of %s", proposal.Status.String())
 	}
 
 	var policyInfo group.GroupPolicyInfo
@@ -521,8 +521,8 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawPr
 		return &group.MsgWithdrawProposalResponse{}, nil
 	}
 
-	// check admin address is the group admin.
-	if admin == groupInfo.Admin {
+	// check address is the group policy admin.
+	if admin == policyInfo.Address {
 		proposal.Result = group.ProposalResultUnfinalized
 		proposal.Status = group.ProposalStatusWithdrawn
 		return storeUpdates()

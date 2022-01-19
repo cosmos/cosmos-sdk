@@ -76,11 +76,16 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	}
 
 	// create a group
-	validMembers := fmt.Sprintf(`{"members": [{
-	  "address": "%s",
-		"weight": "3",
-		"metadata": "%s"
-	}]}`, val.Address.String(), validMetadata)
+	validMembers := fmt.Sprintf(`
+	{
+		"members": [
+			{
+				"address": "%s",
+				"weight": "3",
+				"metadata": "%s"
+			}
+		]
+	}`, val.Address.String(), validMetadata)
 	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
 	out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateGroupCmd(),
 		append(
@@ -1515,6 +1520,8 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
+	ids := make([]string, 2)
+
 	validTxFileName := getTxSendFileName(s, s.groupPolicies[1].Address, val.Address.String())
 	for i := 0; i < 2; i++ {
 		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateProposalCmd(),
@@ -1530,6 +1537,11 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 			),
 		)
 		s.Require().NoError(err, out.String())
+
+		var txResp sdk.TxResponse
+		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+		s.Require().Equal(uint32(0), txResp.Code, out.String())
+		ids[i] = s.getProposalIdFromTxResponse(txResp)
 	}
 
 	testCases := []struct {
@@ -1544,7 +1556,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 			"correct data",
 			append(
 				[]string{
-					"2",
+					ids[0],
 					val.Address.String(),
 				},
 				commonFlags...,
@@ -1558,13 +1570,13 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 			"already withdrawn proposal",
 			append(
 				[]string{
-					"2",
+					ids[0],
 					val.Address.String(),
 				},
 				commonFlags...,
 			),
 			true,
-			"cannot withdraw a proposal with a status of STATUS_WITHDRAWN",
+			"cannot withdraw a proposal with the status of STATUS_WITHDRAWN",
 			&sdk.TxResponse{},
 			0,
 		},
@@ -1600,7 +1612,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 			"wrong admin",
 			append(
 				[]string{
-					"7",
+					ids[1],
 					"wrongAdmin",
 				},
 				commonFlags...,
@@ -1630,6 +1642,21 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 			}
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) getProposalIdFromTxResponse(txResp sdk.TxResponse) string {
+	s.Require().Greater(len(txResp.Logs), 0)
+	s.Require().NotNil(txResp.Logs[0].Events)
+	events := txResp.Logs[0].Events
+	createProposalEvent, _ := sdk.TypedEventToEvent(&group.EventCreateProposal{})
+
+	for _, e := range events {
+		if e.Type == createProposalEvent.Type {
+			return strings.ReplaceAll(e.Attributes[0].Value, "\"", "")
+		}
+	}
+
+	return ""
 }
 
 func (s *IntegrationTestSuite) TestTxExec() {

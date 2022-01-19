@@ -542,13 +542,13 @@ Parameters:
 // MsgWithdrawProposalCmd creates a CLI command for Msg/WithdrawProposal.
 func MsgWithdrawProposalCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "withdraw-proposal [proposal-id] [group_admin_or_proposer]",
+		Use:   "withdraw-proposal [proposal-id] [group-policy-admin-or-proposer]",
 		Short: "Withdraw a submitted proposal.",
 		Long: `Withdraw a submitted proposal.
 
 Parameters:
 			proposal-id: unique ID of the proposal.
-			group_admin_or_proposer: either admin of the group or one the proposer of the proposal.
+			group-policy-admin-or-proposer: either admin of the group policy or one the proposer of the proposal.
 `,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {

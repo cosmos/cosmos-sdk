@@ -3,7 +3,6 @@ RUN apk add build-base git linux-headers
 WORKDIR /work
 COPY go.mod go.sum /work/
 COPY db/go.mod db/go.sum /work/db/
-COPY x/group/go.mod x/group/go.sum /work/x/group/
 COPY errors/go.mod errors/go.sum /work/errors/
 
 RUN go mod download

@@ -11,7 +11,6 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/errors"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
@@ -78,7 +77,7 @@ func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, message proto.Mess
 
 	if haveExisting {
 		if mode == saveModeInsert {
-			return sdkerrors.Wrapf(ormerrors.PrimaryKeyConstraintViolation, "%q:%+v", mref.Descriptor().FullName(), pkValues)
+			return ormerrors.PrimaryKeyConstraintViolation.Wrapf("%q:%+v", mref.Descriptor().FullName(), pkValues)
 		}
 
 		if hooks := writer.Hooks(); hooks != nil {

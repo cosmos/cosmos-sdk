@@ -110,11 +110,12 @@ func Build(options Options) (Table, error) {
 		singletonDesc = proto.GetExtension(messageDescriptor.Options(), ormv1alpha1.E_Singleton).(*ormv1alpha1.SingletonDescriptor)
 	}
 
-	if tableDesc != nil {
+	switch {
+	case tableDesc != nil:
 		if singletonDesc != nil {
 			return nil, ormerrors.InvalidTableDefinition.Wrapf("message %s cannot be declared as both a table and a singleton", messageDescriptor.FullName())
 		}
-	} else if singletonDesc != nil {
+	case singletonDesc != nil:
 		if singletonDesc.Id == 0 {
 			return nil, ormerrors.InvalidTableId.Wrapf("%s", messageDescriptor.FullName())
 		}
@@ -135,7 +136,7 @@ func Build(options Options) (Table, error) {
 		table.tableId = singletonDesc.Id
 
 		return &singleton{table}, nil
-	} else {
+	default:
 		return nil, ormerrors.InvalidTableDefinition.Wrapf("missing table descriptor for %s", messageDescriptor.FullName())
 	}
 

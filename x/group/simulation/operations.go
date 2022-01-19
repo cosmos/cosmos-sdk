@@ -829,7 +829,7 @@ func SimulateMsgExec(ak group.AccountKeeper,
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
 		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "fee error"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgExec, "fee error"), nil, err
 		}
 
 		ctx := sdk.WrapSDKContext(sdkCtx)

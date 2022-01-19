@@ -26,9 +26,6 @@ type PaginationRequest struct {
 type PaginationResponse struct {
 	*queryv1beta1.PageResponse
 
-	// Items are the items in this page.
-	Items []proto.Message
-
 	// HaveMore indicates whether there are more pages.
 	HaveMore bool
 
@@ -42,6 +39,7 @@ func Paginate(
 	index Index,
 	ctx context.Context,
 	request *PaginationRequest,
+	onItem func(proto.Message),
 	options ...ormlist.Option,
 ) (*PaginationResponse, error) {
 	offset := int(request.Offset)
@@ -81,7 +79,6 @@ func Paginate(
 
 	haveMore := false
 	cursors := make([]ormlist.CursorT, 0, limit)
-	items := make([]proto.Message, 0, limit)
 	done := limit + offset
 	for it.Next() {
 		if i == done {
@@ -108,7 +105,7 @@ func Paginate(
 
 		i++
 		cursors = append(cursors, it.Cursor())
-		items = append(items, message)
+		onItem(message)
 	}
 
 	pageRes := &queryv1beta1.PageResponse{}
@@ -123,6 +120,5 @@ func Paginate(
 		PageResponse: pageRes,
 		HaveMore:     haveMore,
 		Cursors:      cursors,
-		Items:        items,
 	}, nil
 }

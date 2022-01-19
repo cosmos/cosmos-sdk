@@ -202,86 +202,91 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	}
 
 	// now do some pagination
+	var items []proto.Message
+	onItem := func(item proto.Message) {
+		items = append(items, item)
+	}
 	res, err := ormtable.Paginate(table, ctx, &ormtable.PaginationRequest{
 		PageRequest: &queryv1beta1.PageRequest{
 			Limit:      4,
 			CountTotal: true,
-		},
-	})
+		}}, onItem)
 	assert.NilError(t, err)
 	assert.Assert(t, res != nil)
 	assert.Equal(t, uint64(10), res.Total)
 	assert.Assert(t, res.NextKey != nil)
 	assert.Assert(t, res.HaveMore)
 	assert.Equal(t, 4, len(res.Cursors))
-	assertGotItems(res.Items, 0, 1, 2, 3)
+	assertGotItems(items, 0, 1, 2, 3)
 
 	// read another page
+	items = nil
 	res, err = ormtable.Paginate(table, ctx, &ormtable.PaginationRequest{
 		PageRequest: &queryv1beta1.PageRequest{
 			Key:   res.NextKey,
 			Limit: 4,
-		},
-	})
+		}}, onItem)
 	assert.NilError(t, err)
 	assert.Assert(t, res != nil)
 	assert.Assert(t, res.NextKey != nil)
 	assert.Assert(t, res.HaveMore)
 	assert.Equal(t, 4, len(res.Cursors))
-	assertGotItems(res.Items, 4, 5, 6, 7)
+	assertGotItems(items, 4, 5, 6, 7)
 
 	// and the last page
+	items = nil
 	res, err = ormtable.Paginate(table, ctx, &ormtable.PaginationRequest{
 		PageRequest: &queryv1beta1.PageRequest{
 			Key:   res.NextKey,
 			Limit: 4,
-		},
-	})
+		}}, onItem)
 	assert.NilError(t, err)
 	assert.Assert(t, res != nil)
 	assert.Assert(t, res.NextKey != nil)
 	assert.Assert(t, !res.HaveMore)
 	assert.Equal(t, 2, len(res.Cursors))
-	assertGotItems(res.Items, 8, 9)
+	assertGotItems(items, 8, 9)
 
 	// let's go backwards
+	items = nil
 	res, err = ormtable.Paginate(table, ctx, &ormtable.PaginationRequest{
 		PageRequest: &queryv1beta1.PageRequest{
 			Limit:      2,
 			CountTotal: true,
 			Reverse:    true,
-		},
-	})
+		}}, onItem)
 	assert.NilError(t, err)
 	assert.Assert(t, res != nil)
 	assert.Assert(t, res.NextKey != nil)
 	assert.Equal(t, uint64(10), res.Total)
 	assert.Assert(t, res.HaveMore)
 	assert.Equal(t, 2, len(res.Cursors))
-	assertGotItems(res.Items, 9, 8)
+	assertGotItems(items, 9, 8)
 
 	// a bit more
+	items = nil
 	res, err = ormtable.Paginate(table, ctx, &ormtable.PaginationRequest{
 		PageRequest: &queryv1beta1.PageRequest{
 			Key:     res.NextKey,
 			Limit:   2,
 			Reverse: true,
-		},
-	})
+		}}, onItem)
 	assert.NilError(t, err)
 	assert.Assert(t, res != nil)
 	assert.Assert(t, res.NextKey != nil)
 	assert.Assert(t, res.HaveMore)
 	assert.Equal(t, 2, len(res.Cursors))
-	assertGotItems(res.Items, 7, 6)
+	assertGotItems(items, 7, 6)
 
 	// range query
+	items = nil
 	res, err = ormtable.Paginate(table, ctx,
 		&ormtable.PaginationRequest{
 			PageRequest: &queryv1beta1.PageRequest{
 				Limit: 10,
 			},
 		},
+		onItem,
 		ormlist.Start(uint32(4), int64(-1), "abc"),
 		ormlist.End(uint32(7), int64(-2), "abe"),
 	)
@@ -289,64 +294,64 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.Assert(t, res != nil)
 	assert.Assert(t, !res.HaveMore)
 	assert.Equal(t, 4, len(res.Cursors))
-	assertGotItems(res.Items, 2, 3, 4, 5)
+	assertGotItems(items, 2, 3, 4, 5)
 
 	// let's try an offset
+	items = nil
 	res, err = ormtable.Paginate(table, ctx, &ormtable.PaginationRequest{
 		PageRequest: &queryv1beta1.PageRequest{
 			Limit:      2,
 			CountTotal: true,
 			Offset:     3,
-		},
-	})
+		}}, onItem)
 	assert.NilError(t, err)
 	assert.Assert(t, res != nil)
 	assert.Assert(t, res.NextKey != nil)
 	assert.Equal(t, uint64(10), res.Total)
 	assert.Assert(t, res.HaveMore)
 	assert.Equal(t, 2, len(res.Cursors))
-	assertGotItems(res.Items, 3, 4)
+	assertGotItems(items, 3, 4)
 
 	// and reverse
+	items = nil
 	res, err = ormtable.Paginate(table, ctx, &ormtable.PaginationRequest{
 		PageRequest: &queryv1beta1.PageRequest{
 			Limit:      3,
 			CountTotal: true,
 			Offset:     5,
 			Reverse:    true,
-		},
-	})
+		}}, onItem)
 	assert.NilError(t, err)
 	assert.Assert(t, res != nil)
 	assert.Assert(t, res.NextKey != nil)
 	assert.Equal(t, uint64(10), res.Total)
 	assert.Assert(t, res.HaveMore)
 	assert.Equal(t, 3, len(res.Cursors))
-	assertGotItems(res.Items, 4, 3, 2)
+	assertGotItems(items, 4, 3, 2)
 
 	// now an offset that's slightly too big
+	items = nil
 	res, err = ormtable.Paginate(table, ctx, &ormtable.PaginationRequest{
 		PageRequest: &queryv1beta1.PageRequest{
 			Limit:      1,
 			CountTotal: true,
 			Offset:     10,
-		},
-	})
+		}}, onItem)
 	assert.NilError(t, err)
-	assert.Equal(t, 0, len(res.Items))
+	assert.Equal(t, 0, len(items))
 	assert.Assert(t, !res.HaveMore)
 	assert.Equal(t, uint64(10), res.Total)
 
 	// another offset that's too big
+	items = nil
 	res, err = ormtable.Paginate(table, ctx, &ormtable.PaginationRequest{
 		PageRequest: &queryv1beta1.PageRequest{
 			Limit:      1,
 			CountTotal: true,
 			Offset:     14,
-		},
-	})
+		}}, onItem)
 	assert.NilError(t, err)
-	assert.Equal(t, 0, len(res.Items))
+	assert.Equal(t, 0, len(items))
 	assert.Assert(t, !res.HaveMore)
 	assert.Equal(t, uint64(10), res.Total)
 

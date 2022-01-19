@@ -215,7 +215,7 @@ Using the new store will require a migration. 2 Migrations are proposed:
     ```go 
 app.UpgradeKeeper.SetUpgradeHandler("adr-40", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 
-    storev2.Migrate(iavlstore, )
+    storev2.Migrate(iavlstore, v2.store)
 
     // RunMigrations returns the VersionMap
     // with the updated module ConsensusVersions
@@ -223,7 +223,7 @@ app.UpgradeKeeper.SetUpgradeHandler("adr-40", func(ctx sdk.Context, plan upgrade
 })
     ```
 
-    The `Migrate` function will read all entries from the save them to the AD-40 combined KV store. Cash layer should not be used and the operation must finish with a single Commit call.
+    The `Migrate` function will read all entries from the save them to the AD-40 combined KV store. Cache layer should not be used and the operation must finish with a single Commit call.
 
 Inserting records to the `SC` (SMT) component should be the bottleneck. Unfortunately SMT doesn't support batch transactions. 
 

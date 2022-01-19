@@ -310,7 +310,7 @@ func SimulateMsgCreateProposal(ak group.AccountKeeper, bk group.BankKeeper, k ke
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, "no group found"), nil, nil
 		}
 		if groupPolicy == nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, "no group policy found"), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, "no group policy found"), nil, nil
 		}
 		groupID := g.GroupId
 		groupPolicyAddr := groupPolicy.Address

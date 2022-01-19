@@ -48,6 +48,14 @@ A new group policy can be created with the `MsgCreateGroupPolicy`, which has an 
 
 It's expecting to fail if metadata length is greater than some `MaxMetadataLength`.
 
+## Msg/CreateGroupWithPolicy
+
+A new group with policy can be created with the `MsgCreateGroupWithPolicy`, which has an admin address, a list of members, a decision policy, a group policy as admin field to optionally set group and group policy admin with group policy address and some optional metadata bytes for group and group policy.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/6f58963e7f6ce820e9b33f02f06f7b96f6d2e347/proto/cosmos/group/v1beta1/tx.proto#L167-L188
+
+It's expecting to fail if group metadata or group policy metadata length is greater than some `MaxMetadataLength`.
+
 ## Msg/UpdateGroupPolicyAdmin
 
 The `UpdateGroupPolicyAdmin` can be used to update a group policy admin.

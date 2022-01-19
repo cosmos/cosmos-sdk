@@ -18,6 +18,7 @@ This module allows the creation and management of on-chain multisig accounts and
 1. **[Concepts](01_concepts.md)**
     - [Group](01_concepts.md#group)
     - [Group Policy](01_concepts.md#group-policy)
+    - [Group With Policy](01_concepts.md#group-with-policy)
     - [Decision Policy](01_concepts.md#decision-policy)
     - [Proposal](01_concepts.md#proposal)
     - [Voting](01_concepts.md#voting)
@@ -34,6 +35,7 @@ This module allows the creation and management of on-chain multisig accounts and
     - [Msg/UpdateGroupAdmin](03_messages.md#msgupdategroupadmin)
     - [Msg/UpdateGroupMetadata](03_messages.md#msgupdategroupmetadata)
     - [Msg/CreateGroupPolicy](03_messages.md#msgcreategrouppolicy)
+    - [Msg/CreateGroupWithPolicy](03_messages.md#msgcreategroupwithpolicy)
     - [Msg/UpdateGroupPolicyAdmin](03_messages.md#msgupdategrouppolicyadmin)
     - [Msg/UpdateGroupPolicyDecisionPolicy](03_messages.md#msgupdategrouppolicydecisionpolicy)
     - [Msg/UpdateGroupPolicyMetadata](03_messages.md#msgupdategrouppolicymetadata)

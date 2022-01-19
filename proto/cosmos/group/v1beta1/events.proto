@@ -41,6 +41,13 @@ message EventCreateProposal {
   uint64 proposal_id = 1;
 }
 
+// EventWithdrawProposal is an event emitted when a proposal is withdrawn.
+message EventWithdrawProposal {
+
+  // proposal_id is the unique ID of the proposal.
+  uint64 proposal_id = 1;
+}
+
 // EventVote is an event emitted when a voter votes on a proposal.
 message EventVote {
 

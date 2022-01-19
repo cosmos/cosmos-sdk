@@ -541,6 +541,11 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawPr
 		return nil, sdkerrors.Wrapf(errors.ErrUnauthorized, "given admin address is neither group admin address nor in proposers: %s", admin)
 	}
 
+	err = ctx.EventManager().EmitTypedEvent(&group.EventWithdrawProposal{ProposalId: id})
+	if err != nil {
+		return nil, err
+	}
+
 	proposal.Result = group.ProposalResultUnfinalized
 	proposal.Status = group.ProposalStatusWithdrawn
 	return storeUpdates()

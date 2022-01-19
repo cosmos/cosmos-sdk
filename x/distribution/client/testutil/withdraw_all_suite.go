@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/stretchr/testify/suite"
-
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -15,6 +13,7 @@ import (
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	"github.com/stretchr/testify/suite"
 )
 
 type WithdrawAllTestSuite struct {

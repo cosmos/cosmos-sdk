@@ -295,8 +295,8 @@ func MsgCreateGroupWithPolicyCmd() *cobra.Command {
 			"an administrator account and a decision policy. Note, the '--from' flag is " +
 			"ignored as it is implied from [admin].",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Create a group with policy which is an aggregation of member accounts with associated weights and
-an administrator account. Note, the '--from' flag is ignored as it is implied from [admin].
+			fmt.Sprintf(`Create a group with policy which is an aggregation of member accounts with associated weights,
+an administrator account and decision policy. Note, the '--from' flag is ignored as it is implied from [admin].
 Members accounts can be given through a members JSON file that contains an array of members.
 If group-policy-as-admin flag is set to true, admin of the newly created group and group policy is set with group policy address itself.
 
@@ -324,7 +324,7 @@ where members.json contains:
 				version.AppName,
 			),
 		),
-		Args: cobra.ExactArgs(5),
+		Args: cobra.MinimumNArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := cmd.Flags().Set(flags.FlagFrom, args[0])
 			if err != nil {

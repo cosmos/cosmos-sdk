@@ -1,6 +1,6 @@
 syntax="proto3";
 
-package cosmos.msg.v1beta1;
+package cosmos.msg.v1;
 
 import "google/protobuf/descriptor.proto";
 
@@ -9,7 +9,7 @@ import "google/protobuf/descriptor.proto";
 option go_package = "github.com/cosmos/cosmos-sdk/types/msgservice";
 
 extend google.protobuf.MessageOptions {
-  // signers must be used in cosmos messages in order
+  // signer must be used in cosmos messages in order
   // to signal to external clients which fields in a
   // given cosmos message must be filled with signer
   // information (address).
@@ -18,5 +18,5 @@ extend google.protobuf.MessageOptions {
   // The field must either be of string kind, or of message
   // kind in case the signer information is contained within
   // a message inside the cosmos message.
-  repeated string signers = 11110000;
+  repeated string signer = 11110000;
 }

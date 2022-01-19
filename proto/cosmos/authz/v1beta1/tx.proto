@@ -6,7 +6,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "cosmos/authz/v1beta1/authz.proto";
-import "cosmos/msg/v1beta1/msg.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package                      = "github.com/cosmos/cosmos-sdk/x/authz";
 option (gogoproto.goproto_getters_all) = false;
@@ -32,7 +32,7 @@ service Msg {
 // MsgGrant is a request type for Grant method. It declares authorization to the grantee
 // on behalf of the granter with the provided expiration time.
 message MsgGrant {
-  option (cosmos.msg.v1beta1.signers) = "granter";
+  option (cosmos.msg.v1.signer) = "granter";
 
   string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -49,7 +49,7 @@ message MsgExecResponse {
 // authorizations granted to the grantee. Each message should have only
 // one signer corresponding to the granter of the authorization.
 message MsgExec {
-  option (cosmos.msg.v1beta1.signers) = "grantee";
+  option (cosmos.msg.v1.signer) = "grantee";
 
   string grantee = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // Authorization Msg requests to execute. Each msg must implement Authorization interface
@@ -64,7 +64,7 @@ message MsgGrantResponse {}
 // MsgRevoke revokes any authorization with the provided sdk.Msg type on the
 // granter's account with that has been granted to the grantee.
 message MsgRevoke {
-  option (cosmos.msg.v1beta1.signers) = "granter";
+  option (cosmos.msg.v1.signer) = "granter";
 
   string granter      = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string grantee      = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];

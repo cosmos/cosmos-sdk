@@ -17,8 +17,6 @@ func TestFieldNames(t *testing.T) {
 	assert.DeepEqual(t, names, f.Names())
 	assert.Equal(t, abc, f.String())
 
-	assert.DeepEqual(t, names, f.Names())
-
 	f = commaSeparatedFieldNames("a, b ,c")
 	assert.Equal(t, fieldNames{abc}, f)
 	assert.DeepEqual(t, names, f.Names())

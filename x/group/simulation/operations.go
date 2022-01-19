@@ -835,7 +835,7 @@ func SimulateMsgExec(ak group.AccountKeeper,
 		ctx := sdk.WrapSDKContext(sdkCtx)
 		proposalsResult, err := k.ProposalsByGroupPolicy(ctx, &group.QueryProposalsByGroupPolicyRequest{Address: groupPolicyAddr})
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "fail to query group info"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgExec, "fail to query group info"), nil, err
 		}
 		proposals := proposalsResult.GetProposals()
 		if len(proposals) == 0 {

@@ -232,7 +232,7 @@ func (r TxResponse) GetTx() Tx {
 
 // WrapServiceResult wraps a result from a protobuf RPC service method call in
 // a Result object or error. This method takes care of marshaling the res param to
-// protobuf and attaching any events on the ctx.EventManager() to the Result.
+// protobuf and attaching any events on the baseCtx.EventManager() to the Result.
 func WrapServiceResult(ctx Context, res proto.Message, err error) (*Result, error) {
 	if err != nil {
 		return nil, err

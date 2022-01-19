@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"sort"
 	"strings"
 	"testing"
@@ -30,12 +31,12 @@ type TestSuite struct {
 	addrs           []sdk.AccAddress
 	groupID         uint64
 	groupPolicyAddr sdk.AccAddress
-	groupAdmin      sdk.AccAddress
 	keeper          keeper.Keeper
 	blockTime       time.Time
 }
 
 func (s *TestSuite) SetupTest() {
+	fmt.Println("a", 1, "-----------------------------------------")
 	app := simapp.Setup(s.T(), false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -59,7 +60,6 @@ func (s *TestSuite) SetupTest() {
 	})
 	s.Require().NoError(err)
 	s.groupID = groupRes.GroupId
-	s.groupAdmin = s.addrs[0]
 
 	policy := group.NewThresholdDecisionPolicy(
 		"2",
@@ -1376,7 +1376,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 	addrs := s.addrs
 	addr2 := addrs[1]
 	addr5 := addrs[4]
-	groupAdmin := s.groupAdmin
+	groupPolicy := s.groupPolicyAddr
 
 	msgSend := &banktypes.MsgSend{
 		FromAddress: s.groupPolicyAddr.String(),
@@ -1413,14 +1413,14 @@ func (s *TestSuite) TestWithdrawProposal() {
 		"already closed proposal": {
 			proposalId: proposalID,
 			admin:      proposers[0],
-			expErrMsg:  "cannot withdraw a proposal with a status of STATUS_WITHDRAWN",
+			expErrMsg:  "cannot withdraw a proposal with the status of STATUS_WITHDRAWN",
 		},
 		"happy case with group admin address": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 			},
 			proposalId: proposalID,
-			admin:      groupAdmin.String(),
+			admin:      groupPolicy.String(),
 		},
 	}
 	for msg, spec := range specs {
@@ -1433,7 +1433,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 
 			_, err := s.keeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
 				ProposalId: pId,
-				Admin:      spec.admin,
+				Address:    spec.admin,
 			})
 
 			if spec.expErrMsg != "" {

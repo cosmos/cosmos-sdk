@@ -204,6 +204,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10393](https://github.com/cosmos/cosmos-sdk/pull/10422) Add `MinCommissionRate` param to `x/staking` module.
 * [#10725](https://github.com/cosmos/cosmos-sdk/pull/10725) populate `ctx.ConsensusParams` for begin/end blockers.
 * [#10763](https://github.com/cosmos/cosmos-sdk/pull/10763) modify the fields in `TallyParams` to use `string` instead of `bytes`
+* (x/staking) [\#10885] (https://github.com/cosmos/cosmos-sdk/pull/10885) Add new `Cancel-Unbond` transaction to `x/staking` module. Delegators now cancel unbonding delegation entry and re-delegate back to validator.
 
  ### Deprecated
 

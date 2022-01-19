@@ -21,6 +21,7 @@ var _ Keeper = (*BaseKeeper)(nil)
 type Keeper interface {
 	SendKeeper
 	WithMintCoinsRestriction(BankMintingRestrictionFn) BaseKeeper
+	NewDenomMintCoinsRestriction(allowedDenoms ...string) BankMintingRestrictionFn
 
 	InitGenesis(sdk.Context, *types.GenesisState)
 	ExportGenesis(sdk.Context) *types.GenesisState
@@ -135,6 +136,25 @@ func (k BaseKeeper) WithMintCoinsRestriction(NewRestrictionFn BankMintingRestric
 		return nil
 	}
 	return k
+}
+
+// NewDenomMintCoinsRestriction creates and returns a BankMintingRestrictionFn that blocks minting any denom that was not included in the parameter.
+func (k BaseKeeper) NewDenomMintCoinsRestriction(allowedDenoms ...string) BankMintingRestrictionFn {
+	allowedDenomMap := make(map[string]bool)
+	for _, denom := range allowedDenoms {
+		allowedDenomMap[denom] = true
+	}
+
+	denomMintCoinsRestrictionFn := func(ctx sdk.Context, coinsToMint sdk.Coins) error {
+		for _, coin := range coinsToMint {
+			if !allowedDenomMap[coin.Denom] {
+				return fmt.Errorf("does not have permission to mint %s", coin.Denom)
+			}
+		}
+		return nil
+	}
+
+	return denomMintCoinsRestrictionFn
 }
 
 // DelegateCoins performs delegation by deducting amt coins from an account with

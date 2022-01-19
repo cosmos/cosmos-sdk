@@ -82,208 +82,6 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }
 
-func (s *TestSuite) TestCreateGroupWithPolicy() {
-	addrs := s.addrs
-	addr1 := addrs[0]
-	addr3 := addrs[2]
-	addr5 := addrs[4]
-	addr6 := addrs[5]
-
-	members := []group.Member{{
-		Address:  addr5.String(),
-		Weight:   "1",
-		Metadata: nil,
-		AddedAt:  s.blockTime,
-	}, {
-		Address:  addr6.String(),
-		Weight:   "2",
-		Metadata: nil,
-		AddedAt:  s.blockTime,
-	}}
-
-	specs := map[string]struct {
-		req    *group.MsgCreateGroupWithPolicy
-		policy group.DecisionPolicy
-		expErr bool
-	}{
-		"all good": {
-			req: &group.MsgCreateGroupWithPolicy{
-				Admin:               addr1.String(),
-				Members:             members,
-				GroupMetadata:       nil,
-				GroupPolicyMetadata: nil,
-				GroupPolicyAsAdmin:  false,
-			},
-			policy: group.NewThresholdDecisionPolicy(
-				"1",
-				time.Second,
-			),
-		},
-		"group policy as admin is true": {
-			req: &group.MsgCreateGroupWithPolicy{
-				Admin:               addr1.String(),
-				Members:             members,
-				GroupMetadata:       nil,
-				GroupPolicyMetadata: nil,
-				GroupPolicyAsAdmin:  true,
-			},
-			policy: group.NewThresholdDecisionPolicy(
-				"1",
-				time.Second,
-			),
-		},
-		"group metadata too long": {
-			req: &group.MsgCreateGroupWithPolicy{
-				Admin:               addr1.String(),
-				Members:             members,
-				GroupMetadata:       bytes.Repeat([]byte{1}, 256),
-				GroupPolicyMetadata: nil,
-				GroupPolicyAsAdmin:  false,
-			},
-			policy: group.NewThresholdDecisionPolicy(
-				"1",
-				time.Second,
-			),
-			expErr: true,
-		},
-		"group policy metadata too long": {
-			req: &group.MsgCreateGroupWithPolicy{
-				Admin:               addr1.String(),
-				Members:             members,
-				GroupMetadata:       nil,
-				GroupPolicyMetadata: bytes.Repeat([]byte{1}, 256),
-				GroupPolicyAsAdmin:  false,
-			},
-			policy: group.NewThresholdDecisionPolicy(
-				"1",
-				time.Second,
-			),
-			expErr: true,
-		},
-		"member metadata too long": {
-			req: &group.MsgCreateGroupWithPolicy{
-				Admin: addr1.String(),
-				Members: []group.Member{{
-					Address:  addr3.String(),
-					Weight:   "1",
-					Metadata: bytes.Repeat([]byte{1}, 256),
-				}},
-				GroupMetadata:       nil,
-				GroupPolicyMetadata: nil,
-				GroupPolicyAsAdmin:  false,
-			},
-			policy: group.NewThresholdDecisionPolicy(
-				"1",
-				time.Second,
-			),
-			expErr: true,
-		},
-		"zero member weight": {
-			req: &group.MsgCreateGroupWithPolicy{
-				Admin: addr1.String(),
-				Members: []group.Member{{
-					Address:  addr3.String(),
-					Weight:   "0",
-					Metadata: nil,
-				}},
-				GroupMetadata:       nil,
-				GroupPolicyMetadata: nil,
-				GroupPolicyAsAdmin:  false,
-			},
-			policy: group.NewThresholdDecisionPolicy(
-				"1",
-				time.Second,
-			),
-			expErr: true,
-		},
-		"decision policy threshold > total group weight": {
-			req: &group.MsgCreateGroupWithPolicy{
-				Admin:               addr1.String(),
-				Members:             members,
-				GroupMetadata:       nil,
-				GroupPolicyMetadata: nil,
-				GroupPolicyAsAdmin:  false,
-			},
-			policy: group.NewThresholdDecisionPolicy(
-				"10",
-				time.Second,
-			),
-			expErr: false,
-		},
-	}
-
-	var seq uint32 = 1
-	for msg, spec := range specs {
-		spec := spec
-		s.Run(msg, func() {
-			err := spec.req.SetDecisionPolicy(spec.policy)
-			s.Require().NoError(err)
-
-			res, err := s.keeper.CreateGroupWithPolicy(s.ctx, spec.req)
-			if spec.expErr {
-				s.Require().Error(err)
-				_, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: uint64(seq + 1)})
-				s.Require().Error(err)
-				return
-			}
-			s.Require().NoError(err)
-			id := res.GroupId
-			groupPolicyAddr := res.GroupPolicyAddress
-
-			seq++
-			s.Assert().Equal(uint64(seq), id)
-
-			// then all data persisted in group
-			loadedGroupRes, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: id})
-			s.Require().NoError(err)
-			s.Assert().Equal(spec.req.GroupMetadata, loadedGroupRes.Info.Metadata)
-			s.Assert().Equal(id, loadedGroupRes.Info.GroupId)
-			if spec.req.GroupPolicyAsAdmin {
-				s.Assert().NotEqual(spec.req.Admin, loadedGroupRes.Info.Admin)
-			} else {
-				s.Assert().Equal(spec.req.Admin, loadedGroupRes.Info.Admin)
-			}
-
-			// and members are stored as well
-			membersRes, err := s.keeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{GroupId: id})
-			s.Require().NoError(err)
-			loadedMembers := membersRes.Members
-			s.Require().Equal(len(members), len(loadedMembers))
-			// we reorder members by address to be able to compare them
-			sort.Slice(members, func(i, j int) bool {
-				addri, err := sdk.AccAddressFromBech32(members[i].Address)
-				s.Require().NoError(err)
-				addrj, err := sdk.AccAddressFromBech32(members[j].Address)
-				s.Require().NoError(err)
-				return bytes.Compare(addri, addrj) < 0
-			})
-			for i := range loadedMembers {
-				s.Assert().Equal(members[i].Metadata, loadedMembers[i].Member.Metadata)
-				s.Assert().Equal(members[i].Address, loadedMembers[i].Member.Address)
-				s.Assert().Equal(members[i].Weight, loadedMembers[i].Member.Weight)
-				s.Assert().Equal(members[i].AddedAt, loadedMembers[i].Member.AddedAt)
-				s.Assert().Equal(id, loadedMembers[i].GroupId)
-			}
-
-			// then all data persisted in group policy
-			groupPolicyRes, err := s.keeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{Address: groupPolicyAddr})
-			s.Require().NoError(err)
-
-			groupPolicy := groupPolicyRes.Info
-			s.Assert().Equal(groupPolicyAddr, groupPolicy.Address)
-			s.Assert().Equal(id, groupPolicy.GroupId)
-			s.Assert().Equal(spec.req.GroupPolicyMetadata, groupPolicy.Metadata)
-			s.Assert().Equal(spec.policy.(*group.ThresholdDecisionPolicy), groupPolicy.GetDecisionPolicy())
-			if spec.req.GroupPolicyAsAdmin {
-				s.Assert().NotEqual(spec.req.Admin, groupPolicy.Admin)
-			} else {
-				s.Assert().Equal(spec.req.Admin, groupPolicy.Admin)
-			}
-		})
-	}
-
-}
-
 func (s *TestSuite) TestCreateGroup() {
 	addrs := s.addrs
 	addr1 := addrs[0]
@@ -905,6 +703,208 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			}
 		})
 	}
+}
+
+func (s *TestSuite) TestCreateGroupWithPolicy() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr3 := addrs[2]
+	addr5 := addrs[4]
+	addr6 := addrs[5]
+
+	members := []group.Member{{
+		Address:  addr5.String(),
+		Weight:   "1",
+		Metadata: nil,
+		AddedAt:  s.blockTime,
+	}, {
+		Address:  addr6.String(),
+		Weight:   "2",
+		Metadata: nil,
+		AddedAt:  s.blockTime,
+	}}
+
+	specs := map[string]struct {
+		req    *group.MsgCreateGroupWithPolicy
+		policy group.DecisionPolicy
+		expErr bool
+	}{
+		"all good": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin:               addr1.String(),
+				Members:             members,
+				GroupMetadata:       nil,
+				GroupPolicyMetadata: nil,
+				GroupPolicyAsAdmin:  false,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+			),
+		},
+		"group policy as admin is true": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin:               addr1.String(),
+				Members:             members,
+				GroupMetadata:       nil,
+				GroupPolicyMetadata: nil,
+				GroupPolicyAsAdmin:  true,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+			),
+		},
+		"group metadata too long": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin:               addr1.String(),
+				Members:             members,
+				GroupMetadata:       bytes.Repeat([]byte{1}, 256),
+				GroupPolicyMetadata: nil,
+				GroupPolicyAsAdmin:  false,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+			),
+			expErr: true,
+		},
+		"group policy metadata too long": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin:               addr1.String(),
+				Members:             members,
+				GroupMetadata:       nil,
+				GroupPolicyMetadata: bytes.Repeat([]byte{1}, 256),
+				GroupPolicyAsAdmin:  false,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+			),
+			expErr: true,
+		},
+		"member metadata too long": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin: addr1.String(),
+				Members: []group.Member{{
+					Address:  addr3.String(),
+					Weight:   "1",
+					Metadata: bytes.Repeat([]byte{1}, 256),
+				}},
+				GroupMetadata:       nil,
+				GroupPolicyMetadata: nil,
+				GroupPolicyAsAdmin:  false,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+			),
+			expErr: true,
+		},
+		"zero member weight": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin: addr1.String(),
+				Members: []group.Member{{
+					Address:  addr3.String(),
+					Weight:   "0",
+					Metadata: nil,
+				}},
+				GroupMetadata:       nil,
+				GroupPolicyMetadata: nil,
+				GroupPolicyAsAdmin:  false,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+			),
+			expErr: true,
+		},
+		"decision policy threshold > total group weight": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin:               addr1.String(),
+				Members:             members,
+				GroupMetadata:       nil,
+				GroupPolicyMetadata: nil,
+				GroupPolicyAsAdmin:  false,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"10",
+				time.Second,
+			),
+			expErr: false,
+		},
+	}
+
+	var seq uint32 = 1
+	for msg, spec := range specs {
+		spec := spec
+		s.Run(msg, func() {
+			err := spec.req.SetDecisionPolicy(spec.policy)
+			s.Require().NoError(err)
+
+			res, err := s.keeper.CreateGroupWithPolicy(s.ctx, spec.req)
+			if spec.expErr {
+				s.Require().Error(err)
+				_, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: uint64(seq + 1)})
+				s.Require().Error(err)
+				return
+			}
+			s.Require().NoError(err)
+			id := res.GroupId
+			groupPolicyAddr := res.GroupPolicyAddress
+
+			seq++
+			s.Assert().Equal(uint64(seq), id)
+
+			// then all data persisted in group
+			loadedGroupRes, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: id})
+			s.Require().NoError(err)
+			s.Assert().Equal(spec.req.GroupMetadata, loadedGroupRes.Info.Metadata)
+			s.Assert().Equal(id, loadedGroupRes.Info.GroupId)
+			if spec.req.GroupPolicyAsAdmin {
+				s.Assert().NotEqual(spec.req.Admin, loadedGroupRes.Info.Admin)
+			} else {
+				s.Assert().Equal(spec.req.Admin, loadedGroupRes.Info.Admin)
+			}
+
+			// and members are stored as well
+			membersRes, err := s.keeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{GroupId: id})
+			s.Require().NoError(err)
+			loadedMembers := membersRes.Members
+			s.Require().Equal(len(members), len(loadedMembers))
+			// we reorder members by address to be able to compare them
+			sort.Slice(members, func(i, j int) bool {
+				addri, err := sdk.AccAddressFromBech32(members[i].Address)
+				s.Require().NoError(err)
+				addrj, err := sdk.AccAddressFromBech32(members[j].Address)
+				s.Require().NoError(err)
+				return bytes.Compare(addri, addrj) < 0
+			})
+			for i := range loadedMembers {
+				s.Assert().Equal(members[i].Metadata, loadedMembers[i].Member.Metadata)
+				s.Assert().Equal(members[i].Address, loadedMembers[i].Member.Address)
+				s.Assert().Equal(members[i].Weight, loadedMembers[i].Member.Weight)
+				s.Assert().Equal(members[i].AddedAt, loadedMembers[i].Member.AddedAt)
+				s.Assert().Equal(id, loadedMembers[i].GroupId)
+			}
+
+			// then all data persisted in group policy
+			groupPolicyRes, err := s.keeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{Address: groupPolicyAddr})
+			s.Require().NoError(err)
+
+			groupPolicy := groupPolicyRes.Info
+			s.Assert().Equal(groupPolicyAddr, groupPolicy.Address)
+			s.Assert().Equal(id, groupPolicy.GroupId)
+			s.Assert().Equal(spec.req.GroupPolicyMetadata, groupPolicy.Metadata)
+			s.Assert().Equal(spec.policy.(*group.ThresholdDecisionPolicy), groupPolicy.GetDecisionPolicy())
+			if spec.req.GroupPolicyAsAdmin {
+				s.Assert().NotEqual(spec.req.Admin, groupPolicy.Admin)
+			} else {
+				s.Assert().Equal(spec.req.Admin, groupPolicy.Admin)
+			}
+		})
+	}
+
 }
 
 func (s *TestSuite) TestCreateGroupPolicy() {

@@ -62,25 +62,11 @@ func (m MsgCreateGroup) ValidateBasic() error {
 }
 
 func (m MsgCreateGroup) validateMembers() error {
-	index := make(map[string]struct{}, len(m.Members))
-	for i := range m.Members {
-		member := m.Members[i]
-		_, err := sdk.AccAddressFromBech32(member.Address)
-		if err != nil {
-			return sdkerrors.Wrap(err, "address")
-		}
 
-		if _, err := math.NewPositiveDecFromString(member.Weight); err != nil {
-			return sdkerrors.Wrap(err, "weight")
-		}
-
-		addr := member.Address
-		if _, exists := index[addr]; exists {
-			return sdkerrors.Wrapf(errors.ErrDuplicate, "address: %s", addr)
-		}
-		index[addr] = struct{}{}
+	err := validateMembers(m.Members)
+	if err != nil {
+		return err
 	}
-
 	return nil
 }
 
@@ -286,7 +272,7 @@ func (m *MsgCreateGroupWithPolicy) GetDecisionPolicy() DecisionPolicy {
 func (m *MsgCreateGroupWithPolicy) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
 	msg, ok := decisionPolicy.(proto.Message)
 	if !ok {
-		return fmt.Errorf("can't proto marshal %T", msg)
+		return sdkerrors.ErrInvalidType.Wrapf("can't proto marshal %T", msg)
 	}
 	any, err := types.NewAnyWithValue(msg)
 	if err != nil {
@@ -340,25 +326,11 @@ func (m MsgCreateGroupWithPolicy) ValidateBasic() error {
 }
 
 func (m MsgCreateGroupWithPolicy) validateMembers() error {
-	index := make(map[string]struct{}, len(m.Members))
-	for i := range m.Members {
-		member := m.Members[i]
-		_, err := sdk.AccAddressFromBech32(member.Address)
-		if err != nil {
-			return sdkerrors.Wrap(err, "address")
-		}
 
-		if _, err := math.NewPositiveDecFromString(member.Weight); err != nil {
-			return sdkerrors.Wrap(err, "weight")
-		}
-
-		addr := member.Address
-		if _, exists := index[addr]; exists {
-			return sdkerrors.Wrapf(errors.ErrDuplicate, "address: %s", addr)
-		}
-		index[addr] = struct{}{}
+	err := validateMembers(m.Members)
+	if err != nil {
+		return err
 	}
-
 	return nil
 }
 
@@ -812,5 +784,28 @@ func (m MsgExec) ValidateBasic() error {
 	if m.ProposalId == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
 	}
+	return nil
+}
+
+func validateMembers(members []Member) error {
+	index := make(map[string]struct{}, len(members))
+	for i := range members {
+		member := members[i]
+		_, err := sdk.AccAddressFromBech32(member.Address)
+		if err != nil {
+			return sdkerrors.Wrap(err, "address")
+		}
+
+		if _, err := math.NewPositiveDecFromString(member.Weight); err != nil {
+			return sdkerrors.Wrap(err, "weight")
+		}
+
+		addr := member.Address
+		if _, exists := index[addr]; exists {
+			return sdkerrors.Wrapf(errors.ErrDuplicate, "address: %s", addr)
+		}
+		index[addr] = struct{}{}
+	}
+
 	return nil
 }

@@ -839,7 +839,7 @@ func SimulateMsgExec(ak group.AccountKeeper,
 		}
 		proposals := proposalsResult.GetProposals()
 		if len(proposals) == 0 {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "no proposals found"), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgExec, "no proposals found"), nil, nil
 		}
 
 		proposalID := -1
@@ -853,7 +853,7 @@ func SimulateMsgExec(ak group.AccountKeeper,
 
 		// return no-op if no proposal found
 		if proposalID == -1 {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "no proposals found"), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgExec, "no proposals found"), nil, nil
 		}
 
 		msg := group.MsgExec{

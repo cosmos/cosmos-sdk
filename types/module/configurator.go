@@ -2,7 +2,6 @@ package module
 
 import (
 	"fmt"
-
 	"github.com/gogo/protobuf/grpc"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -38,21 +37,46 @@ type Configurator interface {
 
 type configurator struct {
 	cdc         codec.Codec
-	msgServer   grpc.Server
+	msgServer   *msgServerAssertSigners
 	queryServer grpc.Server
 
 	// migrations is a map of moduleName -> forVersion -> migration script handler
 	migrations map[string]map[uint64]MigrationHandler
 }
 
+// ConfiguratorOption defines the possible customizations for Configurator
+type ConfiguratorOption func(*configurator)
+
+// WithProtoImportsRemap provides a way to customise protobuf file
+// import paths. It's used in those instances in which a protobuf file
+// is imported in a way in a protobuf file but the generated code of the
+// import registers itself in a different way.
+func WithProtoImportsRemap(m map[string]string) ConfiguratorOption {
+	return func(c *configurator) {
+
+		for k, v := range m {
+			c.msgServer.importRemap[k] = v
+		}
+	}
+}
+
 // NewConfigurator returns a new Configurator instance
-func NewConfigurator(cdc codec.Codec, msgServer grpc.Server, queryServer grpc.Server) Configurator {
-	return configurator{
-		cdc:         cdc,
-		msgServer:   msgServer,
+func NewConfigurator(cdc codec.Codec, msgServer grpc.Server, queryServer grpc.Server, opts ...ConfiguratorOption) Configurator {
+	c := configurator{
+		cdc: cdc,
+		msgServer: newSignerChecker(msgServer, map[string]string{
+			"gogoproto/gogo.proto": "gogo.proto",
+			"cosmos.proto":         "cosmos_proto/cosmos.proto",
+		}),
 		queryServer: queryServer,
 		migrations:  map[string]map[uint64]MigrationHandler{},
 	}
+
+	for _, o := range opts {
+		o(&c)
+	}
+
+	return c
 }
 
 var _ Configurator = configurator{}

@@ -8,8 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"sort"
-	"strings"
 )
 
 // MigrationFromIAVLStoreToSMTStore will migrate the complete state from iavl to smt
@@ -30,10 +28,6 @@ func MigrationFromIAVLStoreToSMTStore(rs *v1Store.Store, rootStore *Store) error
 			continue
 		}
 	}
-
-	sort.Slice(stores, func(i, j int) bool {
-		return strings.Compare(stores[i].name, stores[j].name) == -1
-	})
 
 	// make new smt store schema
 	if len(rootStore.schema) != 0 {

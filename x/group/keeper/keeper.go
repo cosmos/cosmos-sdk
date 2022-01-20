@@ -73,9 +73,11 @@ type Keeper struct {
 	voteByVoterIndex    orm.Index
 
 	router *authmiddleware.MsgServiceRouter
+
+	maxMetadataLength int // MaxMetadataLength defines the max length of the metadata bytes field for various entities within the group module
 }
 
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddleware.MsgServiceRouter, accKeeper group.AccountKeeper) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddleware.MsgServiceRouter, accKeeper group.AccountKeeper, maxMetadataLength int) Keeper {
 	k := Keeper{
 		key:       storeKey,
 		router:    router,
@@ -204,6 +206,8 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	}
 	k.voteTable = *voteTable
 
+	k.maxMetadataLength = maxMetadataLength
+
 	return k
 
 }
@@ -212,3 +216,6 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", group.ModuleName))
 }
+
+// MaxMetadataLength returns the max length of the metadata bytes field for various entities within the group module.
+func (k Keeper) MaxMetadataLength() int { return k.maxMetadataLength }

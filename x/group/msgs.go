@@ -245,10 +245,6 @@ func NewMsgCreateGroupWithPolicy(admin string, members []Member, group_metadata 
 	return m, nil
 }
 
-func (m *MsgCreateGroupWithPolicy) GetGroupPolicyAsAdmin() bool {
-	return m.GroupPolicyAsAdmin
-}
-
 func (m *MsgCreateGroupWithPolicy) GetDecisionPolicy() DecisionPolicy {
 	decisionPolicy, ok := m.DecisionPolicy.GetCachedValue().(DecisionPolicy)
 	if !ok {

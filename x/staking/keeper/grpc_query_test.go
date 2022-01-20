@@ -780,6 +780,7 @@ func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers 
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.GetSubspace(types.ModuleName),
+		types.DefaultConfig(),
 	)
 
 	val1 := teststaking.NewValidator(t, valAddrs[0], pks[0])

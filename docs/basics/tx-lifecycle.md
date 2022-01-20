@@ -93,6 +93,8 @@ Gas won't be charged when `ValidateBasic` is executed. Hence, we should only do 
 
 For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for non-empty addresses and a non-negative coin amount, but does not require knowledge of state such as the account balance of an address.
 
+See also [Msg Service Validation](../building-modules/msg-services.md#Validation).
+
 ### AnteHandler
 
 After the ValidateBasic checks, the `AnteHandler`s are run. Technically, they are optional, but in practice, they are very often present to perform signature verification, gas calculation, fee deduction and other core operations related to blockchain transactions.

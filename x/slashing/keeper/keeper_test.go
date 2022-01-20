@@ -94,7 +94,7 @@ func TestHandleNewValidator(t *testing.T) {
 
 	// Validator created
 	amt := tstaking.CreateValidatorWithValPower(addr, val, 100, true)
-	InitTokens := sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
+	InitTokens := sdk.NewIntFromUint64(200_000_000)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	require.Equal(

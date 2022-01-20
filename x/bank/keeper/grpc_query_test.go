@@ -324,7 +324,7 @@ func (suite *IntegrationTestSuite) TestGRPCDenomOwners() {
 
 		bal := sdk.NewCoins(sdk.NewCoin(
 			sdk.DefaultBondDenom,
-			sdk.TokensFromConsensusPower(initialPower/10, sdk.DefaultPowerReduction),
+			sdk.NewInt(initialPower/10).Mul(sdk.NewIntFromUint64(1_000_000)),
 		))
 		suite.Require().NoError(keeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, acc.GetAddress(), bal))
 	}

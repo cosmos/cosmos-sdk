@@ -19,8 +19,9 @@ const (
 )
 
 // DefaultPowerReduction is the default amount of staking tokens required for 1 unit of consensus-engine power
-var DefaultPowerReduction = NewIntFromUint64(1000000)
+var DefaultPowerReduction = NewIntFromUint64(1000000) // todo, remove or move to testutil as testing global
 
+// todo: move to testutil or to staking. ideally staking since this is a staking module specific function
 // TokensToConsensusPower - convert input tokens to potential consensus-engine power
 func TokensToConsensusPower(tokens Int, powerReduction Int) int64 {
 	return (tokens.Quo(powerReduction)).Int64()

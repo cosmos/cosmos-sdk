@@ -255,7 +255,6 @@ func TestSimulateMsgBeginRedelegate(t *testing.T) {
 
 // returns context and an app with updated mint keeper
 func createTestApp(t *testing.T, isCheckTx bool, r *rand.Rand, n int) (*simapp.SimApp, sdk.Context, []simtypes.Account) {
-	// sdk.DefaultPowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
 
 	accounts := simtypes.RandomAccounts(r, n)
 	// create validator set with single validator

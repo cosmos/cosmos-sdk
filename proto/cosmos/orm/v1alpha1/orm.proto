@@ -88,7 +88,8 @@ message SecondaryIndexDescriptor {
   string fields = 1;
 
   // id is a non-zero integer ID that must be unique within the indexes for this
-  // table. It may be deprecated in the future when this can be auto-generated.
+  // table and less than 32768. It may be deprecated in the future when this can
+  // be auto-generated.
   uint32 id = 2;
 
   // unique specifies that this an unique index.

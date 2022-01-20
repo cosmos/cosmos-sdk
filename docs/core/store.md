@@ -234,9 +234,9 @@ When `KVStore.Set` or `KVStore.Delete` methods are called, `listenkv.Store` auto
 
 # New Store package (`store/v2`)
 
-The SDK is in the process of transitioning to use the types listed here as the default interface for state storage. At the time of writing, these cannot be used within an application and are not directly compatible with the `CommitMultiStore` and related types.
+The SDK is in the process of transitioning to use the types in this package as the default interface for state storage. Note that these types are not all directly compatible with the types in `store/types`.
 
-These types use the new `db` sub-module of Cosmos-SDK (`github.com/cosmos/cosmos-sdk/db`), rather than `tmdb` (`github.com/tendermint/tm-db`).
+This package uses the new `db` sub-module of Cosmos-SDK (`github.com/cosmos/cosmos-sdk/db`), rather than `tmdb` (`github.com/tendermint/tm-db`).
 
 See [ADR-040](../architecture/adr-040-storage-and-smt-state-commitments.md) for the motivations and design specifications of the change.
 
@@ -246,7 +246,7 @@ An interface providing only the basic CRUD functionality (`Get`, `Set`, `Has`, a
 
 ## MultiStore
 
-This is the new interface (or, set of interfaces) for the main client store, replacing the role of `store/types.MultiStore` (v1). There are a few significant differences in behavior compared with v1:
+`BaseApp` and derived types now use this as the interface for the main client store, replacing the role of `store/types.MultiStore` (v1). There are a few significant differences in behavior compared with v1:
   * Commits are atomic and are performed on the entire store state; individual substores cannot be committed separately and cannot have different version numbers.
   * The store's current version and version history track that of the backing `db.DBConnection`. Past versions are accessible read-only.
   * The set of valid substores is defined at initialization and cannot be updated dynamically in an existing store instance.

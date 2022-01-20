@@ -91,7 +91,7 @@ This method is called by the `BaseApp` very early in the processing of the `mess
 
 Gas won't be charged when `ValidateBasic` is executed. Hence, we should only do the most necessary sanity checks to enable middleware operations (eg: parsing the required signer accounts to validate a signature by a middleware). Other validation operation should be performed when [handling a message](../building-modules/msg-services#Validation) in a module Msg Server.
 
-For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as the account balance of an address.
+For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for non-empty addresses and a non-negative coin amount, but does not require knowledge of state such as the account balance of an address.
 
 ### AnteHandler
 

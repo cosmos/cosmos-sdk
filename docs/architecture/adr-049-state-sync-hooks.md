@@ -10,18 +10,19 @@ Draft, Under Implementation
 
 ## Abstract
 
-This ADR provides hooks for app modules to publish additional state(outside of IAVL tree) for state-sync.
+This ADR provides hooks for app modules to publish snapshot of additional state(outside of IAVL tree) for state-sync.
 
 ## Context
 
-New clients uses state-sync to download snapshots of module state from peer nodes. Currently, the snapshot consists of a
+New clients use state-sync to download snapshots of module state from peer nodes. Currently, the snapshot consists of a
 stream of `SnapshotStoreItem` and `SnapshotIAVLItem`, which means for app modules that maintain their states outside of
 the IAVL tree, they can not add their states to the snapshot stream for state-sync.
 
 ## Decision
 
-A simple backward-compatible proposal based on our existing implementation is that, we can add two new message types:
-`SnapshotExtensionMeta` and `SnapshotExtensionPayload`, and they are appended to the existing multi-store stream with `SnapshotExtensionMeta` acting as a delimiter between modules.
+A simple proposal based on our existing implementation is that, we can add two new message types: `SnapshotExtensionMeta` 
+and `SnapshotExtensionPayload`, and they are appended to the existing multi-store stream with `SnapshotExtensionMeta` 
+acting as a delimiter between extensions.
 
 ```proto
 // SnapshotItem is an item contained in a rootmulti.Store snapshot.
@@ -65,10 +66,10 @@ The snapshot stream would look like this:
 ```go
 // multi-store snapshot
 {SnapshotStoreItem | SnapshotIAVLItem, ...}
-// module1 snapshot
+// extension1 snapshot
 SnapshotExtensionMeta
 {SnapshotExtensionPayload, ...}
-// module2 snapshot
+// extension2 snapshot
 SnapshotExtensionMeta
 {SnapshotExtensionPayload, ...}
 ```
@@ -89,7 +90,15 @@ type Manager struct {
 }
 ```
 
-As with `Snapshotter` interface for `multistore` snapshotter, two more function signatures: `SnapshotFormat` and `SupportedFormats` are added.
+For extension snapshotters that have implemented the `NamedSnapshotter` interface, their names should be registered to the snapshotter `Manager` by calling 
+`RegisterExtensions` when setting up the application.
+
+```go
+// RegisterExtensions register extension snapshotters to manager
+func (m *Manager) RegisterExtensions(extensions ...types.NamedSnapshotter) error 
+```
+
+As with `Snapshotter` interface for `multistore` snapshotter, two more function signatures: `SnapshotFormat()` and `SupportedFormats()` are added.
 <ul>
 <li> removal of format parameter: `Snapshotter` chooses a format autonomously, not pass in from the caller. </li>
 <li> `Snapshotter` announces the format it uses to snapshot with method `SnapshotFormat()`. </li>
@@ -126,7 +135,7 @@ type NamedSnapshotter interface {
 
 ## Consequences
 
-As a result of this implementation, we are able to create snapshots of chunk binary stream for the state that we maintain outside of the IAVL Tree, CosmWasm for example. And new clients are able to fetch sanpshots of state for all modules that have implemented the corresponding interface from peer nodes. 
+As a result of this implementation, we are able to create snapshots of binary chunk stream for the state that we maintain outside of the IAVL Tree, CosmWasm blobs for example. And new clients are able to fetch sanpshots of state for all modules that have implemented the corresponding interface from peer nodes. 
 
 
 ### Backwards Compatibility

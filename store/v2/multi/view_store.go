@@ -1,4 +1,4 @@
-package root
+package multi
 
 import (
 	"errors"
@@ -16,6 +16,42 @@ import (
 )
 
 var ErrReadOnly = errors.New("cannot modify read-only store")
+
+func (vs *viewStore) GetKVStore(skey types.StoreKey) types.KVStore {
+	key := skey.Name()
+	if _, has := vs.schema[key]; !has {
+		panic(ErrStoreNotFound(key))
+	}
+	ret, err := vs.getSubstore(key)
+	if err != nil {
+		panic(err)
+	}
+	vs.substoreCache[key] = ret
+	return ret
+}
+
+// Reads but does not update substore cache
+func (vs *viewStore) getSubstore(key string) (*viewSubstore, error) {
+	if cached, has := vs.substoreCache[key]; has {
+		return cached, nil
+	}
+	pfx := substorePrefix(key)
+	stateR := prefixdb.NewPrefixReader(vs.stateView, pfx)
+	stateCommitmentR := prefixdb.NewPrefixReader(vs.stateCommitmentView, pfx)
+	rootHash, err := stateR.Get(merkleRootKey)
+	if err != nil {
+		return nil, err
+	}
+	return &viewSubstore{
+		dataBucket:           prefixdb.NewPrefixReader(stateR, dataPrefix),
+		indexBucket:          prefixdb.NewPrefixReader(stateR, indexPrefix),
+		stateCommitmentStore: loadSMT(dbm.ReaderAsReadWriter(stateCommitmentR), rootHash),
+	}, nil
+}
+
+func (vs *viewStore) CacheWrap() types.CacheMultiStore {
+	return newCacheStore(vs)
+}
 
 func (s *viewSubstore) GetStateCommitmentStore() *smt.Store {
 	return s.stateCommitmentStore
@@ -126,36 +162,4 @@ func (store *Store) getView(version int64) (ret *viewStore, err error) {
 		schema:              pr.StoreSchema,
 	}
 	return
-}
-
-func (vs *viewStore) GetKVStore(skey types.StoreKey) types.KVStore {
-	key := skey.Name()
-	if _, has := vs.schema[key]; !has {
-		panic(ErrStoreNotFound(key))
-	}
-	ret, err := vs.getSubstore(key)
-	if err != nil {
-		panic(err)
-	}
-	vs.substoreCache[key] = ret
-	return ret
-}
-
-// Reads but does not update substore cache
-func (vs *viewStore) getSubstore(key string) (*viewSubstore, error) {
-	if cached, has := vs.substoreCache[key]; has {
-		return cached, nil
-	}
-	pfx := substorePrefix(key)
-	stateR := prefixdb.NewPrefixReader(vs.stateView, pfx)
-	stateCommitmentR := prefixdb.NewPrefixReader(vs.stateCommitmentView, pfx)
-	rootHash, err := stateR.Get(merkleRootKey)
-	if err != nil {
-		return nil, err
-	}
-	return &viewSubstore{
-		dataBucket:           prefixdb.NewPrefixReader(stateR, dataPrefix),
-		indexBucket:          prefixdb.NewPrefixReader(stateR, indexPrefix),
-		stateCommitmentStore: loadSMT(dbm.ReaderAsReadWriter(stateCommitmentR), rootHash),
-	}, nil
 }

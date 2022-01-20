@@ -1,4 +1,4 @@
-package root
+package multi
 
 import (
 	"errors"
@@ -64,7 +64,7 @@ type StoreConfig struct {
 	// If nil, Merkle data is stored in the state storage DB under a separate prefix.
 	StateCommitmentDB dbm.DBConnection
 
-	prefixRegistry
+	SchemaBuilder
 	PersistentCache types.MultiStorePersistentCache
 	Upgrades        []types.StoreUpgrades
 
@@ -131,7 +131,7 @@ type viewSubstore struct {
 }
 
 // Builder type used to create a valid schema with no prefix conflicts
-type prefixRegistry struct {
+type SchemaBuilder struct {
 	StoreSchema
 	reserved []string
 }
@@ -152,7 +152,7 @@ func newTraceListenMixin() *traceListenMixin {
 func DefaultStoreConfig() StoreConfig {
 	return StoreConfig{
 		Pruning: types.PruneDefault,
-		prefixRegistry: prefixRegistry{
+		SchemaBuilder: SchemaBuilder{
 			StoreSchema: StoreSchema{},
 		},
 		traceListenMixin: newTraceListenMixin(),
@@ -191,8 +191,8 @@ func (this StoreSchema) equal(that StoreSchema) bool {
 }
 
 // Parses a schema from the DB
-func readSavedSchema(bucket dbm.DBReader) (*prefixRegistry, error) {
-	ret := prefixRegistry{StoreSchema: StoreSchema{}}
+func readSavedSchema(bucket dbm.DBReader) (*SchemaBuilder, error) {
+	ret := SchemaBuilder{StoreSchema: StoreSchema{}}
 	it, err := bucket.Iterator(nil, nil)
 	if err != nil {
 		return nil, err
@@ -282,55 +282,69 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 			err = util.CombineErrors(err, ret.Close(), "base.Close also failed")
 		}
 	}()
+	writeSchema := func(reg *SchemaBuilder) {
+		schemaWriter := prefixdb.NewPrefixWriter(ret.stateTxn, schemaPrefix)
+		var it dbm.Iterator
+		it, err = schemaView.Iterator(nil, nil)
+		if err != nil {
+			return
+		}
+		for it.Next() {
+			err = schemaWriter.Delete(it.Key())
+			if err != nil {
+				return
+			}
+		}
+		err = it.Close()
+		if err != nil {
+			return
+		}
+		err = schemaView.Discard()
+		if err != nil {
+			return
+		}
+		// NB. the migrated contents and schema are not committed until the next store.Commit
+		for skey, typ := range reg.StoreSchema {
+			err = schemaWriter.Set([]byte(skey), []byte{byte(typ)})
+			if err != nil {
+				return
+			}
+		}
+	}
+
 	reg, err := readSavedSchema(schemaView)
 	if err != nil {
 		return
 	}
 	// If the loaded schema is empty (for new store), just copy the config schema;
-	// Otherwise, verify it is identical to the config schema
+	// Otherwise, migrate, then verify it is identical to the config schema
 	if len(reg.StoreSchema) == 0 {
 		for k, v := range opts.StoreSchema {
 			reg.StoreSchema[k] = v
 		}
 		reg.reserved = make([]string, len(opts.reserved))
 		copy(reg.reserved, opts.reserved)
+		writeSchema(reg)
 	} else {
+		// Apply migrations to the schema
+		for _, upgrades := range opts.Upgrades {
+			err = reg.MigrateSchema(upgrades)
+			if err != nil {
+				return
+			}
+		}
 		if !reg.equal(opts.StoreSchema) {
 			err = errors.New("loaded schema does not match configured schema")
 			return
 		}
-	}
-	// Apply migrations, then clear old schema and write the new one
-	for _, upgrades := range opts.Upgrades {
-		err = reg.migrate(ret, upgrades)
-		if err != nil {
-			return
+		for _, upgrades := range opts.Upgrades {
+			err = migrateData(ret, upgrades)
+			if err != nil {
+				return
+			}
 		}
-	}
-	schemaWriter := prefixdb.NewPrefixWriter(ret.stateTxn, schemaPrefix)
-	it, err := schemaView.Iterator(nil, nil)
-	if err != nil {
-		return
-	}
-	for it.Next() {
-		err = schemaWriter.Delete(it.Key())
-		if err != nil {
-			return
-		}
-	}
-	err = it.Close()
-	if err != nil {
-		return
-	}
-	err = schemaView.Discard()
-	if err != nil {
-		return
-	}
-	// NB. the migrated contents and schema are not committed until the next store.Commit
-	for skey, typ := range reg.StoreSchema {
-		err = schemaWriter.Set([]byte(skey), []byte{byte(typ)})
-		if err != nil {
-			return
+		if len(opts.Upgrades) != 0 {
+			writeSchema(reg)
 		}
 	}
 	ret.schema = reg.StoreSchema
@@ -346,7 +360,7 @@ func (s *Store) Close() error {
 }
 
 // Applies store upgrades to the DB contents.
-func (pr *prefixRegistry) migrate(store *Store, upgrades types.StoreUpgrades) error {
+func migrateData(store *Store, upgrades types.StoreUpgrades) error {
 	// Get a view of current state to allow mutation while iterating
 	reader := store.stateDB.Reader()
 	scReader := reader
@@ -355,16 +369,6 @@ func (pr *prefixRegistry) migrate(store *Store, upgrades types.StoreUpgrades) er
 	}
 
 	for _, key := range upgrades.Deleted {
-		sst, ix, err := pr.storeInfo(key)
-		if err != nil {
-			return err
-		}
-		if sst != types.StoreTypePersistent {
-			return fmt.Errorf("prefix is for non-persistent substore: %v (%v)", key, sst)
-		}
-		pr.reserved = append(pr.reserved[:ix], pr.reserved[ix+1:]...)
-		delete(pr.StoreSchema, key)
-
 		pfx := substorePrefix(key)
 		subReader := prefixdb.NewPrefixReader(reader, pfx)
 		it, err := subReader.Iterator(nil, nil)
@@ -388,20 +392,6 @@ func (pr *prefixRegistry) migrate(store *Store, upgrades types.StoreUpgrades) er
 		}
 	}
 	for _, rename := range upgrades.Renamed {
-		sst, ix, err := pr.storeInfo(rename.OldKey)
-		if err != nil {
-			return err
-		}
-		if sst != types.StoreTypePersistent {
-			return fmt.Errorf("prefix is for non-persistent substore: %v (%v)", rename.OldKey, sst)
-		}
-		pr.reserved = append(pr.reserved[:ix], pr.reserved[ix+1:]...)
-		delete(pr.StoreSchema, rename.OldKey)
-		err = pr.RegisterSubstore(rename.NewKey, types.StoreTypePersistent)
-		if err != nil {
-			return err
-		}
-
 		oldPrefix := substorePrefix(rename.OldKey)
 		newPrefix := substorePrefix(rename.NewKey)
 		subReader := prefixdb.NewPrefixReader(reader, oldPrefix)
@@ -425,13 +415,6 @@ func (pr *prefixRegistry) migrate(store *Store, upgrades types.StoreUpgrades) er
 				subWriter.Set(it.Key(), it.Value())
 			}
 			it.Close()
-		}
-	}
-
-	for _, key := range upgrades.Added {
-		err := pr.RegisterSubstore(key, types.StoreTypePersistent)
-		if err != nil {
-			return err
 		}
 	}
 	return nil
@@ -680,12 +663,8 @@ func (rs *Store) GetVersion(version int64) (types.BasicMultiStore, error) {
 }
 
 // CacheMultiStore implements BasicMultiStore.
-func (rs *Store) CacheMultiStore() types.CacheMultiStore {
-	return &cacheStore{
-		source:           rs,
-		substores:        map[string]types.CacheKVStore{},
-		traceListenMixin: newTraceListenMixin(),
-	}
+func (rs *Store) CacheWrap() types.CacheMultiStore {
+	return newCacheStore(rs)
 }
 
 // parsePath expects a format like /<storeName>[/<subpath>]
@@ -824,7 +803,44 @@ func binarySearch(hay []string, ndl string) (int, bool) {
 	return from, false
 }
 
-func (pr *prefixRegistry) storeInfo(key string) (sst types.StoreType, ix int, err error) {
+// Migrates the state of the registry based on the upgrades
+func (pr *SchemaBuilder) MigrateSchema(upgrades types.StoreUpgrades) error {
+	for _, key := range upgrades.Deleted {
+		sst, ix, err := pr.storeInfo(key)
+		if err != nil {
+			return err
+		}
+		if sst != types.StoreTypePersistent {
+			return fmt.Errorf("prefix is for non-persistent substore: %v (%v)", key, sst)
+		}
+		pr.reserved = append(pr.reserved[:ix], pr.reserved[ix+1:]...)
+		delete(pr.StoreSchema, key)
+	}
+	for _, rename := range upgrades.Renamed {
+		sst, ix, err := pr.storeInfo(rename.OldKey)
+		if err != nil {
+			return err
+		}
+		if sst != types.StoreTypePersistent {
+			return fmt.Errorf("prefix is for non-persistent substore: %v (%v)", rename.OldKey, sst)
+		}
+		pr.reserved = append(pr.reserved[:ix], pr.reserved[ix+1:]...)
+		delete(pr.StoreSchema, rename.OldKey)
+		err = pr.RegisterSubstore(rename.NewKey, types.StoreTypePersistent)
+		if err != nil {
+			return err
+		}
+	}
+	for _, key := range upgrades.Added {
+		err := pr.RegisterSubstore(key, types.StoreTypePersistent)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (pr *SchemaBuilder) storeInfo(key string) (sst types.StoreType, ix int, err error) {
 	ix, has := binarySearch(pr.reserved, key)
 	if !has {
 		err = fmt.Errorf("prefix does not exist: %v", key)
@@ -838,7 +854,7 @@ func (pr *prefixRegistry) storeInfo(key string) (sst types.StoreType, ix int, er
 	return
 }
 
-func (pr *prefixRegistry) RegisterSubstore(key string, typ types.StoreType) error {
+func (pr *SchemaBuilder) RegisterSubstore(key string, typ types.StoreType) error {
 	if !validSubStoreType(typ) {
 		return fmt.Errorf("StoreType not supported: %v", typ)
 	}
@@ -880,7 +896,7 @@ func (tlm *traceListenMixin) TracingEnabled() bool {
 func (tlm *traceListenMixin) SetTracer(w io.Writer) {
 	tlm.TraceWriter = w
 }
-func (tlm *traceListenMixin) SetTraceContext(tc types.TraceContext) {
+func (tlm *traceListenMixin) SetTracingContext(tc types.TraceContext) {
 	tlm.TraceContext = tc
 }
 

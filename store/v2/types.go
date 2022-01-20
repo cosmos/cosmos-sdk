@@ -56,6 +56,9 @@ var (
 	KVStoreReversePrefixIterator = v1.KVStoreReversePrefixIterator
 
 	NewStoreKVPairWriteListener = v1.NewStoreKVPairWriteListener
+
+	AssertValidKey   = v1.AssertValidKey
+	AssertValidValue = v1.AssertValidValue
 )
 
 // BasicMultiStore defines a minimal interface for accessing root state.
@@ -63,13 +66,17 @@ type BasicMultiStore interface {
 	// Returns a KVStore which has access only to the namespace of the StoreKey.
 	// Panics if the key is not found in the schema.
 	GetKVStore(StoreKey) KVStore
+	// Returns a branched whose modifications are later merged back in.
+	CacheWrap() CacheMultiStore
 }
+
+type MultiStore = BasicMultiStore
 
 // mixin interface for trace and listen methods
 type rootStoreTraceListen interface {
 	TracingEnabled() bool
 	SetTracer(w io.Writer)
-	SetTraceContext(TraceContext)
+	SetTracingContext(TraceContext)
 	ListeningEnabled(key StoreKey) bool
 	AddListeners(key StoreKey, listeners []WriteListener)
 }
@@ -87,8 +94,6 @@ type CommitMultiStore interface {
 	GetVersion(int64) (BasicMultiStore, error)
 	// Closes the store and all backing transactions.
 	Close() error
-	// Returns a branched whose modifications are later merged back in.
-	CacheMultiStore() CacheMultiStore
 	// Defines the minimum version number that can be saved by this store.
 	SetInitialVersion(uint64) error
 }
@@ -99,7 +104,7 @@ type CacheMultiStore interface {
 	rootStoreTraceListen
 
 	// Returns a branched whose modifications are later merged back in.
-	CacheMultiStore() CacheMultiStore
+	CacheWrap() CacheMultiStore
 	// Write all cached changes back to the source store. Note: this overwrites any intervening changes.
 	Write()
 }

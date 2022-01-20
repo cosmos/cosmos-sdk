@@ -1,9 +1,17 @@
-package root
+package multi
 
 import (
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	types "github.com/cosmos/cosmos-sdk/store/v2"
 )
+
+func newCacheStore(bs types.BasicMultiStore) *cacheStore {
+	return &cacheStore{
+		source:           bs,
+		substores:        map[string]types.CacheKVStore{},
+		traceListenMixin: newTraceListenMixin(),
+	}
+}
 
 // GetKVStore implements BasicMultiStore.
 func (cs *cacheStore) GetKVStore(skey types.StoreKey) types.KVStore {
@@ -27,10 +35,23 @@ func (cs *cacheStore) Write() {
 
 // CacheMultiStore implements BasicMultiStore.
 // This recursively wraps the CacheMultiStore in another cache store.
-func (cs *cacheStore) CacheMultiStore() types.CacheMultiStore {
-	return &cacheStore{
-		source:           cs,
-		substores:        map[string]types.CacheKVStore{},
-		traceListenMixin: newTraceListenMixin(),
-	}
+func (cs *cacheStore) CacheWrap() types.CacheMultiStore {
+	return newCacheStore(cs)
+}
+
+// A non-writable cache for interface wiring purposes
+type noopCacheStore struct {
+	types.CacheMultiStore
+}
+
+func (noopCacheStore) Write() {}
+
+// pretend basic store is cache store
+func BasicAsCacheStore(bs types.BasicMultiStore) types.CacheMultiStore {
+	return noopCacheStore{newCacheStore(bs)}
+}
+
+// pretend commit store is cache store
+func CommitAsCacheStore(s types.CommitMultiStore) types.CacheMultiStore {
+	return noopCacheStore{newCacheStore(s)}
 }

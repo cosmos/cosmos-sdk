@@ -1,4 +1,4 @@
-package root
+package multi
 
 import (
 	"bytes"
@@ -754,8 +754,12 @@ func TestMultiStoreMigration(t *testing.T) {
 				Deleted: []string{skey_3.Name()},
 			},
 		}
+		// store must be loaded with post-migration schema, so this fails
 		store, err = NewStore(db, opts)
-		require.Nil(t, err)
+		require.Error(t, err)
+
+		opts.MigrateSchema(opts.Upgrades[0])
+		store, err = NewStore(db, opts)
 
 		// s1 was not changed
 		s1 = store.GetKVStore(skey_1)
@@ -863,7 +867,7 @@ func TestTrace(t *testing.T) {
 
 	store, err := NewStore(db, opts)
 	require.NoError(t, err)
-	store.SetTraceContext(tctx)
+	store.SetTracingContext(tctx)
 	require.False(t, store.TracingEnabled())
 
 	var buf bytes.Buffer

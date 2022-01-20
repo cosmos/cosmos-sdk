@@ -706,13 +706,13 @@ func SimulateMsgVote(ak group.AccountKeeper,
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		g, groupPolicy, _, _, err := randomGroupPolicy(r, k, ak, sdkCtx, accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, ""), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, ""), nil, err
 		}
 		if g == nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, "no group found"), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "no group found"), nil, nil
 		}
 		if groupPolicy == nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, "no group policy found"), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "no group policy found"), nil, nil
 		}
 		groupPolicyAddr := groupPolicy.Address
 

@@ -399,8 +399,7 @@ func checkEqualVotes(t *testing.T, vote1, vote2 v1beta2.Vote) {
 	require.Equal(t, vote1.ProposalId, vote2.ProposalId)
 }
 
-// checkEqualProposal checks that 2 proposals are equal by checking their JSON
-// encoding.
+// checkEqualProposal checks that 2 proposals are equal.
 // When decoding with Amino, there are weird cases where the voting times
 // are actually equal, but `require.Equal()` says they are not:
 //

@@ -20,20 +20,11 @@ import (
 )
 
 type fileDescriptorDBOptions struct {
-	Prefix []byte
-	ID     uint32
-
-	// TypeResolver is an optional type resolver to be used when unmarshaling
-	// protobuf messages.
-	TypeResolver ormtable.TypeResolver
-
-	// JSONValidator is an optional validator that can be used for validating
-	// messaging when using ValidateJSON. If it is nil, DefaultJSONValidator
-	// will be used
-	JSONValidator func(proto.Message) error
-
-	GetBackend func(context.Context) (ormtable.Backend, error)
-
+	Prefix         []byte
+	ID             uint32
+	TypeResolver   ormtable.TypeResolver
+	JSONValidator  func(proto.Message) error
+	GetBackend     func(context.Context) (ormtable.Backend, error)
 	GetReadBackend func(context.Context) (ormtable.ReadBackend, error)
 }
 

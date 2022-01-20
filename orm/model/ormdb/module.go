@@ -19,13 +19,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
 
+// ModuleSchema describes the ORM schema for a module.
 type ModuleSchema struct {
+	// FileDescriptors are the file descriptors that contain ORM tables to use in this schema.
+	// Each file descriptor must have an unique non-zero uint32 ID associated with it.
 	FileDescriptors map[uint32]protoreflect.FileDescriptor
-	Prefix          []byte
+
+	// Prefix is an optional prefix to prepend to all keys. It is recommended
+	// to leave it empty.
+	Prefix []byte
 }
 
+// ModuleDB defines the ORM database type to be used by modules.
 type ModuleDB interface {
 	ormkv.EntryCodec
+
+	// GetTable returns the table for the provided message type or nil.
 	GetTable(message proto.Message) ormtable.Table
 }
 
@@ -35,11 +44,17 @@ type moduleDB struct {
 	tablesByName map[protoreflect.FullName]ormtable.Table
 }
 
+// ModuleDBOptions are options for constructing a ModuleDB.
 type ModuleDBOptions struct {
+
 	// TypeResolver is an optional type resolver to be used when unmarshaling
-	// protobuf messages.
+	// protobuf messages. If it is nil, protoregistry.GlobalTypes will be used.
 	TypeResolver ormtable.TypeResolver
 
+	// FileResolver is an optional file resolver that can be used to retrieve
+	// pinned file descriptors that may be different from those available at
+	// runtime. The file descriptor versions returned by this resolver will be
+	// used instead of the ones provided at runtime by the ModuleSchema.
 	FileResolver protodesc.Resolver
 
 	// JSONValidator is an optional validator that can be used for validating
@@ -47,20 +62,29 @@ type ModuleDBOptions struct {
 	// will be used
 	JSONValidator func(proto.Message) error
 
+	// GetBackend is the function used to retrieve the table backend.
+	// See ormtable.Options.GetBackend for more details.
 	GetBackend func(context.Context) (ormtable.Backend, error)
 
+	// GetReadBackend is the function used to retrieve a table read backend.
+	// See ormtable.Options.GetReadBackend for more details.
 	GetReadBackend func(context.Context) (ormtable.ReadBackend, error)
 }
 
-func NewModuleDB(desc ModuleSchema, options ModuleDBOptions) (ModuleDB, error) {
-	prefix := desc.Prefix
-	schema := &moduleDB{
+// NewModuleDB constructs a ModuleDB instance from the provided schema and options.
+func NewModuleDB(schema ModuleSchema, options ModuleDBOptions) (ModuleDB, error) {
+	prefix := schema.Prefix
+	db := &moduleDB{
 		prefix:       prefix,
 		filesById:    map[uint32]*fileDescriptorDB{},
 		tablesByName: map[protoreflect.FullName]ormtable.Table{},
 	}
 
-	for id, fileDescriptor := range desc.FileDescriptors {
+	for id, fileDescriptor := range schema.FileDescriptors {
+		if id == 0 {
+			return nil, ormerrors.InvalidTableId.Wrapf("for %s", fileDescriptor.Path())
+		}
+
 		opts := fileDescriptorDBOptions{
 			ID:             id,
 			Prefix:         prefix,
@@ -86,17 +110,17 @@ func NewModuleDB(desc ModuleSchema, options ModuleDBOptions) (ModuleDB, error) {
 			return nil, err
 		}
 
-		schema.filesById[id] = fdSchema
+		db.filesById[id] = fdSchema
 		for name, table := range fdSchema.tablesByName {
-			if _, ok := schema.tablesByName[name]; ok {
+			if _, ok := db.tablesByName[name]; ok {
 				return nil, ormerrors.UnexpectedError.Wrapf("duplicate table %s", name)
 			}
 
-			schema.tablesByName[name] = table
+			db.tablesByName[name] = table
 		}
 	}
 
-	return schema, nil
+	return db, nil
 }
 
 func (m moduleDB) DecodeEntry(k, v []byte) (ormkv.Entry, error) {

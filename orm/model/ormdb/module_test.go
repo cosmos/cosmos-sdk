@@ -17,6 +17,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/model/ormdb"
 )
 
+// These tests use a simulated bank keeper. Addresses and balances use
+//  []byte and uint64 types respectively for simplicity.
+
 var TestBankSchema = ormdb.ModuleSchema{
 	FileDescriptors: map[uint32]protoreflect.FileDescriptor{
 		1: testpb.File_testpb_bank_proto,

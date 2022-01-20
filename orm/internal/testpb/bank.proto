@@ -6,6 +6,8 @@ import "cosmos/orm/v1alpha1/orm.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/orm/internal/testpb";
 
+// This is a simulated bank schema used for testing.
+
 message Balance {
   option (cosmos.orm.v1alpha1.table) = {
     id: 1;

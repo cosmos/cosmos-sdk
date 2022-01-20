@@ -549,6 +549,7 @@ func MsgWithdrawProposalCmd() *cobra.Command {
 Parameters:
 			proposal-id: unique ID of the proposal.
 			group-policy-admin-or-proposer: either admin of the group policy or one the proposer of the proposal.
+			(note: --from flag will be ignored here)
 `,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {

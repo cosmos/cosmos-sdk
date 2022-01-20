@@ -41,6 +41,13 @@ The group module emits the following events:
 | message                                  | action        | /cosmos.group.v1beta1.Msg/CreateProposal |
 | cosmos.group.v1beta1.EventCreateProposal | proposal_id   | {proposalId}                             |
 
+## EventWithdrawProposal
+
+| Type                                       | Attribute Key | Attribute Value                            |
+|--------------------------------------------|---------------|--------------------------------------------|
+| message                                    | action        | /cosmos.group.v1beta1.Msg/WithdrawProposal |
+| cosmos.group.v1beta1.EventWithdrawProposal | proposal_id   | {proposalId}                               |
+
 ## EventVote
 
 | Type                           | Attribute Key | Attribute Value                |

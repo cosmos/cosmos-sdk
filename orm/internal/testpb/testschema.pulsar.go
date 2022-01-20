@@ -16,66 +16,66 @@ import (
 	sync "sync"
 )
 
-var _ protoreflect.List = (*_A_17_list)(nil)
+var _ protoreflect.List = (*_ExampleTable_17_list)(nil)
 
-type _A_17_list struct {
+type _ExampleTable_17_list struct {
 	list *[]uint32
 }
 
-func (x *_A_17_list) Len() int {
+func (x *_ExampleTable_17_list) Len() int {
 	if x.list == nil {
 		return 0
 	}
 	return len(*x.list)
 }
 
-func (x *_A_17_list) Get(i int) protoreflect.Value {
+func (x *_ExampleTable_17_list) Get(i int) protoreflect.Value {
 	return protoreflect.ValueOfUint32((*x.list)[i])
 }
 
-func (x *_A_17_list) Set(i int, value protoreflect.Value) {
+func (x *_ExampleTable_17_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Uint()
 	concreteValue := (uint32)(valueUnwrapped)
 	(*x.list)[i] = concreteValue
 }
 
-func (x *_A_17_list) Append(value protoreflect.Value) {
+func (x *_ExampleTable_17_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Uint()
 	concreteValue := (uint32)(valueUnwrapped)
 	*x.list = append(*x.list, concreteValue)
 }
 
-func (x *_A_17_list) AppendMutable() protoreflect.Value {
-	panic(fmt.Errorf("AppendMutable can not be called on message A at list field Repeated as it is not of Message kind"))
+func (x *_ExampleTable_17_list) AppendMutable() protoreflect.Value {
+	panic(fmt.Errorf("AppendMutable can not be called on message ExampleTable at list field Repeated as it is not of Message kind"))
 }
 
-func (x *_A_17_list) Truncate(n int) {
+func (x *_ExampleTable_17_list) Truncate(n int) {
 	*x.list = (*x.list)[:n]
 }
 
-func (x *_A_17_list) NewElement() protoreflect.Value {
+func (x *_ExampleTable_17_list) NewElement() protoreflect.Value {
 	v := uint32(0)
 	return protoreflect.ValueOfUint32(v)
 }
 
-func (x *_A_17_list) IsValid() bool {
+func (x *_ExampleTable_17_list) IsValid() bool {
 	return x.list != nil
 }
 
-var _ protoreflect.Map = (*_A_18_map)(nil)
+var _ protoreflect.Map = (*_ExampleTable_18_map)(nil)
 
-type _A_18_map struct {
+type _ExampleTable_18_map struct {
 	m *map[string]uint32
 }
 
-func (x *_A_18_map) Len() int {
+func (x *_ExampleTable_18_map) Len() int {
 	if x.m == nil {
 		return 0
 	}
 	return len(*x.m)
 }
 
-func (x *_A_18_map) Range(f func(protoreflect.MapKey, protoreflect.Value) bool) {
+func (x *_ExampleTable_18_map) Range(f func(protoreflect.MapKey, protoreflect.Value) bool) {
 	if x.m == nil {
 		return
 	}
@@ -88,7 +88,7 @@ func (x *_A_18_map) Range(f func(protoreflect.MapKey, protoreflect.Value) bool) 
 	}
 }
 
-func (x *_A_18_map) Has(key protoreflect.MapKey) bool {
+func (x *_ExampleTable_18_map) Has(key protoreflect.MapKey) bool {
 	if x.m == nil {
 		return false
 	}
@@ -98,7 +98,7 @@ func (x *_A_18_map) Has(key protoreflect.MapKey) bool {
 	return ok
 }
 
-func (x *_A_18_map) Clear(key protoreflect.MapKey) {
+func (x *_ExampleTable_18_map) Clear(key protoreflect.MapKey) {
 	if x.m == nil {
 		return
 	}
@@ -107,7 +107,7 @@ func (x *_A_18_map) Clear(key protoreflect.MapKey) {
 	delete(*x.m, concreteKey)
 }
 
-func (x *_A_18_map) Get(key protoreflect.MapKey) protoreflect.Value {
+func (x *_ExampleTable_18_map) Get(key protoreflect.MapKey) protoreflect.Value {
 	if x.m == nil {
 		return protoreflect.Value{}
 	}
@@ -120,7 +120,7 @@ func (x *_A_18_map) Get(key protoreflect.MapKey) protoreflect.Value {
 	return protoreflect.ValueOfUint32(v)
 }
 
-func (x *_A_18_map) Set(key protoreflect.MapKey, value protoreflect.Value) {
+func (x *_ExampleTable_18_map) Set(key protoreflect.MapKey, value protoreflect.Value) {
 	if !key.IsValid() || !value.IsValid() {
 		panic("invalid key or value provided")
 	}
@@ -131,77 +131,77 @@ func (x *_A_18_map) Set(key protoreflect.MapKey, value protoreflect.Value) {
 	(*x.m)[concreteKey] = concreteValue
 }
 
-func (x *_A_18_map) Mutable(key protoreflect.MapKey) protoreflect.Value {
+func (x *_ExampleTable_18_map) Mutable(key protoreflect.MapKey) protoreflect.Value {
 	panic("should not call Mutable on protoreflect.Map whose value is not of type protoreflect.Message")
 }
 
-func (x *_A_18_map) NewValue() protoreflect.Value {
+func (x *_ExampleTable_18_map) NewValue() protoreflect.Value {
 	v := uint32(0)
 	return protoreflect.ValueOfUint32(v)
 }
 
-func (x *_A_18_map) IsValid() bool {
+func (x *_ExampleTable_18_map) IsValid() bool {
 	return x.m != nil
 }
 
 var (
-	md_A          protoreflect.MessageDescriptor
-	fd_A_u32      protoreflect.FieldDescriptor
-	fd_A_u64      protoreflect.FieldDescriptor
-	fd_A_str      protoreflect.FieldDescriptor
-	fd_A_bz       protoreflect.FieldDescriptor
-	fd_A_ts       protoreflect.FieldDescriptor
-	fd_A_dur      protoreflect.FieldDescriptor
-	fd_A_i32      protoreflect.FieldDescriptor
-	fd_A_s32      protoreflect.FieldDescriptor
-	fd_A_sf32     protoreflect.FieldDescriptor
-	fd_A_i64      protoreflect.FieldDescriptor
-	fd_A_s64      protoreflect.FieldDescriptor
-	fd_A_sf64     protoreflect.FieldDescriptor
-	fd_A_f32      protoreflect.FieldDescriptor
-	fd_A_f64      protoreflect.FieldDescriptor
-	fd_A_b        protoreflect.FieldDescriptor
-	fd_A_e        protoreflect.FieldDescriptor
-	fd_A_repeated protoreflect.FieldDescriptor
-	fd_A_map      protoreflect.FieldDescriptor
-	fd_A_msg      protoreflect.FieldDescriptor
-	fd_A_oneof    protoreflect.FieldDescriptor
+	md_ExampleTable          protoreflect.MessageDescriptor
+	fd_ExampleTable_u32      protoreflect.FieldDescriptor
+	fd_ExampleTable_u64      protoreflect.FieldDescriptor
+	fd_ExampleTable_str      protoreflect.FieldDescriptor
+	fd_ExampleTable_bz       protoreflect.FieldDescriptor
+	fd_ExampleTable_ts       protoreflect.FieldDescriptor
+	fd_ExampleTable_dur      protoreflect.FieldDescriptor
+	fd_ExampleTable_i32      protoreflect.FieldDescriptor
+	fd_ExampleTable_s32      protoreflect.FieldDescriptor
+	fd_ExampleTable_sf32     protoreflect.FieldDescriptor
+	fd_ExampleTable_i64      protoreflect.FieldDescriptor
+	fd_ExampleTable_s64      protoreflect.FieldDescriptor
+	fd_ExampleTable_sf64     protoreflect.FieldDescriptor
+	fd_ExampleTable_f32      protoreflect.FieldDescriptor
+	fd_ExampleTable_f64      protoreflect.FieldDescriptor
+	fd_ExampleTable_b        protoreflect.FieldDescriptor
+	fd_ExampleTable_e        protoreflect.FieldDescriptor
+	fd_ExampleTable_repeated protoreflect.FieldDescriptor
+	fd_ExampleTable_map      protoreflect.FieldDescriptor
+	fd_ExampleTable_msg      protoreflect.FieldDescriptor
+	fd_ExampleTable_oneof    protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_testpb_testschema_proto_init()
-	md_A = File_testpb_testschema_proto.Messages().ByName("A")
-	fd_A_u32 = md_A.Fields().ByName("u32")
-	fd_A_u64 = md_A.Fields().ByName("u64")
-	fd_A_str = md_A.Fields().ByName("str")
-	fd_A_bz = md_A.Fields().ByName("bz")
-	fd_A_ts = md_A.Fields().ByName("ts")
-	fd_A_dur = md_A.Fields().ByName("dur")
-	fd_A_i32 = md_A.Fields().ByName("i32")
-	fd_A_s32 = md_A.Fields().ByName("s32")
-	fd_A_sf32 = md_A.Fields().ByName("sf32")
-	fd_A_i64 = md_A.Fields().ByName("i64")
-	fd_A_s64 = md_A.Fields().ByName("s64")
-	fd_A_sf64 = md_A.Fields().ByName("sf64")
-	fd_A_f32 = md_A.Fields().ByName("f32")
-	fd_A_f64 = md_A.Fields().ByName("f64")
-	fd_A_b = md_A.Fields().ByName("b")
-	fd_A_e = md_A.Fields().ByName("e")
-	fd_A_repeated = md_A.Fields().ByName("repeated")
-	fd_A_map = md_A.Fields().ByName("map")
-	fd_A_msg = md_A.Fields().ByName("msg")
-	fd_A_oneof = md_A.Fields().ByName("oneof")
+	md_ExampleTable = File_testpb_testschema_proto.Messages().ByName("ExampleTable")
+	fd_ExampleTable_u32 = md_ExampleTable.Fields().ByName("u32")
+	fd_ExampleTable_u64 = md_ExampleTable.Fields().ByName("u64")
+	fd_ExampleTable_str = md_ExampleTable.Fields().ByName("str")
+	fd_ExampleTable_bz = md_ExampleTable.Fields().ByName("bz")
+	fd_ExampleTable_ts = md_ExampleTable.Fields().ByName("ts")
+	fd_ExampleTable_dur = md_ExampleTable.Fields().ByName("dur")
+	fd_ExampleTable_i32 = md_ExampleTable.Fields().ByName("i32")
+	fd_ExampleTable_s32 = md_ExampleTable.Fields().ByName("s32")
+	fd_ExampleTable_sf32 = md_ExampleTable.Fields().ByName("sf32")
+	fd_ExampleTable_i64 = md_ExampleTable.Fields().ByName("i64")
+	fd_ExampleTable_s64 = md_ExampleTable.Fields().ByName("s64")
+	fd_ExampleTable_sf64 = md_ExampleTable.Fields().ByName("sf64")
+	fd_ExampleTable_f32 = md_ExampleTable.Fields().ByName("f32")
+	fd_ExampleTable_f64 = md_ExampleTable.Fields().ByName("f64")
+	fd_ExampleTable_b = md_ExampleTable.Fields().ByName("b")
+	fd_ExampleTable_e = md_ExampleTable.Fields().ByName("e")
+	fd_ExampleTable_repeated = md_ExampleTable.Fields().ByName("repeated")
+	fd_ExampleTable_map = md_ExampleTable.Fields().ByName("map")
+	fd_ExampleTable_msg = md_ExampleTable.Fields().ByName("msg")
+	fd_ExampleTable_oneof = md_ExampleTable.Fields().ByName("oneof")
 }
 
-var _ protoreflect.Message = (*fastReflection_A)(nil)
+var _ protoreflect.Message = (*fastReflection_ExampleTable)(nil)
 
-type fastReflection_A A
+type fastReflection_ExampleTable ExampleTable
 
-func (x *A) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_A)(x)
+func (x *ExampleTable) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_ExampleTable)(x)
 }
 
-func (x *A) slowProtoReflect() protoreflect.Message {
+func (x *ExampleTable) slowProtoReflect() protoreflect.Message {
 	mi := &file_testpb_testschema_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -213,43 +213,43 @@ func (x *A) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_A_messageType fastReflection_A_messageType
-var _ protoreflect.MessageType = fastReflection_A_messageType{}
+var _fastReflection_ExampleTable_messageType fastReflection_ExampleTable_messageType
+var _ protoreflect.MessageType = fastReflection_ExampleTable_messageType{}
 
-type fastReflection_A_messageType struct{}
+type fastReflection_ExampleTable_messageType struct{}
 
-func (x fastReflection_A_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_A)(nil)
+func (x fastReflection_ExampleTable_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_ExampleTable)(nil)
 }
-func (x fastReflection_A_messageType) New() protoreflect.Message {
-	return new(fastReflection_A)
+func (x fastReflection_ExampleTable_messageType) New() protoreflect.Message {
+	return new(fastReflection_ExampleTable)
 }
-func (x fastReflection_A_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_A
+func (x fastReflection_ExampleTable_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_ExampleTable
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_A) Descriptor() protoreflect.MessageDescriptor {
-	return md_A
+func (x *fastReflection_ExampleTable) Descriptor() protoreflect.MessageDescriptor {
+	return md_ExampleTable
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_A) Type() protoreflect.MessageType {
-	return _fastReflection_A_messageType
+func (x *fastReflection_ExampleTable) Type() protoreflect.MessageType {
+	return _fastReflection_ExampleTable_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_A) New() protoreflect.Message {
-	return new(fastReflection_A)
+func (x *fastReflection_ExampleTable) New() protoreflect.Message {
+	return new(fastReflection_ExampleTable)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_A) Interface() protoreflect.ProtoMessage {
-	return (*A)(x)
+func (x *fastReflection_ExampleTable) Interface() protoreflect.ProtoMessage {
+	return (*ExampleTable)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -257,127 +257,127 @@ func (x *fastReflection_A) Interface() protoreflect.ProtoMessage {
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_A) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_ExampleTable) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.U32 != uint32(0) {
 		value := protoreflect.ValueOfUint32(x.U32)
-		if !f(fd_A_u32, value) {
+		if !f(fd_ExampleTable_u32, value) {
 			return
 		}
 	}
 	if x.U64 != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.U64)
-		if !f(fd_A_u64, value) {
+		if !f(fd_ExampleTable_u64, value) {
 			return
 		}
 	}
 	if x.Str != "" {
 		value := protoreflect.ValueOfString(x.Str)
-		if !f(fd_A_str, value) {
+		if !f(fd_ExampleTable_str, value) {
 			return
 		}
 	}
 	if len(x.Bz) != 0 {
 		value := protoreflect.ValueOfBytes(x.Bz)
-		if !f(fd_A_bz, value) {
+		if !f(fd_ExampleTable_bz, value) {
 			return
 		}
 	}
 	if x.Ts != nil {
 		value := protoreflect.ValueOfMessage(x.Ts.ProtoReflect())
-		if !f(fd_A_ts, value) {
+		if !f(fd_ExampleTable_ts, value) {
 			return
 		}
 	}
 	if x.Dur != nil {
 		value := protoreflect.ValueOfMessage(x.Dur.ProtoReflect())
-		if !f(fd_A_dur, value) {
+		if !f(fd_ExampleTable_dur, value) {
 			return
 		}
 	}
 	if x.I32 != int32(0) {
 		value := protoreflect.ValueOfInt32(x.I32)
-		if !f(fd_A_i32, value) {
+		if !f(fd_ExampleTable_i32, value) {
 			return
 		}
 	}
 	if x.S32 != int32(0) {
 		value := protoreflect.ValueOfInt32(x.S32)
-		if !f(fd_A_s32, value) {
+		if !f(fd_ExampleTable_s32, value) {
 			return
 		}
 	}
 	if x.Sf32 != int32(0) {
 		value := protoreflect.ValueOfInt32(x.Sf32)
-		if !f(fd_A_sf32, value) {
+		if !f(fd_ExampleTable_sf32, value) {
 			return
 		}
 	}
 	if x.I64 != int64(0) {
 		value := protoreflect.ValueOfInt64(x.I64)
-		if !f(fd_A_i64, value) {
+		if !f(fd_ExampleTable_i64, value) {
 			return
 		}
 	}
 	if x.S64 != int64(0) {
 		value := protoreflect.ValueOfInt64(x.S64)
-		if !f(fd_A_s64, value) {
+		if !f(fd_ExampleTable_s64, value) {
 			return
 		}
 	}
 	if x.Sf64 != int64(0) {
 		value := protoreflect.ValueOfInt64(x.Sf64)
-		if !f(fd_A_sf64, value) {
+		if !f(fd_ExampleTable_sf64, value) {
 			return
 		}
 	}
 	if x.F32 != uint32(0) {
 		value := protoreflect.ValueOfUint32(x.F32)
-		if !f(fd_A_f32, value) {
+		if !f(fd_ExampleTable_f32, value) {
 			return
 		}
 	}
 	if x.F64 != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.F64)
-		if !f(fd_A_f64, value) {
+		if !f(fd_ExampleTable_f64, value) {
 			return
 		}
 	}
 	if x.B != false {
 		value := protoreflect.ValueOfBool(x.B)
-		if !f(fd_A_b, value) {
+		if !f(fd_ExampleTable_b, value) {
 			return
 		}
 	}
 	if x.E != 0 {
 		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.E))
-		if !f(fd_A_e, value) {
+		if !f(fd_ExampleTable_e, value) {
 			return
 		}
 	}
 	if len(x.Repeated) != 0 {
-		value := protoreflect.ValueOfList(&_A_17_list{list: &x.Repeated})
-		if !f(fd_A_repeated, value) {
+		value := protoreflect.ValueOfList(&_ExampleTable_17_list{list: &x.Repeated})
+		if !f(fd_ExampleTable_repeated, value) {
 			return
 		}
 	}
 	if len(x.Map) != 0 {
-		value := protoreflect.ValueOfMap(&_A_18_map{m: &x.Map})
-		if !f(fd_A_map, value) {
+		value := protoreflect.ValueOfMap(&_ExampleTable_18_map{m: &x.Map})
+		if !f(fd_ExampleTable_map, value) {
 			return
 		}
 	}
 	if x.Msg != nil {
 		value := protoreflect.ValueOfMessage(x.Msg.ProtoReflect())
-		if !f(fd_A_msg, value) {
+		if !f(fd_ExampleTable_msg, value) {
 			return
 		}
 	}
 	if x.Sum != nil {
 		switch o := x.Sum.(type) {
-		case *A_Oneof:
+		case *ExampleTable_Oneof:
 			v := o.Oneof
 			value := protoreflect.ValueOfUint32(v)
-			if !f(fd_A_oneof, value) {
+			if !f(fd_ExampleTable_oneof, value) {
 				return
 			}
 		}
@@ -395,59 +395,59 @@ func (x *fastReflection_A) Range(f func(protoreflect.FieldDescriptor, protorefle
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_A) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_ExampleTable) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "testpb.A.u32":
+	case "testpb.ExampleTable.u32":
 		return x.U32 != uint32(0)
-	case "testpb.A.u64":
+	case "testpb.ExampleTable.u64":
 		return x.U64 != uint64(0)
-	case "testpb.A.str":
+	case "testpb.ExampleTable.str":
 		return x.Str != ""
-	case "testpb.A.bz":
+	case "testpb.ExampleTable.bz":
 		return len(x.Bz) != 0
-	case "testpb.A.ts":
+	case "testpb.ExampleTable.ts":
 		return x.Ts != nil
-	case "testpb.A.dur":
+	case "testpb.ExampleTable.dur":
 		return x.Dur != nil
-	case "testpb.A.i32":
+	case "testpb.ExampleTable.i32":
 		return x.I32 != int32(0)
-	case "testpb.A.s32":
+	case "testpb.ExampleTable.s32":
 		return x.S32 != int32(0)
-	case "testpb.A.sf32":
+	case "testpb.ExampleTable.sf32":
 		return x.Sf32 != int32(0)
-	case "testpb.A.i64":
+	case "testpb.ExampleTable.i64":
 		return x.I64 != int64(0)
-	case "testpb.A.s64":
+	case "testpb.ExampleTable.s64":
 		return x.S64 != int64(0)
-	case "testpb.A.sf64":
+	case "testpb.ExampleTable.sf64":
 		return x.Sf64 != int64(0)
-	case "testpb.A.f32":
+	case "testpb.ExampleTable.f32":
 		return x.F32 != uint32(0)
-	case "testpb.A.f64":
+	case "testpb.ExampleTable.f64":
 		return x.F64 != uint64(0)
-	case "testpb.A.b":
+	case "testpb.ExampleTable.b":
 		return x.B != false
-	case "testpb.A.e":
+	case "testpb.ExampleTable.e":
 		return x.E != 0
-	case "testpb.A.repeated":
+	case "testpb.ExampleTable.repeated":
 		return len(x.Repeated) != 0
-	case "testpb.A.map":
+	case "testpb.ExampleTable.map":
 		return len(x.Map) != 0
-	case "testpb.A.msg":
+	case "testpb.ExampleTable.msg":
 		return x.Msg != nil
-	case "testpb.A.oneof":
+	case "testpb.ExampleTable.oneof":
 		if x.Sum == nil {
 			return false
-		} else if _, ok := x.Sum.(*A_Oneof); ok {
+		} else if _, ok := x.Sum.(*ExampleTable_Oneof); ok {
 			return true
 		} else {
 			return false
 		}
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.A"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleTable"))
 		}
-		panic(fmt.Errorf("message testpb.A does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.ExampleTable does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -457,53 +457,53 @@ func (x *fastReflection_A) Has(fd protoreflect.FieldDescriptor) bool {
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_A) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_ExampleTable) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "testpb.A.u32":
+	case "testpb.ExampleTable.u32":
 		x.U32 = uint32(0)
-	case "testpb.A.u64":
+	case "testpb.ExampleTable.u64":
 		x.U64 = uint64(0)
-	case "testpb.A.str":
+	case "testpb.ExampleTable.str":
 		x.Str = ""
-	case "testpb.A.bz":
+	case "testpb.ExampleTable.bz":
 		x.Bz = nil
-	case "testpb.A.ts":
+	case "testpb.ExampleTable.ts":
 		x.Ts = nil
-	case "testpb.A.dur":
+	case "testpb.ExampleTable.dur":
 		x.Dur = nil
-	case "testpb.A.i32":
+	case "testpb.ExampleTable.i32":
 		x.I32 = int32(0)
-	case "testpb.A.s32":
+	case "testpb.ExampleTable.s32":
 		x.S32 = int32(0)
-	case "testpb.A.sf32":
+	case "testpb.ExampleTable.sf32":
 		x.Sf32 = int32(0)
-	case "testpb.A.i64":
+	case "testpb.ExampleTable.i64":
 		x.I64 = int64(0)
-	case "testpb.A.s64":
+	case "testpb.ExampleTable.s64":
 		x.S64 = int64(0)
-	case "testpb.A.sf64":
+	case "testpb.ExampleTable.sf64":
 		x.Sf64 = int64(0)
-	case "testpb.A.f32":
+	case "testpb.ExampleTable.f32":
 		x.F32 = uint32(0)
-	case "testpb.A.f64":
+	case "testpb.ExampleTable.f64":
 		x.F64 = uint64(0)
-	case "testpb.A.b":
+	case "testpb.ExampleTable.b":
 		x.B = false
-	case "testpb.A.e":
+	case "testpb.ExampleTable.e":
 		x.E = 0
-	case "testpb.A.repeated":
+	case "testpb.ExampleTable.repeated":
 		x.Repeated = nil
-	case "testpb.A.map":
+	case "testpb.ExampleTable.map":
 		x.Map = nil
-	case "testpb.A.msg":
+	case "testpb.ExampleTable.msg":
 		x.Msg = nil
-	case "testpb.A.oneof":
+	case "testpb.ExampleTable.oneof":
 		x.Sum = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.A"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleTable"))
 		}
-		panic(fmt.Errorf("message testpb.A does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.ExampleTable does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -513,84 +513,84 @@ func (x *fastReflection_A) Clear(fd protoreflect.FieldDescriptor) {
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_A) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_ExampleTable) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "testpb.A.u32":
+	case "testpb.ExampleTable.u32":
 		value := x.U32
 		return protoreflect.ValueOfUint32(value)
-	case "testpb.A.u64":
+	case "testpb.ExampleTable.u64":
 		value := x.U64
 		return protoreflect.ValueOfUint64(value)
-	case "testpb.A.str":
+	case "testpb.ExampleTable.str":
 		value := x.Str
 		return protoreflect.ValueOfString(value)
-	case "testpb.A.bz":
+	case "testpb.ExampleTable.bz":
 		value := x.Bz
 		return protoreflect.ValueOfBytes(value)
-	case "testpb.A.ts":
+	case "testpb.ExampleTable.ts":
 		value := x.Ts
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "testpb.A.dur":
+	case "testpb.ExampleTable.dur":
 		value := x.Dur
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "testpb.A.i32":
+	case "testpb.ExampleTable.i32":
 		value := x.I32
 		return protoreflect.ValueOfInt32(value)
-	case "testpb.A.s32":
+	case "testpb.ExampleTable.s32":
 		value := x.S32
 		return protoreflect.ValueOfInt32(value)
-	case "testpb.A.sf32":
+	case "testpb.ExampleTable.sf32":
 		value := x.Sf32
 		return protoreflect.ValueOfInt32(value)
-	case "testpb.A.i64":
+	case "testpb.ExampleTable.i64":
 		value := x.I64
 		return protoreflect.ValueOfInt64(value)
-	case "testpb.A.s64":
+	case "testpb.ExampleTable.s64":
 		value := x.S64
 		return protoreflect.ValueOfInt64(value)
-	case "testpb.A.sf64":
+	case "testpb.ExampleTable.sf64":
 		value := x.Sf64
 		return protoreflect.ValueOfInt64(value)
-	case "testpb.A.f32":
+	case "testpb.ExampleTable.f32":
 		value := x.F32
 		return protoreflect.ValueOfUint32(value)
-	case "testpb.A.f64":
+	case "testpb.ExampleTable.f64":
 		value := x.F64
 		return protoreflect.ValueOfUint64(value)
-	case "testpb.A.b":
+	case "testpb.ExampleTable.b":
 		value := x.B
 		return protoreflect.ValueOfBool(value)
-	case "testpb.A.e":
+	case "testpb.ExampleTable.e":
 		value := x.E
 		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
-	case "testpb.A.repeated":
+	case "testpb.ExampleTable.repeated":
 		if len(x.Repeated) == 0 {
-			return protoreflect.ValueOfList(&_A_17_list{})
+			return protoreflect.ValueOfList(&_ExampleTable_17_list{})
 		}
-		listValue := &_A_17_list{list: &x.Repeated}
+		listValue := &_ExampleTable_17_list{list: &x.Repeated}
 		return protoreflect.ValueOfList(listValue)
-	case "testpb.A.map":
+	case "testpb.ExampleTable.map":
 		if len(x.Map) == 0 {
-			return protoreflect.ValueOfMap(&_A_18_map{})
+			return protoreflect.ValueOfMap(&_ExampleTable_18_map{})
 		}
-		mapValue := &_A_18_map{m: &x.Map}
+		mapValue := &_ExampleTable_18_map{m: &x.Map}
 		return protoreflect.ValueOfMap(mapValue)
-	case "testpb.A.msg":
+	case "testpb.ExampleTable.msg":
 		value := x.Msg
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "testpb.A.oneof":
+	case "testpb.ExampleTable.oneof":
 		if x.Sum == nil {
 			return protoreflect.ValueOfUint32(uint32(0))
-		} else if v, ok := x.Sum.(*A_Oneof); ok {
+		} else if v, ok := x.Sum.(*ExampleTable_Oneof); ok {
 			return protoreflect.ValueOfUint32(v.Oneof)
 		} else {
 			return protoreflect.ValueOfUint32(uint32(0))
 		}
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.A"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleTable"))
 		}
-		panic(fmt.Errorf("message testpb.A does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message testpb.ExampleTable does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -604,58 +604,58 @@ func (x *fastReflection_A) Get(descriptor protoreflect.FieldDescriptor) protoref
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_A) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_ExampleTable) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "testpb.A.u32":
+	case "testpb.ExampleTable.u32":
 		x.U32 = uint32(value.Uint())
-	case "testpb.A.u64":
+	case "testpb.ExampleTable.u64":
 		x.U64 = value.Uint()
-	case "testpb.A.str":
+	case "testpb.ExampleTable.str":
 		x.Str = value.Interface().(string)
-	case "testpb.A.bz":
+	case "testpb.ExampleTable.bz":
 		x.Bz = value.Bytes()
-	case "testpb.A.ts":
+	case "testpb.ExampleTable.ts":
 		x.Ts = value.Message().Interface().(*timestamppb.Timestamp)
-	case "testpb.A.dur":
+	case "testpb.ExampleTable.dur":
 		x.Dur = value.Message().Interface().(*durationpb.Duration)
-	case "testpb.A.i32":
+	case "testpb.ExampleTable.i32":
 		x.I32 = int32(value.Int())
-	case "testpb.A.s32":
+	case "testpb.ExampleTable.s32":
 		x.S32 = int32(value.Int())
-	case "testpb.A.sf32":
+	case "testpb.ExampleTable.sf32":
 		x.Sf32 = int32(value.Int())
-	case "testpb.A.i64":
+	case "testpb.ExampleTable.i64":
 		x.I64 = value.Int()
-	case "testpb.A.s64":
+	case "testpb.ExampleTable.s64":
 		x.S64 = value.Int()
-	case "testpb.A.sf64":
+	case "testpb.ExampleTable.sf64":
 		x.Sf64 = value.Int()
-	case "testpb.A.f32":
+	case "testpb.ExampleTable.f32":
 		x.F32 = uint32(value.Uint())
-	case "testpb.A.f64":
+	case "testpb.ExampleTable.f64":
 		x.F64 = value.Uint()
-	case "testpb.A.b":
+	case "testpb.ExampleTable.b":
 		x.B = value.Bool()
-	case "testpb.A.e":
+	case "testpb.ExampleTable.e":
 		x.E = (Enum)(value.Enum())
-	case "testpb.A.repeated":
+	case "testpb.ExampleTable.repeated":
 		lv := value.List()
-		clv := lv.(*_A_17_list)
+		clv := lv.(*_ExampleTable_17_list)
 		x.Repeated = *clv.list
-	case "testpb.A.map":
+	case "testpb.ExampleTable.map":
 		mv := value.Map()
-		cmv := mv.(*_A_18_map)
+		cmv := mv.(*_ExampleTable_18_map)
 		x.Map = *cmv.m
-	case "testpb.A.msg":
-		x.Msg = value.Message().Interface().(*B)
-	case "testpb.A.oneof":
+	case "testpb.ExampleTable.msg":
+		x.Msg = value.Message().Interface().(*ExampleTable_ExampleMessage)
+	case "testpb.ExampleTable.oneof":
 		cv := uint32(value.Uint())
-		x.Sum = &A_Oneof{Oneof: cv}
+		x.Sum = &ExampleTable_Oneof{Oneof: cv}
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.A"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleTable"))
 		}
-		panic(fmt.Errorf("message testpb.A does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.ExampleTable does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -669,146 +669,146 @@ func (x *fastReflection_A) Set(fd protoreflect.FieldDescriptor, value protorefle
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_A) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_ExampleTable) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "testpb.A.ts":
+	case "testpb.ExampleTable.ts":
 		if x.Ts == nil {
 			x.Ts = new(timestamppb.Timestamp)
 		}
 		return protoreflect.ValueOfMessage(x.Ts.ProtoReflect())
-	case "testpb.A.dur":
+	case "testpb.ExampleTable.dur":
 		if x.Dur == nil {
 			x.Dur = new(durationpb.Duration)
 		}
 		return protoreflect.ValueOfMessage(x.Dur.ProtoReflect())
-	case "testpb.A.repeated":
+	case "testpb.ExampleTable.repeated":
 		if x.Repeated == nil {
 			x.Repeated = []uint32{}
 		}
-		value := &_A_17_list{list: &x.Repeated}
+		value := &_ExampleTable_17_list{list: &x.Repeated}
 		return protoreflect.ValueOfList(value)
-	case "testpb.A.map":
+	case "testpb.ExampleTable.map":
 		if x.Map == nil {
 			x.Map = make(map[string]uint32)
 		}
-		value := &_A_18_map{m: &x.Map}
+		value := &_ExampleTable_18_map{m: &x.Map}
 		return protoreflect.ValueOfMap(value)
-	case "testpb.A.msg":
+	case "testpb.ExampleTable.msg":
 		if x.Msg == nil {
-			x.Msg = new(B)
+			x.Msg = new(ExampleTable_ExampleMessage)
 		}
 		return protoreflect.ValueOfMessage(x.Msg.ProtoReflect())
-	case "testpb.A.u32":
-		panic(fmt.Errorf("field u32 of message testpb.A is not mutable"))
-	case "testpb.A.u64":
-		panic(fmt.Errorf("field u64 of message testpb.A is not mutable"))
-	case "testpb.A.str":
-		panic(fmt.Errorf("field str of message testpb.A is not mutable"))
-	case "testpb.A.bz":
-		panic(fmt.Errorf("field bz of message testpb.A is not mutable"))
-	case "testpb.A.i32":
-		panic(fmt.Errorf("field i32 of message testpb.A is not mutable"))
-	case "testpb.A.s32":
-		panic(fmt.Errorf("field s32 of message testpb.A is not mutable"))
-	case "testpb.A.sf32":
-		panic(fmt.Errorf("field sf32 of message testpb.A is not mutable"))
-	case "testpb.A.i64":
-		panic(fmt.Errorf("field i64 of message testpb.A is not mutable"))
-	case "testpb.A.s64":
-		panic(fmt.Errorf("field s64 of message testpb.A is not mutable"))
-	case "testpb.A.sf64":
-		panic(fmt.Errorf("field sf64 of message testpb.A is not mutable"))
-	case "testpb.A.f32":
-		panic(fmt.Errorf("field f32 of message testpb.A is not mutable"))
-	case "testpb.A.f64":
-		panic(fmt.Errorf("field f64 of message testpb.A is not mutable"))
-	case "testpb.A.b":
-		panic(fmt.Errorf("field b of message testpb.A is not mutable"))
-	case "testpb.A.e":
-		panic(fmt.Errorf("field e of message testpb.A is not mutable"))
-	case "testpb.A.oneof":
-		panic(fmt.Errorf("field oneof of message testpb.A is not mutable"))
+	case "testpb.ExampleTable.u32":
+		panic(fmt.Errorf("field u32 of message testpb.ExampleTable is not mutable"))
+	case "testpb.ExampleTable.u64":
+		panic(fmt.Errorf("field u64 of message testpb.ExampleTable is not mutable"))
+	case "testpb.ExampleTable.str":
+		panic(fmt.Errorf("field str of message testpb.ExampleTable is not mutable"))
+	case "testpb.ExampleTable.bz":
+		panic(fmt.Errorf("field bz of message testpb.ExampleTable is not mutable"))
+	case "testpb.ExampleTable.i32":
+		panic(fmt.Errorf("field i32 of message testpb.ExampleTable is not mutable"))
+	case "testpb.ExampleTable.s32":
+		panic(fmt.Errorf("field s32 of message testpb.ExampleTable is not mutable"))
+	case "testpb.ExampleTable.sf32":
+		panic(fmt.Errorf("field sf32 of message testpb.ExampleTable is not mutable"))
+	case "testpb.ExampleTable.i64":
+		panic(fmt.Errorf("field i64 of message testpb.ExampleTable is not mutable"))
+	case "testpb.ExampleTable.s64":
+		panic(fmt.Errorf("field s64 of message testpb.ExampleTable is not mutable"))
+	case "testpb.ExampleTable.sf64":
+		panic(fmt.Errorf("field sf64 of message testpb.ExampleTable is not mutable"))
+	case "testpb.ExampleTable.f32":
+		panic(fmt.Errorf("field f32 of message testpb.ExampleTable is not mutable"))
+	case "testpb.ExampleTable.f64":
+		panic(fmt.Errorf("field f64 of message testpb.ExampleTable is not mutable"))
+	case "testpb.ExampleTable.b":
+		panic(fmt.Errorf("field b of message testpb.ExampleTable is not mutable"))
+	case "testpb.ExampleTable.e":
+		panic(fmt.Errorf("field e of message testpb.ExampleTable is not mutable"))
+	case "testpb.ExampleTable.oneof":
+		panic(fmt.Errorf("field oneof of message testpb.ExampleTable is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.A"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleTable"))
 		}
-		panic(fmt.Errorf("message testpb.A does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.ExampleTable does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_A) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_ExampleTable) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "testpb.A.u32":
+	case "testpb.ExampleTable.u32":
 		return protoreflect.ValueOfUint32(uint32(0))
-	case "testpb.A.u64":
+	case "testpb.ExampleTable.u64":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "testpb.A.str":
+	case "testpb.ExampleTable.str":
 		return protoreflect.ValueOfString("")
-	case "testpb.A.bz":
+	case "testpb.ExampleTable.bz":
 		return protoreflect.ValueOfBytes(nil)
-	case "testpb.A.ts":
+	case "testpb.ExampleTable.ts":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "testpb.A.dur":
+	case "testpb.ExampleTable.dur":
 		m := new(durationpb.Duration)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "testpb.A.i32":
+	case "testpb.ExampleTable.i32":
 		return protoreflect.ValueOfInt32(int32(0))
-	case "testpb.A.s32":
+	case "testpb.ExampleTable.s32":
 		return protoreflect.ValueOfInt32(int32(0))
-	case "testpb.A.sf32":
+	case "testpb.ExampleTable.sf32":
 		return protoreflect.ValueOfInt32(int32(0))
-	case "testpb.A.i64":
+	case "testpb.ExampleTable.i64":
 		return protoreflect.ValueOfInt64(int64(0))
-	case "testpb.A.s64":
+	case "testpb.ExampleTable.s64":
 		return protoreflect.ValueOfInt64(int64(0))
-	case "testpb.A.sf64":
+	case "testpb.ExampleTable.sf64":
 		return protoreflect.ValueOfInt64(int64(0))
-	case "testpb.A.f32":
+	case "testpb.ExampleTable.f32":
 		return protoreflect.ValueOfUint32(uint32(0))
-	case "testpb.A.f64":
+	case "testpb.ExampleTable.f64":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "testpb.A.b":
+	case "testpb.ExampleTable.b":
 		return protoreflect.ValueOfBool(false)
-	case "testpb.A.e":
+	case "testpb.ExampleTable.e":
 		return protoreflect.ValueOfEnum(0)
-	case "testpb.A.repeated":
+	case "testpb.ExampleTable.repeated":
 		list := []uint32{}
-		return protoreflect.ValueOfList(&_A_17_list{list: &list})
-	case "testpb.A.map":
+		return protoreflect.ValueOfList(&_ExampleTable_17_list{list: &list})
+	case "testpb.ExampleTable.map":
 		m := make(map[string]uint32)
-		return protoreflect.ValueOfMap(&_A_18_map{m: &m})
-	case "testpb.A.msg":
-		m := new(B)
+		return protoreflect.ValueOfMap(&_ExampleTable_18_map{m: &m})
+	case "testpb.ExampleTable.msg":
+		m := new(ExampleTable_ExampleMessage)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "testpb.A.oneof":
+	case "testpb.ExampleTable.oneof":
 		return protoreflect.ValueOfUint32(uint32(0))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.A"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleTable"))
 		}
-		panic(fmt.Errorf("message testpb.A does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.ExampleTable does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_A) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_ExampleTable) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
-	case "testpb.A.sum":
+	case "testpb.ExampleTable.sum":
 		if x.Sum == nil {
 			return nil
 		}
 		switch x.Sum.(type) {
-		case *A_Oneof:
+		case *ExampleTable_Oneof:
 			return x.Descriptor().Fields().ByName("oneof")
 		}
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in testpb.A", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in testpb.ExampleTable", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -816,7 +816,7 @@ func (x *fastReflection_A) WhichOneof(d protoreflect.OneofDescriptor) protorefle
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_A) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_ExampleTable) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -827,7 +827,7 @@ func (x *fastReflection_A) GetUnknown() protoreflect.RawFields {
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_A) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_ExampleTable) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -839,7 +839,7 @@ func (x *fastReflection_A) SetUnknown(fields protoreflect.RawFields) {
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_A) IsValid() bool {
+func (x *fastReflection_ExampleTable) IsValid() bool {
 	return x != nil
 }
 
@@ -849,9 +849,9 @@ func (x *fastReflection_A) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_A) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_ExampleTable) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*A)
+		x := input.Message.Interface().(*ExampleTable)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -948,7 +948,7 @@ func (x *fastReflection_A) ProtoMethods() *protoiface.Methods {
 			n += 2 + l + runtime.Sov(uint64(l))
 		}
 		switch x := x.Sum.(type) {
-		case *A_Oneof:
+		case *ExampleTable_Oneof:
 			if x == nil {
 				break
 			}
@@ -964,7 +964,7 @@ func (x *fastReflection_A) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*A)
+		x := input.Message.Interface().(*ExampleTable)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -984,7 +984,7 @@ func (x *fastReflection_A) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], x.unknownFields)
 		}
 		switch x := x.Sum.(type) {
-		case *A_Oneof:
+		case *ExampleTable_Oneof:
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.Oneof))
 			i--
 			dAtA[i] = 0x1
@@ -1196,7 +1196,7 @@ func (x *fastReflection_A) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*A)
+		x := input.Message.Interface().(*ExampleTable)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1228,10 +1228,10 @@ func (x *fastReflection_A) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: A: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ExampleTable: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: A: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ExampleTable: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -1788,7 +1788,7 @@ func (x *fastReflection_A) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Msg == nil {
-					x.Msg = &B{}
+					x.Msg = &ExampleTable_ExampleMessage{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Msg); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -1813,7 +1813,7 @@ func (x *fastReflection_A) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
-				x.Sum = &A_Oneof{v}
+				x.Sum = &ExampleTable_Oneof{v}
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -1850,26 +1850,28 @@ func (x *fastReflection_A) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_B   protoreflect.MessageDescriptor
-	fd_B_x protoreflect.FieldDescriptor
+	md_ExampleTable_ExampleMessage     protoreflect.MessageDescriptor
+	fd_ExampleTable_ExampleMessage_foo protoreflect.FieldDescriptor
+	fd_ExampleTable_ExampleMessage_bar protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_testpb_testschema_proto_init()
-	md_B = File_testpb_testschema_proto.Messages().ByName("B")
-	fd_B_x = md_B.Fields().ByName("x")
+	md_ExampleTable_ExampleMessage = File_testpb_testschema_proto.Messages().ByName("ExampleTable").Messages().ByName("ExampleMessage")
+	fd_ExampleTable_ExampleMessage_foo = md_ExampleTable_ExampleMessage.Fields().ByName("foo")
+	fd_ExampleTable_ExampleMessage_bar = md_ExampleTable_ExampleMessage.Fields().ByName("bar")
 }
 
-var _ protoreflect.Message = (*fastReflection_B)(nil)
+var _ protoreflect.Message = (*fastReflection_ExampleTable_ExampleMessage)(nil)
 
-type fastReflection_B B
+type fastReflection_ExampleTable_ExampleMessage ExampleTable_ExampleMessage
 
-func (x *B) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_B)(x)
+func (x *ExampleTable_ExampleMessage) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_ExampleTable_ExampleMessage)(x)
 }
 
-func (x *B) slowProtoReflect() protoreflect.Message {
-	mi := &file_testpb_testschema_proto_msgTypes[1]
+func (x *ExampleTable_ExampleMessage) slowProtoReflect() protoreflect.Message {
+	mi := &file_testpb_testschema_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1880,43 +1882,43 @@ func (x *B) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_B_messageType fastReflection_B_messageType
-var _ protoreflect.MessageType = fastReflection_B_messageType{}
+var _fastReflection_ExampleTable_ExampleMessage_messageType fastReflection_ExampleTable_ExampleMessage_messageType
+var _ protoreflect.MessageType = fastReflection_ExampleTable_ExampleMessage_messageType{}
 
-type fastReflection_B_messageType struct{}
+type fastReflection_ExampleTable_ExampleMessage_messageType struct{}
 
-func (x fastReflection_B_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_B)(nil)
+func (x fastReflection_ExampleTable_ExampleMessage_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_ExampleTable_ExampleMessage)(nil)
 }
-func (x fastReflection_B_messageType) New() protoreflect.Message {
-	return new(fastReflection_B)
+func (x fastReflection_ExampleTable_ExampleMessage_messageType) New() protoreflect.Message {
+	return new(fastReflection_ExampleTable_ExampleMessage)
 }
-func (x fastReflection_B_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_B
+func (x fastReflection_ExampleTable_ExampleMessage_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_ExampleTable_ExampleMessage
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_B) Descriptor() protoreflect.MessageDescriptor {
-	return md_B
+func (x *fastReflection_ExampleTable_ExampleMessage) Descriptor() protoreflect.MessageDescriptor {
+	return md_ExampleTable_ExampleMessage
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_B) Type() protoreflect.MessageType {
-	return _fastReflection_B_messageType
+func (x *fastReflection_ExampleTable_ExampleMessage) Type() protoreflect.MessageType {
+	return _fastReflection_ExampleTable_ExampleMessage_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_B) New() protoreflect.Message {
-	return new(fastReflection_B)
+func (x *fastReflection_ExampleTable_ExampleMessage) New() protoreflect.Message {
+	return new(fastReflection_ExampleTable_ExampleMessage)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_B) Interface() protoreflect.ProtoMessage {
-	return (*B)(x)
+func (x *fastReflection_ExampleTable_ExampleMessage) Interface() protoreflect.ProtoMessage {
+	return (*ExampleTable_ExampleMessage)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -1924,10 +1926,16 @@ func (x *fastReflection_B) Interface() protoreflect.ProtoMessage {
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_B) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.X != "" {
-		value := protoreflect.ValueOfString(x.X)
-		if !f(fd_B_x, value) {
+func (x *fastReflection_ExampleTable_ExampleMessage) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Foo != "" {
+		value := protoreflect.ValueOfString(x.Foo)
+		if !f(fd_ExampleTable_ExampleMessage_foo, value) {
+			return
+		}
+	}
+	if x.Bar != int32(0) {
+		value := protoreflect.ValueOfInt32(x.Bar)
+		if !f(fd_ExampleTable_ExampleMessage_bar, value) {
 			return
 		}
 	}
@@ -1944,15 +1952,17 @@ func (x *fastReflection_B) Range(f func(protoreflect.FieldDescriptor, protorefle
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_B) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_ExampleTable_ExampleMessage) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "testpb.B.x":
-		return x.X != ""
+	case "testpb.ExampleTable.ExampleMessage.foo":
+		return x.Foo != ""
+	case "testpb.ExampleTable.ExampleMessage.bar":
+		return x.Bar != int32(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.B"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleTable.ExampleMessage"))
 		}
-		panic(fmt.Errorf("message testpb.B does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.ExampleTable.ExampleMessage does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1962,15 +1972,17 @@ func (x *fastReflection_B) Has(fd protoreflect.FieldDescriptor) bool {
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_B) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_ExampleTable_ExampleMessage) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "testpb.B.x":
-		x.X = ""
+	case "testpb.ExampleTable.ExampleMessage.foo":
+		x.Foo = ""
+	case "testpb.ExampleTable.ExampleMessage.bar":
+		x.Bar = int32(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.B"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleTable.ExampleMessage"))
 		}
-		panic(fmt.Errorf("message testpb.B does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.ExampleTable.ExampleMessage does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1980,16 +1992,19 @@ func (x *fastReflection_B) Clear(fd protoreflect.FieldDescriptor) {
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_B) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_ExampleTable_ExampleMessage) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "testpb.B.x":
-		value := x.X
+	case "testpb.ExampleTable.ExampleMessage.foo":
+		value := x.Foo
 		return protoreflect.ValueOfString(value)
+	case "testpb.ExampleTable.ExampleMessage.bar":
+		value := x.Bar
+		return protoreflect.ValueOfInt32(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.B"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleTable.ExampleMessage"))
 		}
-		panic(fmt.Errorf("message testpb.B does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message testpb.ExampleTable.ExampleMessage does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -2003,15 +2018,17 @@ func (x *fastReflection_B) Get(descriptor protoreflect.FieldDescriptor) protoref
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_B) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_ExampleTable_ExampleMessage) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "testpb.B.x":
-		x.X = value.Interface().(string)
+	case "testpb.ExampleTable.ExampleMessage.foo":
+		x.Foo = value.Interface().(string)
+	case "testpb.ExampleTable.ExampleMessage.bar":
+		x.Bar = int32(value.Int())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.B"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleTable.ExampleMessage"))
 		}
-		panic(fmt.Errorf("message testpb.B does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.ExampleTable.ExampleMessage does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2025,40 +2042,44 @@ func (x *fastReflection_B) Set(fd protoreflect.FieldDescriptor, value protorefle
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_B) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_ExampleTable_ExampleMessage) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "testpb.B.x":
-		panic(fmt.Errorf("field x of message testpb.B is not mutable"))
+	case "testpb.ExampleTable.ExampleMessage.foo":
+		panic(fmt.Errorf("field foo of message testpb.ExampleTable.ExampleMessage is not mutable"))
+	case "testpb.ExampleTable.ExampleMessage.bar":
+		panic(fmt.Errorf("field bar of message testpb.ExampleTable.ExampleMessage is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.B"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleTable.ExampleMessage"))
 		}
-		panic(fmt.Errorf("message testpb.B does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.ExampleTable.ExampleMessage does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_B) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_ExampleTable_ExampleMessage) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "testpb.B.x":
+	case "testpb.ExampleTable.ExampleMessage.foo":
 		return protoreflect.ValueOfString("")
+	case "testpb.ExampleTable.ExampleMessage.bar":
+		return protoreflect.ValueOfInt32(int32(0))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.B"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleTable.ExampleMessage"))
 		}
-		panic(fmt.Errorf("message testpb.B does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.ExampleTable.ExampleMessage does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_B) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_ExampleTable_ExampleMessage) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in testpb.B", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in testpb.ExampleTable.ExampleMessage", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -2066,7 +2087,7 @@ func (x *fastReflection_B) WhichOneof(d protoreflect.OneofDescriptor) protorefle
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_B) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_ExampleTable_ExampleMessage) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -2077,7 +2098,7 @@ func (x *fastReflection_B) GetUnknown() protoreflect.RawFields {
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_B) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_ExampleTable_ExampleMessage) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -2089,7 +2110,7 @@ func (x *fastReflection_B) SetUnknown(fields protoreflect.RawFields) {
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_B) IsValid() bool {
+func (x *fastReflection_ExampleTable_ExampleMessage) IsValid() bool {
 	return x != nil
 }
 
@@ -2099,9 +2120,9 @@ func (x *fastReflection_B) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_B) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_ExampleTable_ExampleMessage) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*B)
+		x := input.Message.Interface().(*ExampleTable_ExampleMessage)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2113,9 +2134,12 @@ func (x *fastReflection_B) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		l = len(x.X)
+		l = len(x.Foo)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Bar != 0 {
+			n += 1 + runtime.Sov(uint64(x.Bar))
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -2127,7 +2151,7 @@ func (x *fastReflection_B) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*B)
+		x := input.Message.Interface().(*ExampleTable_ExampleMessage)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2146,10 +2170,15 @@ func (x *fastReflection_B) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.X) > 0 {
-			i -= len(x.X)
-			copy(dAtA[i:], x.X)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.X)))
+		if x.Bar != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Bar))
+			i--
+			dAtA[i] = 0x10
+		}
+		if len(x.Foo) > 0 {
+			i -= len(x.Foo)
+			copy(dAtA[i:], x.Foo)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Foo)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -2164,7 +2193,7 @@ func (x *fastReflection_B) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*B)
+		x := input.Message.Interface().(*ExampleTable_ExampleMessage)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2196,15 +2225,15 @@ func (x *fastReflection_B) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: B: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ExampleTable_ExampleMessage: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: B: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ExampleTable_ExampleMessage: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field X", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Foo", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -2232,8 +2261,27 @@ func (x *fastReflection_B) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.X = string(dAtA[iNdEx:postIndex])
+				x.Foo = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Bar", wireType)
+				}
+				x.Bar = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Bar |= int32(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -2270,28 +2318,30 @@ func (x *fastReflection_B) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_C    protoreflect.MessageDescriptor
-	fd_C_id protoreflect.FieldDescriptor
-	fd_C_x  protoreflect.FieldDescriptor
+	md_ExampleAutoIncrementTable    protoreflect.MessageDescriptor
+	fd_ExampleAutoIncrementTable_id protoreflect.FieldDescriptor
+	fd_ExampleAutoIncrementTable_x  protoreflect.FieldDescriptor
+	fd_ExampleAutoIncrementTable_y  protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_testpb_testschema_proto_init()
-	md_C = File_testpb_testschema_proto.Messages().ByName("C")
-	fd_C_id = md_C.Fields().ByName("id")
-	fd_C_x = md_C.Fields().ByName("x")
+	md_ExampleAutoIncrementTable = File_testpb_testschema_proto.Messages().ByName("ExampleAutoIncrementTable")
+	fd_ExampleAutoIncrementTable_id = md_ExampleAutoIncrementTable.Fields().ByName("id")
+	fd_ExampleAutoIncrementTable_x = md_ExampleAutoIncrementTable.Fields().ByName("x")
+	fd_ExampleAutoIncrementTable_y = md_ExampleAutoIncrementTable.Fields().ByName("y")
 }
 
-var _ protoreflect.Message = (*fastReflection_C)(nil)
+var _ protoreflect.Message = (*fastReflection_ExampleAutoIncrementTable)(nil)
 
-type fastReflection_C C
+type fastReflection_ExampleAutoIncrementTable ExampleAutoIncrementTable
 
-func (x *C) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_C)(x)
+func (x *ExampleAutoIncrementTable) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_ExampleAutoIncrementTable)(x)
 }
 
-func (x *C) slowProtoReflect() protoreflect.Message {
-	mi := &file_testpb_testschema_proto_msgTypes[2]
+func (x *ExampleAutoIncrementTable) slowProtoReflect() protoreflect.Message {
+	mi := &file_testpb_testschema_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2302,43 +2352,43 @@ func (x *C) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_C_messageType fastReflection_C_messageType
-var _ protoreflect.MessageType = fastReflection_C_messageType{}
+var _fastReflection_ExampleAutoIncrementTable_messageType fastReflection_ExampleAutoIncrementTable_messageType
+var _ protoreflect.MessageType = fastReflection_ExampleAutoIncrementTable_messageType{}
 
-type fastReflection_C_messageType struct{}
+type fastReflection_ExampleAutoIncrementTable_messageType struct{}
 
-func (x fastReflection_C_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_C)(nil)
+func (x fastReflection_ExampleAutoIncrementTable_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_ExampleAutoIncrementTable)(nil)
 }
-func (x fastReflection_C_messageType) New() protoreflect.Message {
-	return new(fastReflection_C)
+func (x fastReflection_ExampleAutoIncrementTable_messageType) New() protoreflect.Message {
+	return new(fastReflection_ExampleAutoIncrementTable)
 }
-func (x fastReflection_C_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_C
+func (x fastReflection_ExampleAutoIncrementTable_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_ExampleAutoIncrementTable
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_C) Descriptor() protoreflect.MessageDescriptor {
-	return md_C
+func (x *fastReflection_ExampleAutoIncrementTable) Descriptor() protoreflect.MessageDescriptor {
+	return md_ExampleAutoIncrementTable
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_C) Type() protoreflect.MessageType {
-	return _fastReflection_C_messageType
+func (x *fastReflection_ExampleAutoIncrementTable) Type() protoreflect.MessageType {
+	return _fastReflection_ExampleAutoIncrementTable_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_C) New() protoreflect.Message {
-	return new(fastReflection_C)
+func (x *fastReflection_ExampleAutoIncrementTable) New() protoreflect.Message {
+	return new(fastReflection_ExampleAutoIncrementTable)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_C) Interface() protoreflect.ProtoMessage {
-	return (*C)(x)
+func (x *fastReflection_ExampleAutoIncrementTable) Interface() protoreflect.ProtoMessage {
+	return (*ExampleAutoIncrementTable)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -2346,16 +2396,22 @@ func (x *fastReflection_C) Interface() protoreflect.ProtoMessage {
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_C) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_ExampleAutoIncrementTable) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Id != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.Id)
-		if !f(fd_C_id, value) {
+		if !f(fd_ExampleAutoIncrementTable_id, value) {
 			return
 		}
 	}
 	if x.X != "" {
 		value := protoreflect.ValueOfString(x.X)
-		if !f(fd_C_x, value) {
+		if !f(fd_ExampleAutoIncrementTable_x, value) {
+			return
+		}
+	}
+	if x.Y != int32(0) {
+		value := protoreflect.ValueOfInt32(x.Y)
+		if !f(fd_ExampleAutoIncrementTable_y, value) {
 			return
 		}
 	}
@@ -2372,17 +2428,19 @@ func (x *fastReflection_C) Range(f func(protoreflect.FieldDescriptor, protorefle
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_C) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_ExampleAutoIncrementTable) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "testpb.C.id":
+	case "testpb.ExampleAutoIncrementTable.id":
 		return x.Id != uint64(0)
-	case "testpb.C.x":
+	case "testpb.ExampleAutoIncrementTable.x":
 		return x.X != ""
+	case "testpb.ExampleAutoIncrementTable.y":
+		return x.Y != int32(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.C"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleAutoIncrementTable"))
 		}
-		panic(fmt.Errorf("message testpb.C does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.ExampleAutoIncrementTable does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2392,17 +2450,19 @@ func (x *fastReflection_C) Has(fd protoreflect.FieldDescriptor) bool {
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_C) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_ExampleAutoIncrementTable) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "testpb.C.id":
+	case "testpb.ExampleAutoIncrementTable.id":
 		x.Id = uint64(0)
-	case "testpb.C.x":
+	case "testpb.ExampleAutoIncrementTable.x":
 		x.X = ""
+	case "testpb.ExampleAutoIncrementTable.y":
+		x.Y = int32(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.C"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleAutoIncrementTable"))
 		}
-		panic(fmt.Errorf("message testpb.C does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.ExampleAutoIncrementTable does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2412,19 +2472,22 @@ func (x *fastReflection_C) Clear(fd protoreflect.FieldDescriptor) {
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_C) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_ExampleAutoIncrementTable) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "testpb.C.id":
+	case "testpb.ExampleAutoIncrementTable.id":
 		value := x.Id
 		return protoreflect.ValueOfUint64(value)
-	case "testpb.C.x":
+	case "testpb.ExampleAutoIncrementTable.x":
 		value := x.X
 		return protoreflect.ValueOfString(value)
+	case "testpb.ExampleAutoIncrementTable.y":
+		value := x.Y
+		return protoreflect.ValueOfInt32(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.C"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleAutoIncrementTable"))
 		}
-		panic(fmt.Errorf("message testpb.C does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message testpb.ExampleAutoIncrementTable does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -2438,17 +2501,19 @@ func (x *fastReflection_C) Get(descriptor protoreflect.FieldDescriptor) protoref
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_C) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_ExampleAutoIncrementTable) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "testpb.C.id":
+	case "testpb.ExampleAutoIncrementTable.id":
 		x.Id = value.Uint()
-	case "testpb.C.x":
+	case "testpb.ExampleAutoIncrementTable.x":
 		x.X = value.Interface().(string)
+	case "testpb.ExampleAutoIncrementTable.y":
+		x.Y = int32(value.Int())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.C"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleAutoIncrementTable"))
 		}
-		panic(fmt.Errorf("message testpb.C does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.ExampleAutoIncrementTable does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2462,44 +2527,48 @@ func (x *fastReflection_C) Set(fd protoreflect.FieldDescriptor, value protorefle
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_C) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_ExampleAutoIncrementTable) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "testpb.C.id":
-		panic(fmt.Errorf("field id of message testpb.C is not mutable"))
-	case "testpb.C.x":
-		panic(fmt.Errorf("field x of message testpb.C is not mutable"))
+	case "testpb.ExampleAutoIncrementTable.id":
+		panic(fmt.Errorf("field id of message testpb.ExampleAutoIncrementTable is not mutable"))
+	case "testpb.ExampleAutoIncrementTable.x":
+		panic(fmt.Errorf("field x of message testpb.ExampleAutoIncrementTable is not mutable"))
+	case "testpb.ExampleAutoIncrementTable.y":
+		panic(fmt.Errorf("field y of message testpb.ExampleAutoIncrementTable is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.C"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleAutoIncrementTable"))
 		}
-		panic(fmt.Errorf("message testpb.C does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.ExampleAutoIncrementTable does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_C) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_ExampleAutoIncrementTable) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "testpb.C.id":
+	case "testpb.ExampleAutoIncrementTable.id":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "testpb.C.x":
+	case "testpb.ExampleAutoIncrementTable.x":
 		return protoreflect.ValueOfString("")
+	case "testpb.ExampleAutoIncrementTable.y":
+		return protoreflect.ValueOfInt32(int32(0))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.C"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleAutoIncrementTable"))
 		}
-		panic(fmt.Errorf("message testpb.C does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.ExampleAutoIncrementTable does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_C) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_ExampleAutoIncrementTable) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in testpb.C", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in testpb.ExampleAutoIncrementTable", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -2507,7 +2576,7 @@ func (x *fastReflection_C) WhichOneof(d protoreflect.OneofDescriptor) protorefle
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_C) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_ExampleAutoIncrementTable) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -2518,7 +2587,7 @@ func (x *fastReflection_C) GetUnknown() protoreflect.RawFields {
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_C) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_ExampleAutoIncrementTable) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -2530,7 +2599,7 @@ func (x *fastReflection_C) SetUnknown(fields protoreflect.RawFields) {
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_C) IsValid() bool {
+func (x *fastReflection_ExampleAutoIncrementTable) IsValid() bool {
 	return x != nil
 }
 
@@ -2540,9 +2609,9 @@ func (x *fastReflection_C) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_C) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_ExampleAutoIncrementTable) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*C)
+		x := input.Message.Interface().(*ExampleAutoIncrementTable)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2561,6 +2630,9 @@ func (x *fastReflection_C) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		if x.Y != 0 {
+			n += 1 + runtime.Sov(uint64(x.Y))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -2571,7 +2643,7 @@ func (x *fastReflection_C) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*C)
+		x := input.Message.Interface().(*ExampleAutoIncrementTable)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2589,6 +2661,11 @@ func (x *fastReflection_C) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Y != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Y))
+			i--
+			dAtA[i] = 0x18
 		}
 		if len(x.X) > 0 {
 			i -= len(x.X)
@@ -2613,7 +2690,7 @@ func (x *fastReflection_C) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*C)
+		x := input.Message.Interface().(*ExampleAutoIncrementTable)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2645,10 +2722,10 @@ func (x *fastReflection_C) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: C: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ExampleAutoIncrementTable: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: C: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ExampleAutoIncrementTable: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -2702,6 +2779,493 @@ func (x *fastReflection_C) ProtoMethods() *protoiface.Methods {
 				}
 				x.X = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
+			case 3:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Y", wireType)
+				}
+				x.Y = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Y |= int32(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_ExampleSingleton     protoreflect.MessageDescriptor
+	fd_ExampleSingleton_foo protoreflect.FieldDescriptor
+	fd_ExampleSingleton_bar protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_testpb_testschema_proto_init()
+	md_ExampleSingleton = File_testpb_testschema_proto.Messages().ByName("ExampleSingleton")
+	fd_ExampleSingleton_foo = md_ExampleSingleton.Fields().ByName("foo")
+	fd_ExampleSingleton_bar = md_ExampleSingleton.Fields().ByName("bar")
+}
+
+var _ protoreflect.Message = (*fastReflection_ExampleSingleton)(nil)
+
+type fastReflection_ExampleSingleton ExampleSingleton
+
+func (x *ExampleSingleton) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_ExampleSingleton)(x)
+}
+
+func (x *ExampleSingleton) slowProtoReflect() protoreflect.Message {
+	mi := &file_testpb_testschema_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_ExampleSingleton_messageType fastReflection_ExampleSingleton_messageType
+var _ protoreflect.MessageType = fastReflection_ExampleSingleton_messageType{}
+
+type fastReflection_ExampleSingleton_messageType struct{}
+
+func (x fastReflection_ExampleSingleton_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_ExampleSingleton)(nil)
+}
+func (x fastReflection_ExampleSingleton_messageType) New() protoreflect.Message {
+	return new(fastReflection_ExampleSingleton)
+}
+func (x fastReflection_ExampleSingleton_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_ExampleSingleton
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_ExampleSingleton) Descriptor() protoreflect.MessageDescriptor {
+	return md_ExampleSingleton
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_ExampleSingleton) Type() protoreflect.MessageType {
+	return _fastReflection_ExampleSingleton_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_ExampleSingleton) New() protoreflect.Message {
+	return new(fastReflection_ExampleSingleton)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_ExampleSingleton) Interface() protoreflect.ProtoMessage {
+	return (*ExampleSingleton)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_ExampleSingleton) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Foo != "" {
+		value := protoreflect.ValueOfString(x.Foo)
+		if !f(fd_ExampleSingleton_foo, value) {
+			return
+		}
+	}
+	if x.Bar != int32(0) {
+		value := protoreflect.ValueOfInt32(x.Bar)
+		if !f(fd_ExampleSingleton_bar, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_ExampleSingleton) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "testpb.ExampleSingleton.foo":
+		return x.Foo != ""
+	case "testpb.ExampleSingleton.bar":
+		return x.Bar != int32(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleSingleton"))
+		}
+		panic(fmt.Errorf("message testpb.ExampleSingleton does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ExampleSingleton) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "testpb.ExampleSingleton.foo":
+		x.Foo = ""
+	case "testpb.ExampleSingleton.bar":
+		x.Bar = int32(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleSingleton"))
+		}
+		panic(fmt.Errorf("message testpb.ExampleSingleton does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_ExampleSingleton) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "testpb.ExampleSingleton.foo":
+		value := x.Foo
+		return protoreflect.ValueOfString(value)
+	case "testpb.ExampleSingleton.bar":
+		value := x.Bar
+		return protoreflect.ValueOfInt32(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleSingleton"))
+		}
+		panic(fmt.Errorf("message testpb.ExampleSingleton does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ExampleSingleton) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "testpb.ExampleSingleton.foo":
+		x.Foo = value.Interface().(string)
+	case "testpb.ExampleSingleton.bar":
+		x.Bar = int32(value.Int())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleSingleton"))
+		}
+		panic(fmt.Errorf("message testpb.ExampleSingleton does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ExampleSingleton) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "testpb.ExampleSingleton.foo":
+		panic(fmt.Errorf("field foo of message testpb.ExampleSingleton is not mutable"))
+	case "testpb.ExampleSingleton.bar":
+		panic(fmt.Errorf("field bar of message testpb.ExampleSingleton is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleSingleton"))
+		}
+		panic(fmt.Errorf("message testpb.ExampleSingleton does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_ExampleSingleton) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "testpb.ExampleSingleton.foo":
+		return protoreflect.ValueOfString("")
+	case "testpb.ExampleSingleton.bar":
+		return protoreflect.ValueOfInt32(int32(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.ExampleSingleton"))
+		}
+		panic(fmt.Errorf("message testpb.ExampleSingleton does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_ExampleSingleton) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in testpb.ExampleSingleton", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_ExampleSingleton) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ExampleSingleton) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_ExampleSingleton) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_ExampleSingleton) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*ExampleSingleton)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Foo)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Bar != 0 {
+			n += 1 + runtime.Sov(uint64(x.Bar))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*ExampleSingleton)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Bar != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Bar))
+			i--
+			dAtA[i] = 0x10
+		}
+		if len(x.Foo) > 0 {
+			i -= len(x.Foo)
+			copy(dAtA[i:], x.Foo)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Foo)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*ExampleSingleton)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ExampleSingleton: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ExampleSingleton: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Foo", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Foo = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Bar", wireType)
+				}
+				x.Bar = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Bar |= int32(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -2805,7 +3369,7 @@ func (Enum) EnumDescriptor() ([]byte, []int) {
 	return file_testpb_testschema_proto_rawDescGZIP(), []int{0}
 }
 
-type A struct {
+type ExampleTable struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -2828,16 +3392,16 @@ type A struct {
 	B    bool                   `protobuf:"varint,15,opt,name=b,proto3" json:"b,omitempty"`
 	E    Enum                   `protobuf:"varint,16,opt,name=e,proto3,enum=testpb.Enum" json:"e,omitempty"`
 	// Invalid key fields:
-	Repeated []uint32          `protobuf:"varint,17,rep,packed,name=repeated,proto3" json:"repeated,omitempty"`
-	Map      map[string]uint32 `protobuf:"bytes,18,rep,name=map,proto3" json:"map,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
-	Msg      *B                `protobuf:"bytes,19,opt,name=msg,proto3" json:"msg,omitempty"`
+	Repeated []uint32                     `protobuf:"varint,17,rep,packed,name=repeated,proto3" json:"repeated,omitempty"`
+	Map      map[string]uint32            `protobuf:"bytes,18,rep,name=map,proto3" json:"map,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
+	Msg      *ExampleTable_ExampleMessage `protobuf:"bytes,19,opt,name=msg,proto3" json:"msg,omitempty"`
 	// Types that are assignable to Sum:
-	//	*A_Oneof
-	Sum isA_Sum `protobuf_oneof:"sum"`
+	//	*ExampleTable_Oneof
+	Sum isExampleTable_Sum `protobuf_oneof:"sum"`
 }
 
-func (x *A) Reset() {
-	*x = A{}
+func (x *ExampleTable) Reset() {
+	*x = ExampleTable{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_testschema_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2845,184 +3409,186 @@ func (x *A) Reset() {
 	}
 }
 
-func (x *A) String() string {
+func (x *ExampleTable) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*A) ProtoMessage() {}
+func (*ExampleTable) ProtoMessage() {}
 
-// Deprecated: Use A.ProtoReflect.Descriptor instead.
-func (*A) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleTable.ProtoReflect.Descriptor instead.
+func (*ExampleTable) Descriptor() ([]byte, []int) {
 	return file_testpb_testschema_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *A) GetU32() uint32 {
+func (x *ExampleTable) GetU32() uint32 {
 	if x != nil {
 		return x.U32
 	}
 	return 0
 }
 
-func (x *A) GetU64() uint64 {
+func (x *ExampleTable) GetU64() uint64 {
 	if x != nil {
 		return x.U64
 	}
 	return 0
 }
 
-func (x *A) GetStr() string {
+func (x *ExampleTable) GetStr() string {
 	if x != nil {
 		return x.Str
 	}
 	return ""
 }
 
-func (x *A) GetBz() []byte {
+func (x *ExampleTable) GetBz() []byte {
 	if x != nil {
 		return x.Bz
 	}
 	return nil
 }
 
-func (x *A) GetTs() *timestamppb.Timestamp {
+func (x *ExampleTable) GetTs() *timestamppb.Timestamp {
 	if x != nil {
 		return x.Ts
 	}
 	return nil
 }
 
-func (x *A) GetDur() *durationpb.Duration {
+func (x *ExampleTable) GetDur() *durationpb.Duration {
 	if x != nil {
 		return x.Dur
 	}
 	return nil
 }
 
-func (x *A) GetI32() int32 {
+func (x *ExampleTable) GetI32() int32 {
 	if x != nil {
 		return x.I32
 	}
 	return 0
 }
 
-func (x *A) GetS32() int32 {
+func (x *ExampleTable) GetS32() int32 {
 	if x != nil {
 		return x.S32
 	}
 	return 0
 }
 
-func (x *A) GetSf32() int32 {
+func (x *ExampleTable) GetSf32() int32 {
 	if x != nil {
 		return x.Sf32
 	}
 	return 0
 }
 
-func (x *A) GetI64() int64 {
+func (x *ExampleTable) GetI64() int64 {
 	if x != nil {
 		return x.I64
 	}
 	return 0
 }
 
-func (x *A) GetS64() int64 {
+func (x *ExampleTable) GetS64() int64 {
 	if x != nil {
 		return x.S64
 	}
 	return 0
 }
 
-func (x *A) GetSf64() int64 {
+func (x *ExampleTable) GetSf64() int64 {
 	if x != nil {
 		return x.Sf64
 	}
 	return 0
 }
 
-func (x *A) GetF32() uint32 {
+func (x *ExampleTable) GetF32() uint32 {
 	if x != nil {
 		return x.F32
 	}
 	return 0
 }
 
-func (x *A) GetF64() uint64 {
+func (x *ExampleTable) GetF64() uint64 {
 	if x != nil {
 		return x.F64
 	}
 	return 0
 }
 
-func (x *A) GetB() bool {
+func (x *ExampleTable) GetB() bool {
 	if x != nil {
 		return x.B
 	}
 	return false
 }
 
-func (x *A) GetE() Enum {
+func (x *ExampleTable) GetE() Enum {
 	if x != nil {
 		return x.E
 	}
 	return Enum_ENUM_UNSPECIFIED
 }
 
-func (x *A) GetRepeated() []uint32 {
+func (x *ExampleTable) GetRepeated() []uint32 {
 	if x != nil {
 		return x.Repeated
 	}
 	return nil
 }
 
-func (x *A) GetMap() map[string]uint32 {
+func (x *ExampleTable) GetMap() map[string]uint32 {
 	if x != nil {
 		return x.Map
 	}
 	return nil
 }
 
-func (x *A) GetMsg() *B {
+func (x *ExampleTable) GetMsg() *ExampleTable_ExampleMessage {
 	if x != nil {
 		return x.Msg
 	}
 	return nil
 }
 
-func (x *A) GetSum() isA_Sum {
+func (x *ExampleTable) GetSum() isExampleTable_Sum {
 	if x != nil {
 		return x.Sum
 	}
 	return nil
 }
 
-func (x *A) GetOneof() uint32 {
-	if x, ok := x.GetSum().(*A_Oneof); ok {
+func (x *ExampleTable) GetOneof() uint32 {
+	if x, ok := x.GetSum().(*ExampleTable_Oneof); ok {
 		return x.Oneof
 	}
 	return 0
 }
 
-type isA_Sum interface {
-	isA_Sum()
+type isExampleTable_Sum interface {
+	isExampleTable_Sum()
 }
 
-type A_Oneof struct {
+type ExampleTable_Oneof struct {
 	Oneof uint32 `protobuf:"varint,20,opt,name=oneof,proto3,oneof"`
 }
 
-func (*A_Oneof) isA_Sum() {}
+func (*ExampleTable_Oneof) isExampleTable_Sum() {}
 
-type B struct {
+type ExampleAutoIncrementTable struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	X string `protobuf:"bytes,1,opt,name=x,proto3" json:"x,omitempty"`
+	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	X  string `protobuf:"bytes,2,opt,name=x,proto3" json:"x,omitempty"`
+	Y  int32  `protobuf:"varint,3,opt,name=y,proto3" json:"y,omitempty"`
 }
 
-func (x *B) Reset() {
-	*x = B{}
+func (x *ExampleAutoIncrementTable) Reset() {
+	*x = ExampleAutoIncrementTable{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_testschema_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -3030,35 +3596,49 @@ func (x *B) Reset() {
 	}
 }
 
-func (x *B) String() string {
+func (x *ExampleAutoIncrementTable) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*B) ProtoMessage() {}
+func (*ExampleAutoIncrementTable) ProtoMessage() {}
 
-// Deprecated: Use B.ProtoReflect.Descriptor instead.
-func (*B) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleAutoIncrementTable.ProtoReflect.Descriptor instead.
+func (*ExampleAutoIncrementTable) Descriptor() ([]byte, []int) {
 	return file_testpb_testschema_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *B) GetX() string {
+func (x *ExampleAutoIncrementTable) GetId() uint64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *ExampleAutoIncrementTable) GetX() string {
 	if x != nil {
 		return x.X
 	}
 	return ""
 }
 
-type C struct {
+func (x *ExampleAutoIncrementTable) GetY() int32 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+type ExampleSingleton struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	X  string `protobuf:"bytes,2,opt,name=x,proto3" json:"x,omitempty"`
+	Foo string `protobuf:"bytes,1,opt,name=foo,proto3" json:"foo,omitempty"`
+	Bar int32  `protobuf:"varint,2,opt,name=bar,proto3" json:"bar,omitempty"`
 }
 
-func (x *C) Reset() {
-	*x = C{}
+func (x *ExampleSingleton) Reset() {
+	*x = ExampleSingleton{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_testschema_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -3066,29 +3646,72 @@ func (x *C) Reset() {
 	}
 }
 
-func (x *C) String() string {
+func (x *ExampleSingleton) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*C) ProtoMessage() {}
+func (*ExampleSingleton) ProtoMessage() {}
 
-// Deprecated: Use C.ProtoReflect.Descriptor instead.
-func (*C) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleSingleton.ProtoReflect.Descriptor instead.
+func (*ExampleSingleton) Descriptor() ([]byte, []int) {
 	return file_testpb_testschema_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *C) GetId() uint64 {
+func (x *ExampleSingleton) GetFoo() string {
 	if x != nil {
-		return x.Id
+		return x.Foo
+	}
+	return ""
+}
+
+func (x *ExampleSingleton) GetBar() int32 {
+	if x != nil {
+		return x.Bar
 	}
 	return 0
 }
 
-func (x *C) GetX() string {
+type ExampleTable_ExampleMessage struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Foo string `protobuf:"bytes,1,opt,name=foo,proto3" json:"foo,omitempty"`
+	Bar int32  `protobuf:"varint,2,opt,name=bar,proto3" json:"bar,omitempty"`
+}
+
+func (x *ExampleTable_ExampleMessage) Reset() {
+	*x = ExampleTable_ExampleMessage{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_testpb_testschema_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ExampleTable_ExampleMessage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExampleTable_ExampleMessage) ProtoMessage() {}
+
+// Deprecated: Use ExampleTable_ExampleMessage.ProtoReflect.Descriptor instead.
+func (*ExampleTable_ExampleMessage) Descriptor() ([]byte, []int) {
+	return file_testpb_testschema_proto_rawDescGZIP(), []int{0, 1}
+}
+
+func (x *ExampleTable_ExampleMessage) GetFoo() string {
 	if x != nil {
-		return x.X
+		return x.Foo
 	}
 	return ""
+}
+
+func (x *ExampleTable_ExampleMessage) GetBar() int32 {
+	if x != nil {
+		return x.Bar
+	}
+	return 0
 }
 
 var File_testpb_testschema_proto protoreflect.FileDescriptor
@@ -3102,65 +3725,76 @@ var file_testpb_testschema_proto_rawDesc = []byte{
 	0x62, 0x75, 0x66, 0x2f, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x1a, 0x1d, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6f, 0x72, 0x6d, 0x2f, 0x76,
 	0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2f, 0x6f, 0x72, 0x6d, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x22, 0xd5, 0x04, 0x0a, 0x01, 0x41, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x33, 0x32, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x0d, 0x52, 0x03, 0x75, 0x33, 0x32, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x36, 0x34,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x03, 0x75, 0x36, 0x34, 0x12, 0x10, 0x0a, 0x03, 0x73,
-	0x74, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x73, 0x74, 0x72, 0x12, 0x0e, 0x0a,
-	0x02, 0x62, 0x7a, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x02, 0x62, 0x7a, 0x12, 0x2a, 0x0a,
-	0x02, 0x74, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67,
-	0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65,
-	0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x02, 0x74, 0x73, 0x12, 0x2b, 0x0a, 0x03, 0x64, 0x75, 0x72,
-	0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f,
-	0x6e, 0x52, 0x03, 0x64, 0x75, 0x72, 0x12, 0x10, 0x0a, 0x03, 0x69, 0x33, 0x32, 0x18, 0x07, 0x20,
-	0x01, 0x28, 0x05, 0x52, 0x03, 0x69, 0x33, 0x32, 0x12, 0x10, 0x0a, 0x03, 0x73, 0x33, 0x32, 0x18,
-	0x08, 0x20, 0x01, 0x28, 0x11, 0x52, 0x03, 0x73, 0x33, 0x32, 0x12, 0x12, 0x0a, 0x04, 0x73, 0x66,
-	0x33, 0x32, 0x18, 0x09, 0x20, 0x01, 0x28, 0x0f, 0x52, 0x04, 0x73, 0x66, 0x33, 0x32, 0x12, 0x10,
-	0x0a, 0x03, 0x69, 0x36, 0x34, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x03, 0x52, 0x03, 0x69, 0x36, 0x34,
-	0x12, 0x10, 0x0a, 0x03, 0x73, 0x36, 0x34, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x12, 0x52, 0x03, 0x73,
-	0x36, 0x34, 0x12, 0x12, 0x0a, 0x04, 0x73, 0x66, 0x36, 0x34, 0x18, 0x0c, 0x20, 0x01, 0x28, 0x10,
-	0x52, 0x04, 0x73, 0x66, 0x36, 0x34, 0x12, 0x10, 0x0a, 0x03, 0x66, 0x33, 0x32, 0x18, 0x0d, 0x20,
-	0x01, 0x28, 0x07, 0x52, 0x03, 0x66, 0x33, 0x32, 0x12, 0x10, 0x0a, 0x03, 0x66, 0x36, 0x34, 0x18,
-	0x0e, 0x20, 0x01, 0x28, 0x06, 0x52, 0x03, 0x66, 0x36, 0x34, 0x12, 0x0c, 0x0a, 0x01, 0x62, 0x18,
-	0x0f, 0x20, 0x01, 0x28, 0x08, 0x52, 0x01, 0x62, 0x12, 0x1a, 0x0a, 0x01, 0x65, 0x18, 0x10, 0x20,
-	0x01, 0x28, 0x0e, 0x32, 0x0c, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x6e, 0x75,
-	0x6d, 0x52, 0x01, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65, 0x70, 0x65, 0x61, 0x74, 0x65, 0x64,
-	0x18, 0x11, 0x20, 0x03, 0x28, 0x0d, 0x52, 0x08, 0x72, 0x65, 0x70, 0x65, 0x61, 0x74, 0x65, 0x64,
-	0x12, 0x24, 0x0a, 0x03, 0x6d, 0x61, 0x70, 0x18, 0x12, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x12, 0x2e,
-	0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x41, 0x2e, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x72,
-	0x79, 0x52, 0x03, 0x6d, 0x61, 0x70, 0x12, 0x1b, 0x0a, 0x03, 0x6d, 0x73, 0x67, 0x18, 0x13, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x09, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x42, 0x52, 0x03,
+	0x6f, 0x22, 0xbd, 0x05, 0x0a, 0x0c, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62,
+	0x6c, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x33, 0x32, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52,
+	0x03, 0x75, 0x33, 0x32, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x36, 0x34, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x04, 0x52, 0x03, 0x75, 0x36, 0x34, 0x12, 0x10, 0x0a, 0x03, 0x73, 0x74, 0x72, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x03, 0x73, 0x74, 0x72, 0x12, 0x0e, 0x0a, 0x02, 0x62, 0x7a, 0x18, 0x04,
+	0x20, 0x01, 0x28, 0x0c, 0x52, 0x02, 0x62, 0x7a, 0x12, 0x2a, 0x0a, 0x02, 0x74, 0x73, 0x18, 0x05,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
+	0x52, 0x02, 0x74, 0x73, 0x12, 0x2b, 0x0a, 0x03, 0x64, 0x75, 0x72, 0x18, 0x06, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x62, 0x75, 0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x03, 0x64, 0x75,
+	0x72, 0x12, 0x10, 0x0a, 0x03, 0x69, 0x33, 0x32, 0x18, 0x07, 0x20, 0x01, 0x28, 0x05, 0x52, 0x03,
+	0x69, 0x33, 0x32, 0x12, 0x10, 0x0a, 0x03, 0x73, 0x33, 0x32, 0x18, 0x08, 0x20, 0x01, 0x28, 0x11,
+	0x52, 0x03, 0x73, 0x33, 0x32, 0x12, 0x12, 0x0a, 0x04, 0x73, 0x66, 0x33, 0x32, 0x18, 0x09, 0x20,
+	0x01, 0x28, 0x0f, 0x52, 0x04, 0x73, 0x66, 0x33, 0x32, 0x12, 0x10, 0x0a, 0x03, 0x69, 0x36, 0x34,
+	0x18, 0x0a, 0x20, 0x01, 0x28, 0x03, 0x52, 0x03, 0x69, 0x36, 0x34, 0x12, 0x10, 0x0a, 0x03, 0x73,
+	0x36, 0x34, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x12, 0x52, 0x03, 0x73, 0x36, 0x34, 0x12, 0x12, 0x0a,
+	0x04, 0x73, 0x66, 0x36, 0x34, 0x18, 0x0c, 0x20, 0x01, 0x28, 0x10, 0x52, 0x04, 0x73, 0x66, 0x36,
+	0x34, 0x12, 0x10, 0x0a, 0x03, 0x66, 0x33, 0x32, 0x18, 0x0d, 0x20, 0x01, 0x28, 0x07, 0x52, 0x03,
+	0x66, 0x33, 0x32, 0x12, 0x10, 0x0a, 0x03, 0x66, 0x36, 0x34, 0x18, 0x0e, 0x20, 0x01, 0x28, 0x06,
+	0x52, 0x03, 0x66, 0x36, 0x34, 0x12, 0x0c, 0x0a, 0x01, 0x62, 0x18, 0x0f, 0x20, 0x01, 0x28, 0x08,
+	0x52, 0x01, 0x62, 0x12, 0x1a, 0x0a, 0x01, 0x65, 0x18, 0x10, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x0c,
+	0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x6e, 0x75, 0x6d, 0x52, 0x01, 0x65, 0x12,
+	0x1a, 0x0a, 0x08, 0x72, 0x65, 0x70, 0x65, 0x61, 0x74, 0x65, 0x64, 0x18, 0x11, 0x20, 0x03, 0x28,
+	0x0d, 0x52, 0x08, 0x72, 0x65, 0x70, 0x65, 0x61, 0x74, 0x65, 0x64, 0x12, 0x2f, 0x0a, 0x03, 0x6d,
+	0x61, 0x70, 0x18, 0x12, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70,
+	0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x2e, 0x4d,
+	0x61, 0x70, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x03, 0x6d, 0x61, 0x70, 0x12, 0x35, 0x0a, 0x03,
+	0x6d, 0x73, 0x67, 0x18, 0x13, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x74, 0x65, 0x73, 0x74,
+	0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x2e,
+	0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x52, 0x03,
 	0x6d, 0x73, 0x67, 0x12, 0x16, 0x0a, 0x05, 0x6f, 0x6e, 0x65, 0x6f, 0x66, 0x18, 0x14, 0x20, 0x01,
 	0x28, 0x0d, 0x48, 0x00, 0x52, 0x05, 0x6f, 0x6e, 0x65, 0x6f, 0x66, 0x1a, 0x36, 0x0a, 0x08, 0x4d,
 	0x61, 0x70, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01,
 	0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c,
 	0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a,
-	0x02, 0x38, 0x01, 0x3a, 0x3d, 0xf2, 0x9e, 0xd3, 0x8e, 0x03, 0x37, 0x0a, 0x0d, 0x0a, 0x0b, 0x75,
-	0x33, 0x32, 0x2c, 0x75, 0x36, 0x34, 0x2c, 0x73, 0x74, 0x72, 0x12, 0x0b, 0x0a, 0x07, 0x75, 0x36,
-	0x34, 0x2c, 0x73, 0x74, 0x72, 0x10, 0x01, 0x12, 0x0b, 0x0a, 0x07, 0x73, 0x74, 0x72, 0x2c, 0x75,
-	0x33, 0x32, 0x10, 0x02, 0x12, 0x0a, 0x0a, 0x06, 0x62, 0x7a, 0x2c, 0x73, 0x74, 0x72, 0x10, 0x03,
-	0x18, 0x01, 0x42, 0x05, 0x0a, 0x03, 0x73, 0x75, 0x6d, 0x22, 0x1b, 0x0a, 0x01, 0x42, 0x12, 0x0c,
-	0x0a, 0x01, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x01, 0x78, 0x3a, 0x08, 0xfa, 0x9e,
-	0xd3, 0x8e, 0x03, 0x02, 0x08, 0x02, 0x22, 0x33, 0x0a, 0x01, 0x43, 0x12, 0x0e, 0x0a, 0x02, 0x69,
-	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x12, 0x0c, 0x0a, 0x01, 0x78,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x01, 0x78, 0x3a, 0x10, 0xf2, 0x9e, 0xd3, 0x8e, 0x03,
-	0x0a, 0x0a, 0x06, 0x0a, 0x02, 0x69, 0x64, 0x10, 0x01, 0x18, 0x03, 0x2a, 0x64, 0x0a, 0x04, 0x45,
-	0x6e, 0x75, 0x6d, 0x12, 0x14, 0x0a, 0x10, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x55, 0x4e, 0x53, 0x50,
-	0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x0c, 0x0a, 0x08, 0x45, 0x4e, 0x55,
-	0x4d, 0x5f, 0x4f, 0x4e, 0x45, 0x10, 0x01, 0x12, 0x0c, 0x0a, 0x08, 0x45, 0x4e, 0x55, 0x4d, 0x5f,
-	0x54, 0x57, 0x4f, 0x10, 0x02, 0x12, 0x0d, 0x0a, 0x09, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x46, 0x49,
-	0x56, 0x45, 0x10, 0x05, 0x12, 0x1b, 0x0a, 0x0e, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x4e, 0x45, 0x47,
-	0x5f, 0x54, 0x48, 0x52, 0x45, 0x45, 0x10, 0xfd, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-	0x01, 0x42, 0x87, 0x01, 0x0a, 0x0a, 0x63, 0x6f, 0x6d, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62,
-	0x42, 0x0f, 0x54, 0x65, 0x73, 0x74, 0x73, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x50, 0x72, 0x6f, 0x74,
-	0x6f, 0x50, 0x01, 0x5a, 0x30, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64,
-	0x6b, 0x2f, 0x6f, 0x72, 0x6d, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x74,
-	0x65, 0x73, 0x74, 0x70, 0x62, 0xa2, 0x02, 0x03, 0x54, 0x58, 0x58, 0xaa, 0x02, 0x06, 0x54, 0x65,
-	0x73, 0x74, 0x70, 0x62, 0xca, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0xe2, 0x02, 0x12,
-	0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
-	0x74, 0x61, 0xea, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x02, 0x38, 0x01, 0x1a, 0x34, 0x0a, 0x0e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x4d, 0x65,
+	0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x66, 0x6f, 0x6f, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x03, 0x66, 0x6f, 0x6f, 0x12, 0x10, 0x0a, 0x03, 0x62, 0x61, 0x72, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x05, 0x52, 0x03, 0x62, 0x61, 0x72, 0x3a, 0x3f, 0xf2, 0x9e, 0xd3, 0x8e, 0x03,
+	0x39, 0x0a, 0x0d, 0x0a, 0x0b, 0x75, 0x33, 0x32, 0x2c, 0x69, 0x36, 0x34, 0x2c, 0x73, 0x74, 0x72,
+	0x12, 0x0d, 0x0a, 0x07, 0x75, 0x36, 0x34, 0x2c, 0x73, 0x74, 0x72, 0x10, 0x01, 0x18, 0x01, 0x12,
+	0x0b, 0x0a, 0x07, 0x73, 0x74, 0x72, 0x2c, 0x75, 0x33, 0x32, 0x10, 0x02, 0x12, 0x0a, 0x0a, 0x06,
+	0x62, 0x7a, 0x2c, 0x73, 0x74, 0x72, 0x10, 0x03, 0x18, 0x01, 0x42, 0x05, 0x0a, 0x03, 0x73, 0x75,
+	0x6d, 0x22, 0x62, 0x0a, 0x19, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f,
+	0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x12, 0x0e,
+	0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x12, 0x0c,
+	0x0a, 0x01, 0x78, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x01, 0x78, 0x12, 0x0c, 0x0a, 0x01,
+	0x79, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x01, 0x79, 0x3a, 0x19, 0xf2, 0x9e, 0xd3, 0x8e,
+	0x03, 0x13, 0x0a, 0x06, 0x0a, 0x02, 0x69, 0x64, 0x10, 0x01, 0x12, 0x07, 0x0a, 0x01, 0x78, 0x10,
+	0x01, 0x18, 0x01, 0x18, 0x03, 0x22, 0x40, 0x0a, 0x10, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
+	0x53, 0x69, 0x6e, 0x67, 0x6c, 0x65, 0x74, 0x6f, 0x6e, 0x12, 0x10, 0x0a, 0x03, 0x66, 0x6f, 0x6f,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x66, 0x6f, 0x6f, 0x12, 0x10, 0x0a, 0x03, 0x62,
+	0x61, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x03, 0x62, 0x61, 0x72, 0x3a, 0x08, 0xfa,
+	0x9e, 0xd3, 0x8e, 0x03, 0x02, 0x08, 0x02, 0x2a, 0x64, 0x0a, 0x04, 0x45, 0x6e, 0x75, 0x6d, 0x12,
+	0x14, 0x0a, 0x10, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46,
+	0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x0c, 0x0a, 0x08, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x4f, 0x4e,
+	0x45, 0x10, 0x01, 0x12, 0x0c, 0x0a, 0x08, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x54, 0x57, 0x4f, 0x10,
+	0x02, 0x12, 0x0d, 0x0a, 0x09, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x46, 0x49, 0x56, 0x45, 0x10, 0x05,
+	0x12, 0x1b, 0x0a, 0x0e, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x4e, 0x45, 0x47, 0x5f, 0x54, 0x48, 0x52,
+	0x45, 0x45, 0x10, 0xfd, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01, 0x42, 0x87, 0x01,
+	0x0a, 0x0a, 0x63, 0x6f, 0x6d, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x42, 0x0f, 0x54, 0x65,
+	0x73, 0x74, 0x73, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a,
+	0x30, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x6f, 0x72,
+	0x6d, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x70,
+	0x62, 0xa2, 0x02, 0x03, 0x54, 0x58, 0x58, 0xaa, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62,
+	0xca, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0xe2, 0x02, 0x12, 0x54, 0x65, 0x73, 0x74,
+	0x70, 0x62, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02,
+	0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3176,22 +3810,23 @@ func file_testpb_testschema_proto_rawDescGZIP() []byte {
 }
 
 var file_testpb_testschema_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_testpb_testschema_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_testpb_testschema_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_testpb_testschema_proto_goTypes = []interface{}{
-	(Enum)(0),                     // 0: testpb.Enum
-	(*A)(nil),                     // 1: testpb.A
-	(*B)(nil),                     // 2: testpb.B
-	(*C)(nil),                     // 3: testpb.C
-	nil,                           // 4: testpb.A.MapEntry
-	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
-	(*durationpb.Duration)(nil),   // 6: google.protobuf.Duration
+	(Enum)(0),                           // 0: testpb.Enum
+	(*ExampleTable)(nil),                // 1: testpb.ExampleTable
+	(*ExampleAutoIncrementTable)(nil),   // 2: testpb.ExampleAutoIncrementTable
+	(*ExampleSingleton)(nil),            // 3: testpb.ExampleSingleton
+	nil,                                 // 4: testpb.ExampleTable.MapEntry
+	(*ExampleTable_ExampleMessage)(nil), // 5: testpb.ExampleTable.ExampleMessage
+	(*timestamppb.Timestamp)(nil),       // 6: google.protobuf.Timestamp
+	(*durationpb.Duration)(nil),         // 7: google.protobuf.Duration
 }
 var file_testpb_testschema_proto_depIdxs = []int32{
-	5, // 0: testpb.A.ts:type_name -> google.protobuf.Timestamp
-	6, // 1: testpb.A.dur:type_name -> google.protobuf.Duration
-	0, // 2: testpb.A.e:type_name -> testpb.Enum
-	4, // 3: testpb.A.map:type_name -> testpb.A.MapEntry
-	2, // 4: testpb.A.msg:type_name -> testpb.B
+	6, // 0: testpb.ExampleTable.ts:type_name -> google.protobuf.Timestamp
+	7, // 1: testpb.ExampleTable.dur:type_name -> google.protobuf.Duration
+	0, // 2: testpb.ExampleTable.e:type_name -> testpb.Enum
+	4, // 3: testpb.ExampleTable.map:type_name -> testpb.ExampleTable.MapEntry
+	5, // 4: testpb.ExampleTable.msg:type_name -> testpb.ExampleTable.ExampleMessage
 	5, // [5:5] is the sub-list for method output_type
 	5, // [5:5] is the sub-list for method input_type
 	5, // [5:5] is the sub-list for extension type_name
@@ -3206,7 +3841,7 @@ func file_testpb_testschema_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_testpb_testschema_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*A); i {
+			switch v := v.(*ExampleTable); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3218,7 +3853,7 @@ func file_testpb_testschema_proto_init() {
 			}
 		}
 		file_testpb_testschema_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*B); i {
+			switch v := v.(*ExampleAutoIncrementTable); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3230,7 +3865,19 @@ func file_testpb_testschema_proto_init() {
 			}
 		}
 		file_testpb_testschema_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*C); i {
+			switch v := v.(*ExampleSingleton); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_testpb_testschema_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ExampleTable_ExampleMessage); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3243,7 +3890,7 @@ func file_testpb_testschema_proto_init() {
 		}
 	}
 	file_testpb_testschema_proto_msgTypes[0].OneofWrappers = []interface{}{
-		(*A_Oneof)(nil),
+		(*ExampleTable_Oneof)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -3251,7 +3898,7 @@ func file_testpb_testschema_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_testpb_testschema_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   4,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -91,7 +91,7 @@ func (k msgServer) ExecLegacyContent(goCtx context.Context, msg *v1beta2.MsgExec
 
 	content, err := v1beta2.LegacyContentFromMessage(msg)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(v1beta1.ErrInvalidProposalContent, "%+v", err)
+		return nil, sdkerrors.Wrapf(types.ErrInvalidProposalContent, "%+v", err)
 	}
 
 	// Ensure that the content has a respective handler
@@ -101,7 +101,7 @@ func (k msgServer) ExecLegacyContent(goCtx context.Context, msg *v1beta2.MsgExec
 
 	handler := k.Keeper.legacyRouter.GetRoute(content.ProposalRoute())
 	if err := handler(ctx, content); err != nil {
-		return nil, sdkerrors.Wrapf(v1beta1.ErrInvalidProposalContent, "failed to run legacy handler %s, %+v", content.ProposalRoute(), err)
+		return nil, sdkerrors.Wrapf(types.ErrInvalidProposalContent, "failed to run legacy handler %s, %+v", content.ProposalRoute(), err)
 	}
 
 	return &v1beta2.MsgExecLegacyContentResponse{}, nil

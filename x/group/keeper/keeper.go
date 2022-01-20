@@ -77,14 +77,22 @@ type Keeper struct {
 	maxMetadataLength int // MaxMetadataLength defines the max length of the metadata bytes field for various entities within the group module
 }
 
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddleware.MsgServiceRouter, accKeeper group.AccountKeeper, maxMetadataLength int) Keeper {
+type KeeperParams struct {
+	storeKey          storetypes.StoreKey
+	cdc               codec.Codec
+	router            *authmiddleware.MsgServiceRouter
+	accKeeper         group.AccountKeeper
+	maxMetadataLength int
+}
+
+func (params KeeperParams) NewKeeper() Keeper {
 	k := Keeper{
-		key:       storeKey,
-		router:    router,
-		accKeeper: accKeeper,
+		key:       params.storeKey,
+		router:    params.router,
+		accKeeper: params.accKeeper,
 	}
 
-	groupTable, err := orm.NewAutoUInt64Table([2]byte{GroupTablePrefix}, GroupTableSeqPrefix, &group.GroupInfo{}, cdc)
+	groupTable, err := orm.NewAutoUInt64Table([2]byte{GroupTablePrefix}, GroupTableSeqPrefix, &group.GroupInfo{}, params.cdc)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -101,7 +109,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	k.groupTable = *groupTable
 
 	// Group Member Table
-	groupMemberTable, err := orm.NewPrimaryKeyTable([2]byte{GroupMemberTablePrefix}, &group.GroupMember{}, cdc)
+	groupMemberTable, err := orm.NewPrimaryKeyTable([2]byte{GroupMemberTablePrefix}, &group.GroupMember{}, params.cdc)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -127,7 +135,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 
 	// Group Policy Table
 	k.groupPolicySeq = orm.NewSequence(GroupPolicyTableSeqPrefix)
-	groupPolicyTable, err := orm.NewPrimaryKeyTable([2]byte{GroupPolicyTablePrefix}, &group.GroupPolicyInfo{}, cdc)
+	groupPolicyTable, err := orm.NewPrimaryKeyTable([2]byte{GroupPolicyTablePrefix}, &group.GroupPolicyInfo{}, params.cdc)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -151,7 +159,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	k.groupPolicyTable = *groupPolicyTable
 
 	// Proposal Table
-	proposalTable, err := orm.NewAutoUInt64Table([2]byte{ProposalTablePrefix}, ProposalTableSeqPrefix, &group.Proposal{}, cdc)
+	proposalTable, err := orm.NewAutoUInt64Table([2]byte{ProposalTablePrefix}, ProposalTableSeqPrefix, &group.Proposal{}, params.cdc)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -184,7 +192,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	k.proposalTable = *proposalTable
 
 	// Vote Table
-	voteTable, err := orm.NewPrimaryKeyTable([2]byte{VoteTablePrefix}, &group.Vote{}, cdc)
+	voteTable, err := orm.NewPrimaryKeyTable([2]byte{VoteTablePrefix}, &group.Vote{}, params.cdc)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -206,7 +214,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	}
 	k.voteTable = *voteTable
 
-	k.maxMetadataLength = maxMetadataLength
+	k.maxMetadataLength = params.maxMetadataLength
 
 	return k
 

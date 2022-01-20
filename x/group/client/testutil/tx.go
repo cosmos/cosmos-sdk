@@ -689,7 +689,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 	invalidMembersAddress := `{"members": [{
 	  "address": "",
 	  "weight": "1"
-  	}]}`
+	}]}`
 	invalidMembersAddressFile := testutil.WriteToNewTempFile(s.T(), invalidMembersAddress)
 
 	invalidMembersWeight := fmt.Sprintf(`{"members": [{
@@ -749,27 +749,25 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 			&sdk.TxResponse{},
 			0,
 		},
-		/*
-			This case times out. Figure out why and fix it.
-			{
-				"with amino-json",
-				append(
-					[]string{
-						val.Address.String(),
-						validMetadata,
-						validMetadata,
-						validMembersFile.Name(),
-						"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"timeout\":\"1s\"}",
-						fmt.Sprintf("--%s=%v", client.FlagGroupPolicyAsAdmin, false),
-						fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
-					},
-				),
-				false,
-				"",
-				&sdk.TxResponse{},
-				0,
-			},
-		*/
+		{
+			"with amino-json",
+			append(
+				[]string{
+					val.Address.String(),
+					validMetadata,
+					validMetadata,
+					validMembersFile.Name(),
+					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"timeout\":\"1s\"}",
+					fmt.Sprintf("--%s=%v", client.FlagGroupPolicyAsAdmin, false),
+					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+				},
+				commonFlags...,
+			),
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
 		{
 			"group metadata too long",
 			append(

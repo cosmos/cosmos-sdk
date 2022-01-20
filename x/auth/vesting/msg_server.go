@@ -2,7 +2,6 @@ package vesting
 
 import (
 	"context"
-	"fmt"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -344,15 +343,15 @@ func (s msgServer) Clawback(goCtx context.Context, msg *types.MsgClawback) (*typ
 
 	acc := ak.GetAccount(ctx, addr)
 	if acc == nil {
-		return nil, fmt.Errorf("account %s does not exist", msg.Address)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "account %s does not exist", msg.Address)
 	}
 	va, ok := acc.(*types.TrueVestingAccount)
 	if !ok {
-		return nil, fmt.Errorf("account not subject to clawback: %s", msg.Address)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account not subject to clawback: %s", msg.Address)
 	}
 
 	if va.FunderAddress != msg.GetFunderAddress() {
-		return nil, fmt.Errorf("clawback can only be requested by original funder %s", va.FunderAddress)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "clawback can only be requested by original funder %s", va.FunderAddress)
 	}
 
 	err = va.Clawback(ctx, dest, ak, bk, s.StakingKeeper)

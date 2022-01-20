@@ -8,6 +8,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// AccountKeeper defines the expected interface contract the vesting module
+// requires for storing accounts.
 type AccountKeeper interface {
 	SetAccount(sdk.Context, authtypes.AccountI)
 }
@@ -22,6 +24,8 @@ type BankKeeper interface {
 	BlockedAddr(addr sdk.AccAddress) bool
 }
 
+// StakingKeeper defines the expected interface contract the vesting module
+// requires for finding and changing the delegated tokens, used in clawback.
 type StakingKeeper interface {
 	BondDenom(ctx sdk.Context) string
 	GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress,

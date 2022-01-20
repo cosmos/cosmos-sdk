@@ -103,7 +103,7 @@ func coinsMin(a, b sdk.Coins) sdk.Coins {
 	min := sdk.NewCoins()
 	for _, coinA := range a {
 		denom := coinA.Denom
-		bAmt := b.AmountOf(denom)
+		bAmt := b.AmountOfNoDenomValidation(denom)
 		minAmt := coinA.Amount
 		if minAmt.GT(bAmt) {
 			minAmt = bAmt

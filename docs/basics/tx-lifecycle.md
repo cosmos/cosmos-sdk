@@ -56,6 +56,8 @@ Each full-node (running Tendermint) that receives a `Tx` sends an [ABCI message]
 `CheckTx`, to the application layer to check for validity, and receives an `abci.ResponseCheckTx`. If the `Tx` passes the checks, it is held in the nodes'
 [**Mempool**](https://tendermint.com/docs/tendermint-core/mempool.html#mempool), an in-memory pool of transactions unique to each node) pending inclusion in a block - honest nodes will discard `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
 
+In the following sub-sections we describe the lifecycle of Cosmos SDK app CheckTx.
+
 ### Types of Checks
 
 The full-nodes perform stateless, then stateful checks on `Tx` during `CheckTx`, with the goal to
@@ -83,7 +85,15 @@ When `Tx` is received by the application from the underlying consensus engine (e
 
 ### ValidateBasic
 
-[`sdk.Msg`s](../core/transactions.md#messages) are extracted from `Tx`, and `ValidateBasic`, a method of the `sdk.Msg` interface implemented by the module developer, is run for each one. `ValidateBasic` should include basic **stateless** sanity checks. For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as the account balance of an address.
+[`sdk.Msg`s](../core/transactions.md#messages) are extracted from `Tx`, and `ValidateBasic`, a method of the `sdk.Msg` interface implemented by the module developer, is run for each one. 
+This method is called by `BaseApp` very early in the processing of the `message` (in both [`CheckTx`](../core/baseapp.md#checktx) and [`DeliverTx`](../core/baseapp.md#delivertx)), in order to discard obviously invalid messages. 
+`ValidateBasic` can only include **stateless** checks, i.e. checks that do not require access to the state. 
+
+#### Guideline
+
+Gas won't be charged when `ValidateBasic` is executed. Hence, we should only do the most necessary sanity checks to enable middleware operations (eg: parsing the required signer accounts to validate a signature by a middleware). Other validation operation should be performed when [handling a message](../building-modules/msg-services#Validation) in a module Msg Server.
+
+For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as the account balance of an address.
 
 ### AnteHandler
 

@@ -18,7 +18,7 @@ func TestVestingAccountMsg(t *testing.T) {
 	tp := msg.Type()
 	require.Equal(t, TypeMsgCreateVestingAccount, tp)
 	err := msg.ValidateBasic()
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	badFromMsg := MsgCreateVestingAccount{
 		FromAddress: "foo",
@@ -57,7 +57,7 @@ func TestPeriodicVestingAccountMsg(t *testing.T) {
 	tp := msg.Type()
 	require.Equal(t, TypeMsgCreatePeriodicVestingAccount, tp)
 	err := msg.ValidateBasic()
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	badFromMsg := MsgCreatePeriodicVestingAccount{
 		FromAddress:    "foo",
@@ -101,7 +101,7 @@ func TestTrueVestingAccountMsg(t *testing.T) {
 	tp := msg.Type()
 	require.Equal(t, TypeMsgCreateTrueVestingAccount, tp)
 	err := msg.ValidateBasic()
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	badFromMsg := MsgCreateTrueVestingAccount{
 		FromAddress:    "foo",
@@ -141,11 +141,11 @@ func TestTrueVestingAccountMsg(t *testing.T) {
 	emptyPeriods := []Period{}
 	noLockupOk := NewMsgCreateTrueVestingAccount(fromAddr, toAddr, startTime, emptyPeriods, vestingPeriods, false)
 	err = noLockupOk.ValidateBasic()
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	noVestingOk := NewMsgCreateTrueVestingAccount(fromAddr, toAddr, startTime, lockupPeriods, emptyPeriods, false)
 	err = noVestingOk.ValidateBasic()
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func TestClawbackMsg(t *testing.T) {
@@ -159,12 +159,12 @@ func TestClawbackMsg(t *testing.T) {
 	tp := okMsg.Type()
 	require.Equal(t, TypeMsgClawback, tp)
 	err := okMsg.ValidateBasic()
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	noDest := NewMsgClawback(funderAddr, addr, nil)
 	require.Equal(t, noDest.DestAddress, "")
 	err = noDest.ValidateBasic()
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	badFunder := MsgClawback{
 		FunderAddress: "foo",

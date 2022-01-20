@@ -452,6 +452,22 @@ func (k Keeper) IterateRedelegations(ctx sdk.Context, fn func(index int64, red t
 	}
 }
 
+// iterate through one delegator's redelegations
+func (k Keeper) IterateDelegatorRedelegations(ctx sdk.Context, delegator sdk.AccAddress, fn func(red types.Redelegation) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	delegatorPrefixKey := types.GetREDsKey(delegator)
+
+	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		red := types.MustUnmarshalRED(k.cdc, iterator.Value())
+		if stop := fn(red); stop {
+			break
+		}
+	}
+}
+
 // remove a redelegation object and associated index
 func (k Keeper) RemoveRedelegation(ctx sdk.Context, red types.Redelegation) {
 	delegatorAddress, err := sdk.AccAddressFromBech32(red.DelegatorAddress)
@@ -650,18 +666,23 @@ func (k Keeper) TransferDelegation(ctx sdk.Context, fromAddr, toAddr sdk.AccAddr
 
 	// Check redelegation entry limits while we can still return early.
 	// Assume the worst case that we need to transfer all redelegation entries
-	toRedelegations := k.GetRedelegations(ctx, toAddr, math.MaxUint16)
-	for _, toRedelegation := range toRedelegations {
+	mightExceedLimit := false
+	k.IterateDelegatorRedelegations(ctx, fromAddr, func(toRedelegation types.Redelegation) (stop bool) {
 		// There's no redelegation index by delegator and dstVal or vice-versa.
 		// The minimum cardinality is to look up by delegator, so scan and skip.
 		if toRedelegation.ValidatorDstAddress != valAddr.String() {
-			continue
+			return false
 		}
 		fromRedelegation, found := k.GetRedelegation(ctx, fromAddr, sdk.ValAddress(toRedelegation.ValidatorSrcAddress), sdk.ValAddress(toRedelegation.ValidatorDstAddress))
 		if found && len(toRedelegation.Entries)+len(fromRedelegation.Entries) >= int(k.MaxEntries(ctx)) {
-			// avoid types.ErrMaxRedelegationEntries
-			return transferred
+			mightExceedLimit = true
+			return true
 		}
+		return false
+	})
+	if mightExceedLimit {
+		// avoid types.ErrMaxRedelegationEntries
+		return transferred
 	}
 
 	// compute shares to transfer, amount left behind

@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -147,7 +145,7 @@ func (msg MsgCreatePeriodicVestingAccount) ValidateBasic() error {
 
 	for i, period := range msg.VestingPeriods {
 		if period.Length < 1 {
-			return fmt.Errorf("invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
 		}
 	}
 
@@ -209,7 +207,7 @@ func (msg MsgCreateTrueVestingAccount) ValidateBasic() error {
 	lockupCoins := sdk.NewCoins()
 	for i, period := range msg.LockupPeriods {
 		if period.Length < 1 {
-			return fmt.Errorf("invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
 		}
 		lockupCoins = lockupCoins.Add(period.Amount...)
 	}
@@ -217,7 +215,7 @@ func (msg MsgCreateTrueVestingAccount) ValidateBasic() error {
 	vestingCoins := sdk.NewCoins()
 	for i, period := range msg.VestingPeriods {
 		if period.Length < 1 {
-			return fmt.Errorf("invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
 		}
 		vestingCoins = vestingCoins.Add(period.Amount...)
 	}
@@ -226,7 +224,7 @@ func (msg MsgCreateTrueVestingAccount) ValidateBasic() error {
 	// IsEqual can panic, so use (a == b) <=> (a <= b && b <= a).
 	if len(msg.LockupPeriods) > 0 && len(msg.VestingPeriods) > 0 &&
 		!(lockupCoins.IsAllLTE(vestingCoins) && vestingCoins.IsAllLTE(lockupCoins)) {
-		return fmt.Errorf("vesting and lockup schedules must have same total coins")
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "vesting and lockup schedules must have same total coins")
 	}
 
 	return nil

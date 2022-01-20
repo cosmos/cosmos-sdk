@@ -40,7 +40,7 @@ func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DBConnectio
 		return simtypes.Config{}, nil, "", nil, false, err
 	}
 
-	db, err := badgerdb.NewDB(dbName)
+	db, err := badgerdb.NewDB(dir)
 	if err != nil {
 		return simtypes.Config{}, nil, "", nil, false, err
 	}

@@ -8,13 +8,12 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store"
-
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/db/memdb"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2"
+	"github.com/cosmos/cosmos-sdk/store/v2/multi"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
@@ -40,11 +39,12 @@ func (s *invariantTestSuite) SetupSuite() {
 	group.RegisterInterfaces(interfaceRegistry)
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	key := sdk.NewKVStoreKey(group.ModuleName)
-	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db)
-	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
-	_ = cms.LoadLatestVersion()
-	sdkCtx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
+	db := memdb.NewDB()
+	config := multi.DefaultStoreConfig()
+	s.Require().NoError(config.RegisterSubstore(key.Name(), storetypes.StoreTypePersistent))
+	ms, err := multi.NewStore(db, config)
+	s.Require().NoError(err)
+	sdkCtx := sdk.NewContext(ms, tmproto.Header{}, false, log.NewNopLogger())
 
 	s.ctx = sdkCtx
 	s.cdc = cdc

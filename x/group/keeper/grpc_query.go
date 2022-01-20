@@ -269,7 +269,6 @@ func (q Keeper) GroupsByMember(goCtx context.Context, request *group.QueryGroups
 	if err != nil {
 		return nil, err
 	}
-	defer iter.Close()
 
 	var members []*group.GroupMember
 	pageRes, err := orm.Paginate(iter, request.Pagination, &members)

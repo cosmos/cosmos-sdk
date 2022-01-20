@@ -691,6 +691,117 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	return res, nil
 }
 
+func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*group.MsgLeaveGroupResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	_, err := sdk.AccAddressFromBech32(req.MemberAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	// Checking if the group member is already part of the group
+	groupMember, err := k.getGroupMember(ctx, &group.GroupMember{
+		GroupId: req.GroupId,
+		Member:  &group.Member{Address: req.MemberAddress},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	groupIter, err := k.getGroupMembers(ctx, req.GroupId, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer groupIter.Close()
+
+	var m group.GroupMember
+	weight := math.NewDecFromInt64(0)
+	for {
+		if _, err := groupIter.LoadNext(&m); err != nil {
+			if errors.ErrORMIteratorDone.Is(err) {
+				break
+			}
+			return nil, err
+		}
+
+		if m.Member.Address == groupMember.Member.Address {
+			continue
+		}
+
+		d, err := math.NewNonNegativeDecFromString(m.Member.Weight)
+		if err != nil {
+			return nil, err
+		}
+
+		weight, err = math.Add(weight, d)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	policyIter, err := k.groupPolicyByGroupIndex.Get(ctx.KVStore(k.key), req.GroupId)
+	if err != nil {
+		return nil, err
+	}
+	defer policyIter.Close()
+
+	var groupPolicy group.GroupPolicyInfo
+	if _, err := policyIter.LoadNext(&groupPolicy); err != nil {
+		return nil, err
+	}
+
+	policy := groupPolicy.GetDecisionPolicy()
+	switch v := policy.(type) {
+	case *group.ThresholdDecisionPolicy:
+		tdp, ok := policy.(*group.ThresholdDecisionPolicy)
+		if !ok {
+			return nil, err
+		}
+
+		threshold, err := math.NewNonNegativeDecFromString(tdp.Threshold)
+		if err != nil {
+			return nil, err
+		}
+
+		if threshold.Cmp(weight) == -1 {
+			return nil, sdkerrors.ErrInvalidRequest.Wrap("cannot leave group")
+		}
+
+	// TODO: how to handle other decision policies?
+
+	default:
+		return nil, sdkerrors.ErrInvalidType.Wrapf("got invalid type %T", v)
+	}
+
+	// Delete group member in the groupMemberTable.
+	if err := k.groupMemberTable.Delete(ctx.KVStore(k.key), groupMember); err != nil {
+		return nil, sdkerrors.Wrap(err, "delete member")
+	}
+
+	// TODO: update group weight
+	// k.groupTable.Update()
+
+	ctx.EventManager().EmitTypedEvent(&group.EventLeaveGroup{
+		GroupId: req.GroupId,
+	})
+
+	return &group.MsgLeaveGroupResponse{}, nil
+}
+
+func (k Keeper) getGroupMember(ctx sdk.Context, member *group.GroupMember) (*group.GroupMember, error) {
+	var groupMember group.GroupMember
+	switch err := k.groupMemberTable.GetOne(ctx.KVStore(k.key),
+		orm.PrimaryKey(member), &groupMember); {
+	case err == nil:
+		break
+	case sdkerrors.ErrNotFound.Is(err):
+		return nil, sdkerrors.ErrNotFound.Wrapf("%s is not part of group %d", member.Member.Address, member.GroupId)
+	default:
+		return nil, err
+	}
+
+	return &groupMember, nil
+}
+
 type authNGroupReq interface {
 	GetGroupID() uint64
 	GetAdmin() string

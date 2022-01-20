@@ -44,7 +44,7 @@ func NewTxCmd() *cobra.Command {
 		NewDelegateCmd(),
 		NewRedelegateCmd(),
 		NewUnbondCmd(),
-		NewCancelUnBondDelegation(),
+		NewCancelUnbondingDelegation(),
 	)
 
 	return stakingTxCmd
@@ -278,7 +278,7 @@ $ %s tx staking unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from
 	return cmd
 }
 
-func NewCancelUnBondDelegation() *cobra.Command {
+func NewCancelUnbondingDelegation() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
 	cmd := &cobra.Command{

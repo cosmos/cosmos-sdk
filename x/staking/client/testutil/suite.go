@@ -3,6 +3,7 @@ package testutil
 import (
 	"context"
 	"fmt"
+	sdkerr "github.com/cosmos/cosmos-sdk/types/errors"
 	"strings"
 	"testing"
 
@@ -534,7 +535,6 @@ func (s *IntegrationTestSuite) TestGetCmdQueryUnbondingDelegations() {
 
 				s.Require().NoError(err)
 				s.Require().Len(ubds.UnbondingResponses, 1)
-				fmt.Println(ubds.UnbondingResponses)
 				s.Require().Equal(ubds.UnbondingResponses[0].DelegatorAddress, val.Address.String())
 			}
 		})
@@ -1345,6 +1345,32 @@ func (s *IntegrationTestSuite) TestNewCancelUnbondingDelegationCmd() {
 			true, 0, nil,
 		},
 		{
+			"Wrong unbonding creation height",
+			[]string{
+				val.ValAddress.String(),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(),
+				sdk.NewInt(10000).String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, sdkerr.ErrNotFound.ABCICode(), &sdk.TxResponse{},
+		},
+		{
+			"Invalid unbonding amount (higher than the unbonding amount)",
+			[]string{
+				val.ValAddress.String(),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10000)).String(),
+				sdk.NewInt(3).String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, sdkerr.ErrInvalidRequest.ABCICode(), &sdk.TxResponse{},
+		},
+		{
 			"valid transaction of canceling unbonding delegation",
 			[]string{
 				val.ValAddress.String(),
@@ -1363,7 +1389,7 @@ func (s *IntegrationTestSuite) TestNewCancelUnbondingDelegationCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewCancelUnBondDelegation()
+			cmd := cli.NewCancelUnbondingDelegation()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)

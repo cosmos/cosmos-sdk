@@ -411,14 +411,14 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 		return nil, types.ErrNoValidatorFound
 	}
 
-	//// In some situations, the exchange rate becomes invalid, e.g. if
-	//// Validator loses all tokens due to slashing. In this case,
-	//// make all future delegations invalid.
+	// In some situations, the exchange rate becomes invalid, e.g. if
+	// Validator loses all tokens due to slashing. In this case,
+	// make all future delegations invalid.
 	if validator.InvalidExRate() {
 		return nil, types.ErrDelegatorShareExRateInvalid
 	}
 
-	if validator.IsJailed(){
+	if validator.IsJailed() {
 		return nil, types.ErrValidatorJailed
 	}
 
@@ -431,29 +431,31 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 	}
 
 	var (
-		foundUnBondingAtHeight = false
-		unbondEntry            types.UnbondingDelegationEntry
-		unbondEntryIndex       int64
+		unbondEntry      types.UnbondingDelegationEntry
+		unbondEntryIndex int64 = -1
 	)
 
 	for i, entry := range ubd.Entries {
 		if entry.CreationHeight == int64(msg.CreationHeight) {
-			foundUnBondingAtHeight = true
 			unbondEntry = entry
 			unbondEntryIndex = int64(i)
 			break
 		}
 	}
-	if !foundUnBondingAtHeight {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "unbonding delegation is not found at block height %d", msg.CreationHeight)
+	if unbondEntryIndex == -1 {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "unbonding delegation entry is not found at block height %d", msg.CreationHeight)
+	}
+
+	if !msg.Amount.IsPositive() {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid amount")
 	}
 
 	if unbondEntry.Balance.LT(msg.Amount.Amount) {
-		return nil, sdkerrors.Wrap(types.ErrNotEnoughDelegationShares, msg.Amount.String())
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "amount is greater than the unbonding delegation entry balance")
 	}
 
-	if !ubd.Entries[unbondEntryIndex].CompletionTime.After(ctx.BlockTime()){
-		return nil, sdkerrors.Wrap(types.ErrNotEnoughDelegationShares, msg.Amount.String())
+	if ubd.Entries[unbondEntryIndex].CompletionTime.Before(ctx.BlockTime()) {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "unbonding delegation is already processed.")
 	}
 
 	// delegate the unbonding delegation amount to validator back
@@ -463,7 +465,7 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 	}
 
 	amount := unbondEntry.Balance.Sub(msg.Amount.Amount)
-	if amount.Equal(sdk.NewInt(0)) {
+	if amount.IsZero() {
 		// remove from ubd
 		ubd.RemoveEntry(unbondEntryIndex)
 	} else {
@@ -481,7 +483,7 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeCancelUnbondDelegation,
+			types.EventTypeCancelUnbondingDelegation,
 			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),

@@ -271,6 +271,7 @@ func GetConfig(v *viper.Viper) Config {
 			HaltTime:          v.GetUint64("halt-time"),
 			IndexEvents:       v.GetStringSlice("index-events"),
 			MinRetainBlocks:   v.GetUint64("min-retain-blocks"),
+			IAVLCacheSize:     v.GetUint64("iavl-cache-size"),
 		},
 		Telemetry: telemetry.Config{
 			ServiceName:             v.GetString("telemetry.service-name"),

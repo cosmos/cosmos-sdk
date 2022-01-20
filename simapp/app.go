@@ -268,7 +268,7 @@ func NewSimApp(
 	stakingConfig := stakingtypes.DefaultConfig()
 	/*
 		Example of setting staking params:
-		stakingConfig.UnbondingTime = "72h"
+		stakingConfig.PowerReduction = sdk.NewIntFromUint64(10)
 	*/
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName), stakingConfig,

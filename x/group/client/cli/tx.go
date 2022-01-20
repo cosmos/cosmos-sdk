@@ -543,7 +543,7 @@ Parameters:
 func MsgWithdrawProposalCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw-proposal [proposal-id] [group-policy-admin-or-proposer]",
-		Short: "Withdraw a submitted proposal.",
+		Short: "Withdraw a submitted proposal",
 		Long: `Withdraw a submitted proposal.
 
 Parameters:

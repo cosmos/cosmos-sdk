@@ -488,7 +488,7 @@ func (k Keeper) CreateProposal(goCtx context.Context, req *group.MsgCreatePropos
 func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawProposal) (*group.MsgWithdrawProposalResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	id := req.ProposalId
-	admin := req.Address
+	address := req.Address
 
 	proposal, err := k.getProposal(ctx, id)
 	if err != nil {
@@ -505,15 +505,6 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawPr
 		return nil, sdkerrors.Wrap(err, "load group policy")
 	}
 
-	groupInfo, err := k.getGroupInfo(ctx, policyInfo.GroupId)
-	if err != nil {
-		return nil, err
-	}
-
-	if groupInfo.Version != proposal.GroupVersion {
-		return nil, sdkerrors.Wrap(errors.ErrModified, "group was already modified")
-	}
-
 	storeUpdates := func() (*group.MsgWithdrawProposalResponse, error) {
 		if err := k.proposalTable.Update(ctx.KVStore(k.key), id, &proposal); err != nil {
 			return nil, err
@@ -522,23 +513,28 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawPr
 	}
 
 	// check address is the group policy admin.
-	if admin == policyInfo.Address {
+	if address == policyInfo.Address {
+		err = ctx.EventManager().EmitTypedEvent(&group.EventWithdrawProposal{ProposalId: id})
+		if err != nil {
+			return nil, err
+		}
+
 		proposal.Result = group.ProposalResultUnfinalized
 		proposal.Status = group.ProposalStatusWithdrawn
 		return storeUpdates()
 	}
 
-	// if admin address is not group admin then check whether he is in proposers list.
+	// if address is not group policy admin then check whether he is in proposers list.
 	validProposer := false
 	for _, proposer := range proposal.Proposers {
-		if proposer == admin {
+		if proposer == address {
 			validProposer = true
 			break
 		}
 	}
 
 	if !validProposer {
-		return nil, sdkerrors.Wrapf(errors.ErrUnauthorized, "given admin address is neither group admin address nor in proposers: %s", admin)
+		return nil, sdkerrors.Wrapf(errors.ErrUnauthorized, "given address is neither group policy admin nor in proposers: %s", address)
 	}
 
 	err = ctx.EventManager().EmitTypedEvent(&group.EventWithdrawProposal{ProposalId: id})

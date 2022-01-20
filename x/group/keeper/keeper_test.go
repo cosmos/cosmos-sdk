@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"sort"
 	"strings"
 	"testing"
@@ -36,7 +35,6 @@ type TestSuite struct {
 }
 
 func (s *TestSuite) SetupTest() {
-	fmt.Println("a", 1, "-----------------------------------------")
 	app := simapp.Setup(s.T(), false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 

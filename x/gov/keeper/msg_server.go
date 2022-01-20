@@ -21,7 +21,7 @@ type msgServer struct {
 }
 
 // NewMsgServerImpl returns an implementation of the gov MsgServer interface
-// for the provided k.Keeper.
+// for the provided Keeper.
 func NewMsgServerImpl(keeper Keeper) v1beta2.MsgServer {
 	return &msgServer{Keeper: keeper}
 }

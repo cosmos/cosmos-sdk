@@ -37,6 +37,7 @@ Before a `msgServer` method is executed, the `message`'s [`ValidateBasic()`](../
 For example, a `msgServer` method for a `transfer` message might check that the sending account has enough funds to actually perform the transfer. 
 
 It is recommended to implement all validation checks in a separate function, with state values passed as arguments. This will simplify testing. Expensive validation functions should charge additional gas. Example:
+
 ```go
 ValidateMsgA(msg MsgA, now Time, gm GasMeter) error {
 	if now.Before(msg.Expire) {

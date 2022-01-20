@@ -135,6 +135,10 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 	// https://github.com/cosmos/cosmos-sdk/issues/7036.
 	result, err := QueryTx(s.clientCtx, req.Hash)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			return nil, status.Errorf(codes.NotFound, "tx not found: %s", req.Hash)
+		}
+
 		return nil, err
 	}
 

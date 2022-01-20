@@ -30,4 +30,5 @@ var (
 	JSONImportError               = errors.New(codespace, 23, "json import error")
 	UniqueKeyViolation            = errors.New(codespace, 24, "unique key violation")
 	InvalidTableDefinition        = errors.New(codespace, 25, "invalid table definition")
+	InvalidFileDescriptorID       = errors.New(codespace, 26, "invalid file descriptor ID")
 )

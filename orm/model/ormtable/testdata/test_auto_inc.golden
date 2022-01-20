@@ -12,7 +12,7 @@ SET 03000000000000000001 1203666f6f1805
 SET 03808002 01
     SEQ testpb.ExampleAutoIncrementTable 1
 SET 0301666f6f 0000000000000001
-    UNIQ testpb.ExampleAutoIncrementTable x : "foo" -> 1
+    UNIQ testpb.ExampleAutoIncrementTable x : foo -> 1
 GET 03808002 01
     SEQ testpb.ExampleAutoIncrementTable 1
 ITERATOR 0300 -> 0301

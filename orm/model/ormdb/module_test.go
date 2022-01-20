@@ -1,24 +1,24 @@
 package ormdb_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
-
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"gotest.tools/v3/assert"
+	"gotest.tools/v3/golden"
 
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-
+	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormdb"
+	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 )
 
 // These tests use a simulated bank keeper. Addresses and balances use
-//  []byte and uint64 types respectively for simplicity.
+// string and uint64 types respectively for simplicity.
 
 var TestBankSchema = ormdb.ModuleSchema{
 	FileDescriptors: map[uint32]protoreflect.FileDescriptor{
@@ -35,7 +35,7 @@ type keeper struct {
 	supplyDenomIndex ormtable.UniqueIndex
 }
 
-func (k keeper) Send(ctx context.Context, from, to []byte, denom string, amount uint64) error {
+func (k keeper) Send(ctx context.Context, from, to, denom string, amount uint64) error {
 	err := k.safeSubBalance(ctx, from, denom, amount)
 	if err != nil {
 		return err
@@ -44,7 +44,7 @@ func (k keeper) Send(ctx context.Context, from, to []byte, denom string, amount 
 	return k.addBalance(ctx, to, denom, amount)
 }
 
-func (k keeper) Mint(ctx context.Context, acct []byte, denom string, amount uint64) error {
+func (k keeper) Mint(ctx context.Context, acct, denom string, amount uint64) error {
 	var supply testpb.Supply
 	found, err := k.supplyDenomIndex.Get(ctx, &supply, denom)
 	if err != nil {
@@ -66,7 +66,7 @@ func (k keeper) Mint(ctx context.Context, acct []byte, denom string, amount uint
 	return k.addBalance(ctx, acct, denom, amount)
 }
 
-func (k keeper) Burn(ctx context.Context, acct []byte, denom string, amount uint64) error {
+func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) error {
 	var supply testpb.Supply
 	found, err := k.supplyDenomIndex.Get(ctx, &supply, denom)
 	if err != nil {
@@ -95,7 +95,7 @@ func (k keeper) Burn(ctx context.Context, acct []byte, denom string, amount uint
 	return k.safeSubBalance(ctx, acct, denom, amount)
 }
 
-func (k keeper) Balance(ctx context.Context, acct []byte, denom string) (uint64, error) {
+func (k keeper) Balance(ctx context.Context, acct, denom string) (uint64, error) {
 	var balance testpb.Balance
 	found, err := k.balanceAddressDenomIndex.Get(ctx, &balance, acct, denom)
 	if err != nil || !found {
@@ -115,7 +115,7 @@ func (k keeper) Supply(ctx context.Context, denom string) (uint64, error) {
 	return supply.Amount, nil
 }
 
-func (k keeper) addBalance(ctx context.Context, acct []byte, denom string, amount uint64) error {
+func (k keeper) addBalance(ctx context.Context, acct, denom string, amount uint64) error {
 	var balance testpb.Balance
 	found, err := k.balanceAddressDenomIndex.Get(ctx, &balance, acct, denom)
 	if err != nil {
@@ -133,7 +133,7 @@ func (k keeper) addBalance(ctx context.Context, acct []byte, denom string, amoun
 	return k.balanceTable.Save(ctx, &balance)
 }
 
-func (k keeper) safeSubBalance(ctx context.Context, acct []byte, denom string, amount uint64) error {
+func (k keeper) safeSubBalance(ctx context.Context, acct, denom string, amount uint64) error {
 	var balance testpb.Balance
 	found, err := k.balanceAddressDenomIndex.Get(ctx, &balance, acct, denom)
 	if err != nil {
@@ -171,10 +171,18 @@ func newKeeper(db ormdb.ModuleDB) keeper {
 }
 
 func TestModuleDB(t *testing.T) {
-	// create db & ctx
+	// create db & debug context
 	db, err := ormdb.NewModuleDB(TestBankSchema, ormdb.ModuleDBOptions{})
 	assert.NilError(t, err)
-	ctx := ormtable.WrapContextDefault(testkv.NewSplitMemBackend())
+	debugBuf := &strings.Builder{}
+	store := testkv.NewDebugBackend(
+		testkv.NewSharedMemBackend(),
+		&testkv.EntryCodecDebugger{
+			EntryCodec: db,
+			Print:      func(s string) { debugBuf.WriteString(s + "\n") },
+		},
+	)
+	ctx := ormtable.WrapContextDefault(store)
 
 	// create keeper
 	k := newKeeper(db)
@@ -186,7 +194,7 @@ func TestModuleDB(t *testing.T) {
 
 	// mint coins
 	denom := "foo"
-	acct1 := []byte{0, 1, 2, 3}
+	acct1 := "bob"
 	err = k.Mint(ctx, acct1, denom, 100)
 	assert.NilError(t, err)
 	bal, err := k.Balance(ctx, acct1, denom)
@@ -197,7 +205,7 @@ func TestModuleDB(t *testing.T) {
 	assert.Equal(t, uint64(100), supply)
 
 	// send coins
-	acct2 := []byte{3, 2, 1, 0}
+	acct2 := "sally"
 	err = k.Send(ctx, acct1, acct2, denom, 30)
 	bal, err = k.Balance(ctx, acct1, denom)
 	assert.NilError(t, err)
@@ -214,4 +222,20 @@ func TestModuleDB(t *testing.T) {
 	supply, err = k.Supply(ctx, denom)
 	assert.NilError(t, err)
 	assert.Equal(t, uint64(97), supply)
+
+	// check debug output
+	golden.Assert(t, debugBuf.String(), "bank_scenario.golden")
+
+	// check decode & encode
+	it, err := store.CommitmentStore().Iterator(nil, nil)
+	assert.NilError(t, err)
+	for it.Valid() {
+		entry, err := db.DecodeEntry(it.Key(), it.Value())
+		assert.NilError(t, err)
+		k, v, err := db.EncodeEntry(entry)
+		assert.NilError(t, err)
+		assert.Assert(t, bytes.Equal(k, it.Key()))
+		assert.Assert(t, bytes.Equal(v, it.Value()))
+		it.Next()
+	}
 }

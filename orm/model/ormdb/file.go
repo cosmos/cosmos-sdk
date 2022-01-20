@@ -56,7 +56,8 @@ func newFileDescriptorDB(fileDescriptor protoreflect.FileDescriptor, options fil
 	n := messages.Len()
 	for i := 0; i < n; i++ {
 		messageDescriptor := messages.Get(i)
-		messageType, err := resolver.FindMessageByName(messageDescriptor.FullName())
+		tableName := messageDescriptor.FullName()
+		messageType, err := resolver.FindMessageByName(tableName)
 		if err != nil {
 			return nil, err
 		}
@@ -73,8 +74,16 @@ func newFileDescriptorDB(fileDescriptor protoreflect.FileDescriptor, options fil
 			return nil, err
 		}
 
-		schema.tablesByName[messageDescriptor.FullName()] = table
-		schema.tablesById[table.ID()] = table
+		id := table.ID()
+		if _, ok := schema.tablesById[id]; ok {
+			return nil, ormerrors.InvalidTableId.Wrapf("duplicate ID %d for %s", id, tableName)
+		}
+		schema.tablesById[id] = table
+
+		if _, ok := schema.tablesByName[tableName]; ok {
+			return nil, ormerrors.InvalidTableDefinition.Wrapf("duplicate table %s", tableName)
+		}
+		schema.tablesByName[tableName] = table
 	}
 
 	return schema, nil
@@ -111,11 +120,6 @@ func (f fileDescriptorDB) EncodeEntry(entry ormkv.Entry) (k, v []byte, err error
 	}
 
 	return table.EncodeEntry(entry)
-}
-
-func (f fileDescriptorDB) GetTable(message proto.Message) ormtable.Table {
-	table, _ := f.tablesByName[message.ProtoReflect().Descriptor().FullName()]
-	return table
 }
 
 var _ ormkv.EntryCodec = fileDescriptorDB{}

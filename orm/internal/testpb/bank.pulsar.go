@@ -94,8 +94,8 @@ func (x *fastReflection_Balance) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_Balance) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.Address) != 0 {
-		value := protoreflect.ValueOfBytes(x.Address)
+	if x.Address != "" {
+		value := protoreflect.ValueOfString(x.Address)
 		if !f(fd_Balance_address, value) {
 			return
 		}
@@ -128,7 +128,7 @@ func (x *fastReflection_Balance) Range(f func(protoreflect.FieldDescriptor, prot
 func (x *fastReflection_Balance) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "testpb.Balance.address":
-		return len(x.Address) != 0
+		return x.Address != ""
 	case "testpb.Balance.denom":
 		return x.Denom != ""
 	case "testpb.Balance.amount":
@@ -150,7 +150,7 @@ func (x *fastReflection_Balance) Has(fd protoreflect.FieldDescriptor) bool {
 func (x *fastReflection_Balance) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "testpb.Balance.address":
-		x.Address = nil
+		x.Address = ""
 	case "testpb.Balance.denom":
 		x.Denom = ""
 	case "testpb.Balance.amount":
@@ -173,7 +173,7 @@ func (x *fastReflection_Balance) Get(descriptor protoreflect.FieldDescriptor) pr
 	switch descriptor.FullName() {
 	case "testpb.Balance.address":
 		value := x.Address
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "testpb.Balance.denom":
 		value := x.Denom
 		return protoreflect.ValueOfString(value)
@@ -201,7 +201,7 @@ func (x *fastReflection_Balance) Get(descriptor protoreflect.FieldDescriptor) pr
 func (x *fastReflection_Balance) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "testpb.Balance.address":
-		x.Address = value.Bytes()
+		x.Address = value.Interface().(string)
 	case "testpb.Balance.denom":
 		x.Denom = value.Interface().(string)
 	case "testpb.Balance.amount":
@@ -246,7 +246,7 @@ func (x *fastReflection_Balance) Mutable(fd protoreflect.FieldDescriptor) protor
 func (x *fastReflection_Balance) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "testpb.Balance.address":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "testpb.Balance.denom":
 		return protoreflect.ValueOfString("")
 	case "testpb.Balance.amount":
@@ -432,7 +432,7 @@ func (x *fastReflection_Balance) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -442,25 +442,23 @@ func (x *fastReflection_Balance) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Address = append(x.Address[:0], dAtA[iNdEx:postIndex]...)
-				if x.Address == nil {
-					x.Address = []byte{}
-				}
+				x.Address = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
@@ -1034,7 +1032,7 @@ type Balance struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Address []byte `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 	Denom   string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
 	Amount  uint64 `protobuf:"varint,3,opt,name=amount,proto3" json:"amount,omitempty"`
 }
@@ -1059,11 +1057,11 @@ func (*Balance) Descriptor() ([]byte, []int) {
 	return file_testpb_bank_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Balance) GetAddress() []byte {
+func (x *Balance) GetAddress() string {
 	if x != nil {
 		return x.Address
 	}
-	return nil
+	return ""
 }
 
 func (x *Balance) GetDenom() string {
@@ -1131,7 +1129,7 @@ var file_testpb_bank_proto_rawDesc = []byte{
 	0x6d, 0x6f, 0x73, 0x2f, 0x6f, 0x72, 0x6d, 0x2f, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31,
 	0x2f, 0x6f, 0x72, 0x6d, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x77, 0x0a, 0x07, 0x42, 0x61,
 	0x6c, 0x61, 0x6e, 0x63, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12,
 	0x14, 0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05,
 	0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18,
 	0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x3a, 0x24, 0xf2,
@@ -1141,7 +1139,7 @@ var file_testpb_bank_proto_rawDesc = []byte{
 	0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x64, 0x65,
 	0x6e, 0x6f, 0x6d, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20,
 	0x01, 0x28, 0x04, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x3a, 0x11, 0xf2, 0x9e, 0xd3,
-	0x8e, 0x03, 0x0b, 0x0a, 0x07, 0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01, 0x42, 0x81,
+	0x8e, 0x03, 0x0b, 0x0a, 0x07, 0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x02, 0x42, 0x81,
 	0x01, 0x0a, 0x0a, 0x63, 0x6f, 0x6d, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x42, 0x09, 0x42,
 	0x61, 0x6e, 0x6b, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x30, 0x67, 0x69, 0x74, 0x68,
 	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f,

@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/known/structpb"
 )
 
 // Entry defines a logical representation of a kv-store entry for ORM instances.
@@ -56,19 +54,7 @@ func fmtValues(values []protoreflect.Value) string {
 
 	parts := make([]string, len(values))
 	for i, v := range values {
-		val, err := structpb.NewValue(v.Interface())
-		if err != nil {
-			parts[i] = "ERR"
-			continue
-		}
-
-		bz, err := protojson.Marshal(val)
-		if err != nil {
-			parts[i] = "ERR"
-			continue
-		}
-
-		parts[i] = string(bz)
+		parts[i] = fmt.Sprintf("%v", v.Interface())
 	}
 
 	return strings.Join(parts, "/")

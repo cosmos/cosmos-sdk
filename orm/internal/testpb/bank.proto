@@ -11,19 +11,19 @@ option go_package = "github.com/cosmos/cosmos-sdk/orm/internal/testpb";
 message Balance {
   option (cosmos.orm.v1alpha1.table) = {
     id: 1;
-    primary_key:{ fields: "address,denom" }
-    index: { id: 1 fields: "denom" }
+    primary_key:{fields: "address,denom"}
+    index: {id: 1 fields: "denom"}
   };
 
-  bytes address = 1;
+  string address = 1;
   string denom = 2;
   uint64 amount = 3;
 }
 
 message Supply {
   option (cosmos.orm.v1alpha1.table) = {
-    id: 1;
-    primary_key:{ fields: "denom" }
+    id: 2;
+    primary_key:{fields: "denom"}
   };
 
   string denom = 1;

@@ -82,7 +82,7 @@ func NewModuleDB(schema ModuleSchema, options ModuleDBOptions) (ModuleDB, error)
 
 	for id, fileDescriptor := range schema.FileDescriptors {
 		if id == 0 {
-			return nil, ormerrors.InvalidTableId.Wrapf("for %s", fileDescriptor.Path())
+			return nil, ormerrors.InvalidFileDescriptorID.Wrapf("for %s", fileDescriptor.Path())
 		}
 
 		opts := fileDescriptorDBOptions{

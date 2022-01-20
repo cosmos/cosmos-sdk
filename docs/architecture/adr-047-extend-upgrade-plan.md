@@ -190,7 +190,7 @@ In order to utilize the `UpgradeInstructions` as part of a software upgrade, bot
 
 ### Negative
 
-1.  The `Plan` message becomes larger.
+1.  The `Plan` message becomes larger. This is negligable because A) the `x/upgrades` module only stores at most one upgrade plan, and B) upgrades are rare enough that the increased gas cost isn't a concern.
 1.  There is no option for providing a URL that will return the `UpgradeInstructions`.
 1.  The only way to provide multiple assets (executables and other files) for a platform is to use an archive as the platform's artifact.
 

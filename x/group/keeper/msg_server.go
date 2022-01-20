@@ -263,8 +263,7 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 		return nil, sdkerrors.Wrap(err, "group policy address")
 	}
 
-	groupPolicyAsAdmin := req.GetGroupPolicyAsAdmin()
-	if groupPolicyAsAdmin {
+	if req.GetGroupPolicyAsAdmin() {
 		updateAdminReq := &group.MsgUpdateGroupAdmin{
 			GroupId:  groupId,
 			Admin:    req.Admin,

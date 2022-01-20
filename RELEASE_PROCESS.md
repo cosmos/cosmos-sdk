@@ -69,8 +69,9 @@ Note: not every Major Release is denoted as stable releases.
 
 Only the following major release series have a stable release status:
 
-* **0.42 «Stargate»** will be supported until 6 months after **0.43.0** is published. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
-* **0.44** is the latest major release.
+* **0.42 «Stargate»** is supported until 2022-02-09. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
+* **0.44** is supported until 2022-07-17. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
+* **0.45** is the latest major release and will be supported until 6 months after **0.46.0** release.
 
 ## Stable Release Policy
 

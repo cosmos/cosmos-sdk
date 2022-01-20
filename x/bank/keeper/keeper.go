@@ -11,7 +11,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -471,7 +470,7 @@ func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, balanc
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}
 
-	vacc, ok := acc.(vestexported.VestingAccount)
+	vacc, ok := acc.(types.VestingAccount)
 	if ok {
 		// TODO: return error on account.TrackDelegation
 		vacc.TrackDelegation(ctx.BlockHeader().Time, balance, amt)
@@ -488,7 +487,7 @@ func (k BaseKeeper) trackUndelegation(ctx sdk.Context, addr sdk.AccAddress, amt 
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}
 
-	vacc, ok := acc.(vestexported.VestingAccount)
+	vacc, ok := acc.(types.VestingAccount)
 	if ok {
 		// TODO: return error on account.TrackUndelegation
 		vacc.TrackUndelegation(amt)

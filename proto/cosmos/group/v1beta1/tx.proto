@@ -168,7 +168,7 @@ message MsgUpdateGroupPolicyAdmin {
 message MsgCreateGroupWithPolicy {
   option (gogoproto.goproto_getters) = false;
 
-  // admin is the account address of the group admin.
+  // admin is the account address of the group and group policy admin.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // members defines the group members.
@@ -180,8 +180,8 @@ message MsgCreateGroupWithPolicy {
   // group_policy_metadata is any arbitrary metadata attached to the group policy.
   bytes group_policy_metadata = 4;
 
-  // group_policy_as_admin is a boolean field attached to the group.
-  bool group_policy_as_admin = 5; // if set to true, update admin with group policy account address.
+  // group_policy_as_admin is a boolean field, if set to true, the group policy account address will be used as group and group policy admin.
+  bool group_policy_as_admin = 5; 
 
   // decision_policy specifies the group policy's decision policy.
   google.protobuf.Any decision_policy = 6 [(cosmos_proto.accepts_interface) = "DecisionPolicy"];

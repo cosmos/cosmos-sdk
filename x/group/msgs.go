@@ -245,18 +245,6 @@ func NewMsgCreateGroupWithPolicy(admin string, members []Member, group_metadata 
 	return m, nil
 }
 
-func (m *MsgCreateGroupWithPolicy) GetAdmin() string {
-	return m.Admin
-}
-
-func (m *MsgCreateGroupWithPolicy) GetGroupMetadata() []byte {
-	return m.GroupMetadata
-}
-
-func (m *MsgCreateGroupWithPolicy) GetGroupPolicyMetadata() []byte {
-	return m.GroupPolicyMetadata
-}
-
 func (m *MsgCreateGroupWithPolicy) GetGroupPolicyAsAdmin() bool {
 	return m.GroupPolicyAsAdmin
 }

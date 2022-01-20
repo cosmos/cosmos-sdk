@@ -863,6 +863,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			s.Assert().Equal(id, loadedGroupRes.Info.GroupId)
 			if spec.req.GroupPolicyAsAdmin {
 				s.Assert().NotEqual(spec.req.Admin, loadedGroupRes.Info.Admin)
+				s.Assert().Equal(groupPolicyAddr, loadedGroupRes.Info.Admin)
 			} else {
 				s.Assert().Equal(spec.req.Admin, loadedGroupRes.Info.Admin)
 			}
@@ -899,6 +900,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			s.Assert().Equal(spec.policy.(*group.ThresholdDecisionPolicy), groupPolicy.GetDecisionPolicy())
 			if spec.req.GroupPolicyAsAdmin {
 				s.Assert().NotEqual(spec.req.Admin, groupPolicy.Admin)
+				s.Assert().Equal(groupPolicyAddr, groupPolicy.Admin)
 			} else {
 				s.Assert().Equal(spec.req.Admin, groupPolicy.Admin)
 			}

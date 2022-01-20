@@ -235,31 +235,11 @@ func (k Keeper) UpdateGroupMetadata(goCtx context.Context, req *group.MsgUpdateG
 
 func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreateGroupWithPolicy) (*group.MsgCreateGroupWithPolicyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	var admin sdk.AccAddress
-	admin, err := sdk.AccAddressFromBech32(req.GetAdmin())
-	if err != nil {
-		return nil, sdkerrors.Wrap(err, "request admin")
-	}
-
-	members := group.Members{Members: req.Members}
-	if err := members.ValidateBasic(); err != nil {
-		return nil, err
-	}
-
-	groupMetadata := req.GetGroupMetadata()
-	if err := assertMetadataLength(groupMetadata, "group metadata"); err != nil {
-		return nil, err
-	}
-
-	groupPolicyMetadata := req.GetGroupPolicyMetadata()
-	if err := assertMetadataLength(groupPolicyMetadata, "group policy metadata"); err != nil {
-		return nil, err
-	}
 
 	groupRes, err := k.CreateGroup(goCtx, &group.MsgCreateGroup{
-		Admin:    admin.String(),
-		Members:  members.Members,
-		Metadata: groupMetadata,
+		Admin:    req.Admin,
+		Members:  req.Members,
+		Metadata: req.GroupMetadata,
 	})
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "group response")
@@ -268,9 +248,9 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 
 	var groupPolicyAddr sdk.AccAddress
 	groupPolicyRes, err := k.CreateGroupPolicy(goCtx, &group.MsgCreateGroupPolicy{
-		Admin:          admin.String(),
+		Admin:          req.Admin,
 		GroupId:        groupId,
-		Metadata:       groupPolicyMetadata,
+		Metadata:       req.GroupPolicyMetadata,
 		DecisionPolicy: req.DecisionPolicy,
 	})
 	if err != nil {
@@ -285,11 +265,10 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 
 	groupPolicyAsAdmin := req.GetGroupPolicyAsAdmin()
 	if groupPolicyAsAdmin {
-		newAdmin := groupPolicyAddr
 		updateAdminReq := &group.MsgUpdateGroupAdmin{
 			GroupId:  groupId,
-			Admin:    admin.String(),
-			NewAdmin: newAdmin.String(),
+			Admin:    req.Admin,
+			NewAdmin: groupPolicyAddr.String(),
 		}
 		_, err = k.UpdateGroupAdmin(goCtx, updateAdminReq)
 		if err != nil {
@@ -297,9 +276,9 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 		}
 
 		updatePolicyAddressReq := &group.MsgUpdateGroupPolicyAdmin{
-			Admin:    admin.String(),
+			Admin:    req.Admin,
 			Address:  groupPolicyAddr.String(),
-			NewAdmin: newAdmin.String(),
+			NewAdmin: groupPolicyAddr.String(),
 		}
 		_, err = k.UpdateGroupPolicyAdmin(goCtx, updatePolicyAddressReq)
 		if err != nil {

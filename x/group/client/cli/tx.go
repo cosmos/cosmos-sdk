@@ -298,7 +298,7 @@ func MsgCreateGroupWithPolicyCmd() *cobra.Command {
 			fmt.Sprintf(`Create a group with policy which is an aggregation of member accounts with associated weights,
 an administrator account and decision policy. Note, the '--from' flag is ignored as it is implied from [admin].
 Members accounts can be given through a members JSON file that contains an array of members.
-If group-policy-as-admin flag is set to true, admin of the newly created group and group policy is set with group policy address itself.
+If group-policy-as-admin flag is set to true, the admin of the newly created group and group policy is set with the group policy address itself.
 
 Example:
 $ %s tx group create-group-with-policy [admin] [group-metadata] [group-policy-metadata] [members-json-file] \

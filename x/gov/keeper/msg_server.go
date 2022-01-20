@@ -84,22 +84,23 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1beta2.MsgSubmitP
 func (k msgServer) ExecLegacyContent(goCtx context.Context, msg *v1beta2.MsgExecLegacyContent) (*v1beta2.MsgExecLegacyContentResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	govAcct := k.GetGovernanceAccount(ctx).GetAddress().String()
+	if govAcct != msg.Authority {
+		return nil, sdkerrors.Wrapf(types.ErrInvalidSigner, "expected %s got %s", govAcct, msg.Authority)
+	}
+
 	content, err := v1beta2.LegacyContentFromMessage(msg)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(v1beta1.ErrInvalidProposalContent, "%+v", err)
 	}
 
-	// if so ensure that the content has a respective handler
+	// Ensure that the content has a respective handler
 	if !k.Keeper.legacyRouter.HasRoute(content.ProposalRoute()) {
 		return nil, sdkerrors.Wrap(types.ErrNoProposalHandlerExists, content.ProposalRoute())
 	}
 
-	// Execute the proposal content in a new context branch (with branched store)
-	// to validate the actual parameter changes before the proposal proceeds
-	// through the governance process. State is not persisted.
-	cacheCtx, _ := ctx.CacheContext()
 	handler := k.Keeper.legacyRouter.GetRoute(content.ProposalRoute())
-	if err := handler(cacheCtx, content); err != nil {
+	if err := handler(ctx, content); err != nil {
 		return nil, sdkerrors.Wrapf(v1beta1.ErrInvalidProposalContent, "failed to run legacy handler %s, %+v", content.ProposalRoute(), err)
 	}
 

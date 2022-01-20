@@ -32,7 +32,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg) (v1beta
 
 		// assert that the governance module account is the only signer of the messages
 		if !signers[0].Equals(keeper.GetGovernanceAccount(ctx).GetAddress()) {
-			return v1beta2.Proposal{}, sdkerrors.Wrap(types.ErrInvalidSigner, signers[0].String())
+			return v1beta2.Proposal{}, sdkerrors.Wrapf(types.ErrInvalidSigner, signers[0].String())
 		}
 
 		// for all other message types use the msg service router to see that there is a valid route for that

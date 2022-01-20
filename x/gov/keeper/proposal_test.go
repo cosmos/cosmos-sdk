@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -53,22 +54,28 @@ type invalidProposalRoute struct{ v1beta1.TextProposal }
 func (invalidProposalRoute) ProposalRoute() string { return "nonexistingroute" }
 
 func (suite *KeeperTestSuite) TestSubmitProposal() {
+	govAcct := suite.app.GovKeeper.GetGovernanceAccount(suite.ctx).GetAddress().String()
+	_, _, randomAddr := testdata.KeyTestPubAddr()
+
 	testCases := []struct {
 		content     v1beta1.Content
+		authority   string
 		expectedErr error
 	}{
-		{&v1beta1.TextProposal{Title: "title", Description: "description"}, nil},
+		{&v1beta1.TextProposal{Title: "title", Description: "description"}, govAcct, nil},
 		// Keeper does not check the validity of title and description, no error
-		{&v1beta1.TextProposal{Title: "", Description: "description"}, nil},
-		{&v1beta1.TextProposal{Title: strings.Repeat("1234567890", 100), Description: "description"}, nil},
-		{&v1beta1.TextProposal{Title: "title", Description: ""}, nil},
-		{&v1beta1.TextProposal{Title: "title", Description: strings.Repeat("1234567890", 1000)}, nil},
+		{&v1beta1.TextProposal{Title: "", Description: "description"}, govAcct, nil},
+		{&v1beta1.TextProposal{Title: strings.Repeat("1234567890", 100), Description: "description"}, govAcct, nil},
+		{&v1beta1.TextProposal{Title: "title", Description: ""}, govAcct, nil},
+		{&v1beta1.TextProposal{Title: "title", Description: strings.Repeat("1234567890", 1000)}, govAcct, nil},
+		// error when signer is not gov acct
+		{&v1beta1.TextProposal{Title: "title", Description: "description"}, randomAddr.String(), types.ErrInvalidSigner},
 		// error only when invalid route
-		{&invalidProposalRoute{}, types.ErrNoProposalHandlerExists},
+		{&invalidProposalRoute{}, govAcct, types.ErrNoProposalHandlerExists},
 	}
 
 	for i, tc := range testCases {
-		prop, err := v1beta2.NewLegacyContent(tc.content, suite.app.GovKeeper.GetGovernanceAccount(suite.ctx).GetAddress().String())
+		prop, err := v1beta2.NewLegacyContent(tc.content, tc.authority)
 		suite.Require().NoError(err)
 		_, err = suite.app.GovKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop})
 		suite.Require().True(errors.Is(tc.expectedErr, err), "tc #%d; got: %v, expected: %v", i, err, tc.expectedErr)

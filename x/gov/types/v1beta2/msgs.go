@@ -3,8 +3,6 @@ package v1beta2
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -35,33 +33,18 @@ func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer
 		Proposer:       proposer,
 	}
 
-	if err := m.setMessages(messages); err != nil {
-		return &MsgSubmitProposal{}, err
+	anys, err := sdktx.SetMsgs(messages)
+	if err != nil {
+		return nil, err
 	}
+
+	m.Messages = anys
 
 	return m, nil
 }
 
 func (m *MsgSubmitProposal) GetMsgs() ([]sdk.Msg, error) {
 	return sdktx.GetMsgs(m.Messages, "sdk.MsgProposal")
-}
-
-func (m *MsgSubmitProposal) setMessages(messages []sdk.Msg) error {
-	msgs := make([]*codectypes.Any, len(messages))
-	for i, msg := range messages {
-		m, ok := msg.(proto.Message)
-		if !ok {
-			return fmt.Errorf("can't proto marshal %T", msg)
-		}
-		any, err := codectypes.NewAnyWithValue(m)
-		if err != nil {
-			return err
-		}
-
-		msgs[i] = any
-	}
-	m.Messages = msgs
-	return nil
 }
 
 // Route implements Msg

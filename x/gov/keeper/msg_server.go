@@ -68,14 +68,14 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1beta2.MsgSubmitP
 		),
 	)
 
-	submitEvent := sdk.NewEvent(types.EventTypeSubmitProposal)
 	if votingStarted {
-		submitEvent = submitEvent.AppendAttributes(
+		submitEvent := sdk.NewEvent(types.EventTypeSubmitProposal,
 			sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.ProposalId)),
 		)
+
+		ctx.EventManager().EmitEvent(submitEvent)
 	}
 
-	ctx.EventManager().EmitEvent(submitEvent)
 	return &v1beta2.MsgSubmitProposalResponse{
 		ProposalId: proposal.ProposalId,
 	}, nil

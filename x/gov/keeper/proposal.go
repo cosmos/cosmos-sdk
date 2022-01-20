@@ -12,9 +12,14 @@ import (
 
 // SubmitProposal create new proposal given an array of messages
 func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg) (v1beta2.Proposal, error) {
+	// Will hold a comma-separated string of all Msg type URLs.
+	msgsStr := ""
+
 	// Loop through all messages and confirm that each has a handler and the gov module account
 	// as the only signer
 	for _, msg := range messages {
+		msgsStr += fmt.Sprintf(",%s", sdk.MsgTypeURL(msg))
+
 		// perform a basic validation of the message
 		if err := msg.ValidateBasic(); err != nil {
 			return v1beta2.Proposal{}, sdkerrors.Wrap(types.ErrInvalidProposalMsg, err.Error())
@@ -75,6 +80,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg) (v1beta
 		sdk.NewEvent(
 			types.EventTypeSubmitProposal,
 			sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
+			sdk.NewAttribute(types.AttributeKeyProposalMessages, msgsStr),
 		),
 	)
 

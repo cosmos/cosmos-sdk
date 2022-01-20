@@ -20,8 +20,6 @@ import (
 
 const custom = "custom"
 
-var encCfg = simapp.MakeTestEncodingConfig()
-
 func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier) (v1beta2.DepositParams, v1beta2.VotingParams, v1beta2.TallyParams) {
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, v1beta2.QueryParams, v1beta2.ParamDeposit}, "/"),
@@ -252,8 +250,8 @@ func TestQueries(t *testing.T) {
 	// Only proposals #2 and #3 should be in Voting Period
 	proposals = getQueriedProposals(t, ctx, legacyQuerierCdc, querier, nil, nil, v1beta2.StatusVotingPeriod, 1, 0)
 	require.Len(t, proposals, 2)
-	checkEqualProposal(t, proposal2, *proposals[0])
-	checkEqualProposal(t, proposal3, *proposals[1])
+	require.Equal(t, proposal2, *proposals[0])
+	require.Equal(t, proposal3, *proposals[1])
 
 	// Addrs[0] votes on proposals #2 & #3
 	vote1 := v1beta2.NewVote(proposal2.ProposalId, TestAddrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))
@@ -267,8 +265,8 @@ func TestQueries(t *testing.T) {
 
 	// Test query voted by TestAddrs[0]
 	proposals = getQueriedProposals(t, ctx, legacyQuerierCdc, querier, nil, TestAddrs[0], v1beta2.StatusNil, 1, 0)
-	checkEqualProposal(t, proposal2, *proposals[0])
-	checkEqualProposal(t, proposal3, *proposals[1])
+	require.Equal(t, proposal2, *proposals[0])
+	require.Equal(t, proposal3, *proposals[1])
 
 	// Test query votes on v1beta2.Proposal 2
 	votes := getQueriedVotes(t, ctx, legacyQuerierCdc, querier, proposal2.ProposalId, 1, 0)
@@ -286,9 +284,9 @@ func TestQueries(t *testing.T) {
 
 	// Test query all proposals
 	proposals = getQueriedProposals(t, ctx, legacyQuerierCdc, querier, nil, nil, v1beta2.StatusNil, 1, 0)
-	checkEqualProposal(t, proposal1, *proposals[0])
-	checkEqualProposal(t, proposal2, *proposals[1])
-	checkEqualProposal(t, proposal3, *proposals[2])
+	require.Equal(t, proposal1, *proposals[0])
+	require.Equal(t, proposal2, *proposals[1])
+	require.Equal(t, proposal3, *proposals[2])
 
 	// Test query voted by TestAddrs[1]
 	proposals = getQueriedProposals(t, ctx, legacyQuerierCdc, querier, nil, TestAddrs[1], v1beta2.StatusNil, 1, 0)
@@ -399,53 +397,4 @@ func checkEqualVotes(t *testing.T, vote1, vote2 v1beta2.Vote) {
 	require.Equal(t, vote1.Options, vote2.Options)
 	require.Equal(t, vote1.Voter, vote2.Voter)
 	require.Equal(t, vote1.ProposalId, vote2.ProposalId)
-}
-
-// checkEqualProposal checks that 2 proposals are equal by checking their JSON
-// encoding.
-// When decoding with Amino, there are weird cases where the voting times
-// are actually equal, but `require.Equal()` says they are not:
-//
-// Diff:
-// --- Expected
-// +++ Actual
-// @@ -68,15 +68,11 @@
-//   },
-// - VotingStartTime: (*time.Time)(<nil>),
-// + VotingStartTime: (*time.Time)({
-// +  wall: (uint64) 0,
-// +  ext: (int64) 0,
-// +  loc: (*time.Location)(<nil>)
-// + }),
-//   VotingEndTime: (*time.Time)({
-// -  wall: (uint64) 13867285062520661648,
-// -  ext: (int64) 172800395941069,
-// -  loc: (*time.Location)({
-// -   name: (string) "",
-// -   zone: ([]time.zone) <nil>,
-// -   tx: ([]time.zoneTrans) <nil>,
-// -   extend: (string) "",
-// -   cacheStart: (int64) 0,
-// -   cacheEnd: (int64) 0,
-// -   cacheZone: (*time.zone)(<nil>)
-// -  })
-// +  wall: (uint64) 0,
-// +  ext: (int64) 172800,
-// +  loc: (*time.Location)(<nil>)
-//   })
-func checkEqualProposal(t *testing.T, p1, p2 v1beta2.Proposal) {
-	bz1, err := encCfg.Codec.MarshalJSON(&p1)
-	require.NoError(t, err)
-	bz2, err := encCfg.Codec.MarshalJSON(&p1)
-	require.NoError(t, err)
-	require.Equal(t, bz1, bz2)
-	// require.Equal(t, p1.ProposalId, p2.ProposalId)
-	// require.Equal(t, p1.Messages, p2.Messages)
-	// require.Equal(t, p1.Status, p2.Status)
-	// require.Equal(t, p1.FinalTallyResult, p2.FinalTallyResult)
-	// require.Equal(t, p1.SubmitTime, p2.SubmitTime)
-	// require.Equal(t, p1.DepositEndTime, p2.DepositEndTime)
-	// require.Equal(t, p1.TotalDeposit, p2.TotalDeposit)
-	// require.Equal(t, p1.VotingStartTime, p2.VotingStartTime.String())
-	// require.Equal(t, p1.VotingEndTime, p2.VotingEndTime)
 }

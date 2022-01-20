@@ -26,6 +26,7 @@ const (
 	TypeMsgCreateProposal                  = "create_proposal"
 	TypeMsgVote                            = "vote"
 	TypeMsgExec                            = "exec"
+	TypeMsgLeaveGroup                      = "leave_group"
 )
 
 var _ sdk.Msg = &MsgCreateGroup{}
@@ -675,6 +676,42 @@ func (m MsgExec) ValidateBasic() error {
 	}
 	if m.ProposalId == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal")
+	}
+	return nil
+}
+
+var _ sdk.Msg = &MsgLeaveGroup{}
+
+// Route Implements Msg
+func (m MsgLeaveGroup) Route() string {
+	return RouterKey
+}
+
+// Type Implements Msg
+func (m MsgLeaveGroup) Type() string { return TypeMsgLeaveGroup }
+
+// GetSignBytes Implements Msg
+func (m MsgLeaveGroup) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+// GetSigners returns the expected signers for a MsgLeaveGroup
+func (m MsgLeaveGroup) GetSigners() []sdk.AccAddress {
+	signer, err := sdk.AccAddressFromBech32(m.MemberAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{signer}
+}
+
+// ValidateBasic does a sanity check on the provided data
+func (m MsgLeaveGroup) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.MemberAddress)
+	if err != nil {
+		return sdkerrors.Wrap(err, "group member")
+	}
+	if m.GroupId == 0 {
+		return sdkerrors.Wrap(errors.ErrEmpty, "group-id")
 	}
 	return nil
 }

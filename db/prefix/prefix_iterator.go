@@ -4,18 +4,18 @@ import (
 	"bytes"
 	"fmt"
 
-	dbm "github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db"
 )
 
 // IteratePrefix is a convenience function for iterating over a key domain
 // restricted by prefix.
-func IteratePrefix(db dbm.DBReader, prefix []byte) (dbm.Iterator, error) {
+func IteratePrefix(dbr db.DBReader, prefix []byte) (db.Iterator, error) {
 	var start, end []byte
 	if len(prefix) != 0 {
 		start = prefix
 		end = cpIncr(prefix)
 	}
-	itr, err := db.Iterator(start, end)
+	itr, err := dbr.Iterator(start, end)
 	if err != nil {
 		return nil, err
 	}
@@ -27,13 +27,13 @@ type prefixDBIterator struct {
 	prefix []byte
 	start  []byte
 	end    []byte
-	source dbm.Iterator
+	source db.Iterator
 	err    error
 }
 
-var _ dbm.Iterator = (*prefixDBIterator)(nil)
+var _ db.Iterator = (*prefixDBIterator)(nil)
 
-func newPrefixIterator(prefix, start, end []byte, source dbm.Iterator) *prefixDBIterator {
+func newPrefixIterator(prefix, start, end []byte, source db.Iterator) *prefixDBIterator {
 	return &prefixDBIterator{
 		prefix: prefix,
 		start:  start,

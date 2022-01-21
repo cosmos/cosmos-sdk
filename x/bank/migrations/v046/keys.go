@@ -1,4 +1,4 @@
-package v045
+package v046
 
 var (
 	DenomAddressPrefix = []byte{0x03}

@@ -3,13 +3,13 @@ package v1beta1
 import (
 	"fmt"
 
+	"github.com/gogo/protobuf/proto"
 	"sigs.k8s.io/yaml"
 
-	"github.com/gogo/protobuf/proto"
-
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // Governance message types and routes
@@ -21,8 +21,8 @@ const (
 )
 
 var (
-	_, _, _, _ sdk.Msg                       = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}
-	_          types.UnpackInterfacesMessage = &MsgSubmitProposal{}
+	_, _, _, _ sdk.Msg                            = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}
+	_          codectypes.UnpackInterfacesMessage = &MsgSubmitProposal{}
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
@@ -67,7 +67,7 @@ func (m *MsgSubmitProposal) SetContent(content Content) error {
 	if !ok {
 		return fmt.Errorf("can't proto marshal %T", msg)
 	}
-	any, err := types.NewAnyWithValue(msg)
+	any, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func (m *MsgSubmitProposal) SetContent(content Content) error {
 }
 
 // Route implements Msg
-func (m MsgSubmitProposal) Route() string { return RouterKey }
+func (m MsgSubmitProposal) Route() string { return types.RouterKey }
 
 // Type implements Msg
 func (m MsgSubmitProposal) Type() string { return TypeMsgSubmitProposal }
@@ -95,10 +95,10 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 
 	content := m.GetContent()
 	if content == nil {
-		return sdkerrors.Wrap(ErrInvalidProposalContent, "missing content")
+		return sdkerrors.Wrap(types.ErrInvalidProposalContent, "missing content")
 	}
 	if !IsValidProposalType(content.ProposalType()) {
-		return sdkerrors.Wrap(ErrInvalidProposalType, content.ProposalType())
+		return sdkerrors.Wrap(types.ErrInvalidProposalType, content.ProposalType())
 	}
 	if err := content.ValidateBasic(); err != nil {
 		return err
@@ -109,7 +109,7 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 
 // GetSignBytes implements Msg
 func (m MsgSubmitProposal) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&m)
+	bz := types.ModuleCdc.MustMarshalJSON(&m)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -126,7 +126,7 @@ func (m MsgSubmitProposal) String() string {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgSubmitProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (m MsgSubmitProposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var content Content
 	return unpacker.UnpackAny(m.Content, &content)
 }
@@ -138,7 +138,7 @@ func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins
 }
 
 // Route implements Msg
-func (msg MsgDeposit) Route() string { return RouterKey }
+func (msg MsgDeposit) Route() string { return types.RouterKey }
 
 // Type implements Msg
 func (msg MsgDeposit) Type() string { return TypeMsgDeposit }
@@ -166,7 +166,7 @@ func (msg MsgDeposit) String() string {
 
 // GetSignBytes implements Msg
 func (msg MsgDeposit) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
+	bz := types.ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -183,7 +183,7 @@ func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) *Msg
 }
 
 // Route implements Msg
-func (msg MsgVote) Route() string { return RouterKey }
+func (msg MsgVote) Route() string { return types.RouterKey }
 
 // Type implements Msg
 func (msg MsgVote) Type() string { return TypeMsgVote }
@@ -194,7 +194,7 @@ func (msg MsgVote) ValidateBasic() error {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
 	}
 	if !ValidVoteOption(msg.Option) {
-		return sdkerrors.Wrap(ErrInvalidVote, msg.Option.String())
+		return sdkerrors.Wrap(types.ErrInvalidVote, msg.Option.String())
 	}
 
 	return nil
@@ -208,7 +208,7 @@ func (msg MsgVote) String() string {
 
 // GetSignBytes implements Msg
 func (msg MsgVote) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
+	bz := types.ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -225,7 +225,7 @@ func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options Weighte
 }
 
 // Route implements Msg
-func (msg MsgVoteWeighted) Route() string { return RouterKey }
+func (msg MsgVoteWeighted) Route() string { return types.RouterKey }
 
 // Type implements Msg
 func (msg MsgVoteWeighted) Type() string { return TypeMsgVoteWeighted }
@@ -243,21 +243,21 @@ func (msg MsgVoteWeighted) ValidateBasic() error {
 	usedOptions := make(map[VoteOption]bool)
 	for _, option := range msg.Options {
 		if !ValidWeightedVoteOption(option) {
-			return sdkerrors.Wrap(ErrInvalidVote, option.String())
+			return sdkerrors.Wrap(types.ErrInvalidVote, option.String())
 		}
 		totalWeight = totalWeight.Add(option.Weight)
 		if usedOptions[option.Option] {
-			return sdkerrors.Wrap(ErrInvalidVote, "Duplicated vote option")
+			return sdkerrors.Wrap(types.ErrInvalidVote, "Duplicated vote option")
 		}
 		usedOptions[option.Option] = true
 	}
 
 	if totalWeight.GT(sdk.NewDec(1)) {
-		return sdkerrors.Wrap(ErrInvalidVote, "Total weight overflow 1.00")
+		return sdkerrors.Wrap(types.ErrInvalidVote, "Total weight overflow 1.00")
 	}
 
 	if totalWeight.LT(sdk.NewDec(1)) {
-		return sdkerrors.Wrap(ErrInvalidVote, "Total weight lower than 1.00")
+		return sdkerrors.Wrap(types.ErrInvalidVote, "Total weight lower than 1.00")
 	}
 
 	return nil
@@ -271,7 +271,7 @@ func (msg MsgVoteWeighted) String() string {
 
 // GetSignBytes implements Msg
 func (msg MsgVoteWeighted) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
+	bz := types.ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 

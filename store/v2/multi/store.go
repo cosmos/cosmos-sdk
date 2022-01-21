@@ -111,27 +111,6 @@ type substore struct {
 	stateCommitmentStore *smt.Store
 }
 
-// Branched state
-type cacheStore struct {
-	source    types.BasicMultiStore
-	substores map[string]types.CacheKVStore
-	*traceListenMixin
-}
-
-// Read-only store for querying past versions
-type viewStore struct {
-	stateView           dbm.DBReader
-	stateCommitmentView dbm.DBReader
-	substoreCache       map[string]*viewSubstore
-	schema              StoreSchema
-}
-
-type viewSubstore struct {
-	dataBucket           dbm.DBReader
-	indexBucket          dbm.DBReader
-	stateCommitmentStore *smt.Store
-}
-
 // Builder type used to create a valid schema with no prefix conflicts
 type SchemaBuilder struct {
 	StoreSchema

@@ -17,6 +17,20 @@ import (
 
 var ErrReadOnly = errors.New("cannot modify read-only store")
 
+// Read-only store for querying past versions
+type viewStore struct {
+	stateView           dbm.DBReader
+	stateCommitmentView dbm.DBReader
+	substoreCache       map[string]*viewSubstore
+	schema              StoreSchema
+}
+
+type viewSubstore struct {
+	dataBucket           dbm.DBReader
+	indexBucket          dbm.DBReader
+	stateCommitmentStore *smt.Store
+}
+
 func (vs *viewStore) GetKVStore(skey types.StoreKey) types.KVStore {
 	key := skey.Name()
 	if _, has := vs.schema[key]; !has {

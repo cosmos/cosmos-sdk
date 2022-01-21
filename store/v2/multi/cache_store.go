@@ -5,6 +5,13 @@ import (
 	types "github.com/cosmos/cosmos-sdk/store/v2"
 )
 
+// Branched state
+type cacheStore struct {
+	source    types.BasicMultiStore
+	substores map[string]types.CacheKVStore
+	*traceListenMixin
+}
+
 func newCacheStore(bs types.BasicMultiStore) *cacheStore {
 	return &cacheStore{
 		source:           bs,

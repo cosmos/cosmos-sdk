@@ -56,7 +56,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
 
-			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
+			initClientCtx, err := client.ReadPersistentCommandFlags(cmd.Context(), initClientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}

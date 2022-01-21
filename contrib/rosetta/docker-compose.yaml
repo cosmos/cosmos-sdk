@@ -29,7 +29,7 @@ services:
     working_dir: /rosetta
     command: ["python3", "faucet.py"]
     expose:
-      - 8080
+      - 8000
 
   test_rosetta:
     image: tendermintdev/rosetta-cli:v0.6.7

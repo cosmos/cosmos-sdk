@@ -1,6 +1,7 @@
 package network
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"path/filepath"
@@ -12,6 +13,7 @@ import (
 	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/rpc/client/local"
 	"github.com/tendermint/tendermint/types"
+	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
@@ -110,7 +112,15 @@ func startInProcess(cfg Config, val *Validator) error {
 				return err
 			}
 		}
+
+		gcl, err := grpc.DialContext(context.Background(), val.AppConfig.GRPC.Address, grpc.WithInsecure(), grpc.WithReturnConnectionError())
+		if err != nil {
+			return err
+		}
+
+		val.ClientCtx = val.ClientCtx.WithClientConn(gcl)
 	}
+
 	return nil
 }
 

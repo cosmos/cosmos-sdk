@@ -12,7 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
@@ -25,9 +27,12 @@ const (
 // initClientContext initiates client Context for tests
 func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 	home := t.TempDir()
+	registry := testdata.NewTestInterfaceRegistry()
+
 	clientCtx := client.Context{}.
 		WithHomeDir(home).
-		WithViper("")
+		WithViper("").
+		WithCodec(codec.NewProtoCodec(registry))
 
 	clientCtx.Viper.BindEnv(nodeEnv)
 	if envVar != "" {
@@ -53,7 +58,7 @@ func TestConfigCmd(t *testing.T) {
 	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	require.NoError(t, err)
 
-	//./build/simd config node //http://localhost:1
+	// ./build/simd config node //http://localhost:1
 	b := bytes.NewBufferString("")
 	cmd.SetOut(b)
 	cmd.SetArgs([]string{"node"})
@@ -68,6 +73,8 @@ func TestConfigCmdEnvFlag(t *testing.T) {
 		defaultNode = "http://localhost:26657"
 	)
 
+	nogrpc := fmt.Sprintf("--%s=", flags.FlagGRPCNode)
+
 	tt := []struct {
 		name    string
 		envVar  string
@@ -75,9 +82,9 @@ func TestConfigCmdEnvFlag(t *testing.T) {
 		expNode string
 	}{
 		{"env var is set with no flag", testNode1, []string{"validators"}, testNode1},
-		{"env var is set with a flag", testNode1, []string{"validators", fmt.Sprintf("--%s=%s", flags.FlagNode, testNode2)}, testNode2},
-		{"env var is not set with no flag", "", []string{"validators"}, defaultNode},
-		{"env var is not set with a flag", "", []string{"validators", fmt.Sprintf("--%s=%s", flags.FlagNode, testNode2)}, testNode2},
+		{"env var is set with a flag", testNode1, []string{"validators", nogrpc, fmt.Sprintf("--%s=%s", flags.FlagNode, testNode2)}, testNode2},
+		{"env var is not set with no flag", "", []string{"validators", nogrpc}, defaultNode},
+		{"env var is not set with a flag", "", []string{"validators", nogrpc, fmt.Sprintf("--%s=%s", flags.FlagNode, testNode2)}, testNode2},
 	}
 
 	for _, tc := range tt {

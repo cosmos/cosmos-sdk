@@ -51,10 +51,6 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 	}
 
 	// Case 2. Querying state.
-	reqBz, err := protoCodec.Marshal(req)
-	if err != nil {
-		return err
-	}
 
 	// parse height header
 	md, _ := metadata.FromOutgoingContext(grpcCtx)
@@ -72,35 +68,51 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 		ctx = ctx.WithHeight(height)
 	}
 
-	abciReq := abci.RequestQuery{
-		Path:   method,
-		Data:   reqBz,
-		Height: ctx.Height,
-	}
-
-	res, err := ctx.QueryABCI(abciReq)
-	if err != nil {
-		return err
-	}
-
-	err = protoCodec.Unmarshal(res.Value, reply)
-	if err != nil {
-		return err
-	}
-
-	// Create header metadata. For now the headers contain:
-	// - block height
-	// We then parse all the call options, if the call option is a
-	// HeaderCallOption, then we manually set the value of that header to the
-	// metadata.
-	md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(res.Height, 10))
-	for _, callOpt := range opts {
-		header, ok := callOpt.(grpc.HeaderCallOption)
-		if !ok {
-			continue
+	if ctx.ClientConn != nil {
+		if ctx.Height > 0 {
+			grpcCtx = metadata.AppendToOutgoingContext(grpcCtx, grpctypes.GRPCBlockHeightHeader, strconv.FormatUint(uint64(ctx.Height), 10))
 		}
 
-		*header.HeaderAddr = md
+		err = ctx.ClientConn.Invoke(grpcCtx, method, req, reply, opts...)
+		if err != nil {
+			return err
+		}
+	} else {
+		reqBz, err := protoCodec.Marshal(req)
+		if err != nil {
+			return err
+		}
+
+		abciReq := abci.RequestQuery{
+			Path:   method,
+			Data:   reqBz,
+			Height: ctx.Height,
+		}
+
+		res, err := ctx.QueryABCI(abciReq)
+		if err != nil {
+			return err
+		}
+
+		err = protoCodec.Unmarshal(res.Value, reply)
+		if err != nil {
+			return err
+		}
+
+		// Create header metadata. For now the headers contain:
+		// - block height
+		// We then parse all the call options, if the call option is a
+		// HeaderCallOption, then we manually set the value of that header to the
+		// metadata.
+		md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(res.Height, 10))
+		for _, callOpt := range opts {
+			header, ok := callOpt.(grpc.HeaderCallOption)
+			if !ok {
+				continue
+			}
+
+			*header.HeaderAddr = md
+		}
 	}
 
 	if ctx.InterfaceRegistry != nil {

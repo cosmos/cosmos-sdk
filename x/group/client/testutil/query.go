@@ -28,7 +28,7 @@ func (s *IntegrationTestSuite) TestQueryGroupInfo() {
 			"group not found",
 			[]string{"12345", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			true,
-			"not found: invalid request",
+			"not found",
 			0,
 		},
 		{
@@ -295,7 +295,7 @@ func (s *IntegrationTestSuite) TestQueryGroupPolicyInfo() {
 			"group policy not found",
 			[]string{val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			true,
-			"not found: invalid request",
+			"not found",
 			0,
 		},
 		{

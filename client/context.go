@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/spf13/viper"
+	"google.golang.org/grpc"
 
 	"sigs.k8s.io/yaml"
 
@@ -49,9 +50,10 @@ type Context struct {
 	FeePayer          sdk.AccAddress
 	FeeGranter        sdk.AccAddress
 	Viper             *viper.Viper
-	
+	ClientConn        grpc.ClientConnInterface
+
 	// IsAux is true when the signer is an auxiliary signer (e.g. the tipper).
-	IsAux             bool
+	IsAux bool
 
 	// TODO: Deprecated (remove).
 	LegacyAmino *codec.LegacyAmino
@@ -125,6 +127,14 @@ func (ctx Context) WithHeight(height int64) Context {
 // instance.
 func (ctx Context) WithClient(client rpcclient.Client) Context {
 	ctx.Client = client
+	return ctx
+}
+
+// WithClientConn returns a copy of the context with an updated gRPC client
+// instance. This is optional, if not set, then the client.Context will default
+// to using Tendermint's RPC `abci_query` for making queries.
+func (ctx Context) WithClientConn(rpc grpc.ClientConnInterface) Context {
+	ctx.ClientConn = rpc
 	return ctx
 }
 

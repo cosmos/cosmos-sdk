@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
@@ -38,7 +39,7 @@ func TestRandomizedGenState(t *testing.T) {
 	simulation.RandomizedGenState(&simState)
 
 	var govGenesis v1beta2.GenesisState
-	simState.Cdc.MustUnmarshalJSON(simState.GenState[v1beta2.ModuleName], &govGenesis)
+	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &govGenesis)
 
 	dec1, _ := sdk.NewDecFromStr("0.361000000000000000")
 	dec2, _ := sdk.NewDecFromStr("0.512000000000000000")

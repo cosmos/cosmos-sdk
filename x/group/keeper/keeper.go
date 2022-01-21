@@ -212,3 +212,8 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", group.ModuleName))
 }
+
+// GetGroupSequence returns the current value of the group table sequence
+func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
+	return k.groupTable.Sequence().CurVal(ctx.KVStore(k.key))
+}

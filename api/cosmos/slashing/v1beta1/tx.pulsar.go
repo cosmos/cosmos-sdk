@@ -2,16 +2,15 @@ package slashingv1beta1
 
 import (
 	fmt "fmt"
-	io "io"
-	reflect "reflect"
-	sync "sync"
-
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/gogo/protobuf/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	io "io"
+	reflect "reflect"
+	sync "sync"
 )
 
 var (
@@ -809,7 +808,7 @@ type MsgUnjail struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ValidatorAddr string `protobuf:"bytes,1,opt,name=validator_addr,json=address,proto3" json:"validator_addr,omitempty"`
+	ValidatorAddr string `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3" json:"validator_addr,omitempty"`
 }
 
 func (x *MsgUnjail) Reset() {

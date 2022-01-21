@@ -27,10 +27,11 @@ var (
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
 //nolint:interfacer
-func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer string) (*MsgSubmitProposal, error) {
+func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer string, metadata []byte) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		InitialDeposit: initialDeposit,
 		Proposer:       proposer,
+		Metadata:       metadata,
 	}
 
 	anys, err := sdktx.SetMsgs(messages)
@@ -68,11 +69,10 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
 	}
 
-	// Empty messages are not allowed
-	// TODO: ValidateBasic should check that either metadata or length is non nil
-	// if m.Messages == nil || len(m.Messages) == 0 {
-	// 	return ErrNoProposalMsgs
-	// }
+	// Check that either metadata or Msgs length is non nil.
+	if len(m.Messages) == 0 || len(m.Metadata) == 0 {
+		return sdkerrors.Wrap(types.ErrNoProposalMsgs, "either metadata or Msgs length must be non-nil")
+	}
 
 	msgs, err := m.GetMsgs()
 	if err != nil {

@@ -88,7 +88,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				GroupSeq:              2,
 				Groups:                []*GroupInfo{{GroupId: 1, Admin: accAddr.String(), Metadata: []byte("1"), Version: 1, TotalWeight: "1"}, {GroupId: 2, Admin: accAddr.String(), Metadata: []byte("2"), Version: 2, TotalWeight: "2"}},
 				GroupMembers:          []*GroupMember{{GroupId: 1, Member: &Member{Address: memberAddr.String(), Weight: "1", Metadata: []byte("member metadata")}}, {GroupId: 2, Member: &Member{Address: memberAddr.String(), Weight: "2", Metadata: []byte("member metadata")}}},
-				GroupPolicyAccountSeq: 1,
+				GroupPolicySeq: 1,
 				GroupPolicies:         []*GroupPolicyInfo{groupPolicy},
 				ProposalSeq:           1,
 				Proposals:             []*Proposal{proposal},

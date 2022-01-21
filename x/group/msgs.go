@@ -645,7 +645,7 @@ func (m MsgWithdrawProposal) ValidateBasic() error {
 	}
 
 	if m.ProposalId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "proposal")
+		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
 	}
 
 	return nil

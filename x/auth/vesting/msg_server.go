@@ -132,14 +132,13 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 	acc := ak.GetAccount(ctx, to)
 
 	if acc != nil {
-		pva, ok := acc.(*types.PeriodicVestingAccount)
-		if !msg.Merge {
-			if ok {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists; consider using --merge", msg.ToAddress)
-			}
+		pva, isPeriodic := acc.(*types.PeriodicVestingAccount)
+		switch {
+		case !msg.Merge && isPeriodic:
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists; consider using --merge", msg.ToAddress)
+		case !msg.Merge && !isPeriodic:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
-		}
-		if !ok {
+		case msg.Merge && !isPeriodic:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrNotSupported, "account %s must be a periodic vesting account", msg.ToAddress)
 		}
 		newStart, newEnd, newPeriods := types.DisjunctPeriods(pva.StartTime, msg.GetStartTime(),
@@ -249,28 +248,26 @@ func (s msgServer) CreateTrueVestingAccount(goCtx context.Context, msg *types.Ms
 	var va *types.TrueVestingAccount
 
 	if acc != nil {
-		var ok bool
-		va, ok = acc.(*types.TrueVestingAccount)
-		if !msg.Merge {
-			if ok {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists; consider using --merge", msg.ToAddress)
-			}
+		var isClawback bool
+		va, isClawback = acc.(*types.TrueVestingAccount)
+		switch {
+		case !msg.Merge && isClawback:
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists; consider using --merge", msg.ToAddress)
+		case !msg.Merge && !isClawback:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
-		}
-		if !ok {
+		case msg.Merge && !isClawback:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrNotSupported, "account %s must be a true vesting account", msg.ToAddress)
-		}
-		if msg.FromAddress != va.FunderAddress {
+		case msg.FromAddress != va.FunderAddress:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s can only accept grants from account %s", msg.ToAddress, va.FunderAddress)
 		}
-		newStart, newEnd, newLockupPeriods := types.DisjunctPeriods(va.StartTime, msg.GetStartTime(), va.LockupPeriods, msg.LockupPeriods)
-		newStartX, newEndX, newVestingPeriods := types.DisjunctPeriods(va.StartTime, msg.GetStartTime(),
+		newLockupStart, newLockupEnd, newLockupPeriods := types.DisjunctPeriods(va.StartTime, msg.GetStartTime(), va.LockupPeriods, msg.LockupPeriods)
+		newVestingStart, newVestingEnd, newVestingPeriods := types.DisjunctPeriods(va.StartTime, msg.GetStartTime(),
 			va.GetVestingPeriods(), msg.GetVestingPeriods())
-		if newStart != newStartX {
+		if newLockupStart != newVestingStart {
 			panic("bad start time calculation")
 		}
-		va.StartTime = newStart
-		va.EndTime = max64(newEnd, newEndX)
+		va.StartTime = newLockupStart
+		va.EndTime = max64(newLockupEnd, newVestingEnd)
 		va.LockupPeriods = newLockupPeriods
 		va.VestingPeriods = newVestingPeriods
 		va.OriginalVesting = va.OriginalVesting.Add(vestingCoins...)

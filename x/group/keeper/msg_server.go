@@ -717,7 +717,7 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 	defer groupIter.Close()
 
 	var m group.GroupMember
-	weight := math.NewDecFromInt64(0)
+	memberWeight := math.NewDecFromInt64(0)
 	for {
 		if _, err := groupIter.LoadNext(&m); err != nil {
 			if errors.ErrORMIteratorDone.Is(err) {
@@ -727,17 +727,11 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 		}
 
 		if m.Member.Address == groupMember.Member.Address {
-			continue
-		}
-
-		d, err := math.NewNonNegativeDecFromString(m.Member.Weight)
-		if err != nil {
-			return nil, err
-		}
-
-		weight, err = math.Add(weight, d)
-		if err != nil {
-			return nil, err
+			memberWeight, err = math.NewNonNegativeDecFromString(m.Member.Weight)
+			if err != nil {
+				return nil, err
+			}
+			break
 		}
 	}
 
@@ -752,12 +746,27 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 		return nil, err
 	}
 
+	groupInfo, err := k.getGroupInfo(ctx, req.GroupId)
+	if err != nil {
+		return nil, err
+	}
+
+	groupWeight, err := math.NewNonNegativeDecFromString(groupInfo.TotalWeight)
+	if err != nil {
+		return nil, err
+	}
+	
+	r, err := math.SubNonNegative(groupWeight, memberWeight)
+	if err != nil {
+		return nil, err
+	}
+
 	policy := groupPolicy.GetDecisionPolicy()
 	switch v := policy.(type) {
 	case *group.ThresholdDecisionPolicy:
 		tdp, ok := policy.(*group.ThresholdDecisionPolicy)
 		if !ok {
-			return nil, err
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("expected %T, got %T", (*group.ThresholdDecisionPolicy)(nil), policy)
 		}
 
 		threshold, err := math.NewNonNegativeDecFromString(tdp.Threshold)
@@ -765,7 +774,7 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 			return nil, err
 		}
 
-		if threshold.Cmp(weight) == -1 {
+		if threshold.Cmp(r) == -1 {
 			return nil, sdkerrors.ErrInvalidRequest.Wrap("cannot leave group")
 		}
 
@@ -780,8 +789,10 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 		return nil, sdkerrors.Wrap(err, "delete member")
 	}
 
-	// TODO: update group weight
-	// k.groupTable.Update()
+	groupInfo.TotalWeight = r.String()
+	if err := k.groupTable.Update(ctx.KVStore(k.key), groupInfo.GroupId, &groupInfo); err != nil {
+		return nil, err
+	}
 
 	ctx.EventManager().EmitTypedEvent(&group.EventLeaveGroup{
 		GroupId: req.GroupId,

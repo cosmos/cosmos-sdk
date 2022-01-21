@@ -768,3 +768,51 @@ func TestMsgExec(t *testing.T) {
 		})
 	}
 }
+
+func TestMsgLeaveGroup(t *testing.T) {
+	testCases := []struct {
+		name   string
+		msg    *group.MsgLeaveGroup
+		expErr bool
+		errMsg string
+	}{
+		{
+			"invalid group member address",
+			&group.MsgLeaveGroup{
+				MemberAddress: "member",
+			},
+			true,
+			"group member: decoding bech32 failed",
+		},
+		{
+			"group id is required",
+			&group.MsgLeaveGroup{
+				MemberAddress: admin.String(),
+			},
+			true,
+			"group-id: value is empty",
+		},
+		{
+			"valid testcase",
+			&group.MsgLeaveGroup{
+				MemberAddress: admin.String(),
+				GroupId:       1,
+			},
+			false,
+			"",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := tc.msg
+			err := msg.ValidateBasic()
+			if tc.expErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.errMsg)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, msg.Type(), group.TypeMsgLeaveGroup)
+			}
+		})
+	}
+}

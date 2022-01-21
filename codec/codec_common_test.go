@@ -12,7 +12,7 @@ import (
 )
 
 type interfaceMarshaler struct {
-	marshal   func(i interface{}) ([]byte, error)
+	marshal   func(i proto.Message) ([]byte, error)
 	unmarshal func(bz []byte, ptr interface{}) error
 }
 

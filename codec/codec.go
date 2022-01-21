@@ -46,7 +46,7 @@ type (
 
 		// MarshalInterface is a helper method which will wrap `i` into `Any` for correct
 		// binary interface (de)serialization.
-		MarshalInterface(i interface{}) ([]byte, error)
+		MarshalInterface(i proto.Message) ([]byte, error)
 		// UnmarshalInterface is a helper method which will parse binary enoded data
 		// into `Any` and unpack any into the `ptr`. It fails if the target interface type
 		// is not registered in codec, or is not compatible with the serialized data
@@ -62,7 +62,7 @@ type (
 		MustMarshalJSON(o proto.Message) []byte
 		// MarshalInterfaceJSON is a helper method which will wrap `i` into `Any` for correct
 		// JSON interface (de)serialization.
-		MarshalInterfaceJSON(i interface{}) ([]byte, error)
+		MarshalInterfaceJSON(i proto.Message) ([]byte, error)
 		// UnmarshalInterfaceJSON is a helper method which will parse JSON encoded data
 		// into `Any` and unpack any into the `ptr`. It fails if the target interface type
 		// is not registered in codec, or is not compatible with the serialized data

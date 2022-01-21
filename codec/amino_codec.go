@@ -82,7 +82,7 @@ func (ac *AminoCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 // MarshalInterface is a convenience function for amino marshaling interfaces.
 // The `i` must be an interface.
 // NOTE: to marshal a concrete type, you should use Marshal instead
-func (ac *AminoCodec) MarshalInterface(i interface{}) ([]byte, error) {
+func (ac *AminoCodec) MarshalInterface(i proto.Message) ([]byte, error) {
 	if err := assertNotNil(i); err != nil {
 		return nil, err
 	}
@@ -103,7 +103,7 @@ func (ac *AminoCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
 // MarshalInterfaceJSON is a convenience function for amino marshaling interfaces.
 // The `i` must be an interface.
 // NOTE: to marshal a concrete type, you should use MarshalJSON instead
-func (ac *AminoCodec) MarshalInterfaceJSON(i interface{}) ([]byte, error) {
+func (ac *AminoCodec) MarshalInterfaceJSON(i proto.Message) ([]byte, error) {
 	if err := assertNotNil(i); err != nil {
 		return nil, err
 	}

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"math/big"
 	"testing"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -22,13 +23,16 @@ func createTestInput(t *testing.T) (*codec.LegacyAmino, *simapp.SimApp, sdk.Cont
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
+	stakingConfig := types.DefaultConfig()
+	stakingConfig.PowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
+
 	app.StakingKeeper = keeper.NewKeeper(
 		app.AppCodec(),
 		app.GetKey(types.StoreKey),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.GetSubspace(types.ModuleName),
-		types.DefaultConfig(),
+		stakingConfig,
 	)
 	return app.LegacyAmino(), app, ctx
 }

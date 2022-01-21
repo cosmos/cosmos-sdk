@@ -1,9 +1,17 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	"math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 func TokensToConsensusPower(tokens sdk.Int, powerReduction sdk.Int) int64 {
-	return (tokens.Quo(powerReduction)).Int64()
+	power := tokens.Quo(powerReduction)
+	if power.GT(sdk.NewIntFromUint64(math.MaxInt64)) {
+		return 0
+	}
+	return power.Int64()
 }
 
 // TokensFromConsensusPower - convert input power to tokens

@@ -1,4 +1,4 @@
-package v045_test
+package v046_test
 
 import (
 	"testing"
@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	v043 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v043"
-	v045 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v045"
+	v046 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v046"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -36,7 +36,7 @@ func TestMigrateStore(t *testing.T) {
 		prefixAccStore.Set([]byte(b.Denom), bz)
 	}
 
-	require.NoError(t, v045.MigrateStore(ctx, bankKey, encCfg.Codec))
+	require.NoError(t, v046.MigrateStore(ctx, bankKey, encCfg.Codec))
 
 	for _, b := range balances {
 		addrPrefixStore := prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
@@ -47,7 +47,7 @@ func TestMigrateStore(t *testing.T) {
 	}
 
 	for _, b := range balances {
-		denomPrefixStore := prefix.NewStore(store, v045.CreateDenomAddressPrefix(b.Denom))
+		denomPrefixStore := prefix.NewStore(store, v046.CreateDenomAddressPrefix(b.Denom))
 		bz := denomPrefixStore.Get(address.MustLengthPrefix(addr))
 		require.NotNil(t, bz)
 	}
@@ -95,7 +95,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 		denomMetadataStore.Set(key, bz)
 	}
 
-	require.NoError(t, v045.MigrateStore(ctx, bankKey, encCfg.Codec))
+	require.NoError(t, v046.MigrateStore(ctx, bankKey, encCfg.Codec))
 
 	denomMetadataStore = prefix.NewStore(store, v043.DenomMetadataPrefix)
 	denomMetadataIter := denomMetadataStore.Iterator(nil, nil)

@@ -2,8 +2,10 @@ package testutil
 
 import (
 	"bytes"
-
+	bankv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/bank/v1beta1"
+	basev1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/v1beta1"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/protobuf/testing/protocmp"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -13,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"gotest.tools/v3/assert"
 )
 
 // TxConfigTestSuite provides a test suite that can be used to test that a TxConfig implementation is correct.
@@ -306,4 +309,98 @@ func (s *TxConfigTestSuite) TestWrapTxBuilder() {
 	newTxBldr, err := s.TxConfig.WrapTxBuilder(txBuilder.GetTx())
 	s.Require().NoError(err)
 	s.Require().Equal(txBuilder, newTxBldr)
+}
+
+// TODO: REMOVE
+// msgSendWrapper is a wrapper around the api/bank/MsgSend proto message.
+// we use this to impl GetSigners/ValidateBasic.
+// This can be removed once PR's are added to codegen these functions.
+type msgSendWrapper struct {
+	*bankv1beta1.MsgSend
+}
+
+func (x msgSendWrapper) GetSigners() []sdk.AccAddress {
+	addr, _ := sdk.AccAddressFromBech32(x.FromAddress)
+	return []sdk.AccAddress{addr}
+}
+
+func (x msgSendWrapper) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(x.FromAddress); err != nil {
+		return err
+	}
+	if _, err := sdk.AccAddressFromBech32(x.ToAddress); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *TxConfigTestSuite) TestEncodeDecodeV2() {
+	log := s.T().Log
+	_, pubkey, addr := testdata.KeyTestPubAddr()
+	feeAmount := sdk.Coins{sdk.NewInt64Coin("atom", 150)}
+	gasLimit := uint64(50000)
+	memo := "foomemo"
+	//msg := testdata.NewTestMsg(addr)
+	m := bankv1beta1.MsgSend{FromAddress: addr.String(), ToAddress: addr.String(), Amount: []*basev1beta1.Coin{{Amount: "100", Denom: "Foo"}}}
+	msg := msgSendWrapper{&m}
+	dummySig := []byte("dummySig")
+	sig := signingtypes.SignatureV2{
+		PubKey: pubkey,
+		Data: &signingtypes.SingleSignatureData{
+			SignMode:  signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+			Signature: dummySig,
+		},
+	}
+
+	txBuilder := s.TxConfig.NewTxBuilder()
+	txBuilder.SetFeeAmount(feeAmount)
+	txBuilder.SetGasLimit(gasLimit)
+	txBuilder.SetMemo(memo)
+	err := txBuilder.SetMsgs(msg)
+	s.Require().NoError(err)
+	err = txBuilder.SetSignatures(sig)
+	s.Require().NoError(err)
+	tx := txBuilder.GetTx()
+
+	log("encode transaction")
+	txBytes, err := s.TxConfig.TxEncoder()(tx)
+	s.Require().NoError(err)
+	s.Require().NotNil(txBytes)
+	log("decode transaction", s.TxConfig)
+	tx2, err := s.TxConfig.TxDecoder()(txBytes)
+
+	s.Require().NoError(err)
+	tx3, ok := tx2.(signing.Tx)
+	s.Require().True(ok)
+	assert.DeepEqual(s.T(), []sdk.Msg{msg}, tx3.GetMsgs(), protocmp.Transform())
+	s.Require().Equal(feeAmount, tx3.GetFee())
+	s.Require().Equal(gasLimit, tx3.GetGas())
+	s.Require().Equal(memo, tx3.GetMemo())
+	tx3Sigs, err := tx3.GetSignaturesV2()
+	s.Require().NoError(err)
+	s.Require().Equal([]signingtypes.SignatureV2{sig}, tx3Sigs)
+	pks, err := tx3.GetPubKeys()
+	s.Require().NoError(err)
+	s.Require().Equal([]cryptotypes.PubKey{pubkey}, pks)
+
+	log("JSON encode transaction")
+	jsonTxBytes, err := s.TxConfig.TxJSONEncoder()(tx)
+	s.Require().NoError(err)
+	s.Require().NotNil(jsonTxBytes)
+
+	log("JSON decode transaction")
+	tx2, err = s.TxConfig.TxJSONDecoder()(jsonTxBytes)
+	s.Require().NoError(err)
+	tx3, ok = tx2.(signing.Tx)
+	s.Require().True(ok)
+	assert.DeepEqual(s.T(), []sdk.Msg{msg}, tx3.GetMsgs(), protocmp.Transform())
+	s.Require().Equal(feeAmount, tx3.GetFee())
+	s.Require().Equal(gasLimit, tx3.GetGas())
+	s.Require().Equal(memo, tx3.GetMemo())
+	tx3Sigs, err = tx3.GetSignaturesV2()
+	s.Require().NoError(err)
+	s.Require().Equal([]signingtypes.SignatureV2{sig}, tx3Sigs)
+	pks, err = tx3.GetPubKeys()
+	s.Require().NoError(err)
+	s.Require().Equal([]cryptotypes.PubKey{pubkey}, pks)
 }

@@ -52,8 +52,7 @@ func (any *Any) MarshalJSONPB(m *jsonpb.Marshaler) ([]byte, error) {
 }
 
 func (any *Any) UnmarshalJSONPB(u *jsonpb.Unmarshaler, bz []byte) error {
-
-	typeURL, err := typeUrlFromBytes(bz)
+	typeURL, jsonbz, err := typeUrlFromBytes(bz)
 	if err != nil {
 		return err
 	}
@@ -67,43 +66,58 @@ func (any *Any) UnmarshalJSONPB(u *jsonpb.Unmarshaler, bz []byte) error {
 	case protov2.Message:
 		unmarshalv2 := protojson.UnmarshalOptions{
 			AllowPartial:   false,
-			DiscardUnknown: !u.AllowUnknownFields, // TODO(tyler): this ok?
+			DiscardUnknown: !u.AllowUnknownFields, // TODO(tyler): is this ok?
 			Resolver:       u.AnyResolver.(InterfaceRegistry),
 		}
-		err := unmarshalv2.Unmarshal(bz, msg)
+		err := unmarshalv2.Unmarshal(jsonbz, msg)
 		if err != nil {
 			return err
 		}
-		any.Value = bz
+		v2bz, err := protov2.Marshal(msg)
+		if err != nil {
+			return err
+		}
+		any.TypeUrl = typeURL
+		any.Value = v2bz
+		any.cachedValue = msg
 		return nil
 	case gogoproto.Message:
-		buf := bytes.NewReader(bz)
+		buf := bytes.NewReader(jsonbz)
 		err := u.Unmarshal(buf, msg)
 		if err != nil {
 			return err
 		}
-		any.Value = bz
+		gogobz, err := gogoproto.Marshal(msg)
+		if err != nil {
+			return err
+		}
+		any.TypeUrl = typeURL
+		any.Value = gogobz
+		any.cachedValue = msg
 		return nil
 	default:
 		return fmt.Errorf("the message resolved from the Any was not a gogoproto nor a protov2 message, got: %T", msg)
 	}
 }
 
-func typeUrlFromBytes(bz []byte) (string, error) {
+func typeUrlFromBytes(bz []byte) (typeUrl string, jsonbz []byte, err error) {
 	// we need to extract the typeURL from the bytes in order to correctly decide
 	// if this is a gogo message or a proto v2 message
 	var objmap map[string]json.RawMessage
-	err := json.Unmarshal(bz, &objmap)
+	err = json.Unmarshal(bz, &objmap)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	raw, ok := objmap["@type"]
 	if !ok {
-		return "", errors.New("field @type not found in message bytes")
+		return "", nil, errors.New("field @type not found in message bytes")
 	}
+
+	delete(objmap, "@type")
+	jsonbz, err = json.Marshal(objmap)
 
 	var typeURL string
 	err = json.Unmarshal(raw, &typeURL)
-	return typeURL, err
+	return typeURL, jsonbz, err
 }

@@ -41,10 +41,7 @@ func ProtoMarshalJSON(msg interface{}, resolver types.InterfaceRegistry) ([]byte
 		}
 
 		buf := new(bytes.Buffer)
-		//if err := protoJM.Marshal(buf, msg); err != nil { // test panicked: invalid Go type types.Int for field cosmos.base.v1beta1.Coin.amount
-		//	return nil, err
-		//}
-		if err := jm.Marshal(buf, msg); err != nil { // ERROR: unknown field "@type" in testdata.TestMsg: tx parse error
+		if err := jm.Marshal(buf, msg); err != nil {
 			return nil, err
 		}
 

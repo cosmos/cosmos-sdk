@@ -1,6 +1,7 @@
 package tx
 
 import (
+	bankv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/bank/v1beta1"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -16,7 +17,7 @@ import (
 func TestGenerator(t *testing.T) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	std.RegisterInterfaces(interfaceRegistry)
-	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
+	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{}, &bankv1beta1.MsgSend{})
 	protoCodec := codec.NewProtoCodec(interfaceRegistry)
 	suite.Run(t, testutil.NewTxConfigTestSuite(NewTxConfig(protoCodec, DefaultSignModes)))
 }

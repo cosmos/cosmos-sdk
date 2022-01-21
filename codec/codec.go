@@ -21,28 +21,28 @@ type (
 
 	BinaryCodec interface {
 		// Marshal returns binary encoding of v.
-		Marshal(o interface{}) ([]byte, error)
+		Marshal(o proto.Message) ([]byte, error)
 		// MustMarshal calls Marshal and panics if error is returned.
-		MustMarshal(o interface{}) []byte
+		MustMarshal(o proto.Message) []byte
 
 		// MarshalLengthPrefixed returns binary encoding of v with bytes length prefix.
-		MarshalLengthPrefixed(o interface{}) ([]byte, error)
+		MarshalLengthPrefixed(o proto.Message) ([]byte, error)
 		// MustMarshalLengthPrefixed calls MarshalLengthPrefixed and panics if
 		// error is returned.
-		MustMarshalLengthPrefixed(o interface{}) []byte
+		MustMarshalLengthPrefixed(o proto.Message) []byte
 
 		// Unmarshal parses the data encoded with Marshal method and stores the result
 		// in the value pointed to by v.
-		Unmarshal(bz []byte, ptr interface{}) error
+		Unmarshal(bz []byte, ptr proto.Message) error
 		// MustUnmarshal calls Unmarshal and panics if error is returned.
-		MustUnmarshal(bz []byte, ptr interface{})
+		MustUnmarshal(bz []byte, ptr proto.Message)
 
 		// UnmarshalLengthPrefixed parses the data encoded with UnmarshalLengthPrefixed method and stores
 		// the result in the value pointed to by v.
-		UnmarshalLengthPrefixed(bz []byte, ptr interface{}) error
+		UnmarshalLengthPrefixed(bz []byte, ptr proto.Message) error
 		// MustUnmarshalLengthPrefixed calls UnmarshalLengthPrefixed and panics if error
 		// is returned.
-		MustUnmarshalLengthPrefixed(bz []byte, ptr interface{})
+		MustUnmarshalLengthPrefixed(bz []byte, ptr proto.Message)
 
 		// MarshalInterface is a helper method which will wrap `i` into `Any` for correct
 		// binary interface (de)serialization.
@@ -57,9 +57,9 @@ type (
 
 	JSONCodec interface {
 		// MarshalJSON returns JSON encoding of v.
-		MarshalJSON(o interface{}) ([]byte, error)
+		MarshalJSON(o proto.Message) ([]byte, error)
 		// MustMarshalJSON calls MarshalJSON and panics if error is returned.
-		MustMarshalJSON(o interface{}) []byte
+		MustMarshalJSON(o proto.Message) []byte
 		// MarshalInterfaceJSON is a helper method which will wrap `i` into `Any` for correct
 		// JSON interface (de)serialization.
 		MarshalInterfaceJSON(i interface{}) ([]byte, error)
@@ -70,9 +70,9 @@ type (
 
 		// UnmarshalJSON parses the data encoded with MarshalJSON method and stores the result
 		// in the value pointed to by v.
-		UnmarshalJSON(bz []byte, ptr interface{}) error
+		UnmarshalJSON(bz []byte, ptr proto.Message) error
 		// MustUnmarshalJSON calls Unmarshal and panics if error is returned.
-		MustUnmarshalJSON(bz []byte, ptr interface{})
+		MustUnmarshalJSON(bz []byte, ptr proto.Message)
 	}
 
 	// ProtoMarshaler defines an interface a type must implement to serialize itself

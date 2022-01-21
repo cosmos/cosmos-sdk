@@ -1,6 +1,7 @@
 package codec_test
 
 import (
+	"github.com/gogo/protobuf/proto"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -27,7 +28,7 @@ func testInterfaceMarshaling(require *require.Assertions, cdc interfaceMarshaler
 	var animal testdata.Animal
 	if isAminoBin {
 		require.PanicsWithValue("Unmarshal expects a pointer", func() {
-			cdc.unmarshal(bz, animal)
+			_ = cdc.unmarshal(bz, animal)
 		})
 	} else {
 		err = cdc.unmarshal(bz, animal)
@@ -49,10 +50,10 @@ func testInterfaceMarshaling(require *require.Assertions, cdc interfaceMarshaler
 }
 
 type mustMarshaler struct {
-	marshal       func(i interface{}) ([]byte, error)
-	mustMarshal   func(i interface{}) []byte
-	unmarshal     func(bz []byte, ptr interface{}) error
-	mustUnmarshal func(bz []byte, ptr interface{})
+	marshal       func(i proto.Message) ([]byte, error)
+	mustMarshal   func(i proto.Message) []byte
+	unmarshal     func(bz []byte, ptr proto.Message) error
+	mustUnmarshal func(bz []byte, ptr proto.Message)
 }
 
 type testCase struct {
@@ -119,10 +120,10 @@ func testMarshaling(t *testing.T, cdc codec.Codec) {
 		m1 := mustMarshaler{cdc.Marshal, cdc.MustMarshal, cdc.Unmarshal, cdc.MustUnmarshal}
 		m2 := mustMarshaler{cdc.MarshalLengthPrefixed, cdc.MustMarshalLengthPrefixed, cdc.UnmarshalLengthPrefixed, cdc.MustUnmarshalLengthPrefixed}
 		m3 := mustMarshaler{
-			func(i interface{}) ([]byte, error) { return cdc.MarshalJSON(i) },
-			func(i interface{}) []byte { return cdc.MustMarshalJSON(i) },
-			func(bz []byte, ptr interface{}) error { return cdc.UnmarshalJSON(bz, ptr) },
-			func(bz []byte, ptr interface{}) { cdc.MustUnmarshalJSON(bz, ptr) }}
+			func(i proto.Message) ([]byte, error) { return cdc.MarshalJSON(i) },
+			func(i proto.Message) []byte { return cdc.MustMarshalJSON(i) },
+			func(bz []byte, ptr proto.Message) error { return cdc.UnmarshalJSON(bz, ptr) },
+			func(bz []byte, ptr proto.Message) { cdc.MustUnmarshalJSON(bz, ptr) }}
 
 		t.Run(tc.name+"_BinaryBare",
 			func(t *testing.T) { testMarshalingTestCase(require.New(t), tc, m1) })

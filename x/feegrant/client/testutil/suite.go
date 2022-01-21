@@ -263,7 +263,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGranter() {
 		name         string
 		args         []string
 		expectErr    bool
-		resp         *feegrant.QueryIssuedAllowancesResponse
+		resp         *feegrant.QueryAllowancesByGranterResponse
 		expectLength int
 	}{
 		{
@@ -280,7 +280,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGranter() {
 				"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			false, &feegrant.QueryIssuedAllowancesResponse{}, 0,
+			false, &feegrant.QueryAllowancesByGranterResponse{}, 0,
 		},
 		{
 			"valid req",
@@ -288,7 +288,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGranter() {
 				granter.String(),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			false, &feegrant.QueryIssuedAllowancesResponse{}, 1,
+			false, &feegrant.QueryAllowancesByGranterResponse{}, 1,
 		},
 	}
 

@@ -148,51 +148,51 @@ func (suite *KeeperTestSuite) TestFeeAllowances() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestFeeIssuedAllowances() {
+func (suite *KeeperTestSuite) TestFeeAllowancesByGranter() {
 	testCases := []struct {
 		name      string
-		req       *feegrant.QueryIssuedAllowancesRequest
+		req       *feegrant.QueryAllowancesByGranterRequest
 		expectErr bool
 		preRun    func()
-		postRun   func(_ *feegrant.QueryIssuedAllowancesResponse)
+		postRun   func(_ *feegrant.QueryAllowancesByGranterResponse)
 	}{
 		{
 			"nil request",
 			nil,
 			true,
 			func() {},
-			func(*feegrant.QueryIssuedAllowancesResponse) {},
+			func(*feegrant.QueryAllowancesByGranterResponse) {},
 		},
 		{
 			"fail: invalid grantee",
-			&feegrant.QueryIssuedAllowancesRequest{
+			&feegrant.QueryAllowancesByGranterRequest{
 				Granter: "invalid_grantee",
 			},
 			true,
 			func() {},
-			func(*feegrant.QueryIssuedAllowancesResponse) {},
+			func(*feegrant.QueryAllowancesByGranterResponse) {},
 		},
 		{
 			"no grants",
-			&feegrant.QueryIssuedAllowancesRequest{
+			&feegrant.QueryAllowancesByGranterRequest{
 				Granter: suite.addrs[0].String(),
 			},
 			false,
 			func() {},
-			func(resp *feegrant.QueryIssuedAllowancesResponse) {
+			func(resp *feegrant.QueryAllowancesByGranterResponse) {
 				suite.Require().Equal(len(resp.Allowances), 0)
 			},
 		},
 		{
 			"valid query: expect single grant",
-			&feegrant.QueryIssuedAllowancesRequest{
+			&feegrant.QueryAllowancesByGranterRequest{
 				Granter: suite.addrs[0].String(),
 			},
 			false,
 			func() {
 				grantFeeAllowance(suite)
 			},
-			func(resp *feegrant.QueryIssuedAllowancesResponse) {
+			func(resp *feegrant.QueryAllowancesByGranterResponse) {
 				suite.Require().Equal(len(resp.Allowances), 1)
 				suite.Require().Equal(resp.Allowances[0].Granter, suite.addrs[0].String())
 				suite.Require().Equal(resp.Allowances[0].Grantee, suite.addrs[1].String())
@@ -203,7 +203,7 @@ func (suite *KeeperTestSuite) TestFeeIssuedAllowances() {
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			tc.preRun()
-			resp, err := suite.keeper.IssuedAllowances(suite.ctx, tc.req)
+			resp, err := suite.keeper.AllowancesByGranter(suite.ctx, tc.req)
 			if tc.expectErr {
 				suite.Require().Error(err)
 			} else {

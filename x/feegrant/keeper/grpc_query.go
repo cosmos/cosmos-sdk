@@ -94,8 +94,8 @@ func (q Keeper) Allowances(c context.Context, req *feegrant.QueryAllowancesReque
 	return &feegrant.QueryAllowancesResponse{Allowances: grants, Pagination: pageRes}, nil
 }
 
-// IssuedAllowances queries all the allowances granted by the given granter
-func (q Keeper) IssuedAllowances(c context.Context, req *feegrant.QueryIssuedAllowancesRequest) (*feegrant.QueryIssuedAllowancesResponse, error) {
+// AllowancesByGranter queries all the allowances granted by the given granter
+func (q Keeper) AllowancesByGranter(c context.Context, req *feegrant.QueryAllowancesByGranterRequest) (*feegrant.QueryAllowancesByGranterResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -130,5 +130,5 @@ func (q Keeper) IssuedAllowances(c context.Context, req *feegrant.QueryIssuedAll
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &feegrant.QueryIssuedAllowancesResponse{Allowances: grants, Pagination: pageRes}, nil
+	return &feegrant.QueryAllowancesByGranterResponse{Allowances: grants, Pagination: pageRes}, nil
 }

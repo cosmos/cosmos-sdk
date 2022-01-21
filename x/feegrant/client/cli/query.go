@@ -157,9 +157,9 @@ $ %s query feegrant grants [granter]
 				return err
 			}
 
-			res, err := queryClient.IssuedAllowances(
+			res, err := queryClient.AllowancesByGranter(
 				cmd.Context(),
-				&feegrant.QueryIssuedAllowancesRequest{
+				&feegrant.QueryAllowancesByGranterRequest{
 					Granter:    granterAddr.String(),
 					Pagination: pageReq,
 				},

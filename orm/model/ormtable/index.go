@@ -40,14 +40,14 @@ type concreteIndex interface {
 type UniqueIndex interface {
 	Index
 
+	// Has returns true if the key values are present in the store for this index.
+	Has(context context.Context, keyValues ...interface{}) (found bool, err error)
+
 	// Get retrieves the message if one exists for the provided key values.
 	Get(context context.Context, message proto.Message, keyValues ...interface{}) (found bool, err error)
 
 	// DeleteByKey deletes the message if one exists in for the provided key values.
 	DeleteByKey(context context.Context, keyValues ...interface{}) error
-
-	// Has returns true if the key values are present in the store for this index.
-	Has(context context.Context, keyValues ...interface{}) (found bool, err error)
 }
 
 type indexer interface {

@@ -6,8 +6,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TokensToConsensusPower - convert input tokens to Power
 func TokensToConsensusPower(tokens sdk.Int, powerReduction sdk.Int) int64 {
+	if powerReduction.IsZero() {
+		return 0
+	}
+
 	power := tokens.Quo(powerReduction)
+
 	if power.GT(sdk.NewIntFromUint64(math.MaxInt64)) {
 		return 0
 	}

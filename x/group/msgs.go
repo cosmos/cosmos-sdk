@@ -13,28 +13,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 )
 
-// Group message types and routes
-const (
-	TypeMsgCreateGroup                     = "create_group"
-	TypeMsgUpdateGroupAdmin                = "update_group_admin"
-	TypeMsgUpdateGroupMetadata             = "update_group_metadata"
-	TypeMsgUpdateGroupMembers              = "update_group_members"
-	TypeMsgCreateGroupPolicy               = "create_group_policy"
-	TypeMsgUpdateGroupPolicyAdmin          = "update_group_policy_admin"
-	TypeMsgUpdateGroupPolicyDecisionPolicy = "update_group_policy_decision_policy"
-	TypeMsgUpdateGroupPolicyMetadata       = "update_group_policy_metadata"
-	TypeMsgCreateProposal                  = "create_proposal"
-	TypeMsgVote                            = "vote"
-	TypeMsgExec                            = "exec"
-)
-
 var _ sdk.Msg = &MsgCreateGroup{}
 
 // Route Implements Msg.
-func (m MsgCreateGroup) Route() string { return RouterKey }
+func (m MsgCreateGroup) Route() string { return sdk.MsgTypeURL(&m) }
 
 // Type Implements Msg.
-func (m MsgCreateGroup) Type() string { return TypeMsgCreateGroup }
+func (m MsgCreateGroup) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgCreateGroup) GetSignBytes() []byte {
@@ -100,11 +85,11 @@ var _ sdk.Msg = &MsgUpdateGroupAdmin{}
 
 // Route Implements Msg.
 func (m MsgUpdateGroupAdmin) Route() string {
-	return RouterKey
+	return sdk.MsgTypeURL(&m)
 }
 
 // Type Implements Msg.
-func (m MsgUpdateGroupAdmin) Type() string { return TypeMsgUpdateGroupAdmin }
+func (m MsgUpdateGroupAdmin) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupAdmin) GetSignBytes() []byte {
@@ -150,11 +135,11 @@ var _ sdk.Msg = &MsgUpdateGroupMetadata{}
 
 // Route Implements Msg.
 func (m MsgUpdateGroupMetadata) Route() string {
-	return RouterKey
+	return sdk.MsgTypeURL(&m)
 }
 
 // Type Implements Msg.
-func (m MsgUpdateGroupMetadata) Type() string { return TypeMsgUpdateGroupMetadata }
+func (m MsgUpdateGroupMetadata) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupMetadata) GetSignBytes() []byte {
@@ -192,11 +177,11 @@ var _ sdk.Msg = &MsgUpdateGroupMembers{}
 
 // Route Implements Msg.
 func (m MsgUpdateGroupMembers) Route() string {
-	return RouterKey
+	return sdk.MsgTypeURL(&m)
 }
 
 // Type Implements Msg.
-func (m MsgUpdateGroupMembers) Type() string { return TypeMsgUpdateGroupMembers }
+func (m MsgUpdateGroupMembers) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupMembers) GetSignBytes() []byte {
@@ -243,11 +228,11 @@ var _ sdk.Msg = &MsgCreateGroupPolicy{}
 
 // Route Implements Msg.
 func (m MsgCreateGroupPolicy) Route() string {
-	return RouterKey
+	return sdk.MsgTypeURL(&m)
 }
 
 // Type Implements Msg.
-func (m MsgCreateGroupPolicy) Type() string { return TypeMsgCreateGroupPolicy }
+func (m MsgCreateGroupPolicy) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgCreateGroupPolicy) GetSignBytes() []byte {
@@ -288,11 +273,11 @@ var _ sdk.Msg = &MsgUpdateGroupPolicyAdmin{}
 
 // Route Implements Msg.
 func (m MsgUpdateGroupPolicyAdmin) Route() string {
-	return RouterKey
+	return sdk.MsgTypeURL(&m)
 }
 
 // Type Implements Msg.
-func (m MsgUpdateGroupPolicyAdmin) Type() string { return TypeMsgUpdateGroupPolicyAdmin }
+func (m MsgUpdateGroupPolicyAdmin) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupPolicyAdmin) GetSignBytes() []byte {
@@ -361,12 +346,12 @@ func (m *MsgUpdateGroupPolicyDecisionPolicy) SetDecisionPolicy(decisionPolicy De
 
 // Route Implements Msg.
 func (m MsgUpdateGroupPolicyDecisionPolicy) Route() string {
-	return RouterKey
+	return sdk.MsgTypeURL(&m)
 }
 
 // Type Implements Msg.
 func (m MsgUpdateGroupPolicyDecisionPolicy) Type() string {
-	return TypeMsgUpdateGroupPolicyDecisionPolicy
+	return sdk.MsgTypeURL(&m)
 }
 
 // GetSignBytes Implements Msg.
@@ -425,11 +410,11 @@ var _ sdk.Msg = &MsgUpdateGroupPolicyMetadata{}
 
 // Route Implements Msg.
 func (m MsgUpdateGroupPolicyMetadata) Route() string {
-	return RouterKey
+	return sdk.MsgTypeURL(&m)
 }
 
 // Type Implements Msg.
-func (m MsgUpdateGroupPolicyMetadata) Type() string { return TypeMsgUpdateGroupPolicyMetadata }
+func (m MsgUpdateGroupPolicyMetadata) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupPolicyMetadata) GetSignBytes() []byte {
@@ -535,11 +520,11 @@ func NewMsgCreateProposalRequest(address string, proposers []string, msgs []sdk.
 
 // Route Implements Msg.
 func (m MsgCreateProposal) Route() string {
-	return RouterKey
+	return sdk.MsgTypeURL(&m)
 }
 
 // Type Implements Msg.
-func (m MsgCreateProposal) Type() string { return TypeMsgCreateProposal }
+func (m MsgCreateProposal) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgCreateProposal) GetSignBytes() []byte {
@@ -618,11 +603,11 @@ var _ sdk.Msg = &MsgVote{}
 
 // Route Implements Msg.
 func (m MsgVote) Route() string {
-	return RouterKey
+	return sdk.MsgTypeURL(&m)
 }
 
 // Type Implements Msg.
-func (m MsgVote) Type() string { return TypeMsgVote }
+func (m MsgVote) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgVote) GetSignBytes() []byte {
@@ -660,11 +645,11 @@ var _ sdk.Msg = &MsgExec{}
 
 // Route Implements Msg.
 func (m MsgExec) Route() string {
-	return RouterKey
+	return sdk.MsgTypeURL(&m)
 }
 
 // Type Implements Msg.
-func (m MsgExec) Type() string { return TypeMsgExec }
+func (m MsgExec) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgExec) GetSignBytes() []byte {

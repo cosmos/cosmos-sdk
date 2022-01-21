@@ -33,10 +33,10 @@ When possible, the existing module's [`Keeper`](keeper.md) should implement `Msg
 
 ### Validation 
 
-Before a `msgServer` method is executed, the `message`'s [`ValidateBasic()`](../basics/tx-lifecycle.md#ValidateBasic) method has already been called. Since `msg.ValidateBasic()`  performs only the most basic checks, at this stage we must perform all other validation (both *stateful* and *stateless*) to make sure the `message` is valid. Checks performed in the `msgServer` method can be more expensive and the signer will be charged gas for these operations.
+Before a `msgServer` method is executed, the message's [`ValidateBasic()`](../basics/tx-lifecycle.md#ValidateBasic) method has already been called. Since `msg.ValidateBasic()`  performs only the most basic checks, this stage must perform all other validation (both *stateful* and *stateless*) to make sure the `message` is valid. Checks performed in the `msgServer` method can be more expensive and the signer is charged gas for these operations.
 For example, a `msgServer` method for a `transfer` message might check that the sending account has enough funds to actually perform the transfer. 
 
-It is recommended to implement all validation checks in a separate function, with state values passed as arguments. This will simplify testing. Expensive validation functions should charge additional gas. Example:
+It is recommended to implement all validation checks in a separate function that passes state values as arguments. This implementation simplifies testing. As expected, expensive validation functions charge additional gas. Example:
 
 ```go
 ValidateMsgA(msg MsgA, now Time, gm GasMeter) error {

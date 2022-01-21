@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/orm/internal/stablejson"
+
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -43,7 +45,12 @@ func (p *PrimaryKeyEntry) String() string {
 	if p.Value == nil {
 		return fmt.Sprintf("PK %s %s -> _", p.TableName, fmtValues(p.Key))
 	} else {
-		return fmt.Sprintf("PK %s %s -> %s", p.TableName, fmtValues(p.Key), p.Value)
+		valBz, err := stablejson.Marshal(p.Value)
+		valStr := string(valBz)
+		if err != nil {
+			valStr = fmt.Sprintf("ERR %v", err)
+		}
+		return fmt.Sprintf("PK %s %s -> %s", p.TableName, fmtValues(p.Key), valStr)
 	}
 }
 

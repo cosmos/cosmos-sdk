@@ -18,6 +18,8 @@ import (
 	"io/ioutil"
 )
 
+var errBadSigners = errors.New("bad signers descriptor") // sentinel error for the panic message helpers.
+
 // msgServerAssertSigners wraps a grpc.Server to check
 // if registered msg server services inputs
 // correctly signal message signers.
@@ -52,7 +54,7 @@ func (s *msgServerAssertSigners) checkInputs(sd *grpc.ServiceDesc) error {
 		md := prefSd.Methods().Get(i).Input()
 		err := assertSigners(md, map[protoreflect.FullName]struct{}{})
 		if err != nil {
-			return err
+			return fmt.Errorf("%w: %s", errBadSigners, err)
 		}
 	}
 
@@ -67,6 +69,9 @@ func assertSigners(md protoreflect.MessageDescriptor, visited map[protoreflect.F
 	visited[md.FullName()] = struct{}{}
 
 	signers := proto.GetExtension(md.Options(), msgv1.E_Signer).([]string)
+	if len(signers) == 0 {
+		return fmt.Errorf("no signers specified for cosmos message %s", md.FullName())
+	}
 
 	for _, signer := range signers {
 		fd := md.Fields().ByName(protoreflect.Name(signer))
@@ -92,6 +97,23 @@ func assertSigners(md protoreflect.MessageDescriptor, visited map[protoreflect.F
 }
 
 func (s *msgServerAssertSigners) onError(err error) {
+	const notFoundHelper = `The protobuf file registry did not find the given file, the reason for which this might be happening
+is because you might have protobuf generated file which registers itself in the registry with a path but was then imported in other protobuf files
+with a different path. Please use the github.com/cosmos/cosmos-sdk/types/module.WithProtoImportsRemaps function to rewrite the import paths.
+Ref: https://github.com/cosmos/cosmos-sdk/issues/10978#issuecomment-1016644826
+`
+	const badSignersHelper = `Signers of the message were signaled in an incorrect way.
+A signer field can be either of type string. Or it can be of type message. In case it is of type message that message must be extended with the cosmos.msg.v1.signer option.
+For a string field example definition refer to: https://github.com/cosmos/cosmos-sdk/blob/fdymylja/agnostic-signers/proto/cosmos/bank/v1beta1/tx.proto#L23
+For a message field example definition refer to: https://github.com/cosmos/cosmos-sdk/blob/fdymylja/agnostic-signers/proto/cosmos/bank/v1beta1/tx.proto#L39
+`
+	switch {
+	case errors.Is(err, errBadSigners):
+		err = fmt.Errorf("%w\n%s", err, badSignersHelper)
+	case errors.Is(err, protoregistry.NotFound):
+		err = fmt.Errorf("%w\n%s", err, notFoundHelper)
+	}
+
 	panic(err)
 }
 

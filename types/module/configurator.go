@@ -54,7 +54,6 @@ type ConfiguratorOption func(*configurator)
 // See: https://github.com/cosmos/cosmos-sdk/issues/10978#issuecomment-1016644826
 func WithProtoImportsRemap(m map[string]string) ConfiguratorOption {
 	return func(c *configurator) {
-
 		for k, v := range m {
 			c.msgServer.importRemap[k] = v
 		}

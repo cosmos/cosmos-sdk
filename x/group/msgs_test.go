@@ -793,9 +793,20 @@ func TestMsgLeaveGroup(t *testing.T) {
 			"group-id: value is empty",
 		},
 		{
+			"invalid policy address",
+			&group.MsgLeaveGroup{
+				MemberAddress: admin.String(),
+				PolicyAddress: "policy",
+				GroupId:       1,
+			},
+			false,
+			"",
+		},
+		{
 			"valid testcase",
 			&group.MsgLeaveGroup{
 				MemberAddress: admin.String(),
+				PolicyAddress: member1.String(),
 				GroupId:       1,
 			},
 			false,

@@ -2034,6 +2034,141 @@ func (s *TestSuite) TestExecProposal() {
 	}
 }
 
+func (s *TestSuite) TestLeaveGroup() {
+	addrs := simapp.AddTestAddrsIncremental(s.app, s.sdkCtx, 5, sdk.NewInt(3000000))
+	admin := addrs[0]
+	member1 := addrs[1]
+	member2 := addrs[2]
+	member3 := addrs[3]
+	member4 := addrs[4]
+	require := s.Require()
+
+	res, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
+		Admin: admin.String(),
+		Members: []group.Member{
+			{
+				Address:  member1.String(),
+				Weight:   "1",
+				Metadata: []byte("metadata"),
+				AddedAt:  s.sdkCtx.BlockTime(),
+			},
+			{
+				Address:  member2.String(),
+				Weight:   "2",
+				Metadata: []byte("metadata"),
+				AddedAt:  s.sdkCtx.BlockTime(),
+			},
+			{
+				Address:  member3.String(),
+				Weight:   "3",
+				Metadata: []byte("metadata"),
+				AddedAt:  s.sdkCtx.BlockTime(),
+			},
+		},
+	})
+	require.NoError(err)
+	require.NotNil(res)
+
+	groupPolicy := &group.MsgCreateGroupPolicy{
+		Admin:    admin.String(),
+		GroupId:  res.GroupId,
+		Metadata: []byte("metadata"),
+	}
+	policy := group.NewThresholdDecisionPolicy(
+		"3",
+		time.Hour,
+	)
+	require.NoError(groupPolicy.SetDecisionPolicy(policy))
+	require.NoError(err)
+
+	res1, err := s.keeper.CreateGroupPolicy(s.ctx, groupPolicy)
+	require.NoError(err)
+	require.NotNil(res1)
+
+	groupId := res.GroupId
+	testCases := []struct {
+		name           string
+		req            *group.MsgLeaveGroup
+		expErr         bool
+		errMsg         string
+		expMembersSize int
+	}{
+		{
+			"expect error: group not found",
+			&group.MsgLeaveGroup{
+				GroupId:       100000,
+				MemberAddress: member1.String(),
+				PolicyAddress: member2.String(),
+			},
+			true,
+			"group: not found",
+			0,
+		},
+		{
+			"expect error: member not part of group",
+			&group.MsgLeaveGroup{
+				GroupId:       groupId,
+				MemberAddress: member4.String(),
+				PolicyAddress: member2.String(),
+			},
+			true,
+			"not part of group",
+			0,
+		},
+		{
+			"expect error: group policy not found",
+			&group.MsgLeaveGroup{
+				GroupId:       groupId,
+				MemberAddress: member3.String(),
+				PolicyAddress: member2.String(),
+			},
+			true,
+			"group policy: not found",
+			0,
+		},
+		{
+			"valid testcase",
+			&group.MsgLeaveGroup{
+				GroupId:       groupId,
+				MemberAddress: member3.String(),
+				PolicyAddress: res1.Address,
+			},
+			false,
+			"",
+			2,
+		},
+		{
+			"valid request: cannot leave group",
+			&group.MsgLeaveGroup{
+				GroupId:       groupId,
+				MemberAddress: member2.String(),
+				PolicyAddress: res1.Address,
+			},
+			true,
+			"cannot leave group",
+			0,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			res, err := s.keeper.LeaveGroup(s.ctx, tc.req)
+			if tc.expErr {
+				require.Error(err)
+				require.Contains(err.Error(), tc.errMsg)
+			} else {
+				require.NoError(err)
+				require.NotNil(res)
+				res, err := s.keeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{
+					GroupId: groupId,
+				})
+				require.NoError(err)
+				require.Len(res.Members, tc.expMembersSize)
+			}
+		})
+	}
+}
+
 func createProposal(
 	ctx context.Context, s *TestSuite, msgs []sdk.Msg,
 	proposers []string) uint64 {

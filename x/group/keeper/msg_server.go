@@ -701,6 +701,11 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 		return nil, err
 	}
 
+	groupInfo, err := k.getGroupInfo(ctx, req.GroupId)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "group")
+	}
+
 	// Checking if the group member is already part of the group
 	groupMember, err := k.getGroupMember(ctx, &group.GroupMember{
 		GroupId: req.GroupId,
@@ -721,72 +726,54 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 	for {
 		if _, err := groupIter.LoadNext(&m); err != nil {
 			if errors.ErrORMIteratorDone.Is(err) {
-				break
+				return nil, sdkerrors.ErrInvalidRequest.Wrapf("%s is not part of group %d", req.MemberAddress, req.GroupId)
 			}
+
 			return nil, err
 		}
 
 		if m.Member.Address == groupMember.Member.Address {
-			memberWeight, err = math.NewNonNegativeDecFromString(m.Member.Weight)
-			if err != nil {
+			if memberWeight, err = math.NewNonNegativeDecFromString(m.Member.Weight); err != nil {
 				return nil, err
 			}
+
 			break
 		}
 	}
 
-	policyIter, err := k.groupPolicyByGroupIndex.Get(ctx.KVStore(k.key), req.GroupId)
+	groupPolicy, err := k.getGroupPolicyInfo(ctx, req.PolicyAddress)
 	if err != nil {
-		return nil, err
-	}
-	defer policyIter.Close()
-
-	var groupPolicy group.GroupPolicyInfo
-	if _, err := policyIter.LoadNext(&groupPolicy); err != nil {
-		return nil, err
-	}
-
-	groupInfo, err := k.getGroupInfo(ctx, req.GroupId)
-	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(err, "group policy")
 	}
 
 	groupWeight, err := math.NewNonNegativeDecFromString(groupInfo.TotalWeight)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	r, err := math.SubNonNegative(groupWeight, memberWeight)
 	if err != nil {
 		return nil, err
 	}
 
 	policy := groupPolicy.GetDecisionPolicy()
-	switch v := policy.(type) {
-	case *group.ThresholdDecisionPolicy:
-		tdp, ok := policy.(*group.ThresholdDecisionPolicy)
-		if !ok {
-			return nil, sdkerrors.ErrInvalidRequest.Wrapf("expected %T, got %T", (*group.ThresholdDecisionPolicy)(nil), policy)
-		}
+	tdp, ok := policy.(*group.ThresholdDecisionPolicy)
+	if !ok {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("expected %T, got %T", (*group.ThresholdDecisionPolicy)(nil), policy)
+	}
 
-		threshold, err := math.NewNonNegativeDecFromString(tdp.Threshold)
-		if err != nil {
-			return nil, err
-		}
+	threshold, err := math.NewNonNegativeDecFromString(tdp.Threshold)
+	if err != nil {
+		return nil, err
+	}
 
-		if threshold.Cmp(r) == -1 {
-			return nil, sdkerrors.ErrInvalidRequest.Wrap("cannot leave group")
-		}
-
-	// TODO: how to handle other decision policies?
-
-	default:
-		return nil, sdkerrors.ErrInvalidType.Wrapf("got invalid type %T", v)
+	if threshold.Cmp(r) == 1 {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("cannot leave group")
 	}
 
 	// Delete group member in the groupMemberTable.
 	if err := k.groupMemberTable.Delete(ctx.KVStore(k.key), groupMember); err != nil {
-		return nil, sdkerrors.Wrap(err, "delete member")
+		return nil, sdkerrors.Wrap(err, "group member")
 	}
 
 	groupInfo.TotalWeight = r.String()

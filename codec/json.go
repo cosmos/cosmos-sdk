@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/gogo/protobuf/jsonpb"
 	gogoproto "github.com/gogo/protobuf/proto"
-	protopb "github.com/golang/protobuf/jsonpb"
 	"google.golang.org/protobuf/encoding/protojson"
 	protov2 "google.golang.org/protobuf/proto"
 )
@@ -21,10 +20,8 @@ func ProtoMarshalJSON(msg interface{}, resolver types.InterfaceRegistry) ([]byte
 		// We use the OrigName because camel casing fields just doesn't make sense.
 		// EmitDefaults is also often the more expected behavior for CLI users
 		jm := &jsonpb.Marshaler{OrigName: true, EmitDefaults: true, AnyResolver: nil}
-		protoJM := &protopb.Marshaler{OrigName: true, EmitDefaults: true, AnyResolver: nil}
 		if resolver != nil {
 			jm.AnyResolver = resolver
-			protoJM.AnyResolver = resolver.GetV2Resolver()
 		}
 		err := types.UnpackInterfaces(msg, types.ProtoJSONPacker{JSONPBMarshaler: jm, V2MarshalOptions: protojson.MarshalOptions{
 			NoUnkeyedLiterals: struct{}{},

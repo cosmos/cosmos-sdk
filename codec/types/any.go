@@ -1,11 +1,10 @@
 package types
 
 import (
-	fmt "fmt"
+	"fmt"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	gogoproto "github.com/gogo/protobuf/proto"
 	protov2 "google.golang.org/protobuf/proto"
-
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type Any struct {

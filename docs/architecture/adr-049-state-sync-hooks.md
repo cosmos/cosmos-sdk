@@ -22,7 +22,13 @@ the IAVL tree, they can not add their states to the snapshot stream for state-sy
 
 A simple proposal based on our existing implementation is that, we can add two new message types: `SnapshotExtensionMeta` 
 and `SnapshotExtensionPayload`, and they are appended to the existing multi-store stream with `SnapshotExtensionMeta` 
-acting as a delimiter between extensions.
+acting as a delimiter between extensions. As the chunk hashes should be able to ensure data integrity, we don't need a
+delimiter to mark the end of the snapshot stream.
+
+Besides, we provide `Snapshotter` and `NamedSnapshotter` interface for modules to implement snapshotters, which will handle both taking 
+snapshot and the restoration. Each module could have mutiple snapshotters, and for modules with additional state, they should
+implement `NamedSnapshotter` as extension snapshotters. When setting up the application, the snapshot `Manager` should call 
+`RegisterExtensions([]NamedSnapshotter…)` to register all the extension snapshotters.
 
 ```proto
 // SnapshotItem is an item contained in a rootmulti.Store snapshot.
@@ -50,8 +56,10 @@ message SnapshotIAVLItem {
 }
 
 // SnapshotExtensionMeta contains metadata about an external snapshotter.
+// One module may need multiple snapshotters, so each module may have multiple SnapshotExtensionMeta.
 message SnapshotExtensionMeta {
   string name   = 1;
+  // format is used within the snapshotter/namespace, not global one for all modules
   uint32 format = 2;
 }
 
@@ -90,8 +98,8 @@ type Manager struct {
 }
 ```
 
-For extension snapshotters that have implemented the `NamedSnapshotter` interface, their names should be registered to the snapshotter `Manager` by calling 
-`RegisterExtensions` when setting up the application.
+For extension snapshotters that implement the `NamedSnapshotter` interface, their names should be registered to the snapshot `Manager` by 
+calling `RegisterExtensions` when setting up the application. And the snapshotters will handle both taking snapshot and restoration.
 
 ```go
 // RegisterExtensions register extension snapshotters to manager
@@ -152,7 +160,7 @@ State maintained outside of IAVL tree like CosmWasm blobs can create snapshots b
 
 ### Neutral
 
-All modules that maintain state outside of IAVL tree need to implement `NamedSnapshotter` and the snapshot manager need to call `RegisterExtensions` when setting up the application.
+All modules that maintain state outside of IAVL tree need to implement `NamedSnapshotter` and the snapshot `Manager` need to call `RegisterExtensions` when setting up the application.
 
 ## Further Discussions
 

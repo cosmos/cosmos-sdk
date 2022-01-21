@@ -59,6 +59,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [\#10950](https://github.com/cosmos/cosmos-sdk/pull/10950) Add `envPrefix` parameter to `cmd.Execute`.
 * (x/mint) [\#10441](https://github.com/cosmos/cosmos-sdk/pull/10441) The `NewAppModule` function now accepts an inflation calculation function as an argument.
 * [\#10295](https://github.com/cosmos/cosmos-sdk/pull/10295) Remove store type aliases from /types
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Migrate keys from `Info` -> `Record`
@@ -119,12 +120,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [\#9594](https://github.com/cosmos/cosmos-sdk/pull/9594) Remove legacy REST API. Please see the [REST Endpoints Migration guide](https://docs.cosmos.network/master/migrations/rest.html) to migrate to the new REST endpoints.
 * [\#9995](https://github.com/cosmos/cosmos-sdk/pull/9995) Increased gas cost for creating proposals.
-* [\#10598](https://github.com/cosmos/cosmos-sdk/pull/10598) Remove `gogoproto.json_tag` from all proto files. 
-  - The affected fields are:
-    - Message Proposal in goverance `id` is now `proposal_id`
-    - Message `MsgUnjail` `address` is no `validator_addr` 
-    - Message `GenesisState` json representation of Gentxs is now `gen_txs`, previously `gentxs`
-    - Message `DelegatorStartingInfo` json representation of Height is now `height`, previously `creation_height`
 
 ### CLI Breaking Changes
 

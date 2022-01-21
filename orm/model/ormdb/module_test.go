@@ -45,20 +45,14 @@ func (k keeper) Send(ctx context.Context, from, to, denom string, amount uint64)
 }
 
 func (k keeper) Mint(ctx context.Context, acct, denom string, amount uint64) error {
-	var supply testpb.Supply
-	found, err := k.supplyDenomIndex.Get(ctx, &supply, denom)
+	supply := &testpb.Supply{Denom: denom}
+	_, err := k.supplyTable.Get(ctx, supply)
 	if err != nil {
 		return err
 	}
 
-	if !found {
-		supply.Denom = denom
-		supply.Amount = amount
-	} else {
-		supply.Amount = supply.Amount + amount
-	}
-
-	err = k.supplyTable.Save(ctx, &supply)
+	supply.Amount = supply.Amount + amount
+	err = k.supplyTable.Save(ctx, supply)
 	if err != nil {
 		return err
 	}
@@ -67,8 +61,8 @@ func (k keeper) Mint(ctx context.Context, acct, denom string, amount uint64) err
 }
 
 func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) error {
-	var supply testpb.Supply
-	found, err := k.supplyDenomIndex.Get(ctx, &supply, denom)
+	supply := &testpb.Supply{Denom: denom}
+	found, err := k.supplyTable.Get(ctx, supply)
 	if err != nil {
 		return err
 	}
@@ -84,9 +78,9 @@ func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) err
 	supply.Amount = supply.Amount - amount
 
 	if supply.Amount == 0 {
-		err = k.supplyTable.Delete(ctx, &supply)
+		err = k.supplyTable.Delete(ctx, supply)
 	} else {
-		err = k.supplyTable.Save(ctx, &supply)
+		err = k.supplyTable.Save(ctx, supply)
 	}
 	if err != nil {
 		return err
@@ -96,46 +90,31 @@ func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) err
 }
 
 func (k keeper) Balance(ctx context.Context, acct, denom string) (uint64, error) {
-	var balance testpb.Balance
-	found, err := k.balanceAddressDenomIndex.Get(ctx, &balance, acct, denom)
-	if err != nil || !found {
-		return 0, err
-	}
-
-	return balance.Amount, nil
+	balance := &testpb.Balance{Address: acct, Denom: denom}
+	_, err := k.balanceTable.Get(ctx, balance)
+	return balance.Amount, err
 }
 
 func (k keeper) Supply(ctx context.Context, denom string) (uint64, error) {
-	var supply testpb.Supply
-	found, err := k.supplyDenomIndex.Get(ctx, &supply, denom)
-	if err != nil || !found {
-		return 0, err
-	}
-
-	return supply.Amount, nil
+	supply := &testpb.Supply{Denom: denom}
+	_, err := k.supplyTable.Get(ctx, supply)
+	return supply.Amount, err
 }
 
 func (k keeper) addBalance(ctx context.Context, acct, denom string, amount uint64) error {
-	var balance testpb.Balance
-	found, err := k.balanceAddressDenomIndex.Get(ctx, &balance, acct, denom)
+	balance := &testpb.Balance{Address: acct, Denom: denom}
+	_, err := k.balanceTable.Get(ctx, balance)
 	if err != nil {
 		return err
 	}
 
-	if !found {
-		balance.Address = acct
-		balance.Denom = denom
-		balance.Amount = amount
-	} else {
-		balance.Amount = balance.Amount + amount
-	}
-
-	return k.balanceTable.Save(ctx, &balance)
+	balance.Amount = balance.Amount + amount
+	return k.balanceTable.Save(ctx, balance)
 }
 
 func (k keeper) safeSubBalance(ctx context.Context, acct, denom string, amount uint64) error {
-	var balance testpb.Balance
-	found, err := k.balanceAddressDenomIndex.Get(ctx, &balance, acct, denom)
+	balance := &testpb.Balance{Address: acct, Denom: denom}
+	found, err := k.balanceTable.Get(ctx, balance)
 	if err != nil {
 		return err
 	}
@@ -151,9 +130,9 @@ func (k keeper) safeSubBalance(ctx context.Context, acct, denom string, amount u
 	balance.Amount = balance.Amount - amount
 
 	if balance.Amount == 0 {
-		return k.balanceTable.Delete(ctx, &balance)
+		return k.balanceTable.Delete(ctx, balance)
 	} else {
-		return k.balanceTable.Save(ctx, &balance)
+		return k.balanceTable.Save(ctx, balance)
 	}
 }
 

@@ -4,7 +4,7 @@ GET 03808002
     SEQ testpb.ExampleAutoIncrementTable 0
 GET 03000000000000000001 
     PK testpb.ExampleAutoIncrementTable 1 -> {"id":1}
-ORM INSERT testpb.ExampleAutoIncrementTable id:1 x:"foo" y:5
+ORM INSERT testpb.ExampleAutoIncrementTable {"id":1,"x":"foo","y":5}
 HAS 0301666f6f
     ERR:EOF
 SET 03000000000000000001 1203666f6f1805

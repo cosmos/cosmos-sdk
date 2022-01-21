@@ -51,22 +51,42 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	store := ctx.KVStore(k.storeKey)
 	key := feegrant.FeeAllowanceKey(granter, grantee)
 
-	var exp *time.Time
+	var oldExp *time.Time
 	existingGrant, err := k.getGrant(ctx, grantee, granter)
 	if err != nil && existingGrant != nil && existingGrant.GetAllowance() != nil {
-		grant1, err := existingGrant.GetGrant()
+		grantInfo, err := existingGrant.GetGrant()
 		if err != nil {
 			return err
 		}
 
-		exp, err = grant1.ExpiresAt()
+		oldExp, err = grantInfo.ExpiresAt()
 		if err != nil {
 			return err
 		}
+	}
 
-		if exp != nil {
-			k.removeFromGrantQueue(ctx, exp, key)
-		}
+	newExp, err := feeAllowance.ExpiresAt()
+	if err != nil {
+		return err
+	} else if newExp != nil && newExp.Before(ctx.BlockTime()) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "expiration is before current block time")
+	} else if oldExp == nil && newExp != nil {
+		// when old oldExp is nil there won't be any key added before to queue.
+		// add the new key to queue directly.
+		k.addToFeeAllowanceQueue(ctx, key[1:], newExp)
+	} else if oldExp != nil && newExp == nil {
+		// when newExp is nil no need of adding the key to the pruning queue
+		// remove the old key from queue.
+		k.removeFromGrantQueue(ctx, oldExp, key[1:])
+	} else if oldExp != nil && newExp != nil && !oldExp.Equal(*newExp) {
+		// `key` formed here with the prefix of `FeeAllowanceKeyPrefix` (which is `0x00`)
+		// remove the 1st byte and reuse the remaining key as it is.
+
+		// remove the old key from queue.
+		k.removeFromGrantQueue(ctx, oldExp, key[1:])
+
+		// add the new key to queue.
+		k.addToFeeAllowanceQueue(ctx, key[1:], newExp)
 	}
 
 	grant, err := feegrant.NewGrant(granter, grantee, feeAllowance)
@@ -80,13 +100,6 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	}
 
 	store.Set(key, bz)
-	expiration, err := feeAllowance.ExpiresAt()
-
-	if err != nil {
-		return err
-	} else if expiration != nil {
-		k.addToFeeAllowanceQueue(ctx, key, expiration)
-	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

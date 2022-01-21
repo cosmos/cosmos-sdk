@@ -2,13 +2,6 @@ package v1beta1
 
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
-// Copied over from /x/gov/types/keys.go to avoid circular imports
-const (
-	ModuleName = "gov"
-
-	RouterKey = ModuleName
-)
-
 // Content defines an interface that a proposal must implement. It contains
 // information such as the title and description along with the type and routing
 // information for the appropriate handler to process the proposal. Content can

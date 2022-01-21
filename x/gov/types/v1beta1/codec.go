@@ -2,10 +2,10 @@ package v1beta1
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
@@ -19,7 +19,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&TextProposal{}, "cosmos-sdk/TextProposal", nil)
 }
 
-func RegisterInterfaces(registry types.InterfaceRegistry) {
+func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSubmitProposal{},
 		&MsgVote{},
@@ -42,22 +42,9 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 // NOTE: This should only be used for applications that are still using a concrete
 // Amino codec for serialization.
 func RegisterProposalTypeCodec(o interface{}, name string) {
-	amino.RegisterConcrete(o, name, nil)
+	types.ModuleCdc.LegacyAmino.RegisterConcrete(o, name, nil)
 }
 
-var (
-	amino = codec.NewLegacyAmino()
-
-	// ModuleCdc references the global x/gov module codec. Note, the codec should
-	// ONLY be used in certain instances of tests and for JSON encoding as Amino is
-	// still used for that purpose.
-	//
-	// The actual codec used for serialization should be provided to x/gov and
-	// defined at the application level.
-	ModuleCdc = codec.NewAminoCodec(amino)
-)
-
 func init() {
-	RegisterLegacyAminoCodec(amino)
-	cryptocodec.RegisterCrypto(amino)
+	RegisterLegacyAminoCodec(types.ModuleCdc.LegacyAmino)
 }

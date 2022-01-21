@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 var _ types.GovHooks = &MockGovHooksReceiver{}
@@ -69,7 +69,7 @@ func TestHooks(t *testing.T) {
 	require.True(t, govHooksReceiver.AfterProposalSubmissionValid)
 
 	newHeader := ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod).Add(time.Duration(1) * time.Second)
+	newHeader.Time = ctx.BlockHeader().Time.Add(*app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod).Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 	gov.EndBlocker(ctx, app.GovKeeper)
 
@@ -83,12 +83,12 @@ func TestHooks(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, govHooksReceiver.AfterProposalDepositValid)
 
-	err = app.GovKeeper.AddVote(ctx, p2.ProposalId, addrs[0], v1beta1.NewNonSplitVoteOption(v1beta1.OptionYes))
+	err = app.GovKeeper.AddVote(ctx, p2.ProposalId, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))
 	require.NoError(t, err)
 	require.True(t, govHooksReceiver.AfterProposalVoteValid)
 
 	newHeader = ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(app.GovKeeper.GetVotingParams(ctx).VotingPeriod).Add(time.Duration(1) * time.Second)
+	newHeader.Time = ctx.BlockHeader().Time.Add(*app.GovKeeper.GetVotingParams(ctx).VotingPeriod).Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 	gov.EndBlocker(ctx, app.GovKeeper)
 	require.True(t, govHooksReceiver.AfterProposalVotingPeriodEndedValid)

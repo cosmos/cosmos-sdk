@@ -2,14 +2,15 @@ package ormv1alpha1
 
 import (
 	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	descriptorpb "google.golang.org/protobuf/types/descriptorpb"
-	io "io"
-	reflect "reflect"
-	sync "sync"
 )
 
 var _ protoreflect.List = (*_TableDescriptor_2_list)(nil)
@@ -2333,7 +2334,8 @@ type SecondaryIndexDescriptor struct {
 	// store the remaining primary key fields in the value..
 	Fields string `protobuf:"bytes,1,opt,name=fields,proto3" json:"fields,omitempty"`
 	// id is a non-zero integer ID that must be unique within the indexes for this
-	// table. It may be deprecated in the future when this can be auto-generated.
+	// table and less than 32768. It may be deprecated in the future when this can
+	// be auto-generated.
 	Id uint32 `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
 	// unique specifies that this an unique index.
 	Unique bool `protobuf:"varint,3,opt,name=unique,proto3" json:"unique,omitempty"`

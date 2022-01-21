@@ -5,7 +5,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/db/memdb"
-	// "github.com/cosmos/cosmos-sdk/store"
 	stypes "github.com/cosmos/cosmos-sdk/store/v2"
 	"github.com/cosmos/cosmos-sdk/store/v2/multi"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,7 +19,7 @@ func DefaultContext(key, tkey stypes.StoreKey) (ret sdk.Context) {
 		}
 	}()
 	db := memdb.NewDB()
-	opts := multi.DefaultStoreConfig()
+	opts := multi.DefaultStoreParams()
 	err = opts.RegisterSubstore(key.Name(), stypes.StoreTypePersistent)
 	if err != nil {
 		return

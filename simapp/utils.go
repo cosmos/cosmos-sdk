@@ -105,11 +105,10 @@ func CheckExportSimulation(
 }
 
 // PrintStats prints the corresponding statistics from the app DB.
+// TODO: implement stats collection for DBConnection
 func PrintStats(db dbm.DBConnection) {
-	fmt.Println("\nLevelDB Stats")
-	fmt.Println("\nTODO") // TODO
-	// fmt.Println(db.Stats()["leveldb.stats"])
-	// fmt.Println("LevelDB cached block size", db.Stats()["leveldb.cachedblock"])
+	// stats := db.Stats()
+	fmt.Println("\nDB Stats: not available")
 }
 
 // GetSimulationLog unmarshals the KVPair's Value to the corresponding type based on the

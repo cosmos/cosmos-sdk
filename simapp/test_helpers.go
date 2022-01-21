@@ -29,7 +29,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
-	// "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -70,10 +69,6 @@ type SetupOptions struct {
 
 func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 	encCdc := MakeTestEncodingConfig()
-	// rstore, err := store.NewCommitRootStore(memdb.NewDB(), store.RootStoreConfig{})
-	// if err != nil {
-	// 	panic(err)
-	// }
 	app := NewSimApp(log.NewNopLogger(), memdb.NewDB(), nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Codec)

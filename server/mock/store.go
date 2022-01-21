@@ -3,7 +3,6 @@ package mock
 import (
 	"io"
 
-	// storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -73,10 +72,6 @@ func (ms multiStore) GetPruning() sdk.PruningOptions {
 func (ms multiStore) GetKVStore(key storetypes.StoreKey) sdk.KVStore {
 	return ms.kv[key]
 }
-
-// func (ms multiStore) GetStoreType() storetypes.StoreType {
-// 	panic("not implemented")
-// }
 
 func (ms multiStore) SetInitialVersion(version uint64) error {
 	panic("not implemented")

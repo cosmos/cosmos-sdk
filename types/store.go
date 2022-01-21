@@ -11,21 +11,10 @@ import (
 )
 
 type (
-	PruningOptions = types.PruningOptions
-)
-
-type (
-	Store       = types.Store
-	Committer   = types.Committer
-	CommitStore = types.CommitStore
-	Queryable   = types.Queryable
-	// MultiStore                = types.MultiStore
-	// CacheMultiStore           = types.CacheMultiStore
-	// CommitMultiStore          = types.CommitMultiStore
-	// MultiStorePersistentCache = types.MultiStorePersistentCache
-	KVStore  = types.KVStore
-	Iterator = types.Iterator
-	// MultiStoreConfig          = multi.StoreConfig
+	PruningOptions            = types2.PruningOptions
+	Queryable                 = types2.Queryable
+	KVStore                   = types2.KVStore
+	Iterator                  = types2.Iterator
 	BasicMultiStore           = types2.BasicMultiStore
 	CommitMultiStore          = types2.CommitMultiStore
 	CacheMultiStore           = types2.CacheMultiStore

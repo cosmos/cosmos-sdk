@@ -84,7 +84,7 @@ func SetSnapshotStore(snapshotStore *snapshots.Store) AppOptionOrdered {
 	}
 }
 
-// SetSubstores store registers substores according to app configuration
+// SetSubstores registers substores according to app configuration
 func SetSubstores(keys ...storetypes.StoreKey) StoreOption {
 	return func(config *StoreConfig, _ uint64) error {
 		for _, key := range keys {

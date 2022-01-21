@@ -3,7 +3,6 @@ package baseapp
 import (
 	"context"
 	"fmt"
-	// "reflect"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -11,10 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	dbm "github.com/cosmos/cosmos-sdk/db"
-	// dbutil "github.com/cosmos/cosmos-sdk/internal/db"
 	"github.com/cosmos/cosmos-sdk/snapshots"
-	// "github.com/cosmos/cosmos-sdk/store"
-	// "github.com/cosmos/cosmos-sdk/store/rootmulti"
 	stypes "github.com/cosmos/cosmos-sdk/store/v2"
 	"github.com/cosmos/cosmos-sdk/store/v2/multi"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,6 +22,9 @@ const (
 	runTxModeReCheck                   // Recheck a (pending) transaction after a commit
 	runTxModeSimulate                  // Simulate a transaction
 	runTxModeDeliver                   // Deliver a transaction
+
+	OptionOrderDefault = iota
+	OptionOrderAfterStore
 )
 
 var (
@@ -36,32 +35,44 @@ type (
 	// Enum mode for app.runTx
 	runTxMode uint8
 
-	// StoreLoader defines a customizable function to control how we load the CommitMultiStore
+	// StoreConfig is an alias for the config parameter type of the CommitMultiStore.
+	StoreConfig = multi.StoreConfig
+	// StoreOption provides a functional callback to modify StoreConfig.
+	// The callback is passed the loaded height as uint64.
+	StoreOption func(*StoreConfig, uint64) error
+	// StoreConstructor defines a customizable function to control how we load the CommitMultiStore
 	// from disk. This is useful for state migration, when loading a datastore written with
 	// an older version of the software. In particular, if a module changed the substore key name
 	// (or removed a substore) between two versions of the software.
-	// StoreLoader func(ms sdk.CommitMultiStore) error
+	StoreConstructor func(dbm.DBConnection, StoreConfig) (sdk.CommitMultiStore, error)
 
-	// StoreLoader func(initialVersion uint64) (sdk.CommitMultiStore, error)
-	// StoreLoader func(multi.StoreConfig) (sdk.CommitMultiStore, error)
-	// StoreLoader func(*multi.StoreConfig, uint64) (sdk.CommitMultiStore, error)
-	StoreConfig      = multi.StoreConfig
-	StoreOption      func(*StoreConfig, uint64) error
-	StoreConstructor func(dbm.DBConnection, multi.StoreConfig) (sdk.CommitMultiStore, error)
+	// AppOption provides a configuration option for a BaseApp
+	AppOption interface {
+		Apply(*BaseApp)
+		Order() OptionOrder
+	}
+	// OptionOrder represents the required ordering for order dependent options
+	OptionOrder int
+	// AppOptionFunc wraps a functional option for BaseApp
+	AppOptionFunc func(*BaseApp)
+	// AppOptionOrdered wraps an order-dependent functional option
+	AppOptionOrdered struct {
+		AppOptionFunc
+		order OptionOrder
+	}
 )
 
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct { // nolint: maligned
 	// initialized on creation
-	logger    log.Logger
-	name      string // application name from abci.Info
-	db        dbm.DBConnection
-	storeCtor StoreConstructor
-	storeOpts []StoreOption        // options to configure root store
-	store     sdk.CommitMultiStore // Main (uncached) state
-	// storeLoader StoreLoader         // function to handle store loading
-	queryRouter       sdk.QueryRouter  // router for redirecting query calls
-	grpcQueryRouter   *GRPCQueryRouter // router for redirecting gRPC query calls
+	logger            log.Logger
+	name              string // application name from abci.Info
+	db                dbm.DBConnection
+	storeCtor         StoreConstructor
+	storeOpts         []StoreOption        // options to configure root store
+	store             sdk.CommitMultiStore // Main (uncached) state
+	queryRouter       sdk.QueryRouter      // router for redirecting query calls
+	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
 	interfaceRegistry types.InterfaceRegistry
 
 	txHandler      tx.Handler       // txHandler for {Deliver,Check}Tx and simulations
@@ -83,6 +94,9 @@ type BaseApp struct { // nolint: maligned
 	// deliverState is set on InitChain and BeginBlock and set to nil on Commit
 	checkState   *state // for CheckTx
 	deliverState *state // for DeliverTx
+
+	// an inter-block write-through cache provided to the context during deliverState
+	interBlockCache sdk.MultiStorePersistentCache
 
 	// absent validators from begin block
 	voteInfos []abci.VoteInfo
@@ -138,27 +152,6 @@ type BaseApp struct { // nolint: maligned
 	abciListeners []ABCIListener
 }
 
-// OptionOrder represents the required ordering for options that are order dependent
-type OptionOrder int
-
-const (
-	OptionOrderDefault = iota
-	OptionOrderAfterStore
-)
-
-// AppOption is a configuration option for a BaseApp
-type AppOption interface {
-	Apply(*BaseApp)
-	Order() OptionOrder
-}
-
-type AppOptionFunc func(*BaseApp)
-
-type AppOptionOrdered struct {
-	AppOptionFunc
-	order OptionOrder
-}
-
 func (opt AppOptionOrdered) Order() OptionOrder { return opt.order }
 
 func (opt AppOptionFunc) Apply(app *BaseApp) { opt(app) }
@@ -205,18 +198,6 @@ func NewBaseApp(
 	for _, option := range afterStoreOpts {
 		option.Apply(app)
 	}
-
-	// // TODO: conditional loading of multistore/rootstore
-	// if loadv2 {
-	// 	opts := store.StoreConfig{PersistentCache: app.interBlockCache}
-	// 	store, err := multi.NewStore(db, opts)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// } else {
-	// 	app.store = NewCommitMultiStore(dbutil.ConnectionAsTmdb(db))
-	// }
-
 	return app
 }
 
@@ -267,7 +248,7 @@ func (app *BaseApp) CloseStore() error {
 }
 
 // DefaultStoreConstructor attempts to create a new store, but loads from existing data if present.
-func DefaultStoreConstructor(db dbm.DBConnection, config multi.StoreConfig) (stypes.CommitMultiStore, error) {
+func DefaultStoreConstructor(db dbm.DBConnection, config StoreConfig) (stypes.CommitMultiStore, error) {
 	return multi.NewStore(db, config)
 }
 

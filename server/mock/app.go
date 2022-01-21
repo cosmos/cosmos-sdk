@@ -63,6 +63,9 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 		},
 	)
 	baseApp.SetTxHandler(txHandler)
+	if err = baseApp.Init(); err != nil {
+		return nil, err
+	}
 	return baseApp, nil
 }
 

@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/db/memdb"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	// "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -54,9 +53,9 @@ var fauxMerkleModeOpt = baseapp.AppOptionFunc(func(bapp *baseapp.BaseApp) {
 
 // interBlockCacheOpt returns a BaseApp option function that sets the persistent
 // inter-block write-through cache.
+// TODO: implement this cache as enhancement to v2 multistore
 func interBlockCacheOpt() baseapp.AppOptionFunc {
 	return func(*baseapp.BaseApp) {}
-	// return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
 
 func TestFullAppSimulation(t *testing.T) {

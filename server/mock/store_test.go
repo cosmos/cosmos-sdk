@@ -5,7 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	// storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

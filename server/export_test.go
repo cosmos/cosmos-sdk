@@ -33,7 +33,6 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 	tempDir := t.TempDir()
 
 	_, ctx, _, cmd := setupApp(t, tempDir)
-	// require.NoError(t, app.CloseStore())
 
 	output := &bytes.Buffer{}
 	cmd.SetOut(output)

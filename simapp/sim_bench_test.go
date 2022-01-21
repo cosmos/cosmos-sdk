@@ -7,7 +7,6 @@ import (
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	// "github.com/cosmos/cosmos-sdk/store"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
@@ -58,7 +57,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	}
 
 	if config.Commit {
-		// PrintStats(db)			// TODO
+		PrintStats(db)
 	}
 }
 

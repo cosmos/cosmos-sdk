@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	dbm "github.com/cosmos/cosmos-sdk/db"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	types "github.com/cosmos/cosmos-sdk/store/v2"
 
 	"github.com/lazyledger/smt"
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
@@ -21,7 +21,7 @@ var (
 	errValueNil = errors.New("value is nil")
 )
 
-// Store Implements types.KVStore and CommitKVStore.
+// Store Implements types.BasicKVStore.
 type Store struct {
 	tree *smt.SparseMerkleTree
 }

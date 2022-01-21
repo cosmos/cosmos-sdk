@@ -34,6 +34,9 @@ var (
 )
 
 var (
+	ErrVersionDoesNotExist = errors.New("version does not exist")
+	ErrMaximumHeight       = errors.New("maximum block height reached")
+
 	// Root prefixes
 	merkleRootKey = []byte{0} // Key for root hash of namespace tree
 	schemaPrefix  = []byte{1} // Prefix for store keys (namespaces)
@@ -45,9 +48,6 @@ var (
 	indexPrefix           = []byte{2} // Prefix for Store reverse index
 	merkleNodePrefix      = []byte{3} // Prefix for Merkle tree nodes
 	merkleValuePrefix     = []byte{4} // Prefix for Merkle value mappings
-
-	ErrVersionDoesNotExist = errors.New("version does not exist")
-	ErrMaximumHeight       = errors.New("maximum block height reached")
 )
 
 func ErrStoreNotFound(skey string) error {
@@ -63,11 +63,13 @@ type StoreParams struct {
 	// The backing DB to use for the state commitment Merkle tree data.
 	// If nil, Merkle data is stored in the state storage DB under a separate prefix.
 	StateCommitmentDB dbm.DBConnection
-
+	// Contains the store schema and methods to modify it
 	SchemaBuilder
+	// Inter-block persistent cache to use. TODO: not implemented
 	PersistentCache types.MultiStorePersistentCache
-	Upgrades        []types.StoreUpgrades
-
+	// Any pending upgrades to apply on loading.
+	Upgrades []types.StoreUpgrades
+	// Contains The trace context and listeners that can also be set from store methods.
 	*traceListenMixin
 }
 

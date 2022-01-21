@@ -16,7 +16,7 @@ import (
 
 // SetPruning sets a pruning option on the multistore associated with the app
 func SetPruning(opts sdk.PruningOptions) StoreOption {
-	return func(config *StoreConfig, _ uint64) error { config.Pruning = opts; return nil }
+	return func(config *StoreParams, _ uint64) error { config.Pruning = opts; return nil }
 }
 
 // SetMinGasPrices returns an option that sets the minimum gas prices on the app.
@@ -59,7 +59,7 @@ func SetIndexEvents(ie []string) AppOptionFunc {
 // SetInterBlockCache provides a BaseApp option function that sets the
 // inter-block cache.
 func SetInterBlockCache(cache sdk.MultiStorePersistentCache) AppOptionFunc {
-	opt := func(cfg *StoreConfig, v uint64) error {
+	opt := func(cfg *StoreParams, v uint64) error {
 		cfg.PersistentCache = cache
 		return nil
 	}
@@ -86,7 +86,7 @@ func SetSnapshotStore(snapshotStore *snapshots.Store) AppOptionOrdered {
 
 // SetSubstores registers substores according to app configuration
 func SetSubstores(keys ...storetypes.StoreKey) StoreOption {
-	return func(config *StoreConfig, _ uint64) error {
+	return func(config *StoreParams, _ uint64) error {
 		for _, key := range keys {
 			typ, err := storetypes.StoreKeyToType(key)
 			if err != nil {
@@ -189,7 +189,7 @@ func (app *BaseApp) SetFauxMerkleMode() {
 // SetCommitMultiStoreTracer sets the store tracer on the BaseApp's underlying
 // CommitMultiStore.
 func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
-	opt := func(cfg *StoreConfig, v uint64) error {
+	opt := func(cfg *StoreParams, v uint64) error {
 		cfg.TraceWriter = w
 		return nil
 	}

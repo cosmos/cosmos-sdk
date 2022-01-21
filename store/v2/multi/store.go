@@ -54,8 +54,8 @@ func ErrStoreNotFound(skey string) error {
 	return fmt.Errorf("store does not exist for key: %s", skey)
 }
 
-// StoreConfig is used to define a schema and other options and pass them to the MultiStore constructor.
-type StoreConfig struct {
+// StoreParams is used to define a schema and other options and pass them to the MultiStore constructor.
+type StoreParams struct {
 	// Version pruning options for backing DBs.
 	Pruning types.PruningOptions
 	// The minimum allowed version number.
@@ -76,7 +76,7 @@ type StoreSchema map[string]types.StoreType
 
 // Store is the main persistent store type implementing CommitMultiStore.
 // Substores consist of an SMT-based state commitment store and state storage.
-// Substores must be reserved in the StoreConfig or defined as part of a StoreUpgrade in order to be valid.
+// Substores must be reserved in the StoreParams or defined as part of a StoreUpgrade in order to be valid.
 // Note:
 // The state commitment data and proof are structured in the same basic pattern as the MultiStore, but use an SMT rather than IAVL tree:
 // * The state commitment store of each substore consists of a independent SMT.
@@ -92,7 +92,7 @@ type Store struct {
 	tran   *transient.Store
 	mtx    sync.RWMutex
 
-	// Copied from StoreConfig
+	// Copied from StoreParams
 	Pruning        types.PruningOptions
 	InitialVersion uint64 // if
 	*traceListenMixin
@@ -147,10 +147,10 @@ func newTraceListenMixin() *traceListenMixin {
 	return &traceListenMixin{listeners: map[string][]types.WriteListener{}}
 }
 
-// DefaultStoreConfig returns a MultiStore config with an empty schema, a single backing DB,
+// DefaultStoreParams returns a MultiStore config with an empty schema, a single backing DB,
 // pruning with PruneDefault, no listeners and no tracer.
-func DefaultStoreConfig() StoreConfig {
-	return StoreConfig{
+func DefaultStoreParams() StoreParams {
+	return StoreParams{
 		Pruning: types.PruneDefault,
 		SchemaBuilder: SchemaBuilder{
 			StoreSchema: StoreSchema{},
@@ -213,7 +213,7 @@ func readSavedSchema(bucket dbm.DBReader) (*SchemaBuilder, error) {
 
 // NewStore constructs a MultiStore directly from a database.
 // Creates a new store if no data exists; otherwise loads existing data.
-func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
+func NewStore(db dbm.DBConnection, opts StoreParams) (ret *Store, err error) {
 	versions, err := db.Versions()
 	if err != nil {
 		return

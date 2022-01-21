@@ -35,16 +35,16 @@ type (
 	// Enum mode for app.runTx
 	runTxMode uint8
 
-	// StoreConfig is an alias for the config parameter type of the CommitMultiStore.
-	StoreConfig = multi.StoreConfig
-	// StoreOption provides a functional callback to modify StoreConfig.
+	// StoreParams is an alias for the config parameter type of the CommitMultiStore.
+	StoreParams = multi.StoreParams
+	// StoreOption provides a functional callback to modify StoreParams.
 	// The callback is passed the loaded height as uint64.
-	StoreOption func(*StoreConfig, uint64) error
+	StoreOption func(*StoreParams, uint64) error
 	// StoreConstructor defines a customizable function to control how we load the CommitMultiStore
 	// from disk. This is useful for state migration, when loading a datastore written with
 	// an older version of the software. In particular, if a module changed the substore key name
 	// (or removed a substore) between two versions of the software.
-	StoreConstructor func(dbm.DBConnection, StoreConfig) (sdk.CommitMultiStore, error)
+	StoreConstructor func(dbm.DBConnection, StoreParams) (sdk.CommitMultiStore, error)
 
 	// AppOption provides a configuration option for a BaseApp
 	AppOption interface {
@@ -232,7 +232,7 @@ func (app *BaseApp) loadStore() error {
 		return err
 	}
 	latest := versions.Last()
-	config := multi.DefaultStoreConfig()
+	config := multi.DefaultStoreParams()
 	for _, opt := range app.storeOpts {
 		opt(&config, latest)
 	}
@@ -248,7 +248,7 @@ func (app *BaseApp) CloseStore() error {
 }
 
 // DefaultStoreConstructor attempts to create a new store, but loads from existing data if present.
-func DefaultStoreConstructor(db dbm.DBConnection, config StoreConfig) (stypes.CommitMultiStore, error) {
+func DefaultStoreConstructor(db dbm.DBConnection, config StoreParams) (stypes.CommitMultiStore, error) {
 	return multi.NewStore(db, config)
 }
 

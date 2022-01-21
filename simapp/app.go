@@ -231,7 +231,7 @@ func NewSimApp(
 	// not include this key.
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, "testingkey")
 	// initialize stores
-	setNamespaces := func(config *baseapp.StoreConfig, ver uint64) error {
+	setNamespaces := func(config *baseapp.StoreParams, ver uint64) error {
 		for _, key := range keys {
 			typ, err := storev2.StoreKeyToType(key)
 			if err != nil {

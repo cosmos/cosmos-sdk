@@ -339,7 +339,7 @@ var useDefaultConstructor = baseapp.AppOptionFunc(func(app *baseapp.BaseApp) {
 
 func initStore(t *testing.T, db dbm.DBConnection, storeKey string, k, v []byte) {
 	key := sdk.NewKVStoreKey(storeKey)
-	opts := multi.DefaultStoreConfig()
+	opts := multi.DefaultStoreParams()
 	opts.Pruning = stypes.PruneNothing
 	require.NoError(t, opts.RegisterSubstore(key.Name(), stypes.StoreTypePersistent))
 	rs, err := multi.NewStore(db, opts)
@@ -356,7 +356,7 @@ func initStore(t *testing.T, db dbm.DBConnection, storeKey string, k, v []byte) 
 }
 
 func checkStore(t *testing.T, db dbm.DBConnection, ver int64, storeKey string, k, v []byte) {
-	opts := multi.DefaultStoreConfig()
+	opts := multi.DefaultStoreParams()
 	opts.Pruning = stypes.PruneNothing
 	key := sdk.NewKVStoreKey(storeKey)
 	require.NoError(t, opts.RegisterSubstore(key.Name(), stypes.StoreTypePersistent))

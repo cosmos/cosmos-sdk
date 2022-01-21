@@ -28,7 +28,7 @@ func defaultLogger() log.Logger {
 	}
 }
 
-func initStore(t *testing.T, db dbm.DBConnection, config multi.StoreConfig, storeKey string, k, v []byte) {
+func initStore(t *testing.T, db dbm.DBConnection, config multi.StoreParams, storeKey string, k, v []byte) {
 	key := sdk.NewKVStoreKey(storeKey)
 	rs, err := multi.NewStore(db, config)
 	require.NoError(t, err)
@@ -44,7 +44,7 @@ func initStore(t *testing.T, db dbm.DBConnection, config multi.StoreConfig, stor
 	require.NoError(t, rs.Close())
 }
 
-func checkStore(t *testing.T, db dbm.DBConnection, config multi.StoreConfig, ver int64, storeKey string, k, v []byte) {
+func checkStore(t *testing.T, db dbm.DBConnection, config multi.StoreParams, ver int64, storeKey string, k, v []byte) {
 	key := sdk.NewKVStoreKey(storeKey)
 	rs, err := multi.NewStore(db, config)
 	require.NoError(t, err)
@@ -112,8 +112,8 @@ func TestSetLoader(t *testing.T) {
 	for name, tc := range cases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			origConfig := multi.DefaultStoreConfig()
-			loadConfig := multi.DefaultStoreConfig()
+			origConfig := multi.DefaultStoreParams()
+			loadConfig := multi.DefaultStoreParams()
 			require.NoError(t, origConfig.RegisterSubstore(tc.origStoreKey, storetypes.StoreTypePersistent))
 			require.NoError(t, loadConfig.RegisterSubstore(tc.loadStoreKey, storetypes.StoreTypePersistent))
 

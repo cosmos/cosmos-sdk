@@ -31,7 +31,7 @@ type SubspaceTestSuite struct {
 func (suite *SubspaceTestSuite) SetupTest() {
 	db := memdb.NewDB()
 
-	config := multi.DefaultStoreConfig()
+	config := multi.DefaultStoreParams()
 	suite.NoError(config.RegisterSubstore(key.Name(), storetypes.StoreTypePersistent))
 	suite.NoError(config.RegisterSubstore(tkey.Name(), storetypes.StoreTypeTransient))
 	ms, err := multi.NewStore(db, config)

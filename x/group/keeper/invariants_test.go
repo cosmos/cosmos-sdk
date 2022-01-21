@@ -40,7 +40,7 @@ func (s *invariantTestSuite) SetupSuite() {
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	key := sdk.NewKVStoreKey(group.ModuleName)
 	db := memdb.NewDB()
-	config := multi.DefaultStoreConfig()
+	config := multi.DefaultStoreParams()
 	s.Require().NoError(config.RegisterSubstore(key.Name(), storetypes.StoreTypePersistent))
 	ms, err := multi.NewStore(db, config)
 	s.Require().NoError(err)

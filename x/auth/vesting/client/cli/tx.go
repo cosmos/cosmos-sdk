@@ -142,7 +142,8 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-periodic-vesting-account [to_address] [periods_json_file]",
 		Short: "Create a new vesting account funded with an allocation of tokens.",
-		Long: `A sequence of coins and period length in seconds. Periods are sequential, in that the duration of a period only starts at the end of the previous period. The duration of the first period starts upon account creation. For instance, the following periods.json file shows 20 "test" coins vesting 30 days apart from each other.
+		Long:  `A sequence of coins and period length in seconds. Periods are sequential, in that the duration of a period only starts at the end of the previous period. The duration of the first period starts upon account creation.`,
+		Example: `The following periods.json file shows 20 "test" coins vesting 30 days apart from each other.
 		Where periods.json contains:
 
 		An array of coin strings and durations for coins to vest
@@ -208,9 +209,8 @@ func NewMsgCreateTrueVestingAccountCmd() *cobra.Command {
 		Staking rewards are subject to a proportional vesting encumbrance.
 		
 		A periods file is a JSON object describing a sequence of unlocking or vesting events,
-		with a start time and an array of coins strings and durations relative to the start or previous event.
-		For example:
-
+		with a start time and an array of coins strings and durations relative to the start or previous event.`,
+		Example: `
 		{ "start_time": 1625204910,
 	      "period": [
 			  {

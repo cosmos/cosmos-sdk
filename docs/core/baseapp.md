@@ -224,7 +224,7 @@ transaction is received by a full-node. The role of `CheckTx` is to guard the fu
 Unconfirmed transactions are relayed to peers only if they pass `CheckTx`.
 
 `CheckTx()` can perform both _stateful_ and _stateless_ checks, but developers should strive to
-make them **lightweight** because nobody is paying gas fees for the resources (CPU, data load...) used during the `CheckTx`. 
+make the checks **lightweight** because gas fees are not charged for the resources (CPU, data load...) used during the `CheckTx`. 
 
 In the Cosmos SDK, after [decoding transactions](./encoding.md), `CheckTx()` is implemented
 to do the following checks:

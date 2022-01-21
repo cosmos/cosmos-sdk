@@ -50,11 +50,11 @@ ValidateMsgA(msg MsgA, now Time, gm GasMeter) error {
 
 ### State Transition
 
-Once the validation is successful, the `msgServer` method uses [`keeper`'s](./keeper.md) functions to access the state and perform a state transition.
+After the validation is successful, the `msgServer` method uses the [`keeper`](./keeper.md) functions to access the state and perform a state transition.
 
 ### Events 
 
-Before returning, `msgServer` methods generally emit one or more [events](../core/events.md) via the `EventManager` held in the `ctx`. We can use the new `EmitTypedEvent` function, which uses protobuf based event types:
+Before returning, `msgServer` methods generally emit one or more [events](../core/events.md) by using the `EventManager` held in the `ctx`. Use the new `EmitTypedEvent` function that uses protobuf-based event types:
 
 ```
 ctx.EventManager().EmitTypedEvent(

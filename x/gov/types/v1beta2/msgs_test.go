@@ -146,8 +146,10 @@ func TestMsgSubmitProposal_ValidateBasic(t *testing.T) {
 	}{
 		{"invalid addr", "", coinsPos, []sdk.Msg{msg1}, metadata, true},
 		{"empty msgs and metadata", addrs[0].String(), coinsPos, nil, nil, true},
-		{"invalid msg", addrs[0].String(), coinsPos, []sdk.Msg{msg2}, metadata, true},
-		{"valid ", addrs[0].String(), coinsPos, []sdk.Msg{msg1}, metadata, false},
+		{"invalid msg", addrs[0].String(), coinsPos, []sdk.Msg{msg1, msg2}, metadata, true},
+		{"valid with no Msg", addrs[0].String(), coinsPos, nil, metadata, false},
+		{"valid with no metadata", addrs[0].String(), coinsPos, []sdk.Msg{msg1}, nil, false},
+		{"valid with everything", addrs[0].String(), coinsPos, []sdk.Msg{msg1}, metadata, false},
 	}
 
 	for _, tc := range tests {

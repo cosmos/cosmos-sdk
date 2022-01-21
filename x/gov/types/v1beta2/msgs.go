@@ -11,15 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-// Governance message types and routes
-const (
-	TypeMsgDeposit        = "deposit"
-	TypeMsgVote           = "vote"
-	TypeMsgVoteWeighted   = "weighted_vote"
-	TypeMsgSubmitProposal = "submit_proposal"
-	TypeMsgSignal         = "signal"
-)
-
 var (
 	_, _, _, _, _ sdk.Msg                            = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}, &MsgExecLegacyContent{}
 	_, _          codectypes.UnpackInterfacesMessage = &MsgSubmitProposal{}, &MsgExecLegacyContent{}
@@ -52,7 +43,7 @@ func (m *MsgSubmitProposal) GetMsgs() ([]sdk.Msg, error) {
 func (m MsgSubmitProposal) Route() string { return types.RouterKey }
 
 // Type implements Msg
-func (m MsgSubmitProposal) Type() string { return TypeMsgSubmitProposal }
+func (m MsgSubmitProposal) Type() string { return sdk.MsgTypeURL(&m) }
 
 // ValidateBasic implements Msg
 func (m MsgSubmitProposal) ValidateBasic() error {
@@ -70,7 +61,7 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 	}
 
 	// Check that either metadata or Msgs length is non nil.
-	if len(m.Messages) == 0 || len(m.Metadata) == 0 {
+	if len(m.Messages) == 0 && len(m.Metadata) == 0 {
 		return sdkerrors.Wrap(types.ErrNoProposalMsgs, "either metadata or Msgs length must be non-nil")
 	}
 
@@ -116,7 +107,7 @@ func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins
 func (msg MsgDeposit) Route() string { return types.RouterKey }
 
 // Type implements Msg
-func (msg MsgDeposit) Type() string { return TypeMsgDeposit }
+func (msg MsgDeposit) Type() string { return sdk.MsgTypeURL(&msg) }
 
 // ValidateBasic implements Msg
 func (msg MsgDeposit) ValidateBasic() error {
@@ -156,7 +147,7 @@ func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) *Msg
 func (msg MsgVote) Route() string { return types.RouterKey }
 
 // Type implements Msg
-func (msg MsgVote) Type() string { return TypeMsgVote }
+func (msg MsgVote) Type() string { return sdk.MsgTypeURL(&msg) }
 
 // ValidateBasic implements Msg
 func (msg MsgVote) ValidateBasic() error {
@@ -192,7 +183,7 @@ func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options Weighte
 func (msg MsgVoteWeighted) Route() string { return types.RouterKey }
 
 // Type implements Msg
-func (msg MsgVoteWeighted) Type() string { return TypeMsgVoteWeighted }
+func (msg MsgVoteWeighted) Type() string { return sdk.MsgTypeURL(&msg) }
 
 // ValidateBasic implements Msg
 func (msg MsgVoteWeighted) ValidateBasic() error {

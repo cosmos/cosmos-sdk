@@ -9,6 +9,7 @@ import (
 
 	bankv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/bank/v1beta1"
 	basev1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/v1beta1"
+	txv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/tx/v1beta1"
 	"github.com/cosmos/cosmos-sdk/orm/internal/stablejson"
 )
 
@@ -28,9 +29,9 @@ func TestStableJSON(t *testing.T) {
 		},
 	})
 	require.NoError(t, err)
-	bz, err := stablejson.Marshal(msg)
+	bz, err := stablejson.Marshal(&txv1beta1.TxBody{Messages: []*anypb.Any{msg}})
 	require.NoError(t, err)
 	require.Equal(t,
-		`{"@type":"cosmos.bank.v1beta1.MsgSend","from_address":"foo213325","to_address":"foo32t5sdfh","amount":[{"denom":"bar","amount":"1234"},{"denom":"baz","amount":"321"}]}`,
+		`{"messages":[{"@type":"cosmos.bank.v1beta1.MsgSend","from_address":"foo213325","to_address":"foo32t5sdfh","amount":[{"denom":"bar","amount":"1234"},{"denom":"baz","amount":"321"}]}]}`,
 		string(bz))
 }

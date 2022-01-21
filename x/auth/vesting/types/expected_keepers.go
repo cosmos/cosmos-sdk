@@ -11,6 +11,7 @@ import (
 // AccountKeeper defines the expected interface contract the vesting module
 // requires for storing accounts.
 type AccountKeeper interface {
+	GetAccount(sdk.Context, sdk.AccAddress) authtypes.AccountI
 	SetAccount(sdk.Context, authtypes.AccountI)
 }
 
@@ -35,4 +36,17 @@ type StakingKeeper interface {
 	GetValidator(ctx sdk.Context, valAddr sdk.ValAddress) (stakingtypes.Validator, bool)
 	TransferUnbonding(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, valAddr sdk.ValAddress, wantAmt sdk.Int) sdk.Int
 	TransferDelegation(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, valAddr sdk.ValAddress, wantShares sdk.Dec) sdk.Dec
+}
+
+// DistributionHooks is the expected interface for distribution module hooks.
+type DistributionHooks interface {
+	// AllowWithdrawAddr tells whether to honor the delegation withdraw
+	// address associated with the address (if any). The distribution
+	// keeper will call this before each reward withdrawal.
+	// If multiple distribution hooks are set, then any of them may
+	// disallow the withdraw address.
+	AllowWithdrawAddr(ctx sdk.Context, delAddr sdk.AccAddress) bool
+
+	// AfterDelegationReward is called after the reward has been transferred the address.
+	AfterDelegationReward(ctx sdk.Context, delAddr, withdrawAddr sdk.AccAddress, reward sdk.Coins)
 }

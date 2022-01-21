@@ -256,18 +256,13 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.Vali
 	// add coins to user account
 	if !coins.IsZero() {
 		addr := del.GetDelegatorAddr()
-		acc := k.authKeeper.GetAccount(ctx, addr)
-		smartAcc, isSmart := acc.(SmartRewardAccount)
-		withdrawAddr := addr
-		if !isSmart {
-			withdrawAddr = k.GetDelegatorWithdrawAddr(ctx, addr)
-		}
+		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, addr)
 		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, coins)
 		if err != nil {
 			return nil, err
 		}
-		if isSmart {
-			smartAcc.PostReward(ctx, coins, k.authKeeper, k.bankKeeper, k.stakingKeeper)
+		for _, h := range k.hooks {
+			h.AfterDelegationReward(ctx, addr, withdrawAddr, coins)
 		}
 	}
 

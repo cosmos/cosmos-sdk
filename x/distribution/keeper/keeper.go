@@ -53,6 +53,8 @@ type Keeper struct {
 	// ValidatorSlashEvents key: valAddr+height+period | value: ValidatorSlashEvent
 	ValidatorSlashEvents collections.Map[collections.Triple[sdk.ValAddress, uint64, uint64], types.ValidatorSlashEvent]
 
+	hooks []types.DistributionHooks
+
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
 
@@ -80,59 +82,8 @@ func NewKeeper(
 		bankKeeper:       bk,
 		stakingKeeper:    sk,
 		feeCollectorName: feeCollectorName,
-		authority:        authority,
-		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		FeePool:          collections.NewItem(sb, types.FeePoolKey, "fee_pool", codec.CollValue[types.FeePool](cdc)),
-		DelegatorsWithdrawAddress: collections.NewMap(
-			sb,
-			types.DelegatorWithdrawAddrPrefix,
-			"delegators_withdraw_address",
-			sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
-			collcodec.KeyToValueCodec(sdk.AccAddressKey),
-		),
-		ValidatorCurrentRewards: collections.NewMap(
-			sb,
-			types.ValidatorCurrentRewardsPrefix,
-			"validators_current_rewards",
-			sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
-			codec.CollValue[types.ValidatorCurrentRewards](cdc),
-		),
-		DelegatorStartingInfo: collections.NewMap(
-			sb,
-			types.DelegatorStartingInfoPrefix,
-			"delegators_starting_info",
-			collections.PairKeyCodec(sdk.ValAddressKey, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
-			codec.CollValue[types.DelegatorStartingInfo](cdc),
-		),
-		ValidatorsAccumulatedCommission: collections.NewMap(
-			sb,
-			types.ValidatorAccumulatedCommissionPrefix,
-			"validators_accumulated_commission",
-			sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
-			codec.CollValue[types.ValidatorAccumulatedCommission](cdc),
-		),
-		ValidatorOutstandingRewards: collections.NewMap(
-			sb,
-			types.ValidatorOutstandingRewardsPrefix,
-			"validator_outstanding_rewards",
-			sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
-			codec.CollValue[types.ValidatorOutstandingRewards](cdc),
-		),
-
-		ValidatorHistoricalRewards: collections.NewMap(
-			sb,
-			types.ValidatorHistoricalRewardsPrefix,
-			"validator_historical_rewards",
-			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.LEUint64Key), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
-			codec.CollValue[types.ValidatorHistoricalRewards](cdc),
-		),
-		ValidatorSlashEvents: collections.NewMap(
-			sb,
-			types.ValidatorSlashEventPrefix,
-			"validator_slash_events",
-			collections.TripleKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), collections.Uint64Key, collections.Uint64Key), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
-			codec.CollValue[types.ValidatorSlashEvent](cdc),
-		),
+		blockedAddrs:     blockedAddrs,
+		hooks:            []types.DistributionHooks{},
 	}
 
 	schema, err := sb.Build()
@@ -146,6 +97,14 @@ func NewKeeper(
 // GetAuthority returns the x/distribution module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
+}
+
+// AddHooks adds a hooks object to be called upon certain events.
+func (k *Keeper) AddHooks(h types.DistributionHooks) *Keeper {
+	if h != nil {
+		k.hooks = append(k.hooks, h)
+	}
+	return k
 }
 
 // SetWithdrawAddr sets a new address that will receive the rewards upon withdrawal
@@ -249,6 +208,9 @@ func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.Val
 
 		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, commission)
 		if err != nil {
+			for _, h := range k.hooks {
+				h.AfterDelegationReward(ctx, accAddr, withdrawAddr, commission)
+			}
 			return nil, err
 		}
 	}

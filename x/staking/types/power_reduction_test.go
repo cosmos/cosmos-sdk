@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var powerReduction = sdk.NewIntFromUint64(1000000)
@@ -23,6 +24,6 @@ func (s *stakingTestSuite) SetupSuite() {
 }
 
 func (s *stakingTestSuite) TestTokensToConsensusPower() {
-	s.Require().Equal(int64(0), sdk.TokensToConsensusPower(sdk.NewInt(999_999), powerReduction))
-	s.Require().Equal(int64(1), sdk.TokensToConsensusPower(sdk.NewInt(1_000_000), powerReduction))
+	s.Require().Equal(int64(0), types.TokensToConsensusPower(sdk.NewInt(999_999), powerReduction))
+	s.Require().Equal(int64(1), types.TokensToConsensusPower(sdk.NewInt(1_000_000), powerReduction))
 }

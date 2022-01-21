@@ -25,7 +25,7 @@ func TestBeginBlocker(t *testing.T) {
 	addr, pk := sdk.ValAddress(pks[0].Address()), pks[0]
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
-	InitTokens := sdk.TokensFromConsensusPower(200, stakingtypes.DefaultConfig().PowerReduction)
+	InitTokens := sdk.NewIntFromUint64(200_000_000)
 	// bond the validator
 	power := int64(100)
 	amt := tstaking.CreateValidatorWithValPower(addr, pk, power, true)

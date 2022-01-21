@@ -657,7 +657,7 @@ func dirtyTrackingFields(ctx sdk.Context, vesting exported.VestingAccount, app *
 }
 
 func createValidator(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers int64) (sdk.AccAddress, sdk.ValAddress) {
-	valTokens := sdk.TokensFromConsensusPower(powers, sdk.DefaultPowerReduction)
+	valTokens := sdk.NewInt(powers).Mul(sdk.NewIntFromUint64(1_000_000))
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 1, valTokens)
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
 	pks := simapp.CreateTestPubKeys(1)

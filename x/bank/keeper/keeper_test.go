@@ -20,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
@@ -40,7 +39,7 @@ var (
 	randomPermAcc = authtypes.NewEmptyModuleAccount(randomPerm, "random")
 
 	// The default power validators are initialized to have within tests
-	initTokens = sdk.TokensFromConsensusPower(initialPower, stakingtypes.DefaultConfig().PowerReduction)
+	initTokens = sdk.NewInt(initialPower).Mul(sdk.NewIntFromUint64(1_000_000))
 	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 )
 

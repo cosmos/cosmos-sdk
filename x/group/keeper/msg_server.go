@@ -234,7 +234,6 @@ func (k Keeper) UpdateGroupMetadata(goCtx context.Context, req *group.MsgUpdateG
 }
 
 func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreateGroupWithPolicy) (*group.MsgCreateGroupWithPolicyResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	groupPolicyMetadata := req.GroupPolicyMetadata
 	if err := assertMetadataLength(groupPolicyMetadata, "group policy metadata"); err != nil {
@@ -288,11 +287,6 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	err = ctx.EventManager().EmitTypedEvents(&group.EventCreateGroup{GroupId: groupId}, &group.EventCreateGroupPolicy{Address: groupPolicyAddr.String()})
-	if err != nil {
-		return nil, err
 	}
 
 	return &group.MsgCreateGroupWithPolicyResponse{GroupId: groupId, GroupPolicyAddress: groupPolicyAddr.String()}, nil

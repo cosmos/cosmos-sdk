@@ -89,9 +89,10 @@ To discard obviously invalid messages, the BaseApp` type calls the `ValidateBasi
 
 #### Guideline
 
-Gas is not charged when `ValidateBasic` is executed so we recommend only performing the most necessary sanity checks to enable middleware operations (for example, parsing the required signer accounts to validate a signature by a middleware). Other validation operations must be performed when [handling a message](../building-modules/msg-services#Validation) in a module Msg Server.
+Gas is not charged when `ValidateBasic` is executed so we recommend only performing all necessary stateless checks to enable middleware operations (for example, parsing the required signer accounts to validate a signature by a middleware) and stateless sanity checks not impacting performance of the CheckTx phase.
+Other validation operations must be performed when [handling a message](../building-modules/msg-services#Validation) in a module Msg Server.
 
-For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for non-empty addresses and a non-negative coin amount, but does not require knowledge of state such as the account balance of an address.
+Example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for non-empty addresses and a non-negative coin amount, but does not require knowledge of state such as the account balance of an address.
 
 See also [Msg Service Validation](../building-modules/msg-services.md#Validation).
 

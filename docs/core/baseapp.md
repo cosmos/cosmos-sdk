@@ -270,7 +270,7 @@ The response contains:
 #### RecheckTx
 
 After `Commit`, `CheckTx` is run again on all transactions that remain in the node's local mempool
-excluding those included in the block. To prevent the mempool from rechecking all transactions
+excluding the transactions that are included in the block. To prevent the mempool from rechecking all transactions
 every time a block is committed, the configuration option `mempool.recheck=false` can be set. As of
 Tendermint v0.32.1, an additional `Type` parameter is made available to the `CheckTx` function that
 indicates whether an incoming transaction is new (`CheckTxType_New`), or a recheck (`CheckTxType_Recheck`).

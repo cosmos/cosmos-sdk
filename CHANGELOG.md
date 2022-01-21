@@ -116,7 +116,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10816](https://github.com/cosmos/cosmos-sdk/pull/10816) Reuse blocked addresses from the bank module. No need to pass them to distribution. 
 * [\#10852](https://github.com/cosmos/cosmos-sdk/pull/10852) Move `x/gov/types` to `x/gov/types/v1beta2`.
 * [\#10868](https://github.com/cosmos/cosmos-sdk/pull/10868) The Gov keeper accepts now a mandatory last argument, the ServiceMsgRouter.
-* [\#10988](https://github.com/cosmos/cosmos-sdk/pull/10988#pullrequestreview-859809392) Removes sdk.Powerreduction as a global and pass it directly to the staking keeper on creation. 
+* [\#10988](https://github.com/cosmos/cosmos-sdk/pull/10988) Removes sdk.PowerReduction as a global and pass it directly to the staking keeper on creation. 
   - Deletes `types/staking.go` and moves the functions to `x/staking/types/power_reduction.go`
 
 ### Client Breaking Changes

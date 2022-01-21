@@ -40,7 +40,7 @@ func (k Keeper) BondDenom(ctx sdk.Context) (res string) {
 }
 
 // PowerReduction - is the amount of staking tokens required for 1 unit of consensus-engine power.
-func (k Keeper) PowerReduction(ctx sdk.Context) sdk.Int {
+func (k Keeper) PowerReduction(_ sdk.Context) sdk.Int {
 	return k.Config.PowerReduction
 }
 

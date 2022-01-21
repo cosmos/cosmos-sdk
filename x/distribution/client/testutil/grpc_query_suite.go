@@ -37,6 +37,12 @@ func (s *GRPCQueryTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 }
 
+// TearDownSuite cleans up the curret test network after _each_ test.
+func (s *GRPCQueryTestSuite) TearDownSuite() {
+	s.T().Log("tearing down integration test suite1")
+	s.network.Cleanup()
+}
+
 func (s *GRPCQueryTestSuite) TestQueryParamsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress

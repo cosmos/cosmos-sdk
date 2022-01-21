@@ -286,10 +286,14 @@ message MsgExecResponse {}
 // MsgLeaveGroup is the Msg/LeaveGroup request type.
 message MsgLeaveGroup {
   // member_address is the account address of the group member.
-  string member_address = 1;
+  string member_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // group_id is the unique ID of the group.
   uint64 group_id = 2;
+
+  // policy_address is the account address of group policy.
+  string policy_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
 }
 
 // MsgLeaveGroupResponse is the Msg/LeaveGroup response type.

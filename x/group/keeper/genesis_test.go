@@ -109,7 +109,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		GroupSeq:              2,
 		Groups:                []*group.GroupInfo{{GroupId: 1, Admin: accAddr.String(), Metadata: []byte("1"), Version: 1, TotalWeight: "1"}, {GroupId: 2, Admin: accAddr.String(), Metadata: []byte("2"), Version: 2, TotalWeight: "2"}},
 		GroupMembers:          []*group.GroupMember{{GroupId: 1, Member: &group.Member{Address: memberAddr.String(), Weight: "1", Metadata: []byte("member metadata")}}, {GroupId: 2, Member: &group.Member{Address: memberAddr.String(), Weight: "2", Metadata: []byte("member metadata")}}},
-		GroupPolicyAccountSeq: 1,
+		GroupPolicySeq: 1,
 		GroupPolicies:         []*group.GroupPolicyInfo{groupPolicy},
 		ProposalSeq:           1,
 		Proposals:             []*group.Proposal{proposal},
@@ -189,7 +189,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	s.Require().Equal(genesisState.Votes, exportedGenesisState.Votes)
 
 	s.Require().Equal(genesisState.GroupSeq, exportedGenesisState.GroupSeq)
-	s.Require().Equal(genesisState.GroupPolicyAccountSeq, exportedGenesisState.GroupPolicyAccountSeq)
+	s.Require().Equal(genesisState.GroupPolicySeq, exportedGenesisState.GroupPolicySeq)
 	s.Require().Equal(genesisState.ProposalSeq, exportedGenesisState.ProposalSeq)
 
 }

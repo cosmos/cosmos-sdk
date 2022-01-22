@@ -52,7 +52,10 @@ func (any *Any) MarshalJSONPB(m *jsonpb.Marshaler) ([]byte, error) {
 }
 
 func (any *Any) UnmarshalJSONPB(u *jsonpb.Unmarshaler, bz []byte) error {
-	typeURL, jsonbz, err := typeUrlFromBytes(bz)
+	if string(bz) == "null" { // we return at this case since JSON will inject "null" for default value fields
+		return nil
+	}
+	typeURL, jsonBz, err := typeUrlFromBytes(bz)
 	if err != nil {
 		return err
 	}
@@ -69,7 +72,7 @@ func (any *Any) UnmarshalJSONPB(u *jsonpb.Unmarshaler, bz []byte) error {
 			DiscardUnknown: !u.AllowUnknownFields, // TODO(tyler): is this ok?
 			Resolver:       u.AnyResolver.(InterfaceRegistry),
 		}
-		err := unmarshalv2.Unmarshal(jsonbz, msg)
+		err := unmarshalv2.Unmarshal(jsonBz, msg)
 		if err != nil {
 			return err
 		}
@@ -82,7 +85,7 @@ func (any *Any) UnmarshalJSONPB(u *jsonpb.Unmarshaler, bz []byte) error {
 		any.cachedValue = msg
 		return nil
 	case gogoproto.Message:
-		buf := bytes.NewReader(jsonbz)
+		buf := bytes.NewReader(jsonBz)
 		err := u.Unmarshal(buf, msg)
 		if err != nil {
 			return err

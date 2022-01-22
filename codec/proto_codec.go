@@ -1,11 +1,10 @@
 package codec
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"strings"
-
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/gogo/protobuf/jsonpb"
@@ -172,7 +171,8 @@ func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr gogoproto.Message) error {
 	switch ptr := ptr.(type) {
 	case gogoproto.Message:
 		unmarshaler := jsonpb.Unmarshaler{AnyResolver: pc.interfaceRegistry}
-		err := unmarshaler.Unmarshal(strings.NewReader(string(bz)), ptr)
+		buffer := bytes.NewBuffer(bz)
+		err := unmarshaler.Unmarshal(buffer, ptr)
 		if err != nil {
 			return err
 		}

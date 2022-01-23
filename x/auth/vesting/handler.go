@@ -21,8 +21,8 @@ func NewHandler(ak keeper.AccountKeeper, bk types.BankKeeper, sk types.StakingKe
 		case *types.MsgCreatePeriodicVestingAccount:
 			res, err := msgServer.CreatePeriodicVestingAccount(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgCreateTrueVestingAccount:
-			res, err := msgServer.CreateTrueVestingAccount(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgCreateClawbackVestingAccount:
+			res, err := msgServer.CreateClawbackVestingAccount(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgClawback:
 			res, err := msgServer.Clawback(sdk.WrapSDKContext(ctx), msg)

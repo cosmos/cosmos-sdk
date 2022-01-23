@@ -12,8 +12,8 @@ const (
 	// TypeMsgCreatePeriodicVestingAccount defines the type value for a MsgCreateVestingAccount.
 	TypeMsgCreatePeriodicVestingAccount = "msg_create_periodic_vesting_account"
 
-	// TypeMsgCreateTrueVestingAccount defines the type value for a MsgCreateTrueVestingAcount.
-	TypeMsgCreateTrueVestingAccount = "msg_create_true_vesting_account"
+	// TypeMsgCreateClawbackVestingAccount defines the type value for a MsgCreateClawbackVestingAcount.
+	TypeMsgCreateClawbackVestingAccount = "msg_create_clawback_vesting_account"
 
 	// TypeMsgClawback defines the type value for a MsgClawback.
 	TypeMsgClawback = "msg_clawback"
@@ -22,7 +22,7 @@ const (
 var (
 	_ sdk.Msg = &MsgCreateVestingAccount{}
 	_ sdk.Msg = &MsgCreatePeriodicVestingAccount{}
-	_ sdk.Msg = &MsgCreateTrueVestingAccount{}
+	_ sdk.Msg = &MsgCreateClawbackVestingAccount{}
 	_ sdk.Msg = &MsgClawback{}
 )
 
@@ -152,10 +152,10 @@ func (msg MsgCreatePeriodicVestingAccount) ValidateBasic() error {
 	return nil
 }
 
-// NewMsgCreateTrueVestingAccount returns a reference to a new MsgCreateTrueVestingAccount.
+// NewMsgCreateClawbackVestingAccount returns a reference to a new MsgCreateClawbackVestingAccount.
 //nolint:interfacer
-func NewMsgCreateTrueVestingAccount(fromAddr, toAddr sdk.AccAddress, startTime int64, lockupPeriods, vestingPeriods []Period, merge bool) *MsgCreateTrueVestingAccount {
-	return &MsgCreateTrueVestingAccount{
+func NewMsgCreateClawbackVestingAccount(fromAddr, toAddr sdk.AccAddress, startTime int64, lockupPeriods, vestingPeriods []Period, merge bool) *MsgCreateClawbackVestingAccount {
+	return &MsgCreateClawbackVestingAccount{
 		FromAddress:    fromAddr.String(),
 		ToAddress:      toAddr.String(),
 		StartTime:      startTime,
@@ -165,14 +165,14 @@ func NewMsgCreateTrueVestingAccount(fromAddr, toAddr sdk.AccAddress, startTime i
 	}
 }
 
-// Route returns the message route for a MsgCreateTrueVestingAccount.
-func (msg MsgCreateTrueVestingAccount) Route() string { return RouterKey }
+// Route returns the message route for a MsgCreateClawbackVestingAccount.
+func (msg MsgCreateClawbackVestingAccount) Route() string { return RouterKey }
 
-// Type returns the message type for a MsgCreateTrueVestingAccount.
-func (msg MsgCreateTrueVestingAccount) Type() string { return TypeMsgCreateTrueVestingAccount }
+// Type returns the message type for a MsgCreateClawbackVestingAccount.
+func (msg MsgCreateClawbackVestingAccount) Type() string { return TypeMsgCreateClawbackVestingAccount }
 
-// GetSigners returns the expected signers for a MsgCreateTrueVestingAccount.
-func (msg MsgCreateTrueVestingAccount) GetSigners() []sdk.AccAddress {
+// GetSigners returns the expected signers for a MsgCreateClawbackVestingAccount.
+func (msg MsgCreateClawbackVestingAccount) GetSigners() []sdk.AccAddress {
 	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
 	if err != nil {
 		panic(err)
@@ -181,13 +181,13 @@ func (msg MsgCreateTrueVestingAccount) GetSigners() []sdk.AccAddress {
 }
 
 // GetSignBytes returns the bytes all expected signers must sign over for a
-// MsgCreateTrueVestingAccount.
-func (msg MsgCreateTrueVestingAccount) GetSignBytes() []byte {
+// MsgCreateClawbackVestingAccount.
+func (msg MsgCreateClawbackVestingAccount) GetSignBytes() []byte {
 	return sdk.MustSortJSON(amino.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic Implements Msg.
-func (msg MsgCreateTrueVestingAccount) ValidateBasic() error {
+func (msg MsgCreateClawbackVestingAccount) ValidateBasic() error {
 	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
 	if err != nil {
 		return err

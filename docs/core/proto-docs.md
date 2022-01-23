@@ -571,20 +571,20 @@
   
 - [cosmos/vesting/v1beta1/vesting.proto](#cosmos/vesting/v1beta1/vesting.proto)
     - [BaseVestingAccount](#cosmos.vesting.v1beta1.BaseVestingAccount)
+    - [ClawbackVestingAccount](#cosmos.vesting.v1beta1.ClawbackVestingAccount)
     - [ContinuousVestingAccount](#cosmos.vesting.v1beta1.ContinuousVestingAccount)
     - [DelayedVestingAccount](#cosmos.vesting.v1beta1.DelayedVestingAccount)
     - [Period](#cosmos.vesting.v1beta1.Period)
     - [PeriodicVestingAccount](#cosmos.vesting.v1beta1.PeriodicVestingAccount)
     - [PermanentLockedAccount](#cosmos.vesting.v1beta1.PermanentLockedAccount)
-    - [TrueVestingAccount](#cosmos.vesting.v1beta1.TrueVestingAccount)
   
 - [cosmos/vesting/v1beta1/tx.proto](#cosmos/vesting/v1beta1/tx.proto)
     - [MsgClawback](#cosmos.vesting.v1beta1.MsgClawback)
     - [MsgClawbackResponse](#cosmos.vesting.v1beta1.MsgClawbackResponse)
+    - [MsgCreateClawbackVestingAccount](#cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount)
+    - [MsgCreateClawbackVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccountResponse)
     - [MsgCreatePeriodicVestingAccount](#cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccount)
     - [MsgCreatePeriodicVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccountResponse)
-    - [MsgCreateTrueVestingAccount](#cosmos.vesting.v1beta1.MsgCreateTrueVestingAccount)
-    - [MsgCreateTrueVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreateTrueVestingAccountResponse)
     - [MsgCreateVestingAccount](#cosmos.vesting.v1beta1.MsgCreateVestingAccount)
     - [MsgCreateVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse)
   
@@ -8184,6 +8184,29 @@ the necessary fields needed for any vesting account implementation.
 
 
 
+<a name="cosmos.vesting.v1beta1.ClawbackVestingAccount"></a>
+
+### ClawbackVestingAccount
+ClawbackVestingAccount implements the VestingAccount interface. It provides
+an account that can hold contributions subject to "lockup" (like a
+PeriodicVestingAccount), or vesting which is subject to clawback
+of unvested tokens, or a combination (tokens vest, but are still locked).
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `base_vesting_account` | [BaseVestingAccount](#cosmos.vesting.v1beta1.BaseVestingAccount) |  |  |
+| `funder_address` | [string](#string) |  | funder_address specifies the account which can perform clawback. |
+| `start_time` | [int64](#int64) |  |  |
+| `combined_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated | schedule of coins being vested and unlocked, relative to the BaseVestingAccount start_time. This determines when tokens are available for transfer. |
+| `lockup_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated | unlocking schedule relative to the BaseVestingAccount start_time. |
+| `vesting_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated | vesting (i.e. immunity from clawback) schedule relative to the BaseVestingAccount start_time. |
+
+
+
+
+
+
 <a name="cosmos.vesting.v1beta1.ContinuousVestingAccount"></a>
 
 ### ContinuousVestingAccount
@@ -8273,29 +8296,6 @@ Since: cosmos-sdk 0.43
 
 
 
-
-<a name="cosmos.vesting.v1beta1.TrueVestingAccount"></a>
-
-### TrueVestingAccount
-TrueVestingAccount implements the VestingAccount interface. It provides
-an account that can hold contributions subject to "lockup" (like a
-PeriodicVestingAccount), or "true vesting" which is subject to clawback
-of unvested tokens, or a combination (tokens vest, but are still locked).
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `base_vesting_account` | [BaseVestingAccount](#cosmos.vesting.v1beta1.BaseVestingAccount) |  |  |
-| `funder_address` | [string](#string) |  | funder_address specifies the account which can perform clawback. |
-| `start_time` | [int64](#int64) |  |  |
-| `combined_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated | schedule of coins being vested and unlocked, relative to the BaseVestingAccount start_time. This determines when tokens are available for transfer. |
-| `lockup_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated | unlocking schedule relative to the BaseVestingAccount start_time. |
-| `vesting_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated | vesting (i.e. immunity from clawback) schedule relative to the BaseVestingAccount start_time. |
-
-
-
-
-
  <!-- end messages -->
 
  <!-- end enums -->
@@ -8316,14 +8316,13 @@ of unvested tokens, or a combination (tokens vest, but are still locked).
 <a name="cosmos.vesting.v1beta1.MsgClawback"></a>
 
 ### MsgClawback
-MsgClawback defines a message that removes unvested (in the true vesting sense) tokens
-from a periodic vesting account.
+MsgClawback defines a message that removes unvested tokens from a ClawbackVestingAccount.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `funder_address` | [string](#string) |  | funder_address is the address which funded the account |
-| `address` | [string](#string) |  | address is the address of the TrueVestingAccount to claw back from. |
+| `address` | [string](#string) |  | address is the address of the ClawbackVestingAccount to claw back from. |
 | `dest_address` | [string](#string) |  | dest_address specifies where the clawed-back tokens should be transferred. If empty, the tokens will be transferred back to the original funder of the account. |
 
 
@@ -8335,6 +8334,36 @@ from a periodic vesting account.
 
 ### MsgClawbackResponse
 MsgClawbackResponse defines the MsgClawback response type.
+
+
+
+
+
+
+<a name="cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount"></a>
+
+### MsgCreateClawbackVestingAccount
+MsgCreateClawbackVestingAccount defines a message that enables creating a ClawbackVestingAccount.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `from_address` | [string](#string) |  | Address of the account providing the funds, which must also sign the request. |
+| `to_address` | [string](#string) |  | Address of the account to receive the funds. |
+| `start_time` | [int64](#int64) |  | Start time of the vesting. Periods start relative to this time. |
+| `lockup_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated | Unlocking events as a sequence of durations and amounts, starting relative to start_time. |
+| `vesting_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated | Vesting events as a sequence of durations and amounts, starting relative to start_time. |
+| `merge` | [bool](#bool) |  | If true, merge this new grant into an existing ClawbackVestingAccount, or create it if it does not exist. If false, creates a new account. New grants to an existing account must be from the same from_address. |
+
+
+
+
+
+
+<a name="cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccountResponse"></a>
+
+### MsgCreateClawbackVestingAccountResponse
+MsgCreateClawbackVestingAccountResponse defines the MsgCreateClawbackVestingAccount response type.
 
 
 
@@ -8366,36 +8395,6 @@ account.
 ### MsgCreatePeriodicVestingAccountResponse
 MsgCreatePeriodicVestingAccountResponse defines the MsgCreatePeriodicVestingAccount
 response type.
-
-
-
-
-
-
-<a name="cosmos.vesting.v1beta1.MsgCreateTrueVestingAccount"></a>
-
-### MsgCreateTrueVestingAccount
-MsgCreateTrueVestingAccount defines a message that enables creating a true vesting account.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `from_address` | [string](#string) |  | Address of the account providing the funds, which must also sign the request. |
-| `to_address` | [string](#string) |  | Address of the account to receive the funds. |
-| `start_time` | [int64](#int64) |  | Start time of the vesting. Periods start relative to this time. |
-| `lockup_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated | Unlocking events as a sequence of durations and amounts, starting relative to start_time. |
-| `vesting_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated | Vesting events as a sequence of durations and amounts, starting relative to start_time. |
-| `merge` | [bool](#bool) |  | If true, merge this new grant into an existing TrueVestingAccount, or create it if it does not exist. If false, creates a new account. New grants to an existing account must be from the same from_address. |
-
-
-
-
-
-
-<a name="cosmos.vesting.v1beta1.MsgCreateTrueVestingAccountResponse"></a>
-
-### MsgCreateTrueVestingAccountResponse
-MsgCreateTrueVestingAccountResponse defines the MsgCreateTrueVestingAccount response type.
 
 
 
@@ -8447,8 +8446,8 @@ Msg defines the bank Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `CreateVestingAccount` | [MsgCreateVestingAccount](#cosmos.vesting.v1beta1.MsgCreateVestingAccount) | [MsgCreateVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse) | CreateVestingAccount defines a method that enables creating a vesting account. | |
 | `CreatePeriodicVestingAccount` | [MsgCreatePeriodicVestingAccount](#cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccount) | [MsgCreatePeriodicVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccountResponse) | CreatePeriodicVestingAccount defines a method that enables creating a periodic vesting account. | |
-| `CreateTrueVestingAccount` | [MsgCreateTrueVestingAccount](#cosmos.vesting.v1beta1.MsgCreateTrueVestingAccount) | [MsgCreateTrueVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreateTrueVestingAccountResponse) | CreateTrueVestingAccount defines a method that enables creating a "true" vesting account - one subject to clawback. | |
-| `Clawback` | [MsgClawback](#cosmos.vesting.v1beta1.MsgClawback) | [MsgClawbackResponse](#cosmos.vesting.v1beta1.MsgClawbackResponse) | Clawback removes the un-true-vested tokens from a true vesting account. | |
+| `CreateClawbackVestingAccount` | [MsgCreateClawbackVestingAccount](#cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount) | [MsgCreateClawbackVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccountResponse) | CreateClawbackVestingAccount defines a method that enables creating a vesting account that is subject to clawback. | |
+| `Clawback` | [MsgClawback](#cosmos.vesting.v1beta1.MsgClawback) | [MsgClawbackResponse](#cosmos.vesting.v1beta1.MsgClawbackResponse) | Clawback removes the unvested tokens from a ClawbackVestingAccount. | |
 
  <!-- end services -->
 

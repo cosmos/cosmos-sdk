@@ -17,7 +17,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&DelayedVestingAccount{}, "cosmos-sdk/DelayedVestingAccount", nil)
 	cdc.RegisterConcrete(&PeriodicVestingAccount{}, "cosmos-sdk/PeriodicVestingAccount", nil)
 	cdc.RegisterConcrete(&PermanentLockedAccount{}, "cosmos-sdk/PermanentLockedAccount", nil)
-	cdc.RegisterConcrete(&TrueVestingAccount{}, "cosmos-sdk/TrueVestingAccount", nil)
+	cdc.RegisterConcrete(&ClawbackVestingAccount{}, "cosmos-sdk/ClawbackVestingAccount", nil)
 }
 
 // RegisterInterfaces associates protoName with AccountI and VestingAccount
@@ -30,7 +30,7 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 		&DelayedVestingAccount{},
 		&PeriodicVestingAccount{},
 		&PermanentLockedAccount{},
-		&TrueVestingAccount{},
+		&ClawbackVestingAccount{},
 	)
 
 	registrar.RegisterImplementations(
@@ -40,7 +40,7 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 		&ContinuousVestingAccount{},
 		&PeriodicVestingAccount{},
 		&PermanentLockedAccount{},
-		&TrueVestingAccount{},
+		&ClawbackVestingAccount{},
 	)
 
 	registrar.RegisterImplementations(
@@ -50,7 +50,7 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 		&ContinuousVestingAccount{},
 		&PeriodicVestingAccount{},
 		&PermanentLockedAccount{},
-		&TrueVestingAccount{},
+		&ClawbackVestingAccount{},
 	)
 
 	registry.RegisterImplementations(
@@ -58,7 +58,7 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 		&MsgClawback{},
 		&MsgCreateVestingAccount{},
 		&MsgCreatePeriodicVestingAccount{},
-		&MsgCreateTrueVestingAccount{},
+		&MsgCreateClawbackVestingAccount{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

@@ -224,7 +224,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreatePeriodicVestingAccountCmd() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewMsgCreateTrueVestingAccountCmd() {
+func (s *IntegrationTestSuite) TestNewMsgCreateClawbackVestingAccountCmd() {
 	val := s.network.Validators[0]
 	for _, tc := range []struct {
 		name         string
@@ -358,7 +358,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreateTrueVestingAccountCmd() {
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 
-			bw, err := clitestutil.ExecTestCLICmd(clientCtx, cli.NewMsgCreateTrueVestingAccountCmd(), tc.args)
+			bw, err := clitestutil.ExecTestCLICmd(clientCtx, cli.NewMsgCreateClawbackVestingAccountCmd(), tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -375,7 +375,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreateTrueVestingAccountCmd() {
 func (s *IntegrationTestSuite) TestNewMsgClawbackCmd() {
 	val := s.network.Validators[0]
 
-	_, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cli.NewMsgCreateTrueVestingAccountCmd(), []string{
+	_, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cli.NewMsgCreateClawbackVestingAccountCmd(), []string{
 		sdk.AccAddress("addr30______________").String(),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 		fmt.Sprintf("--%s=%s", cli.FlagLockup, "testdata/periods1.json"),

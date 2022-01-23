@@ -15,10 +15,10 @@ service Msg {
   // CreatePeriodicVestingAccount defines a method that enables creating a
   // periodic vesting account.
   rpc CreatePeriodicVestingAccount(MsgCreatePeriodicVestingAccount) returns (MsgCreatePeriodicVestingAccountResponse);
-  // CreateTrueVestingAccount defines a method that enables creating a
-  // "true" vesting account - one subject to clawback.
-  rpc CreateTrueVestingAccount(MsgCreateTrueVestingAccount) returns (MsgCreateTrueVestingAccountResponse);
-  // Clawback removes the un-true-vested tokens from a true vesting account.
+  // CreateClawbackVestingAccount defines a method that enables creating a
+  // vesting account that is subject to clawback.
+  rpc CreateClawbackVestingAccount(MsgCreateClawbackVestingAccount) returns (MsgCreateClawbackVestingAccountResponse);
+  // Clawback removes the unvested tokens from a ClawbackVestingAccount.
   rpc Clawback(MsgClawback) returns (MsgClawbackResponse);
 }
 
@@ -67,8 +67,8 @@ message MsgCreatePeriodicVestingAccount {
 // response type.
 message MsgCreatePeriodicVestingAccountResponse {}
 
-// MsgCreateTrueVestingAccount defines a message that enables creating a true vesting account.
-message MsgCreateTrueVestingAccount {
+// MsgCreateClawbackVestingAccount defines a message that enables creating a ClawbackVestingAccount.
+message MsgCreateClawbackVestingAccount {
   option (gogoproto.equal) = false;
 
   // Address of the account providing the funds, which must also sign the request.
@@ -81,21 +81,20 @@ message MsgCreateTrueVestingAccount {
   repeated Period lockup_periods = 4 [(gogoproto.nullable) = false];
  // Vesting events as a sequence of durations and amounts, starting relative to start_time.
   repeated Period vesting_periods = 5 [(gogoproto.nullable) = false];
-  // If true, merge this new grant into an existing TrueVestingAccount,
+  // If true, merge this new grant into an existing ClawbackVestingAccount,
   // or create it if it does not exist. If false, creates a new account.
   // New grants to an existing account must be from the same from_address.
   bool merge = 6;
 }
 
-// MsgCreateTrueVestingAccountResponse defines the MsgCreateTrueVestingAccount response type.
-message MsgCreateTrueVestingAccountResponse {}
+// MsgCreateClawbackVestingAccountResponse defines the MsgCreateClawbackVestingAccount response type.
+message MsgCreateClawbackVestingAccountResponse {}
 
-// MsgClawback defines a message that removes unvested (in the true vesting sense) tokens
-// from a periodic vesting account.
+// MsgClawback defines a message that removes unvested tokens from a ClawbackVestingAccount.
 message MsgClawback {
   // funder_address is the address which funded the account
   string funder_address = 1;
-  // address is the address of the TrueVestingAccount to claw back from.
+  // address is the address of the ClawbackVestingAccount to claw back from.
   string address = 2;
   // dest_address specifies where the clawed-back tokens should be transferred.
   // If empty, the tokens will be transferred back to the original funder of the account.

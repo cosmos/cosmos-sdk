@@ -276,8 +276,8 @@ func (m *MsgCreatePeriodicVestingAccountResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreatePeriodicVestingAccountResponse proto.InternalMessageInfo
 
-// MsgCreateTrueVestingAccount defines a message that enables creating a true vesting account.
-type MsgCreateTrueVestingAccount struct {
+// MsgCreateClawbackVestingAccount defines a message that enables creating a ClawbackVestingAccount.
+type MsgCreateClawbackVestingAccount struct {
 	// Address of the account providing the funds, which must also sign the request.
 	FromAddress string `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty" yaml:"from_address"`
 	// Address of the account to receive the funds.
@@ -288,24 +288,24 @@ type MsgCreateTrueVestingAccount struct {
 	LockupPeriods []Period `protobuf:"bytes,4,rep,name=lockup_periods,json=lockupPeriods,proto3" json:"lockup_periods"`
 	// Vesting events as a sequence of durations and amounts, starting relative to start_time.
 	VestingPeriods []Period `protobuf:"bytes,5,rep,name=vesting_periods,json=vestingPeriods,proto3" json:"vesting_periods"`
-	// If true, merge this new grant into an existing TrueVestingAccount,
+	// If true, merge this new grant into an existing ClawbackVestingAccount,
 	// or create it if it does not exist. If false, creates a new account.
 	// New grants to an existing account must be from the same from_address.
 	Merge bool `protobuf:"varint,6,opt,name=merge,proto3" json:"merge,omitempty"`
 }
 
-func (m *MsgCreateTrueVestingAccount) Reset()         { *m = MsgCreateTrueVestingAccount{} }
-func (m *MsgCreateTrueVestingAccount) String() string { return proto.CompactTextString(m) }
-func (*MsgCreateTrueVestingAccount) ProtoMessage()    {}
-func (*MsgCreateTrueVestingAccount) Descriptor() ([]byte, []int) {
+func (m *MsgCreateClawbackVestingAccount) Reset()         { *m = MsgCreateClawbackVestingAccount{} }
+func (m *MsgCreateClawbackVestingAccount) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateClawbackVestingAccount) ProtoMessage()    {}
+func (*MsgCreateClawbackVestingAccount) Descriptor() ([]byte, []int) {
 	return fileDescriptor_5338ca97811f9792, []int{4}
 }
-func (m *MsgCreateTrueVestingAccount) XXX_Unmarshal(b []byte) error {
+func (m *MsgCreateClawbackVestingAccount) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgCreateTrueVestingAccount) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgCreateClawbackVestingAccount) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgCreateTrueVestingAccount.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgCreateClawbackVestingAccount.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -315,76 +315,78 @@ func (m *MsgCreateTrueVestingAccount) XXX_Marshal(b []byte, deterministic bool) 
 		return b[:n], nil
 	}
 }
-func (m *MsgCreateTrueVestingAccount) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgCreateTrueVestingAccount.Merge(m, src)
+func (m *MsgCreateClawbackVestingAccount) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateClawbackVestingAccount.Merge(m, src)
 }
-func (m *MsgCreateTrueVestingAccount) XXX_Size() int {
+func (m *MsgCreateClawbackVestingAccount) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgCreateTrueVestingAccount) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgCreateTrueVestingAccount.DiscardUnknown(m)
+func (m *MsgCreateClawbackVestingAccount) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateClawbackVestingAccount.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgCreateTrueVestingAccount proto.InternalMessageInfo
+var xxx_messageInfo_MsgCreateClawbackVestingAccount proto.InternalMessageInfo
 
-func (m *MsgCreateTrueVestingAccount) GetFromAddress() string {
+func (m *MsgCreateClawbackVestingAccount) GetFromAddress() string {
 	if m != nil {
 		return m.FromAddress
 	}
 	return ""
 }
 
-func (m *MsgCreateTrueVestingAccount) GetToAddress() string {
+func (m *MsgCreateClawbackVestingAccount) GetToAddress() string {
 	if m != nil {
 		return m.ToAddress
 	}
 	return ""
 }
 
-func (m *MsgCreateTrueVestingAccount) GetStartTime() int64 {
+func (m *MsgCreateClawbackVestingAccount) GetStartTime() int64 {
 	if m != nil {
 		return m.StartTime
 	}
 	return 0
 }
 
-func (m *MsgCreateTrueVestingAccount) GetLockupPeriods() []Period {
+func (m *MsgCreateClawbackVestingAccount) GetLockupPeriods() []Period {
 	if m != nil {
 		return m.LockupPeriods
 	}
 	return nil
 }
 
-func (m *MsgCreateTrueVestingAccount) GetVestingPeriods() []Period {
+func (m *MsgCreateClawbackVestingAccount) GetVestingPeriods() []Period {
 	if m != nil {
 		return m.VestingPeriods
 	}
 	return nil
 }
 
-func (m *MsgCreateTrueVestingAccount) GetMerge() bool {
+func (m *MsgCreateClawbackVestingAccount) GetMerge() bool {
 	if m != nil {
 		return m.Merge
 	}
 	return false
 }
 
-// MsgCreateTrueVestingAccountResponse defines the MsgCreateTrueVestingAccount response type.
-type MsgCreateTrueVestingAccountResponse struct {
+// MsgCreateClawbackVestingAccountResponse defines the MsgCreateClawbackVestingAccount response type.
+type MsgCreateClawbackVestingAccountResponse struct {
 }
 
-func (m *MsgCreateTrueVestingAccountResponse) Reset()         { *m = MsgCreateTrueVestingAccountResponse{} }
-func (m *MsgCreateTrueVestingAccountResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgCreateTrueVestingAccountResponse) ProtoMessage()    {}
-func (*MsgCreateTrueVestingAccountResponse) Descriptor() ([]byte, []int) {
+func (m *MsgCreateClawbackVestingAccountResponse) Reset() {
+	*m = MsgCreateClawbackVestingAccountResponse{}
+}
+func (m *MsgCreateClawbackVestingAccountResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateClawbackVestingAccountResponse) ProtoMessage()    {}
+func (*MsgCreateClawbackVestingAccountResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_5338ca97811f9792, []int{5}
 }
-func (m *MsgCreateTrueVestingAccountResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgCreateClawbackVestingAccountResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgCreateTrueVestingAccountResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgCreateClawbackVestingAccountResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgCreateTrueVestingAccountResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgCreateClawbackVestingAccountResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -394,24 +396,23 @@ func (m *MsgCreateTrueVestingAccountResponse) XXX_Marshal(b []byte, deterministi
 		return b[:n], nil
 	}
 }
-func (m *MsgCreateTrueVestingAccountResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgCreateTrueVestingAccountResponse.Merge(m, src)
+func (m *MsgCreateClawbackVestingAccountResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateClawbackVestingAccountResponse.Merge(m, src)
 }
-func (m *MsgCreateTrueVestingAccountResponse) XXX_Size() int {
+func (m *MsgCreateClawbackVestingAccountResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgCreateTrueVestingAccountResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgCreateTrueVestingAccountResponse.DiscardUnknown(m)
+func (m *MsgCreateClawbackVestingAccountResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateClawbackVestingAccountResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgCreateTrueVestingAccountResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgCreateClawbackVestingAccountResponse proto.InternalMessageInfo
 
-// MsgClawback defines a message that removes unvested (in the true vesting sense) tokens
-// from a periodic vesting account.
+// MsgClawback defines a message that removes unvested tokens from a ClawbackVestingAccount.
 type MsgClawback struct {
 	// funder_address is the address which funded the account
 	FunderAddress string `protobuf:"bytes,1,opt,name=funder_address,json=funderAddress,proto3" json:"funder_address,omitempty"`
-	// address is the address of the TrueVestingAccount to claw back from.
+	// address is the address of the ClawbackVestingAccount to claw back from.
 	Address string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
 	// dest_address specifies where the clawed-back tokens should be transferred.
 	// If empty, the tokens will be transferred back to the original funder of the account.
@@ -514,8 +515,8 @@ func init() {
 	proto.RegisterType((*MsgCreateVestingAccountResponse)(nil), "cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse")
 	proto.RegisterType((*MsgCreatePeriodicVestingAccount)(nil), "cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccount")
 	proto.RegisterType((*MsgCreatePeriodicVestingAccountResponse)(nil), "cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccountResponse")
-	proto.RegisterType((*MsgCreateTrueVestingAccount)(nil), "cosmos.vesting.v1beta1.MsgCreateTrueVestingAccount")
-	proto.RegisterType((*MsgCreateTrueVestingAccountResponse)(nil), "cosmos.vesting.v1beta1.MsgCreateTrueVestingAccountResponse")
+	proto.RegisterType((*MsgCreateClawbackVestingAccount)(nil), "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount")
+	proto.RegisterType((*MsgCreateClawbackVestingAccountResponse)(nil), "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccountResponse")
 	proto.RegisterType((*MsgClawback)(nil), "cosmos.vesting.v1beta1.MsgClawback")
 	proto.RegisterType((*MsgClawbackResponse)(nil), "cosmos.vesting.v1beta1.MsgClawbackResponse")
 }
@@ -523,49 +524,49 @@ func init() {
 func init() { proto.RegisterFile("cosmos/vesting/v1beta1/tx.proto", fileDescriptor_5338ca97811f9792) }
 
 var fileDescriptor_5338ca97811f9792 = []byte{
-	// 671 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x95, 0xbf, 0x6f, 0xd3, 0x40,
-	0x14, 0xc7, 0xe3, 0x24, 0xfd, 0xf5, 0xd2, 0x1f, 0xc2, 0x6d, 0xa9, 0x31, 0xc8, 0x4e, 0x5d, 0x2a,
-	0x82, 0x10, 0x36, 0xfd, 0x21, 0x21, 0x95, 0x01, 0x35, 0x1d, 0xab, 0x4a, 0xc8, 0xaa, 0x18, 0x10,
-	0x52, 0xe5, 0xd8, 0x57, 0xd7, 0x6a, 0xec, 0x0b, 0xbe, 0x73, 0x69, 0x37, 0xfe, 0x00, 0x86, 0x8e,
-	0x8c, 0xcc, 0xcc, 0xfc, 0x01, 0x8c, 0x1d, 0x3b, 0x32, 0x05, 0xd4, 0x2e, 0xcc, 0xdd, 0x91, 0x90,
-	0xef, 0xce, 0x6e, 0xaa, 0x26, 0x29, 0x44, 0x48, 0x88, 0x29, 0x79, 0x7e, 0xdf, 0xef, 0xbb, 0x77,
-	0x9f, 0x77, 0xf6, 0x81, 0xee, 0x62, 0x12, 0x62, 0x62, 0x1d, 0x20, 0x42, 0x83, 0xc8, 0xb7, 0x0e,
-	0x96, 0x1a, 0x88, 0x3a, 0x4b, 0x16, 0x3d, 0x34, 0x5b, 0x31, 0xa6, 0x58, 0xbe, 0xcd, 0x05, 0xa6,
-	0x10, 0x98, 0x42, 0xa0, 0xce, 0xf8, 0xd8, 0xc7, 0x4c, 0x62, 0xa5, 0xff, 0xb8, 0x5a, 0xd5, 0x44,
-	0xb9, 0x86, 0x43, 0x50, 0x5e, 0xcb, 0xc5, 0x41, 0x24, 0xf2, 0xf7, 0x7b, 0x2c, 0x97, 0x55, 0x67,
-	0x2a, 0xe3, 0x4b, 0x11, 0xe6, 0xb6, 0x88, 0xbf, 0x11, 0x23, 0x87, 0xa2, 0x97, 0x3c, 0xb5, 0xee,
-	0xba, 0x38, 0x89, 0xa8, 0xbc, 0x06, 0xe3, 0xbb, 0x31, 0x0e, 0x77, 0x1c, 0xcf, 0x8b, 0x11, 0x21,
-	0x8a, 0x54, 0x95, 0x6a, 0x63, 0xf5, 0xb9, 0x8b, 0xb6, 0x3e, 0x7d, 0xe4, 0x84, 0xcd, 0x35, 0xa3,
-	0x33, 0x6b, 0xd8, 0x95, 0x34, 0x5c, 0xe7, 0x91, 0xbc, 0x0a, 0x40, 0x71, 0xee, 0x2c, 0x32, 0xe7,
-	0xec, 0x45, 0x5b, 0xbf, 0xc5, 0x9d, 0x97, 0x39, 0xc3, 0x1e, 0xa3, 0x38, 0x73, 0xb9, 0x30, 0xec,
-	0x84, 0xe9, 0xda, 0x4a, 0xa9, 0x5a, 0xaa, 0x55, 0x96, 0xef, 0x98, 0x02, 0x49, 0xba, 0xc9, 0x8c,
-	0x87, 0xb9, 0x81, 0x83, 0xa8, 0xfe, 0xe4, 0xa4, 0xad, 0x17, 0x3e, 0x7d, 0xd3, 0x6b, 0x7e, 0x40,
-	0xf7, 0x92, 0x86, 0xe9, 0xe2, 0xd0, 0x12, 0x3b, 0xe6, 0x3f, 0x8f, 0x89, 0xb7, 0x6f, 0xd1, 0xa3,
-	0x16, 0x22, 0xcc, 0x40, 0x6c, 0x51, 0x5a, 0x36, 0x61, 0x14, 0x45, 0xde, 0x0e, 0x0d, 0x42, 0xa4,
-	0x94, 0xab, 0x52, 0xad, 0x54, 0x9f, 0xbe, 0x68, 0xeb, 0x53, 0xbc, 0xb1, 0x2c, 0x63, 0xd8, 0x23,
-	0x28, 0xf2, 0xb6, 0x83, 0x10, 0xc9, 0x0a, 0x8c, 0x78, 0xa8, 0xe9, 0x1c, 0x21, 0x4f, 0x19, 0xaa,
-	0x4a, 0xb5, 0x51, 0x3b, 0x0b, 0xd7, 0xca, 0x3f, 0x3e, 0xea, 0x92, 0x31, 0x0f, 0x7a, 0x0f, 0x82,
-	0x36, 0x22, 0x2d, 0x1c, 0x11, 0x64, 0x7c, 0x2e, 0x76, 0x68, 0x5e, 0xa0, 0x38, 0xc0, 0x5e, 0xe0,
-	0xfe, 0x73, 0xda, 0xab, 0x00, 0x84, 0x3a, 0x31, 0xe5, 0x28, 0x4a, 0x0c, 0x45, 0x87, 0xeb, 0x32,
-	0x67, 0xd8, 0x63, 0x2c, 0x60, 0x38, 0xb6, 0x60, 0x4a, 0x1c, 0xa1, 0x9d, 0x16, 0xdb, 0x09, 0x51,
-	0xca, 0x6c, 0x58, 0x9a, 0xd9, 0xfd, 0xfc, 0x9a, 0x7c, 0xc3, 0xf5, 0x72, 0x3a, 0x31, 0x7b, 0x52,
-	0x64, 0xf9, 0x43, 0x22, 0xcf, 0xc0, 0x50, 0x88, 0x62, 0x1f, 0x09, 0xb6, 0x3c, 0x60, 0x64, 0x0b,
-	0xc6, 0x43, 0x78, 0x70, 0x03, 0xb5, 0x9c, 0xf0, 0xcf, 0x22, 0xdc, 0xcd, 0xb5, 0xdb, 0x71, 0x82,
-	0xfe, 0x53, 0xba, 0x9b, 0x30, 0xd9, 0xc4, 0xee, 0x7e, 0xd2, 0x1a, 0x08, 0xee, 0x04, 0xf7, 0x66,
-	0x6c, 0xbb, 0x8c, 0x6a, 0xe8, 0x6f, 0x8c, 0x6a, 0xf8, 0xfa, 0xa8, 0x16, 0x61, 0xa1, 0x0f, 0xfe,
-	0x7c, 0x4c, 0x6f, 0xa0, 0x92, 0xca, 0x9a, 0xce, 0xdb, 0x86, 0xe3, 0xee, 0xcb, 0x8b, 0x30, 0xb9,
-	0x9b, 0x44, 0x1e, 0x8a, 0xaf, 0xce, 0xc5, 0x9e, 0xe0, 0x4f, 0x33, 0x94, 0x0a, 0x8c, 0x5c, 0xa1,
-	0x6f, 0x67, 0xa1, 0x3c, 0x0f, 0xe3, 0x1e, 0x22, 0x34, 0xb7, 0x97, 0x58, 0xba, 0x92, 0x3e, 0x13,
-	0x66, 0x63, 0x16, 0xa6, 0x3b, 0x96, 0xcc, 0x3a, 0x59, 0x3e, 0x2e, 0x43, 0x69, 0x8b, 0xf8, 0xf2,
-	0x3b, 0x09, 0x66, 0xba, 0x7e, 0xfd, 0xac, 0x5e, 0x8c, 0x7a, 0xbc, 0xec, 0xea, 0xd3, 0x3f, 0x34,
-	0x64, 0xad, 0xc8, 0x1f, 0x24, 0xb8, 0xd7, 0xf7, 0xd3, 0x70, 0x73, 0xe5, 0xee, 0x46, 0xf5, 0xf9,
-	0x80, 0xc6, 0xbc, 0xb5, 0xf7, 0x12, 0x28, 0x3d, 0xdf, 0xa9, 0x95, 0x1b, 0xab, 0x5f, 0x37, 0xa9,
-	0xcf, 0x06, 0x30, 0xe5, 0xed, 0xbc, 0x86, 0xd1, 0xfc, 0xec, 0x2c, 0xf4, 0x2b, 0x24, 0x44, 0xea,
-	0xa3, 0xdf, 0x10, 0x65, 0xd5, 0xeb, 0x9b, 0x27, 0x67, 0x9a, 0x74, 0x7a, 0xa6, 0x49, 0xdf, 0xcf,
-	0x34, 0xe9, 0xf8, 0x5c, 0x2b, 0x9c, 0x9e, 0x6b, 0x85, 0xaf, 0xe7, 0x5a, 0xe1, 0xd5, 0x52, 0xdf,
-	0x4b, 0xe6, 0xd0, 0x72, 0x12, 0xba, 0x97, 0x5f, 0xb4, 0xec, 0xce, 0x69, 0x0c, 0xb3, 0xfb, 0x75,
-	0xe5, 0x57, 0x00, 0x00, 0x00, 0xff, 0xff, 0xa4, 0x75, 0xdf, 0x76, 0xf6, 0x07, 0x00, 0x00,
+	// 661 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x55, 0xbf, 0x6f, 0xd3, 0x40,
+	0x14, 0x8e, 0xeb, 0xf4, 0xd7, 0x4b, 0x7f, 0x08, 0xb7, 0xa5, 0x26, 0x42, 0x76, 0x6a, 0x40, 0x04,
+	0x21, 0x6c, 0x5a, 0x2a, 0x21, 0x75, 0x41, 0x4d, 0xc7, 0xaa, 0x12, 0xb2, 0x10, 0x03, 0x42, 0xaa,
+	0x1c, 0xfb, 0xea, 0x5a, 0x89, 0x7d, 0xc1, 0x77, 0x29, 0xcd, 0x06, 0xff, 0x01, 0x23, 0x03, 0x03,
+	0x33, 0x33, 0x7f, 0x00, 0x63, 0xc7, 0x8e, 0x4c, 0x01, 0x25, 0x0b, 0x73, 0xfe, 0x02, 0xe4, 0xbb,
+	0xb3, 0x9b, 0x4a, 0x4e, 0x52, 0x2a, 0x24, 0xc4, 0x94, 0xbc, 0x7b, 0xdf, 0xf7, 0xee, 0xdd, 0xf7,
+	0x9d, 0xef, 0x81, 0xee, 0x62, 0x12, 0x62, 0x62, 0x9d, 0x20, 0x42, 0x83, 0xc8, 0xb7, 0x4e, 0x36,
+	0xeb, 0x88, 0x3a, 0x9b, 0x16, 0x3d, 0x35, 0x5b, 0x31, 0xa6, 0x58, 0xb9, 0xc9, 0x01, 0xa6, 0x00,
+	0x98, 0x02, 0x50, 0x5e, 0xf5, 0xb1, 0x8f, 0x19, 0xc4, 0x4a, 0xfe, 0x71, 0x74, 0x59, 0x13, 0xe5,
+	0xea, 0x0e, 0x41, 0x59, 0x2d, 0x17, 0x07, 0x91, 0xc8, 0xdf, 0x1d, 0xb1, 0x5d, 0x5a, 0x9d, 0xa1,
+	0x8c, 0x6f, 0x53, 0xb0, 0x7e, 0x40, 0xfc, 0xbd, 0x18, 0x39, 0x14, 0xbd, 0xe4, 0xa9, 0x5d, 0xd7,
+	0xc5, 0xed, 0x88, 0x2a, 0x3b, 0xb0, 0x70, 0x14, 0xe3, 0xf0, 0xd0, 0xf1, 0xbc, 0x18, 0x11, 0xa2,
+	0x4a, 0x15, 0xa9, 0x3a, 0x5f, 0x5b, 0x1f, 0x74, 0xf5, 0x95, 0x8e, 0x13, 0x36, 0x77, 0x8c, 0xe1,
+	0xac, 0x61, 0x97, 0x92, 0x70, 0x97, 0x47, 0xca, 0x36, 0x00, 0xc5, 0x19, 0x73, 0x8a, 0x31, 0xd7,
+	0x06, 0x5d, 0xfd, 0x06, 0x67, 0x5e, 0xe4, 0x0c, 0x7b, 0x9e, 0xe2, 0x94, 0xe5, 0xc2, 0x8c, 0x13,
+	0x26, 0x7b, 0xab, 0x72, 0x45, 0xae, 0x96, 0xb6, 0x6e, 0x99, 0x42, 0x92, 0xe4, 0x90, 0xa9, 0x1e,
+	0xe6, 0x1e, 0x0e, 0xa2, 0xda, 0xe3, 0xb3, 0xae, 0x5e, 0xf8, 0xf2, 0x43, 0xaf, 0xfa, 0x01, 0x3d,
+	0x6e, 0xd7, 0x4d, 0x17, 0x87, 0x96, 0x38, 0x31, 0xff, 0x79, 0x44, 0xbc, 0x86, 0x45, 0x3b, 0x2d,
+	0x44, 0x18, 0x81, 0xd8, 0xa2, 0xb4, 0x62, 0xc2, 0x1c, 0x8a, 0xbc, 0x43, 0x1a, 0x84, 0x48, 0x2d,
+	0x56, 0xa4, 0xaa, 0x5c, 0x5b, 0x19, 0x74, 0xf5, 0x65, 0xde, 0x58, 0x9a, 0x31, 0xec, 0x59, 0x14,
+	0x79, 0x2f, 0x82, 0x10, 0x29, 0x2a, 0xcc, 0x7a, 0xa8, 0xe9, 0x74, 0x90, 0xa7, 0x4e, 0x57, 0xa4,
+	0xea, 0x9c, 0x9d, 0x86, 0x3b, 0xc5, 0x5f, 0x9f, 0x75, 0xc9, 0xd8, 0x00, 0x7d, 0x84, 0x82, 0x36,
+	0x22, 0x2d, 0x1c, 0x11, 0x64, 0x7c, 0x9d, 0x1a, 0xc2, 0x3c, 0x47, 0x71, 0x80, 0xbd, 0xc0, 0xfd,
+	0xe7, 0x6a, 0x6f, 0x03, 0x10, 0xea, 0xc4, 0x94, 0x4b, 0x21, 0x33, 0x29, 0x86, 0x58, 0x17, 0x39,
+	0xc3, 0x9e, 0x67, 0x01, 0x93, 0xe3, 0x00, 0x96, 0xc5, 0x15, 0x3a, 0x6c, 0xb1, 0x93, 0x10, 0xb5,
+	0xc8, 0xcc, 0xd2, 0xcc, 0xfc, 0xfb, 0x6b, 0xf2, 0x03, 0xd7, 0x8a, 0x89, 0x63, 0xf6, 0x92, 0xc8,
+	0xf2, 0x45, 0xa2, 0xac, 0xc2, 0x74, 0x88, 0x62, 0x1f, 0x09, 0x6d, 0x79, 0xc0, 0x94, 0x2d, 0x18,
+	0x0f, 0xe0, 0xfe, 0x04, 0xd5, 0x32, 0x85, 0xdf, 0xcb, 0x43, 0x0a, 0xef, 0x35, 0x9d, 0xb7, 0x75,
+	0xc7, 0x6d, 0xfc, 0xa7, 0x0a, 0xef, 0xc3, 0x52, 0x13, 0xbb, 0x8d, 0x76, 0xeb, 0x5a, 0x02, 0x2f,
+	0x72, 0x6e, 0xaa, 0x6f, 0x8e, 0x5d, 0xd3, 0x7f, 0xc3, 0xae, 0x99, 0xf1, 0x76, 0xe5, 0x5b, 0x90,
+	0xd9, 0xf5, 0x06, 0x4a, 0x09, 0x54, 0x80, 0x94, 0x7b, 0xb0, 0x74, 0xd4, 0x8e, 0x3c, 0x14, 0x5f,
+	0xf6, 0xc6, 0x5e, 0xe4, 0xab, 0xa9, 0x9c, 0x2a, 0xcc, 0x5e, 0x72, 0xc0, 0x4e, 0x43, 0x65, 0x03,
+	0x16, 0x3c, 0x44, 0x68, 0x46, 0x97, 0x59, 0xba, 0x94, 0xac, 0x09, 0xb2, 0xb1, 0x06, 0x2b, 0x43,
+	0x5b, 0xa6, 0x9d, 0x6c, 0x7d, 0x2a, 0x82, 0x7c, 0x40, 0x7c, 0xe5, 0x9d, 0x04, 0xab, 0xb9, 0xaf,
+	0xa0, 0x35, 0x4a, 0xa7, 0x11, 0x1f, 0x7d, 0xf9, 0xe9, 0x1f, 0x12, 0xd2, 0x56, 0x94, 0x8f, 0x12,
+	0xdc, 0x1e, 0xfb, 0x44, 0x4c, 0xae, 0x9c, 0x4f, 0x2c, 0x3f, 0xbb, 0x26, 0x31, 0xa7, 0xb5, 0x11,
+	0xdf, 0xd6, 0xe4, 0xd6, 0xf2, 0x89, 0x57, 0x68, 0x6d, 0xfc, 0x55, 0x52, 0x5e, 0xc3, 0x5c, 0x76,
+	0x8f, 0xee, 0x8c, 0x2b, 0x26, 0x40, 0xe5, 0x87, 0x57, 0x00, 0xa5, 0xd5, 0x6b, 0xfb, 0x67, 0x3d,
+	0x4d, 0x3a, 0xef, 0x69, 0xd2, 0xcf, 0x9e, 0x26, 0x7d, 0xe8, 0x6b, 0x85, 0xf3, 0xbe, 0x56, 0xf8,
+	0xde, 0xd7, 0x0a, 0xaf, 0x36, 0xc7, 0x0e, 0x9e, 0x53, 0xcb, 0x69, 0xd3, 0xe3, 0x6c, 0xf8, 0xb2,
+	0x39, 0x54, 0x9f, 0x61, 0x33, 0xf7, 0xc9, 0xef, 0x00, 0x00, 0x00, 0xff, 0xff, 0x0b, 0xa9, 0x12,
+	0x98, 0x0a, 0x08, 0x00, 0x00,
 }
 
 func (this *MsgCreateVestingAccount) Equal(that interface{}) bool {
@@ -628,10 +629,10 @@ type MsgClient interface {
 	// CreatePeriodicVestingAccount defines a method that enables creating a
 	// periodic vesting account.
 	CreatePeriodicVestingAccount(ctx context.Context, in *MsgCreatePeriodicVestingAccount, opts ...grpc.CallOption) (*MsgCreatePeriodicVestingAccountResponse, error)
-	// CreateTrueVestingAccount defines a method that enables creating a
-	// "true" vesting account - one subject to clawback.
-	CreateTrueVestingAccount(ctx context.Context, in *MsgCreateTrueVestingAccount, opts ...grpc.CallOption) (*MsgCreateTrueVestingAccountResponse, error)
-	// Clawback removes the un-true-vested tokens from a true vesting account.
+	// CreateClawbackVestingAccount defines a method that enables creating a
+	// vesting account that is subject to clawback.
+	CreateClawbackVestingAccount(ctx context.Context, in *MsgCreateClawbackVestingAccount, opts ...grpc.CallOption) (*MsgCreateClawbackVestingAccountResponse, error)
+	// Clawback removes the unvested tokens from a ClawbackVestingAccount.
 	Clawback(ctx context.Context, in *MsgClawback, opts ...grpc.CallOption) (*MsgClawbackResponse, error)
 }
 
@@ -661,9 +662,9 @@ func (c *msgClient) CreatePeriodicVestingAccount(ctx context.Context, in *MsgCre
 	return out, nil
 }
 
-func (c *msgClient) CreateTrueVestingAccount(ctx context.Context, in *MsgCreateTrueVestingAccount, opts ...grpc.CallOption) (*MsgCreateTrueVestingAccountResponse, error) {
-	out := new(MsgCreateTrueVestingAccountResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.vesting.v1beta1.Msg/CreateTrueVestingAccount", in, out, opts...)
+func (c *msgClient) CreateClawbackVestingAccount(ctx context.Context, in *MsgCreateClawbackVestingAccount, opts ...grpc.CallOption) (*MsgCreateClawbackVestingAccountResponse, error) {
+	out := new(MsgCreateClawbackVestingAccountResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.vesting.v1beta1.Msg/CreateClawbackVestingAccount", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -687,10 +688,10 @@ type MsgServer interface {
 	// CreatePeriodicVestingAccount defines a method that enables creating a
 	// periodic vesting account.
 	CreatePeriodicVestingAccount(context.Context, *MsgCreatePeriodicVestingAccount) (*MsgCreatePeriodicVestingAccountResponse, error)
-	// CreateTrueVestingAccount defines a method that enables creating a
-	// "true" vesting account - one subject to clawback.
-	CreateTrueVestingAccount(context.Context, *MsgCreateTrueVestingAccount) (*MsgCreateTrueVestingAccountResponse, error)
-	// Clawback removes the un-true-vested tokens from a true vesting account.
+	// CreateClawbackVestingAccount defines a method that enables creating a
+	// vesting account that is subject to clawback.
+	CreateClawbackVestingAccount(context.Context, *MsgCreateClawbackVestingAccount) (*MsgCreateClawbackVestingAccountResponse, error)
+	// Clawback removes the unvested tokens from a ClawbackVestingAccount.
 	Clawback(context.Context, *MsgClawback) (*MsgClawbackResponse, error)
 }
 
@@ -704,8 +705,8 @@ func (*UnimplementedMsgServer) CreateVestingAccount(ctx context.Context, req *Ms
 func (*UnimplementedMsgServer) CreatePeriodicVestingAccount(ctx context.Context, req *MsgCreatePeriodicVestingAccount) (*MsgCreatePeriodicVestingAccountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreatePeriodicVestingAccount not implemented")
 }
-func (*UnimplementedMsgServer) CreateTrueVestingAccount(ctx context.Context, req *MsgCreateTrueVestingAccount) (*MsgCreateTrueVestingAccountResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateTrueVestingAccount not implemented")
+func (*UnimplementedMsgServer) CreateClawbackVestingAccount(ctx context.Context, req *MsgCreateClawbackVestingAccount) (*MsgCreateClawbackVestingAccountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateClawbackVestingAccount not implemented")
 }
 func (*UnimplementedMsgServer) Clawback(ctx context.Context, req *MsgClawback) (*MsgClawbackResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Clawback not implemented")
@@ -751,20 +752,20 @@ func _Msg_CreatePeriodicVestingAccount_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_CreateTrueVestingAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCreateTrueVestingAccount)
+func _Msg_CreateClawbackVestingAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateClawbackVestingAccount)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).CreateTrueVestingAccount(ctx, in)
+		return srv.(MsgServer).CreateClawbackVestingAccount(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.vesting.v1beta1.Msg/CreateTrueVestingAccount",
+		FullMethod: "/cosmos.vesting.v1beta1.Msg/CreateClawbackVestingAccount",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CreateTrueVestingAccount(ctx, req.(*MsgCreateTrueVestingAccount))
+		return srv.(MsgServer).CreateClawbackVestingAccount(ctx, req.(*MsgCreateClawbackVestingAccount))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -800,8 +801,8 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_CreatePeriodicVestingAccount_Handler,
 		},
 		{
-			MethodName: "CreateTrueVestingAccount",
-			Handler:    _Msg_CreateTrueVestingAccount_Handler,
+			MethodName: "CreateClawbackVestingAccount",
+			Handler:    _Msg_CreateClawbackVestingAccount_Handler,
 		},
 		{
 			MethodName: "Clawback",
@@ -990,7 +991,7 @@ func (m *MsgCreatePeriodicVestingAccountResponse) MarshalToSizedBuffer(dAtA []by
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgCreateTrueVestingAccount) Marshal() (dAtA []byte, err error) {
+func (m *MsgCreateClawbackVestingAccount) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1000,12 +1001,12 @@ func (m *MsgCreateTrueVestingAccount) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgCreateTrueVestingAccount) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgCreateClawbackVestingAccount) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgCreateTrueVestingAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgCreateClawbackVestingAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1070,7 +1071,7 @@ func (m *MsgCreateTrueVestingAccount) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgCreateTrueVestingAccountResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgCreateClawbackVestingAccountResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1080,12 +1081,12 @@ func (m *MsgCreateTrueVestingAccountResponse) Marshal() (dAtA []byte, err error)
 	return dAtA[:n], nil
 }
 
-func (m *MsgCreateTrueVestingAccountResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgCreateClawbackVestingAccountResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgCreateTrueVestingAccountResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgCreateClawbackVestingAccountResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1247,7 +1248,7 @@ func (m *MsgCreatePeriodicVestingAccountResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgCreateTrueVestingAccount) Size() (n int) {
+func (m *MsgCreateClawbackVestingAccount) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1282,7 +1283,7 @@ func (m *MsgCreateTrueVestingAccount) Size() (n int) {
 	return n
 }
 
-func (m *MsgCreateTrueVestingAccountResponse) Size() (n int) {
+func (m *MsgCreateClawbackVestingAccountResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1801,7 +1802,7 @@ func (m *MsgCreatePeriodicVestingAccountResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgCreateTrueVestingAccount) Unmarshal(dAtA []byte) error {
+func (m *MsgCreateClawbackVestingAccount) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1824,10 +1825,10 @@ func (m *MsgCreateTrueVestingAccount) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgCreateTrueVestingAccount: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgCreateClawbackVestingAccount: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgCreateTrueVestingAccount: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgCreateClawbackVestingAccount: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2022,7 +2023,7 @@ func (m *MsgCreateTrueVestingAccount) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgCreateTrueVestingAccountResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgCreateClawbackVestingAccountResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2045,10 +2046,10 @@ func (m *MsgCreateTrueVestingAccountResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgCreateTrueVestingAccountResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgCreateClawbackVestingAccountResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgCreateTrueVestingAccountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgCreateClawbackVestingAccountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

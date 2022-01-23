@@ -38,7 +38,7 @@ func GetTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		NewMsgCreateVestingAccountCmd(),
 		NewMsgCreatePeriodicVestingAccountCmd(),
-		NewMsgCreateTrueVestingAccountCmd(),
+		NewMsgCreateClawbackVestingAccountCmd(),
 		NewMsgClawbackCmd(),
 	)
 
@@ -193,23 +193,23 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 	return cmd
 }
 
-// NewMsgCreateTrueVestingAccountCmd returns a CLI command handler for creating a
-// MsgCreateTrueVestingAccount transaction.
-func NewMsgCreateTrueVestingAccountCmd() *cobra.Command {
+// NewMsgCreateClawbackVestingAccountCmd returns a CLI command handler for creating a
+// MsgCreateClawbackVestingAccount transaction.
+func NewMsgCreateClawbackVestingAccountCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-true-vesting-account [to_address]",
-		Short: "Create a new true vesting account funded with an allocation of tokens, subject to clawback.",
+		Use:   "create-clawback-vesting-account [to_address]",
+		Short: "Create a new vesting account funded with an allocation of tokens, subject to clawback.",
 		Long: `Must provide a lockup periods file (--lockup), a vesting periods file (--vesting), or both.
-		If both files are given, they must describe schedules for the same total amount.
-		If one file is omitted, it will default to a schedule that immediately unlocks or vests the entire amount.
-		The described amount of coins will be transferred from the --from address to the true vesting account.
-		Unvested coins may be "clawed back" by the funder with the clawback command.
-		Coins may not be transferred out of the account if they are locked or unvested, but may be staked.
-		Staking rewards are subject to a proportional vesting encumbrance.
-		
-		A periods file is a JSON object describing a sequence of unlocking or vesting events,
-		with a start time and an array of coins strings and durations relative to the start or previous event.`,
-		Example: `
+If both files are given, they must describe schedules for the same total amount.
+If one file is omitted, it will default to a schedule that immediately unlocks or vests the entire amount.
+The described amount of coins will be transferred from the --from address to the vesting account.
+Unvested coins may be "clawed back" by the funder with the clawback command.
+Coins may not be transferred out of the account if they are locked or unvested, but may be staked.
+Staking rewards are subject to a proportional vesting encumbrance.
+
+A periods file is a JSON object describing a sequence of unlocking or vesting events,
+with a start time and an array of coins strings and durations relative to the start or previous event.`,
+		Example: `Sample period file contents:
 		{ "start_time": 1625204910,
 	      "period": [
 			  {
@@ -258,7 +258,7 @@ func NewMsgCreateTrueVestingAccountCmd() *cobra.Command {
 
 			merge, _ := cmd.Flags().GetBool(FlagMerge)
 
-			msg := types.NewMsgCreateTrueVestingAccount(clientCtx.GetFromAddress(), toAddr, commonStart, lockupPeriods, vestingPeriods, merge)
+			msg := types.NewMsgCreateClawbackVestingAccount(clientCtx.GetFromAddress(), toAddr, commonStart, lockupPeriods, vestingPeriods, merge)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -267,7 +267,7 @@ func NewMsgCreateTrueVestingAccountCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().Bool(FlagMerge, false, "Merge new amount and schedule with existing true vesting account, if any")
+	cmd.Flags().Bool(FlagMerge, false, "Merge new amount and schedule with existing ClawbackVestingAccount, if any")
 	cmd.Flags().String(FlagLockup, "", "path to file containing unlocking periods")
 	cmd.Flags().String(FlagVesting, "", "path to file containing vesting periods")
 	flags.AddTxFlagsToCmd(cmd)
@@ -279,7 +279,7 @@ func NewMsgCreateTrueVestingAccountCmd() *cobra.Command {
 func NewMsgClawbackCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "clawback [address]",
-		Short: "Transfer unvested amount out of a true vesting account.",
+		Short: "Transfer unvested amount out of a ClawbackVestingAccount.",
 		Long: `Must be requested by the original funder address (--from).
 		May provide a destination address (--dest), otherwise the coins return to the funder.
 		Delegated or undelegating staking tokens will be transferred in the delegated (undelegating) state.

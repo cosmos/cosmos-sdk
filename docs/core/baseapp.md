@@ -224,7 +224,9 @@ transaction is received by a full-node. The role of `CheckTx` is to guard the fu
 Unconfirmed transactions are relayed to peers only if they pass `CheckTx`.
 
 `CheckTx()` can perform both _stateful_ and _stateless_ checks, but developers should strive to
-make them lightweight. In the Cosmos SDK, after [decoding transactions](./encoding.md), `CheckTx()` is implemented
+make the checks **lightweight** because gas fees are not charged for the resources (CPU, data load...) used during the `CheckTx`. 
+
+In the Cosmos SDK, after [decoding transactions](./encoding.md), `CheckTx()` is implemented
 to do the following checks:
 
 1. Extract the `sdk.Msg`s from the transaction.
@@ -237,9 +239,8 @@ to do the following checks:
    as `sdk.Msg`s are not processed. Usually, the [`AnteHandler`](../basics/gas-fees.md#antehandler) will check that the `gas` provided
    with the transaction is superior to a minimum reference gas amount based on the raw transaction size,
    in order to avoid spam with transactions that provide 0 gas.
-4. Ensure that each `sdk.Msg`'s fully-qualified service method matches on of the routes inside the `msgServiceRouter`, but do **not** actually
-   process `sdk.Msg`s. `sdk.Msg`s only need to be processed when the canonical state need to be updated,
-   which happens during `DeliverTx`.
+
+`CheckTx` does **not** process `sdk.Msg`s -  they only need to be processed when the canonical state need to be updated, which happens during `DeliverTx`.
 
 Steps 2. and 3. are performed by the [`AnteHandler`](../basics/gas-fees.md#antehandler) in the [`RunTx()`](#runtx-antehandler-and-runmsgs)
 function, which `CheckTx()` calls with the `runTxModeCheck` mode. During each step of `CheckTx()`, a
@@ -269,7 +270,7 @@ The response contains:
 #### RecheckTx
 
 After `Commit`, `CheckTx` is run again on all transactions that remain in the node's local mempool
-after filtering those included in the block. To prevent the mempool from rechecking all transactions
+excluding the transactions that are included in the block. To prevent the mempool from rechecking all transactions
 every time a block is committed, the configuration option `mempool.recheck=false` can be set. As of
 Tendermint v0.32.1, an additional `Type` parameter is made available to the `CheckTx` function that
 indicates whether an incoming transaction is new (`CheckTxType_New`), or a recheck (`CheckTxType_Recheck`).

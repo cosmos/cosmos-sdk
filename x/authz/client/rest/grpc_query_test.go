@@ -97,13 +97,13 @@ func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 			"fail invalid granter address",
 			fmt.Sprintf(grantsURL, "invalid_granter", s.grantee.String(), typeMsgSend),
 			true,
-			"decoding bech32 failed: invalid index of 1: invalid request",
+			"decoding bech32 failed: invalid separator index -1: invalid request",
 		},
 		{
 			"fail invalid grantee address",
 			fmt.Sprintf(grantsURL, val.Address.String(), "invalid_grantee", typeMsgSend),
 			true,
-			"decoding bech32 failed: invalid index of 1: invalid request",
+			"decoding bech32 failed: invalid separator index -1: invalid request",
 		},
 		{
 			"fail with empty granter",

@@ -20,7 +20,6 @@ import (
 const (
 	FlagDelayed = "delayed"
 	FlagDest    = "dest"
-	FlagFunder  = "funder"
 	FlagLockup  = "lockup"
 	FlagMerge   = "merge"
 	FlagVesting = "vesting"
@@ -281,7 +280,7 @@ func NewMsgClawbackCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "clawback [address]",
 		Short: "Transfer unvested amount out of a true vesting account.",
-		Long: `Must provide the funder address (--funder).
+		Long: `Must be requested by the original funder address (--from).
 		May provide a destination address (--dest), otherwise the coins return to the funder.
 		Delegated or undelegating staking tokens will be transferred in the delegated (undelegating) state.
 		The recipient is vulnerable to slashing, and must act to unbond the tokens if desired.`,
@@ -297,14 +296,6 @@ func NewMsgClawbackCmd() *cobra.Command {
 				return err
 			}
 
-			funderString, _ := cmd.Flags().GetString(FlagFunder)
-			if funderString == "" {
-				return fmt.Errorf("must specify a funder address with --funder")
-			}
-			funder, err := sdk.AccAddressFromBech32(funderString)
-			if err != nil {
-				return fmt.Errorf("bad funder address: %w", err)
-			}
 			var dest sdk.AccAddress
 			destString, _ := cmd.Flags().GetString(FlagDest)
 			if destString != "" {
@@ -314,7 +305,7 @@ func NewMsgClawbackCmd() *cobra.Command {
 				}
 			}
 
-			msg := types.NewMsgClawback(funder, addr, dest)
+			msg := types.NewMsgClawback(clientCtx.GetFromAddress(), addr, dest)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -324,7 +315,6 @@ func NewMsgClawbackCmd() *cobra.Command {
 	}
 
 	cmd.Flags().String(FlagDest, "", "address of destination (defaults to funder)")
-	cmd.Flags().String(FlagFunder, "", "address of the account's original funder")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

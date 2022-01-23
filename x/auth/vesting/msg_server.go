@@ -192,8 +192,8 @@ func max64(a, b int64) int64 {
 	return b
 }
 
-// CreateTrueVestingAccount creates a new "true" vesting account, or merges a grant into an existing one.
-func (s msgServer) CreateTrueVestingAccount(goCtx context.Context, msg *types.MsgCreateTrueVestingAccount) (*types.MsgCreateTrueVestingAccountResponse, error) {
+// CreateClawbackVestingAccount creates a new ClawbackVestingAccount, or merges a grant into an existing one.
+func (s msgServer) CreateClawbackVestingAccount(goCtx context.Context, msg *types.MsgCreateClawbackVestingAccount) (*types.MsgCreateClawbackVestingAccountResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	ak := s.AccountKeeper
 	bk := s.BankKeeper
@@ -245,18 +245,18 @@ func (s msgServer) CreateTrueVestingAccount(goCtx context.Context, msg *types.Ms
 
 	madeNewAcc := false
 	acc := ak.GetAccount(ctx, to)
-	var va *types.TrueVestingAccount
+	var va *types.ClawbackVestingAccount
 
 	if acc != nil {
 		var isClawback bool
-		va, isClawback = acc.(*types.TrueVestingAccount)
+		va, isClawback = acc.(*types.ClawbackVestingAccount)
 		switch {
 		case !msg.Merge && isClawback:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists; consider using --merge", msg.ToAddress)
 		case !msg.Merge && !isClawback:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
 		case msg.Merge && !isClawback:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrNotSupported, "account %s must be a true vesting account", msg.ToAddress)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrNotSupported, "account %s must be a clawback vesting account", msg.ToAddress)
 		case msg.FromAddress != va.FunderAddress:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s can only accept grants from account %s", msg.ToAddress, va.FunderAddress)
 		}
@@ -273,7 +273,7 @@ func (s msgServer) CreateTrueVestingAccount(goCtx context.Context, msg *types.Ms
 		va.OriginalVesting = va.OriginalVesting.Add(vestingCoins...)
 	} else {
 		baseAccount := ak.NewAccountWithAddress(ctx, to)
-		va = types.NewTrueVestingAccount(baseAccount.(*authtypes.BaseAccount), from, vestingCoins, msg.StartTime, msg.LockupPeriods, msg.VestingPeriods)
+		va = types.NewClawbackVestingAccount(baseAccount.(*authtypes.BaseAccount), from, vestingCoins, msg.StartTime, msg.LockupPeriods, msg.VestingPeriods)
 		madeNewAcc = true
 	}
 
@@ -286,7 +286,7 @@ func (s msgServer) CreateTrueVestingAccount(goCtx context.Context, msg *types.Ms
 			for _, a := range vestingCoins {
 				if a.Amount.IsInt64() {
 					telemetry.SetGaugeWithLabels(
-						[]string{"tx", "msg", "create_true_vesting_account"},
+						[]string{"tx", "msg", "create_clawback_vesting_account"},
 						float32(a.Amount.Int64()),
 						[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
 					)
@@ -307,10 +307,10 @@ func (s msgServer) CreateTrueVestingAccount(goCtx context.Context, msg *types.Ms
 		),
 	)
 
-	return &types.MsgCreateTrueVestingAccountResponse{}, nil
+	return &types.MsgCreateClawbackVestingAccountResponse{}, nil
 }
 
-// Clawback removes the unvested amount from a TrueVestingAccount.
+// Clawback removes the unvested amount from a ClawbackVestingAccount.
 // The destination defaults to the funder address, but can be overridden.
 func (s msgServer) Clawback(goCtx context.Context, msg *types.MsgClawback) (*types.MsgClawbackResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -342,7 +342,7 @@ func (s msgServer) Clawback(goCtx context.Context, msg *types.MsgClawback) (*typ
 	if acc == nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "account %s does not exist", msg.Address)
 	}
-	va, ok := acc.(*types.TrueVestingAccount)
+	va, ok := acc.(*types.ClawbackVestingAccount)
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account not subject to clawback: %s", msg.Address)
 	}

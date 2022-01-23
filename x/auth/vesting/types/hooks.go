@@ -22,13 +22,13 @@ func NewDistributionHooks(ak AccountKeeper, bk BankKeeper, sk StakingKeeper) Dis
 
 func (dh distributionHooks) AllowWithdrawAddr(ctx sdk.Context, delAddr sdk.AccAddress) bool {
 	acc := dh.accountKeeper.GetAccount(ctx, delAddr)
-	_, isClawback := acc.(*TrueVestingAccount)
+	_, isClawback := acc.(*ClawbackVestingAccount)
 	return !isClawback
 }
 
 func (dh distributionHooks) AfterDelegationReward(ctx sdk.Context, delAddr, withdrawAddr sdk.AccAddress, reward sdk.Coins) {
 	acc := dh.accountKeeper.GetAccount(ctx, delAddr)
-	cva, isClawback := acc.(*TrueVestingAccount)
+	cva, isClawback := acc.(*ClawbackVestingAccount)
 	if isClawback {
 		cva.PostReward(ctx, reward, dh.accountKeeper, dh.bankKeeper, dh.stakingKeeper)
 	}

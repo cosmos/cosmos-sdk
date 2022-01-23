@@ -246,7 +246,7 @@ func (suite *HandlerTestSuite) TestMsgCreatePeriodicVestingAccount_Merge() {
 	suite.Require().Equal(balance, tst(100))
 }
 
-func (suite *HandlerTestSuite) TestMsgCreateTrueVestingAccount() {
+func (suite *HandlerTestSuite) TestMsgCreateClawbackVestingAccount() {
 	ctx := suite.app.BaseApp.NewContext(false, tmproto.Header{Height: suite.app.LastBlockHeight() + 1})
 
 	balances := sdk.NewCoins(sdk.NewInt64Coin("test", 1000))
@@ -267,18 +267,18 @@ func (suite *HandlerTestSuite) TestMsgCreateTrueVestingAccount() {
 
 	testCases := []struct {
 		name               string
-		msg                *types.MsgCreateTrueVestingAccount
+		msg                *types.MsgCreateClawbackVestingAccount
 		expectErr          bool
 		expectExtraBalance int64
 	}{
 		{
 			name:      "create periodic vesting account",
-			msg:       types.NewMsgCreateTrueVestingAccount(addr1, addr2, 0, lockupPeriods, vestingPeriods, false),
+			msg:       types.NewMsgCreateClawbackVestingAccount(addr1, addr2, 0, lockupPeriods, vestingPeriods, false),
 			expectErr: false,
 		},
 		{
 			name: "bad from addr",
-			msg: &types.MsgCreateTrueVestingAccount{
+			msg: &types.MsgCreateClawbackVestingAccount{
 				FromAddress:    "foo",
 				ToAddress:      addr2.String(),
 				StartTime:      0,
@@ -289,7 +289,7 @@ func (suite *HandlerTestSuite) TestMsgCreateTrueVestingAccount() {
 		},
 		{
 			name: "bad to addr",
-			msg: &types.MsgCreateTrueVestingAccount{
+			msg: &types.MsgCreateClawbackVestingAccount{
 				FromAddress:    addr1.String(),
 				ToAddress:      "foo",
 				StartTime:      0,
@@ -300,32 +300,32 @@ func (suite *HandlerTestSuite) TestMsgCreateTrueVestingAccount() {
 		},
 		{
 			name:      "default lockup",
-			msg:       types.NewMsgCreateTrueVestingAccount(addr1, addr3, 0, nil, vestingPeriods, false),
+			msg:       types.NewMsgCreateClawbackVestingAccount(addr1, addr3, 0, nil, vestingPeriods, false),
 			expectErr: false,
 		},
 		{
 			name:      "default vesting",
-			msg:       types.NewMsgCreateTrueVestingAccount(addr1, addr4, 0, lockupPeriods, nil, false),
+			msg:       types.NewMsgCreateClawbackVestingAccount(addr1, addr4, 0, lockupPeriods, nil, false),
 			expectErr: false,
 		},
 		{
 			name:      "different amounts",
-			msg:       types.NewMsgCreateTrueVestingAccount(addr1, addr2, 0, []types.Period{{Length: 5000, Amount: quarter}}, vestingPeriods, false),
+			msg:       types.NewMsgCreateClawbackVestingAccount(addr1, addr2, 0, []types.Period{{Length: 5000, Amount: quarter}}, vestingPeriods, false),
 			expectErr: true,
 		},
 		{
 			name:      "account exists",
-			msg:       types.NewMsgCreateTrueVestingAccount(addr1, addr1, 0, lockupPeriods, vestingPeriods, false),
+			msg:       types.NewMsgCreateClawbackVestingAccount(addr1, addr1, 0, lockupPeriods, vestingPeriods, false),
 			expectErr: true,
 		},
 		{
 			name:      "account exists no merge",
-			msg:       types.NewMsgCreateTrueVestingAccount(addr1, addr2, 0, lockupPeriods, vestingPeriods, false),
+			msg:       types.NewMsgCreateClawbackVestingAccount(addr1, addr2, 0, lockupPeriods, vestingPeriods, false),
 			expectErr: true,
 		},
 		{
 			name:               "account exists merge",
-			msg:                types.NewMsgCreateTrueVestingAccount(addr1, addr2, 0, lockupPeriods, vestingPeriods, true),
+			msg:                types.NewMsgCreateClawbackVestingAccount(addr1, addr2, 0, lockupPeriods, vestingPeriods, true),
 			expectErr:          false,
 			expectExtraBalance: 1000,
 		},
@@ -353,7 +353,7 @@ func (suite *HandlerTestSuite) TestMsgCreateTrueVestingAccount() {
 
 				accI := suite.app.AccountKeeper.GetAccount(ctx, toAddr)
 				suite.Require().NotNil(accI)
-				suite.Require().IsType(&types.TrueVestingAccount{}, accI)
+				suite.Require().IsType(&types.ClawbackVestingAccount{}, accI)
 				balanceSource := suite.app.BankKeeper.GetBalance(ctx, fromAddr, "test")
 				suite.Require().Equal(balanceSource, sdk.NewInt64Coin("test", 0))
 				balanceDest := suite.app.BankKeeper.GetBalance(ctx, toAddr, "test")
@@ -383,7 +383,7 @@ func (suite *HandlerTestSuite) TestMsgClawback() {
 		{Length: 2000, Amount: quarter}, {Length: 2000, Amount: quarter},
 	}
 
-	createMsg := types.NewMsgCreateTrueVestingAccount(addr1, addr2, 0, lockupPeriods, vestingPeriods, false)
+	createMsg := types.NewMsgCreateClawbackVestingAccount(addr1, addr2, 0, lockupPeriods, vestingPeriods, false)
 	res, err := suite.handler(ctx, createMsg)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)

@@ -8,7 +8,7 @@ import (
 
 // TokensToConsensusPower - convert input tokens to Power
 func TokensToConsensusPower(tokens sdk.Int, powerReduction sdk.Int) int64 {
-	if powerReduction.IsZero() {
+	if tokens.IsNil() || powerReduction.IsNil() || powerReduction.IsZero() {
 		return 0
 	}
 

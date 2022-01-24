@@ -1633,6 +1633,169 @@ func (s *IntegrationTestSuite) TestTxExec() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestTxLeaveGroup() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+	require := s.Require()
+
+	commonFlags := []string{
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	}
+
+	// create 3 accounts with some tokens
+	members := make([]string, 3)
+	for i := 1; i <= 3; i++ {
+		info, _, err := clientCtx.Keyring.NewMnemonic(fmt.Sprintf("member%d", i), keyring.English, sdk.FullFundraiserPath,
+			keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+		require.NoError(err)
+
+		pk, err := info.GetPubKey()
+		require.NoError(err)
+
+		account := sdk.AccAddress(pk.Address())
+		members[i-1] = account.String()
+
+		_, err = banktestutil.MsgSendExec(clientCtx, val.Address, account,
+			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))),
+			commonFlags...,
+		)
+		require.NoError(err)
+	}
+
+	// create a group
+	validMembers := fmt.Sprintf(`{"members": [{
+		"address": "%s",
+		  "weight": "1",
+		  "metadata": "AQ=="
+	  },{
+		"address": "%s",
+		  "weight": "2",
+		  "metadata": "AQ=="
+	  },{
+		"address": "%s",
+		  "weight": "2",
+		  "metadata": "AQ=="
+	  }]}`, members[0], members[1], members[2])
+	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
+	out, err := cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupCmd(),
+		append(
+			[]string{
+				val.Address.String(),
+				validMetadata,
+				validMembersFile.Name(),
+			},
+			commonFlags...,
+		),
+	)
+	require.NoError(err, out.String())
+
+	// create decision policy
+	out, err = cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupPolicyCmd(),
+		append(
+			[]string{
+				val.Address.String(),
+				"4",
+				"AQ==",
+				"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"3\", \"timeout\":\"30000s\"}",
+			},
+			commonFlags...,
+		),
+	)
+	require.NoError(err, out.String())
+
+	out, err = cli.ExecTestCLICmd(clientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"4", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	require.NoError(err, out.String())
+	require.NotNil(out)
+	var resp group.QueryGroupPoliciesByGroupResponse
+	require.NoError(clientCtx.Codec.Unmarshal(out.Bytes(), &resp))
+	require.Len(resp.GroupPolicies, 1)
+	policyAddress := resp.GroupPolicies[0].Address
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+		errMsg    string
+	}{
+		{
+			"invalid member address",
+			append(
+				[]string{
+					"address",
+					val.Address.String(),
+					"4",
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				},
+				commonFlags...,
+			),
+			true,
+			"inalivs",
+		},
+		{
+			"invalid policy address",
+			append(
+				[]string{
+					members[0],
+					"policy",
+					"4",
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[0]),
+				},
+				commonFlags...,
+			),
+			true,
+			"inalivs",
+		},
+		{
+			"group not found",
+			append(
+				[]string{
+					members[0],
+					policyAddress,
+					"40",
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[0]),
+				},
+				commonFlags...,
+			),
+			true,
+			"inalivs",
+		},
+		{
+			"policy not found",
+			append(
+				[]string{
+					members[0],
+					policyAddress,
+					"40",
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[0]),
+				},
+				commonFlags...,
+			),
+			true,
+			"inalivs",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := client.MsgLeaveGroupCmd()
+
+			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Contains(out.String(), tc.errMsg)
+			} else {
+				s.Require().NoError(err, out.String())
+			}
+		})
+	}
+
+	require.True(false)
+
+}
+
 func getTxSendFileName(s *IntegrationTestSuite, from string, to string) string {
 	tx := fmt.Sprintf(
 		`{"body":{"messages":[{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%s","to_address":"%s","amount":[{"denom":"%s","amount":"10"}]}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`,

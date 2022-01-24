@@ -768,7 +768,7 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 	}
 
 	if threshold.Cmp(r) == 1 {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap("cannot leave group")
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("cannot leave group. Leaving the group will break group policy.")
 	}
 
 	// Delete group member in the groupMemberTable.

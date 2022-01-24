@@ -260,7 +260,9 @@ func (m MsgCreateGroupWithPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) e
 func (m MsgCreateGroupWithPolicy) Route() string { return RouterKey }
 
 // Type Implements Msg.
-func (m MsgCreateGroupWithPolicy) Type() string { return TypeMsgCreateGroupWithPolicy }
+func (m MsgCreateGroupWithPolicy) Type() string {
+	return sdk.MsgTypeURL(&m)
+}
 
 // GetSignBytes Implements Msg.
 func (m MsgCreateGroupWithPolicy) GetSignBytes() []byte {

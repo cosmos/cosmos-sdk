@@ -123,7 +123,7 @@ message DelegatorStartingInfo {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  uint64 height = 3;
+  uint64 height = 3 [(gogoproto.jsontag) = "creation_height"];
 }
 
 // DelegationDelegatorReward represents the properties

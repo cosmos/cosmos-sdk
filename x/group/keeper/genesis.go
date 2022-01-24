@@ -27,7 +27,7 @@ func (k Keeper) InitGenesis(ctx types.Context, cdc codec.JSONCodec, data json.Ra
 		panic(errors.Wrap(err, "group policies"))
 	}
 
-	if err := k.groupPolicySeq.InitVal(ctx.KVStore(k.key), genesisState.GroupPolicyAccountSeq); err != nil {
+	if err := k.groupPolicySeq.InitVal(ctx.KVStore(k.key), genesisState.GroupPolicySeq); err != nil {
 		panic(errors.Wrap(err, "group policy account seq"))
 	}
 
@@ -68,7 +68,7 @@ func (k Keeper) ExportGenesis(ctx types.Context, cdc codec.JSONCodec) *group.Gen
 		panic(errors.Wrap(err, "group policies"))
 	}
 	genesisState.GroupPolicies = groupPolicies
-	genesisState.GroupPolicyAccountSeq = k.groupPolicySeq.CurVal(ctx.KVStore(k.key))
+	genesisState.GroupPolicySeq = k.groupPolicySeq.CurVal(ctx.KVStore(k.key))
 
 	var proposals []*group.Proposal
 	proposalSeq, err := k.proposalTable.Export(ctx.KVStore(k.key), &proposals)

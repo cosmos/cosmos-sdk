@@ -22,7 +22,10 @@ var _ group.MsgServer = Keeper{}
 
 // TODO: Revisit this once we have propoer gas fee framework.
 // Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054, https://github.com/cosmos/cosmos-sdk/discussions/9072
-const gasCostPerIteration = uint64(20)
+const (
+	gasCostPerIteration      = uint64(20)
+	defaultMaxMetadataLength = 255
+)
 
 func (k Keeper) CreateGroup(goCtx context.Context, req *group.MsgCreateGroup) (*group.MsgCreateGroupResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -772,15 +775,17 @@ func (k Keeper) doAuthenticated(ctx sdk.Context, req authNGroupReq, action actio
 	return nil
 }
 
-// k.assertMetadataLength returns an error if given metadata length
+// assertMetadataLength returns an error if given metadata length
 // is greater than a fixed maxMetadataLength.
 func (k Keeper) assertMetadataLength(metadata []byte, description string) error {
-	if k.MaxMetadataLength() != 0 {
-		if len(metadata) > k.MaxMetadataLength() {
+	if metadata != nil && k.maxMetadataLength != 0 {
+		if len(metadata) > k.maxMetadataLength {
 			return sdkerrors.Wrapf(errors.ErrMaxLimit, description)
 		}
-	} else if len(metadata) > group.MaxMetadataLength {
-		return sdkerrors.Wrap(errors.ErrMaxLimit, description)
+	} else if metadata != nil {
+		if len(metadata) > defaultMaxMetadataLength {
+			return sdkerrors.Wrapf(errors.ErrMaxLimit, description)
+		}
 	}
 	return nil
 }

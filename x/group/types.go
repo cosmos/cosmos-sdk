@@ -16,11 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
-// MaxMetadataLength defines the max length of the metadata bytes field
-// for various entities within the group module
-// TODO: This could be used as params once x/params is upgraded to use protobuf
-const MaxMetadataLength = 255
-
 type DecisionPolicyResult struct {
 	Allow bool
 	Final bool

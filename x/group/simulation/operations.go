@@ -46,6 +46,7 @@ const (
 	OpMsgUpdateGroupMetadata             = "op_wieght_msg_update_group_metadata"
 	OpMsgUpdateGroupMembers              = "op_weight_msg_update_group_members"
 	OpMsgCreateGroupPolicy               = "op_weight_msg_create_group_account"
+	OpMsgCreateGroupWithPolicy           = "op_weight_msg_create_group_with_policy"
 	OpMsgUpdateGroupPolicyAdmin          = "op_weight_msg_update_group_account_admin"
 	OpMsgUpdateGroupPolicyDecisionPolicy = "op_weight_msg_update_group_account_decision_policy"
 	OpMsgUpdateGroupPolicyMetaData       = "op_weight_msg_update_group_account_metadata"
@@ -59,6 +60,7 @@ const (
 const (
 	WeightMsgCreateGroup                     = 100
 	WeightMsgCreateGroupPolicy               = 100
+	WeightMsgCreateGroupWithPolicy           = 100
 	WeightMsgCreateProposal                  = 90
 	WeightMsgVote                            = 90
 	WeightMsgExec                            = 90
@@ -82,6 +84,7 @@ func WeightedOperations(
 		weightMsgUpdateGroupMetadata             int
 		weightMsgUpdateGroupMembers              int
 		weightMsgCreateGroupPolicy               int
+		weightMsgCreateGroupWithPolicy           int
 		weightMsgUpdateGroupPolicyAdmin          int
 		weightMsgUpdateGroupPolicyDecisionPolicy int
 		weightMsgUpdateGroupPolicyMetadata       int
@@ -98,6 +101,11 @@ func WeightedOperations(
 	appParams.GetOrGenerate(cdc, OpMsgCreateGroupPolicy, &weightMsgCreateGroupPolicy, nil,
 		func(_ *rand.Rand) {
 			weightMsgCreateGroupPolicy = WeightMsgCreateGroupPolicy
+		},
+	)
+	appParams.GetOrGenerate(cdc, OpMsgCreateGroupWithPolicy, &weightMsgCreateGroupWithPolicy, nil,
+		func(_ *rand.Rand) {
+			weightMsgCreateGroupWithPolicy = WeightMsgCreateGroupWithPolicy
 		},
 	)
 	appParams.GetOrGenerate(cdc, OpMsgCreateProposal, &weightMsgCreateProposal, nil,
@@ -156,6 +164,10 @@ func WeightedOperations(
 			SimulateMsgCreateGroupPolicy(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
+			weightMsgCreateGroupWithPolicy,
+			SimulateMsgCreateGroupWithPolicy(ak, bk),
+		),
+		simulation.NewWeightedOperation(
 			weightMsgCreateProposal,
 			SimulateMsgCreateProposal(ak, bk, k),
 		),
@@ -191,6 +203,69 @@ func WeightedOperations(
 			weightMsgUpdateGroupPolicyMetadata,
 			SimulateMsgUpdateGroupPolicyMetadata(ak, bk, k),
 		),
+	}
+}
+
+// SimulateMsgCreateGroupWithPolicy generates a MsgCreateGroupWithPolicy with random values
+func SimulateMsgCreateGroupWithPolicy(ak group.AccountKeeper, bk group.BankKeeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		acc, _ := simtypes.RandomAcc(r, accounts)
+		account := ak.GetAccount(ctx, acc.Address)
+		accAddr := acc.Address.String()
+
+		spendableCoins := bk.SpendableCoins(ctx, account.GetAddress())
+		fees, err := simtypes.RandomFees(r, ctx, spendableCoins)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroup, "fee error"), nil, err
+		}
+
+		members := []group.Member{
+			{
+				Address:  accAddr,
+				Weight:   fmt.Sprintf("%d", GroupMemberWeight),
+				Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
+			},
+		}
+
+		decisionPolicy := &group.ThresholdDecisionPolicy{
+			Threshold: "20",
+			Timeout:   time.Second * time.Duration(30*24*60*60),
+		}
+
+		msg := &group.MsgCreateGroupWithPolicy{
+			Admin:               accAddr,
+			Members:             members,
+			GroupMetadata:       []byte(simtypes.RandStringOfLength(r, 10)),
+			GroupPolicyMetadata: []byte(simtypes.RandStringOfLength(r, 10)),
+			GroupPolicyAsAdmin:  true,
+		}
+		msg.SetDecisionPolicy(decisionPolicy)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to set decision policy"), nil, err
+		}
+
+		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		tx, err := helpers.GenTx(
+			txGen,
+			[]sdk.Msg{msg},
+			fees,
+			helpers.DefaultGenTxGas,
+			chainID,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			acc.PrivKey,
+		)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroup, "unable to generate mock tx"), nil, err
+		}
+
+		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
 	}
 }
 

@@ -1664,7 +1664,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 		require.NoError(err)
 	}
 
-	// create a group
+	// create a group with three members
 	validMembers := fmt.Sprintf(`{"members": [{
 		"address": "%s",
 		  "weight": "1",
@@ -1709,7 +1709,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 	require.NoError(err, out.String())
 	require.NotNil(out)
 	var resp group.QueryGroupPoliciesByGroupResponse
-	require.NoError(clientCtx.Codec.Unmarshal(out.Bytes(), &resp))
+	require.NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp))
 	require.Len(resp.GroupPolicies, 1)
 	policyAddress := resp.GroupPolicies[0].Address
 
@@ -1731,7 +1731,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 				commonFlags...,
 			),
 			true,
-			"inalivs",
+			"decoding bech32 failed",
 		},
 		{
 			"invalid policy address",
@@ -1745,7 +1745,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 				commonFlags...,
 			),
 			true,
-			"inalivs",
+			"decoding bech32 failed",
 		},
 		{
 			"group not found",
@@ -1759,21 +1759,63 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 				commonFlags...,
 			),
 			true,
-			"inalivs",
+			"group: not found",
 		},
 		{
 			"policy not found",
 			append(
 				[]string{
 					members[0],
-					policyAddress,
-					"40",
+					members[1],
+					"4",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[0]),
 				},
 				commonFlags...,
 			),
 			true,
-			"inalivs",
+			"group policy: not found",
+		},
+		{
+			"valid case",
+			append(
+				[]string{
+					members[2],
+					policyAddress,
+					"4",
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[2]),
+				},
+				commonFlags...,
+			),
+			false,
+			"",
+		},
+		{
+			"not part of group",
+			append(
+				[]string{
+					members[2],
+					policyAddress,
+					"4",
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[2]),
+				},
+				commonFlags...,
+			),
+			true,
+			"is not part of group",
+		},
+		{
+			"error: cannot leave group (breaks policy threshold)",
+			append(
+				[]string{
+					members[1],
+					policyAddress,
+					"4",
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[1]),
+				},
+				commonFlags...,
+			),
+			true,
+			"Leaving the group will break group policy",
 		},
 	}
 
@@ -1782,18 +1824,15 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 
 		s.Run(tc.name, func() {
 			cmd := client.MsgLeaveGroupCmd()
-
 			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				s.Require().Contains(out.String(), tc.errMsg)
+				require.Error(err, err.Error())
+				require.Contains(out.String(), tc.errMsg)
 			} else {
-				s.Require().NoError(err, out.String())
+				require.NoError(err, out.String())
 			}
 		})
 	}
-
-	require.True(false)
-
 }
 
 func getTxSendFileName(s *IntegrationTestSuite, from string, to string) string {

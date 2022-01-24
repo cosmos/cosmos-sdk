@@ -53,6 +53,7 @@ func parseSubmitLegacyProposalFlags(fs *pflag.FlagSet) (*legacyProposal, error) 
 }
 
 type proposal struct {
+	// Msgs defines an array of sdk.Msgs proto-JSON-encoded as Anys.
 	Msgs     []json.RawMessage
 	Metadata []byte
 	Deposit  string

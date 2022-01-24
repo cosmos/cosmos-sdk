@@ -7,11 +7,20 @@ import (
 
 	"github.com/spf13/pflag"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	govutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 )
 
-func parseSubmitProposalFlags(fs *pflag.FlagSet) (*proposal, error) {
-	proposal := &proposal{}
+type legacyProposal struct {
+	Title       string
+	Description string
+	Type        string
+	Deposit     string
+}
+
+func parseSubmitLegacyProposalFlags(fs *pflag.FlagSet) (*legacyProposal, error) {
+	proposal := &legacyProposal{}
 	proposalFile, _ := fs.GetString(FlagProposal)
 
 	if proposalFile == "" {
@@ -41,4 +50,44 @@ func parseSubmitProposalFlags(fs *pflag.FlagSet) (*proposal, error) {
 	}
 
 	return proposal, nil
+}
+
+type proposal struct {
+	Msgs     []json.RawMessage
+	Metadata []byte
+	Deposit  string
+}
+
+func parseSubmitProposal(cdc codec.Codec, path string, fs *pflag.FlagSet) ([]sdk.Msg, []byte, sdk.Coins, error) {
+	proposal := &proposal{}
+
+	proposal.Deposit, _ = fs.GetString(FlagDeposit)
+
+	contents, err := os.ReadFile(path)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	err = json.Unmarshal(contents, proposal)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	msgs := make([]sdk.Msg, len(proposal.Msgs))
+	for i, any := range proposal.Msgs {
+		var msg sdk.Msg
+		err := cdc.UnmarshalInterfaceJSON(any, &msg)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+		msgs[i] = msg
+	}
+
+	deposit, err := sdk.ParseCoinsNormalized(proposal.Deposit)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	return msgs, proposal.Metadata, deposit, nil
 }

@@ -1731,7 +1731,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 				commonFlags...,
 			),
 			true,
-			"decoding bech32 failed",
+			"key not found",
 		},
 		{
 			"invalid policy address",

@@ -15,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	tmabci "github.com/tendermint/tendermint/abci/types"
 )
 
 // GRPCQueryRouter returns the GRPCQueryRouter of a BaseApp.
@@ -65,6 +66,9 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 
 		return handler(grpcCtx, req)
 	}
+
+	// Register the ABCI Query service
+	sdk.RegisterServiceServer(app.GRPCQueryRouter(), tmabci.NewGRPCApplication(app))
 
 	// Loop through all services and methods, add the interceptor, and register
 	// the service.

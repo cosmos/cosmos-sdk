@@ -1,0 +1,36 @@
+syntax = "proto3";
+package cosmos.base.abci.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "tendermint/crypto/proof.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/types";
+
+// Query exposes the ABCIApplication Query method on BaseApp over gRPC, critical for obtaining proofs over gRPC
+service Service {
+  // Query exposes the ABCIApplication Query method on BaseApp
+  rpc Query(QueryRequest) returns (QueryResponse);
+}
+
+// The request format for an ABCI Query
+message QueryRequest {
+  bytes  data   = 1;
+  string path   = 2;
+  int64  height = 3;
+  bool   prove  = 4;
+}
+
+// The response format for an ABCI Query
+message QueryResponse {
+  uint32 code = 1;
+  // bytes data = 2; // use "value" instead.
+  string                     log       = 3;  // nondeterministic
+  string                     info      = 4;  // nondeterministic
+  int64                      index     = 5;
+  bytes                      key       = 6;
+  bytes                      value     = 7;
+  tendermint.crypto.ProofOps proof_ops = 8;
+  int64                      height    = 9;
+  string                     codespace = 10;
+}

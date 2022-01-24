@@ -17,7 +17,17 @@ import (
 // systems, for instance to enable backwards compatibility when a major
 // migration needs to be performed.
 type View interface {
-	UniqueIndex
+	Index
+
+	// Has returns true if there is an entity in the table with the same
+	// primary key as message. Other fields besides the primary key fields will not
+	// be used for retrieval.
+	Has(ctx context.Context, message proto.Message) (found bool, err error)
+
+	// Get retrieves the message if one exists for the primary key fields
+	// set on the message. Other fields besides the primary key fields will not
+	// be used for retrieval.
+	Get(ctx context.Context, message proto.Message) (found bool, err error)
 
 	// GetIndex returns the index referenced by the provided fields if
 	// one exists or nil. Note that some concrete indexes can be retrieved by
@@ -54,14 +64,16 @@ type Table interface {
 
 	// Insert inserts the provided entry in the store and fails if there is
 	// an unique key violation. See Save for more details on behavior.
-	Insert(context context.Context, message proto.Message) error
+	Insert(ctx context.Context, message proto.Message) error
 
 	// Update updates the provided entry in the store and fails if an entry
 	// with a matching primary key does not exist. See Save for more details
 	// on behavior.
-	Update(context context.Context, message proto.Message) error
+	Update(ctx context.Context, message proto.Message) error
 
-	// Delete deletes the entry with the provided primary key from the store.
+	// Delete deletes the entry with the with primary key fields set on message
+	// if one exists. Other fields besides the primary key fields will not
+	// be used for retrieval.
 	//
 	// If store implement the Hooks interface, the OnDelete hook method will
 	// be called.
@@ -69,7 +81,7 @@ type Table interface {
 	// Delete attempts to be atomic with respect to the underlying store,
 	// meaning that either the full save operation is written or the store is
 	// left unchanged, unless there is an error with the underlying store.
-	Delete(context context.Context, message proto.Message) error
+	Delete(ctx context.Context, message proto.Message) error
 
 	// DefaultJSON returns default JSON that can be used as a template for
 	// genesis files.

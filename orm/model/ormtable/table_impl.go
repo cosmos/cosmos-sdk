@@ -364,6 +364,29 @@ func (t tableImpl) ID() uint32 {
 	return t.tableId
 }
 
+func (t tableImpl) Has(ctx context.Context, message proto.Message) (found bool, err error) {
+	backend, err := t.getReadBackend(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	keyValues := t.primaryKeyIndex.PrimaryKeyCodec.GetKeyValues(message.ProtoReflect())
+	return t.primaryKeyIndex.has(backend, keyValues)
+}
+
+// Get retrieves the message if one exists for the primary key fields
+// set on the message. Other fields besides the primary key fields will not
+// be used for retrieval.
+func (t tableImpl) Get(ctx context.Context, message proto.Message) (found bool, err error) {
+	backend, err := t.getReadBackend(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	keyValues := t.primaryKeyIndex.PrimaryKeyCodec.GetKeyValues(message.ProtoReflect())
+	return t.primaryKeyIndex.get(backend, message, keyValues)
+}
+
 var _ Table = &tableImpl{}
 
 type saveMode int

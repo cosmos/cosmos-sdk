@@ -371,14 +371,15 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	data = append(data, &testpb.ExampleTable{U32: 9})
 	err = table.Save(ctx, data[10])
 	assert.NilError(t, err)
-	found, err = table.Get(ctx, &a, uint32(9), int64(0), "")
+	pkIndex := table.GetUniqueIndex("u32,i64,str")
+	found, err = pkIndex.Get(ctx, &a, uint32(9), int64(0), "")
 	assert.NilError(t, err)
 	assert.Assert(t, found)
 	assert.DeepEqual(t, data[10], &a, protocmp.Transform())
 	// and update it
 	data[10].B = true
 	assert.NilError(t, table.Save(ctx, data[10]))
-	found, err = table.Get(ctx, &a, uint32(9), int64(0), "")
+	found, err = pkIndex.Get(ctx, &a, uint32(9), int64(0), "")
 	assert.NilError(t, err)
 	assert.Assert(t, found)
 	assert.DeepEqual(t, data[10], &a, protocmp.Transform())
@@ -401,10 +402,10 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 
 	// let's delete item 5
 	key5 := []interface{}{uint32(7), int64(-2), "abe"}
-	err = table.DeleteByKey(ctx, key5...)
+	err = pkIndex.DeleteByKey(ctx, key5...)
 	assert.NilError(t, err)
 	// it should be gone
-	found, err = table.Has(ctx, key5...)
+	found, err = pkIndex.Has(ctx, key5...)
 	assert.NilError(t, err)
 	assert.Assert(t, !found)
 	// and missing from the iterator

@@ -33,18 +33,22 @@ func (p primaryKeyIndex) Iterator(ctx context.Context, options ...ormlist.Option
 
 func (p primaryKeyIndex) doNotImplement() {}
 
-func (p primaryKeyIndex) Has(context context.Context, key ...interface{}) (found bool, err error) {
-	ctx, err := p.getReadBackend(context)
+func (p primaryKeyIndex) Has(ctx context.Context, key ...interface{}) (found bool, err error) {
+	backend, err := p.getReadBackend(ctx)
 	if err != nil {
 		return false, err
 	}
 
-	keyBz, err := p.EncodeKey(encodeutil.ValuesOf(key...))
+	return p.has(backend, encodeutil.ValuesOf(key...))
+}
+
+func (p primaryKeyIndex) has(backend ReadBackend, values []protoreflect.Value) (found bool, err error) {
+	keyBz, err := p.EncodeKey(values)
 	if err != nil {
 		return false, err
 	}
 
-	return ctx.CommitmentStoreReader().Has(keyBz)
+	return backend.CommitmentStoreReader().Has(keyBz)
 }
 
 func (p primaryKeyIndex) Get(ctx context.Context, message proto.Message, values ...interface{}) (found bool, err error) {
@@ -54,6 +58,15 @@ func (p primaryKeyIndex) Get(ctx context.Context, message proto.Message, values 
 	}
 
 	return p.get(backend, message, encodeutil.ValuesOf(values...))
+}
+
+func (p primaryKeyIndex) get(backend ReadBackend, message proto.Message, values []protoreflect.Value) (found bool, err error) {
+	key, err := p.EncodeKey(values)
+	if err != nil {
+		return false, err
+	}
+
+	return p.getByKeyBytes(backend, key, values, message)
 }
 
 func (t primaryKeyIndex) DeleteByKey(ctx context.Context, primaryKeyValues ...interface{}) error {
@@ -107,15 +120,6 @@ func (t primaryKeyIndex) doDeleteByKey(ctx context.Context, primaryKeyValues []p
 	}
 
 	return writer.Write()
-}
-
-func (p primaryKeyIndex) get(backend ReadBackend, message proto.Message, values []protoreflect.Value) (found bool, err error) {
-	key, err := p.EncodeKey(values)
-	if err != nil {
-		return false, err
-	}
-
-	return p.getByKeyBytes(backend, key, values, message)
 }
 
 func (p primaryKeyIndex) getByKeyBytes(store ReadBackend, key []byte, keyValues []protoreflect.Value, message proto.Message) (found bool, err error) {

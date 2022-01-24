@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"google.golang.org/protobuf/encoding/protojson"
+	"github.com/cosmos/cosmos-sdk/orm/internal/stablejson"
+
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/known/structpb"
 )
 
 // Entry defines a logical representation of a kv-store entry for ORM instances.
@@ -45,7 +45,12 @@ func (p *PrimaryKeyEntry) String() string {
 	if p.Value == nil {
 		return fmt.Sprintf("PK %s %s -> _", p.TableName, fmtValues(p.Key))
 	} else {
-		return fmt.Sprintf("PK %s %s -> %s", p.TableName, fmtValues(p.Key), p.Value)
+		valBz, err := stablejson.Marshal(p.Value)
+		valStr := string(valBz)
+		if err != nil {
+			valStr = fmt.Sprintf("ERR %v", err)
+		}
+		return fmt.Sprintf("PK %s %s -> %s", p.TableName, fmtValues(p.Key), valStr)
 	}
 }
 
@@ -56,19 +61,7 @@ func fmtValues(values []protoreflect.Value) string {
 
 	parts := make([]string, len(values))
 	for i, v := range values {
-		val, err := structpb.NewValue(v.Interface())
-		if err != nil {
-			parts[i] = "ERR"
-			continue
-		}
-
-		bz, err := protojson.Marshal(val)
-		if err != nil {
-			parts[i] = "ERR"
-			continue
-		}
-
-		parts[i] = string(bz)
+		parts[i] = fmt.Sprintf("%v", v.Interface())
 	}
 
 	return strings.Join(parts, "/")

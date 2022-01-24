@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 const (
@@ -64,4 +65,19 @@ func FeeAllowancePrefixQueue(exp *time.Time, key []byte) []byte {
 func AllowanceByExpTimeKey(exp *time.Time) []byte {
 	// no need of appending len(exp_bytes) here, `FormatTimeBytes` gives const length everytime.
 	return append(FeeAllowanceQueueKeyPrefix, sdk.FormatTimeBytes(*exp)...)
+}
+
+// ParseAddressesFromFeeAllowanceKey exrtacts and returns the granter, grantee from the given key.
+func ParseAddressesFromFeeAllowanceKey(key []byte) (granter, grantee sdk.AccAddress) {
+	// key is of format:
+	// 0x00<granteeAddressLen (1 Byte)><granteeAddress_Bytes><granterAddressLen (1 Byte)><granterAddress_Bytes><msgType_Bytes>
+	kv.AssertKeyAtLeastLength(key, 2)
+	granteeAddrLen := key[1] // remove prefix key
+	kv.AssertKeyAtLeastLength(key, int(2+granteeAddrLen))
+	grantee = sdk.AccAddress(key[2 : 2+granteeAddrLen])
+	granterAddrLen := int(key[2+granteeAddrLen])
+	kv.AssertKeyAtLeastLength(key, 3+int(granteeAddrLen+byte(granterAddrLen)))
+	granter = sdk.AccAddress(key[3+granterAddrLen : 3+granteeAddrLen+byte(granterAddrLen)])
+
+	return granter, grantee
 }

@@ -605,7 +605,7 @@ var _ sdk.Msg = &MsgWithdrawProposal{}
 func (m MsgWithdrawProposal) Route() string { return RouterKey }
 
 // Type Implements Msg.
-func (m MsgWithdrawProposal) Type() string { return TypeMsgWithdrawProposal }
+func (m MsgWithdrawProposal) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgWithdrawProposal) GetSignBytes() []byte {

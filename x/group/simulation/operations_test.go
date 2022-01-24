@@ -215,6 +215,73 @@ func (suite *SimTestSuite) TestSimulateCreateProposal() {
 	suite.Require().Len(futureOperations, 0)
 }
 
+func (suite *SimTestSuite) TestWithdrawProposal() {
+	// setup 1 account
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := suite.getTestingAccounts(r, 1)
+	acc := accounts[0]
+
+	// setup a group
+	ctx := sdk.WrapSDKContext(suite.ctx)
+	addr := acc.Address.String()
+	groupRes, err := suite.app.GroupKeeper.CreateGroup(ctx,
+		&group.MsgCreateGroup{
+			Admin: addr,
+			Members: []group.Member{
+				{
+					Address: addr,
+					Weight:  "1",
+				},
+			},
+		},
+	)
+	suite.Require().NoError(err)
+
+	// setup a group account
+	accountReq := &group.MsgCreateGroupPolicy{
+		Admin:    addr,
+		GroupId:  groupRes.GroupId,
+		Metadata: nil,
+	}
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
+	suite.Require().NoError(err)
+	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
+	suite.Require().NoError(err)
+
+	// setup a proposal
+	proposalReq, err := group.NewMsgCreateProposalRequest(groupPolicyRes.Address, []string{addr}, []sdk.Msg{
+		&banktypes.MsgSend{
+			FromAddress: groupPolicyRes.Address,
+			ToAddress:   addr,
+			Amount:      sdk.Coins{sdk.NewInt64Coin("token", 100)},
+		},
+	}, []byte{}, 0)
+	suite.Require().NoError(err)
+	_, err = suite.app.GroupKeeper.CreateProposal(ctx, proposalReq)
+	suite.Require().NoError(err)
+
+	// begin a new block
+	suite.app.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{
+			Height:  suite.app.LastBlockHeight() + 1,
+			AppHash: suite.app.LastCommitID().Hash,
+		},
+	})
+
+	// execute operation
+	op := simulation.SimulateMsgWithdrawProposal(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.GroupKeeper)
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	suite.Require().NoError(err)
+
+	var msg group.MsgWithdrawProposal
+	err = group.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.Require().NoError(err)
+	suite.Require().True(operationMsg.OK)
+	suite.Require().Equal(addr, msg.Address)
+	suite.Require().Len(futureOperations, 0)
+}
+
 func (suite *SimTestSuite) TestSimulateVote() {
 	// setup 1 account
 	s := rand.NewSource(1)

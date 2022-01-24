@@ -116,7 +116,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 				},
 			}
 
-			// Checking if the group member is already part of the
+			// Checking if the group member is already part of the group
 			var found bool
 			var prevGroupMember group.GroupMember
 			switch err := k.groupMemberTable.GetOne(ctx.KVStore(k.key), orm.PrimaryKey(&groupMember), &prevGroupMember); {

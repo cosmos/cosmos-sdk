@@ -3,6 +3,7 @@ package module
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 
 	"github.com/gorilla/mux"
@@ -18,7 +19,8 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/client/cli"
-	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
+	"github.com/cosmos/cosmos-sdk/x/group/keeper"
+	"github.com/cosmos/cosmos-sdk/x/group/simulation"
 )
 
 var (
@@ -29,19 +31,19 @@ var (
 
 type AppModule struct {
 	AppModuleBasic
-	keeper        groupkeeper.Keeper
-	BankKeeper    group.BankKeeper
-	AccountKeeper group.AccountKeeper
-	registry      cdctypes.InterfaceRegistry
+	keeper     keeper.Keeper
+	bankKeeper group.BankKeeper
+	accKeeper  group.AccountKeeper
+	registry   cdctypes.InterfaceRegistry
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper groupkeeper.Keeper, ak group.AccountKeeper, bk group.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak group.AccountKeeper, bk group.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
-		BankKeeper:     bk,
-		AccountKeeper:  ak,
+		bankKeeper:     bk,
+		accKeeper:      ak,
 		registry:       registry,
 	}
 }
@@ -58,14 +60,16 @@ func (AppModuleBasic) Name() string {
 // DefaultGenesis returns default genesis state as raw bytes for the group
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	// TODO: return default genesis state
-	return nil
+	return cdc.MustMarshalJSON(group.NewGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the group module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
-	// TODO: perform genesis validation
-	return nil
+	var data group.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", group.ModuleName, err)
+	}
+	return data.Validate()
 }
 
 // GetQueryCmd returns the cli query commands for the group module
@@ -104,7 +108,7 @@ func (AppModule) Name() string {
 
 // RegisterInvariants does nothing, there are no invariants to enforce
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	groupkeeper.RegisterInvariants(ir, am.keeper)
+	keeper.RegisterInvariants(ir, am.keeper)
 }
 
 // Deprecated: Route returns the message routing key for the group module.
@@ -127,15 +131,15 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // InitGenesis performs genesis initialization for the group module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	// TODO: initialize genesis for group module
+	am.keeper.InitGenesis(ctx, cdc, data)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the group
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	// TODO: export genesis for group module
-	return nil
+	gs := am.keeper.ExportGenesis(ctx, cdc)
+	return cdc.MustMarshalJSON(gs)
 }
 
 // RegisterServices registers a gRPC query service to respond to the
@@ -161,6 +165,7 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 
 // GenerateGenesisState creates a randomized GenState of the group module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
 }
 
 // ProposalContents returns all the group content functions used to
@@ -176,10 +181,13 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 
 // RegisterStoreDecoder registers a decoder for group module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[group.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	// TODO
-	return nil
+	return simulation.WeightedOperations(
+		simState.AppParams, simState.Cdc,
+		am.accKeeper, am.bankKeeper, am.keeper, am.cdc,
+	)
 }

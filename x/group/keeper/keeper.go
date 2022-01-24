@@ -24,17 +24,17 @@ const (
 	GroupMemberByGroupIndexPrefix  byte = 0x11
 	GroupMemberByMemberIndexPrefix byte = 0x12
 
-	// Group Account Table
-	GroupAccountTablePrefix        byte = 0x20
-	GroupAccountTableSeqPrefix     byte = 0x21
-	GroupAccountByGroupIndexPrefix byte = 0x22
-	GroupAccountByAdminIndexPrefix byte = 0x23
+	// Group Policy Table
+	GroupPolicyTablePrefix        byte = 0x20
+	GroupPolicyTableSeqPrefix     byte = 0x21
+	GroupPolicyByGroupIndexPrefix byte = 0x22
+	GroupPolicyByAdminIndexPrefix byte = 0x23
 
 	// Proposal Table
-	ProposalTablePrefix               byte = 0x30
-	ProposalTableSeqPrefix            byte = 0x31
-	ProposalByGroupAccountIndexPrefix byte = 0x32
-	ProposalByProposerIndexPrefix     byte = 0x33
+	ProposalTablePrefix              byte = 0x30
+	ProposalTableSeqPrefix           byte = 0x31
+	ProposalByGroupPolicyIndexPrefix byte = 0x32
+	ProposalByProposerIndexPrefix    byte = 0x33
 
 	// Vote Table
 	VoteTablePrefix           byte = 0x40
@@ -56,16 +56,16 @@ type Keeper struct {
 	groupMemberByGroupIndex  orm.Index
 	groupMemberByMemberIndex orm.Index
 
-	// Group Account Table
-	groupAccountSeq          orm.Sequence
-	groupAccountTable        orm.PrimaryKeyTable
-	groupAccountByGroupIndex orm.Index
-	groupAccountByAdminIndex orm.Index
+	// Group Policy Table
+	groupPolicySeq          orm.Sequence
+	groupPolicyTable        orm.PrimaryKeyTable
+	groupPolicyByGroupIndex orm.Index
+	groupPolicyByAdminIndex orm.Index
 
 	// Proposal Table
-	proposalTable               orm.AutoUInt64Table
-	proposalByGroupAccountIndex orm.Index
-	proposalByProposerIndex     orm.Index
+	proposalTable              orm.AutoUInt64Table
+	proposalByGroupPolicyIndex orm.Index
+	proposalByProposerIndex    orm.Index
 
 	// Vote Table
 	voteTable           orm.PrimaryKeyTable
@@ -123,20 +123,20 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	}
 	k.groupMemberTable = *groupMemberTable
 
-	// Group Account Table
-	k.groupAccountSeq = orm.NewSequence(GroupAccountTableSeqPrefix)
-	groupAccountTable, err := orm.NewPrimaryKeyTable([2]byte{GroupAccountTablePrefix}, &group.GroupAccountInfo{}, cdc)
+	// Group Policy Table
+	k.groupPolicySeq = orm.NewSequence(GroupPolicyTableSeqPrefix)
+	groupPolicyTable, err := orm.NewPrimaryKeyTable([2]byte{GroupPolicyTablePrefix}, &group.GroupPolicyInfo{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.groupAccountByGroupIndex, err = orm.NewIndex(groupAccountTable, GroupAccountByGroupIndexPrefix, func(value interface{}) ([]interface{}, error) {
-		return []interface{}{value.(*group.GroupAccountInfo).GroupId}, nil
-	}, group.GroupAccountInfo{}.GroupId)
+	k.groupPolicyByGroupIndex, err = orm.NewIndex(groupPolicyTable, GroupPolicyByGroupIndexPrefix, func(value interface{}) ([]interface{}, error) {
+		return []interface{}{value.(*group.GroupPolicyInfo).GroupId}, nil
+	}, group.GroupPolicyInfo{}.GroupId)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.groupAccountByAdminIndex, err = orm.NewIndex(groupAccountTable, GroupAccountByAdminIndexPrefix, func(value interface{}) ([]interface{}, error) {
-		admin := value.(*group.GroupAccountInfo).Admin
+	k.groupPolicyByAdminIndex, err = orm.NewIndex(groupPolicyTable, GroupPolicyByAdminIndexPrefix, func(value interface{}) ([]interface{}, error) {
+		admin := value.(*group.GroupPolicyInfo).Admin
 		addr, err := sdk.AccAddressFromBech32(admin)
 		if err != nil {
 			return nil, err
@@ -146,14 +146,14 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	if err != nil {
 		panic(err.Error())
 	}
-	k.groupAccountTable = *groupAccountTable
+	k.groupPolicyTable = *groupPolicyTable
 
 	// Proposal Table
 	proposalTable, err := orm.NewAutoUInt64Table([2]byte{ProposalTablePrefix}, ProposalTableSeqPrefix, &group.Proposal{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.proposalByGroupAccountIndex, err = orm.NewIndex(proposalTable, ProposalByGroupAccountIndexPrefix, func(value interface{}) ([]interface{}, error) {
+	k.proposalByGroupPolicyIndex, err = orm.NewIndex(proposalTable, ProposalByGroupPolicyIndexPrefix, func(value interface{}) ([]interface{}, error) {
 		account := value.(*group.Proposal).Address
 		addr, err := sdk.AccAddressFromBech32(account)
 		if err != nil {
@@ -211,4 +211,9 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", group.ModuleName))
+}
+
+// GetGroupSequence returns the current value of the group table sequence
+func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
+	return k.groupTable.Sequence().CurVal(ctx.KVStore(k.key))
 }

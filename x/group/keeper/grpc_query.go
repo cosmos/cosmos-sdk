@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -31,19 +32,19 @@ func (q Keeper) getGroupInfo(ctx sdk.Context, id uint64) (group.GroupInfo, error
 	return obj, err
 }
 
-func (q Keeper) GroupAccountInfo(goCtx context.Context, request *group.QueryGroupAccountInfoRequest) (*group.QueryGroupAccountInfoResponse, error) {
+func (q Keeper) GroupPolicyInfo(goCtx context.Context, request *group.QueryGroupPolicyInfoRequest) (*group.QueryGroupPolicyInfoResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	groupAccountInfo, err := q.getGroupAccountInfo(ctx, request.Address)
+	groupPolicyInfo, err := q.getGroupPolicyInfo(ctx, request.Address)
 	if err != nil {
 		return nil, err
 	}
 
-	return &group.QueryGroupAccountInfoResponse{Info: &groupAccountInfo}, nil
+	return &group.QueryGroupPolicyInfoResponse{Info: &groupPolicyInfo}, nil
 }
 
-func (q Keeper) getGroupAccountInfo(ctx sdk.Context, accountAddress string) (group.GroupAccountInfo, error) {
-	var obj group.GroupAccountInfo
-	return obj, q.groupAccountTable.GetOne(ctx.KVStore(q.key), orm.PrimaryKey(&group.GroupAccountInfo{Address: accountAddress}), &obj)
+func (q Keeper) getGroupPolicyInfo(ctx sdk.Context, accountAddress string) (group.GroupPolicyInfo, error) {
+	var obj group.GroupPolicyInfo
+	return obj, q.groupPolicyTable.GetOne(ctx.KVStore(q.key), orm.PrimaryKey(&group.GroupPolicyInfo{Address: accountAddress}), &obj)
 }
 
 func (q Keeper) GroupMembers(goCtx context.Context, request *group.QueryGroupMembersRequest) (*group.QueryGroupMembersResponse, error) {
@@ -97,55 +98,55 @@ func (q Keeper) getGroupsByAdmin(ctx sdk.Context, admin sdk.AccAddress, pageRequ
 	return q.groupByAdminIndex.GetPaginated(ctx.KVStore(q.key), admin.Bytes(), pageRequest)
 }
 
-func (q Keeper) GroupAccountsByGroup(goCtx context.Context, request *group.QueryGroupAccountsByGroupRequest) (*group.QueryGroupAccountsByGroupResponse, error) {
+func (q Keeper) GroupPoliciesByGroup(goCtx context.Context, request *group.QueryGroupPoliciesByGroupRequest) (*group.QueryGroupPoliciesByGroupResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	groupID := request.GroupId
-	it, err := q.getGroupAccountsByGroup(ctx, groupID, request.Pagination)
+	it, err := q.getGroupPoliciesByGroup(ctx, groupID, request.Pagination)
 	if err != nil {
 		return nil, err
 	}
 
-	var accounts []*group.GroupAccountInfo
-	pageRes, err := orm.Paginate(it, request.Pagination, &accounts)
+	var policies []*group.GroupPolicyInfo
+	pageRes, err := orm.Paginate(it, request.Pagination, &policies)
 	if err != nil {
 		return nil, err
 	}
 
-	return &group.QueryGroupAccountsByGroupResponse{
-		GroupAccounts: accounts,
+	return &group.QueryGroupPoliciesByGroupResponse{
+		GroupPolicies: policies,
 		Pagination:    pageRes,
 	}, nil
 }
 
-func (q Keeper) getGroupAccountsByGroup(ctx sdk.Context, id uint64, pageRequest *query.PageRequest) (orm.Iterator, error) {
-	return q.groupAccountByGroupIndex.GetPaginated(ctx.KVStore(q.key), id, pageRequest)
+func (q Keeper) getGroupPoliciesByGroup(ctx sdk.Context, id uint64, pageRequest *query.PageRequest) (orm.Iterator, error) {
+	return q.groupPolicyByGroupIndex.GetPaginated(ctx.KVStore(q.key), id, pageRequest)
 }
 
-func (q Keeper) GroupAccountsByAdmin(goCtx context.Context, request *group.QueryGroupAccountsByAdminRequest) (*group.QueryGroupAccountsByAdminResponse, error) {
+func (q Keeper) GroupPoliciesByAdmin(goCtx context.Context, request *group.QueryGroupPoliciesByAdminRequest) (*group.QueryGroupPoliciesByAdminResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	addr, err := sdk.AccAddressFromBech32(request.Admin)
 	if err != nil {
 		return nil, err
 	}
-	it, err := q.getGroupAccountsByAdmin(ctx, addr, request.Pagination)
+	it, err := q.getGroupPoliciesByAdmin(ctx, addr, request.Pagination)
 	if err != nil {
 		return nil, err
 	}
 
-	var accounts []*group.GroupAccountInfo
-	pageRes, err := orm.Paginate(it, request.Pagination, &accounts)
+	var policies []*group.GroupPolicyInfo
+	pageRes, err := orm.Paginate(it, request.Pagination, &policies)
 	if err != nil {
 		return nil, err
 	}
 
-	return &group.QueryGroupAccountsByAdminResponse{
-		GroupAccounts: accounts,
+	return &group.QueryGroupPoliciesByAdminResponse{
+		GroupPolicies: policies,
 		Pagination:    pageRes,
 	}, nil
 }
 
-func (q Keeper) getGroupAccountsByAdmin(ctx sdk.Context, admin sdk.AccAddress, pageRequest *query.PageRequest) (orm.Iterator, error) {
-	return q.groupAccountByAdminIndex.GetPaginated(ctx.KVStore(q.key), admin.Bytes(), pageRequest)
+func (q Keeper) getGroupPoliciesByAdmin(ctx sdk.Context, admin sdk.AccAddress, pageRequest *query.PageRequest) (orm.Iterator, error) {
+	return q.groupPolicyByAdminIndex.GetPaginated(ctx.KVStore(q.key), admin.Bytes(), pageRequest)
 }
 
 func (q Keeper) Proposal(goCtx context.Context, request *group.QueryProposalRequest) (*group.QueryProposalResponse, error) {
@@ -159,13 +160,13 @@ func (q Keeper) Proposal(goCtx context.Context, request *group.QueryProposalRequ
 	return &group.QueryProposalResponse{Proposal: &proposal}, nil
 }
 
-func (q Keeper) ProposalsByGroupAccount(goCtx context.Context, request *group.QueryProposalsByGroupAccountRequest) (*group.QueryProposalsByGroupAccountResponse, error) {
+func (q Keeper) ProposalsByGroupPolicy(goCtx context.Context, request *group.QueryProposalsByGroupPolicyRequest) (*group.QueryProposalsByGroupPolicyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	addr, err := sdk.AccAddressFromBech32(request.Address)
 	if err != nil {
 		return nil, err
 	}
-	it, err := q.getProposalsByGroupAccount(ctx, addr, request.Pagination)
+	it, err := q.getProposalsByGroupPolicy(ctx, addr, request.Pagination)
 	if err != nil {
 		return nil, err
 	}
@@ -176,14 +177,14 @@ func (q Keeper) ProposalsByGroupAccount(goCtx context.Context, request *group.Qu
 		return nil, err
 	}
 
-	return &group.QueryProposalsByGroupAccountResponse{
+	return &group.QueryProposalsByGroupPolicyResponse{
 		Proposals:  proposals,
 		Pagination: pageRes,
 	}, nil
 }
 
-func (q Keeper) getProposalsByGroupAccount(ctx sdk.Context, account sdk.AccAddress, pageRequest *query.PageRequest) (orm.Iterator, error) {
-	return q.proposalByGroupAccountIndex.GetPaginated(ctx.KVStore(q.key), account.Bytes(), pageRequest)
+func (q Keeper) getProposalsByGroupPolicy(ctx sdk.Context, account sdk.AccAddress, pageRequest *query.PageRequest) (orm.Iterator, error) {
+	return q.proposalByGroupPolicyIndex.GetPaginated(ctx.KVStore(q.key), account.Bytes(), pageRequest)
 }
 
 func (q Keeper) getProposal(ctx sdk.Context, proposalID uint64) (group.Proposal, error) {

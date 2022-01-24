@@ -113,33 +113,34 @@ func (p *ThresholdDecisionPolicy) Validate(g GroupInfo) error {
 		return sdkerrors.Wrap(err, "group total weight")
 	}
 	if threshold.Cmp(totalWeight) > 0 {
-		return sdkerrors.Wrap(errors.ErrInvalid, "policy threshold should not be greater than the total group weight")
+		return sdkerrors.Wrapf(errors.ErrInvalid, "policy threshold %s should not be greater than the total group weight %s", p.Threshold, g.TotalWeight)
 	}
 	return nil
 }
 
-var _ orm.Validateable = GroupAccountInfo{}
+var _ orm.Validateable = GroupPolicyInfo{}
 
-// NewGroupAccountInfo creates a new GroupAccountInfo instance
-func NewGroupAccountInfo(address sdk.AccAddress, group uint64, admin sdk.AccAddress, metadata []byte,
-	version uint64, decisionPolicy DecisionPolicy) (GroupAccountInfo, error) {
-	p := GroupAccountInfo{
-		Address:  address.String(),
-		GroupId:  group,
-		Admin:    admin.String(),
-		Metadata: metadata,
-		Version:  version,
+// NewGroupPolicyInfo creates a new GroupPolicyInfo instance
+func NewGroupPolicyInfo(address sdk.AccAddress, group uint64, admin sdk.AccAddress, metadata []byte,
+	version uint64, decisionPolicy DecisionPolicy, createdAt time.Time) (GroupPolicyInfo, error) {
+	p := GroupPolicyInfo{
+		Address:   address.String(),
+		GroupId:   group,
+		Admin:     admin.String(),
+		Metadata:  metadata,
+		Version:   version,
+		CreatedAt: createdAt,
 	}
 
 	err := p.SetDecisionPolicy(decisionPolicy)
 	if err != nil {
-		return GroupAccountInfo{}, err
+		return GroupPolicyInfo{}, err
 	}
 
 	return p, nil
 }
 
-func (g *GroupAccountInfo) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
+func (g *GroupPolicyInfo) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
 	msg, ok := decisionPolicy.(proto.Message)
 	if !ok {
 		return fmt.Errorf("can't proto marshal %T", msg)
@@ -152,7 +153,7 @@ func (g *GroupAccountInfo) SetDecisionPolicy(decisionPolicy DecisionPolicy) erro
 	return nil
 }
 
-func (g GroupAccountInfo) GetDecisionPolicy() DecisionPolicy {
+func (g GroupPolicyInfo) GetDecisionPolicy() DecisionPolicy {
 	decisionPolicy, ok := g.DecisionPolicy.GetCachedValue().(DecisionPolicy)
 	if !ok {
 		return nil
@@ -161,12 +162,35 @@ func (g GroupAccountInfo) GetDecisionPolicy() DecisionPolicy {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (g GroupAccountInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (g GroupPolicyInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var decisionPolicy DecisionPolicy
 	return unpacker.UnpackAny(g.DecisionPolicy, &decisionPolicy)
 }
 
-func (g GroupAccountInfo) PrimaryKeyFields() []interface{} {
+func (g GroupInfo) PrimaryKeyFields() []interface{} {
+	return []interface{}{g.GroupId}
+}
+
+func (g GroupInfo) ValidateBasic() error {
+	if g.GroupId == 0 {
+		return sdkerrors.Wrap(errors.ErrEmpty, "group's GroupId")
+	}
+
+	_, err := sdk.AccAddressFromBech32(g.Admin)
+	if err != nil {
+		return sdkerrors.Wrap(err, "admin")
+	}
+
+	if _, err := math.NewNonNegativeDecFromString(g.TotalWeight); err != nil {
+		return sdkerrors.Wrap(err, "total weight")
+	}
+	if g.Version == 0 {
+		return sdkerrors.Wrap(errors.ErrEmpty, "version")
+	}
+	return nil
+}
+
+func (g GroupPolicyInfo) PrimaryKeyFields() []interface{} {
 	addr, err := sdk.AccAddressFromBech32(g.Address)
 	if err != nil {
 		panic(err)
@@ -174,32 +198,34 @@ func (g GroupAccountInfo) PrimaryKeyFields() []interface{} {
 	return []interface{}{addr.Bytes()}
 }
 
-func (g GroupAccountInfo) ValidateBasic() error {
+func (g Proposal) PrimaryKeyFields() []interface{} {
+	return []interface{}{g.ProposalId}
+}
+
+func (g GroupPolicyInfo) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(g.Admin)
 	if err != nil {
-		return sdkerrors.Wrap(err, "admin")
+		return sdkerrors.Wrap(err, "group policy admin")
 	}
-
 	_, err = sdk.AccAddressFromBech32(g.Address)
 	if err != nil {
-		return sdkerrors.Wrap(err, "group account")
+		return sdkerrors.Wrap(err, "group policy account address")
 	}
 
 	if g.GroupId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group")
+		return sdkerrors.Wrap(errors.ErrEmpty, "group policy's group id")
 	}
 	if g.Version == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "version")
+		return sdkerrors.Wrap(errors.ErrEmpty, "group policy version")
 	}
 	policy := g.GetDecisionPolicy()
 
 	if policy == nil {
-		return sdkerrors.Wrap(errors.ErrEmpty, "policy")
+		return sdkerrors.Wrap(errors.ErrEmpty, "group policy's decision policy")
 	}
 	if err := policy.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "policy")
+		return sdkerrors.Wrap(err, "group policy's decision policy")
 	}
-
 	return nil
 }
 
@@ -213,12 +239,46 @@ func (g GroupMember) PrimaryKeyFields() []interface{} {
 
 func (g GroupMember) ValidateBasic() error {
 	if g.GroupId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group")
+		return sdkerrors.Wrap(errors.ErrEmpty, "group member's group id")
 	}
 
 	err := g.Member.ValidateBasic()
 	if err != nil {
-		return sdkerrors.Wrap(err, "member")
+		return sdkerrors.Wrap(err, "group member")
+	}
+	return nil
+}
+
+func (p Proposal) ValidateBasic() error {
+
+	if p.ProposalId == 0 {
+		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
+	}
+	_, err := sdk.AccAddressFromBech32(p.Address)
+	if err != nil {
+		return sdkerrors.Wrap(err, "proposal group policy address")
+	}
+	if p.GroupVersion == 0 {
+		return sdkerrors.Wrap(errors.ErrEmpty, "proposal group version")
+	}
+	if p.GroupPolicyVersion == 0 {
+		return sdkerrors.Wrap(errors.ErrEmpty, "proposal group policy version")
+	}
+	_, err = p.VoteState.GetYesCount()
+	if err != nil {
+		return sdkerrors.Wrap(err, "proposal VoteState yes count")
+	}
+	_, err = p.VoteState.GetNoCount()
+	if err != nil {
+		return sdkerrors.Wrap(err, "proposal VoteState no count")
+	}
+	_, err = p.VoteState.GetAbstainCount()
+	if err != nil {
+		return sdkerrors.Wrap(err, "proposal VoteState abstain count")
+	}
+	_, err = p.VoteState.GetVetoCount()
+	if err != nil {
+		return sdkerrors.Wrap(err, "proposal VoteState veto count")
 	}
 	return nil
 }
@@ -231,17 +291,37 @@ func (v Vote) PrimaryKeyFields() []interface{} {
 	return []interface{}{v.ProposalId, addr.Bytes()}
 }
 
-// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (q QueryGroupAccountsByGroupResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	return unpackGroupAccounts(unpacker, q.GroupAccounts)
+var _ orm.Validateable = Vote{}
+
+func (v Vote) ValidateBasic() error {
+
+	_, err := sdk.AccAddressFromBech32(v.Voter)
+	if err != nil {
+		return sdkerrors.Wrap(err, "voter")
+	}
+	if v.ProposalId == 0 {
+		return sdkerrors.Wrap(errors.ErrEmpty, "voter ProposalId")
+	}
+	if v.Choice == Choice_CHOICE_UNSPECIFIED {
+		return sdkerrors.Wrap(errors.ErrEmpty, "voter choice")
+	}
+	if _, ok := Choice_name[int32(v.Choice)]; !ok {
+		return sdkerrors.Wrap(errors.ErrInvalid, "choice")
+	}
+	return nil
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (q QueryGroupAccountsByAdminResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	return unpackGroupAccounts(unpacker, q.GroupAccounts)
+func (q QueryGroupPoliciesByGroupResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return unpackGroupPolicies(unpacker, q.GroupPolicies)
 }
 
-func unpackGroupAccounts(unpacker codectypes.AnyUnpacker, accs []*GroupAccountInfo) error {
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (q QueryGroupPoliciesByAdminResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return unpackGroupPolicies(unpacker, q.GroupPolicies)
+}
+
+func unpackGroupPolicies(unpacker codectypes.AnyUnpacker, accs []*GroupPolicyInfo) error {
 	for _, g := range accs {
 		err := g.UnpackInterfaces(unpacker)
 		if err != nil {

@@ -227,3 +227,8 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // MaxMetadataLength returns the max length of the metadata bytes field for various entities within the group module.
 func (k Keeper) MaxMetadataLength() int { return k.maxMetadataLength }
+
+// GetGroupSequence returns the current value of the group table sequence
+func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
+	return k.groupTable.Sequence().CurVal(ctx.KVStore(k.key))
+}

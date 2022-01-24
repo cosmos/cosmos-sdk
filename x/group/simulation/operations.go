@@ -36,6 +36,7 @@ var (
 	TypeMsgCreateProposal                  = sdk.MsgTypeURL(&group.MsgCreateProposal{})
 	TypeMsgVote                            = sdk.MsgTypeURL(&group.MsgVote{})
 	TypeMsgExec                            = sdk.MsgTypeURL(&group.MsgExec{})
+	TypeMsgLeaveGroup                      = sdk.MsgTypeURL(&group.MsgLeaveGroup{})
 )
 
 // Simulation operation weights constants
@@ -51,6 +52,7 @@ const (
 	OpMsgCreateProposal                  = "op_weight_msg_create_proposal"
 	OpMsgVote                            = "op_weight_msg_vote"
 	OpMsgExec                            = "ops_weight_msg_exec"
+	OpMsgLeaveGroup                      = "ops_weight_msg_leave_group"
 )
 
 // If update group or group account txn's executed, `SimulateMsgVote` & `SimulateMsgExec` txn's returns `noOp`.
@@ -61,6 +63,7 @@ const (
 	WeightMsgCreateProposal                  = 90
 	WeightMsgVote                            = 90
 	WeightMsgExec                            = 90
+	WeightMsgLeaveGroup                      = 20
 	WeightMsgUpdateGroupMetadata             = 5
 	WeightMsgUpdateGroupAdmin                = 5
 	WeightMsgUpdateGroupMembers              = 5
@@ -68,8 +71,6 @@ const (
 	WeightMsgUpdateGroupPolicyDecisionPolicy = 5
 	WeightMsgUpdateGroupPolicyMetadata       = 5
 )
-
-const GroupMemberWeight = 40
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
@@ -87,6 +88,7 @@ func WeightedOperations(
 		weightMsgCreateProposal                  int
 		weightMsgVote                            int
 		weightMsgExec                            int
+		weightMsgLeaveGroup                      int
 	)
 
 	appParams.GetOrGenerate(cdc, OpMsgCreateGroup, &weightMsgCreateGroup, nil,
@@ -144,6 +146,11 @@ func WeightedOperations(
 			weightMsgUpdateGroupPolicyMetadata = WeightMsgUpdateGroupPolicyMetadata
 		},
 	)
+	appParams.GetOrGenerate(cdc, OpMsgLeaveGroup, &weightMsgLeaveGroup, nil,
+		func(_ *rand.Rand) {
+			weightMsgLeaveGroup = WeightMsgLeaveGroup
+		},
+	)
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
@@ -190,6 +197,10 @@ func WeightedOperations(
 			weightMsgUpdateGroupPolicyMetadata,
 			SimulateMsgUpdateGroupPolicyMetadata(ak, bk, k),
 		),
+		simulation.NewWeightedOperation(
+			weightMsgLeaveGroup,
+			SimulateMsgLeaveGroup(k, ak, bk),
+		),
 	}
 }
 
@@ -207,14 +218,7 @@ func SimulateMsgCreateGroup(ak group.AccountKeeper, bk group.BankKeeper) simtype
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroup, "fee error"), nil, err
 		}
 
-		members := []group.Member{
-			{
-				Address:  accAddr,
-				Weight:   fmt.Sprintf("%d", GroupMemberWeight),
-				Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
-			},
-		}
-
+		members := genGroupMembers(r, accounts)
 		msg := &group.MsgCreateGroup{Admin: accAddr, Members: members, Metadata: []byte(simtypes.RandStringOfLength(r, 10))}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -265,7 +269,7 @@ func SimulateMsgCreateGroupPolicy(ak group.AccountKeeper, bk group.BankKeeper, k
 			groupID,
 			[]byte(simtypes.RandStringOfLength(r, 10)),
 			&group.ThresholdDecisionPolicy{
-				Threshold: "20",
+				Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 20)),
 				Timeout:   time.Second * time.Duration(30*24*60*60),
 			},
 		)
@@ -495,16 +499,7 @@ func SimulateMsgUpdateGroupMembers(ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupMembers, "fee error"), nil, err
 		}
 
-		member, _ := simtypes.RandomAcc(r, accounts)
-
-		members := []group.Member{
-			{
-				Address:  member.Address.String(),
-				Weight:   fmt.Sprintf("%d", GroupMemberWeight),
-				Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
-			},
-		}
-
+		members := genGroupMembers(r, accounts)
 		msg := group.MsgUpdateGroupMembers{
 			GroupId:       groupID,
 			Admin:         acc.Address.String(),
@@ -887,6 +882,79 @@ func SimulateMsgExec(ak group.AccountKeeper,
 	}
 }
 
+// SimulateMsgLeaveGroup generates a MsgLeaveGroup with random values
+func SimulateMsgLeaveGroup(k keeper.Keeper, ak group.AccountKeeper, bk group.BankKeeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+
+		ctx := sdk.WrapSDKContext(sdkCtx)
+		groupInfo, policyInfo, _, _, err := randomGroupPolicy(r, k, ak, sdkCtx, accounts)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, ""), nil, err
+		}
+
+		if groupInfo == nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, ""), nil, nil
+		}
+
+		if policyInfo == nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, "no policy found"), nil, nil
+		}
+
+		// Pick a random member from the group
+		acc, account, err := randomMember(r, k, ak, ctx, accounts, groupInfo.GroupId)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, ""), nil, err
+		}
+		if account == nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, "no group member found"), nil, nil
+		}
+
+		member, exists := simtypes.FindAccount(accounts, acc.Address)
+		if !exists {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, "not a sim account"), nil, nil
+		}
+
+		spendableCoins := bk.SpendableCoins(sdkCtx, member.Address)
+		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, "fee error"), nil, err
+		}
+
+		msg := &group.MsgLeaveGroup{
+			MemberAddress: member.Address.String(),
+			GroupId:       groupInfo.GroupId,
+			PolicyAddress: policyInfo.Address,
+		}
+
+		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		tx, err := helpers.GenTx(
+			txGen,
+			[]sdk.Msg{msg},
+			fees,
+			helpers.DefaultGenTxGas,
+			chainID,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			member.PrivKey,
+		)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, "unable to generate mock tx"), nil, err
+		}
+
+		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+		if err != nil {
+			if strings.Contains(err.Error(), "cannot leave group") {
+				return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, ""), nil, nil
+			}
+
+			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+	}
+}
+
 func randomGroup(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 	ctx sdk.Context, accounts []simtypes.Account) (groupInfo *group.GroupInfo, acc simtypes.Account, account authtypes.AccountI, err error) {
 	groupID := k.GetGroupSequence(ctx)
@@ -996,4 +1064,34 @@ func findAccount(accounts []simtypes.Account, addr string) (idx int) {
 		}
 	}
 	return idx
+}
+
+func genGroupMembers(r *rand.Rand, accounts []simtypes.Account) []group.Member {
+	if len(accounts) == 1 {
+		return []group.Member{
+			{
+				Address:  accounts[0].Address.String(),
+				Weight:   fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
+				Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
+			},
+		}
+	}
+
+	max := 5
+	if len(accounts) < max {
+		max = len(accounts)
+	}
+
+	membersLen := simtypes.RandIntBetween(r, 1, max)
+	members := make([]group.Member, membersLen)
+
+	for i := 0; i < membersLen; i++ {
+		members[i] = group.Member{
+			Address:  accounts[i].Address.String(),
+			Weight:   fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
+			Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
+		}
+	}
+
+	return members
 }

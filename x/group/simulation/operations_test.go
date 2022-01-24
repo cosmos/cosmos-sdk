@@ -40,7 +40,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		suite.app.BankKeeper, suite.app.GroupKeeper, cdc,
 	)
 
-	s := rand.NewSource(1)
+	s := rand.NewSource(2)
 	r := rand.New(s)
 	accs := suite.getTestingAccounts(r, 3)
 
@@ -60,6 +60,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{simulation.WeightMsgUpdateGroupPolicyAdmin, group.MsgUpdateGroupPolicyAdmin{}.Route(), simulation.TypeMsgUpdateGroupPolicyAdmin},
 		{simulation.WeightMsgUpdateGroupPolicyDecisionPolicy, group.MsgUpdateGroupPolicyDecisionPolicy{}.Route(), simulation.TypeMsgUpdateGroupPolicyDecisionPolicy},
 		{simulation.WeightMsgUpdateGroupPolicyMetadata, group.MsgUpdateGroupPolicyMetadata{}.Route(), simulation.TypeMsgUpdateGroupPolicyMetadata},
+		{simulation.WeightMsgLeaveGroup, group.MsgLeaveGroup{}.Route(), simulation.TypeMsgLeaveGroup},
 	}
 
 	for i, w := range weightedOps {
@@ -163,7 +164,7 @@ func (suite *SimTestSuite) TestSimulateCreateGroupPolicy() {
 
 func (suite *SimTestSuite) TestSimulateCreateProposal() {
 	// setup 1 account
-	s := rand.NewSource(1)
+	s := rand.NewSource(2)
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 1)
 	acc := accounts[0]
@@ -642,6 +643,73 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyMetadata() {
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(groupPolicyRes.Address, msg.Address)
+	suite.Require().Len(futureOperations, 0)
+}
+
+func (suite *SimTestSuite) TestSimulateLeaveGroup() {
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	require := suite.Require()
+
+	// setup 4 account
+	accounts := suite.getTestingAccounts(r, 4)
+	admin := accounts[0]
+	member1 := accounts[1]
+	member2 := accounts[2]
+	member3 := accounts[3]
+
+	// setup a group
+	ctx := sdk.WrapSDKContext(suite.ctx)
+	groupRes, err := suite.app.GroupKeeper.CreateGroup(ctx,
+		&group.MsgCreateGroup{
+			Admin: admin.Address.String(),
+			Members: []group.Member{
+				{
+					Address: member1.Address.String(),
+					Weight:  "1",
+				},
+				{
+					Address: member2.Address.String(),
+					Weight:  "2",
+				},
+				{
+					Address: member3.Address.String(),
+					Weight:  "1",
+				},
+			},
+		},
+	)
+	require.NoError(err)
+
+	// setup a group account
+	accountReq := &group.MsgCreateGroupPolicy{
+		Admin:    admin.Address.String(),
+		GroupId:  groupRes.GroupId,
+		Metadata: nil,
+	}
+	require.NoError(accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("3", time.Hour)))
+	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
+	require.NoError(err)
+
+	// begin a new block
+	suite.app.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{
+			Height:  suite.app.LastBlockHeight() + 1,
+			AppHash: suite.app.LastCommitID().Hash,
+		},
+	})
+
+	// execute operation
+	op := simulation.SimulateMsgLeaveGroup(suite.app.GroupKeeper, suite.app.AccountKeeper, suite.app.BankKeeper)
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	suite.Require().NoError(err)
+
+	var msg group.MsgLeaveGroup
+	err = group.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.Require().NoError(err)
+	suite.Require().True(operationMsg.OK)
+	suite.Require().Equal(groupRes.GroupId, msg.GroupId)
+	suite.Require().Equal(groupPolicyRes.Address, msg.PolicyAddress)
 	suite.Require().Len(futureOperations, 0)
 }
 

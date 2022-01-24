@@ -1826,10 +1826,11 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 			cmd := client.MsgLeaveGroupCmd()
 			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				require.Error(err, err.Error())
 				require.Contains(out.String(), tc.errMsg)
 			} else {
 				require.NoError(err, out.String())
+				var resp sdk.TxResponse
+				require.NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}
 		})
 	}

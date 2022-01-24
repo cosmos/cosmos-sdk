@@ -733,7 +733,8 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 		}
 
 		if m.Member.Address == groupMember.Member.Address {
-			if memberWeight, err = math.NewNonNegativeDecFromString(m.Member.Weight); err != nil {
+			memberWeight, err = math.NewNonNegativeDecFromString(m.Member.Weight)
+			if err != nil {
 				return nil, err
 			}
 

@@ -95,7 +95,7 @@ func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 
 	for _, s := range status {
 		for i := 0; i < 50; i++ {
-			p, err := v1beta2.NewProposal(TestProposal, proposalID, time.Now(), time.Now())
+			p, err := v1beta2.NewProposal(TestProposal, proposalID, nil, time.Now(), time.Now())
 			suite.Require().NoError(err)
 
 			p.Status = s

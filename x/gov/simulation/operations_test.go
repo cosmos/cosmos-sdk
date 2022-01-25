@@ -16,7 +16,9 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -76,12 +78,12 @@ func TestWeightedOperations(t *testing.T) {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{0, v1beta1.ModuleName, "submit_proposal"},
-		{1, v1beta1.ModuleName, "submit_proposal"},
-		{2, v1beta1.ModuleName, "submit_proposal"},
-		{simappparams.DefaultWeightMsgDeposit, v1beta1.ModuleName, v1beta1.TypeMsgDeposit},
-		{simappparams.DefaultWeightMsgVote, v1beta1.ModuleName, v1beta1.TypeMsgVote},
-		{simappparams.DefaultWeightMsgVoteWeighted, v1beta1.ModuleName, v1beta1.TypeMsgVoteWeighted},
+		{0, types.ModuleName, "submit_proposal"},
+		{1, types.ModuleName, "submit_proposal"},
+		{2, types.ModuleName, "submit_proposal"},
+		{simappparams.DefaultWeightMsgDeposit, types.ModuleName, v1beta1.TypeMsgDeposit},
+		{simappparams.DefaultWeightMsgVote, types.ModuleName, v1beta1.TypeMsgVote},
+		{simappparams.DefaultWeightMsgVoteWeighted, types.ModuleName, v1beta1.TypeMsgVoteWeighted},
 	}
 
 	for i, w := range weightesOps {
@@ -114,7 +116,7 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg v1beta1.MsgSubmitProposal
-	v1beta1.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, "cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.Proposer)
@@ -139,11 +141,13 @@ func TestSimulateMsgDeposit(t *testing.T) {
 
 	// setup a proposal
 	content := v1beta1.NewTextProposal("Test", "description")
+	contentMsg, err := v1beta2.NewLegacyContent(content, app.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String())
+	require.NoError(t, err)
 
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1beta1.NewProposal(content, 1, submitTime, submitTime.Add(depositPeriod))
+	proposal, err := v1beta2.NewProposal([]sdk.Msg{contentMsg}, 1, nil, submitTime, submitTime.Add(*depositPeriod))
 	require.NoError(t, err)
 
 	app.GovKeeper.SetProposal(ctx, proposal)
@@ -157,7 +161,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg v1beta1.MsgDeposit
-	v1beta1.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, uint64(1), msg.ProposalId)
@@ -180,12 +184,14 @@ func TestSimulateMsgVote(t *testing.T) {
 	accounts := getTestingAccounts(t, r, app, ctx, 3)
 
 	// setup a proposal
-	content := v1beta1.NewTextProposal("Test", "description")
+	govAcc := app.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String()
+	contentMsg, err := v1beta2.NewLegacyContent(v1beta1.NewTextProposal("Test", "description"), govAcc)
+	require.NoError(t, err)
 
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1beta1.NewProposal(content, 1, submitTime, submitTime.Add(depositPeriod))
+	proposal, err := v1beta2.NewProposal([]sdk.Msg{contentMsg}, 1, nil, submitTime, submitTime.Add(*depositPeriod))
 	require.NoError(t, err)
 
 	app.GovKeeper.ActivateVotingPeriod(ctx, proposal)
@@ -199,7 +205,7 @@ func TestSimulateMsgVote(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg v1beta1.MsgVote
-	v1beta1.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, uint64(1), msg.ProposalId)
@@ -222,12 +228,13 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	accounts := getTestingAccounts(t, r, app, ctx, 3)
 
 	// setup a proposal
-	content := v1beta1.NewTextProposal("Test", "description")
-
+	govAcc := app.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String()
+	contentMsg, err := v1beta2.NewLegacyContent(v1beta1.NewTextProposal("Test", "description"), govAcc)
+	require.NoError(t, err)
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1beta1.NewProposal(content, 1, submitTime, submitTime.Add(depositPeriod))
+	proposal, err := v1beta2.NewProposal([]sdk.Msg{contentMsg}, 1, nil, submitTime, submitTime.Add(*depositPeriod))
 	require.NoError(t, err)
 
 	app.GovKeeper.ActivateVotingPeriod(ctx, proposal)
@@ -241,7 +248,7 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg v1beta1.MsgVoteWeighted
-	v1beta1.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, uint64(1), msg.ProposalId)

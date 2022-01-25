@@ -14,6 +14,7 @@ const (
 	TypeMsgCreateValidator = "create_validator"
 	TypeMsgDelegate        = "delegate"
 	TypeMsgBeginRedelegate = "begin_redelegate"
+	TypeMsgCancelUndelegate = "cancel_unbonding"
 )
 
 var (
@@ -24,6 +25,7 @@ var (
 	_ sdk.Msg                            = &MsgDelegate{}
 	_ sdk.Msg                            = &MsgUndelegate{}
 	_ sdk.Msg                            = &MsgBeginRedelegate{}
+	_ sdk.Msg							 = &MsgCancelUndelegate{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -331,6 +333,53 @@ func (msg MsgUndelegate) ValidateBasic() error {
 		return sdkerrors.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"invalid shares amount",
+		)
+	}
+
+	return nil
+}
+
+// NewMsgUndelegate creates a new MsgUndelegate instance.
+//nolint:interfacer
+func NewMsgCancelUndelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) *MsgCancelUndelegate {
+	return &MsgCancelUndelegate{
+		DelegatorAddress: delAddr.String(),
+		ValidatorAddress: valAddr.String(),
+		Amount:           amount,
+	}
+}
+
+// Route implements the sdk.Msg interface.
+func (msg MsgCancelUndelegate) Route() string { return RouterKey }
+
+// Type implements the sdk.Msg interface.
+func (msg MsgCancelUndelegate) Type() string { return TypeMsgCancelUndelegate }
+
+// GetSigners implements the sdk.Msg interface.
+func (msg MsgCancelUndelegate) GetSigners() []sdk.AccAddress {
+	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	return []sdk.AccAddress{delegator}
+}
+
+// GetSignBytes implements the sdk.Msg interface.
+func (msg MsgCancelUndelegate) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgCancelUndelegate) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
+	}
+	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
+	}
+
+	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
+		return sdkerrors.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"invalid delegation amount",
 		)
 	}
 

@@ -814,6 +814,57 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 	return balances, nil
 }
 
+// CancelUnbonding cancels the unbonding of entry in the
+// retrieved unbonding delegation object and // sets the bonding balance back too returns the total unbonding balance
+// or an error upon failure.
+// func (k Keeper) CancelUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error) {
+// 	ubd, found := k.GetUnbondingDelegation(ctx, delAddr, valAddr)
+// 	if !found {
+// 		return nil, types.ErrNoUnbondingDelegation
+// 	}
+
+// 	bondDenom := k.GetParams(ctx).BondDenom
+// 	balances := sdk.NewCoins()
+// 	ctxTime := ctx.BlockHeader().Time
+
+// 	delegatorAddress, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	// loop through all the entries and complete unbonding mature entries
+// 	for i := 0; i < len(ubd.Entries); i++ {
+// 		entry := ubd.Entries[i]
+// 		if entry.IsMature(ctxTime) {
+// 			ubd.RemoveEntry(int64(i))
+// 			i--
+
+// 			// track undelegation only when remaining or truncated shares are non-zero
+// 			if !entry.Balance.IsZero() {
+// 				amt := sdk.NewCoin(bondDenom, entry.Balance)
+// 				if err := k.bankKeeper.UndelegateCoinsFromModuleToAccount(
+// 					ctx, types.NotBondedPoolName, delegatorAddress, sdk.NewCoins(amt),
+// 				); err != nil {
+// 					return nil, err
+// 				}
+
+// 				balances = balances.Add(amt)
+// 			}
+// 		}
+// 	}
+
+// 	// set the unbonding delegation or remove it if there are no more entries
+// 	if len(ubd.Entries) == 0 {
+// 		k.RemoveUnbondingDelegation(ctx, ubd)
+// 	} else {
+// 		k.SetUnbondingDelegation(ctx, ubd)
+// 	}
+
+// 	return balances, nil
+// }
+
+
+
 // begin unbonding / redelegation; create a redelegation record
 func (k Keeper) BeginRedelegation(
 	ctx sdk.Context, delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, sharesAmount sdk.Dec,

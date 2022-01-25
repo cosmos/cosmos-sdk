@@ -206,7 +206,11 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	}
 	k.voteTable = *voteTable
 
-	k.maxMetadataLength = maxMetadataLength
+	if maxMetadataLength != 0 {
+		k.maxMetadataLength = maxMetadataLength
+	} else {
+		k.maxMetadataLength = defaultMaxMetadataLength
+	}
 
 	return k
 

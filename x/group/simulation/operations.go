@@ -206,6 +206,54 @@ func WeightedOperations(
 	}
 }
 
+// SimulateMsgCreateGroup generates a MsgCreateGroup with random values
+func SimulateMsgCreateGroup(ak group.AccountKeeper, bk group.BankKeeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		acc, _ := simtypes.RandomAcc(r, accounts)
+		account := ak.GetAccount(ctx, acc.Address)
+		accAddr := acc.Address.String()
+
+		spendableCoins := bk.SpendableCoins(ctx, account.GetAddress())
+		fees, err := simtypes.RandomFees(r, ctx, spendableCoins)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroup, "fee error"), nil, err
+		}
+
+		members := []group.Member{
+			{
+				Address:  accAddr,
+				Weight:   fmt.Sprintf("%d", GroupMemberWeight),
+				Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
+			},
+		}
+
+		msg := &group.MsgCreateGroup{Admin: accAddr, Members: members, Metadata: []byte(simtypes.RandStringOfLength(r, 10))}
+
+		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		tx, err := helpers.GenTx(
+			txGen,
+			[]sdk.Msg{msg},
+			fees,
+			helpers.DefaultGenTxGas,
+			chainID,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			acc.PrivKey,
+		)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroup, "unable to generate mock tx"), nil, err
+		}
+
+		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+	}
+}
+
 // SimulateMsgCreateGroupWithPolicy generates a MsgCreateGroupWithPolicy with random values
 func SimulateMsgCreateGroupWithPolicy(ak group.AccountKeeper, bk group.BankKeeper) simtypes.Operation {
 	return func(
@@ -257,55 +305,7 @@ func SimulateMsgCreateGroupWithPolicy(ak group.AccountKeeper, bk group.BankKeepe
 			acc.PrivKey,
 		)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroup, "unable to generate mock tx"), nil, err
-		}
-
-		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
-		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
-		}
-
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
-	}
-}
-
-// SimulateMsgCreateGroup generates a MsgCreateGroup with random values
-func SimulateMsgCreateGroup(ak group.AccountKeeper, bk group.BankKeeper) simtypes.Operation {
-	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		acc, _ := simtypes.RandomAcc(r, accounts)
-		account := ak.GetAccount(ctx, acc.Address)
-		accAddr := acc.Address.String()
-
-		spendableCoins := bk.SpendableCoins(ctx, account.GetAddress())
-		fees, err := simtypes.RandomFees(r, ctx, spendableCoins)
-		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroup, "fee error"), nil, err
-		}
-
-		members := []group.Member{
-			{
-				Address:  accAddr,
-				Weight:   fmt.Sprintf("%d", GroupMemberWeight),
-				Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
-			},
-		}
-
-		msg := &group.MsgCreateGroup{Admin: accAddr, Members: members, Metadata: []byte(simtypes.RandStringOfLength(r, 10))}
-
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
-			txGen,
-			[]sdk.Msg{msg},
-			fees,
-			helpers.DefaultGenTxGas,
-			chainID,
-			[]uint64{account.GetAccountNumber()},
-			[]uint64{account.GetSequence()},
-			acc.PrivKey,
-		)
-		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroup, "unable to generate mock tx"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroupWithPolicy, "unable to generate mock tx"), nil, err
 		}
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)

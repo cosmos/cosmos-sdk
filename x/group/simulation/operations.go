@@ -238,7 +238,7 @@ func SimulateMsgCreateGroupWithPolicy(ak group.AccountKeeper, bk group.BankKeepe
 			Members:             members,
 			GroupMetadata:       []byte(simtypes.RandStringOfLength(r, 10)),
 			GroupPolicyMetadata: []byte(simtypes.RandStringOfLength(r, 10)),
-			GroupPolicyAsAdmin:  randGroupPolicyAsAdmin(r),
+			GroupPolicyAsAdmin:  simtypes.RandBool(r),
 		}
 		msg.SetDecisionPolicy(decisionPolicy)
 		if err != nil {
@@ -1061,10 +1061,6 @@ func randIntInRange(r *rand.Rand, l int) int {
 	} else {
 		return simtypes.RandIntBetween(r, 0, l-1)
 	}
-}
-
-func randGroupPolicyAsAdmin(r *rand.Rand) bool {
-	return simtypes.RandBool(r)
 }
 
 func findAccount(accounts []simtypes.Account, addr string) (idx int) {

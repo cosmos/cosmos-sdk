@@ -1399,11 +1399,16 @@ func (s *TestSuite) TestWithdrawProposal() {
 			expErrMsg: "unauthorized",
 		},
 		"wrong proposalId": {
-			proposalId: 1111,
-			admin:      proposers[0],
-			expErrMsg:  "not found",
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				return 1111
+			},
+			admin:     proposers[0],
+			expErrMsg: "not found",
 		},
 		"happy case with proposer": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+			},
 			proposalId: proposalID,
 			admin:      proposers[0],
 		},
@@ -1432,10 +1437,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 	for msg, spec := range specs {
 		spec := spec
 		s.Run(msg, func() {
-			pId := spec.proposalId
-			if spec.preRun != nil {
-				pId = spec.preRun(s.sdkCtx)
-			}
+			pId := spec.preRun(s.sdkCtx)
 
 			_, err := s.keeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
 				ProposalId: pId,

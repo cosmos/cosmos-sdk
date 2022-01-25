@@ -119,6 +119,7 @@ var errPanicWithMsg = Wrapf(ErrPanic, "panic message redacted to hide potentiall
 // simply returned.
 func Redact(err error) error {
 	if ErrPanic.Is(err) {
+		fmt.Println("err>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", err.Error())
 		return errPanicWithMsg
 	}
 	if abciCode(err) == internalABCICode {

@@ -49,6 +49,9 @@ message Proposal {
   repeated cosmos.base.v1beta1.Coin total_deposit     = 7 [(gogoproto.nullable) = false];
   google.protobuf.Timestamp         voting_start_time = 8 [(gogoproto.stdtime) = true];
   google.protobuf.Timestamp         voting_end_time   = 9 [(gogoproto.stdtime) = true];
+
+  // metadata is any arbitrary metadata attached to the proposal.
+  bytes metadata = 10;
 }
 
 // ProposalStatus enumerates the valid statuses of a proposal.

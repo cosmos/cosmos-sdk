@@ -764,7 +764,7 @@ func TestMsgWithdrawProposal(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), group.TypeMsgWithdrawProposal)
+				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgWithdrawProposal{}))
 			}
 		})
 	}

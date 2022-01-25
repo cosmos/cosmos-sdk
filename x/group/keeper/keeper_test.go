@@ -1392,9 +1392,11 @@ func (s *TestSuite) TestWithdrawProposal() {
 		expErrMsg  string
 	}{
 		"wrong admin": {
-			proposalId: proposalID,
-			admin:      addr5.String(),
-			expErrMsg:  "unauthorized",
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+			},
+			admin:     addr5.String(),
+			expErrMsg: "unauthorized",
 		},
 		"wrong proposalId": {
 			proposalId: 1111,

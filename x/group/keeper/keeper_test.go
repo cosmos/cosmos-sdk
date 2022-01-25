@@ -1386,13 +1386,10 @@ func (s *TestSuite) TestWithdrawProposal() {
 	proposalID := createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 
 	specs := map[string]struct {
-		req        *group.MsgWithdrawProposal
 		preRun     func(sdkCtx sdk.Context) uint64
 		proposalId uint64
 		admin      string
-		expErr     bool
 		expErrMsg  string
-		postRun    func(sdkCtx sdk.Context)
 	}{
 		"wrong admin": {
 			proposalId: proposalID,

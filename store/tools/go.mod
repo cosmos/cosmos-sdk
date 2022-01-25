@@ -1,4 +1,4 @@
-module github.com/confio/ics23-iavl
+module github.com/cosmos/cosmos-sdk/store/tools
 
 go 1.17
 

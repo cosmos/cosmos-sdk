@@ -1,6 +1,6 @@
 # Proofs SMT
 
-This project demonstrates the generation and validation of ICS-23 proofs for a sparse Merkle tree (SMT) as implemented by [LazyLedger](https://github.com/lazyledger/smt).
+This project demonstrates the generation and validation of ICS-23 proofs for a sparse Merkle tree (SMT) as implemented by [Celestia](https://github.com/celestiaorg/smt).
 
 ## Library usage
 

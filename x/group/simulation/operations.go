@@ -70,7 +70,7 @@ const (
 	WeightMsgUpdateGroupPolicyAdmin          = 5
 	WeightMsgUpdateGroupPolicyDecisionPolicy = 5
 	WeightMsgUpdateGroupPolicyMetadata       = 5
-	WeightMsgWithdrawProposal                = 90
+	WeightMsgWithdrawProposal                = 10
 )
 
 const GroupMemberWeight = 40

@@ -746,6 +746,12 @@ func SimulateMsgWithdrawProposal(ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "fee error"), nil, err
 		}
 
+		policy := groupPolicy.GetDecisionPolicy()
+		err = policy.Validate(*g)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, err.Error()), nil, nil
+		}
+
 		proposalReq, err := group.NewMsgCreateProposalRequest(groupPolicyAddr, []string{acc.Address.String()}, []sdk.Msg{
 			&banktypes.MsgSend{
 				FromAddress: groupPolicyAddr,

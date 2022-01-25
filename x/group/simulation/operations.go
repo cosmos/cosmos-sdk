@@ -50,6 +50,7 @@ const (
 	OpMsgUpdateGroupPolicyDecisionPolicy = "op_weight_msg_update_group_account_decision_policy"
 	OpMsgUpdateGroupPolicyMetaData       = "op_weight_msg_update_group_account_metadata"
 	OpMsgCreateProposal                  = "op_weight_msg_create_proposal"
+	OpMsgWithdrawProposal                = "op_weight_msg_withdraw_proposal"
 	OpMsgVote                            = "op_weight_msg_vote"
 	OpMsgExec                            = "ops_weight_msg_exec"
 )
@@ -60,7 +61,6 @@ const (
 	WeightMsgCreateGroup                     = 100
 	WeightMsgCreateGroupPolicy               = 100
 	WeightMsgCreateProposal                  = 90
-	WeightMsgWithdrawProposal                = 90
 	WeightMsgVote                            = 90
 	WeightMsgExec                            = 90
 	WeightMsgUpdateGroupMetadata             = 5
@@ -69,6 +69,7 @@ const (
 	WeightMsgUpdateGroupPolicyAdmin          = 5
 	WeightMsgUpdateGroupPolicyDecisionPolicy = 5
 	WeightMsgUpdateGroupPolicyMetadata       = 5
+	WeightMsgWithdrawProposal                = 5
 )
 
 const GroupMemberWeight = 40
@@ -89,6 +90,7 @@ func WeightedOperations(
 		weightMsgCreateProposal                  int
 		weightMsgVote                            int
 		weightMsgExec                            int
+		weightMsgWithdrawProposal                int
 	)
 
 	appParams.GetOrGenerate(cdc, OpMsgCreateGroup, &weightMsgCreateGroup, nil,
@@ -146,6 +148,11 @@ func WeightedOperations(
 			weightMsgUpdateGroupPolicyMetadata = WeightMsgUpdateGroupPolicyMetadata
 		},
 	)
+	appParams.GetOrGenerate(cdc, OpMsgWithdrawProposal, &weightMsgWithdrawProposal, nil,
+		func(_ *rand.Rand) {
+			weightMsgWithdrawProposal = WeightMsgWithdrawProposal
+		},
+	)
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
@@ -159,10 +166,6 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgCreateProposal,
 			SimulateMsgCreateProposal(ak, bk, k),
-		),
-		simulation.NewWeightedOperation(
-			WeightMsgWithdrawProposal,
-			SimulateMsgWithdrawProposal(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgVote,
@@ -195,6 +198,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgUpdateGroupPolicyMetadata,
 			SimulateMsgUpdateGroupPolicyMetadata(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			WeightMsgWithdrawProposal,
+			SimulateMsgWithdrawProposal(ak, bk, k),
 		),
 	}
 }

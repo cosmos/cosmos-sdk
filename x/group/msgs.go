@@ -602,7 +602,7 @@ func (m MsgCreateProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 var _ sdk.Msg = &MsgWithdrawProposal{}
 
 // Route Implements Msg.
-func (m MsgWithdrawProposal) Route() string { return RouterKey }
+func (m MsgWithdrawProposal) Route() string { return sdk.MsgTypeURL(&m) }
 
 // Type Implements Msg.
 func (m MsgWithdrawProposal) Type() string { return sdk.MsgTypeURL(&m) }

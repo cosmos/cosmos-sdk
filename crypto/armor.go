@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/cosmos/cosmos-sdk/crypto/xsalsa20symmetric"
 	"github.com/tendermint/crypto/bcrypt"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
 	"golang.org/x/crypto/openpgp/armor" // nolint: staticcheck
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"

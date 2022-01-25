@@ -1408,6 +1408,15 @@ func (s *TestSuite) TestWithdrawProposal() {
 			admin:      proposers[0],
 		},
 		"already closed proposal": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				pId := createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				_, err := s.keeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
+					ProposalId: pId,
+					Address:    proposers[0],
+				})
+				s.Require().NoError(err)
+				return pId
+			},
 			proposalId: proposalID,
 			admin:      proposers[0],
 			expErrMsg:  "cannot withdraw a proposal with the status of STATUS_WITHDRAWN",

@@ -570,7 +570,7 @@ Parameters:
 
 			msg := &group.MsgWithdrawProposal{
 				ProposalId: proposalID,
-				Address:    args[1],
+				Address:    clientCtx.GetFromAddress().String(),
 			}
 
 			if err != nil {

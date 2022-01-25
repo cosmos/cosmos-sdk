@@ -286,7 +286,7 @@ func SimulateMsgCreateGroupWithPolicy(ak group.AccountKeeper, bk group.BankKeepe
 			Members:             members,
 			GroupMetadata:       []byte(simtypes.RandStringOfLength(r, 10)),
 			GroupPolicyMetadata: []byte(simtypes.RandStringOfLength(r, 10)),
-			GroupPolicyAsAdmin:  simtypes.RandBool(r),
+			GroupPolicyAsAdmin:  r.Float32() < 0.5,
 		}
 		msg.SetDecisionPolicy(decisionPolicy)
 		if err != nil {

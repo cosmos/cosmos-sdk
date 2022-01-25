@@ -15,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
@@ -743,6 +744,23 @@ func SimulateMsgWithdrawProposal(ak group.AccountKeeper,
 		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "fee error"), nil, err
+		}
+
+		proposalReq, err := group.NewMsgCreateProposalRequest(groupPolicyAddr, []string{acc.Address.String()}, []sdk.Msg{
+			&banktypes.MsgSend{
+				FromAddress: groupPolicyAddr,
+				ToAddress:   accounts[1].Address.String(),
+				Amount:      sdk.Coins{sdk.NewInt64Coin("token", 100)},
+			},
+		}, []byte{}, 0)
+
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "fail to create proposal request"), nil, err
+		}
+		_, err = k.CreateProposal(ctx, proposalReq)
+
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "failed to create proposal"), nil, err
 		}
 
 		proposalsResult, err := k.ProposalsByGroupPolicy(ctx, &group.QueryProposalsByGroupPolicyRequest{Address: groupPolicyAddr})

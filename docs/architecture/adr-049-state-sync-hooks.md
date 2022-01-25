@@ -25,10 +25,10 @@ and `SnapshotExtensionPayload`, and they are appended to the existing multi-stor
 acting as a delimiter between extensions. As the chunk hashes should be able to ensure data integrity, we don't need a
 delimiter to mark the end of the snapshot stream.
 
-Besides, we provide `Snapshotter` and `NamedSnapshotter` interface for modules to implement snapshotters, which will handle both taking 
+Besides, we provide `Snapshotter` and `ExtensionSnapshotter` interface for modules to implement snapshotters, which will handle both taking 
 snapshot and the restoration. Each module could have mutiple snapshotters, and for modules with additional state, they should
-implement `NamedSnapshotter` as extension snapshotters. When setting up the application, the snapshot `Manager` should call 
-`RegisterExtensions([]NamedSnapshotter…)` to register all the extension snapshotters.
+implement `ExtensionSnapshotter` as extension snapshotters. When setting up the application, the snapshot `Manager` should call 
+`RegisterExtensions([]ExtensionSnapshotter…)` to register all the extension snapshotters.
 
 ```proto
 // SnapshotItem is an item contained in a rootmulti.Store snapshot.
@@ -82,13 +82,13 @@ SnapshotExtensionMeta
 {SnapshotExtensionPayload, ...}
 ```
 
-Add `extensions` field to snapshot `Manager` for extension snapshotters. Multistore snapshotter is a special one and it doesn't need a name because it is always placed at the beginning of the binary stream.
+Add `extensions` field to snapshot `Manager` for extension snapshotters. `multistore` snapshotter is a special one and it doesn't need a name because it is always placed at the beginning of the binary stream.
 
 ```go
 type Manager struct {
 	store      *Store
 	multistore types.Snapshotter
-	extensions map[string]types.NamedSnapshotter
+	extensions map[string]types.ExtensionSnapshotter
     mtx                sync.Mutex
 	operation          operation
 	chRestore          chan<- io.ReadCloser
@@ -98,46 +98,52 @@ type Manager struct {
 }
 ```
 
-For extension snapshotters that implement the `NamedSnapshotter` interface, their names should be registered to the snapshot `Manager` by 
+For extension snapshotters that implement the `ExtensionSnapshotter` interface, their names should be registered to the snapshot `Manager` by 
 calling `RegisterExtensions` when setting up the application. And the snapshotters will handle both taking snapshot and restoration.
 
 ```go
 // RegisterExtensions register extension snapshotters to manager
-func (m *Manager) RegisterExtensions(extensions ...types.NamedSnapshotter) error 
+func (m *Manager) RegisterExtensions(extensions ...types.ExtensionSnapshotter) error 
 ```
 
-As with `Snapshotter` interface for `multistore` snapshotter, two more function signatures: `SnapshotFormat()` and `SupportedFormats()` are added.
+Remain `Snapshotter` interface for `multistore` snapshotter. No need for `SnapshotFormat` and `SupportedFormats` as for `multistore` snapshotter
+formats are handled in a higher level.
 <ul>
 <li> removal of format parameter: `Snapshotter` chooses a format autonomously, not pass in from the caller. </li>
-<li> `Snapshotter` announces the format it uses to snapshot with method `SnapshotFormat()`. </li>
 <ul>
 
 ```go
+// Snapshotter is something that can create and restore snapshots, consisting of streamed binary
+// chunks - all of which must be read from the channel and closed. If an unsupported format is
+// given, it must return ErrUnknownFormat (possibly wrapped with fmt.Errorf).
 type Snapshotter interface {
 	// Snapshot writes snapshot items into the protobuf writer.
-	Snapshot(height uint64, protoWriter protoio.WriteCloser) error
+	Snapshot(height uint64, protoWriter protoio.Writer) error
 
 	// Restore restores a state snapshot from the protobuf items read from the reader.
 	// If the ready channel is non-nil, it returns a ready signal (by being closed) once the
 	// restorer is ready to accept chunks.
-	Restore(height uint64, format uint32, protoReader protoio.ReadCloser) (SnapshotItem, error)
+	Restore(height uint64, format uint32, protoReader protoio.Reader) (SnapshotItem, error)
+}
+```
+
+Add `ExtensionSnapshotter` interface for extension snapshotters, and three more function signatures: `SnapshotFormat()` `SupportedFormats()` and
+`SnapshotName()` are added.
+
+```go
+// ExtensionSnapshotter is an extension Snapshotter that is appended to the snapshot stream.
+// ExtensionSnapshotter has an unique name and manages it's own internal formats.
+type ExtensionSnapshotter interface {
+	Snapshotter
+
+	// SnapshotName returns the name of snapshotter, it should be unique in the manager.
+	SnapshotName() string
 
 	// SnapshotFormat returns the default format used to take a snapshot.
 	SnapshotFormat() uint32
 
 	// SupportedFormats returns a list of formats it can restore from.
 	SupportedFormats() []uint32
-}
-```
-
-Add `NamedSnapshotter` interface for extension snapshotters.
-
-```go
-type NamedSnapshotter interface {
-	Snapshotter
-
-	// SnapshotterName returns the name of snapshotter, it should be unique in the manager.
-	SnapshotterName() string
 }
 ```
 
@@ -148,7 +154,7 @@ As a result of this implementation, we are able to create snapshots of binary ch
 
 ### Backwards Compatibility
 
-This ADR introduces new proto message types, add field for extension snapshotters to snapshot `Manager`, add new function signatures `SnapshotFormat()`, `SupportedFormats()` to `Snapshotter` interface and add new `NamedSnapshotter` interface, so this is not backwards compatible.
+This ADR introduces new proto message types, add field for extension snapshotters to snapshot `Manager`, add new function signatures `SnapshotFormat()`, `SupportedFormats()` to `Snapshotter` interface and add new `ExtensionSnapshotter` interface, so this is not backwards compatible.
 
 ### Positive
 
@@ -160,7 +166,7 @@ State maintained outside of IAVL tree like CosmWasm blobs can create snapshots b
 
 ### Neutral
 
-All modules that maintain state outside of IAVL tree need to implement `NamedSnapshotter` and the snapshot `Manager` need to call `RegisterExtensions` when setting up the application.
+All modules that maintain state outside of IAVL tree need to implement `ExtensionSnapshotter` and the snapshot `Manager` need to call `RegisterExtensions` when setting up the application.
 
 ## Further Discussions
 

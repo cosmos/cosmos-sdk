@@ -1056,7 +1056,7 @@ func genGroupMembers(r *rand.Rand, accounts []simtypes.Account) []group.Member {
 		return []group.Member{
 			{
 				Address:  accounts[0].Address.String(),
-				Weight:   fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
+				Weight:   fmt.Sprintf("%d", GroupMemberWeight),
 				Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
 			},
 		}
@@ -1073,7 +1073,7 @@ func genGroupMembers(r *rand.Rand, accounts []simtypes.Account) []group.Member {
 	for i := 0; i < membersLen; i++ {
 		members[i] = group.Member{
 			Address:  accounts[i].Address.String(),
-			Weight:   fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
+			Weight:   fmt.Sprintf("%d", GroupMemberWeight),
 			Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
 		}
 	}

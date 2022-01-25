@@ -220,14 +220,7 @@ func SimulateMsgCreateGroup(ak group.AccountKeeper, bk group.BankKeeper) simtype
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroup, "fee error"), nil, err
 		}
 
-		members := []group.Member{
-			{
-				Address:  accAddr,
-				Weight:   fmt.Sprintf("%d", GroupMemberWeight),
-				Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
-			},
-		}
-
+		members := genGroupMembers(r, accounts)
 		msg := &group.MsgCreateGroup{Admin: accAddr, Members: members, Metadata: []byte(simtypes.RandStringOfLength(r, 10))}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -268,16 +261,9 @@ func SimulateMsgCreateGroupWithPolicy(ak group.AccountKeeper, bk group.BankKeepe
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroup, "fee error"), nil, err
 		}
 
-		members := []group.Member{
-			{
-				Address:  accAddr,
-				Weight:   fmt.Sprintf("%d", GroupMemberWeight),
-				Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
-			},
-		}
-
+		members := genGroupMembers(r, accounts)
 		decisionPolicy := &group.ThresholdDecisionPolicy{
-			Threshold: "20",
+			Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 20)),
 			Timeout:   time.Second * time.Duration(30*24*60*60),
 		}
 
@@ -341,7 +327,7 @@ func SimulateMsgCreateGroupPolicy(ak group.AccountKeeper, bk group.BankKeeper, k
 			groupID,
 			[]byte(simtypes.RandStringOfLength(r, 10)),
 			&group.ThresholdDecisionPolicy{
-				Threshold: "20",
+				Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 20)),
 				Timeout:   time.Second * time.Duration(30*24*60*60),
 			},
 		)
@@ -571,16 +557,7 @@ func SimulateMsgUpdateGroupMembers(ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupMembers, "fee error"), nil, err
 		}
 
-		member, _ := simtypes.RandomAcc(r, accounts)
-
-		members := []group.Member{
-			{
-				Address:  member.Address.String(),
-				Weight:   fmt.Sprintf("%d", GroupMemberWeight),
-				Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
-			},
-		}
-
+		members := genGroupMembers(r, accounts)
 		msg := group.MsgUpdateGroupMembers{
 			GroupId:       groupID,
 			Admin:         acc.Address.String(),
@@ -1072,4 +1049,34 @@ func findAccount(accounts []simtypes.Account, addr string) (idx int) {
 		}
 	}
 	return idx
+}
+
+func genGroupMembers(r *rand.Rand, accounts []simtypes.Account) []group.Member {
+	if len(accounts) == 1 {
+		return []group.Member{
+			{
+				Address:  accounts[0].Address.String(),
+				Weight:   fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
+				Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
+			},
+		}
+	}
+
+	max := 5
+	if len(accounts) < max {
+		max = len(accounts)
+	}
+
+	membersLen := simtypes.RandIntBetween(r, 1, max)
+	members := make([]group.Member, membersLen)
+
+	for i := 0; i < membersLen; i++ {
+		members[i] = group.Member{
+			Address:  accounts[i].Address.String(),
+			Weight:   fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
+			Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
+		}
+	}
+
+	return members
 }

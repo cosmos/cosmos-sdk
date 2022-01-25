@@ -220,7 +220,7 @@ func (suite *SimTestSuite) TestWithdrawProposal() {
 	// setup 1 account
 	s := rand.NewSource(1)
 	r := rand.New(s)
-	accounts := suite.getTestingAccounts(r, 1)
+	accounts := suite.getTestingAccounts(r, 3)
 	acc := accounts[0]
 
 	// setup a group

@@ -214,14 +214,17 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 		})
 	}
 
-	expired := &feegrant.BasicAllowance{
+	basicAllowance := &feegrant.BasicAllowance{
 		SpendLimit: eth,
 		Expiration: &blockTime,
 	}
-	// creating expired feegrant
-	ctx := suite.sdkCtx.WithBlockTime(oneYear)
-	err := suite.keeper.GrantAllowance(ctx, suite.addrs[0], suite.addrs[2], expired)
+
+	// create basic fee allowance
+	err := suite.keeper.GrantAllowance(suite.sdkCtx, suite.addrs[0], suite.addrs[2], basicAllowance)
 	suite.Require().NoError(err)
+
+	// waiting for future blocks, allowance to be pruned.
+	ctx := suite.sdkCtx.WithBlockTime(oneYear)
 
 	// expect error: feegrant expired
 	err = suite.keeper.UseGrantedFees(ctx, suite.addrs[0], suite.addrs[2], eth, []sdk.Msg{})
@@ -232,7 +235,6 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	_, err = suite.keeper.GetAllowance(ctx, suite.addrs[0], suite.addrs[2])
 	suite.Error(err)
 	suite.Contains(err.Error(), "fee-grant not found")
-
 }
 
 func (suite *KeeperTestSuite) TestIterateGrants() {

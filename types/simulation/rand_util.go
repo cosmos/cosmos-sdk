@@ -103,6 +103,11 @@ func RandIntBetween(r *rand.Rand, min, max int) int {
 	return r.Intn(max-min) + min
 }
 
+// RandBool returns a random boolean value.
+func RandBool(r *rand.Rand) bool {
+	return r.Float32() < 0.5
+}
+
 // returns random subset of the provided coins
 // will return at least one coin unless coins argument is empty or malformed
 // i.e. 0 amt in coins

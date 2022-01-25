@@ -36,7 +36,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1beta2.MsgSubmitP
 		return nil, err
 	}
 
-	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs)
+	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata)
 	if err != nil {
 		return nil, err
 	}
@@ -230,6 +230,7 @@ func (k legacyMsgServer) SubmitProposal(goCtx context.Context, msg *v1beta1.MsgS
 		[]sdk.Msg{contentMsg},
 		msg.InitialDeposit,
 		msg.Proposer,
+		nil,
 	)
 	if err != nil {
 		return nil, err

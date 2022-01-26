@@ -694,6 +694,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	return res, nil
 }
 
+// LeaveGroup implements the MsgServer/LeaveGroup method.
 func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*group.MsgLeaveGroupResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	_, err := sdk.AccAddressFromBech32(req.MemberAddress)
@@ -707,7 +708,7 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 	}
 
 	// Checking if the group member is already part of the group
-	groupMember, err := k.getGroupMember(ctx, &group.GroupMember{
+	gm, err := k.getGroupMember(ctx, &group.GroupMember{
 		GroupId: req.GroupId,
 		Member:  &group.Member{Address: req.MemberAddress},
 	})
@@ -715,31 +716,9 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 		return nil, err
 	}
 
-	groupIter, err := k.getGroupMembers(ctx, req.GroupId, nil)
+	memberWeight, err := math.NewNonNegativeDecFromString(gm.Member.Weight)
 	if err != nil {
 		return nil, err
-	}
-	defer groupIter.Close()
-
-	var m group.GroupMember
-	memberWeight := math.NewDecFromInt64(0)
-	for {
-		if _, err := groupIter.LoadNext(&m); err != nil {
-			if errors.ErrORMIteratorDone.Is(err) {
-				return nil, sdkerrors.ErrInvalidRequest.Wrapf("%s is not part of group %d", req.MemberAddress, req.GroupId)
-			}
-
-			return nil, err
-		}
-
-		if m.Member.Address == groupMember.Member.Address {
-			memberWeight, err = math.NewNonNegativeDecFromString(m.Member.Weight)
-			if err != nil {
-				return nil, err
-			}
-
-			break
-		}
 	}
 
 	groupPolicy, err := k.getGroupPolicyInfo(ctx, req.PolicyAddress)
@@ -751,19 +730,19 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 	if err != nil {
 		return nil, err
 	}
-
-	r, err := math.SubNonNegative(groupWeight, memberWeight)
-	if err != nil {
-		return nil, err
-	}
-
+	
 	policy := groupPolicy.GetDecisionPolicy()
 	tdp, ok := policy.(*group.ThresholdDecisionPolicy)
 	if !ok {
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("expected %T, got %T", (*group.ThresholdDecisionPolicy)(nil), policy)
 	}
-
+	
 	threshold, err := math.NewNonNegativeDecFromString(tdp.Threshold)
+	if err != nil {
+		return nil, err
+	}
+	
+	r, err := math.SubNonNegative(groupWeight, memberWeight)
 	if err != nil {
 		return nil, err
 	}
@@ -773,7 +752,7 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 	}
 
 	// Delete group member in the groupMemberTable.
-	if err := k.groupMemberTable.Delete(ctx.KVStore(k.key), groupMember); err != nil {
+	if err := k.groupMemberTable.Delete(ctx.KVStore(k.key), gm); err != nil {
 		return nil, sdkerrors.Wrap(err, "group member")
 	}
 

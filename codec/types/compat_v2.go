@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/jsonpb"
 	gogoproto "github.com/gogo/protobuf/proto"
 	gogotypes "github.com/gogo/protobuf/types"
@@ -14,6 +15,9 @@ import (
 )
 
 func (any *Any) MarshalJSONPB(m *jsonpb.Marshaler) ([]byte, error) {
+	if m.AnyResolver == nil {
+		return nil, sdkerrors.ErrJSONMarshal.Wrapf("cannot unmarshal Any without an Any resolver")
+	}
 	msg, err := m.AnyResolver.Resolve(any.TypeUrl)
 	if err != nil {
 		return nil, err
@@ -103,7 +107,7 @@ func (any *Any) UnmarshalJSONPB(u *jsonpb.Unmarshaler, bz []byte) error {
 	}
 }
 
-func typeUrlFromBytes(bz []byte) (typeUrl string, jsonbz []byte, err error) {
+func typeUrlFromBytes(bz []byte) (typeURL string, jsonBz []byte, err error) {
 	// we need to extract the typeURL from the bytes in order to correctly decide
 	// if this is a gogo message or a proto v2 message
 	var objmap map[string]json.RawMessage
@@ -118,9 +122,11 @@ func typeUrlFromBytes(bz []byte) (typeUrl string, jsonbz []byte, err error) {
 	}
 
 	delete(objmap, "@type")
-	jsonbz, err = json.Marshal(objmap)
+	jsonBz, err = json.Marshal(objmap)
+	if err != nil {
+		return "", nil, err
+	}
 
-	var typeURL string
 	err = json.Unmarshal(raw, &typeURL)
-	return typeURL, jsonbz, err
+	return typeURL, jsonBz, err
 }

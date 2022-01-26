@@ -1215,6 +1215,7 @@ func TestSimulateTx(t *testing.T) {
 		bapp.SetTxHandler(txHandler)
 	}
 	app := setupBaseApp(t, txHandlerOpt)
+	app.SetInterfaceRegistry(encCfg.InterfaceRegistry) // test msg needs to be added here.
 
 	app.InitChain(abci.RequestInitChain{})
 

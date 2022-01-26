@@ -26,6 +26,7 @@ const (
 	FlagDescription = "description"
 	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagProposalType = "type"
+	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagDeposit      = "deposit"
 	flagVoter        = "voter"
 	flagDepositor    = "depositor"
@@ -91,6 +92,7 @@ $ %s tx gov submit-proposal path/to/proposal.json
 Where proposal.json contains:
 
 {
+  // array of proto-JSON-encoded sdk.Msgs
   "messages": [
     {
       "@type": "/cosmos.bank.v1beta1.MsgSend",
@@ -126,7 +128,6 @@ Where proposal.json contains:
 		},
 	}
 
-	cmd.Flags().String(FlagDeposit, "", "The proposal deposit")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

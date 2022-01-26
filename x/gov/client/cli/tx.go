@@ -92,6 +92,7 @@ $ %s tx gov submit-proposal path/to/proposal.json
 Where proposal.json contains:
 
 {
+  // array of proto-JSON-encoded sdk.Msgs
   "messages": [
     {
       "@type": "/cosmos.bank.v1beta1.MsgSend",

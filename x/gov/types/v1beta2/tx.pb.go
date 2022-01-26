@@ -37,7 +37,7 @@ type MsgSubmitProposal struct {
 	Messages       []*types.Any  `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
 	InitialDeposit []types1.Coin `protobuf:"bytes,2,rep,name=initial_deposit,json=initialDeposit,proto3" json:"initial_deposit"`
 	Proposer       string        `protobuf:"bytes,3,opt,name=proposer,proto3" json:"proposer,omitempty"`
-	// metadata is any arbitrary metadata to attached to the proposal.
+	// metadata is any arbitrary metadata attached to the proposal.
 	Metadata []byte `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
 

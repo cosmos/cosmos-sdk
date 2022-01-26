@@ -41,6 +41,10 @@ type View interface {
 
 	// Indexes returns all the concrete indexes for the table.
 	Indexes() []Index
+
+	GetIndexByID(id uint32) Index
+
+	PrimaryKey() UniqueIndex
 }
 
 // Table is an abstract interface around a concrete table. Table instances

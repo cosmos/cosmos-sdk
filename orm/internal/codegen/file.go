@@ -53,6 +53,7 @@ func (f fileGen) genStoreAccessor() {
 func (f fileGen) genStoreInterface() {
 	f.P("type ", f.storeInterfaceName(), " interface {")
 	for _, message := range f.file.Messages {
+		// TODO skip messages without table or singleton
 		tableDesc := proto.GetExtension(message.Desc.Options(), v1alpha1.E_Table).(*v1alpha1.TableDescriptor)
 		if tableDesc == nil {
 			continue

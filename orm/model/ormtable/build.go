@@ -96,6 +96,7 @@ func Build(options Options) (Table, error) {
 		indexesByFields:       map[fieldnames.FieldNames]concreteIndex{},
 		uniqueIndexesByFields: map[fieldnames.FieldNames]UniqueIndex{},
 		entryCodecsById:       map[uint32]ormkv.EntryCodec{},
+		indexesById:           map[uint32]Index{},
 		typeResolver:          options.TypeResolver,
 		customJSONValidator:   options.JSONValidator,
 	}
@@ -178,6 +179,7 @@ func Build(options Options) (Table, error) {
 	table.indexesByFields[pkFields] = pkIndex
 	table.uniqueIndexesByFields[pkFields] = pkIndex
 	table.entryCodecsById[primaryKeyId] = pkIndex
+	table.indexesById[primaryKeyId] = pkIndex
 	table.indexes = append(table.indexes, pkIndex)
 
 	for _, idxDesc := range tableDesc.Index {
@@ -274,6 +276,7 @@ func Build(options Options) (Table, error) {
 		}
 
 		table.entryCodecsById[id] = index
+		table.indexesById[id] = index
 		table.indexes = append(table.indexes, index)
 		table.indexers = append(table.indexers, index.(indexer))
 	}

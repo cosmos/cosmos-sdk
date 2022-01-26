@@ -24,11 +24,20 @@ type tableImpl struct {
 	indexes               []Index
 	indexesByFields       map[fieldnames.FieldNames]concreteIndex
 	uniqueIndexesByFields map[fieldnames.FieldNames]UniqueIndex
+	indexesById           map[uint32]Index
 	entryCodecsById       map[uint32]ormkv.EntryCodec
 	tablePrefix           []byte
 	tableId               uint32
 	typeResolver          TypeResolver
 	customJSONValidator   func(message proto.Message) error
+}
+
+func (t tableImpl) PrimaryKey() UniqueIndex {
+	return t.primaryKeyIndex
+}
+
+func (t tableImpl) GetIndexByID(id uint32) Index {
+	return t.indexesById[id]
 }
 
 func (t tableImpl) Save(ctx context.Context, message proto.Message) error {

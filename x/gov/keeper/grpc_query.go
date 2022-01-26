@@ -308,19 +308,91 @@ func (q legacyQueryServer) Proposal(c context.Context, req *v1beta1.QueryProposa
 }
 
 func (q legacyQueryServer) Proposals(c context.Context, req *v1beta1.QueryProposalsRequest) (*v1beta1.QueryProposalsResponse, error) {
-	return nil, nil
+	resp, err := q.keeper.Proposals(c, &v1beta2.QueryProposalsRequest{
+		ProposalStatus: v1beta2.ProposalStatus(req.ProposalStatus),
+		Voter: req.Voter,
+		Depositor: req.Depositor,
+		Pagination: req.Pagination,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	legacyProposals := make([]v1beta1.Proposal, len(resp.Proposals))
+	for idx, proposal := range resp.Proposals {
+		legacyProposals[idx], err = v046.ConvertToLegacyProposal(*proposal)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &v1beta1.QueryProposalsResponse{
+		Proposals: legacyProposals, 
+		Pagination: resp.Pagination,
+	}, nil
 }
 
 func (q legacyQueryServer) Vote(c context.Context, req *v1beta1.QueryVoteRequest) (*v1beta1.QueryVoteResponse, error) {
-	return nil, nil
+	resp, err := q.keeper.Vote(c, &v1beta2.QueryVoteRequest{
+		ProposalId: req.ProposalId,
+		Voter: req.Voter,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	vote := v046.ConvertToLegacyVote(*resp.Vote)
+
+	return &v1beta1.QueryVoteResponse{Vote: vote}, nil
 }
 
 func (q legacyQueryServer) Votes(c context.Context, req *v1beta1.QueryVotesRequest) (*v1beta1.QueryVotesResponse, error) {
-	return nil, nil
+	resp, err := q.keeper.Votes(c, &v1beta2.QueryVotesRequest{
+		ProposalId: req.ProposalId,
+		Pagination: req.Pagination,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	votes := make([]v1beta1.Vote, len(resp.Votes))
+	for i, v := range resp.Votes {
+		votes[i] = v046.ConvertToLegacyVote(*v)
+	}
+
+	return &v1beta1.QueryVotesResponse{
+		Votes: votes,
+		Pagination: resp.Pagination,
+	}, nil
 }
 
 func (q legacyQueryServer) Params(c context.Context, req *v1beta1.QueryParamsRequest) (*v1beta1.QueryParamsResponse, error) {
-	return nil, nil
+	resp, err := q.keeper.Params(c, &v1beta2.QueryParamsRequest{
+		ParamsType: req.ParamsType,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	minDeposit := sdk.NewCoins(resp.DepositParams.MinDeposit...)
+	quorum, err := sdk.NewDecFromStr(resp.TallyParams.Quorum)
+	if err != nil {
+		return nil, err
+	}
+	threshold, err := sdk.NewDecFromStr(resp.TallyParams.Threshold)
+	if err != nil {
+		return nil, err
+	}
+	vetoThreshold, err := sdk.NewDecFromStr(resp.TallyParams.VetoThreshold)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1beta1.QueryParamsResponse{
+		VotingParams: v1beta1.NewVotingParams(*resp.VotingParams.VotingPeriod),
+		DepositParams: v1beta1.NewDepositParams(minDeposit, *resp.DepositParams.MaxDepositPeriod),
+		TallyParams: v1beta1.NewTallyParams(quorum, threshold, vetoThreshold),
+	}, nil
 }
 
 func (q legacyQueryServer) Deposit(c context.Context, req *v1beta1.QueryDepositRequest) (*v1beta1.QueryDepositResponse, error) {

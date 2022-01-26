@@ -60,3 +60,26 @@ func ConvertToLegacyTallyResult(tally *v1beta2.TallyResult) v1beta1.TallyResult 
 		Abstain: abstain,
 	}
 }
+
+func ConvertToLegacyVote(vote v1beta2.Vote) v1beta1.Vote {
+	return v1beta1.Vote{
+		ProposalId: vote.ProposalId,
+		Voter: vote.Voter,
+		Options: ConvertToLegacyVoteOptions(vote.Options),
+	}
+}
+
+func ConvertToLegacyVoteOptions(voteOptions []*v1beta2.WeightedVoteOption) []v1beta1.WeightedVoteOption {
+	options := make([]v1beta1.WeightedVoteOption, len(voteOptions))
+	for i, option := range voteOptions {
+		weight, err := types.NewDecFromStr(option.Weight)
+		if err != nil {
+			panic(err)
+		}
+		options[i] = v1beta1.WeightedVoteOption{
+			Option: v1beta1.VoteOption(option.Option),
+			Weight: weight,
+		}
+	}
+	return options
+}

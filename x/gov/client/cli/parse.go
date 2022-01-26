@@ -54,30 +54,28 @@ func parseSubmitLegacyProposalFlags(fs *pflag.FlagSet) (*legacyProposal, error) 
 
 type proposal struct {
 	// Msgs defines an array of sdk.Msgs proto-JSON-encoded as Anys.
-	Msgs     []json.RawMessage
+	Messages []json.RawMessage
 	Metadata []byte
 	Deposit  string
 }
 
-func parseSubmitProposal(cdc codec.Codec, path string, fs *pflag.FlagSet) ([]sdk.Msg, []byte, sdk.Coins, error) {
-	proposal := &proposal{}
-
-	proposal.Deposit, _ = fs.GetString(FlagDeposit)
+func parseSubmitProposal(cdc codec.Codec, path string) ([]sdk.Msg, []byte, sdk.Coins, error) {
+	var proposal proposal
 
 	contents, err := os.ReadFile(path)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	err = json.Unmarshal(contents, proposal)
+	err = json.Unmarshal(contents, &proposal)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	msgs := make([]sdk.Msg, len(proposal.Msgs))
-	for i, any := range proposal.Msgs {
+	msgs := make([]sdk.Msg, len(proposal.Messages))
+	for i, anyJSON := range proposal.Messages {
 		var msg sdk.Msg
-		err := cdc.UnmarshalInterfaceJSON(any, &msg)
+		err := cdc.UnmarshalInterfaceJSON(anyJSON, &msg)
 		if err != nil {
 			return nil, nil, nil, err
 		}

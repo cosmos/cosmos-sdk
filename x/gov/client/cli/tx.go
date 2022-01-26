@@ -58,8 +58,6 @@ func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	// TODO Add CLI for new submit proposal
-	// https://github.com/cosmos/cosmos-sdk/issues/10952
 	cmdSubmitLegacyProp := NewCmdSubmitLegacyProposal()
 	for _, propCmd := range propCmds {
 		flags.AddTxFlagsToCmd(propCmd)
@@ -85,21 +83,24 @@ func NewCmdSubmitProposal() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Submit a proposal along with some messages and metadata.
-Messages and metadata are defined in a JSON file.
+Messages, metadata and deposit are defined in a JSON file.
 
 Example:
-$ %s tx gov submit-proposal path/to/proposal.json --deposit="10test"
+$ %s tx gov submit-proposal path/to/proposal.json
 
 Where proposal.json contains:
 
 {
   "messages": [
-	  {
-		  "@type": "/cosmos.bank.v1beta1.MsgSend",
-		  // -- snip --
-	  }
+    {
+      "@type": "/cosmos.bank.v1beta1.MsgSend",
+      "from_address": "cosmos1...",
+      "to_address": "cosmos1...",
+      "amount":[{"denom": "stake","amount": "10"}]
+    }
   ],
-  "metadata: "4pIMOgIGx1vZGU=" // base64-encoded metadata
+  "metadata: "4pIMOgIGx1vZGU=", // base64-encoded metadata
+  "deposit": "10stake"
 }
 `,
 				version.AppName,
@@ -111,7 +112,7 @@ Where proposal.json contains:
 				return err
 			}
 
-			msgs, metadata, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0], cmd.Flags())
+			msgs, metadata, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0])
 			if err != nil {
 				return err
 			}

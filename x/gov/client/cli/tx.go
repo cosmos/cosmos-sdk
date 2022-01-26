@@ -128,7 +128,6 @@ Where proposal.json contains:
 		},
 	}
 
-	cmd.Flags().String(FlagDeposit, "", "The proposal deposit")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

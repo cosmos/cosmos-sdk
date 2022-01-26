@@ -11,6 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
 )
 
 var _ v1beta2.QueryServer = Keeper{}
@@ -278,3 +280,58 @@ func (q Keeper) TallyResult(c context.Context, req *v1beta2.QueryTallyResultRequ
 
 	return &v1beta2.QueryTallyResultResponse{Tally: &tallyResult}, nil
 }
+
+var _ v1beta1.QueryServer = legacyQueryServer{}
+
+type legacyQueryServer struct {
+	keeper Keeper
+}
+
+func NewLegacyQueryServer(k Keeper) v1beta1.QueryServer {
+	return &legacyQueryServer{keeper: k}
+}
+
+func (q legacyQueryServer) Proposal(c context.Context, req *v1beta1.QueryProposalRequest) (*v1beta1.QueryProposalResponse, error) {
+	resp, err := q.keeper.Proposal(c, &v1beta2.QueryProposalRequest{
+		ProposalId: req.ProposalId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	proposal, err := v046.ConvertToLegacyProposal(*resp.Proposal)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1beta1.QueryProposalResponse{Proposal: proposal}, nil
+}
+
+func (q legacyQueryServer) Proposals(c context.Context, req *v1beta1.QueryProposalsRequest) (*v1beta1.QueryProposalsResponse, error) {
+	return nil, nil
+}
+
+func (q legacyQueryServer) Vote(c context.Context, req *v1beta1.QueryVoteRequest) (*v1beta1.QueryVoteResponse, error) {
+	return nil, nil
+}
+
+func (q legacyQueryServer) Votes(c context.Context, req *v1beta1.QueryVotesRequest) (*v1beta1.QueryVotesResponse, error) {
+	return nil, nil
+}
+
+func (q legacyQueryServer) Params(c context.Context, req *v1beta1.QueryParamsRequest) (*v1beta1.QueryParamsResponse, error) {
+	return nil, nil
+}
+
+func (q legacyQueryServer) Deposit(c context.Context, req *v1beta1.QueryDepositRequest) (*v1beta1.QueryDepositResponse, error) {
+	return nil, nil
+}
+
+func (q legacyQueryServer) Deposits(c context.Context, req *v1beta1.QueryDepositsRequest) (*v1beta1.QueryDepositsResponse, error) {
+	return nil, nil
+}
+
+func (q legacyQueryServer) TallyResult(c context.Context, req *v1beta1.QueryTallyResultRequest) (*v1beta1.QueryTallyResultResponse, error) {
+	return nil, nil
+}
+

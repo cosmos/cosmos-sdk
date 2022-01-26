@@ -92,11 +92,15 @@ func (f fileGen) fileShortName() string {
 	if i > 0 {
 		return shortName[:i]
 	}
-	return shortName
+	return strcase.ToCamel(shortName)
 }
 
 func (f fileGen) messageStoreInterfaceName(m *protogen.Message) string {
 	return m.GoIdent.GoName + "Store"
+}
+
+func (f fileGen) messageReaderInterfaceName(m *protogen.Message) string {
+	return m.GoIdent.GoName + "Reader"
 }
 
 func (f fileGen) messageTableVar(m *protogen.Message) string {

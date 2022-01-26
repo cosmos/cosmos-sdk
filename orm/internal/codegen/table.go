@@ -47,27 +47,19 @@ func newTableGen(fileGen fileGen, msg *protogen.Message, table *ormv1alpha1.Tabl
 
 func (t tableGen) gen() {
 	t.genStoreInterface()
+	t.genReaderInterface()
 	t.genIterator()
 	t.genIndexKeys()
 }
 
 func (t tableGen) genStoreInterface() {
 	t.P("type ", t.messageStoreInterfaceName(t.msg), " interface {")
-	t.P(t.hasSig())
-	t.P(t.getSig())
+	t.P(t.messageReaderInterfaceName(t.msg))
+	t.P()
 	t.P("Create", t.msg.GoIdent, "(", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
 	t.P("Update", t.msg.GoIdent, "(", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
 	t.P("Save", t.msg.GoIdent, "(", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
 	t.P("Delete", t.msg.GoIdent, "(", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
-	t.P(t.listSig())
-	t.P("}")
-	t.P()
-}
-
-func (t tableGen) genIterator() {
-	t.P("type ", t.iteratorName(), " interface {")
-	t.P("Next() bool")
-	t.P("Value() (*", t.QualifiedGoIdent(t.msg.GoIdent), ", error)")
 	t.P("}")
 	t.P()
 }

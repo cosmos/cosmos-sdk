@@ -27,6 +27,7 @@ var TestBankSchema = ormdb.ModuleSchema{
 }
 
 type keeper struct {
+	bankStoreAcc             testpb.BankStoreAccessor
 	balanceTable             ormtable.Table
 	balanceAddressDenomIndex ormtable.UniqueIndex
 	balanceDenomIndex        ormtable.Index
@@ -113,13 +114,13 @@ func (k keeper) addBalance(ctx context.Context, acct, denom string, amount uint6
 }
 
 func (k keeper) safeSubBalance(ctx context.Context, acct, denom string, amount uint64) error {
-	balance := &testpb.Balance{Address: acct, Denom: denom}
-	found, err := k.balanceTable.Get(ctx, balance)
+	store := k.bankStoreAcc.Open(ctx)
+	balance, err := store.GetBalance(acct, denom)
 	if err != nil {
 		return err
 	}
 
-	if !found {
+	if balance == nil {
 		return fmt.Errorf("acct %x has no balance for %s", acct, denom)
 	}
 
@@ -130,9 +131,32 @@ func (k keeper) safeSubBalance(ctx context.Context, acct, denom string, amount u
 	balance.Amount = balance.Amount - amount
 
 	if balance.Amount == 0 {
-		return k.balanceTable.Delete(ctx, balance)
+		return store.DeleteBalance(balance)
 	} else {
-		return k.balanceTable.Save(ctx, balance)
+		return store.SaveBalance(balance)
+	}
+}
+
+func (k keeper) safeSubBalance2(ctx context.Context, acct, denom string, amount uint64) error {
+	balance, err := k.store.Balances().Get(ctx, acct, denom)
+	if err != nil {
+		return err
+	}
+
+	if balance == nil {
+		return fmt.Errorf("acct %x has no balance for %s", acct, denom)
+	}
+
+	if amount > balance.Amount {
+		return fmt.Errorf("insufficient funds")
+	}
+
+	balance.Amount = balance.Amount - amount
+
+	if balance.Amount == 0 {
+		return k.store.Balances().Delete(ctx, balance)
+	} else {
+		return k.store.Balances().Save(ctx, balance)
 	}
 }
 

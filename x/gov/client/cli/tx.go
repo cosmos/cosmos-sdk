@@ -111,12 +111,12 @@ Where proposal.json contains:
 				return err
 			}
 
-			msgs, _, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0], cmd.Flags())
+			msgs, metadata, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0], cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			msg, err := v1beta2.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String())
+			msg, err := v1beta2.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), metadata)
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}

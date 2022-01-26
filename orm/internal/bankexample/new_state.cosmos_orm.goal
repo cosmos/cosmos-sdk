@@ -47,7 +47,7 @@ func (b BalanceAddressDenomIndexKey) balanceIndexKey()      {}
 
 var _ BalanceIndexKey = BalanceAddressDenomIndexKey{}
 
-func (b BalanceAddressDenomIndexKey) WithAddress(address string) BalanceAddressDenomIndexKey {
+func (b BalanceAddressDenomIndexKey) Address(address string) BalanceAddressDenomIndexKey {
 	b.vs = []interface{}{address}
 	return b
 }

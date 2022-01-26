@@ -11,6 +11,7 @@ import (
 const (
 	contextPkg          = protogen.GoImportPath("context")
 	protoreflectPackage = protogen.GoImportPath("google.golang.org/protobuf/reflect/protoreflect")
+	ormListPkg          = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/model/ormlist")
 )
 
 func PluginRunner(p *protogen.Plugin) error {
@@ -19,7 +20,7 @@ func PluginRunner(p *protogen.Plugin) error {
 			continue
 		}
 
-		gen := p.NewGeneratedFile(fmt.Sprintf("%s.cosmsos_orm.go", f.GeneratedFilenamePrefix), f.GoImportPath)
+		gen := p.NewGeneratedFile(fmt.Sprintf("%s.cosmos_orm.go", f.GeneratedFilenamePrefix), f.GoImportPath)
 		cgen := &generator.GeneratedFile{
 			GeneratedFile: gen,
 			Ext:           nil,

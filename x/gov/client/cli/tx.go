@@ -136,9 +136,8 @@ Where proposal.json contains:
 // Deprecated: please use NewCmdSubmitProposal instead.
 func NewCmdSubmitLegacyProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:        "submit-legacy-proposal",
-		Deprecated: "This command is deprecated, prefer to use `submit-proposal` instead",
-		Short:      "Submit a legacy proposal along with an initial deposit",
+		Use:   "submit-legacy-proposal",
+		Short: "Submit a legacy proposal along with an initial deposit",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Submit a legacy proposal along with an initial deposit.
 Proposal title, description, type and deposit can be given directly or through a proposal JSON file.

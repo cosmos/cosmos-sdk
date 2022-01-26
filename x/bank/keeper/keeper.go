@@ -21,7 +21,7 @@ var _ Keeper = (*BaseKeeper)(nil)
 // between accounts.
 type Keeper interface {
 	SendKeeper
-	WithMintCoinsRestriction(BankMintingRestrictionFn) BaseKeeper
+	WithMintCoinsRestriction(MintingRestrictionFn) BaseKeeper
 
 	InitGenesis(sdk.Context, *types.GenesisState)
 	ExportGenesis(sdk.Context) *types.GenesisState
@@ -57,10 +57,10 @@ type BaseKeeper struct {
 	cdc                    codec.BinaryCodec
 	storeKey               storetypes.StoreKey
 	paramSpace             paramtypes.Subspace
-	mintCoinsRestrictionFn BankMintingRestrictionFn
+	mintCoinsRestrictionFn MintingRestrictionFn
 }
 
-type BankMintingRestrictionFn func(ctx sdk.Context, coins sdk.Coins) error
+type MintingRestrictionFn func(ctx sdk.Context, coins sdk.Coins) error
 
 // GetPaginatedTotalSupply queries for the supply, ignoring 0 coins, with a given pagination
 func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error) {
@@ -117,11 +117,13 @@ func NewBaseKeeper(
 }
 
 // WithMintCoinsRestriction restricts the bank Keeper used within a specific module to
-// have restricted permissions on minting speicified denoms.
-func (k BaseKeeper) WithMintCoinsRestriction(NewRestrictionFn BankMintingRestrictionFn) BaseKeeper {
+// have restricted permissions on minting via function passed in parameter.
+// Previous restriction functions can be nested as such:
+//  bankKeeper.WithMintCoinsRestriction(restriction1).WithMintCoinsRestriction(restriction2)
+func (k BaseKeeper) WithMintCoinsRestriction(check MintingRestrictionFn) BaseKeeper {
 	oldRestrictionFn := k.mintCoinsRestrictionFn
 	k.mintCoinsRestrictionFn = func(ctx sdk.Context, coins sdk.Coins) error {
-		err := NewRestrictionFn(ctx, coins)
+		err := check(ctx, coins)
 		if err != nil {
 			return err
 		}
@@ -405,7 +407,7 @@ func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amounts sdk.Coins) error {
 	err := k.mintCoinsRestrictionFn(ctx, amounts)
 	if err != nil {
-		ctx.Logger().Error(fmt.Sprintf("Module %s attempted minting coins %s it did not have permission for with error %v", moduleName, amounts, err))
+		ctx.Logger().Error(fmt.Sprintf("Module %q attempted to mint coins %s it doesn't have permission for, error %v", moduleName, amounts, err))
 		return err
 	}
 	acc := k.ak.GetModuleAccount(ctx, moduleName)

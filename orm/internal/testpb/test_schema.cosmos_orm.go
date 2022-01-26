@@ -2,10 +2,8 @@ package testpb
 
 import (
 	context "context"
-
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-
 	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 )
 
 type TestSchemaStoreAccessor interface {

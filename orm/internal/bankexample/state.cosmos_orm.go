@@ -1,4 +1,4 @@
-package testpb
+package bankexample
 
 import (
 	context "context"
@@ -8,19 +8,15 @@ import (
 	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 )
 
-type BankStoreReadAccessor interface {
-	OpenRead(context.Context) BankReader
+type StateStoreAccessor interface {
+	Open(context.Context) StateStore
 }
 
-type BankStoreAccessor interface {
-	Open(context.Context) BankStore
-}
-
-func NewBankStoreAccessor() (BankStoreAccessor, error) {
+func NewStateStoreAccessor() (StateStoreAccessor, error) {
 	panic("TODO")
 }
 
-type BankStore interface {
+type StateStore interface {
 	BalanceStore
 	SupplyStore
 }
@@ -84,12 +80,7 @@ type SupplyIndexKey interface {
 type SupplyDenomIndexKey struct {
 }
 
-type bankStoreAcc struct {
-	balanceTable ormtable.Table
-	supplyTable  ormtable.Table
-}
-
-type bankStore struct {
+type stateStore struct {
 	balanceTable ormtable.Table
 	supplyTable  ormtable.Table
 }

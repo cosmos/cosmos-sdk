@@ -6,6 +6,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-alpha6
 	github.com/cosmos/cosmos-sdk/api v0.1.0-alpha3
 	github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.2
+	github.com/iancoleman/strcase v0.2.0
 	github.com/stretchr/testify v1.7.0
 	github.com/tendermint/tm-db v0.6.6
 	google.golang.org/protobuf v1.27.1

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package testpb;
+package bankexample;
 
 import "cosmos/orm/v1alpha1/orm.proto";
 

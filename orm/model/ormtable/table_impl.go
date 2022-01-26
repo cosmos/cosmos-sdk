@@ -8,6 +8,8 @@ import (
 	"io"
 	"math"
 
+	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
+
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
@@ -20,8 +22,8 @@ import (
 type tableImpl struct {
 	*primaryKeyIndex
 	indexes               []Index
-	indexesByFields       map[fieldNames]concreteIndex
-	uniqueIndexesByFields map[fieldNames]UniqueIndex
+	indexesByFields       map[fieldnames.FieldNames]concreteIndex
+	uniqueIndexesByFields map[fieldnames.FieldNames]UniqueIndex
 	entryCodecsById       map[uint32]ormkv.EntryCodec
 	tablePrefix           []byte
 	tableId               uint32
@@ -141,11 +143,11 @@ func (t tableImpl) Delete(context context.Context, message proto.Message) error 
 }
 
 func (t tableImpl) GetIndex(fields string) Index {
-	return t.indexesByFields[commaSeparatedFieldNames(fields)]
+	return t.indexesByFields[fieldnames.CommaSeparatedFieldNames(fields)]
 }
 
 func (t tableImpl) GetUniqueIndex(fields string) UniqueIndex {
-	return t.uniqueIndexesByFields[commaSeparatedFieldNames(fields)]
+	return t.uniqueIndexesByFields[fieldnames.CommaSeparatedFieldNames(fields)]
 }
 
 func (t tableImpl) Indexes() []Index {
@@ -349,7 +351,7 @@ func (t tableImpl) EncodeEntry(entry ormkv.Entry) (k, v []byte, err error) {
 	case *ormkv.PrimaryKeyEntry:
 		return t.PrimaryKeyCodec.EncodeEntry(entry)
 	case *ormkv.IndexKeyEntry:
-		idx, ok := t.indexesByFields[fieldsFromNames(entry.Fields)]
+		idx, ok := t.indexesByFields[fieldnames.FieldsFromNames(entry.Fields)]
 		if !ok {
 			return nil, nil, ormerrors.BadDecodeEntry.Wrapf("can't find index with fields %s", entry.Fields)
 		}

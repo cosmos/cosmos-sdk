@@ -4,9 +4,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/cosmos/cosmos-proto/generator"
 	"github.com/iancoleman/strcase"
-
 	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/proto"
+
+	v1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
 )
 
 var (
@@ -14,7 +17,7 @@ var (
 )
 
 type fileGen struct {
-	*protogen.GeneratedFile
+	*generator.GeneratedFile
 	file *protogen.File
 }
 
@@ -23,18 +26,12 @@ func (f fileGen) gen() error {
 	f.genStoreAccessor()
 	f.genStoreInterface()
 	for _, msg := range f.file.Messages {
-		//opts := proto.GetExtension(msg.Desc.Options(), v1alpha1.E_Table).(*v1alpha1.TableDescriptor)
-		//if opts == nil {
-		//	continue
-		//}
-		//err := genMsg(gen, opts, msg)
-		//if err != nil {
-		//	return fmt.Errorf("unable to generate message %s in file %s", msg.Desc.FullName(), f.Desc.Path())
-		//}
-		tableGen{
-			fileGen: f,
-			msg:     msg,
-		}.gen()
+		tableDesc := proto.GetExtension(msg.Desc.Options(), v1alpha1.E_Table).(*v1alpha1.TableDescriptor)
+		if tableDesc == nil {
+			continue
+		}
+
+		newTableGen(f, msg, tableDesc).gen()
 	}
 	f.genStoreStruct()
 	return nil
@@ -48,6 +45,7 @@ func (f fileGen) genStoreAccessor() {
 
 	// constructor
 	f.P("func New", f.storeAccessorName(), "() (", f.storeAccessorName(), ", error) {")
+	f.P(`panic("TODO")`)
 	f.P("}")
 	f.P()
 }
@@ -55,6 +53,10 @@ func (f fileGen) genStoreAccessor() {
 func (f fileGen) genStoreInterface() {
 	f.P("type ", f.storeInterfaceName(), " interface {")
 	for _, message := range f.file.Messages {
+		tableDesc := proto.GetExtension(message.Desc.Options(), v1alpha1.E_Table).(*v1alpha1.TableDescriptor)
+		if tableDesc == nil {
+			continue
+		}
 		f.P(f.messageStoreInterfaceName(message))
 	}
 	f.P("}")

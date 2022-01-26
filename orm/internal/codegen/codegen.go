@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"unicode"
 
+	"github.com/cosmos/cosmos-proto/generator"
+
 	"github.com/iancoleman/strcase"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -12,7 +14,8 @@ import (
 )
 
 const (
-	contextPkg = protogen.GoImportPath("context")
+	contextPkg          = protogen.GoImportPath("context")
+	protoreflectPackage = protogen.GoImportPath("google.golang.org/protobuf/reflect/protoreflect")
 )
 
 func PluginRunner(p *protogen.Plugin) error {
@@ -22,7 +25,12 @@ func PluginRunner(p *protogen.Plugin) error {
 		}
 
 		gen := p.NewGeneratedFile(fmt.Sprintf("%s.cosmsos_orm.go", f.GeneratedFilenamePrefix), f.GoImportPath)
-		f := fileGen{GeneratedFile: gen, file: f}
+		cgen := &generator.GeneratedFile{
+			GeneratedFile: gen,
+			Ext:           nil,
+			LocalPackages: map[string]bool{},
+		}
+		f := fileGen{GeneratedFile: cgen, file: f}
 		err := f.gen()
 		if err != nil {
 			return err

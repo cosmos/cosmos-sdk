@@ -23,19 +23,21 @@ const (
 )
 
 // NewProposal creates a new Proposal instance
-func NewProposal(messages []sdk.Msg, id uint64, submitTime, depositEndTime time.Time) (Proposal, error) {
+func NewProposal(messages []sdk.Msg, id uint64, metadata []byte, submitTime, depositEndTime time.Time) (Proposal, error) {
 
 	msgs, err := sdktx.SetMsgs(messages)
 	if err != nil {
 		return Proposal{}, err
 	}
 
+	tally := EmptyTallyResult()
+
 	p := Proposal{
 		ProposalId:       id,
 		Messages:         msgs,
+		Metadata:         metadata,
 		Status:           StatusDepositPeriod,
-		FinalTallyResult: EmptyTallyResult(),
-		TotalDeposit:     sdk.NewCoins(),
+		FinalTallyResult: &tally,
 		SubmitTime:       &submitTime,
 		DepositEndTime:   &depositEndTime,
 	}
@@ -54,7 +56,7 @@ func (p Proposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 }
 
 // Proposals is an array of proposal
-type Proposals []Proposal
+type Proposals []*Proposal
 
 var _ types.UnpackInterfacesMessage = Proposals{}
 

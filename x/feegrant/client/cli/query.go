@@ -25,7 +25,8 @@ func GetQueryCmd() *cobra.Command {
 
 	feegrantQueryCmd.AddCommand(
 		GetCmdQueryFeeGrant(),
-		GetCmdQueryFeeGrants(),
+		GetCmdQueryFeeGrantsByGrantee(),
+		GetCmdQueryFeeGrantsByGranter(),
 	)
 
 	return feegrantQueryCmd
@@ -80,8 +81,8 @@ $ %s query feegrant grant [granter] [grantee]
 	return cmd
 }
 
-// GetCmdQueryFeeGrants returns cmd to query for all grants for a grantee.
-func GetCmdQueryFeeGrants() *cobra.Command {
+// GetCmdQueryFeeGrantsByGrantee returns cmd to query for all grants for a grantee.
+func GetCmdQueryFeeGrantsByGrantee() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grants [grantee]",
 		Args:  cobra.ExactArgs(1),
@@ -111,6 +112,55 @@ $ %s query feegrant grants [grantee]
 				cmd.Context(),
 				&feegrant.QueryAllowancesRequest{
 					Grantee:    granteeAddr.String(),
+					Pagination: pageReq,
+				},
+			)
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "grants")
+
+	return cmd
+}
+
+// GetCmdQueryFeeGrantsByGranter returns cmd to query for all grants by a granter.
+func GetCmdQueryFeeGrantsByGranter() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "grants [granter]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query all grants by a granter",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Queries all the grants issued for a granter address.
+
+Example:
+$ %s query feegrant grants [granter]
+`, version.AppName),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			queryClient := feegrant.NewQueryClient(clientCtx)
+
+			granterAddr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.AllowancesByGranter(
+				cmd.Context(),
+				&feegrant.QueryAllowancesByGranterRequest{
+					Granter:    granterAddr.String(),
 					Pagination: pageReq,
 				},
 			)

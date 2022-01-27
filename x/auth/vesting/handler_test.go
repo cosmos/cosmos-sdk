@@ -140,6 +140,11 @@ func (suite *HandlerTestSuite) TestMsgCreatePeriodicVestingAccount() {
 			msg:       types.NewMsgCreatePeriodicVestingAccount(addr1, addr1, 0, period, false),
 			expectErr: true,
 		},
+		{
+			name:      "account exists - try merge",
+			msg:       types.NewMsgCreatePeriodicVestingAccount(addr1, addr3, 0, period, false),
+			expectErr: true,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -272,7 +277,7 @@ func (suite *HandlerTestSuite) TestMsgCreateClawbackVestingAccount() {
 		expectExtraBalance int64
 	}{
 		{
-			name:      "create periodic vesting account",
+			name:      "create clawback vesting account",
 			msg:       types.NewMsgCreateClawbackVestingAccount(addr1, addr2, 0, lockupPeriods, vestingPeriods, false),
 			expectErr: false,
 		},
@@ -324,10 +329,20 @@ func (suite *HandlerTestSuite) TestMsgCreateClawbackVestingAccount() {
 			expectErr: true,
 		},
 		{
+			name:      "account exists merge not clawback",
+			msg:       types.NewMsgCreateClawbackVestingAccount(addr1, addr1, 0, lockupPeriods, vestingPeriods, true),
+			expectErr: true,
+		},
+		{
 			name:               "account exists merge",
 			msg:                types.NewMsgCreateClawbackVestingAccount(addr1, addr2, 0, lockupPeriods, vestingPeriods, true),
 			expectErr:          false,
 			expectExtraBalance: 1000,
+		},
+		{
+			name:      "merge wrong funder",
+			msg:       types.NewMsgCreateClawbackVestingAccount(addr2, addr2, 0, lockupPeriods, vestingPeriods, true),
+			expectErr: true,
 		},
 	}
 

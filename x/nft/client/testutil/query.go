@@ -142,53 +142,6 @@ func (s *IntegrationTestSuite) TestQueryNFTs() {
 		name string
 		args struct {
 			ClassID string
-		}
-		expectErr    bool
-		expectResult []*nft.NFT
-	}{
-		{
-			name: "class id does not exist",
-			args: struct {
-				ClassID string
-			}{
-				ClassID: "class",
-			},
-			expectErr:    false,
-			expectResult: []*nft.NFT{},
-		},
-		{
-			name: "class id exist",
-			args: struct {
-				ClassID string
-			}{
-				ClassID: testClassID,
-			},
-			expectErr:    false,
-			expectResult: []*nft.NFT{&ExpNFT},
-		},
-	}
-	for _, tc := range testCases {
-		s.Run(tc.name, func() {
-			resp, err := ExecQueryNFTs(val, tc.args.ClassID)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				var result nft.QueryNFTsOfClassResponse
-				err = val.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &result)
-				s.Require().NoError(err)
-				s.Require().EqualValues(tc.expectResult, result.Nfts)
-			}
-		})
-	}
-}
-
-func (s *IntegrationTestSuite) TestQueryNFTsByOwner() {
-	val := s.network.Validators[0]
-	testCases := []struct {
-		name string
-		args struct {
-			ClassID string
 			Owner   string
 		}
 		expectErr    bool
@@ -219,6 +172,15 @@ func (s *IntegrationTestSuite) TestQueryNFTsByOwner() {
 			expectResult: []*nft.NFT{},
 		},
 		{
+			name: "class id and owner both does not exist",
+			args: struct {
+				ClassID string
+				Owner   string
+			}{},
+			expectErr:    true,
+			expectResult: []*nft.NFT{},
+		},
+		{
 			name: "nft exist",
 			args: struct {
 				ClassID string
@@ -233,12 +195,12 @@ func (s *IntegrationTestSuite) TestQueryNFTsByOwner() {
 	}
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			resp, err := ExecQueryNFTsByOwner(val, tc.args.ClassID, tc.args.Owner)
+			resp, err := ExecQueryNFTs(val, tc.args.ClassID, tc.args.Owner)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				var result nft.QueryNFTsOfClassResponse
+				var result nft.QueryNFTsResponse
 				err = val.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &result)
 				s.Require().NoError(err)
 				s.Require().EqualValues(tc.expectResult, result.Nfts)

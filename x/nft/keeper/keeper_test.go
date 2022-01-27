@@ -169,7 +169,7 @@ func (s *TestSuite) TestMint() {
 
 	// test GetNFTsOfClassByOwner
 	actNFTs = s.app.NFTKeeper.GetNFTsOfClassByOwner(s.ctx, testClassID, s.addrs[0])
-	s.Require().EqualValues([]nft.NFT{expNFT,expNFT2}, actNFTs)
+	s.Require().EqualValues([]nft.NFT{expNFT, expNFT2}, actNFTs)
 
 	// test GetBalance
 	balance = s.app.NFTKeeper.GetBalance(s.ctx, testClassID, s.addrs[0])

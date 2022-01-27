@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -17,7 +18,6 @@ import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	xp "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -243,7 +243,10 @@ func (k Keeper) GetLastCompletedUpgrade(ctx sdk.Context) (string, int64) {
 
 // parseDoneKey - split upgrade name from the done key
 func parseDoneKey(key []byte) string {
-	kv.AssertKeyAtLeastLength(key, 2)
+	if len(key) < 2 {
+		panic(fmt.Sprintf("expected key of length at least %d, got %d", 2, len(key)))
+	}
+
 	return string(key[1:])
 }
 
@@ -420,7 +423,6 @@ func (k Keeper) ReadUpgradeInfoFromDisk() (store.UpgradeInfo, error) {
 	return upgradeInfo, nil
 }
 
-<<<<<<< HEAD
 // upgradeInfo is stripped types.Plan structure used to dump upgrade plan data.
 type upgradeInfo struct {
 	// Name has types.Plan.Name value
@@ -429,7 +431,8 @@ type upgradeInfo struct {
 	Height int64 `json:"height,omitempty"`
 	// Height has types.Plan.Height value
 	Info string `json:"info,omitempty"`
-=======
+}
+
 // SetDowngradeVerified updates downgradeVerified.
 func (k *Keeper) SetDowngradeVerified(v bool) {
 	k.downgradeVerified = v
@@ -438,5 +441,4 @@ func (k *Keeper) SetDowngradeVerified(v bool) {
 // DowngradeVerified returns downgradeVerified.
 func (k Keeper) DowngradeVerified() bool {
 	return k.downgradeVerified
->>>>>>> 562211586 (feat!: add protection against accidental downgrades (#10407))
 }

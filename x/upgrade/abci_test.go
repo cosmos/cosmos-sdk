@@ -415,7 +415,7 @@ func TestDumpUpgradeInfoToFile(t *testing.T) {
 // TODO: add testcase to for `no upgrade handler is present for last applied upgrade`.
 func TestBinaryVersion(t *testing.T) {
 	var skipHeight int64 = 15
-	s := setupTest(t, 10, map[int64]bool{skipHeight: true})
+	s := setupTest(10, map[int64]bool{skipHeight: true})
 
 	testCases := []struct {
 		name        string

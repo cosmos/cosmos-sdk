@@ -295,6 +295,13 @@ func TestTransferDelegation(t *testing.T) {
 	// stake some tokens
 	bond1to1 := types.NewDelegation(addrDels[0], valAddrs[0], sdk.NewDec(99))
 	app.StakingKeeper.SetDelegation(ctx, bond1to1)
+	// stake to an unrelated validator so implementation has to skip it
+	bond1to3 := types.NewDelegation(addrDels[0], valAddrs[2], sdk.NewDec(9))
+	app.StakingKeeper.SetDelegation(ctx, bond1to3)
+
+	// transfer nothing
+	transferred = app.StakingKeeper.TransferDelegation(ctx, addrDels[0], addrDels[1], valAddrs[0], sdk.ZeroDec())
+	require.Equal(t, sdk.ZeroDec(), transferred)
 
 	// partial transfer, empty recipient
 	transferred = app.StakingKeeper.TransferDelegation(ctx, addrDels[0], addrDels[1], valAddrs[0], sdk.NewDec(10))
@@ -439,6 +446,10 @@ func TestTransferUnbonding(t *testing.T) {
 		sdk.NewInt(5),
 	)
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
+
+	// transfer nothing
+	transferred = app.StakingKeeper.TransferUnbonding(ctx, delAddrs[0], delAddrs[1], valAddrs[0], sdk.ZeroInt())
+	require.Equal(t, sdk.ZeroInt(), transferred)
 
 	// partial transfer
 	transferred = app.StakingKeeper.TransferUnbonding(ctx, delAddrs[0], delAddrs[1], valAddrs[0], sdk.NewInt(3))

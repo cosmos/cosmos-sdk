@@ -234,10 +234,6 @@ func (r TxResponse) GetTx() Tx {
 // a Result object or error. This method takes care of marshaling the res param to
 // protobuf and attaching any events on the ctx.EventManager() to the Result.
 func WrapServiceResult(ctx Context, res proto.Message, err error) (*Result, error) {
-	if err != nil {
-		return nil, err
-	}
-
 	any, err := codectypes.NewAnyWithValue(res)
 	if err != nil {
 		return nil, err

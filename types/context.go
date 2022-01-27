@@ -259,7 +259,6 @@ func (c Context) TransientStore(key stypes.StoreKey) stypes.KVStore {
 // EventManager. The cached context is written to the context when writeCache
 // is called.
 func (c Context) CacheContext() (cc Context, writeCache func()) {
-	// TODO replace with constructor?
 	cs := c.MultiStore().CacheWrap()
 	cc = c.WithMultiStore(cs).WithEventManager(NewEventManager())
 	return cc, cs.Write

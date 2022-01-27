@@ -325,7 +325,7 @@ func TestLoadVersion(t *testing.T) {
 	commitID2 := stypes.CommitID{Version: 2, Hash: res.Data}
 	app.CloseStore()
 
-	// reload with LoadLatestVersion
+	// reload with latest version
 	app = baseapp.NewBaseApp(name, logger, db, pruningOpt)
 	app.SetStoreConstructor(baseapp.DefaultStoreConstructor)
 	err = app.Init()

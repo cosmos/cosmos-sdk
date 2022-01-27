@@ -643,7 +643,7 @@ func (rs *Store) GetVersion(version int64) (types.BasicMultiStore, error) {
 	return rs.getView(version)
 }
 
-// CacheMultiStore implements BasicMultiStore.
+// CacheWrap implements BasicMultiStore.
 func (rs *Store) CacheWrap() types.CacheMultiStore {
 	return newCacheStore(rs)
 }

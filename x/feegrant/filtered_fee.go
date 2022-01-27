@@ -1,6 +1,8 @@
 package feegrant
 
 import (
+	"time"
+
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -119,4 +121,12 @@ func (a *AllowedMsgAllowance) ValidateBasic() error {
 	}
 
 	return allowance.ValidateBasic()
+}
+
+func (a *AllowedMsgAllowance) ExpiresAt() (*time.Time, error) {
+	allowance, err := a.GetAllowance()
+	if err != nil {
+		return nil, err
+	}
+	return allowance.ExpiresAt()
 }

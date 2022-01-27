@@ -1,6 +1,8 @@
 package feegrant
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -22,4 +24,7 @@ type FeeAllowanceI interface {
 	// ValidateBasic should evaluate this FeeAllowance for internal consistency.
 	// Don't allow negative amounts, or negative periods for example.
 	ValidateBasic() error
+
+	// ExpiresAt returns the expiry time of the allowance.
+	ExpiresAt() (*time.Time, error)
 }

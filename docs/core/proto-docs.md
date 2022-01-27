@@ -8198,7 +8198,6 @@ of unvested tokens, or a combination (tokens vest, but are still locked).
 | `base_vesting_account` | [BaseVestingAccount](#cosmos.vesting.v1beta1.BaseVestingAccount) |  |  |
 | `funder_address` | [string](#string) |  | funder_address specifies the account which can perform clawback. |
 | `start_time` | [int64](#int64) |  |  |
-| `combined_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated | schedule of coins being vested and unlocked, relative to the BaseVestingAccount start_time. This determines when tokens are available for transfer. |
 | `lockup_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated | unlocking schedule relative to the BaseVestingAccount start_time. |
 | `vesting_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated | vesting (i.e. immunity from clawback) schedule relative to the BaseVestingAccount start_time. |
 

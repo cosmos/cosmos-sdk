@@ -111,11 +111,8 @@ message ClawbackVestingAccount {
   // funder_address specifies the account which can perform clawback.
   string funder_address = 2 [(gogoproto.moretags) = "yaml:\"funder_address\""];
   int64 start_time = 3 [(gogoproto.moretags) = "yaml:\"start_time\""];
-  // schedule of coins being vested and unlocked, relative to the BaseVestingAccount start_time.
-  // This determines when tokens are available for transfer.
-  repeated Period combined_periods = 4 [(gogoproto.moretags) = "yaml:\"combined_periods\"", (gogoproto.nullable) = false];
   // unlocking schedule relative to the BaseVestingAccount start_time.
-  repeated Period lockup_periods = 5 [(gogoproto.moretags) = "yaml:\"lockup_periods\"", (gogoproto.nullable) = false];
+  repeated Period lockup_periods = 4 [(gogoproto.moretags) = "yaml:\"lockup_periods\"", (gogoproto.nullable) = false];
   // vesting (i.e. immunity from clawback) schedule relative to the BaseVestingAccount start_time.
-  repeated Period vesting_periods = 6 [(gogoproto.moretags) = "yaml:\"vesting_periods\"", (gogoproto.nullable) = false];
+  repeated Period vesting_periods = 5 [(gogoproto.moretags) = "yaml:\"vesting_periods\"", (gogoproto.nullable) = false];
 }

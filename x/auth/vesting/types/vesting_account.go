@@ -539,31 +539,21 @@ func NewClawbackVestingAccount(baseAcc *authtypes.BaseAccount, funder sdk.AccAdd
 		EndTime:         endTime,
 	}
 
-	return (&ClawbackVestingAccount{
+	return &ClawbackVestingAccount{
 		BaseVestingAccount: baseVestingAcc,
 		FunderAddress:      funder.String(),
 		StartTime:          startTime,
 		LockupPeriods:      lp,
 		VestingPeriods:     vp,
-	}).UpdateCombined()
-}
-
-func (va *ClawbackVestingAccount) UpdateCombined() *ClawbackVestingAccount {
-	start, end, combined := ConjunctPeriods(va.StartTime, va.StartTime, va.LockupPeriods, va.VestingPeriods)
-	va.StartTime = start
-	va.EndTime = end
-	va.CombinedPeriods = combined
-	return va
+	}
 }
 
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
 // nil is returned.
 func (va ClawbackVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins {
-	// XXX consider not precomputing the combined schedule and just take the
-	// min of the lockup and vesting separately. It's likely that one or the
-	// other schedule will be nearly trivial, so there should be little overhead
-	// in recomputing the conjunction each time.
-	coins := ReadSchedule(va.StartTime, va.EndTime, va.CombinedPeriods, va.OriginalVesting, blockTime.Unix())
+	// It's likely that one or the other schedule will be nearly trivial,
+	// so there should be little overhead in recomputing the conjunction each time.
+	coins := coinsMin(va.GetUnlockedOnly(blockTime), va.GetVestedOnly(blockTime))
 	if coins.IsZero() {
 		return nil
 	}
@@ -668,6 +658,18 @@ func (va ClawbackVestingAccount) MarshalYAML() (interface{}, error) {
 	return marshalYaml(out)
 }
 
+// GetUnlockedOnly returns the unlocking schedule at blockTIme.
+// Like GetVestedCoins, but only for the lockup component.
+func (va ClawbackVestingAccount) GetUnlockedOnly(blockTime time.Time) sdk.Coins {
+	return ReadSchedule(va.StartTime, va.EndTime, va.LockupPeriods, va.OriginalVesting, blockTime.Unix())
+}
+
+// GetVestedOnly returns the vesting schedule and blockTime.
+// Like GetVestedCoins, but only for the vesting (in the clawback sense) component.
+func (va ClawbackVestingAccount) GetVestedOnly(blockTime time.Time) sdk.Coins {
+	return ReadSchedule(va.StartTime, va.EndTime, va.VestingPeriods, va.OriginalVesting, blockTime.Unix())
+}
+
 // ComputeClawback returns an account with all future vesting events removed,
 // plus the total sum of these events. When removing the future vesting events,
 // the lockup schedule will also have to be capped to keep the total sums the same.
@@ -702,15 +704,12 @@ func (va ClawbackVestingAccount) ComputeClawback(clawbackTime int64) (ClawbackVe
 	}
 	_, _, newLockupPeriods := ConjunctPeriods(va.StartTime, va.StartTime, va.LockupPeriods, capPeriods)
 
-	_, _, newCombinedPeriods := ConjunctPeriods(va.StartTime, va.StartTime, newLockupPeriods, newVestingPeriods)
-
 	// Now construct the new account state
 	va.OriginalVesting = totalVested
 	va.EndTime = t
 	va.LockupPeriods = newLockupPeriods
 	va.VestingPeriods = newVestingPeriods
-	va.CombinedPeriods = newCombinedPeriods
-	// DelegatedVesting will be adjusted elsewhere
+	// DelegatedVesting and DelegatedFree will be adjusted elsewhere
 
 	return va, totalUnvested
 }

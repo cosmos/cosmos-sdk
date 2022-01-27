@@ -76,7 +76,7 @@ func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
 	return govTxCmd
 }
 
-// NewCmdSubmitLegacyProposal implements submitting a proposal transaction command.
+// NewCmdSubmitProposal implements submitting a proposal transaction command.
 func NewCmdSubmitProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "submit-proposal",

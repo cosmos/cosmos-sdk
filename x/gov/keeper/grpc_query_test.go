@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
@@ -75,6 +76,81 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 				expJSON, err := suite.app.AppCodec().MarshalJSON(&expProposal)
 				suite.Require().NoError(err)
 				actualJSON, err := suite.app.AppCodec().MarshalJSON(proposalRes.Proposal)
+				suite.Require().NoError(err)
+				suite.Require().Equal(expJSON, actualJSON)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(proposalRes)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
+	app, ctx, queryClient := suite.app, suite.ctx, suite.legacyQueryClient
+
+	var (
+		req         *v1beta1.QueryProposalRequest
+		expProposal v1beta1.Proposal
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = &v1beta1.QueryProposalRequest{}
+			},
+			false,
+		},
+		{
+			"non existing proposal request",
+			func() {
+				req = &v1beta1.QueryProposalRequest{ProposalId: 3}
+			},
+			false,
+		},
+		{
+			"zero proposal id request",
+			func() {
+				req = &v1beta1.QueryProposalRequest{ProposalId: 0}
+			},
+			false,
+		},
+		{
+			"valid request",
+			func() {
+				req = &v1beta1.QueryProposalRequest{ProposalId: 1}
+				testProposal := v1beta1.NewTextProposal("Proposal", "testing proposal")
+				msgContent, err := v1beta2.NewLegacyContent(testProposal, govAcct.String())
+				suite.Require().NoError(err)
+				submittedProposal, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, nil)
+				suite.Require().NoError(err)
+				suite.Require().NotEmpty(submittedProposal)
+
+				expProposal, err = v046.ConvertToLegacyProposal(submittedProposal)
+				suite.Require().NoError(err)
+			},
+			true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
+
+			proposalRes, err := queryClient.Proposal(gocontext.Background(), req)
+
+			if testCase.expPass {
+				suite.Require().NoError(err)
+				// Instead of using MashalJSON, we could compare .String() output too.
+				// https://github.com/cosmos/cosmos-sdk/issues/10965
+				expJSON, err := suite.app.AppCodec().MarshalJSON(&expProposal)
+				suite.Require().NoError(err)
+				actualJSON, err := suite.app.AppCodec().MarshalJSON(&proposalRes.Proposal)
 				suite.Require().NoError(err)
 				suite.Require().Equal(expJSON, actualJSON)
 			} else {

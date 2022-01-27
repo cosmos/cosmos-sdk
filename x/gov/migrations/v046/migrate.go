@@ -11,24 +11,34 @@ import (
 // don't have a legacy message will return a "nil" content.
 func ConvertToLegacyProposal(proposal v1beta2.Proposal) (v1beta1.Proposal, error) {
 	legacyProposal := v1beta1.Proposal{
-		ProposalId: proposal.ProposalId,
-		Content: nil,
-		Status: v1beta1.ProposalStatus(proposal.Status),
+		ProposalId:       proposal.ProposalId,
+		Content:          nil,
+		Status:           v1beta1.ProposalStatus(proposal.Status),
 		FinalTallyResult: ConvertToLegacyTallyResult(proposal.FinalTallyResult),
-		SubmitTime: *proposal.SubmitTime,
-		DepositEndTime: *proposal.DepositEndTime,
-		TotalDeposit: types.NewCoins(proposal.TotalDeposit...),
-		VotingStartTime: *proposal.VotingStartTime,
-		VotingEndTime: *proposal.VotingEndTime,
+		TotalDeposit:     types.NewCoins(proposal.TotalDeposit...),
+	}
+
+	if proposal.VotingStartTime != nil {
+		legacyProposal.VotingStartTime = *proposal.VotingStartTime
+	}
+
+	if proposal.VotingEndTime != nil {
+		legacyProposal.VotingEndTime = *proposal.VotingEndTime
+	}
+
+	if proposal.SubmitTime != nil {
+		legacyProposal.SubmitTime = *proposal.SubmitTime
+	}
+
+	if proposal.DepositEndTime != nil {
+		legacyProposal.DepositEndTime = *proposal.DepositEndTime
 	}
 
 	msgs, err := proposal.GetMsgs()
 	if err != nil {
 		return v1beta1.Proposal{}, err
 	}
-	msgTypes := make([]string, len(msgs))
-	for idx, msg := range msgs {
-		msgTypes[idx] = msg.String()
+	for _, msg := range msgs {
 		if legacyMsg, ok := msg.(*v1beta2.MsgExecLegacyContent); ok {
 			// check that the content struct can be unmarshalled
 			_, err := v1beta2.LegacyContentFromMessage(legacyMsg)
@@ -41,12 +51,6 @@ func ConvertToLegacyProposal(proposal v1beta2.Proposal) (v1beta1.Proposal, error
 	return legacyProposal, nil
 }
 
-// ConvertToNewProposal takes a legacy proposal and converts it to a new proposal, 
-// wrapping the content into a "MsgExecLegacyContent". 
-func ConvertToNewProposal(proposal v1beta1.Proposal) v1beta2.Proposal {
-	return v1beta2.Proposal{}
-}
-
 func ConvertToLegacyTallyResult(tally *v1beta2.TallyResult) v1beta1.TallyResult {
 	yes, _ := types.NewIntFromString(tally.Yes)
 	no, _ := types.NewIntFromString(tally.No)
@@ -54,18 +58,18 @@ func ConvertToLegacyTallyResult(tally *v1beta2.TallyResult) v1beta1.TallyResult 
 	abstain, _ := types.NewIntFromString(tally.Abstain)
 
 	return v1beta1.TallyResult{
-		Yes: yes,
-		No: no,
+		Yes:        yes,
+		No:         no,
 		NoWithVeto: veto,
-		Abstain: abstain,
+		Abstain:    abstain,
 	}
 }
 
 func ConvertToLegacyVote(vote v1beta2.Vote) v1beta1.Vote {
 	return v1beta1.Vote{
 		ProposalId: vote.ProposalId,
-		Voter: vote.Voter,
-		Options: ConvertToLegacyVoteOptions(vote.Options),
+		Voter:      vote.Voter,
+		Options:    ConvertToLegacyVoteOptions(vote.Options),
 	}
 }
 
@@ -82,4 +86,12 @@ func ConvertToLegacyVoteOptions(voteOptions []*v1beta2.WeightedVoteOption) []v1b
 		}
 	}
 	return options
+}
+
+func ConvertToLegacyDeposit(deposit *v1beta2.Deposit) v1beta1.Deposit {
+	return v1beta1.Deposit{
+		ProposalId: deposit.ProposalId,
+		Depositor:  deposit.Depositor,
+		Amount:     types.NewCoins(deposit.Amount...),
+	}
 }

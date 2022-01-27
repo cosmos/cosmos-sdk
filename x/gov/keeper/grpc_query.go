@@ -9,10 +9,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 var _ v1beta2.QueryServer = Keeper{}
@@ -310,9 +310,9 @@ func (q legacyQueryServer) Proposal(c context.Context, req *v1beta1.QueryProposa
 func (q legacyQueryServer) Proposals(c context.Context, req *v1beta1.QueryProposalsRequest) (*v1beta1.QueryProposalsResponse, error) {
 	resp, err := q.keeper.Proposals(c, &v1beta2.QueryProposalsRequest{
 		ProposalStatus: v1beta2.ProposalStatus(req.ProposalStatus),
-		Voter: req.Voter,
-		Depositor: req.Depositor,
-		Pagination: req.Pagination,
+		Voter:          req.Voter,
+		Depositor:      req.Depositor,
+		Pagination:     req.Pagination,
 	})
 	if err != nil {
 		return nil, err
@@ -327,7 +327,7 @@ func (q legacyQueryServer) Proposals(c context.Context, req *v1beta1.QueryPropos
 	}
 
 	return &v1beta1.QueryProposalsResponse{
-		Proposals: legacyProposals, 
+		Proposals:  legacyProposals,
 		Pagination: resp.Pagination,
 	}, nil
 }
@@ -335,7 +335,7 @@ func (q legacyQueryServer) Proposals(c context.Context, req *v1beta1.QueryPropos
 func (q legacyQueryServer) Vote(c context.Context, req *v1beta1.QueryVoteRequest) (*v1beta1.QueryVoteResponse, error) {
 	resp, err := q.keeper.Vote(c, &v1beta2.QueryVoteRequest{
 		ProposalId: req.ProposalId,
-		Voter: req.Voter,
+		Voter:      req.Voter,
 	})
 	if err != nil {
 		return nil, err
@@ -361,7 +361,7 @@ func (q legacyQueryServer) Votes(c context.Context, req *v1beta1.QueryVotesReque
 	}
 
 	return &v1beta1.QueryVotesResponse{
-		Votes: votes,
+		Votes:      votes,
 		Pagination: resp.Pagination,
 	}, nil
 }
@@ -389,21 +389,50 @@ func (q legacyQueryServer) Params(c context.Context, req *v1beta1.QueryParamsReq
 	}
 
 	return &v1beta1.QueryParamsResponse{
-		VotingParams: v1beta1.NewVotingParams(*resp.VotingParams.VotingPeriod),
+		VotingParams:  v1beta1.NewVotingParams(*resp.VotingParams.VotingPeriod),
 		DepositParams: v1beta1.NewDepositParams(minDeposit, *resp.DepositParams.MaxDepositPeriod),
-		TallyParams: v1beta1.NewTallyParams(quorum, threshold, vetoThreshold),
+		TallyParams:   v1beta1.NewTallyParams(quorum, threshold, vetoThreshold),
 	}, nil
 }
 
 func (q legacyQueryServer) Deposit(c context.Context, req *v1beta1.QueryDepositRequest) (*v1beta1.QueryDepositResponse, error) {
-	return nil, nil
+	resp, err := q.keeper.Deposit(c, &v1beta2.QueryDepositRequest{
+		ProposalId: req.ProposalId,
+		Depositor:  req.Depositor,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	deposit := v046.ConvertToLegacyDeposit(resp.Deposit)
+	return &v1beta1.QueryDepositResponse{Deposit: deposit}, nil
 }
 
 func (q legacyQueryServer) Deposits(c context.Context, req *v1beta1.QueryDepositsRequest) (*v1beta1.QueryDepositsResponse, error) {
-	return nil, nil
+	resp, err := q.keeper.Deposits(c, &v1beta2.QueryDepositsRequest{
+		ProposalId: req.ProposalId,
+		Pagination: req.Pagination,
+	})
+	if err != nil {
+		return nil, err
+	}
+	deposits := make([]v1beta1.Deposit, len(resp.Deposits))
+	for idx, deposit := range resp.Deposits {
+		deposits[idx] = v046.ConvertToLegacyDeposit(deposit)
+	}
+
+	return &v1beta1.QueryDepositsResponse{Deposits: deposits, Pagination: resp.Pagination}, nil
 }
 
 func (q legacyQueryServer) TallyResult(c context.Context, req *v1beta1.QueryTallyResultRequest) (*v1beta1.QueryTallyResultResponse, error) {
-	return nil, nil
-}
+	resp, err := q.keeper.TallyResult(c, &v1beta2.QueryTallyResultRequest{
+		ProposalId: req.ProposalId,
+	})
+	if err != nil {
+		return nil, err
+	}
 
+	tally := v046.ConvertToLegacyTallyResult(resp.Tally)
+
+	return &v1beta1.QueryTallyResultResponse{Tally: tally}, nil
+}

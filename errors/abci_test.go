@@ -169,10 +169,10 @@ func (s *abciTestSuite) TestRedact() {
 		untouched bool  // if true we expect the same error after redact
 		changed   error // if untouched == false, expect this error
 	}{
-		// "panic looses message": {
-		// 	err:     Wrap(ErrPanic, "some secret stack trace"),
-		// 	changed: errPanicWithMsg,
-		// },
+		"panic looses message": {
+			err:     Wrap(ErrPanic, "some secret stack trace"),
+			changed: errPanicWithMsg,
+		},
 		"sdk errors untouched": {
 			err:       Wrap(ErrUnauthorized, "cannot drop db"),
 			untouched: true,

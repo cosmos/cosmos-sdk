@@ -22,11 +22,11 @@ func TestSingleton(t *testing.T) {
 	assert.NilError(t, err)
 	store := ormtable.WrapContextDefault(testkv.NewSplitMemBackend())
 
-	found, err := singleton.Has(store)
+	found, err := singleton.Has(store, val)
 	assert.NilError(t, err)
 	assert.Assert(t, !found)
 	assert.NilError(t, singleton.Save(store, val))
-	found, err = singleton.Has(store)
+	found, err = singleton.Has(store, val)
 	assert.NilError(t, err)
 	assert.Assert(t, found)
 

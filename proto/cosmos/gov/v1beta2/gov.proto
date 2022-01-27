@@ -88,10 +88,7 @@ message TallyResult {
 message Vote {
   uint64 proposal_id = 1;
   string voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // Deprecated: Prefer to use `options` instead. This field is set in queries
-  // if and only if `len(options) == 1` and that option has weight 1. In all
-  // other cases, this field will default to VOTE_OPTION_UNSPECIFIED.
-  VoteOption                  option  = 3 [deprecated = true];
+  reserved 3;
   repeated WeightedVoteOption options = 4;
 }
 

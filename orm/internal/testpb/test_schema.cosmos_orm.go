@@ -96,7 +96,7 @@ func (x ExampleTableStrU32I64IndexKey) WithStr(str string) ExampleTableStrU32I64
 	x.vs = []interface{}{str}
 	return x
 }
-func (x ExampleTableStrU32I64IndexKey) WithU32(u32 uint32) ExampleTableStrU32I64IndexKey {
+func (x ExampleTableStrU32I64IndexKey) WithStrU32(u32 uint32) ExampleTableStrU32I64IndexKey {
 	x.vs = []interface{}{u32}
 	return x
 }

@@ -143,7 +143,6 @@ func (q Keeper) Votes(c context.Context, req *v1beta2.QueryVotesRequest) (*v1bet
 		if err := q.cdc.Unmarshal(value, &vote); err != nil {
 			return err
 		}
-		populateLegacyOption(&vote)
 
 		votes = append(votes, &vote)
 		return nil

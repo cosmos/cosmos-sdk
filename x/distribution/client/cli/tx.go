@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 // Transaction flags for the x/distribution module
@@ -168,7 +168,7 @@ $ %[1]s tx distribution withdraw-all-rewards --from mykey
 			}
 
 			chunkSize, _ := cmd.Flags().GetInt(FlagMaxMessagesPerTx)
-			if clientCtx.BroadcastMode != flags.BroadcastBlock && chunkSize > 0 {
+			if !clientCtx.GenerateOnly && clientCtx.BroadcastMode != flags.BroadcastBlock && chunkSize > 0 {
 				return fmt.Errorf("cannot use broadcast mode %[1]s with %[2]s != 0",
 					clientCtx.BroadcastMode, FlagMaxMessagesPerTx)
 			}

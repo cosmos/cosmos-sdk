@@ -8,7 +8,8 @@ import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
 import "cosmos_proto/cosmos.proto";
 
-option go_package                       = "github.com/cosmos/cosmos-sdk/x/gov/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1";
+
 option (gogoproto.goproto_stringer_all) = false;
 option (gogoproto.stringer_all)         = false;
 option (gogoproto.goproto_getters_all)  = false;
@@ -30,10 +31,12 @@ enum VoteOption {
 }
 
 // WeightedVoteOption defines a unit of vote for vote split.
+//
+// Since: cosmos-sdk 0.43
 message WeightedVoteOption {
   VoteOption option = 1;
   string     weight = 2 [
-    (cosmos_proto.scalar) = "cosmos.Dec",
+    (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
@@ -66,23 +69,16 @@ message Deposit {
 message Proposal {
   option (gogoproto.equal) = true;
 
-  uint64              proposal_id        = 1 [(gogoproto.jsontag) = "id"];
-  google.protobuf.Any content            = 2 [(cosmos_proto.accepts_interface) = "Content"];
-  ProposalStatus      status             = 3;
-  TallyResult         final_tally_result = 4
-      [(gogoproto.nullable) = false];
-  google.protobuf.Timestamp submit_time = 5
-      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-  google.protobuf.Timestamp deposit_end_time = 6
-      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-  repeated cosmos.base.v1beta1.Coin total_deposit = 7 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
-  google.protobuf.Timestamp voting_start_time = 8
-      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-  google.protobuf.Timestamp voting_end_time = 9
-      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  uint64                    proposal_id           = 1;
+  google.protobuf.Any       content               = 2 [(cosmos_proto.accepts_interface) = "Content"];
+  ProposalStatus            status                = 3;
+  TallyResult               final_tally_result    = 4 [(gogoproto.nullable) = false];
+  google.protobuf.Timestamp submit_time           = 5 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp deposit_end_time      = 6 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin total_deposit = 7
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  google.protobuf.Timestamp voting_start_time = 8 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp voting_end_time   = 9 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }
 
 // ProposalStatus enumerates the valid statuses of a proposal.
@@ -112,11 +108,23 @@ enum ProposalStatus {
 message TallyResult {
   option (gogoproto.equal) = true;
 
-  string yes     = 1 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string abstain = 2 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string no      = 3 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string yes = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string abstain = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string no = 3 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
   string no_with_veto = 4 [
-    (cosmos_proto.scalar) = "cosmos.Int",
+    (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
@@ -128,12 +136,13 @@ message Vote {
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.equal)            = false;
 
-  uint64 proposal_id = 1;
+  uint64 proposal_id = 1 [(gogoproto.jsontag) = "id"];
   string voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // Deprecated: Prefer to use `options` instead. This field is set in queries
   // if and only if `len(options) == 1` and that option has weight 1. In all
   // other cases, this field will default to VOTE_OPTION_UNSPECIFIED.
-  VoteOption                  option  = 3 [deprecated = true];
+  VoteOption option = 3 [deprecated = true];
+  // Since: cosmos-sdk 0.43
   repeated WeightedVoteOption options = 4 [(gogoproto.nullable) = false];
 }
 
@@ -158,11 +167,12 @@ message DepositParams {
 // VotingParams defines the params for voting on governance proposals.
 message VotingParams {
   //  Length of the voting period.
-  google.protobuf.Duration voting_period = 1 [
-    (gogoproto.nullable)    = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.jsontag)     = "voting_period,omitempty"
-  ];
+  google.protobuf.Duration voting_period = 1
+      [
+        (gogoproto.nullable)    = false,
+        (gogoproto.stdduration) = true,
+        (gogoproto.jsontag)     = "voting_period,omitempty"
+      ];
 }
 
 // TallyParams defines the params for tallying votes on governance proposals.

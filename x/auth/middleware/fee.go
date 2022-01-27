@@ -6,10 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var _ tx.Handler = mempoolFeeTxHandler{}
@@ -30,13 +28,18 @@ func MempoolFeeMiddleware(txh tx.Handler) tx.Handler {
 	}
 }
 
-// CheckTx implements tx.Handler.CheckTx.
-func (txh mempoolFeeTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+// CheckTx implements tx.Handler.CheckTx. It is responsible for determining if a
+// transaction's fees meet the required minimum of the processing node. Note, a
+// node can have zero fees set as the minimum. If non-zero minimum fees are set
+// and the transaction does not meet the minimum, the transaction is rejected.
+//
+// Recall, a transaction's fee is determined by ceil(minGasPrice * gasLimit).
+func (txh mempoolFeeTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	feeTx, ok := tx.(sdk.FeeTx)
+	feeTx, ok := req.Tx.(sdk.FeeTx)
 	if !ok {
-		return abci.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+		return tx.Response{}, tx.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
 	feeCoins := feeTx.GetFee()
@@ -58,21 +61,21 @@ func (txh mempoolFeeTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.
 		}
 
 		if !feeCoins.IsAnyGTE(requiredFees) {
-			return abci.ResponseCheckTx{}, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s required: %s", feeCoins, requiredFees)
+			return tx.Response{}, tx.ResponseCheckTx{}, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s required: %s", feeCoins, requiredFees)
 		}
 	}
 
-	return txh.next.CheckTx(ctx, tx, req)
+	return txh.next.CheckTx(ctx, req, checkReq)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (txh mempoolFeeTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	return txh.next.DeliverTx(ctx, tx, req)
+func (txh mempoolFeeTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	return txh.next.DeliverTx(ctx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (txh mempoolFeeTxHandler) SimulateTx(ctx context.Context, tx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	return txh.next.SimulateTx(ctx, tx, req)
+func (txh mempoolFeeTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	return txh.next.SimulateTx(ctx, req)
 }
 
 var _ tx.Handler = deductFeeTxHandler{}
@@ -99,15 +102,15 @@ func DeductFeeMiddleware(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKeepe
 	}
 }
 
-func (dfd deductFeeTxHandler) checkDeductFee(ctx context.Context, tx sdk.Tx) error {
+func (dfd deductFeeTxHandler) checkDeductFee(ctx context.Context, sdkTx sdk.Tx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	feeTx, ok := tx.(sdk.FeeTx)
+	feeTx, ok := sdkTx.(sdk.FeeTx)
 	if !ok {
 		return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
 	if addr := dfd.accountKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.FeeCollectorName))
+		return fmt.Errorf("Fee collector module account (%s) has not been set", types.FeeCollectorName)
 	}
 
 	fee := feeTx.GetFee()
@@ -120,12 +123,11 @@ func (dfd deductFeeTxHandler) checkDeductFee(ctx context.Context, tx sdk.Tx) err
 	// this works with only when feegrant enabled.
 	if feeGranter != nil {
 		if dfd.feegrantKeeper == nil {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
+			return sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
 		} else if !feeGranter.Equals(feePayer) {
-			err := dfd.feegrantKeeper.UseGrantedFees(sdkCtx, feeGranter, feePayer, fee, tx.GetMsgs())
-
+			err := dfd.feegrantKeeper.UseGrantedFees(sdkCtx, feeGranter, feePayer, fee, sdkTx.GetMsgs())
 			if err != nil {
-				return sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
+				return sdkerrors.Wrapf(err, "%s does not not allow to pay fees for %s", feeGranter, feePayer)
 			}
 		}
 
@@ -134,7 +136,7 @@ func (dfd deductFeeTxHandler) checkDeductFee(ctx context.Context, tx sdk.Tx) err
 
 	deductFeesFromAcc := dfd.accountKeeper.GetAccount(sdkCtx, deductFeesFrom)
 	if deductFeesFromAcc == nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
+		return sdkerrors.ErrUnknownAddress.Wrapf("fee payer address: %s does not exist", deductFeesFrom)
 	}
 
 	// deduct the fees
@@ -154,40 +156,41 @@ func (dfd deductFeeTxHandler) checkDeductFee(ctx context.Context, tx sdk.Tx) err
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (dfd deductFeeTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	if err := dfd.checkDeductFee(ctx, tx); err != nil {
-		return abci.ResponseCheckTx{}, err
+func (dfd deductFeeTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
+	if err := dfd.checkDeductFee(ctx, req.Tx); err != nil {
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
-	return dfd.next.CheckTx(ctx, tx, req)
+	return dfd.next.CheckTx(ctx, req, checkReq)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (dfd deductFeeTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	if err := dfd.checkDeductFee(ctx, tx); err != nil {
-		return abci.ResponseDeliverTx{}, err
+func (dfd deductFeeTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	if err := dfd.checkDeductFee(ctx, req.Tx); err != nil {
+		return tx.Response{}, err
 	}
 
-	return dfd.next.DeliverTx(ctx, tx, req)
+	return dfd.next.DeliverTx(ctx, req)
 }
 
-func (dfd deductFeeTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	if err := dfd.checkDeductFee(ctx, sdkTx); err != nil {
-		return tx.ResponseSimulateTx{}, err
+func (dfd deductFeeTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	if err := dfd.checkDeductFee(ctx, req.Tx); err != nil {
+		return tx.Response{}, err
 	}
 
-	return dfd.next.SimulateTx(ctx, sdkTx, req)
+	return dfd.next.SimulateTx(ctx, req)
 }
 
-// DeductFees deducts fees from the given account.
+// Deprecated: DeductFees deducts fees from the given account.
+// This function will be private in the next release.
 func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc types.AccountI, fees sdk.Coins) error {
 	if !fees.IsValid() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
+		return sdkerrors.ErrInsufficientFee.Wrapf("invalid fee amount: %s", fees)
 	}
 
 	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, fees)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+		return sdkerrors.ErrInsufficientFunds.Wrap(err.Error())
 	}
 
 	return nil

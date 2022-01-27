@@ -62,6 +62,11 @@ func (ctx Context) GetFromAddress() sdk.AccAddress {
 	return ctx.FromAddress
 }
 
+// GetFeePayerAddress returns the fee granter address from the context
+func (ctx Context) GetFeePayerAddress() sdk.AccAddress {
+	return ctx.FeePayer
+}
+
 // GetFeeGranterAddress returns the fee granter address from the context
 func (ctx Context) GetFeeGranterAddress() sdk.AccAddress {
 	return ctx.FeeGranter
@@ -126,8 +131,9 @@ func sdkErrorToGRPCError(resp abci.ResponseQuery) error {
 // or an error if the query fails.
 func (ctx Context) query(path string, key tmbytes.HexBytes) ([]byte, int64, error) {
 	resp, err := ctx.queryABCI(abci.RequestQuery{
-		Path: path,
-		Data: key,
+		Path:   path,
+		Data:   key,
+		Height: ctx.Height,
 	})
 	if err != nil {
 		return nil, 0, err

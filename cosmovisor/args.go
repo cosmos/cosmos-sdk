@@ -14,6 +14,8 @@ import (
 	"github.com/rs/zerolog"
 
 	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
+	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // environment variable names
@@ -23,16 +25,16 @@ const (
 	EnvDownloadBin          = "DAEMON_ALLOW_DOWNLOAD_BINARIES"
 	EnvRestartUpgrade       = "DAEMON_RESTART_AFTER_UPGRADE"
 	EnvSkipBackup           = "UNSAFE_SKIP_BACKUP"
+	EnvDataBackupPath       = "DAEMON_DATA_BACKUP_DIR"
 	EnvInterval             = "DAEMON_POLL_INTERVAL"
 	EnvPreupgradeMaxRetries = "DAEMON_PREUPGRADE_MAX_RETRIES"
 )
 
 const (
-	rootName        = "cosmovisor"
-	genesisDir      = "genesis"
-	upgradesDir     = "upgrades"
-	currentLink     = "current"
-	upgradeFilename = "upgrade-info.json"
+	rootName    = "cosmovisor"
+	genesisDir  = "genesis"
+	upgradesDir = "upgrades"
+	currentLink = "current"
 )
 
 // must be the same as x/upgrade/types.UpgradeInfoFilename
@@ -46,10 +48,11 @@ type Config struct {
 	RestartAfterUpgrade   bool
 	PollInterval          time.Duration
 	UnsafeSkipBackup      bool
+	DataBackupPath        string
 	PreupgradeMaxRetries  int
 
 	// currently running upgrade
-	currentUpgrade UpgradeInfo
+	currentUpgrade upgradetypes.Plan
 }
 
 // Root returns the root directory where all info lives
@@ -128,8 +131,13 @@ func (cfg *Config) CurrentBin() (string, error) {
 func GetConfigFromEnv() (*Config, error) {
 	var errs []error
 	cfg := &Config{
-		Home: os.Getenv(EnvHome),
-		Name: os.Getenv(EnvName),
+		Home:           os.Getenv(EnvHome),
+		Name:           os.Getenv(EnvName),
+		DataBackupPath: os.Getenv(EnvDataBackupPath),
+	}
+
+	if cfg.DataBackupPath == "" {
+		cfg.DataBackupPath = cfg.Home
 	}
 
 	var err error
@@ -176,20 +184,16 @@ func GetConfigFromEnv() (*Config, error) {
 }
 
 // LogConfigOrError logs either the config details or the error.
-func LogConfigOrError(logger zerolog.Logger, cfg *Config, cerr error) {
+func LogConfigOrError(logger zerolog.Logger, cfg *Config, err error) {
+	if cfg == nil && err == nil {
+		return
+	}
+	logger.Info().Msg("Configuration:")
 	switch {
-	case cerr != nil:
-		switch err := cerr.(type) {
-		case *cverrors.MultiError:
-			logger.Error().Msg("multiple configuration errors found:")
-			for i, e := range err.GetErrors() {
-				logger.Error().Err(e).Msg(fmt.Sprintf("  %d:", i+1))
-			}
-		default:
-			logger.Error().Err(cerr).Msg("configuration error:")
-		}
+	case err != nil:
+		cverrors.LogErrors(logger, "configuration errors found", err)
 	case cfg != nil:
-		logger.Info().Msg("Configuration is valid:\n" + cfg.DetailString())
+		logger.Info().Msg(cfg.DetailString())
 	}
 }
 
@@ -216,11 +220,30 @@ func (cfg *Config) validate() []error {
 		}
 	}
 
+	// check the DataBackupPath
+	if cfg.UnsafeSkipBackup == true {
+		return errs
+	}
+	// if UnsafeSkipBackup is false, check if the DataBackupPath valid
+	switch {
+	case cfg.DataBackupPath == "":
+		errs = append(errs, errors.New(EnvDataBackupPath + " must not be empty"))
+	case !filepath.IsAbs(cfg.DataBackupPath):
+		errs = append(errs, errors.New(cfg.DataBackupPath + " must be an absolute path"))
+	default:
+		switch info, err := os.Stat(cfg.DataBackupPath); {
+		case err != nil:
+			errs = append(errs, fmt.Errorf("%q must be a valid directory: %w", cfg.DataBackupPath, err))
+		case !info.IsDir():
+			errs = append(errs, fmt.Errorf("%q must be a valid directory", cfg.DataBackupPath))
+		}
+	}
+
 	return errs
 }
 
 // SetCurrentUpgrade sets the named upgrade to be the current link, returns error if this binary doesn't exist
-func (cfg *Config) SetCurrentUpgrade(u UpgradeInfo) error {
+func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) error {
 	// ensure named upgrade exists
 	bin := cfg.UpgradeBin(u.Name)
 
@@ -244,7 +267,7 @@ func (cfg *Config) SetCurrentUpgrade(u UpgradeInfo) error {
 	}
 
 	cfg.currentUpgrade = u
-	f, err := os.Create(filepath.Join(upgrade, upgradeFilename))
+	f, err := os.Create(filepath.Join(upgrade, upgradekeeper.UpgradeInfoFileName))
 	if err != nil {
 		return err
 	}
@@ -258,14 +281,14 @@ func (cfg *Config) SetCurrentUpgrade(u UpgradeInfo) error {
 	return f.Close()
 }
 
-func (cfg *Config) UpgradeInfo() UpgradeInfo {
+func (cfg *Config) UpgradeInfo() upgradetypes.Plan {
 	if cfg.currentUpgrade.Name != "" {
 		return cfg.currentUpgrade
 	}
 
-	filename := filepath.Join(cfg.Root(), currentLink, upgradeFilename)
+	filename := filepath.Join(cfg.Root(), currentLink, upgradekeeper.UpgradeInfoFileName)
 	_, err := os.Lstat(filename)
-	var u UpgradeInfo
+	var u upgradetypes.Plan
 	var bz []byte
 	if err != nil { // no current directory
 		goto returnError
@@ -308,6 +331,7 @@ func (cfg Config) DetailString() string {
 		{EnvRestartUpgrade, fmt.Sprintf("%t", cfg.RestartAfterUpgrade)},
 		{EnvInterval, fmt.Sprintf("%s", cfg.PollInterval)},
 		{EnvSkipBackup, fmt.Sprintf("%t", cfg.UnsafeSkipBackup)},
+		{EnvDataBackupPath, cfg.DataBackupPath},
 		{EnvPreupgradeMaxRetries, fmt.Sprintf("%d", cfg.PreupgradeMaxRetries)},
 	}
 	derivedEntries := []struct{ name, value string }{
@@ -315,6 +339,7 @@ func (cfg Config) DetailString() string {
 		{"Upgrade Dir", cfg.BaseUpgradeDir()},
 		{"Genesis Bin", cfg.GenesisBin()},
 		{"Monitored File", cfg.UpgradeInfoFilePath()},
+		{"Data Backup Dir", cfg.DataBackupPath},
 	}
 
 	var sb strings.Builder

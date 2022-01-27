@@ -6,12 +6,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -26,8 +26,9 @@ import (
 
 // testAccount represents an account used in the tests in x/auth/middleware.
 type testAccount struct {
-	acc  authtypes.AccountI
-	priv cryptotypes.PrivKey
+	acc    authtypes.AccountI
+	priv   cryptotypes.PrivKey
+	accNum uint64
 }
 
 // MWTestSuite is a test suite to be used with middleware tests.
@@ -42,7 +43,7 @@ type MWTestSuite struct {
 // returns context and app with params set on account keeper
 func createTestApp(t *testing.T, isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(t, isCheckTx)
-	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{}).WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{Height: app.LastBlockHeight() + 1}).WithBlockGasMeter(sdk.NewInfiniteGasMeter())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
 	return app, ctx
@@ -52,7 +53,6 @@ func createTestApp(t *testing.T, isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 func (s *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 	var ctx sdk.Context
 	s.app, ctx = createTestApp(s.T(), isCheckTx)
-	ctx = ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
 	encodingConfig := simapp.MakeTestEncodingConfig()
@@ -70,7 +70,16 @@ func (s *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 	msr := middleware.NewMsgServiceRouter(encodingConfig.InterfaceRegistry)
 	testdata.RegisterMsgServer(msr, testdata.MsgServerImpl{})
 	legacyRouter := middleware.NewLegacyRouter()
-	legacyRouter.AddRoute(sdk.NewRoute((&testdata.TestMsg{}).Route(), func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) { return &sdk.Result{}, nil }))
+	legacyRouter.AddRoute(sdk.NewRoute((&testdata.TestMsg{}).Route(), func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+		any, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			return nil, err
+		}
+
+		return &sdk.Result{
+			MsgResponses: []*codectypes.Any{any},
+		}, nil
+	}))
 	txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 		Debug:            s.app.Trace(),
 		MsgServiceRouter: msr,
@@ -80,6 +89,7 @@ func (s *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 		FeegrantKeeper:   s.app.FeeGrantKeeper,
 		SignModeHandler:  encodingConfig.TxConfig.SignModeHandler(),
 		SigGasConsumer:   middleware.DefaultSigVerificationGasConsumer,
+		TxDecoder:        s.clientCtx.TxConfig.TxDecoder(),
 	})
 	s.Require().NoError(err)
 	s.txHandler = txHandler
@@ -89,25 +99,23 @@ func (s *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 
 // createTestAccounts creates `numAccs` accounts, and return all relevant
 // information about them including their private keys.
-func (s *MWTestSuite) createTestAccounts(ctx sdk.Context, numAccs int) []testAccount {
+func (s *MWTestSuite) createTestAccounts(ctx sdk.Context, numAccs int, coins sdk.Coins) []testAccount {
 	var accounts []testAccount
 
 	for i := 0; i < numAccs; i++ {
 		priv, _, addr := testdata.KeyTestPubAddr()
 		acc := s.app.AccountKeeper.NewAccountWithAddress(ctx, addr)
-		err := acc.SetAccountNumber(uint64(i))
+		accNum := uint64(i)
+		err := acc.SetAccountNumber(accNum)
 		s.Require().NoError(err)
 		s.app.AccountKeeper.SetAccount(ctx, acc)
-		someCoins := sdk.Coins{
-			sdk.NewInt64Coin("atom", 10000000),
-		}
-		err = s.app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, someCoins)
+		err = s.app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
 		s.Require().NoError(err)
 
-		err = s.app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, someCoins)
+		err = s.app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, coins)
 		s.Require().NoError(err)
 
-		accounts = append(accounts, testAccount{acc, priv})
+		accounts = append(accounts, testAccount{acc, priv, accNum})
 	}
 
 	return accounts
@@ -143,7 +151,7 @@ func (s *MWTestSuite) createTestTx(txBuilder client.TxBuilder, privs []cryptotyp
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
-			SignerIndex:   i,
+			PubKey:        priv.PubKey(),
 		}
 		sigV2, err := tx.SignWithPrivKey(
 			s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,
@@ -176,8 +184,8 @@ func (s *MWTestSuite) runTestCase(ctx sdk.Context, txBuilder client.TxBuilder, p
 		// Theoretically speaking, middleware unit tests should only test
 		// middlewares, but here we sometimes also test the tx creation
 		// process.
-		tx, _, txErr := s.createTestTx(txBuilder, privs, accNums, accSeqs, chainID)
-		newCtx, txHandlerErr := s.txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, types.RequestDeliverTx{})
+		testTx, _, txErr := s.createTestTx(txBuilder, privs, accNums, accSeqs, chainID)
+		newCtx, txHandlerErr := s.txHandler.DeliverTx(sdk.WrapSDKContext(ctx), txtypes.Request{Tx: testTx})
 
 		if tc.expPass {
 			s.Require().NoError(txErr)

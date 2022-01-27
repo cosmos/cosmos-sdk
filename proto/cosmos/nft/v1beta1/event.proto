@@ -1,6 +1,5 @@
 syntax = "proto3";
 package cosmos.nft.v1beta1;
-import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/nft";
 

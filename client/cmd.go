@@ -220,8 +220,21 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		clientCtx = clientCtx.WithSignModeStr(signModeStr)
 	}
 
-	if clientCtx.FeeGranter == nil || flagSet.Changed(flags.FlagFeeAccount) {
-		granter, _ := flagSet.GetString(flags.FlagFeeAccount)
+	if clientCtx.FeePayer == nil || flagSet.Changed(flags.FlagFeePayer) {
+		payer, _ := flagSet.GetString(flags.FlagFeePayer)
+
+		if payer != "" {
+			payerAcc, err := sdk.AccAddressFromBech32(payer)
+			if err != nil {
+				return clientCtx, err
+			}
+
+			clientCtx = clientCtx.WithFeePayerAddress(payerAcc)
+		}
+	}
+
+	if clientCtx.FeeGranter == nil || flagSet.Changed(flags.FlagFeeGranter) {
+		granter, _ := flagSet.GetString(flags.FlagFeeGranter)
 
 		if granter != "" {
 			granterAcc, err := sdk.AccAddressFromBech32(granter)
@@ -248,6 +261,24 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		if keyType == keyring.TypeLedger && clientCtx.SignModeStr != flags.SignModeLegacyAminoJSON {
 			fmt.Println("Default sign-mode 'direct' not supported by Ledger, using sign-mode 'amino-json'.")
 			clientCtx = clientCtx.WithSignModeStr(flags.SignModeLegacyAminoJSON)
+		}
+	}
+
+	if !clientCtx.IsAux || flagSet.Changed(flags.FlagAux) {
+		isAux, _ := flagSet.GetBool(flags.FlagAux)
+		clientCtx = clientCtx.WithAux(isAux)
+		if isAux {
+			// If the user didn't explicity set an --output flag, use JSON by
+			// default.
+			if clientCtx.OutputFormat == "" || !flagSet.Changed(cli.OutputFlag) {
+				clientCtx = clientCtx.WithOutputFormat("json")
+			}
+
+			// If the user didn't explicity set a --sign-mode flag, use
+			// DIRECT_AUX by default.
+			if clientCtx.SignModeStr == "" || !flagSet.Changed(flags.FlagSignMode) {
+				clientCtx = clientCtx.WithSignModeStr(flags.SignModeDirectAux)
+			}
 		}
 	}
 

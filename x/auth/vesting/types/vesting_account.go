@@ -715,16 +715,50 @@ func (va ClawbackVestingAccount) ComputeClawback(clawbackTime int64) (ClawbackVe
 	return va, totalUnvested
 }
 
+// updateDelegation returns an account with its delegation bookkeeping modified for clawback,
+// given the current disposition of the account's bank and staking state. Also returns
+// the modified amount to claw back.
+//
+// Computation steps:
+// - first, compute the total amount in bonded and unbonding states, used for BaseAccount bookkeeping;
+// - based on the old bookkeeping, determine the amount lost to slashing since origin;
+// - clip the amount to claw back to be at most the full funds in the account;
+// - first claw back the unbonded funds, then go after what's delegated;
+// - to the remaining delegated amount, add what's slashed;
+// - the "encumbered" (locked up and/or vesting) amount of this goes in DV;
+// - the remainder of the new delegated amount goes in DF.
+func (va ClawbackVestingAccount) updateDelegation(encumbered, toClawBack, bonded, unbonding, unbonded sdk.Coins) (ClawbackVestingAccount, sdk.Coins) {
+	delegated := bonded.Add(unbonding...)
+	oldDelegated := va.DelegatedVesting.Add(va.DelegatedFree...)
+	slashed := delegated.Sub(coinsMin(delegated, oldDelegated))
+	total := delegated.Add(unbonded...)
+	toClawBack = coinsMin(toClawBack, total) // might have been slashed
+	newDelegated := coinsMin(delegated, total.Sub(toClawBack)).Add(slashed...)
+	va.DelegatedVesting = coinsMin(encumbered, newDelegated)
+	va.DelegatedFree = newDelegated.Sub(va.DelegatedVesting)
+	return va, toClawBack
+}
+
 // Clawback transfers unvested tokens in a ClawbackVestingAccount to dest.
 // Future vesting events are removed. Unstaked tokens are simply sent.
 // Unbonding and staked tokens are transferred with their staking state
 // intact.  Account state is updated to reflect the removals.
 func (va ClawbackVestingAccount) Clawback(ctx sdk.Context, dest sdk.AccAddress, ak AccountKeeper, bk BankKeeper, sk StakingKeeper) error {
+	// Compute the clawback based on the account state only, and update account
 	updatedAcc, toClawBack := va.ComputeClawback(ctx.BlockTime().Unix())
 	if toClawBack.IsZero() {
 		return nil
 	}
 	addr := updatedAcc.GetAddress()
+	bondDenom := sk.BondDenom(ctx)
+
+	// Compute the clawback based on bank balance and delegation, and update account
+	encumbered := updatedAcc.GetVestingCoins(ctx.BlockTime())
+	bondedAmt, unbondingAmt, _ := updatedAcc.findBalance(ctx, bk, sk)
+	bonded := sdk.NewCoins(sdk.NewCoin(bondDenom, bondedAmt))
+	unbonding := sdk.NewCoins(sdk.NewCoin(bondDenom, unbondingAmt))
+	unbonded := bk.GetAllBalances(ctx, addr)
+	updatedAcc, toClawBack = updatedAcc.updateDelegation(encumbered, toClawBack, bonded, unbonding, unbonded)
 
 	// Write now now so that the bank module sees unvested tokens are unlocked.
 	// Note that all store writes are aborted if there is a panic, so there is
@@ -744,13 +778,16 @@ func (va ClawbackVestingAccount) Clawback(ctx sdk.Context, dest sdk.AccAddress, 
 	// We need to traverse the staking data structures to update the
 	// vesting account bookkeeping, and to recover more funds if necessary.
 	// Staking is the only way unvested tokens should be missing from the bank balance.
-	bondDenom := sk.BondDenom(ctx)
 
 	// If we need more, transfer UnbondingDelegations.
 	want := toClawBack.AmountOf(bondDenom)
 	unbondings := sk.GetUnbondingDelegations(ctx, addr, math.MaxUint16)
 	for _, unbonding := range unbondings {
-		transferred := sk.TransferUnbonding(ctx, addr, dest, sdk.ValAddress(unbonding.ValidatorAddress), want)
+		valAddr, err := sdk.ValAddressFromBech32(unbonding.ValidatorAddress)
+		if err != nil {
+			panic(err)
+		}
+		transferred := sk.TransferUnbonding(ctx, addr, dest, valAddr, want)
 		want = want.Sub(transferred)
 		if !want.IsPositive() {
 			break
@@ -786,12 +823,6 @@ func (va ClawbackVestingAccount) Clawback(ctx sdk.Context, dest sdk.AccAddress, 
 			}
 		}
 	}
-
-	// Update the account bookkeeping. All delegated and undelegating amounts are free.
-	bonded, unbonding, _ := updatedAcc.findBalance(ctx, bk, sk)
-	updatedAcc.DelegatedFree = sdk.NewCoins(sdk.NewCoin(bondDenom, bonded.Add(unbonding)))
-	updatedAcc.DelegatedVesting = sdk.NewCoins()
-	ak.SetAccount(ctx, &updatedAcc)
 
 	// If we've transferred everything and still haven't transferred the desired clawback amount,
 	// then the account must have most some unvested tokens from slashing.
@@ -878,13 +909,7 @@ func scaleCoins(coins sdk.Coins, scale sdk.Dec) sdk.Coins {
 
 // PostReward encumbers a previously-deposited reward according to the current vesting apportionment of staking.
 // Note that rewards might be unvested, but are unlocked.
-func (va ClawbackVestingAccount) PostReward(ctx sdk.Context, reward sdk.Coins, rak, rbk, rsk interface{}) {
-	// Cast keepers to expected interfaces.
-	// Necessary due to difference in expected keepers between us and caller.
-	ak := rak.(AccountKeeper)
-	bk := rbk.(BankKeeper)
-	sk := rsk.(StakingKeeper)
-
+func (va ClawbackVestingAccount) PostReward(ctx sdk.Context, reward sdk.Coins, ak AccountKeeper, bk BankKeeper, sk StakingKeeper) {
 	// Find the scheduled amount of vested and unvested staking tokens
 	bondDenom := sk.BondDenom(ctx)
 	vested := ReadSchedule(va.StartTime, va.EndTime, va.VestingPeriods, va.OriginalVesting, ctx.BlockTime().Unix()).AmountOf(bondDenom)

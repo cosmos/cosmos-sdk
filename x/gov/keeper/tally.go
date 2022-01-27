@@ -105,7 +105,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1beta2.Proposal) (passes b
 	percentVoting := totalVotingPower.Quo(keeper.sk.TotalBondedTokens(ctx).ToDec())
 	quorum, _ := sdk.NewDecFromStr(tallyParams.Quorum)
 	if percentVoting.LT(quorum) {
-		return false, true, tallyResults
+		return false, false, tallyResults
 	}
 
 	// If no one votes (everyone abstains), proposal fails

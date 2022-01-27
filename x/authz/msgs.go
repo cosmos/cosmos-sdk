@@ -228,7 +228,7 @@ func (msg MsgExec) Type() string {
 
 // Route implements the LegacyMsg.Route method.
 func (msg MsgExec) Route() string {
-	return sdk.MsgTypeURL(&msg)
+	return sdk.MsgTypeURL(&msg) + "xxxx"
 }
 
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.

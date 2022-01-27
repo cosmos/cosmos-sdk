@@ -49,10 +49,11 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		weight     int
 		opMsgRoute string
 		opMsgName  string
+		comment    string
 	}{
-		{simulation.WeightGrant, sdk.MsgTypeURL(&authz.MsgGrant{}), simulation.TypeMsgGrant},
-		{simulation.WeightRevoke, sdk.MsgTypeURL(&authz.MsgRevoke{}), simulation.TypeMsgRevoke},
-		{simulation.WeightExec, authz.ModuleName, simulation.TypeMsgExec},
+		{simulation.WeightGrant, sdk.MsgTypeURL(&authz.MsgGrant{}), simulation.TypeMsgGrant, "success"},
+		{simulation.WeightRevoke, sdk.MsgTypeURL(&authz.MsgRevoke{}), simulation.TypeMsgRevoke, "success"},
+		{simulation.WeightExec, authz.ModuleName, simulation.TypeMsgExec, "no grant found"},
 	}
 
 	for i, w := range weightedOps {
@@ -63,6 +64,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		suite.Require().Equal(expected[i].weight, w.Weight(), "test: %d, weight should be the same", i)
 		suite.Require().Equal(expected[i].opMsgRoute, operationMsg.Route, "test: %d, route should be the same", i)
 		suite.Require().Equal(expected[i].opMsgName, operationMsg.Name, "test: %d, operation Msg name should be the same", i)
+		suite.Require().Equal(expected[i].comment, operationMsg.Comment, "test: %d, wrong operation comment", i)
 	}
 }
 

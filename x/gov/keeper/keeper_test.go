@@ -11,7 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 type KeeperTestSuite struct {
@@ -19,7 +20,7 @@ type KeeperTestSuite struct {
 
 	app         *simapp.SimApp
 	ctx         sdk.Context
-	queryClient v1beta1.QueryClient
+	queryClient v1beta2.QueryClient
 	addrs       []sdk.AccAddress
 }
 
@@ -27,9 +28,17 @@ func (suite *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(suite.T(), false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
+	// Populate the gov account with some coins, as the TestProposal we have
+	// is a MsgSend from the gov account.
+	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100000)))
+	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
+	suite.NoError(err)
+	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)
+	suite.NoError(err)
+
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	v1beta1.RegisterQueryServer(queryHelper, app.GovKeeper)
-	queryClient := v1beta1.NewQueryClient(queryHelper)
+	v1beta2.RegisterQueryServer(queryHelper, app.GovKeeper)
+	queryClient := v1beta2.NewQueryClient(queryHelper)
 
 	suite.app = app
 	suite.ctx = ctx
@@ -42,17 +51,17 @@ func TestIncrementProposalNumber(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	tp := TestProposal
-	_, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	_, err := app.GovKeeper.SubmitProposal(ctx, tp, nil)
 	require.NoError(t, err)
-	_, err = app.GovKeeper.SubmitProposal(ctx, tp)
+	_, err = app.GovKeeper.SubmitProposal(ctx, tp, nil)
 	require.NoError(t, err)
-	_, err = app.GovKeeper.SubmitProposal(ctx, tp)
+	_, err = app.GovKeeper.SubmitProposal(ctx, tp, nil)
 	require.NoError(t, err)
-	_, err = app.GovKeeper.SubmitProposal(ctx, tp)
+	_, err = app.GovKeeper.SubmitProposal(ctx, tp, nil)
 	require.NoError(t, err)
-	_, err = app.GovKeeper.SubmitProposal(ctx, tp)
+	_, err = app.GovKeeper.SubmitProposal(ctx, tp, nil)
 	require.NoError(t, err)
-	proposal6, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal6, err := app.GovKeeper.SubmitProposal(ctx, tp, nil)
 	require.NoError(t, err)
 
 	require.Equal(t, uint64(6), proposal6.ProposalId)
@@ -64,10 +73,10 @@ func TestProposalQueues(t *testing.T) {
 
 	// create test proposals
 	tp := TestProposal
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, nil)
 	require.NoError(t, err)
 
-	inactiveIterator := app.GovKeeper.InactiveProposalQueueIterator(ctx, proposal.DepositEndTime)
+	inactiveIterator := app.GovKeeper.InactiveProposalQueueIterator(ctx, *proposal.DepositEndTime)
 	require.True(t, inactiveIterator.Valid())
 
 	proposalID := types.GetProposalIDFromBytes(inactiveIterator.Value())
@@ -79,7 +88,7 @@ func TestProposalQueues(t *testing.T) {
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposal.ProposalId)
 	require.True(t, ok)
 
-	activeIterator := app.GovKeeper.ActiveProposalQueueIterator(ctx, proposal.VotingEndTime)
+	activeIterator := app.GovKeeper.ActiveProposalQueueIterator(ctx, *proposal.VotingEndTime)
 	require.True(t, activeIterator.Valid())
 
 	proposalID, _ = types.SplitActiveProposalQueueKey(activeIterator.Key())

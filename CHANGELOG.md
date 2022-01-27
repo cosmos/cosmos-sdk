@@ -184,8 +184,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/upgrade) [\#10189](https://github.com/cosmos/cosmos-sdk/issues/10189) Removed potential sources of non-determinism in upgrades
 * [\#10422](https://github.com/cosmos/cosmos-sdk/pull/10422) and [\#10529](https://github.com/cosmos/cosmos-sdk/pull/10529) Add `MinCommissionRate` param to `x/staking` module.
 * [#10763](https://github.com/cosmos/cosmos-sdk/pull/10763) modify the fields in `TallyParams` to use `string` instead of `bytes`
-* [#10770](https://github.com/cosmos/cosmos-sdk/pull/10770) revert tx when block gas limit exceeded
-* (x/staking) [\#10885] (https://github.com/cosmos/cosmos-sdk/pull/10885) Add new `Cancel-Unbond` transaction to `x/staking` module. Delegators now cancel unbonding delegation entry and re-delegate back to validator.
+* [#10770](https://github.com/cosmos/cosmos-sdk/pull/10770) revert tx when block gas limit exceeded
+* (x/staking) [\#10885] (https://github.com/cosmos/cosmos-sdk/pull/10885) Add new `CancelUnbondingDelegation`
+  transaction to `x/staking` module. Delegators now cancel unbonding delegation entry and re-delegate back to validator.
 
  ### Deprecated
 

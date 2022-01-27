@@ -23,7 +23,7 @@ type KeeperTestSuite struct {
 	addrs       []sdk.AccAddress
 	vals        []types.Validator
 	queryClient types.QueryClient
-	msgServer types.MsgServer
+	msgServer   types.MsgServer
 }
 
 func (suite *KeeperTestSuite) SetupTest() {

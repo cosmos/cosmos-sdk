@@ -4,14 +4,11 @@ package testpb
 
 import (
 	context "context"
+	ormdb "github.com/cosmos/cosmos-sdk/orm/model/ormdb"
 	ormlist "github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+	ormerrors "github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
-
-type TestSchemaStore interface {
-	ExampleTable() ExampleTableStore
-	ExampleAutoIncrementTable() ExampleAutoIncrementTableStore
-}
 
 type ExampleTableStore interface {
 	Insert(ctx context.Context, exampleTable *ExampleTable) error
@@ -172,6 +169,14 @@ func (x exampleTableStore) ListRange(ctx context.Context, from, to ExampleTableI
 
 var _ ExampleTableStore = exampleTableStore{}
 
+func NewExampleTableStore(db ormdb.ModuleDB) (ExampleTableStore, error) {
+	table := db.GetTable(&ExampleTable{})
+	if table == nil {
+		return nil, ormerrors.TableNotFound.Wrap(string((&ExampleTable{}).ProtoReflect().Descriptor().FullName()))
+	}
+	return exampleTableStore{table}, nil
+}
+
 type ExampleAutoIncrementTableStore interface {
 	Insert(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
 	Update(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
@@ -269,10 +274,55 @@ func (x exampleAutoIncrementTableStore) ListRange(ctx context.Context, from, to 
 
 var _ ExampleAutoIncrementTableStore = exampleAutoIncrementTableStore{}
 
+func NewExampleAutoIncrementTableStore(db ormdb.ModuleDB) (ExampleAutoIncrementTableStore, error) {
+	table := db.GetTable(&ExampleAutoIncrementTable{})
+	if table == nil {
+		return nil, ormerrors.TableNotFound.Wrap(string((&ExampleAutoIncrementTable{}).ProtoReflect().Descriptor().FullName()))
+	}
+	return exampleAutoIncrementTableStore{table}, nil
+}
+
+// singleton store
+type ExampleSingletonStore interface {
+	Get(ctx context.Context) (*ExampleSingleton, error)
+	Save(ctx context.Context, exampleSingleton *ExampleSingleton) error
+}
+
+type exampleSingletonStore struct {
+	table ormtable.Table
+}
+
+func (x exampleSingletonStore) Get(ctx context.Context) (*ExampleSingleton, error) {
+	var exampleSingleton ExampleSingleton
+	found, err := x.table.Get(ctx, &exampleSingleton)
+	if !found {
+		return nil, err
+	}
+	return &exampleSingleton, err
+}
+
+func (x exampleSingletonStore) Save(ctx context.Context, exampleSingleton *ExampleSingleton) error {
+	return x.table.Save(ctx, exampleSingleton)
+}
+
+func NewExampleSingletonStore(db ormdb.ModuleDB) (ExampleSingletonStore, error) {
+	table := db.GetTable(&ExampleSingleton{})
+	if table == nil {
+		return nil, ormerrors.TableNotFound.Wrap(string((&ExampleSingleton{}).ProtoReflect().Descriptor().FullName()))
+	}
+	return &exampleSingletonStore{table}, nil
+}
+
+type TestSchemaStore interface {
+	ExampleTable() ExampleTableStore
+	ExampleAutoIncrementTable() ExampleAutoIncrementTableStore
+	ExampleSingleton() ExampleSingletonStore
+}
+
 type testSchemaStore struct {
-	exampleTable              *exampleTableStore
-	exampleAutoIncrementTable *exampleAutoIncrementTableStore
-	exampleSingleton          *exampleSingletonStore
+	exampleTable              ExampleTableStore
+	exampleAutoIncrementTable ExampleAutoIncrementTableStore
+	exampleSingleton          ExampleSingletonStore
 }
 
 func (x testSchemaStore) ExampleTable() ExampleTableStore {
@@ -286,3 +336,26 @@ func (x testSchemaStore) ExampleSingleton() ExampleSingletonStore {
 }
 
 var _ TestSchemaStore = testSchemaStore{}
+
+func NewTestSchemaStore(db ormdb.ModuleDB) (TestSchemaStore, error) {
+	exampleTableStore, err := NewExampleTableStore(db)
+	if err != nil {
+		return nil, err
+	}
+
+	exampleAutoIncrementTableStore, err := NewExampleAutoIncrementTableStore(db)
+	if err != nil {
+		return nil, err
+	}
+
+	exampleSingletonStore, err := NewExampleSingletonStore(db)
+	if err != nil {
+		return nil, err
+	}
+
+	return testSchemaStore{
+		exampleTableStore,
+		exampleAutoIncrementTableStore,
+		exampleSingletonStore,
+	}, nil
+}

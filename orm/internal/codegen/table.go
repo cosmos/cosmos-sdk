@@ -48,14 +48,12 @@ func newTableGen(fileGen fileGen, msg *protogen.Message, table *ormv1alpha1.Tabl
 
 func (t tableGen) gen() {
 	t.genStoreInterface()
-
-	// DEPRECATED: reader ifaces no more!
-	// t.genReaderInterface()
 	t.genIterator()
 	t.genIndexKeys()
 	t.genStruct()
 	t.genStoreImpl()
 	t.genStoreImplGuard()
+	t.genConstructor()
 }
 
 func (t tableGen) genStoreInterface() {
@@ -115,7 +113,7 @@ func (t tableGen) fieldArg(name protoreflect.Name) string {
 
 func (t tableGen) genIndexKeys() {
 	t.P("type ", t.indexKeyInterfaceName(), " interface {")
-	t.P(("id() uint32"))
+	t.P("id() uint32")
 	t.P("values() []interface{}")
 	t.P(t.param(t.indexKeyInterfaceName()), "()")
 	t.P("}")
@@ -246,4 +244,15 @@ func (t tableGen) genStoreImpl() {
 
 func (t tableGen) genStoreImplGuard() {
 	t.P("var _ ", t.messageStoreInterfaceName(t.msg), " = ", t.messageStoreReceiverName(t.msg), "{}")
+}
+
+func (t tableGen) genConstructor() {
+	iface := t.messageStoreInterfaceName(t.msg)
+	t.P("func New", iface, "(db ", ormdbPkg.Ident("ModuleDB"), ") (", iface, ", error) {")
+	t.P("table := db.GetTable(&", t.msg.GoIdent.GoName, "{})")
+	t.P("if table == nil {")
+	t.P("return nil,", ormErrPkg.Ident("TableNotFound.Wrap"), "(string((&", t.msg.GoIdent.GoName, "{}).ProtoReflect().Descriptor().FullName()))")
+	t.P("}")
+	t.P("return ", t.messageStoreReceiverName(t.msg), "{table}, nil")
+	t.P("}")
 }

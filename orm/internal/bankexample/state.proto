@@ -11,6 +11,7 @@ message Balance {
     id: 1;
     primary_key:{fields: "address,denom"}
     index: {id: 1 fields: "denom"}
+    index: {id: 2 fields: "amount"}
   };
 
   string address = 1;
@@ -26,4 +27,17 @@ message Supply {
 
   string denom = 1;
   uint64 amount = 2;
+}
+
+message Example {
+  option (cosmos.orm.v1alpha1.singleton) = {
+    id: 3;
+  };
+
+  string foo = 1;
+}
+
+message ShouldNotGen {
+  string foo = 1;
+  int64 bar = 2;
 }

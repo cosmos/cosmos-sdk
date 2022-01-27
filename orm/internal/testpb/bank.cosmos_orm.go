@@ -4,14 +4,11 @@ package testpb
 
 import (
 	context "context"
+	ormdb "github.com/cosmos/cosmos-sdk/orm/model/ormdb"
 	ormlist "github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+	ormerrors "github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
-
-type BankStore interface {
-	Balance() BalanceStore
-	Supply() SupplyStore
-}
 
 type BalanceStore interface {
 	Insert(ctx context.Context, balance *Balance) error
@@ -118,6 +115,14 @@ func (x balanceStore) ListRange(ctx context.Context, from, to BalanceIndexKey, o
 
 var _ BalanceStore = balanceStore{}
 
+func NewBalanceStore(db ormdb.ModuleDB) (BalanceStore, error) {
+	table := db.GetTable(&Balance{})
+	if table == nil {
+		return nil, ormerrors.TableNotFound.Wrap(string((&Balance{}).ProtoReflect().Descriptor().FullName()))
+	}
+	return balanceStore{table}, nil
+}
+
 type SupplyStore interface {
 	Insert(ctx context.Context, supply *Supply) error
 	Update(ctx context.Context, supply *Supply) error
@@ -200,9 +205,22 @@ func (x supplyStore) ListRange(ctx context.Context, from, to SupplyIndexKey, opt
 
 var _ SupplyStore = supplyStore{}
 
+func NewSupplyStore(db ormdb.ModuleDB) (SupplyStore, error) {
+	table := db.GetTable(&Supply{})
+	if table == nil {
+		return nil, ormerrors.TableNotFound.Wrap(string((&Supply{}).ProtoReflect().Descriptor().FullName()))
+	}
+	return supplyStore{table}, nil
+}
+
+type BankStore interface {
+	Balance() BalanceStore
+	Supply() SupplyStore
+}
+
 type bankStore struct {
-	balance *balanceStore
-	supply  *supplyStore
+	balance BalanceStore
+	supply  SupplyStore
 }
 
 func (x bankStore) Balance() BalanceStore {
@@ -213,3 +231,20 @@ func (x bankStore) Supply() SupplyStore {
 }
 
 var _ BankStore = bankStore{}
+
+func NewBankStore(db ormdb.ModuleDB) (BankStore, error) {
+	balanceStore, err := NewBalanceStore(db)
+	if err != nil {
+		return nil, err
+	}
+
+	supplyStore, err := NewSupplyStore(db)
+	if err != nil {
+		return nil, err
+	}
+
+	return bankStore{
+		balanceStore,
+		supplyStore,
+	}, nil
+}

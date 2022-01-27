@@ -4,14 +4,11 @@ package bankexample
 
 import (
 	context "context"
+	ormdb "github.com/cosmos/cosmos-sdk/orm/model/ormdb"
 	ormlist "github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+	ormerrors "github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
-
-type StateStore interface {
-	Balance() BalanceStore
-	Supply() SupplyStore
-}
 
 type BalanceStore interface {
 	Insert(ctx context.Context, balance *Balance) error
@@ -78,6 +75,29 @@ func (x BalanceDenomAddressIndexKey) WithDenomAddress(denom string, address stri
 	return x
 }
 
+type BalanceAmountAddressDenomIndexKey struct {
+	vs []interface{}
+}
+
+func (x BalanceAmountAddressDenomIndexKey) id() uint32            { return 1 /* primary key */ }
+func (x BalanceAmountAddressDenomIndexKey) values() []interface{} { return x.vs }
+func (x BalanceAmountAddressDenomIndexKey) balanceIndexKey()      {}
+
+var _ BalanceIndexKey = BalanceAmountAddressDenomIndexKey{}
+
+func (x BalanceAmountAddressDenomIndexKey) WithAmount(amount uint64) BalanceAmountAddressDenomIndexKey {
+	x.vs = []interface{}{amount}
+	return x
+}
+func (x BalanceAmountAddressDenomIndexKey) WithAddress(address string) BalanceAmountAddressDenomIndexKey {
+	x.vs = []interface{}{address}
+	return x
+}
+func (x BalanceAmountAddressDenomIndexKey) WithAmountAddressDenom(amount uint64, address string, denom string) BalanceAmountAddressDenomIndexKey {
+	x.vs = []interface{}{amount, address, denom}
+	return x
+}
+
 type balanceStore struct {
 	table ormtable.Table
 }
@@ -117,6 +137,14 @@ func (x balanceStore) ListRange(ctx context.Context, from, to BalanceIndexKey, o
 }
 
 var _ BalanceStore = balanceStore{}
+
+func NewBalanceStore(db ormdb.ModuleDB) (BalanceStore, error) {
+	table := db.GetTable(&Balance{})
+	if table == nil {
+		return nil, ormerrors.TableNotFound.Wrap(string((&Balance{}).ProtoReflect().Descriptor().FullName()))
+	}
+	return balanceStore{table}, nil
+}
 
 type SupplyStore interface {
 	Insert(ctx context.Context, supply *Supply) error
@@ -200,9 +228,55 @@ func (x supplyStore) ListRange(ctx context.Context, from, to SupplyIndexKey, opt
 
 var _ SupplyStore = supplyStore{}
 
+func NewSupplyStore(db ormdb.ModuleDB) (SupplyStore, error) {
+	table := db.GetTable(&Supply{})
+	if table == nil {
+		return nil, ormerrors.TableNotFound.Wrap(string((&Supply{}).ProtoReflect().Descriptor().FullName()))
+	}
+	return supplyStore{table}, nil
+}
+
+// singleton store
+type ExampleStore interface {
+	Get(ctx context.Context) (*Example, error)
+	Save(ctx context.Context, example *Example) error
+}
+
+type exampleStore struct {
+	table ormtable.Table
+}
+
+func (x exampleStore) Get(ctx context.Context) (*Example, error) {
+	var example Example
+	found, err := x.table.Get(ctx, &example)
+	if !found {
+		return nil, err
+	}
+	return &example, err
+}
+
+func (x exampleStore) Save(ctx context.Context, example *Example) error {
+	return x.table.Save(ctx, example)
+}
+
+func NewExampleStore(db ormdb.ModuleDB) (ExampleStore, error) {
+	table := db.GetTable(&Example{})
+	if table == nil {
+		return nil, ormerrors.TableNotFound.Wrap(string((&Example{}).ProtoReflect().Descriptor().FullName()))
+	}
+	return &exampleStore{table}, nil
+}
+
+type StateStore interface {
+	Balance() BalanceStore
+	Supply() SupplyStore
+	Example() ExampleStore
+}
+
 type stateStore struct {
-	balance *balanceStore
-	supply  *supplyStore
+	balance BalanceStore
+	supply  SupplyStore
+	example ExampleStore
 }
 
 func (x stateStore) Balance() BalanceStore {
@@ -211,5 +285,31 @@ func (x stateStore) Balance() BalanceStore {
 func (x stateStore) Supply() SupplyStore {
 	return x.supply
 }
+func (x stateStore) Example() ExampleStore {
+	return x.example
+}
 
 var _ StateStore = stateStore{}
+
+func NewStateStore(db ormdb.ModuleDB) (StateStore, error) {
+	balanceStore, err := NewBalanceStore(db)
+	if err != nil {
+		return nil, err
+	}
+
+	supplyStore, err := NewSupplyStore(db)
+	if err != nil {
+		return nil, err
+	}
+
+	exampleStore, err := NewExampleStore(db)
+	if err != nil {
+		return nil, err
+	}
+
+	return stateStore{
+		balanceStore,
+		supplyStore,
+		exampleStore,
+	}, nil
+}

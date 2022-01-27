@@ -1,6 +1,7 @@
 package feegrant
 
 import (
+	"fmt"
 	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,6 +39,9 @@ var (
 // Key format:
 // - <0x00><len(grantee_address_bytes)><grantee_address_bytes><len(granter_address_bytes)><granter_address_bytes>
 func FeeAllowanceKey(granter sdk.AccAddress, grantee sdk.AccAddress) []byte {
+	fmt.Println("granter", address.MustLengthPrefix(granter.Bytes()))
+	fmt.Println("grantee", address.MustLengthPrefix(grantee.Bytes()))
+	fmt.Println("-----------------------------------------------------")
 	return append(FeeAllowancePrefixByGrantee(grantee), address.MustLengthPrefix(granter.Bytes())...)
 }
 
@@ -68,16 +72,17 @@ func AllowanceByExpTimeKey(exp *time.Time) []byte {
 }
 
 // ParseAddressesFromFeeAllowanceKey exrtacts and returns the granter, grantee from the given key.
+// Note: do not send the key with store prefix, remove the store prefix (first byte) while sending.
 func ParseAddressesFromFeeAllowanceKey(key []byte) (granter, grantee sdk.AccAddress) {
 	// key is of format:
-	// 0x00<granteeAddressLen (1 Byte)><granteeAddress_Bytes><granterAddressLen (1 Byte)><granterAddress_Bytes><msgType_Bytes>
-	kv.AssertKeyAtLeastLength(key, 2)
-	granteeAddrLen := key[1] // remove prefix key
-	kv.AssertKeyAtLeastLength(key, int(2+granteeAddrLen))
-	grantee = sdk.AccAddress(key[2 : 2+granteeAddrLen])
-	granterAddrLen := int(key[2+granteeAddrLen])
-	kv.AssertKeyAtLeastLength(key, 3+int(granteeAddrLen+byte(granterAddrLen)))
-	granter = sdk.AccAddress(key[3+granterAddrLen : 3+granteeAddrLen+byte(granterAddrLen)])
+	// <granteeAddressLen (1 Byte)><granteeAddress_Bytes><granterAddressLen (1 Byte)><granterAddress_Bytes>
+	kv.AssertKeyAtLeastLength(key, 1)
+	granteeAddrLen := key[0] // remove prefix key
+	kv.AssertKeyAtLeastLength(key, 1+int(granteeAddrLen))
+	grantee = sdk.AccAddress(key[1 : 1+int(granteeAddrLen)])
+	granterAddrLen := int(key[1+granteeAddrLen])
+	kv.AssertKeyAtLeastLength(key, 2+int(granteeAddrLen)+int(granterAddrLen))
+	granter = sdk.AccAddress(key[2+granterAddrLen : 2+int(granteeAddrLen)+int(granterAddrLen)])
 
 	return granter, grantee
 }

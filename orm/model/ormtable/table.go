@@ -123,3 +123,11 @@ type Table interface {
 	// ID is the ID of this table within the schema of its FileDescriptor.
 	ID() uint32
 }
+
+type AutoIncrementTable interface {
+	Table
+
+	// InsertWithID inserts the provided entry in the store and returns the newly
+	// generated ID for the message or an error.
+	InsertWithID(ctx context.Context, message proto.Message) (newId uint64, err error)
+}

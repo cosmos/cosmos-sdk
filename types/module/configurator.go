@@ -2,6 +2,7 @@ package module
 
 import (
 	"fmt"
+
 	"github.com/gogo/protobuf/grpc"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -52,8 +53,6 @@ func NewConfigurator(cdc codec.Codec, msgServer grpc.Server, queryServer grpc.Se
 		queryServer: queryServer,
 		migrations:  map[string]map[uint64]MigrationHandler{},
 	}
-
-	return c
 }
 
 var _ Configurator = configurator{}

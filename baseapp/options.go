@@ -196,15 +196,6 @@ func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
 	app.storeOpts = append(app.storeOpts, opt)
 }
 
-// SetStoreLoader allows us to customize the root store initialization.
-func (app *BaseApp) SetStoreConstructor(ctor StoreConstructor) {
-	if app.sealed {
-		panic("SetStoreConstructor() on sealed BaseApp")
-	}
-
-	app.storeCtor = ctor
-}
-
 // SetSnapshotStore sets the snapshot store.
 func (app *BaseApp) SetSnapshotStore(snapshotStore *snapshots.Store) {
 	if app.sealed {

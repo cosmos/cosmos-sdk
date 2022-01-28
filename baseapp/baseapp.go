@@ -39,12 +39,11 @@ type (
 	StoreParams = multi.StoreParams
 	// StoreOption provides a functional callback to modify StoreParams.
 	// The callback is passed the loaded height as uint64.
+	// This can be used to control how we load the CommitMultiStore from disk. This is useful for
+	// state migration, when loading a datastore written with an older version of the software.
+	// In particular, if a module changed the substore key name (or removed a substore) between
+	// two versions of the software.
 	StoreOption func(*StoreParams, uint64) error
-	// StoreConstructor defines a customizable function to control how we load the CommitMultiStore
-	// from disk. This is useful for state migration, when loading a datastore written with
-	// an older version of the software. In particular, if a module changed the substore key name
-	// (or removed a substore) between two versions of the software.
-	StoreConstructor func(dbm.DBConnection, StoreParams) (sdk.CommitMultiStore, error)
 
 	// AppOption provides a configuration option for a BaseApp
 	AppOption interface {
@@ -68,7 +67,6 @@ type BaseApp struct { // nolint: maligned
 	logger            log.Logger
 	name              string // application name from abci.Info
 	db                dbm.DBConnection
-	storeCtor         StoreConstructor
 	storeOpts         []StoreOption        // options to configure root store
 	store             sdk.CommitMultiStore // Main (uncached) state
 	queryRouter       sdk.QueryRouter      // router for redirecting query calls
@@ -176,7 +174,6 @@ func NewBaseApp(
 		logger:          logger,
 		name:            name,
 		db:              db,
-		storeCtor:       DefaultStoreConstructor,
 		queryRouter:     NewQueryRouter(),
 		grpcQueryRouter: NewGRPCQueryRouter(),
 		fauxMerkleMode:  false,
@@ -236,7 +233,7 @@ func (app *BaseApp) loadStore() error {
 	for _, opt := range app.storeOpts {
 		opt(&config, latest)
 	}
-	app.store, err = app.storeCtor(app.db, config)
+	app.store, err = multi.NewStore(app.db, config)
 	if err != nil {
 		return fmt.Errorf("failed to load store: %w", err)
 	}
@@ -245,11 +242,6 @@ func (app *BaseApp) loadStore() error {
 
 func (app *BaseApp) CloseStore() error {
 	return app.store.Close()
-}
-
-// DefaultStoreConstructor attempts to create a new store, but loads from existing data if present.
-func DefaultStoreConstructor(db dbm.DBConnection, config StoreParams) (stypes.CommitMultiStore, error) {
-	return multi.NewStore(db, config)
 }
 
 // LastCommitID returns the last CommitID of the multistore.

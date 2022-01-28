@@ -327,15 +327,10 @@ func TestLoadVersion(t *testing.T) {
 
 	// reload with latest version
 	app = baseapp.NewBaseApp(name, logger, db, pruningOpt)
-	app.SetStoreConstructor(baseapp.DefaultStoreConstructor)
 	err = app.Init()
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(2), commitID2)
 }
-
-var useDefaultConstructor = baseapp.AppOptionFunc(func(app *baseapp.BaseApp) {
-	app.SetStoreConstructor(baseapp.DefaultStoreConstructor)
-})
 
 func initStore(t *testing.T, db dbm.DBConnection, storeKey string, k, v []byte) {
 	key := sdk.NewKVStoreKey(storeKey)
@@ -360,7 +355,7 @@ func checkStore(t *testing.T, db dbm.DBConnection, ver int64, storeKey string, k
 	opts.Pruning = stypes.PruneNothing
 	key := sdk.NewKVStoreKey(storeKey)
 	require.NoError(t, opts.RegisterSubstore(key.Name(), stypes.StoreTypePersistent))
-	rs, err := baseapp.DefaultStoreConstructor(db, opts)
+	rs, err := multi.NewStore(db, opts)
 	require.NoError(t, err)
 	require.Equal(t, ver, rs.LastCommitID().Version)
 
@@ -369,60 +364,6 @@ func checkStore(t *testing.T, db dbm.DBConnection, ver int64, storeKey string, k
 	require.NotNil(t, kv)
 	require.Equal(t, v, kv.Get(k))
 	require.NoError(t, rs.Close())
-}
-
-// Test that we can make commits and then reload old versions.
-// Test that LoadLatestVersion actually does.
-func TestSetConstructor(t *testing.T) {
-	cases := map[string]struct {
-		setConstructor baseapp.AppOption
-		origStoreKey   string
-		loadStoreKey   string
-	}{
-		"don't set constructor": {
-			origStoreKey: "foo",
-			loadStoreKey: "foo",
-		},
-		"default constructor": {
-			setConstructor: useDefaultConstructor,
-			origStoreKey:   "foo",
-			loadStoreKey:   "foo",
-		},
-	}
-
-	k := []byte("key")
-	v := []byte("value")
-
-	for name, tc := range cases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			// prepare a db with some data
-			db := memdb.NewDB()
-			initStore(t, db, tc.origStoreKey, k, v)
-
-			// load the app with the existing db
-			opts := []baseapp.AppOption{
-				baseapp.SetPruning(stypes.PruneNothing),
-				baseapp.SetSubstores(sdk.NewKVStoreKey(tc.loadStoreKey)),
-			}
-			if tc.setConstructor != nil {
-				opts = append(opts, tc.setConstructor)
-			}
-			app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, opts...)
-			err := app.Init()
-			require.Nil(t, err)
-
-			// "execute" one block
-			app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
-			res := app.Commit()
-			require.NotNil(t, res.Data)
-			require.NoError(t, app.CloseStore())
-
-			// check db is properly updated
-			checkStore(t, db, 2, tc.loadStoreKey, k, v)
-			checkStore(t, db, 2, tc.loadStoreKey, []byte("foo"), nil)
-		})
-	}
 }
 
 func TestVersionSetterGetter(t *testing.T) {

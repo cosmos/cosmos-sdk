@@ -374,25 +374,35 @@ func (q legacyQueryServer) Params(c context.Context, req *v1beta1.QueryParamsReq
 		return nil, err
 	}
 
-	minDeposit := sdk.NewCoins(resp.DepositParams.MinDeposit...)
-	quorum, err := sdk.NewDecFromStr(resp.TallyParams.Quorum)
-	if err != nil {
-		return nil, err
-	}
-	threshold, err := sdk.NewDecFromStr(resp.TallyParams.Threshold)
-	if err != nil {
-		return nil, err
-	}
-	vetoThreshold, err := sdk.NewDecFromStr(resp.TallyParams.VetoThreshold)
-	if err != nil {
-		return nil, err
+	response := &v1beta1.QueryParamsResponse{}
+
+	if resp.DepositParams != nil {
+		minDeposit := sdk.NewCoins(resp.DepositParams.MinDeposit...)
+		response.DepositParams = v1beta1.NewDepositParams(minDeposit, *resp.DepositParams.MaxDepositPeriod)
 	}
 
-	return &v1beta1.QueryParamsResponse{
-		VotingParams:  v1beta1.NewVotingParams(*resp.VotingParams.VotingPeriod),
-		DepositParams: v1beta1.NewDepositParams(minDeposit, *resp.DepositParams.MaxDepositPeriod),
-		TallyParams:   v1beta1.NewTallyParams(quorum, threshold, vetoThreshold),
-	}, nil
+	if resp.VotingParams != nil {
+		response.VotingParams = v1beta1.NewVotingParams(*resp.VotingParams.VotingPeriod)
+	}
+
+	if resp.TallyParams != nil {
+		quorum, err := sdk.NewDecFromStr(resp.TallyParams.Quorum)
+		if err != nil {
+			return nil, err
+		}
+		threshold, err := sdk.NewDecFromStr(resp.TallyParams.Threshold)
+		if err != nil {
+			return nil, err
+		}
+		vetoThreshold, err := sdk.NewDecFromStr(resp.TallyParams.VetoThreshold)
+		if err != nil {
+			return nil, err
+		}
+
+		response.TallyParams = v1beta1.NewTallyParams(quorum, threshold, vetoThreshold)
+	}
+
+	return response, nil
 }
 
 func (q legacyQueryServer) Deposit(c context.Context, req *v1beta1.QueryDepositRequest) (*v1beta1.QueryDepositResponse, error) {

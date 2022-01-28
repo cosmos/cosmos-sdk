@@ -4,6 +4,7 @@ package testpb
 
 import (
 	context "context"
+
 	ormdb "github.com/cosmos/cosmos-sdk/orm/model/ormdb"
 	ormlist "github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
@@ -40,6 +41,8 @@ type BalanceIndexKey interface {
 }
 
 // primary key starting index..
+type BalancePrimaryKey = BalanceAddressDenomIndexKey
+
 type BalanceAddressDenomIndexKey struct {
 	vs []interface{}
 }
@@ -105,13 +108,13 @@ func (this balanceStore) Get(ctx context.Context, address string, denom string) 
 }
 
 func (this balanceStore) List(ctx context.Context, prefixKey BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error) {
-	opts = append(opts, ormlist.Prefix(prefixKey.values()))
+	opts = append(opts, ormlist.Prefix(prefixKey.values()...))
 	it, err := this.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
 	return BalanceIterator{it}, err
 }
 
 func (this balanceStore) ListRange(ctx context.Context, from, to BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error) {
-	opts = append(opts, ormlist.Start(from.values()), ormlist.End(to))
+	opts = append(opts, ormlist.Start(from.values()...), ormlist.End(to.values()...))
 	it, err := this.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
 	return BalanceIterator{it}, err
 }
@@ -158,6 +161,8 @@ type SupplyIndexKey interface {
 }
 
 // primary key starting index..
+type SupplyPrimaryKey = SupplyDenomIndexKey
+
 type SupplyDenomIndexKey struct {
 	vs []interface{}
 }
@@ -205,13 +210,13 @@ func (this supplyStore) Get(ctx context.Context, denom string) (*Supply, error) 
 }
 
 func (this supplyStore) List(ctx context.Context, prefixKey SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error) {
-	opts = append(opts, ormlist.Prefix(prefixKey.values()))
+	opts = append(opts, ormlist.Prefix(prefixKey.values()...))
 	it, err := this.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
 	return SupplyIterator{it}, err
 }
 
 func (this supplyStore) ListRange(ctx context.Context, from, to SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error) {
-	opts = append(opts, ormlist.Start(from.values()), ormlist.End(to))
+	opts = append(opts, ormlist.Start(from.values()...), ormlist.End(to.values()...))
 	it, err := this.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
 	return SupplyIterator{it}, err
 }

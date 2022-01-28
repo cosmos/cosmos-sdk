@@ -217,7 +217,7 @@ func (t tableGen) genStoreImpl() {
 
 	// List
 	t.P(receiver, "List(ctx ", contextPkg.Ident("Context"), ", prefixKey ", t.indexKeyInterfaceName(), ", opts ...", ormListPkg.Ident("Option"), ") (", t.iteratorName(), ", error) {")
-	t.P("opts = append(opts, ", ormListPkg.Ident("Prefix"), "(prefixKey.values()))")
+	t.P("opts = append(opts, ", ormListPkg.Ident("Prefix"), "(prefixKey.values()...))")
 	t.P("it, err := ", receiverVar, ".table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)")
 	t.P("return ", t.iteratorName(), "{it}, err")
 	t.P("}")
@@ -225,7 +225,7 @@ func (t tableGen) genStoreImpl() {
 
 	// ListRange
 	t.P(receiver, "ListRange(ctx ", contextPkg.Ident("Context"), ", from, to ", t.indexKeyInterfaceName(), ", opts ...", ormListPkg.Ident("Option"), ") (", t.iteratorName(), ", error) {")
-	t.P("opts = append(opts, ", ormListPkg.Ident("Start"), "(from.values()), ", ormListPkg.Ident("End"), "(to))")
+	t.P("opts = append(opts, ", ormListPkg.Ident("Start"), "(from.values()...), ", ormListPkg.Ident("End"), "(to.values()...))")
 	t.P("it, err := ", receiverVar, ".table.GetIndexByID(from.id()).Iterator(ctx, opts...)")
 	t.P("return ", t.iteratorName(), "{it}, err")
 	t.P("}")

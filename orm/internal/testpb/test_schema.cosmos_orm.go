@@ -4,6 +4,7 @@ package testpb
 
 import (
 	context "context"
+
 	ormdb "github.com/cosmos/cosmos-sdk/orm/model/ormdb"
 	ormlist "github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
@@ -42,6 +43,8 @@ type ExampleTableIndexKey interface {
 }
 
 // primary key starting index..
+type ExampleTablePrimaryKey = ExampleTableU32I64StrIndexKey
+
 type ExampleTableU32I64StrIndexKey struct {
 	vs []interface{}
 }
@@ -172,13 +175,13 @@ func (this exampleTableStore) GetByU64Str(ctx context.Context, u64 uint64, str s
 }
 
 func (this exampleTableStore) List(ctx context.Context, prefixKey ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error) {
-	opts = append(opts, ormlist.Prefix(prefixKey.values()))
+	opts = append(opts, ormlist.Prefix(prefixKey.values()...))
 	it, err := this.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
 	return ExampleTableIterator{it}, err
 }
 
 func (this exampleTableStore) ListRange(ctx context.Context, from, to ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error) {
-	opts = append(opts, ormlist.Start(from.values()), ormlist.End(to))
+	opts = append(opts, ormlist.Start(from.values()...), ormlist.End(to.values()...))
 	it, err := this.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
 	return ExampleTableIterator{it}, err
 }
@@ -227,6 +230,8 @@ type ExampleAutoIncrementTableIndexKey interface {
 }
 
 // primary key starting index..
+type ExampleAutoIncrementTablePrimaryKey = ExampleAutoIncrementTableIdIndexKey
+
 type ExampleAutoIncrementTableIdIndexKey struct {
 	vs []interface{}
 }
@@ -304,13 +309,13 @@ func (this exampleAutoIncrementTableStore) GetByX(ctx context.Context, x string)
 }
 
 func (this exampleAutoIncrementTableStore) List(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error) {
-	opts = append(opts, ormlist.Prefix(prefixKey.values()))
+	opts = append(opts, ormlist.Prefix(prefixKey.values()...))
 	it, err := this.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
 	return ExampleAutoIncrementTableIterator{it}, err
 }
 
 func (this exampleAutoIncrementTableStore) ListRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error) {
-	opts = append(opts, ormlist.Start(from.values()), ormlist.End(to))
+	opts = append(opts, ormlist.Start(from.values()...), ormlist.End(to.values()...))
 	it, err := this.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
 	return ExampleAutoIncrementTableIterator{it}, err
 }

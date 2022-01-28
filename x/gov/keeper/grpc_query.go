@@ -341,7 +341,10 @@ func (q legacyQueryServer) Vote(c context.Context, req *v1beta1.QueryVoteRequest
 		return nil, err
 	}
 
-	vote := v046.ConvertToLegacyVote(*resp.Vote)
+	vote, err := v046.ConvertToLegacyVote(*resp.Vote)
+	if err != nil {
+		return nil, err
+	}
 
 	return &v1beta1.QueryVoteResponse{Vote: vote}, nil
 }
@@ -357,7 +360,10 @@ func (q legacyQueryServer) Votes(c context.Context, req *v1beta1.QueryVotesReque
 
 	votes := make([]v1beta1.Vote, len(resp.Votes))
 	for i, v := range resp.Votes {
-		votes[i] = v046.ConvertToLegacyVote(*v)
+		votes[i], err = v046.ConvertToLegacyVote(*v)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &v1beta1.QueryVotesResponse{
@@ -442,7 +448,10 @@ func (q legacyQueryServer) TallyResult(c context.Context, req *v1beta1.QueryTall
 		return nil, err
 	}
 
-	tally := v046.ConvertToLegacyTallyResult(resp.Tally)
+	tally, err := v046.ConvertToLegacyTallyResult(resp.Tally)
+	if err != nil {
+		return nil, err
+	}
 
 	return &v1beta1.QueryTallyResultResponse{Tally: tally}, nil
 }

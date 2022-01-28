@@ -21,6 +21,8 @@ type ExampleTableStore interface {
 	GetByU64Str(ctx context.Context, u64 uint64, str string) (*ExampleTable, error)
 	List(ctx context.Context, prefixKey ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error)
 	ListRange(ctx context.Context, from, to ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error)
+
+	doNotImplement()
 }
 
 type ExampleTableIterator struct {
@@ -124,18 +126,23 @@ type exampleTableStore struct {
 func (this exampleTableStore) Insert(ctx context.Context, exampleTable *ExampleTable) error {
 	return this.table.Insert(ctx, exampleTable)
 }
+
 func (this exampleTableStore) Update(ctx context.Context, exampleTable *ExampleTable) error {
 	return this.table.Update(ctx, exampleTable)
 }
+
 func (this exampleTableStore) Save(ctx context.Context, exampleTable *ExampleTable) error {
 	return this.table.Save(ctx, exampleTable)
 }
+
 func (this exampleTableStore) Delete(ctx context.Context, exampleTable *ExampleTable) error {
 	return this.table.Delete(ctx, exampleTable)
 }
+
 func (this exampleTableStore) Has(ctx context.Context, u32 uint32, i64 int64, str string) (found bool, err error) {
 	return this.table.PrimaryKey().Has(ctx, u32, i64, str)
 }
+
 func (this exampleTableStore) Get(ctx context.Context, u32 uint32, i64 int64, str string) (*ExampleTable, error) {
 	var exampleTable ExampleTable
 	found, err := this.table.PrimaryKey().Get(ctx, &exampleTable, u32, i64, str)
@@ -144,12 +151,14 @@ func (this exampleTableStore) Get(ctx context.Context, u32 uint32, i64 int64, st
 	}
 	return &exampleTable, err
 }
+
 func (this exampleTableStore) HasByU64Str(ctx context.Context, u64 uint64, str string) (found bool, err error) {
 	return this.table.Has(ctx, &ExampleTable{
 		U64: u64,
 		Str: str,
 	})
 }
+
 func (this exampleTableStore) GetByU64Str(ctx context.Context, u64 uint64, str string) (*ExampleTable, error) {
 	exampleTable := &ExampleTable{
 		U64: u64,
@@ -161,16 +170,20 @@ func (this exampleTableStore) GetByU64Str(ctx context.Context, u64 uint64, str s
 	}
 	return exampleTable, nil
 }
+
 func (this exampleTableStore) List(ctx context.Context, prefixKey ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error) {
 	opts = append(opts, ormlist.Prefix(prefixKey.values()))
 	it, err := this.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
 	return ExampleTableIterator{it}, err
 }
+
 func (this exampleTableStore) ListRange(ctx context.Context, from, to ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error) {
 	opts = append(opts, ormlist.Start(from.values()), ormlist.End(to))
 	it, err := this.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
 	return ExampleTableIterator{it}, err
 }
+
+func (this exampleTableStore) doNotImplement() {}
 
 var _ ExampleTableStore = exampleTableStore{}
 
@@ -193,6 +206,8 @@ type ExampleAutoIncrementTableStore interface {
 	GetByX(ctx context.Context, x string) (*ExampleAutoIncrementTable, error)
 	List(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error)
 	ListRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error)
+
+	doNotImplement()
 }
 
 type ExampleAutoIncrementTableIterator struct {
@@ -245,18 +260,23 @@ type exampleAutoIncrementTableStore struct {
 func (this exampleAutoIncrementTableStore) Insert(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
 	return this.table.Insert(ctx, exampleAutoIncrementTable)
 }
+
 func (this exampleAutoIncrementTableStore) Update(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
 	return this.table.Update(ctx, exampleAutoIncrementTable)
 }
+
 func (this exampleAutoIncrementTableStore) Save(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
 	return this.table.Save(ctx, exampleAutoIncrementTable)
 }
+
 func (this exampleAutoIncrementTableStore) Delete(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
 	return this.table.Delete(ctx, exampleAutoIncrementTable)
 }
+
 func (this exampleAutoIncrementTableStore) Has(ctx context.Context, id uint64) (found bool, err error) {
 	return this.table.PrimaryKey().Has(ctx, id)
 }
+
 func (this exampleAutoIncrementTableStore) Get(ctx context.Context, id uint64) (*ExampleAutoIncrementTable, error) {
 	var exampleAutoIncrementTable ExampleAutoIncrementTable
 	found, err := this.table.PrimaryKey().Get(ctx, &exampleAutoIncrementTable, id)
@@ -265,11 +285,13 @@ func (this exampleAutoIncrementTableStore) Get(ctx context.Context, id uint64) (
 	}
 	return &exampleAutoIncrementTable, err
 }
+
 func (this exampleAutoIncrementTableStore) HasByX(ctx context.Context, x string) (found bool, err error) {
 	return this.table.Has(ctx, &ExampleAutoIncrementTable{
 		X: x,
 	})
 }
+
 func (this exampleAutoIncrementTableStore) GetByX(ctx context.Context, x string) (*ExampleAutoIncrementTable, error) {
 	exampleAutoIncrementTable := &ExampleAutoIncrementTable{
 		X: x,
@@ -280,16 +302,20 @@ func (this exampleAutoIncrementTableStore) GetByX(ctx context.Context, x string)
 	}
 	return exampleAutoIncrementTable, nil
 }
+
 func (this exampleAutoIncrementTableStore) List(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error) {
 	opts = append(opts, ormlist.Prefix(prefixKey.values()))
 	it, err := this.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
 	return ExampleAutoIncrementTableIterator{it}, err
 }
+
 func (this exampleAutoIncrementTableStore) ListRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error) {
 	opts = append(opts, ormlist.Start(from.values()), ormlist.End(to))
 	it, err := this.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
 	return ExampleAutoIncrementTableIterator{it}, err
 }
+
+func (this exampleAutoIncrementTableStore) doNotImplement() {}
 
 var _ ExampleAutoIncrementTableStore = exampleAutoIncrementTableStore{}
 
@@ -338,6 +364,8 @@ type TestSchemaStore interface {
 	ExampleTableStore() ExampleTableStore
 	ExampleAutoIncrementTableStore() ExampleAutoIncrementTableStore
 	ExampleSingletonStore() ExampleSingletonStore
+
+	doNotImplement()
 }
 
 type testSchemaStore struct {
@@ -349,12 +377,16 @@ type testSchemaStore struct {
 func (x testSchemaStore) ExampleTableStore() ExampleTableStore {
 	return x.exampleTable
 }
+
 func (x testSchemaStore) ExampleAutoIncrementTableStore() ExampleAutoIncrementTableStore {
 	return x.exampleAutoIncrementTable
 }
+
 func (x testSchemaStore) ExampleSingletonStore() ExampleSingletonStore {
 	return x.exampleSingleton
 }
+
+func (testSchemaStore) doNotImplement() {}
 
 var _ TestSchemaStore = testSchemaStore{}
 

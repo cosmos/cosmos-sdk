@@ -72,6 +72,8 @@ func (t tableGen) genStoreInterface() {
 	}
 	t.P("List(ctx ", contextPkg.Ident("Context"), ", prefixKey ", t.indexKeyInterfaceName(), ", opts ...", ormListPkg.Ident("Option"), ") ", "(", t.iteratorName(), ", error)")
 	t.P("ListRange(ctx ", contextPkg.Ident("Context"), ", from, to ", t.indexKeyInterfaceName(), ", opts ...", ormListPkg.Ident("Option"), ") ", "(", t.iteratorName(), ", error)")
+	t.P()
+	t.P("doNotImplement()")
 	t.P("}")
 	t.P()
 }
@@ -164,12 +166,14 @@ func (t tableGen) genStoreImpl() {
 		t.P(receiver, method, "(ctx ", contextPkg.Ident("Context"), ", ", varName, " *", varTypeName, ") error {")
 		t.P("return ", receiverVar, ".table.", method, "(ctx, ", varName, ")")
 		t.P("}")
+		t.P()
 	}
 
 	// Has
 	t.P(receiver, "Has(ctx ", contextPkg.Ident("Context"), ", ", t.fieldsArgs(t.primaryKeyFields.Names()), ") (found bool, err error) {")
 	t.P("return ", receiverVar, ".table.PrimaryKey().Has(ctx, ", t.primaryKeyFields.String(), ")")
 	t.P("}")
+	t.P()
 
 	// Get
 	t.P(receiver, "Get(ctx ", contextPkg.Ident("Context"), ", ", t.fieldsArgs(t.primaryKeyFields.Names()), ") (*", varTypeName, ", error) {")
@@ -180,6 +184,7 @@ func (t tableGen) genStoreImpl() {
 	t.P("}")
 	t.P("return &", varName, ", err")
 	t.P("}")
+	t.P()
 
 	for _, idx := range t.uniqueIndexes {
 		fields := strings.Split(idx.Fields, ",")
@@ -193,6 +198,7 @@ func (t tableGen) genStoreImpl() {
 		}
 		t.P("})")
 		t.P("}")
+		t.P()
 
 		// get
 		varName := t.param(t.msg.GoIdent.GoName)
@@ -209,6 +215,7 @@ func (t tableGen) genStoreImpl() {
 		t.P("}")
 		t.P("return ", varName, ", nil")
 		t.P("}")
+		t.P()
 	}
 
 	// List
@@ -217,6 +224,7 @@ func (t tableGen) genStoreImpl() {
 	t.P("it, err := ", receiverVar, ".table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)")
 	t.P("return ", t.iteratorName(), "{it}, err")
 	t.P("}")
+	t.P()
 
 	// ListRange
 	t.P(receiver, "ListRange(ctx ", contextPkg.Ident("Context"), ", from, to ", t.indexKeyInterfaceName(), ", opts ...", ormListPkg.Ident("Option"), ") (", t.iteratorName(), ", error) {")
@@ -224,6 +232,10 @@ func (t tableGen) genStoreImpl() {
 	t.P("it, err := ", receiverVar, ".table.GetIndexByID(from.id()).Iterator(ctx, opts...)")
 	t.P("return ", t.iteratorName(), "{it}, err")
 	t.P("}")
+	t.P()
+
+	t.P(receiver, "doNotImplement() {}")
+	t.P()
 }
 
 func (t tableGen) genStoreImplGuard() {

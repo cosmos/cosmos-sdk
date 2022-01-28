@@ -19,6 +19,8 @@ type BalanceStore interface {
 	Get(ctx context.Context, address string, denom string) (*Balance, error)
 	List(ctx context.Context, prefixKey BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
 	ListRange(ctx context.Context, from, to BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
+
+	doNotImplement()
 }
 
 type BalanceIterator struct {
@@ -76,18 +78,23 @@ type balanceStore struct {
 func (this balanceStore) Insert(ctx context.Context, balance *Balance) error {
 	return this.table.Insert(ctx, balance)
 }
+
 func (this balanceStore) Update(ctx context.Context, balance *Balance) error {
 	return this.table.Update(ctx, balance)
 }
+
 func (this balanceStore) Save(ctx context.Context, balance *Balance) error {
 	return this.table.Save(ctx, balance)
 }
+
 func (this balanceStore) Delete(ctx context.Context, balance *Balance) error {
 	return this.table.Delete(ctx, balance)
 }
+
 func (this balanceStore) Has(ctx context.Context, address string, denom string) (found bool, err error) {
 	return this.table.PrimaryKey().Has(ctx, address, denom)
 }
+
 func (this balanceStore) Get(ctx context.Context, address string, denom string) (*Balance, error) {
 	var balance Balance
 	found, err := this.table.PrimaryKey().Get(ctx, &balance, address, denom)
@@ -96,16 +103,20 @@ func (this balanceStore) Get(ctx context.Context, address string, denom string) 
 	}
 	return &balance, err
 }
+
 func (this balanceStore) List(ctx context.Context, prefixKey BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error) {
 	opts = append(opts, ormlist.Prefix(prefixKey.values()))
 	it, err := this.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
 	return BalanceIterator{it}, err
 }
+
 func (this balanceStore) ListRange(ctx context.Context, from, to BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error) {
 	opts = append(opts, ormlist.Start(from.values()), ormlist.End(to))
 	it, err := this.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
 	return BalanceIterator{it}, err
 }
+
+func (this balanceStore) doNotImplement() {}
 
 var _ BalanceStore = balanceStore{}
 
@@ -126,6 +137,8 @@ type SupplyStore interface {
 	Get(ctx context.Context, denom string) (*Supply, error)
 	List(ctx context.Context, prefixKey SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error)
 	ListRange(ctx context.Context, from, to SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error)
+
+	doNotImplement()
 }
 
 type SupplyIterator struct {
@@ -165,18 +178,23 @@ type supplyStore struct {
 func (this supplyStore) Insert(ctx context.Context, supply *Supply) error {
 	return this.table.Insert(ctx, supply)
 }
+
 func (this supplyStore) Update(ctx context.Context, supply *Supply) error {
 	return this.table.Update(ctx, supply)
 }
+
 func (this supplyStore) Save(ctx context.Context, supply *Supply) error {
 	return this.table.Save(ctx, supply)
 }
+
 func (this supplyStore) Delete(ctx context.Context, supply *Supply) error {
 	return this.table.Delete(ctx, supply)
 }
+
 func (this supplyStore) Has(ctx context.Context, denom string) (found bool, err error) {
 	return this.table.PrimaryKey().Has(ctx, denom)
 }
+
 func (this supplyStore) Get(ctx context.Context, denom string) (*Supply, error) {
 	var supply Supply
 	found, err := this.table.PrimaryKey().Get(ctx, &supply, denom)
@@ -185,16 +203,20 @@ func (this supplyStore) Get(ctx context.Context, denom string) (*Supply, error) 
 	}
 	return &supply, err
 }
+
 func (this supplyStore) List(ctx context.Context, prefixKey SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error) {
 	opts = append(opts, ormlist.Prefix(prefixKey.values()))
 	it, err := this.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
 	return SupplyIterator{it}, err
 }
+
 func (this supplyStore) ListRange(ctx context.Context, from, to SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error) {
 	opts = append(opts, ormlist.Start(from.values()), ormlist.End(to))
 	it, err := this.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
 	return SupplyIterator{it}, err
 }
+
+func (this supplyStore) doNotImplement() {}
 
 var _ SupplyStore = supplyStore{}
 
@@ -209,6 +231,8 @@ func NewSupplyStore(db ormdb.ModuleDB) (SupplyStore, error) {
 type BankStore interface {
 	BalanceStore() BalanceStore
 	SupplyStore() SupplyStore
+
+	doNotImplement()
 }
 
 type bankStore struct {
@@ -219,9 +243,12 @@ type bankStore struct {
 func (x bankStore) BalanceStore() BalanceStore {
 	return x.balance
 }
+
 func (x bankStore) SupplyStore() SupplyStore {
 	return x.supply
 }
+
+func (bankStore) doNotImplement() {}
 
 var _ BankStore = bankStore{}
 

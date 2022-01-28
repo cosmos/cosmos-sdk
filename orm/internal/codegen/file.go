@@ -38,12 +38,12 @@ func (f fileGen) gen() error {
 		}
 
 		if tableDesc != nil || singletonDesc != nil { // message is one of the tables,
-			stores = append(stores, msg) // TODO(Tyler): maybe we should split this into singleton stores vs table stores
+			stores = append(stores, msg)
 		}
 	}
 	f.genStoreInterfaces(stores)
 	f.genStoreStruct(stores)
-	f.genStoreGetters(stores)
+	f.genStoreMethods(stores)
 	f.genStoreInterfaceGuard()
 	f.genStoreConstructor(stores)
 	return nil
@@ -55,6 +55,8 @@ func (f fileGen) genStoreInterfaces(stores []*protogen.Message) {
 		name := f.messageStoreInterfaceName(store)
 		f.P(name, "()", name)
 	}
+	f.P()
+	f.P("doNotImplement()")
 	f.P("}")
 	f.P()
 }
@@ -114,13 +116,17 @@ func (f fileGen) messageConstructorName(m *protogen.Message) string {
 	return "New" + f.messageStoreInterfaceName(m)
 }
 
-func (f fileGen) genStoreGetters(stores []*protogen.Message) {
+func (f fileGen) genStoreMethods(stores []*protogen.Message) {
+	// getters
 	for _, msg := range stores {
 		name := f.messageStoreInterfaceName(msg)
 		f.P("func(x ", f.storeStructName(), ") ", name, "() ", name, "{")
 		f.P("return x.", f.param(msg.GoIdent.GoName))
 		f.P("}")
+		f.P()
 	}
+	f.P("func(", f.storeStructName(), ") doNotImplement() {}")
+	f.P()
 }
 
 func (f fileGen) genStoreInterfaceGuard() {

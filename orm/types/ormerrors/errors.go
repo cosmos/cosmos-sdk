@@ -31,4 +31,5 @@ var (
 	UniqueKeyViolation            = errors.New(codespace, 24, "unique key violation")
 	InvalidTableDefinition        = errors.New(codespace, 25, "invalid table definition")
 	InvalidFileDescriptorID       = errors.New(codespace, 26, "invalid file descriptor ID")
+	TableNotFound                 = errors.New(codespace, 27, "table not found")
 )

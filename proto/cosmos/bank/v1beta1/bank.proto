@@ -4,6 +4,7 @@ package cosmos.bank.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
@@ -25,6 +26,8 @@ message SendEnabled {
 
 // Input models transaction input.
 message Input {
+  option (cosmos.msg.v1.signer) = "address";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 

@@ -22,7 +22,7 @@ type autoIncrementTable struct {
 	seqCodec     *ormkv.SeqCodec
 }
 
-func (t autoIncrementTable) InsertWithID(ctx context.Context, message proto.Message) (newId uint64, err error) {
+func (t autoIncrementTable) InsertReturningID(ctx context.Context, message proto.Message) (newId uint64, err error) {
 	backend, err := t.getBackend(ctx)
 	if err != nil {
 		return 0, err

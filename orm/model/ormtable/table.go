@@ -127,7 +127,7 @@ type Table interface {
 type AutoIncrementTable interface {
 	Table
 
-	// InsertWithID inserts the provided entry in the store and returns the newly
+	// InsertReturningID inserts the provided entry in the store and returns the newly
 	// generated ID for the message or an error.
-	InsertWithID(ctx context.Context, message proto.Message) (newId uint64, err error)
+	InsertReturningID(ctx context.Context, message proto.Message) (newId uint64, err error)
 }

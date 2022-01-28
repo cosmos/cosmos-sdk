@@ -2,10 +2,12 @@ package codegen
 
 import (
 	"fmt"
-	ormv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/types/dynamicpb"
+
+	ormv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
+	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 )
 
 type singletonGen struct {
@@ -15,17 +17,14 @@ type singletonGen struct {
 	ormTable ormtable.Table
 }
 
-func newSingletonGen(fileGen fileGen, msg *protogen.Message, table *ormv1alpha1.SingletonDescriptor) *singletonGen {
+func newSingletonGen(fileGen fileGen, msg *protogen.Message, table *ormv1alpha1.SingletonDescriptor) (*singletonGen, error) {
 	s := &singletonGen{fileGen: fileGen, msg: msg, table: table}
-	ot, err := ormtable.Build(ormtable.Options{
+	var err error
+	s.ormTable, err = ormtable.Build(ormtable.Options{
 		MessageType:         dynamicpb.NewMessageType(msg.Desc),
 		SingletonDescriptor: table,
 	})
-	if err != nil {
-		panic(err)
-	}
-	s.ormTable = ot
-	return s
+	return s, err
 }
 
 func (s singletonGen) gen() {

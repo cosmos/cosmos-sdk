@@ -3,6 +3,8 @@ package ormtable
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
+
 	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
@@ -16,7 +18,7 @@ import (
 // primaryKeyIndex defines an UniqueIndex for the primary key.
 type primaryKeyIndex struct {
 	*ormkv.PrimaryKeyCodec
-	fields         fieldNames
+	fields         fieldnames.FieldNames
 	indexers       []indexer
 	getBackend     func(context.Context) (Backend, error)
 	getReadBackend func(context.Context) (ReadBackend, error)

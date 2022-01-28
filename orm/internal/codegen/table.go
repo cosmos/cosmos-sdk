@@ -207,17 +207,19 @@ func (t tableGen) genStoreImpl() {
 		t.P("}")
 
 		// get
+		varName := t.param(t.msg.GoIdent.GoName)
+		varTypeName := t.msg.GoIdent.GoName
 		t.P("func (x ", t.messageStoreReceiverName(t.msg), ") ", getName, "{")
-		t.P(t.param(t.msg.GoIdent.GoName), " := &", t.msg.GoIdent.GoName, "{")
+		t.P(varName, " := &", varTypeName, "{")
 		for _, field := range fields {
 			t.P(strcase.ToCamel(field), ": ", field, ",")
 		}
 		t.P("}")
-		t.P("found, err := x.table.Get(ctx, ", t.param(t.msg.GoIdent.GoName), ")")
+		t.P("found, err := x.table.Get(ctx, ", varName, ")")
 		t.P("if !found {")
 		t.P("return nil, err")
 		t.P("}")
-		t.P("return ", t.param(t.msg.GoIdent.GoName), ", nil")
+		t.P("return ", varName, ", nil")
 		t.P("}")
 
 	}

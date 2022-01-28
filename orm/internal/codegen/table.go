@@ -2,22 +2,16 @@ package codegen
 
 import (
 	"fmt"
+
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-
-	"github.com/iancoleman/strcase"
-
-	"google.golang.org/protobuf/types/dynamicpb"
-
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-
-	"google.golang.org/protobuf/reflect/protoreflect"
-
 	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/dynamicpb"
 
 	ormv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
 	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
+	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 )
 
 type tableGen struct {
@@ -95,6 +89,14 @@ func (t tableGen) listSig() string {
 	return res
 }
 
+func (t tableGen) fieldArgsFromStringSlice(names []string) string {
+	args := make([]string, len(names))
+	for i, name := range names {
+		args[i] = t.fieldArg(protoreflect.Name(name))
+	}
+	return strings.Join(args, ",")
+}
+
 func (t tableGen) fieldsArgs(names []protoreflect.Name) string {
 	var params []string
 	for _, name := range names {
@@ -109,87 +111,6 @@ func (t tableGen) fieldArg(name protoreflect.Name) string {
 		typ = "*" + typ
 	}
 	return string(name) + " " + typ
-}
-
-func (t tableGen) genIndexKeys() {
-	t.P("type ", t.indexKeyInterfaceName(), " interface {")
-	t.P("id() uint32")
-	t.P("values() []interface{}")
-	t.P(t.param(t.indexKeyInterfaceName()), "()")
-	t.P("}")
-	t.P()
-
-	for _, index := range t.ormTable.Indexes() {
-		indexCodec := index.(ormkv.IndexCodec)
-		idxKeyName := t.indexKeyName(indexCodec.GetFieldNames())
-		t.genIndexKey(idxKeyName)
-		t.genIndexMethods(idxKeyName)
-		t.genIndexInterfaceGuard(idxKeyName)
-		t.genWithMethods(idxKeyName, index, indexCodec.GetFieldNames())
-	}
-}
-
-func (t tableGen) indexKeyInterfaceName() string {
-	return t.msg.GoIdent.GoName + "IndexKey"
-}
-
-func (t tableGen) genIndexKey(idxKeyName string) {
-	t.P("type ", idxKeyName, " struct {")
-	t.P("vs []interface{}")
-	t.P("}")
-	t.P()
-}
-
-func (t tableGen) indexKeyParts(names []protoreflect.Name) string {
-	cnames := make([]string, len(names))
-	for i, name := range names {
-		cnames[i] = strcase.ToCamel(string(name))
-	}
-	return strings.Join(cnames, "")
-}
-
-func (t tableGen) indexKeyName(names []protoreflect.Name) string {
-	cnames := make([]string, len(names))
-	for i, name := range names {
-		cnames[i] = strcase.ToCamel(string(name))
-	}
-	joinedNames := strings.Join(cnames, "")
-	return t.msg.GoIdent.GoName + joinedNames + "IndexKey"
-}
-
-func (t tableGen) genIndexMethods(idxKeyName string) {
-	receiverFunc := fmt.Sprintf("func (x %s) ", idxKeyName)
-	t.P(receiverFunc, "id() uint32 { return ", t.table.Id, " /* primary key */ }")
-	t.P(receiverFunc, "values() []interface{} { return x.vs }")
-	t.P(receiverFunc, t.param(t.indexKeyInterfaceName()), "() {}")
-	t.P()
-}
-
-func (t tableGen) genIndexInterfaceGuard(idxKeyName string) {
-	t.P("var _ ", t.indexKeyInterfaceName(), " = ", idxKeyName, "{}")
-	t.P()
-}
-
-func (t tableGen) genWithMethods(idxKeyName string, idx ormtable.Index, idxParts []protoreflect.Name) {
-	receiverFunc := fmt.Sprintf("func (x %s) ", idxKeyName)
-	for i := 0; i < len(idxParts)-1; i++ {
-		t.P(receiverFunc, "With", strcase.ToCamel(string(idxParts[i])), "(", t.fieldArg(idxParts[i]), ") ", idxKeyName, " {")
-		t.P("x.vs = []interface{}{", string(idxParts[i]), "}")
-		t.P("return x")
-		t.P("}")
-	}
-
-	strParts := make([]string, len(idxParts))
-	for i, part := range idxParts {
-		strParts[i] = string(part)
-	}
-
-	strParams := strings.Join(strParts, ",")
-
-	t.P(receiverFunc, "With", t.indexKeyParts(idxParts), "(", t.fieldsArgs(idxParts), ") ", idxKeyName, "{")
-	t.P("x.vs = []interface{}{", strParams, "}")
-	t.P("return x")
-	t.P("}")
 }
 
 func (t tableGen) genStruct() {

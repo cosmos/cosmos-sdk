@@ -31,6 +31,7 @@ func newSingletonGen(fileGen fileGen, msg *protogen.Message, table *ormv1alpha1.
 func (s singletonGen) gen() {
 	s.genInterface()
 	s.genStruct()
+	s.genInterfaceGuard()
 	s.genMethods()
 	s.genConstructor()
 }
@@ -49,6 +50,10 @@ func (s singletonGen) genStruct() {
 	s.P("table ", tablePkg.Ident("Table"))
 	s.P("}")
 	s.P()
+}
+
+func (s singletonGen) genInterfaceGuard() {
+	s.P("var _ ", s.messageStoreInterfaceName(s.msg), " = ", s.messageStoreReceiverName(s.msg), "{}")
 }
 
 func (s singletonGen) genMethods() {

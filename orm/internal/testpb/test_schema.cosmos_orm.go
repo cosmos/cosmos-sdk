@@ -37,24 +37,25 @@ type ExampleTableIndexKey interface {
 	exampleTableIndexKey()
 }
 
+// primary key starting index..
 type ExampleTableU32I64StrIndexKey struct {
 	vs []interface{}
 }
 
-func (x ExampleTableU32I64StrIndexKey) id() uint32            { return 1 /* primary key */ }
+func (x ExampleTableU32I64StrIndexKey) id() uint32            { return 1 }
 func (x ExampleTableU32I64StrIndexKey) values() []interface{} { return x.vs }
 func (x ExampleTableU32I64StrIndexKey) exampleTableIndexKey() {}
-
-var _ ExampleTableIndexKey = ExampleTableU32I64StrIndexKey{}
 
 func (x ExampleTableU32I64StrIndexKey) WithU32(u32 uint32) ExampleTableU32I64StrIndexKey {
 	x.vs = []interface{}{u32}
 	return x
 }
-func (x ExampleTableU32I64StrIndexKey) WithI64(i64 int64) ExampleTableU32I64StrIndexKey {
-	x.vs = []interface{}{i64}
+
+func (x ExampleTableU32I64StrIndexKey) WithU32I64(u32 uint32, i64 int64) ExampleTableU32I64StrIndexKey {
+	x.vs = []interface{}{u32, i64}
 	return x
 }
+
 func (x ExampleTableU32I64StrIndexKey) WithU32I64Str(u32 uint32, i64 int64, str string) ExampleTableU32I64StrIndexKey {
 	x.vs = []interface{}{u32, i64, str}
 	return x
@@ -64,68 +65,53 @@ type ExampleTableU64StrIndexKey struct {
 	vs []interface{}
 }
 
-func (x ExampleTableU64StrIndexKey) id() uint32            { return 1 /* primary key */ }
+func (x ExampleTableU64StrIndexKey) id() uint32            { return 1 }
 func (x ExampleTableU64StrIndexKey) values() []interface{} { return x.vs }
 func (x ExampleTableU64StrIndexKey) exampleTableIndexKey() {}
-
-var _ ExampleTableIndexKey = ExampleTableU64StrIndexKey{}
 
 func (x ExampleTableU64StrIndexKey) WithU64(u64 uint64) ExampleTableU64StrIndexKey {
 	x.vs = []interface{}{u64}
 	return x
 }
+
 func (x ExampleTableU64StrIndexKey) WithU64Str(u64 uint64, str string) ExampleTableU64StrIndexKey {
 	x.vs = []interface{}{u64, str}
 	return x
 }
 
-type ExampleTableStrU32I64IndexKey struct {
+type ExampleTableStrU32IndexKey struct {
 	vs []interface{}
 }
 
-func (x ExampleTableStrU32I64IndexKey) id() uint32            { return 1 /* primary key */ }
-func (x ExampleTableStrU32I64IndexKey) values() []interface{} { return x.vs }
-func (x ExampleTableStrU32I64IndexKey) exampleTableIndexKey() {}
+func (x ExampleTableStrU32IndexKey) id() uint32            { return 2 }
+func (x ExampleTableStrU32IndexKey) values() []interface{} { return x.vs }
+func (x ExampleTableStrU32IndexKey) exampleTableIndexKey() {}
 
-var _ ExampleTableIndexKey = ExampleTableStrU32I64IndexKey{}
-
-func (x ExampleTableStrU32I64IndexKey) WithStr(str string) ExampleTableStrU32I64IndexKey {
+func (x ExampleTableStrU32IndexKey) WithStr(str string) ExampleTableStrU32IndexKey {
 	x.vs = []interface{}{str}
 	return x
 }
-func (x ExampleTableStrU32I64IndexKey) WithU32(u32 uint32) ExampleTableStrU32I64IndexKey {
-	x.vs = []interface{}{u32}
-	return x
-}
-func (x ExampleTableStrU32I64IndexKey) WithStrU32I64(str string, u32 uint32, i64 int64) ExampleTableStrU32I64IndexKey {
-	x.vs = []interface{}{str, u32, i64}
+
+func (x ExampleTableStrU32IndexKey) WithStrU32(str string, u32 uint32) ExampleTableStrU32IndexKey {
+	x.vs = []interface{}{str, u32}
 	return x
 }
 
-type ExampleTableBzStrU32I64IndexKey struct {
+type ExampleTableBzStrIndexKey struct {
 	vs []interface{}
 }
 
-func (x ExampleTableBzStrU32I64IndexKey) id() uint32            { return 1 /* primary key */ }
-func (x ExampleTableBzStrU32I64IndexKey) values() []interface{} { return x.vs }
-func (x ExampleTableBzStrU32I64IndexKey) exampleTableIndexKey() {}
+func (x ExampleTableBzStrIndexKey) id() uint32            { return 3 }
+func (x ExampleTableBzStrIndexKey) values() []interface{} { return x.vs }
+func (x ExampleTableBzStrIndexKey) exampleTableIndexKey() {}
 
-var _ ExampleTableIndexKey = ExampleTableBzStrU32I64IndexKey{}
-
-func (x ExampleTableBzStrU32I64IndexKey) WithBz(bz []byte) ExampleTableBzStrU32I64IndexKey {
+func (x ExampleTableBzStrIndexKey) WithBz(bz []byte) ExampleTableBzStrIndexKey {
 	x.vs = []interface{}{bz}
 	return x
 }
-func (x ExampleTableBzStrU32I64IndexKey) WithStr(str string) ExampleTableBzStrU32I64IndexKey {
-	x.vs = []interface{}{str}
-	return x
-}
-func (x ExampleTableBzStrU32I64IndexKey) WithU32(u32 uint32) ExampleTableBzStrU32I64IndexKey {
-	x.vs = []interface{}{u32}
-	return x
-}
-func (x ExampleTableBzStrU32I64IndexKey) WithBzStrU32I64(bz []byte, str string, u32 uint32, i64 int64) ExampleTableBzStrU32I64IndexKey {
-	x.vs = []interface{}{bz, str, u32, i64}
+
+func (x ExampleTableBzStrIndexKey) WithBzStr(bz []byte, str string) ExampleTableBzStrIndexKey {
+	x.vs = []interface{}{bz, str}
 	return x
 }
 
@@ -204,15 +190,14 @@ type ExampleAutoIncrementTableIndexKey interface {
 	exampleAutoIncrementTableIndexKey()
 }
 
+// primary key starting index..
 type ExampleAutoIncrementTableIdIndexKey struct {
 	vs []interface{}
 }
 
-func (x ExampleAutoIncrementTableIdIndexKey) id() uint32                         { return 3 /* primary key */ }
+func (x ExampleAutoIncrementTableIdIndexKey) id() uint32                         { return 3 }
 func (x ExampleAutoIncrementTableIdIndexKey) values() []interface{}              { return x.vs }
 func (x ExampleAutoIncrementTableIdIndexKey) exampleAutoIncrementTableIndexKey() {}
-
-var _ ExampleAutoIncrementTableIndexKey = ExampleAutoIncrementTableIdIndexKey{}
 
 func (x ExampleAutoIncrementTableIdIndexKey) WithId(id uint64) ExampleAutoIncrementTableIdIndexKey {
 	x.vs = []interface{}{id}
@@ -223,11 +208,9 @@ type ExampleAutoIncrementTableXIndexKey struct {
 	vs []interface{}
 }
 
-func (x ExampleAutoIncrementTableXIndexKey) id() uint32                         { return 3 /* primary key */ }
+func (x ExampleAutoIncrementTableXIndexKey) id() uint32                         { return 1 }
 func (x ExampleAutoIncrementTableXIndexKey) values() []interface{}              { return x.vs }
 func (x ExampleAutoIncrementTableXIndexKey) exampleAutoIncrementTableIndexKey() {}
-
-var _ ExampleAutoIncrementTableIndexKey = ExampleAutoIncrementTableXIndexKey{}
 
 func (x ExampleAutoIncrementTableXIndexKey) WithX(x string) ExampleAutoIncrementTableXIndexKey {
 	x.vs = []interface{}{x}
@@ -291,6 +274,8 @@ type ExampleSingletonStore interface {
 type exampleSingletonStore struct {
 	table ormtable.Table
 }
+
+var _ ExampleSingletonStore = exampleSingletonStore{}
 
 func (x exampleSingletonStore) Get(ctx context.Context) (*ExampleSingleton, error) {
 	var exampleSingleton ExampleSingleton

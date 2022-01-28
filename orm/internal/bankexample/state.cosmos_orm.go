@@ -37,64 +37,71 @@ type BalanceIndexKey interface {
 	balanceIndexKey()
 }
 
+// primary key starting index..
 type BalanceAddressDenomIndexKey struct {
 	vs []interface{}
 }
 
-func (x BalanceAddressDenomIndexKey) id() uint32            { return 1 /* primary key */ }
+func (x BalanceAddressDenomIndexKey) id() uint32            { return 1 }
 func (x BalanceAddressDenomIndexKey) values() []interface{} { return x.vs }
 func (x BalanceAddressDenomIndexKey) balanceIndexKey()      {}
-
-var _ BalanceIndexKey = BalanceAddressDenomIndexKey{}
 
 func (x BalanceAddressDenomIndexKey) WithAddress(address string) BalanceAddressDenomIndexKey {
 	x.vs = []interface{}{address}
 	return x
 }
+
 func (x BalanceAddressDenomIndexKey) WithAddressDenom(address string, denom string) BalanceAddressDenomIndexKey {
 	x.vs = []interface{}{address, denom}
 	return x
 }
 
-type BalanceDenomAddressIndexKey struct {
+type BalanceDenomIndexKey struct {
 	vs []interface{}
 }
 
-func (x BalanceDenomAddressIndexKey) id() uint32            { return 1 /* primary key */ }
-func (x BalanceDenomAddressIndexKey) values() []interface{} { return x.vs }
-func (x BalanceDenomAddressIndexKey) balanceIndexKey()      {}
+func (x BalanceDenomIndexKey) id() uint32            { return 1 }
+func (x BalanceDenomIndexKey) values() []interface{} { return x.vs }
+func (x BalanceDenomIndexKey) balanceIndexKey()      {}
 
-var _ BalanceIndexKey = BalanceDenomAddressIndexKey{}
-
-func (x BalanceDenomAddressIndexKey) WithDenom(denom string) BalanceDenomAddressIndexKey {
+func (x BalanceDenomIndexKey) WithDenom(denom string) BalanceDenomIndexKey {
 	x.vs = []interface{}{denom}
 	return x
 }
-func (x BalanceDenomAddressIndexKey) WithDenomAddress(denom string, address string) BalanceDenomAddressIndexKey {
-	x.vs = []interface{}{denom, address}
-	return x
-}
 
-type BalanceAmountAddressDenomIndexKey struct {
+type BalanceAmountIndexKey struct {
 	vs []interface{}
 }
 
-func (x BalanceAmountAddressDenomIndexKey) id() uint32            { return 1 /* primary key */ }
-func (x BalanceAmountAddressDenomIndexKey) values() []interface{} { return x.vs }
-func (x BalanceAmountAddressDenomIndexKey) balanceIndexKey()      {}
+func (x BalanceAmountIndexKey) id() uint32            { return 2 }
+func (x BalanceAmountIndexKey) values() []interface{} { return x.vs }
+func (x BalanceAmountIndexKey) balanceIndexKey()      {}
 
-var _ BalanceIndexKey = BalanceAmountAddressDenomIndexKey{}
-
-func (x BalanceAmountAddressDenomIndexKey) WithAmount(amount uint64) BalanceAmountAddressDenomIndexKey {
+func (x BalanceAmountIndexKey) WithAmount(amount uint64) BalanceAmountIndexKey {
 	x.vs = []interface{}{amount}
 	return x
 }
-func (x BalanceAmountAddressDenomIndexKey) WithAddress(address string) BalanceAmountAddressDenomIndexKey {
-	x.vs = []interface{}{address}
+
+type BalanceAmountDenomAddressIndexKey struct {
+	vs []interface{}
+}
+
+func (x BalanceAmountDenomAddressIndexKey) id() uint32            { return 3 }
+func (x BalanceAmountDenomAddressIndexKey) values() []interface{} { return x.vs }
+func (x BalanceAmountDenomAddressIndexKey) balanceIndexKey()      {}
+
+func (x BalanceAmountDenomAddressIndexKey) WithAmount(amount uint64) BalanceAmountDenomAddressIndexKey {
+	x.vs = []interface{}{amount}
 	return x
 }
-func (x BalanceAmountAddressDenomIndexKey) WithAmountAddressDenom(amount uint64, address string, denom string) BalanceAmountAddressDenomIndexKey {
-	x.vs = []interface{}{amount, address, denom}
+
+func (x BalanceAmountDenomAddressIndexKey) WithAmountDenom(amount uint64, denom string) BalanceAmountDenomAddressIndexKey {
+	x.vs = []interface{}{amount, denom}
+	return x
+}
+
+func (x BalanceAmountDenomAddressIndexKey) WithAmountDenomAddress(amount uint64, denom string, address string) BalanceAmountDenomAddressIndexKey {
+	x.vs = []interface{}{amount, denom, address}
 	return x
 }
 
@@ -173,15 +180,14 @@ type SupplyIndexKey interface {
 	supplyIndexKey()
 }
 
+// primary key starting index..
 type SupplyDenomIndexKey struct {
 	vs []interface{}
 }
 
-func (x SupplyDenomIndexKey) id() uint32            { return 2 /* primary key */ }
+func (x SupplyDenomIndexKey) id() uint32            { return 2 }
 func (x SupplyDenomIndexKey) values() []interface{} { return x.vs }
 func (x SupplyDenomIndexKey) supplyIndexKey()       {}
-
-var _ SupplyIndexKey = SupplyDenomIndexKey{}
 
 func (x SupplyDenomIndexKey) WithDenom(denom string) SupplyDenomIndexKey {
 	x.vs = []interface{}{denom}
@@ -245,6 +251,8 @@ type ExampleStore interface {
 type exampleStore struct {
 	table ormtable.Table
 }
+
+var _ ExampleStore = exampleStore{}
 
 func (x exampleStore) Get(ctx context.Context) (*Example, error) {
 	var example Example

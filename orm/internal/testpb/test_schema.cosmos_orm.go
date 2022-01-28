@@ -4,7 +4,6 @@ package testpb
 
 import (
 	context "context"
-
 	ormdb "github.com/cosmos/cosmos-sdk/orm/model/ormdb"
 	ormlist "github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
@@ -18,10 +17,10 @@ type ExampleTableStore interface {
 	Delete(ctx context.Context, exampleTable *ExampleTable) error
 	Has(ctx context.Context, u32 uint32, i64 int64, str string) (found bool, err error)
 	Get(ctx context.Context, u32 uint32, i64 int64, str string) (*ExampleTable, error)
-	List(ctx context.Context, prefixKey ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error)
-	ListRange(ctx context.Context, from, to ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error)
 	HasByU64Str(ctx context.Context, u64 uint64, str string) (found bool, err error)
 	GetByU64Str(ctx context.Context, u64 uint64, str string) (*ExampleTable, error)
+	List(ctx context.Context, prefixKey ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error)
+	ListRange(ctx context.Context, from, to ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error)
 }
 
 type ExampleTableIterator struct {
@@ -145,16 +144,6 @@ func (this exampleTableStore) Get(ctx context.Context, u32 uint32, i64 int64, st
 	}
 	return &exampleTable, err
 }
-func (this exampleTableStore) List(ctx context.Context, prefixKey ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error) {
-	opts = append(opts, ormlist.Prefix(prefixKey.values()))
-	it, err := this.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
-	return ExampleTableIterator{it}, err
-}
-func (this exampleTableStore) ListRange(ctx context.Context, from, to ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error) {
-	opts = append(opts, ormlist.Start(from.values()), ormlist.End(to))
-	it, err := this.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
-	return ExampleTableIterator{it}, err
-}
 func (this exampleTableStore) HasByU64Str(ctx context.Context, u64 uint64, str string) (found bool, err error) {
 	return this.table.Has(ctx, &ExampleTable{
 		U64: u64,
@@ -171,6 +160,16 @@ func (this exampleTableStore) GetByU64Str(ctx context.Context, u64 uint64, str s
 		return nil, err
 	}
 	return exampleTable, nil
+}
+func (this exampleTableStore) List(ctx context.Context, prefixKey ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error) {
+	opts = append(opts, ormlist.Prefix(prefixKey.values()))
+	it, err := this.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
+	return ExampleTableIterator{it}, err
+}
+func (this exampleTableStore) ListRange(ctx context.Context, from, to ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error) {
+	opts = append(opts, ormlist.Start(from.values()), ormlist.End(to))
+	it, err := this.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
+	return ExampleTableIterator{it}, err
 }
 
 var _ ExampleTableStore = exampleTableStore{}
@@ -190,10 +189,10 @@ type ExampleAutoIncrementTableStore interface {
 	Delete(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
 	Has(ctx context.Context, id uint64) (found bool, err error)
 	Get(ctx context.Context, id uint64) (*ExampleAutoIncrementTable, error)
-	List(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error)
-	ListRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error)
 	HasByX(ctx context.Context, x string) (found bool, err error)
 	GetByX(ctx context.Context, x string) (*ExampleAutoIncrementTable, error)
+	List(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error)
+	ListRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error)
 }
 
 type ExampleAutoIncrementTableIterator struct {
@@ -266,16 +265,6 @@ func (this exampleAutoIncrementTableStore) Get(ctx context.Context, id uint64) (
 	}
 	return &exampleAutoIncrementTable, err
 }
-func (this exampleAutoIncrementTableStore) List(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error) {
-	opts = append(opts, ormlist.Prefix(prefixKey.values()))
-	it, err := this.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
-	return ExampleAutoIncrementTableIterator{it}, err
-}
-func (this exampleAutoIncrementTableStore) ListRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error) {
-	opts = append(opts, ormlist.Start(from.values()), ormlist.End(to))
-	it, err := this.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
-	return ExampleAutoIncrementTableIterator{it}, err
-}
 func (this exampleAutoIncrementTableStore) HasByX(ctx context.Context, x string) (found bool, err error) {
 	return this.table.Has(ctx, &ExampleAutoIncrementTable{
 		X: x,
@@ -290,6 +279,16 @@ func (this exampleAutoIncrementTableStore) GetByX(ctx context.Context, x string)
 		return nil, err
 	}
 	return exampleAutoIncrementTable, nil
+}
+func (this exampleAutoIncrementTableStore) List(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error) {
+	opts = append(opts, ormlist.Prefix(prefixKey.values()))
+	it, err := this.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
+	return ExampleAutoIncrementTableIterator{it}, err
+}
+func (this exampleAutoIncrementTableStore) ListRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error) {
+	opts = append(opts, ormlist.Start(from.values()), ormlist.End(to))
+	it, err := this.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
+	return ExampleAutoIncrementTableIterator{it}, err
 }
 
 var _ ExampleAutoIncrementTableStore = exampleAutoIncrementTableStore{}

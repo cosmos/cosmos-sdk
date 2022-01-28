@@ -57,28 +57,6 @@ func (t tableGen) genIndexInterfaceGuard(idxKeyName string) {
 	t.P()
 }
 
-//func (t tableGen) genIndexWithMethods(idxKeyName string, idx ormtable.Index, idxParts []protoreflect.Name) {
-//	receiverFunc := fmt.Sprintf("func (x %s) ", idxKeyName)
-//	for i := 0; i < len(idxParts)-1; i++ {
-//		t.P(receiverFunc, "With", strcase.ToCamel(string(idxParts[i])), "(", t.fieldArg(idxParts[i]), ") ", idxKeyName, " {")
-//		t.P("x.vs = []interface{}{", string(idxParts[i]), "}")
-//		t.P("return x")
-//		t.P("}")
-//	}
-//
-//	strParts := make([]string, len(idxParts))
-//	for i, part := range idxParts {
-//		strParts[i] = string(part)
-//	}
-//
-//	strParams := strings.Join(strParts, ",")
-//
-//	t.P(receiverFunc, "With", t.indexKeyParts(idxParts), "(", t.fieldsArgs(idxParts), ") ", idxKeyName, "{")
-//	t.P("x.vs = []interface{}{", strParams, "}")
-//	t.P("return x")
-//	t.P("}")
-//}
-
 func (t tableGen) indexKeyInterfaceName() string {
 	return t.msg.GoIdent.GoName + "IndexKey"
 }

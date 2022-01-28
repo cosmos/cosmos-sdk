@@ -3,19 +3,17 @@ package testpb
 import (
 	binary "encoding/binary"
 	fmt "fmt"
-	io "io"
-	reflect "reflect"
-	sort "sort"
-	sync "sync"
-
 	runtime "github.com/cosmos/cosmos-proto/runtime"
+	_ "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
-
-	_ "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
+	io "io"
+	reflect "reflect"
+	sort "sort"
+	sync "sync"
 )
 
 var _ protoreflect.List = (*_ExampleTable_17_list)(nil)

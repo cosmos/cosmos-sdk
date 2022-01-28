@@ -9,8 +9,8 @@ import (
 	"strconv"
 
 	ics23 "github.com/confio/ics23/go"
-	smtproofs "github.com/cosmos/cosmos-sdk/store/tools/ics23-smt"
-	"github.com/cosmos/cosmos-sdk/store/tools/ics23-smt/helpers"
+	smtproofs "github.com/cosmos/cosmos-sdk/store/tools/ics23/smt"
+	"github.com/cosmos/cosmos-sdk/store/tools/ics23/smt/helpers"
 )
 
 /**

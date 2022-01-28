@@ -1,10 +1,9 @@
-module github.com/cosmos/cosmos-sdk/store/tools
+module github.com/cosmos/cosmos-sdk/store/tools/ics23
 
 go 1.17
 
 require (
 	github.com/confio/ics23/go v0.7.0
-	github.com/cosmos/cosmos-sdk/store/tools v0.0.0-00010101000000-000000000000
 	github.com/lazyledger/smt v0.2.1-0.20210709230900-03ea40719554
 	github.com/tendermint/iavl v0.13.2
 	github.com/tendermint/tendermint v0.33.2
@@ -27,5 +26,6 @@ require (
 	golang.org/x/sys v0.0.0-20200122134326-e047566fdf82 // indirect
 )
 
-replace github.com/cosmos/cosmos-sdk/store/tools => ./
+replace github.com/cosmos/cosmos-sdk/store/tools/ics23 => ./
 
+replace github.com/confio/ics23/go => /home/roy/vulcanize/repo/ics23/go

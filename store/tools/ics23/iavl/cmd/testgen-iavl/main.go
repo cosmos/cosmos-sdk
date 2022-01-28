@@ -9,8 +9,8 @@ import (
 
 	ics23 "github.com/confio/ics23/go"
 
-	iavlproofs "github.com/cosmos/cosmos-sdk/store/tools/ics23-iavl"
-	"github.com/cosmos/cosmos-sdk/store/tools/ics23-iavl/helpers"
+	iavlproofs "github.com/cosmos/cosmos-sdk/store/tools/ics23/iavl"
+	"github.com/cosmos/cosmos-sdk/store/tools/ics23/iavl/helpers"
 )
 
 /**

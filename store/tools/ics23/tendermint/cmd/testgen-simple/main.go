@@ -7,8 +7,8 @@ import (
 	"os"
 	"strconv"
 
-	tmproofs "github.com/cosmos/cosmos-sdk/store/tools/ics23-tendermint"
-	"github.com/cosmos/cosmos-sdk/store/tools/ics23-tendermint/helpers"
+	tmproofs "github.com/cosmos/cosmos-sdk/store/tools/ics23/tendermint"
+	"github.com/cosmos/cosmos-sdk/store/tools/ics23/tendermint/helpers"
 
 	ics23 "github.com/confio/ics23/go"
 )

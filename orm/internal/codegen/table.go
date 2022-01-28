@@ -2,7 +2,7 @@ package codegen
 
 import (
 	"fmt"
-
+	"github.com/iancoleman/strcase"
 	"strings"
 
 	"google.golang.org/protobuf/compiler/protogen"
@@ -20,6 +20,7 @@ type tableGen struct {
 	table            *ormv1alpha1.TableDescriptor
 	primaryKeyFields fieldnames.FieldNames
 	fields           map[protoreflect.Name]*protogen.Field
+	uniqueIndexes    []*ormv1alpha1.SecondaryIndexDescriptor
 	ormTable         ormtable.Table
 }
 
@@ -29,6 +30,13 @@ func newTableGen(fileGen fileGen, msg *protogen.Message, table *ormv1alpha1.Tabl
 	for _, field := range msg.Fields {
 		t.fields[field.Desc.Name()] = field
 	}
+	uniqIndexes := make([]*ormv1alpha1.SecondaryIndexDescriptor, 0)
+	for _, idx := range t.table.Index {
+		if idx.Unique {
+			uniqIndexes = append(uniqIndexes, idx)
+		}
+	}
+	t.uniqueIndexes = uniqIndexes
 	var err error
 	t.ormTable, err = ormtable.Build(ormtable.Options{
 		MessageType:     dynamicpb.NewMessageType(msg.Desc),
@@ -60,8 +68,31 @@ func (t tableGen) genStoreInterface() {
 	t.P("Get(ctx ", contextPkg.Ident("Context"), ", ", t.fieldsArgs(t.primaryKeyFields.Names()), ") (*", t.QualifiedGoIdent(t.msg.GoIdent), ", error)")
 	t.P("List(ctx ", contextPkg.Ident("Context"), ", prefixKey ", t.indexKeyInterfaceName(), ", opts ...", ormListPkg.Ident("Option"), ") ", "(", t.iteratorName(), ", error)")
 	t.P("ListRange(ctx ", contextPkg.Ident("Context"), ", from, to ", t.indexKeyInterfaceName(), ", opts ...", ormListPkg.Ident("Option"), ") ", "(", t.iteratorName(), ", error)")
+	for _, idx := range t.uniqueIndexes {
+		t.genUniqueIndexSig(idx)
+	}
 	t.P("}")
 	t.P()
+}
+
+// returns the has and get (in that order) function signature for unique indexes.
+func (t tableGen) uniqueIndexSig(idx *ormv1alpha1.SecondaryIndexDescriptor) (string, string) {
+	fieldsSlc := strings.Split(idx.Fields, ",")
+	camelFields := t.fieldsToCamelCase(idx.Fields)
+
+	hasFuncName := "HasBy" + camelFields
+	getFuncName := "GetBy" + camelFields
+	args := t.fieldArgsFromStringSlice(fieldsSlc)
+
+	hasFuncSig := fmt.Sprintf("%s (ctx context.Context, %s) (found bool, err error)", hasFuncName, args)
+	getFuncSig := fmt.Sprintf("%s (ctx context.Context, %s) (*%s, error)", getFuncName, args, t.msg.GoIdent.GoName)
+	return hasFuncSig, getFuncSig
+}
+
+func (t tableGen) genUniqueIndexSig(idx *ormv1alpha1.SecondaryIndexDescriptor) {
+	hasSig, getSig := t.uniqueIndexSig(idx)
+	t.P(hasSig)
+	t.P(getSig)
 }
 
 func (t tableGen) iteratorName() string {
@@ -161,6 +192,35 @@ func (t tableGen) genStoreImpl() {
 	t.P("it, err := x.table.GetIndexByID(from.id()).Iterator(ctx, opts...)")
 	t.P("return ", t.iteratorName(), "{it}, err")
 	t.P("}")
+
+	for _, idx := range t.uniqueIndexes {
+		fields := strings.Split(idx.Fields, ",")
+		hasName, getName := t.uniqueIndexSig(idx)
+
+		// has
+		t.P("func (x ", t.messageStoreReceiverName(t.msg), ") ", hasName, "{")
+		t.P("return x.table.Has(ctx, &", t.msg.GoIdent.GoName, "{")
+		for _, field := range fields {
+			t.P(strcase.ToCamel(field), ": ", field, ",")
+		}
+		t.P("})")
+		t.P("}")
+
+		// get
+		t.P("func (x ", t.messageStoreReceiverName(t.msg), ") ", getName, "{")
+		t.P(t.param(t.msg.GoIdent.GoName), " := &", t.msg.GoIdent.GoName, "{")
+		for _, field := range fields {
+			t.P(strcase.ToCamel(field), ": ", field, ",")
+		}
+		t.P("}")
+		t.P("found, err := x.table.Get(ctx, ", t.param(t.msg.GoIdent.GoName), ")")
+		t.P("if !found {")
+		t.P("return nil, err")
+		t.P("}")
+		t.P("return ", t.param(t.msg.GoIdent.GoName), ", nil")
+		t.P("}")
+
+	}
 }
 
 func (t tableGen) genStoreImplGuard() {

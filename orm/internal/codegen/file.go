@@ -143,3 +143,12 @@ func (f fileGen) genStoreConstructor(stores []*protogen.Message) {
 	f.P("}")
 
 }
+
+func (f fileGen) fieldsToCamelCase(fields string) string {
+	splitFields := strings.Split(fields, ",")
+	camelFields := make([]string, len(splitFields))
+	for i, field := range splitFields {
+		camelFields[i] = strcase.ToCamel(field)
+	}
+	return strings.Join(camelFields, "")
+}

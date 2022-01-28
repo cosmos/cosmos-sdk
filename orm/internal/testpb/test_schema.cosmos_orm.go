@@ -19,6 +19,8 @@ type ExampleTableStore interface {
 	Get(ctx context.Context, u32 uint32, i64 int64, str string) (*ExampleTable, error)
 	List(ctx context.Context, prefixKey ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error)
 	ListRange(ctx context.Context, from, to ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error)
+	HasByU64Str(ctx context.Context, u64 uint64, str string) (found bool, err error)
+	GetByU64Str(ctx context.Context, u64 uint64, str string) (*ExampleTable, error)
 }
 
 type ExampleTableIterator struct {
@@ -152,6 +154,23 @@ func (x exampleTableStore) ListRange(ctx context.Context, from, to ExampleTableI
 	it, err := x.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
 	return ExampleTableIterator{it}, err
 }
+func (x exampleTableStore) HasByU64Str(ctx context.Context, u64 uint64, str string) (found bool, err error) {
+	return x.table.Has(ctx, &ExampleTable{
+		U64: u64,
+		Str: str,
+	})
+}
+func (x exampleTableStore) GetByU64Str(ctx context.Context, u64 uint64, str string) (*ExampleTable, error) {
+	exampleTable := &ExampleTable{
+		U64: u64,
+		Str: str,
+	}
+	found, err := x.table.Get(ctx, exampleTable)
+	if !found {
+		return nil, err
+	}
+	return exampleTable, nil
+}
 
 var _ ExampleTableStore = exampleTableStore{}
 
@@ -172,6 +191,8 @@ type ExampleAutoIncrementTableStore interface {
 	Get(ctx context.Context, id uint64) (*ExampleAutoIncrementTable, error)
 	List(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error)
 	ListRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error)
+	HasByX(ctx context.Context, x string) (found bool, err error)
+	GetByX(ctx context.Context, x string) (*ExampleAutoIncrementTable, error)
 }
 
 type ExampleAutoIncrementTableIterator struct {
@@ -253,6 +274,21 @@ func (x exampleAutoIncrementTableStore) ListRange(ctx context.Context, from, to 
 	opts = append(opts, ormlist.Start(from.values()), ormlist.End(to))
 	it, err := x.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
 	return ExampleAutoIncrementTableIterator{it}, err
+}
+func (x exampleAutoIncrementTableStore) HasByX(ctx context.Context, x string) (found bool, err error) {
+	return x.table.Has(ctx, &ExampleAutoIncrementTable{
+		X: x,
+	})
+}
+func (x exampleAutoIncrementTableStore) GetByX(ctx context.Context, x string) (*ExampleAutoIncrementTable, error) {
+	exampleAutoIncrementTable := &ExampleAutoIncrementTable{
+		X: x,
+	}
+	found, err := x.table.Get(ctx, exampleAutoIncrementTable)
+	if !found {
+		return nil, err
+	}
+	return exampleAutoIncrementTable, nil
 }
 
 var _ ExampleAutoIncrementTableStore = exampleAutoIncrementTableStore{}

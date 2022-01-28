@@ -19,6 +19,8 @@ type BalanceStore interface {
 	Get(ctx context.Context, address string, denom string) (*Balance, error)
 	List(ctx context.Context, prefixKey BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
 	ListRange(ctx context.Context, from, to BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
+	HasByDenomAmount(ctx context.Context, denom string, amount uint64) (found bool, err error)
+	GetByDenomAmount(ctx context.Context, denom string, amount uint64) (*Balance, error)
 }
 
 type BalanceIterator struct {
@@ -56,16 +58,21 @@ func (x BalanceAddressDenomIndexKey) WithAddressDenom(address string, denom stri
 	return x
 }
 
-type BalanceDenomIndexKey struct {
+type BalanceDenomAmountIndexKey struct {
 	vs []interface{}
 }
 
-func (x BalanceDenomIndexKey) id() uint32            { return 1 }
-func (x BalanceDenomIndexKey) values() []interface{} { return x.vs }
-func (x BalanceDenomIndexKey) balanceIndexKey()      {}
+func (x BalanceDenomAmountIndexKey) id() uint32            { return 1 }
+func (x BalanceDenomAmountIndexKey) values() []interface{} { return x.vs }
+func (x BalanceDenomAmountIndexKey) balanceIndexKey()      {}
 
-func (x BalanceDenomIndexKey) WithDenom(denom string) BalanceDenomIndexKey {
+func (x BalanceDenomAmountIndexKey) WithDenom(denom string) BalanceDenomAmountIndexKey {
 	x.vs = []interface{}{denom}
+	return x
+}
+
+func (x BalanceDenomAmountIndexKey) WithDenomAmount(denom string, amount uint64) BalanceDenomAmountIndexKey {
+	x.vs = []interface{}{denom, amount}
 	return x
 }
 
@@ -141,6 +148,23 @@ func (x balanceStore) ListRange(ctx context.Context, from, to BalanceIndexKey, o
 	opts = append(opts, ormlist.Start(from.values()), ormlist.End(to))
 	it, err := x.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
 	return BalanceIterator{it}, err
+}
+func (x balanceStore) HasByDenomAmount(ctx context.Context, denom string, amount uint64) (found bool, err error) {
+	return x.table.Has(ctx, &Balance{
+		Denom:  denom,
+		Amount: amount,
+	})
+}
+func (x balanceStore) GetByDenomAmount(ctx context.Context, denom string, amount uint64) (*Balance, error) {
+	balance := &Balance{
+		Denom:  denom,
+		Amount: amount,
+	}
+	found, err := x.table.Get(ctx, balance)
+	if !found {
+		return nil, err
+	}
+	return balance, nil
 }
 
 var _ BalanceStore = balanceStore{}

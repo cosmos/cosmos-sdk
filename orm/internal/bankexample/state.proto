@@ -10,7 +10,7 @@ message Balance {
   option (cosmos.orm.v1alpha1.table) = {
     id: 1;
     primary_key:{fields: "address,denom"}
-    index: {id: 1 fields: "denom" unique: true}
+    index: {id: 1 fields: "denom,amount" unique: true}
     index: {id: 2 fields: "amount"}
     index: {id: 3 fields: "amount,denom,address"}
   };

@@ -4,6 +4,7 @@ package testpb
 
 import (
 	context "context"
+
 	ormdb "github.com/cosmos/cosmos-sdk/orm/model/ormdb"
 	ormlist "github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
@@ -46,14 +47,14 @@ func (x BalanceAddressDenomIndexKey) id() uint32            { return 1 }
 func (x BalanceAddressDenomIndexKey) values() []interface{} { return x.vs }
 func (x BalanceAddressDenomIndexKey) balanceIndexKey()      {}
 
-func (x BalanceAddressDenomIndexKey) WithAddress(address string) BalanceAddressDenomIndexKey {
-	x.vs = []interface{}{address}
-	return x
+func (this BalanceAddressDenomIndexKey) WithAddress(address string) BalanceAddressDenomIndexKey {
+	this.vs = []interface{}{address}
+	return this
 }
 
-func (x BalanceAddressDenomIndexKey) WithAddressDenom(address string, denom string) BalanceAddressDenomIndexKey {
-	x.vs = []interface{}{address, denom}
-	return x
+func (this BalanceAddressDenomIndexKey) WithAddressDenom(address string, denom string) BalanceAddressDenomIndexKey {
+	this.vs = []interface{}{address, denom}
+	return this
 }
 
 type BalanceDenomIndexKey struct {
@@ -64,46 +65,46 @@ func (x BalanceDenomIndexKey) id() uint32            { return 1 }
 func (x BalanceDenomIndexKey) values() []interface{} { return x.vs }
 func (x BalanceDenomIndexKey) balanceIndexKey()      {}
 
-func (x BalanceDenomIndexKey) WithDenom(denom string) BalanceDenomIndexKey {
-	x.vs = []interface{}{denom}
-	return x
+func (this BalanceDenomIndexKey) WithDenom(denom string) BalanceDenomIndexKey {
+	this.vs = []interface{}{denom}
+	return this
 }
 
 type balanceStore struct {
 	table ormtable.Table
 }
 
-func (x balanceStore) Insert(ctx context.Context, balance *Balance) error {
-	return x.table.Insert(ctx, balance)
+func (this balanceStore) Insert(ctx context.Context, balance *Balance) error {
+	return this.table.Insert(ctx, balance)
 }
-func (x balanceStore) Update(ctx context.Context, balance *Balance) error {
-	return x.table.Update(ctx, balance)
+func (this balanceStore) Update(ctx context.Context, balance *Balance) error {
+	return this.table.Update(ctx, balance)
 }
-func (x balanceStore) Save(ctx context.Context, balance *Balance) error {
-	return x.table.Save(ctx, balance)
+func (this balanceStore) Save(ctx context.Context, balance *Balance) error {
+	return this.table.Save(ctx, balance)
 }
-func (x balanceStore) Delete(ctx context.Context, balance *Balance) error {
-	return x.table.Delete(ctx, balance)
+func (this balanceStore) Delete(ctx context.Context, balance *Balance) error {
+	return this.table.Delete(ctx, balance)
 }
-func (x balanceStore) Has(ctx context.Context, address string, denom string) (found bool, err error) {
-	return x.table.PrimaryKey().Has(ctx, address, denom)
+func (this balanceStore) Has(ctx context.Context, address string, denom string) (found bool, err error) {
+	return this.table.PrimaryKey().Has(ctx, address, denom)
 }
-func (x balanceStore) Get(ctx context.Context, address string, denom string) (*Balance, error) {
+func (this balanceStore) Get(ctx context.Context, address string, denom string) (*Balance, error) {
 	var balance Balance
-	found, err := x.table.PrimaryKey().Get(ctx, &balance, address, denom)
+	found, err := this.table.PrimaryKey().Get(ctx, &balance, address, denom)
 	if !found {
 		return nil, err
 	}
 	return &balance, err
 }
-func (x balanceStore) List(ctx context.Context, prefixKey BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error) {
+func (this balanceStore) List(ctx context.Context, prefixKey BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error) {
 	opts = append(opts, ormlist.Prefix(prefixKey.values()))
-	it, err := x.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
+	it, err := this.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
 	return BalanceIterator{it}, err
 }
-func (x balanceStore) ListRange(ctx context.Context, from, to BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error) {
+func (this balanceStore) ListRange(ctx context.Context, from, to BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error) {
 	opts = append(opts, ormlist.Start(from.values()), ormlist.End(to))
-	it, err := x.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
+	it, err := this.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
 	return BalanceIterator{it}, err
 }
 
@@ -153,46 +154,46 @@ func (x SupplyDenomIndexKey) id() uint32            { return 2 }
 func (x SupplyDenomIndexKey) values() []interface{} { return x.vs }
 func (x SupplyDenomIndexKey) supplyIndexKey()       {}
 
-func (x SupplyDenomIndexKey) WithDenom(denom string) SupplyDenomIndexKey {
-	x.vs = []interface{}{denom}
-	return x
+func (this SupplyDenomIndexKey) WithDenom(denom string) SupplyDenomIndexKey {
+	this.vs = []interface{}{denom}
+	return this
 }
 
 type supplyStore struct {
 	table ormtable.Table
 }
 
-func (x supplyStore) Insert(ctx context.Context, supply *Supply) error {
-	return x.table.Insert(ctx, supply)
+func (this supplyStore) Insert(ctx context.Context, supply *Supply) error {
+	return this.table.Insert(ctx, supply)
 }
-func (x supplyStore) Update(ctx context.Context, supply *Supply) error {
-	return x.table.Update(ctx, supply)
+func (this supplyStore) Update(ctx context.Context, supply *Supply) error {
+	return this.table.Update(ctx, supply)
 }
-func (x supplyStore) Save(ctx context.Context, supply *Supply) error {
-	return x.table.Save(ctx, supply)
+func (this supplyStore) Save(ctx context.Context, supply *Supply) error {
+	return this.table.Save(ctx, supply)
 }
-func (x supplyStore) Delete(ctx context.Context, supply *Supply) error {
-	return x.table.Delete(ctx, supply)
+func (this supplyStore) Delete(ctx context.Context, supply *Supply) error {
+	return this.table.Delete(ctx, supply)
 }
-func (x supplyStore) Has(ctx context.Context, denom string) (found bool, err error) {
-	return x.table.PrimaryKey().Has(ctx, denom)
+func (this supplyStore) Has(ctx context.Context, denom string) (found bool, err error) {
+	return this.table.PrimaryKey().Has(ctx, denom)
 }
-func (x supplyStore) Get(ctx context.Context, denom string) (*Supply, error) {
+func (this supplyStore) Get(ctx context.Context, denom string) (*Supply, error) {
 	var supply Supply
-	found, err := x.table.PrimaryKey().Get(ctx, &supply, denom)
+	found, err := this.table.PrimaryKey().Get(ctx, &supply, denom)
 	if !found {
 		return nil, err
 	}
 	return &supply, err
 }
-func (x supplyStore) List(ctx context.Context, prefixKey SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error) {
+func (this supplyStore) List(ctx context.Context, prefixKey SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error) {
 	opts = append(opts, ormlist.Prefix(prefixKey.values()))
-	it, err := x.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
+	it, err := this.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
 	return SupplyIterator{it}, err
 }
-func (x supplyStore) ListRange(ctx context.Context, from, to SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error) {
+func (this supplyStore) ListRange(ctx context.Context, from, to SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error) {
 	opts = append(opts, ormlist.Start(from.values()), ormlist.End(to))
-	it, err := x.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
+	it, err := this.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
 	return SupplyIterator{it}, err
 }
 
@@ -207,8 +208,8 @@ func NewSupplyStore(db ormdb.ModuleDB) (SupplyStore, error) {
 }
 
 type BankStore interface {
-	Balance() BalanceStore
-	Supply() SupplyStore
+	BalanceStore() BalanceStore
+	SupplyStore() SupplyStore
 }
 
 type bankStore struct {
@@ -216,10 +217,10 @@ type bankStore struct {
 	supply  SupplyStore
 }
 
-func (x bankStore) Balance() BalanceStore {
+func (x bankStore) BalanceStore() BalanceStore {
 	return x.balance
 }
-func (x bankStore) Supply() SupplyStore {
+func (x bankStore) SupplyStore() SupplyStore {
 	return x.supply
 }
 

@@ -52,7 +52,8 @@ func (f fileGen) gen() error {
 func (f fileGen) genStoreInterfaces(stores []*protogen.Message) {
 	f.P("type ", f.storeInterfaceName(), " interface {")
 	for _, store := range stores {
-		f.P(store.GoIdent.GoName, "()", f.messageStoreInterfaceName(store))
+		name := f.messageStoreInterfaceName(store)
+		f.P(name, "()", name)
 	}
 	f.P("}")
 	f.P()
@@ -115,7 +116,8 @@ func (f fileGen) messageConstructorName(m *protogen.Message) string {
 
 func (f fileGen) genStoreGetters(stores []*protogen.Message) {
 	for _, msg := range stores {
-		f.P("func(x ", f.storeStructName(), ") ", msg.GoIdent.GoName, "() ", f.messageStoreInterfaceName(msg), "{")
+		name := f.messageStoreInterfaceName(msg)
+		f.P("func(x ", f.storeStructName(), ") ", name, "() ", name, "{")
 		f.P("return x.", f.param(msg.GoIdent.GoName))
 		f.P("}")
 	}

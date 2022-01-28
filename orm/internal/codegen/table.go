@@ -2,8 +2,9 @@ package codegen
 
 import (
 	"fmt"
-	"github.com/iancoleman/strcase"
 	"strings"
+
+	"github.com/iancoleman/strcase"
 
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -152,7 +153,8 @@ func (t tableGen) genStruct() {
 }
 
 func (t tableGen) genStoreImpl() {
-	receiver := fmt.Sprintf("func (x %s) ", t.messageStoreReceiverName(t.msg))
+	receiverVar := "this"
+	receiver := fmt.Sprintf("func (%s %s) ", receiverVar, t.messageStoreReceiverName(t.msg))
 	varName := t.param(t.msg.GoIdent.GoName)
 	varTypeName := t.QualifiedGoIdent(t.msg.GoIdent)
 
@@ -160,19 +162,19 @@ func (t tableGen) genStoreImpl() {
 	methods := []string{"Insert", "Update", "Save", "Delete"}
 	for _, method := range methods {
 		t.P(receiver, method, "(ctx ", contextPkg.Ident("Context"), ", ", varName, " *", varTypeName, ") error {")
-		t.P("return x.table.", method, "(ctx, ", varName, ")")
+		t.P("return ", receiverVar, ".table.", method, "(ctx, ", varName, ")")
 		t.P("}")
 	}
 
 	// Has
 	t.P(receiver, "Has(ctx ", contextPkg.Ident("Context"), ", ", t.fieldsArgs(t.primaryKeyFields.Names()), ") (found bool, err error) {")
-	t.P("return x.table.PrimaryKey().Has(ctx, ", t.primaryKeyFields.String(), ")")
+	t.P("return ", receiverVar, ".table.PrimaryKey().Has(ctx, ", t.primaryKeyFields.String(), ")")
 	t.P("}")
 
 	// Get
 	t.P(receiver, "Get(ctx ", contextPkg.Ident("Context"), ", ", t.fieldsArgs(t.primaryKeyFields.Names()), ") (*", varTypeName, ", error) {")
 	t.P("var ", varName, " ", varTypeName)
-	t.P("found, err := x.table.PrimaryKey().Get(ctx, &", varName, ", ", t.primaryKeyFields.String(), ")")
+	t.P("found, err := ", receiverVar, ".table.PrimaryKey().Get(ctx, &", varName, ", ", t.primaryKeyFields.String(), ")")
 	t.P("if !found {")
 	t.P("return nil, err")
 	t.P("}")
@@ -182,14 +184,14 @@ func (t tableGen) genStoreImpl() {
 	// List
 	t.P(receiver, "List(ctx ", contextPkg.Ident("Context"), ", prefixKey ", t.indexKeyInterfaceName(), ", opts ...", ormListPkg.Ident("Option"), ") (", t.iteratorName(), ", error) {")
 	t.P("opts = append(opts, ", ormListPkg.Ident("Prefix"), "(prefixKey.values()))")
-	t.P("it, err := x.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)")
+	t.P("it, err := ", receiverVar, ".table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)")
 	t.P("return ", t.iteratorName(), "{it}, err")
 	t.P("}")
 
 	// ListRange
 	t.P(receiver, "ListRange(ctx ", contextPkg.Ident("Context"), ", from, to ", t.indexKeyInterfaceName(), ", opts ...", ormListPkg.Ident("Option"), ") (", t.iteratorName(), ", error) {")
 	t.P("opts = append(opts, ", ormListPkg.Ident("Start"), "(from.values()), ", ormListPkg.Ident("End"), "(to))")
-	t.P("it, err := x.table.GetIndexByID(from.id()).Iterator(ctx, opts...)")
+	t.P("it, err := ", receiverVar, ".table.GetIndexByID(from.id()).Iterator(ctx, opts...)")
 	t.P("return ", t.iteratorName(), "{it}, err")
 	t.P("}")
 
@@ -198,8 +200,8 @@ func (t tableGen) genStoreImpl() {
 		hasName, getName := t.uniqueIndexSig(idx)
 
 		// has
-		t.P("func (x ", t.messageStoreReceiverName(t.msg), ") ", hasName, "{")
-		t.P("return x.table.Has(ctx, &", t.msg.GoIdent.GoName, "{")
+		t.P("func (", receiverVar, " ", t.messageStoreReceiverName(t.msg), ") ", hasName, "{")
+		t.P("return ", receiverVar, ".table.Has(ctx, &", t.msg.GoIdent.GoName, "{")
 		for _, field := range fields {
 			t.P(strcase.ToCamel(field), ": ", field, ",")
 		}
@@ -209,13 +211,13 @@ func (t tableGen) genStoreImpl() {
 		// get
 		varName := t.param(t.msg.GoIdent.GoName)
 		varTypeName := t.msg.GoIdent.GoName
-		t.P("func (x ", t.messageStoreReceiverName(t.msg), ") ", getName, "{")
+		t.P("func (", receiverVar, " ", t.messageStoreReceiverName(t.msg), ") ", getName, "{")
 		t.P(varName, " := &", varTypeName, "{")
 		for _, field := range fields {
 			t.P(strcase.ToCamel(field), ": ", field, ",")
 		}
 		t.P("}")
-		t.P("found, err := x.table.Get(ctx, ", varName, ")")
+		t.P("found, err := ", receiverVar, ".table.Get(ctx, ", varName, ")")
 		t.P("if !found {")
 		t.P("return nil, err")
 		t.P("}")

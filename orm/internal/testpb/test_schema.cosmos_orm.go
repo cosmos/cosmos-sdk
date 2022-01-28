@@ -4,6 +4,7 @@ package testpb
 
 import (
 	context "context"
+
 	ormdb "github.com/cosmos/cosmos-sdk/orm/model/ormdb"
 	ormlist "github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
@@ -48,19 +49,19 @@ func (x ExampleTableU32I64StrIndexKey) id() uint32            { return 1 }
 func (x ExampleTableU32I64StrIndexKey) values() []interface{} { return x.vs }
 func (x ExampleTableU32I64StrIndexKey) exampleTableIndexKey() {}
 
-func (x ExampleTableU32I64StrIndexKey) WithU32(u32 uint32) ExampleTableU32I64StrIndexKey {
-	x.vs = []interface{}{u32}
-	return x
+func (this ExampleTableU32I64StrIndexKey) WithU32(u32 uint32) ExampleTableU32I64StrIndexKey {
+	this.vs = []interface{}{u32}
+	return this
 }
 
-func (x ExampleTableU32I64StrIndexKey) WithU32I64(u32 uint32, i64 int64) ExampleTableU32I64StrIndexKey {
-	x.vs = []interface{}{u32, i64}
-	return x
+func (this ExampleTableU32I64StrIndexKey) WithU32I64(u32 uint32, i64 int64) ExampleTableU32I64StrIndexKey {
+	this.vs = []interface{}{u32, i64}
+	return this
 }
 
-func (x ExampleTableU32I64StrIndexKey) WithU32I64Str(u32 uint32, i64 int64, str string) ExampleTableU32I64StrIndexKey {
-	x.vs = []interface{}{u32, i64, str}
-	return x
+func (this ExampleTableU32I64StrIndexKey) WithU32I64Str(u32 uint32, i64 int64, str string) ExampleTableU32I64StrIndexKey {
+	this.vs = []interface{}{u32, i64, str}
+	return this
 }
 
 type ExampleTableU64StrIndexKey struct {
@@ -71,14 +72,14 @@ func (x ExampleTableU64StrIndexKey) id() uint32            { return 1 }
 func (x ExampleTableU64StrIndexKey) values() []interface{} { return x.vs }
 func (x ExampleTableU64StrIndexKey) exampleTableIndexKey() {}
 
-func (x ExampleTableU64StrIndexKey) WithU64(u64 uint64) ExampleTableU64StrIndexKey {
-	x.vs = []interface{}{u64}
-	return x
+func (this ExampleTableU64StrIndexKey) WithU64(u64 uint64) ExampleTableU64StrIndexKey {
+	this.vs = []interface{}{u64}
+	return this
 }
 
-func (x ExampleTableU64StrIndexKey) WithU64Str(u64 uint64, str string) ExampleTableU64StrIndexKey {
-	x.vs = []interface{}{u64, str}
-	return x
+func (this ExampleTableU64StrIndexKey) WithU64Str(u64 uint64, str string) ExampleTableU64StrIndexKey {
+	this.vs = []interface{}{u64, str}
+	return this
 }
 
 type ExampleTableStrU32IndexKey struct {
@@ -89,14 +90,14 @@ func (x ExampleTableStrU32IndexKey) id() uint32            { return 2 }
 func (x ExampleTableStrU32IndexKey) values() []interface{} { return x.vs }
 func (x ExampleTableStrU32IndexKey) exampleTableIndexKey() {}
 
-func (x ExampleTableStrU32IndexKey) WithStr(str string) ExampleTableStrU32IndexKey {
-	x.vs = []interface{}{str}
-	return x
+func (this ExampleTableStrU32IndexKey) WithStr(str string) ExampleTableStrU32IndexKey {
+	this.vs = []interface{}{str}
+	return this
 }
 
-func (x ExampleTableStrU32IndexKey) WithStrU32(str string, u32 uint32) ExampleTableStrU32IndexKey {
-	x.vs = []interface{}{str, u32}
-	return x
+func (this ExampleTableStrU32IndexKey) WithStrU32(str string, u32 uint32) ExampleTableStrU32IndexKey {
+	this.vs = []interface{}{str, u32}
+	return this
 }
 
 type ExampleTableBzStrIndexKey struct {
@@ -107,65 +108,65 @@ func (x ExampleTableBzStrIndexKey) id() uint32            { return 3 }
 func (x ExampleTableBzStrIndexKey) values() []interface{} { return x.vs }
 func (x ExampleTableBzStrIndexKey) exampleTableIndexKey() {}
 
-func (x ExampleTableBzStrIndexKey) WithBz(bz []byte) ExampleTableBzStrIndexKey {
-	x.vs = []interface{}{bz}
-	return x
+func (this ExampleTableBzStrIndexKey) WithBz(bz []byte) ExampleTableBzStrIndexKey {
+	this.vs = []interface{}{bz}
+	return this
 }
 
-func (x ExampleTableBzStrIndexKey) WithBzStr(bz []byte, str string) ExampleTableBzStrIndexKey {
-	x.vs = []interface{}{bz, str}
-	return x
+func (this ExampleTableBzStrIndexKey) WithBzStr(bz []byte, str string) ExampleTableBzStrIndexKey {
+	this.vs = []interface{}{bz, str}
+	return this
 }
 
 type exampleTableStore struct {
 	table ormtable.Table
 }
 
-func (x exampleTableStore) Insert(ctx context.Context, exampleTable *ExampleTable) error {
-	return x.table.Insert(ctx, exampleTable)
+func (this exampleTableStore) Insert(ctx context.Context, exampleTable *ExampleTable) error {
+	return this.table.Insert(ctx, exampleTable)
 }
-func (x exampleTableStore) Update(ctx context.Context, exampleTable *ExampleTable) error {
-	return x.table.Update(ctx, exampleTable)
+func (this exampleTableStore) Update(ctx context.Context, exampleTable *ExampleTable) error {
+	return this.table.Update(ctx, exampleTable)
 }
-func (x exampleTableStore) Save(ctx context.Context, exampleTable *ExampleTable) error {
-	return x.table.Save(ctx, exampleTable)
+func (this exampleTableStore) Save(ctx context.Context, exampleTable *ExampleTable) error {
+	return this.table.Save(ctx, exampleTable)
 }
-func (x exampleTableStore) Delete(ctx context.Context, exampleTable *ExampleTable) error {
-	return x.table.Delete(ctx, exampleTable)
+func (this exampleTableStore) Delete(ctx context.Context, exampleTable *ExampleTable) error {
+	return this.table.Delete(ctx, exampleTable)
 }
-func (x exampleTableStore) Has(ctx context.Context, u32 uint32, i64 int64, str string) (found bool, err error) {
-	return x.table.PrimaryKey().Has(ctx, u32, i64, str)
+func (this exampleTableStore) Has(ctx context.Context, u32 uint32, i64 int64, str string) (found bool, err error) {
+	return this.table.PrimaryKey().Has(ctx, u32, i64, str)
 }
-func (x exampleTableStore) Get(ctx context.Context, u32 uint32, i64 int64, str string) (*ExampleTable, error) {
+func (this exampleTableStore) Get(ctx context.Context, u32 uint32, i64 int64, str string) (*ExampleTable, error) {
 	var exampleTable ExampleTable
-	found, err := x.table.PrimaryKey().Get(ctx, &exampleTable, u32, i64, str)
+	found, err := this.table.PrimaryKey().Get(ctx, &exampleTable, u32, i64, str)
 	if !found {
 		return nil, err
 	}
 	return &exampleTable, err
 }
-func (x exampleTableStore) List(ctx context.Context, prefixKey ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error) {
+func (this exampleTableStore) List(ctx context.Context, prefixKey ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error) {
 	opts = append(opts, ormlist.Prefix(prefixKey.values()))
-	it, err := x.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
+	it, err := this.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
 	return ExampleTableIterator{it}, err
 }
-func (x exampleTableStore) ListRange(ctx context.Context, from, to ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error) {
+func (this exampleTableStore) ListRange(ctx context.Context, from, to ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error) {
 	opts = append(opts, ormlist.Start(from.values()), ormlist.End(to))
-	it, err := x.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
+	it, err := this.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
 	return ExampleTableIterator{it}, err
 }
-func (x exampleTableStore) HasByU64Str(ctx context.Context, u64 uint64, str string) (found bool, err error) {
-	return x.table.Has(ctx, &ExampleTable{
+func (this exampleTableStore) HasByU64Str(ctx context.Context, u64 uint64, str string) (found bool, err error) {
+	return this.table.Has(ctx, &ExampleTable{
 		U64: u64,
 		Str: str,
 	})
 }
-func (x exampleTableStore) GetByU64Str(ctx context.Context, u64 uint64, str string) (*ExampleTable, error) {
+func (this exampleTableStore) GetByU64Str(ctx context.Context, u64 uint64, str string) (*ExampleTable, error) {
 	exampleTable := &ExampleTable{
 		U64: u64,
 		Str: str,
 	}
-	found, err := x.table.Get(ctx, exampleTable)
+	found, err := this.table.Get(ctx, exampleTable)
 	if !found {
 		return nil, err
 	}
@@ -220,9 +221,9 @@ func (x ExampleAutoIncrementTableIdIndexKey) id() uint32                        
 func (x ExampleAutoIncrementTableIdIndexKey) values() []interface{}              { return x.vs }
 func (x ExampleAutoIncrementTableIdIndexKey) exampleAutoIncrementTableIndexKey() {}
 
-func (x ExampleAutoIncrementTableIdIndexKey) WithId(id uint64) ExampleAutoIncrementTableIdIndexKey {
-	x.vs = []interface{}{id}
-	return x
+func (this ExampleAutoIncrementTableIdIndexKey) WithId(id uint64) ExampleAutoIncrementTableIdIndexKey {
+	this.vs = []interface{}{id}
+	return this
 }
 
 type ExampleAutoIncrementTableXIndexKey struct {
@@ -233,58 +234,58 @@ func (x ExampleAutoIncrementTableXIndexKey) id() uint32                         
 func (x ExampleAutoIncrementTableXIndexKey) values() []interface{}              { return x.vs }
 func (x ExampleAutoIncrementTableXIndexKey) exampleAutoIncrementTableIndexKey() {}
 
-func (x ExampleAutoIncrementTableXIndexKey) WithX(x string) ExampleAutoIncrementTableXIndexKey {
-	x.vs = []interface{}{x}
-	return x
+func (this ExampleAutoIncrementTableXIndexKey) WithX(x string) ExampleAutoIncrementTableXIndexKey {
+	this.vs = []interface{}{x}
+	return this
 }
 
 type exampleAutoIncrementTableStore struct {
 	table ormtable.Table
 }
 
-func (x exampleAutoIncrementTableStore) Insert(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
-	return x.table.Insert(ctx, exampleAutoIncrementTable)
+func (this exampleAutoIncrementTableStore) Insert(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
+	return this.table.Insert(ctx, exampleAutoIncrementTable)
 }
-func (x exampleAutoIncrementTableStore) Update(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
-	return x.table.Update(ctx, exampleAutoIncrementTable)
+func (this exampleAutoIncrementTableStore) Update(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
+	return this.table.Update(ctx, exampleAutoIncrementTable)
 }
-func (x exampleAutoIncrementTableStore) Save(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
-	return x.table.Save(ctx, exampleAutoIncrementTable)
+func (this exampleAutoIncrementTableStore) Save(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
+	return this.table.Save(ctx, exampleAutoIncrementTable)
 }
-func (x exampleAutoIncrementTableStore) Delete(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
-	return x.table.Delete(ctx, exampleAutoIncrementTable)
+func (this exampleAutoIncrementTableStore) Delete(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
+	return this.table.Delete(ctx, exampleAutoIncrementTable)
 }
-func (x exampleAutoIncrementTableStore) Has(ctx context.Context, id uint64) (found bool, err error) {
-	return x.table.PrimaryKey().Has(ctx, id)
+func (this exampleAutoIncrementTableStore) Has(ctx context.Context, id uint64) (found bool, err error) {
+	return this.table.PrimaryKey().Has(ctx, id)
 }
-func (x exampleAutoIncrementTableStore) Get(ctx context.Context, id uint64) (*ExampleAutoIncrementTable, error) {
+func (this exampleAutoIncrementTableStore) Get(ctx context.Context, id uint64) (*ExampleAutoIncrementTable, error) {
 	var exampleAutoIncrementTable ExampleAutoIncrementTable
-	found, err := x.table.PrimaryKey().Get(ctx, &exampleAutoIncrementTable, id)
+	found, err := this.table.PrimaryKey().Get(ctx, &exampleAutoIncrementTable, id)
 	if !found {
 		return nil, err
 	}
 	return &exampleAutoIncrementTable, err
 }
-func (x exampleAutoIncrementTableStore) List(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error) {
+func (this exampleAutoIncrementTableStore) List(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error) {
 	opts = append(opts, ormlist.Prefix(prefixKey.values()))
-	it, err := x.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
+	it, err := this.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
 	return ExampleAutoIncrementTableIterator{it}, err
 }
-func (x exampleAutoIncrementTableStore) ListRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error) {
+func (this exampleAutoIncrementTableStore) ListRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error) {
 	opts = append(opts, ormlist.Start(from.values()), ormlist.End(to))
-	it, err := x.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
+	it, err := this.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
 	return ExampleAutoIncrementTableIterator{it}, err
 }
-func (x exampleAutoIncrementTableStore) HasByX(ctx context.Context, x string) (found bool, err error) {
-	return x.table.Has(ctx, &ExampleAutoIncrementTable{
+func (this exampleAutoIncrementTableStore) HasByX(ctx context.Context, x string) (found bool, err error) {
+	return this.table.Has(ctx, &ExampleAutoIncrementTable{
 		X: x,
 	})
 }
-func (x exampleAutoIncrementTableStore) GetByX(ctx context.Context, x string) (*ExampleAutoIncrementTable, error) {
+func (this exampleAutoIncrementTableStore) GetByX(ctx context.Context, x string) (*ExampleAutoIncrementTable, error) {
 	exampleAutoIncrementTable := &ExampleAutoIncrementTable{
 		X: x,
 	}
-	found, err := x.table.Get(ctx, exampleAutoIncrementTable)
+	found, err := this.table.Get(ctx, exampleAutoIncrementTable)
 	if !found {
 		return nil, err
 	}
@@ -335,9 +336,9 @@ func NewExampleSingletonStore(db ormdb.ModuleDB) (ExampleSingletonStore, error) 
 }
 
 type TestSchemaStore interface {
-	ExampleTable() ExampleTableStore
-	ExampleAutoIncrementTable() ExampleAutoIncrementTableStore
-	ExampleSingleton() ExampleSingletonStore
+	ExampleTableStore() ExampleTableStore
+	ExampleAutoIncrementTableStore() ExampleAutoIncrementTableStore
+	ExampleSingletonStore() ExampleSingletonStore
 }
 
 type testSchemaStore struct {
@@ -346,13 +347,13 @@ type testSchemaStore struct {
 	exampleSingleton          ExampleSingletonStore
 }
 
-func (x testSchemaStore) ExampleTable() ExampleTableStore {
+func (x testSchemaStore) ExampleTableStore() ExampleTableStore {
 	return x.exampleTable
 }
-func (x testSchemaStore) ExampleAutoIncrementTable() ExampleAutoIncrementTableStore {
+func (x testSchemaStore) ExampleAutoIncrementTableStore() ExampleAutoIncrementTableStore {
 	return x.exampleAutoIncrementTable
 }
-func (x testSchemaStore) ExampleSingleton() ExampleSingletonStore {
+func (x testSchemaStore) ExampleSingletonStore() ExampleSingletonStore {
 	return x.exampleSingleton
 }
 

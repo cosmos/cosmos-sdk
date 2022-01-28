@@ -2,9 +2,10 @@ package codegen
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/iancoleman/strcase"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"strings"
 )
 
 func (t tableGen) genIndexKeys() {
@@ -139,7 +140,7 @@ func (t tableGen) genIndexInterfaceMethods(id uint32, indexStructName string) {
 }
 
 func (t tableGen) genWithMethods(indexStructName string, parts []string) {
-	funcPrefix := fmt.Sprintf("func (x %s) ", indexStructName)
+	funcPrefix := fmt.Sprintf("func (this %s) ", indexStructName)
 	camelParts := make([]string, len(parts))
 	for i, part := range parts {
 		camelParts[i] = strcase.ToCamel(part)
@@ -147,8 +148,8 @@ func (t tableGen) genWithMethods(indexStructName string, parts []string) {
 	funcName := "With" + strings.Join(camelParts, "")
 
 	t.P(funcPrefix, funcName, "(", t.fieldArgsFromStringSlice(parts), ") ", indexStructName, "{")
-	t.P("x.vs = []interface{}{", strings.Join(parts, ","), "}")
-	t.P("return x")
+	t.P("this.vs = []interface{}{", strings.Join(parts, ","), "}")
+	t.P("return this")
 	t.P("}")
 	t.P()
 }

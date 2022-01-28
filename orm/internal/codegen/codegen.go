@@ -37,7 +37,6 @@ func PluginRunner(p *protogen.Plugin) error {
 			LocalPackages: map[string]bool{},
 		}
 		f := fileGen{GeneratedFile: cgen, file: f}
-		// TODO skip files without tables
 		err := f.gen()
 		if err != nil {
 			return err

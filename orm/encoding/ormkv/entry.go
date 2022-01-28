@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"google.golang.org/protobuf/encoding/protojson"
+	"github.com/cosmos/cosmos-sdk/orm/internal/stablejson"
+
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/known/structpb"
 )
 
 // Entry defines a logical representation of a kv-store entry for ORM instances.
@@ -42,17 +42,16 @@ func (p *PrimaryKeyEntry) GetTableName() protoreflect.FullName {
 }
 
 func (p *PrimaryKeyEntry) String() string {
-	msg := p.Value
-	msgStr := "_"
-	if msg != nil {
-		msgBz, err := protojson.Marshal(msg)
-		if err == nil {
-			msgStr = string(msgBz)
-		} else {
-			msgStr = fmt.Sprintf("ERR:%v", err)
+	if p.Value == nil {
+		return fmt.Sprintf("PK %s %s -> _", p.TableName, fmtValues(p.Key))
+	} else {
+		valBz, err := stablejson.Marshal(p.Value)
+		valStr := string(valBz)
+		if err != nil {
+			valStr = fmt.Sprintf("ERR %v", err)
 		}
+		return fmt.Sprintf("PK %s %s -> %s", p.TableName, fmtValues(p.Key), valStr)
 	}
-	return fmt.Sprintf("PK:%s/%s:%s", p.TableName, fmtValues(p.Key), msgStr)
 }
 
 func fmtValues(values []protoreflect.Value) string {
@@ -62,19 +61,7 @@ func fmtValues(values []protoreflect.Value) string {
 
 	parts := make([]string, len(values))
 	for i, v := range values {
-		val, err := structpb.NewValue(v.Interface())
-		if err != nil {
-			parts[i] = "ERR"
-			continue
-		}
-
-		bz, err := protojson.Marshal(val)
-		if err != nil {
-			parts[i] = "ERR"
-			continue
-		}
-
-		parts[i] = string(bz)
+		parts[i] = fmt.Sprintf("%v", v.Interface())
 	}
 
 	return strings.Join(parts, "/")
@@ -109,7 +96,7 @@ func (i *IndexKeyEntry) GetTableName() protoreflect.FullName {
 func (i *IndexKeyEntry) doNotImplement() {}
 
 func (i *IndexKeyEntry) string() string {
-	return fmt.Sprintf("%s/%s:%s:%s", i.TableName, fmtFields(i.Fields), fmtValues(i.IndexValues), fmtValues(i.PrimaryKey))
+	return fmt.Sprintf("%s %s : %s -> %s", i.TableName, fmtFields(i.Fields), fmtValues(i.IndexValues), fmtValues(i.PrimaryKey))
 }
 
 func fmtFields(fields []protoreflect.Name) string {
@@ -122,10 +109,10 @@ func fmtFields(fields []protoreflect.Name) string {
 
 func (i *IndexKeyEntry) String() string {
 	if i.IsUnique {
-		return fmt.Sprintf("UNIQ:%s", i.string())
+		return fmt.Sprintf("UNIQ %s", i.string())
 	} else {
 
-		return fmt.Sprintf("IDX:%s", i.string())
+		return fmt.Sprintf("IDX %s", i.string())
 	}
 }
 
@@ -146,7 +133,7 @@ func (s *SeqEntry) GetTableName() protoreflect.FullName {
 func (s *SeqEntry) doNotImplement() {}
 
 func (s *SeqEntry) String() string {
-	return fmt.Sprintf("SEQ:%s:%d", s.TableName, s.Value)
+	return fmt.Sprintf("SEQ %s %d", s.TableName, s.Value)
 }
 
 var _, _, _ Entry = &PrimaryKeyEntry{}, &IndexKeyEntry{}, &SeqEntry{}

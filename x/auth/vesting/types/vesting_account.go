@@ -729,7 +729,7 @@ func (va ClawbackVestingAccount) ComputeClawback(clawbackTime int64) (ClawbackVe
 func (va ClawbackVestingAccount) updateDelegation(encumbered, toClawBack, bonded, unbonding, unbonded sdk.Coins) (ClawbackVestingAccount, sdk.Coins) {
 	delegated := bonded.Add(unbonding...)
 	oldDelegated := va.DelegatedVesting.Add(va.DelegatedFree...)
-	slashed := delegated.Sub(coinsMin(delegated, oldDelegated))
+	slashed := oldDelegated.Sub(coinsMin(delegated, oldDelegated))
 	total := delegated.Add(unbonded...)
 	toClawBack = coinsMin(toClawBack, total) // might have been slashed
 	newDelegated := coinsMin(delegated, total.Sub(toClawBack)).Add(slashed...)

@@ -95,18 +95,18 @@ func (msg MsgCreateVestingAccount) GetSigners() []sdk.AccAddress {
  // ValidateBasic Implements Msg.
  func (msg MsgCreatePermanentLockedAccount) ValidateBasic() error {
  	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
- 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %s", err)
+ 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)
  	}
  	if _, err := sdk.AccAddressFromBech32(msg.ToAddress); err != nil {
- 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid recipient address: %s", err)
+ 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
  	}
 
  	if !msg.Amount.IsValid() {
- 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+ 		return sdkerrors.ErrInvalidCoins.Wrap(msg.Amount.String())
  	}
 
  	if !msg.Amount.IsAllPositive() {
- 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+ 		return sdkerrors.ErrInvalidCoins.Wrap(msg.Amount.String())
  	}
 
  	return nil

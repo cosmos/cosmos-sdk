@@ -49,7 +49,7 @@ type ExampleTableU32I64StrIndexKey struct {
 	vs []interface{}
 }
 
-func (x ExampleTableU32I64StrIndexKey) id() uint32            { return 1 }
+func (x ExampleTableU32I64StrIndexKey) id() uint32            { return 0 }
 func (x ExampleTableU32I64StrIndexKey) values() []interface{} { return x.vs }
 func (x ExampleTableU32I64StrIndexKey) exampleTableIndexKey() {}
 
@@ -156,22 +156,22 @@ func (this exampleTableStore) Get(ctx context.Context, u32 uint32, i64 int64, st
 }
 
 func (this exampleTableStore) HasByU64Str(ctx context.Context, u64 uint64, str string) (found bool, err error) {
-	return this.table.Has(ctx, &ExampleTable{
-		U64: u64,
-		Str: str,
-	})
+	return this.table.GetIndexByID(1).(ormtable.UniqueIndex).Has(ctx,
+		u64,
+		str,
+	)
 }
 
 func (this exampleTableStore) GetByU64Str(ctx context.Context, u64 uint64, str string) (*ExampleTable, error) {
-	exampleTable := &ExampleTable{
-		U64: u64,
-		Str: str,
-	}
-	found, err := this.table.Get(ctx, exampleTable)
+	var exampleTable ExampleTable
+	found, err := this.table.GetIndexByID(1).(ormtable.UniqueIndex).Get(ctx, &exampleTable,
+		u64,
+		str,
+	)
 	if !found {
 		return nil, err
 	}
-	return exampleTable, nil
+	return &exampleTable, nil
 }
 
 func (this exampleTableStore) List(ctx context.Context, prefixKey ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error) {
@@ -236,7 +236,7 @@ type ExampleAutoIncrementTableIdIndexKey struct {
 	vs []interface{}
 }
 
-func (x ExampleAutoIncrementTableIdIndexKey) id() uint32                         { return 3 }
+func (x ExampleAutoIncrementTableIdIndexKey) id() uint32                         { return 0 }
 func (x ExampleAutoIncrementTableIdIndexKey) values() []interface{}              { return x.vs }
 func (x ExampleAutoIncrementTableIdIndexKey) exampleAutoIncrementTableIndexKey() {}
 
@@ -292,20 +292,20 @@ func (this exampleAutoIncrementTableStore) Get(ctx context.Context, id uint64) (
 }
 
 func (this exampleAutoIncrementTableStore) HasByX(ctx context.Context, x string) (found bool, err error) {
-	return this.table.Has(ctx, &ExampleAutoIncrementTable{
-		X: x,
-	})
+	return this.table.GetIndexByID(1).(ormtable.UniqueIndex).Has(ctx,
+		x,
+	)
 }
 
 func (this exampleAutoIncrementTableStore) GetByX(ctx context.Context, x string) (*ExampleAutoIncrementTable, error) {
-	exampleAutoIncrementTable := &ExampleAutoIncrementTable{
-		X: x,
-	}
-	found, err := this.table.Get(ctx, exampleAutoIncrementTable)
+	var exampleAutoIncrementTable ExampleAutoIncrementTable
+	found, err := this.table.GetIndexByID(1).(ormtable.UniqueIndex).Get(ctx, &exampleAutoIncrementTable,
+		x,
+	)
 	if !found {
 		return nil, err
 	}
-	return exampleAutoIncrementTable, nil
+	return &exampleAutoIncrementTable, nil
 }
 
 func (this exampleAutoIncrementTableStore) List(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error) {
@@ -345,12 +345,9 @@ type exampleSingletonStore struct {
 var _ ExampleSingletonStore = exampleSingletonStore{}
 
 func (x exampleSingletonStore) Get(ctx context.Context) (*ExampleSingleton, error) {
-	var exampleSingleton ExampleSingleton
-	found, err := x.table.Get(ctx, &exampleSingleton)
-	if !found {
-		return nil, err
-	}
-	return &exampleSingleton, err
+	exampleSingleton := &ExampleSingleton{}
+	_, err := x.table.Get(ctx, exampleSingleton)
+	return exampleSingleton, err
 }
 
 func (x exampleSingletonStore) Save(ctx context.Context, exampleSingleton *ExampleSingleton) error {

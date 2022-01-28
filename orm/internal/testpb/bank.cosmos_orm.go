@@ -47,7 +47,7 @@ type BalanceAddressDenomIndexKey struct {
 	vs []interface{}
 }
 
-func (x BalanceAddressDenomIndexKey) id() uint32            { return 1 }
+func (x BalanceAddressDenomIndexKey) id() uint32            { return 0 }
 func (x BalanceAddressDenomIndexKey) values() []interface{} { return x.vs }
 func (x BalanceAddressDenomIndexKey) balanceIndexKey()      {}
 
@@ -167,7 +167,7 @@ type SupplyDenomIndexKey struct {
 	vs []interface{}
 }
 
-func (x SupplyDenomIndexKey) id() uint32            { return 2 }
+func (x SupplyDenomIndexKey) id() uint32            { return 0 }
 func (x SupplyDenomIndexKey) values() []interface{} { return x.vs }
 func (x SupplyDenomIndexKey) supplyIndexKey()       {}
 

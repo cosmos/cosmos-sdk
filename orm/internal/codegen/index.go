@@ -20,7 +20,7 @@ func (t tableGen) genIndexKeys() {
 
 	// start with primary key..
 	t.P("// primary key starting index..")
-	t.genIndex(t.table.PrimaryKey.Fields, t.ormTable.ID(), true)
+	t.genIndex(t.table.PrimaryKey.Fields, 0, true)
 	for _, idx := range t.table.Index {
 		t.genIndex(idx.Fields, idx.Id, false)
 	}

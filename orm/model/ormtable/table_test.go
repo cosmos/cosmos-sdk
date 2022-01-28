@@ -378,7 +378,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	a, err = store.Get(ctx, 9, 0, "")
 	assert.NilError(t, err)
 	assert.Assert(t, a != nil)
-	assert.DeepEqual(t, data[10], &a, protocmp.Transform())
+	assert.DeepEqual(t, data[10], a, protocmp.Transform())
 	// and update it
 	data[10].B = true
 	assert.NilError(t, table.Save(ctx, data[10]))

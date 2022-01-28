@@ -32,7 +32,7 @@ type tableImpl struct {
 	customJSONValidator   func(message proto.Message) error
 }
 
-func (t tableImpl) GetTable(message proto.Message) Table {
+func (t *tableImpl) GetTable(message proto.Message) Table {
 	if message.ProtoReflect().Descriptor().FullName() == t.MessageType().Descriptor().FullName() {
 		return t
 	}

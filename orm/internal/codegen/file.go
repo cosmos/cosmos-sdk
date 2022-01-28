@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	tablePkg = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/model/ormtable")
+	ormTablePkg = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/model/ormtable")
 )
 
 type fileGen struct {

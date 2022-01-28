@@ -2,10 +2,12 @@ package codegen
 
 import (
 	"fmt"
-	ormv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/types/dynamicpb"
+
+	ormv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
+	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 )
 
 type singletonGen struct {
@@ -47,7 +49,7 @@ func (s singletonGen) genInterface() {
 
 func (s singletonGen) genStruct() {
 	s.P("type ", s.messageStoreReceiverName(s.msg), " struct {")
-	s.P("table ", tablePkg.Ident("Table"))
+	s.P("table ", ormTablePkg.Ident("Table"))
 	s.P("}")
 	s.P()
 }

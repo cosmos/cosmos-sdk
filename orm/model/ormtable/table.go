@@ -42,8 +42,10 @@ type View interface {
 	// Indexes returns all the concrete indexes for the table.
 	Indexes() []Index
 
+	// GetIndexByID returns the index with the provided ID or nil.
 	GetIndexByID(id uint32) Index
 
+	// PrimaryKey returns the primary key unique index.
 	PrimaryKey() UniqueIndex
 }
 

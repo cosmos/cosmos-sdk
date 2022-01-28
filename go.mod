@@ -12,7 +12,7 @@ require (
 	github.com/confio/ics23/go v0.6.6
 	github.com/cosmos/btcutil v1.0.4
 	github.com/cosmos/cosmos-proto v1.0.0-alpha6
-	github.com/cosmos/cosmos-sdk/db v0.0.0
+	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.2
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.17.3

@@ -12,7 +12,6 @@ import (
 
 // MigrateV2 will migrate the state from iavl to smt
 func MigrateV2(rs *v1Store.Store, rootStore *Store) error {
-	// make new smt store schema
 	if len(rootStore.schema) != 0 {
 		// schema already exists
 		return sdkerrors.Wrapf(sdkerrors.ErrLogic, "smt store already have schema")

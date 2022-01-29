@@ -38,7 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 
 ### Features
-
+* [\#10977](https://github.com/cosmos/cosmos-sdk/pull/10977) Now every cosmos message protobuf definition must be extended with a ``cosmos.msg.v1.signer`` option to signal the signer fields in a language agnostic way.
 * [\#10710](https://github.com/cosmos/cosmos-sdk/pull/10710) Chain-id shouldn't be required for creating a transaction with both --generate-only and --offline flags.
 * [\#10703](https://github.com/cosmos/cosmos-sdk/pull/10703) Create a new grantee account, if the grantee of an authorization does not exist.
 * [\#10592](https://github.com/cosmos/cosmos-sdk/pull/10592) Add a `DecApproxEq` function that checks to see if `|d1 - d2| < tol` for some Dec `d1, d2, tol`.
@@ -56,6 +56,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10507](https://github.com/cosmos/cosmos-sdk/pull/10507) Add middleware for tx priority.
 * [\#10311](https://github.com/cosmos/cosmos-sdk/pull/10311) Adds cli to use tips transactions. It adds an `--aux` flag to all CLI tx commands to generate the aux signer data (with optional tip), and a new `tx aux-to-fee` subcommand to let the fee payer gather aux signer data and broadcast the tx
 * [\#10430](https://github.com/cosmos/cosmos-sdk/pull/10430) ADR-040: Add store/v2 `MultiStore` implementation
+* [\#11019](https://github.com/cosmos/cosmos-sdk/pull/11019) Add `MsgCreatePermanentLockedAccount` and CLI method for creating permanent locked account
 * [\#10947](https://github.com/cosmos/cosmos-sdk/pull/10947) Add `AllowancesByGranter` query to the feegrant module
 * [\#10407](https://github.com/cosmos/cosmos-sdk/pull/10407) Add validation to `x/upgrade` module's `BeginBlock` to check accidental binary downgrades
 
@@ -177,6 +178,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10842](https://github.com/cosmos/cosmos-sdk/pull/10842) Fix error when `--generate-only`, `--max-msgs` fags set while executing `WithdrawAllRewards` command.
 * [\#10897](https://github.com/cosmos/cosmos-sdk/pull/10897) Fix: set a non-zero value on gas overflow.
 * [#9790](https://github.com/cosmos/cosmos-sdk/pull/10687) Fix behavior of `DecCoins.MulDecTruncate`.
+* [\#10990](https://github.com/cosmos/cosmos-sdk/pull/10990) Fixes missing `iavl-cache-size` config parsing in `GetConfig` method.
 * (crypto) [#11027] Remove dependency on Tendermint core for xsalsa20symmetric.
 
 ### State Machine Breaking
@@ -193,7 +195,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#10770](https://github.com/cosmos/cosmos-sdk/pull/10770) revert tx when block gas limit exceeded
 * [\#10868](https://github.com/cosmos/cosmos-sdk/pull/10868) Bump gov to v1beta2. Both v1beta1 and v1beta2 queries and Msgs are accepted.
 * [\#11011](https://github.com/cosmos/cosmos-sdk/pull/11011) Remove burning of deposits when qourum is not reached on a governance proposal and when the deposit is not fully met. 
-* [#10770](https://github.com/cosmos/cosmos-sdk/pull/10770) revert tx when block gas limit exceeded
+* [\#11019](https://github.com/cosmos/cosmos-sdk/pull/11019) Add `MsgCreatePermanentLockedAccount` and CLI method for creating permanent locked account
 * (x/staking) [\#10885] (https://github.com/cosmos/cosmos-sdk/pull/10885) Add new `CancelUnbondingDelegation`
   transaction to `x/staking` module. Delegators now cancel unbonding delegation entry and re-delegate back to validator.
 

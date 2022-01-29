@@ -5,6 +5,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/crisis/types";
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
 
 // Msg defines the bank Msg service.
 service Msg {
@@ -14,6 +15,8 @@ service Msg {
 
 // MsgVerifyInvariant represents a message to verify a particular invariance.
 message MsgVerifyInvariant {
+  option (cosmos.msg.v1.signer) = "sender";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 

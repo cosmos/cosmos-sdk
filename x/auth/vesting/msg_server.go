@@ -141,12 +141,7 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 		case msg.Merge && !isPeriodic:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrNotSupported, "account %s must be a periodic vesting account", msg.ToAddress)
 		}
-		newStart, newEnd, newPeriods := types.DisjunctPeriods(pva.StartTime, msg.GetStartTime(),
-			pva.GetVestingPeriods(), msg.GetVestingPeriods())
-		pva.StartTime = newStart
-		pva.EndTime = newEnd
-		pva.VestingPeriods = newPeriods
-		pva.OriginalVesting = pva.OriginalVesting.Add(totalCoins...)
+		pva.AddGrant(msg.GetStartTime(), msg.GetVestingPeriods(), totalCoins)
 	} else {
 		baseAccount := ak.NewAccountWithAddress(ctx, to)
 		acc = types.NewPeriodicVestingAccount(baseAccount.(*authtypes.BaseAccount), totalCoins, msg.StartTime, msg.VestingPeriods)
@@ -260,17 +255,7 @@ func (s msgServer) CreateClawbackVestingAccount(goCtx context.Context, msg *type
 		case msg.FromAddress != va.FunderAddress:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s can only accept grants from account %s", msg.ToAddress, va.FunderAddress)
 		}
-		newLockupStart, newLockupEnd, newLockupPeriods := types.DisjunctPeriods(va.StartTime, msg.GetStartTime(), va.LockupPeriods, msg.LockupPeriods)
-		newVestingStart, newVestingEnd, newVestingPeriods := types.DisjunctPeriods(va.StartTime, msg.GetStartTime(),
-			va.GetVestingPeriods(), msg.GetVestingPeriods())
-		if newLockupStart != newVestingStart {
-			panic("bad start time calculation")
-		}
-		va.StartTime = newLockupStart
-		va.EndTime = max64(newLockupEnd, newVestingEnd)
-		va.LockupPeriods = newLockupPeriods
-		va.VestingPeriods = newVestingPeriods
-		va.OriginalVesting = va.OriginalVesting.Add(vestingCoins...)
+		va.AddGrant(msg.GetStartTime(), msg.GetLockupPeriods(), msg.GetVestingPeriods(), vestingCoins)
 	} else {
 		baseAccount := ak.NewAccountWithAddress(ctx, to)
 		va = types.NewClawbackVestingAccount(baseAccount.(*authtypes.BaseAccount), from, vestingCoins, msg.StartTime, msg.LockupPeriods, msg.VestingPeriods)

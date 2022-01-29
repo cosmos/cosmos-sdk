@@ -364,6 +364,16 @@ func (pva PeriodicVestingAccount) Validate() error {
 	return pva.BaseVestingAccount.Validate()
 }
 
+// AddGrant merges a new periodic vesting grant into an existing PeriodicVestingAccount.
+func (pva *PeriodicVestingAccount) AddGrant(grantStartTime int64, grantVestingPeriods []Period, grantCoins sdk.Coins) {
+	newStart, newEnd, newPeriods := DisjunctPeriods(pva.StartTime, grantStartTime,
+		pva.GetVestingPeriods(), grantVestingPeriods)
+	pva.StartTime = newStart
+	pva.EndTime = newEnd
+	pva.VestingPeriods = newPeriods
+	pva.OriginalVesting = pva.OriginalVesting.Add(grantCoins...)
+}
+
 // Delayed Vesting Account
 
 var (
@@ -656,6 +666,21 @@ func (va ClawbackVestingAccount) MarshalYAML() (interface{}, error) {
 		VestingPeriods:   va.VestingPeriods,
 	}
 	return marshalYaml(out)
+}
+
+// AddGrant merges a new clawback vesting grant into an existing ClawbackVestingAccount.
+func (va *ClawbackVestingAccount) AddGrant(grantStartTime int64, grantLockupPeriods, grantVestingPeriods []Period, grantCoins sdk.Coins) {
+	newLockupStart, newLockupEnd, newLockupPeriods := DisjunctPeriods(va.StartTime, grantStartTime, va.LockupPeriods, grantLockupPeriods)
+	newVestingStart, newVestingEnd, newVestingPeriods := DisjunctPeriods(va.StartTime, grantStartTime,
+		va.GetVestingPeriods(), grantVestingPeriods)
+	if newLockupStart != newVestingStart {
+		panic("bad start time calculation")
+	}
+	va.StartTime = newLockupStart
+	va.EndTime = max64(newLockupEnd, newVestingEnd)
+	va.LockupPeriods = newLockupPeriods
+	va.VestingPeriods = newVestingPeriods
+	va.OriginalVesting = va.OriginalVesting.Add(grantCoins...)
 }
 
 // GetUnlockedOnly returns the unlocking schedule at blockTIme.

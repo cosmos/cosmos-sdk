@@ -906,6 +906,14 @@ func scaleCoins(coins sdk.Coins, scale sdk.Dec) sdk.Coins {
 	return scaledCoins
 }
 
+// minInt returns the minumum of its arguments.
+func minInt(a, b sdk.Int) sdk.Int {
+	if a.GT(b) {
+		return b
+	}
+	return a
+}
+
 // PostReward encumbers a previously-deposited reward according to the current vesting apportionment of staking.
 // Note that rewards might be unvested, but are unlocked.
 func (va ClawbackVestingAccount) PostReward(ctx sdk.Context, reward sdk.Coins, ak AccountKeeper, bk BankKeeper, sk StakingKeeper) {
@@ -928,18 +936,15 @@ func (va ClawbackVestingAccount) PostReward(ctx sdk.Context, reward sdk.Coins, a
 	// Find current split of account balance on staking axis
 	bonded, unbonding, unbonded := va.findBalance(ctx, bk, sk)
 	total := bonded.Add(unbonding).Add(unbonded)
+	total = total.Sub(minInt(total, reward.AmountOf(bondDenom))) // look at pre-reward total
 
 	// Adjust vested/unvested for the actual amount in the account (transfers, slashing)
-	if unvested.GT(total) {
-		// must have been reduced by slashing
-		unvested = total
-	}
+	// preferring them to be unvested
+	unvested = minInt(unvested, total) // may have been reduced by slashing
 	vested = total.Sub(unvested)
 
 	// Now restrict to just the bonded tokens, preferring them to be vested
-	if vested.GT(bonded) {
-		vested = bonded
-	}
+	vested = minInt(vested, bonded)
 	unvested = bonded.Sub(vested)
 
 	// Compute the unvested amount of reward and add to vesting schedule

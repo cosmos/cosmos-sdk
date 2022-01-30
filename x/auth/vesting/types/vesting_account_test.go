@@ -372,6 +372,49 @@ func TestTrackUndelegationDelVestingAcc(t *testing.T) {
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)}, dva.DelegatedVesting)
 }
 
+func TestAddGrantPeriodicVestingAcc(t *testing.T) {
+	c := sdk.NewCoins
+	fee := func(amt int64) sdk.Coin { return sdk.NewInt64Coin(feeDenom, amt) }
+	stake := func(amt int64) sdk.Coin { return sdk.NewInt64Coin(stakeDenom, amt) }
+	now := tmtime.Now()
+
+	// set up simapp
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{}).WithBlockTime((now))
+	require.Equal(t, "stake", app.StakingKeeper.BondDenom(ctx))
+
+	// create an account with an initial grant
+	periods := types.Periods{
+		{Length: 100, Amount: c(fee(650), stake(40))},
+		{Length: 100, Amount: c(fee(350), stake(60))},
+	}
+	bacc, origCoins := initBaseAccount()
+	pva := types.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), periods)
+	addr := pva.GetAddress()
+
+	// simulate 54stake (unvested) lost to slashing
+	pva.DelegatedVesting = c(stake(54))
+
+	// Add a new grant of 50stake
+	newGrant := c(stake(50))
+	pva.AddGrant(ctx, app.BankKeeper, app.StakingKeeper, now.Add(500*time.Second).Unix(), []types.Period{{Length: 50, Amount: newGrant}}, newGrant)
+	app.AccountKeeper.SetAccount(ctx, pva)
+
+	// fund the vesting account with new grant (old has vested and transferred out)
+	ctx = ctx.WithBlockTime(now.Add(500 * time.Second))
+	err := simapp.FundAccount(app.BankKeeper, ctx, addr, newGrant)
+	require.NoError(t, err)
+	require.Equal(t, int64(50), app.BankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
+
+	// we should not be able to transfer the new grant out until it has vested
+	_, _, dest := testdata.KeyTestPubAddr()
+	err = app.BankKeeper.SendCoins(ctx, addr, dest, c(stake(1)))
+	require.Error(t, err)
+	ctx = ctx.WithBlockTime(now.Add(600 * time.Second))
+	err = app.BankKeeper.SendCoins(ctx, addr, dest, newGrant)
+	require.NoError(t, err)
+}
+
 func TestGetVestedCoinsPeriodicVestingAcc(t *testing.T) {
 	now := time.Now()
 	endTime := now.Add(24 * time.Hour)
@@ -1223,6 +1266,118 @@ func TestRewards(t *testing.T) {
 	for i := 3; i < 8; i++ {
 		require.Equal(t, int64(506), va.VestingPeriods[i].Amount.AmountOf(stakeDenom).Int64())
 	}
+}
+
+func TestRewards_PostSlash(t *testing.T) {
+	c := sdk.NewCoins
+	stake := func(x int64) sdk.Coin { return sdk.NewInt64Coin(stakeDenom, x) }
+	now := tmtime.Now()
+
+	// set up simapp and validators
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{}).WithBlockTime((now))
+	_, val := createValidator(t, ctx, app, 100)
+	require.Equal(t, "stake", app.StakingKeeper.BondDenom(ctx))
+
+	// create vesting account with a simulated 350stake lost to slashing
+	lockupPeriods := types.Periods{
+		{Length: 1, Amount: c(stake(4000))},
+	}
+	vestingPeriods := types.Periods{
+		{Length: int64(100), Amount: c(stake(500))},
+		{Length: int64(100), Amount: c(stake(500))},
+		{Length: int64(100), Amount: c(stake(500))},
+		{Length: int64(100), Amount: c(stake(500))},
+		{Length: int64(100), Amount: c(stake(500))},
+		{Length: int64(100), Amount: c(stake(500))},
+		{Length: int64(100), Amount: c(stake(500))},
+		{Length: int64(100), Amount: c(stake(500))},
+	}
+	bacc, _ := initBaseAccount()
+	origCoins := c(stake(4000))
+	_, _, funder := testdata.KeyTestPubAddr()
+	va := types.NewClawbackVestingAccount(bacc, funder, origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+	addr := va.GetAddress()
+	va.DelegatedVesting = c(stake(350))
+	app.AccountKeeper.SetAccount(ctx, va)
+
+	// fund the vesting account with 350 stake lost to slashing
+	err := simapp.FundAccount(app.BankKeeper, ctx, addr, c(stake(3650)))
+	require.NoError(t, err)
+	require.Equal(t, int64(3650), app.BankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
+
+	// delegate all 3650stake
+	shares, err := app.StakingKeeper.Delegate(ctx, addr, sdk.NewInt(3650), stakingtypes.Unbonded, val, true)
+	require.NoError(t, err)
+	require.Equal(t, sdk.NewInt(3650), shares.TruncateInt())
+	require.Equal(t, int64(0), app.BankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
+	va = app.AccountKeeper.GetAccount(ctx, addr).(*types.ClawbackVestingAccount)
+
+	// distribute a reward of 160stake - should all be unvested
+	err = simapp.FundAccount(app.BankKeeper, ctx, addr, c(stake(160)))
+	require.NoError(t, err)
+	va.PostReward(ctx, c(stake(160)), app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
+	va = app.AccountKeeper.GetAccount(ctx, addr).(*types.ClawbackVestingAccount)
+	require.Equal(t, int64(4160), va.OriginalVesting.AmountOf(stakeDenom).Int64())
+	require.Equal(t, 8, len(va.VestingPeriods))
+	for i := 0; i < 8; i++ {
+		require.Equal(t, int64(520), va.VestingPeriods[i].Amount.AmountOf(stakeDenom).Int64())
+	}
+
+	// must not be able to transfer reward until it vests
+	_, _, dest := testdata.KeyTestPubAddr()
+	err = app.BankKeeper.SendCoins(ctx, addr, dest, c(stake(1)))
+	require.Error(t, err)
+	ctx = ctx.WithBlockTime(now.Add(600 * time.Second))
+	err = app.BankKeeper.SendCoins(ctx, addr, dest, c(stake(160)))
+	require.NoError(t, err)
+}
+
+func TestAddGrantClawbackVestingAcc(t *testing.T) {
+	c := sdk.NewCoins
+	fee := func(amt int64) sdk.Coin { return sdk.NewInt64Coin(feeDenom, amt) }
+	stake := func(amt int64) sdk.Coin { return sdk.NewInt64Coin(stakeDenom, amt) }
+	now := tmtime.Now()
+
+	// set up simapp
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{}).WithBlockTime((now))
+	require.Equal(t, "stake", app.StakingKeeper.BondDenom(ctx))
+
+	// create an account with an initial grant
+	_, _, funder := testdata.KeyTestPubAddr()
+	lockupPeriods := types.Periods{{Length: 1, Amount: c(fee(1000), stake(100))}}
+	vestingPeriods := types.Periods{
+		{Length: 100, Amount: c(fee(650), stake(40))},
+		{Length: 100, Amount: c(fee(350), stake(60))},
+	}
+	bacc, origCoins := initBaseAccount()
+	va := types.NewClawbackVestingAccount(bacc, funder, origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+	addr := va.GetAddress()
+
+	// simulate 54stake (unvested) lost to slashing
+	va.DelegatedVesting = c(stake(54))
+
+	// Add a new grant of 50stake
+	newGrant := c(stake(50))
+	va.AddGrant(ctx, app.BankKeeper, app.StakingKeeper, now.Add(500*time.Second).Unix(),
+		[]types.Period{{Length: 1, Amount: newGrant}},
+		[]types.Period{{Length: 50, Amount: newGrant}}, newGrant)
+	app.AccountKeeper.SetAccount(ctx, va)
+
+	// fund the vesting account with new grant (old has vested and transferred out)
+	ctx = ctx.WithBlockTime(now.Add(500 * time.Second))
+	err := simapp.FundAccount(app.BankKeeper, ctx, addr, newGrant)
+	require.NoError(t, err)
+	require.Equal(t, int64(50), app.BankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
+
+	// we should not be able to transfer the new grant out until it has vested
+	_, _, dest := testdata.KeyTestPubAddr()
+	err = app.BankKeeper.SendCoins(ctx, addr, dest, c(stake(1)))
+	require.Error(t, err)
+	ctx = ctx.WithBlockTime(now.Add(600 * time.Second))
+	err = app.BankKeeper.SendCoins(ctx, addr, dest, newGrant)
+	require.NoError(t, err)
 }
 
 func TestGenesisAccountValidate(t *testing.T) {

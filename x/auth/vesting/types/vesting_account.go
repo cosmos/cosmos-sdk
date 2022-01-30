@@ -365,7 +365,18 @@ func (pva PeriodicVestingAccount) Validate() error {
 }
 
 // AddGrant merges a new periodic vesting grant into an existing PeriodicVestingAccount.
-func (pva *PeriodicVestingAccount) AddGrant(grantStartTime int64, grantVestingPeriods []Period, grantCoins sdk.Coins) {
+func (pva *PeriodicVestingAccount) AddGrant(ctx sdk.Context, bk BankKeeper, sk StakingKeeper, grantStartTime int64, grantVestingPeriods []Period, grantCoins sdk.Coins) {
+	// how much is really delegated?
+	bondedAmt, unbondingAmt, _ := findBalance(ctx, pva.GetAddress(), bk, sk)
+	delegatedAmt := bondedAmt.Add(unbondingAmt)
+	delegated := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), delegatedAmt))
+
+	// cap DV at the current unvested amount, DF rounds out to current delegated
+	unvested := pva.GetVestingCoins(ctx.BlockTime())
+	pva.DelegatedVesting = coinsMin(delegated, unvested)
+	pva.DelegatedFree = delegated.Sub(pva.DelegatedVesting)
+
+	// modify vesting schedule for the new grant
 	newStart, newEnd, newPeriods := DisjunctPeriods(pva.StartTime, grantStartTime,
 		pva.GetVestingPeriods(), grantVestingPeriods)
 	pva.StartTime = newStart
@@ -669,7 +680,17 @@ func (va ClawbackVestingAccount) MarshalYAML() (interface{}, error) {
 }
 
 // AddGrant merges a new clawback vesting grant into an existing ClawbackVestingAccount.
-func (va *ClawbackVestingAccount) AddGrant(grantStartTime int64, grantLockupPeriods, grantVestingPeriods []Period, grantCoins sdk.Coins) {
+func (va *ClawbackVestingAccount) AddGrant(ctx sdk.Context, bk BankKeeper, sk StakingKeeper, grantStartTime int64, grantLockupPeriods, grantVestingPeriods []Period, grantCoins sdk.Coins) {
+	// how much is really delegated?
+	bondedAmt, unbondingAmt, _ := findBalance(ctx, va.GetAddress(), bk, sk)
+	delegatedAmt := bondedAmt.Add(unbondingAmt)
+	delegated := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), delegatedAmt))
+
+	// cap DV at the current unvested amount, DF rounds out to current delegated
+	unvested := va.GetVestingCoins(ctx.BlockTime())
+	va.DelegatedVesting = coinsMin(delegated, unvested)
+	va.DelegatedFree = delegated.Sub(va.DelegatedVesting)
+
 	newLockupStart, newLockupEnd, newLockupPeriods := DisjunctPeriods(va.StartTime, grantStartTime, va.LockupPeriods, grantLockupPeriods)
 	newVestingStart, newVestingEnd, newVestingPeriods := DisjunctPeriods(va.StartTime, grantStartTime,
 		va.GetVestingPeriods(), grantVestingPeriods)
@@ -778,7 +799,7 @@ func (va ClawbackVestingAccount) Clawback(ctx sdk.Context, dest sdk.AccAddress, 
 
 	// Compute the clawback based on bank balance and delegation, and update account
 	encumbered := updatedAcc.GetVestingCoins(ctx.BlockTime())
-	bondedAmt, unbondingAmt, _ := updatedAcc.findBalance(ctx, bk, sk)
+	bondedAmt, unbondingAmt, _ := findBalance(ctx, addr, bk, sk)
 	bonded := sdk.NewCoins(sdk.NewCoin(bondDenom, bondedAmt))
 	unbonding := sdk.NewCoins(sdk.NewCoin(bondDenom, unbondingAmt))
 	unbonded := bk.GetAllBalances(ctx, addr)
@@ -857,12 +878,12 @@ func (va ClawbackVestingAccount) Clawback(ctx sdk.Context, dest sdk.AccAddress, 
 // Returns the number of bonded, unbonding, and unbonded statking tokens.
 // Rounds down when computing the bonded tokens to err on the side of vested fraction
 // (smaller number of bonded tokens means vested amount covers more of them).
-func (va ClawbackVestingAccount) findBalance(ctx sdk.Context, bk BankKeeper, sk StakingKeeper) (bonded, unbonding, unbonded sdk.Int) {
+func findBalance(ctx sdk.Context, addr sdk.AccAddress, bk BankKeeper, sk StakingKeeper) (bonded, unbonding, unbonded sdk.Int) {
 	bondDenom := sk.BondDenom(ctx)
-	unbonded = bk.GetBalance(ctx, va.GetAddress(), bondDenom).Amount
+	unbonded = bk.GetBalance(ctx, addr, bondDenom).Amount
 
 	unbonding = sdk.ZeroInt()
-	unbondings := sk.GetUnbondingDelegations(ctx, va.GetAddress(), math.MaxUint16)
+	unbondings := sk.GetUnbondingDelegations(ctx, addr, math.MaxUint16)
 	for _, ubd := range unbondings {
 		for _, entry := range ubd.Entries {
 			unbonding = unbonding.Add(entry.Balance)
@@ -870,7 +891,7 @@ func (va ClawbackVestingAccount) findBalance(ctx sdk.Context, bk BankKeeper, sk 
 	}
 
 	bonded = sdk.ZeroInt()
-	delegations := sk.GetDelegatorDelegations(ctx, va.GetAddress(), math.MaxUint16)
+	delegations := sk.GetDelegatorDelegations(ctx, addr, math.MaxUint16)
 	for _, delegation := range delegations {
 		validatorAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 		if err != nil {
@@ -959,7 +980,7 @@ func (va ClawbackVestingAccount) PostReward(ctx sdk.Context, reward sdk.Coins, a
 	}
 
 	// Find current split of account balance on staking axis
-	bonded, unbonding, unbonded := va.findBalance(ctx, bk, sk)
+	bonded, unbonding, unbonded := findBalance(ctx, va.GetAddress(), bk, sk)
 	total := bonded.Add(unbonding).Add(unbonded)
 	total = total.Sub(minInt(total, reward.AmountOf(bondDenom))) // look at pre-reward total
 

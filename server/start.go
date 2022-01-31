@@ -11,6 +11,8 @@ import (
 	"runtime/pprof"
 	"time"
 
+	tmlog "github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/container"
 	"github.com/cosmos/cosmos-sdk/server/module"
 
@@ -217,11 +219,12 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 
 // legacyAminoCdc is used for the legacy REST API
 func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
-	fmt.Printf("TEST TEST TEST\n")
-	fmt.Printf("%+v\n", ctx.Viper.AllSettings())
-
 	var opts []container.Option
 	for configSection, info := range internal.ModuleRegistry {
+		if ctx.Viper.Get(configSection) == nil {
+			continue
+		}
+
 		cfg := reflect.New(info.ConfigType)
 		err := ctx.Viper.UnmarshalKey(configSection, cfg.Interface())
 		if err != nil {
@@ -248,7 +251,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		}
 	},
 		container.Options(opts...),
-		container.Supply(ctx.Logger),
+		container.Provide(func() tmlog.Logger { return ctx.Logger }),
 	)
 	if err != nil {
 		return err

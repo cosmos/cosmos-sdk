@@ -51,11 +51,11 @@ func init() {
 		return container.Provide(func(logger tmlog.Logger) Service {
 			return Service{
 				Start: func(ctx context.Context) error {
-					logger.Info("Starting Foo Bar", cfg.Foo, cfg.Bar)
+					logger.Info(fmt.Sprintf("Starting Foo:%d Bar:%s", cfg.Foo, cfg.Bar))
 					return nil
 				},
 				Stop: func(ctx context.Context) error {
-					logger.Info("Stopping Foo Bar", cfg.Foo, cfg.Bar)
+					logger.Info(fmt.Sprintf("Stopping Foo:%d Bar:%s", cfg.Foo, cfg.Bar))
 					return nil
 				},
 			}

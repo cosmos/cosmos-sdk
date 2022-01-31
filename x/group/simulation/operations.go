@@ -46,18 +46,18 @@ const (
 	OpMsgUpdateGroupAdmin                = "op_weight_msg_update_group_admin"
 	OpMsgUpdateGroupMetadata             = "op_wieght_msg_update_group_metadata"
 	OpMsgUpdateGroupMembers              = "op_weight_msg_update_group_members"
-	OpMsgCreateGroupPolicy               = "op_weight_msg_create_group_account"
-	OpMsgUpdateGroupPolicyAdmin          = "op_weight_msg_update_group_account_admin"
-	OpMsgUpdateGroupPolicyDecisionPolicy = "op_weight_msg_update_group_account_decision_policy"
-	OpMsgUpdateGroupPolicyMetaData       = "op_weight_msg_update_group_account_metadata"
+	OpMsgCreateGroupPolicy               = "op_weight_msg_create_group_policy"
+	OpMsgUpdateGroupPolicyAdmin          = "op_weight_msg_update_group_policy_admin"
+	OpMsgUpdateGroupPolicyDecisionPolicy = "op_weight_msg_update_group_policy_decision_policy"
+	OpMsgUpdateGroupPolicyMetaData       = "op_weight_msg_update_group_policy_metadata"
 	OpMsgCreateProposal                  = "op_weight_msg_create_proposal"
 	OpMsgWithdrawProposal                = "op_weight_msg_withdraw_proposal"
 	OpMsgVote                            = "op_weight_msg_vote"
-	OpMsgExec                            = "ops_weight_msg_exec"
+	OpMsgExec                            = "op_weight_msg_exec"
 )
 
-// If update group or group account txn's executed, `SimulateMsgVote` & `SimulateMsgExec` txn's returns `noOp`.
-// That's why we have less weight for update group & group-account txn's.
+// If update group or group policy txn's executed, `SimulateMsgVote` & `SimulateMsgExec` txn's returns `noOp`.
+// That's why we have less weight for update group & group-policy txn's.
 const (
 	WeightMsgCreateGroup                     = 100
 	WeightMsgCreateGroupPolicy               = 100
@@ -793,6 +793,12 @@ func SimulateMsgWithdrawProposal(ak group.AccountKeeper,
 			}
 		}
 
+		// select a random proposer
+		proposers := proposal.Proposers
+		n := randIntInRange(r, len(proposers))
+		proposerIdx := findAccount(accounts, proposers[n])
+		proposer := accounts[proposerIdx]
+
 		// return no-op if no proposal found
 		if proposalID == -1 {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "no proposals found"), nil, nil
@@ -810,7 +816,7 @@ func SimulateMsgWithdrawProposal(ak group.AccountKeeper,
 
 		msg := group.MsgWithdrawProposal{
 			ProposalId: uint64(proposalID),
-			Address:    acc.Address.String(),
+			Address:    proposer.Address.String(),
 		}
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
@@ -821,7 +827,7 @@ func SimulateMsgWithdrawProposal(ak group.AccountKeeper,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
-			acc.PrivKey,
+			proposer.PrivKey,
 		)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyMetadata, "unable to generate mock tx"), nil, err
@@ -830,8 +836,8 @@ func SimulateMsgWithdrawProposal(ak group.AccountKeeper,
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 
 		if err != nil {
-			if strings.Contains(err.Error(), "group was modified") || strings.Contains(err.Error(), "group account was modified") {
-				return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "no-op:group/group-account was modified"), nil, nil
+			if strings.Contains(err.Error(), "group was modified") || strings.Contains(err.Error(), "group policy was modified") {
+				return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "no-op:group/group-policy was modified"), nil, nil
 			}
 			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
@@ -943,8 +949,8 @@ func SimulateMsgVote(ak group.AccountKeeper,
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 
 		if err != nil {
-			if strings.Contains(err.Error(), "group was modified") || strings.Contains(err.Error(), "group account was modified") {
-				return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "no-op:group/group-account was modified"), nil, nil
+			if strings.Contains(err.Error(), "group was modified") || strings.Contains(err.Error(), "group policy was modified") {
+				return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "no-op:group/group-policy was modified"), nil, nil
 			}
 			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
@@ -1018,8 +1024,8 @@ func SimulateMsgExec(ak group.AccountKeeper,
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			if strings.Contains(err.Error(), "group was modified") || strings.Contains(err.Error(), "group account was modified") {
-				return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "no-op:group/group-account was modified"), nil, nil
+			if strings.Contains(err.Error(), "group was modified") || strings.Contains(err.Error(), "group policy was modified") {
+				return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "no-op:group/group-policy was modified"), nil, nil
 			}
 			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}

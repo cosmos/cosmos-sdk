@@ -1,4 +1,4 @@
-package v045
+package v046
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -9,7 +9,7 @@ import (
 )
 
 func addAllowancesByExpTimeQueue(ctx types.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
-	prefixStore := prefix.NewStore(store, feegrant.FeeAllowanceKeyPrefix)
+	prefixStore := prefix.NewStore(store, FeeAllowanceKeyPrefix)
 	iterator := prefixStore.Iterator(nil, nil)
 	defer iterator.Close()
 
@@ -31,11 +31,12 @@ func addAllowancesByExpTimeQueue(ctx types.Context, store storetypes.KVStore, cd
 		}
 
 		if exp != nil {
+			// store key is not changed in 0.46
 			key := iterator.Key()
 			if exp.Before(ctx.BlockTime()) {
 				prefixStore.Delete(key)
 			} else {
-				grantByExpTimeQueueKey := feegrant.FeeAllowancePrefixQueue(exp, key)
+				grantByExpTimeQueueKey := FeeAllowancePrefixQueue(exp, key)
 				store.Set(grantByExpTimeQueueKey, []byte{})
 			}
 		}

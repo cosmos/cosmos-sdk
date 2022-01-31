@@ -1,7 +1,6 @@
 package feegrant
 
 import (
-	"fmt"
 	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,9 +38,6 @@ var (
 // Key format:
 // - <0x00><len(grantee_address_bytes)><grantee_address_bytes><len(granter_address_bytes)><granter_address_bytes>
 func FeeAllowanceKey(granter sdk.AccAddress, grantee sdk.AccAddress) []byte {
-	fmt.Println("granter", address.MustLengthPrefix(granter.Bytes()))
-	fmt.Println("grantee", address.MustLengthPrefix(grantee.Bytes()))
-	fmt.Println("-----------------------------------------------------")
 	return append(FeeAllowancePrefixByGrantee(grantee), address.MustLengthPrefix(granter.Bytes())...)
 }
 

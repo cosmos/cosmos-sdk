@@ -38,9 +38,6 @@ type DecisionPolicy interface {
 // Implements DecisionPolicy Interface
 var _ DecisionPolicy = &ThresholdDecisionPolicy{}
 
-// Implements DecisionPolicy Interface
-var _ DecisionPolicy = &PercentageDecisionPolicy{}
-
 // NewThresholdDecisionPolicy creates a threshold DecisionPolicy
 func NewThresholdDecisionPolicy(threshold string, timeout time.Duration) DecisionPolicy {
 	return &ThresholdDecisionPolicy{threshold, timeout}
@@ -116,9 +113,25 @@ func (p *ThresholdDecisionPolicy) Validate(g GroupInfo) error {
 	return nil
 }
 
+// Implements DecisionPolicy Interface
+var _ DecisionPolicy = &PercentageDecisionPolicy{}
+
+// NewPercentageDecisionPolicy creates a new percentage DecisionPolicy
+func NewPercentageDecisionPolicy(percentage string, timeout time.Duration) DecisionPolicy {
+	return &PercentageDecisionPolicy{percentage, timeout}
+}
+
 func (p PercentageDecisionPolicy) ValidateBasic() error {
-	if _, err := math.NewPositiveDecFromString(p.Percentage); err != nil {
-		return sdkerrors.Wrap(err, "threshold")
+	percentage, err := math.NewPositiveDecFromString(p.Percentage)
+	if err != nil {
+		return sdkerrors.Wrap(err, "percentage threshold")
+	}
+	value, err := percentage.Float64()
+	if err != nil {
+		return sdkerrors.Wrap(err, "Dec to Float64 conversion of percentage")
+	}
+	if !(value >= 0 && value <= 1) {
+		return sdkerrors.Wrap(errors.ErrInvalid, "percentage must be in the range of 0 to 1")
 	}
 
 	timeout := p.Timeout

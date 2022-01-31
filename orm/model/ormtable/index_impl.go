@@ -32,7 +32,7 @@ func (i indexKeyIndex) List(ctx context.Context, prefixKey []interface{}, option
 		return nil, err
 	}
 
-	return prefixIterator(backend.IndexStoreReader(), backend, i, i.KeyCodec, encodeutil.ValuesOf(prefixKey), options)
+	return prefixIterator(backend.IndexStoreReader(), backend, i, i.KeyCodec, encodeutil.ValuesOf(prefixKey...), options)
 }
 
 func (i indexKeyIndex) ListRange(ctx context.Context, from, to []interface{}, options ...ormlist.Option) (Iterator, error) {
@@ -41,7 +41,7 @@ func (i indexKeyIndex) ListRange(ctx context.Context, from, to []interface{}, op
 		return nil, err
 	}
 
-	return rangeIterator(backend.IndexStoreReader(), backend, i, i.KeyCodec, encodeutil.ValuesOf(from), encodeutil.ValuesOf(to), options)
+	return rangeIterator(backend.IndexStoreReader(), backend, i, i.KeyCodec, encodeutil.ValuesOf(from...), encodeutil.ValuesOf(to...), options)
 }
 
 var _ indexer = &indexKeyIndex{}

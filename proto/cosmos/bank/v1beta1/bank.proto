@@ -26,8 +26,7 @@ message SendEnabled {
 
 // Input models transaction input.
 message Input {
-  option (cosmos.msg.v1.signer) = "address";
-
+  option (cosmos.msg.v1.signer)      = "address";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 

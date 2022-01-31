@@ -29,6 +29,15 @@ message ModuleDescriptor {
   // or own a single protobuf package. It is assumed that the module uses
   // all of the .proto files in a single package.
   repeated PackageReference use_package = 2;
+
+  // can_migrate_from defines which module versions this module can migrate
+  // state from. The framework will check that one module version is able to
+  // migrate from a previous module version before attempting to update its
+  // config. It is assumed that modules can transitively migrate from earlier
+  // versions. For instance if v3 declares it can migrate from v2, and v2
+  // declares it can migrate from v1, the framework knows how to migrate
+  // from v1 to v3, assuming all 3 module versions are registered at runtime.
+  repeated MigrateFromInfo can_migrate_from = 3;
 }
 
 // PackageReference is a reference to a protobuf package used by a module.
@@ -74,3 +83,11 @@ message PackageReference {
   uint32 revision = 2;
 }
 
+// MigrateFromInfo is information on a module version that a newer module
+// can migrate from.
+message MigrateFromInfo {
+
+  // module is the fully-qualified protobuf name of the module config object
+  // for the previous module version, ex: "cosmos.group.module.v1.Module".
+  string module = 1;
+}

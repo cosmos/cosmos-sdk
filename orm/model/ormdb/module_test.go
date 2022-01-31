@@ -27,12 +27,7 @@ var TestBankSchema = ormdb.ModuleSchema{
 }
 
 type keeper struct {
-	balanceTable             ormtable.Table
-	balanceAddressDenomIndex ormtable.UniqueIndex
-	balanceDenomIndex        ormtable.Index
-
-	supplyTable      ormtable.Table
-	supplyDenomIndex ormtable.UniqueIndex
+	store testpb.BankStore
 }
 
 func (k keeper) Send(ctx context.Context, from, to, denom string, amount uint64) error {
@@ -45,14 +40,18 @@ func (k keeper) Send(ctx context.Context, from, to, denom string, amount uint64)
 }
 
 func (k keeper) Mint(ctx context.Context, acct, denom string, amount uint64) error {
-	supply := &testpb.Supply{Denom: denom}
-	_, err := k.supplyTable.Get(ctx, supply)
+	supply, err := k.store.SupplyStore().Get(ctx, denom)
 	if err != nil {
 		return err
 	}
 
-	supply.Amount = supply.Amount + amount
-	err = k.supplyTable.Save(ctx, supply)
+	if supply == nil {
+		supply = &testpb.Supply{Denom: denom, Amount: amount}
+	} else {
+		supply.Amount = supply.Amount + amount
+	}
+
+	err = k.store.SupplyStore().Save(ctx, supply)
 	if err != nil {
 		return err
 	}
@@ -61,13 +60,13 @@ func (k keeper) Mint(ctx context.Context, acct, denom string, amount uint64) err
 }
 
 func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) error {
-	supply := &testpb.Supply{Denom: denom}
-	found, err := k.supplyTable.Get(ctx, supply)
+	supplyStore := k.store.SupplyStore()
+	supply, err := supplyStore.Get(ctx, denom)
 	if err != nil {
 		return err
 	}
 
-	if !found {
+	if supply == nil {
 		return fmt.Errorf("no supply for %s", denom)
 	}
 
@@ -78,9 +77,9 @@ func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) err
 	supply.Amount = supply.Amount - amount
 
 	if supply.Amount == 0 {
-		err = k.supplyTable.Delete(ctx, supply)
+		err = supplyStore.Delete(ctx, supply)
 	} else {
-		err = k.supplyTable.Save(ctx, supply)
+		err = supplyStore.Save(ctx, supply)
 	}
 	if err != nil {
 		return err
@@ -90,36 +89,48 @@ func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) err
 }
 
 func (k keeper) Balance(ctx context.Context, acct, denom string) (uint64, error) {
-	balance := &testpb.Balance{Address: acct, Denom: denom}
-	_, err := k.balanceTable.Get(ctx, balance)
+	balance, err := k.store.BalanceStore().Get(ctx, acct, denom)
+	if balance == nil {
+		return 0, err
+	}
 	return balance.Amount, err
 }
 
 func (k keeper) Supply(ctx context.Context, denom string) (uint64, error) {
-	supply := &testpb.Supply{Denom: denom}
-	_, err := k.supplyTable.Get(ctx, supply)
+	supply, err := k.store.SupplyStore().Get(ctx, denom)
+	if supply == nil {
+		return 0, err
+	}
 	return supply.Amount, err
 }
 
 func (k keeper) addBalance(ctx context.Context, acct, denom string, amount uint64) error {
-	balance := &testpb.Balance{Address: acct, Denom: denom}
-	_, err := k.balanceTable.Get(ctx, balance)
+	balance, err := k.store.BalanceStore().Get(ctx, acct, denom)
 	if err != nil {
 		return err
 	}
 
-	balance.Amount = balance.Amount + amount
-	return k.balanceTable.Save(ctx, balance)
+	if balance == nil {
+		balance = &testpb.Balance{
+			Address: acct,
+			Denom:   denom,
+			Amount:  amount,
+		}
+	} else {
+		balance.Amount = balance.Amount + amount
+	}
+
+	return k.store.BalanceStore().Save(ctx, balance)
 }
 
 func (k keeper) safeSubBalance(ctx context.Context, acct, denom string, amount uint64) error {
-	balance := &testpb.Balance{Address: acct, Denom: denom}
-	found, err := k.balanceTable.Get(ctx, balance)
+	balanceStore := k.store.BalanceStore()
+	balance, err := balanceStore.Get(ctx, acct, denom)
 	if err != nil {
 		return err
 	}
 
-	if !found {
+	if balance == nil {
 		return fmt.Errorf("acct %x has no balance for %s", acct, denom)
 	}
 
@@ -130,23 +141,15 @@ func (k keeper) safeSubBalance(ctx context.Context, acct, denom string, amount u
 	balance.Amount = balance.Amount - amount
 
 	if balance.Amount == 0 {
-		return k.balanceTable.Delete(ctx, balance)
+		return balanceStore.Delete(ctx, balance)
 	} else {
-		return k.balanceTable.Save(ctx, balance)
+		return balanceStore.Save(ctx, balance)
 	}
 }
 
-func newKeeper(db ormdb.ModuleDB) keeper {
-	k := keeper{
-		balanceTable: db.GetTable(&testpb.Balance{}),
-		supplyTable:  db.GetTable(&testpb.Supply{}),
-	}
-
-	k.balanceAddressDenomIndex = k.balanceTable.GetUniqueIndex("address,denom")
-	k.balanceDenomIndex = k.balanceTable.GetIndex("denom")
-	k.supplyDenomIndex = k.supplyTable.GetUniqueIndex("denom")
-
-	return k
+func newKeeper(db ormdb.ModuleDB) (keeper, error) {
+	store, err := testpb.NewBankStore(db)
+	return keeper{store}, err
 }
 
 func TestModuleDB(t *testing.T) {
@@ -164,12 +167,8 @@ func TestModuleDB(t *testing.T) {
 	ctx := ormtable.WrapContextDefault(store)
 
 	// create keeper
-	k := newKeeper(db)
-	assert.Assert(t, k.balanceTable != nil)
-	assert.Assert(t, k.balanceAddressDenomIndex != nil)
-	assert.Assert(t, k.balanceDenomIndex != nil)
-	assert.Assert(t, k.supplyTable != nil)
-	assert.Assert(t, k.supplyDenomIndex != nil)
+	k, err := newKeeper(db)
+	assert.NilError(t, err)
 
 	// mint coins
 	denom := "foo"

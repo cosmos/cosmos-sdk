@@ -34,7 +34,7 @@ func migrateProposals(store sdk.KVStore, cdc codec.BinaryCodec) error {
 		}
 
 		// Set new value on store.
-		store.Set(iter.Key(), bz)
+		propStore.Set(iter.Key(), bz)
 	}
 
 	return nil

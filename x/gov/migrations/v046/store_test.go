@@ -1,7 +1,6 @@
 package v046_test
 
 import (
-	"bytes"
 	"testing"
 	"time"
 
@@ -9,12 +8,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v040gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v040"
-	v043gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v043"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	v046gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func TestMigrateStore(t *testing.T) {
@@ -23,70 +22,55 @@ func TestMigrateStore(t *testing.T) {
 	ctx := testutil.DefaultContext(govKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(govKey)
 
-	_, _, addr1 := testdata.KeyTestPubAddr()
-	proposalID := uint64(6)
-	now := time.Now()
-	// Use dummy value for keys where we don't test values.
-	dummyValue := []byte("foo")
-	// Use real values for votes, as we're testing weighted votes.
-	oldVote := v1beta1.Vote{ProposalId: 1, Voter: "foobar", Option: v1beta1.OptionNoWithVeto}
-	oldVoteValue := cdc.MustMarshal(&oldVote)
-	newVote := v1beta1.Vote{ProposalId: 1, Voter: "foobar", Options: v1beta1.WeightedVoteOptions{{Option: v1beta1.OptionNoWithVeto, Weight: sdk.NewDec(1)}}}
-	newVoteValue := cdc.MustMarshal(&newVote)
+	propTime := time.Unix(1e9, 0)
 
-	testCases := []struct {
-		name                               string
-		oldKey, oldValue, newKey, newValue []byte
-	}{
-		{
-			"ProposalKey",
-			v040gov.ProposalKey(proposalID), dummyValue,
-			types.ProposalKey(proposalID), dummyValue,
-		},
-		{
-			"ActiveProposalQueue",
-			v040gov.ActiveProposalQueueKey(proposalID, now), dummyValue,
-			types.ActiveProposalQueueKey(proposalID, now), dummyValue,
-		},
-		{
-			"InactiveProposalQueue",
-			v040gov.InactiveProposalQueueKey(proposalID, now), dummyValue,
-			types.InactiveProposalQueueKey(proposalID, now), dummyValue,
-		},
-		{
-			"ProposalIDKey",
-			v040gov.ProposalIDKey, dummyValue,
-			types.ProposalIDKey, dummyValue,
-		},
-		{
-			"DepositKey",
-			v040gov.DepositKey(proposalID, addr1), dummyValue,
-			types.DepositKey(proposalID, addr1), dummyValue,
-		},
-		{
-			"VotesKeyPrefix",
-			v040gov.VoteKey(proposalID, addr1), oldVoteValue,
-			types.VoteKey(proposalID, addr1), newVoteValue,
-		},
-	}
-
-	// Set all the old keys to the store
-	for _, tc := range testCases {
-		store.Set(tc.oldKey, tc.oldValue)
-	}
-
-	// Run migrations.
-	err := v043gov.MigrateStore(ctx, govKey, cdc)
+	// Create 2 proposals
+	prop1, err := v1beta1.NewProposal(v1beta1.NewTextProposal("my title 1", "my desc 1"), 1, propTime, propTime)
+	require.NoError(t, err)
+	prop1Bz, err := cdc.Marshal(&prop1)
+	require.NoError(t, err)
+	prop2, err := v1beta1.NewProposal(upgradetypes.NewSoftwareUpgradeProposal("my title 2", "my desc 2", upgradetypes.Plan{
+		Name: "my plan 2",
+	}), 2, propTime, propTime)
+	require.NoError(t, err)
+	prop2Bz, err := cdc.Marshal(&prop2)
 	require.NoError(t, err)
 
-	// Make sure the new keys are set and old keys are deleted.
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			if !bytes.Equal(tc.oldKey, tc.newKey) {
-				require.Nil(t, store.Get(tc.oldKey))
-			}
-			require.Equal(t, tc.newValue, store.Get(tc.newKey))
-		})
-	}
+	store.Set(v040gov.ProposalKey(prop1.ProposalId), prop1Bz)
+	store.Set(v040gov.ProposalKey(prop2.ProposalId), prop2Bz)
+
+	// Run migrations.
+	err = v046gov.MigrateStore(ctx, govKey, cdc)
+	require.NoError(t, err)
+
+	var newProp1 v1beta2.Proposal
+	err = cdc.Unmarshal(store.Get(v040gov.ProposalKey(prop1.ProposalId)), &newProp1)
+	require.NoError(t, err)
+	compareProps(t, prop1, newProp1)
+
+	var newProp2 v1beta2.Proposal
+	err = cdc.Unmarshal(store.Get(v040gov.ProposalKey(prop2.ProposalId)), &newProp2)
+	require.NoError(t, err)
+	compareProps(t, prop2, newProp2)
+}
+
+func compareProps(t *testing.T, oldProp v1beta1.Proposal, newProp v1beta2.Proposal) {
+	require.Equal(t, oldProp.ProposalId, newProp.ProposalId)
+	require.Equal(t, oldProp.TotalDeposit.String(), sdk.Coins(newProp.TotalDeposit).String())
+	require.Equal(t, oldProp.Status.String(), newProp.Status.String())
+	require.Equal(t, oldProp.FinalTallyResult.Yes.String(), newProp.FinalTallyResult.Yes)
+	require.Equal(t, oldProp.FinalTallyResult.No.String(), newProp.FinalTallyResult.No)
+	require.Equal(t, oldProp.FinalTallyResult.NoWithVeto.String(), newProp.FinalTallyResult.NoWithVeto)
+	require.Equal(t, oldProp.FinalTallyResult.Abstain.String(), newProp.FinalTallyResult.Abstain)
+
+	newContent := newProp.Messages[0].GetCachedValue().(*v1beta2.MsgExecLegacyContent).Content.GetCachedValue().(v1beta1.Content)
+	require.Equal(t, oldProp.Content.GetCachedValue().(v1beta1.Content), newContent)
+
+	// Compare UNIX times, as a simple Equal gives difference between Local and
+	// UTC times.
+	// ref: https://github.com/golang/go/issues/19486#issuecomment-292968278
+	require.Equal(t, oldProp.SubmitTime.Unix(), newProp.SubmitTime.Unix())
+	require.Equal(t, oldProp.DepositEndTime.Unix(), newProp.DepositEndTime.Unix())
+	require.Equal(t, oldProp.VotingStartTime.Unix(), newProp.VotingStartTime.Unix())
+	require.Equal(t, oldProp.VotingEndTime.Unix(), newProp.VotingEndTime.Unix())
 }

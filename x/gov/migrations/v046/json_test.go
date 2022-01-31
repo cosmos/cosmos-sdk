@@ -2,7 +2,6 @@ package v046_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 	"time"
 
@@ -31,7 +30,7 @@ func TestMigrateJSON(t *testing.T) {
 	require.NoError(t, err)
 
 	govGenState := v1beta1.DefaultGenesisState()
-	propTime := time.Unix(9999, 0)
+	propTime := time.Unix(1e9, 0)
 	contentAny, err := codectypes.NewAnyWithValue(v1beta1.NewTextProposal("my title", "my desc").(proto.Message))
 	require.NoError(t, err)
 	govGenState.Proposals = v1beta1.Proposals{
@@ -85,7 +84,7 @@ func TestMigrateJSON(t *testing.T) {
 	"deposits": [],
 	"proposals": [
 		{
-			"deposit_end_time": "1970-01-01T02:46:39Z",
+			"deposit_end_time": "2001-09-09T01:46:40Z",
 			"final_tally_result": {
 				"abstain": "0",
 				"no": "0",
@@ -106,15 +105,15 @@ func TestMigrateJSON(t *testing.T) {
 			"metadata": null,
 			"proposal_id": "1",
 			"status": "PROPOSAL_STATUS_DEPOSIT_PERIOD",
-			"submit_time": "1970-01-01T02:46:39Z",
+			"submit_time": "2001-09-09T01:46:40Z",
 			"total_deposit": [
 				{
 					"amount": "123",
 					"denom": "stake"
 				}
 			],
-			"voting_end_time": "1970-01-01T02:46:39Z",
-			"voting_start_time": "1970-01-01T02:46:39Z"
+			"voting_end_time": "2001-09-09T01:46:40Z",
+			"voting_start_time": "2001-09-09T01:46:40Z"
 		}
 	],
 	"starting_proposal_id": "1",
@@ -134,8 +133,6 @@ func TestMigrateJSON(t *testing.T) {
 		"voting_period": "172800s"
 	}
 }`
-
-	fmt.Println(string(indentedBz))
 
 	require.Equal(t, expected, string(indentedBz))
 }

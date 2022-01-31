@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -89,10 +88,9 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 func initTendermintConfig() *tmcfg.Config {
 	cfg := tmcfg.DefaultConfig()
 
-	cfg.P2P.MaxNumInboundPeers = 100
-	cfg.P2P.MaxNumOutboundPeers = 40
-	cfg.Mempool.Size = 10000
-	cfg.StateSync.TrustPeriod = 112 * time.Hour
+	// these values put a higher strain on node memory
+	// cfg.P2P.MaxNumInboundPeers = 100
+	// cfg.P2P.MaxNumOutboundPeers = 40
 
 	return cfg
 }

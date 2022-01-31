@@ -49,8 +49,6 @@ func runAutoIncrementScenario(t *testing.T, table ormtable.Table, context contex
 
 	buf := &bytes.Buffer{}
 	assert.NilError(t, table.ExportJSON(context, buf))
-	golden.Assert(t, string(buf.Bytes()), "auto_inc_json.golden")
-
 	assert.NilError(t, table.ValidateJSON(bytes.NewReader(buf.Bytes())))
 	store2 := ormtable.WrapContextDefault(testkv.NewSplitMemBackend())
 	assert.NilError(t, table.ImportJSON(store2, bytes.NewReader(buf.Bytes())))

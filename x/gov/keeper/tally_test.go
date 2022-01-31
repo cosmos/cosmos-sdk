@@ -31,7 +31,7 @@ func TestTallyNoOneVotes(t *testing.T) {
 	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
-	require.True(t, burnDeposits)
+	require.False(t, burnDeposits)
 	require.True(t, tallyResults.Equals(v1beta2.EmptyTallyResult()))
 }
 
@@ -57,7 +57,7 @@ func TestTallyNoQuorum(t *testing.T) {
 	require.True(t, ok)
 	passes, burnDeposits, _ := app.GovKeeper.Tally(ctx, proposal)
 	require.False(t, passes)
-	require.True(t, burnDeposits)
+	require.False(t, burnDeposits)
 }
 
 func TestTallyOnlyValidatorsAllYes(t *testing.T) {

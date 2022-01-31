@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -30,17 +31,18 @@ func ValidatorCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
+
 			var height *int64
 
 			// optional height
 			if len(args) > 0 {
-				h, err := strconv.Atoi(args[0])
+				val, err := strconv.ParseInt(args[0], 10, 64)
 				if err != nil {
 					return err
 				}
-				if h > 0 {
-					tmp := int64(h)
-					height = &tmp
+
+				if val > 0 {
+					height = &val
 				}
 			}
 
@@ -56,8 +58,8 @@ func ValidatorCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
+	cmd.Flags().String(flags.FlagNode, "tcp://localhost:26657", "<host>:<port> to Tendermint RPC interface for this chain")
+	cmd.Flags().StringP(tmcli.OutputFlag, "o", "text", "Output format (text|json)")
 	cmd.Flags().Int(flags.FlagPage, query.DefaultPage, "Query a specific page of paginated results")
 	cmd.Flags().Int(flags.FlagLimit, 100, "Query number of results returned per page")
 

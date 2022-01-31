@@ -8,13 +8,16 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
 // Flag names and values
 const (
-	FlagOwner = "owner"
+	FlagOwner   = "owner"
+	FlagClassID = "class-id"
 )
 
 // GetQueryCmd returns the cli query commands for this module
@@ -126,8 +129,7 @@ func GetCmdQueryNFT() *cobra.Command {
 // GetCmdQueryNFTs implements the query nft command.
 func GetCmdQueryNFTs() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "nfts [class-id]",
-		Args:  cobra.ExactArgs(1),
+		Use:   "nfts",
 		Short: "query all NFTs of a given class or owner address.",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query all NFTs of a given class or owner address. If owner
@@ -148,20 +150,38 @@ $ %s query %s nfts <class-id> --owner=<owner>
 				return err
 			}
 
-			request := &nft.QueryNFTsOfClassRequest{
-				ClassId:    args[0],
-				Pagination: pageReq,
-			}
-
 			owner, err := cmd.Flags().GetString(FlagOwner)
 			if err != nil {
 				return err
 			}
 
 			if len(owner) > 0 {
-				request.Owner = owner
+				if _, err := sdk.AccAddressFromBech32(owner); err != nil {
+					return err
+				}
 			}
-			res, err := queryClient.NFTsOfClass(cmd.Context(), request)
+
+			classID, err := cmd.Flags().GetString(FlagClassID)
+			if err != nil {
+				return err
+			}
+
+			if len(classID) > 0 {
+				if err := nft.ValidateClassID(classID); err != nil {
+					return err
+				}
+			}
+
+			if len(owner) == 0 && len(classID) == 0 {
+				return errors.ErrInvalidRequest.Wrap("must provide at least one of classID or owner")
+			}
+
+			request := &nft.QueryNFTsRequest{
+				ClassId:    classID,
+				Owner:      owner,
+				Pagination: pageReq,
+			}
+			res, err := queryClient.NFTs(cmd.Context(), request)
 			if err != nil {
 				return err
 			}
@@ -171,6 +191,7 @@ $ %s query %s nfts <class-id> --owner=<owner>
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "nfts")
 	cmd.Flags().String(FlagOwner, "", "The owner of the nft")
+	cmd.Flags().String(FlagClassID, "", "The class-id of the nft")
 	return cmd
 }
 

@@ -14,7 +14,7 @@ type container struct {
 
 	resolvers map[reflect.Type]resolver
 
-	scopes map[string]Scope
+	moduleKeys map[string]*moduleKey
 
 	resolveStack []resolveFrame
 	callerStack  []Location
@@ -30,15 +30,15 @@ func newContainer(cfg *debugConfig) *container {
 	return &container{
 		debugConfig: cfg,
 		resolvers:   map[reflect.Type]resolver{},
-		scopes:      map[string]Scope{},
+		moduleKeys:  map[string]*moduleKey{},
 		callerStack: nil,
 		callerMap:   map[Location]bool{},
 	}
 }
 
-func (c *container) call(constructor *ProviderDescriptor, scope Scope) ([]reflect.Value, error) {
-	loc := constructor.Location
-	graphNode, err := c.locationGraphNode(loc, scope)
+func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]reflect.Value, error) {
+	loc := provider.Location
+	graphNode, err := c.locationGraphNode(loc, moduleKey)
 	if err != nil {
 		return nil, err
 	}
@@ -53,9 +53,9 @@ func (c *container) call(constructor *ProviderDescriptor, scope Scope) ([]reflec
 
 	c.logf("Resolving dependencies for %s", loc)
 	c.indentLogger()
-	inVals := make([]reflect.Value, len(constructor.Inputs))
-	for i, in := range constructor.Inputs {
-		val, err := c.resolve(in, scope, loc)
+	inVals := make([]reflect.Value, len(provider.Inputs))
+	for i, in := range provider.Inputs {
+		val, err := c.resolve(in, moduleKey, loc)
 		if err != nil {
 			return nil, err
 		}
@@ -67,9 +67,9 @@ func (c *container) call(constructor *ProviderDescriptor, scope Scope) ([]reflec
 	delete(c.callerMap, loc)
 	c.callerStack = c.callerStack[0 : len(c.callerStack)-1]
 
-	out, err := constructor.Fn(inVals)
+	out, err := provider.Fn(inVals)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error calling constructor %s", loc)
+		return nil, errors.Wrapf(err, "error calling provider %s", loc)
 	}
 
 	markGraphNodeAsUsed(graphNode)
@@ -83,7 +83,7 @@ func (c *container) getResolver(typ reflect.Type) (resolver, error) {
 	}
 
 	elemType := typ
-	if isAutoGroupSliceType(elemType) || isOnePerScopeMapType(elemType) {
+	if isAutoGroupSliceType(elemType) || isOnePerModuleMapType(elemType) {
 		elemType = elemType.Elem()
 	}
 
@@ -108,48 +108,48 @@ func (c *container) getResolver(typ reflect.Type) (resolver, error) {
 
 		c.resolvers[elemType] = r
 		c.resolvers[sliceType] = &sliceGroupResolver{r}
-	} else if isOnePerScopeType(elemType) {
-		c.logf("Registering resolver for one-per-scope type %v", elemType)
+	} else if isOnePerModuleType(elemType) {
+		c.logf("Registering resolver for one-per-module type %v", elemType)
 		mapType := reflect.MapOf(stringType, elemType)
 
 		typeGraphNode, err = c.typeGraphNode(mapType)
 		if err != nil {
 			return nil, err
 		}
-		typeGraphNode.SetComment("one-per-scope")
+		typeGraphNode.SetComment("one-per-module")
 
-		r := &onePerScopeResolver{
+		r := &onePerModuleResolver{
 			typ:       elemType,
 			mapType:   mapType,
-			providers: map[Scope]*simpleProvider{},
-			idxMap:    map[Scope]int{},
+			providers: map[*moduleKey]*simpleProvider{},
+			idxMap:    map[*moduleKey]int{},
 			graphNode: typeGraphNode,
 		}
 
 		c.resolvers[elemType] = r
-		c.resolvers[mapType] = &mapOfOnePerScopeResolver{r}
+		c.resolvers[mapType] = &mapOfOnePerModuleResolver{r}
 	}
 
 	return c.resolvers[typ], nil
 }
 
-func (c *container) addNode(constructor *ProviderDescriptor, scope Scope) (interface{}, error) {
-	constructorGraphNode, err := c.locationGraphNode(constructor.Location, scope)
+func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (interface{}, error) {
+	providerGraphNode, err := c.locationGraphNode(provider.Location, key)
 	if err != nil {
 		return nil, err
 	}
 
-	hasScopeParam := false
-	for _, in := range constructor.Inputs {
+	hasModuleKeyParam := false
+	for _, in := range provider.Inputs {
 		typ := in.Type
-		if typ == scopeType {
-			hasScopeParam = true
+		if typ == moduleKeyType {
+			hasModuleKeyParam = true
 		}
 
 		if isAutoGroupType(typ) {
 			return nil, fmt.Errorf("auto-group type %v can't be used as an input parameter", typ)
-		} else if isOnePerScopeType(typ) {
-			return nil, fmt.Errorf("one-per-scope type %v can't be used as an input parameter", typ)
+		} else if isOnePerModuleType(typ) {
+			return nil, fmt.Errorf("one-per-module type %v can't be used as an input parameter", typ)
 		}
 
 		vr, err := c.getResolver(typ)
@@ -167,25 +167,25 @@ func (c *container) addNode(constructor *ProviderDescriptor, scope Scope) (inter
 			}
 		}
 
-		c.addGraphEdge(typeGraphNode, constructorGraphNode)
+		c.addGraphEdge(typeGraphNode, providerGraphNode)
 	}
 
-	if scope != nil || !hasScopeParam {
-		c.logf("Registering %s", constructor.Location.String())
+	if key != nil || !hasModuleKeyParam {
+		c.logf("Registering %s", provider.Location.String())
 		c.indentLogger()
 		defer c.dedentLogger()
 
 		sp := &simpleProvider{
-			provider: constructor,
-			scope:    scope,
+			provider:  provider,
+			moduleKey: key,
 		}
 
-		for i, out := range constructor.Outputs {
+		for i, out := range provider.Outputs {
 			typ := out.Type
 
-			// one-per-scope maps can't be used as a return type
-			if isOnePerScopeMapType(typ) {
-				return nil, fmt.Errorf("%v cannot be used as a return type because %v is a one-per-scope type",
+			// one-per-module maps can't be used as a return type
+			if isOnePerModuleMapType(typ) {
+				return nil, fmt.Errorf("%v cannot be used as a return type because %v is a one-per-module type",
 					typ, typ.Elem())
 			}
 
@@ -221,30 +221,30 @@ func (c *container) addNode(constructor *ProviderDescriptor, scope Scope) (inter
 				c.resolvers[typ] = vr
 			}
 
-			c.addGraphEdge(constructorGraphNode, vr.typeGraphNode())
+			c.addGraphEdge(providerGraphNode, vr.typeGraphNode())
 		}
 
 		return sp, nil
 	} else {
-		c.logf("Registering scope provider: %s", constructor.Location.String())
+		c.logf("Registering module-scoped provider: %s", provider.Location.String())
 		c.indentLogger()
 		defer c.dedentLogger()
 
-		node := &scopeDepProvider{
-			provider:       constructor,
-			calledForScope: map[Scope]bool{},
-			valueMap:       map[Scope][]reflect.Value{},
+		node := &moduleDepProvider{
+			provider:        provider,
+			calledForModule: map[*moduleKey]bool{},
+			valueMap:        map[*moduleKey][]reflect.Value{},
 		}
 
-		for i, out := range constructor.Outputs {
+		for i, out := range provider.Outputs {
 			typ := out.Type
 
-			c.logf("Registering resolver for scoped type %v", typ)
+			c.logf("Registering resolver for module-scoped type %v", typ)
 
 			existing, ok := c.resolvers[typ]
 			if ok {
-				return nil, errors.Errorf("duplicate provision of type %v by scoped provider %s\n\talready provided by %s",
-					typ, constructor.Location, existing.describeLocation())
+				return nil, errors.Errorf("duplicate provision of type %v by module-scoped provider %s\n\talready provided by %s",
+					typ, provider.Location, existing.describeLocation())
 			}
 
 			typeGraphNode, err := c.typeGraphNode(typ)
@@ -252,15 +252,15 @@ func (c *container) addNode(constructor *ProviderDescriptor, scope Scope) (inter
 				return reflect.Value{}, err
 			}
 
-			c.resolvers[typ] = &scopeDepResolver{
+			c.resolvers[typ] = &moduleDepResolver{
 				typ:         typ,
 				idxInValues: i,
 				node:        node,
-				valueMap:    map[Scope]reflect.Value{},
+				valueMap:    map[*moduleKey]reflect.Value{},
 				graphNode:   typeGraphNode,
 			}
 
-			c.addGraphEdge(constructorGraphNode, typeGraphNode)
+			c.addGraphEdge(providerGraphNode, typeGraphNode)
 		}
 
 		return node, nil
@@ -296,7 +296,7 @@ func (c *container) supply(value reflect.Value, location Location) error {
 	return nil
 }
 
-func (c *container) resolve(in ProviderInput, scope Scope, caller Location) (reflect.Value, error) {
+func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Location) (reflect.Value, error) {
 	c.resolveStack = append(c.resolveStack, resolveFrame{loc: caller, typ: in.Type})
 
 	typeGraphNode, err := c.typeGraphNode(in.Type)
@@ -304,13 +304,13 @@ func (c *container) resolve(in ProviderInput, scope Scope, caller Location) (ref
 		return reflect.Value{}, err
 	}
 
-	if in.Type == scopeType {
-		if scope == nil {
-			return reflect.Value{}, errors.Errorf("trying to resolve %T for %s but not inside of any scope", scope, caller)
+	if in.Type == moduleKeyType {
+		if moduleKey == nil {
+			return reflect.Value{}, errors.Errorf("trying to resolve %T for %s but not inside of any module's scope", moduleKey, caller)
 		}
-		c.logf("Providing Scope %s", scope.Name())
+		c.logf("Providing ModuleKey %s", moduleKey.name)
 		markGraphNodeAsUsed(typeGraphNode)
-		return reflect.ValueOf(scope), nil
+		return reflect.ValueOf(ModuleKey{moduleKey}), nil
 	}
 
 	vr, err := c.getResolver(in.Type)
@@ -329,7 +329,7 @@ func (c *container) resolve(in ProviderInput, scope Scope, caller Location) (ref
 			in.Type, caller, c.formatResolveStack())
 	}
 
-	res, err := vr.resolve(c, scope, caller)
+	res, err := vr.resolve(c, moduleKey, caller)
 	if err != nil {
 		markGraphNodeAsFailed(typeGraphNode)
 		return reflect.Value{}, err
@@ -364,7 +364,7 @@ func (c *container) run(invoker interface{}) error {
 
 	sn, ok := node.(*simpleProvider)
 	if !ok {
-		return errors.Errorf("cannot run scoped provider as an invoker")
+		return errors.Errorf("cannot run module-scoped provider as an invoker")
 	}
 
 	c.logf("Building container")
@@ -377,12 +377,12 @@ func (c *container) run(invoker interface{}) error {
 	return nil
 }
 
-func (c container) createOrGetScope(name string) Scope {
-	if s, ok := c.scopes[name]; ok {
+func (c container) createOrGetModuleKey(name string) *moduleKey {
+	if s, ok := c.moduleKeys[name]; ok {
 		return s
 	}
-	s := newScope(name)
-	c.scopes[name] = s
+	s := &moduleKey{name}
+	c.moduleKeys[name] = s
 	return s
 }
 

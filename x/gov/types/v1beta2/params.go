@@ -175,6 +175,7 @@ type Params struct {
 	VotingParams  VotingParams  `json:"voting_params" yaml:"voting_params"`
 	TallyParams   TallyParams   `json:"tally_params" yaml:"tally_params"`
 	DepositParams DepositParams `json:"deposit_params" yaml:"deposit_params"`
+	BurnParams    BurnParams    `json:"burn_params" yaml:"burn_params"`
 }
 
 func (gp Params) String() string {
@@ -183,15 +184,44 @@ func (gp Params) String() string {
 }
 
 // NewParams creates a new gov Params instance
-func NewParams(vp VotingParams, tp TallyParams, dp DepositParams) Params {
+func NewParams(vp VotingParams, tp TallyParams, dp DepositParams, bp BurnParams) Params {
 	return Params{
 		VotingParams:  vp,
 		DepositParams: dp,
 		TallyParams:   tp,
+		BurnParams:    bp,
 	}
 }
 
 // DefaultParams default governance params
 func DefaultParams() Params {
-	return NewParams(DefaultVotingParams(), DefaultTallyParams(), DefaultDepositParams())
+	return NewParams(DefaultVotingParams(), DefaultTallyParams(), DefaultDepositParams(), DefaultBurnParams())
+}
+
+// NewBurnParams creates a new VotingParams object
+func NewBurnParams(vq, pd, vv bool) BurnParams {
+	return BurnParams{
+		VoteQourum:      vq,
+		ProposalDepsoit: pd,
+		VoteVeto:        vv,
+	}
+}
+
+// DefaultVotingParams default parameters for voting
+func DefaultBurnParams() BurnParams {
+	return NewBurnParams(true, true, true)
+}
+
+// Equal checks equality of TallyParams
+func (bp BurnParams) Equal(other BurnParams) bool {
+	if bp.ProposalDepsoit == other.ProposalDepsoit {
+		return true
+	}
+	if bp.VoteQourum == other.VoteQourum {
+		return true
+	}
+	if bp.VoteVeto == other.VoteVeto {
+		return true
+	}
+	return false
 }

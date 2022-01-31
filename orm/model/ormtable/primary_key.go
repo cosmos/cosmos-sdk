@@ -30,7 +30,7 @@ func (p primaryKeyIndex) List(ctx context.Context, prefixKey []interface{}, opti
 		return nil, err
 	}
 
-	return prefixIterator(backend.IndexStoreReader(), backend, p, p.KeyCodec, encodeutil.ValuesOf(prefixKey), options)
+	return prefixIterator(backend.IndexStoreReader(), backend, p, p.KeyCodec, encodeutil.ValuesOf(prefixKey...), options)
 }
 
 func (p primaryKeyIndex) ListRange(ctx context.Context, from, to []interface{}, options ...ormlist.Option) (Iterator, error) {
@@ -39,7 +39,7 @@ func (p primaryKeyIndex) ListRange(ctx context.Context, from, to []interface{}, 
 		return nil, err
 	}
 
-	return rangeIterator(backend.IndexStoreReader(), backend, p, p.KeyCodec, encodeutil.ValuesOf(from), encodeutil.ValuesOf(to), options)
+	return rangeIterator(backend.IndexStoreReader(), backend, p, p.KeyCodec, encodeutil.ValuesOf(from...), encodeutil.ValuesOf(to...), options)
 }
 
 func (p primaryKeyIndex) doNotImplement() {}

@@ -4,6 +4,8 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	queryv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/query/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/listinternal"
 	"github.com/cosmos/cosmos-sdk/orm/model/kv"
@@ -32,6 +34,10 @@ type Iterator interface {
 	// Cursor returns the cursor referencing the current iteration position
 	// and can be used to restart iteration right after this position.
 	Cursor() ormlist.CursorT
+
+	// PageResponse returns a non-nil page response after Next() returns false
+	// if pagination was requested in list options.
+	PageResponse() *queryv1beta1.PageResponse
 
 	// Close closes the iterator and must always be called when done using
 	// the iterator. The defer keyword should generally be used for this.
@@ -94,11 +100,7 @@ func prefixIterator(iteratorStore kv.ReadonlyStore, backend ReadBackend, index c
 		}
 	}
 
-	if options.Filter != nil {
-		return &filterIterator{Iterator: res, filter: options.Filter}, nil
-	}
-
-	return res, nil
+	return applyCommonIteratorOptions(res, options)
 }
 
 func rangeIterator(iteratorStore kv.ReadonlyStore, reader ReadBackend, index concreteIndex, codec *ormkv.KeyCodec, start, end []protoreflect.Value, opts []listinternal.Option) (Iterator, error) {
@@ -125,7 +127,7 @@ func rangeIterator(iteratorStore kv.ReadonlyStore, reader ReadBackend, index con
 
 	// NOTE: fullEndKey indicates whether the end key contained all the fields of the key,
 	// if it did then we need to use inclusive end bytes, otherwise we prefix the end bytes
-	fullEndKey := len(codec.GetFieldNames()) == len(options.End)
+	fullEndKey := len(codec.GetFieldNames()) == len(end)
 
 	var res Iterator
 	if !options.Reverse {
@@ -172,11 +174,19 @@ func rangeIterator(iteratorStore kv.ReadonlyStore, reader ReadBackend, index con
 		}
 	}
 
+	return applyCommonIteratorOptions(res, options)
+}
+
+func applyCommonIteratorOptions(iterator Iterator, options *listinternal.Options) (Iterator, error) {
 	if options.Filter != nil {
-		return &filterIterator{Iterator: res, filter: options.Filter}, nil
+		iterator = &filterIterator{Iterator: iterator, filter: options.Filter}
 	}
 
-	return res, nil
+	if options.CountTotal || options.Limit != 0 || options.Offset != 0 {
+		iterator = paginate(iterator, options)
+	}
+
+	return iterator, nil
 }
 
 type indexIterator struct {
@@ -188,6 +198,10 @@ type indexIterator struct {
 	primaryKey  []protoreflect.Value
 	value       []byte
 	started     bool
+}
+
+func (i *indexIterator) PageResponse() *queryv1beta1.PageResponse {
+	return nil
 }
 
 func (i *indexIterator) Next() bool {

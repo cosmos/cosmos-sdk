@@ -31,6 +31,7 @@ jobs:
         with:
           input: 'proto'
           against: 'https://github.com/${GITHUB_REPOSITORY}#branch=${{ github.event.pull_request.base.ref }},ref=HEAD~1,subdir=proto'
+
   push:
     runs-on: ubuntu-latest
     steps:

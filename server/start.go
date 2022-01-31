@@ -3,11 +3,18 @@ package server
 // DONTCOVER
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
+	"reflect"
 	"runtime/pprof"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/container"
+	"github.com/cosmos/cosmos-sdk/server/module"
+
+	"github.com/cosmos/cosmos-sdk/server/internal"
 
 	"github.com/spf13/cobra"
 	abciclient "github.com/tendermint/tendermint/abci/client"
@@ -29,6 +36,8 @@ import (
 	crgserver "github.com/cosmos/cosmos-sdk/server/rosetta/lib/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
+	_ "github.com/cosmos/cosmos-sdk/server/module"
 )
 
 // Tendermint full-node start flags
@@ -208,6 +217,43 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 
 // legacyAminoCdc is used for the legacy REST API
 func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
+	fmt.Printf("TEST TEST TEST\n")
+	fmt.Printf("%+v\n", ctx.Viper.AllSettings())
+
+	var opts []container.Option
+	for configSection, info := range internal.ModuleRegistry {
+		cfg := reflect.New(info.ConfigType)
+		err := ctx.Viper.UnmarshalKey(configSection, cfg.Interface())
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Loaded %s config: %+v\n", configSection, cfg)
+
+		opt := info.Constructor(cfg.Elem().Interface())
+		opts = append(opts, opt)
+	}
+
+	err := container.Run(func(services []module.Service) {
+		for _, service := range services {
+			svc := service
+			if svc.Start != nil {
+				go func() {
+					err := svc.Start(context.Background())
+					if err != nil {
+						fmt.Printf("Error starting service: %s", err)
+					}
+				}()
+			}
+		}
+	},
+		container.Options(opts...),
+		container.Supply(ctx.Logger),
+	)
+	if err != nil {
+		return err
+	}
+
 	cfg := ctx.Config
 	home := cfg.RootDir
 	var cpuProfileCleanup func()

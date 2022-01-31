@@ -3,28 +3,41 @@ name: Protobuf
 # This workflow is only run when a .proto file has been changed
 on:
   pull_request:
+    paths:
+      - 'proto/**'
+  push:
+    branches:
+      - master
+    paths:
+      - 'proto/**'
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@master
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.proto
-      - name: lint
-        run: make proto-lint
-        if: env.GIT_DIFF
+    - uses: actions/checkout@v2
+    - uses: bufbuild/buf-setup-action@v0.6.0
+    - uses: bufbuild/buf-lint-action@v1
+      with:
+        input: 'proto'
+
   breakage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
-      - uses: technote-space/get-diff-action@v6.0.1
+      - uses: actions/checkout@v2
+      - uses: bufbuild/buf-setup-action@v0.6.0
+      - uses: bufbuild/buf-breaking-action@v1
         with:
-          PATTERNS: |
-            **/**.proto
-      - name: check-breakage
-        run: make proto-check-breaking
-        if: env.GIT_DIFF
+          input: 'proto'
+          against: 'https://github.com/${GITHUB_REPOSITORY}#branch=master,ref=HEAD~1,subdir=proto'
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: bufbuild/buf-setup-action@v0.6.0
+      - uses: bufbuild/buf-push-action@v1
+        with:
+          buf_token: ${{ secrets.BUF_TOKEN }}
+        if: ${{ steps.extract_branch.outputs.branch }} == master
+        

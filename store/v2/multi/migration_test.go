@@ -23,16 +23,15 @@ func TestMigrationV2(t *testing.T) {
 	// setup a temporary test data
 	v1StoreKVStore := v1Store.GetKVStore(kvStoreKey)
 	v1StoreKVStore.Set([]byte("temp_data"), []byte("one"))
+	v1Store.Commit()
 
 	// setup a new root store of smt
 	db2 := memdb.NewDB()
-	v2Store, err := NewStore(db2, DefaultStoreConfig())
-	require.Nil(t, err)
-
 	// migrating the iavl store (v1) to smt store (v2)
-	err = MigrateV2(v1Store, v2Store)
+	v2Store, err := MigrateV2(v1Store, db2, DefaultStoreConfig())
 	require.NoError(t, err)
 
 	v2StoreKVStore := v2Store.GetKVStore(kvStoreKey)
 	require.Equal(t, v2StoreKVStore.Get([]byte("temp_data")), []byte("one"))
+	require.Equal(t, v2Store.LastCommitID().Version,v1Store.LastCommitID().Version)
 }

@@ -13,34 +13,34 @@ type Option interface {
 
 // Provide creates a container option which registers the provided dependency
 // injection constructors. Each constructor will be called at most once with the
-// exception of scoped constructors which are called at most once per scope
-// (see Scope).
+// exception of module-scoped constructors which are called at most once per module
+// (see ModuleKey).
 func Provide(constructors ...interface{}) Option {
 	return containerOption(func(ctr *container) error {
 		return provide(ctr, nil, constructors)
 	})
 }
 
-// ProvideWithScope creates a container option which registers the provided dependency
-// injection constructors that are to be run in the provided scope. Each constructor
+// ProvideInModule creates a container option which registers the provided dependency
+// injection constructors that are to be run in the named module. Each constructor
 // will be called at most once.
-func ProvideWithScope(scopeName string, constructors ...interface{}) Option {
+func ProvideInModule(moduleName string, constructors ...interface{}) Option {
 	return containerOption(func(ctr *container) error {
-		if scopeName == "" {
-			return errors.Errorf("expected non-empty scope name")
+		if moduleName == "" {
+			return errors.Errorf("expected non-empty module name")
 		}
 
-		return provide(ctr, ctr.createOrGetScope(scopeName), constructors)
+		return provide(ctr, ctr.createOrGetModuleKey(moduleName), constructors)
 	})
 }
 
-func provide(ctr *container, scope Scope, constructors []interface{}) error {
+func provide(ctr *container, key *moduleKey, constructors []interface{}) error {
 	for _, c := range constructors {
 		rc, err := ExtractProviderDescriptor(c)
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		_, err = ctr.addNode(&rc, scope)
+		_, err = ctr.addNode(&rc, key)
 		if err != nil {
 			return errors.WithStack(err)
 		}

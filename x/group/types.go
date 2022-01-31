@@ -46,18 +46,6 @@ func NewThresholdDecisionPolicy(threshold string, timeout time.Duration) Decisio
 	return &ThresholdDecisionPolicy{threshold, timeout}
 }
 
-func (p PercentageDecisionPolicy) ValidateBasic() error {
-	if _, err := math.NewPositiveDecFromString(p.PercentageThreshold); err != nil {
-		return sdkerrors.Wrap(err, "threshold")
-	}
-
-	timeout := p.Timeout
-	if timeout <= time.Nanosecond {
-		return sdkerrors.Wrap(errors.ErrInvalid, "timeout")
-	}
-	return nil
-}
-
 func (p ThresholdDecisionPolicy) ValidateBasic() error {
 	if _, err := math.NewPositiveDecFromString(p.Threshold); err != nil {
 		return sdkerrors.Wrap(err, "threshold")
@@ -112,22 +100,49 @@ func (p ThresholdDecisionPolicy) Allow(tally Tally, totalPower string, votingDur
 	return DecisionPolicyResult{Allow: false, Final: false}, nil
 }
 
+// Validate returns an error if policy threshold is greater than the total group weight
+func (p *ThresholdDecisionPolicy) Validate(g GroupInfo) error {
+	threshold, err := math.NewPositiveDecFromString(p.Threshold)
+	if err != nil {
+		return sdkerrors.Wrap(err, "threshold")
+	}
+	totalWeight, err := math.NewNonNegativeDecFromString(g.TotalWeight)
+	if err != nil {
+		return sdkerrors.Wrap(err, "group total weight")
+	}
+	if threshold.Cmp(totalWeight) > 0 {
+		return sdkerrors.Wrapf(errors.ErrInvalid, "policy threshold %s should not be greater than the total group weight %s", p.Threshold, g.TotalWeight)
+	}
+	return nil
+}
+
+func (p PercentageDecisionPolicy) ValidateBasic() error {
+	if _, err := math.NewPositiveDecFromString(p.Percentage); err != nil {
+		return sdkerrors.Wrap(err, "threshold")
+	}
+
+	timeout := p.Timeout
+	if timeout <= time.Nanosecond {
+		return sdkerrors.Wrap(errors.ErrInvalid, "timeout")
+	}
+	return nil
+}
+
+func (p *PercentageDecisionPolicy) Validate(g GroupInfo) error {
+	return nil
+}
+
 // Allow allows a proposal to pass when the tally of yes votes equals or exceeds the percentage threshold before the timeout.
 func (p PercentageDecisionPolicy) Allow(tally Tally, totalPower string, votingDuration time.Duration) (DecisionPolicyResult, error) {
 	timeout := p.Timeout
 	if timeout <= votingDuration {
 		return DecisionPolicyResult{Allow: false, Final: true}, nil
 	}
-	threshold, err := math.NewNonNegativeDecFromString(p.PercentageThreshold)
-	if err != nil {
-		return DecisionPolicyResult{}, err
-	}
-	percent := math.NewDecFromInt64(100)
-	thresholdPercentage, err := threshold.Quo(percent)
-	if err != nil {
-		return DecisionPolicyResult{}, err
-	}
 
+	percentage, err := math.NewNonNegativeDecFromString(p.Percentage)
+	if err != nil {
+		return DecisionPolicyResult{}, err
+	}
 	yesCount, err := math.NewNonNegativeDecFromString(tally.YesCount)
 	if err != nil {
 		return DecisionPolicyResult{}, err
@@ -135,13 +150,6 @@ func (p PercentageDecisionPolicy) Allow(tally Tally, totalPower string, votingDu
 	totalCounts, err := tally.TotalCounts()
 	if err != nil {
 		return DecisionPolicyResult{}, err
-	}
-	yesCountPercentage, err := yesCount.Quo(totalCounts)
-	if err != nil {
-		return DecisionPolicyResult{}, err
-	}
-	if yesCountPercentage.Cmp(thresholdPercentage) >= 0 {
-		return DecisionPolicyResult{Allow: true, Final: true}, nil
 	}
 
 	totalPowerDec, err := math.NewNonNegativeDecFromString(totalPower)
@@ -161,33 +169,13 @@ func (p PercentageDecisionPolicy) Allow(tally Tally, totalPower string, votingDu
 		return DecisionPolicyResult{}, err
 	}
 
-	if sumPercentage.Cmp(thresholdPercentage) < 0 {
+	if sumPercentage.Cmp(percentage) >= 0 {
+		return DecisionPolicyResult{Allow: true, Final: true}, nil
+	} else if sumPercentage.Cmp(percentage) < 0 {
 		return DecisionPolicyResult{Allow: false, Final: true}, nil
 	}
 
 	return DecisionPolicyResult{Allow: false, Final: false}, nil
-}
-
-// Validate returns an error if policy threshold percentage is greater than the group's yes vote weights.
-func (p *PercentageDecisionPolicy) Validate(g GroupInfo) error {
-	// TODO
-	return nil
-}
-
-// Validate returns an error if policy threshold is greater than the total group weight
-func (p *ThresholdDecisionPolicy) Validate(g GroupInfo) error {
-	threshold, err := math.NewPositiveDecFromString(p.Threshold)
-	if err != nil {
-		return sdkerrors.Wrap(err, "threshold")
-	}
-	totalWeight, err := math.NewNonNegativeDecFromString(g.TotalWeight)
-	if err != nil {
-		return sdkerrors.Wrap(err, "group total weight")
-	}
-	if threshold.Cmp(totalWeight) > 0 {
-		return sdkerrors.Wrapf(errors.ErrInvalid, "policy threshold %s should not be greater than the total group weight %s", p.Threshold, g.TotalWeight)
-	}
-	return nil
 }
 
 var _ orm.Validateable = GroupPolicyInfo{}

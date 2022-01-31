@@ -1,6 +1,8 @@
 package ormtable
 
 import (
+	"math"
+
 	"github.com/cosmos/cosmos-sdk/orm/internal/listinternal"
 
 	queryv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/query/v1beta1"
@@ -22,7 +24,13 @@ func paginate(it Iterator, options *listinternal.Options) Iterator {
 		}
 	}
 
-	done := limit + offset
+	var done int
+	if limit != 0 {
+		done = limit + offset
+	} else {
+		done = math.MaxInt
+	}
+
 	return &paginationIterator{
 		Iterator:   it,
 		pageRes:    nil,
@@ -40,27 +48,36 @@ type paginationIterator struct {
 	done       int
 }
 
-func (it paginationIterator) Next() bool {
+func (it *paginationIterator) Next() bool {
 	if it.i >= it.done {
 		it.pageRes = &queryv1beta1.PageResponse{}
-		if it.Next() {
-			it.pageRes.NextKey = it.Cursor()
+		cursor := it.Cursor()
+		if it.Iterator.Next() {
+			it.pageRes.NextKey = cursor
 			it.i++
 		}
 		if it.countTotal {
 			for {
-				it.i++
-				if !it.Next() {
+				if !it.Iterator.Next() {
 					it.pageRes.Total = uint64(it.i)
 					return false
 				}
+				it.i++
 			}
 		}
 		return false
 	}
 
-	it.i++
-	return true
+	ok := it.Iterator.Next()
+	if ok {
+		it.i++
+		return true
+	} else {
+		it.pageRes = &queryv1beta1.PageResponse{
+			Total: uint64(it.i),
+		}
+		return false
+	}
 }
 
 func (it paginationIterator) PageResponse() *queryv1beta1.PageResponse {

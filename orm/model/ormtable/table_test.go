@@ -186,7 +186,6 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	// try filtering
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{}, ormlist.Filter(func(message proto.Message) bool {
 		ex := message.(*testpb.ExampleTable)
-		t.Logf("Ex: %+v", ex)
 		return ex.U64 != 10
 	}))
 	assert.NilError(t, err)
@@ -266,7 +265,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assertIteratorItems(it, 7, 6)
 	res = it.PageResponse()
 	assert.Assert(t, res != nil)
-	assert.Assert(t, res.NextKey == nil)
+	assert.Assert(t, res.NextKey != nil)
 
 	// range query
 	it, err = store.ListRange(ctx,
@@ -291,7 +290,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assertIteratorItems(it, 3, 4)
 	res = it.PageResponse()
 	assert.Assert(t, res != nil)
-	assert.Assert(t, res.NextKey == nil)
+	assert.Assert(t, res.NextKey != nil)
 	assert.Equal(t, uint64(10), res.Total)
 
 	// and reverse
@@ -315,20 +314,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 		Offset:     10,
 	}))
 	assert.NilError(t, err)
-	assert.Assert(t, it.Next())
-	res = it.PageResponse()
-	assert.Assert(t, res != nil)
-	assert.Assert(t, res.NextKey == nil)
-	assert.Equal(t, uint64(10), res.Total)
-
-	// another offset that's too big
-	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{}, ormlist.Paginate(&queryv1beta1.PageRequest{
-		Limit:      1,
-		CountTotal: true,
-		Offset:     14,
-	}))
-	assert.NilError(t, err)
-	assert.Assert(t, it.Next())
+	assert.Assert(t, !it.Next())
 	res = it.PageResponse()
 	assert.Assert(t, res != nil)
 	assert.Assert(t, res.NextKey == nil)

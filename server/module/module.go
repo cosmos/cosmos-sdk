@@ -32,8 +32,7 @@ func Register(
 type Option interface{ isOption() }
 
 type Service struct {
-	Start func(context.Context) error
-	Stop  func(context.Context) error
+	Start func(context.Context) (err error)
 }
 
 var _ container.AutoGroupType = Service{}
@@ -52,10 +51,6 @@ func init() {
 			return Service{
 				Start: func(ctx context.Context) error {
 					logger.Info(fmt.Sprintf("Starting Foo:%d Bar:%s", cfg.Foo, cfg.Bar))
-					return nil
-				},
-				Stop: func(ctx context.Context) error {
-					logger.Info(fmt.Sprintf("Stopping Foo:%d Bar:%s", cfg.Foo, cfg.Bar))
 					return nil
 				},
 			}

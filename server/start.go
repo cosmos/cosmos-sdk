@@ -3,20 +3,11 @@ package server
 // DONTCOVER
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"os"
-	"reflect"
 	"runtime/pprof"
 	"time"
-
-	tmlog "github.com/tendermint/tendermint/libs/log"
-
-	"github.com/cosmos/cosmos-sdk/container"
-	"github.com/cosmos/cosmos-sdk/server/module"
-
-	"github.com/cosmos/cosmos-sdk/server/internal"
 
 	"github.com/spf13/cobra"
 	abciclient "github.com/tendermint/tendermint/abci/client"
@@ -178,6 +169,8 @@ which accepts a path for the resulting pprof file.
 }
 
 func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
+	cancelFn, err := startModules(ctx)
+
 	addr := ctx.Viper.GetString(flagAddress)
 	transport := ctx.Viper.GetString(flagTransport)
 	home := ctx.Viper.GetString(flags.FlagHome)
@@ -214,48 +207,12 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 	}()
 
 	// Wait for SIGINT or SIGTERM signal
-	return WaitForQuitSignals()
+	return WaitForQuitSignalsWithCleanup(cancelFn)
 }
 
 // legacyAminoCdc is used for the legacy REST API
 func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
-	var opts []container.Option
-	for configSection, info := range internal.ModuleRegistry {
-		if ctx.Viper.Get(configSection) == nil {
-			continue
-		}
-
-		cfg := reflect.New(info.ConfigType)
-		err := ctx.Viper.UnmarshalKey(configSection, cfg.Interface())
-		if err != nil {
-			return err
-		}
-
-		fmt.Printf("Loaded %s config: %+v\n", configSection, cfg)
-
-		opt := info.Constructor(cfg.Elem().Interface())
-		opts = append(opts, opt)
-	}
-
-	err := container.Run(func(services []module.Service) {
-		for _, service := range services {
-			svc := service
-			if svc.Start != nil {
-				go func() {
-					err := svc.Start(context.Background())
-					if err != nil {
-						fmt.Printf("Error starting service: %s", err)
-					}
-				}()
-			}
-		}
-	},
-		container.Options(opts...),
-		container.Provide(func() tmlog.Logger { return ctx.Logger }),
-	)
-	if err != nil {
-		return err
-	}
+	cancelFn, err := startModules(ctx)
 
 	cfg := ctx.Config
 	home := cfg.RootDir
@@ -442,5 +399,5 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	}()
 
 	// Wait for SIGINT or SIGTERM signal
-	return WaitForQuitSignals()
+	return WaitForQuitSignalsWithCleanup(cancelFn)
 }

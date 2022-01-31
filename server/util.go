@@ -347,6 +347,17 @@ func WaitForQuitSignals() ErrorCode {
 	return ErrorCode{Code: int(sig.(syscall.Signal)) + 128}
 }
 
+// WaitForQuitSignalsWithCleanup waits for SIGINT and SIGTERM and returns.
+func WaitForQuitSignalsWithCleanup(cleanupFunc func()) ErrorCode {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	sig := <-sigs
+	if cleanupFunc != nil {
+		cleanupFunc()
+	}
+	return ErrorCode{Code: int(sig.(syscall.Signal)) + 128}
+}
+
 func skipInterface(iface net.Interface) bool {
 	if iface.Flags&net.FlagUp == 0 {
 		return true // interface down

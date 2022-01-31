@@ -74,7 +74,7 @@ type Keeper struct {
 
 	router *authmiddleware.MsgServiceRouter
 
-	maxMetadataLength int // MaxMetadataLength defines the max length of the metadata bytes field for various entities within the group module
+	maxMetadataLength uint64
 }
 
 type KeeperParams struct {
@@ -82,7 +82,7 @@ type KeeperParams struct {
 	Cdc               codec.Codec
 	Router            *authmiddleware.MsgServiceRouter
 	AccKeeper         group.AccountKeeper
-	MaxMetadataLength int
+	MaxMetadataLength uint64 // MaxMetadataLength defines the max length of the metadata bytes field for various entities within the group module. Defaults to 255 if not explicitly set.
 }
 
 func NewKeeper(params KeeperParams) Keeper {
@@ -230,7 +230,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // MaxMetadataLength returns the max length of the metadata bytes field for various entities within the group module.
-func (k Keeper) MaxMetadataLength() int { return k.maxMetadataLength }
+func (k Keeper) MaxMetadataLength() uint64 { return k.maxMetadataLength }
 
 // GetGroupSequence returns the current value of the group table sequence
 func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {

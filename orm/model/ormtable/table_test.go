@@ -186,6 +186,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	// try filtering
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{}, ormlist.Filter(func(message proto.Message) bool {
 		ex := message.(*testpb.ExampleTable)
+		t.Logf("Ex: %+v", ex)
 		return ex.U64 != 10
 	}))
 	assert.NilError(t, err)

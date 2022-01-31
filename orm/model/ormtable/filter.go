@@ -21,6 +21,7 @@ func (f *filterIterator) Next() bool {
 		}
 
 		if f.filter(msg) {
+			f.msg = msg
 			return true
 		}
 	}

@@ -4,6 +4,8 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
+
 	queryv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/query/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
@@ -46,7 +48,7 @@ type Iterator interface {
 	doNotImplement()
 }
 
-func prefixIterator(iteratorStore kv.ReadonlyStore, backend ReadBackend, index concreteIndex, codec *ormkv.KeyCodec, prefix []protoreflect.Value, opts []listinternal.Option) (Iterator, error) {
+func prefixIterator(iteratorStore kv.ReadonlyStore, backend ReadBackend, index concreteIndex, codec *ormkv.KeyCodec, prefix []interface{}, opts []listinternal.Option) (Iterator, error) {
 	options := &listinternal.Options{}
 	listinternal.ApplyOptions(options, opts)
 	if err := options.Validate(); err != nil {
@@ -54,7 +56,7 @@ func prefixIterator(iteratorStore kv.ReadonlyStore, backend ReadBackend, index c
 	}
 
 	var prefixBz []byte
-	prefixBz, err := codec.EncodeKey(prefix)
+	prefixBz, err := codec.EncodeKey(encodeutil.ValuesOf(prefix...))
 	if err != nil {
 		return nil, err
 	}
@@ -103,24 +105,26 @@ func prefixIterator(iteratorStore kv.ReadonlyStore, backend ReadBackend, index c
 	return applyCommonIteratorOptions(res, options)
 }
 
-func rangeIterator(iteratorStore kv.ReadonlyStore, reader ReadBackend, index concreteIndex, codec *ormkv.KeyCodec, start, end []protoreflect.Value, opts []listinternal.Option) (Iterator, error) {
+func rangeIterator(iteratorStore kv.ReadonlyStore, reader ReadBackend, index concreteIndex, codec *ormkv.KeyCodec, start, end []interface{}, opts []listinternal.Option) (Iterator, error) {
 	options := &listinternal.Options{}
 	listinternal.ApplyOptions(options, opts)
 	if err := options.Validate(); err != nil {
 		return nil, err
 	}
 
-	err := codec.CheckValidRangeIterationKeys(start, end)
+	startValues := encodeutil.ValuesOf(start...)
+	endValues := encodeutil.ValuesOf(end...)
+	err := codec.CheckValidRangeIterationKeys(startValues, endValues)
 	if err != nil {
 		return nil, err
 	}
 
-	startBz, err := codec.EncodeKey(start)
+	startBz, err := codec.EncodeKey(startValues)
 	if err != nil {
 		return nil, err
 	}
 
-	endBz, err := codec.EncodeKey(end)
+	endBz, err := codec.EncodeKey(endValues)
 	if err != nil {
 		return nil, err
 	}

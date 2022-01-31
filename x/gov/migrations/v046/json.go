@@ -10,10 +10,10 @@ import (
 //
 // - Updating everything to v1beta2.
 // - Migrating proposals to be Msg-based.
-func MigrateJSON(oldState *v1beta1.GenesisState) *v1beta2.GenesisState {
+func MigrateJSON(oldState *v1beta1.GenesisState) (*v1beta2.GenesisState, error) {
 	newProps, err := convertProposals(oldState.Proposals)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	depParams, votingParms, tallyParams := convertDepParams(oldState.DepositParams), convertVotingParams(oldState.VotingParams), convertTallyParams(oldState.TallyParams)
@@ -26,5 +26,5 @@ func MigrateJSON(oldState *v1beta1.GenesisState) *v1beta2.GenesisState {
 		DepositParams:      &depParams,
 		VotingParams:       &votingParms,
 		TallyParams:        &tallyParams,
-	}
+	}, nil
 }

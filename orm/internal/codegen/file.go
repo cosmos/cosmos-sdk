@@ -29,12 +29,20 @@ func (f fileGen) gen() error {
 	for _, msg := range f.file.Messages {
 		tableDesc := proto.GetExtension(msg.Desc.Options(), v1alpha1.E_Table).(*v1alpha1.TableDescriptor)
 		if tableDesc != nil {
-			newTableGen(f, msg, tableDesc).gen()
+			tableGen, err := newTableGen(f, msg, tableDesc)
+			if err != nil {
+				return err
+			}
+			tableGen.gen()
 		}
 		singletonDesc := proto.GetExtension(msg.Desc.Options(), v1alpha1.E_Singleton).(*v1alpha1.SingletonDescriptor)
 		if singletonDesc != nil {
 			// do some singleton magic
-			newSingletonGen(f, msg, singletonDesc).gen()
+			singletonGen, err := newSingletonGen(f, msg, singletonDesc)
+			if err != nil {
+				return err
+			}
+			singletonGen.gen()
 		}
 
 		if tableDesc != nil || singletonDesc != nil { // message is one of the tables,

@@ -25,7 +25,7 @@ type tableGen struct {
 	ormTable         ormtable.Table
 }
 
-func newTableGen(fileGen fileGen, msg *protogen.Message, table *ormv1alpha1.TableDescriptor) *tableGen {
+func newTableGen(fileGen fileGen, msg *protogen.Message, table *ormv1alpha1.TableDescriptor) (*tableGen, error) {
 	t := &tableGen{fileGen: fileGen, msg: msg, table: table, fields: map[protoreflect.Name]*protogen.Field{}}
 	t.primaryKeyFields = fieldnames.CommaSeparatedFieldNames(table.PrimaryKey.Fields)
 	for _, field := range msg.Fields {
@@ -43,10 +43,7 @@ func newTableGen(fileGen fileGen, msg *protogen.Message, table *ormv1alpha1.Tabl
 		MessageType:     dynamicpb.NewMessageType(msg.Desc),
 		TableDescriptor: table,
 	})
-	if err != nil {
-		panic(err)
-	}
-	return t
+	return t, err
 }
 
 func (t tableGen) gen() {

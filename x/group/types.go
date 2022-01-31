@@ -5,7 +5,6 @@ import (
 	"time"
 
 	proto "github.com/gogo/protobuf/proto"
-	"github.com/gogo/protobuf/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -39,9 +38,24 @@ type DecisionPolicy interface {
 // Implements DecisionPolicy Interface
 var _ DecisionPolicy = &ThresholdDecisionPolicy{}
 
+// Implements DecisionPolicy Interface
+var _ DecisionPolicy = &PercentageDecisionPolicy{}
+
 // NewThresholdDecisionPolicy creates a threshold DecisionPolicy
 func NewThresholdDecisionPolicy(threshold string, timeout time.Duration) DecisionPolicy {
 	return &ThresholdDecisionPolicy{threshold, timeout}
+}
+
+func (p PercentageDecisionPolicy) ValidateBasic() error {
+	if _, err := math.NewPositiveDecFromString(p.PercentageThreshold); err != nil {
+		return sdkerrors.Wrap(err, "threshold")
+	}
+
+	timeout := p.Timeout
+	if timeout <= time.Nanosecond {
+		return sdkerrors.Wrap(errors.ErrInvalid, "timeout")
+	}
+	return nil
 }
 
 func (p ThresholdDecisionPolicy) ValidateBasic() error {
@@ -59,11 +73,7 @@ func (p ThresholdDecisionPolicy) ValidateBasic() error {
 
 // Allow allows a proposal to pass when the tally of yes votes equals or exceeds the threshold before the timeout.
 func (p ThresholdDecisionPolicy) Allow(tally Tally, totalPower string, votingDuration time.Duration) (DecisionPolicyResult, error) {
-	pTimeout := types.DurationProto(p.Timeout)
-	timeout, err := types.DurationFromProto(pTimeout)
-	if err != nil {
-		return DecisionPolicyResult{}, err
-	}
+	timeout := p.Timeout
 	if timeout <= votingDuration {
 		return DecisionPolicyResult{Allow: false, Final: true}, nil
 	}
@@ -100,6 +110,68 @@ func (p ThresholdDecisionPolicy) Allow(tally Tally, totalPower string, votingDur
 		return DecisionPolicyResult{Allow: false, Final: true}, nil
 	}
 	return DecisionPolicyResult{Allow: false, Final: false}, nil
+}
+
+// Allow allows a proposal to pass when the tally of yes votes equals or exceeds the percentage threshold before the timeout.
+func (p PercentageDecisionPolicy) Allow(tally Tally, totalPower string, votingDuration time.Duration) (DecisionPolicyResult, error) {
+	timeout := p.Timeout
+	if timeout <= votingDuration {
+		return DecisionPolicyResult{Allow: false, Final: true}, nil
+	}
+	threshold, err := math.NewNonNegativeDecFromString(p.PercentageThreshold)
+	if err != nil {
+		return DecisionPolicyResult{}, err
+	}
+	percent := math.NewDecFromInt64(100)
+	thresholdPercentage, err := threshold.Quo(percent)
+	if err != nil {
+		return DecisionPolicyResult{}, err
+	}
+
+	yesCount, err := math.NewNonNegativeDecFromString(tally.YesCount)
+	if err != nil {
+		return DecisionPolicyResult{}, err
+	}
+	totalCounts, err := tally.TotalCounts()
+	if err != nil {
+		return DecisionPolicyResult{}, err
+	}
+	yesCountPercentage, err := yesCount.Quo(totalCounts)
+	if err != nil {
+		return DecisionPolicyResult{}, err
+	}
+	if yesCountPercentage.Cmp(thresholdPercentage) >= 0 {
+		return DecisionPolicyResult{Allow: true, Final: true}, nil
+	}
+
+	totalPowerDec, err := math.NewNonNegativeDecFromString(totalPower)
+	if err != nil {
+		return DecisionPolicyResult{}, err
+	}
+	undecided, err := math.SubNonNegative(totalPowerDec, totalCounts)
+	if err != nil {
+		return DecisionPolicyResult{}, err
+	}
+	sum, err := yesCount.Add(undecided)
+	if err != nil {
+		return DecisionPolicyResult{}, err
+	}
+	sumPercentage, err := sum.Quo(totalPowerDec)
+	if err != nil {
+		return DecisionPolicyResult{}, err
+	}
+
+	if sumPercentage.Cmp(thresholdPercentage) < 0 {
+		return DecisionPolicyResult{Allow: false, Final: true}, nil
+	}
+
+	return DecisionPolicyResult{Allow: false, Final: false}, nil
+}
+
+// Validate returns an error if policy threshold percentage is greater than the group's yes vote weights.
+func (p *PercentageDecisionPolicy) Validate(g GroupInfo) error {
+	// TODO
+	return nil
 }
 
 // Validate returns an error if policy threshold is greater than the total group weight

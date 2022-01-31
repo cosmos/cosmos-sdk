@@ -101,6 +101,21 @@ func Add(x Dec, y Dec) (Dec, error) {
 	return x.Add(y)
 }
 
+var dec128Context = apd.Context{
+	Precision:   34,
+	MaxExponent: apd.MaxExponent,
+	MinExponent: apd.MinExponent,
+	Traps:       apd.DefaultTraps,
+}
+
+// Quo returns a new Dec with value `x/y` (formatted as decimal128, 34 digit precision) without mutating any
+// argument and error if there is an overflow.
+func (x Dec) Quo(y Dec) (Dec, error) {
+	var z Dec
+	_, err := dec128Context.Quo(&z.dec, &x.dec, &y.dec)
+	return z, sdkerrors.Wrap(err, "decimal quotient error")
+}
+
 func (x Dec) IsZero() bool {
 	return x.dec.IsZero()
 }

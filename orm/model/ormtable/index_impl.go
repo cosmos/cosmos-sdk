@@ -3,6 +3,8 @@ package ormtable
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
+
 	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
 
 	"github.com/cosmos/cosmos-sdk/orm/model/kv"
@@ -24,13 +26,22 @@ type indexKeyIndex struct {
 	getReadBackend func(context.Context) (ReadBackend, error)
 }
 
-func (i indexKeyIndex) Iterator(ctx context.Context, options ...ormlist.Option) (Iterator, error) {
+func (i indexKeyIndex) List(ctx context.Context, prefixKey []interface{}, options ...ormlist.Option) (Iterator, error) {
 	backend, err := i.getReadBackend(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return iterator(backend, backend.IndexStoreReader(), i, i.KeyCodec, options)
+	return prefixIterator(backend.IndexStoreReader(), backend, i, i.KeyCodec, encodeutil.ValuesOf(prefixKey), options)
+}
+
+func (i indexKeyIndex) ListRange(ctx context.Context, from, to []interface{}, options ...ormlist.Option) (Iterator, error) {
+	backend, err := i.getReadBackend(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return rangeIterator(backend.IndexStoreReader(), backend, i, i.KeyCodec, encodeutil.ValuesOf(from), encodeutil.ValuesOf(to), options)
 }
 
 var _ indexer = &indexKeyIndex{}

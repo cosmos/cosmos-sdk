@@ -40,136 +40,143 @@ type Iterator interface {
 	doNotImplement()
 }
 
-func iterator(
-	backend ReadBackend,
-	reader kv.ReadonlyStore,
-	index concreteIndex,
-	codec *ormkv.KeyCodec,
-	options []listinternal.Option,
-) (Iterator, error) {
-	opts := &listinternal.Options{}
-	listinternal.ApplyOptions(opts, options)
-	if err := opts.Validate(); err != nil {
+func prefixIterator(iteratorStore kv.ReadonlyStore, backend ReadBackend, index concreteIndex, codec *ormkv.KeyCodec, prefix []protoreflect.Value, opts []listinternal.Option) (Iterator, error) {
+	options := &listinternal.Options{}
+	listinternal.ApplyOptions(options, opts)
+	if err := options.Validate(); err != nil {
 		return nil, err
 	}
 
-	if opts.Start != nil || opts.End != nil {
-		err := codec.CheckValidRangeIterationKeys(opts.Start, opts.End)
-		if err != nil {
-			return nil, err
-		}
-
-		startBz, err := codec.EncodeKey(opts.Start)
-		if err != nil {
-			return nil, err
-		}
-
-		endBz, err := codec.EncodeKey(opts.End)
-		if err != nil {
-			return nil, err
-		}
-
-		fullEndKey := len(codec.GetFieldNames()) == len(opts.End)
-
-		return rangeIterator(reader, backend, index, startBz, endBz, fullEndKey, opts)
-	} else {
-		prefixBz, err := codec.EncodeKey(opts.Prefix)
-		if err != nil {
-			return nil, err
-		}
-
-		return prefixIterator(reader, backend, index, prefixBz, opts)
+	var prefixBz []byte
+	prefixBz, err := codec.EncodeKey(prefix)
+	if err != nil {
+		return nil, err
 	}
-}
 
-func prefixIterator(iteratorStore kv.ReadonlyStore, backend ReadBackend, index concreteIndex, prefix []byte, options *listinternal.Options) (Iterator, error) {
+	var res Iterator
 	if !options.Reverse {
 		var start []byte
 		if len(options.Cursor) != 0 {
 			// must start right after cursor
 			start = append(options.Cursor, 0x0)
 		} else {
-			start = prefix
+			start = prefixBz
 		}
-		end := prefixEndBytes(prefix)
+		end := prefixEndBytes(prefixBz)
 		it, err := iteratorStore.Iterator(start, end)
 		if err != nil {
 			return nil, err
 		}
-		return &indexIterator{
+		res = &indexIterator{
 			index:    index,
 			store:    backend,
 			iterator: it,
 			started:  false,
-		}, nil
+		}
 	} else {
 		var end []byte
 		if len(options.Cursor) != 0 {
 			// end bytes is already exclusive by default
 			end = options.Cursor
 		} else {
-			end = prefixEndBytes(prefix)
+			end = prefixEndBytes(prefixBz)
 		}
-		it, err := iteratorStore.ReverseIterator(prefix, end)
+		it, err := iteratorStore.ReverseIterator(prefixBz, end)
 		if err != nil {
 			return nil, err
 		}
 
-		return &indexIterator{
+		res = &indexIterator{
 			index:    index,
 			store:    backend,
 			iterator: it,
 			started:  false,
-		}, nil
+		}
 	}
+
+	if options.Filter != nil {
+		return &filterIterator{Iterator: res, filter: options.Filter}, nil
+	}
+
+	return res, nil
 }
 
-// NOTE: fullEndKey indicates whether the end key contained all the fields of the key,
-// if it did then we need to use inclusive end bytes, otherwise we prefix the end bytes
-func rangeIterator(iteratorStore kv.ReadonlyStore, reader ReadBackend, index concreteIndex, start, end []byte, fullEndKey bool, options *listinternal.Options) (Iterator, error) {
+func rangeIterator(iteratorStore kv.ReadonlyStore, reader ReadBackend, index concreteIndex, codec *ormkv.KeyCodec, start, end []protoreflect.Value, opts []listinternal.Option) (Iterator, error) {
+	options := &listinternal.Options{}
+	listinternal.ApplyOptions(options, opts)
+	if err := options.Validate(); err != nil {
+		return nil, err
+	}
+
+	err := codec.CheckValidRangeIterationKeys(start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	startBz, err := codec.EncodeKey(start)
+	if err != nil {
+		return nil, err
+	}
+
+	endBz, err := codec.EncodeKey(end)
+	if err != nil {
+		return nil, err
+	}
+
+	// NOTE: fullEndKey indicates whether the end key contained all the fields of the key,
+	// if it did then we need to use inclusive end bytes, otherwise we prefix the end bytes
+	fullEndKey := len(codec.GetFieldNames()) == len(options.End)
+
+	var res Iterator
 	if !options.Reverse {
 		if len(options.Cursor) != 0 {
-			start = append(options.Cursor, 0)
+			startBz = append(options.Cursor, 0)
 		}
 
 		if fullEndKey {
-			end = inclusiveEndBytes(end)
+			endBz = inclusiveEndBytes(endBz)
 		} else {
-			end = prefixEndBytes(end)
+			endBz = prefixEndBytes(endBz)
 		}
 
-		it, err := iteratorStore.Iterator(start, end)
+		it, err := iteratorStore.Iterator(startBz, endBz)
 		if err != nil {
 			return nil, err
 		}
-		return &indexIterator{
+		res = &indexIterator{
 			index:    index,
 			store:    reader,
 			iterator: it,
 			started:  false,
-		}, nil
+		}
 	} else {
 		if len(options.Cursor) != 0 {
-			end = options.Cursor
+			endBz = options.Cursor
 		} else {
 			if fullEndKey {
-				end = inclusiveEndBytes(end)
+				endBz = inclusiveEndBytes(endBz)
 			} else {
-				end = prefixEndBytes(end)
+				endBz = prefixEndBytes(endBz)
 			}
 		}
-		it, err := iteratorStore.ReverseIterator(start, end)
+		it, err := iteratorStore.ReverseIterator(startBz, endBz)
 		if err != nil {
 			return nil, err
 		}
 
-		return &indexIterator{
+		res = &indexIterator{
 			index:    index,
 			store:    reader,
 			iterator: it,
 			started:  false,
-		}, nil
+		}
 	}
+
+	if options.Filter != nil {
+		return &filterIterator{Iterator: res, filter: options.Filter}, nil
+	}
+
+	return res, nil
 }
 
 type indexIterator struct {
@@ -232,8 +239,6 @@ func (i indexIterator) Close() {
 	}
 }
 
-func (indexIterator) doNotImplement() {
-
-}
+func (indexIterator) doNotImplement() {}
 
 var _ Iterator = &indexIterator{}

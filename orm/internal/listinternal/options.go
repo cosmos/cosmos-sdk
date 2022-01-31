@@ -3,6 +3,8 @@ package listinternal
 import (
 	"fmt"
 
+	"google.golang.org/protobuf/proto"
+
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -11,6 +13,7 @@ type Options struct {
 	Start, End, Prefix []protoreflect.Value
 	Reverse            bool
 	Cursor             []byte
+	Filter             func(proto.Message) bool
 }
 
 func (o Options) Validate() error {

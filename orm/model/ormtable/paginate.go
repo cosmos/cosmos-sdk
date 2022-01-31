@@ -10,17 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 )
 
-// PaginationRequest is a request to the Paginate function and extends the
-// options in query.PageRequest.
-type PaginationRequest struct {
-	*queryv1beta1.PageRequest
-
-	// Filter is an optional filter function that can be used to filter
-	// the results in the underlying iterator and should return true to include
-	// an item in the result.
-	Filter func(message proto.Message) bool
-}
-
 // PaginationResponse is a response from the Paginate function and extends the
 // options in query.PageResponse.
 type PaginationResponse struct {
@@ -38,7 +27,7 @@ type PaginationResponse struct {
 func Paginate(
 	index Index,
 	ctx context.Context,
-	request *PaginationRequest,
+	request *queryv1beta1.PageRequest,
 	onItem func(proto.Message),
 	options ...ormlist.Option,
 ) (*PaginationResponse, error) {
@@ -97,10 +86,6 @@ func Paginate(
 		message, err := it.GetMessage()
 		if err != nil {
 			return nil, err
-		}
-
-		if request.Filter != nil && !request.Filter(message) {
-			continue
 		}
 
 		i++

@@ -2,6 +2,8 @@
 package ormlist
 
 import (
+	"google.golang.org/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
 	"github.com/cosmos/cosmos-sdk/orm/internal/listinternal"
 )
@@ -62,6 +64,14 @@ func Prefix(values ...interface{}) Option {
 func Reverse() Option {
 	return listinternal.FuncOption(func(options *listinternal.Options) {
 		options.Reverse = !options.Reverse
+	})
+}
+
+// Filter returns an option which applies a filter function to each item
+// and skips over it when the filter function returns false.
+func Filter(filterFn func(message proto.Message) bool) Option {
+	return listinternal.FuncOption(func(options *listinternal.Options) {
+		options.Filter = filterFn
 	})
 }
 

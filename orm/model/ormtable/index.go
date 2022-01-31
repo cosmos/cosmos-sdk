@@ -15,9 +15,9 @@ import (
 // are stateless, with all state existing only in the store passed
 // to index methods.
 type Index interface {
+	List(ctx context.Context, prefixKey []interface{}, options ...ormlist.Option) (Iterator, error)
 
-	// Iterator returns an iterator for this index with the provided list options.
-	Iterator(ctx context.Context, options ...ormlist.Option) (Iterator, error)
+	ListRange(ctx context.Context, from, to []interface{}, options ...ormlist.Option) (Iterator, error)
 
 	// MessageType returns the protobuf message type of the index.
 	MessageType() protoreflect.MessageType

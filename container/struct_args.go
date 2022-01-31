@@ -35,7 +35,7 @@ type isOut interface{ isOut() }
 
 var isOutType = reflect.TypeOf((*isOut)(nil)).Elem()
 
-func expandStructArgsConstructor(constructor ProviderDescriptor) (ProviderDescriptor, error) {
+func expandStructArgsProvider(constructor ProviderDescriptor) (ProviderDescriptor, error) {
 	var foundStructArgs bool
 	var newIn []ProviderInput
 

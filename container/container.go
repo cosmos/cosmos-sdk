@@ -36,8 +36,8 @@ func newContainer(cfg *debugConfig) *container {
 	}
 }
 
-func (c *container) call(constructor *ProviderDescriptor, moduleKey *moduleKey) ([]reflect.Value, error) {
-	loc := constructor.Location
+func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]reflect.Value, error) {
+	loc := provider.Location
 	graphNode, err := c.locationGraphNode(loc, moduleKey)
 	if err != nil {
 		return nil, err
@@ -53,8 +53,8 @@ func (c *container) call(constructor *ProviderDescriptor, moduleKey *moduleKey) 
 
 	c.logf("Resolving dependencies for %s", loc)
 	c.indentLogger()
-	inVals := make([]reflect.Value, len(constructor.Inputs))
-	for i, in := range constructor.Inputs {
+	inVals := make([]reflect.Value, len(provider.Inputs))
+	for i, in := range provider.Inputs {
 		val, err := c.resolve(in, moduleKey, loc)
 		if err != nil {
 			return nil, err
@@ -67,9 +67,9 @@ func (c *container) call(constructor *ProviderDescriptor, moduleKey *moduleKey) 
 	delete(c.callerMap, loc)
 	c.callerStack = c.callerStack[0 : len(c.callerStack)-1]
 
-	out, err := constructor.Fn(inVals)
+	out, err := provider.Fn(inVals)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error calling constructor %s", loc)
+		return nil, errors.Wrapf(err, "error calling provider %s", loc)
 	}
 
 	markGraphNodeAsUsed(graphNode)
@@ -133,14 +133,14 @@ func (c *container) getResolver(typ reflect.Type) (resolver, error) {
 	return c.resolvers[typ], nil
 }
 
-func (c *container) addNode(constructor *ProviderDescriptor, key *moduleKey) (interface{}, error) {
-	constructorGraphNode, err := c.locationGraphNode(constructor.Location, key)
+func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (interface{}, error) {
+	providerGraphNode, err := c.locationGraphNode(provider.Location, key)
 	if err != nil {
 		return nil, err
 	}
 
 	hasModuleKeyParam := false
-	for _, in := range constructor.Inputs {
+	for _, in := range provider.Inputs {
 		typ := in.Type
 		if typ == moduleKeyType {
 			hasModuleKeyParam = true
@@ -167,20 +167,20 @@ func (c *container) addNode(constructor *ProviderDescriptor, key *moduleKey) (in
 			}
 		}
 
-		c.addGraphEdge(typeGraphNode, constructorGraphNode)
+		c.addGraphEdge(typeGraphNode, providerGraphNode)
 	}
 
 	if key != nil || !hasModuleKeyParam {
-		c.logf("Registering %s", constructor.Location.String())
+		c.logf("Registering %s", provider.Location.String())
 		c.indentLogger()
 		defer c.dedentLogger()
 
 		sp := &simpleProvider{
-			provider:  constructor,
+			provider:  provider,
 			moduleKey: key,
 		}
 
-		for i, out := range constructor.Outputs {
+		for i, out := range provider.Outputs {
 			typ := out.Type
 
 			// one-per-module maps can't be used as a return type
@@ -221,22 +221,22 @@ func (c *container) addNode(constructor *ProviderDescriptor, key *moduleKey) (in
 				c.resolvers[typ] = vr
 			}
 
-			c.addGraphEdge(constructorGraphNode, vr.typeGraphNode())
+			c.addGraphEdge(providerGraphNode, vr.typeGraphNode())
 		}
 
 		return sp, nil
 	} else {
-		c.logf("Registering module-scoped provider: %s", constructor.Location.String())
+		c.logf("Registering module-scoped provider: %s", provider.Location.String())
 		c.indentLogger()
 		defer c.dedentLogger()
 
 		node := &moduleDepProvider{
-			provider:        constructor,
+			provider:        provider,
 			calledForModule: map[*moduleKey]bool{},
 			valueMap:        map[*moduleKey][]reflect.Value{},
 		}
 
-		for i, out := range constructor.Outputs {
+		for i, out := range provider.Outputs {
 			typ := out.Type
 
 			c.logf("Registering resolver for module-scoped type %v", typ)
@@ -244,7 +244,7 @@ func (c *container) addNode(constructor *ProviderDescriptor, key *moduleKey) (in
 			existing, ok := c.resolvers[typ]
 			if ok {
 				return nil, errors.Errorf("duplicate provision of type %v by module-scoped provider %s\n\talready provided by %s",
-					typ, constructor.Location, existing.describeLocation())
+					typ, provider.Location, existing.describeLocation())
 			}
 
 			typeGraphNode, err := c.typeGraphNode(typ)
@@ -260,7 +260,7 @@ func (c *container) addNode(constructor *ProviderDescriptor, key *moduleKey) (in
 				graphNode:   typeGraphNode,
 			}
 
-			c.addGraphEdge(constructorGraphNode, typeGraphNode)
+			c.addGraphEdge(providerGraphNode, typeGraphNode)
 		}
 
 		return node, nil

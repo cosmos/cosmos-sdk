@@ -44,7 +44,7 @@ func ExtractProviderDescriptor(provider interface{}) (ProviderDescriptor, error)
 		}
 	}
 
-	return expandStructArgsConstructor(rctr)
+	return expandStructArgsProvider(rctr)
 }
 
 func doExtractProviderDescriptor(ctr interface{}) (ProviderDescriptor, error) {

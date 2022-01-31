@@ -10,7 +10,7 @@ import (
 )
 
 // AutoGroupType marks a type which automatically gets grouped together. For an AutoGroupType T,
-// T and []T can be declared as output parameters for constructors as many times within the container
+// T and []T can be declared as output parameters for providers as many times within the container
 // as desired. All of the provided values for T can be retrieved by declaring an
 // []T input parameter.
 type AutoGroupType interface {

@@ -83,7 +83,7 @@ func (o *mapOfOnePerModuleResolver) resolve(c *container, _ *moduleKey, caller L
 
 func (o *onePerModuleResolver) addNode(n *simpleProvider, i int) error {
 	if n.moduleKey == nil {
-		return errors.Errorf("cannot define a constructor with one-per-module dependency %v which isn't provided in a module", o.typ)
+		return errors.Errorf("cannot define a provider with one-per-module dependency %v which isn't provided in a module", o.typ)
 	}
 
 	if existing, ok := o.providers[n.moduleKey]; ok {

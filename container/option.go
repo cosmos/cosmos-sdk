@@ -12,30 +12,30 @@ type Option interface {
 }
 
 // Provide creates a container option which registers the provided dependency
-// injection constructors. Each constructor will be called at most once with the
-// exception of module-scoped constructors which are called at most once per module
+// injection providers. Each provider will be called at most once with the
+// exception of module-scoped providers which are called at most once per module
 // (see ModuleKey).
-func Provide(constructors ...interface{}) Option {
+func Provide(providers ...interface{}) Option {
 	return containerOption(func(ctr *container) error {
-		return provide(ctr, nil, constructors)
+		return provide(ctr, nil, providers)
 	})
 }
 
 // ProvideInModule creates a container option which registers the provided dependency
-// injection constructors that are to be run in the named module. Each constructor
+// injection providers that are to be run in the named module. Each provider
 // will be called at most once.
-func ProvideInModule(moduleName string, constructors ...interface{}) Option {
+func ProvideInModule(moduleName string, providers ...interface{}) Option {
 	return containerOption(func(ctr *container) error {
 		if moduleName == "" {
 			return errors.Errorf("expected non-empty module name")
 		}
 
-		return provide(ctr, ctr.createOrGetModuleKey(moduleName), constructors)
+		return provide(ctr, ctr.createOrGetModuleKey(moduleName), providers)
 	})
 }
 
-func provide(ctr *container, key *moduleKey, constructors []interface{}) error {
-	for _, c := range constructors {
+func provide(ctr *container, key *moduleKey, providers []interface{}) error {
+	for _, c := range providers {
 		rc, err := ExtractProviderDescriptor(c)
 		if err != nil {
 			return errors.WithStack(err)

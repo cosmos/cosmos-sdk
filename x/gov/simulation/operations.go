@@ -146,7 +146,8 @@ func SimulateMsgSubmitProposal(
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "unable to generate deposit"), nil, err
 		}
 
-		contentMsg, err := v1beta2.NewLegacyContent(content, simAccount.Address.String())
+		macc := k.GetGovernanceAccount(ctx)
+		contentMsg, err := v1beta2.NewLegacyContent(content, macc.GetAddress().String())
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "error converting legacy content into proposal message"), nil, err
 		}

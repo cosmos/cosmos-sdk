@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/iancoleman/strcase"
-
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
@@ -189,11 +187,12 @@ func (t tableGen) genStoreImpl() {
 
 		// has
 		t.P("func (", receiverVar, " ", t.messageStoreReceiverName(t.msg), ") ", hasName, "{")
-		t.P("return ", receiverVar, ".table.Has(ctx, &", t.msg.GoIdent.GoName, "{")
+		t.P("return ", receiverVar, ".table.GetIndexByID(", idx.Id, ").(",
+			tablePkg.Ident("UniqueIndex"), ").Has(ctx,")
 		for _, field := range fields {
-			t.P(strcase.ToCamel(field), ": ", field, ",")
+			t.P(field, ",")
 		}
-		t.P("})")
+		t.P(")")
 		t.P("}")
 		t.P()
 
@@ -201,23 +200,24 @@ func (t tableGen) genStoreImpl() {
 		varName := t.param(t.msg.GoIdent.GoName)
 		varTypeName := t.msg.GoIdent.GoName
 		t.P("func (", receiverVar, " ", t.messageStoreReceiverName(t.msg), ") ", getName, "{")
-		t.P(varName, " := &", varTypeName, "{")
+		t.P("var ", varName, " ", varTypeName)
+		t.P("found, err := ", receiverVar, ".table.GetIndexByID(", idx.Id, ").(",
+			tablePkg.Ident("UniqueIndex"), ").Get(ctx, &", varName, ",")
 		for _, field := range fields {
-			t.P(strcase.ToCamel(field), ": ", field, ",")
+			t.P(field, ",")
 		}
-		t.P("}")
-		t.P("found, err := ", receiverVar, ".table.Get(ctx, ", varName, ")")
+		t.P(")")
 		t.P("if !found {")
 		t.P("return nil, err")
 		t.P("}")
-		t.P("return ", varName, ", nil")
+		t.P("return &", varName, ", nil")
 		t.P("}")
 		t.P()
 	}
 
 	// List
 	t.P(receiver, "List(ctx ", contextPkg.Ident("Context"), ", prefixKey ", t.indexKeyInterfaceName(), ", opts ...", ormListPkg.Ident("Option"), ") (", t.iteratorName(), ", error) {")
-	t.P("opts = append(opts, ", ormListPkg.Ident("Prefix"), "(prefixKey.values()))")
+	t.P("opts = append(opts, ", ormListPkg.Ident("Prefix"), "(prefixKey.values()...))")
 	t.P("it, err := ", receiverVar, ".table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)")
 	t.P("return ", t.iteratorName(), "{it}, err")
 	t.P("}")
@@ -225,7 +225,7 @@ func (t tableGen) genStoreImpl() {
 
 	// ListRange
 	t.P(receiver, "ListRange(ctx ", contextPkg.Ident("Context"), ", from, to ", t.indexKeyInterfaceName(), ", opts ...", ormListPkg.Ident("Option"), ") (", t.iteratorName(), ", error) {")
-	t.P("opts = append(opts, ", ormListPkg.Ident("Start"), "(from.values()), ", ormListPkg.Ident("End"), "(to))")
+	t.P("opts = append(opts, ", ormListPkg.Ident("Start"), "(from.values()...), ", ormListPkg.Ident("End"), "(to.values()...))")
 	t.P("it, err := ", receiverVar, ".table.GetIndexByID(from.id()).Iterator(ctx, opts...)")
 	t.P("return ", t.iteratorName(), "{it}, err")
 	t.P("}")

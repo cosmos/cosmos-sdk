@@ -41,5 +41,4 @@ jobs:
         with:
           input: 'proto'
           buf_token: ${{ secrets.BUF_TOKEN }}
-        if: ${{env.GITHUB_REF_NAME}} == 'master'
         

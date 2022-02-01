@@ -27,8 +27,8 @@ func NewValidatorGovInfo(address sdk.ValAddress, bondedTokens sdk.Int, delegator
 }
 
 // NewTallyResult creates a new TallyResult instance
-func NewTallyResult(yes, abstain, no, noWithVeto sdk.Int) *TallyResult {
-	return &TallyResult{
+func NewTallyResult(yes, abstain, no, noWithVeto sdk.Int) TallyResult {
+	return TallyResult{
 		Yes:        yes.String(),
 		Abstain:    abstain.String(),
 		No:         no.String(),
@@ -37,7 +37,7 @@ func NewTallyResult(yes, abstain, no, noWithVeto sdk.Int) *TallyResult {
 }
 
 // NewTallyResultFromMap creates a new TallyResult instance from a Option -> Dec map
-func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) *TallyResult {
+func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) TallyResult {
 	return NewTallyResult(
 		results[OptionYes].TruncateInt(),
 		results[OptionAbstain].TruncateInt(),
@@ -47,7 +47,7 @@ func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) *TallyResult {
 }
 
 // EmptyTallyResult returns an empty TallyResult.
-func EmptyTallyResult() *TallyResult {
+func EmptyTallyResult() TallyResult {
 	return NewTallyResult(sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt())
 }
 

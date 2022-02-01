@@ -12,6 +12,7 @@ const (
 	AttributeKeyProposalResult     = "proposal_result"
 	AttributeKeyOption             = "option"
 	AttributeKeyProposalID         = "proposal_id"
+	AttributeKeyProposalMessages   = "proposal_messages" // Msg type_urls in the proposal
 	AttributeKeyVotingPeriodStart  = "voting_period_start"
 	AttributeValueCategory         = "governance"
 	AttributeValueProposalDropped  = "proposal_dropped"  // didn't meet min deposit

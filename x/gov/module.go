@@ -25,6 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 var (
@@ -54,6 +55,7 @@ func (AppModuleBasic) Name() string {
 // RegisterLegacyAminoCodec registers the gov module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	v1beta1.RegisterLegacyAminoCodec(cdc)
+	v1beta2.RegisterLegacyAminoCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the gov
@@ -64,12 +66,12 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 
 // ValidateGenesis performs genesis state validation for the gov module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
-	var data v1beta1.GenesisState
+	var data v1beta2.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return v1beta1.ValidateGenesis(&data)
+	return v1beta2.ValidateGenesis(&data)
 }
 
 // RegisterRESTRoutes registers the REST routes for the gov module.
@@ -79,6 +81,9 @@ func (a AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Ro
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the gov module.
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	if err := v1beta2.RegisterQueryHandlerClient(context.Background(), mux, v1beta2.NewQueryClient(clientCtx)); err != nil {
+		panic(err)
+	}
 	if err := v1beta1.RegisterQueryHandlerClient(context.Background(), mux, v1beta1.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
@@ -101,6 +106,7 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 
 // RegisterInterfaces implements InterfaceModule.RegisterInterfaces
 func (a AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	v1beta2.RegisterInterfaces(registry)
 	v1beta1.RegisterInterfaces(registry)
 }
 
@@ -150,8 +156,13 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	v1beta1.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	v1beta1.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	msgServer := keeper.NewMsgServerImpl(am.keeper)
+	v1beta1.RegisterMsgServer(cfg.MsgServer(), keeper.NewLegacyMsgServerImpl(am.accountKeeper.GetModuleAddress(types.ModuleName).String(), msgServer))
+	v1beta2.RegisterMsgServer(cfg.MsgServer(), msgServer)
+
+	// TODO Register v1beta1 query server.
+	// https://github.com/cosmos/cosmos-sdk/issues/10951
+	v1beta2.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
 	m := keeper.NewMigrator(am.keeper)
 	err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
@@ -163,7 +174,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 // InitGenesis performs genesis initialization for the gov module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	var genesisState v1beta1.GenesisState
+	var genesisState v1beta2.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 	InitGenesis(ctx, am.accountKeeper, am.bankKeeper, am.keeper, &genesisState)
 	return []abci.ValidatorUpdate{}

@@ -3,6 +3,8 @@ package ormtable
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
+
 	"github.com/cosmos/cosmos-sdk/orm/model/kv"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 
@@ -17,7 +19,7 @@ import (
 // indexKeyIndex implements Index for a regular IndexKey.
 type indexKeyIndex struct {
 	*ormkv.IndexKeyCodec
-	fields         fieldNames
+	fields         fieldnames.FieldNames
 	primaryKey     *primaryKeyIndex
 	getReadBackend func(context.Context) (ReadBackend, error)
 }

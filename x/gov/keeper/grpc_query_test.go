@@ -315,7 +315,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 					Voter:      addrs[0].String(),
 				}
 
-				expRes = &v1beta2.QueryVoteResponse{Vote: &v1beta2.Vote{ProposalId: proposal.ProposalId, Voter: addrs[0].String(), Option: v1beta2.OptionAbstain, Options: []*v1beta2.WeightedVoteOption{{Option: v1beta2.OptionAbstain, Weight: sdk.MustNewDecFromStr("1.0").String()}}}}
+				expRes = &v1beta2.QueryVoteResponse{Vote: &v1beta2.Vote{ProposalId: proposal.ProposalId, Voter: addrs[0].String(), Options: []*v1beta2.WeightedVoteOption{{Option: v1beta2.OptionAbstain, Weight: sdk.MustNewDecFromStr("1.0").String()}}}}
 			},
 			true,
 		},
@@ -412,8 +412,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 				app.GovKeeper.SetProposal(ctx, proposal)
 
 				votes = []*v1beta2.Vote{
-					{ProposalId: proposal.ProposalId, Voter: addrs[0].String(), Option: v1beta2.OptionAbstain, Options: v1beta2.NewNonSplitVoteOption(v1beta2.OptionAbstain)},
-					{ProposalId: proposal.ProposalId, Voter: addrs[1].String(), Option: v1beta2.OptionYes, Options: v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)},
+					{ProposalId: proposal.ProposalId, Voter: addrs[0].String(), Options: v1beta2.NewNonSplitVoteOption(v1beta2.OptionAbstain)},
+					{ProposalId: proposal.ProposalId, Voter: addrs[1].String(), Options: v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)},
 				}
 				accAddr1, err1 := sdk.AccAddressFromBech32(votes[0].Voter)
 				accAddr2, err2 := sdk.AccAddressFromBech32(votes[1].Voter)

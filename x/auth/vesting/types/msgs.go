@@ -10,10 +10,15 @@ import (
 // TypeMsgCreateVestingAccount defines the type value for a MsgCreateVestingAccount.
 const TypeMsgCreateVestingAccount = "msg_create_vesting_account"
 
+// TypeMsgCreatePermanentLockedAccount defines the type value for a MsgCreatePermanentLockedAccount.
+const TypeMsgCreatePermanentLockedAccount = "msg_create_permanent_locked_account"
+
 // TypeMsgCreatePeriodicVestingAccount defines the type value for a MsgCreateVestingAccount.
 const TypeMsgCreatePeriodicVestingAccount = "msg_create_periodic_vesting_account"
 
 var _ sdk.Msg = &MsgCreateVestingAccount{}
+
+var _ sdk.Msg = &MsgCreatePermanentLockedAccount{}
 
 var _ sdk.Msg = &MsgCreatePeriodicVestingAccount{}
 
@@ -70,6 +75,54 @@ func (msg MsgCreateVestingAccount) GetSigners() []sdk.AccAddress {
 	addr, _ := sdk.AccAddressFromBech32(msg.FromAddress)
 	return []sdk.AccAddress{addr}
 }
+
+// NewMsgCreatePermanentLockedAccount returns a reference to a new MsgCreatePermanentLockedAccount.
+ //nolint:interfacer
+ func NewMsgCreatePermanentLockedAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) *MsgCreatePermanentLockedAccount {
+ 	return &MsgCreatePermanentLockedAccount{
+ 		FromAddress: fromAddr.String(),
+ 		ToAddress:   toAddr.String(),
+ 		Amount:      amount,
+ 	}
+ }
+
+ // Route returns the message route for a MsgCreatePermanentLockedAccount.
+ func (msg MsgCreatePermanentLockedAccount) Route() string { return RouterKey }
+
+ // Type returns the message type for a MsgCreatePermanentLockedAccount.
+ func (msg MsgCreatePermanentLockedAccount) Type() string { return TypeMsgCreatePermanentLockedAccount }
+
+ // ValidateBasic Implements Msg.
+ func (msg MsgCreatePermanentLockedAccount) ValidateBasic() error {
+ 	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
+ 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)
+ 	}
+ 	if _, err := sdk.AccAddressFromBech32(msg.ToAddress); err != nil {
+ 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
+ 	}
+
+ 	if !msg.Amount.IsValid() {
+ 		return sdkerrors.ErrInvalidCoins.Wrap(msg.Amount.String())
+ 	}
+
+ 	if !msg.Amount.IsAllPositive() {
+ 		return sdkerrors.ErrInvalidCoins.Wrap(msg.Amount.String())
+ 	}
+
+ 	return nil
+ }
+
+ // GetSignBytes returns the bytes all expected signers must sign over for a
+ // MsgCreatePermanentLockedAccount.
+ func (msg MsgCreatePermanentLockedAccount) GetSignBytes() []byte {
+ 	return sdk.MustSortJSON(amino.MustMarshalJSON(&msg))
+ }
+
+ // GetSigners returns the expected signers for a MsgCreatePermanentLockedAccount.
+ func (msg MsgCreatePermanentLockedAccount) GetSigners() []sdk.AccAddress {
+ 	from, _ := sdk.AccAddressFromBech32(msg.FromAddress)
+ 	return []sdk.AccAddress{from}
+ }
 
 // NewMsgCreatePeriodicVestingAccount returns a reference to a new MsgCreatePeriodicVestingAccount.
 //nolint:interfacer

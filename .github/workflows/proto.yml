@@ -29,6 +29,7 @@ jobs:
       - uses: bufbuild/buf-setup-action@v0.6.0
       - uses: bufbuild/buf-breaking-action@v1
         with:
+          input: 'proto'
           against: 'https://github.com/${{ github.repository }}#branch=${{ github.event.pull_request.base.ref }}'
   push:
     runs-on: ubuntu-latest

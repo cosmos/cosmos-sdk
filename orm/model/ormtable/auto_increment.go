@@ -230,4 +230,11 @@ func (t autoIncrementTable) ExportJSON(ctx context.Context, writer io.Writer) er
 	return t.doExportJSON(ctx, writer)
 }
 
+func (t *autoIncrementTable) GetTable(message proto.Message) Table {
+	if message.ProtoReflect().Descriptor().FullName() == t.MessageType().Descriptor().FullName() {
+		return t
+	}
+	return nil
+}
+
 var _ AutoIncrementTable = &autoIncrementTable{}

@@ -12,10 +12,6 @@ import (
 	v1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
 )
 
-var (
-	ormTablePkg = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/model/ormtable")
-)
-
 type fileGen struct {
 	*generator.GeneratedFile
 	file *protogen.File

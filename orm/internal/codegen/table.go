@@ -202,7 +202,7 @@ func (t tableGen) genStoreImpl() {
 		// has
 		t.P("func (", receiverVar, " ", t.messageStoreReceiverName(t.msg), ") ", hasName, "{")
 		t.P("return ", receiverVar, ".table.GetIndexByID(", idx.Id, ").(",
-			tablePkg.Ident("UniqueIndex"), ").Has(ctx,")
+			ormTablePkg.Ident("UniqueIndex"), ").Has(ctx,")
 		for _, field := range fields {
 			t.P(field, ",")
 		}
@@ -216,7 +216,7 @@ func (t tableGen) genStoreImpl() {
 		t.P("func (", receiverVar, " ", t.messageStoreReceiverName(t.msg), ") ", getName, "{")
 		t.P("var ", varName, " ", varTypeName)
 		t.P("found, err := ", receiverVar, ".table.GetIndexByID(", idx.Id, ").(",
-			tablePkg.Ident("UniqueIndex"), ").Get(ctx, &", varName, ",")
+			ormTablePkg.Ident("UniqueIndex"), ").Get(ctx, &", varName, ",")
 		for _, field := range fields {
 			t.P(field, ",")
 		}

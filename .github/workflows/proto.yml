@@ -30,7 +30,7 @@ jobs:
       - uses: bufbuild/buf-breaking-action@v1
         with:
           input: 'proto'
-          against: 'https://github.com/${{ github.repository }}#branch=${{ github.event.pull_request.base.ref }},ref=HEAD~1,subdir=proto'
+          against: 'https://github.com/${{ github.repository }}#branch=${{ github.event.pull_request.base.ref }},ref=HEAD~1'
 
   push:
     runs-on: ubuntu-latest

@@ -60,12 +60,9 @@ func (s singletonGen) genMethods() {
 	varName := s.param(s.msg.GoIdent.GoName)
 	// Get
 	s.P(receiver, "Get(ctx ", contextPkg.Ident("Context"), ") (*", s.msg.GoIdent.GoName, ", error) {")
-	s.P("var ", varName, " ", s.msg.GoIdent.GoName)
-	s.P("found, err := x.table.Get(ctx, &", varName, ")")
-	s.P("if !found {")
-	s.P("return nil, err")
-	s.P("}")
-	s.P("return &", varName, ", err")
+	s.P(varName, " := &", s.msg.GoIdent.GoName, "{}")
+	s.P("_, err := x.table.Get(ctx, ", varName, ")")
+	s.P("return ", varName, ", err")
 	s.P("}")
 	s.P()
 

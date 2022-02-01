@@ -11,29 +11,36 @@ import (
 )
 
 // MigrateV2 will migrate the state from iavl to smt
-func MigrateV2(rs *v1Store.Store, db dbm.DBConnection, storeConfig StoreConfig) (*Store, error) {
+func MigrateV2(rootMultiStore *v1Store.Store, dbConnection dbm.DBConnection, storeConfig StoreConfig) (*Store, error) {
 	type namedStore struct {
 		*iavl.Store
 		name string
 	}
 	var stores []namedStore
-	for key := range rs.GetStores() {
-		switch store := rs.GetCommitKVStore(key).(type) {
+	for key := range rootMultiStore.GetStores() {
+		switch store := rootMultiStore.GetCommitKVStore(key).(type) {
 		case *iavl.Store:
-			storeConfig.prefixRegistry.StoreSchema[key.Name()] = types.StoreTypePersistent
+			err := storeConfig.RegisterSubstore(key.Name(), types.StoreTypePersistent)
+			if err != nil {
+				return nil, err
+			}
 			stores = append(stores, namedStore{name: key.Name(), Store: store})
 		case *transient.Store, *mem.Store:
-			// Non-persisted stores shouldn't be snapshotted
 			continue
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "don't know how to snapshot store %q of type %T", key.Name(), store)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "don't know how to migrate store %q of type %T", key.Name(), store)
 		}
 	}
 
 	// creating the new store of smt tree
-	rootStore, err := NewStore(db, storeConfig)
+	rootStore, err := NewStore(dbConnection, storeConfig)
 	if err != nil {
 		return nil, err
+	}
+
+	// if version is 0 there is no state data to commit
+	if rootMultiStore.LastCommitID().Version == 0 {
+		return rootStore, nil
 	}
 
 	// iterate through the rootmulti stores and save the key/values into smt tree
@@ -51,7 +58,7 @@ func MigrateV2(rs *v1Store.Store, db dbm.DBConnection, storeConfig StoreConfig) 
 	}
 
 	// commit the all key/values from iavl to smt tree (SMT Store)
-	_, err = rootStore.commit(uint64(rs.LastCommitID().Version))
+	_, err = rootStore.commit(uint64(rootMultiStore.LastCommitID().Version))
 	if err != nil {
 		return nil, err
 	}

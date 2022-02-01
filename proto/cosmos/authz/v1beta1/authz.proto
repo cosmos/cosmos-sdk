@@ -14,7 +14,6 @@ option (gogoproto.goproto_getters_all) = false;
 // the provided method on behalf of the granter's account.
 message GenericAuthorization {
   option (cosmos_proto.implements_interface) = "Authorization";
-
   // Msg, identified by it's type URL, to grant unrestricted permissions to execute
   string msg = 1;
 }

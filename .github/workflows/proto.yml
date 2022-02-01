@@ -32,9 +32,9 @@ jobs:
           input: 'proto'
           against: 'https://github.com/${{ github.repository }}.git#branch=${{ github.event.pull_request.base.ref }},ref=HEAD~1,subdir=proto'
   push:
+    if: steps.extract_branch.outputs.branch == 'master'
     runs-on: ubuntu-latest
     needs: [lint,break-check]
-    if: ${{ steps.extract_branch.outputs.branch }} == 'master'
     steps:
       - uses: actions/checkout@v2
       - uses: bufbuild/buf-setup-action@v0.6.0

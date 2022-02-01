@@ -16,7 +16,7 @@ import (
 // to index methods.
 type Index interface {
 
-	// List dones iteration over the index with the provided prefix key and options.
+	// List does iteration over the index with the provided prefix key and options.
 	// Prefix key values must correspond in type to the index's fields and the
 	// number of values provided cannot exceed the number of fields in the index,
 	// although fewer values can be provided.

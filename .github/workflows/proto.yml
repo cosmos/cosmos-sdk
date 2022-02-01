@@ -37,6 +37,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: bufbuild/buf-setup-action@v0.6.0
+      - run: |
+          echo ${{ steps.extract_branch.outputs.branch }}
       - uses: bufbuild/buf-push-action@v1
         with:
           input: 'proto'

@@ -34,14 +34,12 @@ jobs:
   push:
     runs-on: ubuntu-latest
     needs: [lint,break-check]
+    if: ${{ steps.extract_branch.outputs.branch }} == ${{ github.event.repository.default_branch }}
     steps:
       - uses: actions/checkout@v2
       - uses: bufbuild/buf-setup-action@v0.6.0
-      - run: |
-          echo ${{ steps.extract_branch.outputs.branch }}
       - uses: bufbuild/buf-push-action@v1
         with:
           input: 'proto'
           buf_token: ${{ secrets.BUF_TOKEN }}
-        if: ${{ steps.extract_branch.outputs.branch }} == master
         

@@ -11,7 +11,7 @@ require (
 	github.com/coinbase/rosetta-sdk-go v0.7.2
 	github.com/confio/ics23/go v0.6.6
 	github.com/cosmos/btcutil v1.0.4
-	github.com/cosmos/cosmos-proto v1.0.0-alpha6
+	github.com/cosmos/cosmos-proto v1.0.0-alpha7
 	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.2
 	github.com/cosmos/go-bip39 v1.0.0
@@ -34,7 +34,7 @@ require (
 	github.com/magiconair/properties v1.8.5
 	github.com/mattn/go-isatty v0.0.14
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.12.0
+	github.com/prometheus/client_golang v1.12.1
 	github.com/prometheus/common v0.32.1
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1

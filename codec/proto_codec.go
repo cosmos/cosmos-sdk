@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"google.golang.org/grpc/encoding"
 	"strings"
 
 	"github.com/gogo/protobuf/jsonpb"
@@ -248,6 +249,37 @@ func (pc *ProtoCodec) UnpackAny(any *types.Any, iface interface{}) error {
 // InterfaceRegistry returns InterfaceRegistry
 func (pc *ProtoCodec) InterfaceRegistry() types.InterfaceRegistry {
 	return pc.interfaceRegistry
+}
+
+// GRPCCodec returns the gRPC Codec for this specific ProtoCodec
+func (pc *ProtoCodec) GRPCCodec() encoding.Codec {
+	return &grpcProtoCodec{cdc: pc}
+}
+
+// grpcProtoCodec is the implementation of the gRPC proto codec.
+type grpcProtoCodec struct {
+	cdc *ProtoCodec
+}
+
+func (g grpcProtoCodec) Marshal(v interface{}) ([]byte, error) {
+	m, ok := v.(ProtoMarshaler)
+	if !ok {
+		return nil, fmt.Errorf("cannot marshal: %T does not implement %T", v, (*ProtoMarshaler)(nil))
+	}
+
+	return g.cdc.Marshal(m)
+}
+
+func (g grpcProtoCodec) Unmarshal(data []byte, v interface{}) error {
+	m, ok := v.(ProtoMarshaler)
+	if !ok {
+		return fmt.Errorf("cannot unmarshal: %T does not implement %T", v, (*ProtoMarshaler)(nil))
+	}
+	return g.cdc.Unmarshal(data, m)
+}
+
+func (g grpcProtoCodec) Name() string {
+	return "cosmos-sdk-grpc-codec"
 }
 
 func assertNotNil(i interface{}) error {

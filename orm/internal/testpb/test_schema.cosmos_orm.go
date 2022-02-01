@@ -198,6 +198,7 @@ func NewExampleTableStore(db ormdb.ModuleDB) (ExampleTableStore, error) {
 
 type ExampleAutoIncrementTableStore interface {
 	Insert(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
+	InsertReturningID(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) (uint64, error)
 	Update(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
 	Save(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
 	Delete(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
@@ -257,7 +258,7 @@ func (this ExampleAutoIncrementTableXIndexKey) WithX(x string) ExampleAutoIncrem
 }
 
 type exampleAutoIncrementTableStore struct {
-	table ormtable.Table
+	table ormtable.AutoIncrementTable
 }
 
 func (this exampleAutoIncrementTableStore) Insert(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
@@ -274,6 +275,10 @@ func (this exampleAutoIncrementTableStore) Save(ctx context.Context, exampleAuto
 
 func (this exampleAutoIncrementTableStore) Delete(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
 	return this.table.Delete(ctx, exampleAutoIncrementTable)
+}
+
+func (this exampleAutoIncrementTableStore) InsertReturningID(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) (uint64, error) {
+	return this.table.InsertReturningID(ctx, exampleAutoIncrementTable)
 }
 
 func (this exampleAutoIncrementTableStore) Has(ctx context.Context, id uint64) (found bool, err error) {
@@ -325,7 +330,7 @@ func NewExampleAutoIncrementTableStore(db ormdb.ModuleDB) (ExampleAutoIncrementT
 	if table == nil {
 		return nil, ormerrors.TableNotFound.Wrap(string((&ExampleAutoIncrementTable{}).ProtoReflect().Descriptor().FullName()))
 	}
-	return exampleAutoIncrementTableStore{table}, nil
+	return exampleAutoIncrementTableStore{table.(ormtable.AutoIncrementTable)}, nil
 }
 
 // singleton store

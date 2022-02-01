@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"io"
 
+	"google.golang.org/protobuf/proto"
+
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -90,4 +92,11 @@ func (t singleton) jsonMarshalOptions() protojson.MarshalOptions {
 		EmitUnpopulated: true,
 		Resolver:        t.typeResolver,
 	}
+}
+
+func (t *singleton) GetTable(message proto.Message) Table {
+	if message.ProtoReflect().Descriptor().FullName() == t.MessageType().Descriptor().FullName() {
+		return t
+	}
+	return nil
 }

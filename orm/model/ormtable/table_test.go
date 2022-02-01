@@ -80,6 +80,7 @@ func checkEncodeDecodeEntries(t *testing.T, table ormtable.Table, store kv.Reado
 
 func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backend) {
 	ctx := ormtable.WrapContextDefault(backend)
+	store, err := testpb.NewExampleTableStore(table)
 
 	// let's create 10 data items we'll use later and give them indexes
 	data := []*testpb.ExampleTable{
@@ -110,50 +111,50 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	}
 
 	// insert one record
-	err := table.Insert(ctx, data[0])
+	err = store.Insert(ctx, data[0])
 	// trivial prefix query has one record
-	it, err := table.Iterator(ctx)
+	it, err := store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
 	assertIteratorItems(it, 0)
 
 	// insert one record
-	err = table.Insert(ctx, data[1])
+	err = store.Insert(ctx, data[1])
 	// trivial prefix query has two records
-	it, err = table.Iterator(ctx)
+	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
 	assertIteratorItems(it, 0, 1)
 
 	// insert the other records
 	assert.NilError(t, err)
 	for i := 2; i < len(data); i++ {
-		err = table.Insert(ctx, data[i])
+		err = store.Insert(ctx, data[i])
 		assert.NilError(t, err)
 	}
 
 	// let's do a prefix query on the primary key
-	it, err = table.Iterator(ctx, ormlist.Prefix(uint32(8)))
+	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{}.WithU32(8))
 	assert.NilError(t, err)
 	assertIteratorItems(it, 7, 8, 9)
 
 	// let's try a reverse prefix query
-	it, err = table.Iterator(ctx, ormlist.Prefix(uint32(4)), ormlist.Reverse())
+	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{}.WithU32(4), ormlist.Reverse())
 	assert.NilError(t, err)
 	defer it.Close()
 	assertIteratorItems(it, 2, 1, 0)
 
 	// let's try a range query
-	it, err = table.Iterator(ctx,
-		ormlist.Start(uint32(4), int64(-1)),
-		ormlist.End(uint32(7)),
+	it, err = store.ListRange(ctx,
+		testpb.ExampleTablePrimaryKey{}.WithU32I64(4, -1),
+		testpb.ExampleTablePrimaryKey{}.WithU32(7),
 	)
 	assert.NilError(t, err)
 	defer it.Close()
 	assertIteratorItems(it, 2, 3, 4, 5, 6)
 
 	// and another range query
-	it, err = table.Iterator(ctx,
-		ormlist.Start(uint32(5), int64(-3)),
-		ormlist.End(uint32(8), int64(1), "abc"),
+	it, err = store.ListRange(ctx,
+		testpb.ExampleTablePrimaryKey{}.WithU32I64(5, -3),
+		testpb.ExampleTablePrimaryKey{}.WithU32I64Str(8, 1, "abc"),
 	)
 	assert.NilError(t, err)
 	defer it.Close()
@@ -162,31 +163,33 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	// now a reverse range query on a different index
 	strU32Index := table.GetIndex("str,u32")
 	assert.Assert(t, strU32Index != nil)
-	it, err = strU32Index.Iterator(ctx,
-		ormlist.Start("abc"),
-		ormlist.End("abd"),
+	it, err = store.ListRange(ctx,
+		testpb.ExampleTableStrU32IndexKey{}.WithStr("abc"),
+		testpb.ExampleTableStrU32IndexKey{}.WithStr("abd"),
 		ormlist.Reverse(),
 	)
 	assertIteratorItems(it, 9, 3, 1, 8, 7, 2, 0)
 
 	// another prefix query forwards
-	it, err = strU32Index.Iterator(ctx, ormlist.Prefix("abe", uint32(7)))
+
+	it, err = store.List(ctx,
+		testpb.ExampleTableStrU32IndexKey{}.WithStrU32("abe", 7),
+	)
 	assertIteratorItems(it, 5, 6)
 	// and backwards
-	it, err = strU32Index.Iterator(ctx, ormlist.Prefix("abc", uint32(4)), ormlist.Reverse())
+	it, err = store.List(ctx,
+		testpb.ExampleTableStrU32IndexKey{}.WithStrU32("abc", 4),
+		ormlist.Reverse(),
+	)
 	assertIteratorItems(it, 2, 0)
 
 	// try an unique index
-	u64StrIndex := table.GetUniqueIndex("u64,str")
-	assert.Assert(t, u64StrIndex != nil)
-	found, err := u64StrIndex.Has(ctx, uint64(12), "abc")
+	found, err := store.HasByU64Str(ctx, 12, "abc")
 	assert.NilError(t, err)
 	assert.Assert(t, found)
-	var a testpb.ExampleTable
-	found, err = u64StrIndex.Get(ctx, &a, uint64(12), "abc")
+	a, err := store.GetByU64Str(ctx, 12, "abc")
 	assert.NilError(t, err)
-	assert.Assert(t, found)
-	assert.DeepEqual(t, data[8], &a, protocmp.Transform())
+	assert.DeepEqual(t, data[8], a, protocmp.Transform())
 
 	// let's try paginating some stuff
 
@@ -359,32 +362,32 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	for i := 0; i < 5; i++ {
 		data[i].U64 = data[i].U64 * 2
 		data[i].Bz = []byte(data[i].Str)
-		err = table.Update(ctx, data[i])
+		err = store.Update(ctx, data[i])
 		assert.NilError(t, err)
 	}
-	it, err = table.Iterator(ctx)
+	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
 	// we should still get everything in the same order
 	assertIteratorItems(it, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
 
 	// let's use SAVE_MODE_DEFAULT and add something
 	data = append(data, &testpb.ExampleTable{U32: 9})
-	err = table.Save(ctx, data[10])
+	err = store.Save(ctx, data[10])
 	assert.NilError(t, err)
 	pkIndex := table.GetUniqueIndex("u32,i64,str")
-	found, err = pkIndex.Get(ctx, &a, uint32(9), int64(0), "")
+	a, err = store.Get(ctx, 9, 0, "")
 	assert.NilError(t, err)
-	assert.Assert(t, found)
-	assert.DeepEqual(t, data[10], &a, protocmp.Transform())
+	assert.Assert(t, a != nil)
+	assert.DeepEqual(t, data[10], a, protocmp.Transform())
 	// and update it
 	data[10].B = true
 	assert.NilError(t, table.Save(ctx, data[10]))
-	found, err = pkIndex.Get(ctx, &a, uint32(9), int64(0), "")
+	a, err = store.Get(ctx, 9, 0, "")
 	assert.NilError(t, err)
-	assert.Assert(t, found)
-	assert.DeepEqual(t, data[10], &a, protocmp.Transform())
+	assert.Assert(t, a != nil)
+	assert.DeepEqual(t, data[10], a, protocmp.Transform())
 	// and iterate
-	it, err = table.Iterator(ctx)
+	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
 	assertIteratorItems(it, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
@@ -409,7 +412,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.NilError(t, err)
 	assert.Assert(t, !found)
 	// and missing from the iterator
-	it, err = table.Iterator(ctx)
+	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
 	assertIteratorItems(it, 0, 1, 2, 3, 4, 6, 7, 8, 9, 10)
 }

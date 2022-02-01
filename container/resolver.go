@@ -8,7 +8,7 @@ import (
 
 type resolver interface {
 	addNode(*simpleProvider, int) error
-	resolve(*container, Scope, Location) (reflect.Value, error)
+	resolve(*container, *moduleKey, Location) (reflect.Value, error)
 	describeLocation() string
 	typeGraphNode() *cgraph.Node
 }

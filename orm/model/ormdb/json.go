@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"sort"
+
+	"github.com/cosmos/cosmos-sdk/errors"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -37,7 +38,7 @@ func (m moduleDB) DefaultJSON(sink JSONSink) error {
 }
 
 func (m moduleDB) ValidateJSON(source JSONSource) error {
-	var errors map[protoreflect.FullName]error
+	var errMap map[protoreflect.FullName]error
 	for name, table := range m.tablesByName {
 		r, err := source.JSONReader(name)
 		if err != nil {
@@ -46,7 +47,7 @@ func (m moduleDB) ValidateJSON(source JSONSource) error {
 
 		err = table.ValidateJSON(r)
 		if err != nil {
-			errors[name] = err
+			errMap[name] = err
 		}
 
 		err = r.Close()
@@ -55,7 +56,7 @@ func (m moduleDB) ValidateJSON(source JSONSource) error {
 		}
 	}
 
-	if len(errors) != 0 {
+	if len(errMap) != 0 {
 		panic("TODO")
 	}
 	return nil
@@ -74,7 +75,7 @@ func (m moduleDB) ImportJSON(ctx context.Context, source JSONSource) error {
 
 		r, err := source.JSONReader(fullName)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "table %s", fullName)
 		}
 
 		if r == nil {
@@ -83,12 +84,12 @@ func (m moduleDB) ImportJSON(ctx context.Context, source JSONSource) error {
 
 		err = table.ImportJSON(ctx, r)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "table %s", fullName)
 		}
 
 		err = r.Close()
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "table %s", fullName)
 		}
 	}
 
@@ -157,10 +158,7 @@ func (r *RawJSONSink) JSONWriter(tableName protoreflect.FullName) (io.WriteClose
 }
 
 func (r *RawJSONSink) JSON() (json.RawMessage, error) {
-	for s, message := range r.m {
-		fmt.Printf("%s -> %s\n", s, message)
-	}
-	return json.Marshal(r.m)
+	return json.MarshalIndent(r.m, "", "  ")
 }
 
 type rawWriter struct {
@@ -175,17 +173,3 @@ func (r rawWriter) Close() error {
 }
 
 var _ JSONSink = &RawJSONSink{}
-
-//type FSJSONSouce struct {
-//	fs fs.FS
-//}
-//
-//func (F FSJSONSouce) JSONWriter(tableName protoreflect.FullName) (io.Writer, error) {
-//}
-//
-//func (F FSJSONSouce) JSONReader(tableName protoreflect.FullName) (io.Reader, error) {
-//	return F.fs.Open(fmt.Sprintf("%s.json", tableName))
-//}
-//
-//var _ JSONSource = FSJSONSouce{}
-//var _ JSONSink = FSJSONSouce{}

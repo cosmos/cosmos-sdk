@@ -183,14 +183,12 @@ func (this exampleTableStore) DeleteByU64Str(ctx context.Context, u64 uint64, st
 }
 
 func (this exampleTableStore) List(ctx context.Context, prefixKey ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error) {
-	opts = append(opts, ormlist.Prefix(prefixKey.values()...))
-	it, err := this.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
+	it, err := this.table.GetIndexByID(prefixKey.id()).List(ctx, prefixKey.values(), opts...)
 	return ExampleTableIterator{it}, err
 }
 
 func (this exampleTableStore) ListRange(ctx context.Context, from, to ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error) {
-	opts = append(opts, ormlist.Start(from.values()...), ormlist.End(to.values()...))
-	it, err := this.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
+	it, err := this.table.GetIndexByID(from.id()).ListRange(ctx, from.values(), to.values(), opts...)
 	return ExampleTableIterator{it}, err
 }
 
@@ -329,14 +327,12 @@ func (this exampleAutoIncrementTableStore) DeleteByX(ctx context.Context, x stri
 }
 
 func (this exampleAutoIncrementTableStore) List(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error) {
-	opts = append(opts, ormlist.Prefix(prefixKey.values()...))
-	it, err := this.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
+	it, err := this.table.GetIndexByID(prefixKey.id()).List(ctx, prefixKey.values(), opts...)
 	return ExampleAutoIncrementTableIterator{it}, err
 }
 
 func (this exampleAutoIncrementTableStore) ListRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error) {
-	opts = append(opts, ormlist.Start(from.values()...), ormlist.End(to.values()...))
-	it, err := this.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
+	it, err := this.table.GetIndexByID(from.id()).ListRange(ctx, from.values(), to.values(), opts...)
 	return ExampleAutoIncrementTableIterator{it}, err
 }
 

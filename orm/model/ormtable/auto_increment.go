@@ -213,18 +213,20 @@ func (t autoIncrementTable) ExportJSON(ctx context.Context, writer io.Writer) er
 		return err
 	}
 
-	bz, err := json.Marshal(seq)
-	if err != nil {
-		return err
-	}
-	_, err = writer.Write(bz)
-	if err != nil {
-		return err
-	}
+	if seq != 0 {
+		bz, err := json.Marshal(seq)
+		if err != nil {
+			return err
+		}
+		_, err = writer.Write(bz)
+		if err != nil {
+			return err
+		}
 
-	_, err = writer.Write([]byte(",\n"))
-	if err != nil {
-		return err
+		_, err = writer.Write([]byte(",\n"))
+		if err != nil {
+			return err
+		}
 	}
 
 	return t.doExportJSON(ctx, writer)

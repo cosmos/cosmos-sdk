@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
-	"io"
 	"math"
 
 	"google.golang.org/protobuf/reflect/protodesc"
@@ -73,81 +72,10 @@ type ModuleDB interface {
 	ExportJSON(context.Context, JSONSink) error
 }
 
-type JSONSource interface {
-	// JSONReader returns an io.ReadCloser for the named table. If there
-	// is no JSON for this table, this method will return nil.
-	JSONReader(tableName protoreflect.FullName) (io.ReadCloser, error)
-}
-
-type JSONSink interface {
-	JSONWriter(tableName protoreflect.FullName) (io.WriteCloser, error)
-}
-
 type moduleDB struct {
 	prefix       []byte
 	filesById    map[uint32]*fileDescriptorDB
 	tablesByName map[protoreflect.FullName]ormtable.Table
-}
-
-func (m moduleDB) DefaultJSON(sink JSONSink) error {
-	for name, table := range m.tablesByName {
-		w, err := sink.JSONWriter(name)
-		if err != nil {
-			return err
-		}
-
-		_, err = w.Write(table.DefaultJSON())
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (m moduleDB) ValidateJSON(source JSONSource) error {
-	var errors map[protoreflect.FullName]error
-	for name, table := range m.tablesByName {
-		r, err := source.JSONReader(name)
-		defer func() {
-			err = r.Close()
-			if err != nil {
-				panic(err)
-			}
-		}()
-		if err != nil {
-			return err
-		}
-
-		err = table.ValidateJSON(r)
-		if err != nil {
-			errors[name] = err
-		}
-	}
-
-	if len(errors) != 0 {
-		panic("TODO")
-	}
-	return nil
-}
-
-func (m moduleDB) ImportJSON(ctx context.Context, source JSONSource) error {
-	//TODO need sorted map iteration
-	panic("implement me")
-}
-
-func (m moduleDB) ExportJSON(ctx context.Context, sink JSONSink) error {
-	for name, table := range m.tablesByName {
-		w, err := sink.JSONWriter(name)
-		if err != nil {
-			return err
-		}
-
-		err = table.ExportJSON(ctx, w)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // ModuleDBOptions are options for constructing a ModuleDB.

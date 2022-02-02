@@ -407,7 +407,7 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 			"",
 		},
 		{
-			"invalid percentage threshold policy with negative value",
+			"invalid percentage decision policy with negative value",
 			func() *group.MsgCreateGroupPolicy {
 				percentagePolicy := group.NewPercentageDecisionPolicy("-0.2", time.Second)
 				req, err := group.NewMsgCreateGroupPolicy(admin, 1, []byte("metadata"), percentagePolicy)
@@ -418,7 +418,7 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 			"expected a positive decimal",
 		},
 		{
-			"invalid percentage threshold policy with value greater than 1",
+			"invalid percentage decision policy with value greater than 1",
 			func() *group.MsgCreateGroupPolicy {
 				percentagePolicy := group.NewPercentageDecisionPolicy("2", time.Second)
 				req, err := group.NewMsgCreateGroupPolicy(admin, 1, []byte("metadata"), percentagePolicy)
@@ -429,7 +429,7 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 			"percentage must be in the range of 0 to 1",
 		},
 		{
-			"valid test case with percentage policy",
+			"valid test case with percentage decision policy",
 			func() *group.MsgCreateGroupPolicy {
 				percentagePolicy := group.NewPercentageDecisionPolicy("0.5", time.Second)
 				req, err := group.NewMsgCreateGroupPolicy(admin, 1, []byte("metadata"), percentagePolicy)

@@ -124,10 +124,29 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 		s.Require().NoError(err, out.String())
 	}
+	percentage := 0.5
+	// create group policy with percentage decision policy
+	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateGroupPolicyCmd(),
+		append(
+			[]string{
+				val.Address.String(),
+				"1",
+				validMetadata,
+				fmt.Sprintf("{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"%f\", \"timeout\":\"30000s\"}", percentage),
+			},
+			commonFlags...,
+		),
+	)
+	s.Require().NoError(err, out.String())
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	s.Require().Equal(uint32(0), txResp.Code, out.String())
+
+	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	s.Require().NoError(err, out.String())
 
 	var res group.QueryGroupPoliciesByGroupResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
-	s.Require().Equal(len(res.GroupPolicies), 5)
+	s.Require().Equal(len(res.GroupPolicies), 6)
 	s.groupPolicies = res.GroupPolicies
 
 	// create a proposal
@@ -707,6 +726,22 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 			0,
 		},
 		{
+			"correct data with percentage decision policy",
+			append(
+				[]string{
+					val.Address.String(),
+					fmt.Sprintf("%v", groupID),
+					validMetadata,
+					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"0.5\", \"timeout\":\"1s\"}",
+				},
+				commonFlags...,
+			),
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
 			"with amino-json",
 			append(
 				[]string{
@@ -768,6 +803,38 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 			),
 			true,
 			"not found",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"invalid percentage decision policy with negative value",
+			append(
+				[]string{
+					val.Address.String(),
+					fmt.Sprintf("%v", groupID),
+					validMetadata,
+					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"-0.5\", \"timeout\":\"1s\"}",
+				},
+				commonFlags...,
+			),
+			true,
+			"expected a positive decimal",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"invalid percentage decision policy with value greater than 1",
+			append(
+				[]string{
+					val.Address.String(),
+					fmt.Sprintf("%v", groupID),
+					validMetadata,
+					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"2\", \"timeout\":\"1s\"}",
+				},
+				commonFlags...,
+			),
+			true,
+			"percentage must be in the range of 0 to 1",
 			&sdk.TxResponse{},
 			0,
 		},
@@ -932,6 +999,21 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			0,
 		},
 		{
+			"correct data with percentage decision policy",
+			append(
+				[]string{
+					groupPolicy.Admin,
+					groupPolicy.Address,
+					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"threshold\":\"0.5\", \"timeout\":\"40000s\"}",
+				},
+				commonFlags...,
+			),
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
 			"with amino-json",
 			append(
 				[]string{
@@ -974,6 +1056,36 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			),
 			true,
 			"load group policy: not found",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"invalid percentage decision policy with negative value",
+			append(
+				[]string{
+					groupPolicy.Admin,
+					groupPolicy.Address,
+					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"threshold\":\"-0.5\", \"timeout\":\"1s\"}",
+				},
+				commonFlags...,
+			),
+			true,
+			"expected a positive decimal",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"invalid percentage decision policy with value greater than 1",
+			append(
+				[]string{
+					groupPolicy.Admin,
+					groupPolicy.Address,
+					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"threshold\":\"2\", \"timeout\":\"40000s\"}",
+				},
+				commonFlags...,
+			),
+			true,
+			"percentage must be in the range of 0 to 1",
 			&sdk.TxResponse{},
 			0,
 		},

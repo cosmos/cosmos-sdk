@@ -8308,6 +8308,8 @@ func (x *SignDoc) GetAccountNumber() uint64 {
 
 // SignDocDirectAux is the type used for generating sign bytes for
 // SIGN_MODE_DIRECT_AUX.
+//
+// Since: cosmos-sdk 0.46
 type SignDocDirectAux struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -8750,6 +8752,8 @@ func (x *Fee) GetGranter() string {
 }
 
 // Tip is the tip used for meta-transactions.
+//
+// Since: cosmos-sdk 0.46
 type Tip struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

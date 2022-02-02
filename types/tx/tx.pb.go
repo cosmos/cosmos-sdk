@@ -247,6 +247,8 @@ func (m *SignDoc) GetAccountNumber() uint64 {
 
 // SignDocDirectAux is the type used for generating sign bytes for
 // SIGN_MODE_DIRECT_AUX.
+//
+// Since: cosmos-sdk 0.46
 type SignDocDirectAux struct {
 	// body_bytes is protobuf serialization of a TxBody that matches the
 	// representation in TxRaw.
@@ -853,6 +855,8 @@ func (m *Fee) GetGranter() string {
 }
 
 // Tip is the tip used for meta-transactions.
+//
+// Since: cosmos-sdk 0.46
 type Tip struct {
 	// amount is the amount of the tip
 	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`

@@ -66,6 +66,8 @@ message SignDoc {
 
 // SignDocDirectAux is the type used for generating sign bytes for
 // SIGN_MODE_DIRECT_AUX.
+//
+// Since: cosmos-sdk 0.46
 message SignDocDirectAux {
   // body_bytes is protobuf serialization of a TxBody that matches the
   // representation in TxRaw.
@@ -138,7 +140,7 @@ message AuthInfo {
 
   // Tip is the optional tip used for meta-transactions.
   //
-  // Since: cosmos-sdk 0.45
+  // Since: cosmos-sdk 0.46
   Tip tip = 3;
 }
 
@@ -215,6 +217,8 @@ message Fee {
 }
 
 // Tip is the tip used for meta-transactions.
+//
+// Since: cosmos-sdk 0.46
 message Tip {
   // amount is the amount of the tip
   repeated cosmos.base.v1beta1.Coin amount = 1
@@ -228,7 +232,7 @@ message Tip {
 // actual tx). AuxSignerData is not a valid tx in itself, and will be rejected
 // by the node if sent directly as-is.
 //
-// Since: cosmos-sdk 0.45
+// Since: cosmos-sdk 0.46
 message AuxSignerData {
   // address is the bech32-encoded address of the auxiliary signer. If using
   // AuxSignerData across different chains, the bech32 prefix of the target

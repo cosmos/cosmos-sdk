@@ -1,3 +1,4 @@
+// Since: cosmos-sdk 0.46
 syntax = "proto3";
 package cosmos.gov.v1beta2;
 
@@ -23,8 +24,6 @@ service Msg {
   rpc Vote(MsgVote) returns (MsgVoteResponse);
 
   // VoteWeighted defines a method to add a weighted vote on a specific proposal.
-  //
-  // Since: cosmos-sdk 0.43
   rpc VoteWeighted(MsgVoteWeighted) returns (MsgVoteWeightedResponse);
 
   // Deposit defines a method to add deposit on a specific proposal.
@@ -54,9 +53,9 @@ message MsgExecLegacyContent {
   option (cosmos.msg.v1.signer) = "authority";
 
   // content is the proposal's content.
-  google.protobuf.Any content   = 1 [(cosmos_proto.accepts_interface) = "Content"];
+  google.protobuf.Any content = 1 [(cosmos_proto.accepts_interface) = "Content"];
   // authority must be the gov module address.
-  string              authority = 2;
+  string authority = 2;
 }
 
 // MsgExecLegacyContentResponse defines the Msg/ExecLegacyContent response type.
@@ -64,7 +63,7 @@ message MsgExecLegacyContentResponse {}
 
 // MsgVote defines a message to cast a vote.
 message MsgVote {
-  option (cosmos.msg.v1.signer)  = "voter";
+  option (cosmos.msg.v1.signer) = "voter";
 
   uint64     proposal_id = 1 [(gogoproto.jsontag) = "proposal_id"];
   string     voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -75,8 +74,6 @@ message MsgVote {
 message MsgVoteResponse {}
 
 // MsgVoteWeighted defines a message to cast a vote.
-//
-// Since: cosmos-sdk 0.43
 message MsgVoteWeighted {
   option (cosmos.msg.v1.signer) = "voter";
 
@@ -86,8 +83,6 @@ message MsgVoteWeighted {
 }
 
 // MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.
-//
-// Since: cosmos-sdk 0.43
 message MsgVoteWeightedResponse {}
 
 // MsgDeposit defines a message to submit a deposit to an existing proposal.

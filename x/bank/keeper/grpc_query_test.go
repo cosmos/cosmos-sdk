@@ -4,6 +4,7 @@ import (
 	gocontext "context"
 	"fmt"
 
+	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -324,7 +325,7 @@ func (suite *IntegrationTestSuite) TestGRPCDenomOwners() {
 
 		bal := sdk.NewCoins(sdk.NewCoin(
 			sdk.DefaultBondDenom,
-			sdk.NewInt(initialPower/10).Mul(sdk.NewIntFromUint64(1_000_000)),
+			sdktestutil.TokensFromConsensusPower(initialPower/10, sdktestutil.DefaultpowerReduction),
 		))
 		suite.Require().NoError(keeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, acc.GetAddress(), bal))
 	}

@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -39,8 +40,7 @@ var (
 	randomPermAcc = authtypes.NewEmptyModuleAccount(randomPerm, "random")
 
 	// The default power validators are initialized to have within tests
-	initTokens = sdk.NewInt(initialPower).Mul(sdk.NewIntFromUint64(1_000_000))
-	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
+	initCoins = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdktestutil.TokensFromConsensusPower(initialPower, sdktestutil.DefaultpowerReduction)))
 )
 
 func newFooCoin(amt int64) sdk.Coin {

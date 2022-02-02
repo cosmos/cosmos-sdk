@@ -3,6 +3,8 @@ package config_test
 import (
 	"bytes"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"io"
 	"os"
 	"testing"
@@ -27,7 +29,8 @@ func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 	home := t.TempDir()
 	clientCtx := client.Context{}.
 		WithHomeDir(home).
-		WithViper("")
+		WithViper("").
+		WithCodec(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()))
 
 	clientCtx.Viper.BindEnv(nodeEnv)
 	if envVar != "" {

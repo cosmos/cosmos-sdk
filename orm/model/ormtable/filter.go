@@ -9,12 +9,7 @@ type filterIterator struct {
 }
 
 func (f *filterIterator) Next() bool {
-	for {
-		ok := f.Iterator.Next()
-		if !ok {
-			return false
-		}
-
+	for f.Iterator.Next() {
 		msg, err := f.Iterator.GetMessage()
 		if err != nil {
 			return false
@@ -25,6 +20,7 @@ func (f *filterIterator) Next() bool {
 			return true
 		}
 	}
+	return false
 }
 
 func (f filterIterator) GetMessage() (proto.Message, error) {

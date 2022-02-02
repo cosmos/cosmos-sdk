@@ -74,25 +74,17 @@ type Keeper struct {
 
 	router *authmiddleware.MsgServiceRouter
 
-	maxMetadataLen uint64
+	config Config
 }
 
-type KeeperParams struct {
-	StoreKey       storetypes.StoreKey
-	Cdc            codec.Codec
-	Router         *authmiddleware.MsgServiceRouter
-	AccKeeper      group.AccountKeeper
-	MaxMetadataLen uint64 // MaxMetadataLen defines the max length of the metadata bytes field for various entities within the group module. Defaults to 255 if not explicitly set.
-}
-
-func NewKeeper(params KeeperParams) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddleware.MsgServiceRouter, accKeeper group.AccountKeeper, config Config) Keeper {
 	k := Keeper{
-		key:       params.StoreKey,
-		router:    params.Router,
-		accKeeper: params.AccKeeper,
+		key:       storeKey,
+		router:    router,
+		accKeeper: accKeeper,
 	}
 
-	groupTable, err := orm.NewAutoUInt64Table([2]byte{GroupTablePrefix}, GroupTableSeqPrefix, &group.GroupInfo{}, params.Cdc)
+	groupTable, err := orm.NewAutoUInt64Table([2]byte{GroupTablePrefix}, GroupTableSeqPrefix, &group.GroupInfo{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -109,7 +101,7 @@ func NewKeeper(params KeeperParams) Keeper {
 	k.groupTable = *groupTable
 
 	// Group Member Table
-	groupMemberTable, err := orm.NewPrimaryKeyTable([2]byte{GroupMemberTablePrefix}, &group.GroupMember{}, params.Cdc)
+	groupMemberTable, err := orm.NewPrimaryKeyTable([2]byte{GroupMemberTablePrefix}, &group.GroupMember{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -135,7 +127,7 @@ func NewKeeper(params KeeperParams) Keeper {
 
 	// Group Policy Table
 	k.groupPolicySeq = orm.NewSequence(GroupPolicyTableSeqPrefix)
-	groupPolicyTable, err := orm.NewPrimaryKeyTable([2]byte{GroupPolicyTablePrefix}, &group.GroupPolicyInfo{}, params.Cdc)
+	groupPolicyTable, err := orm.NewPrimaryKeyTable([2]byte{GroupPolicyTablePrefix}, &group.GroupPolicyInfo{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -159,7 +151,7 @@ func NewKeeper(params KeeperParams) Keeper {
 	k.groupPolicyTable = *groupPolicyTable
 
 	// Proposal Table
-	proposalTable, err := orm.NewAutoUInt64Table([2]byte{ProposalTablePrefix}, ProposalTableSeqPrefix, &group.Proposal{}, params.Cdc)
+	proposalTable, err := orm.NewAutoUInt64Table([2]byte{ProposalTablePrefix}, ProposalTableSeqPrefix, &group.Proposal{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -192,7 +184,7 @@ func NewKeeper(params KeeperParams) Keeper {
 	k.proposalTable = *proposalTable
 
 	// Vote Table
-	voteTable, err := orm.NewPrimaryKeyTable([2]byte{VoteTablePrefix}, &group.Vote{}, params.Cdc)
+	voteTable, err := orm.NewPrimaryKeyTable([2]byte{VoteTablePrefix}, &group.Vote{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -214,10 +206,10 @@ func NewKeeper(params KeeperParams) Keeper {
 	}
 	k.voteTable = *voteTable
 
-	if params.MaxMetadataLen != 0 {
-		k.maxMetadataLen = params.MaxMetadataLen
+	if config.MaxMetadataLen != 0 {
+		k.config = config
 	} else {
-		k.maxMetadataLen = defaultMaxMetadataLen
+		k.config = DefaultConfig()
 	}
 
 	return k
@@ -230,7 +222,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // MaxMetadataLength returns the max length of the metadata bytes field for various entities within the group module.
-func (k Keeper) MaxMetadataLength() uint64 { return k.maxMetadataLen }
+func (k Keeper) MaxMetadataLength() uint64 { return k.config.MaxMetadataLen }
 
 // GetGroupSequence returns the current value of the group table sequence
 func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {

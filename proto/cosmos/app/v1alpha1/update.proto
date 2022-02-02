@@ -16,7 +16,7 @@ message ConfigUpdatePlan {
 // ConfigUpdates describes updates to an app config.
 message ConfigUpdates {
 
-  // add_or_update_modules list module configs that will be added if they
+  // add_or_update_modules is a list of module configs that will be added if they
   // describe a new module or updated configs for existing modules with the
   // same name.
   repeated ModuleConfig add_or_update_modules = 1;

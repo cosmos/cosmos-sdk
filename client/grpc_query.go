@@ -3,14 +3,13 @@ package client
 import (
 	gocontext "context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"reflect"
 	"strconv"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/encoding"
-	"google.golang.org/grpc/encoding/proto"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -20,8 +19,6 @@ import (
 )
 
 var _ gogogrpc.ClientConn = Context{}
-
-var protoCodec = encoding.GetCodec(proto.Name)
 
 // Invoke implements the grpc ClientConn.Invoke method
 func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply interface{}, opts ...grpc.CallOption) (err error) {
@@ -51,7 +48,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 	}
 
 	// Case 2. Querying state.
-	reqBz, err := protoCodec.Marshal(req)
+	reqBz, err := ctx.Codec.(*codec.ProtoCodec).GRPCCodec().Marshal(req)
 	if err != nil {
 		return err
 	}
@@ -83,7 +80,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 		return err
 	}
 
-	err = protoCodec.Unmarshal(res.Value, reply)
+	err = ctx.Codec.(*codec.ProtoCodec).GRPCCodec().Unmarshal(res.Value, reply)
 	if err != nil {
 		return err
 	}

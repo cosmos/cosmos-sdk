@@ -4,14 +4,13 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	legacyproto "github.com/golang/protobuf/proto"
 	"google.golang.org/grpc/encoding"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/gogo/protobuf/jsonpb"
 	gogoproto "github.com/gogo/protobuf/proto"
-	legacyproto "github.com/golang/protobuf/proto"
-
-	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 // ProtoCodecMarshaler defines an interface for codecs that utilize Protobuf for both

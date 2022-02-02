@@ -45,6 +45,12 @@ The batch variant accepts 5 arguments:
 **/
 
 func main() {
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: testgen-iavl batch [size] [# exist] [# nonexist]")
+		fmt.Println("       testgen-iavl [exist|nonexist] [left|right|middle] <size>")
+		os.Exit(1)
+	}
+
 	if os.Args[1] == "batch" {
 		err := doBatch(os.Args[2:])
 		if err != nil {

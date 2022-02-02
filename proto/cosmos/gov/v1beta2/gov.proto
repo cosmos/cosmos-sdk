@@ -1,3 +1,4 @@
+// Since: cosmos-sdk 0.46
 syntax = "proto3";
 package cosmos.gov.v1beta2;
 
@@ -95,11 +96,11 @@ message Vote {
 // DepositParams defines the params for deposits on governance proposals.
 message DepositParams {
   //  Minimum deposit for a proposal to enter voting period.
-  repeated cosmos.base.v1beta1.Coin min_deposit = 1 [(gogoproto.nullable) = false,(gogoproto.jsontag)      = "min_deposit,omitempty"];
+  repeated cosmos.base.v1beta1.Coin min_deposit = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "min_deposit,omitempty"];
 
   //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2
   //  months.
-  google.protobuf.Duration max_deposit_period = 2 [(gogoproto.stdduration) = true,(gogoproto.jsontag)     = "max_deposit_period,omitempty"];
+  google.protobuf.Duration max_deposit_period = 2 [(gogoproto.stdduration) = true, (gogoproto.jsontag) = "max_deposit_period,omitempty"];
 }
 
 // VotingParams defines the params for voting on governance proposals.

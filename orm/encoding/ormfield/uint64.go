@@ -8,32 +8,32 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-// Uint64Codec encodes uint64 values as 8-byte big-endian integers.
-type Uint64Codec struct{}
+// FixedUint64Codec encodes uint64 values as 8-byte big-endian integers.
+type FixedUint64Codec struct{}
 
-func (u Uint64Codec) FixedBufferSize() int {
+func (u FixedUint64Codec) FixedBufferSize() int {
 	return 8
 }
 
-func (u Uint64Codec) ComputeBufferSize(protoreflect.Value) (int, error) {
+func (u FixedUint64Codec) ComputeBufferSize(protoreflect.Value) (int, error) {
 	return u.FixedBufferSize(), nil
 }
 
-func (u Uint64Codec) IsOrdered() bool {
+func (u FixedUint64Codec) IsOrdered() bool {
 	return true
 }
 
-func (u Uint64Codec) Compare(v1, v2 protoreflect.Value) int {
+func (u FixedUint64Codec) Compare(v1, v2 protoreflect.Value) int {
 	return compareUint(v1, v2)
 }
 
-func (u Uint64Codec) Decode(r Reader) (protoreflect.Value, error) {
+func (u FixedUint64Codec) Decode(r Reader) (protoreflect.Value, error) {
 	var x uint64
 	err := binary.Read(r, binary.BigEndian, &x)
 	return protoreflect.ValueOfUint64(x), err
 }
 
-func (u Uint64Codec) Encode(value protoreflect.Value, w io.Writer) error {
+func (u FixedUint64Codec) Encode(value protoreflect.Value, w io.Writer) error {
 	return binary.Write(w, binary.BigEndian, value.Uint())
 }
 
@@ -47,6 +47,34 @@ func compareUint(v1, v2 protoreflect.Value) int {
 	} else {
 		return 1
 	}
+}
+
+type CompactUint64Codec struct{}
+
+func (c CompactUint64Codec) Decode(r Reader) (protoreflect.Value, error) {
+	x, err := DecodeCompactU64(r)
+	return protoreflect.ValueOfUint64(x), err
+}
+
+func (c CompactUint64Codec) Encode(value protoreflect.Value, w io.Writer) error {
+	_, err := w.Write(EncodeCompactUint64(value.Uint()))
+	return err
+}
+
+func (c CompactUint64Codec) Compare(v1, v2 protoreflect.Value) int {
+	return compareUint(v1, v2)
+}
+
+func (c CompactUint64Codec) IsOrdered() bool {
+	return true
+}
+
+func (c CompactUint64Codec) FixedBufferSize() int {
+	return 9
+}
+
+func (c CompactUint64Codec) ComputeBufferSize(protoreflect.Value) (int, error) {
+	return c.FixedBufferSize(), nil
 }
 
 func EncodeCompactUint64(x uint64) []byte {
@@ -92,32 +120,50 @@ func EncodeCompactUint64(x uint64) []byte {
 
 func DecodeCompactU64(reader io.Reader) (uint64, error) {
 	var buf [9]byte
-	n, err := reader.Read(buf[:])
+	n, err := reader.Read(buf[:1])
 	if err != nil {
 		return 0, err
 	}
-	if n < 2 {
+	if n < 1 {
 		return 0, io.ErrUnexpectedEOF
 	}
 
 	switch buf[0] >> 6 {
 	case 0:
+		n, err := reader.Read(buf[1:2])
+		if err != nil {
+			return 0, err
+		}
+		if n < 1 {
+			return 0, io.ErrUnexpectedEOF
+		}
+
 		x := uint64(buf[0]) << 8
 		x |= uint64(buf[1])
 		return x, nil
 	case 1:
-		if n < 4 {
+		n, err := reader.Read(buf[1:4])
+		if err != nil {
+			return 0, err
+		}
+		if n < 3 {
 			return 0, io.ErrUnexpectedEOF
 		}
+
 		x := (uint64(buf[0]) & 0x3F) << 24
 		x |= uint64(buf[1]) << 16
 		x |= uint64(buf[2]) << 8
 		x |= uint64(buf[3])
 		return x, nil
 	case 2:
-		if n < 6 {
+		n, err := reader.Read(buf[1:6])
+		if err != nil {
+			return 0, err
+		}
+		if n < 5 {
 			return 0, io.ErrUnexpectedEOF
 		}
+
 		x := (uint64(buf[0]) & 0x3F) << 40
 		x |= uint64(buf[1]) << 32
 		x |= uint64(buf[2]) << 24
@@ -126,9 +172,14 @@ func DecodeCompactU64(reader io.Reader) (uint64, error) {
 		x |= uint64(buf[5])
 		return x, nil
 	case 3:
-		if n < 9 {
+		n, err := reader.Read(buf[1:9])
+		if err != nil {
+			return 0, err
+		}
+		if n < 8 {
 			return 0, io.ErrUnexpectedEOF
 		}
+
 		x := (uint64(buf[0]) & 0x3F) << 58
 		x |= uint64(buf[1]) << 50
 		x |= uint64(buf[2]) << 42

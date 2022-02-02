@@ -8,36 +8,62 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-// Uint32Codec encodes uint32 values as 4-byte big-endian integers.
-type Uint32Codec struct{}
+// FixedUint32Codec encodes uint32 values as 4-byte big-endian integers.
+type FixedUint32Codec struct{}
 
-func (u Uint32Codec) FixedBufferSize() int {
+func (u FixedUint32Codec) FixedBufferSize() int {
 	return 4
 }
 
-func (u Uint32Codec) ComputeBufferSize(protoreflect.Value) (int, error) {
+func (u FixedUint32Codec) ComputeBufferSize(protoreflect.Value) (int, error) {
 	return u.FixedBufferSize(), nil
 }
 
-func (u Uint32Codec) IsOrdered() bool {
+func (u FixedUint32Codec) IsOrdered() bool {
 	return true
 }
 
-func (u Uint32Codec) Compare(v1, v2 protoreflect.Value) int {
+func (u FixedUint32Codec) Compare(v1, v2 protoreflect.Value) int {
 	return compareUint(v1, v2)
 }
 
-func (u Uint32Codec) Decode(r Reader) (protoreflect.Value, error) {
+func (u FixedUint32Codec) Decode(r Reader) (protoreflect.Value, error) {
 	var x uint32
 	err := binary.Read(r, binary.BigEndian, &x)
 	return protoreflect.ValueOfUint32(x), err
 }
 
-func (u Uint32Codec) Encode(value protoreflect.Value, w io.Writer) error {
+func (u FixedUint32Codec) Encode(value protoreflect.Value, w io.Writer) error {
 	return binary.Write(w, binary.BigEndian, uint32(value.Uint()))
 }
 
 type CompactUint32Codec struct{}
+
+func (c CompactUint32Codec) Decode(r Reader) (protoreflect.Value, error) {
+	x, err := DecodeCompactU32(r)
+	return protoreflect.ValueOfUint32(x), err
+}
+
+func (c CompactUint32Codec) Encode(value protoreflect.Value, w io.Writer) error {
+	_, err := w.Write(EncodeCompactUint32(uint32(value.Uint())))
+	return err
+}
+
+func (c CompactUint32Codec) Compare(v1, v2 protoreflect.Value) int {
+	return compareUint(v1, v2)
+}
+
+func (c CompactUint32Codec) IsOrdered() bool {
+	return true
+}
+
+func (c CompactUint32Codec) FixedBufferSize() int {
+	return 5
+}
+
+func (c CompactUint32Codec) ComputeBufferSize(protoreflect.Value) (int, error) {
+	return c.FixedBufferSize(), nil
+}
 
 func EncodeCompactUint32(x uint32) []byte {
 	switch {
@@ -75,40 +101,64 @@ func EncodeCompactUint32(x uint32) []byte {
 
 func DecodeCompactU32(reader io.Reader) (uint32, error) {
 	var buf [5]byte
-	n, err := reader.Read(buf[:])
+
+	n, err := reader.Read(buf[:1])
 	if err != nil {
 		return 0, err
 	}
-	if n < 2 {
+	if n < 1 {
 		return 0, io.ErrUnexpectedEOF
 	}
 
 	switch buf[0] >> 6 {
 	case 0:
+		n, err := reader.Read(buf[1:2])
+		if err != nil {
+			return 0, err
+		}
+		if n < 1 {
+			return 0, io.ErrUnexpectedEOF
+		}
+
 		x := uint32(buf[0]) << 8
 		x |= uint32(buf[1])
 		return x, nil
 	case 1:
-		if n < 3 {
+		n, err := reader.Read(buf[1:3])
+		if err != nil {
+			return 0, err
+		}
+		if n < 2 {
 			return 0, io.ErrUnexpectedEOF
 		}
+
 		x := (uint32(buf[0]) & 0x3F) << 16
 		x |= uint32(buf[1]) << 8
 		x |= uint32(buf[2])
 		return x, nil
 	case 2:
-		if n < 4 {
+		n, err := reader.Read(buf[1:4])
+		if err != nil {
+			return 0, err
+		}
+		if n < 3 {
 			return 0, io.ErrUnexpectedEOF
 		}
+
 		x := (uint32(buf[0]) & 0x3F) << 24
 		x |= uint32(buf[1]) << 16
 		x |= uint32(buf[2]) << 8
 		x |= uint32(buf[3])
 		return x, nil
 	case 3:
-		if n < 5 {
+		n, err := reader.Read(buf[1:5])
+		if err != nil {
+			return 0, err
+		}
+		if n < 4 {
 			return 0, io.ErrUnexpectedEOF
 		}
+
 		x := (uint32(buf[0]) & 0x3F) << 26
 		x |= uint32(buf[1]) << 18
 		x |= uint32(buf[2]) << 10

@@ -78,10 +78,14 @@ func GetCodec(field protoreflect.FieldDescriptor, nonTerminal bool) (Codec, erro
 		} else {
 			return StringCodec{}, nil
 		}
-	case protoreflect.Uint32Kind, protoreflect.Fixed32Kind:
-		return Uint32Codec{}, nil
-	case protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
-		return Uint64Codec{}, nil
+	case protoreflect.Uint32Kind:
+		return CompactUint32Codec{}, nil
+	case protoreflect.Fixed32Kind:
+		return FixedUint32Codec{}, nil
+	case protoreflect.Uint64Kind:
+		return CompactUint64Codec{}, nil
+	case protoreflect.Fixed64Kind:
+		return FixedUint64Codec{}, nil
 	case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
 		return Int32Codec{}, nil
 	case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:

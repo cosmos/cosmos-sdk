@@ -8,6 +8,9 @@ order: 3
 
 A new group can be created with the `MsgCreateGroup`, which has an admin address, a list of members and some optional metadata bytes.
 
+The metadata has a maximum length that is chosen by the app developer, and
+passed into the group keeper as a config.
+
 +++ https://github.com/cosmos/cosmos-sdk/blob/6f58963e7f6ce820e9b33f02f06f7b96f6d2e347/proto/cosmos/group/v1beta1/tx.proto#L54-L65
 
 It's expecting to fail if metadata length is greater than `MaxMetadataLen` config.

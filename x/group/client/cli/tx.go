@@ -550,11 +550,11 @@ Parameters:
 			proposal-id: unique ID of the proposal
 			voter: voter account addresses.
 			choice: choice of the voter(s)
-				CHOICE_UNSPECIFIED: no-op
-				CHOICE_NO: no
-				CHOICE_YES: yes
-				CHOICE_ABSTAIN: abstain
-				CHOICE_VETO: veto
+				VOTE_OPTION_UNSPECIFIED: no-op
+				VOTE_OPTION_NO: no
+				VOTE_OPTION_YES: yes
+				VOTE_OPTION_ABSTAIN: abstain
+				VOTE_OPTION_NO_WITH_VETO: no-with-veto
 			Metadata: metadata for the vote
 `,
 		Args: cobra.ExactArgs(4),

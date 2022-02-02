@@ -46,23 +46,18 @@ message ThresholdDecisionPolicy {
   google.protobuf.Duration timeout = 2 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
-// Choice defines available types of choices for voting.
-enum Choice {
-
-  // CHOICE_UNSPECIFIED defines a no-op voting choice.
-  CHOICE_UNSPECIFIED = 0;
-
-  // CHOICE_NO defines a no voting choice.
-  CHOICE_NO = 1;
-
-  // CHOICE_YES defines a yes voting choice.
-  CHOICE_YES = 2;
-
-  // CHOICE_ABSTAIN defines an abstaining voting choice.
-  CHOICE_ABSTAIN = 3;
-
-  // CHOICE_VETO defines a voting choice with veto.
-  CHOICE_VETO = 4;
+// VoteOption enumerates the valid vote options for a given governance proposal.
+enum VoteOption {
+  // VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
+  VOTE_OPTION_UNSPECIFIED = 0;
+  // VOTE_OPTION_YES defines a yes vote option.
+  VOTE_OPTION_YES = 1;
+  // VOTE_OPTION_ABSTAIN defines an abstain vote option.
+  VOTE_OPTION_ABSTAIN = 2;
+  // VOTE_OPTION_NO defines a no vote option.
+  VOTE_OPTION_NO = 3;
+  // VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
+  VOTE_OPTION_NO_WITH_VETO = 4;
 }
 
 //
@@ -162,46 +157,46 @@ message Proposal {
   // When a decision policy is changed, existing proposals from previous policy versions will become invalid.
   uint64 group_policy_version = 7;
 
-  // Status defines proposal statuses.
-  enum Status {
+  // ProposalStatus defines proposal statuses.
+  enum ProposalStatus {
     option (gogoproto.goproto_enum_prefix) = false;
 
     // An empty value is invalid and not allowed.
-    STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "ProposalStatusInvalid"];
+    PROPOSAL_STATUS_UNSPECIFIED = 0;
 
     // Initial status of a proposal when persisted.
-    STATUS_SUBMITTED = 1 [(gogoproto.enumvalue_customname) = "ProposalStatusSubmitted"];
+    PROPOSAL_STATUS_SUBMITTED = 1;
 
     // Final status of a proposal when the final tally was executed.
-    STATUS_CLOSED = 2 [(gogoproto.enumvalue_customname) = "ProposalStatusClosed"];
+    PROPOSAL_STATUS_CLOSED = 2;
 
     // Final status of a proposal when the group was modified before the final tally.
-    STATUS_ABORTED = 3 [(gogoproto.enumvalue_customname) = "ProposalStatusAborted"];
+    PROPOSAL_STATUS_ABORTED = 3;
 
     // TODO: do we want to support a withdrawn operation?
     // A proposal can be deleted before the voting start time by the owner. When this happens the final status
     // is Withdrawn.
-    //        STATUS_WITHDRAWN = 4 [(gogoproto.enumvalue_customname) = "Withdrawn"];
+    //        PROPOSAL_STATUS_WITHDRAWN = 4;
   }
 
-  // Status represents the high level position in the life cycle of the proposal. Initial value is Submitted.
-  Status status = 8;
+  // status represents the high level position in the life cycle of the proposal. Initial value is Submitted.
+  ProposalStatus status = 8;
 
   // Result defines types of proposal results.
   enum Result {
     option (gogoproto.goproto_enum_prefix) = false;
 
     // An empty value is invalid and not allowed
-    RESULT_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "ProposalResultInvalid"];
+    RESULT_UNSPECIFIED = 0;
 
     // Until a final tally has happened the status is unfinalized
-    RESULT_UNFINALIZED = 1 [(gogoproto.enumvalue_customname) = "ProposalResultUnfinalized"];
+    RESULT_UNFINALIZED = 1;
 
     // Final result of the tally
-    RESULT_ACCEPTED = 2 [(gogoproto.enumvalue_customname) = "ProposalResultAccepted"];
+    RESULT_ACCEPTED = 2;
 
     // Final result of the tally
-    RESULT_REJECTED = 3 [(gogoproto.enumvalue_customname) = "ProposalResultRejected"];
+    RESULT_REJECTED = 3;
   }
 
   // result is the final result based on the votes and election rule. Initial value is unfinalized.
@@ -221,16 +216,16 @@ message Proposal {
     option (gogoproto.goproto_enum_prefix) = false;
 
     // An empty value is not allowed.
-    EXECUTOR_RESULT_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "ProposalExecutorResultInvalid"];
+    EXECUTOR_RESULT_UNSPECIFIED = 0;
 
     // We have not yet run the executor.
-    EXECUTOR_RESULT_NOT_RUN = 1 [(gogoproto.enumvalue_customname) = "ProposalExecutorResultNotRun"];
+    EXECUTOR_RESULT_NOT_RUN = 1;
 
     // The executor was successful and proposed action updated state.
-    EXECUTOR_RESULT_SUCCESS = 2 [(gogoproto.enumvalue_customname) = "ProposalExecutorResultSuccess"];
+    EXECUTOR_RESULT_SUCCESS = 2;
 
     // The executor returned an error and proposed action didn't update state.
-    EXECUTOR_RESULT_FAILURE = 3 [(gogoproto.enumvalue_customname) = "ProposalExecutorResultFailure"];
+    EXECUTOR_RESULT_FAILURE = 3;
   }
 
   // executor_result is the final result based on the votes and election rule. Initial value is NotRun.
@@ -266,8 +261,8 @@ message Vote {
   // voter is the account address of the voter.
   string voter = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // choice is the voter's choice on the proposal.
-  Choice choice = 3;
+  // option is the voter's choice on the proposal.
+  VoteOption option = 3;
 
   // metadata is any arbitrary metadata to attached to the vote.
   bytes metadata = 4;

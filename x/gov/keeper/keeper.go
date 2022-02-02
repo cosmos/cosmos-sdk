@@ -69,6 +69,11 @@ func NewKeeper(
 	// could create invalid or non-deterministic behavior.
 	legacyRouter.Seal()
 
+	// If MaxMetadataLen not set by app developer, set to default value.
+	if config.MaxMetadataLen == 0 {
+		config.MaxMetadataLen = types.DefaultConfig().MaxMetadataLen
+	}
+
 	return Keeper{
 		storeKey:     key,
 		paramSpace:   paramSpace,

@@ -18,9 +18,10 @@ type BalanceStore interface {
 	Delete(ctx context.Context, balance *Balance) error
 	Has(ctx context.Context, address string, denom string) (found bool, err error)
 	Get(ctx context.Context, address string, denom string) (*Balance, error)
-	DeleteByAddressDenom(ctx context.Context, address string, denom string) error
 	List(ctx context.Context, prefixKey BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
 	ListRange(ctx context.Context, from, to BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
+	DeleteBy(ctx context.Context, prefixKey BalanceIndexKey) error
+	DeleteRange(ctx context.Context, from, to BalanceIndexKey) error
 
 	doNotImplement()
 }
@@ -108,13 +109,6 @@ func (this balanceStore) Get(ctx context.Context, address string, denom string) 
 	return &balance, err
 }
 
-func (this balanceStore) DeleteByAddressDenom(ctx context.Context, address string, denom string) error {
-	return this.table.GetIndexByID(0).(ormtable.UniqueIndex).DeleteByKey(ctx,
-		address,
-		denom,
-	)
-}
-
 func (this balanceStore) List(ctx context.Context, prefixKey BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error) {
 	it, err := this.table.GetIndexByID(prefixKey.id()).List(ctx, prefixKey.values(), opts...)
 	return BalanceIterator{it}, err
@@ -123,6 +117,14 @@ func (this balanceStore) List(ctx context.Context, prefixKey BalanceIndexKey, op
 func (this balanceStore) ListRange(ctx context.Context, from, to BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error) {
 	it, err := this.table.GetIndexByID(from.id()).ListRange(ctx, from.values(), to.values(), opts...)
 	return BalanceIterator{it}, err
+}
+
+func (this balanceStore) DeleteBy(ctx context.Context, prefixKey BalanceIndexKey) error {
+	return this.table.GetIndexByID(prefixKey.id()).DeleteBy(ctx, prefixKey.values()...)
+}
+
+func (this balanceStore) DeleteRange(ctx context.Context, from, to BalanceIndexKey) error {
+	return this.table.GetIndexByID(from.id()).DeleteRange(ctx, from.values(), to.values())
 }
 
 func (this balanceStore) doNotImplement() {}
@@ -144,9 +146,10 @@ type SupplyStore interface {
 	Delete(ctx context.Context, supply *Supply) error
 	Has(ctx context.Context, denom string) (found bool, err error)
 	Get(ctx context.Context, denom string) (*Supply, error)
-	DeleteByDenom(ctx context.Context, denom string) error
 	List(ctx context.Context, prefixKey SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error)
 	ListRange(ctx context.Context, from, to SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error)
+	DeleteBy(ctx context.Context, prefixKey SupplyIndexKey) error
+	DeleteRange(ctx context.Context, from, to SupplyIndexKey) error
 
 	doNotImplement()
 }
@@ -216,12 +219,6 @@ func (this supplyStore) Get(ctx context.Context, denom string) (*Supply, error) 
 	return &supply, err
 }
 
-func (this supplyStore) DeleteByDenom(ctx context.Context, denom string) error {
-	return this.table.GetIndexByID(0).(ormtable.UniqueIndex).DeleteByKey(ctx,
-		denom,
-	)
-}
-
 func (this supplyStore) List(ctx context.Context, prefixKey SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error) {
 	it, err := this.table.GetIndexByID(prefixKey.id()).List(ctx, prefixKey.values(), opts...)
 	return SupplyIterator{it}, err
@@ -230,6 +227,14 @@ func (this supplyStore) List(ctx context.Context, prefixKey SupplyIndexKey, opts
 func (this supplyStore) ListRange(ctx context.Context, from, to SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error) {
 	it, err := this.table.GetIndexByID(from.id()).ListRange(ctx, from.values(), to.values(), opts...)
 	return SupplyIterator{it}, err
+}
+
+func (this supplyStore) DeleteBy(ctx context.Context, prefixKey SupplyIndexKey) error {
+	return this.table.GetIndexByID(prefixKey.id()).DeleteBy(ctx, prefixKey.values()...)
+}
+
+func (this supplyStore) DeleteRange(ctx context.Context, from, to SupplyIndexKey) error {
+	return this.table.GetIndexByID(from.id()).DeleteRange(ctx, from.values(), to.values())
 }
 
 func (this supplyStore) doNotImplement() {}

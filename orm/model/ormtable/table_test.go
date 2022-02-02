@@ -365,7 +365,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assertTablesEqual(t, table, ctx, store2)
 
 	// let's delete item 5
-	err = store.DeleteByU32I64Str(ctx, 7, -2, "abe")
+	err = store.DeleteBy(ctx, testpb.ExampleTableU32I64StrIndexKey{}.WithU32I64Str(7, -2, "abe"))
 	assert.NilError(t, err)
 	// it should be gone
 	found, err = store.Has(ctx, 7, -2, "abe")
@@ -375,6 +375,12 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
 	assertIteratorItems(it, 0, 1, 2, 3, 4, 6, 7, 8, 9, 10)
+
+	// let's do a batch delete
+	assert.NilError(t, store.DeleteBy(ctx, testpb.ExampleTableStrU32IndexKey{}.WithStr("abd")))
+	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
+	assert.NilError(t, err)
+	assertIteratorItems(it, 0, 2, 4, 6, 7, 8, 10)
 }
 
 func TestRandomTableData(t *testing.T) {

@@ -66,14 +66,13 @@ func (t tableGen) genStoreInterface() {
 	t.P("Has(ctx ", contextPkg.Ident("Context"), ", ", t.fieldsArgs(t.primaryKeyFields.Names()), ") (found bool, err error)")
 	t.P("Get(ctx ", contextPkg.Ident("Context"), ", ", t.fieldsArgs(t.primaryKeyFields.Names()), ") (*", t.QualifiedGoIdent(t.msg.GoIdent), ", error)")
 
-	_, _, pkDeleteSig := t.uniqueIndexSig(t.table.PrimaryKey.Fields)
-	t.P(pkDeleteSig)
-
 	for _, idx := range t.uniqueIndexes {
 		t.genUniqueIndexSig(idx)
 	}
 	t.P("List(ctx ", contextPkg.Ident("Context"), ", prefixKey ", t.indexKeyInterfaceName(), ", opts ...", ormListPkg.Ident("Option"), ") ", "(", t.iteratorName(), ", error)")
 	t.P("ListRange(ctx ", contextPkg.Ident("Context"), ", from, to ", t.indexKeyInterfaceName(), ", opts ...", ormListPkg.Ident("Option"), ") ", "(", t.iteratorName(), ", error)")
+	t.P("DeleteBy(ctx ", contextPkg.Ident("Context"), ", prefixKey ", t.indexKeyInterfaceName(), ") error")
+	t.P("DeleteRange(ctx ", contextPkg.Ident("Context"), ", from, to ", t.indexKeyInterfaceName(), ") error")
 	t.P()
 	t.P("doNotImplement()")
 	t.P("}")
@@ -81,26 +80,23 @@ func (t tableGen) genStoreInterface() {
 }
 
 // returns the has and get (in that order) function signature for unique indexes.
-func (t tableGen) uniqueIndexSig(idxFields string) (string, string, string) {
+func (t tableGen) uniqueIndexSig(idxFields string) (string, string) {
 	fieldsSlc := strings.Split(idxFields, ",")
 	camelFields := t.fieldsToCamelCase(idxFields)
 
 	hasFuncName := "HasBy" + camelFields
 	getFuncName := "GetBy" + camelFields
-	deleteFuncName := "DeleteBy" + camelFields
 	args := t.fieldArgsFromStringSlice(fieldsSlc)
 
 	hasFuncSig := fmt.Sprintf("%s (ctx context.Context, %s) (found bool, err error)", hasFuncName, args)
 	getFuncSig := fmt.Sprintf("%s (ctx context.Context, %s) (*%s, error)", getFuncName, args, t.msg.GoIdent.GoName)
-	deleteFuncSig := fmt.Sprintf("%s (ctx context.Context, %s) error", deleteFuncName, args)
-	return hasFuncSig, getFuncSig, deleteFuncSig
+	return hasFuncSig, getFuncSig
 }
 
 func (t tableGen) genUniqueIndexSig(idx *ormv1alpha1.SecondaryIndexDescriptor) {
-	hasSig, getSig, deleteSig := t.uniqueIndexSig(idx.Fields)
+	hasSig, getSig := t.uniqueIndexSig(idx.Fields)
 	t.P(hasSig)
 	t.P(getSig)
-	t.P(deleteSig)
 }
 
 func (t tableGen) iteratorName() string {
@@ -202,11 +198,9 @@ func (t tableGen) genStoreImpl() {
 	t.P("}")
 	t.P()
 
-	t.deleteByImpl(receiverVar, 0, t.table.PrimaryKey.Fields)
-
 	for _, idx := range t.uniqueIndexes {
 		fields := strings.Split(idx.Fields, ",")
-		hasName, getName, _ := t.uniqueIndexSig(idx.Fields)
+		hasName, getName := t.uniqueIndexSig(idx.Fields)
 
 		// has
 		t.P("func (", receiverVar, " ", t.messageStoreReceiverName(t.msg), ") ", hasName, "{")
@@ -236,9 +230,6 @@ func (t tableGen) genStoreImpl() {
 		t.P("return &", varName, ", nil")
 		t.P("}")
 		t.P()
-
-		// delete
-		t.deleteByImpl(receiverVar, idx.Id, idx.Fields)
 	}
 
 	// List
@@ -255,21 +246,21 @@ func (t tableGen) genStoreImpl() {
 	t.P("}")
 	t.P()
 
-	t.P(receiver, "doNotImplement() {}")
-	t.P()
-}
-
-func (t tableGen) deleteByImpl(receiverVar string, idxId uint32, fields string) {
-	_, _, deleteName := t.uniqueIndexSig(fields)
-	fieldNames := strings.Split(fields, ",")
-	t.P("func (", receiverVar, " ", t.messageStoreReceiverName(t.msg), ") ", deleteName, "{")
-	t.P("return ", receiverVar, ".table.GetIndexByID(", idxId, ").(",
-		ormTablePkg.Ident("UniqueIndex"), ").DeleteByKey(ctx,")
-	for _, field := range fieldNames {
-		t.P(field, ",")
-	}
-	t.P(")")
+	// DeleteBy
+	t.P(receiver, "DeleteBy(ctx ", contextPkg.Ident("Context"), ", prefixKey ", t.indexKeyInterfaceName(), ") error {")
+	t.P("return ", receiverVar, ".table.GetIndexByID(prefixKey.id()).DeleteBy(ctx, prefixKey.values()...)")
 	t.P("}")
+	t.P()
+	t.P()
+
+	// DeleteRange
+	t.P(receiver, "DeleteRange(ctx ", contextPkg.Ident("Context"), ", from, to ", t.indexKeyInterfaceName(), ") error {")
+	t.P("return ", receiverVar, ".table.GetIndexByID(from.id()).DeleteRange(ctx, from.values(), to.values())")
+	t.P("}")
+	t.P()
+	t.P()
+
+	t.P(receiver, "doNotImplement() {}")
 	t.P()
 }
 

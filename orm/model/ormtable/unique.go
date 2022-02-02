@@ -87,33 +87,22 @@ func (u uniqueKeyIndex) Get(ctx context.Context, message proto.Message, keyValue
 	return u.primaryKey.get(backend, message, pk)
 }
 
-func (u uniqueKeyIndex) DeleteByKey(ctx context.Context, keyValues ...interface{}) error {
-	backend, err := u.getReadBackend(ctx)
+func (u uniqueKeyIndex) DeleteBy(ctx context.Context, keyValues ...interface{}) error {
+	it, err := u.List(ctx, keyValues)
 	if err != nil {
 		return err
 	}
 
-	key, err := u.GetKeyCodec().EncodeKey(encodeutil.ValuesOf(keyValues...))
+	return u.primaryKey.deleteByIterator(ctx, it)
+}
+
+func (u uniqueKeyIndex) DeleteRange(ctx context.Context, from, to []interface{}) error {
+	it, err := u.ListRange(ctx, from, to)
 	if err != nil {
 		return err
 	}
 
-	value, err := backend.IndexStoreReader().Get(key)
-	if err != nil {
-		return err
-	}
-
-	// for unique keys, value can be empty and the entry still exists
-	if value == nil {
-		return nil
-	}
-
-	_, pk, err := u.DecodeIndexKey(key, value)
-	if err != nil {
-		return err
-	}
-
-	return u.primaryKey.doDeleteByKey(ctx, pk)
+	return u.primaryKey.deleteByIterator(ctx, it)
 }
 
 func (u uniqueKeyIndex) onInsert(store kv.Store, message protoreflect.Message) error {

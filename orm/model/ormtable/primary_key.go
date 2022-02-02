@@ -1,6 +1,7 @@
 package ormtable
 
 import (
+	"container/list"
 	"context"
 
 	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
@@ -80,16 +81,43 @@ func (p primaryKeyIndex) get(backend ReadBackend, message proto.Message, values 
 	return p.getByKeyBytes(backend, key, values, message)
 }
 
-func (p primaryKeyIndex) DeleteByKey(ctx context.Context, primaryKeyValues ...interface{}) error {
-	return p.doDeleteByKey(ctx, encodeutil.ValuesOf(primaryKeyValues...))
+func (p primaryKeyIndex) DeleteBy(ctx context.Context, primaryKeyValues ...interface{}) error {
+	it, err := p.List(ctx, primaryKeyValues)
+	if err != nil {
+		return err
+	}
+
+	return p.deleteByIterator(ctx, it)
 }
 
-func (p primaryKeyIndex) doDeleteByKey(ctx context.Context, primaryKeyValues []protoreflect.Value) error {
+func (p primaryKeyIndex) DeleteRange(ctx context.Context, from, to []interface{}) error {
+	it, err := p.ListRange(ctx, from, to)
+	if err != nil {
+		return err
+	}
+
+	return p.deleteByIterator(ctx, it)
+}
+
+func (p primaryKeyIndex) doDelete(ctx context.Context, primaryKeyValues []protoreflect.Value) error {
 	backend, err := p.getBackend(ctx)
 	if err != nil {
 		return err
 	}
 
+	// delete object
+	writer := newBatchIndexCommitmentWriter(backend)
+	defer writer.Close()
+
+	err = p.doDeleteWithWriteBatch(backend, writer, primaryKeyValues)
+	if err != nil {
+		return err
+	}
+
+	return writer.Write()
+}
+
+func (p primaryKeyIndex) doDeleteWithWriteBatch(backend Backend, writer *batchIndexCommitmentWriter, primaryKeyValues []protoreflect.Value) error {
 	pk, err := p.EncodeKey(primaryKeyValues)
 	if err != nil {
 		return err
@@ -113,8 +141,6 @@ func (p primaryKeyIndex) doDeleteByKey(ctx context.Context, primaryKeyValues []p
 	}
 
 	// delete object
-	writer := newBatchIndexCommitmentWriter(backend)
-	defer writer.Close()
 	err = writer.CommitmentStore().Delete(pk)
 	if err != nil {
 		return err
@@ -130,7 +156,7 @@ func (p primaryKeyIndex) doDeleteByKey(ctx context.Context, primaryKeyValues []p
 		}
 	}
 
-	return writer.Write()
+	return nil
 }
 
 func (p primaryKeyIndex) getByKeyBytes(store ReadBackend, key []byte, keyValues []protoreflect.Value, message proto.Message) (found bool, err error) {
@@ -152,6 +178,40 @@ func (p primaryKeyIndex) readValueFromIndexKey(_ ReadBackend, primaryKey []proto
 
 func (p primaryKeyIndex) Fields() string {
 	return p.fields.String()
+}
+
+func (p primaryKeyIndex) deleteByIterator(ctx context.Context, it Iterator) error {
+	// NOTE: we must collect keys to delete first because we can't delete while the
+	// iterator is open. We use a linked list to avoid lots of reallocation when
+	// there are a lot of deletions.
+	ll := list.New()
+	for it.Next() {
+		_, pk, err := it.Keys()
+		if err != nil {
+			return err
+		}
+
+		ll.PushBack(pk)
+	}
+	it.Close()
+
+	backend, err := p.getBackend(ctx)
+	if err != nil {
+		return err
+	}
+
+	// delete object
+	writer := newBatchIndexCommitmentWriter(backend)
+	defer writer.Close()
+
+	for e := ll.Front(); e != nil; e = e.Next() {
+		err = p.doDeleteWithWriteBatch(backend, writer, e.Value.([]protoreflect.Value))
+		if err != nil {
+			return err
+		}
+	}
+
+	return writer.Write()
 }
 
 var _ UniqueIndex = &primaryKeyIndex{}

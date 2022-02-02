@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	ics23 "github.com/confio/ics23/go"
-	"github.com/tendermint/iavl"
+	"github.com/cosmos/iavl"
 )
 
 // IavlSpec constrains the format from ics23-iavl (iavl merkle ics23)

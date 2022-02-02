@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/tendermint/iavl"
+	"github.com/cosmos/iavl"
 	"github.com/tendermint/tendermint/libs/rand"
 	db "github.com/tendermint/tm-db"
 )

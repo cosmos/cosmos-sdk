@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	ics23 "github.com/confio/ics23/go"
-	"github.com/tendermint/iavl"
+	"github.com/cosmos/iavl"
 )
 
 // convertExistenceProof will convert the given proof into a valid

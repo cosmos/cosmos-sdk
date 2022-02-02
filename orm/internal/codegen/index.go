@@ -20,15 +20,15 @@ func (t tableGen) genIndexKeys() {
 
 	// start with primary key..
 	t.P("// primary key starting index..")
-	t.genIndex(t.table.PrimaryKey.Fields, t.ormTable.ID())
+	t.genIndex(t.table.PrimaryKey.Fields, 0, true)
 	for _, idx := range t.table.Index {
-		t.genIndex(idx.Fields, idx.Id)
+		t.genIndex(idx.Fields, idx.Id, false)
 	}
 }
 
 func (t tableGen) genIterator() {
 	t.P("type ", t.iteratorName(), " struct {")
-	t.P(tablePkg.Ident("Iterator"))
+	t.P(ormTablePkg.Ident("Iterator"))
 	t.P("}")
 	t.P()
 	t.genValueFunc()
@@ -94,9 +94,15 @@ func (t tableGen) indexStructName(fields []string) string {
 	return t.msg.GoIdent.GoName + joinedNames + "IndexKey"
 }
 
-func (t tableGen) genIndex(fields string, id uint32) {
+func (t tableGen) genIndex(fields string, id uint32, isPrimaryKey bool) {
 	fieldsSlc := strings.Split(fields, ",")
 	idxKeyName := t.indexStructName(fieldsSlc)
+
+	if isPrimaryKey {
+		t.P("type ", t.msg.GoIdent.GoName, "PrimaryKey = ", idxKeyName)
+		t.P()
+	}
+
 	t.P("type ", idxKeyName, " struct {")
 	t.P("vs []interface{}")
 	t.P("}")

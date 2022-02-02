@@ -33,7 +33,7 @@ func TestIsZero(t *testing.T) {
 	}
 }
 
-func TestCmpare(t *testing.T) {
+func TestCompare(t *testing.T) {
 	tcs := []struct {
 		t1       *tspb.Timestamp
 		t2       *tspb.Timestamp

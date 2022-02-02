@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"io"
 	"math"
 
 	"google.golang.org/protobuf/reflect/protodesc"
@@ -31,12 +32,114 @@ type ModuleSchema struct {
 }
 
 // ModuleDB defines the ORM database type to be used by modules.
-type ModuleDB = ormtable.Schema
+type ModuleDB interface {
+	ormtable.Schema
+
+	// DefaultJSON returns default JSON that can be used as a template for
+	// genesis files.
+	//
+	// For regular tables this an empty JSON array, but for singletons an
+	// empty instance of the singleton is marshaled.
+	DefaultJSON(sink JSONSink) error
+
+	// ValidateJSON validates JSON streamed from the reader.
+	ValidateJSON(source JSONSource) error
+
+	// ImportJSON imports JSON into the store, streaming one entry at a time.
+	// Each table should be import from a separate JSON file to enable proper
+	// streaming.
+	//
+	// Regular tables should be stored as an array of objects with each object
+	// corresponding to a single record in the table.
+	//
+	// Auto-incrementing tables
+	// can optionally have the last sequence value as the first element in the
+	// array. If the last sequence value is provided, then each value of the
+	// primary key in the file must be <= this last sequence value or omitted
+	// entirely. If no last sequence value is provided, no entries should
+	// contain the primary key as this will be auto-assigned.
+	//
+	// Singletons should define a single object and not an array.
+	//
+	// ImportJSON is not atomic with respect to the underlying store, meaning
+	// that in the case of an error, some records may already have been
+	// imported. It is assumed that ImportJSON is called in the context of some
+	// larger transaction isolation.
+	ImportJSON(context.Context, JSONSource) error
+
+	// ExportJSON exports JSON in the format accepted by ImportJSON.
+	// Auto-incrementing tables will export the last sequence number as the
+	// first element in the JSON array.
+	ExportJSON(context.Context, JSONSink) error
+}
+
+type JSONSource interface {
+	JSONReader(tableName protoreflect.FullName) (io.Reader, error)
+}
+
+type JSONSink interface {
+	JSONWriter(tableName protoreflect.FullName) (io.Writer, error)
+}
 
 type moduleDB struct {
 	prefix       []byte
 	filesById    map[uint32]*fileDescriptorDB
 	tablesByName map[protoreflect.FullName]ormtable.Table
+}
+
+func (m moduleDB) DefaultJSON(sink JSONSink) error {
+	for name, table := range m.tablesByName {
+		w, err := sink.JSONWriter(name)
+		if err != nil {
+			return err
+		}
+
+		_, err = w.Write(table.DefaultJSON())
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (m moduleDB) ValidateJSON(source JSONSource) error {
+	var errors map[protoreflect.FullName]error
+	for name, table := range m.tablesByName {
+		r, err := source.JSONReader(name)
+		if err != nil {
+			return err
+		}
+
+		err = table.ValidateJSON(r)
+		if err != nil {
+			errors[name] = err
+		}
+	}
+
+	if len(errors) != 0 {
+		panic("TODO")
+	}
+	return nil
+}
+
+func (m moduleDB) ImportJSON(ctx context.Context, source JSONSource) error {
+	//TODO need sorted map iteration
+	panic("implement me")
+}
+
+func (m moduleDB) ExportJSON(ctx context.Context, sink JSONSink) error {
+	for name, table := range m.tablesByName {
+		w, err := sink.JSONWriter(name)
+		if err != nil {
+			return err
+		}
+
+		err = table.ExportJSON(ctx, w)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // ModuleDBOptions are options for constructing a ModuleDB.

@@ -75,7 +75,7 @@ func (s singletonGen) genMethods() {
 
 func (s singletonGen) genConstructor() {
 	iface := s.messageStoreInterfaceName(s.msg)
-	s.P("func New", iface, "(db ", ormdbPkg.Ident("ModuleDB"), ") (", iface, ", error) {")
+	s.P("func New", iface, "(db ", ormTablePkg.Ident("Schema"), ") (", iface, ", error) {")
 	s.P("table := db.GetTable(&", s.msg.GoIdent.GoName, "{})")
 	s.P("if table == nil {")
 	s.P("return nil, ", ormErrPkg.Ident("TableNotFound.Wrap"), "(string((&", s.msg.GoIdent.GoName, "{}).ProtoReflect().Descriptor().FullName()))")

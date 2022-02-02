@@ -48,6 +48,7 @@ func TestMigrateJSON(t *testing.T) {
 	}
 	govGenState.Votes = v1beta1.Votes{
 		v1beta1.Vote{ProposalId: 1, Voter: voter.String(), Option: v1beta1.OptionAbstain},
+		v1beta1.Vote{ProposalId: 2, Voter: voter.String(), Options: v1beta1.NewNonSplitVoteOption(v1beta1.OptionNo)},
 	}
 
 	migrated, err := v046.MigrateJSON(govGenState)
@@ -124,8 +125,23 @@ func TestMigrateJSON(t *testing.T) {
 	},
 	"votes": [
 		{
-			"options": [],
+			"options": [
+				{
+					"option": "VOTE_OPTION_ABSTAIN",
+					"weight": "1.000000000000000000"
+				}
+			],
 			"proposal_id": "1",
+			"voter": "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
+		},
+		{
+			"options": [
+				{
+					"option": "VOTE_OPTION_NO",
+					"weight": "1.000000000000000000"
+				}
+			],
+			"proposal_id": "2",
 			"voter": "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
 		}
 	],

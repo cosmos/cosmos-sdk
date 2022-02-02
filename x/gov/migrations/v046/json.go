@@ -15,13 +15,17 @@ func MigrateJSON(oldState *v1beta1.GenesisState) (*v1beta2.GenesisState, error) 
 	if err != nil {
 		return nil, err
 	}
+	newVotes, err := convertToNewVotes(oldState.Votes)
+	if err != nil {
+		return nil, err
+	}
 
 	depParams, votingParms, tallyParams := convertToNewDepParams(oldState.DepositParams), convertToNewVotingParams(oldState.VotingParams), convertToNewTallyParams(oldState.TallyParams)
 
 	return &v1beta2.GenesisState{
 		StartingProposalId: oldState.StartingProposalId,
 		Deposits:           convertToNewDeposits(oldState.Deposits),
-		Votes:              convertToNewVotes(oldState.Votes),
+		Votes:              newVotes,
 		Proposals:          newProps,
 		DepositParams:      &depParams,
 		VotingParams:       &votingParms,

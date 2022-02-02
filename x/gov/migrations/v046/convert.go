@@ -133,14 +133,24 @@ func convertToNewDeposits(oldDeps v1beta1.Deposits) v1beta2.Deposits {
 	return newDeps
 }
 
-func convertToNewVotes(oldVotes v1beta1.Votes) v1beta2.Votes {
+func convertToNewVotes(oldVotes v1beta1.Votes) (v1beta2.Votes, error) {
 	newVotes := make([]*v1beta2.Vote, len(oldVotes))
 	for i, oldVote := range oldVotes {
-		// All oldVotes don't have the Option field anymore, as they have been
-		// migrated in the v043 package.
-		newWVOs := make([]*v1beta2.WeightedVoteOption, len(oldVote.Options))
-		for j, oldWVO := range oldVote.Options {
-			newWVOs[j] = v1beta2.NewWeightedVoteOption(v1beta2.VoteOption(oldVote.Option), oldWVO.Weight)
+		var newWVOs []*v1beta2.WeightedVoteOption
+
+		// We deprecated Vote.Option in v043. However, it might still be set.
+		// - if only Options is set, or both Option & Options are set, we read from Options,
+		// - if Options is not set, and Option is set, we read from Option,
+		// - if none are set, we throw.
+		if oldVote.Options != nil {
+			newWVOs = make([]*v1beta2.WeightedVoteOption, len(oldVote.Options))
+			for j, oldWVO := range oldVote.Options {
+				newWVOs[j] = v1beta2.NewWeightedVoteOption(v1beta2.VoteOption(oldWVO.Option), oldWVO.Weight)
+			}
+		} else if oldVote.Option != v1beta1.OptionEmpty {
+			newWVOs = v1beta2.NewNonSplitVoteOption(v1beta2.VoteOption(oldVote.Option))
+		} else {
+			return nil, fmt.Errorf("vote does not have neither Options nor Option")
 		}
 
 		newVotes[i] = &v1beta2.Vote{
@@ -150,7 +160,7 @@ func convertToNewVotes(oldVotes v1beta1.Votes) v1beta2.Votes {
 		}
 	}
 
-	return newVotes
+	return newVotes, nil
 }
 
 func convertToNewDepParams(oldDepParams v1beta1.DepositParams) v1beta2.DepositParams {

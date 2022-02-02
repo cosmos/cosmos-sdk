@@ -56,6 +56,7 @@ upon receiving txGovSubmitProposal from sender do
   proposal = NewProposal()
 
   proposal.Messages = txGovSubmitProposal.Messages
+  proposal.Metadata = txGovSubmitProposal.Metadata
   proposal.TotalDeposit = initialDeposit
   proposal.SubmitTime = <CurrentTime>
   proposal.DepositEndTime = <CurrentTime>.Add(depositParam.MaxDepositPeriod)

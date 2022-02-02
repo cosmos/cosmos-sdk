@@ -48,7 +48,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// done after the deliver state and context have been set as it's persisted
 	// to state.
 	if req.ConsensusParams != nil {
-		app.StoreConsensusParams(app.deliverState.ctx, req.ConsensusParams)
+		app.StoreConsensusParams(app.deliverState.Context(), req.ConsensusParams)
 	}
 
 	if app.initChainer == nil {
@@ -56,9 +56,10 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	}
 
 	// add block gas meter for any genesis transactions (allow infinite gas)
-	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+	ctx := app.deliverState.Context().WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+	app.deliverState.WithContext(ctx)
 
-	res = app.initChainer(app.deliverState.ctx, req)
+	res = app.initChainer(app.deliverState.Context(), req)
 
 	// sanity check
 	if len(req.Validators) > 0 {
@@ -154,14 +155,15 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	} else {
 		// In the first block, app.deliverState.ctx will already be initialized
 		// by InitChain. Context is now updated with Header information.
-		app.deliverState.ctx = app.deliverState.ctx.
+		ctx := app.deliverState.Context().
 			WithBlockHeader(req.Header).
 			WithBlockHeight(req.Header.Height)
+		app.deliverState.WithContext(ctx)
 	}
 
 	// add block gas meter
 	var gasMeter sdk.GasMeter
-	if maxGas := app.getMaximumBlockGas(app.deliverState.ctx); maxGas > 0 {
+	if maxGas := app.getMaximumBlockGas(app.deliverState.Context()); maxGas > 0 {
 		gasMeter = sdk.NewGasMeter(maxGas)
 	} else {
 		gasMeter = sdk.NewInfiniteGasMeter()
@@ -169,21 +171,23 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	// NOTE: header hash is not set in NewContext, so we manually set it here
 
-	app.deliverState.ctx = app.deliverState.ctx.
+	ctx := app.deliverState.Context().
 		WithBlockGasMeter(gasMeter).
 		WithHeaderHash(req.Hash).
 		WithConsensusParams(app.GetConsensusParams(app.deliverState.ctx))
+	app.deliverState.WithContext(ctx)
 
 	// we also set block gas meter to checkState in case the application needs to
 	// verify gas consumption during (Re)CheckTx
 	if app.checkState != nil {
-		app.checkState.ctx = app.checkState.ctx.
+		ctx := app.checkState.Context().
 			WithBlockGasMeter(gasMeter).
 			WithHeaderHash(req.Hash)
+		app.checkState.WithContext(ctx)
 	}
 
 	if app.beginBlocker != nil {
-		res = app.beginBlocker(app.deliverState.ctx, req)
+		res = app.beginBlocker(app.deliverState.Context(), req)
 		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 	// set the signed validators for addition to context in deliverTx
@@ -191,7 +195,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	// call the hooks with the BeginBlock messages
 	for _, streamingListener := range app.abciListeners {
-		if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
+		if err := streamingListener.ListenBeginBlock(app.deliverState.Context(), req, res); err != nil {
 			app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", err)
 		}
 	}
@@ -301,7 +305,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 // height.
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 
-	header := app.deliverState.ctx.BlockHeader()
+	header := app.deliverState.Context().BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
 	// Write the DeliverTx state into branched storage and commit the MultiStore.
@@ -648,7 +652,7 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 
 	// branch the commit-multistore for safety
 	ctx := sdk.NewContext(
-		cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger,
+		cacheMS, app.checkState.Context().BlockHeader(), true, app.logger,
 	).WithMinGasPrices(app.minGasPrices).WithBlockHeight(height)
 
 	return ctx, nil
@@ -704,7 +708,7 @@ func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 	// evidence parameters instead of computing an estimated nubmer of blocks based
 	// on the unbonding period and block commitment time as the two should be
 	// equivalent.
-	cp := app.GetConsensusParams(app.deliverState.ctx)
+	cp := app.GetConsensusParams(app.deliverState.Context())
 	if cp != nil && cp.Evidence != nil && cp.Evidence.MaxAgeNumBlocks > 0 {
 		retentionHeight = commitHeight - cp.Evidence.MaxAgeNumBlocks
 	}

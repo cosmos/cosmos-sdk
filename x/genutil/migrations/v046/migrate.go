@@ -8,7 +8,7 @@ import (
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-// Migrate migrates exported state from v0.45 to a v0.46 genesis state.
+// Migrate migrates exported state from v0.43 to a v0.46 genesis state.
 func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 	// Migrate x/gov.
 	if appState[v043gov.ModuleName] != nil {

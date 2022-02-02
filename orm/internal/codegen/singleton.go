@@ -46,7 +46,7 @@ func (s singletonGen) genInterface() {
 
 func (s singletonGen) genStruct() {
 	s.P("type ", s.messageStoreReceiverName(s.msg), " struct {")
-	s.P("table ", tablePkg.Ident("Table"))
+	s.P("table ", ormTablePkg.Ident("Table"))
 	s.P("}")
 	s.P()
 }

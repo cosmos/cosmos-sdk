@@ -1,6 +1,6 @@
 # Proofs Tendermint
 
-This is an adapter library to convert the `SimpleProof` from 
+This is an adapter library to convert the `SimpleProof` from
 [tendermint/crypto/merkle](https://github.com/tendermint/tendermint/tree/master/crypto/merkle)
 into the standard confio/proofs format.
 
@@ -36,4 +36,4 @@ Will output some json data, from a randomly generated merkle tree each time.
 
 `"existence"` is the hex-encoding of the protobuf binary encoding of a `proofs.ExistenceProof` object. This contains a (key, value) pair,
 along with all steps to reach the root hash. This provides a non-trivial test case, to ensure client in multiple languages can verify the
-protobuf proofs we generate from the iavl tree  
+protobuf proofs we generate from the iavl tree

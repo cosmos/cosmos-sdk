@@ -5,7 +5,7 @@ import (
 
 	ics23 "github.com/confio/ics23/go"
 
-	"github.com/cosmos/cosmos-sdk/store/tools/ics23-iavl/helpers"
+	"github.com/cosmos/cosmos-sdk/store/tools/ics23/iavl/helpers"
 )
 
 func TestCreateMembership(t *testing.T) {

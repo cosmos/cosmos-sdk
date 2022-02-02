@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/store/tools/ics23-iavl/helpers"
+	"github.com/cosmos/cosmos-sdk/store/tools/ics23/iavl/helpers"
 )
 
 func TestConvertExistence(t *testing.T) {

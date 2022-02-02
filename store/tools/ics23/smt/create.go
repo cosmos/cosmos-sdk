@@ -117,6 +117,7 @@ func convertInnerOps(path []byte, sideNodes [][]byte) []*ics23.InnerOp {
 }
 
 // getBitAtFromMSB gets the bit at an offset from the most significant bit
+// Copied from github.com/celestiaorg/smt
 func getBitAtFromMSB(data []byte, position int) int {
 	if int(data[position/8])&(1<<(8-1-uint(position)%8)) > 0 {
 		return 1

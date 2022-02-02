@@ -1,6 +1,6 @@
 # Proofs IAVL
 
-This is a demo project to show converting proofs from tendermint/iavl into the format
+This is a demo project to show converting proofs from cosmos/iavl into the format
 specified in confio/proofs and validating that they still work.
 
 ## Library usage
@@ -12,7 +12,7 @@ produces a CommitmentProof that the given key exists in the iavl tree (and conta
 current value). This returns an error if the key does not exist in the tree.
 
 `func CreateNonMembershipProof(tree *iavl.MutableTree, key []byte) (*proofs.CommitmentProof, error)`
-produces a CommitmentProof that the given key doesn't exist in the iavl tree. 
+produces a CommitmentProof that the given key doesn't exist in the iavl tree.
 This returns an error if the key does not exist in the tree.
 
 Generalized range proofs are lower in priority, as they are just an optimization of the
@@ -41,4 +41,4 @@ Will output some json data, from a randomly generated merkle tree each time.
 
 `"existence"` is the hex-encoding of the protobuf binary encoding of a `proofs.ExistenceProof` object. This contains a (key, value) pair,
 along with all steps to reach the root hash. This provides a non-trivial test case, to ensure client in multiple languages can verify the
-protobuf proofs we generate from the iavl tree  
+protobuf proofs we generate from the iavl tree

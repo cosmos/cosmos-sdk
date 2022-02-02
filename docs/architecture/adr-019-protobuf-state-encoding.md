@@ -125,13 +125,13 @@ this was chosen as the preferred alternative to application-level `oneof`s
 as in our original protobuf design. The arguments in favor of `Any` can be
 summarized as follows:
 
-* `Any` provides a simpler, more consistent client UX for dealing with
+- `Any` provides a simpler, more consistent client UX for dealing with
 interfaces than app-level `oneof`s that will need to be coordinated more
 carefully across applications. Creating a generic transaction
 signing library using `oneof`s may be cumbersome and critical logic may need
 to be reimplemented for each chain
-* `Any` provides more resistance against human error than `oneof`
-* `Any` is generally simpler to implement for both modules and apps
+- `Any` provides more resistance against human error than `oneof`
+- `Any` is generally simpler to implement for both modules and apps
 
 The main counter-argument to using `Any` centers around its additional space
 and possibly performance overhead. The space overhead could be dealt with using
@@ -183,9 +183,9 @@ to communicate the list of concrete types that satisfy an interface to clients.
 
 In .proto files:
 
-* fields which accept interfaces should be annotated with `cosmos_proto.accepts_interface`
+- fields which accept interfaces should be annotated with `cosmos_proto.accepts_interface`
 using the same full-qualified name passed as `protoName` to `InterfaceRegistry.RegisterInterface`
-* interface implementations should be annotated with `cosmos_proto.implements_interface`
+- interface implementations should be annotated with `cosmos_proto.implements_interface`
 using the same full-qualified name passed as `protoName` to `InterfaceRegistry.RegisterInterface`
 
 In the future, `protoName`, `cosmos_proto.accepts_interface`, `cosmos_proto.implements_interface`
@@ -375,5 +375,5 @@ seamless.
 
 ## References
 
-1. https://github.com/cosmos/cosmos-sdk/issues/4977
-2. https://github.com/cosmos/cosmos-sdk/issues/5444
+1. <https://github.com/cosmos/cosmos-sdk/issues/4977>
+2. <https://github.com/cosmos/cosmos-sdk/issues/5444>

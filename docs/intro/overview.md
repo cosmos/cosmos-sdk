@@ -4,13 +4,13 @@ order: 1
 
 # High-level Overview
 
-## What is the Cosmos SDK?
+## What is the Cosmos SDK
 
 The [Cosmos SDK](https://github.com/cosmos/cosmos-sdk) is an open-source framework for building multi-asset public Proof-of-Stake (PoS) <df value="blockchain">blockchains</df>, like the Cosmos Hub, as well as permissioned Proof-of-Authority (PoA) blockchains. Blockchains built with the Cosmos SDK are generally referred to as **application-specific blockchains**.
 
 The goal of the Cosmos SDK is to allow developers to easily create custom blockchains from scratch that can natively interoperate with other blockchains. We envision the Cosmos SDK as the npm-like framework to build secure blockchain applications on top of [Tendermint](https://github.com/tendermint/tendermint). SDK-based blockchains are built out of composable [modules](../building-modules/intro.md), most of which are open source and readily available for any developers to use. Anyone can create a module for the Cosmos SDK, and integrating already-built modules is as simple as importing them into your blockchain application. What's more, the Cosmos SDK is a capabilities-based system that allows developers to better reason about the security of interactions between modules. For a deeper look at capabilities, jump to [Object-Capability Model](../core/ocap.md).
 
-## What are Application-Specific Blockchains?
+## What are Application-Specific Blockchains
 
 One development paradigm in the blockchain world today is that of virtual-machine blockchains like Ethereum, where development generally revolves around building a decentralised applications on top of an existing blockchain as a set of smart contracts. While smart contracts can be very good for some use cases like single-use applications (e.g. ICOs), they often fall short for building complex decentralised platforms. More generally, smart contracts can be limiting in terms of flexibility, sovereignty and performance.
 
@@ -18,7 +18,7 @@ Application-specific blockchains offer a radically different development paradig
 
 Learn more about [application-specific blockchains](./why-app-specific.md).
 
-## Why the Cosmos SDK?
+## Why the Cosmos SDK
 
 The Cosmos SDK is the most advanced framework for building custom application-specific blockchains today. Here are a few reasons why you might want to consider building your decentralised application with the Cosmos SDK:
 

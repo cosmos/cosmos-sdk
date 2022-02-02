@@ -10,9 +10,9 @@ The slashing module emits the following events:
 
 ### MsgUnjail
 
-| Type    | Attribute Key | Attribute Value |
-| ------- | ------------- | --------------- |
-| message | module        | slashing        |
+| Type    | Attribute Key | Attribute Value    |
+| ------- | ------------- | ------------------ |
+| message | module        | slashing           |
 | message | sender        | {validatorAddress} |
 
 ## Keeper
@@ -37,7 +37,7 @@ The slashing module emits the following events:
 
 ### Slash
 
-+ same as `"slash"` event from `HandleValidatorSignature`, but without the `jailed` attribute.
+- same as `"slash"` event from `HandleValidatorSignature`, but without the `jailed` attribute.
 
 ### Jail
 

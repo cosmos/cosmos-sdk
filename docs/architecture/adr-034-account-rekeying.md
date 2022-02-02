@@ -56,21 +56,21 @@ Everytime a key for an address is changed, we will store a log of this change in
 
 ### Positive
 
-* Will allow users and validator operators to employ better operational security practices with key rotation.
-* Will allow organizations or groups to easily change and add/remove multisig signers.
+- Will allow users and validator operators to employ better operational security practices with key rotation.
+- Will allow organizations or groups to easily change and add/remove multisig signers.
 
 ### Negative
 
 Breaks the current assumed relationship between address and pubkeys as H(pubkey) = address. This has a couple of consequences.
 
-* This makes wallets that support this feature more complicated. For example, if an address on chain was updated, the corresponding key in the CLI wallet also needs to be updated.
-* Cannot automatically prune accounts with 0 balance that have had their pubkey changed.
+- This makes wallets that support this feature more complicated. For example, if an address on chain was updated, the corresponding key in the CLI wallet also needs to be updated.
+- Cannot automatically prune accounts with 0 balance that have had their pubkey changed.
 
 ### Neutral
 
-* While the purpose of this is intended to allow the owner of an account to update to a new pubkey they own, this could technically also be used to transfer ownership of an account to a new owner.  For example, this could be use used to sell a staked position without unbonding or an account that has vesting tokens.  However, the friction of this is very high as this would essentially have to be done as a very specific OTC trade. Furthermore, additional constraints could be added to prevent accouns with Vesting tokens to use this feature.
-* Will require that PubKeys for an account are included in the genesis exports.
+- While the purpose of this is intended to allow the owner of an account to update to a new pubkey they own, this could technically also be used to transfer ownership of an account to a new owner.  For example, this could be use used to sell a staked position without unbonding or an account that has vesting tokens.  However, the friction of this is very high as this would essentially have to be done as a very specific OTC trade. Furthermore, additional constraints could be added to prevent accouns with Vesting tokens to use this feature.
+- Will require that PubKeys for an account are included in the genesis exports.
 
 ## References
 
-+ https://www.algorand.com/resources/blog/announcing-rekeying
+- <https://www.algorand.com/resources/blog/announcing-rekeying>

@@ -270,7 +270,7 @@ processors because:
   not `TxBody`)
 
 There are also scenarios where we may choose to safely ignore unknown fields
-(https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-624400188) to
+(<https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-624400188)> to
 provide graceful forwards compatibility with newer clients.
 
 We propose that field numbers with bit 11 set (for most use cases this is
@@ -379,7 +379,7 @@ can gracefully transition away from Amino JSON.
 
 ### `SIGN_MODE_DIRECT_AUX`
 
-(\*Documented as option (3) in https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-628026933)
+(\*Documented as option (3) in <https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-628026933>)
 
 We could add a mode `SIGN_MODE_DIRECT_AUX`
 to support scenarios where multiple signatures
@@ -437,7 +437,7 @@ message SignDocAux {
 
 ### `SIGN_MODE_DIRECT_RELAXED`
 
-(_Documented as option (1)(a) in https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-628026933_)
+(_Documented as option (1)(a) in <https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-628026933>_)
 
 This is a variation of `SIGN_MODE_DIRECT` where multiple signers wouldn't need to
 coordinate public keys and signing modes in advance. It would involve an alternate

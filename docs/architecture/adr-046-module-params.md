@@ -179,6 +179,6 @@ Later, this section can optionally list ideas or improvements the author or revi
 
 ## References
 
-- https://github.com/cosmos/cosmos-sdk/pull/9810
-- https://github.com/cosmos/cosmos-sdk/issues/9438
-- https://github.com/cosmos/cosmos-sdk/discussions/9913
+- <https://github.com/cosmos/cosmos-sdk/pull/9810>
+- <https://github.com/cosmos/cosmos-sdk/issues/9438>
+- <https://github.com/cosmos/cosmos-sdk/discussions/9913>

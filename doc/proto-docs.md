@@ -1,5 +1,6 @@
 <!-- This file is auto-generated. Please do not modify it yourself. -->
 # Protobuf Documentation
+
 <a name="top"></a>
 
 ## Table of Contents
@@ -22,6 +23,7 @@
 <a name="cosmos.base.query.v1beta1.PageRequest"></a>
 
 ### PageRequest
+
 PageRequest is to be embedded in gRPC request messages for efficient
 pagination. Ex:
 
@@ -49,6 +51,7 @@ Since: cosmos-sdk 0.43 |
 <a name="cosmos.base.query.v1beta1.PageResponse"></a>
 
 ### PageResponse
+
 PageResponse is to be embedded in gRPC response messages where the
 corresponding request message has used PageRequest.
 

@@ -99,7 +99,7 @@ TODO, needs architecture review. Some topics:
 
 - Bumping versions frequency
 - When bumping versions, should the Cosmos SDK support both versions?
-  - i.e. v1beta1 -> v1, should we have two folders in the Cosmos SDK, and handlers for both versions?
+    - i.e. v1beta1 -> v1, should we have two folders in the Cosmos SDK, and handlers for both versions?
 - mention ADR-023 Protobuf naming
 
 ## Consequences

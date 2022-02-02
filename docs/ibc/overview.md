@@ -6,7 +6,7 @@ order: 1
 
 Learn what IBC is, its components, and use cases. {synopsis}
 
-## What is the Inter-Blockchain Communication Protocol (IBC)?
+## What is the Inter-Blockchain Communication Protocol (IBC)
 
 The Inter-Blockchain Communication protocol (IBC) allows blockchains to talk to each other. The backbone of the Cosmos ecosystem, IBC handles transport across different sovereign blockchains. This end-to-end, connection-oriented, stateful protocol provides reliable, ordered, and authenticated communication between heterogeneous blockchains. 
 

@@ -21,7 +21,7 @@ This ADR defines the `x/nft` module which is a generic implementation of NFTs, r
 
 ## Context
 
-NFTs are more than just crypto art, which is very helpful for accruing value to the Cosmos ecosystem. As a result, Cosmos Hub should implement NFT functions and enable a unified mechanism for storing and sending the ownership representative of NFTs as discussed in https://github.com/cosmos/cosmos-sdk/discussions/9065.
+NFTs are more than just crypto art, which is very helpful for accruing value to the Cosmos ecosystem. As a result, Cosmos Hub should implement NFT functions and enable a unified mechanism for storing and sending the ownership representative of NFTs as discussed in <https://github.com/cosmos/cosmos-sdk/discussions/9065.>
 
 As discussed in [#9065](https://github.com/cosmos/cosmos-sdk/discussions/9065), several potential solutions can be considered:
 
@@ -54,8 +54,9 @@ All data carried over IBC must be part of the `NFT` or `Class` type described be
 ### Types
 
 We propose two main types:
-+ `Class` -- describes NFT class. We can think about it as a smart contract address.
-+ `NFT` -- object representing unique, non fungible asset. Each NFT is associated with a Class.
+
+- `Class` -- describes NFT class. We can think about it as a smart contract address.
+- `NFT` -- object representing unique, non fungible asset. Each NFT is associated with a Class.
 
 #### Class
 
@@ -315,8 +316,8 @@ This specification conforms to the ERC-721 smart contract specification for NFT 
 
 ### Negative
 
-+ New IBC app is required for x/nft
-+ CW721 adapter is required
+- New IBC app is required for x/nft
+- CW721 adapter is required
 
 ### Neutral
 
@@ -334,6 +335,6 @@ Other networks in the Cosmos ecosystem could design and implement their own NFT 
 
 ## References
 
-- Initial discussion: https://github.com/cosmos/cosmos-sdk/discussions/9065
-- x/nft: initialize module: https://github.com/cosmos/cosmos-sdk/pull/9174
+- Initial discussion: <https://github.com/cosmos/cosmos-sdk/discussions/9065>
+- x/nft: initialize module: <https://github.com/cosmos/cosmos-sdk/pull/9174>
 - [ADR 033](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-033-protobuf-inter-module-comm.md)

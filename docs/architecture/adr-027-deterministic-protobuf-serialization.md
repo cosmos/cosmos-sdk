@@ -84,19 +84,19 @@ with the following additions:
 4. `repeated` fields of scalar numeric types must use
    [packed encoding](https://developers.google.com/protocol-buffers/docs/encoding#packed)
 5. Varint encoding must not be longer than needed:
-    * No trailing zero bytes (in little endian, i.e. no leading zeroes in big
+    - No trailing zero bytes (in little endian, i.e. no leading zeroes in big
       endian). Per rule 3 above, the default value of `0` must be omitted, so
       this rule does not apply in such cases.
-    * The maximum value for a varint must be `FF FF FF FF FF FF FF FF FF 01`.
+    - The maximum value for a varint must be `FF FF FF FF FF FF FF FF FF 01`.
       In other words, when decoded, the highest 6 bits of the 70-bit unsigned
       integer must be `0`. (10-byte varints are 10 groups of 7 bits, i.e.
       70 bits, of which only the lowest 70-6=64 are useful.)
-    * The maximum value for 32-bit values in varint encoding must be `FF FF FF FF 0F`
+    - The maximum value for 32-bit values in varint encoding must be `FF FF FF FF 0F`
       with one exception (below). In other words, when decoded, the highest 38
       bits of the 70-bit unsigned integer must be `0`.
-        * The one exception to the above is _negative_ `int32`, which must be
+        - The one exception to the above is _negative_ `int32`, which must be
           encoded using the full 10 bytes for sign extension<sup>2</sup>.
-    * The maximum value for Boolean values in varint encoding must be `01` (i.e.
+    - The maximum value for Boolean values in varint encoding must be `01` (i.e.
       it must be `0` or `1`). Per rule 3 above, the default value of `0` must
       be omitted, so if a Boolean is included it must have a value of `1`.
 
@@ -238,7 +238,7 @@ must result in the serialization
 When inspecting the serialized document, you see that every second field is
 omitted:
 
-```
+```sh
 $ echo 0a1b54686520776f726c64206e65656473206368616e676520f09f8cb318e8bebec8bc2e280138024a084e696365206f6e654a095468616e6b20796f75 | xxd -r -p | protoc --decode_raw
 1: "The world needs change \360\237\214\263"
 3: 1596806111080
@@ -260,7 +260,7 @@ for all protobuf documents we need in the context of Cosmos SDK signing.
 - Simple enough to keep the barrier to implement transaction signing low
 - It allows us to continue to use 0 and other empty values in SignDoc, avoiding
   the need to work around 0 sequences. This does not imply the change from
-  https://github.com/cosmos/cosmos-sdk/pull/6949 should not be merged, but not
+  <https://github.com/cosmos/cosmos-sdk/pull/6949> should not be merged, but not
   too important anymore.
 
 ### Negative
@@ -288,27 +288,27 @@ the need of implementing a custom serializer that adheres to this standard (and 
   implementation detail and the details of any particular implementation may
   change in the future. Therefore, protocol buffer parsers must be able to parse
   fields in any order._ from
-  https://developers.google.com/protocol-buffers/docs/encoding#order
-- <sup>2</sup> https://developers.google.com/protocol-buffers/docs/encoding#signed_integers
+  <https://developers.google.com/protocol-buffers/docs/encoding#order>
+- <sup>2</sup> <https://developers.google.com/protocol-buffers/docs/encoding#signed_integers>
 - <sup>3</sup> _Note that for scalar message fields, once a message is parsed
   there's no way of telling whether a field was explicitly set to the default
   value (for example whether a boolean was set to false) or just not set at all:
   you should bear this in mind when defining your message types. For example,
   don't have a boolean that switches on some behavior when set to false if you
   don't want that behavior to also happen by default._ from
-  https://developers.google.com/protocol-buffers/docs/proto3#default
+  <https://developers.google.com/protocol-buffers/docs/proto3#default>
 - <sup>4</sup> _When a message is parsed, if the encoded message does not
   contain a particular singular element, the corresponding field in the parsed
   object is set to the default value for that field._ from
-  https://developers.google.com/protocol-buffers/docs/proto3#default
+  <https://developers.google.com/protocol-buffers/docs/proto3#default>
 - <sup>5</sup> _Also note that if a scalar message field is set to its default,
   the value will not be serialized on the wire._ from
-  https://developers.google.com/protocol-buffers/docs/proto3#default
+  <https://developers.google.com/protocol-buffers/docs/proto3#default>
 - <sup>6</sup> _For enums, the default value is the first defined enum value,
   which must be 0._ from
-  https://developers.google.com/protocol-buffers/docs/proto3#default
+  <https://developers.google.com/protocol-buffers/docs/proto3#default>
 - <sup>7</sup> _For message fields, the field is not set. Its exact value is
   language-dependent._ from
-  https://developers.google.com/protocol-buffers/docs/proto3#default
+  <https://developers.google.com/protocol-buffers/docs/proto3#default>
 - Encoding rules and parts of the reasoning taken from
   [canonical-proto3 Aaron Craelius](https://github.com/regen-network/canonical-proto3)

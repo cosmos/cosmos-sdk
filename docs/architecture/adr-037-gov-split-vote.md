@@ -22,7 +22,7 @@ However, often times the entity owning that address might not be a single indivi
 
 We modify the vote structs to be
 
-```
+```go
 type WeightedVoteOption struct {
   Option string
   Weight sdk.Dec
@@ -37,7 +37,7 @@ type Vote struct {
 
 And for backwards compatibility, we introduce `MsgVoteWeighted` while keeping `MsgVote`.
 
-```
+```go
 type MsgVote struct {
   ProposalID int64
   Voter      sdk.Address
@@ -58,7 +58,7 @@ The `ValidateBasic` of a `MsgVoteWeighted` struct would require that
 
 The governance tally function will iterate over all the options in a vote and add to the tally the result of the voter's voting power * the rate for that option.
 
-```
+```go
 tally() {
     results := map[types.VoteOption]sdk.Dec
 
@@ -78,7 +78,7 @@ simd tx gov vote 1 "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05" --from mykey
 
 To create a single-option vote a user can do either
 
-```
+```sh
 simd tx gov vote 1 "yes=1" --from mykey
 ```
 

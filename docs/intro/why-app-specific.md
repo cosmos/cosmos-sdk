@@ -6,7 +6,7 @@ order: 2
 
 This document explains what application-specific blockchains are, and why developers would want to build one as opposed to writing Smart Contracts. {synopsis}
 
-## What are application-specific blockchains?
+## What are application-specific blockchains
 
 Application-specific blockchains are blockchains customized to operate a single application. Instead of building a decentralised application on top of an underlying blockchain like Ethereum, developers build their own blockchain from the ground up. This means building a full-node client, a light-client, and all the necessary interfaces (CLI, REST, ...) to interact with the nodes.
 
@@ -26,7 +26,7 @@ Blockchain node |  |           Consensus           |  |
                 v  +-------------------------------+  v
 ```
 
-## What are the shortcomings of Smart Contracts?
+## What are the shortcomings of Smart Contracts
 
 Virtual-machine blockchains like Ethereum addressed the demand for more programmability back in 2014. At the time, the options available for building decentralised applications were quite limited. Most developers would build on top of the complex and limited Bitcoin scripting language, or fork the Bitcoin codebase which was hard to work with and customize.
 

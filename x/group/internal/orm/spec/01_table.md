@@ -2,7 +2,7 @@
 
 A table can be built given a `codec.ProtoMarshaler` model type, a prefix to access the underlying prefix store used to store table data as well as a `Codec` for marshalling/unmarshalling.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/9f78f16ae75cc42fc5fe636bde18a453ba74831f/x/group/internal/orm/table.go#L24-L30
++++ <https://github.com/cosmos/cosmos-sdk/blob/9f78f16ae75cc42fc5fe636bde18a453ba74831f/x/group/internal/orm/table.go#L24-L30>
 
 In the prefix store, entities should be stored by an unique identifier called `RowID` which can be based either on an `uint64` auto-increment counter, string or dynamic size bytes.
 Regular CRUD operations can be performed on a table, these methods take a `sdk.KVStore` as parameter to get the table prefix store.
@@ -21,7 +21,7 @@ The `table` struct is private, so that we only have custom tables built on top o
 
 `AutoUInt64Table` is a table type with an auto incrementing `uint64` ID.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/9f78f16ae75cc42fc5fe636bde18a453ba74831f/x/group/internal/orm/auto_uint64.go#L11-L14
++++ <https://github.com/cosmos/cosmos-sdk/blob/9f78f16ae75cc42fc5fe636bde18a453ba74831f/x/group/internal/orm/auto_uint64.go#L11-L14>
 
 It's based on the `Sequence` struct which is a persistent unique key generator based on a counter encoded using 8 byte big endian.
 
@@ -33,7 +33,7 @@ It's based on the `Sequence` struct which is a persistent unique key generator b
 
 The model provided for creating a `PrimaryKeyTable` should implement the `PrimaryKeyed` interface:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/9f78f16ae75cc42fc5fe636bde18a453ba74831f/x/group/internal/orm/primary_key.go#L28-L41
++++ <https://github.com/cosmos/cosmos-sdk/blob/9f78f16ae75cc42fc5fe636bde18a453ba74831f/x/group/internal/orm/primary_key.go#L28-L41>
 
 `PrimaryKeyFields()` method returns the list of key parts for a given object.
 The primary key parts can be []byte, string, and `uint64` types.

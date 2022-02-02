@@ -12,4 +12,4 @@ Grants are identified by combining granter address (the address bytes of the gra
 
 The grant object encapsulates an `Authorization` type and an expiration timestamp:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/proto/cosmos/authz/v1beta1/authz.proto#L21-L26
++++ <https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/proto/cosmos/authz/v1beta1/authz.proto#L21-L26>

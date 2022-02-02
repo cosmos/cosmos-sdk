@@ -18,9 +18,9 @@ standardise blockchain interactions.
 
 Through the use of a standard API for integrating blockchain applications it will
 
-* Be easier for a user to interact with a given blockchain
-* Allow exchanges to integrate new blockchains quickly and easily
-* Enable application developers to build cross-blockchain applications such as block explorers, wallets and dApps at
+- Be easier for a user to interact with a given blockchain
+- Allow exchanges to integrate new blockchains quickly and easily
+- Enable application developers to build cross-blockchain applications such as block explorers, wallets and dApps at
   considerably lower cost and effort.
 
 ## Decision
@@ -208,4 +208,4 @@ Proposed
 
 ## References
 
-- https://www.rosetta-api.org/
+- <https://www.rosetta-api.org/>

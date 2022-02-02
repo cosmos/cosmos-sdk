@@ -7,7 +7,7 @@
 
 ## Context
 
-Validator consensus key rotation feature has been discussed and requested for a long time, for the sake of safer validator key management policy (e.g. https://github.com/tendermint/tendermint/issues/1136). So, we suggest one of the simplest form of validator consensus key rotation implementation mostly onto Cosmos SDK.
+Validator consensus key rotation feature has been discussed and requested for a long time, for the sake of safer validator key management policy (e.g. <https://github.com/tendermint/tendermint/issues/1136).> So, we suggest one of the simplest form of validator consensus key rotation implementation mostly onto Cosmos SDK.
 
 We don't need to make any update on consensus logic in Tendermint because Tendermint does not have any mapping information of consensus key and validator operator key, meaning that from Tendermint point of view, a consensus key rotation of a validator is simply a replacement of a consensus key to another.
 
@@ -109,7 +109,7 @@ Proposed
 ### Positive
 
 - Validators can immediately or periodically rotate their consensus key to have better security policy
-- improved security against Long-Range attacks (https://nearprotocol.com/blog/long-range-attacks-and-a-new-fork-choice-rule) given a validator throws away the old consensus key(s)
+- improved security against Long-Range attacks (<https://nearprotocol.com/blog/long-range-attacks-and-a-new-fork-choice-rule)> given a validator throws away the old consensus key(s)
 
 ### Negative
 
@@ -120,6 +120,6 @@ Proposed
 
 ## References
 
-- on tendermint repo : https://github.com/tendermint/tendermint/issues/1136
-- on cosmos-sdk repo : https://github.com/cosmos/cosmos-sdk/issues/5231
-- about multiple consensus keys : https://github.com/tendermint/tendermint/issues/1758#issuecomment-545291698
+- on tendermint repo : <https://github.com/tendermint/tendermint/issues/1136>
+- on cosmos-sdk repo : <https://github.com/cosmos/cosmos-sdk/issues/5231>
+- about multiple consensus keys : <https://github.com/tendermint/tendermint/issues/1758#issuecomment-545291698>

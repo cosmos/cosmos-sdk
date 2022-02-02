@@ -339,13 +339,13 @@ other modules. This will be addressed in separate ADRs or updates to this ADR.
 
 Other future improvements may include:
 
-* custom code generation that:
-    * simplifies interfaces (ex. generates code with `sdk.Context` instead of `context.Context`)
-    * optimizes inter-module calls - for instance caching resolved methods after first invocation
-* combining `StoreKey`s and `ModuleKey`s into a single interface so that modules have a single OCAPs handle
-* code generation which makes inter-module communication more performant
-* decoupling `ModuleKey` creation from `AppModuleBasic.Name()` so that app's can override root module account names
-* inter-module hooks and plugins
+- custom code generation that:
+    - simplifies interfaces (ex. generates code with `sdk.Context` instead of `context.Context`)
+    - optimizes inter-module calls - for instance caching resolved methods after first invocation
+- combining `StoreKey`s and `ModuleKey`s into a single interface so that modules have a single OCAPs handle
+- code generation which makes inter-module communication more performant
+- decoupling `ModuleKey` creation from `AppModuleBasic.Name()` so that app's can override root module account names
+- inter-module hooks and plugins
 
 ## Alternatives
 
@@ -357,11 +357,11 @@ Cosmos SDK and could even be used for inter-module OCAPs as described in [\#5931
 The advantages of the approach described in this ADR are mostly around how it integrates with other parts of the Cosmos SDK,
 specifically:
 
-* protobuf so that:
-    * code generation of interfaces can be leveraged for a better dev UX
-    * module interfaces are versioned and checked for breakage using [buf](https://docs.buf.build/breaking-overview)
-* sub-module accounts as per ADR 028
-* the general `Msg` passing paradigm and the way signers are specified by `GetSigners`
+- protobuf so that:
+    - code generation of interfaces can be leveraged for a better dev UX
+    - module interfaces are versioned and checked for breakage using [buf](https://docs.buf.build/breaking-overview)
+- sub-module accounts as per ADR 028
+- the general `Msg` passing paradigm and the way signers are specified by `GetSigners`
 
 Also, this is a complete replacement for keepers and could be applied to _all_ inter-module communication whereas the
 `x/capability` approach in #5931 would need to be applied method by method.

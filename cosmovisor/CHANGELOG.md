@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 + [\#10285](https://github.com/cosmos/cosmos-sdk/pull/10316) Added `run` action.
 + [\#10533](https://github.com/cosmos/cosmos-sdk/pull/10649) Added environmental variable `DAEMON_BACKUP_DIR` to allow node to set a custom backup directory.
+
 ### Deprecated
 
 + [\#10285](https://github.com/cosmos/cosmos-sdk/pull/10316) Running `cosmovisor` without the `run` argument.
@@ -64,12 +65,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 + [\#10217](https://github.com/cosmos/cosmos-sdk/pull/10217) Replacing logging to use zerolog.
 
 ### CLI Breaking
+
 + [\#10128](https://github.com/cosmos/cosmos-sdk/pull/10128) Change default value of `DAEMON_RESTART_AFTER_UPGRADE` to `true`.
 
 ## v0.1 2021-08-06
 
-This is the first release and we started this changelog on 2021-07-01. See the (README)[https://github.com/cosmos/cosmos-sdk/blob/release/cosmovisor/v0.1.x/cosmovisor/CHANGELOG.md] file for the full list of features.
+This is the first release and we started this changelog on 2021-07-01. See the [README](https://github.com/cosmos/cosmos-sdk/blob/release/cosmovisor/v0.1.x/cosmovisor/CHANGELOG.md) file for the full list of features.
 
 ## Features
 
-* [\#9652](https://github.com/cosmos/cosmos-sdk/pull/9652) Add backup option for cosmovisor.
++ [\#9652](https://github.com/cosmos/cosmos-sdk/pull/9652) Add backup option for cosmovisor.

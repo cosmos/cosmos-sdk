@@ -34,7 +34,7 @@ type Keeper struct {
 
 For example, here is the type definition of the `keeper` from the `staking` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/3bafd8255a502e5a9cee07391cf8261538245dfd/x/staking/keeper/keeper.go#L23-L33
++++ <https://github.com/cosmos/cosmos-sdk/blob/3bafd8255a502e5a9cee07391cf8261538245dfd/x/staking/keeper/keeper.go#L23-L33>
 
 Let us go through the different parameters:
 
@@ -78,7 +78,7 @@ The [module `KVStore`](../core/store.md#kvstore-and-commitkvstore-interfaces) al
 
 This is an example from the `auth` module to iterate accounts:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/bf8809ef9840b4f5369887a38d8345e2380a567f/x/auth/keeper/account.go#L70-L83
++++ <https://github.com/cosmos/cosmos-sdk/blob/bf8809ef9840b4f5369887a38d8345e2380a567f/x/auth/keeper/account.go#L70-L83>
 
 ## Next {hide}
 

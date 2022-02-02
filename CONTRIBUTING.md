@@ -1,7 +1,7 @@
 # Contributing
 
 - [Contributing](#contributing)
-    - [Dev Calls](#dev-calls)
+    - [Teams Dev Calls](#teams-dev-calls)
     - [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
     - [Development Procedure](#development-procedure)
         - [Testing](#testing)
@@ -15,6 +15,9 @@
         - [PR Targeting](#pr-targeting)
     - [Code Owner Membership](#code-owner-membership)
     - [Concept & Feature Approval Process](#concept--feature-approval-process)
+        - [Strategy Discovery](#strategy-discovery)
+        - [Concept Approval](#concept-approval)
+        - [Implementation & Release Approval](#implementation--release-approval)
 
 Thank you for considering making contributions to the Cosmos SDK and related repositories!
 
@@ -23,13 +26,11 @@ discussion or proposing code changes. To ensure a smooth workflow for all
 contributors, the general procedure for contributing has been established:
 
 1. Start by browsing [new issues](https://github.com/cosmos/cosmos-sdk/issues) and [discussions](https://github.com/cosmos/cosmos-sdk/discussions). If you are looking for something interesting or if you have something in your mind, there is a chance it was has been discussed.
-
-- Looking for a good place to start contributing? How about checking out some [good first issues](https://github.com/cosmos/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)?
-
+   - Looking for a good place to start contributing? How about checking out some [good first issues](https://github.com/cosmos/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)?
 2. Determine whether a GitHub issue or discussion is more appropriate for your needs:
-1. If want to propose something new that requires specification or an additional design, or you would like to change a process, start with a [new discussion](https://github.com/cosmos/cosmos-sdk/discussions/new). With discussions, we can better handle the design process using discussion threads. A discussion usually leads to one or more issues.
-2. If the issue you want addressed is a specific proposal or a bug, then open a [new issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose).
-3. Review existing [issues](https://github.com/cosmos/cosmos-sdk/issues) to find an issue you'd like to help with.
+   1. If want to propose something new that requires specification or an additional design, or you would like to change a process, start with a [new discussion](https://github.com/cosmos/cosmos-sdk/discussions/new). With discussions, we can better handle the design process using discussion threads. A discussion usually leads to one or more issues.
+   2. If the issue you want addressed is a specific proposal or a bug, then open a [new issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose).
+   3. Review existing [issues](https://github.com/cosmos/cosmos-sdk/issues) to find an issue you'd like to help with.
 3. Participate in thoughtful discussion on that issue.
 4. If you would like to contribute:
    1. Ensure that the proposal has been accepted.
@@ -55,10 +56,10 @@ The important development announcements are shared on [Discord](https://discord.
 
 To synchronize we have few major meetings:
 
-+ Architecture calls: bi-weekly on Fridays at 14:00 UTC (alternating with the grooming meeting below).
-+ Grooming / Planning: bi-weekly on Fridays at 14:00 UTC (alternating with the architecture meeting above).
-+ Cosmos Community SDK Development Call on the last Wednesday of every month at 17:00 UTC.
-+ Cosmos Roadmap Prioritization every 4 weeks on Tuesday at 15:00 UTC (limited participation).
+- Architecture calls: bi-weekly on Fridays at 14:00 UTC (alternating with the grooming meeting below).
+- Grooming / Planning: bi-weekly on Fridays at 14:00 UTC (alternating with the architecture meeting above).
+- Cosmos Community SDK Development Call on the last Wednesday of every month at 17:00 UTC.
+- Cosmos Roadmap Prioritization every 4 weeks on Tuesday at 15:00 UTC (limited participation).
 
 If you would like to join one of those calls, then please contact us on [Discord](https://discord.com/invite/cosmosnetwork) or reach out directly to Cory Levinson from Regen Network (cory@regen.network).
 
@@ -189,7 +190,7 @@ In order for imports to properly compile in your IDE, you may need to manually s
 
 For example, in vscode your `.vscode/settings.json` should look like:
 
-```
+```json
 {
     "protoc": {
         "options": [
@@ -202,7 +203,7 @@ For example, in vscode your `.vscode/settings.json` should look like:
 
 ## Branching Model and Release
 
-User-facing repos should adhere to the trunk based development branching model: https://trunkbaseddevelopment.com/. User branches should start with a user name, example: `{moniker}/{issue#}-branch-name`.
+User-facing repos should adhere to the trunk based development branching model: <https://trunkbaseddevelopment.com/.> User branches should start with a user name, example: `{moniker}/{issue#}-branch-name`.
 
 The Cosmos SDK repository is a [multi Go module](https://github.com/golang/go/wiki/Modules#is-it-possible-to-add-a-module-to-a-multi-module-repository) repository. It means that we have more than one Go module in a single repository.
 
@@ -245,9 +246,9 @@ stripped with no prior warning or consent from the member in question.
 
 Other potential removal criteria:
 
-* Missing 3 scheduled meetings results in ICF evaluating whether the member should be
+- Missing 3 scheduled meetings results in ICF evaluating whether the member should be
     removed / replaced
-* Violation of Code of Conduct
+- Violation of Code of Conduct
 
 Earning this privilege should be considered to be no small feat and is by no
 means guaranteed by any quantifiable metric. Serving as a code owner is a symbol of great trust from
@@ -261,23 +262,23 @@ is broken up into three distinct stages: **Strategy Discovery**, **Concept Appro
 
 ### Strategy Discovery
 
-* Develop long term priorities, strategy and roadmap for the Cosmos SDK
-* Release committee not yet defined as there is already a roadmap that can be used for the time being
+- Develop long term priorities, strategy and roadmap for the Cosmos SDK
+- Release committee not yet defined as there is already a roadmap that can be used for the time being
 
 ### Concept Approval
 
-* Architecture Decision Records (ADRs) may be proposed by any contributors or maintainers of the Cosmos SDK,
+- Architecture Decision Records (ADRs) may be proposed by any contributors or maintainers of the Cosmos SDK,
     and should follow the guidelines outlined in the
     [ADR Creation Process](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/PROCESS.md)
-* After proposal, a time bound period for Request for Comment (RFC) on ADRs commences
-* ADRs are intended to be iterative, and may be merged into `master` while still in a `Proposed` status
+- After proposal, a time bound period for Request for Comment (RFC) on ADRs commences
+- ADRs are intended to be iterative, and may be merged into `master` while still in a `Proposed` status
 
 **Time Bound Period**
 
-* Once a PR for an ADR is opened, reviewers are expected to perform a first
+- Once a PR for an ADR is opened, reviewers are expected to perform a first
   review within 1 week of pull request being open
-* Time bound period for individual ADR Pull Requests to be merged should not exceed 2 weeks
-* Total time bound period for an ADR to reach a decision (`ABANDONED | ACCEPTED | REJECTED`) should not exceed 4 weeks
+- Time bound period for individual ADR Pull Requests to be merged should not exceed 2 weeks
+- Total time bound period for an ADR to reach a decision (`ABANDONED | ACCEPTED | REJECTED`) should not exceed 4 weeks
 
 If an individual Pull Request for an ADR needs more time than 2 weeks to reach resolution, it should be merged
 in current state (`Draft` or `Proposed`), with its contents updated to summarize
@@ -297,37 +298,37 @@ of the **Concept Approval Committee**.
 
 **Committee Members**
 
-* Core Members: **Aaron** (Regen), **Bez** (IG)
+- Core Members: **Aaron** (Regen), **Bez** (IG)
 
 **Committee Criteria**
 
 Members must:
 
-* Participate in all or almost all ADR discussions, both on GitHub as well as in bi-weekly Architecture Review
+- Participate in all or almost all ADR discussions, both on GitHub as well as in bi-weekly Architecture Review
   meetings
-* Be active contributors to the Cosmos SDK, and furthermore should be continuously making substantial contributions
+- Be active contributors to the Cosmos SDK, and furthermore should be continuously making substantial contributions
   to the project's codebase, review process, documentation and ADRs
-* Have stake in the Cosmos SDK project, represented by:
-    * Being a client / user of the Comsos SDK
-    * "[giving back](https://www.debian.org/social_contract)" to the software
-* Delegate representation in case of vacation or absence
+- Have stake in the Cosmos SDK project, represented by:
+    - Being a client / user of the Comsos SDK
+    - "[giving back](https://www.debian.org/social_contract)" to the software
+- Delegate representation in case of vacation or absence
 
 Code owners need to maintain participation in the process, ideally as members of **Concept Approval Committee**
 members, but at the very least as active participants in ADR discussions
 
 Removal criteria:
 
-* Missing 3 meetings results in ICF evaluating whether the member should be removed / replaced
-* Violation of Code of Conduct
+- Missing 3 meetings results in ICF evaluating whether the member should be removed / replaced
+- Violation of Code of Conduct
 
 ### Implementation & Release Approval
 
 The following process should be adhered to both for implementation PRs corresponding to ADRs, as
 well as for PRs made as part of a release process:
 
-* Code reviewers should ensure the PR does exactly what the ADR said it should
-* Code reviewers should have more senior engineering capability
-* 1/2 approval is required from the **primary repo maintainers** in `CODEOWNERS`
+- Code reviewers should ensure the PR does exactly what the ADR said it should
+- Code reviewers should have more senior engineering capability
+- 1/2 approval is required from the **primary repo maintainers** in `CODEOWNERS`
 
 **Note**: For any major release series denoted as a "Stable Release" (e.g. v0.42 "Stargate"), a separate release
 committee is often established. Stable Releases, and their corresponding release committees are documented

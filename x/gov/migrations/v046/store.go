@@ -24,7 +24,7 @@ func migrateProposals(store sdk.KVStore, cdc codec.BinaryCodec) error {
 			return err
 		}
 
-		newProp, err := convertProposal(oldProp)
+		newProp, err := convertToNewProposal(oldProp)
 		if err != nil {
 			return err
 		}

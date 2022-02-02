@@ -5099,8 +5099,6 @@ func (*MsgVoteResponse) Descriptor() ([]byte, []int) {
 }
 
 // MsgVoteWeighted defines a message to cast a vote.
-//
-// Since: cosmos-sdk 0.43
 type MsgVoteWeighted struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -5153,8 +5151,6 @@ func (x *MsgVoteWeighted) GetOptions() []*WeightedVoteOption {
 }
 
 // MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.
-//
-// Since: cosmos-sdk 0.43
 type MsgVoteWeightedResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

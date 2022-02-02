@@ -138,7 +138,7 @@ message AuthInfo {
 
   // Tip is the optional tip used for meta-transactions.
   //
-  // Since: cosmos-sdk 0.45
+  // Since: cosmos-sdk 0.46
   Tip tip = 3;
 }
 
@@ -228,7 +228,7 @@ message Tip {
 // actual tx). AuxSignerData is not a valid tx in itself, and will be rejected
 // by the node if sent directly as-is.
 //
-// Since: cosmos-sdk 0.45
+// Since: cosmos-sdk 0.46
 message AuxSignerData {
   // address is the bech32-encoded address of the auxiliary signer. If using
   // AuxSignerData across different chains, the bech32 prefix of the target

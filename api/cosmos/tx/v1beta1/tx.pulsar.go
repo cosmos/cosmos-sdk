@@ -8498,7 +8498,7 @@ type AuthInfo struct {
 	Fee *Fee `protobuf:"bytes,2,opt,name=fee,proto3" json:"fee,omitempty"`
 	// Tip is the optional tip used for meta-transactions.
 	//
-	// Since: cosmos-sdk 0.45
+	// Since: cosmos-sdk 0.46
 	Tip *Tip `protobuf:"bytes,3,opt,name=tip,proto3" json:"tip,omitempty"`
 }
 
@@ -8800,7 +8800,7 @@ func (x *Tip) GetTipper() string {
 // actual tx). AuxSignerData is not a valid tx in itself, and will be rejected
 // by the node if sent directly as-is.
 //
-// Since: cosmos-sdk 0.45
+// Since: cosmos-sdk 0.46
 type AuxSignerData struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

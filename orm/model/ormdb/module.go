@@ -74,7 +74,7 @@ type ModuleDB interface {
 }
 
 type JSONSource interface {
-	JSONReader(tableName protoreflect.FullName) (io.Reader, error)
+	JSONReader(tableName protoreflect.FullName) (io.ReadCloser, error)
 }
 
 type JSONSink interface {
@@ -106,6 +106,12 @@ func (m moduleDB) ValidateJSON(source JSONSource) error {
 	var errors map[protoreflect.FullName]error
 	for name, table := range m.tablesByName {
 		r, err := source.JSONReader(name)
+		defer func() {
+			err = r.Close()
+			if err != nil {
+				panic(err)
+			}
+		}()
 		if err != nil {
 			return err
 		}

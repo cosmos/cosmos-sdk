@@ -1793,6 +1793,7 @@ func TestGRPCQuery(t *testing.T) {
 	}
 
 	app := setupBaseApp(t, grpcQueryOpt)
+	app.GRPCQueryRouter().SetInterfaceRegistry(codectypes.NewInterfaceRegistry())
 
 	app.InitChain(abci.RequestInitChain{})
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}

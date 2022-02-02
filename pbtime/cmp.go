@@ -22,7 +22,12 @@ func Compare(t1, t2 *tspb.Timestamp) int {
 	return 1
 }
 
+// Returns a new timestamp with value t + d.
+// If t is nil then nil is returned
 func Add(t *tspb.Timestamp, d time.Duration) *tspb.Timestamp {
+	if t == nil {
+		return nil
+	}
 	if d == 0 {
 		t2 := *t
 		return &t2

@@ -76,4 +76,6 @@ func TestAddFuzzy(t *testing.T) {
 	check(0, 0, 0)
 	check(1, 2, 0)
 	check(-1, -1, 1)
+
+	requier.Equal(nil, Add(nil, time.Second), "works with nil values")
 }

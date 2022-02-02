@@ -49,10 +49,11 @@ func compareUint(v1, v2 protoreflect.Value) int {
 	}
 }
 
+// CompactUint64Codec encodes uint64 values using EncodeCompactUint64.
 type CompactUint64Codec struct{}
 
 func (c CompactUint64Codec) Decode(r Reader) (protoreflect.Value, error) {
-	x, err := DecodeCompactU64(r)
+	x, err := DecodeCompactUint64(r)
 	return protoreflect.ValueOfUint64(x), err
 }
 
@@ -77,6 +78,13 @@ func (c CompactUint64Codec) ComputeBufferSize(protoreflect.Value) (int, error) {
 	return c.FixedBufferSize(), nil
 }
 
+// EncodeCompactUint64 encodes uint64 values in 2,4,6 or 9 bytes.
+// Unlike regular varints, this encoding is
+// suitable for ordered prefix scans. The first two bits of the first byte
+// indicate the length of the buffer - 00 for 2, 01 for 4, 10 for 6 and
+// 11 for 9. The remaining bits are encoded with big-endian ordering.
+// Values less than 2^14 fill fit in 2 bytes, values less than 2^30 will
+// fit in 4, and values less than 2^46 will fit in 6.
 func EncodeCompactUint64(x uint64) []byte {
 	switch {
 	case x < 16384: // 2^14
@@ -118,7 +126,7 @@ func EncodeCompactUint64(x uint64) []byte {
 	}
 }
 
-func DecodeCompactU64(reader io.Reader) (uint64, error) {
+func DecodeCompactUint64(reader io.Reader) (uint64, error) {
 	var buf [9]byte
 	n, err := reader.Read(buf[:1])
 	if err != nil {

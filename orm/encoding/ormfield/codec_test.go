@@ -103,10 +103,10 @@ func TestCompactUInt32(t *testing.T) {
 			assert.Equal(t, 1, cmp)
 		}
 
-		x2, err := ormfield.DecodeCompactU32(bytes.NewReader(bx))
+		x2, err := ormfield.DecodeCompactUint32(bytes.NewReader(bx))
 		assert.NilError(t, err)
 		assert.Equal(t, x, x2)
-		y2, err := ormfield.DecodeCompactU32(bytes.NewReader(by))
+		y2, err := ormfield.DecodeCompactUint32(bytes.NewReader(by))
 		assert.NilError(t, err)
 		assert.Equal(t, y, y2)
 	})
@@ -129,10 +129,10 @@ func TestCompactUInt64(t *testing.T) {
 			assert.Equal(t, 1, cmp)
 		}
 
-		x2, err := ormfield.DecodeCompactU64(bytes.NewReader(bx))
+		x2, err := ormfield.DecodeCompactUint64(bytes.NewReader(bx))
 		assert.NilError(t, err)
 		assert.Equal(t, x, x2)
-		y2, err := ormfield.DecodeCompactU64(bytes.NewReader(by))
+		y2, err := ormfield.DecodeCompactUint64(bytes.NewReader(by))
 		assert.NilError(t, err)
 		assert.Equal(t, y, y2)
 	})

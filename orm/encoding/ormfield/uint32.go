@@ -37,10 +37,11 @@ func (u FixedUint32Codec) Encode(value protoreflect.Value, w io.Writer) error {
 	return binary.Write(w, binary.BigEndian, uint32(value.Uint()))
 }
 
+// CompactUint32Codec encodes uint32 values using EncodeCompactUint32.
 type CompactUint32Codec struct{}
 
 func (c CompactUint32Codec) Decode(r Reader) (protoreflect.Value, error) {
-	x, err := DecodeCompactU32(r)
+	x, err := DecodeCompactUint32(r)
 	return protoreflect.ValueOfUint32(x), err
 }
 
@@ -65,6 +66,13 @@ func (c CompactUint32Codec) ComputeBufferSize(protoreflect.Value) (int, error) {
 	return c.FixedBufferSize(), nil
 }
 
+// EncodeCompactUint32 encodes uint32 values in 2,3,4 or 5 bytes.
+// Unlike regular varints, this encoding is
+// suitable for ordered prefix scans. The length of the output + 2 is encoded
+// in the first 2 bits of the first byte and the remaining bits encoded with
+// big-endian ordering.
+// Values less than 2^14 fill fit in 2 bytes, values less than 2^22 will
+// fit in 3, and values less than 2^30 will fit in 4.
 func EncodeCompactUint32(x uint32) []byte {
 	switch {
 	case x < 16384: // 2^14
@@ -99,7 +107,8 @@ func EncodeCompactUint32(x uint32) []byte {
 	}
 }
 
-func DecodeCompactU32(reader io.Reader) (uint32, error) {
+// DecodeCompactUint32 decodes a uint32 encoded with EncodeCompactU32.
+func DecodeCompactUint32(reader io.Reader) (uint32, error) {
 	var buf [5]byte
 
 	n, err := reader.Read(buf[:1])

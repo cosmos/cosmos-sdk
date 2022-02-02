@@ -28,8 +28,13 @@ func Compare(t1, t2 *tspb.Timestamp) int {
 	return 1
 }
 
+func DurationIsNegative(d durpb.Duration) bool {
+	return d.Seconds < 0 || d.Seconds == 0 && d.Nanos < 0
+}
+
 // AddStd returns a new timestamp with value t + d, where d is stdlib Duration
 // If t is nil then nil is returned
+// Panics on overflow
 func AddStd(t *tspb.Timestamp, d time.Duration) *tspb.Timestamp {
 	if t == nil {
 		return nil
@@ -38,14 +43,29 @@ func AddStd(t *tspb.Timestamp, d time.Duration) *tspb.Timestamp {
 		t2 := *t
 		return &t2
 	}
-	t2 := t.AsTime()
-	return tspb.New(t2.Add(d))
+	t2 := tspb.New(t.AsTime().Add(d))
+	overflowPanic(t, t2, d < 0)
+	return t2
+}
+
+func overflowPanic(t1, t2 *tspb.Timestamp, negative bool) {
+	cmp := Compare(t1, t2)
+	if negative {
+		if cmp < 0 {
+			panic("time overflow")
+		}
+	} else {
+		if cmp > 0 {
+			panic("time overflow")
+		}
+	}
 }
 
 const second = int32(time.Second)
 
 // Add returns a new timestamp with value t + d, where d is protobuf Duration
 // If t is nil then nil is returned. Panics on overflow.
+// Note: d must be a valid PB Duration.
 func Add(t *tspb.Timestamp, d durpb.Duration) *tspb.Timestamp {
 	if t == nil {
 		return nil
@@ -61,6 +81,10 @@ func Add(t *tspb.Timestamp, d durpb.Duration) *tspb.Timestamp {
 	if t2.Nanos >= second {
 		t2.Nanos -= second
 		t2.Seconds++
+	} else if t2.Nanos <= -second {
+		t2.Nanos += second
+		t2.Seconds--
 	}
+	overflowPanic(t, &t2, DurationIsNegative(d))
 	return &t2
 }

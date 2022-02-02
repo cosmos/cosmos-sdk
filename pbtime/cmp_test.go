@@ -1,6 +1,7 @@
 package pbtime
 
 import (
+	"math"
 	"math/rand"
 	"testing"
 	"time"
@@ -83,9 +84,10 @@ func TestAddFuzzy(t *testing.T) {
 		requier.Equal(*t_expected, *tbStd, "checking pb add")
 		requier.Equal(*t_expected, *tbPb, "checking stdlib add")
 	}
+	rInt := func() int64 { return rand.Int63() / 2 }
 
 	for i := 0; i < 2000; i++ {
-		s, n, d := rand.Int63(), rand.Int63(), time.Duration(rand.Int63())
+		s, n, d := rInt(), rand.Int63n(1e9), time.Duration(rInt())
 		check(s, n, d)
 	}
 	check(0, 0, 0)
@@ -94,4 +96,37 @@ func TestAddFuzzy(t *testing.T) {
 
 	requier.Nil(Add(nil, durpb.Duration{Seconds: 1}), "Pb works with nil values")
 	requier.Nil(AddStd(nil, time.Second), "Std works with nil values")
+}
+
+func TestAddOverflow(t *testing.T) {
+	require := require.New(t)
+	tb := tspb.Timestamp{
+		Seconds: math.MaxInt64,
+		Nanos:   1000,
+	}
+	require.Panics(func() {
+		AddStd(&tb, time.Second)
+	}, "AddStd should panic on overflow")
+
+	require.Panics(func() {
+		Add(&tb, durpb.Duration{Nanos: second - 1})
+	}, "Add should panic on overflow")
+
+	// should panic on underflow
+
+	tb = tspb.Timestamp{
+		Seconds: -math.MaxInt64 - 1,
+		Nanos:   -1000,
+	}
+	require.True(tb.Seconds < 0, "sanity check")
+	require.Panics(func() {
+		tt := AddStd(&tb, -time.Second)
+		t.Log(tt)
+	}, "AddStd should panic on underflow")
+
+	require.Panics(func() {
+		tt := Add(&tb, durpb.Duration{Nanos: -second + 1})
+		t.Log(tt)
+	}, "Add should panic on underflow")
+
 }

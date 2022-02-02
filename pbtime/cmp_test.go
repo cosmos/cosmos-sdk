@@ -2,12 +2,12 @@ package pbtime
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
 	"time"
 
-	"math/rand"
-
 	"github.com/stretchr/testify/require"
+	durpb "google.golang.org/protobuf/types/known/durationpb"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -20,10 +20,11 @@ func TestIsZero(t *testing.T) {
 		t        *tspb.Timestamp
 		expected bool
 	}{
+		{nil, true},
 		{&tspb.Timestamp{}, true},
 		{new(0, 0), true},
 
-		{new(1, 0), true},
+		{new(1, 0), false},
 		{new(0, 1), false},
 		{tspb.New(time.Time{}), false},
 	}
@@ -63,10 +64,12 @@ func TestAddFuzzy(t *testing.T) {
 	requier := require.New(t)
 	check := func(s, n int64, d time.Duration) {
 		t := time.Unix(s, n)
-		t_expected := t.Add(d)
+		t_expected := tspb.New(t.Add(d))
 		tb := tspb.New(t)
-		tb = Add(tb, d)
-		requier.Equal(*tspb.New(t_expected), *tb)
+		tbPb := Add(tb, *durpb.New(d))
+		tbStd := AddStd(tb, d)
+		requier.Equal(*t_expected, *tbStd, "checking pb add")
+		requier.Equal(*t_expected, *tbPb, "checking stdlib add")
 	}
 
 	for i := 0; i < 2000; i++ {
@@ -77,5 +80,6 @@ func TestAddFuzzy(t *testing.T) {
 	check(1, 2, 0)
 	check(-1, -1, 1)
 
-	requier.Equal(nil, Add(nil, time.Second), "works with nil values")
+	requier.Nil(Add(nil, durpb.Duration{Seconds: 1}), "Pb works with nil values")
+	requier.Nil(AddStd(nil, time.Second), "Std works with nil values")
 }

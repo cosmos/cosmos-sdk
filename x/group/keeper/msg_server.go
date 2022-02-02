@@ -234,6 +234,10 @@ func (k Keeper) UpdateGroupMetadata(goCtx context.Context, req *group.MsgUpdateG
 }
 
 func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreateGroupWithPolicy) (*group.MsgCreateGroupWithPolicyResponse, error) {
+	groupPolicyMetadata := req.GroupPolicyMetadata
+	if err := assertMetadataLength(groupPolicyMetadata, "group policy metadata"); err != nil {
+		return nil, err
+	}
 
 	groupRes, err := k.CreateGroup(goCtx, &group.MsgCreateGroup{
 		Admin:    req.Admin,

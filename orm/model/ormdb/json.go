@@ -3,9 +3,7 @@ package ormdb
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
-	"io/fs"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -23,22 +21,61 @@ func NewRawJSONSource(message json.RawMessage) (*RawJSONSource, error) {
 	return &RawJSONSource{m}, err
 }
 
-func (r RawJSONSource) JSONReader(tableName protoreflect.FullName) (io.Reader, error) {
-	return bytes.NewReader(r.m[string(tableName)]), nil
+func (r RawJSONSource) JSONReader(tableName protoreflect.FullName) (io.ReadCloser, error) {
+	j, ok := r.m[string(tableName)]
+	if !ok {
+		return nil, nil
+	}
+	return readCloserWrapper{bytes.NewReader(j)}, nil
 }
+
+type readCloserWrapper struct {
+	io.Reader
+}
+
+func (r readCloserWrapper) Close() error { return nil }
 
 var _ JSONSource = RawJSONSource{}
 
-type FSJSONSouce struct {
-	fs fs.FS
+type RawJSONSink struct {
+	m map[string]json.RawMessage
 }
 
-func (F FSJSONSouce) JSONWriter(tableName protoreflect.FullName) (io.Writer, error) {
+func (r *RawJSONSink) JSONWriter(tableName protoreflect.FullName) (io.WriteCloser, error) {
+	if r.m == nil {
+		r.m = map[string]json.RawMessage{}
+	}
+
+	return &rawWriter{Buffer: &bytes.Buffer{}, sink: r, table: tableName}, nil
 }
 
-func (F FSJSONSouce) JSONReader(tableName protoreflect.FullName) (io.Reader, error) {
-	return F.fs.Open(fmt.Sprintf("%s.json", tableName))
+func (r *RawJSONSink) JSON() (json.RawMessage, error) {
+	return json.Marshal(r.m)
 }
 
-var _ JSONSource = FSJSONSouce{}
-var _ JSONSink = FSJSONSouce{}
+type rawWriter struct {
+	*bytes.Buffer
+	table protoreflect.FullName
+	sink  *RawJSONSink
+}
+
+func (r rawWriter) Close() error {
+	r.sink.m[string(r.table)] = r.Buffer.Bytes()
+	return nil
+}
+
+var _ JSONSink = &RawJSONSink{}
+
+//type FSJSONSouce struct {
+//	fs fs.FS
+//}
+//
+//func (F FSJSONSouce) JSONWriter(tableName protoreflect.FullName) (io.Writer, error) {
+//}
+//
+//func (F FSJSONSouce) JSONReader(tableName protoreflect.FullName) (io.Reader, error) {
+//	return F.fs.Open(fmt.Sprintf("%s.json", tableName))
+//}
+//
+//var _ JSONSource = FSJSONSouce{}
+//var _ JSONSink = FSJSONSouce{}

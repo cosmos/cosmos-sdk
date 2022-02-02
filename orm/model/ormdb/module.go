@@ -74,11 +74,13 @@ type ModuleDB interface {
 }
 
 type JSONSource interface {
+	// JSONReader returns an io.ReadCloser for the named table. If there
+	// is no JSON for this table, this method will return nil.
 	JSONReader(tableName protoreflect.FullName) (io.ReadCloser, error)
 }
 
 type JSONSink interface {
-	JSONWriter(tableName protoreflect.FullName) (io.Writer, error)
+	JSONWriter(tableName protoreflect.FullName) (io.WriteCloser, error)
 }
 
 type moduleDB struct {

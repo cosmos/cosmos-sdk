@@ -128,4 +128,23 @@ type Table interface {
 
 	// ID is the ID of this table within the schema of its FileDescriptor.
 	ID() uint32
+
+	Schema
+}
+
+// Schema is an interface for things that contain tables and can encode and
+// decode kv-store pairs.
+type Schema interface {
+	ormkv.EntryCodec
+
+	// GetTable returns the table for the provided message type or nil.
+	GetTable(message proto.Message) Table
+}
+
+type AutoIncrementTable interface {
+	Table
+
+	// InsertReturningID inserts the provided entry in the store and returns the newly
+	// generated ID for the message or an error.
+	InsertReturningID(ctx context.Context, message proto.Message) (newId uint64, err error)
 }

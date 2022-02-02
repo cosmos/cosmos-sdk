@@ -65,6 +65,10 @@ func (t tableGen) genStoreInterface() {
 	t.P("Delete(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
 	t.P("Has(ctx ", contextPkg.Ident("Context"), ", ", t.fieldsArgs(t.primaryKeyFields.Names()), ") (found bool, err error)")
 	t.P("Get(ctx ", contextPkg.Ident("Context"), ", ", t.fieldsArgs(t.primaryKeyFields.Names()), ") (*", t.QualifiedGoIdent(t.msg.GoIdent), ", error)")
+
+	_, _, pkDeleteSig := t.uniqueIndexSig(t.table.PrimaryKey.Fields)
+	t.P(pkDeleteSig)
+
 	for _, idx := range t.uniqueIndexes {
 		t.genUniqueIndexSig(idx)
 	}
@@ -77,9 +81,9 @@ func (t tableGen) genStoreInterface() {
 }
 
 // returns the has and get (in that order) function signature for unique indexes.
-func (t tableGen) uniqueIndexSig(idx *ormv1alpha1.SecondaryIndexDescriptor) (string, string, string) {
-	fieldsSlc := strings.Split(idx.Fields, ",")
-	camelFields := t.fieldsToCamelCase(idx.Fields)
+func (t tableGen) uniqueIndexSig(idxFields string) (string, string, string) {
+	fieldsSlc := strings.Split(idxFields, ",")
+	camelFields := t.fieldsToCamelCase(idxFields)
 
 	hasFuncName := "HasBy" + camelFields
 	getFuncName := "GetBy" + camelFields
@@ -93,7 +97,7 @@ func (t tableGen) uniqueIndexSig(idx *ormv1alpha1.SecondaryIndexDescriptor) (str
 }
 
 func (t tableGen) genUniqueIndexSig(idx *ormv1alpha1.SecondaryIndexDescriptor) {
-	hasSig, getSig, deleteSig := t.uniqueIndexSig(idx)
+	hasSig, getSig, deleteSig := t.uniqueIndexSig(idx.Fields)
 	t.P(hasSig)
 	t.P(getSig)
 	t.P(deleteSig)
@@ -198,9 +202,11 @@ func (t tableGen) genStoreImpl() {
 	t.P("}")
 	t.P()
 
+	t.deleteByImpl(receiverVar, 0, t.table.PrimaryKey.Fields)
+
 	for _, idx := range t.uniqueIndexes {
 		fields := strings.Split(idx.Fields, ",")
-		hasName, getName, deleteName := t.uniqueIndexSig(idx)
+		hasName, getName, _ := t.uniqueIndexSig(idx.Fields)
 
 		// has
 		t.P("func (", receiverVar, " ", t.messageStoreReceiverName(t.msg), ") ", hasName, "{")
@@ -232,15 +238,7 @@ func (t tableGen) genStoreImpl() {
 		t.P()
 
 		// delete
-		t.P("func (", receiverVar, " ", t.messageStoreReceiverName(t.msg), ") ", deleteName, "{")
-		t.P("return ", receiverVar, ".table.GetIndexByID(", idx.Id, ").(",
-			ormTablePkg.Ident("UniqueIndex"), ").DeleteByKey(ctx,")
-		for _, field := range fields {
-			t.P(field, ",")
-		}
-		t.P(")")
-		t.P("}")
-		t.P()
+		t.deleteByImpl(receiverVar, idx.Id, idx.Fields)
 	}
 
 	// List
@@ -258,6 +256,20 @@ func (t tableGen) genStoreImpl() {
 	t.P()
 
 	t.P(receiver, "doNotImplement() {}")
+	t.P()
+}
+
+func (t tableGen) deleteByImpl(receiverVar string, idxId uint32, fields string) {
+	_, _, deleteName := t.uniqueIndexSig(fields)
+	fieldNames := strings.Split(fields, ",")
+	t.P("func (", receiverVar, " ", t.messageStoreReceiverName(t.msg), ") ", deleteName, "{")
+	t.P("return ", receiverVar, ".table.GetIndexByID(", idxId, ").(",
+		ormTablePkg.Ident("UniqueIndex"), ").DeleteByKey(ctx,")
+	for _, field := range fieldNames {
+		t.P(field, ",")
+	}
+	t.P(")")
+	t.P("}")
 	t.P()
 }
 

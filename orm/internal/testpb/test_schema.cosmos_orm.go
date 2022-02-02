@@ -18,6 +18,7 @@ type ExampleTableStore interface {
 	Delete(ctx context.Context, exampleTable *ExampleTable) error
 	Has(ctx context.Context, u32 uint32, i64 int64, str string) (found bool, err error)
 	Get(ctx context.Context, u32 uint32, i64 int64, str string) (*ExampleTable, error)
+	DeleteByU32I64Str(ctx context.Context, u32 uint32, i64 int64, str string) error
 	HasByU64Str(ctx context.Context, u64 uint64, str string) (found bool, err error)
 	GetByU64Str(ctx context.Context, u64 uint64, str string) (*ExampleTable, error)
 	DeleteByU64Str(ctx context.Context, u64 uint64, str string) error
@@ -156,6 +157,14 @@ func (this exampleTableStore) Get(ctx context.Context, u32 uint32, i64 int64, st
 	return &exampleTable, err
 }
 
+func (this exampleTableStore) DeleteByU32I64Str(ctx context.Context, u32 uint32, i64 int64, str string) error {
+	return this.table.GetIndexByID(0).(ormtable.UniqueIndex).DeleteByKey(ctx,
+		u32,
+		i64,
+		str,
+	)
+}
+
 func (this exampleTableStore) HasByU64Str(ctx context.Context, u64 uint64, str string) (found bool, err error) {
 	return this.table.GetIndexByID(1).(ormtable.UniqueIndex).Has(ctx,
 		u64,
@@ -212,6 +221,7 @@ type ExampleAutoIncrementTableStore interface {
 	Delete(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
 	Has(ctx context.Context, id uint64) (found bool, err error)
 	Get(ctx context.Context, id uint64) (*ExampleAutoIncrementTable, error)
+	DeleteById(ctx context.Context, id uint64) error
 	HasByX(ctx context.Context, x string) (found bool, err error)
 	GetByX(ctx context.Context, x string) (*ExampleAutoIncrementTable, error)
 	DeleteByX(ctx context.Context, x string) error
@@ -301,6 +311,12 @@ func (this exampleAutoIncrementTableStore) Get(ctx context.Context, id uint64) (
 		return nil, err
 	}
 	return &exampleAutoIncrementTable, err
+}
+
+func (this exampleAutoIncrementTableStore) DeleteById(ctx context.Context, id uint64) error {
+	return this.table.GetIndexByID(0).(ormtable.UniqueIndex).DeleteByKey(ctx,
+		id,
+	)
 }
 
 func (this exampleAutoIncrementTableStore) HasByX(ctx context.Context, x string) (found bool, err error) {

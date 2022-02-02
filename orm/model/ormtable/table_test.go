@@ -336,7 +336,6 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	data = append(data, &testpb.ExampleTable{U32: 9})
 	err = store.Save(ctx, data[10])
 	assert.NilError(t, err)
-	pkIndex := table.GetUniqueIndex("u32,i64,str")
 	a, err = store.Get(ctx, 9, 0, "")
 	assert.NilError(t, err)
 	assert.Assert(t, a != nil)
@@ -366,11 +365,10 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assertTablesEqual(t, table, ctx, store2)
 
 	// let's delete item 5
-	key5 := []interface{}{uint32(7), int64(-2), "abe"}
-	err = pkIndex.DeleteByKey(ctx, key5...)
+	err = store.DeleteByU32I64Str(ctx, 7, -2, "abe")
 	assert.NilError(t, err)
 	// it should be gone
-	found, err = pkIndex.Has(ctx, key5...)
+	found, err = store.Has(ctx, 7, -2, "abe")
 	assert.NilError(t, err)
 	assert.Assert(t, !found)
 	// and missing from the iterator

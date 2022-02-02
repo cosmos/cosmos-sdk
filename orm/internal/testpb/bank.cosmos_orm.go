@@ -18,6 +18,7 @@ type BalanceStore interface {
 	Delete(ctx context.Context, balance *Balance) error
 	Has(ctx context.Context, address string, denom string) (found bool, err error)
 	Get(ctx context.Context, address string, denom string) (*Balance, error)
+	DeleteByAddressDenom(ctx context.Context, address string, denom string) error
 	List(ctx context.Context, prefixKey BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
 	ListRange(ctx context.Context, from, to BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
 
@@ -107,6 +108,13 @@ func (this balanceStore) Get(ctx context.Context, address string, denom string) 
 	return &balance, err
 }
 
+func (this balanceStore) DeleteByAddressDenom(ctx context.Context, address string, denom string) error {
+	return this.table.GetIndexByID(0).(ormtable.UniqueIndex).DeleteByKey(ctx,
+		address,
+		denom,
+	)
+}
+
 func (this balanceStore) List(ctx context.Context, prefixKey BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error) {
 	it, err := this.table.GetIndexByID(prefixKey.id()).List(ctx, prefixKey.values(), opts...)
 	return BalanceIterator{it}, err
@@ -136,6 +144,7 @@ type SupplyStore interface {
 	Delete(ctx context.Context, supply *Supply) error
 	Has(ctx context.Context, denom string) (found bool, err error)
 	Get(ctx context.Context, denom string) (*Supply, error)
+	DeleteByDenom(ctx context.Context, denom string) error
 	List(ctx context.Context, prefixKey SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error)
 	ListRange(ctx context.Context, from, to SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error)
 
@@ -205,6 +214,12 @@ func (this supplyStore) Get(ctx context.Context, denom string) (*Supply, error) 
 		return nil, err
 	}
 	return &supply, err
+}
+
+func (this supplyStore) DeleteByDenom(ctx context.Context, denom string) error {
+	return this.table.GetIndexByID(0).(ormtable.UniqueIndex).DeleteByKey(ctx,
+		denom,
+	)
 }
 
 func (this supplyStore) List(ctx context.Context, prefixKey SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error) {

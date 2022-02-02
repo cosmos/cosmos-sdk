@@ -85,7 +85,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.grantee[2] = s.createAccount("grantee3")
 
 	// grant send authorization to grantee3
-	out, err = ExecGrant(val, []string{
+	out, err = CreateGrant(val, []string{
 		s.grantee[2].String(),
 		"send",
 		fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),

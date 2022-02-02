@@ -77,23 +77,26 @@ func (t tableGen) genStoreInterface() {
 }
 
 // returns the has and get (in that order) function signature for unique indexes.
-func (t tableGen) uniqueIndexSig(idx *ormv1alpha1.SecondaryIndexDescriptor) (string, string) {
+func (t tableGen) uniqueIndexSig(idx *ormv1alpha1.SecondaryIndexDescriptor) (string, string, string) {
 	fieldsSlc := strings.Split(idx.Fields, ",")
 	camelFields := t.fieldsToCamelCase(idx.Fields)
 
 	hasFuncName := "HasBy" + camelFields
 	getFuncName := "GetBy" + camelFields
+	deleteFuncName := "DeleteBy" + camelFields
 	args := t.fieldArgsFromStringSlice(fieldsSlc)
 
 	hasFuncSig := fmt.Sprintf("%s (ctx context.Context, %s) (found bool, err error)", hasFuncName, args)
 	getFuncSig := fmt.Sprintf("%s (ctx context.Context, %s) (*%s, error)", getFuncName, args, t.msg.GoIdent.GoName)
-	return hasFuncSig, getFuncSig
+	deleteFuncSig := fmt.Sprintf("%s (ctx context.Context, %s) error", deleteFuncName, args)
+	return hasFuncSig, getFuncSig, deleteFuncSig
 }
 
 func (t tableGen) genUniqueIndexSig(idx *ormv1alpha1.SecondaryIndexDescriptor) {
-	hasSig, getSig := t.uniqueIndexSig(idx)
+	hasSig, getSig, deleteSig := t.uniqueIndexSig(idx)
 	t.P(hasSig)
 	t.P(getSig)
+	t.P(deleteSig)
 }
 
 func (t tableGen) iteratorName() string {
@@ -197,7 +200,7 @@ func (t tableGen) genStoreImpl() {
 
 	for _, idx := range t.uniqueIndexes {
 		fields := strings.Split(idx.Fields, ",")
-		hasName, getName := t.uniqueIndexSig(idx)
+		hasName, getName, deleteName := t.uniqueIndexSig(idx)
 
 		// has
 		t.P("func (", receiverVar, " ", t.messageStoreReceiverName(t.msg), ") ", hasName, "{")
@@ -225,6 +228,17 @@ func (t tableGen) genStoreImpl() {
 		t.P("return nil, err")
 		t.P("}")
 		t.P("return &", varName, ", nil")
+		t.P("}")
+		t.P()
+
+		// delete
+		t.P("func (", receiverVar, " ", t.messageStoreReceiverName(t.msg), ") ", deleteName, "{")
+		t.P("return ", receiverVar, ".table.GetIndexByID(", idx.Id, ").(",
+			ormTablePkg.Ident("UniqueIndex"), ").DeleteByKey(ctx,")
+		for _, field := range fields {
+			t.P(field, ",")
+		}
+		t.P(")")
 		t.P("}")
 		t.P()
 	}

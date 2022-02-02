@@ -20,6 +20,7 @@ type ExampleTableStore interface {
 	Get(ctx context.Context, u32 uint32, i64 int64, str string) (*ExampleTable, error)
 	HasByU64Str(ctx context.Context, u64 uint64, str string) (found bool, err error)
 	GetByU64Str(ctx context.Context, u64 uint64, str string) (*ExampleTable, error)
+	DeleteByU64Str(ctx context.Context, u64 uint64, str string) error
 	List(ctx context.Context, prefixKey ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error)
 	ListRange(ctx context.Context, from, to ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error)
 
@@ -174,6 +175,13 @@ func (this exampleTableStore) GetByU64Str(ctx context.Context, u64 uint64, str s
 	return &exampleTable, nil
 }
 
+func (this exampleTableStore) DeleteByU64Str(ctx context.Context, u64 uint64, str string) error {
+	return this.table.GetIndexByID(1).(ormtable.UniqueIndex).DeleteByKey(ctx,
+		u64,
+		str,
+	)
+}
+
 func (this exampleTableStore) List(ctx context.Context, prefixKey ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error) {
 	opts = append(opts, ormlist.Prefix(prefixKey.values()...))
 	it, err := this.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
@@ -208,6 +216,7 @@ type ExampleAutoIncrementTableStore interface {
 	Get(ctx context.Context, id uint64) (*ExampleAutoIncrementTable, error)
 	HasByX(ctx context.Context, x string) (found bool, err error)
 	GetByX(ctx context.Context, x string) (*ExampleAutoIncrementTable, error)
+	DeleteByX(ctx context.Context, x string) error
 	List(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error)
 	ListRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error)
 
@@ -311,6 +320,12 @@ func (this exampleAutoIncrementTableStore) GetByX(ctx context.Context, x string)
 		return nil, err
 	}
 	return &exampleAutoIncrementTable, nil
+}
+
+func (this exampleAutoIncrementTableStore) DeleteByX(ctx context.Context, x string) error {
+	return this.table.GetIndexByID(1).(ormtable.UniqueIndex).DeleteByKey(ctx,
+		x,
+	)
 }
 
 func (this exampleAutoIncrementTableStore) List(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error) {

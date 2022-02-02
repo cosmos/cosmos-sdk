@@ -7,8 +7,7 @@ import (
 	"os"
 	"strconv"
 
-	tmproofs "github.com/cosmos/cosmos-sdk/store/tools/ics23/tendermint"
-	"github.com/cosmos/cosmos-sdk/store/tools/ics23/tendermint/helpers"
+	tmproofs "github.com/cosmos/cosmos-sdk/store/internal/proofs"
 
 	ics23 "github.com/confio/ics23/go"
 )
@@ -62,16 +61,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	data := helpers.BuildMap(size)
-	allkeys := helpers.SortedKeys(data)
-	root := helpers.CalcRoot(data)
+	data := tmproofs.BuildMap(size)
+	allkeys := tmproofs.SortedKeys(data)
+	root := tmproofs.CalcRoot(data)
 
 	var key, value []byte
 	if exist {
-		key = []byte(helpers.GetKey(allkeys, loc))
+		key = []byte(tmproofs.GetKey(allkeys, loc))
 		value = data[string(key)]
 	} else {
-		key = []byte(helpers.GetNonKey(allkeys, loc))
+		key = []byte(tmproofs.GetNonKey(allkeys, loc))
 	}
 
 	var proof *ics23.CommitmentProof
@@ -106,7 +105,7 @@ func main() {
 	fmt.Println(string(out))
 }
 
-func parseArgs(args []string) (exist bool, loc helpers.Where, size int, err error) {
+func parseArgs(args []string) (exist bool, loc tmproofs.Where, size int, err error) {
 	if len(args) != 3 && len(args) != 4 {
 		err = fmt.Errorf("Insufficient args")
 		return
@@ -124,11 +123,11 @@ func parseArgs(args []string) (exist bool, loc helpers.Where, size int, err erro
 
 	switch args[2] {
 	case "left":
-		loc = helpers.Left
+		loc = tmproofs.Left
 	case "middle":
-		loc = helpers.Middle
+		loc = tmproofs.Middle
 	case "right":
-		loc = helpers.Right
+		loc = tmproofs.Right
 	default:
 		err = fmt.Errorf("Invalid arg: %s", args[2])
 		return
@@ -153,15 +152,15 @@ func doBatch(args []string) error {
 		return err
 	}
 
-	data := helpers.BuildMap(size)
-	allkeys := helpers.SortedKeys(data)
-	root := helpers.CalcRoot(data)
+	data := tmproofs.BuildMap(size)
+	allkeys := tmproofs.SortedKeys(data)
+	root := tmproofs.CalcRoot(data)
 
 	items := []item{}
 	proofs := []*ics23.CommitmentProof{}
 
 	for i := 0; i < exist; i++ {
-		key := []byte(helpers.GetKey(allkeys, helpers.Middle))
+		key := []byte(tmproofs.GetKey(allkeys, tmproofs.Middle))
 		value := data[string(key)]
 		proof, err := tmproofs.CreateMembershipProof(data, key)
 		if err != nil {
@@ -176,7 +175,7 @@ func doBatch(args []string) error {
 	}
 
 	for i := 0; i < nonexist; i++ {
-		key := []byte(helpers.GetNonKey(allkeys, helpers.Middle))
+		key := []byte(tmproofs.GetNonKey(allkeys, tmproofs.Middle))
 		proof, err := tmproofs.CreateNonMembershipProof(data, key)
 		if err != nil {
 			return fmt.Errorf("create proof: %+v", err)

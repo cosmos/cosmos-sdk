@@ -15,23 +15,6 @@ var (
 	ErrEmptyKeyInData = errors.New("data contains empty key")
 )
 
-// TendermintSpec constrains the format from ics23-tendermint (crypto/merkle SimpleProof)
-var TendermintSpec = &ics23.ProofSpec{
-	LeafSpec: &ics23.LeafOp{
-		Prefix:       []byte{0},
-		Hash:         ics23.HashOp_SHA256,
-		PrehashValue: ics23.HashOp_SHA256,
-		Length:       ics23.LengthOp_VAR_PROTO,
-	},
-	InnerSpec: &ics23.InnerSpec{
-		ChildOrder:      []int32{0, 1},
-		MinPrefixLength: 1,
-		MaxPrefixLength: 1,  // fixed prefix + one child
-		ChildSize:       32, // (no length byte)
-		Hash:            ics23.HashOp_SHA256,
-	},
-}
-
 /*
 CreateMembershipProof will produce a CommitmentProof that the given key (and queries value) exists in the iavl tree.
 If the key doesn't exist in the tree, this will return an error.

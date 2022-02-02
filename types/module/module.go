@@ -422,6 +422,9 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
 	}
+
+	ctx.Logger().Info("Start running migrations")
+
 	var modules = m.OrderMigrations
 	if modules == nil {
 		modules = DefaultMigrationsOrder(m.ModuleNames())
@@ -453,6 +456,9 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 				// is configurator (the struct).
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
 			}
+
+			ctx.Logger().Info(fmt.Sprintf("Running migration for module: %s, InitGenesis (on default genesis) toVersion %d",
+				moduleName, toVersion))
 
 			moduleValUpdates := module.InitGenesis(ctx, cfgtor.cdc, module.DefaultGenesis(cfgtor.cdc))
 			// The module manager assumes only one module will update the

@@ -1004,7 +1004,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 				[]string{
 					groupPolicy.Admin,
 					groupPolicy.Address,
-					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"threshold\":\"0.5\", \"timeout\":\"40000s\"}",
+					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"0.5\", \"timeout\":\"40000s\"}",
 				},
 				commonFlags...,
 			),
@@ -1065,7 +1065,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 				[]string{
 					groupPolicy.Admin,
 					groupPolicy.Address,
-					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"threshold\":\"-0.5\", \"timeout\":\"1s\"}",
+					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"-0.5\", \"timeout\":\"1s\"}",
 				},
 				commonFlags...,
 			),
@@ -1080,7 +1080,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 				[]string{
 					groupPolicy.Admin,
 					groupPolicy.Address,
-					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"threshold\":\"2\", \"timeout\":\"40000s\"}",
+					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"2\", \"timeout\":\"40000s\"}",
 				},
 				commonFlags...,
 			),

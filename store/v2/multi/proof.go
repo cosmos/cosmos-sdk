@@ -31,7 +31,7 @@ func proveKey(s *smt.Store, key []byte) (*tmcrypto.ProofOps, error) {
 }
 
 // GetProof returns ProofOps containing: a proof for the given key within this substore;
-// and a proof of the substore's existence within the RootStore.
+// and a proof of the substore's existence within the MultiStore.
 func (s *viewSubstore) GetProof(key []byte) (*tmcrypto.ProofOps, error) {
 	ret, err := proveKey(s.stateCommitmentStore, key)
 	if err != nil {

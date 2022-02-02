@@ -1,7 +1,6 @@
 package pbtime
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -53,10 +52,23 @@ func TestCompare(t *testing.T) {
 		{new(1, -1), new(1, -2), 1},
 	}
 	for i, tc := range tcs {
-		t.Run(fmt.Sprint("test ", i), func(t *testing.T) {
-			r := Compare(tc.t1, tc.t2)
-			require.Equal(t, tc.expected, r)
-		})
+		r := Compare(tc.t1, tc.t2)
+		require.Equal(t, tc.expected, r, "test %d", i)
+	}
+
+	// test panics
+	tcs2 := []struct {
+		t1 *tspb.Timestamp
+		t2 *tspb.Timestamp
+	}{
+		{nil, new(1, 1)},
+		{new(1, 1), nil},
+		{nil, nil},
+	}
+	for i, tc := range tcs2 {
+		require.Panics(t, func() {
+			Compare(tc.t1, tc.t2)
+		}, "test-panics %d", i)
 	}
 }
 

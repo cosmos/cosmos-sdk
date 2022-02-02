@@ -1,6 +1,7 @@
 package pbtime
 
 import (
+	"fmt"
 	"time"
 
 	durpb "google.golang.org/protobuf/types/known/durationpb"
@@ -13,8 +14,11 @@ func IsZero(t *tspb.Timestamp) bool {
 }
 
 // Commpare t1 and t2 and returns -1 when t1 < t2, 0 when t1 == t2 and 1 otherwise.
-// Panics if t1 or t2 is nil
+// Returns false if t1 or t2 is nil
 func Compare(t1, t2 *tspb.Timestamp) int {
+	if t1 == nil || t2 == nil {
+		panic(fmt.Sprint("Can't compare nil time, t1=", t1, "t2=", t2))
+	}
 	if t1.Seconds == t2.Seconds && t1.Nanos == t2.Nanos {
 		return 0
 	}

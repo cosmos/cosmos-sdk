@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
@@ -139,7 +138,7 @@ func queryDeposits(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 
 	deposits := keeper.GetDeposits(ctx, params.ProposalID)
 	if deposits == nil {
-		deposits = v1beta1.Deposits{}
+		deposits = v1beta2.Deposits{}
 	}
 
 	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, deposits)
@@ -165,14 +164,14 @@ func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 		return nil, sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
 	}
 
-	var tallyResult v1beta1.TallyResult
+	var tallyResult v1beta2.TallyResult
 
 	switch {
-	case proposal.Status == v1beta1.StatusDepositPeriod:
-		tallyResult = v1beta1.EmptyTallyResult()
+	case proposal.Status == v1beta2.StatusDepositPeriod:
+		tallyResult = v1beta2.EmptyTallyResult()
 
-	case proposal.Status == v1beta1.StatusPassed || proposal.Status == v1beta1.StatusRejected:
-		tallyResult = proposal.FinalTallyResult
+	case proposal.Status == v1beta2.StatusPassed || proposal.Status == v1beta2.StatusRejected:
+		tallyResult = *proposal.FinalTallyResult
 
 	default:
 		// proposal is in voting period
@@ -189,7 +188,7 @@ func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 
 // nolint: unparam
 func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
-	var params v1beta1.QueryProposalVotesParams
+	var params v1beta2.QueryProposalVotesParams
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
@@ -197,11 +196,11 @@ func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 
 	votes := keeper.GetVotes(ctx, params.ProposalID)
 	if votes == nil {
-		votes = v1beta1.Votes{}
+		votes = v1beta2.Votes{}
 	} else {
 		start, end := client.Paginate(len(votes), params.Page, params.Limit, 100)
 		if start < 0 || end < 0 {
-			votes = v1beta1.Votes{}
+			votes = v1beta2.Votes{}
 		} else {
 			votes = votes[start:end]
 		}
@@ -216,7 +215,7 @@ func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 }
 
 func queryProposals(ctx sdk.Context, _ []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
-	var params v1beta1.QueryProposalsParams
+	var params v1beta2.QueryProposalsParams
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
@@ -224,7 +223,7 @@ func queryProposals(ctx sdk.Context, _ []string, req abci.RequestQuery, keeper K
 
 	proposals := keeper.GetProposalsFiltered(ctx, params)
 	if proposals == nil {
-		proposals = v1beta1.Proposals{}
+		proposals = v1beta2.Proposals{}
 	}
 
 	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, proposals)

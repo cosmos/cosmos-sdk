@@ -206,6 +206,29 @@ Some objects may be saved with key, which contains a Protobuf message type. Such
 
 TODO: finalize this or move to another ADR.
 
+## Migration
+
+Using the new store will require a migration. 2 Migrations are proposed:
+1. Genesis export -- it will reset the blockchain history.
+2. In place migration: we can reuse `UpgradeKeeper.SetUpgradeHandler` to provide the migration logic:
+
+    ```go 
+app.UpgradeKeeper.SetUpgradeHandler("adr-40", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+
+    storev2.Migrate(iavlstore, v2.store)
+
+    // RunMigrations returns the VersionMap
+    // with the updated module ConsensusVersions
+    return app.mm.RunMigrations(ctx, vm)
+})
+    ```
+
+The `Migrate` function will read all entries from a store/v1 DB and save them to the AD-40 combined KV store. 
+Cache layer should not be used and the operation must finish with a single Commit call.
+
+Inserting records to the `SC` (SMT) component is the bottleneck. Unfortunately SMT doesn't support batch transactions. 
+Adding batch transactions to `SC` layer is considered as a feature after the main release.
+
 ## Consequences
 
 ### Backwards Compatibility

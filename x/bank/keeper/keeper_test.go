@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -888,7 +887,7 @@ func (suite *IntegrationTestSuite) TestDelegateCoins() {
 
 	// require that delegated vesting amount is equal to what was delegated with DelegateCoins
 	acc = app.AccountKeeper.GetAccount(ctx, addr1)
-	vestingAcc, ok := acc.(exported.VestingAccount)
+	vestingAcc, ok := acc.(types.VestingAccount)
 	suite.Require().True(ok)
 	suite.Require().Equal(delCoins, vestingAcc.GetDelegatedVesting())
 }
@@ -968,7 +967,7 @@ func (suite *IntegrationTestSuite) TestUndelegateCoins() {
 
 	// require that delegated vesting amount is completely empty, since they were completely undelegated
 	acc = app.AccountKeeper.GetAccount(ctx, addr1)
-	vestingAcc, ok := acc.(exported.VestingAccount)
+	vestingAcc, ok := acc.(types.VestingAccount)
 	suite.Require().True(ok)
 	suite.Require().Empty(vestingAcc.GetDelegatedVesting())
 }

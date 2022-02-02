@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/store/tools/ics23
 go 1.17
 
 require (
-	github.com/confio/ics23/go v0.7.0
+	github.com/confio/ics23/go v0.6.7-0.20220201201850-606d5105384e
 	github.com/cosmos/cosmos-sdk v0.45.0
 	github.com/cosmos/iavl v0.17.3
 	github.com/lazyledger/smt v0.2.1-0.20210709230900-03ea40719554
@@ -40,7 +40,5 @@ require (
 )
 
 replace github.com/cosmos/cosmos-sdk/store/tools/ics23 => ./
-
-replace github.com/confio/ics23/go => /home/roy/vulcanize/repo/ics23/go // FIXME
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1

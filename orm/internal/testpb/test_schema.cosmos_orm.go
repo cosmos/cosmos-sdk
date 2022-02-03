@@ -17,10 +17,10 @@ type ExampleTableStore interface {
 	Save(ctx context.Context, exampleTable *ExampleTable) error
 	Delete(ctx context.Context, exampleTable *ExampleTable) error
 	Has(ctx context.Context, u32 uint32, i64 int64, str string) (found bool, err error)
-	// Get returns ormerrors.NotFound if the record wasn't found.
+	// Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
 	Get(ctx context.Context, u32 uint32, i64 int64, str string) (*ExampleTable, error)
 	HasByU64Str(ctx context.Context, u64 uint64, str string) (found bool, err error)
-	// GetByU64Str returns ormerrors.NotFound if the record wasn't found.
+	// GetByU64Str returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
 	GetByU64Str(ctx context.Context, u64 uint64, str string) (*ExampleTable, error)
 	List(ctx context.Context, prefixKey ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error)
 	ListRange(ctx context.Context, from, to ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error)
@@ -221,10 +221,10 @@ type ExampleAutoIncrementTableStore interface {
 	Save(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
 	Delete(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
 	Has(ctx context.Context, id uint64) (found bool, err error)
-	// Get returns ormerrors.NotFound if the record wasn't found.
+	// Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
 	Get(ctx context.Context, id uint64) (*ExampleAutoIncrementTable, error)
 	HasByX(ctx context.Context, x string) (found bool, err error)
-	// GetByX returns ormerrors.NotFound if the record wasn't found.
+	// GetByX returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
 	GetByX(ctx context.Context, x string) (*ExampleAutoIncrementTable, error)
 	List(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error)
 	ListRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error)

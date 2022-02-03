@@ -4,6 +4,11 @@ import "github.com/cosmos/cosmos-sdk/errors"
 
 var codespace = "orm"
 
+// IsNotFound returns true if the error indicates that the record was not found.
+func IsNotFound(err error) bool {
+	return errors.IsOf(err, NotFound)
+}
+
 var (
 	InvalidTableId                = errors.New(codespace, 1, "invalid or missing table or single id, need a non-zero value")
 	MissingPrimaryKey             = errors.New(codespace, 2, "table is missing primary key")

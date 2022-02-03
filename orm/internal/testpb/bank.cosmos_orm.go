@@ -17,7 +17,7 @@ type BalanceStore interface {
 	Save(ctx context.Context, balance *Balance) error
 	Delete(ctx context.Context, balance *Balance) error
 	Has(ctx context.Context, address string, denom string) (found bool, err error)
-	// Get returns ormerrors.NotFound if the record wasn't found.
+	// Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
 	Get(ctx context.Context, address string, denom string) (*Balance, error)
 	List(ctx context.Context, prefixKey BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
 	ListRange(ctx context.Context, from, to BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
@@ -149,7 +149,7 @@ type SupplyStore interface {
 	Save(ctx context.Context, supply *Supply) error
 	Delete(ctx context.Context, supply *Supply) error
 	Has(ctx context.Context, denom string) (found bool, err error)
-	// Get returns ormerrors.NotFound if the record wasn't found.
+	// Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
 	Get(ctx context.Context, denom string) (*Supply, error)
 	List(ctx context.Context, prefixKey SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error)
 	ListRange(ctx context.Context, from, to SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error)

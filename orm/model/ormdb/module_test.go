@@ -9,8 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 
-	"github.com/cosmos/cosmos-sdk/errors"
-
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
@@ -45,7 +43,7 @@ func (k keeper) Send(ctx context.Context, from, to, denom string, amount uint64)
 
 func (k keeper) Mint(ctx context.Context, acct, denom string, amount uint64) error {
 	supply, err := k.store.SupplyStore().Get(ctx, denom)
-	if err != nil && !errors.IsOf(err, ormerrors.NotFound) {
+	if err != nil && !ormerrors.IsNotFound(err) {
 		return err
 	}
 
@@ -91,7 +89,7 @@ func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) err
 func (k keeper) Balance(ctx context.Context, acct, denom string) (uint64, error) {
 	balance, err := k.store.BalanceStore().Get(ctx, acct, denom)
 	if err != nil {
-		if errors.IsOf(err, ormerrors.NotFound) {
+		if ormerrors.IsNotFound(err) {
 			return 0, nil
 		}
 
@@ -103,7 +101,7 @@ func (k keeper) Balance(ctx context.Context, acct, denom string) (uint64, error)
 func (k keeper) Supply(ctx context.Context, denom string) (uint64, error) {
 	supply, err := k.store.SupplyStore().Get(ctx, denom)
 	if supply == nil {
-		if errors.IsOf(err, ormerrors.NotFound) {
+		if ormerrors.IsNotFound(err) {
 			return 0, nil
 		}
 
@@ -114,7 +112,7 @@ func (k keeper) Supply(ctx context.Context, denom string) (uint64, error) {
 
 func (k keeper) addBalance(ctx context.Context, acct, denom string, amount uint64) error {
 	balance, err := k.store.BalanceStore().Get(ctx, acct, denom)
-	if err != nil && !errors.IsOf(err, ormerrors.NotFound) {
+	if err != nil && !ormerrors.IsNotFound(err) {
 		return err
 	}
 

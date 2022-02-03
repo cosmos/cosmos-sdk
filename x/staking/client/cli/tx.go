@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -21,7 +20,7 @@ import (
 
 // default values
 var (
-	DefaultTokens                  = testutil.TokensFromConsensusPower(100, testutil.DefaultpowerReduction)
+	DefaultTokens                  = types.TokensFromConsensusPower(100, types.DefaultConfig().PowerReduction)
 	defaultAmount                  = DefaultTokens.String() + sdk.DefaultBondDenom
 	defaultCommissionRate          = "0.1"
 	defaultCommissionMaxRate       = "0.2"

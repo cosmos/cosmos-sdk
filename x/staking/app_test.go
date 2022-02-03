@@ -8,7 +8,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -41,8 +40,8 @@ func checkDelegation(
 }
 
 func TestStakingMsgs(t *testing.T) {
-	genTokens := testutil.TokensFromConsensusPower(42, testutil.DefaultpowerReduction)
-	bondTokens := testutil.TokensFromConsensusPower(10, testutil.DefaultpowerReduction)
+	genTokens := types.TokensFromConsensusPower(42, types.DefaultConfig().PowerReduction)
+	bondTokens := types.TokensFromConsensusPower(10, types.DefaultConfig().PowerReduction)
 	genCoin := sdk.NewCoin(sdk.DefaultBondDenom, genTokens)
 	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, bondTokens)
 

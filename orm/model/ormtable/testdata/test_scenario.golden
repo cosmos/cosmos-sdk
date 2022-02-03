@@ -958,26 +958,26 @@ ITERATOR 010261626400 -> 010261626401
   VALID true
   KEY 010261626400000000047ffffffffffffffe 
       IDX testpb.ExampleTable str/u32/i64 : abd/4/-2 -> 4/-2/abd
+GET 0100000000047ffffffffffffffe616264 100e2203616264
+    PK testpb.ExampleTable 4/-2/abd -> {"u32":4,"u64":14,"str":"abd","bz":"abd","i64":-2}
+ORM DELETE testpb.ExampleTable {"u32":4,"u64":14,"str":"abd","bz":"abd","i64":-2}
   NEXT
   VALID true
   KEY 010261626400000000057ffffffffffffffe 
       IDX testpb.ExampleTable str/u32/i64 : abd/5/-2 -> 5/-2/abd
+GET 0100000000057ffffffffffffffe616264 10102203616264
+    PK testpb.ExampleTable 5/-2/abd -> {"u32":5,"u64":16,"str":"abd","bz":"abd","i64":-2}
+ORM DELETE testpb.ExampleTable {"u32":5,"u64":16,"str":"abd","bz":"abd","i64":-2}
   NEXT
   VALID true
   KEY 010261626400000000088000000000000001 
       IDX testpb.ExampleTable str/u32/i64 : abd/8/1 -> 8/1/abd
-  NEXT
-  VALID false
-  CLOSE
-GET 0100000000047ffffffffffffffe616264 100e2203616264
-    PK testpb.ExampleTable 4/-2/abd -> {"u32":4,"u64":14,"str":"abd","bz":"abd","i64":-2}
-ORM DELETE testpb.ExampleTable {"u32":4,"u64":14,"str":"abd","bz":"abd","i64":-2}
-GET 0100000000057ffffffffffffffe616264 10102203616264
-    PK testpb.ExampleTable 5/-2/abd -> {"u32":5,"u64":16,"str":"abd","bz":"abd","i64":-2}
-ORM DELETE testpb.ExampleTable {"u32":5,"u64":16,"str":"abd","bz":"abd","i64":-2}
 GET 0100000000088000000000000001616264 100a
     PK testpb.ExampleTable 8/1/abd -> {"u32":8,"u64":10,"str":"abd","i64":1}
 ORM DELETE testpb.ExampleTable {"u32":8,"u64":10,"str":"abd","i64":1}
+  NEXT
+  VALID false
+  CLOSE
 DEL 0100000000047ffffffffffffffe616264
 DEL PK testpb.ExampleTable 4/-2/abd -> {"u32":4,"str":"abd","i64":-2}
 DEL 0100000000057ffffffffffffffe616264
@@ -1036,26 +1036,26 @@ ITERATOR 01026162630000000008 -> 01026162650000000006
   VALID true
   KEY 010261626300000000087ffffffffffffffc 
       IDX testpb.ExampleTable str/u32/i64 : abc/8/-4 -> 8/-4/abc
+GET 0100000000087ffffffffffffffc616263 100b
+    PK testpb.ExampleTable 8/-4/abc -> {"u32":8,"u64":11,"str":"abc","i64":-4}
+ORM DELETE testpb.ExampleTable {"u32":8,"u64":11,"str":"abc","i64":-4}
   NEXT
   VALID true
   KEY 010261626300000000088000000000000001 
       IDX testpb.ExampleTable str/u32/i64 : abc/8/1 -> 8/1/abc
+GET 0100000000088000000000000001616263 100c
+    PK testpb.ExampleTable 8/1/abc -> {"u32":8,"u64":12,"str":"abc","i64":1}
+ORM DELETE testpb.ExampleTable {"u32":8,"u64":12,"str":"abc","i64":1}
   NEXT
   VALID true
   KEY 010261626500000000057ffffffffffffffe 
       IDX testpb.ExampleTable str/u32/i64 : abe/5/-2 -> 5/-2/abe
-  NEXT
-  VALID false
-  CLOSE
-GET 0100000000087ffffffffffffffc616263 100b
-    PK testpb.ExampleTable 8/-4/abc -> {"u32":8,"u64":11,"str":"abc","i64":-4}
-ORM DELETE testpb.ExampleTable {"u32":8,"u64":11,"str":"abc","i64":-4}
-GET 0100000000088000000000000001616263 100c
-    PK testpb.ExampleTable 8/1/abc -> {"u32":8,"u64":12,"str":"abc","i64":1}
-ORM DELETE testpb.ExampleTable {"u32":8,"u64":12,"str":"abc","i64":1}
 GET 0100000000057ffffffffffffffe616265 10122203616265
     PK testpb.ExampleTable 5/-2/abe -> {"u32":5,"u64":18,"str":"abe","bz":"abe","i64":-2}
 ORM DELETE testpb.ExampleTable {"u32":5,"u64":18,"str":"abe","bz":"abe","i64":-2}
+  NEXT
+  VALID false
+  CLOSE
 DEL 0100000000087ffffffffffffffc616263
 DEL PK testpb.ExampleTable 8/-4/abc -> {"u32":8,"str":"abc","i64":-4}
 DEL 0100000000088000000000000001616263

@@ -1,7 +1,6 @@
 package ormtable
 
 import (
-	"container/list"
 	"context"
 
 	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
@@ -113,15 +112,6 @@ func (p primaryKeyIndex) doDelete(ctx context.Context, primaryKeyValues []protor
 	writer := newBatchIndexCommitmentWriter(backend)
 	defer writer.Close()
 
-	err = p.doDeleteWithWriteBatch(backend, writer, primaryKeyValues)
-	if err != nil {
-		return err
-	}
-
-	return writer.Write()
-}
-
-func (p primaryKeyIndex) doDeleteWithWriteBatch(backend Backend, writer *batchIndexCommitmentWriter, primaryKeyValues []protoreflect.Value) error {
 	pk, err := p.EncodeKey(primaryKeyValues)
 	if err != nil {
 		return err
@@ -137,21 +127,30 @@ func (p primaryKeyIndex) doDeleteWithWriteBatch(backend Backend, writer *batchIn
 		return nil
 	}
 
+	err = p.doDeleteWithWriteBatch(backend, writer, pk, msg)
+	if err != nil {
+		return err
+	}
+
+	return writer.Write()
+}
+
+func (p primaryKeyIndex) doDeleteWithWriteBatch(backend Backend, writer *batchIndexCommitmentWriter, primaryKeyBz []byte, message proto.Message) error {
 	if hooks := backend.Hooks(); hooks != nil {
-		err = hooks.OnDelete(msg)
+		err := hooks.OnDelete(message)
 		if err != nil {
 			return err
 		}
 	}
 
 	// delete object
-	err = writer.CommitmentStore().Delete(pk)
+	err := writer.CommitmentStore().Delete(primaryKeyBz)
 	if err != nil {
 		return err
 	}
 
 	// clear indexes
-	mref := msg.ProtoReflect()
+	mref := message.ProtoReflect()
 	indexStoreWriter := writer.IndexStore()
 	for _, idx := range p.indexers {
 		err := idx.onDelete(indexStoreWriter, mref)
@@ -185,36 +184,40 @@ func (p primaryKeyIndex) Fields() string {
 }
 
 func (p primaryKeyIndex) deleteByIterator(ctx context.Context, it Iterator) error {
-	// NOTE: we must collect keys to delete first because we can't delete while the
-	// iterator is open. We use a linked list to avoid lots of reallocation when
-	// there are a lot of deletions.
-	ll := list.New()
+	backend, err := p.getBackend(ctx)
+	if err != nil {
+		return err
+	}
+
+	// we batch writes while the iterator is still open
+	writer := newBatchIndexCommitmentWriter(backend)
+	defer writer.Close()
+
 	for it.Next() {
 		_, pk, err := it.Keys()
 		if err != nil {
 			return err
 		}
 
-		ll.PushBack(pk)
-	}
-	it.Close()
+		msg, err := it.GetMessage()
+		if err != nil {
+			return err
+		}
 
-	backend, err := p.getBackend(ctx)
-	if err != nil {
-		return err
-	}
+		pkBz, err := p.EncodeKey(pk)
+		if err != nil {
+			return err
+		}
 
-	// delete object
-	writer := newBatchIndexCommitmentWriter(backend)
-	defer writer.Close()
-
-	for e := ll.Front(); e != nil; e = e.Next() {
-		err = p.doDeleteWithWriteBatch(backend, writer, e.Value.([]protoreflect.Value))
+		err = p.doDeleteWithWriteBatch(backend, writer, pkBz, msg)
 		if err != nil {
 			return err
 		}
 	}
 
+	// close iterator
+	it.Close()
+	// then write batch
 	return writer.Write()
 }
 

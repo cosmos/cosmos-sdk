@@ -851,7 +851,6 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			if spec.expErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), spec.expErrMsg)
-				_, _ = s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: uint64(seq + 1)})
 				return
 			}
 			s.Require().NoError(err)

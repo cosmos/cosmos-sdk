@@ -141,7 +141,7 @@ func convertToNewVotes(oldVotes v1beta1.Votes) (v1beta2.Votes, error) {
 		// We deprecated Vote.Option in v043. However, it might still be set.
 		// - if only Options is set, or both Option & Options are set, we read from Options,
 		// - if Options is not set, and Option is set, we read from Option,
-		// - if none are set, we throw.
+		// - if none are set, we throw error.
 		if oldVote.Options != nil {
 			newWVOs = make([]*v1beta2.WeightedVoteOption, len(oldVote.Options))
 			for j, oldWVO := range oldVote.Options {

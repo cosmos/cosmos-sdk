@@ -3,7 +3,9 @@ package v046
 import (
 	"fmt"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
@@ -116,4 +118,110 @@ func ConvertToLegacyDeposit(deposit *v1beta2.Deposit) v1beta1.Deposit {
 		Depositor:  deposit.Depositor,
 		Amount:     types.NewCoins(deposit.Amount...),
 	}
+}
+
+func convertToNewDeposits(oldDeps v1beta1.Deposits) v1beta2.Deposits {
+	newDeps := make([]*v1beta2.Deposit, len(oldDeps))
+	for i, oldDep := range oldDeps {
+		newDeps[i] = &v1beta2.Deposit{
+			ProposalId: oldDep.ProposalId,
+			Depositor:  oldDep.Depositor,
+			Amount:     oldDep.Amount,
+		}
+	}
+
+	return newDeps
+}
+
+func convertToNewVotes(oldVotes v1beta1.Votes) (v1beta2.Votes, error) {
+	newVotes := make([]*v1beta2.Vote, len(oldVotes))
+	for i, oldVote := range oldVotes {
+		var newWVOs []*v1beta2.WeightedVoteOption
+
+		// We deprecated Vote.Option in v043. However, it might still be set.
+		// - if only Options is set, or both Option & Options are set, we read from Options,
+		// - if Options is not set, and Option is set, we read from Option,
+		// - if none are set, we throw error.
+		if oldVote.Options != nil {
+			newWVOs = make([]*v1beta2.WeightedVoteOption, len(oldVote.Options))
+			for j, oldWVO := range oldVote.Options {
+				newWVOs[j] = v1beta2.NewWeightedVoteOption(v1beta2.VoteOption(oldWVO.Option), oldWVO.Weight)
+			}
+		} else if oldVote.Option != v1beta1.OptionEmpty {
+			newWVOs = v1beta2.NewNonSplitVoteOption(v1beta2.VoteOption(oldVote.Option))
+		} else {
+			return nil, fmt.Errorf("vote does not have neither Options nor Option")
+		}
+
+		newVotes[i] = &v1beta2.Vote{
+			ProposalId: oldVote.ProposalId,
+			Voter:      oldVote.Voter,
+			Options:    newWVOs,
+		}
+	}
+
+	return newVotes, nil
+}
+
+func convertToNewDepParams(oldDepParams v1beta1.DepositParams) v1beta2.DepositParams {
+	return v1beta2.DepositParams{
+		MinDeposit:       oldDepParams.MinDeposit,
+		MaxDepositPeriod: &oldDepParams.MaxDepositPeriod,
+	}
+}
+
+func convertToNewVotingParams(oldVoteParams v1beta1.VotingParams) v1beta2.VotingParams {
+	return v1beta2.VotingParams{
+		VotingPeriod: &oldVoteParams.VotingPeriod,
+	}
+}
+
+func convertToNewTallyParams(oldTallyParams v1beta1.TallyParams) v1beta2.TallyParams {
+	return v1beta2.TallyParams{
+		Quorum:        oldTallyParams.Quorum.String(),
+		Threshold:     oldTallyParams.Threshold.String(),
+		VetoThreshold: oldTallyParams.VetoThreshold.String(),
+	}
+}
+
+func convertToNewProposal(oldProp v1beta1.Proposal) (v1beta2.Proposal, error) {
+	msg, err := v1beta2.NewLegacyContent(oldProp.GetContent(), authtypes.NewModuleAddress(ModuleName).String())
+	if err != nil {
+		return v1beta2.Proposal{}, err
+	}
+	msgAny, err := codectypes.NewAnyWithValue(msg)
+	if err != nil {
+		return v1beta2.Proposal{}, err
+	}
+
+	return v1beta2.Proposal{
+		ProposalId: oldProp.ProposalId,
+		Messages:   []*codectypes.Any{msgAny},
+		Status:     v1beta2.ProposalStatus(oldProp.Status),
+		FinalTallyResult: &v1beta2.TallyResult{
+			Yes:        oldProp.FinalTallyResult.Yes.String(),
+			No:         oldProp.FinalTallyResult.No.String(),
+			Abstain:    oldProp.FinalTallyResult.Abstain.String(),
+			NoWithVeto: oldProp.FinalTallyResult.NoWithVeto.String(),
+		},
+		SubmitTime:      &oldProp.SubmitTime,
+		DepositEndTime:  &oldProp.DepositEndTime,
+		TotalDeposit:    oldProp.TotalDeposit,
+		VotingStartTime: &oldProp.VotingStartTime,
+		VotingEndTime:   &oldProp.VotingEndTime,
+	}, nil
+}
+
+func convertToNewProposals(oldProps v1beta1.Proposals) (v1beta2.Proposals, error) {
+	newProps := make([]*v1beta2.Proposal, len(oldProps))
+	for i, oldProp := range oldProps {
+		p, err := convertToNewProposal(oldProp)
+		if err != nil {
+			return nil, err
+		}
+
+		newProps[i] = &p
+	}
+
+	return newProps, nil
 }

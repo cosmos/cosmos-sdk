@@ -155,7 +155,7 @@ func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, message proto.Mess
 
 func (t tableImpl) Delete(context context.Context, message proto.Message) error {
 	pk := t.PrimaryKeyCodec.GetKeyValues(message.ProtoReflect())
-	return t.DeleteByKey(context, pk)
+	return t.DeleteBy(context, pk)
 }
 
 func (t tableImpl) GetIndex(fields string) Index {

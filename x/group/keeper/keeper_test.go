@@ -725,9 +725,10 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 	}}
 
 	specs := map[string]struct {
-		req    *group.MsgCreateGroupWithPolicy
-		policy group.DecisionPolicy
-		expErr bool
+		req       *group.MsgCreateGroupWithPolicy
+		policy    group.DecisionPolicy
+		expErr    bool
+		expErrMsg string
 	}{
 		"all good": {
 			req: &group.MsgCreateGroupWithPolicy{
@@ -767,7 +768,8 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 				"1",
 				time.Second,
 			),
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "limit exceeded",
 		},
 		"group policy metadata too long": {
 			req: &group.MsgCreateGroupWithPolicy{
@@ -781,7 +783,8 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 				"1",
 				time.Second,
 			),
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "limit exceeded",
 		},
 		"member metadata too long": {
 			req: &group.MsgCreateGroupWithPolicy{
@@ -799,7 +802,8 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 				"1",
 				time.Second,
 			),
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "limit exceeded",
 		},
 		"zero member weight": {
 			req: &group.MsgCreateGroupWithPolicy{
@@ -817,7 +821,8 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 				"1",
 				time.Second,
 			),
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "expected a positive decimal",
 		},
 		"decision policy threshold > total group weight": {
 			req: &group.MsgCreateGroupWithPolicy{
@@ -845,8 +850,8 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			res, err := s.keeper.CreateGroupWithPolicy(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
-				_, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: uint64(seq + 1)})
-				s.Require().Error(err)
+				s.Require().Contains(err.Error(), spec.expErrMsg)
+				_, _ = s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: uint64(seq + 1)})
 				return
 			}
 			s.Require().NoError(err)

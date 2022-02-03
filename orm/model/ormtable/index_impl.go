@@ -24,6 +24,24 @@ type indexKeyIndex struct {
 	getReadBackend func(context.Context) (ReadBackend, error)
 }
 
+func (i indexKeyIndex) DeleteBy(ctx context.Context, keyValues ...interface{}) error {
+	it, err := i.List(ctx, keyValues)
+	if err != nil {
+		return err
+	}
+
+	return i.primaryKey.deleteByIterator(ctx, it)
+}
+
+func (i indexKeyIndex) DeleteRange(ctx context.Context, from, to []interface{}) error {
+	it, err := i.ListRange(ctx, from, to)
+	if err != nil {
+		return err
+	}
+
+	return i.primaryKey.deleteByIterator(ctx, it)
+}
+
 func (i indexKeyIndex) List(ctx context.Context, prefixKey []interface{}, options ...ormlist.Option) (Iterator, error) {
 	backend, err := i.getReadBackend(ctx)
 	if err != nil {

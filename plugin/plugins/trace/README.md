@@ -15,59 +15,53 @@ The plugin is setup to run as the `default` plugin. See `./plugin/loader/preload
 
 1. Copy the content below to `~/app.toml`.
 
-    ```
-    # app.toml
+   ```
+   # app.toml
 
-    # This is a TOML config file.
-    # For more information, see https://github.com/toml-lang/toml
+   ...
     
-    ###############################################################################
-    ###                           Base Configuration                            ###
-    ###############################################################################
+   ###############################################################################
+   ###                      Plugin system configuration                        ###
+   ###############################################################################
     
-    # Impose a global wait limit threshold for ListenSuccess() messages of external streaming services. (seconds)
-    # It is recomended to set this higher then the average block commit time.
-    globalWaitLimit = 30
+   [plugins]
     
+   # turn the plugin system, as a whole, on or off
+   on = true
     
-    ###############################################################################
-    ###                      Plugin system configuration                        ###
-    ###############################################################################
+   # list of plugins to disable
+   disabled = []
     
-    [plugins]
+   # The directory to load non-preloaded plugins from; defaults to
+   dir = ""
     
-    # turn the plugin system, as a whole, on or off
-    on = true
+   # a mapping of plugin-specific streaming service parameters, mapped to their pluginFileName
+   [plugins.streaming]
     
-    # list of plugins to disable
-    disabled = []
-    
-    # The directory to load non-preloaded plugins from; defaults to
-    dir = ""
-    
-    # a mapping of plugin-specific streaming service parameters, mapped to their pluginFileName
-    [plugins.streaming]
-    
-    
-    ###############################################################################
-    ###                       Trace Plugin configuration                        ###
-    ###############################################################################
-    
-    # The specific parameters for the Kafka streaming service plugin
-    [plugins.streaming.trace]
-    
-    # List of store keys we want to expose for this streaming service.
-    keys = []
-    
-    # Timeout threshold for which a particular block's messages must be delivered to
-    # external streaming service before signaling back to `app.Commit()` call.
-    # This threshold is used to synchronize the work between `app.Commit()` and the
-    # `ABCIListener.ListenSuccess()` call. `ListenSucess()` will allow up to the
-    # specified threshold for services to complete writing messages. The completion
-    # is signaled when `ListenEndBlock` has finished writting.
-    # This value MUST BE less than the 'globalWaitLimit' threshold as not to trigger
-    # the 'globalWaitLimit' timeout which will halt the app.
-    deliveredBlockTimeoutSeconds = 2
+   ###############################################################################
+   ###                       Trace Plugin configuration                        ###
+   ###############################################################################
+   
+   # The specific parameters for the Kafka streaming service plugin
+   [plugins.streaming.trace]
+   
+   # List of store keys we want to expose for this streaming service.
+   keys = []
+   
+   # Timeout threshold for which a particular block's messages must be delivered to
+   # external streaming service before signaling back to the `ack` channel.
+   # If the `ack` is set to `false` this setting will be ignored.
+   # Note: This setting MUST be less then `plugins.global_ack_wait_limit`.
+   #       Otherwise, the application will halt without committing blocks.
+   # In milliseconds.
+   deliver_block_wait_limit = 2000
+   
+   # In addition to block event info, print the data to stdout as well.
+   print_data_to_stdout = false
+   
+   # whether to operate in fire-and-forget or success/failure acknowledgement mode
+   # false == fire-and-forget; true == sends a message receipt success/fail signal
+   ack = "false"
     ```
    
 2. Run `make test-sim-nondeterminism` and wait for the tests to finish.

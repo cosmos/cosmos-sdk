@@ -24,13 +24,22 @@ type primaryKeyIndex struct {
 	getReadBackend func(context.Context) (ReadBackend, error)
 }
 
-func (p primaryKeyIndex) Iterator(ctx context.Context, options ...ormlist.Option) (Iterator, error) {
+func (p primaryKeyIndex) List(ctx context.Context, prefixKey []interface{}, options ...ormlist.Option) (Iterator, error) {
 	backend, err := p.getReadBackend(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return iterator(backend, backend.CommitmentStoreReader(), p, p.KeyCodec, options)
+	return prefixIterator(backend.CommitmentStoreReader(), backend, p, p.KeyCodec, prefixKey, options)
+}
+
+func (p primaryKeyIndex) ListRange(ctx context.Context, from, to []interface{}, options ...ormlist.Option) (Iterator, error) {
+	backend, err := p.getReadBackend(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return rangeIterator(backend.CommitmentStoreReader(), backend, p, p.KeyCodec, from, to, options)
 }
 
 func (p primaryKeyIndex) doNotImplement() {}
@@ -71,23 +80,23 @@ func (p primaryKeyIndex) get(backend ReadBackend, message proto.Message, values 
 	return p.getByKeyBytes(backend, key, values, message)
 }
 
-func (t primaryKeyIndex) DeleteByKey(ctx context.Context, primaryKeyValues ...interface{}) error {
-	return t.doDeleteByKey(ctx, encodeutil.ValuesOf(primaryKeyValues...))
+func (p primaryKeyIndex) DeleteByKey(ctx context.Context, primaryKeyValues ...interface{}) error {
+	return p.doDeleteByKey(ctx, encodeutil.ValuesOf(primaryKeyValues...))
 }
 
-func (t primaryKeyIndex) doDeleteByKey(ctx context.Context, primaryKeyValues []protoreflect.Value) error {
-	backend, err := t.getBackend(ctx)
+func (p primaryKeyIndex) doDeleteByKey(ctx context.Context, primaryKeyValues []protoreflect.Value) error {
+	backend, err := p.getBackend(ctx)
 	if err != nil {
 		return err
 	}
 
-	pk, err := t.EncodeKey(primaryKeyValues)
+	pk, err := p.EncodeKey(primaryKeyValues)
 	if err != nil {
 		return err
 	}
 
-	msg := t.MessageType().New().Interface()
-	found, err := t.getByKeyBytes(backend, pk, primaryKeyValues, msg)
+	msg := p.MessageType().New().Interface()
+	found, err := p.getByKeyBytes(backend, pk, primaryKeyValues, msg)
 	if err != nil {
 		return err
 	}
@@ -114,7 +123,7 @@ func (t primaryKeyIndex) doDeleteByKey(ctx context.Context, primaryKeyValues []p
 	// clear indexes
 	mref := msg.ProtoReflect()
 	indexStoreWriter := writer.IndexStore()
-	for _, idx := range t.indexers {
+	for _, idx := range p.indexers {
 		err := idx.onDelete(indexStoreWriter, mref)
 		if err != nil {
 			return err

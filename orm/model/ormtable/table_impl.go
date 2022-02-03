@@ -303,7 +303,7 @@ func (t tableImpl) doExportJSON(ctx context.Context, writer io.Writer) error {
 	}
 
 	var err error
-	it, _ := t.Iterator(ctx)
+	it, _ := t.List(ctx, nil)
 	start := true
 	for {
 		found := it.Next()

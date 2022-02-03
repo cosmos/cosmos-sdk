@@ -292,6 +292,88 @@ GET 0100000000047ffffffffffffffe616263 1007
     PK testpb.ExampleTable 4/-2/abc -> {"u32":4,"u64":7,"str":"abc","i64":-2}
   NEXT
   VALID false
+ITERATOR 0100 -> 0101
+  VALID true
+  KEY 0100000000047ffffffffffffffe616263 1007
+      PK testpb.ExampleTable 4/-2/abc -> {"u32":4,"u64":7,"str":"abc","i64":-2}
+  NEXT
+  VALID true
+  KEY 0100000000047ffffffffffffffe616264 1007
+      PK testpb.ExampleTable 4/-2/abd -> {"u32":4,"u64":7,"str":"abd","i64":-2}
+  NEXT
+  VALID true
+  KEY 0100000000047fffffffffffffff616263 1008
+      PK testpb.ExampleTable 4/-1/abc -> {"u32":4,"u64":8,"str":"abc","i64":-1}
+  NEXT
+  VALID true
+  KEY 0100000000057ffffffffffffffe616264 1008
+      PK testpb.ExampleTable 5/-2/abd -> {"u32":5,"u64":8,"str":"abd","i64":-2}
+  NEXT
+  VALID true
+  KEY 0100000000057ffffffffffffffe616265 1009
+      PK testpb.ExampleTable 5/-2/abe -> {"u32":5,"u64":9,"str":"abe","i64":-2}
+  NEXT
+  VALID true
+  KEY 0100000000077ffffffffffffffe616265 100a
+      PK testpb.ExampleTable 7/-2/abe -> {"u32":7,"u64":10,"str":"abe","i64":-2}
+  NEXT
+  VALID true
+  KEY 0100000000077fffffffffffffff616265 100b
+      PK testpb.ExampleTable 7/-1/abe -> {"u32":7,"u64":11,"str":"abe","i64":-1}
+  NEXT
+  VALID true
+  KEY 0100000000087ffffffffffffffc616263 100b
+      PK testpb.ExampleTable 8/-4/abc -> {"u32":8,"u64":11,"str":"abc","i64":-4}
+  NEXT
+  VALID true
+  KEY 0100000000088000000000000001616263 100c
+      PK testpb.ExampleTable 8/1/abc -> {"u32":8,"u64":12,"str":"abc","i64":1}
+  NEXT
+  VALID true
+  KEY 0100000000088000000000000001616264 100a
+      PK testpb.ExampleTable 8/1/abd -> {"u32":8,"u64":10,"str":"abd","i64":1}
+  NEXT
+  VALID false
+ITERATOR 0100 -> 0101
+  VALID true
+  NEXT
+  VALID true
+  KEY 0100000000047ffffffffffffffe616264 1007
+      PK testpb.ExampleTable 4/-2/abd -> {"u32":4,"u64":7,"str":"abd","i64":-2}
+ITERATOR 0100000000047ffffffffffffffe61626400 -> 0101
+  VALID true
+  KEY 0100000000047fffffffffffffff616263 1008
+      PK testpb.ExampleTable 4/-1/abc -> {"u32":4,"u64":8,"str":"abc","i64":-1}
+  NEXT
+  VALID true
+  KEY 0100000000057ffffffffffffffe616264 1008
+      PK testpb.ExampleTable 5/-2/abd -> {"u32":5,"u64":8,"str":"abd","i64":-2}
+  NEXT
+  VALID true
+  KEY 0100000000057ffffffffffffffe616265 1009
+      PK testpb.ExampleTable 5/-2/abe -> {"u32":5,"u64":9,"str":"abe","i64":-2}
+  NEXT
+  VALID true
+  KEY 0100000000077ffffffffffffffe616265 100a
+      PK testpb.ExampleTable 7/-2/abe -> {"u32":7,"u64":10,"str":"abe","i64":-2}
+  NEXT
+  VALID true
+  KEY 0100000000077fffffffffffffff616265 100b
+      PK testpb.ExampleTable 7/-1/abe -> {"u32":7,"u64":11,"str":"abe","i64":-1}
+  NEXT
+  VALID true
+  KEY 0100000000087ffffffffffffffc616263 100b
+      PK testpb.ExampleTable 8/-4/abc -> {"u32":8,"u64":11,"str":"abc","i64":-4}
+  NEXT
+  VALID true
+  KEY 0100000000088000000000000001616263 100c
+      PK testpb.ExampleTable 8/1/abc -> {"u32":8,"u64":12,"str":"abc","i64":1}
+  NEXT
+  VALID true
+  KEY 0100000000088000000000000001616264 100a
+      PK testpb.ExampleTable 8/1/abd -> {"u32":8,"u64":10,"str":"abd","i64":1}
+  NEXT
+  VALID false
 HAS 0101000000000000000c616263
     ERR:EOF
 GET 0101000000000000000c616263 000000088000000000000001
@@ -302,18 +384,12 @@ ITERATOR 0100 -> 0101
   VALID true
   KEY 0100000000047ffffffffffffffe616263 1007
       PK testpb.ExampleTable 4/-2/abc -> {"u32":4,"u64":7,"str":"abc","i64":-2}
-  KEY 0100000000047ffffffffffffffe616263 1007
-      PK testpb.ExampleTable 4/-2/abc -> {"u32":4,"u64":7,"str":"abc","i64":-2}
   NEXT
   VALID true
   KEY 0100000000047ffffffffffffffe616264 1007
       PK testpb.ExampleTable 4/-2/abd -> {"u32":4,"u64":7,"str":"abd","i64":-2}
-  KEY 0100000000047ffffffffffffffe616264 1007
-      PK testpb.ExampleTable 4/-2/abd -> {"u32":4,"u64":7,"str":"abd","i64":-2}
   NEXT
   VALID true
-  KEY 0100000000047fffffffffffffff616263 1008
-      PK testpb.ExampleTable 4/-1/abc -> {"u32":4,"u64":8,"str":"abc","i64":-1}
   KEY 0100000000047fffffffffffffff616263 1008
       PK testpb.ExampleTable 4/-1/abc -> {"u32":4,"u64":8,"str":"abc","i64":-1}
   NEXT
@@ -336,23 +412,16 @@ ITERATOR 0100 -> 0101
   VALID true
   NEXT
   VALID false
-  CLOSE
 ITERATOR 0100000000057ffffffffffffffe61626400 -> 0101
   VALID true
   KEY 0100000000057ffffffffffffffe616265 1009
       PK testpb.ExampleTable 5/-2/abe -> {"u32":5,"u64":9,"str":"abe","i64":-2}
-  KEY 0100000000057ffffffffffffffe616265 1009
-      PK testpb.ExampleTable 5/-2/abe -> {"u32":5,"u64":9,"str":"abe","i64":-2}
   NEXT
   VALID true
   KEY 0100000000077ffffffffffffffe616265 100a
       PK testpb.ExampleTable 7/-2/abe -> {"u32":7,"u64":10,"str":"abe","i64":-2}
-  KEY 0100000000077ffffffffffffffe616265 100a
-      PK testpb.ExampleTable 7/-2/abe -> {"u32":7,"u64":10,"str":"abe","i64":-2}
   NEXT
   VALID true
-  KEY 0100000000077fffffffffffffff616265 100b
-      PK testpb.ExampleTable 7/-1/abe -> {"u32":7,"u64":11,"str":"abe","i64":-1}
   KEY 0100000000077fffffffffffffff616265 100b
       PK testpb.ExampleTable 7/-1/abe -> {"u32":7,"u64":11,"str":"abe","i64":-1}
   NEXT
@@ -363,28 +432,20 @@ ITERATOR 0100000000057ffffffffffffffe61626400 -> 0101
       PK testpb.ExampleTable 8/-4/abc -> {"u32":8,"u64":11,"str":"abc","i64":-4}
   NEXT
   VALID true
-  CLOSE
 ITERATOR 0100000000087ffffffffffffffc61626300 -> 0101
   VALID true
   KEY 0100000000088000000000000001616263 100c
       PK testpb.ExampleTable 8/1/abc -> {"u32":8,"u64":12,"str":"abc","i64":1}
-  KEY 0100000000088000000000000001616263 100c
-      PK testpb.ExampleTable 8/1/abc -> {"u32":8,"u64":12,"str":"abc","i64":1}
   NEXT
   VALID true
   KEY 0100000000088000000000000001616264 100a
       PK testpb.ExampleTable 8/1/abd -> {"u32":8,"u64":10,"str":"abd","i64":1}
-  KEY 0100000000088000000000000001616264 100a
-      PK testpb.ExampleTable 8/1/abd -> {"u32":8,"u64":10,"str":"abd","i64":1}
   NEXT
   VALID false
-  CLOSE
 ITERATOR 0100 <- 0101
   VALID true
   KEY 0100000000088000000000000001616264 100a
       PK testpb.ExampleTable 8/1/abd -> {"u32":8,"u64":10,"str":"abd","i64":1}
-  KEY 0100000000088000000000000001616264 100a
-      PK testpb.ExampleTable 8/1/abd -> {"u32":8,"u64":10,"str":"abd","i64":1}
   NEXT
   VALID true
   KEY 0100000000088000000000000001616263 100c
@@ -409,13 +470,10 @@ ITERATOR 0100 <- 0101
   VALID true
   NEXT
   VALID false
-  CLOSE
 ITERATOR 0100 <- 0100000000088000000000000001616263
   VALID true
   KEY 0100000000087ffffffffffffffc616263 100b
       PK testpb.ExampleTable 8/-4/abc -> {"u32":8,"u64":11,"str":"abc","i64":-4}
-  KEY 0100000000087ffffffffffffffc616263 100b
-      PK testpb.ExampleTable 8/-4/abc -> {"u32":8,"u64":11,"str":"abc","i64":-4}
   NEXT
   VALID true
   KEY 0100000000077fffffffffffffff616265 100b
@@ -424,34 +482,24 @@ ITERATOR 0100 <- 0100000000088000000000000001616263
       PK testpb.ExampleTable 7/-1/abe -> {"u32":7,"u64":11,"str":"abe","i64":-1}
   NEXT
   VALID true
-  CLOSE
 ITERATOR 0100000000047fffffffffffffff616263 -> 0100000000077ffffffffffffffe61626500
   VALID true
   KEY 0100000000047fffffffffffffff616263 1008
       PK testpb.ExampleTable 4/-1/abc -> {"u32":4,"u64":8,"str":"abc","i64":-1}
-  KEY 0100000000047fffffffffffffff616263 1008
-      PK testpb.ExampleTable 4/-1/abc -> {"u32":4,"u64":8,"str":"abc","i64":-1}
   NEXT
   VALID true
-  KEY 0100000000057ffffffffffffffe616264 1008
-      PK testpb.ExampleTable 5/-2/abd -> {"u32":5,"u64":8,"str":"abd","i64":-2}
   KEY 0100000000057ffffffffffffffe616264 1008
       PK testpb.ExampleTable 5/-2/abd -> {"u32":5,"u64":8,"str":"abd","i64":-2}
   NEXT
   VALID true
   KEY 0100000000057ffffffffffffffe616265 1009
       PK testpb.ExampleTable 5/-2/abe -> {"u32":5,"u64":9,"str":"abe","i64":-2}
-  KEY 0100000000057ffffffffffffffe616265 1009
-      PK testpb.ExampleTable 5/-2/abe -> {"u32":5,"u64":9,"str":"abe","i64":-2}
   NEXT
   VALID true
-  KEY 0100000000077ffffffffffffffe616265 100a
-      PK testpb.ExampleTable 7/-2/abe -> {"u32":7,"u64":10,"str":"abe","i64":-2}
   KEY 0100000000077ffffffffffffffe616265 100a
       PK testpb.ExampleTable 7/-2/abe -> {"u32":7,"u64":10,"str":"abe","i64":-2}
   NEXT
   VALID false
-  CLOSE
 ITERATOR 0100 -> 0101
   VALID true
   NEXT
@@ -462,8 +510,6 @@ ITERATOR 0100 -> 0101
   VALID true
   KEY 0100000000057ffffffffffffffe616264 1008
       PK testpb.ExampleTable 5/-2/abd -> {"u32":5,"u64":8,"str":"abd","i64":-2}
-  KEY 0100000000057ffffffffffffffe616264 1008
-      PK testpb.ExampleTable 5/-2/abd -> {"u32":5,"u64":8,"str":"abd","i64":-2}
   NEXT
   VALID true
   KEY 0100000000057ffffffffffffffe616265 1009
@@ -482,7 +528,6 @@ ITERATOR 0100 -> 0101
   VALID true
   NEXT
   VALID false
-  CLOSE
 ITERATOR 0100 <- 0101
   VALID true
   NEXT
@@ -497,12 +542,8 @@ ITERATOR 0100 <- 0101
   VALID true
   KEY 0100000000057ffffffffffffffe616265 1009
       PK testpb.ExampleTable 5/-2/abe -> {"u32":5,"u64":9,"str":"abe","i64":-2}
-  KEY 0100000000057ffffffffffffffe616265 1009
-      PK testpb.ExampleTable 5/-2/abe -> {"u32":5,"u64":9,"str":"abe","i64":-2}
   NEXT
   VALID true
-  KEY 0100000000057ffffffffffffffe616264 1008
-      PK testpb.ExampleTable 5/-2/abd -> {"u32":5,"u64":8,"str":"abd","i64":-2}
   KEY 0100000000057ffffffffffffffe616264 1008
       PK testpb.ExampleTable 5/-2/abd -> {"u32":5,"u64":8,"str":"abd","i64":-2}
   NEXT
@@ -517,7 +558,6 @@ ITERATOR 0100 <- 0101
   VALID true
   NEXT
   VALID false
-  CLOSE
 ITERATOR 0100 -> 0101
   VALID true
   NEXT
@@ -540,30 +580,6 @@ ITERATOR 0100 -> 0101
   VALID true
   NEXT
   VALID false
-  CLOSE
-ITERATOR 0100 -> 0101
-  VALID true
-  NEXT
-  VALID true
-  NEXT
-  VALID true
-  NEXT
-  VALID true
-  NEXT
-  VALID true
-  NEXT
-  VALID true
-  NEXT
-  VALID true
-  NEXT
-  VALID true
-  NEXT
-  VALID true
-  NEXT
-  VALID true
-  NEXT
-  VALID false
-  CLOSE
 GET 0100000000047ffffffffffffffe616263 1007
     PK testpb.ExampleTable 4/-2/abc -> {"u32":4,"u64":7,"str":"abc","i64":-2}
 ORM UPDATE testpb.ExampleTable {"u32":4,"u64":7,"str":"abc","i64":-2} -> {"u32":4,"u64":14,"str":"abc","bz":"abc","i64":-2}

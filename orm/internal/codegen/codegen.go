@@ -13,8 +13,7 @@ import (
 )
 
 const (
-	contextPkg = protogen.GoImportPath("context")
-
+	contextPkg  = protogen.GoImportPath("context")
 	ormListPkg  = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/model/ormlist")
 	ormdbPkg    = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/model/ormdb")
 	ormErrPkg   = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/types/ormerrors")

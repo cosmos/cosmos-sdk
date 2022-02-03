@@ -666,17 +666,13 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM app
 					return nil, err
 				}
 			}
-			if module, ok := m.Modules[moduleName].(HasABCIGenesis); ok {
-				moduleValUpdates, err := module.InitGenesis(sdkCtx, module.DefaultGenesis())
-				if err != nil {
-					return nil, err
-				}
 
-				// The module manager assumes only one module will update the
-				// validator set, and it can't be a new module.
-				if len(moduleValUpdates) > 0 {
-					return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "validator InitGenesis update is already set by another module")
-				}
+			moduleValUpdates := module.InitGenesis(ctx, cfgtor.cdc, module.DefaultGenesis(cfgtor.cdc))
+			ctx.Logger().Info(fmt.Sprintf("adding a new module: %s", moduleName))
+			// The module manager assumes only one module will update the
+			// validator set, and that it will not be by a new module.
+			if len(moduleValUpdates) > 0 {
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "validator InitGenesis updates already set by a previous module")
 			}
 		}
 

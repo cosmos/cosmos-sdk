@@ -160,8 +160,8 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	v1beta1.RegisterMsgServer(cfg.MsgServer(), keeper.NewLegacyMsgServerImpl(am.accountKeeper.GetModuleAddress(types.ModuleName).String(), msgServer))
 	v1beta2.RegisterMsgServer(cfg.MsgServer(), msgServer)
 
-	// TODO Register v1beta1 query server.
-	// https://github.com/cosmos/cosmos-sdk/issues/10951
+	legacyQueryServer := keeper.NewLegacyQueryServer(am.keeper)
+	v1beta1.RegisterQueryServer(cfg.QueryServer(), legacyQueryServer)
 	v1beta2.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
 	m := keeper.NewMigrator(am.keeper)

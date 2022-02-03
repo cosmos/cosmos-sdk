@@ -24,13 +24,22 @@ type uniqueKeyIndex struct {
 	getReadBackend func(context.Context) (ReadBackend, error)
 }
 
-func (u uniqueKeyIndex) Iterator(ctx context.Context, options ...ormlist.Option) (Iterator, error) {
+func (u uniqueKeyIndex) List(ctx context.Context, prefixKey []interface{}, options ...ormlist.Option) (Iterator, error) {
 	backend, err := u.getReadBackend(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return iterator(backend, backend.IndexStoreReader(), u, u.GetKeyCodec(), options)
+	return prefixIterator(backend.IndexStoreReader(), backend, u, u.GetKeyCodec(), prefixKey, options)
+}
+
+func (u uniqueKeyIndex) ListRange(ctx context.Context, from, to []interface{}, options ...ormlist.Option) (Iterator, error) {
+	backend, err := u.getReadBackend(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return rangeIterator(backend.IndexStoreReader(), backend, u, u.GetKeyCodec(), from, to, options)
 }
 
 func (u uniqueKeyIndex) doNotImplement() {}
@@ -187,8 +196,8 @@ func (u uniqueKeyIndex) readValueFromIndexKey(store ReadBackend, primaryKey []pr
 	return nil
 }
 
-func (p uniqueKeyIndex) Fields() string {
-	return p.fields.String()
+func (u uniqueKeyIndex) Fields() string {
+	return u.fields.String()
 }
 
 var _ indexer = &uniqueKeyIndex{}

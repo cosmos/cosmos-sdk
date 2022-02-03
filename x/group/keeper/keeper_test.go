@@ -840,7 +840,6 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 		},
 	}
 
-	var seq uint32 = 1
 	for msg, spec := range specs {
 		spec := spec
 		s.Run(msg, func() {
@@ -856,9 +855,6 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			s.Require().NoError(err)
 			id := res.GroupId
 			groupPolicyAddr := res.GroupPolicyAddress
-
-			seq++
-			s.Assert().Equal(uint64(seq), id)
 
 			// then all data persisted in group
 			loadedGroupRes, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: id})

@@ -126,8 +126,8 @@ message TallyParams {
 // BurnParams defines the params for burning tokens within deposits.
 message BurnParams {
   // burn deposits if a proposal does not meet qourum
-  bool vote_qourum = 1;
+  bool vote_quorum = 1;
   // burn deposits if the proposal does not get enough deposits
-  bool proposal_depsoit = 2;
+  bool proposal_deposit = 2;
   bool vote_veto        = 3;
 }

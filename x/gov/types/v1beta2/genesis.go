@@ -34,7 +34,8 @@ func (data GenesisState) Empty() bool {
 	return data.StartingProposalId == 0 ||
 		data.DepositParams == nil ||
 		data.VotingParams == nil ||
-		data.TallyParams == nil
+		data.TallyParams == nil ||
+		data.BurnParams == nil
 }
 
 // ValidateGenesis checks if parameters are within valid ranges

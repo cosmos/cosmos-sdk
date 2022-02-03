@@ -30,5 +30,6 @@ func MigrateJSON(oldState *v1beta1.GenesisState) (*v1beta2.GenesisState, error) 
 		DepositParams:      &depParams,
 		VotingParams:       &votingParms,
 		TallyParams:        &tallyParams,
+		BurnParams:         v1beta2.DefaultGenesisState().BurnParams,
 	}, nil
 }

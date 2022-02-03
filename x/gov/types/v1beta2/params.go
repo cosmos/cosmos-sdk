@@ -27,6 +27,7 @@ var (
 	ParamStoreKeyDepositParams = []byte("depositparams")
 	ParamStoreKeyVotingParams  = []byte("votingparams")
 	ParamStoreKeyTallyParams   = []byte("tallyparams")
+	ParamStoreKeyBurnParams    = []byte("burnparams")
 )
 
 // ParamKeyTable - Key declaration for parameters
@@ -35,6 +36,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 		paramtypes.NewParamSetPair(ParamStoreKeyDepositParams, DepositParams{}, validateDepositParams),
 		paramtypes.NewParamSetPair(ParamStoreKeyVotingParams, VotingParams{}, validateVotingParams),
 		paramtypes.NewParamSetPair(ParamStoreKeyTallyParams, TallyParams{}, validateTallyParams),
+		paramtypes.NewParamSetPair(ParamStoreKeyBurnParams, BurnParams{}, validateBurnParams),
 	)
 }
 
@@ -170,6 +172,47 @@ func validateVotingParams(i interface{}) error {
 	return nil
 }
 
+// DefaultParams default governance params
+func DefaultParams() Params {
+	return NewParams(DefaultVotingParams(), DefaultTallyParams(), DefaultDepositParams(), DefaultBurnParams())
+}
+
+// NewBurnParams creates a new VotingParams object
+func NewBurnParams(vq, pd, vv bool) BurnParams {
+	return BurnParams{
+		VoteQuorum:      vq,
+		ProposalDeposit: pd,
+		VoteVeto:        vv,
+	}
+}
+
+// DefaultVotingParams default parameters for voting
+func DefaultBurnParams() BurnParams {
+	return NewBurnParams(true, true, true)
+}
+
+func validateBurnParams(i interface{}) error {
+	_, ok := i.(BurnParams)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	return nil
+}
+
+// Equal checks equality of TallyParams
+func (bp BurnParams) Equal(other BurnParams) bool {
+	if bp.ProposalDeposit == other.ProposalDeposit {
+		return true
+	}
+	if bp.VoteQuorum == other.VoteQuorum {
+		return true
+	}
+	if bp.VoteVeto == other.VoteVeto {
+		return true
+	}
+	return false
+}
+
 // Params returns all of the governance params
 type Params struct {
 	VotingParams  VotingParams  `json:"voting_params" yaml:"voting_params"`
@@ -191,37 +234,4 @@ func NewParams(vp VotingParams, tp TallyParams, dp DepositParams, bp BurnParams)
 		TallyParams:   tp,
 		BurnParams:    bp,
 	}
-}
-
-// DefaultParams default governance params
-func DefaultParams() Params {
-	return NewParams(DefaultVotingParams(), DefaultTallyParams(), DefaultDepositParams(), DefaultBurnParams())
-}
-
-// NewBurnParams creates a new VotingParams object
-func NewBurnParams(vq, pd, vv bool) BurnParams {
-	return BurnParams{
-		VoteQourum:      vq,
-		ProposalDepsoit: pd,
-		VoteVeto:        vv,
-	}
-}
-
-// DefaultVotingParams default parameters for voting
-func DefaultBurnParams() BurnParams {
-	return NewBurnParams(true, true, true)
-}
-
-// Equal checks equality of TallyParams
-func (bp BurnParams) Equal(other BurnParams) bool {
-	if bp.ProposalDepsoit == other.ProposalDepsoit {
-		return true
-	}
-	if bp.VoteQourum == other.VoteQourum {
-		return true
-	}
-	if bp.VoteVeto == other.VoteVeto {
-		return true
-	}
-	return false
 }

@@ -29,7 +29,7 @@ func (keeper Keeper) GetTallyParams(ctx sdk.Context) v1beta2.TallyParams {
 // GetTallyParams returns the current TallyParam from the global param store
 func (keeper Keeper) GetBurnParams(ctx sdk.Context) v1beta2.BurnParams {
 	var burnParams v1beta2.BurnParams
-	keeper.paramSpace.Get(ctx, v1beta2.ParamStoreKeyTallyParams, &burnParams)
+	keeper.paramSpace.Get(ctx, v1beta2.ParamStoreKeyBurnParams, &burnParams)
 	return burnParams
 }
 
@@ -50,5 +50,5 @@ func (keeper Keeper) SetTallyParams(ctx sdk.Context, tallyParams v1beta2.TallyPa
 
 // SetBurnParams sets BurnParams to the global param store
 func (keeper Keeper) SetBurnParams(ctx sdk.Context, burnParams v1beta2.BurnParams) {
-	keeper.paramSpace.Set(ctx, v1beta2.ParamStoreKeyDepositParams, &burnParams)
+	keeper.paramSpace.Set(ctx, v1beta2.ParamStoreKeyBurnParams, &burnParams)
 }

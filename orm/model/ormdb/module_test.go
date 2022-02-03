@@ -7,6 +7,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+
+	"github.com/cosmos/cosmos-sdk/errors"
+
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
@@ -41,7 +45,7 @@ func (k keeper) Send(ctx context.Context, from, to, denom string, amount uint64)
 
 func (k keeper) Mint(ctx context.Context, acct, denom string, amount uint64) error {
 	supply, err := k.store.SupplyStore().Get(ctx, denom)
-	if err != nil {
+	if err != nil && !errors.IsOf(err, ormerrors.NotFound) {
 		return err
 	}
 
@@ -66,10 +70,6 @@ func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) err
 		return err
 	}
 
-	if supply == nil {
-		return fmt.Errorf("no supply for %s", denom)
-	}
-
 	if amount > supply.Amount {
 		return fmt.Errorf("insufficient supply")
 	}
@@ -90,7 +90,11 @@ func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) err
 
 func (k keeper) Balance(ctx context.Context, acct, denom string) (uint64, error) {
 	balance, err := k.store.BalanceStore().Get(ctx, acct, denom)
-	if balance == nil {
+	if err != nil {
+		if errors.IsOf(err, ormerrors.NotFound) {
+			return 0, nil
+		}
+
 		return 0, err
 	}
 	return balance.Amount, err
@@ -99,6 +103,10 @@ func (k keeper) Balance(ctx context.Context, acct, denom string) (uint64, error)
 func (k keeper) Supply(ctx context.Context, denom string) (uint64, error) {
 	supply, err := k.store.SupplyStore().Get(ctx, denom)
 	if supply == nil {
+		if errors.IsOf(err, ormerrors.NotFound) {
+			return 0, nil
+		}
+
 		return 0, err
 	}
 	return supply.Amount, err
@@ -106,7 +114,7 @@ func (k keeper) Supply(ctx context.Context, denom string) (uint64, error) {
 
 func (k keeper) addBalance(ctx context.Context, acct, denom string, amount uint64) error {
 	balance, err := k.store.BalanceStore().Get(ctx, acct, denom)
-	if err != nil {
+	if err != nil && !errors.IsOf(err, ormerrors.NotFound) {
 		return err
 	}
 
@@ -128,10 +136,6 @@ func (k keeper) safeSubBalance(ctx context.Context, acct, denom string, amount u
 	balance, err := balanceStore.Get(ctx, acct, denom)
 	if err != nil {
 		return err
-	}
-
-	if balance == nil {
-		return fmt.Errorf("acct %x has no balance for %s", acct, denom)
 	}
 
 	if amount > balance.Amount {

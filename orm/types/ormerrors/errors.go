@@ -32,4 +32,5 @@ var (
 	InvalidTableDefinition        = errors.New(codespace, 25, "invalid table definition")
 	InvalidFileDescriptorID       = errors.New(codespace, 26, "invalid file descriptor ID")
 	TableNotFound                 = errors.New(codespace, 27, "table not found")
+	NotFound                      = errors.New(codespace, 28, "not found")
 )

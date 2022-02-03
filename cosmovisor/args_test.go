@@ -230,36 +230,6 @@ func (s *argsTestSuite) TestValidate() {
 	}
 }
 
-func (s *argsTestSuite) TestEnsureBin() {
-	relPath := filepath.Join("testdata", "validate")
-	absPath, err := filepath.Abs(relPath)
-	s.Require().NoError(err)
-
-	cfg := Config{Home: absPath, Name: "dummyd", DataBackupPath: absPath}
-	s.Require().Len(cfg.validate(), 0, "validation errors")
-
-	s.Require().NoError(EnsureBinary(cfg.GenesisBin()))
-
-	cases := map[string]struct {
-		upgrade string
-		hasBin  bool
-	}{
-		"proper":         {"chain2", true},
-		"no binary":      {"nobin", false},
-		"not executable": {"noexec", false},
-		"no directory":   {"foobarbaz", false},
-	}
-
-	for _, tc := range cases {
-		err := EnsureBinary(cfg.UpgradeBin(tc.upgrade))
-		if tc.hasBin {
-			s.Require().NoError(err)
-		} else {
-			s.Require().Error(err)
-		}
-	}
-}
-
 func (s *argsTestSuite) TestBooleanOption() {
 	initialEnv := s.clearEnv()
 	defer s.setEnv(nil, initialEnv)

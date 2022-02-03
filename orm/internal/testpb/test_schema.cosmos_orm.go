@@ -22,6 +22,8 @@ type ExampleTableStore interface {
 	GetByU64Str(ctx context.Context, u64 uint64, str string) (*ExampleTable, error)
 	List(ctx context.Context, prefixKey ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error)
 	ListRange(ctx context.Context, from, to ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error)
+	DeleteBy(ctx context.Context, prefixKey ExampleTableIndexKey) error
+	DeleteRange(ctx context.Context, from, to ExampleTableIndexKey) error
 
 	doNotImplement()
 }
@@ -184,6 +186,14 @@ func (this exampleTableStore) ListRange(ctx context.Context, from, to ExampleTab
 	return ExampleTableIterator{it}, err
 }
 
+func (this exampleTableStore) DeleteBy(ctx context.Context, prefixKey ExampleTableIndexKey) error {
+	return this.table.GetIndexByID(prefixKey.id()).DeleteBy(ctx, prefixKey.values()...)
+}
+
+func (this exampleTableStore) DeleteRange(ctx context.Context, from, to ExampleTableIndexKey) error {
+	return this.table.GetIndexByID(from.id()).DeleteRange(ctx, from.values(), to.values())
+}
+
 func (this exampleTableStore) doNotImplement() {}
 
 var _ ExampleTableStore = exampleTableStore{}
@@ -208,6 +218,8 @@ type ExampleAutoIncrementTableStore interface {
 	GetByX(ctx context.Context, x string) (*ExampleAutoIncrementTable, error)
 	List(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error)
 	ListRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error)
+	DeleteBy(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey) error
+	DeleteRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey) error
 
 	doNotImplement()
 }
@@ -319,6 +331,14 @@ func (this exampleAutoIncrementTableStore) List(ctx context.Context, prefixKey E
 func (this exampleAutoIncrementTableStore) ListRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error) {
 	it, err := this.table.GetIndexByID(from.id()).ListRange(ctx, from.values(), to.values(), opts...)
 	return ExampleAutoIncrementTableIterator{it}, err
+}
+
+func (this exampleAutoIncrementTableStore) DeleteBy(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey) error {
+	return this.table.GetIndexByID(prefixKey.id()).DeleteBy(ctx, prefixKey.values()...)
+}
+
+func (this exampleAutoIncrementTableStore) DeleteRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey) error {
+	return this.table.GetIndexByID(from.id()).DeleteRange(ctx, from.values(), to.values())
 }
 
 func (this exampleAutoIncrementTableStore) doNotImplement() {}

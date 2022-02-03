@@ -334,7 +334,7 @@ type Result struct {
 	Events []types1.Event `protobuf:"bytes,3,rep,name=events,proto3" json:"events"`
 	// msg_responses contains the Msg handler responses type packed in Anys.
 	//
-	// Since: cosmos-sdk 0.45
+	// Since: cosmos-sdk 0.46
 	MsgResponses []*types.Any `protobuf:"bytes,4,rep,name=msg_responses,json=msgResponses,proto3" json:"msg_responses,omitempty"`
 }
 
@@ -478,7 +478,7 @@ type TxMsgData struct {
 	Data []*MsgData `protobuf:"bytes,1,rep,name=data,proto3" json:"data,omitempty"` // Deprecated: Do not use.
 	// msg_responses contains the Msg handler responses packed into Anys.
 	//
-	// Since: cosmos-sdk 0.45
+	// Since: cosmos-sdk 0.46
 	MsgResponses []*types.Any `protobuf:"bytes,2,rep,name=msg_responses,json=msgResponses,proto3" json:"msg_responses,omitempty"`
 }
 

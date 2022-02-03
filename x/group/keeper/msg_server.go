@@ -34,14 +34,14 @@ func (k Keeper) CreateGroup(goCtx context.Context, req *group.MsgCreateGroup) (*
 		return nil, err
 	}
 
-	if err := assertMetadataLength(metadata, "group metadata"); err != nil {
+	if err := k.assertMetadataLength(metadata, "group metadata"); err != nil {
 		return nil, err
 	}
 
 	totalWeight := math.NewDecFromInt64(0)
 	for i := range members.Members {
 		m := members.Members[i]
-		if err := assertMetadataLength(m.Metadata, "member metadata"); err != nil {
+		if err := k.assertMetadataLength(m.Metadata, "member metadata"); err != nil {
 			return nil, err
 		}
 
@@ -105,7 +105,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 			return err
 		}
 		for i := range req.MemberUpdates {
-			if err := assertMetadataLength(req.MemberUpdates[i].Metadata, "group member metadata"); err != nil {
+			if err := k.assertMetadataLength(req.MemberUpdates[i].Metadata, "group member metadata"); err != nil {
 				return err
 			}
 			groupMember := group.GroupMember{GroupId: req.GroupId,
@@ -221,7 +221,7 @@ func (k Keeper) UpdateGroupMetadata(goCtx context.Context, req *group.MsgUpdateG
 		return k.groupTable.Update(ctx.KVStore(k.key), g.GroupId, g)
 	}
 
-	if err := assertMetadataLength(req.Metadata, "group metadata"); err != nil {
+	if err := k.assertMetadataLength(req.Metadata, "group metadata"); err != nil {
 		return nil, err
 	}
 
@@ -243,7 +243,7 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 	groupID := req.GetGroupID()
 	metadata := req.GetMetadata()
 
-	if err := assertMetadataLength(metadata, "group policy metadata"); err != nil {
+	if err := k.assertMetadataLength(metadata, "group policy metadata"); err != nil {
 		return nil, err
 	}
 
@@ -359,7 +359,7 @@ func (k Keeper) UpdateGroupPolicyMetadata(goCtx context.Context, req *group.MsgU
 		return k.groupPolicyTable.Update(ctx.KVStore(k.key), groupPolicy)
 	}
 
-	if err := assertMetadataLength(metadata, "group policy metadata"); err != nil {
+	if err := k.assertMetadataLength(metadata, "group policy metadata"); err != nil {
 		return nil, err
 	}
 
@@ -381,7 +381,7 @@ func (k Keeper) CreateProposal(goCtx context.Context, req *group.MsgCreatePropos
 	proposers := req.Proposers
 	msgs := req.GetMsgs()
 
-	if err := assertMetadataLength(metadata, "metadata"); err != nil {
+	if err := k.assertMetadataLength(metadata, "metadata"); err != nil {
 		return nil, err
 	}
 
@@ -491,7 +491,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	choice := req.Choice
 	metadata := req.Metadata
 
-	if err := assertMetadataLength(metadata, "metadata"); err != nil {
+	if err := k.assertMetadataLength(metadata, "metadata"); err != nil {
 		return nil, err
 	}
 
@@ -773,10 +773,10 @@ func (k Keeper) doAuthenticated(ctx sdk.Context, req authNGroupReq, action actio
 }
 
 // assertMetadataLength returns an error if given metadata length
-// is greater than a fixed maxMetadataLength.
-func assertMetadataLength(metadata []byte, description string) error {
-	if len(metadata) > group.MaxMetadataLength {
-		return sdkerrors.Wrap(errors.ErrMaxLimit, description)
+// is greater than a pre-defined maxMetadataLen.
+func (k Keeper) assertMetadataLength(metadata []byte, description string) error {
+	if metadata != nil && uint64(len(metadata)) > k.config.MaxMetadataLen {
+		return sdkerrors.Wrapf(errors.ErrMaxLimit, description)
 	}
 	return nil
 }

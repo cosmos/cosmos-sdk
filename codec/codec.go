@@ -2,6 +2,7 @@ package codec
 
 import (
 	"github.com/gogo/protobuf/proto"
+	"google.golang.org/grpc/encoding"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
@@ -94,5 +95,9 @@ type (
 		UnmarshalAmino([]byte) error
 		MarshalAminoJSON() ([]byte, error)
 		UnmarshalAminoJSON([]byte) error
+	}
+
+	GRPCCodecProvider interface {
+		GRPCCodec() encoding.Codec
 	}
 )

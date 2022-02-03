@@ -15,7 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
@@ -155,7 +154,16 @@ func WeightedOperations(
 		},
 	)
 
-	return simulation.WeightedOperations{
+	// create two proposals for weightedOperations
+	var createProposalOps simulation.WeightedOperations
+	for i := 0; i < 2; i++ {
+		createProposalOps = append(createProposalOps, simulation.NewWeightedOperation(
+			weightMsgCreateProposal,
+			SimulateMsgCreateProposal(ak, bk, k),
+		))
+	}
+
+	wPreCreateProposalOps := simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgCreateGroup,
 			SimulateMsgCreateGroup(ak, bk),
@@ -164,9 +172,12 @@ func WeightedOperations(
 			weightMsgCreateGroupPolicy,
 			SimulateMsgCreateGroupPolicy(ak, bk, k),
 		),
+	}
+
+	wPostCreateProposalOps := simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
-			weightMsgCreateProposal,
-			SimulateMsgCreateProposal(ak, bk, k),
+			WeightMsgWithdrawProposal,
+			SimulateMsgWithdrawProposal(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgVote,
@@ -200,11 +211,9 @@ func WeightedOperations(
 			weightMsgUpdateGroupPolicyMetadata,
 			SimulateMsgUpdateGroupPolicyMetadata(ak, bk, k),
 		),
-		simulation.NewWeightedOperation(
-			WeightMsgWithdrawProposal,
-			SimulateMsgWithdrawProposal(ak, bk, k),
-		),
 	}
+
+	return append(wPreCreateProposalOps, append(createProposalOps, wPostCreateProposalOps...)...)
 }
 
 // SimulateMsgCreateGroup generates a MsgCreateGroup with random values
@@ -728,23 +737,9 @@ func SimulateMsgWithdrawProposal(ak group.AccountKeeper,
 		if groupPolicy == nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "no group policy found"), nil, nil
 		}
+
 		groupPolicyAddr := groupPolicy.Address
-
-		// Pick a random member from the group
 		ctx := sdk.WrapSDKContext(sdkCtx)
-		acc, account, err := randomMember(r, k, ak, ctx, accounts, g.GroupId)
-		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, ""), nil, err
-		}
-		if account == nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "no group member found"), nil, nil
-		}
-
-		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
-		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
-		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "fee error"), nil, err
-		}
 
 		policy := groupPolicy.GetDecisionPolicy()
 		err = policy.Validate(*g)
@@ -752,27 +747,11 @@ func SimulateMsgWithdrawProposal(ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, err.Error()), nil, nil
 		}
 
-		proposalReq, err := group.NewMsgCreateProposalRequest(groupPolicyAddr, []string{acc.Address.String()}, []sdk.Msg{
-			&banktypes.MsgSend{
-				FromAddress: groupPolicyAddr,
-				ToAddress:   accounts[1].Address.String(),
-				Amount:      sdk.Coins{sdk.NewInt64Coin("token", 100)},
-			},
-		}, []byte{}, 0)
-
-		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "fail to create proposal request"), nil, err
-		}
-		_, err = k.CreateProposal(ctx, proposalReq)
-
-		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "failed to create proposal"), nil, err
-		}
-
 		proposalsResult, err := k.ProposalsByGroupPolicy(ctx, &group.QueryProposalsByGroupPolicyRequest{Address: groupPolicyAddr})
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "fail to query group info"), nil, err
 		}
+
 		proposals := proposalsResult.GetProposals()
 		if len(proposals) == 0 {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "no proposals found"), nil, nil
@@ -793,12 +772,6 @@ func SimulateMsgWithdrawProposal(ak group.AccountKeeper,
 			}
 		}
 
-		// select a random proposer
-		proposers := proposal.Proposers
-		n := randIntInRange(r, len(proposers))
-		proposerIdx := findAccount(accounts, proposers[n])
-		proposer := accounts[proposerIdx]
-
 		// return no-op if no proposal found
 		if proposalID == -1 {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "no proposals found"), nil, nil
@@ -814,10 +787,24 @@ func SimulateMsgWithdrawProposal(ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "group has been modified"), nil, nil
 		}
 
+		// select a random proposer
+		proposers := proposal.Proposers
+		n := randIntInRange(r, len(proposers))
+		proposerIdx := findAccount(accounts, proposers[n])
+		proposer := accounts[proposerIdx]
+		proposerAcc := ak.GetAccount(sdkCtx, proposer.Address)
+
+		spendableCoins := bk.SpendableCoins(sdkCtx, proposer.Address)
+		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "fee error"), nil, err
+		}
+
 		msg := group.MsgWithdrawProposal{
 			ProposalId: uint64(proposalID),
 			Address:    proposer.Address.String(),
 		}
+
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
 			txGen,
@@ -825,10 +812,11 @@ func SimulateMsgWithdrawProposal(ak group.AccountKeeper,
 			fees,
 			helpers.DefaultGenTxGas,
 			chainID,
-			[]uint64{account.GetAccountNumber()},
-			[]uint64{account.GetSequence()},
+			[]uint64{proposerAcc.GetAccountNumber()},
+			[]uint64{proposerAcc.GetSequence()},
 			proposer.PrivKey,
 		)
+
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyMetadata, "unable to generate mock tx"), nil, err
 		}

@@ -52,6 +52,8 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{simulation.WeightMsgCreateGroup, group.MsgCreateGroup{}.Route(), simulation.TypeMsgCreateGroup},
 		{simulation.WeightMsgCreateGroupPolicy, group.MsgCreateGroupPolicy{}.Route(), simulation.TypeMsgCreateGroupPolicy},
 		{simulation.WeightMsgCreateProposal, group.MsgCreateProposal{}.Route(), simulation.TypeMsgCreateProposal},
+		{simulation.WeightMsgCreateProposal, group.MsgCreateProposal{}.Route(), simulation.TypeMsgCreateProposal},
+		{simulation.WeightMsgWithdrawProposal, group.MsgWithdrawProposal{}.Route(), simulation.TypeMsgWithdrawProposal},
 		{simulation.WeightMsgVote, group.MsgVote{}.Route(), simulation.TypeMsgVote},
 		{simulation.WeightMsgExec, group.MsgExec{}.Route(), simulation.TypeMsgExec},
 		{simulation.WeightMsgUpdateGroupMetadata, group.MsgUpdateGroupMetadata{}.Route(), simulation.TypeMsgUpdateGroupMetadata},
@@ -60,7 +62,6 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{simulation.WeightMsgUpdateGroupPolicyAdmin, group.MsgUpdateGroupPolicyAdmin{}.Route(), simulation.TypeMsgUpdateGroupPolicyAdmin},
 		{simulation.WeightMsgUpdateGroupPolicyDecisionPolicy, group.MsgUpdateGroupPolicyDecisionPolicy{}.Route(), simulation.TypeMsgUpdateGroupPolicyDecisionPolicy},
 		{simulation.WeightMsgUpdateGroupPolicyMetadata, group.MsgUpdateGroupPolicyMetadata{}.Route(), simulation.TypeMsgUpdateGroupPolicyMetadata},
-		{simulation.WeightMsgWithdrawProposal, group.MsgWithdrawProposal{}.Route(), simulation.TypeMsgWithdrawProposal},
 	}
 
 	for i, w := range weightedOps {
@@ -68,7 +69,6 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail
-		// fmt.Printf("%v %v\n", operationMsg, w.Weight())
 		suite.Require().Equal(expected[i].weight, w.Weight(), "weight should be the same")
 		suite.Require().Equal(expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
 		suite.Require().Equal(expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")

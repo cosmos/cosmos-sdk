@@ -42,8 +42,7 @@ type Keeper struct {
 	// Msg server router
 	router *middleware.MsgServiceRouter
 
-	// maxMetadataLen defines the maximum proposal metadata length.
-	maxMetadataLen uint64
+	config types.Config
 }
 
 // NewKeeper returns a governance keeper. It handles:
@@ -57,7 +56,7 @@ func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace types.ParamSubspace,
 	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper,
 	legacyRouter v1beta1.Router, router *middleware.MsgServiceRouter,
-	maxMetadataLen uint64,
+	config types.Config,
 ) Keeper {
 
 	// ensure governance module account is set
@@ -70,16 +69,21 @@ func NewKeeper(
 	// could create invalid or non-deterministic behavior.
 	legacyRouter.Seal()
 
+	// If MaxMetadataLen not set by app developer, set to default value.
+	if config.MaxMetadataLen == 0 {
+		config.MaxMetadataLen = types.DefaultConfig().MaxMetadataLen
+	}
+
 	return Keeper{
-		storeKey:       key,
-		paramSpace:     paramSpace,
-		authKeeper:     authKeeper,
-		bankKeeper:     bankKeeper,
-		sk:             sk,
-		cdc:            cdc,
-		legacyRouter:   legacyRouter,
-		router:         router,
-		maxMetadataLen: maxMetadataLen,
+		storeKey:     key,
+		paramSpace:   paramSpace,
+		authKeeper:   authKeeper,
+		bankKeeper:   bankKeeper,
+		sk:           sk,
+		cdc:          cdc,
+		legacyRouter: legacyRouter,
+		router:       router,
+		config:       config,
 	}
 }
 

@@ -31,12 +31,7 @@ type ModuleSchema struct {
 }
 
 // ModuleDB defines the ORM database type to be used by modules.
-type ModuleDB interface {
-	ormkv.EntryCodec
-
-	// GetTable returns the table for the provided message type or nil.
-	GetTable(message proto.Message) ormtable.Table
-}
+type ModuleDB = ormtable.Schema
 
 type moduleDB struct {
 	prefix       []byte

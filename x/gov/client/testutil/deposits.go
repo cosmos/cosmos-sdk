@@ -74,7 +74,7 @@ func (s *DepositTestSuite) createProposal(val *network.Validator, initialDeposit
 		exactArgs = append(exactArgs, fmt.Sprintf("--%s=%s", cli.FlagDeposit, initialDeposit.String()))
 	}
 
-	_, err := MsgSubmitProposal(
+	_, err := MsgSubmitLegacyProposal(
 		val.ClientCtx,
 		val.Address.String(),
 		fmt.Sprintf("Text Proposal %d", id),

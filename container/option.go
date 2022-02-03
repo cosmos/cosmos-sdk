@@ -12,35 +12,35 @@ type Option interface {
 }
 
 // Provide creates a container option which registers the provided dependency
-// injection constructors. Each constructor will be called at most once with the
-// exception of scoped constructors which are called at most once per scope
-// (see Scope).
-func Provide(constructors ...interface{}) Option {
+// injection providers. Each provider will be called at most once with the
+// exception of module-scoped providers which are called at most once per module
+// (see ModuleKey).
+func Provide(providers ...interface{}) Option {
 	return containerOption(func(ctr *container) error {
-		return provide(ctr, nil, constructors)
+		return provide(ctr, nil, providers)
 	})
 }
 
-// ProvideWithScope creates a container option which registers the provided dependency
-// injection constructors that are to be run in the provided scope. Each constructor
+// ProvideInModule creates a container option which registers the provided dependency
+// injection providers that are to be run in the named module. Each provider
 // will be called at most once.
-func ProvideWithScope(scopeName string, constructors ...interface{}) Option {
+func ProvideInModule(moduleName string, providers ...interface{}) Option {
 	return containerOption(func(ctr *container) error {
-		if scopeName == "" {
-			return errors.Errorf("expected non-empty scope name")
+		if moduleName == "" {
+			return errors.Errorf("expected non-empty module name")
 		}
 
-		return provide(ctr, ctr.createOrGetScope(scopeName), constructors)
+		return provide(ctr, ctr.createOrGetModuleKey(moduleName), providers)
 	})
 }
 
-func provide(ctr *container, scope Scope, constructors []interface{}) error {
-	for _, c := range constructors {
+func provide(ctr *container, key *moduleKey, providers []interface{}) error {
+	for _, c := range providers {
 		rc, err := ExtractProviderDescriptor(c)
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		_, err = ctr.addNode(&rc, scope)
+		_, err = ctr.addNode(&rc, key)
 		if err != nil {
 			return errors.WithStack(err)
 		}

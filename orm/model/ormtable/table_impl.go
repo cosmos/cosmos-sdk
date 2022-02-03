@@ -32,6 +32,13 @@ type tableImpl struct {
 	customJSONValidator   func(message proto.Message) error
 }
 
+func (t *tableImpl) GetTable(message proto.Message) Table {
+	if message.ProtoReflect().Descriptor().FullName() == t.MessageType().Descriptor().FullName() {
+		return t
+	}
+	return nil
+}
+
 func (t tableImpl) PrimaryKey() UniqueIndex {
 	return t.primaryKeyIndex
 }
@@ -296,7 +303,7 @@ func (t tableImpl) doExportJSON(ctx context.Context, writer io.Writer) error {
 	}
 
 	var err error
-	it, _ := t.Iterator(ctx)
+	it, _ := t.List(ctx, nil)
 	start := true
 	for {
 		found := it.Next()
@@ -399,6 +406,7 @@ func (t tableImpl) Get(ctx context.Context, message proto.Message) (found bool, 
 }
 
 var _ Table = &tableImpl{}
+var _ Schema = &tableImpl{}
 
 type saveMode int
 

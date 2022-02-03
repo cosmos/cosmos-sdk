@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/orm
 go 1.17
 
 require (
-	github.com/cosmos/cosmos-proto v1.0.0-alpha6
+	github.com/cosmos/cosmos-proto v1.0.0-alpha7
 	github.com/cosmos/cosmos-sdk/api v0.1.0-alpha3
 	github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.2
 	github.com/iancoleman/strcase v0.2.0
@@ -29,7 +29,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.3-0.20201103224600-674baa8c7fc3 // indirect
 	github.com/google/btree v1.0.0 // indirect
-	github.com/google/go-cmp v0.5.5 // indirect
+	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

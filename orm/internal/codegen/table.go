@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/iancoleman/strcase"
-
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
@@ -59,6 +57,9 @@ func (t tableGen) gen() {
 func (t tableGen) genStoreInterface() {
 	t.P("type ", t.messageStoreInterfaceName(t.msg), " interface {")
 	t.P("Insert(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
+	if t.table.PrimaryKey.AutoIncrement {
+		t.P("InsertReturningID(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") (uint64, error)")
+	}
 	t.P("Update(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
 	t.P("Save(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
 	t.P("Delete(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
@@ -146,7 +147,11 @@ func (t tableGen) fieldArg(name protoreflect.Name) string {
 
 func (t tableGen) genStruct() {
 	t.P("type ", t.messageStoreReceiverName(t.msg), " struct {")
-	t.P("table ", tablePkg.Ident("Table"))
+	if t.table.PrimaryKey.AutoIncrement {
+		t.P("table ", ormTablePkg.Ident("AutoIncrementTable"))
+	} else {
+		t.P("table ", ormTablePkg.Ident("Table"))
+	}
 	t.P("}")
 	t.storeStructName()
 }
@@ -162,6 +167,13 @@ func (t tableGen) genStoreImpl() {
 	for _, method := range methods {
 		t.P(receiver, method, "(ctx ", contextPkg.Ident("Context"), ", ", varName, " *", varTypeName, ") error {")
 		t.P("return ", receiverVar, ".table.", method, "(ctx, ", varName, ")")
+		t.P("}")
+		t.P()
+	}
+
+	if t.table.PrimaryKey.AutoIncrement {
+		t.P(receiver, "InsertReturningID(ctx ", contextPkg.Ident("Context"), ", ", varName, " *", varTypeName, ") (uint64, error) {")
+		t.P("return ", receiverVar, ".table.InsertReturningID(ctx, ", varName, ")")
 		t.P("}")
 		t.P()
 	}
@@ -189,11 +201,12 @@ func (t tableGen) genStoreImpl() {
 
 		// has
 		t.P("func (", receiverVar, " ", t.messageStoreReceiverName(t.msg), ") ", hasName, "{")
-		t.P("return ", receiverVar, ".table.Has(ctx, &", t.msg.GoIdent.GoName, "{")
+		t.P("return ", receiverVar, ".table.GetIndexByID(", idx.Id, ").(",
+			ormTablePkg.Ident("UniqueIndex"), ").Has(ctx,")
 		for _, field := range fields {
-			t.P(strcase.ToCamel(field), ": ", field, ",")
+			t.P(field, ",")
 		}
-		t.P("})")
+		t.P(")")
 		t.P("}")
 		t.P()
 
@@ -201,32 +214,31 @@ func (t tableGen) genStoreImpl() {
 		varName := t.param(t.msg.GoIdent.GoName)
 		varTypeName := t.msg.GoIdent.GoName
 		t.P("func (", receiverVar, " ", t.messageStoreReceiverName(t.msg), ") ", getName, "{")
-		t.P(varName, " := &", varTypeName, "{")
+		t.P("var ", varName, " ", varTypeName)
+		t.P("found, err := ", receiverVar, ".table.GetIndexByID(", idx.Id, ").(",
+			ormTablePkg.Ident("UniqueIndex"), ").Get(ctx, &", varName, ",")
 		for _, field := range fields {
-			t.P(strcase.ToCamel(field), ": ", field, ",")
+			t.P(field, ",")
 		}
-		t.P("}")
-		t.P("found, err := ", receiverVar, ".table.Get(ctx, ", varName, ")")
+		t.P(")")
 		t.P("if !found {")
 		t.P("return nil, err")
 		t.P("}")
-		t.P("return ", varName, ", nil")
+		t.P("return &", varName, ", nil")
 		t.P("}")
 		t.P()
 	}
 
 	// List
 	t.P(receiver, "List(ctx ", contextPkg.Ident("Context"), ", prefixKey ", t.indexKeyInterfaceName(), ", opts ...", ormListPkg.Ident("Option"), ") (", t.iteratorName(), ", error) {")
-	t.P("opts = append(opts, ", ormListPkg.Ident("Prefix"), "(prefixKey.values()))")
-	t.P("it, err := ", receiverVar, ".table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)")
+	t.P("it, err := ", receiverVar, ".table.GetIndexByID(prefixKey.id()).List(ctx, prefixKey.values(), opts...)")
 	t.P("return ", t.iteratorName(), "{it}, err")
 	t.P("}")
 	t.P()
 
 	// ListRange
 	t.P(receiver, "ListRange(ctx ", contextPkg.Ident("Context"), ", from, to ", t.indexKeyInterfaceName(), ", opts ...", ormListPkg.Ident("Option"), ") (", t.iteratorName(), ", error) {")
-	t.P("opts = append(opts, ", ormListPkg.Ident("Start"), "(from.values()), ", ormListPkg.Ident("End"), "(to))")
-	t.P("it, err := ", receiverVar, ".table.GetIndexByID(from.id()).Iterator(ctx, opts...)")
+	t.P("it, err := ", receiverVar, ".table.GetIndexByID(from.id()).ListRange(ctx, from.values(), to.values(), opts...)")
 	t.P("return ", t.iteratorName(), "{it}, err")
 	t.P("}")
 	t.P()
@@ -246,6 +258,13 @@ func (t tableGen) genConstructor() {
 	t.P("if table == nil {")
 	t.P("return nil,", ormErrPkg.Ident("TableNotFound.Wrap"), "(string((&", t.msg.GoIdent.GoName, "{}).ProtoReflect().Descriptor().FullName()))")
 	t.P("}")
-	t.P("return ", t.messageStoreReceiverName(t.msg), "{table}, nil")
+	if t.table.PrimaryKey.AutoIncrement {
+		t.P(
+			"return ", t.messageStoreReceiverName(t.msg), "{table.(",
+			ormTablePkg.Ident("AutoIncrementTable"), ")}, nil",
+		)
+	} else {
+		t.P("return ", t.messageStoreReceiverName(t.msg), "{table}, nil")
+	}
 	t.P("}")
 }

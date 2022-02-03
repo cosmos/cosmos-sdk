@@ -27,6 +27,7 @@ const (
 	EnvDownloadBin          = "DAEMON_ALLOW_DOWNLOAD_BINARIES"
 	EnvRestartUpgrade       = "DAEMON_RESTART_AFTER_UPGRADE"
 	EnvSkipBackup           = "UNSAFE_SKIP_BACKUP"
+	EnvDataBackupPath       = "DAEMON_DATA_BACKUP_DIR"
 	EnvInterval             = "DAEMON_POLL_INTERVAL"
 	EnvPreupgradeMaxRetries = "DAEMON_PREUPGRADE_MAX_RETRIES"
 )
@@ -49,6 +50,7 @@ type Config struct {
 	RestartAfterUpgrade   bool
 	PollInterval          time.Duration
 	UnsafeSkipBackup      bool
+	DataBackupPath        string
 	PreupgradeMaxRetries  int
 	OSArch                string
 
@@ -132,9 +134,14 @@ func (cfg *Config) CurrentBin() (string, error) {
 func GetConfigFromEnv() (*Config, error) {
 	var errs []error
 	cfg := &Config{
-		Home:   os.Getenv(EnvHome),
-		Name:   os.Getenv(EnvName),
-		OSArch: OSArch(),
+		Home:           os.Getenv(EnvHome),
+		Name:           os.Getenv(EnvName),
+		DataBackupPath: os.Getenv(EnvDataBackupPath),
+		OSArch:         OSArch(),
+	}
+
+	if cfg.DataBackupPath == "" {
+		cfg.DataBackupPath = cfg.Home
 	}
 
 	var err error
@@ -218,6 +225,25 @@ func (cfg *Config) validate() []error {
 			errs = append(errs, fmt.Errorf("cannot stat home dir: %w", err))
 		case !info.IsDir():
 			errs = append(errs, fmt.Errorf("%s is not a directory", cfg.Root()))
+		}
+	}
+
+	// check the DataBackupPath
+	if cfg.UnsafeSkipBackup == true {
+		return errs
+	}
+	// if UnsafeSkipBackup is false, check if the DataBackupPath valid
+	switch {
+	case cfg.DataBackupPath == "":
+		errs = append(errs, errors.New(EnvDataBackupPath+" must not be empty"))
+	case !filepath.IsAbs(cfg.DataBackupPath):
+		errs = append(errs, errors.New(cfg.DataBackupPath+" must be an absolute path"))
+	default:
+		switch info, err := os.Stat(cfg.DataBackupPath); {
+		case err != nil:
+			errs = append(errs, fmt.Errorf("%q must be a valid directory: %w", cfg.DataBackupPath, err))
+		case !info.IsDir():
+			errs = append(errs, fmt.Errorf("%q must be a valid directory", cfg.DataBackupPath))
 		}
 	}
 
@@ -313,6 +339,7 @@ func (cfg Config) DetailString() string {
 		{EnvRestartUpgrade, fmt.Sprintf("%t", cfg.RestartAfterUpgrade)},
 		{EnvInterval, fmt.Sprintf("%s", cfg.PollInterval)},
 		{EnvSkipBackup, fmt.Sprintf("%t", cfg.UnsafeSkipBackup)},
+		{EnvDataBackupPath, cfg.DataBackupPath},
 		{EnvPreupgradeMaxRetries, fmt.Sprintf("%d", cfg.PreupgradeMaxRetries)},
 		{"os/arch", cfg.OSArch},
 	}
@@ -321,6 +348,7 @@ func (cfg Config) DetailString() string {
 		{"Upgrade Dir", cfg.BaseUpgradeDir()},
 		{"Genesis Bin", cfg.GenesisBin()},
 		{"Monitored File", cfg.UpgradeInfoFilePath()},
+		{"Data Backup Dir", cfg.DataBackupPath},
 	}
 
 	var sb strings.Builder

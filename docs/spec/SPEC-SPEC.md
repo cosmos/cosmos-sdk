@@ -37,6 +37,7 @@ following list is nonbinding and all files are optional.
 - `XX_client.md` - list and describe CLI commands and gRPC and REST endpoints
 - `XX_params.md` - list all module parameters, their types (in JSON) and examples
 - `XX_future_improvements.md` - describe future improvements of this module
+- `XX_tests.md` - acceptance tests
 - `XX_appendix.md` - supplementary details referenced elsewhere within the spec
 
 ### Notation for key-value mapping

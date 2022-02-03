@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/internal/conv"
 )
 
 // Info is the special structure that the Plan.Info string can be (as json).
@@ -57,7 +59,7 @@ func ResolveInfo(infoStr string, requireChecksum bool) (string, error) {
 // ParseInfoJSON parses an info JSON string into a map of os/arch strings to URL string.
 func ParseInfoJSON(infoJSON string) (*Info, error) {
 	var planInfo Info
-	if err := json.Unmarshal([]byte(infoJSON), &planInfo); err != nil {
+	if err := json.Unmarshal(conv.UnsafeStrToBytes(infoJSON), &planInfo); err != nil {
 		return nil, fmt.Errorf("could not parse plan info json: %v", err)
 	}
 	return &planInfo, nil

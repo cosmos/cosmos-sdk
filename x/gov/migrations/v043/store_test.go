@@ -14,6 +14,7 @@ import (
 	v040gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v040"
 	v043gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v043"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 func TestMigrateStore(t *testing.T) {
@@ -28,9 +29,9 @@ func TestMigrateStore(t *testing.T) {
 	// Use dummy value for keys where we don't test values.
 	dummyValue := []byte("foo")
 	// Use real values for votes, as we're testing weighted votes.
-	oldVote := types.Vote{ProposalId: 1, Voter: "foobar", Option: types.OptionNoWithVeto}
+	oldVote := v1beta1.Vote{ProposalId: 1, Voter: "foobar", Option: v1beta1.OptionNoWithVeto}
 	oldVoteValue := cdc.MustMarshal(&oldVote)
-	newVote := types.Vote{ProposalId: 1, Voter: "foobar", Options: types.WeightedVoteOptions{{Option: types.OptionNoWithVeto, Weight: sdk.NewDec(1)}}}
+	newVote := v1beta1.Vote{ProposalId: 1, Voter: "foobar", Options: v1beta1.WeightedVoteOptions{{Option: v1beta1.OptionNoWithVeto, Weight: sdk.NewDec(1)}}}
 	newVoteValue := cdc.MustMarshal(&newVote)
 
 	testCases := []struct {

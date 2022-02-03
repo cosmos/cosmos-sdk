@@ -15,8 +15,9 @@ import (
 func TestSeqCodec(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
 		prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix").([]byte)
-		tableName := (&testpb.A{}).ProtoReflect().Descriptor().FullName()
-		cdc := ormkv.NewSeqCodec(tableName, prefix)
+		typ := (&testpb.ExampleTable{}).ProtoReflect().Type()
+		tableName := typ.Descriptor().FullName()
+		cdc := ormkv.NewSeqCodec(typ, prefix)
 
 		seq, err := cdc.DecodeValue(nil)
 		assert.NilError(t, err)

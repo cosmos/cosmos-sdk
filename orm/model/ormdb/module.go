@@ -6,6 +6,8 @@ import (
 	"encoding/binary"
 	"math"
 
+	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
+
 	"google.golang.org/protobuf/reflect/protodesc"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
@@ -34,42 +36,18 @@ type ModuleSchema struct {
 type ModuleDB interface {
 	ormtable.Schema
 
-	// DefaultJSON returns default JSON that can be used as a template for
-	// genesis files.
-	//
-	// For regular tables this an empty JSON array, but for singletons an
-	// empty instance of the singleton is marshaled.
-	DefaultJSON(sink JSONSink) error
+	// DefaultJSON writes default JSON for each table in the module to the target.
+	DefaultJSON(ormjson.WriteTarget) error
 
-	// ValidateJSON validates JSON streamed from the reader.
-	ValidateJSON(source JSONSource) error
+	// ValidateJSON validates JSON for each table in the module.
+	ValidateJSON(ormjson.ReadSource) error
 
-	// ImportJSON imports JSON into the store, streaming one entry at a time.
-	// Each table should be import from a separate JSON file to enable proper
-	// streaming.
-	//
-	// Regular tables should be stored as an array of objects with each object
-	// corresponding to a single record in the table.
-	//
-	// Auto-incrementing tables
-	// can optionally have the last sequence value as the first element in the
-	// array. If the last sequence value is provided, then each value of the
-	// primary key in the file must be <= this last sequence value or omitted
-	// entirely. If no last sequence value is provided, no entries should
-	// contain the primary key as this will be auto-assigned.
-	//
-	// Singletons should define a single object and not an array.
-	//
-	// ImportJSON is not atomic with respect to the underlying store, meaning
-	// that in the case of an error, some records may already have been
-	// imported. It is assumed that ImportJSON is called in the context of some
-	// larger transaction isolation.
-	ImportJSON(context.Context, JSONSource) error
+	// ImportJSON imports JSON for each table in the module which has JSON
+	// defined in the read source.
+	ImportJSON(context.Context, ormjson.ReadSource) error
 
-	// ExportJSON exports JSON in the format accepted by ImportJSON.
-	// Auto-incrementing tables will export the last sequence number as the
-	// first element in the JSON array.
-	ExportJSON(context.Context, JSONSink) error
+	// ExportJSON exports JSON for each table in the module.
+	ExportJSON(context.Context, ormjson.WriteTarget) error
 }
 
 type moduleDB struct {

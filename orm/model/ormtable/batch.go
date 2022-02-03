@@ -1,6 +1,8 @@
 package ormtable
 
-import "github.com/cosmos/cosmos-sdk/orm/model/kv"
+import (
+	"github.com/cosmos/cosmos-sdk/orm/types/kv"
+)
 
 type batchIndexCommitmentWriter struct {
 	Backend

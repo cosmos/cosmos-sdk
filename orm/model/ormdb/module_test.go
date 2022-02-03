@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
+
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
@@ -157,14 +159,14 @@ func TestModuleDB(t *testing.T) {
 	db, err := ormdb.NewModuleDB(TestBankSchema, ormdb.ModuleDBOptions{})
 	assert.NilError(t, err)
 	debugBuf := &strings.Builder{}
-	store := testkv.NewDebugBackend(
-		testkv.NewSharedMemBackend(),
+	backend := testkv.NewSharedMemBackend()
+	ctx := ormtable.WrapContextDefault(testkv.NewDebugBackend(
+		backend,
 		&testkv.EntryCodecDebugger{
 			EntryCodec: db,
 			Print:      func(s string) { debugBuf.WriteString(s + "\n") },
 		},
-	)
-	ctx := ormtable.WrapContextDefault(store)
+	))
 
 	// create keeper
 	k, err := newKeeper(db)
@@ -205,7 +207,7 @@ func TestModuleDB(t *testing.T) {
 	golden.Assert(t, debugBuf.String(), "bank_scenario.golden")
 
 	// check decode & encode
-	it, err := store.CommitmentStore().Iterator(nil, nil)
+	it, err := backend.CommitmentStore().Iterator(nil, nil)
 	assert.NilError(t, err)
 	for it.Valid() {
 		entry, err := db.DecodeEntry(it.Key(), it.Value())
@@ -216,4 +218,24 @@ func TestModuleDB(t *testing.T) {
 		assert.Assert(t, bytes.Equal(v, it.Value()))
 		it.Next()
 	}
+
+	// check JSON
+	target := ormjson.NewRawMessageTarget()
+	assert.NilError(t, db.DefaultJSON(target))
+	rawJson, err := target.JSON()
+	assert.NilError(t, err)
+	golden.Assert(t, string(rawJson), "default_json.golden")
+
+	target = ormjson.NewRawMessageTarget()
+	assert.NilError(t, db.ExportJSON(ctx, target))
+	rawJson, err = target.JSON()
+	assert.NilError(t, err)
+
+	backend2 := testkv.NewSharedMemBackend()
+	ctx2 := ormtable.WrapContextDefault(backend2)
+	source, err := ormjson.NewRawMessageSource(rawJson)
+	assert.NilError(t, err)
+	assert.NilError(t, db.ValidateJSON(source))
+	assert.NilError(t, db.ImportJSON(ctx2, source))
+	testkv.AssertBackendsEqual(t, backend, backend2)
 }

@@ -396,6 +396,13 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
 	assertIteratorItems(it, 0, 2, 6, 10)
+
+	// Let's delete something directly
+	assert.NilError(t, store.Delete(ctx, data[0]))
+	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
+	assert.NilError(t, err)
+	assertIteratorItems(it, 2, 6, 10)
+
 }
 
 func TestRandomTableData(t *testing.T) {

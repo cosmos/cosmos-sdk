@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/orm/testing/ormtest"
+
 	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -159,7 +161,7 @@ func TestModuleDB(t *testing.T) {
 	db, err := ormdb.NewModuleDB(TestBankSchema, ormdb.ModuleDBOptions{})
 	assert.NilError(t, err)
 	debugBuf := &strings.Builder{}
-	backend := testkv.NewSharedMemBackend()
+	backend := ormtest.NewMemoryBackend()
 	ctx := ormtable.WrapContextDefault(testkv.NewDebugBackend(
 		backend,
 		&testkv.EntryCodecDebugger{
@@ -231,7 +233,7 @@ func TestModuleDB(t *testing.T) {
 	rawJson, err = target.JSON()
 	assert.NilError(t, err)
 
-	backend2 := testkv.NewSharedMemBackend()
+	backend2 := ormtest.NewMemoryBackend()
 	ctx2 := ormtable.WrapContextDefault(backend2)
 	source, err := ormjson.NewRawMessageSource(rawJson)
 	assert.NilError(t, err)

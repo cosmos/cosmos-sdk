@@ -12,7 +12,7 @@ import (
 
 // SubmitProposal create new proposal given an array of messages
 func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadata []byte) (v1beta2.Proposal, error) {
-	if metadata != nil && len(metadata) > int(keeper.maxMetadataLen) {
+	if metadata != nil && uint64(len(metadata)) > keeper.config.MaxMetadataLen {
 		return v1beta2.Proposal{}, types.ErrMetadataTooLong.Wrapf("got metadata with length %d", len(metadata))
 	}
 

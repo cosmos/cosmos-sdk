@@ -140,3 +140,11 @@ type Schema interface {
 	// GetTable returns the table for the provided message type or nil.
 	GetTable(message proto.Message) Table
 }
+
+type AutoIncrementTable interface {
+	Table
+
+	// InsertReturningID inserts the provided entry in the store and returns the newly
+	// generated ID for the message or an error.
+	InsertReturningID(ctx context.Context, message proto.Message) (newId uint64, err error)
+}

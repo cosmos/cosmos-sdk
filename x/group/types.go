@@ -160,7 +160,7 @@ func (p PercentageDecisionPolicy) Allow(tally Tally, totalPower string, votingDu
 	if err != nil {
 		return DecisionPolicyResult{}, err
 	}
-
+	
 	yesPercentage, err := yesCount.Quo(totalPowerDec)
 	if err != nil {
 		return DecisionPolicyResult{}, err
@@ -168,10 +168,27 @@ func (p PercentageDecisionPolicy) Allow(tally Tally, totalPower string, votingDu
 
 	if yesPercentage.Cmp(percentage) >= 0 {
 		return DecisionPolicyResult{Allow: true, Final: true}, nil
-	} else if yesPercentage.Cmp(percentage) < 0 {
-		return DecisionPolicyResult{Allow: false, Final: true}, nil
 	}
 
+	totalCounts, err := tally.TotalCounts()
+	if err != nil {
+		return DecisionPolicyResult{}, err
+	}
+	undecided, err := math.SubNonNegative(totalPowerDec, totalCounts)
+	if err != nil {
+		return DecisionPolicyResult{}, err
+	}
+	sum, err := yesCount.Add(undecided)
+	if err != nil {
+		return DecisionPolicyResult{}, err
+	}
+	sumPercentage, err := sum.Quo(totalPowerDec)
+	if err != nil {
+		return DecisionPolicyResult{}, err
+	}
+	if sumPercentage.Cmp(percentage) < 0 {
+		return DecisionPolicyResult{Allow: false, Final: true}, nil
+	}
 	return DecisionPolicyResult{Allow: false, Final: false}, nil
 }
 

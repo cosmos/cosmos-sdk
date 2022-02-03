@@ -193,4 +193,4 @@ Once a block contains more than 2/3rd _precommits_ where a common
 nodes, non-validating full nodes and light-nodes) are expected to switch to the
 new version of the software.
 
-_Note: Not clear how the flip is handled programmatically_
+_Note: Not clear how the flip is handled programmatically_.

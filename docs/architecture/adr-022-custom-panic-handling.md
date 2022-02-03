@@ -19,8 +19,8 @@ might be handled in a "standard" way (middleware) alongside the others.
 
 We propose middleware-solution, which could help developers implement the following cases:
 
-* add external logging (let's say sending reports to external services like [Sentry](https://sentry.io));
-* call panic for specific error cases;
+- add external logging (let's say sending reports to external services like [Sentry](https://sentry.io));
+- call panic for specific error cases;
 
 It will also make `OutOfGas` case and `default` case one of the middlewares.
 `Default` case wraps recovery object to an error and logs it ([example middleware implementation](#Recovery-middleware)).
@@ -94,9 +94,9 @@ func newRecoveryMiddleware(handler RecoveryHandler, next recoveryMiddleware) rec
 
 Function receives a `recoveryObj` object and returns:
 
-* (next `recoveryMiddleware`, `nil`) if object wasn't handled (not a target type) by `RecoveryHandler`;
-* (`nil`, not nil `error`) if input object was handled and other middlewares in the chain should not be executed;
-* (`nil`, `nil`) in case of invalid behavior. Panic recovery might not have been properly handled;
+- (next `recoveryMiddleware`, `nil`) if object wasn't handled (not a target type) by `RecoveryHandler`;
+- (`nil`, not nil `error`) if input object was handled and other middlewares in the chain should not be executed;
+- (`nil`, `nil`) in case of invalid behavior. Panic recovery might not have been properly handled;
 this can be avoided by always using a `default` as a rightmost middleware in the chain (always returns an `error`');
 
 `OutOfGas` middleware example:
@@ -197,9 +197,9 @@ This method would prepend handlers to an existing chain.
 ### Positive
 
 - Developers of Cosmos SDK based projects can add custom panic handlers to:
-    * add error context for custom panic sources (panic inside of custom keepers);
-    * emit `panic()`: passthrough recovery object to the Tendermint core;
-    * other necessary handling;
+    - add error context for custom panic sources (panic inside of custom keepers);
+    - emit `panic()`: passthrough recovery object to the Tendermint core;
+    - other necessary handling;
 - Developers can use standard Cosmos SDK `BaseApp` implementation, rather that rewriting it in their projects;
 - Proposed solution doesn't break the current "standard" `runTx()` flow;
 

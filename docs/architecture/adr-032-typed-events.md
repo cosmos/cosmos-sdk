@@ -34,7 +34,7 @@ This proposal is specifically about how to consume these events as a client of t
 
 ## Decision
 
-__Step-1__:  Implement additional functionality in the `types` package: `EmitTypedEvent` and `ParseTypedEvent` functions
+**Step-1**:  Implement additional functionality in the `types` package: `EmitTypedEvent` and `ParseTypedEvent` functions
 
 ```go
 // types/events.go
@@ -111,7 +111,7 @@ Here, the `EmitTypedEvent` is a method on `EventManager` which takes typed event
 
 When we subscribe to emitted events on the tendermint websocket, they are emitted in the form of an `abci.Event`. `ParseTypedEvent` parses the event back to it's original proto message.
 
-__Step-2__: Add proto definitions for typed events for msgs in each module:
+**Step-2**: Add proto definitions for typed events for msgs in each module:
 
 For example, let's take `MsgSubmitProposal` of `gov` module and implement this event's type.
 
@@ -128,7 +128,7 @@ message EventSubmitProposal {
 }
 ```
 
-__Step-3__: Refactor event emission to use the typed event created and emit using `sdk.EmitTypedEvent`:
+**Step-3**: Refactor event emission to use the typed event created and emit using `sdk.EmitTypedEvent`:
 
 ```go
 // x/gov/handler.go
@@ -145,7 +145,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper keeper.Keeper, msg types.Ms
 }
 ```
 
-#### How to subscribe to these typed events in `Client`
+### How to subscribe to these typed events in `Client`
 
 > NOTE: Full code example below
 
@@ -159,9 +159,9 @@ Please see the below code sample for more detail on this flow looks for clients.
 
 ### Positive
 
-* Improves consistency of implementation for the events currently in the Cosmos SDK
-* Provides a much more ergonomic way to handle events and facilitates writing event driven applications
-* This implementation will support a middleware ecosystem of `EventHandler`s
+- Improves consistency of implementation for the events currently in the Cosmos SDK
+- Provides a much more ergonomic way to handle events and facilitates writing event driven applications
+- This implementation will support a middleware ecosystem of `EventHandler`s
 
 ### Negative
 

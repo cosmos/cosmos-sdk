@@ -2854,7 +2854,7 @@ BUG FIXES
 
 ## 0.25.0
 
-_October 24th, 2018_
+_October 24th, 2018_.
 
 BREAKING CHANGES
 
@@ -3102,7 +3102,7 @@ BUG FIXES
 
 ## 0.24.2
 
-_August 22nd, 2018_
+_August 22nd, 2018_.
 
 BUG FIXES
 
@@ -3111,7 +3111,7 @@ BUG FIXES
 
 ## 0.24.1
 
-_August 21st, 2018_
+_August 21st, 2018_.
 
 BUG FIXES
 
@@ -3120,7 +3120,7 @@ BUG FIXES
 
 ## 0.24.0
 
-_August 13th, 2018_
+_August 13th, 2018_.
 
 BREAKING CHANGES
 
@@ -3236,7 +3236,7 @@ BUG FIXES
 
 ## 0.23.1
 
-_July 27th, 2018_
+_July 27th, 2018_.
 
 BUG FIXES
 
@@ -3246,7 +3246,7 @@ BUG FIXES
 
 ## 0.23.0
 
-_July 25th, 2018_
+_July 25th, 2018_.
 
 BREAKING CHANGES
 
@@ -3269,7 +3269,7 @@ BUG FIXES
 
 ## 0.22.0
 
-_July 16th, 2018_
+_July 16th, 2018_.
 
 BREAKING CHANGES
 
@@ -3288,7 +3288,7 @@ BUG FIXES
 
 ## 0.21.1
 
-_July 14th, 2018_
+_July 14th, 2018_.
 
 BUG FIXES
 
@@ -3297,7 +3297,7 @@ BUG FIXES
 
 ## 0.21.0
 
-_July 13th, 2018_
+_July 13th, 2018_.
 
 BREAKING CHANGES
 
@@ -3328,7 +3328,7 @@ BUG FIXES
 
 ## 0.20.0
 
-_July 10th, 2018_
+_July 10th, 2018_.
 
 BREAKING CHANGES
 
@@ -3472,7 +3472,7 @@ BUG FIXES
 
 ## 0.19.0
 
-_June 13, 2018_
+_June 13, 2018_.
 
 BREAKING CHANGES
 
@@ -3512,7 +3512,7 @@ FEATURES
 
 ## 0.18.0
 
-_June 9, 2018_
+_June 9, 2018_.
 
 BREAKING CHANGES
 
@@ -3577,48 +3577,28 @@ BUG FIXES
 * Auto-sequencing now works correctly
 * [gaiacli] Fix error message when account isn't found when running gaiacli account
 
-
 ## 0.17.5
 
-_June 5, 2018_
+_June 5, 2018_.
 
 Update to Tendermint v0.19.9 (Fix evidence reactor, mempool deadlock, WAL panic,
 memory leak)
 
 ## 0.17.4
 
-_May 31, 2018_
+_May 31, 2018_.
 
 Update to Tendermint v0.19.7 (WAL fixes and more)
 
 ## 0.17.3
 
-_May 29, 2018_
-
-Update to Tendermint v0.19.6 (fix fast-sync halt)
-
-## 0.17.5
-
-_June 5, 2018_
-
-Update to Tendermint v0.19.9 (Fix evidence reactor, mempool deadlock, WAL panic,
-memory leak)
-
-## 0.17.4
-
-_May 31, 2018_
-
-Update to Tendermint v0.19.7 (WAL fixes and more)
-
-## 0.17.3
-
-_May 29, 2018_
+_May 29, 2018_.
 
 Update to Tendermint v0.19.6 (fix fast-sync halt)
 
 ## 0.17.2
 
-_May 20, 2018_
+_May 20, 2018_.
 
 Update to Tendermint v0.19.5 (reduce WAL use, bound the mempool and some rpcs, improve logging)
 
@@ -4144,12 +4124,12 @@ BUG FIXES:
 
 ## PreHistory
 
-##### January 14-18, 2017
+### January 14-18, 2017
 
 * Update to Tendermint v0.8.0
 * Cleanup a bit and release blog post
 
-##### September 22, 2016
+### September 22, 2016
 
 * Basecoin compiles again
 

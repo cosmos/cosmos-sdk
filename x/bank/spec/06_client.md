@@ -149,7 +149,7 @@ Example Output:
 
 The `AllBalances` endpoint allows users to query account balance by address for all denominations.
 
-```
+```sh
 cosmos.bank.v1beta1.Query/AllBalances
 ```
 

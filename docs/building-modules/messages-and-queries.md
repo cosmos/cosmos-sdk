@@ -34,8 +34,8 @@ Each `Msg` service method must have exactly one argument, which must implement t
 
 The Cosmos SDK uses Protobuf definitions to generate client and server code:
 
-* `MsgServer` interface defines the server API for the `Msg` service and its implementation is described as part of the [`Msg` services](./msg-services.md) documentation.
-* Structures are generated for all RPC request and response types.
+- `MsgServer` interface defines the server API for the `Msg` service and its implementation is described as part of the [`Msg` services](./msg-services.md) documentation.
+- Structures are generated for all RPC request and response types.
 
 A `RegisterMsgServer` method is also generated and should be used to register the module's `MsgServer` implementation in `RegisterServices` method from the [`AppModule` interface](./module-manager.md#appmodule).
 

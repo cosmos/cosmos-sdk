@@ -23,7 +23,7 @@ must not be larger than the `maxMetadataLen` config passed into the gov keeper.
 - Initialise `Proposal`'s attributes
 - Decrease balance of sender by `InitialDeposit`
 - If `MinDeposit` is reached:
-  - Push `proposalID` in `ProposalProcessingQueue`
+    - Push `proposalID` in `ProposalProcessingQueue`
 - Transfer `InitialDeposit` from the `Proposer` to the governance `ModuleAccount`
 
 A `MsgSubmitProposal` transaction can be handled according to the following
@@ -150,7 +150,7 @@ vote on the proposal.
 
 - Record `Vote` of sender
 
-_Note: Gas cost for this message has to take into account the future tallying of the vote in EndBlocker_
+_Note: Gas cost for this message has to take into account the future tallying of the vote in EndBlocker._
 
 Next is a pseudocode outline of the way `MsgVote` transactions are
 handled:

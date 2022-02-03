@@ -238,16 +238,16 @@ queryClient := types.NewQueryClient(queryHelper)
 
 ### Positive
 
-* greatly simplified querier implementation (no manual encoding/decoding)
-* easy query client generation (can use existing grpc and swagger tools)
-* no need for REST query implementations
-* type safe query methods (generated via grpc plugin)
-* going forward, there will be less breakage of query methods because of the
+- greatly simplified querier implementation (no manual encoding/decoding)
+- easy query client generation (can use existing grpc and swagger tools)
+- no need for REST query implementations
+- type safe query methods (generated via grpc plugin)
+- going forward, there will be less breakage of query methods because of the
 backwards compatibility guarantees provided by buf
 
 ### Negative
 
-* all clients using the existing ABCI/REST queries will need to be refactored
+- all clients using the existing ABCI/REST queries will need to be refactored
 for both the new GRPC/REST query paths as well as protobuf/proto-json encoded
 data, but this is more or less unavoidable in the protobuf refactoring
 

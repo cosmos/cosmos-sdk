@@ -17,6 +17,10 @@
     - [Concept & Feature Approval Process](#concept--feature-approval-process)
         - [Strategy Discovery](#strategy-discovery)
         - [Concept Approval](#concept-approval)
+            - [Time Bound Period](#time-bound-period)
+            - [Approval Committee & Decision Making](#approval-committee--decision-making)
+            - [Committee Members](#committee-members)
+            - [Committee Criteria](#committee-criteria)
         - [Implementation & Release Approval](#implementation--release-approval)
 
 Thank you for considering making contributions to the Cosmos SDK and related repositories!
@@ -273,7 +277,7 @@ is broken up into three distinct stages: **Strategy Discovery**, **Concept Appro
 - After proposal, a time bound period for Request for Comment (RFC) on ADRs commences
 - ADRs are intended to be iterative, and may be merged into `master` while still in a `Proposed` status
 
-**Time Bound Period**
+#### Time Bound Period
 
 - Once a PR for an ADR is opened, reviewers are expected to perform a first
   review within 1 week of pull request being open
@@ -291,16 +295,16 @@ should convene to rectify the situation by either:
 - making changes to the Concept Approval Process (as outlined here)
 - making changes to the members of the Concept Approval Committee
 
-**Approval Committee & Decision Making**
+#### Approval Committee & Decision Making
 
 In absence of general consensus, decision making requires 1/2 vote from the two members
 of the **Concept Approval Committee**.
 
-**Committee Members**
+#### Committee Members
 
 - Core Members: **Aaron** (Regen), **Bez** (IG)
 
-**Committee Criteria**
+#### Committee Criteria
 
 Members must:
 

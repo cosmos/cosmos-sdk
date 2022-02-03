@@ -32,7 +32,7 @@ simd query mint annual-provisions
 
 Example Output:
 
-```
+```sh
 22268504368893.612100895088410693
 ```
 
@@ -52,7 +52,7 @@ simd query mint inflation
 
 Example Output:
 
-```
+```sh
 0.199200302563256955
 ```
 
@@ -105,7 +105,7 @@ Example Output:
 
 The `Inflation` endpoint allow users to query the current minting inflation value
 
-```
+```sh
 /cosmos.mint.v1beta1.Query/Inflation
 ```
 
@@ -127,7 +127,7 @@ Example Output:
 
 The `Params` endpoint allow users to query the current minting parameters
 
-```
+```sh
 /cosmos.mint.v1beta1.Query/Params
 ```
 
@@ -158,7 +158,7 @@ A user can query the `mint` module using REST endpoints.
 
 ### annual-provisions
 
-```
+```sh
 /cosmos/mint/v1beta1/annual_provisions
 ```
 

@@ -426,7 +426,7 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 				return req
 			},
 			true,
-			"percentage must be in the range of 0 to 1",
+			"percentage must be > 0 and <= 1",
 		},
 		{
 			"valid test case with percentage decision policy",
@@ -537,7 +537,7 @@ func TestMsgUpdateGroupPolicyDecisionPolicy(t *testing.T) {
 			"invalid percentage decision policy with value greater than 1",
 			msg5,
 			true,
-			"decision policy: percentage must be in the range of 0 to 1",
+			"decision policy: percentage must be > 0 and <= 1",
 		},
 	}
 

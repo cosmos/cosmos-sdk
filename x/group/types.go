@@ -126,12 +126,8 @@ func (p PercentageDecisionPolicy) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrap(err, "percentage threshold")
 	}
-	value, err := percentage.Float64()
-	if err != nil {
-		return sdkerrors.Wrap(err, "Dec to Float64 conversion of percentage")
-	}
-	if !(value >= 0 && value <= 1) {
-		return sdkerrors.Wrap(errors.ErrInvalid, "percentage must be in the range of 0 to 1")
+	if percentage.Cmp(math.NewDecFromInt64(1)) == 1 {
+		return sdkerrors.Wrap(errors.ErrInvalid, "percentage must be > 0 and <= 1")
 	}
 
 	timeout := p.Timeout
@@ -152,7 +148,7 @@ func (p PercentageDecisionPolicy) Allow(tally Tally, totalPower string, votingDu
 		return DecisionPolicyResult{Allow: false, Final: true}, nil
 	}
 
-	percentage, err := math.NewNonNegativeDecFromString(p.Percentage)
+	percentage, err := math.NewPositiveDecFromString(p.Percentage)
 	if err != nil {
 		return DecisionPolicyResult{}, err
 	}
@@ -160,31 +156,19 @@ func (p PercentageDecisionPolicy) Allow(tally Tally, totalPower string, votingDu
 	if err != nil {
 		return DecisionPolicyResult{}, err
 	}
-	totalCounts, err := tally.TotalCounts()
-	if err != nil {
-		return DecisionPolicyResult{}, err
-	}
-
 	totalPowerDec, err := math.NewNonNegativeDecFromString(totalPower)
 	if err != nil {
 		return DecisionPolicyResult{}, err
 	}
-	undecided, err := math.SubNonNegative(totalPowerDec, totalCounts)
-	if err != nil {
-		return DecisionPolicyResult{}, err
-	}
-	sum, err := yesCount.Add(undecided)
-	if err != nil {
-		return DecisionPolicyResult{}, err
-	}
-	sumPercentage, err := sum.Quo(totalPowerDec)
+
+	yesPercentage, err := yesCount.Quo(totalPowerDec)
 	if err != nil {
 		return DecisionPolicyResult{}, err
 	}
 
-	if sumPercentage.Cmp(percentage) >= 0 {
+	if yesPercentage.Cmp(percentage) >= 0 {
 		return DecisionPolicyResult{Allow: true, Final: true}, nil
-	} else if sumPercentage.Cmp(percentage) < 0 {
+	} else if yesPercentage.Cmp(percentage) < 0 {
 		return DecisionPolicyResult{Allow: false, Final: true}, nil
 	}
 

@@ -820,7 +820,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 				time.Second,
 			),
 			expErr:    true,
-			expErrMsg: "percentage must be in the range of 0 to 1",
+			expErrMsg: "percentage must be > 0 and <= 1",
 		},
 	}
 	for msg, spec := range specs {
@@ -848,6 +848,12 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			s.Assert().Equal(spec.req.Admin, groupPolicy.Admin)
 			s.Assert().Equal(spec.req.Metadata, groupPolicy.Metadata)
 			s.Assert().Equal(uint64(1), groupPolicy.Version)
+			_, ok := spec.policy.(*group.PercentageDecisionPolicy)
+			if ok {
+				s.Assert().Equal(spec.policy.(*group.PercentageDecisionPolicy), groupPolicy.GetDecisionPolicy())
+			} else {
+				s.Assert().Equal(spec.policy.(*group.ThresholdDecisionPolicy), groupPolicy.GetDecisionPolicy())
+			}
 		})
 	}
 }

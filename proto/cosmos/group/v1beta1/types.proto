@@ -50,7 +50,7 @@ message ThresholdDecisionPolicy {
 message PercentageDecisionPolicy {
   option (cosmos_proto.implements_interface) = "DecisionPolicy";
 
-  // percentage is the minimum threshold percentage the weighted sum of yes votes must met for a proposal to succeed.
+  // percentage is the minimum percentage the weighted sum of yes votes must met for a proposal to succeed.
   string percentage = 1;
 
   // timeout is the duration from submission of a proposal to the end of voting period

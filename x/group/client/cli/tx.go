@@ -300,7 +300,7 @@ Example:
 $ %s tx group create-group-policy [admin] [group-id] [metadata] \
 '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"1s"}'
 
-Here, we can use percentage decision policy when needed, where percentage varies from 0 to 1.
+Here, we can use percentage decision policy when needed, where 0 < percentage <= 1.
 Ex: '{"@type":"/cosmos.group.v1beta1.PercentageDecisionPolicy", "percentage":"0.5", "timeout":"1s"}'
 `,
 				version.AppName,

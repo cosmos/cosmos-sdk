@@ -206,11 +206,10 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	}
 	k.voteTable = *voteTable
 
-	if config.MaxMetadataLen != 0 {
-		k.config = config
-	} else {
-		k.config = DefaultConfig()
+	if config.MaxMetadataLen == 0 {
+		config.MaxMetadataLen = DefaultConfig().MaxMetadataLen
 	}
+	k.config = config
 
 	return k
 

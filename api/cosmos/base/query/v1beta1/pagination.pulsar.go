@@ -3,13 +3,14 @@ package queryv1beta1
 
 import (
 	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	io "io"
-	reflect "reflect"
-	sync "sync"
 )
 
 var (
@@ -1223,7 +1224,8 @@ type PageResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// next_key is the key to be passed to PageRequest.key to
-	// query the next page most efficiently
+	// query the next page most efficiently. It will be empty if
+	// there are no more results.
 	NextKey []byte `protobuf:"bytes,1,opt,name=next_key,json=nextKey,proto3" json:"next_key,omitempty"`
 	// total is total number of results available if PageRequest.count_total
 	// was set, its value is undefined otherwise

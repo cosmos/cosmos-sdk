@@ -2,7 +2,6 @@ package v043_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -121,8 +120,6 @@ func TestMigrateJSON(t *testing.T) {
 		"voting_period": "0s"
 	}
 }`
-
-	fmt.Println(string(indentedBz))
 
 	require.Equal(t, expected, string(indentedBz))
 }

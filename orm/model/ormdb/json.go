@@ -2,7 +2,10 @@ package ormdb
 
 import (
 	"context"
+	"fmt"
 	"sort"
+
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 
 	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
 
@@ -32,7 +35,7 @@ func (m moduleDB) DefaultJSON(target ormjson.WriteTarget) error {
 }
 
 func (m moduleDB) ValidateJSON(source ormjson.ReadSource) error {
-	var errMap map[protoreflect.FullName]error
+	errMap := map[protoreflect.FullName]error{}
 	for name, table := range m.tablesByName {
 		r, err := source.OpenReader(name)
 		if err != nil {
@@ -51,8 +54,13 @@ func (m moduleDB) ValidateJSON(source ormjson.ReadSource) error {
 	}
 
 	if len(errMap) != 0 {
-		panic("TODO")
+		var allErrors string
+		for name, err := range errMap {
+			allErrors += fmt.Sprintf("Error in JSON for table %s: %v\n", name, err)
+		}
+		return ormerrors.JSONValidationError.Wrap(allErrors)
 	}
+
 	return nil
 }
 

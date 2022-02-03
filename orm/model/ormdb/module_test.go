@@ -3,9 +3,12 @@ package ormdb_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 
 	"github.com/cosmos/cosmos-sdk/orm/testing/ormtest"
 
@@ -233,9 +236,18 @@ func TestModuleDB(t *testing.T) {
 	rawJson, err = target.JSON()
 	assert.NilError(t, err)
 
+	badJSON := `{
+  "testpb.Balance": 5,
+  "testpb.Supply": {}
+}
+`
+	source, err := ormjson.NewRawMessageSource(json.RawMessage(badJSON))
+	assert.NilError(t, err)
+	assert.ErrorIs(t, db.ValidateJSON(source), ormerrors.JSONValidationError)
+
 	backend2 := ormtest.NewMemoryBackend()
 	ctx2 := ormtable.WrapContextDefault(backend2)
-	source, err := ormjson.NewRawMessageSource(rawJson)
+	source, err = ormjson.NewRawMessageSource(rawJson)
 	assert.NilError(t, err)
 	assert.NilError(t, db.ValidateJSON(source))
 	assert.NilError(t, db.ImportJSON(ctx2, source))

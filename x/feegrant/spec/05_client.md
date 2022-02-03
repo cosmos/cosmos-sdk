@@ -124,7 +124,7 @@ A user can query the `feegrant` module using gRPC endpoints.
 
 The `Allowance` endpoint allows users to query a granted fee allowance.
 
-```
+```sh
 cosmos.feegrant.v1beta1.Query/Allowance
 ```
 
@@ -153,7 +153,7 @@ Example Output:
 
 The `Allowances` endpoint allows users to query all granted fee allowances for a given grantee.
 
-```
+```sh
 cosmos.feegrant.v1beta1.Query/Allowances
 ```
 

@@ -27,13 +27,13 @@ Release branches have the following format `release/cosmovisor/vA.B.x`, where A 
 
 To install the latest version of `cosmovisor`, run the following command:
 
-```
+```sh
 go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@latest
 ```
 
 To install a previous version, you can specify the version. IMPORTANT: Chains that use Cosmos-SDK v0.44.3 or earlier (eg v0.44.2) and want to use auto-download feature MUST use Cosmovisor v0.1.0
 
-```
+```sh
 go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v0.1.0
 ```
 
@@ -41,7 +41,7 @@ You can run `cosmovisor --version` to check the Cosmovisor version (works only w
 
 You can also install from source by pulling the cosmos-sdk repository and switching to the correct version and building as follows:
 
-```
+```sh
 git clone git@github.com:cosmos/cosmos-sdk
 cd cosmos-sdk
 git checkout cosmovisor/vx.x.x
@@ -50,7 +50,7 @@ make cosmovisor
 
 This will build cosmovisor in `/cosmovisor` directory. Afterwards you may want to put it into your machine's PATH like as follows:
 
-```
+```sh
 cp cosmovisor/cosmovisor ~/go/bin/cosmovisor
 ```
 
@@ -110,11 +110,11 @@ Please note that `$DAEMON_HOME/cosmovisor` only stores the *application binaries
 
 The system administrator is responsible for:
 
-- installing the `cosmovisor` binary
-- configuring the host's init system (e.g. `systemd`, `launchd`, etc.)
-- appropriately setting the environmental variables
-- manually installing the `genesis` folder
-- manually installing the `upgrades/<name>` folders
+* installing the `cosmovisor` binary
+* configuring the host's init system (e.g. `systemd`, `launchd`, etc.)
+* appropriately setting the environmental variables
+* manually installing the `genesis` folder
+* manually installing the `upgrades/<name>` folders
 
 `cosmovisor` will set the `current` link to point to `genesis` at first start (i.e. when no `current` link exists) and then handle switching binaries at the correct points in time so that the system administrator can prepare days in advance and relax at upgrade time.
 
@@ -127,10 +127,10 @@ The `DAEMON` specific code and operations (e.g. tendermint config, the applicati
 `cosmovisor` is polling the `$DAEMON_HOME/data/upgrade-info.json` file for new upgrade instructions. The file is created by the x/upgrade module in `BeginBlocker` when an upgrade is detected and the blockchain reaches the upgrade height.
 The following heuristic is applied to detect the upgrade:
 
-+ When starting, `cosmovisor` doesn't know much about currently running upgrade, except the binary which is `current/bin/`. It tries to read the `current/update-info.json` file to get information about the current upgrade name.
-+ If neither `cosmovisor/current/upgrade-info.json` nor `data/upgrade-info.json` exist, then `cosmovisor` will wait for `data/upgrade-info.json` file to trigger an upgrade.
-+ If `cosmovisor/current/upgrade-info.json` doesn't exist but `data/upgrade-info.json` exists, then `cosmovisor` assumes that whatever is in `data/upgrade-info.json` is a valid upgrade request. In this case `cosmovisor` tries immediately to make an upgrade according to the `name` attribute in `data/upgrade-info.json`.
-+ Otherwise, `cosmovisor` waits for changes in `upgrade-info.json`. As soon as a new upgrade name is recorded in the file, `cosmovisor` will trigger an upgrade mechanism.
+* When starting, `cosmovisor` doesn't know much about currently running upgrade, except the binary which is `current/bin/`. It tries to read the `current/update-info.json` file to get information about the current upgrade name.
+* If neither `cosmovisor/current/upgrade-info.json` nor `data/upgrade-info.json` exist, then `cosmovisor` will wait for `data/upgrade-info.json` file to trigger an upgrade.
+* If `cosmovisor/current/upgrade-info.json` doesn't exist but `data/upgrade-info.json` exists, then `cosmovisor` assumes that whatever is in `data/upgrade-info.json` is a valid upgrade request. In this case `cosmovisor` tries immediately to make an upgrade according to the `name` attribute in `data/upgrade-info.json`.
+* Otherwise, `cosmovisor` waits for changes in `upgrade-info.json`. As soon as a new upgrade name is recorded in the file, `cosmovisor` will trigger an upgrade mechanism.
 
 When the upgrade mechanism is triggered, `cosmovisor` will:
 
@@ -169,7 +169,7 @@ You can include multiple binaries at once to ensure more than one environment wi
 
 When submitting this as a proposal ensure there are no spaces. An example command using `gaiad` could look like:
 
-```
+```sh
 > gaiad tx gov submit-proposal software-upgrade Vega \
 --title Vega \
 --deposit 100uatom \
@@ -196,7 +196,7 @@ Note that for this mechanism to provide strong security guarantees, all URLs sho
 
 To properly create a sha256 checksum on linux, you can use the `sha256sum` utility. For example:
 
-```
+```sh
 sha256sum ./testdata/repo/zip_directory/autod.zip
 ```
 
@@ -208,24 +208,25 @@ You can also use `sha512sum` if you would prefer to use longer hashes, or `md5su
 
 The following instructions provide a demonstration of `cosmovisor` using the simulation application (`simapp`) shipped with the Cosmos SDK's source code. The following commands are to be run from within the `cosmos-sdk` repository.
 
+
 #### Chain Setup
 
 Let's create a new chain using the `v0.44` version of simapp (the Cosmos SDK demo app):
 
-```
+```sh
 git checkout v0.44.6
 make build
 ```
 
 Clean `~/.simapp` (never do this in a production environment):
 
-```
+```sh
 ./build/simd unsafe-reset-all
 ```
 
 Set up app config:
 
-```
+```sh
 ./build/simd config chain-id test
 ./build/simd config keyring-backend test
 ./build/simd config broadcast-mode block
@@ -235,13 +236,13 @@ Initialize the node and overwrite any previous genesis file (never do this in a 
  
 <!-- TODO: init does not read chain-id from config -->
 
-```
+```sh
 ./build/simd init test --chain-id test --overwrite
 ```
 
 Set the minimum gas price to `0stake` in `~/.simapp/config/app.toml`:
 
-```
+```sh
 minimum-gas-prices = "0stake"
 ```
 
@@ -256,7 +257,7 @@ Create a validator, and setup genesis transaction:
 <!-- TODO: add-genesis-account does not read keyring-backend from config -->
 <!-- TODO: gentx does not read chain-id from config -->
 
-```
+```sh
 ./build/simd keys add validator
 ./build/simd add-genesis-account validator 1000000000stake --keyring-backend test
 ./build/simd gentx validator 1000000stake --chain-id test
@@ -267,27 +268,28 @@ Create a validator, and setup genesis transaction:
 
 Set the required environment variables:
 
-```
+```sh
 export DAEMON_NAME=simd
 export DAEMON_HOME=$HOME/.simapp
 ```
 
 Set the optional environment variable to trigger an automatic app restart:
 
-```
+```sh
 export DAEMON_RESTART_AFTER_UPGRADE=true
 ```
 
 Create the folder for the genesis binary and copy the `simd` binary:
 
-```
+```sh
 mkdir -p $DAEMON_HOME/cosmovisor/genesis/bin
 cp ./build/simd $DAEMON_HOME/cosmovisor/genesis/bin
 ```
 
 Now you can run cosmovisor with simapp v0.44:
 
-```
+
+```sh
 cosmovisor run start
 ```
 
@@ -300,13 +302,13 @@ Next, we can add a migration - which is defined using `x/upgrade` [upgrade plan]
 
 Build the new version `simd` binary:
 
-```
+```sh
 make build
 ```
 
 Create the folder for the upgrade binary and copy the `simd` binary:
 
-```
+```sh
 mkdir -p $DAEMON_HOME/cosmovisor/upgrades/test1/bin
 cp ./build/simd $DAEMON_HOME/cosmovisor/upgrades/test1/bin
 ```
@@ -314,7 +316,7 @@ cp ./build/simd $DAEMON_HOME/cosmovisor/upgrades/test1/bin
 
 Open a new terminal window and submit an upgrade proposal along with a deposit and a vote (these commands must be run within 20 seconds of each other):
 
-```
+```sh
 ./build/simd tx gov submit-proposal software-upgrade test1 --title upgrade --description upgrade --upgrade-height 200 --from validator --yes
 ./build/simd tx gov deposit 1 10000000stake --from validator --yes
 ./build/simd tx gov vote 1 yes --from validator --yes

@@ -121,7 +121,7 @@ A user can query the `bank` module using gRPC endpoints.
 
 The `Balance` endpoint allows users to query account balance by address for a given denomination.
 
-```
+```sh
 cosmos.bank.v1beta1.Query/Balance
 ```
 
@@ -221,7 +221,7 @@ Example Output:
 
 The `DenomsMetadata` endpoint allows users to query metadata for all coin denominations.
 
-```
+```sh
 cosmos.bank.v1beta1.Query/DenomsMetadata
 ```
 
@@ -264,7 +264,7 @@ Example Output:
 
 The `DenomOwners` endpoint allows users to query metadata for a single coin denomination.
 
-```
+```sh
 cosmos.bank.v1beta1.Query/DenomOwners
 ```
 
@@ -307,7 +307,7 @@ Example Output:
 
 The `TotalSupply` endpoint allows users to query the total supply of all coins.
 
-```
+```sh
 cosmos.bank.v1beta1.Query/TotalSupply
 ```
 
@@ -339,7 +339,7 @@ Example Output:
 
 The `SupplyOf` endpoint allows users to query the total supply of a single coin.
 
-```
+```sh
 cosmos.bank.v1beta1.Query/SupplyOf
 ```
 
@@ -367,7 +367,7 @@ Example Output:
 
 The `Params` endpoint allows users to query the parameters of the `bank` module.
 
-```
+```sh
 cosmos.bank.v1beta1.Query/Params
 ```
 

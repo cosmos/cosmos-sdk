@@ -4,3 +4,4 @@
 # name             go-path                  number of the sub-plugin or *
 
 file github.com/cosmos/cosmos-sdk/plugin/plugins/file *
+trace github.com/cosmos/cosmos-sdk/plugin/plugins/trace *

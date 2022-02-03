@@ -201,7 +201,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10868](https://github.com/cosmos/cosmos-sdk/pull/10868) Bump gov to v1beta2. Both v1beta1 and v1beta2 queries and Msgs are accepted.
 * [\#11011](https://github.com/cosmos/cosmos-sdk/pull/11011) Remove burning of deposits when qourum is not reached on a governance proposal and when the deposit is not fully met. 
 * [\#11019](https://github.com/cosmos/cosmos-sdk/pull/11019) Add `MsgCreatePermanentLockedAccount` and CLI method for creating permanent locked account
-* (x/authz) [\#10447](https://github.com/cosmos/cosmos-sdk/pull/10447) Remove time.now() check in authz `NewGrant` validation.
 
 ### Deprecated
 

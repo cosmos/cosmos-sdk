@@ -377,10 +377,24 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assertIteratorItems(it, 0, 1, 2, 3, 4, 6, 7, 8, 9, 10)
 
 	// let's do a batch delete
+	// first iterate over the items we'll delete to check that iterator
+	it, err = store.List(ctx, testpb.ExampleTableStrU32IndexKey{}.WithStr("abd"))
+	assert.NilError(t, err)
+	assertIteratorItems(it, 1, 3, 9)
+	// now delete them
 	assert.NilError(t, store.DeleteBy(ctx, testpb.ExampleTableStrU32IndexKey{}.WithStr("abd")))
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
 	assertIteratorItems(it, 0, 2, 4, 6, 7, 8, 10)
+
+	// Let's do a range delete
+	assert.NilError(t, store.DeleteRange(ctx,
+		testpb.ExampleTableStrU32IndexKey{}.WithStrU32("abc", 8),
+		testpb.ExampleTableStrU32IndexKey{}.WithStrU32("abe", 5),
+	))
+	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
+	assert.NilError(t, err)
+	assertIteratorItems(it, 0, 2, 6, 10)
 }
 
 func TestRandomTableData(t *testing.T) {

@@ -80,7 +80,7 @@ func (t tableGen) genStoreInterface() {
 }
 
 // returns the has and get (in that order) function signature for unique indexes.
-func (t tableGen) uniqueIndexSig(idxFields string) (string, string, string) {
+func (t tableGen) uniqueIndexSig(idxFields string) (string, string) {
 	fieldsSlc := strings.Split(idxFields, ",")
 	camelFields := t.fieldsToCamelCase(idxFields)
 

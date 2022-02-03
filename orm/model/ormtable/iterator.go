@@ -213,6 +213,7 @@ func (i *indexIterator) Next() bool {
 		i.started = true
 	} else {
 		i.iterator.Next()
+		i.indexValues = nil
 	}
 
 	return i.iterator.Valid()

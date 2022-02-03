@@ -82,6 +82,10 @@ func (p primaryKeyIndex) get(backend ReadBackend, message proto.Message, values 
 }
 
 func (p primaryKeyIndex) DeleteBy(ctx context.Context, primaryKeyValues ...interface{}) error {
+	if len(primaryKeyValues) == len(p.GetFieldNames()) {
+		return p.doDelete(ctx, encodeutil.ValuesOf(primaryKeyValues...))
+	}
+
 	it, err := p.List(ctx, primaryKeyValues)
 	if err != nil {
 		return err

@@ -136,12 +136,6 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 // same `sdk.Msg` type, this grant overwrites that.
 func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration time.Time) error {
 	store := ctx.KVStore(k.storeKey)
-	blockTime := ctx.BlockTime()
-	if !expiration.After(blockTime) {
-		return sdkerrors.ErrInvalidRequest.Wrapf(
-			"expiration must be after the current block time (%v), got %v",
-			blockTime.Format(time.RFC3339), expiration.Format(time.RFC3339))
-	}
 
 	grant, err := authz.NewGrant(authorization, expiration)
 	if err != nil {

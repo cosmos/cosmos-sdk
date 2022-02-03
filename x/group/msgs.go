@@ -501,11 +501,11 @@ func (m MsgCreateGroupPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error
 	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
 }
 
-var _ sdk.Msg = &MsgCreateProposal{}
+var _ sdk.Msg = &MsgSubmitProposal{}
 
-// NewMsgCreateProposalRequest creates a new MsgCreateProposal.
-func NewMsgCreateProposalRequest(address string, proposers []string, msgs []sdk.Msg, metadata []byte, exec Exec) (*MsgCreateProposal, error) {
-	m := &MsgCreateProposal{
+// NewMsgSubmitProposalRequest creates a new MsgSubmitProposal.
+func NewMsgSubmitProposalRequest(address string, proposers []string, msgs []sdk.Msg, metadata []byte, exec Exec) (*MsgSubmitProposal, error) {
+	m := &MsgSubmitProposal{
 		Address:   address,
 		Proposers: proposers,
 		Metadata:  metadata,
@@ -519,20 +519,20 @@ func NewMsgCreateProposalRequest(address string, proposers []string, msgs []sdk.
 }
 
 // Route Implements Msg.
-func (m MsgCreateProposal) Route() string {
+func (m MsgSubmitProposal) Route() string {
 	return sdk.MsgTypeURL(&m)
 }
 
 // Type Implements Msg.
-func (m MsgCreateProposal) Type() string { return sdk.MsgTypeURL(&m) }
+func (m MsgSubmitProposal) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
-func (m MsgCreateProposal) GetSignBytes() []byte {
+func (m MsgSubmitProposal) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
-// GetSigners returns the expected signers for a MsgCreateProposal.
-func (m MsgCreateProposal) GetSigners() []sdk.AccAddress {
+// GetSigners returns the expected signers for a MsgSubmitProposal.
+func (m MsgSubmitProposal) GetSigners() []sdk.AccAddress {
 	addrs := make([]sdk.AccAddress, len(m.Proposers))
 	for i, proposer := range m.Proposers {
 		addr, err := sdk.AccAddressFromBech32(proposer)
@@ -545,7 +545,7 @@ func (m MsgCreateProposal) GetSigners() []sdk.AccAddress {
 }
 
 // ValidateBasic does a sanity check on the provided data
-func (m MsgCreateProposal) ValidateBasic() error {
+func (m MsgSubmitProposal) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Address)
 	if err != nil {
 		return sdkerrors.Wrap(err, "group policy")
@@ -576,18 +576,18 @@ func (m MsgCreateProposal) ValidateBasic() error {
 }
 
 // SetMsgs packs msgs into Any's
-func (m *MsgCreateProposal) SetMsgs(msgs []sdk.Msg) error {
+func (m *MsgSubmitProposal) SetMsgs(msgs []sdk.Msg) error {
 	anys, err := tx.SetMsgs(msgs)
 	if err != nil {
 		return err
 	}
-	m.Msgs = anys
+	m.Messages = anys
 	return nil
 }
 
-// GetMsgs unpacks m.Msgs Any's into sdk.Msg's
-func (m MsgCreateProposal) GetMsgs() []sdk.Msg {
-	msgs, err := tx.GetMsgs(m.Msgs, "proposal")
+// GetMsgs unpacks m.Messages Any's into sdk.Msg's
+func (m MsgSubmitProposal) GetMsgs() []sdk.Msg {
+	msgs, err := tx.GetMsgs(m.Messages, "proposal")
 	if err != nil {
 		panic(err)
 	}
@@ -595,8 +595,8 @@ func (m MsgCreateProposal) GetMsgs() []sdk.Msg {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgCreateProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	return tx.UnpackInterfaces(unpacker, m.Msgs)
+func (m MsgSubmitProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	return tx.UnpackInterfaces(unpacker, m.Messages)
 }
 
 var _ sdk.Msg = &MsgVote{}
@@ -632,11 +632,11 @@ func (m MsgVote) ValidateBasic() error {
 	if m.ProposalId == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
 	}
-	if m.Choice == Choice_CHOICE_UNSPECIFIED {
-		return sdkerrors.Wrap(errors.ErrEmpty, "choice")
+	if m.Option == VOTE_OPTION_UNSPECIFIED {
+		return sdkerrors.Wrap(errors.ErrEmpty, "vote option")
 	}
-	if _, ok := Choice_name[int32(m.Choice)]; !ok {
-		return sdkerrors.Wrap(errors.ErrInvalid, "choice")
+	if _, ok := VoteOption_name[int32(m.Option)]; !ok {
+		return sdkerrors.Wrap(errors.ErrInvalid, "vote option")
 	}
 	return nil
 }

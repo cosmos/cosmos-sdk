@@ -1144,7 +1144,7 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 	}
 }
 
-func (s *TestSuite) TestCreateProposal() {
+func (s *TestSuite) TestSubmitProposal() {
 	addrs := s.addrs
 	addr1 := addrs[0]
 	addr2 := addrs[1]
@@ -1176,25 +1176,25 @@ func (s *TestSuite) TestCreateProposal() {
 	bigThresholdAddr := bigThresholdRes.Address
 
 	defaultProposal := group.Proposal{
-		Status: group.ProposalStatusSubmitted,
-		Result: group.ProposalResultUnfinalized,
+		Status: group.PROPOSAL_STATUS_SUBMITTED,
+		Result: group.PROPOSAL_RESULT_UNFINALIZED,
 		VoteState: group.Tally{
 			YesCount:     "0",
 			NoCount:      "0",
 			AbstainCount: "0",
 			VetoCount:    "0",
 		},
-		ExecutorResult: group.ProposalExecutorResultNotRun,
+		ExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
 	}
 	specs := map[string]struct {
-		req         *group.MsgCreateProposal
+		req         *group.MsgSubmitProposal
 		msgs        []sdk.Msg
 		expProposal group.Proposal
 		expErr      bool
 		postRun     func(sdkCtx sdk.Context)
 	}{
 		"all good with minimal fields set": {
-			req: &group.MsgCreateProposal{
+			req: &group.MsgSubmitProposal{
 				Address:   accountAddr.String(),
 				Proposers: []string{addr2.String()},
 			},
@@ -1202,7 +1202,7 @@ func (s *TestSuite) TestCreateProposal() {
 			postRun:     func(sdkCtx sdk.Context) {},
 		},
 		"all good with good msg payload": {
-			req: &group.MsgCreateProposal{
+			req: &group.MsgSubmitProposal{
 				Address:   accountAddr.String(),
 				Proposers: []string{addr2.String()},
 			},
@@ -1215,7 +1215,7 @@ func (s *TestSuite) TestCreateProposal() {
 			postRun:     func(sdkCtx sdk.Context) {},
 		},
 		"metadata too long": {
-			req: &group.MsgCreateProposal{
+			req: &group.MsgSubmitProposal{
 				Address:   accountAddr.String(),
 				Metadata:  bytes.Repeat([]byte{1}, 256),
 				Proposers: []string{addr2.String()},
@@ -1224,7 +1224,7 @@ func (s *TestSuite) TestCreateProposal() {
 			postRun: func(sdkCtx sdk.Context) {},
 		},
 		"group policy required": {
-			req: &group.MsgCreateProposal{
+			req: &group.MsgSubmitProposal{
 				Metadata:  nil,
 				Proposers: []string{addr2.String()},
 			},
@@ -1232,7 +1232,7 @@ func (s *TestSuite) TestCreateProposal() {
 			postRun: func(sdkCtx sdk.Context) {},
 		},
 		"existing group policy required": {
-			req: &group.MsgCreateProposal{
+			req: &group.MsgSubmitProposal{
 				Address:   addr1.String(),
 				Proposers: []string{addr2.String()},
 			},
@@ -1240,7 +1240,7 @@ func (s *TestSuite) TestCreateProposal() {
 			postRun: func(sdkCtx sdk.Context) {},
 		},
 		"impossible case: decision policy threshold > total group weight": {
-			req: &group.MsgCreateProposal{
+			req: &group.MsgSubmitProposal{
 				Address:   bigThresholdAddr,
 				Proposers: []string{addr2.String()},
 			},
@@ -1248,7 +1248,7 @@ func (s *TestSuite) TestCreateProposal() {
 			postRun: func(sdkCtx sdk.Context) {},
 		},
 		"only group members can create a proposal": {
-			req: &group.MsgCreateProposal{
+			req: &group.MsgSubmitProposal{
 				Address:   accountAddr.String(),
 				Proposers: []string{addr4.String()},
 			},
@@ -1256,7 +1256,7 @@ func (s *TestSuite) TestCreateProposal() {
 			postRun: func(sdkCtx sdk.Context) {},
 		},
 		"all proposers must be in group": {
-			req: &group.MsgCreateProposal{
+			req: &group.MsgSubmitProposal{
 				Address:   accountAddr.String(),
 				Proposers: []string{addr2.String(), addr4.String()},
 			},
@@ -1264,7 +1264,7 @@ func (s *TestSuite) TestCreateProposal() {
 			postRun: func(sdkCtx sdk.Context) {},
 		},
 		"admin that is not a group member can not create proposal": {
-			req: &group.MsgCreateProposal{
+			req: &group.MsgSubmitProposal{
 				Address:   accountAddr.String(),
 				Metadata:  nil,
 				Proposers: []string{addr1.String()},
@@ -1273,7 +1273,7 @@ func (s *TestSuite) TestCreateProposal() {
 			postRun: func(sdkCtx sdk.Context) {},
 		},
 		"reject msgs that are not authz by group policy": {
-			req: &group.MsgCreateProposal{
+			req: &group.MsgSubmitProposal{
 				Address:   accountAddr.String(),
 				Metadata:  nil,
 				Proposers: []string{addr2.String()},
@@ -1283,22 +1283,22 @@ func (s *TestSuite) TestCreateProposal() {
 			postRun: func(sdkCtx sdk.Context) {},
 		},
 		"with try exec": {
-			req: &group.MsgCreateProposal{
+			req: &group.MsgSubmitProposal{
 				Address:   accountAddr.String(),
 				Proposers: []string{addr2.String()},
 				Exec:      group.Exec_EXEC_TRY,
 			},
 			msgs: []sdk.Msg{msgSend},
 			expProposal: group.Proposal{
-				Status: group.ProposalStatusClosed,
-				Result: group.ProposalResultAccepted,
+				Status: group.PROPOSAL_STATUS_CLOSED,
+				Result: group.PROPOSAL_RESULT_ACCEPTED,
 				VoteState: group.Tally{
 					YesCount:     "2",
 					NoCount:      "0",
 					AbstainCount: "0",
 					VetoCount:    "0",
 				},
-				ExecutorResult: group.ProposalExecutorResultSuccess,
+				ExecutorResult: group.EXECUTOR_RESULT_SUCCESS,
 			},
 			postRun: func(sdkCtx sdk.Context) {
 				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, accountAddr)
@@ -1308,22 +1308,22 @@ func (s *TestSuite) TestCreateProposal() {
 			},
 		},
 		"with try exec, not enough yes votes for proposal to pass": {
-			req: &group.MsgCreateProposal{
+			req: &group.MsgSubmitProposal{
 				Address:   accountAddr.String(),
 				Proposers: []string{addr5.String()},
 				Exec:      group.Exec_EXEC_TRY,
 			},
 			msgs: []sdk.Msg{msgSend},
 			expProposal: group.Proposal{
-				Status: group.ProposalStatusSubmitted,
-				Result: group.ProposalResultUnfinalized,
+				Status: group.PROPOSAL_STATUS_SUBMITTED,
+				Result: group.PROPOSAL_RESULT_UNFINALIZED,
 				VoteState: group.Tally{
 					YesCount:     "1",
 					NoCount:      "0",
 					AbstainCount: "0",
 					VetoCount:    "0",
 				},
-				ExecutorResult: group.ProposalExecutorResultNotRun,
+				ExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
 			},
 			postRun: func(sdkCtx sdk.Context) {},
 		},
@@ -1334,7 +1334,7 @@ func (s *TestSuite) TestCreateProposal() {
 			err := spec.req.SetMsgs(spec.msgs)
 			s.Require().NoError(err)
 
-			res, err := s.keeper.CreateProposal(s.ctx, spec.req)
+			res, err := s.keeper.SubmitProposal(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
 				return
@@ -1409,11 +1409,11 @@ func (s *TestSuite) TestVote() {
 
 	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, groupPolicy, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 
-	req := &group.MsgCreateProposal{
+	req := &group.MsgSubmitProposal{
 		Address:   accountAddr,
 		Metadata:  nil,
 		Proposers: []string{addr4.String()},
-		Msgs:      nil,
+		Messages:  nil,
 	}
 	err = req.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
 		FromAddress: accountAddr,
@@ -1422,7 +1422,7 @@ func (s *TestSuite) TestVote() {
 	}})
 	s.Require().NoError(err)
 
-	proposalRes, err := s.keeper.CreateProposal(s.ctx, req)
+	proposalRes, err := s.keeper.SubmitProposal(s.ctx, req)
 	s.Require().NoError(err)
 	myProposalID := proposalRes.ProposalId
 
@@ -1440,8 +1440,8 @@ func (s *TestSuite) TestVote() {
 
 	s.Assert().Equal(uint64(1), proposals[0].GroupVersion)
 	s.Assert().Equal(uint64(1), proposals[0].GroupPolicyVersion)
-	s.Assert().Equal(group.ProposalStatusSubmitted, proposals[0].Status)
-	s.Assert().Equal(group.ProposalResultUnfinalized, proposals[0].Result)
+	s.Assert().Equal(group.PROPOSAL_STATUS_SUBMITTED, proposals[0].Status)
+	s.Assert().Equal(group.PROPOSAL_RESULT_UNFINALIZED, proposals[0].Result)
 	s.Assert().Equal(group.Tally{
 		YesCount:     "0",
 		NoCount:      "0",
@@ -1464,7 +1464,7 @@ func (s *TestSuite) TestVote() {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
-				Choice:     group.Choice_CHOICE_YES,
+				Option:     group.VOTE_OPTION_YES,
 			},
 			expVoteState: group.Tally{
 				YesCount:     "1",
@@ -1472,16 +1472,16 @@ func (s *TestSuite) TestVote() {
 				AbstainCount: "0",
 				VetoCount:    "0",
 			},
-			expProposalStatus: group.ProposalStatusSubmitted,
-			expResult:         group.ProposalResultUnfinalized,
-			expExecutorResult: group.ProposalExecutorResultNotRun,
+			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
+			expResult:         group.PROPOSAL_RESULT_UNFINALIZED,
+			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
 			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"with try exec": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr3.String(),
-				Choice:     group.Choice_CHOICE_YES,
+				Option:     group.VOTE_OPTION_YES,
 				Exec:       group.Exec_EXEC_TRY,
 			},
 			expVoteState: group.Tally{
@@ -1490,9 +1490,9 @@ func (s *TestSuite) TestVote() {
 				AbstainCount: "0",
 				VetoCount:    "0",
 			},
-			expProposalStatus: group.ProposalStatusClosed,
-			expResult:         group.ProposalResultAccepted,
-			expExecutorResult: group.ProposalExecutorResultSuccess,
+			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
+			expResult:         group.PROPOSAL_RESULT_ACCEPTED,
+			expExecutorResult: group.EXECUTOR_RESULT_SUCCESS,
 			postRun: func(sdkCtx sdk.Context) {
 				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, groupPolicy)
 				s.Require().Contains(fromBalances, sdk.NewInt64Coin("test", 9900))
@@ -1504,7 +1504,7 @@ func (s *TestSuite) TestVote() {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
-				Choice:     group.Choice_CHOICE_YES,
+				Option:     group.VOTE_OPTION_YES,
 				Exec:       group.Exec_EXEC_TRY,
 			},
 			expVoteState: group.Tally{
@@ -1513,16 +1513,16 @@ func (s *TestSuite) TestVote() {
 				AbstainCount: "0",
 				VetoCount:    "0",
 			},
-			expProposalStatus: group.ProposalStatusSubmitted,
-			expResult:         group.ProposalResultUnfinalized,
-			expExecutorResult: group.ProposalExecutorResultNotRun,
+			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
+			expResult:         group.PROPOSAL_RESULT_UNFINALIZED,
+			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
 			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"vote no": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
-				Choice:     group.Choice_CHOICE_NO,
+				Option:     group.VOTE_OPTION_NO,
 			},
 			expVoteState: group.Tally{
 				YesCount:     "0",
@@ -1530,16 +1530,16 @@ func (s *TestSuite) TestVote() {
 				AbstainCount: "0",
 				VetoCount:    "0",
 			},
-			expProposalStatus: group.ProposalStatusSubmitted,
-			expResult:         group.ProposalResultUnfinalized,
-			expExecutorResult: group.ProposalExecutorResultNotRun,
+			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
+			expResult:         group.PROPOSAL_RESULT_UNFINALIZED,
+			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
 			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"vote abstain": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
-				Choice:     group.Choice_CHOICE_ABSTAIN,
+				Option:     group.VOTE_OPTION_ABSTAIN,
 			},
 			expVoteState: group.Tally{
 				YesCount:     "0",
@@ -1547,16 +1547,16 @@ func (s *TestSuite) TestVote() {
 				AbstainCount: "1",
 				VetoCount:    "0",
 			},
-			expProposalStatus: group.ProposalStatusSubmitted,
-			expResult:         group.ProposalResultUnfinalized,
-			expExecutorResult: group.ProposalExecutorResultNotRun,
+			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
+			expResult:         group.PROPOSAL_RESULT_UNFINALIZED,
+			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
 			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"vote veto": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
-				Choice:     group.Choice_CHOICE_VETO,
+				Option:     group.VOTE_OPTION_NO_WITH_VETO,
 			},
 			expVoteState: group.Tally{
 				YesCount:     "0",
@@ -1564,16 +1564,16 @@ func (s *TestSuite) TestVote() {
 				AbstainCount: "0",
 				VetoCount:    "1",
 			},
-			expProposalStatus: group.ProposalStatusSubmitted,
-			expResult:         group.ProposalResultUnfinalized,
-			expExecutorResult: group.ProposalExecutorResultNotRun,
+			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
+			expResult:         group.PROPOSAL_RESULT_UNFINALIZED,
+			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
 			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"apply decision policy early": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr3.String(),
-				Choice:     group.Choice_CHOICE_YES,
+				Option:     group.VOTE_OPTION_YES,
 			},
 			expVoteState: group.Tally{
 				YesCount:     "2",
@@ -1581,22 +1581,22 @@ func (s *TestSuite) TestVote() {
 				AbstainCount: "0",
 				VetoCount:    "0",
 			},
-			expProposalStatus: group.ProposalStatusClosed,
-			expResult:         group.ProposalResultAccepted,
-			expExecutorResult: group.ProposalExecutorResultNotRun,
+			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
+			expResult:         group.PROPOSAL_RESULT_ACCEPTED,
+			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
 			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"reject new votes when final decision is made already": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
-				Choice:     group.Choice_CHOICE_YES,
+				Option:     group.VOTE_OPTION_YES,
 			},
 			doBefore: func(ctx context.Context) {
 				_, err := s.keeper.Vote(ctx, &group.MsgVote{
 					ProposalId: myProposalID,
 					Voter:      addr3.String(),
-					Choice:     group.Choice_CHOICE_VETO,
+					Option:     group.VOTE_OPTION_NO_WITH_VETO,
 				})
 				s.Require().NoError(err)
 			},
@@ -1608,7 +1608,7 @@ func (s *TestSuite) TestVote() {
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
 				Metadata:   bytes.Repeat([]byte{1}, 256),
-				Choice:     group.Choice_CHOICE_NO,
+				Option:     group.VOTE_OPTION_NO,
 			},
 			expErr:  true,
 			postRun: func(sdkCtx sdk.Context) {},
@@ -1617,12 +1617,12 @@ func (s *TestSuite) TestVote() {
 			req: &group.MsgVote{
 				ProposalId: 999,
 				Voter:      addr4.String(),
-				Choice:     group.Choice_CHOICE_NO,
+				Option:     group.VOTE_OPTION_NO,
 			},
 			expErr:  true,
 			postRun: func(sdkCtx sdk.Context) {},
 		},
-		"empty choice": {
+		"empty vote option": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
@@ -1630,11 +1630,11 @@ func (s *TestSuite) TestVote() {
 			expErr:  true,
 			postRun: func(sdkCtx sdk.Context) {},
 		},
-		"invalid choice": {
+		"invalid vote option": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
-				Choice:     5,
+				Option:     5,
 			},
 			expErr:  true,
 			postRun: func(sdkCtx sdk.Context) {},
@@ -1643,7 +1643,7 @@ func (s *TestSuite) TestVote() {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr2.String(),
-				Choice:     group.Choice_CHOICE_NO,
+				Option:     group.VOTE_OPTION_NO,
 			},
 			expErr:  true,
 			postRun: func(sdkCtx sdk.Context) {},
@@ -1652,7 +1652,7 @@ func (s *TestSuite) TestVote() {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr1.String(),
-				Choice:     group.Choice_CHOICE_NO,
+				Option:     group.VOTE_OPTION_NO,
 			},
 			expErr:  true,
 			postRun: func(sdkCtx sdk.Context) {},
@@ -1661,7 +1661,7 @@ func (s *TestSuite) TestVote() {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
-				Choice:     group.Choice_CHOICE_NO,
+				Option:     group.VOTE_OPTION_NO,
 			},
 			srcCtx:  s.sdkCtx.WithBlockTime(s.blockTime.Add(time.Second)),
 			expErr:  true,
@@ -1671,13 +1671,13 @@ func (s *TestSuite) TestVote() {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
-				Choice:     group.Choice_CHOICE_NO,
+				Option:     group.VOTE_OPTION_NO,
 			},
 			doBefore: func(ctx context.Context) {
 				_, err := s.keeper.Vote(ctx, &group.MsgVote{
 					ProposalId: myProposalID,
 					Voter:      addr3.String(),
-					Choice:     group.Choice_CHOICE_YES,
+					Option:     group.VOTE_OPTION_YES,
 				})
 				s.Require().NoError(err)
 			},
@@ -1688,13 +1688,13 @@ func (s *TestSuite) TestVote() {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
-				Choice:     group.Choice_CHOICE_NO,
+				Option:     group.VOTE_OPTION_NO,
 			},
 			doBefore: func(ctx context.Context) {
 				_, err := s.keeper.Vote(ctx, &group.MsgVote{
 					ProposalId: myProposalID,
 					Voter:      addr4.String(),
-					Choice:     group.Choice_CHOICE_YES,
+					Option:     group.VOTE_OPTION_YES,
 				})
 				s.Require().NoError(err)
 			},
@@ -1705,7 +1705,7 @@ func (s *TestSuite) TestVote() {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
-				Choice:     group.Choice_CHOICE_NO,
+				Option:     group.VOTE_OPTION_NO,
 			},
 			doBefore: func(ctx context.Context) {
 				_, err = s.keeper.UpdateGroupMetadata(ctx, &group.MsgUpdateGroupMetadata{
@@ -1722,7 +1722,7 @@ func (s *TestSuite) TestVote() {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
-				Choice:     group.Choice_CHOICE_NO,
+				Option:     group.VOTE_OPTION_NO,
 			},
 			doBefore: func(ctx context.Context) {
 				m, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(
@@ -1772,7 +1772,7 @@ func (s *TestSuite) TestVote() {
 			loaded := res.Vote
 			s.Assert().Equal(spec.req.ProposalId, loaded.ProposalId)
 			s.Assert().Equal(spec.req.Voter, loaded.Voter)
-			s.Assert().Equal(spec.req.Choice, loaded.Choice)
+			s.Assert().Equal(spec.req.Option, loaded.Option)
 			s.Assert().Equal(spec.req.Metadata, loaded.Metadata)
 			s.Assert().Equal(s.blockTime, loaded.SubmittedAt)
 
@@ -1786,7 +1786,7 @@ func (s *TestSuite) TestVote() {
 			vote := votesByProposal[0]
 			s.Assert().Equal(spec.req.ProposalId, vote.ProposalId)
 			s.Assert().Equal(spec.req.Voter, vote.Voter)
-			s.Assert().Equal(spec.req.Choice, vote.Choice)
+			s.Assert().Equal(spec.req.Option, vote.Option)
 			s.Assert().Equal(spec.req.Metadata, vote.Metadata)
 			s.Assert().Equal(s.blockTime, vote.SubmittedAt)
 
@@ -1800,7 +1800,7 @@ func (s *TestSuite) TestVote() {
 			s.Require().Equal(1, len(votesByVoter))
 			s.Assert().Equal(spec.req.ProposalId, votesByVoter[0].ProposalId)
 			s.Assert().Equal(voter, votesByVoter[0].Voter)
-			s.Assert().Equal(spec.req.Choice, votesByVoter[0].Choice)
+			s.Assert().Equal(spec.req.Option, votesByVoter[0].Option)
 			s.Assert().Equal(spec.req.Metadata, votesByVoter[0].Metadata)
 			s.Assert().Equal(s.blockTime, votesByVoter[0].SubmittedAt)
 
@@ -1851,11 +1851,11 @@ func (s *TestSuite) TestExecProposal() {
 		"proposal executed when accepted": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
-				return createProposalAndVote(ctx, s, msgs, proposers, group.Choice_CHOICE_YES)
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
-			expProposalStatus: group.ProposalStatusClosed,
-			expProposalResult: group.ProposalResultAccepted,
-			expExecutorResult: group.ProposalExecutorResultSuccess,
+			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
+			expProposalResult: group.PROPOSAL_RESULT_ACCEPTED,
+			expExecutorResult: group.EXECUTOR_RESULT_SUCCESS,
 			expBalance:        true,
 			expFromBalances:   sdk.NewInt64Coin("test", 9900),
 			expToBalances:     sdk.NewInt64Coin("test", 100),
@@ -1863,11 +1863,11 @@ func (s *TestSuite) TestExecProposal() {
 		"proposal with multiple messages executed when accepted": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1, msgSend1}
-				return createProposalAndVote(ctx, s, msgs, proposers, group.Choice_CHOICE_YES)
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
-			expProposalStatus: group.ProposalStatusClosed,
-			expProposalResult: group.ProposalResultAccepted,
-			expExecutorResult: group.ProposalExecutorResultSuccess,
+			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
+			expProposalResult: group.PROPOSAL_RESULT_ACCEPTED,
+			expExecutorResult: group.EXECUTOR_RESULT_SUCCESS,
 			expBalance:        true,
 			expFromBalances:   sdk.NewInt64Coin("test", 9800),
 			expToBalances:     sdk.NewInt64Coin("test", 200),
@@ -1875,19 +1875,19 @@ func (s *TestSuite) TestExecProposal() {
 		"proposal not executed when rejected": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
-				return createProposalAndVote(ctx, s, msgs, proposers, group.Choice_CHOICE_NO)
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_NO)
 			},
-			expProposalStatus: group.ProposalStatusClosed,
-			expProposalResult: group.ProposalResultRejected,
-			expExecutorResult: group.ProposalExecutorResultNotRun,
+			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
+			expProposalResult: group.PROPOSAL_RESULT_REJECTED,
+			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
 		},
 		"open proposal must not fail": {
 			setupProposal: func(ctx context.Context) uint64 {
-				return createProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
+				return submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
 			},
-			expProposalStatus: group.ProposalStatusSubmitted,
-			expProposalResult: group.ProposalResultUnfinalized,
-			expExecutorResult: group.ProposalExecutorResultNotRun,
+			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
+			expProposalResult: group.PROPOSAL_RESULT_UNFINALIZED,
+			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
 		},
 		"existing proposal required": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -1898,26 +1898,26 @@ func (s *TestSuite) TestExecProposal() {
 		"Decision policy also applied on timeout": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
-				return createProposalAndVote(ctx, s, msgs, proposers, group.Choice_CHOICE_NO)
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_NO)
 			},
 			srcBlockTime:      s.blockTime.Add(time.Second),
-			expProposalStatus: group.ProposalStatusClosed,
-			expProposalResult: group.ProposalResultRejected,
-			expExecutorResult: group.ProposalExecutorResultNotRun,
+			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
+			expProposalResult: group.PROPOSAL_RESULT_REJECTED,
+			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
 		},
 		"Decision policy also applied after timeout": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
-				return createProposalAndVote(ctx, s, msgs, proposers, group.Choice_CHOICE_NO)
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_NO)
 			},
 			srcBlockTime:      s.blockTime.Add(time.Second).Add(time.Millisecond),
-			expProposalStatus: group.ProposalStatusClosed,
-			expProposalResult: group.ProposalResultRejected,
-			expExecutorResult: group.ProposalExecutorResultNotRun,
+			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
+			expProposalResult: group.PROPOSAL_RESULT_REJECTED,
+			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
 		},
 		"with group modified before tally": {
 			setupProposal: func(ctx context.Context) uint64 {
-				myProposalID := createProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
+				myProposalID := submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
 
 				// then modify group
 				_, err := s.keeper.UpdateGroupMetadata(ctx, &group.MsgUpdateGroupMetadata{
@@ -1928,13 +1928,13 @@ func (s *TestSuite) TestExecProposal() {
 				s.Require().NoError(err)
 				return myProposalID
 			},
-			expProposalStatus: group.ProposalStatusAborted,
-			expProposalResult: group.ProposalResultUnfinalized,
-			expExecutorResult: group.ProposalExecutorResultNotRun,
+			expProposalStatus: group.PROPOSAL_STATUS_ABORTED,
+			expProposalResult: group.PROPOSAL_RESULT_UNFINALIZED,
+			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
 		},
 		"with group policy modified before tally": {
 			setupProposal: func(ctx context.Context) uint64 {
-				myProposalID := createProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
+				myProposalID := submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
 				_, err := s.keeper.UpdateGroupPolicyMetadata(ctx, &group.MsgUpdateGroupPolicyMetadata{
 					Admin:    addr1.String(),
 					Address:  s.groupPolicyAddr.String(),
@@ -1943,21 +1943,21 @@ func (s *TestSuite) TestExecProposal() {
 				s.Require().NoError(err)
 				return myProposalID
 			},
-			expProposalStatus: group.ProposalStatusAborted,
-			expProposalResult: group.ProposalResultUnfinalized,
-			expExecutorResult: group.ProposalExecutorResultNotRun,
+			expProposalStatus: group.PROPOSAL_STATUS_ABORTED,
+			expProposalResult: group.PROPOSAL_RESULT_UNFINALIZED,
+			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
 		},
 		"prevent double execution when successful": {
 			setupProposal: func(ctx context.Context) uint64 {
-				myProposalID := createProposalAndVote(ctx, s, []sdk.Msg{msgSend1}, proposers, group.Choice_CHOICE_YES)
+				myProposalID := submitProposalAndVote(ctx, s, []sdk.Msg{msgSend1}, proposers, group.VOTE_OPTION_YES)
 
 				_, err := s.keeper.Exec(ctx, &group.MsgExec{Signer: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
 				return myProposalID
 			},
-			expProposalStatus: group.ProposalStatusClosed,
-			expProposalResult: group.ProposalResultAccepted,
-			expExecutorResult: group.ProposalExecutorResultSuccess,
+			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
+			expProposalResult: group.PROPOSAL_RESULT_ACCEPTED,
+			expExecutorResult: group.EXECUTOR_RESULT_SUCCESS,
 			expBalance:        true,
 			expFromBalances:   sdk.NewInt64Coin("test", 9900),
 			expToBalances:     sdk.NewInt64Coin("test", 100),
@@ -1965,16 +1965,16 @@ func (s *TestSuite) TestExecProposal() {
 		"rollback all msg updates on failure": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1, msgSend2}
-				return createProposalAndVote(ctx, s, msgs, proposers, group.Choice_CHOICE_YES)
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
-			expProposalStatus: group.ProposalStatusClosed,
-			expProposalResult: group.ProposalResultAccepted,
-			expExecutorResult: group.ProposalExecutorResultFailure,
+			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
+			expProposalResult: group.PROPOSAL_RESULT_ACCEPTED,
+			expExecutorResult: group.EXECUTOR_RESULT_FAILURE,
 		},
 		"executable when failed before": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend2}
-				myProposalID := createProposalAndVote(ctx, s, msgs, proposers, group.Choice_CHOICE_YES)
+				myProposalID := submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 
 				_, err := s.keeper.Exec(ctx, &group.MsgExec{Signer: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
@@ -1983,9 +1983,9 @@ func (s *TestSuite) TestExecProposal() {
 
 				return myProposalID
 			},
-			expProposalStatus: group.ProposalStatusClosed,
-			expProposalResult: group.ProposalResultAccepted,
-			expExecutorResult: group.ProposalExecutorResultSuccess,
+			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
+			expProposalResult: group.PROPOSAL_RESULT_ACCEPTED,
+			expExecutorResult: group.EXECUTOR_RESULT_SUCCESS,
 		},
 	}
 	for msg, spec := range specs {
@@ -2034,10 +2034,10 @@ func (s *TestSuite) TestExecProposal() {
 	}
 }
 
-func createProposal(
+func submitProposal(
 	ctx context.Context, s *TestSuite, msgs []sdk.Msg,
 	proposers []string) uint64 {
-	proposalReq := &group.MsgCreateProposal{
+	proposalReq := &group.MsgSubmitProposal{
 		Address:   s.groupPolicyAddr.String(),
 		Proposers: proposers,
 		Metadata:  nil,
@@ -2045,21 +2045,21 @@ func createProposal(
 	err := proposalReq.SetMsgs(msgs)
 	s.Require().NoError(err)
 
-	proposalRes, err := s.keeper.CreateProposal(ctx, proposalReq)
+	proposalRes, err := s.keeper.SubmitProposal(ctx, proposalReq)
 	s.Require().NoError(err)
 	return proposalRes.ProposalId
 }
 
-func createProposalAndVote(
+func submitProposalAndVote(
 	ctx context.Context, s *TestSuite, msgs []sdk.Msg,
-	proposers []string, choice group.Choice) uint64 {
+	proposers []string, voteOption group.VoteOption) uint64 {
 	s.Require().Greater(len(proposers), 0)
-	myProposalID := createProposal(ctx, s, msgs, proposers)
+	myProposalID := submitProposal(ctx, s, msgs, proposers)
 
 	_, err := s.keeper.Vote(ctx, &group.MsgVote{
 		ProposalId: myProposalID,
 		Voter:      proposers[0],
-		Choice:     choice,
+		Option:     voteOption,
 	})
 	s.Require().NoError(err)
 	return myProposalID

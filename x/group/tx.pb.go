@@ -1016,7 +1016,7 @@ func (m *MsgVote) GetOption() VoteOption {
 	if m != nil {
 		return m.Option
 	}
-	return VoteOption_VOTE_OPTION_UNSPECIFIED
+	return VOTE_OPTION_UNSPECIFIED
 }
 
 func (m *MsgVote) GetMetadata() []byte {

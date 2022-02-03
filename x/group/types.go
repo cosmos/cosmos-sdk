@@ -302,11 +302,11 @@ func (v Vote) ValidateBasic() error {
 	if v.ProposalId == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "voter ProposalId")
 	}
-	if v.Choice == Choice_CHOICE_UNSPECIFIED {
-		return sdkerrors.Wrap(errors.ErrEmpty, "voter choice")
+	if v.Option == VOTE_OPTION_UNSPECIFIED {
+		return sdkerrors.Wrap(errors.ErrEmpty, "voter vote option")
 	}
-	if _, ok := Choice_name[int32(v.Choice)]; !ok {
-		return sdkerrors.Wrap(errors.ErrInvalid, "choice")
+	if _, ok := VoteOption_name[int32(v.Option)]; !ok {
+		return sdkerrors.Wrap(errors.ErrInvalid, "vote option")
 	}
 	return nil
 }
@@ -357,33 +357,33 @@ func (t *Tally) operation(vote Vote, weight string, op operation) error {
 		return sdkerrors.Wrap(err, "veto count")
 	}
 
-	switch vote.Choice {
-	case Choice_CHOICE_YES:
+	switch vote.Option {
+	case VOTE_OPTION_YES:
 		yesCount, err := op(yesCount, weightDec)
 		if err != nil {
 			return sdkerrors.Wrap(err, "yes count")
 		}
 		t.YesCount = yesCount.String()
-	case Choice_CHOICE_NO:
+	case VOTE_OPTION_NO:
 		noCount, err := op(noCount, weightDec)
 		if err != nil {
 			return sdkerrors.Wrap(err, "no count")
 		}
 		t.NoCount = noCount.String()
-	case Choice_CHOICE_ABSTAIN:
+	case VOTE_OPTION_ABSTAIN:
 		abstainCount, err := op(abstainCount, weightDec)
 		if err != nil {
 			return sdkerrors.Wrap(err, "abstain count")
 		}
 		t.AbstainCount = abstainCount.String()
-	case Choice_CHOICE_VETO:
+	case VOTE_OPTION_NO_WITH_VETO:
 		vetoCount, err := op(vetoCount, weightDec)
 		if err != nil {
 			return sdkerrors.Wrap(err, "veto count")
 		}
 		t.VetoCount = vetoCount.String()
 	default:
-		return sdkerrors.Wrapf(errors.ErrInvalid, "unknown choice %s", vote.Choice.String())
+		return sdkerrors.Wrapf(errors.ErrInvalid, "unknown vote option %s", vote.Option.String())
 	}
 	return nil
 }
@@ -466,12 +466,12 @@ func (t Tally) TotalCounts() (math.Dec, error) {
 	return totalCounts, nil
 }
 
-// ChoiceFromString returns a Choice from a string. It returns an error
+// VoteOptionFromString returns a VoteOption from a string. It returns an error
 // if the string is invalid.
-func ChoiceFromString(str string) (Choice, error) {
-	choice, ok := Choice_value[str]
+func VoteOptionFromString(str string) (VoteOption, error) {
+	vo, ok := VoteOption_value[str]
 	if !ok {
-		return Choice_CHOICE_UNSPECIFIED, fmt.Errorf("'%s' is not a valid vote choice", str)
+		return VOTE_OPTION_UNSPECIFIED, fmt.Errorf("'%s' is not a valid vote option", str)
 	}
-	return Choice(choice), nil
+	return VoteOption(vo), nil
 }

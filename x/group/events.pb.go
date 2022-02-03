@@ -207,24 +207,24 @@ func (m *EventUpdateGroupPolicy) GetAddress() string {
 	return ""
 }
 
-// SubmitProposal is an event emitted when a proposal is created.
-type SubmitProposal struct {
+// EventSubmitProposal is an event emitted when a proposal is created.
+type EventSubmitProposal struct {
 	// proposal_id is the unique ID of the proposal.
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
 }
 
-func (m *SubmitProposal) Reset()         { *m = SubmitProposal{} }
-func (m *SubmitProposal) String() string { return proto.CompactTextString(m) }
-func (*SubmitProposal) ProtoMessage()    {}
-func (*SubmitProposal) Descriptor() ([]byte, []int) {
+func (m *EventSubmitProposal) Reset()         { *m = EventSubmitProposal{} }
+func (m *EventSubmitProposal) String() string { return proto.CompactTextString(m) }
+func (*EventSubmitProposal) ProtoMessage()    {}
+func (*EventSubmitProposal) Descriptor() ([]byte, []int) {
 	return fileDescriptor_7879e051fb126fc0, []int{4}
 }
-func (m *SubmitProposal) XXX_Unmarshal(b []byte) error {
+func (m *EventSubmitProposal) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *SubmitProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventSubmitProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_SubmitProposal.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventSubmitProposal.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -234,19 +234,19 @@ func (m *SubmitProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, erro
 		return b[:n], nil
 	}
 }
-func (m *SubmitProposal) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SubmitProposal.Merge(m, src)
+func (m *EventSubmitProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventSubmitProposal.Merge(m, src)
 }
-func (m *SubmitProposal) XXX_Size() int {
+func (m *EventSubmitProposal) XXX_Size() int {
 	return m.Size()
 }
-func (m *SubmitProposal) XXX_DiscardUnknown() {
-	xxx_messageInfo_SubmitProposal.DiscardUnknown(m)
+func (m *EventSubmitProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventSubmitProposal.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_SubmitProposal proto.InternalMessageInfo
+var xxx_messageInfo_EventSubmitProposal proto.InternalMessageInfo
 
-func (m *SubmitProposal) GetProposalId() uint64 {
+func (m *EventSubmitProposal) GetProposalId() uint64 {
 	if m != nil {
 		return m.ProposalId
 	}
@@ -350,7 +350,7 @@ func init() {
 	proto.RegisterType((*EventUpdateGroup)(nil), "cosmos.group.v1beta1.EventUpdateGroup")
 	proto.RegisterType((*EventCreateGroupPolicy)(nil), "cosmos.group.v1beta1.EventCreateGroupPolicy")
 	proto.RegisterType((*EventUpdateGroupPolicy)(nil), "cosmos.group.v1beta1.EventUpdateGroupPolicy")
-	proto.RegisterType((*SubmitProposal)(nil), "cosmos.group.v1beta1.SubmitProposal")
+	proto.RegisterType((*EventSubmitProposal)(nil), "cosmos.group.v1beta1.EventSubmitProposal")
 	proto.RegisterType((*EventVote)(nil), "cosmos.group.v1beta1.EventVote")
 	proto.RegisterType((*EventExec)(nil), "cosmos.group.v1beta1.EventExec")
 }
@@ -358,7 +358,7 @@ func init() {
 func init() { proto.RegisterFile("cosmos/group/v1beta1/events.proto", fileDescriptor_7879e051fb126fc0) }
 
 var fileDescriptor_7879e051fb126fc0 = []byte{
-	// 284 bytes of a gzipped FileDescriptorProto
+	// 285 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x4c, 0xce, 0x2f, 0xce,
 	0xcd, 0x2f, 0xd6, 0x4f, 0x2f, 0xca, 0x2f, 0x2d, 0xd0, 0x2f, 0x33, 0x4c, 0x4a, 0x2d, 0x49, 0x34,
 	0xd4, 0x4f, 0x2d, 0x4b, 0xcd, 0x2b, 0x29, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x81,
@@ -369,14 +369,14 @@ var fileDescriptor_7879e051fb126fc0 = []byte{
 	0x70, 0x89, 0xa1, 0x9b, 0x1e, 0x90, 0x9f, 0x93, 0x99, 0x5c, 0x29, 0x64, 0xc4, 0xc5, 0x9e, 0x98,
 	0x92, 0x52, 0x94, 0x5a, 0x5c, 0x0c, 0xd6, 0xc3, 0xe9, 0x24, 0x71, 0x69, 0x8b, 0x2e, 0xcc, 0xf5,
 	0x8e, 0x10, 0x99, 0xe0, 0x92, 0xa2, 0xcc, 0xbc, 0xf4, 0x20, 0x98, 0x42, 0xb8, 0x69, 0x48, 0x96,
-	0x53, 0x60, 0x9a, 0x21, 0x17, 0x5f, 0x70, 0x69, 0x52, 0x6e, 0x66, 0x49, 0x40, 0x51, 0x7e, 0x41,
-	0x7e, 0x71, 0x62, 0x8e, 0x90, 0x3c, 0x17, 0x77, 0x01, 0x94, 0x8d, 0xf0, 0x0b, 0x17, 0x4c, 0xc8,
-	0x33, 0x45, 0x49, 0x87, 0x8b, 0x13, 0xec, 0x80, 0xb0, 0xfc, 0x92, 0x54, 0xe2, 0x55, 0xbb, 0x56,
-	0xa4, 0x26, 0x13, 0x54, 0xed, 0x64, 0x77, 0xe2, 0x91, 0x1c, 0xe3, 0x85, 0x47, 0x72, 0x8c, 0x0f,
-	0x1e, 0xc9, 0x31, 0x4e, 0x78, 0x2c, 0xc7, 0x70, 0xe1, 0xb1, 0x1c, 0xc3, 0x8d, 0xc7, 0x72, 0x0c,
-	0x51, 0x2a, 0xe9, 0x99, 0x25, 0x19, 0xa5, 0x49, 0x7a, 0xc9, 0xf9, 0xb9, 0xd0, 0xb8, 0x83, 0x52,
-	0xba, 0xc5, 0x29, 0xd9, 0xfa, 0x15, 0x90, 0xe4, 0x90, 0xc4, 0x06, 0x8e, 0x4f, 0x63, 0x40, 0x00,
-	0x00, 0x00, 0xff, 0xff, 0x9d, 0xff, 0xb7, 0x94, 0x25, 0x02, 0x00, 0x00,
+	0x53, 0x60, 0x9a, 0x19, 0x97, 0x30, 0xd8, 0xb4, 0xe0, 0xd2, 0xa4, 0xdc, 0xcc, 0x92, 0x80, 0xa2,
+	0xfc, 0x82, 0xfc, 0xe2, 0xc4, 0x1c, 0x21, 0x79, 0x2e, 0xee, 0x02, 0x28, 0x1b, 0xe1, 0x21, 0x2e,
+	0x98, 0x90, 0x67, 0x8a, 0x92, 0x0e, 0x17, 0x27, 0x58, 0x5f, 0x58, 0x7e, 0x49, 0x2a, 0xf1, 0xaa,
+	0x5d, 0x2b, 0x52, 0x93, 0x09, 0xaa, 0x76, 0xb2, 0x3b, 0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39,
+	0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6, 0x63,
+	0x39, 0x86, 0x28, 0x95, 0xf4, 0xcc, 0x92, 0x8c, 0xd2, 0x24, 0xbd, 0xe4, 0xfc, 0x5c, 0x68, 0x04,
+	0x42, 0x29, 0xdd, 0xe2, 0x94, 0x6c, 0xfd, 0x0a, 0x48, 0x9a, 0x48, 0x62, 0x03, 0x47, 0xaa, 0x31,
+	0x20, 0x00, 0x00, 0xff, 0xff, 0x80, 0x04, 0xb8, 0x7c, 0x2a, 0x02, 0x00, 0x00,
 }
 
 func (m *EventCreateGroup) Marshal() (dAtA []byte, err error) {
@@ -495,7 +495,7 @@ func (m *EventUpdateGroupPolicy) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
-func (m *SubmitProposal) Marshal() (dAtA []byte, err error) {
+func (m *EventSubmitProposal) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -505,12 +505,12 @@ func (m *SubmitProposal) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *SubmitProposal) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventSubmitProposal) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *SubmitProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventSubmitProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -640,7 +640,7 @@ func (m *EventUpdateGroupPolicy) Size() (n int) {
 	return n
 }
 
-func (m *SubmitProposal) Size() (n int) {
+func (m *EventSubmitProposal) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -984,7 +984,7 @@ func (m *EventUpdateGroupPolicy) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *SubmitProposal) Unmarshal(dAtA []byte) error {
+func (m *EventSubmitProposal) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1007,10 +1007,10 @@ func (m *SubmitProposal) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SubmitProposal: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventSubmitProposal: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SubmitProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventSubmitProposal: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

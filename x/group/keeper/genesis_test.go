@@ -87,8 +87,8 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 			memberAddr.String(),
 		},
 		SubmittedAt: submittedAt,
-		Status:      group.ProposalStatusClosed,
-		Result:      group.ProposalResultAccepted,
+		Status:      group.PROPOSAL_STATUS_CLOSED,
+		Result:      group.PROPOSAL_RESULT_ACCEPTED,
 		VoteState: group.Tally{
 			YesCount:     "1",
 			NoCount:      "0",
@@ -96,7 +96,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 			VetoCount:    "0",
 		},
 		Timeout:        timeout,
-		ExecutorResult: group.ProposalExecutorResultSuccess,
+		ExecutorResult: group.EXECUTOR_RESULT_SUCCESS,
 	}
 	err = proposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
 		FromAddress: accAddr.String(),
@@ -106,14 +106,14 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	s.Require().NoError(err)
 
 	genesisState := &group.GenesisState{
-		GroupSeq:              2,
-		Groups:                []*group.GroupInfo{{GroupId: 1, Admin: accAddr.String(), Metadata: []byte("1"), Version: 1, TotalWeight: "1"}, {GroupId: 2, Admin: accAddr.String(), Metadata: []byte("2"), Version: 2, TotalWeight: "2"}},
-		GroupMembers:          []*group.GroupMember{{GroupId: 1, Member: &group.Member{Address: memberAddr.String(), Weight: "1", Metadata: []byte("member metadata")}}, {GroupId: 2, Member: &group.Member{Address: memberAddr.String(), Weight: "2", Metadata: []byte("member metadata")}}},
+		GroupSeq:       2,
+		Groups:         []*group.GroupInfo{{GroupId: 1, Admin: accAddr.String(), Metadata: []byte("1"), Version: 1, TotalWeight: "1"}, {GroupId: 2, Admin: accAddr.String(), Metadata: []byte("2"), Version: 2, TotalWeight: "2"}},
+		GroupMembers:   []*group.GroupMember{{GroupId: 1, Member: &group.Member{Address: memberAddr.String(), Weight: "1", Metadata: []byte("member metadata")}}, {GroupId: 2, Member: &group.Member{Address: memberAddr.String(), Weight: "2", Metadata: []byte("member metadata")}}},
 		GroupPolicySeq: 1,
-		GroupPolicies:         []*group.GroupPolicyInfo{groupPolicy},
-		ProposalSeq:           1,
-		Proposals:             []*group.Proposal{proposal},
-		Votes:                 []*group.Vote{{ProposalId: proposal.ProposalId, Voter: memberAddr.String(), SubmittedAt: submittedAt, Choice: group.Choice_CHOICE_YES}},
+		GroupPolicies:  []*group.GroupPolicyInfo{groupPolicy},
+		ProposalSeq:    1,
+		Proposals:      []*group.Proposal{proposal},
+		Votes:          []*group.Vote{{ProposalId: proposal.ProposalId, Voter: memberAddr.String(), SubmittedAt: submittedAt, Option: group.VOTE_OPTION_YES}},
 	}
 	genesisBytes, err := cdc.MarshalJSON(genesisState)
 	s.Require().NoError(err)

@@ -48,6 +48,8 @@ message ThresholdDecisionPolicy {
 
 // VoteOption enumerates the valid vote options for a given governance proposal.
 enum VoteOption {
+  option (gogoproto.goproto_enum_prefix) = false;
+
   // VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
   VOTE_OPTION_UNSPECIFIED = 0;
   // VOTE_OPTION_YES defines a yes vote option.
@@ -157,8 +159,8 @@ message Proposal {
   // When a decision policy is changed, existing proposals from previous policy versions will become invalid.
   uint64 group_policy_version = 7;
 
-  // ProposalStatus defines proposal statuses.
-  enum ProposalStatus {
+  // Status defines proposal statuses.
+  enum Status {
     option (gogoproto.goproto_enum_prefix) = false;
 
     // An empty value is invalid and not allowed.
@@ -180,23 +182,23 @@ message Proposal {
   }
 
   // status represents the high level position in the life cycle of the proposal. Initial value is Submitted.
-  ProposalStatus status = 8;
+  Status status = 8;
 
   // Result defines types of proposal results.
   enum Result {
     option (gogoproto.goproto_enum_prefix) = false;
 
     // An empty value is invalid and not allowed
-    RESULT_UNSPECIFIED = 0;
+    PROPOSAL_RESULT_UNSPECIFIED = 0;
 
     // Until a final tally has happened the status is unfinalized
-    RESULT_UNFINALIZED = 1;
+    PROPOSAL_RESULT_UNFINALIZED = 1;
 
     // Final result of the tally
-    RESULT_ACCEPTED = 2;
+    PROPOSAL_RESULT_ACCEPTED = 2;
 
     // Final result of the tally
-    RESULT_REJECTED = 3;
+    PROPOSAL_RESULT_REJECTED = 3;
   }
 
   // result is the final result based on the votes and election rule. Initial value is unfinalized.

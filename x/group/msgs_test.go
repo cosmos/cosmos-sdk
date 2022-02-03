@@ -613,16 +613,16 @@ func TestMsgUpdateGroupPolicyMetadata(t *testing.T) {
 	}
 }
 
-func TestMsgCreateProposal(t *testing.T) {
+func TestMsgSubmitProposal(t *testing.T) {
 	testCases := []struct {
 		name   string
-		msg    *group.MsgCreateProposal
+		msg    *group.MsgSubmitProposal
 		expErr bool
 		errMsg string
 	}{
 		{
 			"invalid group policy address",
-			&group.MsgCreateProposal{
+			&group.MsgSubmitProposal{
 				Address: "address",
 			},
 			true,
@@ -630,7 +630,7 @@ func TestMsgCreateProposal(t *testing.T) {
 		},
 		{
 			"proposers required",
-			&group.MsgCreateProposal{
+			&group.MsgSubmitProposal{
 				Address: admin.String(),
 			},
 			true,
@@ -638,7 +638,7 @@ func TestMsgCreateProposal(t *testing.T) {
 		},
 		{
 			"valid testcase",
-			&group.MsgCreateProposal{
+			&group.MsgSubmitProposal{
 				Address:   admin.String(),
 				Proposers: []string{member1.String(), member2.String()},
 			},
@@ -656,7 +656,7 @@ func TestMsgCreateProposal(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgCreateProposal{}))
+				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgSubmitProposal{}))
 			}
 		})
 	}
@@ -686,20 +686,20 @@ func TestMsgVote(t *testing.T) {
 			"proposal id: value is empty",
 		},
 		{
-			"unspecified vote choice",
+			"unspecified vote option",
 			&group.MsgVote{
 				Voter:      member1.String(),
 				ProposalId: 1,
 			},
 			true,
-			"choice: value is empty",
+			"vote option: value is empty",
 		},
 		{
 			"valid test case",
 			&group.MsgVote{
 				Voter:      member1.String(),
 				ProposalId: 1,
-				Choice:     group.Choice_CHOICE_YES,
+				Option:     group.VOTE_OPTION_YES,
 			},
 			false,
 			"",

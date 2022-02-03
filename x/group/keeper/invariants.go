@@ -46,7 +46,7 @@ func GroupTotalWeightInvariant(keeper Keeper) sdk.Invariant {
 	}
 }
 
-// TallyVotesSumInvariant checks that proposal VoteState must correspond to the vote choice.
+// TallyVotesSumInvariant checks that proposal VoteState must correspond to the vote option.
 func TallyVotesSumInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		msg, broken := TallyVotesSumInvariantHelper(ctx, keeper.key, keeper.groupTable, keeper.proposalTable, keeper.groupMemberTable, keeper.voteByProposalIndex, keeper.groupPolicyTable)
@@ -303,26 +303,26 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, grou
 				return msg, broken
 			}
 
-			switch vote.Choice {
-			case group.Choice_CHOICE_YES:
+			switch vote.Option {
+			case group.VOTE_OPTION_YES:
 				yesVoteWeight, err = groupmath.Add(yesVoteWeight, curMemVotingWeight)
 				if err != nil {
 					msg += fmt.Sprintf("decimal addition error\n%v\n", err)
 					return msg, broken
 				}
-			case group.Choice_CHOICE_NO:
+			case group.VOTE_OPTION_NO:
 				noVoteWeight, err = groupmath.Add(noVoteWeight, curMemVotingWeight)
 				if err != nil {
 					msg += fmt.Sprintf("decimal addition error\n%v\n", err)
 					return msg, broken
 				}
-			case group.Choice_CHOICE_ABSTAIN:
+			case group.VOTE_OPTION_ABSTAIN:
 				abstainVoteWeight, err = groupmath.Add(abstainVoteWeight, curMemVotingWeight)
 				if err != nil {
 					msg += fmt.Sprintf("decimal addition error\n%v\n", err)
 					return msg, broken
 				}
-			case group.Choice_CHOICE_VETO:
+			case group.VOTE_OPTION_NO_WITH_VETO:
 				vetoVoteWeight, err = groupmath.Add(vetoVoteWeight, curMemVotingWeight)
 				if err != nil {
 					msg += fmt.Sprintf("decimal addition error\n%v\n", err)
@@ -365,7 +365,7 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, grou
 
 		if (yesVoteWeight.Cmp(proposalYesCount) != 0) || (noVoteWeight.Cmp(proposalNoCount) != 0) || (abstainVoteWeight.Cmp(proposalAbstainCount) != 0) || (vetoVoteWeight.Cmp(proposalVetoCount) != 0) {
 			broken = true
-			msg += fmt.Sprintf("proposal VoteState must correspond to the vote choice\nProposal with ID %d and voter address %s must correspond to the vote choice\n", proposal.ProposalId, vote.Voter)
+			msg += fmt.Sprintf("proposal VoteState must correspond to the vote option\nProposal with ID %d and voter address %s must correspond to the vote option\n", proposal.ProposalId, vote.Voter)
 			break
 		}
 	}

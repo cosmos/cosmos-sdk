@@ -89,15 +89,15 @@ func getProposals(r *rand.Rand, simState *module.SimulationState) []*group.Propo
 			Address:            fromAddr,
 			GroupVersion:       uint64(i + 1),
 			GroupPolicyVersion: uint64(i + 1),
-			Status:             group.ProposalStatusSubmitted,
-			Result:             group.ProposalResultAccepted,
+			Status:             group.PROPOSAL_STATUS_SUBMITTED,
+			Result:             group.PROPOSAL_RESULT_ACCEPTED,
 			VoteState: group.Tally{
 				YesCount:     "1",
 				NoCount:      "1",
 				AbstainCount: "1",
 				VetoCount:    "0",
 			},
-			ExecutorResult: group.ProposalExecutorResultNotRun,
+			ExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
 			Metadata:       []byte(simtypes.RandStringOfLength(r, 50)),
 			SubmittedAt:    submittedAt,
 			Timeout:        timeout,
@@ -124,7 +124,7 @@ func getVotes(r *rand.Rand, simState *module.SimulationState) []*group.Vote {
 		votes[i] = &group.Vote{
 			ProposalId:  uint64(i + 1),
 			Voter:       simState.Accounts[i].Address.String(),
-			Choice:      getVoteChoice(i),
+			Option:      getVoteOption(i),
 			Metadata:    []byte(simtypes.RandStringOfLength(r, 50)),
 			SubmittedAt: time.Unix(0, 0),
 		}
@@ -133,16 +133,16 @@ func getVotes(r *rand.Rand, simState *module.SimulationState) []*group.Vote {
 	return votes
 }
 
-func getVoteChoice(index int) group.Choice {
+func getVoteOption(index int) group.VoteOption {
 	switch index {
 	case 0:
-		return group.Choice_CHOICE_YES
+		return group.VOTE_OPTION_YES
 	case 1:
-		return group.Choice_CHOICE_NO
+		return group.VOTE_OPTION_NO
 	case 2:
-		return group.Choice_CHOICE_ABSTAIN
+		return group.VOTE_OPTION_ABSTAIN
 	default:
-		return group.Choice_CHOICE_VETO
+		return group.VOTE_OPTION_NO_WITH_VETO
 	}
 }
 

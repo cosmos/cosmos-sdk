@@ -371,7 +371,7 @@ func (k Keeper) UpdateGroupPolicyMetadata(goCtx context.Context, req *group.MsgU
 	return &group.MsgUpdateGroupPolicyMetadataResponse{}, nil
 }
 
-func (k Keeper) CreateProposal(goCtx context.Context, req *group.MsgCreateProposal) (*group.MsgCreateProposalResponse, error) {
+func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitProposal) (*group.MsgSubmitProposalResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	accountAddress, err := sdk.AccAddressFromBech32(req.Address)
 	if err != nil {
@@ -431,9 +431,9 @@ func (k Keeper) CreateProposal(goCtx context.Context, req *group.MsgCreatePropos
 		SubmittedAt:        ctx.BlockTime(),
 		GroupVersion:       g.Version,
 		GroupPolicyVersion: policyAcc.Version,
-		Result:             group.ProposalResultUnfinalized,
-		Status:             group.ProposalStatusSubmitted,
-		ExecutorResult:     group.ProposalExecutorResultNotRun,
+		Result:             group.PROPOSAL_RESULT_UNFINALIZED,
+		Status:             group.PROPOSAL_STATUS_SUBMITTED,
+		ExecutorResult:     group.EXECUTOR_RESULT_NOT_RUN,
 		Timeout:            ctx.BlockTime().Add(window),
 		VoteState: group.Tally{
 			YesCount:     "0",
@@ -451,7 +451,7 @@ func (k Keeper) CreateProposal(goCtx context.Context, req *group.MsgCreatePropos
 		return nil, sdkerrors.Wrap(err, "create proposal")
 	}
 
-	err = ctx.EventManager().EmitTypedEvent(&group.EventCreateProposal{ProposalId: id})
+	err = ctx.EventManager().EmitTypedEvent(&group.EventSubmitProposal{ProposalId: id})
 	if err != nil {
 		return nil, err
 	}
@@ -464,10 +464,10 @@ func (k Keeper) CreateProposal(goCtx context.Context, req *group.MsgCreatePropos
 			_, err = k.Vote(sdk.WrapSDKContext(ctx), &group.MsgVote{
 				ProposalId: id,
 				Voter:      proposers[i],
-				Choice:     group.Choice_CHOICE_YES,
+				Option:     group.VOTE_OPTION_YES,
 			})
 			if err != nil {
-				return &group.MsgCreateProposalResponse{ProposalId: id}, sdkerrors.Wrap(err, "The proposal was created but failed on vote")
+				return &group.MsgSubmitProposalResponse{ProposalId: id}, sdkerrors.Wrap(err, "The proposal was created but failed on vote")
 			}
 		}
 		// Then try to execute the proposal
@@ -478,17 +478,17 @@ func (k Keeper) CreateProposal(goCtx context.Context, req *group.MsgCreatePropos
 			Signer: proposers[0],
 		})
 		if err != nil {
-			return &group.MsgCreateProposalResponse{ProposalId: id}, sdkerrors.Wrap(err, "The proposal was created but failed on exec")
+			return &group.MsgSubmitProposalResponse{ProposalId: id}, sdkerrors.Wrap(err, "The proposal was created but failed on exec")
 		}
 	}
 
-	return &group.MsgCreateProposalResponse{ProposalId: id}, nil
+	return &group.MsgSubmitProposalResponse{ProposalId: id}, nil
 }
 
 func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	id := req.ProposalId
-	choice := req.Choice
+	voteOption := req.Option
 	metadata := req.Metadata
 
 	if err := assertMetadataLength(metadata, "metadata"); err != nil {
@@ -500,7 +500,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 		return nil, err
 	}
 	// Ensure that we can still accept votes for this proposal.
-	if proposal.Status != group.ProposalStatusSubmitted {
+	if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED {
 		return nil, sdkerrors.Wrap(errors.ErrInvalid, "proposal not open for voting")
 	}
 	proposalTimeout, err := gogotypes.TimestampProto(proposal.Timeout)
@@ -543,7 +543,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	newVote := group.Vote{
 		ProposalId:  id,
 		Voter:       voterAddr,
-		Choice:      choice,
+		Option:      voteOption,
 		Metadata:    metadata,
 		SubmittedAt: ctx.BlockTime(),
 	}
@@ -600,11 +600,11 @@ func doTally(ctx sdk.Context, p *group.Proposal, electorate group.GroupInfo, pol
 	case err != nil:
 		return sdkerrors.Wrap(err, "policy execution")
 	case result.Allow && result.Final:
-		p.Result = group.ProposalResultAccepted
-		p.Status = group.ProposalStatusClosed
+		p.Result = group.PROPOSAL_RESULT_ACCEPTED
+		p.Status = group.PROPOSAL_STATUS_CLOSED
 	case !result.Allow && result.Final:
-		p.Result = group.ProposalResultRejected
-		p.Status = group.ProposalStatusClosed
+		p.Result = group.PROPOSAL_RESULT_REJECTED
+		p.Status = group.PROPOSAL_STATUS_CLOSED
 	}
 	return nil
 }
@@ -619,7 +619,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 		return nil, err
 	}
 
-	if proposal.Status != group.ProposalStatusSubmitted && proposal.Status != group.ProposalStatusClosed {
+	if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED && proposal.Status != group.PROPOSAL_STATUS_CLOSED {
 		return nil, sdkerrors.Wrapf(errors.ErrInvalid, "not possible with proposal status %s", proposal.Status.String())
 	}
 
@@ -635,11 +635,11 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 		return &group.MsgExecResponse{}, nil
 	}
 
-	if proposal.Status == group.ProposalStatusSubmitted {
+	if proposal.Status == group.PROPOSAL_STATUS_SUBMITTED {
 		// Ensure that group policy hasn't been modified before tally.
 		if proposal.GroupPolicyVersion != policyInfo.Version {
-			proposal.Result = group.ProposalResultUnfinalized
-			proposal.Status = group.ProposalStatusAborted
+			proposal.Result = group.PROPOSAL_RESULT_UNFINALIZED
+			proposal.Status = group.PROPOSAL_STATUS_ABORTED
 			return storeUpdates()
 		}
 
@@ -650,8 +650,8 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 
 		// Ensure that group hasn't been modified before tally.
 		if electorate.Version != proposal.GroupVersion {
-			proposal.Result = group.ProposalResultUnfinalized
-			proposal.Status = group.ProposalStatusAborted
+			proposal.Result = group.PROPOSAL_RESULT_UNFINALIZED
+			proposal.Status = group.PROPOSAL_STATUS_ABORTED
 			return storeUpdates()
 		}
 		if err := doTally(ctx, &proposal, electorate, policyInfo); err != nil {
@@ -660,7 +660,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	}
 
 	// Execute proposal payload.
-	if proposal.Status == group.ProposalStatusClosed && proposal.Result == group.ProposalResultAccepted && proposal.ExecutorResult != group.ProposalExecutorResultSuccess {
+	if proposal.Status == group.PROPOSAL_STATUS_CLOSED && proposal.Result == group.PROPOSAL_RESULT_ACCEPTED && proposal.ExecutorResult != group.EXECUTOR_RESULT_SUCCESS {
 		logger := ctx.Logger().With("module", fmt.Sprintf("x/%s", group.ModuleName))
 		// Caching context so that we don't update the store in case of failure.
 		ctx, flush := ctx.CacheContext()
@@ -671,11 +671,11 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 		}
 		_, err = k.doExecuteMsgs(ctx, k.router, proposal, addr)
 		if err != nil {
-			proposal.ExecutorResult = group.ProposalExecutorResultFailure
+			proposal.ExecutorResult = group.EXECUTOR_RESULT_FAILURE
 			proposalType := reflect.TypeOf(proposal).String()
 			logger.Info("proposal execution failed", "cause", err, "type", proposalType, "proposalID", id)
 		} else {
-			proposal.ExecutorResult = group.ProposalExecutorResultSuccess
+			proposal.ExecutorResult = group.EXECUTOR_RESULT_SUCCESS
 			flush()
 		}
 	}

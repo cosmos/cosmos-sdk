@@ -132,7 +132,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	// create a proposal
 	validTxFileName := getTxSendFileName(s, s.groupPolicies[0].Address, val.Address.String())
-	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateProposalCmd(),
+	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
 		append(
 			[]string{
 				s.groupPolicies[0].Address,
@@ -154,7 +154,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			[]string{
 				"1",
 				val.Address.String(),
-				"CHOICE_YES",
+				"VOTE_OPTION_YES",
 				"",
 			},
 			commonFlags...,
@@ -1117,7 +1117,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTxCreateProposal() {
+func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -1301,7 +1301,7 @@ func (s *IntegrationTestSuite) TestTxCreateProposal() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := client.MsgCreateProposalCmd()
+			cmd := client.MsgSubmitProposalCmd()
 
 			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
@@ -1329,7 +1329,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 
 	validTxFileName := getTxSendFileName(s, s.groupPolicies[1].Address, val.Address.String())
 	for i := 0; i < 2; i++ {
-		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateProposalCmd(),
+		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
 			append(
 				[]string{
 					s.groupPolicies[1].Address,
@@ -1358,7 +1358,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 				[]string{
 					"2",
 					val.Address.String(),
-					"CHOICE_YES",
+					"VOTE_OPTION_YES",
 					"",
 				},
 				commonFlags...,
@@ -1374,7 +1374,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 				[]string{
 					"7",
 					val.Address.String(),
-					"CHOICE_YES",
+					"VOTE_OPTION_YES",
 					"",
 					fmt.Sprintf("--%s=try", client.FlagExec),
 				},
@@ -1391,7 +1391,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 				[]string{
 					"8",
 					val.Address.String(),
-					"CHOICE_NO",
+					"VOTE_OPTION_NO",
 					"",
 					fmt.Sprintf("--%s=try", client.FlagExec),
 				},
@@ -1408,7 +1408,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 				[]string{
 					"5",
 					val.Address.String(),
-					"CHOICE_YES",
+					"VOTE_OPTION_YES",
 					"",
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
@@ -1425,7 +1425,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 				[]string{
 					"abcd",
 					val.Address.String(),
-					"CHOICE_YES",
+					"VOTE_OPTION_YES",
 					"",
 				},
 				commonFlags...,
@@ -1441,7 +1441,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 				[]string{
 					"1234",
 					val.Address.String(),
-					"CHOICE_YES",
+					"VOTE_OPTION_YES",
 					"",
 				},
 				commonFlags...,
@@ -1457,7 +1457,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 				[]string{
 					"2",
 					val.Address.String(),
-					"CHOICE_YES",
+					"VOTE_OPTION_YES",
 					"AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ==",
 				},
 				commonFlags...,
@@ -1468,18 +1468,18 @@ func (s *IntegrationTestSuite) TestTxVote() {
 			0,
 		},
 		{
-			"invalid choice",
+			"invalid vote option",
 			append(
 				[]string{
 					"2",
 					val.Address.String(),
-					"INVALID_CHOICE",
+					"INVALID_VOTE_OPTION",
 					"",
 				},
 				commonFlags...,
 			),
 			true,
-			"not a valid vote choice",
+			"not a valid vote option",
 			nil,
 			0,
 		},
@@ -1518,7 +1518,7 @@ func (s *IntegrationTestSuite) TestTxExec() {
 	// create proposals and vote
 	for i := 3; i <= 4; i++ {
 		validTxFileName := getTxSendFileName(s, s.groupPolicies[0].Address, val.Address.String())
-		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateProposalCmd(),
+		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
 			append(
 				[]string{
 					s.groupPolicies[0].Address,
@@ -1537,7 +1537,7 @@ func (s *IntegrationTestSuite) TestTxExec() {
 				[]string{
 					fmt.Sprintf("%d", i),
 					val.Address.String(),
-					"CHOICE_YES",
+					"VOTE_OPTION_YES",
 					"",
 				},
 				commonFlags...,

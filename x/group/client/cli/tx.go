@@ -42,7 +42,7 @@ func TxCmd(name string) *cobra.Command {
 		MsgUpdateGroupPolicyAdminCmd(),
 		MsgUpdateGroupPolicyDecisionPolicyCmd(),
 		MsgUpdateGroupPolicyMetadataCmd(),
-		MsgCreateProposalCmd(),
+		MsgSubmitProposalCmd(),
 		MsgVoteCmd(),
 		MsgExecCmd(),
 	)
@@ -476,10 +476,10 @@ func MsgUpdateGroupPolicyMetadataCmd() *cobra.Command {
 	return cmd
 }
 
-// MsgCreateProposalCmd creates a CLI command for Msg/CreateProposal.
-func MsgCreateProposalCmd() *cobra.Command {
+// MsgSubmitProposalCmd creates a CLI command for Msg/SubmitProposal.
+func MsgSubmitProposalCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-proposal [group-policy-account] [proposer[,proposer]*] [msg_tx_json_file] [metadata]",
+		Use:   "submit-proposal [group-policy-account] [proposer[,proposer]*] [msg_tx_json_file] [metadata]",
 		Short: "Submit a new proposal",
 		Long: `Submit a new proposal.
 
@@ -514,7 +514,7 @@ Parameters:
 
 			execStr, _ := cmd.Flags().GetString(FlagExec)
 
-			msg, err := group.NewMsgCreateProposalRequest(
+			msg, err := group.NewMsgSubmitProposalRequest(
 				args[0],
 				proposers,
 				msgs,
@@ -542,14 +542,14 @@ Parameters:
 // MsgVoteCmd creates a CLI command for Msg/Vote.
 func MsgVoteCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "vote [proposal-id] [voter] [choice] [metadata]",
+		Use:   "vote [proposal-id] [voter] [vote-option] [metadata]",
 		Short: "Vote on a proposal",
 		Long: `Vote on a proposal.
 
 Parameters:
 			proposal-id: unique ID of the proposal
 			voter: voter account addresses.
-			choice: choice of the voter(s)
+			vote-option: choice of the voter(s)
 				VOTE_OPTION_UNSPECIFIED: no-op
 				VOTE_OPTION_NO: no
 				VOTE_OPTION_YES: yes
@@ -574,7 +574,7 @@ Parameters:
 				return err
 			}
 
-			choice, err := group.ChoiceFromString(args[2])
+			voteOption, err := group.VoteOptionFromString(args[2])
 			if err != nil {
 				return err
 			}
@@ -589,7 +589,7 @@ Parameters:
 			msg := &group.MsgVote{
 				ProposalId: proposalID,
 				Voter:      args[1],
-				Choice:     choice,
+				Option:     voteOption,
 				Metadata:   b,
 				Exec:       execFromString(execStr),
 			}

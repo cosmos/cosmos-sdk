@@ -7,18 +7,19 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gogo/protobuf/proto"
+	"github.com/stretchr/testify/suite"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
-	"github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-
-	"github.com/cosmos/cosmos-sdk/testutil/network"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	client "github.com/cosmos/cosmos-sdk/x/group/client/cli"
 )
@@ -1256,7 +1257,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 				commonFlags...,
 			),
 			true,
-			"proposers: decoding bech32 failed",
+			"invalid.info: key not found",
 			nil,
 			0,
 		},
@@ -1782,8 +1783,17 @@ func (s *IntegrationTestSuite) createCLIProposal(groupPolicyAddress, proposer, s
 	bz, err := base64.StdEncoding.DecodeString(metadata)
 	s.Require().NoError(err)
 
+	msg := banktypes.MsgSend{
+		FromAddress: sendFrom,
+		ToAddress:   sendTo,
+		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))),
+	}
+	msgJSON, err := s.cfg.Codec.MarshalInterfaceJSON(&msg)
+	s.Require().NoError(err)
+
 	p := client.CLIProposal{
 		GroupPolicyAddress: groupPolicyAddress,
+		Messages:           []json.RawMessage{msgJSON},
 		Metadata:           bz,
 		Proposers:          []string{proposer},
 	}

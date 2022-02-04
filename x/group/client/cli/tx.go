@@ -506,12 +506,21 @@ Example:
 }`, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			prop, err := parseCLIProposal(args[0])
+			if err != nil {
+				return err
+			}
+
+			// Since the --from flag is not required on this CLI command, we
+			// ignore it, and just use the 1st proposer in the JSON file.
+			cmd.Flags().Set(flags.FlagFrom, prop.Proposers[0])
+
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msgs, prop, err := parseSubmitProposal(clientCtx.Codec, args[0])
+			msgs, err := parseMsgs(clientCtx.Codec, prop)
 			if err != nil {
 				return err
 			}

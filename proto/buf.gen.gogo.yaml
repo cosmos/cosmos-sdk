@@ -3,6 +3,6 @@ plugins:
   - name: gocosmos
     out: ..
     opt: plugins=grpc,Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types
-  - remote: buf.build/grpc-ecosystem/plugins/grpc-gateway:v2.7.3-1
+  - name: grpc-gateway
     out: ..
-    opt: logtostderr=true
+    opt: logtostderr=true,allow_colon_final_segments=true

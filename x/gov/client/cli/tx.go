@@ -27,10 +27,10 @@ const (
 	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagProposalType = "type"
 	// Deprecated: only used for v1beta1 legacy proposals.
-	FlagDeposit      = "deposit"
-	flagVoter        = "voter"
-	flagDepositor    = "depositor"
-	flagStatus       = "status"
+	FlagDeposit   = "deposit"
+	flagVoter     = "voter"
+	flagDepositor = "depositor"
+	flagStatus    = "status"
 	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagProposal = "proposal"
 )
@@ -47,10 +47,11 @@ var ProposalFlags = []string{
 
 // NewTxCmd returns the transaction commands for this module
 // governance ModuleClient is slightly different from other ModuleClients in that
-// it contains a slice of "proposal" child commands. These commands are respective
+// it contains a slice of "proposal" child commands and a slice of legacy
+// "proposal" child commands. These commands are respective
 // to proposal type handlers that are implemented in other modules but are mounted
 // under the governance CLI (eg. parameter change proposals).
-func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
+func NewTxCmd(propCmds []*cobra.Command, legacyPropCmds []*cobra.Command) *cobra.Command {
 	govTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Governance transactions subcommands",
@@ -59,8 +60,14 @@ func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmdSubmitLegacyProp := NewCmdSubmitLegacyProposal()
+	cmdSubmitProp := NewCmdSubmitProposal()
 	for _, propCmd := range propCmds {
+		flags.AddTxFlagsToCmd(propCmd)
+		cmdSubmitProp.AddCommand(propCmd)
+	}
+
+	cmdSubmitLegacyProp := NewCmdSubmitLegacyProposal()
+	for _, propCmd := range legacyPropCmds {
 		flags.AddTxFlagsToCmd(propCmd)
 		cmdSubmitLegacyProp.AddCommand(propCmd)
 	}
@@ -69,7 +76,7 @@ func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
 		NewCmdDeposit(),
 		NewCmdVote(),
 		NewCmdWeightedVote(),
-		NewCmdSubmitProposal(),
+		cmdSubmitProp,
 		cmdSubmitLegacyProp,
 	)
 

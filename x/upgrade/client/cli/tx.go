@@ -1,25 +1,31 @@
 package cli
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const (
+	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagUpgradeHeight = "upgrade-height"
-	FlagUpgradeInfo   = "upgrade-info"
-	FlagNoValidate    = "no-validate"
-	FlagDaemonName    = "daemon-name"
+	// Deprecated: only used for v1beta1 legacy proposals.
+	FlagUpgradeInfo = "upgrade-info"
+	FlagNoValidate  = "no-validate"
+	FlagDaemonName  = "daemon-name"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -34,6 +40,88 @@ func GetTxCmd() *cobra.Command {
 
 // NewCmdSubmitUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
 func NewCmdSubmitUpgradeProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "software-upgrade [proposal_json_file] [flags]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Submit a software upgrade proposal",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a software upgrade along with an initial deposit.
+Upgrade plan, metadata and deposit are defined in a JSON file.
+Please specify a unique name and height for the upgrade to take effect.
+You may include info to reference a binary download link, in a format compatible with: https://github.com/cosmos/cosmos-sdk/tree/master/cosmovisor
+
+Example:
+$ %s tx gov submit-proposal software-upgrade path/to/proposal.json
+
+Where proposal.json contains:
+
+{
+	"plan": [
+		{
+			"name": "upgrade name",
+			"height": "123...",
+			"info": "a7fb1..."
+		}
+	],
+	"metadata: "4pIMOgIGx1vZGU=", // base64-encoded metadata
+	"deposit": "10stake"
+}
+`, version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			upgradePlan, metadata, deposit, err := parseSubmitSoftwareUpgradeProposal(clientCtx.Codec, args[0])
+			if err != nil {
+				return err
+			}
+
+			noValidate, err := cmd.Flags().GetBool(FlagNoValidate)
+			if err != nil {
+				return err
+			}
+			if !noValidate {
+				var daemonName string
+				if daemonName, err = cmd.Flags().GetString(FlagDaemonName); err != nil {
+					return err
+				}
+				var planInfo *plan.Info
+				if planInfo, err = plan.ParseInfo(upgradePlan.Info); err != nil {
+					return err
+				}
+				if err = planInfo.ValidateFull(daemonName); err != nil {
+					return err
+				}
+			}
+
+			msgs := []sdk.Msg{
+				&types.MsgSoftwareUpgrade{
+					Authority: "",
+					Plan:      *upgradePlan,
+				},
+			}
+
+			msg, err := v1beta2.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), metadata)
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	cmd.Flags().Bool(FlagNoValidate, false, "Skip validation of the upgrade info")
+	cmd.Flags().String(FlagDaemonName, getDefaultDaemonName(), "The name of the executable being upgraded (for upgrade-info validation). Default is the DAEMON_NAME env var if set, or else this executable")
+
+	return cmd
+}
+
+// NewCmdSubmitLegacyUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
+// Deprecated: please use NewCmdSubmitUpgradeProposal instead.
+func NewCmdSubmitLegacyUpgradeProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "software-upgrade [name] (--upgrade-height [height]) (--upgrade-info [info]) [flags]",
 		Args:  cobra.ExactArgs(1),
@@ -81,7 +169,7 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 				return err
 			}
 
-			msg, err := gov.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := v1beta1.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err
 			}
@@ -137,7 +225,7 @@ func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 
 			content := types.NewCancelSoftwareUpgradeProposal(title, description)
 
-			msg, err := gov.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := v1beta1.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err
 			}
@@ -153,32 +241,6 @@ func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 	cmd.MarkFlagRequired(cli.FlagDescription)
 
 	return cmd
-}
-
-func parseArgsToContent(cmd *cobra.Command, name string) (gov.Content, error) {
-	title, err := cmd.Flags().GetString(cli.FlagTitle)
-	if err != nil {
-		return nil, err
-	}
-
-	description, err := cmd.Flags().GetString(cli.FlagDescription)
-	if err != nil {
-		return nil, err
-	}
-
-	height, err := cmd.Flags().GetInt64(FlagUpgradeHeight)
-	if err != nil {
-		return nil, err
-	}
-
-	info, err := cmd.Flags().GetString(FlagUpgradeInfo)
-	if err != nil {
-		return nil, err
-	}
-
-	plan := types.Plan{Name: name, Height: height, Info: info}
-	content := types.NewSoftwareUpgradeProposal(title, description, plan)
-	return content, nil
 }
 
 // getDefaultDaemonName gets the default name to use for the daemon.

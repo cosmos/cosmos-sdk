@@ -36,14 +36,16 @@ var (
 
 // AppModuleBasic defines the basic application module used by the gov module.
 type AppModuleBasic struct {
-	cdc              codec.Codec
-	proposalHandlers []govclient.ProposalHandler // proposal handlers which live in governance cli and rest
+	cdc                    codec.Codec
+	legacyProposalHandlers []govclient.ProposalHandler // legacy proposal handlers which live in governance cli and rest
+	proposalHandlers       []govclient.ProposalHandler // proposal handlers which live in governance cli and rest
 }
 
 // NewAppModuleBasic creates a new AppModuleBasic object
-func NewAppModuleBasic(proposalHandlers ...govclient.ProposalHandler) AppModuleBasic {
+func NewAppModuleBasic(proposalHandlers []govclient.ProposalHandler, legacyProposalHandlers []govclient.ProposalHandler) AppModuleBasic {
 	return AppModuleBasic{
-		proposalHandlers: proposalHandlers,
+		proposalHandlers:       proposalHandlers,
+		legacyProposalHandlers: legacyProposalHandlers,
 	}
 }
 
@@ -91,12 +93,18 @@ func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux 
 
 // GetTxCmd returns the root tx command for the gov module.
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
-	proposalCLIHandlers := make([]*cobra.Command, 0, len(a.proposalHandlers))
-	for _, proposalHandler := range a.proposalHandlers {
+	proposalCLIHandlers := getProposalCLIHandlers(a.proposalHandlers)
+	legacyProposalCLIHandlers := getProposalCLIHandlers(a.legacyProposalHandlers)
+
+	return cli.NewTxCmd(proposalCLIHandlers, legacyProposalCLIHandlers)
+}
+
+func getProposalCLIHandlers(handlers []govclient.ProposalHandler) []*cobra.Command {
+	proposalCLIHandlers := make([]*cobra.Command, 0, len(handlers))
+	for _, proposalHandler := range handlers {
 		proposalCLIHandlers = append(proposalCLIHandlers, proposalHandler.CLIHandler())
 	}
-
-	return cli.NewTxCmd(proposalCLIHandlers)
+	return proposalCLIHandlers
 }
 
 // GetQueryCmd returns the root query command for the gov module.

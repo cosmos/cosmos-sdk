@@ -79,4 +79,4 @@ In order to prevent DoS attacks, using a filtered `x/feegrant` incurs gas. The S
 
 ## Pruning
 
-A queue in the state maintained with the prefix of expiration of the grants and checks them with the current block time for every block to prune.
+A queue in the state maintained with the prefix of expiration of the grants and checks them on EndBlock with the current block time for every block to prune.

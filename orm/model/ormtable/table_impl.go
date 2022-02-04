@@ -153,9 +153,9 @@ func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, message proto.Mess
 	return writer.Write()
 }
 
-func (t tableImpl) Delete(context context.Context, message proto.Message) error {
+func (t tableImpl) Delete(ctx context.Context, message proto.Message) error {
 	pk := t.PrimaryKeyCodec.GetKeyValues(message.ProtoReflect())
-	return t.DeleteBy(context, pk)
+	return t.doDelete(ctx, pk)
 }
 
 func (t tableImpl) GetIndex(fields string) Index {

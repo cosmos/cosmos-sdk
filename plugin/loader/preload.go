@@ -2,6 +2,7 @@ package loader
 
 import (
 	pluginfile "github.com/cosmos/cosmos-sdk/plugin/plugins/file"
+	pluginkafka "github.com/cosmos/cosmos-sdk/plugin/plugins/kafka"
 	plugintrace "github.com/cosmos/cosmos-sdk/plugin/plugins/trace"
 )
 
@@ -11,5 +12,6 @@ import (
 
 func init() {
 	Preload(pluginfile.Plugins...)
+	Preload(pluginkafka.Plugins...)
 	Preload(plugintrace.Plugins...)
 }

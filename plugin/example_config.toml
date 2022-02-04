@@ -57,3 +57,47 @@ print_data_to_stdout = false
 # whether to operate in fire-and-forget or success/failure acknowledgement mode
 # false == fire-and-forget; true == sends a message receipt success/fail signal
 ack = "false"
+
+###############################################################################
+###                       Kafka Plugin configuration                        ###
+###############################################################################
+
+# The specific parameters for the Kafka streaming service plugin
+[plugins.streaming.kafka]
+
+# List of store keys we want to expose for this streaming service.
+keys = []
+
+# Optional topic prefix for the topic(s) where data will be stored
+topic_prefix = "block"
+
+# Flush and wait for outstanding messages and requests to complete delivery. (milliseconds)
+flush_timeout_ms = 1500
+
+# whether to operate in fire-and-forget or success/failure acknowledgement mode
+# false == fire-and-forget; true == sends a message receipt success/fail signal
+ack = "false"
+
+# Producer configuration properties.
+# The plugin uses confluent-kafka-go which is a lightweight wrapper around librdkafka.
+# For a full list of producer configuration properties
+# see https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
+[plugins.streaming.kafka.producer]
+
+# Initial list of brokers as a comma seperated list of broker host or host:port[, host:port[,...]]
+bootstrap_servers = "localhost:9092"
+
+# Client identifier
+client_id = "my-app-id"
+
+# This field indicates the number of acknowledgements the leader
+# broker must receive from ISR brokers before responding to the request
+acks = "all"
+
+# When set to true, the producer will ensure that messages
+# are successfully produced exactly once and in the original produce order.
+# The following configuration properties are adjusted automatically (if not modified by the user)
+# when idempotence is enabled: max.in.flight.requests.per.connection=5 (must be less than or equal to 5),
+# retries=INT32_MAX (must be greater than 0), acks=all, queuing.strategy=fifo.
+# Producer instantation will fail if user-supplied configuration is incompatible.
+enable_idempotence = true

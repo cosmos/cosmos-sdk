@@ -4,4 +4,5 @@
 # name             go-path                  number of the sub-plugin or *
 
 file github.com/cosmos/cosmos-sdk/plugin/plugins/file *
+kafka github.com/cosmos/cosmos-sdk/plugin/plugins/kafka *
 trace github.com/cosmos/cosmos-sdk/plugin/plugins/trace *

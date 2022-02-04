@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/orm/types/kv"
+
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -21,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
-	"github.com/cosmos/cosmos-sdk/orm/model/kv"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"

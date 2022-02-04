@@ -54,7 +54,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	// create a proposal with deposit
-	_, err = govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
+	_, err = govtestutil.MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 1", "Where is the title!?", govv1beta1.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", govcli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, govv1beta2.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)

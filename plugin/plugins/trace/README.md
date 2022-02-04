@@ -29,8 +29,8 @@ The plugin is setup to run as the `default` plugin. See `./plugin/loader/preload
    # turn the plugin system, as a whole, on or off
    on = true
     
-   # list of plugins to disable
-   disabled = []
+   # List of plugin names to enable from the plugin/plugins/*
+   enabled = ["trace"]
     
    # The directory to load non-preloaded plugins from; defaults to
    dir = ""

@@ -47,8 +47,8 @@ The plugin has been hooked up to run with `test-sim-nondeterminism` task. For a 
     # turn the plugin system, as a whole, on or off
     on = true
     
-    # List of plugin names to disable
-    disabled = ["file", "trace"]
+    # List of plugin names to enable from the plugin/plugins/*
+    enabled = ["kafka"]
     
     # The directory to load non-preloaded plugins from; defaults to ./plugin/plugins
     dir = ""

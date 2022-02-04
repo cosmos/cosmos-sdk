@@ -8,7 +8,7 @@
 on = true
 
 # List of plugin names to enable from the plugin/plugins/*
-disabled = []
+enabled = ["trace"]
 
 # The directory to load non-preloaded plugins from; defaults $GOPATH/src/github.com/cosmos/cosmos-sdk/plugin/plugins
 dir = ""

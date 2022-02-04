@@ -19,8 +19,8 @@ const (
 	// PLUGINS_DIR_TOML_KEY is the second-level TOML key for the directory to load plugins from
 	PLUGINS_DIR_TOML_KEY = "dir"
 
-	// PLUGINS_DISABLED_TOML_KEY is the second-level TOML key for a list of plugins to disable
-	PLUGINS_DISABLED_TOML_KEY = "disabled"
+	// PLUGINS_ENABLED_TOML_KEY is the second-level TOML key for a list of plugins to disable
+	PLUGINS_ENABLED_TOML_KEY = "enabled"
 
 	// DEFAULT_PLUGINS_DIRECTORY is the default directory to load plugins from
 	DEFAULT_PLUGINS_DIRECTORY = "src/github.com/cosmos/cosmos-sdk/plugin/plugins"

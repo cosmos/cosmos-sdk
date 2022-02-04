@@ -323,16 +323,12 @@ func TestAppStateDeterminism(t *testing.T) {
 			}
 
 			appOpts := loadAppOptions()
-			disabledPlugins := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.PLUGINS_DISABLED_TOML_KEY)))
-			var kafkaDisabled bool = false
-			for _, p := range disabledPlugins {
+			enabledPlugins := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.PLUGINS_ENABLED_TOML_KEY)))
+			for _, p := range enabledPlugins {
 				if kafkaplugin.PLUGIN_NAME == p {
-					kafkaDisabled = true
+					prepKafkaTopics(appOpts)
 					break
 				}
-			}
-			if !kafkaDisabled {
-				prepKafkaTopics(appOpts)
 			}
 
 			db := dbm.NewMemDB()

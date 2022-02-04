@@ -396,7 +396,7 @@ devdoc-update:
 ###############################################################################
 
 protoVer=v0.3
-protoImageName=tendermintdev/sdk-proto-gen:$(protoVer)
+protoImageName=proto-sdk:latest
 containerProtoGen=$(PROJECT_NAME)-proto-gen-$(protoVer)
 containerProtoGenAny=$(PROJECT_NAME)-proto-gen-any-$(protoVer)
 containerProtoGenSwagger=$(PROJECT_NAME)-proto-gen-swagger-$(protoVer)

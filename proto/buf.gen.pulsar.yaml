@@ -12,6 +12,6 @@ plugins:
   - name: go-pulsar
     out: ../api
     opt: paths=source_relative
-  - name: go-grpc
+  - remote: buf.build/grpc/plugins/go:v1.2.0-1
     out: ../api
     opt: paths=source_relative

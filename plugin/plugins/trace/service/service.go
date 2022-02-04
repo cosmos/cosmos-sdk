@@ -46,7 +46,6 @@ type TraceStreamingService struct {
 	currentBlockNumber    int64                                    // the current block number
 	currentTxIndex        int64                                    // the index of the current tx
 	quitChan              chan struct{}                            // channel used for synchronize closure
-	successChan           chan bool                                // channel used for signaling success or failure of message delivery to external service
 	printDataToStdout     bool                                     // Print types.StoreKVPair data stored in each event to stdout.
 	ack                   bool                                     // true == fire-and-forget; false == sends success/failure signal
 	ackStatus             bool                                     // success/failure status to be sent to ackChan
@@ -80,7 +79,6 @@ func NewTraceStreamingService(
 	printDataToStdout     bool,
 	ack                   bool,
 ) (*TraceStreamingService, error) {
-	successChan := make(chan bool, 1)
 	listenChan := make(chan []byte)
 	iw := NewIntermediateWriter(listenChan)
 	listener := types.NewStoreKVPairWriteListener(iw, c)
@@ -96,7 +94,6 @@ func NewTraceStreamingService(
 		codec:                 c,
 		stateCache:            make([][]byte, 0),
 		stateCacheLock:        new(sync.Mutex),
-		successChan:           successChan,
 		printDataToStdout:     printDataToStdout,
 		ack:                   ack,
 		ackChan:               make(chan bool),
@@ -218,11 +215,6 @@ func (tss *TraceStreamingService) ListenEndBlock(
 // ListenSuccess returns a chan that is used to acknowledge successful receipt of messages by the external service
 // after some configurable delay, `false` is sent to this channel from the service to signify failure of receipt.
 // For fire-and-forget model, set the chan to always be `true`:
-//
-//   func (tss *TraceStreamingService) ListenSuccess() <-chan bool {
-//       tss.successChan <- true
-//	     return tss.successChan
-//   }
 func (tss *TraceStreamingService) ListenSuccess() <-chan bool {
 	// if we are operating in fire-and-forget mode, immediately send a "success" signal
 	if !tss.ack {

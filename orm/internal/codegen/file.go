@@ -12,10 +12,6 @@ import (
 	v1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
 )
 
-var (
-	tablePkg = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/model/ormtable")
-)
-
 type fileGen struct {
 	*generator.GeneratedFile
 	file *protogen.File
@@ -142,7 +138,7 @@ func (f fileGen) genStoreInterfaceGuard() {
 }
 
 func (f fileGen) genStoreConstructor(stores []*protogen.Message) {
-	f.P("func New", f.storeInterfaceName(), "(db ", ormdbPkg.Ident("ModuleDB"), ") (", f.storeInterfaceName(), ", error) {")
+	f.P("func New", f.storeInterfaceName(), "(db ", ormTablePkg.Ident("Schema"), ") (", f.storeInterfaceName(), ", error) {")
 	for _, store := range stores {
 		f.P(f.messageStoreReceiverName(store), ", err := ", f.messageConstructorName(store), "(db)")
 		f.P("if err != nil {")

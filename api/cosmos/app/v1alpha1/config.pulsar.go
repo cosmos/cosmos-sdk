@@ -17,7 +17,7 @@ import (
 var _ protoreflect.List = (*_Config_1_list)(nil)
 
 type _Config_1_list struct {
-	list *[]*Config_ModuleDescriptor
+	list *[]*ModuleConfig
 }
 
 func (x *_Config_1_list) Len() int {
@@ -33,18 +33,18 @@ func (x *_Config_1_list) Get(i int) protoreflect.Value {
 
 func (x *_Config_1_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*Config_ModuleDescriptor)
+	concreteValue := valueUnwrapped.Interface().(*ModuleConfig)
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_Config_1_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*Config_ModuleDescriptor)
+	concreteValue := valueUnwrapped.Interface().(*ModuleConfig)
 	*x.list = append(*x.list, concreteValue)
 }
 
 func (x *_Config_1_list) AppendMutable() protoreflect.Value {
-	v := new(Config_ModuleDescriptor)
+	v := new(ModuleConfig)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
@@ -57,7 +57,7 @@ func (x *_Config_1_list) Truncate(n int) {
 }
 
 func (x *_Config_1_list) NewElement() protoreflect.Value {
-	v := new(Config_ModuleDescriptor)
+	v := new(ModuleConfig)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
@@ -250,7 +250,7 @@ func (x *fastReflection_Config) Mutable(fd protoreflect.FieldDescriptor) protore
 	switch fd.FullName() {
 	case "cosmos.app.v1alpha1.Config.modules":
 		if x.Modules == nil {
-			x.Modules = []*Config_ModuleDescriptor{}
+			x.Modules = []*ModuleConfig{}
 		}
 		value := &_Config_1_list{list: &x.Modules}
 		return protoreflect.ValueOfList(value)
@@ -268,7 +268,7 @@ func (x *fastReflection_Config) Mutable(fd protoreflect.FieldDescriptor) protore
 func (x *fastReflection_Config) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.app.v1alpha1.Config.modules":
-		list := []*Config_ModuleDescriptor{}
+		list := []*ModuleConfig{}
 		return protoreflect.ValueOfList(&_Config_1_list{list: &list})
 	default:
 		if fd.IsExtension() {
@@ -468,7 +468,7 @@ func (x *fastReflection_Config) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Modules = append(x.Modules, &Config_ModuleDescriptor{})
+				x.Modules = append(x.Modules, &ModuleConfig{})
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Modules[len(x.Modules)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
@@ -509,27 +509,27 @@ func (x *fastReflection_Config) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_Config_ModuleDescriptor        protoreflect.MessageDescriptor
-	fd_Config_ModuleDescriptor_name   protoreflect.FieldDescriptor
-	fd_Config_ModuleDescriptor_config protoreflect.FieldDescriptor
+	md_ModuleConfig        protoreflect.MessageDescriptor
+	fd_ModuleConfig_name   protoreflect.FieldDescriptor
+	fd_ModuleConfig_config protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_app_v1alpha1_config_proto_init()
-	md_Config_ModuleDescriptor = File_cosmos_app_v1alpha1_config_proto.Messages().ByName("Config").Messages().ByName("ModuleDescriptor")
-	fd_Config_ModuleDescriptor_name = md_Config_ModuleDescriptor.Fields().ByName("name")
-	fd_Config_ModuleDescriptor_config = md_Config_ModuleDescriptor.Fields().ByName("config")
+	md_ModuleConfig = File_cosmos_app_v1alpha1_config_proto.Messages().ByName("ModuleConfig")
+	fd_ModuleConfig_name = md_ModuleConfig.Fields().ByName("name")
+	fd_ModuleConfig_config = md_ModuleConfig.Fields().ByName("config")
 }
 
-var _ protoreflect.Message = (*fastReflection_Config_ModuleDescriptor)(nil)
+var _ protoreflect.Message = (*fastReflection_ModuleConfig)(nil)
 
-type fastReflection_Config_ModuleDescriptor Config_ModuleDescriptor
+type fastReflection_ModuleConfig ModuleConfig
 
-func (x *Config_ModuleDescriptor) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_Config_ModuleDescriptor)(x)
+func (x *ModuleConfig) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_ModuleConfig)(x)
 }
 
-func (x *Config_ModuleDescriptor) slowProtoReflect() protoreflect.Message {
+func (x *ModuleConfig) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_app_v1alpha1_config_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -541,43 +541,43 @@ func (x *Config_ModuleDescriptor) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_Config_ModuleDescriptor_messageType fastReflection_Config_ModuleDescriptor_messageType
-var _ protoreflect.MessageType = fastReflection_Config_ModuleDescriptor_messageType{}
+var _fastReflection_ModuleConfig_messageType fastReflection_ModuleConfig_messageType
+var _ protoreflect.MessageType = fastReflection_ModuleConfig_messageType{}
 
-type fastReflection_Config_ModuleDescriptor_messageType struct{}
+type fastReflection_ModuleConfig_messageType struct{}
 
-func (x fastReflection_Config_ModuleDescriptor_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_Config_ModuleDescriptor)(nil)
+func (x fastReflection_ModuleConfig_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_ModuleConfig)(nil)
 }
-func (x fastReflection_Config_ModuleDescriptor_messageType) New() protoreflect.Message {
-	return new(fastReflection_Config_ModuleDescriptor)
+func (x fastReflection_ModuleConfig_messageType) New() protoreflect.Message {
+	return new(fastReflection_ModuleConfig)
 }
-func (x fastReflection_Config_ModuleDescriptor_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_Config_ModuleDescriptor
+func (x fastReflection_ModuleConfig_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_ModuleConfig
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_Config_ModuleDescriptor) Descriptor() protoreflect.MessageDescriptor {
-	return md_Config_ModuleDescriptor
+func (x *fastReflection_ModuleConfig) Descriptor() protoreflect.MessageDescriptor {
+	return md_ModuleConfig
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_Config_ModuleDescriptor) Type() protoreflect.MessageType {
-	return _fastReflection_Config_ModuleDescriptor_messageType
+func (x *fastReflection_ModuleConfig) Type() protoreflect.MessageType {
+	return _fastReflection_ModuleConfig_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_Config_ModuleDescriptor) New() protoreflect.Message {
-	return new(fastReflection_Config_ModuleDescriptor)
+func (x *fastReflection_ModuleConfig) New() protoreflect.Message {
+	return new(fastReflection_ModuleConfig)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_Config_ModuleDescriptor) Interface() protoreflect.ProtoMessage {
-	return (*Config_ModuleDescriptor)(x)
+func (x *fastReflection_ModuleConfig) Interface() protoreflect.ProtoMessage {
+	return (*ModuleConfig)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -585,16 +585,16 @@ func (x *fastReflection_Config_ModuleDescriptor) Interface() protoreflect.ProtoM
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_Config_ModuleDescriptor) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_ModuleConfig) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Name != "" {
 		value := protoreflect.ValueOfString(x.Name)
-		if !f(fd_Config_ModuleDescriptor_name, value) {
+		if !f(fd_ModuleConfig_name, value) {
 			return
 		}
 	}
 	if x.Config != nil {
 		value := protoreflect.ValueOfMessage(x.Config.ProtoReflect())
-		if !f(fd_Config_ModuleDescriptor_config, value) {
+		if !f(fd_ModuleConfig_config, value) {
 			return
 		}
 	}
@@ -611,17 +611,17 @@ func (x *fastReflection_Config_ModuleDescriptor) Range(f func(protoreflect.Field
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_Config_ModuleDescriptor) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_ModuleConfig) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.app.v1alpha1.Config.ModuleDescriptor.name":
+	case "cosmos.app.v1alpha1.ModuleConfig.name":
 		return x.Name != ""
-	case "cosmos.app.v1alpha1.Config.ModuleDescriptor.config":
+	case "cosmos.app.v1alpha1.ModuleConfig.config":
 		return x.Config != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.Config.ModuleDescriptor"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.ModuleConfig"))
 		}
-		panic(fmt.Errorf("message cosmos.app.v1alpha1.Config.ModuleDescriptor does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.app.v1alpha1.ModuleConfig does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -631,17 +631,17 @@ func (x *fastReflection_Config_ModuleDescriptor) Has(fd protoreflect.FieldDescri
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Config_ModuleDescriptor) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_ModuleConfig) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.app.v1alpha1.Config.ModuleDescriptor.name":
+	case "cosmos.app.v1alpha1.ModuleConfig.name":
 		x.Name = ""
-	case "cosmos.app.v1alpha1.Config.ModuleDescriptor.config":
+	case "cosmos.app.v1alpha1.ModuleConfig.config":
 		x.Config = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.Config.ModuleDescriptor"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.ModuleConfig"))
 		}
-		panic(fmt.Errorf("message cosmos.app.v1alpha1.Config.ModuleDescriptor does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.app.v1alpha1.ModuleConfig does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -651,19 +651,19 @@ func (x *fastReflection_Config_ModuleDescriptor) Clear(fd protoreflect.FieldDesc
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_Config_ModuleDescriptor) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_ModuleConfig) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.app.v1alpha1.Config.ModuleDescriptor.name":
+	case "cosmos.app.v1alpha1.ModuleConfig.name":
 		value := x.Name
 		return protoreflect.ValueOfString(value)
-	case "cosmos.app.v1alpha1.Config.ModuleDescriptor.config":
+	case "cosmos.app.v1alpha1.ModuleConfig.config":
 		value := x.Config
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.Config.ModuleDescriptor"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.ModuleConfig"))
 		}
-		panic(fmt.Errorf("message cosmos.app.v1alpha1.Config.ModuleDescriptor does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.app.v1alpha1.ModuleConfig does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -677,17 +677,17 @@ func (x *fastReflection_Config_ModuleDescriptor) Get(descriptor protoreflect.Fie
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Config_ModuleDescriptor) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_ModuleConfig) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.app.v1alpha1.Config.ModuleDescriptor.name":
+	case "cosmos.app.v1alpha1.ModuleConfig.name":
 		x.Name = value.Interface().(string)
-	case "cosmos.app.v1alpha1.Config.ModuleDescriptor.config":
+	case "cosmos.app.v1alpha1.ModuleConfig.config":
 		x.Config = value.Message().Interface().(*anypb.Any)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.Config.ModuleDescriptor"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.ModuleConfig"))
 		}
-		panic(fmt.Errorf("message cosmos.app.v1alpha1.Config.ModuleDescriptor does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.app.v1alpha1.ModuleConfig does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -701,48 +701,48 @@ func (x *fastReflection_Config_ModuleDescriptor) Set(fd protoreflect.FieldDescri
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Config_ModuleDescriptor) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_ModuleConfig) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.app.v1alpha1.Config.ModuleDescriptor.config":
+	case "cosmos.app.v1alpha1.ModuleConfig.config":
 		if x.Config == nil {
 			x.Config = new(anypb.Any)
 		}
 		return protoreflect.ValueOfMessage(x.Config.ProtoReflect())
-	case "cosmos.app.v1alpha1.Config.ModuleDescriptor.name":
-		panic(fmt.Errorf("field name of message cosmos.app.v1alpha1.Config.ModuleDescriptor is not mutable"))
+	case "cosmos.app.v1alpha1.ModuleConfig.name":
+		panic(fmt.Errorf("field name of message cosmos.app.v1alpha1.ModuleConfig is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.Config.ModuleDescriptor"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.ModuleConfig"))
 		}
-		panic(fmt.Errorf("message cosmos.app.v1alpha1.Config.ModuleDescriptor does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.app.v1alpha1.ModuleConfig does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_Config_ModuleDescriptor) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_ModuleConfig) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.app.v1alpha1.Config.ModuleDescriptor.name":
+	case "cosmos.app.v1alpha1.ModuleConfig.name":
 		return protoreflect.ValueOfString("")
-	case "cosmos.app.v1alpha1.Config.ModuleDescriptor.config":
+	case "cosmos.app.v1alpha1.ModuleConfig.config":
 		m := new(anypb.Any)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.Config.ModuleDescriptor"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.ModuleConfig"))
 		}
-		panic(fmt.Errorf("message cosmos.app.v1alpha1.Config.ModuleDescriptor does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.app.v1alpha1.ModuleConfig does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_Config_ModuleDescriptor) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_ModuleConfig) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.app.v1alpha1.Config.ModuleDescriptor", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.app.v1alpha1.ModuleConfig", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -750,7 +750,7 @@ func (x *fastReflection_Config_ModuleDescriptor) WhichOneof(d protoreflect.Oneof
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_Config_ModuleDescriptor) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_ModuleConfig) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -761,7 +761,7 @@ func (x *fastReflection_Config_ModuleDescriptor) GetUnknown() protoreflect.RawFi
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Config_ModuleDescriptor) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_ModuleConfig) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -773,7 +773,7 @@ func (x *fastReflection_Config_ModuleDescriptor) SetUnknown(fields protoreflect.
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_Config_ModuleDescriptor) IsValid() bool {
+func (x *fastReflection_ModuleConfig) IsValid() bool {
 	return x != nil
 }
 
@@ -783,9 +783,9 @@ func (x *fastReflection_Config_ModuleDescriptor) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_Config_ModuleDescriptor) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_ModuleConfig) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*Config_ModuleDescriptor)
+		x := input.Message.Interface().(*ModuleConfig)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -815,7 +815,7 @@ func (x *fastReflection_Config_ModuleDescriptor) ProtoMethods() *protoiface.Meth
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*Config_ModuleDescriptor)
+		x := input.Message.Interface().(*ModuleConfig)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -866,7 +866,7 @@ func (x *fastReflection_Config_ModuleDescriptor) ProtoMethods() *protoiface.Meth
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*Config_ModuleDescriptor)
+		x := input.Message.Interface().(*ModuleConfig)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -898,10 +898,10 @@ func (x *fastReflection_Config_ModuleDescriptor) ProtoMethods() *protoiface.Meth
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Config_ModuleDescriptor: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ModuleConfig: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Config_ModuleDescriptor: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ModuleConfig: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -1020,12 +1020,20 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Config represents the configuration for a Cosmos SDK ABCI app.
+// It is intended that all state machine logic including the version of
+// baseapp and tx handlers (and possibly even Tendermint) that an app needs
+// can be described in a config object. For compatibility, the framework should
+// allow a mixture of declarative and imperative app wiring, however, apps
+// that strive for the maximum ease of maintainability should be able to describe
+// their state machine with a config object alone.
 type Config struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Modules []*Config_ModuleDescriptor `protobuf:"bytes,1,rep,name=modules,proto3" json:"modules,omitempty"`
+	// modules are the module configurations for the app.
+	Modules []*ModuleConfig `protobuf:"bytes,1,rep,name=modules,proto3" json:"modules,omitempty"`
 }
 
 func (x *Config) Reset() {
@@ -1048,24 +1056,37 @@ func (*Config) Descriptor() ([]byte, []int) {
 	return file_cosmos_app_v1alpha1_config_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Config) GetModules() []*Config_ModuleDescriptor {
+func (x *Config) GetModules() []*ModuleConfig {
 	if x != nil {
 		return x.Modules
 	}
 	return nil
 }
 
-type Config_ModuleDescriptor struct {
+// ModuleConfig is a module configuration for an app.
+type ModuleConfig struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Name   string     `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// name is the unique name of the module within the app. It should be a name
+	// that persists between different versions of a module so that modules
+	// can be smoothly upgraded to new versions.
+	//
+	// For example, for the module cosmos.bank.module.v1.Module, we may chose
+	// to simply name the module "bank" in the app. When we upgrade to
+	// cosmos.bank.module.v2.Module, the app-specific name "bank" stays the same
+	// and the framework knows that the v2 module should receive all the same state
+	// that the v1 module had. Note: modules should provide info on which versions
+	// they can migrate from in the ModuleDescriptor.can_migration_from field.
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// config is the config object for the module. Module config messages should
+	// define a ModuleDescriptor using the cosmos.app.v1alpha1.is_module extension.
 	Config *anypb.Any `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
 }
 
-func (x *Config_ModuleDescriptor) Reset() {
-	*x = Config_ModuleDescriptor{}
+func (x *ModuleConfig) Reset() {
+	*x = ModuleConfig{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_app_v1alpha1_config_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1073,25 +1094,25 @@ func (x *Config_ModuleDescriptor) Reset() {
 	}
 }
 
-func (x *Config_ModuleDescriptor) String() string {
+func (x *ModuleConfig) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Config_ModuleDescriptor) ProtoMessage() {}
+func (*ModuleConfig) ProtoMessage() {}
 
-// Deprecated: Use Config_ModuleDescriptor.ProtoReflect.Descriptor instead.
-func (*Config_ModuleDescriptor) Descriptor() ([]byte, []int) {
-	return file_cosmos_app_v1alpha1_config_proto_rawDescGZIP(), []int{0, 0}
+// Deprecated: Use ModuleConfig.ProtoReflect.Descriptor instead.
+func (*ModuleConfig) Descriptor() ([]byte, []int) {
+	return file_cosmos_app_v1alpha1_config_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *Config_ModuleDescriptor) GetName() string {
+func (x *ModuleConfig) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *Config_ModuleDescriptor) GetConfig() *anypb.Any {
+func (x *ModuleConfig) GetConfig() *anypb.Any {
 	if x != nil {
 		return x.Config
 	}
@@ -1106,13 +1127,12 @@ var file_cosmos_app_v1alpha1_config_proto_rawDesc = []byte{
 	0x74, 0x6f, 0x12, 0x13, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x76,
 	0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x1a, 0x19, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x61, 0x6e, 0x79, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x22, 0xa6, 0x01, 0x0a, 0x06, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x46, 0x0a,
-	0x07, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x2c,
-	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x76, 0x31, 0x61, 0x6c,
-	0x70, 0x68, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2e, 0x4d, 0x6f, 0x64, 0x75,
-	0x6c, 0x65, 0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x52, 0x07, 0x6d, 0x6f,
-	0x64, 0x75, 0x6c, 0x65, 0x73, 0x1a, 0x54, 0x0a, 0x10, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x44,
-	0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d,
+	0x74, 0x6f, 0x22, 0x45, 0x0a, 0x06, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x3b, 0x0a, 0x07,
+	0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x21, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70,
+	0x68, 0x61, 0x31, 0x2e, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67,
+	0x52, 0x07, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x73, 0x22, 0x50, 0x0a, 0x0c, 0x4d, 0x6f, 0x64,
+	0x75, 0x6c, 0x65, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d,
 	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x2c, 0x0a,
 	0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e,
 	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
@@ -1147,13 +1167,13 @@ func file_cosmos_app_v1alpha1_config_proto_rawDescGZIP() []byte {
 
 var file_cosmos_app_v1alpha1_config_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_cosmos_app_v1alpha1_config_proto_goTypes = []interface{}{
-	(*Config)(nil),                  // 0: cosmos.app.v1alpha1.Config
-	(*Config_ModuleDescriptor)(nil), // 1: cosmos.app.v1alpha1.Config.ModuleDescriptor
-	(*anypb.Any)(nil),               // 2: google.protobuf.Any
+	(*Config)(nil),       // 0: cosmos.app.v1alpha1.Config
+	(*ModuleConfig)(nil), // 1: cosmos.app.v1alpha1.ModuleConfig
+	(*anypb.Any)(nil),    // 2: google.protobuf.Any
 }
 var file_cosmos_app_v1alpha1_config_proto_depIdxs = []int32{
-	1, // 0: cosmos.app.v1alpha1.Config.modules:type_name -> cosmos.app.v1alpha1.Config.ModuleDescriptor
-	2, // 1: cosmos.app.v1alpha1.Config.ModuleDescriptor.config:type_name -> google.protobuf.Any
+	1, // 0: cosmos.app.v1alpha1.Config.modules:type_name -> cosmos.app.v1alpha1.ModuleConfig
+	2, // 1: cosmos.app.v1alpha1.ModuleConfig.config:type_name -> google.protobuf.Any
 	2, // [2:2] is the sub-list for method output_type
 	2, // [2:2] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
@@ -1180,7 +1200,7 @@ func file_cosmos_app_v1alpha1_config_proto_init() {
 			}
 		}
 		file_cosmos_app_v1alpha1_config_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Config_ModuleDescriptor); i {
+			switch v := v.(*ModuleConfig); i {
 			case 0:
 				return &v.state
 			case 1:

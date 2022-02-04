@@ -6,6 +6,8 @@ import (
 	"encoding/binary"
 	"math"
 
+	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
+
 	"google.golang.org/protobuf/reflect/protodesc"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
@@ -32,10 +34,20 @@ type ModuleSchema struct {
 
 // ModuleDB defines the ORM database type to be used by modules.
 type ModuleDB interface {
-	ormkv.EntryCodec
+	ormtable.Schema
 
-	// GetTable returns the table for the provided message type or nil.
-	GetTable(message proto.Message) ormtable.Table
+	// DefaultJSON writes default JSON for each table in the module to the target.
+	DefaultJSON(ormjson.WriteTarget) error
+
+	// ValidateJSON validates JSON for each table in the module.
+	ValidateJSON(ormjson.ReadSource) error
+
+	// ImportJSON imports JSON for each table in the module which has JSON
+	// defined in the read source.
+	ImportJSON(context.Context, ormjson.ReadSource) error
+
+	// ExportJSON exports JSON for each table in the module.
+	ExportJSON(context.Context, ormjson.WriteTarget) error
 }
 
 type moduleDB struct {

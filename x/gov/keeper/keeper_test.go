@@ -10,7 +10,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -18,10 +20,11 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app         *simapp.SimApp
-	ctx         sdk.Context
-	queryClient v1beta2.QueryClient
-	addrs       []sdk.AccAddress
+	app               *simapp.SimApp
+	ctx               sdk.Context
+	queryClient       v1beta2.QueryClient
+	legacyQueryClient v1beta1.QueryClient
+	addrs             []sdk.AccAddress
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -38,11 +41,15 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	v1beta2.RegisterQueryServer(queryHelper, app.GovKeeper)
+	legacyQueryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
+	v1beta1.RegisterQueryServer(legacyQueryHelper, keeper.NewLegacyQueryServer(app.GovKeeper))
 	queryClient := v1beta2.NewQueryClient(queryHelper)
+	legacyQueryClient := v1beta1.NewQueryClient(legacyQueryHelper)
 
 	suite.app = app
 	suite.ctx = ctx
 	suite.queryClient = queryClient
+	suite.legacyQueryClient = legacyQueryClient
 	suite.addrs = simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
 }
 

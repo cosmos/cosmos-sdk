@@ -1503,7 +1503,7 @@ func (s *IntegrationTestSuite) TestAuxSigner() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			_, err := govtestutil.MsgSubmitProposal(
+			_, err := govtestutil.MsgSubmitLegacyProposal(
 				val.ClientCtx,
 				val.Address.String(),
 				"test",
@@ -1747,7 +1747,7 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			res, err := govtestutil.MsgSubmitProposal(
+			res, err := govtestutil.MsgSubmitLegacyProposal(
 				val.ClientCtx,
 				tipper.String(),
 				"test",

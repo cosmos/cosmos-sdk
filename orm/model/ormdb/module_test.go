@@ -3,6 +3,7 @@ package ormdb_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -15,6 +16,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormdb"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+	"github.com/cosmos/cosmos-sdk/orm/testing/ormtest"
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
 )
 
 // These tests use a simulated bank keeper. Addresses and balances use
@@ -41,7 +45,7 @@ func (k keeper) Send(ctx context.Context, from, to, denom string, amount uint64)
 
 func (k keeper) Mint(ctx context.Context, acct, denom string, amount uint64) error {
 	supply, err := k.store.SupplyStore().Get(ctx, denom)
-	if err != nil {
+	if err != nil && !ormerrors.IsNotFound(err) {
 		return err
 	}
 
@@ -66,10 +70,6 @@ func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) err
 		return err
 	}
 
-	if supply == nil {
-		return fmt.Errorf("no supply for %s", denom)
-	}
-
 	if amount > supply.Amount {
 		return fmt.Errorf("insufficient supply")
 	}
@@ -90,7 +90,11 @@ func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) err
 
 func (k keeper) Balance(ctx context.Context, acct, denom string) (uint64, error) {
 	balance, err := k.store.BalanceStore().Get(ctx, acct, denom)
-	if balance == nil {
+	if err != nil {
+		if ormerrors.IsNotFound(err) {
+			return 0, nil
+		}
+
 		return 0, err
 	}
 	return balance.Amount, err
@@ -99,6 +103,10 @@ func (k keeper) Balance(ctx context.Context, acct, denom string) (uint64, error)
 func (k keeper) Supply(ctx context.Context, denom string) (uint64, error) {
 	supply, err := k.store.SupplyStore().Get(ctx, denom)
 	if supply == nil {
+		if ormerrors.IsNotFound(err) {
+			return 0, nil
+		}
+
 		return 0, err
 	}
 	return supply.Amount, err
@@ -106,7 +114,7 @@ func (k keeper) Supply(ctx context.Context, denom string) (uint64, error) {
 
 func (k keeper) addBalance(ctx context.Context, acct, denom string, amount uint64) error {
 	balance, err := k.store.BalanceStore().Get(ctx, acct, denom)
-	if err != nil {
+	if err != nil && !ormerrors.IsNotFound(err) {
 		return err
 	}
 
@@ -128,10 +136,6 @@ func (k keeper) safeSubBalance(ctx context.Context, acct, denom string, amount u
 	balance, err := balanceStore.Get(ctx, acct, denom)
 	if err != nil {
 		return err
-	}
-
-	if balance == nil {
-		return fmt.Errorf("acct %x has no balance for %s", acct, denom)
 	}
 
 	if amount > balance.Amount {
@@ -157,14 +161,14 @@ func TestModuleDB(t *testing.T) {
 	db, err := ormdb.NewModuleDB(TestBankSchema, ormdb.ModuleDBOptions{})
 	assert.NilError(t, err)
 	debugBuf := &strings.Builder{}
-	store := testkv.NewDebugBackend(
-		testkv.NewSharedMemBackend(),
+	backend := ormtest.NewMemoryBackend()
+	ctx := ormtable.WrapContextDefault(testkv.NewDebugBackend(
+		backend,
 		&testkv.EntryCodecDebugger{
 			EntryCodec: db,
 			Print:      func(s string) { debugBuf.WriteString(s + "\n") },
 		},
-	)
-	ctx := ormtable.WrapContextDefault(store)
+	))
 
 	// create keeper
 	k, err := newKeeper(db)
@@ -205,7 +209,7 @@ func TestModuleDB(t *testing.T) {
 	golden.Assert(t, debugBuf.String(), "bank_scenario.golden")
 
 	// check decode & encode
-	it, err := store.CommitmentStore().Iterator(nil, nil)
+	it, err := backend.CommitmentStore().Iterator(nil, nil)
 	assert.NilError(t, err)
 	for it.Valid() {
 		entry, err := db.DecodeEntry(it.Key(), it.Value())
@@ -216,4 +220,33 @@ func TestModuleDB(t *testing.T) {
 		assert.Assert(t, bytes.Equal(v, it.Value()))
 		it.Next()
 	}
+
+	// check JSON
+	target := ormjson.NewRawMessageTarget()
+	assert.NilError(t, db.DefaultJSON(target))
+	rawJson, err := target.JSON()
+	assert.NilError(t, err)
+	golden.Assert(t, string(rawJson), "default_json.golden")
+
+	target = ormjson.NewRawMessageTarget()
+	assert.NilError(t, db.ExportJSON(ctx, target))
+	rawJson, err = target.JSON()
+	assert.NilError(t, err)
+
+	badJSON := `{
+  "testpb.Balance": 5,
+  "testpb.Supply": {}
+}
+`
+	source, err := ormjson.NewRawMessageSource(json.RawMessage(badJSON))
+	assert.NilError(t, err)
+	assert.ErrorIs(t, db.ValidateJSON(source), ormerrors.JSONValidationError)
+
+	backend2 := ormtest.NewMemoryBackend()
+	ctx2 := ormtable.WrapContextDefault(backend2)
+	source, err = ormjson.NewRawMessageSource(rawJson)
+	assert.NilError(t, err)
+	assert.NilError(t, db.ValidateJSON(source))
+	assert.NilError(t, db.ImportJSON(ctx2, source))
+	testkv.AssertBackendsEqual(t, backend, backend2)
 }

@@ -65,10 +65,62 @@ func (x *_ModuleDescriptor_2_list) IsValid() bool {
 	return x.list != nil
 }
 
+var _ protoreflect.List = (*_ModuleDescriptor_3_list)(nil)
+
+type _ModuleDescriptor_3_list struct {
+	list *[]*MigrateFromInfo
+}
+
+func (x *_ModuleDescriptor_3_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_ModuleDescriptor_3_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_ModuleDescriptor_3_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*MigrateFromInfo)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_ModuleDescriptor_3_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*MigrateFromInfo)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_ModuleDescriptor_3_list) AppendMutable() protoreflect.Value {
+	v := new(MigrateFromInfo)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_ModuleDescriptor_3_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_ModuleDescriptor_3_list) NewElement() protoreflect.Value {
+	v := new(MigrateFromInfo)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_ModuleDescriptor_3_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
-	md_ModuleDescriptor             protoreflect.MessageDescriptor
-	fd_ModuleDescriptor_go_import   protoreflect.FieldDescriptor
-	fd_ModuleDescriptor_use_package protoreflect.FieldDescriptor
+	md_ModuleDescriptor                  protoreflect.MessageDescriptor
+	fd_ModuleDescriptor_go_import        protoreflect.FieldDescriptor
+	fd_ModuleDescriptor_use_package      protoreflect.FieldDescriptor
+	fd_ModuleDescriptor_can_migrate_from protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -76,6 +128,7 @@ func init() {
 	md_ModuleDescriptor = File_cosmos_app_v1alpha1_module_proto.Messages().ByName("ModuleDescriptor")
 	fd_ModuleDescriptor_go_import = md_ModuleDescriptor.Fields().ByName("go_import")
 	fd_ModuleDescriptor_use_package = md_ModuleDescriptor.Fields().ByName("use_package")
+	fd_ModuleDescriptor_can_migrate_from = md_ModuleDescriptor.Fields().ByName("can_migrate_from")
 }
 
 var _ protoreflect.Message = (*fastReflection_ModuleDescriptor)(nil)
@@ -155,6 +208,12 @@ func (x *fastReflection_ModuleDescriptor) Range(f func(protoreflect.FieldDescrip
 			return
 		}
 	}
+	if len(x.CanMigrateFrom) != 0 {
+		value := protoreflect.ValueOfList(&_ModuleDescriptor_3_list{list: &x.CanMigrateFrom})
+		if !f(fd_ModuleDescriptor_can_migrate_from, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -174,6 +233,8 @@ func (x *fastReflection_ModuleDescriptor) Has(fd protoreflect.FieldDescriptor) b
 		return x.GoImport != ""
 	case "cosmos.app.v1alpha1.ModuleDescriptor.use_package":
 		return len(x.UsePackage) != 0
+	case "cosmos.app.v1alpha1.ModuleDescriptor.can_migrate_from":
+		return len(x.CanMigrateFrom) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.ModuleDescriptor"))
@@ -194,6 +255,8 @@ func (x *fastReflection_ModuleDescriptor) Clear(fd protoreflect.FieldDescriptor)
 		x.GoImport = ""
 	case "cosmos.app.v1alpha1.ModuleDescriptor.use_package":
 		x.UsePackage = nil
+	case "cosmos.app.v1alpha1.ModuleDescriptor.can_migrate_from":
+		x.CanMigrateFrom = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.ModuleDescriptor"))
@@ -218,6 +281,12 @@ func (x *fastReflection_ModuleDescriptor) Get(descriptor protoreflect.FieldDescr
 			return protoreflect.ValueOfList(&_ModuleDescriptor_2_list{})
 		}
 		listValue := &_ModuleDescriptor_2_list{list: &x.UsePackage}
+		return protoreflect.ValueOfList(listValue)
+	case "cosmos.app.v1alpha1.ModuleDescriptor.can_migrate_from":
+		if len(x.CanMigrateFrom) == 0 {
+			return protoreflect.ValueOfList(&_ModuleDescriptor_3_list{})
+		}
+		listValue := &_ModuleDescriptor_3_list{list: &x.CanMigrateFrom}
 		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
@@ -245,6 +314,10 @@ func (x *fastReflection_ModuleDescriptor) Set(fd protoreflect.FieldDescriptor, v
 		lv := value.List()
 		clv := lv.(*_ModuleDescriptor_2_list)
 		x.UsePackage = *clv.list
+	case "cosmos.app.v1alpha1.ModuleDescriptor.can_migrate_from":
+		lv := value.List()
+		clv := lv.(*_ModuleDescriptor_3_list)
+		x.CanMigrateFrom = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.ModuleDescriptor"))
@@ -271,6 +344,12 @@ func (x *fastReflection_ModuleDescriptor) Mutable(fd protoreflect.FieldDescripto
 		}
 		value := &_ModuleDescriptor_2_list{list: &x.UsePackage}
 		return protoreflect.ValueOfList(value)
+	case "cosmos.app.v1alpha1.ModuleDescriptor.can_migrate_from":
+		if x.CanMigrateFrom == nil {
+			x.CanMigrateFrom = []*MigrateFromInfo{}
+		}
+		value := &_ModuleDescriptor_3_list{list: &x.CanMigrateFrom}
+		return protoreflect.ValueOfList(value)
 	case "cosmos.app.v1alpha1.ModuleDescriptor.go_import":
 		panic(fmt.Errorf("field go_import of message cosmos.app.v1alpha1.ModuleDescriptor is not mutable"))
 	default:
@@ -291,6 +370,9 @@ func (x *fastReflection_ModuleDescriptor) NewField(fd protoreflect.FieldDescript
 	case "cosmos.app.v1alpha1.ModuleDescriptor.use_package":
 		list := []*PackageReference{}
 		return protoreflect.ValueOfList(&_ModuleDescriptor_2_list{list: &list})
+	case "cosmos.app.v1alpha1.ModuleDescriptor.can_migrate_from":
+		list := []*MigrateFromInfo{}
+		return protoreflect.ValueOfList(&_ModuleDescriptor_3_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.ModuleDescriptor"))
@@ -370,6 +452,12 @@ func (x *fastReflection_ModuleDescriptor) ProtoMethods() *protoiface.Methods {
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
+		if len(x.CanMigrateFrom) > 0 {
+			for _, e := range x.CanMigrateFrom {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -398,6 +486,22 @@ func (x *fastReflection_ModuleDescriptor) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.CanMigrateFrom) > 0 {
+			for iNdEx := len(x.CanMigrateFrom) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.CanMigrateFrom[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x1a
+			}
 		}
 		if len(x.UsePackage) > 0 {
 			for iNdEx := len(x.UsePackage) - 1; iNdEx >= 0; iNdEx-- {
@@ -534,6 +638,40 @@ func (x *fastReflection_ModuleDescriptor) ProtoMethods() *protoiface.Methods {
 				}
 				x.UsePackage = append(x.UsePackage, &PackageReference{})
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.UsePackage[len(x.UsePackage)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field CanMigrateFrom", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.CanMigrateFrom = append(x.CanMigrateFrom, &MigrateFromInfo{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.CanMigrateFrom[len(x.CanMigrateFrom)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -1040,6 +1178,426 @@ func (x *fastReflection_PackageReference) ProtoMethods() *protoiface.Methods {
 	}
 }
 
+var (
+	md_MigrateFromInfo        protoreflect.MessageDescriptor
+	fd_MigrateFromInfo_module protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_app_v1alpha1_module_proto_init()
+	md_MigrateFromInfo = File_cosmos_app_v1alpha1_module_proto.Messages().ByName("MigrateFromInfo")
+	fd_MigrateFromInfo_module = md_MigrateFromInfo.Fields().ByName("module")
+}
+
+var _ protoreflect.Message = (*fastReflection_MigrateFromInfo)(nil)
+
+type fastReflection_MigrateFromInfo MigrateFromInfo
+
+func (x *MigrateFromInfo) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MigrateFromInfo)(x)
+}
+
+func (x *MigrateFromInfo) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_app_v1alpha1_module_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MigrateFromInfo_messageType fastReflection_MigrateFromInfo_messageType
+var _ protoreflect.MessageType = fastReflection_MigrateFromInfo_messageType{}
+
+type fastReflection_MigrateFromInfo_messageType struct{}
+
+func (x fastReflection_MigrateFromInfo_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MigrateFromInfo)(nil)
+}
+func (x fastReflection_MigrateFromInfo_messageType) New() protoreflect.Message {
+	return new(fastReflection_MigrateFromInfo)
+}
+func (x fastReflection_MigrateFromInfo_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MigrateFromInfo
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MigrateFromInfo) Descriptor() protoreflect.MessageDescriptor {
+	return md_MigrateFromInfo
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MigrateFromInfo) Type() protoreflect.MessageType {
+	return _fastReflection_MigrateFromInfo_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MigrateFromInfo) New() protoreflect.Message {
+	return new(fastReflection_MigrateFromInfo)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MigrateFromInfo) Interface() protoreflect.ProtoMessage {
+	return (*MigrateFromInfo)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MigrateFromInfo) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Module != "" {
+		value := protoreflect.ValueOfString(x.Module)
+		if !f(fd_MigrateFromInfo_module, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MigrateFromInfo) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.app.v1alpha1.MigrateFromInfo.module":
+		return x.Module != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.MigrateFromInfo"))
+		}
+		panic(fmt.Errorf("message cosmos.app.v1alpha1.MigrateFromInfo does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MigrateFromInfo) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.app.v1alpha1.MigrateFromInfo.module":
+		x.Module = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.MigrateFromInfo"))
+		}
+		panic(fmt.Errorf("message cosmos.app.v1alpha1.MigrateFromInfo does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MigrateFromInfo) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.app.v1alpha1.MigrateFromInfo.module":
+		value := x.Module
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.MigrateFromInfo"))
+		}
+		panic(fmt.Errorf("message cosmos.app.v1alpha1.MigrateFromInfo does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MigrateFromInfo) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.app.v1alpha1.MigrateFromInfo.module":
+		x.Module = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.MigrateFromInfo"))
+		}
+		panic(fmt.Errorf("message cosmos.app.v1alpha1.MigrateFromInfo does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MigrateFromInfo) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.app.v1alpha1.MigrateFromInfo.module":
+		panic(fmt.Errorf("field module of message cosmos.app.v1alpha1.MigrateFromInfo is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.MigrateFromInfo"))
+		}
+		panic(fmt.Errorf("message cosmos.app.v1alpha1.MigrateFromInfo does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MigrateFromInfo) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.app.v1alpha1.MigrateFromInfo.module":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.app.v1alpha1.MigrateFromInfo"))
+		}
+		panic(fmt.Errorf("message cosmos.app.v1alpha1.MigrateFromInfo does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MigrateFromInfo) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.app.v1alpha1.MigrateFromInfo", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MigrateFromInfo) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MigrateFromInfo) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MigrateFromInfo) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MigrateFromInfo) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MigrateFromInfo)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Module)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MigrateFromInfo)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Module) > 0 {
+			i -= len(x.Module)
+			copy(dAtA[i:], x.Module)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Module)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MigrateFromInfo)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MigrateFromInfo: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MigrateFromInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Module", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Module = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -1060,7 +1618,7 @@ type ModuleDescriptor struct {
 	unknownFields protoimpl.UnknownFields
 
 	// go_import names the package that should be imported by an app to load the
-	// module in the module registry. Either go_import must be defined here
+	// module in the runtime module registry. Either go_import must be defined here
 	// or the go_package option must be defined at the file level to indicate
 	// to users where to location the module implementation. go_import takes
 	// precedence over go_package when both are defined.
@@ -1070,6 +1628,14 @@ type ModuleDescriptor struct {
 	// or own a single protobuf package. It is assumed that the module uses
 	// all of the .proto files in a single package.
 	UsePackage []*PackageReference `protobuf:"bytes,2,rep,name=use_package,json=usePackage,proto3" json:"use_package,omitempty"`
+	// can_migrate_from defines which module versions this module can migrate
+	// state from. The framework will check that one module version is able to
+	// migrate from a previous module version before attempting to update its
+	// config. It is assumed that modules can transitively migrate from earlier
+	// versions. For instance if v3 declares it can migrate from v2, and v2
+	// declares it can migrate from v1, the framework knows how to migrate
+	// from v1 to v3, assuming all 3 module versions are registered at runtime.
+	CanMigrateFrom []*MigrateFromInfo `protobuf:"bytes,3,rep,name=can_migrate_from,json=canMigrateFrom,proto3" json:"can_migrate_from,omitempty"`
 }
 
 func (x *ModuleDescriptor) Reset() {
@@ -1106,6 +1672,13 @@ func (x *ModuleDescriptor) GetUsePackage() []*PackageReference {
 	return nil
 }
 
+func (x *ModuleDescriptor) GetCanMigrateFrom() []*MigrateFromInfo {
+	if x != nil {
+		return x.CanMigrateFrom
+	}
+	return nil
+}
+
 // PackageReference is a reference to a protobuf package used by a module.
 type PackageReference struct {
 	state         protoimpl.MessageState
@@ -1135,16 +1708,20 @@ type PackageReference struct {
 	// in the pinned descriptor which do not have
 	// a "Since Revision N" comment or have a "Since Revision N" comment where
 	// N is <= to the revision specified here. This indicates that the protobuf
-	// files have been updated, but the pinned file descriptor hasn't. This behavior
-	// ensures that:
-	// * pinned proto images are up-to-date
-	// * protobuf files are carefully annotated with revision comments which
-	//   are important good client UX
+	// files have been updated, but the pinned file descriptor hasn't.
 	//
 	// If there are items in the pinned file descriptor with a revision
 	// greater than the value indicated here, this will also cause a panic
 	// as it may mean that the pinned descriptor for a legacy module has been
 	// improperly updated or that there is some other versioning discrepancy.
+	// Runtime protobuf definitions will also be checked for compatibility
+	// with pinned file descriptors to make sure there are no incompatible changes.
+	//
+	// This behavior ensures that:
+	// * pinned proto images are up-to-date
+	// * protobuf files are carefully annotated with revision comments which
+	//   are important good client UX
+	// * protobuf files are changed in backwards and forwards compatible ways
 	Revision uint32 `protobuf:"varint,2,opt,name=revision,proto3" json:"revision,omitempty"`
 }
 
@@ -1182,6 +1759,45 @@ func (x *PackageReference) GetRevision() uint32 {
 	return 0
 }
 
+// MigrateFromInfo is information on a module version that a newer module
+// can migrate from.
+type MigrateFromInfo struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// module is the fully-qualified protobuf name of the module config object
+	// for the previous module version, ex: "cosmos.group.module.v1.Module".
+	Module string `protobuf:"bytes,1,opt,name=module,proto3" json:"module,omitempty"`
+}
+
+func (x *MigrateFromInfo) Reset() {
+	*x = MigrateFromInfo{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_app_v1alpha1_module_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MigrateFromInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MigrateFromInfo) ProtoMessage() {}
+
+// Deprecated: Use MigrateFromInfo.ProtoReflect.Descriptor instead.
+func (*MigrateFromInfo) Descriptor() ([]byte, []int) {
+	return file_cosmos_app_v1alpha1_module_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *MigrateFromInfo) GetModule() string {
+	if x != nil {
+		return x.Module
+	}
+	return ""
+}
+
 var file_cosmos_app_v1alpha1_module_proto_extTypes = []protoimpl.ExtensionInfo{
 	{
 		ExtendedType:  (*descriptorpb.MessageOptions)(nil),
@@ -1197,6 +1813,11 @@ var file_cosmos_app_v1alpha1_module_proto_extTypes = []protoimpl.ExtensionInfo{
 var (
 	// is_module indicates that this proto type is a config object for an app module
 	// and optionally provides other descriptive information about the module.
+	// It is recommended that a new module config object and go module is versioned
+	// for every state machine breaking version of a module. The recommended
+	// pattern for doing this is to put module config objects in a separate proto
+	// package from the API they expose. Ex: the cosmos.group.v1 API would be
+	// exposed by module configs cosmos.group.module.v1, cosmos.group.module.v2, etc.
 	//
 	// optional cosmos.app.v1alpha1.ModuleDescriptor is_module = 57193479;
 	E_IsModule = &file_cosmos_app_v1alpha1_module_proto_extTypes[0]
@@ -1210,39 +1831,47 @@ var file_cosmos_app_v1alpha1_module_proto_rawDesc = []byte{
 	0x74, 0x6f, 0x12, 0x13, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x76,
 	0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x1a, 0x20, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70,
-	0x74, 0x6f, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x77, 0x0a, 0x10, 0x4d, 0x6f, 0x64,
-	0x75, 0x6c, 0x65, 0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x12, 0x1b, 0x0a,
-	0x09, 0x67, 0x6f, 0x5f, 0x69, 0x6d, 0x70, 0x6f, 0x72, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x08, 0x67, 0x6f, 0x49, 0x6d, 0x70, 0x6f, 0x72, 0x74, 0x12, 0x46, 0x0a, 0x0b, 0x75, 0x73,
-	0x65, 0x5f, 0x70, 0x61, 0x63, 0x6b, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32,
-	0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x76, 0x31, 0x61,
-	0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x63, 0x6b, 0x61, 0x67, 0x65, 0x52, 0x65, 0x66,
-	0x65, 0x72, 0x65, 0x6e, 0x63, 0x65, 0x52, 0x0a, 0x75, 0x73, 0x65, 0x50, 0x61, 0x63, 0x6b, 0x61,
-	0x67, 0x65, 0x22, 0x42, 0x0a, 0x10, 0x50, 0x61, 0x63, 0x6b, 0x61, 0x67, 0x65, 0x52, 0x65, 0x66,
-	0x65, 0x72, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65,
-	0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x72, 0x65,
-	0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x3a, 0x66, 0x0a, 0x09, 0x69, 0x73, 0x5f, 0x6d, 0x6f, 0x64,
-	0x75, 0x6c, 0x65, 0x12, 0x1f, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x4f, 0x70, 0x74,
-	0x69, 0x6f, 0x6e, 0x73, 0x18, 0x87, 0xe8, 0xa2, 0x1b, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x25, 0x2e,
+	0x74, 0x6f, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xc7, 0x01, 0x0a, 0x10, 0x4d, 0x6f,
+	0x64, 0x75, 0x6c, 0x65, 0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x12, 0x1b,
+	0x0a, 0x09, 0x67, 0x6f, 0x5f, 0x69, 0x6d, 0x70, 0x6f, 0x72, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x08, 0x67, 0x6f, 0x49, 0x6d, 0x70, 0x6f, 0x72, 0x74, 0x12, 0x46, 0x0a, 0x0b, 0x75,
+	0x73, 0x65, 0x5f, 0x70, 0x61, 0x63, 0x6b, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x76, 0x31,
+	0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x63, 0x6b, 0x61, 0x67, 0x65, 0x52, 0x65,
+	0x66, 0x65, 0x72, 0x65, 0x6e, 0x63, 0x65, 0x52, 0x0a, 0x75, 0x73, 0x65, 0x50, 0x61, 0x63, 0x6b,
+	0x61, 0x67, 0x65, 0x12, 0x4e, 0x0a, 0x10, 0x63, 0x61, 0x6e, 0x5f, 0x6d, 0x69, 0x67, 0x72, 0x61,
+	0x74, 0x65, 0x5f, 0x66, 0x72, 0x6f, 0x6d, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x24, 0x2e,
 	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70,
-	0x68, 0x61, 0x31, 0x2e, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x44, 0x65, 0x73, 0x63, 0x72, 0x69,
-	0x70, 0x74, 0x6f, 0x72, 0x52, 0x08, 0x69, 0x73, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x42, 0xd6,
-	0x01, 0x0a, 0x17, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x70,
-	0x70, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x42, 0x0b, 0x4d, 0x6f, 0x64, 0x75,
-	0x6c, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x40, 0x67, 0x69, 0x74, 0x68, 0x75,
-	0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2f, 0x61, 0x70, 0x70, 0x2f, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x3b,
-	0x61, 0x70, 0x70, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x41,
-	0x58, 0xaa, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x70, 0x70, 0x2e, 0x56,
-	0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x5c, 0x41, 0x70, 0x70, 0x5c, 0x56, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0xe2, 0x02, 0x1f,
-	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x70, 0x70, 0x5c, 0x56, 0x31, 0x61, 0x6c, 0x70,
-	0x68, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea,
-	0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x70, 0x70, 0x3a, 0x3a, 0x56,
-	0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x68, 0x61, 0x31, 0x2e, 0x4d, 0x69, 0x67, 0x72, 0x61, 0x74, 0x65, 0x46, 0x72, 0x6f, 0x6d, 0x49,
+	0x6e, 0x66, 0x6f, 0x52, 0x0e, 0x63, 0x61, 0x6e, 0x4d, 0x69, 0x67, 0x72, 0x61, 0x74, 0x65, 0x46,
+	0x72, 0x6f, 0x6d, 0x22, 0x42, 0x0a, 0x10, 0x50, 0x61, 0x63, 0x6b, 0x61, 0x67, 0x65, 0x52, 0x65,
+	0x66, 0x65, 0x72, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x72,
+	0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x72,
+	0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x22, 0x29, 0x0a, 0x0f, 0x4d, 0x69, 0x67, 0x72, 0x61,
+	0x74, 0x65, 0x46, 0x72, 0x6f, 0x6d, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x16, 0x0a, 0x06, 0x6d, 0x6f,
+	0x64, 0x75, 0x6c, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x6d, 0x6f, 0x64, 0x75,
+	0x6c, 0x65, 0x3a, 0x66, 0x0a, 0x09, 0x69, 0x73, 0x5f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x12,
+	0x1f, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
+	0x66, 0x2e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73,
+	0x18, 0x87, 0xe8, 0xa2, 0x1b, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e,
+	0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72,
+	0x52, 0x08, 0x69, 0x73, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x42, 0xd6, 0x01, 0x0a, 0x17, 0x63,
+	0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x76, 0x31,
+	0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x42, 0x0b, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x50, 0x72,
+	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x40, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f,
+	0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d,
+	0x73, 0x64, 0x6b, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61,
+	0x70, 0x70, 0x2f, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x3b, 0x61, 0x70, 0x70, 0x76,
+	0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x41, 0x58, 0xaa, 0x02, 0x13,
+	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x70, 0x70, 0x2e, 0x56, 0x31, 0x61, 0x6c, 0x70,
+	0x68, 0x61, 0x31, 0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x70, 0x70,
+	0x5c, 0x56, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x5c, 0x41, 0x70, 0x70, 0x5c, 0x56, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x5c,
+	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x70, 0x70, 0x3a, 0x3a, 0x56, 0x31, 0x61, 0x6c, 0x70,
+	0x68, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1257,21 +1886,23 @@ func file_cosmos_app_v1alpha1_module_proto_rawDescGZIP() []byte {
 	return file_cosmos_app_v1alpha1_module_proto_rawDescData
 }
 
-var file_cosmos_app_v1alpha1_module_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_cosmos_app_v1alpha1_module_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_cosmos_app_v1alpha1_module_proto_goTypes = []interface{}{
 	(*ModuleDescriptor)(nil),            // 0: cosmos.app.v1alpha1.ModuleDescriptor
 	(*PackageReference)(nil),            // 1: cosmos.app.v1alpha1.PackageReference
-	(*descriptorpb.MessageOptions)(nil), // 2: google.protobuf.MessageOptions
+	(*MigrateFromInfo)(nil),             // 2: cosmos.app.v1alpha1.MigrateFromInfo
+	(*descriptorpb.MessageOptions)(nil), // 3: google.protobuf.MessageOptions
 }
 var file_cosmos_app_v1alpha1_module_proto_depIdxs = []int32{
 	1, // 0: cosmos.app.v1alpha1.ModuleDescriptor.use_package:type_name -> cosmos.app.v1alpha1.PackageReference
-	2, // 1: cosmos.app.v1alpha1.is_module:extendee -> google.protobuf.MessageOptions
-	0, // 2: cosmos.app.v1alpha1.is_module:type_name -> cosmos.app.v1alpha1.ModuleDescriptor
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	2, // [2:3] is the sub-list for extension type_name
-	1, // [1:2] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	2, // 1: cosmos.app.v1alpha1.ModuleDescriptor.can_migrate_from:type_name -> cosmos.app.v1alpha1.MigrateFromInfo
+	3, // 2: cosmos.app.v1alpha1.is_module:extendee -> google.protobuf.MessageOptions
+	0, // 3: cosmos.app.v1alpha1.is_module:type_name -> cosmos.app.v1alpha1.ModuleDescriptor
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	3, // [3:4] is the sub-list for extension type_name
+	2, // [2:3] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_app_v1alpha1_module_proto_init() }
@@ -1304,6 +1935,18 @@ func file_cosmos_app_v1alpha1_module_proto_init() {
 				return nil
 			}
 		}
+		file_cosmos_app_v1alpha1_module_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MigrateFromInfo); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1311,7 +1954,7 @@ func file_cosmos_app_v1alpha1_module_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_app_v1alpha1_module_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   3,
 			NumExtensions: 1,
 			NumServices:   0,
 		},

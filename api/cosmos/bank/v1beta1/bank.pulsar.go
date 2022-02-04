@@ -3,17 +3,19 @@ package bankv1beta1
 
 import (
 	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
-	v1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/v1beta1"
-	_ "github.com/cosmos/cosmos-sdk/api/cosmos/msg/v1"
 	_ "github.com/gogo/protobuf/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	io "io"
-	reflect "reflect"
-	sync "sync"
+
+	v1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/v1beta1"
+	_ "github.com/cosmos/cosmos-sdk/api/cosmos/msg/v1"
 )
 
 var _ protoreflect.List = (*_Params_1_list)(nil)
@@ -4498,12 +4500,12 @@ type Metadata struct {
 	Symbol string `protobuf:"bytes,6,opt,name=symbol,proto3" json:"symbol,omitempty"`
 	// URI to a document (on or off-chain) that contains additional information. Optional.
 	//
-	// Since: cosmos-sdk 0.45
+	// Since: cosmos-sdk 0.46
 	Uri string `protobuf:"bytes,7,opt,name=uri,proto3" json:"uri,omitempty"`
 	// URIHash is a sha256 hash of a document pointed by URI. It's used to verify that
 	// the document didn't change. Optional.
 	//
-	// Since: cosmos-sdk 0.45
+	// Since: cosmos-sdk 0.46
 	UriHash string `protobuf:"bytes,8,opt,name=uri_hash,json=uriHash,proto3" json:"uri_hash,omitempty"`
 }
 

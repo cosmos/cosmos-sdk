@@ -1524,7 +1524,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 
 	validTxFileName := getTxSendFileName(s, s.groupPolicies[1].Address, val.Address.String())
 	for i := 0; i < 2; i++ {
-		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateProposalCmd(),
+		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
 			append(
 				[]string{
 					s.groupPolicies[1].Address,
@@ -1648,7 +1648,7 @@ func (s *IntegrationTestSuite) getProposalIdFromTxResponse(txResp sdk.TxResponse
 	s.Require().Greater(len(txResp.Logs), 0)
 	s.Require().NotNil(txResp.Logs[0].Events)
 	events := txResp.Logs[0].Events
-	createProposalEvent, _ := sdk.TypedEventToEvent(&group.EventCreateProposal{})
+	createProposalEvent, _ := sdk.TypedEventToEvent(&group.EventSubmitProposal{})
 
 	for _, e := range events {
 		if e.Type == createProposalEvent.Type {

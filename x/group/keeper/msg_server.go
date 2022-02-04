@@ -496,7 +496,7 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawPr
 	}
 
 	// Ensure the proposal can be withdrawn.
-	if proposal.Status != group.ProposalStatusSubmitted {
+	if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED {
 		return nil, sdkerrors.Wrapf(errors.ErrInvalid, "cannot withdraw a proposal with the status of %s", proposal.Status.String())
 	}
 
@@ -519,8 +519,8 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawPr
 			return nil, err
 		}
 
-		proposal.Result = group.ProposalResultUnfinalized
-		proposal.Status = group.ProposalStatusWithdrawn
+		proposal.Result = group.PROPOSAL_RESULT_UNFINALIZED
+		proposal.Status = group.PROPOSAL_STATUS_WITHDRAWN
 		return storeUpdates()
 	}
 
@@ -542,8 +542,8 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawPr
 		return nil, err
 	}
 
-	proposal.Result = group.ProposalResultUnfinalized
-	proposal.Status = group.ProposalStatusWithdrawn
+	proposal.Result = group.PROPOSAL_RESULT_UNFINALIZED
+	proposal.Status = group.PROPOSAL_STATUS_WITHDRAWN
 	return storeUpdates()
 }
 

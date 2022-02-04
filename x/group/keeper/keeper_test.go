@@ -1383,7 +1383,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 	}
 
 	proposers := []string{addr2.String()}
-	proposalID := createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+	proposalID := submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 
 	specs := map[string]struct {
 		preRun     func(sdkCtx sdk.Context) uint64
@@ -1393,7 +1393,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 	}{
 		"wrong admin": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				return submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 			},
 			admin:     addr5.String(),
 			expErrMsg: "unauthorized",
@@ -1407,14 +1407,14 @@ func (s *TestSuite) TestWithdrawProposal() {
 		},
 		"happy case with proposer": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				return submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 			},
 			proposalId: proposalID,
 			admin:      proposers[0],
 		},
 		"already closed proposal": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				pId := createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				pId := submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 				_, err := s.keeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
 					ProposalId: pId,
 					Address:    proposers[0],
@@ -1428,7 +1428,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 		},
 		"happy case with group admin address": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				return submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 			},
 			proposalId: proposalID,
 			admin:      groupPolicy.String(),
@@ -1453,7 +1453,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 			s.Require().NoError(err)
 			resp, err := s.keeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: pId})
 			s.Require().NoError(err)
-			s.Require().Equal(resp.GetProposal().Status, group.ProposalStatusWithdrawn)
+			s.Require().Equal(resp.GetProposal().Status, group.PROPOSAL_STATUS_WITHDRAWN)
 		})
 	}
 }
@@ -1862,7 +1862,7 @@ func (s *TestSuite) TestVote() {
 			s.Assert().Equal(spec.req.Voter, loaded.Voter)
 			s.Assert().Equal(spec.req.Option, loaded.Option)
 			s.Assert().Equal(spec.req.Metadata, loaded.Metadata)
-			s.Assert().Equal(s.blockTime, loaded.SubmittedAt)
+			s.Assert().Equal(s.blockTime, loaded.SubmitTime)
 
 			// query votes by proposal
 			votesByProposalRes, err := s.keeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{
@@ -1876,7 +1876,7 @@ func (s *TestSuite) TestVote() {
 			s.Assert().Equal(spec.req.Voter, vote.Voter)
 			s.Assert().Equal(spec.req.Option, vote.Option)
 			s.Assert().Equal(spec.req.Metadata, vote.Metadata)
-			s.Assert().Equal(s.blockTime, vote.SubmittedAt)
+			s.Assert().Equal(s.blockTime, vote.SubmitTime)
 
 			// query votes by voter
 			voter := spec.req.Voter
@@ -1890,7 +1890,7 @@ func (s *TestSuite) TestVote() {
 			s.Assert().Equal(voter, votesByVoter[0].Voter)
 			s.Assert().Equal(spec.req.Option, votesByVoter[0].Option)
 			s.Assert().Equal(spec.req.Metadata, votesByVoter[0].Metadata)
-			s.Assert().Equal(s.blockTime, votesByVoter[0].SubmittedAt)
+			s.Assert().Equal(s.blockTime, votesByVoter[0].SubmitTime)
 
 			// and proposal is updated
 			proposalRes, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{

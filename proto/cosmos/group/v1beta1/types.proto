@@ -175,8 +175,8 @@ message Proposal {
   // proposal can not be executed anymore and should be considered pending delete.
   google.protobuf.Timestamp timeout = 11 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 
-  // PROPOSAL_EXECUTOR_RESULT is the final result based on the votes and election rule. Initial value is NotRun.
-  ProposalExecutorResult PROPOSAL_EXECUTOR_RESULT = 12;
+  // executor_result is the final result based on the votes and election rule. Initial value is NotRun.
+  ProposalExecutorResult executor_result = 12;
 
   // messages is a list of Msgs that will be executed if the proposal passes.
   repeated google.protobuf.Any messages = 13;
@@ -201,7 +201,6 @@ enum ProposalStatus {
   // A proposal can be deleted before the voting start time by the owner. When this happens the final status
   // is Withdrawn.
   PROPOSAL_STATUS_WITHDRAWN = 4;
-  }
 }
 
 // ProposalResult defines types of proposal results.

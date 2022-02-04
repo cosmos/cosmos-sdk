@@ -38,15 +38,10 @@ type MsgClient interface {
 	UpdateGroupPolicyDecisionPolicy(ctx context.Context, in *MsgUpdateGroupPolicyDecisionPolicy, opts ...grpc.CallOption) (*MsgUpdateGroupPolicyDecisionPolicyResponse, error)
 	// UpdateGroupPolicyMetadata updates a group policy metadata.
 	UpdateGroupPolicyMetadata(ctx context.Context, in *MsgUpdateGroupPolicyMetadata, opts ...grpc.CallOption) (*MsgUpdateGroupPolicyMetadataResponse, error)
-<<<<<<< HEAD
 	// SubmitProposal submits a new proposal.
 	SubmitProposal(ctx context.Context, in *MsgSubmitProposal, opts ...grpc.CallOption) (*MsgSubmitProposalResponse, error)
-=======
-	// CreateProposal submits a new proposal.
-	CreateProposal(ctx context.Context, in *MsgCreateProposal, opts ...grpc.CallOption) (*MsgCreateProposalResponse, error)
 	// WithdrawProposal aborts a proposal.
 	WithdrawProposal(ctx context.Context, in *MsgWithdrawProposal, opts ...grpc.CallOption) (*MsgWithdrawProposalResponse, error)
->>>>>>> a7fb1a1d5131eb18c676c2ce0bcbad02bd4c6413
 	// Vote allows a voter to vote on a proposal.
 	Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error)
 	// Exec executes a proposal.
@@ -189,15 +184,10 @@ type MsgServer interface {
 	UpdateGroupPolicyDecisionPolicy(context.Context, *MsgUpdateGroupPolicyDecisionPolicy) (*MsgUpdateGroupPolicyDecisionPolicyResponse, error)
 	// UpdateGroupPolicyMetadata updates a group policy metadata.
 	UpdateGroupPolicyMetadata(context.Context, *MsgUpdateGroupPolicyMetadata) (*MsgUpdateGroupPolicyMetadataResponse, error)
-<<<<<<< HEAD
 	// SubmitProposal submits a new proposal.
 	SubmitProposal(context.Context, *MsgSubmitProposal) (*MsgSubmitProposalResponse, error)
-=======
-	// CreateProposal submits a new proposal.
-	CreateProposal(context.Context, *MsgCreateProposal) (*MsgCreateProposalResponse, error)
 	// WithdrawProposal aborts a proposal.
 	WithdrawProposal(context.Context, *MsgWithdrawProposal) (*MsgWithdrawProposalResponse, error)
->>>>>>> a7fb1a1d5131eb18c676c2ce0bcbad02bd4c6413
 	// Vote allows a voter to vote on a proposal.
 	Vote(context.Context, *MsgVote) (*MsgVoteResponse, error)
 	// Exec executes a proposal.

@@ -3658,16 +3658,10 @@ var file_cosmos_group_v1beta1_events_proto_goTypes = []interface{}{
 	(*EventUpdateGroup)(nil),       // 1: cosmos.group.v1beta1.EventUpdateGroup
 	(*EventCreateGroupPolicy)(nil), // 2: cosmos.group.v1beta1.EventCreateGroupPolicy
 	(*EventUpdateGroupPolicy)(nil), // 3: cosmos.group.v1beta1.EventUpdateGroupPolicy
-<<<<<<< HEAD
 	(*EventSubmitProposal)(nil),    // 4: cosmos.group.v1beta1.EventSubmitProposal
-	(*EventVote)(nil),              // 5: cosmos.group.v1beta1.EventVote
-	(*EventExec)(nil),              // 6: cosmos.group.v1beta1.EventExec
-=======
-	(*EventCreateProposal)(nil),    // 4: cosmos.group.v1beta1.EventCreateProposal
 	(*EventWithdrawProposal)(nil),  // 5: cosmos.group.v1beta1.EventWithdrawProposal
 	(*EventVote)(nil),              // 6: cosmos.group.v1beta1.EventVote
 	(*EventExec)(nil),              // 7: cosmos.group.v1beta1.EventExec
->>>>>>> a7fb1a1d5131eb18c676c2ce0bcbad02bd4c6413
 }
 var file_cosmos_group_v1beta1_events_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type

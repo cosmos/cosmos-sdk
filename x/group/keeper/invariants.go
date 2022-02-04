@@ -46,7 +46,7 @@ func GroupTotalWeightInvariant(keeper Keeper) sdk.Invariant {
 	}
 }
 
-// TallyVotesSumInvariant checks that proposal VoteState must correspond to the vote option.
+// TallyVotesSumInvariant checks that proposal FinalTallyResult must correspond to the vote option.
 func TallyVotesSumInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		msg, broken := TallyVotesSumInvariantHelper(ctx, keeper.key, keeper.groupTable, keeper.proposalTable, keeper.groupMemberTable, keeper.voteByProposalIndex, keeper.groupPolicyTable)
@@ -87,42 +87,42 @@ func TallyVotesInvariantHelper(ctx sdk.Context, prevCtx sdk.Context, key storety
 
 	for i := 0; i < len(prevProposals); i++ {
 		if prevProposals[i].ProposalId == curProposals[i].ProposalId {
-			prevYesCount, err := prevProposals[i].VoteState.GetYesCount()
+			prevYesCount, err := prevProposals[i].FinalTallyResult.GetYesCount()
 			if err != nil {
 				msg += fmt.Sprintf("error while getting yes votes weight of proposal at block height %d\n%v\n", prevCtx.BlockHeight(), err)
 				return msg, broken
 			}
-			curYesCount, err := curProposals[i].VoteState.GetYesCount()
+			curYesCount, err := curProposals[i].FinalTallyResult.GetYesCount()
 			if err != nil {
 				msg += fmt.Sprintf("error while getting yes votes weight of proposal at block height %d\n%v\n", ctx.BlockHeight(), err)
 				return msg, broken
 			}
-			prevNoCount, err := prevProposals[i].VoteState.GetNoCount()
+			prevNoCount, err := prevProposals[i].FinalTallyResult.GetNoCount()
 			if err != nil {
 				msg += fmt.Sprintf("error while getting no votes weight of proposal at block height %d\n%v\n", prevCtx.BlockHeight(), err)
 				return msg, broken
 			}
-			curNoCount, err := curProposals[i].VoteState.GetNoCount()
+			curNoCount, err := curProposals[i].FinalTallyResult.GetNoCount()
 			if err != nil {
 				msg += fmt.Sprintf("error while getting no votes weight of proposal at block height %d\n%v\n", ctx.BlockHeight(), err)
 				return msg, broken
 			}
-			prevAbstainCount, err := prevProposals[i].VoteState.GetAbstainCount()
+			prevAbstainCount, err := prevProposals[i].FinalTallyResult.GetAbstainCount()
 			if err != nil {
 				msg += fmt.Sprintf("error while getting abstain votes weight of proposal at block height %d\n%v\n", prevCtx.BlockHeight(), err)
 				return msg, broken
 			}
-			curAbstainCount, err := curProposals[i].VoteState.GetAbstainCount()
+			curAbstainCount, err := curProposals[i].FinalTallyResult.GetAbstainCount()
 			if err != nil {
 				msg += fmt.Sprintf("error while getting abstain votes weight of proposal at block height %d\n%v\n", ctx.BlockHeight(), err)
 				return msg, broken
 			}
-			prevVetoCount, err := prevProposals[i].VoteState.GetVetoCount()
+			prevVetoCount, err := prevProposals[i].FinalTallyResult.GetNoWithVetoCount()
 			if err != nil {
 				msg += fmt.Sprintf("error while getting veto votes weight of proposal at block height %d\n%v\n", prevCtx.BlockHeight(), err)
 				return msg, broken
 			}
-			curVetoCount, err := curProposals[i].VoteState.GetVetoCount()
+			curVetoCount, err := curProposals[i].FinalTallyResult.GetNoWithVetoCount()
 			if err != nil {
 				msg += fmt.Sprintf("error while getting veto votes weight of proposal at block height %d\n%v\n", ctx.BlockHeight(), err)
 				return msg, broken
@@ -331,27 +331,27 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, grou
 			}
 		}
 
-		totalProposalVotes, err := proposal.VoteState.TotalCounts()
+		totalProposalVotes, err := proposal.FinalTallyResult.TotalCounts()
 		if err != nil {
 			msg += fmt.Sprintf("error while getting total weighted votes of proposal with ID %d\n%v\n", proposal.ProposalId, err)
 			return msg, broken
 		}
-		proposalYesCount, err := proposal.VoteState.GetYesCount()
+		proposalYesCount, err := proposal.FinalTallyResult.GetYesCount()
 		if err != nil {
 			msg += fmt.Sprintf("error while getting the weighted sum of yes votes for proposal with ID %d\n%v\n", proposal.ProposalId, err)
 			return msg, broken
 		}
-		proposalNoCount, err := proposal.VoteState.GetNoCount()
+		proposalNoCount, err := proposal.FinalTallyResult.GetNoCount()
 		if err != nil {
 			msg += fmt.Sprintf("error while getting the weighted sum of no votes for proposal with ID %d\n%v\n", proposal.ProposalId, err)
 			return msg, broken
 		}
-		proposalAbstainCount, err := proposal.VoteState.GetAbstainCount()
+		proposalAbstainCount, err := proposal.FinalTallyResult.GetAbstainCount()
 		if err != nil {
 			msg += fmt.Sprintf("error while getting the weighted sum of abstain votes for proposal with ID %d\n%v\n", proposal.ProposalId, err)
 			return msg, broken
 		}
-		proposalVetoCount, err := proposal.VoteState.GetVetoCount()
+		proposalVetoCount, err := proposal.FinalTallyResult.GetNoWithVetoCount()
 		if err != nil {
 			msg += fmt.Sprintf("error while getting the weighted sum of veto votes for proposal with ID %d\n%v\n", proposal.ProposalId, err)
 			return msg, broken
@@ -359,13 +359,13 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, grou
 
 		if totalProposalVotes.Cmp(totalVotingWeight) != 0 {
 			broken = true
-			msg += fmt.Sprintf("proposal VoteState must correspond to the sum of votes weights\nProposal with ID %d has total proposal votes %s, but got sum of votes weights %s\n", proposal.ProposalId, totalProposalVotes.String(), totalVotingWeight.String())
+			msg += fmt.Sprintf("proposal FinalTallyResult must correspond to the sum of votes weights\nProposal with ID %d has total proposal votes %s, but got sum of votes weights %s\n", proposal.ProposalId, totalProposalVotes.String(), totalVotingWeight.String())
 			break
 		}
 
 		if (yesVoteWeight.Cmp(proposalYesCount) != 0) || (noVoteWeight.Cmp(proposalNoCount) != 0) || (abstainVoteWeight.Cmp(proposalAbstainCount) != 0) || (vetoVoteWeight.Cmp(proposalVetoCount) != 0) {
 			broken = true
-			msg += fmt.Sprintf("proposal VoteState must correspond to the vote option\nProposal with ID %d and voter address %s must correspond to the vote option\n", proposal.ProposalId, vote.Voter)
+			msg += fmt.Sprintf("proposal FinalTallyResult must correspond to the vote option\nProposal with ID %d and voter address %s must correspond to the vote option\n", proposal.ProposalId, vote.Voter)
 			break
 		}
 	}

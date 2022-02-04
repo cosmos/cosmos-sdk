@@ -32,7 +32,7 @@ type DecisionPolicy interface {
 
 	ValidateBasic() error
 	GetTimeout() time.Duration
-	Allow(tally Tally, totalPower string, votingDuration time.Duration) (DecisionPolicyResult, error)
+	Allow(tallyResult TallyResult, totalPower string, votingDuration time.Duration) (DecisionPolicyResult, error)
 	Validate(g GroupInfo) error
 }
 
@@ -57,8 +57,8 @@ func (p ThresholdDecisionPolicy) ValidateBasic() error {
 	return nil
 }
 
-// Allow allows a proposal to pass when the tally of yes votes equals or exceeds the threshold before the timeout.
-func (p ThresholdDecisionPolicy) Allow(tally Tally, totalPower string, votingDuration time.Duration) (DecisionPolicyResult, error) {
+// Allow allows a proposal to pass when the tallyResult of yes votes equals or exceeds the threshold before the timeout.
+func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower string, votingDuration time.Duration) (DecisionPolicyResult, error) {
 	pTimeout := types.DurationProto(p.Timeout)
 	timeout, err := types.DurationFromProto(pTimeout)
 	if err != nil {
@@ -72,7 +72,7 @@ func (p ThresholdDecisionPolicy) Allow(tally Tally, totalPower string, votingDur
 	if err != nil {
 		return DecisionPolicyResult{}, err
 	}
-	yesCount, err := math.NewNonNegativeDecFromString(tally.YesCount)
+	yesCount, err := math.NewNonNegativeDecFromString(tallyResult.Yes)
 	if err != nil {
 		return DecisionPolicyResult{}, err
 	}
@@ -84,7 +84,7 @@ func (p ThresholdDecisionPolicy) Allow(tally Tally, totalPower string, votingDur
 	if err != nil {
 		return DecisionPolicyResult{}, err
 	}
-	totalCounts, err := tally.TotalCounts()
+	totalCounts, err := tallyResult.TotalCounts()
 	if err != nil {
 		return DecisionPolicyResult{}, err
 	}
@@ -264,21 +264,21 @@ func (p Proposal) ValidateBasic() error {
 	if p.GroupPolicyVersion == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal group policy version")
 	}
-	_, err = p.VoteState.GetYesCount()
+	_, err = p.FinalTallyResult.GetYesCount()
 	if err != nil {
-		return sdkerrors.Wrap(err, "proposal VoteState yes count")
+		return sdkerrors.Wrap(err, "proposal FinalTallyResult yes count")
 	}
-	_, err = p.VoteState.GetNoCount()
+	_, err = p.FinalTallyResult.GetNoCount()
 	if err != nil {
-		return sdkerrors.Wrap(err, "proposal VoteState no count")
+		return sdkerrors.Wrap(err, "proposal FinalTallyResult no count")
 	}
-	_, err = p.VoteState.GetAbstainCount()
+	_, err = p.FinalTallyResult.GetAbstainCount()
 	if err != nil {
-		return sdkerrors.Wrap(err, "proposal VoteState abstain count")
+		return sdkerrors.Wrap(err, "proposal FinalTallyResult abstain count")
 	}
-	_, err = p.VoteState.GetVetoCount()
+	_, err = p.FinalTallyResult.GetNoWithVetoCount()
 	if err != nil {
-		return sdkerrors.Wrap(err, "proposal VoteState veto count")
+		return sdkerrors.Wrap(err, "proposal FinalTallyResult veto count")
 	}
 	return nil
 }
@@ -334,7 +334,7 @@ func unpackGroupPolicies(unpacker codectypes.AnyUnpacker, accs []*GroupPolicyInf
 
 type operation func(x, y math.Dec) (math.Dec, error)
 
-func (t *Tally) operation(vote Vote, weight string, op operation) error {
+func (t *TallyResult) operation(vote Vote, weight string, op operation) error {
 	weightDec, err := math.NewPositiveDecFromString(weight)
 	if err != nil {
 		return err
@@ -352,7 +352,7 @@ func (t *Tally) operation(vote Vote, weight string, op operation) error {
 	if err != nil {
 		return sdkerrors.Wrap(err, "abstain count")
 	}
-	vetoCount, err := t.GetVetoCount()
+	vetoCount, err := t.GetNoWithVetoCount()
 	if err != nil {
 		return sdkerrors.Wrap(err, "veto count")
 	}
@@ -363,64 +363,64 @@ func (t *Tally) operation(vote Vote, weight string, op operation) error {
 		if err != nil {
 			return sdkerrors.Wrap(err, "yes count")
 		}
-		t.YesCount = yesCount.String()
+		t.Yes = yesCount.String()
 	case VOTE_OPTION_NO:
 		noCount, err := op(noCount, weightDec)
 		if err != nil {
 			return sdkerrors.Wrap(err, "no count")
 		}
-		t.NoCount = noCount.String()
+		t.No = noCount.String()
 	case VOTE_OPTION_ABSTAIN:
 		abstainCount, err := op(abstainCount, weightDec)
 		if err != nil {
 			return sdkerrors.Wrap(err, "abstain count")
 		}
-		t.AbstainCount = abstainCount.String()
+		t.Abstain = abstainCount.String()
 	case VOTE_OPTION_NO_WITH_VETO:
 		vetoCount, err := op(vetoCount, weightDec)
 		if err != nil {
 			return sdkerrors.Wrap(err, "veto count")
 		}
-		t.VetoCount = vetoCount.String()
+		t.NoWithVeto = vetoCount.String()
 	default:
 		return sdkerrors.Wrapf(errors.ErrInvalid, "unknown vote option %s", vote.Option.String())
 	}
 	return nil
 }
 
-func (t Tally) GetYesCount() (math.Dec, error) {
-	yesCount, err := math.NewNonNegativeDecFromString(t.YesCount)
+func (t TallyResult) GetYesCount() (math.Dec, error) {
+	yesCount, err := math.NewNonNegativeDecFromString(t.Yes)
 	if err != nil {
 		return math.Dec{}, err
 	}
 	return yesCount, nil
 }
 
-func (t Tally) GetNoCount() (math.Dec, error) {
-	noCount, err := math.NewNonNegativeDecFromString(t.NoCount)
+func (t TallyResult) GetNoCount() (math.Dec, error) {
+	noCount, err := math.NewNonNegativeDecFromString(t.No)
 	if err != nil {
 		return math.Dec{}, err
 	}
 	return noCount, nil
 }
 
-func (t Tally) GetAbstainCount() (math.Dec, error) {
-	abstainCount, err := math.NewNonNegativeDecFromString(t.AbstainCount)
+func (t TallyResult) GetAbstainCount() (math.Dec, error) {
+	abstainCount, err := math.NewNonNegativeDecFromString(t.Abstain)
 	if err != nil {
 		return math.Dec{}, err
 	}
 	return abstainCount, nil
 }
 
-func (t Tally) GetVetoCount() (math.Dec, error) {
-	vetoCount, err := math.NewNonNegativeDecFromString(t.VetoCount)
+func (t TallyResult) GetNoWithVetoCount() (math.Dec, error) {
+	vetoCount, err := math.NewNonNegativeDecFromString(t.NoWithVeto)
 	if err != nil {
 		return math.Dec{}, err
 	}
 	return vetoCount, nil
 }
 
-func (t *Tally) Add(vote Vote, weight string) error {
+func (t *TallyResult) Add(vote Vote, weight string) error {
 	if err := t.operation(vote, weight, math.Add); err != nil {
 		return err
 	}
@@ -428,7 +428,7 @@ func (t *Tally) Add(vote Vote, weight string) error {
 }
 
 // TotalCounts is the sum of all weights.
-func (t Tally) TotalCounts() (math.Dec, error) {
+func (t TallyResult) TotalCounts() (math.Dec, error) {
 	yesCount, err := t.GetYesCount()
 	if err != nil {
 		return math.Dec{}, sdkerrors.Wrap(err, "yes count")
@@ -441,7 +441,7 @@ func (t Tally) TotalCounts() (math.Dec, error) {
 	if err != nil {
 		return math.Dec{}, sdkerrors.Wrap(err, "abstain count")
 	}
-	vetoCount, err := t.GetVetoCount()
+	vetoCount, err := t.GetNoWithVetoCount()
 	if err != nil {
 		return math.Dec{}, sdkerrors.Wrap(err, "veto count")
 	}

@@ -86,17 +86,17 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		Proposers: []string{
 			memberAddr.String(),
 		},
-		SubmittedAt: submittedAt,
-		Status:      group.PROPOSAL_STATUS_CLOSED,
-		Result:      group.PROPOSAL_RESULT_ACCEPTED,
-		VoteState: group.Tally{
-			YesCount:     "1",
-			NoCount:      "0",
-			AbstainCount: "0",
-			VetoCount:    "0",
+		SubmitTime: submittedAt,
+		Status:     group.PROPOSAL_STATUS_CLOSED,
+		Result:     group.PROPOSAL_RESULT_ACCEPTED,
+		FinalTallyResult: group.TallyResult{
+			Yes:        "1",
+			No:         "0",
+			Abstain:    "0",
+			NoWithVeto: "0",
 		},
 		Timeout:        timeout,
-		ExecutorResult: group.EXECUTOR_RESULT_SUCCESS,
+		ExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 	}
 	err = proposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
 		FromAddress: accAddr.String(),
@@ -113,7 +113,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		GroupPolicies:  []*group.GroupPolicyInfo{groupPolicy},
 		ProposalSeq:    1,
 		Proposals:      []*group.Proposal{proposal},
-		Votes:          []*group.Vote{{ProposalId: proposal.ProposalId, Voter: memberAddr.String(), SubmittedAt: submittedAt, Option: group.VOTE_OPTION_YES}},
+		Votes:          []*group.Vote{{ProposalId: proposal.ProposalId, Voter: memberAddr.String(), SubmitTime: submittedAt, Option: group.VOTE_OPTION_YES}},
 	}
 	genesisBytes, err := cdc.MarshalJSON(genesisState)
 	s.Require().NoError(err)
@@ -210,12 +210,12 @@ func (s *GenesisTestSuite) assertProposalsEqual(g *group.Proposal, other *group.
 	require.Equal(g.Address, other.Address)
 	require.Equal(g.Metadata, other.Metadata)
 	require.Equal(g.Proposers, other.Proposers)
-	require.Equal(g.SubmittedAt, other.SubmittedAt)
+	require.Equal(g.SubmitTime, other.SubmitTime)
 	require.Equal(g.GroupVersion, other.GroupVersion)
 	require.Equal(g.GroupPolicyVersion, other.GroupPolicyVersion)
 	require.Equal(g.Status, other.Status)
 	require.Equal(g.Result, other.Result)
-	require.Equal(g.VoteState, other.VoteState)
+	require.Equal(g.FinalTallyResult, other.FinalTallyResult)
 	require.Equal(g.Timeout, other.Timeout)
 	require.Equal(g.ExecutorResult, other.ExecutorResult)
 	require.Equal(g.GetMsgs(), other.GetMsgs())

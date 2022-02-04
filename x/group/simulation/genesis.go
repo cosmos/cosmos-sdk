@@ -91,15 +91,15 @@ func getProposals(r *rand.Rand, simState *module.SimulationState) []*group.Propo
 			GroupPolicyVersion: uint64(i + 1),
 			Status:             group.PROPOSAL_STATUS_SUBMITTED,
 			Result:             group.PROPOSAL_RESULT_ACCEPTED,
-			VoteState: group.Tally{
-				YesCount:     "1",
-				NoCount:      "1",
-				AbstainCount: "1",
-				VetoCount:    "0",
+			FinalTallyResult: group.TallyResult{
+				Yes:        "1",
+				No:         "1",
+				Abstain:    "1",
+				NoWithVeto: "0",
 			},
-			ExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
+			ExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			Metadata:       []byte(simtypes.RandStringOfLength(r, 50)),
-			SubmittedAt:    submittedAt,
+			SubmitTime:     submittedAt,
 			Timeout:        timeout,
 		}
 		err := proposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
@@ -122,11 +122,11 @@ func getVotes(r *rand.Rand, simState *module.SimulationState) []*group.Vote {
 
 	for i := 0; i < 3; i++ {
 		votes[i] = &group.Vote{
-			ProposalId:  uint64(i + 1),
-			Voter:       simState.Accounts[i].Address.String(),
-			Option:      getVoteOption(i),
-			Metadata:    []byte(simtypes.RandStringOfLength(r, 50)),
-			SubmittedAt: time.Unix(0, 0),
+			ProposalId: uint64(i + 1),
+			Voter:      simState.Accounts[i].Address.String(),
+			Option:     getVoteOption(i),
+			Metadata:   []byte(simtypes.RandStringOfLength(r, 50)),
+			SubmitTime: time.Unix(0, 0),
 		}
 	}
 

@@ -428,18 +428,18 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		Address:            req.Address,
 		Metadata:           metadata,
 		Proposers:          proposers,
-		SubmittedAt:        ctx.BlockTime(),
+		SubmitTime:         ctx.BlockTime(),
 		GroupVersion:       g.Version,
 		GroupPolicyVersion: policyAcc.Version,
 		Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 		Status:             group.PROPOSAL_STATUS_SUBMITTED,
-		ExecutorResult:     group.EXECUTOR_RESULT_NOT_RUN,
+		ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		Timeout:            ctx.BlockTime().Add(window),
-		VoteState: group.Tally{
-			YesCount:     "0",
-			NoCount:      "0",
-			AbstainCount: "0",
-			VetoCount:    "0",
+		FinalTallyResult: group.TallyResult{
+			Yes:        "0",
+			No:         "0",
+			Abstain:    "0",
+			NoWithVeto: "0",
 		},
 	}
 	if err := m.SetMsgs(msgs); err != nil {
@@ -541,13 +541,13 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 		return nil, sdkerrors.Wrapf(err, "address: %s", voterAddr)
 	}
 	newVote := group.Vote{
-		ProposalId:  id,
-		Voter:       voterAddr,
-		Option:      voteOption,
-		Metadata:    metadata,
-		SubmittedAt: ctx.BlockTime(),
+		ProposalId: id,
+		Voter:      voterAddr,
+		Option:     voteOption,
+		Metadata:   metadata,
+		SubmitTime: ctx.BlockTime(),
 	}
-	if err := proposal.VoteState.Add(newVote, voter.Member.Weight); err != nil {
+	if err := proposal.FinalTallyResult.Add(newVote, voter.Member.Weight); err != nil {
 		return nil, sdkerrors.Wrap(err, "add new vote")
 	}
 
@@ -588,7 +588,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 // doTally updates the proposal status and tally if necessary based on the group policy's decision policy.
 func doTally(ctx sdk.Context, p *group.Proposal, electorate group.GroupInfo, policyInfo group.GroupPolicyInfo) error {
 	policy := policyInfo.GetDecisionPolicy()
-	pSubmittedAt, err := gogotypes.TimestampProto(p.SubmittedAt)
+	pSubmittedAt, err := gogotypes.TimestampProto(p.SubmitTime)
 	if err != nil {
 		return err
 	}
@@ -596,7 +596,7 @@ func doTally(ctx sdk.Context, p *group.Proposal, electorate group.GroupInfo, pol
 	if err != nil {
 		return err
 	}
-	switch result, err := policy.Allow(p.VoteState, electorate.TotalWeight, ctx.BlockTime().Sub(submittedAt)); {
+	switch result, err := policy.Allow(p.FinalTallyResult, electorate.TotalWeight, ctx.BlockTime().Sub(submittedAt)); {
 	case err != nil:
 		return sdkerrors.Wrap(err, "policy execution")
 	case result.Allow && result.Final:
@@ -660,7 +660,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	}
 
 	// Execute proposal payload.
-	if proposal.Status == group.PROPOSAL_STATUS_CLOSED && proposal.Result == group.PROPOSAL_RESULT_ACCEPTED && proposal.ExecutorResult != group.EXECUTOR_RESULT_SUCCESS {
+	if proposal.Status == group.PROPOSAL_STATUS_CLOSED && proposal.Result == group.PROPOSAL_RESULT_ACCEPTED && proposal.ExecutorResult != group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
 		logger := ctx.Logger().With("module", fmt.Sprintf("x/%s", group.ModuleName))
 		// Caching context so that we don't update the store in case of failure.
 		ctx, flush := ctx.CacheContext()
@@ -671,11 +671,11 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 		}
 		_, err = k.doExecuteMsgs(ctx, k.router, proposal, addr)
 		if err != nil {
-			proposal.ExecutorResult = group.EXECUTOR_RESULT_FAILURE
+			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_FAILURE
 			proposalType := reflect.TypeOf(proposal).String()
 			logger.Info("proposal execution failed", "cause", err, "type", proposalType, "proposalID", id)
 		} else {
-			proposal.ExecutorResult = group.EXECUTOR_RESULT_SUCCESS
+			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_SUCCESS
 			flush()
 		}
 	}

@@ -58,17 +58,17 @@ func TestGenesisStateValidate(t *testing.T) {
 		Proposers: []string{
 			memberAddr.String(),
 		},
-		SubmittedAt: submittedAt,
-		Status:      PROPOSAL_STATUS_CLOSED,
-		Result:      PROPOSAL_RESULT_ACCEPTED,
-		VoteState: Tally{
-			YesCount:     "1",
-			NoCount:      "0",
-			AbstainCount: "0",
-			VetoCount:    "0",
+		SubmitTime: submittedAt,
+		Status:     PROPOSAL_STATUS_CLOSED,
+		Result:     PROPOSAL_RESULT_ACCEPTED,
+		FinalTallyResult: TallyResult{
+			Yes:        "1",
+			No:         "0",
+			Abstain:    "0",
+			NoWithVeto: "0",
 		},
 		Timeout:        timeout,
-		ExecutorResult: EXECUTOR_RESULT_SUCCESS,
+		ExecutorResult: PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 	}
 	err = proposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
 		FromAddress: accAddr.String(),
@@ -92,7 +92,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				GroupPolicies:  []*GroupPolicyInfo{groupPolicy},
 				ProposalSeq:    1,
 				Proposals:      []*Proposal{proposal},
-				Votes:          []*Vote{{ProposalId: proposal.ProposalId, Voter: memberAddr.String(), SubmittedAt: submittedAt, Option: VOTE_OPTION_YES}},
+				Votes:          []*Vote{{ProposalId: proposal.ProposalId, Voter: memberAddr.String(), SubmitTime: submittedAt, Option: VOTE_OPTION_YES}},
 			},
 			false,
 		},
@@ -463,7 +463,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			true,
 		},
 		{
-			"invalid VoteState with negative YesCount",
+			"invalid FinalTallyResult with negative YesCount",
 			GenesisState{
 				Groups: []*GroupInfo{
 					{
@@ -487,14 +487,14 @@ func TestGenesisStateValidate(t *testing.T) {
 						Proposers: []string{
 							memberAddr.String(),
 						},
-						SubmittedAt: submittedAt,
-						Status:      PROPOSAL_STATUS_CLOSED,
-						Result:      PROPOSAL_RESULT_ACCEPTED,
-						VoteState: Tally{
-							YesCount:     "-1",
-							NoCount:      "0",
-							AbstainCount: "0",
-							VetoCount:    "0",
+						SubmitTime: submittedAt,
+						Status:     PROPOSAL_STATUS_CLOSED,
+						Result:     PROPOSAL_RESULT_ACCEPTED,
+						FinalTallyResult: TallyResult{
+							Yes:        "-1",
+							No:         "0",
+							Abstain:    "0",
+							NoWithVeto: "0",
 						},
 					},
 				},
@@ -502,7 +502,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			true,
 		},
 		{
-			"invalid VoteState with negative NoCount",
+			"invalid FinalTallyResult with negative NoCount",
 			GenesisState{
 				Groups: []*GroupInfo{
 					{
@@ -526,14 +526,14 @@ func TestGenesisStateValidate(t *testing.T) {
 						Proposers: []string{
 							memberAddr.String(),
 						},
-						SubmittedAt: submittedAt,
-						Status:      PROPOSAL_STATUS_CLOSED,
-						Result:      PROPOSAL_RESULT_ACCEPTED,
-						VoteState: Tally{
-							YesCount:     "0",
-							NoCount:      "-1",
-							AbstainCount: "0",
-							VetoCount:    "0",
+						SubmitTime: submittedAt,
+						Status:     PROPOSAL_STATUS_CLOSED,
+						Result:     PROPOSAL_RESULT_ACCEPTED,
+						FinalTallyResult: TallyResult{
+							Yes:        "0",
+							No:         "-1",
+							Abstain:    "0",
+							NoWithVeto: "0",
 						},
 					},
 				},
@@ -541,7 +541,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			true,
 		},
 		{
-			"invalid VoteState with negative AbstainCount",
+			"invalid FinalTallyResult with negative AbstainCount",
 			GenesisState{
 				Groups: []*GroupInfo{
 					{
@@ -565,14 +565,14 @@ func TestGenesisStateValidate(t *testing.T) {
 						Proposers: []string{
 							memberAddr.String(),
 						},
-						SubmittedAt: submittedAt,
-						Status:      PROPOSAL_STATUS_CLOSED,
-						Result:      PROPOSAL_RESULT_ACCEPTED,
-						VoteState: Tally{
-							YesCount:     "0",
-							NoCount:      "0",
-							AbstainCount: "-1",
-							VetoCount:    "0",
+						SubmitTime: submittedAt,
+						Status:     PROPOSAL_STATUS_CLOSED,
+						Result:     PROPOSAL_RESULT_ACCEPTED,
+						FinalTallyResult: TallyResult{
+							Yes:        "0",
+							No:         "0",
+							Abstain:    "-1",
+							NoWithVeto: "0",
 						},
 					},
 				},
@@ -580,7 +580,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			true,
 		},
 		{
-			"invalid VoteState with negative VetoCount",
+			"invalid FinalTallyResult with negative VetoCount",
 			GenesisState{
 				Groups: []*GroupInfo{
 					{
@@ -604,14 +604,14 @@ func TestGenesisStateValidate(t *testing.T) {
 						Proposers: []string{
 							memberAddr.String(),
 						},
-						SubmittedAt: submittedAt,
-						Status:      PROPOSAL_STATUS_CLOSED,
-						Result:      PROPOSAL_RESULT_ACCEPTED,
-						VoteState: Tally{
-							YesCount:     "0",
-							NoCount:      "0",
-							AbstainCount: "0",
-							VetoCount:    "-1",
+						SubmitTime: submittedAt,
+						Status:     PROPOSAL_STATUS_CLOSED,
+						Result:     PROPOSAL_RESULT_ACCEPTED,
+						FinalTallyResult: TallyResult{
+							Yes:        "0",
+							No:         "0",
+							Abstain:    "0",
+							NoWithVeto: "-1",
 						},
 					},
 				},
@@ -638,10 +638,10 @@ func TestGenesisStateValidate(t *testing.T) {
 				},
 				Votes: []*Vote{
 					{
-						ProposalId:  proposal.ProposalId,
-						Voter:       "invalid voter",
-						SubmittedAt: submittedAt,
-						Option:      VOTE_OPTION_YES,
+						ProposalId: proposal.ProposalId,
+						Voter:      "invalid voter",
+						SubmitTime: submittedAt,
+						Option:     VOTE_OPTION_YES,
 					},
 				},
 			},
@@ -667,10 +667,10 @@ func TestGenesisStateValidate(t *testing.T) {
 				},
 				Votes: []*Vote{
 					{
-						ProposalId:  0,
-						Voter:       memberAddr.String(),
-						SubmittedAt: submittedAt,
-						Option:      VOTE_OPTION_YES,
+						ProposalId: 0,
+						Voter:      memberAddr.String(),
+						SubmitTime: submittedAt,
+						Option:     VOTE_OPTION_YES,
 					},
 				},
 			},
@@ -696,10 +696,10 @@ func TestGenesisStateValidate(t *testing.T) {
 				},
 				Votes: []*Vote{
 					{
-						ProposalId:  2,
-						Voter:       memberAddr.String(),
-						SubmittedAt: submittedAt,
-						Option:      VOTE_OPTION_YES,
+						ProposalId: 2,
+						Voter:      memberAddr.String(),
+						SubmitTime: submittedAt,
+						Option:     VOTE_OPTION_YES,
 					},
 				},
 			},
@@ -725,10 +725,10 @@ func TestGenesisStateValidate(t *testing.T) {
 				},
 				Votes: []*Vote{
 					{
-						ProposalId:  proposal.ProposalId,
-						Voter:       memberAddr.String(),
-						SubmittedAt: submittedAt,
-						Option:      VOTE_OPTION_UNSPECIFIED,
+						ProposalId: proposal.ProposalId,
+						Voter:      memberAddr.String(),
+						SubmitTime: submittedAt,
+						Option:     VOTE_OPTION_UNSPECIFIED,
 					},
 				},
 			},

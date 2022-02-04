@@ -148,8 +148,8 @@ message Proposal {
   // proposers are the account addresses of the proposers.
   repeated string proposers = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // submitted_at is a timestamp specifying when a proposal was submitted.
-  google.protobuf.Timestamp submitted_at = 5 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  // submit_time is a timestamp specifying when a proposal was submitted.
+  google.protobuf.Timestamp submit_time = 5 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 
   // group_version tracks the version of the group that this proposal corresponds to.
   // When group membership is changed, existing proposals from previous group versions will become invalid.
@@ -159,99 +159,100 @@ message Proposal {
   // When a decision policy is changed, existing proposals from previous policy versions will become invalid.
   uint64 group_policy_version = 7;
 
-  // Status defines proposal statuses.
-  enum Status {
-    option (gogoproto.goproto_enum_prefix) = false;
-
-    // An empty value is invalid and not allowed.
-    PROPOSAL_STATUS_UNSPECIFIED = 0;
-
-    // Initial status of a proposal when persisted.
-    PROPOSAL_STATUS_SUBMITTED = 1;
-
-    // Final status of a proposal when the final tally was executed.
-    PROPOSAL_STATUS_CLOSED = 2;
-
-    // Final status of a proposal when the group was modified before the final tally.
-    PROPOSAL_STATUS_ABORTED = 3;
-
-    // TODO: do we want to support a withdrawn operation?
-    // A proposal can be deleted before the voting start time by the owner. When this happens the final status
-    // is Withdrawn.
-    //        PROPOSAL_STATUS_WITHDRAWN = 4;
-  }
-
   // status represents the high level position in the life cycle of the proposal. Initial value is Submitted.
-  Status status = 8;
-
-  // Result defines types of proposal results.
-  enum Result {
-    option (gogoproto.goproto_enum_prefix) = false;
-
-    // An empty value is invalid and not allowed
-    PROPOSAL_RESULT_UNSPECIFIED = 0;
-
-    // Until a final tally has happened the status is unfinalized
-    PROPOSAL_RESULT_UNFINALIZED = 1;
-
-    // Final result of the tally
-    PROPOSAL_RESULT_ACCEPTED = 2;
-
-    // Final result of the tally
-    PROPOSAL_RESULT_REJECTED = 3;
-  }
+  ProposalStatus status = 8;
 
   // result is the final result based on the votes and election rule. Initial value is unfinalized.
   // The result is persisted so that clients can always rely on this state and not have to replicate the logic.
-  Result result = 9;
+  ProposalResult result = 9;
 
-  // vote_state contains the sums of all weighted votes for this proposal.
-  Tally vote_state = 10 [(gogoproto.nullable) = false];
+  // final_tally_result contains the sums of all weighted votes for this
+  // proposal for each vote option, after tallying.
+  TallyResult final_tally_result = 10 [(gogoproto.nullable) = false];
 
   // timeout is the timestamp of the block where the proposal execution times out. Header times of the votes and
   // execution messages must be before this end time to be included in the election. After the timeout timestamp the
   // proposal can not be executed anymore and should be considered pending delete.
   google.protobuf.Timestamp timeout = 11 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 
-  // ExecutorResult defines types of proposal executor results.
-  enum ExecutorResult {
-    option (gogoproto.goproto_enum_prefix) = false;
+  // PROPOSAL_EXECUTOR_RESULT is the final result based on the votes and election rule. Initial value is NotRun.
+  ProposalExecutorResult PROPOSAL_EXECUTOR_RESULT = 12;
 
-    // An empty value is not allowed.
-    EXECUTOR_RESULT_UNSPECIFIED = 0;
-
-    // We have not yet run the executor.
-    EXECUTOR_RESULT_NOT_RUN = 1;
-
-    // The executor was successful and proposed action updated state.
-    EXECUTOR_RESULT_SUCCESS = 2;
-
-    // The executor returned an error and proposed action didn't update state.
-    EXECUTOR_RESULT_FAILURE = 3;
-  }
-
-  // executor_result is the final result based on the votes and election rule. Initial value is NotRun.
-  ExecutorResult executor_result = 12;
-
-  // msgs is a list of Msgs that will be executed if the proposal passes.
-  repeated google.protobuf.Any msgs = 13;
+  // messages is a list of Msgs that will be executed if the proposal passes.
+  repeated google.protobuf.Any messages = 13;
 }
 
-// Tally represents the sum of weighted votes.
-message Tally {
+// ProposalStatus defines proposal statuses.
+enum ProposalStatus {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // An empty value is invalid and not allowed.
+  PROPOSAL_STATUS_UNSPECIFIED = 0;
+
+  // Initial status of a proposal when persisted.
+  PROPOSAL_STATUS_SUBMITTED = 1;
+
+  // Final status of a proposal when the final tally was executed.
+  PROPOSAL_STATUS_CLOSED = 2;
+
+  // Final status of a proposal when the group was modified before the final tally.
+  PROPOSAL_STATUS_ABORTED = 3;
+
+  // TODO: do we want to support a withdrawn operation?
+  // A proposal can be deleted before the voting start time by the owner. When this happens the final status
+  // is Withdrawn.
+  //        PROPOSAL_STATUS_WITHDRAWN = 4;
+}
+
+// ProposalResult defines types of proposal results.
+enum ProposalResult {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // An empty value is invalid and not allowed
+  PROPOSAL_RESULT_UNSPECIFIED = 0;
+
+  // Until a final tally has happened the status is unfinalized
+  PROPOSAL_RESULT_UNFINALIZED = 1;
+
+  // Final result of the tally
+  PROPOSAL_RESULT_ACCEPTED = 2;
+
+  // Final result of the tally
+  PROPOSAL_RESULT_REJECTED = 3;
+}
+
+// ProposalExecutorResult defines types of proposal executor results.
+enum ProposalExecutorResult {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // An empty value is not allowed.
+  PROPOSAL_EXECUTOR_RESULT_UNSPECIFIED = 0;
+
+  // We have not yet run the executor.
+  PROPOSAL_EXECUTOR_RESULT_NOT_RUN = 1;
+
+  // The executor was successful and proposed action updated state.
+  PROPOSAL_EXECUTOR_RESULT_SUCCESS = 2;
+
+  // The executor returned an error and proposed action didn't update state.
+  PROPOSAL_EXECUTOR_RESULT_FAILURE = 3;
+}
+
+// TallyResult represents the sum of weighted votes for each vote option.
+message TallyResult {
   option (gogoproto.goproto_getters) = false;
 
-  // yes_count is the weighted sum of yes votes.
-  string yes_count = 1;
+  // yes is the weighted sum of yes votes.
+  string yes = 1;
 
-  // no_count is the weighted sum of no votes.
-  string no_count = 2;
+  // abstain is the weighted sum of abstainers.
+  string abstain = 2;
 
-  // abstain_count is the weighted sum of abstainers
-  string abstain_count = 3;
+  // no is the weighted sum of no votes.
+  string no = 3;
 
-  // veto_count is the weighted sum of vetoes.
-  string veto_count = 4;
+  // no_with_veto is the weighted sum of veto.
+  string no_with_veto = 4;
 }
 
 // Vote represents a vote for a proposal.
@@ -269,6 +270,6 @@ message Vote {
   // metadata is any arbitrary metadata to attached to the vote.
   bytes metadata = 4;
 
-  // submitted_at is the timestamp when the vote was submitted.
-  google.protobuf.Timestamp submitted_at = 5 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  // submit_time is the timestamp when the vote was submitted.
+  google.protobuf.Timestamp submit_time = 5 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }

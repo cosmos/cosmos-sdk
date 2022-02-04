@@ -1178,13 +1178,13 @@ func (s *TestSuite) TestSubmitProposal() {
 	defaultProposal := group.Proposal{
 		Status: group.PROPOSAL_STATUS_SUBMITTED,
 		Result: group.PROPOSAL_RESULT_UNFINALIZED,
-		VoteState: group.Tally{
-			YesCount:     "0",
-			NoCount:      "0",
-			AbstainCount: "0",
-			VetoCount:    "0",
+		FinalTallyResult: group.TallyResult{
+			Yes:        "0",
+			No:         "0",
+			Abstain:    "0",
+			NoWithVeto: "0",
 		},
-		ExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
+		ExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 	}
 	specs := map[string]struct {
 		req         *group.MsgSubmitProposal
@@ -1292,13 +1292,13 @@ func (s *TestSuite) TestSubmitProposal() {
 			expProposal: group.Proposal{
 				Status: group.PROPOSAL_STATUS_CLOSED,
 				Result: group.PROPOSAL_RESULT_ACCEPTED,
-				VoteState: group.Tally{
-					YesCount:     "2",
-					NoCount:      "0",
-					AbstainCount: "0",
-					VetoCount:    "0",
+				FinalTallyResult: group.TallyResult{
+					Yes:        "2",
+					No:         "0",
+					Abstain:    "0",
+					NoWithVeto: "0",
 				},
-				ExecutorResult: group.EXECUTOR_RESULT_SUCCESS,
+				ExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			},
 			postRun: func(sdkCtx sdk.Context) {
 				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, accountAddr)
@@ -1317,13 +1317,13 @@ func (s *TestSuite) TestSubmitProposal() {
 			expProposal: group.Proposal{
 				Status: group.PROPOSAL_STATUS_SUBMITTED,
 				Result: group.PROPOSAL_RESULT_UNFINALIZED,
-				VoteState: group.Tally{
-					YesCount:     "1",
-					NoCount:      "0",
-					AbstainCount: "0",
-					VetoCount:    "0",
+				FinalTallyResult: group.TallyResult{
+					Yes:        "1",
+					No:         "0",
+					Abstain:    "0",
+					NoWithVeto: "0",
 				},
-				ExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
+				ExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			postRun: func(sdkCtx sdk.Context) {},
 		},
@@ -1350,12 +1350,12 @@ func (s *TestSuite) TestSubmitProposal() {
 			s.Assert().Equal(accountAddr.String(), proposal.Address)
 			s.Assert().Equal(spec.req.Metadata, proposal.Metadata)
 			s.Assert().Equal(spec.req.Proposers, proposal.Proposers)
-			s.Assert().Equal(s.blockTime, proposal.SubmittedAt)
+			s.Assert().Equal(s.blockTime, proposal.SubmitTime)
 			s.Assert().Equal(uint64(1), proposal.GroupVersion)
 			s.Assert().Equal(uint64(1), proposal.GroupPolicyVersion)
 			s.Assert().Equal(spec.expProposal.Status, proposal.Status)
 			s.Assert().Equal(spec.expProposal.Result, proposal.Result)
-			s.Assert().Equal(spec.expProposal.VoteState, proposal.VoteState)
+			s.Assert().Equal(spec.expProposal.FinalTallyResult, proposal.FinalTallyResult)
 			s.Assert().Equal(spec.expProposal.ExecutorResult, proposal.ExecutorResult)
 			s.Assert().Equal(s.blockTime.Add(time.Second), proposal.Timeout)
 
@@ -1436,29 +1436,29 @@ func (s *TestSuite) TestVote() {
 	s.Assert().Equal(req.Address, proposals[0].Address)
 	s.Assert().Equal(req.Metadata, proposals[0].Metadata)
 	s.Assert().Equal(req.Proposers, proposals[0].Proposers)
-	s.Assert().Equal(s.blockTime, proposals[0].SubmittedAt)
+	s.Assert().Equal(s.blockTime, proposals[0].SubmitTime)
 
 	s.Assert().Equal(uint64(1), proposals[0].GroupVersion)
 	s.Assert().Equal(uint64(1), proposals[0].GroupPolicyVersion)
 	s.Assert().Equal(group.PROPOSAL_STATUS_SUBMITTED, proposals[0].Status)
 	s.Assert().Equal(group.PROPOSAL_RESULT_UNFINALIZED, proposals[0].Result)
-	s.Assert().Equal(group.Tally{
-		YesCount:     "0",
-		NoCount:      "0",
-		AbstainCount: "0",
-		VetoCount:    "0",
-	}, proposals[0].VoteState)
+	s.Assert().Equal(group.TallyResult{
+		Yes:        "0",
+		No:         "0",
+		Abstain:    "0",
+		NoWithVeto: "0",
+	}, proposals[0].FinalTallyResult)
 
 	specs := map[string]struct {
-		srcCtx            sdk.Context
-		expVoteState      group.Tally
-		req               *group.MsgVote
-		doBefore          func(ctx context.Context)
-		postRun           func(sdkCtx sdk.Context)
-		expProposalStatus group.Proposal_Status
-		expResult         group.Proposal_Result
-		expExecutorResult group.Proposal_ExecutorResult
-		expErr            bool
+		srcCtx              sdk.Context
+		expFinalTallyResult group.TallyResult
+		req                 *group.MsgVote
+		doBefore            func(ctx context.Context)
+		postRun             func(sdkCtx sdk.Context)
+		expProposalStatus   group.ProposalStatus
+		expResult           group.ProposalResult
+		expExecutorResult   group.ProposalExecutorResult
+		expErr              bool
 	}{
 		"vote yes": {
 			req: &group.MsgVote{
@@ -1466,15 +1466,15 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr4.String(),
 				Option:     group.VOTE_OPTION_YES,
 			},
-			expVoteState: group.Tally{
-				YesCount:     "1",
-				NoCount:      "0",
-				AbstainCount: "0",
-				VetoCount:    "0",
+			expFinalTallyResult: group.TallyResult{
+				Yes:        "1",
+				No:         "0",
+				Abstain:    "0",
+				NoWithVeto: "0",
 			},
 			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
 			expResult:         group.PROPOSAL_RESULT_UNFINALIZED,
-			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"with try exec": {
@@ -1484,15 +1484,15 @@ func (s *TestSuite) TestVote() {
 				Option:     group.VOTE_OPTION_YES,
 				Exec:       group.Exec_EXEC_TRY,
 			},
-			expVoteState: group.Tally{
-				YesCount:     "2",
-				NoCount:      "0",
-				AbstainCount: "0",
-				VetoCount:    "0",
+			expFinalTallyResult: group.TallyResult{
+				Yes:        "2",
+				No:         "0",
+				Abstain:    "0",
+				NoWithVeto: "0",
 			},
 			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
 			expResult:         group.PROPOSAL_RESULT_ACCEPTED,
-			expExecutorResult: group.EXECUTOR_RESULT_SUCCESS,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			postRun: func(sdkCtx sdk.Context) {
 				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, groupPolicy)
 				s.Require().Contains(fromBalances, sdk.NewInt64Coin("test", 9900))
@@ -1507,15 +1507,15 @@ func (s *TestSuite) TestVote() {
 				Option:     group.VOTE_OPTION_YES,
 				Exec:       group.Exec_EXEC_TRY,
 			},
-			expVoteState: group.Tally{
-				YesCount:     "1",
-				NoCount:      "0",
-				AbstainCount: "0",
-				VetoCount:    "0",
+			expFinalTallyResult: group.TallyResult{
+				Yes:        "1",
+				No:         "0",
+				Abstain:    "0",
+				NoWithVeto: "0",
 			},
 			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
 			expResult:         group.PROPOSAL_RESULT_UNFINALIZED,
-			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"vote no": {
@@ -1524,15 +1524,15 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr4.String(),
 				Option:     group.VOTE_OPTION_NO,
 			},
-			expVoteState: group.Tally{
-				YesCount:     "0",
-				NoCount:      "1",
-				AbstainCount: "0",
-				VetoCount:    "0",
+			expFinalTallyResult: group.TallyResult{
+				Yes:        "0",
+				No:         "1",
+				Abstain:    "0",
+				NoWithVeto: "0",
 			},
 			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
 			expResult:         group.PROPOSAL_RESULT_UNFINALIZED,
-			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"vote abstain": {
@@ -1541,15 +1541,15 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr4.String(),
 				Option:     group.VOTE_OPTION_ABSTAIN,
 			},
-			expVoteState: group.Tally{
-				YesCount:     "0",
-				NoCount:      "0",
-				AbstainCount: "1",
-				VetoCount:    "0",
+			expFinalTallyResult: group.TallyResult{
+				Yes:        "0",
+				No:         "0",
+				Abstain:    "1",
+				NoWithVeto: "0",
 			},
 			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
 			expResult:         group.PROPOSAL_RESULT_UNFINALIZED,
-			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"vote veto": {
@@ -1558,15 +1558,15 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr4.String(),
 				Option:     group.VOTE_OPTION_NO_WITH_VETO,
 			},
-			expVoteState: group.Tally{
-				YesCount:     "0",
-				NoCount:      "0",
-				AbstainCount: "0",
-				VetoCount:    "1",
+			expFinalTallyResult: group.TallyResult{
+				Yes:        "0",
+				No:         "0",
+				Abstain:    "0",
+				NoWithVeto: "1",
 			},
 			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
 			expResult:         group.PROPOSAL_RESULT_UNFINALIZED,
-			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"apply decision policy early": {
@@ -1575,15 +1575,15 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr3.String(),
 				Option:     group.VOTE_OPTION_YES,
 			},
-			expVoteState: group.Tally{
-				YesCount:     "2",
-				NoCount:      "0",
-				AbstainCount: "0",
-				VetoCount:    "0",
+			expFinalTallyResult: group.TallyResult{
+				Yes:        "2",
+				No:         "0",
+				Abstain:    "0",
+				NoWithVeto: "0",
 			},
 			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
 			expResult:         group.PROPOSAL_RESULT_ACCEPTED,
-			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			postRun:           func(sdkCtx sdk.Context) {},
 		},
 		"reject new votes when final decision is made already": {
@@ -1810,7 +1810,7 @@ func (s *TestSuite) TestVote() {
 			})
 			s.Require().NoError(err)
 			proposal := proposalRes.Proposal
-			s.Assert().Equal(spec.expVoteState, proposal.VoteState)
+			s.Assert().Equal(spec.expFinalTallyResult, proposal.FinalTallyResult)
 			s.Assert().Equal(spec.expResult, proposal.Result)
 			s.Assert().Equal(spec.expProposalStatus, proposal.Status)
 			s.Assert().Equal(spec.expExecutorResult, proposal.ExecutorResult)
@@ -1841,9 +1841,9 @@ func (s *TestSuite) TestExecProposal() {
 		srcBlockTime      time.Time
 		setupProposal     func(ctx context.Context) uint64
 		expErr            bool
-		expProposalStatus group.Proposal_Status
-		expProposalResult group.Proposal_Result
-		expExecutorResult group.Proposal_ExecutorResult
+		expProposalStatus group.ProposalStatus
+		expProposalResult group.ProposalResult
+		expExecutorResult group.ProposalExecutorResult
 		expBalance        bool
 		expFromBalances   sdk.Coin
 		expToBalances     sdk.Coin
@@ -1855,7 +1855,7 @@ func (s *TestSuite) TestExecProposal() {
 			},
 			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
 			expProposalResult: group.PROPOSAL_RESULT_ACCEPTED,
-			expExecutorResult: group.EXECUTOR_RESULT_SUCCESS,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			expBalance:        true,
 			expFromBalances:   sdk.NewInt64Coin("test", 9900),
 			expToBalances:     sdk.NewInt64Coin("test", 100),
@@ -1867,7 +1867,7 @@ func (s *TestSuite) TestExecProposal() {
 			},
 			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
 			expProposalResult: group.PROPOSAL_RESULT_ACCEPTED,
-			expExecutorResult: group.EXECUTOR_RESULT_SUCCESS,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			expBalance:        true,
 			expFromBalances:   sdk.NewInt64Coin("test", 9800),
 			expToBalances:     sdk.NewInt64Coin("test", 200),
@@ -1879,7 +1879,7 @@ func (s *TestSuite) TestExecProposal() {
 			},
 			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
 			expProposalResult: group.PROPOSAL_RESULT_REJECTED,
-			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
 		"open proposal must not fail": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -1887,7 +1887,7 @@ func (s *TestSuite) TestExecProposal() {
 			},
 			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
 			expProposalResult: group.PROPOSAL_RESULT_UNFINALIZED,
-			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
 		"existing proposal required": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -1903,7 +1903,7 @@ func (s *TestSuite) TestExecProposal() {
 			srcBlockTime:      s.blockTime.Add(time.Second),
 			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
 			expProposalResult: group.PROPOSAL_RESULT_REJECTED,
-			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
 		"Decision policy also applied after timeout": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -1913,7 +1913,7 @@ func (s *TestSuite) TestExecProposal() {
 			srcBlockTime:      s.blockTime.Add(time.Second).Add(time.Millisecond),
 			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
 			expProposalResult: group.PROPOSAL_RESULT_REJECTED,
-			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
 		"with group modified before tally": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -1930,7 +1930,7 @@ func (s *TestSuite) TestExecProposal() {
 			},
 			expProposalStatus: group.PROPOSAL_STATUS_ABORTED,
 			expProposalResult: group.PROPOSAL_RESULT_UNFINALIZED,
-			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
 		"with group policy modified before tally": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -1945,7 +1945,7 @@ func (s *TestSuite) TestExecProposal() {
 			},
 			expProposalStatus: group.PROPOSAL_STATUS_ABORTED,
 			expProposalResult: group.PROPOSAL_RESULT_UNFINALIZED,
-			expExecutorResult: group.EXECUTOR_RESULT_NOT_RUN,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
 		"prevent double execution when successful": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -1957,7 +1957,7 @@ func (s *TestSuite) TestExecProposal() {
 			},
 			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
 			expProposalResult: group.PROPOSAL_RESULT_ACCEPTED,
-			expExecutorResult: group.EXECUTOR_RESULT_SUCCESS,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			expBalance:        true,
 			expFromBalances:   sdk.NewInt64Coin("test", 9900),
 			expToBalances:     sdk.NewInt64Coin("test", 100),
@@ -1969,7 +1969,7 @@ func (s *TestSuite) TestExecProposal() {
 			},
 			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
 			expProposalResult: group.PROPOSAL_RESULT_ACCEPTED,
-			expExecutorResult: group.EXECUTOR_RESULT_FAILURE,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_FAILURE,
 		},
 		"executable when failed before": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -1985,7 +1985,7 @@ func (s *TestSuite) TestExecProposal() {
 			},
 			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
 			expProposalResult: group.PROPOSAL_RESULT_ACCEPTED,
-			expExecutorResult: group.EXECUTOR_RESULT_SUCCESS,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 		},
 	}
 	for msg, spec := range specs {
@@ -2012,16 +2012,16 @@ func (s *TestSuite) TestExecProposal() {
 			s.Require().NoError(err)
 			proposal := res.Proposal
 
-			exp := group.Proposal_Result_name[int32(spec.expProposalResult)]
-			got := group.Proposal_Result_name[int32(proposal.Result)]
+			exp := group.ProposalResult_name[int32(spec.expProposalResult)]
+			got := group.ProposalResult_name[int32(proposal.Result)]
 			s.Assert().Equal(exp, got)
 
-			exp = group.Proposal_Status_name[int32(spec.expProposalStatus)]
-			got = group.Proposal_Status_name[int32(proposal.Status)]
+			exp = group.ProposalStatus_name[int32(spec.expProposalStatus)]
+			got = group.ProposalStatus_name[int32(proposal.Status)]
 			s.Assert().Equal(exp, got)
 
-			exp = group.Proposal_ExecutorResult_name[int32(spec.expExecutorResult)]
-			got = group.Proposal_ExecutorResult_name[int32(proposal.ExecutorResult)]
+			exp = group.ProposalExecutorResult_name[int32(spec.expExecutorResult)]
+			got = group.ProposalExecutorResult_name[int32(proposal.ExecutorResult)]
 			s.Assert().Equal(exp, got)
 
 			if spec.expBalance {

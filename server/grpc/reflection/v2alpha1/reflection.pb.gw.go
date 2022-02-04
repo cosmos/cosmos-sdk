@@ -13,14 +13,14 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/golang/protobuf/descriptor"
-	"github.com/golang/protobuf/proto"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/grpc-ecosystem/grpc-gateway/utilities"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/utilities"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 )
 
 // Suppress "imported and not used" errors
@@ -29,7 +29,7 @@ var _ io.Reader
 var _ status.Status
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
-var _ = descriptor.ForMessage
+var _ = metadata.Join
 
 func request_ReflectionService_GetAuthnDescriptor_0(ctx context.Context, marshaler runtime.Marshaler, client ReflectionServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq GetAuthnDescriptorRequest
@@ -142,19 +142,22 @@ func local_request_ReflectionService_GetTxDescriptor_0(ctx context.Context, mars
 // RegisterReflectionServiceHandlerServer registers the http handlers for service ReflectionService to "mux".
 // UnaryRPC     :call ReflectionServiceServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
-// Note that using this registration option will cause many gRPC library features (such as grpc.SendHeader, etc) to stop working. Consider using RegisterReflectionServiceHandlerFromEndpoint instead.
+// Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterReflectionServiceHandlerFromEndpoint instead.
 func RegisterReflectionServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, server ReflectionServiceServer) error {
 
 	mux.Handle("GET", pattern_ReflectionService_GetAuthnDescriptor_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/cosmos.base.reflection.v2alpha1.ReflectionService/GetAuthnDescriptor", runtime.WithHTTPPathPattern("/cosmos/base/reflection/v1beta1/app_descriptor/authn"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_ReflectionService_GetAuthnDescriptor_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -168,13 +171,16 @@ func RegisterReflectionServiceHandlerServer(ctx context.Context, mux *runtime.Se
 	mux.Handle("GET", pattern_ReflectionService_GetChainDescriptor_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/cosmos.base.reflection.v2alpha1.ReflectionService/GetChainDescriptor", runtime.WithHTTPPathPattern("/cosmos/base/reflection/v1beta1/app_descriptor/chain"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_ReflectionService_GetChainDescriptor_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -188,13 +194,16 @@ func RegisterReflectionServiceHandlerServer(ctx context.Context, mux *runtime.Se
 	mux.Handle("GET", pattern_ReflectionService_GetCodecDescriptor_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/cosmos.base.reflection.v2alpha1.ReflectionService/GetCodecDescriptor", runtime.WithHTTPPathPattern("/cosmos/base/reflection/v1beta1/app_descriptor/codec"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_ReflectionService_GetCodecDescriptor_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -208,13 +217,16 @@ func RegisterReflectionServiceHandlerServer(ctx context.Context, mux *runtime.Se
 	mux.Handle("GET", pattern_ReflectionService_GetConfigurationDescriptor_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/cosmos.base.reflection.v2alpha1.ReflectionService/GetConfigurationDescriptor", runtime.WithHTTPPathPattern("/cosmos/base/reflection/v1beta1/app_descriptor/configuration"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_ReflectionService_GetConfigurationDescriptor_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -228,13 +240,16 @@ func RegisterReflectionServiceHandlerServer(ctx context.Context, mux *runtime.Se
 	mux.Handle("GET", pattern_ReflectionService_GetQueryServicesDescriptor_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/cosmos.base.reflection.v2alpha1.ReflectionService/GetQueryServicesDescriptor", runtime.WithHTTPPathPattern("/cosmos/base/reflection/v1beta1/app_descriptor/query_services"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_ReflectionService_GetQueryServicesDescriptor_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -248,13 +263,16 @@ func RegisterReflectionServiceHandlerServer(ctx context.Context, mux *runtime.Se
 	mux.Handle("GET", pattern_ReflectionService_GetTxDescriptor_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/cosmos.base.reflection.v2alpha1.ReflectionService/GetTxDescriptor", runtime.WithHTTPPathPattern("/cosmos/base/reflection/v1beta1/app_descriptor/tx_descriptor"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_ReflectionService_GetTxDescriptor_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -310,7 +328,7 @@ func RegisterReflectionServiceHandlerClient(ctx context.Context, mux *runtime.Se
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/cosmos.base.reflection.v2alpha1.ReflectionService/GetAuthnDescriptor", runtime.WithHTTPPathPattern("/cosmos/base/reflection/v1beta1/app_descriptor/authn"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -330,7 +348,7 @@ func RegisterReflectionServiceHandlerClient(ctx context.Context, mux *runtime.Se
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/cosmos.base.reflection.v2alpha1.ReflectionService/GetChainDescriptor", runtime.WithHTTPPathPattern("/cosmos/base/reflection/v1beta1/app_descriptor/chain"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -350,7 +368,7 @@ func RegisterReflectionServiceHandlerClient(ctx context.Context, mux *runtime.Se
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/cosmos.base.reflection.v2alpha1.ReflectionService/GetCodecDescriptor", runtime.WithHTTPPathPattern("/cosmos/base/reflection/v1beta1/app_descriptor/codec"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -370,7 +388,7 @@ func RegisterReflectionServiceHandlerClient(ctx context.Context, mux *runtime.Se
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/cosmos.base.reflection.v2alpha1.ReflectionService/GetConfigurationDescriptor", runtime.WithHTTPPathPattern("/cosmos/base/reflection/v1beta1/app_descriptor/configuration"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -390,7 +408,7 @@ func RegisterReflectionServiceHandlerClient(ctx context.Context, mux *runtime.Se
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/cosmos.base.reflection.v2alpha1.ReflectionService/GetQueryServicesDescriptor", runtime.WithHTTPPathPattern("/cosmos/base/reflection/v1beta1/app_descriptor/query_services"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -410,7 +428,7 @@ func RegisterReflectionServiceHandlerClient(ctx context.Context, mux *runtime.Se
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/cosmos.base.reflection.v2alpha1.ReflectionService/GetTxDescriptor", runtime.WithHTTPPathPattern("/cosmos/base/reflection/v1beta1/app_descriptor/tx_descriptor"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -430,17 +448,17 @@ func RegisterReflectionServiceHandlerClient(ctx context.Context, mux *runtime.Se
 }
 
 var (
-	pattern_ReflectionService_GetAuthnDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "authn"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_ReflectionService_GetAuthnDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "authn"}, ""))
 
-	pattern_ReflectionService_GetChainDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "chain"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_ReflectionService_GetChainDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "chain"}, ""))
 
-	pattern_ReflectionService_GetCodecDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "codec"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_ReflectionService_GetCodecDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "codec"}, ""))
 
-	pattern_ReflectionService_GetConfigurationDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "configuration"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_ReflectionService_GetConfigurationDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "configuration"}, ""))
 
-	pattern_ReflectionService_GetQueryServicesDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "query_services"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_ReflectionService_GetQueryServicesDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "query_services"}, ""))
 
-	pattern_ReflectionService_GetTxDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "tx_descriptor"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_ReflectionService_GetTxDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "tx_descriptor"}, ""))
 )
 
 var (

@@ -4,12 +4,13 @@ import (
 	"embed"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/app/internal"
+
 	"google.golang.org/protobuf/proto"
 
 	"google.golang.org/protobuf/types/descriptorpb"
 
 	appv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/app/v1alpha1"
-	"github.com/cosmos/cosmos-sdk/app/module/internal"
 )
 
 func Register(configType proto.Message, pinnedProtoImageFS embed.FS, options ...Option) {
@@ -30,14 +31,17 @@ func Register(configType proto.Message, pinnedProtoImageFS embed.FS, options ...
 		}
 	}
 
-	config := &internal.ModuleConfig{}
+	initializer := &internal.ModuleInitializer{
+		ConfigType:         configType.ProtoReflect().Type(),
+		PinnedProtoImageFS: pinnedProtoImageFS,
+	}
 
 	for _, opt := range options {
-		err := opt.apply(config)
+		err := opt.apply(initializer)
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	internal.ModuleRegistry[desc.FullName()] = config
+	internal.ModuleRegistry[desc.FullName()] = initializer
 }

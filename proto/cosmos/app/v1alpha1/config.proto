@@ -14,6 +14,10 @@ import "google/protobuf/any.proto";
 message Config {
   // modules are the module configurations for the app.
   repeated ModuleConfig modules = 1;
+
+  // version is the config version. For this version of config, it should
+  // always be v1alpha1.
+  string version = 2;
 }
 
 // ModuleConfig is a module configuration for an app.

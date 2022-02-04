@@ -1,15 +1,13 @@
 package service
 
 import (
-	"github.com/tendermint/tendermint/libs/log"
-	"sync"
-	"testing"
-	"time"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/libs/log"
+	"sync"
+	"testing"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -98,12 +96,12 @@ var (
 	mockKey3   = []byte{3, 4, 5}
 	mockValue3 = []byte{5, 4, 3}
 
-	// maximum amount of time ListenSuccess() will wait receipt
-	// that all current block messages were delivered to the service.
-	deliverBlockWaitLimit = time.Duration(1000)
-
 	// print event data in stdout
 	printDataToStdout = true
+
+	// false == fire-and-forget; true == sends a message receipt success/fail signal
+	ack = false
+
 )
 
 func TestIntermediateWriter(t *testing.T) {
@@ -128,7 +126,7 @@ func TestIntermediateWriter(t *testing.T) {
 func TestKafkaStreamingService(t *testing.T) {
 	loggerContext = emptyContext.WithLogger(log.TestingLogger())
 	testKeys := []types.StoreKey{mockStoreKey1, mockStoreKey2}
-	tss, err := NewTraceStreamingService(testKeys, testMarshaller, deliverBlockWaitLimit, printDataToStdout)
+	tss, err := NewTraceStreamingService(testKeys, testMarshaller, printDataToStdout, ack)
 	testStreamingService = tss
 	require.Nil(t, err)
 	require.IsType(t, &TraceStreamingService{}, testStreamingService)

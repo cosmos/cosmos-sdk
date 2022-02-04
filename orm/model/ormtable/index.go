@@ -3,11 +3,12 @@ package ormtable
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/orm/types/kv"
+
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/model/kv"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 )
 
@@ -38,6 +39,12 @@ type Index interface {
 	// Range iteration is inclusive at both ends.
 	ListRange(ctx context.Context, from, to []interface{}, options ...ormlist.Option) (Iterator, error)
 
+	// DeleteBy deletes any entries which match the provided prefix key.
+	DeleteBy(context context.Context, prefixKey ...interface{}) error
+
+	// DeleteRange deletes any entries between the provided range keys.
+	DeleteRange(context context.Context, from, to []interface{}) error
+
 	// MessageType returns the protobuf message type of the index.
 	MessageType() protoreflect.MessageType
 
@@ -64,9 +71,6 @@ type UniqueIndex interface {
 
 	// Get retrieves the message if one exists for the provided key values.
 	Get(context context.Context, message proto.Message, keyValues ...interface{}) (found bool, err error)
-
-	// DeleteByKey deletes the message if one exists in for the provided key values.
-	DeleteByKey(context context.Context, keyValues ...interface{}) error
 }
 
 type indexer interface {

@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/orm/types/kv"
+
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -21,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
-	"github.com/cosmos/cosmos-sdk/orm/model/kv"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
@@ -336,7 +337,6 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	data = append(data, &testpb.ExampleTable{U32: 9})
 	err = store.Save(ctx, data[10])
 	assert.NilError(t, err)
-	pkIndex := table.GetUniqueIndex("u32,i64,str")
 	a, err = store.Get(ctx, 9, 0, "")
 	assert.NilError(t, err)
 	assert.Assert(t, a != nil)
@@ -366,17 +366,43 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assertTablesEqual(t, table, ctx, store2)
 
 	// let's delete item 5
-	key5 := []interface{}{uint32(7), int64(-2), "abe"}
-	err = pkIndex.DeleteByKey(ctx, key5...)
+	err = store.DeleteBy(ctx, testpb.ExampleTableU32I64StrIndexKey{}.WithU32I64Str(7, -2, "abe"))
 	assert.NilError(t, err)
 	// it should be gone
-	found, err = pkIndex.Has(ctx, key5...)
+	found, err = store.Has(ctx, 7, -2, "abe")
 	assert.NilError(t, err)
 	assert.Assert(t, !found)
 	// and missing from the iterator
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
 	assertIteratorItems(it, 0, 1, 2, 3, 4, 6, 7, 8, 9, 10)
+
+	// let's do a batch delete
+	// first iterate over the items we'll delete to check that iterator
+	it, err = store.List(ctx, testpb.ExampleTableStrU32IndexKey{}.WithStr("abd"))
+	assert.NilError(t, err)
+	assertIteratorItems(it, 1, 3, 9)
+	// now delete them
+	assert.NilError(t, store.DeleteBy(ctx, testpb.ExampleTableStrU32IndexKey{}.WithStr("abd")))
+	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
+	assert.NilError(t, err)
+	assertIteratorItems(it, 0, 2, 4, 6, 7, 8, 10)
+
+	// Let's do a range delete
+	assert.NilError(t, store.DeleteRange(ctx,
+		testpb.ExampleTableStrU32IndexKey{}.WithStrU32("abc", 8),
+		testpb.ExampleTableStrU32IndexKey{}.WithStrU32("abe", 5),
+	))
+	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
+	assert.NilError(t, err)
+	assertIteratorItems(it, 0, 2, 6, 10)
+
+	// Let's delete something directly
+	assert.NilError(t, store.Delete(ctx, data[0]))
+	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
+	assert.NilError(t, err)
+	assertIteratorItems(it, 2, 6, 10)
+
 }
 
 func TestRandomTableData(t *testing.T) {

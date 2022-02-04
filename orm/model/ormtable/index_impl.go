@@ -3,9 +3,10 @@ package ormtable
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/orm/types/kv"
+
 	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
 
-	"github.com/cosmos/cosmos-sdk/orm/model/kv"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
@@ -22,6 +23,24 @@ type indexKeyIndex struct {
 	fields         fieldnames.FieldNames
 	primaryKey     *primaryKeyIndex
 	getReadBackend func(context.Context) (ReadBackend, error)
+}
+
+func (i indexKeyIndex) DeleteBy(ctx context.Context, keyValues ...interface{}) error {
+	it, err := i.List(ctx, keyValues)
+	if err != nil {
+		return err
+	}
+
+	return i.primaryKey.deleteByIterator(ctx, it)
+}
+
+func (i indexKeyIndex) DeleteRange(ctx context.Context, from, to []interface{}) error {
+	it, err := i.ListRange(ctx, from, to)
+	if err != nil {
+		return err
+	}
+
+	return i.primaryKey.deleteByIterator(ctx, it)
 }
 
 func (i indexKeyIndex) List(ctx context.Context, prefixKey []interface{}, options ...ormlist.Option) (Iterator, error) {

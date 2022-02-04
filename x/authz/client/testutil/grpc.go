@@ -107,7 +107,7 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 			false,
 			"",
 			func() {
-				_, err := CreateGrant(val, []string{
+				_, err := ExecGrant(val, []string{
 					grantee.String(),
 					"generic",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),

@@ -176,10 +176,6 @@ func WeightedOperations(
 
 	wPostCreateProposalOps := simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
-			weightMsgSubmitProposal,
-			SimulateMsgSubmitProposal(ak, bk, k),
-		),
-		simulation.NewWeightedOperation(
 			WeightMsgWithdrawProposal,
 			SimulateMsgWithdrawProposal(ak, bk, k),
 		),

@@ -6,10 +6,9 @@ package grpc_test
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"testing"
 	"time"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/jhump/protoreflect/grpcreflect"
 

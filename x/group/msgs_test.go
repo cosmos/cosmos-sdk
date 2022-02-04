@@ -36,7 +36,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
 				Members: []group.Member{
-					{
+					group.Member{
 						Address: "invalid address",
 					},
 				},
@@ -49,7 +49,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
 				Members: []group.Member{
-					{
+					group.Member{
 						Address: member1.String(),
 						Weight:  "-1",
 					},
@@ -63,7 +63,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
 				Members: []group.Member{
-					{
+					group.Member{
 						Address: member1.String(),
 						Weight:  "0",
 					},
@@ -77,12 +77,12 @@ func TestMsgCreateGroup(t *testing.T) {
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
 				Members: []group.Member{
-					{
+					group.Member{
 						Address:  member1.String(),
 						Weight:   "1",
 						Metadata: []byte("metadata"),
 					},
-					{
+					group.Member{
 						Address:  member1.String(),
 						Weight:   "1",
 						Metadata: []byte("metadata"),
@@ -97,7 +97,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
 				Members: []group.Member{
-					{
+					group.Member{
 						Address:  member1.String(),
 						Weight:   "1",
 						Metadata: []byte("metadata"),
@@ -121,12 +121,12 @@ func TestMsgCreateGroup(t *testing.T) {
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
 				Members: []group.Member{
-					{
+					group.Member{
 						Address:  member1.String(),
 						Weight:   "1",
 						Metadata: []byte("metadata"),
 					},
-					{
+					group.Member{
 						Address:  member2.String(),
 						Weight:   "1",
 						Metadata: []byte("metadata"),
@@ -311,7 +311,7 @@ func TestMsgUpdateGroupMembers(t *testing.T) {
 				GroupId: 1,
 				Admin:   admin.String(),
 				MemberUpdates: []group.Member{
-					{
+					group.Member{
 						Address:  member1.String(),
 						Weight:   "1",
 						Metadata: []byte("metadata"),
@@ -327,7 +327,7 @@ func TestMsgUpdateGroupMembers(t *testing.T) {
 				GroupId: 1,
 				Admin:   admin.String(),
 				MemberUpdates: []group.Member{
-					{
+					group.Member{
 						Address:  member1.String(),
 						Weight:   "0",
 						Metadata: []byte("metadata"),

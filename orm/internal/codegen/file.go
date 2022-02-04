@@ -138,7 +138,7 @@ func (f fileGen) genStoreInterfaceGuard() {
 }
 
 func (f fileGen) genStoreConstructor(stores []*protogen.Message) {
-	f.P("func New", f.storeInterfaceName(), "(db ", ormdbPkg.Ident("ModuleDB"), ") (", f.storeInterfaceName(), ", error) {")
+	f.P("func New", f.storeInterfaceName(), "(db ", ormTablePkg.Ident("Schema"), ") (", f.storeInterfaceName(), ", error) {")
 	for _, store := range stores {
 		f.P(f.messageStoreReceiverName(store), ", err := ", f.messageConstructorName(store), "(db)")
 		f.P("if err != nil {")

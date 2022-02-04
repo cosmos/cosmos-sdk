@@ -40,6 +40,7 @@ This module allows the creation and management of on-chain multisig accounts and
     - [Msg/UpdateGroupPolicyDecisionPolicy](03_messages.md#msgupdategrouppolicydecisionpolicy)
     - [Msg/UpdateGroupPolicyMetadata](03_messages.md#msgupdategrouppolicymetadata)
     - [Msg/CreateProposal](03_messages.md#msgcreateproposal)
+    - [Msg/WithdrawProposal](03_messages.md#msgwithdrawproposal)
     - [Msg/Vote](03_messages.md#msgvote)
     - [Msg/Exec](03_messages.md#msgexec)
 4. **[Events](04_events.md)**
@@ -48,6 +49,7 @@ This module allows the creation and management of on-chain multisig accounts and
     - [EventCreateGroupPolicy](04_events.md#eventcreategrouppolicy)
     - [EventUpdateGroupPolicy](04_events.md#eventupdategrouppolicy)
     - [EventCreateProposal](04_events.md#eventcreateproposal)
+    - [EventWithdrawProposal](04_events.md#eventwithdrawproposal)
     - [EventVote](04_events.md#eventvote)
     - [EventExec](04_events.md#eventexec)
 5. **[Client](05_client.md)**

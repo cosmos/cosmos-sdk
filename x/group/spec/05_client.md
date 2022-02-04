@@ -538,6 +538,20 @@ Example:
 simd tx group create-proposal cosmos1.. cosmos1.. msg_tx.json "AQ=="
 ```
 
+#### withdraw-proposal
+
+The `withdraw-proposal` command allows users to withdraw a proposal.
+
+```bash
+simd tx group withdraw-proposal [proposal-id] [group-policy-admin-or-proposer]
+```
+
+Example:
+
+```bash
+simd tx group withdraw-proposal 1 cosmos1..
+```
+
 #### vote 
 
 The `vote` command allows users to vote on a proposal.

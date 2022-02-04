@@ -94,6 +94,16 @@ An optional `Exec` value can be provided to try to execute the proposal immediat
 
 It's expecting to fail if metadata length is greater than `MaxMetadataLen` config.
 
+## Msg/WithdrawProposal
+
+A proposal can be withdrawn using `MsgWithdrawProposal` which has a `address` (can be either proposer or policy admin) and a `proposal_id` (which has to be withdrawn).
+
++++ https://github.com/cosmos/cosmos-sdk/blob/f2d6f0e4bb1a9bd7f7ae3cdc4702c9d3d1fc0329/proto/cosmos/group/v1beta1/tx.proto#L251-L258
+
+It's expecting to fail if:
+- the signer is neither policy address nor proposer of the proposal.
+- the proposal is already closed or aborted.
+
 ## Msg/Vote
 
 A new vote can be created with the `MsgVote`, given a proposal id, a voter address, a choice (yes, no, veto or abstain) and some optional metadata bytes.

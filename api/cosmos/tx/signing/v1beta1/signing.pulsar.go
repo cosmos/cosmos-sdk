@@ -3,15 +3,17 @@ package signingv1beta1
 
 import (
 	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
 	runtime "github.com/cosmos/cosmos-proto/runtime"
-	v1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/crypto/multisig/v1beta1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"
-	io "io"
-	reflect "reflect"
-	sync "sync"
+
+	v1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/crypto/multisig/v1beta1"
 )
 
 var _ protoreflect.List = (*_SignatureDescriptors_1_list)(nil)
@@ -2729,6 +2731,8 @@ const (
 	// SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode does not
 	// require signers signing over other signers' `signer_info`. It also allows
 	// for adding Tips in transactions.
+	//
+	// Since: cosmos-sdk 0.46
 	SignMode_SIGN_MODE_DIRECT_AUX SignMode = 3
 	// SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses
 	// Amino JSON and will be removed in the future.

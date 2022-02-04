@@ -9,13 +9,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var (
-	_ cdctypes.UnpackInterfacesMessage = &Grant{}
-)
-
 // NewGrant returns new Grant
-// NOTE: a new grant is considered invalid if the expiration time is after the
-// "current" time - you should assure that before calling this function.
 func NewGrant(a Authorization, expiration time.Time) (Grant, error) {
 	g := Grant{
 		Expiration: expiration,
@@ -33,6 +27,10 @@ func NewGrant(a Authorization, expiration time.Time) (Grant, error) {
 
 	return g, nil
 }
+
+var (
+	_ cdctypes.UnpackInterfacesMessage = &Grant{}
+)
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (g Grant) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
@@ -53,6 +51,10 @@ func (g Grant) GetAuthorization() Authorization {
 }
 
 func (g Grant) ValidateBasic() error {
+	if g.Expiration.Unix() < time.Now().Unix() {
+		return sdkerrors.Wrap(ErrInvalidExpirationTime, "Time can't be in the past")
+	}
+
 	av := g.Authorization.GetCachedValue()
 	a, ok := av.(Authorization)
 	if !ok {

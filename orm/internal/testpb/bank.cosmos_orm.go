@@ -5,7 +5,6 @@ package testpb
 import (
 	context "context"
 
-	ormdb "github.com/cosmos/cosmos-sdk/orm/model/ormdb"
 	ormlist "github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	ormerrors "github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
@@ -135,7 +134,7 @@ func (this balanceStore) doNotImplement() {}
 
 var _ BalanceStore = balanceStore{}
 
-func NewBalanceStore(db ormdb.ModuleDB) (BalanceStore, error) {
+func NewBalanceStore(db ormtable.Schema) (BalanceStore, error) {
 	table := db.GetTable(&Balance{})
 	if table == nil {
 		return nil, ormerrors.TableNotFound.Wrap(string((&Balance{}).ProtoReflect().Descriptor().FullName()))
@@ -249,7 +248,7 @@ func (this supplyStore) doNotImplement() {}
 
 var _ SupplyStore = supplyStore{}
 
-func NewSupplyStore(db ormdb.ModuleDB) (SupplyStore, error) {
+func NewSupplyStore(db ormtable.Schema) (SupplyStore, error) {
 	table := db.GetTable(&Supply{})
 	if table == nil {
 		return nil, ormerrors.TableNotFound.Wrap(string((&Supply{}).ProtoReflect().Descriptor().FullName()))
@@ -281,7 +280,7 @@ func (bankStore) doNotImplement() {}
 
 var _ BankStore = bankStore{}
 
-func NewBankStore(db ormdb.ModuleDB) (BankStore, error) {
+func NewBankStore(db ormtable.Schema) (BankStore, error) {
 	balanceStore, err := NewBalanceStore(db)
 	if err != nil {
 		return nil, err

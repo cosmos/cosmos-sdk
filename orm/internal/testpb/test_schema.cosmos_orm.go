@@ -5,7 +5,6 @@ package testpb
 import (
 	context "context"
 
-	ormdb "github.com/cosmos/cosmos-sdk/orm/model/ormdb"
 	ormlist "github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	ormerrors "github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
@@ -206,7 +205,7 @@ func (this exampleTableStore) doNotImplement() {}
 
 var _ ExampleTableStore = exampleTableStore{}
 
-func NewExampleTableStore(db ormdb.ModuleDB) (ExampleTableStore, error) {
+func NewExampleTableStore(db ormtable.Schema) (ExampleTableStore, error) {
 	table := db.GetTable(&ExampleTable{})
 	if table == nil {
 		return nil, ormerrors.TableNotFound.Wrap(string((&ExampleTable{}).ProtoReflect().Descriptor().FullName()))
@@ -361,7 +360,7 @@ func (this exampleAutoIncrementTableStore) doNotImplement() {}
 
 var _ ExampleAutoIncrementTableStore = exampleAutoIncrementTableStore{}
 
-func NewExampleAutoIncrementTableStore(db ormdb.ModuleDB) (ExampleAutoIncrementTableStore, error) {
+func NewExampleAutoIncrementTableStore(db ormtable.Schema) (ExampleAutoIncrementTableStore, error) {
 	table := db.GetTable(&ExampleAutoIncrementTable{})
 	if table == nil {
 		return nil, ormerrors.TableNotFound.Wrap(string((&ExampleAutoIncrementTable{}).ProtoReflect().Descriptor().FullName()))
@@ -391,7 +390,7 @@ func (x exampleSingletonStore) Save(ctx context.Context, exampleSingleton *Examp
 	return x.table.Save(ctx, exampleSingleton)
 }
 
-func NewExampleSingletonStore(db ormdb.ModuleDB) (ExampleSingletonStore, error) {
+func NewExampleSingletonStore(db ormtable.Schema) (ExampleSingletonStore, error) {
 	table := db.GetTable(&ExampleSingleton{})
 	if table == nil {
 		return nil, ormerrors.TableNotFound.Wrap(string((&ExampleSingleton{}).ProtoReflect().Descriptor().FullName()))
@@ -429,7 +428,7 @@ func (testSchemaStore) doNotImplement() {}
 
 var _ TestSchemaStore = testSchemaStore{}
 
-func NewTestSchemaStore(db ormdb.ModuleDB) (TestSchemaStore, error) {
+func NewTestSchemaStore(db ormtable.Schema) (TestSchemaStore, error) {
 	exampleTableStore, err := NewExampleTableStore(db)
 	if err != nil {
 		return nil, err

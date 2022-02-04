@@ -280,7 +280,7 @@ func (t tableGen) genStoreImplGuard() {
 
 func (t tableGen) genConstructor() {
 	iface := t.messageStoreInterfaceName(t.msg)
-	t.P("func New", iface, "(db ", ormdbPkg.Ident("ModuleDB"), ") (", iface, ", error) {")
+	t.P("func New", iface, "(db ", ormTablePkg.Ident("Schema"), ") (", iface, ", error) {")
 	t.P("table := db.GetTable(&", t.msg.GoIdent.GoName, "{})")
 	t.P("if table == nil {")
 	t.P("return nil,", ormErrPkg.Ident("TableNotFound.Wrap"), "(string((&", t.msg.GoIdent.GoName, "{}).ProtoReflect().Descriptor().FullName()))")

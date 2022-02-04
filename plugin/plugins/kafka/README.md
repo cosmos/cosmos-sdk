@@ -58,7 +58,7 @@ The plugin has been hooked up to run with `test-sim-nondeterminism` task. For a 
     
     # maximum amount of time the BaseApp will await positive acknowledgement of message receipt from all streaming services
     # in milliseconds
-    global_ack_wait_limit = 500
+    global_ack_wait_limit = 2000
     
     ###############################################################################
     ###                       Kafka Plugin configuration                        ###
@@ -79,6 +79,11 @@ The plugin has been hooked up to run with `test-sim-nondeterminism` task. For a 
     # whether to operate in fire-and-forget or success/failure acknowledgement mode
     # false == fire-and-forget; true == sends a message receipt success/fail signal
     ack = "false"
+   
+    # The amount of time to wait for acknowledgment of success/failure of message 
+    # delivery of the current block before considering the delivery of messages failed. (In
+    # milliseconds)
+    delivered_block_wait_limit = 1000
     
     # Producer configuration properties.
     # The plugin uses confluent-kafka-go which is a lightweight wrapper around librdkafka.

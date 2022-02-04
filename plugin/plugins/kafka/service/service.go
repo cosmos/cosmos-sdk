@@ -8,7 +8,9 @@ import (
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/types"
@@ -71,20 +73,22 @@ var _ baseapp.StreamingService = (*KafkaStreamingService)(nil)
 
 // KafkaStreamingService is a concrete implementation of streaming.Service that writes state changes out to Kafka
 type KafkaStreamingService struct {
-	listeners             map[types.StoreKey][]types.WriteListener // the listeners that will be initialized with BaseApp
-	srcChan               <-chan []byte                            // the channel that all of the WriteListeners write their data out to
-	topicPrefix           string                                   // topicPrefix prefix name
-	producer              *kafka.Producer                          // the producer instance that will be used to send messages to Kafka
-	flushTimeoutMs        int                                      // the time to wait for outstanding messages and requests to complete delivery (milliseconds)
-	codec                 codec.BinaryCodec                        // binary marshaller used for re-marshalling the ABCI messages to write them out to the destination files
-	stateCache            [][]byte                                 // cache the protobuf binary encoded StoreKVPairs in the order they are received
-	stateCacheLock        *sync.Mutex                              // mutex for the state cache
-	currentBlockNumber    int64                                    // the current block number
-	currentTxIndex        int64                                    // the index of the current tx
-	quitChan              chan struct{}                            // channel used for synchronize closure
-	ack                   bool                                     // true == fire-and-forget; false == sends success/failure signal
-	ackStatus             bool                                     // success/failure status to be sent to ackChan
-	ackChan               chan bool                                // channel used to send a success/failure signal
+	listeners               map[types.StoreKey][]types.WriteListener // the listeners that will be initialized with BaseApp
+	srcChan                 <-chan []byte                            // the channel that all of the WriteListeners write their data out to
+	topicPrefix             string                                   // topicPrefix prefix name
+	producer                *kafka.Producer                          // the producer instance that will be used to send messages to Kafka
+	flushTimeoutMs          int                                      // the time to wait for outstanding messages and requests to complete delivery (milliseconds)
+	codec                   codec.BinaryCodec                        // binary marshaller used for re-marshalling the ABCI messages to write them out to the destination files
+	stateCache              [][]byte                                 // cache the protobuf binary encoded StoreKVPairs in the order they are received
+	stateCacheLock          *sync.Mutex                              // mutex for the state cache
+	currentBlockNumber      int64                                    // the current block number
+	currentTxIndex          int64                                    // the index of the current tx
+	quitChan                chan struct{}                            // channel used for synchronize closure
+	ack                     bool                                     // true == fire-and-forget; false == sends success/failure signal
+	ackStatus               bool                                     // success/failure status to be sent to ackChan
+	ackChan                 chan bool                                // channel used to send a success/failure signal
+	deliveredBlockChan      chan struct{}                            // channel used for signaling the delivery of all messages for the current block to Kafka.
+	deliveredBlockWaitLimit time.Duration                            // the time to wait for Kafka service to deliver current block messages before timing out.
 }
 
 // IntermediateWriter is used so that we do not need to update the underlying io.Writer inside the StoreKVPairWriteListener
@@ -108,13 +112,14 @@ func (iw *IntermediateWriter) Write(b []byte) (int, error) {
 
 // NewKafkaStreamingService creates a new KafkaStreamingService
 func NewKafkaStreamingService(
-	logger         log.Logger,
-	producerConfig kafka.ConfigMap,
-	topicPrefix    string,
-	flushTimeoutMs int,
-	storeKeys      []types.StoreKey,
-	c              codec.BinaryCodec,
-	ack            bool,
+	logger                  log.Logger,
+	producerConfig          kafka.ConfigMap,
+	topicPrefix             string,
+	flushTimeoutMs          int,
+	storeKeys               []types.StoreKey,
+	c                       codec.BinaryCodec,
+	ack                     bool,
+	deliveredBlockWaitLimit time.Duration,
 ) (*KafkaStreamingService, error) {
 	listenChan := make(chan []byte)
 	iw := NewIntermediateWriter(listenChan)
@@ -133,31 +138,41 @@ func NewKafkaStreamingService(
 	logger.Debug("Created Producer: ", "producer", p)
 
 	kss := &KafkaStreamingService{
-		listeners:      listeners,
-		srcChan:        listenChan,
-		topicPrefix:    topicPrefix,
-		producer:       p,
-		flushTimeoutMs: flushTimeoutMs,
-		codec:          c,
-		stateCache:     make([][]byte, 0),
-		stateCacheLock: new(sync.Mutex),
-		ack:            ack,
-		ackChan:        make (chan bool, 1),
+		listeners:               listeners,
+		srcChan:                 listenChan,
+		topicPrefix:             topicPrefix,
+		producer:                p,
+		flushTimeoutMs:          flushTimeoutMs,
+		codec:                   c,
+		stateCache:              make([][]byte, 0),
+		stateCacheLock:          new(sync.Mutex),
+		ack:                     ack,
+		ackChan:                 make (chan bool, 1),
+		deliveredBlockWaitLimit: deliveredBlockWaitLimit,
 	}
 
+	var endBlockResTopic string
+	if len(kss.topicPrefix) > 0 {
+		endBlockResTopic = fmt.Sprintf("%s-%s", kss.topicPrefix, EndBlockResTopic)
+	}
 	go func() {
 		for e := range p.Events() {
 			switch ev := e.(type) {
 			case *kafka.Message:
 				pTopic := ev.TopicPartition.Topic
 				partition := ev.TopicPartition.Partition
-				offset := ev.TopicPartition.Offset
+				//offset := ev.TopicPartition.Offset
 				key := string(ev.Key)
 				if err := ev.TopicPartition.Error; err != nil {
-					logger.Debug("Delivery failed: ", "topic", pTopic, "partition", partition, "key", key, "err", err)
+					logger.Error("Delivery failed: ", "topic", pTopic, "partition", partition, "key", key, "err", err)
 					kss.ackStatus = false
 				} else {
-					logger.Debug("Delivered message:", "topic", pTopic, "partition", partition, "offset", offset, "key", key)
+					//logger.Debug("Delivered message:", "topic", pTopic, "partition", partition, "offset", offset, "key", key)
+					// signal delivery of the block's messages
+					if strings.Compare(endBlockResTopic, *pTopic) == 0 {
+						logger.Debug("====== EndBlock Delivered ======")
+						close(kss.deliveredBlockChan)
+					}
 				}
 			}
 		}
@@ -207,6 +222,7 @@ func (kss *KafkaStreamingService) setBeginBlock(req abci.RequestBeginBlock) {
 	kss.currentBlockNumber = req.GetHeader().Height
 	kss.currentTxIndex = 0
 	kss.ackStatus = true
+	kss.deliveredBlockChan = make(chan  struct{})
 }
 
 // ListenDeliverTx satisfies the Hook interface
@@ -282,15 +298,41 @@ func (kss *KafkaStreamingService) ListenSuccess() <-chan bool {
 	// if we are operating in fire-and-forget mode, immediately send a "success" signal
 	if !kss.ack {
 		go func() {
+			fmt.Printf("%s", "\r------ inside listenSuccess ------\n")
 			kss.ackChan <- true
 		}()
 	} else {
 		go func() {
-			// the KafkaStreamingService operating synchronously, but this will signify whether an error occurred
-			// during it's processing cycle
-			kss.ackChan <- kss.ackStatus
+			// Synchronize the work deliver of all block's messages.
+			// Force call to ListenSuccess() from within app.Commit()
+			// to wait {n} milliseconds before failing.
+			var deliveredBlock = false
+			maxWait := time.NewTicker(kss.deliveredBlockWaitLimit * time.Millisecond)
+			defer maxWait.Stop()
+			loop:
+				for {
+					// No reason to wait for block data to finish writing
+					// if any of the block's messages failed to be delivered
+					if !kss.ackStatus {
+						break loop
+					}
+					select {
+					case <-kss.deliveredBlockChan:
+						deliveredBlock = true
+						break loop
+					case <-maxWait.C:
+						break loop
+					}
+				}
+
+			if deliveredBlock == false {
+				kss.ackChan <- false
+			} else {
+				kss.ackChan <- kss.ackStatus
+			}
 		}()
 	}
+
 	return kss.ackChan
 }
 

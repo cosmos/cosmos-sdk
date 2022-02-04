@@ -46,7 +46,7 @@ message ThresholdDecisionPolicy {
   google.protobuf.Duration timeout = 2 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
-// VoteOption enumerates the valid vote options for a given governance proposal.
+// VoteOption enumerates the valid vote options for a given proposal.
 enum VoteOption {
   option (gogoproto.goproto_enum_prefix) = false;
 

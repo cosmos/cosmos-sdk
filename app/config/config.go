@@ -4,7 +4,6 @@ import (
 	"sigs.k8s.io/yaml"
 
 	configinternal "github.com/cosmos/cosmos-sdk/app/internal/config"
-
 	"github.com/cosmos/cosmos-sdk/container"
 )
 

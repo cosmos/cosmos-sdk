@@ -25,20 +25,31 @@ func LoadJSON(bz []byte) container.Option {
 		return container.Error(err)
 	}
 
-	if cfg.Version != "v1alpha" {
+	if cfg.Version != "v1alpha1" {
 		return container.Error(fmt.Errorf("unsupported config version %s", cfg.Version))
 	}
 
 	registryBuilder := protoregistry.NewRegistryBuilder()
 	moduleInitializers := make([]*internal.ModuleInitializer, len(cfg.Modules))
+	configJsons := make([]json.RawMessage, len(cfg.Modules))
 	for i, mod := range cfg.Modules {
-		var anyWrapper AnyWrapper
-		err = json.Unmarshal(mod.Config, &anyWrapper)
+		var anyMap map[string]interface{}
+		err = json.Unmarshal(mod.Config, &anyMap)
 		if err != nil {
 			return container.Error(err)
 		}
 
-		url := anyWrapper.TypeURL
+		url, ok := anyMap["@type"].(string)
+		if !ok {
+			return container.Error(fmt.Errorf(`can't find expected field "@type" in %s`, mod.Config))
+		}
+
+		delete(anyMap, "@type")
+		configJsons[i], err = json.Marshal(anyMap)
+		if err != nil {
+			return container.Error(err)
+		}
+
 		fullName := protoreflect.FullName(url)
 		if i := strings.LastIndexByte(url, '/'); i >= 0 {
 			fullName = fullName[i+len("/"):]
@@ -68,11 +79,9 @@ func LoadJSON(bz []byte) container.Option {
 
 	var containerOpts []container.Option
 
-	for i, mod := range cfg.Modules {
-		moduleInitializer := moduleInitializers[i]
-
+	for i, moduleInitializer := range moduleInitializers {
 		configObj := moduleInitializer.ConfigType.New().Interface()
-		err = unmarshalJsonOpts.Unmarshal(mod.Config, configObj)
+		err = unmarshalJsonOpts.Unmarshal(configJsons[i], configObj)
 		if err != nil {
 			return container.Error(err)
 		}

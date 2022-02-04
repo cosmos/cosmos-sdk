@@ -1,0 +1,5 @@
+version: v1alpha1
+modules:
+  - name: app
+    config:
+      "@type": cosmos.app.module.v1alpha1.Module

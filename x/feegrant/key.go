@@ -68,7 +68,6 @@ func AllowanceByExpTimeKey(exp *time.Time) []byte {
 }
 
 // ParseAddressesFromFeeAllowanceKey exrtacts and returns the granter, grantee from the given key.
-// Note: do not send the key with store prefix, remove the store prefix (first byte) while sending.
 func ParseAddressesFromFeeAllowanceKey(key []byte) (granter, grantee sdk.AccAddress) {
 	// key is of format:
 	// 0x00<granteeAddressLen (1 Byte)><granteeAddress_Bytes><granterAddressLen (1 Byte)><granterAddress_Bytes>

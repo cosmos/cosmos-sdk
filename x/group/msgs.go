@@ -599,6 +599,42 @@ func (m MsgSubmitProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return tx.UnpackInterfaces(unpacker, m.Messages)
 }
 
+var _ sdk.Msg = &MsgWithdrawProposal{}
+
+// Route Implements Msg.
+func (m MsgWithdrawProposal) Route() string { return sdk.MsgTypeURL(&m) }
+
+// Type Implements Msg.
+func (m MsgWithdrawProposal) Type() string { return sdk.MsgTypeURL(&m) }
+
+// GetSignBytes Implements Msg.
+func (m MsgWithdrawProposal) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+// GetSigners returns the expected signers for a MsgWithdrawProposal.
+func (m MsgWithdrawProposal) GetSigners() []sdk.AccAddress {
+	admin, err := sdk.AccAddressFromBech32(m.Address)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{admin}
+}
+
+// ValidateBasic does a sanity check on the provided data
+func (m MsgWithdrawProposal) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Address)
+	if err != nil {
+		return sdkerrors.Wrap(err, "admin")
+	}
+
+	if m.ProposalId == 0 {
+		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
+	}
+
+	return nil
+}
+
 var _ sdk.Msg = &MsgVote{}
 
 // Route Implements Msg.

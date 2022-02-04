@@ -135,7 +135,7 @@ func SimulateMsgGrant(ak authz.AccountKeeper, bk authz.BankKeeper, _ keeper.Keep
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
-		return simtypes.NewOperationMsg(msg, true, "success", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
 	}
 }
 
@@ -202,7 +202,7 @@ func SimulateMsgRevoke(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Kee
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(&msg, true, "success", nil), nil, nil
+		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, nil
 	}
 }
 

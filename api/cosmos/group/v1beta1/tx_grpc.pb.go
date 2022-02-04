@@ -38,8 +38,15 @@ type MsgClient interface {
 	UpdateGroupPolicyDecisionPolicy(ctx context.Context, in *MsgUpdateGroupPolicyDecisionPolicy, opts ...grpc.CallOption) (*MsgUpdateGroupPolicyDecisionPolicyResponse, error)
 	// UpdateGroupPolicyMetadata updates a group policy metadata.
 	UpdateGroupPolicyMetadata(ctx context.Context, in *MsgUpdateGroupPolicyMetadata, opts ...grpc.CallOption) (*MsgUpdateGroupPolicyMetadataResponse, error)
+<<<<<<< HEAD
 	// SubmitProposal submits a new proposal.
 	SubmitProposal(ctx context.Context, in *MsgSubmitProposal, opts ...grpc.CallOption) (*MsgSubmitProposalResponse, error)
+=======
+	// CreateProposal submits a new proposal.
+	CreateProposal(ctx context.Context, in *MsgCreateProposal, opts ...grpc.CallOption) (*MsgCreateProposalResponse, error)
+	// WithdrawProposal aborts a proposal.
+	WithdrawProposal(ctx context.Context, in *MsgWithdrawProposal, opts ...grpc.CallOption) (*MsgWithdrawProposalResponse, error)
+>>>>>>> a7fb1a1d5131eb18c676c2ce0bcbad02bd4c6413
 	// Vote allows a voter to vote on a proposal.
 	Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error)
 	// Exec executes a proposal.
@@ -135,6 +142,15 @@ func (c *msgClient) SubmitProposal(ctx context.Context, in *MsgSubmitProposal, o
 	return out, nil
 }
 
+func (c *msgClient) WithdrawProposal(ctx context.Context, in *MsgWithdrawProposal, opts ...grpc.CallOption) (*MsgWithdrawProposalResponse, error) {
+	out := new(MsgWithdrawProposalResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/WithdrawProposal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error) {
 	out := new(MsgVoteResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/Vote", in, out, opts...)
@@ -173,8 +189,15 @@ type MsgServer interface {
 	UpdateGroupPolicyDecisionPolicy(context.Context, *MsgUpdateGroupPolicyDecisionPolicy) (*MsgUpdateGroupPolicyDecisionPolicyResponse, error)
 	// UpdateGroupPolicyMetadata updates a group policy metadata.
 	UpdateGroupPolicyMetadata(context.Context, *MsgUpdateGroupPolicyMetadata) (*MsgUpdateGroupPolicyMetadataResponse, error)
+<<<<<<< HEAD
 	// SubmitProposal submits a new proposal.
 	SubmitProposal(context.Context, *MsgSubmitProposal) (*MsgSubmitProposalResponse, error)
+=======
+	// CreateProposal submits a new proposal.
+	CreateProposal(context.Context, *MsgCreateProposal) (*MsgCreateProposalResponse, error)
+	// WithdrawProposal aborts a proposal.
+	WithdrawProposal(context.Context, *MsgWithdrawProposal) (*MsgWithdrawProposalResponse, error)
+>>>>>>> a7fb1a1d5131eb18c676c2ce0bcbad02bd4c6413
 	// Vote allows a voter to vote on a proposal.
 	Vote(context.Context, *MsgVote) (*MsgVoteResponse, error)
 	// Exec executes a proposal.
@@ -212,6 +235,9 @@ func (UnimplementedMsgServer) UpdateGroupPolicyMetadata(context.Context, *MsgUpd
 }
 func (UnimplementedMsgServer) SubmitProposal(context.Context, *MsgSubmitProposal) (*MsgSubmitProposalResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SubmitProposal not implemented")
+}
+func (UnimplementedMsgServer) WithdrawProposal(context.Context, *MsgWithdrawProposal) (*MsgWithdrawProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawProposal not implemented")
 }
 func (UnimplementedMsgServer) Vote(context.Context, *MsgVote) (*MsgVoteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Vote not implemented")
@@ -394,6 +420,24 @@ func _Msg_SubmitProposal_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_WithdrawProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawProposal)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.group.v1beta1.Msg/WithdrawProposal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawProposal(ctx, req.(*MsgWithdrawProposal))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Msg_Vote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgVote)
 	if err := dec(in); err != nil {
@@ -472,6 +516,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SubmitProposal",
 			Handler:    _Msg_SubmitProposal_Handler,
+		},
+		{
+			MethodName: "WithdrawProposal",
+			Handler:    _Msg_WithdrawProposal_Handler,
 		},
 		{
 			MethodName: "Vote",

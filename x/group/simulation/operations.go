@@ -34,6 +34,7 @@ var (
 	TypeMsgUpdateGroupPolicyDecisionPolicy = sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyDecisionPolicy{})
 	TypeMsgUpdateGroupPolicyMetadata       = sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyMetadata{})
 	TypeMsgSubmitProposal                  = sdk.MsgTypeURL(&group.MsgSubmitProposal{})
+	TypeMsgWithdrawProposal                = sdk.MsgTypeURL(&group.MsgWithdrawProposal{})
 	TypeMsgVote                            = sdk.MsgTypeURL(&group.MsgVote{})
 	TypeMsgExec                            = sdk.MsgTypeURL(&group.MsgExec{})
 )
@@ -44,17 +45,18 @@ const (
 	OpMsgUpdateGroupAdmin                = "op_weight_msg_update_group_admin"
 	OpMsgUpdateGroupMetadata             = "op_wieght_msg_update_group_metadata"
 	OpMsgUpdateGroupMembers              = "op_weight_msg_update_group_members"
-	OpMsgCreateGroupPolicy               = "op_weight_msg_create_group_account"
-	OpMsgUpdateGroupPolicyAdmin          = "op_weight_msg_update_group_account_admin"
-	OpMsgUpdateGroupPolicyDecisionPolicy = "op_weight_msg_update_group_account_decision_policy"
-	OpMsgUpdateGroupPolicyMetaData       = "op_weight_msg_update_group_account_metadata"
+	OpMsgCreateGroupPolicy               = "op_weight_msg_create_group_policy"
+	OpMsgUpdateGroupPolicyAdmin          = "op_weight_msg_update_group_policy_admin"
+	OpMsgUpdateGroupPolicyDecisionPolicy = "op_weight_msg_update_group_policy_decision_policy"
+	OpMsgUpdateGroupPolicyMetaData       = "op_weight_msg_update_group_policy_metadata"
 	OpMsgSubmitProposal                  = "op_weight_msg_submit_proposal"
+	OpMsgWithdrawProposal                = "op_weight_msg_withdraw_proposal"
 	OpMsgVote                            = "op_weight_msg_vote"
-	OpMsgExec                            = "ops_weight_msg_exec"
+	OpMsgExec                            = "op_weight_msg_exec"
 )
 
-// If update group or group account txn's executed, `SimulateMsgVote` & `SimulateMsgExec` txn's returns `noOp`.
-// That's why we have less weight for update group & group-account txn's.
+// If update group or group policy txn's executed, `SimulateMsgVote` & `SimulateMsgExec` txn's returns `noOp`.
+// That's why we have less weight for update group & group-policy txn's.
 const (
 	WeightMsgCreateGroup                     = 100
 	WeightMsgCreateGroupPolicy               = 100
@@ -67,6 +69,7 @@ const (
 	WeightMsgUpdateGroupPolicyAdmin          = 5
 	WeightMsgUpdateGroupPolicyDecisionPolicy = 5
 	WeightMsgUpdateGroupPolicyMetadata       = 5
+	WeightMsgWithdrawProposal                = 20
 )
 
 const GroupMemberWeight = 40
@@ -87,6 +90,7 @@ func WeightedOperations(
 		weightMsgSubmitProposal                  int
 		weightMsgVote                            int
 		weightMsgExec                            int
+		weightMsgWithdrawProposal                int
 	)
 
 	appParams.GetOrGenerate(cdc, OpMsgCreateGroup, &weightMsgCreateGroup, nil,
@@ -144,8 +148,22 @@ func WeightedOperations(
 			weightMsgUpdateGroupPolicyMetadata = WeightMsgUpdateGroupPolicyMetadata
 		},
 	)
+	appParams.GetOrGenerate(cdc, OpMsgWithdrawProposal, &weightMsgWithdrawProposal, nil,
+		func(_ *rand.Rand) {
+			weightMsgWithdrawProposal = WeightMsgWithdrawProposal
+		},
+	)
 
-	return simulation.WeightedOperations{
+	// create two proposals for weightedOperations
+	var createProposalOps simulation.WeightedOperations
+	for i := 0; i < 2; i++ {
+		createProposalOps = append(createProposalOps, simulation.NewWeightedOperation(
+			weightMsgSubmitProposal,
+			SimulateMsgSubmitProposal(ak, bk, k),
+		))
+	}
+
+	wPreCreateProposalOps := simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgCreateGroup,
 			SimulateMsgCreateGroup(ak, bk),
@@ -154,9 +172,16 @@ func WeightedOperations(
 			weightMsgCreateGroupPolicy,
 			SimulateMsgCreateGroupPolicy(ak, bk, k),
 		),
+	}
+
+	wPostCreateProposalOps := simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgSubmitProposal,
 			SimulateMsgSubmitProposal(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			WeightMsgWithdrawProposal,
+			SimulateMsgWithdrawProposal(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgVote,
@@ -191,6 +216,8 @@ func WeightedOperations(
 			SimulateMsgUpdateGroupPolicyMetadata(ak, bk, k),
 		),
 	}
+
+	return append(wPreCreateProposalOps, append(createProposalOps, wPostCreateProposalOps...)...)
 }
 
 // SimulateMsgCreateGroup generates a MsgCreateGroup with random values
@@ -699,6 +726,118 @@ func SimulateMsgUpdateGroupPolicyMetadata(ak group.AccountKeeper,
 	}
 }
 
+// SimulateMsgWithdrawProposal generates a MsgWithdrawProposal with random values
+func SimulateMsgWithdrawProposal(ak group.AccountKeeper,
+	bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		g, groupPolicy, _, _, err := randomGroupPolicy(r, k, ak, sdkCtx, accounts)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, ""), nil, err
+		}
+		if g == nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "no group found"), nil, nil
+		}
+		if groupPolicy == nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "no group policy found"), nil, nil
+		}
+
+		groupPolicyAddr := groupPolicy.Address
+		ctx := sdk.WrapSDKContext(sdkCtx)
+
+		policy := groupPolicy.GetDecisionPolicy()
+		err = policy.Validate(*g)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, err.Error()), nil, nil
+		}
+
+		proposalsResult, err := k.ProposalsByGroupPolicy(ctx, &group.QueryProposalsByGroupPolicyRequest{Address: groupPolicyAddr})
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "fail to query group info"), nil, err
+		}
+
+		proposals := proposalsResult.GetProposals()
+		if len(proposals) == 0 {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "no proposals found"), nil, nil
+		}
+
+		var proposal *group.Proposal
+		proposalID := -1
+
+		for _, p := range proposals {
+			if p.Status == group.PROPOSAL_STATUS_SUBMITTED {
+				timeout := p.Timeout
+				proposal = p
+				proposalID = int(p.ProposalId)
+				if timeout.Before(sdkCtx.BlockTime()) || timeout.Equal(sdkCtx.BlockTime()) {
+					return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "voting period ended: skipping"), nil, nil
+				}
+				break
+			}
+		}
+
+		// return no-op if no proposal found
+		if proposalID == -1 {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "no proposals found"), nil, nil
+		}
+
+		// Ensure that group and group policy haven't been modified since the proposal submission.
+		if proposal.GroupPolicyVersion != groupPolicy.Version {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "group policy has been modified"), nil, nil
+		}
+
+		// Ensure the group hasn't been modified.
+		if proposal.GroupVersion != g.Version {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "group has been modified"), nil, nil
+		}
+
+		// select a random proposer
+		proposers := proposal.Proposers
+		n := randIntInRange(r, len(proposers))
+		proposerIdx := findAccount(accounts, proposers[n])
+		proposer := accounts[proposerIdx]
+		proposerAcc := ak.GetAccount(sdkCtx, proposer.Address)
+
+		spendableCoins := bk.SpendableCoins(sdkCtx, proposer.Address)
+		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "fee error"), nil, err
+		}
+
+		msg := group.MsgWithdrawProposal{
+			ProposalId: uint64(proposalID),
+			Address:    proposer.Address.String(),
+		}
+
+		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		tx, err := helpers.GenTx(
+			txGen,
+			[]sdk.Msg{&msg},
+			fees,
+			helpers.DefaultGenTxGas,
+			chainID,
+			[]uint64{proposerAcc.GetAccountNumber()},
+			[]uint64{proposerAcc.GetSequence()},
+			proposer.PrivKey,
+		)
+
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyMetadata, "unable to generate mock tx"), nil, err
+		}
+
+		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+
+		if err != nil {
+			if strings.Contains(err.Error(), "group was modified") || strings.Contains(err.Error(), "group policy was modified") {
+				return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "no-op:group/group-policy was modified"), nil, nil
+			}
+			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+		}
+
+		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, err
+	}
+}
+
 // SimulateMsgVote generates a MsgVote with random values
 func SimulateMsgVote(ak group.AccountKeeper,
 	bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
@@ -802,8 +941,8 @@ func SimulateMsgVote(ak group.AccountKeeper,
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 
 		if err != nil {
-			if strings.Contains(err.Error(), "group was modified") || strings.Contains(err.Error(), "group account was modified") {
-				return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "no-op:group/group-account was modified"), nil, nil
+			if strings.Contains(err.Error(), "group was modified") || strings.Contains(err.Error(), "group policy was modified") {
+				return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "no-op:group/group-policy was modified"), nil, nil
 			}
 			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
@@ -877,8 +1016,8 @@ func SimulateMsgExec(ak group.AccountKeeper,
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			if strings.Contains(err.Error(), "group was modified") || strings.Contains(err.Error(), "group account was modified") {
-				return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "no-op:group/group-account was modified"), nil, nil
+			if strings.Contains(err.Error(), "group was modified") || strings.Contains(err.Error(), "group policy was modified") {
+				return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "no-op:group/group-policy was modified"), nil, nil
 			}
 			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}

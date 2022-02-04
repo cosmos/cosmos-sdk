@@ -198,10 +198,10 @@ enum ProposalStatus {
   // Final status of a proposal when the group was modified before the final tally.
   PROPOSAL_STATUS_ABORTED = 3;
 
-  // TODO: do we want to support a withdrawn operation?
   // A proposal can be deleted before the voting start time by the owner. When this happens the final status
   // is Withdrawn.
-  //        PROPOSAL_STATUS_WITHDRAWN = 4;
+  PROPOSAL_STATUS_WITHDRAWN = 4;
+  }
 }
 
 // ProposalResult defines types of proposal results.

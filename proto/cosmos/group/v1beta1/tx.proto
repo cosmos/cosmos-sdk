@@ -42,6 +42,9 @@ service Msg {
   // SubmitProposal submits a new proposal.
   rpc SubmitProposal(MsgSubmitProposal) returns (MsgSubmitProposalResponse);
 
+  // WithdrawProposal aborts a proposal.
+  rpc WithdrawProposal(MsgWithdrawProposal) returns (MsgWithdrawProposalResponse);
+
   // Vote allows a voter to vote on a proposal.
   rpc Vote(MsgVote) returns (MsgVoteResponse);
 
@@ -257,6 +260,18 @@ message MsgSubmitProposalResponse {
   // proposal is the unique ID of the proposal.
   uint64 proposal_id = 1;
 }
+
+// MsgWithdrawProposal is the Msg/WithdrawProposal request type.
+message MsgWithdrawProposal {
+  // proposal is the unique ID of the proposal.
+  uint64 proposal_id = 1;
+
+  // address is the admin of the group policy or one of the proposer of the proposal.
+  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgWithdrawProposalResponse is the Msg/WithdrawProposal response type.
+message MsgWithdrawProposalResponse {}
 
 // MsgVote is the Msg/Vote request type.
 message MsgVote {

@@ -3,9 +3,10 @@ package ormtable
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/orm/types/kv"
+
 	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
 
-	"github.com/cosmos/cosmos-sdk/orm/model/kv"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
@@ -24,13 +25,40 @@ type indexKeyIndex struct {
 	getReadBackend func(context.Context) (ReadBackend, error)
 }
 
-func (i indexKeyIndex) Iterator(ctx context.Context, options ...ormlist.Option) (Iterator, error) {
+func (i indexKeyIndex) DeleteBy(ctx context.Context, keyValues ...interface{}) error {
+	it, err := i.List(ctx, keyValues)
+	if err != nil {
+		return err
+	}
+
+	return i.primaryKey.deleteByIterator(ctx, it)
+}
+
+func (i indexKeyIndex) DeleteRange(ctx context.Context, from, to []interface{}) error {
+	it, err := i.ListRange(ctx, from, to)
+	if err != nil {
+		return err
+	}
+
+	return i.primaryKey.deleteByIterator(ctx, it)
+}
+
+func (i indexKeyIndex) List(ctx context.Context, prefixKey []interface{}, options ...ormlist.Option) (Iterator, error) {
 	backend, err := i.getReadBackend(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return iterator(backend, backend.IndexStoreReader(), i, i.KeyCodec, options)
+	return prefixIterator(backend.IndexStoreReader(), backend, i, i.KeyCodec, prefixKey, options)
+}
+
+func (i indexKeyIndex) ListRange(ctx context.Context, from, to []interface{}, options ...ormlist.Option) (Iterator, error) {
+	backend, err := i.getReadBackend(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return rangeIterator(backend.IndexStoreReader(), backend, i, i.KeyCodec, from, to, options)
 }
 
 var _ indexer = &indexKeyIndex{}

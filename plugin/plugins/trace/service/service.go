@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/gogo/protobuf/proto"
-	"sync"
-	"time"
-
 	abci "github.com/tendermint/tendermint/abci/types"
+	"sync"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/types"
@@ -49,10 +47,10 @@ type TraceStreamingService struct {
 	currentTxIndex        int64                                    // the index of the current tx
 	quitChan              chan struct{}                            // channel used for synchronize closure
 	successChan           chan bool                                // channel used for signaling success or failure of message delivery to external service
-	deliveredMessages     bool                                     // True if messages were delivered, false otherwise.
-	deliveredBlockChan    chan struct{}                            // channel used for signaling the delivery of all messages for the current block.
-	deliverBlockWaitLimit time.Duration                            // the time to wait for service to deliver current block messages before timing out.
 	printDataToStdout     bool                                     // Print types.StoreKVPair data stored in each event to stdout.
+	ack                   bool                                     // true == fire-and-forget; false == sends success/failure signal
+	ackStatus             bool                                     // success/failure status to be sent to ackChan
+	ackChan               chan bool                                // channel used to send a success/failure signal
 }
 
 // IntermediateWriter is used so that we do not need to update the underlying io.Writer inside the StoreKVPairWriteListener
@@ -79,8 +77,8 @@ func (iw *IntermediateWriter) Write(b []byte) (int, error) {
 func NewTraceStreamingService(
 	storeKeys             []types.StoreKey,
 	c                     codec.BinaryCodec,
-	deliverBlockWaitLimit time.Duration,
 	printDataToStdout     bool,
+	ack                   bool,
 ) (*TraceStreamingService, error) {
 	successChan := make(chan bool, 1)
 	listenChan := make(chan []byte)
@@ -99,9 +97,9 @@ func NewTraceStreamingService(
 		stateCache:            make([][]byte, 0),
 		stateCacheLock:        new(sync.Mutex),
 		successChan:           successChan,
-		deliveredMessages:     true,
-		deliverBlockWaitLimit: deliverBlockWaitLimit,
 		printDataToStdout:     printDataToStdout,
+		ack:                   ack,
+		ackChan:               make(chan bool),
 	}
 
 	return tss, nil
@@ -145,9 +143,9 @@ func (tss *TraceStreamingService) ListenBeginBlock(
 
 func (tss *TraceStreamingService) setBeginBlock(req abci.RequestBeginBlock) {
 	tss.currentBlockNumber = req.GetHeader().Height
+	// reset on new block
 	tss.currentTxIndex = 0
-	tss.deliveredBlockChan = make(chan struct{})
-	tss.deliveredMessages = true // Reset to true. Will be set to false when delivery of any message fails.
+	tss.ackStatus = true
 }
 
 // ListenDeliverTx satisfies the Hook interface
@@ -214,8 +212,6 @@ func (tss *TraceStreamingService) ListenEndBlock(
 		return err
 	}
 
-	// Acknowledge that the EndBlockEvent request, response and state changes have been written
-	close(tss.deliveredBlockChan)
 	return nil
 }
 
@@ -228,29 +224,19 @@ func (tss *TraceStreamingService) ListenEndBlock(
 //	     return tss.successChan
 //   }
 func (tss *TraceStreamingService) ListenSuccess() <-chan bool {
-	// Synchronize the work between app.Commit() and message writes for the current block.
-	// Wait until ListenEndBlock() is finished or timeout is reached before responding back.
-	var deliveredBlock bool
-	maxWait := time.NewTicker(tss.deliverBlockWaitLimit)
-	defer maxWait.Stop()
-	loop:
-		for {
-			select {
-			case <-tss.deliveredBlockChan:
-				deliveredBlock = true
-				break loop
-			case <-maxWait.C:
-				deliveredBlock = false
-				break loop
-			}
-		}
-
-	if deliveredBlock == false {
-		tss.deliveredMessages = false
+	// if we are operating in fire-and-forget mode, immediately send a "success" signal
+	if !tss.ack {
+		go func() {
+			tss.ackChan <- true
+		}()
+	} else {
+		go func() {
+			// the TraceStreamingService operating synchronously, but this will signify whether an error occurred
+			// during it's processing cycle
+			tss.ackChan <- tss.ackStatus
+		}()
 	}
-
-	tss.successChan <- tss.deliveredMessages
-	return tss.successChan
+	return tss.ackChan
 }
 
 // Stream spins up a goroutine select loop which awaits length-prefixed binary encoded KV pairs and caches them in the order they were received
@@ -292,9 +278,11 @@ func (tss *TraceStreamingService) writeStateChange(ctx sdk.Context, event string
 	for i, stateChange := range tss.stateCache {
 		key := fmt.Sprintf(LogMsgFmt, tss.currentBlockNumber, event, eventId, StateChangeEventType, i+1)
 		if err := kodec.UnmarshalLengthPrefixed(stateChange, kvPair); err != nil {
+			tss.ackStatus = false
 			return err
 		}
 		if err := tss.writeEventReqRes(ctx, key, kvPair); err != nil {
+			tss.ackStatus = false
 			return err
 		}
 	}

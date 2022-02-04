@@ -1,13 +1,59 @@
+###############################################################################
+###                      Plugin system configuration                        ###
+###############################################################################
+
 [plugins]
-    on = false # turn the plugin system, as a whole, on or off
-    disabled = ["list", "of", "plugin", "names", "to", "disable"]
-    dir = "the directory to load non-preloaded plugins from; defaults to cosmos-sdk/plugin/plugins"
-    [plugins.streaming] # a mapping of plugin-specific streaming service parameters, mapped to their pluginFileName
-    # maximum amount of time the BaseApp will await positive acknowledgement of message receipt from all streaming services
-    # in milliseconds
-    global_ack_wait_limit = 500
-        [plugins.streaming.file] # the specific parameters for the file streaming service plugin
-            keys = ["list", "of", "store", "keys", "we", "want", "to", "expose", "for", "this", "streaming", "service"]
-            write_dir = "path to the write directory"
-            prefix = "optional prefix to prepend to the generated file names"
-            ack = "false" # false == fire-and-forget; true == sends a message receipt success/fail signal
+
+# turn the plugin system, as a whole, on or off
+on = true
+
+# List of plugin names to enable from the plugin/plugins/*
+disabled = []
+
+# The directory to load non-preloaded plugins from; defaults $GOPATH/src/github.com/cosmos/cosmos-sdk/plugin/plugins
+dir = ""
+
+# a mapping of plugin-specific streaming service parameters, mapped to their pluginFileName
+[plugins.streaming]
+
+# maximum amount of time the BaseApp will await positive acknowledgement of message receipt from all streaming services
+# in milliseconds
+global_ack_wait_limit = 5000
+
+###############################################################################
+###                      File plugin configuration                          ###
+###############################################################################
+
+# the specific parameters for the file streaming service plugin
+[plugins.streaming.file]
+
+# List of store keys to expose to this streaming service.
+# Leaving this blank will include all store keys.
+keys = []
+
+# Path to the write directory
+write_dir = ""
+
+# Optional prefix to prepend to the generated file names
+prefix = ""
+
+# whether to operate in fire-and-forget or success/failure acknowledgement mode
+# false == fire-and-forget; true == sends a message receipt success/fail signal
+ack = "false"
+
+###############################################################################
+###                       Trace Plugin configuration                        ###
+###############################################################################
+
+# The specific parameters for the Kafka streaming service plugin
+[plugins.streaming.trace]
+
+# List of store keys we want to expose for this streaming service.
+keys = []
+
+# In addition to block event info, print the data to stdout as well.
+print_data_to_stdout = false
+
+# whether to operate in fire-and-forget or success/failure acknowledgement mode
+# false == fire-and-forget; true == sends a message receipt success/fail signal
+ack = "false"

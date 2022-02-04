@@ -48,21 +48,13 @@ The plugin is setup to run as the `default` plugin. See `./plugin/loader/preload
    # List of store keys we want to expose for this streaming service.
    keys = []
    
-   # Timeout threshold for which a particular block's messages must be delivered to
-   # external streaming service before signaling back to the `ack` channel.
-   # If the `ack` is set to `false` this setting will be ignored.
-   # Note: This setting MUST be less then `plugins.global_ack_wait_limit`.
-   #       Otherwise, the application will halt without committing blocks.
-   # In milliseconds.
-   deliver_block_wait_limit = 2000
-   
    # In addition to block event info, print the data to stdout as well.
    print_data_to_stdout = false
    
    # whether to operate in fire-and-forget or success/failure acknowledgement mode
    # false == fire-and-forget; true == sends a message receipt success/fail signal
    ack = "false"
-    ```
+   ```
    
 2. Run `make test-sim-nondeterminism` and wait for the tests to finish.
 

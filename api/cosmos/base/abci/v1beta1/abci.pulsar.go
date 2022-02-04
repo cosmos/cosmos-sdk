@@ -3,16 +3,18 @@ package abciv1beta1
 
 import (
 	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
 	runtime "github.com/cosmos/cosmos-proto/runtime"
-	abci "github.com/cosmos/cosmos-sdk/api/tendermint/abci"
 	_ "github.com/gogo/protobuf/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"
-	io "io"
-	reflect "reflect"
-	sync "sync"
+
+	abci "github.com/cosmos/cosmos-sdk/api/tendermint/abci"
 )
 
 var _ protoreflect.List = (*_TxResponse_7_list)(nil)
@@ -6907,7 +6909,7 @@ type Result struct {
 	Events []*abci.Event `protobuf:"bytes,3,rep,name=events,proto3" json:"events,omitempty"`
 	// msg_responses contains the Msg handler responses type packed in Anys.
 	//
-	// Since: cosmos-sdk 0.45
+	// Since: cosmos-sdk 0.46
 	MsgResponses []*anypb.Any `protobuf:"bytes,4,rep,name=msg_responses,json=msgResponses,proto3" json:"msg_responses,omitempty"`
 }
 
@@ -7065,7 +7067,7 @@ type TxMsgData struct {
 	Data []*MsgData `protobuf:"bytes,1,rep,name=data,proto3" json:"data,omitempty"`
 	// msg_responses contains the Msg handler responses packed into Anys.
 	//
-	// Since: cosmos-sdk 0.45
+	// Since: cosmos-sdk 0.46
 	MsgResponses []*anypb.Any `protobuf:"bytes,2,rep,name=msg_responses,json=msgResponses,proto3" json:"msg_responses,omitempty"`
 }
 

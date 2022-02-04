@@ -36,7 +36,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
 				Members: []group.Member{
-					group.Member{
+					{
 						Address: "invalid address",
 					},
 				},
@@ -49,7 +49,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
 				Members: []group.Member{
-					group.Member{
+					{
 						Address: member1.String(),
 						Weight:  "-1",
 					},
@@ -63,7 +63,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
 				Members: []group.Member{
-					group.Member{
+					{
 						Address: member1.String(),
 						Weight:  "0",
 					},
@@ -77,12 +77,12 @@ func TestMsgCreateGroup(t *testing.T) {
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
 				Members: []group.Member{
-					group.Member{
+					{
 						Address:  member1.String(),
 						Weight:   "1",
 						Metadata: []byte("metadata"),
 					},
-					group.Member{
+					{
 						Address:  member1.String(),
 						Weight:   "1",
 						Metadata: []byte("metadata"),
@@ -97,7 +97,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
 				Members: []group.Member{
-					group.Member{
+					{
 						Address:  member1.String(),
 						Weight:   "1",
 						Metadata: []byte("metadata"),
@@ -121,12 +121,12 @@ func TestMsgCreateGroup(t *testing.T) {
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
 				Members: []group.Member{
-					group.Member{
+					{
 						Address:  member1.String(),
 						Weight:   "1",
 						Metadata: []byte("metadata"),
 					},
-					group.Member{
+					{
 						Address:  member2.String(),
 						Weight:   "1",
 						Metadata: []byte("metadata"),
@@ -311,7 +311,7 @@ func TestMsgUpdateGroupMembers(t *testing.T) {
 				GroupId: 1,
 				Admin:   admin.String(),
 				MemberUpdates: []group.Member{
-					group.Member{
+					{
 						Address:  member1.String(),
 						Weight:   "1",
 						Metadata: []byte("metadata"),
@@ -327,7 +327,7 @@ func TestMsgUpdateGroupMembers(t *testing.T) {
 				GroupId: 1,
 				Admin:   admin.String(),
 				MemberUpdates: []group.Member{
-					group.Member{
+					{
 						Address:  member1.String(),
 						Weight:   "0",
 						Metadata: []byte("metadata"),
@@ -716,6 +716,55 @@ func TestMsgVote(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgVote{}))
+			}
+		})
+	}
+}
+
+func TestMsgWithdrawProposal(t *testing.T) {
+	testCases := []struct {
+		name   string
+		msg    *group.MsgWithdrawProposal
+		expErr bool
+		errMsg string
+	}{
+		{
+			"invalid address",
+			&group.MsgWithdrawProposal{
+				Address: "address",
+			},
+			true,
+			"decoding bech32 failed",
+		},
+		{
+			"proposal id is required",
+			&group.MsgWithdrawProposal{
+				Address: member1.String(),
+			},
+			true,
+			"proposal id: value is empty",
+		},
+		{
+			"valid msg",
+			&group.MsgWithdrawProposal{
+				Address:    member1.String(),
+				ProposalId: 1,
+			},
+			false,
+			"",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := tc.msg
+			err := msg.ValidateBasic()
+			if tc.expErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.errMsg)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgWithdrawProposal{}))
 			}
 		})
 	}

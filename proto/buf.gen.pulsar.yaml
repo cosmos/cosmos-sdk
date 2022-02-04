@@ -1,3 +1,5 @@
+# this is the template used to build all proto files with pulsar and
+# it overrides any go_package declaration
 version: v1
 managed:
   enabled: true
@@ -7,7 +9,6 @@ managed:
       - buf.build/googleapis/googleapis
       - buf.build/cosmos/gogo-proto
       - buf.build/cosmos/cosmos-proto
-    override:
 plugins:
   - name: go-pulsar
     out: ../api

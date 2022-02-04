@@ -1,0 +1,20 @@
+# this is the template used to build newer proto files with gogo which are
+# targeted primarily for pulsar and the api module. These are files
+# which don't declare a go_package and use buf managed mode instead.
+# This template gives them a go package path.
+version: v1
+managed:
+  enabled: true
+  go_package_prefix:
+    default: github.com/cosmos/cosmos-sdk/types/apicompat
+    except:
+      - buf.build/googleapis/googleapis
+      - buf.build/cosmos/gogo-proto
+      - buf.build/cosmos/cosmos-proto
+plugins:
+  - name: gocosmos
+    out: ..
+    opt: plugins=grpc,Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types
+  - name: grpc-gateway
+    out: ..
+    opt: logtostderr=true,allow_colon_final_segments=true

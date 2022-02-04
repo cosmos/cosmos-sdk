@@ -1,3 +1,5 @@
+# this is the template used to build proto files that were originally built with
+# gogo proto and have an explicit go_package option
 version: v1
 plugins:
   - name: gocosmos

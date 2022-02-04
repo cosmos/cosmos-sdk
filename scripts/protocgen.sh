@@ -18,8 +18,12 @@ cd proto
 proto_dirs=$(find ./cosmos -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
 for dir in $proto_dirs; do
   for file in $(find "${dir}" -maxdepth 1 -name '*.proto'); do
+    # for packages with an explict go_package we generate them as before
     if grep "option go_package" $file &> /dev/null ; then
       buf generate --template buf.gen.gogo.yaml $file
+    # for packages without an explict go_package we generate them in a compatibility package with gogo
+    else
+      buf generate --template buf.gen.gogo-compat.yaml $file
     fi
   done
 done

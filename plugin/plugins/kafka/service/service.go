@@ -142,7 +142,7 @@ func NewKafkaStreamingService(
 		stateCache:     make([][]byte, 0),
 		stateCacheLock: new(sync.Mutex),
 		ack:            ack,
-		ackChan:        make (chan bool),
+		ackChan:        make (chan bool, 1),
 	}
 
 	go func() {

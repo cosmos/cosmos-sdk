@@ -1,13 +1,22 @@
 package simapp
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/cosmos/cosmos-sdk/plugin"
+	"github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/spf13/cast"
+	"github.com/spf13/viper"
+	tmos "github.com/tendermint/tendermint/libs/os"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"runtime/debug"
 	"strings"
 	"testing"
+	"time"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/stretchr/testify/require"
@@ -33,6 +42,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	kafkaplugin "github.com/cosmos/cosmos-sdk/plugin/plugins/kafka"
+	kafkaservice "github.com/cosmos/cosmos-sdk/plugin/plugins/kafka/service"
 )
 
 // Get flags every time the simulator is run
@@ -310,8 +322,21 @@ func TestAppStateDeterminism(t *testing.T) {
 				logger = log.NewNopLogger()
 			}
 
+			appOpts := loadAppOptions()
+			disabledPlugins := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.PLUGINS_DISABLED_TOML_KEY)))
+			var kafkaDisabled bool = false
+			for _, p := range disabledPlugins {
+				if kafkaplugin.PLUGIN_NAME == p {
+					kafkaDisabled = true
+					break
+				}
+			}
+			if !kafkaDisabled {
+				prepKafkaTopics(appOpts)
+			}
+
 			db := dbm.NewMemDB()
-			app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeTestEncodingConfig(), EmptyAppOptions{}, interBlockCacheOpt())
+			app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeTestEncodingConfig(), appOpts, interBlockCacheOpt())
 
 			fmt.Printf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
@@ -346,4 +371,130 @@ func TestAppStateDeterminism(t *testing.T) {
 			}
 		}
 	}
+}
+
+func loadAppOptions() types.AppOptions {
+	// load plugin config
+	usrHomeDir, _ := os.UserHomeDir()
+	confFile := filepath.Join(usrHomeDir, "app.toml")
+	vpr := viper.New()
+	vpr.SetConfigFile(confFile)
+	err := vpr.ReadInConfig()
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	return vpr
+}
+
+func prepKafkaTopics(opts types.AppOptions) {
+	// kafka topic setup
+	topicPrefix := cast.ToString(opts.Get(fmt.Sprintf("%s.%s.%s.%s", plugin.PLUGINS_TOML_KEY, plugin.STREAMING_TOML_KEY, kafkaplugin.PLUGIN_NAME, kafkaplugin.TOPIC_PREFIX_PARAM)))
+	bootstrapServers := cast.ToString(opts.Get(fmt.Sprintf("%s.%s.%s.%s.%s", plugin.PLUGINS_TOML_KEY, plugin.STREAMING_TOML_KEY, kafkaplugin.PLUGIN_NAME, kafkaplugin.PRODUCER_CONFIG_PARAM, "bootstrap_servers")))
+	bootstrapServers = strings.ReplaceAll(bootstrapServers, "_", ".")
+	topics := []string{
+		string(kafkaservice.BeginBlockReqTopic),
+		kafkaservice.BeginBlockResTopic,
+		kafkaservice.DeliverTxReqTopic,
+		kafkaservice.DeliverTxResTopic,
+		kafkaservice.EndBlockReqTopic,
+		kafkaservice.EndBlockResTopic,
+		kafkaservice.StateChangeTopic,
+	}
+	deleteTopics(topicPrefix, topics, bootstrapServers)
+	createTopics(topicPrefix, topics, bootstrapServers)
+}
+
+func createTopics(topicPrefix string, topics []string, bootstrapServers string) {
+
+	adminClient, err := kafka.NewAdminClient(&kafka.ConfigMap{
+		"bootstrap.servers":       bootstrapServers,
+		"broker.version.fallback": "0.10.0.0",
+		"api.version.fallback.ms": 0,
+	})
+	if err != nil {
+		fmt.Printf("Failed to create Admin client: %s\n", err)
+		tmos.Exit(err.Error())
+	}
+
+	// Contexts are used to abort or limit the amount of time
+	// the Admin call blocks waiting for a result.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Create topics on cluster.
+	// Set Admin options to wait for the operation to finish (or at most 60s)
+	maxDuration, err := time.ParseDuration("60s")
+	if err != nil {
+		fmt.Printf("time.ParseDuration(60s)")
+		tmos.Exit(err.Error())
+	}
+
+	var _topics []kafka.TopicSpecification
+	for _, s := range topics {
+		_topics = append(_topics,
+			kafka.TopicSpecification{
+				Topic:             fmt.Sprintf("%s-%s", topicPrefix, s),
+				NumPartitions:     1,
+				ReplicationFactor: 1})
+	}
+	results, err := adminClient.CreateTopics(ctx, _topics, kafka.SetAdminOperationTimeout(maxDuration))
+	if err != nil {
+		fmt.Printf("Problem during the topicPrefix creation: %v\n", err)
+		tmos.Exit(err.Error())
+	}
+
+	// Check for specific topicPrefix errors
+	for _, result := range results {
+		if result.Error.Code() != kafka.ErrNoError &&
+			result.Error.Code() != kafka.ErrTopicAlreadyExists {
+			fmt.Printf("Topic creation failed for %s: %v",
+				result.Topic, result.Error.String())
+			tmos.Exit(err.Error())
+		}
+	}
+
+	adminClient.Close()
+}
+
+func deleteTopics(topicPrefix string, topics []string, bootstrapServers string) {
+	// Create a new AdminClient.
+	// AdminClient can also be instantiated using an existing
+	// Producer or Consumer instance, see NewAdminClientFromProducer and
+	// NewAdminClientFromConsumer.
+	a, err := kafka.NewAdminClient(&kafka.ConfigMap{"bootstrap.servers": bootstrapServers})
+	if err != nil {
+		fmt.Printf("Failed to create Admin client: %s\n", err)
+		tmos.Exit(err.Error())
+	}
+
+	// Contexts are used to abort or limit the amount of time
+	// the Admin call blocks waiting for a result.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Delete topics on cluster
+	// Set Admin options to wait for the operation to finish (or at most 60s)
+	maxDur, err := time.ParseDuration("60s")
+	if err != nil {
+		fmt.Printf("ParseDuration(60s)")
+		tmos.Exit(err.Error())
+	}
+
+	var _topics []string
+	for _, s := range topics {
+		_topics = append(_topics, fmt.Sprintf("%s-%s", topicPrefix, s))
+	}
+
+	results, err := a.DeleteTopics(ctx, _topics, kafka.SetAdminOperationTimeout(maxDur))
+	if err != nil {
+		fmt.Printf("Failed to delete topics: %v\n", err)
+		tmos.Exit(err.Error())
+	}
+
+	// Print results
+	for _, result := range results {
+		fmt.Printf("%s\n", result)
+	}
+
+	a.Close()
 }

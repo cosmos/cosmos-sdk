@@ -96,7 +96,7 @@ func NewTraceStreamingService(
 		stateCacheLock:        new(sync.Mutex),
 		printDataToStdout:     printDataToStdout,
 		ack:                   ack,
-		ackChan:               make(chan bool),
+		ackChan:               make(chan bool, 1),
 	}
 
 	return tss, nil

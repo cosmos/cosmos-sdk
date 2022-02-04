@@ -130,7 +130,7 @@ type BaseApp struct { // nolint: maligned
 	// and exposing the requests and responses to external consumers
 	abciListeners []ABCIListener
 
-	// globalWaitTime is the maximum amount of time the BaseApp will wait for positive acknowledgement of message
+	// globalWaitLimit is the maximum amount of time the BaseApp will wait for positive acknowledgement of message
 	// receipt from ABCIListeners before halting
 	globalWaitLimit time.Duration
 }

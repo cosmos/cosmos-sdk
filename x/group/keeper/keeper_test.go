@@ -1441,6 +1441,94 @@ func (s *TestSuite) TestCreateProposal() {
 	}
 }
 
+func (s *TestSuite) TestWithdrawProposal() {
+	addrs := s.addrs
+	addr2 := addrs[1]
+	addr5 := addrs[4]
+	groupPolicy := s.groupPolicyAddr
+
+	msgSend := &banktypes.MsgSend{
+		FromAddress: s.groupPolicyAddr.String(),
+		ToAddress:   addr2.String(),
+		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+	}
+
+	proposers := []string{addr2.String()}
+	proposalID := createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+
+	specs := map[string]struct {
+		preRun     func(sdkCtx sdk.Context) uint64
+		proposalId uint64
+		admin      string
+		expErrMsg  string
+	}{
+		"wrong admin": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+			},
+			admin:     addr5.String(),
+			expErrMsg: "unauthorized",
+		},
+		"wrong proposalId": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				return 1111
+			},
+			admin:     proposers[0],
+			expErrMsg: "not found",
+		},
+		"happy case with proposer": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+			},
+			proposalId: proposalID,
+			admin:      proposers[0],
+		},
+		"already closed proposal": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				pId := createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				_, err := s.keeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
+					ProposalId: pId,
+					Address:    proposers[0],
+				})
+				s.Require().NoError(err)
+				return pId
+			},
+			proposalId: proposalID,
+			admin:      proposers[0],
+			expErrMsg:  "cannot withdraw a proposal with the status of STATUS_WITHDRAWN",
+		},
+		"happy case with group admin address": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+			},
+			proposalId: proposalID,
+			admin:      groupPolicy.String(),
+		},
+	}
+	for msg, spec := range specs {
+		spec := spec
+		s.Run(msg, func() {
+			pId := spec.preRun(s.sdkCtx)
+
+			_, err := s.keeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
+				ProposalId: pId,
+				Address:    spec.admin,
+			})
+
+			if spec.expErrMsg != "" {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), spec.expErrMsg)
+				return
+			}
+
+			s.Require().NoError(err)
+			resp, err := s.keeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: pId})
+			s.Require().NoError(err)
+			s.Require().Equal(resp.GetProposal().Status, group.ProposalStatusWithdrawn)
+		})
+	}
+}
+
 func (s *TestSuite) TestVote() {
 	addrs := s.addrs
 	addr1 := addrs[0]

@@ -21,13 +21,15 @@ type KeeperTestSuite struct {
 	homeDir string
 	app     *simapp.SimApp
 	ctx     sdk.Context
+	msgSrvr types.MsgServer
+	addrs   []sdk.AccAddress
 }
 
 func (s *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(s.T(), false)
 	homeDir := filepath.Join(s.T().TempDir(), "x_upgrade_keeper_test")
 	app.UpgradeKeeper = keeper.NewKeeper( // recreate keeper in order to use a custom home path
-		make(map[int64]bool), app.GetKey(types.StoreKey), app.AppCodec(), homeDir, app.BaseApp,
+		make(map[int64]bool), app.GetKey(types.StoreKey), app.AppCodec(), homeDir, app.BaseApp, app.AccountKeeper,
 	)
 	s.T().Log("home dir:", homeDir)
 	s.homeDir = homeDir
@@ -36,6 +38,8 @@ func (s *KeeperTestSuite) SetupTest() {
 		Time:   time.Now(),
 		Height: 10,
 	})
+	s.msgSrvr = keeper.NewMsgServerImpl(s.app.UpgradeKeeper)
+	s.addrs = simapp.AddTestAddrsIncremental(app, s.ctx, 1, sdk.NewInt(30000000))
 }
 
 func (s *KeeperTestSuite) TestReadUpgradeInfoFromDisk() {

@@ -71,14 +71,14 @@ func AllowanceByExpTimeKey(exp *time.Time) []byte {
 // Note: do not send the key with store prefix, remove the store prefix (first byte) while sending.
 func ParseAddressesFromFeeAllowanceKey(key []byte) (granter, grantee sdk.AccAddress) {
 	// key is of format:
-	// <granteeAddressLen (1 Byte)><granteeAddress_Bytes><granterAddressLen (1 Byte)><granterAddress_Bytes>
-	kv.AssertKeyAtLeastLength(key, 1)
-	granteeAddrLen := key[0] // remove prefix key
-	kv.AssertKeyAtLeastLength(key, 1+int(granteeAddrLen))
-	grantee = sdk.AccAddress(key[1 : 1+int(granteeAddrLen)])
-	granterAddrLen := int(key[1+granteeAddrLen])
-	kv.AssertKeyAtLeastLength(key, 2+int(granteeAddrLen)+int(granterAddrLen))
-	granter = sdk.AccAddress(key[2+granterAddrLen : 2+int(granteeAddrLen)+int(granterAddrLen)])
+	// 0x00<granteeAddressLen (1 Byte)><granteeAddress_Bytes><granterAddressLen (1 Byte)><granterAddress_Bytes>
+	kv.AssertKeyAtLeastLength(key, 2)
+	granteeAddrLen := key[1] // remove prefix key
+	kv.AssertKeyAtLeastLength(key, 2+int(granteeAddrLen))
+	grantee = sdk.AccAddress(key[2 : 2+int(granteeAddrLen)])
+	granterAddrLen := int(key[2+granteeAddrLen])
+	kv.AssertKeyAtLeastLength(key, 3+int(granteeAddrLen)+int(granterAddrLen))
+	granter = sdk.AccAddress(key[3+granterAddrLen : 3+int(granteeAddrLen)+int(granterAddrLen)])
 
 	return granter, grantee
 }

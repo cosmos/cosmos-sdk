@@ -114,7 +114,8 @@ func (q Keeper) AllowancesByGranter(c context.Context, req *feegrant.QueryAllowa
 	pageRes, err := query.Paginate(prefixStore, req.Pagination, func(key []byte, value []byte) error {
 		var grant feegrant.Grant
 
-		granter, _ := feegrant.ParseAddressesFromFeeAllowanceKey(key)
+		// ParseAddressesFromFeeAllowanceKey expects the full key including the prefix.
+		granter, _ := feegrant.ParseAddressesFromFeeAllowanceKey(append(feegrant.FeeAllowanceKeyPrefix, key...))
 		if !granter.Equals(granterAddr) {
 			return nil
 		}

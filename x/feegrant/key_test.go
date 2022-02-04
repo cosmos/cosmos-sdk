@@ -19,7 +19,7 @@ func TestMarshalAndUnmarshalFeegrantKey(t *testing.T) {
 	require.Len(t, key, len(grantee.Bytes())+len(granter.Bytes())+3)
 	require.Equal(t, feegrant.FeeAllowancePrefixByGrantee(grantee), key[:len(grantee.Bytes())+2])
 
-	g1, g2 := feegrant.ParseAddressesFromFeeAllowanceKey(key[1:])
+	g1, g2 := feegrant.ParseAddressesFromFeeAllowanceKey(key)
 	require.Equal(t, granter, g1)
 	require.Equal(t, grantee, g2)
 }

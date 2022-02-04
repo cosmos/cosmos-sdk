@@ -1,6 +1,8 @@
 package testutil
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -136,15 +138,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.groupPolicies = res.GroupPolicies
 
 	// create a proposal
-	validTxFileName := getTxSendFileName(s, s.groupPolicies[0].Address, val.Address.String())
 	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
 		append(
 			[]string{
-				s.groupPolicies[0].Address,
-				val.Address.String(),
-				validTxFileName,
-				"",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				s.createCLIProposal(
+					s.groupPolicies[0].Address, val.Address.String(),
+					s.groupPolicies[0].Address, val.Address.String(),
+					""),
 			},
 			commonFlags...,
 		),
@@ -1132,10 +1132,6 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
-	validTxFileName := getTxSendFileName(s, s.groupPolicies[0].Address, val.Address.String())
-	unauthzTxFileName := getTxSendFileName(s, val.Address.String(), s.groupPolicies[0].Address)
-	validTxFileName2 := getTxSendFileName(s, s.groupPolicies[3].Address, val.Address.String())
-
 	testCases := []struct {
 		name         string
 		args         []string
@@ -1148,11 +1144,11 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 			"correct data",
 			append(
 				[]string{
-					s.groupPolicies[0].Address,
-					val.Address.String(),
-					validTxFileName,
-					"",
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+					s.createCLIProposal(
+						s.groupPolicies[0].Address, val.Address.String(),
+						s.groupPolicies[0].Address, val.Address.String(),
+						"",
+					),
 				},
 				commonFlags...,
 			),
@@ -1165,11 +1161,11 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 			"with try exec",
 			append(
 				[]string{
-					s.groupPolicies[0].Address,
-					val.Address.String(),
-					validTxFileName,
-					"",
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+					s.createCLIProposal(
+						s.groupPolicies[0].Address, val.Address.String(),
+						s.groupPolicies[0].Address, val.Address.String(),
+						"",
+					),
 					fmt.Sprintf("--%s=try", client.FlagExec),
 				},
 				commonFlags...,
@@ -1183,11 +1179,10 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 			"with try exec, not enough yes votes for proposal to pass",
 			append(
 				[]string{
-					s.groupPolicies[3].Address,
-					val.Address.String(),
-					validTxFileName2,
-					"",
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+					s.createCLIProposal(
+						s.groupPolicies[3].Address, val.Address.String(),
+						s.groupPolicies[3].Address, val.Address.String(),
+						""),
 					fmt.Sprintf("--%s=try", client.FlagExec),
 				},
 				commonFlags...,
@@ -1201,11 +1196,11 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 			"with amino-json",
 			append(
 				[]string{
-					s.groupPolicies[0].Address,
-					val.Address.String(),
-					validTxFileName,
-					"",
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+					s.createCLIProposal(
+						s.groupPolicies[0].Address, val.Address.String(),
+						s.groupPolicies[0].Address, val.Address.String(),
+						"",
+					),
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
 				commonFlags...,
@@ -1219,11 +1214,11 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 			"metadata too long",
 			append(
 				[]string{
-					s.groupPolicies[0].Address,
-					val.Address.String(),
-					validTxFileName,
-					"AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ==",
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+					s.createCLIProposal(
+						s.groupPolicies[0].Address, val.Address.String(),
+						s.groupPolicies[0].Address, val.Address.String(),
+						"AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ==",
+					),
 				},
 				commonFlags...,
 			),
@@ -1236,11 +1231,10 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 			"unauthorized msg",
 			append(
 				[]string{
-					s.groupPolicies[0].Address,
-					val.Address.String(),
-					unauthzTxFileName,
-					"",
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+					s.createCLIProposal(
+						s.groupPolicies[0].Address, val.Address.String(),
+						val.Address.String(), s.groupPolicies[0].Address,
+						""),
 				},
 				commonFlags...,
 			),
@@ -1253,11 +1247,11 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 			"invalid proposers",
 			append(
 				[]string{
-					s.groupPolicies[0].Address,
-					"invalid",
-					validTxFileName,
-					"",
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+					s.createCLIProposal(
+						s.groupPolicies[0].Address, "invalid",
+						s.groupPolicies[0].Address, val.Address.String(),
+						"",
+					),
 				},
 				commonFlags...,
 			),
@@ -1270,11 +1264,11 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 			"invalid group policy",
 			append(
 				[]string{
-					"invalid",
-					val.Address.String(),
-					validTxFileName,
-					"",
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+					s.createCLIProposal(
+						"invalid", val.Address.String(),
+						s.groupPolicies[0].Address, val.Address.String(),
+						"",
+					),
 				},
 				commonFlags...,
 			),
@@ -1287,11 +1281,11 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 			"no group policy",
 			append(
 				[]string{
-					val.Address.String(),
-					val.Address.String(),
-					validTxFileName,
-					"",
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+					s.createCLIProposal(
+						val.Address.String(), val.Address.String(),
+						s.groupPolicies[0].Address, val.Address.String(),
+						"",
+					),
 				},
 				commonFlags...,
 			),
@@ -1332,16 +1326,14 @@ func (s *IntegrationTestSuite) TestTxVote() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
-	validTxFileName := getTxSendFileName(s, s.groupPolicies[1].Address, val.Address.String())
 	for i := 0; i < 2; i++ {
 		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
 			append(
 				[]string{
-					s.groupPolicies[1].Address,
-					val.Address.String(),
-					validTxFileName,
-					"",
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+					s.createCLIProposal(
+						s.groupPolicies[1].Address, val.Address.String(),
+						s.groupPolicies[1].Address, val.Address.String(),
+						""),
 				},
 				commonFlags...,
 			),
@@ -1522,16 +1514,14 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 
 	ids := make([]string, 2)
 
-	validTxFileName := getTxSendFileName(s, s.groupPolicies[1].Address, val.Address.String())
 	for i := 0; i < 2; i++ {
 		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
 			append(
 				[]string{
-					s.groupPolicies[1].Address,
-					val.Address.String(),
-					validTxFileName,
-					"",
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+					s.createCLIProposal(
+						s.groupPolicies[1].Address, val.Address.String(),
+						s.groupPolicies[1].Address, val.Address.String(),
+						""),
 				},
 				commonFlags...,
 			),
@@ -1671,15 +1661,14 @@ func (s *IntegrationTestSuite) TestTxExec() {
 
 	// create proposals and vote
 	for i := 3; i <= 4; i++ {
-		validTxFileName := getTxSendFileName(s, s.groupPolicies[0].Address, val.Address.String())
 		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
 			append(
 				[]string{
-					s.groupPolicies[0].Address,
-					val.Address.String(),
-					validTxFileName,
-					"",
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+					s.createCLIProposal(
+						s.groupPolicies[0].Address, val.Address.String(),
+						s.groupPolicies[0].Address, val.Address.String(),
+						"",
+					),
 				},
 				commonFlags...,
 			),
@@ -1787,10 +1776,20 @@ func (s *IntegrationTestSuite) TestTxExec() {
 	}
 }
 
-func getTxSendFileName(s *IntegrationTestSuite, from string, to string) string {
-	tx := fmt.Sprintf(
-		`{"body":{"messages":[{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%s","to_address":"%s","amount":[{"denom":"%s","amount":"10"}]}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`,
-		from, to, s.cfg.BondDenom,
-	)
-	return testutil.WriteToNewTempFile(s.T(), tx).Name()
+// createCLIProposal writes a CLI proposal with a MsgSend to a file. Returns
+// the path to the JSON file.
+func (s *IntegrationTestSuite) createCLIProposal(groupPolicyAddress, proposer, sendFrom, sendTo, metadata string) string {
+	bz, err := base64.StdEncoding.DecodeString(metadata)
+	s.Require().NoError(err)
+
+	p := client.CLIProposal{
+		GroupPolicyAddress: groupPolicyAddress,
+		Metadata:           bz,
+		Proposers:          []string{proposer},
+	}
+
+	bz, err = json.Marshal(&p)
+	s.Require().NoError(err)
+
+	return testutil.WriteToNewTempFile(s.T(), string(bz)).Name()
 }

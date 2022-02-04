@@ -14,7 +14,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
@@ -479,46 +478,51 @@ func MsgUpdateGroupPolicyMetadataCmd() *cobra.Command {
 // MsgSubmitProposalCmd creates a CLI command for Msg/SubmitProposal.
 func MsgSubmitProposalCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "submit-proposal [group-policy-account] [proposer[,proposer]*] [msg_tx_json_file] [metadata]",
+		Use:   "submit-proposal [proposal_json_file]",
 		Short: "Submit a new proposal",
-		Long: `Submit a new proposal.
+		Long: fmt.Sprintf(`Submit a new proposal.
 
 Parameters:
-			group-policy-account: account address of the group policy
-			proposer: comma separated (no spaces) list of proposer account addresses. Example: "addr1,addr2" 
-			Metadata: metadata for the proposal
 			msg_tx_json_file: path to json file with messages that will be executed if the proposal is accepted.
-`,
-		Args: cobra.ExactArgs(4),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			proposers := strings.Split(args[1], ",")
-			for i := range proposers {
-				proposers[i] = strings.TrimSpace(proposers[i])
-			}
 
+Example:
+	$ %s tx gov submit-proposal path/to/proposal.json
+	
+	Where proposal.json contains:
+
+{
+	"group_policy_address": "cosmos1...",
+	// array of proto-JSON-encoded sdk.Msgs
+	"messages": [
+	{
+		"@type": "/cosmos.bank.v1beta1.MsgSend",
+		"from_address": "cosmos1...",
+		"to_address": "cosmos1...",
+		"amount":[{"denom": "stake","amount": "10"}]
+	}
+	],
+	"metadata: "4pIMOgIGx1vZGU=", // base64-encoded metadata
+	"proposers": ["cosmos1...", "cosmos1..."],
+}`, version.AppName),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			theTx, err := authclient.ReadTxFromFile(clientCtx, args[2])
+			msgs, prop, err := parseSubmitProposal(clientCtx.Codec, args[0])
 			if err != nil {
 				return err
-			}
-			msgs := theTx.GetMsgs()
-
-			b, err := base64.StdEncoding.DecodeString(args[3])
-			if err != nil {
-				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "metadata is malformed, proper base64 string is required")
 			}
 
 			execStr, _ := cmd.Flags().GetString(FlagExec)
 
 			msg, err := group.NewMsgSubmitProposalRequest(
-				args[0],
-				proposers,
+				prop.GroupPolicyAddress,
+				prop.Proposers,
 				msgs,
-				b,
+				prop.Metadata,
 				execFromString(execStr),
 			)
 			if err != nil {

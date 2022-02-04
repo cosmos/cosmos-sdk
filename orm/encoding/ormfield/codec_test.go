@@ -87,6 +87,26 @@ func TestNTBytesTooLong(t *testing.T) {
 }
 
 func TestCompactUInt32(t *testing.T) {
+	var lastBz []byte
+	testEncodeDecode := func(x uint32, expectedLen int) {
+		bz := ormfield.EncodeCompactUint32(x)
+		assert.Equal(t, expectedLen, len(bz))
+		y, err := ormfield.DecodeCompactUint32(bytes.NewReader(bz))
+		assert.NilError(t, err)
+		assert.Equal(t, x, y)
+		assert.Assert(t, bytes.Compare(lastBz, bz) < 0)
+		lastBz = bz
+	}
+
+	testEncodeDecode(64, 2)
+	testEncodeDecode(16383, 2)
+	testEncodeDecode(16384, 3)
+	testEncodeDecode(4194303, 3)
+	testEncodeDecode(4194304, 4)
+	testEncodeDecode(1073741823, 4)
+	testEncodeDecode(1073741824, 5)
+
+	// randomized tests
 	rapid.Check(t, func(t *rapid.T) {
 		x := rapid.Uint32().Draw(t, "x").(uint32)
 		y := rapid.Uint32().Draw(t, "y").(uint32)
@@ -113,6 +133,28 @@ func TestCompactUInt32(t *testing.T) {
 }
 
 func TestCompactUInt64(t *testing.T) {
+	var lastBz []byte
+	testEncodeDecode := func(x uint64, expectedLen int) {
+		bz := ormfield.EncodeCompactUint64(x)
+		assert.Equal(t, expectedLen, len(bz))
+		y, err := ormfield.DecodeCompactUint64(bytes.NewReader(bz))
+		assert.NilError(t, err)
+		assert.Equal(t, x, y)
+		assert.Assert(t, bytes.Compare(lastBz, bz) < 0)
+		lastBz = bz
+	}
+
+	testEncodeDecode(64, 2)
+	testEncodeDecode(16383, 2)
+	testEncodeDecode(16384, 4)
+	testEncodeDecode(4194303, 4)
+	testEncodeDecode(4194304, 4)
+	testEncodeDecode(1073741823, 4)
+	testEncodeDecode(1073741824, 6)
+	testEncodeDecode(70368744177663, 6)
+	testEncodeDecode(70368744177664, 9)
+
+	// randomized tests
 	rapid.Check(t, func(t *rapid.T) {
 		x := rapid.Uint64().Draw(t, "x").(uint64)
 		y := rapid.Uint64().Draw(t, "y").(uint64)

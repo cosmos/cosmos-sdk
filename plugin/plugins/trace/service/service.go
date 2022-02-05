@@ -38,18 +38,16 @@ const (
 
 // TraceStreamingService is a concrete implementation of streaming.Service that writes state changes to log file.
 type TraceStreamingService struct {
-	listeners             map[types.StoreKey][]types.WriteListener // the listeners that will be initialized with BaseApp
-	srcChan               <-chan []byte                            // the channel that all of the WriteListeners write their data out to
-	codec                 codec.BinaryCodec                        // binary marshaller used for re-marshalling the ABCI messages to write them out to the destination files
-	stateCache            [][]byte                                 // cache the protobuf binary encoded StoreKVPairs in the order they are received
-	stateCacheLock        *sync.Mutex                              // mutex for the state cache
-	currentBlockNumber    int64                                    // the current block number
-	currentTxIndex        int64                                    // the index of the current tx
-	quitChan              chan struct{}                            // channel used for synchronize closure
-	printDataToStdout     bool                                     // Print types.StoreKVPair data stored in each event to stdout.
-	ack                   bool                                     // true == fire-and-forget; false == sends success/failure signal
-	ackStatus             bool                                     // success/failure status to be sent to ackChan
-	ackChan               chan bool                                // channel used to send a success/failure signal
+	listeners              map[types.StoreKey][]types.WriteListener // the listeners that will be initialized with BaseApp
+	srcChan                <-chan []byte                            // the channel that all of the WriteListeners write their data out to
+	codec                  codec.BinaryCodec                        // binary marshaller used for re-marshalling the ABCI messages to write them out to the destination files
+	stateCache             [][]byte                                 // cache the protobuf binary encoded StoreKVPairs in the order they are received
+	stateCacheLock         *sync.Mutex                              // mutex for the state cache
+	currentBlockNumber     int64                                    // the current block number
+	currentTxIndex         int64                                    // the index of the current tx
+	quitChan               chan struct{}                            // channel used for synchronize closure
+	printDataToStdout      bool                                     // Print types.StoreKVPair data stored in each event to stdout.
+	haltAppOnDeliveryError bool                                     // true if the app should be halted on streaming errors, false otherwise
 }
 
 // IntermediateWriter is used so that we do not need to update the underlying io.Writer inside the StoreKVPairWriteListener
@@ -74,10 +72,10 @@ func (iw *IntermediateWriter) Write(b []byte) (int, error) {
 // NewTraceStreamingService creates a new TraceStreamingService for the provided
 // storeKeys, BinaryCodec and deliverBlockWaitLimit (in milliseconds)
 func NewTraceStreamingService(
-	storeKeys             []types.StoreKey,
-	c                     codec.BinaryCodec,
-	printDataToStdout     bool,
-	ack                   bool,
+	storeKeys              []types.StoreKey,
+	c                      codec.BinaryCodec,
+	printDataToStdout      bool,
+	haltAppOnDeliveryError bool,
 ) (*TraceStreamingService, error) {
 	listenChan := make(chan []byte)
 	iw := NewIntermediateWriter(listenChan)
@@ -89,14 +87,13 @@ func NewTraceStreamingService(
 	}
 
 	tss := &TraceStreamingService{
-		listeners:             listeners,
-		srcChan:               listenChan,
-		codec:                 c,
-		stateCache:            make([][]byte, 0),
-		stateCacheLock:        new(sync.Mutex),
-		printDataToStdout:     printDataToStdout,
-		ack:                   ack,
-		ackChan:               make(chan bool, 1),
+		listeners:              listeners,
+		srcChan:                listenChan,
+		codec:                  c,
+		stateCache:             make([][]byte, 0),
+		stateCacheLock:         new(sync.Mutex),
+		printDataToStdout:      printDataToStdout,
+		haltAppOnDeliveryError: haltAppOnDeliveryError,
 	}
 
 	return tss, nil
@@ -142,7 +139,6 @@ func (tss *TraceStreamingService) setBeginBlock(req abci.RequestBeginBlock) {
 	tss.currentBlockNumber = req.GetHeader().Height
 	// reset on new block
 	tss.currentTxIndex = 0
-	tss.ackStatus = true
 }
 
 // ListenDeliverTx satisfies the Hook interface
@@ -212,23 +208,10 @@ func (tss *TraceStreamingService) ListenEndBlock(
 	return nil
 }
 
-// ListenSuccess returns a chan that is used to acknowledge successful receipt of messages by the external service
-// after some configurable delay, `false` is sent to this channel from the service to signify failure of receipt.
-// For fire-and-forget model, set the chan to always be `true`:
-func (tss *TraceStreamingService) ListenSuccess() <-chan bool {
-	// if we are operating in fire-and-forget mode, immediately send a "success" signal
-	if !tss.ack {
-		go func() {
-			tss.ackChan <- true
-		}()
-	} else {
-		go func() {
-			// the TraceStreamingService operating synchronously, but this will signify whether an error occurred
-			// during it's processing cycle
-			tss.ackChan <- tss.ackStatus
-		}()
-	}
-	return tss.ackChan
+// HaltAppOnDeliveryError whether or not to halt the application when delivery of massages fails
+// in ListenBeginBlock, ListenEndBlock, ListenDeliverTx. Setting this to `false` will give fire-and-forget semantics.
+func (tss *TraceStreamingService) HaltAppOnDeliveryError() bool {
+	return tss.haltAppOnDeliveryError
 }
 
 // Stream spins up a goroutine select loop which awaits length-prefixed binary encoded KV pairs and caches them in the order they were received
@@ -270,11 +253,9 @@ func (tss *TraceStreamingService) writeStateChange(ctx sdk.Context, event string
 	for i, stateChange := range tss.stateCache {
 		key := fmt.Sprintf(LogMsgFmt, tss.currentBlockNumber, event, eventId, StateChangeEventType, i+1)
 		if err := kodec.UnmarshalLengthPrefixed(stateChange, kvPair); err != nil {
-			tss.ackStatus = false
 			return err
 		}
 		if err := tss.writeEventReqRes(ctx, key, kvPair); err != nil {
-			tss.ackStatus = false
 			return err
 		}
 	}

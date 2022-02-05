@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -129,10 +127,6 @@ type BaseApp struct { // nolint: maligned
 	// abciListeners for hooking into the ABCI message processing of the BaseApp
 	// and exposing the requests and responses to external consumers
 	abciListeners []ABCIListener
-
-	// globalWaitLimit is the maximum amount of time the BaseApp will wait for positive acknowledgement of message
-	// receipt from ABCIListeners before halting
-	globalWaitLimit time.Duration
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

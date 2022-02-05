@@ -222,9 +222,9 @@ type ABCIListener interface {
 	ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
 	// ListenDeliverTx updates the steaming service with the latest DeliverTx messages
 	ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
-	// ListenSuccess returns a chan that is used to acknowledge successful receipt of messages by the external service
-	// after some configurable delay, `false` is sent to this channel from the service to signify failure of receipt
-	ListenSuccess() <-chan bool
+	// HaltAppOnDeliveryError whether or not to halt the application when delivery of massages fails 
+	// in ListenBeginBlock, ListenEndBlock, ListenDeliverTx. Setting this to `false` will give fire-and-forget semantics.
+	HaltAppOnDeliveryError() bool
 }
 
 // StreamingService interface for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks
@@ -257,15 +257,6 @@ func (app *BaseApp) SetStreamingService(s StreamingService) {
 }
 ```
 
-We will add a new method to the `BaseApp` that is used to configure a global wait limit for receiving positive acknowledgement
-of message receipt from the integrated `StreamingService`s.
-
-```go
-func (app *BaseApp) SetGlobalWaitLimit(t time.Duration) {
-	app.globalWaitLimit = t
-}
-```
-
 We will also modify the `BeginBlock`, `EndBlock`, and `DeliverTx` methods to pass ABCI requests and responses to any streaming service hooks registered
 with the `BaseApp`.
 
@@ -276,7 +267,12 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	// Call the streaming service hooks with the BeginBlock messages
 	for _, listener := range app.abciListeners {
-		listener.ListenBeginBlock(app.deliverState.ctx, req, res)
+		if err := listener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
+			app.logger.Error("ListenBeginBlock listening hook failed", "err", err)
+			if listener.HaltAppOnDeliveryError() {
+				app.halt()
+			}
+		}
 	}
 
 	return res
@@ -290,7 +286,12 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 
 	// Call the streaming service hooks with the EndBlock messages
 	for _, listener := range app.abciListeners {
-		listener.ListenEndBlock(app.deliverState.ctx, req, res)
+		if err := listener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
+            app.logger.Error("ListenEndBlock listening hook failed", "err", err)
+			if listener.HaltAppOnDeliveryError() {
+				app.halt()
+			}
+		}
 	}
 
 	return res
@@ -299,64 +300,22 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 
 ```go
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
-
-	...
-
-	gInfo, result, err := app.runTx(runTxModeDeliver, req.Tx)
-	if err != nil {
-		resultStr = "failed"
-		res := sdkerrors.ResponseDeliverTx(err, gInfo.GasWanted, gInfo.GasUsed, app.trace)
-		// If we throw an error, be sure to still call the streaming service's hook
-		for _, listener := range app.abciListeners {
-			listener.ListenDeliverTx(app.deliverState.ctx, req, res)
+	
+	var abciRes abci.ResponseDeliverTx
+	defer func() {
+		for _, streamingListener := range app.abciListeners {
+			if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, abciRes); err != nil {
+				app.logger.Error("DeliverTx listening hook failed", "err", err)
+				if streamingListener.HaltAppOnDeliveryError() {
+					app.halt()
+				}
+			}
 		}
-		return res
-	}
-
-	res := abci.ResponseDeliverTx{
-		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
-		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
-		Log:       result.Log,
-		Data:      result.Data,
-		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
-	}
-
-	// Call the streaming service hooks with the DeliverTx messages
-	for _, listener := range app.abciListeners {
-		listener.ListenDeliverTx(app.deliverState.ctx, req, res)
-	}
+	}()
+	
+	...
 
 	return res
-}
-```
-
-We will also modify the `Commit` method to process `success/failure` signals from the integrated `StreamingService`s using
-the `ABCIListener.ListenSuccess()` method. Each `StreamingService` has an internal wait threshold after which it sends
-`false` to the `ListenSuccess()` channel, and the BaseApp also imposes a configurable global wait limit.
-If the `StreamingService` is operating in a "fire-and-forget" mode, `ListenSuccess()` should immediately return `true`
-off the channel despite the success status of the service.
-
-```go
-func (app *BaseApp) Commit() (res abci.ResponseCommit) {
-
-	...
-
-	// each listener has an internal wait threshold after which it sends `false` to the ListenSuccess() channel
-	// but the BaseApp also imposes a global wait limit
-	maxWait := time.NewTicker(app.globalWaitLimit)
-	for _, lis := range app.abciListeners {
-		select {
-		case success := <- lis.ListenSuccess():
-			if success == false {
-				app.halt()
-			}
-		case <- maxWait.C:
-			app.halt()
-		}
-	}
-
-	...
-
 }
 ```
 
@@ -468,48 +427,42 @@ The plugin system will be configured within an app's app.toml file.
 ```toml
 [plugins]
     on = false # turn the plugin system, as a whole, on or off
-    disabled = ["list", "of", "plugin", "names", "to", "disable"]
+    enabled = ["list", "of", "plugin", "names", "to", "enable"]
     dir = "the directory to load non-preloaded plugins from; defaults to cosmos-sdk/plugin/plugins"
 ```
 
-There will be three parameters for configuring the plugin system: `plugins.on`, `plugins.disabled` and `plugins.dir`.
+There will be three parameters for configuring the plugin system: `plugins.on`, `plugins.enabled` and `plugins.dir`.
 `plugins.on` is a bool that turns on or off the plugin system at large, `plugins.dir` directs the system to a directory
-to load plugins from, and `plugins.disabled` is a list of names for the plugins we want to disable (useful for disabling preloaded plugins).
+to load plugins from, and `plugins.enabled` provides `opt-in` semantics to plugin names to enable (including preloaded plugins).
 
 Configuration of a given plugin is ultimately specific to the plugin, but we will introduce some standards here:
 
 Plugin TOML configuration should be split into separate sub-tables for each kind of plugin (e.g. `plugins.streaming`).
-For streaming plugins a parameter `plugins.streaming.global_ack_wait_limit` is used to configure the maximum amount of time
-the BaseApp will wait for positive acknowledgement of receipt by the external streaming services before it considers
-the message relay to be a failure.
 
 Within these sub-tables, the parameters for a specific plugin of that kind are included in another sub-table (e.g. `plugins.streaming.file`).
 It is generally expected, but not required, that a streaming service plugin can be configured with a set of store keys
-(e.g. `plugins.streaming.file.keys`) for the stores it listens to and a flag (e.g. `plugins.streaming.file.ack`)
-that signifies whether the service operates in a fire-and-forget capacity or the BaseApp should require positive
-acknowledgement of message receipt by the service. In the case of "ack" mode, the service may also need to be
-configured with an acknowledgement wait limit specific to that individual service (e.g. `plugins.streaming.kafka.ack_wait_limit`).
-The file `StreamingService` does not have an individual `ack_wait_limit` since it operates synchronously with the App.
+(e.g. `plugins.streaming.file.keys`) for the stores it listens to and a flag (e.g. `plugins.streaming.file.halt_app_on_delivery_error`)
+that signifies whether the service operates in a fire-and-forget capacity, or stop the BaseApp when an error occurs in 
+any of `ListenBeginBlock`, `ListenEndBlock` and `ListenDeliverTx`.
 
 e.g.
 
 ```toml
 [plugins]
     on = false # turn the plugin system, as a whole, on or off
-    disabled = ["list", "of", "plugin", "names", "to", "disable"]
+    enabled = ["list", "of", "plugin", "names", "to", "enable"]
     dir = "the directory to load non-preloaded plugins from; defaults to "
     [plugins.streaming] # a mapping of plugin-specific streaming service parameters, mapped to their plugin name
-        # maximum amount of time the BaseApp will await positive acknowledgement of message receipt from all streaming services
-        # in milliseconds
-        global_ack_wait_limit = 500
         [plugins.streaming.file] # the specific parameters for the file streaming service plugin
             keys = ["list", "of", "store", "keys", "we", "want", "to", "expose", "for", "this", "streaming", "service"]
             write_dir = "path to the write directory"
             prefix = "optional prefix to prepend to the generated file names"
-            ack = "false" # false == fire-and-forget; true == sends a message receipt success/fail signal
+            halt_app_on_delivery_error = "false" # false == fire-and-forget; true == stop the application
         [plugins.streaming.kafka]
-            ...
-    [plugins.modules]
+            keys = []
+            topic_prefix = "block" # Optional prefix for topic names where data will be stored.
+            flush_timeout_ms = 5000 # Flush and wait for outstanding messages and requests to complete delivery when calling `StreamingService.Close(). (milliseconds)
+            halt_app_on_delivery_error = true # Whether or not to halt the application when plugin fails to deliver message(s).
         ...
 ```
 

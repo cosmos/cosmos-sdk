@@ -38,20 +38,17 @@ var _ baseapp.StreamingService = (*FileStreamingService)(nil)
 
 // FileStreamingService is a concrete implementation of streaming.Service that writes state changes out to files
 type FileStreamingService struct {
-	listeners          map[types.StoreKey][]types.WriteListener // the listeners that will be initialized with BaseApp
-	srcChan            <-chan []byte                            // the channel that all of the WriteListeners write their data out to
-	filePrefix         string                                   // optional prefix for each of the generated files
-	writeDir           string                                   // directory to write files into
-	codec              codec.BinaryCodec                        // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
-	stateCache         [][]byte                                 // cache the protobuf binary encoded StoreKVPairs in the order they are received
-	stateCacheLock     *sync.Mutex                              // mutex for the state cache
-	currentBlockNumber int64                                    // the current block number
-	currentTxIndex     int64                                    // the index of the current tx
-	quitChan           chan struct{}                            // channel used for synchronize closure
-
-	ack       bool      // true == fire-and-forget; false == sends success/failure signal
-	ackStatus bool      // success/failure status, to be sent to ackChan
-	ackChan   chan bool // the channel used to send the success/failure signal
+	listeners              map[types.StoreKey][]types.WriteListener // the listeners that will be initialized with BaseApp
+	srcChan                <-chan []byte                            // the channel that all of the WriteListeners write their data out to
+	filePrefix             string                                   // optional prefix for each of the generated files
+	writeDir               string                                   // directory to write files into
+	codec                  codec.BinaryCodec                        // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
+	stateCache             [][]byte                                 // cache the protobuf binary encoded StoreKVPairs in the order they are received
+	stateCacheLock         *sync.Mutex                              // mutex for the state cache
+	currentBlockNumber     int64                                    // the current block number
+	currentTxIndex         int64                                    // the index of the current tx
+	quitChan               chan struct{}                            // channel used for synchronize closure
+	haltAppOnDeliveryError bool                                     // true if the app should be halted on streaming errors, false otherwise
 }
 
 // IntermediateWriter is used so that we do not need to update the underlying io.Writer inside the StoreKVPairWriteListener
@@ -74,8 +71,13 @@ func (iw *IntermediateWriter) Write(b []byte) (int, error) {
 }
 
 // NewFileStreamingService creates a new FileStreamingService for the provided writeDir, (optional) filePrefix, and storeKeys
-func NewFileStreamingService(writeDir, filePrefix string, storeKeys []types.StoreKey, c codec.BinaryCodec,
-	ack bool) (*FileStreamingService, error) {
+func NewFileStreamingService(
+	writeDir,
+	filePrefix string,
+	storeKeys []types.StoreKey,
+	c codec.BinaryCodec,
+	haltAppOnDeliveryError bool,
+) (*FileStreamingService, error) {
 	listenChan := make(chan []byte)
 	iw := NewIntermediateWriter(listenChan)
 	listener := types.NewStoreKVPairWriteListener(iw, c)
@@ -90,15 +92,14 @@ func NewFileStreamingService(writeDir, filePrefix string, storeKeys []types.Stor
 		return nil, err
 	}
 	return &FileStreamingService{
-		listeners:      listeners,
-		srcChan:        listenChan,
-		filePrefix:     filePrefix,
-		writeDir:       writeDir,
-		codec:          c,
-		stateCache:     make([][]byte, 0),
-		stateCacheLock: new(sync.Mutex),
-		ack:            ack,
-		ackChan:        make(chan bool, 1),
+		listeners:              listeners,
+		srcChan:                listenChan,
+		filePrefix:             filePrefix,
+		writeDir:               writeDir,
+		codec:                  c,
+		stateCache:             make([][]byte, 0),
+		stateCacheLock:         new(sync.Mutex),
+		haltAppOnDeliveryError: haltAppOnDeliveryError,
 	}, nil
 }
 
@@ -111,22 +112,17 @@ func (fss *FileStreamingService) Listeners() map[types.StoreKey][]types.WriteLis
 // It writes out the received BeginBlock request and response and the resulting state changes out to a file as described
 // in the above the naming schema
 func (fss *FileStreamingService) ListenBeginBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
-	// reset the ack status
-	fss.ackStatus = true
 	// generate the new file
 	dstFile, err := fss.openBeginBlockFile(req)
 	if err != nil {
-		fss.ackStatus = false
 		return err
 	}
 	// write req to file
 	lengthPrefixedReqBytes, err := fss.codec.MarshalLengthPrefixed(&req)
 	if err != nil {
-		fss.ackStatus = false
 		return err
 	}
 	if _, err = dstFile.Write(lengthPrefixedReqBytes); err != nil {
-		fss.ackStatus = false
 		return err
 	}
 	// write all state changes cached for this stage to file
@@ -135,7 +131,6 @@ func (fss *FileStreamingService) ListenBeginBlock(ctx sdk.Context, req abci.Requ
 		if _, err = dstFile.Write(stateChange); err != nil {
 			fss.stateCache = nil
 			fss.stateCacheLock.Unlock()
-			fss.ackStatus = false
 			return err
 		}
 	}
@@ -145,16 +140,13 @@ func (fss *FileStreamingService) ListenBeginBlock(ctx sdk.Context, req abci.Requ
 	// write res to file
 	lengthPrefixedResBytes, err := fss.codec.MarshalLengthPrefixed(&res)
 	if err != nil {
-		fss.ackStatus = false
 		return err
 	}
 	if _, err = dstFile.Write(lengthPrefixedResBytes); err != nil {
-		fss.ackStatus = false
 		return err
 	}
 	// close file
 	if err := dstFile.Close(); err != nil {
-		fss.ackStatus = false
 		return err
 	}
 	return nil
@@ -177,17 +169,14 @@ func (fss *FileStreamingService) ListenDeliverTx(ctx sdk.Context, req abci.Reque
 	// generate the new file
 	dstFile, err := fss.openDeliverTxFile()
 	if err != nil {
-		fss.ackStatus = false
 		return err
 	}
 	// write req to file
 	lengthPrefixedReqBytes, err := fss.codec.MarshalLengthPrefixed(&req)
 	if err != nil {
-		fss.ackStatus = false
 		return err
 	}
 	if _, err = dstFile.Write(lengthPrefixedReqBytes); err != nil {
-		fss.ackStatus = false
 		return err
 	}
 	// write all state changes cached for this stage to file
@@ -196,7 +185,6 @@ func (fss *FileStreamingService) ListenDeliverTx(ctx sdk.Context, req abci.Reque
 		if _, err = dstFile.Write(stateChange); err != nil {
 			fss.stateCache = nil
 			fss.stateCacheLock.Unlock()
-			fss.ackStatus = false
 			return err
 		}
 	}
@@ -206,16 +194,13 @@ func (fss *FileStreamingService) ListenDeliverTx(ctx sdk.Context, req abci.Reque
 	// write res to file
 	lengthPrefixedResBytes, err := fss.codec.MarshalLengthPrefixed(&res)
 	if err != nil {
-		fss.ackStatus = false
 		return err
 	}
 	if _, err = dstFile.Write(lengthPrefixedResBytes); err != nil {
-		fss.ackStatus = false
 		return err
 	}
 	// close file
 	if err := dstFile.Close(); err != nil {
-		fss.ackStatus = false
 		return err
 	}
 	return nil
@@ -237,17 +222,14 @@ func (fss *FileStreamingService) ListenEndBlock(ctx sdk.Context, req abci.Reques
 	// generate the new file
 	dstFile, err := fss.openEndBlockFile()
 	if err != nil {
-		fss.ackStatus = false
 		return err
 	}
 	// write req to file
 	lengthPrefixedReqBytes, err := fss.codec.MarshalLengthPrefixed(&req)
 	if err != nil {
-		fss.ackStatus = false
 		return err
 	}
 	if _, err = dstFile.Write(lengthPrefixedReqBytes); err != nil {
-		fss.ackStatus = false
 		return err
 	}
 	// write all state changes cached for this stage to file
@@ -256,7 +238,6 @@ func (fss *FileStreamingService) ListenEndBlock(ctx sdk.Context, req abci.Reques
 		if _, err = dstFile.Write(stateChange); err != nil {
 			fss.stateCache = nil
 			fss.stateCacheLock.Unlock()
-			fss.ackStatus = false
 			return err
 		}
 	}
@@ -266,16 +247,13 @@ func (fss *FileStreamingService) ListenEndBlock(ctx sdk.Context, req abci.Reques
 	// write res to file
 	lengthPrefixedResBytes, err := fss.codec.MarshalLengthPrefixed(&res)
 	if err != nil {
-		fss.ackStatus = false
 		return err
 	}
 	if _, err = dstFile.Write(lengthPrefixedResBytes); err != nil {
-		fss.ackStatus = false
 		return err
 	}
 	// close file
 	if err := dstFile.Close(); err != nil {
-		fss.ackStatus = false
 		return err
 	}
 	return nil
@@ -320,32 +298,10 @@ func (fss *FileStreamingService) Close() error {
 	return nil
 }
 
-// ListenSuccess returns a chan that is used to acknowledge successful receipt of messages by the external service
-// after some configurable delay, `false` is sent to this channel from the service to signify failure of receipt
-func (fss *FileStreamingService) ListenSuccess() <-chan bool {
-	// if we are operating in fire-and-forget mode, immediately send a "success" signal
-	if !fss.ack {
-		go func() {
-			fss.ackChan <- true
-		}()
-	} else {
-		go func() {
-			// the FileStreamingService operating synchronously, but this will signify whether an error occurred
-			// during it's processing cycle
-			fss.ackChan <- fss.ackStatus
-		}()
-	}
-	return fss.ackChan
-}
-
-// SetAckMode is used to set the ack mode for testing purposes
-func (fss *FileStreamingService) SetAckMode(on bool) {
-	fss.ack = on
-}
-
-// SetAckStatus is used to set the ack status for testing purposes
-func (fss *FileStreamingService) SetAckStatus(status bool) {
-	fss.ackStatus = status
+// HaltAppOnDeliveryError whether or not to halt the application when delivery of massages fails
+// in ListenBeginBlock, ListenEndBlock, ListenDeliverTx. Setting this to `false` will give fire-and-forget semantics.
+func (fss *FileStreamingService) HaltAppOnDeliveryError() bool {
+	return fss.haltAppOnDeliveryError
 }
 
 // isDirWriteable checks if dir is writable by writing and removing a file

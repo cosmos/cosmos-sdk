@@ -18,9 +18,9 @@ type ABCIListener interface {
 	ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
 	// ListenDeliverTx updates the steaming service with the latest DeliverTx messages
 	ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
-	// ListenSuccess returns a chan that is used to acknowledge successful receipt of messages by the external service
-	// after some configurable delay, `false` is sent to this channel from the service to signify failure of receipt
-	ListenSuccess() <-chan bool
+	// HaltAppOnDeliveryError whether or not to halt the application when delivery of massages fails
+	// in ListenBeginBlock, ListenEndBlock, ListenDeliverTx. Setting this to `false` will give fire-and-forget semantics.
+	HaltAppOnDeliveryError() bool
 }
 
 // StreamingService interface for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks

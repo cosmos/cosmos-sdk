@@ -35,8 +35,8 @@ const (
 	// KEYS_PARAM is a list of the StoreKeys we want to expose for this streaming service
 	KEYS_PARAM = "keys"
 
-	// ACK_MODE configures whether to operate in fire-and-forget or success/failure acknowledgement mode
-	ACK_MODE = "ack"
+	// HALT_APP_ON_DELIVERY_ERROR whether or not to halt the application when plugin fails to deliver message(s)
+	HALT_APP_ON_DELIVERY_ERROR = "halt_app_on_delivery_error"
 )
 
 const minWaitDuration = time.Millisecond * 10
@@ -91,9 +91,9 @@ func (ssp *streamingServicePlugin) Register(bApp *baseapp.BaseApp, marshaller co
 			exposeStoreKeys = append(exposeStoreKeys, storeKey)
 		}
 	}
-	ack := cast.ToBool(ssp.opts.Get(fmt.Sprintf("%s.%s", tomlKeyPrefix, ACK_MODE)))
+	haltAppOnDeliveryError := cast.ToBool(ssp.opts.Get(fmt.Sprintf("%s.%s", tomlKeyPrefix, HALT_APP_ON_DELIVERY_ERROR)))
 	var err error
-	ssp.fss, err = service.NewFileStreamingService(fileDir, filePrefix, exposeStoreKeys, marshaller, ack)
+	ssp.fss, err = service.NewFileStreamingService(fileDir, filePrefix, exposeStoreKeys, marshaller, haltAppOnDeliveryError)
 	if err != nil {
 		return err
 	}

@@ -133,7 +133,7 @@ func TestFileStreamingService(t *testing.T) {
 	defer os.RemoveAll(testDir)
 
 	testKeys := []types.StoreKey{mockStoreKey1, mockStoreKey2}
-	testStreamingService, err = NewFileStreamingService(testDir, testPrefix, testKeys, testMarshaller, false)
+	testStreamingService, err = NewFileStreamingService(testDir, testPrefix, testKeys, testMarshaller, true)
 	require.Nil(t, err)
 	require.IsType(t, &FileStreamingService{}, testStreamingService)
 	require.Equal(t, testPrefix, testStreamingService.filePrefix)
@@ -147,26 +147,6 @@ func TestFileStreamingService(t *testing.T) {
 	testListenDeliverTx1(t)
 	testListenDeliverTx2(t)
 	testListenEndBlock(t)
-
-	// status is success but not operating in ack mode
-	success := <-testStreamingService.ListenSuccess()
-	require.Equal(t, success, true)
-
-	// status is failure but not operating in ack mode
-	testStreamingService.SetAckStatus(false)
-	success = <-testStreamingService.ListenSuccess()
-	require.Equal(t, success, true)
-
-	// status is failure and operating in ack mode
-	testStreamingService.SetAckMode(true)
-	success = <-testStreamingService.ListenSuccess()
-	require.Equal(t, success, false)
-
-	// status is success and operating in ack mode
-	testStreamingService.SetAckStatus(true)
-	success = <-testStreamingService.ListenSuccess()
-	require.Equal(t, success, true)
-
 	testStreamingService.Close()
 	wg.Wait()
 }

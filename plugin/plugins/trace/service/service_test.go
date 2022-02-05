@@ -95,13 +95,6 @@ var (
 	mockValue2 = []byte{4, 3, 2}
 	mockKey3   = []byte{3, 4, 5}
 	mockValue3 = []byte{5, 4, 3}
-
-	// print event data in stdout
-	printDataToStdout = true
-
-	// false == fire-and-forget; true == sends a message receipt success/fail signal
-	ack = false
-
 )
 
 func TestIntermediateWriter(t *testing.T) {
@@ -126,7 +119,7 @@ func TestIntermediateWriter(t *testing.T) {
 func TestKafkaStreamingService(t *testing.T) {
 	loggerContext = emptyContext.WithLogger(log.TestingLogger())
 	testKeys := []types.StoreKey{mockStoreKey1, mockStoreKey2}
-	tss, err := NewTraceStreamingService(testKeys, testMarshaller, printDataToStdout, ack)
+	tss, err := NewTraceStreamingService(testKeys, testMarshaller, true, false)
 	testStreamingService = tss
 	require.Nil(t, err)
 	require.IsType(t, &TraceStreamingService{}, testStreamingService)

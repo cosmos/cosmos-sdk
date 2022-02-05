@@ -40,12 +40,8 @@ const (
 	// KEYS_PARAM is a list of the StoreKeys we want to expose for this streaming service
 	KEYS_PARAM = "keys"
 
-	// ACK_MODE configures whether to operate in fire-and-forget or success/failure acknowledgement mode
-	ACK_MODE = "ack"
-
-	// DELIVERED_BLOCK_WAIT_LIMIT the amount of time to wait for acknowledgment of success/failure of
-	// message delivery of the current block before considering the delivery of messages failed.
-	DELIVERED_BLOCK_WAIT_LIMIT = "delivered_block_wait_limit"
+	// HALT_APP_ON_DELIVERY_ERROR whether or not to halt the application when plugin fails to deliver message(s)
+	HALT_APP_ON_DELIVERY_ERROR = "halt_app_on_delivery_error"
 )
 
 // Plugins is the exported symbol for loading this plugin
@@ -86,8 +82,7 @@ func (ssp *streamingServicePlugin) Register(
 	tomlKeyPrefix := fmt.Sprintf("%s.%s.%s", plugin.PLUGINS_TOML_KEY, plugin.STREAMING_TOML_KEY, PLUGIN_NAME)
 	topicPrefix := cast.ToString(ssp.opts.Get(fmt.Sprintf("%s.%s", tomlKeyPrefix, TOPIC_PREFIX_PARAM)))
 	flushTimeoutMs := cast.ToInt(ssp.opts.Get(fmt.Sprintf("%s.%s", tomlKeyPrefix, FLUSH_TIMEOUT_MS_PARAM)))
-	ack := cast.ToBool(ssp.opts.Get(fmt.Sprintf("%s.%s", tomlKeyPrefix, ACK_MODE)))
-	deliveredBlockWaitLimit := cast.ToDuration(ssp.opts.Get(fmt.Sprintf("%s.%s", tomlKeyPrefix, DELIVERED_BLOCK_WAIT_LIMIT)))
+	haltAppOnDeliveryError := cast.ToBool(ssp.opts.Get(fmt.Sprintf("%s.%s", tomlKeyPrefix, HALT_APP_ON_DELIVERY_ERROR)))
 	producerConfig := cast.ToStringMap(ssp.opts.Get(fmt.Sprintf("%s.%s", tomlKeyPrefix, PRODUCER_CONFIG_PARAM)))
 	// get the store keys allowed to be exposed for this streaming service
 	exposeKeyStrings := cast.ToStringSlice(ssp.opts.Get(fmt.Sprintf("%s.%s", tomlKeyPrefix, KEYS_PARAM)))
@@ -139,14 +134,12 @@ func (ssp *streamingServicePlugin) Register(
 
 	var err error
 	ssp.kss, err = service.NewKafkaStreamingService(
-		bApp.Logger(),
 		producerConfigMap,
 		topicPrefix,
 		flushTimeoutMs,
 		exposeStoreKeys,
 		marshaller,
-		ack,
-		deliveredBlockWaitLimit,
+		haltAppOnDeliveryError,
 	)
 	if err != nil {
 		return err

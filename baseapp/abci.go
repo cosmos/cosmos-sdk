@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -194,6 +193,9 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	for _, streamingListener := range app.abciListeners {
 		if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
 			app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", err)
+			if streamingListener.HaltAppOnDeliveryError() {
+				app.halt()
+			}
 		}
 	}
 
@@ -220,6 +222,9 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	for _, streamingListener := range app.abciListeners {
 		if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
 			app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", err)
+			if streamingListener.HaltAppOnDeliveryError() {
+				app.halt()
+			}
 		}
 	}
 
@@ -273,6 +278,9 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 		for _, streamingListener := range app.abciListeners {
 			if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, abciRes); err != nil {
 				app.logger.Error("DeliverTx listening hook failed", "err", err)
+				if streamingListener.HaltAppOnDeliveryError() {
+					app.halt()
+				}
 			}
 		}
 	}()
@@ -337,23 +345,6 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 		// restart and process blocks assuming the halt configuration has been
 		// reset or moved to a more distant value.
 		app.halt()
-	}
-
-	// each listener has an internal wait threshold after which it sends `false` to the ListenSuccess() channel
-	// but the BaseApp also imposes a global wait limit
-	if app.globalWaitLimit > 0 {
-		maxWait := time.NewTicker(app.globalWaitLimit * time.Millisecond)
-		defer maxWait.Stop()
-		for _, lis := range app.abciListeners {
-			select {
-			case success := <-lis.ListenSuccess():
-				if success == false {
-					app.halt()
-				}
-			case <-maxWait.C:
-				app.halt()
-			}
-		}
 	}
 
 	if app.snapshotInterval > 0 && uint64(header.Height)%app.snapshotInterval == 0 {

@@ -76,14 +76,8 @@ The plugin has been hooked up to run with `test-sim-nondeterminism` task. For a 
     # Flush and wait for outstanding messages and requests to complete delivery. (milliseconds)
     flush_timeout_ms = 1500
     
-    # whether to operate in fire-and-forget or success/failure acknowledgement mode
-    # false == fire-and-forget; true == sends a message receipt success/fail signal
-    ack = "false"
-   
-    # The amount of time to wait for acknowledgment of success/failure of message 
-    # delivery of the current block before considering the delivery of messages failed. (In
-    # milliseconds)
-    delivered_block_wait_limit = 1000
+    # Whether or not to halt the application when plugin fails to deliver message(s).
+    halt_app_on_delivery_error = true
     
     # Producer configuration properties.
     # The plugin uses confluent-kafka-go which is a lightweight wrapper around librdkafka.

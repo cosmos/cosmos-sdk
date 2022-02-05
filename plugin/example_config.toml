@@ -16,10 +16,6 @@ dir = ""
 # a mapping of plugin-specific streaming service parameters, mapped to their pluginFileName
 [plugins.streaming]
 
-# maximum amount of time the BaseApp will await positive acknowledgement of message receipt from all streaming services
-# in milliseconds
-global_ack_wait_limit = 2000
-
 ###############################################################################
 ###                      File plugin configuration                          ###
 ###############################################################################
@@ -37,9 +33,8 @@ write_dir = ""
 # Optional prefix to prepend to the generated file names
 prefix = ""
 
-# whether to operate in fire-and-forget or success/failure acknowledgement mode
-# false == fire-and-forget; true == sends a message receipt success/fail signal
-ack = "true"
+# Whether or not to halt the application when plugin fails to deliver message(s).
+halt_app_on_delivery_error = true
 
 ###############################################################################
 ###                       Trace Plugin configuration                        ###
@@ -54,9 +49,8 @@ keys = []
 # In addition to block event info, print the data to stdout as well.
 print_data_to_stdout = false
 
-# whether to operate in fire-and-forget or success/failure acknowledgement mode
-# false == fire-and-forget; true == sends a message receipt success/fail signal
-ack = "true"
+# Whether or not to halt the application when plugin fails to deliver message(s).
+halt_app_on_delivery_error = true
 
 ###############################################################################
 ###                       Kafka Plugin configuration                        ###
@@ -74,14 +68,8 @@ topic_prefix = "block"
 # Flush and wait for outstanding messages and requests to complete delivery. (milliseconds)
 flush_timeout_ms = 1500
 
-# whether to operate in fire-and-forget or success/failure acknowledgement mode
-# false == fire-and-forget; true == sends a message receipt success/fail signal
-ack = "true"
-
-# The amount of time to wait for acknowledgment of success/failure of message
-# delivery of the current block before considering the delivery of messages failed. (In
-# milliseconds)
-delivered_block_wait_limit = 1000
+# Whether or not to halt the application when plugin fails to deliver message(s).
+halt_app_on_delivery_error = true
 
 # Producer configuration properties.
 # The plugin uses confluent-kafka-go which is a lightweight wrapper around librdkafka.

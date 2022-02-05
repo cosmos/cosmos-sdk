@@ -2,10 +2,8 @@ package baseapp
 
 import (
 	"fmt"
-	"io"
-	"time"
-
 	dbm "github.com/tendermint/tm-db"
+	"io"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
@@ -245,10 +243,4 @@ func (app *BaseApp) SetStreamingService(s StreamingService) {
 	// register the StreamingService within the BaseApp
 	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context
 	app.abciListeners = append(app.abciListeners, s)
-}
-
-// SetGlobalWaitLimit is used to set the maximum amount of time the BaseApp will wait for positive acknowledgement
-// of message receipt from ABCIListeners before halting
-func (app *BaseApp) SetGlobalWaitLimit(t time.Duration) {
-	app.globalWaitLimit = t
 }

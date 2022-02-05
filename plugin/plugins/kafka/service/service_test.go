@@ -27,8 +27,7 @@ var (
 	testMarshaller               = codec.NewProtoCodec(interfaceRegistry)
 	testStreamingService         *KafkaStreamingService
 	testListener1, testListener2 types.WriteListener
-	emptyContext                 = sdk.Context{}
-	logger                       log.Logger
+	testingCtx                   sdk.Context
 
 	// test abci message types
 	mockHash          = []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}
@@ -126,9 +125,6 @@ var (
 	mockValue2 = []byte{4, 3, 2}
 	mockKey3   = []byte{3, 4, 5}
 	mockValue3 = []byte{5, 4, 3}
-
-	// false == fire-and-forget; true == sends a message receipt success/fail signal
-	ack = false
 )
 
 func TestIntermediateWriter(t *testing.T) {
@@ -152,9 +148,9 @@ func TestIntermediateWriter(t *testing.T) {
 
 // change this to write to in-memory io.Writer (e.g. bytes.Buffer)
 func TestKafkaStreamingService(t *testing.T) {
+	 testingCtx = sdk.NewContext(nil, types1.Header{}, false, log.TestingLogger())
 	testKeys := []types.StoreKey{mockStoreKey1, mockStoreKey2}
-	logger = log.TestingLogger()
-	kss, err := NewKafkaStreamingService(logger, producerConfig, topicPrefix, flushTimeoutMs, testKeys, testMarshaller, ack)
+	kss, err := NewKafkaStreamingService(producerConfig, topicPrefix, flushTimeoutMs, testKeys, testMarshaller, true)
 	testStreamingService = kss
 	require.Nil(t, err)
 	require.IsType(t, &KafkaStreamingService{}, testStreamingService)
@@ -209,7 +205,7 @@ func  testListenBeginBlock(t *testing.T) {
 	require.Nil(t, err)
 
 	// send the ABCI messages
-	err = testStreamingService.ListenBeginBlock(emptyContext, testBeginBlockReq, testBeginBlockRes)
+	err = testStreamingService.ListenBeginBlock(testingCtx, testBeginBlockReq, testBeginBlockRes)
 	require.Nil(t, err)
 
 	// consume stored messages
@@ -260,7 +256,7 @@ func testListenDeliverTx1(t *testing.T) {
 	require.Nil(t, err)
 
 	// send the ABCI messages
-	err = testStreamingService.ListenDeliverTx(emptyContext, testDeliverTxReq1, testDeliverTxRes1)
+	err = testStreamingService.ListenDeliverTx(testingCtx, testDeliverTxReq1, testDeliverTxRes1)
 	require.Nil(t, err)
 
 	// consume stored messages
@@ -311,7 +307,7 @@ func testListenDeliverTx2(t *testing.T) {
 	require.Nil(t, err)
 
 	// send the ABCI messages
-	err = testStreamingService.ListenDeliverTx(emptyContext, testDeliverTxReq2, testDeliverTxRes2)
+	err = testStreamingService.ListenDeliverTx(testingCtx, testDeliverTxReq2, testDeliverTxRes2)
 	require.Nil(t, err)
 
 	// consume stored messages
@@ -362,7 +358,7 @@ func testListenEndBlock(t *testing.T) {
 	require.Nil(t, err)
 
 	// send the ABCI messages
-	err = testStreamingService.ListenEndBlock(emptyContext, testEndBlockReq, testEndBlockRes)
+	err = testStreamingService.ListenEndBlock(testingCtx, testEndBlockReq, testEndBlockRes)
 	require.Nil(t, err)
 
 	// consume stored messages

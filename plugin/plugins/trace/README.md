@@ -50,10 +50,9 @@ The plugin is setup to run as the `default` plugin. See `./plugin/loader/preload
    
    # In addition to block event info, print the data to stdout as well.
    print_data_to_stdout = false
-   
-   # whether to operate in fire-and-forget or success/failure acknowledgement mode
-   # false == fire-and-forget; true == sends a message receipt success/fail signal
-   ack = "false"
+
+   # Whether or not to halt the application when plugin fails to deliver message(s).
+   halt_app_on_delivery_error = true
    ```
    
 2. Run `make test-sim-nondeterminism` and wait for the tests to finish.

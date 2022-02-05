@@ -19,7 +19,7 @@ On top of this core, the Cosmos SDK enables developers to build modules that imp
 
 Cosmos SDK modules can be seen as little state-machines within the state-machine. They generally define a subset of the state using one or more `KVStore`s in the [main multistore](../core/store.md), as well as a subset of [message types](./messages-and-queries.md#messages). These messages are routed by one of the main components of Cosmos SDK core, [`BaseApp`](../core/baseapp.md), to a module Protobuf [`Msg` service](./msg-services.md) that defines them.
 
-```
+```text
                                       +
                                       |
                                       |  Transaction relayed from the full-node's consensus engine

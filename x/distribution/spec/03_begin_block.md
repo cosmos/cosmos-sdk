@@ -45,7 +45,7 @@ only bonded validators can supply valid precommits) and is always larger than
 Any remaining fees are distributed among all the bonded validators, including
 the proposer, in proportion to their consensus power.
 
-```
+```text
 powFrac = validator power / total bonded validator power
 proposerMul = baseproposerreward + bonusproposerreward * P
 voteMul = 1 - communitytax - proposerMul
@@ -79,7 +79,7 @@ blocks. Then hold `(precommits included) / (total bonded validator power)`
 constant so that the amortized block reward for the validator is `( validator power / total bonded power) * (1 - community tax rate)` of
 the total rewards. Consequently, the reward for a single delegator is:
 
-```
+```text
 (delegator proportion of the validator power / validator power) * (validator power / total bonded power)
   * (1 - community tax rate) * (1 - validator commision rate)
 = (delegator proportion of the validator power / total bonded power) * (1 -

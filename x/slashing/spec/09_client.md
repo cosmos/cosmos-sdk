@@ -6,7 +6,7 @@ order: 9
 
 A user can query and interact with the `slashing` module using the CLI.
 
-### Query
+## Query
 
 The `query` commands allow users to query `slashing` state.
 
@@ -14,7 +14,7 @@ The `query` commands allow users to query `slashing` state.
 simd query slashing --help
 ```
 
-#### params
+### params
 
 The `params` command allows users to query genesis parameters for the slashing module.
 
@@ -38,7 +38,7 @@ slash_fraction_double_sign: "0.050000000000000000"
 slash_fraction_downtime: "0.010000000000000000"
 ```
 
-#### signing-info
+### signing-info
 
 The `signing-info` command allows users to query signing-info of the validator using consensus public key.
 
@@ -64,7 +64,7 @@ start_height: "0"
 tombstoned: false
 ```
 
-#### signing-infos
+### signing-infos
 
 The `signing-infos` command allows users to query signing infos of all validators.
 
@@ -93,7 +93,7 @@ pagination:
   total: "0"
 ```
 
-### Transactions
+## Transactions
 
 The `tx` commands allow users to interact with the `slashing` module.
 
@@ -101,7 +101,7 @@ The `tx` commands allow users to interact with the `slashing` module.
 simd tx slashing --help
 ```
 
-#### unjail
+### unjail
 
 The `unjail` command allows users to unjail a validator previously jailed for downtime.
 

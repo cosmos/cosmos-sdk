@@ -10,7 +10,7 @@ This document describes the core parts of a Cosmos SDK application. Throughout t
 
 The Daemon, or [Full-Node Client](../core/node.md), is the core process of a Cosmos SDK-based blockchain. Participants in the network run this process to initialize their state-machine, connect with other full-nodes and update their state-machine as new blocks come in.
 
-```
+```text
                 ^  +-------------------------------+  ^
                 |  |                               |  |
                 |  |  State-machine = Application  |  |
@@ -233,7 +233,7 @@ A patch introduced in `go-grpc v1.34.0` made gRPC incompatible with the `gogopro
 
 To make sure that gRPC is working properly, it is **highly recommended** to add the following line in your application's `go.mod`:
 
-```
+```go
 replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 ```
 

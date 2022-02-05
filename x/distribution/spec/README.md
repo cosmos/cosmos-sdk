@@ -50,7 +50,7 @@ As a part of the lazy computations, each delegator holds an accumulation term
 specific to each validator which is used to estimate what their approximate
 fair portion of tokens held in the global fee pool is owed to them.
 
-```
+```text
 entitlement = delegator-accumulation / all-delegators-accumulation
 ```
 

@@ -35,7 +35,7 @@ The power of the Cosmos SDK lies in its modularity. Cosmos SDK applications are 
 
 Here is a simplified view of how a transaction is processed by the application of each full-node when it is received in a valid block:
 
-```
+```text
                                       +
                                       |
                                       |  Transaction relayed from the full-node's

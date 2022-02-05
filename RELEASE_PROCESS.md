@@ -8,7 +8,7 @@ A _major release_ is an increment of the first number (eg: `v1.2` → `v2.0.0`) 
 
 Before making a new _major_ release we do beta and release candidate releases. For example, for release 1.0.0:
 
-```
+```text
 v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → v1.0.0
 ```
 
@@ -160,9 +160,9 @@ As rule of thumb, the following changes will **NOT** be automatically accepted i
 1. Check that the bug is either fixed or not reproducible in `master`. It is, in general, not appropriate to release bug fixes for stable releases without first testing them in `master`. Please apply the label [v0.43](https://github.com/cosmos/cosmos-sdk/milestone/26) to the issue.
 2. Add a comment to the issue and ensure it contains the following information (see the bug template below):
 
-- **[Impact]** An explanation of the bug on users and justification for backporting the fix to the stable release.
-- A **[Test Case]** section containing detailed instructions on how to reproduce the bug.
-- A **[Regression Potential]** section with a clear assessment on how regressions are most likely to manifest as a result of the pull request that aims to fix the bug in the target stable release.
+   - **[Impact]** An explanation of the bug on users and justification for backporting the fix to the stable release.
+   - A **[Test Case]** section containing detailed instructions on how to reproduce the bug.
+   - A **[Regression Potential]** section with a clear assessment on how regressions are most likely to manifest as a result of the pull request that aims to fix the bug in the target stable release.
 
 3. **Stable Release Managers** will review and discuss the PR. Once _consensus_ surrounding the rationale has been reached and the technical review has successfully concluded, the pull request will be merged in the respective point-release target branch (e.g. `release/v0.43.x`) and the PR included in the point-release's respective milestone (e.g. `v0.43.5`).
 

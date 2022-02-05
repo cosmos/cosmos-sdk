@@ -12,7 +12,7 @@ A state machine is a computer science concept whereby a machine can have multipl
 
 Given a state S and a transaction T, the state machine will return a new state S'.
 
-```
+```text
 +--------+                 +--------+
 |        |                 |        |
 |   S    +---------------->+   S'   |
@@ -22,7 +22,7 @@ Given a state S and a transaction T, the state machine will return a new state S
 
 In practice, the transactions are bundled in blocks to make the process more efficient. Given a state S and a block of transactions B, the state machine will return a new state S'.
 
-```
+```text
 +--------+                              +--------+
 |        |                              |        |
 |   S    +----------------------------> |   S'   |
@@ -38,7 +38,7 @@ The Cosmos SDK gives developers maximum flexibility to define the state of their
 
 Thanks to the Cosmos SDK, developers just have to define the state machine, and [*Tendermint*](https://tendermint.com/docs/introduction/what-is-tendermint.html) will handle replication over the network for them.
 
-```
+```text
                 ^  +-------------------------------+  ^
                 |  |                               |  |   Built with Cosmos SDK
                 |  |  State-machine = Application  |  |
@@ -62,7 +62,7 @@ The Tendermint [consensus algorithm](https://docs.tendermint.com/v0.34/introduct
 
 Tendermint passes transactions to the application through an interface called the [ABCI](https://docs.tendermint.com/v0.34/spec/abci/), which the application must implement.
 
-```
+```text
               +---------------------+
               |                     |
               |     Application     |

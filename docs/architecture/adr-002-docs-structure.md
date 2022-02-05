@@ -13,7 +13,7 @@ Ideally, we would have:
 
 Re-structure the `/docs` folder of the Cosmos SDK github repo as follows:
 
-```
+```text
 docs/
 ├── README
 ├── intro/

@@ -81,7 +81,7 @@ Each module's migration functions are specific to the module's store evolutions,
 
 We introduce a new prefix store in `x/upgrade`'s store. This store will track each module's current version, it can be modelized as a `map[string]uint64` of module name to module ConsensusVersion, and will be used when running the migrations (see next section for details). The key prefix used is `0x1`, and the key/value format is:
 
-```
+```text
 0x2 | {bytes(module_name)} => BigEndian(module_consensus_version)
 ```
 

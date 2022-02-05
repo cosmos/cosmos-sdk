@@ -83,7 +83,7 @@ A user can query the `mint` module using gRPC endpoints.
 
 The `AnnualProvisions` endpoint allow users to query the current minting annual provisions value
 
-```
+```sh
 /cosmos.mint.v1beta1.Query/AnnualProvisions
 ```
 

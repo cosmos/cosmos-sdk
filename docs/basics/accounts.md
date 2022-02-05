@@ -6,7 +6,7 @@ order: 4
 
 This document describes the in-built account and public key system of the Cosmos SDK. {synopsis}
 
-### Pre-requisite Readings
+## Pre-requisite Readings
 
 - [Anatomy of a Cosmos SDK Application](./app-anatomy.md) {prereq}
 
@@ -16,7 +16,7 @@ In the Cosmos SDK, an _account_ designates a pair of _public key_ `PubKey` and _
 
 For HD key derivation the Cosmos SDK uses a standard called [BIP32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki). The BIP32 allows users to create an HD wallet (as specified in [BIP44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki)) - a set of accounts derived from an initial secret seed. A seed is usually created from a 12- or 24-word mnemonic. A single seed can derive any number of `PrivKey`s using a one-way cryptographic function. Then, a `PubKey` can be derived from the `PrivKey`. Naturally, the mnemonic is the most sensitive information, as private keys can always be re-generated if the mnemonic is preserved.
 
-```
+```text
      Account 0                         Account 1                         Account 2
 
 +------------------+              +------------------+               +------------------+
@@ -71,10 +71,10 @@ The Cosmos SDK supports the following digital key schemes for creating digital s
 - `tm-ed25519`, as implemented in the [Cosmos SDK `crypto/keys/ed25519` package](https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/crypto/keys/ed25519/ed25519.go). This scheme is supported only for the consensus validation.
 
 |              | Address length in bytes | Public key length in bytes | Used for transaction authentication | Used for consensus (tendermint) |
-|:------------:|:-----------------------:|:--------------------------:|:-----------------------------------:|:-------------------------------:|
-| `secp256k1`  | 20                      |                         33 | yes                                 | no                              |
-| `secp256r1`  | 32                      |                         33 | yes                                 | no                              |
-| `tm-ed25519` | -- not used --          |                         32 | no                                  | yes                             |
+| :----------: | :---------------------: | :------------------------: | :---------------------------------: | :-----------------------------: |
+| `secp256k1`  |           20            |             33             |                 yes                 |               no                |
+| `secp256r1`  |           32            |             33             |                 yes                 |               no                |
+| `tm-ed25519` |     -- not used --      |             32             |                 no                  |               yes               |
 
 ## Addresses
 

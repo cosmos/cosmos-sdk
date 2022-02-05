@@ -26,7 +26,7 @@ See an example of a `Msg` service definition from `x/bank` module:
 
 Each `Msg` service method must have exactly one argument, which must implement the `sdk.Msg` interface, and a Protobuf response. The naming convention is to call the RPC argument `Msg<service-rpc-name>` and the RPC response `Msg<service-rpc-name>Response`. For example:
 
-```
+```protobuf
   rpc Send(MsgSend) returns (MsgSendResponse);
 ```
 
@@ -83,7 +83,7 @@ A `RegisterQueryServer` method is also generated and should be used to register 
 
 Before the introduction of Protobuf and gRPC in the Cosmos SDK, there was usually no specific `query` object defined by module developers, contrary to `message`s. Instead, the Cosmos SDK took the simpler approach of using a simple `path` to define each `query`. The `path` contains the `query` type and all the arguments needed in order to process it. For most module queries, the `path` should look like the following:
 
-```
+```text
 queryCategory/queryRoute/queryType/arg1/arg2/...
 ```
 

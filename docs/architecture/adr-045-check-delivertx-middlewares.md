@@ -186,7 +186,7 @@ While BaseApp simply holds a reference to a `tx.Handler`, this `tx.Handler` itse
 
 Then, the app developer can compose multiple middlewares on top on the base `tx.Handler`. Each middleware can run pre-and-post-processing logic around its next middleware, as described in the section above. Conceptually, as an example, given the middlewares `A`, `B`, and `C` and the base `tx.Handler` `H` the stack looks like:
 
-```
+```text
 A.pre
     B.pre
         C.pre

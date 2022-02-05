@@ -5,6 +5,8 @@ parent:
   title: "feegrant"
 -->
 
+# Fee grant
+
 ## Abstract
 
 This document specifies the fee grant module. For the full ADR, please see [Fee Grant ADR-029](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/docs/architecture/adr-029-fee-grant-module.md).

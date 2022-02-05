@@ -182,7 +182,7 @@ Example Output:
 
 The `DenomMetadata` endpoint allows users to query metadata for a single coin denomination.
 
-```
+```sh
 cosmos.bank.v1beta1.Query/DenomMetadata
 ```
 

@@ -408,27 +408,27 @@ To generate a signature in `SIGN_MODE_DIRECT_AUX` these steps would be followed:
 1. Encode `SignDocAux` (with the same requirement that fields must be serialized
    in order):
 
-```proto
-// types/types.proto
-message SignDocAux {
-    bytes body_bytes = 1;
-    // PublicKey is included in SignDocAux :
-    // 1. as a special case for multisig public keys. For multisig public keys,
-    // the signer should use the top-level multisig public key they are signing
-    // against, not their own public key. This is to prevent against a form
-    // of malleability where a signature could be taken out of context of the
-    // multisig key that was intended to be signed for
-    // 2. to guard against scenario where configuration information is encoded
-    // in public keys (it has been proposed) such that two keys can generate
-    // the same signature but have different security properties
-    //
-    // By including it here, the composer of AuthInfo cannot reference the
-    // a public key variant the signer did not intend to use
-    PublicKey public_key = 2;
-    string chain_id = 3;
-    uint64 account_number = 4;
-}
-```
+    ```proto
+    // types/types.proto
+    message SignDocAux {
+        bytes body_bytes = 1;
+        // PublicKey is included in SignDocAux :
+        // 1. as a special case for multisig public keys. For multisig public keys,
+        // the signer should use the top-level multisig public key they are signing
+        // against, not their own public key. This is to prevent against a form
+        // of malleability where a signature could be taken out of context of the
+        // multisig key that was intended to be signed for
+        // 2. to guard against scenario where configuration information is encoded
+        // in public keys (it has been proposed) such that two keys can generate
+        // the same signature but have different security properties
+        //
+        // By including it here, the composer of AuthInfo cannot reference the
+        // a public key variant the signer did not intend to use
+        PublicKey public_key = 2;
+        string chain_id = 3;
+        uint64 account_number = 4;
+    }
+    ```
 
 2. Sign the encoded `SignDocAux` bytes
 3. Send their signature and `SignerInfo` to primary signer who will then

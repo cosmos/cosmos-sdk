@@ -43,7 +43,7 @@ A patch introduced in `go-grpc v1.34.0` made gRPC incompatible with the `gogopro
 
 To make sure that gRPC is working properly, it is **highly recommended** to add the following line in your application's `go.mod`:
 
-```
+```go
 replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 ```
 

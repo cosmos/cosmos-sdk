@@ -206,9 +206,9 @@ A real-life example of encoding the pubkey as `Any` inside the Validator struct 
 
 ## FAQ
 
-1. How to create modules using protobuf encoding?
+### How to create modules using protobuf encoding
 
-**Defining module types**
+#### Defining module types
 
 Protobuf types can be defined to encode:
 
@@ -217,12 +217,12 @@ Protobuf types can be defined to encode:
 - [Query services](../building-modules/query-services.md)
 - [genesis](../building-modules/genesis.md)
 
-**Naming and conventions**
+#### Naming and conventions
 
 We encourage developers to follow industry guidelines: [Protocol Buffers style guide](https://developers.google.com/protocol-buffers/docs/style)
 and [Buf](https://buf.build/docs/style-guide), see more details in [ADR 023](../architecture/adr-023-protobuf-naming.md)
 
-2. How to update modules to protobuf encoding?
+### How to update modules to protobuf encoding
 
 If modules do not contain any interfaces (e.g. `Account` or `Content`), then they
 may simply migrate any existing types that

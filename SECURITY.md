@@ -83,7 +83,7 @@ Communications to partners usually include the following details:
 
 An example notice looks like:
 
-```
+```text
 Dear Cosmos SDK partners,
 
 A critical security vulnerability has been identified in Cosmos SDK vX.X.X.

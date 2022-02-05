@@ -6,7 +6,7 @@ order: 2
 
 This document describes the lifecycle of a transaction from creation to committed state changes. Transaction definition is described in a [different doc](../core/transactions.md). The transaction will be referred to as `Tx`. {synopsis}
 
-### Pre-requisite Readings
+## Pre-requisite Readings
 
 - [Anatomy of a Cosmos SDK Application](./app-anatomy.md) {prereq}
 
@@ -153,7 +153,7 @@ and [`EndBlock`](./app-anatomy.md#beginblocker-and-endblocker). While each full-
 locally, this process yields a single, unambiguous result, since the messages' state transitions are deterministic and transactions are
 explicitly ordered in the block proposal.
 
-```
+```text
 		-----------------------
 		|Receive Block Proposal|
 		-----------------------

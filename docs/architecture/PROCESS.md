@@ -26,7 +26,7 @@ ADR creation is an **iterative** process. Instead of trying to solve all decisio
 
 Status has two components:
 
-```
+```text
 {CONSENSUS STATUS} {IMPLEMENTATION STATUS}
 ```
 
@@ -34,7 +34,7 @@ IMPLEMENTATION STATUS is either `Implemented` or `Not Implemented`.
 
 #### Consensus Status
 
-```
+```text
 DRAFT -> PROPOSED -> LAST CALL yyyy-mm-dd -> ACCEPTED | REJECTED -> SUPERSEDED by ADR-xxx
                   \        |
                    \       |

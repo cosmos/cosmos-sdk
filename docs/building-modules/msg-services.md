@@ -56,7 +56,7 @@ After the validation is successful, the `msgServer` method uses the [`keeper`](.
 
 Before returning, `msgServer` methods generally emit one or more [events](../core/events.md) by using the `EventManager` held in the `ctx`. Use the new `EmitTypedEvent` function that uses protobuf-based event types:
 
-```
+```go
 ctx.EventManager().EmitTypedEvent(
 	&group.EventABC{Key1: Value1,  Key2, Value2})
 ```

@@ -45,19 +45,19 @@ following list is nonbinding and all files are optional.
 Within `state.md` the following notation `->` should be used to describe key to
 value mapping:
 
-```
+```text
 key -> value
 ```
 
 to represent byte concatenation the `|` may be used. In addition, encoding
 type may be specified, for example:
 
-```
+```text
 0x00 | addressBytes | address2Bytes -> amino(value_object)
 ```
 
 Additionally, index mappings may be specified by mapping to the `nil` value, for example:
 
-```
+```text
 0x01 | address2Bytes | addressBytes -> nil
 ```

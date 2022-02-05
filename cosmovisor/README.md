@@ -82,7 +82,7 @@ All arguments passed to `cosmovisor run` will be passed to the application binar
 
 `$DAEMON_HOME/cosmovisor` is expected to belong completely to `cosmovisor` and the subprocesses that are controlled by it. The folder content is organized as follows:
 
-```
+```text
 .
 ├── current -> genesis or upgrades/<name>
 ├── genesis
@@ -99,7 +99,7 @@ The `cosmovisor/` directory incudes a subdirectory for each version of the appli
 
 Please note that `$DAEMON_HOME/cosmovisor` only stores the *application binaries*. The `cosmovisor` binary itself can be stored in any typical location (e.g. `/usr/local/bin`). The application will continue to store its data in the default data directory (e.g. `$HOME/.gaiad`) or the data directory specified with the `--home` flag. `$DAEMON_HOME` is independent of the data directory and can be set to any location. If you set `$DAEMON_HOME` to the same directory as the data directory, you will end up with a configuation like the following:
 
-```
+```text
 .gaiad
 ├── config
 ├── data
@@ -147,48 +147,48 @@ If `DAEMON_ALLOW_DOWNLOAD_BINARIES` is set to `true`, and no local binary can be
 
 1. Store an os/architecture -> binary URI map in the upgrade plan info field as JSON under the `"binaries"` key. For example:
 
-```json
-{
-  "binaries": {
-    "linux/amd64":"https://example.com/gaia.zip?checksum=sha256:aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f"
-  }
-}
-```
-
-You can include multiple binaries at once to ensure more than one environment will receive the correct binaries:
-
-```json
-{
-  "binaries": {
-    "linux/amd64":"https://example.com/gaia.zip?checksum=sha256:aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f",
-    "linux/arm64":"https://example.com/gaia.zip?checksum=sha256:aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f",
-    "darwin/amd64":"https://example.com/gaia.zip?checksum=sha256:aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f"
+    ```json
+    {
+      "binaries": {
+        "linux/amd64":"https://example.com/gaia.zip?checksum=sha256:aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f"
+      }
     }
-}
-```
+    ```
 
-When submitting this as a proposal ensure there are no spaces. An example command using `gaiad` could look like:
+    You can include multiple binaries at once to ensure more than one environment will receive the correct binaries:
 
-```sh
-> gaiad tx gov submit-proposal software-upgrade Vega \
---title Vega \
---deposit 100uatom \
---upgrade-height 7368420 \
---upgrade-info '{"binaries":{"linux/amd64":"https://github.com/cosmos/gaia/releases/download/v6.0.0-rc1/gaiad-v6.0.0-rc1-linux-amd64","linux/arm64":"https://github.com/cosmos/gaia/releases/download/v6.0.0-rc1/gaiad-v6.0.0-rc1-linux-arm64","darwin/amd64":"https://github.com/cosmos/gaia/releases/download/v6.0.0-rc1/gaiad-v6.0.0-rc1-darwin-amd64"}}' \
---description "upgrade to Vega" \
---gas 400000 \
---from user \
---chain-id test \
---home test/val2 \
---node tcp://localhost:36657 \
---yes
-```
+    ```json
+    {
+      "binaries": {
+        "linux/amd64":"https://example.com/gaia.zip?checksum=sha256:aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f",
+        "linux/arm64":"https://example.com/gaia.zip?checksum=sha256:aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f",
+        "darwin/amd64":"https://example.com/gaia.zip?checksum=sha256:aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f"
+        }
+    }
+    ```
+
+    When submitting this as a proposal ensure there are no spaces. An example command using `gaiad` could look like:
+
+    ```sh
+    > gaiad tx gov submit-proposal software-upgrade Vega \
+    --title Vega \
+    --deposit 100uatom \
+    --upgrade-height 7368420 \
+    --upgrade-info '{"binaries":{"linux/amd64":"https://github.com/cosmos/gaia/releases/download/v6.0.0-rc1/gaiad-v6.0.0-rc1-linux-amd64","linux/arm64":"https://github.com/cosmos/gaia/releases/download/v6.0.0-rc1/gaiad-v6.0.0-rc1-linux-arm64","darwin/amd64":"https://github.com/cosmos/gaia/releases/download/v6.0.0-rc1/gaiad-v6.0.0-rc1-darwin-amd64"}}' \
+    --description "upgrade to Vega" \
+    --gas 400000 \
+    --from user \
+    --chain-id test \
+    --home test/val2 \
+    --node tcp://localhost:36657 \
+    --yes
+    ```
 
 2. Store a link to a file that contains all information in the above format (e.g. if you want to specify lots of binaries, changelog info, etc. without filling up the blockchain). For example:
 
-```
-https://example.com/testnet-1001-info.json?checksum=sha256:deaaa99fda9407c4dbe1d04bd49bab0cc3c1dd76fa392cd55a9425be074af01e
-```
+    ```text
+    https://example.com/testnet-1001-info.json?checksum=sha256:deaaa99fda9407c4dbe1d04bd49bab0cc3c1dd76fa392cd55a9425be074af01e
+    ```
 
 When `cosmovisor` is triggered to download the new binary, `cosmovisor` will parse the `"binaries"` field, download the new binary with [go-getter](https://github.com/hashicorp/go-getter), and unpack the new binary in the `upgrades/<name>` folder so that it can be run as if it was installed manually.
 

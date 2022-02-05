@@ -15,6 +15,3 @@ plugins:
   - remote: buf.build/grpc/plugins/go:v1.2.0-1
     out: ../api
     opt: paths=source_relative
-  - remote: buf.build/grpc-ecosystem/plugins/grpc-gateway:v2.7.3-1
-    out: ../api
-    opt: logtostderr=true

@@ -84,7 +84,7 @@ Install the theme and all dependencies.
 npm run serve
 ```
 
-Run `pre` and `post` hooks and start a hot-reloading web-server. See output of this command for the URL (it is often <https://localhost:8080).>
+Run `pre` and `post` hooks and start a hot-reloading web-server. See output of this command for the URL (it is often <https://localhost:8080>).
 
 To build documentation as a static website run `npm run build`. You will find the website in `.vuepress/dist` directory.
 

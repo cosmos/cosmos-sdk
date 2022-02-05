@@ -270,7 +270,7 @@ processors because:
   not `TxBody`)
 
 There are also scenarios where we may choose to safely ignore unknown fields
-(<https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-624400188)> to
+(<https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-624400188>) to
 provide graceful forwards compatibility with newer clients.
 
 We propose that field numbers with bit 11 set (for most use cases this is

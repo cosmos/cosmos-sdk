@@ -1,4 +1,4 @@
-FROM bufbuild/buf:latest as BUILDER
+FROM bufbuild/buf:1.0.0-rc10 as BUILDER
 
 FROM golang:alpine
 

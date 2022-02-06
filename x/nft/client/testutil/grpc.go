@@ -161,6 +161,7 @@ func (s *IntegrationTestSuite) TestQueryOwnerGRPC() {
 				var result nft.QueryOwnerResponse
 				err = val.ClientCtx.Codec.UnmarshalJSON(resp, &result)
 				s.Require().NoError(err)
+				s.Require().EqualValues(tc.expectResult, result.Owner)
 			}
 		})
 	}
@@ -228,7 +229,7 @@ func (s *IntegrationTestSuite) TestQuerySupplyGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryNFTsByOwnerGRPC() {
+func (s *IntegrationTestSuite) TestQueryNFTsGRPC() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name string
@@ -241,44 +242,61 @@ func (s *IntegrationTestSuite) TestQueryNFTsByOwnerGRPC() {
 		expectResult []*nft.NFT
 	}{
 		{
-			name: "class id is invalid",
+			name: "classID and owner are both empty",
+			args: struct {
+				ClassId string
+				Owner   string
+			}{},
+			errorMsg:     "must provide at least one of classID or owner",
+			expectErr:    true,
+			expectResult: []*nft.NFT{},
+		},
+		{
+			name: "classID is invalid",
 			args: struct {
 				ClassId string
 				Owner   string
 			}{
 				ClassId: "invalid_class_id",
-				Owner:   s.owner.String(),
 			},
 			expectErr:    true,
-			errorMsg:     "invalid class id",
 			expectResult: []*nft.NFT{},
 		},
 		{
-			name: "class id does not exist",
+			name: "classID does not exist",
 			args: struct {
 				ClassId string
 				Owner   string
 			}{
 				ClassId: "class-id",
-				Owner:   s.owner.String(),
 			},
 			expectErr:    false,
 			expectResult: []*nft.NFT{},
 		},
 		{
-			name: "owner does not exist",
+			name: "success query by classID",
 			args: struct {
 				ClassId string
 				Owner   string
 			}{
 				ClassId: ExpNFT.ClassId,
-				Owner:   s.owner.String(),
 			},
 			expectErr:    false,
-			expectResult: []*nft.NFT{},
+			expectResult: []*nft.NFT{&ExpNFT},
 		},
 		{
-			name: "nft exist",
+			name: "success query by owner",
+			args: struct {
+				ClassId string
+				Owner   string
+			}{
+				Owner: val.Address.String(),
+			},
+			expectErr:    false,
+			expectResult: []*nft.NFT{&ExpNFT},
+		},
+		{
+			name: "success query by owner and classID",
 			args: struct {
 				ClassId string
 				Owner   string
@@ -290,7 +308,7 @@ func (s *IntegrationTestSuite) TestQueryNFTsByOwnerGRPC() {
 			expectResult: []*nft.NFT{&ExpNFT},
 		},
 	}
-	nftsOfClassURL := val.APIAddress + "/cosmos/nft/v1beta1/nfts/%s?owner=%s"
+	nftsOfClassURL := val.APIAddress + "/cosmos/nft/v1beta1/nfts?class_id=%s&owner=%s"
 	for _, tc := range testCases {
 		uri := fmt.Sprintf(nftsOfClassURL, tc.args.ClassId, tc.args.Owner)
 		s.Run(tc.name, func() {
@@ -299,67 +317,7 @@ func (s *IntegrationTestSuite) TestQueryNFTsByOwnerGRPC() {
 				s.Require().Contains(string(resp), tc.errorMsg)
 			} else {
 				s.Require().NoError(err)
-				var result nft.QueryNFTsOfClassResponse
-				err = val.ClientCtx.Codec.UnmarshalJSON(resp, &result)
-				s.Require().NoError(err)
-				s.Require().EqualValues(tc.expectResult, result.Nfts)
-			}
-		})
-	}
-}
-
-func (s *IntegrationTestSuite) TestQueryNFTsOfClassGRPC() {
-	val := s.network.Validators[0]
-	testCases := []struct {
-		name string
-		args struct {
-			ClassId string
-		}
-		expectErr    bool
-		errorMsg     string
-		expectResult []*nft.NFT
-	}{
-		{
-			name: "class id is invalid",
-			args: struct {
-				ClassId string
-			}{
-				ClassId: "invalid_class_id",
-			},
-			expectErr:    true,
-			expectResult: []*nft.NFT{},
-		},
-		{
-			name: "class id does not exist",
-			args: struct {
-				ClassId string
-			}{
-				ClassId: "class-id",
-			},
-			expectErr:    false,
-			expectResult: []*nft.NFT{},
-		},
-		{
-			name: "class id exist",
-			args: struct {
-				ClassId string
-			}{
-				ClassId: ExpNFT.ClassId,
-			},
-			expectErr:    false,
-			expectResult: []*nft.NFT{&ExpNFT},
-		},
-	}
-	nftsOfClassURL := val.APIAddress + "/cosmos/nft/v1beta1/nfts/%s"
-	for _, tc := range testCases {
-		uri := fmt.Sprintf(nftsOfClassURL, tc.args.ClassId)
-		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(uri)
-			if tc.expectErr {
-				s.Require().Contains(string(resp), tc.errorMsg)
-			} else {
-				s.Require().NoError(err)
-				var result nft.QueryNFTsOfClassResponse
+				var result nft.QueryNFTsResponse
 				err = val.ClientCtx.Codec.UnmarshalJSON(resp, &result)
 				s.Require().NoError(err)
 				s.Require().EqualValues(tc.expectResult, result.Nfts)

@@ -35,7 +35,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 type IntegrationTestSuite struct {
@@ -1503,7 +1503,7 @@ func (s *IntegrationTestSuite) TestAuxSigner() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			_, err := govtestutil.MsgSubmitProposal(
+			_, err := govtestutil.MsgSubmitLegacyProposal(
 				val.ClientCtx,
 				val.Address.String(),
 				"test",
@@ -1747,7 +1747,7 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			res, err := govtestutil.MsgSubmitProposal(
+			res, err := govtestutil.MsgSubmitLegacyProposal(
 				val.ClientCtx,
 				tipper.String(),
 				"test",

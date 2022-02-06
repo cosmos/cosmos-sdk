@@ -36,11 +36,12 @@ The model provided for creating a `PrimaryKeyTable` should implement the `Primar
 +++ https://github.com/cosmos/cosmos-sdk/blob/9f78f16ae75cc42fc5fe636bde18a453ba74831f/x/group/internal/orm/primary_key.go#L28-L41
 
 `PrimaryKeyFields()` method returns the list of key parts for a given object.
-The primary key parts can be []byte, string, and `uint64` types. 
+The primary key parts can be []byte, string, and `uint64` types.
 
 ### Key codec
 
 Key parts, except the last part, follow these rules:
-  - []byte is encoded with a single byte length prefix
-  - strings are null-terminated
-  - `uint64` are encoded using 8 byte big endian.
+
+- []byte is encoded with a single byte length prefix
+- strings are null-terminated
+- `uint64` are encoded using 8 byte big endian.

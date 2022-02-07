@@ -66,7 +66,7 @@ type MultiStore interface {
 	// Returns a KVStore which has access only to the namespace of the StoreKey.
 	// Panics if the key is not found in the schema.
 	GetKVStore(StoreKey) KVStore
-	// Returns a branched whose modifications are later merged back in.
+	// Returns a branched store whose modifications are later merged back in.
 	CacheWrap() CacheMultiStore
 }
 
@@ -101,8 +101,6 @@ type CacheMultiStore interface {
 	MultiStore
 	rootStoreTraceListen
 
-	// Returns a branched whose modifications are later merged back in.
-	CacheWrap() CacheMultiStore
 	// Write all cached changes back to the source store. Note: this overwrites any intervening changes.
 	Write()
 }

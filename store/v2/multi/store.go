@@ -60,7 +60,7 @@ type StoreParams struct {
 	Pruning types.PruningOptions
 	// The minimum allowed version number.
 	InitialVersion uint64
-	// The backing DB to use for the state commitment Merkle tree data.
+	// The optional backing DB to use for the state commitment Merkle tree data.
 	// If nil, Merkle data is stored in the state storage DB under a separate prefix.
 	StateCommitmentDB dbm.DBConnection
 	// Contains the store schema and methods to modify it
@@ -68,7 +68,7 @@ type StoreParams struct {
 	// Inter-block persistent cache to use. TODO: not implemented
 	PersistentCache types.MultiStorePersistentCache
 	// Any pending upgrades to apply on loading.
-	Upgrades []types.StoreUpgrades
+	Upgrades *types.StoreUpgrades
 	// Contains The trace context and listeners that can also be set from store methods.
 	*traceListenMixin
 }
@@ -96,7 +96,7 @@ type Store struct {
 
 	// Copied from StoreParams
 	Pruning        types.PruningOptions
-	InitialVersion uint64 // if
+	InitialVersion uint64
 	*traceListenMixin
 
 	PersistentCache types.MultiStorePersistentCache
@@ -308,8 +308,8 @@ func NewStore(db dbm.DBConnection, opts StoreParams) (ret *Store, err error) {
 		writeSchema(reg)
 	} else {
 		// Apply migrations to the schema
-		for _, upgrades := range opts.Upgrades {
-			err = reg.MigrateSchema(upgrades)
+		if opts.Upgrades != nil {
+			err = reg.MigrateSchema(*opts.Upgrades)
 			if err != nil {
 				return
 			}
@@ -318,13 +318,11 @@ func NewStore(db dbm.DBConnection, opts StoreParams) (ret *Store, err error) {
 			err = errors.New("loaded schema does not match configured schema")
 			return
 		}
-		for _, upgrades := range opts.Upgrades {
-			err = migrateData(ret, upgrades)
+		if opts.Upgrades != nil {
+			err = migrateData(ret, *opts.Upgrades)
 			if err != nil {
 				return
 			}
-		}
-		if len(opts.Upgrades) != 0 {
 			writeSchema(reg)
 		}
 	}
@@ -709,9 +707,6 @@ func (rs *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		return sdkerrors.QueryResult(sdkerrors.Wrapf(err, "failed to access height"), false)
 	}
 
-	if _, has := rs.schema[storeName]; !has {
-		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "no such store: %s", storeName), false)
-	}
 	substore, err := view.getSubstore(storeName)
 	if err != nil {
 		return sdkerrors.QueryResult(sdkerrors.Wrapf(err, "failed to access store: %s", storeName), false)

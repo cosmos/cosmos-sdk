@@ -254,13 +254,13 @@ An interface providing only the basic CRUD functionality (`Get`, `Set`, `Has`, a
 ### `CommitMultiStore`
 
 This is the main interface for persisent application state, analogous to the original `CommitMultiStore`.
-  * Past version views are accessed with `GetVersion`, which returns a `BasicMultiStore`.
+  * Past version views are accessed with `GetVersion`, which returns a `MultiStore`.
   * Substores are accessed with `GetKVStore`. Trying to get a substore that was not defined at initialization will cause a panic.
   * `Close` must be called to release the DB resources being used by the store.
 
-### `BasicMultiStore`
+### `MultiStore`
 
-A minimal interface that only allows accessing substores. Note: substores returned by `BasicMultiStore.GetKVStore` are read-only and will panic on `Set` or `Delete` calls.
+A minimal interface that only allows accessing substores. Note: substores returned by `MultiStore.GetKVStore` are read-only and will panic on `Set` or `Delete` calls.
 
 ### Implementation (`root.Store`)
 

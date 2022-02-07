@@ -61,16 +61,14 @@ var (
 	AssertValidValue = v1.AssertValidValue
 )
 
-// BasicMultiStore defines a minimal interface for accessing root state.
-type BasicMultiStore interface {
+// MultiStore defines a minimal interface for accessing root state.
+type MultiStore interface {
 	// Returns a KVStore which has access only to the namespace of the StoreKey.
 	// Panics if the key is not found in the schema.
 	GetKVStore(StoreKey) KVStore
 	// Returns a branched whose modifications are later merged back in.
 	CacheWrap() CacheMultiStore
 }
-
-type MultiStore = BasicMultiStore
 
 // mixin interface for trace and listen methods
 type rootStoreTraceListen interface {
@@ -84,14 +82,14 @@ type rootStoreTraceListen interface {
 // CommitMultiStore defines a complete interface for persistent root state, including
 // (read-only) access to past versions, pruning, trace/listen, and state snapshots.
 type CommitMultiStore interface {
-	BasicMultiStore
+	MultiStore
 	rootStoreTraceListen
 	Committer
 	snapshottypes.Snapshotter
 
 	// Gets a read-only view of the store at a specific version.
 	// Returns an error if the version is not found.
-	GetVersion(int64) (BasicMultiStore, error)
+	GetVersion(int64) (MultiStore, error)
 	// Closes the store and all backing transactions.
 	Close() error
 	// Defines the minimum version number that can be saved by this store.
@@ -100,7 +98,7 @@ type CommitMultiStore interface {
 
 // CacheMultiStore defines a branch of the root state which can be written back to the source store.
 type CacheMultiStore interface {
-	BasicMultiStore
+	MultiStore
 	rootStoreTraceListen
 
 	// Returns a branched whose modifications are later merged back in.

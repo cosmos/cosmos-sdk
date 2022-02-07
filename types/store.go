@@ -15,7 +15,7 @@ type (
 	Queryable                 = types2.Queryable
 	KVStore                   = types2.KVStore
 	Iterator                  = types2.Iterator
-	BasicMultiStore           = types2.BasicMultiStore
+	MultiStore                = types2.MultiStore
 	CommitMultiStore          = types2.CommitMultiStore
 	CacheMultiStore           = types2.CacheMultiStore
 	MultiStorePersistentCache = types2.MultiStorePersistentCache

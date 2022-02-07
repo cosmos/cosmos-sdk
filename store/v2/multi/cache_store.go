@@ -7,12 +7,12 @@ import (
 
 // Branched state
 type cacheStore struct {
-	source    types.BasicMultiStore
+	source    types.MultiStore
 	substores map[string]types.CacheKVStore
 	*traceListenMixin
 }
 
-func newCacheStore(bs types.BasicMultiStore) *cacheStore {
+func newCacheStore(bs types.MultiStore) *cacheStore {
 	return &cacheStore{
 		source:           bs,
 		substores:        map[string]types.CacheKVStore{},
@@ -20,7 +20,7 @@ func newCacheStore(bs types.BasicMultiStore) *cacheStore {
 	}
 }
 
-// GetKVStore implements BasicMultiStore.
+// GetKVStore implements MultiStore.
 func (cs *cacheStore) GetKVStore(skey types.StoreKey) types.KVStore {
 	key := skey.Name()
 	sub, has := cs.substores[key]
@@ -40,7 +40,7 @@ func (cs *cacheStore) Write() {
 	}
 }
 
-// CacheMultiStore implements BasicMultiStore.
+// CacheMultiStore implements MultiStore.
 // This recursively wraps the CacheMultiStore in another cache store.
 func (cs *cacheStore) CacheWrap() types.CacheMultiStore {
 	return newCacheStore(cs)
@@ -54,7 +54,7 @@ type noopCacheStore struct {
 func (noopCacheStore) Write() {}
 
 // pretend basic store is cache store
-func BasicAsCacheStore(bs types.BasicMultiStore) types.CacheMultiStore {
+func BasicAsCacheStore(bs types.MultiStore) types.CacheMultiStore {
 	return noopCacheStore{newCacheStore(bs)}
 }
 

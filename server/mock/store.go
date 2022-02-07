@@ -87,7 +87,7 @@ func (ms multiStore) Restore(
 	panic("not implemented")
 }
 
-func (ms multiStore) GetVersion(int64) (storetypes.BasicMultiStore, error) {
+func (ms multiStore) GetVersion(int64) (storetypes.MultiStore, error) {
 	panic("not implemented")
 }
 

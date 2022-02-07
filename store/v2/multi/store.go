@@ -29,7 +29,7 @@ var (
 	_ types.Queryable        = (*Store)(nil)
 	_ types.CommitMultiStore = (*Store)(nil)
 	_ types.CacheMultiStore  = (*cacheStore)(nil)
-	_ types.BasicMultiStore  = (*viewStore)(nil)
+	_ types.MultiStore       = (*viewStore)(nil)
 	_ types.KVStore          = (*substore)(nil)
 )
 
@@ -405,7 +405,7 @@ func substorePrefix(key string) []byte {
 	return append(contentPrefix, key...)
 }
 
-// GetKVStore implements BasicMultiStore.
+// GetKVStore implements MultiStore.
 func (rs *Store) GetKVStore(skey types.StoreKey) types.KVStore {
 	key := skey.Name()
 	var parent types.KVStore
@@ -639,11 +639,11 @@ func (rs *Store) SetInitialVersion(version uint64) error {
 }
 
 // GetVersion implements CommitMultiStore.
-func (rs *Store) GetVersion(version int64) (types.BasicMultiStore, error) {
+func (rs *Store) GetVersion(version int64) (types.MultiStore, error) {
 	return rs.getView(version)
 }
 
-// CacheWrap implements BasicMultiStore.
+// CacheWrap implements MultiStore.
 func (rs *Store) CacheWrap() types.CacheMultiStore {
 	return newCacheStore(rs)
 }

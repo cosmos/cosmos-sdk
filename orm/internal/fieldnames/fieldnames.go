@@ -1,4 +1,4 @@
-package ormtable
+package fieldnames
 
 import (
 	"strings"
@@ -6,15 +6,15 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-// fieldNames abstractly represents a list of fields with a comparable type which
+// FieldNames abstractly represents a list of fields with a comparable type which
 // can be used as a map key. It is used primarily to lookup indexes.
-type fieldNames struct {
+type FieldNames struct {
 	fields string
 }
 
-// commaSeparatedFieldNames creates a fieldNames instance from a list of comma-separated
+// CommaSeparatedFieldNames creates a FieldNames instance from a list of comma-separated
 // fields.
-func commaSeparatedFieldNames(fields string) fieldNames {
+func CommaSeparatedFieldNames(fields string) FieldNames {
 	// normalize cases where there are spaces
 	if strings.IndexByte(fields, ' ') >= 0 {
 		parts := strings.Split(fields, ",")
@@ -23,21 +23,21 @@ func commaSeparatedFieldNames(fields string) fieldNames {
 		}
 		fields = strings.Join(parts, ",")
 	}
-	return fieldNames{fields: fields}
+	return FieldNames{fields: fields}
 }
 
-// fieldsFromNames creates a fieldNames instance from an array of field
+// FieldsFromNames creates a FieldNames instance from an array of field
 // names.
-func fieldsFromNames(fnames []protoreflect.Name) fieldNames {
+func FieldsFromNames(fnames []protoreflect.Name) FieldNames {
 	var names []string
 	for _, name := range fnames {
 		names = append(names, string(name))
 	}
-	return fieldNames{fields: strings.Join(names, ",")}
+	return FieldNames{fields: strings.Join(names, ",")}
 }
 
-// Names returns the array of names this fieldNames instance represents.
-func (f fieldNames) Names() []protoreflect.Name {
+// Names returns the array of names this FieldNames instance represents.
+func (f FieldNames) Names() []protoreflect.Name {
 	if f.fields == "" {
 		return nil
 	}
@@ -50,6 +50,6 @@ func (f fieldNames) Names() []protoreflect.Name {
 	return names
 }
 
-func (f fieldNames) String() string {
+func (f FieldNames) String() string {
 	return f.fields
 }

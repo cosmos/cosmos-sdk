@@ -9,6 +9,8 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/any.proto";
 import "cosmos/group/v1beta1/types.proto";
 
+import "cosmos/msg/v1/msg.proto";
+
 // Msg is the cosmos.group.v1beta1 Msg service.
 service Msg {
 
@@ -40,6 +42,9 @@ service Msg {
   // CreateProposal submits a new proposal.
   rpc CreateProposal(MsgCreateProposal) returns (MsgCreateProposalResponse);
 
+  // WithdrawProposal aborts a proposal.
+  rpc WithdrawProposal(MsgWithdrawProposal) returns (MsgWithdrawProposalResponse);
+
   // Vote allows a voter to vote on a proposal.
   rpc Vote(MsgVote) returns (MsgVoteResponse);
 
@@ -56,7 +61,7 @@ service Msg {
 
 // MsgCreateGroup is the Msg/CreateGroup request type.
 message MsgCreateGroup {
-
+  option (cosmos.msg.v1.signer) = "admin";
   // admin is the account address of the group admin.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
@@ -76,6 +81,7 @@ message MsgCreateGroupResponse {
 
 // MsgUpdateGroupMembers is the Msg/UpdateGroupMembers request type.
 message MsgUpdateGroupMembers {
+  option (cosmos.msg.v1.signer) = "admin";
 
   // admin is the account address of the group admin.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -93,6 +99,7 @@ message MsgUpdateGroupMembersResponse {}
 
 // MsgUpdateGroupAdmin is the Msg/UpdateGroupAdmin request type.
 message MsgUpdateGroupAdmin {
+  option (cosmos.msg.v1.signer) = "admin";
 
   // admin is the current account address of the group admin.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -109,6 +116,7 @@ message MsgUpdateGroupAdminResponse {}
 
 // MsgUpdateGroupMetadata is the Msg/UpdateGroupMetadata request type.
 message MsgUpdateGroupMetadata {
+  option (cosmos.msg.v1.signer) = "admin";
 
   // admin is the account address of the group admin.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -129,6 +137,8 @@ message MsgUpdateGroupMetadataResponse {}
 
 // MsgCreateGroupPolicy is the Msg/CreateGroupPolicy request type.
 message MsgCreateGroupPolicy {
+  option (cosmos.msg.v1.signer) = "admin";
+
   option (gogoproto.goproto_getters) = false;
 
   // admin is the account address of the group admin.
@@ -153,6 +163,7 @@ message MsgCreateGroupPolicyResponse {
 
 // MsgUpdateGroupPolicyAdmin is the Msg/UpdateGroupPolicyAdmin request type.
 message MsgUpdateGroupPolicyAdmin {
+  option (cosmos.msg.v1.signer) = "admin";
 
   // admin is the account address of the group admin.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -169,6 +180,8 @@ message MsgUpdateGroupPolicyAdminResponse {}
 
 // MsgUpdateGroupPolicyDecisionPolicy is the Msg/UpdateGroupPolicyDecisionPolicy request type.
 message MsgUpdateGroupPolicyDecisionPolicy {
+  option (cosmos.msg.v1.signer) = "admin";
+
   option (gogoproto.goproto_getters) = false;
 
   // admin is the account address of the group admin.
@@ -186,6 +199,7 @@ message MsgUpdateGroupPolicyDecisionPolicyResponse {}
 
 // MsgUpdateGroupPolicyMetadata is the Msg/UpdateGroupPolicyMetadata request type.
 message MsgUpdateGroupPolicyMetadata {
+  option (cosmos.msg.v1.signer) = "admin";
 
   // admin is the account address of the group admin.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -220,6 +234,8 @@ enum Exec {
 
 // MsgCreateProposal is the Msg/CreateProposal request type.
 message MsgCreateProposal {
+  option (cosmos.msg.v1.signer) = "proposers";
+
   option (gogoproto.goproto_getters) = false;
 
   // address is the account address of group policy.
@@ -248,8 +264,21 @@ message MsgCreateProposalResponse {
   uint64 proposal_id = 1;
 }
 
+// MsgWithdrawProposal is the Msg/WithdrawProposal request type.
+message MsgWithdrawProposal {
+  // proposal is the unique ID of the proposal.
+  uint64 proposal_id = 1;
+
+  // address is the admin of the group policy or one of the proposer of the proposal.
+  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgWithdrawProposalResponse is the Msg/WithdrawProposal response type.
+message MsgWithdrawProposalResponse {}
+
 // MsgVote is the Msg/Vote request type.
 message MsgVote {
+  option (cosmos.msg.v1.signer) = "voter";
 
   // proposal is the unique ID of the proposal.
   uint64 proposal_id = 1;
@@ -272,6 +301,7 @@ message MsgVoteResponse {}
 
 // MsgExec is the Msg/Exec request type.
 message MsgExec {
+  option (cosmos.msg.v1.signer) = "signer";
 
   // proposal is the unique ID of the proposal.
   uint64 proposal_id = 1;

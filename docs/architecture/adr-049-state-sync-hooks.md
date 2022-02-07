@@ -18,13 +18,15 @@ New clients use state-sync to download snapshots of module state from peer nodes
 stream of `SnapshotStoreItem` and `SnapshotIAVLItem`, which means for app modules that maintain their states outside of
 the IAVL tree, they can not add their states to the snapshot stream for state-sync.
 
+Notification: `Even though the module state data is outside of the tree, for determinism we
+require that the hash of the external data should be posted in the IAVL tree`
+
 ## Decision
 
 A simple proposal based on our existing implementation is that, we can add two new message types: `SnapshotExtensionMeta` 
 and `SnapshotExtensionPayload`, and they are appended to the existing multi-store stream with `SnapshotExtensionMeta` 
-acting as a delimiter between extensions. Even for modules that maintain the data outside of the tree, for determinism we
-require that the hash of the external data should be posted in the IAVL tree. As the chunk hashes should be able to ensure 
-data integrity, we don't need a delimiter to mark the end of the snapshot stream.
+acting as a delimiter between extensions. As the chunk hashes should be able to ensure data integrity, we don't need 
+a delimiter to mark the end of the snapshot stream.
 
 Besides, we provide `Snapshotter` and `ExtensionSnapshotter` interface for modules to implement snapshotters, which will handle both taking 
 snapshot and the restoration. Each module could have mutiple snapshotters, and for modules with additional state, they should

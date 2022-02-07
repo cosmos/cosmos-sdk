@@ -37,7 +37,7 @@ To install a previous version, you can specify the version. IMPORTANT: Chains th
 go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v0.1.0
 ```
 
-It is possible to confirm the version of cosmovisor when using Cosmovisor v1.0.0, but it is not possible to do so with `v0.1.0`.
+You can run `cosmovisor --version` to check the Cosmovisor version (works only with Cosmovisor >=1.0.0).
 
 You can also install from source by pulling the cosmos-sdk repository and switching to the correct version and building as follows:
 
@@ -45,11 +45,10 @@ You can also install from source by pulling the cosmos-sdk repository and switch
 git clone git@github.com:cosmos/cosmos-sdk
 cd cosmos-sdk
 git checkout cosmovisor/vx.x.x
-cd cosmovisor
-make
+make cosmovisor
 ```
 
-This will build cosmovisor in your current directory. Afterwards you may want to put it into your machine's PATH like as follows:
+This will build cosmovisor in `/cosmovisor` directory. Afterwards you may want to put it into your machine's PATH like as follows:
 
 ```
 cp cosmovisor ~/go/bin/cosmovisor
@@ -67,7 +66,7 @@ The first argument passed to `cosmovisor` is the action for `cosmovisor` to take
 
 All arguments passed to `cosmovisor run` will be passed to the application binary (as a subprocess). `cosmovisor` will return `/dev/stdout` and `/dev/stderr` of the subprocess as its own. For this reason, `cosmovisor run` cannot accept any command-line arguments other than those available to the application binary.
 
-*Note: Use of `cosmovisor` without one of the action arguments is deprecated. For backwards compatability, if the first argument is not an action argument, `run` is assumed. However, this fallback might be removed in future versions, so it is recommended that you always provide `run`.
+*Note: Use of `cosmovisor` without one of the action arguments is deprecated. For backwards compatibility, if the first argument is not an action argument, `run` is assumed. However, this fallback might be removed in future versions, so it is recommended that you always provide `run`.
 
 `cosmovisor` reads its configuration from environment variables:
 
@@ -209,25 +208,22 @@ You can also use `sha512sum` if you would prefer to use longer hashes, or `md5su
 
 The following instructions provide a demonstration of `cosmovisor` using the simulation application (`simapp`) shipped with the Cosmos SDK's source code. The following commands are to be run from within the `cosmos-sdk` repository.
 
-First, check out the latest `v0.42` release:
+#### Setup a genesis chain
+
+Let's create a new chain using the latest `v0.44` simapp (the Cosmos SDK demo app):
 
 ```
-git checkout v0.42.7
-```
-
-Compile the `simd` binary:
-
-```
+git checkout v0.44.6
 make build
 ```
 
-Reset `~/.simapp` (never do this in a production environment):
+Clean `~/.simapp` (never do this in a production environment):
 
 ```
 ./build/simd unsafe-reset-all
 ```
 
-Configure the `simd` binary for testing:
+Setup app config:
 
 ```
 ./build/simd config chain-id test
@@ -236,7 +232,7 @@ Configure the `simd` binary for testing:
 ```
 
 Initialize the node and overwrite any previous genesis file (never do this in a production environment):
-
+ 
 <!-- TODO: init does not read chain-id from config -->
 
 ```
@@ -249,7 +245,13 @@ Set the minimum gas price to `0stake` in `~/.simapp/config/app.toml`:
 minimum-gas-prices = "0stake"
 ```
 
-Create a new key for the validator, then add a genesis account and transaction:
+For the sake of this demonstration, amend `voting_period` in `genesis.json` to a reduced time of 20 seconds (`20s`):
+
+```
+cat <<< $(jq '.app_state.gov.voting_params.voting_period = "20s"' $HOME/.simapp/config/genesis.json) > $HOME/.simapp/config/genesis.json
+```
+
+Create a validator, and setup genesis transaction:
 
 <!-- TODO: add-genesis-account does not read keyring-backend from config -->
 <!-- TODO: gentx does not read chain-id from config -->
@@ -261,6 +263,15 @@ Create a new key for the validator, then add a genesis account and transaction:
 ./build/simd collect-gentxs
 ```
 
+Start `cosmosvisor`:
+
+```
+cosmovisor run start
+```
+
+
+#### Prepare Cosmovisor
+
 Set the required environment variables:
 
 ```
@@ -268,7 +279,7 @@ export DAEMON_NAME=simd
 export DAEMON_HOME=$HOME/.simapp
 ```
 
-Set the optional environment variable to trigger an automatic restart:
+Set the optional environment variable to trigger an automatic app restart:
 
 ```
 export DAEMON_RESTART_AFTER_UPGRADE=true
@@ -281,35 +292,15 @@ mkdir -p $DAEMON_HOME/cosmovisor/genesis/bin
 cp ./build/simd $DAEMON_HOME/cosmovisor/genesis/bin
 ```
 
-For the sake of this demonstration, amend `voting_period` in `genesis.json` to a reduced time of 20 seconds (`20s`):
+Now you can run cosmovisor with simapp v0.44
 
-```
-cat <<< $(jq '.app_state.gov.voting_params.voting_period = "20s"' $HOME/.simapp/config/genesis.json) > $HOME/.simapp/config/genesis.json
-```
+#### Update App
 
-Next, we will hardcode a modification in `simapp` to simulate a code change. In `simapp/app.go`, find the line containing the `UpgradeKeeper` initialization. It should look like the following:
+Update app to the latest  version (eg v0.45).
 
-```go
-app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath)
-```
+Next, we can add a migration - which is defined using `x/upgrade` [upgrade plan](https://github.com/cosmos/cosmos-sdk/blob/master/docs/core/upgrade.md) (you may refer to a past version if you are using an older Cosmos SDK release). In a migration we can do any deterministic state change. 
 
-After that line, add the following:
-
-```go
-app.UpgradeKeeper.SetUpgradeHandler("test1", func(ctx sdk.Context, plan upgradetypes.Plan) {
-	// Add some coins to a random account
-	addr, err := sdk.AccAddressFromBech32("cosmos18cgkqduwuh253twzmhedesw3l7v3fm37sppt58")
-	if err != nil {
-		panic(err)
-	}
-	err = app.BankKeeper.AddCoins(ctx, addr, sdk.Coins{sdk.Coin{Denom: "stake", Amount: sdk.NewInt(345600000)}})
-	if err != nil {
-		panic(err)
-	}
-})
-```
-
-Now recompile the `simd` binary with the added upgrade handler:
+Now build a new version of `simd` binary:
 
 ```
 make build
@@ -322,18 +313,13 @@ mkdir -p $DAEMON_HOME/cosmovisor/upgrades/test1/bin
 cp ./build/simd $DAEMON_HOME/cosmovisor/upgrades/test1/bin
 ```
 
-Start `cosmosvisor`:
-
-```
-cosmovisor run start
-```
 
 Open a new terminal window and submit an upgrade proposal along with a deposit and a vote (these commands must be run within 20 seconds of each other):
 
 ```
-./build/simd tx gov submit-proposal software-upgrade test1 --title upgrade --description upgrade --upgrade-height 20 --from validator --yes
+./build/simd tx gov submit-proposal software-upgrade test1 --title upgrade --description upgrade --upgrade-height 100 --from validator --yes
 ./build/simd tx gov deposit 1 10000000stake --from validator --yes
 ./build/simd tx gov vote 1 yes --from validator --yes
 ```
 
-The upgrade will occur automatically at height 20.
+The upgrade will occur automatically at height 100. Note: you may need to change the upgrade height in the snippet above.

@@ -105,8 +105,7 @@ func (k Keeper) GranterGrants(c context.Context, req *authz.QueryGranterGrantsRe
 	store := ctx.KVStore(k.storeKey)
 	authzStore := prefix.NewStore(store, grantStoreKey(nil, granter, ""))
 
-	var fullGrants []*authz.GrantAuthorization
-	var grants []*authz.Grant
+	var grants []*authz.GrantAuthorization
 	pageRes, err := query.FilteredPaginate(authzStore, req.Pagination, func(key []byte, value []byte,
 		accumulate bool) (bool, error) {
 		auth, err := unmarshalAuthorization(k.cdc, value)
@@ -121,13 +120,8 @@ func (k Keeper) GranterGrants(c context.Context, req *authz.QueryGranterGrantsRe
 				return false, status.Errorf(codes.Internal, err.Error())
 			}
 
-			grants = append(grants, &authz.Grant{
-				Authorization: any,
-				Expiration:    auth.Expiration,
-			})
-
 			grantee := firstAddressFromGrantStoreKey(key)
-			fullGrants = append(fullGrants, &authz.GrantAuthorization{
+			grants = append(grants, &authz.GrantAuthorization{
 				Granter:       granter.String(),
 				Grantee:       grantee.String(),
 				Authorization: any,
@@ -143,7 +137,6 @@ func (k Keeper) GranterGrants(c context.Context, req *authz.QueryGranterGrantsRe
 	return &authz.QueryGranterGrantsResponse{
 		Grants:     grants,
 		Pagination: pageRes,
-		FullGrants: fullGrants,
 	}, nil
 }
 
@@ -161,7 +154,7 @@ func (k Keeper) GranteeGrants(c context.Context, req *authz.QueryGranteeGrantsRe
 	ctx := sdk.UnwrapSDKContext(c)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), GrantKey)
 
-	var grants []*authz.GrantAuthorization
+	var authorizations []*authz.GrantAuthorization
 	pageRes, err := query.FilteredPaginate(store, req.Pagination, func(key []byte, value []byte,
 		accumulate bool) (bool, error) {
 		auth, err := unmarshalAuthorization(k.cdc, value)
@@ -181,7 +174,7 @@ func (k Keeper) GranteeGrants(c context.Context, req *authz.QueryGranteeGrantsRe
 				return false, status.Errorf(codes.Internal, err.Error())
 			}
 
-			grants = append(grants, &authz.GrantAuthorization{
+			authorizations = append(authorizations, &authz.GrantAuthorization{
 				Authorization: any,
 				Expiration:    auth.Expiration,
 				Granter:       granter.String(),
@@ -195,7 +188,7 @@ func (k Keeper) GranteeGrants(c context.Context, req *authz.QueryGranteeGrantsRe
 	}
 
 	return &authz.QueryGranteeGrantsResponse{
-		Grants:     grants,
+		Grants:     authorizations,
 		Pagination: pageRes,
 	}, nil
 }

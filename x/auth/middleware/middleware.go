@@ -97,13 +97,25 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		TxTimeoutHeightMiddleware,
 		ValidateMemoMiddleware(options.AccountKeeper),
 		ConsumeTxSizeGasMiddleware(options.AccountKeeper),
+		// No gas should be consumed in any middleware above in a "post" handler part. See
+		// ComposeMiddlewares godoc for details.
+		// `DeductFeeMiddleware` and `IncrementSequenceMiddleware` should be put outside of `WithBranchedStore` middleware,
+		// so their storage writes are not discarded when tx fails.
 		DeductFeeMiddleware(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),
 		TxPriorityMiddleware,
 		SetPubKeyMiddleware(options.AccountKeeper),
 		ValidateSigCountMiddleware(options.AccountKeeper),
 		SigGasConsumeMiddleware(options.AccountKeeper, sigGasConsumer),
 		SigVerificationMiddleware(options.AccountKeeper, options.SignModeHandler),
-		NewTipMiddleware(options.BankKeeper),
 		IncrementSequenceMiddleware(options.AccountKeeper),
+		// Creates a new MultiStore branch, discards downstream writes if the downstream returns error.
+		// These kinds of middlewares should be put under this:
+		// - Could return error after messages executed succesfully.
+		// - Storage writes should be discarded together when tx failed.
+		WithBranchedStore,
+		// Consume block gas. All middlewares whose gas consumption after their `next` handler
+		// should be accounted for, should go below this middleware.
+		ConsumeBlockGasMiddleware,
+		NewTipMiddleware(options.BankKeeper),
 	), nil
 }

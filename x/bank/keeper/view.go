@@ -10,7 +10,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -170,7 +169,7 @@ func (k BaseViewKeeper) IterateAllBalances(ctx sdk.Context, cb func(sdk.AccAddre
 func (k BaseViewKeeper) LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
 	acc := k.ak.GetAccount(ctx, addr)
 	if acc != nil {
-		vacc, ok := acc.(vestexported.VestingAccount)
+		vacc, ok := acc.(types.VestingAccount)
 		if ok {
 			return vacc.LockedCoins(ctx.BlockTime())
 		}
@@ -220,7 +219,7 @@ func (k BaseViewKeeper) ValidateBalance(ctx sdk.Context, addr sdk.AccAddress) er
 		return fmt.Errorf("account balance of %s is invalid", balances)
 	}
 
-	vacc, ok := acc.(vestexported.VestingAccount)
+	vacc, ok := acc.(types.VestingAccount)
 	if ok {
 		ogv := vacc.GetOriginalVesting()
 		if ogv.IsAnyGT(balances) {

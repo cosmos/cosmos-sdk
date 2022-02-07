@@ -39,7 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 + [\#10285](https://github.com/cosmos/cosmos-sdk/pull/10316) Added `run` action.
-
++ [\#10533](https://github.com/cosmos/cosmos-sdk/pull/10649) Added environmental variable `DAEMON_BACKUP_DIR` to allow node to set a custom backup directory.
 ### Deprecated
 
 + [\#10285](https://github.com/cosmos/cosmos-sdk/pull/10316) Running `cosmovisor` without the `run` argument.

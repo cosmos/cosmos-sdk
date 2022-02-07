@@ -2,6 +2,6 @@
 order: 0
 -->
 
-# Feegrant
+# Fee Grant
 
-- [Feegrant](spec/README.md) - Grant fee allowances for executing transactions.
+- [Fee Grant](spec/README.md) - Grant fee allowances for executing transactions.

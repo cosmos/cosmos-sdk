@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const proposalIDLen = 8
@@ -37,11 +38,11 @@ func migratePrefixProposalAddress(store sdk.KVStore, prefixBz []byte) {
 // migrateStoreWeightedVotes migrates a legacy vote to an ADR-037 weighted vote.
 // Important: the `oldVote` has its `Option` field set, whereas the new weighted
 // vote has its `Options` field set.
-func migrateVote(oldVote types.Vote) types.Vote {
-	return types.Vote{
+func migrateVote(oldVote v1beta1.Vote) v1beta1.Vote {
+	return v1beta1.Vote{
 		ProposalId: oldVote.ProposalId,
 		Voter:      oldVote.Voter,
-		Options:    types.NewNonSplitVoteOption(oldVote.Option),
+		Options:    v1beta1.NewNonSplitVoteOption(oldVote.Option),
 	}
 }
 
@@ -51,7 +52,7 @@ func migrateStoreWeightedVotes(store sdk.KVStore, cdc codec.BinaryCodec) error {
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		var oldVote types.Vote
+		var oldVote v1beta1.Vote
 		err := cdc.Unmarshal(iterator.Value(), &oldVote)
 		if err != nil {
 			return err
@@ -74,6 +75,7 @@ func migrateStoreWeightedVotes(store sdk.KVStore, cdc codec.BinaryCodec) error {
 // migration includes:
 //
 // - Change addresses to be length-prefixed.
+// - Change all legacy votes to ADR-037 weighted votes.
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
 	migratePrefixProposalAddress(store, types.DepositsKeyPrefix)

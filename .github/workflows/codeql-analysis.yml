@@ -2,8 +2,12 @@ name: "CodeQL"
 
 on:
   pull_request:
+      paths:
+        - "**.go"
   push:
     branches: [ master ]
+    paths:
+      - "**.go"
 
 jobs:
   analyze:

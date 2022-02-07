@@ -1,0 +1,7 @@
+// Package ormmocks contains generated mocks for orm types that can be used
+// in testing. Right now, this package only contains a mock for ormtable.Hooks
+// as this useful way for unit testing using an in-memory database. Rather
+// than attempting to mock a whole table or database instance, instead
+// a mock Hook instance can be passed in to verify that the expected
+// insert/update/delete operations are happening in the database.
+package ormmocks

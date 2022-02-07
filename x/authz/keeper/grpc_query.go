@@ -152,7 +152,7 @@ func (k Keeper) GranteeGrants(c context.Context, req *authz.QueryGranteeGrantsRe
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	store := ctx.KVStore(k.storeKey)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), GrantKey)
 
 	var authorizations []*authz.GrantAuthorization
 	pageRes, err := query.FilteredPaginate(store, req.Pagination, func(key []byte, value []byte,

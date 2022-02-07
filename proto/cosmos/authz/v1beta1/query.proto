@@ -18,12 +18,12 @@ service Query {
 
   // GranterGrants returns list of `GrantAuthorization`, granted by granter.
   rpc GranterGrants(QueryGranterGrantsRequest) returns (QueryGranterGrantsResponse) {
-    option (google.api.http).get = "/cosmos/authz/v1beta1/grants/granter/{granter}";
+    option (google.api.http).get = "/cosmos/authz/v1beta1/grants/{granter}";
   }
 
   // GranteeGrants returns a list of `GrantAuthorization` by grantee.
   rpc GranteeGrants(QueryGranteeGrantsRequest) returns (QueryGranteeGrantsResponse) {
-    option (google.api.http).get = "/cosmos/authz/v1beta1/grants/grantee/{grantee}";
+    option (google.api.http).get = "/cosmos/authz/v1beta1/granteegrants/{grantee}";
   }
 }
 

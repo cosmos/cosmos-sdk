@@ -1,21 +1,28 @@
 #!/usr/bin/env bash
 
-# Requirements
-# + https://github.com/grpc-ecosystem/grpc-gateway#installation
+#== Requirements ==
+#
+### https://github.com/grpc-ecosystem/grpc-gateway#installation
 # go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 # go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-# go install github.com/grpc-ecosystem/grpc-gateway/@v1
+# go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0
 #
-# go install github.com/regen-network/cosmos-proto@latest
+## make sure you are outside of module (eg `cd ~`) - the command below doesn't work with `go install`:
+# go get github.com/regen-network/cosmos-proto@latest
+#
+## Install latest buf (v1.0.0-rc11 or later)
+
 set -eo pipefail
 
 protoc_install_gocosmos() {
-  if ! grep "github.com/gogo/protobuf => github.com/regen-network/protobuf" go.mod &>/dev/null ; then
-    echo -e "\tPlease run this command from somewhere inside the cosmos-sdk folder."
-    return 1
-  fi
-
-  go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos@latest 2>/dev/null
+  echo "Installing protobuf gocosmos plugin"
+  # we should use go install, but regen-network/cosmos-proto uses contains
+  # replace directives. It must not contain directives that would cause
+  # it to be interpreted differently than if it were the main module.
+  # So the command below issues a warning and we are muting it for now.
+  #
+  # Installing plugins must be done outside of the module
+  (cd ~; go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos@v0.3.1 2> /dev/null)
 }
 
 protoc_install_gocosmos
@@ -33,13 +40,13 @@ done
 
 cd ..
 
-# # generate codec/testdata proto code
-# (cd testutil/testdata; buf generate)
+# generate codec/testdata proto code
+(cd testutil/testdata; buf generate)
 
-# # move proto files to the right places
-# cp -r github.com/cosmos/cosmos-sdk/* ./
-# rm -rf github.com
+# move proto files to the right places
+cp -r github.com/cosmos/cosmos-sdk/* ./
+rm -rf github.com
 
-# go mod tidy
+go mod tidy
 
-# ./scripts/protocgen2.sh
+./scripts/protocgen2.sh

@@ -56,7 +56,7 @@ func NewCmdGrantAuthorization() *cobra.Command {
 		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from <granter>",
 		Short: "Grant authorization to an address",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`grant authorization to an address to execute a transaction on your behalf:
+			fmt.Sprintf(`create a new grant authorization to an address to execute a transaction on your behalf:
 
 Examples:
  $ %s tx %s grant cosmos1skjw.. send %s --spend-limit=1000stake --from=cosmos1skl..

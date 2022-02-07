@@ -3,21 +3,19 @@ package txv1beta1
 
 import (
 	fmt "fmt"
-	io "io"
-	reflect "reflect"
-	sync "sync"
-
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
+	v1beta12 "github.com/cosmos/cosmos-sdk/api/cosmos/base/v1beta1"
+	v1beta11 "github.com/cosmos/cosmos-sdk/api/cosmos/crypto/multisig/v1beta1"
+	v1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/tx/signing/v1beta1"
 	_ "github.com/gogo/protobuf/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"
-
-	v1beta12 "github.com/cosmos/cosmos-sdk/api/cosmos/base/v1beta1"
-	v1beta11 "github.com/cosmos/cosmos-sdk/api/cosmos/crypto/multisig/v1beta1"
-	v1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/tx/signing/v1beta1"
+	io "io"
+	reflect "reflect"
+	sync "sync"
 )
 
 var _ protoreflect.List = (*_Tx_3_list)(nil)

@@ -2,10 +2,9 @@ package grpc
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"net"
 	"time"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 
 	"google.golang.org/grpc"
 

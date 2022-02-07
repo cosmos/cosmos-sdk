@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	v046 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
+	"github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )

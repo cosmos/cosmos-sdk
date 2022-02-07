@@ -3,18 +3,16 @@ package govv1beta2
 
 import (
 	fmt "fmt"
-	io "io"
-	reflect "reflect"
-	sync "sync"
-
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
+	v1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/query/v1beta1"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-
-	v1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/query/v1beta1"
+	io "io"
+	reflect "reflect"
+	sync "sync"
 )
 
 var (

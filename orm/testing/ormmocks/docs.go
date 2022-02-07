@@ -4,4 +4,7 @@
 // than attempting to mock a whole table or database instance, instead
 // a mock Hook instance can be passed in to verify that the expected
 // insert/update/delete operations are happening in the database.
+//
+// The Eq function gomock.Matcher that compares protobuf messages that can
+// be used in gomock EXPECT functions.
 package ormmocks

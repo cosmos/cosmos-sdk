@@ -2,7 +2,8 @@
 package ormtest
 
 import (
-	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
+	dbm "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 )
 
@@ -14,5 +15,15 @@ import (
 //  ctx := ormtable.WrapContextDefault()
 //  ...
 func NewMemoryBackend() ormtable.Backend {
-	return testkv.NewSplitMemBackend()
+	return NewMemoryBackendWithHooks(nil)
+}
+
+// NewMemoryBackendWithHooks returns an ORM memory backend which can
+// be used for testing with the provided hooks.
+func NewMemoryBackendWithHooks(hooks ormtable.Hooks) ormtable.Backend {
+	return ormtable.NewBackend(ormtable.BackendOptions{
+		CommitmentStore: dbm.NewMemDB(),
+		IndexStore:      dbm.NewMemDB(),
+		Hooks:           hooks,
+	})
 }

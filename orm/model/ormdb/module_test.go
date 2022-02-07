@@ -8,6 +8,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/golang/mock/gomock"
+
+	"github.com/cosmos/cosmos-sdk/orm/testing/ormmocks"
+
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
@@ -32,6 +36,19 @@ var TestBankSchema = ormdb.ModuleSchema{
 
 type keeper struct {
 	store testpb.BankStore
+}
+
+func NewKeeper(db ormdb.ModuleDB) (Keeper, error) {
+	store, err := testpb.NewBankStore(db)
+	return keeper{store}, err
+}
+
+type Keeper interface {
+	Send(ctx context.Context, from, to, denom string, amount uint64) error
+	Mint(ctx context.Context, acct, denom string, amount uint64) error
+	Burn(ctx context.Context, acct, denom string, amount uint64) error
+	Balance(ctx context.Context, acct, denom string) (uint64, error)
+	Supply(ctx context.Context, denom string) (uint64, error)
 }
 
 func (k keeper) Send(ctx context.Context, from, to, denom string, amount uint64) error {
@@ -151,11 +168,6 @@ func (k keeper) safeSubBalance(ctx context.Context, acct, denom string, amount u
 	}
 }
 
-func newKeeper(db ormdb.ModuleDB) (keeper, error) {
-	store, err := testpb.NewBankStore(db)
-	return keeper{store}, err
-}
-
 func TestModuleDB(t *testing.T) {
 	// create db & debug context
 	db, err := ormdb.NewModuleDB(TestBankSchema, ormdb.ModuleDBOptions{})
@@ -171,7 +183,7 @@ func TestModuleDB(t *testing.T) {
 	))
 
 	// create keeper
-	k, err := newKeeper(db)
+	k, err := NewKeeper(db)
 	assert.NilError(t, err)
 
 	// mint coins
@@ -249,4 +261,40 @@ func TestModuleDB(t *testing.T) {
 	assert.NilError(t, db.ValidateJSON(source))
 	assert.NilError(t, db.ImportJSON(ctx2, source))
 	testkv.AssertBackendsEqual(t, backend, backend2)
+}
+
+func TestHooks(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	db, err := ormdb.NewModuleDB(TestBankSchema, ormdb.ModuleDBOptions{})
+	assert.NilError(t, err)
+	hooks := ormmocks.NewMockHooks(ctrl)
+	ctx := ormtable.WrapContextDefault(ormtest.NewMemoryBackendWithHooks(hooks))
+	k, err := NewKeeper(db)
+	assert.NilError(t, err)
+
+	denom := "foo"
+	acct1 := "bob"
+	acct2 := "sally"
+
+	hooks.EXPECT().OnInsert(ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 10}))
+	hooks.EXPECT().OnInsert(ormmocks.Eq(&testpb.Supply{Denom: denom, Amount: 10}))
+	assert.NilError(t, k.Mint(ctx, acct1, denom, 10))
+
+	hooks.EXPECT().OnUpdate(
+		ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 10}),
+		ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 5}),
+	)
+	hooks.EXPECT().OnInsert(
+		ormmocks.Eq(&testpb.Balance{Address: acct2, Denom: denom, Amount: 5}),
+	)
+	assert.NilError(t, k.Send(ctx, acct1, acct2, denom, 5))
+
+	hooks.EXPECT().OnUpdate(
+		ormmocks.Eq(&testpb.Supply{Denom: denom, Amount: 10}),
+		ormmocks.Eq(&testpb.Supply{Denom: denom, Amount: 5}),
+	)
+	hooks.EXPECT().OnDelete(
+		ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 5}),
+	)
+	assert.NilError(t, k.Burn(ctx, acct1, denom, 5))
 }

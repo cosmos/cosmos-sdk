@@ -556,13 +556,13 @@ simd tx group exec 1
 The `leave-group` command allows group member to leave the group.
 
 ```bash
-simd tx group leave-group [member-address] [group-policy-account] [group-id]
+simd tx group leave-group [member-address] [group-id]
 ```
 
 Example:
 
 ```bash
-simd tx group leave-group cosmos1... cosmos1... 1
+simd tx group leave-group cosmos1... 1
 ```
 
 

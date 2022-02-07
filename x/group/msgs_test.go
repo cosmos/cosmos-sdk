@@ -788,26 +788,14 @@ func TestMsgLeaveGroup(t *testing.T) {
 			"group id is required",
 			&group.MsgLeaveGroup{
 				MemberAddress: admin.String(),
-				PolicyAddress: member1.String(),
 			},
 			true,
 			"group-id: value is empty",
 		},
 		{
-			"invalid policy address",
-			&group.MsgLeaveGroup{
-				MemberAddress: admin.String(),
-				PolicyAddress: "policy",
-				GroupId:       1,
-			},
-			true,
-			"decoding bech32 failed",
-		},
-		{
 			"valid testcase",
 			&group.MsgLeaveGroup{
 				MemberAddress: admin.String(),
-				PolicyAddress: member1.String(),
 				GroupId:       1,
 			},
 			false,

@@ -1711,7 +1711,6 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 	var resp group.QueryGroupPoliciesByGroupResponse
 	require.NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp))
 	require.Len(resp.GroupPolicies, 1)
-	policyAddress := resp.GroupPolicies[0].Address
 
 	testCases := []struct {
 		name      string
@@ -1724,7 +1723,6 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 			append(
 				[]string{
 					"address",
-					val.Address.String(),
 					"4",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				},
@@ -1734,25 +1732,10 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 			"key not found",
 		},
 		{
-			"invalid policy address",
-			append(
-				[]string{
-					members[0],
-					"policy",
-					"4",
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[0]),
-				},
-				commonFlags...,
-			),
-			true,
-			"decoding bech32 failed",
-		},
-		{
 			"group not found",
 			append(
 				[]string{
 					members[0],
-					policyAddress,
 					"40",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[0]),
 				},
@@ -1762,25 +1745,10 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 			"group: not found",
 		},
 		{
-			"policy not found",
-			append(
-				[]string{
-					members[0],
-					members[1],
-					"4",
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[0]),
-				},
-				commonFlags...,
-			),
-			true,
-			"group policy: not found",
-		},
-		{
 			"valid case",
 			append(
 				[]string{
 					members[2],
-					policyAddress,
 					"4",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[2]),
 				},
@@ -1794,7 +1762,6 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 			append(
 				[]string{
 					members[2],
-					policyAddress,
 					"4",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[2]),
 				},
@@ -1808,7 +1775,6 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 			append(
 				[]string{
 					members[1],
-					policyAddress,
 					"4",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[1]),
 				},

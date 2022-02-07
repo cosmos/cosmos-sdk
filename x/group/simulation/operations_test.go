@@ -688,7 +688,7 @@ func (suite *SimTestSuite) TestSimulateLeaveGroup() {
 		Metadata: nil,
 	}
 	require.NoError(accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("3", time.Hour)))
-	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
+	_, err = suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	require.NoError(err)
 
 	// begin a new block
@@ -709,7 +709,6 @@ func (suite *SimTestSuite) TestSimulateLeaveGroup() {
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(groupRes.GroupId, msg.GroupId)
-	suite.Require().Equal(groupPolicyRes.Address, msg.PolicyAddress)
 	suite.Require().Len(futureOperations, 0)
 }
 

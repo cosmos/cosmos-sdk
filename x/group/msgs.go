@@ -708,11 +708,6 @@ func (m MsgLeaveGroup) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "group member")
 	}
 
-	_, err = sdk.AccAddressFromBech32(m.PolicyAddress)
-	if err != nil {
-		return sdkerrors.Wrap(err, "policy")
-	}
-
 	if m.GroupId == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "group-id")
 	}

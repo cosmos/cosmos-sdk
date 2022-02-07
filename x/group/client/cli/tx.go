@@ -653,18 +653,17 @@ func MsgExecCmd() *cobra.Command {
 // MsgLeaveGroupCmd creates a CLI command for Msg/LeaveGroup.
 func MsgLeaveGroupCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "leave-group [member-address] [group-policy-account] [group-id]",
+		Use:   "leave-group [member-address] [group-id]",
 		Short: "remove member from the group",
 		Long: ` remove member from the group
 
 Parameters:
 		   group-id: unique id of the group
-		   group-policy-account: account address of the group policy
 		   member-address: account address of the group member
 		   Note, the'--from' flag is
 				ignored as it is implied from [member-address]
 		`,
-		Args: cobra.ExactArgs(3),
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Flags().Set(flags.FlagFrom, args[0])
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -672,14 +671,13 @@ Parameters:
 				return err
 			}
 
-			groupID, err := strconv.ParseUint(args[2], 10, 64)
+			groupID, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
 
 			msg := &group.MsgLeaveGroup{
 				MemberAddress: clientCtx.GetFromAddress().String(),
-				PolicyAddress: args[1],
 				GroupId:       groupID,
 			}
 			if err = msg.ValidateBasic(); err != nil {

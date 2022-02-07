@@ -924,7 +924,6 @@ func SimulateMsgLeaveGroup(k keeper.Keeper, ak group.AccountKeeper, bk group.Ban
 		msg := &group.MsgLeaveGroup{
 			MemberAddress: member.Address.String(),
 			GroupId:       groupInfo.GroupId,
-			PolicyAddress: policyInfo.Address,
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig

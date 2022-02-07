@@ -2035,14 +2035,15 @@ func (s *TestSuite) TestExecProposal() {
 }
 
 func (s *TestSuite) TestLeaveGroup() {
-	addrs := simapp.AddTestAddrsIncremental(s.app, s.sdkCtx, 5, sdk.NewInt(3000000))
+	addrs := simapp.AddTestAddrsIncremental(s.app, s.sdkCtx, 6, sdk.NewInt(3000000))
 	admin := addrs[0]
 	member1 := addrs[1]
 	member2 := addrs[2]
 	member3 := addrs[3]
 	member4 := addrs[4]
-	require := s.Require()
+	admin2 := addrs[5]
 
+	require := s.Require()
 	res, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin: admin.String(),
 		Members: []group.Member{
@@ -2069,6 +2070,20 @@ func (s *TestSuite) TestLeaveGroup() {
 	require.NoError(err)
 	require.NotNil(res)
 
+	res1, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
+		Admin: admin2.String(),
+		Members: []group.Member{
+			{
+				Address:  member1.String(),
+				Weight:   "1",
+				Metadata: []byte("metadata"),
+				AddedAt:  s.sdkCtx.BlockTime(),
+			},
+		},
+	})
+	require.NoError(err)
+	require.NotNil(res1)
+
 	groupPolicy := &group.MsgCreateGroupPolicy{
 		Admin:    admin.String(),
 		GroupId:  res.GroupId,
@@ -2081,9 +2096,9 @@ func (s *TestSuite) TestLeaveGroup() {
 	require.NoError(groupPolicy.SetDecisionPolicy(policy))
 	require.NoError(err)
 
-	res1, err := s.keeper.CreateGroupPolicy(s.ctx, groupPolicy)
+	policyRes, err := s.keeper.CreateGroupPolicy(s.ctx, groupPolicy)
 	require.NoError(err)
-	require.NotNil(res1)
+	require.NotNil(policyRes)
 
 	groupId := res.GroupId
 	testCases := []struct {
@@ -2098,7 +2113,6 @@ func (s *TestSuite) TestLeaveGroup() {
 			&group.MsgLeaveGroup{
 				GroupId:       100000,
 				MemberAddress: member1.String(),
-				PolicyAddress: member2.String(),
 			},
 			true,
 			"group: not found",
@@ -2109,21 +2123,19 @@ func (s *TestSuite) TestLeaveGroup() {
 			&group.MsgLeaveGroup{
 				GroupId:       groupId,
 				MemberAddress: member4.String(),
-				PolicyAddress: member2.String(),
 			},
 			true,
 			"not part of group",
 			0,
 		},
 		{
-			"expect error: group policy not found",
+			"valid testcase: decision policy is not present",
 			&group.MsgLeaveGroup{
-				GroupId:       groupId,
-				MemberAddress: member3.String(),
-				PolicyAddress: member2.String(),
+				GroupId:       res1.GroupId,
+				MemberAddress: member1.String(),
 			},
-			true,
-			"group policy: not found",
+			false,
+			"",
 			0,
 		},
 		{
@@ -2131,7 +2143,6 @@ func (s *TestSuite) TestLeaveGroup() {
 			&group.MsgLeaveGroup{
 				GroupId:       groupId,
 				MemberAddress: member3.String(),
-				PolicyAddress: res1.Address,
 			},
 			false,
 			"",
@@ -2142,7 +2153,6 @@ func (s *TestSuite) TestLeaveGroup() {
 			&group.MsgLeaveGroup{
 				GroupId:       groupId,
 				MemberAddress: member2.String(),
-				PolicyAddress: res1.Address,
 			},
 			true,
 			"cannot leave group",
@@ -2160,7 +2170,7 @@ func (s *TestSuite) TestLeaveGroup() {
 				require.NoError(err)
 				require.NotNil(res)
 				res, err := s.keeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{
-					GroupId: groupId,
+					GroupId: tc.req.GroupId,
 				})
 				require.NoError(err)
 				require.Len(res.Members, tc.expMembersSize)

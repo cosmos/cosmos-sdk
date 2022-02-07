@@ -84,7 +84,7 @@ When `Tx` is received by the application from the underlying consensus engine (e
 ### ValidateBasic
 
 Messages ([`sdk.Msg`](../core/transactions.md#messages)) are extracted from transactions (`Tx`). The `ValidateBasic` method of the `sdk.Msg` interface implemented by the module developer is run for each transaction. 
-To discard obviously invalid messages, the BaseApp` type calls the `ValidateBasic` method very early in the processing of the message in the [`CheckTx`](../core/baseapp.md#checktx) and [`DeliverTx`](../core/baseapp.md#delivertx)) transactions.
+To discard obviously invalid messages, the `BaseApp` type calls the `ValidateBasic` method very early in the processing of the message in the [`CheckTx`](../core/baseapp.md#checktx) and [`DeliverTx`](../core/baseapp.md#delivertx) transactions.
 `ValidateBasic` can include only **stateless** checks (the checks that do not require access to the state). 
 
 #### Guideline

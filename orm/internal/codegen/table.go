@@ -23,6 +23,8 @@ type tableGen struct {
 	ormTable         ormtable.Table
 }
 
+const notFoundDocs = " returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found."
+
 func newTableGen(fileGen fileGen, msg *protogen.Message, table *ormv1alpha1.TableDescriptor) (*tableGen, error) {
 	t := &tableGen{fileGen: fileGen, msg: msg, table: table, fields: map[protoreflect.Name]*protogen.Field{}}
 	t.primaryKeyFields = fieldnames.CommaSeparatedFieldNames(table.PrimaryKey.Fields)
@@ -64,6 +66,7 @@ func (t tableGen) genStoreInterface() {
 	t.P("Save(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
 	t.P("Delete(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
 	t.P("Has(ctx ", contextPkg.Ident("Context"), ", ", t.fieldsArgs(t.primaryKeyFields.Names()), ") (found bool, err error)")
+	t.P("// Get", notFoundDocs)
 	t.P("Get(ctx ", contextPkg.Ident("Context"), ", ", t.fieldsArgs(t.primaryKeyFields.Names()), ") (*", t.QualifiedGoIdent(t.msg.GoIdent), ", error)")
 
 	for _, idx := range t.uniqueIndexes {
@@ -80,7 +83,7 @@ func (t tableGen) genStoreInterface() {
 }
 
 // returns the has and get (in that order) function signature for unique indexes.
-func (t tableGen) uniqueIndexSig(idxFields string) (string, string) {
+func (t tableGen) uniqueIndexSig(idxFields string) (string, string, string) {
 	fieldsSlc := strings.Split(idxFields, ",")
 	camelFields := t.fieldsToCamelCase(idxFields)
 
@@ -90,12 +93,13 @@ func (t tableGen) uniqueIndexSig(idxFields string) (string, string) {
 
 	hasFuncSig := fmt.Sprintf("%s (ctx context.Context, %s) (found bool, err error)", hasFuncName, args)
 	getFuncSig := fmt.Sprintf("%s (ctx context.Context, %s) (*%s, error)", getFuncName, args, t.msg.GoIdent.GoName)
-	return hasFuncSig, getFuncSig
+	return hasFuncSig, getFuncSig, getFuncName
 }
 
 func (t tableGen) genUniqueIndexSig(idx *ormv1alpha1.SecondaryIndexDescriptor) {
-	hasSig, getSig := t.uniqueIndexSig(idx.Fields)
+	hasSig, getSig, getFuncName := t.uniqueIndexSig(idx.Fields)
 	t.P(hasSig)
+	t.P("// ", getFuncName, notFoundDocs)
 	t.P(getSig)
 }
 
@@ -191,16 +195,19 @@ func (t tableGen) genStoreImpl() {
 	t.P(receiver, "Get(ctx ", contextPkg.Ident("Context"), ", ", t.fieldsArgs(t.primaryKeyFields.Names()), ") (*", varTypeName, ", error) {")
 	t.P("var ", varName, " ", varTypeName)
 	t.P("found, err := ", receiverVar, ".table.PrimaryKey().Get(ctx, &", varName, ", ", t.primaryKeyFields.String(), ")")
-	t.P("if !found {")
+	t.P("if err != nil {")
 	t.P("return nil, err")
 	t.P("}")
-	t.P("return &", varName, ", err")
+	t.P("if !found {")
+	t.P("return nil, ", ormErrPkg.Ident("NotFound"))
+	t.P("}")
+	t.P("return &", varName, ", nil")
 	t.P("}")
 	t.P()
 
 	for _, idx := range t.uniqueIndexes {
 		fields := strings.Split(idx.Fields, ",")
-		hasName, getName := t.uniqueIndexSig(idx.Fields)
+		hasName, getName, _ := t.uniqueIndexSig(idx.Fields)
 
 		// has
 		t.P("func (", receiverVar, " ", t.messageStoreReceiverName(t.msg), ") ", hasName, "{")
@@ -224,8 +231,11 @@ func (t tableGen) genStoreImpl() {
 			t.P(field, ",")
 		}
 		t.P(")")
-		t.P("if !found {")
+		t.P("if err != nil {")
 		t.P("return nil, err")
+		t.P("}")
+		t.P("if !found {")
+		t.P("return nil, ", ormErrPkg.Ident("NotFound"))
 		t.P("}")
 		t.P("return &", varName, ", nil")
 		t.P("}")

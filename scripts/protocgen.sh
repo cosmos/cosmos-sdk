@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Requirements
+# + https://github.com/grpc-ecosystem/grpc-gateway#installation
+
 set -eo pipefail
 
 protoc_gen_gocosmos() {
@@ -26,13 +29,13 @@ done
 
 cd ..
 
-# generate codec/testdata proto code
-(cd testutil/testdata; buf generate)
+# # generate codec/testdata proto code
+# (cd testutil/testdata; buf generate)
 
-# move proto files to the right places
-cp -r github.com/cosmos/cosmos-sdk/* ./
-rm -rf github.com
+# # move proto files to the right places
+# cp -r github.com/cosmos/cosmos-sdk/* ./
+# rm -rf github.com
 
-go mod tidy
+# go mod tidy
 
-./scripts/protocgen2.sh
+# ./scripts/protocgen2.sh

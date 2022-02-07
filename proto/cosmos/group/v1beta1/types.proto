@@ -65,6 +65,12 @@ enum Choice {
   CHOICE_VETO = 4;
 }
 
+// WeightedVoteOption defines a unit of vote for vote split.
+message WeightedVoteOption {
+  Choice     option = 1;
+  string     weight = 2;
+}
+
 //
 // State
 //

@@ -44,6 +44,8 @@ type MsgClient interface {
 	WithdrawProposal(ctx context.Context, in *MsgWithdrawProposal, opts ...grpc.CallOption) (*MsgWithdrawProposalResponse, error)
 	// Vote allows a voter to vote on a proposal.
 	Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error)
+	// VoteWeighted defines a method to add a weighted vote on a specific proposal.
+	VoteWeighted(ctx context.Context, in *MsgVoteWeighted, opts ...grpc.CallOption) (*MsgVoteWeightedResponse, error)
 	// Exec executes a proposal.
 	Exec(ctx context.Context, in *MsgExec, opts ...grpc.CallOption) (*MsgExecResponse, error)
 }
@@ -155,6 +157,15 @@ func (c *msgClient) Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOpti
 	return out, nil
 }
 
+func (c *msgClient) VoteWeighted(ctx context.Context, in *MsgVoteWeighted, opts ...grpc.CallOption) (*MsgVoteWeightedResponse, error) {
+	out := new(MsgVoteWeightedResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/VoteWeighted", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) Exec(ctx context.Context, in *MsgExec, opts ...grpc.CallOption) (*MsgExecResponse, error) {
 	out := new(MsgExecResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/Exec", in, out, opts...)
@@ -190,6 +201,8 @@ type MsgServer interface {
 	WithdrawProposal(context.Context, *MsgWithdrawProposal) (*MsgWithdrawProposalResponse, error)
 	// Vote allows a voter to vote on a proposal.
 	Vote(context.Context, *MsgVote) (*MsgVoteResponse, error)
+	// VoteWeighted defines a method to add a weighted vote on a specific proposal.
+	VoteWeighted(context.Context, *MsgVoteWeighted) (*MsgVoteWeightedResponse, error)
 	// Exec executes a proposal.
 	Exec(context.Context, *MsgExec) (*MsgExecResponse, error)
 	mustEmbedUnimplementedMsgServer()
@@ -231,6 +244,9 @@ func (UnimplementedMsgServer) WithdrawProposal(context.Context, *MsgWithdrawProp
 }
 func (UnimplementedMsgServer) Vote(context.Context, *MsgVote) (*MsgVoteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Vote not implemented")
+}
+func (UnimplementedMsgServer) VoteWeighted(context.Context, *MsgVoteWeighted) (*MsgVoteWeightedResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VoteWeighted not implemented")
 }
 func (UnimplementedMsgServer) Exec(context.Context, *MsgExec) (*MsgExecResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Exec not implemented")
@@ -446,6 +462,24 @@ func _Msg_Vote_Handler(srv interface{}, ctx context.Context, dec func(interface{
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_VoteWeighted_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgVoteWeighted)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).VoteWeighted(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.group.v1beta1.Msg/VoteWeighted",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).VoteWeighted(ctx, req.(*MsgVoteWeighted))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Msg_Exec_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgExec)
 	if err := dec(in); err != nil {
@@ -514,6 +548,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Vote",
 			Handler:    _Msg_Vote_Handler,
+		},
+		{
+			MethodName: "VoteWeighted",
+			Handler:    _Msg_VoteWeighted_Handler,
 		},
 		{
 			MethodName: "Exec",

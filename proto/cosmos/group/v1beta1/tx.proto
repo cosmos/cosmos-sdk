@@ -48,6 +48,9 @@ service Msg {
   // Vote allows a voter to vote on a proposal.
   rpc Vote(MsgVote) returns (MsgVoteResponse);
 
+  // VoteWeighted defines a method to add a weighted vote on a specific proposal.
+  rpc VoteWeighted(MsgVoteWeighted) returns (MsgVoteWeightedResponse);
+
   // Exec executes a proposal.
   rpc Exec(MsgExec) returns (MsgExecResponse);
 }
@@ -295,6 +298,23 @@ message MsgVote {
 
 // MsgVoteResponse is the Msg/Vote response type.
 message MsgVoteResponse {}
+
+// MsgVoteWeighted defines a message to cast a vote.
+message MsgVoteWeighted {
+  option (cosmos.msg.v1.signer) = "voter";
+
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  uint64                      proposal_id = 1 [(gogoproto.jsontag) = "proposal_id"];
+  string                      voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated WeightedVoteOption options     = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.
+message MsgVoteWeightedResponse {}
 
 // MsgExec is the Msg/Exec request type.
 message MsgExec {

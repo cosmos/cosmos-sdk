@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	dbm "github.com/tendermint/tm-db"
+	tmdb "github.com/tendermint/tm-db"
 
 	v1 "github.com/cosmos/cosmos-sdk/store/types"
 	v2 "github.com/cosmos/cosmos-sdk/store/v2"
@@ -12,8 +12,8 @@ import (
 
 var (
 	_ v1.CommitMultiStore = (*compatStore)(nil)
-	_ v1.CacheMultiStore  = (*compatCacheStore)(nil)
 	_ v1.Queryable        = (*compatStore)(nil)
+	_ v1.CacheMultiStore  = (*compatCacheStore)(nil)
 )
 
 type compatStore struct {
@@ -39,6 +39,8 @@ func WrapCacheStoreAsV1CacheMultiStore(cs v2.CacheMultiStore) (v1.CacheMultiStor
 	}
 	return &compatCacheStore{impl}, nil
 }
+
+// commit store
 
 func (st *compatStore) GetStoreType() v1.StoreType {
 	return v1.StoreTypeMulti
@@ -87,7 +89,7 @@ func (st *compatStore) SetTracingContext(tc v1.TraceContext) v1.MultiStore {
 	return st
 }
 
-func (st *compatStore) MountStoreWithDB(key v1.StoreKey, typ v1.StoreType, db dbm.DB) {
+func (st *compatStore) MountStoreWithDB(key v1.StoreKey, typ v1.StoreType, db tmdb.DB) {
 	panic("unsupported: MountStoreWithDB")
 }
 
@@ -104,7 +106,7 @@ func (st *compatStore) LoadVersionAndUpgrade(ver int64, upgrades *v1.StoreUpgrad
 func (st *compatStore) LoadVersion(ver int64) error {
 	// TODO
 	// cache a viewStore representing "current" version?
-	return nil
+	panic("unsupported: LoadVersion")
 }
 
 func (st *compatStore) SetInterBlockCache(v1.MultiStorePersistentCache) {
@@ -119,6 +121,8 @@ func (st *compatStore) SetInitialVersion(version int64) error {
 func (st *compatStore) SetIAVLCacheSize(size int) {
 	panic("unsupported: SetIAVLCacheSize")
 }
+
+// cache store
 
 func (cs *compatCacheStore) GetStoreType() v1.StoreType { return v1.StoreTypeMulti }
 func (cs *compatCacheStore) CacheWrap() v1.CacheWrap {

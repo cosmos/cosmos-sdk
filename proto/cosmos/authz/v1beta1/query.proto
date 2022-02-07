@@ -57,10 +57,12 @@ message QueryGranterGrantsRequest {
 
 // QueryGranterGrantsResponse is the response type for the Query/GranterGrants RPC method.
 message QueryGranterGrantsResponse {
-  // grants is a list of grants granted by the granter.
-  repeated GrantAuthorization grants = 1;
+  // Deprecated: grants is a list of grants granted by the granter.
+  repeated Grant grants = 1 [deprecated = true];
   // pagination defines an pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  // full_grants is a list of grants including the grantee and granter addresses
+  repeated GrantAuthorization full_grants = 3;
 }
 
 // QueryGranteeGrantsRequest is the request type for the Query/IssuedGrants RPC method.

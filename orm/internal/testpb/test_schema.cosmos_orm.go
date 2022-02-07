@@ -16,8 +16,10 @@ type ExampleTableStore interface {
 	Save(ctx context.Context, exampleTable *ExampleTable) error
 	Delete(ctx context.Context, exampleTable *ExampleTable) error
 	Has(ctx context.Context, u32 uint32, i64 int64, str string) (found bool, err error)
+	// Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
 	Get(ctx context.Context, u32 uint32, i64 int64, str string) (*ExampleTable, error)
 	HasByU64Str(ctx context.Context, u64 uint64, str string) (found bool, err error)
+	// GetByU64Str returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
 	GetByU64Str(ctx context.Context, u64 uint64, str string) (*ExampleTable, error)
 	List(ctx context.Context, prefixKey ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error)
 	ListRange(ctx context.Context, from, to ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error)
@@ -150,10 +152,13 @@ func (this exampleTableStore) Has(ctx context.Context, u32 uint32, i64 int64, st
 func (this exampleTableStore) Get(ctx context.Context, u32 uint32, i64 int64, str string) (*ExampleTable, error) {
 	var exampleTable ExampleTable
 	found, err := this.table.PrimaryKey().Get(ctx, &exampleTable, u32, i64, str)
-	if !found {
+	if err != nil {
 		return nil, err
 	}
-	return &exampleTable, err
+	if !found {
+		return nil, ormerrors.NotFound
+	}
+	return &exampleTable, nil
 }
 
 func (this exampleTableStore) HasByU64Str(ctx context.Context, u64 uint64, str string) (found bool, err error) {
@@ -169,8 +174,11 @@ func (this exampleTableStore) GetByU64Str(ctx context.Context, u64 uint64, str s
 		u64,
 		str,
 	)
-	if !found {
+	if err != nil {
 		return nil, err
+	}
+	if !found {
+		return nil, ormerrors.NotFound
 	}
 	return &exampleTable, nil
 }
@@ -212,8 +220,10 @@ type ExampleAutoIncrementTableStore interface {
 	Save(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
 	Delete(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
 	Has(ctx context.Context, id uint64) (found bool, err error)
+	// Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
 	Get(ctx context.Context, id uint64) (*ExampleAutoIncrementTable, error)
 	HasByX(ctx context.Context, x string) (found bool, err error)
+	// GetByX returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
 	GetByX(ctx context.Context, x string) (*ExampleAutoIncrementTable, error)
 	List(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error)
 	ListRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error)
@@ -299,10 +309,13 @@ func (this exampleAutoIncrementTableStore) Has(ctx context.Context, id uint64) (
 func (this exampleAutoIncrementTableStore) Get(ctx context.Context, id uint64) (*ExampleAutoIncrementTable, error) {
 	var exampleAutoIncrementTable ExampleAutoIncrementTable
 	found, err := this.table.PrimaryKey().Get(ctx, &exampleAutoIncrementTable, id)
-	if !found {
+	if err != nil {
 		return nil, err
 	}
-	return &exampleAutoIncrementTable, err
+	if !found {
+		return nil, ormerrors.NotFound
+	}
+	return &exampleAutoIncrementTable, nil
 }
 
 func (this exampleAutoIncrementTableStore) HasByX(ctx context.Context, x string) (found bool, err error) {
@@ -316,8 +329,11 @@ func (this exampleAutoIncrementTableStore) GetByX(ctx context.Context, x string)
 	found, err := this.table.GetIndexByID(1).(ormtable.UniqueIndex).Get(ctx, &exampleAutoIncrementTable,
 		x,
 	)
-	if !found {
+	if err != nil {
 		return nil, err
+	}
+	if !found {
+		return nil, ormerrors.NotFound
 	}
 	return &exampleAutoIncrementTable, nil
 }

@@ -162,7 +162,7 @@ func (k Keeper) GranteeGrants(c context.Context, req *authz.QueryGranteeGrantsRe
 			return false, err
 		}
 
-		granter, g := addressesFromGrantStoreKey(key)
+		granter, g := addressesFromGrantStoreKey(append(GrantKey, key...))
 		if !g.Equals(grantee) {
 			return false, nil
 		}

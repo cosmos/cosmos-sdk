@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/model/kv"
+	"github.com/cosmos/cosmos-sdk/orm/types/kv"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
 
@@ -125,7 +125,7 @@ func (t autoIncrementTable) ValidateJSON(reader io.Reader) error {
 		messageRef := message.ProtoReflect()
 		id := messageRef.Get(t.autoIncField).Uint()
 		if id > maxID {
-			return fmt.Errorf("invalid ID %d, expected a value <= %d", id, maxID)
+			return fmt.Errorf("invalid ID %d, expected a value <= %d, the highest sequence number", id, maxID)
 		}
 
 		if t.customJSONValidator != nil {
@@ -152,7 +152,7 @@ func (t autoIncrementTable) ImportJSON(ctx context.Context, reader io.Reader) er
 			return err
 		} else {
 			if id > maxID {
-				return fmt.Errorf("invalid ID %d, expected a value <= %d", id, maxID)
+				return fmt.Errorf("invalid ID %d, expected a value <= %d, the highest sequence number", id, maxID)
 			}
 			// we do have an ID and calling Save will fail because it expects
 			// either no ID or SAVE_MODE_UPDATE. So instead we drop one level
@@ -213,18 +213,20 @@ func (t autoIncrementTable) ExportJSON(ctx context.Context, writer io.Writer) er
 		return err
 	}
 
-	bz, err := json.Marshal(seq)
-	if err != nil {
-		return err
-	}
-	_, err = writer.Write(bz)
-	if err != nil {
-		return err
-	}
+	if seq != 0 {
+		bz, err := json.Marshal(seq)
+		if err != nil {
+			return err
+		}
+		_, err = writer.Write(bz)
+		if err != nil {
+			return err
+		}
 
-	_, err = writer.Write([]byte(",\n"))
-	if err != nil {
-		return err
+		_, err = writer.Write([]byte(",\n"))
+		if err != nil {
+			return err
+		}
 	}
 
 	return t.doExportJSON(ctx, writer)

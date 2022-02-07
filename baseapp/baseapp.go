@@ -233,7 +233,7 @@ func (app *BaseApp) loadStore() error {
 	for _, opt := range app.storeOpts {
 		opt(&config, latest)
 	}
-	app.store, err = multi.NewStore(app.db, config)
+	app.store, err = multi.NewV1MultiStoreAsV2(app.db, config)
 	if err != nil {
 		return fmt.Errorf("failed to load store: %w", err)
 	}

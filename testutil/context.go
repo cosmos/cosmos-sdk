@@ -28,7 +28,7 @@ func DefaultContext(key, tkey stypes.StoreKey) (ret sdk.Context) {
 	if err != nil {
 		return
 	}
-	rs, err := multi.NewStore(db, opts)
+	rs, err := multi.NewV1MultiStoreAsV2(db, opts)
 	if err != nil {
 		return
 	}

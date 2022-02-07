@@ -337,7 +337,7 @@ func initStore(t *testing.T, db dbm.DBConnection, storeKey string, k, v []byte) 
 	opts := multi.DefaultStoreParams()
 	opts.Pruning = stypes.PruneNothing
 	require.NoError(t, opts.RegisterSubstore(key, stypes.StoreTypePersistent))
-	rs, err := multi.NewStore(db, opts)
+	rs, err := multi.NewV1MultiStoreAsV2(db, opts)
 	require.NoError(t, err)
 	require.Equal(t, int64(0), rs.LastCommitID().Version)
 
@@ -355,7 +355,7 @@ func checkStore(t *testing.T, db dbm.DBConnection, ver int64, storeKey string, k
 	opts.Pruning = stypes.PruneNothing
 	key := sdk.NewKVStoreKey(storeKey)
 	require.NoError(t, opts.RegisterSubstore(key, stypes.StoreTypePersistent))
-	rs, err := multi.NewStore(db, opts)
+	rs, err := multi.NewV1MultiStoreAsV2(db, opts)
 	require.NoError(t, err)
 	require.Equal(t, ver, rs.LastCommitID().Version)
 
@@ -423,7 +423,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	// CacheMultiStoreWithVersion returned no error on missing version (?)
 	for _, v := range []int64{1, 2, 4} {
 		_, err = app.Store().GetVersion(v)
-		require.Error(t, err, "version=%v", v)
+		require.NoError(t, err, "version=%v", v)
 	}
 
 	for _, v := range []int64{3, 5, 6, 7} {
@@ -571,7 +571,7 @@ func TestInitChainer(t *testing.T) {
 
 	app.Commit()
 	res = app.Query(query)
-	require.True(t, res.IsOK())
+	require.True(t, res.IsOK(), res.Log)
 	require.Equal(t, int64(1), app.LastBlockHeight())
 	require.Equal(t, value, res.Value)
 	require.NoError(t, app.CloseStore())

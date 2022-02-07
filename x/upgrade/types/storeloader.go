@@ -12,7 +12,7 @@ func UpgradeStoreOption(upgradeHeight uint64, storeUpgrades *storetypes.StoreUpg
 		// Check if the current commit version and upgrade height matches
 		if upgradeHeight == loadHeight+1 {
 			if len(storeUpgrades.Renamed) > 0 || len(storeUpgrades.Deleted) > 0 || len(storeUpgrades.Added) > 0 {
-				par.Upgrades = append(par.Upgrades, *storeUpgrades)
+				par.Upgrades = storeUpgrades
 			}
 		}
 		return nil

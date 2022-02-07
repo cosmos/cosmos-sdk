@@ -30,7 +30,7 @@ func defaultLogger() log.Logger {
 
 func initStore(t *testing.T, db dbm.DBConnection, config multi.StoreParams, storeKey string, k, v []byte) {
 	key := sdk.NewKVStoreKey(storeKey)
-	rs, err := multi.NewStore(db, config)
+	rs, err := multi.NewV1MultiStoreAsV2(db, config)
 	require.NoError(t, err)
 	rs.SetPruning(storetypes.PruneNothing)
 	require.Equal(t, int64(0), rs.LastCommitID().Version)
@@ -46,7 +46,7 @@ func initStore(t *testing.T, db dbm.DBConnection, config multi.StoreParams, stor
 
 func checkStore(t *testing.T, db dbm.DBConnection, config multi.StoreParams, ver int64, storeKey string, k, v []byte) {
 	key := sdk.NewKVStoreKey(storeKey)
-	rs, err := multi.NewStore(db, config)
+	rs, err := multi.NewV1MultiStoreAsV2(db, config)
 	require.NoError(t, err)
 	rs.SetPruning(storetypes.PruneNothing)
 	require.Equal(t, ver, rs.LastCommitID().Version)

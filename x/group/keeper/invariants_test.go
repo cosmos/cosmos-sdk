@@ -42,7 +42,7 @@ func (s *invariantTestSuite) SetupSuite() {
 	db := memdb.NewDB()
 	config := multi.DefaultStoreParams()
 	s.Require().NoError(config.RegisterSubstore(key.Name(), storetypes.StoreTypePersistent))
-	ms, err := multi.NewStore(db, config)
+	ms, err := multi.NewV1MultiStoreAsV2(db, config)
 	s.Require().NoError(err)
 	sdkCtx := sdk.NewContext(ms, tmproto.Header{}, false, log.NewNopLogger())
 

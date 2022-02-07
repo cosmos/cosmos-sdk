@@ -34,7 +34,7 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	config := multi.DefaultStoreParams()
 	suite.NoError(config.RegisterSubstore(key.Name(), storetypes.StoreTypePersistent))
 	suite.NoError(config.RegisterSubstore(tkey.Name(), storetypes.StoreTypeTransient))
-	ms, err := multi.NewStore(db, config)
+	ms, err := multi.NewV1MultiStoreAsV2(db, config)
 	suite.NoError(err)
 
 	encCfg := simapp.MakeTestEncodingConfig()

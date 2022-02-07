@@ -7,4 +7,7 @@
 //
 // The Eq function gomock.Matcher that compares protobuf messages that can
 // be used in gomock EXPECT functions.
+//
+// See TestHooks in ormdb/module_test.go for examples of how to use
+// mock Hooks in a real-world scenario.
 package ormmocks

@@ -97,7 +97,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 				return nil, sdkerrors.ErrUnauthorized.Wrap("authorization not found")
 			}
 
-			if grant.Expiration.Before(ctx.BlockHeader().Time) {
+			if grant.Expiration.Before(ctx.BlockTime()) {
 				return nil, sdkerrors.ErrUnauthorized.Wrap("authorization expired")
 			}
 

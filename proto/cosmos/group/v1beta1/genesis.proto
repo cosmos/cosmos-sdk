@@ -19,9 +19,9 @@ message GenesisState {
   // group_members is the list of groups members.
   repeated GroupMember group_members = 3;
 
-  // group_policy_account_seq is the group policy table orm.Sequence,
+  // group_policy_seq is the group policy table orm.Sequence,
   // it is used to generate the next group policy account address.
-  uint64 group_policy_account_seq = 4;
+  uint64 group_policy_seq = 4;
 
   // group_policies is the list of group policies info.
   repeated GroupPolicyInfo group_policies = 5;

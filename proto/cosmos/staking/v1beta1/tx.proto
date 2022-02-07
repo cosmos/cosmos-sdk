@@ -9,6 +9,8 @@ import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/staking/v1beta1/staking.proto";
 
+import "cosmos/msg/v1/msg.proto";
+
 option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
 // Msg defines the staking Msg service.
@@ -34,6 +36,12 @@ service Msg {
 
 // MsgCreateValidator defines a SDK message for creating a new validator.
 message MsgCreateValidator {
+  // NOTE(fdymylja): this is a particular case in which
+  // if validator_address == delegator_address then only one
+  // is expected to sign, otherwise both are.
+  option (cosmos.msg.v1.signer) = "delegator_address";
+  option (cosmos.msg.v1.signer) = "validator_address";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -55,6 +63,8 @@ message MsgCreateValidatorResponse {}
 
 // MsgEditValidator defines a SDK message for editing an existing validator.
 message MsgEditValidator {
+  option (cosmos.msg.v1.signer) = "validator_address";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -77,6 +87,8 @@ message MsgEditValidatorResponse {}
 // MsgDelegate defines a SDK message for performing a delegation of coins
 // from a delegator to a validator.
 message MsgDelegate {
+  option (cosmos.msg.v1.signer) = "delegator_address";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -91,6 +103,8 @@ message MsgDelegateResponse {}
 // MsgBeginRedelegate defines a SDK message for performing a redelegation
 // of coins from a delegator and source validator to a destination validator.
 message MsgBeginRedelegate {
+  option (cosmos.msg.v1.signer) = "delegator_address";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -108,6 +122,8 @@ message MsgBeginRedelegateResponse {
 // MsgUndelegate defines a SDK message for performing an undelegation from a
 // delegate and a validator.
 message MsgUndelegate {
+  option (cosmos.msg.v1.signer) = "delegator_address";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 

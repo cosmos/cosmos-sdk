@@ -23,7 +23,7 @@ but please do not over-use it. We try to keep all data structured
 and standard additions here would be better just to add to the Context struct
 */
 type Context struct {
-	ctx           context.Context
+	baseCtx       context.Context
 	ms            MultiStore
 	header        tmproto.Header
 	headerHash    tmbytes.HexBytes
@@ -44,7 +44,7 @@ type Context struct {
 type Request = Context
 
 // Read-only accessors
-func (c Context) Context() context.Context    { return c.ctx }
+func (c Context) Context() context.Context    { return c.baseCtx }
 func (c Context) MultiStore() MultiStore      { return c.ms }
 func (c Context) BlockHeight() int64          { return c.header.Height }
 func (c Context) BlockTime() time.Time        { return c.header.Time }
@@ -76,12 +76,24 @@ func (c Context) ConsensusParams() *tmproto.ConsensusParams {
 	return proto.Clone(c.consParams).(*tmproto.ConsensusParams)
 }
 
+func (c Context) Deadline() (deadline time.Time, ok bool) {
+	return c.baseCtx.Deadline()
+}
+
+func (c Context) Done() <-chan struct{} {
+	return c.baseCtx.Done()
+}
+
+func (c Context) Err() error {
+	return c.baseCtx.Err()
+}
+
 // create a new context
 func NewContext(ms MultiStore, header tmproto.Header, isCheckTx bool, logger log.Logger) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
 	return Context{
-		ctx:          context.Background(),
+		baseCtx:      context.Background(),
 		ms:           ms,
 		header:       header,
 		chainID:      header.ChainID,
@@ -95,7 +107,7 @@ func NewContext(ms MultiStore, header tmproto.Header, isCheckTx bool, logger log
 
 // WithContext returns a Context with an updated context.Context.
 func (c Context) WithContext(ctx context.Context) Context {
-	c.ctx = ctx
+	c.baseCtx = ctx
 	return c
 }
 
@@ -219,23 +231,13 @@ func (c Context) IsZero() bool {
 	return c.ms == nil
 }
 
-// WithValue is deprecated, provided for backwards compatibility
-// Please use
-//     ctx = ctx.WithContext(context.WithValue(ctx.Context(), key, false))
-// instead of
-//     ctx = ctx.WithValue(key, false)
 func (c Context) WithValue(key, value interface{}) Context {
-	c.ctx = context.WithValue(c.ctx, key, value)
+	c.baseCtx = context.WithValue(c.baseCtx, key, value)
 	return c
 }
 
-// Value is deprecated, provided for backwards compatibility
-// Please use
-//     ctx.Context().Value(key)
-// instead of
-//     ctx.Value(key)
 func (c Context) Value(key interface{}) interface{} {
-	return c.ctx.Value(key)
+	return c.baseCtx.Value(key)
 }
 
 // ----------------------------------------------------------------------------
@@ -261,6 +263,8 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 	return cc, cms.Write
 }
 
+var _ context.Context = Context{}
+
 // ContextKey defines a type alias for a stdlib Context key.
 type ContextKey string
 
@@ -272,12 +276,15 @@ const SdkContextKey ContextKey = "sdk-context"
 // stdlib context.Context parameter such as generated gRPC methods. To get the original
 // sdk.Context back, call UnwrapSDKContext.
 func WrapSDKContext(ctx Context) context.Context {
-	return context.WithValue(ctx.ctx, SdkContextKey, ctx)
+	return ctx
 }
 
 // UnwrapSDKContext retrieves a Context from a context.Context instance
 // attached with WrapSDKContext. It panics if a Context was not properly
 // attached
 func UnwrapSDKContext(ctx context.Context) Context {
+	if sdkCtx, ok := ctx.(Context); ok {
+		return sdkCtx
+	}
 	return ctx.Value(SdkContextKey).(Context)
 }

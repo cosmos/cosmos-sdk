@@ -6,7 +6,7 @@ order: 5
 
 A store is a data structure that holds the state of the application. {synopsis}
 
-### Pre-requisite Readings
+## Pre-requisite Readings
 
 - [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
 
@@ -232,7 +232,7 @@ Additional information about state streaming configuration can be found in the [
 
 When `KVStore.Set` or `KVStore.Delete` methods are called, `listenkv.Store` automatically writes the operations to the set of `Store.listeners`.
 
-# New Store package (`store/v2`)
+## New Store package (`store/v2`)
 
 The SDK is in the process of transitioning to use the types listed here as the default interface for state storage. At the time of writing, these cannot be used within an application and are not directly compatible with the `CommitMultiStore` and related types.
 
@@ -274,6 +274,6 @@ This store can optionally be configured to use a different backend database inst
 
 `store/v2/smt.Store` maps values into a Sparse Merkle Tree (SMT), and supports a `BasicKVStore` interface as well as methods for cryptographic proof generation.
 
-# Next {hide}
+## Next {hide}
 
 Learn about [encoding](./encoding.md) {hide}

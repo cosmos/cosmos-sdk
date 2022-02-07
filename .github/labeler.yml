@@ -20,6 +20,8 @@
   - x/gov/**/*
 "C:x/mint":
   - x/mint/**/*
+"C:x/nft":
+  - x/nft/**/*
 "C:x/params":
   - x/params/**/*
 "C:Simulations":
@@ -54,3 +56,8 @@
   - docs/architecture/**/*
 "C:container":
   - container/**/*
+"C:Store":
+  - store/**/*
+  - db/**/*
+"C:orm":
+  - orm/**/*

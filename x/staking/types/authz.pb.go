@@ -26,6 +26,8 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // AuthorizationType defines the type of staking module authorization type
+//
+// Since: cosmos-sdk 0.43
 type AuthorizationType int32
 
 const (
@@ -62,6 +64,8 @@ func (AuthorizationType) EnumDescriptor() ([]byte, []int) {
 }
 
 // StakeAuthorization defines authorization for delegate/undelegate/redelegate.
+//
+// Since: cosmos-sdk 0.43
 type StakeAuthorization struct {
 	// max_tokens specifies the maximum amount of tokens can be delegate to a validator. If it is
 	// empty, there is no spend limit and any amount of coins can be delegated.

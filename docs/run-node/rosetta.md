@@ -8,7 +8,7 @@ The `rosetta` package implements Coinbase's [Rosetta API](https://www.rosetta-ap
 
 ## Add Rosetta Command
 
-The Rosetta API server is a stand-alone server that connects to a node of a chain developed with Cosmos SDK. 
+The Rosetta API server is a stand-alone server that connects to a node of a chain developed with Cosmos SDK.
 
 To enable Rosetta API support, it's required to add the `RosettaCommand` to your application's root command file (e.g. `appd/cmd/root.go`).
 

@@ -469,11 +469,11 @@ func (ks keystore) Delete(uid string) error {
 func (ks keystore) KeyByAddress(address sdk.Address) (*Record, error) {
 	ik, err := ks.db.Get(addrHexKeyAsString(address))
 	if err != nil {
-		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address", address, "not found"))
+		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address ", address.String(), "not found"))
 	}
 
 	if len(ik.Data) == 0 {
-		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address", address, "not found"))
+		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address ", address.String(), "not found"))
 	}
 
 	return ks.Key(string(ik.Data))
@@ -496,7 +496,7 @@ func (ks keystore) List() ([]*Record, error) {
 		return nil, err
 	}
 
-	var res []*Record
+	var res []*Record //nolint:prealloc
 	sort.Strings(keys)
 	for _, key := range keys {
 		if strings.Contains(key, addressSuffix) {

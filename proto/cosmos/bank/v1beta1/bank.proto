@@ -4,6 +4,7 @@ package cosmos.bank.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
@@ -25,6 +26,8 @@ message SendEnabled {
 
 // Input models transaction input.
 message Input {
+  option (cosmos.msg.v1.signer) = "address";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -65,7 +68,7 @@ message DenomUnit {
   string denom = 1;
   // exponent represents power of 10 exponent that one must
   // raise the base_denom to in order to equal the given DenomUnit's denom
-  // 1 denom = 1^exponent base_denom
+  // 1 denom = 10^exponent base_denom
   // (e.g. with a base_denom of uatom, one can create a DenomUnit of 'atom' with
   // exponent = 6, thus: 1 atom = 10^6 uatom).
   uint32 exponent = 2;
@@ -85,13 +88,21 @@ message Metadata {
   // displayed in clients.
   string display = 4;
   // name defines the name of the token (eg: Cosmos Atom)
+  //
+  // Since: cosmos-sdk 0.43
   string name = 5;
   // symbol is the token symbol usually shown on exchanges (eg: ATOM). This can
   // be the same as the display.
+  //
+  // Since: cosmos-sdk 0.43
   string symbol = 6;
   // URI to a document (on or off-chain) that contains additional information. Optional.
+  //
+  // Since: cosmos-sdk 0.46
   string uri = 7 [(gogoproto.customname) = "URI"];
   // URIHash is a sha256 hash of a document pointed by URI. It's used to verify that
   // the document didn't change. Optional.
+  //
+  // Since: cosmos-sdk 0.46
   string uri_hash = 8 [(gogoproto.customname) = "URIHash"];
 }

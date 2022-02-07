@@ -49,47 +49,47 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (txh validateBasicTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (txh validateBasicTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	// no need to validate basic on recheck tx, call next middleware
-	if req.Type == abci.CheckTxType_Recheck {
-		return txh.next.CheckTx(ctx, tx, req)
+	if checkReq.Type == abci.CheckTxType_Recheck {
+		return txh.next.CheckTx(ctx, req, checkReq)
 	}
 
-	if err := validateBasicTxMsgs(tx.GetMsgs()); err != nil {
-		return abci.ResponseCheckTx{}, err
+	if err := validateBasicTxMsgs(req.Tx.GetMsgs()); err != nil {
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
-	if err := tx.ValidateBasic(); err != nil {
-		return abci.ResponseCheckTx{}, err
+	if err := req.Tx.ValidateBasic(); err != nil {
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
-	return txh.next.CheckTx(ctx, tx, req)
+	return txh.next.CheckTx(ctx, req, checkReq)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (txh validateBasicTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	if err := tx.ValidateBasic(); err != nil {
-		return abci.ResponseDeliverTx{}, err
+func (txh validateBasicTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	if err := req.Tx.ValidateBasic(); err != nil {
+		return tx.Response{}, err
 	}
 
-	if err := validateBasicTxMsgs(tx.GetMsgs()); err != nil {
-		return abci.ResponseDeliverTx{}, err
+	if err := validateBasicTxMsgs(req.Tx.GetMsgs()); err != nil {
+		return tx.Response{}, err
 	}
 
-	return txh.next.DeliverTx(ctx, tx, req)
+	return txh.next.DeliverTx(ctx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (txh validateBasicTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	if err := sdkTx.ValidateBasic(); err != nil {
-		return tx.ResponseSimulateTx{}, err
+func (txh validateBasicTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	if err := req.Tx.ValidateBasic(); err != nil {
+		return tx.Response{}, err
 	}
 
-	if err := validateBasicTxMsgs(sdkTx.GetMsgs()); err != nil {
-		return tx.ResponseSimulateTx{}, err
+	if err := validateBasicTxMsgs(req.Tx.GetMsgs()); err != nil {
+		return tx.Response{}, err
 	}
 
-	return txh.next.SimulateTx(ctx, sdkTx, req)
+	return txh.next.SimulateTx(ctx, req)
 }
 
 var _ tx.Handler = txTimeoutHeightTxHandler{}
@@ -124,30 +124,30 @@ func checkTimeout(ctx context.Context, tx sdk.Tx) error {
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (txh txTimeoutHeightTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	if err := checkTimeout(ctx, tx); err != nil {
-		return abci.ResponseCheckTx{}, err
+func (txh txTimeoutHeightTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
+	if err := checkTimeout(ctx, req.Tx); err != nil {
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
-	return txh.next.CheckTx(ctx, tx, req)
+	return txh.next.CheckTx(ctx, req, checkReq)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (txh txTimeoutHeightTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	if err := checkTimeout(ctx, tx); err != nil {
-		return abci.ResponseDeliverTx{}, err
+func (txh txTimeoutHeightTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	if err := checkTimeout(ctx, req.Tx); err != nil {
+		return tx.Response{}, err
 	}
 
-	return txh.next.DeliverTx(ctx, tx, req)
+	return txh.next.DeliverTx(ctx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (txh txTimeoutHeightTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	if err := checkTimeout(ctx, sdkTx); err != nil {
-		return tx.ResponseSimulateTx{}, err
+func (txh txTimeoutHeightTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	if err := checkTimeout(ctx, req.Tx); err != nil {
+		return tx.Response{}, err
 	}
 
-	return txh.next.SimulateTx(ctx, sdkTx, req)
+	return txh.next.SimulateTx(ctx, req)
 }
 
 type validateMemoTxHandler struct {
@@ -190,30 +190,30 @@ func (vmm validateMemoTxHandler) checkForValidMemo(ctx context.Context, tx sdk.T
 }
 
 // CheckTx implements tx.Handler.CheckTx method.
-func (vmm validateMemoTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	if err := vmm.checkForValidMemo(ctx, tx); err != nil {
-		return abci.ResponseCheckTx{}, err
+func (vmm validateMemoTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
+	if err := vmm.checkForValidMemo(ctx, req.Tx); err != nil {
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
-	return vmm.next.CheckTx(ctx, tx, req)
+	return vmm.next.CheckTx(ctx, req, checkReq)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx method.
-func (vmm validateMemoTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	if err := vmm.checkForValidMemo(ctx, tx); err != nil {
-		return abci.ResponseDeliverTx{}, err
+func (vmm validateMemoTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	if err := vmm.checkForValidMemo(ctx, req.Tx); err != nil {
+		return tx.Response{}, err
 	}
 
-	return vmm.next.DeliverTx(ctx, tx, req)
+	return vmm.next.DeliverTx(ctx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
-func (vmm validateMemoTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	if err := vmm.checkForValidMemo(ctx, sdkTx); err != nil {
-		return tx.ResponseSimulateTx{}, err
+func (vmm validateMemoTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	if err := vmm.checkForValidMemo(ctx, req.Tx); err != nil {
+		return tx.Response{}, err
 	}
 
-	return vmm.next.SimulateTx(ctx, sdkTx, req)
+	return vmm.next.SimulateTx(ctx, req)
 }
 
 var _ tx.Handler = consumeTxSizeGasTxHandler{}
@@ -295,7 +295,8 @@ func (cgts consumeTxSizeGasTxHandler) simulateSigGasCost(ctx context.Context, tx
 	return nil
 }
 
-func (cgts consumeTxSizeGasTxHandler) consumeTxSizeGas(ctx context.Context, tx sdk.Tx, txBytes []byte, simulate bool) error {
+//nolint:unparam
+func (cgts consumeTxSizeGasTxHandler) consumeTxSizeGas(ctx context.Context, _ sdk.Tx, txBytes []byte) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	params := cgts.ak.GetParams(sdkCtx)
 	sdkCtx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(txBytes)), "txSize")
@@ -304,34 +305,34 @@ func (cgts consumeTxSizeGasTxHandler) consumeTxSizeGas(ctx context.Context, tx s
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (cgts consumeTxSizeGasTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	if err := cgts.consumeTxSizeGas(ctx, tx, req.GetTx(), false); err != nil {
-		return abci.ResponseCheckTx{}, err
+func (cgts consumeTxSizeGasTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
+	if err := cgts.consumeTxSizeGas(ctx, req.Tx, req.TxBytes); err != nil {
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
-	return cgts.next.CheckTx(ctx, tx, req)
+	return cgts.next.CheckTx(ctx, req, checkReq)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (cgts consumeTxSizeGasTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	if err := cgts.consumeTxSizeGas(ctx, tx, req.GetTx(), false); err != nil {
-		return abci.ResponseDeliverTx{}, err
+func (cgts consumeTxSizeGasTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	if err := cgts.consumeTxSizeGas(ctx, req.Tx, req.TxBytes); err != nil {
+		return tx.Response{}, err
 	}
 
-	return cgts.next.DeliverTx(ctx, tx, req)
+	return cgts.next.DeliverTx(ctx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx.
-func (cgts consumeTxSizeGasTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	if err := cgts.consumeTxSizeGas(ctx, sdkTx, req.TxBytes, true); err != nil {
-		return tx.ResponseSimulateTx{}, err
+func (cgts consumeTxSizeGasTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	if err := cgts.consumeTxSizeGas(ctx, req.Tx, req.TxBytes); err != nil {
+		return tx.Response{}, err
 	}
 
-	if err := cgts.simulateSigGasCost(ctx, sdkTx); err != nil {
-		return tx.ResponseSimulateTx{}, err
+	if err := cgts.simulateSigGasCost(ctx, req.Tx); err != nil {
+		return tx.Response{}, err
 	}
 
-	return cgts.next.SimulateTx(ctx, sdkTx, req)
+	return cgts.next.SimulateTx(ctx, req)
 }
 
 // isIncompleteSignature tests whether SignatureData is fully filled in for simulation purposes

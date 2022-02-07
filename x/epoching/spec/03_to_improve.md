@@ -29,7 +29,7 @@ In this case, unbonding should start instantly.
 // — BufferedMsgCreateValidatorQueue, BufferedMsgEditValidatorQueue
 // — BufferedMsgUnjailQueue, BufferedMsgDelegateQueue, BufferedMsgRedelegationQueue, BufferedMsgUndelegateQueue
 // Write epoch related tests with new scenarios
-// — Simulation test is important for finding bugs [Ask Dev for questions) 
+// — Simulation test is important for finding bugs [Ask Dev for questions)
 // — Can easily add a simulator check to make sure all delegation amounts in queue add up to the same amount that’s in the EpochUnbondedPool
 // — I’d like it added as an invariant test for the simulator
 // — the simulator should check that the sum of all the queued delegations always equals the amount kept track in the data

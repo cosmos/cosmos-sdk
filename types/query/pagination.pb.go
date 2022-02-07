@@ -47,6 +47,8 @@ type PageRequest struct {
 	// is set.
 	CountTotal bool `protobuf:"varint,4,opt,name=count_total,json=countTotal,proto3" json:"count_total,omitempty"`
 	// reverse is set to true if results are to be returned in the descending order.
+	//
+	// Since: cosmos-sdk 0.43
 	Reverse bool `protobuf:"varint,5,opt,name=reverse,proto3" json:"reverse,omitempty"`
 }
 
@@ -127,7 +129,8 @@ func (m *PageRequest) GetReverse() bool {
 //  }
 type PageResponse struct {
 	// next_key is the key to be passed to PageRequest.key to
-	// query the next page most efficiently
+	// query the next page most efficiently. It will be empty if
+	// there are no more results.
 	NextKey []byte `protobuf:"bytes,1,opt,name=next_key,json=nextKey,proto3" json:"next_key,omitempty"`
 	// total is total number of results available if PageRequest.count_total
 	// was set, its value is undefined otherwise

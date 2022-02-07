@@ -11,6 +11,7 @@ The `query` commands allows users to query `evidence` state.
 ```bash
 simd query evidence --help
 ```
+
 ### evidence
 
 The `evidence` command allows users to list all evidence or evidence by hash.
@@ -20,6 +21,7 @@ Usage:
 ```bash
 simd query evidence [flags]
 ```
+
 To query evidence by hash
 
 Example:
@@ -45,6 +47,7 @@ Example:
 ```bash
 simd query evidence
 ```
+
 Example Output:
 
 ```bash
@@ -75,6 +78,7 @@ Example:
 ```bash
 curl -X GET "http://localhost:1317/cosmos/evidence/v1beta1/evidence/DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660"
 ```
+
 Example Output:
 
 ```bash
@@ -101,6 +105,7 @@ Example:
 ```bash
 curl -X GET "http://localhost:1317/cosmos/evidence/v1beta1/evidence"
 ```
+
 Example Output:
 
 ```bash
@@ -163,6 +168,7 @@ Example:
 ```bash
 grpcurl -plaintext localhost:9090 cosmos.evidence.v1beta1.Query/AllEvidence
 ```
+
 Example Output:
 
 ```bash

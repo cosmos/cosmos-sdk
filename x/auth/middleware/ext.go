@@ -3,8 +3,6 @@ package middleware
 import (
 	"context"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -44,28 +42,28 @@ func checkExtOpts(tx sdk.Tx) error {
 }
 
 // CheckTx implements tx.Handler.CheckTx.
-func (txh rejectExtensionOptionsTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	if err := checkExtOpts(tx); err != nil {
-		return abci.ResponseCheckTx{}, err
+func (txh rejectExtensionOptionsTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
+	if err := checkExtOpts(req.Tx); err != nil {
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
-	return txh.next.CheckTx(ctx, tx, req)
+	return txh.next.CheckTx(ctx, req, checkReq)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx.
-func (txh rejectExtensionOptionsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	if err := checkExtOpts(tx); err != nil {
-		return abci.ResponseDeliverTx{}, err
+func (txh rejectExtensionOptionsTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	if err := checkExtOpts(req.Tx); err != nil {
+		return tx.Response{}, err
 	}
 
-	return txh.next.DeliverTx(ctx, tx, req)
+	return txh.next.DeliverTx(ctx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
-func (txh rejectExtensionOptionsTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	if err := checkExtOpts(sdkTx); err != nil {
-		return tx.ResponseSimulateTx{}, err
+func (txh rejectExtensionOptionsTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	if err := checkExtOpts(req.Tx); err != nil {
+		return tx.Response{}, err
 	}
 
-	return txh.next.SimulateTx(ctx, sdkTx, req)
+	return txh.next.SimulateTx(ctx, req)
 }

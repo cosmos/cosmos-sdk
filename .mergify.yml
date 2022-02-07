@@ -1,3 +1,8 @@
+queue_rules:
+  - name: default
+    conditions:
+      - "#approved-reviews-by>1"
+
 pull_request_rules:
   - name: automerge to master with label automerge and branch protection passing
     conditions:
@@ -5,10 +10,20 @@ pull_request_rules:
       - base=master
       - label=automerge
     actions:
-      merge:
+      queue:
+        name: default
         method: squash
-        strict: true
-        commit_message: title+body
+        commit_message_template: |
+           {{ title }} (#{{ number }})
+           {{ body }}
+  - name: backport patches to v0.45.x branch
+    conditions:
+      - base=master
+      - label=backport/0.45.x
+    actions:
+      backport:
+        branches:
+          - release/v0.45.x
   - name: backport patches to v0.44.x branch
     conditions:
       - base=master

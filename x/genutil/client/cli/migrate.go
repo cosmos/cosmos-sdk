@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	v040 "github.com/cosmos/cosmos-sdk/x/genutil/migrations/v040"
 	v043 "github.com/cosmos/cosmos-sdk/x/genutil/migrations/v043"
+	v046 "github.com/cosmos/cosmos-sdk/x/genutil/migrations/v046"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -26,7 +27,8 @@ const flagGenesisTime = "genesis-time"
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/5041
 var migrationMap = types.MigrationMap{
 	"v0.42": v040.Migrate, // NOTE: v0.40, v0.41 and v0.42 are genesis compatible.
-	"v0.43": v043.Migrate,
+	"v0.43": v043.Migrate, // NOTE: v0.43, v0.44 and v0.45 are genesis compatible.
+	"v0.46": v046.Migrate,
 }
 
 // GetMigrationCallback returns a MigrationCallback for a given version.

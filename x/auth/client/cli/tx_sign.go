@@ -263,6 +263,11 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
+		bMode, err := f.GetString(flags.FlagBroadcastMode)
+		if err != nil {
+			return err
+		}
+
 		var json []byte
 		if aminoJSON {
 			stdTx, err := tx.ConvertTxToStdTx(clientCtx.LegacyAmino, txBuilder.GetTx())
@@ -271,7 +276,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			}
 			req := BroadcastReq{
 				Tx:   stdTx,
-				Mode: "block|sync|async",
+				Mode: bMode,
 			}
 			json, err = clientCtx.LegacyAmino.MarshalJSON(req)
 			if err != nil {

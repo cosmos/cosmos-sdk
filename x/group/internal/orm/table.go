@@ -1,15 +1,21 @@
 package orm
 
 import (
+	"bytes"
 	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
-var _ Indexable = &table{}
+var (
+	_ Indexable       = &table{}
+	_ TableExportable = &table{}
+)
 
 // table is the high level object to storage mapper functionality. Persistent
 // entities are stored by an unique identifier called `RowID`. The table struct
@@ -32,7 +38,7 @@ type table struct {
 // newTable creates a new table
 func newTable(prefix [2]byte, model codec.ProtoMarshaler, cdc codec.Codec) (*table, error) {
 	if model == nil {
-		return nil, errors.ErrORMEmptyModel.Wrap("Model must not be nil")
+		return nil, errors.ErrORMInvalidArgument.Wrap("Model must not be nil")
 	}
 	tp := reflect.TypeOf(model)
 	if tp.Kind() == reflect.Ptr {
@@ -74,14 +80,14 @@ func (a table) Create(store sdk.KVStore, rowID RowID, obj codec.ProtoMarshaler) 
 }
 
 // Update updates the given object under the rowID key. It expects the key to
-// exists already and fails with an `errors.ErrNotFound` otherwise. Any caller must
+// exists already and fails with an `sdkerrors.ErrNotFound` otherwise. Any caller must
 // therefore make sure that this contract is fulfilled. Parameters must not be
 // nil.
 //
 // Update triggers all "after set" hooks that may add or remove secondary index keys.
 func (a table) Update(store sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler) error {
 	if !a.Has(store, rowID) {
-		return errors.ErrNotFound
+		return sdkerrors.ErrNotFound
 	}
 
 	return a.Set(store, rowID, newValue)
@@ -113,13 +119,13 @@ func (a table) Set(store sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler
 
 	newValueEncoded, err := a.cdc.Marshal(newValue)
 	if err != nil {
-		return errors.Wrapf(err, "failed to serialize %T", newValue)
+		return sdkerrors.Wrapf(err, "failed to serialize %T", newValue)
 	}
 
 	pStore.Set(rowID, newValueEncoded)
 	for i, itc := range a.afterSet {
 		if err := itc(store, rowID, newValue, oldValue); err != nil {
-			return errors.Wrapf(err, "interceptor %d failed", i)
+			return sdkerrors.Wrapf(err, "interceptor %d failed", i)
 		}
 	}
 	return nil
@@ -135,7 +141,7 @@ func assertValid(obj codec.ProtoMarshaler) error {
 }
 
 // Delete removes the object under the rowID key. It expects the key to exists
-// already and fails with a `errors.ErrNotFound` otherwise. Any caller must therefore
+// already and fails with a `sdkerrors.ErrNotFound` otherwise. Any caller must therefore
 // make sure that this contract is fulfilled.
 //
 // Delete iterates through the registered callbacks that remove secondary index
@@ -145,13 +151,13 @@ func (a table) Delete(store sdk.KVStore, rowID RowID) error {
 
 	var oldValue = reflect.New(a.model).Interface().(codec.ProtoMarshaler)
 	if err := a.GetOne(store, rowID, oldValue); err != nil {
-		return errors.Wrap(err, "load old value")
+		return sdkerrors.Wrap(err, "load old value")
 	}
 	pStore.Delete(rowID)
 
 	for i, itc := range a.afterDelete {
 		if err := itc(store, rowID, oldValue); err != nil {
-			return errors.Wrapf(err, "delete interceptor %d failed", i)
+			return sdkerrors.Wrapf(err, "delete interceptor %d failed", i)
 		}
 	}
 	return nil
@@ -170,12 +176,129 @@ func (a table) Has(store sdk.KVStore, key RowID) bool {
 }
 
 // GetOne load the object persisted for the given RowID into the dest parameter.
-// If none exists or `rowID==nil` then `errors.ErrNotFound` is returned instead.
+// If none exists or `rowID==nil` then `sdkerrors.ErrNotFound` is returned instead.
 // Parameters must not be nil - we don't allow creation of values with empty keys.
 func (a table) GetOne(store sdk.KVStore, rowID RowID, dest codec.ProtoMarshaler) error {
 	if len(rowID) == 0 {
-		return errors.ErrNotFound
+		return sdkerrors.ErrNotFound
 	}
 	x := NewTypeSafeRowGetter(a.prefix, a.model, a.cdc)
 	return x(store, rowID, dest)
+}
+
+// PrefixScan returns an Iterator over a domain of keys in ascending order. End is exclusive.
+// Start is an MultiKeyIndex key or prefix. It must be less than end, or the Iterator is invalid.
+// Iterator must be closed by caller.
+// To iterate over entire domain, use PrefixScan(nil, nil)
+//
+// WARNING: The use of a PrefixScan can be very expensive in terms of Gas. Please make sure you do not expose
+// this as an endpoint to the public without further limits.
+// Example:
+//			it, err := idx.PrefixScan(ctx, start, end)
+//			if err !=nil {
+//				return err
+//			}
+//			const defaultLimit = 20
+//			it = LimitIterator(it, defaultLimit)
+//
+// CONTRACT: No writes may happen within a domain while an iterator exists over it.
+func (a table) PrefixScan(store sdk.KVStore, start, end RowID) (Iterator, error) {
+	if start != nil && end != nil && bytes.Compare(start, end) >= 0 {
+		return NewInvalidIterator(), sdkerrors.Wrap(errors.ErrORMInvalidArgument, "start must be before end")
+	}
+	pStore := prefix.NewStore(store, a.prefix[:])
+	return &typeSafeIterator{
+		store:     store,
+		rowGetter: NewTypeSafeRowGetter(a.prefix, a.model, a.cdc),
+		it:        pStore.Iterator(start, end),
+	}, nil
+}
+
+// ReversePrefixScan returns an Iterator over a domain of keys in descending order. End is exclusive.
+// Start is an MultiKeyIndex key or prefix. It must be less than end, or the Iterator is invalid  and error is returned.
+// Iterator must be closed by caller.
+// To iterate over entire domain, use PrefixScan(nil, nil)
+//
+// WARNING: The use of a ReversePrefixScan can be very expensive in terms of Gas. Please make sure you do not expose
+// this as an endpoint to the public without further limits. See `LimitIterator`
+//
+// CONTRACT: No writes may happen within a domain while an iterator exists over it.
+func (a table) ReversePrefixScan(store sdk.KVStore, start, end RowID) (Iterator, error) {
+	if start != nil && end != nil && bytes.Compare(start, end) >= 0 {
+		return NewInvalidIterator(), sdkerrors.Wrap(errors.ErrORMInvalidArgument, "start must be before end")
+	}
+	pStore := prefix.NewStore(store, a.prefix[:])
+	return &typeSafeIterator{
+		store:     store,
+		rowGetter: NewTypeSafeRowGetter(a.prefix, a.model, a.cdc),
+		it:        pStore.ReverseIterator(start, end),
+	}, nil
+}
+
+// Export stores all the values in the table in the passed ModelSlicePtr.
+func (a table) Export(store sdk.KVStore, dest ModelSlicePtr) (uint64, error) {
+	it, err := a.PrefixScan(store, nil, nil)
+	if err != nil {
+		return 0, sdkerrors.Wrap(err, "table Export failure when exporting table data")
+	}
+	_, err = ReadAll(it, dest)
+	if err != nil {
+		return 0, err
+	}
+	return 0, nil
+}
+
+// Import clears the table and initializes it from the given data interface{}.
+// data should be a slice of structs that implement PrimaryKeyed.
+func (a table) Import(store sdk.KVStore, data interface{}, _ uint64) error {
+	// Clear all data
+	pStore := prefix.NewStore(store, a.prefix[:])
+	it := pStore.Iterator(nil, nil)
+	defer it.Close()
+	for ; it.Valid(); it.Next() {
+		if err := a.Delete(store, it.Key()); err != nil {
+			return err
+		}
+	}
+
+	// Provided data must be a slice
+	modelSlice := reflect.ValueOf(data)
+	if modelSlice.Kind() != reflect.Slice {
+		return sdkerrors.Wrap(errors.ErrORMInvalidArgument, "data must be a slice")
+	}
+
+	// Import values from slice
+	for i := 0; i < modelSlice.Len(); i++ {
+		obj, ok := modelSlice.Index(i).Interface().(PrimaryKeyed)
+		if !ok {
+			return sdkerrors.Wrapf(errors.ErrORMInvalidArgument, "unsupported type :%s", reflect.TypeOf(data).Elem().Elem())
+		}
+		err := a.Create(store, PrimaryKey(obj), obj)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// typeSafeIterator is initialized with a type safe RowGetter only.
+type typeSafeIterator struct {
+	store     sdk.KVStore
+	rowGetter RowGetter
+	it        types.Iterator
+}
+
+func (i typeSafeIterator) LoadNext(dest codec.ProtoMarshaler) (RowID, error) {
+	if !i.it.Valid() {
+		return nil, errors.ErrORMIteratorDone
+	}
+	rowID := i.it.Key()
+	i.it.Next()
+	return rowID, i.rowGetter(i.store, rowID, dest)
+}
+
+func (i typeSafeIterator) Close() error {
+	i.it.Close()
+	return nil
 }

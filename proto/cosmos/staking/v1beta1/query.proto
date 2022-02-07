@@ -114,7 +114,7 @@ message QueryValidatorsResponse {
 // QueryValidatorRequest is response type for the Query/Validator RPC method
 message QueryValidatorRequest {
   // validator_addr defines the validator address to query for.
-  string validator_addr = 1  [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_addr = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // QueryValidatorResponse is response type for the Query/Validator RPC method

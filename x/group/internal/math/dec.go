@@ -6,7 +6,8 @@ import (
 
 	"github.com/cockroachdb/apd/v2"
 
-	"github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 // Dec is a wrapper struct around apd.Decimal that does no mutation of apd.Decimal's when performing
@@ -19,12 +20,42 @@ type Dec struct {
 	dec apd.Decimal
 }
 
+func NewPositiveDecFromString(s string) (Dec, error) {
+	d, err := NewDecFromString(s)
+	if err != nil {
+		return Dec{}, errors.ErrInvalidDecString.Wrap(err.Error())
+	}
+	if !d.IsPositive() {
+		return Dec{}, errors.ErrInvalidDecString.Wrapf("expected a positive decimal, got %s", s)
+	}
+	return d, nil
+}
+
+func NewNonNegativeDecFromString(s string) (Dec, error) {
+	d, err := NewDecFromString(s)
+	if err != nil {
+		return Dec{}, errors.ErrInvalidDecString.Wrap(err.Error())
+	}
+	if d.IsNegative() {
+		return Dec{}, errors.ErrInvalidDecString.Wrapf("expected a non-negative decimal, got %s", s)
+	}
+	return d, nil
+}
+
+func (x Dec) IsPositive() bool {
+	return !x.dec.Negative && !x.dec.IsZero()
+}
+
 func NewDecFromString(s string) (Dec, error) {
 	d, _, err := apd.NewFromString(s)
 	if err != nil {
 		return Dec{}, errors.ErrInvalidDecString.Wrap(err.Error())
 	}
 	return Dec{*d}, nil
+}
+
+func (x Dec) String() string {
+	return x.dec.Text('f')
 }
 
 func NewDecFromInt64(x int64) Dec {
@@ -38,7 +69,7 @@ func NewDecFromInt64(x int64) Dec {
 func (x Dec) Add(y Dec) (Dec, error) {
 	var z Dec
 	_, err := apd.BaseContext.Add(&z.dec, &x.dec, &y.dec)
-	return z, errors.Wrap(err, "decimal addition error")
+	return z, sdkerrors.Wrap(err, "decimal addition error")
 }
 
 // Sub returns a new Dec with value `x-y` without mutating any argument and error if
@@ -46,7 +77,7 @@ func (x Dec) Add(y Dec) (Dec, error) {
 func (x Dec) Sub(y Dec) (Dec, error) {
 	var z Dec
 	_, err := apd.BaseContext.Sub(&z.dec, &x.dec, &y.dec)
-	return z, errors.Wrap(err, "decimal subtraction error")
+	return z, sdkerrors.Wrap(err, "decimal subtraction error")
 }
 
 func (x Dec) Int64() (int64, error) {
@@ -68,6 +99,10 @@ func (x Dec) IsNegative() bool {
 // Add adds x and y
 func Add(x Dec, y Dec) (Dec, error) {
 	return x.Add(y)
+}
+
+func (x Dec) IsZero() bool {
+	return x.dec.IsZero()
 }
 
 // SubNonNegative subtracts the value of y from x and returns the result with

@@ -7,16 +7,17 @@ This document outlines the process for releasing a new version of Cosmos SDK, wh
 A _major release_ is an increment of the first number (eg: `v1.2` → `v2.0.0`) or the _point number_ (eg: `v1.1 → v1.2.0`, also called _point release_). Each major release opens a _stable release series_ and receives updates outlined in the [Major Release Maintenance](#major-release-maintenance)_section.
 
 Before making a new _major_ release we do beta and release candidate releases. For example, for release 1.0.0:
+
 ```
 v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → v1.0.0
 ```
 
 - Release a first beta version on the `master` branch and freeze `master` from receiving any new features. After beta is released, we focus on releasing the release candidate:
-  - finish audits and reviews
-  - kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks)
-  - perform functional tests
-  - add more tests
-  - release new beta version as the bugs are discovered and fixed.
+    - finish audits and reviews
+    - kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks)
+    - perform functional tests
+    - add more tests
+    - release new beta version as the bugs are discovered and fixed.
 - After the team feels that the `master` works fine we create a `release/vY` branch (going forward known a release branch), where `Y` is the version number, with the patch part substituted to `x` (eg: 0.42.x, 1.0.x). Ensure the release branch is protected so that pushes against the release branch are permitted only by the release manager or release coordinator.
     - **PRs targeting this branch can be merged _only_ when exceptional circumstances arise**
     - update the GitHub mergify integration by adding instructions for automatically backporting commits from `master` to the `release/vY` using the `backport/Y` label.
@@ -24,16 +25,17 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
     - All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
     - Copy the entries into a `RELEASE_CHANGELOG.md`, this is needed so the bot knows which entries to add to the release page on GitHub.
 - Create a new annotated git tag for a release candidate  (eg: `git tag -a v1.1.0-rc1`) in the release branch.
-  - from this point we unfreeze master.
-  - the SDK teams collaborate and do their best to run testnets in order to validate the release.
-  - when bugs are found, create a PR for `master`, and backport fixes to the release branch.
-  - create new release candidate tags after bugs are fixed.
+    - from this point we unfreeze master.
+    - the SDK teams collaborate and do their best to run testnets in order to validate the release.
+    - when bugs are found, create a PR for `master`, and backport fixes to the release branch.
+    - create new release candidate tags after bugs are fixed.
 - After the team feels the release branch is stable and everything works, create a full release:
-  - update `CHANGELOG.md`.
-  - create a new annotated git tag (eg `git -a v1.1.0`) in the release branch.
-  - Create a GitHub release.
+    - update `CHANGELOG.md`.
+    - create a new annotated git tag (eg `git -a v1.1.0`) in the release branch.
+    - Create a GitHub release.
 
 Following _semver_ philosophy, point releases after `v1.0`:
+
 - must not break API
 - can break consensus
 
@@ -54,10 +56,10 @@ Lastly, it is core team's responsibility to ensure that the PR meets all the SRU
 Point Release must follow the [Stable Release Policy](#stable-release-policy).
 
 After the release branch has all commits required for the next patch release:
+
 - update `CHANGELOG.md`.
 - create a new annotated git tag (eg `git -a v1.1.0`) in the release branch.
 - Create a GitHub release.
-
 
 ## Major Release Maintenance
 
@@ -67,9 +69,9 @@ Note: not every Major Release is denoted as stable releases.
 
 Only the following major release series have a stable release status:
 
-* **0.42 «Stargate»** will be supported until 6 months after **0.43.0** is published. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
-* **0.44** is the latest major release.
-
+* **0.42 «Stargate»** is supported until 2022-02-09. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
+* **0.44** is supported until 2022-07-17. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
+* **0.45** is the latest major release and will be supported until 6 months after **0.46.0** release.
 
 ## Stable Release Policy
 

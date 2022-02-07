@@ -27,7 +27,7 @@ func (s *MWTestSuite) TestSetPubKey() {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 	require := s.Require()
 	txHandler := middleware.ComposeMiddlewares(
-		noopTxHandler{},
+		noopTxHandler,
 		middleware.SetPubKeyMiddleware(s.app.AccountKeeper),
 	)
 
@@ -55,7 +55,7 @@ func (s *MWTestSuite) TestSetPubKey() {
 	testTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 	require.NoError(err)
 
-	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), testTx, abci.RequestDeliverTx{})
+	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx})
 	require.NoError(err)
 
 	// Require that all accounts have pubkey set after middleware runs
@@ -127,7 +127,7 @@ func (s *MWTestSuite) TestSigVerification() {
 	// make block height non-zero to ensure account numbers part of signBytes
 	ctx = ctx.WithBlockHeight(1)
 	txHandler := middleware.ComposeMiddlewares(
-		noopTxHandler{},
+		noopTxHandler,
 		middleware.SetPubKeyMiddleware(s.app.AccountKeeper),
 		middleware.SigVerificationMiddleware(
 			s.app.AccountKeeper,
@@ -183,9 +183,9 @@ func (s *MWTestSuite) TestSigVerification() {
 		s.Require().NoError(err)
 
 		if tc.recheck {
-			_, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), testTx, abci.RequestCheckTx{Type: abci.CheckTxType_Recheck})
+			_, _, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, tx.RequestCheckTx{Type: abci.CheckTxType_Recheck})
 		} else {
-			_, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), testTx, abci.RequestCheckTx{})
+			_, _, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, tx.RequestCheckTx{})
 		}
 		if tc.shouldErr {
 			s.Require().NotNil(err, "TestCase %d: %s did not error as expected", i, tc.name)
@@ -239,7 +239,7 @@ func (s *MWTestSuite) TestSigVerification_ExplicitAmino() {
 	gasLimit := testdata.NewTestGasLimit()
 
 	txHandler := middleware.ComposeMiddlewares(
-		noopTxHandler{},
+		noopTxHandler,
 		middleware.SetPubKeyMiddleware(s.app.AccountKeeper),
 		middleware.SigVerificationMiddleware(
 			s.app.AccountKeeper,
@@ -278,9 +278,9 @@ func (s *MWTestSuite) TestSigVerification_ExplicitAmino() {
 		s.Require().NoError(err)
 
 		if tc.recheck {
-			_, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), testTx, abci.RequestCheckTx{Type: abci.CheckTxType_Recheck})
+			_, _, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, tx.RequestCheckTx{Type: abci.CheckTxType_Recheck})
 		} else {
-			_, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), testTx, abci.RequestCheckTx{})
+			_, _, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, tx.RequestCheckTx{})
 		}
 		if tc.shouldErr {
 			s.Require().NotNil(err, "TestCase %d: %s did not error as expected", i, tc.name)
@@ -342,7 +342,7 @@ func (s *MWTestSuite) runSigMiddlewares(params types.Params, _ bool, privs ...cr
 	s.Require().NoError(err)
 
 	txHandler := middleware.ComposeMiddlewares(
-		noopTxHandler{},
+		noopTxHandler,
 		middleware.SetPubKeyMiddleware(s.app.AccountKeeper),
 		middleware.SigGasConsumeMiddleware(s.app.AccountKeeper, middleware.DefaultSigVerificationGasConsumer),
 		middleware.SigVerificationMiddleware(
@@ -353,7 +353,7 @@ func (s *MWTestSuite) runSigMiddlewares(params types.Params, _ bool, privs ...cr
 
 	// Determine gas consumption of txhandler with default params
 	before := ctx.GasMeter().GasConsumed()
-	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), testTx, abci.RequestDeliverTx{})
+	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx})
 	after := ctx.GasMeter().GasConsumed()
 
 	return after - before, err
@@ -382,7 +382,7 @@ func (s *MWTestSuite) TestIncrementSequenceMiddleware() {
 	s.Require().NoError(err)
 
 	txHandler := middleware.ComposeMiddlewares(
-		noopTxHandler{},
+		noopTxHandler,
 		middleware.IncrementSequenceMiddleware(s.app.AccountKeeper),
 	)
 
@@ -401,9 +401,9 @@ func (s *MWTestSuite) TestIncrementSequenceMiddleware() {
 	for i, tc := range testCases {
 		var err error
 		if tc.simulate {
-			_, err = txHandler.SimulateTx(sdk.WrapSDKContext(tc.ctx), testTx, tx.RequestSimulateTx{})
+			_, err = txHandler.SimulateTx(sdk.WrapSDKContext(tc.ctx), tx.Request{Tx: testTx})
 		} else {
-			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(tc.ctx), testTx, abci.RequestDeliverTx{})
+			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(tc.ctx), tx.Request{Tx: testTx})
 		}
 
 		s.Require().NoError(err, "unexpected error; tc #%d, %v", i, tc)

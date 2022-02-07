@@ -6,7 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 )
 
@@ -31,33 +30,33 @@ func CustomTxHandlerMiddleware(handler handlerFun) tx.Middleware {
 }
 
 // CheckTx implements tx.Handler.CheckTx method.
-func (txh customTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	sdkCtx, err := txh.runHandler(ctx, tx, req.Tx, false)
+func (txh customTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
+	sdkCtx, err := txh.runHandler(ctx, req.Tx, req.TxBytes, false)
 	if err != nil {
-		return abci.ResponseCheckTx{}, err
+		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
-	return txh.next.CheckTx(sdk.WrapSDKContext(sdkCtx), tx, req)
+	return txh.next.CheckTx(sdk.WrapSDKContext(sdkCtx), req, checkReq)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx method.
-func (txh customTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	sdkCtx, err := txh.runHandler(ctx, tx, req.Tx, false)
+func (txh customTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	sdkCtx, err := txh.runHandler(ctx, req.Tx, req.TxBytes, false)
 	if err != nil {
-		return abci.ResponseDeliverTx{}, err
+		return tx.Response{}, err
 	}
 
-	return txh.next.DeliverTx(sdk.WrapSDKContext(sdkCtx), tx, req)
+	return txh.next.DeliverTx(sdk.WrapSDKContext(sdkCtx), req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
-func (txh customTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	sdkCtx, err := txh.runHandler(ctx, sdkTx, req.TxBytes, true)
+func (txh customTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	sdkCtx, err := txh.runHandler(ctx, req.Tx, req.TxBytes, true)
 	if err != nil {
-		return tx.ResponseSimulateTx{}, err
+		return tx.Response{}, err
 	}
 
-	return txh.next.SimulateTx(sdk.WrapSDKContext(sdkCtx), sdkTx, req)
+	return txh.next.SimulateTx(sdk.WrapSDKContext(sdkCtx), req)
 }
 
 func (txh customTxHandler) runHandler(ctx context.Context, tx sdk.Tx, txBytes []byte, isSimulate bool) (sdk.Context, error) {

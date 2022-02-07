@@ -4,8 +4,6 @@ import (
 	"context"
 	"runtime/debug"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -26,7 +24,7 @@ func RecoveryTxMiddleware(txh tx.Handler) tx.Handler {
 var _ tx.Handler = recoveryTxHandler{}
 
 // CheckTx implements tx.Handler.CheckTx method.
-func (txh recoveryTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (res abci.ResponseCheckTx, err error) {
+func (txh recoveryTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (res tx.Response, resCheckTx tx.ResponseCheckTx, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Panic recovery.
 	defer func() {
@@ -35,20 +33,12 @@ func (txh recoveryTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.Re
 		}
 	}()
 
-	return txh.next.CheckTx(ctx, tx, req)
+	return txh.next.CheckTx(ctx, req, checkReq)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx method.
-func (txh recoveryTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (res abci.ResponseDeliverTx, err error) {
+func (txh recoveryTxHandler) DeliverTx(ctx context.Context, req tx.Request) (res tx.Response, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	// only run the tx if there is block gas remaining
-	if sdkCtx.BlockGasMeter().IsOutOfGas() {
-		err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, "no block gas left to run tx")
-		return
-	}
-
-	startingGas := sdkCtx.BlockGasMeter().GasConsumed()
-
 	// Panic recovery.
 	defer func() {
 		if r := recover(); r != nil {
@@ -56,26 +46,11 @@ func (txh recoveryTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.
 		}
 	}()
 
-	// If BlockGasMeter() panics it will be caught by the above recover and will
-	// return an error - in any case BlockGasMeter will consume gas past the limit.
-	//
-	// NOTE: This must exist in a separate defer function for the above recovery
-	// to recover from this one.
-	defer func() {
-		sdkCtx.BlockGasMeter().ConsumeGas(
-			sdkCtx.GasMeter().GasConsumedToLimit(), "block gas meter",
-		)
-
-		if sdkCtx.BlockGasMeter().GasConsumed() < startingGas {
-			panic(sdk.ErrorGasOverflow{Descriptor: "tx gas summation"})
-		}
-	}()
-
-	return txh.next.DeliverTx(ctx, tx, req)
+	return txh.next.DeliverTx(ctx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
-func (txh recoveryTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (res tx.ResponseSimulateTx, err error) {
+func (txh recoveryTxHandler) SimulateTx(ctx context.Context, req tx.Request) (res tx.Response, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Panic recovery.
 	defer func() {
@@ -84,7 +59,7 @@ func (txh recoveryTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req t
 		}
 	}()
 
-	return txh.next.SimulateTx(ctx, sdkTx, req)
+	return txh.next.SimulateTx(ctx, req)
 }
 
 func handleRecovery(r interface{}, sdkCtx sdk.Context) error {

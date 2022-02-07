@@ -28,16 +28,20 @@ message CommissionRates {
   option (gogoproto.goproto_stringer) = false;
 
   // rate is the commission rate charged to delegators, as a fraction.
-  string rate = 1 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string rate = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
   // max_rate defines the maximum commission rate which validator can ever charge, as a fraction.
   string max_rate = 2 [
-    (cosmos_proto.scalar) = "cosmos.Dec",
+    (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
   // max_change_rate defines the maximum daily increase of the validator commission, as a fraction.
   string max_change_rate = 3 [
-    (cosmos_proto.scalar) = "cosmos.Dec",
+    (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
@@ -51,8 +55,7 @@ message Commission {
   // commission_rates defines the initial commission rates to be used for creating a validator.
   CommissionRates commission_rates = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false];
   // update_time is the last time the commission rate was changed.
-  google.protobuf.Timestamp update_time = 2
-      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp update_time = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
 
 // Description defines a validator description.
@@ -88,17 +91,20 @@ message Validator {
   // operator_address defines the address of the validator's operator; bech encoded in JSON.
   string operator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // consensus_pubkey is the consensus public key of the validator, as a Protobuf Any.
-  google.protobuf.Any consensus_pubkey = 2
-      [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
+  google.protobuf.Any consensus_pubkey = 2 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
   // jailed defined whether the validator has been jailed from bonded status or not.
   bool jailed = 3;
   // status is the validator status (bonded/unbonding/unbonded).
   BondStatus status = 4;
   // tokens define the delegated tokens (incl. self-delegation).
-  string tokens = 5 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string tokens = 5 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
   // delegator_shares defines total shares issued to a validator's delegators.
   string delegator_shares = 6 [
-    (cosmos_proto.scalar) = "cosmos.Dec",
+    (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
@@ -107,13 +113,12 @@ message Validator {
   // unbonding_height defines, if unbonding, the height at which this validator has begun unbonding.
   int64 unbonding_height = 8;
   // unbonding_time defines, if unbonding, the min time for the validator to complete unbonding.
-  google.protobuf.Timestamp unbonding_time = 9
-      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp unbonding_time = 9 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   // commission defines the commission parameters.
   Commission commission = 10 [(gogoproto.nullable) = false];
   // min_self_delegation is the validator's self declared minimum self delegation.
   string min_self_delegation = 11 [
-    (cosmos_proto.scalar) = "cosmos.Int", 
+    (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
@@ -190,7 +195,11 @@ message Delegation {
   // validator_address is the bech32-encoded address of the validator.
   string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // shares define the delegation shares received.
-  string shares = 3 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string shares = 3 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 // UnbondingDelegation stores all of a single delegator's unbonding bonds
@@ -205,7 +214,7 @@ message UnbondingDelegation {
   // validator_address is the bech32-encoded address of the validator.
   string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // entries are the unbonding delegation entries.
-  repeated UnbondingDelegationEntry entries = 3 [(gogoproto.nullable) = false]; // unbonding delegation entries
+  repeated UnbondingDelegationEntry entries = 3 [(gogoproto.nullable) = false];  // unbonding delegation entries
 }
 
 // UnbondingDelegationEntry defines an unbonding object with relevant metadata.
@@ -216,16 +225,19 @@ message UnbondingDelegationEntry {
   // creation_height is the height which the unbonding took place.
   int64 creation_height = 1;
   // completion_time is the unix time for unbonding completion.
-  google.protobuf.Timestamp completion_time = 2
-      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp completion_time = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   // initial_balance defines the tokens initially scheduled to receive at completion.
   string initial_balance = 3 [
-    (cosmos_proto.scalar) = "cosmos.Int",
+    (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
   // balance defines the tokens to receive at completion.
-  string balance = 4 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string balance = 4 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 // RedelegationEntry defines a redelegation object with relevant metadata.
@@ -236,17 +248,19 @@ message RedelegationEntry {
   // creation_height  defines the height which the redelegation took place.
   int64 creation_height = 1;
   // completion_time defines the unix time for redelegation completion.
-  google.protobuf.Timestamp completion_time = 2
-      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp completion_time = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   // initial_balance defines the initial balance when redelegation started.
   string initial_balance = 3 [
-    (cosmos_proto.scalar) = "cosmos.Int", 
+    (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
   // shares_dst is the amount of destination-validator shares created by redelegation.
-  string shares_dst = 4
-      [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string shares_dst = 4 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 // Redelegation contains the list of a particular delegator's redelegating bonds
@@ -263,7 +277,7 @@ message Redelegation {
   // validator_dst_address is the validator redelegation destination operator address.
   string validator_dst_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // entries are the redelegation entries.
-  repeated RedelegationEntry entries = 4 [(gogoproto.nullable) = false]; // redelegation entries
+  repeated RedelegationEntry entries = 4 [(gogoproto.nullable) = false];  // redelegation entries
 }
 
 // Params defines the parameters for the staking module.
@@ -272,8 +286,7 @@ message Params {
   option (gogoproto.goproto_stringer) = false;
 
   // unbonding_time is the time duration of unbonding.
-  google.protobuf.Duration unbonding_time = 1
-      [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
+  google.protobuf.Duration unbonding_time = 1 [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
   // max_validators is the maximum number of validators.
   uint32 max_validators = 2;
   // max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio).
@@ -282,6 +295,12 @@ message Params {
   uint32 historical_entries = 4;
   // bond_denom defines the bondable coin denomination.
   string bond_denom = 5;
+  // min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators
+  string min_commission_rate = 6 [
+    (gogoproto.moretags)   = "yaml:\"min_commission_rate\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 // DelegationResponse is equivalent to Delegation except that it contains a
@@ -302,7 +321,11 @@ message RedelegationEntryResponse {
   option (gogoproto.equal) = true;
 
   RedelegationEntry redelegation_entry = 1 [(gogoproto.nullable) = false];
-  string balance = 4 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string            balance            = 4 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 // RedelegationResponse is equivalent to a Redelegation except that its entries
@@ -321,15 +344,15 @@ message Pool {
   option (gogoproto.description) = true;
   option (gogoproto.equal)       = true;
   string not_bonded_tokens       = 1 [
-    (cosmos_proto.scalar) = "cosmos.Int",
+    (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.jsontag)    = "not_bonded_tokens",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "not_bonded_tokens"
   ];
   string bonded_tokens = 2 [
-    (cosmos_proto.scalar) = "cosmos.Int",
-    (gogoproto.jsontag)    = "bonded_tokens",
+    (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "bonded_tokens"
   ];
 }

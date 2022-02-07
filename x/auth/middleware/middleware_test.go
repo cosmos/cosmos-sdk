@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -23,13 +24,15 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+var testCoins = sdk.Coins{sdk.NewInt64Coin("atom", 10000000)}
+
 // Test that simulate transaction accurately estimates gas cost
 func (s *MWTestSuite) TestSimulateGasCost() {
 	ctx := s.SetupTest(false) // reset
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 3)
+	accounts := s.createTestAccounts(ctx, 3, testCoins)
 	msgs := []sdk.Msg{
 		testdata.NewTestMsg(accounts[0].acc.GetAddress(), accounts[1].acc.GetAddress()),
 		testdata.NewTestMsg(accounts[2].acc.GetAddress(), accounts[0].acc.GetAddress()),
@@ -166,7 +169,7 @@ func (s *MWTestSuite) TestTxHandlerAccountNumbers() {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 2)
+	accounts := s.createTestAccounts(ctx, 2, testCoins)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 
@@ -248,7 +251,7 @@ func (s *MWTestSuite) TestTxHandlerAccountNumbersAtBlockHeightZero() {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 2)
+	accounts := s.createTestAccounts(ctx, 2, testCoins)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 
@@ -331,7 +334,7 @@ func (s *MWTestSuite) TestTxHandlerSequences() {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 3)
+	accounts := s.createTestAccounts(ctx, 3, testCoins)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 
@@ -524,7 +527,7 @@ func (s *MWTestSuite) TestTxHandlerMemoGas() {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 1)
+	accounts := s.createTestAccounts(ctx, 1, testCoins)
 	msgs := []sdk.Msg{testdata.NewTestMsg(accounts[0].acc.GetAddress())}
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
 
@@ -594,7 +597,7 @@ func (s *MWTestSuite) TestTxHandlerMultiSigner() {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 3)
+	accounts := s.createTestAccounts(ctx, 3, testCoins)
 	msg1 := testdata.NewTestMsg(accounts[0].acc.GetAddress(), accounts[1].acc.GetAddress())
 	msg2 := testdata.NewTestMsg(accounts[2].acc.GetAddress(), accounts[0].acc.GetAddress())
 	msg3 := testdata.NewTestMsg(accounts[1].acc.GetAddress(), accounts[2].acc.GetAddress())
@@ -667,7 +670,7 @@ func (s *MWTestSuite) TestTxHandlerBadSignBytes() {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 2)
+	accounts := s.createTestAccounts(ctx, 2, testCoins)
 	msg0 := testdata.NewTestMsg(accounts[0].acc.GetAddress())
 
 	// Variable data per test case
@@ -793,7 +796,7 @@ func (s *MWTestSuite) TestTxHandlerSetPubKey() {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 2)
+	accounts := s.createTestAccounts(ctx, 2, testCoins)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 
@@ -851,14 +854,14 @@ func (s *MWTestSuite) TestTxHandlerSetPubKey() {
 				txBuilder.SetGasLimit(gasLimit)
 
 				// Manually create tx, and remove signature.
-				tx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+				testTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 				s.Require().NoError(err)
-				txBuilder, err := s.clientCtx.TxConfig.WrapTxBuilder(tx)
+				txBuilder, err := s.clientCtx.TxConfig.WrapTxBuilder(testTx)
 				s.Require().NoError(err)
 				s.Require().NoError(txBuilder.SetSignatures())
 
 				// Run txHandler manually, expect ErrNoSignatures.
-				_, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), txBuilder.GetTx(), abci.RequestCheckTx{})
+				_, _, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: txBuilder.GetTx()}, tx.RequestCheckTx{})
 				s.Require().Error(err)
 				s.Require().True(errors.Is(err, sdkerrors.ErrNoSignatures))
 
@@ -971,7 +974,7 @@ func (s *MWTestSuite) TestTxHandlerSigLimitExceeded() {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 8)
+	accounts := s.createTestAccounts(ctx, 8, testCoins)
 	var addrs []sdk.AccAddress
 	var privs []cryptotypes.PrivKey
 	for i := 0; i < 8; i++ {
@@ -1022,6 +1025,7 @@ func (s *MWTestSuite) TestCustomSignatureVerificationGasConsumer() {
 					return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 				}
 			},
+			TxDecoder: s.clientCtx.TxConfig.TxDecoder(),
 		},
 	)
 	s.Require().NoError(err)
@@ -1029,7 +1033,7 @@ func (s *MWTestSuite) TestCustomSignatureVerificationGasConsumer() {
 	s.Require().NoError(err)
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 1)
+	accounts := s.createTestAccounts(ctx, 1, testCoins)
 	txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
 	txBuilder.SetMsgs(testdata.NewTestMsg(accounts[0].acc.GetAddress()))
@@ -1057,9 +1061,9 @@ func (s *MWTestSuite) TestCustomSignatureVerificationGasConsumer() {
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			tc.malleate()
 
-			tx, txBytes, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+			testTx, txBytes, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 			s.Require().NoError(err)
-			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, abci.RequestDeliverTx{Tx: txBytes})
+			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: txBytes})
 			s.Require().Error(err)
 			s.Require().True(errors.Is(err, tc.expErr))
 		})
@@ -1073,7 +1077,7 @@ func (s *MWTestSuite) TestTxHandlerReCheck() {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 1)
+	accounts := s.createTestAccounts(ctx, 1, testCoins)
 
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
@@ -1088,21 +1092,21 @@ func (s *MWTestSuite) TestTxHandlerReCheck() {
 
 	// test that operations skipped on recheck do not run
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
-	tx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	testTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 	s.Require().NoError(err)
 
 	// make signature array empty which would normally cause ValidateBasicMiddleware and SigVerificationMiddleware fail
 	// since these middlewares don't run on recheck, the tx should pass the middleware
-	txBuilder, err = s.clientCtx.TxConfig.WrapTxBuilder(tx)
+	txBuilder, err = s.clientCtx.TxConfig.WrapTxBuilder(testTx)
 	s.Require().NoError(err)
 	s.Require().NoError(txBuilder.SetSignatures())
 
-	_, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), txBuilder.GetTx(), abci.RequestCheckTx{Type: abci.CheckTxType_Recheck})
+	_, _, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: txBuilder.GetTx()}, tx.RequestCheckTx{Type: abci.CheckTxType_Recheck})
 	s.Require().Nil(err, "TxHandler errored on recheck unexpectedly: %v", err)
 
-	tx, _, err = s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	testTx, _, err = s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 	s.Require().NoError(err)
-	txBytes, err := json.Marshal(tx)
+	txBytes, err := json.Marshal(testTx)
 	s.Require().Nil(err, "Error marshalling tx: %v", err)
 	ctx = ctx.WithTxBytes(txBytes)
 
@@ -1120,7 +1124,7 @@ func (s *MWTestSuite) TestTxHandlerReCheck() {
 		// set testcase parameters
 		s.app.AccountKeeper.SetParams(ctx, tc.params)
 
-		_, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{Tx: txBytes, Type: abci.CheckTxType_Recheck})
+		_, _, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: txBytes}, tx.RequestCheckTx{Type: abci.CheckTxType_Recheck})
 
 		s.Require().NotNil(err, "tx does not fail on recheck with updated params in test case: %s", tc.name)
 
@@ -1134,7 +1138,7 @@ func (s *MWTestSuite) TestTxHandlerReCheck() {
 		Denom:  "dnecoin", // fee does not have this denom
 		Amount: sdk.NewDec(5),
 	}})
-	_, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{})
+	_, _, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, tx.RequestCheckTx{})
 
 	s.Require().NotNil(err, "txhandler on recheck did not fail when mingasPrice was changed")
 	// reset min gasprice
@@ -1146,6 +1150,6 @@ func (s *MWTestSuite) TestTxHandlerReCheck() {
 	err = s.app.BankKeeper.SendCoinsFromAccountToModule(ctx, accounts[0].acc.GetAddress(), minttypes.ModuleName, balances)
 	s.Require().NoError(err)
 
-	_, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{})
+	_, _, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, tx.RequestCheckTx{})
 	s.Require().NotNil(err, "txhandler on recheck did not fail once feePayer no longer has sufficient funds")
 }

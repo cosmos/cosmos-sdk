@@ -193,14 +193,14 @@ func (s *IntegrationTestSuite) TestQueryGranterGrantsGRPC() {
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/%s", val.APIAddress, val.Address.String()),
 			false,
 			"",
-			6,
+			7,
 		},
 		{
-			"valid query: expect two grants",
+			"valid query: expect seven grants",
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/%s", val.APIAddress, val.Address.String()),
 			false,
 			"",
-			6,
+			7,
 		},
 	}
 	for _, tc := range testCases {

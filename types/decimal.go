@@ -801,3 +801,8 @@ func MaxDec(d1, d2 Dec) Dec {
 func DecEq(t *testing.T, exp, got Dec) (*testing.T, bool, string, string, string) {
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
+
+func DecApproxEq(t *testing.T, d1 Dec, d2 Dec, tol Dec) (*testing.T, bool, string, string, string) {
+	diff := d1.Sub(d2).Abs()
+	return t, diff.LTE(tol), "expected |d1 - d2| <:\t%v\ngot |d1 - d2| = \t\t%v", tol.String(), diff.String()
+}

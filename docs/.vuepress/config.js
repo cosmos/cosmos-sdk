@@ -56,7 +56,7 @@ module.exports = {
       }
     ],
     topbar: {
-      banner: true
+      banner: false
     },
     sidebar: {
       auto: true,

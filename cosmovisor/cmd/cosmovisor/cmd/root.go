@@ -13,12 +13,11 @@ func RunCosmovisorCommand(args []string) error {
 		arg0 = strings.TrimSpace(args[0])
 	}
 	switch {
+	case IsVersionCommand(arg0):
+		return PrintVersion()
 	case ShouldGiveHelp(arg0):
 		DoHelp()
 		return nil
-	case IsVersionCommand(arg0):
-		PrintVersion()
-		return Run([]string{"version"})
 	case IsRunCommand(arg0):
 		return Run(args[1:])
 	}

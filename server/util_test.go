@@ -12,6 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+	tmcfg "github.com/tendermint/tendermint/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -27,7 +28,7 @@ var cancelledInPreRun = errors.New("Cancelled in prerun")
 // Used in each test to run the function under test via Cobra
 // but to always halt the command
 func preRunETestImpl(cmd *cobra.Command, args []string) error {
-	err := server.InterceptConfigsPreRunHandler(cmd, "", nil)
+	err := server.InterceptConfigsPreRunHandler(cmd, "", nil, tmcfg.DefaultConfig())
 	if err != nil {
 		return err
 	}
@@ -104,7 +105,7 @@ func TestInterceptConfigsPreRunHandlerReadsConfigToml(t *testing.T) {
 		t.Fatalf("creating config.toml file failed: %v", err)
 	}
 
-	_, err = writer.WriteString(fmt.Sprintf("db_backend = '%s'\n", testDbBackend))
+	_, err = writer.WriteString(fmt.Sprintf("db-backend = '%s'\n", testDbBackend))
 	if err != nil {
 		t.Fatalf("Failed writing string to config.toml: %v", err)
 	}
@@ -128,7 +129,7 @@ func TestInterceptConfigsPreRunHandlerReadsConfigToml(t *testing.T) {
 	}
 
 	if testDbBackend != serverCtx.Config.DBBackend {
-		t.Error("DBPath was not set from config.toml")
+		t.Error("backend was not set from config.toml")
 	}
 }
 
@@ -432,7 +433,7 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	// Run StartCmd.
 	cmd = server.StartCmd(nil, tempDir)
 	cmd.PreRunE = func(cmd *cobra.Command, _ []string) error {
-		return server.InterceptConfigsPreRunHandler(cmd, "", nil)
+		return server.InterceptConfigsPreRunHandler(cmd, "", nil, tmcfg.DefaultConfig())
 	}
 	err = cmd.ExecuteContext(ctx)
 	require.Errorf(t, err, sdkerrors.ErrAppConfig.Error())

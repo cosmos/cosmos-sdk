@@ -37,6 +37,8 @@ message BadMultiSignature {
 }
 
 message TableModel {
-  uint64 id = 1;
-  string name = 2;
+  uint64 id       = 1;
+  string name     = 2;
+  uint64 number   = 3;
+  bytes  metadata = 4;
 }

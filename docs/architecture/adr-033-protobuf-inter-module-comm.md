@@ -381,7 +381,7 @@ replacing `Keeper` interfaces altogether.
 - improved module developer DevX, as commented on by several particpants on
     [Architecture Review Call, Dec 3](https://hackmd.io/E0wxxOvRQ5qVmTf6N_k84Q)
 - lays the groundwork for what can be a greatly simplified `app.go`
-- router can be setup to enforce atomic transactions for moule-to-module calls
+- router can be setup to enforce atomic transactions for module-to-module calls
 
 ### Negative
 

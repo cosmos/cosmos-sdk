@@ -3,8 +3,6 @@ package middleware
 import (
 	"context"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
@@ -13,7 +11,7 @@ type indexEventsTxHandler struct {
 	// indexEvents defines the set of events in the form {eventType}.{attributeKey},
 	// which informs Tendermint what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
-	inner       tx.Handler
+	next        tx.Handler
 }
 
 // NewIndexEventsTxMiddleware defines a middleware to optionally only index a
@@ -22,7 +20,7 @@ func NewIndexEventsTxMiddleware(indexEvents map[string]struct{}) tx.Middleware {
 	return func(txHandler tx.Handler) tx.Handler {
 		return indexEventsTxHandler{
 			indexEvents: indexEvents,
-			inner:       txHandler,
+			next:        txHandler,
 		}
 	}
 }
@@ -30,19 +28,19 @@ func NewIndexEventsTxMiddleware(indexEvents map[string]struct{}) tx.Middleware {
 var _ tx.Handler = indexEventsTxHandler{}
 
 // CheckTx implements tx.Handler.CheckTx method.
-func (txh indexEventsTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	res, err := txh.inner.CheckTx(ctx, tx, req)
+func (txh indexEventsTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
+	res, resCheckTx, err := txh.next.CheckTx(ctx, req, checkReq)
 	if err != nil {
-		return res, err
+		return res, tx.ResponseCheckTx{}, err
 	}
 
 	res.Events = sdk.MarkEventsToIndex(res.Events, txh.indexEvents)
-	return res, nil
+	return res, resCheckTx, nil
 }
 
 // DeliverTx implements tx.Handler.DeliverTx method.
-func (txh indexEventsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	res, err := txh.inner.DeliverTx(ctx, tx, req)
+func (txh indexEventsTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	res, err := txh.next.DeliverTx(ctx, req)
 	if err != nil {
 		return res, err
 	}
@@ -52,12 +50,12 @@ func (txh indexEventsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req ab
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
-func (txh indexEventsTxHandler) SimulateTx(ctx context.Context, tx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	res, err := txh.inner.SimulateTx(ctx, tx, req)
+func (txh indexEventsTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
+	res, err := txh.next.SimulateTx(ctx, req)
 	if err != nil {
 		return res, err
 	}
 
-	res.Result.Events = sdk.MarkEventsToIndex(res.Result.Events, txh.indexEvents)
+	res.Events = sdk.MarkEventsToIndex(res.Events, txh.indexEvents)
 	return res, nil
 }

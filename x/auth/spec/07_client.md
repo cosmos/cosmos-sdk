@@ -320,7 +320,6 @@ Example Output:
 }
 ```
 
-
 ### Params
 
 The `params` endpoint allow users to query the current auth parameters.

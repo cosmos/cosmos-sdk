@@ -1,26 +1,15 @@
-## Abstract
+# Abstract
 
 The orm package provides a framework for creating relational database tables with primary and secondary keys.
 
-### Tables
+## Contents
 
-```go
-type table struct {
-	model       reflect.Type
-	prefix      [2]byte
-	afterSet   []AfterSetInterceptor
-	afterDelete []AfterDeleteInterceptor
-	cdc         codec.Codec
-}
-```
-
-A table can be built given a `codec.ProtoMarshaler` model type, a prefix to access the underlying prefix store used to store table data as well as a `Codec` for marshalling/unmarshalling.
-In the prefix store, entities should be stored by an unique identifier called `RowID` which can be based either on an `uint64` auto-increment counter, string or dynamic size bytes.
-Regular CRUD operations can be performed on a table, these methods take a `sdk.KVStore` as parameter to get the table prefix store.
-
-The `table` struct does not:
- - enforce uniqueness of the `RowID`
- - enforce prefix uniqueness of keys, i.e. not allowing one key to be a prefix
- of another
- - optimize Gas usage conditions
-The `table` struct is private, so that we only have custom tables built on top of it, that do satisfy these requirements.
+1. **[Table](01_table.md)**
+   - [AutoUInt64Table](01_table.md#autouint64table)
+   - [PrimaryKeyTable](01_table.md#primarykeytable)
+2. **[Secondary Index](02_secondary_index.md)**
+   - [MultiKeyIndex](02_secondary_index.md#multikeyindex)
+   - [UniqueIndex](02_secondary_index.md#uniqueindex)
+3. **[Iterator and Pagination](03_iterator_pagination.md)**
+   - [Iterator](03_iterator_pagination.md#iterator)
+   - [Pagination](03_iterator_pagination.md#pagination)

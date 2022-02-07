@@ -66,6 +66,8 @@ message SignDoc {
 
 // SignDocDirectAux is the type used for generating sign bytes for
 // SIGN_MODE_DIRECT_AUX.
+//
+// Since: cosmos-sdk 0.46
 message SignDocDirectAux {
   // body_bytes is protobuf serialization of a TxBody that matches the
   // representation in TxRaw.
@@ -137,6 +139,8 @@ message AuthInfo {
   Fee fee = 2;
 
   // Tip is the optional tip used for meta-transactions.
+  //
+  // Since: cosmos-sdk 0.46
   Tip tip = 3;
 }
 
@@ -213,9 +217,33 @@ message Fee {
 }
 
 // Tip is the tip used for meta-transactions.
+//
+// Since: cosmos-sdk 0.46
 message Tip {
   // amount is the amount of the tip
-  repeated cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   // tipper is the address of the account paying for the tip
   string tipper = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// AuxSignerData is the intermediary format that an auxiliary signer (e.g. a
+// tipper) builds and sends to the fee payer (who will build and broadcast the
+// actual tx). AuxSignerData is not a valid tx in itself, and will be rejected
+// by the node if sent directly as-is.
+//
+// Since: cosmos-sdk 0.46
+message AuxSignerData {
+  // address is the bech32-encoded address of the auxiliary signer. If using
+  // AuxSignerData across different chains, the bech32 prefix of the target
+  // chain (where the final transaction is broadcasted) should be used.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // sign_doc is the SIGN_MOD_DIRECT_AUX sign doc that the auxiliary signer
+  // signs. Note: we use the same sign doc even if we're signing with
+  // LEGACY_AMINO_JSON.
+  SignDocDirectAux sign_doc = 2;
+  // mode is the signing mode of the single signer
+  cosmos.tx.signing.v1beta1.SignMode mode = 3;
+  // sig is the signature of the sign doc.
+  bytes sig = 4;
 }

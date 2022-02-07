@@ -135,10 +135,14 @@ simd query gov proposal 1
 Example Output:
 
 ```bash
-content:
-  '@type': /cosmos.gov.v1beta1.TextProposal
-  description: testing, testing, 1, 2, 3
-  title: Test Proposal
+messages: [
+  {
+    '@type': /cosmos.bank.v1beta1.MsgSend
+    from_address: "cosmos1..",
+    to_address: "cosmos1..",
+    amount: "100atom"
+  }
+],
 deposit_end_time: "2021-09-17T23:36:18.254995423Z"
 final_tally_result:
   abstain: "0"
@@ -666,7 +670,7 @@ Example Output:
 }
 ```
 
-### Deposits
+### deposits
 
 The `Deposits` endpoint allows users to query all deposits for a given proposal.
 
@@ -739,7 +743,7 @@ Example Output:
 
 A user can query the `gov` module using REST endpoints.
 
-### proposals
+### proposal
 
 The `proposals` endpoint allows users to query a given proposal.
 
@@ -787,7 +791,7 @@ Example Output:
 
 ### proposals
 
-The `proposals` endpoint allows users to query all proposals with optional filters.
+The `proposals` endpoint also allows users to query all proposals with optional filters.
 
 ```bash
 /cosmos/gov/v1beta1/proposals
@@ -858,7 +862,7 @@ Example Output:
 }
 ```
 
-### votes
+### voter vote
 
 The `votes` endpoint allows users to query a vote for a given proposal.
 
@@ -995,7 +999,7 @@ Example Output:
 }
 ```
 
-### deposits
+### proposal deposits
 
 The `deposits` endpoint allows users to query all deposits for a given proposal.
 

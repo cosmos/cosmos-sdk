@@ -38,7 +38,6 @@ slash_fraction_double_sign: "0.050000000000000000"
 slash_fraction_downtime: "0.010000000000000000"
 ```
 
-
 #### signing-info
 
 The `signing-info` command allows users to query signing-info of the validator using consensus public key.
@@ -208,7 +207,6 @@ Example Output:
 ## REST
 
 A user can query the `slashing` module using REST endpoints.
-
 
 ### Params
 

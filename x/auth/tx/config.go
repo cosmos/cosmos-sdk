@@ -35,7 +35,7 @@ func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signin
 }
 
 func (g config) NewTxBuilder() client.TxBuilder {
-	return newBuilder()
+	return newBuilder(g.protoCodec)
 }
 
 // WrapTxBuilder returns a builder from provided transaction

@@ -74,6 +74,14 @@ func (s *StdTxBuilder) SetTimeoutHeight(height uint64) {
 // SetFeeGranter does nothing for stdtx
 func (s *StdTxBuilder) SetFeeGranter(_ sdk.AccAddress) {}
 
+// SetFeePayer does nothing for stdtx
+func (s *StdTxBuilder) SetFeePayer(_ sdk.AccAddress) {}
+
+// AddAuxSignerData returns an error for StdTxBuilder.
+func (s *StdTxBuilder) AddAuxSignerData(_ tx.AuxSignerData) error {
+	return sdkerrors.ErrLogic.Wrap("cannot use AuxSignerData with StdTxBuilder")
+}
+
 // StdTxConfig is a context.TxConfig for StdTx
 type StdTxConfig struct {
 	Cdc *codec.LegacyAmino

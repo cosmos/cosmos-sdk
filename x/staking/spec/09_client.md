@@ -915,7 +915,7 @@ Example Output:
 
 ```bash
 {
-  "delegation_response": 
+  "delegation_response":
   {
     "delegation":
       {
@@ -1347,7 +1347,6 @@ The `DelegtaorDelegations` REST endpoint queries all delegations of a given dele
 ```bash
 /cosmos/staking/v1beta1/delegations/{delegatorAddr}
 ```
-
 
 Example:
 
@@ -1886,7 +1885,7 @@ Example Output:
 
 ### ValidatorDelegations
 
-The `ValidatorDelegations` REST endpoint queries delegate information for given validator. 
+The `ValidatorDelegations` REST endpoint queries delegate information for given validator.
 
 ```bash
 /cosmos/staking/v1beta1/validators/{validatorAddr}/delegations
@@ -2037,7 +2036,7 @@ Example Output:
 
 ### ValidatorUnbondingDelegations
 
-The `ValidatorUnbondingDelegations` REST endpoint queries unbonding delegations of a validator. 
+The `ValidatorUnbondingDelegations` REST endpoint queries unbonding delegations of a validator.
 
 ```bash
 /cosmos/staking/v1beta1/validators/{validatorAddr}/unbonding_delegations
@@ -2087,4 +2086,3 @@ Example Output:
   }
 }
 ```
-

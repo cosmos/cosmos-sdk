@@ -3,12 +3,11 @@ package tmservice
 import (
 	"context"
 
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/tendermint/tendermint/rpc/coretypes"
 )
 
-func getBlock(ctx context.Context, clientCtx client.Context, height *int64) (*ctypes.ResultBlock, error) {
+func getBlock(ctx context.Context, clientCtx client.Context, height *int64) (*coretypes.ResultBlock, error) {
 	// get the node
 	node, err := clientCtx.GetNode()
 	if err != nil {

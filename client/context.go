@@ -46,8 +46,12 @@ type Context struct {
 	TxConfig          TxConfig
 	AccountRetriever  AccountRetriever
 	NodeURI           string
+	FeePayer          sdk.AccAddress
 	FeeGranter        sdk.AccAddress
 	Viper             *viper.Viper
+	
+	// IsAux is true when the signer is an auxiliary signer (e.g. the tipper).
+	IsAux             bool
 
 	// TODO: Deprecated (remove).
 	LegacyAmino *codec.LegacyAmino
@@ -181,6 +185,13 @@ func (ctx Context) WithFromAddress(addr sdk.AccAddress) Context {
 	return ctx
 }
 
+// WithFeePayerAddress returns a copy of the context with an updated fee payer account
+// address.
+func (ctx Context) WithFeePayerAddress(addr sdk.AccAddress) Context {
+	ctx.FeePayer = addr
+	return ctx
+}
+
 // WithFeeGranterAddress returns a copy of the context with an updated fee granter account
 // address.
 func (ctx Context) WithFeeGranterAddress(addr sdk.AccAddress) Context {
@@ -234,6 +245,12 @@ func (ctx Context) WithViper(prefix string) Context {
 	v.SetEnvPrefix(prefix)
 	v.AutomaticEnv()
 	ctx.Viper = v
+	return ctx
+}
+
+// WithAux returns a copy of the context with an updated IsAux value.
+func (ctx Context) WithAux(isAux bool) Context {
+	ctx.IsAux = isAux
 	return ctx
 }
 

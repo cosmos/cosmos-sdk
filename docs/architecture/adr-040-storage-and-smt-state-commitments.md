@@ -119,7 +119,6 @@ We need to be able to process transactions and roll-back state updates if a tran
 
 We identified use-cases, where modules will need to save an object commitment without storing an object itself. Sometimes clients are receiving complex objects, and they have no way to prove a correctness of that object without knowing the storage layout. For those use cases it would be easier to commit to the object without storing it directly.
 
-
 ### Refactor MultiStore
 
 The Stargate `/store` implementation (store/v1) adds an additional layer in the SDK store construction - the `MultiStore` structure. The multistore exists to support the modularity of the Cosmos SDK - each module is using its own instance of IAVL, but in the current implementation, all instances share the same database. The latter indicates, however, that the implementation doesn't provide true modularity. Instead it causes problems related to race condition and atomic DB commits (see: [\#6370](https://github.com/cosmos/cosmos-sdk/issues/6370) and [discussion](https://github.com/cosmos/cosmos-sdk/discussions/8297#discussioncomment-757043)).
@@ -192,6 +191,7 @@ The presented workaround can be used until the IBC module is fully upgraded to s
 ### Optimization: compress module key prefixes
 
 We consider a compression of prefix keys by creating a mapping from module key to an integer, and serializing the integer using varint coding. Varint coding assures that different values don't have common byte prefix. For Merkle Proofs we can't use prefix compression - so it should only apply for the `SS` keys. Moreover, the prefix compression should be only applied for the module namespace. More precisely:
+
 + each module has it's own namespace;
 + when accessing a module namespace we create a KVStore with embedded prefix;
 + that prefix will be compressed only when accessing and managing `SS`.
@@ -205,6 +205,29 @@ TODO: need to make decision about the key compression.
 Some objects may be saved with key, which contains a Protobuf message type. Such keys are long. We could save a lot of space if we can map Protobuf message types in varints.
 
 TODO: finalize this or move to another ADR.
+
+## Migration
+
+Using the new store will require a migration. 2 Migrations are proposed:
+1. Genesis export -- it will reset the blockchain history.
+2. In place migration: we can reuse `UpgradeKeeper.SetUpgradeHandler` to provide the migration logic:
+
+    ```go 
+app.UpgradeKeeper.SetUpgradeHandler("adr-40", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+
+    storev2.Migrate(iavlstore, v2.store)
+
+    // RunMigrations returns the VersionMap
+    // with the updated module ConsensusVersions
+    return app.mm.RunMigrations(ctx, vm)
+})
+    ```
+
+The `Migrate` function will read all entries from a store/v1 DB and save them to the AD-40 combined KV store. 
+Cache layer should not be used and the operation must finish with a single Commit call.
+
+Inserting records to the `SC` (SMT) component is the bottleneck. Unfortunately SMT doesn't support batch transactions. 
+Adding batch transactions to `SC` layer is considered as a feature after the main release.
 
 ## Consequences
 
@@ -236,7 +259,7 @@ We change the storage layout of the state machine, a storage hard fork and netwo
 
 Most of the alternative designs were evaluated in [state commitments and storage report](https://paper.dropbox.com/published/State-commitments-and-storage-review--BDvA1MLwRtOx55KRihJ5xxLbBw-KeEB7eOd11pNrZvVtqUgL3h).
 
-Ethereum research published [Verkle Tire](https://notes.ethereum.org/_N1mutVERDKtqGIEYc-Flw#fnref1) - an idea of combining polynomial commitments with merkle tree in order to reduce the tree height. This concept has a very good potential, but we think it's too early to implement it. The current, SMT based design could be easily updated to the Verkle Tire once other research implement all necessary libraries. The main advantage of the design described in this ADR is the separation of state commitments from the data storage and designing a more powerful interface.
+Ethereum research published [Verkle Trie](https://dankradfeist.de/ethereum/2021/06/18/verkle-trie-for-eth1.html) - an idea of combining polynomial commitments with merkle tree in order to reduce the tree height. This concept has a very good potential, but we think it's too early to implement it. The current, SMT based design could be easily updated to the Verkle Trie once other research implement all necessary libraries. The main advantage of the design described in this ADR is the separation of state commitments from the data storage and designing a more powerful interface.
 
 ## Further Discussions
 

@@ -114,6 +114,9 @@ func (ms multiStore) GetStoreType() storetypes.StoreType {
 func (ms multiStore) SetInterBlockCache(_ sdk.MultiStorePersistentCache) {
 	panic("not implemented")
 }
+func (ms multiStore) SetIAVLCacheSize(size int) {
+	panic("not implemented")
+}
 
 func (ms multiStore) SetInitialVersion(version int64) error {
 	panic("not implemented")

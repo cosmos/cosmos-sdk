@@ -166,6 +166,8 @@ func (m *CancelSoftwareUpgradeProposal) XXX_DiscardUnknown() {
 var xxx_messageInfo_CancelSoftwareUpgradeProposal proto.InternalMessageInfo
 
 // ModuleVersion specifies a module and its consensus version.
+//
+// Since: cosmos-sdk 0.43
 type ModuleVersion struct {
 	// name of the app module
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`

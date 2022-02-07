@@ -248,7 +248,7 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 		}
 
 		if sendAuth.SpendLimit.IsAllLTE(coins) {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "over spent"), nil, nil
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "over spend limit"), nil, nil
 		}
 
 		res, err := sendAuth.Accept(ctx, msg[0])

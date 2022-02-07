@@ -371,10 +371,22 @@ func (pva *PeriodicVestingAccount) AddGrant(ctx sdk.Context, bk BankKeeper, sk S
 	delegatedAmt := bondedAmt.Add(unbondingAmt)
 	delegated := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), delegatedAmt))
 
-	// cap DV at the current unvested amount, DF rounds out to current delegated
-	unvested := pva.GetVestingCoins(ctx.BlockTime())
-	pva.DelegatedVesting = coinsMin(delegated, unvested)
-	pva.DelegatedFree = delegated.Sub(pva.DelegatedVesting)
+	// discover what has been slashed
+	oldDelegated := pva.DelegatedVesting.Add(pva.DelegatedFree...)
+	slashed := oldDelegated.Sub(coinsMin(oldDelegated, delegated))
+
+	// We need to remember the unvested funds eaten by slashing.
+	// We do this by removing these funds from the last vesting.
+	unvestedSlashed := coinsMin(slashed, pva.OriginalVesting)
+	if !unvestedSlashed.IsZero() {
+		newOrigVesting := pva.OriginalVesting.Sub(unvestedSlashed)
+		newStart, newEnd, newPeriods := ConjunctPeriods(pva.GetStartTime(), pva.GetStartTime(), pva.GetVestingPeriods(),
+			[]Period{{Length: 1, Amount: newOrigVesting}})
+		pva.OriginalVesting = newOrigVesting
+		pva.StartTime = newStart
+		pva.EndTime = newEnd
+		pva.VestingPeriods = newPeriods
+	}
 
 	// modify vesting schedule for the new grant
 	newStart, newEnd, newPeriods := DisjunctPeriods(pva.StartTime, grantStartTime,
@@ -383,6 +395,11 @@ func (pva *PeriodicVestingAccount) AddGrant(ctx sdk.Context, bk BankKeeper, sk S
 	pva.EndTime = newEnd
 	pva.VestingPeriods = newPeriods
 	pva.OriginalVesting = pva.OriginalVesting.Add(grantCoins...)
+
+	// cap DV at the current unvested amount, DF rounds out to current delegated
+	unvested := pva.GetVestingCoins(ctx.BlockTime())
+	pva.DelegatedVesting = coinsMin(delegated, unvested)
+	pva.DelegatedFree = delegated.Sub(pva.DelegatedVesting)
 }
 
 // Delayed Vesting Account
@@ -686,11 +703,25 @@ func (va *ClawbackVestingAccount) AddGrant(ctx sdk.Context, bk BankKeeper, sk St
 	delegatedAmt := bondedAmt.Add(unbondingAmt)
 	delegated := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), delegatedAmt))
 
-	// cap DV at the current unvested amount, DF rounds out to current delegated
-	unvested := va.GetVestingCoins(ctx.BlockTime())
-	va.DelegatedVesting = coinsMin(delegated, unvested)
-	va.DelegatedFree = delegated.Sub(va.DelegatedVesting)
+	// discover what has been slashed
+	oldDelegated := va.DelegatedVesting.Add(va.DelegatedFree...)
+	slashed := oldDelegated.Sub(coinsMin(oldDelegated, delegated))
 
+	// Absorb the slashed amount by eliminating the tail of the vesting and lockup schedules
+	unvestedSlashed := coinsMin(slashed, va.OriginalVesting)
+	if !unvestedSlashed.IsZero() {
+		newOrigVesting := va.OriginalVesting.Sub(unvestedSlashed)
+		cutoffPeriods := []Period{{Length: 1, Amount: newOrigVesting}}
+		start := va.GetStartTime()
+		_, newLockupEnd, newLockupPeriods := ConjunctPeriods(start, start, va.LockupPeriods, cutoffPeriods)
+		_, newVestingEnd, newVestingPeriods := ConjunctPeriods(start, start, va.VestingPeriods, cutoffPeriods)
+		va.OriginalVesting = newOrigVesting
+		va.EndTime = max64(newLockupEnd, newVestingEnd)
+		va.LockupPeriods = newLockupPeriods
+		va.VestingPeriods = newVestingPeriods
+	}
+
+	// modify schedules for the new grant
 	newLockupStart, newLockupEnd, newLockupPeriods := DisjunctPeriods(va.StartTime, grantStartTime, va.LockupPeriods, grantLockupPeriods)
 	newVestingStart, newVestingEnd, newVestingPeriods := DisjunctPeriods(va.StartTime, grantStartTime,
 		va.GetVestingPeriods(), grantVestingPeriods)
@@ -702,6 +733,11 @@ func (va *ClawbackVestingAccount) AddGrant(ctx sdk.Context, bk BankKeeper, sk St
 	va.LockupPeriods = newLockupPeriods
 	va.VestingPeriods = newVestingPeriods
 	va.OriginalVesting = va.OriginalVesting.Add(grantCoins...)
+
+	// cap DV at the current unvested amount, DF rounds out to current delegated
+	unvested := va.GetVestingCoins(ctx.BlockTime())
+	va.DelegatedVesting = coinsMin(delegated, unvested)
+	va.DelegatedFree = delegated.Sub(va.DelegatedVesting)
 }
 
 // GetUnlockedOnly returns the unlocking schedule at blockTIme.

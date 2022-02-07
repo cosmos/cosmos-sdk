@@ -395,10 +395,16 @@ func TestAddGrantPeriodicVestingAcc(t *testing.T) {
 	// simulate 54stake (unvested) lost to slashing
 	pva.DelegatedVesting = c(stake(54))
 
+	// Only 6stake are locked at now+150, due to slashing
+	require.Equal(t, int64(6), pva.LockedCoins(ctx.WithBlockTime(now.Add(150*time.Second))).AmountOf(stakeDenom).Int64())
+
 	// Add a new grant of 50stake
 	newGrant := c(stake(50))
 	pva.AddGrant(ctx, app.BankKeeper, app.StakingKeeper, now.Add(500*time.Second).Unix(), []types.Period{{Length: 50, Amount: newGrant}}, newGrant)
 	app.AccountKeeper.SetAccount(ctx, pva)
+
+	// Only 56stake locked at now+150, due to slashing
+	require.Equal(t, int64(56), pva.LockedCoins(ctx.WithBlockTime(now.Add(150*time.Second))).AmountOf(stakeDenom).Int64())
 
 	// fund the vesting account with new grant (old has vested and transferred out)
 	ctx = ctx.WithBlockTime(now.Add(500 * time.Second))
@@ -1358,12 +1364,18 @@ func TestAddGrantClawbackVestingAcc(t *testing.T) {
 	// simulate 54stake (unvested) lost to slashing
 	va.DelegatedVesting = c(stake(54))
 
+	// Only 6stake are locked at now+150, due to slashing
+	require.Equal(t, int64(6), va.LockedCoins(ctx.WithBlockTime(now.Add(150*time.Second))).AmountOf(stakeDenom).Int64())
+
 	// Add a new grant of 50stake
 	newGrant := c(stake(50))
 	va.AddGrant(ctx, app.BankKeeper, app.StakingKeeper, now.Add(500*time.Second).Unix(),
 		[]types.Period{{Length: 1, Amount: newGrant}},
 		[]types.Period{{Length: 50, Amount: newGrant}}, newGrant)
 	app.AccountKeeper.SetAccount(ctx, va)
+
+	// Only 56stake locked at now+150, due to slashing
+	require.Equal(t, int64(56), va.LockedCoins(ctx.WithBlockTime(now.Add(150*time.Second))).AmountOf(stakeDenom).Int64())
 
 	// fund the vesting account with new grant (old has vested and transferred out)
 	ctx = ctx.WithBlockTime(now.Add(500 * time.Second))

@@ -41,7 +41,7 @@ func (data GenesisState) Empty() bool {
 // ValidateGenesis checks if parameters are within valid ranges
 func ValidateGenesis(data *GenesisState) error {
 	if data.StartingProposalId == 0 {
-		return errors.New("Starting proposal id must be greater than 0")
+		return errors.New("starting proposal id must be greater than 0")
 	}
 
 	if err := validateTallyParams(*data.TallyParams); err != nil {
@@ -54,6 +54,10 @@ func ValidateGenesis(data *GenesisState) error {
 
 	if err := validateDepositParams(*data.DepositParams); err != nil {
 		return fmt.Errorf("invalid deposit params: %w", err)
+	}
+
+	if err := validateBurnParams(*data.BurnParams); err != nil {
+		return fmt.Errorf("invalid burn params: %w", err)
 	}
 
 	return nil

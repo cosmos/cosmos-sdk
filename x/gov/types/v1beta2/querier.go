@@ -20,6 +20,7 @@ const (
 	ParamDeposit  = "deposit"
 	ParamVoting   = "voting"
 	ParamTallying = "tallying"
+	ParamBurn     = "burn"
 )
 
 // QueryProposalParams Params for queries:

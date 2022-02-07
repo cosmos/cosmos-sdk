@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
+	v046 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
@@ -677,6 +677,17 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 				tallyParams := v1beta2.DefaultTallyParams()
 				expRes = &v1beta2.QueryParamsResponse{
 					TallyParams: &tallyParams,
+				}
+			},
+			true,
+		},
+		{
+			"burn params request",
+			func() {
+				req = &v1beta2.QueryParamsRequest{ParamsType: v1beta2.ParamBurn}
+				burnParams := v1beta2.DefaultBurnParams()
+				expRes = &v1beta2.QueryParamsResponse{
+					BurnParams: &burnParams,
 				}
 			},
 			true,

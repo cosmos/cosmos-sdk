@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
+	v046 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
@@ -177,6 +177,9 @@ func (q Keeper) Params(c context.Context, req *v1beta2.QueryParamsRequest) (*v1b
 	case v1beta2.ParamTallying:
 		tallyParams := q.GetTallyParams(ctx)
 		return &v1beta2.QueryParamsResponse{TallyParams: &tallyParams}, nil
+	case v1beta2.ParamBurn:
+		burnParams := q.GetBurnParams(ctx)
+		return &v1beta2.QueryParamsResponse{BurnParams: &burnParams}, nil
 
 	default:
 		return nil, status.Errorf(codes.InvalidArgument,

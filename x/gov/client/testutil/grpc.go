@@ -360,6 +360,7 @@ func (s *IntegrationTestSuite) TestGetParamsGRPC() {
 	dp := v1beta2.DefaultDepositParams()
 	vp := v1beta2.DefaultVotingParams()
 	tp := v1beta2.DefaultTallyParams()
+	bp := v1beta2.DefaultBurnParams()
 
 	testCases := []struct {
 		name       string
@@ -393,6 +394,13 @@ func (s *IntegrationTestSuite) TestGetParamsGRPC() {
 			false,
 			&v1beta2.QueryParamsResponse{},
 			&v1beta2.QueryParamsResponse{TallyParams: &tp},
+		},
+		{
+			"get burn params",
+			fmt.Sprintf("%s/cosmos/gov/v1beta2/params/%s", val.APIAddress, v1beta2.ParamBurn),
+			false,
+			&v1beta2.QueryParamsResponse{},
+			&v1beta2.QueryParamsResponse{BurnParams: &bp},
 		},
 	}
 

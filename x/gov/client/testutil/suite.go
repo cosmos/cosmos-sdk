@@ -94,12 +94,16 @@ func (s *IntegrationTestSuite) TestCmdParams() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`{"voting_params":{"voting_period":"172800000000000"},"tally_params":{"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000"},"deposit_params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800000000000"}}`,
+			`{"voting_params":{"voting_period":"172800000000000"},"tally_params":{"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000"},"deposit_params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800000000000"},"burn_params":{"vote_quorum":true,"proposal_deposit":true,"vote_veto":true}}`,
 		},
 		{
 			"text output",
 			[]string{},
 			`
+burn_params:
+	proposal_deposit: true
+	vote_quorum: true
+	vote_veto: true
 deposit_params:
   max_deposit_period: "172800000000000"
   min_deposit:

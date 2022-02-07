@@ -24,11 +24,12 @@ const _ = grpc.SupportPackageIsVersion7
 type MsgClient interface {
 	// SubmitProposal defines a method to create new proposal given a content.
 	SubmitProposal(ctx context.Context, in *MsgSubmitProposal, opts ...grpc.CallOption) (*MsgSubmitProposalResponse, error)
+	// ExecLegacyContent defines a Msg to be in included in a MsgSubmitProposal
+	// to execute a legacy content-based proposal.
+	ExecLegacyContent(ctx context.Context, in *MsgExecLegacyContent, opts ...grpc.CallOption) (*MsgExecLegacyContentResponse, error)
 	// Vote defines a method to add a vote on a specific proposal.
 	Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error)
 	// VoteWeighted defines a method to add a weighted vote on a specific proposal.
-	//
-	// Since: cosmos-sdk 0.43
 	VoteWeighted(ctx context.Context, in *MsgVoteWeighted, opts ...grpc.CallOption) (*MsgVoteWeightedResponse, error)
 	// Deposit defines a method to add deposit on a specific proposal.
 	Deposit(ctx context.Context, in *MsgDeposit, opts ...grpc.CallOption) (*MsgDepositResponse, error)
@@ -45,6 +46,15 @@ func NewMsgClient(cc grpc.ClientConnInterface) MsgClient {
 func (c *msgClient) SubmitProposal(ctx context.Context, in *MsgSubmitProposal, opts ...grpc.CallOption) (*MsgSubmitProposalResponse, error) {
 	out := new(MsgSubmitProposalResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta2.Msg/SubmitProposal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ExecLegacyContent(ctx context.Context, in *MsgExecLegacyContent, opts ...grpc.CallOption) (*MsgExecLegacyContentResponse, error) {
+	out := new(MsgExecLegacyContentResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta2.Msg/ExecLegacyContent", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -84,11 +94,12 @@ func (c *msgClient) Deposit(ctx context.Context, in *MsgDeposit, opts ...grpc.Ca
 type MsgServer interface {
 	// SubmitProposal defines a method to create new proposal given a content.
 	SubmitProposal(context.Context, *MsgSubmitProposal) (*MsgSubmitProposalResponse, error)
+	// ExecLegacyContent defines a Msg to be in included in a MsgSubmitProposal
+	// to execute a legacy content-based proposal.
+	ExecLegacyContent(context.Context, *MsgExecLegacyContent) (*MsgExecLegacyContentResponse, error)
 	// Vote defines a method to add a vote on a specific proposal.
 	Vote(context.Context, *MsgVote) (*MsgVoteResponse, error)
 	// VoteWeighted defines a method to add a weighted vote on a specific proposal.
-	//
-	// Since: cosmos-sdk 0.43
 	VoteWeighted(context.Context, *MsgVoteWeighted) (*MsgVoteWeightedResponse, error)
 	// Deposit defines a method to add deposit on a specific proposal.
 	Deposit(context.Context, *MsgDeposit) (*MsgDepositResponse, error)
@@ -101,6 +112,9 @@ type UnimplementedMsgServer struct {
 
 func (UnimplementedMsgServer) SubmitProposal(context.Context, *MsgSubmitProposal) (*MsgSubmitProposalResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SubmitProposal not implemented")
+}
+func (UnimplementedMsgServer) ExecLegacyContent(context.Context, *MsgExecLegacyContent) (*MsgExecLegacyContentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExecLegacyContent not implemented")
 }
 func (UnimplementedMsgServer) Vote(context.Context, *MsgVote) (*MsgVoteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Vote not implemented")
@@ -138,6 +152,24 @@ func _Msg_SubmitProposal_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).SubmitProposal(ctx, req.(*MsgSubmitProposal))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ExecLegacyContent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgExecLegacyContent)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ExecLegacyContent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.gov.v1beta2.Msg/ExecLegacyContent",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ExecLegacyContent(ctx, req.(*MsgExecLegacyContent))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -206,6 +238,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SubmitProposal",
 			Handler:    _Msg_SubmitProposal_Handler,
+		},
+		{
+			MethodName: "ExecLegacyContent",
+			Handler:    _Msg_ExecLegacyContent_Handler,
 		},
 		{
 			MethodName: "Vote",

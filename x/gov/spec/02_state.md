@@ -36,6 +36,9 @@ the following `JSON` template:
 
 This makes it far easier for clients to support multiple networks.
 
+The metadata has a maximum length that is chosen by the app developer, and
+passed into the gov keeper as a config.
+
 ### Writing a module that uses governance
 
 There are many aspects of a chain, or of the individual modules that you may want to

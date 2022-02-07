@@ -56,7 +56,7 @@ func DefaultDepositParams() DepositParams {
 
 // Equal checks equality of DepositParams
 func (dp DepositParams) Equal(dp2 DepositParams) bool {
-	return sdk.NewCoins(dp.MinDeposit...).IsEqual(sdk.NewCoins(dp2.MinDeposit...)) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
+	return sdk.Coins(dp.MinDeposit).IsEqual(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
 }
 
 func validateDepositParams(i interface{}) error {
@@ -65,8 +65,7 @@ func validateDepositParams(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	minDeposit := sdk.NewCoins(v.MinDeposit...)
-	if !minDeposit.IsValid() {
+	if !sdk.Coins(v.MinDeposit).IsValid() {
 		return fmt.Errorf("invalid minimum deposit: %s", v.MinDeposit)
 	}
 	if v.MaxDepositPeriod == nil || v.MaxDepositPeriod.Seconds() <= 0 {

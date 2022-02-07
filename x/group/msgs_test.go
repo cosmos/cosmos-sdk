@@ -146,7 +146,7 @@ func TestMsgCreateGroup(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.Type(), group.TypeMsgCreateGroup)
+				require.Equal(t, tc.msg.Type(), sdk.MsgTypeURL(&group.MsgCreateGroup{}))
 			}
 		})
 	}
@@ -217,7 +217,7 @@ func TestMsgUpdateGroupAdmin(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.Type(), group.TypeMsgUpdateGroupAdmin)
+				require.Equal(t, tc.msg.Type(), sdk.MsgTypeURL(&group.MsgUpdateGroupAdmin{}))
 			}
 		})
 	}
@@ -267,7 +267,7 @@ func TestMsgUpdateGroupMetadata(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.Type(), group.TypeMsgUpdateGroupMetadata)
+				require.Equal(t, tc.msg.Type(), sdk.MsgTypeURL(&group.MsgUpdateGroupMetadata{}))
 			}
 		})
 	}
@@ -347,7 +347,7 @@ func TestMsgUpdateGroupMembers(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.Type(), group.TypeMsgUpdateGroupMembers)
+				require.Equal(t, tc.msg.Type(), sdk.MsgTypeURL(&group.MsgUpdateGroupMembers{}))
 			}
 		})
 	}
@@ -414,7 +414,7 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), group.TypeMsgCreateGroupPolicy)
+				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgCreateGroupPolicy{}))
 			}
 		})
 	}
@@ -484,7 +484,7 @@ func TestMsgUpdateGroupPolicyDecisionPolicy(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), group.TypeMsgUpdateGroupPolicyDecisionPolicy)
+				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyDecisionPolicy{}))
 			}
 		})
 	}
@@ -556,7 +556,7 @@ func TestMsgUpdateGroupPolicyAdmin(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), group.TypeMsgUpdateGroupPolicyAdmin)
+				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyAdmin{}))
 			}
 		})
 	}
@@ -607,7 +607,7 @@ func TestMsgUpdateGroupPolicyMetadata(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), group.TypeMsgUpdateGroupPolicyMetadata)
+				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyMetadata{}))
 			}
 		})
 	}
@@ -656,7 +656,7 @@ func TestMsgCreateProposal(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), group.TypeMsgCreateProposal)
+				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgCreateProposal{}))
 			}
 		})
 	}
@@ -715,7 +715,56 @@ func TestMsgVote(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), group.TypeMsgVote)
+				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgVote{}))
+			}
+		})
+	}
+}
+
+func TestMsgWithdrawProposal(t *testing.T) {
+	testCases := []struct {
+		name   string
+		msg    *group.MsgWithdrawProposal
+		expErr bool
+		errMsg string
+	}{
+		{
+			"invalid address",
+			&group.MsgWithdrawProposal{
+				Address: "address",
+			},
+			true,
+			"decoding bech32 failed",
+		},
+		{
+			"proposal id is required",
+			&group.MsgWithdrawProposal{
+				Address: member1.String(),
+			},
+			true,
+			"proposal id: value is empty",
+		},
+		{
+			"valid msg",
+			&group.MsgWithdrawProposal{
+				Address:    member1.String(),
+				ProposalId: 1,
+			},
+			false,
+			"",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := tc.msg
+			err := msg.ValidateBasic()
+			if tc.expErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.errMsg)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgWithdrawProposal{}))
 			}
 		})
 	}
@@ -763,7 +812,7 @@ func TestMsgExec(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), group.TypeMsgExec)
+				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgExec{}))
 			}
 		})
 	}

@@ -26,6 +26,9 @@ type QueryClient interface {
 	Allowance(ctx context.Context, in *QueryAllowanceRequest, opts ...grpc.CallOption) (*QueryAllowanceResponse, error)
 	// Allowances returns all the grants for address.
 	Allowances(ctx context.Context, in *QueryAllowancesRequest, opts ...grpc.CallOption) (*QueryAllowancesResponse, error)
+	// AllowancesByGranter returns all the grants given by an address
+	// Since v0.46
+	AllowancesByGranter(ctx context.Context, in *QueryAllowancesByGranterRequest, opts ...grpc.CallOption) (*QueryAllowancesByGranterResponse, error)
 }
 
 type queryClient struct {
@@ -54,6 +57,15 @@ func (c *queryClient) Allowances(ctx context.Context, in *QueryAllowancesRequest
 	return out, nil
 }
 
+func (c *queryClient) AllowancesByGranter(ctx context.Context, in *QueryAllowancesByGranterRequest, opts ...grpc.CallOption) (*QueryAllowancesByGranterResponse, error) {
+	out := new(QueryAllowancesByGranterResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.feegrant.v1beta1.Query/AllowancesByGranter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -62,6 +74,9 @@ type QueryServer interface {
 	Allowance(context.Context, *QueryAllowanceRequest) (*QueryAllowanceResponse, error)
 	// Allowances returns all the grants for address.
 	Allowances(context.Context, *QueryAllowancesRequest) (*QueryAllowancesResponse, error)
+	// AllowancesByGranter returns all the grants given by an address
+	// Since v0.46
+	AllowancesByGranter(context.Context, *QueryAllowancesByGranterRequest) (*QueryAllowancesByGranterResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -74,6 +89,9 @@ func (UnimplementedQueryServer) Allowance(context.Context, *QueryAllowanceReques
 }
 func (UnimplementedQueryServer) Allowances(context.Context, *QueryAllowancesRequest) (*QueryAllowancesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Allowances not implemented")
+}
+func (UnimplementedQueryServer) AllowancesByGranter(context.Context, *QueryAllowancesByGranterRequest) (*QueryAllowancesByGranterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllowancesByGranter not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -124,6 +142,24 @@ func _Query_Allowances_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_AllowancesByGranter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllowancesByGranterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllowancesByGranter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.feegrant.v1beta1.Query/AllowancesByGranter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllowancesByGranter(ctx, req.(*QueryAllowancesByGranterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -138,6 +174,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Allowances",
 			Handler:    _Query_Allowances_Handler,
+		},
+		{
+			MethodName: "AllowancesByGranter",
+			Handler:    _Query_AllowancesByGranter_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

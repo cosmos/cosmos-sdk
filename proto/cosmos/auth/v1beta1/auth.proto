@@ -18,7 +18,7 @@ message BaseAccount {
   option (cosmos_proto.implements_interface) = "AccountI";
 
   string              address        = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  google.protobuf.Any pub_key        = 2 [json_name = "public_key"];
+  google.protobuf.Any pub_key        = 2 [(gogoproto.jsontag) = "public_key,omitempty"];
   uint64              account_number = 3;
   uint64              sequence       = 4;
 }

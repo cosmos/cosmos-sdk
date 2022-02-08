@@ -16,11 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
-// MaxMetadataLength defines the max length of the metadata bytes field
-// for various entities within the group module
-// TODO: This could be used as params once x/params is upgraded to use protobuf
-const MaxMetadataLength = 255
-
 type DecisionPolicyResult struct {
 	Allow bool
 	Final bool
@@ -113,7 +108,7 @@ func (p *ThresholdDecisionPolicy) Validate(g GroupInfo) error {
 		return sdkerrors.Wrap(err, "group total weight")
 	}
 	if threshold.Cmp(totalWeight) > 0 {
-		return sdkerrors.Wrap(errors.ErrInvalid, "policy threshold should not be greater than the total group weight")
+		return sdkerrors.Wrapf(errors.ErrInvalid, "policy threshold %s should not be greater than the total group weight %s", p.Threshold, g.TotalWeight)
 	}
 	return nil
 }
@@ -256,7 +251,7 @@ func (p Proposal) ValidateBasic() error {
 	}
 	_, err := sdk.AccAddressFromBech32(p.Address)
 	if err != nil {
-		return sdkerrors.Wrap(err, "proposer group policy address")
+		return sdkerrors.Wrap(err, "proposal group policy address")
 	}
 	if p.GroupVersion == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal group version")

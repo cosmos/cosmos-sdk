@@ -178,10 +178,9 @@ message Proposal {
     // Final status of a proposal when the group was modified before the final tally.
     STATUS_ABORTED = 3 [(gogoproto.enumvalue_customname) = "ProposalStatusAborted"];
 
-    // TODO: do we want to support a withdrawn operation?
     // A proposal can be deleted before the voting start time by the owner. When this happens the final status
     // is Withdrawn.
-    //        STATUS_WITHDRAWN = 4 [(gogoproto.enumvalue_customname) = "Withdrawn"];
+    STATUS_WITHDRAWN = 4 [(gogoproto.enumvalue_customname) = "ProposalStatusWithdrawn"];
   }
 
   // Status represents the high level position in the life cycle of the proposal. Initial value is Submitted.

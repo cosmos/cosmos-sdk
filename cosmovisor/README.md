@@ -263,14 +263,7 @@ Create a validator, and setup genesis transaction:
 ./build/simd collect-gentxs
 ```
 
-Start `cosmosvisor`:
-
-```
-cosmovisor run start
-```
-
-
-#### Prepare Cosmovisor
+#### Prepare Cosmovisor and Start the Chain
 
 Set the required environment variables:
 
@@ -292,7 +285,12 @@ mkdir -p $DAEMON_HOME/cosmovisor/genesis/bin
 cp ./build/simd $DAEMON_HOME/cosmovisor/genesis/bin
 ```
 
-Now you can run cosmovisor with simapp v0.44
+Now you can run cosmovisor with simapp v0.44:
+
+```
+cosmovisor run start
+```
+
 
 #### Update App
 
@@ -300,7 +298,7 @@ Update app to the latest version (e.g. v0.45).
 
 Next, we can add a migration - which is defined using `x/upgrade` [upgrade plan](https://github.com/cosmos/cosmos-sdk/blob/master/docs/core/upgrade.md) (you may refer to a past version if you are using an older Cosmos SDK release). In a migration we can do any deterministic state change. 
 
-Now build a new version of `simd` binary:
+Build the new version `simd` binary:
 
 ```
 make build
@@ -317,9 +315,9 @@ cp ./build/simd $DAEMON_HOME/cosmovisor/upgrades/test1/bin
 Open a new terminal window and submit an upgrade proposal along with a deposit and a vote (these commands must be run within 20 seconds of each other):
 
 ```
-./build/simd tx gov submit-proposal software-upgrade test1 --title upgrade --description upgrade --upgrade-height 100 --from validator --yes
+./build/simd tx gov submit-proposal software-upgrade test1 --title upgrade --description upgrade --upgrade-height 200 --from validator --yes
 ./build/simd tx gov deposit 1 10000000stake --from validator --yes
 ./build/simd tx gov vote 1 yes --from validator --yes
 ```
 
-The upgrade will occur automatically at height 100. Note: you may need to change the upgrade height in the snippet above.
+The upgrade will occur automatically at height 200. Note: you may need to change the upgrade height in the snippet above if your test play takes more time.

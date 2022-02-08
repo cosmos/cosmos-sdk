@@ -5,7 +5,7 @@
 // a mock Hook instance can be passed in to verify that the expected
 // insert/update/delete operations are happening in the database.
 //
-// The Eq function gomock.Matcher that compares protobuf messages that can
+// The Eq function gomock.Matcher that compares protobuf messages can
 // be used in gomock EXPECT functions.
 //
 // See TestHooks in ormdb/module_test.go for examples of how to use

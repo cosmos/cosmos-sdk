@@ -100,7 +100,7 @@ var xxx_messageInfo_TxResponse proto.InternalMessageInfo
 
 // ABCIMessageLog defines a structure containing an indexed tx ABCI message log.
 type ABCIMessageLog struct {
-	MsgIndex uint32 `protobuf:"varint,1,opt,name=msg_index,json=msgIndex,proto3" json:"msg_index,omitempty"`
+	MsgIndex uint32 `protobuf:"varint,1,opt,name=msg_index,json=msgIndex,proto3" json:"msg_index"`
 	Log      string `protobuf:"bytes,2,opt,name=log,proto3" json:"log,omitempty"`
 	// Events contains a slice of Event objects that were emitted during some
 	// execution.

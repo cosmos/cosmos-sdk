@@ -213,7 +213,9 @@ func (t autoIncrementTable) ExportJSON(ctx context.Context, writer io.Writer) er
 		return err
 	}
 
+	start := true
 	if seq != 0 {
+		start = false
 		bz, err := json.Marshal(seq)
 		if err != nil {
 			return err
@@ -222,14 +224,9 @@ func (t autoIncrementTable) ExportJSON(ctx context.Context, writer io.Writer) er
 		if err != nil {
 			return err
 		}
-
-		_, err = writer.Write([]byte(",\n"))
-		if err != nil {
-			return err
-		}
 	}
 
-	return t.doExportJSON(ctx, writer)
+	return t.doExportJSON(ctx, writer, start)
 }
 
 func (t *autoIncrementTable) GetTable(message proto.Message) Table {

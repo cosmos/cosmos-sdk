@@ -40,9 +40,9 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		suite.app.BankKeeper, suite.app.AuthzKeeper, cdc,
 	)
 
-	// setup 3 accounts
-	s := rand.NewSource(2)
+	s := rand.NewSource(3)
 	r := rand.New(s)
+	// setup 2 accounts
 	accs := suite.getTestingAccounts(r, 2)
 
 	expected := []struct {

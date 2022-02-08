@@ -165,8 +165,7 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 	BeginBlocker(ctx, am.keeper)
 }
 
-// EndBlock returns the end blocker for the authz module. It returns no validator
-// updates.
+// EndBlock does nothing
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }

@@ -268,7 +268,7 @@ func TestHooks(t *testing.T) {
 	db, err := ormdb.NewModuleDB(TestBankSchema, ormdb.ModuleDBOptions{})
 	assert.NilError(t, err)
 	hooks := ormmocks.NewMockHooks(ctrl)
-	ctx := ormtable.WrapContextDefault(ormtest.NewMemoryBackendWithHooks(hooks))
+	ctx := ormtable.WrapContextDefault(ormtest.NewMemoryBackend().WithHooks(hooks))
 	k, err := NewKeeper(db)
 	assert.NilError(t, err)
 

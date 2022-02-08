@@ -159,7 +159,13 @@ func (acc BaseAccount) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return unpacker.UnpackAny(acc.PubKey, &pubKey)
 }
 
-// NewModuleAddress creates an AccAddress from the hash of the module's name
+// Deprecated: NewModuleAddress creates an AccAddress from the hash of the module's name
+// This function doesn't follow ADR-028 and will be deleted in the next release. Use
+// `types/address.Module(newAccouuntName, modKey)` instead to cerate a module account. Eg:
+//    address.Module(dao.ModuleName, newDAO.ID)
+//  Above, newDAO.ID is an ID for a new DAO created in the x/dao module, for which we want to
+//  create an account. See also the `address.Derive` function which is used to derive new
+//  sub-accounts.
 func NewModuleAddress(name string) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash([]byte(name)))
 }

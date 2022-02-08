@@ -59,13 +59,18 @@ func Compose(typ string, subAddresses []Addressable) ([]byte, error) {
 }
 
 // Module is a specialized version of a composed address for modules. Each module account
-// is constructed from a module name and module account key.
+// is constructed from a module name and a key for the new account. The key must be unique
+// in the module scope, and is usually constructed from some object id. Example, let's
+// a x/dao module, and a new DAO object, it's address would be:
+//     address.Module(dao.ModuleName, newDAO.ID)
 func Module(moduleName string, key []byte) []byte {
 	mKey := append([]byte(moduleName), 0)
 	return Hash("module", append(mKey, key...))
 }
 
 // Derive derives a new address from the main `address` and a derivation `key`.
+// This function is used to create a sub accounts. To create a module accounts (on
+// module level 1), use the `Module` function.
 func Derive(address []byte, key []byte) []byte {
 	return Hash(conv.UnsafeBytesToStr(address), key)
 }

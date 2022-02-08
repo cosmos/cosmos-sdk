@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -802,6 +803,56 @@ func TestCacheWraps(t *testing.T) {
 
 	cacheWrappedWithListeners := multi.CacheWrapWithListeners(nil, nil)
 	require.IsType(t, cachemulti.Store{}, cacheWrappedWithListeners)
+}
+
+func TestTraceConcurrency(t *testing.T) {
+	db := dbm.NewMemDB()
+	multi := newMultiStoreWithMounts(db, types.PruneNothing)
+	err := multi.LoadLatestVersion()
+	require.NoError(t, err)
+
+	b := &bytes.Buffer{}
+	key := multi.keysByName["store1"]
+	tc := types.TraceContext(map[string]interface{}{"blockHeight": 64})
+
+	multi.SetTracer(b)
+	multi.SetTracingContext(tc)
+
+	cms := multi.CacheMultiStore()
+	store1 := cms.GetKVStore(key)
+	cw := store1.CacheWrapWithTrace(b, tc)
+	_ = cw
+	require.NotNil(t, store1)
+
+	stop := make(chan struct{})
+	stopW := make(chan struct{})
+
+	go func(stop chan struct{}) {
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+				store1.Set([]byte{1}, []byte{1})
+				cms.Write()
+			}
+		}
+	}(stop)
+
+	go func(stop chan struct{}) {
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+				multi.SetTracingContext(tc)
+			}
+		}
+	}(stopW)
+
+	time.Sleep(3 * time.Second)
+	stop <- struct{}{}
+	stopW <- struct{}{}
 }
 
 func BenchmarkMultistoreSnapshot100K(b *testing.B) {

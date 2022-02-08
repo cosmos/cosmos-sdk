@@ -139,6 +139,7 @@ func TallyVotesInvariantHelper(ctx sdk.Context, prevCtx sdk.Context, key storety
 
 func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, groupTable orm.AutoUInt64Table, groupMemberByGroupIndex orm.Index) (string, bool) {
 
+	fmt.Println("=======================================================")
 	var msg string
 	var broken bool
 
@@ -152,6 +153,8 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 	}
 	defer groupIt.Close()
 
+	v := make(map[uint64]int, 0)
+
 	for {
 		membersWeight, err := groupmath.NewNonNegativeDecFromString("0")
 		if err != nil {
@@ -162,18 +165,33 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 		if errors.ErrORMIteratorDone.Is(err) {
 			break
 		}
+		fmt.Println(groupInfo.GroupId)
+		_, ok := v[groupInfo.GroupId]
+		if !ok {
+			v[groupInfo.GroupId] = 0
+		}
+
+		fmt.Println("=======================================================")
 		memIt, err := groupMemberByGroupIndex.Get(ctx.KVStore(key), groupInfo.GroupId)
 		if err != nil {
 			msg += fmt.Sprintf("error while returning group member iterator for group with ID %d\n%v\n", groupInfo.GroupId, err)
 			return msg, broken
 		}
 		defer memIt.Close()
+		if groupInfo.GroupId == 111 {
+			fmt.Println(v)
+		}
 
 		for {
 			_, err = memIt.LoadNext(&groupMember)
 			if errors.ErrORMIteratorDone.Is(err) {
 				break
 			}
+			if err != nil {
+				panic(err)
+			}
+			v[groupInfo.GroupId] += 1
+
 			curMemWeight, err := groupmath.NewNonNegativeDecFromString(groupMember.GetMember().GetWeight())
 			if err != nil {
 				msg += fmt.Sprintf("error while parsing non-nengative decimal for group member %s\n%v\n", groupMember.Member.Address, err)
@@ -185,6 +203,7 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 				return msg, broken
 			}
 		}
+
 		groupWeight, err := groupmath.NewNonNegativeDecFromString(groupInfo.GetTotalWeight())
 		if err != nil {
 			msg += fmt.Sprintf("error while parsing non-nengative decimal for group with ID %d\n%v\n", groupInfo.GroupId, err)
@@ -197,6 +216,9 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 			break
 		}
 	}
+	fmt.Println("Out of loooooooop")
+	// fmt.Println(v)
+	fmt.Println("====================================================================", msg)
 	return msg, broken
 }
 

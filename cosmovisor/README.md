@@ -51,7 +51,7 @@ make cosmovisor
 This will build cosmovisor in `/cosmovisor` directory. Afterwards you may want to put it into your machine's PATH like as follows:
 
 ```
-cp cosmovisor ~/go/bin/cosmovisor
+cp cosmovisor/cosmovisor ~/go/bin/cosmovisor
 ```
 
 *Note: If you are using go `v1.15` or earlier, you will need to use `go get`, and you may want to run the command outside a project directory.*
@@ -208,9 +208,9 @@ You can also use `sha512sum` if you would prefer to use longer hashes, or `md5su
 
 The following instructions provide a demonstration of `cosmovisor` using the simulation application (`simapp`) shipped with the Cosmos SDK's source code. The following commands are to be run from within the `cosmos-sdk` repository.
 
-#### Setup a genesis chain
+#### Chain Setup
 
-Let's create a new chain using the latest `v0.44` simapp (the Cosmos SDK demo app):
+Let's create a new chain using the `v0.44` version of simapp (the Cosmos SDK demo app):
 
 ```
 git checkout v0.44.6
@@ -223,7 +223,7 @@ Clean `~/.simapp` (never do this in a production environment):
 ./build/simd unsafe-reset-all
 ```
 
-Setup app config:
+Set up app config:
 
 ```
 ./build/simd config chain-id test
@@ -296,7 +296,7 @@ Now you can run cosmovisor with simapp v0.44
 
 #### Update App
 
-Update app to the latest  version (eg v0.45).
+Update app to the latest version (e.g. v0.45).
 
 Next, we can add a migration - which is defined using `x/upgrade` [upgrade plan](https://github.com/cosmos/cosmos-sdk/blob/master/docs/core/upgrade.md) (you may refer to a past version if you are using an older Cosmos SDK release). In a migration we can do any deterministic state change. 
 

@@ -8,7 +8,7 @@ order: 3
 
 ## Pre-requisite Readings
 
-- [Introduction to Cosmos SDK Modules](./intro.md) {prereq}
+* [Introduction to Cosmos SDK Modules](./intro.md) {prereq}
 
 ## Messages
 
@@ -34,8 +34,8 @@ Each `Msg` service method must have exactly one argument, which must implement t
 
 The Cosmos SDK uses Protobuf definitions to generate client and server code:
 
-- `MsgServer` interface defines the server API for the `Msg` service and its implementation is described as part of the [`Msg` services](./msg-services.md) documentation.
-- Structures are generated for all RPC request and response types.
+* `MsgServer` interface defines the server API for the `Msg` service and its implementation is described as part of the [`Msg` services](./msg-services.md) documentation.
+* Structures are generated for all RPC request and response types.
 
 A `RegisterMsgServer` method is also generated and should be used to register the module's `MsgServer` implementation in `RegisterServices` method from the [`AppModule` interface](./module-manager.md#appmodule).
 
@@ -53,11 +53,11 @@ A `LegacyMsg` is typically accompanied by a standard constructor function, that 
 
 It extends `proto.Message` and contains the following methods:
 
-- `Route() string`: Name of the route for this message. Typically all `message`s in a module have the same route, which is most often the module's name.
-- `Type() string`: Type of the message, used primarly in [events](../core/events.md). This should return a message-specific `string`, typically the denomination of the message itself.
-- [`ValidateBasic() error`](../basics/tx-lifecycle.md#ValidateBasic).
-- `GetSignBytes() []byte`: Return the canonical byte representation of the message. Used to generate a signature.
-- `GetSigners() []AccAddress`: Return the list of signers. The Cosmos SDK will make sure that each `message` contained in a transaction is signed by all the signers listed in the list returned by this method.
+* `Route() string`: Name of the route for this message. Typically all `message`s in a module have the same route, which is most often the module's name.
+* `Type() string`: Type of the message, used primarly in [events](../core/events.md). This should return a message-specific `string`, typically the denomination of the message itself.
+* [`ValidateBasic() error`](../basics/tx-lifecycle.md#ValidateBasic).
+* `GetSignBytes() []byte`: Return the canonical byte representation of the message. Used to generate a signature.
+* `GetSigners() []AccAddress`: Return the list of signers. The Cosmos SDK will make sure that each `message` contained in a transaction is signed by all the signers listed in the list returned by this method.
 
 See an example implementation of a `message` from the `gov` module:
 
@@ -89,16 +89,16 @@ queryCategory/queryRoute/queryType/arg1/arg2/...
 
 where:
 
-- `queryCategory` is the category of the `query`, typically `custom` for module queries. It is used to differentiate between different kinds of queries within `BaseApp`'s [`Query` method](../core/baseapp.md#query).
-- `queryRoute` is used by `BaseApp`'s [`queryRouter`](../core/baseapp.md#query-routing) to map the `query` to its module. Usually, `queryRoute` should be the name of the module.
-- `queryType` is used by the module's [`querier`](./query-services.md#legacy-queriers) to map the `query` to the appropriate `querier function` within the module.
-- `args` are the actual arguments needed to process the `query`. They are filled out by the end-user. Note that for bigger queries, you might prefer passing arguments in the `Data` field of the request `req` instead of the `path`.
+* `queryCategory` is the category of the `query`, typically `custom` for module queries. It is used to differentiate between different kinds of queries within `BaseApp`'s [`Query` method](../core/baseapp.md#query).
+* `queryRoute` is used by `BaseApp`'s [`queryRouter`](../core/baseapp.md#query-routing) to map the `query` to its module. Usually, `queryRoute` should be the name of the module.
+* `queryType` is used by the module's [`querier`](./query-services.md#legacy-queriers) to map the `query` to the appropriate `querier function` within the module.
+* `args` are the actual arguments needed to process the `query`. They are filled out by the end-user. Note that for bigger queries, you might prefer passing arguments in the `Data` field of the request `req` instead of the `path`.
 
 The `path` for each `query` must be defined by the module developer in the module's [command-line interface file](./module-interfaces.md#query-commands).Overall, there are 3 mains components module developers need to implement in order to make the subset of the state defined by their module queryable:
 
-- A [`querier`](./query-services.md#legacy-queriers), to process the `query` once it has been [routed to the module](../core/baseapp.md#query-routing).
-- [Query commands](./module-interfaces.md#query-commands) in the module's CLI file, where the `path` for each `query` is specified.
-- `query` return types. Typically defined in a file `types/querier.go`, they specify the result type of each of the module's `queries`. These custom types must implement the `String()` method of [`fmt.Stringer`](https://golang.org/pkg/fmt/#Stringer).
+* A [`querier`](./query-services.md#legacy-queriers), to process the `query` once it has been [routed to the module](../core/baseapp.md#query-routing).
+* [Query commands](./module-interfaces.md#query-commands) in the module's CLI file, where the `path` for each `query` is specified.
+* `query` return types. Typically defined in a file `types/querier.go`, they specify the result type of each of the module's `queries`. These custom types must implement the `String()` method of [`fmt.Stringer`](https://golang.org/pkg/fmt/#Stringer).
 
 ### Store Queries
 

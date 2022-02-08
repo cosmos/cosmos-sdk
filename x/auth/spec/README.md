@@ -21,26 +21,26 @@ This module is used in the Cosmos Hub.
 ## Contents
 
 1. **[Concepts](01_concepts.md)**
-   - [Gas & Fees](01_concepts.md#gas-&-fees)
+   * [Gas & Fees](01_concepts.md#gas-&-fees)
 2. **[State](02_state.md)**
-   - [Accounts](02_state.md#accounts)
+   * [Accounts](02_state.md#accounts)
 3. **[AnteHandlers](03_antehandlers.md)**
-   - [Handlers](03_antehandlers.md#handlers)
+   * [Handlers](03_antehandlers.md#handlers)
 4. **[Keepers](04_keepers.md)**
-   - [Account Keeper](04_keepers.md#account-keeper)
+   * [Account Keeper](04_keepers.md#account-keeper)
 5. **[Vesting](05_vesting.md)**
-   - [Intro and Requirements](05_vesting.md#intro-and-requirements)
-   - [Vesting Account Types](05_vesting.md#vesting-account-types)
-   - [Vesting Account Specification](05_vesting.md#vesting-account-specification)
-   - [Keepers & Handlers](05_vesting.md#keepers-&-handlers)
-   - [Genesis Initialization](05_vesting.md#genesis-initialization)
-   - [Examples](05_vesting.md#examples)
-   - [Glossary](05_vesting.md#glossary)
+   * [Intro and Requirements](05_vesting.md#intro-and-requirements)
+   * [Vesting Account Types](05_vesting.md#vesting-account-types)
+   * [Vesting Account Specification](05_vesting.md#vesting-account-specification)
+   * [Keepers & Handlers](05_vesting.md#keepers-&-handlers)
+   * [Genesis Initialization](05_vesting.md#genesis-initialization)
+   * [Examples](05_vesting.md#examples)
+   * [Glossary](05_vesting.md#glossary)
 6. **[Parameters](06_params.md)**
 7. **[Client](07_client.md)**
-   - **[Auth](07_client.md#auth)**
-      - [CLI](07_client.md#cli)
-      - [gRPC](07_client.md#grpc)
-      - [REST](07_client.md#rest)
-   - **[Vesting](07_client.md#vesting)**
-      - [CLI](07_client.md#vesting#cli)
+   * **[Auth](07_client.md#auth)**
+      * [CLI](07_client.md#cli)
+      * [gRPC](07_client.md#grpc)
+      * [REST](07_client.md#rest)
+   * **[Vesting](07_client.md#vesting)**
+      * [CLI](07_client.md#vesting#cli)

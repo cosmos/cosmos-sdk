@@ -5,11 +5,13 @@
 
 ## Table of Contents
 
-- [cosmos/base/query/v1beta1/pagination.proto](#cosmos/base/query/v1beta1/pagination.proto)
-    - [PageRequest](#cosmos.base.query.v1beta1.PageRequest)
-    - [PageResponse](#cosmos.base.query.v1beta1.PageResponse)
-  
-- [Scalar Value Types](#scalar-value-types)
+* [Protobuf Documentation](#protobuf-documentation)
+    * [Table of Contents](#table-of-contents)
+    * [cosmos/base/query/v1beta1/pagination.proto](#cosmosbasequeryv1beta1paginationproto)
+        * [PageRequest](#pagerequest)
+        * [PageResponse](#pageresponse)
+    * [Scalar Value Types](#scalar-value-types)
+* [Scalar Value Types](#scalar-value-types)
 
 
 

@@ -15,8 +15,8 @@ Blockchain invariants can be checked using the `MsgVerifyInvariant` message.
 
 This message is expected to fail if:
 
-- the sender does not have enough coins for the constant fee
-- the invariant route is not registered
+* the sender does not have enough coins for the constant fee
+* the invariant route is not registered
 
 This message checks the invariant provided, and if the invariant is broken it
 panics, halting the blockchain. If the invariant is broken, the constant fee is

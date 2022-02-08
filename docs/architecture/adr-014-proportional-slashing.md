@@ -2,9 +2,9 @@
 
 ## Changelog
 
-- 2019-10-15: Initial draft
-- 2020-05-25: Removed correlation root slashing
-- 2020-07-01: Updated to include S-curve function instead of linear
+* 2019-10-15: Initial draft
+* 2020-05-25: Removed correlation root slashing
+* 2020-07-01: Updated to include S-curve function instead of linear
 
 ## Context
 
@@ -75,11 +75,11 @@ Proposed
 
 ### Positive
 
-- Increases decentralization by disincentivizing delegating to large validators
-- Incentivizes Decorrelation of Validators
-- More severely punishes attacks than accidental faults
-- More flexibility in slashing rates parameterization
+* Increases decentralization by disincentivizing delegating to large validators
+* Incentivizes Decorrelation of Validators
+* More severely punishes attacks than accidental faults
+* More flexibility in slashing rates parameterization
 
 ### Negative
 
-- More computationally expensive than current implementation.  Will require more data about "recent slashing events" to be stored on chain.
+* More computationally expensive than current implementation.  Will require more data about "recent slashing events" to be stored on chain.

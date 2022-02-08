@@ -84,9 +84,9 @@ Each module can be seen as a little state-machine. Developers need to define the
 
 Cosmos SDK modules are defined in the `x/` folder of the Cosmos SDK. Some core modules include:
 
-- `x/auth`: Used to manage accounts and signatures.
-- `x/bank`: Used to enable tokens and token transfers.
-- `x/staking` + `x/slashing`: Used to build Proof-Of-Stake blockchains.
+* `x/auth`: Used to manage accounts and signatures.
+* `x/bank`: Used to enable tokens and token transfers.
+* `x/staking` + `x/slashing`: Used to build Proof-Of-Stake blockchains.
 
 In addition to the already existing modules in `x/`, that anyone can use in their app, the Cosmos SDK lets you build your own custom modules. You can check an [example of that in the tutorial](https://tutorials.cosmos.network/).
 

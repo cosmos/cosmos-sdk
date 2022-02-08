@@ -1,27 +1,27 @@
 # Contributing
 
-- [Contributing](#contributing)
-    - [Teams Dev Calls](#teams-dev-calls)
-    - [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
-    - [Development Procedure](#development-procedure)
-        - [Testing](#testing)
-        - [Pull Requests](#pull-requests)
-        - [Pull Request Templates](#pull-request-templates)
-        - [Requesting Reviews](#requesting-reviews)
-        - [Updating Documentation](#updating-documentation)
-    - [Dependencies](#dependencies)
-    - [Protobuf](#protobuf)
-    - [Branching Model and Release](#branching-model-and-release)
-        - [PR Targeting](#pr-targeting)
-    - [Code Owner Membership](#code-owner-membership)
-    - [Concept & Feature Approval Process](#concept--feature-approval-process)
-        - [Strategy Discovery](#strategy-discovery)
-        - [Concept Approval](#concept-approval)
-            - [Time Bound Period](#time-bound-period)
-            - [Approval Committee & Decision Making](#approval-committee--decision-making)
-            - [Committee Members](#committee-members)
-            - [Committee Criteria](#committee-criteria)
-        - [Implementation & Release Approval](#implementation--release-approval)
+* [Contributing](#contributing)
+    * [Teams Dev Calls](#teams-dev-calls)
+    * [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
+    * [Development Procedure](#development-procedure)
+        * [Testing](#testing)
+        * [Pull Requests](#pull-requests)
+        * [Pull Request Templates](#pull-request-templates)
+        * [Requesting Reviews](#requesting-reviews)
+        * [Updating Documentation](#updating-documentation)
+    * [Dependencies](#dependencies)
+    * [Protobuf](#protobuf)
+    * [Branching Model and Release](#branching-model-and-release)
+        * [PR Targeting](#pr-targeting)
+    * [Code Owner Membership](#code-owner-membership)
+    * [Concept & Feature Approval Process](#concept--feature-approval-process)
+        * [Strategy Discovery](#strategy-discovery)
+        * [Concept Approval](#concept-approval)
+            * [Time Bound Period](#time-bound-period)
+            * [Approval Committee & Decision Making](#approval-committee--decision-making)
+            * [Committee Members](#committee-members)
+            * [Committee Criteria](#committee-criteria)
+        * [Implementation & Release Approval](#implementation--release-approval)
 
 Thank you for considering making contributions to the Cosmos SDK and related repositories!
 
@@ -30,7 +30,7 @@ discussion or proposing code changes. To ensure a smooth workflow for all
 contributors, the general procedure for contributing has been established:
 
 1. Start by browsing [new issues](https://github.com/cosmos/cosmos-sdk/issues) and [discussions](https://github.com/cosmos/cosmos-sdk/discussions). If you are looking for something interesting or if you have something in your mind, there is a chance it was has been discussed.
-   - Looking for a good place to start contributing? How about checking out some [good first issues](https://github.com/cosmos/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)?
+   * Looking for a good place to start contributing? How about checking out some [good first issues](https://github.com/cosmos/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)?
 2. Determine whether a GitHub issue or discussion is more appropriate for your needs:
    1. If want to propose something new that requires specification or an additional design, or you would like to change a process, start with a [new discussion](https://github.com/cosmos/cosmos-sdk/discussions/new). With discussions, we can better handle the design process using discussion threads. A discussion usually leads to one or more issues.
    2. If the issue you want addressed is a specific proposal or a bug, then open a [new issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose).
@@ -60,10 +60,10 @@ The important development announcements are shared on [Discord](https://discord.
 
 To synchronize we have few major meetings:
 
-- Architecture calls: bi-weekly on Fridays at 14:00 UTC (alternating with the grooming meeting below).
-- Grooming / Planning: bi-weekly on Fridays at 14:00 UTC (alternating with the architecture meeting above).
-- Cosmos Community SDK Development Call on the last Wednesday of every month at 17:00 UTC.
-- Cosmos Roadmap Prioritization every 4 weeks on Tuesday at 15:00 UTC (limited participation).
+* Architecture calls: bi-weekly on Fridays at 14:00 UTC (alternating with the grooming meeting below).
+* Grooming / Planning: bi-weekly on Fridays at 14:00 UTC (alternating with the architecture meeting above).
+* Cosmos Community SDK Development Call on the last Wednesday of every month at 17:00 UTC.
+* Cosmos Roadmap Prioritization every 4 weeks on Tuesday at 15:00 UTC (limited participation).
 
 If you would like to join one of those calls, then please contact us on [Discord](https://discord.com/invite/cosmosnetwork) or reach out directly to Cory Levinson from Regen Network (cory@regen.network).
 
@@ -73,22 +73,22 @@ When proposing an architecture decision for the Cosmos SDK, please start by open
 
 ## Development Procedure
 
-- The latest state of development is on `master`.
-- `master` must never fail `make lint test test-race`.
-- No `--force` onto `master` (except when reverting a broken commit, which should seldom happen).
-- Create a branch to start a wok:
-    - Fork the repo (core developers must create a branch directly in the Cosmos SDK repo),
+* The latest state of development is on `master`.
+* `master` must never fail `make lint test test-race`.
+* No `--force` onto `master` (except when reverting a broken commit, which should seldom happen).
+* Create a branch to start a wok:
+    * Fork the repo (core developers must create a branch directly in the Cosmos SDK repo),
     branch from the HEAD of `master`, make some commits, and submit a PR to `master`.
-    - For core developers working within the `cosmos-sdk` repo, follow branch name conventions to ensure a clear
+    * For core developers working within the `cosmos-sdk` repo, follow branch name conventions to ensure a clear
     ownership of branches: `{moniker}/{issue#}-branch-name`.
-    - See [Branching Model](#branching-model-and-release) for more details.
-- Be sure to run `make format` before every commit. The easiest way
+    * See [Branching Model](#branching-model-and-release) for more details.
+* Be sure to run `make format` before every commit. The easiest way
   to do this is have your editor run it for you upon saving a file (most of the editors
   will do it anyway using a pre-configured setup of the programming language mode).
   Additionally, be sure that your code is lint compliant by running `make lint-fix`.
   A convenience git `pre-commit` hook that runs the formatters automatically
   before each commit is available in the `contrib/githooks/` directory.
-- Follow the [CODING GUIDELINES](CODING_GUIDELINES.md), which defines criteria for designing and coding a software.
+* Follow the [CODING GUIDELINES](CODING_GUIDELINES.md), which defines criteria for designing and coding a software.
 
 Code is merged into master through pull request procedure.
 
@@ -100,8 +100,8 @@ Tests can be executed by running `make test` at the top level of the Cosmos SDK 
 
 Before submitting a pull request:
 
-- merge the latest master `git merge origin/master`,
-- run `make lint test` to ensure that all checks and tests pass.
+* merge the latest master `git merge origin/master`,
+* run `make lint test` to ensure that all checks and tests pass.
 
 Then:
 
@@ -125,8 +125,8 @@ NOTE: when merging, GitHub will squash commits and rebase on top of the master.
 
 There are three PR templates. The [default template](./.github/PULL_REQUEST_TEMPLATE.md) is for types `fix`, `feat`, and `refactor`. We also have a [docs template](./.github/PULL_REQUEST_TEMPLATE/docs.md) for documentation changes and an [other template](./.github/PULL_REQUEST_TEMPLATE/other.md) for changes that do not affect production code. When previewing a PR before it has been opened, you can change the template by adding one of the following parameters to the url:
 
-- `template=docs.md`
-- `template=other.md`
+* `template=docs.md`
+* `template=other.md`
 
 ### Requesting Reviews
 
@@ -143,24 +143,24 @@ the case of minor changes to [docs](./.github/PULL_REQUEST_TEMPLATE/docs.md) or 
 for all checked items unless they have indicated otherwise by leaving their handle next to specific
 items. In addition, use the following review explanations:
 
-- `LGTM` without an explicit approval means that the changes look good, but you haven't thoroughly reviewed the reviewer checklist items.
-- `Approval` means that you have completed some or all of the reviewer checklist items. If you only reviewed selected items, you must add your handle next to the items that you have reviewed. In addition, follow these guidelines:
-    - You must also think through anything which ought to be included but is not
-    - You must think through whether any added code could be partially combined (DRYed) with existing code
-    - You must think through any potential security issues or incentive-compatibility flaws introduced by the changes
-    - Naming must be consistent with conventions and the rest of the codebase
-    - Code must live in a reasonable location, considering dependency structures (for example, not importing testing modules in production code, or including example code modules in production code).
-    - If you approve the PR, you are responsible for any issues mentioned here and any issues that should have been addressed after thoroughly reviewing the reviewer checklist items in the pull request template.
-- If you sat down with the PR submitter and did a pairing review, add this information in the `Approval` or your PR comments.
-- If you are only making "surface level" reviews, submit notes as a `comment` review.
+* `LGTM` without an explicit approval means that the changes look good, but you haven't thoroughly reviewed the reviewer checklist items.
+* `Approval` means that you have completed some or all of the reviewer checklist items. If you only reviewed selected items, you must add your handle next to the items that you have reviewed. In addition, follow these guidelines:
+    * You must also think through anything which ought to be included but is not
+    * You must think through whether any added code could be partially combined (DRYed) with existing code
+    * You must think through any potential security issues or incentive-compatibility flaws introduced by the changes
+    * Naming must be consistent with conventions and the rest of the codebase
+    * Code must live in a reasonable location, considering dependency structures (for example, not importing testing modules in production code, or including example code modules in production code).
+    * If you approve the PR, you are responsible for any issues mentioned here and any issues that should have been addressed after thoroughly reviewing the reviewer checklist items in the pull request template.
+* If you sat down with the PR submitter and did a pairing review, add this information in the `Approval` or your PR comments.
+* If you are only making "surface level" reviews, submit notes as a `comment` review.
 
 ### Updating Documentation
 
 If you open a PR on the Cosmos SDK, it is mandatory to update the relevant documentation in `/docs`.
 
-- If your change relates to the core SDK (baseapp, store, ...), be sure to update the content in `docs/basics/`, `docs/core/` and/or `docs/building-modules/` folders.
-- If your changes relate to the core of the CLI (not specifically to module's CLI/Rest), then modify the content in the `docs/run-node/` folder.
-- If your changes relate to a module, then be sure to update the module's spec in `x/moduleName/docs/spec/`.
+* If your change relates to the core SDK (baseapp, store, ...), be sure to update the content in `docs/basics/`, `docs/core/` and/or `docs/building-modules/` folders.
+* If your changes relate to the core of the CLI (not specifically to module's CLI/Rest), then modify the content in the `docs/run-node/` folder.
+* If your changes relate to a module, then be sure to update the module's spec in `x/moduleName/docs/spec/`.
 
 When writing documentation, follow the [Documentation Writing Guidelines](./docs/DOC_WRITING_GUIDELINES.md).
 
@@ -250,9 +250,9 @@ stripped with no prior warning or consent from the member in question.
 
 Other potential removal criteria:
 
-- Missing 3 scheduled meetings results in ICF evaluating whether the member should be
+* Missing 3 scheduled meetings results in ICF evaluating whether the member should be
     removed / replaced
-- Violation of Code of Conduct
+* Violation of Code of Conduct
 
 Earning this privilege should be considered to be no small feat and is by no
 means guaranteed by any quantifiable metric. Serving as a code owner is a symbol of great trust from
@@ -266,23 +266,23 @@ is broken up into three distinct stages: **Strategy Discovery**, **Concept Appro
 
 ### Strategy Discovery
 
-- Develop long term priorities, strategy and roadmap for the Cosmos SDK
-- Release committee not yet defined as there is already a roadmap that can be used for the time being
+* Develop long term priorities, strategy and roadmap for the Cosmos SDK
+* Release committee not yet defined as there is already a roadmap that can be used for the time being
 
 ### Concept Approval
 
-- Architecture Decision Records (ADRs) may be proposed by any contributors or maintainers of the Cosmos SDK,
+* Architecture Decision Records (ADRs) may be proposed by any contributors or maintainers of the Cosmos SDK,
     and should follow the guidelines outlined in the
     [ADR Creation Process](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/PROCESS.md)
-- After proposal, a time bound period for Request for Comment (RFC) on ADRs commences
-- ADRs are intended to be iterative, and may be merged into `master` while still in a `Proposed` status
+* After proposal, a time bound period for Request for Comment (RFC) on ADRs commences
+* ADRs are intended to be iterative, and may be merged into `master` while still in a `Proposed` status
 
 #### Time Bound Period
 
-- Once a PR for an ADR is opened, reviewers are expected to perform a first
+* Once a PR for an ADR is opened, reviewers are expected to perform a first
   review within 1 week of pull request being open
-- Time bound period for individual ADR Pull Requests to be merged should not exceed 2 weeks
-- Total time bound period for an ADR to reach a decision (`ABANDONED | ACCEPTED | REJECTED`) should not exceed 4 weeks
+* Time bound period for individual ADR Pull Requests to be merged should not exceed 2 weeks
+* Total time bound period for an ADR to reach a decision (`ABANDONED | ACCEPTED | REJECTED`) should not exceed 4 weeks
 
 If an individual Pull Request for an ADR needs more time than 2 weeks to reach resolution, it should be merged
 in current state (`Draft` or `Proposed`), with its contents updated to summarize
@@ -291,9 +291,9 @@ the current state of its discussion.
 If an ADR is taking longer than 4 weeks to reach a final conclusion, the **Concept Approval Committee**
 should convene to rectify the situation by either:
 
-- unanimously setting a new time bound period for this ADR
-- making changes to the Concept Approval Process (as outlined here)
-- making changes to the members of the Concept Approval Committee
+* unanimously setting a new time bound period for this ADR
+* making changes to the Concept Approval Process (as outlined here)
+* making changes to the members of the Concept Approval Committee
 
 #### Approval Committee & Decision Making
 
@@ -302,37 +302,37 @@ of the **Concept Approval Committee**.
 
 #### Committee Members
 
-- Core Members: **Aaron** (Regen), **Bez** (IG)
+* Core Members: **Aaron** (Regen), **Bez** (IG)
 
 #### Committee Criteria
 
 Members must:
 
-- Participate in all or almost all ADR discussions, both on GitHub as well as in bi-weekly Architecture Review
+* Participate in all or almost all ADR discussions, both on GitHub as well as in bi-weekly Architecture Review
   meetings
-- Be active contributors to the Cosmos SDK, and furthermore should be continuously making substantial contributions
+* Be active contributors to the Cosmos SDK, and furthermore should be continuously making substantial contributions
   to the project's codebase, review process, documentation and ADRs
-- Have stake in the Cosmos SDK project, represented by:
-    - Being a client / user of the Comsos SDK
-    - "[giving back](https://www.debian.org/social_contract)" to the software
-- Delegate representation in case of vacation or absence
+* Have stake in the Cosmos SDK project, represented by:
+    * Being a client / user of the Comsos SDK
+    * "[giving back](https://www.debian.org/social_contract)" to the software
+* Delegate representation in case of vacation or absence
 
 Code owners need to maintain participation in the process, ideally as members of **Concept Approval Committee**
 members, but at the very least as active participants in ADR discussions
 
 Removal criteria:
 
-- Missing 3 meetings results in ICF evaluating whether the member should be removed / replaced
-- Violation of Code of Conduct
+* Missing 3 meetings results in ICF evaluating whether the member should be removed / replaced
+* Violation of Code of Conduct
 
 ### Implementation & Release Approval
 
 The following process should be adhered to both for implementation PRs corresponding to ADRs, as
 well as for PRs made as part of a release process:
 
-- Code reviewers should ensure the PR does exactly what the ADR said it should
-- Code reviewers should have more senior engineering capability
-- 1/2 approval is required from the **primary repo maintainers** in `CODEOWNERS`
+* Code reviewers should ensure the PR does exactly what the ADR said it should
+* Code reviewers should have more senior engineering capability
+* 1/2 approval is required from the **primary repo maintainers** in `CODEOWNERS`
 
 **Note**: For any major release series denoted as a "Stable Release" (e.g. v0.42 "Stargate"), a separate release
 committee is often established. Stable Releases, and their corresponding release committees are documented

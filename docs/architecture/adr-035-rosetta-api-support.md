@@ -2,14 +2,14 @@
 
 ## Authors
 
-- Jonathan Gimeno (@jgimeno)
-- David Grierson (@senormonito)
-- Alessio Treglia (@alessio)
-- Frojdy Dymylja (@fdymylja)
+* Jonathan Gimeno (@jgimeno)
+* David Grierson (@senormonito)
+* Alessio Treglia (@alessio)
+* Frojdy Dymylja (@fdymylja)
 
 ## Changelog
 
-- 2021-05-12: the external library  [cosmos-rosetta-gateway](https://github.com/tendermint/cosmos-rosetta-gateway) has been moved within the Cosmos SDK.
+* 2021-05-12: the external library  [cosmos-rosetta-gateway](https://github.com/tendermint/cosmos-rosetta-gateway) has been moved within the Cosmos SDK.
 
 ## Context
 
@@ -18,9 +18,9 @@ standardise blockchain interactions.
 
 Through the use of a standard API for integrating blockchain applications it will
 
-- Be easier for a user to interact with a given blockchain
-- Allow exchanges to integrate new blockchains quickly and easily
-- Enable application developers to build cross-blockchain applications such as block explorers, wallets and dApps at
+* Be easier for a user to interact with a given blockchain
+* Allow exchanges to integrate new blockchains quickly and easily
+* Enable application developers to build cross-blockchain applications such as block explorers, wallets and dApps at
   considerably lower cost and effort.
 
 ## Decision
@@ -203,9 +203,9 @@ Proposed
 
 ### Positive
 
-- Out-of-the-box Rosetta API support within Cosmos SDK.
-- Blockchain interface standardisation
+* Out-of-the-box Rosetta API support within Cosmos SDK.
+* Blockchain interface standardisation
 
 ## References
 
-- <https://www.rosetta-api.org/>
+* <https://www.rosetta-api.org/>

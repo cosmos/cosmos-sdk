@@ -2,13 +2,13 @@
 
 ## Changelog
 
-- 28-Sept-2020: Initial Draft
+* 28-Sept-2020: Initial Draft
 
 ## Authors
 
-- Anil Kumar (@anilcse)
-- Jack Zampolin (@jackzampolin)
-- Adam Bozanich (@boz)
+* Anil Kumar (@anilcse)
+* Jack Zampolin (@jackzampolin)
+* Adam Bozanich (@boz)
 
 ## Status
 
@@ -159,9 +159,9 @@ Please see the below code sample for more detail on this flow looks for clients.
 
 ### Positive
 
-- Improves consistency of implementation for the events currently in the Cosmos SDK
-- Provides a much more ergonomic way to handle events and facilitates writing event driven applications
-- This implementation will support a middleware ecosystem of `EventHandler`s
+* Improves consistency of implementation for the events currently in the Cosmos SDK
+* Provides a much more ergonomic way to handle events and facilitates writing event driven applications
+* This implementation will support a middleware ecosystem of `EventHandler`s
 
 ### Negative
 
@@ -315,5 +315,5 @@ func PublishChainTxEvents(ctx context.Context, client tmclient.EventsClient, bus
 
 ## References
 
-- [Publish Custom Events via a bus](https://github.com/ovrclk/akash/blob/90d258caeb933b611d575355b8df281208a214f8/events/publish.go#L19-L58)
-- [Consuming the events in `Client`](https://github.com/ovrclk/deploy/blob/bf6c633ab6c68f3026df59efd9982d6ca1bf0561/cmd/event-handlers.go#L57)
+* [Publish Custom Events via a bus](https://github.com/ovrclk/akash/blob/90d258caeb933b611d575355b8df281208a214f8/events/publish.go#L19-L58)
+* [Consuming the events in `Client`](https://github.com/ovrclk/deploy/blob/bf6c633ab6c68f3026df59efd9982d6ca1bf0561/cmd/event-handlers.go#L57)

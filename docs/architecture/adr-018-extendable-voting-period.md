@@ -2,7 +2,7 @@
 
 ## Changelog
 
-- 1 January 2020: Start of first version
+* 1 January 2020: Start of first version
 
 ## Context
 
@@ -18,8 +18,8 @@ Thus, we propose the following mechanism:
 
 ### Params
 
-- The current gov param `VotingPeriod` is to be replaced by a `MinVotingPeriod` param.  This is the the default voting period that all governance proposal voting periods start with.
-- There is a new gov param called `MaxVotingPeriodExtension`.
+* The current gov param `VotingPeriod` is to be replaced by a `MinVotingPeriod` param.  This is the the default voting period that all governance proposal voting periods start with.
+* There is a new gov param called `MaxVotingPeriodExtension`.
 
 ### Mechanism
 
@@ -50,17 +50,17 @@ Proposed
 
 ### Positive
 
-- More complex/contentious governance proposals will have more time to properly digest and deliberate
+* More complex/contentious governance proposals will have more time to properly digest and deliberate
 
 ### Negative
 
-- Governance process becomes more complex and requires more understanding to interact with effectively
-- Can no longer predict when a governance proposal will end. Can't assume order in which governance proposals will end.
+* Governance process becomes more complex and requires more understanding to interact with effectively
+* Can no longer predict when a governance proposal will end. Can't assume order in which governance proposals will end.
 
 ### Neutral
 
-- The minimum voting period can be made shorter
+* The minimum voting period can be made shorter
 
 ## References
 
-- [Cosmos Forum post where idea first originated](https://forum.cosmos.network/t/proposal-draft-reduce-governance-voting-period-to-7-days/3032/9)
+* [Cosmos Forum post where idea first originated](https://forum.cosmos.network/t/proposal-draft-reduce-governance-voting-period-to-7-days/3032/9)

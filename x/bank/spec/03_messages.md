@@ -11,8 +11,8 @@ Send coins from one address to another.
 
 The message will fail under the following conditions:
 
-- The coins do not have sending enabled
-- The `to` address is restricted
+* The coins do not have sending enabled
+* The `to` address is restricted
 
 ## MsgMultiSend
 
@@ -21,7 +21,7 @@ Send coins from and to a series of different address. If any of the receiving ad
 
 The message will fail under the following conditions:
 
-- Any of the coins do not have sending enabled
-- Any of the `to` addresses are restricted
-- Any of the coins are locked
-- The inputs and outputs do not correctly correspond to one another
+* Any of the coins do not have sending enabled
+* Any of the `to` addresses are restricted
+* Any of the coins are locked
+* The inputs and outputs do not correctly correspond to one another

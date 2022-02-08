@@ -12,9 +12,9 @@ The slashing module implements the `StakingHooks` defined in `x/staking` and are
 
 The following hooks impact the slashing state:
 
-+ `AfterValidatorBonded` creates a `ValidatorSigningInfo` instance as described in the following section.
-+ `AfterValidatorCreated` stores a validator's consensus key.
-+ `AfterValidatorRemoved` removes a validator's consensus key.
+* `AfterValidatorBonded` creates a `ValidatorSigningInfo` instance as described in the following section.
+* `AfterValidatorCreated` stores a validator's consensus key.
+* `AfterValidatorRemoved` removes a validator's consensus key.
 
 ## Validator Bonded
 

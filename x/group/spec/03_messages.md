@@ -41,8 +41,8 @@ The `UpdateGroupMetadata` can be used to update a group metadata.
 
 It's expecting to fail if:
 
-- new metadata length is greater than `MaxMetadataLen` config.
-- the signer is not the admin of the group.
+* new metadata length is greater than `MaxMetadataLen` config.
+* the signer is not the admin of the group.
 
 ## Msg/CreateGroupPolicy
 
@@ -76,8 +76,8 @@ The `UpdateGroupPolicyMetadata` can be used to update a group policy metadata.
 
 It's expecting to fail if:
 
-- new metadata length is greater than `MaxMetadataLen` config.
-- the signer is not the admin of the group.
+* new metadata length is greater than `MaxMetadataLen` config.
+* the signer is not the admin of the group.
 
 ## Msg/CreateProposal
 
@@ -92,11 +92,12 @@ It's expecting to fail if metadata length is greater than `MaxMetadataLen` confi
 
 A proposal can be withdrawn using `MsgWithdrawProposal` which has a `address` (can be either proposer or policy admin) and a `proposal_id` (which has to be withdrawn).
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/f2d6f0e4bb1a9bd7f7ae3cdc4702c9d3d1fc0329/proto/cosmos/group/v1beta1/tx.proto#L251-L258
++++ <https://github.com/cosmos/cosmos-sdk/blob/f2d6f0e4bb1a9bd7f7ae3cdc4702c9d3d1fc0329/proto/cosmos/group/v1beta1/tx.proto#L251-L258>
 
 It's expecting to fail if:
-- the signer is neither policy address nor proposer of the proposal.
-- the proposal is already closed or aborted.
+
+* the signer is neither policy address nor proposer of the proposal.
+* the proposal is already closed or aborted.
 
 ## Msg/Vote
 
@@ -115,8 +116,8 @@ A proposal can be executed with the `MsgExec`.
 
 The messages that are part of this proposal won't be executed if:
 
-- the group has been modified before tally.
-- the group policy has been modified before tally.
-- the proposal has not been accepted.
-- the proposal status is not closed.
-- the proposal has already been successfully executed.
+* the group has been modified before tally.
+* the group policy has been modified before tally.
+* the proposal has not been accepted.
+* the proposal status is not closed.
+* the proposal has already been successfully executed.

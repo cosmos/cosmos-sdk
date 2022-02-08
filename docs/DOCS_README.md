@@ -4,18 +4,18 @@ If you want to open a PR in Cosmos SDK to update the documentation, please follo
 
 ## Internationalization
 
-- Translations for documentation live in a `docs/<locale>/` folder, where `<locale>` is the language code for a specific language. For example, `zh` for Chinese, `ko` for Korean, `ru` for Russian, etc.
-- Each `docs/<locale>/` folder must follow the same folder structure within `docs/`, but only content in the following folders needs to be translated and included in the respective `docs/<locale>/` folder:
-    - `docs/basics/`
-    - `docs/building-modules/`
-    - `docs/core/`
-    - `docs/ibc/`
-    - `docs/intro/`
-    - `docs/migrations/`
-    - `docs/run-node/`
-- Each `docs/<locale>/` folder must also have a `README.md` that includes a translated version of both the layout and content within the root-level [`README.md`](https://github.com/cosmos/cosmos-sdk/tree/master/docs/README.md). The layout defined in the `README.md` is used to build the homepage.
-- Always translate content living on `master` unless you are revising documentation for a specific release. Translated documentation like the root-level documentation is semantically versioned.
-- For additional configuration options, please see [VuePress Internationalization](https://vuepress.vuejs.org/guide/i18n.html).
+* Translations for documentation live in a `docs/<locale>/` folder, where `<locale>` is the language code for a specific language. For example, `zh` for Chinese, `ko` for Korean, `ru` for Russian, etc.
+* Each `docs/<locale>/` folder must follow the same folder structure within `docs/`, but only content in the following folders needs to be translated and included in the respective `docs/<locale>/` folder:
+    * `docs/basics/`
+    * `docs/building-modules/`
+    * `docs/core/`
+    * `docs/ibc/`
+    * `docs/intro/`
+    * `docs/migrations/`
+    * `docs/run-node/`
+* Each `docs/<locale>/` folder must also have a `README.md` that includes a translated version of both the layout and content within the root-level [`README.md`](https://github.com/cosmos/cosmos-sdk/tree/master/docs/README.md). The layout defined in the `README.md` is used to build the homepage.
+* Always translate content living on `master` unless you are revising documentation for a specific release. Translated documentation like the root-level documentation is semantically versioned.
+* For additional configuration options, please see [VuePress Internationalization](https://vuepress.vuejs.org/guide/i18n.html).
 
 ## Docs Build Workflow
 
@@ -47,17 +47,17 @@ Relative links should be used nearly everywhere, having discovered and weighed t
 
 Where is the other file, relative to the current one?
 
-- works both on GitHub and for the VuePress build
-- confusing / annoying to have things like: `../../../../myfile.md`
-- requires more updates when files are re-shuffled
+* works both on GitHub and for the VuePress build
+* confusing / annoying to have things like: `../../../../myfile.md`
+* requires more updates when files are re-shuffled
 
 ### Absolute
 
 Where is the other file, given the root of the repo?
 
-- works on GitHub, doesn't work for the VuePress build
-- this is much nicer: `/docs/hereitis/myfile.md`
-- if you move that file around, the links inside it are preserved (but not to it, of course)
+* works on GitHub, doesn't work for the VuePress build
+* this is much nicer: `/docs/hereitis/myfile.md`
+* if you move that file around, the links inside it are preserved (but not to it, of course)
 
 ### Full
 

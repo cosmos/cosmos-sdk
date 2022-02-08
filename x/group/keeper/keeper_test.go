@@ -1424,7 +1424,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 			},
 			proposalId: proposalID,
 			admin:      proposers[0],
-			expErrMsg:  "cannot withdraw a proposal with the status of STATUS_WITHDRAWN",
+			expErrMsg:  "cannot withdraw a proposal with the status of PROPOSAL_STATUS_WITHDRAWN",
 		},
 		"happy case with group admin address": {
 			preRun: func(sdkCtx sdk.Context) uint64 {

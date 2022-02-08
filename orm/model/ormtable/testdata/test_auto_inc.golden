@@ -52,3 +52,21 @@ ITERATOR 0300 -> 0301
       PK testpb.ExampleAutoIncrementTable 2 -> {"id":2,"x":"bar","y":10}
   NEXT
   VALID false
+GET 03000001 1203666f6f1805
+    PK testpb.ExampleAutoIncrementTable 1 -> {"id":1,"x":"foo","y":5}
+ORM DELETE testpb.ExampleAutoIncrementTable {"id":1,"x":"foo","y":5}
+DEL 03000001
+DEL PK testpb.ExampleAutoIncrementTable 1 -> {"id":1}
+DEL 0301666f6f
+DEL ERR:EOF
+GET 03000002 1203626172180a
+    PK testpb.ExampleAutoIncrementTable 2 -> {"id":2,"x":"bar","y":10}
+ORM DELETE testpb.ExampleAutoIncrementTable {"id":2,"x":"bar","y":10}
+DEL 03000002
+DEL PK testpb.ExampleAutoIncrementTable 2 -> {"id":2}
+DEL 0301626172
+DEL ERR:EOF
+GET 03808002 02
+    SEQ testpb.ExampleAutoIncrementTable 2
+ITERATOR 0300 -> 0301
+  VALID false

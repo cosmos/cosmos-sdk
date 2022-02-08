@@ -110,10 +110,12 @@ func (q Keeper) AllowancesByGranter(c context.Context, req *feegrant.QueryAllowa
 	var grants []*feegrant.Grant
 
 	store := ctx.KVStore(q.storeKey)
-	pageRes, err := query.Paginate(store, req.Pagination, func(key []byte, value []byte) error {
+	prefixStore := prefix.NewStore(store, feegrant.FeeAllowanceKeyPrefix)
+	pageRes, err := query.Paginate(prefixStore, req.Pagination, func(key []byte, value []byte) error {
 		var grant feegrant.Grant
 
-		granter, _ := feegrant.ParseAddressesFromFeeAllowanceKey(key)
+		// ParseAddressesFromFeeAllowanceKey expects the full key including the prefix.
+		granter, _ := feegrant.ParseAddressesFromFeeAllowanceKey(append(feegrant.FeeAllowanceKeyPrefix, key...))
 		if !granter.Equals(granterAddr) {
 			return nil
 		}

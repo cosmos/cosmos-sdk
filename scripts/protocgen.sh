@@ -26,7 +26,7 @@ protoc_install_gocosmos() {
   # So the command below issues a warning and we are muting it for now.
   #
   # Installing plugins must be done outside of the module
-  (cd ~; go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos@@v0.3.1 2> /dev/null)
+  (cd ~; go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos@v0.3.1 2> /dev/null)
 }
 
 protoc_install_gocosmos

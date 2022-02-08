@@ -5,15 +5,10 @@
 
 ## Table of Contents
 
-* [Protobuf Documentation](#protobuf-documentation)
-    * [Table of Contents](#table-of-contents)
-    * [cosmos/base/query/v1beta1/pagination.proto](#cosmosbasequeryv1beta1paginationproto)
-        * [PageRequest](#pagerequest)
-        * [PageResponse](#pageresponse)
-    * [Scalar Value Types](#scalar-value-types)
+* [cosmos/base/query/v1beta1/pagination.proto](#cosmosbasequeryv1beta1paginationproto)
+    * [PageRequest](#pagerequest)
+    * [PageResponse](#pageresponse)
 * [Scalar Value Types](#scalar-value-types)
-
-
 
 <a name="cosmos/base/query/v1beta1/pagination.proto"></a>
 <p align="right"><a href="#top">Top</a></p>

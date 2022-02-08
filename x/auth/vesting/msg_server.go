@@ -141,7 +141,7 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 		case msg.Merge && !isPeriodic:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrNotSupported, "account %s must be a periodic vesting account", msg.ToAddress)
 		}
-		pva.AddGrant(ctx, s.BankKeeper, s.StakingKeeper, msg.GetStartTime(), msg.GetVestingPeriods(), totalCoins)
+		pva.AddGrant(ctx, s.StakingKeeper, msg.GetStartTime(), msg.GetVestingPeriods(), totalCoins)
 	} else {
 		baseAccount := ak.NewAccountWithAddress(ctx, to)
 		acc = types.NewPeriodicVestingAccount(baseAccount.(*authtypes.BaseAccount), totalCoins, msg.StartTime, msg.VestingPeriods)
@@ -255,7 +255,7 @@ func (s msgServer) CreateClawbackVestingAccount(goCtx context.Context, msg *type
 		case msg.FromAddress != va.FunderAddress:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s can only accept grants from account %s", msg.ToAddress, va.FunderAddress)
 		}
-		va.AddGrant(ctx, s.BankKeeper, s.StakingKeeper, msg.GetStartTime(), msg.GetLockupPeriods(), msg.GetVestingPeriods(), vestingCoins)
+		va.AddGrant(ctx, s.StakingKeeper, msg.GetStartTime(), msg.GetLockupPeriods(), msg.GetVestingPeriods(), vestingCoins)
 	} else {
 		baseAccount := ak.NewAccountWithAddress(ctx, to)
 		va = types.NewClawbackVestingAccount(baseAccount.(*authtypes.BaseAccount), from, vestingCoins, msg.StartTime, msg.LockupPeriods, msg.VestingPeriods)

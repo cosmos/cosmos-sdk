@@ -65,7 +65,7 @@ const (
 	WeightMsgCreateProposal                  = 90
 	WeightMsgVote                            = 90
 	WeightMsgExec                            = 90
-	WeightMsgCreateGroupWithPolicy           = 50
+	WeightMsgCreateGroupWithPolicy           = 100
 	WeightMsgUpdateGroupMetadata             = 5
 	WeightMsgUpdateGroupAdmin                = 5
 	WeightMsgUpdateGroupMembers              = 5

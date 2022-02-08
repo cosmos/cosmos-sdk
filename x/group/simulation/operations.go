@@ -65,7 +65,7 @@ const (
 	WeightMsgCreateProposal                  = 90
 	WeightMsgVote                            = 90
 	WeightMsgExec                            = 90
-	WeightMsgCreateGroupWithPolicy           = 100
+	WeightMsgCreateGroupWithPolicy           = 50
 	WeightMsgUpdateGroupMetadata             = 5
 	WeightMsgUpdateGroupAdmin                = 5
 	WeightMsgUpdateGroupMembers              = 5
@@ -74,8 +74,6 @@ const (
 	WeightMsgUpdateGroupPolicyMetadata       = 5
 	WeightMsgWithdrawProposal                = 20
 )
-
-const GroupMemberWeight = 40
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
@@ -286,7 +284,7 @@ func SimulateMsgCreateGroupWithPolicy(ak group.AccountKeeper, bk group.BankKeepe
 
 		members := genGroupMembers(r, accounts)
 		decisionPolicy := &group.ThresholdDecisionPolicy{
-			Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 20)),
+			Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
 			Timeout:   time.Second * time.Duration(30*24*60*60),
 		}
 
@@ -350,7 +348,7 @@ func SimulateMsgCreateGroupPolicy(ak group.AccountKeeper, bk group.BankKeeper, k
 			groupID,
 			[]byte(simtypes.RandStringOfLength(r, 10)),
 			&group.ThresholdDecisionPolicy{
-				Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 20)),
+				Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
 				Timeout:   time.Second * time.Duration(30*24*60*60),
 			},
 		)
@@ -695,7 +693,7 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(ak group.AccountKeeper,
 		}
 
 		msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(acc.Address, groupPolicyBech32, &group.ThresholdDecisionPolicy{
-			Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 20)),
+			Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
 			Timeout:   time.Second * time.Duration(simtypes.RandIntBetween(r, 100, 1000)),
 		})
 		if err != nil {
@@ -1191,7 +1189,7 @@ func genGroupMembers(r *rand.Rand, accounts []simtypes.Account) []group.Member {
 		return []group.Member{
 			{
 				Address:  accounts[0].Address.String(),
-				Weight:   fmt.Sprintf("%d", GroupMemberWeight),
+				Weight:   fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 5)),
 				Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
 			},
 		}
@@ -1208,7 +1206,7 @@ func genGroupMembers(r *rand.Rand, accounts []simtypes.Account) []group.Member {
 	for i := 0; i < membersLen; i++ {
 		members[i] = group.Member{
 			Address:  accounts[i].Address.String(),
-			Weight:   fmt.Sprintf("%d", GroupMemberWeight),
+			Weight:   fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 5)),
 			Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
 		}
 	}

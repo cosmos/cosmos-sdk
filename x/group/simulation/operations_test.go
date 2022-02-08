@@ -40,7 +40,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		suite.app.BankKeeper, suite.app.GroupKeeper, cdc,
 	)
 
-	s := rand.NewSource(1)
+	s := rand.NewSource(2)
 	r := rand.New(s)
 	accs := suite.getTestingAccounts(r, 3)
 

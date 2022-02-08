@@ -50,7 +50,7 @@ func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 			"fail invalid msg-type",
 			fmt.Sprintf(grantsURL, val.Address.String(), grantee.String(), "invalidMsg"),
 			true,
-			"no authorization found for invalidMsg type",
+			"authorization not found for invalidMsg type",
 		},
 		{
 			"valid query",

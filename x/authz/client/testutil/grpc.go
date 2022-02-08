@@ -185,21 +185,14 @@ func (s *IntegrationTestSuite) TestQueryGranterGrantsGRPC() {
 		},
 		{
 			"no authorizations found",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.APIAddress, grantee.String()),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.APIAddress, val.Address.String()),
 			false,
 			"",
 			0,
 		},
 		{
 			"valid query",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.APIAddress, val.Address.String()),
-			false,
-			"",
-			7,
-		},
-		{
-			"valid query: expect seven grants",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.APIAddress, val.Address.String()),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.APIAddress, grantee.String()),
 			false,
 			"",
 			7,
@@ -251,13 +244,6 @@ func (s *IntegrationTestSuite) TestQueryGranteeGrantsGRPC() {
 		},
 		{
 			"valid query",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/grantee/%s", val.APIAddress, val.Address.String()),
-			false,
-			"",
-			7,
-		},
-		{
-			"valid query: expect seven grants",
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/grantee/%s", val.APIAddress, val.Address.String()),
 			false,
 			"",

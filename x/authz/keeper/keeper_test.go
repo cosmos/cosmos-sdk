@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	tmtime "github.com/tendermint/tendermint/libs/time"
@@ -134,7 +135,7 @@ func (s *TestSuite) TestDispatchAction() {
 		req       authz.MsgExec
 		expectErr bool
 		errMsg    string
-		preRun    func()
+		preRun    func() sdk.Context
 		postRun   func()
 	}{
 		{
@@ -148,9 +149,10 @@ func (s *TestSuite) TestDispatchAction() {
 			}),
 			true,
 			"authorization not found",
-			func() {
+			func() sdk.Context {
 				// remove any existing authorizations
 				app.AuthzKeeper.DeleteGrant(s.ctx, granteeAddr, granterAddr, bankSendAuthMsgType)
+				return s.ctx
 			},
 			func() {},
 		},
@@ -165,9 +167,10 @@ func (s *TestSuite) TestDispatchAction() {
 			}),
 			true,
 			"authorization expired",
-			func() {
-				err := app.AuthzKeeper.SaveGrant(s.ctx, granteeAddr, granterAddr, banktypes.NewSendAuthorization(coins100), now.AddDate(0, -1, 0))
+			func() sdk.Context {
+				err := app.AuthzKeeper.SaveGrant(s.ctx, granteeAddr, granterAddr, banktypes.NewSendAuthorization(coins100), now.AddDate(0, 0, 1))
 				require.NoError(err)
+				return s.ctx.WithBlockTime(s.ctx.BlockTime().AddDate(0, 0, 2))
 			},
 			func() {},
 		},
@@ -182,9 +185,10 @@ func (s *TestSuite) TestDispatchAction() {
 			}),
 			true,
 			"requested amount is more than spend limit",
-			func() {
+			func() sdk.Context {
 				err := app.AuthzKeeper.SaveGrant(s.ctx, granteeAddr, granterAddr, banktypes.NewSendAuthorization(coins100), now.AddDate(0, 1, 0))
 				require.NoError(err)
+				return s.ctx
 			},
 			func() {},
 		},
@@ -199,9 +203,10 @@ func (s *TestSuite) TestDispatchAction() {
 			}),
 			false,
 			"",
-			func() {
+			func() sdk.Context {
 				err := app.AuthzKeeper.SaveGrant(s.ctx, granteeAddr, granterAddr, banktypes.NewSendAuthorization(coins100), now.AddDate(0, 1, 0))
 				require.NoError(err)
+				return s.ctx
 			},
 			func() {
 				authzs, err := app.AuthzKeeper.GetAuthorizations(s.ctx, granteeAddr, granterAddr)
@@ -223,9 +228,10 @@ func (s *TestSuite) TestDispatchAction() {
 			}),
 			false,
 			"",
-			func() {
+			func() sdk.Context {
 				err := app.AuthzKeeper.SaveGrant(s.ctx, granteeAddr, granterAddr, banktypes.NewSendAuthorization(coins100), now.AddDate(0, 1, 0))
 				require.NoError(err)
+				return s.ctx
 			},
 			func() {
 				authzs, err := app.AuthzKeeper.GetAuthorizations(s.ctx, granteeAddr, granterAddr)
@@ -236,19 +242,21 @@ func (s *TestSuite) TestDispatchAction() {
 	}
 
 	for _, tc := range testCases {
-		tc.preRun()
-		executeMsgs, err := tc.req.GetMessages()
-		s.Require().NoError(err)
-		result, err := app.AuthzKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)
-		if tc.expectErr {
-			require.Error(err)
-			require.Nil(result)
-			require.Contains(err.Error(), tc.errMsg)
-		} else {
+		s.Run(tc.name, func() {
+			ctx := tc.preRun()
+			executeMsgs, err := tc.req.GetMessages()
 			require.NoError(err)
-			require.NotNil(result)
-		}
-		tc.postRun()
+			result, err := app.AuthzKeeper.DispatchActions(ctx, granteeAddr, executeMsgs)
+			if tc.expectErr {
+				require.Error(err)
+				require.Nil(result)
+				require.Contains(err.Error(), tc.errMsg)
+			} else {
+				require.NoError(err)
+				require.NotNil(result)
+			}
+			tc.postRun()
+		})
 	}
 
 }
@@ -262,8 +270,7 @@ func (s *TestSuite) TestDispatchedEvents() {
 	granteeAddr := addrs[1]
 	recipientAddr := addrs[2]
 	require.NoError(testutil.FundAccount(app.BankKeeper, s.ctx, granterAddr, coins1000))
-	now := s.ctx.BlockHeader().Time
-	require.NotNil(now)
+	expiration := s.ctx.BlockTime().Add(1 * time.Second) // must be in the future
 
 	msgs := authz.NewMsgExec(granteeAddr, []sdk.Msg{
 		&banktypes.MsgSend{
@@ -274,7 +281,7 @@ func (s *TestSuite) TestDispatchedEvents() {
 	})
 
 	// grant authorization
-	err := app.AuthzKeeper.SaveGrant(s.ctx, granteeAddr, granterAddr, &banktypes.SendAuthorization{SpendLimit: coins10}, now)
+	err := app.AuthzKeeper.SaveGrant(s.ctx, granteeAddr, granterAddr, &banktypes.SendAuthorization{SpendLimit: coins10}, expiration)
 	require.NoError(err)
 	authorizations, err := app.AuthzKeeper.GetAuthorizations(s.ctx, granteeAddr, granterAddr)
 	require.NoError(err)
@@ -311,25 +318,22 @@ func (s *TestSuite) TestDequeueAllGrantsQueue() {
 	granter := addrs[0]
 	grantee := addrs[1]
 	grantee1 := addrs[2]
-
-	now := s.ctx.BlockHeader().Time
-
-	smallCoin := sdk.NewCoins(sdk.NewInt64Coin("stake", 20))
+	exp := s.ctx.BlockTime().AddDate(0, 0, 1)
 
 	// create few authorizations
-	err := app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, &banktypes.SendAuthorization{SpendLimit: smallCoin}, now)
+	err := app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, &banktypes.SendAuthorization{SpendLimit: coins100}, exp)
 	require.NoError(err)
 
-	err = app.AuthzKeeper.SaveGrant(s.ctx, grantee1, granter, &banktypes.SendAuthorization{SpendLimit: smallCoin}, now)
+	err = app.AuthzKeeper.SaveGrant(s.ctx, grantee1, granter, &banktypes.SendAuthorization{SpendLimit: coins100}, exp)
 	require.NoError(err)
 
-	err = app.AuthzKeeper.SaveGrant(s.ctx, granter, grantee1, &banktypes.SendAuthorization{SpendLimit: smallCoin}, now.AddDate(0, 1, 0))
+	err = app.AuthzKeeper.SaveGrant(s.ctx, granter, grantee1, &banktypes.SendAuthorization{SpendLimit: coins100}, exp.AddDate(0, 1, 0))
 	require.NoError(err)
 
-	err = app.AuthzKeeper.SaveGrant(s.ctx, granter, grantee, &banktypes.SendAuthorization{SpendLimit: smallCoin}, now.AddDate(2, 0, 0))
+	err = app.AuthzKeeper.SaveGrant(s.ctx, granter, grantee, &banktypes.SendAuthorization{SpendLimit: coins100}, exp.AddDate(2, 0, 0))
 	require.NoError(err)
 
-	newCtx := s.ctx.WithBlockTime(now.AddDate(1, 0, 0))
+	newCtx := s.ctx.WithBlockTime(exp.AddDate(1, 0, 0))
 	err = app.AuthzKeeper.DequeueAndDeleteExpiredGrants(newCtx)
 	require.NoError(err)
 

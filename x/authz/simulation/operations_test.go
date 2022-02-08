@@ -43,7 +43,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	// setup 3 accounts
 	s := rand.NewSource(2)
 	r := rand.New(s)
-	accs := suite.getTestingAccounts(r, 3)
+	accs := suite.getTestingAccounts(r, 2)
 
 	expected := []struct {
 		weight     int

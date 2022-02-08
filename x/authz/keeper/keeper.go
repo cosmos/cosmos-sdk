@@ -161,7 +161,7 @@ func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, auth
 		}
 	}
 
-	grant, err := authz.NewGrant(authorization, expiration)
+	grant, err := authz.NewGrant(ctx.BlockTime(), authorization, expiration)
 	if err != nil {
 		return err
 	}
@@ -271,10 +271,12 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *authz.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
+
 		granter, err := sdk.AccAddressFromBech32(entry.Granter)
 		if err != nil {
 			panic(err)
 		}
+
 		a, ok := entry.Authorization.GetCachedValue().(authz.Authorization)
 		if !ok {
 			panic("expected authorization")

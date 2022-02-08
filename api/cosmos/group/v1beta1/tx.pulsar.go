@@ -10612,6 +10612,7 @@ var (
 	fd_MsgVoteWeighted_proposal_id protoreflect.FieldDescriptor
 	fd_MsgVoteWeighted_voter       protoreflect.FieldDescriptor
 	fd_MsgVoteWeighted_options     protoreflect.FieldDescriptor
+	fd_MsgVoteWeighted_exec        protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -10620,6 +10621,7 @@ func init() {
 	fd_MsgVoteWeighted_proposal_id = md_MsgVoteWeighted.Fields().ByName("proposal_id")
 	fd_MsgVoteWeighted_voter = md_MsgVoteWeighted.Fields().ByName("voter")
 	fd_MsgVoteWeighted_options = md_MsgVoteWeighted.Fields().ByName("options")
+	fd_MsgVoteWeighted_exec = md_MsgVoteWeighted.Fields().ByName("exec")
 }
 
 var _ protoreflect.Message = (*fastReflection_MsgVoteWeighted)(nil)
@@ -10705,6 +10707,12 @@ func (x *fastReflection_MsgVoteWeighted) Range(f func(protoreflect.FieldDescript
 			return
 		}
 	}
+	if x.Exec != 0 {
+		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Exec))
+		if !f(fd_MsgVoteWeighted_exec, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -10726,6 +10734,8 @@ func (x *fastReflection_MsgVoteWeighted) Has(fd protoreflect.FieldDescriptor) bo
 		return x.Voter != ""
 	case "cosmos.group.v1beta1.MsgVoteWeighted.options":
 		return len(x.Options) != 0
+	case "cosmos.group.v1beta1.MsgVoteWeighted.exec":
+		return x.Exec != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgVoteWeighted"))
@@ -10748,6 +10758,8 @@ func (x *fastReflection_MsgVoteWeighted) Clear(fd protoreflect.FieldDescriptor) 
 		x.Voter = ""
 	case "cosmos.group.v1beta1.MsgVoteWeighted.options":
 		x.Options = nil
+	case "cosmos.group.v1beta1.MsgVoteWeighted.exec":
+		x.Exec = 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgVoteWeighted"))
@@ -10776,6 +10788,9 @@ func (x *fastReflection_MsgVoteWeighted) Get(descriptor protoreflect.FieldDescri
 		}
 		listValue := &_MsgVoteWeighted_3_list{list: &x.Options}
 		return protoreflect.ValueOfList(listValue)
+	case "cosmos.group.v1beta1.MsgVoteWeighted.exec":
+		value := x.Exec
+		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgVoteWeighted"))
@@ -10804,6 +10819,8 @@ func (x *fastReflection_MsgVoteWeighted) Set(fd protoreflect.FieldDescriptor, va
 		lv := value.List()
 		clv := lv.(*_MsgVoteWeighted_3_list)
 		x.Options = *clv.list
+	case "cosmos.group.v1beta1.MsgVoteWeighted.exec":
+		x.Exec = (Exec)(value.Enum())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgVoteWeighted"))
@@ -10834,6 +10851,8 @@ func (x *fastReflection_MsgVoteWeighted) Mutable(fd protoreflect.FieldDescriptor
 		panic(fmt.Errorf("field proposal_id of message cosmos.group.v1beta1.MsgVoteWeighted is not mutable"))
 	case "cosmos.group.v1beta1.MsgVoteWeighted.voter":
 		panic(fmt.Errorf("field voter of message cosmos.group.v1beta1.MsgVoteWeighted is not mutable"))
+	case "cosmos.group.v1beta1.MsgVoteWeighted.exec":
+		panic(fmt.Errorf("field exec of message cosmos.group.v1beta1.MsgVoteWeighted is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgVoteWeighted"))
@@ -10854,6 +10873,8 @@ func (x *fastReflection_MsgVoteWeighted) NewField(fd protoreflect.FieldDescripto
 	case "cosmos.group.v1beta1.MsgVoteWeighted.options":
 		list := []*WeightedVoteOption{}
 		return protoreflect.ValueOfList(&_MsgVoteWeighted_3_list{list: &list})
+	case "cosmos.group.v1beta1.MsgVoteWeighted.exec":
+		return protoreflect.ValueOfEnum(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgVoteWeighted"))
@@ -10936,6 +10957,9 @@ func (x *fastReflection_MsgVoteWeighted) ProtoMethods() *protoiface.Methods {
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
+		if x.Exec != 0 {
+			n += 1 + runtime.Sov(uint64(x.Exec))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -10964,6 +10988,11 @@ func (x *fastReflection_MsgVoteWeighted) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Exec != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Exec))
+			i--
+			dAtA[i] = 0x20
 		}
 		if len(x.Options) > 0 {
 			for iNdEx := len(x.Options) - 1; iNdEx >= 0; iNdEx-- {
@@ -11127,6 +11156,25 @@ func (x *fastReflection_MsgVoteWeighted) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
+			case 4:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Exec", wireType)
+				}
+				x.Exec = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Exec |= Exec(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -13387,9 +13435,15 @@ type MsgVoteWeighted struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ProposalId uint64                `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	Voter      string                `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
-	Options    []*WeightedVoteOption `protobuf:"bytes,3,rep,name=options,proto3" json:"options,omitempty"`
+	// proposal is the unique ID of the proposal.
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	// voter is the voter account address.
+	Voter string `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
+	// options are the array of votes with different weights.
+	Options []*WeightedVoteOption `protobuf:"bytes,3,rep,name=options,proto3" json:"options,omitempty"`
+	// exec defines whether the proposal should be executed
+	// immediately after voting or not.
+	Exec Exec `protobuf:"varint,4,opt,name=exec,proto3,enum=cosmos.group.v1beta1.Exec" json:"exec,omitempty"`
 }
 
 func (x *MsgVoteWeighted) Reset() {
@@ -13431,6 +13485,13 @@ func (x *MsgVoteWeighted) GetOptions() []*WeightedVoteOption {
 		return x.Options
 	}
 	return nil
+}
+
+func (x *MsgVoteWeighted) GetExec() Exec {
+	if x != nil {
+		return x.Exec
+	}
+	return Exec_EXEC_UNSPECIFIED
 }
 
 // MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.
@@ -13707,7 +13768,7 @@ var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
 	0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x45, 0x78,
 	0x65, 0x63, 0x52, 0x04, 0x65, 0x78, 0x65, 0x63, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x76,
 	0x6f, 0x74, 0x65, 0x72, 0x22, 0x11, 0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xd9, 0x01, 0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x56,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x89, 0x02, 0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x56,
 	0x6f, 0x74, 0x65, 0x57, 0x65, 0x69, 0x67, 0x68, 0x74, 0x65, 0x64, 0x12, 0x30, 0x0a, 0x0b, 0x70,
 	0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04,
 	0x42, 0x0f, 0xea, 0xde, 0x1f, 0x0b, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x5f, 0x69,
@@ -13719,7 +13780,10 @@ var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
 	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31,
 	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x57, 0x65, 0x69, 0x67, 0x68, 0x74, 0x65, 0x64, 0x56, 0x6f,
 	0x74, 0x65, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x07,
-	0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x3a, 0x1a, 0x88, 0xa0, 0x1f, 0x00, 0x98, 0xa0, 0x1f,
+	0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x2e, 0x0a, 0x04, 0x65, 0x78, 0x65, 0x63, 0x18,
+	0x04, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x1a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67,
+	0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x45, 0x78, 0x65,
+	0x63, 0x52, 0x04, 0x65, 0x78, 0x65, 0x63, 0x3a, 0x1a, 0x88, 0xa0, 0x1f, 0x00, 0x98, 0xa0, 0x1f,
 	0x00, 0xe8, 0xa0, 0x1f, 0x00, 0x80, 0xdc, 0x20, 0x00, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x76, 0x6f,
 	0x74, 0x65, 0x72, 0x22, 0x19, 0x0a, 0x17, 0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x57, 0x65,
 	0x69, 0x67, 0x68, 0x74, 0x65, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x69,
@@ -13901,37 +13965,38 @@ var file_cosmos_group_v1beta1_tx_proto_depIdxs = []int32{
 	29, // 6: cosmos.group.v1beta1.MsgVote.choice:type_name -> cosmos.group.v1beta1.Choice
 	0,  // 7: cosmos.group.v1beta1.MsgVote.exec:type_name -> cosmos.group.v1beta1.Exec
 	30, // 8: cosmos.group.v1beta1.MsgVoteWeighted.options:type_name -> cosmos.group.v1beta1.WeightedVoteOption
-	1,  // 9: cosmos.group.v1beta1.Msg.CreateGroup:input_type -> cosmos.group.v1beta1.MsgCreateGroup
-	3,  // 10: cosmos.group.v1beta1.Msg.UpdateGroupMembers:input_type -> cosmos.group.v1beta1.MsgUpdateGroupMembers
-	5,  // 11: cosmos.group.v1beta1.Msg.UpdateGroupAdmin:input_type -> cosmos.group.v1beta1.MsgUpdateGroupAdmin
-	7,  // 12: cosmos.group.v1beta1.Msg.UpdateGroupMetadata:input_type -> cosmos.group.v1beta1.MsgUpdateGroupMetadata
-	9,  // 13: cosmos.group.v1beta1.Msg.CreateGroupPolicy:input_type -> cosmos.group.v1beta1.MsgCreateGroupPolicy
-	11, // 14: cosmos.group.v1beta1.Msg.UpdateGroupPolicyAdmin:input_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin
-	13, // 15: cosmos.group.v1beta1.Msg.UpdateGroupPolicyDecisionPolicy:input_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy
-	15, // 16: cosmos.group.v1beta1.Msg.UpdateGroupPolicyMetadata:input_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata
-	17, // 17: cosmos.group.v1beta1.Msg.CreateProposal:input_type -> cosmos.group.v1beta1.MsgCreateProposal
-	19, // 18: cosmos.group.v1beta1.Msg.WithdrawProposal:input_type -> cosmos.group.v1beta1.MsgWithdrawProposal
-	21, // 19: cosmos.group.v1beta1.Msg.Vote:input_type -> cosmos.group.v1beta1.MsgVote
-	23, // 20: cosmos.group.v1beta1.Msg.VoteWeighted:input_type -> cosmos.group.v1beta1.MsgVoteWeighted
-	25, // 21: cosmos.group.v1beta1.Msg.Exec:input_type -> cosmos.group.v1beta1.MsgExec
-	2,  // 22: cosmos.group.v1beta1.Msg.CreateGroup:output_type -> cosmos.group.v1beta1.MsgCreateGroupResponse
-	4,  // 23: cosmos.group.v1beta1.Msg.UpdateGroupMembers:output_type -> cosmos.group.v1beta1.MsgUpdateGroupMembersResponse
-	6,  // 24: cosmos.group.v1beta1.Msg.UpdateGroupAdmin:output_type -> cosmos.group.v1beta1.MsgUpdateGroupAdminResponse
-	8,  // 25: cosmos.group.v1beta1.Msg.UpdateGroupMetadata:output_type -> cosmos.group.v1beta1.MsgUpdateGroupMetadataResponse
-	10, // 26: cosmos.group.v1beta1.Msg.CreateGroupPolicy:output_type -> cosmos.group.v1beta1.MsgCreateGroupPolicyResponse
-	12, // 27: cosmos.group.v1beta1.Msg.UpdateGroupPolicyAdmin:output_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyAdminResponse
-	14, // 28: cosmos.group.v1beta1.Msg.UpdateGroupPolicyDecisionPolicy:output_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse
-	16, // 29: cosmos.group.v1beta1.Msg.UpdateGroupPolicyMetadata:output_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse
-	18, // 30: cosmos.group.v1beta1.Msg.CreateProposal:output_type -> cosmos.group.v1beta1.MsgCreateProposalResponse
-	20, // 31: cosmos.group.v1beta1.Msg.WithdrawProposal:output_type -> cosmos.group.v1beta1.MsgWithdrawProposalResponse
-	22, // 32: cosmos.group.v1beta1.Msg.Vote:output_type -> cosmos.group.v1beta1.MsgVoteResponse
-	24, // 33: cosmos.group.v1beta1.Msg.VoteWeighted:output_type -> cosmos.group.v1beta1.MsgVoteWeightedResponse
-	26, // 34: cosmos.group.v1beta1.Msg.Exec:output_type -> cosmos.group.v1beta1.MsgExecResponse
-	22, // [22:35] is the sub-list for method output_type
-	9,  // [9:22] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	0,  // 9: cosmos.group.v1beta1.MsgVoteWeighted.exec:type_name -> cosmos.group.v1beta1.Exec
+	1,  // 10: cosmos.group.v1beta1.Msg.CreateGroup:input_type -> cosmos.group.v1beta1.MsgCreateGroup
+	3,  // 11: cosmos.group.v1beta1.Msg.UpdateGroupMembers:input_type -> cosmos.group.v1beta1.MsgUpdateGroupMembers
+	5,  // 12: cosmos.group.v1beta1.Msg.UpdateGroupAdmin:input_type -> cosmos.group.v1beta1.MsgUpdateGroupAdmin
+	7,  // 13: cosmos.group.v1beta1.Msg.UpdateGroupMetadata:input_type -> cosmos.group.v1beta1.MsgUpdateGroupMetadata
+	9,  // 14: cosmos.group.v1beta1.Msg.CreateGroupPolicy:input_type -> cosmos.group.v1beta1.MsgCreateGroupPolicy
+	11, // 15: cosmos.group.v1beta1.Msg.UpdateGroupPolicyAdmin:input_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin
+	13, // 16: cosmos.group.v1beta1.Msg.UpdateGroupPolicyDecisionPolicy:input_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy
+	15, // 17: cosmos.group.v1beta1.Msg.UpdateGroupPolicyMetadata:input_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata
+	17, // 18: cosmos.group.v1beta1.Msg.CreateProposal:input_type -> cosmos.group.v1beta1.MsgCreateProposal
+	19, // 19: cosmos.group.v1beta1.Msg.WithdrawProposal:input_type -> cosmos.group.v1beta1.MsgWithdrawProposal
+	21, // 20: cosmos.group.v1beta1.Msg.Vote:input_type -> cosmos.group.v1beta1.MsgVote
+	23, // 21: cosmos.group.v1beta1.Msg.VoteWeighted:input_type -> cosmos.group.v1beta1.MsgVoteWeighted
+	25, // 22: cosmos.group.v1beta1.Msg.Exec:input_type -> cosmos.group.v1beta1.MsgExec
+	2,  // 23: cosmos.group.v1beta1.Msg.CreateGroup:output_type -> cosmos.group.v1beta1.MsgCreateGroupResponse
+	4,  // 24: cosmos.group.v1beta1.Msg.UpdateGroupMembers:output_type -> cosmos.group.v1beta1.MsgUpdateGroupMembersResponse
+	6,  // 25: cosmos.group.v1beta1.Msg.UpdateGroupAdmin:output_type -> cosmos.group.v1beta1.MsgUpdateGroupAdminResponse
+	8,  // 26: cosmos.group.v1beta1.Msg.UpdateGroupMetadata:output_type -> cosmos.group.v1beta1.MsgUpdateGroupMetadataResponse
+	10, // 27: cosmos.group.v1beta1.Msg.CreateGroupPolicy:output_type -> cosmos.group.v1beta1.MsgCreateGroupPolicyResponse
+	12, // 28: cosmos.group.v1beta1.Msg.UpdateGroupPolicyAdmin:output_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyAdminResponse
+	14, // 29: cosmos.group.v1beta1.Msg.UpdateGroupPolicyDecisionPolicy:output_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse
+	16, // 30: cosmos.group.v1beta1.Msg.UpdateGroupPolicyMetadata:output_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse
+	18, // 31: cosmos.group.v1beta1.Msg.CreateProposal:output_type -> cosmos.group.v1beta1.MsgCreateProposalResponse
+	20, // 32: cosmos.group.v1beta1.Msg.WithdrawProposal:output_type -> cosmos.group.v1beta1.MsgWithdrawProposalResponse
+	22, // 33: cosmos.group.v1beta1.Msg.Vote:output_type -> cosmos.group.v1beta1.MsgVoteResponse
+	24, // 34: cosmos.group.v1beta1.Msg.VoteWeighted:output_type -> cosmos.group.v1beta1.MsgVoteWeightedResponse
+	26, // 35: cosmos.group.v1beta1.Msg.Exec:output_type -> cosmos.group.v1beta1.MsgExecResponse
+	23, // [23:36] is the sub-list for method output_type
+	10, // [10:23] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_group_v1beta1_tx_proto_init() }

@@ -249,7 +249,12 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 		}
 
 		msg := []sdk.Msg{banktype.NewMsgSend(granterAddr, granteeAddr, coins)}
-		sendAuth, ok := targetGrant.GetAuthorization().(*banktype.SendAuthorization)
+		authorization, err := targetGrant.GetAuthorization()
+		if err != nil{
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
+		}
+
+		sendAuth, ok := authorization.(*banktype.SendAuthorization)
 		if !ok {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "not a send authorization"), nil, nil
 		}

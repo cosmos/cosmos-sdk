@@ -45,6 +45,25 @@ func (k Keeper) GetValidatorDelegations(ctx context.Context, valAddr sdk.ValAddr
 			return true, err
 		}
 
+// IterateDelegatorDelegations iterates through one delegator's delegations
+func (k Keeper) IterateDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress,
+	cb func(delegation types.Delegation) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	delegatorPrefixKey := types.GetDelegationsKey(delegator)
+	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
+		if cb(delegation) {
+			break
+		}
+	}
+}
+
+// GetAllDelegations returns all delegations used during genesis dump
+func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegation) {
+	k.IterateAllDelegations(ctx, func(delegation types.Delegation) bool {
 		delegations = append(delegations, delegation)
 
 		return false, nil
@@ -79,30 +98,45 @@ func (k Keeper) GetDelegatorDelegations(ctx context.Context, delegator sdk.AccAd
 	return delegations[:i], nil // trim if the array length < maxRetrieve
 }
 
-// SetDelegation sets a delegation.
-func (k Keeper) SetDelegation(ctx context.Context, delegation types.Delegation) error {
-	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(delegation.DelegatorAddress)
-	if err != nil {
-		return err
-	}
+// return a given amount of all the delegations from a delegator
+func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress,
+	maxRetrieve uint16) (delegations []types.Delegation) {
+	delegations = make([]types.Delegation, maxRetrieve)
 
-	valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
-	if err != nil {
-		return err
+	i := 0
+	if i < int(maxRetrieve) {
+		k.IterateDelegatorDelegations(ctx, delegator, func(delegation types.Delegation) bool {
+			delegations[i] = delegation
+			i++
+			return i >= int(maxRetrieve)
+		})
 	}
-
-	err = k.Delegations.Set(ctx, collections.Join(sdk.AccAddress(delegatorAddress), sdk.ValAddress(valAddr)), delegation)
-	if err != nil {
-		return err
-	}
-
-	// set the delegation in validator delegator index
-	return k.DelegationsByValidator.Set(ctx, collections.Join(sdk.ValAddress(valAddr), sdk.AccAddress(delegatorAddress)), []byte{})
+	return delegations[:i] // trim if the array length < maxRetrieve
 }
 
-// RemoveDelegation removes a delegation
-func (k Keeper) RemoveDelegation(ctx context.Context, delegation types.Delegation) error {
-	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(delegation.DelegatorAddress)
+// return the total amount a delegator has bonded
+func (k Keeper) GetDelegatorBonded(ctx sdk.Context, delegator sdk.AccAddress) sdk.Int {
+	bonded := sdk.ZeroInt()
+
+	k.IterateDelegatorDelegations(ctx, delegator, func(delegation types.Delegation) bool {
+		validatorAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+		if err != nil {
+			panic(err) // shouldn't happen
+		}
+		validator, found := k.GetValidator(ctx, validatorAddr)
+		if found {
+			shares := delegation.Shares
+			tokens := validator.TokensFromSharesTruncated(shares).RoundInt()
+			bonded = bonded.Add(tokens)
+		}
+		return false
+	})
+	return bonded
+}
+
+// set a delegation
+func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
+	delegatorAddress, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
 	if err != nil {
 		return err
 	}
@@ -255,11 +289,39 @@ func (k Keeper) IterateDelegatorDelegations(ctx context.Context, delegator sdk.A
 	return nil
 }
 
-// HasMaxUnbondingDelegationEntries checks if unbonding delegation has maximum number of entries.
-func (k Keeper) HasMaxUnbondingDelegationEntries(ctx context.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) (bool, error) {
-	ubd, err := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
-	if err != nil && !errors.Is(err, types.ErrNoUnbondingDelegation) {
-		return false, err
+// iterate through a delegator's unbonding delegations
+func (k Keeper) IterateDelegatorUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress,
+	cb func(ubd types.UnbondingDelegation) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.GetUBDsKey(delegator))
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		ubd := types.MustUnmarshalUBD(k.cdc, iterator.Value())
+		if cb(ubd) {
+			break
+		}
+	}
+}
+
+// return the total amount a delegator has unbonding
+func (k Keeper) GetDelegatorUnbonding(ctx sdk.Context, delegator sdk.AccAddress) sdk.Int {
+	unbonding := sdk.ZeroInt()
+	k.IterateDelegatorUnbondingDelegations(ctx, delegator, func(ubd types.UnbondingDelegation) bool {
+		for _, entry := range ubd.Entries {
+			unbonding = unbonding.Add(entry.Balance)
+		}
+		return false
+	})
+	return unbonding
+}
+
+// HasMaxUnbondingDelegationEntries - check if unbonding delegation has maximum number of entries
+func (k Keeper) HasMaxUnbondingDelegationEntries(ctx sdk.Context,
+	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) bool {
+	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
+	if !found {
+		return false
 	}
 
 	maxEntries, err := k.MaxEntries(ctx)

@@ -30,8 +30,10 @@ type BankKeeper interface {
 // requires for finding and changing the delegated tokens, used in clawback.
 type StakingKeeper interface {
 	BondDenom(ctx sdk.Context) string
+	GetDelegatorBonded(ctx sdk.Context, delegator sdk.AccAddress) sdk.Int
 	GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 		maxRetrieve uint16) []stakingtypes.Delegation
+	GetDelegatorUnbonding(ctx sdk.Context, delegator sdk.AccAddress) sdk.Int
 	GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 		maxRetrieve uint16) []stakingtypes.UnbondingDelegation
 	GetValidator(ctx sdk.Context, valAddr sdk.ValAddress) (stakingtypes.Validator, bool)

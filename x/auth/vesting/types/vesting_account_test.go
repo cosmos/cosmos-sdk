@@ -400,7 +400,7 @@ func TestAddGrantPeriodicVestingAcc(t *testing.T) {
 
 	// Add a new grant of 50stake
 	newGrant := c(stake(50))
-	pva.AddGrant(ctx, app.BankKeeper, app.StakingKeeper, now.Add(500*time.Second).Unix(), []types.Period{{Length: 50, Amount: newGrant}}, newGrant)
+	pva.AddGrant(ctx, app.StakingKeeper, now.Add(500*time.Second).Unix(), []types.Period{{Length: 50, Amount: newGrant}}, newGrant)
 	app.AccountKeeper.SetAccount(ctx, pva)
 
 	// Only 56stake locked at now+150, due to slashing
@@ -449,7 +449,7 @@ func TestAddGrantPeriodicVestingAcc_FullSlash(t *testing.T) {
 
 	// Add a new grant of 50stake
 	newGrant := c(stake(50))
-	pva.AddGrant(ctx, app.BankKeeper, app.StakingKeeper, now.Add(500*time.Second).Unix(), []types.Period{{Length: 50, Amount: newGrant}}, newGrant)
+	pva.AddGrant(ctx, app.StakingKeeper, now.Add(500*time.Second).Unix(), []types.Period{{Length: 50, Amount: newGrant}}, newGrant)
 	app.AccountKeeper.SetAccount(ctx, pva)
 
 	// The new 50 are locked at now+150
@@ -1418,7 +1418,7 @@ func TestAddGrantClawbackVestingAcc_fullSlash(t *testing.T) {
 
 	// Add a new grant of 50stake
 	newGrant := c(stake(50))
-	va.AddGrant(ctx, app.BankKeeper, app.StakingKeeper, now.Add(500*time.Second).Unix(),
+	va.AddGrant(ctx, app.StakingKeeper, now.Add(500*time.Second).Unix(),
 		[]types.Period{{Length: 1, Amount: newGrant}},
 		[]types.Period{{Length: 50, Amount: newGrant}}, newGrant)
 	app.AccountKeeper.SetAccount(ctx, va)
@@ -1471,7 +1471,7 @@ func TestAddGrantClawbackVestingAcc(t *testing.T) {
 
 	// Add a new grant of 50stake
 	newGrant := c(stake(50))
-	va.AddGrant(ctx, app.BankKeeper, app.StakingKeeper, now.Add(500*time.Second).Unix(),
+	va.AddGrant(ctx, app.StakingKeeper, now.Add(500*time.Second).Unix(),
 		[]types.Period{{Length: 1, Amount: newGrant}},
 		[]types.Period{{Length: 50, Amount: newGrant}}, newGrant)
 	app.AccountKeeper.SetAccount(ctx, va)

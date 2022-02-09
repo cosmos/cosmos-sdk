@@ -84,10 +84,6 @@ func (x Dec) Int64() (int64, error) {
 	return x.dec.Int64()
 }
 
-func (x Dec) Float64() (float64, error) {
-	return x.dec.Float64()
-}
-
 func (x Dec) Cmp(y Dec) int {
 	return x.dec.Cmp(&y.dec)
 }

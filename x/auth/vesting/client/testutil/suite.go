@@ -374,9 +374,10 @@ func (s *IntegrationTestSuite) TestNewMsgCreateClawbackVestingAccountCmd() {
 
 func (s *IntegrationTestSuite) TestNewMsgClawbackCmd() {
 	val := s.network.Validators[0]
+	addr := sdk.AccAddress("addr30______________")
 
 	_, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cli.NewMsgCreateClawbackVestingAccountCmd(), []string{
-		sdk.AccAddress("addr30______________").String(),
+		addr.String(),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 		fmt.Sprintf("--%s=%s", cli.FlagLockup, "testdata/periods1.json"),
 		fmt.Sprintf("--%s=%s", cli.FlagVesting, "testdata/periods1.json"),
@@ -396,7 +397,7 @@ func (s *IntegrationTestSuite) TestNewMsgClawbackCmd() {
 		{
 			name: "basic",
 			args: []string{
-				sdk.AccAddress("addr30______________").String(),
+				addr.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 				fmt.Sprintf("--%s=%s", cli.FlagDest, sdk.AccAddress("addr32______________").String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -417,7 +418,7 @@ func (s *IntegrationTestSuite) TestNewMsgClawbackCmd() {
 		{
 			name: "bad dest addr",
 			args: []string{
-				sdk.AccAddress("addr30______________").String(),
+				addr.String(),
 				fmt.Sprintf("--%s=%s", cli.FlagDest, "bar"),
 			},
 			expectErr: true,
@@ -425,7 +426,7 @@ func (s *IntegrationTestSuite) TestNewMsgClawbackCmd() {
 		{
 			name: "default dest",
 			args: []string{
-				sdk.AccAddress("addr30______________").String(),
+				addr.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),

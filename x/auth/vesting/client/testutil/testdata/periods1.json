@@ -1,12 +1,12 @@
 {
     "start_time": 1625204910,
-    "period": [
+    "periods": [
         {
-            "coins": "10test",
+            "coins": "10stake",
             "length_seconds": 2592000
         },
         {
-            "coins": "10test",
+            "coins": "10stake",
             "length_seconds":2592000
         }
     ]

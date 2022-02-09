@@ -387,6 +387,7 @@ func (suite *HandlerTestSuite) TestMsgClawback() {
 	addr1 := sdk.AccAddress([]byte("addr1_______________"))
 	addr2 := sdk.AccAddress([]byte("addr2_______________"))
 	addr3 := sdk.AccAddress([]byte("addr3_______________"))
+	addr4 := sdk.AccAddress([]byte("addr4_______________"))
 
 	funder := suite.app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	suite.app.AccountKeeper.SetAccount(ctx, funder)
@@ -415,6 +416,51 @@ func (suite *HandlerTestSuite) TestMsgClawback() {
 	suite.Require().Equal(balanceDest, sdk.NewInt64Coin("test", 0))
 	balanceClaw := suite.app.BankKeeper.GetBalance(ctx, addr3, "test")
 	suite.Require().Equal(balanceClaw, sdk.NewInt64Coin("test", 1000))
+
+	// test bad messages
+
+	// bad funder
+	clawbackMsg = &types.MsgClawback{
+		FunderAddress: "foo",
+		Address:       addr2.String(),
+		DestAddress:   addr3.String(),
+	}
+	_, err = suite.handler(ctx, clawbackMsg)
+	suite.Require().Error(err)
+
+	// bad addr
+	clawbackMsg = &types.MsgClawback{
+		FunderAddress: addr1.String(),
+		Address:       "foo",
+		DestAddress:   addr3.String(),
+	}
+	_, err = suite.handler(ctx, clawbackMsg)
+	suite.Require().Error(err)
+
+	// bad dest
+	clawbackMsg = &types.MsgClawback{
+		FunderAddress: addr1.String(),
+		Address:       addr2.String(),
+		DestAddress:   "foo",
+	}
+	_, err = suite.handler(ctx, clawbackMsg)
+	suite.Require().Error(err)
+
+	// no account
+	clawbackMsg = types.NewMsgClawback(addr1, addr4, addr3)
+	_, err = suite.handler(ctx, clawbackMsg)
+	suite.Require().Error(err)
+
+	// wrong account type
+	clawbackMsg = types.NewMsgClawback(addr1, addr3, addr4)
+	_, err = suite.handler(ctx, clawbackMsg)
+	suite.Require().Error(err)
+
+	// wrong funder
+	clawbackMsg = types.NewMsgClawback(addr4, addr2, addr3)
+	_, err = suite.handler(ctx, clawbackMsg)
+	suite.Require().Error(err)
+
 }
 
 func TestHandlerTestSuite(t *testing.T) {

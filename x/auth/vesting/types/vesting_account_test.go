@@ -1258,6 +1258,15 @@ func TestRewards_PostSlash(t *testing.T) {
 	ctx = ctx.WithBlockTime(now.Add(600 * time.Second))
 	err = app.BankKeeper.SendCoins(ctx, addr, dest, c(stake(160)))
 	require.NoError(t, err)
+
+	// distribute another reward once everything has vested
+	ctx = ctx.WithBlockTime(now.Add(1200 * time.Second))
+	err = simapp.FundAccount(app.BankKeeper, ctx, addr, c(stake(160)))
+	require.NoError(t, err)
+	va.PostReward(ctx, c(stake(160)), app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
+	va = app.AccountKeeper.GetAccount(ctx, addr).(*types.ClawbackVestingAccount)
+	// shouldn't be added to vesting schedule
+	require.Equal(t, int64(4160), va.OriginalVesting.AmountOf(stakeDenom).Int64())
 }
 
 func TestAddGrantClawbackVestingAcc_fullSlash(t *testing.T) {
@@ -1474,7 +1483,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 				BaseVestingAccount: &types.BaseVestingAccount{
 					BaseAccount:     baseAcc,
 					OriginalVesting: initialVesting,
-					EndTime:         50,
+					EndTime:         120,
 				},
 				FunderAddress:  "funder",
 				StartTime:      100,
@@ -1489,7 +1498,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 				BaseVestingAccount: &types.BaseVestingAccount{
 					BaseAccount:     baseAcc,
 					OriginalVesting: initialVesting,
-					EndTime:         50,
+					EndTime:         110,
 				},
 				FunderAddress:  "funder",
 				StartTime:      100,
@@ -1504,7 +1513,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 				BaseVestingAccount: &types.BaseVestingAccount{
 					BaseAccount:     baseAcc,
 					OriginalVesting: initialVesting,
-					EndTime:         50,
+					EndTime:         120,
 				},
 				FunderAddress:  "funder",
 				StartTime:      100,

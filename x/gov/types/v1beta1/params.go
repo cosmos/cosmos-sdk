@@ -7,11 +7,18 @@ import (
 	"sigs.k8s.io/yaml"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Default period for deposits & voting
 const (
 	DefaultPeriod time.Duration = time.Hour * 24 * 2 // 2 days
+)
+
+var (
+	ParamStoreKeyDepositParams = []byte("depositparams")
+	ParamStoreKeyVotingParams  = []byte("votingparams")
+	ParamStoreKeyTallyParams   = []byte("tallyparams")
 )
 
 // Default governance params
@@ -21,6 +28,15 @@ var (
 	DefaultThreshold        = sdk.NewDecWithPrec(5, 1)
 	DefaultVetoThreshold    = sdk.NewDecWithPrec(334, 3)
 )
+
+// ParamKeyTable - Key declaration for parameters
+func ParamKeyTable() paramtypes.KeyTable {
+	return paramtypes.NewKeyTable(
+		paramtypes.NewParamSetPair(ParamStoreKeyDepositParams, DepositParams{}, validateDepositParams),
+		paramtypes.NewParamSetPair(ParamStoreKeyVotingParams, VotingParams{}, validateVotingParams),
+		paramtypes.NewParamSetPair(ParamStoreKeyTallyParams, TallyParams{}, validateTallyParams),
+	)
+}
 
 // NewDepositParams creates a new DepositParams object
 func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration) DepositParams {

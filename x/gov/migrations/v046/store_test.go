@@ -21,12 +21,12 @@ func TestMigrateStore(t *testing.T) {
 	cdc := simapp.MakeTestEncodingConfig()
 	govKey := sdk.NewKVStoreKey("gov")
 	tGovKey := sdk.NewTransientStoreKey("transient_test")
-	ctx := testutil.DefaultContext(govKey, sdk.NewTransientStoreKey("transient_test"))
+	ctx := testutil.DefaultContext(govKey, tGovKey)
 	store := ctx.KVStore(govKey)
 	paramstore := paramtypes.NewSubspace(cdc.Codec, cdc.Amino, govKey, tGovKey, "gov")
 
-	paramstore.WithKeyTable(v1beta2.ParamKeyTable())
-	paramstore.Set(ctx, v1beta2.ParamStoreKeyDepositParams, v1beta2.DefaultDepositParams())
+	paramstore.WithKeyTable(v1beta1.ParamKeyTable())
+	paramstore.Set(ctx, v1beta1.ParamStoreKeyDepositParams, v1beta1.DefaultDepositParams())
 
 	propTime := time.Unix(1e9, 0)
 

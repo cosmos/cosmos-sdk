@@ -44,12 +44,14 @@ func migrateProposals(store sdk.KVStore, cdc codec.BinaryCodec) error {
 
 // migrateParams migrates legacy depositParams  params into the new deposit params.
 func migrateParams(ctx sdk.Context, paramstore paramtypes.Subspace) {
-	oldDp := v1beta1.DepositParams{}
-	paramstore.Get(ctx, v1beta2.ParamStoreKeyVotingParams, &oldDp)
 
-	depParams := convertToNewDepParams(oldDp)
+	oldDp := v1beta2.DepositParams{}
+	paramstore.Get(ctx, v1beta1.ParamStoreKeyVotingParams, &oldDp)
 
-	paramstore.Set(ctx, v1beta2.ParamStoreKeyVotingParams, depParams)
+	// depParams := convertToNewDepParams(oldDp)
+
+	paramstore.WithKeyTable(v1beta2.ParamKeyTable())
+	// paramstore.Set(ctx, v1beta2.ParamStoreKeyVotingParams, depParams)
 }
 
 // MigrateStore performs in-place store migrations from v0.43 to v0.46. The

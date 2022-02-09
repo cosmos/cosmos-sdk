@@ -13,43 +13,49 @@ import (
 	v046gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func TestMigrateStore(t *testing.T) {
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	cdc := simapp.MakeTestEncodingConfig()
 	govKey := sdk.NewKVStoreKey("gov")
+	tGovKey := sdk.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(govKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(govKey)
+	paramstore := paramtypes.NewSubspace(cdc.Codec, cdc.Amino, govKey, tGovKey, "gov")
+
+	paramstore.WithKeyTable(v1beta2.ParamKeyTable())
+	paramstore.Set(ctx, v1beta2.ParamStoreKeyDepositParams, v1beta2.DefaultDepositParams())
 
 	propTime := time.Unix(1e9, 0)
 
 	// Create 2 proposals
 	prop1, err := v1beta1.NewProposal(v1beta1.NewTextProposal("my title 1", "my desc 1"), 1, propTime, propTime)
 	require.NoError(t, err)
-	prop1Bz, err := cdc.Marshal(&prop1)
+	prop1Bz, err := cdc.Codec.Marshal(&prop1)
 	require.NoError(t, err)
 	prop2, err := v1beta1.NewProposal(upgradetypes.NewSoftwareUpgradeProposal("my title 2", "my desc 2", upgradetypes.Plan{
 		Name: "my plan 2",
 	}), 2, propTime, propTime)
 	require.NoError(t, err)
-	prop2Bz, err := cdc.Marshal(&prop2)
+	prop2Bz, err := cdc.Codec.Marshal(&prop2)
 	require.NoError(t, err)
 
 	store.Set(v040gov.ProposalKey(prop1.ProposalId), prop1Bz)
 	store.Set(v040gov.ProposalKey(prop2.ProposalId), prop2Bz)
 
 	// Run migrations.
-	err = v046gov.MigrateStore(ctx, govKey, cdc)
+	err = v046gov.MigrateStore(ctx, govKey, cdc.Codec, paramstore)
 	require.NoError(t, err)
 
 	var newProp1 v1beta2.Proposal
-	err = cdc.Unmarshal(store.Get(v040gov.ProposalKey(prop1.ProposalId)), &newProp1)
+	err = cdc.Codec.Unmarshal(store.Get(v040gov.ProposalKey(prop1.ProposalId)), &newProp1)
 	require.NoError(t, err)
 	compareProps(t, prop1, newProp1)
 
 	var newProp2 v1beta2.Proposal
-	err = cdc.Unmarshal(store.Get(v040gov.ProposalKey(prop2.ProposalId)), &newProp2)
+	err = cdc.Codec.Unmarshal(store.Get(v040gov.ProposalKey(prop2.ProposalId)), &newProp2)
 	require.NoError(t, err)
 	compareProps(t, prop2, newProp2)
 }

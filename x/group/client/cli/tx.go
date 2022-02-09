@@ -15,6 +15,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	govutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
@@ -644,9 +645,6 @@ Parameters:
 				Metadata:   b,
 				Exec:       execFromString(execStr),
 			}
-			if err != nil {
-				return err
-			}
 
 			if err = msg.ValidateBasic(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
@@ -657,6 +655,86 @@ Parameters:
 	}
 
 	cmd.Flags().String(FlagExec, "", "Set to 1 to try to execute proposal immediately after voting")
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewCmdWeightedVote implements creating a new weighted vote command.
+func MsgVoteWeighted() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "weighted-vote [proposal-id] [voter] [weighted-choices] [metadata]",
+		Args:  cobra.ExactArgs(4),
+		Short: "Vote on a proposal with splitting the choices",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a vote for an active proposal. You can
+find the proposal-id by running "%s query gov proposals".
+
+Parameters:
+			proposal-id: unique ID of the proposal
+			voter: voter account addresses
+			choice: choice of the voter(s)
+				CHOICE_UNSPECIFIED: no-op
+				CHOICE_NO: no
+				CHOICE_YES: yes
+				CHOICE_ABSTAIN: abstain
+				CHOICE_VETO: veto
+			Metadata: metadata for the vote
+
+Example:
+$ %s tx gov weighted-vote 1 cosmos1... CHOICE_YES=0.6,CHOICE_NO=0.3,CHOICE_ABSTAIN=0.05,CHOICE_VETO=0.05 AQ==
+`,
+				version.AppName, version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := cmd.Flags().Set(flags.FlagFrom, args[1])
+			if err != nil {
+				return err
+			}
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			// validate that the proposal id is a uint
+			proposalID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("proposal-id %s not a valid int, please input a valid proposal-id", args[0])
+			}
+
+			// Figure out which vote options user chose
+			choices, err := group.WeightedVoteChoicesFromString(govutils.NormalizeWeightedVoteOptions(args[2]))
+			if err != nil {
+				return err
+			}
+
+			b, err := base64.StdEncoding.DecodeString(args[3])
+			if err != nil {
+				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "metadata is malformed, proper base64 string is required")
+			}
+
+			from := clientCtx.GetFromAddress()
+			execStr, _ := cmd.Flags().GetString(FlagExec)
+
+			// Build vote message and run basic validation
+			msg := &group.MsgVoteWeighted{
+				ProposalId: proposalID,
+				Voter:      from.String(),
+				Choices:    choices,
+				Metadata:   b,
+				Exec:       execFromString(execStr),
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return fmt.Errorf("message validation failed: %w", err)
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

@@ -106,7 +106,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.group = &group.GroupInfo{GroupId: 1, Admin: val.Address.String(), Metadata: []byte{1}, TotalWeight: "3", Version: 1}
 
 	// create 5 group policies
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 6; i++ {
 		threshold := i + 1
 		if threshold > 3 {
 			threshold = 3
@@ -1495,6 +1495,233 @@ func (s *IntegrationTestSuite) TestTxVote() {
 
 		s.Run(tc.name, func() {
 			cmd := client.MsgVoteCmd()
+
+			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Contains(out.String(), tc.expectErrMsg)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestTxVoteWeighted() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	var commonFlags = []string{
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	}
+
+	proposalIds := make([]string, 2)
+
+	validTxFileName := getTxSendFileName(s, s.groupPolicies[1].Address, val.Address.String())
+	for i := 0; i < 4; i++ {
+		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateProposalCmd(),
+			append(
+				[]string{
+					s.groupPolicies[1].Address,
+					val.Address.String(),
+					validTxFileName,
+					"",
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				},
+				commonFlags...,
+			),
+		)
+		s.Require().NoError(err, out.String())
+
+		var txResp sdk.TxResponse
+		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+		s.Require().Equal(uint32(0), txResp.Code, out.String())
+		proposalIds[i] = s.getProposalIdFromTxResponse(txResp)
+	}
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		expectErrMsg string
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"correct data",
+			append(
+				[]string{
+					proposalIds[0],
+					val.Address.String(),
+					"CHOICE_YES=0.5,CHOICE_NO=0.3,CHOICE_ABSTAIN=0.1,CHOICE_VETO=0.1",
+					"",
+				},
+				commonFlags...,
+			),
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"sum of choices weightes > 1",
+			append(
+				[]string{
+					proposalIds[1],
+					val.Address.String(),
+					"CHOICE_YES=0.5,CHOICE_NO=0.5,CHOICE_ABSTAIN=0.1,CHOICE_VETO=0.1",
+					"",
+				},
+				commonFlags...,
+			),
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"sum of choices weightes < 1",
+			append(
+				[]string{
+					proposalIds[1],
+					val.Address.String(),
+					"CHOICE_YES=0.5,CHOICE_NO=0.5,CHOICE_ABSTAIN=0.1,CHOICE_VETO=0.1",
+					"",
+				},
+				commonFlags...,
+			),
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"with try exec",
+			append(
+				[]string{
+					proposalIds[1],
+					val.Address.String(),
+					"CHOICE_YES=1",
+					"",
+					fmt.Sprintf("--%s=try", client.FlagExec),
+				},
+				commonFlags...,
+			),
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"with try exec, not enough yes votes for proposal to pass",
+			append(
+				[]string{
+					proposalIds[2],
+					val.Address.String(),
+					"CHOICE_NO=1",
+					"",
+					fmt.Sprintf("--%s=try", client.FlagExec),
+				},
+				commonFlags...,
+			),
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"with amino-json",
+			append(
+				[]string{
+					proposalIds[3],
+					val.Address.String(),
+					"CHOICE_YES=1",
+					"",
+					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+				},
+				commonFlags...,
+			),
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"invalid proposal id",
+			append(
+				[]string{
+					"abcd",
+					val.Address.String(),
+					"CHOICE_YES=1",
+					"",
+				},
+				commonFlags...,
+			),
+			true,
+			"invalid syntax",
+			nil,
+			0,
+		},
+		{
+			"proposal not found",
+			append(
+				[]string{
+					"1234",
+					val.Address.String(),
+					"CHOICE_YES=1",
+					"",
+				},
+				commonFlags...,
+			),
+			true,
+			"proposal: not found",
+			nil,
+			0,
+		},
+		{
+			"metadata too long",
+			append(
+				[]string{
+					"2",
+					val.Address.String(),
+					"CHOICE_YES=1",
+					"AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ==",
+				},
+				commonFlags...,
+			),
+			true,
+			"metadata: limit exceeded",
+			nil,
+			0,
+		},
+		{
+			"invalid choice",
+			append(
+				[]string{
+					"2",
+					val.Address.String(),
+					"INVALID_CHOICE=1",
+					"",
+				},
+				commonFlags...,
+			),
+			true,
+			"not a valid vote choice",
+			nil,
+			0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := client.MsgVoteWeighted()
 
 			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {

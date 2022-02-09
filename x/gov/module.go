@@ -63,7 +63,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 // DefaultGenesis returns default genesis state as raw bytes for the gov
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(v1beta1.DefaultGenesisState())
+	return cdc.MustMarshalJSON(v1beta2.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the gov module.

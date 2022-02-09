@@ -1,6 +1,8 @@
 package types
 
-import fmt "fmt"
+import (
+	"fmt"
+)
 
 // Pruning option string constants
 const (

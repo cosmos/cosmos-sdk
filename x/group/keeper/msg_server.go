@@ -647,6 +647,119 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	return &group.MsgVoteResponse{}, nil
 }
 
+func (k Keeper) VoteWeighted(goCtx context.Context, req *group.MsgVoteWeighted) (*group.MsgVoteWeightedResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	voter, err := sdk.AccAddressFromBech32(req.Voter)
+	id := req.ProposalId
+	choice := req.Choice
+	// metadata := req.Metadata
+
+	if err != nil {
+		return nil, err
+	}
+
+	id := req.ProposalId
+	choice := req.Choice
+	metadata := req.Metadata
+
+	if err := k.assertMetadataLength(metadata, "metadata"); err != nil {
+		return nil, err
+	}
+
+	proposal, err := k.getProposal(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Ensure that we can still accept votes for this proposal.
+	if proposal.Status != group.ProposalStatusSubmitted {
+		return nil, sdkerrors.Wrap(errors.ErrInvalid, "proposal not open for voting")
+	}
+
+	proposalTimeout, err := gogotypes.TimestampProto(proposal.Timeout)
+	if err != nil {
+		return nil, err
+	}
+
+	votingPeriodEnd, err := gogotypes.TimestampFromProto(proposalTimeout)
+	if err != nil {
+		return nil, err
+	}
+
+	if votingPeriodEnd.Before(ctx.BlockTime()) || votingPeriodEnd.Equal(ctx.BlockTime()) {
+		return nil, sdkerrors.Wrap(errors.ErrExpired, "voting period has ended already")
+	}
+
+	var policyInfo group.GroupPolicyInfo
+
+	// Ensure that group policy hasn't been modified since the proposal submission.
+	if policyInfo, err = k.getGroupPolicyInfo(ctx, proposal.Address); err != nil {
+		return nil, sdkerrors.Wrap(err, "load group policy")
+	}
+	if proposal.GroupPolicyVersion != policyInfo.Version {
+		return nil, sdkerrors.Wrap(errors.ErrModified, "group policy was modified")
+	}
+
+	// Ensure that group hasn't been modified since the proposal submission.
+	electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
+	if err != nil {
+		return nil, err
+	}
+	if electorate.Version != proposal.GroupVersion {
+		return nil, sdkerrors.Wrap(errors.ErrModified, "group was modified")
+	}
+
+	// Count and store votes.
+	voterAddr := req.Voter
+	voter := group.GroupMember{GroupId: electorate.GroupId, Member: &group.Member{Address: voterAddr}}
+	if err := k.groupMemberTable.GetOne(ctx.KVStore(k.key), orm.PrimaryKey(&voter), &voter); err != nil {
+		return nil, sdkerrors.Wrapf(err, "address: %s", voterAddr)
+	}
+	newVote := group.Vote{
+		ProposalId:  id,
+		Voter:       voterAddr,
+		Choice:      choice,
+		Metadata:    metadata,
+		SubmittedAt: ctx.BlockTime(),
+	}
+	if err := proposal.VoteState.Add(newVote, voter.Member.Weight); err != nil {
+		return nil, sdkerrors.Wrap(err, "add new vote")
+	}
+
+	// The ORM will return an error if the vote already exists,
+	// making sure than a voter hasn't already voted.
+	if err := k.voteTable.Create(ctx.KVStore(k.key), &newVote); err != nil {
+		return nil, sdkerrors.Wrap(err, "store vote")
+	}
+
+	// Run tally with new votes to close early.
+	if err := doTally(ctx, &proposal, electorate, policyInfo); err != nil {
+		return nil, err
+	}
+
+	if err = k.proposalTable.Update(ctx.KVStore(k.key), id, &proposal); err != nil {
+		return nil, err
+	}
+
+	err = ctx.EventManager().EmitTypedEvent(&group.EventVote{ProposalId: id})
+	if err != nil {
+		return nil, err
+	}
+
+	// Try to execute proposal immediately
+	if req.Exec == group.Exec_EXEC_TRY {
+		_, err = k.Exec(sdk.WrapSDKContext(ctx), &group.MsgExec{
+			ProposalId: id,
+			Signer:     voterAddr,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &group.MsgVoteWeightedResponse{}, nil
+}
+
 // doTally updates the proposal status and tally if necessary based on the group policy's decision policy.
 func doTally(ctx sdk.Context, p *group.Proposal, electorate group.GroupInfo, policyInfo group.GroupPolicyInfo) error {
 	policy := policyInfo.GetDecisionPolicy()

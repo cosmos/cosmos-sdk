@@ -1,7 +1,6 @@
 package store
 
 import (
-	crand "crypto/rand"
 	"encoding/binary"
 	"fmt"
 	"math"
@@ -18,8 +17,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/db/rocksdb"
 	storev1 "github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	storev2 "github.com/cosmos/cosmos-sdk/store/v2/flat"
-	dbm "github.com/tendermint/tm-db"
+	storev2types "github.com/cosmos/cosmos-sdk/store/v2"
+	storev2 "github.com/cosmos/cosmos-sdk/store/v2/multi"
+	tmdb "github.com/tendermint/tm-db"
 )
 
 var (
@@ -28,15 +28,15 @@ var (
 
 func randBytes(numBytes int) []byte {
 	b := make([]byte, numBytes)
-	_, _ = crand.Read(b)
+	_, _ = rand.Read(b)
 	return b
 }
 
 type percentages struct {
-	has    uint
-	get    uint
-	set    uint
-	delete uint
+	has    int
+	get    int
+	set    int
+	delete int
 }
 
 type counts struct {
@@ -46,28 +46,20 @@ type counts struct {
 	delete int
 }
 
-func generateSampledPercentages() []*percentages {
-	var sampledPercentages []*percentages
-	sampleX := &percentages{has: 5, get: 65, set: 30, delete: 0}
+func generateSampledPercentages() []percentages {
+	var sampledPercentages []percentages
+	sampleX := percentages{has: 2, get: 55, set: 40, delete: 3}
 	sampledPercentages = append(sampledPercentages, sampleX)
-	for a := uint(0); a < 100; a += 20 {
-		for b := uint(0); b < 100; b += 20 {
-			if a+b > 100 {
-				break
-			} else {
-				for c := uint(0); c < 100; c += 20 {
-					if a+b+c > 100 {
-						break
-					} else {
-						sample := percentages{
-							has:    a,
-							get:    b,
-							set:    c,
-							delete: 100 - a - b - c,
-						}
-						sampledPercentages = append(sampledPercentages, &sample)
-					}
+	for a := 0; a < 100; a += 20 {
+		for b := 0; b <= 100-a; b += 20 {
+			for c := 0; c < 100-a-b; c += 20 {
+				sample := percentages{
+					has:    a,
+					get:    b,
+					set:    c,
+					delete: 100 - a - b - c,
 				}
+				sampledPercentages = append(sampledPercentages, sample)
 			}
 		}
 	}
@@ -76,23 +68,23 @@ func generateSampledPercentages() []*percentages {
 
 type benchmark struct {
 	name        string
-	percentages *percentages
-	dbType      dbm.BackendType
-	counts      *counts
+	percentages percentages
+	dbType      tmdb.BackendType
+	counts      counts
 }
 
-func generateBenchmarks(dbBackendTypes []dbm.BackendType, sampledPercentages []*percentages, sampledCounts []*counts) []benchmark {
+func generateBenchmarks(dbBackendTypes []tmdb.BackendType, sampledPercentages []percentages, sampledCounts []counts) []benchmark {
 	var benchmarks []benchmark
 	for _, dbType := range dbBackendTypes {
 		if len(sampledPercentages) > 0 {
 			for _, p := range sampledPercentages {
 				name := fmt.Sprintf("r-%s-%d-%d-%d-%d", dbType, p.has, p.get, p.set, p.delete)
-				benchmarks = append(benchmarks, benchmark{name: name, percentages: p, dbType: dbType, counts: (*counts)(nil)})
+				benchmarks = append(benchmarks, benchmark{name: name, percentages: p, dbType: dbType, counts: counts{}})
 			}
 		} else if len(sampledCounts) > 0 {
 			for _, c := range sampledCounts {
 				name := fmt.Sprintf("d-%s-%d-%d-%d-%d", dbType, c.has, c.get, c.set, c.delete)
-				benchmarks = append(benchmarks, benchmark{name: name, percentages: (*percentages)(nil), dbType: dbType, counts: c})
+				benchmarks = append(benchmarks, benchmark{name: name, percentages: percentages{}, dbType: dbType, counts: c})
 			}
 		}
 	}
@@ -107,28 +99,28 @@ type store interface {
 	Commit() types.CommitID
 }
 
-func sampleOperation(p *percentages) (string, error) {
-	ops := []string{"Has", "Get", "Set", "Delete"}
-	thresholds := []uint{p.has, p.has + p.get, p.has + p.get + p.set}
-	r := rand.Intn(100)
-	if r >= int(thresholds[2]) {
-		return ops[3], nil
-	} else {
-		for i := 0; i < len(thresholds); i++ {
-			if r < int(thresholds[i]) {
-				return ops[i], nil
-			}
-		}
-	}
-	return "", fmt.Errorf("failed to smaple operation")
+type storeV2 struct {
+	*storev2.Store
+	storev2types.KVStore
 }
 
-func runRandomizedOperations(b *testing.B, s store, totalOpsCount int, p *percentages) {
+func sampleOperation(p percentages) string {
+	ops := []string{"Has", "Get", "Set", "Delete"}
+	thresholds := []int{p.has, p.has + p.get, p.has + p.get + p.set}
+	r := rand.Intn(100)
+	for i := 0; i < len(thresholds); i++ {
+		if r < thresholds[i] {
+			return ops[i]
+		}
+	}
+	return ops[3]
+}
+
+func runRandomizedOperations(b *testing.B, s store, totalOpsCount int, p percentages) {
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < totalOpsCount; j++ {
 			b.StopTimer()
-			op, err := sampleOperation(p)
-			require.NoError(b, err)
+			op := sampleOperation(p)
 			b.StartTimer()
 
 			switch op {
@@ -162,7 +154,7 @@ func createKey(i int) []byte {
 	return b
 }
 
-func runDeterministicOperations(b *testing.B, s store, values [][]byte, c *counts) {
+func runDeterministicOperations(b *testing.B, s store, values [][]byte, c counts) {
 	counts := []int{c.has, c.get, c.set, c.delete}
 	sort.Ints(counts)
 	step := counts[len(counts)-1]
@@ -199,7 +191,7 @@ func runDeterministicOperations(b *testing.B, s store, values [][]byte, c *count
 	}
 }
 
-func newDB(version int, dbName string, dbType dbm.BackendType, dir string) (db interface{}, err error) {
+func newDB(version int, dbName string, dbType tmdb.BackendType, dir string) (db interface{}, err error) {
 	d := filepath.Join(dir, dbName, dbName+".db")
 	err = os.MkdirAll(d, os.ModePerm)
 	if err != nil {
@@ -207,7 +199,7 @@ func newDB(version int, dbName string, dbType dbm.BackendType, dir string) (db i
 	}
 
 	if version == 1 {
-		db, err = dbm.NewDB(dbName, dbType, d)
+		db, err = tmdb.NewDB(dbName, dbType, d)
 		if err != nil {
 			return nil, err
 		}
@@ -216,13 +208,13 @@ func newDB(version int, dbName string, dbType dbm.BackendType, dir string) (db i
 
 	if version == 2 {
 		switch dbType {
-		case dbm.RocksDBBackend:
+		case tmdb.RocksDBBackend:
 			db, err = rocksdb.NewDB(d)
 			if err != nil {
 				return nil, err
 			}
 			return db, nil
-		case dbm.BadgerDBBackend:
+		case tmdb.BadgerDBBackend:
 			db, err = badgerdb.NewDB(d)
 			if err != nil {
 				return nil, err
@@ -236,45 +228,37 @@ func newDB(version int, dbName string, dbType dbm.BackendType, dir string) (db i
 	return nil, fmt.Errorf("not supported version")
 }
 
-func newStore(version int, ssdbBackend interface{}, scdbBackend interface{}, cID *types.CommitID, cacheSize int) (store, error) {
+func newStore(version int, dbBackend interface{}, cID *types.CommitID, cacheSize int) (store, error) {
 	if version == 1 {
-		db, ok := ssdbBackend.(dbm.DB)
+		db, ok := dbBackend.(tmdb.DB)
 		if !ok {
-			return (*storev1.Store)(nil), fmt.Errorf("unsupported db type")
+			return nil, fmt.Errorf("unsupported db type")
 		}
 		if cID == nil {
 			cID = &types.CommitID{Version: 0, Hash: nil}
 		}
 		s, err := storev1.LoadStore(db, *cID, false, cacheSize)
 		if err != nil {
-			return (*storev1.Store)(nil), err
+			return nil, err
 		}
 		return s, nil
 	}
 
 	if version == 2 {
-		ssdb, ok := ssdbBackend.(db.DBConnection)
+		db, ok := dbBackend.(db.DBConnection)
 		if !ok {
-			return (*storev2.Store)(nil), fmt.Errorf("unsupported db type")
+			return nil, fmt.Errorf("unsupported db type")
 		}
-		scdb, ok := scdbBackend.(db.DBConnection)
-		if !ok {
-			return (*storev2.Store)(nil), fmt.Errorf("unsupported db type")
-		}
-		var opts storev2.StoreConfig
-		if cID != nil {
-			opts = storev2.StoreConfig{InitialVersion: uint64(cID.Version), Pruning: types.PruneNothing, MerkleDB: scdb}
-		} else {
-			opts = storev2.StoreConfig{InitialVersion: 0, Pruning: types.PruneNothing, MerkleDB: scdb}
-		}
-		s, err := storev2.NewStore(ssdb, opts)
+		root, err := storev2.NewStore(db, storev2.DefaultStoreConfig())
 		if err != nil {
-			return (*storev2.Store)(nil), err
+			return nil, err
 		}
+		store := root.GetKVStore(storev2types.NewKVStoreKey("store1"))
+		s := &storeV2{root, store}
 		return s, nil
 	}
 
-	return (*storev2.Store)(nil), fmt.Errorf("unsupported version")
+	return nil, fmt.Errorf("unsupported version")
 }
 
 func prepareStore(s store, values [][]byte) (store, types.CommitID) {
@@ -285,86 +269,43 @@ func prepareStore(s store, values [][]byte) (store, types.CommitID) {
 	return s, cID
 }
 
-func TestStoreV2Rollback(t *testing.T) {
+func runSuite(b *testing.B, version int, dbBackendTypes []tmdb.BackendType, dir string) {
+	// run randomized operations subbenchmarks for various scenarios
+	sampledPercentages := generateSampledPercentages()
+	benchmarks := generateBenchmarks(dbBackendTypes, sampledPercentages, nil)
+	for _, bm := range benchmarks {
+		db, err := newDB(version, bm.name, bm.dbType, dir)
+		require.NoError(b, err)
+		s, err := newStore(version, db, nil, cacheSize)
+		require.NoError(b, err)
+		b.Run(bm.name, func(sub *testing.B) {
+			runRandomizedOperations(sub, s, 1000, bm.percentages)
+		})
+	}
+
+	// run deterministic operations subbenchmarks for various scenarios
+	c := counts{has: 5, get: 20, set: 5, delete: 1}
+	sampledCounts := []counts{c}
+	benchmarks = generateBenchmarks(dbBackendTypes, nil, sampledCounts)
 	values := prepareValues()
-	ssdb, err := newDB(2, "rollbacktest-ss", dbm.RocksDBBackend, "testdbs/v2")
-	scdb, err := newDB(2, "rollbacktest-sc", dbm.RocksDBBackend, "testdbs/v2")
-	require.NoError(t, err)
-	s, err := newStore(2, ssdb, scdb, nil, cacheSize)
-	require.NoError(t, err)
-	s, cID := prepareStore(s, values)
-	require.EqualValues(t, values[111], s.Get(createKey(111)))
-	require.EqualValues(t, 1, cID.Version)
-	sV2, ok := s.(*storev2.Store)
-	require.True(t, ok)
-	require.NoError(t, sV2.Close())
-
-	s, err = newStore(2, ssdb, scdb, nil, cacheSize)
-	require.NoError(t, err)
-	require.EqualValues(t, values[111], s.Get(createKey(111)))
-	s.Set(createKey(111), []byte("goodbye"))
-	cID2 := s.Commit()
-	sV2, ok = s.(*storev2.Store)
-	require.True(t, ok)
-	require.NoError(t, sV2.Close())
-
-	s, err = newStore(2, ssdb, scdb, nil, cacheSize)
-	require.NoError(t, err)
-	s.Set(createKey(111), []byte("world"))
-	_ = s.Commit()
-	sV2, ok = s.(*storev2.Store)
-	require.True(t, ok)
-	require.NoError(t, sV2.Close())
-
-	// db, ok := rdb.(db.DBConnection)
-	// require.True(t, ok)
-	// db.DeleteVersion(uint64(cID.Version) + 1)
-	s, err = newStore(2, ssdb, scdb, &cID2, cacheSize)
-	// s.Set(createKey(111), []byte("hello"))
-	// require.EqualValues(t, []byte("hello"), s.Get(createKey(111)))
-	// db.DeleteVersion(uint64(cID.Version)+1)
-	require.EqualValues(t, []byte("world"), s.Get(createKey(111)))
+	for _, bm := range benchmarks {
+		db, err := newDB(version, bm.name, bm.dbType, dir)
+		require.NoError(b, err)
+		s, err := newStore(version, db, nil, cacheSize)
+		require.NoError(b, err)
+		b.Run(bm.name, func(sub *testing.B) {
+			runDeterministicOperations(sub, s, values, bm.counts)
+		})
+	}
 }
 
-// func runRollback(b *testing.B, s store)
+func BenchmarkLoadStoreV1(b *testing.B) {
+	dbBackendTypes := []tmdb.BackendType{tmdb.GoLevelDBBackend, tmdb.RocksDBBackend, tmdb.BadgerDBBackend}
+	// dbBackendTypes := []tmdb.BackendType{tmdb.RocksDBBackend, tmdb.BadgerDBBackend}
+	runSuite(b, 1, dbBackendTypes, "testdbs/v1")
+}
 
-// func runSuit(b *testing.B, version int, dbBackendTypes []dbm.BackendType, dir string) {
-// 	// run randomized operations subbenchmarks for various scenarios
-// 	sampledPercentages := generateSampledPercentages()
-// 	benchmarks := generateBenchmarks(dbBackendTypes, sampledPercentages, nil)
-// 	for _, bm := range benchmarks {
-// 		db, err := newDB(version, bm.name, bm.dbType, dir)
-// 		require.NoError(b, err)
-// 		s, err := newStore(version, db, nil, cacheSize)
-// 		require.NoError(b, err)
-// 		b.Run(bm.name, func(sub *testing.B) {
-// 			runRandomizedOperations(sub, s, 1000, bm.percentages)
-// 		})
-// 	}
-
-// 	// run deterministic operations subbenchmarks for various scenarios
-// 	c := &counts{has: 5, get: 20, set: 5, delete: 1}
-// 	sampledCounts := []*counts{c}
-// 	benchmarks = generateBenchmarks(dbBackendTypes, nil, sampledCounts)
-// 	values := prepareValues()
-// 	for _, bm := range benchmarks {
-// 		db, err := newDB(version, bm.name, bm.dbType, dir)
-// 		require.NoError(b, err)
-// 		s, err := newStore(version, db, nil, cacheSize)
-// 		require.NoError(b, err)
-// 		b.Run(bm.name, func(sub *testing.B) {
-// 			runDeterministicOperations(sub, s, values, bm.counts)
-// 		})
-// 	}
-// }
-
-// func BenchmarkLoadStoreV1(b *testing.B) {
-// 	dbBackendTypes := []dbm.BackendType{dbm.GoLevelDBBackend, dbm.RocksDBBackend, dbm.BadgerDBBackend}
-// 	// dbBackendTypes := []dbm.BackendType{dbm.RocksDBBackend, dbm.BadgerDBBackend}
-// 	runSuit(b, 1, dbBackendTypes, "testdbs/v1")
-// }
-
-// func BenchmarkLoadStoreV2(b *testing.B) {
-// 	dbBackendTypes := []dbm.BackendType{dbm.RocksDBBackend, dbm.BadgerDBBackend}
-// 	runSuit(b, 2, dbBackendTypes, "testdbs/v2")
-// }
+func BenchmarkLoadStoreV2(b *testing.B) {
+	dbBackendTypes := []tmdb.BackendType{tmdb.RocksDBBackend, tmdb.BadgerDBBackend}
+	runSuite(b, 2, dbBackendTypes, "testdbs/v2")
+}

@@ -177,9 +177,6 @@ func (q Keeper) Params(c context.Context, req *v1beta2.QueryParamsRequest) (*v1b
 	case v1beta2.ParamTallying:
 		tallyParams := q.GetTallyParams(ctx)
 		return &v1beta2.QueryParamsResponse{TallyParams: &tallyParams}, nil
-	case v1beta2.ParamBurn:
-		burnParams := q.GetBurnParams(ctx)
-		return &v1beta2.QueryParamsResponse{BurnParams: &burnParams}, nil
 
 	default:
 		return nil, status.Errorf(codes.InvalidArgument,

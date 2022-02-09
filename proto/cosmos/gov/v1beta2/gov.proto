@@ -101,6 +101,13 @@ message DepositParams {
   //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2
   //  months.
   google.protobuf.Duration max_deposit_period = 2 [(gogoproto.stdduration) = true, (gogoproto.jsontag) = "max_deposit_period,omitempty"];
+
+  // burn deposits if a proposal does not meet qourum
+  bool vote_quorum = 3;
+  // burn deposits if the proposal does not get enough deposits
+  bool proposal_deposit = 4;
+  // burn deposits if qouroum wite vote type no_veto is met
+  bool vote_veto = 5;
 }
 
 // VotingParams defines the params for voting on governance proposals.
@@ -121,13 +128,4 @@ message TallyParams {
   //  Minimum value of Veto votes to Total votes ratio for proposal to be
   //  vetoed. Default value: 1/3.
   string veto_threshold = 3 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.jsontag) = "veto_threshold,omitempty"];
-}
-
-// BurnParams defines the params for burning tokens within deposits.
-message BurnParams {
-  // burn deposits if a proposal does not meet qourum
-  bool vote_quorum = 1;
-  // burn deposits if the proposal does not get enough deposits
-  bool proposal_deposit = 2;
-  bool vote_veto        = 3;
 }

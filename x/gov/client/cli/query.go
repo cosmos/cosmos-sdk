@@ -560,19 +560,10 @@ $ %s query gov params
 				return err
 			}
 
-			burnRes, err := queryClient.Params(
-				ctx,
-				&v1beta2.QueryParamsRequest{ParamsType: "burn"},
-			)
-			if err != nil {
-				return err
-			}
-
 			params := v1beta2.NewParams(
 				*votingRes.GetVotingParams(),
 				*tallyRes.GetTallyParams(),
 				*depositRes.GetDepositParams(),
-				*burnRes.GetBurnParams(),
 			)
 
 			return clientCtx.PrintObjectLegacy(params)

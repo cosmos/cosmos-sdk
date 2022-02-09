@@ -8,13 +8,12 @@ import (
 )
 
 // NewGenesisState creates a new genesis state for the governance module
-func NewGenesisState(startingProposalID uint64, dp DepositParams, vp VotingParams, tp TallyParams, bp BurnParams) *GenesisState {
+func NewGenesisState(startingProposalID uint64, dp DepositParams, vp VotingParams, tp TallyParams) *GenesisState {
 	return &GenesisState{
 		StartingProposalId: startingProposalID,
 		DepositParams:      &dp,
 		VotingParams:       &vp,
 		TallyParams:        &tp,
-		BurnParams:         &bp,
 	}
 }
 
@@ -25,7 +24,6 @@ func DefaultGenesisState() *GenesisState {
 		DefaultDepositParams(),
 		DefaultVotingParams(),
 		DefaultTallyParams(),
-		DefaultBurnParams(),
 	)
 }
 
@@ -34,8 +32,7 @@ func (data GenesisState) Empty() bool {
 	return data.StartingProposalId == 0 ||
 		data.DepositParams == nil ||
 		data.VotingParams == nil ||
-		data.TallyParams == nil ||
-		data.BurnParams == nil
+		data.TallyParams == nil
 }
 
 // ValidateGenesis checks if parameters are within valid ranges
@@ -54,10 +51,6 @@ func ValidateGenesis(data *GenesisState) error {
 
 	if err := validateDepositParams(*data.DepositParams); err != nil {
 		return fmt.Errorf("invalid deposit params: %w", err)
-	}
-
-	if err := validateBurnParams(*data.BurnParams); err != nil {
-		return fmt.Errorf("invalid burn params: %w", err)
 	}
 
 	return nil

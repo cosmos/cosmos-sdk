@@ -27,7 +27,6 @@ var (
 	ParamStoreKeyDepositParams = []byte("depositparams")
 	ParamStoreKeyVotingParams  = []byte("votingparams")
 	ParamStoreKeyTallyParams   = []byte("tallyparams")
-	ParamStoreKeyBurnParams    = []byte("burnparams")
 )
 
 // ParamKeyTable - Key declaration for parameters
@@ -36,15 +35,17 @@ func ParamKeyTable() paramtypes.KeyTable {
 		paramtypes.NewParamSetPair(ParamStoreKeyDepositParams, DepositParams{}, validateDepositParams),
 		paramtypes.NewParamSetPair(ParamStoreKeyVotingParams, VotingParams{}, validateVotingParams),
 		paramtypes.NewParamSetPair(ParamStoreKeyTallyParams, TallyParams{}, validateTallyParams),
-		paramtypes.NewParamSetPair(ParamStoreKeyBurnParams, BurnParams{}, validateBurnParams),
 	)
 }
 
 // NewDepositParams creates a new DepositParams object
-func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration) DepositParams {
+func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration, vv, vq, dp bool) DepositParams {
 	return DepositParams{
 		MinDeposit:       minDeposit,
 		MaxDepositPeriod: &maxDepositPeriod,
+		VoteQuorum:       vq,
+		VoteVeto:         vv,
+		ProposalDeposit:  dp,
 	}
 }
 
@@ -52,7 +53,7 @@ func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration) Depo
 func DefaultDepositParams() DepositParams {
 	return NewDepositParams(
 		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinDepositTokens)),
-		DefaultPeriod,
+		DefaultPeriod, true, true, true,
 	)
 }
 
@@ -174,43 +175,7 @@ func validateVotingParams(i interface{}) error {
 
 // DefaultParams default governance params
 func DefaultParams() Params {
-	return NewParams(DefaultVotingParams(), DefaultTallyParams(), DefaultDepositParams(), DefaultBurnParams())
-}
-
-// NewBurnParams creates a new VotingParams object
-func NewBurnParams(vq, pd, vv bool) BurnParams {
-	return BurnParams{
-		VoteQuorum:      vq,
-		ProposalDeposit: pd,
-		VoteVeto:        vv,
-	}
-}
-
-// DefaultVotingParams default parameters for voting
-func DefaultBurnParams() BurnParams {
-	return NewBurnParams(true, true, true)
-}
-
-func validateBurnParams(i interface{}) error {
-	_, ok := i.(BurnParams)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-	return nil
-}
-
-// Equal checks equality of TallyParams
-func (bp BurnParams) Equal(other BurnParams) bool {
-	if bp.ProposalDeposit == other.ProposalDeposit {
-		return true
-	}
-	if bp.VoteQuorum == other.VoteQuorum {
-		return true
-	}
-	if bp.VoteVeto == other.VoteVeto {
-		return true
-	}
-	return false
+	return NewParams(DefaultVotingParams(), DefaultTallyParams(), DefaultDepositParams())
 }
 
 // Params returns all of the governance params
@@ -218,7 +183,6 @@ type Params struct {
 	VotingParams  VotingParams  `json:"voting_params" yaml:"voting_params"`
 	TallyParams   TallyParams   `json:"tally_params" yaml:"tally_params"`
 	DepositParams DepositParams `json:"deposit_params" yaml:"deposit_params"`
-	BurnParams    BurnParams    `json:"burn_params" yaml:"burn_params"`
 }
 
 func (gp Params) String() string {
@@ -227,11 +191,10 @@ func (gp Params) String() string {
 }
 
 // NewParams creates a new gov Params instance
-func NewParams(vp VotingParams, tp TallyParams, dp DepositParams, bp BurnParams) Params {
+func NewParams(vp VotingParams, tp TallyParams, dp DepositParams) Params {
 	return Params{
 		VotingParams:  vp,
 		DepositParams: dp,
 		TallyParams:   tp,
-		BurnParams:    bp,
 	}
 }

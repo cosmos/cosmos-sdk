@@ -2241,8 +2241,15 @@ type PrimaryKeyDescriptor struct {
 	// fields is a comma-separated list of fields in the primary key. Spaces are
 	// not allowed. Supported field types, their encodings, and any applicable constraints
 	// are described below.
-	//   - uint32, uint64 are encoded as big-endian fixed width bytes and support
-	//   sorted iteration.
+	//   - uint32 are encoded as 2,3,4 or 5 bytes using a compact encoding that
+	//     is suitable for sorted iteration (not varint encoding). This type is
+	//     well-suited for small integers.
+	//   - uint64 are encoded as 2,4,6 or 9 bytes using a compact encoding that
+	//     is suitable for sorted iteration (not varint encoding). This type is
+	//     well-suited for small integers such as auto-incrementing sequences.
+	//   - fixed32, fixed64 are encoded as big-endian fixed width bytes and support
+	//   sorted iteration. These types are well-suited for encoding fixed with
+	//   decimals as integers.
 	//   - string's are encoded as raw bytes in terminal key segments and null-terminated
 	//   in non-terminal segments. Null characters are thus forbidden in strings.
 	//   string fields support sorted iteration.
@@ -2251,7 +2258,7 @@ type PrimaryKeyDescriptor struct {
 	//   longer than 255 bytes are unsupported and bytes fields should not
 	//   be assumed to be lexically sorted. If you have a byte array longer than
 	//   255 bytes that you'd like to index, you should consider hashing it first.
-	//   - int32, sint32, int64, sint64 are encoding as fixed width bytes with
+	//   - int32, sint32, int64, sint64, sfixed32, sfixed64 are encoded as fixed width bytes with
 	//   an encoding that enables sorted iteration.
 	//   - google.protobuf.Timestamp and google.protobuf.Duration are encoded
 	//   as 12 bytes using an encoding that enables sorted iteration.

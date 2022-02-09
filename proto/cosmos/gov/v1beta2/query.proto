@@ -136,8 +136,6 @@ message QueryParamsResponse {
   DepositParams deposit_params = 2;
   // tally_params defines the parameters related to tally.
   TallyParams tally_params = 3;
-  // burn_params defines the parameters related to burning.
-  BurnParams burn_params = 4;
 }
 
 // QueryDepositRequest is the request type for the Query/Deposit RPC method.

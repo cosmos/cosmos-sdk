@@ -23,6 +23,4 @@ message GenesisState {
   VotingParams voting_params = 6;
   // params defines all the paramaters of related to tally.
   TallyParams tally_params = 7;
-  // burn_params defines all the paramaters of related to tally.
-  BurnParams burn_params = 8;
 }

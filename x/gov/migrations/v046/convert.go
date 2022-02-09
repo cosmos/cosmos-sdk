@@ -167,6 +167,9 @@ func convertToNewDepParams(oldDepParams v1beta1.DepositParams) v1beta2.DepositPa
 	return v1beta2.DepositParams{
 		MinDeposit:       oldDepParams.MinDeposit,
 		MaxDepositPeriod: &oldDepParams.MaxDepositPeriod,
+		VoteQuorum:       true,
+		VoteVeto:         true,
+		ProposalDeposit:  true,
 	}
 }
 

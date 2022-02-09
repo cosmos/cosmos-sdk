@@ -682,17 +682,6 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 			true,
 		},
 		{
-			"burn params request",
-			func() {
-				req = &v1beta2.QueryParamsRequest{ParamsType: v1beta2.ParamBurn}
-				burnParams := v1beta2.DefaultBurnParams()
-				expRes = &v1beta2.QueryParamsResponse{
-					BurnParams: &burnParams,
-				}
-			},
-			true,
-		},
-		{
 			"invalid request",
 			func() {
 				req = &v1beta2.QueryParamsRequest{ParamsType: "wrongPath"}

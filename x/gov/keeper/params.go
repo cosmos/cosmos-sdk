@@ -26,13 +26,6 @@ func (keeper Keeper) GetTallyParams(ctx sdk.Context) v1beta2.TallyParams {
 	return tallyParams
 }
 
-// GetTallyParams returns the current TallyParam from the global param store
-func (keeper Keeper) GetBurnParams(ctx sdk.Context) v1beta2.BurnParams {
-	var burnParams v1beta2.BurnParams
-	keeper.paramSpace.Get(ctx, v1beta2.ParamStoreKeyBurnParams, &burnParams)
-	return burnParams
-}
-
 // SetDepositParams sets DepositParams to the global param store
 func (keeper Keeper) SetDepositParams(ctx sdk.Context, depositParams v1beta2.DepositParams) {
 	keeper.paramSpace.Set(ctx, v1beta2.ParamStoreKeyDepositParams, &depositParams)
@@ -46,9 +39,4 @@ func (keeper Keeper) SetVotingParams(ctx sdk.Context, votingParams v1beta2.Votin
 // SetTallyParams sets TallyParams to the global param store
 func (keeper Keeper) SetTallyParams(ctx sdk.Context, tallyParams v1beta2.TallyParams) {
 	keeper.paramSpace.Set(ctx, v1beta2.ParamStoreKeyTallyParams, &tallyParams)
-}
-
-// SetBurnParams sets BurnParams to the global param store
-func (keeper Keeper) SetBurnParams(ctx sdk.Context, burnParams v1beta2.BurnParams) {
-	keeper.paramSpace.Set(ctx, v1beta2.ParamStoreKeyBurnParams, &burnParams)
 }

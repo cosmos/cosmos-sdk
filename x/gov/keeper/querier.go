@@ -68,13 +68,6 @@ func queryParams(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
 		}
 		return bz, nil
 
-	case v1beta2.ParamBurn:
-		bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, keeper.GetBurnParams(ctx))
-		if err != nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
-		}
-		return bz, nil
-
 	default:
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "%s is not a valid query request path", req.Path)
 	}

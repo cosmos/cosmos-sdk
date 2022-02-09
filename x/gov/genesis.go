@@ -15,7 +15,6 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 	k.SetDepositParams(ctx, *data.DepositParams)
 	k.SetVotingParams(ctx, *data.VotingParams)
 	k.SetTallyParams(ctx, *data.TallyParams)
-	k.SetBurnParams(ctx, *data.BurnParams)
 
 	// check if the deposits pool account exists
 	moduleAcc := k.GetGovernanceAccount(ctx)

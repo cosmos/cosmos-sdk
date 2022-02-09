@@ -28,7 +28,7 @@ func (st *state) Context() sdk.Context {
 
 // WithContext update context of the state
 func (st *state) WithContext(ctx sdk.Context) {
-	defer st.lock.Unlock()
 	st.lock.Lock()
+	defer st.lock.Unlock()
 	st.ctx = ctx
 }

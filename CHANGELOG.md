@@ -119,6 +119,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10816](https://github.com/cosmos/cosmos-sdk/pull/10816) Reuse blocked addresses from the bank module. No need to pass them to distribution. 
 * [\#10852](https://github.com/cosmos/cosmos-sdk/pull/10852) Move `x/gov/types` to `x/gov/types/v1beta2`.
 * [\#10868](https://github.com/cosmos/cosmos-sdk/pull/10868), [\#10989](https://github.com/cosmos/cosmos-sdk/pull/10989), [\#11093](https://github.com/cosmos/cosmos-sdk/pull/11093) The Gov keeper accepts now 2 more mandatory arguments, the ServiceMsgRouter and a gov Config including the max metadata length.
+* [\#11124](https://github.com/cosmos/cosmos-sdk/pull/11124) Add `GetAllVersions` to application store
+* (x/authz) [\#10447](https://github.com/cosmos/cosmos-sdk/pull/10447) authz `NewGrant` takes a new argument: block time, to correctly validate expire time.
 
 ### Client Breaking Changes
 * [\#11089](https://github.com/cosmos/cosmos-sdk/pull/11089]) interacting with the node through `grpc.Dial` requires clients to pass a codec refer to [doc](docs/run-node/interact-node.md).
@@ -157,6 +159,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (store) [\#11117](https://github.com/cosmos/cosmos-sdk/pull/11117) Fix data race in store trace component
 * (cli) [\#11065](https://github.com/cosmos/cosmos-sdk/pull/11065) Ensure the `tendermint-validator-set` query command respects the `-o` output flag.
 * (grpc) [\#10985](https://github.com/cosmos/cosmos-sdk/pull/10992) The `/cosmos/tx/v1beta1/txs/{hash}` endpoint returns a 404 when a tx does not exist.
 * (rosetta) [\#10340](https://github.com/cosmos/cosmos-sdk/pull/10340) Use `GenesisChunked(ctx)` instead `Genesis(ctx)` to get genesis block height
@@ -184,6 +187,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#9790](https://github.com/cosmos/cosmos-sdk/pull/10687) Fix behavior of `DecCoins.MulDecTruncate`.
 * [\#10990](https://github.com/cosmos/cosmos-sdk/pull/10990) Fixes missing `iavl-cache-size` config parsing in `GetConfig` method.
 * (crypto) [#11027] Remove dependency on Tendermint core for xsalsa20symmetric.
+* (x/authz) [\#10447](https://github.com/cosmos/cosmos-sdk/pull/10447) Fix authz `NewGrant` expiration check.
 
 ### State Machine Breaking
 
@@ -200,6 +204,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10868](https://github.com/cosmos/cosmos-sdk/pull/10868) Bump gov to v1beta2. Both v1beta1 and v1beta2 queries and Msgs are accepted.
 * [\#11011](https://github.com/cosmos/cosmos-sdk/pull/11011) Remove burning of deposits when qourum is not reached on a governance proposal and when the deposit is not fully met. 
 * [\#11019](https://github.com/cosmos/cosmos-sdk/pull/11019) Add `MsgCreatePermanentLockedAccount` and CLI method for creating permanent locked account
+* (x/feegrant) [\#10830](https://github.com/cosmos/cosmos-sdk/pull/10830) Expired allowances will be pruned from state.
 
 ### Deprecated
 

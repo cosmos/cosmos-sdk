@@ -398,8 +398,8 @@ func TestPruning(t *testing.T) {
 		types.PruningOptions
 		kept []uint64
 	}{
-		{types.PruningOptions{2, 4, 10}, []uint64{4, 8, 9, 10}},
-		{types.PruningOptions{0, 4, 10}, []uint64{4, 8, 10}},
+		{types.PruningOptions{2, 10}, []uint64{4, 8, 9, 10}},
+		{types.PruningOptions{0, 10}, []uint64{4, 8, 10}},
 		{types.PruneEverything, []uint64{10}},
 		{types.PruneNothing, []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
 	}
@@ -441,7 +441,7 @@ func TestPruning(t *testing.T) {
 	}
 	db := memdb.NewDB()
 	opts := simpleStoreConfig(t)
-	opts.Pruning = types.PruningOptions{0, 5, 10}
+	opts.Pruning = types.PruningOptions{0, 10}
 	store, err := NewStore(db, opts)
 	require.NoError(t, err)
 

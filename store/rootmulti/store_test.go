@@ -329,7 +329,6 @@ func TestMultiStoreRestart(t *testing.T) {
 	db := dbm.NewMemDB()
 	pruning := types.PruningOptions{
 		KeepRecent: 2,
-		KeepEvery:  3,
 		Interval:   1,
 	}
 	multi := newMultiStoreWithMounts(db, pruning)
@@ -488,9 +487,9 @@ func TestMultiStore_Pruning(t *testing.T) {
 	}{
 		{"prune nothing", 10, types.PruneNothing, nil, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
 		{"prune everything", 10, types.PruneEverything, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9}, []int64{10}},
-		{"prune some; no batch", 10, types.NewPruningOptions(2, 3, 1), []int64{1, 2, 4, 5, 7}, []int64{3, 6, 8, 9, 10}},
-		{"prune some; small batch", 10, types.NewPruningOptions(2, 3, 3), []int64{1, 2, 4, 5}, []int64{3, 6, 7, 8, 9, 10}},
-		{"prune some; large batch", 10, types.NewPruningOptions(2, 3, 11), nil, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
+		{"prune some; no batch", 10, types.NewPruningOptions(2, 1), []int64{1, 2, 4, 5, 7}, []int64{3, 6, 8, 9, 10}},
+		{"prune some; small batch", 10, types.NewPruningOptions(2, 3), []int64{1, 2, 4, 5}, []int64{3, 6, 7, 8, 9, 10}},
+		{"prune some; large batch", 10, types.NewPruningOptions(2, 11), nil, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
 	}
 
 	for _, tc := range testCases {
@@ -520,7 +519,7 @@ func TestMultiStore_Pruning(t *testing.T) {
 
 func TestMultiStore_PruningRestart(t *testing.T) {
 	db := dbm.NewMemDB()
-	ms := newMultiStoreWithMounts(db, types.NewPruningOptions(2, 3, 11))
+	ms := newMultiStoreWithMounts(db, types.NewPruningOptions(2, 11))
 	require.NoError(t, ms.LoadLatestVersion())
 
 	// Commit enough to build up heights to prune, where on the next block we should
@@ -537,7 +536,7 @@ func TestMultiStore_PruningRestart(t *testing.T) {
 	require.Equal(t, pruneHeights, ph)
 
 	// "restart"
-	ms = newMultiStoreWithMounts(db, types.NewPruningOptions(2, 3, 11))
+	ms = newMultiStoreWithMounts(db, types.NewPruningOptions(2, 11))
 	err = ms.LoadLatestVersion()
 	require.NoError(t, err)
 	require.Equal(t, pruneHeights, ms.pruneHeights)

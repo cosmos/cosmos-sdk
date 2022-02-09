@@ -60,12 +60,12 @@ const (
 // If update group or group policy txn's executed, `SimulateMsgVote` & `SimulateMsgExec` txn's returns `noOp`.
 // That's why we have less weight for update group & group-policy txn's.
 const (
-	WeightMsgCreateGroup                     = 100
-	WeightMsgCreateGroupPolicy               = 100
+	WeightMsgCreateGroup                     = 50
+	WeightMsgCreateGroupWithPolicy           = 100
+	WeightMsgCreateGroupPolicy               = 50
 	WeightMsgCreateProposal                  = 90
 	WeightMsgVote                            = 90
 	WeightMsgExec                            = 90
-	WeightMsgCreateGroupWithPolicy           = 100
 	WeightMsgUpdateGroupMetadata             = 5
 	WeightMsgUpdateGroupAdmin                = 5
 	WeightMsgUpdateGroupMembers              = 5
@@ -579,6 +579,33 @@ func SimulateMsgUpdateGroupMembers(ak group.AccountKeeper,
 		}
 
 		members := genGroupMembers(r, accounts)
+
+		ctx := sdk.UnwrapSDKContext(sdkCtx)
+		res, err := k.GroupMembers(ctx, &group.QueryGroupMembersRequest{GroupId: groupID})
+		if err != nil {
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupMembers, "group members"), nil, err
+		}
+
+		// set existing radnom group member weight to zero to remove from the group
+		existigMembers := res.Members
+		if len(existigMembers) > 0 {
+			memberToRemove := existigMembers[r.Intn(len(existigMembers))]
+			var isDuplicateMember bool
+			for idx, m := range members {
+				if m.Address == memberToRemove.Member.Address {
+					members[idx].Weight = "0"
+					isDuplicateMember = true
+					break
+				}
+			}
+
+			if !isDuplicateMember {
+				m := memberToRemove.Member
+				m.Weight = "0"
+				members = append(members, *m)
+			}
+		}
+
 		msg := group.MsgUpdateGroupMembers{
 			GroupId:       groupID,
 			Admin:         acc.Address.String(),

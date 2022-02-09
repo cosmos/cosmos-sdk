@@ -60,7 +60,7 @@ func (k Keeper) CreateGroup(goCtx context.Context, req *group.MsgCreateGroup) (*
 
 	// Create a new group in the groupTable.
 	groupInfo := &group.GroupInfo{
-		GroupId:     k.groupTable.Sequence().PeekNextVal(ctx.KVStore(k.key)),
+		Id:          k.groupTable.Sequence().PeekNextVal(ctx.KVStore(k.key)),
 		Admin:       admin,
 		Metadata:    metadata,
 		Version:     1,
@@ -185,7 +185,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 		// Update group in the groupTable.
 		g.TotalWeight = totalWeight.String()
 		g.Version++
-		return k.groupTable.Update(ctx.KVStore(k.key), g.GroupId, g)
+		return k.groupTable.Update(ctx.KVStore(k.key), g.Id, g)
 	}
 
 	err := k.doUpdateGroup(ctx, req, action, "members updated")
@@ -202,7 +202,7 @@ func (k Keeper) UpdateGroupAdmin(goCtx context.Context, req *group.MsgUpdateGrou
 		g.Admin = req.NewAdmin
 		g.Version++
 
-		return k.groupTable.Update(ctx.KVStore(k.key), g.GroupId, g)
+		return k.groupTable.Update(ctx.KVStore(k.key), g.Id, g)
 	}
 
 	err := k.doUpdateGroup(ctx, req, action, "admin updated")
@@ -218,7 +218,7 @@ func (k Keeper) UpdateGroupMetadata(goCtx context.Context, req *group.MsgUpdateG
 	action := func(g *group.GroupInfo) error {
 		g.Metadata = req.Metadata
 		g.Version++
-		return k.groupTable.Update(ctx.KVStore(k.key), g.GroupId, g)
+		return k.groupTable.Update(ctx.KVStore(k.key), g.Id, g)
 	}
 
 	if err := k.assertMetadataLength(req.Metadata, "group metadata"); err != nil {
@@ -397,7 +397,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 
 	// Only members of the group can submit a new proposal.
 	for i := range proposers {
-		if !k.groupMemberTable.Has(ctx.KVStore(k.key), orm.PrimaryKey(&group.GroupMember{GroupId: g.GroupId, Member: &group.Member{Address: proposers[i]}})) {
+		if !k.groupMemberTable.Has(ctx.KVStore(k.key), orm.PrimaryKey(&group.GroupMember{GroupId: g.Id, Member: &group.Member{Address: proposers[i]}})) {
 			return nil, sdkerrors.Wrapf(errors.ErrUnauthorized, "not in group: %s", proposers[i])
 		}
 	}
@@ -424,7 +424,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 	window := timeout
 
 	m := &group.Proposal{
-		ProposalId:         k.proposalTable.Sequence().PeekNextVal(ctx.KVStore(k.key)),
+		Id:                 k.proposalTable.Sequence().PeekNextVal(ctx.KVStore(k.key)),
 		Address:            req.Address,
 		Metadata:           metadata,
 		Proposers:          proposers,
@@ -598,7 +598,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 
 	// Count and store votes.
 	voterAddr := req.Voter
-	voter := group.GroupMember{GroupId: electorate.GroupId, Member: &group.Member{Address: voterAddr}}
+	voter := group.GroupMember{GroupId: electorate.Id, Member: &group.Member{Address: voterAddr}}
 	if err := k.groupMemberTable.GetOne(ctx.KVStore(k.key), orm.PrimaryKey(&voter), &voter); err != nil {
 		return nil, sdkerrors.Wrapf(err, "address: %s", voterAddr)
 	}

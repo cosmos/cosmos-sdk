@@ -55,7 +55,7 @@ func TestMigrateStore(t *testing.T) {
 }
 
 func compareProps(t *testing.T, oldProp v1beta1.Proposal, newProp v1beta2.Proposal) {
-	require.Equal(t, oldProp.ProposalId, newProp.ProposalId)
+	require.Equal(t, oldProp.ProposalId, newProp.Id)
 	require.Equal(t, oldProp.TotalDeposit.String(), sdk.Coins(newProp.TotalDeposit).String())
 	require.Equal(t, oldProp.Status.String(), newProp.Status.String())
 	require.Equal(t, oldProp.FinalTallyResult.Yes.String(), newProp.FinalTallyResult.Yes)

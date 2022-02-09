@@ -41,9 +41,12 @@ message Deposit {
 
 // Proposal defines the core field members of a governance proposal.
 message Proposal {
-  uint64   proposal_id                                = 1;
+  uint64   id                                = 1;
   repeated google.protobuf.Any messages               = 2;
   ProposalStatus               status                 = 3;
+  // final_tally_result is the final tally result of the proposal. When
+  // querying a proposal via gRPC, this field is not populated until the
+  // proposal's voting period has ended.
   TallyResult                  final_tally_result     = 4;
   google.protobuf.Timestamp    submit_time            = 5 [(gogoproto.stdtime) = true];
   google.protobuf.Timestamp    deposit_end_time       = 6 [(gogoproto.stdtime) = true];

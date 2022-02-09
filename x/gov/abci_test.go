@@ -297,7 +297,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	require.NoError(t, err)
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 10))}
-	newDepositMsg := v1beta2.NewMsgDeposit(addrs[0], proposal.ProposalId, proposalCoins)
+	newDepositMsg := v1beta2.NewMsgDeposit(addrs[0], proposal.Id, proposalCoins)
 
 	res, err := govMsgSvr.Deposit(sdk.WrapSDKContext(ctx), newDepositMsg)
 	require.NoError(t, err)
@@ -310,7 +310,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	deposits := initialModuleAccCoins.Add(proposal.TotalDeposit...).Add(proposalCoins...)
 	require.True(t, moduleAccCoins.IsEqual(deposits))
 
-	err = app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))
+	err = app.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))
 	require.NoError(t, err)
 
 	newHeader := ctx.BlockHeader()
@@ -347,14 +347,14 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	require.NoError(t, err)
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 10)))
-	newDepositMsg := v1beta2.NewMsgDeposit(addrs[0], proposal.ProposalId, proposalCoins)
+	newDepositMsg := v1beta2.NewMsgDeposit(addrs[0], proposal.Id, proposalCoins)
 
 	govMsgSvr := keeper.NewMsgServerImpl(app.GovKeeper)
 	res, err := govMsgSvr.Deposit(sdk.WrapSDKContext(ctx), newDepositMsg)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	err = app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))
+	err = app.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))
 	require.NoError(t, err)
 
 	newHeader := ctx.BlockHeader()

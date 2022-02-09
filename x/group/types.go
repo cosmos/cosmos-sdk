@@ -163,11 +163,11 @@ func (g GroupPolicyInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error
 }
 
 func (g GroupInfo) PrimaryKeyFields() []interface{} {
-	return []interface{}{g.GroupId}
+	return []interface{}{g.Id}
 }
 
 func (g GroupInfo) ValidateBasic() error {
-	if g.GroupId == 0 {
+	if g.Id == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "group's GroupId")
 	}
 
@@ -194,7 +194,7 @@ func (g GroupPolicyInfo) PrimaryKeyFields() []interface{} {
 }
 
 func (g Proposal) PrimaryKeyFields() []interface{} {
-	return []interface{}{g.ProposalId}
+	return []interface{}{g.Id}
 }
 
 func (g GroupPolicyInfo) ValidateBasic() error {
@@ -246,7 +246,7 @@ func (g GroupMember) ValidateBasic() error {
 
 func (p Proposal) ValidateBasic() error {
 
-	if p.ProposalId == 0 {
+	if p.Id == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
 	}
 	_, err := sdk.AccAddressFromBech32(p.Address)

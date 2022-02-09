@@ -72,7 +72,7 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 	}{
 		"invariant not broken": {
 			prevProposal: &group.Proposal{
-				ProposalId:         1,
+				Id:                 1,
 				Address:            addr1.String(),
 				Proposers:          []string{addr1.String()},
 				SubmitTime:         prevCtx.BlockTime(),
@@ -86,7 +86,7 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 			},
 
 			curProposal: &group.Proposal{
-				ProposalId:         1,
+				Id:                 1,
 				Address:            addr2.String(),
 				Proposers:          []string{addr2.String()},
 				SubmitTime:         curCtx.BlockTime(),
@@ -101,7 +101,7 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 		},
 		"current block yes vote count must be greater than previous block yes vote count": {
 			prevProposal: &group.Proposal{
-				ProposalId:         1,
+				Id:                 1,
 				Address:            addr1.String(),
 				Proposers:          []string{addr1.String()},
 				SubmitTime:         prevCtx.BlockTime(),
@@ -114,7 +114,7 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			curProposal: &group.Proposal{
-				ProposalId:         1,
+				Id:                 1,
 				Address:            addr2.String(),
 				Proposers:          []string{addr2.String()},
 				SubmitTime:         curCtx.BlockTime(),
@@ -130,7 +130,7 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 		},
 		"current block no vote count must be greater than previous block no vote count": {
 			prevProposal: &group.Proposal{
-				ProposalId:         1,
+				Id:                 1,
 				Address:            addr1.String(),
 				Proposers:          []string{addr1.String()},
 				SubmitTime:         prevCtx.BlockTime(),
@@ -143,7 +143,7 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			curProposal: &group.Proposal{
-				ProposalId:         1,
+				Id:                 1,
 				Address:            addr2.String(),
 				Proposers:          []string{addr2.String()},
 				SubmitTime:         curCtx.BlockTime(),
@@ -159,7 +159,7 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 		},
 		"current block abstain vote count must be greater than previous block abstain vote count": {
 			prevProposal: &group.Proposal{
-				ProposalId:         1,
+				Id:                 1,
 				Address:            addr1.String(),
 				Proposers:          []string{addr1.String()},
 				SubmitTime:         prevCtx.BlockTime(),
@@ -172,7 +172,7 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			curProposal: &group.Proposal{
-				ProposalId:         1,
+				Id:                 1,
 				Address:            addr2.String(),
 				Proposers:          []string{addr2.String()},
 				SubmitTime:         curCtx.BlockTime(),
@@ -188,7 +188,7 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 		},
 		"current block veto vote count must be greater than previous block veto vote count": {
 			prevProposal: &group.Proposal{
-				ProposalId:         1,
+				Id:                 1,
 				Address:            addr1.String(),
 				Proposers:          []string{addr1.String()},
 				SubmitTime:         prevCtx.BlockTime(),
@@ -201,7 +201,7 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			curProposal: &group.Proposal{
-				ProposalId:         1,
+				Id:                 1,
 				Address:            addr2.String(),
 				Proposers:          []string{addr2.String()},
 				SubmitTime:         curCtx.BlockTime(),
@@ -263,7 +263,7 @@ func (s *invariantTestSuite) TestGroupTotalWeightInvariant() {
 	}{
 		"invariant not broken": {
 			groupsInfo: &group.GroupInfo{
-				GroupId:     1,
+				Id:          1,
 				Admin:       addr1.String(),
 				Version:     1,
 				TotalWeight: "3",
@@ -289,7 +289,7 @@ func (s *invariantTestSuite) TestGroupTotalWeightInvariant() {
 
 		"group's TotalWeight must be equal to sum of its members weight ": {
 			groupsInfo: &group.GroupInfo{
-				GroupId:     1,
+				Id:          1,
 				Admin:       addr1.String(),
 				Version:     1,
 				TotalWeight: "3",
@@ -376,7 +376,7 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 	}{
 		"invariant not broken": {
 			groupsInfo: &group.GroupInfo{
-				GroupId:     1,
+				Id:          1,
 				Admin:       adminAddr.String(),
 				Version:     1,
 				TotalWeight: "7",
@@ -404,7 +404,7 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 				},
 			},
 			proposal: &group.Proposal{
-				ProposalId:         1,
+				Id:                 1,
 				Address:            addr1.String(),
 				Proposers:          []string{addr1.String()},
 				SubmitTime:         curCtx.BlockTime(),
@@ -434,7 +434,7 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 		},
 		"proposal tally must correspond to the sum of vote weights": {
 			groupsInfo: &group.GroupInfo{
-				GroupId:     1,
+				Id:          1,
 				Admin:       adminAddr.String(),
 				Version:     1,
 				TotalWeight: "5",
@@ -462,7 +462,7 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 				},
 			},
 			proposal: &group.Proposal{
-				ProposalId:         1,
+				Id:                 1,
 				Address:            addr1.String(),
 				Proposers:          []string{addr1.String()},
 				SubmitTime:         curCtx.BlockTime(),
@@ -492,7 +492,7 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 		},
 		"proposal FinalTallyResult must correspond to the vote option": {
 			groupsInfo: &group.GroupInfo{
-				GroupId:     1,
+				Id:          1,
 				Admin:       adminAddr.String(),
 				Version:     1,
 				TotalWeight: "7",
@@ -520,7 +520,7 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 				},
 			},
 			proposal: &group.Proposal{
-				ProposalId:         1,
+				Id:                 1,
 				Address:            addr1.String(),
 				Proposers:          []string{addr1.String()},
 				SubmitTime:         curCtx.BlockTime(),

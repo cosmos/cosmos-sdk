@@ -19,7 +19,7 @@ func TestDeposits(t *testing.T) {
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, nil)
 	require.NoError(t, err)
-	proposalID := proposal.ProposalId
+	proposalID := proposal.Id
 
 	fourStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 4)))
 	fiveStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 5)))
@@ -103,7 +103,7 @@ func TestDeposits(t *testing.T) {
 	// Test delete and burn deposits
 	proposal, err = app.GovKeeper.SubmitProposal(ctx, tp, nil)
 	require.NoError(t, err)
-	proposalID = proposal.ProposalId
+	proposalID = proposal.Id
 	_, err = app.GovKeeper.AddDeposit(ctx, proposalID, TestAddrs[0], fourStake)
 	require.NoError(t, err)
 	app.GovKeeper.DeleteAndBurnDeposits(ctx, proposalID)

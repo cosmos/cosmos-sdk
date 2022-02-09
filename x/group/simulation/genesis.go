@@ -26,7 +26,7 @@ func getGroups(r *rand.Rand, accounts []simtypes.Account) []*group.GroupInfo {
 	for i := 0; i < 3; i++ {
 		acc, _ := simtypes.RandomAcc(r, accounts)
 		groups[i] = &group.GroupInfo{
-			GroupId:     uint64(i + 1),
+			Id:          uint64(i + 1),
 			Admin:       acc.Address.String(),
 			Metadata:    []byte(simtypes.RandStringOfLength(r, 10)),
 			Version:     1,
@@ -84,7 +84,7 @@ func getProposals(r *rand.Rand, simState *module.SimulationState) []*group.Propo
 		timeout := submittedAt.Add(time.Second * 1000).UTC()
 
 		proposal := &group.Proposal{
-			ProposalId:         uint64(i + 1),
+			Id:                 uint64(i + 1),
 			Proposers:          proposers,
 			Address:            fromAddr,
 			GroupVersion:       uint64(i + 1),

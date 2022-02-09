@@ -16,7 +16,7 @@ import (
 func ConvertToLegacyProposal(proposal v1beta2.Proposal) (v1beta1.Proposal, error) {
 	var err error
 	legacyProposal := v1beta1.Proposal{
-		ProposalId:   proposal.ProposalId,
+		ProposalId:   proposal.Id,
 		Status:       v1beta1.ProposalStatus(proposal.Status),
 		TotalDeposit: types.NewCoins(proposal.TotalDeposit...),
 	}
@@ -195,7 +195,7 @@ func convertToNewProposal(oldProp v1beta1.Proposal) (v1beta2.Proposal, error) {
 	}
 
 	return v1beta2.Proposal{
-		ProposalId: oldProp.ProposalId,
+		Id: oldProp.ProposalId,
 		Messages:   []*codectypes.Any{msgAny},
 		Status:     v1beta2.ProposalStatus(oldProp.Status),
 		FinalTallyResult: &v1beta2.TallyResult{

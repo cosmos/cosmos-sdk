@@ -103,7 +103,7 @@ func (s *TestSuite) TestCreateGroup() {
 
 	expGroups := []*group.GroupInfo{
 		{
-			GroupId:     s.groupID,
+			Id:          s.groupID,
 			Version:     1,
 			Admin:       addr1.String(),
 			TotalWeight: "3",
@@ -111,7 +111,7 @@ func (s *TestSuite) TestCreateGroup() {
 			CreatedAt:   s.blockTime,
 		},
 		{
-			GroupId:     2,
+			Id:          2,
 			Version:     1,
 			Admin:       addr1.String(),
 			TotalWeight: "3",
@@ -189,7 +189,7 @@ func (s *TestSuite) TestCreateGroup() {
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.req.Admin, loadedGroupRes.Info.Admin)
 			s.Assert().Equal(spec.req.Metadata, loadedGroupRes.Info.Metadata)
-			s.Assert().Equal(id, loadedGroupRes.Info.GroupId)
+			s.Assert().Equal(id, loadedGroupRes.Info.Id)
 			s.Assert().Equal(uint64(1), loadedGroupRes.Info.Version)
 
 			// and members are stored as well
@@ -222,7 +222,7 @@ func (s *TestSuite) TestCreateGroup() {
 				s.Assert().Equal(spec.expGroups[i].Metadata, loadedGroups[i].Metadata)
 				s.Assert().Equal(spec.expGroups[i].Admin, loadedGroups[i].Admin)
 				s.Assert().Equal(spec.expGroups[i].TotalWeight, loadedGroups[i].TotalWeight)
-				s.Assert().Equal(spec.expGroups[i].GroupId, loadedGroups[i].GroupId)
+				s.Assert().Equal(spec.expGroups[i].Id, loadedGroups[i].Id)
 				s.Assert().Equal(spec.expGroups[i].Version, loadedGroups[i].Version)
 				s.Assert().Equal(spec.expGroups[i].CreatedAt, loadedGroups[i].CreatedAt)
 			}
@@ -265,7 +265,7 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 				NewAdmin: newAdmin,
 			},
 			expStored: &group.GroupInfo{
-				GroupId:     groupID,
+				Id:          groupID,
 				Admin:       newAdmin,
 				Metadata:    nil,
 				TotalWeight: "1",
@@ -281,7 +281,7 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 			},
 			expErr: true,
 			expStored: &group.GroupInfo{
-				GroupId:     groupID,
+				Id:          groupID,
 				Admin:       oldAdmin,
 				Metadata:    nil,
 				TotalWeight: "1",
@@ -297,7 +297,7 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 			},
 			expErr: true,
 			expStored: &group.GroupInfo{
-				GroupId:     groupID,
+				Id:          groupID,
 				Admin:       oldAdmin,
 				Metadata:    nil,
 				TotalWeight: "1",
@@ -344,7 +344,7 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 				Metadata: []byte{1, 2, 3},
 			},
 			expStored: &group.GroupInfo{
-				GroupId:     groupID,
+				Id:          groupID,
 				Admin:       oldAdmin,
 				Metadata:    []byte{1, 2, 3},
 				TotalWeight: "3",
@@ -360,7 +360,7 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 			},
 			expErr: true,
 			expStored: &group.GroupInfo{
-				GroupId:     groupID,
+				Id:          groupID,
 				Admin:       oldAdmin,
 				Metadata:    nil,
 				TotalWeight: "1",
@@ -376,7 +376,7 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 			},
 			expErr: true,
 			expStored: &group.GroupInfo{
-				GroupId:     groupID,
+				Id:          groupID,
 				Admin:       oldAdmin,
 				Metadata:    nil,
 				TotalWeight: "1",
@@ -446,7 +446,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				}},
 			},
 			expGroup: &group.GroupInfo{
-				GroupId:     groupID,
+				Id:          groupID,
 				Admin:       myAdmin,
 				Metadata:    nil,
 				TotalWeight: "3",
@@ -483,7 +483,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				}},
 			},
 			expGroup: &group.GroupInfo{
-				GroupId:     groupID,
+				Id:          groupID,
 				Admin:       myAdmin,
 				Metadata:    nil,
 				TotalWeight: "2",
@@ -511,7 +511,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				}},
 			},
 			expGroup: &group.GroupInfo{
-				GroupId:     groupID,
+				Id:          groupID,
 				Admin:       myAdmin,
 				Metadata:    nil,
 				TotalWeight: "1",
@@ -546,7 +546,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				},
 			},
 			expGroup: &group.GroupInfo{
-				GroupId:     groupID,
+				Id:          groupID,
 				Admin:       myAdmin,
 				Metadata:    nil,
 				TotalWeight: "1",
@@ -573,7 +573,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				}},
 			},
 			expGroup: &group.GroupInfo{
-				GroupId:     groupID,
+				Id:          groupID,
 				Admin:       myAdmin,
 				Metadata:    nil,
 				TotalWeight: "0",
@@ -594,7 +594,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			},
 			expErr: true,
 			expGroup: &group.GroupInfo{
-				GroupId:     groupID,
+				Id:          groupID,
 				Admin:       myAdmin,
 				Metadata:    nil,
 				TotalWeight: "1",
@@ -622,7 +622,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			},
 			expErr: true,
 			expGroup: &group.GroupInfo{
-				GroupId:     groupID,
+				Id:          groupID,
 				Admin:       myAdmin,
 				Metadata:    nil,
 				TotalWeight: "1",
@@ -649,7 +649,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			},
 			expErr: true,
 			expGroup: &group.GroupInfo{
-				GroupId:     groupID,
+				Id:          groupID,
 				Admin:       myAdmin,
 				Metadata:    nil,
 				TotalWeight: "1",

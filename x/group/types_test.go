@@ -18,7 +18,6 @@ func TestAllow(t *testing.T) {
 		tally          *group.Tally
 		totalPower     string
 		votingDuration time.Duration
-		expErr         bool
 	}{
 		{
 			"YesCount percentage >= decision policy percentage",
@@ -34,7 +33,6 @@ func TestAllow(t *testing.T) {
 			},
 			"3",
 			time.Duration(time.Second * 50),
-			false,
 		},
 		{
 			"YesCount percentage < decision policy percentage",
@@ -50,7 +48,6 @@ func TestAllow(t *testing.T) {
 			},
 			"3",
 			time.Duration(time.Second * 50),
-			false,
 		},
 		{
 			"sum percentage < decision policy percentage",
@@ -66,7 +63,6 @@ func TestAllow(t *testing.T) {
 			},
 			"3",
 			time.Duration(time.Second * 50),
-			false,
 		},
 		{
 			"sum percentage >= decision policy percentage",
@@ -82,7 +78,6 @@ func TestAllow(t *testing.T) {
 			},
 			"3",
 			time.Duration(time.Second * 50),
-			false,
 		},
 		{
 			"decision policy timeout <= voting duration",
@@ -98,17 +93,14 @@ func TestAllow(t *testing.T) {
 			},
 			"3",
 			time.Duration(time.Second * 50),
-			false,
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+
 			policyResult, err := tc.policy.Allow(*tc.tally, tc.totalPower, tc.votingDuration)
-			if tc.expErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-			}
+			require.NoError(t, err)
+
 			policyPercentage, err := math.NewPositiveDecFromString(tc.policy.Percentage)
 			require.NoError(t, err)
 			totalPower, err := math.NewNonNegativeDecFromString(tc.totalPower)

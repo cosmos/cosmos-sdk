@@ -24,14 +24,6 @@ var _ group.MsgServer = Keeper{}
 // Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054, https://github.com/cosmos/cosmos-sdk/discussions/9072
 const gasCostPerIteration = uint64(20)
 
-// WeightedVoteOptions describes array of WeightedVoteOptions
-type WeightedVoteOptions []*group.WeightedVoteOption
-
-// NewNonSplitVoteOption creates a single choice vote with weight 1
-func NewNonSplitVoteOption(choice group.Choice) WeightedVoteOptions {
-	return WeightedVoteOptions{{choice, math.NewDecFromInt64(1).String()}}
-}
-
 func (k Keeper) CreateGroup(goCtx context.Context, req *group.MsgCreateGroup) (*group.MsgCreateGroupResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	metadata := req.Metadata
@@ -615,7 +607,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 		Voter:       voterAddr,
 		Metadata:    metadata,
 		SubmittedAt: ctx.BlockTime(),
-		Choices:     NewNonSplitVoteOption(choice),
+		Choices:     group.NewNonSplitVoteOption(choice),
 	}
 	if err := proposal.VoteState.Add(newVote, voter.Member.Weight); err != nil {
 		return nil, sdkerrors.Wrap(err, "add new vote")

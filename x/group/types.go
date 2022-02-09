@@ -2,6 +2,7 @@ package group
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	proto "github.com/gogo/protobuf/proto"
@@ -482,4 +483,20 @@ func ChoiceFromString(str string) (Choice, error) {
 		return Choice_CHOICE_UNSPECIFIED, fmt.Errorf("'%s' is not a valid vote choice", str)
 	}
 	return Choice(choice), nil
+}
+
+// WeightedVoteOptions describes array of WeightedVoteOptions
+type WeightedVoteOptions []*WeightedVoteOption
+
+// NewNonSplitVoteOption creates a single choice vote with weight 1
+func NewNonSplitVoteOption(choice Choice) WeightedVoteOptions {
+	return WeightedVoteOptions{{choice, math.NewDecFromInt64(1).String()}}
+}
+
+func (v WeightedVoteOptions) String() (out string) {
+	for _, opt := range v {
+		out += opt.String() + "\n"
+	}
+
+	return strings.TrimSpace(out)
 }

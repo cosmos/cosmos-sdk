@@ -677,6 +677,65 @@ func (m MsgVote) ValidateBasic() error {
 	return nil
 }
 
+var _ sdk.Msg = &MsgVoteWeighted{}
+
+// Route implements Msg
+func (msg MsgVoteWeighted) Route() string { return sdk.MsgTypeURL(&msg) }
+
+// Type implements Msg
+func (msg MsgVoteWeighted) Type() string { return sdk.MsgTypeURL(&msg) }
+
+// GetSignBytes Implements Msg.
+func (msg MsgVoteWeighted) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners returns the expected signers for a MsgVote.
+func (msg MsgVoteWeighted) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Voter)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+// ValidateBasic implements Msg
+func (msg MsgVoteWeighted) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Voter); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
+	}
+	if len(msg.Choices) == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, WeightedVoteOptions(msg.Choices).String())
+	}
+
+	totalWeight := sdk.NewDec(0)
+	usedOptions := make(map[Choice]bool)
+	for _, option := range msg.Choices {
+		if _, ok := Choice_name[int32(option.Choice)]; !ok {
+			return sdkerrors.Wrap(errors.ErrInvalid, "choice")
+		}
+		weight, err := sdk.NewDecFromStr(option.Weight)
+		if err != nil {
+			return sdkerrors.Wrapf(errors.ErrInvalid, "Invalid weight: %s", err)
+		}
+		totalWeight = totalWeight.Add(weight)
+		if usedOptions[option.Choice] {
+			return sdkerrors.Wrap(errors.ErrInvalid, "Duplicated vote option")
+		}
+		usedOptions[option.Choice] = true
+	}
+
+	if totalWeight.GT(sdk.NewDec(1)) {
+		return sdkerrors.Wrap(errors.ErrInvalid, "Total weight overflow 1.00")
+	}
+
+	if totalWeight.LT(sdk.NewDec(1)) {
+		return sdkerrors.Wrap(errors.ErrInvalid, "Total weight lower than 1.00")
+	}
+
+	return nil
+}
+
 var _ sdk.Msg = &MsgExec{}
 
 // Route Implements Msg.

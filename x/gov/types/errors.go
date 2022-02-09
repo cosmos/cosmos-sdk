@@ -20,4 +20,5 @@ var (
 	ErrInvalidProposalMsg      = sdkerrors.Register(ModuleName, 12, "invalid proposal message")
 	ErrInvalidSigner           = sdkerrors.Register(ModuleName, 13, "expected gov account as only signer for proposal message")
 	ErrInvalidSignalMsg        = sdkerrors.Register(ModuleName, 14, "signal message is invalid")
+	ErrMetadataTooLong         = sdkerrors.Register(ModuleName, 15, "metadata too long")
 )

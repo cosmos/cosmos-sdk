@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"math/rand"
+	"time"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,7 +14,7 @@ import (
 )
 
 // genGrant returns a slice of authorization grants.
-func genGrant(r *rand.Rand, accounts []simtypes.Account) []authz.GrantAuthorization {
+func genGrant(r *rand.Rand, accounts []simtypes.Account, genT time.Time) []authz.GrantAuthorization {
 	authorizations := make([]authz.GrantAuthorization, len(accounts)-1)
 	for i := 0; i < len(accounts)-1; i++ {
 		granter := accounts[i]
@@ -22,6 +23,7 @@ func genGrant(r *rand.Rand, accounts []simtypes.Account) []authz.GrantAuthorizat
 			Granter:       granter.Address.String(),
 			Grantee:       grantee.Address.String(),
 			Authorization: generateRandomGrant(r),
+			Expiration:    genT.AddDate(1, 0, 0),
 		}
 	}
 
@@ -50,7 +52,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	var grants []authz.GrantAuthorization
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, "authz", &grants, simState.Rand,
-		func(r *rand.Rand) { grants = genGrant(r, simState.Accounts) },
+		func(r *rand.Rand) { grants = genGrant(r, simState.Accounts, simState.GenTimestamp) },
 	)
 
 	authzGrantsGenesis := authz.NewGenesisState(grants)

@@ -10,7 +10,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -18,10 +20,11 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app         *simapp.SimApp
-	ctx         sdk.Context
-	queryClient v1beta2.QueryClient
-	addrs       []sdk.AccAddress
+	app               *simapp.SimApp
+	ctx               sdk.Context
+	queryClient       v1beta2.QueryClient
+	legacyQueryClient v1beta1.QueryClient
+	addrs             []sdk.AccAddress
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -38,11 +41,15 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	v1beta2.RegisterQueryServer(queryHelper, app.GovKeeper)
+	legacyQueryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
+	v1beta1.RegisterQueryServer(legacyQueryHelper, keeper.NewLegacyQueryServer(app.GovKeeper))
 	queryClient := v1beta2.NewQueryClient(queryHelper)
+	legacyQueryClient := v1beta1.NewQueryClient(legacyQueryHelper)
 
 	suite.app = app
 	suite.ctx = ctx
 	suite.queryClient = queryClient
+	suite.legacyQueryClient = legacyQueryClient
 	suite.addrs = simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
 }
 
@@ -51,17 +58,17 @@ func TestIncrementProposalNumber(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	tp := TestProposal
-	_, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	_, err := app.GovKeeper.SubmitProposal(ctx, tp, nil)
 	require.NoError(t, err)
-	_, err = app.GovKeeper.SubmitProposal(ctx, tp)
+	_, err = app.GovKeeper.SubmitProposal(ctx, tp, nil)
 	require.NoError(t, err)
-	_, err = app.GovKeeper.SubmitProposal(ctx, tp)
+	_, err = app.GovKeeper.SubmitProposal(ctx, tp, nil)
 	require.NoError(t, err)
-	_, err = app.GovKeeper.SubmitProposal(ctx, tp)
+	_, err = app.GovKeeper.SubmitProposal(ctx, tp, nil)
 	require.NoError(t, err)
-	_, err = app.GovKeeper.SubmitProposal(ctx, tp)
+	_, err = app.GovKeeper.SubmitProposal(ctx, tp, nil)
 	require.NoError(t, err)
-	proposal6, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal6, err := app.GovKeeper.SubmitProposal(ctx, tp, nil)
 	require.NoError(t, err)
 
 	require.Equal(t, uint64(6), proposal6.ProposalId)
@@ -73,7 +80,7 @@ func TestProposalQueues(t *testing.T) {
 
 	// create test proposals
 	tp := TestProposal
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, nil)
 	require.NoError(t, err)
 
 	inactiveIterator := app.GovKeeper.InactiveProposalQueueIterator(ctx, *proposal.DepositEndTime)

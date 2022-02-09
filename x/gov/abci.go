@@ -17,10 +17,10 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 
 	logger := keeper.Logger(ctx)
 
-	// delete dead proposals from store and burn theirs deposits. A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
+	// delete dead proposals from store and returns theirs deposits. A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
 	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal v1beta2.Proposal) bool {
 		keeper.DeleteProposal(ctx, proposal.ProposalId)
-		keeper.DeleteAndBurnDeposits(ctx, proposal.ProposalId)
+		keeper.RefundAndDeleteDeposits(ctx, proposal.ProposalId) // refund deposit if proposal got removed without getting 100% of the proposal
 
 		// called when proposal become inactive
 		keeper.AfterProposalFailedMinDeposit(ctx, proposal.ProposalId)

@@ -539,6 +539,57 @@ Parameters:
 	return cmd
 }
 
+// MsgWithdrawProposalCmd creates a CLI command for Msg/WithdrawProposal.
+func MsgWithdrawProposalCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "withdraw-proposal [proposal-id] [group-policy-admin-or-proposer]",
+		Short: "Withdraw a submitted proposal",
+		Long: `Withdraw a submitted proposal.
+
+Parameters:
+			proposal-id: unique ID of the proposal.
+			group-policy-admin-or-proposer: either admin of the group policy or one the proposer of the proposal.
+			(note: --from flag will be ignored here)
+`,
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := cmd.Flags().Set(flags.FlagFrom, args[1])
+			if err != nil {
+				return err
+			}
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			proposalID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			msg := &group.MsgWithdrawProposal{
+				ProposalId: proposalID,
+				Address:    clientCtx.GetFromAddress().String(),
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return fmt.Errorf("message validation failed: %w", err)
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
 // MsgVoteCmd creates a CLI command for Msg/Vote.
 func MsgVoteCmd() *cobra.Command {
 	cmd := &cobra.Command{

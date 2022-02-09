@@ -8,9 +8,12 @@ order: 3
 
 A new group can be created with the `MsgCreateGroup`, which has an admin address, a list of members and some optional metadata bytes.
 
+The metadata has a maximum length that is chosen by the app developer, and
+passed into the group keeper as a config.
+
 +++ https://github.com/cosmos/cosmos-sdk/blob/6f58963e7f6ce820e9b33f02f06f7b96f6d2e347/proto/cosmos/group/v1beta1/tx.proto#L54-L65
 
-It's expecting to fail if metadata length is greater than some `MaxMetadataLength`.
+It's expecting to fail if metadata length is greater than `MaxMetadataLen` config.
 
 ## Msg/UpdateGroupMembers
 
@@ -37,7 +40,7 @@ The `UpdateGroupMetadata` can be used to update a group metadata.
 +++ https://github.com/cosmos/cosmos-sdk/blob/6f58963e7f6ce820e9b33f02f06f7b96f6d2e347/proto/cosmos/group/v1beta1/tx.proto#L107-L118
 
 It's expecting to fail if:
-- new metadata length is greater than some `MaxMetadataLength`.
+- new metadata length is greater than `MaxMetadataLen` config.
 - the signer is not the admin of the group.
 
 ## Msg/CreateGroupPolicy
@@ -46,7 +49,7 @@ A new group policy can be created with the `MsgCreateGroupPolicy`, which has an 
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/6f58963e7f6ce820e9b33f02f06f7b96f6d2e347/proto/cosmos/group/v1beta1/tx.proto#L121-L142
 
-It's expecting to fail if metadata length is greater than some `MaxMetadataLength`.
+It's expecting to fail if metadata length is greater than `MaxMetadataLen` config.
 
 ## Msg/UpdateGroupPolicyAdmin
 
@@ -71,7 +74,7 @@ The `UpdateGroupPolicyMetadata` can be used to update a group policy metadata.
 +++ https://github.com/cosmos/cosmos-sdk/blob/6f58963e7f6ce820e9b33f02f06f7b96f6d2e347/proto/cosmos/group/v1beta1/tx.proto#L184-L195
 
 It's expecting to fail if:
-- new metadata length is greater than some `MaxMetadataLength`.
+- new metadata length is greater than `MaxMetadataLen` config.
 - the signer is not the admin of the group.
 
 ## Msg/CreateProposal
@@ -81,7 +84,17 @@ An optional `Exec` value can be provided to try to execute the proposal immediat
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/6f58963e7f6ce820e9b33f02f06f7b96f6d2e347/proto/cosmos/group/v1beta1/tx.proto#L218-L239
 
-It's expecting to fail if metadata length is greater than some `MaxMetadataLength`.
+It's expecting to fail if metadata length is greater than `MaxMetadataLen` config.
+
+## Msg/WithdrawProposal
+
+A proposal can be withdrawn using `MsgWithdrawProposal` which has a `address` (can be either proposer or policy admin) and a `proposal_id` (which has to be withdrawn).
+
++++ https://github.com/cosmos/cosmos-sdk/blob/f2d6f0e4bb1a9bd7f7ae3cdc4702c9d3d1fc0329/proto/cosmos/group/v1beta1/tx.proto#L251-L258
+
+It's expecting to fail if:
+- the signer is neither policy address nor proposer of the proposal.
+- the proposal is already closed or aborted.
 
 ## Msg/Vote
 
@@ -90,7 +103,7 @@ An optional `Exec` value can be provided to try to execute the proposal immediat
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/6f58963e7f6ce820e9b33f02f06f7b96f6d2e347/proto/cosmos/group/v1beta1/tx.proto#L248-L265
 
-It's expecting to fail if metadata length is greater than some `MaxMetadataLength`.
+It's expecting to fail if metadata length is greater than `MaxMetadataLen` config.
 
 ## Msg/Exec
 

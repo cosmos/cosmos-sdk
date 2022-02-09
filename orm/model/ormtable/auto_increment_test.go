@@ -65,6 +65,19 @@ func runAutoIncrementScenario(t *testing.T, table ormtable.AutoIncrementTable, c
 	store2 := ormtable.WrapContextDefault(testkv.NewSplitMemBackend())
 	assert.NilError(t, table.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
 	assertTablesEqual(t, table, ctx, store2)
+
+	// test edge case where we have deleted all entities but we're still exporting the sequence number
+	assert.NilError(t, table.Delete(ctx, ex1))
+	assert.NilError(t, table.Delete(ctx, ex2))
+	buf = &bytes.Buffer{}
+	assert.NilError(t, table.ExportJSON(ctx, buf))
+	assert.NilError(t, table.ValidateJSON(bytes.NewReader(buf.Bytes())))
+	golden.Assert(t, buf.String(), "trivial_auto_inc_export.golden")
+	store3 := ormtable.WrapContextDefault(testkv.NewSplitMemBackend())
+	assert.NilError(t, table.ImportJSON(store3, bytes.NewReader(buf.Bytes())))
+	ex1.Id = 0
+	assert.NilError(t, table.Insert(store3, ex1))
+	assert.Equal(t, uint64(3), ex1.Id) // should equal 3 because the sequence number 2 should have been imported from JSON
 }
 
 func TestBadJSON(t *testing.T) {

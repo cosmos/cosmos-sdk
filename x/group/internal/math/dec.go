@@ -80,6 +80,14 @@ func (x Dec) Sub(y Dec) (Dec, error) {
 	return z, sdkerrors.Wrap(err, "decimal subtraction error")
 }
 
+// Mul returns a new Dec with value `x*y` without mutating any argument and error if
+// there is an overflow.
+func (x Dec) Mul(y Dec) (Dec, error) {
+	var z Dec
+	_, err := apd.BaseContext.Mul(&z.dec, &x.dec, &y.dec)
+	return z, sdkerrors.Wrap(err, "decimal multiplication error")
+}
+
 func (x Dec) Int64() (int64, error) {
 	return x.dec.Int64()
 }

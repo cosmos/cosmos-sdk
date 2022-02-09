@@ -335,51 +335,64 @@ func (t *Tally) operation(vote Vote, weight string, op operation) error {
 		return err
 	}
 
-	yesCount, err := t.GetYesCount()
-	if err != nil {
-		return sdkerrors.Wrap(err, "yes count")
-	}
-	noCount, err := t.GetNoCount()
-	if err != nil {
-		return sdkerrors.Wrap(err, "no count")
-	}
-	abstainCount, err := t.GetAbstainCount()
-	if err != nil {
-		return sdkerrors.Wrap(err, "abstain count")
-	}
-	vetoCount, err := t.GetVetoCount()
-	if err != nil {
-		return sdkerrors.Wrap(err, "veto count")
-	}
+	for _, choice := range vote.Choices {
+		choiceWeight, err := math.NewPositiveDecFromString(choice.Weight)
+		if err != nil {
+			return err
+		}
 
-	switch vote.Choice {
-	case Choice_CHOICE_YES:
-		yesCount, err := op(yesCount, weightDec)
+		weightToBeAdded, err := choiceWeight.Mul(weightDec)
+		if err != nil {
+			return err
+		}
+
+		yesCount, err := t.GetYesCount()
 		if err != nil {
 			return sdkerrors.Wrap(err, "yes count")
 		}
-		t.YesCount = yesCount.String()
-	case Choice_CHOICE_NO:
-		noCount, err := op(noCount, weightDec)
+		noCount, err := t.GetNoCount()
 		if err != nil {
 			return sdkerrors.Wrap(err, "no count")
 		}
-		t.NoCount = noCount.String()
-	case Choice_CHOICE_ABSTAIN:
-		abstainCount, err := op(abstainCount, weightDec)
+		abstainCount, err := t.GetAbstainCount()
 		if err != nil {
 			return sdkerrors.Wrap(err, "abstain count")
 		}
-		t.AbstainCount = abstainCount.String()
-	case Choice_CHOICE_VETO:
-		vetoCount, err := op(vetoCount, weightDec)
+		vetoCount, err := t.GetVetoCount()
 		if err != nil {
 			return sdkerrors.Wrap(err, "veto count")
 		}
-		t.VetoCount = vetoCount.String()
-	default:
-		return sdkerrors.Wrapf(errors.ErrInvalid, "unknown choice %s", vote.Choice.String())
+
+		switch choice.Choice {
+		case Choice_CHOICE_YES:
+			yesCount, err := op(yesCount, weightToBeAdded)
+			if err != nil {
+				return sdkerrors.Wrap(err, "yes count")
+			}
+			t.YesCount = yesCount.String()
+		case Choice_CHOICE_NO:
+			noCount, err := op(noCount, weightToBeAdded)
+			if err != nil {
+				return sdkerrors.Wrap(err, "no count")
+			}
+			t.NoCount = noCount.String()
+		case Choice_CHOICE_ABSTAIN:
+			abstainCount, err := op(abstainCount, weightToBeAdded)
+			if err != nil {
+				return sdkerrors.Wrap(err, "abstain count")
+			}
+			t.AbstainCount = abstainCount.String()
+		case Choice_CHOICE_VETO:
+			vetoCount, err := op(vetoCount, weightToBeAdded)
+			if err != nil {
+				return sdkerrors.Wrap(err, "veto count")
+			}
+			t.VetoCount = vetoCount.String()
+		default:
+			return sdkerrors.Wrapf(errors.ErrInvalid, "unknown choice %s", choice.Choice.String())
+		}
 	}
+
 	return nil
 }
 

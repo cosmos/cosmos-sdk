@@ -1641,14 +1641,14 @@ func (x *fastReflection_ThresholdDecisionPolicy) ProtoMethods() *protoiface.Meth
 
 var (
 	md_WeightedVoteOption        protoreflect.MessageDescriptor
-	fd_WeightedVoteOption_option protoreflect.FieldDescriptor
+	fd_WeightedVoteOption_choice protoreflect.FieldDescriptor
 	fd_WeightedVoteOption_weight protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1beta1_types_proto_init()
 	md_WeightedVoteOption = File_cosmos_group_v1beta1_types_proto.Messages().ByName("WeightedVoteOption")
-	fd_WeightedVoteOption_option = md_WeightedVoteOption.Fields().ByName("option")
+	fd_WeightedVoteOption_choice = md_WeightedVoteOption.Fields().ByName("choice")
 	fd_WeightedVoteOption_weight = md_WeightedVoteOption.Fields().ByName("weight")
 }
 
@@ -1717,9 +1717,9 @@ func (x *fastReflection_WeightedVoteOption) Interface() protoreflect.ProtoMessag
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_WeightedVoteOption) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Option != 0 {
-		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Option))
-		if !f(fd_WeightedVoteOption_option, value) {
+	if x.Choice != 0 {
+		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Choice))
+		if !f(fd_WeightedVoteOption_choice, value) {
 			return
 		}
 	}
@@ -1744,8 +1744,8 @@ func (x *fastReflection_WeightedVoteOption) Range(f func(protoreflect.FieldDescr
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_WeightedVoteOption) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.WeightedVoteOption.option":
-		return x.Option != 0
+	case "cosmos.group.v1beta1.WeightedVoteOption.choice":
+		return x.Choice != 0
 	case "cosmos.group.v1beta1.WeightedVoteOption.weight":
 		return x.Weight != ""
 	default:
@@ -1764,8 +1764,8 @@ func (x *fastReflection_WeightedVoteOption) Has(fd protoreflect.FieldDescriptor)
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_WeightedVoteOption) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.WeightedVoteOption.option":
-		x.Option = 0
+	case "cosmos.group.v1beta1.WeightedVoteOption.choice":
+		x.Choice = 0
 	case "cosmos.group.v1beta1.WeightedVoteOption.weight":
 		x.Weight = ""
 	default:
@@ -1784,8 +1784,8 @@ func (x *fastReflection_WeightedVoteOption) Clear(fd protoreflect.FieldDescripto
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_WeightedVoteOption) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.group.v1beta1.WeightedVoteOption.option":
-		value := x.Option
+	case "cosmos.group.v1beta1.WeightedVoteOption.choice":
+		value := x.Choice
 		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
 	case "cosmos.group.v1beta1.WeightedVoteOption.weight":
 		value := x.Weight
@@ -1810,8 +1810,8 @@ func (x *fastReflection_WeightedVoteOption) Get(descriptor protoreflect.FieldDes
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_WeightedVoteOption) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.WeightedVoteOption.option":
-		x.Option = (Choice)(value.Enum())
+	case "cosmos.group.v1beta1.WeightedVoteOption.choice":
+		x.Choice = (Choice)(value.Enum())
 	case "cosmos.group.v1beta1.WeightedVoteOption.weight":
 		x.Weight = value.Interface().(string)
 	default:
@@ -1834,8 +1834,8 @@ func (x *fastReflection_WeightedVoteOption) Set(fd protoreflect.FieldDescriptor,
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_WeightedVoteOption) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.WeightedVoteOption.option":
-		panic(fmt.Errorf("field option of message cosmos.group.v1beta1.WeightedVoteOption is not mutable"))
+	case "cosmos.group.v1beta1.WeightedVoteOption.choice":
+		panic(fmt.Errorf("field choice of message cosmos.group.v1beta1.WeightedVoteOption is not mutable"))
 	case "cosmos.group.v1beta1.WeightedVoteOption.weight":
 		panic(fmt.Errorf("field weight of message cosmos.group.v1beta1.WeightedVoteOption is not mutable"))
 	default:
@@ -1851,7 +1851,7 @@ func (x *fastReflection_WeightedVoteOption) Mutable(fd protoreflect.FieldDescrip
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_WeightedVoteOption) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.WeightedVoteOption.option":
+	case "cosmos.group.v1beta1.WeightedVoteOption.choice":
 		return protoreflect.ValueOfEnum(0)
 	case "cosmos.group.v1beta1.WeightedVoteOption.weight":
 		return protoreflect.ValueOfString("")
@@ -1924,8 +1924,8 @@ func (x *fastReflection_WeightedVoteOption) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		if x.Option != 0 {
-			n += 1 + runtime.Sov(uint64(x.Option))
+		if x.Choice != 0 {
+			n += 1 + runtime.Sov(uint64(x.Choice))
 		}
 		l = len(x.Weight)
 		if l > 0 {
@@ -1967,8 +1967,8 @@ func (x *fastReflection_WeightedVoteOption) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x12
 		}
-		if x.Option != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.Option))
+		if x.Choice != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Choice))
 			i--
 			dAtA[i] = 0x8
 		}
@@ -2023,9 +2023,9 @@ func (x *fastReflection_WeightedVoteOption) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Option", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Choice", wireType)
 				}
-				x.Option = 0
+				x.Choice = 0
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -2035,7 +2035,7 @@ func (x *fastReflection_WeightedVoteOption) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Option |= Choice(b&0x7F) << shift
+					x.Choice |= Choice(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -6004,6 +6004,57 @@ func (x *fastReflection_Tally) ProtoMethods() *protoiface.Methods {
 	}
 }
 
+var _ protoreflect.List = (*_Vote_6_list)(nil)
+
+type _Vote_6_list struct {
+	list *[]*WeightedVoteOption
+}
+
+func (x *_Vote_6_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_Vote_6_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_Vote_6_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*WeightedVoteOption)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_Vote_6_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*WeightedVoteOption)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_Vote_6_list) AppendMutable() protoreflect.Value {
+	v := new(WeightedVoteOption)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Vote_6_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_Vote_6_list) NewElement() protoreflect.Value {
+	v := new(WeightedVoteOption)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Vote_6_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
 	md_Vote              protoreflect.MessageDescriptor
 	fd_Vote_proposal_id  protoreflect.FieldDescriptor
@@ -6011,6 +6062,7 @@ var (
 	fd_Vote_choice       protoreflect.FieldDescriptor
 	fd_Vote_metadata     protoreflect.FieldDescriptor
 	fd_Vote_submitted_at protoreflect.FieldDescriptor
+	fd_Vote_choices      protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -6021,6 +6073,7 @@ func init() {
 	fd_Vote_choice = md_Vote.Fields().ByName("choice")
 	fd_Vote_metadata = md_Vote.Fields().ByName("metadata")
 	fd_Vote_submitted_at = md_Vote.Fields().ByName("submitted_at")
+	fd_Vote_choices = md_Vote.Fields().ByName("choices")
 }
 
 var _ protoreflect.Message = (*fastReflection_Vote)(nil)
@@ -6118,6 +6171,12 @@ func (x *fastReflection_Vote) Range(f func(protoreflect.FieldDescriptor, protore
 			return
 		}
 	}
+	if len(x.Choices) != 0 {
+		value := protoreflect.ValueOfList(&_Vote_6_list{list: &x.Choices})
+		if !f(fd_Vote_choices, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -6143,6 +6202,8 @@ func (x *fastReflection_Vote) Has(fd protoreflect.FieldDescriptor) bool {
 		return len(x.Metadata) != 0
 	case "cosmos.group.v1beta1.Vote.submitted_at":
 		return x.SubmittedAt != nil
+	case "cosmos.group.v1beta1.Vote.choices":
+		return len(x.Choices) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.Vote"))
@@ -6169,6 +6230,8 @@ func (x *fastReflection_Vote) Clear(fd protoreflect.FieldDescriptor) {
 		x.Metadata = nil
 	case "cosmos.group.v1beta1.Vote.submitted_at":
 		x.SubmittedAt = nil
+	case "cosmos.group.v1beta1.Vote.choices":
+		x.Choices = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.Vote"))
@@ -6200,6 +6263,12 @@ func (x *fastReflection_Vote) Get(descriptor protoreflect.FieldDescriptor) proto
 	case "cosmos.group.v1beta1.Vote.submitted_at":
 		value := x.SubmittedAt
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "cosmos.group.v1beta1.Vote.choices":
+		if len(x.Choices) == 0 {
+			return protoreflect.ValueOfList(&_Vote_6_list{})
+		}
+		listValue := &_Vote_6_list{list: &x.Choices}
+		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.Vote"))
@@ -6230,6 +6299,10 @@ func (x *fastReflection_Vote) Set(fd protoreflect.FieldDescriptor, value protore
 		x.Metadata = value.Bytes()
 	case "cosmos.group.v1beta1.Vote.submitted_at":
 		x.SubmittedAt = value.Message().Interface().(*timestamppb.Timestamp)
+	case "cosmos.group.v1beta1.Vote.choices":
+		lv := value.List()
+		clv := lv.(*_Vote_6_list)
+		x.Choices = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.Vote"))
@@ -6255,6 +6328,12 @@ func (x *fastReflection_Vote) Mutable(fd protoreflect.FieldDescriptor) protorefl
 			x.SubmittedAt = new(timestamppb.Timestamp)
 		}
 		return protoreflect.ValueOfMessage(x.SubmittedAt.ProtoReflect())
+	case "cosmos.group.v1beta1.Vote.choices":
+		if x.Choices == nil {
+			x.Choices = []*WeightedVoteOption{}
+		}
+		value := &_Vote_6_list{list: &x.Choices}
+		return protoreflect.ValueOfList(value)
 	case "cosmos.group.v1beta1.Vote.proposal_id":
 		panic(fmt.Errorf("field proposal_id of message cosmos.group.v1beta1.Vote is not mutable"))
 	case "cosmos.group.v1beta1.Vote.voter":
@@ -6287,6 +6366,9 @@ func (x *fastReflection_Vote) NewField(fd protoreflect.FieldDescriptor) protoref
 	case "cosmos.group.v1beta1.Vote.submitted_at":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "cosmos.group.v1beta1.Vote.choices":
+		list := []*WeightedVoteOption{}
+		return protoreflect.ValueOfList(&_Vote_6_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.Vote"))
@@ -6374,6 +6456,12 @@ func (x *fastReflection_Vote) ProtoMethods() *protoiface.Methods {
 			l = options.Size(x.SubmittedAt)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		if len(x.Choices) > 0 {
+			for _, e := range x.Choices {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -6402,6 +6490,22 @@ func (x *fastReflection_Vote) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Choices) > 0 {
+			for iNdEx := len(x.Choices) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Choices[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x32
+			}
 		}
 		if x.SubmittedAt != nil {
 			encoded, err := options.Marshal(x.SubmittedAt)
@@ -6627,6 +6731,40 @@ func (x *fastReflection_Vote) ProtoMethods() *protoiface.Methods {
 					x.SubmittedAt = &timestamppb.Timestamp{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.SubmittedAt); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Choices", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Choices = append(x.Choices, &WeightedVoteOption{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Choices[len(x.Choices)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -7070,7 +7208,7 @@ type WeightedVoteOption struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Option Choice `protobuf:"varint,1,opt,name=option,proto3,enum=cosmos.group.v1beta1.Choice" json:"option,omitempty"`
+	Choice Choice `protobuf:"varint,1,opt,name=choice,proto3,enum=cosmos.group.v1beta1.Choice" json:"choice,omitempty"`
 	Weight string `protobuf:"bytes,2,opt,name=weight,proto3" json:"weight,omitempty"`
 }
 
@@ -7094,9 +7232,9 @@ func (*WeightedVoteOption) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_types_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *WeightedVoteOption) GetOption() Choice {
+func (x *WeightedVoteOption) GetChoice() Choice {
 	if x != nil {
-		return x.Option
+		return x.Choice
 	}
 	return Choice_CHOICE_UNSPECIFIED
 }
@@ -7564,6 +7702,8 @@ type Vote struct {
 	Metadata []byte `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// submitted_at is the timestamp when the vote was submitted.
 	SubmittedAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=submitted_at,json=submittedAt,proto3" json:"submitted_at,omitempty"`
+	// choices is the split of votes.
+	Choices []*WeightedVoteOption `protobuf:"bytes,6,rep,name=choices,proto3" json:"choices,omitempty"`
 }
 
 func (x *Vote) Reset() {
@@ -7621,6 +7761,13 @@ func (x *Vote) GetSubmittedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *Vote) GetChoices() []*WeightedVoteOption {
+	if x != nil {
+		return x.Choices
+	}
+	return nil
+}
+
 var File_cosmos_group_v1beta1_types_proto protoreflect.FileDescriptor
 
 var file_cosmos_group_v1beta1_types_proto_rawDesc = []byte{
@@ -7662,10 +7809,10 @@ var file_cosmos_group_v1beta1_types_proto_rawDesc = []byte{
 	0x1f, 0x01, 0x52, 0x07, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x3a, 0x12, 0xca, 0xb4, 0x2d,
 	0x0e, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x22,
 	0x62, 0x0a, 0x12, 0x57, 0x65, 0x69, 0x67, 0x68, 0x74, 0x65, 0x64, 0x56, 0x6f, 0x74, 0x65, 0x4f,
-	0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x34, 0x0a, 0x06, 0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18,
+	0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x34, 0x0a, 0x06, 0x63, 0x68, 0x6f, 0x69, 0x63, 0x65, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67,
 	0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x68, 0x6f,
-	0x69, 0x63, 0x65, 0x52, 0x06, 0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x77,
+	0x69, 0x63, 0x65, 0x52, 0x06, 0x63, 0x68, 0x6f, 0x69, 0x63, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x77,
 	0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x77, 0x65, 0x69,
 	0x67, 0x68, 0x74, 0x22, 0xf4, 0x01, 0x0a, 0x09, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x6e, 0x66,
 	0x6f, 0x12, 0x19, 0x0a, 0x08, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20,
@@ -7813,8 +7960,8 @@ var file_cosmos_group_v1beta1_types_proto_rawDesc = []byte{
 	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x61, 0x62, 0x73,
 	0x74, 0x61, 0x69, 0x6e, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x76, 0x65, 0x74,
 	0x6f, 0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x76,
-	0x65, 0x74, 0x6f, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x3a, 0x04, 0x88, 0xa0, 0x1f, 0x00, 0x22, 0xf2,
-	0x01, 0x0a, 0x04, 0x56, 0x6f, 0x74, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x6f, 0x70, 0x6f,
+	0x65, 0x74, 0x6f, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x3a, 0x04, 0x88, 0xa0, 0x1f, 0x00, 0x22, 0xb6,
+	0x02, 0x0a, 0x04, 0x56, 0x6f, 0x74, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x6f, 0x70, 0x6f,
 	0x73, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x70, 0x72,
 	0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x49, 0x64, 0x12, 0x2e, 0x0a, 0x05, 0x76, 0x6f, 0x74, 0x65,
 	0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
@@ -7829,27 +7976,32 @@ var file_cosmos_group_v1beta1_types_proto_rawDesc = []byte{
 	0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
 	0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde,
 	0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x0b, 0x73, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x74, 0x65,
-	0x64, 0x41, 0x74, 0x2a, 0x64, 0x0a, 0x06, 0x43, 0x68, 0x6f, 0x69, 0x63, 0x65, 0x12, 0x16, 0x0a,
-	0x12, 0x43, 0x48, 0x4f, 0x49, 0x43, 0x45, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46,
-	0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x0d, 0x0a, 0x09, 0x43, 0x48, 0x4f, 0x49, 0x43, 0x45, 0x5f,
-	0x4e, 0x4f, 0x10, 0x01, 0x12, 0x0e, 0x0a, 0x0a, 0x43, 0x48, 0x4f, 0x49, 0x43, 0x45, 0x5f, 0x59,
-	0x45, 0x53, 0x10, 0x02, 0x12, 0x12, 0x0a, 0x0e, 0x43, 0x48, 0x4f, 0x49, 0x43, 0x45, 0x5f, 0x41,
-	0x42, 0x53, 0x54, 0x41, 0x49, 0x4e, 0x10, 0x03, 0x12, 0x0f, 0x0a, 0x0b, 0x43, 0x48, 0x4f, 0x49,
-	0x43, 0x45, 0x5f, 0x56, 0x45, 0x54, 0x4f, 0x10, 0x04, 0x42, 0xdc, 0x01, 0x0a, 0x18, 0x63, 0x6f,
-	0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x0a, 0x54, 0x79, 0x70, 0x65, 0x73, 0x50, 0x72, 0x6f,
-	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x42, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
-	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73,
-	0x64, 0x6b, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x67, 0x72,
-	0x6f, 0x75, 0x70, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x67, 0x72, 0x6f, 0x75,
-	0x70, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x47, 0x58, 0xaa, 0x02,
-	0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x56, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x47,
-	0x72, 0x6f, 0x75, 0x70, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x20, 0x43,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x5c, 0x56, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea,
-	0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x3a,
-	0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x64, 0x41, 0x74, 0x12, 0x42, 0x0a, 0x07, 0x63, 0x68, 0x6f, 0x69, 0x63, 0x65, 0x73, 0x18, 0x06,
+	0x20, 0x03, 0x28, 0x0b, 0x32, 0x28, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72,
+	0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x57, 0x65, 0x69, 0x67,
+	0x68, 0x74, 0x65, 0x64, 0x56, 0x6f, 0x74, 0x65, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x07,
+	0x63, 0x68, 0x6f, 0x69, 0x63, 0x65, 0x73, 0x2a, 0x64, 0x0a, 0x06, 0x43, 0x68, 0x6f, 0x69, 0x63,
+	0x65, 0x12, 0x16, 0x0a, 0x12, 0x43, 0x48, 0x4f, 0x49, 0x43, 0x45, 0x5f, 0x55, 0x4e, 0x53, 0x50,
+	0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x0d, 0x0a, 0x09, 0x43, 0x48, 0x4f,
+	0x49, 0x43, 0x45, 0x5f, 0x4e, 0x4f, 0x10, 0x01, 0x12, 0x0e, 0x0a, 0x0a, 0x43, 0x48, 0x4f, 0x49,
+	0x43, 0x45, 0x5f, 0x59, 0x45, 0x53, 0x10, 0x02, 0x12, 0x12, 0x0a, 0x0e, 0x43, 0x48, 0x4f, 0x49,
+	0x43, 0x45, 0x5f, 0x41, 0x42, 0x53, 0x54, 0x41, 0x49, 0x4e, 0x10, 0x03, 0x12, 0x0f, 0x0a, 0x0b,
+	0x43, 0x48, 0x4f, 0x49, 0x43, 0x45, 0x5f, 0x56, 0x45, 0x54, 0x4f, 0x10, 0x04, 0x42, 0xdc, 0x01,
+	0x0a, 0x18, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f,
+	0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x0a, 0x54, 0x79, 0x70, 0x65,
+	0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x42, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
+	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2f, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b,
+	0x67, 0x72, 0x6f, 0x75, 0x70, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43,
+	0x47, 0x58, 0xaa, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x47, 0x72, 0x6f, 0x75,
+	0x70, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x5c, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0xe2, 0x02, 0x20, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x5c,
+	0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64,
+	0x61, 0x74, 0x61, 0xea, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x47, 0x72,
+	0x6f, 0x75, 0x70, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -7889,7 +8041,7 @@ var file_cosmos_group_v1beta1_types_proto_depIdxs = []int32{
 	14, // 0: cosmos.group.v1beta1.Member.added_at:type_name -> google.protobuf.Timestamp
 	4,  // 1: cosmos.group.v1beta1.Members.members:type_name -> cosmos.group.v1beta1.Member
 	15, // 2: cosmos.group.v1beta1.ThresholdDecisionPolicy.timeout:type_name -> google.protobuf.Duration
-	0,  // 3: cosmos.group.v1beta1.WeightedVoteOption.option:type_name -> cosmos.group.v1beta1.Choice
+	0,  // 3: cosmos.group.v1beta1.WeightedVoteOption.choice:type_name -> cosmos.group.v1beta1.Choice
 	14, // 4: cosmos.group.v1beta1.GroupInfo.created_at:type_name -> google.protobuf.Timestamp
 	4,  // 5: cosmos.group.v1beta1.GroupMember.member:type_name -> cosmos.group.v1beta1.Member
 	16, // 6: cosmos.group.v1beta1.GroupPolicyInfo.decision_policy:type_name -> google.protobuf.Any
@@ -7903,11 +8055,12 @@ var file_cosmos_group_v1beta1_types_proto_depIdxs = []int32{
 	16, // 14: cosmos.group.v1beta1.Proposal.msgs:type_name -> google.protobuf.Any
 	0,  // 15: cosmos.group.v1beta1.Vote.choice:type_name -> cosmos.group.v1beta1.Choice
 	14, // 16: cosmos.group.v1beta1.Vote.submitted_at:type_name -> google.protobuf.Timestamp
-	17, // [17:17] is the sub-list for method output_type
-	17, // [17:17] is the sub-list for method input_type
-	17, // [17:17] is the sub-list for extension type_name
-	17, // [17:17] is the sub-list for extension extendee
-	0,  // [0:17] is the sub-list for field type_name
+	7,  // 17: cosmos.group.v1beta1.Vote.choices:type_name -> cosmos.group.v1beta1.WeightedVoteOption
+	18, // [18:18] is the sub-list for method output_type
+	18, // [18:18] is the sub-list for method input_type
+	18, // [18:18] is the sub-list for extension type_name
+	18, // [18:18] is the sub-list for extension extendee
+	0,  // [0:18] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_group_v1beta1_types_proto_init() }

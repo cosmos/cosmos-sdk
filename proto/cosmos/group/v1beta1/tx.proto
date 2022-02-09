@@ -303,14 +303,16 @@ message MsgVoteResponse {}
 message MsgVoteWeighted {
   option (cosmos.msg.v1.signer) = "voter";
 
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
-  option (gogoproto.goproto_getters)  = false;
-
   uint64                      proposal_id = 1 [(gogoproto.jsontag) = "proposal_id"];
   string                      voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  repeated WeightedVoteOption options     = 3 [(gogoproto.nullable) = false];
+  repeated WeightedVoteOption choices     = 3;
+
+  // metadata is any arbitrary metadata to attached to the vote.
+  bytes metadata = 4;
+
+  // exec defines whether the proposal should be executed
+  // immediately after voting or not.
+  Exec exec = 5;
 }
 
 // MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.

@@ -24,6 +24,14 @@ var _ group.MsgServer = Keeper{}
 // Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054, https://github.com/cosmos/cosmos-sdk/discussions/9072
 const gasCostPerIteration = uint64(20)
 
+// WeightedVoteOptions describes array of WeightedVoteOptions
+type WeightedVoteOptions []*group.WeightedVoteOption
+
+// NewNonSplitVoteOption creates a single choice vote with weight 1
+func NewNonSplitVoteOption(choice group.Choice) WeightedVoteOptions {
+	return WeightedVoteOptions{{choice, math.NewDecFromInt64(1).String()}}
+}
+
 func (k Keeper) CreateGroup(goCtx context.Context, req *group.MsgCreateGroup) (*group.MsgCreateGroupResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	metadata := req.Metadata
@@ -605,9 +613,9 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	newVote := group.Vote{
 		ProposalId:  id,
 		Voter:       voterAddr,
-		Choice:      choice,
 		Metadata:    metadata,
 		SubmittedAt: ctx.BlockTime(),
+		Choices:     NewNonSplitVoteOption(choice),
 	}
 	if err := proposal.VoteState.Add(newVote, voter.Member.Weight); err != nil {
 		return nil, sdkerrors.Wrap(err, "add new vote")
@@ -649,17 +657,8 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 
 func (k Keeper) VoteWeighted(goCtx context.Context, req *group.MsgVoteWeighted) (*group.MsgVoteWeightedResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	voter, err := sdk.AccAddressFromBech32(req.Voter)
 	id := req.ProposalId
-	choice := req.Choice
-	// metadata := req.Metadata
-
-	if err != nil {
-		return nil, err
-	}
-
-	id := req.ProposalId
-	choice := req.Choice
+	opts := req.Choices
 	metadata := req.Metadata
 
 	if err := k.assertMetadataLength(metadata, "metadata"); err != nil {
@@ -711,18 +710,19 @@ func (k Keeper) VoteWeighted(goCtx context.Context, req *group.MsgVoteWeighted) 
 
 	// Count and store votes.
 	voterAddr := req.Voter
-	voter := group.GroupMember{GroupId: electorate.GroupId, Member: &group.Member{Address: voterAddr}}
-	if err := k.groupMemberTable.GetOne(ctx.KVStore(k.key), orm.PrimaryKey(&voter), &voter); err != nil {
+	voterInfo := group.GroupMember{GroupId: electorate.GroupId, Member: &group.Member{Address: voterAddr}}
+	if err := k.groupMemberTable.GetOne(ctx.KVStore(k.key), orm.PrimaryKey(&voterInfo), &voterInfo); err != nil {
 		return nil, sdkerrors.Wrapf(err, "address: %s", voterAddr)
 	}
 	newVote := group.Vote{
 		ProposalId:  id,
 		Voter:       voterAddr,
-		Choice:      choice,
 		Metadata:    metadata,
 		SubmittedAt: ctx.BlockTime(),
+		Choices:     opts,
 	}
-	if err := proposal.VoteState.Add(newVote, voter.Member.Weight); err != nil {
+
+	if err := proposal.VoteState.Add(newVote, voterInfo.Member.Weight); err != nil {
 		return nil, sdkerrors.Wrap(err, "add new vote")
 	}
 

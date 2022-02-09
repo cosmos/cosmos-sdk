@@ -67,7 +67,7 @@ enum Choice {
 
 // WeightedVoteOption defines a unit of vote for vote split.
 message WeightedVoteOption {
-  Choice option = 1;
+  Choice choice = 1;
   string weight = 2;
 }
 
@@ -279,4 +279,7 @@ message Vote {
 
   // submitted_at is the timestamp when the vote was submitted.
   google.protobuf.Timestamp submitted_at = 5 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+
+  // choices is the split of votes.
+  repeated WeightedVoteOption choices = 6;
 }

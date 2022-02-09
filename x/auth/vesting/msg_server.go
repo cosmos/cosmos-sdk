@@ -180,13 +180,6 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 	return &types.MsgCreatePeriodicVestingAccountResponse{}, nil
 }
 
-func max64(a, b int64) int64 {
-	if a > b {
-		return a
-	}
-	return b
-}
-
 // CreateClawbackVestingAccount creates a new ClawbackVestingAccount, or merges a grant into an existing one.
 func (s msgServer) CreateClawbackVestingAccount(goCtx context.Context, msg *types.MsgCreateClawbackVestingAccount) (*types.MsgCreateClawbackVestingAccountResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

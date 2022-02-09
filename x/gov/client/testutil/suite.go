@@ -101,9 +101,9 @@ func (s *IntegrationTestSuite) TestCmdParams() {
 			[]string{},
 			`
 burn_params:
-	proposal_deposit: true
-	vote_quorum: true
-	vote_veto: true
+  proposal_deposit: true
+  vote_quorum: true
+  vote_veto: true
 deposit_params:
   max_deposit_period: "172800000000000"
   min_deposit:

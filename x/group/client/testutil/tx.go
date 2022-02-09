@@ -106,7 +106,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().Equal(uint32(0), txResp.Code, out.String())
 
-	s.group = &group.GroupInfo{GroupId: 1, Admin: val.Address.String(), Metadata: []byte{1}, TotalWeight: "3", Version: 1}
+	s.group = &group.GroupInfo{Id: 1, Admin: val.Address.String(), Metadata: []byte{1}, TotalWeight: "3", Version: 1}
 
 	// create 5 group policies
 	for i := 0; i < 5; i++ {
@@ -521,7 +521,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
 			append(
 				[]string{
 					val.Address.String(),
-					strconv.FormatUint(s.group.GroupId, 10),
+					strconv.FormatUint(s.group.Id, 10),
 					"AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ==",
 				},
 				commonFlags...,
@@ -628,7 +628,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 			append(
 				[]string{
 					val.Address.String(),
-					strconv.FormatUint(s.group.GroupId, 10),
+					strconv.FormatUint(s.group.Id, 10),
 					invalidMembersMetadataFileName,
 				},
 				commonFlags...,
@@ -686,7 +686,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
-	groupID := s.group.GroupId
+	groupID := s.group.Id
 
 	testCases := []struct {
 		name         string

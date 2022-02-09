@@ -60,6 +60,8 @@ type concreteIndex interface {
 	ormkv.IndexCodec
 
 	readValueFromIndexKey(context ReadBackend, primaryKey []protoreflect.Value, value []byte, message proto.Message) error
+	addPendingDelete(backend Backend, writer *batchIndexCommitmentWriter, primaryKey []protoreflect.Value, existing proto.Message) error
+	addPendingUpdate(backend Backend, writer *batchIndexCommitmentWriter, primaryKey []protoreflect.Value, existing, new proto.Message) error
 }
 
 // UniqueIndex defines an unique index on a table.

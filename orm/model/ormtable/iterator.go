@@ -43,6 +43,22 @@ type Iterator interface {
 	// if pagination was requested in list options.
 	PageResponse() *queryv1beta1.PageResponse
 
+	// Update schedules an update of the entity at the current position.
+	// Scheduled updates will not be applied until the Write method is
+	// called which also closes the iterator.
+	Update(updated proto.Message) error
+
+	// Delete schedule a deletion of the entity at the current position.
+	// Scheduled deletions will not be applied until the Write method is
+	// called which also closes the iterator.
+	Delete() error
+
+	// Write writes any pending updates and deletions to the store and
+	// closes the iterator. Only one of Write() or Close() needs to
+	// be called, but Close() can be called after Write() without causing
+	// and error.
+	Write() error
+
 	// Close closes the iterator and must always be called when done using
 	// the iterator. The defer keyword should generally be used for this.
 	Close()
@@ -50,7 +66,7 @@ type Iterator interface {
 	doNotImplement()
 }
 
-func prefixIterator(iteratorStore kv.ReadonlyStore, backend ReadBackend, index concreteIndex, codec *ormkv.KeyCodec, prefix []interface{}, opts []listinternal.Option) (Iterator, error) {
+func prefixIterator(iteratorStore kv.ReadonlyStore, backend Backend, index concreteIndex, codec *ormkv.KeyCodec, prefix []interface{}, opts []listinternal.Option) (Iterator, error) {
 	options := &listinternal.Options{}
 	listinternal.ApplyOptions(options, opts)
 	if err := options.Validate(); err != nil {
@@ -79,7 +95,7 @@ func prefixIterator(iteratorStore kv.ReadonlyStore, backend ReadBackend, index c
 		}
 		res = &indexIterator{
 			index:    index,
-			store:    backend,
+			backend:  backend,
 			iterator: it,
 			started:  false,
 		}
@@ -98,7 +114,7 @@ func prefixIterator(iteratorStore kv.ReadonlyStore, backend ReadBackend, index c
 
 		res = &indexIterator{
 			index:    index,
-			store:    backend,
+			backend:  backend,
 			iterator: it,
 			started:  false,
 		}
@@ -107,7 +123,7 @@ func prefixIterator(iteratorStore kv.ReadonlyStore, backend ReadBackend, index c
 	return applyCommonIteratorOptions(res, options)
 }
 
-func rangeIterator(iteratorStore kv.ReadonlyStore, reader ReadBackend, index concreteIndex, codec *ormkv.KeyCodec, start, end []interface{}, opts []listinternal.Option) (Iterator, error) {
+func rangeIterator(iteratorStore kv.ReadonlyStore, backend Backend, index concreteIndex, codec *ormkv.KeyCodec, start, end []interface{}, opts []listinternal.Option) (Iterator, error) {
 	options := &listinternal.Options{}
 	listinternal.ApplyOptions(options, opts)
 	if err := options.Validate(); err != nil {
@@ -153,7 +169,7 @@ func rangeIterator(iteratorStore kv.ReadonlyStore, reader ReadBackend, index con
 		}
 		res = &indexIterator{
 			index:    index,
-			store:    reader,
+			backend:  backend,
 			iterator: it,
 			started:  false,
 		}
@@ -174,7 +190,7 @@ func rangeIterator(iteratorStore kv.ReadonlyStore, reader ReadBackend, index con
 
 		res = &indexIterator{
 			index:    index,
-			store:    reader,
+			backend:  backend,
 			iterator: it,
 			started:  false,
 		}
@@ -197,13 +213,57 @@ func applyCommonIteratorOptions(iterator Iterator, options *listinternal.Options
 
 type indexIterator struct {
 	index    concreteIndex
-	store    ReadBackend
+	backend  Backend
 	iterator kv.Iterator
 
 	indexValues []protoreflect.Value
 	primaryKey  []protoreflect.Value
+	msg         proto.Message
 	value       []byte
 	started     bool
+
+	writeBatch *batchIndexCommitmentWriter
+}
+
+func (i *indexIterator) Update(updated proto.Message) error {
+	if i.writeBatch == nil {
+		i.writeBatch = newBatchIndexCommitmentWriter(i.backend)
+	}
+
+	_, pk, err := i.Keys()
+	if err != nil {
+		return err
+	}
+
+	msg, err := i.GetMessage()
+	if err != nil {
+		return err
+	}
+
+	return i.index.addPendingUpdate(i.backend, i.writeBatch, pk, msg, updated)
+}
+
+func (i *indexIterator) Delete() error {
+	if i.writeBatch == nil {
+		i.writeBatch = newBatchIndexCommitmentWriter(i.backend)
+	}
+
+	_, pk, err := i.Keys()
+	if err != nil {
+		return err
+	}
+
+	msg, err := i.GetMessage()
+	if err != nil {
+		return err
+	}
+
+	return i.index.addPendingDelete(i.backend, i.writeBatch, pk, msg)
+}
+
+func (i *indexIterator) Write() error {
+	i.Close()
+	return i.writeBatch.Write()
 }
 
 func (i *indexIterator) PageResponse() *queryv1beta1.PageResponse {
@@ -216,6 +276,7 @@ func (i *indexIterator) Next() bool {
 	} else {
 		i.iterator.Next()
 		i.indexValues = nil
+		i.msg = nil
 	}
 
 	return i.iterator.Valid()
@@ -240,13 +301,24 @@ func (i indexIterator) UnmarshalMessage(message proto.Message) error {
 	if err != nil {
 		return err
 	}
-	return i.index.readValueFromIndexKey(i.store, pk, i.value, message)
+	err = i.index.readValueFromIndexKey(i.backend, pk, i.value, message)
+	i.msg = message
+	return nil
 }
 
 func (i *indexIterator) GetMessage() (proto.Message, error) {
+	if i.msg != nil {
+		return i.msg, nil
+	}
+
 	msg := i.index.MessageType().New().Interface()
 	err := i.UnmarshalMessage(msg)
-	return msg, err
+	if err != nil {
+		return nil, err
+	}
+
+	i.msg = msg
+	return msg, nil
 }
 
 func (i indexIterator) Cursor() ormlist.CursorT {

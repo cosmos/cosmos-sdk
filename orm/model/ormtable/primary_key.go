@@ -25,7 +25,7 @@ type primaryKeyIndex struct {
 }
 
 func (p primaryKeyIndex) List(ctx context.Context, prefixKey []interface{}, options ...ormlist.Option) (Iterator, error) {
-	backend, err := p.getReadBackend(ctx)
+	backend, err := p.getBackend(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func (p primaryKeyIndex) List(ctx context.Context, prefixKey []interface{}, opti
 }
 
 func (p primaryKeyIndex) ListRange(ctx context.Context, from, to []interface{}, options ...ormlist.Option) (Iterator, error) {
-	backend, err := p.getReadBackend(ctx)
+	backend, err := p.getBackend(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -219,6 +219,26 @@ func (p primaryKeyIndex) deleteByIterator(ctx context.Context, it Iterator) erro
 	it.Close()
 	// then write batch
 	return writer.Write()
+}
+
+func (p primaryKeyIndex) addPendingDelete(backend Backend, writer *batchIndexCommitmentWriter, primaryKey []protoreflect.Value, existing proto.Message) error {
+	pkBz, err := p.EncodeKey(primaryKey)
+	if err != nil {
+		return err
+	}
+
+	return p.doDeleteWithWriteBatch(backend, writer, pkBz, existing)
+}
+
+func (p primaryKeyIndex) addPendingUpdate(backend Backend, writer *batchIndexCommitmentWriter, primaryKey []protoreflect.Value, existing, new proto.Message) error {
+	newPk := p.GetKeyValues(new.ProtoReflect())
+	if p.CompareKeys(primaryKey, newPk) != 0 {
+		err := p.addPendingDelete(backend, writer, primaryKey, existing)
+		if err != nil {
+			return err
+		}
+
+	}
 }
 
 var _ UniqueIndex = &primaryKeyIndex{}

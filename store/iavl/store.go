@@ -174,10 +174,10 @@ func (st *Store) VersionExists(version int64) bool {
 
 // GetAllVersions returns all versions in the iavl tree
 func (st *Store) GetAllVersions() []int {
-	return st.tree.AvailableVersions()
+	return st.tree.(*iavl.MutableTree).AvailableVersions()
 }
 
-// GetStoreType implements Store.
+// Implements Store.
 func (st *Store) GetStoreType() types.StoreType {
 	return types.StoreTypeIAVL
 }

@@ -7,6 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v040 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v040"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // migrateProposals migrates all legacy proposals into MsgExecLegacyContent
@@ -40,12 +42,24 @@ func migrateProposals(store sdk.KVStore, cdc codec.BinaryCodec) error {
 	return nil
 }
 
+// migrateParams migrates legacy depositParams  params into the new deposit params.
+func migrateParams(ctx sdk.Context, paramstore paramtypes.Subspace) {
+	oldDp := v1beta1.DepositParams{}
+	paramstore.Get(ctx, v1beta2.ParamStoreKeyVotingParams, &oldDp)
+
+	depParams := convertToNewDepParams(oldDp)
+
+	paramstore.Set(ctx, v1beta2.ParamStoreKeyVotingParams, depParams)
+}
+
 // MigrateStore performs in-place store migrations from v0.43 to v0.46. The
 // migration includes:
 //
 // - Migrate proposals to be Msg-based.
-func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
+func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, paramStore paramtypes.Subspace) error {
 	store := ctx.KVStore(storeKey)
+
+	migrateParams(ctx, paramStore)
 
 	return migrateProposals(store, cdc)
 }

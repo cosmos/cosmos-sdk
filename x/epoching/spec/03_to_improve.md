@@ -8,10 +8,10 @@ order: 3
 
 Cases that trigger unbonding process
 
-- Validator undelegate can unbond more tokens than his minimum_self_delegation and it will automatically turn the validator into unbonding
+* Validator undelegate can unbond more tokens than his minimum_self_delegation and it will automatically turn the validator into unbonding
 In this case, unbonding should start instantly.
-- Validator miss blocks and get slashed
-- Validator get slashed for double sign
+* Validator miss blocks and get slashed
+* Validator get slashed for double sign
 
 **Note:** When a validator begins the unbonding process, it could be required to turn the validator into unbonding state instantly.
   This is different than a specific delegator beginning to unbond. A validator beginning to unbond means that it's not in the set any more.

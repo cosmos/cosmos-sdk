@@ -165,6 +165,9 @@ retries = {{ .Rosetta.Retries }}
 # Offline defines if Rosetta server should run in offline mode.
 offline = {{ .Rosetta.Offline }}
 
+# EnableDefaultFeeSuggest indicates to use default fee suggestion
+enable-default-fee-suggest = {{ .Rosetta.EnableDefaultFeeSuggest }}
+
 # SuggestGas defines gas limit when calculate fee
 suggest-gas = {{ .Rosetta.SuggestGas }}
 

@@ -47,8 +47,8 @@ func NewPruningOptions(keepRecent, interval uint64) PruningOptions {
 }
 
 func (po PruningOptions) Validate() error {
-	if po.KeepRecent == 0 && po.Interval > 0 {
-		return fmt.Errorf("invalid 'Interval' when pruning nothing: %d", po.Interval)
+	if po.KeepRecent > 0 && po.Interval == 0 {
+		return fmt.Errorf("invalid 'Interval' when pruning recent heights: %d", po.Interval)
 	}
 
 	return nil

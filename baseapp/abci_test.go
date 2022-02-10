@@ -43,7 +43,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 			),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
-			expected:     490000,
+			expected:     498999,
 		},
 		"pruning state sync snapshot only": {
 			bapp: baseapp.NewBaseApp(

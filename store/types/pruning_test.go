@@ -15,9 +15,7 @@ func TestPruningOptions_Validate(t *testing.T) {
 		{100, 10, false}, // default
 		{0, 10, false},   // everything
 		{0, 0, false},    // nothing
-		{0, 10, false},
-		{100, 0, true}, // invalid interval
-		{0, 5, true},   // invalid interval
+		{100, 0, true},   // invalid interval
 	}
 
 	for _, tc := range testCases {

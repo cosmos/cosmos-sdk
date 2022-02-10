@@ -41,11 +41,11 @@ func ParamKeyTable() paramtypes.KeyTable {
 // NewDepositParams creates a new DepositParams object
 func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration, vv, vq, dp bool) DepositParams {
 	return DepositParams{
-		MinDeposit:       minDeposit,
-		MaxDepositPeriod: &maxDepositPeriod,
-		VoteQuorum:       vq,
-		VoteVeto:         vv,
-		ProposalDeposit:  dp,
+		MinDeposit:          minDeposit,
+		MaxDepositPeriod:    &maxDepositPeriod,
+		BurnVoteQuorum:      vq,
+		BurnVoteVeto:        vv,
+		BurnProposalDeposit: dp,
 	}
 }
 

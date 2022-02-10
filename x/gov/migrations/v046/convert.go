@@ -165,11 +165,11 @@ func convertToNewVotes(oldVotes v1beta1.Votes) (v1beta2.Votes, error) {
 
 func convertToNewDepParams(oldDepParams v1beta1.DepositParams) v1beta2.DepositParams {
 	return v1beta2.DepositParams{
-		MinDeposit:       oldDepParams.MinDeposit,
-		MaxDepositPeriod: &oldDepParams.MaxDepositPeriod,
-		VoteQuorum:       true,
-		VoteVeto:         true,
-		ProposalDeposit:  true,
+		MinDeposit:          oldDepParams.MinDeposit,
+		MaxDepositPeriod:    &oldDepParams.MaxDepositPeriod,
+		BurnVoteQuorum:      true,
+		BurnVoteVeto:        true,
+		BurnProposalDeposit: true,
 	}
 }
 

@@ -74,16 +74,16 @@ func TestMigrateJSON(t *testing.T) {
 	// - Proposals use MsgExecLegacyContent
 	expected := `{
 	"deposit_params": {
+		"burn_proposal_deposit": true,
+		"burn_vote_quorum": true,
+		"burn_vote_veto": true,
 		"max_deposit_period": "172800s",
 		"min_deposit": [
 			{
 				"amount": "10000000",
 				"denom": "stake"
 			}
-		],
-		"proposal_deposit": true,
-		"vote_quorum": true,
-		"vote_veto": true
+		]
 	},
 	"deposits": [],
 	"proposals": [

@@ -103,11 +103,11 @@ message DepositParams {
   google.protobuf.Duration max_deposit_period = 2 [(gogoproto.stdduration) = true, (gogoproto.jsontag) = "max_deposit_period,omitempty"];
 
   // burn deposits if a proposal does not meet qourum
-  bool vote_quorum = 3;
+  bool burn_vote_quorum = 3;
   // burn deposits if the proposal does not get enough deposits
-  bool proposal_deposit = 4;
-  // burn deposits if qouroum wite vote type no_veto is met
-  bool vote_veto = 5;
+  bool burn_proposal_deposit = 4;
+  // burn deposits if qouroum with vote type no_veto is met
+  bool burn_vote_veto = 5;
 }
 
 // VotingParams defines the params for voting on governance proposals.

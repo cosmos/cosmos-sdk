@@ -105,7 +105,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1beta2.Proposal) (passes b
 	percentVoting := totalVotingPower.Quo(keeper.sk.TotalBondedTokens(ctx).ToDec())
 	quorum, _ := sdk.NewDecFromStr(tallyParams.Quorum)
 	if percentVoting.LT(quorum) {
-		return false, keeper.GetDepositParams(ctx).VoteQuorum, tallyResults
+		return false, keeper.GetDepositParams(ctx).BurnVoteQuorum, tallyResults
 	}
 
 	// If no one votes (everyone abstains), proposal fails
@@ -116,7 +116,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1beta2.Proposal) (passes b
 	// If more than 1/3 of voters veto, proposal fails
 	vetoThreshold, _ := sdk.NewDecFromStr(tallyParams.VetoThreshold)
 	if results[v1beta2.OptionNoWithVeto].Quo(totalVotingPower).GT(vetoThreshold) {
-		return false, keeper.GetDepositParams(ctx).VoteVeto, tallyResults
+		return false, keeper.GetDepositParams(ctx).BurnVoteVeto, tallyResults
 	}
 
 	// If more than 1/2 of non-abstaining voters vote Yes, proposal passes

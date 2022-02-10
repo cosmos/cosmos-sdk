@@ -1,13 +1,10 @@
 package group_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/x/group"
-
-	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 
 	"github.com/stretchr/testify/require"
 )
@@ -157,27 +154,6 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-
-			percentage, err := math.NewPositiveDecFromString(tc.policy.Percentage)
-			require.NoError(t, err)
-			yesCount, err := math.NewNonNegativeDecFromString(tc.tally.YesCount)
-			require.NoError(t, err)
-			totalPowerDec, err := math.NewNonNegativeDecFromString(tc.totalPower)
-			require.NoError(t, err)
-			totalCounts, err := tc.tally.TotalCounts()
-			require.NoError(t, err)
-			undecided, err := math.SubNonNegative(totalPowerDec, totalCounts)
-			require.NoError(t, err)
-			sum, err := yesCount.Add(undecided)
-			require.NoError(t, err)
-			yesPercentage, err := yesCount.Quo(totalPowerDec)
-			require.NoError(t, err)
-			sumPercentage, err := sum.Quo(totalPowerDec)
-			require.NoError(t, err)
-			fmt.Println("------------")
-			fmt.Println(sumPercentage, percentage)
-			fmt.Println(yesPercentage, percentage)
-			// panic("")
 			policyResult, err := tc.policy.Allow(*tc.tally, tc.totalPower, tc.votingDuration)
 			require.NoError(t, err)
 			require.Equal(t, tc.result, policyResult)

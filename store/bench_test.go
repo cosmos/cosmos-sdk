@@ -24,6 +24,7 @@ import (
 
 var (
 	cacheSize = 100
+	skey_1    = types.NewKVStoreKey("store1")
 )
 
 func randBytes(numBytes int) []byte {
@@ -102,6 +103,15 @@ type store interface {
 type storeV2 struct {
 	*storev2.Store
 	storev2types.KVStore
+}
+
+func simpleStoreConfig() (storev2.StoreConfig, error) {
+	opts := storev2.DefaultStoreConfig()
+	err := opts.RegisterSubstore(skey_1.Name(), types.StoreTypePersistent)
+	if err != nil {
+		return storev2.StoreConfig{}, err
+	}
+	return opts, nil
 }
 
 func sampleOperation(p percentages) string {
@@ -249,7 +259,11 @@ func newStore(version int, dbBackend interface{}, cID *types.CommitID, cacheSize
 		if !ok {
 			return nil, fmt.Errorf("unsupported db type")
 		}
-		root, err := storev2.NewStore(db, storev2.DefaultStoreConfig())
+		simpleStoreConfig, err := simpleStoreConfig()
+		if err != nil {
+			return nil, err
+		}
+		root, err := storev2.NewStore(db, simpleStoreConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -284,7 +298,7 @@ func runSuite(b *testing.B, version int, dbBackendTypes []tmdb.BackendType, dir 
 	}
 
 	// run deterministic operations subbenchmarks for various scenarios
-	c := counts{has: 5, get: 20, set: 5, delete: 1}
+	c := counts{has: 200, get: 5500, set: 4000, delete: 300}
 	sampledCounts := []counts{c}
 	benchmarks = generateBenchmarks(dbBackendTypes, nil, sampledCounts)
 	values := prepareValues()

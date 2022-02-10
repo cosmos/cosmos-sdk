@@ -185,14 +185,14 @@ func (s *IntegrationTestSuite) TestQueryGranterGrantsGRPC() {
 		},
 		{
 			"no authorizations found",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.APIAddress, val.Address.String()),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.APIAddress, grantee.String()),
 			false,
 			"",
 			0,
 		},
 		{
 			"valid query",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.APIAddress, grantee.String()),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.APIAddress, val.Address.String()),
 			false,
 			"",
 			7,
@@ -209,6 +209,7 @@ func (s *IntegrationTestSuite) TestQueryGranterGrantsGRPC() {
 				var authorizations authz.QueryGranterGrantsResponse
 				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &authorizations)
 				require.NoError(err)
+				// FIXME: https://github.com/cosmos/cosmos-sdk/issues/10965
 				require.Len(authorizations.Grants, tc.numItems)
 			}
 
@@ -237,17 +238,17 @@ func (s *IntegrationTestSuite) TestQueryGranteeGrantsGRPC() {
 		},
 		{
 			"no authorizations found",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/grantee/%s", val.APIAddress, grantee.String()),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/grantee/%s", val.APIAddress, val.Address.String()),
 			false,
 			"",
 			0,
 		},
 		{
 			"valid query",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/grantee/%s", val.APIAddress, val.Address.String()),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/grantee/%s", val.APIAddress, grantee.String()),
 			false,
 			"",
-			7,
+			1,
 		},
 	}
 	for _, tc := range testCases {
@@ -261,6 +262,7 @@ func (s *IntegrationTestSuite) TestQueryGranteeGrantsGRPC() {
 				var authorizations authz.QueryGranteeGrantsResponse
 				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &authorizations)
 				require.NoError(err)
+				// FIXME: https://github.com/cosmos/cosmos-sdk/issues/10965
 				require.Len(authorizations.Grants, tc.numItems)
 			}
 

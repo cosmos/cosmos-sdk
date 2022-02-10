@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
+	clientflags "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/pflag"
 
 	crg "github.com/cosmos/cosmos-sdk/server/rosetta/lib/server"
@@ -31,8 +32,6 @@ const (
 	DefaultNetwork = "network"
 	// DefaultOffline defines the default offline value
 	DefaultOffline = false
-	// DefaultSuggestGas defines the default gas limit for fee suggestion
-	DefaultSuggestGas = 200_000
 	// DefaultSuggestDenom defines the default denom for fee suggestion
 	DefaultSuggestDenom = "uatom"
 )
@@ -113,7 +112,7 @@ func (c *Config) validate() error {
 		return fmt.Errorf("network not provided")
 	}
 	if c.SuggestGas <= 0 {
-		c.SuggestGas = DefaultSuggestGas
+		c.SuggestGas = clientflags.DefaultGasLimit
 	}
 	found := false
 	for i := 0; i < c.SuggestPrices.Len(); i++ {
@@ -234,6 +233,6 @@ func SetFlags(flags *pflag.FlagSet) {
 	flags.String(FlagAddr, DefaultAddr, "the address rosetta will bind to")
 	flags.Int(FlagRetries, DefaultRetries, "the number of retries that will be done before quitting")
 	flags.Bool(FlagOffline, DefaultOffline, "run rosetta only with construction API")
-	flags.Int(FlagSuggestGas, DefaultSuggestGas, "default gas for fee suggestion")
+	flags.Int(FlagSuggestGas, clientflags.DefaultGasLimit, "default gas for fee suggestion")
 	flags.String(FlagSuggestDenom, DefaultSuggestDenom, "default denom to suggest fee")
 }

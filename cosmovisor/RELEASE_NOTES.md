@@ -1,3 +1,5 @@
+# Cosmovisor v1.1.0 Release Notes
+
 ### New execution model
 
 With this release we are shifting to a new CLI design: 

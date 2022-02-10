@@ -403,6 +403,33 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.NilError(t, err)
 	assertIteratorItems(it, 2, 6, 10)
 
+	// Let's update with an iterator
+	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
+	assert.NilError(t, err)
+	for it.Next() {
+		ex, err := it.Value()
+		assert.NilError(t, err)
+		ex.U64 += 1
+		assert.NilError(t, it.Update(ex))
+	}
+	assert.NilError(t, it.Write())
+	data[2].U64 += 1
+	data[6].U64 += 1
+	data[10].U64 += 1
+	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
+	assert.NilError(t, err)
+	assertIteratorItems(it, 2, 6, 10)
+
+	// Let's delete using the iterator
+	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
+	assert.NilError(t, err)
+	for it.Next() {
+		assert.NilError(t, it.Delete())
+	}
+	assert.NilError(t, it.Write())
+	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
+	assert.NilError(t, err)
+	assertIteratorItems(it) // empty
 }
 
 func TestRandomTableData(t *testing.T) {

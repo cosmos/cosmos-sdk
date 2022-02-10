@@ -298,11 +298,32 @@ func (v Vote) ValidateBasic() error {
 	if v.ProposalId == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "voter ProposalId")
 	}
-	if v.Choice == Choice_CHOICE_UNSPECIFIED {
-		return sdkerrors.Wrap(errors.ErrEmpty, "voter choice")
+	if len(v.Choices) == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, WeightedVoteOptions(v.Choices).String())
 	}
-	if _, ok := Choice_name[int32(v.Choice)]; !ok {
-		return sdkerrors.Wrap(errors.ErrInvalid, "choice")
+	totalWeight := sdk.NewDec(0)
+	usedOptions := make(map[Choice]bool)
+	for _, option := range v.Choices {
+		if _, ok := Choice_name[int32(option.Choice)]; !ok {
+			return sdkerrors.Wrap(errors.ErrInvalid, "choice")
+		}
+		weight, err := sdk.NewDecFromStr(option.Weight)
+		if err != nil {
+			return sdkerrors.Wrapf(errors.ErrInvalid, "Invalid weight: %s", err)
+		}
+		totalWeight = totalWeight.Add(weight)
+		if usedOptions[option.Choice] {
+			return sdkerrors.Wrap(errors.ErrInvalid, "Duplicated vote option")
+		}
+		usedOptions[option.Choice] = true
+	}
+
+	if totalWeight.GT(sdk.NewDec(1)) {
+		return sdkerrors.Wrap(errors.ErrInvalid, "Total weight overflow 1.00")
+	}
+
+	if totalWeight.LT(sdk.NewDec(1)) {
+		return sdkerrors.Wrap(errors.ErrInvalid, "Total weight lower than 1.00")
 	}
 	return nil
 }

@@ -1383,7 +1383,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 	}
 
 	proposers := []string{addr2.String()}
-	proposalID := createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+	proposalID := createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers, s.groupPolicyAddr)
 
 	specs := map[string]struct {
 		preRun     func(sdkCtx sdk.Context) uint64
@@ -1393,7 +1393,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 	}{
 		"wrong admin": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers, s.groupPolicyAddr)
 			},
 			admin:     addr5.String(),
 			expErrMsg: "unauthorized",
@@ -1407,14 +1407,14 @@ func (s *TestSuite) TestWithdrawProposal() {
 		},
 		"happy case with proposer": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers, s.groupPolicyAddr)
 			},
 			proposalId: proposalID,
 			admin:      proposers[0],
 		},
 		"already closed proposal": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				pId := createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				pId := createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers, s.groupPolicyAddr)
 				_, err := s.keeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
 					ProposalId: pId,
 					Address:    proposers[0],
@@ -1428,7 +1428,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 		},
 		"happy case with group admin address": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers, s.groupPolicyAddr)
 			},
 			proposalId: proposalID,
 			admin:      groupPolicy.String(),
@@ -1989,7 +1989,7 @@ func (s *TestSuite) TestVoteWeighted() {
 	}{
 		"vote yes=0.5,no=0.1,veto=0.1,abstain=0.3": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers, groupPolicy)
 			},
 			req: &group.MsgVoteWeighted{
 				ProposalId: myProposalID, // ignores `myProposalID` replaces by `preRun`
@@ -2014,7 +2014,7 @@ func (s *TestSuite) TestVoteWeighted() {
 		},
 		"with try exec": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers, groupPolicy)
 			},
 			req: &group.MsgVoteWeighted{
 				ProposalId: myProposalID, // ignores `myProposalID` replaces by `preRun`
@@ -2040,7 +2040,7 @@ func (s *TestSuite) TestVoteWeighted() {
 		},
 		"with try exec, not enough yes votes for proposal to pass": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers, groupPolicy)
 			},
 			req: &group.MsgVoteWeighted{
 				ProposalId: myProposalID, // ignores `myProposalID` replaces by `preRun`
@@ -2061,7 +2061,7 @@ func (s *TestSuite) TestVoteWeighted() {
 		},
 		"vote no": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers, groupPolicy)
 			},
 			req: &group.MsgVoteWeighted{
 				ProposalId: myProposalID, // ignores `myProposalID` replaces by `preRun`
@@ -2081,7 +2081,7 @@ func (s *TestSuite) TestVoteWeighted() {
 		},
 		"vote abstain": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers, groupPolicy)
 			},
 			req: &group.MsgVoteWeighted{
 				ProposalId: myProposalID, // ignores `myProposalID` replaces by `preRun`
@@ -2101,7 +2101,7 @@ func (s *TestSuite) TestVoteWeighted() {
 		},
 		"vote veto": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers, groupPolicy)
 			},
 			req: &group.MsgVoteWeighted{
 				ProposalId: myProposalID, // ignores `myProposalID` replaces by `preRun`
@@ -2121,7 +2121,7 @@ func (s *TestSuite) TestVoteWeighted() {
 		},
 		"apply decision policy early": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers, groupPolicy)
 			},
 			req: &group.MsgVoteWeighted{
 				ProposalId: myProposalID, // ignores `myProposalID` replaces by `preRun`
@@ -2146,7 +2146,7 @@ func (s *TestSuite) TestVoteWeighted() {
 				Choices:    group.NewNonSplitVoteOption(group.Choice_CHOICE_YES),
 			},
 			preRun: func(ctx sdk.Context) uint64 {
-				pId := createProposal(ctx, s, []sdk.Msg{msgSend}, proposers)
+				pId := createProposal(ctx, s, []sdk.Msg{msgSend}, proposers, groupPolicy)
 				_, err := s.keeper.VoteWeighted(ctx, &group.MsgVoteWeighted{
 					ProposalId: myProposalID,
 					Voter:      addr3.String(),
@@ -2229,7 +2229,7 @@ func (s *TestSuite) TestVoteWeighted() {
 				Choices:    group.NewNonSplitVoteOption(group.Choice_CHOICE_NO),
 			},
 			preRun: func(ctx sdk.Context) uint64 {
-				pId := createProposal(ctx, s, []sdk.Msg{msgSend}, proposers)
+				pId := createProposal(ctx, s, []sdk.Msg{msgSend}, proposers, groupPolicy)
 				_, err := s.keeper.VoteWeighted(ctx, &group.MsgVoteWeighted{
 					ProposalId: pId,
 					Voter:      addr3.String(),
@@ -2248,7 +2248,7 @@ func (s *TestSuite) TestVoteWeighted() {
 				Choices:    group.NewNonSplitVoteOption(group.Choice_CHOICE_NO),
 			},
 			preRun: func(ctx sdk.Context) uint64 {
-				pId := createProposal(ctx, s, []sdk.Msg{msgSend}, proposers)
+				pId := createProposal(ctx, s, []sdk.Msg{msgSend}, proposers, groupPolicy)
 				_, err := s.keeper.VoteWeighted(ctx, &group.MsgVoteWeighted{
 					ProposalId: pId,
 					Voter:      addr4.String(),
@@ -2446,7 +2446,7 @@ func (s *TestSuite) TestExecProposal() {
 		},
 		"open proposal must not fail": {
 			setupProposal: func(ctx context.Context) uint64 {
-				return createProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
+				return createProposal(ctx, s, []sdk.Msg{msgSend1}, proposers, s.groupPolicyAddr)
 			},
 			expProposalStatus: group.ProposalStatusSubmitted,
 			expProposalResult: group.ProposalResultUnfinalized,
@@ -2480,7 +2480,7 @@ func (s *TestSuite) TestExecProposal() {
 		},
 		"with group modified before tally": {
 			setupProposal: func(ctx context.Context) uint64 {
-				myProposalID := createProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
+				myProposalID := createProposal(ctx, s, []sdk.Msg{msgSend1}, proposers, s.groupPolicyAddr)
 
 				// then modify group
 				_, err := s.keeper.UpdateGroupMetadata(ctx, &group.MsgUpdateGroupMetadata{
@@ -2497,7 +2497,7 @@ func (s *TestSuite) TestExecProposal() {
 		},
 		"with group policy modified before tally": {
 			setupProposal: func(ctx context.Context) uint64 {
-				myProposalID := createProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
+				myProposalID := createProposal(ctx, s, []sdk.Msg{msgSend1}, proposers, s.groupPolicyAddr)
 				_, err := s.keeper.UpdateGroupPolicyMetadata(ctx, &group.MsgUpdateGroupPolicyMetadata{
 					Admin:    addr1.String(),
 					Address:  s.groupPolicyAddr.String(),
@@ -2599,9 +2599,9 @@ func (s *TestSuite) TestExecProposal() {
 
 func createProposal(
 	ctx context.Context, s *TestSuite, msgs []sdk.Msg,
-	proposers []string) uint64 {
+	proposers []string, groupPolicyAddr sdk.AccAddress) uint64 {
 	proposalReq := &group.MsgCreateProposal{
-		Address:   s.groupPolicyAddr.String(),
+		Address:   groupPolicyAddr.String(),
 		Proposers: proposers,
 		Metadata:  nil,
 	}
@@ -2617,7 +2617,7 @@ func createProposalAndVote(
 	ctx context.Context, s *TestSuite, msgs []sdk.Msg,
 	proposers []string, choice group.Choice) uint64 {
 	s.Require().Greater(len(proposers), 0)
-	myProposalID := createProposal(ctx, s, msgs, proposers)
+	myProposalID := createProposal(ctx, s, msgs, proposers, s.groupPolicyAddr)
 
 	_, err := s.keeper.Vote(ctx, &group.MsgVote{
 		ProposalId: myProposalID,

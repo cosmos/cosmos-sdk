@@ -5,23 +5,28 @@ package authz
 
 import (
 	fmt "fmt"
+<<<<<<< HEAD
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
 	_ "github.com/regen-network/cosmos-proto"
+=======
+	_ "github.com/cosmos/cosmos-proto"
+	_ "github.com/cosmos/cosmos-sdk/codec/types"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+>>>>>>> fa8099da9 (feat: add grants by grantee authz query (#10944))
 	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
-	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
-var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -74,78 +79,8 @@ func (m *GenesisState) GetAuthorization() []GrantAuthorization {
 	return nil
 }
 
-// GrantAuthorization defines the GenesisState/GrantAuthorization type.
-type GrantAuthorization struct {
-	Granter       string     `protobuf:"bytes,1,opt,name=granter,proto3" json:"granter,omitempty"`
-	Grantee       string     `protobuf:"bytes,2,opt,name=grantee,proto3" json:"grantee,omitempty"`
-	Authorization *types.Any `protobuf:"bytes,3,opt,name=authorization,proto3" json:"authorization,omitempty"`
-	Expiration    time.Time  `protobuf:"bytes,4,opt,name=expiration,proto3,stdtime" json:"expiration"`
-}
-
-func (m *GrantAuthorization) Reset()         { *m = GrantAuthorization{} }
-func (m *GrantAuthorization) String() string { return proto.CompactTextString(m) }
-func (*GrantAuthorization) ProtoMessage()    {}
-func (*GrantAuthorization) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4c2fbb971da7c892, []int{1}
-}
-func (m *GrantAuthorization) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *GrantAuthorization) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_GrantAuthorization.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *GrantAuthorization) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GrantAuthorization.Merge(m, src)
-}
-func (m *GrantAuthorization) XXX_Size() int {
-	return m.Size()
-}
-func (m *GrantAuthorization) XXX_DiscardUnknown() {
-	xxx_messageInfo_GrantAuthorization.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_GrantAuthorization proto.InternalMessageInfo
-
-func (m *GrantAuthorization) GetGranter() string {
-	if m != nil {
-		return m.Granter
-	}
-	return ""
-}
-
-func (m *GrantAuthorization) GetGrantee() string {
-	if m != nil {
-		return m.Grantee
-	}
-	return ""
-}
-
-func (m *GrantAuthorization) GetAuthorization() *types.Any {
-	if m != nil {
-		return m.Authorization
-	}
-	return nil
-}
-
-func (m *GrantAuthorization) GetExpiration() time.Time {
-	if m != nil {
-		return m.Expiration
-	}
-	return time.Time{}
-}
-
 func init() {
 	proto.RegisterType((*GenesisState)(nil), "cosmos.authz.v1beta1.GenesisState")
-	proto.RegisterType((*GrantAuthorization)(nil), "cosmos.authz.v1beta1.GrantAuthorization")
 }
 
 func init() {
@@ -153,6 +88,7 @@ func init() {
 }
 
 var fileDescriptor_4c2fbb971da7c892 = []byte{
+<<<<<<< HEAD
 	// 337 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x52, 0xbb, 0x6e, 0xc2, 0x30,
 	0x14, 0x8d, 0x0b, 0xea, 0xc3, 0x94, 0xa1, 0x11, 0x43, 0xca, 0x60, 0x10, 0xea, 0x90, 0x05, 0x5b,
@@ -176,6 +112,25 @@ var fileDescriptor_4c2fbb971da7c892 = []byte{
 	0x42, 0x3c, 0x90, 0x51, 0xb6, 0xf8, 0xec, 0xd3, 0x54, 0xc3, 0x67, 0x32, 0xb5, 0xcf, 0x23, 0x3c,
 	0x36, 0x4e, 0xd7, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x7c, 0xdb, 0x6c, 0xcb, 0x35, 0x02, 0x00,
 	0x00,
+=======
+	// 247 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x4a, 0xce, 0x2f, 0xce,
+	0xcd, 0x2f, 0xd6, 0x4f, 0x2c, 0x2d, 0xc9, 0xa8, 0xd2, 0x2f, 0x33, 0x4c, 0x4a, 0x2d, 0x49, 0x34,
+	0xd4, 0x4f, 0x4f, 0xcd, 0x4b, 0x2d, 0xce, 0x2c, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12,
+	0x81, 0xa8, 0xd1, 0x03, 0xab, 0xd1, 0x83, 0xaa, 0x91, 0x92, 0x4f, 0xcf, 0xcf, 0x4f, 0xcf, 0x49,
+	0xd5, 0x07, 0xab, 0x49, 0x2a, 0x4d, 0xd3, 0x2f, 0xc9, 0xcc, 0x4d, 0x2d, 0x2e, 0x49, 0xcc, 0x2d,
+	0x80, 0x68, 0x93, 0x92, 0x44, 0x57, 0x90, 0x98, 0x57, 0x09, 0x95, 0x12, 0x49, 0xcf, 0x4f, 0xcf,
+	0x07, 0x33, 0xf5, 0x41, 0x2c, 0x98, 0x06, 0x88, 0x3d, 0xf1, 0x10, 0x09, 0xa8, 0xa5, 0x10, 0x29,
+	0x05, 0xac, 0xce, 0x84, 0x38, 0x08, 0xac, 0x42, 0x29, 0x85, 0x8b, 0xc7, 0x1d, 0xe2, 0xea, 0xe0,
+	0x92, 0xc4, 0x92, 0x54, 0xa1, 0x10, 0x2e, 0x5e, 0x90, 0x74, 0x7e, 0x51, 0x66, 0x55, 0x62, 0x49,
+	0x66, 0x7e, 0x9e, 0x04, 0xa3, 0x02, 0xb3, 0x06, 0xb7, 0x91, 0x86, 0x1e, 0x36, 0xcf, 0xe8, 0xb9,
+	0x17, 0x25, 0xe6, 0x95, 0x38, 0x22, 0xab, 0x77, 0x62, 0x39, 0x71, 0x4f, 0x9e, 0x21, 0x08, 0xd5,
+	0x10, 0x27, 0xbb, 0x13, 0x8f, 0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0x71,
+	0xc2, 0x63, 0x39, 0x86, 0x0b, 0x8f, 0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63, 0x88, 0x52, 0x49, 0xcf,
+	0x2c, 0xc9, 0x28, 0x4d, 0xd2, 0x4b, 0xce, 0xcf, 0x85, 0x3a, 0x1d, 0x4a, 0xe9, 0x16, 0xa7, 0x64,
+	0xeb, 0x57, 0x40, 0xdc, 0x9a, 0xc4, 0x06, 0x76, 0xac, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x22,
+	0xa6, 0xf4, 0x0b, 0x77, 0x01, 0x00, 0x00,
+>>>>>>> fa8099da9 (feat: add grants by grantee authz query (#10944))
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -215,63 +170,6 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *GrantAuthorization) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *GrantAuthorization) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *GrantAuthorization) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	n1, err1 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.Expiration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.Expiration):])
-	if err1 != nil {
-		return 0, err1
-	}
-	i -= n1
-	i = encodeVarintGenesis(dAtA, i, uint64(n1))
-	i--
-	dAtA[i] = 0x22
-	if m.Authorization != nil {
-		{
-			size, err := m.Authorization.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintGenesis(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.Grantee) > 0 {
-		i -= len(m.Grantee)
-		copy(dAtA[i:], m.Grantee)
-		i = encodeVarintGenesis(dAtA, i, uint64(len(m.Grantee)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Granter) > 0 {
-		i -= len(m.Granter)
-		copy(dAtA[i:], m.Granter)
-		i = encodeVarintGenesis(dAtA, i, uint64(len(m.Granter)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func encodeVarintGenesis(dAtA []byte, offset int, v uint64) int {
 	offset -= sovGenesis(v)
 	base := offset
@@ -295,29 +193,6 @@ func (m *GenesisState) Size() (n int) {
 			n += 1 + l + sovGenesis(uint64(l))
 		}
 	}
-	return n
-}
-
-func (m *GrantAuthorization) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Granter)
-	if l > 0 {
-		n += 1 + l + sovGenesis(uint64(l))
-	}
-	l = len(m.Grantee)
-	if l > 0 {
-		n += 1 + l + sovGenesis(uint64(l))
-	}
-	if m.Authorization != nil {
-		l = m.Authorization.Size()
-		n += 1 + l + sovGenesis(uint64(l))
-	}
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.Expiration)
-	n += 1 + l + sovGenesis(uint64(l))
 	return n
 }
 
@@ -387,189 +262,6 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			}
 			m.Authorization = append(m.Authorization, GrantAuthorization{})
 			if err := m.Authorization[len(m.Authorization)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipGenesis(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *GrantAuthorization) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowGenesis
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: GrantAuthorization: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: GrantAuthorization: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Granter", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGenesis
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Granter = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Grantee", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGenesis
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Grantee = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Authorization", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGenesis
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Authorization == nil {
-				m.Authorization = &types.Any{}
-			}
-			if err := m.Authorization.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Expiration", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGenesis
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.Expiration, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

@@ -6,9 +6,9 @@ order: 2
 
 This document describes the lifecycle of a transaction from creation to committed state changes. Transaction definition is described in a [different doc](../core/transactions.md). The transaction will be referred to as `Tx`. {synopsis}
 
-### Pre-requisite Readings
+## Pre-requisite Readings
 
-- [Anatomy of a Cosmos SDK Application](./app-anatomy.md) {prereq}
+* [Anatomy of a Cosmos SDK Application](./app-anatomy.md) {prereq}
 
 ## Creation
 
@@ -28,11 +28,11 @@ There are several required and optional flags for transaction creation. The `--f
 
 Additionally, there are several [flags](../core/cli.md) users can use to indicate how much they are willing to pay in [fees](./gas-fees.md):
 
-- `--gas` refers to how much [gas](./gas-fees.md), which represents computational resources, `Tx` consumes. Gas is dependent on the transaction and is not precisely calculated until execution, but can be estimated by providing `auto` as the value for `--gas`.
-- `--gas-adjustment` (optional) can be used to scale `gas` up in order to avoid underestimating. For example, users can specify their gas adjustment as 1.5 to use 1.5 times the estimated gas.
-- `--gas-prices` specifies how much the user is willing pay per unit of gas, which can be one or multiple denominations of tokens. For example, `--gas-prices=0.025uatom, 0.025upho` means the user is willing to pay 0.025uatom AND 0.025upho per unit of gas.
-- `--fees` specifies how much in fees the user is willing to pay in total.
-- `--timeout-height` specifies a block timeout height to prevent the tx from being committed past a certain height.
+* `--gas` refers to how much [gas](./gas-fees.md), which represents computational resources, `Tx` consumes. Gas is dependent on the transaction and is not precisely calculated until execution, but can be estimated by providing `auto` as the value for `--gas`.
+* `--gas-adjustment` (optional) can be used to scale `gas` up in order to avoid underestimating. For example, users can specify their gas adjustment as 1.5 to use 1.5 times the estimated gas.
+* `--gas-prices` specifies how much the user is willing pay per unit of gas, which can be one or multiple denominations of tokens. For example, `--gas-prices=0.025uatom, 0.025upho` means the user is willing to pay 0.025uatom AND 0.025upho per unit of gas.
+* `--fees` specifies how much in fees the user is willing to pay in total.
+* `--timeout-height` specifies a block timeout height to prevent the tx from being committed past a certain height.
 
 The ultimate value of the fees paid is equal to the gas multiplied by the gas prices. In other words, `fees = ceil(gas * gasPrices)`. Thus, since fees can be calculated using gas prices and vice versa, the users specify only one of the two.
 
@@ -153,7 +153,7 @@ and [`EndBlock`](./app-anatomy.md#beginblocker-and-endblocker). While each full-
 locally, this process yields a single, unambiguous result, since the messages' state transitions are deterministic and transactions are
 explicitly ordered in the block proposal.
 
-```
+```text
 		-----------------------
 		|Receive Block Proposal|
 		-----------------------
@@ -198,25 +198,25 @@ to during consensus. Under the hood, `DeliverTx` is almost identical to `CheckTx
 [`runTx`](../core/baseapp.md#runtx) function in deliver mode instead of check mode.
 Instead of using their `checkState`, full-nodes use `deliverState`:
 
-- **Decoding:** Since `DeliverTx` is an ABCI call, `Tx` is received in the encoded `[]byte` form.
+* **Decoding:** Since `DeliverTx` is an ABCI call, `Tx` is received in the encoded `[]byte` form.
   Nodes first unmarshal the transaction, using the [`TxConfig`](./app-anatomy#register-codec) defined in the app, then call `runTx` in `runTxModeDeliver`, which is very similar to `CheckTx` but also executes and writes state changes.
 
-- **Checks:** Full-nodes call `validateBasicMsgs` and the `AnteHandler` again. This second check
+* **Checks:** Full-nodes call `validateBasicMsgs` and the `AnteHandler` again. This second check
   happens because they may not have seen the same transactions during the addition to Mempool stage\
   and a malicious proposer may have included invalid ones. One difference here is that the
   `AnteHandler` will not compare `gas-prices` to the node's `min-gas-prices` since that value is local
   to each node - differing values across nodes would yield nondeterministic results.
 
-- **`MsgServiceRouter`:** While `CheckTx` would have exited, `DeliverTx` continues to run
+* **`MsgServiceRouter`:** While `CheckTx` would have exited, `DeliverTx` continues to run
   [`runMsgs`](../core/baseapp.md#runtx-and-runmsgs) to fully execute each `Msg` within the transaction.
   Since the transaction may have messages from different modules, `BaseApp` needs to know which module
   to find the appropriate handler. This is achieved using `BaseApp`'s `MsgServiceRouter` so that it can be processed by the module's Protobuf [`Msg` service](../building-modules/msg-services.md).
   For `LegacyMsg` routing, the `Route` function is called via the [module manager](../building-modules/module-manager.md) to retrieve the route name and find the legacy [`Handler`](../building-modules/msg-services.md#handler-type) within the module.
 
-- **`Msg` service:** a Protobuf `Msg` service, a step up from `AnteHandler`, is responsible for executing each
+* **`Msg` service:** a Protobuf `Msg` service, a step up from `AnteHandler`, is responsible for executing each
   message in the `Tx` and causes state transitions to persist in `deliverTxState`.
 
-- **Gas:** While a `Tx` is being delivered, a `GasMeter` is used to keep track of how much
+* **Gas:** While a `Tx` is being delivered, a `GasMeter` is used to keep track of how much
   gas is being used; if execution completes, `GasUsed` is set and returned in the
   `abci.ResponseDeliverTx`. If execution halts because `BlockGasMeter` or `GasMeter` has run out or something else goes
   wrong, a deferred function at the end appropriately errors or panics.

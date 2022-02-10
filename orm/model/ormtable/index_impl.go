@@ -20,9 +20,8 @@ import (
 // indexKeyIndex implements Index for a regular IndexKey.
 type indexKeyIndex struct {
 	*ormkv.IndexKeyCodec
-	fields         fieldnames.FieldNames
-	primaryKey     *primaryKeyIndex
-	getReadBackend func(context.Context) (ReadBackend, error)
+	fields     fieldnames.FieldNames
+	primaryKey *primaryKeyIndex
 }
 
 func (i indexKeyIndex) DeleteBy(ctx context.Context, keyValues ...interface{}) error {
@@ -44,7 +43,7 @@ func (i indexKeyIndex) DeleteRange(ctx context.Context, from, to []interface{}) 
 }
 
 func (i indexKeyIndex) List(ctx context.Context, prefixKey []interface{}, options ...ormlist.Option) (Iterator, error) {
-	backend, err := i.getReadBackend(ctx)
+	backend, err := i.primaryKey.getReadBackend(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +52,7 @@ func (i indexKeyIndex) List(ctx context.Context, prefixKey []interface{}, option
 }
 
 func (i indexKeyIndex) ListRange(ctx context.Context, from, to []interface{}, options ...ormlist.Option) (Iterator, error) {
-	backend, err := i.getReadBackend(ctx)
+	backend, err := i.primaryKey.getReadBackend(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -116,6 +115,14 @@ func (i indexKeyIndex) readValueFromIndexKey(backend ReadBackend, primaryKey []p
 	}
 
 	return nil
+}
+
+func (i indexKeyIndex) addPendingDelete(writer *batchIndexCommitmentWriter, primaryKey []protoreflect.Value, existingBz []byte) error {
+	return i.primaryKey.addPendingDelete(writer, primaryKey, existingBz)
+}
+
+func (i indexKeyIndex) addPendingUpdate(writer *batchIndexCommitmentWriter, primaryKey []protoreflect.Value, existingBz []byte, new proto.Message) error {
+	return i.primaryKey.addPendingUpdate(writer, primaryKey, existingBz, new)
 }
 
 func (p indexKeyIndex) Fields() string {

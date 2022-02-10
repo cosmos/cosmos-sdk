@@ -20,13 +20,12 @@ import (
 
 type uniqueKeyIndex struct {
 	*ormkv.UniqueKeyCodec
-	fields         fieldnames.FieldNames
-	primaryKey     *primaryKeyIndex
-	getReadBackend func(context.Context) (ReadBackend, error)
+	fields     fieldnames.FieldNames
+	primaryKey *primaryKeyIndex
 }
 
 func (u uniqueKeyIndex) List(ctx context.Context, prefixKey []interface{}, options ...ormlist.Option) (Iterator, error) {
-	backend, err := u.getReadBackend(ctx)
+	backend, err := u.primaryKey.getReadBackend(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +34,7 @@ func (u uniqueKeyIndex) List(ctx context.Context, prefixKey []interface{}, optio
 }
 
 func (u uniqueKeyIndex) ListRange(ctx context.Context, from, to []interface{}, options ...ormlist.Option) (Iterator, error) {
-	backend, err := u.getReadBackend(ctx)
+	backend, err := u.primaryKey.getReadBackend(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +45,7 @@ func (u uniqueKeyIndex) ListRange(ctx context.Context, from, to []interface{}, o
 func (u uniqueKeyIndex) doNotImplement() {}
 
 func (u uniqueKeyIndex) Has(ctx context.Context, values ...interface{}) (found bool, err error) {
-	backend, err := u.getReadBackend(ctx)
+	backend, err := u.primaryKey.getReadBackend(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -60,7 +59,7 @@ func (u uniqueKeyIndex) Has(ctx context.Context, values ...interface{}) (found b
 }
 
 func (u uniqueKeyIndex) Get(ctx context.Context, message proto.Message, keyValues ...interface{}) (found bool, err error) {
-	backend, err := u.getReadBackend(ctx)
+	backend, err := u.primaryKey.getReadBackend(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -188,6 +187,14 @@ func (u uniqueKeyIndex) readValueFromIndexKey(store ReadBackend, primaryKey []pr
 
 func (u uniqueKeyIndex) Fields() string {
 	return u.fields.String()
+}
+
+func (u uniqueKeyIndex) addPendingDelete(writer *batchIndexCommitmentWriter, primaryKey []protoreflect.Value, existingBz []byte) error {
+	return u.primaryKey.addPendingDelete(writer, primaryKey, existingBz)
+}
+
+func (u uniqueKeyIndex) addPendingUpdate(writer *batchIndexCommitmentWriter, primaryKey []protoreflect.Value, existingBz []byte, new proto.Message) error {
+	return u.primaryKey.addPendingUpdate(writer, primaryKey, existingBz, new)
 }
 
 var _ indexer = &uniqueKeyIndex{}

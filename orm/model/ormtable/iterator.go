@@ -4,6 +4,8 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+
 	queryv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/query/v1beta1"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
@@ -66,7 +68,7 @@ type Iterator interface {
 	doNotImplement()
 }
 
-func prefixIterator(iteratorStore kv.ReadonlyStore, backend Backend, index concreteIndex, codec *ormkv.KeyCodec, prefix []interface{}, opts []listinternal.Option) (Iterator, error) {
+func prefixIterator(iteratorStore kv.ReadonlyStore, backend ReadBackend, index concreteIndex, codec *ormkv.KeyCodec, prefix []interface{}, opts []listinternal.Option) (Iterator, error) {
 	options := &listinternal.Options{}
 	listinternal.ApplyOptions(options, opts)
 	if err := options.Validate(); err != nil {
@@ -123,7 +125,7 @@ func prefixIterator(iteratorStore kv.ReadonlyStore, backend Backend, index concr
 	return applyCommonIteratorOptions(res, options)
 }
 
-func rangeIterator(iteratorStore kv.ReadonlyStore, backend Backend, index concreteIndex, codec *ormkv.KeyCodec, start, end []interface{}, opts []listinternal.Option) (Iterator, error) {
+func rangeIterator(iteratorStore kv.ReadonlyStore, backend ReadBackend, index concreteIndex, codec *ormkv.KeyCodec, start, end []interface{}, opts []listinternal.Option) (Iterator, error) {
 	options := &listinternal.Options{}
 	listinternal.ApplyOptions(options, opts)
 	if err := options.Validate(); err != nil {
@@ -213,12 +215,11 @@ func applyCommonIteratorOptions(iterator Iterator, options *listinternal.Options
 
 type indexIterator struct {
 	index    concreteIndex
-	backend  Backend
+	backend  ReadBackend
 	iterator kv.Iterator
 
 	indexValues []protoreflect.Value
 	primaryKey  []protoreflect.Value
-	msg         proto.Message
 	value       []byte
 	started     bool
 
@@ -227,7 +228,10 @@ type indexIterator struct {
 
 func (i *indexIterator) Update(updated proto.Message) error {
 	if i.writeBatch == nil {
-		i.writeBatch = newBatchIndexCommitmentWriter(i.backend)
+		err := i.initWriteBatch()
+		if err != nil {
+			return err
+		}
 	}
 
 	_, pk, err := i.Keys()
@@ -235,17 +239,15 @@ func (i *indexIterator) Update(updated proto.Message) error {
 		return err
 	}
 
-	msg, err := i.GetMessage()
-	if err != nil {
-		return err
-	}
-
-	return i.index.addPendingUpdate(i.backend, i.writeBatch, pk, msg, updated)
+	return i.index.addPendingUpdate(i.writeBatch, pk, i.iterator.Value(), updated)
 }
 
 func (i *indexIterator) Delete() error {
 	if i.writeBatch == nil {
-		i.writeBatch = newBatchIndexCommitmentWriter(i.backend)
+		err := i.initWriteBatch()
+		if err != nil {
+			return err
+		}
 	}
 
 	_, pk, err := i.Keys()
@@ -253,17 +255,16 @@ func (i *indexIterator) Delete() error {
 		return err
 	}
 
-	msg, err := i.GetMessage()
-	if err != nil {
-		return err
-	}
-
-	return i.index.addPendingDelete(i.backend, i.writeBatch, pk, msg)
+	return i.index.addPendingDelete(i.writeBatch, pk, i.iterator.Value())
 }
 
-func (i *indexIterator) Write() error {
-	i.Close()
-	return i.writeBatch.Write()
+func (i *indexIterator) initWriteBatch() error {
+	writeBackend, ok := i.backend.(Backend)
+	if !ok {
+		return ormerrors.ReadonlyBackend
+	}
+	i.writeBatch = newBatchIndexCommitmentWriter(writeBackend)
+	return nil
 }
 
 func (i *indexIterator) PageResponse() *queryv1beta1.PageResponse {
@@ -276,7 +277,6 @@ func (i *indexIterator) Next() bool {
 	} else {
 		i.iterator.Next()
 		i.indexValues = nil
-		i.msg = nil
 	}
 
 	return i.iterator.Valid()
@@ -301,28 +301,28 @@ func (i indexIterator) UnmarshalMessage(message proto.Message) error {
 	if err != nil {
 		return err
 	}
-	err = i.index.readValueFromIndexKey(i.backend, pk, i.value, message)
-	i.msg = message
-	return nil
+	return i.index.readValueFromIndexKey(i.backend, pk, i.value, message)
 }
 
 func (i *indexIterator) GetMessage() (proto.Message, error) {
-	if i.msg != nil {
-		return i.msg, nil
-	}
-
 	msg := i.index.MessageType().New().Interface()
 	err := i.UnmarshalMessage(msg)
-	if err != nil {
-		return nil, err
-	}
-
-	i.msg = msg
-	return msg, nil
+	return msg, err
 }
 
 func (i indexIterator) Cursor() ormlist.CursorT {
 	return i.iterator.Key()
+}
+
+func (i *indexIterator) Write() error {
+	err := i.iterator.Close()
+	if err != nil {
+		return nil
+	}
+
+	wb := i.writeBatch
+	i.writeBatch = nil
+	return wb.Write()
 }
 
 func (i indexIterator) Close() {

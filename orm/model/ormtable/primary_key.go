@@ -3,6 +3,8 @@ package ormtable
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+
 	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
 
 	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
@@ -25,7 +27,7 @@ type primaryKeyIndex struct {
 }
 
 func (p primaryKeyIndex) List(ctx context.Context, prefixKey []interface{}, options ...ormlist.Option) (Iterator, error) {
-	backend, err := p.getBackend(ctx)
+	backend, err := p.getReadBackend(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +36,7 @@ func (p primaryKeyIndex) List(ctx context.Context, prefixKey []interface{}, opti
 }
 
 func (p primaryKeyIndex) ListRange(ctx context.Context, from, to []interface{}, options ...ormlist.Option) (Iterator, error) {
-	backend, err := p.getBackend(ctx)
+	backend, err := p.getReadBackend(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +129,7 @@ func (p primaryKeyIndex) doDelete(ctx context.Context, primaryKeyValues []protor
 		return nil
 	}
 
-	err = p.doDeleteWithWriteBatch(backend, writer, pk, msg)
+	err = p.doDeleteWithWriteBatch(writer, pk, msg)
 	if err != nil {
 		return err
 	}
@@ -135,8 +137,8 @@ func (p primaryKeyIndex) doDelete(ctx context.Context, primaryKeyValues []protor
 	return writer.Write()
 }
 
-func (p primaryKeyIndex) doDeleteWithWriteBatch(backend Backend, writer *batchIndexCommitmentWriter, primaryKeyBz []byte, message proto.Message) error {
-	if hooks := backend.Hooks(); hooks != nil {
+func (p primaryKeyIndex) doDeleteWithWriteBatch(writer *batchIndexCommitmentWriter, primaryKeyBz []byte, message proto.Message) error {
+	if hooks := writer.Hooks(); hooks != nil {
 		err := hooks.OnDelete(message)
 		if err != nil {
 			return err
@@ -209,7 +211,7 @@ func (p primaryKeyIndex) deleteByIterator(ctx context.Context, it Iterator) erro
 			return err
 		}
 
-		err = p.doDeleteWithWriteBatch(backend, writer, pkBz, msg)
+		err = p.doDeleteWithWriteBatch(writer, pkBz, msg)
 		if err != nil {
 			return err
 		}
@@ -221,24 +223,126 @@ func (p primaryKeyIndex) deleteByIterator(ctx context.Context, it Iterator) erro
 	return writer.Write()
 }
 
-func (p primaryKeyIndex) addPendingDelete(backend Backend, writer *batchIndexCommitmentWriter, primaryKey []protoreflect.Value, existing proto.Message) error {
+func (t primaryKeyIndex) doSave(writer *batchIndexCommitmentWriter, message proto.Message, mode saveMode) error {
+	mref := message.ProtoReflect()
+	pkValues, pk, err := t.EncodeKeyFromMessage(mref)
+	if err != nil {
+		return err
+	}
+
+	existing := mref.New().Interface()
+	haveExisting, err := t.getByKeyBytes(writer, pk, pkValues, existing)
+	if err != nil {
+		return err
+	}
+
+	if !haveExisting {
+		existing = nil
+	}
+
+	err = t.doUpdateWithWriteBatch(writer, pkValues, pk, existing, message, mode)
+	if err != nil {
+		return err
+	}
+
+	return writer.Write()
+}
+
+func (p primaryKeyIndex) doUpdateWithWriteBatch(writer *batchIndexCommitmentWriter, pkValues []protoreflect.Value, pkBz []byte, existing, new protoreflect.ProtoMessage, mode saveMode) error {
+	mref := new.ProtoReflect()
+	if existing != nil {
+		if mode == saveModeInsert {
+			return ormerrors.PrimaryKeyConstraintViolation.Wrapf("%q:%+v", mref.Descriptor().FullName(), pkValues)
+		}
+
+		if hooks := writer.Hooks(); hooks != nil {
+			err := hooks.OnUpdate(existing, new)
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		if mode == saveModeUpdate {
+			return ormerrors.NotFoundOnUpdate.Wrapf("%q", mref.Descriptor().FullName())
+		}
+
+		if hooks := writer.Hooks(); hooks != nil {
+			err := hooks.OnInsert(new)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// temporarily clear primary key
+	p.ClearValues(mref)
+
+	// store object
+	bz, err := proto.MarshalOptions{Deterministic: true}.Marshal(new)
+	err = writer.CommitmentStore().Set(pkBz, bz)
+	if err != nil {
+		return err
+	}
+
+	// set primary key again
+	p.SetKeyValues(mref, pkValues)
+
+	// set indexes
+	indexStoreWriter := writer.IndexStore()
+	if existing == nil {
+		for _, idx := range p.indexers {
+			err = idx.onInsert(indexStoreWriter, mref)
+			if err != nil {
+				return err
+			}
+
+		}
+	} else {
+		existingMref := existing.ProtoReflect()
+		for _, idx := range p.indexers {
+			err = idx.onUpdate(indexStoreWriter, mref, existingMref)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (p primaryKeyIndex) addPendingDelete(writer *batchIndexCommitmentWriter, primaryKey []protoreflect.Value, existingBz []byte) error {
 	pkBz, err := p.EncodeKey(primaryKey)
 	if err != nil {
 		return err
 	}
 
-	return p.doDeleteWithWriteBatch(backend, writer, pkBz, existing)
+	msg := p.MessageType().New().Interface()
+	err = p.Unmarshal(primaryKey, existingBz, msg)
+	if err != nil {
+		return err
+	}
+
+	return p.doDeleteWithWriteBatch(writer, pkBz, msg)
 }
 
-func (p primaryKeyIndex) addPendingUpdate(backend Backend, writer *batchIndexCommitmentWriter, primaryKey []protoreflect.Value, existing, new proto.Message) error {
+func (p primaryKeyIndex) addPendingUpdate(writer *batchIndexCommitmentWriter, primaryKey []protoreflect.Value, existingBz []byte, new proto.Message) error {
 	newPk := p.GetKeyValues(new.ProtoReflect())
 	if p.CompareKeys(primaryKey, newPk) != 0 {
-		err := p.addPendingDelete(backend, writer, primaryKey, existing)
-		if err != nil {
-			return err
-		}
-
+		return ormerrors.InvalidIteratorUpdate
 	}
+
+	pkBz, err := p.EncodeKey(primaryKey)
+	if err != nil {
+		return err
+	}
+
+	existing := p.MessageType().New().Interface()
+	err = p.Unmarshal(primaryKey, existingBz, existing)
+	if err != nil {
+		return err
+	}
+
+	return p.doUpdateWithWriteBatch(writer, primaryKey, pkBz, existing, new, saveModeUpdate)
 }
 
 var _ UniqueIndex = &primaryKeyIndex{}

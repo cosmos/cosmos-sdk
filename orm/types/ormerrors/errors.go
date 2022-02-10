@@ -39,4 +39,6 @@ var (
 	TableNotFound                 = errors.New(codespace, 27, "table not found")
 	JSONValidationError           = errors.New(codespace, 28, "invalid JSON")
 	NotFound                      = errors.New(codespace, 29, "not found")
+	InvalidIteratorUpdate         = errors.New(codespace, 30, "updates using iterators can't change the primary key")
+	ReadonlyBackend               = errors.New(codespace, 31, "backend is read-only, can't do mutations")
 )

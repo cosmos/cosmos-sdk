@@ -213,7 +213,6 @@ func Build(options Options) (Table, error) {
 				UniqueKeyCodec: uniqCdc,
 				fields:         idxFields,
 				primaryKey:     pkIndex,
-				getReadBackend: getReadBackend,
 			}
 			table.uniqueIndexesByFields[idxFields] = uniqIdx
 			index = uniqIdx
@@ -228,10 +227,9 @@ func Build(options Options) (Table, error) {
 				return nil, err
 			}
 			index = &indexKeyIndex{
-				IndexKeyCodec:  idxCdc,
-				fields:         idxFields,
-				primaryKey:     pkIndex,
-				getReadBackend: getReadBackend,
+				IndexKeyCodec: idxCdc,
+				fields:        idxFields,
+				primaryKey:    pkIndex,
 			}
 
 			// non-unique indexes can sometimes be named by several sub-lists of

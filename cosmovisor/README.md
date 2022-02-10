@@ -209,7 +209,7 @@ You can also use `sha512sum` if you would prefer to use longer hashes, or `md5su
 The following instructions provide a demonstration of `cosmovisor` using the simulation application (`simapp`) shipped with the Cosmos SDK's source code. The following commands are to be run from within the `cosmos-sdk` repository.
 
 
-#### Chain Setup
+### Chain Setup
 
 Let's create a new chain using the `v0.44` version of simapp (the Cosmos SDK demo app):
 
@@ -248,7 +248,7 @@ minimum-gas-prices = "0stake"
 
 For the sake of this demonstration, amend `voting_period` in `genesis.json` to a reduced time of 20 seconds (`20s`):
 
-```
+```sh
 cat <<< $(jq '.app_state.gov.voting_params.voting_period = "20s"' $HOME/.simapp/config/genesis.json) > $HOME/.simapp/config/genesis.json
 ```
 

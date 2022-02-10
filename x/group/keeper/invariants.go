@@ -208,7 +208,7 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, grou
 	var proposal group.Proposal
 	var groupPolicy group.GroupPolicyInfo
 	var groupMem group.GroupMember
-	var vote group.Vote
+	var voter string
 
 	proposalIt, err := proposalTable.PrefixScan(ctx.KVStore(key), 1, math.MaxUint64)
 	if err != nil {
@@ -281,10 +281,13 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, grou
 		defer voteIt.Close()
 
 		for {
+			var vote group.Vote
+
 			_, err := voteIt.LoadNext(&vote)
 			if errors.ErrORMIteratorDone.Is(err) {
 				break
 			}
+			voter = vote.Voter
 
 			err = groupMemberTable.GetOne(ctx.KVStore(key), orm.PrimaryKey(&group.GroupMember{GroupId: groupPolicy.GroupId, Member: &group.Member{Address: vote.Voter}}), &groupMem)
 			if err != nil {
@@ -303,30 +306,44 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, grou
 				return msg, broken
 			}
 
-			switch vote.Choice {
-			case group.Choice_CHOICE_YES:
-				yesVoteWeight, err = groupmath.Add(yesVoteWeight, curMemVotingWeight)
+			for _, choice := range vote.Choices {
+				choiceWeight, err := groupmath.NewPositiveDecFromString(choice.Weight)
+				if err != nil {
+					msg += fmt.Sprintf("error while parsing positive decimal for group member %s\n%v\n", groupMem.Member.Address, err)
+					return msg, broken
+				}
+
+				weightToBeAdded, err := choiceWeight.Mul(curMemVotingWeight)
 				if err != nil {
 					msg += fmt.Sprintf("decimal addition error\n%v\n", err)
 					return msg, broken
 				}
-			case group.Choice_CHOICE_NO:
-				noVoteWeight, err = groupmath.Add(noVoteWeight, curMemVotingWeight)
-				if err != nil {
-					msg += fmt.Sprintf("decimal addition error\n%v\n", err)
-					return msg, broken
-				}
-			case group.Choice_CHOICE_ABSTAIN:
-				abstainVoteWeight, err = groupmath.Add(abstainVoteWeight, curMemVotingWeight)
-				if err != nil {
-					msg += fmt.Sprintf("decimal addition error\n%v\n", err)
-					return msg, broken
-				}
-			case group.Choice_CHOICE_VETO:
-				vetoVoteWeight, err = groupmath.Add(vetoVoteWeight, curMemVotingWeight)
-				if err != nil {
-					msg += fmt.Sprintf("decimal addition error\n%v\n", err)
-					return msg, broken
+				switch choice.Choice {
+
+				case group.Choice_CHOICE_YES:
+					yesVoteWeight, err = groupmath.Add(yesVoteWeight, weightToBeAdded)
+					if err != nil {
+						msg += fmt.Sprintf("decimal addition error\n%v\n", err)
+						return msg, broken
+					}
+				case group.Choice_CHOICE_NO:
+					noVoteWeight, err = groupmath.Add(noVoteWeight, weightToBeAdded)
+					if err != nil {
+						msg += fmt.Sprintf("decimal addition error\n%v\n", err)
+						return msg, broken
+					}
+				case group.Choice_CHOICE_ABSTAIN:
+					abstainVoteWeight, err = groupmath.Add(abstainVoteWeight, weightToBeAdded)
+					if err != nil {
+						msg += fmt.Sprintf("decimal addition error\n%v\n", err)
+						return msg, broken
+					}
+				case group.Choice_CHOICE_VETO:
+					vetoVoteWeight, err = groupmath.Add(vetoVoteWeight, weightToBeAdded)
+					if err != nil {
+						msg += fmt.Sprintf("decimal addition error\n%v\n", err)
+						return msg, broken
+					}
 				}
 			}
 		}
@@ -365,7 +382,7 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, grou
 
 		if (yesVoteWeight.Cmp(proposalYesCount) != 0) || (noVoteWeight.Cmp(proposalNoCount) != 0) || (abstainVoteWeight.Cmp(proposalAbstainCount) != 0) || (vetoVoteWeight.Cmp(proposalVetoCount) != 0) {
 			broken = true
-			msg += fmt.Sprintf("proposal VoteState must correspond to the vote choice\nProposal with ID %d and voter address %s must correspond to the vote choice\n", proposal.ProposalId, vote.Voter)
+			msg += fmt.Sprintf("proposal VoteState must correspond to the vote choice\nProposal with ID %d and voter address %s must correspond to the vote choice\n", proposal.ProposalId, voter)
 			break
 		}
 	}

@@ -420,13 +420,13 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 				{
 					ProposalId:  1,
 					Voter:       addr1.String(),
-					Choice:      group.Choice_CHOICE_YES,
+					Choices:     group.NewNonSplitVoteOption(group.Choice_CHOICE_YES),
 					SubmittedAt: curCtx.BlockTime(),
 				},
 				{
 					ProposalId:  1,
 					Voter:       addr2.String(),
-					Choice:      group.Choice_CHOICE_NO,
+					Choices:     group.NewNonSplitVoteOption(group.Choice_CHOICE_NO),
 					SubmittedAt: curCtx.BlockTime(),
 				},
 			},
@@ -478,13 +478,13 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 				{
 					ProposalId:  1,
 					Voter:       addr1.String(),
-					Choice:      group.Choice_CHOICE_YES,
+					Choices:     group.NewNonSplitVoteOption(group.Choice_CHOICE_YES),
 					SubmittedAt: curCtx.BlockTime(),
 				},
 				{
 					ProposalId:  1,
 					Voter:       addr2.String(),
-					Choice:      group.Choice_CHOICE_YES,
+					Choices:     group.NewNonSplitVoteOption(group.Choice_CHOICE_YES),
 					SubmittedAt: curCtx.BlockTime(),
 				},
 			},
@@ -536,13 +536,13 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 				{
 					ProposalId:  1,
 					Voter:       addr1.String(),
-					Choice:      group.Choice_CHOICE_YES,
+					Choices:     group.NewNonSplitVoteOption(group.Choice_CHOICE_YES),
 					SubmittedAt: curCtx.BlockTime(),
 				},
 				{
 					ProposalId:  1,
 					Voter:       addr2.String(),
-					Choice:      group.Choice_CHOICE_ABSTAIN,
+					Choices:     group.NewNonSplitVoteOption(group.Choice_CHOICE_ABSTAIN),
 					SubmittedAt: curCtx.BlockTime(),
 				},
 			},

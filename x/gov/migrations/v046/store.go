@@ -42,16 +42,23 @@ func migrateProposals(store sdk.KVStore, cdc codec.BinaryCodec) error {
 	return nil
 }
 
-// migrateParams migrates legacy depositParams  params into the new deposit params.
+// migrateParams migrates legacy depositParams params into the new deposit params.
 func migrateParams(ctx sdk.Context, paramstore paramtypes.Subspace) {
 
-	oldDp := v1beta2.DepositParams{}
-	paramstore.Get(ctx, v1beta1.ParamStoreKeyVotingParams, &oldDp)
+	oldDp := v1beta1.DepositParams{}
+	// oldTp := v1beta1.TallyParams{}
+	// oldVp := v1beta1.VotingParams{}
+	paramstore.Get(ctx, v1beta1.ParamStoreKeyDepositParams, &oldDp)
+	// paramstore.Get(ctx, v1beta1.ParamStoreKeyVotingParams, &oldVp)
+	// paramstore.Get(ctx, v1beta1.ParamStoreKeyTallyParams, &oldTp)
 
-	// depParams := convertToNewDepParams(oldDp)
+	// depParams, votingParms, tallyParams := convertToNewDepParams(oldDp), convertToNewVotingParams(oldVp), convertToNewTallyParams(oldTp)
+	depParams := convertToNewDepParams(oldDp)
 
 	paramstore.WithKeyTable(v1beta2.ParamKeyTable())
-	// paramstore.Set(ctx, v1beta2.ParamStoreKeyVotingParams, depParams)
+	paramstore.Set(ctx, v1beta2.ParamStoreKeyDepositParams, depParams)
+	// paramstore.Set(ctx, v1beta2.ParamStoreKeyTallyParams, tallyParams)
+	// paramstore.Set(ctx, v1beta2.ParamStoreKeyVotingParams, votingParms)
 }
 
 // MigrateStore performs in-place store migrations from v0.43 to v0.46. The

@@ -27,6 +27,8 @@ func TestMigrateStore(t *testing.T) {
 
 	paramstore.WithKeyTable(v1beta1.ParamKeyTable())
 	paramstore.Set(ctx, v1beta1.ParamStoreKeyDepositParams, v1beta1.DefaultDepositParams())
+	paramstore.Set(ctx, v1beta1.ParamStoreKeyVotingParams, v1beta1.DefaultVotingParams())
+	paramstore.Set(ctx, v1beta1.ParamStoreKeyTallyParams, v1beta1.DefaultTallyParams())
 
 	propTime := time.Unix(1e9, 0)
 

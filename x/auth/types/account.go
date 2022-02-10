@@ -170,6 +170,13 @@ func NewModuleAddress(name string) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash([]byte(name)))
 }
 
+// LegacyModuleAddress creates an AccAddress using module name hash.
+// This function doesn't follow ADR-028 and should not be used.
+// `types/address.Module(newAccouuntName, modKey)` should be used instead.
+func LegacyModuleAddress(name string) sdk.AccAddress {
+	return sdk.AccAddress(crypto.AddressHash([]byte(name)))
+}
+
 // NewEmptyModuleAccount creates a empty ModuleAccount from a string
 func NewEmptyModuleAccount(name string, permissions ...string) *ModuleAccount {
 	moduleAddress := NewModuleAddress(name)

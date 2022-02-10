@@ -23,8 +23,8 @@ module correctly.
 
 ## Pre-requisites Readings
 
-- [IBC Overview](./overview.md)) {prereq}
-- [IBC default integration](./integration.md) {prereq}
+* [IBC Overview](./overview.md)) {prereq}
+* [IBC default integration](./integration.md) {prereq}
 
 ## Create a custom IBC application module
 

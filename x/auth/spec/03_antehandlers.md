@@ -13,28 +13,28 @@ Note that the `AnteHandler` is called on both `CheckTx` and `DeliverTx`, as Tend
 
 The auth module provides `AnteDecorator`s that are recursively chained together into a single `AnteHandler` in the following order:
 
-- `SetUpContextDecorator`: Sets the `GasMeter` in the `Context` and wraps the next `AnteHandler` with a defer clause to recover from any downstream `OutOfGas` panics in the `AnteHandler` chain to return an error with information on gas provided and gas used.
+* `SetUpContextDecorator`: Sets the `GasMeter` in the `Context` and wraps the next `AnteHandler` with a defer clause to recover from any downstream `OutOfGas` panics in the `AnteHandler` chain to return an error with information on gas provided and gas used.
 
-- `RejectExtensionOptionsDecorator`: Rejects all extension options which can optionally be included in protobuf transactions.
+* `RejectExtensionOptionsDecorator`: Rejects all extension options which can optionally be included in protobuf transactions.
 
-- `MempoolFeeDecorator`: Checks if the `tx` fee is above local mempool `minFee` parameter during `CheckTx`.
+* `MempoolFeeDecorator`: Checks if the `tx` fee is above local mempool `minFee` parameter during `CheckTx`.
 
-- `ValidateBasicDecorator`: Calls `tx.ValidateBasic` and returns any non-nil error.
+* `ValidateBasicDecorator`: Calls `tx.ValidateBasic` and returns any non-nil error.
 
-- `TxTimeoutHeightDecorator`: Check for a `tx` height timeout.
+* `TxTimeoutHeightDecorator`: Check for a `tx` height timeout.
 
-- `ValidateMemoDecorator`: Validates `tx` memo with application parameters and returns any non-nil error.
+* `ValidateMemoDecorator`: Validates `tx` memo with application parameters and returns any non-nil error.
 
-- `ConsumeGasTxSizeDecorator`: Consumes gas proportional to the `tx` size based on application parameters.
+* `ConsumeGasTxSizeDecorator`: Consumes gas proportional to the `tx` size based on application parameters.
 
-- `DeductFeeDecorator`: Deducts the `FeeAmount` from first signer of the `tx`. If the `x/feegrant` module is enabled and a fee granter is set, it deducts fees from the fee granter account.
+* `DeductFeeDecorator`: Deducts the `FeeAmount` from first signer of the `tx`. If the `x/feegrant` module is enabled and a fee granter is set, it deducts fees from the fee granter account.
 
-- `SetPubKeyDecorator`: Sets the pubkey from a `tx`'s signers that does not already have its corresponding pubkey saved in the state machine and in the current context.
+* `SetPubKeyDecorator`: Sets the pubkey from a `tx`'s signers that does not already have its corresponding pubkey saved in the state machine and in the current context.
 
-- `ValidateSigCountDecorator`: Validates the number of signatures in `tx` based on app-parameters.
+* `ValidateSigCountDecorator`: Validates the number of signatures in `tx` based on app-parameters.
 
-- `SigGasConsumeDecorator`: Consumes parameter-defined amount of gas for each signature. This requires pubkeys to be set in context for all signers as part of `SetPubKeyDecorator`.
+* `SigGasConsumeDecorator`: Consumes parameter-defined amount of gas for each signature. This requires pubkeys to be set in context for all signers as part of `SetPubKeyDecorator`.
 
-- `SigVerificationDecorator`: Verifies all signatures are valid. This requires pubkeys to be set in context for all signers as part of `SetPubKeyDecorator`.
+* `SigVerificationDecorator`: Verifies all signatures are valid. This requires pubkeys to be set in context for all signers as part of `SetPubKeyDecorator`.
 
-- `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
+* `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.

@@ -2,8 +2,8 @@
 
 ## Changelog
 
-- 28.06.2021: Initial Draft
-- 02.12.2021: Add `Since:` comment for new fields
+* 28.06.2021: Initial Draft
+* 02.12.2021: Add `Since:` comment for new fields
 
 ## Status
 
@@ -19,8 +19,8 @@ The Cosmos SDK maintains a set of [Protobuf definitions](https://github.com/cosm
 
 When making changes to these Protobuf definitions, the Cosmos SDK currently only follows [Buf's](https://docs.buf.build/) recommendations. We noticed however that Buf's recommendations might still result in breaking changes in the SDK in some cases. For example:
 
-- Adding fields to `Msg`s. Adding fields is a not a Protobuf spec-breaking operation. However, when adding new fields to `Msg`s, the unknown field rejection will throw an error when sending the new `Msg` to an older node.
-- Marking fields as `reserved`. Protobuf proposes the `reserved` keyword for removing fields without the need to bump the package version. However, by doing so, client backwards compatibility is broken as Protobuf doesn't generate anything for `reserved` fields. See [#9446](https://github.com/cosmos/cosmos-sdk/issues/9446) for more details on this issue.
+* Adding fields to `Msg`s. Adding fields is a not a Protobuf spec-breaking operation. However, when adding new fields to `Msg`s, the unknown field rejection will throw an error when sending the new `Msg` to an older node.
+* Marking fields as `reserved`. Protobuf proposes the `reserved` keyword for removing fields without the need to bump the package version. However, by doing so, client backwards compatibility is broken as Protobuf doesn't generate anything for `reserved` fields. See [#9446](https://github.com/cosmos/cosmos-sdk/issues/9446) for more details on this issue.
 
 Moreover, module developers often face other questions around Protobuf definitions such as "Can I rename a field?" or "Can I deprecate a field?" This ADR aims to answer all these questions by providing clear guidelines about allowed updates for Protobuf definitions.
 
@@ -28,11 +28,11 @@ Moreover, module developers often face other questions around Protobuf definitio
 
 We decide to keep [Buf's](https://docs.buf.build/) recommendations with the following exceptions:
 
-- `UNARY_RPC`: the Cosmos SDK currently does not support streaming RPCs.
-- `COMMENT_FIELD`: the Cosmos SDK allows fields with no comments.
-- `SERVICE_SUFFIX`: we use the `Query` and `Msg` service naming convention, which doesn't use the `-Service` suffix.
-- `PACKAGE_VERSION_SUFFIX`: some packages, such as `cosmos.crypto.ed25519`, don't use a version suffix.
-- `RPC_REQUEST_STANDARD_NAME`: Requests for the `Msg` service don't have the `-Request` suffix to keep backwards compatibility.
+* `UNARY_RPC`: the Cosmos SDK currently does not support streaming RPCs.
+* `COMMENT_FIELD`: the Cosmos SDK allows fields with no comments.
+* `SERVICE_SUFFIX`: we use the `Query` and `Msg` service naming convention, which doesn't use the `-Service` suffix.
+* `PACKAGE_VERSION_SUFFIX`: some packages, such as `cosmos.crypto.ed25519`, don't use a version suffix.
+* `RPC_REQUEST_STANDARD_NAME`: Requests for the `Msg` service don't have the `-Request` suffix to keep backwards compatibility.
 
 On top of Buf's recommendations we add the following guidelines that are specific to the Cosmos SDK.
 
@@ -86,8 +86,8 @@ Protobuf supports the [`deprecated` field option](https://developers.google.com/
 
 As an example, the Cosmos SDK v0.42 to v0.43 update contained two Protobuf-breaking changes, listed below. Instead of bumping the package versions from `v1beta1` to `v1`, the SDK team decided to follow this guideline, by reverting the breaking changes, marking those changes as deprecated, and modifying the node implementation when processing messages with deprecated fields. More specifically:
 
-- The Cosmos SDK recently removed support for [time-based software upgrades](https://github.com/cosmos/cosmos-sdk/pull/8849). As such, the `time` field has been marked as deprecated in `cosmos.upgrade.v1beta1.Plan`. Moreover, the node will reject any proposal containing an upgrade Plan whose `time` field is non-empty.
-- The Cosmos SDK now supports [governance split votes](./adr-037-gov-split-vote.md). When querying for votes, the returned `cosmos.gov.v1beta1.Vote` message has its `option` field (used for 1 vote option) deprecated in favor of its `options` field (allowing multiple vote options). Whenever possible, the SDK still populates the deprecated `option` field, that is, if and only if the `len(options) == 1` and `options[0].Weight == 1.0`.
+* The Cosmos SDK recently removed support for [time-based software upgrades](https://github.com/cosmos/cosmos-sdk/pull/8849). As such, the `time` field has been marked as deprecated in `cosmos.upgrade.v1beta1.Plan`. Moreover, the node will reject any proposal containing an upgrade Plan whose `time` field is non-empty.
+* The Cosmos SDK now supports [governance split votes](./adr-037-gov-split-vote.md). When querying for votes, the returned `cosmos.gov.v1beta1.Vote` message has its `option` field (used for 1 vote option) deprecated in favor of its `options` field (allowing multiple vote options). Whenever possible, the SDK still populates the deprecated `option` field, that is, if and only if the `len(options) == 1` and `options[0].Weight == 1.0`.
 
 #### 4. Fields MUST NOT be renamed
 
@@ -97,10 +97,10 @@ Whereas the official Protobuf recommendations do not prohibit renaming fields, a
 
 TODO, needs architecture review. Some topics:
 
-- Bumping versions frequency
-- When bumping versions, should the Cosmos SDK support both versions?
-  - i.e. v1beta1 -> v1, should we have two folders in the Cosmos SDK, and handlers for both versions?
-- mention ADR-023 Protobuf naming
+* Bumping versions frequency
+* When bumping versions, should the Cosmos SDK support both versions?
+    * i.e. v1beta1 -> v1, should we have two folders in the Cosmos SDK, and handlers for both versions?
+* mention ADR-023 Protobuf naming
 
 ## Consequences
 
@@ -112,9 +112,9 @@ TODO, needs architecture review. Some topics:
 
 ### Positive
 
-- less pain to tool developers
-- more compatibility in the ecosystem
-- ...
+* less pain to tool developers
+* more compatibility in the ecosystem
+* ...
 
 ### Negative
 
@@ -122,7 +122,7 @@ TODO, needs architecture review. Some topics:
 
 ### Neutral
 
-- more rigor in Protobuf review
+* more rigor in Protobuf review
 
 ## Further Discussions
 
@@ -134,5 +134,5 @@ Test cases for an implementation are mandatory for ADRs that are affecting conse
 
 ## References
 
-- [#9445](https://github.com/cosmos/cosmos-sdk/issues/9445) Release proto definitions v1
-- [#9446](https://github.com/cosmos/cosmos-sdk/issues/9446) Address v1beta1 proto breaking changes
+* [#9445](https://github.com/cosmos/cosmos-sdk/issues/9445) Release proto definitions v1
+* [#9446](https://github.com/cosmos/cosmos-sdk/issues/9446) Address v1beta1 proto breaking changes

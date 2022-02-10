@@ -266,11 +266,11 @@ func (e *Error) Is(err error) bool {
 
 // Wrap extends this error with an additional information.
 // It's a handy function to call Wrap with sdk errors.
-func (e Error) Wrap(desc string) error { return Wrap(e, desc) }
+func (e *Error) Wrap(desc string) error { return Wrap(e, desc) }
 
 // Wrapf extends this error with an additional information.
 // It's a handy function to call Wrapf with sdk errors.
-func (e Error) Wrapf(desc string, args ...interface{}) error { return Wrapf(e, desc, args...) }
+func (e *Error) Wrapf(desc string, args ...interface{}) error { return Wrapf(e, desc, args...) }
 
 func isNilErr(err error) bool {
 	// Reflect usage is necessary to correctly compare with

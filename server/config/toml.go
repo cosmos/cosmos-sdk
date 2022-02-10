@@ -63,12 +63,24 @@ min-retain-blocks = {{ .BaseConfig.MinRetainBlocks }}
 # InterBlockCache enables inter-block caching.
 inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 
+# InterBlockCacheSize set the size (the number of cache items) of interblock cache item
+# Each item consumes 128 bytes, so the value should be dividend by 128
+# Default cache size is 10mb.
+# Ex) 10mb = 10,000,000 / 128 = 78,125
+inter-block-cache-size = {{ .BaseConfig.InterBlockCacheSize }}
+
 # IndexEvents defines the set of events in the form {eventType}.{attributeKey},
 # which informs Tendermint what to index. If empty, all events will be indexed.
 #
 # Example:
 # ["message.sender", "message.recipient"]
 index-events = {{ .BaseConfig.IndexEvents }}
+
+# IAVLCacheSize set the cache size (the number of cache items) of the iavl tree. 
+# Each item size consumes 128 bytes, so the value should be dividend by 128
+# Default cache size is 100mb.
+# Ex) 100mb = 100,000,000 / 128 = 781,250
+iavl-cache-size = {{ .BaseConfig.IAVLCacheSize }}
 
 ###############################################################################
 ###                         Telemetry Configuration                         ###

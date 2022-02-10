@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/viper"
 
 	clientflags "github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/store/cache"
+	"github.com/cosmos/cosmos-sdk/store/iavl"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -67,9 +69,15 @@ type BaseConfig struct {
 	// InterBlockCache enables inter-block caching.
 	InterBlockCache bool `mapstructure:"inter-block-cache"`
 
+	// InterBlockCacheSize set the size of the inter-block cache.
+	InterBlockCacheSize uint `mapstructure:"inter-block-cache-size"`
+
 	// IndexEvents defines the set of events in the form {eventType}.{attributeKey},
 	// which informs Tendermint what to index. If empty, all events will be indexed.
 	IndexEvents []string `mapstructure:"index-events"`
+
+	// IavlCacheSize set the size of the iavl tree cache.
+	IAVLCacheSize uint64 `mapstructure:"iavl-cache-size"`
 }
 
 // APIConfig defines the API listener configuration.
@@ -208,14 +216,16 @@ func (c *Config) GetMinGasPrices() sdk.DecCoins {
 func DefaultConfig() *Config {
 	return &Config{
 		BaseConfig: BaseConfig{
-			MinGasPrices:      defaultMinGasPrices,
-			InterBlockCache:   true,
-			Pruning:           storetypes.PruningOptionDefault,
-			PruningKeepRecent: "0",
-			PruningKeepEvery:  "0",
-			PruningInterval:   "0",
-			MinRetainBlocks:   0,
-			IndexEvents:       make([]string, 0),
+			MinGasPrices:        defaultMinGasPrices,
+			InterBlockCache:     true,
+			InterBlockCacheSize: cache.DefaultCommitKVStoreCacheSize,
+			Pruning:             storetypes.PruningOptionDefault,
+			PruningKeepRecent:   "0",
+			PruningKeepEvery:    "0",
+			PruningInterval:     "0",
+			MinRetainBlocks:     0,
+			IndexEvents:         make([]string, 0),
+			IAVLCacheSize:       iavl.DefaultIAVLCacheSize,
 		},
 		Telemetry: telemetry.Config{
 			Enabled:      false,
@@ -267,16 +277,18 @@ func GetConfig(v *viper.Viper) Config {
 
 	return Config{
 		BaseConfig: BaseConfig{
-			MinGasPrices:      v.GetString("minimum-gas-prices"),
-			InterBlockCache:   v.GetBool("inter-block-cache"),
-			Pruning:           v.GetString("pruning"),
-			PruningKeepRecent: v.GetString("pruning-keep-recent"),
-			PruningKeepEvery:  v.GetString("pruning-keep-every"),
-			PruningInterval:   v.GetString("pruning-interval"),
-			HaltHeight:        v.GetUint64("halt-height"),
-			HaltTime:          v.GetUint64("halt-time"),
-			IndexEvents:       v.GetStringSlice("index-events"),
-			MinRetainBlocks:   v.GetUint64("min-retain-blocks"),
+			MinGasPrices:        v.GetString("minimum-gas-prices"),
+			InterBlockCache:     v.GetBool("inter-block-cache"),
+			InterBlockCacheSize: v.GetUint("inter-block-cache-size"),
+			Pruning:             v.GetString("pruning"),
+			PruningKeepRecent:   v.GetString("pruning-keep-recent"),
+			PruningKeepEvery:    v.GetString("pruning-keep-every"),
+			PruningInterval:     v.GetString("pruning-interval"),
+			HaltHeight:          v.GetUint64("halt-height"),
+			HaltTime:            v.GetUint64("halt-time"),
+			IndexEvents:         v.GetStringSlice("index-events"),
+			MinRetainBlocks:     v.GetUint64("min-retain-blocks"),
+			IAVLCacheSize:       v.GetUint64("iavl-cache-size"),
 		},
 		Telemetry: telemetry.Config{
 			ServiceName:             v.GetString("telemetry.service-name"),

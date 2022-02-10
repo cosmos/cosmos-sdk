@@ -188,6 +188,9 @@ type CommitMultiStore interface {
 	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
 	// starting a new chain at an arbitrary height.
 	SetInitialVersion(version int64) error
+
+	// SetIAVLCacheSize sets the cache size of the IAVL tree.
+	SetIAVLCacheSize(size int)
 }
 
 //---------subsp-------------------------------
@@ -416,6 +419,9 @@ type MultiStorePersistentCache interface {
 	// Wrap and return the provided CommitKVStore with an inter-block (persistent)
 	// cache.
 	GetStoreCache(key StoreKey, store CommitKVStore) CommitKVStore
+
+	// Sets the cache size of the provided CommitKVStore
+	SetCacheSize(size uint)
 
 	// Return the underlying CommitKVStore for a StoreKey.
 	Unwrap(key StoreKey) CommitKVStore

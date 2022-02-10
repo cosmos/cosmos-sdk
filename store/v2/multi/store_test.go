@@ -398,8 +398,8 @@ func TestPruning(t *testing.T) {
 		types.PruningOptions
 		kept []uint64
 	}{
-		{types.PruningOptions{2, 10}, []uint64{4, 8, 9, 10}},
-		{types.PruningOptions{0, 10}, []uint64{4, 8, 10}},
+		{types.PruningOptions{2, 10}, []uint64{8, 9, 10}},
+		{types.PruningOptions{0, 10}, []uint64{10}},
 		{types.PruneEverything, []uint64{10}},
 		{types.PruneNothing, []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
 	}
@@ -435,9 +435,9 @@ func TestPruning(t *testing.T) {
 	// Save up to 20th version while checking history at specific version checkpoints
 	testCheckPoints := map[uint64][]uint64{
 		5:  []uint64{1, 2, 3, 4, 5},
-		10: []uint64{5, 10},
-		15: []uint64{5, 10, 11, 12, 13, 14, 15},
-		20: []uint64{5, 10, 15, 20},
+		10: []uint64{10},
+		15: []uint64{10, 11, 12, 13, 14, 15},
+		20: []uint64{20},
 	}
 	db := memdb.NewDB()
 	opts := simpleStoreConfig(t)

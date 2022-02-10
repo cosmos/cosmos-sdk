@@ -9,7 +9,7 @@ order: 3
 Proposals can be submitted by any account via a `MsgSubmitProposal`
 transaction.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/ab9545527d630fe38761aa61cc5c95eabd68e0e6/proto/cosmos/gov/v1beta2/tx.proto#L34-L44
++++ <https://github.com/cosmos/cosmos-sdk/blob/ab9545527d630fe38761aa61cc5c95eabd68e0e6/proto/cosmos/gov/v1beta2/tx.proto#L34-L44>
 
 All `sdk.Msgs` passed into the `messages` field of a `MsgSubmitProposal` message
 must be registered in the app's `MsgServiceRouter`. Each of these messages must
@@ -18,13 +18,13 @@ must not be larger than the `maxMetadataLen` config passed into the gov keeper.
 
 **State modifications:**
 
-- Generate new `proposalID`
-- Create new `Proposal`
-- Initialise `Proposal`'s attributes
-- Decrease balance of sender by `InitialDeposit`
-- If `MinDeposit` is reached:
-  - Push `proposalID` in `ProposalProcessingQueue`
-- Transfer `InitialDeposit` from the `Proposer` to the governance `ModuleAccount`
+* Generate new `proposalID`
+* Create new `Proposal`
+* Initialise `Proposal`'s attributes
+* Decrease balance of sender by `InitialDeposit`
+* If `MinDeposit` is reached:
+    * Push `proposalID` in `ProposalProcessingQueue`
+* Transfer `InitialDeposit` from the `Proposer` to the governance `ModuleAccount`
 
 A `MsgSubmitProposal` transaction can be handled according to the following
 pseudocode.
@@ -78,16 +78,16 @@ Once a proposal is submitted, if
 `Proposal.TotalDeposit < ActiveParam.MinDeposit`, Atom holders can send
 `MsgDeposit` transactions to increase the proposal's deposit.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/tx.proto#L61-L72
++++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/tx.proto#L61-L72>
 
 **State modifications:**
 
-- Decrease balance of sender by `deposit`
-- Add `deposit` of sender in `proposal.Deposits`
-- Increase `proposal.TotalDeposit` by sender's `deposit`
-- If `MinDeposit` is reached:
-  - Push `proposalID` in `ProposalProcessingQueueEnd`
-- Transfer `Deposit` from the `proposer` to the governance `ModuleAccount`
+* Decrease balance of sender by `deposit`
+* Add `deposit` of sender in `proposal.Deposits`
+* Increase `proposal.TotalDeposit` by sender's `deposit`
+* If `MinDeposit` is reached:
+    * Push `proposalID` in `ProposalProcessingQueueEnd`
+* Transfer `Deposit` from the `proposer` to the governance `ModuleAccount`
 
 A `MsgDeposit` transaction has to go through a number of checks to be valid.
 These checks are outlined in the following pseudocode.
@@ -144,13 +144,13 @@ Once `ActiveParam.MinDeposit` is reached, voting period starts. From there,
 bonded Atom holders are able to send `MsgVote` transactions to cast their
 vote on the proposal.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/tx.proto#L46-L56
++++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/tx.proto#L46-L56>
 
 **State modifications:**
 
-- Record `Vote` of sender
+* Record `Vote` of sender
 
-_Note: Gas cost for this message has to take into account the future tallying of the vote in EndBlocker_
+_Note: Gas cost for this message has to take into account the future tallying of the vote in EndBlocker._
 
 Next is a pseudocode outline of the way `MsgVote` transactions are
 handled:

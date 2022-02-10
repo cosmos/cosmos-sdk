@@ -2,8 +2,8 @@
 
 ## Changelog
 
-- 26 November 2019: Start of first version
-- 2 December 2019: Final draft of first version
+* 26 November 2019: Start of first version
+* 2 December 2019: Final draft of first version
 
 ## Context
 
@@ -44,13 +44,13 @@ Implementation of this ADR will require changes to the Cosmos SDK. It will not r
 
 ### Positive
 
-- Easy retrieval of headers & state roots for recent past heights by modules anywhere in the Cosmos SDK.
-- No RPC calls to Tendermint required.
-- No ABCI alterations required.
+* Easy retrieval of headers & state roots for recent past heights by modules anywhere in the Cosmos SDK.
+* No RPC calls to Tendermint required.
+* No ABCI alterations required.
 
 ### Negative
 
-- Duplicates `n` headers data in Tendermint & the application (additional disk usage) - in the long term, an approach such as [this](https://github.com/tendermint/tendermint/issues/4210) might be preferable.
+* Duplicates `n` headers data in Tendermint & the application (additional disk usage) - in the long term, an approach such as [this](https://github.com/tendermint/tendermint/issues/4210) might be preferable.
 
 ### Neutral
 
@@ -58,4 +58,4 @@ Implementation of this ADR will require changes to the Cosmos SDK. It will not r
 
 ## References
 
-- [ICS 2: "Consensus state introspection"](https://github.com/cosmos/ibc/tree/master/spec/core/ics-002-client-semantics#consensus-state-introspection)
+* [ICS 2: "Consensus state introspection"](https://github.com/cosmos/ibc/tree/master/spec/core/ics-002-client-semantics#consensus-state-introspection)

@@ -8,7 +8,7 @@ order: 7
 
 ## Pre-requisite Readings
 
-- [Introduction to Cosmos SDK Modules](./intro.md) {prereq}
+* [Introduction to Cosmos SDK Modules](./intro.md) {prereq}
 
 ## Motivation
 
@@ -34,13 +34,13 @@ type Keeper struct {
 
 For example, here is the type definition of the `keeper` from the `staking` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/3bafd8255a502e5a9cee07391cf8261538245dfd/x/staking/keeper/keeper.go#L23-L33
++++ <https://github.com/cosmos/cosmos-sdk/blob/3bafd8255a502e5a9cee07391cf8261538245dfd/x/staking/keeper/keeper.go#L23-L33>
 
 Let us go through the different parameters:
 
-- An expected `keeper` is a `keeper` external to a module that is required by the internal `keeper` of said module. External `keeper`s are listed in the internal `keeper`'s type definition as interfaces. These interfaces are themselves defined in an `expected_keepers.go` file in the root of the module's folder. In this context, interfaces are used to reduce the number of dependencies, as well as to facilitate the maintenance of the module itself.
-- `storeKey`s grant access to the store(s) of the [multistore](../core/store.md) managed by the module. They should always remain unexposed to external modules.
-- `cdc` is the [codec](../core/encoding.md) used to marshall and unmarshall structs to/from `[]byte`. The `cdc` can be any of `codec.BinaryCodec`, `codec.JSONCodec` or `codec.Codec` based on your requirements. It can be either a proto or amino codec as long as they implement these interfaces.
+* An expected `keeper` is a `keeper` external to a module that is required by the internal `keeper` of said module. External `keeper`s are listed in the internal `keeper`'s type definition as interfaces. These interfaces are themselves defined in an `expected_keepers.go` file in the root of the module's folder. In this context, interfaces are used to reduce the number of dependencies, as well as to facilitate the maintenance of the module itself.
+* `storeKey`s grant access to the store(s) of the [multistore](../core/store.md) managed by the module. They should always remain unexposed to external modules.
+* `cdc` is the [codec](../core/encoding.md) used to marshall and unmarshall structs to/from `[]byte`. The `cdc` can be any of `codec.BinaryCodec`, `codec.JSONCodec` or `codec.Codec` based on your requirements. It can be either a proto or amino codec as long as they implement these interfaces.
 
 Of course, it is possible to define different types of internal `keeper`s for the same module (e.g. a read-only `keeper`). Each type of `keeper` comes with its own constructor function, which is called from the [application's constructor function](../basics/app-anatomy.md). This is where `keeper`s are instantiated, and where developers make sure to pass correct instances of modules' `keeper`s to other modules that require them.
 
@@ -78,7 +78,7 @@ The [module `KVStore`](../core/store.md#kvstore-and-commitkvstore-interfaces) al
 
 This is an example from the `auth` module to iterate accounts:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/bf8809ef9840b4f5369887a38d8345e2380a567f/x/auth/keeper/account.go#L70-L83
++++ <https://github.com/cosmos/cosmos-sdk/blob/bf8809ef9840b4f5369887a38d8345e2380a567f/x/auth/keeper/account.go#L70-L83>
 
 ## Next {hide}
 

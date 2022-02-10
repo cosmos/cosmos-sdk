@@ -2012,6 +2012,31 @@ func (s *TestSuite) TestVoteWeighted() {
 			expExecutorResult: group.ProposalExecutorResultNotRun,
 			postRun:           func(sdkCtx sdk.Context) {},
 		},
+		"vote yes=0.5,no=0.1,veto=0.1,abstain=0.3 with member weight > 1": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers, groupPolicy)
+			},
+			req: &group.MsgVoteWeighted{
+				ProposalId: myProposalID, // ignores `myProposalID` replaces by `preRun`
+				Voter:      addr3.String(),
+				Choices: []*group.WeightedVoteOption{
+					{Choice: group.Choice_CHOICE_YES, Weight: "0.5"},
+					{Choice: group.Choice_CHOICE_NO, Weight: "0.1"},
+					{Choice: group.Choice_CHOICE_VETO, Weight: "0.1"},
+					{Choice: group.Choice_CHOICE_ABSTAIN, Weight: "0.3"},
+				},
+			},
+			expVoteState: group.Tally{
+				YesCount:     "1.0",
+				NoCount:      "0.2",
+				VetoCount:    "0.2",
+				AbstainCount: "0.6",
+			},
+			expProposalStatus: group.ProposalStatusSubmitted,
+			expResult:         group.ProposalResultUnfinalized,
+			expExecutorResult: group.ProposalExecutorResultNotRun,
+			postRun:           func(sdkCtx sdk.Context) {},
+		},
 		"with try exec": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				return createProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers, groupPolicy)
@@ -2139,6 +2164,54 @@ func (s *TestSuite) TestVoteWeighted() {
 			expExecutorResult: group.ProposalExecutorResultNotRun,
 			postRun:           func(sdkCtx sdk.Context) {},
 		},
+		"choice weights sum > 1": {
+			req: &group.MsgVoteWeighted{
+				ProposalId: myProposalID,
+				Voter:      addr4.String(),
+				Choices: []*group.WeightedVoteOption{
+					{Choice: group.Choice_CHOICE_YES, Weight: "0.5"},
+					{Choice: group.Choice_CHOICE_NO, Weight: "0.5"},
+					{Choice: group.Choice_CHOICE_VETO, Weight: "0.1"},
+					{Choice: group.Choice_CHOICE_ABSTAIN, Weight: "0.3"},
+				},
+			},
+			preRun: func(ctx sdk.Context) uint64 {
+				pId := createProposal(ctx, s, []sdk.Msg{msgSend}, proposers, groupPolicy)
+				_, err := s.keeper.VoteWeighted(ctx, &group.MsgVoteWeighted{
+					ProposalId: pId,
+					Voter:      addr3.String(),
+					Choices:    group.NewNonSplitVoteOption(group.Choice_CHOICE_VETO),
+				})
+				s.Require().NoError(err)
+				return pId
+			},
+			expErr:  true,
+			postRun: func(sdkCtx sdk.Context) {},
+		},
+		"choice weights sum < 1": {
+			req: &group.MsgVoteWeighted{
+				ProposalId: myProposalID,
+				Voter:      addr4.String(),
+				Choices: []*group.WeightedVoteOption{
+					{Choice: group.Choice_CHOICE_YES, Weight: "0.1"},
+					{Choice: group.Choice_CHOICE_NO, Weight: "0.1"},
+					{Choice: group.Choice_CHOICE_VETO, Weight: "0.1"},
+					{Choice: group.Choice_CHOICE_ABSTAIN, Weight: "0.1"},
+				},
+			},
+			preRun: func(ctx sdk.Context) uint64 {
+				pId := createProposal(ctx, s, []sdk.Msg{msgSend}, proposers, groupPolicy)
+				_, err := s.keeper.VoteWeighted(ctx, &group.MsgVoteWeighted{
+					ProposalId: pId,
+					Voter:      addr3.String(),
+					Choices:    group.NewNonSplitVoteOption(group.Choice_CHOICE_VETO),
+				})
+				s.Require().NoError(err)
+				return pId
+			},
+			expErr:  true,
+			postRun: func(sdkCtx sdk.Context) {},
+		},
 		"reject new votes when final decision is made already": {
 			req: &group.MsgVoteWeighted{
 				ProposalId: myProposalID,
@@ -2148,7 +2221,7 @@ func (s *TestSuite) TestVoteWeighted() {
 			preRun: func(ctx sdk.Context) uint64 {
 				pId := createProposal(ctx, s, []sdk.Msg{msgSend}, proposers, groupPolicy)
 				_, err := s.keeper.VoteWeighted(ctx, &group.MsgVoteWeighted{
-					ProposalId: myProposalID,
+					ProposalId: pId,
 					Voter:      addr3.String(),
 					Choices:    group.NewNonSplitVoteOption(group.Choice_CHOICE_VETO),
 				})

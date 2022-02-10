@@ -26,8 +26,8 @@ verification command which can potentially solve this issue.
 
 ## Other updates
 
-+ Changed default value of `DAEMON_RESTART_AFTER_UPGRADE` to `true`.
-+ Added `version` command, which prints both the Cosmovisor and the associated app version.
-+ Added `help`  command, which prints the Cosmovisor help without passing it to the associated version. This is an exception, because normally, Cosmovisor passes all arguments to the associated app.
+* Changed default value of `DAEMON_RESTART_AFTER_UPGRADE` to `true`.
+* Added `version` command, which prints both the Cosmovisor and the associated app version.
+* Added `help`  command, which prints the Cosmovisor help without passing it to the associated version. This is an exception, because normally, Cosmovisor passes all arguments to the associated app.
 
 For more details, please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/cosmovisor/v1.0.0/cosmovisor/CHANGELOG.md).

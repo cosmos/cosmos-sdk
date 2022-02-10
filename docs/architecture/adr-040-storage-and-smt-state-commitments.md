@@ -2,7 +2,7 @@
 
 ## Changelog
 
-- 2020-01-15: Draft
+* 2020-01-15: Draft
 
 ## Status
 
@@ -19,11 +19,11 @@ Currently, Cosmos SDK uses IAVL for both state [commitments](https://cryptograph
 IAVL has effectively become an orphaned project within the Cosmos ecosystem and it's proven to be an inefficient state commitment data structure.
 In the current design, IAVL is used for both data storage and as a Merkle Tree for state commitments. IAVL is meant to be a standalone Merkelized key/value database, however it's using a KV DB engine to store all tree nodes. So, each node is stored in a separate record in the KV DB. This causes many inefficiencies and problems:
 
-+ Each object query requires a tree traversal from the root. Subsequent queries for the same object are cached on the Cosmos SDK level.
-+ Each edge traversal requires a DB query.
-+ Creating snapshots is [expensive](https://github.com/cosmos/cosmos-sdk/issues/7215#issuecomment-684804950). It takes about 30 seconds to export less than 100 MB of state (as of March 2020).
-+ Updates in IAVL may trigger tree reorganization and possible O(log(n)) hashes re-computation, which can become a CPU bottleneck.
-+ The node structure is pretty expensive - it contains a standard tree node elements (key, value, left and right element) and additional metadata such as height, version (which is not required by the Cosmos SDK). The entire node is hashed, and that hash is used as the key in the underlying database, [ref](https://github.com/cosmos/iavl/blob/master/docs/node/node.md
+* Each object query requires a tree traversal from the root. Subsequent queries for the same object are cached on the Cosmos SDK level.
+* Each edge traversal requires a DB query.
+* Creating snapshots is [expensive](https://github.com/cosmos/cosmos-sdk/issues/7215#issuecomment-684804950). It takes about 30 seconds to export less than 100 MB of state (as of March 2020).
+* Updates in IAVL may trigger tree reorganization and possible O(log(n)) hashes re-computation, which can become a CPU bottleneck.
+* The node structure is pretty expensive - it contains a standard tree node elements (key, value, left and right element) and additional metadata such as height, version (which is not required by the Cosmos SDK). The entire node is hashed, and that hash is used as the key in the underlying database, [ref](https://github.com/cosmos/iavl/blob/master/docs/node/node.md
 ).
 
 Moreover, the IAVL project lacks support and a maintainer and we already see better and well-established alternatives. Instead of optimizing the IAVL, we are looking into other solutions for both storage and state commitments.
@@ -54,18 +54,18 @@ We propose to use a KV database for both `SS` and `SC`. The store interface will
 
 State Storage requirements:
 
-+ range queries
-+ quick (key, value) access
-+ creating a snapshot
-+ historical versioning
-+ pruning (garbage collection)
+* range queries
+* quick (key, value) access
+* creating a snapshot
+* historical versioning
+* pruning (garbage collection)
 
 State Commitment requirements:
 
-+ fast updates
-+ tree path should be short
-+ query historical commitment proofs using ICS-23 standard
-+ pruning (garbage collection)
+* fast updates
+* tree path should be short
+* query historical commitment proofs using ICS-23 standard
+* pruning (garbage collection)
 
 ### SMT for State Commitment
 
@@ -192,9 +192,9 @@ The presented workaround can be used until the IBC module is fully upgraded to s
 
 We consider a compression of prefix keys by creating a mapping from module key to an integer, and serializing the integer using varint coding. Varint coding assures that different values don't have common byte prefix. For Merkle Proofs we can't use prefix compression - so it should only apply for the `SS` keys. Moreover, the prefix compression should be only applied for the module namespace. More precisely:
 
-+ each module has it's own namespace;
-+ when accessing a module namespace we create a KVStore with embedded prefix;
-+ that prefix will be compressed only when accessing and managing `SS`.
+* each module has it's own namespace;
+* when accessing a module namespace we create a KVStore with embedded prefix;
+* that prefix will be compressed only when accessing and managing `SS`.
 
 We need to assure that the codes won't change. We can fix the mapping in a static variable (provided by an app) or SS state under a special key.
 
@@ -209,10 +209,11 @@ TODO: finalize this or move to another ADR.
 ## Migration
 
 Using the new store will require a migration. 2 Migrations are proposed:
+
 1. Genesis export -- it will reset the blockchain history.
 2. In place migration: we can reuse `UpgradeKeeper.SetUpgradeHandler` to provide the migration logic:
 
-    ```go 
+```go 
 app.UpgradeKeeper.SetUpgradeHandler("adr-40", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 
     storev2.Migrate(iavlstore, v2.store)
@@ -221,7 +222,7 @@ app.UpgradeKeeper.SetUpgradeHandler("adr-40", func(ctx sdk.Context, plan upgrade
     // with the updated module ConsensusVersions
     return app.mm.RunMigrations(ctx, vm)
 })
-    ```
+```
 
 The `Migrate` function will read all entries from a store/v1 DB and save them to the AD-40 combined KV store. 
 Cache layer should not be used and the operation must finish with a single Commit call.
@@ -239,21 +240,21 @@ We change the storage layout of the state machine, a storage hard fork and netwo
 
 ### Positive
 
-+ Decoupling state from state commitment introduce better engineering opportunities for further optimizations and better storage patterns.
-+ Performance improvements.
-+ Joining SMT based camp which has wider and proven adoption than IAVL. Example projects which decided on SMT: Ethereum2, Diem (Libra), Trillan, Tezos, Celestia.
-+ Multistore removal fixes a longstanding issue with the current MultiStore design.
-+ Simplifies merkle proofs - all modules, except IBC, have only one pass for merkle proof.
+* Decoupling state from state commitment introduce better engineering opportunities for further optimizations and better storage patterns.
+* Performance improvements.
+* Joining SMT based camp which has wider and proven adoption than IAVL. Example projects which decided on SMT: Ethereum2, Diem (Libra), Trillan, Tezos, Celestia.
+* Multistore removal fixes a longstanding issue with the current MultiStore design.
+* Simplifies merkle proofs - all modules, except IBC, have only one pass for merkle proof.
 
 ### Negative
 
-+ Storage migration
-+ LL SMT doesn't support pruning - we will need to add and test that functionality.
-+ `SS` keys will have an overhead of a key prefix. This doesn't impact `SC` because all keys in `SC` have same size (they are hashed).
+* Storage migration
+* LL SMT doesn't support pruning - we will need to add and test that functionality.
+* `SS` keys will have an overhead of a key prefix. This doesn't impact `SC` because all keys in `SC` have same size (they are hashed).
 
 ### Neutral
 
-+ Deprecating IAVL, which is one of the core proposals of Cosmos Whitepaper.
+* Deprecating IAVL, which is one of the core proposals of Cosmos Whitepaper.
 
 ## Alternative designs
 
@@ -277,12 +278,12 @@ We were discussing use case where modules can use a support database, which is n
 
 ## References
 
-+ [IAVL What's Next?](https://github.com/cosmos/cosmos-sdk/issues/7100)
-+ [IAVL overview](https://docs.google.com/document/d/16Z_hW2rSAmoyMENO-RlAhQjAG3mSNKsQueMnKpmcBv0/edit#heading=h.yd2th7x3o1iv) of it's state v0.15
-+ [State commitments and storage report](https://paper.dropbox.com/published/State-commitments-and-storage-review--BDvA1MLwRtOx55KRihJ5xxLbBw-KeEB7eOd11pNrZvVtqUgL3h)
-+ [Celestia (LazyLedger) SMT](https://github.com/lazyledger/smt)
-+ Facebook Diem (Libra) SMT [design](https://developers.diem.com/papers/jellyfish-merkle-tree/2021-01-14.pdf)
-+ [Trillian Revocation Transparency](https://github.com/google/trillian/blob/master/docs/papers/RevocationTransparency.pdf), [Trillian Verifiable Data Structures](https://github.com/google/trillian/blob/master/docs/papers/VerifiableDataStructures.pdf).
-+ Design and implementation [discussion](https://github.com/cosmos/cosmos-sdk/discussions/8297).
-+ [How to Upgrade IBC Chains and their Clients](https://github.com/cosmos/ibc-go/blob/main/docs/ibc/upgrades/quick-guide.md)
-+ [ADR-40 Effect on IBC](https://github.com/cosmos/ibc-go/discussions/256)
+* [IAVL What's Next?](https://github.com/cosmos/cosmos-sdk/issues/7100)
+* [IAVL overview](https://docs.google.com/document/d/16Z_hW2rSAmoyMENO-RlAhQjAG3mSNKsQueMnKpmcBv0/edit#heading=h.yd2th7x3o1iv) of it's state v0.15
+* [State commitments and storage report](https://paper.dropbox.com/published/State-commitments-and-storage-review--BDvA1MLwRtOx55KRihJ5xxLbBw-KeEB7eOd11pNrZvVtqUgL3h)
+* [Celestia (LazyLedger) SMT](https://github.com/lazyledger/smt)
+* Facebook Diem (Libra) SMT [design](https://developers.diem.com/papers/jellyfish-merkle-tree/2021-01-14.pdf)
+* [Trillian Revocation Transparency](https://github.com/google/trillian/blob/master/docs/papers/RevocationTransparency.pdf), [Trillian Verifiable Data Structures](https://github.com/google/trillian/blob/master/docs/papers/VerifiableDataStructures.pdf).
+* Design and implementation [discussion](https://github.com/cosmos/cosmos-sdk/discussions/8297).
+* [How to Upgrade IBC Chains and their Clients](https://github.com/cosmos/ibc-go/blob/main/docs/ibc/upgrades/quick-guide.md)
+* [ADR-40 Effect on IBC](https://github.com/cosmos/ibc-go/discussions/256)

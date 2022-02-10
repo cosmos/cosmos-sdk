@@ -10,9 +10,9 @@ This document presents an overview of all the endpoints a node exposes: gRPC, RE
 
 Each node exposes the following endpoints for users to interact with a node, each endpoint is served on a different port. Details on how to configure each endpoint is provided in the endpoint's own section.
 
-- the gRPC server (default port: `9090`),
-- the REST server (default port: `1317`),
-- the Tendermint RPC endpoint (default port: `26657`).
+* the gRPC server (default port: `9090`),
+* the REST server (default port: `1317`),
+* the Tendermint RPC endpoint (default port: `26657`).
 
 ::: tip
 The node also exposes some other endpoints, such as the Tendermint P2P endpoint, or the [Prometheus endpoint](https://docs.tendermint.com/master/nodes/metrics.html#metrics), which are not directly related to the Cosmos SDK. Please refer to the [Tendermint documentation](https://docs.tendermint.com/master/tendermint-core/using-tendermint.html#configuration) for more information about these endpoints.
@@ -25,7 +25,7 @@ A patch introduced in `go-grpc v1.34.0` made gRPC incompatible with the `gogopro
 
 To make sure that gRPC is working properly, it is **highly recommended** to add the following line in your application's `go.mod`:
 
-```
+```go
 replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 ```
 
@@ -36,14 +36,14 @@ Cosmos SDK v0.40 introduced Protobuf as the main [encoding](./encoding) library,
 
 Each module exposes a [Protobuf `Query` service](../building-modules/messages-and-queries.md#queries) that defines state queries. The `Query` services and a transaction service used to broadcast transactions are hooked up to the gRPC server via the following function inside the application:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-rc0/server/types/app.go#L39-L41
++++ <https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-rc0/server/types/app.go#L39-L41>
 
 Note: It is not possible to expose any [Protobuf `Msg` service](../building-modules/messages-and-queries.md#messages) endpoints via gRPC. Transactions must be generated and signed using the CLI or programmatically before they can be broadcasted using gRPC. See [Generating, Signing, and Broadcasting Transactions](../run-node/txs.html) for more information.
 
 The `grpc.Server` is a concrete gRPC server, which spawns and serves all gRPC query requests and a broadcast transaction request. This server can be configured inside `~/.simapp/config/app.toml`:
 
-- `grpc.enable = true|false` field defines if the gRPC server should be enabled. Defaults to `true`.
-- `grpc.address = {string}` field defines the address (really, the port, since the host should be kept at `0.0.0.0`) the server should bind to. Defaults to `0.0.0.0:9090`.
+* `grpc.enable = true|false` field defines if the gRPC server should be enabled. Defaults to `true`.
+* `grpc.address = {string}` field defines the address (really, the port, since the host should be kept at `0.0.0.0`) the server should bind to. Defaults to `0.0.0.0:9090`.
 
 :::tip
 `~/.simapp` is the directory where the node's configuration and databases are stored. By default, it's set to `~/.{app_name}`.
@@ -59,9 +59,9 @@ Cosmos SDK supports REST routes via gRPC-gateway.
 
 All routes are configured under the following fields in `~/.simapp/config/app.toml`:
 
-- `api.enable = true|false` field defines if the REST server should be enabled. Defaults to `false`.
-- `api.address = {string}` field defines the address (really, the port, since the host should be kept at `0.0.0.0`) the server should bind to. Defaults to `tcp://0.0.0.0:1317`.
-- some additional API configuration options are defined in `~/.simapp/config/app.toml`, along with comments, please refer to that file directly.
+* `api.enable = true|false` field defines if the REST server should be enabled. Defaults to `false`.
+* `api.address = {string}` field defines the address (really, the port, since the host should be kept at `0.0.0.0`) the server should bind to. Defaults to `tcp://0.0.0.0:1317`.
+* some additional API configuration options are defined in `~/.simapp/config/app.toml`, along with comments, please refer to that file directly.
 
 ### gRPC-gateway REST Routes
 
@@ -69,7 +69,7 @@ If, for various reasons, you cannot use gRPC (for example, you are building a we
 
 [gRPC-gateway](https://grpc-ecosystem.github.io/grpc-gateway/) is a tool to expose gRPC endpoints as REST endpoints. For each gRPC endpoint defined in a Protobuf `Query` service, the Cosmos SDK offers a REST equivalent. For instance, querying a balance could be done via the `/cosmos.bank.v1beta1.QueryAllBalances` gRPC endpoint, or alternatively via the gRPC-gateway `"/cosmos/bank/v1beta1/balances/{address}"` REST endpoint: both will return the same result. For each RPC method defined in a Protobuf `Query` service, the corresponding REST endpoint is defined as an option:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.41.0/proto/cosmos/bank/v1beta1/query.proto#L19-L22
++++ <https://github.com/cosmos/cosmos-sdk/blob/v0.41.0/proto/cosmos/bank/v1beta1/query.proto#L19-L22>
 
 For application developers, gRPC-gateway REST routes needs to be wired up to the REST server, this is done by calling the `RegisterGRPCGatewayRoutes` function on the ModuleManager.
 
@@ -87,14 +87,14 @@ Independently from the Cosmos SDK, Tendermint also exposes a RPC server. This RP
 
 Some Tendermint RPC endpoints are directly related to the Cosmos SDK:
 
-- `/abci_query`: this endpoint will query the application for state. As the `path` parameter, you can send the following strings:
-    - any Protobuf fully-qualified service method, such as `/cosmos.bank.v1beta1.QueryAllBalances`. The `data` field should then include the method's request parameter(s) encoded as bytes using Protobuf.
-    - `/app/simulate`: this will simulate a transaction, and return some information such as gas used.
-    - `/app/version`: this will return the application's version.
-    - `/store/{path}`: this will query the store directly.
-    - `/p2p/filter/addr/{port}`: this will return a filtered list of the node's P2P peers by address port.
-    - `/p2p/filter/id/{id}`: this will return a filtered list of the node's P2P peers by ID.
-- `/broadcast_tx_{aync,async,commit}`: these 3 endpoint will broadcast a transaction to other peers. CLI, gRPC and REST expose [a way to broadcast transations](./transactions.md#broadcasting-the-transaction), but they all use these 3 Tendermint RPCs under the hood.
+* `/abci_query`: this endpoint will query the application for state. As the `path` parameter, you can send the following strings:
+    * any Protobuf fully-qualified service method, such as `/cosmos.bank.v1beta1.QueryAllBalances`. The `data` field should then include the method's request parameter(s) encoded as bytes using Protobuf.
+    * `/app/simulate`: this will simulate a transaction, and return some information such as gas used.
+    * `/app/version`: this will return the application's version.
+    * `/store/{path}`: this will query the store directly.
+    * `/p2p/filter/addr/{port}`: this will return a filtered list of the node's P2P peers by address port.
+    * `/p2p/filter/id/{id}`: this will return a filtered list of the node's P2P peers by ID.
+* `/broadcast_tx_{aync,async,commit}`: these 3 endpoint will broadcast a transaction to other peers. CLI, gRPC and REST expose [a way to broadcast transations](./transactions.md#broadcasting-the-transaction), but they all use these 3 Tendermint RPCs under the hood.
 
 ## Comparison Table
 

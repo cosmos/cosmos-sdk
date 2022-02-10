@@ -121,6 +121,14 @@ func (c *Client) Ready() error {
 	if err != nil {
 		return err
 	}
+
+	// to prevent timeout of reading genesis block
+	var height int64 = -1
+	_, err = c.BlockByHeight(ctx, &height)
+	if err != nil {
+		return err
+	}
+
 	_, err = c.bank.TotalSupply(ctx, &bank.QueryTotalSupplyRequest{})
 	if err != nil {
 		return err

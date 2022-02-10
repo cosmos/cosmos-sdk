@@ -6,7 +6,7 @@ order: 1
 
 Learn what IBC is, its components, and use cases. {synopsis}
 
-## What is the Inter-Blockchain Communication Protocol (IBC)?
+## What is the Inter-Blockchain Communication Protocol (IBC)
 
 The Inter-Blockchain Communication protocol (IBC) allows blockchains to talk to each other. The backbone of the Cosmos ecosystem, IBC handles transport across different sovereign blockchains. This end-to-end, connection-oriented, stateful protocol provides reliable, ordered, and authenticated communication between heterogeneous blockchains. 
 
@@ -18,13 +18,13 @@ The abstraction layer details on channels and ports are relevant for app develop
 
 The following requirements must be met for a module to interact over IBC:
 
-- Bind to one or more ports
+* Bind to one or more ports
 
-- Define the packet data
+* Define the packet data
 
-- Define optional acknowledgement structures and methods to encode and decode them
+* Define optional acknowledgement structures and methods to encode and decode them
 
-- Implement the IBCModule interface
+* Implement the IBCModule interface
 
 ## Components Overview
 
@@ -34,9 +34,9 @@ This section describes the IBC components and links to the repos.
 
 IBC clients are light clients that are identified by a unique client id. IBC clients track the consensus states of other blockchains and the proof specs of those blockchains that are required to properly verify proofs against the client's consensus state. A client can be associated with any number of connections to multiple chains. The supported IBC clients are:
 
-- [Solo Machine light client](https://github.com/cosmos/ibc-go/blob/main/modules/light-clients/06-solomachine): devices such as phones, browsers, or laptops.
-- [Tendermint light client](https://github.com/cosmos/ibc-go/blob/main/modules/light-clients/07-tendermint): The default for Cosmos SDK-based chains.
-- [Localhost (loopback) client](https://github.com/cosmos/ibc-go/blob/main/modules/light-clients/09-localhost): Useful for testing, simulation, and relaying packets to modules on the same application.
+* [Solo Machine light client](https://github.com/cosmos/ibc-go/blob/main/modules/light-clients/06-solomachine): devices such as phones, browsers, or laptops.
+* [Tendermint light client](https://github.com/cosmos/ibc-go/blob/main/modules/light-clients/07-tendermint): The default for Cosmos SDK-based chains.
+* [Localhost (loopback) client](https://github.com/cosmos/ibc-go/blob/main/modules/light-clients/09-localhost): Useful for testing, simulation, and relaying packets to modules on the same application.
 
 ### [Connections](https://github.com/cosmos/ibc-go/blob/main/modules/core/03-connection)
 
@@ -46,13 +46,13 @@ Connections encapsulate two `ConnectionEnd` objects on two separate blockchains.
 
 In IBC, blockchains do not directly pass messages to each other over the network.
 
-- To communicate, a blockchain commits some state to a precisely defined path reserved for a specific message type and a specific counterparty. For example, a blockchain that stores a specific connectionEnd as part of a handshake or a packet intended to be relayed to a module on the counterparty chain.
+* To communicate, a blockchain commits some state to a precisely defined path reserved for a specific message type and a specific counterparty. For example, a blockchain that stores a specific connectionEnd as part of a handshake or a packet intended to be relayed to a module on the counterparty chain.
 
-- A relayer process monitors for updates to these paths and relays messages by submitting the data stored under the path along with a proof of that data to the counterparty chain.
+* A relayer process monitors for updates to these paths and relays messages by submitting the data stored under the path along with a proof of that data to the counterparty chain.
 
-- The paths that all IBC implementations must support for committing IBC messages are defined in [ICS-24 host requirements](https://github.com/cosmos/ics/tree/master/spec/core/ics-024-host-requirements).
+* The paths that all IBC implementations must support for committing IBC messages are defined in [ICS-24 host requirements](https://github.com/cosmos/ics/tree/master/spec/core/ics-024-host-requirements).
 
-- The proof format that all implementations must produce and verify is defined in [ICS-23 implementation](https://github.com/confio/ics23).
+* The proof format that all implementations must produce and verify is defined in [ICS-23 implementation](https://github.com/confio/ics23).
 
 ### [Capabilities](./ocap.md)
 
@@ -74,9 +74,9 @@ IBC modules are responsible for claiming the capability that is returned on `Bin
 
 An IBC channel can be established between two IBC ports. A port is exclusively owned by a single module. IBC packets are sent over channels. Just as IP packets contain the destination IP address, IP port, the source IP address, and source IP port, IBC packets contain the destination portID, channelID, the source portID, and channelID. The IBC packets enable IBC to correctly route the packets to the destination module, while also allowing modules receiving packets to know the sender module.
 
-- A channel can be `ORDERED` so that packets from a sending module must be processed by the receiving module in the order they were sent.
+* A channel can be `ORDERED` so that packets from a sending module must be processed by the receiving module in the order they were sent.
 
-- Recommended, a channel may be `UNORDERED` so that packets from a sending module are processed in the order they arrive, which may not be the order the packets were sent.
+* Recommended, a channel may be `UNORDERED` so that packets from a sending module are processed in the order they arrive, which may not be the order the packets were sent.
 
 Modules may choose which channels they wish to communicate over with. IBC expects modules to implement callbacks that are called during the channel handshake. These callbacks may do custom channel initialization logic. If an error is returned, the channel handshake fails. By returning errors on callbacks, modules can programmatically reject and accept channels.
 
@@ -95,19 +95,19 @@ Just as ports came with dynamic capabilities, channel initialization returns a d
 
 Modules communicate with each other by sending packets over IBC channels. All IBC packets contain:
 
-- Destination `portID`
+* Destination `portID`
 
-- Destination `channelID`
+* Destination `channelID`
 
-- Source `portID`
+* Source `portID`
 
-- Source `channelID`
+* Source `channelID`
 
   These port and channels allow the modules to know the sender module of a given packet.
 
-- A sequence to optionally enforce ordering
+* A sequence to optionally enforce ordering
 
-- `TimeoutTimestamp` and `TimeoutHeight`
+* `TimeoutTimestamp` and `TimeoutHeight`
 
   When non-zero, these timeout values determine the deadline before which the receiving module must process a packet.
 
@@ -131,9 +131,9 @@ For this reason, most modules that use UNORDERED channels are recommended as the
 
 Modules also write application-specific acknowledgements when processing a packet. Acknowledgements can be done:
 
-- Synchronously on `OnRecvPacket` if the module processes packets as soon as they are received from IBC module.
+* Synchronously on `OnRecvPacket` if the module processes packets as soon as they are received from IBC module.
 
-- Asynchronously if module processes packets at some later point after receiving the packet.
+* Asynchronously if module processes packets at some later point after receiving the packet.
 
 This acknowledgement data is opaque to IBC much like the packet `Data` and is treated by IBC as a simple byte string `[]byte`. The receiver modules must encode their acknowledgement so that the sender module can decode it correctly. How the acknowledgement is encoded should be decided through version negotiation during the channel handshake.
 
@@ -147,8 +147,8 @@ After an acknowledgement is received successfully on the original sender the cha
 
 To learn more about IBC, check out the following specifications:
 
-- [IBC specs](https://github.com/cosmos/ibc/tree/master/spec)
-- [IBC protocol on the Cosmos SDK](https://github.com/cosmos/ibc-go/tree/main/docs)
+* [IBC specs](https://github.com/cosmos/ibc/tree/master/spec)
+* [IBC protocol on the Cosmos SDK](https://github.com/cosmos/ibc-go/tree/main/docs)
 
 ## Next {hide}
 

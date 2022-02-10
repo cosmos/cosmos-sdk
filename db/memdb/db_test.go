@@ -3,32 +3,32 @@ package memdb
 import (
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/db/dbtest"
 )
 
 func BenchmarkMemDBRangeScans1M(b *testing.B) {
-	db := NewDB()
-	defer db.Close()
+	dbm := NewDB()
+	defer dbm.Close()
 
-	dbtest.BenchmarkRangeScans(b, db.ReadWriter(), int64(1e6))
+	dbtest.BenchmarkRangeScans(b, dbm.ReadWriter(), int64(1e6))
 }
 
 func BenchmarkMemDBRangeScans10M(b *testing.B) {
-	db := NewDB()
-	defer db.Close()
+	dbm := NewDB()
+	defer dbm.Close()
 
-	dbtest.BenchmarkRangeScans(b, db.ReadWriter(), int64(10e6))
+	dbtest.BenchmarkRangeScans(b, dbm.ReadWriter(), int64(10e6))
 }
 
 func BenchmarkMemDBRandomReadsWrites(b *testing.B) {
-	db := NewDB()
-	defer db.Close()
+	dbm := NewDB()
+	defer dbm.Close()
 
-	dbtest.BenchmarkRandomReadsWrites(b, db.ReadWriter())
+	dbtest.BenchmarkRandomReadsWrites(b, dbm.ReadWriter())
 }
 
-func load(t *testing.T, _ string) dbm.DBConnection {
+func load(t *testing.T, _ string) db.DBConnection {
 	return NewDB()
 }
 

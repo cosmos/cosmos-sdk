@@ -8,9 +8,10 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"sigs.k8s.io/yaml"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // DefaultStartingProposalID is 1
@@ -22,7 +23,7 @@ func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Tim
 		return Proposal{}, fmt.Errorf("%T does not implement proto.Message", content)
 	}
 
-	any, err := types.NewAnyWithValue(msg)
+	any, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
 		return Proposal{}, err
 	}
@@ -80,7 +81,7 @@ func (p Proposal) GetTitle() string {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (p Proposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (p Proposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var content Content
 	return unpacker.UnpackAny(p.Content, &content)
 }
@@ -88,7 +89,7 @@ func (p Proposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 // Proposals is an array of proposal
 type Proposals []Proposal
 
-var _ types.UnpackInterfacesMessage = Proposals{}
+var _ codectypes.UnpackInterfacesMessage = Proposals{}
 
 // Equal returns true if two slices (order-dependant) of proposals are equal.
 func (p Proposals) Equal(other Proposals) bool {
@@ -117,7 +118,7 @@ func (p Proposals) String() string {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (p Proposals) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (p Proposals) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, x := range p {
 		err := x.UnpackInterfaces(unpacker)
 		if err != nil {
@@ -183,7 +184,7 @@ func (tp *TextProposal) GetTitle() string { return tp.Title }
 func (tp *TextProposal) GetDescription() string { return tp.Description }
 
 // ProposalRoute returns the proposal router key
-func (tp *TextProposal) ProposalRoute() string { return RouterKey }
+func (tp *TextProposal) ProposalRoute() string { return types.RouterKey }
 
 // ProposalType is "Text"
 func (tp *TextProposal) ProposalType() string { return ProposalTypeText }
@@ -213,18 +214,18 @@ func ValidProposalStatus(status ProposalStatus) bool {
 func ValidateAbstract(c Content) error {
 	title := c.GetTitle()
 	if len(strings.TrimSpace(title)) == 0 {
-		return sdkerrors.Wrap(ErrInvalidProposalContent, "proposal title cannot be blank")
+		return sdkerrors.Wrap(types.ErrInvalidProposalContent, "proposal title cannot be blank")
 	}
 	if len(title) > MaxTitleLength {
-		return sdkerrors.Wrapf(ErrInvalidProposalContent, "proposal title is longer than max length of %d", MaxTitleLength)
+		return sdkerrors.Wrapf(types.ErrInvalidProposalContent, "proposal title is longer than max length of %d", MaxTitleLength)
 	}
 
 	description := c.GetDescription()
 	if len(description) == 0 {
-		return sdkerrors.Wrap(ErrInvalidProposalContent, "proposal description cannot be blank")
+		return sdkerrors.Wrap(types.ErrInvalidProposalContent, "proposal description cannot be blank")
 	}
 	if len(description) > MaxDescriptionLength {
-		return sdkerrors.Wrapf(ErrInvalidProposalContent, "proposal description is longer than max length of %d", MaxDescriptionLength)
+		return sdkerrors.Wrapf(types.ErrInvalidProposalContent, "proposal description is longer than max length of %d", MaxDescriptionLength)
 	}
 
 	return nil

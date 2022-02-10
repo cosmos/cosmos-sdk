@@ -1,6 +1,8 @@
 package module
 
 import (
+	"fmt"
+
 	"github.com/gogo/protobuf/grpc"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -103,6 +105,7 @@ func (c configurator) runModuleMigrations(ctx sdk.Context, moduleName string, fr
 		if !found {
 			return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "no migration found for module %s from version %d to version %d", moduleName, i, i+1)
 		}
+		ctx.Logger().Info(fmt.Sprintf("migrating module %s from version %d to version %d", moduleName, i, i+1))
 
 		err := migrateFn(ctx)
 		if err != nil {

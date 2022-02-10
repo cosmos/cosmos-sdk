@@ -13,27 +13,27 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	govutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 // Proposal flags
 const (
-	FlagTitle        = "title"
-	FlagDescription  = "description"
+	// Deprecated: only used for v1beta1 legacy proposals.
+	FlagTitle = "title"
+	// Deprecated: only used for v1beta1 legacy proposals.
+	FlagDescription = "description"
+	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagProposalType = "type"
+	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagDeposit      = "deposit"
 	flagVoter        = "voter"
 	flagDepositor    = "depositor"
 	flagStatus       = "status"
-	FlagProposal     = "proposal"
+	// Deprecated: only used for v1beta1 legacy proposals.
+	FlagProposal = "proposal"
 )
-
-type proposal struct {
-	Title       string
-	Description string
-	Type        string
-	Deposit     string
-}
 
 // ProposalFlags defines the core required fields of a proposal. It is used to
 // verify that these values are not provided in conjunction with a JSON proposal
@@ -52,24 +52,25 @@ var ProposalFlags = []string{
 // under the governance CLI (eg. parameter change proposals).
 func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
 	govTxCmd := &cobra.Command{
-		Use:                        v1beta1.ModuleName,
+		Use:                        types.ModuleName,
 		Short:                      "Governance transactions subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmdSubmitProp := NewCmdSubmitProposal()
+	cmdSubmitLegacyProp := NewCmdSubmitLegacyProposal()
 	for _, propCmd := range propCmds {
 		flags.AddTxFlagsToCmd(propCmd)
-		cmdSubmitProp.AddCommand(propCmd)
+		cmdSubmitLegacyProp.AddCommand(propCmd)
 	}
 
 	govTxCmd.AddCommand(
 		NewCmdDeposit(),
 		NewCmdVote(),
 		NewCmdWeightedVote(),
-		cmdSubmitProp,
+		NewCmdSubmitProposal(),
+		cmdSubmitLegacyProp,
 	)
 
 	return govTxCmd
@@ -79,13 +80,71 @@ func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
 func NewCmdSubmitProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "submit-proposal",
-		Short: "Submit a proposal along with an initial deposit",
+		Short: "Submit a proposal along with some messages and metadata",
+		Args:  cobra.ExactArgs(1),
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Submit a proposal along with an initial deposit.
+			fmt.Sprintf(`Submit a proposal along with some messages and metadata.
+Messages, metadata and deposit are defined in a JSON file.
+
+Example:
+$ %s tx gov submit-proposal path/to/proposal.json
+
+Where proposal.json contains:
+
+{
+  // array of proto-JSON-encoded sdk.Msgs
+  "messages": [
+    {
+      "@type": "/cosmos.bank.v1beta1.MsgSend",
+      "from_address": "cosmos1...",
+      "to_address": "cosmos1...",
+      "amount":[{"denom": "stake","amount": "10"}]
+    }
+  ],
+  "metadata: "4pIMOgIGx1vZGU=", // base64-encoded metadata
+  "deposit": "10stake"
+}
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msgs, metadata, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0])
+			if err != nil {
+				return err
+			}
+
+			msg, err := v1beta2.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), metadata)
+			if err != nil {
+				return fmt.Errorf("invalid message: %w", err)
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewCmdSubmitLegacyProposal implements submitting a proposal transaction command.
+// Deprecated: please use NewCmdSubmitProposal instead.
+func NewCmdSubmitLegacyProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "submit-legacy-proposal",
+		Short: "Submit a legacy proposal along with an initial deposit",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a legacy proposal along with an initial deposit.
 Proposal title, description, type and deposit can be given directly or through a proposal JSON file.
 
 Example:
-$ %s tx gov submit-proposal --proposal="path/to/proposal.json" --from mykey
+$ %s tx gov submit-legacy-proposal --proposal="path/to/proposal.json" --from mykey
 
 Where proposal.json contains:
 
@@ -98,7 +157,7 @@ Where proposal.json contains:
 
 Which is equivalent to:
 
-$ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
+$ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
 `,
 				version.AppName, version.AppName,
 			),
@@ -109,7 +168,7 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 				return err
 			}
 
-			proposal, err := parseSubmitProposalFlags(cmd.Flags())
+			proposal, err := parseSubmitLegacyProposalFlags(cmd.Flags())
 			if err != nil {
 				return fmt.Errorf("failed to parse proposal: %w", err)
 			}
@@ -120,7 +179,6 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 			}
 
 			content := v1beta1.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
-
 			msg, err := v1beta1.NewMsgSubmitProposal(content, amount, clientCtx.GetFromAddress())
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
@@ -177,7 +235,7 @@ $ %s tx gov deposit 1 10stake --from mykey
 				return err
 			}
 
-			msg := v1beta1.NewMsgDeposit(from, proposalID, amount)
+			msg := v1beta2.NewMsgDeposit(from, proposalID, amount)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -219,13 +277,13 @@ $ %s tx gov vote 1 yes --from mykey
 			}
 
 			// Find out which vote option user chose
-			byteVoteOption, err := v1beta1.VoteOptionFromString(govutils.NormalizeVoteOption(args[1]))
+			byteVoteOption, err := v1beta2.VoteOptionFromString(govutils.NormalizeVoteOption(args[1]))
 			if err != nil {
 				return err
 			}
 
 			// Build vote message and run basic validation
-			msg := v1beta1.NewMsgVote(from, proposalID, byteVoteOption)
+			msg := v1beta2.NewMsgVote(from, proposalID, byteVoteOption)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -268,13 +326,13 @@ $ %s tx gov weighted-vote 1 yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05 --from
 			}
 
 			// Figure out which vote options user chose
-			options, err := v1beta1.WeightedVoteOptionsFromString(govutils.NormalizeWeightedVoteOptions(args[1]))
+			options, err := v1beta2.WeightedVoteOptionsFromString(govutils.NormalizeWeightedVoteOptions(args[1]))
 			if err != nil {
 				return err
 			}
 
 			// Build vote message and run basic validation
-			msg := v1beta1.NewMsgVoteWeighted(from, proposalID, options)
+			msg := v1beta2.NewMsgVoteWeighted(from, proposalID, options)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

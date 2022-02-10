@@ -12,7 +12,7 @@ import (
 func main() {
 	rootCmd, _ := cmd.NewRootCmd()
 
-	if err := svrcmd.Execute(rootCmd, simapp.DefaultNodeHome); err != nil {
+	if err := svrcmd.Execute(rootCmd, "", simapp.DefaultNodeHome); err != nil {
 		switch e := err.(type) {
 		case server.ErrorCode:
 			os.Exit(e.Code)

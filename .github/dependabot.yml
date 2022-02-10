@@ -60,11 +60,3 @@ updates:
   labels:
   - automerge
   - dependencies
-- package-ecosystem: gomod
-  directory: "/x/group"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - automerge
-  - dependencies

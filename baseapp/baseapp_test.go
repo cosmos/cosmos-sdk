@@ -2,6 +2,7 @@ package baseapp_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -136,6 +137,7 @@ func testTxHandler(options middleware.TxHandlerOptions, customTxHandlerMiddlewar
 		middleware.RecoveryTxMiddleware,
 		middleware.NewIndexEventsTxMiddleware(options.IndexEvents),
 		middleware.ValidateBasicMiddleware,
+		middleware.ConsumeBlockGasMiddleware,
 		CustomTxHandlerMiddleware(customTxHandlerMiddleware),
 	)
 }
@@ -237,6 +239,51 @@ func TestMountStores(t *testing.T) {
 	require.NotNil(t, store1)
 	store2 := app.CMS().GetCommitKVStore(capKey2)
 	require.NotNil(t, store2)
+}
+
+type MockTxHandler struct {
+	T *testing.T
+}
+
+func (th MockTxHandler) CheckTx(goCtx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	require.NotNil(th.T, ctx.ConsensusParams())
+	return tx.Response{}, tx.ResponseCheckTx{}, nil
+}
+
+func (th MockTxHandler) DeliverTx(goCtx context.Context, req tx.Request) (tx.Response, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	require.NotNil(th.T, ctx.ConsensusParams())
+	return tx.Response{}, nil
+}
+
+func (th MockTxHandler) SimulateTx(goCtx context.Context, req tx.Request) (tx.Response, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	require.NotNil(th.T, ctx.ConsensusParams())
+	return tx.Response{}, nil
+}
+
+func TestConsensusParamsNotNil(t *testing.T) {
+	app := setupBaseApp(t, func(app *baseapp.BaseApp) {
+		app.SetBeginBlocker(func(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+			require.NotNil(t, ctx.ConsensusParams())
+			return abci.ResponseBeginBlock{}
+		})
+	}, func(app *baseapp.BaseApp) {
+		app.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+			require.NotNil(t, ctx.ConsensusParams())
+			return abci.ResponseEndBlock{}
+		})
+	}, func(app *baseapp.BaseApp) {
+		app.SetTxHandler(MockTxHandler{T: t})
+	})
+
+	header := tmproto.Header{Height: 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	app.EndBlock(abci.RequestEndBlock{Height: header.Height})
+	app.CheckTx(abci.RequestCheckTx{})
+	app.DeliverTx(abci.RequestDeliverTx{})
+	app.Simulate([]byte{})
 }
 
 // Test that we can make commits and then reload old versions.
@@ -1746,6 +1793,7 @@ func TestGRPCQuery(t *testing.T) {
 	}
 
 	app := setupBaseApp(t, grpcQueryOpt)
+	app.GRPCQueryRouter().SetInterfaceRegistry(codectypes.NewInterfaceRegistry())
 
 	app.InitChain(abci.RequestInitChain{})
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}

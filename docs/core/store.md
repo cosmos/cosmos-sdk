@@ -6,7 +6,7 @@ order: 5
 
 A store is a data structure that holds the state of the application. {synopsis}
 
-### Pre-requisite Readings
+## Pre-requisite Readings
 
 - [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
 
@@ -236,21 +236,43 @@ When `KVStore.Set` or `KVStore.Delete` methods are called, `listenkv.Store` auto
 
 The SDK is in the process of transitioning to use the types listed here as the default interface for state storage. At the time of writing, these cannot be used within an application and are not directly compatible with the `CommitMultiStore` and related types.
 
-### `BasicKVStore` interface
+These types use the new `db` sub-module of Cosmos-SDK (`github.com/cosmos/cosmos-sdk/db`), rather than `tmdb` (`github.com/tendermint/tm-db`).
 
-An interface providing only the basic CRUD functionality (`Get`, `Set`, `Has`, and `Delete` methods), without iteration or caching. This is used to partially expose components of a larger store, such as a `flat.Store`.
+See [ADR-040](../architecture/adr-040-storage-and-smt-state-commitments.md) for the motivations and design specifications of the change.
 
-### Flat Store
+## `BasicKVStore` interface
 
-`flat.Store` is the new default persistent store, which internally decouples the concerns of state storage and commitment scheme. Values are stored directly in the backing key-value database (the "storage" bucket), while the value's hash is mapped in a separate store which is able to generate a cryptographic commitment (the "state commitment" bucket, implmented with `smt.Store`).
+An interface providing only the basic CRUD functionality (`Get`, `Set`, `Has`, and `Delete` methods), without iteration or caching. This is used to partially expose components of a larger store, such as a `root.Store`.
 
-This can optionally be constructed to use different backend databases for each bucket.
+## MultiStore
 
-<!-- TODO: add link +++ https://github.com/cosmos/cosmos-sdk/blob/v0.44.0/store/v2/flat/store.go -->
+This is the new interface (or, set of interfaces) for the main client store, replacing the role of `store/types.MultiStore` (v1). There are a few significant differences in behavior compared with v1:
+  * Commits are atomic and are performed on the entire store state; individual substores cannot be committed separately and cannot have different version numbers.
+  * The store's current version and version history track that of the backing `db.DBConnection`. Past versions are accessible read-only.
+  * The set of valid substores is defined at initialization and cannot be updated dynamically in an existing store instance.
 
-### SMT Store
+### `CommitMultiStore`
 
-A `BasicKVStore` which is used to partially expose functions of an underlying store (for instance, to allow access to the commitment store in `flat.Store`).
+This is the main interface for persisent application state, analogous to the original `CommitMultiStore`.
+  * Past version views are accessed with `GetVersion`, which returns a `BasicMultiStore`.
+  * Substores are accessed with `GetKVStore`. Trying to get a substore that was not defined at initialization will cause a panic.
+  * `Close` must be called to release the DB resources being used by the store.
+
+### `BasicMultiStore`
+
+A minimal interface that only allows accessing substores. Note: substores returned by `BasicMultiStore.GetKVStore` are read-only and will panic on `Set` or `Delete` calls.
+
+### Implementation (`root.Store`)
+
+The canonical implementation of `MultiStore` is in `store/v2/root`. It internally decouples the concerns of state storage and state commitment: values are stored in, and read directly from, the backing key-value database (state storage, or *SS*), but are also mapped in a logically separate database which generates cryptographic proofs (for state-commitment or *SC*).
+
+The state-commitment component of each substore is implemented as an independent `smt.Store` (see below). Internally, each substore is allocated in a logically separate partition within the same backing DB, such that commits apply to the state of all substores. Therefore, views of past versions also include the state of all substores (including *SS* and *SC* data).
+
+This store can optionally be configured to use a different backend database instance for *SC* (e.g., `badgerdb` for the state storage DB and `memdb` for the state-commitment DB; see `StoreConfig.StateCommitmentDB`).
+
+## SMT Store
+
+`store/v2/smt.Store` maps values into a Sparse Merkle Tree (SMT), and supports a `BasicKVStore` interface as well as methods for cryptographic proof generation.
 
 ## Next {hide}
 

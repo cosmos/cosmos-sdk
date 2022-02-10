@@ -47,18 +47,26 @@ type Iterator interface {
 
 	// Update schedules an update of the entity at the current position.
 	// Scheduled updates will not be applied until the Write method is
-	// called which also closes the iterator.
+	// called which also closes the iterator. This method will return
+	// an error if the underlying store is read-only.
+	//
+	// NOTE: it is illegal to call Table.Update() on an item in an
+	// iterator while the iterator is open. Call this method instead.
 	Update(updated proto.Message) error
 
 	// Delete schedule a deletion of the entity at the current position.
 	// Scheduled deletions will not be applied until the Write method is
-	// called which also closes the iterator.
+	// called which also closes the iterator. This method will return
+	//	an error if the underlying store is read-only.
+	//
+	//	NOTE: it is illegal to call Table.Delete() on an item in an
+	//	iterator while the iterator is open. Call this method instead.
 	Delete() error
 
 	// Write writes any pending updates and deletions to the store and
 	// closes the iterator. Only one of Write() or Close() needs to
 	// be called, but Close() can be called after Write() without causing
-	// and error.
+	// an error.
 	Write() error
 
 	// Close closes the iterator and must always be called when done using

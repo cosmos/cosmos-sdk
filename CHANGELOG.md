@@ -65,6 +65,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* (store)[\#11152](https://github.com/cosmos/cosmos-sdk/pull/11152) Remove `keep-every` from pruning options.
 * [\#10950](https://github.com/cosmos/cosmos-sdk/pull/10950) Add `envPrefix` parameter to `cmd.Execute`.
 * (x/mint) [\#10441](https://github.com/cosmos/cosmos-sdk/pull/10441) The `NewAppModule` function now accepts an inflation calculation function as an argument.
 * [\#10295](https://github.com/cosmos/cosmos-sdk/pull/10295) Remove store type aliases from /types

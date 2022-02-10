@@ -31,7 +31,6 @@ import (
 // interface assertion
 var _ crgtypes.Client = (*Client)(nil)
 
-const tmWebsocketPath = "/websocket"
 const defaultNodeTimeout = 60 * time.Second
 
 // Client implements a single network client to interact with cosmos based chains
@@ -396,15 +395,18 @@ func (c *Client) ConstructionMetadataFromOptions(ctx context.Context, options ma
 		return nil, err
 	}
 
-	if constructionOptions.GasLimit <= 0 {
-		// set to default
-		constructionOptions.GasLimit = uint64(c.config.SuggestGas)
+	// if default fess suggestion is enabled and gas limit or price is unset, use default
+	if c.config.EnableDefaultFeeSuggest {
+		if constructionOptions.GasLimit <= 0 {
+			constructionOptions.GasLimit = uint64(c.config.SuggestGas)
+		}
+		if constructionOptions.GasPrice == "" {
+			denom := c.config.DefaultSuggestDenom
+			constructionOptions.GasPrice = c.config.SuggestPrices.AmountOf(denom).String() + denom
+		}
 	}
-	if constructionOptions.GasPrice == "" {
-		// set to default
-		denom := c.config.DefaultSuggestDenom
-		constructionOptions.GasPrice = c.config.SuggestPrices.AmountOf(denom).String() + denom
-	} else {
+
+	if constructionOptions.GasLimit > 0 && constructionOptions.GasPrice != "" {
 		gasPrice, err := sdk.ParseDecCoin(constructionOptions.GasPrice)
 		if err != nil {
 			return nil, err

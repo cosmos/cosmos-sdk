@@ -2,7 +2,7 @@
 
 ## Changelog
 
-- 11/23/2020: Initial draft
+* 11/23/2020: Initial draft
 
 ## Status
 
@@ -535,17 +535,17 @@ These changes will provide a means of subscribing to KVStore state changes in re
 
 ### Backwards Compatibility
 
-- This ADR changes the `MultiStore`, `CacheWrap`, and `CacheWrapper` interfaces, implementations supporting the previous version of these interfaces will not support the new ones
+* This ADR changes the `MultiStore`, `CacheWrap`, and `CacheWrapper` interfaces, implementations supporting the previous version of these interfaces will not support the new ones
 
 ### Positive
 
-- Ability to listen to KVStore state changes in real time and expose these events to external consumers
+* Ability to listen to KVStore state changes in real time and expose these events to external consumers
 
 ### Negative
 
-- Changes `MultiStore`, `CacheWrap`, and `CacheWrapper` interfaces
+* Changes `MultiStore`, `CacheWrap`, and `CacheWrapper` interfaces
 
 ### Neutral
 
-- Introduces additional- but optional- complexity to configuring and running a cosmos application
-- If an application developer opts to use these features to expose data, they need to be aware of the ramifications/risks of that data exposure as it pertains to the specifics of their application
+* Introduces additional- but optional- complexity to configuring and running a cosmos application
+* If an application developer opts to use these features to expose data, they need to be aware of the ramifications/risks of that data exposure as it pertains to the specifics of their application

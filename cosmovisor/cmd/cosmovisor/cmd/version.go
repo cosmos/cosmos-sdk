@@ -10,7 +10,7 @@ import (
 )
 
 // Version represents Cosmovisor version value. Set during build
-var Version string
+var Version = "1.0.0"
 
 // VersionArgs is the strings that indicate a cosmovisor version command.
 var VersionArgs = []string{"version", "--version"}

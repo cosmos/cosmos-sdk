@@ -234,6 +234,7 @@ func (d Dec) ImmutOpInt(op func(Dec, Int) Dec, d2 Int) Dec {
 func (d Dec) ImmutOpInt64(op func(Dec, int64) Dec, d2 int64) Dec {
 	// TODO: use already allocated operand bigint to avoid
 	// newint each time, add mutex for race condition
+	// Issue: https://github.com/cosmos/cosmos-sdk/issues/11166
 	return op(d.Clone(), d2)
 }
 

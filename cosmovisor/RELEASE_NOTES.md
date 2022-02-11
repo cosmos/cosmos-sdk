@@ -3,7 +3,7 @@
 ### New execution model
 
 With this release we are shifting to a new CLI design: 
-* in the past, Cosmovisor was designed to act as a wrapper for a Cosmos App. A admin could link it and use it instead of the Cosmos App. When running it will pass all options and configuration  parameters to the app. Hence the only way to configure the Cosmovisor was through environment variables.
+* in the past, Cosmovisor was designed to act as a wrapper for a Cosmos App. An admin could link it and use it instead of the Cosmos App. When running it will pass all options and configuration  parameters to the app. Hence the only way to configure the Cosmovisor was through environment variables.
 * now, we are moving to a more traditional model, where Cosmovisor has it's own command set and is a true supervisor.
 
 New commands have been added:
@@ -15,7 +15,7 @@ The existing way of starting an app with Cosmovisor has been deprecated (`cosmov
 
 ### New Features
 
-We added a new configuration option: `DAEMON_BACKUP_DIR` (as env variable). When set, Cosmovisor will create backup the app data backup in that  directory (instead of using the app home directory) before running the update. See the [README](https://github.com/cosmos/cosmos-sdk/blob/master/cosmovisor/README.md#command-line-arguments-and-environment-variables) file for more details.
+We added a new configuration option: `DAEMON_BACKUP_DIR` (as env variable). When set, Cosmovisor will create backup the app data backup in that directory (instead of using the app home directory) before running the update. See the [README](https://github.com/cosmos/cosmos-sdk/blob/master/cosmovisor/README.md#command-line-arguments-and-environment-variables) file for more details.
 
 ### Bug Fixes
 

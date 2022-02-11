@@ -65,7 +65,7 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 		},
 		{
 			"Query params shouldn't be considered as height",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/by_denom?denom=%s,height=2", baseURL, s.cfg.BondDenom),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/by_denom?denom=%s&height=2", baseURL, s.cfg.BondDenom),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
@@ -76,7 +76,7 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 		},
 		{
 			"GRPC total supply of a bogus denom",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/foobar", baseURL),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/by_denom?denom=foobar", baseURL),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},

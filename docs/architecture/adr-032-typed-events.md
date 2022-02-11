@@ -2,13 +2,13 @@
 
 ## Changelog
 
-- 28-Sept-2020: Initial Draft
+* 28-Sept-2020: Initial Draft
 
 ## Authors
 
-- Anil Kumar (@anilcse)
-- Jack Zampolin (@jackzampolin)
-- Adam Bozanich (@boz)
+* Anil Kumar (@anilcse)
+* Jack Zampolin (@jackzampolin)
+* Adam Bozanich (@boz)
 
 ## Status
 
@@ -34,7 +34,7 @@ This proposal is specifically about how to consume these events as a client of t
 
 ## Decision
 
-__Step-1__:  Implement additional functionality in the `types` package: `EmitTypedEvent` and `ParseTypedEvent` functions
+**Step-1**:  Implement additional functionality in the `types` package: `EmitTypedEvent` and `ParseTypedEvent` functions
 
 ```go
 // types/events.go
@@ -111,7 +111,7 @@ Here, the `EmitTypedEvent` is a method on `EventManager` which takes typed event
 
 When we subscribe to emitted events on the tendermint websocket, they are emitted in the form of an `abci.Event`. `ParseTypedEvent` parses the event back to it's original proto message.
 
-__Step-2__: Add proto definitions for typed events for msgs in each module:
+**Step-2**: Add proto definitions for typed events for msgs in each module:
 
 For example, let's take `MsgSubmitProposal` of `gov` module and implement this event's type.
 
@@ -128,7 +128,7 @@ message EventSubmitProposal {
 }
 ```
 
-__Step-3__: Refactor event emission to use the typed event created and emit using `sdk.EmitTypedEvent`:
+**Step-3**: Refactor event emission to use the typed event created and emit using `sdk.EmitTypedEvent`:
 
 ```go
 // x/gov/handler.go
@@ -145,7 +145,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper keeper.Keeper, msg types.Ms
 }
 ```
 
-#### How to subscribe to these typed events in `Client`
+### How to subscribe to these typed events in `Client`
 
 > NOTE: Full code example below
 
@@ -315,5 +315,5 @@ func PublishChainTxEvents(ctx context.Context, client tmclient.EventsClient, bus
 
 ## References
 
-- [Publish Custom Events via a bus](https://github.com/ovrclk/akash/blob/90d258caeb933b611d575355b8df281208a214f8/events/publish.go#L19-L58)
-- [Consuming the events in `Client`](https://github.com/ovrclk/deploy/blob/bf6c633ab6c68f3026df59efd9982d6ca1bf0561/cmd/event-handlers.go#L57)
+* [Publish Custom Events via a bus](https://github.com/ovrclk/akash/blob/90d258caeb933b611d575355b8df281208a214f8/events/publish.go#L19-L58)
+* [Consuming the events in `Client`](https://github.com/ovrclk/deploy/blob/bf6c633ab6c68f3026df59efd9982d6ca1bf0561/cmd/event-handlers.go#L57)

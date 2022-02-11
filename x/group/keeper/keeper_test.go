@@ -719,9 +719,10 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 	myGroupID := groupRes.GroupId
 
 	specs := map[string]struct {
-		req    *group.MsgCreateGroupPolicy
-		policy group.DecisionPolicy
-		expErr bool
+		req       *group.MsgCreateGroupPolicy
+		policy    group.DecisionPolicy
+		expErr    bool
+		expErrMsg string
 	}{
 		"all good": {
 			req: &group.MsgCreateGroupPolicy{
@@ -731,6 +732,17 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
+				time.Second,
+			),
+		},
+		"all good with percentage decision policy": {
+			req: &group.MsgCreateGroupPolicy{
+				Admin:    addr1.String(),
+				Metadata: nil,
+				GroupId:  myGroupID,
+			},
+			policy: group.NewPercentageDecisionPolicy(
+				"0.5",
 				time.Second,
 			),
 		},
@@ -755,7 +767,8 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 				"1",
 				time.Second,
 			),
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "not found",
 		},
 		"admin not group admin": {
 			req: &group.MsgCreateGroupPolicy{
@@ -767,7 +780,8 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 				"1",
 				time.Second,
 			),
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "not group admin",
 		},
 		"metadata too long": {
 			req: &group.MsgCreateGroupPolicy{
@@ -779,7 +793,34 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 				"1",
 				time.Second,
 			),
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "limit exceeded",
+		},
+		"percentage decision policy with negative value": {
+			req: &group.MsgCreateGroupPolicy{
+				Admin:    addr1.String(),
+				Metadata: nil,
+				GroupId:  myGroupID,
+			},
+			policy: group.NewPercentageDecisionPolicy(
+				"-0.5",
+				time.Second,
+			),
+			expErr:    true,
+			expErrMsg: "expected a positive decimal",
+		},
+		"percentage decision policy with value greater than 1": {
+			req: &group.MsgCreateGroupPolicy{
+				Admin:    addr1.String(),
+				Metadata: nil,
+				GroupId:  myGroupID,
+			},
+			policy: group.NewPercentageDecisionPolicy(
+				"2",
+				time.Second,
+			),
+			expErr:    true,
+			expErrMsg: "percentage must be > 0 and <= 1",
 		},
 	}
 	for msg, spec := range specs {
@@ -791,6 +832,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			res, err := s.keeper.CreateGroupPolicy(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
+				s.Require().Contains(err.Error(), spec.expErrMsg)
 				return
 			}
 			s.Require().NoError(err)
@@ -806,7 +848,12 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			s.Assert().Equal(spec.req.Admin, groupPolicy.Admin)
 			s.Assert().Equal(spec.req.Metadata, groupPolicy.Metadata)
 			s.Assert().Equal(uint64(1), groupPolicy.Version)
-			s.Assert().Equal(spec.policy.(*group.ThresholdDecisionPolicy), groupPolicy.GetDecisionPolicy())
+			percentageDecisionPolicy, ok := spec.policy.(*group.PercentageDecisionPolicy)
+			if ok {
+				s.Assert().Equal(percentageDecisionPolicy, groupPolicy.GetDecisionPolicy())
+			} else {
+				s.Assert().Equal(spec.policy.(*group.ThresholdDecisionPolicy), groupPolicy.GetDecisionPolicy())
+			}
 		})
 	}
 }
@@ -1029,6 +1076,26 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 			},
 			expErr: false,
 		},
+		"correct data with percentage decision policy": {
+			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
+				Admin:   admin.String(),
+				Address: groupPolicyAddr,
+			},
+			policy: group.NewPercentageDecisionPolicy(
+				"0.5",
+				time.Duration(2)*time.Second,
+			),
+			expGroupPolicy: &group.GroupPolicyInfo{
+				Admin:          admin.String(),
+				Address:        groupPolicyAddr,
+				GroupId:        myGroupID,
+				Metadata:       nil,
+				Version:        3,
+				DecisionPolicy: nil,
+				CreatedAt:      s.blockTime,
+			},
+			expErr: false,
+		},
 	}
 	for msg, spec := range specs {
 		spec := spec
@@ -1076,9 +1143,13 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 			"10",
 			time.Second,
 		),
+		group.NewPercentageDecisionPolicy(
+			"0.5",
+			time.Second,
+		),
 	}
 
-	count := 2
+	count := 3
 	expectAccs := make([]*group.GroupPolicyInfo, count)
 	for i := range expectAccs {
 		req := &group.MsgCreateGroupPolicy{

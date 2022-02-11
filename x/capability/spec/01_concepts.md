@@ -31,4 +31,4 @@ not own.
 
 ## Stores
 
-- MemStore
+* MemStore

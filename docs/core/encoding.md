@@ -8,7 +8,7 @@ While encoding in the Cosmos SDK used to be mainly handled by `go-amino` codec, 
 
 ## Pre-requisite Readings
 
-- [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
+* [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
 
 ## Encoding
 
@@ -75,10 +75,10 @@ Modules are encouraged to utilize Protobuf encoding for their respective types. 
 
 In addition to [following official Protocol Buffer guidelines](https://developers.google.com/protocol-buffers/docs/proto3#simple), we recommend using these annotations in .proto files when dealing with interfaces:
 
-- use `cosmos_proto.accepts_interface` to annote fields that accept interfaces
-- pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
-- annotate interface implementations with `cosmos_proto.implements_interface`
-- pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
+* use `cosmos_proto.accepts_interface` to annote fields that accept interfaces
+* pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
+* annotate interface implementations with `cosmos_proto.implements_interface`
+* pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
 
 ### Transaction Encoding
 
@@ -88,16 +88,16 @@ the Cosmos SDK but are then passed to the underlying consensus engine to be rela
 other peers. Since the underlying consensus engine is agnostic to the application,
 the consensus engine accepts only transactions in the form of raw bytes.
 
-- The `TxEncoder` object performs the encoding.
-- The `TxDecoder` object performs the decoding.
+* The `TxEncoder` object performs the encoding.
+* The `TxDecoder` object performs the decoding.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc4/types/tx_msg.go#L83-L87
++++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc4/types/tx_msg.go#L83-L87>
 
 A standard implementation of both these objects can be found in the [`auth` module](../../x/auth/spec/README.md):
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc4/x/auth/tx/decoder.go
++++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc4/x/auth/tx/decoder.go>
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc4/x/auth/tx/encoder.go
++++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc4/x/auth/tx/encoder.go>
 
 See [ADR-020](../architecture/adr-020-protobuf-transaction-encoding.md) for details of how a transaction is encoded.
 
@@ -116,7 +116,7 @@ message Profile {
 
 In this `Profile` example, we hardcoded `account` as a `BaseAccount`. However, there are several other types of [user accounts related to vesting](../../x/auth/spec/05_vesting.md), such as `BaseVestingAccount` or `ContinuousVestingAccount`. All of these accounts are different, but they all implement the `AccountI` interface. How would you create a `Profile` that allows all these types of accounts with an `account` field that accepts an `AccountI` interface?
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/x/auth/types/account.go#L307-L330
++++ <https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/x/auth/types/account.go#L307-L330>
 
 In [ADR-019](../architecture/adr-019-protobuf-state-encoding.md), it has been decided to use [`Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto)s to encode interfaces in protobuf. An `Any` contains an arbitrary serialized message as bytes, along with a URL that acts as a globally unique identifier for and resolves to that message's type. This strategy allows us to pack arbitrary Go types inside protobuf messages. Our new `Profile` then looks like:
 
@@ -193,36 +193,36 @@ For more information about interface encoding, and especially on `UnpackInterfac
 
 The above `Profile` example is a fictive example used for educational purposes. In the Cosmos SDK, we use `Any` encoding in several places (non-exhaustive list):
 
-- the `cryptotypes.PubKey` interface for encoding different types of public keys,
-- the `sdk.Msg` interface for encoding different `Msg`s in a transaction,
-- the `AccountI` interface for encodinig different types of accounts (similar to the above example) in the x/auth query responses,
-- the `Evidencei` interface for encoding different types of evidences in the x/evidence module,
-- the `AuthorizationI` interface for encoding different types of x/authz authorizations,
-- the [`Validator`](https://github.com/cosmos/cosmos-sdk/blob/v0.42.5/x/staking/types/staking.pb.go#L306-L337) struct that contains information about a validator.
+* the `cryptotypes.PubKey` interface for encoding different types of public keys,
+* the `sdk.Msg` interface for encoding different `Msg`s in a transaction,
+* the `AccountI` interface for encodinig different types of accounts (similar to the above example) in the x/auth query responses,
+* the `Evidencei` interface for encoding different types of evidences in the x/evidence module,
+* the `AuthorizationI` interface for encoding different types of x/authz authorizations,
+* the [`Validator`](https://github.com/cosmos/cosmos-sdk/blob/v0.42.5/x/staking/types/staking.pb.go#L306-L337) struct that contains information about a validator.
 
 A real-life example of encoding the pubkey as `Any` inside the Validator struct in x/staking is shown in the following example:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/x/staking/types/validator.go#L40-L61
++++ <https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/x/staking/types/validator.go#L40-L61>
 
 ## FAQ
 
-1. How to create modules using protobuf encoding?
+### How to create modules using protobuf encoding
 
-**Defining module types**
+#### Defining module types
 
 Protobuf types can be defined to encode:
 
-- state
-- [`Msg`s](../building-modules/messages-and-queries.md#messages)
-- [Query services](../building-modules/query-services.md)
-- [genesis](../building-modules/genesis.md)
+* state
+* [`Msg`s](../building-modules/messages-and-queries.md#messages)
+* [Query services](../building-modules/query-services.md)
+* [genesis](../building-modules/genesis.md)
 
-**Naming and conventions**
+#### Naming and conventions
 
 We encourage developers to follow industry guidelines: [Protocol Buffers style guide](https://developers.google.com/protocol-buffers/docs/style)
 and [Buf](https://buf.build/docs/style-guide), see more details in [ADR 023](../architecture/adr-023-protobuf-naming.md)
 
-2. How to update modules to protobuf encoding?
+### How to update modules to protobuf encoding
 
 If modules do not contain any interfaces (e.g. `Account` or `Content`), then they
 may simply migrate any existing types that
@@ -246,7 +246,7 @@ The Cosmos SDK `codec.Codec` interface provides support methods `MarshalInterfac
 
 Module should register interfaces using `InterfaceRegistry` which provides a mechanism for registering interfaces: `RegisterInterface(protoName string, iface interface{})` and implementations: `RegisterImplementations(iface interface{}, impls ...proto.Message)` that can be safely unpacked from Any, similarly to type registration with Amino:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc4/codec/types/interface_registry.go#L25-L66
++++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc4/codec/types/interface_registry.go#L25-L66>
 
 In addition, an `UnpackInterfaces` phase should be introduced to deserialization to unpack interfaces before they're needed. Protobuf types that contain a protobuf `Any` either directly or via one of their members should implement the `UnpackInterfacesMessage` interface:
 

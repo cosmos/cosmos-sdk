@@ -6,4 +6,4 @@ a maintainer by running `buf push` in this folder.
 
 User facing documentation should not be placed here but instead goes in
 `buf.md` and in each protobuf package following the guidelines in
-https://docs.buf.build/bsr/documentation.
+<https://docs.buf.build/bsr/documentation>.

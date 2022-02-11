@@ -17,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	legacybech32prefix "github.com/cosmos/cosmos-sdk/client/debug/legacybech32pubkey"
+	legacybech32 "github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
 )
 
 var (
@@ -104,17 +104,17 @@ func getPubKeyFromRawString(pkstr string, keytype string) (cryptotypes.PubKey, e
 		}
 	}
 
-	pk, err := legacybech32prefix.GetPubKeyFromBech32(legacybech32prefix.Bech32PubKeyTypeAccPub, pkstr)
+	pk, err := legacybech32.UnmarshalPubKey(legacybech32.AccPK, pkstr)
 	if err == nil {
 		return pk, nil
 	}
 
-	pk, err = legacybech32prefix.GetPubKeyFromBech32(legacybech32prefix.Bech32PubKeyTypeValPub, pkstr)
+	pk, err = legacybech32.UnmarshalPubKey(legacybech32.ValPK, pkstr)
 	if err == nil {
 		return pk, nil
 	}
 
-	pk, err = legacybech32prefix.GetPubKeyFromBech32(legacybech32prefix.Bech32PubKeyTypeConsPub, pkstr)
+	pk, err = legacybech32.UnmarshalPubKey(legacybech32.ConsPK, pkstr)
 	if err == nil {
 		return pk, nil
 	}
@@ -152,7 +152,7 @@ $ %s debug pubkey-raw cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			var consensusPub string
 			edPK, ok := pk.(*ed25519.PubKey)
 			if ok && pubkeyType == "ed25519" {
-				consensusPub, err = legacybech32prefix.Bech32ifyPubKey(legacybech32prefix.Bech32PubKeyTypeConsPub, edPK)
+				consensusPub, err = legacybech32.MarshalPubKey(legacybech32.ConsPK, edPK)
 				if err != nil {
 					return err
 				}
@@ -165,11 +165,11 @@ $ %s debug pubkey-raw cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			if err != nil {
 				return err
 			}
-			accPub, err := legacybech32prefix.Bech32ifyPubKey(legacybech32prefix.Bech32PubKeyTypeAccPub, pk)
+			accPub, err := legacybech32.MarshalPubKey(legacybech32.AccPK, pk)
 			if err != nil {
 				return err
 			}
-			valPub, err := legacybech32prefix.Bech32ifyPubKey(legacybech32prefix.Bech32PubKeyTypeValPub, pk)
+			valPub, err := legacybech32.MarshalPubKey(legacybech32.ValPK, pk)
 			if err != nil {
 				return err
 			}

@@ -879,7 +879,9 @@ func (ks keystore) MigrateAll() (bool, error) {
 
 // migrate converts keyring.Item from amino to proto serialization format.
 func (ks keystore) migrate(key string) (*Record, bool, error) {
-	if !(strings.HasSuffix(key, infoSuffix)) && !(strings.HasPrefix(key, sdk.Bech32PrefixAccAddr)) {
+	if ((strings.HasPrefix(key, sdk.Bech32PrefixAccAddr)) && (len(key) == 6)) || (strings.HasSuffix(key, infoSuffix) && len(key) == 4) {
+		key = infoKey(key)
+	} else if !(strings.HasSuffix(key, infoSuffix)) && !(strings.HasPrefix(key, sdk.Bech32PrefixAccAddr)) {
 		key = infoKey(key)
 	}
 	item, err := ks.db.Get(key)

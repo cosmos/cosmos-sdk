@@ -3,6 +3,7 @@ package keys
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/libs/cli"
@@ -165,20 +166,22 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 func fetchKey(kb keyring.Keyring, keyref string) (*keyring.Record, error) {
 	// firstly check if the keyref is a key name of a key registered in a keyring.
 	k, err := kb.Key(keyref)
+	if (strings.HasPrefix(keyref, sdk.Bech32PrefixAccAddr)) && (len(keyref) > 6) {
+		accAddr, err := sdk.AccAddressFromBech32(keyref)
+		if err != nil {
+			return k, err
+		}
+
+		k, err = kb.KeyByAddress(accAddr)
+		return k, sdkerr.Wrap(err, "Invalid key")
+	}
 	// if the key is not there or if we have a problem with a keyring itself then we move to a
 	// fallback: searching for key by address.
-
 	if err == nil || !sdkerr.IsOf(err, sdkerr.ErrIO, sdkerr.ErrKeyNotFound) {
 		return k, err
 	}
+	return k, err
 
-	accAddr, err := sdk.AccAddressFromBech32(keyref)
-	if err != nil {
-		return k, err
-	}
-
-	k, err = kb.KeyByAddress(accAddr)
-	return k, sdkerr.Wrap(err, "Invalid key")
 }
 
 func validateMultisigThreshold(k, nKeys int) error {

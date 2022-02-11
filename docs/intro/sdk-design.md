@@ -17,7 +17,7 @@ Here is a simplified view of how transactions are handled by an application buil
 
 `baseapp` is the boilerplate implementation of a Cosmos SDK application. It comes with an implementation of the ABCI to handle the connection with the underlying consensus engine. Typically, a Cosmos SDK application extends `baseapp` by embedding it in [`app.go`](../basics/app-anatomy.md#core-application-file). See an example of this from the Cosmos SDK application tutorial:
 
-+++ https://github.com/cosmos/sdk-tutorials/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/app.go#L72-L92
++++ <https://github.com/cosmos/sdk-tutorials/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/app.go#L72-L92>
 
 The goal of `baseapp` is to provide a secure interface between the store and the extensible state machine while defining as little about the state machine as possible (staying true to the ABCI).
 
@@ -35,7 +35,7 @@ The power of the Cosmos SDK lies in its modularity. Cosmos SDK applications are 
 
 Here is a simplified view of how a transaction is processed by the application of each full-node when it is received in a valid block:
 
-```
+```text
                                       +
                                       |
                                       |  Transaction relayed from the full-node's
@@ -84,9 +84,9 @@ Each module can be seen as a little state-machine. Developers need to define the
 
 Cosmos SDK modules are defined in the `x/` folder of the Cosmos SDK. Some core modules include:
 
-- `x/auth`: Used to manage accounts and signatures.
-- `x/bank`: Used to enable tokens and token transfers.
-- `x/staking` + `x/slashing`: Used to build Proof-Of-Stake blockchains.
+* `x/auth`: Used to manage accounts and signatures.
+* `x/bank`: Used to enable tokens and token transfers.
+* `x/staking` + `x/slashing`: Used to build Proof-Of-Stake blockchains.
 
 In addition to the already existing modules in `x/`, that anyone can use in their app, the Cosmos SDK lets you build your own custom modules. You can check an [example of that in the tutorial](https://tutorials.cosmos.network/).
 

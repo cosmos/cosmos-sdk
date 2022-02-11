@@ -17,23 +17,23 @@ in for Tendermint and other lower-level libraries (eg. [IAVL](https://github.com
 
 ### Core packages
 
-- [`/baseapp`](https://github.com/cosmos/cosmos-sdk/tree/master/baseapp)
-- [`/crypto`](https://github.com/cosmos/cosmos-sdk/tree/master/crypto)
-- [`/types`](https://github.com/cosmos/cosmos-sdk/tree/master/types)
-- [`/store`](https://github.com/cosmos/cosmos-sdk/tree/master/store)
+* [`/baseapp`](https://github.com/cosmos/cosmos-sdk/tree/master/baseapp)
+* [`/crypto`](https://github.com/cosmos/cosmos-sdk/tree/master/crypto)
+* [`/types`](https://github.com/cosmos/cosmos-sdk/tree/master/types)
+* [`/store`](https://github.com/cosmos/cosmos-sdk/tree/master/store)
 
 ### Modules
 
-- [`x/auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth)
-- [`x/bank`](https://github.com/cosmos/cosmos-sdk/tree/master/x/bank)
-- [`x/capability`](https://github.com/cosmos/cosmos-sdk/tree/master/x/capability)
-- [`x/staking`](https://github.com/cosmos/cosmos-sdk/tree/master/x/staking)
-- [`x/slashing`](https://github.com/cosmos/cosmos-sdk/tree/master/x/slashing)
-- [`x/evidence`](https://github.com/cosmos/cosmos-sdk/tree/master/x/evidence)
-- [`x/distribution`](https://github.com/cosmos/cosmos-sdk/tree/master/x/distribution)
-- [`x/ibc`](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc)
-- [`x/ibc-transfer`](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc-transfer)
-- [`x/mint`](https://github.com/cosmos/cosmos-sdk/tree/master/x/mint)
+* [`x/auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth)
+* [`x/bank`](https://github.com/cosmos/cosmos-sdk/tree/master/x/bank)
+* [`x/capability`](https://github.com/cosmos/cosmos-sdk/tree/master/x/capability)
+* [`x/staking`](https://github.com/cosmos/cosmos-sdk/tree/master/x/staking)
+* [`x/slashing`](https://github.com/cosmos/cosmos-sdk/tree/master/x/slashing)
+* [`x/evidence`](https://github.com/cosmos/cosmos-sdk/tree/master/x/evidence)
+* [`x/distribution`](https://github.com/cosmos/cosmos-sdk/tree/master/x/distribution)
+* [`x/ibc`](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc)
+* [`x/ibc-transfer`](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc-transfer)
+* [`x/mint`](https://github.com/cosmos/cosmos-sdk/tree/master/x/mint)
 
 We are interested in bugs in other modules, however the above are most likely to
 have significant vulnerabilities, due to the complexity / nuance involved. We
@@ -42,16 +42,16 @@ the code.
 
 ### How we process Tx parameters
 
-- Integer operations on tx parameters, especially `sdk.Int` / `sdk.Dec`
-- Gas calculation & parameter choices
-- Tx signature verification (see [`x/auth/ante`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/ante))
-- Possible Node DoS vectors (perhaps due to gas weighting / non constant timing)
+* Integer operations on tx parameters, especially `sdk.Int` / `sdk.Dec`
+* Gas calculation & parameter choices
+* Tx signature verification (see [`x/auth/ante`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/ante))
+* Possible Node DoS vectors (perhaps due to gas weighting / non constant timing)
 
 ### Handling private keys
 
-- HD key derivation, local and Ledger, and all key-management functionality
-- Side-channel attack vectors with our implementations
-    - e.g. key exfiltration based on time or memory-access patterns when decrypting privkey
+* HD key derivation, local and Ledger, and all key-management functionality
+* Side-channel attack vectors with our implementations
+    * e.g. key exfiltration based on time or memory-access patterns when decrypting privkey
 
 ## Disclosure Process
 
@@ -83,7 +83,7 @@ Communications to partners usually include the following details:
 
 An example notice looks like:
 
-```
+```text
 Dear Cosmos SDK partners,
 
 A critical security vulnerability has been identified in Cosmos SDK vX.X.X.

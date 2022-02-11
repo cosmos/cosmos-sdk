@@ -201,6 +201,36 @@ func runDeterministicOperations(b *testing.B, s store, values [][]byte, c counts
 	}
 }
 
+func RunRvert(b *testing.B, version int, dbType tmdb.BackendType, committedValues [][]byte, uncommittedValues [][]byte) {
+	dir := fmt.Sprintf("testdbs/v%d", version)
+	dbName := fmt.Sprintf("reverttest-%s", dbType)
+	db, err := newDB(version, dbName, tmdb.RocksDBBackend, dir)
+	require.NoError(b, err)
+	s, err := newStore(version, db, nil, cacheSize)
+	require.NoError(b, err)
+	for i, v := range committedValues {
+		s.Set(createKey(i), v)
+	}
+	_ = s.Commit()
+
+	// Key, value pairs changed but not committed
+	for i, v := range uncommittedValues {
+		s.Set(createKey(i), v)
+	}
+
+	b.ResetTimer()
+	switch t := s.(type) {
+	case *storev1.Store:
+		s, err = newStore(1, db, nil, cacheSize) // This shall revert to the last commitID
+		require.NoError(b, err)
+	case *storeV2:
+		require.NoError(b, t.Close())
+		s, err = newStore(2, db, nil, 0) // This shall revert to the last commitID
+	default:
+		panic("not supported store type")
+	}
+}
+
 func newDB(version int, dbName string, dbType tmdb.BackendType, dir string) (db interface{}, err error) {
 	d := filepath.Join(dir, dbName, dbName+".db")
 	err = os.MkdirAll(d, os.ModePerm)
@@ -309,6 +339,15 @@ func runSuite(b *testing.B, version int, dbBackendTypes []tmdb.BackendType, dir 
 		require.NoError(b, err)
 		b.Run(bm.name, func(sub *testing.B) {
 			runDeterministicOperations(sub, s, values, bm.counts)
+		})
+	}
+
+	// test performance when the store reverting to the last committed version
+	committedValues := prepareValues()
+	uncommittedValues := prepareValues()
+	for _, dbType := range dbBackendTypes {
+		b.Run(fmt.Sprintf("v%d-%s-revert", version, dbType), func(sub *testing.B) {
+			RunRvert(sub, version, dbType, committedValues, uncommittedValues)
 		})
 	}
 }

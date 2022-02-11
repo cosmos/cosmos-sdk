@@ -35,11 +35,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
+<!-- NOTE: when creating a new release, update cosmovisor/cmd/cosmovisor/cmd/version.go:Version -->
+
+## v1.1.0 2022-10-02
 
 ### Features
 
-* [\#10285](https://github.com/cosmos/cosmos-sdk/pull/10316) Added `run` action.
+* [\#10285](https://github.com/cosmos/cosmos-sdk/pull/10316) Added `run` command to run the associated app.
 * [\#10533](https://github.com/cosmos/cosmos-sdk/pull/10649) Added environmental variable `DAEMON_BACKUP_DIR` to allow node to set a custom backup directory.
+
+### Features
+
+* [\#10649](https://github.com/cosmos/cosmos-sdk/pull/10649) Customize backup directory. When `DAEMON_BACKUP_DIR` env variable is set, cosmovisor will backup the app data directory in that directory before running the update.
 
 ### Deprecated
 

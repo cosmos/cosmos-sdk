@@ -40,9 +40,14 @@ func Cursor(cursor CursorT) Option {
 // The Iterator.PageRequest value on the returned iterator will be non-nil
 // after Iterator.Next() returns false when this option is provided.
 // Care should be taken when using Paginate together with Reverse and/or Cursor
-// and generally this should be avoided.
+// and generally this should be avoided. If pageRequest is nil, this option
+// will be a no-op.
 func Paginate(pageRequest *queryv1beta1.PageRequest) Option {
 	return listinternal.FuncOption(func(options *listinternal.Options) {
+		if pageRequest == nil {
+			return
+		}
+
 		if pageRequest.Reverse {
 			options.Reverse = !options.Reverse
 		}

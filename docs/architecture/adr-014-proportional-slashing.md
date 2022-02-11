@@ -2,9 +2,9 @@
 
 ## Changelog
 
-- 2019-10-15: Initial draft
-- 2020-05-25: Removed correlation root slashing
-- 2020-07-01: Updated to include S-curve function instead of linear
+* 2019-10-15: Initial draft
+* 2020-05-25: Removed correlation root slashing
+* 2020-07-01: Updated to include S-curve function instead of linear
 
 ## Context
 
@@ -16,13 +16,13 @@ In Proof of Stake-based chains, centralization of consensus power amongst a smal
 
 To solve this problem, we will implement a procedure called Proportional Slashing.  The desire is that the larger a validator is, the more they should be slashed.  The first naive attempt is to make a validator's slash percent proportional to their share of consensus voting power.
 
-```
+```text
 slash_amount = k * power // power is the faulting validator's voting power and k is some on-chain constant
 ```
 
 However, this will incentivize validators with large amounts of stake to split up their voting power amongst accounts (sybil attack), so that if they fault, they all get slashed at a lower percent.  The solution to this is to take into account not just a validator's own voting percentage, but also the voting percentage of all the other validators who get slashed in a specified time frame.
 
-```
+```text
 slash_amount = k * (power_1 + power_2 + ... + power_n) // where power_i is the voting power of the ith validator faulting in the specified time frame and k is some on-chain constant
 ```
 
@@ -51,7 +51,7 @@ Griefing, the act of intentionally getting oneself slashed in order to make anot
 
 In the slashing module, we will add two queues that will track all of the recent slash events.  For double sign faults, we will define "recent slashes" as ones that have occurred within the last `unbonding period`.  For liveness faults, we will define "recent slashes" as ones that have occurred withing the last `jail period`.
 
-```
+```go
 type SlashEvent struct {
     Address                     sdk.ValAddress
     ValidatorVotingPercent      sdk.Dec
@@ -75,11 +75,11 @@ Proposed
 
 ### Positive
 
-- Increases decentralization by disincentivizing delegating to large validators
-- Incentivizes Decorrelation of Validators
-- More severely punishes attacks than accidental faults
-- More flexibility in slashing rates parameterization
+* Increases decentralization by disincentivizing delegating to large validators
+* Incentivizes Decorrelation of Validators
+* More severely punishes attacks than accidental faults
+* More flexibility in slashing rates parameterization
 
 ### Negative
 
-- More computationally expensive than current implementation.  Will require more data about "recent slashing events" to be stored on chain.
+* More computationally expensive than current implementation.  Will require more data about "recent slashing events" to be stored on chain.

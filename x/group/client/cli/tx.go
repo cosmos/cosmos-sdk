@@ -299,6 +299,9 @@ Note, the '--from' flag is ignored as it is implied from [admin].
 Example:
 $ %s tx group create-group-policy [admin] [group-id] [metadata] \
 '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"1s"}'
+
+Here, we can use percentage decision policy when needed, where 0 < percentage <= 1.
+Ex: '{"@type":"/cosmos.group.v1beta1.PercentageDecisionPolicy", "percentage":"0.5", "timeout":"1s"}'
 `,
 				version.AppName,
 			),
@@ -534,6 +537,57 @@ Parameters:
 	}
 
 	cmd.Flags().String(FlagExec, "", "Set to 1 to try to execute proposal immediately after creation (proposers signatures are considered as Yes votes)")
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// MsgWithdrawProposalCmd creates a CLI command for Msg/WithdrawProposal.
+func MsgWithdrawProposalCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "withdraw-proposal [proposal-id] [group-policy-admin-or-proposer]",
+		Short: "Withdraw a submitted proposal",
+		Long: `Withdraw a submitted proposal.
+
+Parameters:
+			proposal-id: unique ID of the proposal.
+			group-policy-admin-or-proposer: either admin of the group policy or one the proposer of the proposal.
+			(note: --from flag will be ignored here)
+`,
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := cmd.Flags().Set(flags.FlagFrom, args[1])
+			if err != nil {
+				return err
+			}
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			proposalID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			msg := &group.MsgWithdrawProposal{
+				ProposalId: proposalID,
+				Address:    clientCtx.GetFromAddress().String(),
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return fmt.Errorf("message validation failed: %w", err)
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

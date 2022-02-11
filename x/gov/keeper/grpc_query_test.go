@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
@@ -52,7 +53,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 				testProposal := v1beta1.NewTextProposal("Proposal", "testing proposal")
 				msgContent, err := v1beta2.NewLegacyContent(testProposal, govAcct.String())
 				suite.Require().NoError(err)
-				submittedProposal, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent})
+				submittedProposal, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, nil)
 				suite.Require().NoError(err)
 				suite.Require().NotEmpty(submittedProposal)
 
@@ -75,6 +76,81 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 				expJSON, err := suite.app.AppCodec().MarshalJSON(&expProposal)
 				suite.Require().NoError(err)
 				actualJSON, err := suite.app.AppCodec().MarshalJSON(proposalRes.Proposal)
+				suite.Require().NoError(err)
+				suite.Require().Equal(expJSON, actualJSON)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(proposalRes)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
+	app, ctx, queryClient := suite.app, suite.ctx, suite.legacyQueryClient
+
+	var (
+		req         *v1beta1.QueryProposalRequest
+		expProposal v1beta1.Proposal
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = &v1beta1.QueryProposalRequest{}
+			},
+			false,
+		},
+		{
+			"non existing proposal request",
+			func() {
+				req = &v1beta1.QueryProposalRequest{ProposalId: 3}
+			},
+			false,
+		},
+		{
+			"zero proposal id request",
+			func() {
+				req = &v1beta1.QueryProposalRequest{ProposalId: 0}
+			},
+			false,
+		},
+		{
+			"valid request",
+			func() {
+				req = &v1beta1.QueryProposalRequest{ProposalId: 1}
+				testProposal := v1beta1.NewTextProposal("Proposal", "testing proposal")
+				msgContent, err := v1beta2.NewLegacyContent(testProposal, govAcct.String())
+				suite.Require().NoError(err)
+				submittedProposal, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, nil)
+				suite.Require().NoError(err)
+				suite.Require().NotEmpty(submittedProposal)
+
+				expProposal, err = v046.ConvertToLegacyProposal(submittedProposal)
+				suite.Require().NoError(err)
+			},
+			true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
+
+			proposalRes, err := queryClient.Proposal(gocontext.Background(), req)
+
+			if testCase.expPass {
+				suite.Require().NoError(err)
+				// Instead of using MashalJSON, we could compare .String() output too.
+				// https://github.com/cosmos/cosmos-sdk/issues/10965
+				expJSON, err := suite.app.AppCodec().MarshalJSON(&expProposal)
+				suite.Require().NoError(err)
+				actualJSON, err := suite.app.AppCodec().MarshalJSON(&proposalRes.Proposal)
 				suite.Require().NoError(err)
 				suite.Require().Equal(expJSON, actualJSON)
 			} else {
@@ -116,7 +192,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 					testProposal := []sdk.Msg{
 						v1beta2.NewMsgVote(govAddress, uint64(i), v1beta2.OptionYes),
 					}
-					proposal, err := app.GovKeeper.SubmitProposal(ctx, testProposal)
+					proposal, err := app.GovKeeper.SubmitProposal(ctx, testProposal, nil)
 					suite.Require().NotEmpty(proposal)
 					suite.Require().NoError(err)
 					testProposals = append(testProposals, &proposal)
@@ -291,7 +367,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 			"no votes present",
 			func() {
 				var err error
-				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal)
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, nil)
 				suite.Require().NoError(err)
 
 				req = &v1beta2.QueryVoteRequest{
@@ -315,7 +391,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 					Voter:      addrs[0].String(),
 				}
 
-				expRes = &v1beta2.QueryVoteResponse{Vote: &v1beta2.Vote{ProposalId: proposal.ProposalId, Voter: addrs[0].String(), Option: v1beta2.OptionAbstain, Options: []*v1beta2.WeightedVoteOption{{Option: v1beta2.OptionAbstain, Weight: sdk.MustNewDecFromStr("1.0").String()}}}}
+				expRes = &v1beta2.QueryVoteResponse{Vote: &v1beta2.Vote{ProposalId: proposal.ProposalId, Voter: addrs[0].String(), Options: []*v1beta2.WeightedVoteOption{{Option: v1beta2.OptionAbstain, Weight: sdk.MustNewDecFromStr("1.0").String()}}}}
 			},
 			true,
 		},
@@ -396,7 +472,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 			"create a proposal and get votes",
 			func() {
 				var err error
-				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal)
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, nil)
 				suite.Require().NoError(err)
 
 				req = &v1beta2.QueryVotesRequest{
@@ -412,8 +488,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 				app.GovKeeper.SetProposal(ctx, proposal)
 
 				votes = []*v1beta2.Vote{
-					{ProposalId: proposal.ProposalId, Voter: addrs[0].String(), Option: v1beta2.OptionAbstain, Options: v1beta2.NewNonSplitVoteOption(v1beta2.OptionAbstain)},
-					{ProposalId: proposal.ProposalId, Voter: addrs[1].String(), Option: v1beta2.OptionYes, Options: v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)},
+					{ProposalId: proposal.ProposalId, Voter: addrs[0].String(), Options: v1beta2.NewNonSplitVoteOption(v1beta2.OptionAbstain)},
+					{ProposalId: proposal.ProposalId, Voter: addrs[1].String(), Options: v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)},
 				}
 				accAddr1, err1 := sdk.AccAddressFromBech32(votes[0].Voter)
 				accAddr2, err2 := sdk.AccAddressFromBech32(votes[1].Voter)
@@ -427,6 +503,107 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 				}
 
 				expRes = &v1beta2.QueryVotesResponse{
+					Votes: votes,
+				}
+			},
+			true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
+
+			votes, err := queryClient.Votes(gocontext.Background(), req)
+
+			if testCase.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(expRes.GetVotes(), votes.GetVotes())
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(votes)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
+	app, ctx, queryClient := suite.app, suite.ctx, suite.legacyQueryClient
+
+	addrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
+
+	var (
+		req      *v1beta1.QueryVotesRequest
+		expRes   *v1beta1.QueryVotesResponse
+		proposal v1beta2.Proposal
+		votes    v1beta1.Votes
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = &v1beta1.QueryVotesRequest{}
+			},
+			false,
+		},
+		{
+			"zero proposal id request",
+			func() {
+				req = &v1beta1.QueryVotesRequest{
+					ProposalId: 0,
+				}
+			},
+			false,
+		},
+		{
+			"non existed proposals",
+			func() {
+				req = &v1beta1.QueryVotesRequest{
+					ProposalId: 2,
+				}
+			},
+			true,
+		},
+		{
+			"create a proposal and get votes",
+			func() {
+				var err error
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, nil)
+				suite.Require().NoError(err)
+
+				req = &v1beta1.QueryVotesRequest{
+					ProposalId: proposal.ProposalId,
+				}
+			},
+			true,
+		},
+		{
+			"request after adding 2 votes",
+			func() {
+				proposal.Status = v1beta2.StatusVotingPeriod
+				app.GovKeeper.SetProposal(ctx, proposal)
+
+				votes = []v1beta1.Vote{
+					{ProposalId: proposal.ProposalId, Voter: addrs[0].String(), Options: v1beta1.NewNonSplitVoteOption(v1beta1.OptionAbstain)},
+					{ProposalId: proposal.ProposalId, Voter: addrs[1].String(), Options: v1beta1.NewNonSplitVoteOption(v1beta1.OptionYes)},
+				}
+				accAddr1, err1 := sdk.AccAddressFromBech32(votes[0].Voter)
+				accAddr2, err2 := sdk.AccAddressFromBech32(votes[1].Voter)
+				suite.Require().NoError(err1)
+				suite.Require().NoError(err2)
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalId, accAddr1, v1beta2.NewNonSplitVoteOption(v1beta2.OptionAbstain)))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalId, accAddr2, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)))
+
+				req = &v1beta1.QueryVotesRequest{
+					ProposalId: proposal.ProposalId,
+				}
+
+				expRes = &v1beta1.QueryVotesResponse{
 					Votes: votes,
 				}
 			},
@@ -533,6 +710,96 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestLegacyGRPCQueryParams() {
+	queryClient := suite.legacyQueryClient
+
+	var (
+		req    *v1beta1.QueryParamsRequest
+		expRes *v1beta1.QueryParamsResponse
+	)
+
+	defaultTallyParams := v1beta1.TallyParams{
+		Quorum:        sdk.NewDec(0),
+		Threshold:     sdk.NewDec(0),
+		VetoThreshold: sdk.NewDec(0),
+	}
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = &v1beta1.QueryParamsRequest{}
+			},
+			false,
+		},
+		{
+			"deposit params request",
+			func() {
+				req = &v1beta1.QueryParamsRequest{ParamsType: v1beta1.ParamDeposit}
+				depositParams := v1beta1.DefaultDepositParams()
+				expRes = &v1beta1.QueryParamsResponse{
+					DepositParams: depositParams,
+					TallyParams:   defaultTallyParams,
+				}
+			},
+			true,
+		},
+		{
+			"voting params request",
+			func() {
+				req = &v1beta1.QueryParamsRequest{ParamsType: v1beta1.ParamVoting}
+				votingParams := v1beta1.DefaultVotingParams()
+				expRes = &v1beta1.QueryParamsResponse{
+					VotingParams: votingParams,
+					TallyParams:  defaultTallyParams,
+				}
+			},
+			true,
+		},
+		{
+			"tally params request",
+			func() {
+				req = &v1beta1.QueryParamsRequest{ParamsType: v1beta1.ParamTallying}
+				tallyParams := v1beta1.DefaultTallyParams()
+				expRes = &v1beta1.QueryParamsResponse{
+					TallyParams: tallyParams,
+				}
+			},
+			true,
+		},
+		{
+			"invalid request",
+			func() {
+				req = &v1beta1.QueryParamsRequest{ParamsType: "wrongPath"}
+				expRes = &v1beta1.QueryParamsResponse{}
+			},
+			false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
+
+			params, err := queryClient.Params(gocontext.Background(), req)
+
+			if testCase.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(expRes.GetDepositParams(), params.GetDepositParams())
+				suite.Require().Equal(expRes.GetVotingParams(), params.GetVotingParams())
+				suite.Require().Equal(expRes.GetTallyParams(), params.GetTallyParams())
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(params)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 
@@ -588,7 +855,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 			"no deposits proposal",
 			func() {
 				var err error
-				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal)
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, nil)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(proposal)
 
@@ -677,7 +944,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposits() {
 			"create a proposal and get deposits",
 			func() {
 				var err error
-				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal)
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, nil)
 				suite.Require().NoError(err)
 
 				req = &v1beta2.QueryDepositsRequest{
@@ -769,7 +1036,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 			"create a proposal and get tally",
 			func() {
 				var err error
-				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal)
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, nil)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(proposal)
 

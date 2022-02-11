@@ -12,7 +12,7 @@ to resolve and then execute if the proposal passes. `Proposal`'s are identified 
 unique id and contains a series of timestamps: `submit_time`, `deposit_end_time`,
 `voting_start_time`, `voting_end_time` which track the lifecycle of a proposal
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/4a129832eb16f37a89e97652a669f0cdc9196ca9/proto/cosmos/gov/v1beta2/gov.proto#L42-L52
++++ <https://github.com/cosmos/cosmos-sdk/blob/4a129832eb16f37a89e97652a669f0cdc9196ca9/proto/cosmos/gov/v1beta2/gov.proto#L42-L52>
 
 A proposal will generally require more than just a set of messages to explain its
 purpose but need some greater justification and allow a means for interested participants
@@ -36,6 +36,9 @@ the following `JSON` template:
 
 This makes it far easier for clients to support multiple networks.
 
+The metadata has a maximum length that is chosen by the app developer, and
+passed into the gov keeper as a config.
+
 ### Writing a module that uses governance
 
 There are many aspects of a chain, or of the individual modules that you may want to
@@ -55,15 +58,15 @@ parameter set has to be created and the previous one rendered inactive.
 
 ### DepositParams
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/gov.proto#L127-L145
++++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/gov.proto#L127-L145>
 
 ### VotingParams
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/gov.proto#L147-L156
++++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/gov.proto#L147-L156>
 
 ### TallyParams
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/gov.proto#L158-L183
++++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/gov.proto#L158-L183>
 
 Parameters are stored in a global `GlobalParams` KVStore.
 
@@ -101,7 +104,7 @@ const (
 
 ## Deposit
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/gov.proto#L43-L53
++++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/gov.proto#L43-L53>
 
 ## ValidatorGovInfo
 
@@ -121,21 +124,21 @@ parameter in the list_`
 
 We will use one KVStore `Governance` to store two mappings:
 
-- A mapping from `proposalID|'proposal'` to `Proposal`.
-- A mapping from `proposalID|'addresses'|address` to `Vote`. This mapping allows
+* A mapping from `proposalID|'proposal'` to `Proposal`.
+* A mapping from `proposalID|'addresses'|address` to `Vote`. This mapping allows
   us to query all addresses that voted on the proposal along with their vote by
   doing a range query on `proposalID:addresses`.
 
 For pseudocode purposes, here are the two function we will use to read or write in stores:
 
-- `load(StoreKey, Key)`: Retrieve item stored at key `Key` in store found at key `StoreKey` in the multistore
-- `store(StoreKey, Key, value)`: Write value `Value` at key `Key` in store found at key `StoreKey` in the multistore
+* `load(StoreKey, Key)`: Retrieve item stored at key `Key` in store found at key `StoreKey` in the multistore
+* `store(StoreKey, Key, value)`: Write value `Value` at key `Key` in store found at key `StoreKey` in the multistore
 
 ## Proposal Processing Queue
 
 **Store:**
 
-- `ProposalProcessingQueue`: A queue `queue[proposalID]` containing all the
+* `ProposalProcessingQueue`: A queue `queue[proposalID]` containing all the
   `ProposalIDs` of proposals that reached `MinDeposit`. During each `EndBlock`,
   all the proposals that have reached the end of their voting period are processed.
   To process a finished proposal, the application tallies the votes, computes the

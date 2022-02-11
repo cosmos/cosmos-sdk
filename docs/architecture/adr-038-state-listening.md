@@ -287,7 +287,7 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	// Call the streaming service hooks with the EndBlock messages
 	for _, listener := range app.abciListeners {
 		if err := listener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
-            app.logger.Error("ListenEndBlock listening hook failed", "err", err)
+			app.logger.Error("ListenEndBlock listening hook failed", "err", err)
 			if listener.HaltAppOnDeliveryError() {
 				app.halt()
 			}

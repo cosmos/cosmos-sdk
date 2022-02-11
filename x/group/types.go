@@ -155,7 +155,7 @@ func (p PercentageDecisionPolicy) Allow(tally Tally, totalPower string, votingDu
 	if err != nil {
 		return DecisionPolicyResult{}, err
 	}
-	
+
 	yesPercentage, err := yesCount.Quo(totalPowerDec)
 	if err != nil {
 		return DecisionPolicyResult{}, err

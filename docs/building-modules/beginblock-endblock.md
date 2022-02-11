@@ -8,7 +8,7 @@ order: 6
 
 ## Pre-requisite Readings
 
-- [Module Manager](./module-manager.md) {prereq}
+* [Module Manager](./module-manager.md) {prereq}
 
 ## BeginBlocker and EndBlocker
 
@@ -18,9 +18,9 @@ When needed, `BeginBlocker` and `EndBlocker` are implemented as part of the [`Ap
 
 The actual implementation of `BeginBlocker` and `EndBlocker` in `abci.go` are very similar to that of a [`Msg` service](./msg-services.md):
 
-- They generally use the [`keeper`](./keeper.md) and [`ctx`](../core/context.md) to retrieve information about the latest state.
-- If needed, they use the `keeper` and `ctx` to trigger state-transitions.
-- If needed, they can emit [`events`](../core/events.md) via the `ctx`'s `EventManager`.
+* They generally use the [`keeper`](./keeper.md) and [`ctx`](../core/context.md) to retrieve information about the latest state.
+* If needed, they use the `keeper` and `ctx` to trigger state-transitions.
+* If needed, they can emit [`events`](../core/events.md) via the `ctx`'s `EventManager`.
 
 A specificity of the `EndBlocker` is that it can return validator updates to the underlying consensus engine in the form of an [`[]abci.ValidatorUpdates`](https://tendermint.com/docs/app-dev/abci-spec.html#validatorupdate). This is the preferred way to implement custom validator changes.
 
@@ -28,11 +28,11 @@ It is possible for developers to define the order of execution between the `Begi
 
 See an example implementation of `BeginBlocker` from the `distr` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/f33749263f4ecc796115ad6e789cb0f7cddf9148/x/distribution/abci.go#L14-L38
++++ <https://github.com/cosmos/cosmos-sdk/blob/f33749263f4ecc796115ad6e789cb0f7cddf9148/x/distribution/abci.go#L14-L38>
 
 and an example implementation of `EndBlocker` from the `staking` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/f33749263f4ecc796115ad6e789cb0f7cddf9148/x/staking/abci.go#L22-L27
++++ <https://github.com/cosmos/cosmos-sdk/blob/f33749263f4ecc796115ad6e789cb0f7cddf9148/x/staking/abci.go#L22-L27>
 
 ## Next {hide}
 

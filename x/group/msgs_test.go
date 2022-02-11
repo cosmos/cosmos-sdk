@@ -407,6 +407,17 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 			"",
 		},
 		{
+			"invalid percentage decision policy with zero value",
+			func() *group.MsgCreateGroupPolicy {
+				percentagePolicy := group.NewPercentageDecisionPolicy("0", time.Second)
+				req, err := group.NewMsgCreateGroupPolicy(admin, 1, []byte("metadata"), percentagePolicy)
+				require.NoError(t, err)
+				return req
+			},
+			true,
+			"expected a positive decimal",
+		},
+		{
 			"invalid percentage decision policy with negative value",
 			func() *group.MsgCreateGroupPolicy {
 				percentagePolicy := group.NewPercentageDecisionPolicy("-0.2", time.Second)

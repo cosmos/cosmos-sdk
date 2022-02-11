@@ -293,10 +293,10 @@ func (t tableImpl) ExportJSON(context context.Context, writer io.Writer) error {
 		return err
 	}
 
-	return t.doExportJSON(context, writer)
+	return t.doExportJSON(context, writer, true)
 }
 
-func (t tableImpl) doExportJSON(ctx context.Context, writer io.Writer) error {
+func (t tableImpl) doExportJSON(ctx context.Context, writer io.Writer, start bool) error {
 	marshalOptions := protojson.MarshalOptions{
 		UseProtoNames: true,
 		Resolver:      t.typeResolver,
@@ -304,7 +304,6 @@ func (t tableImpl) doExportJSON(ctx context.Context, writer io.Writer) error {
 
 	var err error
 	it, _ := t.List(ctx, nil)
-	start := true
 	for {
 		found := it.Next()
 

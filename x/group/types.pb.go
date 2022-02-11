@@ -362,10 +362,10 @@ func (m *ThresholdDecisionPolicy) GetTimeout() time.Duration {
 
 // PercentageDecisionPolicy implements the DecisionPolicy interface
 type PercentageDecisionPolicy struct {
-	// percentage is the minimum percentage the weighted sum of yes votes must met for a proposal to succeed.
+	// percentage is the minimum percentage the weighted sum of yes votes must meet for a proposal to succeed.
 	Percentage string `protobuf:"bytes,1,opt,name=percentage,proto3" json:"percentage,omitempty"`
 	// timeout is the duration from submission of a proposal to the end of voting period
-	// Within this times votes and exec messages can be submitted.
+	// Within these times votes and exec messages can be submitted.
 	Timeout time.Duration `protobuf:"bytes,2,opt,name=timeout,proto3,stdduration" json:"timeout"`
 }
 

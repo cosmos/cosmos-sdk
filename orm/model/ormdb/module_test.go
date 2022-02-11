@@ -8,11 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"github.com/golang/mock/gomock"
 
-	"github.com/cosmos/cosmos-sdk/orm/testing/ormtest"
-
-	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
+	"github.com/cosmos/cosmos-sdk/orm/testing/ormmocks"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"gotest.tools/v3/assert"
@@ -22,6 +20,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormdb"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+	"github.com/cosmos/cosmos-sdk/orm/testing/ormtest"
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
 )
 
 // These tests use a simulated bank keeper. Addresses and balances use
@@ -37,6 +38,19 @@ type keeper struct {
 	store testpb.BankStore
 }
 
+func NewKeeper(db ormdb.ModuleDB) (Keeper, error) {
+	store, err := testpb.NewBankStore(db)
+	return keeper{store}, err
+}
+
+type Keeper interface {
+	Send(ctx context.Context, from, to, denom string, amount uint64) error
+	Mint(ctx context.Context, acct, denom string, amount uint64) error
+	Burn(ctx context.Context, acct, denom string, amount uint64) error
+	Balance(ctx context.Context, acct, denom string) (uint64, error)
+	Supply(ctx context.Context, denom string) (uint64, error)
+}
+
 func (k keeper) Send(ctx context.Context, from, to, denom string, amount uint64) error {
 	err := k.safeSubBalance(ctx, from, denom, amount)
 	if err != nil {
@@ -48,7 +62,7 @@ func (k keeper) Send(ctx context.Context, from, to, denom string, amount uint64)
 
 func (k keeper) Mint(ctx context.Context, acct, denom string, amount uint64) error {
 	supply, err := k.store.SupplyStore().Get(ctx, denom)
-	if err != nil {
+	if err != nil && !ormerrors.IsNotFound(err) {
 		return err
 	}
 
@@ -73,10 +87,6 @@ func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) err
 		return err
 	}
 
-	if supply == nil {
-		return fmt.Errorf("no supply for %s", denom)
-	}
-
 	if amount > supply.Amount {
 		return fmt.Errorf("insufficient supply")
 	}
@@ -97,7 +107,11 @@ func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) err
 
 func (k keeper) Balance(ctx context.Context, acct, denom string) (uint64, error) {
 	balance, err := k.store.BalanceStore().Get(ctx, acct, denom)
-	if balance == nil {
+	if err != nil {
+		if ormerrors.IsNotFound(err) {
+			return 0, nil
+		}
+
 		return 0, err
 	}
 	return balance.Amount, err
@@ -106,6 +120,10 @@ func (k keeper) Balance(ctx context.Context, acct, denom string) (uint64, error)
 func (k keeper) Supply(ctx context.Context, denom string) (uint64, error) {
 	supply, err := k.store.SupplyStore().Get(ctx, denom)
 	if supply == nil {
+		if ormerrors.IsNotFound(err) {
+			return 0, nil
+		}
+
 		return 0, err
 	}
 	return supply.Amount, err
@@ -113,7 +131,7 @@ func (k keeper) Supply(ctx context.Context, denom string) (uint64, error) {
 
 func (k keeper) addBalance(ctx context.Context, acct, denom string, amount uint64) error {
 	balance, err := k.store.BalanceStore().Get(ctx, acct, denom)
-	if err != nil {
+	if err != nil && !ormerrors.IsNotFound(err) {
 		return err
 	}
 
@@ -137,10 +155,6 @@ func (k keeper) safeSubBalance(ctx context.Context, acct, denom string, amount u
 		return err
 	}
 
-	if balance == nil {
-		return fmt.Errorf("acct %x has no balance for %s", acct, denom)
-	}
-
 	if amount > balance.Amount {
 		return fmt.Errorf("insufficient funds")
 	}
@@ -152,11 +166,6 @@ func (k keeper) safeSubBalance(ctx context.Context, acct, denom string, amount u
 	} else {
 		return balanceStore.Save(ctx, balance)
 	}
-}
-
-func newKeeper(db ormdb.ModuleDB) (keeper, error) {
-	store, err := testpb.NewBankStore(db)
-	return keeper{store}, err
 }
 
 func TestModuleDB(t *testing.T) {
@@ -174,7 +183,7 @@ func TestModuleDB(t *testing.T) {
 	))
 
 	// create keeper
-	k, err := newKeeper(db)
+	k, err := NewKeeper(db)
 	assert.NilError(t, err)
 
 	// mint coins
@@ -252,4 +261,40 @@ func TestModuleDB(t *testing.T) {
 	assert.NilError(t, db.ValidateJSON(source))
 	assert.NilError(t, db.ImportJSON(ctx2, source))
 	testkv.AssertBackendsEqual(t, backend, backend2)
+}
+
+func TestHooks(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	db, err := ormdb.NewModuleDB(TestBankSchema, ormdb.ModuleDBOptions{})
+	assert.NilError(t, err)
+	hooks := ormmocks.NewMockHooks(ctrl)
+	ctx := ormtable.WrapContextDefault(ormtest.NewMemoryBackend().WithHooks(hooks))
+	k, err := NewKeeper(db)
+	assert.NilError(t, err)
+
+	denom := "foo"
+	acct1 := "bob"
+	acct2 := "sally"
+
+	hooks.EXPECT().OnInsert(ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 10}))
+	hooks.EXPECT().OnInsert(ormmocks.Eq(&testpb.Supply{Denom: denom, Amount: 10}))
+	assert.NilError(t, k.Mint(ctx, acct1, denom, 10))
+
+	hooks.EXPECT().OnUpdate(
+		ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 10}),
+		ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 5}),
+	)
+	hooks.EXPECT().OnInsert(
+		ormmocks.Eq(&testpb.Balance{Address: acct2, Denom: denom, Amount: 5}),
+	)
+	assert.NilError(t, k.Send(ctx, acct1, acct2, denom, 5))
+
+	hooks.EXPECT().OnUpdate(
+		ormmocks.Eq(&testpb.Supply{Denom: denom, Amount: 10}),
+		ormmocks.Eq(&testpb.Supply{Denom: denom, Amount: 5}),
+	)
+	hooks.EXPECT().OnDelete(
+		ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 5}),
+	)
+	assert.NilError(t, k.Burn(ctx, acct1, denom, 5))
 }

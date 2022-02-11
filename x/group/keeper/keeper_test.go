@@ -848,9 +848,9 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			s.Assert().Equal(spec.req.Admin, groupPolicy.Admin)
 			s.Assert().Equal(spec.req.Metadata, groupPolicy.Metadata)
 			s.Assert().Equal(uint64(1), groupPolicy.Version)
-			_, ok := spec.policy.(*group.PercentageDecisionPolicy)
+			percentageDecisionPolicy, ok := spec.policy.(*group.PercentageDecisionPolicy)
 			if ok {
-				s.Assert().Equal(spec.policy.(*group.PercentageDecisionPolicy), groupPolicy.GetDecisionPolicy())
+				s.Assert().Equal(percentageDecisionPolicy, groupPolicy.GetDecisionPolicy())
 			} else {
 				s.Assert().Equal(spec.policy.(*group.ThresholdDecisionPolicy), groupPolicy.GetDecisionPolicy())
 			}

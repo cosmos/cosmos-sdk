@@ -16,11 +16,11 @@ simd tx bank send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000stake --chain-id my-test-
 
 will run the following steps:
 
-- generate a transaction with one `Msg` (`x/bank`'s `MsgSend`), and print the generated transaction to the console.
-- ask the user for confirmation to send the transaction from the `$MY_VALIDATOR_ADDRESS` account.
-- fetch `$MY_VALIDATOR_ADDRESS` from the keyring. This is possible because we have [set up the CLI's keyring](./keyring.md) in a previous step.
-- sign the generated transaction with the keyring's account.
-- broadcast the signed transaction to the network. This is possible because the CLI connects to the node's Tendermint RPC endpoint.
+* generate a transaction with one `Msg` (`x/bank`'s `MsgSend`), and print the generated transaction to the console.
+* ask the user for confirmation to send the transaction from the `$MY_VALIDATOR_ADDRESS` account.
+* fetch `$MY_VALIDATOR_ADDRESS` from the keyring. This is possible because we have [set up the CLI's keyring](./keyring.md) in a previous step.
+* sign the generated transaction with the keyring's account.
+* broadcast the signed transaction to the network. This is possible because the CLI connects to the node's Tendermint RPC endpoint.
 
 The CLI bundles all the necessary steps into a simple-to-use user experience. However, it's possible to run all the steps individually too.
 
@@ -46,8 +46,8 @@ This command will decode the unsigned transaction and sign it with `SIGN_MODE_DI
 
 Some useful flags to consider in the `tx sign` command:
 
-- `--sign-mode`: you may use `amino-json` to sign the transaction using `SIGN_MODE_LEGACY_AMINO_JSON`,
-- `--offline`: sign in offline mode. This means that the `tx sign` command doesn't connect to the node to retrieve the signer's account number and sequence, both needed for signing. In this case, you must manually supply the `--account-number` and `--sequence` flags. This is useful for offline signing, i.e. signing in a secure environment which doesn't have access to the internet.
+* `--sign-mode`: you may use `amino-json` to sign the transaction using `SIGN_MODE_LEGACY_AMINO_JSON`,
+* `--offline`: sign in offline mode. This means that the `tx sign` command doesn't connect to the node to retrieve the signer's account number and sequence, both needed for signing. In this case, you must manually supply the `--account-number` and `--sequence` flags. This is useful for offline signing, i.e. signing in a secure environment which doesn't have access to the internet.
 
 #### Signing with Multiple Signers
 
@@ -79,9 +79,9 @@ simd tx broadcast tx_signed.json
 
 You may optionally pass the `--broadcast-mode` flag to specify which response to receive from the node:
 
-- `block`: the CLI waits for the tx to be committed in a block.
-- `sync`: the CLI waits for a CheckTx execution response only.
-- `async`: the CLI returns immediately (transaction might fail).
+* `block`: the CLI waits for the tx to be committed in a block.
+* `sync`: the CLI waits for a CheckTx execution response only.
+* `async`: the CLI returns immediately (transaction might fail).
 
 ### Encoding a Transaction
 
@@ -179,8 +179,8 @@ At this point, `TxBuilder`'s underlying transaction is ready to be signed.
 
 We set encoding config to use Protobuf, which will use `SIGN_MODE_DIRECT` by default. As per [ADR-020](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/docs/architecture/adr-020-protobuf-transaction-encoding.md), each signer needs to sign the `SignerInfo`s of all other signers. This means that we need to perform two steps sequentially:
 
-- for each signer, populate the signer's `SignerInfo` inside `TxBuilder`,
-- once all `SignerInfo`s are populated, for each signer, sign the `SignDoc` (the payload to be signed).
+* for each signer, populate the signer's `SignerInfo` inside `TxBuilder`,
+* once all `SignerInfo`s are populated, for each signer, sign the `SignDoc` (the payload to be signed).
 
 In the current `TxBuilder`'s API, both steps are done using the same method: `SetSignatures()`. The current API requires us to first perform a round of `SetSignatures()` _with empty signatures_, only to populate `SignerInfo`s, and a second round of `SetSignatures()` to actually sign the correct payload.
 

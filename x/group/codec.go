@@ -13,6 +13,7 @@ import (
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*DecisionPolicy)(nil), nil)
 	cdc.RegisterConcrete(&ThresholdDecisionPolicy{}, "cosmos-sdk/ThresholdDecisionPolicy", nil)
+	cdc.RegisterConcrete(&PercentageDecisionPolicy{}, "cosmos-sdk/PercentageDecisionPolicy", nil)
 	cdc.RegisterConcrete(&MsgCreateGroup{}, "cosmos-sdk/MsgCreateGroup", nil)
 	cdc.RegisterConcrete(&MsgUpdateGroupMembers{}, "cosmos-sdk/MsgUpdateGroupMembers", nil)
 	cdc.RegisterConcrete(&MsgUpdateGroupAdmin{}, "cosmos-sdk/MsgUpdateGroupAdmin", nil)
@@ -50,6 +51,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		"cosmos.group.v1beta1.DecisionPolicy",
 		(*DecisionPolicy)(nil),
 		&ThresholdDecisionPolicy{},
+		&PercentageDecisionPolicy{},
 	)
 }
 

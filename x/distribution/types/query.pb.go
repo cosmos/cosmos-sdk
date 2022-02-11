@@ -7,9 +7,11 @@ import (
 	context "context"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/gogo/protobuf/gogoproto"
+	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
@@ -453,7 +455,7 @@ var xxx_messageInfo_QueryDelegationRewardsRequest proto.InternalMessageInfo
 // Query/DelegationRewards RPC method.
 type QueryDelegationRewardsResponse struct {
 	// rewards defines the rewards accrued by a delegation.
-	Rewards []types.DecCoin `protobuf:"bytes,1,rep,name=rewards,proto3" json:"rewards"`
+	Rewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"rewards"`
 }
 
 func (m *QueryDelegationRewardsResponse) Reset()         { *m = QueryDelegationRewardsResponse{} }
@@ -489,7 +491,7 @@ func (m *QueryDelegationRewardsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryDelegationRewardsResponse proto.InternalMessageInfo
 
-func (m *QueryDelegationRewardsResponse) GetRewards() []types.DecCoin {
+func (m *QueryDelegationRewardsResponse) GetRewards() github_com_cosmos_cosmos_sdk_types.DecCoins {
 	if m != nil {
 		return m.Rewards
 	}
@@ -542,7 +544,7 @@ type QueryDelegationTotalRewardsResponse struct {
 	// rewards defines all the rewards accrued by a delegator.
 	Rewards []DelegationDelegatorReward `protobuf:"bytes,1,rep,name=rewards,proto3" json:"rewards"`
 	// total defines the sum of all the rewards.
-	Total []types.DecCoin `protobuf:"bytes,2,rep,name=total,proto3" json:"total"`
+	Total github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,2,rep,name=total,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"total"`
 }
 
 func (m *QueryDelegationTotalRewardsResponse) Reset()         { *m = QueryDelegationTotalRewardsResponse{} }
@@ -585,7 +587,7 @@ func (m *QueryDelegationTotalRewardsResponse) GetRewards() []DelegationDelegator
 	return nil
 }
 
-func (m *QueryDelegationTotalRewardsResponse) GetTotal() []types.DecCoin {
+func (m *QueryDelegationTotalRewardsResponse) GetTotal() github_com_cosmos_cosmos_sdk_types.DecCoins {
 	if m != nil {
 		return m.Total
 	}
@@ -794,7 +796,7 @@ var xxx_messageInfo_QueryCommunityPoolRequest proto.InternalMessageInfo
 // RPC method.
 type QueryCommunityPoolResponse struct {
 	// pool defines community pool's coins.
-	Pool []types.DecCoin `protobuf:"bytes,1,rep,name=pool,proto3" json:"pool"`
+	Pool github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=pool,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"pool"`
 }
 
 func (m *QueryCommunityPoolResponse) Reset()         { *m = QueryCommunityPoolResponse{} }
@@ -830,7 +832,7 @@ func (m *QueryCommunityPoolResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryCommunityPoolResponse proto.InternalMessageInfo
 
-func (m *QueryCommunityPoolResponse) GetPool() []types.DecCoin {
+func (m *QueryCommunityPoolResponse) GetPool() github_com_cosmos_cosmos_sdk_types.DecCoins {
 	if m != nil {
 		return m.Pool
 	}
@@ -971,10 +973,10 @@ type QueryClient interface {
 }
 
 type queryClient struct {
-	cc *grpc.ClientConn
+	cc grpc1.ClientConn
 }
 
-func NewQueryClient(cc *grpc.ClientConn) QueryClient {
+func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
@@ -1114,7 +1116,7 @@ func (*UnimplementedQueryServer) CommunityPool(ctx context.Context, req *QueryCo
 	return nil, status.Errorf(codes.Unimplemented, "method CommunityPool not implemented")
 }
 
-func RegisterQueryServer(s *grpc.Server, srv QueryServer) {
+func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 

@@ -28,11 +28,11 @@ type GenesisState struct {
 	// starting_proposal_id is the ID of the starting proposal.
 	StartingProposalId uint64 `protobuf:"varint,1,opt,name=starting_proposal_id,json=startingProposalId,proto3" json:"starting_proposal_id,omitempty"`
 	// deposits defines all the deposits present at genesis.
-	Deposits []Deposit `protobuf:"bytes,2,rep,name=deposits,proto3" json:"deposits"`
+	Deposits Deposits `protobuf:"bytes,2,rep,name=deposits,proto3,castrepeated=Deposits" json:"deposits"`
 	// votes defines all the votes present at genesis.
-	Votes []Vote `protobuf:"bytes,3,rep,name=votes,proto3" json:"votes"`
+	Votes Votes `protobuf:"bytes,3,rep,name=votes,proto3,castrepeated=Votes" json:"votes"`
 	// proposals defines all the proposals present at genesis.
-	Proposals []Proposal `protobuf:"bytes,4,rep,name=proposals,proto3" json:"proposals"`
+	Proposals Proposals `protobuf:"bytes,4,rep,name=proposals,proto3,castrepeated=Proposals" json:"proposals"`
 	// params defines all the paramaters of related to deposit.
 	DepositParams DepositParams `protobuf:"bytes,5,opt,name=deposit_params,json=depositParams,proto3" json:"deposit_params"`
 	// params defines all the paramaters of related to voting.
@@ -81,21 +81,21 @@ func (m *GenesisState) GetStartingProposalId() uint64 {
 	return 0
 }
 
-func (m *GenesisState) GetDeposits() []Deposit {
+func (m *GenesisState) GetDeposits() Deposits {
 	if m != nil {
 		return m.Deposits
 	}
 	return nil
 }
 
-func (m *GenesisState) GetVotes() []Vote {
+func (m *GenesisState) GetVotes() Votes {
 	if m != nil {
 		return m.Votes
 	}
 	return nil
 }
 
-func (m *GenesisState) GetProposals() []Proposal {
+func (m *GenesisState) GetProposals() Proposals {
 	if m != nil {
 		return m.Proposals
 	}

@@ -8,6 +8,7 @@ import (
 	_ "github.com/cosmos/cosmos-proto"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	types1 "github.com/cosmos/cosmos-sdk/crypto/types"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types2 "github.com/cosmos/cosmos-sdk/types"
 	signing "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	_ "github.com/gogo/protobuf/gogoproto"
@@ -778,7 +779,7 @@ func (m *ModeInfo_Multi) GetModeInfos() []*ModeInfo {
 // which must be above some miminum to be accepted into the mempool.
 type Fee struct {
 	// amount is the amount of coins to be paid as a fee
-	Amount []types2.Coin `protobuf:"bytes,1,rep,name=amount,proto3" json:"amount"`
+	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
 	// gas_limit is the maximum gas that can be used in transaction processing
 	// before an out of gas error occurs
 	GasLimit uint64 `protobuf:"varint,2,opt,name=gas_limit,json=gasLimit,proto3" json:"gas_limit,omitempty"`
@@ -825,7 +826,7 @@ func (m *Fee) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Fee proto.InternalMessageInfo
 
-func (m *Fee) GetAmount() []types2.Coin {
+func (m *Fee) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.Amount
 	}
@@ -858,7 +859,7 @@ func (m *Fee) GetGranter() string {
 // Since: cosmos-sdk 0.46
 type Tip struct {
 	// amount is the amount of the tip
-	Amount []types2.Coin `protobuf:"bytes,1,rep,name=amount,proto3" json:"amount"`
+	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
 	// tipper is the address of the account paying for the tip
 	Tipper string `protobuf:"bytes,2,opt,name=tipper,proto3" json:"tipper,omitempty"`
 }
@@ -896,7 +897,7 @@ func (m *Tip) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Tip proto.InternalMessageInfo
 
-func (m *Tip) GetAmount() []types2.Coin {
+func (m *Tip) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.Amount
 	}

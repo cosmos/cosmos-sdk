@@ -9,6 +9,7 @@ import (
 	types "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/gogo/protobuf/gogoproto"
+	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	golang_proto "github.com/golang/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
@@ -659,10 +660,10 @@ type ServiceClient interface {
 }
 
 type serviceClient struct {
-	cc *grpc.ClientConn
+	cc grpc1.ClientConn
 }
 
-func NewServiceClient(cc *grpc.ClientConn) ServiceClient {
+func NewServiceClient(cc grpc1.ClientConn) ServiceClient {
 	return &serviceClient{cc}
 }
 
@@ -731,7 +732,7 @@ func (*UnimplementedServiceServer) GetTxsEvent(ctx context.Context, req *GetTxsE
 	return nil, status.Errorf(codes.Unimplemented, "method GetTxsEvent not implemented")
 }
 
-func RegisterServiceServer(s *grpc.Server, srv ServiceServer) {
+func RegisterServiceServer(s grpc1.Server, srv ServiceServer) {
 	s.RegisterService(&_Service_serviceDesc, srv)
 }
 

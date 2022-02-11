@@ -86,8 +86,8 @@ func (m *Params) GetWithdrawAddrEnabled() bool {
 //  read that record)
 //  + one per validator for the zeroeth period, set on initialization
 type ValidatorHistoricalRewards struct {
-	CumulativeRewardRatio []types.DecCoin `protobuf:"bytes,1,rep,name=cumulative_reward_ratio,json=cumulativeRewardRatio,proto3" json:"cumulative_reward_ratio"`
-	ReferenceCount        uint32          `protobuf:"varint,2,opt,name=reference_count,json=referenceCount,proto3" json:"reference_count,omitempty"`
+	CumulativeRewardRatio github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=cumulative_reward_ratio,json=cumulativeRewardRatio,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"cumulative_reward_ratio"`
+	ReferenceCount        uint32                                      `protobuf:"varint,2,opt,name=reference_count,json=referenceCount,proto3" json:"reference_count,omitempty"`
 }
 
 func (m *ValidatorHistoricalRewards) Reset()         { *m = ValidatorHistoricalRewards{} }
@@ -123,7 +123,7 @@ func (m *ValidatorHistoricalRewards) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ValidatorHistoricalRewards proto.InternalMessageInfo
 
-func (m *ValidatorHistoricalRewards) GetCumulativeRewardRatio() []types.DecCoin {
+func (m *ValidatorHistoricalRewards) GetCumulativeRewardRatio() github_com_cosmos_cosmos_sdk_types.DecCoins {
 	if m != nil {
 		return m.CumulativeRewardRatio
 	}
@@ -141,8 +141,8 @@ func (m *ValidatorHistoricalRewards) GetReferenceCount() uint32 {
 // period for a validator kept as a running counter and incremented
 // each block as long as the validator's tokens remain constant.
 type ValidatorCurrentRewards struct {
-	Rewards []types.DecCoin `protobuf:"bytes,1,rep,name=rewards,proto3" json:"rewards"`
-	Period  uint64          `protobuf:"varint,2,opt,name=period,proto3" json:"period,omitempty"`
+	Rewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"rewards"`
+	Period  uint64                                      `protobuf:"varint,2,opt,name=period,proto3" json:"period,omitempty"`
 }
 
 func (m *ValidatorCurrentRewards) Reset()         { *m = ValidatorCurrentRewards{} }
@@ -178,7 +178,7 @@ func (m *ValidatorCurrentRewards) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ValidatorCurrentRewards proto.InternalMessageInfo
 
-func (m *ValidatorCurrentRewards) GetRewards() []types.DecCoin {
+func (m *ValidatorCurrentRewards) GetRewards() github_com_cosmos_cosmos_sdk_types.DecCoins {
 	if m != nil {
 		return m.Rewards
 	}
@@ -195,7 +195,7 @@ func (m *ValidatorCurrentRewards) GetPeriod() uint64 {
 // ValidatorAccumulatedCommission represents accumulated commission
 // for a validator kept as a running counter, can be withdrawn at any time.
 type ValidatorAccumulatedCommission struct {
-	Commission []types.DecCoin `protobuf:"bytes,1,rep,name=commission,proto3" json:"commission"`
+	Commission github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=commission,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"commission"`
 }
 
 func (m *ValidatorAccumulatedCommission) Reset()         { *m = ValidatorAccumulatedCommission{} }
@@ -231,7 +231,7 @@ func (m *ValidatorAccumulatedCommission) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ValidatorAccumulatedCommission proto.InternalMessageInfo
 
-func (m *ValidatorAccumulatedCommission) GetCommission() []types.DecCoin {
+func (m *ValidatorAccumulatedCommission) GetCommission() github_com_cosmos_cosmos_sdk_types.DecCoins {
 	if m != nil {
 		return m.Commission
 	}
@@ -241,7 +241,7 @@ func (m *ValidatorAccumulatedCommission) GetCommission() []types.DecCoin {
 // ValidatorOutstandingRewards represents outstanding (un-withdrawn) rewards
 // for a validator inexpensive to track, allows simple sanity checks.
 type ValidatorOutstandingRewards struct {
-	Rewards []types.DecCoin `protobuf:"bytes,1,rep,name=rewards,proto3" json:"rewards"`
+	Rewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"rewards"`
 }
 
 func (m *ValidatorOutstandingRewards) Reset()         { *m = ValidatorOutstandingRewards{} }
@@ -277,7 +277,7 @@ func (m *ValidatorOutstandingRewards) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ValidatorOutstandingRewards proto.InternalMessageInfo
 
-func (m *ValidatorOutstandingRewards) GetRewards() []types.DecCoin {
+func (m *ValidatorOutstandingRewards) GetRewards() github_com_cosmos_cosmos_sdk_types.DecCoins {
 	if m != nil {
 		return m.Rewards
 	}
@@ -379,7 +379,7 @@ func (m *ValidatorSlashEvents) GetValidatorSlashEvents() []ValidatorSlashEvent {
 
 // FeePool is the global fee pool for distribution.
 type FeePool struct {
-	CommunityPool []types.DecCoin `protobuf:"bytes,1,rep,name=community_pool,json=communityPool,proto3" json:"community_pool"`
+	CommunityPool github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=community_pool,json=communityPool,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"community_pool"`
 }
 
 func (m *FeePool) Reset()         { *m = FeePool{} }
@@ -415,7 +415,7 @@ func (m *FeePool) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_FeePool proto.InternalMessageInfo
 
-func (m *FeePool) GetCommunityPool() []types.DecCoin {
+func (m *FeePool) GetCommunityPool() github_com_cosmos_cosmos_sdk_types.DecCoins {
 	if m != nil {
 		return m.CommunityPool
 	}
@@ -426,10 +426,10 @@ func (m *FeePool) GetCommunityPool() []types.DecCoin {
 // together with how many coins are proposed to be spent, and to which
 // recipient account.
 type CommunityPoolSpendProposal struct {
-	Title       string       `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description string       `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Recipient   string       `protobuf:"bytes,3,opt,name=recipient,proto3" json:"recipient,omitempty"`
-	Amount      []types.Coin `protobuf:"bytes,4,rep,name=amount,proto3" json:"amount"`
+	Title       string                                   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description string                                   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Recipient   string                                   `protobuf:"bytes,3,opt,name=recipient,proto3" json:"recipient,omitempty"`
+	Amount      github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
 }
 
 func (m *CommunityPoolSpendProposal) Reset()      { *m = CommunityPoolSpendProposal{} }
@@ -526,8 +526,8 @@ func (m *DelegatorStartingInfo) GetHeight() uint64 {
 // DelegationDelegatorReward represents the properties
 // of a delegator's delegation reward.
 type DelegationDelegatorReward struct {
-	ValidatorAddress string          `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
-	Reward           []types.DecCoin `protobuf:"bytes,2,rep,name=reward,proto3" json:"reward"`
+	ValidatorAddress string                                      `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
+	Reward           github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,2,rep,name=reward,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"reward"`
 }
 
 func (m *DelegationDelegatorReward) Reset()         { *m = DelegationDelegatorReward{} }
@@ -1055,27 +1055,36 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x20
 	}
-	if len(m.BonusProposerReward) > 0 {
-		i -= len(m.BonusProposerReward)
-		copy(dAtA[i:], m.BonusProposerReward)
-		i = encodeVarintDistribution(dAtA, i, uint64(len(m.BonusProposerReward)))
-		i--
-		dAtA[i] = 0x1a
+	{
+		size := m.BonusProposerReward.Size()
+		i -= size
+		if _, err := m.BonusProposerReward.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintDistribution(dAtA, i, uint64(size))
 	}
-	if len(m.BaseProposerReward) > 0 {
-		i -= len(m.BaseProposerReward)
-		copy(dAtA[i:], m.BaseProposerReward)
-		i = encodeVarintDistribution(dAtA, i, uint64(len(m.BaseProposerReward)))
-		i--
-		dAtA[i] = 0x12
+	i--
+	dAtA[i] = 0x1a
+	{
+		size := m.BaseProposerReward.Size()
+		i -= size
+		if _, err := m.BaseProposerReward.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintDistribution(dAtA, i, uint64(size))
 	}
-	if len(m.CommunityTax) > 0 {
-		i -= len(m.CommunityTax)
-		copy(dAtA[i:], m.CommunityTax)
-		i = encodeVarintDistribution(dAtA, i, uint64(len(m.CommunityTax)))
-		i--
-		dAtA[i] = 0xa
+	i--
+	dAtA[i] = 0x12
+	{
+		size := m.CommunityTax.Size()
+		i -= size
+		if _, err := m.CommunityTax.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintDistribution(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -1257,13 +1266,16 @@ func (m *ValidatorSlashEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Fraction) > 0 {
-		i -= len(m.Fraction)
-		copy(dAtA[i:], m.Fraction)
-		i = encodeVarintDistribution(dAtA, i, uint64(len(m.Fraction)))
-		i--
-		dAtA[i] = 0x12
+	{
+		size := m.Fraction.Size()
+		i -= size
+		if _, err := m.Fraction.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintDistribution(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x12
 	if m.ValidatorPeriod != 0 {
 		i = encodeVarintDistribution(dAtA, i, uint64(m.ValidatorPeriod))
 		i--
@@ -1429,13 +1441,16 @@ func (m *DelegatorStartingInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x18
 	}
-	if len(m.Stake) > 0 {
-		i -= len(m.Stake)
-		copy(dAtA[i:], m.Stake)
-		i = encodeVarintDistribution(dAtA, i, uint64(len(m.Stake)))
-		i--
-		dAtA[i] = 0x12
+	{
+		size := m.Stake.Size()
+		i -= size
+		if _, err := m.Stake.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintDistribution(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x12
 	if m.PreviousPeriod != 0 {
 		i = encodeVarintDistribution(dAtA, i, uint64(m.PreviousPeriod))
 		i--
@@ -1563,18 +1578,12 @@ func (m *Params) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.CommunityTax)
-	if l > 0 {
-		n += 1 + l + sovDistribution(uint64(l))
-	}
-	l = len(m.BaseProposerReward)
-	if l > 0 {
-		n += 1 + l + sovDistribution(uint64(l))
-	}
-	l = len(m.BonusProposerReward)
-	if l > 0 {
-		n += 1 + l + sovDistribution(uint64(l))
-	}
+	l = m.CommunityTax.Size()
+	n += 1 + l + sovDistribution(uint64(l))
+	l = m.BaseProposerReward.Size()
+	n += 1 + l + sovDistribution(uint64(l))
+	l = m.BonusProposerReward.Size()
+	n += 1 + l + sovDistribution(uint64(l))
 	if m.WithdrawAddrEnabled {
 		n += 2
 	}
@@ -1656,10 +1665,8 @@ func (m *ValidatorSlashEvent) Size() (n int) {
 	if m.ValidatorPeriod != 0 {
 		n += 1 + sovDistribution(uint64(m.ValidatorPeriod))
 	}
-	l = len(m.Fraction)
-	if l > 0 {
-		n += 1 + l + sovDistribution(uint64(l))
-	}
+	l = m.Fraction.Size()
+	n += 1 + l + sovDistribution(uint64(l))
 	return n
 }
 
@@ -1729,10 +1736,8 @@ func (m *DelegatorStartingInfo) Size() (n int) {
 	if m.PreviousPeriod != 0 {
 		n += 1 + sovDistribution(uint64(m.PreviousPeriod))
 	}
-	l = len(m.Stake)
-	if l > 0 {
-		n += 1 + l + sovDistribution(uint64(l))
-	}
+	l = m.Stake.Size()
+	n += 1 + l + sovDistribution(uint64(l))
 	if m.Height != 0 {
 		n += 1 + sovDistribution(uint64(m.Height))
 	}
@@ -1852,7 +1857,9 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.CommunityTax = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
+			if err := m.CommunityTax.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -1884,7 +1891,9 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.BaseProposerReward = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
+			if err := m.BaseProposerReward.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -1916,7 +1925,9 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.BonusProposerReward = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
+			if err := m.BonusProposerReward.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 4:
 			if wireType != 0 {
@@ -2411,7 +2422,9 @@ func (m *ValidatorSlashEvent) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Fraction = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
+			if err := m.Fraction.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2860,7 +2873,9 @@ func (m *DelegatorStartingInfo) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Stake = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
+			if err := m.Stake.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 0 {

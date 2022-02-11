@@ -7,6 +7,7 @@ import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	types1 "github.com/cosmos/cosmos-sdk/codec/types"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
@@ -37,7 +38,7 @@ type BasicAllowance struct {
 	// spend_limit specifies the maximum amount of tokens that can be spent
 	// by this allowance and will be updated as tokens are spent. If it is
 	// empty, there is no spend limit and any amount of coins can be spent.
-	SpendLimit []types.Coin `protobuf:"bytes,1,rep,name=spend_limit,json=spendLimit,proto3" json:"spend_limit"`
+	SpendLimit github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=spend_limit,json=spendLimit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"spend_limit"`
 	// expiration specifies an optional time when this allowance expires
 	Expiration *time.Time `protobuf:"bytes,2,opt,name=expiration,proto3,stdtime" json:"expiration,omitempty"`
 }
@@ -75,7 +76,7 @@ func (m *BasicAllowance) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_BasicAllowance proto.InternalMessageInfo
 
-func (m *BasicAllowance) GetSpendLimit() []types.Coin {
+func (m *BasicAllowance) GetSpendLimit() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.SpendLimit
 	}
@@ -99,9 +100,9 @@ type PeriodicAllowance struct {
 	Period time.Duration `protobuf:"bytes,2,opt,name=period,proto3,stdduration" json:"period"`
 	// period_spend_limit specifies the maximum number of coins that can be spent
 	// in the period
-	PeriodSpendLimit []types.Coin `protobuf:"bytes,3,rep,name=period_spend_limit,json=periodSpendLimit,proto3" json:"period_spend_limit"`
+	PeriodSpendLimit github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=period_spend_limit,json=periodSpendLimit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"period_spend_limit"`
 	// period_can_spend is the number of coins left to be spent before the period_reset time
-	PeriodCanSpend []types.Coin `protobuf:"bytes,4,rep,name=period_can_spend,json=periodCanSpend,proto3" json:"period_can_spend"`
+	PeriodCanSpend github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=period_can_spend,json=periodCanSpend,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"period_can_spend"`
 	// period_reset is the time at which this period resets and a new one begins,
 	// it is calculated from the start time of the first transaction after the
 	// last period ended
@@ -155,14 +156,14 @@ func (m *PeriodicAllowance) GetPeriod() time.Duration {
 	return 0
 }
 
-func (m *PeriodicAllowance) GetPeriodSpendLimit() []types.Coin {
+func (m *PeriodicAllowance) GetPeriodSpendLimit() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.PeriodSpendLimit
 	}
 	return nil
 }
 
-func (m *PeriodicAllowance) GetPeriodCanSpend() []types.Coin {
+func (m *PeriodicAllowance) GetPeriodCanSpend() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.PeriodCanSpend
 	}

@@ -7,9 +7,11 @@ import (
 	context "context"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/gogo/protobuf/gogoproto"
+	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
@@ -163,7 +165,7 @@ var xxx_messageInfo_QueryAllBalancesRequest proto.InternalMessageInfo
 // method.
 type QueryAllBalancesResponse struct {
 	// balances is the balances of all the coins.
-	Balances []types.Coin `protobuf:"bytes,1,rep,name=balances,proto3" json:"balances"`
+	Balances github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=balances,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"balances"`
 	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
@@ -201,7 +203,7 @@ func (m *QueryAllBalancesResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryAllBalancesResponse proto.InternalMessageInfo
 
-func (m *QueryAllBalancesResponse) GetBalances() []types.Coin {
+func (m *QueryAllBalancesResponse) GetBalances() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.Balances
 	}
@@ -261,7 +263,7 @@ var xxx_messageInfo_QueryTotalSupplyRequest proto.InternalMessageInfo
 // method
 type QueryTotalSupplyResponse struct {
 	// supply is the supply of the coins
-	Supply []types.Coin `protobuf:"bytes,1,rep,name=supply,proto3" json:"supply"`
+	Supply github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=supply,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"supply"`
 	// pagination defines the pagination in the response.
 	//
 	// Since: cosmos-sdk 0.43
@@ -301,7 +303,7 @@ func (m *QueryTotalSupplyResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryTotalSupplyResponse proto.InternalMessageInfo
 
-func (m *QueryTotalSupplyResponse) GetSupply() []types.Coin {
+func (m *QueryTotalSupplyResponse) GetSupply() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.Supply
 	}
@@ -971,10 +973,10 @@ type QueryClient interface {
 }
 
 type queryClient struct {
-	cc *grpc.ClientConn
+	cc grpc1.ClientConn
 }
 
-func NewQueryClient(cc *grpc.ClientConn) QueryClient {
+func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
@@ -1101,7 +1103,7 @@ func (*UnimplementedQueryServer) DenomOwners(ctx context.Context, req *QueryDeno
 	return nil, status.Errorf(codes.Unimplemented, "method DenomOwners not implemented")
 }
 
-func RegisterQueryServer(s *grpc.Server, srv QueryServer) {
+func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 

@@ -203,9 +203,9 @@ var xxx_messageInfo_TextProposal proto.InternalMessageInfo
 // Deposit defines an amount deposited by an account address to an active
 // proposal.
 type Deposit struct {
-	ProposalId uint64       `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	Depositor  string       `protobuf:"bytes,2,opt,name=depositor,proto3" json:"depositor,omitempty"`
-	Amount     []types.Coin `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount"`
+	ProposalId uint64                                   `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	Depositor  string                                   `protobuf:"bytes,2,opt,name=depositor,proto3" json:"depositor,omitempty"`
+	Amount     github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
 }
 
 func (m *Deposit) Reset()      { *m = Deposit{} }
@@ -242,15 +242,15 @@ var xxx_messageInfo_Deposit proto.InternalMessageInfo
 
 // Proposal defines the core field members of a governance proposal.
 type Proposal struct {
-	ProposalId       uint64         `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	Content          *types1.Any    `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
-	Status           ProposalStatus `protobuf:"varint,3,opt,name=status,proto3,enum=cosmos.gov.v1beta1.ProposalStatus" json:"status,omitempty"`
-	FinalTallyResult TallyResult    `protobuf:"bytes,4,opt,name=final_tally_result,json=finalTallyResult,proto3" json:"final_tally_result"`
-	SubmitTime       time.Time      `protobuf:"bytes,5,opt,name=submit_time,json=submitTime,proto3,stdtime" json:"submit_time"`
-	DepositEndTime   time.Time      `protobuf:"bytes,6,opt,name=deposit_end_time,json=depositEndTime,proto3,stdtime" json:"deposit_end_time"`
-	TotalDeposit     []types.Coin   `protobuf:"bytes,7,rep,name=total_deposit,json=totalDeposit,proto3" json:"total_deposit"`
-	VotingStartTime  time.Time      `protobuf:"bytes,8,opt,name=voting_start_time,json=votingStartTime,proto3,stdtime" json:"voting_start_time"`
-	VotingEndTime    time.Time      `protobuf:"bytes,9,opt,name=voting_end_time,json=votingEndTime,proto3,stdtime" json:"voting_end_time"`
+	ProposalId       uint64                                   `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	Content          *types1.Any                              `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	Status           ProposalStatus                           `protobuf:"varint,3,opt,name=status,proto3,enum=cosmos.gov.v1beta1.ProposalStatus" json:"status,omitempty"`
+	FinalTallyResult TallyResult                              `protobuf:"bytes,4,opt,name=final_tally_result,json=finalTallyResult,proto3" json:"final_tally_result"`
+	SubmitTime       time.Time                                `protobuf:"bytes,5,opt,name=submit_time,json=submitTime,proto3,stdtime" json:"submit_time"`
+	DepositEndTime   time.Time                                `protobuf:"bytes,6,opt,name=deposit_end_time,json=depositEndTime,proto3,stdtime" json:"deposit_end_time"`
+	TotalDeposit     github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,7,rep,name=total_deposit,json=totalDeposit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"total_deposit"`
+	VotingStartTime  time.Time                                `protobuf:"bytes,8,opt,name=voting_start_time,json=votingStartTime,proto3,stdtime" json:"voting_start_time"`
+	VotingEndTime    time.Time                                `protobuf:"bytes,9,opt,name=voting_end_time,json=votingEndTime,proto3,stdtime" json:"voting_end_time"`
 }
 
 func (m *Proposal) Reset()      { *m = Proposal{} }
@@ -373,7 +373,7 @@ var xxx_messageInfo_Vote proto.InternalMessageInfo
 // DepositParams defines the params for deposits on governance proposals.
 type DepositParams struct {
 	//  Minimum deposit for a proposal to enter voting period.
-	MinDeposit []types.Coin `protobuf:"bytes,1,rep,name=min_deposit,json=minDeposit,proto3" json:"min_deposit,omitempty"`
+	MinDeposit github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=min_deposit,json=minDeposit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"min_deposit,omitempty"`
 	//  Maximum period for Atom holders to deposit on a proposal. Initial value: 2
 	//  months.
 	MaxDepositPeriod time.Duration `protobuf:"bytes,2,opt,name=max_deposit_period,json=maxDepositPeriod,proto3,stdduration" json:"max_deposit_period,omitempty"`
@@ -731,13 +731,16 @@ func (m *WeightedVoteOption) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Weight) > 0 {
-		i -= len(m.Weight)
-		copy(dAtA[i:], m.Weight)
-		i = encodeVarintGov(dAtA, i, uint64(len(m.Weight)))
-		i--
-		dAtA[i] = 0x12
+	{
+		size := m.Weight.Size()
+		i -= size
+		if _, err := m.Weight.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintGov(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x12
 	if m.Option != 0 {
 		i = encodeVarintGov(dAtA, i, uint64(m.Option))
 		i--
@@ -953,34 +956,46 @@ func (m *TallyResult) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.NoWithVeto) > 0 {
-		i -= len(m.NoWithVeto)
-		copy(dAtA[i:], m.NoWithVeto)
-		i = encodeVarintGov(dAtA, i, uint64(len(m.NoWithVeto)))
-		i--
-		dAtA[i] = 0x22
+	{
+		size := m.NoWithVeto.Size()
+		i -= size
+		if _, err := m.NoWithVeto.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintGov(dAtA, i, uint64(size))
 	}
-	if len(m.No) > 0 {
-		i -= len(m.No)
-		copy(dAtA[i:], m.No)
-		i = encodeVarintGov(dAtA, i, uint64(len(m.No)))
-		i--
-		dAtA[i] = 0x1a
+	i--
+	dAtA[i] = 0x22
+	{
+		size := m.No.Size()
+		i -= size
+		if _, err := m.No.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintGov(dAtA, i, uint64(size))
 	}
-	if len(m.Abstain) > 0 {
-		i -= len(m.Abstain)
-		copy(dAtA[i:], m.Abstain)
-		i = encodeVarintGov(dAtA, i, uint64(len(m.Abstain)))
-		i--
-		dAtA[i] = 0x12
+	i--
+	dAtA[i] = 0x1a
+	{
+		size := m.Abstain.Size()
+		i -= size
+		if _, err := m.Abstain.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintGov(dAtA, i, uint64(size))
 	}
-	if len(m.Yes) > 0 {
-		i -= len(m.Yes)
-		copy(dAtA[i:], m.Yes)
-		i = encodeVarintGov(dAtA, i, uint64(len(m.Yes)))
-		i--
-		dAtA[i] = 0xa
+	i--
+	dAtA[i] = 0x12
+	{
+		size := m.Yes.Size()
+		i -= size
+		if _, err := m.Yes.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintGov(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -1187,10 +1202,8 @@ func (m *WeightedVoteOption) Size() (n int) {
 	if m.Option != 0 {
 		n += 1 + sovGov(uint64(m.Option))
 	}
-	l = len(m.Weight)
-	if l > 0 {
-		n += 1 + l + sovGov(uint64(l))
-	}
+	l = m.Weight.Size()
+	n += 1 + l + sovGov(uint64(l))
 	return n
 }
 
@@ -1274,22 +1287,14 @@ func (m *TallyResult) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Yes)
-	if l > 0 {
-		n += 1 + l + sovGov(uint64(l))
-	}
-	l = len(m.Abstain)
-	if l > 0 {
-		n += 1 + l + sovGov(uint64(l))
-	}
-	l = len(m.No)
-	if l > 0 {
-		n += 1 + l + sovGov(uint64(l))
-	}
-	l = len(m.NoWithVeto)
-	if l > 0 {
-		n += 1 + l + sovGov(uint64(l))
-	}
+	l = m.Yes.Size()
+	n += 1 + l + sovGov(uint64(l))
+	l = m.Abstain.Size()
+	n += 1 + l + sovGov(uint64(l))
+	l = m.No.Size()
+	n += 1 + l + sovGov(uint64(l))
+	l = m.NoWithVeto.Size()
+	n += 1 + l + sovGov(uint64(l))
 	return n
 }
 
@@ -1445,7 +1450,9 @@ func (m *WeightedVoteOption) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Weight = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
+			if err := m.Weight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2099,7 +2106,9 @@ func (m *TallyResult) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Yes = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
+			if err := m.Yes.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -2131,7 +2140,9 @@ func (m *TallyResult) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Abstain = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
+			if err := m.Abstain.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -2163,7 +2174,9 @@ func (m *TallyResult) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.No = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
+			if err := m.No.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -2195,7 +2208,9 @@ func (m *TallyResult) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.NoWithVeto = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
+			if err := m.NoWithVeto.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

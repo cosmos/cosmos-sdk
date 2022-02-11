@@ -7101,10 +7101,10 @@ type PercentageDecisionPolicy struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// percentage is the minimum percentage the weighted sum of yes votes must meet for a proposal to succeed.
+	// percentage is the minimum percentage the weighted sum of yes votes must met for a proposal to succeed.
 	Percentage string `protobuf:"bytes,1,opt,name=percentage,proto3" json:"percentage,omitempty"`
 	// timeout is the duration from submission of a proposal to the end of voting period
-	// Within these times votes and exec messages can be submitted.
+	// Within this times votes and exec messages can be submitted.
 	Timeout *durationpb.Duration `protobuf:"bytes,2,opt,name=timeout,proto3" json:"timeout,omitempty"`
 }
 

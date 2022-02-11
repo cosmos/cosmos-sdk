@@ -2058,36 +2058,27 @@ func (m *CommissionRates) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.MaxChangeRate.Size()
-		i -= size
-		if _, err := m.MaxChangeRate.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintStaking(dAtA, i, uint64(size))
+	if len(m.MaxChangeRate) > 0 {
+		i -= len(m.MaxChangeRate)
+		copy(dAtA[i:], m.MaxChangeRate)
+		i = encodeVarintStaking(dAtA, i, uint64(len(m.MaxChangeRate)))
+		i--
+		dAtA[i] = 0x1a
 	}
-	i--
-	dAtA[i] = 0x1a
-	{
-		size := m.MaxRate.Size()
-		i -= size
-		if _, err := m.MaxRate.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintStaking(dAtA, i, uint64(size))
+	if len(m.MaxRate) > 0 {
+		i -= len(m.MaxRate)
+		copy(dAtA[i:], m.MaxRate)
+		i = encodeVarintStaking(dAtA, i, uint64(len(m.MaxRate)))
+		i--
+		dAtA[i] = 0x12
 	}
-	i--
-	dAtA[i] = 0x12
-	{
-		size := m.Rate.Size()
-		i -= size
-		if _, err := m.Rate.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintStaking(dAtA, i, uint64(size))
+	if len(m.Rate) > 0 {
+		i -= len(m.Rate)
+		copy(dAtA[i:], m.Rate)
+		i = encodeVarintStaking(dAtA, i, uint64(len(m.Rate)))
+		i--
+		dAtA[i] = 0xa
 	}
-	i--
-	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -2210,16 +2201,13 @@ func (m *Validator) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.MinSelfDelegation.Size()
-		i -= size
-		if _, err := m.MinSelfDelegation.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintStaking(dAtA, i, uint64(size))
+	if len(m.MinSelfDelegation) > 0 {
+		i -= len(m.MinSelfDelegation)
+		copy(dAtA[i:], m.MinSelfDelegation)
+		i = encodeVarintStaking(dAtA, i, uint64(len(m.MinSelfDelegation)))
+		i--
+		dAtA[i] = 0x5a
 	}
-	i--
-	dAtA[i] = 0x5a
 	{
 		size, err := m.Commission.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
@@ -2253,26 +2241,20 @@ func (m *Validator) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x3a
-	{
-		size := m.DelegatorShares.Size()
-		i -= size
-		if _, err := m.DelegatorShares.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintStaking(dAtA, i, uint64(size))
+	if len(m.DelegatorShares) > 0 {
+		i -= len(m.DelegatorShares)
+		copy(dAtA[i:], m.DelegatorShares)
+		i = encodeVarintStaking(dAtA, i, uint64(len(m.DelegatorShares)))
+		i--
+		dAtA[i] = 0x32
 	}
-	i--
-	dAtA[i] = 0x32
-	{
-		size := m.Tokens.Size()
-		i -= size
-		if _, err := m.Tokens.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintStaking(dAtA, i, uint64(size))
+	if len(m.Tokens) > 0 {
+		i -= len(m.Tokens)
+		copy(dAtA[i:], m.Tokens)
+		i = encodeVarintStaking(dAtA, i, uint64(len(m.Tokens)))
+		i--
+		dAtA[i] = 0x2a
 	}
-	i--
-	dAtA[i] = 0x2a
 	if m.Status != 0 {
 		i = encodeVarintStaking(dAtA, i, uint64(m.Status))
 		i--
@@ -2517,16 +2499,13 @@ func (m *Delegation) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.Shares.Size()
-		i -= size
-		if _, err := m.Shares.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintStaking(dAtA, i, uint64(size))
+	if len(m.Shares) > 0 {
+		i -= len(m.Shares)
+		copy(dAtA[i:], m.Shares)
+		i = encodeVarintStaking(dAtA, i, uint64(len(m.Shares)))
+		i--
+		dAtA[i] = 0x1a
 	}
-	i--
-	dAtA[i] = 0x1a
 	if len(m.ValidatorAddress) > 0 {
 		i -= len(m.ValidatorAddress)
 		copy(dAtA[i:], m.ValidatorAddress)
@@ -2615,26 +2594,20 @@ func (m *UnbondingDelegationEntry) MarshalToSizedBuffer(dAtA []byte) (int, error
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.Balance.Size()
-		i -= size
-		if _, err := m.Balance.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintStaking(dAtA, i, uint64(size))
+	if len(m.Balance) > 0 {
+		i -= len(m.Balance)
+		copy(dAtA[i:], m.Balance)
+		i = encodeVarintStaking(dAtA, i, uint64(len(m.Balance)))
+		i--
+		dAtA[i] = 0x22
 	}
-	i--
-	dAtA[i] = 0x22
-	{
-		size := m.InitialBalance.Size()
-		i -= size
-		if _, err := m.InitialBalance.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintStaking(dAtA, i, uint64(size))
+	if len(m.InitialBalance) > 0 {
+		i -= len(m.InitialBalance)
+		copy(dAtA[i:], m.InitialBalance)
+		i = encodeVarintStaking(dAtA, i, uint64(len(m.InitialBalance)))
+		i--
+		dAtA[i] = 0x1a
 	}
-	i--
-	dAtA[i] = 0x1a
 	n8, err8 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.CompletionTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.CompletionTime):])
 	if err8 != nil {
 		return 0, err8
@@ -2671,26 +2644,20 @@ func (m *RedelegationEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.SharesDst.Size()
-		i -= size
-		if _, err := m.SharesDst.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintStaking(dAtA, i, uint64(size))
+	if len(m.SharesDst) > 0 {
+		i -= len(m.SharesDst)
+		copy(dAtA[i:], m.SharesDst)
+		i = encodeVarintStaking(dAtA, i, uint64(len(m.SharesDst)))
+		i--
+		dAtA[i] = 0x22
 	}
-	i--
-	dAtA[i] = 0x22
-	{
-		size := m.InitialBalance.Size()
-		i -= size
-		if _, err := m.InitialBalance.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintStaking(dAtA, i, uint64(size))
+	if len(m.InitialBalance) > 0 {
+		i -= len(m.InitialBalance)
+		copy(dAtA[i:], m.InitialBalance)
+		i = encodeVarintStaking(dAtA, i, uint64(len(m.InitialBalance)))
+		i--
+		dAtA[i] = 0x1a
 	}
-	i--
-	dAtA[i] = 0x1a
 	n9, err9 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.CompletionTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.CompletionTime):])
 	if err9 != nil {
 		return 0, err9
@@ -2785,16 +2752,13 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.MinCommissionRate.Size()
-		i -= size
-		if _, err := m.MinCommissionRate.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintStaking(dAtA, i, uint64(size))
+	if len(m.MinCommissionRate) > 0 {
+		i -= len(m.MinCommissionRate)
+		copy(dAtA[i:], m.MinCommissionRate)
+		i = encodeVarintStaking(dAtA, i, uint64(len(m.MinCommissionRate)))
+		i--
+		dAtA[i] = 0x32
 	}
-	i--
-	dAtA[i] = 0x32
 	if len(m.BondDenom) > 0 {
 		i -= len(m.BondDenom)
 		copy(dAtA[i:], m.BondDenom)
@@ -2891,16 +2855,13 @@ func (m *RedelegationEntryResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.Balance.Size()
-		i -= size
-		if _, err := m.Balance.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintStaking(dAtA, i, uint64(size))
+	if len(m.Balance) > 0 {
+		i -= len(m.Balance)
+		copy(dAtA[i:], m.Balance)
+		i = encodeVarintStaking(dAtA, i, uint64(len(m.Balance)))
+		i--
+		dAtA[i] = 0x22
 	}
-	i--
-	dAtA[i] = 0x22
 	{
 		size, err := m.RedelegationEntry.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
@@ -2981,26 +2942,20 @@ func (m *Pool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.BondedTokens.Size()
-		i -= size
-		if _, err := m.BondedTokens.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintStaking(dAtA, i, uint64(size))
+	if len(m.BondedTokens) > 0 {
+		i -= len(m.BondedTokens)
+		copy(dAtA[i:], m.BondedTokens)
+		i = encodeVarintStaking(dAtA, i, uint64(len(m.BondedTokens)))
+		i--
+		dAtA[i] = 0x12
 	}
-	i--
-	dAtA[i] = 0x12
-	{
-		size := m.NotBondedTokens.Size()
-		i -= size
-		if _, err := m.NotBondedTokens.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintStaking(dAtA, i, uint64(size))
+	if len(m.NotBondedTokens) > 0 {
+		i -= len(m.NotBondedTokens)
+		copy(dAtA[i:], m.NotBondedTokens)
+		i = encodeVarintStaking(dAtA, i, uint64(len(m.NotBondedTokens)))
+		i--
+		dAtA[i] = 0xa
 	}
-	i--
-	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -3038,12 +2993,18 @@ func (m *CommissionRates) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.Rate.Size()
-	n += 1 + l + sovStaking(uint64(l))
-	l = m.MaxRate.Size()
-	n += 1 + l + sovStaking(uint64(l))
-	l = m.MaxChangeRate.Size()
-	n += 1 + l + sovStaking(uint64(l))
+	l = len(m.Rate)
+	if l > 0 {
+		n += 1 + l + sovStaking(uint64(l))
+	}
+	l = len(m.MaxRate)
+	if l > 0 {
+		n += 1 + l + sovStaking(uint64(l))
+	}
+	l = len(m.MaxChangeRate)
+	if l > 0 {
+		n += 1 + l + sovStaking(uint64(l))
+	}
 	return n
 }
 
@@ -3109,10 +3070,14 @@ func (m *Validator) Size() (n int) {
 	if m.Status != 0 {
 		n += 1 + sovStaking(uint64(m.Status))
 	}
-	l = m.Tokens.Size()
-	n += 1 + l + sovStaking(uint64(l))
-	l = m.DelegatorShares.Size()
-	n += 1 + l + sovStaking(uint64(l))
+	l = len(m.Tokens)
+	if l > 0 {
+		n += 1 + l + sovStaking(uint64(l))
+	}
+	l = len(m.DelegatorShares)
+	if l > 0 {
+		n += 1 + l + sovStaking(uint64(l))
+	}
 	l = m.Description.Size()
 	n += 1 + l + sovStaking(uint64(l))
 	if m.UnbondingHeight != 0 {
@@ -3122,8 +3087,10 @@ func (m *Validator) Size() (n int) {
 	n += 1 + l + sovStaking(uint64(l))
 	l = m.Commission.Size()
 	n += 1 + l + sovStaking(uint64(l))
-	l = m.MinSelfDelegation.Size()
-	n += 1 + l + sovStaking(uint64(l))
+	l = len(m.MinSelfDelegation)
+	if l > 0 {
+		n += 1 + l + sovStaking(uint64(l))
+	}
 	return n
 }
 
@@ -3224,8 +3191,10 @@ func (m *Delegation) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovStaking(uint64(l))
 	}
-	l = m.Shares.Size()
-	n += 1 + l + sovStaking(uint64(l))
+	l = len(m.Shares)
+	if l > 0 {
+		n += 1 + l + sovStaking(uint64(l))
+	}
 	return n
 }
 
@@ -3263,10 +3232,14 @@ func (m *UnbondingDelegationEntry) Size() (n int) {
 	}
 	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.CompletionTime)
 	n += 1 + l + sovStaking(uint64(l))
-	l = m.InitialBalance.Size()
-	n += 1 + l + sovStaking(uint64(l))
-	l = m.Balance.Size()
-	n += 1 + l + sovStaking(uint64(l))
+	l = len(m.InitialBalance)
+	if l > 0 {
+		n += 1 + l + sovStaking(uint64(l))
+	}
+	l = len(m.Balance)
+	if l > 0 {
+		n += 1 + l + sovStaking(uint64(l))
+	}
 	return n
 }
 
@@ -3281,10 +3254,14 @@ func (m *RedelegationEntry) Size() (n int) {
 	}
 	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.CompletionTime)
 	n += 1 + l + sovStaking(uint64(l))
-	l = m.InitialBalance.Size()
-	n += 1 + l + sovStaking(uint64(l))
-	l = m.SharesDst.Size()
-	n += 1 + l + sovStaking(uint64(l))
+	l = len(m.InitialBalance)
+	if l > 0 {
+		n += 1 + l + sovStaking(uint64(l))
+	}
+	l = len(m.SharesDst)
+	if l > 0 {
+		n += 1 + l + sovStaking(uint64(l))
+	}
 	return n
 }
 
@@ -3336,8 +3313,10 @@ func (m *Params) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovStaking(uint64(l))
 	}
-	l = m.MinCommissionRate.Size()
-	n += 1 + l + sovStaking(uint64(l))
+	l = len(m.MinCommissionRate)
+	if l > 0 {
+		n += 1 + l + sovStaking(uint64(l))
+	}
 	return n
 }
 
@@ -3362,8 +3341,10 @@ func (m *RedelegationEntryResponse) Size() (n int) {
 	_ = l
 	l = m.RedelegationEntry.Size()
 	n += 1 + l + sovStaking(uint64(l))
-	l = m.Balance.Size()
-	n += 1 + l + sovStaking(uint64(l))
+	l = len(m.Balance)
+	if l > 0 {
+		n += 1 + l + sovStaking(uint64(l))
+	}
 	return n
 }
 
@@ -3390,10 +3371,14 @@ func (m *Pool) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.NotBondedTokens.Size()
-	n += 1 + l + sovStaking(uint64(l))
-	l = m.BondedTokens.Size()
-	n += 1 + l + sovStaking(uint64(l))
+	l = len(m.NotBondedTokens)
+	if l > 0 {
+		n += 1 + l + sovStaking(uint64(l))
+	}
+	l = len(m.BondedTokens)
+	if l > 0 {
+		n += 1 + l + sovStaking(uint64(l))
+	}
 	return n
 }
 
@@ -3597,9 +3582,7 @@ func (m *CommissionRates) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Rate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Rate = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -3631,9 +3614,7 @@ func (m *CommissionRates) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.MaxRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.MaxRate = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -3665,9 +3646,7 @@ func (m *CommissionRates) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.MaxChangeRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.MaxChangeRate = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -4182,9 +4161,7 @@ func (m *Validator) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Tokens.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Tokens = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 6:
 			if wireType != 2 {
@@ -4216,9 +4193,7 @@ func (m *Validator) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.DelegatorShares.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.DelegatorShares = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 7:
 			if wireType != 2 {
@@ -4368,9 +4343,7 @@ func (m *Validator) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.MinSelfDelegation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.MinSelfDelegation = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -5026,9 +4999,7 @@ func (m *Delegation) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Shares.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Shares = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -5310,9 +5281,7 @@ func (m *UnbondingDelegationEntry) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.InitialBalance.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.InitialBalance = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -5344,9 +5313,7 @@ func (m *UnbondingDelegationEntry) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Balance.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Balance = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -5480,9 +5447,7 @@ func (m *RedelegationEntry) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.InitialBalance.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.InitialBalance = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -5514,9 +5479,7 @@ func (m *RedelegationEntry) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.SharesDst.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.SharesDst = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -5900,9 +5863,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.MinCommissionRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.MinCommissionRate = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -6133,9 +6094,7 @@ func (m *RedelegationEntryResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Balance.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Balance = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -6334,9 +6293,7 @@ func (m *Pool) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.NotBondedTokens.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.NotBondedTokens = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -6368,9 +6325,7 @@ func (m *Pool) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.BondedTokens.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.BondedTokens = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

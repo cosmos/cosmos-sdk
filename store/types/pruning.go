@@ -23,7 +23,7 @@ var (
 	// PruneEverything defines a pruning strategy where all committed heights are
 	// deleted, storing only the current and previous height and where to-be pruned
 	// heights are pruned at every 10th height.
-	PruneEverything = NewPruningOptions(0, 10)
+	PruneEverything = NewPruningOptions(2, 10)
 
 	// PruneNothing defines a pruning strategy where all heights are kept on disk.
 	PruneNothing = NewPruningOptions(0, 0)

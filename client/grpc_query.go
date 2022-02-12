@@ -32,7 +32,8 @@ var fallBackCodec = codec.NewProtoCodec(failingInterfaceRegistry{})
 func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply interface{}, opts ...grpc.CallOption) (err error) {
 	// Two things can happen here:
 	// 1. either we're broadcasting a Tx, in which call we call Tendermint's broadcast endpoint directly,
-	// 2. or we are querying for state, in which case we call ABCI's Query.
+	// 2-1. or we are querying for state, in which case we call ABCI's Query if grpc client not set.
+	// 2-2. or we are querying for state, in which case we call grpc if grpc client set.
 
 	// In both cases, we don't allow empty request args (it will panic unexpectedly).
 	if reflect.ValueOf(req).IsNil() {
@@ -55,56 +56,64 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 		return err
 	}
 
-	reqBz, err := ctx.gRPCCodec().Marshal(req)
-	if err != nil {
-		return err
-	}
-
-	// parse height header
-	md, _ := metadata.FromOutgoingContext(grpcCtx)
-	if heights := md.Get(grpctypes.GRPCBlockHeightHeader); len(heights) > 0 {
-		height, err := strconv.ParseInt(heights[0], 10, 64)
+	if ctx.GRPCClient == nil {
+		// Case 2-1. Querying state via abci query.
+		reqBz, err := ctx.gRPCCodec().Marshal(req)
 		if err != nil {
 			return err
 		}
-		if height < 0 {
-			return sdkerrors.Wrapf(
-				sdkerrors.ErrInvalidRequest,
-				"client.Context.Invoke: height (%d) from %q must be >= 0", height, grpctypes.GRPCBlockHeightHeader)
+
+		// parse height header
+		md, _ := metadata.FromOutgoingContext(grpcCtx)
+		if heights := md.Get(grpctypes.GRPCBlockHeightHeader); len(heights) > 0 {
+			height, err := strconv.ParseInt(heights[0], 10, 64)
+			if err != nil {
+				return err
+			}
+			if height < 0 {
+				return sdkerrors.Wrapf(
+					sdkerrors.ErrInvalidRequest,
+					"client.Context.Invoke: height (%d) from %q must be >= 0", height, grpctypes.GRPCBlockHeightHeader)
+			}
+
+			ctx = ctx.WithHeight(height)
 		}
 
-		ctx = ctx.WithHeight(height)
-	}
-
-	abciReq := abci.RequestQuery{
-		Path:   method,
-		Data:   reqBz,
-		Height: ctx.Height,
-	}
-
-	res, err := ctx.QueryABCI(abciReq)
-	if err != nil {
-		return err
-	}
-
-	err = ctx.gRPCCodec().Unmarshal(res.Value, reply)
-	if err != nil {
-		return err
-	}
-
-	// Create header metadata. For now the headers contain:
-	// - block height
-	// We then parse all the call options, if the call option is a
-	// HeaderCallOption, then we manually set the value of that header to the
-	// metadata.
-	md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(res.Height, 10))
-	for _, callOpt := range opts {
-		header, ok := callOpt.(grpc.HeaderCallOption)
-		if !ok {
-			continue
+		abciReq := abci.RequestQuery{
+			Path:   method,
+			Data:   reqBz,
+			Height: ctx.Height,
 		}
 
-		*header.HeaderAddr = md
+		res, err := ctx.QueryABCI(abciReq)
+		if err != nil {
+			return err
+		}
+
+		err = ctx.gRPCCodec().Unmarshal(res.Value, reply)
+		if err != nil {
+			return err
+		}
+
+		// Create header metadata. For now the headers contain:
+		// - block height
+		// We then parse all the call options, if the call option is a
+		// HeaderCallOption, then we manually set the value of that header to the
+		// metadata.
+		md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(res.Height, 10))
+		for _, callOpt := range opts {
+			header, ok := callOpt.(grpc.HeaderCallOption)
+			if !ok {
+				continue
+			}
+
+			*header.HeaderAddr = md
+		}
+	} else {
+		// Case 2-2. Invoke grpc.
+		if err = ctx.GRPCClient.Invoke(grpcCtx, method, req, reply, opts...); err != nil {
+			return err
+		}
 	}
 
 	if ctx.InterfaceRegistry != nil {

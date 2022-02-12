@@ -296,6 +296,16 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			WithHomeDir(home).
 			WithChainID(genDoc.ChainID)
 
+		if config.GRPC.Enable {
+			// If grpc is enabled, configure grpc client for grpc gateway.
+			grpcClient, err := grpc.Dial(config.GRPC.Address, grpc.WithInsecure())
+			if err != nil {
+				return err
+			}
+			clientCtx = clientCtx.WithGRPCClient(grpcClient)
+			ctx.Logger.Debug("grpc client assigned to client context", "target", config.GRPC.Address)
+		}
+
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
 		app.RegisterAPIRoutes(apiSrv, config.API)
 		errCh := make(chan error)

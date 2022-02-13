@@ -16,10 +16,10 @@ func TestImmutableTreePanics(t *testing.T) {
 	require.Panics(t, func() { it.Remove([]byte{}) })
 	require.Panics(t, func() { it.SaveVersion() })           // nolint:errcheck
 	require.Panics(t, func() { it.DeleteVersion(int64(1)) }) // nolint:errcheck
-	v, _ := it.GetVersioned([]byte{0x01}, 1)
-	require.Equal(t, int64(-1), v)
-	v, _ = it.GetVersioned([]byte{0x01}, 0)
-	require.Equal(t, int64(0), v)
+	v := it.GetVersioned([]byte{0x01}, 1)
+	require.Nil(t, v)
+	v = it.GetVersioned([]byte{0x01}, 0)
+	require.Nil(t, v)
 
 	val, proof, err := it.GetVersionedWithProof(nil, 1)
 	require.Error(t, err)

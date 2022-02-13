@@ -29,7 +29,7 @@ type SubspaceTestSuite struct {
 func (suite *SubspaceTestSuite) SetupTest() {
 	db := dbm.NewMemDB()
 
-	ms := store.NewCommitMultiStore(db)
+	ms := store.NewCommitMultiStore(db, log.NewNopLogger())
 	ms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkey, sdk.StoreTypeTransient, db)
 	suite.NoError(ms.LoadLatestVersion())

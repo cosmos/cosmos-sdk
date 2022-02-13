@@ -105,7 +105,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.group = &group.GroupInfo{GroupId: 1, Admin: val.Address.String(), Metadata: []byte{1}, TotalWeight: "3", Version: 1}
 
-	// create 5 group policies
+	// create 6 group policies
 	for i := 0; i < 6; i++ {
 		threshold := i + 1
 		if threshold > 3 {

@@ -132,7 +132,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	var res group.QueryGroupPoliciesByGroupResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
-	s.Require().Equal(len(res.GroupPolicies), 5)
+	s.Require().Equal(6, len(res.GroupPolicies))
 	s.groupPolicies = res.GroupPolicies
 
 	// create a proposal
@@ -1520,14 +1520,15 @@ func (s *IntegrationTestSuite) TestTxVoteWeighted() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
-	proposalIds := make([]string, 2)
+	policyAddr := s.groupPolicies[5].Address
+	proposalIds := make([]string, 4)
 
-	validTxFileName := getTxSendFileName(s, s.groupPolicies[1].Address, val.Address.String())
+	validTxFileName := getTxSendFileName(s, policyAddr, val.Address.String())
 	for i := 0; i < 4; i++ {
 		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateProposalCmd(),
 			append(
 				[]string{
-					s.groupPolicies[1].Address,
+					policyAddr,
 					val.Address.String(),
 					validTxFileName,
 					"",
@@ -1569,7 +1570,7 @@ func (s *IntegrationTestSuite) TestTxVoteWeighted() {
 			0,
 		},
 		{
-			"sum of choices weightes > 1",
+			"sum of choices weights > 1",
 			append(
 				[]string{
 					proposalIds[1],
@@ -1579,24 +1580,56 @@ func (s *IntegrationTestSuite) TestTxVoteWeighted() {
 				},
 				commonFlags...,
 			),
-			false,
-			"",
+			true,
+			"total weight overflow 1.00",
 			&sdk.TxResponse{},
 			0,
 		},
 		{
-			"sum of choices weightes < 1",
+			"sum of choices weights < 1",
 			append(
 				[]string{
 					proposalIds[1],
 					val.Address.String(),
-					"CHOICE_YES=0.5,CHOICE_NO=0.5,CHOICE_ABSTAIN=0.1,CHOICE_VETO=0.1",
+					"CHOICE_YES=0.1,CHOICE_NO=0.5,CHOICE_ABSTAIN=0.1,CHOICE_VETO=0.1",
 					"",
 				},
 				commonFlags...,
 			),
-			false,
-			"",
+			true,
+			"total weight lower than 1.00",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"invalid weight",
+			append(
+				[]string{
+					proposalIds[1],
+					val.Address.String(),
+					"CHOICE_YES=a",
+					"",
+				},
+				commonFlags...,
+			),
+			true,
+			"failed to set decimal string",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"duplicate choice",
+			append(
+				[]string{
+					proposalIds[1],
+					val.Address.String(),
+					"CHOICE_YES=0.5,CHOICE_YES=0.5",
+					"",
+				},
+				commonFlags...,
+			),
+			true,
+			"duplicated vote option",
 			&sdk.TxResponse{},
 			0,
 		},
@@ -1663,7 +1696,7 @@ func (s *IntegrationTestSuite) TestTxVoteWeighted() {
 				commonFlags...,
 			),
 			true,
-			"invalid syntax",
+			"please input a valid proposal-id",
 			nil,
 			0,
 		},

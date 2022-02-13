@@ -716,21 +716,21 @@ func (msg MsgVoteWeighted) ValidateBasic() error {
 		}
 		weight, err := sdk.NewDecFromStr(option.Weight)
 		if err != nil {
-			return sdkerrors.Wrapf(errors.ErrInvalid, "Invalid weight: %s", err)
+			return sdkerrors.Wrapf(errors.ErrInvalid, "invalid weight: %s", err)
 		}
 		totalWeight = totalWeight.Add(weight)
 		if usedOptions[option.Choice] {
-			return sdkerrors.Wrap(errors.ErrInvalid, "Duplicated vote option")
+			return sdkerrors.Wrap(errors.ErrInvalid, "duplicated vote option")
 		}
 		usedOptions[option.Choice] = true
 	}
 
 	if totalWeight.GT(sdk.NewDec(1)) {
-		return sdkerrors.Wrap(errors.ErrInvalid, "Total weight overflow 1.00")
+		return sdkerrors.Wrap(errors.ErrInvalid, "total weight overflow 1.00")
 	}
 
 	if totalWeight.LT(sdk.NewDec(1)) {
-		return sdkerrors.Wrap(errors.ErrInvalid, "Total weight lower than 1.00")
+		return sdkerrors.Wrap(errors.ErrInvalid, "total weight lower than 1.00")
 	}
 
 	return nil

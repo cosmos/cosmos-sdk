@@ -736,6 +736,7 @@ $ %s tx gov weighted-vote 1 cosmos1... CHOICE_YES=0.6,CHOICE_NO=0.3,CHOICE_ABSTA
 		},
 	}
 
+	cmd.Flags().String(FlagExec, "", "Set to 1 to try to execute proposal immediately after voting")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

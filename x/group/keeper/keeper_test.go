@@ -1858,9 +1858,13 @@ func (s *TestSuite) TestVote() {
 			})
 			s.Require().NoError(err)
 			loaded := res.Vote
+			choice := []*group.WeightedVoteOption{{
+				Choice: spec.req.Choice,
+				Weight: "1",
+			}}
 			s.Assert().Equal(spec.req.ProposalId, loaded.ProposalId)
 			s.Assert().Equal(spec.req.Voter, loaded.Voter)
-			s.Assert().Equal(spec.req.Choice, loaded.Choice)
+			s.Assert().Equal(choice, loaded.Choices)
 			s.Assert().Equal(spec.req.Metadata, loaded.Metadata)
 			s.Assert().Equal(s.blockTime, loaded.SubmittedAt)
 
@@ -1874,7 +1878,7 @@ func (s *TestSuite) TestVote() {
 			vote := votesByProposal[0]
 			s.Assert().Equal(spec.req.ProposalId, vote.ProposalId)
 			s.Assert().Equal(spec.req.Voter, vote.Voter)
-			s.Assert().Equal(spec.req.Choice, vote.Choice)
+			s.Assert().Equal(choice, vote.Choices)
 			s.Assert().Equal(spec.req.Metadata, vote.Metadata)
 			s.Assert().Equal(s.blockTime, vote.SubmittedAt)
 
@@ -1888,7 +1892,7 @@ func (s *TestSuite) TestVote() {
 			s.Require().Equal(1, len(votesByVoter))
 			s.Assert().Equal(spec.req.ProposalId, votesByVoter[0].ProposalId)
 			s.Assert().Equal(voter, votesByVoter[0].Voter)
-			s.Assert().Equal(spec.req.Choice, votesByVoter[0].Choice)
+			s.Assert().Equal(choice, votesByVoter[0].Choices)
 			s.Assert().Equal(spec.req.Metadata, votesByVoter[0].Metadata)
 			s.Assert().Equal(s.blockTime, votesByVoter[0].SubmittedAt)
 

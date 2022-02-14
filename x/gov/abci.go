@@ -19,23 +19,23 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 
 	// delete dead proposals from store and returns theirs deposits. A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
 	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal v1beta2.Proposal) bool {
-		keeper.DeleteProposal(ctx, proposal.ProposalId)
-		keeper.RefundAndDeleteDeposits(ctx, proposal.ProposalId) // refund deposit if proposal got removed without getting 100% of the proposal
+		keeper.DeleteProposal(ctx, proposal.Id)
+		keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
 
 		// called when proposal become inactive
-		keeper.AfterProposalFailedMinDeposit(ctx, proposal.ProposalId)
+		keeper.AfterProposalFailedMinDeposit(ctx, proposal.Id)
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeInactiveProposal,
-				sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.ProposalId)),
+				sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.Id)),
 				sdk.NewAttribute(types.AttributeKeyProposalResult, types.AttributeValueProposalDropped),
 			),
 		)
 
 		logger.Info(
 			"proposal did not meet minimum deposit; deleted",
-			"proposal", proposal.ProposalId,
+			"proposal", proposal.Id,
 			"min_deposit", sdk.NewCoins(keeper.GetDepositParams(ctx).MinDeposit...).String(),
 			"total_deposit", sdk.NewCoins(proposal.TotalDeposit...).String(),
 		)
@@ -50,9 +50,9 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
 
 		if burnDeposits {
-			keeper.DeleteAndBurnDeposits(ctx, proposal.ProposalId)
+			keeper.DeleteAndBurnDeposits(ctx, proposal.Id)
 		} else {
-			keeper.RefundAndDeleteDeposits(ctx, proposal.ProposalId)
+			keeper.RefundAndDeleteDeposits(ctx, proposal.Id)
 		}
 
 		if passes {
@@ -106,21 +106,21 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		proposal.FinalTallyResult = &tallyResults
 
 		keeper.SetProposal(ctx, proposal)
-		keeper.RemoveFromActiveProposalQueue(ctx, proposal.ProposalId, *proposal.VotingEndTime)
+		keeper.RemoveFromActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
 
 		// when proposal become active
-		keeper.AfterProposalVotingPeriodEnded(ctx, proposal.ProposalId)
+		keeper.AfterProposalVotingPeriodEnded(ctx, proposal.Id)
 
 		logger.Info(
 			"proposal tallied",
-			"proposal", proposal.ProposalId,
+			"proposal", proposal.Id,
 			"results", logMsg,
 		)
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeActiveProposal,
-				sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.ProposalId)),
+				sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.Id)),
 				sdk.NewAttribute(types.AttributeKeyProposalResult, tagValue),
 			),
 		)

@@ -7,7 +7,7 @@ import (
 )
 
 func (p *Proposal) GetMsgs() []sdk.Msg {
-	msgs, err := tx.GetMsgs(p.Msgs, "proposal")
+	msgs, err := tx.GetMsgs(p.Messages, "proposal")
 	if err != nil {
 		panic(err)
 	}
@@ -19,11 +19,11 @@ func (p *Proposal) SetMsgs(msgs []sdk.Msg) error {
 	if err != nil {
 		return err
 	}
-	p.Msgs = anys
+	p.Messages = anys
 	return nil
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (p Proposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	return tx.UnpackInterfaces(unpacker, p.Msgs)
+	return tx.UnpackInterfaces(unpacker, p.Messages)
 }

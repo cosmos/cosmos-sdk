@@ -1242,6 +1242,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 // proposal ids in other tests (e.g. voting or Exec tests).
 // This is a headache, but requires a bigger refactor of all tests in this file
 // so that each one is independent.
+// https://github.com/cosmos/cosmos-sdk/issues/11168
 func (s *IntegrationTestSuite) TestTxCreateProposal() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx

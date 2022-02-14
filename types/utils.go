@@ -106,8 +106,12 @@ func NewLevelDB(name, dir string) (db dbm.DB, err error) {
 // 3) If the backendType is an empty string, "goleveldb" is used.
 func NewDB(name, backendType, dir string) (db dbm.DB, err error) {
 	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("couldn't create db: %v", r)
+		r := recover()
+		switch {
+		case r != nil:
+			err = fmt.Errorf("could not create %q db in %s with name %q: %v", backendType, dir, name, r)
+		case err != nil:
+			err = fmt.Errorf("could not create %q db in %s with name %q: %w", backendType, dir, name, err)
 		}
 	}()
 	if len(backendType) == 0 {

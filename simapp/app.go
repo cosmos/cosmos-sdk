@@ -214,7 +214,6 @@ func NewSimApp(
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
-	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 
 	keys := sdk.NewKVStoreKeys(
@@ -252,6 +251,8 @@ func NewSimApp(
 
 	// set the BaseApp's parameter store
 	bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable()))
+	// Needs to be called after the param store is created
+	bApp.SetVersion(version.Version)
 
 	app.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, keys[capabilitytypes.StoreKey], memKeys[capabilitytypes.MemStoreKey])
 	// Applications that wish to enforce statically created ScopedKeepers should call `Seal` after creating

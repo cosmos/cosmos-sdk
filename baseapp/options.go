@@ -1,9 +1,11 @@
 package baseapp
 
 import (
+	"encoding/binary"
 	"fmt"
 	"io"
 
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -101,13 +103,17 @@ func (app *BaseApp) SetParamStore(ps ParamStore) {
 	app.paramStore = ps
 }
 
-// // SetVersion sets the application's version string. TODO
-// func (app *BaseApp) SetVersion(v string) {
-// 	if app.sealed {
-// 		panic("SetVersion() on sealed BaseApp")
-// 	}
-// 	app.version = v
-// }
+// SetVersion sets the application's version string. TODO
+func (app *BaseApp) SetVersion(v string) {
+	if app.sealed {
+		panic("SetVersion() on sealed BaseApp")
+	}
+
+	i := binary.LittleEndian.Uint64([]byte(v))
+	av := &tmproto.VersionParams{AppVersion: i}
+	app.paramStore.Set(app.deliverState.ctx, ParamStoreKeyVersionParams, av)
+
+}
 
 // SetProtocolVersion sets the application's protocol version
 func (app *BaseApp) SetProtocolVersion(v uint64) {

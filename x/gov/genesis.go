@@ -35,9 +35,9 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 	for _, proposal := range data.Proposals {
 		switch proposal.Status {
 		case v1beta2.StatusDepositPeriod:
-			k.InsertInactiveProposalQueue(ctx, proposal.ProposalId, *proposal.DepositEndTime)
+			k.InsertInactiveProposalQueue(ctx, proposal.Id, *proposal.DepositEndTime)
 		case v1beta2.StatusVotingPeriod:
-			k.InsertActiveProposalQueue(ctx, proposal.ProposalId, *proposal.VotingEndTime)
+			k.InsertActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
 		}
 		k.SetProposal(ctx, *proposal)
 	}
@@ -65,10 +65,10 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *v1beta2.GenesisState {
 	var proposalsDeposits v1beta2.Deposits
 	var proposalsVotes v1beta2.Votes
 	for _, proposal := range proposals {
-		deposits := k.GetDeposits(ctx, proposal.ProposalId)
+		deposits := k.GetDeposits(ctx, proposal.Id)
 		proposalsDeposits = append(proposalsDeposits, deposits...)
 
-		votes := k.GetVotes(ctx, proposal.ProposalId)
+		votes := k.GetVotes(ctx, proposal.Id)
 		proposalsVotes = append(proposalsVotes, votes...)
 	}
 

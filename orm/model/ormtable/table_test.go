@@ -81,7 +81,7 @@ func checkEncodeDecodeEntries(t *testing.T, table ormtable.Table, store kv.Reado
 
 func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backend) {
 	ctx := ormtable.WrapContextDefault(backend)
-	store, err := testpb.NewExampleTableStore(table)
+	store, err := testpb.NewExampleTableTable(table)
 
 	// let's create 10 data items we'll use later and give them indexes
 	data := []*testpb.ExampleTable{

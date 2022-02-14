@@ -55,13 +55,13 @@ func TestMigrateStore(t *testing.T) {
 }
 
 func compareProps(t *testing.T, oldProp v1beta1.Proposal, newProp v1beta2.Proposal) {
-	require.Equal(t, oldProp.ProposalId, newProp.ProposalId)
+	require.Equal(t, oldProp.ProposalId, newProp.Id)
 	require.Equal(t, oldProp.TotalDeposit.String(), sdk.Coins(newProp.TotalDeposit).String())
 	require.Equal(t, oldProp.Status.String(), newProp.Status.String())
-	require.Equal(t, oldProp.FinalTallyResult.Yes.String(), newProp.FinalTallyResult.Yes)
-	require.Equal(t, oldProp.FinalTallyResult.No.String(), newProp.FinalTallyResult.No)
-	require.Equal(t, oldProp.FinalTallyResult.NoWithVeto.String(), newProp.FinalTallyResult.NoWithVeto)
-	require.Equal(t, oldProp.FinalTallyResult.Abstain.String(), newProp.FinalTallyResult.Abstain)
+	require.Equal(t, oldProp.FinalTallyResult.Yes.String(), newProp.FinalTallyResult.YesCount)
+	require.Equal(t, oldProp.FinalTallyResult.No.String(), newProp.FinalTallyResult.NoCount)
+	require.Equal(t, oldProp.FinalTallyResult.NoWithVeto.String(), newProp.FinalTallyResult.NoWithVetoCount)
+	require.Equal(t, oldProp.FinalTallyResult.Abstain.String(), newProp.FinalTallyResult.AbstainCount)
 
 	newContent := newProp.Messages[0].GetCachedValue().(*v1beta2.MsgExecLegacyContent).Content.GetCachedValue().(v1beta1.Content)
 	require.Equal(t, oldProp.Content.GetCachedValue().(v1beta1.Content), newContent)

@@ -37,7 +37,7 @@ func (s singletonGen) gen() {
 
 func (s singletonGen) genInterface() {
 	s.P("// singleton store")
-	s.P("type ", s.messageStoreInterfaceName(s.msg), " interface {")
+	s.P("type ", s.messageTableInterfaceName(s.msg), " interface {")
 	s.P("Get(ctx ", contextPkg.Ident("Context"), ") (*", s.msg.GoIdent.GoName, ", error)")
 	s.P("Save(ctx ", contextPkg.Ident("Context"), ", ", s.param(s.msg.GoIdent.GoName), "*", s.msg.GoIdent.GoName, ") error")
 	s.P("}")
@@ -45,18 +45,18 @@ func (s singletonGen) genInterface() {
 }
 
 func (s singletonGen) genStruct() {
-	s.P("type ", s.messageStoreReceiverName(s.msg), " struct {")
+	s.P("type ", s.messageTableReceiverName(s.msg), " struct {")
 	s.P("table ", ormTablePkg.Ident("Table"))
 	s.P("}")
 	s.P()
 }
 
 func (s singletonGen) genInterfaceGuard() {
-	s.P("var _ ", s.messageStoreInterfaceName(s.msg), " = ", s.messageStoreReceiverName(s.msg), "{}")
+	s.P("var _ ", s.messageTableInterfaceName(s.msg), " = ", s.messageTableReceiverName(s.msg), "{}")
 }
 
 func (s singletonGen) genMethods() {
-	receiver := fmt.Sprintf("func (x %s) ", s.messageStoreReceiverName(s.msg))
+	receiver := fmt.Sprintf("func (x %s) ", s.messageTableReceiverName(s.msg))
 	varName := s.param(s.msg.GoIdent.GoName)
 	// Get
 	s.P(receiver, "Get(ctx ", contextPkg.Ident("Context"), ") (*", s.msg.GoIdent.GoName, ", error) {")
@@ -74,12 +74,12 @@ func (s singletonGen) genMethods() {
 }
 
 func (s singletonGen) genConstructor() {
-	iface := s.messageStoreInterfaceName(s.msg)
+	iface := s.messageTableInterfaceName(s.msg)
 	s.P("func New", iface, "(db ", ormTablePkg.Ident("Schema"), ") (", iface, ", error) {")
 	s.P("table := db.GetTable(&", s.msg.GoIdent.GoName, "{})")
 	s.P("if table == nil {")
 	s.P("return nil, ", ormErrPkg.Ident("TableNotFound.Wrap"), "(string((&", s.msg.GoIdent.GoName, "{}).ProtoReflect().Descriptor().FullName()))")
 	s.P("}")
-	s.P("return &", s.messageStoreReceiverName(s.msg), "{table}, nil")
+	s.P("return &", s.messageTableReceiverName(s.msg), "{table}, nil")
 	s.P("}")
 }

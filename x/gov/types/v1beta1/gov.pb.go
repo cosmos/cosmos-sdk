@@ -242,9 +242,12 @@ var xxx_messageInfo_Deposit proto.InternalMessageInfo
 
 // Proposal defines the core field members of a governance proposal.
 type Proposal struct {
-	ProposalId       uint64                                   `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	Content          *types1.Any                              `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
-	Status           ProposalStatus                           `protobuf:"varint,3,opt,name=status,proto3,enum=cosmos.gov.v1beta1.ProposalStatus" json:"status,omitempty"`
+	ProposalId uint64         `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	Content    *types1.Any    `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	Status     ProposalStatus `protobuf:"varint,3,opt,name=status,proto3,enum=cosmos.gov.v1beta1.ProposalStatus" json:"status,omitempty"`
+	// final_tally_result is the final tally result of the proposal. When
+	// querying a proposal via gRPC, this field is not populated until the
+	// proposal's voting period has ended.
 	FinalTallyResult TallyResult                              `protobuf:"bytes,4,opt,name=final_tally_result,json=finalTallyResult,proto3" json:"final_tally_result"`
 	SubmitTime       time.Time                                `protobuf:"bytes,5,opt,name=submit_time,json=submitTime,proto3,stdtime" json:"submit_time"`
 	DepositEndTime   time.Time                                `protobuf:"bytes,6,opt,name=deposit_end_time,json=depositEndTime,proto3,stdtime" json:"deposit_end_time"`

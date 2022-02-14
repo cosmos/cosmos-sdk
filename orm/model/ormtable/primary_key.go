@@ -136,8 +136,8 @@ func (p primaryKeyIndex) doDelete(ctx context.Context, primaryKeyValues []protor
 }
 
 func (p primaryKeyIndex) doDeleteWithWriteBatch(backend Backend, writer *batchIndexCommitmentWriter, primaryKeyBz []byte, message proto.Message) error {
-	if hooks := backend.Hooks(); hooks != nil {
-		err := hooks.OnDelete(message)
+	if hooks := backend.ValidateHooks(); hooks != nil {
+		err := hooks.ValidateDelete(nil, message)
 		if err != nil {
 			return err
 		}

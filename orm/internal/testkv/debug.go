@@ -1,6 +1,7 @@
 package testkv
 
 import (
+	"context"
 	"fmt"
 
 	"google.golang.org/protobuf/proto"
@@ -26,7 +27,7 @@ func NewDebugBackend(backend ormtable.Backend, debugger Debugger) ormtable.Backe
 	return ormtable.NewBackend(ormtable.BackendOptions{
 		CommitmentStore: NewDebugStore(backend.CommitmentStore(), debugger, "commit"),
 		IndexStore:      NewDebugStore(backend.IndexStore(), debugger, "index"),
-		Hooks:           debugHooks{debugger: debugger, hooks: backend.Hooks()},
+		Hooks:           debugHooks{debugger: debugger, hooks: backend.ValidateHooks()},
 	})
 }
 
@@ -207,10 +208,10 @@ func (d *EntryCodecDebugger) Decode(key, value []byte) string {
 
 type debugHooks struct {
 	debugger Debugger
-	hooks    ormtable.Hooks
+	hooks    ormtable.ValidateHooks
 }
 
-func (d debugHooks) OnInsert(message proto.Message) error {
+func (d debugHooks) ValidateInsert(context context.Context, message proto.Message) error {
 	jsonBz, err := stablejson.Marshal(message)
 	if err != nil {
 		return err
@@ -222,12 +223,12 @@ func (d debugHooks) OnInsert(message proto.Message) error {
 		jsonBz,
 	))
 	if d.hooks != nil {
-		return d.hooks.OnInsert(message)
+		return d.hooks.ValidateInsert(
 	}
 	return nil
 }
 
-func (d debugHooks) OnUpdate(existing, new proto.Message) error {
+func (d debugHooks) ValidateUpdate(ctx context.Context, existing, new proto.Message) error {
 	existingJson, err := stablejson.Marshal(existing)
 	if err != nil {
 		return err
@@ -245,12 +246,12 @@ func (d debugHooks) OnUpdate(existing, new proto.Message) error {
 		newJson,
 	))
 	if d.hooks != nil {
-		return d.hooks.OnUpdate(existing, new)
+		return d.hooks.ValidateUpdate(nil, existing, new)
 	}
 	return nil
 }
 
-func (d debugHooks) OnDelete(message proto.Message) error {
+func (d debugHooks) ValidateDelete(ctx context.Context, message proto.Message) error {
 	jsonBz, err := stablejson.Marshal(message)
 	if err != nil {
 		return err
@@ -262,7 +263,7 @@ func (d debugHooks) OnDelete(message proto.Message) error {
 		jsonBz,
 	))
 	if d.hooks != nil {
-		return d.hooks.OnDelete(message)
+		return d.hooks.ValidateDelete(nil, message)
 	}
 	return nil
 }

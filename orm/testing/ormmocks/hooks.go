@@ -5,13 +5,14 @@
 package ormmocks
 
 import (
+	"context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
 	proto "google.golang.org/protobuf/proto"
 )
 
-// MockHooks is a mock of Hooks interface.
+// MockHooks is a mock of ValidateHooks interface.
 type MockHooks struct {
 	ctrl     *gomock.Controller
 	recorder *MockHooksMockRecorder
@@ -35,9 +36,9 @@ func (m *MockHooks) EXPECT() *MockHooksMockRecorder {
 }
 
 // OnDelete mocks base method.
-func (m *MockHooks) OnDelete(arg0 proto.Message) error {
+func (m *MockHooks) ValidateDelete(ctx context.Context, arg0 proto.Message) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "OnDelete", arg0)
+	ret := m.ctrl.Call(m, "ValidateDelete", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
@@ -45,13 +46,13 @@ func (m *MockHooks) OnDelete(arg0 proto.Message) error {
 // OnDelete indicates an expected call of OnDelete.
 func (mr *MockHooksMockRecorder) OnDelete(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDelete", reflect.TypeOf((*MockHooks)(nil).OnDelete), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateDelete", reflect.TypeOf((*MockHooks)(nil).ValidateDelete), arg0)
 }
 
 // OnInsert mocks base method.
-func (m *MockHooks) OnInsert(arg0 proto.Message) error {
+func (m *MockHooks) ValidateInsert(context context.Context, arg0 proto.Message) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "OnInsert", arg0)
+	ret := m.ctrl.Call(m, "ValidateInsert", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
@@ -59,13 +60,13 @@ func (m *MockHooks) OnInsert(arg0 proto.Message) error {
 // OnInsert indicates an expected call of OnInsert.
 func (mr *MockHooksMockRecorder) OnInsert(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnInsert", reflect.TypeOf((*MockHooks)(nil).OnInsert), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateInsert", reflect.TypeOf((*MockHooks)(nil).ValidateInsert), arg0)
 }
 
 // OnUpdate mocks base method.
-func (m *MockHooks) OnUpdate(existing, new proto.Message) error {
+func (m *MockHooks) ValidateUpdate(ctx context.Context, existing, new proto.Message) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "OnUpdate", existing, new)
+	ret := m.ctrl.Call(m, "ValidateUpdate", existing, new)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
@@ -73,5 +74,5 @@ func (m *MockHooks) OnUpdate(existing, new proto.Message) error {
 // OnUpdate indicates an expected call of OnUpdate.
 func (mr *MockHooksMockRecorder) OnUpdate(existing, new interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnUpdate", reflect.TypeOf((*MockHooks)(nil).OnUpdate), existing, new)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateUpdate", reflect.TypeOf((*MockHooks)(nil).ValidateUpdate), existing, new)
 }

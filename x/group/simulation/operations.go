@@ -116,7 +116,7 @@ func WeightedOperations(
 			weightMsgVote = WeightMsgVote
 		},
 	)
-	appParams.GetOrGenerate(cdc, OpMsgVote, &weightMsgVote, nil,
+	appParams.GetOrGenerate(cdc, OpMsgVote, &weightMsgVoteWeighted, nil,
 		func(_ *rand.Rand) {
 			weightMsgVoteWeighted = WeightMsgVoteWeighted
 		},
@@ -966,13 +966,13 @@ func SimulateMsgVoteWeighted(ak group.AccountKeeper,
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		g, groupPolicy, _, _, err := randomGroupPolicy(r, k, ak, sdkCtx, accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, ""), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVoteWeighted, ""), nil, err
 		}
 		if g == nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "no group found"), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVoteWeighted, "no group found"), nil, nil
 		}
 		if groupPolicy == nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "no group policy found"), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVoteWeighted, "no group policy found"), nil, nil
 		}
 		groupPolicyAddr := groupPolicy.Address
 
@@ -980,25 +980,25 @@ func SimulateMsgVoteWeighted(ak group.AccountKeeper,
 		ctx := sdk.WrapSDKContext(sdkCtx)
 		acc, account, err := randomMember(r, k, ak, ctx, accounts, g.GroupId)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, ""), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVoteWeighted, ""), nil, err
 		}
 		if account == nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "no group member found"), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVoteWeighted, "no group member found"), nil, nil
 		}
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
 		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "fee error"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVoteWeighted, "fee error"), nil, err
 		}
 
 		proposalsResult, err := k.ProposalsByGroupPolicy(ctx, &group.QueryProposalsByGroupPolicyRequest{Address: groupPolicyAddr})
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "fail to query group info"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVoteWeighted, "fail to query group info"), nil, err
 		}
 		proposals := proposalsResult.GetProposals()
 		if len(proposals) == 0 {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "no proposals found"), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVoteWeighted, "no proposals found"), nil, nil
 		}
 
 		var proposal *group.Proposal
@@ -1010,7 +1010,7 @@ func SimulateMsgVoteWeighted(ak group.AccountKeeper,
 				proposal = p
 				proposalID = int(p.ProposalId)
 				if timeout.Before(sdkCtx.BlockTime()) || timeout.Equal(sdkCtx.BlockTime()) {
-					return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "voting period ended: skipping"), nil, nil
+					return simtypes.NoOpMsg(group.ModuleName, TypeMsgVoteWeighted, "voting period ended: skipping"), nil, nil
 				}
 				break
 			}
@@ -1018,15 +1018,15 @@ func SimulateMsgVoteWeighted(ak group.AccountKeeper,
 
 		// return no-op if no proposal found
 		if proposalID == -1 {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "no proposals found"), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVoteWeighted, "no proposals found"), nil, nil
 		}
 
 		// Ensure that group and group policy haven't been modified since the proposal submission.
 		if proposal.GroupPolicyVersion != groupPolicy.Version {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "group policy has been modified"), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVoteWeighted, "group policy has been modified"), nil, nil
 		}
 		if proposal.GroupVersion != g.Version {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "group has been modified"), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVoteWeighted, "group has been modified"), nil, nil
 		}
 
 		// Ensure member hasn't already voted
@@ -1035,7 +1035,7 @@ func SimulateMsgVoteWeighted(ak group.AccountKeeper,
 			ProposalId: uint64(proposalID),
 		})
 		if res != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "member has already voted"), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVoteWeighted, "member has already voted"), nil, nil
 		}
 
 		msg := group.MsgVoteWeighted{

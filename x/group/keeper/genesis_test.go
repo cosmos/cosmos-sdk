@@ -106,14 +106,14 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	s.Require().NoError(err)
 
 	genesisState := &group.GenesisState{
-		GroupSeq:              2,
-		Groups:                []*group.GroupInfo{{GroupId: 1, Admin: accAddr.String(), Metadata: []byte("1"), Version: 1, TotalWeight: "1"}, {GroupId: 2, Admin: accAddr.String(), Metadata: []byte("2"), Version: 2, TotalWeight: "2"}},
-		GroupMembers:          []*group.GroupMember{{GroupId: 1, Member: &group.Member{Address: memberAddr.String(), Weight: "1", Metadata: []byte("member metadata")}}, {GroupId: 2, Member: &group.Member{Address: memberAddr.String(), Weight: "2", Metadata: []byte("member metadata")}}},
+		GroupSeq:       2,
+		Groups:         []*group.GroupInfo{{GroupId: 1, Admin: accAddr.String(), Metadata: []byte("1"), Version: 1, TotalWeight: "1"}, {GroupId: 2, Admin: accAddr.String(), Metadata: []byte("2"), Version: 2, TotalWeight: "2"}},
+		GroupMembers:   []*group.GroupMember{{GroupId: 1, Member: &group.Member{Address: memberAddr.String(), Weight: "1", Metadata: []byte("member metadata")}}, {GroupId: 2, Member: &group.Member{Address: memberAddr.String(), Weight: "2", Metadata: []byte("member metadata")}}},
 		GroupPolicySeq: 1,
-		GroupPolicies:         []*group.GroupPolicyInfo{groupPolicy},
-		ProposalSeq:           1,
-		Proposals:             []*group.Proposal{proposal},
-		Votes:                 []*group.Vote{{ProposalId: proposal.ProposalId, Voter: memberAddr.String(), SubmittedAt: submittedAt, Choice: group.Choice_CHOICE_YES}},
+		GroupPolicies:  []*group.GroupPolicyInfo{groupPolicy},
+		ProposalSeq:    1,
+		Proposals:      []*group.Proposal{proposal},
+		Votes:          []*group.Vote{{ProposalId: proposal.ProposalId, Voter: memberAddr.String(), SubmittedAt: submittedAt, Choices: group.NewNonSplitVoteOption(group.Choice_CHOICE_YES)}},
 	}
 	genesisBytes, err := cdc.MarshalJSON(genesisState)
 	s.Require().NoError(err)

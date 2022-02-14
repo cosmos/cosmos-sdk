@@ -151,7 +151,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	var res group.QueryGroupPoliciesByGroupResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
-	s.Require().Equal(len(res.GroupPolicies), 6)
+	s.Require().Equal(len(res.GroupPolicies), 7)
 	s.groupPolicies = res.GroupPolicies
 
 	// create a proposal

@@ -373,6 +373,7 @@ func (s *IntegrationTestSuite) TestQueryGroupPoliciesByGroup() {
 				s.groupPolicies[3],
 				s.groupPolicies[4],
 				s.groupPolicies[5],
+				s.groupPolicies[6],
 			},
 		},
 	}
@@ -445,6 +446,7 @@ func (s *IntegrationTestSuite) TestQueryGroupPoliciesByAdmin() {
 				s.groupPolicies[3],
 				s.groupPolicies[4],
 				s.groupPolicies[5],
+				s.groupPolicies[6],
 			},
 		},
 	}

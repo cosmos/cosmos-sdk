@@ -1033,6 +1033,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 	groupPolicyAddr, myGroupID, policy := createGroupAndGroupPolicy(admin, s)
 
 	specs := map[string]struct {
+		preRun         func(admin sdk.AccAddress, s *TestSuite) (policyAddr string, groupId uint64, policy group.DecisionPolicy)
 		req            *group.MsgUpdateGroupPolicyDecisionPolicy
 		policy         group.DecisionPolicy
 		expGroupPolicy *group.GroupPolicyInfo
@@ -1077,6 +1078,9 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 			expErr: false,
 		},
 		"correct data with percentage decision policy": {
+			preRun: func(admin sdk.AccAddress, s *TestSuite) (policyAddr string, groupId uint64, policy group.DecisionPolicy) {
+				return createGroupAndGroupPolicy(admin, s)
+			},
 			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
 				Admin:   admin.String(),
 				Address: groupPolicyAddr,
@@ -1087,11 +1091,9 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 			),
 			expGroupPolicy: &group.GroupPolicyInfo{
 				Admin:          admin.String(),
-				Address:        groupPolicyAddr,
-				GroupId:        myGroupID,
 				Metadata:       nil,
-				Version:        3,
 				DecisionPolicy: nil,
+				Version:        2,
 				CreatedAt:      s.blockTime,
 			},
 			expErr: false,
@@ -1099,8 +1101,17 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 	}
 	for msg, spec := range specs {
 		spec := spec
+		policyAddr := groupPolicyAddr
 		err := spec.expGroupPolicy.SetDecisionPolicy(spec.policy)
 		s.Require().NoError(err)
+		if spec.preRun != nil {
+			policyAddr1, groupId, _ := spec.preRun(admin, s)
+			spec.expGroupPolicy.GroupId = groupId
+			policyAddr = policyAddr1
+			spec.expGroupPolicy.Address = policyAddr1
+			spec.expGroupPolicy.GroupId = groupId
+			spec.req.Address = policyAddr1
+		}
 
 		err = spec.req.SetDecisionPolicy(spec.policy)
 		s.Require().NoError(err)
@@ -1113,7 +1124,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 			}
 			s.Require().NoError(err)
 			res, err := s.keeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{
-				Address: groupPolicyAddr,
+				Address: policyAddr,
 			})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.expGroupPolicy, res.Info)

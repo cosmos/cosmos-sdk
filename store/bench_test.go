@@ -213,21 +213,23 @@ func RunRvert(b *testing.B, version int, dbType tmdb.BackendType, committedValue
 	}
 	_ = s.Commit()
 
-	// Key, value pairs changed but not committed
-	for i, v := range uncommittedValues {
-		s.Set(createKey(i), v)
-	}
-
 	b.ResetTimer()
-	switch t := s.(type) {
-	case *storev1.Store:
-		s, err = newStore(1, db, nil, cacheSize) // This shall revert to the last commitID
-		require.NoError(b, err)
-	case *storeV2:
-		require.NoError(b, t.Close())
-		s, err = newStore(2, db, nil, 0) // This shall revert to the last commitID
-	default:
-		panic("not supported store type")
+	for i := 0; i < b.N; i++ {
+		// Key, value pairs changed but not committed
+		for i, v := range uncommittedValues {
+			s.Set(createKey(i), v)
+		}
+
+		switch t := s.(type) {
+		case *storev1.Store:
+			s, err = newStore(1, db, nil, cacheSize) // This shall revert to the last commitID
+			require.NoError(b, err)
+		case *storeV2:
+			require.NoError(b, t.Close())
+			s, err = newStore(2, db, nil, 0) // This shall revert to the last commitID
+		default:
+			panic("not supported store type")
+		}
 	}
 }
 

@@ -1108,8 +1108,12 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 			policyAddr1, groupId, _ := spec.preRun(admin, s)
 			spec.expGroupPolicy.GroupId = groupId
 			policyAddr = policyAddr1
+
+			// update the expected info with new group policy details
 			spec.expGroupPolicy.Address = policyAddr1
 			spec.expGroupPolicy.GroupId = groupId
+
+			// update req with new group policy addr
 			spec.req.Address = policyAddr1
 		}
 

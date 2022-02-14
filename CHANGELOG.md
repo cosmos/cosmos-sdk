@@ -164,7 +164,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types/errors) [\#10779](https://github.com/cosmos/cosmos-sdk/pull/10779) Move most functionality in `types/errors` to a standalone `errors` go module, except the `RootCodespace` errors and ABCI response helpers. All functions and types that used to live in `types/errors` are now aliased so this is not a breaking change.
 * (gov) [\#10854](https://github.com/cosmos/cosmos-sdk/pull/10854) v1beta2's vote doesn't include the deprecate `option VoteOption` anymore. Instead, it only uses `WeightedVoteOption`.
 * (types) [\#11004](https://github.com/cosmos/cosmos-sdk/pull/11004) Added mutable versions of many of the sdk.Dec types operations.  This improves performance when used by avoiding reallocating a new bigint for each operation.
-* (types) [\#10948](https://github.com/cosmos/cosmos-sdk/issues/10948) Use Tendermint `db_backend` config value instead of compile-time `types.DBBackend` value.
+* (types) [\#10948](https://github.com/cosmos/cosmos-sdk/issues/10948) Use Tendermint `db-backend` config value instead of compile-time `types.DBBackend` value.
 
 ### Bug Fixes
 

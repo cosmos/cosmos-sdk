@@ -169,7 +169,7 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 	transport := ctx.Viper.GetString(flagTransport)
 	home := ctx.Viper.GetString(flags.FlagHome)
 
-	db, err := openDB(home)
+	db, err := openDB(home, ctx.Viper.GetString("db-backend"))
 	if err != nil {
 		return err
 	}
@@ -229,7 +229,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	}
 
 	traceWriterFile := ctx.Viper.GetString(flagTraceStore)
-	db, err := openDB(home)
+	db, err := openDB(home, cfg.DBBackend)
 	if err != nil {
 		return err
 	}

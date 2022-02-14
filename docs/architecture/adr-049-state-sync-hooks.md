@@ -10,16 +10,17 @@ Draft, Under Implementation
 
 ## Abstract
 
-This ADR provides hooks for app modules to publish snapshot of additional state(outside of IAVL tree) for state-sync.
+This ADR outlines a hooks-based mechanism for application modules to provide additional state (outside of the IAVL tree) to be used 
+during state sync.
 
 ## Context
 
-New clients use state-sync to download snapshots of module state from peer nodes. Currently, the snapshot consists of a
-stream of `SnapshotStoreItem` and `SnapshotIAVLItem`, which means for app modules that maintain their states outside of
-the IAVL tree, they can not add their states to the snapshot stream for state-sync.
+New clients use state-sync to download snapshots of module state from peers. Currently, the snapshot consists of a
+stream of `SnapshotStoreItem` and `SnapshotIAVLItem`, which means that application modules that define their state outside of the IAVL 
+tree cannot include their state as part of the state-sync process.
 
-Notification: `Even though the module state data is outside of the tree, for determinism we
-require that the hash of the external data should be posted in the IAVL tree`
+Note, Even though the module state data is outside of the tree, for determinism we require that the hash of the external data should 
+be posted in the IAVL tree.
 
 ## Decision
 
@@ -35,6 +36,7 @@ implement `ExtensionSnapshotter` as extension snapshotters. When setting up the 
 
 ```proto
 // SnapshotItem is an item contained in a rootmulti.Store snapshot.
+// Except the exsiting SnapshotStoreItem and SnapshotIAVLItem, we add two new options for the item.
 message SnapshotItem {
   // item is the specific type of snapshot item.
   oneof item {
@@ -45,24 +47,13 @@ message SnapshotItem {
   }
 }
 
-// SnapshotStoreItem contains metadata about a snapshotted store.
-message SnapshotStoreItem {
-  string name = 1;
-}
-
-// SnapshotIAVLItem is an exported IAVL node.
-message SnapshotIAVLItem {
-  bytes key     = 1;
-  bytes value   = 2;
-  int64 version = 3;
-  int32 height  = 4;
-}
-
 // SnapshotExtensionMeta contains metadata about an external snapshotter.
 // One module may need multiple snapshotters, so each module may have multiple SnapshotExtensionMeta.
 message SnapshotExtensionMeta {
+  // the name of the ExtensionSnapshotter, and it is registered to snapshotter manager when setting up the application
   string name   = 1;
-  // format is used within the snapshotter/namespace, not global one for all modules
+  // this is used by each ExtensionSnapshotter to decide the format of payloads included in SnapshotExtensionPayload message
+  // it is used within the snapshotter/namespace, not global one for all modules
   uint32 format = 2;
 }
 
@@ -72,7 +63,7 @@ message SnapshotExtensionPayload {
 }
 ```
 
-The snapshot stream would look like this:
+The snapshot stream would look like as follows:
 
 ```go
 // multi-store snapshot
@@ -85,7 +76,7 @@ SnapshotExtensionMeta
 {SnapshotExtensionPayload, ...}
 ```
 
-Add `extensions` field to snapshot `Manager` for extension snapshotters. `multistore` snapshotter is a special one and it doesn't need a name because it is always placed at the beginning of the binary stream.
+We add an `extensions` field to snapshot `Manager` for extension snapshotters. The `multistore` snapshotter is a special one and it doesn't need a name because it is always placed at the beginning of the binary stream.
 
 ```go
 type Manager struct {
@@ -102,36 +93,14 @@ type Manager struct {
 ```
 
 For extension snapshotters that implement the `ExtensionSnapshotter` interface, their names should be registered to the snapshot `Manager` by 
-calling `RegisterExtensions` when setting up the application. And the snapshotters will handle both taking snapshot and restoration.
+calling `RegisterExtensions` when setting up the application. The snapshotters will handle both taking snapshot and restoration.
 
 ```go
 // RegisterExtensions register extension snapshotters to manager
 func (m *Manager) RegisterExtensions(extensions ...types.ExtensionSnapshotter) error 
 ```
 
-Remain `Snapshotter` interface for `multistore` snapshotter. No need for `SnapshotFormat` and `SupportedFormats` as for `multistore` snapshotter
-formats are handled in a higher level.
-<ul>
-<li> removal of format parameter: `Snapshotter` chooses a format autonomously, not pass in from the caller. </li>
-<ul>
-
-```go
-// Snapshotter is something that can create and restore snapshots, consisting of streamed binary
-// chunks - all of which must be read from the channel and closed. If an unsupported format is
-// given, it must return ErrUnknownFormat (possibly wrapped with fmt.Errorf).
-type Snapshotter interface {
-	// Snapshot writes snapshot items into the protobuf writer.
-	Snapshot(height uint64, protoWriter protoio.Writer) error
-
-	// Restore restores a state snapshot from the protobuf items read from the reader.
-	// If the ready channel is non-nil, it returns a ready signal (by being closed) once the
-	// restorer is ready to accept chunks.
-	Restore(height uint64, format uint32, protoReader protoio.Reader) (SnapshotItem, error)
-}
-```
-
-Add `ExtensionSnapshotter` interface for extension snapshotters, and three more function signatures: `SnapshotFormat()` `SupportedFormats()` and
-`SnapshotName()` are added.
+Except the existing `Snapshotter` interface for the `multistore`, we add `ExtensionSnapshotter` interface for the extension snapshotters. Three more function signatures: `SnapshotFormat()`, `SupportedFormats()` and `SnapshotName()` are added to `ExtensionSnapshotter`.
 
 ```go
 // ExtensionSnapshotter is an extension Snapshotter that is appended to the snapshot stream.
@@ -161,15 +130,11 @@ This ADR introduces new proto message types, add field for extension snapshotter
 
 ### Positive
 
-State maintained outside of IAVL tree like CosmWasm blobs can create snapshots by implementing extension snapshotters, and being fetched by new clients via state-sync.
-
-### Negative
-
-// Todo
+- State maintained outside of IAVL tree like CosmWasm blobs can create snapshots by implementing extension snapshotters, and being fetched by new clients via state-sync.
 
 ### Neutral
 
-All modules that maintain state outside of IAVL tree need to implement `ExtensionSnapshotter` and the snapshot `Manager` need to call `RegisterExtensions` when setting up the application.
+- All modules that maintain state outside of IAVL tree need to implement `ExtensionSnapshotter` and the snapshot `Manager` need to call `RegisterExtensions` when setting up the application.
 
 ## Further Discussions
 

@@ -3,7 +3,7 @@ package ormtable
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/orm/model/kv"
+	"github.com/cosmos/cosmos-sdk/orm/types/kv"
 )
 
 // ReadBackend defines the type used for read-only ORM operations.
@@ -32,6 +32,9 @@ type Backend interface {
 
 	// Hooks returns a Hooks instance or nil.
 	Hooks() Hooks
+
+	// WithHooks returns a copy of this backend with the provided hooks.
+	WithHooks(Hooks) Backend
 }
 
 // ReadBackendOptions defines options for creating a ReadBackend.
@@ -80,6 +83,11 @@ type backend struct {
 	commitmentStore kv.Store
 	indexStore      kv.Store
 	hooks           Hooks
+}
+
+func (c backend) WithHooks(hooks Hooks) Backend {
+	c.hooks = hooks
+	return c
 }
 
 func (backend) private() {}

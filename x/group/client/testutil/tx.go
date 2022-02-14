@@ -76,11 +76,16 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	}
 
 	// create a group
-	validMembers := fmt.Sprintf(`{"members": [{
-	  "address": "%s",
-		"weight": "3",
-		"metadata": "%s"
-	}]}`, val.Address.String(), validMetadata)
+	validMembers := fmt.Sprintf(`
+	{
+		"members": [
+			{
+				"address": "%s",
+				"weight": "3",
+				"metadata": "%s"
+			}
+		]
+	}`, val.Address.String(), validMetadata)
 	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
 	out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateGroupCmd(),
 		append(
@@ -124,10 +129,29 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 		s.Require().NoError(err, out.String())
 	}
+	percentage := 0.5
+	// create group policy with percentage decision policy
+	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateGroupPolicyCmd(),
+		append(
+			[]string{
+				val.Address.String(),
+				"1",
+				validMetadata,
+				fmt.Sprintf("{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"%f\", \"timeout\":\"30000s\"}", percentage),
+			},
+			commonFlags...,
+		),
+	)
+	s.Require().NoError(err, out.String())
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	s.Require().Equal(uint32(0), txResp.Code, out.String())
+
+	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	s.Require().NoError(err, out.String())
 
 	var res group.QueryGroupPoliciesByGroupResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
-	s.Require().Equal(len(res.GroupPolicies), 5)
+	s.Require().Equal(len(res.GroupPolicies), 6)
 	s.groupPolicies = res.GroupPolicies
 
 	// create a proposal
@@ -707,6 +731,22 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 			0,
 		},
 		{
+			"correct data with percentage decision policy",
+			append(
+				[]string{
+					val.Address.String(),
+					fmt.Sprintf("%v", groupID),
+					validMetadata,
+					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"0.5\", \"timeout\":\"1s\"}",
+				},
+				commonFlags...,
+			),
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
 			"with amino-json",
 			append(
 				[]string{
@@ -768,6 +808,38 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 			),
 			true,
 			"not found",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"invalid percentage decision policy with negative value",
+			append(
+				[]string{
+					val.Address.String(),
+					fmt.Sprintf("%v", groupID),
+					validMetadata,
+					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"-0.5\", \"timeout\":\"1s\"}",
+				},
+				commonFlags...,
+			),
+			true,
+			"expected a positive decimal",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"invalid percentage decision policy with value greater than 1",
+			append(
+				[]string{
+					val.Address.String(),
+					fmt.Sprintf("%v", groupID),
+					validMetadata,
+					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"2\", \"timeout\":\"1s\"}",
+				},
+				commonFlags...,
+			),
+			true,
+			"percentage must be > 0 and <= 1",
 			&sdk.TxResponse{},
 			0,
 		},
@@ -932,6 +1004,21 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			0,
 		},
 		{
+			"correct data with percentage decision policy",
+			append(
+				[]string{
+					groupPolicy.Admin,
+					groupPolicy.Address,
+					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"0.5\", \"timeout\":\"40000s\"}",
+				},
+				commonFlags...,
+			),
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
 			"with amino-json",
 			append(
 				[]string{
@@ -974,6 +1061,36 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			),
 			true,
 			"load group policy: not found",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"invalid percentage decision policy with negative value",
+			append(
+				[]string{
+					groupPolicy.Admin,
+					groupPolicy.Address,
+					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"-0.5\", \"timeout\":\"1s\"}",
+				},
+				commonFlags...,
+			),
+			true,
+			"expected a positive decimal",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"invalid percentage decision policy with value greater than 1",
+			append(
+				[]string{
+					groupPolicy.Admin,
+					groupPolicy.Address,
+					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"2\", \"timeout\":\"40000s\"}",
+				},
+				commonFlags...,
+			),
+			true,
+			"percentage must be > 0 and <= 1",
 			&sdk.TxResponse{},
 			0,
 		},
@@ -1503,6 +1620,155 @@ func (s *IntegrationTestSuite) TestTxVote() {
 			}
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	var commonFlags = []string{
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	}
+
+	ids := make([]string, 2)
+
+	validTxFileName := getTxSendFileName(s, s.groupPolicies[1].Address, val.Address.String())
+	for i := 0; i < 2; i++ {
+		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateProposalCmd(),
+			append(
+				[]string{
+					s.groupPolicies[1].Address,
+					val.Address.String(),
+					validTxFileName,
+					"",
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				},
+				commonFlags...,
+			),
+		)
+		s.Require().NoError(err, out.String())
+
+		var txResp sdk.TxResponse
+		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+		s.Require().Equal(uint32(0), txResp.Code, out.String())
+		ids[i] = s.getProposalIdFromTxResponse(txResp)
+	}
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		expectErrMsg string
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"correct data",
+			append(
+				[]string{
+					ids[0],
+					val.Address.String(),
+				},
+				commonFlags...,
+			),
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"already withdrawn proposal",
+			append(
+				[]string{
+					ids[0],
+					val.Address.String(),
+				},
+				commonFlags...,
+			),
+			true,
+			"cannot withdraw a proposal with the status of STATUS_WITHDRAWN",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"proposal not found",
+			append(
+				[]string{
+					"222",
+					"wrongAdmin",
+				},
+				commonFlags...,
+			),
+			true,
+			"not found",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"invalid proposal",
+			append(
+				[]string{
+					"abc",
+					val.Address.String(),
+				},
+				commonFlags...,
+			),
+			true,
+			"invalid syntax",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"wrong admin",
+			append(
+				[]string{
+					ids[1],
+					"wrongAdmin",
+				},
+				commonFlags...,
+			),
+			true,
+			"key not found",
+			&sdk.TxResponse{},
+			0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := client.MsgWithdrawProposalCmd()
+
+			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Contains(out.String(), tc.expectErrMsg)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) getProposalIdFromTxResponse(txResp sdk.TxResponse) string {
+	s.Require().Greater(len(txResp.Logs), 0)
+	s.Require().NotNil(txResp.Logs[0].Events)
+	events := txResp.Logs[0].Events
+	createProposalEvent, _ := sdk.TypedEventToEvent(&group.EventCreateProposal{})
+
+	for _, e := range events {
+		if e.Type == createProposalEvent.Type {
+			return strings.ReplaceAll(e.Attributes[0].Value, "\"", "")
+		}
+	}
+
+	return ""
 }
 
 func (s *IntegrationTestSuite) TestTxExec() {

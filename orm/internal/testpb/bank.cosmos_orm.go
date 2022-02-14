@@ -5,7 +5,6 @@ package testpb
 import (
 	context "context"
 
-	ormdb "github.com/cosmos/cosmos-sdk/orm/model/ormdb"
 	ormlist "github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	ormerrors "github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
@@ -17,6 +16,7 @@ type BalanceStore interface {
 	Save(ctx context.Context, balance *Balance) error
 	Delete(ctx context.Context, balance *Balance) error
 	Has(ctx context.Context, address string, denom string) (found bool, err error)
+	// Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
 	Get(ctx context.Context, address string, denom string) (*Balance, error)
 	List(ctx context.Context, prefixKey BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
 	ListRange(ctx context.Context, from, to BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
@@ -103,10 +103,13 @@ func (this balanceStore) Has(ctx context.Context, address string, denom string) 
 func (this balanceStore) Get(ctx context.Context, address string, denom string) (*Balance, error) {
 	var balance Balance
 	found, err := this.table.PrimaryKey().Get(ctx, &balance, address, denom)
-	if !found {
+	if err != nil {
 		return nil, err
 	}
-	return &balance, err
+	if !found {
+		return nil, ormerrors.NotFound
+	}
+	return &balance, nil
 }
 
 func (this balanceStore) List(ctx context.Context, prefixKey BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error) {
@@ -131,7 +134,7 @@ func (this balanceStore) doNotImplement() {}
 
 var _ BalanceStore = balanceStore{}
 
-func NewBalanceStore(db ormdb.ModuleDB) (BalanceStore, error) {
+func NewBalanceStore(db ormtable.Schema) (BalanceStore, error) {
 	table := db.GetTable(&Balance{})
 	if table == nil {
 		return nil, ormerrors.TableNotFound.Wrap(string((&Balance{}).ProtoReflect().Descriptor().FullName()))
@@ -145,6 +148,7 @@ type SupplyStore interface {
 	Save(ctx context.Context, supply *Supply) error
 	Delete(ctx context.Context, supply *Supply) error
 	Has(ctx context.Context, denom string) (found bool, err error)
+	// Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
 	Get(ctx context.Context, denom string) (*Supply, error)
 	List(ctx context.Context, prefixKey SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error)
 	ListRange(ctx context.Context, from, to SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error)
@@ -213,10 +217,13 @@ func (this supplyStore) Has(ctx context.Context, denom string) (found bool, err 
 func (this supplyStore) Get(ctx context.Context, denom string) (*Supply, error) {
 	var supply Supply
 	found, err := this.table.PrimaryKey().Get(ctx, &supply, denom)
-	if !found {
+	if err != nil {
 		return nil, err
 	}
-	return &supply, err
+	if !found {
+		return nil, ormerrors.NotFound
+	}
+	return &supply, nil
 }
 
 func (this supplyStore) List(ctx context.Context, prefixKey SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error) {
@@ -241,7 +248,7 @@ func (this supplyStore) doNotImplement() {}
 
 var _ SupplyStore = supplyStore{}
 
-func NewSupplyStore(db ormdb.ModuleDB) (SupplyStore, error) {
+func NewSupplyStore(db ormtable.Schema) (SupplyStore, error) {
 	table := db.GetTable(&Supply{})
 	if table == nil {
 		return nil, ormerrors.TableNotFound.Wrap(string((&Supply{}).ProtoReflect().Descriptor().FullName()))
@@ -273,7 +280,7 @@ func (bankStore) doNotImplement() {}
 
 var _ BankStore = bankStore{}
 
-func NewBankStore(db ormdb.ModuleDB) (BankStore, error) {
+func NewBankStore(db ormtable.Schema) (BankStore, error) {
 	balanceStore, err := NewBalanceStore(db)
 	if err != nil {
 		return nil, err

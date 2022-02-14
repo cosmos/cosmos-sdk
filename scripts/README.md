@@ -1,8 +1,10 @@
+# Scripts
+
 Generally we should avoid shell scripting and write tests purely in Golang.
 However, some libraries are not Goroutine-safe (e.g. app simulations cannot be run safely in parallel),
 and OS-native threading may be more efficient for many parallel simulations, so we use shell scripts here.
 
-### Validate Gentxs
+## Validate Gentxs
 
 A custom utility script is available to [validate gentxs](./validate-gentxs.sh). Though we have
 `ValidateBasic()` for validating gentx data, it cannot validate signatures. This custom script helps
@@ -22,4 +24,4 @@ export GENTXS_DIR=~/go/src/github.com/cosmos/mainnet/$CHAIN_ID/gentxs
 
 Though this script is handy for verifying the gentxs locally, it is advised to use Github Action to validate gentxs.
 An example can be found here:
-https://github.com/regen-network/mainnet/blob/0bcd387671b9574e893289e39c08a1643cac7d62/.github/workflows/validate-gentx.yml
+<https://github.com/regen-network/mainnet/blob/0bcd387671b9574e893289e39c08a1643cac7d62/.github/workflows/validate-gentx.yml>

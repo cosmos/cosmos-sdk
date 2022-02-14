@@ -46,6 +46,18 @@ message ThresholdDecisionPolicy {
   google.protobuf.Duration timeout = 2 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
+// PercentageDecisionPolicy implements the DecisionPolicy interface
+message PercentageDecisionPolicy {
+  option (cosmos_proto.implements_interface) = "DecisionPolicy";
+
+  // percentage is the minimum percentage the weighted sum of yes votes must meet for a proposal to succeed.
+  string percentage = 1;
+
+  // timeout is the duration from submission of a proposal to the end of voting period
+  // Within these times votes and exec messages can be submitted.
+  google.protobuf.Duration timeout = 2 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+}
+
 // Choice defines available types of choices for voting.
 enum Choice {
 
@@ -178,10 +190,9 @@ message Proposal {
     // Final status of a proposal when the group was modified before the final tally.
     STATUS_ABORTED = 3 [(gogoproto.enumvalue_customname) = "ProposalStatusAborted"];
 
-    // TODO: do we want to support a withdrawn operation?
     // A proposal can be deleted before the voting start time by the owner. When this happens the final status
     // is Withdrawn.
-    //        STATUS_WITHDRAWN = 4 [(gogoproto.enumvalue_customname) = "Withdrawn"];
+    STATUS_WITHDRAWN = 4 [(gogoproto.enumvalue_customname) = "ProposalStatusWithdrawn"];
   }
 
   // Status represents the high level position in the life cycle of the proposal. Initial value is Submitted.

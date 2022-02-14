@@ -398,8 +398,8 @@ func TestPruning(t *testing.T) {
 		types.PruningOptions
 		kept []uint64
 	}{
-		{types.PruningOptions{2, 4, 10}, []uint64{4, 8, 9, 10}},
-		{types.PruningOptions{0, 4, 10}, []uint64{4, 8, 10}},
+		{types.PruningOptions{2, 10}, []uint64{8, 9, 10}},
+		{types.PruningOptions{0, 10}, []uint64{10}},
 		{types.PruneEverything, []uint64{10}},
 		{types.PruneNothing, []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
 	}
@@ -423,6 +423,7 @@ func TestPruning(t *testing.T) {
 		for _, db := range dbs {
 			versions, err := db.Versions()
 			require.NoError(t, err)
+
 			kept := sliceToSet(tc.kept)
 			for v := uint64(1); v <= 10; v++ {
 				_, has := kept[v]
@@ -434,19 +435,21 @@ func TestPruning(t *testing.T) {
 	// Test pruning interval
 	// Save up to 20th version while checking history at specific version checkpoints
 	testCheckPoints := map[uint64][]uint64{
-		5:  []uint64{1, 2, 3, 4, 5},
-		10: []uint64{5, 10},
-		15: []uint64{5, 10, 11, 12, 13, 14, 15},
-		20: []uint64{5, 10, 15, 20},
+		5:  {1, 2, 3, 4, 5},
+		10: {10},
+		15: {10, 11, 12, 13, 14, 15},
+		20: {20},
 	}
+
 	db := memdb.NewDB()
 	opts := simpleStoreConfig(t)
-	opts.Pruning = types.PruningOptions{0, 5, 10}
+	opts.Pruning = types.PruningOptions{0, 10}
 	store, err := NewStore(db, opts)
 	require.NoError(t, err)
 
 	for i := byte(1); i <= 20; i++ {
 		store.GetKVStore(skey_1).Set([]byte{i}, []byte{i})
+
 		cid := store.Commit()
 		latest := uint64(i)
 		require.Equal(t, latest, uint64(cid.Version))
@@ -455,8 +458,10 @@ func TestPruning(t *testing.T) {
 		if !has {
 			continue
 		}
+
 		versions, err := db.Versions()
 		require.NoError(t, err)
+
 		keptMap := sliceToSet(kept)
 		for v := uint64(1); v <= latest; v++ {
 			_, has := keptMap[v]

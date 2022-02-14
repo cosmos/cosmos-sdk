@@ -117,7 +117,7 @@ func NewDB(name, backendType, dir string) (db dbm.DB, err error) {
 	if len(backendType) == 0 {
 		backendType = string(dbm.GoLevelDBBackend)
 	}
-	return dbm.NewDB(name,  dbm.BackendType(backendType), dir)
+	return dbm.NewDB(name, dbm.BackendType(backendType), dir)
 }
 
 // copy bytes

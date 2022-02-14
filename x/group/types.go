@@ -378,6 +378,9 @@ func (v Vote) ValidateBasic() error {
 	totalWeight := sdk.NewDec(0)
 	usedOptions := make(map[Choice]bool)
 	for _, option := range v.Choices {
+		if option.Choice == Choice_CHOICE_UNSPECIFIED {
+			return sdkerrors.Wrap(errors.ErrEmpty, "voter choice")
+		}
 		if _, ok := Choice_name[int32(option.Choice)]; !ok {
 			return sdkerrors.Wrap(errors.ErrInvalid, "choice")
 		}

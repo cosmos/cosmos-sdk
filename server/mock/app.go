@@ -34,8 +34,8 @@ func testTxHandler(options middleware.TxHandlerOptions) tx.Handler {
 // similar to a real app. Make sure rootDir is empty before running the test,
 // in order to guarantee consistent results
 func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
-	// TODO: use something other than a hard-coded "goleveldb" here?
-	db, err := sdk.NewDB("mock", "goleveldb", filepath.Join(rootDir, "data"))
+	// TODO: provide something as the db backend here instead of using the default?
+	db, err := sdk.NewDB("mock", "", filepath.Join(rootDir, "data"))
 	if err != nil {
 		return nil, err
 	}

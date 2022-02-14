@@ -100,16 +100,19 @@ func NewLevelDB(name, dir string) (db dbm.DB, err error) {
 }
 
 // NewDB instantiate a new DB instance.
-// This differs from the tendermint/tm-db.NewDB function in two ways:
+// This differs from the tendermint/tm-db.NewDB function in three ways:
 // 1) Returns an error instead of panicking.
 // 2) Takes in a string for the backend type.
+// 3) If the backendType is an empty string, "goleveldb" is used.
 func NewDB(name, backendType, dir string) (db dbm.DB, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("couldn't create db: %v", r)
 		}
 	}()
-
+	if len(backendType) == 0 {
+		backendType = string(dbm.GoLevelDBBackend)
+	}
 	return dbm.NewDB(name,  dbm.BackendType(backendType), dir)
 }
 

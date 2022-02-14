@@ -111,9 +111,8 @@ type BaseApp struct { // nolint: maligned
 	// ResponseCommit.RetainHeight.
 	minRetainBlocks uint64
 
-	// application's protocol version that increments on every upgrade
-	// if BaseApp is passed to the upgrade keeper's NewKeeper method.
-	appVersion uint64
+	// version represents the application software semantic version.
+	version string
 
 	// trace set will return full stack traces for errors in ABCI Log field
 	trace bool
@@ -164,15 +163,16 @@ func (app *BaseApp) Name() string {
 
 // AppVersion returns the application's protocol version.
 func (app *BaseApp) AppVersion() uint64 {
-	return app.appVersion
+
+	v := &tmproto.VersionParams{}
+	app.paramStore.Get(app.deliverState.ctx, ParamStoreKeyVersionParams, v)
+
+	return v.AppVersion
 }
 
 // Version returns the application's version string.
 func (app *BaseApp) Version() string {
-	v := &tmproto.VersionParams{}
-	app.paramStore.Get(app.deliverState.ctx, ParamStoreKeyVersionParams, v)
-
-	return fmt.Sprint(v.AppVersion)
+	return app.version
 }
 
 // Logger returns the logger of the BaseApp.

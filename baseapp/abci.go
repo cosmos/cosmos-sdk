@@ -112,8 +112,8 @@ func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 
 	return abci.ResponseInfo{
 		Data:             app.name,
-		Version:          fmt.Sprint(v.AppVersion),
-		AppVersion:       app.appVersion,
+		Version:          app.version,
+		AppVersion:       v.AppVersion,
 		LastBlockHeight:  lastCommitID.Version,
 		LastBlockAppHash: lastCommitID.Hash,
 	}

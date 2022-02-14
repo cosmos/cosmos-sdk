@@ -1,7 +1,6 @@
 package baseapp
 
 import (
-	"encoding/binary"
 	"fmt"
 	"io"
 
@@ -109,15 +108,12 @@ func (app *BaseApp) SetVersion(v string) {
 		panic("SetVersion() on sealed BaseApp")
 	}
 
-	i := binary.LittleEndian.Uint64([]byte(v))
-	av := &tmproto.VersionParams{AppVersion: i}
-	app.paramStore.Set(app.deliverState.ctx, ParamStoreKeyVersionParams, av)
-
 }
 
 // SetProtocolVersion sets the application's protocol version
 func (app *BaseApp) SetProtocolVersion(v uint64) {
-	app.appVersion = v
+	av := &tmproto.VersionParams{AppVersion: v}
+	app.paramStore.Set(app.deliverState.ctx, ParamStoreKeyVersionParams, av)
 }
 
 func (app *BaseApp) SetDB(db dbm.DB) {

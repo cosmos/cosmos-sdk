@@ -39,8 +39,8 @@ service Msg {
   // UpdateGroupPolicyMetadata updates a group policy metadata.
   rpc UpdateGroupPolicyMetadata(MsgUpdateGroupPolicyMetadata) returns (MsgUpdateGroupPolicyMetadataResponse);
 
-  // CreateProposal submits a new proposal.
-  rpc CreateProposal(MsgCreateProposal) returns (MsgCreateProposalResponse);
+  // SubmitProposal submits a new proposal.
+  rpc SubmitProposal(MsgSubmitProposal) returns (MsgSubmitProposalResponse);
 
   // WithdrawProposal aborts a proposal.
   rpc WithdrawProposal(MsgWithdrawProposal) returns (MsgWithdrawProposalResponse);
@@ -229,8 +229,8 @@ enum Exec {
   EXEC_TRY = 1;
 }
 
-// MsgCreateProposal is the Msg/CreateProposal request type.
-message MsgCreateProposal {
+// MsgSubmitProposal is the Msg/SubmitProposal request type.
+message MsgSubmitProposal {
   option (cosmos.msg.v1.signer) = "proposers";
 
   option (gogoproto.goproto_getters) = false;
@@ -245,8 +245,8 @@ message MsgCreateProposal {
   // metadata is any arbitrary metadata to attached to the proposal.
   bytes metadata = 3;
 
-  // msgs is a list of Msgs that will be executed if the proposal passes.
-  repeated google.protobuf.Any msgs = 4;
+  // messages is a list of `sdk.Msg`s that will be executed if the proposal passes.
+  repeated google.protobuf.Any messages = 4;
 
   // exec defines the mode of execution of the proposal,
   // whether it should be executed immediately on creation or not.
@@ -254,8 +254,8 @@ message MsgCreateProposal {
   Exec exec = 5;
 }
 
-// MsgCreateProposalResponse is the Msg/CreateProposal response type.
-message MsgCreateProposalResponse {
+// MsgSubmitProposalResponse is the Msg/SubmitProposal response type.
+message MsgSubmitProposalResponse {
 
   // proposal is the unique ID of the proposal.
   uint64 proposal_id = 1;
@@ -282,8 +282,8 @@ message MsgVote {
   // voter is the voter account address.
   string voter = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // choice is the voter's choice on the proposal.
-  Choice choice = 3;
+  // option is the voter's choice on the proposal.
+  VoteOption option = 3;
 
   // metadata is any arbitrary metadata to attached to the vote.
   bytes metadata = 4;

@@ -28,9 +28,7 @@ filesystem under `<node_home>/data/snapshots/`, with metadata in a LevelDB datab
 
 Snapshots are taken asynchronously, i.e. new blocks will be applied concurrently
 with snapshots being taken. This is possible because IAVL supports querying
-immutable historical heights. However, this requires `state-sync.snapshot-interval`
-to be a multiple of `pruning-keep-every`, to prevent a height from being removed
-while it is being snapshotted.
+immutable historical heights.
 
 When a remote node is state syncing, Tendermint calls the ABCI method
 `ListSnapshots` to list available local snapshots and `LoadSnapshotChunk` to

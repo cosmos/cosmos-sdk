@@ -1640,27 +1640,27 @@ func (x *fastReflection_ThresholdDecisionPolicy) ProtoMethods() *protoiface.Meth
 }
 
 var (
-	md_WeightedVoteOption        protoreflect.MessageDescriptor
-	fd_WeightedVoteOption_choice protoreflect.FieldDescriptor
-	fd_WeightedVoteOption_weight protoreflect.FieldDescriptor
+	md_PercentageDecisionPolicy            protoreflect.MessageDescriptor
+	fd_PercentageDecisionPolicy_percentage protoreflect.FieldDescriptor
+	fd_PercentageDecisionPolicy_timeout    protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1beta1_types_proto_init()
-	md_WeightedVoteOption = File_cosmos_group_v1beta1_types_proto.Messages().ByName("WeightedVoteOption")
-	fd_WeightedVoteOption_choice = md_WeightedVoteOption.Fields().ByName("choice")
-	fd_WeightedVoteOption_weight = md_WeightedVoteOption.Fields().ByName("weight")
+	md_PercentageDecisionPolicy = File_cosmos_group_v1beta1_types_proto.Messages().ByName("PercentageDecisionPolicy")
+	fd_PercentageDecisionPolicy_percentage = md_PercentageDecisionPolicy.Fields().ByName("percentage")
+	fd_PercentageDecisionPolicy_timeout = md_PercentageDecisionPolicy.Fields().ByName("timeout")
 }
 
-var _ protoreflect.Message = (*fastReflection_WeightedVoteOption)(nil)
+var _ protoreflect.Message = (*fastReflection_PercentageDecisionPolicy)(nil)
 
-type fastReflection_WeightedVoteOption WeightedVoteOption
+type fastReflection_PercentageDecisionPolicy PercentageDecisionPolicy
 
-func (x *WeightedVoteOption) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_WeightedVoteOption)(x)
+func (x *PercentageDecisionPolicy) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_PercentageDecisionPolicy)(x)
 }
 
-func (x *WeightedVoteOption) slowProtoReflect() protoreflect.Message {
+func (x *PercentageDecisionPolicy) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1672,43 +1672,43 @@ func (x *WeightedVoteOption) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_WeightedVoteOption_messageType fastReflection_WeightedVoteOption_messageType
-var _ protoreflect.MessageType = fastReflection_WeightedVoteOption_messageType{}
+var _fastReflection_PercentageDecisionPolicy_messageType fastReflection_PercentageDecisionPolicy_messageType
+var _ protoreflect.MessageType = fastReflection_PercentageDecisionPolicy_messageType{}
 
-type fastReflection_WeightedVoteOption_messageType struct{}
+type fastReflection_PercentageDecisionPolicy_messageType struct{}
 
-func (x fastReflection_WeightedVoteOption_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_WeightedVoteOption)(nil)
+func (x fastReflection_PercentageDecisionPolicy_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_PercentageDecisionPolicy)(nil)
 }
-func (x fastReflection_WeightedVoteOption_messageType) New() protoreflect.Message {
-	return new(fastReflection_WeightedVoteOption)
+func (x fastReflection_PercentageDecisionPolicy_messageType) New() protoreflect.Message {
+	return new(fastReflection_PercentageDecisionPolicy)
 }
-func (x fastReflection_WeightedVoteOption_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_WeightedVoteOption
+func (x fastReflection_PercentageDecisionPolicy_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_PercentageDecisionPolicy
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_WeightedVoteOption) Descriptor() protoreflect.MessageDescriptor {
-	return md_WeightedVoteOption
+func (x *fastReflection_PercentageDecisionPolicy) Descriptor() protoreflect.MessageDescriptor {
+	return md_PercentageDecisionPolicy
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_WeightedVoteOption) Type() protoreflect.MessageType {
-	return _fastReflection_WeightedVoteOption_messageType
+func (x *fastReflection_PercentageDecisionPolicy) Type() protoreflect.MessageType {
+	return _fastReflection_PercentageDecisionPolicy_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_WeightedVoteOption) New() protoreflect.Message {
-	return new(fastReflection_WeightedVoteOption)
+func (x *fastReflection_PercentageDecisionPolicy) New() protoreflect.Message {
+	return new(fastReflection_PercentageDecisionPolicy)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_WeightedVoteOption) Interface() protoreflect.ProtoMessage {
-	return (*WeightedVoteOption)(x)
+func (x *fastReflection_PercentageDecisionPolicy) Interface() protoreflect.ProtoMessage {
+	return (*PercentageDecisionPolicy)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -1716,16 +1716,16 @@ func (x *fastReflection_WeightedVoteOption) Interface() protoreflect.ProtoMessag
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_WeightedVoteOption) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Choice != 0 {
-		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Choice))
-		if !f(fd_WeightedVoteOption_choice, value) {
+func (x *fastReflection_PercentageDecisionPolicy) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Percentage != "" {
+		value := protoreflect.ValueOfString(x.Percentage)
+		if !f(fd_PercentageDecisionPolicy_percentage, value) {
 			return
 		}
 	}
-	if x.Weight != "" {
-		value := protoreflect.ValueOfString(x.Weight)
-		if !f(fd_WeightedVoteOption_weight, value) {
+	if x.Timeout != nil {
+		value := protoreflect.ValueOfMessage(x.Timeout.ProtoReflect())
+		if !f(fd_PercentageDecisionPolicy_timeout, value) {
 			return
 		}
 	}
@@ -1742,17 +1742,17 @@ func (x *fastReflection_WeightedVoteOption) Range(f func(protoreflect.FieldDescr
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_WeightedVoteOption) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_PercentageDecisionPolicy) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.WeightedVoteOption.choice":
-		return x.Choice != 0
-	case "cosmos.group.v1beta1.WeightedVoteOption.weight":
-		return x.Weight != ""
+	case "cosmos.group.v1beta1.PercentageDecisionPolicy.percentage":
+		return x.Percentage != ""
+	case "cosmos.group.v1beta1.PercentageDecisionPolicy.timeout":
+		return x.Timeout != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.WeightedVoteOption"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.PercentageDecisionPolicy"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.WeightedVoteOption does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.PercentageDecisionPolicy does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1762,17 +1762,17 @@ func (x *fastReflection_WeightedVoteOption) Has(fd protoreflect.FieldDescriptor)
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_WeightedVoteOption) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_PercentageDecisionPolicy) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.WeightedVoteOption.choice":
-		x.Choice = 0
-	case "cosmos.group.v1beta1.WeightedVoteOption.weight":
-		x.Weight = ""
+	case "cosmos.group.v1beta1.PercentageDecisionPolicy.percentage":
+		x.Percentage = ""
+	case "cosmos.group.v1beta1.PercentageDecisionPolicy.timeout":
+		x.Timeout = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.WeightedVoteOption"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.PercentageDecisionPolicy"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.WeightedVoteOption does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.PercentageDecisionPolicy does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1782,19 +1782,19 @@ func (x *fastReflection_WeightedVoteOption) Clear(fd protoreflect.FieldDescripto
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_WeightedVoteOption) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_PercentageDecisionPolicy) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.group.v1beta1.WeightedVoteOption.choice":
-		value := x.Choice
-		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
-	case "cosmos.group.v1beta1.WeightedVoteOption.weight":
-		value := x.Weight
+	case "cosmos.group.v1beta1.PercentageDecisionPolicy.percentage":
+		value := x.Percentage
 		return protoreflect.ValueOfString(value)
+	case "cosmos.group.v1beta1.PercentageDecisionPolicy.timeout":
+		value := x.Timeout
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.WeightedVoteOption"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.PercentageDecisionPolicy"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.WeightedVoteOption does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.PercentageDecisionPolicy does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1808,17 +1808,17 @@ func (x *fastReflection_WeightedVoteOption) Get(descriptor protoreflect.FieldDes
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_WeightedVoteOption) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_PercentageDecisionPolicy) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.WeightedVoteOption.choice":
-		x.Choice = (Choice)(value.Enum())
-	case "cosmos.group.v1beta1.WeightedVoteOption.weight":
-		x.Weight = value.Interface().(string)
+	case "cosmos.group.v1beta1.PercentageDecisionPolicy.percentage":
+		x.Percentage = value.Interface().(string)
+	case "cosmos.group.v1beta1.PercentageDecisionPolicy.timeout":
+		x.Timeout = value.Message().Interface().(*durationpb.Duration)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.WeightedVoteOption"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.PercentageDecisionPolicy"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.WeightedVoteOption does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.PercentageDecisionPolicy does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1832,44 +1832,48 @@ func (x *fastReflection_WeightedVoteOption) Set(fd protoreflect.FieldDescriptor,
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_WeightedVoteOption) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_PercentageDecisionPolicy) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.WeightedVoteOption.choice":
-		panic(fmt.Errorf("field choice of message cosmos.group.v1beta1.WeightedVoteOption is not mutable"))
-	case "cosmos.group.v1beta1.WeightedVoteOption.weight":
-		panic(fmt.Errorf("field weight of message cosmos.group.v1beta1.WeightedVoteOption is not mutable"))
+	case "cosmos.group.v1beta1.PercentageDecisionPolicy.timeout":
+		if x.Timeout == nil {
+			x.Timeout = new(durationpb.Duration)
+		}
+		return protoreflect.ValueOfMessage(x.Timeout.ProtoReflect())
+	case "cosmos.group.v1beta1.PercentageDecisionPolicy.percentage":
+		panic(fmt.Errorf("field percentage of message cosmos.group.v1beta1.PercentageDecisionPolicy is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.WeightedVoteOption"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.PercentageDecisionPolicy"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.WeightedVoteOption does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.PercentageDecisionPolicy does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_WeightedVoteOption) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_PercentageDecisionPolicy) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.WeightedVoteOption.choice":
-		return protoreflect.ValueOfEnum(0)
-	case "cosmos.group.v1beta1.WeightedVoteOption.weight":
+	case "cosmos.group.v1beta1.PercentageDecisionPolicy.percentage":
 		return protoreflect.ValueOfString("")
+	case "cosmos.group.v1beta1.PercentageDecisionPolicy.timeout":
+		m := new(durationpb.Duration)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.WeightedVoteOption"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.PercentageDecisionPolicy"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.WeightedVoteOption does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.PercentageDecisionPolicy does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_WeightedVoteOption) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_PercentageDecisionPolicy) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.WeightedVoteOption", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.PercentageDecisionPolicy", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1877,7 +1881,7 @@ func (x *fastReflection_WeightedVoteOption) WhichOneof(d protoreflect.OneofDescr
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_WeightedVoteOption) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_PercentageDecisionPolicy) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -1888,7 +1892,7 @@ func (x *fastReflection_WeightedVoteOption) GetUnknown() protoreflect.RawFields 
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_WeightedVoteOption) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_PercentageDecisionPolicy) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -1900,7 +1904,7 @@ func (x *fastReflection_WeightedVoteOption) SetUnknown(fields protoreflect.RawFi
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_WeightedVoteOption) IsValid() bool {
+func (x *fastReflection_PercentageDecisionPolicy) IsValid() bool {
 	return x != nil
 }
 
@@ -1910,9 +1914,9 @@ func (x *fastReflection_WeightedVoteOption) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_WeightedVoteOption) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_PercentageDecisionPolicy) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*WeightedVoteOption)
+		x := input.Message.Interface().(*PercentageDecisionPolicy)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1924,11 +1928,12 @@ func (x *fastReflection_WeightedVoteOption) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		if x.Choice != 0 {
-			n += 1 + runtime.Sov(uint64(x.Choice))
-		}
-		l = len(x.Weight)
+		l = len(x.Percentage)
 		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Timeout != nil {
+			l = options.Size(x.Timeout)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
@@ -1941,7 +1946,7 @@ func (x *fastReflection_WeightedVoteOption) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*WeightedVoteOption)
+		x := input.Message.Interface().(*PercentageDecisionPolicy)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1960,17 +1965,26 @@ func (x *fastReflection_WeightedVoteOption) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.Weight) > 0 {
-			i -= len(x.Weight)
-			copy(dAtA[i:], x.Weight)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Weight)))
+		if x.Timeout != nil {
+			encoded, err := options.Marshal(x.Timeout)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 			i--
 			dAtA[i] = 0x12
 		}
-		if x.Choice != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.Choice))
+		if len(x.Percentage) > 0 {
+			i -= len(x.Percentage)
+			copy(dAtA[i:], x.Percentage)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Percentage)))
 			i--
-			dAtA[i] = 0x8
+			dAtA[i] = 0xa
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -1983,7 +1997,7 @@ func (x *fastReflection_WeightedVoteOption) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*WeightedVoteOption)
+		x := input.Message.Interface().(*PercentageDecisionPolicy)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2015,34 +2029,15 @@ func (x *fastReflection_WeightedVoteOption) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: WeightedVoteOption: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: PercentageDecisionPolicy: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: WeightedVoteOption: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: PercentageDecisionPolicy: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
-				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Choice", wireType)
-				}
-				x.Choice = 0
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					x.Choice |= Choice(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Weight", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Percentage", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -2070,7 +2065,43 @@ func (x *fastReflection_WeightedVoteOption) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Weight = string(dAtA[iNdEx:postIndex])
+				x.Percentage = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timeout", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Timeout == nil {
+					x.Timeout = &durationpb.Duration{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Timeout); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -7202,18 +7233,21 @@ func (x *ThresholdDecisionPolicy) GetTimeout() *durationpb.Duration {
 	return nil
 }
 
-// WeightedVoteOption defines a unit of vote for vote split.
-type WeightedVoteOption struct {
+// PercentageDecisionPolicy implements the DecisionPolicy interface
+type PercentageDecisionPolicy struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Choice Choice `protobuf:"varint,1,opt,name=choice,proto3,enum=cosmos.group.v1beta1.Choice" json:"choice,omitempty"`
-	Weight string `protobuf:"bytes,2,opt,name=weight,proto3" json:"weight,omitempty"`
+	// percentage is the minimum percentage the weighted sum of yes votes must meet for a proposal to succeed.
+	Percentage string `protobuf:"bytes,1,opt,name=percentage,proto3" json:"percentage,omitempty"`
+	// timeout is the duration from submission of a proposal to the end of voting period
+	// Within these times votes and exec messages can be submitted.
+	Timeout *durationpb.Duration `protobuf:"bytes,2,opt,name=timeout,proto3" json:"timeout,omitempty"`
 }
 
-func (x *WeightedVoteOption) Reset() {
-	*x = WeightedVoteOption{}
+func (x *PercentageDecisionPolicy) Reset() {
+	*x = PercentageDecisionPolicy{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -7221,29 +7255,29 @@ func (x *WeightedVoteOption) Reset() {
 	}
 }
 
-func (x *WeightedVoteOption) String() string {
+func (x *PercentageDecisionPolicy) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*WeightedVoteOption) ProtoMessage() {}
+func (*PercentageDecisionPolicy) ProtoMessage() {}
 
-// Deprecated: Use WeightedVoteOption.ProtoReflect.Descriptor instead.
-func (*WeightedVoteOption) Descriptor() ([]byte, []int) {
+// Deprecated: Use PercentageDecisionPolicy.ProtoReflect.Descriptor instead.
+func (*PercentageDecisionPolicy) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_types_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *WeightedVoteOption) GetChoice() Choice {
+func (x *PercentageDecisionPolicy) GetPercentage() string {
 	if x != nil {
-		return x.Choice
-	}
-	return Choice_CHOICE_UNSPECIFIED
-}
-
-func (x *WeightedVoteOption) GetWeight() string {
-	if x != nil {
-		return x.Weight
+		return x.Percentage
 	}
 	return ""
+}
+
+func (x *PercentageDecisionPolicy) GetTimeout() *durationpb.Duration {
+	if x != nil {
+		return x.Timeout
+	}
+	return nil
 }
 
 // GroupInfo represents the high-level on-chain information for a group.
@@ -7808,16 +7842,39 @@ var file_cosmos_group_v1beta1_types_proto_rawDesc = []byte{
 	0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x98, 0xdf,
 	0x1f, 0x01, 0x52, 0x07, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x3a, 0x12, 0xca, 0xb4, 0x2d,
 	0x0e, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x22,
-	0x62, 0x0a, 0x12, 0x57, 0x65, 0x69, 0x67, 0x68, 0x74, 0x65, 0x64, 0x56, 0x6f, 0x74, 0x65, 0x4f,
-	0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x34, 0x0a, 0x06, 0x63, 0x68, 0x6f, 0x69, 0x63, 0x65, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67,
-	0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x68, 0x6f,
-	0x69, 0x63, 0x65, 0x52, 0x06, 0x63, 0x68, 0x6f, 0x69, 0x63, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x77,
-	0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x77, 0x65, 0x69,
-	0x67, 0x68, 0x74, 0x22, 0xf4, 0x01, 0x0a, 0x09, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x6e, 0x66,
-	0x6f, 0x12, 0x19, 0x0a, 0x08, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x04, 0x52, 0x07, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x64, 0x12, 0x2e, 0x0a, 0x05,
-	0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d,
+	0x8d, 0x01, 0x0a, 0x18, 0x50, 0x65, 0x72, 0x63, 0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x44, 0x65,
+	0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x12, 0x1e, 0x0a, 0x0a,
+	0x70, 0x65, 0x72, 0x63, 0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x0a, 0x70, 0x65, 0x72, 0x63, 0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x12, 0x3d, 0x0a, 0x07,
+	0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e,
+	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
+	0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x98, 0xdf,
+	0x1f, 0x01, 0x52, 0x07, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x3a, 0x12, 0xca, 0xb4, 0x2d,
+	0x0e, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x22,
+	0xf4, 0x01, 0x0a, 0x09, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x19, 0x0a,
+	0x08, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52,
+	0x07, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x64, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69,
+	0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
+	0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18,
+	0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x21,
+	0x0a, 0x0c, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x77, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x05,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x57, 0x65, 0x69, 0x67, 0x68,
+	0x74, 0x12, 0x43, 0x0a, 0x0a, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x5f, 0x61, 0x74, 0x18,
+	0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
+	0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x09, 0x63, 0x72, 0x65,
+	0x61, 0x74, 0x65, 0x64, 0x41, 0x74, 0x22, 0x5e, 0x0a, 0x0b, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d,
+	0x65, 0x6d, 0x62, 0x65, 0x72, 0x12, 0x19, 0x0a, 0x08, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x69,
+	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x64,
+	0x12, 0x34, 0x0a, 0x06, 0x6d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x52, 0x06,
+	0x6d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x22, 0xe8, 0x02, 0x0a, 0x0f, 0x47, 0x72, 0x6f, 0x75, 0x70,
+	0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x32, 0x0a, 0x07, 0x61, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d,
 	0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53,
 	0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x1a, 0x0a, 0x08,
 	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08,
@@ -8019,29 +8076,29 @@ func file_cosmos_group_v1beta1_types_proto_rawDescGZIP() []byte {
 var file_cosmos_group_v1beta1_types_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
 var file_cosmos_group_v1beta1_types_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_cosmos_group_v1beta1_types_proto_goTypes = []interface{}{
-	(Choice)(0),                     // 0: cosmos.group.v1beta1.Choice
-	(Proposal_Status)(0),            // 1: cosmos.group.v1beta1.Proposal.Status
-	(Proposal_Result)(0),            // 2: cosmos.group.v1beta1.Proposal.Result
-	(Proposal_ExecutorResult)(0),    // 3: cosmos.group.v1beta1.Proposal.ExecutorResult
-	(*Member)(nil),                  // 4: cosmos.group.v1beta1.Member
-	(*Members)(nil),                 // 5: cosmos.group.v1beta1.Members
-	(*ThresholdDecisionPolicy)(nil), // 6: cosmos.group.v1beta1.ThresholdDecisionPolicy
-	(*WeightedVoteOption)(nil),      // 7: cosmos.group.v1beta1.WeightedVoteOption
-	(*GroupInfo)(nil),               // 8: cosmos.group.v1beta1.GroupInfo
-	(*GroupMember)(nil),             // 9: cosmos.group.v1beta1.GroupMember
-	(*GroupPolicyInfo)(nil),         // 10: cosmos.group.v1beta1.GroupPolicyInfo
-	(*Proposal)(nil),                // 11: cosmos.group.v1beta1.Proposal
-	(*Tally)(nil),                   // 12: cosmos.group.v1beta1.Tally
-	(*Vote)(nil),                    // 13: cosmos.group.v1beta1.Vote
-	(*timestamppb.Timestamp)(nil),   // 14: google.protobuf.Timestamp
-	(*durationpb.Duration)(nil),     // 15: google.protobuf.Duration
-	(*anypb.Any)(nil),               // 16: google.protobuf.Any
+	(Choice)(0),                      // 0: cosmos.group.v1beta1.Choice
+	(Proposal_Status)(0),             // 1: cosmos.group.v1beta1.Proposal.Status
+	(Proposal_Result)(0),             // 2: cosmos.group.v1beta1.Proposal.Result
+	(Proposal_ExecutorResult)(0),     // 3: cosmos.group.v1beta1.Proposal.ExecutorResult
+	(*Member)(nil),                   // 4: cosmos.group.v1beta1.Member
+	(*Members)(nil),                  // 5: cosmos.group.v1beta1.Members
+	(*ThresholdDecisionPolicy)(nil),  // 6: cosmos.group.v1beta1.ThresholdDecisionPolicy
+	(*PercentageDecisionPolicy)(nil), // 7: cosmos.group.v1beta1.PercentageDecisionPolicy
+	(*GroupInfo)(nil),                // 8: cosmos.group.v1beta1.GroupInfo
+	(*GroupMember)(nil),              // 9: cosmos.group.v1beta1.GroupMember
+	(*GroupPolicyInfo)(nil),          // 10: cosmos.group.v1beta1.GroupPolicyInfo
+	(*Proposal)(nil),                 // 11: cosmos.group.v1beta1.Proposal
+	(*Tally)(nil),                    // 12: cosmos.group.v1beta1.Tally
+	(*Vote)(nil),                     // 13: cosmos.group.v1beta1.Vote
+	(*timestamppb.Timestamp)(nil),    // 14: google.protobuf.Timestamp
+	(*durationpb.Duration)(nil),      // 15: google.protobuf.Duration
+	(*anypb.Any)(nil),                // 16: google.protobuf.Any
 }
 var file_cosmos_group_v1beta1_types_proto_depIdxs = []int32{
 	14, // 0: cosmos.group.v1beta1.Member.added_at:type_name -> google.protobuf.Timestamp
 	4,  // 1: cosmos.group.v1beta1.Members.members:type_name -> cosmos.group.v1beta1.Member
 	15, // 2: cosmos.group.v1beta1.ThresholdDecisionPolicy.timeout:type_name -> google.protobuf.Duration
-	0,  // 3: cosmos.group.v1beta1.WeightedVoteOption.choice:type_name -> cosmos.group.v1beta1.Choice
+	15, // 3: cosmos.group.v1beta1.PercentageDecisionPolicy.timeout:type_name -> google.protobuf.Duration
 	14, // 4: cosmos.group.v1beta1.GroupInfo.created_at:type_name -> google.protobuf.Timestamp
 	4,  // 5: cosmos.group.v1beta1.GroupMember.member:type_name -> cosmos.group.v1beta1.Member
 	16, // 6: cosmos.group.v1beta1.GroupPolicyInfo.decision_policy:type_name -> google.protobuf.Any
@@ -8055,12 +8112,11 @@ var file_cosmos_group_v1beta1_types_proto_depIdxs = []int32{
 	16, // 14: cosmos.group.v1beta1.Proposal.msgs:type_name -> google.protobuf.Any
 	0,  // 15: cosmos.group.v1beta1.Vote.choice:type_name -> cosmos.group.v1beta1.Choice
 	14, // 16: cosmos.group.v1beta1.Vote.submitted_at:type_name -> google.protobuf.Timestamp
-	7,  // 17: cosmos.group.v1beta1.Vote.choices:type_name -> cosmos.group.v1beta1.WeightedVoteOption
-	18, // [18:18] is the sub-list for method output_type
-	18, // [18:18] is the sub-list for method input_type
-	18, // [18:18] is the sub-list for extension type_name
-	18, // [18:18] is the sub-list for extension extendee
-	0,  // [0:18] is the sub-list for field type_name
+	17, // [17:17] is the sub-list for method output_type
+	17, // [17:17] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_group_v1beta1_types_proto_init() }
@@ -8106,7 +8162,7 @@ func file_cosmos_group_v1beta1_types_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_types_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*WeightedVoteOption); i {
+			switch v := v.(*PercentageDecisionPolicy); i {
 			case 0:
 				return &v.state
 			case 1:

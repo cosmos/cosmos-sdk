@@ -521,35 +521,40 @@ func (s *Store) Commit() types.CommitID {
 	// Substores read-lock this mutex; lock to prevent racey invalidation of underlying txns
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
+
 	// Determine the target version
 	versions, err := s.stateDB.Versions()
 	if err != nil {
 		panic(err)
 	}
+
 	target := versions.Last() + 1
 	if target > math.MaxInt64 {
 		panic(ErrMaximumHeight)
 	}
+
 	// Fast forward to initial version if needed
 	if s.InitialVersion != 0 && target < s.InitialVersion {
 		target = s.InitialVersion
 	}
+
 	cid, err := s.commit(target)
 	if err != nil {
 		panic(err)
 	}
+
 	// Prune if necessary
 	previous := cid.Version - 1
-	if s.Pruning.KeepEvery != 1 && s.Pruning.Interval != 0 && cid.Version%int64(s.Pruning.Interval) == 0 {
+	if s.Pruning.Interval != 0 && cid.Version%int64(s.Pruning.Interval) == 0 {
 		// The range of newly prunable versions
 		lastPrunable := previous - int64(s.Pruning.KeepRecent)
 		firstPrunable := lastPrunable - int64(s.Pruning.Interval)
+
 		for version := firstPrunable; version <= lastPrunable; version++ {
-			if s.Pruning.KeepEvery == 0 || version%int64(s.Pruning.KeepEvery) != 0 {
-				s.stateDB.DeleteVersion(uint64(version))
-				if s.StateCommitmentDB != nil {
-					s.StateCommitmentDB.DeleteVersion(uint64(version))
-				}
+			s.stateDB.DeleteVersion(uint64(version))
+
+			if s.StateCommitmentDB != nil {
+				s.StateCommitmentDB.DeleteVersion(uint64(version))
 			}
 		}
 	}

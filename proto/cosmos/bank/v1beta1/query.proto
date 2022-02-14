@@ -29,7 +29,7 @@ service Query {
 
   // SupplyOf queries the supply of a single coin.
   rpc SupplyOf(QuerySupplyOfRequest) returns (QuerySupplyOfResponse) {
-    option (google.api.http).get = "/cosmos/bank/v1beta1/supply/{denom}";
+    option (google.api.http).get = "/cosmos/bank/v1beta1/supply/by_denom";
   }
 
   // Params queries the parameters of x/bank module.

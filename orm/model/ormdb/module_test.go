@@ -245,12 +245,20 @@ func TestModuleDB(t *testing.T) {
 	rawJson, err = target.JSON()
 	assert.NilError(t, err)
 
+	goodJSON := `{
+  "testpb.Supply": []
+}`
+	source, err := ormjson.NewRawMessageSource(json.RawMessage(goodJSON))
+	assert.NilError(t, err)
+	assert.NilError(t, db.ValidateJSON(source))
+	assert.NilError(t, db.ImportJSON(ormtable.WrapContextDefault(ormtest.NewMemoryBackend()), source))
+
 	badJSON := `{
   "testpb.Balance": 5,
   "testpb.Supply": {}
 }
 `
-	source, err := ormjson.NewRawMessageSource(json.RawMessage(badJSON))
+	source, err = ormjson.NewRawMessageSource(json.RawMessage(badJSON))
 	assert.NilError(t, err)
 	assert.ErrorIs(t, db.ValidateJSON(source), ormerrors.JSONValidationError)
 

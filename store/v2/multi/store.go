@@ -50,8 +50,8 @@ var (
 	merkleValuePrefix     = []byte{4} // Prefix for Merkle value mappings
 )
 
-func ErrStoreNotFound(skey string) error {
-	return fmt.Errorf("store does not exist for key: %s", skey)
+func ErrStoreNotFound(key string) error {
+	return fmt.Errorf("store does not exist for key: %s", key)
 }
 
 // StoreParams is used to define a schema and other options and pass them to the MultiStore constructor.
@@ -65,6 +65,7 @@ type StoreParams struct {
 	StateCommitmentDB dbm.DBConnection
 	// Contains the store schema and methods to modify it
 	SchemaBuilder
+	storeKeys
 	// Inter-block persistent cache to use. TODO: not implemented
 	PersistentCache types.MultiStorePersistentCache
 	// Any pending upgrades to apply on loading.
@@ -75,6 +76,10 @@ type StoreParams struct {
 
 // StoreSchema defineds a mapping of substore keys to store types
 type StoreSchema map[string]types.StoreType
+type StoreKeySchema map[types.StoreKey]types.StoreType
+
+// storeKeys maps key names to StoreKey instances
+type storeKeys map[string]types.StoreKey
 
 // Store is the main persistent store type implementing CommitMultiStore.
 // Substores consist of an SMT-based state commitment store and state storage.
@@ -89,10 +94,11 @@ type Store struct {
 	StateCommitmentDB  dbm.DBConnection
 	stateCommitmentTxn dbm.DBReadWriter
 
-	schema StoreSchema
-	mem    *mem.Store
-	tran   *transient.Store
-	mtx    sync.RWMutex
+	schema StoreKeySchema
+
+	mem  *mem.Store
+	tran *transient.Store
+	mtx  sync.RWMutex
 
 	// Copied from StoreParams
 	Pruning        types.PruningOptions
@@ -119,25 +125,45 @@ type SchemaBuilder struct {
 
 // Mixin type that to compose trace & listen state into each root store variant type
 type traceListenMixin struct {
-	listeners    map[string][]types.WriteListener
+	listeners    map[types.StoreKey][]types.WriteListener
 	TraceWriter  io.Writer
 	TraceContext types.TraceContext
 }
 
 func newTraceListenMixin() *traceListenMixin {
-	return &traceListenMixin{listeners: map[string][]types.WriteListener{}}
+	return &traceListenMixin{listeners: map[types.StoreKey][]types.WriteListener{}}
+}
+
+func newSchemaBuilder() SchemaBuilder {
+	return SchemaBuilder{StoreSchema: StoreSchema{}}
 }
 
 // DefaultStoreParams returns a MultiStore config with an empty schema, a single backing DB,
 // pruning with PruneDefault, no listeners and no tracer.
 func DefaultStoreParams() StoreParams {
 	return StoreParams{
-		Pruning: types.PruneDefault,
-		SchemaBuilder: SchemaBuilder{
-			StoreSchema: StoreSchema{},
-		},
+		Pruning:          types.PruneDefault,
+		SchemaBuilder:    newSchemaBuilder(),
+		storeKeys:        storeKeys{},
 		traceListenMixin: newTraceListenMixin(),
 	}
+}
+
+// func (pr *SchemaBuilder) registerName(key string, typ types.StoreType) error {
+func (par *StoreParams) RegisterSubstore(skey types.StoreKey, typ types.StoreType) error {
+	if err := par.registerName(skey.Name(), typ); err != nil {
+		return err
+	}
+	par.storeKeys[skey.Name()] = skey
+	return nil
+}
+
+func (par *StoreParams) storeKey(key string) (types.StoreKey, error) {
+	skey, ok := par.storeKeys[key]
+	if !ok {
+		return nil, fmt.Errorf("StoreKey instance not mapped: %s", key)
+	}
+	return skey, nil
 }
 
 // Returns true for valid store types for a MultiStore schema
@@ -173,7 +199,7 @@ func (this StoreSchema) equal(that StoreSchema) bool {
 
 // Parses a schema from the DB
 func readSavedSchema(bucket dbm.DBReader) (*SchemaBuilder, error) {
-	ret := SchemaBuilder{StoreSchema: StoreSchema{}}
+	ret := newSchemaBuilder()
 	it, err := bucket.Iterator(nil, nil)
 	if err != nil {
 		return nil, err
@@ -263,7 +289,7 @@ func NewStore(db dbm.DBConnection, opts StoreParams) (ret *Store, err error) {
 			err = util.CombineErrors(err, ret.Close(), "base.Close also failed")
 		}
 	}()
-	writeSchema := func(reg *SchemaBuilder) {
+	writeSchema := func(sch StoreSchema) {
 		schemaWriter := prefixdb.NewPrefixWriter(ret.stateTxn, schemaPrefix)
 		var it dbm.Iterator
 		it, err = schemaView.Iterator(nil, nil)
@@ -285,7 +311,7 @@ func NewStore(db dbm.DBConnection, opts StoreParams) (ret *Store, err error) {
 			return
 		}
 		// NB. the migrated contents and schema are not committed until the next store.Commit
-		for skey, typ := range reg.StoreSchema {
+		for skey, typ := range sch {
 			err = schemaWriter.Set([]byte(skey), []byte{byte(typ)})
 			if err != nil {
 				return
@@ -300,16 +326,11 @@ func NewStore(db dbm.DBConnection, opts StoreParams) (ret *Store, err error) {
 	// If the loaded schema is empty (for new store), just copy the config schema;
 	// Otherwise, migrate, then verify it is identical to the config schema
 	if len(reg.StoreSchema) == 0 {
-		for k, v := range opts.StoreSchema {
-			reg.StoreSchema[k] = v
-		}
-		reg.reserved = make([]string, len(opts.reserved))
-		copy(reg.reserved, opts.reserved)
-		writeSchema(reg)
+		writeSchema(opts.StoreSchema)
 	} else {
 		// Apply migrations to the schema
 		if opts.Upgrades != nil {
-			err = reg.MigrateSchema(*opts.Upgrades)
+			err = reg.migrateSchema(*opts.Upgrades)
 			if err != nil {
 				return
 			}
@@ -323,10 +344,18 @@ func NewStore(db dbm.DBConnection, opts StoreParams) (ret *Store, err error) {
 			if err != nil {
 				return
 			}
-			writeSchema(reg)
+			writeSchema(opts.StoreSchema)
 		}
 	}
-	ret.schema = reg.StoreSchema
+	ret.schema = StoreKeySchema{}
+	for key, typ := range opts.StoreSchema {
+		var skey types.StoreKey
+		skey, err = opts.storeKey(key)
+		if err != nil {
+			return
+		}
+		ret.schema[skey] = typ
+	}
 	return
 }
 
@@ -407,7 +436,7 @@ func substorePrefix(key string) []byte {
 func (rs *Store) GetKVStore(skey types.StoreKey) types.KVStore {
 	key := skey.Name()
 	var parent types.KVStore
-	typ, has := rs.schema[key]
+	typ, has := rs.schema[skey]
 	if !has {
 		panic(ErrStoreNotFound(key))
 	}
@@ -523,14 +552,14 @@ func (s *Store) Commit() types.CommitID {
 func (s *Store) getMerkleRoots() (ret map[string][]byte, err error) {
 	ret = map[string][]byte{}
 	for key := range s.schema {
-		sub, has := s.substoreCache[key]
+		sub, has := s.substoreCache[key.Name()]
 		if !has {
-			sub, err = s.getSubstore(key)
+			sub, err = s.getSubstore(key.Name())
 			if err != nil {
 				return
 			}
 		}
-		ret[key] = sub.stateCommitmentStore.Root()
+		ret[key.Name()] = sub.stateCommitmentStore.Root()
 	}
 	return
 }
@@ -780,7 +809,7 @@ func binarySearch(hay []string, ndl string) (int, bool) {
 }
 
 // Migrates the state of the registry based on the upgrades
-func (pr *SchemaBuilder) MigrateSchema(upgrades types.StoreUpgrades) error {
+func (pr *SchemaBuilder) migrateSchema(upgrades types.StoreUpgrades) error {
 	for _, key := range upgrades.Deleted {
 		sst, ix, err := pr.storeInfo(key)
 		if err != nil {
@@ -802,13 +831,13 @@ func (pr *SchemaBuilder) MigrateSchema(upgrades types.StoreUpgrades) error {
 		}
 		pr.reserved = append(pr.reserved[:ix], pr.reserved[ix+1:]...)
 		delete(pr.StoreSchema, rename.OldKey)
-		err = pr.RegisterSubstore(rename.NewKey, types.StoreTypePersistent)
+		err = pr.registerName(rename.NewKey, types.StoreTypePersistent)
 		if err != nil {
 			return err
 		}
 	}
 	for _, key := range upgrades.Added {
-		err := pr.RegisterSubstore(key, types.StoreTypePersistent)
+		err := pr.registerName(key, types.StoreTypePersistent)
 		if err != nil {
 			return err
 		}
@@ -830,7 +859,8 @@ func (pr *SchemaBuilder) storeInfo(key string) (sst types.StoreType, ix int, err
 	return
 }
 
-func (pr *SchemaBuilder) RegisterSubstore(key string, typ types.StoreType) error {
+// registerName registers a store key by name only
+func (pr *SchemaBuilder) registerName(key string, typ types.StoreType) error {
 	if !validSubStoreType(typ) {
 		return fmt.Errorf("StoreType not supported: %v", typ)
 	}
@@ -854,13 +884,12 @@ func (pr *SchemaBuilder) RegisterSubstore(key string, typ types.StoreType) error
 }
 
 func (tlm *traceListenMixin) AddListeners(skey types.StoreKey, listeners []types.WriteListener) {
-	key := skey.Name()
-	tlm.listeners[key] = append(tlm.listeners[key], listeners...)
+	tlm.listeners[skey] = append(tlm.listeners[skey], listeners...)
 }
 
 // ListeningEnabled returns if listening is enabled for a specific KVStore
 func (tlm *traceListenMixin) ListeningEnabled(key types.StoreKey) bool {
-	if ls, has := tlm.listeners[key.Name()]; has {
+	if ls, has := tlm.listeners[key]; has {
 		return len(ls) != 0
 	}
 	return false
@@ -881,7 +910,7 @@ func (tlm *traceListenMixin) wrapTraceListen(store types.KVStore, skey types.Sto
 		store = tracekv.NewStore(store, tlm.TraceWriter, tlm.TraceContext)
 	}
 	if tlm.ListeningEnabled(skey) {
-		store = listenkv.NewStore(store, skey, tlm.listeners[skey.Name()])
+		store = listenkv.NewStore(store, skey, tlm.listeners[skey])
 	}
 	return store
 }

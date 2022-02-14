@@ -92,7 +92,7 @@ func SetSubstores(keys ...storetypes.StoreKey) StoreOption {
 			if err != nil {
 				return err
 			}
-			if err = config.RegisterSubstore(key.Name(), typ); err != nil {
+			if err = config.RegisterSubstore(key, typ); err != nil {
 				return err
 			}
 		}

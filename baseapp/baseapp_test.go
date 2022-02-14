@@ -336,7 +336,7 @@ func initStore(t *testing.T, db dbm.DBConnection, storeKey string, k, v []byte) 
 	key := sdk.NewKVStoreKey(storeKey)
 	opts := multi.DefaultStoreParams()
 	opts.Pruning = stypes.PruneNothing
-	require.NoError(t, opts.RegisterSubstore(key.Name(), stypes.StoreTypePersistent))
+	require.NoError(t, opts.RegisterSubstore(key, stypes.StoreTypePersistent))
 	rs, err := multi.NewStore(db, opts)
 	require.NoError(t, err)
 	require.Equal(t, int64(0), rs.LastCommitID().Version)
@@ -354,7 +354,7 @@ func checkStore(t *testing.T, db dbm.DBConnection, ver int64, storeKey string, k
 	opts := multi.DefaultStoreParams()
 	opts.Pruning = stypes.PruneNothing
 	key := sdk.NewKVStoreKey(storeKey)
-	require.NoError(t, opts.RegisterSubstore(key.Name(), stypes.StoreTypePersistent))
+	require.NoError(t, opts.RegisterSubstore(key, stypes.StoreTypePersistent))
 	rs, err := multi.NewStore(db, opts)
 	require.NoError(t, err)
 	require.Equal(t, ver, rs.LastCommitID().Version)

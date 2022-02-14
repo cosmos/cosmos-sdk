@@ -34,16 +34,16 @@ var (
 
 func simpleStoreParams(t *testing.T) StoreParams {
 	opts := DefaultStoreParams()
-	require.NoError(t, opts.RegisterSubstore(skey_1.Name(), types.StoreTypePersistent))
+	require.NoError(t, opts.RegisterSubstore(skey_1, types.StoreTypePersistent))
 	return opts
 }
 
 func storeConfig123(t *testing.T) StoreParams {
 	opts := DefaultStoreParams()
 	opts.Pruning = types.PruneNothing
-	require.NoError(t, opts.RegisterSubstore(skey_1.Name(), types.StoreTypePersistent))
-	require.NoError(t, opts.RegisterSubstore(skey_2.Name(), types.StoreTypePersistent))
-	require.NoError(t, opts.RegisterSubstore(skey_3.Name(), types.StoreTypePersistent))
+	require.NoError(t, opts.RegisterSubstore(skey_1, types.StoreTypePersistent))
+	require.NoError(t, opts.RegisterSubstore(skey_2, types.StoreTypePersistent))
+	require.NoError(t, opts.RegisterSubstore(skey_3, types.StoreTypePersistent))
 	return opts
 }
 
@@ -589,7 +589,7 @@ func TestQuery(t *testing.T) {
 
 		// querying past version succeeds after rename
 		opts := DefaultStoreParams()
-		require.NoError(t, opts.RegisterSubstore(skey_2.Name(), types.StoreTypePersistent))
+		require.NoError(t, opts.RegisterSubstore(skey_2, types.StoreTypePersistent))
 		opts.Upgrades = &types.StoreUpgrades{
 			Renamed: []types.StoreRename{types.StoreRename{skey_1.Name(), skey_2.Name()}},
 		}
@@ -672,20 +672,20 @@ func TestQuery(t *testing.T) {
 func TestStoreParams(t *testing.T) {
 	opts := DefaultStoreParams()
 	// Fail with invalid types
-	require.Error(t, opts.RegisterSubstore(skey_1.Name(), types.StoreTypeDB))
-	require.Error(t, opts.RegisterSubstore(skey_1.Name(), types.StoreTypeSMT))
+	require.Error(t, opts.RegisterSubstore(skey_1, types.StoreTypeDB))
+	require.Error(t, opts.RegisterSubstore(skey_1, types.StoreTypeSMT))
 	// Ensure that no prefix conflicts are allowed
-	require.NoError(t, opts.RegisterSubstore(skey_1.Name(), types.StoreTypePersistent))
-	require.NoError(t, opts.RegisterSubstore(skey_2.Name(), types.StoreTypeMemory))
-	require.NoError(t, opts.RegisterSubstore(skey_3b.Name(), types.StoreTypeTransient))
-	require.Error(t, opts.RegisterSubstore(skey_1b.Name(), types.StoreTypePersistent))
-	require.Error(t, opts.RegisterSubstore(skey_2b.Name(), types.StoreTypePersistent))
-	require.Error(t, opts.RegisterSubstore(skey_3.Name(), types.StoreTypePersistent))
+	require.NoError(t, opts.RegisterSubstore(skey_1, types.StoreTypePersistent))
+	require.NoError(t, opts.RegisterSubstore(skey_2, types.StoreTypeMemory))
+	require.NoError(t, opts.RegisterSubstore(skey_3b, types.StoreTypeTransient))
+	require.Error(t, opts.RegisterSubstore(skey_1b, types.StoreTypePersistent))
+	require.Error(t, opts.RegisterSubstore(skey_2b, types.StoreTypePersistent))
+	require.Error(t, opts.RegisterSubstore(skey_3, types.StoreTypePersistent))
 }
 
 func TestMultiStoreBasic(t *testing.T) {
 	opts := DefaultStoreParams()
-	err := opts.RegisterSubstore(skey_1.Name(), types.StoreTypePersistent)
+	err := opts.RegisterSubstore(skey_1, types.StoreTypePersistent)
 	require.NoError(t, err)
 	db := memdb.NewDB()
 	store, err := NewStore(db, opts)
@@ -777,7 +777,7 @@ func TestMultiStoreMigration(t *testing.T) {
 
 	t.Run("basic migration", func(t *testing.T) {
 		// now, let's load with upgrades...
-		opts.Upgrades = &types.StoreUpgrades{
+		upgrades := &types.StoreUpgrades{
 			Added: []string{skey_4.Name()},
 			Renamed: []types.StoreRename{{
 				OldKey: skey_2.Name(),
@@ -785,12 +785,20 @@ func TestMultiStoreMigration(t *testing.T) {
 			}},
 			Deleted: []string{skey_3.Name()},
 		}
+
 		// store must be loaded with post-migration schema, so this fails
+		opts := storeConfig123(t)
+		opts.Upgrades = upgrades
 		store, err = NewStore(db, opts)
 		require.Error(t, err)
 
-		opts.MigrateSchema(*opts.Upgrades)
+		opts = DefaultStoreParams()
+		opts.Upgrades = upgrades
+		require.NoError(t, opts.RegisterSubstore(skey_1, types.StoreTypePersistent))
+		require.NoError(t, opts.RegisterSubstore(skey_2b, types.StoreTypePersistent))
+		require.NoError(t, opts.RegisterSubstore(skey_4, types.StoreTypePersistent))
 		store, err = NewStore(db, opts)
+		require.NoError(t, err)
 
 		// store1 was not changed
 		s1 = store.GetKVStore(skey_1)
@@ -833,14 +841,11 @@ func TestMultiStoreMigration(t *testing.T) {
 
 		// pass in a schema reflecting the migrations
 		migratedOpts := DefaultStoreParams()
-		err = migratedOpts.RegisterSubstore(skey_1.Name(), types.StoreTypePersistent)
-		require.NoError(t, err)
-		err = migratedOpts.RegisterSubstore(skey_2b.Name(), types.StoreTypePersistent)
-		require.NoError(t, err)
-		err = migratedOpts.RegisterSubstore(skey_4.Name(), types.StoreTypePersistent)
-		require.NoError(t, err)
+		require.NoError(t, migratedOpts.RegisterSubstore(skey_1, types.StoreTypePersistent))
+		require.NoError(t, migratedOpts.RegisterSubstore(skey_2b, types.StoreTypePersistent))
+		require.NoError(t, migratedOpts.RegisterSubstore(skey_4, types.StoreTypePersistent))
 		store, err = NewStore(db, migratedOpts)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		require.Equal(t, migratedID, store.LastCommitID())
 
 		// query this new store
@@ -893,8 +898,8 @@ func TestTrace(t *testing.T) {
 
 	db := memdb.NewDB()
 	opts := simpleStoreParams(t)
-	require.NoError(t, opts.RegisterSubstore(skey_2.Name(), types.StoreTypeMemory))
-	require.NoError(t, opts.RegisterSubstore(skey_3.Name(), types.StoreTypeTransient))
+	require.NoError(t, opts.RegisterSubstore(skey_2, types.StoreTypeMemory))
+	require.NoError(t, opts.RegisterSubstore(skey_3, types.StoreTypeTransient))
 
 	store, err := NewStore(db, opts)
 	require.NoError(t, err)
@@ -971,8 +976,8 @@ func TestListeners(t *testing.T) {
 
 	db := memdb.NewDB()
 	opts := simpleStoreParams(t)
-	require.NoError(t, opts.RegisterSubstore(skey_2.Name(), types.StoreTypeMemory))
-	require.NoError(t, opts.RegisterSubstore(skey_3.Name(), types.StoreTypeTransient))
+	require.NoError(t, opts.RegisterSubstore(skey_2, types.StoreTypeMemory))
+	require.NoError(t, opts.RegisterSubstore(skey_3, types.StoreTypeTransient))
 
 	store, err := NewStore(db, opts)
 	require.NoError(t, err)

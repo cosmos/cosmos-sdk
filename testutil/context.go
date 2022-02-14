@@ -20,11 +20,11 @@ func DefaultContext(key, tkey stypes.StoreKey) (ret sdk.Context) {
 	}()
 	db := memdb.NewDB()
 	opts := multi.DefaultStoreParams()
-	err = opts.RegisterSubstore(key.Name(), stypes.StoreTypePersistent)
+	err = opts.RegisterSubstore(key, stypes.StoreTypePersistent)
 	if err != nil {
 		return
 	}
-	err = opts.RegisterSubstore(tkey.Name(), stypes.StoreTypeTransient)
+	err = opts.RegisterSubstore(tkey, stypes.StoreTypeTransient)
 	if err != nil {
 		return
 	}

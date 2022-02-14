@@ -42,10 +42,6 @@ ifeq ($(LEDGER_ENABLED),true)
   endif
 endif
 
-ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += gcc
-endif
-
 whitespace :=
 whitespace += $(whitespace)
 comma := ,
@@ -62,22 +58,19 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
 
 # DB backend selection
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
-  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
+  build_tags += gcc
 endif
 ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
-  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=badgerdb
   BUILD_TAGS += badgerdb
 endif
 # handle rocksdb
 ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
   CGO_ENABLED=1
   BUILD_TAGS += rocksdb
-  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=rocksdb
 endif
 # handle boltdb
 ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
   BUILD_TAGS += boltdb
-  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=boltdb
 endif
 
 ifeq (,$(findstring nostrip,$(COSMOS_BUILD_OPTIONS)))

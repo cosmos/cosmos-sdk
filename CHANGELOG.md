@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* (types) [\#10948](https://github.com/cosmos/cosmos-sdk/issues/10948) Use Tendermint `db_backend` config value instead of compile-time `types.DBBackend` value.
+
 # Provenance Specific releases
 
 ## [v0.45-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.45-pio-1.8.rc1)

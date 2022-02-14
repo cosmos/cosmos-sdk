@@ -83,7 +83,7 @@ type Manager struct {
 	store      *Store
 	multistore types.Snapshotter
 	extensions map[string]types.ExtensionSnapshotter
-    mtx                sync.Mutex
+	mtx                sync.Mutex
 	operation          operation
 	chRestore          chan<- io.ReadCloser
 	chRestoreDone      <-chan restoreDone

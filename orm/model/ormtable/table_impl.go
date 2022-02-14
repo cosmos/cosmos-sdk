@@ -155,7 +155,7 @@ func (t tableImpl) doSave(ctx context.Context, writer *batchIndexCommitmentWrite
 		}
 		if writeHooks := writer.WriteHooks(); writeHooks != nil {
 			writer.enqueueHook(func() {
-				writeHooks.OnUpdate(ctx, existingMref.Interface(), mref.Interface())
+				writeHooks.OnUpdate(ctx, existing, message)
 			})
 		}
 	}

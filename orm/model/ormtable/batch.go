@@ -62,7 +62,9 @@ func flushWrites(store kv.Store, writer *batchStoreWriter) error {
 
 func flushBuf(store kv.Store, writes []*batchWriterEntry) error {
 	for _, write := range writes {
-		if !write.delete {
+		if write.hookCall != nil {
+			write.hookCall()
+		} else if !write.delete {
 			err := store.Set(write.key, write.value)
 			if err != nil {
 				return err
@@ -73,9 +75,7 @@ func flushBuf(store kv.Store, writes []*batchWriterEntry) error {
 				return err
 			}
 		}
-		if write.hookCall != nil {
-			write.hookCall()
-		}
+
 	}
 	return nil
 }

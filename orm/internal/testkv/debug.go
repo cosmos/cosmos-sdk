@@ -24,10 +24,16 @@ type Debugger interface {
 
 // NewDebugBackend wraps both stores from a Backend with a debugger.
 func NewDebugBackend(backend ormtable.Backend, debugger Debugger) ormtable.Backend {
+	hooks := debugHooks{
+		debugger:      debugger,
+		validateHooks: backend.ValidateHooks(),
+		writeHooks:    backend.WriteHooks(),
+	}
 	return ormtable.NewBackend(ormtable.BackendOptions{
 		CommitmentStore: NewDebugStore(backend.CommitmentStore(), debugger, "commit"),
 		IndexStore:      NewDebugStore(backend.IndexStore(), debugger, "index"),
-		Hooks:           debugHooks{debugger: debugger, hooks: backend.ValidateHooks()},
+		ValidateHooks:   hooks,
+		WriteHooks:      hooks,
 	})
 }
 
@@ -207,8 +213,9 @@ func (d *EntryCodecDebugger) Decode(key, value []byte) string {
 }
 
 type debugHooks struct {
-	debugger Debugger
-	hooks    ormtable.ValidateHooks
+	debugger      Debugger
+	validateHooks ormtable.ValidateHooks
+	writeHooks    ormtable.WriteHooks
 }
 
 func (d debugHooks) ValidateInsert(context context.Context, message proto.Message) error {
@@ -218,12 +225,12 @@ func (d debugHooks) ValidateInsert(context context.Context, message proto.Messag
 	}
 
 	d.debugger.Log(fmt.Sprintf(
-		"ORM INSERT %s %s",
+		"ORM BEFORE INSERT %s %s",
 		message.ProtoReflect().Descriptor().FullName(),
 		jsonBz,
 	))
-	if d.hooks != nil {
-		return d.hooks.ValidateInsert(
+	if d.validateHooks != nil {
+		return d.validateHooks.ValidateInsert(context, message)
 	}
 	return nil
 }
@@ -240,13 +247,13 @@ func (d debugHooks) ValidateUpdate(ctx context.Context, existing, new proto.Mess
 	}
 
 	d.debugger.Log(fmt.Sprintf(
-		"ORM UPDATE %s %s -> %s",
+		"ORM BEFORE UPDATE %s %s -> %s",
 		existing.ProtoReflect().Descriptor().FullName(),
 		existingJson,
 		newJson,
 	))
-	if d.hooks != nil {
-		return d.hooks.ValidateUpdate(nil, existing, new)
+	if d.validateHooks != nil {
+		return d.validateHooks.ValidateUpdate(ctx, existing, new)
 	}
 	return nil
 }
@@ -258,12 +265,66 @@ func (d debugHooks) ValidateDelete(ctx context.Context, message proto.Message) e
 	}
 
 	d.debugger.Log(fmt.Sprintf(
-		"ORM DELETE %s %s",
+		"ORM BEFORE DELETE %s %s",
 		message.ProtoReflect().Descriptor().FullName(),
 		jsonBz,
 	))
-	if d.hooks != nil {
-		return d.hooks.ValidateDelete(nil, message)
+	if d.validateHooks != nil {
+		return d.validateHooks.ValidateDelete(ctx, message)
 	}
 	return nil
+}
+
+func (d debugHooks) OnInsert(ctx context.Context, message proto.Message) {
+	jsonBz, err := stablejson.Marshal(message)
+	if err != nil {
+		panic(err)
+	}
+
+	d.debugger.Log(fmt.Sprintf(
+		"ORM AFTER INSERT %s %s",
+		message.ProtoReflect().Descriptor().FullName(),
+		jsonBz,
+	))
+	if d.writeHooks != nil {
+		d.writeHooks.OnInsert(ctx, message)
+	}
+}
+
+func (d debugHooks) OnUpdate(ctx context.Context, existing, new proto.Message) {
+	existingJson, err := stablejson.Marshal(existing)
+	if err != nil {
+		panic(err)
+	}
+
+	newJson, err := stablejson.Marshal(new)
+	if err != nil {
+		panic(err)
+	}
+
+	d.debugger.Log(fmt.Sprintf(
+		"ORM AFTER UPDATE %s %s -> %s",
+		existing.ProtoReflect().Descriptor().FullName(),
+		existingJson,
+		newJson,
+	))
+	if d.writeHooks != nil {
+		d.writeHooks.OnUpdate(ctx, existing, new)
+	}
+}
+
+func (d debugHooks) OnDelete(ctx context.Context, message proto.Message) {
+	jsonBz, err := stablejson.Marshal(message)
+	if err != nil {
+		panic(err)
+	}
+
+	d.debugger.Log(fmt.Sprintf(
+		"ORM AFTER DELETE %s %s",
+		message.ProtoReflect().Descriptor().FullName(),
+		jsonBz,
+	))
+	if d.writeHooks != nil {
+		d.writeHooks.OnDelete(ctx, message)
+	}
 }

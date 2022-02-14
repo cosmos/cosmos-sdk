@@ -140,8 +140,10 @@ type BackendOptions struct {
 	// If it is nil the CommitmentStore will be used.
 	IndexStore kv.Store
 
-	// Hooks are optional hooks into ORM insert, update and delete operations.
-	Hooks ValidateHooks
+	// ValidateHooks are optional hooks into ORM insert, update and delete operations.
+	ValidateHooks ValidateHooks
+
+	WriteHooks WriteHooks
 }
 
 // NewBackend creates a new Backend.
@@ -153,7 +155,8 @@ func NewBackend(options BackendOptions) Backend {
 	return &backend{
 		commitmentStore: options.CommitmentStore,
 		indexStore:      indexStore,
-		validateHooks:   options.Hooks,
+		validateHooks:   options.ValidateHooks,
+		writeHooks:      options.WriteHooks,
 	}
 }
 

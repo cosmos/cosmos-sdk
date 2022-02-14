@@ -1106,7 +1106,6 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 		s.Require().NoError(err)
 		if spec.preRun != nil {
 			policyAddr1, groupId, _ := spec.preRun(admin, s)
-			spec.expGroupPolicy.GroupId = groupId
 			policyAddr = policyAddr1
 
 			// update the expected info with new group policy details

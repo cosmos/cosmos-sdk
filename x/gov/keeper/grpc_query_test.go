@@ -1063,10 +1063,10 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 
 				expRes = &v1beta2.QueryTallyResultResponse{
 					Tally: &v1beta2.TallyResult{
-						Yes:        sdk.NewInt(3 * 5 * 1000000).String(),
-						No:         "0",
-						Abstain:    "0",
-						NoWithVeto: "0",
+						YesCount:        sdk.NewInt(3 * 5 * 1000000).String(),
+						NoCount:         "0",
+						AbstainCount:    "0",
+						NoWithVetoCount: "0",
 					},
 				}
 			},

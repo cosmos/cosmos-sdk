@@ -436,10 +436,10 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		Timeout:            ctx.BlockTime().Add(window),
 		FinalTallyResult: group.TallyResult{
-			Yes:        "0",
-			No:         "0",
-			Abstain:    "0",
-			NoWithVeto: "0",
+			YesCount:        "0",
+			NoCount:         "0",
+			AbstainCount:    "0",
+			NoWithVetoCount: "0",
 		},
 	}
 	if err := m.SetMsgs(msgs); err != nil {

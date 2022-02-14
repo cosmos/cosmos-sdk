@@ -184,9 +184,10 @@ message Proposal {
   // has ended.
   TallyResult final_tally_result = 10 [(gogoproto.nullable) = false];
 
-  // timeout is the timestamp of the block where the proposal execution times out. Header times of the votes and
-  // execution messages must be before this end time to be included in the election. After the timeout timestamp the
-  // proposal can not be executed anymore and should be considered pending delete.
+  // timeout is the timestamp before which both voting and execution must be
+  // done. If this timestamp is passed, then the proposal cannot be executed
+  // anymore and should be considered pending delete. This timestamp is checked
+  // against the block header's timestamp.
   google.protobuf.Timestamp timeout = 11 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 
   // executor_result is the final result based on the votes and election rule. Initial value is NotRun.
@@ -255,17 +256,17 @@ enum ProposalExecutorResult {
 message TallyResult {
   option (gogoproto.goproto_getters) = false;
 
-  // yes is the weighted sum of yes votes.
-  string yes = 1;
+  // yes_count is the weighted sum of yes votes.
+  string yes_count = 1;
 
-  // abstain is the weighted sum of abstainers.
-  string abstain = 2;
+  // abstain_count is the weighted sum of abstainers.
+  string abstain_count = 2;
 
   // no is the weighted sum of no votes.
-  string no = 3;
+  string no_count = 3;
 
-  // no_with_veto is the weighted sum of veto.
-  string no_with_veto = 4;
+  // no_with_veto_count is the weighted sum of veto.
+  string no_with_veto_count = 4;
 }
 
 // Vote represents a vote for a proposal.

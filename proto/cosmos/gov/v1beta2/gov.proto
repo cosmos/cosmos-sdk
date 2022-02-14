@@ -81,10 +81,10 @@ enum ProposalStatus {
 
 // TallyResult defines a standard tally for a governance proposal.
 message TallyResult {
-  string yes          = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
-  string abstain      = 2 [(cosmos_proto.scalar) = "cosmos.Int"];
-  string no           = 3 [(cosmos_proto.scalar) = "cosmos.Int"];
-  string no_with_veto = 4 [(cosmos_proto.scalar) = "cosmos.Int"];
+  string yes_count          = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
+  string abstain_count      = 2 [(cosmos_proto.scalar) = "cosmos.Int"];
+  string no_count           = 3 [(cosmos_proto.scalar) = "cosmos.Int"];
+  string no_with_veto_count = 4 [(cosmos_proto.scalar) = "cosmos.Int"];
 }
 
 // Vote defines a vote on a governance proposal.

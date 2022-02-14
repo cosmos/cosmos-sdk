@@ -62,7 +62,7 @@ func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower strin
 	if err != nil {
 		return DecisionPolicyResult{}, err
 	}
-	yesCount, err := math.NewNonNegativeDecFromString(tallyResult.Yes)
+	yesCount, err := math.NewNonNegativeDecFromString(tallyResult.YesCount)
 	if err != nil {
 		return DecisionPolicyResult{}, err
 	}
@@ -432,25 +432,25 @@ func (t *TallyResult) operation(vote Vote, weight string, op operation) error {
 		if err != nil {
 			return sdkerrors.Wrap(err, "yes count")
 		}
-		t.Yes = yesCount.String()
+		t.YesCount = yesCount.String()
 	case VOTE_OPTION_NO:
 		noCount, err := op(noCount, weightDec)
 		if err != nil {
 			return sdkerrors.Wrap(err, "no count")
 		}
-		t.No = noCount.String()
+		t.NoCount = noCount.String()
 	case VOTE_OPTION_ABSTAIN:
 		abstainCount, err := op(abstainCount, weightDec)
 		if err != nil {
 			return sdkerrors.Wrap(err, "abstain count")
 		}
-		t.Abstain = abstainCount.String()
+		t.AbstainCount = abstainCount.String()
 	case VOTE_OPTION_NO_WITH_VETO:
 		vetoCount, err := op(vetoCount, weightDec)
 		if err != nil {
 			return sdkerrors.Wrap(err, "veto count")
 		}
-		t.NoWithVeto = vetoCount.String()
+		t.NoWithVetoCount = vetoCount.String()
 	default:
 		return sdkerrors.Wrapf(errors.ErrInvalid, "unknown vote option %s", vote.Option.String())
 	}
@@ -458,7 +458,7 @@ func (t *TallyResult) operation(vote Vote, weight string, op operation) error {
 }
 
 func (t TallyResult) GetYesCount() (math.Dec, error) {
-	yesCount, err := math.NewNonNegativeDecFromString(t.Yes)
+	yesCount, err := math.NewNonNegativeDecFromString(t.YesCount)
 	if err != nil {
 		return math.Dec{}, err
 	}
@@ -466,7 +466,7 @@ func (t TallyResult) GetYesCount() (math.Dec, error) {
 }
 
 func (t TallyResult) GetNoCount() (math.Dec, error) {
-	noCount, err := math.NewNonNegativeDecFromString(t.No)
+	noCount, err := math.NewNonNegativeDecFromString(t.NoCount)
 	if err != nil {
 		return math.Dec{}, err
 	}
@@ -474,7 +474,7 @@ func (t TallyResult) GetNoCount() (math.Dec, error) {
 }
 
 func (t TallyResult) GetAbstainCount() (math.Dec, error) {
-	abstainCount, err := math.NewNonNegativeDecFromString(t.Abstain)
+	abstainCount, err := math.NewNonNegativeDecFromString(t.AbstainCount)
 	if err != nil {
 		return math.Dec{}, err
 	}
@@ -482,7 +482,7 @@ func (t TallyResult) GetAbstainCount() (math.Dec, error) {
 }
 
 func (t TallyResult) GetNoWithVetoCount() (math.Dec, error) {
-	vetoCount, err := math.NewNonNegativeDecFromString(t.NoWithVeto)
+	vetoCount, err := math.NewNonNegativeDecFromString(t.NoWithVetoCount)
 	if err != nil {
 		return math.Dec{}, err
 	}

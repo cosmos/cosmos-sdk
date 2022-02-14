@@ -111,9 +111,6 @@ type BaseApp struct { // nolint: maligned
 	// ResponseCommit.RetainHeight.
 	minRetainBlocks uint64
 
-	// application's version string
-	version string
-
 	// application's protocol version that increments on every upgrade
 	// if BaseApp is passed to the upgrade keeper's NewKeeper method.
 	appVersion uint64
@@ -172,7 +169,10 @@ func (app *BaseApp) AppVersion() uint64 {
 
 // Version returns the application's version string.
 func (app *BaseApp) Version() string {
-	return app.version
+	v := &tmproto.VersionParams{}
+	app.paramStore.Get(app.deliverState.ctx, ParamStoreKeyVersionParams, v)
+
+	return fmt.Sprint(v.AppVersion)
 }
 
 // Logger returns the logger of the BaseApp.
@@ -395,6 +395,13 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams
 		cp.Validator = &vp
 	}
 
+	if app.paramStore.Has(ctx, ParamStoreKeyVersionParams) {
+		var vp tmproto.VersionParams
+
+		app.paramStore.Get(ctx, ParamStoreKeyVersionParams, &vp)
+		cp.Version = &vp
+	}
+
 	return cp
 }
 
@@ -411,6 +418,7 @@ func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *tmproto.ConsensusP
 	app.paramStore.Set(ctx, ParamStoreKeyBlockParams, cp.Block)
 	app.paramStore.Set(ctx, ParamStoreKeyEvidenceParams, cp.Evidence)
 	app.paramStore.Set(ctx, ParamStoreKeyValidatorParams, cp.Validator)
+	app.paramStore.Set(ctx, ParamStoreKeyVersionParams, cp.Version)
 	// We're explicitly not storing the Tendermint app_version in the param store. It's
 	// stored instead in the x/upgrade store, with its own bump logic.
 }

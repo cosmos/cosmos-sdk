@@ -101,13 +101,13 @@ func (app *BaseApp) SetParamStore(ps ParamStore) {
 	app.paramStore = ps
 }
 
-// SetVersion sets the application's version string.
-func (app *BaseApp) SetVersion(v string) {
-	if app.sealed {
-		panic("SetVersion() on sealed BaseApp")
-	}
-	app.version = v
-}
+// // SetVersion sets the application's version string. TODO
+// func (app *BaseApp) SetVersion(v string) {
+// 	if app.sealed {
+// 		panic("SetVersion() on sealed BaseApp")
+// 	}
+// 	app.version = v
+// }
 
 // SetProtocolVersion sets the application's protocol version
 func (app *BaseApp) SetProtocolVersion(v uint64) {

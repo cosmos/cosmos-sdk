@@ -1268,16 +1268,9 @@ func (s *TestSuite) TestSubmitProposal() {
 	addr1 := addrs[0]
 	addr2 := addrs[1]
 	addr4 := addrs[3]
-	addr5 := addrs[4]
 
 	myGroupID := s.groupID
 	accountAddr := s.groupPolicyAddr
-
-	msgSend := &banktypes.MsgSend{
-		FromAddress: s.groupPolicyAddr.String(),
-		ToAddress:   addr2.String(),
-		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
-	}
 
 	policyReq := &group.MsgCreateGroupPolicy{
 		Admin:    addr1.String(),
@@ -1400,51 +1393,6 @@ func (s *TestSuite) TestSubmitProposal() {
 			},
 			msgs:    []sdk.Msg{&testdata.TestMsg{Signers: []string{addr1.String()}}},
 			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
-		},
-		"with try exec": {
-			req: &group.MsgSubmitProposal{
-				Address:   accountAddr.String(),
-				Proposers: []string{addr2.String()},
-				Exec:      group.Exec_EXEC_TRY,
-			},
-			msgs: []sdk.Msg{msgSend},
-			expProposal: group.Proposal{
-				Status: group.PROPOSAL_STATUS_CLOSED,
-				Result: group.PROPOSAL_RESULT_ACCEPTED,
-				FinalTallyResult: group.TallyResult{
-					YesCount:        "2",
-					NoCount:         "0",
-					AbstainCount:    "0",
-					NoWithVetoCount: "0",
-				},
-				ExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
-			},
-			postRun: func(sdkCtx sdk.Context) {
-				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, accountAddr)
-				s.Require().Contains(fromBalances, sdk.NewInt64Coin("test", 9900))
-				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr2)
-				s.Require().Contains(toBalances, sdk.NewInt64Coin("test", 100))
-			},
-		},
-		"with try exec, not enough yes votes for proposal to pass": {
-			req: &group.MsgSubmitProposal{
-				Address:   accountAddr.String(),
-				Proposers: []string{addr5.String()},
-				Exec:      group.Exec_EXEC_TRY,
-			},
-			msgs: []sdk.Msg{msgSend},
-			expProposal: group.Proposal{
-				Status: group.PROPOSAL_STATUS_SUBMITTED,
-				Result: group.PROPOSAL_RESULT_UNFINALIZED,
-				FinalTallyResult: group.TallyResult{
-					YesCount:        "1",
-					NoCount:         "0",
-					AbstainCount:    "0",
-					NoWithVetoCount: "0",
-				},
-				ExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
-			},
 			postRun: func(sdkCtx sdk.Context) {},
 		},
 	}
@@ -1652,22 +1600,17 @@ func (s *TestSuite) TestVote() {
 	s.Assert().Equal(uint64(1), proposals[0].GroupPolicyVersion)
 	s.Assert().Equal(group.PROPOSAL_STATUS_SUBMITTED, proposals[0].Status)
 	s.Assert().Equal(group.PROPOSAL_RESULT_UNFINALIZED, proposals[0].Result)
-	s.Assert().Equal(group.TallyResult{
-		YesCount:        "0",
-		NoCount:         "0",
-		AbstainCount:    "0",
-		NoWithVetoCount: "0",
-	}, proposals[0].FinalTallyResult)
+	s.Assert().Equal(group.DefaultTallyResult(), proposals[0].FinalTallyResult)
 
 	specs := map[string]struct {
 		srcCtx              sdk.Context
-		expFinalTallyResult group.TallyResult
+		expFinalTallyResult group.TallyResult // expected after tallying
 		req                 *group.MsgVote
 		doBefore            func(ctx context.Context)
 		postRun             func(sdkCtx sdk.Context)
-		expProposalStatus   group.ProposalStatus
-		expResult           group.ProposalResult
-		expExecutorResult   group.ProposalExecutorResult
+		expProposalStatus   group.ProposalStatus         // expected after tallying
+		expResult           group.ProposalResult         // expected after tallying
+		expExecutorResult   group.ProposalExecutorResult // expected after tallying
 		expErr              bool
 	}{
 		"vote yes": {
@@ -1675,47 +1618,6 @@ func (s *TestSuite) TestVote() {
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
 				Option:     group.VOTE_OPTION_YES,
-			},
-			expFinalTallyResult: group.TallyResult{
-				YesCount:        "1",
-				NoCount:         "0",
-				AbstainCount:    "0",
-				NoWithVetoCount: "0",
-			},
-			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
-			expResult:         group.PROPOSAL_RESULT_UNFINALIZED,
-			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
-			postRun:           func(sdkCtx sdk.Context) {},
-		},
-		"with try exec": {
-			req: &group.MsgVote{
-				ProposalId: myProposalID,
-				Voter:      addr3.String(),
-				Option:     group.VOTE_OPTION_YES,
-				Exec:       group.Exec_EXEC_TRY,
-			},
-			expFinalTallyResult: group.TallyResult{
-				YesCount:        "2",
-				NoCount:         "0",
-				AbstainCount:    "0",
-				NoWithVetoCount: "0",
-			},
-			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
-			expResult:         group.PROPOSAL_RESULT_ACCEPTED,
-			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
-			postRun: func(sdkCtx sdk.Context) {
-				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, groupPolicy)
-				s.Require().Contains(fromBalances, sdk.NewInt64Coin("test", 9900))
-				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr5)
-				s.Require().Contains(toBalances, sdk.NewInt64Coin("test", 100))
-			},
-		},
-		"with try exec, not enough yes votes for proposal to pass": {
-			req: &group.MsgVote{
-				ProposalId: myProposalID,
-				Voter:      addr4.String(),
-				Option:     group.VOTE_OPTION_YES,
-				Exec:       group.Exec_EXEC_TRY,
 			},
 			expFinalTallyResult: group.TallyResult{
 				YesCount:        "1",
@@ -1796,23 +1698,6 @@ func (s *TestSuite) TestVote() {
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			postRun:           func(sdkCtx sdk.Context) {},
 		},
-		"reject new votes when final decision is made already": {
-			req: &group.MsgVote{
-				ProposalId: myProposalID,
-				Voter:      addr4.String(),
-				Option:     group.VOTE_OPTION_YES,
-			},
-			doBefore: func(ctx context.Context) {
-				_, err := s.keeper.Vote(ctx, &group.MsgVote{
-					ProposalId: myProposalID,
-					Voter:      addr3.String(),
-					Option:     group.VOTE_OPTION_NO_WITH_VETO,
-				})
-				s.Require().NoError(err)
-			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
-		},
 		"metadata too long": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
@@ -1867,7 +1752,7 @@ func (s *TestSuite) TestVote() {
 			expErr:  true,
 			postRun: func(sdkCtx sdk.Context) {},
 		},
-		"on timeout": {
+		"on voting period end": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
@@ -1889,6 +1774,10 @@ func (s *TestSuite) TestVote() {
 					Voter:      addr3.String(),
 					Option:     group.VOTE_OPTION_YES,
 				})
+				s.Require().NoError(err)
+
+				// Execute to close the proposal.
+				_, err = s.keeper.Exec(ctx, &group.MsgExec{ProposalId: myProposalID, Signer: addr3.String()})
 				s.Require().NoError(err)
 			},
 			expErr:  true,
@@ -2015,12 +1904,19 @@ func (s *TestSuite) TestVote() {
 			s.Assert().Equal(spec.req.Metadata, votesByVoter[0].Metadata)
 			s.Assert().Equal(s.blockTime, votesByVoter[0].SubmitTime)
 
-			// and proposal is updated
+			// make sure proposal isn't mutated
 			proposalRes, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{
 				ProposalId: spec.req.ProposalId,
 			})
 			s.Require().NoError(err)
 			proposal := proposalRes.Proposal
+			s.Assert().Equal(group.DefaultTallyResult(), proposal.FinalTallyResult) // Make sure proposal isn't mutated.
+
+			// do a round of tallying
+			groupPolicyRes, err := s.keeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{Address: groupPolicy.String()})
+			s.Require().NoError(err)
+			err = s.keeper.DoTallyAndUpdate(sdkCtx, proposal, group.GroupInfo{TotalWeight: "3"}, *groupPolicyRes.Info)
+			s.Require().NoError(err)
 			s.Assert().Equal(spec.expFinalTallyResult, proposal.FinalTallyResult)
 			s.Assert().Equal(spec.expResult, proposal.Result)
 			s.Assert().Equal(spec.expProposalStatus, proposal.Status)

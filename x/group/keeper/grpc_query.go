@@ -10,6 +10,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
@@ -303,4 +304,43 @@ func (q Keeper) getVotesByProposal(ctx sdk.Context, proposalID uint64, pageReque
 
 func (q Keeper) getVotesByVoter(ctx sdk.Context, voter sdk.AccAddress, pageRequest *query.PageRequest) (orm.Iterator, error) {
 	return q.voteByVoterIndex.GetPaginated(ctx.KVStore(q.key), voter.Bytes(), pageRequest)
+}
+
+// doTally is a pure function that returns the current tally result of a given
+// proposal, by iterating through all votes.
+func (q Keeper) doTally(ctx sdk.Context, p group.Proposal, groupId uint64) (group.TallyResult, error) {
+	it, err := q.voteByProposalIndex.Get(ctx.KVStore(q.key), p.Id)
+	if err != nil {
+		return group.TallyResult{}, err
+	}
+
+	// We if proposal has already been tallied, then we just return.
+	if p.FinalTallyResult == (group.TallyResult{}) {
+		return p.FinalTallyResult, nil
+	}
+
+	tallyResult := group.DefaultTallyResult()
+
+	var vote group.Vote
+	for {
+		_, err = it.LoadNext(&vote)
+		if errors.ErrORMIteratorDone.Is(err) {
+			break
+		}
+		if err != nil {
+			return group.TallyResult{}, err
+		}
+
+		var member group.GroupMember
+		err := q.groupMemberTable.GetOne(ctx.KVStore(q.key), orm.PrimaryKey(&group.GroupMember{GroupId: groupId, Member: &group.Member{Address: vote.Voter}}), &member)
+		if err != nil {
+			return group.TallyResult{}, err
+		}
+
+		if err := tallyResult.Add(vote, member.Member.Weight); err != nil {
+			return group.TallyResult{}, sdkerrors.Wrap(err, "add new vote")
+		}
+	}
+
+	return tallyResult, nil
 }

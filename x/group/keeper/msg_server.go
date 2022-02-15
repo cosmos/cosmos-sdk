@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"reflect"
 
-	proto "github.com/gogo/protobuf/proto"
 	gogotypes "github.com/gogo/protobuf/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -430,14 +429,8 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 		Status:             group.PROPOSAL_STATUS_SUBMITTED,
 		ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
-		// The voting window begins as soon as the proposal is submitted.
-		VotingPeriodEnd: ctx.BlockTime().Add(policy.GetVotingPeriod()),
-		FinalTallyResult: group.TallyResult{
-			YesCount:        "0",
-			NoCount:         "0",
-			AbstainCount:    "0",
-			NoWithVetoCount: "0",
-		},
+		VotingPeriodEnd:    ctx.BlockTime().Add(policy.GetVotingPeriod()), // The voting window begins as soon as the proposal is submitted.
+		FinalTallyResult:   group.DefaultTallyResult(),
 	}
 	if execDuration := policy.GetExecutionPeriod(); execDuration != nil {
 		end := ctx.BlockTime().Add(*execDuration)
@@ -456,32 +449,6 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 	err = ctx.EventManager().EmitTypedEvent(&group.EventSubmitProposal{ProposalId: id})
 	if err != nil {
 		return nil, err
-	}
-
-	// Try to execute proposal immediately
-	if req.Exec == group.Exec_EXEC_TRY {
-		// Consider proposers as Yes votes
-		for i := range proposers {
-			ctx.GasMeter().ConsumeGas(gasCostPerIteration, "vote on proposal")
-			_, err = k.Vote(sdk.WrapSDKContext(ctx), &group.MsgVote{
-				ProposalId: id,
-				Voter:      proposers[i],
-				Option:     group.VOTE_OPTION_YES,
-			})
-			if err != nil {
-				return &group.MsgSubmitProposalResponse{ProposalId: id}, sdkerrors.Wrap(err, "The proposal was created but failed on vote")
-			}
-		}
-		// Then try to execute the proposal
-		_, err = k.Exec(sdk.WrapSDKContext(ctx), &group.MsgExec{
-			ProposalId: id,
-			// We consider the first proposer as the MsgExecRequest signer
-			// but that could be revisited (eg using the group policy)
-			Signer: proposers[0],
-		})
-		if err != nil {
-			return &group.MsgSubmitProposalResponse{ProposalId: id}, sdkerrors.Wrap(err, "The proposal was created but failed on exec")
-		}
 	}
 
 	return &group.MsgSubmitProposalResponse{ProposalId: id}, nil
@@ -623,50 +590,11 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 		return nil, err
 	}
 
-	// Try to execute proposal immediately
-	if req.Exec == group.Exec_EXEC_TRY {
-		_, err = k.Exec(sdk.WrapSDKContext(ctx), &group.MsgExec{
-			ProposalId: id,
-			Signer:     voterAddr,
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	return &group.MsgVoteResponse{}, nil
 }
 
-func (k Keeper) doTally(ctx sdk.Context, p group.Proposal) (group.TallyResult, error) {
-	it, err := k.voteByProposalIndex.Get(ctx.KVStore(k.key), p.Id)
-	if err != nil {
-		return group.TallyResult{}, err
-	}
-
-	if !proto.Equal(&p.FinalTallyResult, &group.TallyResult{}) {
-		return group.TallyResult{}, sdkerrors.ErrLogic.Wrap("can't call doTally when proposal's tally result is already final")
-	}
-
-	var vote group.Vote
-	for {
-		_, err = it.LoadNext(&vote)
-		if errors.ErrORMIteratorDone.Is(err) {
-			break
-		}
-		if err != nil {
-			return group.TallyResult{}, err
-		}
-
-		if err := p.FinalTallyResult.Add(vote, voter.Member.Weight); err != nil {
-			return group.TallyResult{}, sdkerrors.Wrap(err, "add new vote")
-		}
-	}
-
-	return group.TallyResult{}, nil
-}
-
-// doTallyAndUpdate updates the proposal status and tally if necessary based on the group policy's decision policy.
-func (k Keeper) doTallyAndUpdate(ctx sdk.Context, p *group.Proposal, electorate group.GroupInfo, policyInfo group.GroupPolicyInfo) error {
+// DoTallyAndUpdate updates the proposal status and tally if necessary based on the group policy's decision policy.
+func (k Keeper) DoTallyAndUpdate(ctx sdk.Context, p *group.Proposal, electorate group.GroupInfo, policyInfo group.GroupPolicyInfo) error {
 	policy := policyInfo.GetDecisionPolicy()
 	pSubmittedAt, err := gogotypes.TimestampProto(p.SubmitTime)
 	if err != nil {
@@ -677,7 +605,7 @@ func (k Keeper) doTallyAndUpdate(ctx sdk.Context, p *group.Proposal, electorate 
 		return err
 	}
 
-	tallyResult, err := k.doTally(ctx, *p)
+	tallyResult, err := k.doTally(ctx, *p, policyInfo.GroupId)
 	if err != nil {
 		return err
 	}
@@ -742,7 +670,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 			proposal.Status = group.PROPOSAL_STATUS_ABORTED
 			return storeUpdates()
 		}
-		if err := k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo); err != nil {
+		if err := k.DoTallyAndUpdate(ctx, &proposal, electorate, policyInfo); err != nil {
 			return nil, err
 		}
 	}

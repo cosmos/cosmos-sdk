@@ -17,11 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
-const (
-	FlagExec = "exec"
-	ExecTry  = "try"
-)
-
 // TxCmd returns a root CLI command handler for all x/group transaction commands.
 func TxCmd(name string) *cobra.Command {
 	txCmd := &cobra.Command{
@@ -528,14 +523,11 @@ Example:
 				return err
 			}
 
-			execStr, _ := cmd.Flags().GetString(FlagExec)
-
 			msg, err := group.NewMsgSubmitProposalRequest(
 				prop.GroupPolicyAddress,
 				prop.Proposers,
 				msgs,
 				prop.Metadata,
-				execFromString(execStr),
 			)
 			if err != nil {
 				return err
@@ -549,7 +541,6 @@ Example:
 		},
 	}
 
-	cmd.Flags().String(FlagExec, "", "Set to 1 to try to execute proposal immediately after creation (proposers signatures are considered as Yes votes)")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -651,14 +642,11 @@ Parameters:
 				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "metadata is malformed, proper base64 string is required")
 			}
 
-			execStr, _ := cmd.Flags().GetString(FlagExec)
-
 			msg := &group.MsgVote{
 				ProposalId: proposalID,
 				Voter:      args[1],
 				Option:     voteOption,
 				Metadata:   b,
-				Exec:       execFromString(execStr),
 			}
 			if err != nil {
 				return err
@@ -672,7 +660,6 @@ Parameters:
 		},
 	}
 
-	cmd.Flags().String(FlagExec, "", "Set to 1 to try to execute proposal immediately after voting")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

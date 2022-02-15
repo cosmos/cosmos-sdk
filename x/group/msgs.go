@@ -504,12 +504,11 @@ func (m MsgCreateGroupPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error
 var _ sdk.Msg = &MsgSubmitProposal{}
 
 // NewMsgSubmitProposalRequest creates a new MsgSubmitProposal.
-func NewMsgSubmitProposalRequest(address string, proposers []string, msgs []sdk.Msg, metadata []byte, exec Exec) (*MsgSubmitProposal, error) {
+func NewMsgSubmitProposalRequest(address string, proposers []string, msgs []sdk.Msg, metadata []byte) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		Address:   address,
 		Proposers: proposers,
 		Metadata:  metadata,
-		Exec:      exec,
 	}
 	err := m.SetMsgs(msgs)
 	if err != nil {

@@ -54,11 +54,6 @@ func (s *storeTestSuite) TestCommitID() {
 	s.Require().False(nonempty.IsZero())
 }
 
-func (s *storeTestSuite) TestNewKVStoreKeys() {
-	s.Require().Equal(map[string]*sdk.KVStoreKey{}, sdk.NewKVStoreKeys())
-	s.Require().Equal(1, len(sdk.NewKVStoreKeys("one")))
-}
-
 func (s *storeTestSuite) TestNewTransientStoreKeys() {
 	s.Require().Equal(map[string]*sdk.TransientStoreKey{}, sdk.NewTransientStoreKeys())
 	s.Require().Equal(1, len(sdk.NewTransientStoreKeys("one")))

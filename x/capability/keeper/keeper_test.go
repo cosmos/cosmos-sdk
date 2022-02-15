@@ -39,7 +39,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.cdc = cdc
 }
 
-func (suite *KeeperTestSuite) TestInitializeAndSeal() {
+func (suite *KeeperTestSuite) TestSeal() {
 	sk := suite.keeper.ScopeToModule(banktypes.ModuleName)
 	suite.Require().Panics(func() {
 		suite.keeper.ScopeToModule("  ")
@@ -59,7 +59,7 @@ func (suite *KeeperTestSuite) TestInitializeAndSeal() {
 	}
 
 	suite.Require().NotPanics(func() {
-		suite.keeper.InitializeAndSeal(suite.ctx)
+		suite.keeper.Seal()
 	})
 
 	for i, cap := range caps {
@@ -70,7 +70,7 @@ func (suite *KeeperTestSuite) TestInitializeAndSeal() {
 	}
 
 	suite.Require().Panics(func() {
-		suite.keeper.InitializeAndSeal(suite.ctx)
+		suite.keeper.Seal()
 	})
 
 	suite.Require().Panics(func() {
@@ -115,16 +115,6 @@ func (suite *KeeperTestSuite) TestNewCapability() {
 	cap, err = sk.NewCapability(suite.ctx, "   ")
 	suite.Require().Error(err)
 	suite.Require().Nil(cap)
-}
-
-func (suite *KeeperTestSuite) TestOriginalCapabilityKeeper() {
-	got, ok := suite.app.ScopedIBCKeeper.GetCapability(suite.ctx, "invalid")
-	suite.Require().False(ok)
-	suite.Require().Nil(got)
-
-	port, ok := suite.app.ScopedIBCKeeper.GetCapability(suite.ctx, "ports/transfer")
-	suite.Require().True(ok)
-	suite.Require().NotNil(port)
 }
 
 func (suite *KeeperTestSuite) TestAuthenticateCapability() {

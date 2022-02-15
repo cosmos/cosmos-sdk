@@ -59,8 +59,8 @@ Where there is no protobuf-based type definition for a module (see below), Amino
 is used to encode and decode raw wire bytes to the concrete type or interface:
 
 ```go
-bz := keeper.cdc.MustMarshalBinaryBare(typeOrInterface)
-keeper.cdc.MustUnmarshalBinaryBare(bz, &typeOrInterface)
+bz := keeper.cdc.MustMarshal(typeOrInterface)
+keeper.cdc.MustUnmarshal(bz, &typeOrInterface)
 ```
 
 Note, there are length-prefixed variants of the above functionality and this is
@@ -86,7 +86,7 @@ Another important use of Protobuf is the encoding and decoding of
 [transactions](./transactions.md). Transactions are defined by the application or
 the SDK but are then passed to the underlying consensus engine to be relayed to
 other peers. Since the underlying consensus engine is agnostic to the application,
-the consensus engine accepts only transactions in the form of raw bytes. 
+the consensus engine accepts only transactions in the form of raw bytes.
 
 - The `TxEncoder` object performs the encoding.
 - The `TxDecoder` object performs the decoding.
@@ -150,7 +150,7 @@ profile := Profile {
 }
 
 // We can then marshal the profile as usual.
-bz, err := cdc.MarshalBinaryBare(profile)
+bz, err := cdc.Marshal(profile)
 jsonBz, err := cdc.MarshalJSON(profile)
 ```
 
@@ -162,7 +162,7 @@ The reverse operation of retrieving the concrete Go type from inside an `Any`, c
 profileBz := ... // The proto-encoded bytes of a Profile, e.g. retrieved through gRPC.
 var myProfile Profile
 // Unmarshal the bytes into the myProfile struct.
-err := cdc.UnmarshalBinaryBare(profilebz, &myProfile)
+err := cdc.Unmarshal(profilebz, &myProfile)
 
 // Let's see the types of the Account field.
 fmt.Printf("%T\n", myProfile.Account)                  // Prints "Any"
@@ -197,7 +197,8 @@ The above `Profile` example is a fictive example used for educational purposes. 
 - the `sdk.Msg` interface for encoding different `Msg`s in a transaction,
 - the `AccountI` interface for encodinig different types of accounts (similar to the above example) in the x/auth query responses,
 - the `Evidencei` interface for encoding different types of evidences in the x/evidence module,
-- the `AuthorizationI` interface for encoding different types of x/authz authorizations.
+- the `AuthorizationI` interface for encoding different types of x/authz authorizations,
+- the [`Validator`](https://github.com/cosmos/cosmos-sdk/blob/v0.42.5/x/staking/types/staking.pb.go#L306-L337) struct that contains information about a validator.
 
 A real-life example of encoding the pubkey as `Any` inside the Validator struct in x/staking is shown in the following example:
 
@@ -241,7 +242,7 @@ message MsgSubmitEvidence {
 }
 ```
 
-The SDK `codec.Marshaler` interface provides support methods `MarshalInterface` and `UnmarshalInterface` to easy encoding of state to `Any`.
+The SDK `codec.Codec` interface provides support methods `MarshalInterface` and `UnmarshalInterface` to easy encoding of state to `Any`.
 
 Module should register interfaces using `InterfaceRegistry` which provides a mechanism for registering interfaces: `RegisterInterface(protoName string, iface interface{})` and implementations: `RegisterImplementations(iface interface{}, impls ...proto.Message)` that can be safely unpacked from Any, similarly to type registration with Amino:
 

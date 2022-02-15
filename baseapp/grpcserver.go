@@ -2,78 +2,68 @@ package baseapp
 
 import (
 	"context"
-	"reflect"
+	"strconv"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	grpcmiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/tx"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
 
 // GRPCQueryRouter returns the GRPCQueryRouter of a BaseApp.
 func (app *BaseApp) GRPCQueryRouter() *GRPCQueryRouter { return app.grpcQueryRouter }
 
 // RegisterGRPCServer registers gRPC services directly with the gRPC server.
-func (app *BaseApp) RegisterGRPCServer(clientCtx client.Context, server gogogrpc.Server) {
-	// Define an interceptor for all gRPC queries: this interceptor will route
-	// the query through the `clientCtx`, which itself queries Tendermint.
-	interceptor := func(grpcCtx context.Context, req interface{}, info *grpc.UnaryServerInfo, _ grpc.UnaryHandler) (interface{}, error) {
-		// Two things can happen here:
-		// 1. either we're broadcasting a Tx, in which case we call Tendermint's broadcast endpoint directly,
-		// 2. or we are querying for state, in which case we call ABCI's Query.
+func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
+	// Define an interceptor for all gRPC queries: this interceptor will create
+	// a new sdk.Context, and pass it into the query handler.
+	interceptor := func(grpcCtx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+		// If there's some metadata in the context, retrieve it.
+		md, ok := metadata.FromIncomingContext(grpcCtx)
+		if !ok {
+			return nil, status.Error(codes.Internal, "unable to retrieve metadata")
+		}
 
-		// Case 1. Broadcasting a Tx.
-		if reqProto, ok := req.(*tx.BroadcastTxRequest); ok {
-			if !ok {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxRequest)(nil), req)
+		// Get height header from the request context, if present.
+		var height int64
+		if heightHeaders := md.Get(grpctypes.GRPCBlockHeightHeader); len(heightHeaders) == 1 {
+			height, err = strconv.ParseInt(heightHeaders[0], 10, 64)
+			if err != nil {
+				return nil, sdkerrors.Wrapf(
+					sdkerrors.ErrInvalidRequest,
+					"Baseapp.RegisterGRPCServer: invalid height header %q: %v", grpctypes.GRPCBlockHeightHeader, err)
 			}
-
-			return client.TxServiceBroadcast(grpcCtx, clientCtx, reqProto)
+			if err := checkNegativeHeight(height); err != nil {
+				return nil, err
+			}
 		}
 
-		// Case 2. Querying state.
-		inMd, _ := metadata.FromIncomingContext(grpcCtx)
-		abciRes, outMd, err := client.RunGRPCQuery(clientCtx, grpcCtx, info.FullMethod, req, inMd)
+		// Create the sdk.Context. Passing false as 2nd arg, as we can't
+		// actually support proofs with gRPC right now.
+		sdkCtx, err := app.createQueryContext(height, false)
 		if err != nil {
 			return nil, err
 		}
 
-		// We need to know the return type of the grpc method for
-		// unmarshalling abciRes.Value.
-		//
-		// When we call each method handler for the first time, we save its
-		// return type in the `returnTypes` map (see the method handler in
-		// `grpcrouter.go`). By this time, the method handler has already run
-		// at least once (in the RunGRPCQuery call), so we're sure the
-		// returnType maps is populated for this method. We're retrieving it
-		// for decoding.
-		returnType, err := app.GRPCQueryRouter().returnTypeOf(info.FullMethod)
-		if err != nil {
-			return nil, err
+		// Add relevant gRPC headers
+		if height == 0 {
+			height = sdkCtx.BlockHeight() // If height was not set in the request, set it to the latest
 		}
 
-		// returnType is a pointer to a struct. Here, we're creating res which
-		// is a new pointer to the underlying struct.
-		res := reflect.New(returnType.Elem()).Interface()
+		// Attach the sdk.Context into the gRPC's context.Context.
+		grpcCtx = context.WithValue(grpcCtx, sdk.SdkContextKey, sdkCtx)
 
-		err = protoCodec.Unmarshal(abciRes.Value, res)
-		if err != nil {
-			return nil, err
-		}
+		md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
+		grpc.SetHeader(grpcCtx, md)
 
-		// Send the metadata header back. The metadata currently includes:
-		// - block height.
-		err = grpc.SendHeader(grpcCtx, outMd)
-		if err != nil {
-			return nil, err
-		}
-
-		return res, nil
+		return handler(grpcCtx, req)
 	}
 
 	// Loop through all services and methods, add the interceptor, and register

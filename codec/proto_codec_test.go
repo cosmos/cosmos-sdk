@@ -46,11 +46,11 @@ func (lpm *lyingProtoMarshaler) Size() int {
 	return lpm.falseSize
 }
 
-func TestProtoCodecUnmarshalBinaryLengthPrefixedChecks(t *testing.T) {
+func TestProtoCodecUnmarshalLengthPrefixedChecks(t *testing.T) {
 	cdc := codec.NewProtoCodec(createTestInterfaceRegistry())
 
 	truth := &testdata.Cat{Lives: 9, Moniker: "glowing"}
-	realSize := len(cdc.MustMarshalBinaryBare(truth))
+	realSize := len(cdc.MustMarshal(truth))
 
 	falseSizes := []int{
 		100,
@@ -66,10 +66,10 @@ func TestProtoCodecUnmarshalBinaryLengthPrefixedChecks(t *testing.T) {
 				falseSize:      falseSize,
 			}
 			var serialized []byte
-			require.NotPanics(t, func() { serialized = cdc.MustMarshalBinaryLengthPrefixed(lpm) })
+			require.NotPanics(t, func() { serialized = cdc.MustMarshalLengthPrefixed(lpm) })
 
 			recv := new(testdata.Cat)
-			gotErr := cdc.UnmarshalBinaryLengthPrefixed(serialized, recv)
+			gotErr := cdc.UnmarshalLengthPrefixed(serialized, recv)
 			var wantErr error
 			if falseSize > realSize {
 				wantErr = fmt.Errorf("not enough bytes to read; want: %d, got: %d", falseSize, realSize)
@@ -83,10 +83,10 @@ func TestProtoCodecUnmarshalBinaryLengthPrefixedChecks(t *testing.T) {
 	t.Run("Crafted bad uvarint size", func(t *testing.T) {
 		crafted := []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f}
 		recv := new(testdata.Cat)
-		gotErr := cdc.UnmarshalBinaryLengthPrefixed(crafted, recv)
+		gotErr := cdc.UnmarshalLengthPrefixed(crafted, recv)
 		require.Equal(t, gotErr, errors.New("invalid number of bytes read from length-prefixed encoding: -10"))
 
-		require.Panics(t, func() { cdc.MustUnmarshalBinaryLengthPrefixed(crafted, recv) })
+		require.Panics(t, func() { cdc.MustUnmarshalLengthPrefixed(crafted, recv) })
 	})
 }
 
@@ -98,7 +98,7 @@ func mustAny(msg proto.Message) *types.Any {
 	return any
 }
 
-func BenchmarkProtoCodecMarshalBinaryLengthPrefixed(b *testing.B) {
+func BenchmarkProtoCodecMarshalLengthPrefixed(b *testing.B) {
 	var pCdc = codec.NewProtoCodec(types.NewInterfaceRegistry())
 	var msg = &testdata.HasAnimal{
 		X: 1000,
@@ -124,7 +124,7 @@ func BenchmarkProtoCodecMarshalBinaryLengthPrefixed(b *testing.B) {
 	b.ReportAllocs()
 
 	for i := 0; i < b.N; i++ {
-		blob, err := pCdc.MarshalBinaryLengthPrefixed(msg)
+		blob, err := pCdc.MarshalLengthPrefixed(msg)
 		if err != nil {
 			b.Fatal(err)
 		}

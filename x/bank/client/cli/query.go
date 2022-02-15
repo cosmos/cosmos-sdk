@@ -74,11 +74,10 @@ Example:
 			if err != nil {
 				return err
 			}
-
+			ctx := cmd.Context()
 			if denom == "" {
 				params := types.NewQueryAllBalancesRequest(addr, pageReq)
-
-				res, err := queryClient.AllBalances(cmd.Context(), params)
+				res, err := queryClient.AllBalances(ctx, params)
 				if err != nil {
 					return err
 				}
@@ -86,7 +85,7 @@ Example:
 			}
 
 			params := types.NewQueryBalanceRequest(addr, denom)
-			res, err := queryClient.Balance(cmd.Context(), params)
+			res, err := queryClient.Balance(ctx, params)
 			if err != nil {
 				return err
 			}
@@ -183,9 +182,14 @@ To query for the total supply of a specific coin denomination use:
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
+			ctx := cmd.Context()
 
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
 			if denom == "" {
-				res, err := queryClient.TotalSupply(cmd.Context(), &types.QueryTotalSupplyRequest{})
+				res, err := queryClient.TotalSupply(ctx, &types.QueryTotalSupplyRequest{Pagination: pageReq})
 				if err != nil {
 					return err
 				}
@@ -193,7 +197,7 @@ To query for the total supply of a specific coin denomination use:
 				return clientCtx.PrintProto(res)
 			}
 
-			res, err := queryClient.SupplyOf(cmd.Context(), &types.QuerySupplyOfRequest{Denom: denom})
+			res, err := queryClient.SupplyOf(ctx, &types.QuerySupplyOfRequest{Denom: denom})
 			if err != nil {
 				return err
 			}

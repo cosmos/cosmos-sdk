@@ -18,12 +18,12 @@ const (
 func (suite *KeeperTestSuite) TestQuerier_QueryEvidence_Existing() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	numEvidence := 100
-	_, cdc := simapp.MakeCodecs()
+	legacyCdc := simapp.MakeTestEncodingConfig().Amino
 
 	evidence := suite.populateEvidence(ctx, numEvidence)
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryEvidence}, "/"),
-		Data: cdc.MustMarshalJSON(types.NewQueryEvidenceRequest(evidence[0].Hash())),
+		Data: legacyCdc.MustMarshalJSON(types.NewQueryEvidenceRequest(evidence[0].Hash())),
 	}
 
 	bz, err := suite.querier(ctx, []string{types.QueryEvidence}, query)
@@ -31,13 +31,13 @@ func (suite *KeeperTestSuite) TestQuerier_QueryEvidence_Existing() {
 	suite.NotNil(bz)
 
 	var e exported.Evidence
-	suite.Nil(cdc.UnmarshalJSON(bz, &e))
+	suite.Nil(legacyCdc.UnmarshalJSON(bz, &e))
 	suite.Equal(evidence[0], e)
 }
 
 func (suite *KeeperTestSuite) TestQuerier_QueryEvidence_NonExisting() {
 	ctx := suite.ctx.WithIsCheckTx(false)
-	cdc, _ := simapp.MakeCodecs()
+	cdc := simapp.MakeTestEncodingConfig().Marshaler
 	numEvidence := 100
 
 	suite.populateEvidence(ctx, numEvidence)
@@ -53,7 +53,7 @@ func (suite *KeeperTestSuite) TestQuerier_QueryEvidence_NonExisting() {
 
 func (suite *KeeperTestSuite) TestQuerier_QueryAllEvidence() {
 	ctx := suite.ctx.WithIsCheckTx(false)
-	_, cdc := simapp.MakeCodecs()
+	cdc := simapp.MakeTestEncodingConfig().Amino
 	numEvidence := 100
 
 	suite.populateEvidence(ctx, numEvidence)
@@ -73,7 +73,7 @@ func (suite *KeeperTestSuite) TestQuerier_QueryAllEvidence() {
 
 func (suite *KeeperTestSuite) TestQuerier_QueryAllEvidence_InvalidPagination() {
 	ctx := suite.ctx.WithIsCheckTx(false)
-	_, cdc := simapp.MakeCodecs()
+	cdc := simapp.MakeTestEncodingConfig().Amino
 	numEvidence := 100
 
 	suite.populateEvidence(ctx, numEvidence)

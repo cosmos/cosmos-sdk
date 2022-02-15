@@ -13,7 +13,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	genutilrest "github.com/cosmos/cosmos-sdk/x/genutil/client/rest"
 )
@@ -99,7 +99,7 @@ func QueryTxsRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		searchResult, err := authclient.QueryTxsByEvents(clientCtx, events, page, limit, "")
+		searchResult, err := authtx.QueryTxsByEvents(clientCtx, events, page, limit, "")
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -131,7 +131,7 @@ func QueryTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		output, err := authclient.QueryTx(clientCtx, hashHexStr)
+		output, err := authtx.QueryTx(clientCtx, hashHexStr)
 		if err != nil {
 			if strings.Contains(err.Error(), hashHexStr) {
 				rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())

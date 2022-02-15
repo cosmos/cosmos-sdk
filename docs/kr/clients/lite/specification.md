@@ -54,7 +54,6 @@ type KeyExistsProof struct {
 
 존재 증거의 데이터 형식은 위와 같이 나열되어 있습니다. 존재 증거를 생성하고 검증하는 방식은 다음과 같습니다:
 
-
 ![Exist Proof](./pics/existProof.png)
 
 증거 생성 절차:
@@ -123,12 +122,11 @@ type KeyAbsentProof struct {
 
 * 만약 우측 노드만 존재하는 경우, 존재 증거(exist proof)를 검증하여 최좌특 노드인지 확인한다
 * 만약 우측 노드만 존재하는 경우, 존재 증거(exist proof)를 검증하여 최우측 노드인지 확인한다
-* 만약 좌측 노드와 우측 노드가 동시에 존재하는 경우, 두 노드가 인접(adjacent)한지 확인한다 
+* 만약 좌측 노드와 우측 노드가 동시에 존재하는 경우, 두 노드가 인접(adjacent)한지 확인한다
 
 ### Substores 증거와 AppHash 증거 확인하기
 
 IAVL 증거를 검증했다면 substore 증거와 AppHash를 비교하여 검증할 수 있습니다. 우선 MultiStoreCommitInfo를 반복(iterate)하여 proof StoreName을 이용해 서브스토어의 commitID를 찾을 수 있습니다. 여기에서 commitID의 해시가 RootHash의 proof와 동일하다는 것을 검증합니다. 만약 동일하지 않을 경우, 증거는 유효하지 않습니다. 이후 서브스토어 commitInfo 어레이를 서브스토어 이름의 해시 값으로 정렬합니다. 마지막으로, 모든 서브스토어 commitInfo 어레이를 기반으로 단순 머클 트리(simple Merkle tree)를 빌드하여 머클 루트 해시가 앱 해시와 동일한지 검증합니다.
-
 
 ![substore proof](./pics/substoreProof.png)
 

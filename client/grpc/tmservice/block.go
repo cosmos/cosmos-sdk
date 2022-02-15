@@ -8,12 +8,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 )
 
-func getBlock(clientCtx client.Context, height *int64) (*ctypes.ResultBlock, error) {
+func getBlock(ctx context.Context, clientCtx client.Context, height *int64) (*ctypes.ResultBlock, error) {
 	// get the node
 	node, err := clientCtx.GetNode()
 	if err != nil {
 		return nil, err
 	}
 
-	return node.Block(context.Background(), height)
+	return node.Block(ctx, height)
 }

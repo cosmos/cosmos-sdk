@@ -87,15 +87,17 @@ Currently, in the jail period implementation, once a validator unjails, all of
 their delegators who are delegated to them (haven't unbonded / redelegated away),
 stay with them. Given that consensus safety faults are so egregious
 (way more so than liveness faults), it is probably prudent to have delegators not
-"auto-rebond" to the validator. Thus, we propose setting the "jail time" for a
+"auto-rebond" to the validator.
+
+### Proposal: infinite jail
+
+We propose setting the "jail time" for a
 validator who commits a consensus safety fault, to `infinite` (i.e. a tombstone state).
 This essentially kicks the validator out of the validator set and does not allow
 them to re-enter the validator set. All of their delegators (including the operator themselves)
 have to either unbond or redelegate away. The validator operator can create a new
 validator if they would like, with a new operator key and consensus key, but they
-have to "re-earn" their delegations back. To put the validator in the tombstone
-state, we set `DoubleSignJailEndTime` to `time.Unix(253402300800)`, the maximum
-time supported by Amino.
+have to "re-earn" their delegations back.
 
 Implementing the tombstone system and getting rid of the slashing period tracking
 will make the `slashing` module way simpler, especially because we can remove all

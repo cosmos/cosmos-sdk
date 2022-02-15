@@ -18,9 +18,9 @@ consensus layer. Operations are as following:
 - the new validator set is taken as the top `params.MaxValidators` number of
   validators retrieved from the `ValidatorsByPower` index
 - the previous validator set is compared with the new validator set:
-  - missing validators begin unbonding and their `Tokens` are transferred from the
+    - missing validators begin unbonding and their `Tokens` are transferred from the
     `BondedPool` to the `NotBondedPool` `ModuleAccount`
-  - new validators are instantly bonded and their `Tokens` are transferred from the
+    - new validators are instantly bonded and their `Tokens` are transferred from the
     `NotBondedPool` to the `BondedPool` `ModuleAccount`
 
 In all cases, any validators leaving or entering the bonded validator set or

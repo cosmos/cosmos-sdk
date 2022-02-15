@@ -177,6 +177,10 @@ func (i offlineInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
 
+// Deprecated: this structure is not used anymore and it's here only to allow
+// decoding old multiInfo records from keyring.
+// The problem with legacy.Cdc.UnmarshalLengthPrefixed - the legacy codec doesn't
+// tolerate extensibility.
 type multisigPubKeyInfo struct {
 	PubKey cryptotypes.PubKey `json:"pubkey"`
 	Weight uint               `json:"weight"`
@@ -191,21 +195,14 @@ type multiInfo struct {
 }
 
 // NewMultiInfo creates a new multiInfo instance
-func NewMultiInfo(name string, pub cryptotypes.PubKey) Info {
-	multiPK := pub.(*multisig.LegacyAminoPubKey)
-
-	pubKeys := make([]multisigPubKeyInfo, len(multiPK.PubKeys))
-	for i, pk := range multiPK.GetPubKeys() {
-		// TODO: Recursively check pk for total weight?
-		pubKeys[i] = multisigPubKeyInfo{pk, 1}
+func NewMultiInfo(name string, pub cryptotypes.PubKey) (Info, error) {
+	if _, ok := pub.(*multisig.LegacyAminoPubKey); !ok {
+		return nil, fmt.Errorf("MultiInfo supports only multisig.LegacyAminoPubKey, got  %T", pub)
 	}
-
 	return &multiInfo{
-		Name:      name,
-		PubKey:    pub,
-		Threshold: uint(multiPK.Threshold),
-		PubKeys:   pubKeys,
-	}
+		Name:   name,
+		PubKey: pub,
+	}, nil
 }
 
 // GetType implements Info interface
@@ -247,12 +244,12 @@ func (i multiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 // encoding info
 func marshalInfo(i Info) []byte {
-	return legacy.Cdc.MustMarshalBinaryLengthPrefixed(i)
+	return legacy.Cdc.MustMarshalLengthPrefixed(i)
 }
 
 // decoding info
 func unmarshalInfo(bz []byte) (info Info, err error) {
-	err = legacy.Cdc.UnmarshalBinaryLengthPrefixed(bz, &info)
+	err = legacy.Cdc.UnmarshalLengthPrefixed(bz, &info)
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +264,7 @@ func unmarshalInfo(bz []byte) (info Info, err error) {
 	_, ok := info.(multiInfo)
 	if ok {
 		var multi multiInfo
-		err = legacy.Cdc.UnmarshalBinaryLengthPrefixed(bz, &multi)
+		err = legacy.Cdc.UnmarshalLengthPrefixed(bz, &multi)
 
 		return multi, err
 	}

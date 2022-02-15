@@ -63,7 +63,7 @@ ctx.BlockGasMeter().ConsumeGas(
 
 ## AnteHandler
 
-The `AnteHandler` is run for every transaction during `CheckTx` and `DeliverTx`, before the `Msg` service of each `Msg` in the transaction. `AnteHandler`s have the following signature:
+The `AnteHandler` is run for every transaction during `CheckTx` and `DeliverTx`, before a Protobuf `Msg` service method for each `sdk.Msg` in the transaction. `AnteHandler`s have the following signature:
 
 ```go
 // AnteHandler authenticates transactions, before their internal messages are handled.

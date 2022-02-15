@@ -35,7 +35,7 @@ func (suite *SlashingTestSuite) SetupTest() {
 	app.BankKeeper.SetParams(ctx, banktypes.DefaultParams())
 	app.SlashingKeeper.SetParams(ctx, testslashing.TestParams())
 
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.TokensFromConsensusPower(200))
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 200))
 
 	info1 := types.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[0]), int64(4), int64(3),
 		time.Unix(2, 0), false, int64(10))

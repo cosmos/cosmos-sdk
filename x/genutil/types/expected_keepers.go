@@ -35,7 +35,7 @@ type GenesisAccountsIterator interface {
 // GenesisAccountsIterator defines the expected iterating genesis accounts object (noalias)
 type GenesisBalancesIterator interface {
 	IterateGenesisBalances(
-		cdc codec.JSONMarshaler,
+		cdc codec.JSONCodec,
 		appGenesis map[string]json.RawMessage,
 		cb func(bankexported.GenesisBalance) (stop bool),
 	)

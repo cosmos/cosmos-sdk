@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/hdevalence/ed25519consensus"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 
@@ -116,7 +117,8 @@ func (privKey *PrivKey) UnmarshalAminoJSON(bz []byte) error {
 	return privKey.UnmarshalAmino(bz)
 }
 
-// GenPrivKey generates a new ed25519 private key.
+// GenPrivKey generates a new ed25519 private key. These ed25519 keys must not
+// be used in SDK apps except in a tendermint validator context.
 // It uses OS randomness in conjunction with the current global random seed
 // in tendermint/libs/common to generate the private key.
 func GenPrivKey() *PrivKey {
@@ -137,6 +139,7 @@ func genPrivKey(rand io.Reader) *PrivKey {
 
 // GenPrivKeyFromSecret hashes the secret with SHA2, and uses
 // that 32 byte output to create the private key.
+// NOTE: ed25519 keys must not be used in SDK apps except in a tendermint validator context.
 // NOTE: secret should be the output of a KDF like bcrypt,
 // if it's derived from user input.
 func GenPrivKeyFromSecret(secret []byte) *PrivKey {
@@ -151,10 +154,14 @@ var _ cryptotypes.PubKey = &PubKey{}
 var _ codec.AminoMarshaler = &PubKey{}
 
 // Address is the SHA256-20 of the raw pubkey bytes.
+// It doesn't implement ADR-28 addresses and it must not be used
+// in SDK except in a tendermint validator context.
 func (pubKey *PubKey) Address() crypto.Address {
 	if len(pubKey.Key) != PubKeySize {
 		panic("pubkey is incorrect size")
 	}
+	// For ADR-28 compatible address we would need to
+	// return address.Hash(proto.MessageName(pubKey), pubKey.Key)
 	return crypto.Address(tmhash.SumTruncated(pubKey.Key))
 }
 
@@ -169,9 +176,11 @@ func (pubKey *PubKey) VerifySignature(msg []byte, sig []byte) bool {
 		return false
 	}
 
-	return ed25519.Verify(pubKey.Key, msg, sig)
+	// uses https://github.com/hdevalence/ed25519consensus.Verify to comply with zip215 verification rules
+	return ed25519consensus.Verify(pubKey.Key, msg, sig)
 }
 
+// String returns Hex representation of a pubkey with it's type
 func (pubKey *PubKey) String() string {
 	return fmt.Sprintf("PubKeyEd25519{%X}", pubKey.Key)
 }

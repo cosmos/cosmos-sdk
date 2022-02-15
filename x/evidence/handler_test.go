@@ -116,7 +116,7 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence() {
 			msg := tc.msg.(exported.MsgSubmitEvidenceI)
 
 			var resultData types.MsgSubmitEvidenceResponse
-			suite.app.AppCodec().UnmarshalBinaryBare(res.Data, &resultData)
+			suite.app.AppCodec().Unmarshal(res.Data, &resultData)
 			suite.Require().Equal(msg.GetEvidence().Hash().Bytes(), resultData.Hash, "invalid hash; tc #%d", i)
 		}
 	}

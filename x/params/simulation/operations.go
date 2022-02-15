@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -8,44 +9,45 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
+func min(a int, b int) int {
+	if a <= b {
+		return a
+	}
+	return b
+}
+
 // SimulateParamChangeProposalContent returns random parameter change content.
 // It will generate a ParameterChangeProposal object with anywhere between 1 and
 // the total amount of defined parameters changes, all of which have random valid values.
 func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange) simulation.ContentSimulatorFn {
+	numProposals := 0
+	// Bound the maximum number of simultaneous parameter changes
+	maxSimultaneousParamChanges := min(len(paramChangePool), 1000)
+	if maxSimultaneousParamChanges == 0 {
+		panic("param changes array is empty")
+	}
+
 	return func(r *rand.Rand, _ sdk.Context, _ []simulation.Account) simulation.Content {
-
-		lenParamChange := len(paramChangePool)
-		if lenParamChange == 0 {
-			panic("param changes array is empty")
-		}
-
-		numChanges := simulation.RandIntBetween(r, 1, lenParamChange)
+		numChanges := simulation.RandIntBetween(r, 1, maxSimultaneousParamChanges)
 		paramChanges := make([]proposal.ParamChange, numChanges)
 
-		// map from key to empty struct; used only for look-up of the keys of the
-		// parameters that are already in the random set of changes.
-		paramChangesKeys := make(map[string]struct{})
+		// perm here takes at most len(paramChangePool) calls to random
+		paramChoices := r.Perm(len(paramChangePool))
 
 		for i := 0; i < numChanges; i++ {
-			spc := paramChangePool[r.Intn(len(paramChangePool))]
-
-			// do not include duplicate parameter changes for a given subspace/key
-			_, ok := paramChangesKeys[spc.ComposedKey()]
-			for ok {
-				spc = paramChangePool[r.Intn(len(paramChangePool))]
-				_, ok = paramChangesKeys[spc.ComposedKey()]
-			}
-
-			// add a new distinct parameter to the set of changes and register the key
-			// to avoid further duplicates
-			paramChangesKeys[spc.ComposedKey()] = struct{}{}
+			spc := paramChangePool[paramChoices[i]]
+			// add a new distinct parameter to the set of changes
 			paramChanges[i] = proposal.NewParamChange(spc.Subspace(), spc.Key(), spc.SimValue()(r))
 		}
 
+		title := fmt.Sprintf("title from SimulateParamChangeProposalContent-%d", numProposals)
+		desc := fmt.Sprintf("desc from SimulateParamChangeProposalContent-%d. Random short desc: %s",
+			numProposals, simulation.RandStringOfLength(r, 20))
+		numProposals++
 		return proposal.NewParameterChangeProposal(
-			simulation.RandStringOfLength(r, 140),  // title
-			simulation.RandStringOfLength(r, 5000), // description
-			paramChanges,                           // set of changes
+			title,        // title
+			desc,         // description
+			paramChanges, // set of changes
 		)
 	}
 }

@@ -33,8 +33,6 @@ func runListCmd(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cmd.SetOut(cmd.OutOrStdout())
-
 	if ok, _ := cmd.Flags().GetBool(flagListNames); !ok {
 		printInfos(cmd.OutOrStdout(), infos, clientCtx.OutputFormat)
 		return nil

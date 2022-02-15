@@ -11,6 +11,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -109,6 +110,27 @@ func TestImportExportQueues(t *testing.T) {
 	proposal2, ok = app2.GovKeeper.GetProposal(ctx2, proposalID2)
 	require.True(t, ok)
 	require.True(t, proposal2.Status == types.StatusRejected)
+}
+
+func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	require.Panics(t, func() {
+		gov.InitGenesis(ctx, app.AccountKeeper, app.BankKeeper, app.GovKeeper, &types.GenesisState{
+			Deposits: types.Deposits{
+				{
+					ProposalId: 1234,
+					Depositor:  "me",
+					Amount: sdk.Coins{
+						sdk.NewCoin(
+							"stake",
+							sdk.NewInt(1234),
+						),
+					},
+				},
+			},
+		})
+	})
 }
 
 func TestEqualProposals(t *testing.T) {

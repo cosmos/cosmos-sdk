@@ -161,7 +161,7 @@ func (u *Uint) MarshalTo(data []byte) (n int, err error) {
 	if u.i == nil {
 		u.i = new(big.Int)
 	}
-	if len(u.i.Bytes()) == 0 {
+	if u.i.BitLen() == 0 { // The value 0
 		copy(data, []byte{0x30})
 		return 1, nil
 	}
@@ -206,8 +206,6 @@ func (u *Uint) Size() int {
 // Override Amino binary serialization by proxying to protobuf.
 func (u Uint) MarshalAmino() ([]byte, error)   { return u.Marshal() }
 func (u *Uint) UnmarshalAmino(bz []byte) error { return u.Unmarshal(bz) }
-
-// __________________________________________________________________________
 
 // UintOverflow returns true if a given unsigned integer overflows and false
 // otherwise.

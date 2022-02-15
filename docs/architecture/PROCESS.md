@@ -6,7 +6,6 @@
 4. Add an entry to a list in the [README](./README.md) file.
 5. Create a Pull Request to propose a new ADR.
 
-
 ## ADR life cycle
 
 ADR creation is an **iterative** process. Instead of trying to solve all decisions in a single ADR pull request, we MUST firstly understand the problem and collect feedback through a GitHub Issue.
@@ -22,7 +21,6 @@ ADR creation is an **iterative** process. Instead of trying to solve all decisio
 5. The PR SHOULD always be merged. In the case of a faulty ADR, we still prefer to  merge it with a _rejected_ status. The only time the ADR SHOULD NOT be merged is if the author abandons it.
 
 6. Merged ADRs SHOULD NOT be pruned.
-
 
 ### ADR status
 
@@ -44,7 +42,6 @@ DRAFT -> PROPOSED -> LAST CALL yyyy-mm-dd -> ACCEPTED | REJECTED -> SUPERSEEDED 
                      ABANDONED
 ```
 
-
 + `DRAFT`: [optional] an ADR which is work in progress, not being ready for a general review. This is to present an early work and get an early feedback in a Draft Pull Request form.
 + `PROPOSED`: an ADR covering a full solution architecture and still in the review - project stakeholders haven't reached an agreed yet.
 + `LAST CALL <date for the last call>`: [optional] clear notify that we are close to accept updates. Changing a status to `LAST CALL` means that social consensus (of Cosmos SDK maintainers) has been reached and we still want to give it a time to let the community react or analyze.
@@ -52,7 +49,6 @@ DRAFT -> PROPOSED -> LAST CALL yyyy-mm-dd -> ACCEPTED | REJECTED -> SUPERSEEDED 
 + `REJECTED`: ADR can go from PROPOSED or ACCEPTED to rejected if the consensus among project stakeholders will decide so.
 + `SUPERSEEDED by ADR-xxx`: ADR which has been superseded by a new ADR.
 + `ABANDONED`: the ADR is no longer pursued by the original authors.
-
 
 ## Language used in ADR
 

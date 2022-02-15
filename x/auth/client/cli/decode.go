@@ -17,7 +17,7 @@ const flagHex = "hex"
 func GetDecodeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "decode [amino-byte-string]",
-		Short: "Decode an binary encoded transaction string.",
+		Short: "Decode a binary encoded transaction string",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx := client.GetClientContextFromCmd(cmd)

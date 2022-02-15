@@ -25,4 +25,4 @@ The governance module contains the following parameters:
 
 __NOTE__: The governance module contains parameters that are objects unlike other
 modules. If only a subset of parameters are desired to be changed, only they need
-to be included and not the entire parameter object structure. 
+to be included and not the entire parameter object structure.

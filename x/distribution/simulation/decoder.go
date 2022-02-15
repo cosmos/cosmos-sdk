@@ -12,13 +12,13 @@ import (
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
 // Value to the corresponding distribution type.
-func NewDecodeStore(cdc codec.Marshaler) func(kvA, kvB kv.Pair) string {
+func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key[:1], types.FeePoolKey):
 			var feePoolA, feePoolB types.FeePool
-			cdc.MustUnmarshalBinaryBare(kvA.Value, &feePoolA)
-			cdc.MustUnmarshalBinaryBare(kvB.Value, &feePoolB)
+			cdc.MustUnmarshal(kvA.Value, &feePoolA)
+			cdc.MustUnmarshal(kvB.Value, &feePoolB)
 			return fmt.Sprintf("%v\n%v", feePoolA, feePoolB)
 
 		case bytes.Equal(kvA.Key[:1], types.ProposerKey):
@@ -26,8 +26,8 @@ func NewDecodeStore(cdc codec.Marshaler) func(kvA, kvB kv.Pair) string {
 
 		case bytes.Equal(kvA.Key[:1], types.ValidatorOutstandingRewardsPrefix):
 			var rewardsA, rewardsB types.ValidatorOutstandingRewards
-			cdc.MustUnmarshalBinaryBare(kvA.Value, &rewardsA)
-			cdc.MustUnmarshalBinaryBare(kvB.Value, &rewardsB)
+			cdc.MustUnmarshal(kvA.Value, &rewardsA)
+			cdc.MustUnmarshal(kvB.Value, &rewardsB)
 			return fmt.Sprintf("%v\n%v", rewardsA, rewardsB)
 
 		case bytes.Equal(kvA.Key[:1], types.DelegatorWithdrawAddrPrefix):
@@ -35,32 +35,32 @@ func NewDecodeStore(cdc codec.Marshaler) func(kvA, kvB kv.Pair) string {
 
 		case bytes.Equal(kvA.Key[:1], types.DelegatorStartingInfoPrefix):
 			var infoA, infoB types.DelegatorStartingInfo
-			cdc.MustUnmarshalBinaryBare(kvA.Value, &infoA)
-			cdc.MustUnmarshalBinaryBare(kvB.Value, &infoB)
+			cdc.MustUnmarshal(kvA.Value, &infoA)
+			cdc.MustUnmarshal(kvB.Value, &infoB)
 			return fmt.Sprintf("%v\n%v", infoA, infoB)
 
 		case bytes.Equal(kvA.Key[:1], types.ValidatorHistoricalRewardsPrefix):
 			var rewardsA, rewardsB types.ValidatorHistoricalRewards
-			cdc.MustUnmarshalBinaryBare(kvA.Value, &rewardsA)
-			cdc.MustUnmarshalBinaryBare(kvB.Value, &rewardsB)
+			cdc.MustUnmarshal(kvA.Value, &rewardsA)
+			cdc.MustUnmarshal(kvB.Value, &rewardsB)
 			return fmt.Sprintf("%v\n%v", rewardsA, rewardsB)
 
 		case bytes.Equal(kvA.Key[:1], types.ValidatorCurrentRewardsPrefix):
 			var rewardsA, rewardsB types.ValidatorCurrentRewards
-			cdc.MustUnmarshalBinaryBare(kvA.Value, &rewardsA)
-			cdc.MustUnmarshalBinaryBare(kvB.Value, &rewardsB)
+			cdc.MustUnmarshal(kvA.Value, &rewardsA)
+			cdc.MustUnmarshal(kvB.Value, &rewardsB)
 			return fmt.Sprintf("%v\n%v", rewardsA, rewardsB)
 
 		case bytes.Equal(kvA.Key[:1], types.ValidatorAccumulatedCommissionPrefix):
 			var commissionA, commissionB types.ValidatorAccumulatedCommission
-			cdc.MustUnmarshalBinaryBare(kvA.Value, &commissionA)
-			cdc.MustUnmarshalBinaryBare(kvB.Value, &commissionB)
+			cdc.MustUnmarshal(kvA.Value, &commissionA)
+			cdc.MustUnmarshal(kvB.Value, &commissionB)
 			return fmt.Sprintf("%v\n%v", commissionA, commissionB)
 
 		case bytes.Equal(kvA.Key[:1], types.ValidatorSlashEventPrefix):
 			var eventA, eventB types.ValidatorSlashEvent
-			cdc.MustUnmarshalBinaryBare(kvA.Value, &eventA)
-			cdc.MustUnmarshalBinaryBare(kvB.Value, &eventB)
+			cdc.MustUnmarshal(kvA.Value, &eventA)
+			cdc.MustUnmarshal(kvB.Value, &eventB)
 			return fmt.Sprintf("%v\n%v", eventA, eventB)
 
 		default:

@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
+set -euo pipefail
+set -x
 
 BINARY=/simd/${BINARY:-simd}
 ID=${ID:-0}
@@ -9,14 +11,7 @@ if ! [ -f "${BINARY}" ]; then
 	exit 1
 fi
 
-BINARY_CHECK="$(file "$BINARY" | grep 'ELF 64-bit LSB executable, x86-64')"
-
-if [ -z "${BINARY_CHECK}" ]; then
-	echo "Binary needs to be OS linux, ARCH amd64"
-	exit 1
-fi
-
-export SIMDHOME="/simd/node${ID}/simd"
+export SIMDHOME="/data/node${ID}/simd"
 
 if [ -d "$(dirname "${SIMDHOME}"/"${LOG}")" ]; then
   "${BINARY}" --home "${SIMDHOME}" "$@" | tee "${SIMDHOME}/${LOG}"

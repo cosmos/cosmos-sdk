@@ -46,11 +46,6 @@ func TestDepositKeys(t *testing.T) {
 	proposalID, depositorAddr := SplitKeyDeposit(key)
 	require.Equal(t, int(proposalID), 2)
 	require.Equal(t, addr, depositorAddr)
-
-	// invalid key
-	addr2 := sdk.AccAddress("test1")
-	key = DepositKey(5, addr2)
-	require.Panics(t, func() { SplitKeyDeposit(key) })
 }
 
 func TestVoteKeys(t *testing.T) {
@@ -63,9 +58,4 @@ func TestVoteKeys(t *testing.T) {
 	proposalID, voterAddr := SplitKeyDeposit(key)
 	require.Equal(t, int(proposalID), 2)
 	require.Equal(t, addr, voterAddr)
-
-	// invalid key
-	addr2 := sdk.AccAddress("test1")
-	key = VoteKey(5, addr2)
-	require.Panics(t, func() { SplitKeyVote(key) })
 }

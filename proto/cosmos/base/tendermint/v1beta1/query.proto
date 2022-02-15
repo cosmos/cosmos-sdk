@@ -123,6 +123,7 @@ message VersionInfo {
   string          build_tags         = 5;
   string          go_version         = 6;
   repeated Module build_deps         = 7;
+  // Since: cosmos-sdk 0.43
   string          cosmos_sdk_version = 8;
 }
 

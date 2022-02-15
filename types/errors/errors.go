@@ -134,9 +134,19 @@ var (
 	// supported.
 	ErrNotSupported = Register(RootCodespace, 37, "feature not supported")
 
+	// ErrNotFound defines an error when requested entity doesn't exist in the state.
+	ErrNotFound = Register(RootCodespace, 38, "not found")
+
+	// ErrIO should be used to wrap internal errors caused by external operation.
+	// Examples: not DB domain error, file writing etc...
+	ErrIO = Register(RootCodespace, 39, "Internal IO error")
+
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")
+
+	// ErrAppConfig defines an error occurred if min-gas-prices field in BaseConfig is empty.
+	ErrAppConfig = Register(RootCodespace, 40, "error in app.toml")
 )
 
 // Register returns an error instance that should be used as the base for
@@ -254,6 +264,14 @@ func (e *Error) Is(err error) bool {
 	}
 }
 
+// Wrap extends this error with an additional information.
+// It's a handy function to call Wrap with sdk errors.
+func (e Error) Wrap(desc string) error { return Wrap(e, desc) }
+
+// Wrapf extends this error with an additional information.
+// It's a handy function to call Wrapf with sdk errors.
+func (e Error) Wrapf(desc string, args ...interface{}) error { return Wrapf(e, desc, args...) }
+
 func isNilErr(err error) bool {
 	// Reflect usage is necessary to correctly compare with
 	// a nil implementation of an error.
@@ -354,6 +372,17 @@ func Recover(err *error) {
 // WithType is a helper to augment an error with a corresponding type message
 func WithType(err error, obj interface{}) error {
 	return Wrap(err, fmt.Sprintf("%T", obj))
+}
+
+// IsOf checks if a received error is caused by one of the target errors.
+// It extends the errors.Is functionality to a list of errors.
+func IsOf(received error, targets ...error) bool {
+	for _, t := range targets {
+		if errors.Is(received, t) {
+			return true
+		}
+	}
+	return false
 }
 
 // causer is an interface implemented by an error that supports wrapping. Use

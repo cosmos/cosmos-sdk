@@ -23,8 +23,18 @@ service Query {
   // as a trusted kernel for the next version of this chain. It will only be
   // stored at the last height of this chain.
   // UpgradedConsensusState RPC not supported with legacy querier
+  // This rpc is deprecated now that IBC has its own replacement
+  // (https://github.com/cosmos/ibc-go/blob/2c880a22e9f9cc75f62b527ca94aa75ce1106001/proto/ibc/core/client/v1/query.proto#L54)
   rpc UpgradedConsensusState(QueryUpgradedConsensusStateRequest) returns (QueryUpgradedConsensusStateResponse) {
+    option deprecated            = true;
     option (google.api.http).get = "/cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}";
+  }
+
+  // ModuleVersions queries the list of module versions from state.
+  //
+  // Since: cosmos-sdk 0.43
+  rpc ModuleVersions(QueryModuleVersionsRequest) returns (QueryModuleVersionsResponse) {
+    option (google.api.http).get = "/cosmos/upgrade/v1beta1/module_versions";
   }
 }
 
@@ -56,6 +66,8 @@ message QueryAppliedPlanResponse {
 // QueryUpgradedConsensusStateRequest is the request type for the Query/UpgradedConsensusState
 // RPC method.
 message QueryUpgradedConsensusStateRequest {
+  option deprecated = true;
+
   // last height of the current chain must be sent in request
   // as this is the height under which next consensus state is stored
   int64 last_height = 1;
@@ -64,5 +76,29 @@ message QueryUpgradedConsensusStateRequest {
 // QueryUpgradedConsensusStateResponse is the response type for the Query/UpgradedConsensusState
 // RPC method.
 message QueryUpgradedConsensusStateResponse {
-  google.protobuf.Any upgraded_consensus_state = 1;
+  option deprecated = true;
+  reserved 1;
+
+  // Since: cosmos-sdk 0.43
+  bytes upgraded_consensus_state = 2;
+}
+
+// QueryModuleVersionsRequest is the request type for the Query/ModuleVersions
+// RPC method.
+//
+// Since: cosmos-sdk 0.43
+message QueryModuleVersionsRequest {
+  // module_name is a field to query a specific module
+  // consensus version from state. Leaving this empty will
+  // fetch the full list of module versions from state
+  string module_name = 1;
+}
+
+// QueryModuleVersionsResponse is the response type for the Query/ModuleVersions
+// RPC method.
+//
+// Since: cosmos-sdk 0.43
+message QueryModuleVersionsResponse {
+  // module_versions is a list of module names with their consensus versions.
+  repeated ModuleVersion module_versions = 1;
 }

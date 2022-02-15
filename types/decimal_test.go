@@ -29,8 +29,6 @@ func (s *decimalTestSuite) mustNewDecFromStr(str string) (d sdk.Dec) {
 	return d
 }
 
-// _______________________________________
-
 func (s *decimalTestSuite) TestNewDecFromStr() {
 	largeBigInt, success := new(big.Int).SetString("3144605511029693144278234343371835", 10)
 	s.Require().True(success)
@@ -99,6 +97,28 @@ func (s *decimalTestSuite) TestDecString() {
 	}
 	for tcIndex, tc := range tests {
 		s.Require().Equal(tc.want, tc.d.String(), "bad String(), index: %v", tcIndex)
+	}
+}
+
+func (s *decimalTestSuite) TestDecFloat64() {
+	tests := []struct {
+		d    sdk.Dec
+		want float64
+	}{
+		{sdk.NewDec(0), 0.000000000000000000},
+		{sdk.NewDec(1), 1.000000000000000000},
+		{sdk.NewDec(10), 10.000000000000000000},
+		{sdk.NewDec(12340), 12340.000000000000000000},
+		{sdk.NewDecWithPrec(12340, 4), 1.234000000000000000},
+		{sdk.NewDecWithPrec(12340, 5), 0.123400000000000000},
+		{sdk.NewDecWithPrec(12340, 8), 0.000123400000000000},
+		{sdk.NewDecWithPrec(1009009009009009009, 17), 10.090090090090090090},
+	}
+	for tcIndex, tc := range tests {
+		value, err := tc.d.Float64()
+		s.Require().Nil(err, "error getting Float64(), index: %v", tcIndex)
+		s.Require().Equal(tc.want, value, "bad Float64(), index: %v", tcIndex)
+		s.Require().Equal(tc.want, tc.d.MustFloat64(), "bad MustFloat64(), index: %v", tcIndex)
 	}
 }
 
@@ -488,6 +508,7 @@ func (s *decimalTestSuite) TestOperationOrders() {
 }
 
 func BenchmarkMarshalTo(b *testing.B) {
+	b.ReportAllocs()
 	bis := []struct {
 		in   sdk.Dec
 		want []byte

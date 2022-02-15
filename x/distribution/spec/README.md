@@ -42,7 +42,7 @@ following rewards between validators and associated delegators:
 
 Fees are pooled within a global pool, as well as validator specific
 proposer-reward pools. The mechanisms used allow for validators and delegators
-to independently and lazily withdraw their rewards.  
+to independently and lazily withdraw their rewards.
 
 ## Shortcomings
 
@@ -87,12 +87,12 @@ to set up a script to periodically withdraw and rebond rewards.
 1. **[Concepts](01_concepts.md)**
     - [Reference Counting in F1 Fee Distribution](01_concepts.md#reference-counting-in-f1-fee-distribution)
 2. **[State](02_state.md)**
-3. **[End Block](03_end_block.md)**
+3. **[Begin Block](03_begin_block.md)**
 4. **[Messages](04_messages.md)**
     - [MsgSetWithdrawAddress](04_messages.md#msgsetwithdrawaddress)
     - [MsgWithdrawDelegatorReward](04_messages.md#msgwithdrawdelegatorreward)
         - [Withdraw Validator Rewards All](04_messages.md#withdraw-validator-rewards-all)
-    - [Common calculations ](04_messages.md#common-calculations-)
+    - [Common calculations](04_messages.md#common-calculations-)
 5. **[Hooks](05_hooks.md)**
     - [Create or modify delegation distribution](05_hooks.md#create-or-modify-delegation-distribution)
     - [Commission rate change](05_hooks.md#commission-rate-change)

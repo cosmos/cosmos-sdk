@@ -5,6 +5,8 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 )
 
+// TODO: remove this file https://github.com/cosmos/cosmos-sdk/issues/8047
+
 // KeysCdc defines codec to be used with key operations
 var KeysCdc *codec.LegacyAmino
 

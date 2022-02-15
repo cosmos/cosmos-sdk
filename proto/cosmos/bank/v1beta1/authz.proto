@@ -1,0 +1,19 @@
+syntax = "proto3";
+package cosmos.bank.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
+
+// SendAuthorization allows the grantee to spend up to spend_limit coins from
+// the granter's account.
+//
+// Since: cosmos-sdk 0.43
+message SendAuthorization {
+  option (cosmos_proto.implements_interface) = "Authorization";
+
+  repeated cosmos.base.v1beta1.Coin spend_limit = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}

@@ -3,6 +3,9 @@ package keeper
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/types/query"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -12,6 +15,34 @@ import (
 )
 
 var _ types.QueryServer = AccountKeeper{}
+
+func (ak AccountKeeper) Accounts(c context.Context, req *types.QueryAccountsRequest) (*types.QueryAccountsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	store := ctx.KVStore(ak.key)
+	accountsStore := prefix.NewStore(store, types.AddressStoreKeyPrefix)
+
+	var accounts []*codectypes.Any
+	pageRes, err := query.Paginate(accountsStore, req.Pagination, func(key, value []byte) error {
+		account := ak.decodeAccount(value)
+		any, err := codectypes.NewAnyWithValue(account)
+		if err != nil {
+			return err
+		}
+
+		accounts = append(accounts, any)
+		return nil
+	})
+
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "paginate: %v", err)
+	}
+
+	return &types.QueryAccountsResponse{Accounts: accounts, Pagination: pageRes}, err
+}
 
 // Account returns account details based on address
 func (ak AccountKeeper) Account(c context.Context, req *types.QueryAccountRequest) (*types.QueryAccountResponse, error) {

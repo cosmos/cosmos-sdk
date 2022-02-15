@@ -5,41 +5,42 @@
 package mocks
 
 import (
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	grpc "google.golang.org/grpc"
-	reflect "reflect"
 )
 
-// MockServer is a mock of Server interface
+// MockServer is a mock of Server interface.
 type MockServer struct {
 	ctrl     *gomock.Controller
 	recorder *MockServerMockRecorder
 }
 
-// MockServerMockRecorder is the mock recorder for MockServer
+// MockServerMockRecorder is the mock recorder for MockServer.
 type MockServerMockRecorder struct {
 	mock *MockServer
 }
 
-// NewMockServer creates a new mock instance
+// NewMockServer creates a new mock instance.
 func NewMockServer(ctrl *gomock.Controller) *MockServer {
 	mock := &MockServer{ctrl: ctrl}
 	mock.recorder = &MockServerMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockServer) EXPECT() *MockServerMockRecorder {
 	return m.recorder
 }
 
-// RegisterService mocks base method
+// RegisterService mocks base method.
 func (m *MockServer) RegisterService(arg0 *grpc.ServiceDesc, arg1 interface{}) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterService", arg0, arg1)
 }
 
-// RegisterService indicates an expected call of RegisterService
+// RegisterService indicates an expected call of RegisterService.
 func (mr *MockServerMockRecorder) RegisterService(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterService", reflect.TypeOf((*MockServer)(nil).RegisterService), arg0, arg1)

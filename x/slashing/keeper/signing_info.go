@@ -18,7 +18,7 @@ func (k Keeper) GetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress
 		found = false
 		return
 	}
-	k.cdc.MustUnmarshalBinaryBare(bz, &info)
+	k.cdc.MustUnmarshal(bz, &info)
 	found = true
 	return
 }
@@ -33,7 +33,7 @@ func (k Keeper) HasValidatorSigningInfo(ctx sdk.Context, consAddr sdk.ConsAddres
 // SetValidatorSigningInfo sets the validator signing info to a consensus address key
 func (k Keeper) SetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress, info types.ValidatorSigningInfo) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryBare(&info)
+	bz := k.cdc.MustMarshal(&info)
 	store.Set(types.ValidatorSigningInfoKey(address), bz)
 }
 
@@ -47,7 +47,7 @@ func (k Keeper) IterateValidatorSigningInfos(ctx sdk.Context,
 	for ; iter.Valid(); iter.Next() {
 		address := types.ValidatorSigningInfoAddress(iter.Key())
 		var info types.ValidatorSigningInfo
-		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &info)
+		k.cdc.MustUnmarshal(iter.Value(), &info)
 		if handler(address, info) {
 			break
 		}
@@ -63,7 +63,7 @@ func (k Keeper) GetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.Con
 		// lazy: treat empty key as not missed
 		return false
 	}
-	k.cdc.MustUnmarshalBinaryBare(bz, &missed)
+	k.cdc.MustUnmarshal(bz, &missed)
 
 	return missed.Value
 }
@@ -83,7 +83,7 @@ func (k Keeper) IterateValidatorMissedBlockBitArray(ctx sdk.Context,
 			continue
 		}
 
-		k.cdc.MustUnmarshalBinaryBare(bz, &missed)
+		k.cdc.MustUnmarshal(bz, &missed)
 		if handler(index, missed.Value) {
 			break
 		}
@@ -143,7 +143,7 @@ func (k Keeper) IsTombstoned(ctx sdk.Context, consAddr sdk.ConsAddress) bool {
 // missed a block in the current window
 func (k Keeper) SetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64, missed bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryBare(&gogotypes.BoolValue{Value: missed})
+	bz := k.cdc.MustMarshal(&gogotypes.BoolValue{Value: missed})
 	store.Set(types.ValidatorMissedBlockBitArrayKey(address, index), bz)
 }
 

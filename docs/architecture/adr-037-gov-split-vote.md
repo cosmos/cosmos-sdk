@@ -6,7 +6,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Abstract
 
@@ -35,7 +35,8 @@ type Vote struct {
 }
 ```
 
-And for backwards compatibility, we introduce `MsgWeightedVote` while keeping `MsgVote`.
+And for backwards compatibility, we introduce `MsgVoteWeighted` while keeping `MsgVote`.
+
 ```
 type MsgVote struct {
   ProposalID int64
@@ -43,14 +44,15 @@ type MsgVote struct {
   Option     Option
 }
 
-type MsgWeightedVote struct {
+type MsgVoteWeighted struct {
   ProposalID int64
   Voter      sdk.Address
   Options    []WeightedVoteOption
 }
 ```
 
-The `ValidateBasic` of a `MsgWeightedVote` struct would require that
+The `ValidateBasic` of a `MsgVoteWeighted` struct would require that
+
 1. The sum of all the Rates is equal to 1.0
 2. No Option is repeated
 
@@ -69,16 +71,18 @@ tally() {
 ```
 
 The CLI command for creating a multi-option vote would be as such:
+
 ```sh
 simd tx gov vote 1 "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05" --from mykey
 ```
 
 To create a single-option vote a user can do either
+
 ```
 simd tx gov vote 1 "yes=1" --from mykey
 ```
 
-or 
+or
 
 ```sh
 simd tx gov vote 1 yes --from mykey
@@ -86,19 +90,22 @@ simd tx gov vote 1 yes --from mykey
 
 to maintain backwards compatibility.
 
-
 ## Consequences
 
 ### Backwards Compatibility
+
 - Previous VoteMsg types will remain the same and so clients will not have to update their procedure unless they want to support the WeightedVoteMsg feature.
 - When querying a Vote struct from state, its structure will be different, and so clients wanting to display all voters and their respective votes will have to handle the new format and the fact that a single voter can have split votes.
 - The result of querying the tally function should have the same API for clients.
 
 ### Positive
+
 - Can make the voting process more accurate for addresses representing multiple stakeholders, often some of the largest addresses.
 
 ### Negative
+
 - Is more complex than simple voting, and so may be harder to explain to users.  However, this is mostly mitigated because the feature is opt-in.
 
 ### Neutral
+
 - Relatively minor change to governance tally function.

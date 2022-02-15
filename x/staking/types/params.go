@@ -43,6 +43,7 @@ var (
 	KeyMaxEntries              = []byte("MaxEntries")
 	KeyBondDenom               = []byte("BondDenom")
 	KeyHistoricalEntries       = []byte("HistoricalEntries")
+	KeyPowerReduction          = []byte("PowerReduction")
 	KeyMinGlobalSelfDelegation = []byte("MinGlobalSelfDelegation")
 )
 
@@ -107,7 +108,7 @@ func MustUnmarshalParams(cdc *codec.LegacyAmino, value []byte) Params {
 
 // unmarshal the current staking params value from store key
 func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err error) {
-	err = cdc.UnmarshalBinaryBare(value, &params)
+	err = cdc.Unmarshal(value, &params)
 	if err != nil {
 		return
 	}
@@ -200,6 +201,19 @@ func validateBondDenom(i interface{}) error {
 
 	if err := sdk.ValidateDenom(v); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func ValidatePowerReduction(i interface{}) error {
+	v, ok := i.(sdk.Int)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.LT(sdk.NewInt(1)) {
+		return fmt.Errorf("power reduction cannot be lower than 1")
 	}
 
 	return nil

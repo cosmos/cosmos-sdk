@@ -6,9 +6,8 @@ namespace for a parameter store, where keys are prefixed by pre-configured
 subspace names which modules provide. The Keeper has a permission to access all
 existing subspaces.
 
-Subspace can be used by the individual keepers, who needs a private parameter store
-that the other keeper cannot modify. Keeper can be used by the Governance keeper,
-who need to modify any parameter in case of the proposal passes.
+Subspace can be used by the individual keepers, which need a private parameter store
+that the other keepers cannot modify.
 
 Basic Usage:
 
@@ -23,11 +22,11 @@ Basic Usage:
 		KeyParameter2 = "myparameter2"
 	)
 
-2. Create a concrete parameter struct and define the validation functions:
+2. Define parameters as proto message and define the validation functions:
 
-	type MyParams struct {
-		MyParam1 int64 `json:"my_param1" yaml:"my_param1"`
-		MyParam2 bool `json:"my_param2" yaml:"my_param2"`
+	message MyParams {
+		int64 my_param1 = 1;
+		bool my_param2 = 2;
 	}
 
 	func validateMyParam1(i interface{}) error {
@@ -56,12 +55,12 @@ Basic Usage:
 
 	func (p *MyParams) ParamSetPairs() params.ParamSetPairs {
 		return params.ParamSetPairs{
-			{KeyParameter1, &p.MyParam1, validateMyParam1},
-			{KeyParameter2, &p.MyParam2, validateMyParam2},
+			params.NewParamSetPair(KeyParameter1, &p.MyParam1, validateMyParam1),
+			params.NewParamSetPair(KeyParameter2, &p.MyParam2, validateMyParam2),
 		}
 	}
 
-	func paramKeyTable() params.KeyTable {
+	func ParamKeyTable() params.KeyTable {
 		return params.NewKeyTable().RegisterParamSet(&MyParams{})
 	}
 
@@ -70,7 +69,7 @@ Basic Usage:
 	func NewKeeper(..., paramSpace params.Subspace, ...) Keeper {
 		// set KeyTable if it has not already been set
 		if !paramSpace.HasKeyTable() {
-			paramSpace = paramSpace.WithKeyTable(paramKeyTable())
+			paramSpace = paramSpace.WithKeyTable(ParamKeyTable())
 		}
 
 		return Keeper {

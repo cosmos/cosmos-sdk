@@ -1,5 +1,10 @@
 # 基础文档
 
+::: warning
+**DEPRECATED**
+This documentation is not complete and it's outdated. Please use the English version.
+:::
+
 此目录包含对 cosmos sdk 的基础概念介绍
 
 1. [SDK 应用解析](./app-anatomy.md)

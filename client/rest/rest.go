@@ -26,6 +26,7 @@ func addHTTPDeprecationHeaders(h http.Handler) http.Handler {
 // WithHTTPDeprecationHeaders returns a new *mux.Router, identical to its input
 // but with the addition of HTTP Deprecation headers. This is used to mark legacy
 // amino REST endpoints as deprecated in the REST API.
+// nolint: gocritic
 func WithHTTPDeprecationHeaders(r *mux.Router) *mux.Router {
 	subRouter := r.NewRoute().Subrouter()
 	subRouter.Use(addHTTPDeprecationHeaders)

@@ -20,7 +20,7 @@ import (
 type SubspaceTestSuite struct {
 	suite.Suite
 
-	cdc   codec.BinaryMarshaler
+	cdc   codec.BinaryCodec
 	amino *codec.LegacyAmino
 	ctx   sdk.Context
 	ss    types.Subspace

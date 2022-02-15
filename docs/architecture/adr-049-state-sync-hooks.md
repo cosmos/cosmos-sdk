@@ -87,7 +87,7 @@ type Manager struct {
 	store      *Store
 	multistore types.Snapshotter
 	extensions map[string]types.ExtensionSnapshotter
-    mtx                sync.Mutex
+	mtx                sync.Mutex
 	operation          operation
 	chRestore          chan<- io.ReadCloser
 	chRestoreDone      <-chan restoreDone
@@ -104,7 +104,7 @@ calling `RegisterExtensions` when setting up the application. The snapshotters w
 func (m *Manager) RegisterExtensions(extensions ...types.ExtensionSnapshotter) error 
 ```
 
-Except the existing `Snapshotter` interface for the `multistore`, we add `ExtensionSnapshotter` interface for the extension snapshotters. Three more function signatures: `SnapshotFormat()`, `SupportedFormats()` and `SnapshotName()` are added to `ExtensionSnapshotter`.
+On top of the existing `Snapshotter` interface for the `multistore`, we add `ExtensionSnapshotter` interface for the extension snapshotters. Three more function signatures: `SnapshotFormat()`, `SupportedFormats()` and `SnapshotName()` are added to `ExtensionSnapshotter`.
 
 ```go
 // ExtensionSnapshotter is an extension Snapshotter that is appended to the snapshot stream.

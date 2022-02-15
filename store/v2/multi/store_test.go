@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"math"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -940,6 +941,53 @@ func TestTrace(t *testing.T) {
 	store.SetTracer(nil)
 	require.False(t, store.TracingEnabled())
 	require.NoError(t, store.Close())
+}
+
+func TestTraceConcurrency(t *testing.T) {
+	db := memdb.NewDB()
+	opts := storeConfig123(t)
+	store, err := NewStore(db, opts)
+	require.NoError(t, err)
+
+	b := &bytes.Buffer{}
+	tc := types.TraceContext(map[string]interface{}{"blockHeight": 64})
+
+	store.SetTracer(b)
+	store.SetTracingContext(tc)
+
+	cms := store.CacheWrap()
+	s1 := cms.GetKVStore(skey_1)
+	require.NotNil(t, s1)
+
+	stop := make(chan struct{})
+	stopW := make(chan struct{})
+
+	go func(stop chan struct{}) {
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+				s1.Set([]byte{1}, []byte{1})
+				cms.Write()
+			}
+		}
+	}(stop)
+
+	go func(stop chan struct{}) {
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+				store.SetTracingContext(tc)
+			}
+		}
+	}(stopW)
+
+	time.Sleep(1 * time.Second)
+	stop <- struct{}{}
+	stopW <- struct{}{}
 }
 
 func TestListeners(t *testing.T) {

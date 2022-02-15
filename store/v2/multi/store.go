@@ -125,9 +125,10 @@ type SchemaBuilder struct {
 
 // Mixin type that to compose trace & listen state into each root store variant type
 type traceListenMixin struct {
-	listeners    map[types.StoreKey][]types.WriteListener
-	TraceWriter  io.Writer
-	TraceContext types.TraceContext
+	listeners         map[types.StoreKey][]types.WriteListener
+	TraceWriter       io.Writer
+	TraceContext      types.TraceContext
+	traceContextMutex sync.RWMutex
 }
 
 func newTraceListenMixin() *traceListenMixin {
@@ -902,12 +903,35 @@ func (tlm *traceListenMixin) SetTracer(w io.Writer) {
 	tlm.TraceWriter = w
 }
 func (tlm *traceListenMixin) SetTracingContext(tc types.TraceContext) {
-	tlm.TraceContext = tc
+	tlm.traceContextMutex.Lock()
+	defer tlm.traceContextMutex.Unlock()
+	if tlm.TraceContext != nil {
+		for k, v := range tc {
+			tlm.TraceContext[k] = v
+		}
+	} else {
+		tlm.TraceContext = tc
+	}
+}
+
+func (tlm *traceListenMixin) getTracingContext() types.TraceContext {
+	tlm.traceContextMutex.Lock()
+	defer tlm.traceContextMutex.Unlock()
+
+	if tlm.TraceContext == nil {
+		return nil
+	}
+
+	ctx := types.TraceContext{}
+	for k, v := range tlm.TraceContext {
+		ctx[k] = v
+	}
+	return ctx
 }
 
 func (tlm *traceListenMixin) wrapTraceListen(store types.KVStore, skey types.StoreKey) types.KVStore {
 	if tlm.TracingEnabled() {
-		store = tracekv.NewStore(store, tlm.TraceWriter, tlm.TraceContext)
+		store = tracekv.NewStore(store, tlm.TraceWriter, tlm.getTracingContext())
 	}
 	if tlm.ListeningEnabled(skey) {
 		store = listenkv.NewStore(store, skey, tlm.listeners[skey])

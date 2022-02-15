@@ -136,6 +136,16 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.Val
 	return rewards
 }
 
+// SmartRewardAccount is an account with a post-reward processing function.
+// Such an account ignores a non-default withdrawal address, as this can
+// be implemented in the post-reward processing if desired.
+type SmartRewardAccount interface {
+	// PostReward is called after reward has been transferred to the account.
+	// The named keepers should be provided. They are given the trivial type
+	// here to handle the mismatch in expected methods with the callee.
+	PostReward(ctx sdk.Context, reward sdk.Coins, authKeeper, bankKeeper, stakingKeeper interface{})
+}
+
 func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI) (sdk.Coins, error) {
 	// check existence of delegator starting info
 	if !k.HasDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr()) {
@@ -166,10 +176,14 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.Vali
 
 	// add coins to user account
 	if !coins.IsZero() {
-		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, del.GetDelegatorAddr())
+		addr := del.GetDelegatorAddr()
+		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, addr)
 		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, coins)
 		if err != nil {
 			return nil, err
+		}
+		for _, h := range k.hooks {
+			h.AfterDelegationReward(ctx, addr, withdrawAddr, coins)
 		}
 	}
 

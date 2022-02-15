@@ -118,8 +118,12 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				if err != nil {
 					return fmt.Errorf("error getting account from keybase: %w", err)
 				}
+				multisigKey, err := txFactory.Keybase().KeyByAddress(multisigAddr)
+				if err != nil {
+					return err
+				}
 				err = authclient.SignTxWithSignerAddress(
-					txFactory, clientCtx, multisigAddr, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, true)
+					txFactory, clientCtx, multisigAddr, multisigKey.Name, txBuilder, clientCtx.Offline, true)
 				if err != nil {
 					return err
 				}

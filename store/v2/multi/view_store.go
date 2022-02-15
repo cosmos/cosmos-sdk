@@ -63,8 +63,10 @@ func (vs *viewStore) getSubstore(key string) (*viewSubstore, error) {
 	}, nil
 }
 
+// CacheWrap implements MultiStore.
+// Because this store is a read-only view, the returned store's Write operation is a no-op.
 func (vs *viewStore) CacheWrap() types.CacheMultiStore {
-	return newCacheStore(vs)
+	return noopCacheStore{newCacheStore(vs)}
 }
 
 func (s *viewSubstore) GetStateCommitmentStore() *smt.Store {

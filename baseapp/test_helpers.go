@@ -98,5 +98,5 @@ func (app *BaseApp) NewContextAt(isCheckTx bool, header tmproto.Header, height i
 	if err != nil {
 		return sdk.Context{}, err
 	}
-	return sdk.NewContext(multi.BasicAsCacheStore(view), header, isCheckTx, app.logger), nil
+	return sdk.NewContext(view.CacheWrap(), header, isCheckTx, app.logger), nil
 }

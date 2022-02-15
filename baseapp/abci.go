@@ -17,7 +17,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/store/v2/multi"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -646,11 +645,10 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 				"failed to load state at height %d; %s (latest height: %d)", height, err, app.LastBlockHeight(),
 			)
 	}
-	cacheMS := multi.BasicAsCacheStore(version)
 
-	// branch the commit-multistore for safety
 	ctx := sdk.NewContext(
-		cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger,
+		version.CacheWrap(), // branch the commit-multistore for safety
+		app.checkState.ctx.BlockHeader(), true, app.logger,
 	).WithMinGasPrices(app.minGasPrices).WithBlockHeight(height)
 
 	return ctx, nil

@@ -53,11 +53,6 @@ type noopCacheStore struct {
 
 func (noopCacheStore) Write() {}
 
-// pretend basic store is cache store
-func BasicAsCacheStore(bs types.MultiStore) types.CacheMultiStore {
-	return noopCacheStore{newCacheStore(bs)}
-}
-
 // pretend commit store is cache store
 func CommitAsCacheStore(s types.CommitMultiStore) types.CacheMultiStore {
 	return noopCacheStore{newCacheStore(s)}

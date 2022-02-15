@@ -2,7 +2,6 @@ package baseapp
 
 import (
 	"crypto/sha256"
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"os"
@@ -107,13 +106,10 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 	lastCommitID := app.cms.LastCommitID()
 
-	v := &tmproto.VersionParams{}
-	app.paramStore.Get(app.deliverState.ctx, ParamStoreKeyVersionParams, v)
-
 	return abci.ResponseInfo{
 		Data:             app.name,
 		Version:          app.version,
-		AppVersion:       v.AppVersion,
+		AppVersion:       app.appVersion,
 		LastBlockHeight:  lastCommitID.Version,
 		LastBlockAppHash: lastCommitID.Hash,
 	}
@@ -757,16 +753,11 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 			}
 
 		case "version":
-			v := &tmproto.VersionParams{}
-			app.paramStore.Get(app.deliverState.ctx, ParamStoreKeyVersionParams, v)
-
-			b := make([]byte, 8)
-			binary.LittleEndian.PutUint64(b, v.AppVersion)
 
 			return abci.ResponseQuery{
 				Codespace: sdkerrors.RootCodespace,
 				Height:    req.Height,
-				Value:     b,
+				Value:     []byte(app.version),
 			}
 
 		default:

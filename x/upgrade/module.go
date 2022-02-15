@@ -104,7 +104,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 // InitGenesis is ignored, no sense in serializing future upgrades
-func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
+	version := am.keeper.GetProtocolVersion(ctx)
+	am.keeper.VersionSetter.SetProtocolVersion(version)
 	return []abci.ValidatorUpdate{}
 }
 

@@ -54,9 +54,10 @@ func getGroupMembers(r *rand.Rand, accounts []simtypes.Account) []*group.GroupMe
 
 func getGroupPolicies(r *rand.Rand, simState *module.SimulationState) []*group.GroupPolicyInfo {
 	groupPolicies := make([]*group.GroupPolicyInfo, 3)
+	sec := time.Second
 	for i := 0; i < 3; i++ {
 		acc, _ := simtypes.RandomAcc(r, simState.Accounts)
-		any, err := codectypes.NewAnyWithValue(group.NewThresholdDecisionPolicy("10", time.Second*time.Duration(1)))
+		any, err := codectypes.NewAnyWithValue(group.NewThresholdDecisionPolicy("10", time.Second, &sec))
 		if err != nil {
 			panic(err)
 		}
@@ -97,10 +98,11 @@ func getProposals(r *rand.Rand, simState *module.SimulationState) []*group.Propo
 				AbstainCount:    "1",
 				NoWithVetoCount: "0",
 			},
-			ExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
-			Metadata:       []byte(simtypes.RandStringOfLength(r, 50)),
-			SubmitTime:     submittedAt,
-			Timeout:        timeout,
+			ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			Metadata:           []byte(simtypes.RandStringOfLength(r, 50)),
+			SubmitTime:         submittedAt,
+			VotingPeriodEnd:    timeout,
+			ExecutionPeriodEnd: &timeout,
 		}
 		err := proposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
 			FromAddress: fromAddr,

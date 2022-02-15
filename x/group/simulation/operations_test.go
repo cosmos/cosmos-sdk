@@ -18,6 +18,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/simulation"
 )
 
+var hour = time.Hour
+
 type SimTestSuite struct {
 	suite.Suite
 
@@ -190,7 +192,7 @@ func (suite *SimTestSuite) TestSimulateSubmitProposal() {
 		GroupId:  groupRes.GroupId,
 		Metadata: nil,
 	}
-	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, &hour))
 	suite.Require().NoError(err)
 	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
@@ -245,7 +247,7 @@ func (suite *SimTestSuite) TestWithdrawProposal() {
 		GroupId:  groupRes.GroupId,
 		Metadata: nil,
 	}
-	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, &hour))
 	suite.Require().NoError(err)
 	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
@@ -312,7 +314,7 @@ func (suite *SimTestSuite) TestSimulateVote() {
 		GroupId:  groupRes.GroupId,
 		Metadata: nil,
 	}
-	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, &hour))
 	suite.Require().NoError(err)
 	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
@@ -379,7 +381,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 		GroupId:  groupRes.GroupId,
 		Metadata: nil,
 	}
-	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, &hour))
 	suite.Require().NoError(err)
 	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
@@ -579,7 +581,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyAdmin() {
 		GroupId:  groupRes.GroupId,
 		Metadata: nil,
 	}
-	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, &hour))
 	suite.Require().NoError(err)
 	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
@@ -633,7 +635,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyDecisionPolicy() {
 		GroupId:  groupRes.GroupId,
 		Metadata: nil,
 	}
-	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, &hour))
 	suite.Require().NoError(err)
 	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
@@ -687,7 +689,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyMetadata() {
 		GroupId:  groupRes.GroupId,
 		Metadata: nil,
 	}
-	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, &hour))
 	suite.Require().NoError(err)
 	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)

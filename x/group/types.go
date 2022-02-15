@@ -26,6 +26,9 @@ type DecisionPolicy interface {
 
 	GetVotingPeriod() time.Duration
 	GetExecutionPeriod() *time.Duration
+	// Allow defines policy-specific logic to allow a proposal to pass or not,
+	// based on its tally result, the group's total power and the time since
+	// the proposal was submitted.
 	Allow(tallyResult TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error)
 
 	ValidateBasic() error

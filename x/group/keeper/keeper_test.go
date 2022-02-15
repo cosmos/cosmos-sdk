@@ -21,6 +21,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 )
 
+var (
+	milliSec = time.Millisecond
+	sec      = time.Second
+	twoSec   = time.Second * 2
+)
+
 type TestSuite struct {
 	suite.Suite
 
@@ -62,6 +68,7 @@ func (s *TestSuite) SetupTest() {
 	policy := group.NewThresholdDecisionPolicy(
 		"2",
 		time.Second,
+		&sec,
 	)
 	policyReq := &group.MsgCreateGroupPolicy{
 		Admin:    s.addrs[0].String(),
@@ -733,6 +740,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
 				time.Second,
+				&sec,
 			),
 		},
 		"all good with percentage decision policy": {
@@ -744,6 +752,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			policy: group.NewPercentageDecisionPolicy(
 				"0.5",
 				time.Second,
+				&sec,
 			),
 		},
 		"decision policy threshold > total group weight": {
@@ -755,6 +764,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			policy: group.NewThresholdDecisionPolicy(
 				"10",
 				time.Second,
+				&sec,
 			),
 		},
 		"group id does not exists": {
@@ -766,6 +776,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
 				time.Second,
+				&sec,
 			),
 			expErr:    true,
 			expErrMsg: "not found",
@@ -779,6 +790,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
 				time.Second,
+				&sec,
 			),
 			expErr:    true,
 			expErrMsg: "not group admin",
@@ -792,6 +804,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
 				time.Second,
+				&sec,
 			),
 			expErr:    true,
 			expErrMsg: "limit exceeded",
@@ -805,6 +818,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			policy: group.NewPercentageDecisionPolicy(
 				"-0.5",
 				time.Second,
+				&sec,
 			),
 			expErr:    true,
 			expErrMsg: "expected a positive decimal",
@@ -818,9 +832,24 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			policy: group.NewPercentageDecisionPolicy(
 				"2",
 				time.Second,
+				&sec,
 			),
 			expErr:    true,
 			expErrMsg: "percentage must be > 0 and <= 1",
+		},
+		"percentage decision policy with execPeriod < votingPeriod": {
+			req: &group.MsgCreateGroupPolicy{
+				Admin:    addr1.String(),
+				Metadata: nil,
+				GroupId:  myGroupID,
+			},
+			policy: group.NewPercentageDecisionPolicy(
+				"0.5",
+				time.Second,
+				&milliSec,
+			),
+			expErr:    true,
+			expErrMsg: "execution period must be longer than voting period",
 		},
 	}
 	for msg, spec := range specs {
@@ -1065,6 +1094,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 			policy: group.NewThresholdDecisionPolicy(
 				"2",
 				time.Duration(2)*time.Second,
+				&twoSec,
 			),
 			expGroupPolicy: &group.GroupPolicyInfo{
 				Admin:          admin.String(),
@@ -1088,6 +1118,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 			policy: group.NewPercentageDecisionPolicy(
 				"0.5",
 				time.Duration(2)*time.Second,
+				&twoSec,
 			),
 			expGroupPolicy: &group.GroupPolicyInfo{
 				Admin:          admin.String(),
@@ -1152,14 +1183,17 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 		group.NewThresholdDecisionPolicy(
 			"1",
 			time.Second,
+			&sec,
 		),
 		group.NewThresholdDecisionPolicy(
 			"10",
 			time.Second,
+			&sec,
 		),
 		group.NewPercentageDecisionPolicy(
 			"0.5",
 			time.Second,
+			&sec,
 		),
 	}
 
@@ -1253,6 +1287,7 @@ func (s *TestSuite) TestSubmitProposal() {
 	policy := group.NewThresholdDecisionPolicy(
 		"100",
 		time.Second,
+		&sec,
 	)
 	err := policyReq.SetDecisionPolicy(policy)
 	s.Require().NoError(err)
@@ -1442,7 +1477,8 @@ func (s *TestSuite) TestSubmitProposal() {
 			s.Assert().Equal(spec.expProposal.Result, proposal.Result)
 			s.Assert().Equal(spec.expProposal.FinalTallyResult, proposal.FinalTallyResult)
 			s.Assert().Equal(spec.expProposal.ExecutorResult, proposal.ExecutorResult)
-			s.Assert().Equal(s.blockTime.Add(time.Second), proposal.Timeout)
+			s.Assert().Equal(s.blockTime.Add(time.Second), proposal.VotingPeriodEnd)
+			s.Assert().Equal(s.blockTime.Add(time.Second), *proposal.ExecutionPeriodEnd)
 
 			if spec.msgs == nil { // then empty list is ok
 				s.Assert().Len(proposal.GetMsgs(), 0)
@@ -1565,6 +1601,7 @@ func (s *TestSuite) TestVote() {
 	policy := group.NewThresholdDecisionPolicy(
 		"2",
 		time.Duration(2),
+		&twoSec,
 	)
 	policyReq := &group.MsgCreateGroupPolicy{
 		Admin:    addr1.String(),
@@ -1902,8 +1939,9 @@ func (s *TestSuite) TestVote() {
 					addr1,
 					groupPolicy,
 					&group.ThresholdDecisionPolicy{
-						Threshold: "1",
-						Timeout:   time.Second,
+						Threshold:       "1",
+						VotingPeriod:    time.Second,
+						ExecutionPeriod: &sec,
 					},
 				)
 				s.Require().NoError(err)
@@ -2259,6 +2297,7 @@ func createGroupAndGroupPolicy(
 	policy := group.NewThresholdDecisionPolicy(
 		"1",
 		time.Second,
+		&sec,
 	)
 	err = groupPolicy.SetDecisionPolicy(policy)
 	s.Require().NoError(err)

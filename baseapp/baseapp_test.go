@@ -563,7 +563,7 @@ func TestInfo(t *testing.T) {
 	assert.Equal(t, t.Name(), res.GetData())
 	assert.Equal(t, int64(0), res.LastBlockHeight)
 	require.Equal(t, []uint8(nil), res.LastBlockAppHash)
-	require.Equal(t, app.AppVersion(), res.AppVersion)
+	require.Equal(t, app.GetProtocolVersion(), res.AppVersion)
 	// ----- test a proper response -------
 	// TODO
 }

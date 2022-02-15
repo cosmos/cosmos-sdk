@@ -250,12 +250,12 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 	ctx := app.getContextForTx(mode, req.Tx)
 	res, checkRes, err := app.txHandler.CheckTx(ctx, tx.Request{TxBytes: req.Tx}, tx.RequestCheckTx{Type: req.Type})
 	if err != nil {
-		return sdkerrors.ResponseCheckTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
+		return sdkerrors.ResponseCheckTx(err, res.GasUsed, res.GasWanted, app.trace)
 	}
 
 	abciRes, err := convertTxResponseToCheckTx(res, checkRes)
 	if err != nil {
-		return sdkerrors.ResponseCheckTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
+		return sdkerrors.ResponseCheckTx(err, res.GasUsed, res.GasWanted, app.trace)
 	}
 
 	return abciRes
@@ -885,7 +885,7 @@ func makeABCIData(txRes tx.Response) ([]byte, error) {
 func convertTxResponseToCheckTx(txRes tx.Response, checkRes tx.ResponseCheckTx) (abci.ResponseCheckTx, error) {
 	data, err := makeABCIData(txRes)
 	if err != nil {
-		return abci.ResponseCheckTx{}, nil
+		return abci.ResponseCheckTx{}, err
 	}
 
 	return abci.ResponseCheckTx{
@@ -900,7 +900,7 @@ func convertTxResponseToCheckTx(txRes tx.Response, checkRes tx.ResponseCheckTx) 
 func convertTxResponseToDeliverTx(txRes tx.Response) (abci.ResponseDeliverTx, error) {
 	data, err := makeABCIData(txRes)
 	if err != nil {
-		return abci.ResponseDeliverTx{}, nil
+		return abci.ResponseDeliverTx{}, err
 	}
 
 	return abci.ResponseDeliverTx{

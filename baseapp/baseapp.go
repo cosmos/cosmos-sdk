@@ -161,15 +161,6 @@ func (app *BaseApp) Name() string {
 	return app.name
 }
 
-// AppVersion returns the application's protocol version.
-func (app *BaseApp) AppVersion() uint64 {
-
-	v := &tmproto.VersionParams{}
-	app.paramStore.Get(app.deliverState.ctx, ParamStoreKeyVersionParams, v)
-
-	return v.AppVersion
-}
-
 // Version returns the application's version string.
 func (app *BaseApp) Version() string {
 	return app.version

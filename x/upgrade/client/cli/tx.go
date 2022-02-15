@@ -123,7 +123,7 @@ Where proposal.json contains:
 // Deprecated: please use NewCmdSubmitUpgradeProposal instead.
 func NewCmdSubmitLegacyUpgradeProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "software-upgrade [name] (--upgrade-height [height]) (--upgrade-info [info]) [flags]",
+		Use:   "legacy-software-upgrade [name] (--upgrade-height [height]) (--upgrade-info [info]) [flags]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Submit a software upgrade proposal",
 		Long: "Submit a software upgrade along with an initial deposit.\n" +
@@ -191,8 +191,14 @@ func NewCmdSubmitLegacyUpgradeProposal() *cobra.Command {
 
 // NewCmdSubmitCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
 func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
+	panic("todo")
+}
+
+// NewCmdSubmitLegacyCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
+// Deprecated: please use NewCmdSubmitCancelUpgradeProposal instead.
+func NewCmdSubmitLegacyCancelUpgradeProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "cancel-software-upgrade [flags]",
+		Use:   "legacy-cancel-software-upgrade [flags]",
 		Args:  cobra.ExactArgs(0),
 		Short: "Cancel the current software upgrade proposal",
 		Long:  "Cancel a software upgrade along with an initial deposit.",

@@ -68,3 +68,42 @@ func TestMsgSoftwareUpgrade(t *testing.T) {
 		})
 	}
 }
+
+func TestMsgCancelUpgrade(t *testing.T) {
+	testCases := []struct {
+		name   string
+		msg    *types.MsgCancelUpgrade
+		expErr bool
+		errMsg string
+	}{
+		{
+			"invalid authority address",
+			&types.MsgCancelUpgrade{
+				Authority: "authority",
+			},
+			true,
+			"authority: decoding bech32 failed",
+		},
+		{
+			"all good",
+			&types.MsgCancelUpgrade{
+				Authority: authority.String(),
+			},
+			false,
+			"",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.errMsg)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.msg.Type(), sdk.MsgTypeURL(&types.MsgCancelUpgrade{}))
+			}
+		})
+	}
+}

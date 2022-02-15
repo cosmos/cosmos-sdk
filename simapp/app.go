@@ -116,8 +116,8 @@ var (
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(
-			[]govclient.ProposalHandler{upgradeclient.ProposalHandler},
-			[]govclient.ProposalHandler{paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.LegacyProposalHandler, upgradeclient.CancelProposalHandler},
+			[]govclient.ProposalHandler{upgradeclient.ProposalHandler, upgradeclient.CancelProposalHandler},
+			[]govclient.ProposalHandler{paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.LegacyProposalHandler, upgradeclient.LegacyCancelProposalHandler},
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},

@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	_ sdk.Msg            = &MsgSoftwareUpgrade{}
-	_ legacytx.LegacyMsg = &MsgSoftwareUpgrade{}
+	_, _ sdk.Msg            = &MsgSoftwareUpgrade{}, &MsgCancelUpgrade{}
+	_, _ legacytx.LegacyMsg = &MsgSoftwareUpgrade{}, &MsgCancelUpgrade{}
 )
 
 // Route implements the LegacyMsg interface.
@@ -38,6 +38,32 @@ func (m *MsgSoftwareUpgrade) ValidateBasic() error {
 
 // GetSigners returns the expected signers for MsgSoftwareUpgrade.
 func (m *MsgSoftwareUpgrade) GetSigners() []sdk.AccAddress {
+	addr, _ := sdk.AccAddressFromBech32(m.Authority)
+	return []sdk.AccAddress{addr}
+}
+
+// Route implements the LegacyMsg interface.
+func (m MsgCancelUpgrade) Route() string { return sdk.MsgTypeURL(&m) }
+
+// Type implements the LegacyMsg interface.
+func (m MsgCancelUpgrade) Type() string { return sdk.MsgTypeURL(&m) }
+
+// GetSignBytes implements the LegacyMsg interface.
+func (m MsgCancelUpgrade) GetSignBytes() []byte {
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
+}
+
+// ValidateBasic does a sanity check on the provided data.
+func (m *MsgCancelUpgrade) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return sdkerrors.Wrap(err, "authority")
+	}
+
+	return nil
+}
+
+// GetSigners returns the expected signers for MsgSoftwareUpgrade.
+func (m *MsgCancelUpgrade) GetSigners() []sdk.AccAddress {
 	addr, _ := sdk.AccAddressFromBech32(m.Authority)
 	return []sdk.AccAddress{addr}
 }

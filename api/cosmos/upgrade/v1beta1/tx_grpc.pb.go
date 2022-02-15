@@ -26,6 +26,11 @@ type MsgClient interface {
 	//
 	// Since: cosmos-sdk 0.46
 	SoftwareUpgrade(ctx context.Context, in *MsgSoftwareUpgrade, opts ...grpc.CallOption) (*MsgSoftwareUpgradeResponse, error)
+	// CancelUpgrade is a governance operation for cancelling a previously
+	// approvid software upgrade.
+	//
+	// Since: cosmos-sdk 0.46
+	CancelUpgrade(ctx context.Context, in *MsgCancelUpgrade, opts ...grpc.CallOption) (*MsgCancelUpgradeResponse, error)
 }
 
 type msgClient struct {
@@ -45,6 +50,15 @@ func (c *msgClient) SoftwareUpgrade(ctx context.Context, in *MsgSoftwareUpgrade,
 	return out, nil
 }
 
+func (c *msgClient) CancelUpgrade(ctx context.Context, in *MsgCancelUpgrade, opts ...grpc.CallOption) (*MsgCancelUpgradeResponse, error) {
+	out := new(MsgCancelUpgradeResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.upgrade.v1beta1.Msg/CancelUpgrade", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -53,6 +67,11 @@ type MsgServer interface {
 	//
 	// Since: cosmos-sdk 0.46
 	SoftwareUpgrade(context.Context, *MsgSoftwareUpgrade) (*MsgSoftwareUpgradeResponse, error)
+	// CancelUpgrade is a governance operation for cancelling a previously
+	// approvid software upgrade.
+	//
+	// Since: cosmos-sdk 0.46
+	CancelUpgrade(context.Context, *MsgCancelUpgrade) (*MsgCancelUpgradeResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -62,6 +81,9 @@ type UnimplementedMsgServer struct {
 
 func (UnimplementedMsgServer) SoftwareUpgrade(context.Context, *MsgSoftwareUpgrade) (*MsgSoftwareUpgradeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SoftwareUpgrade not implemented")
+}
+func (UnimplementedMsgServer) CancelUpgrade(context.Context, *MsgCancelUpgrade) (*MsgCancelUpgradeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CancelUpgrade not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -94,6 +116,24 @@ func _Msg_SoftwareUpgrade_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CancelUpgrade_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCancelUpgrade)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CancelUpgrade(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.upgrade.v1beta1.Msg/CancelUpgrade",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CancelUpgrade(ctx, req.(*MsgCancelUpgrade))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -104,6 +144,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SoftwareUpgrade",
 			Handler:    _Msg_SoftwareUpgrade_Handler,
+		},
+		{
+			MethodName: "CancelUpgrade",
+			Handler:    _Msg_CancelUpgrade_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

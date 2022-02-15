@@ -115,6 +115,6 @@ None in particular.
 
 ## References
 
-* Ref: <https://github.com/cosmos/cosmos-sdk/issues/4982>
-* Ref: <https://github.com/cosmos/cosmos-sdk/issues/5467>
-* Ref: <https://github.com/cosmos/cosmos-sdk/issues/5492>
+* Ref: https://github.com/cosmos/cosmos-sdk/issues/4982
+* Ref: https://github.com/cosmos/cosmos-sdk/issues/5467
+* Ref: https://github.com/cosmos/cosmos-sdk/issues/5492

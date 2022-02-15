@@ -24,7 +24,7 @@ The legacy amino multi-signature mechanism of the Cosmos SDK has certain limitat
 While the group module is not meant to be a total replacement for the current multi-signature accounts, it provides a solution to the limitations described above, with a more flexible key management system where keys can be added, updated or removed, as well as configurable thresholds.
 It's meant to be used with other access control modules such as [`x/feegrant`](./adr-029-fee-grant-module.md) ans [`x/authz`](adr-030-authz-module.md) to simplify key management for individuals and organizations.
 
-The proof of concept of the group module can be found in <https://github.com/regen-network/regen-ledger/tree/master/proto/regen/group/v1alpha1> and <https://github.com/regen-network/regen-ledger/tree/master/x/group>.
+The proof of concept of the group module can be found in https://github.com/regen-network/regen-ledger/tree/master/proto/regen/group/v1alpha1 and https://github.com/regen-network/regen-ledger/tree/master/x/group.
 
 ## Decision
 
@@ -265,15 +265,15 @@ Inter-module communication introduced by [ADR-033](adr-033-protobuf-inter-module
 
 ## Further Discussions
 
-* Convergence of `/group` and `x/gov` as both support proposals and voting: <https://github.com/cosmos/cosmos-sdk/discussions/9066>
+* Convergence of `/group` and `x/gov` as both support proposals and voting: https://github.com/cosmos/cosmos-sdk/discussions/9066
 * `x/group` possible future improvements:
-    * Execute proposals on submission (<https://github.com/regen-network/regen-ledger/issues/288>)
-    * Withdraw a proposal (<https://github.com/regen-network/cosmos-modules/issues/41>)
+    * Execute proposals on submission (https://github.com/regen-network/regen-ledger/issues/288)
+    * Withdraw a proposal (https://github.com/regen-network/cosmos-modules/issues/41)
     * Make `Tally` more flexible and support non-binary choices
 
 ## References
 
 * Initial specification:
-    * <https://gist.github.com/aaronc/b60628017352df5983791cad30babe56#group-module>
+    * https://gist.github.com/aaronc/b60628017352df5983791cad30babe56#group-module
     * [#5236](https://github.com/cosmos/cosmos-sdk/pull/5236)
 * Proposal to add `x/group` into the Cosmos SDK: [#7633](https://github.com/cosmos/cosmos-sdk/issues/7633)

@@ -1268,6 +1268,9 @@ tags are stringified and the log is JSON decoded.
 | `gas_used` | [int64](#int64) |  | Amount of gas consumed by transaction. |
 | `tx` | [google.protobuf.Any](#google.protobuf.Any) |  | The request transaction bytes. |
 | `timestamp` | [string](#string) |  | Time of the previous block. For heights > 1, it's the weighted median of the timestamps of the valid votes in the block.LastCommit. For height == 1, it's genesis time. |
+| `events` | [tendermint.abci.Event](#tendermint.abci.Event) | repeated | Events defines all the events emitted by processing a transaction. Note, these events include those emitted by processing all the messages and those emitted from the ante handler. Whereas Logs contains the events, with additional metadata, emitted only by processing the messages.
+
+Since: cosmos-sdk 0.42.11, 0.44.5, 0.45 |
 
 
 
@@ -6428,6 +6431,7 @@ Params defines the parameters for the staking module.
 | `max_entries` | [uint32](#uint32) |  | max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio). |
 | `historical_entries` | [uint32](#uint32) |  | historical_entries is the number of historical entries to persist. |
 | `bond_denom` | [string](#string) |  | bond_denom defines the bondable coin denomination. |
+| `min_global_self_delegation` | [string](#string) |  | min_global_self_delegation is the validators' self declared minimum self delegation. |
 
 
 

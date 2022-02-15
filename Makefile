@@ -407,9 +407,8 @@ proto-swagger-gen:
 
 proto-format:
 	@echo "Formatting Protobuf files"
-	@if $(DOCKER) ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then $(DOCKER) start -a $(containerProtoFmt); else $(DOCKER) run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace onomy/docker-build-proto \
-		find ./ -not -path "./third_party/*" -name "*.proto" -exec clang-format -i {} \; ; fi
-
+	@if $(DOCKER) ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then $(DOCKER) start -a $(containerProtoFmt); else $(DOCKER) run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
+		find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {}; fi
 
 proto-lint:
 	@$(DOCKER_BUF) lint --error-format=json

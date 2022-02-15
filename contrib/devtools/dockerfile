@@ -1,4 +1,6 @@
-FROM bufbuild/buf:latest as BUILDER
+FROM bufbuild/buf:0.53.0 as BUILDER
+
+FROM unibeautify/clang-format as clang-format-build
 
 FROM golang:alpine
 
@@ -25,3 +27,4 @@ RUN apk add --no-cache \
 RUN npm install -g swagger-combine
 
 COPY --from=BUILDER /usr/local/bin /usr/local/bin
+COPY --from=clang-format-build /usr/bin/clang-format /usr/bin

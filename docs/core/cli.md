@@ -40,7 +40,7 @@ The `main.go` file needs to have a `main()` function that creates a root command
 
 The `main()` function finally creates an executor and [execute](https://godoc.org/github.com/spf13/cobra#Command.Execute) the root command. See an example of `main()` function from the `simapp` application:
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/main.go#L12-L24>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/main.go#L12-L24
 
 The rest of the document will detail what needs to be implemented for each step and include smaller portions of code from the `simapp` CLI files.
 
@@ -60,17 +60,17 @@ The root command (called `rootCmd`) is what the user first types into the comman
 
 Next is an example `rootCmd` function from the `simapp` application. It instantiates the root command, adds a [_persistent_ flag](#flags) and `PreRun` function to be run before every execution, and adds all of the necessary subcommands.
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/4eea4cafd3b8b1c2cd493886db524500c9dd745c/simapp/simd/cmd/root.go#L37-L150>
++++ https://github.com/cosmos/cosmos-sdk/blob/4eea4cafd3b8b1c2cd493886db524500c9dd745c/simapp/simd/cmd/root.go#L37-L150
 
 `rootCmd` has a function called `initAppConfig()` which is useful for setting the application's custom configs.
 By default app uses Tendermint app config template from Cosmos SDK, which can be over-written via `initAppConfig()`.
 Here's an example code to override default `app.toml` template.
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/4eea4cafd3b8b1c2cd493886db524500c9dd745c/simapp/simd/cmd/root.go#L84-L117>
++++ https://github.com/cosmos/cosmos-sdk/blob/4eea4cafd3b8b1c2cd493886db524500c9dd745c/simapp/simd/cmd/root.go#L84-L117
 
 The `initAppConfig()` also allows overriding the default Cosmos SDK's [server config](https://github.com/cosmos/cosmos-sdk/blob/4eea4cafd3b8b1c2cd493886db524500c9dd745c/server/config/config.go#L199). One example is the `min-gas-prices` config, which defines the minimum gas prices a validator is willing to accept for processing a transaction. By default, the Cosmos SDK sets this parameter to `""` (empty string), which forces all validators to tweak their own `app.toml` and set a non-empty value, or else the node will halt on startup. This might not be the best UX for validators, so the chain developer can set a default `app.toml` value for validators inside this `initAppConfig()` function.
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/aa9b055ddb46aacd4737335a92d0b8a82d577341/simapp/simd/cmd/root.go#L101-L116>
++++ https://github.com/cosmos/cosmos-sdk/blob/aa9b055ddb46aacd4737335a92d0b8a82d577341/simapp/simd/cmd/root.go#L101-L116
 
 The root-level `status` and `keys` subcommands are common across most applications and do not interact with application state. The bulk of an application's functionality - what users can actually _do_ with it - is enabled by its `tx` and `query` commands.
 
@@ -78,7 +78,7 @@ The root-level `status` and `keys` subcommands are common across most applicatio
 
 [Transactions](./transactions.md) are objects wrapping [`Msg`s](../building-modules/messages-and-queries.md#messages) that trigger state changes. To enable the creation of transactions using the CLI interface, a function `txCmd` is generally added to the `rootCmd`:
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L86-L92>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L86-L92
 
 This `txCmd` function adds all the transaction available to end-users for the application. This typically includes:
 
@@ -88,13 +88,13 @@ This `txCmd` function adds all the transaction available to end-users for the ap
 
 Here is an example of a `txCmd` aggregating these subcommands from the `simapp` application:
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L123-L149>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L123-L149
 
 ### Query Commands
 
 [**Queries**](../building-modules/messages-and-queries.md#queries) are objects that allow users to retrieve information about the application's state. To enable the creation of transactions using the CLI interface, a function `txCmd` is generally added to the `rootCmd`:
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L86-L92>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L86-L92
 
 This `queryCmd` function adds all the queries available to end-users for the application. This typically includes:
 
@@ -106,7 +106,7 @@ This `queryCmd` function adds all the queries available to end-users for the app
 
 Here is an example of a `queryCmd` aggregating subcommands from the `simapp` application:
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L99-L121>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L99-L121
 
 ## Flags
 
@@ -116,7 +116,7 @@ A _persistent_ flag (as opposed to a _local_ flag) added to a command transcends
 
 Flags are added to commands directly (generally in the [module's CLI file](../building-modules/module-interfaces.md#flags) where module commands are defined) and no flag except for the `rootCmd` persistent flags has to be added at application level. It is common to add a _persistent_ flag for `--chain-id`, the unique identifier of the blockchain the application pertains to, to the root command. Adding this flag can be done in the `main()` function. Adding this flag makes sense as the chain ID should not be changing across commands in this application CLI. Here is an example from the `simapp` application:
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L118-L119>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L118-L119
 
 ## Environment variables
 
@@ -145,7 +145,7 @@ It is vital that the root command of an application uses `PersistentPreRun()` co
 
 Here is an example of an `PersistentPreRun()` function from `simapp``:
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L54-L60>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L54-L60
 
 The `SetCmdClientContextHandler` call reads persistent flags via `ReadPersistentCommandFlags` which creates a `client.Context` and sets that on the root command's `Context`.
 

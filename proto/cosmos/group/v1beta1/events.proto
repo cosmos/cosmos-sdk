@@ -67,4 +67,7 @@ message EventLeaveGroup {
 
   // group_id is the unique ID of the group.
   uint64 group_id = 1;
+
+  // address is the account address of the group member.
+  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }

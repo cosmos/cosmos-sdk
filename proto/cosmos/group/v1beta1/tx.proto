@@ -315,6 +315,8 @@ message MsgExecResponse {}
 
 // MsgLeaveGroup is the Msg/LeaveGroup request type.
 message MsgLeaveGroup {
+  option (cosmos.msg.v1.signer) = "member_address";
+
   // member_address is the account address of the group member.
   string member_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 

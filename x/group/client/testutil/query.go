@@ -40,7 +40,7 @@ func (s *IntegrationTestSuite) TestQueryGroupInfo() {
 		},
 		{
 			"group found",
-			[]string{strconv.FormatUint(s.group.GroupId, 10), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{strconv.FormatUint(s.group.Id, 10), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			"",
 			0,
@@ -61,7 +61,7 @@ func (s *IntegrationTestSuite) TestQueryGroupInfo() {
 
 				var g group.GroupInfo
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &g))
-				s.Require().Equal(s.group.GroupId, g.GroupId)
+				s.Require().Equal(s.group.Id, g.Id)
 				s.Require().Equal(s.group.Admin, g.Admin)
 				s.Require().Equal(s.group.TotalWeight, g.TotalWeight)
 				s.Require().Equal(s.group.Metadata, g.Metadata)
@@ -85,7 +85,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByMembers() {
 	require.Len(groups.Groups, 1)
 
 	cmd = client.QueryGroupMembersCmd()
-	out, err = cli.ExecTestCLICmd(clientCtx, cmd, []string{fmt.Sprintf("%d", groups.Groups[0].GroupId), fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err = cli.ExecTestCLICmd(clientCtx, cmd, []string{fmt.Sprintf("%d", groups.Groups[0].Id), fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	require.NoError(err)
 
 	var members group.QueryGroupMembersResponse
@@ -170,13 +170,13 @@ func (s *IntegrationTestSuite) TestQueryGroupMembers() {
 		},
 		{
 			"members found",
-			[]string{strconv.FormatUint(s.group.GroupId, 10), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{strconv.FormatUint(s.group.Id, 10), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			"",
 			0,
 			[]*group.GroupMember{
 				{
-					GroupId: s.group.GroupId,
+					GroupId: s.group.Id,
 					Member: &group.Member{
 						Address:  val.Address.String(),
 						Weight:   "3",
@@ -269,7 +269,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByAdmin() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
 				s.Require().Equal(len(res.Groups), len(tc.expectGroups))
 				for i := range res.Groups {
-					s.Require().Equal(res.Groups[i].GroupId, tc.expectGroups[i].GroupId)
+					s.Require().Equal(res.Groups[i].Id, tc.expectGroups[i].Id)
 					s.Require().Equal(res.Groups[i].Metadata, tc.expectGroups[i].Metadata)
 					s.Require().Equal(res.Groups[i].Version, tc.expectGroups[i].Version)
 					s.Require().Equal(res.Groups[i].TotalWeight, tc.expectGroups[i].TotalWeight)
@@ -362,7 +362,7 @@ func (s *IntegrationTestSuite) TestQueryGroupPoliciesByGroup() {
 		},
 		{
 			"found group policies",
-			[]string{strconv.FormatUint(s.group.GroupId, 10), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{strconv.FormatUint(s.group.Id, 10), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			"",
 			0,
@@ -372,6 +372,7 @@ func (s *IntegrationTestSuite) TestQueryGroupPoliciesByGroup() {
 				s.groupPolicies[2],
 				s.groupPolicies[3],
 				s.groupPolicies[4],
+				s.groupPolicies[5],
 			},
 		},
 	}
@@ -443,6 +444,7 @@ func (s *IntegrationTestSuite) TestQueryGroupPoliciesByAdmin() {
 				s.groupPolicies[2],
 				s.groupPolicies[3],
 				s.groupPolicies[4],
+				s.groupPolicies[5],
 			},
 		},
 	}

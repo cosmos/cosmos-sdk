@@ -26,7 +26,7 @@ func getGroups(r *rand.Rand, accounts []simtypes.Account) []*group.GroupInfo {
 	for i := 0; i < 3; i++ {
 		acc, _ := simtypes.RandomAcc(r, accounts)
 		groups[i] = &group.GroupInfo{
-			GroupId:     uint64(i + 1),
+			Id:          uint64(i + 1),
 			Admin:       acc.Address.String(),
 			Metadata:    []byte(simtypes.RandStringOfLength(r, 10)),
 			Version:     1,
@@ -84,22 +84,22 @@ func getProposals(r *rand.Rand, simState *module.SimulationState) []*group.Propo
 		timeout := submittedAt.Add(time.Second * 1000).UTC()
 
 		proposal := &group.Proposal{
-			ProposalId:         uint64(i + 1),
+			Id:                 uint64(i + 1),
 			Proposers:          proposers,
 			Address:            fromAddr,
 			GroupVersion:       uint64(i + 1),
 			GroupPolicyVersion: uint64(i + 1),
-			Status:             group.ProposalStatusSubmitted,
-			Result:             group.ProposalResultAccepted,
-			VoteState: group.Tally{
-				YesCount:     "1",
-				NoCount:      "1",
-				AbstainCount: "1",
-				VetoCount:    "0",
+			Status:             group.PROPOSAL_STATUS_SUBMITTED,
+			Result:             group.PROPOSAL_RESULT_ACCEPTED,
+			FinalTallyResult: group.TallyResult{
+				YesCount:        "1",
+				NoCount:         "1",
+				AbstainCount:    "1",
+				NoWithVetoCount: "0",
 			},
-			ExecutorResult: group.ProposalExecutorResultNotRun,
+			ExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			Metadata:       []byte(simtypes.RandStringOfLength(r, 50)),
-			SubmittedAt:    submittedAt,
+			SubmitTime:     submittedAt,
 			Timeout:        timeout,
 		}
 		err := proposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
@@ -122,27 +122,27 @@ func getVotes(r *rand.Rand, simState *module.SimulationState) []*group.Vote {
 
 	for i := 0; i < 3; i++ {
 		votes[i] = &group.Vote{
-			ProposalId:  uint64(i + 1),
-			Voter:       simState.Accounts[i].Address.String(),
-			Choice:      getVoteChoice(i),
-			Metadata:    []byte(simtypes.RandStringOfLength(r, 50)),
-			SubmittedAt: time.Unix(0, 0),
+			ProposalId: uint64(i + 1),
+			Voter:      simState.Accounts[i].Address.String(),
+			Option:     getVoteOption(i),
+			Metadata:   []byte(simtypes.RandStringOfLength(r, 50)),
+			SubmitTime: time.Unix(0, 0),
 		}
 	}
 
 	return votes
 }
 
-func getVoteChoice(index int) group.Choice {
+func getVoteOption(index int) group.VoteOption {
 	switch index {
 	case 0:
-		return group.Choice_CHOICE_YES
+		return group.VOTE_OPTION_YES
 	case 1:
-		return group.Choice_CHOICE_NO
+		return group.VOTE_OPTION_NO
 	case 2:
-		return group.Choice_CHOICE_ABSTAIN
+		return group.VOTE_OPTION_ABSTAIN
 	default:
-		return group.Choice_CHOICE_VETO
+		return group.VOTE_OPTION_NO_WITH_VETO
 	}
 }
 

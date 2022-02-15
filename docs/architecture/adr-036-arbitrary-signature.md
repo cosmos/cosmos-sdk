@@ -126,7 +126,7 @@ Backwards compatibility is maintained as this is a new message spec definition.
 
 ## References
 
-1. <https://github.com/cosmos/ics/pull/33>
-2. <https://github.com/cosmos/cosmos-sdk/pull/7727#discussion_r515668204>
-3. <https://github.com/cosmos/cosmos-sdk/pull/7727#issuecomment-722478477>
-4. <https://github.com/cosmos/cosmos-sdk/pull/7727#issuecomment-721062923>
+1. https://github.com/cosmos/ics/pull/33
+2. https://github.com/cosmos/cosmos-sdk/pull/7727#discussion_r515668204
+3. https://github.com/cosmos/cosmos-sdk/pull/7727#issuecomment-722478477
+4. https://github.com/cosmos/cosmos-sdk/pull/7727#issuecomment-721062923

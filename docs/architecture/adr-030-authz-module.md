@@ -244,6 +244,6 @@ SDK users
 
 ## References
 
-* Initial Hackatom implementation: <https://github.com/cosmos-gaians/cosmos-sdk/tree/hackatom/x/delegation>
-* Post-Hackatom spec: <https://gist.github.com/aaronc/b60628017352df5983791cad30babe56#delegation-module>
-* B-Harvest subkeys spec: <https://github.com/cosmos/cosmos-sdk/issues/4480>
+* Initial Hackatom implementation: https://github.com/cosmos-gaians/cosmos-sdk/tree/hackatom/x/delegation
+* Post-Hackatom spec: https://gist.github.com/aaronc/b60628017352df5983791cad30babe56#delegation-module
+* B-Harvest subkeys spec: https://github.com/cosmos/cosmos-sdk/issues/4480

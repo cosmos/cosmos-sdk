@@ -162,6 +162,6 @@ While modules MUST register their migration functions when bumping ConsensusVers
 
 ## References
 
-* Initial discussion: <https://github.com/cosmos/cosmos-sdk/discussions/8429>
-* Implementation of `ConsensusVersion` and `RunMigrations`: <https://github.com/cosmos/cosmos-sdk/pull/8485>
-* Issue discussing `x/upgrade` design: <https://github.com/cosmos/cosmos-sdk/issues/8514>
+* Initial discussion: https://github.com/cosmos/cosmos-sdk/discussions/8429
+* Implementation of `ConsensusVersion` and `RunMigrations`: https://github.com/cosmos/cosmos-sdk/pull/8485
+* Issue discussing `x/upgrade` design: https://github.com/cosmos/cosmos-sdk/issues/8514

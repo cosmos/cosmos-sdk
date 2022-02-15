@@ -19,7 +19,7 @@ func TestDecodeStore(t *testing.T) {
 	cdc := simapp.MakeTestEncodingConfig().Codec
 	dec := simulation.NewDecodeStore(cdc)
 
-	g := group.GroupInfo{GroupId: 1}
+	g := group.GroupInfo{Id: 1}
 	groupBz, err := cdc.Marshal(&g)
 	require.NoError(t, err)
 
@@ -35,7 +35,7 @@ func TestDecodeStore(t *testing.T) {
 	accBz, err := cdc.Marshal(&acc)
 	require.NoError(t, err)
 
-	proposal := group.Proposal{ProposalId: 1}
+	proposal := group.Proposal{Id: 1}
 	proposalBz, err := cdc.Marshal(&proposal)
 	require.NoError(t, err)
 

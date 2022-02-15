@@ -21,7 +21,7 @@ func TestSingleton(t *testing.T) {
 	assert.NilError(t, err)
 	ctx := ormtable.WrapContextDefault(testkv.NewSplitMemBackend())
 
-	store, err := testpb.NewExampleSingletonStore(table)
+	store, err := testpb.NewExampleSingletonTable(table)
 	assert.NilError(t, err)
 
 	val, err := store.Get(ctx)

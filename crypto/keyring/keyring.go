@@ -810,18 +810,29 @@ func (ks keystore) writeRecord(k *Record) error {
 
 // existsInDb returns (true, nil) if either addr or name exist is in keystore DB.
 // On the other hand, it returns (false, error) if Get method returns error different from keyring.ErrKeyNotFound
+// In case of inconsistent keyring, it recovers it automatically.
 func (ks keystore) existsInDb(addr sdk.Address, name string) (bool, error) {
-
-	if _, err := ks.db.Get(addrHexKeyAsString(addr)); err == nil {
-		return true, nil // address lookup succeeds - info exists
-	} else if err != keyring.ErrKeyNotFound {
-		return false, err // received unexpected error - returns error
+	_, errAddr := ks.db.Get(addrHexKeyAsString(addr))
+	if errAddr != nil && !errors.Is(errAddr, keyring.ErrKeyNotFound) {
+		return false, errAddr
 	}
 
-	if _, err := ks.db.Get(name); err == nil {
+	_, errInfo := ks.db.Get(infoKey(name))
+	if errInfo == nil {
 		return true, nil // uid lookup succeeds - info exists
-	} else if err != keyring.ErrKeyNotFound {
-		return false, err // received unexpected error - returns
+	} else if !errors.Is(errInfo, keyring.ErrKeyNotFound) {
+		return false, errInfo // received unexpected error - returns
+	}
+
+	// looking for an issue, record with meta (getByAddress) exists, but record with public key itself does not
+	if errAddr == nil && errors.Is(errInfo, keyring.ErrKeyNotFound) {
+		fmt.Fprintf(os.Stderr, "address \"%s\" exists but pubkey itself does not\n", hex.EncodeToString(addr.Bytes()))
+		fmt.Fprintln(os.Stderr, "recreating pubkey record")
+		err := ks.db.Remove(addrHexKeyAsString(addr))
+		if err != nil {
+			return true, err
+		}
+		return false, nil
 	}
 
 	// both lookups failed, info does not exist

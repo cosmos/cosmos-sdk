@@ -122,11 +122,11 @@ func getVotes(r *rand.Rand, simState *module.SimulationState) []*group.Vote {
 
 	for i := 0; i < 3; i++ {
 		votes[i] = &group.Vote{
-			ProposalId:  uint64(i + 1),
-			Voter:       simState.Accounts[i].Address.String(),
-			Choices:     group.NewNonSplitVoteOption(getVoteChoice(i)),
-			Metadata:    []byte(simtypes.RandStringOfLength(r, 50)),
-			SubmittedAt: time.Unix(0, 0),
+			ProposalId: uint64(i + 1),
+			Voter:      simState.Accounts[i].Address.String(),
+			Options:    group.NewNonSplitVoteOption(getVoteOption(i)),
+			Metadata:   []byte(simtypes.RandStringOfLength(r, 50)),
+			SubmitTime: time.Unix(0, 0),
 		}
 	}
 

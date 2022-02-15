@@ -51,9 +51,9 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}{
 		{simulation.WeightMsgCreateGroup, group.MsgCreateGroup{}.Route(), simulation.TypeMsgCreateGroup},
 		{simulation.WeightMsgCreateGroupPolicy, group.MsgCreateGroupPolicy{}.Route(), simulation.TypeMsgCreateGroupPolicy},
-		{simulation.WeightMsgCreateProposal, group.MsgCreateProposal{}.Route(), simulation.TypeMsgCreateProposal},
-		{simulation.WeightMsgCreateProposal, group.MsgCreateProposal{}.Route(), simulation.TypeMsgCreateProposal},
-		{simulation.WeightMsgCreateProposal, group.MsgCreateProposal{}.Route(), simulation.TypeMsgCreateProposal},
+		{simulation.WeightMsgSubmitProposal, group.MsgSubmitProposal{}.Route(), simulation.TypeMsgSubmitProposal},
+		{simulation.WeightMsgSubmitProposal, group.MsgSubmitProposal{}.Route(), simulation.TypeMsgSubmitProposal},
+		{simulation.WeightMsgSubmitProposal, group.MsgSubmitProposal{}.Route(), simulation.TypeMsgSubmitProposal},
 		{simulation.WeightMsgWithdrawProposal, group.MsgWithdrawProposal{}.Route(), simulation.TypeMsgWithdrawProposal},
 		{simulation.WeightMsgVote, group.MsgVote{}.Route(), simulation.TypeMsgVote},
 		{simulation.WeightMsgVoteWeighted, group.MsgVoteWeighted{}.Route(), simulation.TypeMsgVoteWeighted},
@@ -387,7 +387,7 @@ func (suite *SimTestSuite) TestSimulateVoteWeighted() {
 	suite.Require().NoError(err)
 
 	// setup a proposal
-	proposalReq, err := group.NewMsgCreateProposalRequest(groupPolicyRes.Address, []string{addr}, []sdk.Msg{
+	proposalReq, err := group.NewMsgSubmitProposalRequest(groupPolicyRes.Address, []string{addr}, []sdk.Msg{
 		&banktypes.MsgSend{
 			FromAddress: groupPolicyRes.Address,
 			ToAddress:   addr,
@@ -395,7 +395,7 @@ func (suite *SimTestSuite) TestSimulateVoteWeighted() {
 		},
 	}, []byte{}, 0)
 	suite.Require().NoError(err)
-	_, err = suite.app.GroupKeeper.CreateProposal(ctx, proposalReq)
+	_, err = suite.app.GroupKeeper.SubmitProposal(ctx, proposalReq)
 	suite.Require().NoError(err)
 
 	// begin a new block

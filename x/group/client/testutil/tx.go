@@ -1636,16 +1636,14 @@ func (s *IntegrationTestSuite) TestTxVoteWeighted() {
 	policyAddr := s.groupPolicies[5].Address
 	proposalIds := make([]string, 4)
 
-	validTxFileName := getTxSendFileName(s, policyAddr, val.Address.String())
 	for i := 0; i < 4; i++ {
-		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateProposalCmd(),
+		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
 			append(
 				[]string{
-					policyAddr,
-					val.Address.String(),
-					validTxFileName,
-					"",
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+					s.createCLIProposal(
+						policyAddr, val.Address.String(),
+						policyAddr, val.Address.String(),
+						""),
 				},
 				commonFlags...,
 			),

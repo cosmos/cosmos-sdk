@@ -372,35 +372,35 @@ func (v Vote) ValidateBasic() error {
 	if v.ProposalId == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "voter ProposalId")
 	}
-	if len(v.Choices) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, WeightedVoteOptions(v.Choices).String())
+	if len(v.Options) == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, WeightedVoteOptions(v.Options).String())
 	}
 	totalWeight := sdk.NewDec(0)
-	usedOptions := make(map[Choice]bool)
-	for _, option := range v.Choices {
-		if option.Choice == Choice_CHOICE_UNSPECIFIED {
-			return sdkerrors.Wrap(errors.ErrEmpty, "voter choice")
+	usedOptions := make(map[VoteOption]bool)
+	for _, option := range v.Options {
+		if option.Option == VOTE_OPTION_UNSPECIFIED {
+			return sdkerrors.Wrap(errors.ErrEmpty, "voter option")
 		}
-		if _, ok := Choice_name[int32(option.Choice)]; !ok {
-			return sdkerrors.Wrap(errors.ErrInvalid, "choice")
+		if _, ok := VoteOption_name[int32(option.Option)]; !ok {
+			return sdkerrors.Wrap(errors.ErrInvalid, "option")
 		}
 		weight, err := sdk.NewDecFromStr(option.Weight)
 		if err != nil {
-			return sdkerrors.Wrapf(errors.ErrInvalid, "Invalid weight: %s", err)
+			return sdkerrors.Wrapf(errors.ErrInvalid, "invalid weight: %s", err)
 		}
 		totalWeight = totalWeight.Add(weight)
-		if usedOptions[option.Choice] {
-			return sdkerrors.Wrap(errors.ErrInvalid, "Duplicated vote option")
+		if usedOptions[option.Option] {
+			return sdkerrors.Wrap(errors.ErrInvalid, "duplicated vote option")
 		}
-		usedOptions[option.Choice] = true
+		usedOptions[option.Option] = true
 	}
 
 	if totalWeight.GT(sdk.NewDec(1)) {
-		return sdkerrors.Wrap(errors.ErrInvalid, "Total weight overflow 1.00")
+		return sdkerrors.Wrap(errors.ErrInvalid, "total weight overflow 1.00")
 	}
 
 	if totalWeight.LT(sdk.NewDec(1)) {
-		return sdkerrors.Wrap(errors.ErrInvalid, "Total weight lower than 1.00")
+		return sdkerrors.Wrap(errors.ErrInvalid, "total weight lower than 1.00")
 	}
 	return nil
 }
@@ -434,13 +434,13 @@ func (t *TallyResult) operation(vote Vote, weight string, op operation) error {
 		return err
 	}
 
-	for _, choice := range vote.Choices {
-		choiceWeight, err := math.NewPositiveDecFromString(choice.Weight)
+	for _, option := range vote.Options {
+		optionWeight, err := math.NewPositiveDecFromString(option.Weight)
 		if err != nil {
 			return err
 		}
 
-		weightToBeAdded, err := choiceWeight.Mul(weightDec)
+		weightToBeAdded, err := optionWeight.Mul(weightDec)
 		if err != nil {
 			return err
 		}
@@ -457,38 +457,38 @@ func (t *TallyResult) operation(vote Vote, weight string, op operation) error {
 		if err != nil {
 			return sdkerrors.Wrap(err, "abstain count")
 		}
-		vetoCount, err := t.GetVetoCount()
+		vetoCount, err := t.GetNoWithVetoCount()
 		if err != nil {
 			return sdkerrors.Wrap(err, "veto count")
 		}
 
-		switch choice.Choice {
-		case Choice_CHOICE_YES:
+		switch option.Option {
+		case VOTE_OPTION_YES:
 			yesCount, err := op(yesCount, weightToBeAdded)
 			if err != nil {
 				return sdkerrors.Wrap(err, "yes count")
 			}
 			t.YesCount = yesCount.String()
-		case Choice_CHOICE_NO:
+		case VOTE_OPTION_NO:
 			noCount, err := op(noCount, weightToBeAdded)
 			if err != nil {
 				return sdkerrors.Wrap(err, "no count")
 			}
 			t.NoCount = noCount.String()
-		case Choice_CHOICE_ABSTAIN:
+		case VOTE_OPTION_ABSTAIN:
 			abstainCount, err := op(abstainCount, weightToBeAdded)
 			if err != nil {
 				return sdkerrors.Wrap(err, "abstain count")
 			}
 			t.AbstainCount = abstainCount.String()
-		case Choice_CHOICE_VETO:
+		case VOTE_OPTION_NO_WITH_VETO:
 			vetoCount, err := op(vetoCount, weightToBeAdded)
 			if err != nil {
 				return sdkerrors.Wrap(err, "veto count")
 			}
-			t.VetoCount = vetoCount.String()
+			t.NoWithVetoCount = vetoCount.String()
 		default:
-			return sdkerrors.Wrapf(errors.ErrInvalid, "unknown choice %s", choice.Choice.String())
+			return sdkerrors.Wrapf(errors.ErrInvalid, "unknown choice %s", option.Option.String())
 		}
 	}
 
@@ -587,8 +587,8 @@ func VoteOptionFromString(str string) (VoteOption, error) {
 type WeightedVoteOptions []*WeightedVoteOption
 
 // NewNonSplitVoteOption creates a single choice vote with weight 1
-func NewNonSplitVoteOption(choice Choice) WeightedVoteOptions {
-	return WeightedVoteOptions{{choice, math.NewDecFromInt64(1).String()}}
+func NewNonSplitVoteOption(option VoteOption) WeightedVoteOptions {
+	return WeightedVoteOptions{{option, math.NewDecFromInt64(1).String()}}
 }
 
 func (v WeightedVoteOptions) String() (out string) {
@@ -602,24 +602,24 @@ func (v WeightedVoteOptions) String() (out string) {
 // WeightedVoteChoicesFromString returns weighted vote options from string. It returns an error
 // if the string is invalid.
 func WeightedVoteChoicesFromString(str string) (WeightedVoteOptions, error) {
-	choices := WeightedVoteOptions{}
-	for _, choice := range strings.Split(str, ",") {
-		fields := strings.Split(choice, "=")
-		choice, err := ChoiceFromString(fields[0])
+	options := WeightedVoteOptions{}
+	for _, option := range strings.Split(str, ",") {
+		fields := strings.Split(option, "=")
+		choice, err := VoteOptionFromString(fields[0])
 		if err != nil {
-			return choices, err
+			return options, err
 		}
 		if len(fields) < 2 {
-			return choices, fmt.Errorf("weight field does not exist for %s choice", fields[0])
+			return options, fmt.Errorf("weight field does not exist for %s choice", fields[0])
 		}
 		weight, err := sdk.NewDecFromStr(fields[1])
 		if err != nil {
-			return choices, err
+			return options, err
 		}
-		choices = append(choices, &WeightedVoteOption{
-			Choice: choice,
+		options = append(options, &WeightedVoteOption{
+			Option: choice,
 			Weight: weight.String(),
 		})
 	}
-	return choices, nil
+	return options, nil
 }

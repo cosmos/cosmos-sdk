@@ -113,7 +113,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		GroupPolicies:  []*group.GroupPolicyInfo{groupPolicy},
 		ProposalSeq:    1,
 		Proposals:      []*group.Proposal{proposal},
-		Votes:          []*group.Vote{{ProposalId: proposal.Id, Voter: memberAddr.String(), SubmitTime: submittedAt, Option: group.VOTE_OPTION_YES}},
+		Votes:          []*group.Vote{{ProposalId: proposal.Id, Voter: memberAddr.String(), SubmitTime: submittedAt, Options: group.NewNonSplitVoteOption(group.VOTE_OPTION_YES)}},
 	}
 	genesisBytes, err := cdc.MarshalJSON(genesisState)
 	s.Require().NoError(err)

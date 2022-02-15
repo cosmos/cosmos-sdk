@@ -605,7 +605,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	newVote := group.Vote{
 		ProposalId: id,
 		Voter:      voterAddr,
-		Option:     voteOption,
+		Options:    group.NewNonSplitVoteOption(voteOption),
 		Metadata:   metadata,
 		SubmitTime: ctx.BlockTime(),
 	}
@@ -650,7 +650,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 func (k Keeper) VoteWeighted(goCtx context.Context, req *group.MsgVoteWeighted) (*group.MsgVoteWeightedResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	id := req.ProposalId
-	opts := req.Choices
+	opts := req.Options
 	metadata := req.Metadata
 
 	if err := k.assertMetadataLength(metadata, "metadata"); err != nil {
@@ -663,7 +663,7 @@ func (k Keeper) VoteWeighted(goCtx context.Context, req *group.MsgVoteWeighted) 
 	}
 
 	// Ensure that we can still accept votes for this proposal.
-	if proposal.Status != group.ProposalStatusSubmitted {
+	if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED {
 		return nil, sdkerrors.Wrap(errors.ErrInvalid, "proposal not open for voting")
 	}
 
@@ -702,19 +702,19 @@ func (k Keeper) VoteWeighted(goCtx context.Context, req *group.MsgVoteWeighted) 
 
 	// Count and store votes.
 	voterAddr := req.Voter
-	voterInfo := group.GroupMember{GroupId: electorate.GroupId, Member: &group.Member{Address: voterAddr}}
+	voterInfo := group.GroupMember{GroupId: electorate.Id, Member: &group.Member{Address: voterAddr}}
 	if err := k.groupMemberTable.GetOne(ctx.KVStore(k.key), orm.PrimaryKey(&voterInfo), &voterInfo); err != nil {
 		return nil, sdkerrors.Wrapf(err, "address: %s", voterAddr)
 	}
 	newVote := group.Vote{
-		ProposalId:  id,
-		Voter:       voterAddr,
-		Metadata:    metadata,
-		SubmittedAt: ctx.BlockTime(),
-		Choices:     opts,
+		ProposalId: id,
+		Voter:      voterAddr,
+		Metadata:   metadata,
+		SubmitTime: ctx.BlockTime(),
+		Options:    opts,
 	}
 
-	if err := proposal.VoteState.Add(newVote, voterInfo.Member.Weight); err != nil {
+	if err := proposal.FinalTallyResult.Add(newVote, voterInfo.Member.Weight); err != nil {
 		return nil, sdkerrors.Wrap(err, "add new vote")
 	}
 

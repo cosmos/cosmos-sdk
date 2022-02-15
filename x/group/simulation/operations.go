@@ -978,7 +978,7 @@ func SimulateMsgVoteWeighted(ak group.AccountKeeper,
 
 		// Pick a random member from the group
 		ctx := sdk.WrapSDKContext(sdkCtx)
-		acc, account, err := randomMember(r, k, ak, ctx, accounts, g.GroupId)
+		acc, account, err := randomMember(r, k, ak, ctx, accounts, g.Id)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVoteWeighted, ""), nil, err
 		}
@@ -1005,10 +1005,10 @@ func SimulateMsgVoteWeighted(ak group.AccountKeeper,
 		proposalID := -1
 
 		for _, p := range proposals {
-			if p.Status == group.ProposalStatusSubmitted {
+			if p.Status == group.PROPOSAL_STATUS_SUBMITTED {
 				timeout := p.Timeout
 				proposal = p
-				proposalID = int(p.ProposalId)
+				proposalID = int(p.Id)
 				if timeout.Before(sdkCtx.BlockTime()) || timeout.Equal(sdkCtx.BlockTime()) {
 					return simtypes.NoOpMsg(group.ModuleName, TypeMsgVoteWeighted, "voting period ended: skipping"), nil, nil
 				}
@@ -1041,7 +1041,7 @@ func SimulateMsgVoteWeighted(ak group.AccountKeeper,
 		msg := group.MsgVoteWeighted{
 			ProposalId: uint64(proposalID),
 			Voter:      acc.Address.String(),
-			Choices:    group.NewNonSplitVoteOption(group.Choice_CHOICE_YES),
+			Options:    group.NewNonSplitVoteOption(group.VOTE_OPTION_YES),
 			Metadata:   []byte(simtypes.RandStringOfLength(r, 10)),
 		}
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig

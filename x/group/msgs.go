@@ -704,25 +704,25 @@ func (msg MsgVoteWeighted) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Voter); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
 	}
-	if len(msg.Choices) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, WeightedVoteOptions(msg.Choices).String())
+	if len(msg.Options) == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, WeightedVoteOptions(msg.Options).String())
 	}
 
 	totalWeight := sdk.NewDec(0)
-	usedOptions := make(map[Choice]bool)
-	for _, option := range msg.Choices {
-		if _, ok := Choice_name[int32(option.Choice)]; !ok {
-			return sdkerrors.Wrap(errors.ErrInvalid, "choice")
+	usedOptions := make(map[VoteOption]bool)
+	for _, option := range msg.Options {
+		if _, ok := VoteOption_name[int32(option.Option)]; !ok {
+			return sdkerrors.Wrap(errors.ErrInvalid, "option")
 		}
 		weight, err := sdk.NewDecFromStr(option.Weight)
 		if err != nil {
 			return sdkerrors.Wrapf(errors.ErrInvalid, "invalid weight: %s", err)
 		}
 		totalWeight = totalWeight.Add(weight)
-		if usedOptions[option.Choice] {
+		if usedOptions[option.Option] {
 			return sdkerrors.Wrap(errors.ErrInvalid, "duplicated vote option")
 		}
-		usedOptions[option.Choice] = true
+		usedOptions[option.Option] = true
 	}
 
 	if totalWeight.GT(sdk.NewDec(1)) {

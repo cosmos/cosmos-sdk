@@ -722,7 +722,7 @@ $ %s tx gov weighted-vote 1 cosmos1... CHOICE_YES=0.6,CHOICE_NO=0.3,CHOICE_ABSTA
 			}
 
 			// Figure out which vote options user chose
-			choices, err := group.WeightedVoteChoicesFromString(govutils.NormalizeWeightedVoteOptions(args[2]))
+			options, err := group.WeightedVoteChoicesFromString(govutils.NormalizeWeightedVoteOptions(args[2]))
 			if err != nil {
 				return err
 			}
@@ -739,7 +739,7 @@ $ %s tx gov weighted-vote 1 cosmos1... CHOICE_YES=0.6,CHOICE_NO=0.3,CHOICE_ABSTA
 			msg := &group.MsgVoteWeighted{
 				ProposalId: proposalID,
 				Voter:      from.String(),
-				Choices:    choices,
+				Options:    options,
 				Metadata:   b,
 				Exec:       execFromString(execStr),
 			}

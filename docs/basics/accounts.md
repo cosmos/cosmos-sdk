@@ -88,7 +88,7 @@ Each account is identified using `Address` which is a sequence of bytes derived 
 
 These types implement the `Address` interface:
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/types/address.go#L71-L90>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/types/address.go#L71-L90
 
 Address construction algorithm is defined in [ADR-28](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-028-public-key-addresses.md).
 Here is the standard way to obtain an account address from a `pub` public key:
@@ -101,7 +101,7 @@ Of note, the `Marshal()` and `Bytes()` method both return the same raw `[]byte` 
 
 For user interaction, addresses are formatted using [Bech32](https://en.bitcoin.it/wiki/Bech32) and implemented by the `String` method. The Bech32 method is the only supported format to use when interacting with a blockchain. The Bech32 human-readable part (Bech32 prefix) is used to denote an address type. Example:
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/types/address.go#L230-L244>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/types/address.go#L230-L244
 
 |                    | Address Bech32 Prefix |
 | ------------------ | --------------------- |
@@ -113,7 +113,7 @@ For user interaction, addresses are formatted using [Bech32](https://en.bitcoin.
 
 Public keys in Cosmos SDK are defined by `cryptotypes.PubKey` interface. Since public keys are saved in a store, `cryptotypes.PubKey` extends the `proto.Message` interface:
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/crypto/types/types.go#L8-L17>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/crypto/types/types.go#L8-L17
 
 A compressed format is used for `secp256k1` and `secp256r1` serialization.
 
@@ -125,20 +125,20 @@ This prefix is followed by the `x`-coordinate.
 Public Keys are not used to reference accounts (or users) and in general are not used when composing transaction messages (with few exceptions: `MsgCreateValidator`, `Validator` and `Multisig` messages).
 For user interactions, `PubKey` is formatted using Protobufs JSON ([ProtoMarshalJSON](https://github.com/cosmos/cosmos-sdk/blob/release/v0.42.x/codec/json.go#L12) function). Example:
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/7568b66/crypto/keyring/output.go#L23-L39>
++++ https://github.com/cosmos/cosmos-sdk/blob/7568b66/crypto/keyring/output.go#L23-L39
 
 ## Keyring
 
 A `Keyring` is an object that stores and manages accounts. In the Cosmos SDK, a `Keyring` implementation follows the `Keyring` interface:
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/crypto/keyring/keyring.go#L51-L89>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/crypto/keyring/keyring.go#L51-L89
 
 The default implementation of `Keyring` comes from the third-party [`99designs/keyring`](https://github.com/99designs/keyring) library.
 
 A few notes on the `Keyring` methods:
 
 * `Sign(uid string, payload []byte) ([]byte, sdkcrypto.PubKey, error)` strictly deals with the signature of the `payload` bytes. You must prepare and encode the transaction into a canonical `[]byte` form. Because protobuf is not deterministic, it has been decided in [ADR-020](../architecture/adr-020-protobuf-transaction-encoding.md) that the canonical `payload` to sign is the `SignDoc` struct, deterministically encoded using [ADR-027](../architecture/adr-027-deterministic-protobuf-serialization.md). Note that signature verification is not implemented in the Cosmos SDK by default, it is deferred to the [`anteHandler`](../core/baseapp.md#antehandler).
-  +++ <https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/proto/cosmos/tx/v1beta1/tx.proto#L47-L64>
+  +++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/proto/cosmos/tx/v1beta1/tx.proto#L47-L64
 
 * `NewAccount(uid, mnemonic, bip39Passwd, hdPath string, algo SignatureAlgo) (Info, error)` creates a new account based on the [`bip44 path`](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) and persists it on disk. The `PrivKey` is **never stored unencrypted**, instead it is [encrypted with a passphrase](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/crypto/armor.go)  before being persisted. In the context of this method, the key type and sequence number refer to the segment of the BIP44 derivation path (for example, `0`, `1`, `2`, ...) that is used to derive a private and a public key from the mnemonic. Using the same mnemonic and derivation path, the same `PrivKey`, `PubKey` and `Address` is generated. The following keys are supported by the keyring:
 

@@ -808,20 +808,21 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 			return nil, err
 		}
 
-		policy := groupPolicy.GetDecisionPolicy()
-		tdp, ok := policy.(*group.ThresholdDecisionPolicy)
-		// TODO: handle percentage decision policy
-		if !ok {
+		policyI := groupPolicy.GetDecisionPolicy()
+		switch policy := policyI.(type) {
+		case *group.ThresholdDecisionPolicy:
+			threshold, err := math.NewNonNegativeDecFromString(policy.Threshold)
+			if err != nil {
+				return nil, err
+			}
+
+			if threshold.Cmp(updatedWeight) == 1 {
+				return nil, sdkerrors.ErrInvalidRequest.Wrap("cannot leave group. Leaving the group will break group policy.")
+			}
+		case *group.PercentageDecisionPolicy:
+			continue
+		default:
 			return nil, sdkerrors.ErrInvalidRequest.Wrapf("expected %T, got %T", (*group.ThresholdDecisionPolicy)(nil), policy)
-		}
-
-		threshold, err := math.NewNonNegativeDecFromString(tdp.Threshold)
-		if err != nil {
-			return nil, err
-		}
-
-		if threshold.Cmp(updatedWeight) == 1 {
-			return nil, sdkerrors.ErrInvalidRequest.Wrap("cannot leave group. Leaving the group will break group policy.")
 		}
 	}
 
@@ -833,7 +834,7 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 	// update group weight and increment group version
 	groupInfo.TotalWeight = updatedWeight.String()
 	groupInfo.Version++
-	if err := k.groupTable.Update(ctx.KVStore(k.key), groupInfo.GroupId, &groupInfo); err != nil {
+	if err := k.groupTable.Update(ctx.KVStore(k.key), groupInfo.Id, &groupInfo); err != nil {
 		return nil, err
 	}
 

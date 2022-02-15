@@ -2208,13 +2208,14 @@ func (s *TestSuite) TestExecProposal() {
 }
 
 func (s *TestSuite) TestLeaveGroup() {
-	addrs := simapp.AddTestAddrsIncremental(s.app, s.sdkCtx, 6, sdk.NewInt(3000000))
+	addrs := simapp.AddTestAddrsIncremental(s.app, s.sdkCtx, 7, sdk.NewInt(3000000))
 	admin := addrs[0]
 	member1 := addrs[1]
 	member2 := addrs[2]
 	member3 := addrs[3]
 	member4 := addrs[4]
 	admin2 := addrs[5]
+	admin3 := addrs[6]
 
 	require := s.Require()
 	res, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
@@ -2257,6 +2258,26 @@ func (s *TestSuite) TestLeaveGroup() {
 	require.NoError(err)
 	require.NotNil(res1)
 
+	res2, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
+		Admin: admin3.String(),
+		Members: []group.Member{
+			{
+				Address:  member1.String(),
+				Weight:   "1",
+				Metadata: []byte("metadata"),
+				AddedAt:  s.sdkCtx.BlockTime(),
+			},
+			{
+				Address:  member2.String(),
+				Weight:   "2",
+				Metadata: []byte("metadata"),
+				AddedAt:  s.sdkCtx.BlockTime(),
+			},
+		},
+	})
+	require.NoError(err)
+	require.NotNil(res2)
+
 	groupPolicy := &group.MsgCreateGroupPolicy{
 		Admin:    admin.String(),
 		GroupId:  res.GroupId,
@@ -2272,6 +2293,22 @@ func (s *TestSuite) TestLeaveGroup() {
 	policyRes, err := s.keeper.CreateGroupPolicy(s.ctx, groupPolicy)
 	require.NoError(err)
 	require.NotNil(policyRes)
+
+	groupPolicy = &group.MsgCreateGroupPolicy{
+		Admin:    admin3.String(),
+		GroupId:  res2.GroupId,
+		Metadata: []byte("metadata"),
+	}
+	pPolicy := &group.PercentageDecisionPolicy{
+		Percentage: "0.5",
+		Timeout:    time.Hour,
+	}
+	require.NoError(groupPolicy.SetDecisionPolicy(pPolicy))
+	require.NoError(err)
+
+	policyRes1, err := s.keeper.CreateGroupPolicy(s.ctx, groupPolicy)
+	require.NoError(err)
+	require.NotNil(policyRes1)
 
 	groupId := res.GroupId
 	testCases := []struct {
@@ -2330,6 +2367,16 @@ func (s *TestSuite) TestLeaveGroup() {
 			true,
 			"cannot leave group",
 			0,
+		},
+		{
+			"valid request: can leave group (percentage decision policy)",
+			&group.MsgLeaveGroup{
+				GroupId:       res2.GroupId,
+				MemberAddress: member2.String(),
+			},
+			false,
+			"",
+			1,
 		},
 	}
 

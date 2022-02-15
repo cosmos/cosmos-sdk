@@ -1037,7 +1037,7 @@ func SimulateMsgLeaveGroup(k keeper.Keeper, ak group.AccountKeeper, bk group.Ban
 		}
 
 		// Pick a random member from the group
-		acc, account, err := randomMember(r, k, ak, ctx, accounts, groupInfo.GroupId)
+		acc, account, err := randomMember(r, k, ak, ctx, accounts, groupInfo.Id)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, ""), nil, err
 		}
@@ -1058,7 +1058,7 @@ func SimulateMsgLeaveGroup(k keeper.Keeper, ak group.AccountKeeper, bk group.Ban
 
 		msg := &group.MsgLeaveGroup{
 			MemberAddress: member.Address.String(),
-			GroupId:       groupInfo.GroupId,
+			GroupId:       groupInfo.Id,
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig

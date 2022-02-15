@@ -43,6 +43,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgWithdrawProposal{},
 		&MsgVote{},
 		&MsgExec{},
+		&MsgLeaveGroup{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

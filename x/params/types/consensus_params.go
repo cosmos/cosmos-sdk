@@ -22,7 +22,8 @@ func ConsensusParamsKeyTable() KeyTable {
 		NewParamSetPair(
 			baseapp.ParamStoreKeyValidatorParams, tmproto.ValidatorParams{}, baseapp.ValidateValidatorParams,
 		),
-		// This param is stroed in the param store in order to send it to tendermint after state sync. If this param is modified by governance, it will be reset by the upgrade module
+		// This param is stored in the param store in order to send it to Tendermint after state sync.
+		// If this param is modified by governance, it will be reset by the upgrade module.
 		NewParamSetPair(
 			baseapp.ParamStoreKeyVersionParams, tmproto.VersionParams{}, baseapp.ValidateValidatorParams,
 		),

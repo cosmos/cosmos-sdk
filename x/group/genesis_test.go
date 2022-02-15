@@ -30,8 +30,8 @@ func TestGenesisStateValidate(t *testing.T) {
 		Metadata: []byte("policy metadata"),
 	}
 	err := groupPolicy.SetDecisionPolicy(&ThresholdDecisionPolicy{
-		Threshold: "1",
-		Timeout:   time.Second,
+		Threshold:    "1",
+		VotingPeriod: time.Second,
 	})
 	require.NoError(t, err)
 
@@ -44,8 +44,8 @@ func TestGenesisStateValidate(t *testing.T) {
 		Metadata: []byte("policy metadata"),
 	}
 	err = groupPolicy2.SetDecisionPolicy(&ThresholdDecisionPolicy{
-		Threshold: "1",
-		Timeout:   0,
+		Threshold:    "1",
+		VotingPeriod: 0,
 	})
 	require.NoError(t, err)
 
@@ -67,8 +67,8 @@ func TestGenesisStateValidate(t *testing.T) {
 			AbstainCount:    "0",
 			NoWithVetoCount: "0",
 		},
-		Timeout:        timeout,
-		ExecutorResult: PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+		VotingPeriodEnd: timeout,
+		ExecutorResult:  PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 	}
 	err = proposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
 		FromAddress: accAddr.String(),

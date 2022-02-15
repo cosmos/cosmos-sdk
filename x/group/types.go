@@ -24,9 +24,11 @@ type DecisionPolicyResult struct {
 type DecisionPolicy interface {
 	codec.ProtoMarshaler
 
+	GetVotingPeriod() time.Duration
+	GetExecutionPeriod() *time.Duration
+	Allow(tallyResult TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error)
+
 	ValidateBasic() error
-	GetTimeout() time.Duration
-	Allow(tallyResult TallyResult, totalPower string, votingDuration time.Duration) (DecisionPolicyResult, error)
 	Validate(g GroupInfo) error
 }
 
@@ -34,8 +36,8 @@ type DecisionPolicy interface {
 var _ DecisionPolicy = &ThresholdDecisionPolicy{}
 
 // NewThresholdDecisionPolicy creates a threshold DecisionPolicy
-func NewThresholdDecisionPolicy(threshold string, timeout time.Duration) DecisionPolicy {
-	return &ThresholdDecisionPolicy{threshold, timeout}
+func NewThresholdDecisionPolicy(threshold string, votingPeriod time.Duration, executionPeriod *time.Duration) DecisionPolicy {
+	return &ThresholdDecisionPolicy{threshold, votingPeriod, executionPeriod}
 }
 
 func (p ThresholdDecisionPolicy) ValidateBasic() error {
@@ -43,18 +45,20 @@ func (p ThresholdDecisionPolicy) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "threshold")
 	}
 
-	timeout := p.Timeout
-
-	if timeout <= time.Nanosecond {
-		return sdkerrors.Wrap(errors.ErrInvalid, "timeout")
+	if p.VotingPeriod <= time.Nanosecond {
+		return sdkerrors.Wrap(errors.ErrInvalid, "timeout too small")
 	}
+
+	if p.ExecutionPeriod != nil && *p.ExecutionPeriod < p.VotingPeriod {
+		return sdkerrors.Wrap(errors.ErrInvalid, "execution period must be longer than voting period")
+	}
+
 	return nil
 }
 
 // Allow allows a proposal to pass when the tally of yes votes equals or exceeds the threshold before the timeout.
-func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower string, votingDuration time.Duration) (DecisionPolicyResult, error) {
-	timeout := p.Timeout
-	if timeout <= votingDuration {
+func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error) {
+	if p.ExecutionPeriod != nil && *p.ExecutionPeriod <= sinceSubmission {
 		return DecisionPolicyResult{Allow: false, Final: true}, nil
 	}
 
@@ -112,8 +116,8 @@ func (p *ThresholdDecisionPolicy) Validate(g GroupInfo) error {
 var _ DecisionPolicy = &PercentageDecisionPolicy{}
 
 // NewPercentageDecisionPolicy creates a new percentage DecisionPolicy
-func NewPercentageDecisionPolicy(percentage string, timeout time.Duration) DecisionPolicy {
-	return &PercentageDecisionPolicy{percentage, timeout}
+func NewPercentageDecisionPolicy(percentage string, votingPeriod time.Duration, executionPeriod *time.Duration) DecisionPolicy {
+	return &PercentageDecisionPolicy{percentage, votingPeriod, executionPeriod}
 }
 
 func (p PercentageDecisionPolicy) ValidateBasic() error {
@@ -125,10 +129,14 @@ func (p PercentageDecisionPolicy) ValidateBasic() error {
 		return sdkerrors.Wrap(errors.ErrInvalid, "percentage must be > 0 and <= 1")
 	}
 
-	timeout := p.Timeout
-	if timeout <= time.Nanosecond {
-		return sdkerrors.Wrap(errors.ErrInvalid, "timeout")
+	if p.VotingPeriod <= time.Nanosecond {
+		return sdkerrors.Wrap(errors.ErrInvalid, "timeout too small")
 	}
+
+	if p.ExecutionPeriod != nil && *p.ExecutionPeriod < p.VotingPeriod {
+		return sdkerrors.Wrap(errors.ErrInvalid, "execution period must be longer than voting period")
+	}
+
 	return nil
 }
 
@@ -137,9 +145,8 @@ func (p *PercentageDecisionPolicy) Validate(g GroupInfo) error {
 }
 
 // Allow allows a proposal to pass when the tally of yes votes equals or exceeds the percentage threshold before the timeout.
-func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string, votingDuration time.Duration) (DecisionPolicyResult, error) {
-	timeout := p.Timeout
-	if timeout <= votingDuration {
+func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error) {
+	if p.ExecutionPeriod != nil && *p.ExecutionPeriod <= sinceSubmission {
 		return DecisionPolicyResult{Allow: false, Final: true}, nil
 	}
 

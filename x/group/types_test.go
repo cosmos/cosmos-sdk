@@ -9,6 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	tenSecs     = time.Second * 10
+	hundredSecs = time.Second * 100
+)
+
 func TestPercentageDecisionPolicyAllow(t *testing.T) {
 	testCases := []struct {
 		name           string
@@ -21,8 +26,9 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 		{
 			"YesCount percentage > decision policy percentage",
 			&group.PercentageDecisionPolicy{
-				Percentage: "0.5",
-				Timeout:    time.Second * 100,
+				Percentage:      "0.5",
+				VotingPeriod:    time.Second * 100,
+				ExecutionPeriod: &hundredSecs,
 			},
 			&group.TallyResult{
 				YesCount:        "2",
@@ -40,8 +46,9 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 		{
 			"YesCount percentage == decision policy percentage",
 			&group.PercentageDecisionPolicy{
-				Percentage: "0.5",
-				Timeout:    time.Second * 100,
+				Percentage:      "0.5",
+				VotingPeriod:    time.Second * 100,
+				ExecutionPeriod: &hundredSecs,
 			},
 			&group.TallyResult{
 				YesCount:        "2",
@@ -59,8 +66,9 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 		{
 			"YesCount percentage < decision policy percentage",
 			&group.PercentageDecisionPolicy{
-				Percentage: "0.5",
-				Timeout:    time.Second * 100,
+				Percentage:      "0.5",
+				VotingPeriod:    time.Second * 100,
+				ExecutionPeriod: &hundredSecs,
 			},
 			&group.TallyResult{
 				YesCount:        "1",
@@ -78,8 +86,9 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 		{
 			"sum percentage (YesCount + undecided votes percentage) < decision policy percentage",
 			&group.PercentageDecisionPolicy{
-				Percentage: "0.5",
-				Timeout:    time.Second * 100,
+				Percentage:      "0.5",
+				VotingPeriod:    time.Second * 100,
+				ExecutionPeriod: &hundredSecs,
 			},
 			&group.TallyResult{
 				YesCount:        "1",
@@ -97,8 +106,9 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 		{
 			"sum percentage = decision policy percentage",
 			&group.PercentageDecisionPolicy{
-				Percentage: "0.5",
-				Timeout:    time.Second * 100,
+				Percentage:      "0.5",
+				VotingPeriod:    time.Second * 100,
+				ExecutionPeriod: &hundredSecs,
 			},
 			&group.TallyResult{
 				YesCount:        "1",
@@ -116,8 +126,9 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 		{
 			"sum percentage > decision policy percentage",
 			&group.PercentageDecisionPolicy{
-				Percentage: "0.5",
-				Timeout:    time.Second * 100,
+				Percentage:      "0.5",
+				VotingPeriod:    time.Second * 100,
+				ExecutionPeriod: &hundredSecs,
 			},
 			&group.TallyResult{
 				YesCount:        "1",
@@ -135,8 +146,9 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 		{
 			"decision policy timeout <= voting duration",
 			&group.PercentageDecisionPolicy{
-				Percentage: "0.5",
-				Timeout:    time.Second * 10,
+				Percentage:      "0.5",
+				VotingPeriod:    time.Second * 10,
+				ExecutionPeriod: &tenSecs,
 			},
 			&group.TallyResult{
 				YesCount:        "2",
@@ -173,8 +185,9 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 		{
 			"YesCount >= threshold decision policy",
 			&group.ThresholdDecisionPolicy{
-				Threshold: "3",
-				Timeout:   time.Second * 100,
+				Threshold:       "3",
+				VotingPeriod:    time.Second * 100,
+				ExecutionPeriod: &hundredSecs,
 			},
 			&group.TallyResult{
 				YesCount:        "3",
@@ -192,8 +205,9 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 		{
 			"YesCount < threshold decision policy",
 			&group.ThresholdDecisionPolicy{
-				Threshold: "3",
-				Timeout:   time.Second * 100,
+				Threshold:       "3",
+				VotingPeriod:    time.Second * 100,
+				ExecutionPeriod: &hundredSecs,
 			},
 			&group.TallyResult{
 				YesCount:        "1",
@@ -211,8 +225,9 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 		{
 			"sum votes < threshold decision policy",
 			&group.ThresholdDecisionPolicy{
-				Threshold: "3",
-				Timeout:   time.Second * 100,
+				Threshold:       "3",
+				VotingPeriod:    time.Second * 100,
+				ExecutionPeriod: &hundredSecs,
 			},
 			&group.TallyResult{
 				YesCount:        "1",
@@ -230,8 +245,9 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 		{
 			"sum votes >= threshold decision policy",
 			&group.ThresholdDecisionPolicy{
-				Threshold: "3",
-				Timeout:   time.Second * 100,
+				Threshold:       "3",
+				VotingPeriod:    time.Second * 100,
+				ExecutionPeriod: &hundredSecs,
 			},
 			&group.TallyResult{
 				YesCount:        "1",
@@ -249,8 +265,9 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 		{
 			"decision policy timeout <= voting duration",
 			&group.ThresholdDecisionPolicy{
-				Threshold: "3",
-				Timeout:   time.Second * 10,
+				Threshold:       "3",
+				VotingPeriod:    time.Second * 10,
+				ExecutionPeriod: &tenSecs,
 			},
 			&group.TallyResult{
 				YesCount:        "3",

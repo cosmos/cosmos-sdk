@@ -418,11 +418,6 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		return nil, err
 	}
 
-	// Define proposal timout.
-	// The voting window begins as soon as the proposal is submitted.
-	timeout := policy.GetTimeout()
-	window := timeout
-
 	m := &group.Proposal{
 		Id:                 k.proposalTable.Sequence().PeekNextVal(ctx.KVStore(k.key)),
 		Address:            req.Address,
@@ -434,7 +429,8 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 		Status:             group.PROPOSAL_STATUS_SUBMITTED,
 		ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
-		Timeout:            ctx.BlockTime().Add(window),
+		// The voting window begins as soon as the proposal is submitted.
+		VotingPeriodEnd: ctx.BlockTime().Add(policy.GetVotingPeriod()),
 		FinalTallyResult: group.TallyResult{
 			YesCount:        "0",
 			NoCount:         "0",
@@ -442,6 +438,11 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 			NoWithVetoCount: "0",
 		},
 	}
+	if execDuration := policy.GetExecutionPeriod(); execDuration != nil {
+		end := ctx.BlockTime().Add(*execDuration)
+		m.ExecutionPeriodEnd = &end
+	}
+
 	if err := m.SetMsgs(msgs); err != nil {
 		return nil, sdkerrors.Wrap(err, "create proposal")
 	}
@@ -565,7 +566,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED {
 		return nil, sdkerrors.Wrap(errors.ErrInvalid, "proposal not open for voting")
 	}
-	proposalTimeout, err := gogotypes.TimestampProto(proposal.Timeout)
+	proposalTimeout, err := gogotypes.TimestampProto(proposal.VotingPeriodEnd)
 	if err != nil {
 		return nil, err
 	}
@@ -617,15 +618,6 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	// making sure than a voter hasn't already voted.
 	if err := k.voteTable.Create(ctx.KVStore(k.key), &newVote); err != nil {
 		return nil, sdkerrors.Wrap(err, "store vote")
-	}
-
-	// Run tally with new votes to close early.
-	if err := doTally(ctx, &proposal, electorate, policyInfo); err != nil {
-		return nil, err
-	}
-
-	if err = k.proposalTable.Update(ctx.KVStore(k.key), id, &proposal); err != nil {
-		return nil, err
 	}
 
 	err = ctx.EventManager().EmitTypedEvent(&group.EventVote{ProposalId: id})

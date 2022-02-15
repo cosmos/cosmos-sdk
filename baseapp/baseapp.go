@@ -114,6 +114,8 @@ type BaseApp struct { // nolint: maligned
 	// version represents the application software semantic version.
 	version string
 
+	// application's protocol version that increments on every upgrade
+	// if BaseApp is passed to the upgrade keeper's NewKeeper method.
 	appVersion uint64
 
 	// trace set will return full stack traces for errors in ABCI Log field

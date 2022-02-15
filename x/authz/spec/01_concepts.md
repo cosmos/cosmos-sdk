@@ -28,7 +28,7 @@ The Cosmos SDK `x/authz` module comes with following authorization types:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/x/authz/generic_authorization.go#L18-L31
 
-- `msg` stores Msg type URL.
+* `msg` stores Msg type URL.
 
 ### SendAuthorization
 
@@ -38,7 +38,7 @@ The Cosmos SDK `x/authz` module comes with following authorization types:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/x/bank/types/send_authorization.go#L25-L40
 
-- `spend_limit` keeps track of how many coins are left in the authorization.
+* `spend_limit` keeps track of how many coins are left in the authorization.
 
 ### StakeAuthorization
 

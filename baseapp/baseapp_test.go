@@ -184,7 +184,6 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 	app := setupBaseApp(t, append(options,
 		baseapp.SetSnapshotStore(snapshotStore),
 		baseapp.SetSnapshotInterval(snapshotInterval),
-		baseapp.SetPruning(sdk.PruningOptions{KeepEvery: 1}),
 		routerOpt)...)
 
 	app.InitChain(abci.RequestInitChain{})
@@ -480,7 +479,6 @@ func TestLoadVersionPruning(t *testing.T) {
 	logger := log.NewNopLogger()
 	pruningOptions := storetypes.PruningOptions{
 		KeepRecent: 2,
-		KeepEvery:  3,
 		Interval:   1,
 	}
 	pruningOpt := baseapp.SetPruning(pruningOptions)
@@ -1793,6 +1791,7 @@ func TestGRPCQuery(t *testing.T) {
 	}
 
 	app := setupBaseApp(t, grpcQueryOpt)
+	app.GRPCQueryRouter().SetInterfaceRegistry(codectypes.NewInterfaceRegistry())
 
 	app.InitChain(abci.RequestInitChain{})
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}

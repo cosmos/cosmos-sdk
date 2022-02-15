@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	v046 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v046"
 	v043 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v043"
 )
 
@@ -18,4 +19,9 @@ func NewMigrator(keeper Keeper) Migrator {
 // Migrate1to2 migrates from version 1 to 2.
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 	return v043.MigrateStore(ctx, m.keeper.storeKey, m.keeper.cdc)
+}
+
+// Migrate2to3 migrates from version 2 to 3.
+func (m Migrator) Migrate2to3(ctx sdk.Context) error {
+	return v046.MigrateStore(ctx, m.keeper.storeKey, m.keeper.cdc)
 }

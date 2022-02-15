@@ -136,14 +136,8 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 // same `sdk.Msg` type, this grant overwrites that.
 func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration time.Time) error {
 	store := ctx.KVStore(k.storeKey)
-	blockTime := ctx.BlockTime()
-	if !expiration.After(blockTime) {
-		return sdkerrors.ErrInvalidRequest.Wrapf(
-			"expiration must be after the current block time (%v), got %v",
-			blockTime.Format(time.RFC3339), expiration.Format(time.RFC3339))
-	}
 
-	grant, err := authz.NewGrant(authorization, expiration)
+	grant, err := authz.NewGrant(ctx.BlockTime(), authorization, expiration)
 	if err != nil {
 		return err
 	}
@@ -243,14 +237,20 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *authz.GenesisState {
 // InitGenesis new authz genesis
 func (k Keeper) InitGenesis(ctx sdk.Context, data *authz.GenesisState) {
 	for _, entry := range data.Authorization {
+		if entry.Expiration.Before(ctx.BlockTime()) {
+			continue
+		}
+
 		grantee, err := sdk.AccAddressFromBech32(entry.Grantee)
 		if err != nil {
 			panic(err)
 		}
+
 		granter, err := sdk.AccAddressFromBech32(entry.Granter)
 		if err != nil {
 			panic(err)
 		}
+
 		a, ok := entry.Authorization.GetCachedValue().(authz.Authorization)
 		if !ok {
 			panic("expected authorization")

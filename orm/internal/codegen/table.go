@@ -23,6 +23,8 @@ type tableGen struct {
 	ormTable         ormtable.Table
 }
 
+const notFoundDocs = " returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found."
+
 func newTableGen(fileGen fileGen, msg *protogen.Message, table *ormv1alpha1.TableDescriptor) (*tableGen, error) {
 	t := &tableGen{fileGen: fileGen, msg: msg, table: table, fields: map[protoreflect.Name]*protogen.Field{}}
 	t.primaryKeyFields = fieldnames.CommaSeparatedFieldNames(table.PrimaryKey.Fields)
@@ -45,17 +47,17 @@ func newTableGen(fileGen fileGen, msg *protogen.Message, table *ormv1alpha1.Tabl
 }
 
 func (t tableGen) gen() {
-	t.genStoreInterface()
+	t.getTableInterface()
 	t.genIterator()
 	t.genIndexKeys()
 	t.genStruct()
-	t.genStoreImpl()
-	t.genStoreImplGuard()
+	t.genTableImpl()
+	t.genTableImplGuard()
 	t.genConstructor()
 }
 
-func (t tableGen) genStoreInterface() {
-	t.P("type ", t.messageStoreInterfaceName(t.msg), " interface {")
+func (t tableGen) getTableInterface() {
+	t.P("type ", t.messageTableInterfaceName(t.msg), " interface {")
 	t.P("Insert(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
 	if t.table.PrimaryKey.AutoIncrement {
 		t.P("InsertReturningID(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") (uint64, error)")
@@ -64,12 +66,16 @@ func (t tableGen) genStoreInterface() {
 	t.P("Save(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
 	t.P("Delete(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
 	t.P("Has(ctx ", contextPkg.Ident("Context"), ", ", t.fieldsArgs(t.primaryKeyFields.Names()), ") (found bool, err error)")
+	t.P("// Get", notFoundDocs)
 	t.P("Get(ctx ", contextPkg.Ident("Context"), ", ", t.fieldsArgs(t.primaryKeyFields.Names()), ") (*", t.QualifiedGoIdent(t.msg.GoIdent), ", error)")
+
 	for _, idx := range t.uniqueIndexes {
 		t.genUniqueIndexSig(idx)
 	}
 	t.P("List(ctx ", contextPkg.Ident("Context"), ", prefixKey ", t.indexKeyInterfaceName(), ", opts ...", ormListPkg.Ident("Option"), ") ", "(", t.iteratorName(), ", error)")
 	t.P("ListRange(ctx ", contextPkg.Ident("Context"), ", from, to ", t.indexKeyInterfaceName(), ", opts ...", ormListPkg.Ident("Option"), ") ", "(", t.iteratorName(), ", error)")
+	t.P("DeleteBy(ctx ", contextPkg.Ident("Context"), ", prefixKey ", t.indexKeyInterfaceName(), ") error")
+	t.P("DeleteRange(ctx ", contextPkg.Ident("Context"), ", from, to ", t.indexKeyInterfaceName(), ") error")
 	t.P()
 	t.P("doNotImplement()")
 	t.P("}")
@@ -77,9 +83,9 @@ func (t tableGen) genStoreInterface() {
 }
 
 // returns the has and get (in that order) function signature for unique indexes.
-func (t tableGen) uniqueIndexSig(idx *ormv1alpha1.SecondaryIndexDescriptor) (string, string) {
-	fieldsSlc := strings.Split(idx.Fields, ",")
-	camelFields := t.fieldsToCamelCase(idx.Fields)
+func (t tableGen) uniqueIndexSig(idxFields string) (string, string, string) {
+	fieldsSlc := strings.Split(idxFields, ",")
+	camelFields := t.fieldsToCamelCase(idxFields)
 
 	hasFuncName := "HasBy" + camelFields
 	getFuncName := "GetBy" + camelFields
@@ -87,12 +93,13 @@ func (t tableGen) uniqueIndexSig(idx *ormv1alpha1.SecondaryIndexDescriptor) (str
 
 	hasFuncSig := fmt.Sprintf("%s (ctx context.Context, %s) (found bool, err error)", hasFuncName, args)
 	getFuncSig := fmt.Sprintf("%s (ctx context.Context, %s) (*%s, error)", getFuncName, args, t.msg.GoIdent.GoName)
-	return hasFuncSig, getFuncSig
+	return hasFuncSig, getFuncSig, getFuncName
 }
 
 func (t tableGen) genUniqueIndexSig(idx *ormv1alpha1.SecondaryIndexDescriptor) {
-	hasSig, getSig := t.uniqueIndexSig(idx)
+	hasSig, getSig, getFuncName := t.uniqueIndexSig(idx.Fields)
 	t.P(hasSig)
+	t.P("// ", getFuncName, notFoundDocs)
 	t.P(getSig)
 }
 
@@ -146,7 +153,7 @@ func (t tableGen) fieldArg(name protoreflect.Name) string {
 }
 
 func (t tableGen) genStruct() {
-	t.P("type ", t.messageStoreReceiverName(t.msg), " struct {")
+	t.P("type ", t.messageTableReceiverName(t.msg), " struct {")
 	if t.table.PrimaryKey.AutoIncrement {
 		t.P("table ", ormTablePkg.Ident("AutoIncrementTable"))
 	} else {
@@ -156,9 +163,9 @@ func (t tableGen) genStruct() {
 	t.storeStructName()
 }
 
-func (t tableGen) genStoreImpl() {
+func (t tableGen) genTableImpl() {
 	receiverVar := "this"
-	receiver := fmt.Sprintf("func (%s %s) ", receiverVar, t.messageStoreReceiverName(t.msg))
+	receiver := fmt.Sprintf("func (%s %s) ", receiverVar, t.messageTableReceiverName(t.msg))
 	varName := t.param(t.msg.GoIdent.GoName)
 	varTypeName := t.QualifiedGoIdent(t.msg.GoIdent)
 
@@ -188,19 +195,22 @@ func (t tableGen) genStoreImpl() {
 	t.P(receiver, "Get(ctx ", contextPkg.Ident("Context"), ", ", t.fieldsArgs(t.primaryKeyFields.Names()), ") (*", varTypeName, ", error) {")
 	t.P("var ", varName, " ", varTypeName)
 	t.P("found, err := ", receiverVar, ".table.PrimaryKey().Get(ctx, &", varName, ", ", t.primaryKeyFields.String(), ")")
-	t.P("if !found {")
+	t.P("if err != nil {")
 	t.P("return nil, err")
 	t.P("}")
-	t.P("return &", varName, ", err")
+	t.P("if !found {")
+	t.P("return nil, ", ormErrPkg.Ident("NotFound"))
+	t.P("}")
+	t.P("return &", varName, ", nil")
 	t.P("}")
 	t.P()
 
 	for _, idx := range t.uniqueIndexes {
 		fields := strings.Split(idx.Fields, ",")
-		hasName, getName := t.uniqueIndexSig(idx)
+		hasName, getName, _ := t.uniqueIndexSig(idx.Fields)
 
 		// has
-		t.P("func (", receiverVar, " ", t.messageStoreReceiverName(t.msg), ") ", hasName, "{")
+		t.P("func (", receiverVar, " ", t.messageTableReceiverName(t.msg), ") ", hasName, "{")
 		t.P("return ", receiverVar, ".table.GetIndexByID(", idx.Id, ").(",
 			ormTablePkg.Ident("UniqueIndex"), ").Has(ctx,")
 		for _, field := range fields {
@@ -213,7 +223,7 @@ func (t tableGen) genStoreImpl() {
 		// get
 		varName := t.param(t.msg.GoIdent.GoName)
 		varTypeName := t.msg.GoIdent.GoName
-		t.P("func (", receiverVar, " ", t.messageStoreReceiverName(t.msg), ") ", getName, "{")
+		t.P("func (", receiverVar, " ", t.messageTableReceiverName(t.msg), ") ", getName, "{")
 		t.P("var ", varName, " ", varTypeName)
 		t.P("found, err := ", receiverVar, ".table.GetIndexByID(", idx.Id, ").(",
 			ormTablePkg.Ident("UniqueIndex"), ").Get(ctx, &", varName, ",")
@@ -221,8 +231,11 @@ func (t tableGen) genStoreImpl() {
 			t.P(field, ",")
 		}
 		t.P(")")
-		t.P("if !found {")
+		t.P("if err != nil {")
 		t.P("return nil, err")
+		t.P("}")
+		t.P("if !found {")
+		t.P("return nil, ", ormErrPkg.Ident("NotFound"))
 		t.P("}")
 		t.P("return &", varName, ", nil")
 		t.P("}")
@@ -243,28 +256,42 @@ func (t tableGen) genStoreImpl() {
 	t.P("}")
 	t.P()
 
+	// DeleteBy
+	t.P(receiver, "DeleteBy(ctx ", contextPkg.Ident("Context"), ", prefixKey ", t.indexKeyInterfaceName(), ") error {")
+	t.P("return ", receiverVar, ".table.GetIndexByID(prefixKey.id()).DeleteBy(ctx, prefixKey.values()...)")
+	t.P("}")
+	t.P()
+	t.P()
+
+	// DeleteRange
+	t.P(receiver, "DeleteRange(ctx ", contextPkg.Ident("Context"), ", from, to ", t.indexKeyInterfaceName(), ") error {")
+	t.P("return ", receiverVar, ".table.GetIndexByID(from.id()).DeleteRange(ctx, from.values(), to.values())")
+	t.P("}")
+	t.P()
+	t.P()
+
 	t.P(receiver, "doNotImplement() {}")
 	t.P()
 }
 
-func (t tableGen) genStoreImplGuard() {
-	t.P("var _ ", t.messageStoreInterfaceName(t.msg), " = ", t.messageStoreReceiverName(t.msg), "{}")
+func (t tableGen) genTableImplGuard() {
+	t.P("var _ ", t.messageTableInterfaceName(t.msg), " = ", t.messageTableReceiverName(t.msg), "{}")
 }
 
 func (t tableGen) genConstructor() {
-	iface := t.messageStoreInterfaceName(t.msg)
-	t.P("func New", iface, "(db ", ormdbPkg.Ident("ModuleDB"), ") (", iface, ", error) {")
+	iface := t.messageTableInterfaceName(t.msg)
+	t.P("func New", iface, "(db ", ormTablePkg.Ident("Schema"), ") (", iface, ", error) {")
 	t.P("table := db.GetTable(&", t.msg.GoIdent.GoName, "{})")
 	t.P("if table == nil {")
 	t.P("return nil,", ormErrPkg.Ident("TableNotFound.Wrap"), "(string((&", t.msg.GoIdent.GoName, "{}).ProtoReflect().Descriptor().FullName()))")
 	t.P("}")
 	if t.table.PrimaryKey.AutoIncrement {
 		t.P(
-			"return ", t.messageStoreReceiverName(t.msg), "{table.(",
+			"return ", t.messageTableReceiverName(t.msg), "{table.(",
 			ormTablePkg.Ident("AutoIncrementTable"), ")}, nil",
 		)
 	} else {
-		t.P("return ", t.messageStoreReceiverName(t.msg), "{table}, nil")
+		t.P("return ", t.messageTableReceiverName(t.msg), "{table}, nil")
 	}
 	t.P("}")
 }

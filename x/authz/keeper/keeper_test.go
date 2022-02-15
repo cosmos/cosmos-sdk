@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -61,7 +60,7 @@ func (s *TestSuite) TestKeeper() {
 	s.T().Log("verify if expired authorization is rejected")
 	x := &banktypes.SendAuthorization{SpendLimit: newCoins}
 	err := app.AuthzKeeper.SaveGrant(ctx, granterAddr, granteeAddr, x, now.Add(-1*time.Hour))
-	s.Require().ErrorIs(err, errors.ErrInvalidRequest)
+	s.Require().Error(err)
 	authorization, _ = app.AuthzKeeper.GetCleanAuthorization(ctx, granteeAddr, granterAddr, bankSendAuthMsgType)
 	s.Require().Nil(authorization)
 
@@ -83,7 +82,7 @@ func (s *TestSuite) TestKeeper() {
 
 	s.T().Log("verify revoke fails with wrong information")
 	err = app.AuthzKeeper.DeleteGrant(ctx, recipientAddr, granterAddr, bankSendAuthMsgType)
-	s.Require().ErrorIs(err, errors.ErrNotFound)
+	s.Require().Error(err)
 	authorization, _ = app.AuthzKeeper.GetCleanAuthorization(ctx, recipientAddr, granterAddr, bankSendAuthMsgType)
 	s.Require().Nil(authorization)
 

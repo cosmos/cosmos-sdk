@@ -8,8 +8,8 @@ order: 9
 
 ## Pre-requisite Readings
 
-- [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
-- [Tendermint Documentation on Events](https://docs.tendermint.com/master/spec/abci/abci.html#events) {prereq}
+* [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
+* [Tendermint Documentation on Events](https://docs.tendermint.com/master/spec/abci/abci.html#events) {prereq}
 
 ## Events
 
@@ -20,8 +20,8 @@ take the form of: `{eventType}.{attributeKey}={attributeValue}`.
 
 An Event contains:
 
-- A `type` to categorize the Event at a high-level; for example, the Cosmos SDK uses the `"message"` type to filter Events by `Msg`s.
-- A list of `attributes` are key-value pairs that give more information about the categorized Event. For example, for the `"message"` type, we can filter Events by key-value pairs using `message.action={some_action}`, `message.module={some_module}` or `message.sender={some_sender}`.
+* A `type` to categorize the Event at a high-level; for example, the Cosmos SDK uses the `"message"` type to filter Events by `Msg`s.
+* A list of `attributes` are key-value pairs that give more information about the categorized Event. For example, for the `"message"` type, we can filter Events by key-value pairs using `message.action={some_action}`, `message.module={some_module}` or `message.sender={some_sender}`.
 
 ::: tip
 To parse the attribute values as strings, make sure to add `'` (single quotes) around each attribute value.
@@ -34,10 +34,10 @@ by using the [`EventManager`](#eventmanager). In addition, each module documents
 
 Events are returned to the underlying consensus engine in the response of the following ABCI messages:
 
-- [`BeginBlock`](./baseapp.md#beginblock)
-- [`EndBlock`](./baseapp.md#endblock)
-- [`CheckTx`](./baseapp.md#checktx)
-- [`DeliverTx`](./baseapp.md#delivertx)
+* [`BeginBlock`](./baseapp.md#beginblock)
+* [`EndBlock`](./baseapp.md#endblock)
+* [`CheckTx`](./baseapp.md#checktx)
+* [`DeliverTx`](./baseapp.md#delivertx)
 
 ### Examples
 
@@ -104,9 +104,9 @@ You can use Tendermint's [Websocket](https://docs.tendermint.com/master/tendermi
 
 The main `eventCategory` you can subscribe to are:
 
-- `NewBlock`: Contains Events triggered during `BeginBlock` and `EndBlock`.
-- `Tx`: Contains Events triggered during `DeliverTx` (i.e. transaction processing).
-- `ValidatorSetUpdates`: Contains validator set updates for the block.
+* `NewBlock`: Contains Events triggered during `BeginBlock` and `EndBlock`.
+* `Tx`: Contains Events triggered during `DeliverTx` (i.e. transaction processing).
+* `ValidatorSetUpdates`: Contains validator set updates for the block.
 
 These Events are triggered from the `state` package after a block is committed. You can get the
 full list of Event categories [on the Tendermint Godoc page](https://godoc.org/github.com/tendermint/tendermint/types#pkg-constants).

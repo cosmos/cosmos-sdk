@@ -7546,131 +7546,131 @@ func (x *fastReflection_MsgUpdateGroupPolicyMetadataResponse) ProtoMethods() *pr
 	}
 }
 
-var _ protoreflect.List = (*_MsgCreateProposal_2_list)(nil)
+var _ protoreflect.List = (*_MsgSubmitProposal_2_list)(nil)
 
-type _MsgCreateProposal_2_list struct {
+type _MsgSubmitProposal_2_list struct {
 	list *[]string
 }
 
-func (x *_MsgCreateProposal_2_list) Len() int {
+func (x *_MsgSubmitProposal_2_list) Len() int {
 	if x.list == nil {
 		return 0
 	}
 	return len(*x.list)
 }
 
-func (x *_MsgCreateProposal_2_list) Get(i int) protoreflect.Value {
+func (x *_MsgSubmitProposal_2_list) Get(i int) protoreflect.Value {
 	return protoreflect.ValueOfString((*x.list)[i])
 }
 
-func (x *_MsgCreateProposal_2_list) Set(i int, value protoreflect.Value) {
+func (x *_MsgSubmitProposal_2_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.String()
 	concreteValue := valueUnwrapped
 	(*x.list)[i] = concreteValue
 }
 
-func (x *_MsgCreateProposal_2_list) Append(value protoreflect.Value) {
+func (x *_MsgSubmitProposal_2_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.String()
 	concreteValue := valueUnwrapped
 	*x.list = append(*x.list, concreteValue)
 }
 
-func (x *_MsgCreateProposal_2_list) AppendMutable() protoreflect.Value {
-	panic(fmt.Errorf("AppendMutable can not be called on message MsgCreateProposal at list field Proposers as it is not of Message kind"))
+func (x *_MsgSubmitProposal_2_list) AppendMutable() protoreflect.Value {
+	panic(fmt.Errorf("AppendMutable can not be called on message MsgSubmitProposal at list field Proposers as it is not of Message kind"))
 }
 
-func (x *_MsgCreateProposal_2_list) Truncate(n int) {
+func (x *_MsgSubmitProposal_2_list) Truncate(n int) {
 	*x.list = (*x.list)[:n]
 }
 
-func (x *_MsgCreateProposal_2_list) NewElement() protoreflect.Value {
+func (x *_MsgSubmitProposal_2_list) NewElement() protoreflect.Value {
 	v := ""
 	return protoreflect.ValueOfString(v)
 }
 
-func (x *_MsgCreateProposal_2_list) IsValid() bool {
+func (x *_MsgSubmitProposal_2_list) IsValid() bool {
 	return x.list != nil
 }
 
-var _ protoreflect.List = (*_MsgCreateProposal_4_list)(nil)
+var _ protoreflect.List = (*_MsgSubmitProposal_4_list)(nil)
 
-type _MsgCreateProposal_4_list struct {
+type _MsgSubmitProposal_4_list struct {
 	list *[]*anypb.Any
 }
 
-func (x *_MsgCreateProposal_4_list) Len() int {
+func (x *_MsgSubmitProposal_4_list) Len() int {
 	if x.list == nil {
 		return 0
 	}
 	return len(*x.list)
 }
 
-func (x *_MsgCreateProposal_4_list) Get(i int) protoreflect.Value {
+func (x *_MsgSubmitProposal_4_list) Get(i int) protoreflect.Value {
 	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
 }
 
-func (x *_MsgCreateProposal_4_list) Set(i int, value protoreflect.Value) {
+func (x *_MsgSubmitProposal_4_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
 	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
 	(*x.list)[i] = concreteValue
 }
 
-func (x *_MsgCreateProposal_4_list) Append(value protoreflect.Value) {
+func (x *_MsgSubmitProposal_4_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
 	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
 	*x.list = append(*x.list, concreteValue)
 }
 
-func (x *_MsgCreateProposal_4_list) AppendMutable() protoreflect.Value {
+func (x *_MsgSubmitProposal_4_list) AppendMutable() protoreflect.Value {
 	v := new(anypb.Any)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_MsgCreateProposal_4_list) Truncate(n int) {
+func (x *_MsgSubmitProposal_4_list) Truncate(n int) {
 	for i := n; i < len(*x.list); i++ {
 		(*x.list)[i] = nil
 	}
 	*x.list = (*x.list)[:n]
 }
 
-func (x *_MsgCreateProposal_4_list) NewElement() protoreflect.Value {
+func (x *_MsgSubmitProposal_4_list) NewElement() protoreflect.Value {
 	v := new(anypb.Any)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_MsgCreateProposal_4_list) IsValid() bool {
+func (x *_MsgSubmitProposal_4_list) IsValid() bool {
 	return x.list != nil
 }
 
 var (
-	md_MsgCreateProposal           protoreflect.MessageDescriptor
-	fd_MsgCreateProposal_address   protoreflect.FieldDescriptor
-	fd_MsgCreateProposal_proposers protoreflect.FieldDescriptor
-	fd_MsgCreateProposal_metadata  protoreflect.FieldDescriptor
-	fd_MsgCreateProposal_msgs      protoreflect.FieldDescriptor
-	fd_MsgCreateProposal_exec      protoreflect.FieldDescriptor
+	md_MsgSubmitProposal           protoreflect.MessageDescriptor
+	fd_MsgSubmitProposal_address   protoreflect.FieldDescriptor
+	fd_MsgSubmitProposal_proposers protoreflect.FieldDescriptor
+	fd_MsgSubmitProposal_metadata  protoreflect.FieldDescriptor
+	fd_MsgSubmitProposal_messages  protoreflect.FieldDescriptor
+	fd_MsgSubmitProposal_exec      protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1beta1_tx_proto_init()
-	md_MsgCreateProposal = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgCreateProposal")
-	fd_MsgCreateProposal_address = md_MsgCreateProposal.Fields().ByName("address")
-	fd_MsgCreateProposal_proposers = md_MsgCreateProposal.Fields().ByName("proposers")
-	fd_MsgCreateProposal_metadata = md_MsgCreateProposal.Fields().ByName("metadata")
-	fd_MsgCreateProposal_msgs = md_MsgCreateProposal.Fields().ByName("msgs")
-	fd_MsgCreateProposal_exec = md_MsgCreateProposal.Fields().ByName("exec")
+	md_MsgSubmitProposal = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgSubmitProposal")
+	fd_MsgSubmitProposal_address = md_MsgSubmitProposal.Fields().ByName("address")
+	fd_MsgSubmitProposal_proposers = md_MsgSubmitProposal.Fields().ByName("proposers")
+	fd_MsgSubmitProposal_metadata = md_MsgSubmitProposal.Fields().ByName("metadata")
+	fd_MsgSubmitProposal_messages = md_MsgSubmitProposal.Fields().ByName("messages")
+	fd_MsgSubmitProposal_exec = md_MsgSubmitProposal.Fields().ByName("exec")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgCreateProposal)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgSubmitProposal)(nil)
 
-type fastReflection_MsgCreateProposal MsgCreateProposal
+type fastReflection_MsgSubmitProposal MsgSubmitProposal
 
-func (x *MsgCreateProposal) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgCreateProposal)(x)
+func (x *MsgSubmitProposal) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgSubmitProposal)(x)
 }
 
-func (x *MsgCreateProposal) slowProtoReflect() protoreflect.Message {
+func (x *MsgSubmitProposal) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -7682,43 +7682,43 @@ func (x *MsgCreateProposal) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgCreateProposal_messageType fastReflection_MsgCreateProposal_messageType
-var _ protoreflect.MessageType = fastReflection_MsgCreateProposal_messageType{}
+var _fastReflection_MsgSubmitProposal_messageType fastReflection_MsgSubmitProposal_messageType
+var _ protoreflect.MessageType = fastReflection_MsgSubmitProposal_messageType{}
 
-type fastReflection_MsgCreateProposal_messageType struct{}
+type fastReflection_MsgSubmitProposal_messageType struct{}
 
-func (x fastReflection_MsgCreateProposal_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgCreateProposal)(nil)
+func (x fastReflection_MsgSubmitProposal_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgSubmitProposal)(nil)
 }
-func (x fastReflection_MsgCreateProposal_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgCreateProposal)
+func (x fastReflection_MsgSubmitProposal_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgSubmitProposal)
 }
-func (x fastReflection_MsgCreateProposal_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgCreateProposal
+func (x fastReflection_MsgSubmitProposal_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSubmitProposal
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgCreateProposal) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgCreateProposal
+func (x *fastReflection_MsgSubmitProposal) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSubmitProposal
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgCreateProposal) Type() protoreflect.MessageType {
-	return _fastReflection_MsgCreateProposal_messageType
+func (x *fastReflection_MsgSubmitProposal) Type() protoreflect.MessageType {
+	return _fastReflection_MsgSubmitProposal_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgCreateProposal) New() protoreflect.Message {
-	return new(fastReflection_MsgCreateProposal)
+func (x *fastReflection_MsgSubmitProposal) New() protoreflect.Message {
+	return new(fastReflection_MsgSubmitProposal)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgCreateProposal) Interface() protoreflect.ProtoMessage {
-	return (*MsgCreateProposal)(x)
+func (x *fastReflection_MsgSubmitProposal) Interface() protoreflect.ProtoMessage {
+	return (*MsgSubmitProposal)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -7726,34 +7726,34 @@ func (x *fastReflection_MsgCreateProposal) Interface() protoreflect.ProtoMessage
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgCreateProposal) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgSubmitProposal) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Address != "" {
 		value := protoreflect.ValueOfString(x.Address)
-		if !f(fd_MsgCreateProposal_address, value) {
+		if !f(fd_MsgSubmitProposal_address, value) {
 			return
 		}
 	}
 	if len(x.Proposers) != 0 {
-		value := protoreflect.ValueOfList(&_MsgCreateProposal_2_list{list: &x.Proposers})
-		if !f(fd_MsgCreateProposal_proposers, value) {
+		value := protoreflect.ValueOfList(&_MsgSubmitProposal_2_list{list: &x.Proposers})
+		if !f(fd_MsgSubmitProposal_proposers, value) {
 			return
 		}
 	}
 	if len(x.Metadata) != 0 {
 		value := protoreflect.ValueOfBytes(x.Metadata)
-		if !f(fd_MsgCreateProposal_metadata, value) {
+		if !f(fd_MsgSubmitProposal_metadata, value) {
 			return
 		}
 	}
-	if len(x.Msgs) != 0 {
-		value := protoreflect.ValueOfList(&_MsgCreateProposal_4_list{list: &x.Msgs})
-		if !f(fd_MsgCreateProposal_msgs, value) {
+	if len(x.Messages) != 0 {
+		value := protoreflect.ValueOfList(&_MsgSubmitProposal_4_list{list: &x.Messages})
+		if !f(fd_MsgSubmitProposal_messages, value) {
 			return
 		}
 	}
 	if x.Exec != 0 {
 		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Exec))
-		if !f(fd_MsgCreateProposal_exec, value) {
+		if !f(fd_MsgSubmitProposal_exec, value) {
 			return
 		}
 	}
@@ -7770,23 +7770,23 @@ func (x *fastReflection_MsgCreateProposal) Range(f func(protoreflect.FieldDescri
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgCreateProposal) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgSubmitProposal) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateProposal.address":
+	case "cosmos.group.v1beta1.MsgSubmitProposal.address":
 		return x.Address != ""
-	case "cosmos.group.v1beta1.MsgCreateProposal.proposers":
+	case "cosmos.group.v1beta1.MsgSubmitProposal.proposers":
 		return len(x.Proposers) != 0
-	case "cosmos.group.v1beta1.MsgCreateProposal.metadata":
+	case "cosmos.group.v1beta1.MsgSubmitProposal.metadata":
 		return len(x.Metadata) != 0
-	case "cosmos.group.v1beta1.MsgCreateProposal.msgs":
-		return len(x.Msgs) != 0
-	case "cosmos.group.v1beta1.MsgCreateProposal.exec":
+	case "cosmos.group.v1beta1.MsgSubmitProposal.messages":
+		return len(x.Messages) != 0
+	case "cosmos.group.v1beta1.MsgSubmitProposal.exec":
 		return x.Exec != 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgSubmitProposal"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgSubmitProposal does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7796,23 +7796,23 @@ func (x *fastReflection_MsgCreateProposal) Has(fd protoreflect.FieldDescriptor) 
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateProposal) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgSubmitProposal) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateProposal.address":
+	case "cosmos.group.v1beta1.MsgSubmitProposal.address":
 		x.Address = ""
-	case "cosmos.group.v1beta1.MsgCreateProposal.proposers":
+	case "cosmos.group.v1beta1.MsgSubmitProposal.proposers":
 		x.Proposers = nil
-	case "cosmos.group.v1beta1.MsgCreateProposal.metadata":
+	case "cosmos.group.v1beta1.MsgSubmitProposal.metadata":
 		x.Metadata = nil
-	case "cosmos.group.v1beta1.MsgCreateProposal.msgs":
-		x.Msgs = nil
-	case "cosmos.group.v1beta1.MsgCreateProposal.exec":
+	case "cosmos.group.v1beta1.MsgSubmitProposal.messages":
+		x.Messages = nil
+	case "cosmos.group.v1beta1.MsgSubmitProposal.exec":
 		x.Exec = 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgSubmitProposal"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgSubmitProposal does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7822,34 +7822,34 @@ func (x *fastReflection_MsgCreateProposal) Clear(fd protoreflect.FieldDescriptor
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgCreateProposal) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgSubmitProposal) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateProposal.address":
+	case "cosmos.group.v1beta1.MsgSubmitProposal.address":
 		value := x.Address
 		return protoreflect.ValueOfString(value)
-	case "cosmos.group.v1beta1.MsgCreateProposal.proposers":
+	case "cosmos.group.v1beta1.MsgSubmitProposal.proposers":
 		if len(x.Proposers) == 0 {
-			return protoreflect.ValueOfList(&_MsgCreateProposal_2_list{})
+			return protoreflect.ValueOfList(&_MsgSubmitProposal_2_list{})
 		}
-		listValue := &_MsgCreateProposal_2_list{list: &x.Proposers}
+		listValue := &_MsgSubmitProposal_2_list{list: &x.Proposers}
 		return protoreflect.ValueOfList(listValue)
-	case "cosmos.group.v1beta1.MsgCreateProposal.metadata":
+	case "cosmos.group.v1beta1.MsgSubmitProposal.metadata":
 		value := x.Metadata
 		return protoreflect.ValueOfBytes(value)
-	case "cosmos.group.v1beta1.MsgCreateProposal.msgs":
-		if len(x.Msgs) == 0 {
-			return protoreflect.ValueOfList(&_MsgCreateProposal_4_list{})
+	case "cosmos.group.v1beta1.MsgSubmitProposal.messages":
+		if len(x.Messages) == 0 {
+			return protoreflect.ValueOfList(&_MsgSubmitProposal_4_list{})
 		}
-		listValue := &_MsgCreateProposal_4_list{list: &x.Msgs}
+		listValue := &_MsgSubmitProposal_4_list{list: &x.Messages}
 		return protoreflect.ValueOfList(listValue)
-	case "cosmos.group.v1beta1.MsgCreateProposal.exec":
+	case "cosmos.group.v1beta1.MsgSubmitProposal.exec":
 		value := x.Exec
 		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgSubmitProposal"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposal does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgSubmitProposal does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -7863,27 +7863,27 @@ func (x *fastReflection_MsgCreateProposal) Get(descriptor protoreflect.FieldDesc
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateProposal) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgSubmitProposal) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateProposal.address":
+	case "cosmos.group.v1beta1.MsgSubmitProposal.address":
 		x.Address = value.Interface().(string)
-	case "cosmos.group.v1beta1.MsgCreateProposal.proposers":
+	case "cosmos.group.v1beta1.MsgSubmitProposal.proposers":
 		lv := value.List()
-		clv := lv.(*_MsgCreateProposal_2_list)
+		clv := lv.(*_MsgSubmitProposal_2_list)
 		x.Proposers = *clv.list
-	case "cosmos.group.v1beta1.MsgCreateProposal.metadata":
+	case "cosmos.group.v1beta1.MsgSubmitProposal.metadata":
 		x.Metadata = value.Bytes()
-	case "cosmos.group.v1beta1.MsgCreateProposal.msgs":
+	case "cosmos.group.v1beta1.MsgSubmitProposal.messages":
 		lv := value.List()
-		clv := lv.(*_MsgCreateProposal_4_list)
-		x.Msgs = *clv.list
-	case "cosmos.group.v1beta1.MsgCreateProposal.exec":
+		clv := lv.(*_MsgSubmitProposal_4_list)
+		x.Messages = *clv.list
+	case "cosmos.group.v1beta1.MsgSubmitProposal.exec":
 		x.Exec = (Exec)(value.Enum())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgSubmitProposal"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgSubmitProposal does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7897,66 +7897,66 @@ func (x *fastReflection_MsgCreateProposal) Set(fd protoreflect.FieldDescriptor, 
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateProposal) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgSubmitProposal) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateProposal.proposers":
+	case "cosmos.group.v1beta1.MsgSubmitProposal.proposers":
 		if x.Proposers == nil {
 			x.Proposers = []string{}
 		}
-		value := &_MsgCreateProposal_2_list{list: &x.Proposers}
+		value := &_MsgSubmitProposal_2_list{list: &x.Proposers}
 		return protoreflect.ValueOfList(value)
-	case "cosmos.group.v1beta1.MsgCreateProposal.msgs":
-		if x.Msgs == nil {
-			x.Msgs = []*anypb.Any{}
+	case "cosmos.group.v1beta1.MsgSubmitProposal.messages":
+		if x.Messages == nil {
+			x.Messages = []*anypb.Any{}
 		}
-		value := &_MsgCreateProposal_4_list{list: &x.Msgs}
+		value := &_MsgSubmitProposal_4_list{list: &x.Messages}
 		return protoreflect.ValueOfList(value)
-	case "cosmos.group.v1beta1.MsgCreateProposal.address":
-		panic(fmt.Errorf("field address of message cosmos.group.v1beta1.MsgCreateProposal is not mutable"))
-	case "cosmos.group.v1beta1.MsgCreateProposal.metadata":
-		panic(fmt.Errorf("field metadata of message cosmos.group.v1beta1.MsgCreateProposal is not mutable"))
-	case "cosmos.group.v1beta1.MsgCreateProposal.exec":
-		panic(fmt.Errorf("field exec of message cosmos.group.v1beta1.MsgCreateProposal is not mutable"))
+	case "cosmos.group.v1beta1.MsgSubmitProposal.address":
+		panic(fmt.Errorf("field address of message cosmos.group.v1beta1.MsgSubmitProposal is not mutable"))
+	case "cosmos.group.v1beta1.MsgSubmitProposal.metadata":
+		panic(fmt.Errorf("field metadata of message cosmos.group.v1beta1.MsgSubmitProposal is not mutable"))
+	case "cosmos.group.v1beta1.MsgSubmitProposal.exec":
+		panic(fmt.Errorf("field exec of message cosmos.group.v1beta1.MsgSubmitProposal is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgSubmitProposal"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgSubmitProposal does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgCreateProposal) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgSubmitProposal) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateProposal.address":
+	case "cosmos.group.v1beta1.MsgSubmitProposal.address":
 		return protoreflect.ValueOfString("")
-	case "cosmos.group.v1beta1.MsgCreateProposal.proposers":
+	case "cosmos.group.v1beta1.MsgSubmitProposal.proposers":
 		list := []string{}
-		return protoreflect.ValueOfList(&_MsgCreateProposal_2_list{list: &list})
-	case "cosmos.group.v1beta1.MsgCreateProposal.metadata":
+		return protoreflect.ValueOfList(&_MsgSubmitProposal_2_list{list: &list})
+	case "cosmos.group.v1beta1.MsgSubmitProposal.metadata":
 		return protoreflect.ValueOfBytes(nil)
-	case "cosmos.group.v1beta1.MsgCreateProposal.msgs":
+	case "cosmos.group.v1beta1.MsgSubmitProposal.messages":
 		list := []*anypb.Any{}
-		return protoreflect.ValueOfList(&_MsgCreateProposal_4_list{list: &list})
-	case "cosmos.group.v1beta1.MsgCreateProposal.exec":
+		return protoreflect.ValueOfList(&_MsgSubmitProposal_4_list{list: &list})
+	case "cosmos.group.v1beta1.MsgSubmitProposal.exec":
 		return protoreflect.ValueOfEnum(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgSubmitProposal"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgSubmitProposal does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgCreateProposal) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgSubmitProposal) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgCreateProposal", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgSubmitProposal", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -7964,7 +7964,7 @@ func (x *fastReflection_MsgCreateProposal) WhichOneof(d protoreflect.OneofDescri
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgCreateProposal) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgSubmitProposal) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -7975,7 +7975,7 @@ func (x *fastReflection_MsgCreateProposal) GetUnknown() protoreflect.RawFields {
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateProposal) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgSubmitProposal) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -7987,7 +7987,7 @@ func (x *fastReflection_MsgCreateProposal) SetUnknown(fields protoreflect.RawFie
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgCreateProposal) IsValid() bool {
+func (x *fastReflection_MsgSubmitProposal) IsValid() bool {
 	return x != nil
 }
 
@@ -7997,9 +7997,9 @@ func (x *fastReflection_MsgCreateProposal) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgCreateProposal) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgSubmitProposal) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgCreateProposal)
+		x := input.Message.Interface().(*MsgSubmitProposal)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -8025,8 +8025,8 @@ func (x *fastReflection_MsgCreateProposal) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if len(x.Msgs) > 0 {
-			for _, e := range x.Msgs {
+		if len(x.Messages) > 0 {
+			for _, e := range x.Messages {
 				l = options.Size(e)
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
@@ -8044,7 +8044,7 @@ func (x *fastReflection_MsgCreateProposal) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgCreateProposal)
+		x := input.Message.Interface().(*MsgSubmitProposal)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -8068,9 +8068,9 @@ func (x *fastReflection_MsgCreateProposal) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x28
 		}
-		if len(x.Msgs) > 0 {
-			for iNdEx := len(x.Msgs) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.Msgs[iNdEx])
+		if len(x.Messages) > 0 {
+			for iNdEx := len(x.Messages) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Messages[iNdEx])
 				if err != nil {
 					return protoiface.MarshalOutput{
 						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -8118,7 +8118,7 @@ func (x *fastReflection_MsgCreateProposal) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgCreateProposal)
+		x := input.Message.Interface().(*MsgSubmitProposal)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -8150,10 +8150,10 @@ func (x *fastReflection_MsgCreateProposal) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateProposal: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSubmitProposal: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSubmitProposal: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -8256,7 +8256,7 @@ func (x *fastReflection_MsgCreateProposal) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 4:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Msgs", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Messages", wireType)
 				}
 				var msglen int
 				for shift := uint(0); ; shift += 7 {
@@ -8283,8 +8283,8 @@ func (x *fastReflection_MsgCreateProposal) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Msgs = append(x.Msgs, &anypb.Any{})
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Msgs[len(x.Msgs)-1]); err != nil {
+				x.Messages = append(x.Messages, &anypb.Any{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Messages[len(x.Messages)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -8343,25 +8343,25 @@ func (x *fastReflection_MsgCreateProposal) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_MsgCreateProposalResponse             protoreflect.MessageDescriptor
-	fd_MsgCreateProposalResponse_proposal_id protoreflect.FieldDescriptor
+	md_MsgSubmitProposalResponse             protoreflect.MessageDescriptor
+	fd_MsgSubmitProposalResponse_proposal_id protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1beta1_tx_proto_init()
-	md_MsgCreateProposalResponse = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgCreateProposalResponse")
-	fd_MsgCreateProposalResponse_proposal_id = md_MsgCreateProposalResponse.Fields().ByName("proposal_id")
+	md_MsgSubmitProposalResponse = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgSubmitProposalResponse")
+	fd_MsgSubmitProposalResponse_proposal_id = md_MsgSubmitProposalResponse.Fields().ByName("proposal_id")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgCreateProposalResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgSubmitProposalResponse)(nil)
 
-type fastReflection_MsgCreateProposalResponse MsgCreateProposalResponse
+type fastReflection_MsgSubmitProposalResponse MsgSubmitProposalResponse
 
-func (x *MsgCreateProposalResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgCreateProposalResponse)(x)
+func (x *MsgSubmitProposalResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgSubmitProposalResponse)(x)
 }
 
-func (x *MsgCreateProposalResponse) slowProtoReflect() protoreflect.Message {
+func (x *MsgSubmitProposalResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -8373,43 +8373,43 @@ func (x *MsgCreateProposalResponse) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgCreateProposalResponse_messageType fastReflection_MsgCreateProposalResponse_messageType
-var _ protoreflect.MessageType = fastReflection_MsgCreateProposalResponse_messageType{}
+var _fastReflection_MsgSubmitProposalResponse_messageType fastReflection_MsgSubmitProposalResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgSubmitProposalResponse_messageType{}
 
-type fastReflection_MsgCreateProposalResponse_messageType struct{}
+type fastReflection_MsgSubmitProposalResponse_messageType struct{}
 
-func (x fastReflection_MsgCreateProposalResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgCreateProposalResponse)(nil)
+func (x fastReflection_MsgSubmitProposalResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgSubmitProposalResponse)(nil)
 }
-func (x fastReflection_MsgCreateProposalResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgCreateProposalResponse)
+func (x fastReflection_MsgSubmitProposalResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgSubmitProposalResponse)
 }
-func (x fastReflection_MsgCreateProposalResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgCreateProposalResponse
+func (x fastReflection_MsgSubmitProposalResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSubmitProposalResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgCreateProposalResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgCreateProposalResponse
+func (x *fastReflection_MsgSubmitProposalResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSubmitProposalResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgCreateProposalResponse) Type() protoreflect.MessageType {
-	return _fastReflection_MsgCreateProposalResponse_messageType
+func (x *fastReflection_MsgSubmitProposalResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgSubmitProposalResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgCreateProposalResponse) New() protoreflect.Message {
-	return new(fastReflection_MsgCreateProposalResponse)
+func (x *fastReflection_MsgSubmitProposalResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgSubmitProposalResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgCreateProposalResponse) Interface() protoreflect.ProtoMessage {
-	return (*MsgCreateProposalResponse)(x)
+func (x *fastReflection_MsgSubmitProposalResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgSubmitProposalResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -8417,10 +8417,10 @@ func (x *fastReflection_MsgCreateProposalResponse) Interface() protoreflect.Prot
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgCreateProposalResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgSubmitProposalResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.ProposalId != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.ProposalId)
-		if !f(fd_MsgCreateProposalResponse_proposal_id, value) {
+		if !f(fd_MsgSubmitProposalResponse_proposal_id, value) {
 			return
 		}
 	}
@@ -8437,15 +8437,15 @@ func (x *fastReflection_MsgCreateProposalResponse) Range(f func(protoreflect.Fie
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgCreateProposalResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgSubmitProposalResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateProposalResponse.proposal_id":
+	case "cosmos.group.v1beta1.MsgSubmitProposalResponse.proposal_id":
 		return x.ProposalId != uint64(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgSubmitProposalResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposalResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgSubmitProposalResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -8455,15 +8455,15 @@ func (x *fastReflection_MsgCreateProposalResponse) Has(fd protoreflect.FieldDesc
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateProposalResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgSubmitProposalResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateProposalResponse.proposal_id":
+	case "cosmos.group.v1beta1.MsgSubmitProposalResponse.proposal_id":
 		x.ProposalId = uint64(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgSubmitProposalResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposalResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgSubmitProposalResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -8473,16 +8473,16 @@ func (x *fastReflection_MsgCreateProposalResponse) Clear(fd protoreflect.FieldDe
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgCreateProposalResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgSubmitProposalResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateProposalResponse.proposal_id":
+	case "cosmos.group.v1beta1.MsgSubmitProposalResponse.proposal_id":
 		value := x.ProposalId
 		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgSubmitProposalResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposalResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgSubmitProposalResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -8496,15 +8496,15 @@ func (x *fastReflection_MsgCreateProposalResponse) Get(descriptor protoreflect.F
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateProposalResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgSubmitProposalResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateProposalResponse.proposal_id":
+	case "cosmos.group.v1beta1.MsgSubmitProposalResponse.proposal_id":
 		x.ProposalId = value.Uint()
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgSubmitProposalResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposalResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgSubmitProposalResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -8518,40 +8518,40 @@ func (x *fastReflection_MsgCreateProposalResponse) Set(fd protoreflect.FieldDesc
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateProposalResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgSubmitProposalResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateProposalResponse.proposal_id":
-		panic(fmt.Errorf("field proposal_id of message cosmos.group.v1beta1.MsgCreateProposalResponse is not mutable"))
+	case "cosmos.group.v1beta1.MsgSubmitProposalResponse.proposal_id":
+		panic(fmt.Errorf("field proposal_id of message cosmos.group.v1beta1.MsgSubmitProposalResponse is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgSubmitProposalResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposalResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgSubmitProposalResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgCreateProposalResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgSubmitProposalResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.MsgCreateProposalResponse.proposal_id":
+	case "cosmos.group.v1beta1.MsgSubmitProposalResponse.proposal_id":
 		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateProposalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgSubmitProposalResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgCreateProposalResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgSubmitProposalResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgCreateProposalResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgSubmitProposalResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgCreateProposalResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgSubmitProposalResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -8559,7 +8559,7 @@ func (x *fastReflection_MsgCreateProposalResponse) WhichOneof(d protoreflect.One
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgCreateProposalResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgSubmitProposalResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -8570,7 +8570,7 @@ func (x *fastReflection_MsgCreateProposalResponse) GetUnknown() protoreflect.Raw
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgCreateProposalResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgSubmitProposalResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -8582,7 +8582,7 @@ func (x *fastReflection_MsgCreateProposalResponse) SetUnknown(fields protoreflec
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgCreateProposalResponse) IsValid() bool {
+func (x *fastReflection_MsgSubmitProposalResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -8592,9 +8592,9 @@ func (x *fastReflection_MsgCreateProposalResponse) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgCreateProposalResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgSubmitProposalResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgCreateProposalResponse)
+		x := input.Message.Interface().(*MsgSubmitProposalResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -8619,7 +8619,7 @@ func (x *fastReflection_MsgCreateProposalResponse) ProtoMethods() *protoiface.Me
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgCreateProposalResponse)
+		x := input.Message.Interface().(*MsgSubmitProposalResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -8654,7 +8654,7 @@ func (x *fastReflection_MsgCreateProposalResponse) ProtoMethods() *protoiface.Me
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgCreateProposalResponse)
+		x := input.Message.Interface().(*MsgSubmitProposalResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -8686,10 +8686,10 @@ func (x *fastReflection_MsgCreateProposalResponse) ProtoMethods() *protoiface.Me
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateProposalResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSubmitProposalResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSubmitProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -8747,10 +8747,834 @@ func (x *fastReflection_MsgCreateProposalResponse) ProtoMethods() *protoiface.Me
 }
 
 var (
+	md_MsgWithdrawProposal             protoreflect.MessageDescriptor
+	fd_MsgWithdrawProposal_proposal_id protoreflect.FieldDescriptor
+	fd_MsgWithdrawProposal_address     protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_group_v1beta1_tx_proto_init()
+	md_MsgWithdrawProposal = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgWithdrawProposal")
+	fd_MsgWithdrawProposal_proposal_id = md_MsgWithdrawProposal.Fields().ByName("proposal_id")
+	fd_MsgWithdrawProposal_address = md_MsgWithdrawProposal.Fields().ByName("address")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgWithdrawProposal)(nil)
+
+type fastReflection_MsgWithdrawProposal MsgWithdrawProposal
+
+func (x *MsgWithdrawProposal) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgWithdrawProposal)(x)
+}
+
+func (x *MsgWithdrawProposal) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[18]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgWithdrawProposal_messageType fastReflection_MsgWithdrawProposal_messageType
+var _ protoreflect.MessageType = fastReflection_MsgWithdrawProposal_messageType{}
+
+type fastReflection_MsgWithdrawProposal_messageType struct{}
+
+func (x fastReflection_MsgWithdrawProposal_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgWithdrawProposal)(nil)
+}
+func (x fastReflection_MsgWithdrawProposal_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgWithdrawProposal)
+}
+func (x fastReflection_MsgWithdrawProposal_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgWithdrawProposal
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgWithdrawProposal) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgWithdrawProposal
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgWithdrawProposal) Type() protoreflect.MessageType {
+	return _fastReflection_MsgWithdrawProposal_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgWithdrawProposal) New() protoreflect.Message {
+	return new(fastReflection_MsgWithdrawProposal)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgWithdrawProposal) Interface() protoreflect.ProtoMessage {
+	return (*MsgWithdrawProposal)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgWithdrawProposal) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.ProposalId != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.ProposalId)
+		if !f(fd_MsgWithdrawProposal_proposal_id, value) {
+			return
+		}
+	}
+	if x.Address != "" {
+		value := protoreflect.ValueOfString(x.Address)
+		if !f(fd_MsgWithdrawProposal_address, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgWithdrawProposal) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.group.v1beta1.MsgWithdrawProposal.proposal_id":
+		return x.ProposalId != uint64(0)
+	case "cosmos.group.v1beta1.MsgWithdrawProposal.address":
+		return x.Address != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgWithdrawProposal"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgWithdrawProposal does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgWithdrawProposal) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.group.v1beta1.MsgWithdrawProposal.proposal_id":
+		x.ProposalId = uint64(0)
+	case "cosmos.group.v1beta1.MsgWithdrawProposal.address":
+		x.Address = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgWithdrawProposal"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgWithdrawProposal does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgWithdrawProposal) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.group.v1beta1.MsgWithdrawProposal.proposal_id":
+		value := x.ProposalId
+		return protoreflect.ValueOfUint64(value)
+	case "cosmos.group.v1beta1.MsgWithdrawProposal.address":
+		value := x.Address
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgWithdrawProposal"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgWithdrawProposal does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgWithdrawProposal) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.group.v1beta1.MsgWithdrawProposal.proposal_id":
+		x.ProposalId = value.Uint()
+	case "cosmos.group.v1beta1.MsgWithdrawProposal.address":
+		x.Address = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgWithdrawProposal"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgWithdrawProposal does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgWithdrawProposal) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.group.v1beta1.MsgWithdrawProposal.proposal_id":
+		panic(fmt.Errorf("field proposal_id of message cosmos.group.v1beta1.MsgWithdrawProposal is not mutable"))
+	case "cosmos.group.v1beta1.MsgWithdrawProposal.address":
+		panic(fmt.Errorf("field address of message cosmos.group.v1beta1.MsgWithdrawProposal is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgWithdrawProposal"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgWithdrawProposal does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgWithdrawProposal) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.group.v1beta1.MsgWithdrawProposal.proposal_id":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.group.v1beta1.MsgWithdrawProposal.address":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgWithdrawProposal"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgWithdrawProposal does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgWithdrawProposal) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgWithdrawProposal", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgWithdrawProposal) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgWithdrawProposal) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgWithdrawProposal) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgWithdrawProposal) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgWithdrawProposal)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.ProposalId != 0 {
+			n += 1 + runtime.Sov(uint64(x.ProposalId))
+		}
+		l = len(x.Address)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgWithdrawProposal)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Address) > 0 {
+			i -= len(x.Address)
+			copy(dAtA[i:], x.Address)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Address)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if x.ProposalId != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.ProposalId))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgWithdrawProposal)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgWithdrawProposal: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgWithdrawProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ProposalId", wireType)
+				}
+				x.ProposalId = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.ProposalId |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Address = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgWithdrawProposalResponse protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_cosmos_group_v1beta1_tx_proto_init()
+	md_MsgWithdrawProposalResponse = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgWithdrawProposalResponse")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgWithdrawProposalResponse)(nil)
+
+type fastReflection_MsgWithdrawProposalResponse MsgWithdrawProposalResponse
+
+func (x *MsgWithdrawProposalResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgWithdrawProposalResponse)(x)
+}
+
+func (x *MsgWithdrawProposalResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[19]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgWithdrawProposalResponse_messageType fastReflection_MsgWithdrawProposalResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgWithdrawProposalResponse_messageType{}
+
+type fastReflection_MsgWithdrawProposalResponse_messageType struct{}
+
+func (x fastReflection_MsgWithdrawProposalResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgWithdrawProposalResponse)(nil)
+}
+func (x fastReflection_MsgWithdrawProposalResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgWithdrawProposalResponse)
+}
+func (x fastReflection_MsgWithdrawProposalResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgWithdrawProposalResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgWithdrawProposalResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgWithdrawProposalResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgWithdrawProposalResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgWithdrawProposalResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgWithdrawProposalResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgWithdrawProposalResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgWithdrawProposalResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgWithdrawProposalResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgWithdrawProposalResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgWithdrawProposalResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgWithdrawProposalResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgWithdrawProposalResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgWithdrawProposalResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgWithdrawProposalResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgWithdrawProposalResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgWithdrawProposalResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgWithdrawProposalResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgWithdrawProposalResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgWithdrawProposalResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgWithdrawProposalResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgWithdrawProposalResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgWithdrawProposalResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgWithdrawProposalResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgWithdrawProposalResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgWithdrawProposalResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgWithdrawProposalResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgWithdrawProposalResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgWithdrawProposalResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgWithdrawProposalResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgWithdrawProposalResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgWithdrawProposalResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgWithdrawProposalResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgWithdrawProposalResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgWithdrawProposalResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgWithdrawProposalResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgWithdrawProposalResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgWithdrawProposalResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgWithdrawProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
 	md_MsgVote             protoreflect.MessageDescriptor
 	fd_MsgVote_proposal_id protoreflect.FieldDescriptor
 	fd_MsgVote_voter       protoreflect.FieldDescriptor
-	fd_MsgVote_choice      protoreflect.FieldDescriptor
+	fd_MsgVote_option      protoreflect.FieldDescriptor
 	fd_MsgVote_metadata    protoreflect.FieldDescriptor
 	fd_MsgVote_exec        protoreflect.FieldDescriptor
 )
@@ -8760,7 +9584,7 @@ func init() {
 	md_MsgVote = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgVote")
 	fd_MsgVote_proposal_id = md_MsgVote.Fields().ByName("proposal_id")
 	fd_MsgVote_voter = md_MsgVote.Fields().ByName("voter")
-	fd_MsgVote_choice = md_MsgVote.Fields().ByName("choice")
+	fd_MsgVote_option = md_MsgVote.Fields().ByName("option")
 	fd_MsgVote_metadata = md_MsgVote.Fields().ByName("metadata")
 	fd_MsgVote_exec = md_MsgVote.Fields().ByName("exec")
 }
@@ -8774,7 +9598,7 @@ func (x *MsgVote) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgVote) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[18]
+	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8842,9 +9666,9 @@ func (x *fastReflection_MsgVote) Range(f func(protoreflect.FieldDescriptor, prot
 			return
 		}
 	}
-	if x.Choice != 0 {
-		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Choice))
-		if !f(fd_MsgVote_choice, value) {
+	if x.Option != 0 {
+		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Option))
+		if !f(fd_MsgVote_option, value) {
 			return
 		}
 	}
@@ -8879,8 +9703,8 @@ func (x *fastReflection_MsgVote) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.ProposalId != uint64(0)
 	case "cosmos.group.v1beta1.MsgVote.voter":
 		return x.Voter != ""
-	case "cosmos.group.v1beta1.MsgVote.choice":
-		return x.Choice != 0
+	case "cosmos.group.v1beta1.MsgVote.option":
+		return x.Option != 0
 	case "cosmos.group.v1beta1.MsgVote.metadata":
 		return len(x.Metadata) != 0
 	case "cosmos.group.v1beta1.MsgVote.exec":
@@ -8905,8 +9729,8 @@ func (x *fastReflection_MsgVote) Clear(fd protoreflect.FieldDescriptor) {
 		x.ProposalId = uint64(0)
 	case "cosmos.group.v1beta1.MsgVote.voter":
 		x.Voter = ""
-	case "cosmos.group.v1beta1.MsgVote.choice":
-		x.Choice = 0
+	case "cosmos.group.v1beta1.MsgVote.option":
+		x.Option = 0
 	case "cosmos.group.v1beta1.MsgVote.metadata":
 		x.Metadata = nil
 	case "cosmos.group.v1beta1.MsgVote.exec":
@@ -8933,8 +9757,8 @@ func (x *fastReflection_MsgVote) Get(descriptor protoreflect.FieldDescriptor) pr
 	case "cosmos.group.v1beta1.MsgVote.voter":
 		value := x.Voter
 		return protoreflect.ValueOfString(value)
-	case "cosmos.group.v1beta1.MsgVote.choice":
-		value := x.Choice
+	case "cosmos.group.v1beta1.MsgVote.option":
+		value := x.Option
 		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
 	case "cosmos.group.v1beta1.MsgVote.metadata":
 		value := x.Metadata
@@ -8966,8 +9790,8 @@ func (x *fastReflection_MsgVote) Set(fd protoreflect.FieldDescriptor, value prot
 		x.ProposalId = value.Uint()
 	case "cosmos.group.v1beta1.MsgVote.voter":
 		x.Voter = value.Interface().(string)
-	case "cosmos.group.v1beta1.MsgVote.choice":
-		x.Choice = (Choice)(value.Enum())
+	case "cosmos.group.v1beta1.MsgVote.option":
+		x.Option = (VoteOption)(value.Enum())
 	case "cosmos.group.v1beta1.MsgVote.metadata":
 		x.Metadata = value.Bytes()
 	case "cosmos.group.v1beta1.MsgVote.exec":
@@ -8996,8 +9820,8 @@ func (x *fastReflection_MsgVote) Mutable(fd protoreflect.FieldDescriptor) protor
 		panic(fmt.Errorf("field proposal_id of message cosmos.group.v1beta1.MsgVote is not mutable"))
 	case "cosmos.group.v1beta1.MsgVote.voter":
 		panic(fmt.Errorf("field voter of message cosmos.group.v1beta1.MsgVote is not mutable"))
-	case "cosmos.group.v1beta1.MsgVote.choice":
-		panic(fmt.Errorf("field choice of message cosmos.group.v1beta1.MsgVote is not mutable"))
+	case "cosmos.group.v1beta1.MsgVote.option":
+		panic(fmt.Errorf("field option of message cosmos.group.v1beta1.MsgVote is not mutable"))
 	case "cosmos.group.v1beta1.MsgVote.metadata":
 		panic(fmt.Errorf("field metadata of message cosmos.group.v1beta1.MsgVote is not mutable"))
 	case "cosmos.group.v1beta1.MsgVote.exec":
@@ -9019,7 +9843,7 @@ func (x *fastReflection_MsgVote) NewField(fd protoreflect.FieldDescriptor) proto
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.group.v1beta1.MsgVote.voter":
 		return protoreflect.ValueOfString("")
-	case "cosmos.group.v1beta1.MsgVote.choice":
+	case "cosmos.group.v1beta1.MsgVote.option":
 		return protoreflect.ValueOfEnum(0)
 	case "cosmos.group.v1beta1.MsgVote.metadata":
 		return protoreflect.ValueOfBytes(nil)
@@ -9101,8 +9925,8 @@ func (x *fastReflection_MsgVote) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.Choice != 0 {
-			n += 1 + runtime.Sov(uint64(x.Choice))
+		if x.Option != 0 {
+			n += 1 + runtime.Sov(uint64(x.Option))
 		}
 		l = len(x.Metadata)
 		if l > 0 {
@@ -9152,8 +9976,8 @@ func (x *fastReflection_MsgVote) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x22
 		}
-		if x.Choice != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.Choice))
+		if x.Option != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Option))
 			i--
 			dAtA[i] = 0x18
 		}
@@ -9271,9 +10095,9 @@ func (x *fastReflection_MsgVote) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 3:
 				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Choice", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Option", wireType)
 				}
-				x.Choice = 0
+				x.Option = 0
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -9283,7 +10107,7 @@ func (x *fastReflection_MsgVote) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Choice |= Choice(b&0x7F) << shift
+					x.Option |= VoteOption(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -9394,7 +10218,7 @@ func (x *MsgVoteResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgVoteResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[19]
+	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9754,7 +10578,7 @@ func (x *MsgExec) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgExec) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[20]
+	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10218,7 +11042,7 @@ func (x *MsgExecResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgExecResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[21]
+	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11308,8 +12132,8 @@ func (*MsgUpdateGroupPolicyMetadataResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{15}
 }
 
-// MsgCreateProposal is the Msg/CreateProposal request type.
-type MsgCreateProposal struct {
+// MsgSubmitProposal is the Msg/SubmitProposal request type.
+type MsgSubmitProposal struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -11321,16 +12145,16 @@ type MsgCreateProposal struct {
 	Proposers []string `protobuf:"bytes,2,rep,name=proposers,proto3" json:"proposers,omitempty"`
 	// metadata is any arbitrary metadata to attached to the proposal.
 	Metadata []byte `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
-	// msgs is a list of Msgs that will be executed if the proposal passes.
-	Msgs []*anypb.Any `protobuf:"bytes,4,rep,name=msgs,proto3" json:"msgs,omitempty"`
+	// messages is a list of `sdk.Msg`s that will be executed if the proposal passes.
+	Messages []*anypb.Any `protobuf:"bytes,4,rep,name=messages,proto3" json:"messages,omitempty"`
 	// exec defines the mode of execution of the proposal,
 	// whether it should be executed immediately on creation or not.
 	// If so, proposers signatures are considered as Yes votes.
 	Exec Exec `protobuf:"varint,5,opt,name=exec,proto3,enum=cosmos.group.v1beta1.Exec" json:"exec,omitempty"`
 }
 
-func (x *MsgCreateProposal) Reset() {
-	*x = MsgCreateProposal{}
+func (x *MsgSubmitProposal) Reset() {
+	*x = MsgSubmitProposal{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11338,54 +12162,54 @@ func (x *MsgCreateProposal) Reset() {
 	}
 }
 
-func (x *MsgCreateProposal) String() string {
+func (x *MsgSubmitProposal) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgCreateProposal) ProtoMessage() {}
+func (*MsgSubmitProposal) ProtoMessage() {}
 
-// Deprecated: Use MsgCreateProposal.ProtoReflect.Descriptor instead.
-func (*MsgCreateProposal) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgSubmitProposal.ProtoReflect.Descriptor instead.
+func (*MsgSubmitProposal) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{16}
 }
 
-func (x *MsgCreateProposal) GetAddress() string {
+func (x *MsgSubmitProposal) GetAddress() string {
 	if x != nil {
 		return x.Address
 	}
 	return ""
 }
 
-func (x *MsgCreateProposal) GetProposers() []string {
+func (x *MsgSubmitProposal) GetProposers() []string {
 	if x != nil {
 		return x.Proposers
 	}
 	return nil
 }
 
-func (x *MsgCreateProposal) GetMetadata() []byte {
+func (x *MsgSubmitProposal) GetMetadata() []byte {
 	if x != nil {
 		return x.Metadata
 	}
 	return nil
 }
 
-func (x *MsgCreateProposal) GetMsgs() []*anypb.Any {
+func (x *MsgSubmitProposal) GetMessages() []*anypb.Any {
 	if x != nil {
-		return x.Msgs
+		return x.Messages
 	}
 	return nil
 }
 
-func (x *MsgCreateProposal) GetExec() Exec {
+func (x *MsgSubmitProposal) GetExec() Exec {
 	if x != nil {
 		return x.Exec
 	}
 	return Exec_EXEC_UNSPECIFIED
 }
 
-// MsgCreateProposalResponse is the Msg/CreateProposal response type.
-type MsgCreateProposalResponse struct {
+// MsgSubmitProposalResponse is the Msg/SubmitProposal response type.
+type MsgSubmitProposalResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -11394,8 +12218,8 @@ type MsgCreateProposalResponse struct {
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
 }
 
-func (x *MsgCreateProposalResponse) Reset() {
-	*x = MsgCreateProposalResponse{}
+func (x *MsgSubmitProposalResponse) Reset() {
+	*x = MsgSubmitProposalResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11403,22 +12227,95 @@ func (x *MsgCreateProposalResponse) Reset() {
 	}
 }
 
-func (x *MsgCreateProposalResponse) String() string {
+func (x *MsgSubmitProposalResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgCreateProposalResponse) ProtoMessage() {}
+func (*MsgSubmitProposalResponse) ProtoMessage() {}
 
-// Deprecated: Use MsgCreateProposalResponse.ProtoReflect.Descriptor instead.
-func (*MsgCreateProposalResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgSubmitProposalResponse.ProtoReflect.Descriptor instead.
+func (*MsgSubmitProposalResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{17}
 }
 
-func (x *MsgCreateProposalResponse) GetProposalId() uint64 {
+func (x *MsgSubmitProposalResponse) GetProposalId() uint64 {
 	if x != nil {
 		return x.ProposalId
 	}
 	return 0
+}
+
+// MsgWithdrawProposal is the Msg/WithdrawProposal request type.
+type MsgWithdrawProposal struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// proposal is the unique ID of the proposal.
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	// address is the admin of the group policy or one of the proposer of the proposal.
+	Address string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
+}
+
+func (x *MsgWithdrawProposal) Reset() {
+	*x = MsgWithdrawProposal{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[18]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgWithdrawProposal) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgWithdrawProposal) ProtoMessage() {}
+
+// Deprecated: Use MsgWithdrawProposal.ProtoReflect.Descriptor instead.
+func (*MsgWithdrawProposal) Descriptor() ([]byte, []int) {
+	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *MsgWithdrawProposal) GetProposalId() uint64 {
+	if x != nil {
+		return x.ProposalId
+	}
+	return 0
+}
+
+func (x *MsgWithdrawProposal) GetAddress() string {
+	if x != nil {
+		return x.Address
+	}
+	return ""
+}
+
+// MsgWithdrawProposalResponse is the Msg/WithdrawProposal response type.
+type MsgWithdrawProposalResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *MsgWithdrawProposalResponse) Reset() {
+	*x = MsgWithdrawProposalResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[19]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgWithdrawProposalResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgWithdrawProposalResponse) ProtoMessage() {}
+
+// Deprecated: Use MsgWithdrawProposalResponse.ProtoReflect.Descriptor instead.
+func (*MsgWithdrawProposalResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{19}
 }
 
 // MsgVote is the Msg/Vote request type.
@@ -11431,8 +12328,8 @@ type MsgVote struct {
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
 	// voter is the voter account address.
 	Voter string `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
-	// choice is the voter's choice on the proposal.
-	Choice Choice `protobuf:"varint,3,opt,name=choice,proto3,enum=cosmos.group.v1beta1.Choice" json:"choice,omitempty"`
+	// option is the voter's choice on the proposal.
+	Option VoteOption `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.group.v1beta1.VoteOption" json:"option,omitempty"`
 	// metadata is any arbitrary metadata to attached to the vote.
 	Metadata []byte `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// exec defines whether the proposal should be executed
@@ -11443,7 +12340,7 @@ type MsgVote struct {
 func (x *MsgVote) Reset() {
 	*x = MsgVote{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[18]
+		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -11457,7 +12354,7 @@ func (*MsgVote) ProtoMessage() {}
 
 // Deprecated: Use MsgVote.ProtoReflect.Descriptor instead.
 func (*MsgVote) Descriptor() ([]byte, []int) {
-	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{18}
+	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *MsgVote) GetProposalId() uint64 {
@@ -11474,11 +12371,11 @@ func (x *MsgVote) GetVoter() string {
 	return ""
 }
 
-func (x *MsgVote) GetChoice() Choice {
+func (x *MsgVote) GetOption() VoteOption {
 	if x != nil {
-		return x.Choice
+		return x.Option
 	}
-	return Choice_CHOICE_UNSPECIFIED
+	return VoteOption_VOTE_OPTION_UNSPECIFIED
 }
 
 func (x *MsgVote) GetMetadata() []byte {
@@ -11505,7 +12402,7 @@ type MsgVoteResponse struct {
 func (x *MsgVoteResponse) Reset() {
 	*x = MsgVoteResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[19]
+		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -11519,7 +12416,7 @@ func (*MsgVoteResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgVoteResponse.ProtoReflect.Descriptor instead.
 func (*MsgVoteResponse) Descriptor() ([]byte, []int) {
-	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{19}
+	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{21}
 }
 
 // MsgExec is the Msg/Exec request type.
@@ -11537,7 +12434,7 @@ type MsgExec struct {
 func (x *MsgExec) Reset() {
 	*x = MsgExec{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[20]
+		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -11551,7 +12448,7 @@ func (*MsgExec) ProtoMessage() {}
 
 // Deprecated: Use MsgExec.ProtoReflect.Descriptor instead.
 func (*MsgExec) Descriptor() ([]byte, []int) {
-	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{20}
+	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *MsgExec) GetProposalId() uint64 {
@@ -11578,7 +12475,7 @@ type MsgExecResponse struct {
 func (x *MsgExecResponse) Reset() {
 	*x = MsgExecResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[21]
+		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -11592,7 +12489,7 @@ func (*MsgExecResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgExecResponse.ProtoReflect.Descriptor instead.
 func (*MsgExecResponse) Descriptor() ([]byte, []int) {
-	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{21}
+	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{23}
 }
 
 var File_cosmos_group_v1beta1_tx_proto protoreflect.FileDescriptor
@@ -11725,8 +12622,8 @@ var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
 	0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a,
 	0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x26, 0x0a, 0x24, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64,
 	0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x4d, 0x65,
-	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xef,
-	0x01, 0x0a, 0x11, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x72, 0x6f, 0x70,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xf7,
+	0x01, 0x0a, 0x11, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x70,
 	0x6f, 0x73, 0x61, 0x6c, 0x12, 0x32, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
 	0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52,
@@ -11734,138 +12631,155 @@ var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
 	0x6f, 0x73, 0x65, 0x72, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x09, 0x52, 0x09, 0x70, 0x72, 0x6f,
 	0x70, 0x6f, 0x73, 0x65, 0x72, 0x73, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61,
 	0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61,
-	0x74, 0x61, 0x12, 0x28, 0x0a, 0x04, 0x6d, 0x73, 0x67, 0x73, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b,
-	0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
-	0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x04, 0x6d, 0x73, 0x67, 0x73, 0x12, 0x2e, 0x0a, 0x04,
-	0x65, 0x78, 0x65, 0x63, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x1a, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x45, 0x78, 0x65, 0x63, 0x52, 0x04, 0x65, 0x78, 0x65, 0x63, 0x3a, 0x12, 0x88, 0xa0,
-	0x1f, 0x00, 0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x65, 0x72, 0x73,
-	0x22, 0x3c, 0x0a, 0x19, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x72, 0x6f,
-	0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1f, 0x0a,
+	0x74, 0x61, 0x12, 0x30, 0x0a, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x18, 0x04,
+	0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x08, 0x6d, 0x65, 0x73, 0x73,
+	0x61, 0x67, 0x65, 0x73, 0x12, 0x2e, 0x0a, 0x04, 0x65, 0x78, 0x65, 0x63, 0x18, 0x05, 0x20, 0x01,
+	0x28, 0x0e, 0x32, 0x1a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75,
+	0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x45, 0x78, 0x65, 0x63, 0x52, 0x04,
+	0x65, 0x78, 0x65, 0x63, 0x3a, 0x12, 0x88, 0xa0, 0x1f, 0x00, 0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x70,
+	0x72, 0x6f, 0x70, 0x6f, 0x73, 0x65, 0x72, 0x73, 0x22, 0x3c, 0x0a, 0x19, 0x4d, 0x73, 0x67, 0x53,
+	0x75, 0x62, 0x6d, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61,
+	0x6c, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x70, 0x72, 0x6f, 0x70,
+	0x6f, 0x73, 0x61, 0x6c, 0x49, 0x64, 0x22, 0x6a, 0x0a, 0x13, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74,
+	0x68, 0x64, 0x72, 0x61, 0x77, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x1f, 0x0a,
 	0x0b, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x04, 0x52, 0x0a, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x49, 0x64, 0x22, 0xe8,
-	0x01, 0x0a, 0x07, 0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72,
-	0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52,
-	0x0a, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x49, 0x64, 0x12, 0x2e, 0x0a, 0x05, 0x76,
-	0x6f, 0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74,
-	0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x76, 0x6f, 0x74, 0x65, 0x72, 0x12, 0x34, 0x0a, 0x06, 0x63,
-	0x68, 0x6f, 0x69, 0x63, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x1c, 0x2e, 0x63, 0x6f,
+	0x28, 0x04, 0x52, 0x0a, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x49, 0x64, 0x12, 0x32,
+	0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42,
+	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x22, 0x1d, 0x0a, 0x1b, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61,
+	0x77, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x22, 0xec, 0x01, 0x0a, 0x07, 0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x12, 0x1f, 0x0a,
+	0x0b, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x04, 0x52, 0x0a, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x49, 0x64, 0x12, 0x2e,
+	0x0a, 0x05, 0x76, 0x6f, 0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2,
+	0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x76, 0x6f, 0x74, 0x65, 0x72, 0x12, 0x38,
+	0x0a, 0x06, 0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x20,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x56, 0x6f, 0x74, 0x65, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e,
+	0x52, 0x06, 0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0x12, 0x2e, 0x0a, 0x04, 0x65, 0x78, 0x65, 0x63, 0x18, 0x05, 0x20, 0x01,
+	0x28, 0x0e, 0x32, 0x1a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75,
+	0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x45, 0x78, 0x65, 0x63, 0x52, 0x04,
+	0x65, 0x78, 0x65, 0x63, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x76, 0x6f, 0x74, 0x65, 0x72,
+	0x22, 0x11, 0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x22, 0x69, 0x0a, 0x07, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x12, 0x1f,
+	0x0a, 0x0b, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x04, 0x52, 0x0a, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x49, 0x64, 0x12,
+	0x30, 0x0a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42,
+	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65,
+	0x72, 0x3a, 0x0b, 0x82, 0xe7, 0xb0, 0x2a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x22, 0x11,
+	0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x2a, 0x2a, 0x0a, 0x04, 0x45, 0x78, 0x65, 0x63, 0x12, 0x14, 0x0a, 0x10, 0x45, 0x58, 0x45,
+	0x43, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12,
+	0x0c, 0x0a, 0x08, 0x45, 0x58, 0x45, 0x43, 0x5f, 0x54, 0x52, 0x59, 0x10, 0x01, 0x32, 0xef, 0x0a,
+	0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x61, 0x0a, 0x0b, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47,
+	0x72, 0x6f, 0x75, 0x70, 0x12, 0x24, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72,
+	0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43,
+	0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x1a, 0x2c, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x76, 0x0a, 0x12, 0x55, 0x70, 0x64, 0x61,
+	0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x12, 0x2b,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47,
+	0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x1a, 0x33, 0x2e, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x2e, 0x43, 0x68, 0x6f, 0x69, 0x63, 0x65, 0x52, 0x06, 0x63, 0x68, 0x6f, 0x69, 0x63,
-	0x65, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x04, 0x20,
-	0x01, 0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x2e, 0x0a,
-	0x04, 0x65, 0x78, 0x65, 0x63, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x1a, 0x2e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x2e, 0x45, 0x78, 0x65, 0x63, 0x52, 0x04, 0x65, 0x78, 0x65, 0x63, 0x3a, 0x0a, 0x82,
-	0xe7, 0xb0, 0x2a, 0x05, 0x76, 0x6f, 0x74, 0x65, 0x72, 0x22, 0x11, 0x0a, 0x0f, 0x4d, 0x73, 0x67,
-	0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x69, 0x0a, 0x07,
-	0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x6f, 0x70, 0x6f,
-	0x73, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x70, 0x72,
-	0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x49, 0x64, 0x12, 0x30, 0x0a, 0x06, 0x73, 0x69, 0x67, 0x6e,
-	0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
-	0x6e, 0x67, 0x52, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x3a, 0x0b, 0x82, 0xe7, 0xb0, 0x2a,
-	0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x22, 0x11, 0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x45, 0x78,
-	0x65, 0x63, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x2a, 0x2a, 0x0a, 0x04, 0x45, 0x78,
-	0x65, 0x63, 0x12, 0x14, 0x0a, 0x10, 0x45, 0x58, 0x45, 0x43, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45,
-	0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x0c, 0x0a, 0x08, 0x45, 0x58, 0x45, 0x43,
-	0x5f, 0x54, 0x52, 0x59, 0x10, 0x01, 0x32, 0xfd, 0x09, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x61,
-	0x0a, 0x0b, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x12, 0x24, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62,
-	0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72,
-	0x6f, 0x75, 0x70, 0x1a, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f,
-	0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72,
-	0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x76, 0x0a, 0x12, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70,
-	0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x12, 0x2b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d,
-	0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x6d,
-	0x62, 0x65, 0x72, 0x73, 0x1a, 0x33, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72,
+	0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75,
+	0x70, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x70, 0x0a, 0x10, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41,
+	0x64, 0x6d, 0x69, 0x6e, 0x12, 0x29, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72,
 	0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55,
-	0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72,
-	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x70, 0x0a, 0x10, 0x55, 0x70, 0x64,
-	0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x29, 0x2e,
+	0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x1a,
+	0x31, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
+	0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x79, 0x0a, 0x13, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75,
+	0x70, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d,
+	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x1a, 0x34, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d,
+	0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x74,
+	0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x73, 0x0a,
+	0x11, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69,
+	0x63, 0x79, 0x12, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75,
+	0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65,
+	0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x1a, 0x32,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47,
+	0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x82, 0x01, 0x0a, 0x16, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f,
+	0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x2f, 0x2e,
 	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62,
 	0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72,
-	0x6f, 0x75, 0x70, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x1a, 0x31, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
-	0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x64,
-	0x6d, 0x69, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x79, 0x0a, 0x13, 0x55,
-	0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
-	0x74, 0x61, 0x12, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75,
-	0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64,
-	0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
-	0x1a, 0x34, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74,
-	0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x73, 0x0a, 0x11, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
-	0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x12, 0x2a, 0x2e, 0x63, 0x6f,
+	0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x1a, 0x37,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47,
+	0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x9d, 0x01, 0x0a, 0x1f, 0x55, 0x70, 0x64, 0x61,
+	0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x44, 0x65, 0x63,
+	0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x12, 0x38, 0x2e, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75,
-	0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x1a, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d,
-	0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c,
-	0x69, 0x63, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x82, 0x01, 0x0a, 0x16,
+	0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75,
+	0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50,
+	0x6f, 0x6c, 0x69, 0x63, 0x79, 0x1a, 0x40, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67,
+	0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67,
 	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63,
-	0x79, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73,
-	0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69,
-	0x63, 0x79, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x1a, 0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d,
-	0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c,
-	0x69, 0x63, 0x79, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x9d, 0x01, 0x0a, 0x1f, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70,
-	0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f,
-	0x6c, 0x69, 0x63, 0x79, 0x12, 0x38, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72,
-	0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55,
-	0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79,
-	0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x1a, 0x40,
-	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47,
-	0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69,
-	0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x8b, 0x01, 0x0a, 0x19, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70,
-	0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x32,
-	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47,
-	0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
-	0x74, 0x61, 0x1a, 0x3a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75,
-	0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64,
-	0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x4d, 0x65,
-	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6a,
-	0x0a, 0x0e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c,
-	0x12, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74,
-	0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x1a, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x79, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x8b, 0x01, 0x0a, 0x19, 0x55, 0x70, 0x64, 0x61,
+	0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x4d, 0x65, 0x74,
+	0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67,
+	0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67,
+	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63,
+	0x79, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x1a, 0x3a, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
 	0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73,
-	0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4c, 0x0a, 0x04, 0x56, 0x6f,
-	0x74, 0x65, 0x12, 0x1d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75,
-	0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74,
-	0x65, 0x1a, 0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70,
-	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4c, 0x0a, 0x04, 0x45, 0x78, 0x65, 0x63,
-	0x12, 0x1d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x1a,
-	0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0xd9, 0x01, 0x0a, 0x18, 0x63, 0x6f, 0x6d, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x42,
-	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x61, 0x70, 0x69,
-	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2f, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x47, 0x58, 0xaa, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca,
-	0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x5c, 0x56,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x20, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c,
-	0x47, 0x72, 0x6f, 0x75, 0x70, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50,
-	0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x3a, 0x3a, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50,
+	0x6f, 0x6c, 0x69, 0x63, 0x79, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6a, 0x0a, 0x0e, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x50,
+	0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d,
+	0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c,
+	0x1a, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69,
+	0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x70, 0x0a, 0x10, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x50, 0x72, 0x6f,
+	0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x29, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67,
+	0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67,
+	0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c,
+	0x1a, 0x31, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64,
+	0x72, 0x61, 0x77, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x4c, 0x0a, 0x04, 0x56, 0x6f, 0x74, 0x65, 0x12, 0x1d, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x1a, 0x25, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2e, 0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x4c, 0x0a, 0x04, 0x45, 0x78, 0x65, 0x63, 0x12, 0x1d, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x1a, 0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
+	0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42,
+	0xd9, 0x01, 0x0a, 0x18, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67,
+	0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x07, 0x54, 0x78,
+	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x42, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e,
+	0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2f, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x67,
+	0x72, 0x6f, 0x75, 0x70, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x47,
+	0x58, 0xaa, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x47, 0x72, 0x6f, 0x75, 0x70,
+	0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x5c, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2,
+	0x02, 0x20, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x5c, 0x56,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
+	0x74, 0x61, 0xea, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x47, 0x72, 0x6f,
+	0x75, 0x70, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x33,
 }
 
 var (
@@ -11881,7 +12795,7 @@ func file_cosmos_group_v1beta1_tx_proto_rawDescGZIP() []byte {
 }
 
 var file_cosmos_group_v1beta1_tx_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_cosmos_group_v1beta1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
+var file_cosmos_group_v1beta1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
 var file_cosmos_group_v1beta1_tx_proto_goTypes = []interface{}{
 	(Exec)(0),                                          // 0: cosmos.group.v1beta1.Exec
 	(*MsgCreateGroup)(nil),                             // 1: cosmos.group.v1beta1.MsgCreateGroup
@@ -11900,24 +12814,26 @@ var file_cosmos_group_v1beta1_tx_proto_goTypes = []interface{}{
 	(*MsgUpdateGroupPolicyDecisionPolicyResponse)(nil), // 14: cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse
 	(*MsgUpdateGroupPolicyMetadata)(nil),               // 15: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata
 	(*MsgUpdateGroupPolicyMetadataResponse)(nil),       // 16: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse
-	(*MsgCreateProposal)(nil),                          // 17: cosmos.group.v1beta1.MsgCreateProposal
-	(*MsgCreateProposalResponse)(nil),                  // 18: cosmos.group.v1beta1.MsgCreateProposalResponse
-	(*MsgVote)(nil),                                    // 19: cosmos.group.v1beta1.MsgVote
-	(*MsgVoteResponse)(nil),                            // 20: cosmos.group.v1beta1.MsgVoteResponse
-	(*MsgExec)(nil),                                    // 21: cosmos.group.v1beta1.MsgExec
-	(*MsgExecResponse)(nil),                            // 22: cosmos.group.v1beta1.MsgExecResponse
-	(*Member)(nil),                                     // 23: cosmos.group.v1beta1.Member
-	(*anypb.Any)(nil),                                  // 24: google.protobuf.Any
-	(Choice)(0),                                        // 25: cosmos.group.v1beta1.Choice
+	(*MsgSubmitProposal)(nil),                          // 17: cosmos.group.v1beta1.MsgSubmitProposal
+	(*MsgSubmitProposalResponse)(nil),                  // 18: cosmos.group.v1beta1.MsgSubmitProposalResponse
+	(*MsgWithdrawProposal)(nil),                        // 19: cosmos.group.v1beta1.MsgWithdrawProposal
+	(*MsgWithdrawProposalResponse)(nil),                // 20: cosmos.group.v1beta1.MsgWithdrawProposalResponse
+	(*MsgVote)(nil),                                    // 21: cosmos.group.v1beta1.MsgVote
+	(*MsgVoteResponse)(nil),                            // 22: cosmos.group.v1beta1.MsgVoteResponse
+	(*MsgExec)(nil),                                    // 23: cosmos.group.v1beta1.MsgExec
+	(*MsgExecResponse)(nil),                            // 24: cosmos.group.v1beta1.MsgExecResponse
+	(*Member)(nil),                                     // 25: cosmos.group.v1beta1.Member
+	(*anypb.Any)(nil),                                  // 26: google.protobuf.Any
+	(VoteOption)(0),                                    // 27: cosmos.group.v1beta1.VoteOption
 }
 var file_cosmos_group_v1beta1_tx_proto_depIdxs = []int32{
-	23, // 0: cosmos.group.v1beta1.MsgCreateGroup.members:type_name -> cosmos.group.v1beta1.Member
-	23, // 1: cosmos.group.v1beta1.MsgUpdateGroupMembers.member_updates:type_name -> cosmos.group.v1beta1.Member
-	24, // 2: cosmos.group.v1beta1.MsgCreateGroupPolicy.decision_policy:type_name -> google.protobuf.Any
-	24, // 3: cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.decision_policy:type_name -> google.protobuf.Any
-	24, // 4: cosmos.group.v1beta1.MsgCreateProposal.msgs:type_name -> google.protobuf.Any
-	0,  // 5: cosmos.group.v1beta1.MsgCreateProposal.exec:type_name -> cosmos.group.v1beta1.Exec
-	25, // 6: cosmos.group.v1beta1.MsgVote.choice:type_name -> cosmos.group.v1beta1.Choice
+	25, // 0: cosmos.group.v1beta1.MsgCreateGroup.members:type_name -> cosmos.group.v1beta1.Member
+	25, // 1: cosmos.group.v1beta1.MsgUpdateGroupMembers.member_updates:type_name -> cosmos.group.v1beta1.Member
+	26, // 2: cosmos.group.v1beta1.MsgCreateGroupPolicy.decision_policy:type_name -> google.protobuf.Any
+	26, // 3: cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.decision_policy:type_name -> google.protobuf.Any
+	26, // 4: cosmos.group.v1beta1.MsgSubmitProposal.messages:type_name -> google.protobuf.Any
+	0,  // 5: cosmos.group.v1beta1.MsgSubmitProposal.exec:type_name -> cosmos.group.v1beta1.Exec
+	27, // 6: cosmos.group.v1beta1.MsgVote.option:type_name -> cosmos.group.v1beta1.VoteOption
 	0,  // 7: cosmos.group.v1beta1.MsgVote.exec:type_name -> cosmos.group.v1beta1.Exec
 	1,  // 8: cosmos.group.v1beta1.Msg.CreateGroup:input_type -> cosmos.group.v1beta1.MsgCreateGroup
 	3,  // 9: cosmos.group.v1beta1.Msg.UpdateGroupMembers:input_type -> cosmos.group.v1beta1.MsgUpdateGroupMembers
@@ -11927,22 +12843,24 @@ var file_cosmos_group_v1beta1_tx_proto_depIdxs = []int32{
 	11, // 13: cosmos.group.v1beta1.Msg.UpdateGroupPolicyAdmin:input_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyAdmin
 	13, // 14: cosmos.group.v1beta1.Msg.UpdateGroupPolicyDecisionPolicy:input_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy
 	15, // 15: cosmos.group.v1beta1.Msg.UpdateGroupPolicyMetadata:input_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata
-	17, // 16: cosmos.group.v1beta1.Msg.CreateProposal:input_type -> cosmos.group.v1beta1.MsgCreateProposal
-	19, // 17: cosmos.group.v1beta1.Msg.Vote:input_type -> cosmos.group.v1beta1.MsgVote
-	21, // 18: cosmos.group.v1beta1.Msg.Exec:input_type -> cosmos.group.v1beta1.MsgExec
-	2,  // 19: cosmos.group.v1beta1.Msg.CreateGroup:output_type -> cosmos.group.v1beta1.MsgCreateGroupResponse
-	4,  // 20: cosmos.group.v1beta1.Msg.UpdateGroupMembers:output_type -> cosmos.group.v1beta1.MsgUpdateGroupMembersResponse
-	6,  // 21: cosmos.group.v1beta1.Msg.UpdateGroupAdmin:output_type -> cosmos.group.v1beta1.MsgUpdateGroupAdminResponse
-	8,  // 22: cosmos.group.v1beta1.Msg.UpdateGroupMetadata:output_type -> cosmos.group.v1beta1.MsgUpdateGroupMetadataResponse
-	10, // 23: cosmos.group.v1beta1.Msg.CreateGroupPolicy:output_type -> cosmos.group.v1beta1.MsgCreateGroupPolicyResponse
-	12, // 24: cosmos.group.v1beta1.Msg.UpdateGroupPolicyAdmin:output_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyAdminResponse
-	14, // 25: cosmos.group.v1beta1.Msg.UpdateGroupPolicyDecisionPolicy:output_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse
-	16, // 26: cosmos.group.v1beta1.Msg.UpdateGroupPolicyMetadata:output_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse
-	18, // 27: cosmos.group.v1beta1.Msg.CreateProposal:output_type -> cosmos.group.v1beta1.MsgCreateProposalResponse
-	20, // 28: cosmos.group.v1beta1.Msg.Vote:output_type -> cosmos.group.v1beta1.MsgVoteResponse
-	22, // 29: cosmos.group.v1beta1.Msg.Exec:output_type -> cosmos.group.v1beta1.MsgExecResponse
-	19, // [19:30] is the sub-list for method output_type
-	8,  // [8:19] is the sub-list for method input_type
+	17, // 16: cosmos.group.v1beta1.Msg.SubmitProposal:input_type -> cosmos.group.v1beta1.MsgSubmitProposal
+	19, // 17: cosmos.group.v1beta1.Msg.WithdrawProposal:input_type -> cosmos.group.v1beta1.MsgWithdrawProposal
+	21, // 18: cosmos.group.v1beta1.Msg.Vote:input_type -> cosmos.group.v1beta1.MsgVote
+	23, // 19: cosmos.group.v1beta1.Msg.Exec:input_type -> cosmos.group.v1beta1.MsgExec
+	2,  // 20: cosmos.group.v1beta1.Msg.CreateGroup:output_type -> cosmos.group.v1beta1.MsgCreateGroupResponse
+	4,  // 21: cosmos.group.v1beta1.Msg.UpdateGroupMembers:output_type -> cosmos.group.v1beta1.MsgUpdateGroupMembersResponse
+	6,  // 22: cosmos.group.v1beta1.Msg.UpdateGroupAdmin:output_type -> cosmos.group.v1beta1.MsgUpdateGroupAdminResponse
+	8,  // 23: cosmos.group.v1beta1.Msg.UpdateGroupMetadata:output_type -> cosmos.group.v1beta1.MsgUpdateGroupMetadataResponse
+	10, // 24: cosmos.group.v1beta1.Msg.CreateGroupPolicy:output_type -> cosmos.group.v1beta1.MsgCreateGroupPolicyResponse
+	12, // 25: cosmos.group.v1beta1.Msg.UpdateGroupPolicyAdmin:output_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyAdminResponse
+	14, // 26: cosmos.group.v1beta1.Msg.UpdateGroupPolicyDecisionPolicy:output_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse
+	16, // 27: cosmos.group.v1beta1.Msg.UpdateGroupPolicyMetadata:output_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse
+	18, // 28: cosmos.group.v1beta1.Msg.SubmitProposal:output_type -> cosmos.group.v1beta1.MsgSubmitProposalResponse
+	20, // 29: cosmos.group.v1beta1.Msg.WithdrawProposal:output_type -> cosmos.group.v1beta1.MsgWithdrawProposalResponse
+	22, // 30: cosmos.group.v1beta1.Msg.Vote:output_type -> cosmos.group.v1beta1.MsgVoteResponse
+	24, // 31: cosmos.group.v1beta1.Msg.Exec:output_type -> cosmos.group.v1beta1.MsgExecResponse
+	20, // [20:32] is the sub-list for method output_type
+	8,  // [8:20] is the sub-list for method input_type
 	8,  // [8:8] is the sub-list for extension type_name
 	8,  // [8:8] is the sub-list for extension extendee
 	0,  // [0:8] is the sub-list for field type_name
@@ -12148,7 +13066,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_tx_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgCreateProposal); i {
+			switch v := v.(*MsgSubmitProposal); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12160,7 +13078,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_tx_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgCreateProposalResponse); i {
+			switch v := v.(*MsgSubmitProposalResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12172,7 +13090,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_tx_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgVote); i {
+			switch v := v.(*MsgWithdrawProposal); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12184,7 +13102,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_tx_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgVoteResponse); i {
+			switch v := v.(*MsgWithdrawProposalResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12196,7 +13114,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_tx_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgExec); i {
+			switch v := v.(*MsgVote); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12208,6 +13126,30 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_tx_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgVoteResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_group_v1beta1_tx_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgExec); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_group_v1beta1_tx_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*MsgExecResponse); i {
 			case 0:
 				return &v.state
@@ -12226,7 +13168,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_group_v1beta1_tx_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   22,
+			NumMessages:   24,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

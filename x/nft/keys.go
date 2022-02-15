@@ -1,7 +1,7 @@
 package nft
 
 const (
-	// module name
+	// ModuleName module name
 	ModuleName = "nft"
 
 	// StoreKey is the default store key for nft

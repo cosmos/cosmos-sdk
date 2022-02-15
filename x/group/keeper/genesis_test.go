@@ -78,7 +78,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	s.Require().NoError(err)
 
 	proposal := &group.Proposal{
-		ProposalId:         1,
+		Id:                 1,
 		Address:            accAddr.String(),
 		Metadata:           []byte("proposal metadata"),
 		GroupVersion:       1,
@@ -86,17 +86,17 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		Proposers: []string{
 			memberAddr.String(),
 		},
-		SubmittedAt: submittedAt,
-		Status:      group.ProposalStatusClosed,
-		Result:      group.ProposalResultAccepted,
-		VoteState: group.Tally{
-			YesCount:     "1",
-			NoCount:      "0",
-			AbstainCount: "0",
-			VetoCount:    "0",
+		SubmitTime: submittedAt,
+		Status:     group.PROPOSAL_STATUS_CLOSED,
+		Result:     group.PROPOSAL_RESULT_ACCEPTED,
+		FinalTallyResult: group.TallyResult{
+			YesCount:        "1",
+			NoCount:         "0",
+			AbstainCount:    "0",
+			NoWithVetoCount: "0",
 		},
 		Timeout:        timeout,
-		ExecutorResult: group.ProposalExecutorResultSuccess,
+		ExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 	}
 	err = proposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
 		FromAddress: accAddr.String(),
@@ -106,14 +106,14 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	s.Require().NoError(err)
 
 	genesisState := &group.GenesisState{
-		GroupSeq:              2,
-		Groups:                []*group.GroupInfo{{GroupId: 1, Admin: accAddr.String(), Metadata: []byte("1"), Version: 1, TotalWeight: "1"}, {GroupId: 2, Admin: accAddr.String(), Metadata: []byte("2"), Version: 2, TotalWeight: "2"}},
-		GroupMembers:          []*group.GroupMember{{GroupId: 1, Member: &group.Member{Address: memberAddr.String(), Weight: "1", Metadata: []byte("member metadata")}}, {GroupId: 2, Member: &group.Member{Address: memberAddr.String(), Weight: "2", Metadata: []byte("member metadata")}}},
+		GroupSeq:       2,
+		Groups:         []*group.GroupInfo{{Id: 1, Admin: accAddr.String(), Metadata: []byte("1"), Version: 1, TotalWeight: "1"}, {Id: 2, Admin: accAddr.String(), Metadata: []byte("2"), Version: 2, TotalWeight: "2"}},
+		GroupMembers:   []*group.GroupMember{{GroupId: 1, Member: &group.Member{Address: memberAddr.String(), Weight: "1", Metadata: []byte("member metadata")}}, {GroupId: 2, Member: &group.Member{Address: memberAddr.String(), Weight: "2", Metadata: []byte("member metadata")}}},
 		GroupPolicySeq: 1,
-		GroupPolicies:         []*group.GroupPolicyInfo{groupPolicy},
-		ProposalSeq:           1,
-		Proposals:             []*group.Proposal{proposal},
-		Votes:                 []*group.Vote{{ProposalId: proposal.ProposalId, Voter: memberAddr.String(), SubmittedAt: submittedAt, Choice: group.Choice_CHOICE_YES}},
+		GroupPolicies:  []*group.GroupPolicyInfo{groupPolicy},
+		ProposalSeq:    1,
+		Proposals:      []*group.Proposal{proposal},
+		Votes:          []*group.Vote{{ProposalId: proposal.Id, Voter: memberAddr.String(), SubmitTime: submittedAt, Option: group.VOTE_OPTION_YES}},
 	}
 	genesisBytes, err := cdc.MarshalJSON(genesisState)
 	s.Require().NoError(err)
@@ -126,13 +126,13 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 
 	for i, g := range genesisState.Groups {
 		res, err := s.keeper.GroupInfo(ctx, &group.QueryGroupInfoRequest{
-			GroupId: g.GroupId,
+			GroupId: g.Id,
 		})
 		s.Require().NoError(err)
 		s.Require().Equal(g, res.Info)
 
 		membersRes, err := s.keeper.GroupMembers(ctx, &group.QueryGroupMembersRequest{
-			GroupId: g.GroupId,
+			GroupId: g.Id,
 		})
 		s.Require().NoError(err)
 		s.Require().Equal(len(membersRes.Members), 1)
@@ -149,13 +149,13 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 
 	for _, g := range genesisState.Proposals {
 		res, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{
-			ProposalId: g.ProposalId,
+			ProposalId: g.Id,
 		})
 		s.Require().NoError(err)
 		s.assertProposalsEqual(g, res.Proposal)
 
 		votesRes, err := s.keeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{
-			ProposalId: g.ProposalId,
+			ProposalId: g.Id,
 		})
 		s.Require().NoError(err)
 		s.Require().Equal(len(votesRes.Votes), 1)
@@ -206,16 +206,16 @@ func (s *GenesisTestSuite) assertGroupPoliciesEqual(g *group.GroupPolicyInfo, ot
 
 func (s *GenesisTestSuite) assertProposalsEqual(g *group.Proposal, other *group.Proposal) {
 	require := s.Require()
-	require.Equal(g.ProposalId, other.ProposalId)
+	require.Equal(g.Id, other.Id)
 	require.Equal(g.Address, other.Address)
 	require.Equal(g.Metadata, other.Metadata)
 	require.Equal(g.Proposers, other.Proposers)
-	require.Equal(g.SubmittedAt, other.SubmittedAt)
+	require.Equal(g.SubmitTime, other.SubmitTime)
 	require.Equal(g.GroupVersion, other.GroupVersion)
 	require.Equal(g.GroupPolicyVersion, other.GroupPolicyVersion)
 	require.Equal(g.Status, other.Status)
 	require.Equal(g.Result, other.Result)
-	require.Equal(g.VoteState, other.VoteState)
+	require.Equal(g.FinalTallyResult, other.FinalTallyResult)
 	require.Equal(g.Timeout, other.Timeout)
 	require.Equal(g.ExecutorResult, other.ExecutorResult)
 	require.Equal(g.GetMsgs(), other.GetMsgs())

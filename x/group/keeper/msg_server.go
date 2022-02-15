@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
+	proto "github.com/gogo/protobuf/proto"
 	gogotypes "github.com/gogo/protobuf/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -566,11 +567,11 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED {
 		return nil, sdkerrors.Wrap(errors.ErrInvalid, "proposal not open for voting")
 	}
-	proposalTimeout, err := gogotypes.TimestampProto(proposal.VotingPeriodEnd)
+	votingPeriodEndGogo, err := gogotypes.TimestampProto(proposal.VotingPeriodEnd)
 	if err != nil {
 		return nil, err
 	}
-	votingPeriodEnd, err := gogotypes.TimestampFromProto(proposalTimeout)
+	votingPeriodEnd, err := gogotypes.TimestampFromProto(votingPeriodEndGogo)
 	if err != nil {
 		return nil, err
 	}
@@ -610,9 +611,6 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 		Metadata:   metadata,
 		SubmitTime: ctx.BlockTime(),
 	}
-	if err := proposal.FinalTallyResult.Add(newVote, voter.Member.Weight); err != nil {
-		return nil, sdkerrors.Wrap(err, "add new vote")
-	}
 
 	// The ORM will return an error if the vote already exists,
 	// making sure than a voter hasn't already voted.
@@ -639,8 +637,36 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	return &group.MsgVoteResponse{}, nil
 }
 
-// doTally updates the proposal status and tally if necessary based on the group policy's decision policy.
-func doTally(ctx sdk.Context, p *group.Proposal, electorate group.GroupInfo, policyInfo group.GroupPolicyInfo) error {
+func (k Keeper) doTally(ctx sdk.Context, p group.Proposal) (group.TallyResult, error) {
+	it, err := k.voteByProposalIndex.Get(ctx.KVStore(k.key), p.Id)
+	if err != nil {
+		return group.TallyResult{}, err
+	}
+
+	if !proto.Equal(&p.FinalTallyResult, &group.TallyResult{}) {
+		return group.TallyResult{}, sdkerrors.ErrLogic.Wrap("can't call doTally when proposal's tally result is already final")
+	}
+
+	var vote group.Vote
+	for {
+		_, err = it.LoadNext(&vote)
+		if errors.ErrORMIteratorDone.Is(err) {
+			break
+		}
+		if err != nil {
+			return group.TallyResult{}, err
+		}
+
+		if err := p.FinalTallyResult.Add(vote, voter.Member.Weight); err != nil {
+			return group.TallyResult{}, sdkerrors.Wrap(err, "add new vote")
+		}
+	}
+
+	return group.TallyResult{}, nil
+}
+
+// doTallyAndUpdate updates the proposal status and tally if necessary based on the group policy's decision policy.
+func (k Keeper) doTallyAndUpdate(ctx sdk.Context, p *group.Proposal, electorate group.GroupInfo, policyInfo group.GroupPolicyInfo) error {
 	policy := policyInfo.GetDecisionPolicy()
 	pSubmittedAt, err := gogotypes.TimestampProto(p.SubmitTime)
 	if err != nil {
@@ -650,6 +676,14 @@ func doTally(ctx sdk.Context, p *group.Proposal, electorate group.GroupInfo, pol
 	if err != nil {
 		return err
 	}
+
+	tallyResult, err := k.doTally(ctx, *p)
+	if err != nil {
+		return err
+	}
+
+	p.FinalTallyResult = tallyResult
+
 	switch result, err := policy.Allow(p.FinalTallyResult, electorate.TotalWeight, ctx.BlockTime().Sub(submittedAt)); {
 	case err != nil:
 		return sdkerrors.Wrap(err, "policy execution")
@@ -708,7 +742,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 			proposal.Status = group.PROPOSAL_STATUS_ABORTED
 			return storeUpdates()
 		}
-		if err := doTally(ctx, &proposal, electorate, policyInfo); err != nil {
+		if err := k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo); err != nil {
 			return nil, err
 		}
 	}

@@ -11,7 +11,7 @@ import (
 )
 
 // MigrateV2 will migrate the state from iavl to smt
-func MigrateV2(rootMultiStore *v1Store.Store, dbConnection dbm.DBConnection, storeConfig StoreConfig) (*Store, error) {
+func MigrateV2(rootMultiStore *v1Store.Store, store2db dbm.DBConnection, storeConfig StoreConfig) (*Store, error) {
 	type namedStore struct {
 		*iavl.Store
 		name string
@@ -33,7 +33,7 @@ func MigrateV2(rootMultiStore *v1Store.Store, dbConnection dbm.DBConnection, sto
 	}
 
 	// creating the new store of smt tree
-	rootStore, err := NewStore(dbConnection, storeConfig)
+	rootStore, err := NewStore(store2db, storeConfig)
 	if err != nil {
 		return nil, err
 	}

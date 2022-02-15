@@ -36,7 +36,7 @@ implement `ExtensionSnapshotter` as extension snapshotters. When setting up the 
 
 ```proto
 // SnapshotItem is an item contained in a rootmulti.Store snapshot.
-// Except the exsiting SnapshotStoreItem and SnapshotIAVLItem, we add two new options for the item.
+// On top of the exsiting SnapshotStoreItem and SnapshotIAVLItem, we add two new options for the item.
 message SnapshotItem {
   // item is the specific type of snapshot item.
   oneof item {

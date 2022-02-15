@@ -375,5 +375,5 @@ seamless.
 
 ## References
 
-1. <https://github.com/cosmos/cosmos-sdk/issues/4977>
-2. <https://github.com/cosmos/cosmos-sdk/issues/5444>
+1. https://github.com/cosmos/cosmos-sdk/issues/4977
+2. https://github.com/cosmos/cosmos-sdk/issues/5444

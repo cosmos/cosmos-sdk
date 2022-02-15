@@ -175,6 +175,12 @@ func (k Keeper) getClassStoreByOwner(ctx sdk.Context, owner sdk.AccAddress, clas
 	return prefix.NewStore(store, key)
 }
 
+func (k Keeper) prefixStoreNftOfClassByOwner(ctx sdk.Context, owner sdk.AccAddress) prefix.Store {
+	store := ctx.KVStore(k.storeKey)
+	key := prefixNftOfClassByOwnerStoreKey(owner)
+	return prefix.NewStore(store, key)
+}
+
 func (k Keeper) incrTotalSupply(ctx sdk.Context, classID string) {
 	supply := k.GetTotalSupply(ctx, classID) + 1
 	k.updateTotalSupply(ctx, classID, supply)

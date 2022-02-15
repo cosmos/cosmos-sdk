@@ -14,6 +14,9 @@ var (
 	admin   = sdk.AccAddress("admin")
 	member1 = sdk.AccAddress("member1")
 	member2 = sdk.AccAddress("member2")
+	member3 = sdk.AccAddress("member3")
+	member4 = sdk.AccAddress("member4")
+	member5 = sdk.AccAddress("member5")
 )
 
 func TestMsgCreateGroup(t *testing.T) {
@@ -146,7 +149,7 @@ func TestMsgCreateGroup(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.Type(), group.TypeMsgCreateGroup)
+				require.Equal(t, tc.msg.Type(), sdk.MsgTypeURL(&group.MsgCreateGroup{}))
 			}
 		})
 	}
@@ -217,7 +220,7 @@ func TestMsgUpdateGroupAdmin(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.Type(), group.TypeMsgUpdateGroupAdmin)
+				require.Equal(t, tc.msg.Type(), sdk.MsgTypeURL(&group.MsgUpdateGroupAdmin{}))
 			}
 		})
 	}
@@ -267,7 +270,7 @@ func TestMsgUpdateGroupMetadata(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.Type(), group.TypeMsgUpdateGroupMetadata)
+				require.Equal(t, tc.msg.Type(), sdk.MsgTypeURL(&group.MsgUpdateGroupMetadata{}))
 			}
 		})
 	}
@@ -347,7 +350,7 @@ func TestMsgUpdateGroupMembers(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.Type(), group.TypeMsgUpdateGroupMembers)
+				require.Equal(t, tc.msg.Type(), sdk.MsgTypeURL(&group.MsgUpdateGroupMembers{}))
 			}
 		})
 	}
@@ -403,6 +406,50 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 			false,
 			"",
 		},
+		{
+			"invalid percentage decision policy with zero value",
+			func() *group.MsgCreateGroupPolicy {
+				percentagePolicy := group.NewPercentageDecisionPolicy("0", time.Second)
+				req, err := group.NewMsgCreateGroupPolicy(admin, 1, []byte("metadata"), percentagePolicy)
+				require.NoError(t, err)
+				return req
+			},
+			true,
+			"expected a positive decimal",
+		},
+		{
+			"invalid percentage decision policy with negative value",
+			func() *group.MsgCreateGroupPolicy {
+				percentagePolicy := group.NewPercentageDecisionPolicy("-0.2", time.Second)
+				req, err := group.NewMsgCreateGroupPolicy(admin, 1, []byte("metadata"), percentagePolicy)
+				require.NoError(t, err)
+				return req
+			},
+			true,
+			"expected a positive decimal",
+		},
+		{
+			"invalid percentage decision policy with value greater than 1",
+			func() *group.MsgCreateGroupPolicy {
+				percentagePolicy := group.NewPercentageDecisionPolicy("2", time.Second)
+				req, err := group.NewMsgCreateGroupPolicy(admin, 1, []byte("metadata"), percentagePolicy)
+				require.NoError(t, err)
+				return req
+			},
+			true,
+			"percentage must be > 0 and <= 1",
+		},
+		{
+			"valid test case with percentage decision policy",
+			func() *group.MsgCreateGroupPolicy {
+				percentagePolicy := group.NewPercentageDecisionPolicy("0.5", time.Second)
+				req, err := group.NewMsgCreateGroupPolicy(admin, 1, []byte("metadata"), percentagePolicy)
+				require.NoError(t, err)
+				return req
+			},
+			false,
+			"",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -414,7 +461,7 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), group.TypeMsgCreateGroupPolicy)
+				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgCreateGroupPolicy{}))
 			}
 		})
 	}
@@ -427,6 +474,18 @@ func TestMsgUpdateGroupPolicyDecisionPolicy(t *testing.T) {
 
 	invalidPolicy := group.NewThresholdDecisionPolicy("-1", time.Second)
 	msg2, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member2, invalidPolicy)
+	require.NoError(t, err)
+
+	validPercentagePolicy := group.NewPercentageDecisionPolicy("0.7", time.Second)
+	msg3, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member3, validPercentagePolicy)
+	require.NoError(t, err)
+
+	invalidPercentagePolicy := group.NewPercentageDecisionPolicy("-0.1", time.Second)
+	msg4, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member4, invalidPercentagePolicy)
+	require.NoError(t, err)
+
+	invalidPercentagePolicy2 := group.NewPercentageDecisionPolicy("2", time.Second)
+	msg5, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member5, invalidPercentagePolicy2)
 	require.NoError(t, err)
 
 	testCases := []struct {
@@ -468,10 +527,28 @@ func TestMsgUpdateGroupPolicyDecisionPolicy(t *testing.T) {
 			"decision policy: threshold: expected a positive decimal",
 		},
 		{
-			"invalid decision policy",
+			"valid decision policy",
 			msg1,
 			false,
 			"",
+		},
+		{
+			"valid percentage decision policy",
+			msg3,
+			false,
+			"",
+		},
+		{
+			"invalid percentage decision policy with negative value",
+			msg4,
+			true,
+			"decision policy: percentage threshold: expected a positive decimal",
+		},
+		{
+			"invalid percentage decision policy with value greater than 1",
+			msg5,
+			true,
+			"decision policy: percentage must be > 0 and <= 1",
 		},
 	}
 
@@ -484,7 +561,7 @@ func TestMsgUpdateGroupPolicyDecisionPolicy(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), group.TypeMsgUpdateGroupPolicyDecisionPolicy)
+				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyDecisionPolicy{}))
 			}
 		})
 	}
@@ -556,7 +633,7 @@ func TestMsgUpdateGroupPolicyAdmin(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), group.TypeMsgUpdateGroupPolicyAdmin)
+				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyAdmin{}))
 			}
 		})
 	}
@@ -607,22 +684,22 @@ func TestMsgUpdateGroupPolicyMetadata(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), group.TypeMsgUpdateGroupPolicyMetadata)
+				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyMetadata{}))
 			}
 		})
 	}
 }
 
-func TestMsgCreateProposal(t *testing.T) {
+func TestMsgSubmitProposal(t *testing.T) {
 	testCases := []struct {
 		name   string
-		msg    *group.MsgCreateProposal
+		msg    *group.MsgSubmitProposal
 		expErr bool
 		errMsg string
 	}{
 		{
 			"invalid group policy address",
-			&group.MsgCreateProposal{
+			&group.MsgSubmitProposal{
 				Address: "address",
 			},
 			true,
@@ -630,7 +707,7 @@ func TestMsgCreateProposal(t *testing.T) {
 		},
 		{
 			"proposers required",
-			&group.MsgCreateProposal{
+			&group.MsgSubmitProposal{
 				Address: admin.String(),
 			},
 			true,
@@ -638,7 +715,7 @@ func TestMsgCreateProposal(t *testing.T) {
 		},
 		{
 			"valid testcase",
-			&group.MsgCreateProposal{
+			&group.MsgSubmitProposal{
 				Address:   admin.String(),
 				Proposers: []string{member1.String(), member2.String()},
 			},
@@ -656,7 +733,7 @@ func TestMsgCreateProposal(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), group.TypeMsgCreateProposal)
+				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgSubmitProposal{}))
 			}
 		})
 	}
@@ -686,20 +763,20 @@ func TestMsgVote(t *testing.T) {
 			"proposal id: value is empty",
 		},
 		{
-			"unspecified vote choice",
+			"unspecified vote option",
 			&group.MsgVote{
 				Voter:      member1.String(),
 				ProposalId: 1,
 			},
 			true,
-			"choice: value is empty",
+			"vote option: value is empty",
 		},
 		{
 			"valid test case",
 			&group.MsgVote{
 				Voter:      member1.String(),
 				ProposalId: 1,
-				Choice:     group.Choice_CHOICE_YES,
+				Option:     group.VOTE_OPTION_YES,
 			},
 			false,
 			"",
@@ -715,7 +792,56 @@ func TestMsgVote(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), group.TypeMsgVote)
+				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgVote{}))
+			}
+		})
+	}
+}
+
+func TestMsgWithdrawProposal(t *testing.T) {
+	testCases := []struct {
+		name   string
+		msg    *group.MsgWithdrawProposal
+		expErr bool
+		errMsg string
+	}{
+		{
+			"invalid address",
+			&group.MsgWithdrawProposal{
+				Address: "address",
+			},
+			true,
+			"decoding bech32 failed",
+		},
+		{
+			"proposal id is required",
+			&group.MsgWithdrawProposal{
+				Address: member1.String(),
+			},
+			true,
+			"proposal id: value is empty",
+		},
+		{
+			"valid msg",
+			&group.MsgWithdrawProposal{
+				Address:    member1.String(),
+				ProposalId: 1,
+			},
+			false,
+			"",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := tc.msg
+			err := msg.ValidateBasic()
+			if tc.expErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.errMsg)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgWithdrawProposal{}))
 			}
 		})
 	}
@@ -763,7 +889,7 @@ func TestMsgExec(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), group.TypeMsgExec)
+				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgExec{}))
 			}
 		})
 	}

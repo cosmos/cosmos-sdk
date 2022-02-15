@@ -13,7 +13,7 @@ func NewDeposit(proposalID uint64, depositor sdk.AccAddress, amount sdk.Coins) D
 }
 
 // Deposits is a collection of Deposit objects
-type Deposits []Deposit
+type Deposits []*Deposit
 
 // Equal returns true if two slices (order-dependant) of deposits are equal.
 func (d Deposits) Equal(other Deposits) bool {

@@ -47,7 +47,7 @@ Taking the slashes into account requires iteration.
 Let `F(X)` be the fraction a validator is to be slashed for a slashing event that happened at period `X`.
 If the validator was slashed at periods `P1, ..., PN`, where `A < P1`, `PN < B`, the distribution module calculates the individual delegator's rewards, `T(A, B)`, as follows:
 
-```
+```go
 stake := initial stake
 rewards := 0
 previous := A

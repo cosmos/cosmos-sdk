@@ -22,12 +22,12 @@ and validator proposer-reward pool. Due to the nature of passive accounting,
 whenever changes to parameters which affect the rate of reward distribution
 occurs, withdrawal of rewards must also occur.
 
-- Whenever withdrawing, one must withdraw the maximum amount they are entitled
+* Whenever withdrawing, one must withdraw the maximum amount they are entitled
    to, leaving nothing in the pool.
-- Whenever bonding, unbonding, or re-delegating tokens to an existing account, a
+* Whenever bonding, unbonding, or re-delegating tokens to an existing account, a
    full withdrawal of the rewards must occur (as the rules for lazy accounting
    change).
-- Whenever a validator chooses to change the commission on rewards, all accumulated
+* Whenever a validator chooses to change the commission on rewards, all accumulated
    commission rewards must be simultaneously withdrawn.
 
 The above scenarios are covered in `hooks.md`.
@@ -35,10 +35,10 @@ The above scenarios are covered in `hooks.md`.
 The distribution mechanism outlined herein is used to lazily distribute the
 following rewards between validators and associated delegators:
 
-- multi-token fees to be socially distributed
-- proposer reward pool
-- inflated atom provisions
-- validator commission on all rewards earned by their delegators stake
+* multi-token fees to be socially distributed
+* proposer reward pool
+* inflated atom provisions
+* validator commission on all rewards earned by their delegators stake
 
 Fees are pooled within a global pool, as well as validator specific
 proposer-reward pools. The mechanisms used allow for validators and delegators
@@ -50,7 +50,7 @@ As a part of the lazy computations, each delegator holds an accumulation term
 specific to each validator which is used to estimate what their approximate
 fair portion of tokens held in the global fee pool is owed to them.
 
-```
+```text
 entitlement = delegator-accumulation / all-delegators-accumulation
 ```
 
@@ -85,22 +85,22 @@ to set up a script to periodically withdraw and rebond rewards.
 ## Contents
 
 1. **[Concepts](01_concepts.md)**
-    - [Reference Counting in F1 Fee Distribution](01_concepts.md#reference-counting-in-f1-fee-distribution)
+    * [Reference Counting in F1 Fee Distribution](01_concepts.md#reference-counting-in-f1-fee-distribution)
 2. **[State](02_state.md)**
 3. **[Begin Block](03_begin_block.md)**
 4. **[Messages](04_messages.md)**
-    - [MsgSetWithdrawAddress](04_messages.md#msgsetwithdrawaddress)
-    - [MsgWithdrawDelegatorReward](04_messages.md#msgwithdrawdelegatorreward)
-        - [Withdraw Validator Rewards All](04_messages.md#withdraw-validator-rewards-all)
-    - [Common calculations](04_messages.md#common-calculations-)
+    * [MsgSetWithdrawAddress](04_messages.md#msgsetwithdrawaddress)
+    * [MsgWithdrawDelegatorReward](04_messages.md#msgwithdrawdelegatorreward)
+        * [Withdraw Validator Rewards All](04_messages.md#withdraw-validator-rewards-all)
+    * [Common calculations](04_messages.md#common-calculations-)
 5. **[Hooks](05_hooks.md)**
-    - [Create or modify delegation distribution](05_hooks.md#create-or-modify-delegation-distribution)
-    - [Commission rate change](05_hooks.md#commission-rate-change)
-    - [Change in Validator State](05_hooks.md#change-in-validator-state)
+    * [Create or modify delegation distribution](05_hooks.md#create-or-modify-delegation-distribution)
+    * [Commission rate change](05_hooks.md#commission-rate-change)
+    * [Change in Validator State](05_hooks.md#change-in-validator-state)
 6. **[Events](06_events.md)**
-    - [BeginBlocker](06_events.md#beginblocker)
-    - [Handlers](06_events.md#handlers)
+    * [BeginBlocker](06_events.md#beginblocker)
+    * [Handlers](06_events.md#handlers)
 7. **[Parameters](07_params.md)**
 8. **[Parameters](07_params.md)**
-    - [CLI](08_client.md#cli)
-    - [gRPC](08_client.md#grpc)
+    * [CLI](08_client.md#cli)
+    * [gRPC](08_client.md#grpc)

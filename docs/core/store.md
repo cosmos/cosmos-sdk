@@ -6,15 +6,15 @@ order: 5
 
 A store is a data structure that holds the state of the application. {synopsis}
 
-### Pre-requisite Readings
+## Pre-requisite Readings
 
-- [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
+* [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
 
 ## Introduction to Cosmos SDK Stores
 
 The Cosmos SDK comes with a large set of stores to persist the state of applications. By default, the main store of Cosmos SDK applications is a `multistore`, i.e. a store of stores. Developers can add any number of key-value stores to the multistore, depending on their application needs. The multistore exists to support the modularity of the Cosmos SDK, as it lets each module declare and manage their own subset of the state. Key-value stores in the multistore can only be accessed with a specific capability `key`, which is typically held in the [`keeper`](../building-modules/keeper.md) of the module that declared the store.
 
-```
+```text
 +-----------------------------------------------------+
 |                                                     |
 |    +--------------------------------------------+   |
@@ -134,9 +134,9 @@ The default implementation of `KVStore` and `CommitKVStore` used in `baseapp` is
 
 `iavl` stores are based around an [IAVL Tree](https://github.com/tendermint/iavl), a self-balancing binary tree which guarantees that:
 
-- `Get` and `Set` operations are O(log n), where n is the number of elements in the tree.
-- Iteration efficiently returns the sorted elements within the range.
-- Each tree version is immutable and can be retrieved even after a commit (depending on the pruning settings).
+* `Get` and `Set` operations are O(log n), where n is the number of elements in the tree.
+* Iteration efficiently returns the sorted elements within the range.
+* Each tree version is immutable and can be retrieved even after a commit (depending on the pruning settings).
 
 The documentation on the IAVL Tree is located [here](https://github.com/cosmos/iavl/blob/v0.15.0-rc5/docs/overview.md).
 
@@ -232,7 +232,7 @@ Additional information about state streaming configuration can be found in the [
 
 When `KVStore.Set` or `KVStore.Delete` methods are called, `listenkv.Store` automatically writes the operations to the set of `Store.listeners`.
 
-# New Store package (`store/v2`)
+## New Store package (`store/v2`)
 
 The SDK is in the process of transitioning to use the types in this package as the default interface for state storage. Note that these types are not all directly compatible with the types in `store/types`.
 
@@ -246,7 +246,8 @@ An interface providing only the basic CRUD functionality (`Get`, `Set`, `Has`, a
 
 ## MultiStore
 
-`BaseApp` and derived types now use this as the interface for the main client store, replacing the role of `store/types.MultiStore` (v1). There are a few significant differences in behavior compared with v1:
+This is the new interface (or, set of interfaces) for the main client store, replacing the role of `store/types.MultiStore` (v1). There are a few significant differences in behavior compared with v1:
+
   * Commits are atomic and are performed on the entire store state; individual substores cannot be committed separately and cannot have different version numbers.
   * The store's current version and version history track that of the backing `db.DBConnection`. Past versions are accessible read-only.
   * The set of valid substores is defined at initialization and cannot be updated dynamically in an existing store instance.
@@ -254,7 +255,8 @@ An interface providing only the basic CRUD functionality (`Get`, `Set`, `Has`, a
 ### `CommitMultiStore`
 
 This is the main interface for persisent application state, analogous to the original `CommitMultiStore`.
-  * Past version views are accessed with `GetVersion`, which returns a `MultiStore`.
+
+  * Past version views are accessed with `GetVersion`, which returns a `BasicMultiStore`.
   * Substores are accessed with `GetKVStore`. Trying to get a substore that was not defined at initialization will cause a panic.
   * `Close` must be called to release the DB resources being used by the store.
 
@@ -274,6 +276,6 @@ This store can optionally be configured to use a different backend database inst
 
 `store/v2/smt.Store` maps values into a Sparse Merkle Tree (SMT), and supports a `BasicKVStore` interface as well as methods for cryptographic proof generation.
 
-# Next {hide}
+## Next {hide}
 
 Learn about [encoding](./encoding.md) {hide}

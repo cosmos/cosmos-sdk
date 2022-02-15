@@ -6,8 +6,9 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/model/kv"
+	"github.com/cosmos/cosmos-sdk/orm/internal/stablejson"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+	"github.com/cosmos/cosmos-sdk/orm/types/kv"
 )
 
 // Debugger is an interface that handles debug info from the debug store wrapper.
@@ -210,10 +211,15 @@ type debugHooks struct {
 }
 
 func (d debugHooks) OnInsert(message proto.Message) error {
+	jsonBz, err := stablejson.Marshal(message)
+	if err != nil {
+		return err
+	}
+
 	d.debugger.Log(fmt.Sprintf(
 		"ORM INSERT %s %s",
 		message.ProtoReflect().Descriptor().FullName(),
-		message,
+		jsonBz,
 	))
 	if d.hooks != nil {
 		return d.hooks.OnInsert(message)
@@ -222,11 +228,21 @@ func (d debugHooks) OnInsert(message proto.Message) error {
 }
 
 func (d debugHooks) OnUpdate(existing, new proto.Message) error {
+	existingJson, err := stablejson.Marshal(existing)
+	if err != nil {
+		return err
+	}
+
+	newJson, err := stablejson.Marshal(new)
+	if err != nil {
+		return err
+	}
+
 	d.debugger.Log(fmt.Sprintf(
 		"ORM UPDATE %s %s -> %s",
 		existing.ProtoReflect().Descriptor().FullName(),
-		existing,
-		new,
+		existingJson,
+		newJson,
 	))
 	if d.hooks != nil {
 		return d.hooks.OnUpdate(existing, new)
@@ -235,10 +251,15 @@ func (d debugHooks) OnUpdate(existing, new proto.Message) error {
 }
 
 func (d debugHooks) OnDelete(message proto.Message) error {
+	jsonBz, err := stablejson.Marshal(message)
+	if err != nil {
+		return err
+	}
+
 	d.debugger.Log(fmt.Sprintf(
 		"ORM DELETE %s %s",
 		message.ProtoReflect().Descriptor().FullName(),
-		message,
+		jsonBz,
 	))
 	if d.hooks != nil {
 		return d.hooks.OnDelete(message)

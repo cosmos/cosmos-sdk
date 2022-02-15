@@ -22,8 +22,8 @@ type RecoveryHandler func(recoveryObj interface{}) error
 
 **Contract:**
 
-- RecoveryHandler returns `nil` if `recoveryObj` wasn't handled and should be passed to the next recovery middleware;
-- RecoveryHandler returns a non-nil `error` if `recoveryObj` was handled;
+* RecoveryHandler returns `nil` if `recoveryObj` wasn't handled and should be passed to the next recovery middleware;
+* RecoveryHandler returns a non-nil `error` if `recoveryObj` was handled;
 
 ## Custom RecoveryHandler register
 

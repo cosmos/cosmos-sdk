@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	stypes "github.com/cosmos/cosmos-sdk/store/v2"
 	"github.com/cosmos/cosmos-sdk/store/v2/multi"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -264,17 +265,6 @@ func (app *BaseApp) Init() error {
 	// needed for the export command which inits from store but never calls initchain
 	app.setCheckState(tmproto.Header{})
 	app.Seal()
-
-	// make sure the snapshot interval is a multiple of the pruning KeepEvery interval
-	if app.snapshotManager != nil && app.snapshotInterval > 0 {
-		pruningOpts := app.store.GetPruning()
-		if pruningOpts.KeepEvery > 0 && app.snapshotInterval%pruningOpts.KeepEvery != 0 {
-			return fmt.Errorf(
-				"state sync snapshot interval %v must be a multiple of pruning keep every interval %v",
-				app.snapshotInterval, pruningOpts.KeepEvery)
-		}
-	}
-
 	return nil
 }
 

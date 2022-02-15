@@ -38,12 +38,11 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"pruning iavl snapshot only": {
 			bapp: baseapp.NewBaseApp(
 				name, logger, memdb.NewDB(),
-				baseapp.SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
 				baseapp.SetMinRetainBlocks(1),
 			),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
-			expected:     490000,
+			expected:     498999,
 		},
 		"pruning state sync snapshot only": {
 			bapp: baseapp.NewBaseApp(
@@ -68,7 +67,6 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"pruning all conditions": {
 			bapp: baseapp.NewBaseApp(
 				name, logger, memdb.NewDB(),
-				baseapp.SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
 				baseapp.SetMinRetainBlocks(400000),
 				baseapp.SetSnapshotInterval(50000), baseapp.SetSnapshotKeepRecent(3),
 			),
@@ -79,7 +77,6 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"no pruning due to no persisted state": {
 			bapp: baseapp.NewBaseApp(
 				name, logger, memdb.NewDB(),
-				baseapp.SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
 				baseapp.SetMinRetainBlocks(400000),
 				baseapp.SetSnapshotInterval(50000), baseapp.SetSnapshotKeepRecent(3),
 			),
@@ -90,7 +87,6 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"disable pruning": {
 			bapp: baseapp.NewBaseApp(
 				name, logger, memdb.NewDB(),
-				baseapp.SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
 				baseapp.SetMinRetainBlocks(0),
 				baseapp.SetSnapshotInterval(50000), baseapp.SetSnapshotKeepRecent(3),
 			),

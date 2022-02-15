@@ -2,8 +2,8 @@
 
 ## Changelog
 
-- 2019 Oct 23: Initial draft
-- 2019 Nov 28: Add key rotation fee
+* 2019 Oct 23: Initial draft
+* 2019 Nov 28: Add key rotation fee
 
 ## Context
 
@@ -17,37 +17,37 @@ Also, it should be noted that this ADR includes only the simplest form of consen
 
 ### Pseudo procedure for consensus key rotation
 
-- create new random consensus key.
-- create and broadcast a transaction with a `MsgRotateConsPubKey` that states the new consensus key is now coupled with the validator operator with signature from the validator's operator key.
-- old consensus key becomes unable to participate on consensus immediately after the update of key mapping state on-chain.
-- start validating with new consensus key.
-- validators using HSM and KMS should update the consensus key in HSM to use the new rotated key after the height `h` when `MsgRotateConsPubKey` committed to the blockchain.
+* create new random consensus key.
+* create and broadcast a transaction with a `MsgRotateConsPubKey` that states the new consensus key is now coupled with the validator operator with signature from the validator's operator key.
+* old consensus key becomes unable to participate on consensus immediately after the update of key mapping state on-chain.
+* start validating with new consensus key.
+* validators using HSM and KMS should update the consensus key in HSM to use the new rotated key after the height `h` when `MsgRotateConsPubKey` committed to the blockchain.
 
 ### Considerations
 
-- consensus key mapping information management strategy
-    - store history of each key mapping changes in the kvstore.
-    - the state machine can search corresponding consensus key paired with given validator operator for any arbitrary height in a recent unbonding period.
-    - the state machine does not need any historical mapping information which is past more than unbonding period.
-- key rotation costs related to LCD and IBC
-    - LCD and IBC will have traffic/computation burden when there exists frequent power changes
-    - In current Tendermint design, consensus key rotations are seen as power changes from LCD or IBC perspective
-    - Therefore, to minimize unnecessary frequent key rotation behavior, we limited maximum number of rotation in recent unbonding period and also applied exponentially increasing rotation fee
-- limits
-    - a validator cannot rotate its consensus key more than `MaxConsPubKeyRotations` time for any unbonding period, to prevent spam.
-    - parameters can be decided by governance and stored in genesis file.
-- key rotation fee
-    - a validator should pay `KeyRotationFee` to rotate the consensus key which is calculated as below
-    - `KeyRotationFee` = (max(`VotingPowerPercentage` *100, 1)* `InitialKeyRotationFee`) * 2^(number of rotations in `ConsPubKeyRotationHistory` in recent unbonding period)
-- evidence module
-    - evidence module can search corresponding consensus key for any height from slashing keeper so that it can decide which consensus key is supposed to be used for given height.
-- abci.ValidatorUpdate
-    - tendermint already has ability to change a consensus key by ABCI communication(`ValidatorUpdate`).
-    - validator consensus key update can be done via creating new + delete old by change the power to zero.
-    - therefore, we expect we even do not need to change tendermint codebase at all to implement this feature.
-- new genesis parameters in `staking` module
-    - `MaxConsPubKeyRotations` : maximum number of rotation can be executed by a validator in recent unbonding period. default value 10 is suggested(11th key rotation will be rejected)
-    - `InitialKeyRotationFee` : the initial key rotation fee when no key rotation has happened in recent unbonding period. default value 1atom is suggested(1atom fee for the first key rotation in recent unbonding period)
+* consensus key mapping information management strategy
+    * store history of each key mapping changes in the kvstore.
+    * the state machine can search corresponding consensus key paired with given validator operator for any arbitrary height in a recent unbonding period.
+    * the state machine does not need any historical mapping information which is past more than unbonding period.
+* key rotation costs related to LCD and IBC
+    * LCD and IBC will have traffic/computation burden when there exists frequent power changes
+    * In current Tendermint design, consensus key rotations are seen as power changes from LCD or IBC perspective
+    * Therefore, to minimize unnecessary frequent key rotation behavior, we limited maximum number of rotation in recent unbonding period and also applied exponentially increasing rotation fee
+* limits
+    * a validator cannot rotate its consensus key more than `MaxConsPubKeyRotations` time for any unbonding period, to prevent spam.
+    * parameters can be decided by governance and stored in genesis file.
+* key rotation fee
+    * a validator should pay `KeyRotationFee` to rotate the consensus key which is calculated as below
+    * `KeyRotationFee` = (max(`VotingPowerPercentage` *100, 1)* `InitialKeyRotationFee`) * 2^(number of rotations in `ConsPubKeyRotationHistory` in recent unbonding period)
+* evidence module
+    * evidence module can search corresponding consensus key for any height from slashing keeper so that it can decide which consensus key is supposed to be used for given height.
+* abci.ValidatorUpdate
+    * tendermint already has ability to change a consensus key by ABCI communication(`ValidatorUpdate`).
+    * validator consensus key update can be done via creating new + delete old by change the power to zero.
+    * therefore, we expect we even do not need to change tendermint codebase at all to implement this feature.
+* new genesis parameters in `staking` module
+    * `MaxConsPubKeyRotations` : maximum number of rotation can be executed by a validator in recent unbonding period. default value 10 is suggested(11th key rotation will be rejected)
+    * `InitialKeyRotationFee` : the initial key rotation fee when no key rotation has happened in recent unbonding period. default value 1atom is suggested(1atom fee for the first key rotation in recent unbonding period)
 
 ### Workflow
 
@@ -63,14 +63,14 @@ Also, it should be noted that this ADR includes only the simplest form of consen
 
 3. `handleMsgRotateConsPubKey` gets `MsgRotateConsPubKey`, calls `RotateConsPubKey` with emits event
 4. `RotateConsPubKey`
-    - checks if `NewPubKey` is not duplicated on `ValidatorsByConsAddr`
-    - checks if the validator is does not exceed parameter `MaxConsPubKeyRotations` by iterating `ConsPubKeyRotationHistory`
-    - checks if the signing account has enough balance to pay `KeyRotationFee`
-    - pays `KeyRotationFee` to community fund
-    - overwrites `NewPubKey` in `validator.ConsPubKey`
-    - deletes old `ValidatorByConsAddr`
-    - `SetValidatorByConsAddr` for `NewPubKey`
-    - Add `ConsPubKeyRotationHistory` for tracking rotation
+    * checks if `NewPubKey` is not duplicated on `ValidatorsByConsAddr`
+    * checks if the validator is does not exceed parameter `MaxConsPubKeyRotations` by iterating `ConsPubKeyRotationHistory`
+    * checks if the signing account has enough balance to pay `KeyRotationFee`
+    * pays `KeyRotationFee` to community fund
+    * overwrites `NewPubKey` in `validator.ConsPubKey`
+    * deletes old `ValidatorByConsAddr`
+    * `SetValidatorByConsAddr` for `NewPubKey`
+    * Add `ConsPubKeyRotationHistory` for tracking rotation
 
     ```go
     type ConsPubKeyRotationHistory struct {
@@ -98,7 +98,7 @@ Also, it should be noted that this ADR includes only the simplest form of consen
 6. at `previousVotes` Iteration logic of `AllocateTokens`,  `previousVote` using `OldConsPubKey` match up with `ConsPubKeyRotationHistory`, and replace validator for token allocation
 7. Migrate `ValidatorSigningInfo` and `ValidatorMissedBlockBitArray` from `OldConsPubKey` to `NewConsPubKey`
 
-- Note : All above features shall be implemented in `staking` module.
+* Note : All above features shall be implemented in `staking` module.
 
 ## Status
 
@@ -108,18 +108,18 @@ Proposed
 
 ### Positive
 
-- Validators can immediately or periodically rotate their consensus key to have better security policy
-- improved security against Long-Range attacks (https://nearprotocol.com/blog/long-range-attacks-and-a-new-fork-choice-rule) given a validator throws away the old consensus key(s)
+* Validators can immediately or periodically rotate their consensus key to have better security policy
+* improved security against Long-Range attacks (https://nearprotocol.com/blog/long-range-attacks-and-a-new-fork-choice-rule) given a validator throws away the old consensus key(s)
 
 ### Negative
 
-- Slash module needs more computation because it needs to lookup corresponding consensus key of validators for each height
-- frequent key rotations will make light client bisection less efficient
+* Slash module needs more computation because it needs to lookup corresponding consensus key of validators for each height
+* frequent key rotations will make light client bisection less efficient
 
 ### Neutral
 
 ## References
 
-- on tendermint repo : https://github.com/tendermint/tendermint/issues/1136
-- on cosmos-sdk repo : https://github.com/cosmos/cosmos-sdk/issues/5231
-- about multiple consensus keys : https://github.com/tendermint/tendermint/issues/1758#issuecomment-545291698
+* on tendermint repo : https://github.com/tendermint/tendermint/issues/1136
+* on cosmos-sdk repo : https://github.com/cosmos/cosmos-sdk/issues/5231
+* about multiple consensus keys : https://github.com/tendermint/tendermint/issues/1758#issuecomment-545291698

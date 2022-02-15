@@ -78,6 +78,15 @@ func NewNonSplitVoteOption(option VoteOption) WeightedVoteOptions {
 	return WeightedVoteOptions{{option, sdk.NewDec(1).String()}}
 }
 
+// ValidWeightedVoteOption returns true if the sub vote is valid and false otherwise.
+func ValidWeightedVoteOption(option WeightedVoteOption) bool {
+	weight, err := sdk.NewDecFromStr(option.Weight)
+	if err != nil || !weight.IsPositive() || weight.GT(sdk.NewDec(1)) {
+		return false
+	}
+	return ValidVoteOption(option.Option)
+}
+
 // WeightedVoteOptions describes array of WeightedVoteOptions
 type WeightedVoteOptions []*WeightedVoteOption
 

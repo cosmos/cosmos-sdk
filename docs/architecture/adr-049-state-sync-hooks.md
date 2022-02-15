@@ -51,6 +51,8 @@ message SnapshotItem {
 // One module may need multiple snapshotters, so each module may have multiple SnapshotExtensionMeta.
 message SnapshotExtensionMeta {
   // the name of the ExtensionSnapshotter, and it is registered to snapshotter manager when setting up the application
+  // name should be unique for each ExtensionSnapshotter as we need to alphabetically order their snapshots to get
+  // deterministic snapshot stream.
   string name   = 1;
   // this is used by each ExtensionSnapshotter to decide the format of payloads included in SnapshotExtensionPayload message
   // it is used within the snapshotter/namespace, not global one for all modules
@@ -62,6 +64,8 @@ message SnapshotExtensionPayload {
   bytes payload = 1;
 }
 ```
+
+When we create a snapshot stream, the `multistore` snapshot is always placed at the beginning of the binary stream, and other extension snapshots are alphabetically ordered by the name of the corresponding `ExtensionSnapshotter`. 
 
 The snapshot stream would look like as follows:
 
@@ -131,6 +135,8 @@ This ADR introduces new proto message types, add field for extension snapshotter
 ### Positive
 
 - State maintained outside of IAVL tree like CosmWasm blobs can create snapshots by implementing extension snapshotters, and being fetched by new clients via state-sync.
+
+### Negative
 
 ### Neutral
 

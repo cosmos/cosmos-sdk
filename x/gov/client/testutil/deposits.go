@@ -51,7 +51,7 @@ func (s *DepositTestSuite) SetupSuite() {
 		id := i + 1
 		deposit := deposits[i]
 
-		s.createProposal(val, deposit, id)
+		s.submitProposal(val, deposit, id)
 		s.proposalIDs = append(s.proposalIDs, fmt.Sprintf("%d", id))
 	}
 }
@@ -67,7 +67,7 @@ func (s *DepositTestSuite) SetupNewSuite() {
 	s.Require().NoError(err)
 }
 
-func (s *DepositTestSuite) createProposal(val *network.Validator, initialDeposit sdk.Coin, id int) {
+func (s *DepositTestSuite) submitProposal(val *network.Validator, initialDeposit sdk.Coin, id int) {
 	var exactArgs []string
 
 	if !initialDeposit.IsZero() {
@@ -151,7 +151,7 @@ func (s *DepositTestSuite) TestRejectedProposalDeposits() {
 	id := 1
 	proposalID := fmt.Sprintf("%d", id)
 
-	s.createProposal(val, initialDeposit, id)
+	s.submitProposal(val, initialDeposit, id)
 
 	// query deposits
 	var deposits v1beta2.QueryDepositsResponse

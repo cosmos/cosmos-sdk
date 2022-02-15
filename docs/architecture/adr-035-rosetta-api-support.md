@@ -208,4 +208,4 @@ Proposed
 
 ## References
 
-* <https://www.rosetta-api.org/>
+* https://www.rosetta-api.org/

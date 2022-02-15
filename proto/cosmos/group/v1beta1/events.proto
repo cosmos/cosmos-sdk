@@ -34,8 +34,8 @@ message EventUpdateGroupPolicy {
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// EventCreateProposal is an event emitted when a proposal is created.
-message EventCreateProposal {
+// EventSubmitProposal is an event emitted when a proposal is created.
+message EventSubmitProposal {
 
   // proposal_id is the unique ID of the proposal.
   uint64 proposal_id = 1;

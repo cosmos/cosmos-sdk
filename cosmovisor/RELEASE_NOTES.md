@@ -3,10 +3,12 @@
 ### New execution model
 
 With this release we are shifting to a new CLI design: 
+
 * in the past, Cosmovisor was designed to act as a wrapper for a Cosmos App. An admin could link it and use it instead of the Cosmos App. When running it will pass all options and configuration  parameters to the app. Hence the only way to configure the Cosmovisor was through environment variables.
 * now, we are moving to a more traditional model, where Cosmovisor has it's own command set and is a true supervisor.
 
 New commands have been added:
+
 * `run` will start the Cosmos App and pass remaining arguments to the app (similar to `npm run`)
 * `help` will display Cosmovisor help
 * `version` will display both Cosmovisor and the associated app version.

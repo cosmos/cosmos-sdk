@@ -164,7 +164,7 @@ func (suite *SimTestSuite) TestSimulateCreateGroupPolicy() {
 	suite.Require().Len(futureOperations, 0)
 }
 
-func (suite *SimTestSuite) TestSimulateCreateProposal() {
+func (suite *SimTestSuite) TestSimulateSubmitProposal() {
 	// setup 1 account
 	s := rand.NewSource(1)
 	r := rand.New(s)
@@ -206,11 +206,11 @@ func (suite *SimTestSuite) TestSimulateCreateProposal() {
 	})
 
 	// execute operation
-	op := simulation.SimulateMsgCreateProposal(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.GroupKeeper)
+	op := simulation.SimulateMsgSubmitProposal(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.GroupKeeper)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg group.MsgCreateProposal
+	var msg group.MsgSubmitProposal
 	err = group.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
@@ -253,7 +253,7 @@ func (suite *SimTestSuite) TestWithdrawProposal() {
 	suite.Require().NoError(err)
 
 	// setup a proposal
-	proposalReq, err := group.NewMsgCreateProposalRequest(groupPolicyRes.Address, []string{addr}, []sdk.Msg{
+	proposalReq, err := group.NewMsgSubmitProposalRequest(groupPolicyRes.Address, []string{addr}, []sdk.Msg{
 		&banktypes.MsgSend{
 			FromAddress: groupPolicyRes.Address,
 			ToAddress:   addr,
@@ -261,7 +261,7 @@ func (suite *SimTestSuite) TestWithdrawProposal() {
 		},
 	}, []byte{}, 0)
 	suite.Require().NoError(err)
-	_, err = suite.app.GroupKeeper.CreateProposal(ctx, proposalReq)
+	_, err = suite.app.GroupKeeper.SubmitProposal(ctx, proposalReq)
 	suite.Require().NoError(err)
 
 	// begin a new block
@@ -320,7 +320,7 @@ func (suite *SimTestSuite) TestSimulateVote() {
 	suite.Require().NoError(err)
 
 	// setup a proposal
-	proposalReq, err := group.NewMsgCreateProposalRequest(groupPolicyRes.Address, []string{addr}, []sdk.Msg{
+	proposalReq, err := group.NewMsgSubmitProposalRequest(groupPolicyRes.Address, []string{addr}, []sdk.Msg{
 		&banktypes.MsgSend{
 			FromAddress: groupPolicyRes.Address,
 			ToAddress:   addr,
@@ -328,7 +328,7 @@ func (suite *SimTestSuite) TestSimulateVote() {
 		},
 	}, []byte{}, 0)
 	suite.Require().NoError(err)
-	_, err = suite.app.GroupKeeper.CreateProposal(ctx, proposalReq)
+	_, err = suite.app.GroupKeeper.SubmitProposal(ctx, proposalReq)
 	suite.Require().NoError(err)
 
 	// begin a new block
@@ -454,7 +454,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	suite.Require().NoError(err)
 
 	// setup a proposal
-	proposalReq, err := group.NewMsgCreateProposalRequest(groupPolicyRes.Address, []string{addr}, []sdk.Msg{
+	proposalReq, err := group.NewMsgSubmitProposalRequest(groupPolicyRes.Address, []string{addr}, []sdk.Msg{
 		&banktypes.MsgSend{
 			FromAddress: groupPolicyRes.Address,
 			ToAddress:   addr,
@@ -462,14 +462,14 @@ func (suite *SimTestSuite) TestSimulateExec() {
 		},
 	}, []byte{}, 0)
 	suite.Require().NoError(err)
-	proposalRes, err := suite.app.GroupKeeper.CreateProposal(ctx, proposalReq)
+	proposalRes, err := suite.app.GroupKeeper.SubmitProposal(ctx, proposalReq)
 	suite.Require().NoError(err)
 
 	// vote
 	_, err = suite.app.GroupKeeper.Vote(ctx, &group.MsgVote{
 		ProposalId: proposalRes.ProposalId,
 		Voter:      addr,
-		Choice:     group.Choice_CHOICE_YES,
+		Option:     group.VOTE_OPTION_YES,
 	})
 	suite.Require().NoError(err)
 

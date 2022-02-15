@@ -2,12 +2,11 @@
 
 ## Changelog
 
-* Jan 19, 2022: Initial Draft
-* Apr 29, 2022: Safer extension snapshotter interface
+- Jan 19, 2022: Initial Draft
 
 ## Status
 
-Implemented
+Draft, Under Implementation
 
 ## Abstract
 
@@ -31,13 +30,13 @@ acting as a delimiter between extensions. As the chunk hashes should be able to 
 a delimiter to mark the end of the snapshot stream.
 
 Besides, we provide `Snapshotter` and `ExtensionSnapshotter` interface for modules to implement snapshotters, which will handle both taking 
-snapshot and the restoration. Each module could have multiple snapshotters, and for modules with additional state, they should
+snapshot and the restoration. Each module could have mutiple snapshotters, and for modules with additional state, they should
 implement `ExtensionSnapshotter` as extension snapshotters. When setting up the application, the snapshot `Manager` should call 
 `RegisterExtensions([]ExtensionSnapshotter…)` to register all the extension snapshotters.
 
-```protobuf
+```proto
 // SnapshotItem is an item contained in a rootmulti.Store snapshot.
-// On top of the existing SnapshotStoreItem and SnapshotIAVLItem, we add two new options for the item.
+// On top of the exsiting SnapshotStoreItem and SnapshotIAVLItem, we add two new options for the item.
 message SnapshotItem {
   // item is the specific type of snapshot item.
   oneof item {
@@ -108,16 +107,11 @@ func (m *Manager) RegisterExtensions(extensions ...types.ExtensionSnapshotter) e
 On top of the existing `Snapshotter` interface for the `multistore`, we add `ExtensionSnapshotter` interface for the extension snapshotters. Three more function signatures: `SnapshotFormat()`, `SupportedFormats()` and `SnapshotName()` are added to `ExtensionSnapshotter`.
 
 ```go
-// ExtensionPayloadReader read extension payloads,
-// it returns io.EOF when reached either end of stream or the extension boundaries.
-type ExtensionPayloadReader = func() ([]byte, error)
-
-// ExtensionPayloadWriter is a helper to write extension payloads to underlying stream.
-type ExtensionPayloadWriter = func([]byte) error
-
 // ExtensionSnapshotter is an extension Snapshotter that is appended to the snapshot stream.
 // ExtensionSnapshotter has an unique name and manages it's own internal formats.
 type ExtensionSnapshotter interface {
+	Snapshotter
+
 	// SnapshotName returns the name of snapshotter, it should be unique in the manager.
 	SnapshotName() string
 
@@ -126,20 +120,12 @@ type ExtensionSnapshotter interface {
 
 	// SupportedFormats returns a list of formats it can restore from.
 	SupportedFormats() []uint32
-
-	// SnapshotExtension writes extension payloads into the underlying protobuf stream.
-	SnapshotExtension(height uint64, payloadWriter ExtensionPayloadWriter) error
-
-	// RestoreExtension restores an extension state snapshot,
-	// the payload reader returns `io.EOF` when reached the extension boundaries.
-	RestoreExtension(height uint64, format uint32, payloadReader ExtensionPayloadReader) error
-
 }
 ```
 
 ## Consequences
 
-As a result of this implementation, we are able to create snapshots of binary chunk stream for the state that we maintain outside of the IAVL Tree, CosmWasm blobs for example. And new clients are able to fetch snapshots of state for all modules that have implemented the corresponding interface from peer nodes.
+As a result of this implementation, we are able to create snapshots of binary chunk stream for the state that we maintain outside of the IAVL Tree, CosmWasm blobs for example. And new clients are able to fetch sanpshots of state for all modules that have implemented the corresponding interface from peer nodes. 
 
 
 ### Backwards Compatibility
@@ -150,13 +136,13 @@ But for applications that does not have the state data outside of the IAVL tree 
 
 ### Positive
 
-* State maintained outside of IAVL tree like CosmWasm blobs can create snapshots by implementing extension snapshotters, and being fetched by new clients via state-sync.
+- State maintained outside of IAVL tree like CosmWasm blobs can create snapshots by implementing extension snapshotters, and being fetched by new clients via state-sync.
 
 ### Negative
 
 ### Neutral
 
-* All modules that maintain state outside of IAVL tree need to implement `ExtensionSnapshotter` and the snapshot `Manager` need to call `RegisterExtensions` when setting up the application.
+- All modules that maintain state outside of IAVL tree need to implement `ExtensionSnapshotter` and the snapshot `Manager` need to call `RegisterExtensions` when setting up the application.
 
 ## Further Discussions
 
@@ -169,5 +155,6 @@ Test cases for an implementation are mandatory for ADRs that are affecting conse
 
 ## References
 
-* https://github.com/cosmos/cosmos-sdk/pull/10961
-* https://github.com/cosmos/cosmos-sdk/issues/7340
+- https://github.com/cosmos/cosmos-sdk/pull/10961
+- https://github.com/cosmos/cosmos-sdk/issues/7340
+- https://hackmd.io/gJoyev6DSmqqkO667WQlGw

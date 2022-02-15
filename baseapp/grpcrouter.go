@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"google.golang.org/grpc/encoding"
-	"google.golang.org/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
@@ -84,11 +83,7 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 			// call the method handler from the service description with the handler object,
 			// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
 			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), func(i interface{}) error {
-				if msgv2, ok := i.(proto.Message); ok {
-					return proto.Unmarshal(req.Data, msgv2)
-				} else {
-					return qrt.cdc.Unmarshal(req.Data, i)
-				}
+				return qrt.cdc.Unmarshal(req.Data, i)
 			}, nil)
 			if err != nil {
 				return abci.ResponseQuery{}, err
@@ -96,11 +91,7 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 
 			// proto marshal the result bytes
 			var resBytes []byte
-			if msgv2, ok := res.(proto.Message); ok {
-				resBytes, err = proto.Marshal(msgv2)
-			} else {
-				resBytes, err = qrt.cdc.Marshal(res)
-			}
+			resBytes, err = qrt.cdc.Marshal(res)
 			if err != nil {
 				return abci.ResponseQuery{}, err
 			}

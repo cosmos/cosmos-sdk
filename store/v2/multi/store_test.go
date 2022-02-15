@@ -32,13 +32,13 @@ var (
 	skey_3b = types.NewKVStoreKey("store3b")
 )
 
-func simpleStoreParams(t *testing.T) StoreParams {
+func storeParams1(t *testing.T) StoreParams {
 	opts := DefaultStoreParams()
 	require.NoError(t, opts.RegisterSubstore(skey_1, types.StoreTypePersistent))
 	return opts
 }
 
-func storeConfig123(t *testing.T) StoreParams {
+func storeParams123(t *testing.T) StoreParams {
 	opts := DefaultStoreParams()
 	opts.Pruning = types.PruneNothing
 	require.NoError(t, opts.RegisterSubstore(skey_1, types.StoreTypePersistent))
@@ -48,7 +48,7 @@ func storeConfig123(t *testing.T) StoreParams {
 }
 
 func newSubStoreWithData(t *testing.T, db dbm.DBConnection, storeData map[string]string) (*Store, types.KVStore) {
-	root, err := NewStore(db, simpleStoreParams(t))
+	root, err := NewStore(db, storeParams1(t))
 	require.NoError(t, err)
 
 	store := root.GetKVStore(skey_1)
@@ -94,7 +94,7 @@ func TestGetSetHasDelete(t *testing.T) {
 func TestConstructors(t *testing.T) {
 	db := memdb.NewDB()
 
-	store, err := NewStore(db, simpleStoreParams(t))
+	store, err := NewStore(db, storeParams1(t))
 	require.NoError(t, err)
 	_ = store.GetKVStore(skey_1)
 	store.Commit()
@@ -135,7 +135,7 @@ func TestConstructors(t *testing.T) {
 	merkledb.Close()
 
 	t.Run("can't load existing store if we can't access root hash", func(t *testing.T) {
-		store, err = NewStore(db, simpleStoreParams(t))
+		store, err = NewStore(db, storeParams1(t))
 		require.NoError(t, err)
 		store.Commit()
 		require.NoError(t, store.Close())
@@ -246,7 +246,7 @@ func TestCommit(t *testing.T) {
 			require.NotEqual(t, previd.Version, id.Version)
 		}
 	}
-	basicOpts := simpleStoreParams(t)
+	basicOpts := storeParams1(t)
 	basicOpts.Pruning = types.PruneNothing
 	t.Run("sanity tests for Merkle hashing", func(t *testing.T) {
 		testBasic(basicOpts)
@@ -285,7 +285,7 @@ func TestCommit(t *testing.T) {
 		require.NoError(t, store.Close())
 	}
 
-	opts := simpleStoreParams(t)
+	opts := storeParams1(t)
 	opts.Pruning = types.PruneNothing
 
 	// Ensure Store's commit is rolled back in each failure case...
@@ -323,7 +323,7 @@ func TestCommit(t *testing.T) {
 		testFailedCommit(t, store, nil, opts)
 	})
 
-	opts = simpleStoreParams(t)
+	opts = storeParams1(t)
 	t.Run("recover after stateDB.Versions error triggers failure", func(t *testing.T) {
 		db := memdb.NewDB()
 		store, err := NewStore(db, opts)
@@ -358,7 +358,7 @@ func TestCommit(t *testing.T) {
 	})
 
 	t.Run("first commit version matches InitialVersion", func(t *testing.T) {
-		opts = simpleStoreParams(t)
+		opts = storeParams1(t)
 		opts.InitialVersion = 5
 		opts.Pruning = types.PruneNothing
 		opts.StateCommitmentDB = memdb.NewDB()
@@ -368,14 +368,14 @@ func TestCommit(t *testing.T) {
 	})
 
 	// test improbable failures to fill out test coverage
-	opts = simpleStoreParams(t)
+	opts = storeParams1(t)
 	store, err := NewStore(memdb.NewDB(), opts)
 	require.NoError(t, err)
 	store.Commit()
 	store.stateDB = dbVersionsFails{store.stateDB}
 	require.Panics(t, func() { store.LastCommitID() })
 
-	opts = simpleStoreParams(t)
+	opts = storeParams1(t)
 	opts.StateCommitmentDB = memdb.NewDB()
 	store, err = NewStore(memdb.NewDB(), opts)
 	require.NoError(t, err)
@@ -406,7 +406,7 @@ func TestPruning(t *testing.T) {
 
 	for tci, tc := range testCases {
 		dbs := []dbm.DBConnection{memdb.NewDB(), memdb.NewDB()}
-		opts := simpleStoreParams(t)
+		opts := storeParams1(t)
 		opts.Pruning = tc.PruningOptions
 		opts.StateCommitmentDB = dbs[1]
 		store, err := NewStore(dbs[0], opts)
@@ -440,7 +440,7 @@ func TestPruning(t *testing.T) {
 		20: []uint64{5, 10, 15, 20},
 	}
 	db := memdb.NewDB()
-	opts := simpleStoreParams(t)
+	opts := storeParams1(t)
 	opts.Pruning = types.PruningOptions{0, 5, 10}
 	store, err := NewStore(db, opts)
 	require.NoError(t, err)
@@ -496,7 +496,7 @@ func TestQuery(t *testing.T) {
 	valExpSub2, err := KVs2.Marshal()
 	require.NoError(t, err)
 
-	store, err := NewStore(memdb.NewDB(), simpleStoreParams(t))
+	store, err := NewStore(memdb.NewDB(), storeParams1(t))
 	require.NoError(t, err)
 	cid := store.Commit()
 	ver := cid.Version
@@ -574,7 +574,7 @@ func TestQuery(t *testing.T) {
 		require.Equal(t, v1, qres.Value)
 
 		// querying an empty store will fail
-		store, err = NewStore(stateDB, simpleStoreParams(t))
+		store, err = NewStore(stateDB, storeParams1(t))
 		require.NoError(t, err)
 		qres = store.Query(queryHeight0)
 		require.True(t, qres.IsErr())
@@ -605,7 +605,7 @@ func TestQuery(t *testing.T) {
 	t.Run("failed queries", func(t *testing.T) {
 		stateDB := memdb.NewDB()
 
-		store, err = NewStore(stateDB, simpleStoreParams(t))
+		store, err = NewStore(stateDB, storeParams1(t))
 		require.NoError(t, err)
 		store.GetKVStore(skey_1).Set(k1, v1)
 		store.Commit()
@@ -622,7 +622,7 @@ func TestQuery(t *testing.T) {
 		require.True(t, qres.IsErr())
 		require.NoError(t, store.Close())
 
-		store, err = NewStore(stateDB, simpleStoreParams(t))
+		store, err = NewStore(stateDB, storeParams1(t))
 		require.NoError(t, err)
 
 		// query with a nil or empty key fails
@@ -658,7 +658,7 @@ func TestQuery(t *testing.T) {
 		testProve()
 		require.NoError(t, store.Close())
 
-		opts := simpleStoreParams(t)
+		opts := storeParams1(t)
 		opts.StateCommitmentDB = memdb.NewDB()
 		store, err = NewStore(memdb.NewDB(), opts)
 		require.NoError(t, err)
@@ -703,7 +703,7 @@ func TestMultiStoreBasic(t *testing.T) {
 
 func TestGetVersion(t *testing.T) {
 	db := memdb.NewDB()
-	opts := storeConfig123(t)
+	opts := storeParams123(t)
 	store, err := NewStore(db, opts)
 	require.NoError(t, err)
 
@@ -738,7 +738,7 @@ func TestGetVersion(t *testing.T) {
 
 func TestMultiStoreMigration(t *testing.T) {
 	db := memdb.NewDB()
-	opts := storeConfig123(t)
+	opts := storeParams123(t)
 	store, err := NewStore(db, opts)
 	require.NoError(t, err)
 
@@ -787,7 +787,7 @@ func TestMultiStoreMigration(t *testing.T) {
 		}
 
 		// store must be loaded with post-migration schema, so this fails
-		opts := storeConfig123(t)
+		opts := storeParams123(t)
 		opts.Upgrades = upgrades
 		store, err = NewStore(db, opts)
 		require.Error(t, err)
@@ -836,7 +836,7 @@ func TestMultiStoreMigration(t *testing.T) {
 
 	t.Run("reload after migrations", func(t *testing.T) {
 		// fail to load the migrated store with the old schema
-		store, err = NewStore(db, storeConfig123(t))
+		store, err = NewStore(db, storeParams123(t))
 		require.Error(t, err)
 
 		// pass in a schema reflecting the migrations
@@ -887,23 +887,23 @@ func TestMultiStoreMigration(t *testing.T) {
 
 func TestTrace(t *testing.T) {
 	key, value := []byte("test-key"), []byte("test-value")
-	tctx := types.TraceContext(map[string]interface{}{"blockHeight": 64})
+	tc := types.TraceContext(map[string]interface{}{"blockHeight": 64})
 
-	expected_Set := "{\"operation\":\"write\",\"key\":\"dGVzdC1rZXk=\",\"value\":\"dGVzdC12YWx1ZQ==\",\"metadata\":{\"blockHeight\":64}}\n"
-	expected_Get := "{\"operation\":\"read\",\"key\":\"dGVzdC1rZXk=\",\"value\":\"dGVzdC12YWx1ZQ==\",\"metadata\":{\"blockHeight\":64}}\n"
-	expected_Get_missing := "{\"operation\":\"read\",\"key\":\"dGVzdC1rZXk=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n"
-	expected_Delete := "{\"operation\":\"delete\",\"key\":\"dGVzdC1rZXk=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n"
-	expected_IterKey := "{\"operation\":\"iterKey\",\"key\":\"dGVzdC1rZXk=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n"
-	expected_IterValue := "{\"operation\":\"iterValue\",\"key\":\"\",\"value\":\"dGVzdC12YWx1ZQ==\",\"metadata\":{\"blockHeight\":64}}\n"
+	expected_Set := `{"operation":"write","key":"dGVzdC1rZXk=","value":"dGVzdC12YWx1ZQ==","metadata":{"blockHeight":64}}` + "\n"
+	expected_Get := `{"operation":"read","key":"dGVzdC1rZXk=","value":"dGVzdC12YWx1ZQ==","metadata":{"blockHeight":64}}` + "\n"
+	expected_Get_missing := `{"operation":"read","key":"dGVzdC1rZXk=","value":"","metadata":{"blockHeight":64}}` + "\n"
+	expected_Delete := `{"operation":"delete","key":"dGVzdC1rZXk=","value":"","metadata":{"blockHeight":64}}` + "\n"
+	expected_IterKey := `{"operation":"iterKey","key":"dGVzdC1rZXk=","value":"","metadata":{"blockHeight":64}}` + "\n"
+	expected_IterValue := `{"operation":"iterValue","key":"","value":"dGVzdC12YWx1ZQ==","metadata":{"blockHeight":64}}` + "\n"
 
 	db := memdb.NewDB()
-	opts := simpleStoreParams(t)
+	opts := storeParams1(t)
 	require.NoError(t, opts.RegisterSubstore(skey_2, types.StoreTypeMemory))
 	require.NoError(t, opts.RegisterSubstore(skey_3, types.StoreTypeTransient))
 
 	store, err := NewStore(db, opts)
 	require.NoError(t, err)
-	store.SetTracingContext(tctx)
+	store.SetTracingContext(tc)
 	require.False(t, store.TracingEnabled())
 
 	var buf bytes.Buffer
@@ -935,8 +935,8 @@ func TestTrace(t *testing.T) {
 		buf.Reset()
 		store.GetKVStore(skey).Delete(key)
 		require.Equal(t, expected_Delete, buf.String())
-
 	}
+
 	store.SetTracer(nil)
 	require.False(t, store.TracingEnabled())
 	require.NoError(t, store.Close())
@@ -975,7 +975,7 @@ func TestListeners(t *testing.T) {
 	var marshaller = codec.NewProtoCodec(interfaceRegistry)
 
 	db := memdb.NewDB()
-	opts := simpleStoreParams(t)
+	opts := storeParams1(t)
 	require.NoError(t, opts.RegisterSubstore(skey_2, types.StoreTypeMemory))
 	require.NoError(t, opts.RegisterSubstore(skey_3, types.StoreTypeTransient))
 

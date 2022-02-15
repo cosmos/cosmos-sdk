@@ -80,6 +80,8 @@ func (s store1as2) SetInitialVersion(ver uint64) error {
 func (s store1as2) SetTracer(w io.Writer)                { s.SetTracer(w) }
 func (s store1as2) SetTracingContext(tc v2.TraceContext) { s.SetTracingContext(tc) }
 
+func (s store1as2) GetAllVersions() []int { panic("unsupported: GetAllVersions") }
+
 // cache store
 
 func (s cacheStore1as2) CacheWrap() v2.CacheMultiStore {

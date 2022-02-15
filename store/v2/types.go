@@ -94,6 +94,9 @@ type CommitMultiStore interface {
 	Close() error
 	// Defines the minimum version number that can be saved by this store.
 	SetInitialVersion(uint64) error
+	// Gets all versions in the DB
+	// https://github.com/cosmos/cosmos-sdk/pull/11124
+	GetAllVersions() []int
 }
 
 // CacheMultiStore defines a branch of the root state which can be written back to the source store.

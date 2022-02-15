@@ -676,6 +676,20 @@ func (rs *Store) CacheWrap() types.CacheMultiStore {
 	return newCacheStore(rs)
 }
 
+// GetAllVersions implements CommitMultiStore.
+// https://github.com/cosmos/cosmos-sdk/pull/11124
+func (rs *Store) GetAllVersions() []int {
+	vs, err := rs.stateDB.Versions()
+	if err != nil {
+		panic(err)
+	}
+	var ret []int
+	for it := vs.Iterator(); it.Next(); {
+		ret = append(ret, int(it.Value()))
+	}
+	return ret
+}
+
 // parsePath expects a format like /<storeName>[/<subpath>]
 // Must start with /, subpath may be empty
 // Returns error if it doesn't start with /

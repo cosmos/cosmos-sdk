@@ -130,7 +130,9 @@ As a result of this implementation, we are able to create snapshots of binary ch
 
 ### Backwards Compatibility
 
-This ADR introduces new proto message types, add field for extension snapshotters to snapshot `Manager`, add new function signatures `SnapshotFormat()`, `SupportedFormats()` to `Snapshotter` interface and add new `ExtensionSnapshotter` interface, so this is not backwards compatible.
+This ADR introduces new proto message types, add an `extensions` field in snapshot `Manager`, and add new `ExtensionSnapshotter` interface, so this is not backwards compatible if we have extensions.
+
+But for applications that does not have the state data outside of the IAVL tree for any module, the snapshot stream is backwards-compatible.
 
 ### Positive
 

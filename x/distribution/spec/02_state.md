@@ -15,7 +15,7 @@ for fractions of coins to be received from operations like inflation.
 When coins are distributed from the pool they are truncated back to
 `sdk.Coins` which are non-decimal.
 
-- FeePool: `0x00 -> ProtocolBuffer(FeePool)`
+* FeePool: `0x00 -> ProtocolBuffer(FeePool)`
 
 ```go
 // coins with decimal
@@ -38,7 +38,7 @@ Validator distribution information for the relevant validator is updated each ti
 3. any delegator withdraws from a validator, or
 4. the validator withdraws its commission.
 
-- ValidatorDistInfo: `0x02 | ValOperatorAddrLen (1 byte) | ValOperatorAddr -> ProtocolBuffer(validatorDistribution)`
+* ValidatorDistInfo: `0x02 | ValOperatorAddrLen (1 byte) | ValOperatorAddr -> ProtocolBuffer(validatorDistribution)`
 
 ```go
 type ValidatorDistInfo struct {
@@ -56,7 +56,7 @@ properties change (aka bonded tokens etc.) its properties will remain constant
 and the delegator's _accumulation_ factor can be calculated passively knowing
 only the height of the last withdrawal and its current properties.
 
-- DelegationDistInfo: `0x02 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValOperatorAddrLen (1 byte) | ValOperatorAddr -> ProtocolBuffer(delegatorDist)`
+* DelegationDistInfo: `0x02 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValOperatorAddrLen (1 byte) | ValOperatorAddr -> ProtocolBuffer(delegatorDist)`
 
 ```go
 type DelegationDistInfo struct {

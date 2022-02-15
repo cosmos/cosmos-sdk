@@ -2,7 +2,7 @@
 
 ## Changelog
 
-- 2020/04/09: Initial Draft
+* 2020/04/09: Initial Draft
 
 ## Status
 
@@ -16,10 +16,10 @@ This ADR defines the `x/group` module which allows the creation and management o
 
 The legacy amino multi-signature mechanism of the Cosmos SDK has certain limitations:
 
-- Key rotation is not possible, although this can be solved with [account rekeying](adr-034-account-rekeying.md).
-- Thresholds can't be changed.
-- UX is cumbersome for non-technical users ([#5661](https://github.com/cosmos/cosmos-sdk/issues/5661)).
-- It requires `legacy_amino` sign mode ([#8141](https://github.com/cosmos/cosmos-sdk/issues/8141)).
+* Key rotation is not possible, although this can be solved with [account rekeying](adr-034-account-rekeying.md).
+* Thresholds can't be changed.
+* UX is cumbersome for non-technical users ([#5661](https://github.com/cosmos/cosmos-sdk/issues/5661)).
+* It requires `legacy_amino` sign mode ([#8141](https://github.com/cosmos/cosmos-sdk/issues/8141)).
 
 While the group module is not meant to be a total replacement for the current multi-signature accounts, it provides a solution to the limitations described above, with a more flexible key management system where keys can be added, updated or removed, as well as configurable thresholds.
 It's meant to be used with other access control modules such as [`x/feegrant`](./adr-029-fee-grant-module.md) ans [`x/authz`](adr-030-authz-module.md) to simplify key management for individuals and organizations.
@@ -187,9 +187,9 @@ passes as well as any metadata associated with the proposal. These `sdk.Msg`s ge
 
 Internally, a proposal also tracks:
 
-- its current `Status`: submitted, closed or aborted
-- its `Result`: unfinalized, accepted or rejected
-- its `VoteState` in the form of a `Tally`, which is calculated on new votes and when executing the proposal.
+* its current `Status`: submitted, closed or aborted
+* its `Result`: unfinalized, accepted or rejected
+* its `VoteState` in the form of a `Tally`, which is calculated on new votes and when executing the proposal.
 
 ```proto
 // Tally represents the sum of weighted votes.
@@ -254,26 +254,26 @@ Inter-module communication introduced by [ADR-033](adr-033-protobuf-inter-module
 
 ### Positive
 
-- Improved UX for multi-signature accounts allowing key rotation and custom decision policies.
+* Improved UX for multi-signature accounts allowing key rotation and custom decision policies.
 
 ### Negative
 
 ### Neutral
 
-- It uses ADR 033 so it will need to be implemented within the Cosmos SDK, but this doesn't imply necessarily any large refactoring of existing Cosmos SDK modules.
-- The current implementation of the group module uses the ORM package.
+* It uses ADR 033 so it will need to be implemented within the Cosmos SDK, but this doesn't imply necessarily any large refactoring of existing Cosmos SDK modules.
+* The current implementation of the group module uses the ORM package.
 
 ## Further Discussions
 
-- Convergence of `/group` and `x/gov` as both support proposals and voting: https://github.com/cosmos/cosmos-sdk/discussions/9066
-- `x/group` possible future improvements:
-    - Execute proposals on submission (https://github.com/regen-network/regen-ledger/issues/288)
-    - Withdraw a proposal (https://github.com/regen-network/cosmos-modules/issues/41)
-    - Make `Tally` more flexible and support non-binary choices
+* Convergence of `/group` and `x/gov` as both support proposals and voting: https://github.com/cosmos/cosmos-sdk/discussions/9066
+* `x/group` possible future improvements:
+    * Execute proposals on submission (https://github.com/regen-network/regen-ledger/issues/288)
+    * Withdraw a proposal (https://github.com/regen-network/cosmos-modules/issues/41)
+    * Make `Tally` more flexible and support non-binary choices
 
 ## References
 
-- Initial specification:
-    - https://gist.github.com/aaronc/b60628017352df5983791cad30babe56#group-module
-    - [#5236](https://github.com/cosmos/cosmos-sdk/pull/5236)
-- Proposal to add `x/group` into the Cosmos SDK: [#7633](https://github.com/cosmos/cosmos-sdk/issues/7633)
+* Initial specification:
+    * https://gist.github.com/aaronc/b60628017352df5983791cad30babe56#group-module
+    * [#5236](https://github.com/cosmos/cosmos-sdk/pull/5236)
+* Proposal to add `x/group` into the Cosmos SDK: [#7633](https://github.com/cosmos/cosmos-sdk/issues/7633)

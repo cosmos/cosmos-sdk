@@ -29,10 +29,10 @@ func NewValidatorGovInfo(address sdk.ValAddress, bondedTokens sdk.Int, delegator
 // NewTallyResult creates a new TallyResult instance
 func NewTallyResult(yes, abstain, no, noWithVeto sdk.Int) TallyResult {
 	return TallyResult{
-		Yes:        yes.String(),
-		Abstain:    abstain.String(),
-		No:         no.String(),
-		NoWithVeto: noWithVeto.String(),
+		YesCount:        yes.String(),
+		AbstainCount:    abstain.String(),
+		NoCount:         no.String(),
+		NoWithVetoCount: noWithVeto.String(),
 	}
 }
 
@@ -53,8 +53,8 @@ func EmptyTallyResult() TallyResult {
 
 // Equals returns if two tally results are equal.
 func (tr TallyResult) Equals(comp TallyResult) bool {
-	return tr.Yes == comp.Yes &&
-		tr.Abstain == comp.Abstain &&
-		tr.No == comp.No &&
-		tr.NoWithVeto == comp.NoWithVeto
+	return tr.YesCount == comp.YesCount &&
+		tr.AbstainCount == comp.AbstainCount &&
+		tr.NoCount == comp.NoCount &&
+		tr.NoWithVetoCount == comp.NoWithVetoCount
 }

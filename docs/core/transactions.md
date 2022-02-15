@@ -8,7 +8,7 @@ order: 2
 
 ## Pre-requisite Readings
 
-- [Anatomy of a Cosmos SDK Application](../basics/app-anatomy.md) {prereq}
+* [Anatomy of a Cosmos SDK Application](../basics/app-anatomy.md) {prereq}
 
 ## Transactions
 
@@ -24,8 +24,8 @@ Transaction objects are Cosmos SDK types that implement the `Tx` interface
 
 It contains the following methods:
 
-- **GetMsgs:** unwraps the transaction and returns a list of contained `sdk.Msg`s - one transaction may have one or multiple messages, which are defined by module developers.
-- **ValidateBasic:** lightweight, [_stateless_](../basics/tx-lifecycle.md#types-of-checks) checks used by ABCI messages [`CheckTx`](./baseapp.md#checktx) and [`DeliverTx`](./baseapp.md#delivertx) to make sure transactions are not invalid. For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth) module's `StdTx` `ValidateBasic` function checks that its transactions are signed by the correct number of signers and that the fees do not exceed what the user's maximum. Note that this function is to be distinct from `sdk.Msg` [`ValidateBasic`](../basics/tx-lifecycle.md#ValidateBasic) methods, which perform basic validity checks on messages only. When [`runTx`](./baseapp.md#runtx) is checking a transaction created from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module, it first runs `ValidateBasic` on each message, then runs the `auth` module AnteHandler which calls `ValidateBasic` for the transaction itself.
+* **GetMsgs:** unwraps the transaction and returns a list of contained `sdk.Msg`s - one transaction may have one or multiple messages, which are defined by module developers.
+* **ValidateBasic:** lightweight, [_stateless_](../basics/tx-lifecycle.md#types-of-checks) checks used by ABCI messages [`CheckTx`](./baseapp.md#checktx) and [`DeliverTx`](./baseapp.md#delivertx) to make sure transactions are not invalid. For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth) module's `StdTx` `ValidateBasic` function checks that its transactions are signed by the correct number of signers and that the fees do not exceed what the user's maximum. Note that this function is to be distinct from `sdk.Msg` [`ValidateBasic`](../basics/tx-lifecycle.md#ValidateBasic) methods, which perform basic validity checks on messages only. When [`runTx`](./baseapp.md#runtx) is checking a transaction created from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module, it first runs `ValidateBasic` on each message, then runs the `auth` module AnteHandler which calls `ValidateBasic` for the transaction itself.
 
 As a developer, you should rarely manipulate `Tx` directly, as `Tx` is really an intermediate type used for transaction generation. Instead, developers should prefer the `TxBuilder` interface, which you can learn more about [below](#transaction-generation).
 
@@ -65,9 +65,9 @@ Other sign modes, most notably `SIGN_MODE_TEXTUAL`, are being discussed. If you 
 
 The process of an end-user sending a transaction is:
 
-- decide on the messages to put into the transaction,
-- generate the transaction using the Cosmos SDK's `TxBuilder`,
-- broadcast the transaction using one of the available interfaces.
+* decide on the messages to put into the transaction,
+* generate the transaction using the Cosmos SDK's `TxBuilder`,
+* broadcast the transaction using one of the available interfaces.
 
 The next paragraphs will describe each of these components, in this order.
 
@@ -92,17 +92,17 @@ The `TxBuilder` interface contains data closely related with the generation of t
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/client/tx_config.go#L32-L45
 
-- `Msg`s, the array of [messages](#messages) included in the transaction.
-- `GasLimit`, option chosen by the users for how to calculate how much gas they will need to pay.
-- `Memo`, a note or comment to send with the transaction.
-- `FeeAmount`, the maximum amount the user is willing to pay in fees.
-- `TimeoutHeight`, block height until which the transaction is valid.
-- `Signatures`, the array of signatures from all signers of the transaction.
+* `Msg`s, the array of [messages](#messages) included in the transaction.
+* `GasLimit`, option chosen by the users for how to calculate how much gas they will need to pay.
+* `Memo`, a note or comment to send with the transaction.
+* `FeeAmount`, the maximum amount the user is willing to pay in fees.
+* `TimeoutHeight`, block height until which the transaction is valid.
+* `Signatures`, the array of signatures from all signers of the transaction.
 
 As there are currently two sign modes for signing transactions, there are also two implementations of `TxBuilder`:
 
-- [wrapper](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/auth/tx/builder.go#L19-L33) for creating transactions for `SIGN_MODE_DIRECT`,
-- [StdTxBuilder](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/auth/legacy/legacytx/stdtx_builder.go#L14-L20) for `SIGN_MODE_LEGACY_AMINO_JSON`.
+* [wrapper](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/auth/tx/builder.go#L19-L33) for creating transactions for `SIGN_MODE_DIRECT`,
+* [StdTxBuilder](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/auth/legacy/legacytx/stdtx_builder.go#L14-L20) for `SIGN_MODE_LEGACY_AMINO_JSON`.
 
 However, the two implementation of `TxBuilder` should be hidden away from end-users, as they should prefer using the overarching `TxConfig` interface:
 

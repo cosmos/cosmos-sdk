@@ -42,6 +42,10 @@ func (m moduleDB) ValidateJSON(source ormjson.ReadSource) error {
 			return err
 		}
 
+		if r == nil {
+			continue
+		}
+
 		err = table.ValidateJSON(r)
 		if err != nil {
 			errMap[name] = err

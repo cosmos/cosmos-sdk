@@ -19,15 +19,15 @@ As further described in [ADR 031](../architecture/adr-031-msg-service.md), this 
 
 Protobuf generates a `MsgServer` interface based on a definition of `Msg` service. It is the role of the module developer to implement this interface, by implementing the state transition logic that should happen upon receival of each `sdk.Msg`. As an example, here is the generated `MsgServer` interface for `x/bank`, which exposes two `sdk.Msg`s:
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/bank/types/tx.pb.go#L285-L291>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/bank/types/tx.pb.go#L285-L291
 
 When possible, the existing module's [`Keeper`](keeper.md) should implement `MsgServer`, otherwise a `msgServer` struct that embeds the `Keeper` can be created, typically in `./keeper/msg_server.go`:
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/bank/keeper/msg_server.go#L14-L16>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/bank/keeper/msg_server.go#L14-L16
 
 `msgServer` methods can retrieve the `sdk.Context` from the `context.Context` parameter method using the `sdk.UnwrapSDKContext`:
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/bank/keeper/msg_server.go#L27-L28>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/bank/keeper/msg_server.go#L27-L28
 
 `sdk.Msg` processing usually follows these 3 steps:
 
@@ -77,11 +77,11 @@ These events are relayed back to the underlying consensus engine and can be used
 
 The invoked `msgServer` method returns a `proto.Message` response and an `error`. These return values are then wrapped into an `*sdk.Result` or an `error` using `sdk.WrapServiceResult(ctx sdk.Context, res proto.Message, err error)`:
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc2/baseapp/msg_service_router.go#L104-L104>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc2/baseapp/msg_service_router.go#L104-L104
 
 This method takes care of marshaling the `res` parameter to protobuf and attaching any events on the `ctx.EventManager()` to the `sdk.Result`.
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/proto/cosmos/base/abci/v1beta1/abci.proto#L81-L95>
++++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/proto/cosmos/base/abci/v1beta1/abci.proto#L81-L95
 
 This diagram shows a typical structure of a Protobuf `Msg` service, and how the message propagates through the module.
 
@@ -95,7 +95,7 @@ The `handler` type defined in the Cosmos SDK will be deprecated in favor of [`Ms
 
 Here is the typical structure of a `handler` function:
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc2/types/handler.go#L4-L4>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc2/types/handler.go#L4-L4
 
 Let us break it down:
 
@@ -107,13 +107,13 @@ Module `handler`s are typically implemented in a `./handler.go` file inside the 
 [application's `router`](../core/baseapp.md#message-routing) via the `Route()` method. Typically,
 the manager's `Route()` method simply constructs a Route that calls a `NewHandler()` method defined in `handler.go`.
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/228728cce2af8d494c8b4e996d011492139b04ab/x/gov/module.go#L143-L146>
++++ https://github.com/cosmos/cosmos-sdk/blob/228728cce2af8d494c8b4e996d011492139b04ab/x/gov/module.go#L143-L146
 
 ### Implementation
 
 `NewHandler` function dispatches a `LegacyMsg` to appropriate handler function, usually by using a switch statement:
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/x/bank/handler.go#L13-L29>
++++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/x/bank/handler.go#L13-L29
 
 First, `NewHandler` function sets a new `EventManager` to the context to isolate events per `msg`.
 Then, a simple switch calls the appropriate `handler` based on the `LegacyMsg` type.
@@ -127,7 +127,7 @@ New [telemetry metrics](../core/telemetry.md) can be created from `msgServer` me
 
 This is an example from the `x/auth/vesting` module:
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/auth/vesting/msg_server.go#L73-L85>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/auth/vesting/msg_server.go#L73-L85
 
 ## Next {hide}
 

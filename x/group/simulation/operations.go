@@ -33,7 +33,7 @@ var (
 	TypeMsgUpdateGroupPolicyAdmin          = sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyAdmin{})
 	TypeMsgUpdateGroupPolicyDecisionPolicy = sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyDecisionPolicy{})
 	TypeMsgUpdateGroupPolicyMetadata       = sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyMetadata{})
-	TypeMsgCreateProposal                  = sdk.MsgTypeURL(&group.MsgCreateProposal{})
+	TypeMsgSubmitProposal                  = sdk.MsgTypeURL(&group.MsgSubmitProposal{})
 	TypeMsgWithdrawProposal                = sdk.MsgTypeURL(&group.MsgWithdrawProposal{})
 	TypeMsgVote                            = sdk.MsgTypeURL(&group.MsgVote{})
 	TypeMsgExec                            = sdk.MsgTypeURL(&group.MsgExec{})
@@ -50,7 +50,7 @@ const (
 	OpMsgUpdateGroupPolicyAdmin          = "op_weight_msg_update_group_policy_admin"
 	OpMsgUpdateGroupPolicyDecisionPolicy = "op_weight_msg_update_group_policy_decision_policy"
 	OpMsgUpdateGroupPolicyMetaData       = "op_weight_msg_update_group_policy_metadata"
-	OpMsgCreateProposal                  = "op_weight_msg_create_proposal"
+	OpMsgSubmitProposal                  = "op_weight_msg_submit_proposal"
 	OpMsgWithdrawProposal                = "op_weight_msg_withdraw_proposal"
 	OpMsgVote                            = "op_weight_msg_vote"
 	OpMsgExec                            = "ops_weight_msg_exec"
@@ -62,7 +62,7 @@ const (
 const (
 	WeightMsgCreateGroup                     = 100
 	WeightMsgCreateGroupPolicy               = 100
-	WeightMsgCreateProposal                  = 90
+	WeightMsgSubmitProposal                  = 90
 	WeightMsgVote                            = 90
 	WeightMsgExec                            = 90
 	WeightMsgLeaveGroup                      = 20
@@ -88,7 +88,7 @@ func WeightedOperations(
 		weightMsgUpdateGroupPolicyAdmin          int
 		weightMsgUpdateGroupPolicyDecisionPolicy int
 		weightMsgUpdateGroupPolicyMetadata       int
-		weightMsgCreateProposal                  int
+		weightMsgSubmitProposal                  int
 		weightMsgVote                            int
 		weightMsgExec                            int
 		weightMsgLeaveGroup                      int
@@ -105,9 +105,9 @@ func WeightedOperations(
 			weightMsgCreateGroupPolicy = WeightMsgCreateGroupPolicy
 		},
 	)
-	appParams.GetOrGenerate(cdc, OpMsgCreateProposal, &weightMsgCreateProposal, nil,
+	appParams.GetOrGenerate(cdc, OpMsgSubmitProposal, &weightMsgSubmitProposal, nil,
 		func(_ *rand.Rand) {
-			weightMsgCreateProposal = WeightMsgCreateProposal
+			weightMsgSubmitProposal = WeightMsgSubmitProposal
 		},
 	)
 	appParams.GetOrGenerate(cdc, OpMsgVote, &weightMsgVote, nil,
@@ -165,8 +165,8 @@ func WeightedOperations(
 	var createProposalOps simulation.WeightedOperations
 	for i := 0; i < 2; i++ {
 		createProposalOps = append(createProposalOps, simulation.NewWeightedOperation(
-			weightMsgCreateProposal,
-			SimulateMsgCreateProposal(ak, bk, k),
+			weightMsgSubmitProposal,
+			SimulateMsgSubmitProposal(ak, bk, k),
 		))
 	}
 
@@ -279,7 +279,7 @@ func SimulateMsgCreateGroupPolicy(ak group.AccountKeeper, bk group.BankKeeper, k
 		if groupInfo == nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroupPolicy, ""), nil, nil
 		}
-		groupID := groupInfo.GroupId
+		groupID := groupInfo.Id
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
 		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
@@ -325,47 +325,47 @@ func SimulateMsgCreateGroupPolicy(ak group.AccountKeeper, bk group.BankKeeper, k
 	}
 }
 
-// SimulateMsgCreateProposal generates a NewMsgCreateProposal with random values
-func SimulateMsgCreateProposal(ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
+// SimulateMsgSubmitProposal generates a NewMsgSubmitProposal with random values
+func SimulateMsgSubmitProposal(ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		g, groupPolicy, _, _, err := randomGroupPolicy(r, k, ak, sdkCtx, accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, ""), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgSubmitProposal, ""), nil, err
 		}
 		if g == nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, "no group found"), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgSubmitProposal, "no group found"), nil, nil
 		}
 		if groupPolicy == nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, "no group policy found"), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgSubmitProposal, "no group policy found"), nil, nil
 		}
-		groupID := g.GroupId
+		groupID := g.Id
 		groupPolicyAddr := groupPolicy.Address
 
 		// Return a no-op if we know the proposal cannot be created
 		policy := groupPolicy.GetDecisionPolicy()
 		err = policy.Validate(*g)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, ""), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgSubmitProposal, ""), nil, nil
 		}
 
 		// Pick a random member from the group
 		ctx := sdk.WrapSDKContext(sdkCtx)
 		acc, account, err := randomMember(r, k, ak, ctx, accounts, groupID)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, ""), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgSubmitProposal, ""), nil, err
 		}
 		if account == nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, "no group member found"), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgSubmitProposal, "no group member found"), nil, nil
 		}
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
 		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, "fee error"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgSubmitProposal, "fee error"), nil, err
 		}
 
-		msg := group.MsgCreateProposal{
+		msg := group.MsgSubmitProposal{
 			Address:   groupPolicyAddr,
 			Proposers: []string{acc.Address.String()},
 			Metadata:  []byte(simtypes.RandStringOfLength(r, 10)),
@@ -383,7 +383,7 @@ func SimulateMsgCreateProposal(ak group.AccountKeeper, bk group.BankKeeper, k ke
 			acc.PrivKey,
 		)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateProposal, "unable to generate mock tx"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgSubmitProposal, "unable to generate mock tx"), nil, err
 		}
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
@@ -406,7 +406,7 @@ func SimulateMsgUpdateGroupAdmin(ak group.AccountKeeper, bk group.BankKeeper, k 
 		if groupInfo == nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupAdmin, ""), nil, nil
 		}
-		groupID := groupInfo.GroupId
+		groupID := groupInfo.Id
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
 		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
@@ -464,7 +464,7 @@ func SimulateMsgUpdateGroupMetadata(ak group.AccountKeeper, bk group.BankKeeper,
 		if groupInfo == nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupMetadata, ""), nil, nil
 		}
-		groupID := groupInfo.GroupId
+		groupID := groupInfo.Id
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
 		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
@@ -514,7 +514,7 @@ func SimulateMsgUpdateGroupMembers(ak group.AccountKeeper,
 		if groupInfo == nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupMembers, ""), nil, nil
 		}
-		groupID := groupInfo.GroupId
+		groupID := groupInfo.Id
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
 		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
@@ -756,10 +756,10 @@ func SimulateMsgWithdrawProposal(ak group.AccountKeeper,
 		proposalID := -1
 
 		for _, p := range proposals {
-			if p.Status == group.ProposalStatusSubmitted {
+			if p.Status == group.PROPOSAL_STATUS_SUBMITTED {
 				timeout := p.Timeout
 				proposal = p
-				proposalID = int(p.ProposalId)
+				proposalID = int(p.Id)
 				if timeout.Before(sdkCtx.BlockTime()) || timeout.Equal(sdkCtx.BlockTime()) {
 					return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "voting period ended: skipping"), nil, nil
 				}
@@ -848,7 +848,7 @@ func SimulateMsgVote(ak group.AccountKeeper,
 
 		// Pick a random member from the group
 		ctx := sdk.WrapSDKContext(sdkCtx)
-		acc, account, err := randomMember(r, k, ak, ctx, accounts, g.GroupId)
+		acc, account, err := randomMember(r, k, ak, ctx, accounts, g.Id)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, ""), nil, err
 		}
@@ -875,10 +875,10 @@ func SimulateMsgVote(ak group.AccountKeeper,
 		proposalID := -1
 
 		for _, p := range proposals {
-			if p.Status == group.ProposalStatusSubmitted {
+			if p.Status == group.PROPOSAL_STATUS_SUBMITTED {
 				timeout := p.Timeout
 				proposal = p
-				proposalID = int(p.ProposalId)
+				proposalID = int(p.Id)
 				if timeout.Before(sdkCtx.BlockTime()) || timeout.Equal(sdkCtx.BlockTime()) {
 					return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "voting period ended: skipping"), nil, nil
 				}
@@ -911,7 +911,7 @@ func SimulateMsgVote(ak group.AccountKeeper,
 		msg := group.MsgVote{
 			ProposalId: uint64(proposalID),
 			Voter:      acc.Address.String(),
-			Choice:     group.Choice_CHOICE_YES,
+			Option:     group.VOTE_OPTION_YES,
 			Metadata:   []byte(simtypes.RandStringOfLength(r, 10)),
 		}
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -975,8 +975,8 @@ func SimulateMsgExec(ak group.AccountKeeper,
 		proposalID := -1
 
 		for _, proposal := range proposals {
-			if proposal.Status == group.ProposalStatusClosed {
-				proposalID = int(proposal.ProposalId)
+			if proposal.Status == group.PROPOSAL_STATUS_CLOSED {
+				proposalID = int(proposal.Id)
 				break
 			}
 		}
@@ -1135,7 +1135,7 @@ func randomGroupPolicy(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 	if groupInfo == nil {
 		return nil, nil, simtypes.Account{}, nil, nil
 	}
-	groupID := groupInfo.GroupId
+	groupID := groupInfo.Id
 
 	result, err := k.GroupPoliciesByGroup(sdk.WrapSDKContext(ctx), &group.QueryGroupPoliciesByGroupRequest{GroupId: groupID})
 	if err != nil {

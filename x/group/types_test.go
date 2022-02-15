@@ -13,7 +13,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 	testCases := []struct {
 		name           string
 		policy         *group.PercentageDecisionPolicy
-		tally          *group.Tally
+		tally          *group.TallyResult
 		totalPower     string
 		votingDuration time.Duration
 		result         group.DecisionPolicyResult
@@ -24,11 +24,11 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				Percentage: "0.5",
 				Timeout:    time.Second * 100,
 			},
-			&group.Tally{
-				YesCount:     "2",
-				NoCount:      "0",
-				AbstainCount: "0",
-				VetoCount:    "0",
+			&group.TallyResult{
+				YesCount:        "2",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
 			},
 			"3",
 			time.Duration(time.Second * 50),
@@ -43,11 +43,11 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				Percentage: "0.5",
 				Timeout:    time.Second * 100,
 			},
-			&group.Tally{
-				YesCount:     "2",
-				NoCount:      "0",
-				AbstainCount: "0",
-				VetoCount:    "0",
+			&group.TallyResult{
+				YesCount:        "2",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
 			},
 			"4",
 			time.Duration(time.Second * 50),
@@ -62,11 +62,11 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				Percentage: "0.5",
 				Timeout:    time.Second * 100,
 			},
-			&group.Tally{
-				YesCount:     "1",
-				NoCount:      "0",
-				AbstainCount: "0",
-				VetoCount:    "0",
+			&group.TallyResult{
+				YesCount:        "1",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
 			},
 			"3",
 			time.Duration(time.Second * 50),
@@ -81,11 +81,11 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				Percentage: "0.5",
 				Timeout:    time.Second * 100,
 			},
-			&group.Tally{
-				YesCount:     "1",
-				NoCount:      "2",
-				AbstainCount: "0",
-				VetoCount:    "0",
+			&group.TallyResult{
+				YesCount:        "1",
+				NoCount:         "2",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
 			},
 			"3",
 			time.Duration(time.Second * 50),
@@ -100,11 +100,11 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				Percentage: "0.5",
 				Timeout:    time.Second * 100,
 			},
-			&group.Tally{
-				YesCount:     "1",
-				NoCount:      "2",
-				AbstainCount: "0",
-				VetoCount:    "0",
+			&group.TallyResult{
+				YesCount:        "1",
+				NoCount:         "2",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
 			},
 			"4",
 			time.Duration(time.Second * 50),
@@ -119,11 +119,11 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				Percentage: "0.5",
 				Timeout:    time.Second * 100,
 			},
-			&group.Tally{
-				YesCount:     "1",
-				NoCount:      "0",
-				AbstainCount: "0",
-				VetoCount:    "0",
+			&group.TallyResult{
+				YesCount:        "1",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
 			},
 			"3",
 			time.Duration(time.Second * 50),
@@ -138,11 +138,11 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				Percentage: "0.5",
 				Timeout:    time.Second * 10,
 			},
-			&group.Tally{
-				YesCount:     "2",
-				NoCount:      "0",
-				AbstainCount: "0",
-				VetoCount:    "0",
+			&group.TallyResult{
+				YesCount:        "2",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
 			},
 			"3",
 			time.Duration(time.Second * 50),
@@ -165,7 +165,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 	testCases := []struct {
 		name           string
 		policy         *group.ThresholdDecisionPolicy
-		tally          *group.Tally
+		tally          *group.TallyResult
 		totalPower     string
 		votingDuration time.Duration
 		result         group.DecisionPolicyResult
@@ -176,11 +176,11 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				Threshold: "3",
 				Timeout:   time.Second * 100,
 			},
-			&group.Tally{
-				YesCount:     "3",
-				NoCount:      "0",
-				AbstainCount: "0",
-				VetoCount:    "0",
+			&group.TallyResult{
+				YesCount:        "3",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
 			},
 			"3",
 			time.Duration(time.Second * 50),
@@ -195,11 +195,11 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				Threshold: "3",
 				Timeout:   time.Second * 100,
 			},
-			&group.Tally{
-				YesCount:     "1",
-				NoCount:      "0",
-				AbstainCount: "0",
-				VetoCount:    "0",
+			&group.TallyResult{
+				YesCount:        "1",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
 			},
 			"3",
 			time.Duration(time.Second * 50),
@@ -214,11 +214,11 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				Threshold: "3",
 				Timeout:   time.Second * 100,
 			},
-			&group.Tally{
-				YesCount:     "1",
-				NoCount:      "0",
-				AbstainCount: "0",
-				VetoCount:    "0",
+			&group.TallyResult{
+				YesCount:        "1",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
 			},
 			"2",
 			time.Duration(time.Second * 50),
@@ -233,11 +233,11 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				Threshold: "3",
 				Timeout:   time.Second * 100,
 			},
-			&group.Tally{
-				YesCount:     "1",
-				NoCount:      "0",
-				AbstainCount: "0",
-				VetoCount:    "0",
+			&group.TallyResult{
+				YesCount:        "1",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
 			},
 			"3",
 			time.Duration(time.Second * 50),
@@ -252,11 +252,11 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				Threshold: "3",
 				Timeout:   time.Second * 10,
 			},
-			&group.Tally{
-				YesCount:     "3",
-				NoCount:      "0",
-				AbstainCount: "0",
-				VetoCount:    "0",
+			&group.TallyResult{
+				YesCount:        "3",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
 			},
 			"3",
 			time.Duration(time.Second * 50),

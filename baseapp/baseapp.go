@@ -114,10 +114,6 @@ type BaseApp struct { // nolint: maligned
 	// version represents the application software semantic version.
 	version string
 
-	// application's protocol version that increments on every upgrade
-	// if BaseApp is passed to the upgrade keeper's NewKeeper method.
-	appVersion uint64
-
 	// trace set will return full stack traces for errors in ABCI Log field
 	trace bool
 
@@ -167,7 +163,11 @@ func (app *BaseApp) Name() string {
 
 // AppVersion returns the application's protocol version.
 func (app *BaseApp) AppVersion() uint64 {
-	return app.appVersion
+
+	v := &tmproto.VersionParams{}
+	app.paramStore.Get(app.deliverState.ctx, ParamStoreKeyVersionParams, v)
+
+	return v.AppVersion
 }
 
 // Version returns the application's version string.
@@ -395,8 +395,12 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams
 		cp.Validator = &vp
 	}
 
-	// set app version from upgrade module in consensus params
-	cp.Version = &tmproto.VersionParams{AppVersion: app.appVersion}
+	if app.paramStore.Has(ctx, ParamStoreKeyVersionParams) {
+		var vp tmproto.VersionParams
+
+		app.paramStore.Get(ctx, ParamStoreKeyVersionParams, &vp)
+		cp.Version = &vp
+	}
 
 	return cp
 }
@@ -414,6 +418,7 @@ func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *tmproto.ConsensusP
 	app.paramStore.Set(ctx, ParamStoreKeyBlockParams, cp.Block)
 	app.paramStore.Set(ctx, ParamStoreKeyEvidenceParams, cp.Evidence)
 	app.paramStore.Set(ctx, ParamStoreKeyValidatorParams, cp.Validator)
+	app.paramStore.Set(ctx, ParamStoreKeyVersionParams, cp.Version)
 	// We're explicitly not storing the Tendermint app_version in the param store. It's
 	// stored instead in the x/upgrade store, with its own bump logic.
 }

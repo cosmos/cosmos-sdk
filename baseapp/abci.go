@@ -106,10 +106,11 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 	lastCommitID := app.cms.LastCommitID()
 
+	appVersion := app.GetProtocolVersion()
 	return abci.ResponseInfo{
 		Data:             app.name,
 		Version:          app.version,
-		AppVersion:       app.appVersion,
+		AppVersion:       appVersion,
 		LastBlockHeight:  lastCommitID.Version,
 		LastBlockAppHash: lastCommitID.Hash,
 	}
@@ -279,13 +280,13 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 	ctx := app.getContextForTx(runTxModeDeliver, req.Tx)
 	res, err := app.txHandler.DeliverTx(ctx, tx.Request{TxBytes: req.Tx})
 	if err != nil {
-		abciRes = sdkerrors.ResponseDeliverTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
+		abciRes = sdkerrors.ResponseDeliverTx(err, res.GasUsed, res.GasWanted, app.trace)
 		return abciRes
 	}
 
 	abciRes, err = convertTxResponseToDeliverTx(res)
 	if err != nil {
-		return sdkerrors.ResponseDeliverTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
+		return sdkerrors.ResponseDeliverTx(err, res.GasUsed, res.GasWanted, app.trace)
 	}
 
 	return abciRes

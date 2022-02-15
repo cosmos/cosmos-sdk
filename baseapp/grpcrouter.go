@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"google.golang.org/grpc/encoding"
 

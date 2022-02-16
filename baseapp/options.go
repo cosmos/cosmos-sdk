@@ -119,7 +119,6 @@ func (app *BaseApp) SetProtocolVersion(v uint64) {
 
 // GetProtocolVersion gets the application's protocol version
 func (app *BaseApp) GetProtocolVersion() uint64 {
-
 	av := &tmproto.VersionParams{}
 	app.paramStore.Get(app.deliverState.ctx, ParamStoreKeyVersionParams, av)
 

@@ -9,14 +9,16 @@
 #
 ## All protoc dependencies must be installed not in the module scope
 ## currently we must use grpc-gateway v1
-# cd ~
-# go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-# go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-# go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0
-# go install github.com/cosmos/cosmos-proto/cmd/protoc-gen-go-pulsar@latest
-# go get github.com/regen-network/cosmos-proto@latest # doesn't work in install mode
+set -eox pipefail
 
-set -eo pipefail
+# INSTALL DEPENDENCIES
+cd ~
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0
+go install github.com/cosmos/cosmos-proto/cmd/protoc-gen-go-pulsar@latest
+go get github.com/regen-network/cosmos-proto@latest # doesn't work in install mode
+cd -
 
 protoc_install_gocosmos() {
   echo "Installing protobuf gocosmos plugin"

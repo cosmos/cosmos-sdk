@@ -1,8 +1,9 @@
 package keeper
 
 import (
+	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v043 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v043"
 	v046 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v046"
 )
 
@@ -20,7 +21,7 @@ func NewMigrator(keeper Keeper) Migrator {
 
 // Migrate1to2 migrates from version 1 to 2.
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
-	return v043.MigrateStore(ctx, m.keeper.storeKey)
+	return errors.New("Migration from x/staking v1 (Cosmos SDK v0.42) to v2 is not supported any more")
 }
 
 // Migrate2to3 migrates x/staking state from consensus version 2 to 3.

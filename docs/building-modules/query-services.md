@@ -15,7 +15,7 @@ A Protobuf Query service processes [`queries`](./messages-and-queries.md#queries
 
 The `querier` type defined in the Cosmos SDK will be deprecated in favor of [gRPC Services](#grpc-service). It specifies the typical structure of a `querier` function:
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/9a183ffbcc0163c8deb71c7fd5f8089a83e58f05/types/queryable.go#L9>
++++ https://github.com/cosmos/cosmos-sdk/blob/9a183ffbcc0163c8deb71c7fd5f8089a83e58f05/types/queryable.go#L9
 
 Let us break it down:
 
@@ -43,7 +43,7 @@ from the store. Therefore, the Cosmos SDK provides a function `sdk.UnwrapSDKCont
 
 Here's an example implementation for the bank module:
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/x/bank/keeper/grpc_query.go>
++++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/x/bank/keeper/grpc_query.go
 
 ### Legacy Queriers
 

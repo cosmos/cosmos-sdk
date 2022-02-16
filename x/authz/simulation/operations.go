@@ -108,7 +108,10 @@ func SimulateMsgGrant(ak authz.AccountKeeper, bk authz.BankKeeper, _ keeper.Keep
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, "spend limit is nil"), nil, nil
 		}
 
-		expiration := ctx.BlockTime().AddDate(1, 0, 0)
+		expiration := simtypes.RandTimestamp(r)
+		if expiration.Before(ctx.BlockTime()) {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, "past time"), nil, nil
+		}
 		msg, err := authz.NewMsgGrant(granter.Address, grantee.Address, generateRandomAuthorization(r, spendLimit), expiration)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, err.Error()), nil, err
@@ -176,7 +179,11 @@ func SimulateMsgRevoke(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Kee
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "fee error"), nil, err
 		}
 
-		a := grant.GetAuthorization()
+		a, err := grant.GetAuthorization()
+		if err != nil {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "authorization error"), nil, err
+		}
+
 		msg := authz.NewMsgRevoke(granterAddr, granteeAddr, a.MsgTypeURL())
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
 		account := ak.GetAccount(ctx, granterAddr)
@@ -242,7 +249,12 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 		}
 
 		msg := []sdk.Msg{banktype.NewMsgSend(granterAddr, granteeAddr, coins)}
-		sendAuth, ok := targetGrant.GetAuthorization().(*banktype.SendAuthorization)
+		authorization, err := targetGrant.GetAuthorization()
+		if err != nil{
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
+		}
+
+		sendAuth, ok := authorization.(*banktype.SendAuthorization)
 		if !ok {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "not a send authorization"), nil, nil
 		}

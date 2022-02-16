@@ -221,6 +221,19 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.Equal(t, uint64(10), res.Total)
 	assert.Assert(t, res.NextKey != nil)
 
+	// let's use a default limit
+	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{},
+		ormlist.DefaultLimit(4),
+		ormlist.Paginate(&queryv1beta1.PageRequest{
+			CountTotal: true,
+		}))
+	assert.NilError(t, err)
+	assertIteratorItems(it, 0, 1, 2, 3)
+	res = it.PageResponse()
+	assert.Assert(t, res != nil)
+	assert.Equal(t, uint64(10), res.Total)
+	assert.Assert(t, res.NextKey != nil)
+
 	// read another page
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{}, ormlist.Paginate(&queryv1beta1.PageRequest{
 		Key:   res.NextKey,

@@ -12,7 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
@@ -98,9 +100,11 @@ Where proposal.json contains:
 				}
 			}
 
+			authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+
 			msgs := []sdk.Msg{
 				&types.MsgSoftwareUpgrade{
-					Authority: "",
+					Authority: authority.String(),
 					Plan:      *upgradePlan,
 				},
 			}
@@ -191,7 +195,55 @@ func NewCmdSubmitLegacyUpgradeProposal() *cobra.Command {
 
 // NewCmdSubmitCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
 func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
-	panic("todo")
+	cmd := &cobra.Command{
+		Use:   "cancel-software-upgrade [flags]",
+		Args:  cobra.ExactArgs(0),
+		Short: "Cancel the current software upgrade proposal",
+		Long:  "Submits a proposal to cancel the current software upgrade along. Can also be submitted with an initial deposit and metadata.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			from := clientCtx.GetFromAddress()
+
+			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
+			if err != nil {
+				return err
+			}
+
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return err
+			}
+
+			var metadata []byte 
+			metadata, err = cmd.Flags().GetBytesBase64(cli.FlagMetadata)
+			if err != nil {
+				return err
+			}
+
+			authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+
+			msgs := []sdk.Msg{
+				&types.MsgCancelUpgrade{
+					Authority: authority.String(),
+				},
+			}
+
+			msg, err := v1beta2.NewMsgSubmitProposal(msgs, deposit, from.String(), metadata)
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().BytesBase64(cli.FlagMetadata, []byte{}, "base64 encoded metadata associated with the cancel upgrade proposal")
+	cmd.Flags().String(cli.FlagDeposit, "", "deposit for the proposal")
+
+	return cmd
 }
 
 // NewCmdSubmitLegacyCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.

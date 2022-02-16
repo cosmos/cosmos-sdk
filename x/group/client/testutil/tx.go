@@ -1670,7 +1670,7 @@ func (s *IntegrationTestSuite) TestTxVoteWeighted() {
 				[]string{
 					proposalIds[0],
 					val.Address.String(),
-					"CHOICE_YES=0.5,CHOICE_NO=0.3,CHOICE_ABSTAIN=0.1,CHOICE_VETO=0.1",
+					"VOTE_OPTION_YES=0.5,VOTE_OPTION_NO=0.3,VOTE_OPTION_ABSTAIN=0.1,VOTE_OPTION_NO_WITH_VETO=0.1",
 					"",
 				},
 				commonFlags...,
@@ -1686,7 +1686,7 @@ func (s *IntegrationTestSuite) TestTxVoteWeighted() {
 				[]string{
 					proposalIds[1],
 					val.Address.String(),
-					"CHOICE_YES=0.5,CHOICE_NO=0.5,CHOICE_ABSTAIN=0.1,CHOICE_VETO=0.1",
+					"VOTE_OPTION_YES=0.5,VOTE_OPTION_NO=0.5,VOTE_OPTION_ABSTAIN=0.1,VOTE_OPTION_NO_WITH_VETO=0.1",
 					"",
 				},
 				commonFlags...,
@@ -1702,7 +1702,7 @@ func (s *IntegrationTestSuite) TestTxVoteWeighted() {
 				[]string{
 					proposalIds[1],
 					val.Address.String(),
-					"CHOICE_YES=0.1,CHOICE_NO=0.5,CHOICE_ABSTAIN=0.1,CHOICE_VETO=0.1",
+					"VOTE_OPTION_YES=0.1,VOTE_OPTION_NO=0.5,VOTE_OPTION_ABSTAIN=0.1,VOTE_OPTION_NO_WITH_VETO=0.1",
 					"",
 				},
 				commonFlags...,
@@ -1718,7 +1718,7 @@ func (s *IntegrationTestSuite) TestTxVoteWeighted() {
 				[]string{
 					proposalIds[1],
 					val.Address.String(),
-					"CHOICE_YES=a",
+					"VOTE_OPTION_YES=a",
 					"",
 				},
 				commonFlags...,
@@ -1734,7 +1734,7 @@ func (s *IntegrationTestSuite) TestTxVoteWeighted() {
 				[]string{
 					proposalIds[1],
 					val.Address.String(),
-					"CHOICE_YES=0.5,CHOICE_YES=0.5",
+					"VOTE_OPTION_YES=0.5,VOTE_OPTION_YES=0.5",
 					"",
 				},
 				commonFlags...,
@@ -1750,7 +1750,7 @@ func (s *IntegrationTestSuite) TestTxVoteWeighted() {
 				[]string{
 					proposalIds[1],
 					val.Address.String(),
-					"CHOICE_YES=1",
+					"VOTE_OPTION_YES=1",
 					"",
 					fmt.Sprintf("--%s=try", client.FlagExec),
 				},
@@ -1767,7 +1767,7 @@ func (s *IntegrationTestSuite) TestTxVoteWeighted() {
 				[]string{
 					proposalIds[2],
 					val.Address.String(),
-					"CHOICE_NO=1",
+					"VOTE_OPTION_NO=1",
 					"",
 					fmt.Sprintf("--%s=try", client.FlagExec),
 				},
@@ -1784,7 +1784,7 @@ func (s *IntegrationTestSuite) TestTxVoteWeighted() {
 				[]string{
 					proposalIds[3],
 					val.Address.String(),
-					"CHOICE_YES=1",
+					"VOTE_OPTION_YES=1",
 					"",
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
@@ -1801,7 +1801,7 @@ func (s *IntegrationTestSuite) TestTxVoteWeighted() {
 				[]string{
 					"abcd",
 					val.Address.String(),
-					"CHOICE_YES=1",
+					"VOTE_OPTION_YES=1",
 					"",
 				},
 				commonFlags...,
@@ -1817,7 +1817,7 @@ func (s *IntegrationTestSuite) TestTxVoteWeighted() {
 				[]string{
 					"1234",
 					val.Address.String(),
-					"CHOICE_YES=1",
+					"VOTE_OPTION_YES=1",
 					"",
 				},
 				commonFlags...,
@@ -1833,7 +1833,7 @@ func (s *IntegrationTestSuite) TestTxVoteWeighted() {
 				[]string{
 					"2",
 					val.Address.String(),
-					"CHOICE_YES=1",
+					"VOTE_OPTION_YES=1",
 					"AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ==",
 				},
 				commonFlags...,
@@ -1855,7 +1855,7 @@ func (s *IntegrationTestSuite) TestTxVoteWeighted() {
 				commonFlags...,
 			),
 			true,
-			"not a valid vote choice",
+			"is not a valid vote option",
 			nil,
 			0,
 		},

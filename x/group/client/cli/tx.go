@@ -691,15 +691,15 @@ Parameters:
 			proposal-id: unique ID of the proposal
 			voter: voter account addresses
 			choice: choice of the voter(s)
-				CHOICE_UNSPECIFIED: no-op
-				CHOICE_NO: no
-				CHOICE_YES: yes
-				CHOICE_ABSTAIN: abstain
-				CHOICE_VETO: veto
+				VOTE_OPTION_UNSPECIFIED: no-op
+				VOTE_OPTION_NO: no
+				VOTE_OPTION_YES: yes
+				VOTE_OPTION_ABSTAIN: abstain
+				VOTE_OPTION_NO_WITH_VETO: veto
 			Metadata: metadata for the vote
 
 Example:
-$ %s tx gov weighted-vote 1 cosmos1... CHOICE_YES=0.6,CHOICE_NO=0.3,CHOICE_ABSTAIN=0.05,CHOICE_VETO=0.05 AQ==
+$ %s tx gov weighted-vote 1 cosmos1... VOTE_OPTION_YES=0.6,VOTE_OPTION_NO=0.3,VOTE_OPTION_ABSTAIN=0.05,VOTE_OPTION_NO_WITH_VETO=0.05 AQ==
 `,
 				version.AppName, version.AppName,
 			),
@@ -722,7 +722,7 @@ $ %s tx gov weighted-vote 1 cosmos1... CHOICE_YES=0.6,CHOICE_NO=0.3,CHOICE_ABSTA
 			}
 
 			// Figure out which vote options user chose
-			options, err := group.WeightedVoteChoicesFromString(govutils.NormalizeWeightedVoteOptions(args[2]))
+			options, err := group.WeightedVoteOptionsFromString(govutils.NormalizeWeightedVoteOptions(args[2]))
 			if err != nil {
 				return err
 			}

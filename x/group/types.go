@@ -601,23 +601,23 @@ func (v WeightedVoteOptions) String() (out string) {
 
 // WeightedVoteChoicesFromString returns weighted vote options from string. It returns an error
 // if the string is invalid.
-func WeightedVoteChoicesFromString(str string) (WeightedVoteOptions, error) {
+func WeightedVoteOptionsFromString(str string) (WeightedVoteOptions, error) {
 	options := WeightedVoteOptions{}
 	for _, option := range strings.Split(str, ",") {
 		fields := strings.Split(option, "=")
-		choice, err := VoteOptionFromString(fields[0])
+		option, err := VoteOptionFromString(fields[0])
 		if err != nil {
 			return options, err
 		}
 		if len(fields) < 2 {
-			return options, fmt.Errorf("weight field does not exist for %s choice", fields[0])
+			return options, fmt.Errorf("weight field does not exist for %s option", fields[0])
 		}
 		weight, err := sdk.NewDecFromStr(fields[1])
 		if err != nil {
 			return options, err
 		}
 		options = append(options, &WeightedVoteOption{
-			Option: choice,
+			Option: option,
 			Weight: weight.String(),
 		})
 	}

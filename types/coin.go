@@ -390,6 +390,41 @@ func (coins Coins) SafeSub(coinsB Coins) (Coins, bool) {
 	return diff, diff.IsAnyNegative()
 }
 
+// Max returns the maximum of each denom of its inputs.
+// The inputs should be sorted. Note that the max might
+// not be equal to either of its inputs.
+func (coins Coins) Max(coinsB Coins) Coins {
+	// coins + coinsB = min(coins, coinsB) + max(coins, coinsB)
+	return coins.Add(coinsB...).Sub(coins.Min(coinsB))
+}
+
+// Min returns the minimum of each denom of its inputs.
+// The inputs should be sorted. Note that the min might
+// not be equal to either of its inputs.
+func (coins Coins) Min(coinsB Coins) Coins {
+	min := make([]Coin, 0)
+	for indexA, indexB := 0, 0; indexA < len(coins) && indexB < len(coinsB); {
+		coinA, coinB := coins[indexA], coinsB[indexB]
+		switch strings.Compare(coinA.Denom, coinB.Denom) {
+		case -1: // denom missing from coinsB
+			indexA++
+		case 0: // same denom in both
+			minCoin := coinA
+			if coinB.Amount.LT(minCoin.Amount) {
+				minCoin = coinB
+			}
+			if !minCoin.IsZero() {
+				min = append(min, minCoin)
+			}
+			indexA++
+			indexB++
+		case 1: // denom missing from coins
+			indexB++
+		}
+	}
+	return NewCoins(min...)
+}
+
 // IsAllGT returns true if for every denom in coinsB,
 // the denom is present at a greater amount in coins.
 func (coins Coins) IsAllGT(coinsB Coins) bool {

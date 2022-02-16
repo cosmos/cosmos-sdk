@@ -1943,11 +1943,10 @@ func (s *TestSuite) TestVote() {
 			})
 			s.Require().NoError(err)
 			loaded := res.Vote
-			choice := []*group.WeightedVoteOption{{
+			options := []*group.WeightedVoteOption{{
 				Option: spec.req.Option,
 				Weight: "1",
 			}}
-			options := group.NewNonSplitVoteOption(spec.req.Option)
 			s.Assert().Equal(spec.req.ProposalId, loaded.ProposalId)
 			s.Assert().Equal(spec.req.Voter, loaded.Voter)
 			s.Assert().Equal(options, loaded.Options)
@@ -1978,7 +1977,7 @@ func (s *TestSuite) TestVote() {
 			s.Require().Equal(1, len(votesByVoter))
 			s.Assert().Equal(spec.req.ProposalId, votesByVoter[0].ProposalId)
 			s.Assert().Equal(voter, votesByVoter[0].Voter)
-			s.Assert().Equal(choice, votesByVoter[0].Options)
+			s.Assert().Equal(options, votesByVoter[0].Options)
 			s.Assert().Equal(spec.req.Metadata, votesByVoter[0].Metadata)
 			s.Assert().Equal(s.blockTime, votesByVoter[0].SubmitTime)
 
@@ -1988,7 +1987,7 @@ func (s *TestSuite) TestVote() {
 			})
 			s.Require().NoError(err)
 			proposal := proposalRes.Proposal
-			// s.Assert().Equal(spec.expTallyResult, proposal.VoteState)
+			s.Assert().Equal(spec.expFinalTallyResult, proposal.FinalTallyResult)
 			s.Assert().Equal(spec.expResult, proposal.Result)
 			s.Assert().Equal(spec.expProposalStatus, proposal.Status)
 			s.Assert().Equal(spec.expExecutorResult, proposal.ExecutorResult)

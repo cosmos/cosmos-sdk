@@ -117,7 +117,7 @@ func (k Keeper) GranterGrants(c context.Context, req *authz.QueryGranterGrantsRe
 	store := ctx.KVStore(k.storeKey)
 	authzStore := prefix.NewStore(store, grantStoreKey(nil, granter, ""))
 
-	var authorizations []*authz.Grant
+	var grants []*authz.GrantAuthorization
 	pageRes, err := query.FilteredPaginate(authzStore, req.Pagination, func(key []byte, value []byte,
 		accumulate bool) (bool, error) {
 		auth, err := unmarshalAuthorization(k.cdc, value)
@@ -136,7 +136,10 @@ func (k Keeper) GranterGrants(c context.Context, req *authz.QueryGranterGrantsRe
 				return false, status.Errorf(codes.Internal, err.Error())
 			}
 
-			authorizations = append(authorizations, &authz.Grant{
+			grantee := firstAddressFromGrantStoreKey(key)
+			grants = append(grants, &authz.GrantAuthorization{
+				Granter:       granter.String(),
+				Grantee:       grantee.String(),
 				Authorization: any,
 				Expiration:    auth.Expiration,
 			})
@@ -148,6 +151,59 @@ func (k Keeper) GranterGrants(c context.Context, req *authz.QueryGranterGrantsRe
 	}
 
 	return &authz.QueryGranterGrantsResponse{
+		Grants:     grants,
+		Pagination: pageRes,
+	}, nil
+}
+
+// GranteeGrants implements the Query/GranteeGrants gRPC method.
+func (k Keeper) GranteeGrants(c context.Context, req *authz.QueryGranteeGrantsRequest) (*authz.QueryGranteeGrantsResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	grantee, err := sdk.AccAddressFromBech32(req.Grantee)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), GrantKey)
+
+	var authorizations []*authz.GrantAuthorization
+	pageRes, err := query.FilteredPaginate(store, req.Pagination, func(key []byte, value []byte,
+		accumulate bool) (bool, error) {
+		auth, err := unmarshalAuthorization(k.cdc, value)
+		if err != nil {
+			return false, err
+		}
+
+		granter, g := addressesFromGrantStoreKey(append(GrantKey, key...))
+		if !g.Equals(grantee) {
+			return false, nil
+		}
+
+		auth1 := auth.GetAuthorization()
+		if accumulate {
+			any, err := codectypes.NewAnyWithValue(auth1)
+			if err != nil {
+				return false, status.Errorf(codes.Internal, err.Error())
+			}
+
+			authorizations = append(authorizations, &authz.GrantAuthorization{
+				Authorization: any,
+				Expiration:    auth.Expiration,
+				Granter:       granter.String(),
+				Grantee:       grantee.String(),
+			})
+		}
+		return true, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &authz.QueryGranteeGrantsResponse{
 		Grants:     authorizations,
 		Pagination: pageRes,
 	}, nil

@@ -8,8 +8,8 @@ There are multiple ways to interact with a node: using the CLI, using gRPC or us
 
 ## Pre-requisite Readings
 
-- [gRPC, REST and Tendermint Endpoints](../core/grpc_rest.md) {prereq}
-- [Running a Node](./run-node.md) {prereq}
+* [gRPC, REST and Tendermint Endpoints](../core/grpc_rest.md) {prereq}
+* [Running a Node](./run-node.md) {prereq}
 
 ## Using the CLI
 
@@ -54,9 +54,9 @@ The Protobuf ecosystem developed tools for different use cases, including code-g
 
 Since the code generation library largely depends on your own tech stack, we will only present three alternatives:
 
-- `grpcurl` for generic debugging and testing,
-- programmatically via Go,
-- CosmJS for JavaScript/TypeScript developers.
+* `grpcurl` for generic debugging and testing,
+* programmatically via Go,
+* CosmJS for JavaScript/TypeScript developers.
 
 ### grpcurl
 

@@ -428,14 +428,7 @@ func (rs *Store) Commit() types.CommitID {
 	// be pruned, where pruneHeight = (commitHeight - 1) - KeepRecent.
 	if int64(rs.pruningOpts.KeepRecent) < previousHeight {
 		pruneHeight := previousHeight - int64(rs.pruningOpts.KeepRecent)
-		// We consider this height to be pruned iff:
-		//
-		// - KeepEvery is zero as that means that all heights should be pruned.
-		// - KeepEvery % (height - KeepRecent) != 0 as that means the height is not
-		// a 'snapshot' height.
-		if rs.pruningOpts.KeepEvery == 0 || pruneHeight%int64(rs.pruningOpts.KeepEvery) != 0 {
-			rs.pruneHeights = append(rs.pruneHeights, pruneHeight)
-		}
+		rs.pruneHeights = append(rs.pruneHeights, pruneHeight)
 	}
 
 	// batch prune if the current height is a pruning interval height

@@ -184,7 +184,6 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 	app := setupBaseApp(t, append(options,
 		baseapp.SetSnapshotStore(snapshotStore),
 		baseapp.SetSnapshotInterval(snapshotInterval),
-		baseapp.SetPruning(sdk.PruningOptions{KeepEvery: 1}),
 		routerOpt)...)
 
 	app.InitChain(abci.RequestInitChain{})
@@ -480,7 +479,6 @@ func TestLoadVersionPruning(t *testing.T) {
 	logger := log.NewNopLogger()
 	pruningOptions := storetypes.PruningOptions{
 		KeepRecent: 2,
-		KeepEvery:  3,
 		Interval:   1,
 	}
 	pruningOpt := baseapp.SetPruning(pruningOptions)

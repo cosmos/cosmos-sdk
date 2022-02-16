@@ -292,15 +292,8 @@ func (app *BaseApp) init() error {
 
 	// make sure the snapshot interval is a multiple of the pruning KeepEvery interval
 	if app.snapshotManager != nil && app.snapshotInterval > 0 {
-		rms, ok := app.cms.(*rootmulti.Store)
-		if !ok {
+		if _, ok := app.cms.(*rootmulti.Store); !ok {
 			return errors.New("state sync snapshots require a rootmulti store")
-		}
-		pruningOpts := rms.GetPruning()
-		if pruningOpts.KeepEvery > 0 && app.snapshotInterval%pruningOpts.KeepEvery != 0 {
-			return fmt.Errorf(
-				"state sync snapshot interval %v must be a multiple of pruning keep every interval %v",
-				app.snapshotInterval, pruningOpts.KeepEvery)
 		}
 	}
 

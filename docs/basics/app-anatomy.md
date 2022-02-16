@@ -10,7 +10,7 @@ This document describes the core parts of a Cosmos SDK application. Throughout t
 
 The Daemon, or [Full-Node Client](../core/node.md), is the core process of a Cosmos SDK-based blockchain. Participants in the network run this process to initialize their state-machine, connect with other full-nodes and update their state-machine as new blocks come in.
 
-```
+```text
                 ^  +-------------------------------+  ^
                 |  |                               |  |
                 |  |  State-machine = Application  |  |
@@ -44,12 +44,12 @@ In general, the core of the state-machine is defined in a file called `app.go`. 
 
 The first thing defined in `app.go` is the `type` of the application. It is generally comprised of the following parts:
 
-- **A reference to [`baseapp`](../core/baseapp.md).** The custom application defined in `app.go` is an extension of `baseapp`. When a transaction is relayed by Tendermint to the application, `app` uses `baseapp`'s methods to route them to the appropriate module. `baseapp` implements most of the core logic for the application, including all the [ABCI methods](https://tendermint.com/docs/spec/abci/abci.html#overview) and the [routing logic](../core/baseapp.md#routing).
-- **A list of store keys**. The [store](../core/store.md), which contains the entire state, is implemented as a [`multistore`](../core/store.md#multistore) (i.e. a store of stores) in the Cosmos SDK. Each module uses one or multiple stores in the multistore to persist their part of the state. These stores can be accessed with specific keys that are declared in the `app` type. These keys, along with the `keepers`, are at the heart of the [object-capabilities model](../core/ocap.md) of the Cosmos SDK.
-- **A list of module's `keeper`s.** Each module defines an abstraction called [`keeper`](../building-modules/keeper.md), which handles reads and writes for this module's store(s). The `keeper`'s methods of one module can be called from other modules (if authorized), which is why they are declared in the application's type and exported as interfaces to other modules so that the latter can only access the authorized functions.
-- **A reference to an [`appCodec`](../core/encoding.md).** The application's `appCodec` is used to serialize and deserialize data structures in order to store them, as stores can only persist `[]bytes`. The default codec is [Protocol Buffers](../core/encoding.md).
-- **A reference to a [`legacyAmino`](../core/encoding.md) codec.** Some parts of the Cosmos SDK have not been migrated to use the `appCodec` above, and are still hardcoded to use Amino. Other parts explicity use Amino for backwards compatibility. For these reasons, the application still holds a reference to the legacy Amino codec. Please note that the Amino codec will be removed from the SDK in the upcoming releases.
-- **A reference to a [module manager](../building-modules/module-manager.md#manager)** and a [basic module manager](../building-modules/module-manager.md#basicmanager). The module manager is an object that contains a list of the application's module. It facilitates operations related to these modules, like registering their [`Msg` service](../core/baseapp.md#msg-services) and [gRPC `Query` service](../core/baseapp.md#grpc-query-services), or setting the order of execution between modules for various functions like [`InitChainer`](#initchainer), [`BeginBlocker` and `EndBlocker`](#beginblocker-and-endblocker).
+* **A reference to [`baseapp`](../core/baseapp.md).** The custom application defined in `app.go` is an extension of `baseapp`. When a transaction is relayed by Tendermint to the application, `app` uses `baseapp`'s methods to route them to the appropriate module. `baseapp` implements most of the core logic for the application, including all the [ABCI methods](https://tendermint.com/docs/spec/abci/abci.html#overview) and the [routing logic](../core/baseapp.md#routing).
+* **A list of store keys**. The [store](../core/store.md), which contains the entire state, is implemented as a [`multistore`](../core/store.md#multistore) (i.e. a store of stores) in the Cosmos SDK. Each module uses one or multiple stores in the multistore to persist their part of the state. These stores can be accessed with specific keys that are declared in the `app` type. These keys, along with the `keepers`, are at the heart of the [object-capabilities model](../core/ocap.md) of the Cosmos SDK.
+* **A list of module's `keeper`s.** Each module defines an abstraction called [`keeper`](../building-modules/keeper.md), which handles reads and writes for this module's store(s). The `keeper`'s methods of one module can be called from other modules (if authorized), which is why they are declared in the application's type and exported as interfaces to other modules so that the latter can only access the authorized functions.
+* **A reference to an [`appCodec`](../core/encoding.md).** The application's `appCodec` is used to serialize and deserialize data structures in order to store them, as stores can only persist `[]bytes`. The default codec is [Protocol Buffers](../core/encoding.md).
+* **A reference to a [`legacyAmino`](../core/encoding.md) codec.** Some parts of the Cosmos SDK have not been migrated to use the `appCodec` above, and are still hardcoded to use Amino. Other parts explicity use Amino for backwards compatibility. For these reasons, the application still holds a reference to the legacy Amino codec. Please note that the Amino codec will be removed from the SDK in the upcoming releases.
+* **A reference to a [module manager](../building-modules/module-manager.md#manager)** and a [basic module manager](../building-modules/module-manager.md#basicmanager). The module manager is an object that contains a list of the application's module. It facilitates operations related to these modules, like registering their [`Msg` service](../core/baseapp.md#msg-services) and [gRPC `Query` service](../core/baseapp.md#grpc-query-services), or setting the order of execution between modules for various functions like [`InitChainer`](#initchainer), [`BeginBlocker` and `EndBlocker`](#beginblocker-and-endblocker).
 
 See an example of application type definition from `simapp`, the Cosmos SDK's own app used for demo and testing purposes:
 
@@ -63,19 +63,19 @@ This function constructs a new application of the type defined in the section ab
 
 Here are the main actions performed by this function:
 
-- Instantiate a new [`codec`](../core/encoding.md) and initialize the `codec` of each of the application's module using the [basic manager](../building-modules/module-manager.md#basicmanager)
-- Instantiate a new application with a reference to a `baseapp` instance, a codec and all the appropriate store keys.
-- Instantiate all the [`keeper`s](#keeper) defined in the application's `type` using the `NewKeeper` function of each of the application's modules. Note that `keepers` must be instantiated in the correct order, as the `NewKeeper` of one module might require a reference to another module's `keeper`.
-- Instantiate the application's [module manager](../building-modules/module-manager.md#manager) with the [`AppModule`](#application-module-interface) object of each of the application's modules.
-- With the module manager, initialize the application's [`Msg` services](../core/baseapp.md#msg-services), [gRPC `Query` services](../core/baseapp.md#grpc-query-services), [legacy `Msg` routes](../core/baseapp.md#routing) and [legacy query routes](../core/baseapp.md#query-routing). When a transaction is relayed to the application by Tendermint via the ABCI, it is routed to the appropriate module's [`Msg` service](#msg-services) using the routes defined here. Likewise, when a gRPC query request is received by the application, it is routed to the appropriate module's [`gRPC query service`](#grpc-query-services) using the gRPC routes defined here. The Cosmos SDK still supports legacy `Msg`s and legacy Tendermint queries, which are routed using respectively the legacy `Msg` routes and the legacy query routes.
-- With the module manager, register the [application's modules' invariants](../building-modules/invariants.md). Invariants are variables (e.g. total supply of a token) that are evaluated at the end of each block. The process of checking invariants is done via a special module called the [`InvariantsRegistry`](../building-modules/invariants.md#invariant-registry). The value of the invariant should be equal to a predicted value defined in the module. Should the value be different than the predicted one, special logic defined in the invariant registry will be triggered (usually the chain is halted). This is useful to make sure no critical bug goes unnoticed and produces long-lasting effects that would be hard to fix.
-- With the module manager, set the order of execution between the `InitGenesis`, `BeginBlocker` and `EndBlocker` functions of each of the [application's modules](#application-module-interface). Note that not all modules implement these functions.
-- Set the remainder of application's parameters:
-    - [`InitChainer`](#initchainer): used to initialize the application when it is first started.
-    - [`BeginBlocker`, `EndBlocker`](#beginblocker-and-endlbocker): called at the beginning and the end of every block).
-    - [`anteHandler`](../core/baseapp.md#antehandler): used to handle fees and signature verification.
-- Mount the stores.
-- Return the application.
+* Instantiate a new [`codec`](../core/encoding.md) and initialize the `codec` of each of the application's module using the [basic manager](../building-modules/module-manager.md#basicmanager)
+* Instantiate a new application with a reference to a `baseapp` instance, a codec and all the appropriate store keys.
+* Instantiate all the [`keeper`s](#keeper) defined in the application's `type` using the `NewKeeper` function of each of the application's modules. Note that `keepers` must be instantiated in the correct order, as the `NewKeeper` of one module might require a reference to another module's `keeper`.
+* Instantiate the application's [module manager](../building-modules/module-manager.md#manager) with the [`AppModule`](#application-module-interface) object of each of the application's modules.
+* With the module manager, initialize the application's [`Msg` services](../core/baseapp.md#msg-services), [gRPC `Query` services](../core/baseapp.md#grpc-query-services), [legacy `Msg` routes](../core/baseapp.md#routing) and [legacy query routes](../core/baseapp.md#query-routing). When a transaction is relayed to the application by Tendermint via the ABCI, it is routed to the appropriate module's [`Msg` service](#msg-services) using the routes defined here. Likewise, when a gRPC query request is received by the application, it is routed to the appropriate module's [`gRPC query service`](#grpc-query-services) using the gRPC routes defined here. The Cosmos SDK still supports legacy `Msg`s and legacy Tendermint queries, which are routed using respectively the legacy `Msg` routes and the legacy query routes.
+* With the module manager, register the [application's modules' invariants](../building-modules/invariants.md). Invariants are variables (e.g. total supply of a token) that are evaluated at the end of each block. The process of checking invariants is done via a special module called the [`InvariantsRegistry`](../building-modules/invariants.md#invariant-registry). The value of the invariant should be equal to a predicted value defined in the module. Should the value be different than the predicted one, special logic defined in the invariant registry will be triggered (usually the chain is halted). This is useful to make sure no critical bug goes unnoticed and produces long-lasting effects that would be hard to fix.
+* With the module manager, set the order of execution between the `InitGenesis`, `BeginBlocker` and `EndBlocker` functions of each of the [application's modules](#application-module-interface). Note that not all modules implement these functions.
+* Set the remainder of application's parameters:
+    * [`InitChainer`](#initchainer): used to initialize the application when it is first started.
+    * [`BeginBlocker`, `EndBlocker`](#beginblocker-and-endlbocker): called at the beginning and the end of every block).
+    * [`anteHandler`](../core/baseapp.md#antehandler): used to handle fees and signature verification.
+* Mount the stores.
+* Return the application.
 
 Note that this function only creates an instance of the app, while the actual state is either carried over from the `~/.app/data` folder if the node is restarted, or generated from the genesis file if the node is started for the first time.
 
@@ -113,12 +113,12 @@ The `EncodingConfig` structure is the last important part of the `app.go` file. 
 
 Here are descriptions of what each of the four fields means:
 
-- `InterfaceRegistry`: The `InterfaceRegistry` is used by the Protobuf codec to handle interfaces that are encoded and decoded (we also say "unpacked") using [`google.protobuf.Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto). `Any` could be thought as a struct that contains a `type_url` (name of a concrete type implementing the interface) and a `value` (its encoded bytes). `InterfaceRegistry` provides a mechanism for registering interfaces and implementations that can be safely unpacked from `Any`. Each of the application's modules implements the `RegisterInterfaces` method that can be used to register the module's own interfaces and implementations.
-    - You can read more about Any in [ADR-19](../architecture/adr-019-protobuf-state-encoding.md#usage-of-any-to-encode-interfaces).
-    - To go more into details, the Cosmos SDK uses an implementation of the Protobuf specification called [`gogoprotobuf`](https://github.com/gogo/protobuf). By default, the [gogo protobuf implementation of `Any`](https://godoc.org/github.com/gogo/protobuf/types) uses [global type registration](https://github.com/gogo/protobuf/blob/master/proto/properties.go#L540) to decode values packed in `Any` into concrete Go types. This introduces a vulnerability where any malicious module in the dependency tree could registry a type with the global protobuf registry and cause it to be loaded and unmarshaled by a transaction that referenced it in the `type_url` field. For more information, please refer to [ADR-019](../architecture/adr-019-protobuf-state-encoding.md).
-- `Marshaler`: the default codec used throughout the Cosmos SDK. It is composed of a `BinaryCodec` used to encode and decode state, and a `JSONCodec` used to output data to the users (for example in the [CLI](#cli)). By default, the SDK uses Protobuf as `Marshaler`.
-- `TxConfig`: `TxConfig` defines an interface a client can utilize to generate an application-defined concrete transaction type. Currently, the SDK handles two transaction types: `SIGN_MODE_DIRECT` (which uses Protobuf binary as over-the-wire encoding) and `SIGN_MODE_LEGACY_AMINO_JSON` (which depends on Amino). Read more about transactions [here](../core/transactions.md).
-- `Amino`: Some legacy parts of the Cosmos SDK still use Amino for backwards-compatibility. Each module exposes a `RegisterLegacyAmino` method to register the module's specific types within Amino. This `Amino` codec should not be used by app developers anymore, and will be removed in future releases.
+* `InterfaceRegistry`: The `InterfaceRegistry` is used by the Protobuf codec to handle interfaces that are encoded and decoded (we also say "unpacked") using [`google.protobuf.Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto). `Any` could be thought as a struct that contains a `type_url` (name of a concrete type implementing the interface) and a `value` (its encoded bytes). `InterfaceRegistry` provides a mechanism for registering interfaces and implementations that can be safely unpacked from `Any`. Each of the application's modules implements the `RegisterInterfaces` method that can be used to register the module's own interfaces and implementations.
+    * You can read more about Any in [ADR-19](../architecture/adr-019-protobuf-state-encoding.md#usage-of-any-to-encode-interfaces).
+    * To go more into details, the Cosmos SDK uses an implementation of the Protobuf specification called [`gogoprotobuf`](https://github.com/gogo/protobuf). By default, the [gogo protobuf implementation of `Any`](https://godoc.org/github.com/gogo/protobuf/types) uses [global type registration](https://github.com/gogo/protobuf/blob/master/proto/properties.go#L540) to decode values packed in `Any` into concrete Go types. This introduces a vulnerability where any malicious module in the dependency tree could registry a type with the global protobuf registry and cause it to be loaded and unmarshaled by a transaction that referenced it in the `type_url` field. For more information, please refer to [ADR-019](../architecture/adr-019-protobuf-state-encoding.md).
+* `Marshaler`: the default codec used throughout the Cosmos SDK. It is composed of a `BinaryCodec` used to encode and decode state, and a `JSONCodec` used to output data to the users (for example in the [CLI](#cli)). By default, the SDK uses Protobuf as `Marshaler`.
+* `TxConfig`: `TxConfig` defines an interface a client can utilize to generate an application-defined concrete transaction type. Currently, the SDK handles two transaction types: `SIGN_MODE_DIRECT` (which uses Protobuf binary as over-the-wire encoding) and `SIGN_MODE_LEGACY_AMINO_JSON` (which depends on Amino). Read more about transactions [here](../core/transactions.md).
+* `Amino`: Some legacy parts of the Cosmos SDK still use Amino for backwards-compatibility. Each module exposes a `RegisterLegacyAmino` method to register the module's specific types within Amino. This `Amino` codec should not be used by app developers anymore, and will be removed in future releases.
 
 The Cosmos SDK exposes a `MakeTestEncodingConfig` function used to create a `EncodingConfig` for the app constructor (`NewApp`). It uses Protobuf as a default `Marshaler`.
 NOTE: this function is marked deprecated and should only be used to create an app or in tests. We are working on refactoring codec management in a post Stargate release.
@@ -178,9 +178,9 @@ Finally, each module should also implement the `RegisterServices` method as part
 
 The `keeper` type definition generally consists of:
 
-- **Key(s)** to the module's store(s) in the multistore.
-- Reference to **other module's `keepers`**. Only needed if the `keeper` needs to access other module's store(s) (either to read or write from them).
-- A reference to the application's **codec**. The `keeper` needs it to marshal structs before storing them, or to unmarshal them when it retrieves them, because stores only accept `[]bytes` as value.
+* **Key(s)** to the module's store(s) in the multistore.
+* Reference to **other module's `keepers`**. Only needed if the `keeper` needs to access other module's store(s) (either to read or write from them).
+* A reference to the application's **codec**. The `keeper` needs it to marshal structs before storing them, or to unmarshal them when it retrieves them, because stores only accept `[]bytes` as value.
 
 Along with the type definition, the next important component of the `keeper.go` file is the `keeper`'s constructor function, `NewKeeper`. This function instantiates a new `keeper` of the type defined above, with a `codec`, store `keys` and potentially references to other modules' `keeper`s as parameters. The `NewKeeper` function is called from the [application's constructor](#constructor-function). The rest of the file defines the `keeper`'s methods, primarily getters and setters.
 
@@ -192,8 +192,8 @@ Each module defines command-line commands, gRPC services and REST routes to be e
 
 Generally, the [commands related to a module](../building-modules/module-interfaces.md#cli) are defined in a folder called `client/cli` in the module's folder. The CLI divides commands in two category, transactions and queries, defined in `client/cli/tx.go` and `client/cli/query.go` respectively. Both commands are built on top of the [Cobra Library](https://github.com/spf13/cobra):
 
-- Transactions commands let users generate new transactions so that they can be included in a block and eventually update the state. One command should be created for each [message type](#message-types) defined in the module. The command calls the constructor of the message with the parameters provided by the end-user, and wraps it into a transaction. The Cosmos SDK handles signing and the addition of other transaction metadata.
-- Queries let users query the subset of the state defined by the module. Query commands forward queries to the [application's query router](../core/baseapp.md#query-routing), which routes them to the appropriate [querier](#querier) the `queryRoute` parameter supplied.
+* Transactions commands let users generate new transactions so that they can be included in a block and eventually update the state. One command should be created for each [message type](#message-types) defined in the module. The command calls the constructor of the message with the parameters provided by the end-user, and wraps it into a transaction. The Cosmos SDK handles signing and the addition of other transaction metadata.
+* Queries let users query the subset of the state defined by the module. Query commands forward queries to the [application's query router](../core/baseapp.md#query-routing), which routes them to the appropriate [querier](#querier) the `queryRoute` parameter supplied.
 
 #### gRPC
 
@@ -201,8 +201,8 @@ Generally, the [commands related to a module](../building-modules/module-interfa
 
 Each module can expose gRPC endpoints, called [service methods](https://grpc.io/docs/what-is-grpc/core-concepts/#service-definition) and are defined in the [module's Protobuf `query.proto` file](#grpc-query-services). A service method is defined by its name, input arguments and output response. The module then needs to:
 
-- define a `RegisterGRPCGatewayRoutes` method on `AppModuleBasic` to wire the client gRPC requests to the correct handler inside the module.
-- for each service method, define a corresponding handler. The handler implements the core logic necessary to serve the gRPC request, and is located in the `keeper/grpc_query.go` file.
+* define a `RegisterGRPCGatewayRoutes` method on `AppModuleBasic` to wire the client gRPC requests to the correct handler inside the module.
+* for each service method, define a corresponding handler. The handler implements the core logic necessary to serve the gRPC request, and is located in the `keeper/grpc_query.go` file.
 
 #### gRPC-gateway REST Endpoints
 
@@ -218,9 +218,9 @@ The Cosmos SDK also provides a development endpoint to generate [Swagger](https:
 
 The main interface is the [Command-Line Interface](../core/cli.md). The CLI of a Cosmos SDK application is built by aggregating [CLI commands](#cli) defined in each of the modules used by the application. The CLI of an application is the same as the daemon (e.g. `appd`), and defined in a file called `appd/main.go`. The file contains:
 
-- **A `main()` function**, which is executed to build the `appd` interface client. This function prepares each command and adds them to the `rootCmd` before building them. At the root of `appd`, the function adds generic commands like `status`, `keys` and `config`, query commands, tx commands and `rest-server`.
-- **Query commands** are added by calling the `queryCmd` function. This function returns a Cobra command that contains the query commands defined in each of the application's modules (passed as an array of `sdk.ModuleClients` from the `main()` function), as well as some other lower level query commands such as block or validator queries. Query command are called by using the command `appd query [query]` of the CLI.
-- **Transaction commands** are added by calling the `txCmd` function. Similar to `queryCmd`, the function returns a Cobra command that contains the tx commands defined in each of the application's modules, as well as lower level tx commands like transaction signing or broadcasting. Tx commands are called by using the command `appd tx [tx]` of the CLI.
+* **A `main()` function**, which is executed to build the `appd` interface client. This function prepares each command and adds them to the `rootCmd` before building them. At the root of `appd`, the function adds generic commands like `status`, `keys` and `config`, query commands, tx commands and `rest-server`.
+* **Query commands** are added by calling the `queryCmd` function. This function returns a Cobra command that contains the query commands defined in each of the application's modules (passed as an array of `sdk.ModuleClients` from the `main()` function), as well as some other lower level query commands such as block or validator queries. Query command are called by using the command `appd query [query]` of the CLI.
+* **Transaction commands** are added by calling the `txCmd` function. Similar to `queryCmd`, the function returns a Cobra command that contains the tx commands defined in each of the application's modules, as well as lower level tx commands like transaction signing or broadcasting. Tx commands are called by using the command `appd tx [tx]` of the CLI.
 
 See an example of an application's main command-line file from the [nameservice tutorial](https://github.com/cosmos/sdk-tutorials/tree/master/nameservice)
 
@@ -233,7 +233,7 @@ A patch introduced in `go-grpc v1.34.0` made gRPC incompatible with the `gogopro
 
 To make sure that gRPC is working properly, it is **highly recommended** to add the following line in your application's `go.mod`:
 
-```
+```go
 replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 ```
 

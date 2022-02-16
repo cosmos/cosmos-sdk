@@ -3,6 +3,7 @@
 ## Changelog
 
 - 2020-10-05: Initial Draft
+- 2021-04-21: Remove `ServiceMsg`s to follow Protobuf `Any`'s spec, see [#9063](https://github.com/cosmos/cosmos-sdk/issues/9063).
 
 ## Status
 
@@ -96,71 +97,28 @@ On the client side, developers could take advantage of this by creating RPC impl
 logic. Protobuf libraries that use asynchronous callbacks, like [protobuf.js](https://github.com/protobufjs/protobuf.js#using-services)
 could use this to register callbacks for specific messages even for transactions that include multiple `Msg`s.
 
-For backwards compatibility, existing `Msg` types should be used as the request parameter
-for `service` definitions. Newer `Msg` types which only support `service` definitions
-should use the more canonical `Msg...Request` names.
+Each `Msg` service method should have exactly one request parameter: its corresponding `Msg` type. For example, the `Msg` service method `/cosmos.gov.v1beta1.Msg/SubmitProposal` above has exactly one request parameter, namely the `Msg` type `/cosmos.gov.v1beta1.MsgSubmitProposal`. It is important the reader understands clearly the nomenclature difference between a `Msg` service (a Protobuf service) and a `Msg` type (a Protobuf message), and the differences in their fully-qualified name.
+
+This convention has been decided over the more canonical `Msg...Request` names mainly for backwards compatibility, but also for better readability in `TxBody.messages` (see [Encoding section](#encoding) below): transactions containing `/cosmos.gov.MsgSubmitProposal` read better than those containing `/cosmos.gov.v1beta1.MsgSubmitProposalRequest`.
+
+One consequence of this convention is that each `Msg` type can be the request parameter of only one `Msg` service method. However, we consider this limitation a good practice in explicitness.
 
 ### Encoding
 
-Currently, we are encoding `Msg`s as `Any` in `Tx`s which involves packing the
+Encoding of transactions generated with `Msg` services do not differ from current Protobuf transaction encoding as defined in [ADR-020](./adr-020-protobuf-transaction-encoding.md). We are encoding `Msg` types (which are exactly `Msg` service methods' request parameters) as `Any` in `Tx`s which involves packing the
 binary-encoded `Msg` with its type URL.
-
-The type URL for `MsgSubmitProposal` based on the proto3 spec is `/cosmos.gov.MsgSubmitProposal`.
-
-The fully-qualified name for the `SubmitProposal` service method above (also
-based on the proto3 and gRPC specs) is `/cosmos.gov.Msg/SubmitProposal` which varies
-by a single `/` character. The generated `.pb.go` files for protobuf `service`s
-include names of this form and any compliant protobuf/gRPC code generator will
-generate the same name.
-
-In order to encode service methods in transactions, we encode them as `Any`s in
-the same `TxBody.messages` field as other `Msg`s. We simply set `Any.type_url`
-to the full-qualified method name (ex. `/cosmos.gov.Msg/SubmitProposal`) and
-set `Any.value` to the protobuf encoding of the request message
-(`MsgSubmitProposal` in this case).
 
 ### Decoding
 
-When decoding, `TxBody.UnpackInterfaces` will need a special case
-to detect if `Any` type URLs match the service method format (ex. `/cosmos.gov.Msg/SubmitProposal`)
-by checking for two `/` characters. Messages that are method names plus request parameters
-instead of a normal `Any` messages will get unpacked into the `ServiceMsg` struct:
-
-```go
-type ServiceMsg struct {
-  // MethodName is the fully-qualified service name
-  MethodName string
-  // Request is the request payload
-  Request MsgRequest
-}
-```
+Since `Msg` types are packed into `Any`, decoding transactions messages are done by unpacking `Any`s into `Msg` types. For more information, please refer to [ADR-020](./adr-020-protobuf-transaction-encoding.md#transactions).
 
 ### Routing
 
-In the future, `service` definitions may become the primary method for defining
-`Msg`s. As a starting point, we need to integrate with the SDK's existing routing
-and `Msg` interface.
+We propose to add a `msg_service_router` in BaseApp. This router is a key/value map which maps `Msg` types' `type_url`s to their corresponding `Msg` service method handler. Since there is a 1-to-1 mapping between `Msg` types and `Msg` service method, the `msg_service_router` has exactly one entry per `Msg` service method.
 
-To do this, `ServiceMsg` implements the `sdk.Msg` interface and its handler does the
-actual method routing, allowing this feature to be added incrementally on top of
-existing functionality.
+When a transaction is processed by BaseApp (in CheckTx or in DeliverTx), its `TxBody.messages` are decoded as `Msg`s. Each `Msg`'s `type_url` is matched against an entry in the `msg_service_router`, and the respective `Msg` service method handler is called.
 
-### `MsgRequest` interface
-
-All request messages will need to implement the `MsgRequest` interface which is a
-simplified version of `Msg`, without `Route()`, `Type()` and `GetSignBytes()` which
-are no longer needed:
-
-```go
-type MsgRequest interface {
-  proto.Message
-  ValidateBasic() error
-  GetSigners() []AccAddress
-}
-```
-
-`ServiceMsg` will forward its `ValidateBasic` and `GetSigners` methods to the `MsgRequest`
-methods.
+For backward compatability, the old handlers are not removed yet. If BaseApp receives a legacy `Msg` with no correspoding entry in the `msg_service_router`, it will be routed via its legacy `Route()` method into the legacy handler.
 
 ### Module Configuration
 
@@ -192,8 +150,8 @@ The `RegisterServices` method and the `Configurator` interface are intended to
 evolve to satisfy the use cases discussed in [\#7093](https://github.com/cosmos/cosmos-sdk/issues/7093)
 and [\#7122](https://github.com/cosmos/cosmos-sdk/issues/7421).
 
-When `Msg` services are registered, the framework _should_ verify that all `Msg...Request` types
-implement the `MsgRequest` interface described above and throw an error during initialization rather
+When `Msg` services are registered, the framework _should_ verify that all `Msg` types
+implement the `sdk.Msg` interface and throw an error during initialization rather
 than later when transactions are processed.
 
 ### `Msg` Service Implementation
@@ -211,8 +169,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, params *types.MsgSubmitPro
 }
 ```
 
-The `sdk.Context` should have an `EventManager` already attached by the `ServiceMsg`
-router.
+The `sdk.Context` should have an `EventManager` already attached by BaseApp's `msg_service_router`.
 
 Separate handler definition is no longer needed with this approach.
 
@@ -225,6 +182,7 @@ This also allows us to change how we perform functional tests. Instead of mockin
 Finally, closing a module to client API opens desirable OCAP patterns discussed in ADR-033. Since server implementation and interface is hidden, nobody can hold "keepers"/servers and will be forced to relay on the client interface, which will drive developers for correct encapsulation and software engineering patterns.
 
 ### Pros
+
 - communicates return type clearly
 - manual handler registration and return type marshaling is no longer needed, just implement the interface and register it
 - communication interface is automatically generated, the developer can now focus only on the state transition methods - this would improve the UX of [\#7093](https://github.com/cosmos/cosmos-sdk/issues/7093) approach (1) if we chose to adopt that
@@ -232,10 +190,8 @@ Finally, closing a module to client API opens desirable OCAP patterns discussed 
 - dramatically reduces and simplifies the code
 
 ### Cons
-- supporting both this and the current concrete `Msg` type approach simultaneously could be confusing
-(we could choose to deprecate the current approach)
-- using `service` definitions outside the context of gRPC could be confusing (but doesn’t violate the proto3 spec)
 
+- using `service` definitions outside the context of gRPC could be confusing (but doesn’t violate the proto3 spec)
 
 ## References
 

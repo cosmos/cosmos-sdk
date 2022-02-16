@@ -33,8 +33,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 	// add coins to the module account
 	macc := app.DistrKeeper.GetDistributionAccount(ctx)
 	balances := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
-	err := app.BankKeeper.SetBalances(ctx, macc.GetAddress(), balances.Add(amount...))
-	require.NoError(t, err)
+	require.NoError(t, simapp.FundModuleAccount(app.BankKeeper, ctx, macc.GetName(), amount))
 
 	app.AccountKeeper.SetModuleAccount(ctx, macc)
 

@@ -57,13 +57,11 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	balances := sdk.NewCoins()
-	store := sdkCtx.KVStore(k.storeKey)
-	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
-	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
+	accountStore := k.getAccountStore(sdkCtx, addr)
 
 	pageRes, err := query.Paginate(accountStore, req.Pagination, func(_, value []byte) error {
 		var result sdk.Coin
-		err := k.cdc.UnmarshalBinaryBare(value, &result)
+		err := k.cdc.Unmarshal(value, &result)
 		if err != nil {
 			return err
 		}
@@ -79,11 +77,14 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 }
 
 // TotalSupply implements the Query/TotalSupply gRPC method
-func (k BaseKeeper) TotalSupply(ctx context.Context, _ *types.QueryTotalSupplyRequest) (*types.QueryTotalSupplyResponse, error) {
+func (k BaseKeeper) TotalSupply(ctx context.Context, req *types.QueryTotalSupplyRequest) (*types.QueryTotalSupplyResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	totalSupply := k.GetSupply(sdkCtx).GetTotal()
+	totalSupply, pageRes, err := k.GetPaginatedTotalSupply(sdkCtx, req.Pagination)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 
-	return &types.QueryTotalSupplyResponse{Supply: totalSupply}, nil
+	return &types.QueryTotalSupplyResponse{Supply: totalSupply, Pagination: pageRes}, nil
 }
 
 // SupplyOf implements the Query/SupplyOf gRPC method
@@ -97,9 +98,9 @@ func (k BaseKeeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest)
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	supply := k.GetSupply(ctx).GetTotal().AmountOf(req.Denom)
+	supply := k.GetSupply(ctx, req.Denom)
 
-	return &types.QuerySupplyOfResponse{Amount: sdk.NewCoin(req.Denom, supply)}, nil
+	return &types.QuerySupplyOfResponse{Amount: sdk.NewCoin(req.Denom, supply.Amount)}, nil
 }
 
 // Params implements the gRPC service handler for querying x/bank parameters.
@@ -126,7 +127,7 @@ func (k BaseKeeper) DenomsMetadata(c context.Context, req *types.QueryDenomsMeta
 	metadatas := []types.Metadata{}
 	pageRes, err := query.Paginate(store, req.Pagination, func(_, value []byte) error {
 		var metadata types.Metadata
-		k.cdc.MustUnmarshalBinaryBare(value, &metadata)
+		k.cdc.MustUnmarshal(value, &metadata)
 
 		metadatas = append(metadatas, metadata)
 		return nil
@@ -154,8 +155,8 @@ func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetada
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	metadata := k.GetDenomMetaData(ctx, req.Denom)
-	if metadata.Base == "" && metadata.Display == "" && metadata.Description == "" && len(metadata.DenomUnits) == 0 {
+	metadata, found := k.GetDenomMetaData(ctx, req.Denom)
+	if !found {
 		return nil, status.Errorf(codes.NotFound, "client metadata for denom %s", req.Denom)
 	}
 

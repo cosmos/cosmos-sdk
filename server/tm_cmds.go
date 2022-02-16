@@ -4,17 +4,15 @@ package server
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
 	tversion "github.com/tendermint/tendermint/version"
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/client"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -32,7 +30,6 @@ func ShowNodeIDCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
 			fmt.Println(nodeKey.ID())
 			return nil
 		},
@@ -49,31 +46,24 @@ func ShowValidatorCmd() *cobra.Command {
 			cfg := serverCtx.Config
 
 			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
-			valPubKey, err := privValidator.GetPubKey()
+			pk, err := privValidator.GetPubKey()
 			if err != nil {
 				return err
 			}
-
-			output, _ := cmd.Flags().GetString(cli.OutputFlag)
-			if strings.ToLower(output) == "json" {
-				return printlnJSON(valPubKey)
-			}
-
-			pubkey, err := cryptocodec.FromTmPubKeyInterface(valPubKey)
+			sdkPK, err := cryptocodec.FromTmPubKeyInterface(pk)
 			if err != nil {
 				return err
 			}
-			pubkeyBech32, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pubkey)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			bz, err := clientCtx.Codec.MarshalInterfaceJSON(sdkPK)
 			if err != nil {
 				return err
 			}
-
-			fmt.Println(pubkeyBech32)
+			fmt.Println(string(bz))
 			return nil
 		},
 	}
 
-	cmd.Flags().StringP(cli.OutputFlag, "o", "text", "Output format (text|json)")
 	return &cmd
 }
 
@@ -88,18 +78,11 @@ func ShowAddressCmd() *cobra.Command {
 
 			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			valConsAddr := (sdk.ConsAddress)(privValidator.GetAddress())
-
-			output, _ := cmd.Flags().GetString(cli.OutputFlag)
-			if strings.ToLower(output) == "json" {
-				return printlnJSON(valConsAddr)
-			}
-
 			fmt.Println(valConsAddr.String())
 			return nil
 		},
 	}
 
-	cmd.Flags().StringP(cli.OutputFlag, "o", "text", "Output format (text|json)")
 	return cmd
 }
 
@@ -131,19 +114,6 @@ against which this app has been compiled.
 			return nil
 		},
 	}
-}
-
-func printlnJSON(v interface{}) error {
-	cdc := codec.NewLegacyAmino()
-	cryptocodec.RegisterCrypto(cdc)
-
-	marshalled, err := cdc.MarshalJSON(v)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(marshalled))
-	return nil
 }
 
 // UnsafeResetAllCmd - extension of the tendermint command, resets initialization

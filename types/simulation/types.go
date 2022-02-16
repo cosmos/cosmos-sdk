@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 type WeightedProposalContent interface {
@@ -75,8 +76,15 @@ func NewOperationMsgBasic(route, name, comment string, ok bool, msg []byte) Oper
 }
 
 // NewOperationMsg - create a new operation message from sdk.Msg
-func NewOperationMsg(msg sdk.Msg, ok bool, comment string) OperationMsg {
-	return NewOperationMsgBasic(msg.Route(), msg.Type(), comment, ok, msg.GetSignBytes())
+func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec) OperationMsg {
+	if legacyMsg, okType := msg.(legacytx.LegacyMsg); okType {
+		return NewOperationMsgBasic(legacyMsg.Route(), legacyMsg.Type(), comment, ok, legacyMsg.GetSignBytes())
+	}
+
+	bz := cdc.MustMarshalJSON(msg)
+
+	return NewOperationMsgBasic(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), comment, ok, bz)
+
 }
 
 // NoOpMsg - create a no-operation message
@@ -114,8 +122,6 @@ func (om OperationMsg) LogEvent(eventLogger func(route, op, evResult string)) {
 	eventLogger(om.Route, om.Name, pass)
 }
 
-// ________________________________________________________________________
-
 // FutureOperation is an operation which will be ran at the beginning of the
 // provided BlockHeight. If both a BlockHeight and BlockTime are specified, it
 // will use the BlockHeight. In the (likely) event that multiple operations
@@ -135,7 +141,7 @@ type AppParams map[string]json.RawMessage
 // object. If it exists, it'll be decoded and returned. Otherwise, the provided
 // ParamSimulator is used to generate a random value or default value (eg: in the
 // case of operation weights where Rand is not used).
-func (sp AppParams) GetOrGenerate(_ codec.JSONMarshaler, key string, ptr interface{}, r *rand.Rand, ps ParamSimulator) {
+func (sp AppParams) GetOrGenerate(_ codec.JSONCodec, key string, ptr interface{}, r *rand.Rand, ps ParamSimulator) {
 	if v, ok := sp[key]; ok && v != nil {
 		err := json.Unmarshal(v, ptr)
 		if err != nil {

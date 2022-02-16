@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
+	"github.com/golang/protobuf/proto" // nolint: staticcheck
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -59,12 +60,12 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 	}
 
 	for _, event := range req.Events {
-		if strings.Count(event, "=") != 1 {
+		if !strings.Contains(event, "=") || strings.Count(event, "=") > 1 {
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid event; event %s should be of the format: %s", event, eventFormat))
 		}
 	}
 
-	result, err := queryTxsByEvents(ctx, s.clientCtx, req.Events, page, limit, orderBy)
+	result, err := QueryTxsByEvents(s.clientCtx, req.Events, page, limit, orderBy)
 	if err != nil {
 		return nil, err
 	}
@@ -92,17 +93,25 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 
 // Simulate implements the ServiceServer.Simulate RPC method.
 func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*txtypes.SimulateResponse, error) {
-	if req == nil || req.Tx == nil {
+	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
 	}
 
-	err := req.Tx.UnpackInterfaces(s.interfaceRegistry)
-	if err != nil {
-		return nil, err
+	txBytes := req.TxBytes
+	if txBytes == nil && req.Tx != nil {
+		// This block is for backwards-compatibility.
+		// We used to support passing a `Tx` in req. But if we do that, sig
+		// verification might not pass, because the .Marshal() below might not
+		// be the same marshaling done by the client.
+		var err error
+		txBytes, err = proto.Marshal(req.Tx)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid tx; %v", err)
+		}
 	}
-	txBytes, err := req.Tx.Marshal()
-	if err != nil {
-		return nil, err
+
+	if txBytes == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty txBytes is not allowed")
 	}
 
 	gasInfo, result, err := s.simulate(txBytes)
@@ -124,7 +133,7 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 
 	// TODO We should also check the proof flag in gRPC header.
 	// https://github.com/cosmos/cosmos-sdk/issues/7036.
-	result, err := queryTx(ctx, s.clientCtx, req.Hash)
+	result, err := QueryTx(s.clientCtx, req.Hash)
 	if err != nil {
 		return nil, err
 	}

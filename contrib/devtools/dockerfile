@@ -20,5 +20,11 @@ RUN GO111MODULE=on go get \
 
 RUN GO111MODULE=on go get -u github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc
 
+RUN apk add --no-cache \
+  nodejs \
+  npm
+
+RUN npm install -g swagger-combine
+
 COPY --from=BUILDER /usr/local/bin /usr/local/bin
 COPY --from=clang-format-build /usr/bin/clang-format /usr/bin

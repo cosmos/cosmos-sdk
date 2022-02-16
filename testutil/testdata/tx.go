@@ -3,7 +3,10 @@ package testdata
 import (
 	"encoding/json"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -11,6 +14,15 @@ import (
 // KeyTestPubAddr generates a new secp256k1 keypair.
 func KeyTestPubAddr() (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) {
 	key := secp256k1.GenPrivKey()
+	pub := key.PubKey()
+	addr := sdk.AccAddress(pub.Address())
+	return key, pub, addr
+}
+
+// KeyTestPubAddr generates a new secp256r1 keypair.
+func KeyTestPubAddrSecp256R1(require *require.Assertions) (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) {
+	key, err := secp256r1.GenPrivKey()
+	require.NoError(err)
 	pub := key.PubKey()
 	addr := sdk.AccAddress(pub.Address())
 	return key, pub, addr
@@ -65,14 +77,7 @@ func (msg *TestMsg) GetSigners() []sdk.AccAddress {
 }
 func (msg *TestMsg) ValidateBasic() error { return nil }
 
-var _ sdk.MsgRequest = &MsgCreateDog{}
+var _ sdk.Msg = &MsgCreateDog{}
 
 func (msg *MsgCreateDog) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{} }
 func (msg *MsgCreateDog) ValidateBasic() error         { return nil }
-
-func NewServiceMsgCreateDog(msg *MsgCreateDog) sdk.Msg {
-	return sdk.ServiceMsg{
-		MethodName: "/testdata.Msg/CreateDog",
-		Request:    msg,
-	}
-}

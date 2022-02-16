@@ -30,7 +30,7 @@ func Test_runListCmd(t *testing.T) {
 	clientCtx := client.Context{}.WithKeyring(kb)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
-	path := "" //sdk.GetConfig().GetFullFundraiserPath()
+	path := "" //sdk.GetConfig().GetFullBIP44Path()
 	_, err = kb.NewAccount("something", testutil.TestMnemonic, "", path, hd.Secp256k1)
 	require.NoError(t, err)
 
@@ -57,7 +57,6 @@ func Test_runListCmd(t *testing.T) {
 			cmd.SetArgs([]string{
 				fmt.Sprintf("--%s=%s", flags.FlagHome, tt.kbDir),
 				fmt.Sprintf("--%s=false", flagListNames),
-				fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 			})
 
 			if err := cmd.ExecuteContext(ctx); (err != nil) != tt.wantErr {
@@ -67,7 +66,6 @@ func Test_runListCmd(t *testing.T) {
 			cmd.SetArgs([]string{
 				fmt.Sprintf("--%s=%s", flags.FlagHome, tt.kbDir),
 				fmt.Sprintf("--%s=true", flagListNames),
-				fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 			})
 
 			if err := cmd.ExecuteContext(ctx); (err != nil) != tt.wantErr {

@@ -22,8 +22,8 @@ func TestDeposits(t *testing.T) {
 	require.NoError(t, err)
 	proposalID := proposal.ProposalId
 
-	fourStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(4)))
-	fiveStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(5)))
+	fourStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 4)))
+	fiveStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 5)))
 
 	addr0Initial := app.BankKeeper.GetAllBalances(ctx, TestAddrs[0])
 	addr1Initial := app.BankKeeper.GetAllBalances(ctx, TestAddrs[1])
@@ -100,4 +100,11 @@ func TestDeposits(t *testing.T) {
 	require.False(t, found)
 	require.Equal(t, addr0Initial, app.BankKeeper.GetAllBalances(ctx, TestAddrs[0]))
 	require.Equal(t, addr1Initial, app.BankKeeper.GetAllBalances(ctx, TestAddrs[1]))
+
+	// Test delete deposits
+	_, err = app.GovKeeper.AddDeposit(ctx, proposalID, TestAddrs[0], fourStake)
+	require.NoError(t, err)
+	app.GovKeeper.DeleteDeposits(ctx, proposalID)
+	deposits = app.GovKeeper.GetDeposits(ctx, proposalID)
+	require.Len(t, deposits, 0)
 }

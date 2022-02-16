@@ -8,6 +8,64 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+func (suite *KeeperTestSuite) TestGRPCQueryAccounts() {
+	var (
+		req *types.QueryAccountsRequest
+	)
+	_, _, first := testdata.KeyTestPubAddr()
+	_, _, second := testdata.KeyTestPubAddr()
+
+	testCases := []struct {
+		msg       string
+		malleate  func()
+		expPass   bool
+		posttests func(res *types.QueryAccountsResponse)
+	}{
+		{
+			"success",
+			func() {
+				suite.app.AccountKeeper.SetAccount(suite.ctx,
+					suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, first))
+				suite.app.AccountKeeper.SetAccount(suite.ctx,
+					suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, second))
+				req = &types.QueryAccountsRequest{}
+			},
+			true,
+			func(res *types.QueryAccountsResponse) {
+				for _, acc := range res.Accounts {
+					var account types.AccountI
+					err := suite.app.InterfaceRegistry().UnpackAny(acc, &account)
+					suite.Require().NoError(err)
+
+					suite.Require().True(
+						first.Equals(account.GetAddress()) || second.Equals(account.GetAddress()))
+				}
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.ctx)
+
+			res, err := suite.queryClient.Accounts(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(res)
+			}
+
+			tc.posttests(res)
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 	var (
 		req *types.QueryAccountRequest

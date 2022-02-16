@@ -8,7 +8,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
 option (gogoproto.goproto_registration) = true;
-option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
+option go_package                       = "github.com/cosmos/cosmos-sdk/types/tx";
 
 // Service defines a gRPC service for interacting with transactions.
 service Service {
@@ -43,7 +43,7 @@ message GetTxsEventRequest {
   repeated string events = 1;
   // pagination defines an pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
-  OrderBy order_by = 3;
+  OrderBy                               order_by   = 3;
 }
 
 // OrderBy defines the sorting order
@@ -51,9 +51,9 @@ enum OrderBy {
   // ORDER_BY_UNSPECIFIED specifies an unknown sorting order. OrderBy defaults to ASC in this case.
   ORDER_BY_UNSPECIFIED = 0;
   // ORDER_BY_ASC defines ascending order
-  ORDER_BY_ASC     = 1;
+  ORDER_BY_ASC = 1;
   // ORDER_BY_DESC defines descending order
-  ORDER_BY_DESC    = 2;
+  ORDER_BY_DESC = 2;
 }
 
 // GetTxsEventResponse is the response type for the Service.TxsByEvents
@@ -101,7 +101,12 @@ message BroadcastTxResponse {
 // RPC method.
 message SimulateRequest {
   // tx is the transaction to simulate.
-  cosmos.tx.v1beta1.Tx tx = 1;
+  // Deprecated. Send raw tx bytes instead.
+  cosmos.tx.v1beta1.Tx tx = 1 [deprecated = true];
+  // tx_bytes is the raw transaction.
+  //
+  // Since: cosmos-sdk 0.43
+  bytes tx_bytes = 2;
 }
 
 // SimulateResponse is the response type for the

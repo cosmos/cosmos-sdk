@@ -63,7 +63,7 @@ func (s *internalIntTestSuite) TestEncodingRandom() {
 }
 
 func (s *internalIntTestSuite) TestSerializationOverflow() {
-	bx, _ := new(big.Int).SetString("91888242871839275229946405745257275988696311157297823662689937894645226298583", 10)
+	bx, _ := new(big.Int).SetString("115792089237316195423570985008687907853269984665640564039457584007913129639936", 10)
 	x := Int{bx}
 	y := new(Int)
 
@@ -78,6 +78,24 @@ func (s *internalIntTestSuite) TestSerializationOverflow() {
 	s.Require().NoError(err)
 
 	s.Require().Error(y.UnmarshalJSON(bz))
+}
+
+func (s *internalIntTestSuite) TestDeserializeMaxERC20() {
+	bx, _ := new(big.Int).SetString("115792089237316195423570985008687907853269984665640564039457584007913129639935", 10)
+	x := Int{bx}
+	y := new(Int)
+
+	bz, err := x.Marshal()
+	s.Require().NoError(err)
+
+	// require deserialization to be successful
+	s.Require().NoError(y.Unmarshal(bz))
+
+	// require JSON deserialization to succeed
+	bz, err = x.MarshalJSON()
+	s.Require().NoError(err)
+
+	s.Require().NoError(y.UnmarshalJSON(bz))
 }
 
 func (s *internalIntTestSuite) TestImmutabilityArithInt() {

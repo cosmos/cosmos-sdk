@@ -36,7 +36,7 @@ NextInflationRate(params Params, bondedRatio sdk.Dec) (inflation sdk.Dec) {
 ## NextAnnualProvisions
 
 Calculate the annual provisions based on current total supply and inflation
-rate. This parameter is calculated once per block. 
+rate. This parameter is calculated once per block.
 
 ```
 NextAnnualProvisions(params Params, totalSupply sdk.Dec) (provisions sdk.Dec) {

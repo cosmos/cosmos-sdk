@@ -69,9 +69,6 @@ timestamp.`,
 			delayed, _ := cmd.Flags().GetBool(FlagDelayed)
 
 			msg := types.NewMsgCreateVestingAccount(clientCtx.GetFromAddress(), toAddr, amount, endTime, delayed)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

@@ -16,7 +16,7 @@ message GenesisState {
   repeated SigningInfo signing_infos = 2
       [(gogoproto.moretags) = "yaml:\"signing_infos\"", (gogoproto.nullable) = false];
 
-  // signing_infos represents a map between validator addresses and their
+  // missed_blocks represents a map between validator addresses and their
   // missed blocks.
   repeated ValidatorMissedBlocks missed_blocks = 3
       [(gogoproto.moretags) = "yaml:\"missed_blocks\"", (gogoproto.nullable) = false];

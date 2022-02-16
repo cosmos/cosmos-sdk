@@ -30,6 +30,11 @@ message PageRequest {
   // count_total is only respected when offset is used. It is ignored when key
   // is set.
   bool count_total = 4;
+
+  // reverse is set to true if results are to be returned in the descending order.
+  //
+  // Since: cosmos-sdk 0.43
+  bool reverse = 5;
 }
 
 // PageResponse is to be embedded in gRPC response messages where the

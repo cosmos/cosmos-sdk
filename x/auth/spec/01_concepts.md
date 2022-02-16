@@ -4,6 +4,13 @@ order: 1
 
 # Concepts
 
+**Note:** The auth module is different from the [authz module](../modules/authz/).
+
+The differences are:
+
+* `auth` - authentication of accounts and transactions for Cosmos SDK applications and is responsible for specifying the base transaction and account types.
+* `authz` - authorization for accounts to perform actions on behalf of other accounts and enables a granter to grant authorizations to a grantee that allows the grantee to execute messages on behalf of the granter.
+
 ## Gas & Fees
 
 Fees serve two purposes for an operator of the network.

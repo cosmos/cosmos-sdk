@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -173,41 +172,13 @@ func TestDefaultTxEncoder(t *testing.T) {
 
 	tx := NewStdTx(msgs, fee, sigs, "")
 
-	cdcBytes, err := cdc.MarshalBinaryBare(tx)
+	cdcBytes, err := cdc.Marshal(tx)
 
 	require.NoError(t, err)
 	encoderBytes, err := encoder(tx)
 
 	require.NoError(t, err)
 	require.Equal(t, cdcBytes, encoderBytes)
-}
-
-func TestStdSignatureMarshalYAML(t *testing.T) {
-	_, pubKey, _ := testdata.KeyTestPubAddr()
-
-	testCases := []struct {
-		sig    StdSignature
-		output string
-	}{
-		{
-			StdSignature{},
-			"|\n  pubkey: \"\"\n  signature: \"\"\n",
-		},
-		{
-			StdSignature{PubKey: pubKey, Signature: []byte("dummySig")},
-			fmt.Sprintf("|\n  pubkey: %s\n  signature: 64756D6D79536967\n", sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)),
-		},
-		{
-			StdSignature{PubKey: pubKey, Signature: nil},
-			fmt.Sprintf("|\n  pubkey: %s\n  signature: \"\"\n", sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)),
-		},
-	}
-
-	for i, tc := range testCases {
-		bz, err := yaml.Marshal(tc.sig)
-		require.NoError(t, err)
-		require.Equal(t, tc.output, string(bz), "test case #%d", i)
-	}
 }
 
 func TestSignatureV2Conversions(t *testing.T) {
@@ -280,7 +251,7 @@ func TestGetSignaturesV2(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, len(sigs), 1)
 
-	require.Equal(t, cdc.MustMarshalBinaryBare(sigs[0].PubKey), cdc.MustMarshalBinaryBare(sig.GetPubKey()))
+	require.Equal(t, cdc.MustMarshal(sigs[0].PubKey), cdc.MustMarshal(sig.GetPubKey()))
 	require.Equal(t, sigs[0].Data, &signing.SingleSignatureData{
 		SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		Signature: sig.GetSignature(),

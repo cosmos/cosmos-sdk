@@ -97,6 +97,7 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		homeDir, _ := flagSet.GetString(flags.FlagHome)
 		clientCtx = clientCtx.WithHomeDir(homeDir)
 	}
+
 	if !clientCtx.Simulate || flagSet.Changed(flags.FlagDryRun) {
 		dryRun, _ := flagSet.GetBool(flags.FlagDryRun)
 		clientCtx = clientCtx.WithSimulation(dryRun)
@@ -194,11 +195,6 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		clientCtx = clientCtx.WithGenerateOnly(genOnly)
 	}
 
-	if !clientCtx.Simulate || flagSet.Changed(flags.FlagDryRun) {
-		dryRun, _ := flagSet.GetBool(flags.FlagDryRun)
-		clientCtx = clientCtx.WithSimulation(dryRun)
-	}
-
 	if !clientCtx.Offline || flagSet.Changed(flags.FlagOffline) {
 		offline, _ := flagSet.GetBool(flags.FlagOffline)
 		clientCtx = clientCtx.WithOffline(offline)
@@ -224,6 +220,19 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		clientCtx = clientCtx.WithSignModeStr(signModeStr)
 	}
 
+	if clientCtx.FeeGranter == nil || flagSet.Changed(flags.FlagFeeAccount) {
+		granter, _ := flagSet.GetString(flags.FlagFeeAccount)
+
+		if granter != "" {
+			granterAcc, err := sdk.AccAddressFromBech32(granter)
+			if err != nil {
+				return clientCtx, err
+			}
+
+			clientCtx = clientCtx.WithFeeGranterAddress(granterAcc)
+		}
+	}
+
 	if clientCtx.From == "" || flagSet.Changed(flags.FlagFrom) {
 		from, _ := flagSet.GetString(flags.FlagFrom)
 		fromAddr, fromName, keyType, err := GetFromFields(clientCtx.Keyring, from, clientCtx.GenerateOnly)
@@ -243,21 +252,6 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 	}
 
 	return clientCtx, nil
-}
-
-// ReadHomeFlag checks if home flag is changed.
-// If this is a case, we update HomeDir field of Client Context
-/* Discovered a bug with Cory
-./build/simd init andrei --home ./test
-cd test/config there is no client.toml configuration file
-*/
-func ReadHomeFlag(clientCtx Context, cmd *cobra.Command) Context {
-	if cmd.Flags().Changed(flags.FlagHome) {
-		rootDir, _ := cmd.Flags().GetString(flags.FlagHome)
-		clientCtx = clientCtx.WithHomeDir(rootDir)
-	}
-
-	return clientCtx
 }
 
 // GetClientQueryContext returns a Context from a command with fields set based on flags

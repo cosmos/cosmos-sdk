@@ -3,7 +3,7 @@ package bech32
 import (
 	"fmt"
 
-	"github.com/enigmampc/btcutil/bech32"
+	"github.com/cosmos/btcutil/bech32"
 )
 
 // ConvertAndEncode converts from a base64 encoded byte string to base32 encoded byte string and then to bech32.

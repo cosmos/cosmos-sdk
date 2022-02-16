@@ -28,7 +28,7 @@ Blockchain Node |  |           Consensus           |  |
 
 1. [`app.go`] 创建了一个状态机实例。
 
-2. 用最新的已知状态初始化状态机，该状态机是从存储在 `~/.appd/data` 文件夹中的 db 中提取的。 此时，状态机的高度为：`appBlockHeight`。
+2. 用最新的已知状态初始化状态机，该状态机是从存储在 `~/.app/data` 文件夹中的 db 中提取的。 此时，状态机的高度为：`appBlockHeight`。
 
 3. 创建并启动一个新的 Tendermint 实例。 该节点将与对等节点进行连接交换信息。 它将从他们那里获取最新的 `blockHeight`，如果它大于本地的 `appBlockHeight`，则重播块以同步到该高度。 如果 `appBlockHeight` 为 `0`，则该节点从创世开始，并且 Tendermint 通过 ABCI 接口向 `app` 发送 `InitChain` 初始化链命令，从而触发 [`InitChainer`](https://docs.cosmos.network/master/basics/app-anatomy.html#initchainer)。
 
@@ -67,13 +67,13 @@ Blockchain Node |  |           Consensus           |  |
 - 使用模块管理器，在每个应用程序的模块 的 InitGenesis，BegingBlocker 和 EndBlocker 函数之间设置执行顺序。 请注意，并非所有模块都实现这些功能。
 - 模块实现这些功能。
 - 设置其余的应用程序参数：
-  - `InitChainer` 于在应用程序首次启动时对其进行初始化。
-  - `BeginBlocker`，`EndBlocker`：在每个块的开始和结尾处调用。
-  - `anteHandler`：用于处理费用和签名验证。
+    - `InitChainer` 于在应用程序首次启动时对其进行初始化。
+    - `BeginBlocker`，`EndBlocker`：在每个块的开始和结尾处调用。
+    - `anteHandler`：用于处理费用和签名验证。
 - 挂载存储.
 - 返回应用实例.
 
-请注意，此函数仅创建该应用的一个实例，而如果重新启动节点，则状态将从 `〜/.appd/data` 文件夹中保留下来状态加载，如果节点是第一次启动，则从创世文件生成。See an example of application constructor from [`gaia`](https://github.com/cosmos/gaia):
+请注意，此函数仅创建该应用的一个实例，而如果重新启动节点，则状态将从 `〜/.app/data` 文件夹中保留下来状态加载，如果节点是第一次启动，则从创世文件生成。See an example of application constructor from [`gaia`](https://github.com/cosmos/gaia):
 
 +++ https://github.com/cosmos/gaia/blob/f41a660cdd5bea173139965ade55bd25d1ee3429/app/app.go#L110-L222
 
@@ -179,7 +179,7 @@ AppModule 在模块上公开了一组有用的方法，这些方法有助于将�
 `keeper` 类型定义通常包括：
 
 - 多重存储中模块存储的`密钥`。
-  - 参考**其他模块的`keepers`**。 仅当 `keeper` 需要访问其他模块的存储（从它们读取或写入）时才需要。
+    - 参考**其他模块的`keepers`**。 仅当 `keeper` 需要访问其他模块的存储（从它们读取或写入）时才需要。
 - 对应用程序的`编解码器`的引用。 `keeper` 需要它在存储结构之前序列化处理，或在检索它们时将反序列化处理，因为存储仅接受 `[]bytes` 作为值。
 
 与类型定义一起，keeper.go 文件的一个重要组成部分是 Keeper 的构造函数 NewKeeper。 该函数实例化上面定义的类型的新 `keeper`，并带有 `codec`，存储 `keys` 以及可能引用其他模块的 `keeper` 作为参数。从应用程序的构造函数中调用 `NewKeeper` 函数。文件的其余部分定义了 `keeper` 的方法，主要是 getter 和 setter。

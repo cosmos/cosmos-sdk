@@ -12,7 +12,6 @@
 
 관련 스펙은 [여기](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/staking)에서 확인하실 수 있습니다.
 
-
 # Slashing
 
 `x/slashing` 모듈은 코스모스 위임형 지분증명(Delegated-Proof-of-Stake) 시스템에서 사용됩니다.

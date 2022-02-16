@@ -18,9 +18,9 @@ The staking module emits the following events:
 | complete_redelegation | destination_validator | {dstValidatorAddress}     |
 | complete_redelegation | delegator             | {delegatorAddress}        |
 
-## Service Messages
+## Msg's
 
-### Msg/CreateValidator
+### MsgCreateValidator
 
 | Type             | Attribute Key | Attribute Value    |
 | ---------------- | ------------- | ------------------ |
@@ -30,7 +30,7 @@ The staking module emits the following events:
 | message          | action        | create_validator   |
 | message          | sender        | {senderAddress}    |
 
-### Msg/EditValidator
+### MsgEditValidator
 
 | Type           | Attribute Key       | Attribute Value     |
 | -------------- | ------------------- | ------------------- |
@@ -40,7 +40,7 @@ The staking module emits the following events:
 | message        | action              | edit_validator      |
 | message        | sender              | {senderAddress}     |
 
-### Msg/Delegate
+### MsgDelegate
 
 | Type     | Attribute Key | Attribute Value    |
 | -------- | ------------- | ------------------ |
@@ -50,7 +50,7 @@ The staking module emits the following events:
 | message  | action        | delegate           |
 | message  | sender        | {senderAddress}    |
 
-### Msg/Undelegate
+### MsgUndelegate
 
 | Type    | Attribute Key       | Attribute Value    |
 | ------- | ------------------- | ------------------ |
@@ -63,7 +63,7 @@ The staking module emits the following events:
 
 - [0] Time is formatted in the RFC3339 standard
 
-### Msg/BeginRedelegate
+### MsgBeginRedelegate
 
 | Type       | Attribute Key         | Attribute Value       |
 | ---------- | --------------------- | --------------------- |

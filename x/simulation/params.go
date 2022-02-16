@@ -87,7 +87,6 @@ func RandomParams(r *rand.Rand) Params {
 	}
 }
 
-//-----------------------------------------------------------------------------
 // Param change proposals
 
 // ParamChange defines the object used for simulating parameter change proposals
@@ -120,10 +119,9 @@ func NewSimParamChange(subspace, key string, simVal simulation.SimValFn) simulat
 
 // ComposedKey creates a new composed key for the param change proposal
 func (spc ParamChange) ComposedKey() string {
-	return fmt.Sprintf("%s/%s", spc.Subspace(), spc.Key())
+	return spc.Subspace() + "/" + spc.Key()
 }
 
-//-----------------------------------------------------------------------------
 // Proposal Contents
 
 // WeightedProposalContent defines a common struct for proposal contents defined by
@@ -150,11 +148,10 @@ func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulato
 	return w.contentSimulatorFn
 }
 
-//-----------------------------------------------------------------------------
 // Param change proposals
 
 // randomConsensusParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
-func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSONMarshaler) *abci.ConsensusParams {
+func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSONCodec) *abci.ConsensusParams {
 	var genesisState map[string]json.RawMessage
 	err := json.Unmarshal(appState, &genesisState)
 	if err != nil {

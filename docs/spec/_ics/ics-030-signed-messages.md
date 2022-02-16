@@ -19,7 +19,7 @@ Proposed.
 ## Abstract
 
 Having the ability to sign messages off-chain has proven to be a fundamental aspect
-of nearly any blockchain. The notion of signing messages off-chain has many 
+of nearly any blockchain. The notion of signing messages off-chain has many
 added benefits such as saving on computational costs and reducing transaction
 throughput and overhead. Within the context of the Cosmos, some of the major
 applications of signing such data includes, but is not limited to, providing a
@@ -42,13 +42,13 @@ This specification is only concerned with the rationale and the standardized
 implementation of Cosmos signed messages. It does **not** concern itself with the
 concept of replay attacks as that will be left up to the higher-level application
 implementation. If you view signed messages in the means of authorizing some
-action or data, then such an application would have to either treat this as 
+action or data, then such an application would have to either treat this as
 idempotent or have mechanisms in place to reject known signed messages.
 
 ## Preliminary
 
 The Cosmos message signing protocol will be parameterized with a cryptographic
-secure hashing algorithm `SHA-256` and a signing algorithm `S` that contains 
+secure hashing algorithm `SHA-256` and a signing algorithm `S` that contains
 the operations `sign` and `verify` which provide a digital signature over a set
 of bytes and verification of a signature respectively.
 
@@ -85,7 +85,7 @@ in lexicographically ascending order.
 For the purposes of signing Cosmos messages, the `@chain_id` field must correspond
 to the Cosmos chain identifier. The user-agent should **refuse** signing if the
 `@chain_id` field does not match the currently active chain! The `@type` field
-must equal the constant `"message"`. The `@type` field corresponds to the type of 
+must equal the constant `"message"`. The `@type` field corresponds to the type of
 structure the user will be signing in an application. For now, a user is only
 allowed to sign bytes of valid ASCII text ([see here](https://github.com/tendermint/tendermint/blob/master/libs/common/string.go#L61-L74)).
 However, this will change and evolve to support additional application-specific
@@ -153,7 +153,6 @@ know exactly what they are signing (opposed to signing a bunch of arbitrary byte
 
 Thus, in the future, the Cosmos signing message specification will be expected
 to expand upon it's canonical JSON structure to include such functionality.
-
 
 ## API
 

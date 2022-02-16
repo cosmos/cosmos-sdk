@@ -10,6 +10,7 @@ const (
 	DefaultWeightMsgFundCommunityPool           int = 50
 	DefaultWeightMsgDeposit                     int = 100
 	DefaultWeightMsgVote                        int = 67
+	DefaultWeightMsgVoteWeighted                int = 33
 	DefaultWeightMsgUnjail                      int = 100
 	DefaultWeightMsgCreateValidator             int = 100
 	DefaultWeightMsgEditValidator               int = 5
@@ -20,4 +21,8 @@ const (
 	DefaultWeightCommunitySpendProposal int = 5
 	DefaultWeightTextProposal           int = 5
 	DefaultWeightParamChangeProposal    int = 5
+
+	// feegrant
+	DefaultWeightGrantAllowance  int = 100
+	DefaultWeightRevokeAllowance int = 100
 )

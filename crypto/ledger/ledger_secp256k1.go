@@ -149,7 +149,7 @@ func (pkl *PrivKeyLedgerSecp256k1) AssertIsPrivKeyInner() {}
 // Bytes implements the PrivKey interface. It stores the cached public key so
 // we can verify the same key when we reconnect to a ledger.
 func (pkl PrivKeyLedgerSecp256k1) Bytes() []byte {
-	return cdc.MustMarshalBinaryBare(pkl)
+	return cdc.MustMarshal(pkl)
 }
 
 // Equals implements the PrivKey interface. It makes sure two private keys

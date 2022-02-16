@@ -18,6 +18,7 @@ docs/_build
 docs/tutorial
 docs/node_modules
 docs/modules
+docs/run-node/cosmovisor.md
 dist
 tools-stamp
 buf-stamp

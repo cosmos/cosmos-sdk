@@ -35,8 +35,6 @@ func (gs *Store) GetStoreType() types.StoreType {
 
 // Implements KVStore.
 func (gs *Store) Get(key []byte) (value []byte) {
-	defer telemetry.MeasureSince(time.Now(), "store", "gaskv", "get")
-
 	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostFlat, types.GasReadCostFlatDesc)
 	value = gs.parent.Get(key)
 
@@ -48,8 +46,6 @@ func (gs *Store) Get(key []byte) (value []byte) {
 
 // Implements KVStore.
 func (gs *Store) Set(key []byte, value []byte) {
-	defer telemetry.MeasureSince(time.Now(), "store", "gaskv", "set")
-
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostFlat, types.GasWriteCostFlatDesc)
@@ -96,6 +92,11 @@ func (gs *Store) CacheWrap() types.CacheWrap {
 // CacheWrapWithTrace implements the KVStore interface.
 func (gs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.CacheWrap {
 	panic("cannot CacheWrapWithTrace a GasKVStore")
+}
+
+// CacheWrapWithListeners implements the CacheWrapper interface.
+func (gs *Store) CacheWrapWithListeners(_ types.StoreKey, _ []types.WriteListener) types.CacheWrap {
+	panic("cannot CacheWrapWithListeners a GasKVStore")
 }
 
 func (gs *Store) iterator(start, end []byte, ascending bool) types.Iterator {
@@ -173,7 +174,7 @@ func (gi *gasIterator) Error() error {
 	return gi.parent.Error()
 }
 
-// consumeSeekGas consumes a flat gas cost for seeking and a variable gas cost
+// consumeSeekGas consumes on each iteration step a flat gas cost and a variable gas cost
 // based on the current value's length.
 func (gi *gasIterator) consumeSeekGas() {
 	value := gi.Value()

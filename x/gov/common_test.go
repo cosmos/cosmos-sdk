@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	valTokens           = sdk.TokensFromConsensusPower(42)
+	valTokens           = sdk.TokensFromConsensusPower(42, sdk.DefaultPowerReduction)
 	TestProposal        = types.NewTextProposal("Test", "description")
 	TestDescription     = stakingtypes.NewDescription("T", "E", "S", "T", "Z")
 	TestCommissionRates = stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
@@ -82,7 +82,7 @@ func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context,
 	require.True(t, len(addrs) <= len(pubkeys), "Not enough pubkeys specified at top of file.")
 
 	for i := 0; i < len(addrs); i++ {
-		valTokens := sdk.TokensFromConsensusPower(powerAmt[i])
+		valTokens := sdk.TokensFromConsensusPower(powerAmt[i], sdk.DefaultPowerReduction)
 		valCreateMsg, err := stakingtypes.NewMsgCreateValidator(
 			addrs[i], pubkeys[i], sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			TestDescription, TestCommissionRates, sdk.OneInt(),

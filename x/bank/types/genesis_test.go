@@ -1,4 +1,4 @@
-package types_test
+package types
 
 import (
 	"testing"
@@ -6,31 +6,32 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestGenesisStateValidate(t *testing.T) {
 
 	testCases := []struct {
 		name         string
-		genesisState types.GenesisState
+		genesisState GenesisState
 		expErr       bool
 	}{
 		{
 			"valid genesisState",
-			types.GenesisState{
-				Params: types.DefaultParams(),
-				Balances: []types.Balance{
+			GenesisState{
+				Params: DefaultParams(),
+				Balances: []Balance{
 					{
 						Address: "cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t",
 						Coins:   sdk.Coins{sdk.NewInt64Coin("uatom", 1)},
 					},
 				},
 				Supply: sdk.Coins{sdk.NewInt64Coin("uatom", 1)},
-				DenomMetadata: []types.Metadata{
+				DenomMetadata: []Metadata{
 					{
+						Name:        "Cosmos Hub Atom",
+						Symbol:      "ATOM",
 						Description: "The native staking token of the Cosmos Hub.",
-						DenomUnits: []*types.DenomUnit{
+						DenomUnits: []*DenomUnit{
 							{"uatom", uint32(0), []string{"microatom"}},
 							{"matom", uint32(3), []string{"milliatom"}},
 							{"atom", uint32(6), nil},
@@ -42,12 +43,12 @@ func TestGenesisStateValidate(t *testing.T) {
 			},
 			false,
 		},
-		{"empty genesisState", types.GenesisState{}, false},
+		{"empty genesisState", GenesisState{}, false},
 		{
 			"invalid params ",
-			types.GenesisState{
-				Params: types.Params{
-					SendEnabled: []*types.SendEnabled{
+			GenesisState{
+				Params: Params{
+					SendEnabled: []*SendEnabled{
 						{"", true},
 					},
 				},
@@ -56,8 +57,8 @@ func TestGenesisStateValidate(t *testing.T) {
 		},
 		{
 			"dup balances",
-			types.GenesisState{
-				Balances: []types.Balance{
+			GenesisState{
+				Balances: []Balance{
 					{
 						Address: "cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t",
 						Coins:   sdk.Coins{sdk.NewInt64Coin("uatom", 1)},
@@ -72,8 +73,8 @@ func TestGenesisStateValidate(t *testing.T) {
 		},
 		{
 			"0  balance",
-			types.GenesisState{
-				Balances: []types.Balance{
+			GenesisState{
+				Balances: []Balance{
 					{
 						Address: "cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t",
 					},
@@ -83,11 +84,13 @@ func TestGenesisStateValidate(t *testing.T) {
 		},
 		{
 			"dup Metadata",
-			types.GenesisState{
-				DenomMetadata: []types.Metadata{
+			GenesisState{
+				DenomMetadata: []Metadata{
 					{
+						Name:        "Cosmos Hub Atom",
+						Symbol:      "ATOM",
 						Description: "The native staking token of the Cosmos Hub.",
-						DenomUnits: []*types.DenomUnit{
+						DenomUnits: []*DenomUnit{
 							{"uatom", uint32(0), []string{"microatom"}},
 							{"matom", uint32(3), []string{"milliatom"}},
 							{"atom", uint32(6), nil},
@@ -96,8 +99,10 @@ func TestGenesisStateValidate(t *testing.T) {
 						Display: "atom",
 					},
 					{
+						Name:        "Cosmos Hub Atom",
+						Symbol:      "ATOM",
 						Description: "The native staking token of the Cosmos Hub.",
-						DenomUnits: []*types.DenomUnit{
+						DenomUnits: []*DenomUnit{
 							{"uatom", uint32(0), []string{"microatom"}},
 							{"matom", uint32(3), []string{"milliatom"}},
 							{"atom", uint32(6), nil},
@@ -111,11 +116,13 @@ func TestGenesisStateValidate(t *testing.T) {
 		},
 		{
 			"invalid Metadata",
-			types.GenesisState{
-				DenomMetadata: []types.Metadata{
+			GenesisState{
+				DenomMetadata: []Metadata{
 					{
+						Name:        "Cosmos Hub Atom",
+						Symbol:      "ATOM",
 						Description: "The native staking token of the Cosmos Hub.",
-						DenomUnits: []*types.DenomUnit{
+						DenomUnits: []*DenomUnit{
 							{"uatom", uint32(0), []string{"microatom"}},
 							{"matom", uint32(3), []string{"milliatom"}},
 							{"atom", uint32(6), nil},
@@ -129,7 +136,7 @@ func TestGenesisStateValidate(t *testing.T) {
 		},
 		{
 			"invalid supply",
-			types.GenesisState{
+			GenesisState{
 				Supply: sdk.Coins{sdk.Coin{Denom: "", Amount: sdk.OneInt()}},
 			},
 			true,

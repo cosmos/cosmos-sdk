@@ -29,7 +29,7 @@ func Test_TestnetCmd(t *testing.T) {
 
 	serverCtx := server.NewContext(viper.New(), cfg, logger)
 	clientCtx := client.Context{}.
-		WithJSONMarshaler(encodingConfig.Marshaler).
+		WithCodec(encodingConfig.Marshaler).
 		WithHomeDir(home).
 		WithTxConfig(encodingConfig.TxConfig)
 

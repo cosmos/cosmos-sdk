@@ -1,7 +1,7 @@
 run:
   tests: false
-#   # timeout for analysis, e.g. 30s, 5m, default is 1m
-#   timeout: 5m
+  # timeout for analysis, e.g. 30s, 5m, default is 1m
+  timeout: 5m
 
 linters:
   disable-all: true
@@ -15,17 +15,15 @@ linters:
     - gocritic
     - gofmt
     - goimports
-    - golint
     - gosec
     - gosimple
     - govet
     - ineffassign
-    - interfacer
-    - maligned
     - misspell
     - nakedret
     - prealloc
-    - scopelint
+    - revive
+    - exportloopref
     - staticcheck
     - structcheck
     - stylecheck
@@ -56,9 +54,11 @@ issues:
     - text: "ST1016:"
       linters:
         - stylecheck
-    - text: "SA1019: codec.LegacyAmino is deprecated"
+    - path: "legacy"
+      text: "SA1019:"
       linters:
         - staticcheck
+
   max-issues-per-linter: 10000
   max-same-issues: 10000
 

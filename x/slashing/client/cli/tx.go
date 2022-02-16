@@ -41,9 +41,6 @@ $ <appd> tx slashing unjail --from mykey
 			valAddr := clientCtx.GetFromAddress()
 
 			msg := types.NewMsgUnjail(sdk.ValAddress(valAddr))
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

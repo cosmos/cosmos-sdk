@@ -120,10 +120,10 @@ func TestSimulateMsgEditValidator(t *testing.T) {
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, "0.280623462081924936", msg.CommissionRate.String())
-	require.Equal(t, "rBqDOTtGTO", msg.Description.Moniker)
-	require.Equal(t, "BSpYuLyYgg", msg.Description.Identity)
-	require.Equal(t, "wNbeHVIkPZ", msg.Description.Website)
-	require.Equal(t, "MOXcnQfyze", msg.Description.SecurityContact)
+	require.Equal(t, "xKGLwQvuyN", msg.Description.Moniker)
+	require.Equal(t, "SlcxgdXhhu", msg.Description.Identity)
+	require.Equal(t, "WeLrQKjLxz", msg.Description.Website)
+	require.Equal(t, "rBqDOTtGTO", msg.Description.SecurityContact)
 	require.Equal(t, types.TypeMsgEditValidator, msg.Type())
 	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
 	require.Len(t, futureOperations, 0)
@@ -181,7 +181,7 @@ func TestSimulateMsgUndelegate(t *testing.T) {
 	validator0 := getTestingValidator0(t, app, ctx, accounts)
 
 	// setup delegation
-	delTokens := sdk.TokensFromConsensusPower(2)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := accounts[1]
 	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
@@ -227,7 +227,7 @@ func TestSimulateMsgBeginRedelegate(t *testing.T) {
 	validator0 := getTestingValidator0(t, app, ctx, accounts)
 	validator1 := getTestingValidator1(t, app, ctx, accounts)
 
-	delTokens := sdk.TokensFromConsensusPower(2)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 
 	// setup accounts[2] as delegator
@@ -276,15 +276,14 @@ func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 func getTestingAccounts(t *testing.T, r *rand.Rand, app *simapp.SimApp, ctx sdk.Context, n int) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
 
-	initAmt := sdk.TokensFromConsensusPower(200)
+	initAmt := app.StakingKeeper.TokensFromConsensusPower(ctx, 200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	// add coins to the accounts
 	for _, account := range accounts {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, account.Address)
 		app.AccountKeeper.SetAccount(ctx, acc)
-		err := app.BankKeeper.SetBalances(ctx, account.Address, initCoins)
-		require.NoError(t, err)
+		require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, account.Address, initCoins))
 	}
 
 	return accounts
@@ -309,7 +308,7 @@ func getTestingValidator(t *testing.T, app *simapp.SimApp, ctx sdk.Context, acco
 	require.NoError(t, err)
 
 	validator.DelegatorShares = sdk.NewDec(100)
-	validator.Tokens = sdk.TokensFromConsensusPower(100)
+	validator.Tokens = app.StakingKeeper.TokensFromConsensusPower(ctx, 100)
 
 	app.StakingKeeper.SetValidator(ctx, validator)
 

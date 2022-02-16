@@ -94,8 +94,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	err := app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67)))
-	require.NoError(t, err)
+	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
 
 	app.Commit()
 
@@ -109,7 +108,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	sendMsg := types.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	txGen := simapp.MakeTestEncodingConfig().TxConfig
-	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
+	_, _, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
 	require.Error(t, err)
 
 	simapp.CheckBalance(t, app, addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 67)})
@@ -130,8 +129,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	err := app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67)))
-	require.NoError(t, err)
+	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
 
 	app.Commit()
 
@@ -201,11 +199,9 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	err := app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42)))
-	require.NoError(t, err)
+	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 
-	err = app.BankKeeper.SetBalances(ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42)))
-	require.NoError(t, err)
+	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 
 	app.Commit()
 
@@ -252,14 +248,11 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	err := app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42)))
-	require.NoError(t, err)
+	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 
-	err = app.BankKeeper.SetBalances(ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42)))
-	require.NoError(t, err)
+	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 
-	err = app.BankKeeper.SetBalances(ctx, addr4, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42)))
-	require.NoError(t, err)
+	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, addr4, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 
 	app.Commit()
 
@@ -302,8 +295,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	err = app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42)))
-	require.NoError(t, err)
+	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 
 	app.Commit()
 

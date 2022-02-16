@@ -149,6 +149,27 @@ func (s *errorsTestSuite) TestErrorIs() {
 	}
 }
 
+func (s *errorsTestSuite) TestIsOf() {
+	require := s.Require()
+
+	var errNil *Error
+	var err = ErrInvalidAddress
+	var errW = Wrap(ErrLogic, "more info")
+
+	require.False(IsOf(errNil), "nil error should always have no causer")
+	require.False(IsOf(errNil, err), "nil error should always have no causer")
+
+	require.False(IsOf(err))
+	require.False(IsOf(err, nil))
+	require.False(IsOf(err, ErrLogic))
+
+	require.True(IsOf(errW, ErrLogic))
+	require.True(IsOf(errW, err, ErrLogic))
+	require.True(IsOf(errW, nil, errW), "error should much itself")
+	var err2 = errors.New("other error")
+	require.True(IsOf(err2, nil, err2), "error should much itself")
+}
+
 type customError struct {
 }
 

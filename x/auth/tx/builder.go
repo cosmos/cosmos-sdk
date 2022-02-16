@@ -7,6 +7,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -34,7 +35,6 @@ var (
 	_ client.TxBuilder           = &wrapper{}
 	_ ante.HasExtensionOptionsTx = &wrapper{}
 	_ ExtensionOptionsTxBuilder  = &wrapper{}
-	_ ProtoTxProvider            = &wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
@@ -100,7 +100,7 @@ func (w *wrapper) GetSigners() []sdk.AccAddress {
 	return w.tx.GetSigners()
 }
 
-func (w *wrapper) GetPubKeys() []cryptotypes.PubKey {
+func (w *wrapper) GetPubKeys() ([]cryptotypes.PubKey, error) {
 	signerInfos := w.tx.AuthInfo.SignerInfos
 	pks := make([]cryptotypes.PubKey, len(signerInfos))
 
@@ -111,13 +111,16 @@ func (w *wrapper) GetPubKeys() []cryptotypes.PubKey {
 			continue
 		}
 
-		pk, ok := si.PublicKey.GetCachedValue().(cryptotypes.PubKey)
+		pkAny := si.PublicKey.GetCachedValue()
+		pk, ok := pkAny.(cryptotypes.PubKey)
 		if ok {
 			pks[i] = pk
+		} else {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "Expecting PubKey, got: %T", pkAny)
 		}
 	}
 
-	return pks
+	return pks, nil
 }
 
 func (w *wrapper) GetGas() uint64 {
@@ -165,7 +168,10 @@ func (w *wrapper) GetTimeoutHeight() uint64 {
 func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 	signerInfos := w.tx.AuthInfo.SignerInfos
 	sigs := w.tx.Signatures
-	pubKeys := w.GetPubKeys()
+	pubKeys, err := w.GetPubKeys()
+	if err != nil {
+		return nil, err
+	}
 	n := len(signerInfos)
 	res := make([]signing.SignatureV2, n)
 
@@ -198,12 +204,7 @@ func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
 
 	for i, msg := range msgs {
 		var err error
-		switch msg := msg.(type) {
-		case sdk.ServiceMsg:
-			anys[i], err = codectypes.NewAnyWithCustomTypeURL(msg.Request, msg.MethodName)
-		default:
-			anys[i], err = codectypes.NewAnyWithValue(msg)
-		}
+		anys[i], err = codectypes.NewAnyWithValue(msg)
 		if err != nil {
 			return err
 		}
@@ -348,9 +349,4 @@ func (w *wrapper) SetExtensionOptions(extOpts ...*codectypes.Any) {
 func (w *wrapper) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 	w.tx.Body.NonCriticalExtensionOptions = extOpts
 	w.bodyBz = nil
-}
-
-// ProtoTxProvider is a type which can provide a proto transaction.
-type ProtoTxProvider interface {
-	GetProtoTx() *tx.Tx
 }

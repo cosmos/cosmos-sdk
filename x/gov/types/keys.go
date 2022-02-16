@@ -6,6 +6,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 const (
@@ -33,9 +34,9 @@ const (
 //
 // - 0x03: nextProposalID
 //
-// - 0x10<proposalID_Bytes><depositorAddr_Bytes>: Deposit
+// - 0x10<proposalID_Bytes><depositorAddrLen (1 Byte)><depositorAddr_Bytes>: Deposit
 //
-// - 0x20<proposalID_Bytes><voterAddr_Bytes>: Voter
+// - 0x20<proposalID_Bytes><voterAddrLen (1 Byte)><voterAddr_Bytes>: Voter
 var (
 	ProposalsKeyPrefix          = []byte{0x00}
 	ActiveProposalQueuePrefix   = []byte{0x01}
@@ -93,7 +94,7 @@ func DepositsKey(proposalID uint64) []byte {
 
 // DepositKey key of a specific deposit from the store
 func DepositKey(proposalID uint64, depositorAddr sdk.AccAddress) []byte {
-	return append(DepositsKey(proposalID), depositorAddr.Bytes()...)
+	return append(DepositsKey(proposalID), address.MustLengthPrefix(depositorAddr.Bytes())...)
 }
 
 // VotesKey gets the first part of the votes key based on the proposalID
@@ -103,7 +104,7 @@ func VotesKey(proposalID uint64) []byte {
 
 // VoteKey key of a specific vote from the store
 func VoteKey(proposalID uint64, voterAddr sdk.AccAddress) []byte {
-	return append(VotesKey(proposalID), voterAddr.Bytes()...)
+	return append(VotesKey(proposalID), address.MustLengthPrefix(voterAddr.Bytes())...)
 }
 
 // Split keys function; used for iterators
@@ -154,11 +155,9 @@ func splitKeyWithTime(key []byte) (proposalID uint64, endTime time.Time) {
 }
 
 func splitKeyWithAddress(key []byte) (proposalID uint64, addr sdk.AccAddress) {
-	if len(key[1:]) != 8+sdk.AddrLen {
-		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(key), 8+sdk.AddrLen))
-	}
-
+	// Both Vote and Deposit store keys are of format:
+	// <prefix (1 Byte)><proposalID (8 bytes)><addrLen (1 Byte)><addr_Bytes>
 	proposalID = GetProposalIDFromBytes(key[1:9])
-	addr = sdk.AccAddress(key[9:])
+	addr = sdk.AccAddress(key[10:])
 	return
 }

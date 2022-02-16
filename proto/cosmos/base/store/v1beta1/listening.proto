@@ -1,0 +1,16 @@
+syntax = "proto3";
+package cosmos.base.store.v1beta1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/store/types";
+
+// StoreKVPair is a KVStore KVPair used for listening to state changes (Sets and Deletes)
+// It optionally includes the StoreKey for the originating KVStore and a Boolean flag to distinguish between Sets and
+// Deletes
+//
+// Since: cosmos-sdk 0.43
+message StoreKVPair {
+  string store_key = 1; // the store key for the KVStore this pair originates from
+  bool delete      = 2; // true indicates a delete operation, false indicates a set operation
+  bytes key        = 3;
+  bytes value      = 4;
+}

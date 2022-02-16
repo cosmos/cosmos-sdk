@@ -48,6 +48,7 @@ func ProtoBaseAccount() AccountI {
 }
 
 // NewBaseAccountWithAddress - returns a new base account with a given address
+// leaving AccountNumber and Sequence to zero.
 func NewBaseAccountWithAddress(addr sdk.AccAddress) *BaseAccount {
 	return &BaseAccount{
 		Address: addr.String(),

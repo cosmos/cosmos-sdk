@@ -50,8 +50,7 @@ func TestMsgSubmitEvidence(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		require.Equal(t, tc.msg.Route(), types.RouterKey, "unexpected result for tc #%d", i)
-		require.Equal(t, tc.msg.Type(), types.TypeMsgSubmitEvidence, "unexpected result for tc #%d", i)
+		require.Equal(t, sdk.MsgTypeURL(&types.MsgSubmitEvidence{}), sdk.MsgTypeURL(tc.msg), "unexpected result for tc #%d", i)
 		require.Equal(t, tc.expectErr, tc.msg.ValidateBasic() != nil, "unexpected result for tc #%d", i)
 
 		if !tc.expectErr {

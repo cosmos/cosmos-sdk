@@ -151,20 +151,24 @@ func delegatorTxsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			actions []string
 		)
 
+		// For each case, we search txs for both:
+		// - legacy messages: their Type() is a custom string, e.g. "delegate"
+		// - service Msgs: their Type() is their FQ method name, e.g. "/cosmos.staking.v1beta1.MsgDelegate"
+		// and we combine the results.
 		switch {
 		case isBondTx:
-			actions = append(actions, types.MsgDelegate{}.Type())
+			actions = append(actions, types.TypeMsgDelegate)
 
 		case isUnbondTx:
-			actions = append(actions, types.MsgUndelegate{}.Type())
+			actions = append(actions, types.TypeMsgUndelegate)
 
 		case isRedTx:
-			actions = append(actions, types.MsgBeginRedelegate{}.Type())
+			actions = append(actions, types.TypeMsgBeginRedelegate)
 
 		case noQuery:
-			actions = append(actions, types.MsgDelegate{}.Type())
-			actions = append(actions, types.MsgUndelegate{}.Type())
-			actions = append(actions, types.MsgBeginRedelegate{}.Type())
+			actions = append(actions, types.TypeMsgDelegate)
+			actions = append(actions, types.TypeMsgUndelegate)
+			actions = append(actions, types.TypeMsgBeginRedelegate)
 
 		default:
 			w.WriteHeader(http.StatusNoContent)

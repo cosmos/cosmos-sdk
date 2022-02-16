@@ -3,19 +3,28 @@ name: Protobuf
 # This workflow is only run when a .proto file has been changed
 on:
   pull_request:
-    paths:
-      - "**.proto"
+
 jobs:
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@master
+      - uses: technote-space/get-diff-action@v4
+        with:
+          PATTERNS: |
+            **/**.proto
       - name: lint
         run: make proto-lint
+        if: env.GIT_DIFF
   breakage:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
+      - uses: technote-space/get-diff-action@v4
+        with:
+          PATTERNS: |
+            **/**.proto
       - name: check-breakage
         run: make proto-check-breaking
+        if: env.GIT_DIFF

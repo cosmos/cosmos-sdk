@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"fmt"
 	"math"
 	"math/big"
 	"math/rand"
@@ -289,4 +290,37 @@ func maxuint(i1, i2 uint64) uint64 {
 		return i1
 	}
 	return i2
+}
+
+func TestRoundTripMarshalToUint(t *testing.T) {
+	var values = []uint64{
+		0,
+		1,
+		1 << 10,
+		1<<10 - 3,
+		1<<63 - 1,
+		1<<32 - 7,
+		1<<22 - 8,
+	}
+
+	for _, value := range values {
+		value := value
+		t.Run(fmt.Sprintf("%d", value), func(t *testing.T) {
+			t.Parallel()
+
+			var scratch [20]byte
+			uv := sdk.NewUint(value)
+			n, err := uv.MarshalTo(scratch[:])
+			if err != nil {
+				t.Fatal(err)
+			}
+			rt := new(sdk.Uint)
+			if err := rt.Unmarshal(scratch[:n]); err != nil {
+				t.Fatal(err)
+			}
+			if !rt.Equal(uv) {
+				t.Fatalf("roundtrip=%q != original=%q", rt, uv)
+			}
+		})
+	}
 }

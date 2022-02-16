@@ -67,7 +67,8 @@ func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc types.AccountI) {
 	store.Delete(types.AddressStoreKey(addr))
 }
 
-// IterateAccounts iterates over all the stored accounts and performs a callback function
+// IterateAccounts iterates over all the stored accounts and performs a callback function.
+// Stops iteration when callback returns true.
 func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, cb func(account types.AccountI) (stop bool)) {
 	store := ctx.KVStore(ak.key)
 	iterator := sdk.KVStorePrefixIterator(store, types.AddressStoreKeyPrefix)

@@ -1113,7 +1113,7 @@ const (
 	// fast index storage. Note that the Cosmos SDK before store/v2
 	// does not support this.
 	StorageType_STORAGE_TYPE_DEFAULT_UNSPECIFIED StorageType = 0
-	// STORAGE_TYPE_MEMORY indicates in-memory storage that will must be
+	// STORAGE_TYPE_MEMORY indicates in-memory storage that will be
 	// reloaded every time an app restarts. Tables with this type of storage
 	// will by default be ignored when importing and exporting a module's
 	// state from JSON.

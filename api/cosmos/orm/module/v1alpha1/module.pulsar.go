@@ -384,7 +384,9 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Module defines the ORM module.
+// Module defines the ORM module which adds providers to the app container for
+// module-scoped DB's. In the future it may provide gRPC services for interacting
+// with ORM data.
 type Module struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

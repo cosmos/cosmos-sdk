@@ -178,12 +178,15 @@ func (k Keeper) GranteeGrants(c context.Context, req *authz.QueryGranteeGrantsRe
 			return false, err
 		}
 
-		granter, g := addressesFromGrantStoreKey(append(GrantKey, key...))
+		granter, g, _ := parseGrantStoreKey(append(GrantKey, key...))
 		if !g.Equals(grantee) {
 			return false, nil
 		}
 
-		auth1 := auth.GetAuthorization()
+		auth1, err := auth.GetAuthorization()
+		if err != nil {
+			return false, err
+		}
 		if accumulate {
 			any, err := codectypes.NewAnyWithValue(auth1)
 			if err != nil {

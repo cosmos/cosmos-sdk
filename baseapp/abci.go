@@ -408,6 +408,25 @@ func (app *BaseApp) snapshot(height int64) {
 	}
 }
 
+// PreprocessTxs fullfills the celestia-core version of the ACBI interface. It
+// allows for arbitrary processing steps before transaction data is included in
+// the block.
+func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+	// TODO(evan): fully implement
+	// pass through txs w/o processing for now
+	return abci.ResponsePrepareProposal{
+		BlockData: req.BlockData,
+	}
+}
+
+// ProcessProposal fulfills the celestia-core version of the ABCI++ interface.
+// It allows for arbitrary processing to occur after recieving a proposal block
+func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
+	return abci.ResponseProcessProposal{
+		Result: abci.ResponseProcessProposal_ACCEPT,
+	}
+}
+
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
 // implements Queryable.
 func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {

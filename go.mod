@@ -53,7 +53,7 @@ require (
 	github.com/tendermint/tm-db v0.6.6
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
 	google.golang.org/genproto v0.0.0-20220407144326-9054f6ed7bac
-	google.golang.org/grpc v1.45.0
+	google.golang.org/grpc v1.46.0
 	google.golang.org/protobuf v1.28.0
 	pgregory.net/rapid v0.4.7
 	sigs.k8s.io/yaml v1.3.0
@@ -69,6 +69,10 @@ require (
 	github.com/aws/aws-sdk-go v1.40.45 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
+	github.com/celestiaorg/go-leopard v0.1.0 // indirect
+	github.com/celestiaorg/merkletree v0.0.0-20210714075610-a84dc3ddbbe4 // indirect
+	github.com/celestiaorg/nmt v0.8.0 // indirect
+	github.com/celestiaorg/rsmt2d v0.5.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.1 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
@@ -131,6 +135,7 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
 	github.com/ulikunitz/xz v0.5.8 // indirect
+	github.com/vivint/infectious v0.0.0-20200605153912-25a574ae18a3 // indirect
 	github.com/zondax/hid v0.9.1-0.20220302062450-5552068d2266 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	go.opencensus.io v0.23.0 // indirect
@@ -157,6 +162,7 @@ replace (
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+	github.com/tendermint/tendermint => github.com/celestiaorg/celestia-core v0.36.0-dev.0.20220505194232-7497e2c6db43
 )
 
 retract v0.43.0

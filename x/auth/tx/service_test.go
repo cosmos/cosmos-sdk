@@ -40,6 +40,7 @@ type IntegrationTestSuite struct {
 	cfg     network.Config
 	network *network.Network
 
+	txHeight    int64
 	queryClient tx.ServiceClient
 	txRes       sdk.TxResponse
 }
@@ -81,6 +82,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().Equal(uint32(0), s.txRes.Code)
 
 	s.Require().NoError(s.network.WaitForNextBlock())
+	height, err := s.network.LatestHeight()
+	s.Require().NoError(err)
+	s.txHeight = height
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -586,6 +590,75 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 
 	// make sure gas was used
 	s.Require().Greater(res.GasInfo.GasUsed, uint64(0))
+}
+
+func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPC() {
+	testCases := []struct {
+		name      string
+		req       *tx.GetBlockWithTxsRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"nil request", nil, true, "request cannot be nil"},
+		{"empty request", &tx.GetBlockWithTxsRequest{}, true, "height must not be less than 1 or greater than the current height"},
+		{"bad height", &tx.GetBlockWithTxsRequest{Height: 99999999}, true, "height must not be less than 1 or greater than the current height"},
+		{"good request", &tx.GetBlockWithTxsRequest{Height: s.txHeight}, false, ""},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			// Query the tx via gRPC.
+			grpcRes, err := s.queryClient.GetBlockWithTxs(context.Background(), tc.req)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
+				s.Require().Equal(grpcRes.Block.Header.Height, tc.req.Height)
+			}
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPCGateway() {
+	val := s.network.Validators[0]
+	testCases := []struct {
+		name      string
+		url       string
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			"empty params",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/block/0", val.APIAddress),
+			true, "height must not be less than 1 or greater than the current height",
+		},
+		{
+			"bad height",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/block/%d", val.APIAddress, 9999999),
+			true, "height must not be less than 1 or greater than the current height",
+		},
+		{
+			"good request",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/block/%d", val.APIAddress, s.txHeight),
+			false, "",
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			res, err := rest.GetRequest(tc.url)
+			s.Require().NoError(err)
+			if tc.expErr {
+				s.Require().Contains(string(res), tc.expErrMsg)
+			} else {
+				var result tx.GetBlockWithTxsResponse
+				err = val.ClientCtx.Codec.UnmarshalJSON(res, &result)
+				s.Require().NoError(err)
+				s.Require().Equal("foobar", result.Txs[0].Body.Memo)
+				s.Require().Equal(result.Block.Header.Height, s.txHeight)
+			}
+		})
+	}
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

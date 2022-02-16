@@ -3,6 +3,7 @@ package tx
 import (
 	"context"
 	"fmt"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"strings"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
@@ -155,6 +156,65 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 		Tx:         protoTx,
 		TxResponse: result,
 	}, nil
+}
+
+// protoTxProvider is a type which can provide a proto transaction. It is a
+// workaround to get access to the wrapper TxBuilder's method GetProtoTx().
+type protoTxProvider interface {
+	GetProtoTx() *txtypes.Tx
+}
+
+// GetBlockWithTxs returns a block with decoded txs.
+func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWithTxsRequest) (*txtypes.GetBlockWithTxsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	currentHeight := sdkCtx.BlockHeight()
+
+	if req.Height < 1 || req.Height > currentHeight {
+		return nil, sdkerrors.ErrInvalidHeight.Wrapf("requested height %d but height must not be less than 1 "+
+			"or greater than the current height %d", req.Height, currentHeight)
+	}
+
+	node, err := s.clientCtx.GetNode()
+	if err != nil {
+		return nil, err
+	}
+
+	blockRes, err := node.Block(ctx, &req.Height)
+	if err != nil {
+		return nil, err
+	}
+	block := blockRes.Block
+	blockId := blockRes.BlockID
+
+	txs := make([]*txtypes.Tx, len(block.Txs))
+	for i, tx := range block.Txs {
+		txb, err := s.clientCtx.TxConfig.TxDecoder()(tx)
+		if err != nil {
+			return nil, err
+		}
+		p, ok := txb.(protoTxProvider)
+		if !ok {
+			return nil, fmt.Errorf("could not cast %T to %T", txb, txtypes.Tx{})
+		}
+		txs[i] = p.GetProtoTx()
+	}
+
+	protoBlockId := blockId.ToProto()
+	protoBlock, err := block.ToProto()
+	if err != nil {
+		return nil, err
+	}
+
+	return &txtypes.GetBlockWithTxsResponse{
+		Txs:     txs,
+		BlockId: &protoBlockId,
+		Block:   protoBlock,
+	}, nil
+
 }
 
 func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxRequest) (*txtypes.BroadcastTxResponse, error) {

@@ -16,7 +16,7 @@ import (
 func ConvertToLegacyProposal(proposal v1beta2.Proposal) (v1beta1.Proposal, error) {
 	var err error
 	legacyProposal := v1beta1.Proposal{
-		ProposalId:   proposal.ProposalId,
+		ProposalId:   proposal.Id,
 		Status:       v1beta1.ProposalStatus(proposal.Status),
 		TotalDeposit: types.NewCoins(proposal.TotalDeposit...),
 	}
@@ -60,21 +60,21 @@ func ConvertToLegacyProposal(proposal v1beta2.Proposal) (v1beta1.Proposal, error
 }
 
 func ConvertToLegacyTallyResult(tally *v1beta2.TallyResult) (v1beta1.TallyResult, error) {
-	yes, ok := types.NewIntFromString(tally.Yes)
+	yes, ok := types.NewIntFromString(tally.YesCount)
 	if !ok {
-		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert yes tally string (%s) to int", tally.Yes)
+		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert yes tally string (%s) to int", tally.YesCount)
 	}
-	no, ok := types.NewIntFromString(tally.No)
+	no, ok := types.NewIntFromString(tally.NoCount)
 	if !ok {
-		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert no tally string (%s) to int", tally.No)
+		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert no tally string (%s) to int", tally.NoCount)
 	}
-	veto, ok := types.NewIntFromString(tally.NoWithVeto)
+	veto, ok := types.NewIntFromString(tally.NoWithVetoCount)
 	if !ok {
-		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert no with veto tally string (%s) to int", tally.NoWithVeto)
+		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert no with veto tally string (%s) to int", tally.NoWithVetoCount)
 	}
-	abstain, ok := types.NewIntFromString(tally.Abstain)
+	abstain, ok := types.NewIntFromString(tally.AbstainCount)
 	if !ok {
-		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert abstain tally string (%s) to int", tally.Abstain)
+		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert abstain tally string (%s) to int", tally.AbstainCount)
 	}
 
 	return v1beta1.TallyResult{
@@ -195,14 +195,14 @@ func convertToNewProposal(oldProp v1beta1.Proposal) (v1beta2.Proposal, error) {
 	}
 
 	return v1beta2.Proposal{
-		ProposalId: oldProp.ProposalId,
-		Messages:   []*codectypes.Any{msgAny},
-		Status:     v1beta2.ProposalStatus(oldProp.Status),
+		Id:       oldProp.ProposalId,
+		Messages: []*codectypes.Any{msgAny},
+		Status:   v1beta2.ProposalStatus(oldProp.Status),
 		FinalTallyResult: &v1beta2.TallyResult{
-			Yes:        oldProp.FinalTallyResult.Yes.String(),
-			No:         oldProp.FinalTallyResult.No.String(),
-			Abstain:    oldProp.FinalTallyResult.Abstain.String(),
-			NoWithVeto: oldProp.FinalTallyResult.NoWithVeto.String(),
+			YesCount:        oldProp.FinalTallyResult.Yes.String(),
+			NoCount:         oldProp.FinalTallyResult.No.String(),
+			AbstainCount:    oldProp.FinalTallyResult.Abstain.String(),
+			NoWithVetoCount: oldProp.FinalTallyResult.NoWithVeto.String(),
 		},
 		SubmitTime:      &oldProp.SubmitTime,
 		DepositEndTime:  &oldProp.DepositEndTime,

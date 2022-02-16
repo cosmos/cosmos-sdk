@@ -207,7 +207,7 @@ For example, in vscode your `.vscode/settings.json` should look like:
 
 ## Branching Model and Release
 
-User-facing repos should adhere to the trunk based development branching model: <https://trunkbaseddevelopment.com/>. User branches should start with a user name, example: `{moniker}/{issue#}-branch-name`.
+User-facing repos should adhere to the trunk based development branching model: https://trunkbaseddevelopment.com. User branches should start with a user name, example: `{moniker}/{issue#}-branch-name`.
 
 The Cosmos SDK repository is a [multi Go module](https://github.com/golang/go/wiki/Modules#is-it-possible-to-add-a-module-to-a-multi-module-repository) repository. It means that we have more than one Go module in a single repository.
 

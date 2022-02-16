@@ -61,7 +61,7 @@ func (k keeper) Send(ctx context.Context, from, to, denom string, amount uint64)
 }
 
 func (k keeper) Mint(ctx context.Context, acct, denom string, amount uint64) error {
-	supply, err := k.store.SupplyStore().Get(ctx, denom)
+	supply, err := k.store.SupplyTable().Get(ctx, denom)
 	if err != nil && !ormerrors.IsNotFound(err) {
 		return err
 	}
@@ -72,7 +72,7 @@ func (k keeper) Mint(ctx context.Context, acct, denom string, amount uint64) err
 		supply.Amount = supply.Amount + amount
 	}
 
-	err = k.store.SupplyStore().Save(ctx, supply)
+	err = k.store.SupplyTable().Save(ctx, supply)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func (k keeper) Mint(ctx context.Context, acct, denom string, amount uint64) err
 }
 
 func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) error {
-	supplyStore := k.store.SupplyStore()
+	supplyStore := k.store.SupplyTable()
 	supply, err := supplyStore.Get(ctx, denom)
 	if err != nil {
 		return err
@@ -106,7 +106,7 @@ func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) err
 }
 
 func (k keeper) Balance(ctx context.Context, acct, denom string) (uint64, error) {
-	balance, err := k.store.BalanceStore().Get(ctx, acct, denom)
+	balance, err := k.store.BalanceTable().Get(ctx, acct, denom)
 	if err != nil {
 		if ormerrors.IsNotFound(err) {
 			return 0, nil
@@ -118,7 +118,7 @@ func (k keeper) Balance(ctx context.Context, acct, denom string) (uint64, error)
 }
 
 func (k keeper) Supply(ctx context.Context, denom string) (uint64, error) {
-	supply, err := k.store.SupplyStore().Get(ctx, denom)
+	supply, err := k.store.SupplyTable().Get(ctx, denom)
 	if supply == nil {
 		if ormerrors.IsNotFound(err) {
 			return 0, nil
@@ -130,7 +130,7 @@ func (k keeper) Supply(ctx context.Context, denom string) (uint64, error) {
 }
 
 func (k keeper) addBalance(ctx context.Context, acct, denom string, amount uint64) error {
-	balance, err := k.store.BalanceStore().Get(ctx, acct, denom)
+	balance, err := k.store.BalanceTable().Get(ctx, acct, denom)
 	if err != nil && !ormerrors.IsNotFound(err) {
 		return err
 	}
@@ -145,11 +145,11 @@ func (k keeper) addBalance(ctx context.Context, acct, denom string, amount uint6
 		balance.Amount = balance.Amount + amount
 	}
 
-	return k.store.BalanceStore().Save(ctx, balance)
+	return k.store.BalanceTable().Save(ctx, balance)
 }
 
 func (k keeper) safeSubBalance(ctx context.Context, acct, denom string, amount uint64) error {
-	balanceStore := k.store.BalanceStore()
+	balanceStore := k.store.BalanceTable()
 	balance, err := balanceStore.Get(ctx, acct, denom)
 	if err != nil {
 		return err
@@ -245,12 +245,20 @@ func TestModuleDB(t *testing.T) {
 	rawJson, err = target.JSON()
 	assert.NilError(t, err)
 
+	goodJSON := `{
+  "testpb.Supply": []
+}`
+	source, err := ormjson.NewRawMessageSource(json.RawMessage(goodJSON))
+	assert.NilError(t, err)
+	assert.NilError(t, db.ValidateJSON(source))
+	assert.NilError(t, db.ImportJSON(ormtable.WrapContextDefault(ormtest.NewMemoryBackend()), source))
+
 	badJSON := `{
   "testpb.Balance": 5,
   "testpb.Supply": {}
 }
 `
-	source, err := ormjson.NewRawMessageSource(json.RawMessage(badJSON))
+	source, err = ormjson.NewRawMessageSource(json.RawMessage(badJSON))
 	assert.NilError(t, err)
 	assert.ErrorIs(t, db.ValidateJSON(source), ormerrors.JSONValidationError)
 

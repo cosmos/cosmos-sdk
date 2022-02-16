@@ -71,6 +71,11 @@ service Query {
   rpc GroupsByMember(QueryGroupsByMemberRequest) returns (QueryGroupsByMemberResponse) {
     option (google.api.http).get = "/cosmos/group/v1beta1/groups_by_member/{address}";
   };
+
+  // TallyResult queries the tally of a proposal votes.
+  rpc TallyResult(QueryTallyResultRequest) returns (QueryTallyResultResponse) {
+    option (google.api.http).get = "/cosmos/group/v1beta1/proposals/{proposal_id}/tally";
+  };
 }
 
 // QueryGroupInfoRequest is the Query/GroupInfo request type.
@@ -287,4 +292,18 @@ message QueryGroupsByMemberResponse {
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryTallyResultRequest is the Query/Tally request type.
+message QueryTallyResultRequest {
+
+  // proposal_id is the unique id of a proposal.
+  uint64 proposal_id = 1;
+}
+
+// QueryTallyResultResponse is the Query/Tally response type.
+message QueryTallyResultResponse {
+
+  // tally defines the requested tally.
+  TallyResult tally = 1;
 }

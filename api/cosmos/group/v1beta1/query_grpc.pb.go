@@ -46,6 +46,8 @@ type QueryClient interface {
 	VotesByVoter(ctx context.Context, in *QueryVotesByVoterRequest, opts ...grpc.CallOption) (*QueryVotesByVoterResponse, error)
 	// GroupsByMember queries groups by member address.
 	GroupsByMember(ctx context.Context, in *QueryGroupsByMemberRequest, opts ...grpc.CallOption) (*QueryGroupsByMemberResponse, error)
+	// TallyResult queries the tally of a proposal votes.
+	TallyResult(ctx context.Context, in *QueryTallyResultRequest, opts ...grpc.CallOption) (*QueryTallyResultResponse, error)
 }
 
 type queryClient struct {
@@ -164,6 +166,15 @@ func (c *queryClient) GroupsByMember(ctx context.Context, in *QueryGroupsByMembe
 	return out, nil
 }
 
+func (c *queryClient) TallyResult(ctx context.Context, in *QueryTallyResultRequest, opts ...grpc.CallOption) (*QueryTallyResultResponse, error) {
+	out := new(QueryTallyResultResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/TallyResult", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -192,6 +203,8 @@ type QueryServer interface {
 	VotesByVoter(context.Context, *QueryVotesByVoterRequest) (*QueryVotesByVoterResponse, error)
 	// GroupsByMember queries groups by member address.
 	GroupsByMember(context.Context, *QueryGroupsByMemberRequest) (*QueryGroupsByMemberResponse, error)
+	// TallyResult queries the tally of a proposal votes.
+	TallyResult(context.Context, *QueryTallyResultRequest) (*QueryTallyResultResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -234,6 +247,9 @@ func (UnimplementedQueryServer) VotesByVoter(context.Context, *QueryVotesByVoter
 }
 func (UnimplementedQueryServer) GroupsByMember(context.Context, *QueryGroupsByMemberRequest) (*QueryGroupsByMemberResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GroupsByMember not implemented")
+}
+func (UnimplementedQueryServer) TallyResult(context.Context, *QueryTallyResultRequest) (*QueryTallyResultResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TallyResult not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -464,6 +480,24 @@ func _Query_GroupsByMember_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_TallyResult_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTallyResultRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TallyResult(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.group.v1beta1.Query/TallyResult",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TallyResult(ctx, req.(*QueryTallyResultRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -518,6 +552,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GroupsByMember",
 			Handler:    _Query_GroupsByMember_Handler,
+		},
+		{
+			MethodName: "TallyResult",
+			Handler:    _Query_TallyResult_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

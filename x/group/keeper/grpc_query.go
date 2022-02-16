@@ -304,3 +304,19 @@ func (q Keeper) getVotesByProposal(ctx sdk.Context, proposalID uint64, pageReque
 func (q Keeper) getVotesByVoter(ctx sdk.Context, voter sdk.AccAddress, pageRequest *query.PageRequest) (orm.Iterator, error) {
 	return q.voteByVoterIndex.GetPaginated(ctx.KVStore(q.key), voter.Bytes(), pageRequest)
 }
+
+func (q Keeper) TallyResult(goCtx context.Context, request *group.QueryTallyResultRequest) (*group.QueryTallyResultResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	proposalId := request.ProposalId
+
+	var tallyResult *group.TallyResult
+
+	err := q.Tally(ctx, proposalId, tallyResult)
+	if err != nil {
+		return nil, err
+	}
+
+	return &group.QueryTallyResultResponse{
+		Tally: tallyResult,
+	}, nil
+}

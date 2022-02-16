@@ -39,8 +39,8 @@ type DecisionPolicy interface {
 var _ DecisionPolicy = &ThresholdDecisionPolicy{}
 
 // NewThresholdDecisionPolicy creates a threshold DecisionPolicy
-func NewThresholdDecisionPolicy(threshold string, votingPeriod time.Duration, executionPeriod *time.Duration) DecisionPolicy {
-	return &ThresholdDecisionPolicy{threshold, votingPeriod, executionPeriod}
+func NewThresholdDecisionPolicy(threshold string, votingPeriod time.Duration) DecisionPolicy {
+	return &ThresholdDecisionPolicy{threshold, votingPeriod}
 }
 
 func (p ThresholdDecisionPolicy) ValidateBasic() error {
@@ -52,19 +52,11 @@ func (p ThresholdDecisionPolicy) ValidateBasic() error {
 		return sdkerrors.Wrap(errors.ErrInvalid, "timeout too small")
 	}
 
-	if p.ExecutionPeriod != nil && *p.ExecutionPeriod < p.VotingPeriod {
-		return sdkerrors.Wrap(errors.ErrInvalid, "execution period must be longer than voting period")
-	}
-
 	return nil
 }
 
 // Allow allows a proposal to pass when the tally of yes votes equals or exceeds the threshold before the timeout.
-func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error) {
-	if p.ExecutionPeriod != nil && *p.ExecutionPeriod <= sinceSubmission {
-		return DecisionPolicyResult{Allow: false, Final: true}, nil
-	}
-
+func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower string, _ time.Duration) (DecisionPolicyResult, error) {
 	threshold, err := math.NewPositiveDecFromString(p.Threshold)
 	if err != nil {
 		return DecisionPolicyResult{}, err
@@ -148,11 +140,7 @@ func (p *PercentageDecisionPolicy) Validate(g GroupInfo) error {
 }
 
 // Allow allows a proposal to pass when the tally of yes votes equals or exceeds the percentage threshold before the timeout.
-func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error) {
-	if p.ExecutionPeriod != nil && *p.ExecutionPeriod <= sinceSubmission {
-		return DecisionPolicyResult{Allow: false, Final: true}, nil
-	}
-
+func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string, _ time.Duration) (DecisionPolicyResult, error) {
 	percentage, err := math.NewPositiveDecFromString(p.Percentage)
 	if err != nil {
 		return DecisionPolicyResult{}, err

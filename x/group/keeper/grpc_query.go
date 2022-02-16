@@ -314,8 +314,9 @@ func (q Keeper) doTally(ctx sdk.Context, p group.Proposal, groupId uint64) (grou
 		return group.TallyResult{}, err
 	}
 
-	// We if proposal has already been tallied, then we just return.
-	if p.FinalTallyResult == (group.TallyResult{}) {
+	// If proposal has already been tallied, its status is closed, then we just
+	// return the previously stored result.
+	if p.Status == group.PROPOSAL_STATUS_CLOSED {
 		return p.FinalTallyResult, nil
 	}
 

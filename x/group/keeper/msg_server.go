@@ -612,6 +612,10 @@ func (k Keeper) DoTallyAndUpdate(ctx sdk.Context, p *group.Proposal, electorate 
 
 	p.FinalTallyResult = tallyResult
 
+	if ctx.BlockTime().Sub(p.VotingPeriodEnd) > k.config.ExecutionPeriod {
+		return errors.ErrExpired.Wrapf("%s pass after voting period end, expected max %s", ctx.BlockTime().Sub(p.VotingPeriodEnd), k.config.ExecutionPeriod)
+	}
+
 	switch result, err := policy.Allow(p.FinalTallyResult, electorate.TotalWeight, ctx.BlockTime().Sub(submittedAt)); {
 	case err != nil:
 		return sdkerrors.Wrap(err, "policy execution")

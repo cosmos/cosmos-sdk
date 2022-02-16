@@ -289,9 +289,8 @@ func SimulateMsgCreateGroupPolicy(ak group.AccountKeeper, bk group.BankKeeper, k
 			groupID,
 			[]byte(simtypes.RandStringOfLength(r, 10)),
 			&group.ThresholdDecisionPolicy{
-				Threshold:       "20",
-				VotingPeriod:    month,
-				ExecutionPeriod: &month,
+				Threshold:    "20",
+				VotingPeriod: time.Second * time.Duration(30*24*60*60),
 			},
 		)
 		if err != nil {
@@ -643,11 +642,9 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, fmt.Sprintf("fail to decide bech32 address: %s", err.Error())), nil, nil
 		}
 
-		var randomDuration = time.Second * time.Duration(simtypes.RandIntBetween(r, 100, 1000))
 		msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(acc.Address, groupPolicyBech32, &group.ThresholdDecisionPolicy{
-			Threshold:       fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 20)),
-			VotingPeriod:    randomDuration,
-			ExecutionPeriod: &randomDuration,
+			Threshold:    fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 20)),
+			VotingPeriod: time.Second * time.Duration(simtypes.RandIntBetween(r, 100, 1000)),
 		})
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, err.Error()), nil, err

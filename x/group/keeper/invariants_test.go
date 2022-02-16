@@ -85,7 +85,6 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "1", NoCount: "0", AbstainCount: "0", NoWithVetoCount: "0"},
 				VotingPeriodEnd:    prevCtxPlus10min,
-				ExecutionPeriodEnd: &prevCtxPlus10min,
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 
@@ -100,7 +99,6 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "2", NoCount: "0", AbstainCount: "0", NoWithVetoCount: "0"},
 				VotingPeriodEnd:    curCtxPlus10min,
-				ExecutionPeriodEnd: &curCtxPlus10min,
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 		},
@@ -116,7 +114,6 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "2", NoCount: "0", AbstainCount: "0", NoWithVetoCount: "0"},
 				VotingPeriodEnd:    prevCtxPlus10min,
-				ExecutionPeriodEnd: &prevCtxPlus10min,
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			curProposal: &group.Proposal{
@@ -130,7 +127,6 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "1", NoCount: "0", AbstainCount: "0", NoWithVetoCount: "0"},
 				VotingPeriodEnd:    curCtxPlus10min,
-				ExecutionPeriodEnd: &curCtxPlus10min,
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			expBroken: true,
@@ -147,7 +143,6 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "0", NoCount: "2", AbstainCount: "0", NoWithVetoCount: "0"},
 				VotingPeriodEnd:    prevCtxPlus10min,
-				ExecutionPeriodEnd: &prevCtxPlus10min,
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			curProposal: &group.Proposal{
@@ -161,7 +156,6 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "0", NoCount: "1", AbstainCount: "0", NoWithVetoCount: "0"},
 				VotingPeriodEnd:    curCtxPlus10min,
-				ExecutionPeriodEnd: &curCtxPlus10min,
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			expBroken: true,
@@ -178,7 +172,6 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "0", NoCount: "0", AbstainCount: "2", NoWithVetoCount: "0"},
 				VotingPeriodEnd:    prevCtxPlus10min,
-				ExecutionPeriodEnd: &prevCtxPlus10min,
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			curProposal: &group.Proposal{
@@ -192,7 +185,6 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "0", NoCount: "0", AbstainCount: "1", NoWithVetoCount: "0"},
 				VotingPeriodEnd:    curCtxPlus10min,
-				ExecutionPeriodEnd: &curCtxPlus10min,
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			expBroken: true,
@@ -209,7 +201,6 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "0", NoCount: "0", AbstainCount: "0", NoWithVetoCount: "2"},
 				VotingPeriodEnd:    prevCtxPlus10min,
-				ExecutionPeriodEnd: &prevCtxPlus10min,
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			curProposal: &group.Proposal{
@@ -223,7 +214,6 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "0", NoCount: "0", AbstainCount: "0", NoWithVetoCount: "1"},
 				VotingPeriodEnd:    curCtxPlus10min,
-				ExecutionPeriodEnd: &curCtxPlus10min,
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			expBroken: true,
@@ -429,7 +419,6 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "4", NoCount: "3", AbstainCount: "0", NoWithVetoCount: "0"},
 				VotingPeriodEnd:    curCtxPlus10min,
-				ExecutionPeriodEnd: &curCtxPlus10min,
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			votes: []*group.Vote{
@@ -488,7 +477,6 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "6", NoCount: "0", AbstainCount: "0", NoWithVetoCount: "0"},
 				VotingPeriodEnd:    curCtxPlus10min,
-				ExecutionPeriodEnd: &curCtxPlus10min,
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			votes: []*group.Vote{
@@ -547,7 +535,6 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "4", NoCount: "3", AbstainCount: "0", NoWithVetoCount: "0"},
 				VotingPeriodEnd:    curCtxPlus10min,
-				ExecutionPeriodEnd: &curCtxPlus10min,
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			votes: []*group.Vote{

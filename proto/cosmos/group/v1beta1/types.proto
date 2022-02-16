@@ -42,13 +42,16 @@ message ThresholdDecisionPolicy {
   string threshold = 1;
 
   // voting_period is the duration from submission of a proposal to the end of voting period
-  // Within this times votes can be submitted.
+  // Within this times votes can be submitted with MsgVote.
   google.protobuf.Duration voting_period = 2 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 
-  // execution_period is the duration from submission of a proposal to the end
-  // of proposal execution. It can be left empty, but if set, if must be longer
-  // than then voting_period. Within this period MsgExec can be called.
-  google.protobuf.Duration execution_period = 3 [(gogoproto.stdduration) = true];
+  // min_execution_period is the minimum duration after the proposal submission
+  // where members can start sending MsgExec. This means that the window for
+  // sending a MsgExec transaction is:
+  // `[ submission + min_execution_period ; submission + voting_period + max_execution_period]`
+  // where max_execution_period is a app-specific config, defined in the keeper.
+  // If not set, min_execution_period will default to 0.
+  google.protobuf.Duration min_execution_period = 3 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
 // PercentageDecisionPolicy implements the DecisionPolicy interface
@@ -59,13 +62,16 @@ message PercentageDecisionPolicy {
   string percentage = 1;
 
   // voting_period is the duration from submission of a proposal to the end of voting period
-  // Within this times votes can be submitted.
+  // Within this times votes can be submitted with MsgVote.
   google.protobuf.Duration voting_period = 2 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 
-  // execution_period is the duration from submission of a proposal to the end
-  // of proposal execution. It can be left empty, but if set, if must be longer
-  // than then voting_period. Within this period MsgExec can be called.
-  google.protobuf.Duration execution_period = 3 [(gogoproto.stdduration) = true];
+  // min_execution_period is the minimum duration after the proposal submission
+  // where members can start sending MsgExec. This means that the window for
+  // sending a MsgExec transaction is:
+  // `[ submission + min_execution_period ; submission + voting_period + max_execution_period]`
+  // where max_execution_period is a app-specific config, defined in the keeper.
+  // If not set, min_execution_period will default to 0.
+  google.protobuf.Duration min_execution_period = 3 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
 // VoteOption enumerates the valid vote options for a given proposal.
@@ -201,15 +207,11 @@ message Proposal {
   // as `status` and `result` fields will be accordingly updated.
   google.protobuf.Timestamp voting_period_end = 11 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 
-  // execution_period_end is the timestamp before which execution must be done.
-  // It can be left empty.
-  google.protobuf.Timestamp execution_period_end = 12 [(gogoproto.stdtime) = true];
-
   // executor_result is the final result based on the votes and election rule. Initial value is NotRun.
-  ProposalExecutorResult executor_result = 13;
+  ProposalExecutorResult executor_result = 12;
 
   // messages is a list of Msgs that will be executed if the proposal passes.
-  repeated google.protobuf.Any messages = 14;
+  repeated google.protobuf.Any messages = 13;
 }
 
 // ProposalStatus defines proposal statuses.

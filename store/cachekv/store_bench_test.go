@@ -35,7 +35,8 @@ func benchmarkBlankParentIteratorNext(b *testing.B, keysize int) {
 	iter := kvstore.Iterator(keys[0], keys[b.N])
 	defer iter.Close()
 
-	for _ = iter.Key(); iter.Valid(); iter.Next() {
+	for ; iter.Valid(); iter.Next() {
+		_ = iter.Key()
 		// deadcode elimination stub
 		sink = iter
 	}
@@ -83,7 +84,8 @@ func benchmarkRandomSet(b *testing.B, keysize int) {
 	iter := kvstore.Iterator(keys[0], keys[b.N])
 	defer iter.Close()
 
-	for _ = iter.Key(); iter.Valid(); iter.Next() {
+	for ; iter.Valid(); iter.Next() {
+		_ = iter.Key()
 		// deadcode elimination stub
 		sink = iter
 	}
@@ -123,7 +125,8 @@ func benchmarkIteratorOnParentWithManyDeletes(b *testing.B, numDeletes int) {
 	iter := kvstore.Iterator(keys[0], keys[numDeletes])
 	defer iter.Close()
 
-	for _ = iter.Key(); iter.Valid(); iter.Next() {
+	for ; iter.Valid(); iter.Next() {
+		_ = iter.Key()
 		// deadcode elimination stub
 		sink = iter
 	}

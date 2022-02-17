@@ -319,7 +319,7 @@ func (coins DecCoins) SafeSub(coinsB DecCoins) (DecCoins, bool) {
 // Intersect will return a new set of coins which contains the minimum DecCoin
 // for common denoms found in both `coins` and `coinsB`. For denoms not common
 // to both `coins` and `coinsB` the minimum is considered to be 0, thus they
-// are not added to the final set.In other words, trim any denom amount from
+// are not added to the final set. In other words, trim any denom amount from
 // coin which exceeds that of coinB, such that (coin.Intersect(coinB)).IsLTE(coinB).
 func (coins DecCoins) Intersect(coinsB DecCoins) DecCoins {
 	res := make([]DecCoin, len(coins))
@@ -331,6 +331,22 @@ func (coins DecCoins) Intersect(coinsB DecCoins) DecCoins {
 		res[i] = minCoin
 	}
 	return removeZeroDecCoins(res)
+}
+
+// Min returns the minimum of each denom of its inputs, including
+// the implicitly-zero absent denoms. Identical to Intersect() and
+// provided for compatibility with Coins.
+func (coins DecCoins) Min(coinsB DecCoins) DecCoins {
+	return coins.Intersect(coinsB)
+}
+
+// Max returns the maximum of each denom of its inputs, including
+// the implicitly-zero absent denoms. Though this is the
+// multiset union operation, that name is dangerously confusable
+// with Add(), and will not be used.
+func (coins DecCoins) Max(coinsB DecCoins) DecCoins {
+	// coins + coinsB == min(coins, coinsB) + max(coins, coinsB)
+	return coins.Add(coinsB...).Sub(coins.Min(coinsB))
 }
 
 // GetDenomByIndex returns the Denom to make the findDup generic

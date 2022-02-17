@@ -395,7 +395,7 @@ func (coins Coins) SafeSub(coinsB Coins) (Coins, bool) {
 // not be equal to either of its inputs. Uses multiset
 // semantics, so unmentioned denoms are implicitly zero.
 func (coins Coins) Max(coinsB Coins) Coins {
-	// coins + coinsB = min(coins, coinsB) + max(coins, coinsB)
+	// coins + coinsB == min(coins, coinsB) + max(coins, coinsB)
 	return coins.Add(coinsB...).Sub(coins.Min(coinsB))
 }
 
@@ -425,6 +425,15 @@ func (coins Coins) Min(coinsB Coins) Coins {
 		}
 	}
 	return NewCoins(min...)
+}
+
+// Intersect will return a new set of coins which coinains the minimum Coin
+// for common denoms found in both `coins` and `coinsB`. Identical to Min()
+// method and provided for compatibility with DecCoins. Note that the
+// corresponding Union() alias for Max() will not be provided since it is
+// dangerously confusable with Add().
+func (coins Coins) Intersect(coinsB Coins) Coins {
+	return coins.Min(coinsB)
 }
 
 // IsAllGT returns true if for every denom in coinsB,

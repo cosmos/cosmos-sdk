@@ -275,8 +275,11 @@ func TestHooks(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	db, err := ormdb.NewModuleDB(TestBankSchema, ormdb.ModuleDBOptions{})
 	assert.NilError(t, err)
-	hooks := ormmocks.NewMockHooks(ctrl)
-	ctx := ormtable.WrapContextDefault(ormtest.NewMemoryBackend().WithValidateHooks(hooks))
+	validateHooks := ormmocks.NewMockValidateHooks(ctrl)
+	writeHooks := ormmocks.NewMockWriteHooks(ctrl)
+	ctx := ormtable.WrapContextDefault(ormtest.NewMemoryBackend().
+		WithValidateHooks(validateHooks).
+		WithWriteHooks(writeHooks))
 	k, err := NewKeeper(db)
 	assert.NilError(t, err)
 
@@ -284,24 +287,48 @@ func TestHooks(t *testing.T) {
 	acct1 := "bob"
 	acct2 := "sally"
 
-	hooks.EXPECT().OnInsert(ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 10}))
-	hooks.EXPECT().OnInsert(ormmocks.Eq(&testpb.Supply{Denom: denom, Amount: 10}))
+	validateHooks.EXPECT().ValidateInsert(gomock.Any(), ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 10}))
+	validateHooks.EXPECT().ValidateInsert(gomock.Any(), ormmocks.Eq(&testpb.Supply{Denom: denom, Amount: 10}))
+	writeHooks.EXPECT().OnInsert(gomock.Any(), ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 10}))
+	writeHooks.EXPECT().OnInsert(gomock.Any(), ormmocks.Eq(&testpb.Supply{Denom: denom, Amount: 10}))
 	assert.NilError(t, k.Mint(ctx, acct1, denom, 10))
 
-	hooks.EXPECT().OnUpdate(
+	validateHooks.EXPECT().ValidateUpdate(
+		gomock.Any(),
 		ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 10}),
 		ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 5}),
 	)
-	hooks.EXPECT().OnInsert(
+	validateHooks.EXPECT().ValidateInsert(
+		gomock.Any(),
+		ormmocks.Eq(&testpb.Balance{Address: acct2, Denom: denom, Amount: 5}),
+	)
+	writeHooks.EXPECT().OnUpdate(
+		gomock.Any(),
+		ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 10}),
+		ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 5}),
+	)
+	writeHooks.EXPECT().OnInsert(
+		gomock.Any(),
 		ormmocks.Eq(&testpb.Balance{Address: acct2, Denom: denom, Amount: 5}),
 	)
 	assert.NilError(t, k.Send(ctx, acct1, acct2, denom, 5))
 
-	hooks.EXPECT().OnUpdate(
+	validateHooks.EXPECT().ValidateUpdate(
+		gomock.Any(),
 		ormmocks.Eq(&testpb.Supply{Denom: denom, Amount: 10}),
 		ormmocks.Eq(&testpb.Supply{Denom: denom, Amount: 5}),
 	)
-	hooks.EXPECT().OnDelete(
+	validateHooks.EXPECT().ValidateDelete(
+		gomock.Any(),
+		ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 5}),
+	)
+	writeHooks.EXPECT().OnUpdate(
+		gomock.Any(),
+		ormmocks.Eq(&testpb.Supply{Denom: denom, Amount: 10}),
+		ormmocks.Eq(&testpb.Supply{Denom: denom, Amount: 5}),
+	)
+	writeHooks.EXPECT().OnDelete(
+		gomock.Any(),
 		ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 5}),
 	)
 	assert.NilError(t, k.Burn(ctx, acct1, denom, 5))

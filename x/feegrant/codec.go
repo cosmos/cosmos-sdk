@@ -10,8 +10,8 @@ import (
 // RegisterLegacyAminoCodec registers the necessary x/feegrant interfaces and concrete types
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgGrantAllowance{}, "cosmos-sdk/MsgGrantAllowance", nil)
-	cdc.RegisterConcrete(&MsgRevokeAllowance{}, "cosmos-sdk/MsgRevokeAllowance", nil)
+	cdc.RegisterConcrete(&MsgGrantAllowance{}, "cosmos-sdk/feegrant/MsgGrantAllowance", nil)
+	cdc.RegisterConcrete(&MsgRevokeAllowance{}, "cosmos-sdk/feegrant/MsgRevokeAllowance", nil)
 }
 
 // RegisterInterfaces registers the interfaces types with the interface registry

@@ -10,8 +10,8 @@ import (
 // RegisterLegacyAminoCodec registers the necessary x/authz interfaces and concrete types
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgGrant{}, "cosmos-sdk/MsgGrant", nil)
-	cdc.RegisterConcrete(&MsgRevoke{}, "cosmos-sdk/MsgRevoke", nil)
+	cdc.RegisterConcrete(&MsgGrant{}, "cosmos-sdk/authz/MsgGrant", nil)
+	cdc.RegisterConcrete(&MsgRevoke{}, "cosmos-sdk/authz/MsgRevoke", nil)
 	cdc.RegisterConcrete(&MsgExec{}, "cosmos-sdk/authz/MsgExec", nil)
 }
 

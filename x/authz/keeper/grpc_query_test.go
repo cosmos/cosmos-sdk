@@ -52,7 +52,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 					MsgTypeUrl: "unknown",
 				}
 			},
-			"no authorization found for unknown type",
+			"authorization not found for unknown type",
 			func(require *require.Assertions, res *authz.QueryGrantsResponse) {},
 		},
 		{

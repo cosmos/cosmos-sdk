@@ -109,9 +109,14 @@ func TestMsgGrantGetAuthorization(t *testing.T) {
 	var err error
 	m.Grant.Authorization, err = cdctypes.NewAnyWithValue(&g)
 	require.NoError(err)
-	require.Equal(m.GetAuthorization(), &g)
+
+	a, err := m.GetAuthorization()
+	require.NoError(err)
+	require.Equal(a, &g)
 
 	g = authz.GenericAuthorization{Msg: "some_type2"}
 	m.SetAuthorization(&g)
-	require.Equal(m.GetAuthorization(), &g)
+	a, err = m.GetAuthorization()
+	require.NoError(err)
+	require.Equal(a, &g)
 }

@@ -31,3 +31,20 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
+
+var (
+	amino = codec.NewLegacyAmino()
+
+	// ModuleCdc references the global x/feegrant module codec. Note, the codec should
+	// ONLY be used in certain instances of tests and for JSON encoding as Amino is
+	// still used for that purpose.
+	//
+	// The actual codec used for serialization should be provided to x/feegrant and
+	// defined at the application level.
+	ModuleCdc = codec.NewAminoCodec(amino)
+)
+
+func init() {
+	RegisterLegacyAminoCodec(amino)
+	amino.Seal()
+}

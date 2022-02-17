@@ -8,6 +8,7 @@ import (
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -119,4 +120,44 @@ func TestMsgGrantGetAuthorization(t *testing.T) {
 	a, err = m.GetAuthorization()
 	require.NoError(err)
 	require.Equal(a, &g)
+}
+
+func TestAminoJSON(t *testing.T) {
+	tx := legacytx.StdTx{}
+	var msg legacytx.LegacyMsg
+	someDate := time.Date(1, 1, 1, 1, 1, 1, 1, time.UTC)
+	msgSend := banktypes.MsgSend{FromAddress: "cosmos1ghi", ToAddress: "cosmos1jkl"}
+	typeURL := sdk.MsgTypeURL(&msgSend)
+	msgSendAny, err := cdctypes.NewAnyWithValue(&msgSend)
+	require.NoError(t, err)
+	grant, err := authz.NewGrant(someDate, authz.NewGenericAuthorization(typeURL), someDate.Add(time.Hour))
+	require.NoError(t, err)
+
+	// Amino JSON encoding has changed in authz since v0.46.
+	// Before, it was outputting something like:
+	// `{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"grant":{"authorization":{"msg":"/cosmos.bank.v1beta1.MsgSend"},"expiration":"0001-01-01T02:01:01.000000001Z"},"grantee":"cosmos1def","granter":"cosmos1abc"}],"sequence":"1","timeout_height":"1"}`
+	//
+	// This was a bug. Now, it's as below, See how there's `type` & `value` fields.
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/11190
+	// ref: https://github.com/cosmos/cosmjs/issues/1026
+	msg = &authz.MsgGrant{Granter: "cosmos1abc", Grantee: "cosmos1def", Grant: grant}
+	tx.Msgs = []sdk.Msg{msg}
+	require.Equal(t,
+		`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/authz/MsgGrant","value":{"grant":{"authorization":{"msg":"/cosmos.bank.v1beta1.MsgSend"},"expiration":"0001-01-01T02:01:01.000000001Z"},"grantee":"cosmos1def","granter":"cosmos1abc"}}],"sequence":"1","timeout_height":"1"}`,
+		string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msg}, "memo", nil)),
+	)
+
+	msg = &authz.MsgRevoke{Granter: "cosmos1abc", Grantee: "cosmos1def", MsgTypeUrl: typeURL}
+	tx.Msgs = []sdk.Msg{msg}
+	require.Equal(t,
+		`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/authz/MsgRevoke","value":{"grantee":"cosmos1def","granter":"cosmos1abc","msg_type_url":"/cosmos.bank.v1beta1.MsgSend"}}],"sequence":"1","timeout_height":"1"}`,
+		string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msg}, "memo", nil)),
+	)
+
+	msg = &authz.MsgExec{Grantee: "cosmos1def", Msgs: []*cdctypes.Any{msgSendAny}}
+	tx.Msgs = []sdk.Msg{msg}
+	require.Equal(t,
+		`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/authz/MsgExec","value":{"grantee":"cosmos1def","msgs":[{"amount":[],"from_address":"cosmos1ghi","to_address":"cosmos1jkl"}]}}],"sequence":"1","timeout_height":"1"}`,
+		string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msg}, "memo", nil)),
+	)
 }

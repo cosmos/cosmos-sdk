@@ -8,11 +8,10 @@ import (
 
 // Options is the internal list options struct.
 type Options struct {
-	Reverse       bool
-	Cursor        []byte
-	Filter        func(proto.Message) bool
-	Offset, Limit uint64
-	CountTotal    bool
+	Reverse, CountTotal         bool
+	Offset, Limit, DefaultLimit uint64
+	Cursor                      []byte
+	Filter                      func(proto.Message) bool
 }
 
 func (o Options) Validate() error {

@@ -392,7 +392,8 @@ func (coins Coins) SafeSub(coinsB Coins) (Coins, bool) {
 
 // Max returns the maximum of each denom of its inputs.
 // The inputs should be sorted. Note that the max might
-// not be equal to either of its inputs.
+// not be equal to either of its inputs. Uses multiset
+// semantics, so unmentioned denoms are implicitly zero.
 func (coins Coins) Max(coinsB Coins) Coins {
 	// coins + coinsB = min(coins, coinsB) + max(coins, coinsB)
 	return coins.Add(coinsB...).Sub(coins.Min(coinsB))
@@ -400,7 +401,8 @@ func (coins Coins) Max(coinsB Coins) Coins {
 
 // Min returns the minimum of each denom of its inputs.
 // The inputs should be sorted. Note that the min might
-// not be equal to either of its inputs.
+// not be equal to either of its inputs. Uses multiset
+// semantics, so unmentioned denoms are implicitly zero.
 func (coins Coins) Min(coinsB Coins) Coins {
 	min := make([]Coin, 0)
 	for indexA, indexB := 0, 0; indexA < len(coins) && indexB < len(coinsB); {

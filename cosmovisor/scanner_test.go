@@ -5,46 +5,44 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func TestParseUpgradeInfoFile(t *testing.T) {
 	cases := []struct {
 		filename      string
-		expectUpgrade upgradetypes.Plan
+		expectUpgrade UpgradeInfo
 		expectErr     bool
 	}{{
 		filename:      "f1-good.json",
-		expectUpgrade: upgradetypes.Plan{Name: "upgrade1", Info: "some info", Height: 123},
+		expectUpgrade: UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 123},
 		expectErr:     false,
 	}, {
 		filename:      "f2-bad-type.json",
-		expectUpgrade: upgradetypes.Plan{},
+		expectUpgrade: UpgradeInfo{},
 		expectErr:     true,
 	}, {
 		filename:      "f2-bad-type-2.json",
-		expectUpgrade: upgradetypes.Plan{},
+		expectUpgrade: UpgradeInfo{},
 		expectErr:     true,
 	}, {
 		filename:      "f3-empty.json",
-		expectUpgrade: upgradetypes.Plan{},
+		expectUpgrade: UpgradeInfo{},
 		expectErr:     true,
 	}, {
 		filename:      "f4-empty-obj.json",
-		expectUpgrade: upgradetypes.Plan{},
+		expectUpgrade: UpgradeInfo{},
 		expectErr:     true,
 	}, {
 		filename:      "f5-partial-obj-1.json",
-		expectUpgrade: upgradetypes.Plan{},
+		expectUpgrade: UpgradeInfo{},
 		expectErr:     true,
 	}, {
 		filename:      "f5-partial-obj-2.json",
-		expectUpgrade: upgradetypes.Plan{},
+		expectUpgrade: UpgradeInfo{},
 		expectErr:     true,
 	}, {
 		filename:      "unknown.json",
-		expectUpgrade: upgradetypes.Plan{},
+		expectUpgrade: UpgradeInfo{},
 		expectErr:     true,
 	}}
 

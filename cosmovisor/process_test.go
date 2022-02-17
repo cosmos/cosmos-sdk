@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 package cosmovisor_test
@@ -10,7 +11,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type processTestSuite struct {
@@ -134,27 +134,27 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 func TestSkipUpgrade(t *testing.T) {
 	cases := []struct {
 		args        []string
-		upgradeInfo upgradetypes.Plan
+		upgradeInfo cosmovisor.UpgradeInfo
 		expectRes   bool
 	}{{
 		args:        []string{"appb", "start", "--unsafe-skip-upgrades"},
-		upgradeInfo: upgradetypes.Plan{Name: "upgrade1", Info: "some info", Height: 123},
+		upgradeInfo: cosmovisor.UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 123},
 		expectRes:   false,
 	}, {
 		args:        []string{"appb", "start", "--unsafe-skip-upgrades", "--abcd"},
-		upgradeInfo: upgradetypes.Plan{Name: "upgrade1", Info: "some info", Height: 123},
+		upgradeInfo: cosmovisor.UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 123},
 		expectRes:   false,
 	}, {
 		args:        []string{"appb", "start", "--unsafe-skip-upgrades", "10", "--abcd"},
-		upgradeInfo: upgradetypes.Plan{Name: "upgrade1", Info: "some info", Height: 11},
+		upgradeInfo: cosmovisor.UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 11},
 		expectRes:   false,
 	}, {
 		args:        []string{"appb", "start", "--unsafe-skip-upgrades", "10", "20", "--abcd"},
-		upgradeInfo: upgradetypes.Plan{Name: "upgrade1", Info: "some info", Height: 20},
+		upgradeInfo: cosmovisor.UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 20},
 		expectRes:   true,
 	}, {
 		args:        []string{"appb", "start", "--unsafe-skip-upgrades", "10", "20", "--abcd", "34"},
-		upgradeInfo: upgradetypes.Plan{Name: "upgrade1", Info: "some info", Height: 34},
+		upgradeInfo: cosmovisor.UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 34},
 		expectRes:   false,
 	}}
 

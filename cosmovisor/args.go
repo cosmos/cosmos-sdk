@@ -14,8 +14,6 @@ import (
 	"github.com/rs/zerolog"
 
 	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
-	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // environment variable names
@@ -52,7 +50,7 @@ type Config struct {
 	PreupgradeMaxRetries  int
 
 	// currently running upgrade
-	currentUpgrade upgradetypes.Plan
+	currentUpgrade UpgradeInfo
 }
 
 // Root returns the root directory where all info lives
@@ -227,9 +225,9 @@ func (cfg *Config) validate() []error {
 	// if UnsafeSkipBackup is false, check if the DataBackupPath valid
 	switch {
 	case cfg.DataBackupPath == "":
-		errs = append(errs, errors.New(EnvDataBackupPath + " must not be empty"))
+		errs = append(errs, errors.New(EnvDataBackupPath+" must not be empty"))
 	case !filepath.IsAbs(cfg.DataBackupPath):
-		errs = append(errs, errors.New(cfg.DataBackupPath + " must be an absolute path"))
+		errs = append(errs, errors.New(cfg.DataBackupPath+" must be an absolute path"))
 	default:
 		switch info, err := os.Stat(cfg.DataBackupPath); {
 		case err != nil:
@@ -243,7 +241,7 @@ func (cfg *Config) validate() []error {
 }
 
 // SetCurrentUpgrade sets the named upgrade to be the current link, returns error if this binary doesn't exist
-func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) error {
+func (cfg *Config) SetCurrentUpgrade(u UpgradeInfo) error {
 	// ensure named upgrade exists
 	bin := cfg.UpgradeBin(u.Name)
 
@@ -267,7 +265,7 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) error {
 	}
 
 	cfg.currentUpgrade = u
-	f, err := os.Create(filepath.Join(upgrade, upgradekeeper.UpgradeInfoFileName))
+	f, err := os.Create(filepath.Join(upgrade, defaultFilename))
 	if err != nil {
 		return err
 	}
@@ -281,14 +279,14 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) error {
 	return f.Close()
 }
 
-func (cfg *Config) UpgradeInfo() upgradetypes.Plan {
+func (cfg *Config) UpgradeInfo() UpgradeInfo {
 	if cfg.currentUpgrade.Name != "" {
 		return cfg.currentUpgrade
 	}
 
-	filename := filepath.Join(cfg.Root(), currentLink, upgradekeeper.UpgradeInfoFileName)
+	filename := filepath.Join(cfg.Root(), currentLink, defaultFilename)
 	_, err := os.Lstat(filename)
-	var u upgradetypes.Plan
+	var u UpgradeInfo
 	var bz []byte
 	if err != nil { // no current directory
 		goto returnError

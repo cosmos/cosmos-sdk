@@ -18,7 +18,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type upgradeTestSuite struct {
@@ -40,7 +39,7 @@ func (s *upgradeTestSuite) TestCurrentBin() {
 
 	// ensure we cannot set this to an invalid value
 	for _, name := range []string{"missing", "nobin", "noexec"} {
-		s.Require().Error(cfg.SetCurrentUpgrade(upgradetypes.Plan{Name: name}), name)
+		s.Require().Error(cfg.SetCurrentUpgrade(cosmovisor.UpgradeInfo{Name: name}), name)
 
 		currentBin, err := cfg.CurrentBin()
 		s.Require().NoError(err)
@@ -51,7 +50,7 @@ func (s *upgradeTestSuite) TestCurrentBin() {
 	// try a few times to make sure this can be reproduced
 	for _, name := range []string{"chain2", "chain3", "chain2"} {
 		// now set it to a valid upgrade and make sure CurrentBin is now set properly
-		err = cfg.SetCurrentUpgrade(upgradetypes.Plan{Name: name})
+		err = cfg.SetCurrentUpgrade(cosmovisor.UpgradeInfo{Name: name})
 		s.Require().NoError(err)
 		// we should see current point to the new upgrade dir
 		currentBin, err := cfg.CurrentBin()
@@ -70,7 +69,7 @@ func (s *upgradeTestSuite) TestCurrentAlwaysSymlinkToDirectory() {
 	s.Require().Equal(cfg.GenesisBin(), currentBin)
 	s.assertCurrentLink(cfg, "genesis")
 
-	err = cfg.SetCurrentUpgrade(upgradetypes.Plan{Name: "chain2"})
+	err = cfg.SetCurrentUpgrade(cosmovisor.UpgradeInfo{Name: "chain2"})
 	s.Require().NoError(err)
 	currentBin, err = cfg.CurrentBin()
 	s.Require().NoError(err)
@@ -103,7 +102,7 @@ func (s *upgradeTestSuite) TestDoUpgradeNoDownloadUrl() {
 
 	// do upgrade ignores bad files
 	for _, name := range []string{"missing", "nobin", "noexec"} {
-		info := upgradetypes.Plan{Name: name}
+		info := cosmovisor.UpgradeInfo{Name: name}
 		err = cosmovisor.DoUpgrade(cfg, info)
 		s.Require().Error(err, name)
 		currentBin, err := cfg.CurrentBin()
@@ -114,7 +113,7 @@ func (s *upgradeTestSuite) TestDoUpgradeNoDownloadUrl() {
 	// make sure it updates a few times
 	for _, upgrade := range []string{"chain2", "chain3"} {
 		// now set it to a valid upgrade and make sure CurrentBin is now set properly
-		info := upgradetypes.Plan{Name: upgrade}
+		info := cosmovisor.UpgradeInfo{Name: upgrade}
 		err = cosmovisor.DoUpgrade(cfg, info)
 		s.Require().NoError(err)
 		// we should see current point to the new upgrade dir
@@ -189,7 +188,7 @@ func (s *upgradeTestSuite) TestGetDownloadURL() {
 
 	for name, tc := range cases {
 		s.Run(name, func() {
-			url, err := cosmovisor.GetDownloadURL(upgradetypes.Plan{Info: tc.info})
+			url, err := cosmovisor.GetDownloadURL(cosmovisor.UpgradeInfo{Info: tc.info})
 			switch e := tc.err.(type) {
 			case nil:
 				s.Require().NoError(err)
@@ -267,7 +266,7 @@ func (s *upgradeTestSuite) TestDownloadBinary() {
 			}
 
 			const upgrade = "amazonas"
-			info := upgradetypes.Plan{
+			info := cosmovisor.UpgradeInfo{
 				Name: upgrade,
 				Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, cosmovisor.OSArch(), url),
 			}

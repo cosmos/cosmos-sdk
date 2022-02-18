@@ -81,4 +81,5 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 
 ### Draft
 
-* [ADR 044: Guidelines for Updating Protobuf Definitions](./adr-044-protobuf-updates-guidelines.md)
+- [ADR 044: Guidelines for Updating Protobuf Definitions](./adr-044-protobuf-updates-guidelines.md)
+- [ADR 047: Extend Upgrade Plan](./adr-047-extend-upgrade-plan.md)

@@ -306,7 +306,7 @@ func (q Keeper) getVotesByVoter(ctx sdk.Context, voter sdk.AccAddress, pageReque
 }
 
 // TODO Merge with https://github.com/cosmos/cosmos-sdk/issues/11151
-func (q Keeper) doTally(ctx sdk.Context, p group.Proposal, groupId uint64) (group.TallyResult, error) {
+func (q Keeper) Tally(ctx sdk.Context, p group.Proposal, groupId uint64) (group.TallyResult, error) {
 	it, err := q.voteByProposalIndex.Get(ctx.KVStore(q.key), p.Id)
 	if err != nil {
 		return group.TallyResult{}, err

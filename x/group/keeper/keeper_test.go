@@ -1845,15 +1845,16 @@ func (s *TestSuite) TestVote() {
 	s.Assert().Equal(group.DefaultTallyResult(), proposals[0].FinalTallyResult)
 
 	specs := map[string]struct {
-		srcCtx              sdk.Context
-		expFinalTallyResult group.TallyResult // expected after tallying
-		req                 *group.MsgVote
-		doBefore            func(ctx context.Context)
-		postRun             func(sdkCtx sdk.Context)
-		expProposalStatus   group.ProposalStatus         // expected after tallying
-		expResult           group.ProposalResult         // expected after tallying
-		expExecutorResult   group.ProposalExecutorResult // expected after tallying
-		expErr              bool
+		srcCtx            sdk.Context
+		expTallyResult    group.TallyResult // expected after tallying
+		expFinal          bool              // is the tally result final?
+		req               *group.MsgVote
+		doBefore          func(ctx context.Context)
+		postRun           func(sdkCtx sdk.Context)
+		expProposalStatus group.ProposalStatus         // expected after tallying
+		expResult         group.ProposalResult         // expected after tallying
+		expExecutorResult group.ProposalExecutorResult // expected after tallying
+		expErr            bool
 	}{
 		"vote yes": {
 			req: &group.MsgVote{
@@ -1861,7 +1862,7 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr4.String(),
 				Option:     group.VOTE_OPTION_YES,
 			},
-			expFinalTallyResult: group.TallyResult{
+			expTallyResult: group.TallyResult{
 				YesCount:        "1",
 				NoCount:         "0",
 				AbstainCount:    "0",
@@ -1879,12 +1880,13 @@ func (s *TestSuite) TestVote() {
 				Option:     group.VOTE_OPTION_YES,
 				Exec:       group.Exec_EXEC_TRY,
 			},
-			expFinalTallyResult: group.TallyResult{
+			expTallyResult: group.TallyResult{
 				YesCount:        "2",
 				NoCount:         "0",
 				AbstainCount:    "0",
 				NoWithVetoCount: "0",
 			},
+			expFinal:          true,
 			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
 			expResult:         group.PROPOSAL_RESULT_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
@@ -1902,7 +1904,7 @@ func (s *TestSuite) TestVote() {
 				Option:     group.VOTE_OPTION_YES,
 				Exec:       group.Exec_EXEC_TRY,
 			},
-			expFinalTallyResult: group.TallyResult{
+			expTallyResult: group.TallyResult{
 				YesCount:        "1",
 				NoCount:         "0",
 				AbstainCount:    "0",
@@ -1919,7 +1921,7 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr4.String(),
 				Option:     group.VOTE_OPTION_NO,
 			},
-			expFinalTallyResult: group.TallyResult{
+			expTallyResult: group.TallyResult{
 				YesCount:        "0",
 				NoCount:         "1",
 				AbstainCount:    "0",
@@ -1936,7 +1938,7 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr4.String(),
 				Option:     group.VOTE_OPTION_ABSTAIN,
 			},
-			expFinalTallyResult: group.TallyResult{
+			expTallyResult: group.TallyResult{
 				YesCount:        "0",
 				NoCount:         "0",
 				AbstainCount:    "1",
@@ -1953,7 +1955,7 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr4.String(),
 				Option:     group.VOTE_OPTION_NO_WITH_VETO,
 			},
-			expFinalTallyResult: group.TallyResult{
+			expTallyResult: group.TallyResult{
 				YesCount:        "0",
 				NoCount:         "0",
 				AbstainCount:    "0",
@@ -1970,7 +1972,7 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr3.String(),
 				Option:     group.VOTE_OPTION_YES,
 			},
-			expFinalTallyResult: group.TallyResult{
+			expTallyResult: group.TallyResult{
 				YesCount:        "2",
 				NoCount:         "0",
 				AbstainCount:    "0",
@@ -2193,17 +2195,20 @@ func (s *TestSuite) TestVote() {
 			})
 			s.Require().NoError(err)
 			proposal := proposalRes.Proposal
-			s.Assert().Equal(group.DefaultTallyResult(), proposal.FinalTallyResult) // Make sure proposal isn't mutated.
+			if spec.expFinal {
+				s.Assert().Equal(spec.expTallyResult, proposal.FinalTallyResult)
+				s.Assert().Equal(spec.expResult, proposal.Result)
+				s.Assert().Equal(spec.expProposalStatus, proposal.Status)
+				s.Assert().Equal(spec.expExecutorResult, proposal.ExecutorResult)
+			} else {
+				s.Assert().Equal(group.DefaultTallyResult(), proposal.FinalTallyResult) // Make sure proposal isn't mutated.
 
-			// do a round of tallying
-			groupPolicyRes, err := s.keeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{Address: groupPolicy.String()})
-			s.Require().NoError(err)
-			err = s.keeper.DoTallyAndUpdate(sdkCtx, proposal, group.GroupInfo{TotalWeight: "3"}, *groupPolicyRes.Info)
-			s.Require().NoError(err)
-			s.Assert().Equal(spec.expFinalTallyResult, proposal.FinalTallyResult)
-			s.Assert().Equal(spec.expResult, proposal.Result)
-			s.Assert().Equal(spec.expProposalStatus, proposal.Status)
-			s.Assert().Equal(spec.expExecutorResult, proposal.ExecutorResult)
+				// do a round of tallying
+				tallyResult, err := s.keeper.Tally(sdkCtx, *proposal, myGroupID)
+				s.Require().NoError(err)
+
+				s.Assert().Equal(spec.expTallyResult, tallyResult)
+			}
 
 			spec.postRun(sdkCtx)
 		})

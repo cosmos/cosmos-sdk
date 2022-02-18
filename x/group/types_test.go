@@ -17,6 +17,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 		totalPower     string
 		votingDuration time.Duration
 		result         group.DecisionPolicyResult
+		expErr         bool
 	}{
 		{
 			"YesCount percentage > decision policy percentage",
@@ -36,6 +37,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				Allow: true,
 				Final: true,
 			},
+			false,
 		},
 		{
 			"YesCount percentage == decision policy percentage",
@@ -55,6 +57,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				Allow: true,
 				Final: true,
 			},
+			false,
 		},
 		{
 			"YesCount percentage < decision policy percentage",
@@ -74,6 +77,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				Allow: false,
 				Final: false,
 			},
+			false,
 		},
 		{
 			"sum percentage (YesCount + undecided votes percentage) < decision policy percentage",
@@ -93,6 +97,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				Allow: false,
 				Final: true,
 			},
+			false,
 		},
 		{
 			"sum percentage = decision policy percentage",
@@ -112,6 +117,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				Allow: false,
 				Final: false,
 			},
+			false,
 		},
 		{
 			"sum percentage > decision policy percentage",
@@ -131,12 +137,14 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				Allow: false,
 				Final: false,
 			},
+			false,
 		},
 		{
-			"decision policy timeout <= voting duration",
+			"time since submission < min execution period",
 			&group.PercentageDecisionPolicy{
-				Percentage:   "0.5",
-				VotingPeriod: time.Second * 10,
+				Percentage:         "0.5",
+				VotingPeriod:       time.Second * 10,
+				MinExecutionPeriod: time.Minute,
 			},
 			&group.TallyResult{
 				YesCount:        "2",
@@ -146,17 +154,19 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 			},
 			"3",
 			time.Duration(time.Second * 50),
-			group.DecisionPolicyResult{
-				Allow: false,
-				Final: true,
-			},
+			group.DecisionPolicyResult{},
+			true,
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			policyResult, err := tc.policy.Allow(*tc.tally, tc.totalPower, tc.votingDuration)
-			require.NoError(t, err)
-			require.Equal(t, tc.result, policyResult)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.result, policyResult)
+			}
 		})
 	}
 }
@@ -169,6 +179,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 		totalPower     string
 		votingDuration time.Duration
 		result         group.DecisionPolicyResult
+		expErr         bool
 	}{
 		{
 			"YesCount >= threshold decision policy",
@@ -188,6 +199,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				Allow: true,
 				Final: true,
 			},
+			false,
 		},
 		{
 			"YesCount < threshold decision policy",
@@ -207,6 +219,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				Allow: false,
 				Final: false,
 			},
+			false,
 		},
 		{
 			"sum votes < threshold decision policy",
@@ -226,6 +239,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				Allow: false,
 				Final: true,
 			},
+			false,
 		},
 		{
 			"sum votes >= threshold decision policy",
@@ -245,12 +259,14 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				Allow: false,
 				Final: false,
 			},
+			false,
 		},
 		{
-			"decision policy timeout <= voting duration",
+			"time since submission < min execution period",
 			&group.ThresholdDecisionPolicy{
-				Threshold:    "3",
-				VotingPeriod: time.Second * 10,
+				Threshold:          "3",
+				VotingPeriod:       time.Second * 10,
+				MinExecutionPeriod: time.Minute,
 			},
 			&group.TallyResult{
 				YesCount:        "3",
@@ -264,13 +280,18 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				Allow: false,
 				Final: true,
 			},
+			true,
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			policyResult, err := tc.policy.Allow(*tc.tally, tc.totalPower, tc.votingDuration)
-			require.NoError(t, err)
-			require.Equal(t, tc.result, policyResult)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.result, policyResult)
+			}
 		})
 	}
 }

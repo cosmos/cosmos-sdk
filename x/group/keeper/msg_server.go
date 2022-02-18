@@ -515,6 +515,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 				return &group.MsgSubmitProposalResponse{ProposalId: id}, sdkerrors.Wrap(err, "The proposal was created but failed on vote")
 			}
 		}
+
 		// Then try to execute the proposal
 		_, err = k.Exec(sdk.WrapSDKContext(ctx), &group.MsgExec{
 			ProposalId: id,
@@ -680,8 +681,9 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	return &group.MsgVoteResponse{}, nil
 }
 
-// DoTallyAndUpdate updates the proposal status and tally if necessary based on the group policy's decision policy.
-func (k Keeper) DoTallyAndUpdate(ctx sdk.Context, p *group.Proposal, electorate group.GroupInfo, policyInfo group.GroupPolicyInfo) error {
+// doTallyAndUpdate performs a tally, and updates the proposal's
+// `FinalTallyResult` field only if the tally is final.
+func (k Keeper) doTallyAndUpdate(ctx sdk.Context, p *group.Proposal, electorate group.GroupInfo, policyInfo group.GroupPolicyInfo) error {
 	policy := policyInfo.GetDecisionPolicy()
 	pSubmittedAt, err := gogotypes.TimestampProto(p.SubmitTime)
 	if err != nil {
@@ -692,12 +694,10 @@ func (k Keeper) DoTallyAndUpdate(ctx sdk.Context, p *group.Proposal, electorate 
 		return err
 	}
 
-	tallyResult, err := k.doTally(ctx, *p, policyInfo.GroupId)
+	tallyResult, err := k.Tally(ctx, *p, policyInfo.GroupId)
 	if err != nil {
 		return err
 	}
-
-	p.FinalTallyResult = tallyResult
 
 	if ctx.BlockTime().Sub(p.VotingPeriodEnd) > k.config.MaxExecutionPeriod {
 		return errors.ErrExpired.Wrapf("%s pass after voting period end, expected max %s", ctx.BlockTime().Sub(p.VotingPeriodEnd), k.config.MaxExecutionPeriod)
@@ -707,9 +707,11 @@ func (k Keeper) DoTallyAndUpdate(ctx sdk.Context, p *group.Proposal, electorate 
 	case err != nil:
 		return sdkerrors.Wrap(err, "policy execution")
 	case result.Allow && result.Final:
+		p.FinalTallyResult = tallyResult
 		p.Result = group.PROPOSAL_RESULT_ACCEPTED
 		p.Status = group.PROPOSAL_STATUS_CLOSED
 	case !result.Allow && result.Final:
+		p.FinalTallyResult = tallyResult
 		p.Result = group.PROPOSAL_RESULT_REJECTED
 		p.Status = group.PROPOSAL_STATUS_CLOSED
 	}
@@ -761,7 +763,8 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 			proposal.Status = group.PROPOSAL_STATUS_ABORTED
 			return storeUpdates()
 		}
-		if err := k.DoTallyAndUpdate(ctx, &proposal, electorate, policyInfo); err != nil {
+
+		if err := k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo); err != nil {
 			return nil, err
 		}
 	}

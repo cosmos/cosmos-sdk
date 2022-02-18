@@ -753,11 +753,14 @@ Parameters:
 				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "metadata is malformed, proper base64 string is required")
 			}
 
+			execStr, _ := cmd.Flags().GetString(FlagExec)
+
 			msg := &group.MsgVote{
 				ProposalId: proposalID,
 				Voter:      args[1],
 				Option:     voteOption,
 				Metadata:   b,
+				Exec:       execFromString(execStr),
 			}
 			if err != nil {
 				return err

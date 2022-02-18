@@ -150,14 +150,14 @@ func TestAminoJSON(t *testing.T) {
 	msg = &feegrant.MsgGrantAllowance{Granter: "cosmos1abc", Grantee: "cosmos1def", Allowance: allowanceAny}
 	tx.Msgs = []sdk.Msg{msg}
 	require.Equal(t,
-		`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/feegrant/MsgGrantAllowance","value":{"allowance":{"spend_limit":[{"amount":"100","denom":"foo"}]},"grantee":"cosmos1def","granter":"cosmos1abc"}}],"sequence":"1","timeout_height":"1"}`,
+		`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgGrantAllowance","value":{"allowance":{"type":"cosmos-sdk/BasicAllowance","value":{"spend_limit":[{"amount":"100","denom":"foo"}]}},"grantee":"cosmos1def","granter":"cosmos1abc"}}],"sequence":"1","timeout_height":"1"}`,
 		string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msg}, "memo", nil)),
 	)
 
 	msg = &feegrant.MsgRevokeAllowance{Granter: "cosmos1abc", Grantee: "cosmos1def"}
 	tx.Msgs = []sdk.Msg{msg}
 	require.Equal(t,
-		`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/feegrant/MsgRevokeAllowance","value":{"grantee":"cosmos1def","granter":"cosmos1abc"}}],"sequence":"1","timeout_height":"1"}`,
+		`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgRevokeAllowance","value":{"grantee":"cosmos1def","granter":"cosmos1abc"}}],"sequence":"1","timeout_height":"1"}`,
 		string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msg}, "memo", nil)),
 	)
 }

@@ -324,8 +324,8 @@ message MsgVote {
   // metadata is any arbitrary metadata to attached to the vote.
   bytes metadata = 4;
 
-  // exec defines the mode of execution of the proposal,
-  // whether it should be executed immediately on creation or not.
+  // exec defines whether the proposal should be executed
+  // immediately after voting or not.
   Exec exec = 5;
 }
 

@@ -199,6 +199,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (crypto) [#11027] Remove dependency on Tendermint core for xsalsa20symmetric.
 * (x/authz) [\#10447](https://github.com/cosmos/cosmos-sdk/pull/10447) Fix authz `NewGrant` expiration check.
 * (x/authz) [\#10633](https://github.com/cosmos/cosmos-sdk/pull/10633) Fixed authorization not found error when executing message.
+* [#11222](https://github.com/cosmos/cosmos-sdk/pull/11222) reject query with block height in the future
 
 ### State Machine Breaking
 

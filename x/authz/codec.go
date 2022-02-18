@@ -49,5 +49,4 @@ var (
 
 func init() {
 	RegisterLegacyAminoCodec(amino)
-	amino.Seal()
 }

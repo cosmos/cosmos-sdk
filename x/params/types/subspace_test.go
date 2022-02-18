@@ -32,8 +32,8 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	db := memdb.NewDB()
 
 	config := multi.DefaultStoreParams()
-	suite.NoError(config.RegisterSubstore(key.Name(), storetypes.StoreTypePersistent))
-	suite.NoError(config.RegisterSubstore(tkey.Name(), storetypes.StoreTypeTransient))
+	suite.NoError(config.RegisterSubstore(key, storetypes.StoreTypePersistent))
+	suite.NoError(config.RegisterSubstore(tkey, storetypes.StoreTypeTransient))
 	ms, err := multi.NewV1MultiStoreAsV2(db, config)
 	suite.NoError(err)
 

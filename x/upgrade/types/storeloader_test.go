@@ -28,8 +28,7 @@ func defaultLogger() log.Logger {
 	}
 }
 
-func initStore(t *testing.T, db dbm.DBConnection, config multi.StoreParams, storeKey string, k, v []byte) {
-	key := sdk.NewKVStoreKey(storeKey)
+func initStore(t *testing.T, db dbm.DBConnection, config multi.StoreParams, key storetypes.StoreKey, k, v []byte) {
 	rs, err := multi.NewV1MultiStoreAsV2(db, config)
 	require.NoError(t, err)
 	rs.SetPruning(storetypes.PruneNothing)
@@ -44,8 +43,7 @@ func initStore(t *testing.T, db dbm.DBConnection, config multi.StoreParams, stor
 	require.NoError(t, rs.Close())
 }
 
-func checkStore(t *testing.T, db dbm.DBConnection, config multi.StoreParams, ver int64, storeKey string, k, v []byte) {
-	key := sdk.NewKVStoreKey(storeKey)
+func checkStore(t *testing.T, db dbm.DBConnection, config multi.StoreParams, ver int64, key storetypes.StoreKey, k, v []byte) {
 	rs, err := multi.NewV1MultiStoreAsV2(db, config)
 	require.NoError(t, err)
 	rs.SetPruning(storetypes.PruneNothing)
@@ -84,15 +82,17 @@ func TestSetLoader(t *testing.T) {
 	_, err = os.Stat(upgradeInfoFilePath)
 	require.NoError(t, err)
 
+	fooKey := sdk.NewKVStoreKey("foo")
+	barKey := sdk.NewKVStoreKey("bar")
 	cases := map[string]struct {
 		setLoader    baseapp.AppOption
-		origStoreKey string
-		loadStoreKey string
+		origStoreKey storetypes.StoreKey
+		loadStoreKey storetypes.StoreKey
 	}{
 		"don't set loader": {
 			setLoader:    nil,
-			origStoreKey: "foo",
-			loadStoreKey: "foo",
+			origStoreKey: fooKey,
+			loadStoreKey: fooKey,
 		},
 		"rename with inline opts": {
 			setLoader: UpgradeStoreOption(uint64(upgradeHeight), &storetypes.StoreUpgrades{
@@ -101,8 +101,8 @@ func TestSetLoader(t *testing.T) {
 					NewKey: "bar",
 				}},
 			}),
-			origStoreKey: "foo",
-			loadStoreKey: "bar",
+			origStoreKey: fooKey,
+			loadStoreKey: barKey,
 		},
 	}
 
@@ -124,7 +124,7 @@ func TestSetLoader(t *testing.T) {
 			// load the app with the existing db
 			opts := []baseapp.AppOption{
 				baseapp.SetPruning(storetypes.PruneNothing),
-				baseapp.SetSubstores(sdk.NewKVStoreKey(tc.origStoreKey)),
+				baseapp.SetSubstores(tc.origStoreKey),
 			}
 			origapp := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, opts...)
 			require.NoError(t, origapp.Init())
@@ -139,7 +139,7 @@ func TestSetLoader(t *testing.T) {
 			// load the new app with the original app db
 			opts = []baseapp.AppOption{
 				baseapp.SetPruning(storetypes.PruneNothing),
-				baseapp.SetSubstores(sdk.NewKVStoreKey(tc.loadStoreKey)),
+				baseapp.SetSubstores(tc.loadStoreKey),
 			}
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)

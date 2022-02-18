@@ -1730,7 +1730,7 @@ func TestGRPCQueryPulsar(t *testing.T) {
 		)
 	}
 
-	app := setupBaseApp(t, grpcQueryOpt)
+	app := setupBaseApp(t, baseapp.AppOptionFunc(grpcQueryOpt))
 	app.GRPCQueryRouter().SetInterfaceRegistry(codectypes.NewInterfaceRegistry())
 
 	app.InitChain(abci.RequestInitChain{})

@@ -950,7 +950,7 @@ func TestTrace(t *testing.T) {
 
 func TestTraceConcurrency(t *testing.T) {
 	db := memdb.NewDB()
-	opts := storeConfig123(t)
+	opts := storeParams123(t)
 	store, err := NewStore(db, opts)
 	require.NoError(t, err)
 

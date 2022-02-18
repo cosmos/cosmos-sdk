@@ -41,7 +41,7 @@ func (s *invariantTestSuite) SetupSuite() {
 	key := sdk.NewKVStoreKey(group.ModuleName)
 	db := memdb.NewDB()
 	config := multi.DefaultStoreParams()
-	s.Require().NoError(config.RegisterSubstore(key.Name(), storetypes.StoreTypePersistent))
+	s.Require().NoError(config.RegisterSubstore(key, storetypes.StoreTypePersistent))
 	ms, err := multi.NewV1MultiStoreAsV2(db, config)
 	s.Require().NoError(err)
 	sdkCtx := sdk.NewContext(ms, tmproto.Header{}, false, log.NewNopLogger())

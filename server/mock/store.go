@@ -91,6 +91,10 @@ func (ms multiStore) GetVersion(int64) (storetypes.MultiStore, error) {
 	panic("not implemented")
 }
 
+func (ms multiStore) GetAllVersions() []int {
+	panic("not implemented")
+}
+
 func (ms multiStore) Close() error {
 	panic("not implemented")
 }

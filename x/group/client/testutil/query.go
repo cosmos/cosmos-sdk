@@ -750,3 +750,78 @@ func (s *IntegrationTestSuite) TestQueryVotesByVoter() {
 		})
 	}
 }
+
+func (s *IntegrationTestSuite) TestTallyResult() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	member := s.votedMember
+
+	testCases := []struct {
+		name           string
+		args           []string
+		expectErr      bool
+		expTallyResult *group.TallyResult
+		expectErrMsg   string
+		expectedCode   uint32
+	}{
+		{
+			"not found",
+			[]string{
+				"12345",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			nil,
+			"not found",
+			0,
+		},
+		{
+			"invalid proposal id",
+			[]string{
+				"",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			nil,
+			"strconv.ParseUint: parsing \"\": invalid syntax",
+			0,
+		},
+		{
+			"valid proposal id",
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			&group.TallyResult{
+				YesCount:        member.Weight,
+				AbstainCount:    "0",
+				NoCount:         "0",
+				NoWithVetoCount: "0",
+			},
+			"",
+			0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := client.QueryTallyResultCmd()
+
+			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Contains(out.String(), tc.expectErrMsg)
+			} else {
+				s.Require().NoError(err, out.String())
+				var tallyResultRes group.QueryTallyResultResponse
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &tallyResultRes))
+				s.Require().NotNil(tallyResultRes)
+				s.Require().Equal(tc.expTallyResult, tallyResultRes.Tally)
+			}
+		})
+	}
+
+}

@@ -34,6 +34,7 @@ type IntegrationTestSuite struct {
 	groupPolicies []*group.GroupPolicyInfo
 	proposal      *group.Proposal
 	vote          *group.Vote
+	votedMember   *group.Member
 }
 
 const validMetadata = "AQ=="
@@ -78,17 +79,18 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
+	memberWeight := "3"
 	// create a group
 	validMembers := fmt.Sprintf(`
 	{
 		"members": [
 			{
 				"address": "%s",
-				"weight": "3",
+				"weight": "%s",
 				"metadata": "%s"
 			}
 		]
-	}`, val.Address.String(), validMetadata)
+	}`, val.Address.String(), memberWeight, validMetadata)
 	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
 	out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateGroupCmd(),
 		append(
@@ -202,6 +204,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var voteRes group.QueryVoteByProposalVoterResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &voteRes))
 	s.vote = voteRes.Vote
+
+	s.votedMember = &group.Member{
+		Address:  val.Address.String(),
+		Weight:   memberWeight,
+		Metadata: []byte(validMetadata),
+	}
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {

@@ -24,7 +24,7 @@ type StructOut struct {
 	Y []byte
 }
 
-func TestExtractConstructorInfo(t *testing.T) {
+func TestExtractProviderDescriptor(t *testing.T) {
 	var (
 		intType     = reflect.TypeOf(0)
 		int16Type   = reflect.TypeOf(int16(0))

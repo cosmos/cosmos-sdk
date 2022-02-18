@@ -9,3 +9,6 @@ plugins:
   - name: go-pulsar
     out: .
     opt: paths=source_relative
+  - name: go-cosmos-orm
+    out: .
+    opt: paths=source_relative

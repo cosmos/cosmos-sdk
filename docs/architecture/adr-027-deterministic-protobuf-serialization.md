@@ -2,8 +2,8 @@
 
 ## Changelog
 
-- 2020-08-07: Initial Draft
-- 2020-09-01: Further clarify rules
+* 2020-08-07: Initial Draft
+* 2020-09-01: Further clarify rules
 
 ## Status
 
@@ -126,12 +126,12 @@ default value).
 There are three main implementation strategies, ordered from the least to the
 most custom development:
 
-- **Use a protobuf serializer that follows the above rules by default.** E.g.
+* **Use a protobuf serializer that follows the above rules by default.** E.g.
   [gogoproto](https://pkg.go.dev/github.com/gogo/protobuf/gogoproto) is known to
   be compliant by in most cases, but not when certain annotations such as
   `nullable = false` are used. It might also be an option to configure an
   existing serializer accordingly.
-- **Normalize default values before encoding them.** If your serializer follows
+* **Normalize default values before encoding them.** If your serializer follows
   rule 1. and 2. and allows you to explicitly unset fields for serialization,
   you can normalize default values to unset. This can be done when working with
   [protobuf.js](https://www.npmjs.com/package/protobufjs):
@@ -146,7 +146,7 @@ most custom development:
   }).finish();
   ```
 
-- **Use a hand-written serializer for the types you need.** If none of the above
+* **Use a hand-written serializer for the types you need.** If none of the above
   ways works for you, you can write a serializer yourself. For SignDoc this
   would look something like this in Go, building on existing protobuf utilities:
 
@@ -231,14 +231,14 @@ backlinks: []
 
 must result in the serialization
 
-```
+```text
 0a1b54686520776f726c64206e65656473206368616e676520f09f8cb318e8bebec8bc2e280138024a084e696365206f6e654a095468616e6b20796f75
 ```
 
 When inspecting the serialized document, you see that every second field is
 omitted:
 
-```
+```sh
 $ echo 0a1b54686520776f726c64206e65656473206368616e676520f09f8cb318e8bebec8bc2e280138024a084e696365206f6e654a095468616e6b20796f75 | xxd -r -p | protoc --decode_raw
 1: "The world needs change \360\237\214\263"
 3: 1596806111080
@@ -255,20 +255,20 @@ for all protobuf documents we need in the context of Cosmos SDK signing.
 
 ### Positive
 
-- Well defined rules that can be verified independent of a reference
+* Well defined rules that can be verified independent of a reference
   implementation
-- Simple enough to keep the barrier to implement transaction signing low
-- It allows us to continue to use 0 and other empty values in SignDoc, avoiding
+* Simple enough to keep the barrier to implement transaction signing low
+* It allows us to continue to use 0 and other empty values in SignDoc, avoiding
   the need to work around 0 sequences. This does not imply the change from
   https://github.com/cosmos/cosmos-sdk/pull/6949 should not be merged, but not
   too important anymore.
 
 ### Negative
 
-- When implementing transaction signing, the encoding rules above must be
+* When implementing transaction signing, the encoding rules above must be
   understood and implemented.
-- The need for rule number 3. adds some complexity to implementations.
-- Some data structures may require custom code for serialization. Thus
+* The need for rule number 3. adds some complexity to implementations.
+* Some data structures may require custom code for serialization. Thus
   the code is not very portable - it will require additional work for each
   client implementing serialization to properly handle custom data structures.
 
@@ -283,32 +283,32 @@ the need of implementing a custom serializer that adheres to this standard (and 
 
 ## References
 
-- <sup>1</sup> _When a message is serialized, there is no guaranteed order for
+* <sup>1</sup> _When a message is serialized, there is no guaranteed order for
   how its known or unknown fields should be written. Serialization order is an
   implementation detail and the details of any particular implementation may
   change in the future. Therefore, protocol buffer parsers must be able to parse
   fields in any order._ from
   https://developers.google.com/protocol-buffers/docs/encoding#order
-- <sup>2</sup> https://developers.google.com/protocol-buffers/docs/encoding#signed_integers
-- <sup>3</sup> _Note that for scalar message fields, once a message is parsed
+* <sup>2</sup> https://developers.google.com/protocol-buffers/docs/encoding#signed_integers
+* <sup>3</sup> _Note that for scalar message fields, once a message is parsed
   there's no way of telling whether a field was explicitly set to the default
   value (for example whether a boolean was set to false) or just not set at all:
   you should bear this in mind when defining your message types. For example,
   don't have a boolean that switches on some behavior when set to false if you
   don't want that behavior to also happen by default._ from
   https://developers.google.com/protocol-buffers/docs/proto3#default
-- <sup>4</sup> _When a message is parsed, if the encoded message does not
+* <sup>4</sup> _When a message is parsed, if the encoded message does not
   contain a particular singular element, the corresponding field in the parsed
   object is set to the default value for that field._ from
   https://developers.google.com/protocol-buffers/docs/proto3#default
-- <sup>5</sup> _Also note that if a scalar message field is set to its default,
+* <sup>5</sup> _Also note that if a scalar message field is set to its default,
   the value will not be serialized on the wire._ from
   https://developers.google.com/protocol-buffers/docs/proto3#default
-- <sup>6</sup> _For enums, the default value is the first defined enum value,
+* <sup>6</sup> _For enums, the default value is the first defined enum value,
   which must be 0._ from
   https://developers.google.com/protocol-buffers/docs/proto3#default
-- <sup>7</sup> _For message fields, the field is not set. Its exact value is
+* <sup>7</sup> _For message fields, the field is not set. Its exact value is
   language-dependent._ from
   https://developers.google.com/protocol-buffers/docs/proto3#default
-- Encoding rules and parts of the reasoning taken from
+* Encoding rules and parts of the reasoning taken from
   [canonical-proto3 Aaron Craelius](https://github.com/regen-network/canonical-proto3)

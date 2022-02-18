@@ -15,10 +15,10 @@ If there is already a grant for the `(granter, grantee, Authorization)` triple, 
 
 The message handling should fail if:
 
-- both granter and grantee have the same address.
-- provided `Expiration` time is less than current unix timestamp.
-- provided `Grant.Authorization` is not implemented.
-- `Authorization.MsgTypeURL()` is not defined in the router (there is no defined handler in the app router to handle that Msg types).
+* both granter and grantee have the same address.
+* provided `Expiration` time is less than current unix timestamp.
+* provided `Grant.Authorization` is not implemented.
+* `Authorization.MsgTypeURL()` is not defined in the router (there is no defined handler in the app router to handle that Msg types).
 
 ## MsgRevoke
 
@@ -28,8 +28,8 @@ A grant can be removed with the `MsgRevoke` message.
 
 The message handling should fail if:
 
-- both granter and grantee have the same address.
-- provided `MsgTypeUrl` is empty.
+* both granter and grantee have the same address.
+* provided `MsgTypeUrl` is empty.
 
 NOTE: The `MsgExec` message removes a grant if the grant has expired.
 
@@ -41,6 +41,6 @@ When a grantee wants to execute a transaction on behalf of a granter, they must 
 
 The message handling should fail if:
 
-- provided `Authorization` is not implemented.
-- grantee doesn't have permission to run the transaction.
-- if granted authorization is expired.
+* provided `Authorization` is not implemented.
+* grantee doesn't have permission to run the transaction.
+* if granted authorization is expired.

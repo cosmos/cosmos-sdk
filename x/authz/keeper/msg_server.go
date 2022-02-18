@@ -10,7 +10,7 @@ import (
 
 var _ authz.MsgServer = Keeper{}
 
-// GrantAuthorization implements the MsgServer.Grant method.
+// GrantAuthorization implements the MsgServer.Grant method to create a new grant.
 func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGrantResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
@@ -29,9 +29,9 @@ func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGra
 		return nil, err
 	}
 
-	authorization := msg.GetAuthorization()
-	if authorization == nil {
-		return nil, sdkerrors.ErrUnpackAny.Wrap("Authorization is not present in the msg")
+	authorization, err := msg.GetAuthorization()
+	if err != nil {
+		return nil, err
 	}
 	t := authorization.MsgTypeURL()
 	if k.router.HandlerByTypeURL(t) == nil {

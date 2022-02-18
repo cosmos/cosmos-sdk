@@ -10,7 +10,7 @@ import (
 )
 
 // AutoGroupType marks a type which automatically gets grouped together. For an AutoGroupType T,
-// T and []T can be declared as output parameters for constructors as many times within the container
+// T and []T can be declared as output parameters for providers as many times within the container
 // as desired. All of the provided values for T can be retrieved by declaring an
 // []T input parameter.
 type AutoGroupType interface {
@@ -46,7 +46,7 @@ func (g *groupResolver) describeLocation() string {
 	return fmt.Sprintf("auto-group type %v", g.typ)
 }
 
-func (g *sliceGroupResolver) resolve(c *container, _ Scope, caller Location) (reflect.Value, error) {
+func (g *sliceGroupResolver) resolve(c *container, _ *moduleKey, caller Location) (reflect.Value, error) {
 	// Log
 	c.logf("Providing auto-group type slice %v to %s from:", g.sliceType, caller.Name())
 	c.indentLogger()
@@ -80,7 +80,7 @@ func (g *sliceGroupResolver) resolve(c *container, _ Scope, caller Location) (re
 	return g.values, nil
 }
 
-func (g *groupResolver) resolve(_ *container, _ Scope, _ Location) (reflect.Value, error) {
+func (g *groupResolver) resolve(_ *container, _ *moduleKey, _ Location) (reflect.Value, error) {
 	return reflect.Value{}, errors.Errorf("%v is an auto-group type and cannot be used as an input value, instead use %v", g.typ, g.sliceType)
 }
 

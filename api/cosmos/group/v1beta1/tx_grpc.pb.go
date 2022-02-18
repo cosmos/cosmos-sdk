@@ -32,6 +32,8 @@ type MsgClient interface {
 	UpdateGroupMetadata(ctx context.Context, in *MsgUpdateGroupMetadata, opts ...grpc.CallOption) (*MsgUpdateGroupMetadataResponse, error)
 	// CreateGroupPolicy creates a new group policy using given DecisionPolicy.
 	CreateGroupPolicy(ctx context.Context, in *MsgCreateGroupPolicy, opts ...grpc.CallOption) (*MsgCreateGroupPolicyResponse, error)
+	// CreateGroupWithPolicy creates a new group with policy.
+	CreateGroupWithPolicy(ctx context.Context, in *MsgCreateGroupWithPolicy, opts ...grpc.CallOption) (*MsgCreateGroupWithPolicyResponse, error)
 	// UpdateGroupPolicyAdmin updates a group policy admin.
 	UpdateGroupPolicyAdmin(ctx context.Context, in *MsgUpdateGroupPolicyAdmin, opts ...grpc.CallOption) (*MsgUpdateGroupPolicyAdminResponse, error)
 	// UpdateGroupPolicyDecisionPolicy allows a group policy's decision policy to be updated.
@@ -95,6 +97,15 @@ func (c *msgClient) UpdateGroupMetadata(ctx context.Context, in *MsgUpdateGroupM
 func (c *msgClient) CreateGroupPolicy(ctx context.Context, in *MsgCreateGroupPolicy, opts ...grpc.CallOption) (*MsgCreateGroupPolicyResponse, error) {
 	out := new(MsgCreateGroupPolicyResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/CreateGroupPolicy", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) CreateGroupWithPolicy(ctx context.Context, in *MsgCreateGroupWithPolicy, opts ...grpc.CallOption) (*MsgCreateGroupWithPolicyResponse, error) {
+	out := new(MsgCreateGroupWithPolicyResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/CreateGroupWithPolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -178,6 +189,8 @@ type MsgServer interface {
 	UpdateGroupMetadata(context.Context, *MsgUpdateGroupMetadata) (*MsgUpdateGroupMetadataResponse, error)
 	// CreateGroupPolicy creates a new group policy using given DecisionPolicy.
 	CreateGroupPolicy(context.Context, *MsgCreateGroupPolicy) (*MsgCreateGroupPolicyResponse, error)
+	// CreateGroupWithPolicy creates a new group with policy.
+	CreateGroupWithPolicy(context.Context, *MsgCreateGroupWithPolicy) (*MsgCreateGroupWithPolicyResponse, error)
 	// UpdateGroupPolicyAdmin updates a group policy admin.
 	UpdateGroupPolicyAdmin(context.Context, *MsgUpdateGroupPolicyAdmin) (*MsgUpdateGroupPolicyAdminResponse, error)
 	// UpdateGroupPolicyDecisionPolicy allows a group policy's decision policy to be updated.
@@ -213,6 +226,9 @@ func (UnimplementedMsgServer) UpdateGroupMetadata(context.Context, *MsgUpdateGro
 }
 func (UnimplementedMsgServer) CreateGroupPolicy(context.Context, *MsgCreateGroupPolicy) (*MsgCreateGroupPolicyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateGroupPolicy not implemented")
+}
+func (UnimplementedMsgServer) CreateGroupWithPolicy(context.Context, *MsgCreateGroupWithPolicy) (*MsgCreateGroupWithPolicyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateGroupWithPolicy not implemented")
 }
 func (UnimplementedMsgServer) UpdateGroupPolicyAdmin(context.Context, *MsgUpdateGroupPolicyAdmin) (*MsgUpdateGroupPolicyAdminResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroupPolicyAdmin not implemented")
@@ -334,6 +350,24 @@ func _Msg_CreateGroupPolicy_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).CreateGroupPolicy(ctx, req.(*MsgCreateGroupPolicy))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_CreateGroupWithPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateGroupWithPolicy)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateGroupWithPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.group.v1beta1.Msg/CreateGroupWithPolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateGroupWithPolicy(ctx, req.(*MsgCreateGroupWithPolicy))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -490,6 +524,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateGroupPolicy",
 			Handler:    _Msg_CreateGroupPolicy_Handler,
+		},
+		{
+			MethodName: "CreateGroupWithPolicy",
+			Handler:    _Msg_CreateGroupWithPolicy_Handler,
 		},
 		{
 			MethodName: "UpdateGroupPolicyAdmin",
